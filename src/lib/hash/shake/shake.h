@@ -17,10 +17,8 @@ namespace Botan {
 /**
 * SHAKE-128
 */
-class SHAKE_128 final : public HashFunction
-   {
+class SHAKE_128 final : public HashFunction {
    public:
-
       /**
       * @param output_bits the desired output size in bits
       * must be a multiple of 8
@@ -28,6 +26,7 @@ class SHAKE_128 final : public HashFunction
       explicit SHAKE_128(size_t output_bits);
 
       size_t hash_block_size() const override { return SHAKE_128_BITRATE / 8; }
+
       size_t output_length() const override { return m_output_bits / 8; }
 
       std::unique_ptr<HashFunction> new_object() const override;
@@ -44,15 +43,13 @@ class SHAKE_128 final : public HashFunction
       size_t m_output_bits;
       secure_vector<uint64_t> m_S;
       size_t m_S_pos;
-   };
+};
 
 /**
 * SHAKE-256
 */
-class SHAKE_256 final : public HashFunction
-   {
+class SHAKE_256 final : public HashFunction {
    public:
-
       /**
       * @param output_bits the desired output size in bits
       * must be a multiple of 8
@@ -60,6 +57,7 @@ class SHAKE_256 final : public HashFunction
       explicit SHAKE_256(size_t output_bits);
 
       size_t hash_block_size() const override { return SHAKE_256_BITRATE / 8; }
+
       size_t output_length() const override { return m_output_bits / 8; }
 
       std::unique_ptr<HashFunction> new_object() const override;
@@ -76,8 +74,8 @@ class SHAKE_256 final : public HashFunction
       size_t m_output_bits;
       secure_vector<uint64_t> m_S;
       size_t m_S_pos;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

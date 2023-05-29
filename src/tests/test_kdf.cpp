@@ -11,8 +11,8 @@
 #endif
 
 #if defined(BOTAN_HAS_HKDF)
-   #include <botan/internal/hkdf.h>
    #include <botan/hash.h>
+   #include <botan/internal/hkdf.h>
 #endif
 
 namespace Botan_Tests {
@@ -20,22 +20,19 @@ namespace Botan_Tests {
 namespace {
 
 #if defined(BOTAN_HAS_KDF_BASE)
-class KDF_KAT_Tests final : public Text_Based_Test
-   {
+class KDF_KAT_Tests final : public Text_Based_Test {
    public:
       KDF_KAT_Tests() : Text_Based_Test("kdf", "Secret,Output", "Salt,Label,IKM,XTS") {}
 
-      Test::Result run_one_test(const std::string& kdf_name, const VarMap& vars) override
-         {
+      Test::Result run_one_test(const std::string& kdf_name, const VarMap& vars) override {
          Test::Result result(kdf_name);
 
          auto kdf = Botan::KDF::create(kdf_name);
 
-         if(!kdf)
-            {
+         if(!kdf) {
             result.note_missing(kdf_name);
             return result;
-            }
+         }
 
          const std::vector<uint8_t> salt = vars.get_opt_bin("Salt");
          const std::vector<uint8_t> secret = vars.get_req_bin("Secret");
@@ -51,23 +48,19 @@ class KDF_KAT_Tests final : public Text_Based_Test
          result.test_eq("Clone has same name", kdf->name(), clone->name());
 
          return result;
-         }
-
-   };
+      }
+};
 
 BOTAN_REGISTER_SMOKE_TEST("kdf", "kdf_kat", KDF_KAT_Tests);
 
 #endif
 
 #if defined(BOTAN_HAS_HKDF)
-class HKDF_Expand_Label_Tests final : public Text_Based_Test
-   {
+class HKDF_Expand_Label_Tests final : public Text_Based_Test {
    public:
-      HKDF_Expand_Label_Tests() :
-         Text_Based_Test("hkdf_label.vec", "Secret,Label,HashValue,Output") {}
+      HKDF_Expand_Label_Tests() : Text_Based_Test("hkdf_label.vec", "Secret,Label,HashValue,Output") {}
 
-      Test::Result run_one_test(const std::string& hash_name, const VarMap& vars) override
-         {
+      Test::Result run_one_test(const std::string& hash_name, const VarMap& vars) override {
          Test::Result result("HKDF-Expand-Label(" + hash_name + ")");
 
          const std::vector<uint8_t> secret = vars.get_req_bin("Secret");
@@ -77,30 +70,24 @@ class HKDF_Expand_Label_Tests final : public Text_Based_Test
 
          auto hash = Botan::HashFunction::create(hash_name);
 
-         if(!hash)
-            {
+         if(!hash) {
             result.test_note("Skipping test due to missing hash");
             return result;
-            }
+         }
 
-         Botan::secure_vector<uint8_t> output =
-            Botan::hkdf_expand_label(hash_name,
-                                     secret.data(), secret.size(),
-                                     label,
-                                     hashval.data(), hashval.size(),
-                                     expected.size());
+         Botan::secure_vector<uint8_t> output = Botan::hkdf_expand_label(
+            hash_name, secret.data(), secret.size(), label, hashval.data(), hashval.size(), expected.size());
 
          result.test_eq("Output matches", output, expected);
 
          return result;
-         }
-
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("kdf", "hkdf_expand_label", HKDF_Expand_Label_Tests);
 
 #endif
 
-}
+}  // namespace
 
-}
+}  // namespace Botan_Tests

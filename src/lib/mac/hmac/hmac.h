@@ -8,16 +8,15 @@
 #ifndef BOTAN_HMAC_H_
 #define BOTAN_HMAC_H_
 
-#include <botan/mac.h>
 #include <botan/hash.h>
+#include <botan/mac.h>
 
 namespace Botan {
 
 /**
 * HMAC
 */
-class HMAC final : public MessageAuthenticationCode
-   {
+class HMAC final : public MessageAuthenticationCode {
    public:
       void clear() override;
       std::string name() const override;
@@ -36,6 +35,7 @@ class HMAC final : public MessageAuthenticationCode
 
       HMAC(const HMAC&) = delete;
       HMAC& operator=(const HMAC&) = delete;
+
    private:
       void add_data(const uint8_t[], size_t) override;
       void final_result(uint8_t[]) override;
@@ -45,8 +45,8 @@ class HMAC final : public MessageAuthenticationCode
       secure_vector<uint8_t> m_ikey, m_okey;
       size_t m_hash_output_length;
       size_t m_hash_block_size;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

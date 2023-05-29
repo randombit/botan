@@ -6,8 +6,8 @@
 
 #include <botan/numthry.h>
 
-#include <botan/internal/divide.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/divide.h>
 #include <botan/internal/mp_core.h>
 #include <botan/internal/rounding.h>
 
@@ -15,8 +15,7 @@ namespace Botan {
 
 namespace {
 
-BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
-   {
+BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod) {
    // Caller should assure these preconditions:
    BOTAN_DEBUG_ASSERT(n.is_positive());
    BOTAN_DEBUG_ASSERT(mod.is_positive());
@@ -45,13 +44,13 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
    const size_t mod_words = mod.sig_words();
    BOTAN_ASSERT(mod_words > 0, "Not empty");
 
-   secure_vector<word> tmp_mem(5*mod_words);
+   secure_vector<word> tmp_mem(5 * mod_words);
 
    word* v_w = &tmp_mem[0];
-   word* u_w = &tmp_mem[1*mod_words];
-   word* b_w = &tmp_mem[2*mod_words];
-   word* a_w = &tmp_mem[3*mod_words];
-   word* mp1o2 = &tmp_mem[4*mod_words];
+   word* u_w = &tmp_mem[1 * mod_words];
+   word* b_w = &tmp_mem[2 * mod_words];
+   word* a_w = &tmp_mem[3 * mod_words];
+   word* mp1o2 = &tmp_mem[4 * mod_words];
 
    CT::poison(tmp_mem.data(), tmp_mem.size());
 
@@ -70,8 +69,7 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
    // Only n.bits() + mod.bits() iterations are required, but avoid leaking the size of n
    const size_t execs = 2 * mod.bits();
 
-   for(size_t i = 0; i != execs; ++i)
-      {
+   for(size_t i = 0; i != execs; ++i) {
       const word odd_a = a_w[0] & 1;
 
       //if(odd_a) a -= b
@@ -98,7 +96,7 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
 
       //if(odd_u) u += mp1o2;
       bigint_cnd_add(odd_u, u_w, mp1o2, mod_words);
-      }
+   }
 
    auto a_is_0 = CT::Mask<word>::set();
    for(size_t i = 0; i != mod_words; ++i)
@@ -119,17 +117,16 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod)
    * So just clear out the other values and then give that buffer to a
    * BigInt.
    */
-   clear_mem(&tmp_mem[mod_words], 4*mod_words);
+   clear_mem(&tmp_mem[mod_words], 4 * mod_words);
 
    CT::unpoison(tmp_mem.data(), tmp_mem.size());
 
    BigInt r;
    r.swap_reg(tmp_mem);
    return r;
-   }
+}
 
-BigInt inverse_mod_pow2(const BigInt& a1, size_t k)
-   {
+BigInt inverse_mod_pow2(const BigInt& a1, size_t k) {
    /*
    * From "A New Algorithm for Inversion mod p^k" by Çetin Kaya Koç
    * https://eprint.iacr.org/2017/411.pdf sections 5 and 7.
@@ -159,24 +156,22 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k)
    */
    const size_t iter = round_up(k, BOTAN_MP_WORD_BITS);
 
-   for(size_t i = 0; i != iter; ++i)
-      {
+   for(size_t i = 0; i != iter; ++i) {
       const bool b0 = b.get_bit(0);
       X.conditionally_set_bit(i, b0);
       newb = b - a;
       b.ct_cond_assign(b0, newb);
       b >>= 1;
-      }
+   }
 
    X.mask_bits(k);
    X.const_time_unpoison();
    return X;
-   }
-
 }
 
-BigInt inverse_mod(const BigInt& n, const BigInt& mod)
-   {
+}  // namespace
+
+BigInt inverse_mod(const BigInt& n, const BigInt& mod) {
    if(mod.is_zero())
       throw Invalid_Argument("inverse_mod modulus cannot be zero");
    if(mod.is_negative() || n.is_negative())
@@ -184,8 +179,7 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
    if(n.is_zero() || (n.is_even() && mod.is_even()))
       return BigInt::zero();
 
-   if(mod.is_odd())
-      {
+   if(mod.is_odd()) {
       /*
       Fastpath for common case. This leaks if n is greater than mod or
       not, but we don't guarantee const time behavior in that case.
@@ -194,7 +188,7 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
          return inverse_mod_odd_modulus(n, mod);
       else
          return inverse_mod_odd_modulus(ct_modulo(n, mod), mod);
-      }
+   }
 
    // If n is even and mod is even we already returned 0
    // If n is even and mod is odd we jumped directly to odd-modulus algo
@@ -205,14 +199,12 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
    const size_t mod_bits = mod.bits();
    BOTAN_ASSERT_NOMSG(mod_bits > mod_lz);
 
-   if(mod_lz == mod_bits - 1)
-      {
+   if(mod_lz == mod_bits - 1) {
       // In this case we are performing an inversion modulo 2^k
       return inverse_mod_pow2(n, mod_lz);
-      }
+   }
 
-   if(mod_lz == 1)
-      {
+   if(mod_lz == 1) {
       /*
       Inversion modulo 2*o is an easier special case of CRT
 
@@ -238,7 +230,7 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
       BigInt h = inv_o;
       h.ct_cond_add(!inv_o.get_bit(0), o);
       return h;
-      }
+   }
 
    /*
    * In this case we are performing an inversion modulo 2^k*o for
@@ -272,6 +264,6 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod)
    h *= o;
    h += inv_o;
    return h;
-   }
-
 }
+
+}  // namespace Botan

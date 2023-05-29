@@ -11,20 +11,18 @@
 #include <botan/internal/os_utils.h>
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-  #include <botan/system_rng.h>
+   #include <botan/system_rng.h>
 #endif
 
 #include <array>
 
 namespace Botan {
 
-void RandomNumberGenerator::randomize_with_ts_input(std::span<uint8_t> output)
-   {
-   if(this->accepts_input())
-      {
+void RandomNumberGenerator::randomize_with_ts_input(std::span<uint8_t> output) {
+   if(this->accepts_input()) {
       constexpr auto s_hd_clk = sizeof(decltype(OS::get_high_resolution_clock()));
       constexpr auto s_sys_ts = sizeof(decltype(OS::get_system_timestamp_ns()));
-      constexpr auto s_pid    = sizeof(decltype(OS::get_process_id()));
+      constexpr auto s_pid = sizeof(decltype(OS::get_process_id()));
 
       std::array<uint8_t, s_hd_clk + s_sys_ts + s_pid> additional_input = {0};
       auto s_additional_input = std::span(additional_input.begin(), additional_input.end());
@@ -43,33 +41,23 @@ void RandomNumberGenerator::randomize_with_ts_input(std::span<uint8_t> output)
 #endif
 
       this->fill_bytes_with_input(output, additional_input);
-      }
-   else
-      {
+   } else {
       this->fill_bytes_with_input(output, {});
-      }
    }
-
-size_t RandomNumberGenerator::reseed(Entropy_Sources& srcs,
-                                     size_t poll_bits,
-                                     std::chrono::milliseconds poll_timeout)
-   {
-   if(this->accepts_input())
-      {
-      return srcs.poll(*this, poll_bits, poll_timeout);
-      }
-   else
-      {
-      return 0;
-      }
-   }
-
-void RandomNumberGenerator::reseed_from_rng(RandomNumberGenerator& rng, size_t poll_bits)
-   {
-   if(this->accepts_input())
-      {
-      this->add_entropy(rng.random_vec(poll_bits / 8));
-      }
-   }
-
 }
+
+size_t RandomNumberGenerator::reseed(Entropy_Sources& srcs, size_t poll_bits, std::chrono::milliseconds poll_timeout) {
+   if(this->accepts_input()) {
+      return srcs.poll(*this, poll_bits, poll_timeout);
+   } else {
+      return 0;
+   }
+}
+
+void RandomNumberGenerator::reseed_from_rng(RandomNumberGenerator& rng, size_t poll_bits) {
+   if(this->accepts_input()) {
+      this->add_entropy(rng.random_vec(poll_bits / 8));
+   }
+}
+
+}  // namespace Botan

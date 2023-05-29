@@ -9,9 +9,8 @@
 #include <botan/reducer.h>
 #include <botan/internal/curve_nistp.h>
 
-void fuzz(const uint8_t in[], size_t len)
-   {
-   if(len > 2*192/8)
+void fuzz(const uint8_t in[], size_t len) {
+   if(len > 2 * 192 / 8)
       return;
 
    static const Botan::BigInt& prime = Botan::prime_p192();
@@ -20,13 +19,12 @@ void fuzz(const uint8_t in[], size_t len)
 
    Botan::BigInt input = Botan::BigInt::decode(in, len);
 
-   if(input < prime_2)
-      {
+   if(input < prime_2) {
       const Botan::BigInt ref = prime_redc.reduce(input);
 
       Botan::secure_vector<Botan::word> ws;
       Botan::redc_p192(input, ws);
 
       FUZZER_ASSERT_EQUAL(ref, input);
-      }
    }
+}

@@ -7,26 +7,25 @@
 
 #include <botan/internal/oaep.h>
 
-#include <botan/internal/mgf1.h>
 #include <botan/exceptn.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/mgf1.h>
 
 namespace Botan {
 
 /*
 * OAEP Pad Operation
 */
-secure_vector<uint8_t> OAEP::pad(const uint8_t in[], size_t in_length,
-                             size_t key_length,
-                             RandomNumberGenerator& rng) const
-   {
+secure_vector<uint8_t> OAEP::pad(const uint8_t in[],
+                                 size_t in_length,
+                                 size_t key_length,
+                                 RandomNumberGenerator& rng) const {
    key_length /= 8;
 
-   if(in_length > maximum_input_size(key_length * 8))
-      {
+   if(in_length > maximum_input_size(key_length * 8)) {
       throw Invalid_Argument("OAEP: Input is too large");
-      }
+   }
 
    secure_vector<uint8_t> out(key_length);
 
@@ -36,23 +35,17 @@ secure_vector<uint8_t> OAEP::pad(const uint8_t in[], size_t in_length,
    out[out.size() - in_length - 1] = 0x01;
    buffer_insert(out, out.size() - in_length, in, in_length);
 
-   mgf1_mask(*m_mgf1_hash,
-             out.data(), m_Phash.size(),
-             &out[m_Phash.size()], out.size() - m_Phash.size());
+   mgf1_mask(*m_mgf1_hash, out.data(), m_Phash.size(), &out[m_Phash.size()], out.size() - m_Phash.size());
 
-   mgf1_mask(*m_mgf1_hash,
-             &out[m_Phash.size()], out.size() - m_Phash.size(),
-             out.data(), m_Phash.size());
+   mgf1_mask(*m_mgf1_hash, &out[m_Phash.size()], out.size() - m_Phash.size(), out.data(), m_Phash.size());
 
    return out;
-   }
+}
 
 /*
 * OAEP Unpad Operation
 */
-secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
-                                   const uint8_t in[], size_t in_length) const
-   {
+secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask, const uint8_t in[], size_t in_length) const {
    /*
    Must be careful about error messages here; if an attacker can
    distinguish them, it is easy to use the differences as an oracle to
@@ -79,31 +72,25 @@ secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask,
 
    const size_t hlen = m_Phash.size();
 
-   mgf1_mask(*m_mgf1_hash,
-             &input[hlen], input.size() - hlen,
-             input.data(), hlen);
+   mgf1_mask(*m_mgf1_hash, &input[hlen], input.size() - hlen, input.data(), hlen);
 
-   mgf1_mask(*m_mgf1_hash,
-             input.data(), hlen,
-             &input[hlen], input.size() - hlen);
+   mgf1_mask(*m_mgf1_hash, input.data(), hlen, &input[hlen], input.size() - hlen);
 
    auto unpadded = oaep_find_delim(valid_mask, input.data(), input.size(), m_Phash);
    valid_mask &= leading_0.unpoisoned_value();
    return unpadded;
-   }
+}
 
-secure_vector<uint8_t>
-oaep_find_delim(uint8_t& valid_mask,
-                const uint8_t input[], size_t input_len,
-                const secure_vector<uint8_t>& Phash)
-   {
+secure_vector<uint8_t> oaep_find_delim(uint8_t& valid_mask,
+                                       const uint8_t input[],
+                                       size_t input_len,
+                                       const secure_vector<uint8_t>& Phash) {
    const size_t hlen = Phash.size();
 
    // Too short to be valid, reject immediately
-   if(input_len < 1 + 2*hlen)
-      {
+   if(input_len < 1 + 2 * hlen) {
       return secure_vector<uint8_t>();
-      }
+   }
 
    CT::poison(input, input_len);
 
@@ -111,8 +98,7 @@ oaep_find_delim(uint8_t& valid_mask,
    CT::Mask<uint8_t> waiting_for_delim = CT::Mask<uint8_t>::set();
    CT::Mask<uint8_t> bad_input_m = CT::Mask<uint8_t>::cleared();
 
-   for(size_t i = delim_idx; i < input_len; ++i)
-      {
+   for(size_t i = delim_idx; i < input_len; ++i) {
       const auto zero_m = CT::Mask<uint8_t>::is_zero(input[i]);
       const auto one_m = CT::Mask<uint8_t>::is_equal(input[i], 1);
 
@@ -123,7 +109,7 @@ oaep_find_delim(uint8_t& valid_mask,
       delim_idx += add_m.if_set_return(1);
 
       waiting_for_delim &= zero_m;
-      }
+   }
 
    // If we never saw any non-zero byte, then it's not valid input
    bad_input_m |= waiting_for_delim;
@@ -137,33 +123,26 @@ oaep_find_delim(uint8_t& valid_mask,
    CT::unpoison(input, input_len);
 
    return output;
-   }
+}
 
 /*
 * Return the max input size for a given key size
 */
-size_t OAEP::maximum_input_size(size_t keybits) const
-   {
-   if(keybits / 8 > 2*m_Phash.size() + 1)
-      return ((keybits / 8) - 2*m_Phash.size() - 1);
+size_t OAEP::maximum_input_size(size_t keybits) const {
+   if(keybits / 8 > 2 * m_Phash.size() + 1)
+      return ((keybits / 8) - 2 * m_Phash.size() - 1);
    else
       return 0;
-   }
+}
 
-OAEP::OAEP(std::unique_ptr<HashFunction> hash,
-           std::string_view P) :
-   m_mgf1_hash(std::move(hash))
-   {
+OAEP::OAEP(std::unique_ptr<HashFunction> hash, std::string_view P) : m_mgf1_hash(std::move(hash)) {
    m_Phash = m_mgf1_hash->process(P);
-   }
+}
 
-OAEP::OAEP(std::unique_ptr<HashFunction> hash,
-           std::unique_ptr<HashFunction> mgf1_hash,
-           std::string_view P) :
-   m_mgf1_hash(std::move(mgf1_hash))
-   {
+OAEP::OAEP(std::unique_ptr<HashFunction> hash, std::unique_ptr<HashFunction> mgf1_hash, std::string_view P) :
+      m_mgf1_hash(std::move(mgf1_hash)) {
    auto phash = std::move(hash);
    m_Phash = phash->process(P);
-   }
-
 }
+
+}  // namespace Botan

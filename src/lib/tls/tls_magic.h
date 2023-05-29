@@ -24,12 +24,12 @@ namespace TLS {
 * TODO: this should not be an enum
 */
 enum Size_Limits : size_t {
-   TLS_HEADER_SIZE    = 5,
-   DTLS_HEADER_SIZE   = TLS_HEADER_SIZE + 8,
+   TLS_HEADER_SIZE = 5,
+   DTLS_HEADER_SIZE = TLS_HEADER_SIZE + 8,
 
    // The "TLSInnerPlaintext" length, i.e. the maximum amount of plaintext
    // application data that can be transmitted in a single TLS record.
-   MAX_PLAINTEXT_SIZE = 16*1024,
+   MAX_PLAINTEXT_SIZE = 16 * 1024,
 
    MAX_COMPRESSED_SIZE = MAX_PLAINTEXT_SIZE + 1024,
    MAX_CIPHERTEXT_SIZE = MAX_COMPRESSED_SIZE + 1024,
@@ -51,39 +51,39 @@ enum class Connection_Side {
 };
 
 enum class Handshake_Type {
-   HelloRequest         = 0,
-   ClientHello          = 1,
-   ServerHello          = 2,
-   HelloVerifyRequest   = 3,
-   NewSessionTicket     = 4, // RFC 5077
+   HelloRequest = 0,
+   ClientHello = 1,
+   ServerHello = 2,
+   HelloVerifyRequest = 3,
+   NewSessionTicket = 4,  // RFC 5077
 
-   EndOfEarlyData       = 5, // RFC 8446 (TLS 1.3)
-   EncryptedExtensions  = 8, // RFC 8446 (TLS 1.3)
+   EndOfEarlyData = 5,       // RFC 8446 (TLS 1.3)
+   EncryptedExtensions = 8,  // RFC 8446 (TLS 1.3)
 
-   Certificate          = 11,
-   ServerKeyExchange    = 12,
-   CertificateRequest   = 13,
-   ServerHelloDone      = 14,
-   CertificateVerify    = 15,
-   ClientKeyExchange    = 16,
-   Finished             = 20,
+   Certificate = 11,
+   ServerKeyExchange = 12,
+   CertificateRequest = 13,
+   ServerHelloDone = 14,
+   CertificateVerify = 15,
+   ClientKeyExchange = 16,
+   Finished = 20,
 
-   CertificateUrl       = 21,
-   CertificateStatus    = 22,
+   CertificateUrl = 21,
+   CertificateStatus = 22,
 
-   KeyUpdate            = 24,  // RFC 8446 (TLS 1.3)
+   KeyUpdate = 24,  // RFC 8446 (TLS 1.3)
 
-   HelloRetryRequest    = 253, // Not a wire value (HRR appears as an ordinary Server Hello)
-   HandshakeCCS         = 254, // Not a wire value (TLS 1.3 uses this value for 'message_hash' -- RFC 8446 4.4.1)
-   None                 = 255  // Null value
+   HelloRetryRequest = 253,  // Not a wire value (HRR appears as an ordinary Server Hello)
+   HandshakeCCS = 254,       // Not a wire value (TLS 1.3 uses this value for 'message_hash' -- RFC 8446 4.4.1)
+   None = 255                // Null value
 };
 
 BOTAN_TEST_API const char* handshake_type_to_string(Handshake_Type t);
 
 using Transcript_Hash = std::vector<uint8_t>;
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif

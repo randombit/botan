@@ -12,8 +12,7 @@
 
 namespace Botan_Tests {
 
-class StdoutReporter : public Reporter
-   {
+class StdoutReporter : public Reporter {
    public:
       StdoutReporter(const Test_Options& opts, std::ostream& output_stream);
 
@@ -36,8 +35,8 @@ class StdoutReporter : public Reporter
       std::set<std::string> m_tests_failed_names;
       size_t m_tests_failed;
       size_t m_tests_run;
-   };
+};
 
-}
+}  // namespace Botan_Tests
 
 #endif

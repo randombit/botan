@@ -1,9 +1,8 @@
-#include <botan/kdf.h>
 #include <botan/hex.h>
+#include <botan/kdf.h>
 #include <iostream>
 
-int main()
-   {
+int main() {
    // Replicate a test from RFC 5869
    // https://www.rfc-editor.org/rfc/rfc5869#appendix-A.1
    const std::vector<uint8_t> input_secret(22, 0x0b);
@@ -16,4 +15,4 @@ int main()
 
    // OKM = 0x3cb25f25faacd57a90434f64d0362f2a...
    std::cout << Botan::hex_encode(derived_key) << "\n";
-   }
+}

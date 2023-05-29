@@ -17,8 +17,7 @@ namespace Botan {
 /**
 * BLAKE2b MAC
 */
-class BLAKE2bMAC final : public MessageAuthenticationCode
-   {
+class BLAKE2bMAC final : public MessageAuthenticationCode {
    public:
       explicit BLAKE2bMAC(size_t output_bits = 512);
 
@@ -26,39 +25,33 @@ class BLAKE2bMAC final : public MessageAuthenticationCode
       BLAKE2bMAC& operator=(const BLAKE2bMAC&) = delete;
 
       std::string name() const override { return m_blake.name(); }
+
       size_t output_length() const override { return m_blake.output_length(); }
+
       std::unique_ptr<MessageAuthenticationCode> new_object() const override;
 
       void clear() override;
 
       bool has_keying_material() const override { return m_blake.has_keying_material(); }
 
-      Key_Length_Specification key_spec() const override
-         {
-         return m_blake.key_spec();
-         }
+      Key_Length_Specification key_spec() const override { return m_blake.key_spec(); }
 
    private:
-      void key_schedule(const uint8_t key[], size_t length) override
-         {
-         m_blake.set_key(key, length);
-         }
+      void key_schedule(const uint8_t key[], size_t length) override { m_blake.set_key(key, length); }
 
-      void add_data(const uint8_t input[], size_t length) override
-         {
+      void add_data(const uint8_t input[], size_t length) override {
          assert_key_material_set();
          m_blake.update(input, length);
-         }
+      }
 
-      void final_result(uint8_t out[]) override
-         {
+      void final_result(uint8_t out[]) override {
          assert_key_material_set();
          m_blake.final(out);
-         }
+      }
 
       BLAKE2b m_blake;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

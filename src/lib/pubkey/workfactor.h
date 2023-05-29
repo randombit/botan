@@ -45,6 +45,6 @@ size_t BOTAN_TEST_API if_work_factor(size_t n_bits);
 */
 size_t ecp_work_factor(size_t prime_group_size);
 
-}
+}  // namespace Botan
 
 #endif

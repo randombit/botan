@@ -15,16 +15,18 @@ namespace Botan {
 /**
 * Noekeon
 */
-class Noekeon final : public Block_Cipher_Fixed_Params<16, 16>
-   {
+class Noekeon final : public Block_Cipher_Fixed_Params<16, 16> {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
       std::string provider() const override;
       void clear() override;
+
       std::string name() const override { return "Noekeon"; }
+
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<Noekeon>(); }
+
       size_t parallelism() const override;
       bool has_keying_material() const override;
 
@@ -41,8 +43,8 @@ class Noekeon final : public Block_Cipher_Fixed_Params<16, 16>
 
       void key_schedule(const uint8_t[], size_t) override;
       secure_vector<uint32_t> m_EK, m_DK;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

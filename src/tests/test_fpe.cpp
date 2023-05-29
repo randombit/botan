@@ -14,17 +14,15 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_FPE_FE1)
 
-class FPE_FE1_Tests final : public Text_Based_Test
-   {
+class FPE_FE1_Tests final : public Text_Based_Test {
    public:
       FPE_FE1_Tests() : Text_Based_Test("fpe_fe1.vec", "Mod,In,Out,Key,Tweak") {}
 
-      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
-         {
-         const Botan::BigInt modulus  = vars.get_req_bn("Mod");
-         const Botan::BigInt input    = vars.get_req_bn("In");
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
+         const Botan::BigInt modulus = vars.get_req_bn("Mod");
+         const Botan::BigInt input = vars.get_req_bn("In");
          const Botan::BigInt expected = vars.get_req_bn("Out");
-         const auto key               = Botan::SymmetricKey(vars.get_req_bin("Key"));
+         const auto key = Botan::SymmetricKey(vars.get_req_bin("Key"));
          const std::vector<uint8_t> tweak = vars.get_req_bin("Tweak");
 
          Test::Result result("FPE_FE1");
@@ -38,12 +36,11 @@ class FPE_FE1_Tests final : public Text_Based_Test
          result.test_eq("decrypted", decry, input);
 
          return result;
-         }
-
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("misc", "fpe_fe1", FPE_FE1_Tests);
 
 #endif
 
-}
+}  // namespace Botan_Tests

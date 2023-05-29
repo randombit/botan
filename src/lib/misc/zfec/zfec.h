@@ -11,10 +11,10 @@
 #define BOTAN_ZFEC_H_
 
 #include <botan/types.h>
-#include <string>
-#include <map>
-#include <vector>
 #include <functional>
+#include <map>
+#include <string>
+#include <vector>
 
 namespace Botan {
 
@@ -27,10 +27,9 @@ namespace Botan {
 * should be kept secret. (If nothing else, because the first K shares
 * are simply the original input!)
 */
-class BOTAN_PUBLIC_API(3,0) ZFEC final
-   {
+class BOTAN_PUBLIC_API(3, 0) ZFEC final {
    public:
-      typedef std::function<void (size_t, const uint8_t[], size_t)> output_cb_t;
+      typedef std::function<void(size_t, const uint8_t[], size_t)> output_cb_t;
 
       /**
       * FEC constructor
@@ -40,6 +39,7 @@ class BOTAN_PUBLIC_API(3,0) ZFEC final
       ZFEC(size_t K, size_t N);
 
       size_t recovery_threshold() const { return m_K; }
+
       size_t generated_shares() const { return m_N; }
 
       std::string provider() const;
@@ -49,32 +49,25 @@ class BOTAN_PUBLIC_API(3,0) ZFEC final
       * @param size the length in bytes of input
       * @param output_cb the output callback
       */
-      void encode(
-         const uint8_t input[], size_t size,
-         const output_cb_t& output_cb)
-         const;
+      void encode(const uint8_t input[], size_t size, const output_cb_t& output_cb) const;
 
       /**
       * @param shares exactly K shares of data to FEC
       * @param share_size the length in bytes of each share
       * @param output_cb the output callback
       */
-      void encode_shares(
-         const std::vector<const uint8_t*>& shares,
-         size_t share_size,
-         const output_cb_t& output_cb)
-         const;
+      void encode_shares(const std::vector<const uint8_t*>& shares,
+                         size_t share_size,
+                         const output_cb_t& output_cb) const;
 
       /**
       * @param shares map of share id to share contents
       * @param share_size size in bytes of each share
       * @param output_cb the output callback
       */
-      void decode_shares(
-         const std::map<size_t, const uint8_t*>& shares,
-         size_t share_size,
-         const output_cb_t& output_cb)
-         const;
+      void decode_shares(const std::map<size_t, const uint8_t*>& shares,
+                         size_t share_size,
+                         const output_cb_t& output_cb) const;
 
    private:
       static void addmul(uint8_t z[], const uint8_t x[], uint8_t y, size_t size);
@@ -89,8 +82,8 @@ class BOTAN_PUBLIC_API(3,0) ZFEC final
 
       const size_t m_K, m_N;
       std::vector<uint8_t> m_enc_matrix;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

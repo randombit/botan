@@ -8,9 +8,9 @@
 #define BOTAN_ASN1_PRINT_H_
 
 #include <botan/asn1_obj.h>
+#include <iosfwd>
 #include <string>
 #include <vector>
-#include <iosfwd>
 
 namespace Botan {
 
@@ -20,8 +20,7 @@ class BER_Decoder;
 /**
 * Format ASN.1 data and call a virtual to format
 */
-class BOTAN_PUBLIC_API(2,4) ASN1_Formatter
-   {
+class BOTAN_PUBLIC_API(2, 4) ASN1_Formatter {
    public:
       virtual ~ASN1_Formatter() = default;
 
@@ -31,31 +30,23 @@ class BOTAN_PUBLIC_API(2,4) ASN1_Formatter
       *        is unbounded.
       */
       ASN1_Formatter(bool print_context_specific, size_t max_depth) :
-         m_print_context_specific(print_context_specific),
-         m_max_depth(max_depth)
-         {}
+            m_print_context_specific(print_context_specific), m_max_depth(max_depth) {}
 
-      void print_to_stream(std::ostream& out,
-                           const uint8_t in[],
-                           size_t len) const;
+      void print_to_stream(std::ostream& out, const uint8_t in[], size_t len) const;
 
       std::string print(const uint8_t in[], size_t len) const;
 
-      template<typename Alloc>
-      std::string print(const std::vector<uint8_t, Alloc>& vec) const
-         {
+      template <typename Alloc>
+      std::string print(const std::vector<uint8_t, Alloc>& vec) const {
          return print(vec.data(), vec.size());
-         }
+      }
 
    protected:
       /**
       * This is called for each element
       */
-      virtual std::string format(ASN1_Type type_tag,
-                                 ASN1_Class class_tag,
-                                 size_t level,
-                                 size_t length,
-                                 std::string_view value) const = 0;
+      virtual std::string format(
+         ASN1_Type type_tag, ASN1_Class class_tag, size_t level, size_t length, std::string_view value) const = 0;
 
       /**
       * This is called to format binary elements that we don't know how to
@@ -72,20 +63,17 @@ class BOTAN_PUBLIC_API(2,4) ASN1_Formatter
       virtual std::string format_bn(const BigInt& bn) const = 0;
 
    private:
-      void decode(std::ostream& output,
-                  BER_Decoder& decoder,
-                  size_t level) const;
+      void decode(std::ostream& output, BER_Decoder& decoder, size_t level) const;
 
       const bool m_print_context_specific;
       const size_t m_max_depth;
-   };
+};
 
 /**
 * Format ASN.1 data into human readable output. The exact form of the output for
 * any particular input is not guaranteed and may change from release to release.
 */
-class BOTAN_PUBLIC_API(2,4) ASN1_Pretty_Printer final : public ASN1_Formatter
-   {
+class BOTAN_PUBLIC_API(2, 4) ASN1_Pretty_Printer final : public ASN1_Formatter {
    public:
       /**
       * @param print_limit strings larger than this are not printed
@@ -102,23 +90,17 @@ class BOTAN_PUBLIC_API(2,4) ASN1_Pretty_Printer final : public ASN1_Formatter
                           size_t initial_level = 0,
                           size_t value_column = 60,
                           size_t max_depth = 64) :
-         ASN1_Formatter(print_context_specific, max_depth),
-         m_print_limit(print_limit),
-         m_print_binary_limit(print_binary_limit),
-         m_initial_level(initial_level),
-         m_value_column(value_column)
-         {}
+            ASN1_Formatter(print_context_specific, max_depth),
+            m_print_limit(print_limit),
+            m_print_binary_limit(print_binary_limit),
+            m_initial_level(initial_level),
+            m_value_column(value_column) {}
 
    private:
-      std::string format(ASN1_Type type_tag,
-                         ASN1_Class class_tag,
-                         size_t level,
-                         size_t length,
-                         std::string_view value) const override;
+      std::string format(
+         ASN1_Type type_tag, ASN1_Class class_tag, size_t level, size_t length, std::string_view value) const override;
 
-      std::string format_bin(ASN1_Type type_tag,
-                             ASN1_Class class_tag,
-                             const std::vector<uint8_t>& vec) const override;
+      std::string format_bin(ASN1_Type type_tag, ASN1_Class class_tag, const std::vector<uint8_t>& vec) const override;
 
       std::string format_bn(const BigInt& bn) const override;
 
@@ -126,8 +108,8 @@ class BOTAN_PUBLIC_API(2,4) ASN1_Pretty_Printer final : public ASN1_Formatter
       const size_t m_print_binary_limit;
       const size_t m_initial_level;
       const size_t m_value_column;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

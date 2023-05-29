@@ -11,15 +11,11 @@
 
 namespace Botan {
 
-size_t ecp_work_factor(size_t bits)
-   {
-   return bits / 2;
-   }
+size_t ecp_work_factor(size_t bits) { return bits / 2; }
 
 namespace {
 
-size_t nfs_workfactor(size_t bits, double log2_k)
-   {
+size_t nfs_workfactor(size_t bits, double log2_k) {
    // approximates natural logarithm of an integer of given bitsize
    const double log2_e = 1.44269504088896340736;
    const double log_p = bits / log2_e;
@@ -27,33 +23,30 @@ size_t nfs_workfactor(size_t bits, double log2_k)
    const double log_log_p = std::log(log_p);
 
    // RFC 3766: k * e^((1.92 + o(1)) * cubrt(ln(n) * (ln(ln(n)))^2))
-   const double est = 1.92 * std::pow(log_p * log_log_p * log_log_p, 1.0/3.0);
+   const double est = 1.92 * std::pow(log_p * log_log_p * log_log_p, 1.0 / 3.0);
 
    // return log2 of the workfactor
    return static_cast<size_t>(log2_k + log2_e * est);
-   }
-
 }
 
-size_t if_work_factor(size_t bits)
-   {
+}  // namespace
+
+size_t if_work_factor(size_t bits) {
    if(bits < 512)
       return 0;
 
    // RFC 3766 estimates k at .02 and o(1) to be effectively zero for sizes of interest
 
-   const double log2_k = -5.6438; // log2(.02)
+   const double log2_k = -5.6438;  // log2(.02)
    return nfs_workfactor(bits, log2_k);
-   }
+}
 
-size_t dl_work_factor(size_t bits)
-   {
+size_t dl_work_factor(size_t bits) {
    // Lacking better estimates...
    return if_work_factor(bits);
-   }
+}
 
-size_t dl_exponent_size(size_t bits)
-   {
+size_t dl_exponent_size(size_t bits) {
    if(bits == 0)
       return 0;
    if(bits <= 256)
@@ -67,6 +60,6 @@ size_t dl_exponent_size(size_t bits)
    if(bits <= 4096)
       return 384;
    return 512;
-   }
-
 }
+
+}  // namespace Botan

@@ -8,26 +8,22 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_HOTP) && defined(BOTAN_HAS_TOTP)
+   #include <botan/hash.h>
    #include <botan/otp.h>
    #include <botan/internal/calendar.h>
-   #include <botan/hash.h>
 #endif
 
 namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_HOTP) && defined(BOTAN_HAS_TOTP)
 
-class HOTP_KAT_Tests final : public Text_Based_Test
-   {
+class HOTP_KAT_Tests final : public Text_Based_Test {
    public:
-      HOTP_KAT_Tests()
-         : Text_Based_Test("otp/hotp.vec", "Key,Digits,Counter,OTP")
-         {}
+      HOTP_KAT_Tests() : Text_Based_Test("otp/hotp.vec", "Key,Digits,Counter,OTP") {}
 
       bool clear_between_callbacks() const override { return false; }
 
-      Test::Result run_one_test(const std::string& hash_algo, const VarMap& vars) override
-         {
+      Test::Result run_one_test(const std::string& hash_algo, const VarMap& vars) override {
          Test::Result result("HOTP " + hash_algo);
 
          auto hash_test = Botan::HashFunction::create(hash_algo);
@@ -63,22 +59,18 @@ class HOTP_KAT_Tests final : public Text_Based_Test
          result.confirm("OTP verify next counter", otp_res.second == counter + 1);
 
          return result;
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("otp", "otp_hotp", HOTP_KAT_Tests);
 
-class TOTP_KAT_Tests final : public Text_Based_Test
-   {
+class TOTP_KAT_Tests final : public Text_Based_Test {
    public:
-      TOTP_KAT_Tests()
-         : Text_Based_Test("otp/totp.vec", "Key,Digits,Timestep,Timestamp,OTP")
-         {}
+      TOTP_KAT_Tests() : Text_Based_Test("otp/totp.vec", "Key,Digits,Timestep,Timestamp,OTP") {}
 
       bool clear_between_callbacks() const override { return false; }
 
-      Test::Result run_one_test(const std::string& hash_algo, const VarMap& vars) override
-         {
+      Test::Result run_one_test(const std::string& hash_algo, const VarMap& vars) override {
          Test::Result result("TOTP " + hash_algo);
 
          auto hash_test = Botan::HashFunction::create(hash_algo);
@@ -95,7 +87,7 @@ class TOTP_KAT_Tests final : public Text_Based_Test
 
          std::chrono::system_clock::time_point time = from_timestring(timestamp);
          std::chrono::system_clock::time_point later_time = time + std::chrono::seconds(timestep);
-         std::chrono::system_clock::time_point too_late = time + std::chrono::seconds(2*timestep);
+         std::chrono::system_clock::time_point too_late = time + std::chrono::seconds(2 * timestep);
 
          result.test_int_eq("TOTP generate", totp.generate_totp(time), otp);
 
@@ -106,11 +98,10 @@ class TOTP_KAT_Tests final : public Text_Based_Test
          result.test_eq("TOTP verify time slip out of range", totp.verify_totp(otp, too_late, 1), false);
 
          return result;
-         }
+      }
 
    private:
-      static std::chrono::system_clock::time_point from_timestring(const std::string& time_str)
-         {
+      static std::chrono::system_clock::time_point from_timestring(const std::string& time_str) {
          if(time_str.size() != 19)
             throw Test_Error("Invalid TOTP timestamp string " + time_str);
          // YYYY-MM-DDTHH:MM:SS
@@ -122,13 +113,11 @@ class TOTP_KAT_Tests final : public Text_Based_Test
          const uint32_t minute = static_cast<uint32_t>(std::stoi(time_str.substr(14, 2)));
          const uint32_t second = static_cast<uint32_t>(std::stoi(time_str.substr(17, 2)));
          return Botan::calendar_point(year, month, day, hour, minute, second).to_std_timepoint();
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("otp", "otp_totp", TOTP_KAT_Tests);
 
 #endif
 
-}
-
-
+}  // namespace Botan_Tests

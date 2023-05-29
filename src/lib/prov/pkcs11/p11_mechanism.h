@@ -11,9 +11,9 @@
 
 #include <botan/p11.h>
 
-#include <utility>
-#include <string>
 #include <memory>
+#include <string>
+#include <utility>
 
 namespace Botan {
 namespace PKCS11 {
@@ -23,8 +23,7 @@ namespace PKCS11 {
 * for RSA (encryption/decryption, signature/verification)
 * and EC (ECDSA signature/verification, ECDH key derivation).
 */
-class MechanismWrapper final
-   {
+class MechanismWrapper final {
    public:
       /// @param mechanism_type the CK_MECHANISM_TYPE for the `mechanism` field of the CK_MECHANISM struct
       explicit MechanismWrapper(MechanismType mechanism_type);
@@ -63,61 +62,46 @@ class MechanismWrapper final
       * @param salt the salt
       * @param salt_len size of the salt in bytes
       */
-      inline void set_ecdh_salt(const uint8_t salt[], size_t salt_len)
-         {
+      inline void set_ecdh_salt(const uint8_t salt[], size_t salt_len) {
          m_parameters->ecdh_params.pSharedData = const_cast<uint8_t*>(salt);
          m_parameters->ecdh_params.ulSharedDataLen = static_cast<Ulong>(salt_len);
-         }
+      }
 
       /**
       * Sets the public key of the other party for the ECDH mechanism parameters.
       * @param other_key key of the other party
       * @param other_key_len size of the key of the other party in bytes
       */
-      inline void set_ecdh_other_key(const uint8_t other_key[], size_t other_key_len)
-         {
+      inline void set_ecdh_other_key(const uint8_t other_key[], size_t other_key_len) {
          m_parameters->ecdh_params.pPublicData = const_cast<uint8_t*>(other_key);
          m_parameters->ecdh_params.ulPublicDataLen = static_cast<Ulong>(other_key_len);
-         }
+      }
 
       /// @return a pointer to the CK_MECHANISM struct that can be passed to the cryptoki functions
-      inline Mechanism* data() const
-         {
-         return const_cast<Mechanism*>(&m_mechanism);
-         }
+      inline Mechanism* data() const { return const_cast<Mechanism*>(&m_mechanism); }
 
-      inline MechanismType mechanism_type() const
-         {
-         return static_cast<MechanismType>(m_mechanism.mechanism);
-         }
+      inline MechanismType mechanism_type() const { return static_cast<MechanismType>(m_mechanism.mechanism); }
 
       /// @return the size of the padding in bytes (for encryption/decryption)
-      inline size_t padding_size() const
-         {
-         return m_padding_size;
-         }
+      inline size_t padding_size() const { return m_padding_size; }
 
       /// Holds the mechanism parameters for OAEP, PSS and ECDH
-      union MechanismParameters
-         {
-         MechanismParameters()
-            {
-            clear_mem(this, 1);
-            }
+      union MechanismParameters {
+            MechanismParameters() { clear_mem(this, 1); }
 
-         RsaPkcsOaepParams oaep_params;
-         RsaPkcsPssParams pss_params;
-         Ecdh1DeriveParams ecdh_params;
-         };
+            RsaPkcsOaepParams oaep_params;
+            RsaPkcsPssParams pss_params;
+            Ecdh1DeriveParams ecdh_params;
+      };
 
    private:
       Mechanism m_mechanism;
       std::shared_ptr<MechanismParameters> m_parameters;
       size_t m_padding_size = 0;
-   };
+};
 
-}
+}  // namespace PKCS11
 
-}
+}  // namespace Botan
 
 #endif

@@ -20,8 +20,8 @@ class Key_Agreement;
 class KEM_Encryption;
 class KEM_Decryption;
 
-}
+}  // namespace PK_Ops
 
-}
+}  // namespace Botan
 
 #endif

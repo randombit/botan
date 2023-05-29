@@ -15,34 +15,24 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_TPM)
 
-class TPM_Tests final : public Test
-   {
+class TPM_Tests final : public Test {
    public:
+      static std::string pin_cb(const std::string&) { return "123456"; }
 
-      static std::string pin_cb(const std::string&)
-         {
-         return "123456";
-         }
-
-      std::vector<Test::Result> run() override
-         {
+      std::vector<Test::Result> run() override {
          Test::Result result("TPM");
 
          std::unique_ptr<Botan::TPM_Context> ctx;
 
-         try
-            {
+         try {
             ctx.reset(new Botan::TPM_Context(pin_cb, nullptr));
             result.test_success("Created TPM context");
-            }
-         catch(Botan::TPM_Error& e)
-            {
+         } catch(Botan::TPM_Error& e) {
             result.test_success("Error conecting to TPM, skipping tests");
             return {result};
-            }
+         }
 
-         try
-            {
+         try {
             result.test_note("TPM counter is " + std::to_string(ctx->current_counter()));
 
             Botan::TPM_RNG rng(*ctx);
@@ -60,32 +50,24 @@ class TPM_Tests final : public Test
 
             std::vector<std::string> registered_keys = Botan::TPM_PrivateKey::registered_keys(*ctx);
 
-            for(auto url : registered_keys)
-               {
+            for(auto url : registered_keys) {
                result.test_note("TPM registered key " + url);
-               }
+            }
 
             // TODO export public key
             // TODO generate a signature, verify it
             // TODO test key registration mechanisms
-            }
-         catch(Botan::Exception& e)
-            {
-            result.test_failure("TPM problem", e.what());
-            }
+         } catch(Botan::Exception& e) { result.test_failure("TPM problem", e.what()); }
 
          return {result};
-         }
-
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("tpm", "tpm_tests", TPM_Tests);
 
-class UUID_Tests final : public Test
-   {
+class UUID_Tests final : public Test {
    public:
-      std::vector<Test::Result> run() override
-         {
+      std::vector<Test::Result> run() override {
          Test::Result result("UUID");
 
          const Botan::UUID empty_uuid;
@@ -105,11 +87,11 @@ class UUID_Tests final : public Test
          result.confirm("UUID copied by string equals original", random_uuid == string_copy);
 
          return {result};
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("tpm", "tpm_uuid", UUID_Tests);
 
 #endif
 
-}
+}  // namespace Botan_Tests

@@ -9,19 +9,18 @@
 #ifndef BOTAN_OUTPUT_BUFFER_H_
 #define BOTAN_OUTPUT_BUFFER_H_
 
-#include <botan/types.h>
 #include <botan/pipe.h>
+#include <botan/types.h>
 #include <deque>
 
 namespace Botan {
-	
+
 class SecureQueue;
 
 /**
 * Container of output buffers for Pipe
 */
-class Output_Buffers final
-   {
+class Output_Buffers final {
    public:
       size_t read(uint8_t[], size_t, Pipe::message_id);
       size_t peek(uint8_t[], size_t, size_t, Pipe::message_id) const;
@@ -34,13 +33,14 @@ class Output_Buffers final
       Pipe::message_id message_count() const;
 
       Output_Buffers();
+
    private:
       class SecureQueue* get(Pipe::message_id) const;
 
       std::deque<std::unique_ptr<SecureQueue>> m_buffers;
       Pipe::message_id m_offset;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

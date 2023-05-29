@@ -1,11 +1,10 @@
+#include <botan/hex.h>
 #include <botan/pwdhash.h>
 #include <botan/system_rng.h>
-#include <botan/hex.h>
-#include <iostream>
 #include <array>
+#include <iostream>
 
-int main()
-   {
+int main() {
    // You can change this to "PBKDF2(SHA-512)" or "Scrypt" or "Argon2id" or ...
    const std::string pbkdf_algo = "Argon2i";
    auto pbkdf_runtime = std::chrono::milliseconds(300);
@@ -29,4 +28,4 @@ int main()
    std::cout << Botan::hex_encode(key) << "\n";
 
    return 0;
-   }
+}

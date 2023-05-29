@@ -10,9 +10,9 @@
 #define BOTAN_TLS_RECORD_LAYER_13_H_
 
 #include <optional>
+#include <span>
 #include <variant>
 #include <vector>
-#include <span>
 
 #include <botan/secmem.h>
 #include <botan/tls_magic.h>
@@ -24,17 +24,14 @@ namespace Botan::TLS {
  * Resembles the `TLSPlaintext` structure in RFC 8446 5.1
  * minus the record protocol specifics and ossified bytes.
  */
-struct Record
-   {
-   Record_Type             type;
-   secure_vector<uint8_t>  fragment;
-   std::optional<uint64_t> seq_no;  // unprotected records have no sequence number
+struct Record {
+      Record_Type type;
+      secure_vector<uint8_t> fragment;
+      std::optional<uint64_t> seq_no;  // unprotected records have no sequence number
 
-   Record(Record_Type record_type, secure_vector<uint8_t> frgmnt)
-      : type(record_type)
-      , fragment(std::move(frgmnt))
-      , seq_no(std::nullopt) {}
-   };
+      Record(Record_Type record_type, secure_vector<uint8_t> frgmnt) :
+            type(record_type), fragment(std::move(frgmnt)), seq_no(std::nullopt) {}
+};
 
 using BytesNeeded = size_t;
 
@@ -46,8 +43,7 @@ class Cipher_State;
  * This component transforms bytes received from the peer into bytes
  * containing plaintext TLS messages and vice versa.
  */
-class BOTAN_TEST_API Record_Layer
-   {
+class BOTAN_TEST_API Record_Layer {
    public:
       Record_Layer(Connection_Side side);
 
@@ -77,7 +73,7 @@ class BOTAN_TEST_API Record_Layer
 
       std::vector<uint8_t> prepare_records(const Record_Type type,
                                            std::span<const uint8_t> data,
-                                           Cipher_State* cipher_state=nullptr) const;
+                                           Cipher_State* cipher_state = nullptr) const;
 
       /**
        * Clears any data currently stored in the read buffer. This is typically
@@ -98,15 +94,15 @@ class BOTAN_TEST_API Record_Layer
        * @param incoming_limit  the maximal number of plaintext bytes to be
        *                        accepted in a received protected record
        */
-      void set_record_size_limits(const uint16_t outgoing_limit,
-                                  const uint16_t incoming_limit);
+      void set_record_size_limits(const uint16_t outgoing_limit, const uint16_t incoming_limit);
 
       void disable_sending_compat_mode() { m_sending_compat_mode = false; }
+
       void disable_receiving_compat_mode() { m_receiving_compat_mode = false; }
 
    private:
       std::vector<uint8_t> m_read_buffer;
-      Connection_Side      m_side;
+      Connection_Side m_side;
 
       // Those are either the limits set by the TLS 1.3 specification (RFC 8446),
       // or the ones negotiated via the "record_size_limit" extension (RFC 8449).
@@ -118,8 +114,8 @@ class BOTAN_TEST_API Record_Layer
       // compatibility reasons. (RFC 8446 5.1 regarding "legacy_record_version")
       bool m_sending_compat_mode;
       bool m_receiving_compat_mode;
-   };
+};
 
-}
+}  // namespace Botan::TLS
 
 #endif

@@ -24,39 +24,33 @@ namespace {
  * Maps OID string representations instead of human readable strings in order
  * to avoid an additional lookup.
  */
-const std::map<OID, size_t> DN_UB =
-   {
-   { OID({2,5,4,10}), 64 },      // X520.Organization
-   { OID({2,5,4,11}), 64 },      // X520.OrganizationalUnit
-   { OID({2,5,4,12}), 64 },      // X520.Title
-   { OID({2,5,4,3}), 64 },       // X520.CommonName
-   { OID({2,5,4,4}), 40 },       // X520.Surname
-   { OID({2,5,4,42}), 32768 },   // X520.GivenName
-   { OID({2,5,4,43}), 32768 },   // X520.Initials
-   { OID({2,5,4,44}), 32768 },   // X520.GenerationalQualifier
-   { OID({2,5,4,46}), 64 },      // X520.DNQualifier
-   { OID({2,5,4,5}), 64 },       // X520.SerialNumber
-   { OID({2,5,4,6}), 3 },        // X520.Country
-   { OID({2,5,4,65}), 128 },     // X520.Pseudonym
-   { OID({2,5,4,7}), 128 },      // X520.Locality
-   { OID({2,5,4,8}), 128 },      // X520.State
-   { OID({2,5,4,9}), 128 }       // X520.StreetAddress
-   };
+const std::map<OID, size_t> DN_UB = {
+   {OID({2, 5, 4, 10}), 64},     // X520.Organization
+   {OID({2, 5, 4, 11}), 64},     // X520.OrganizationalUnit
+   {OID({2, 5, 4, 12}), 64},     // X520.Title
+   {OID({2, 5, 4, 3}), 64},      // X520.CommonName
+   {OID({2, 5, 4, 4}), 40},      // X520.Surname
+   {OID({2, 5, 4, 42}), 32768},  // X520.GivenName
+   {OID({2, 5, 4, 43}), 32768},  // X520.Initials
+   {OID({2, 5, 4, 44}), 32768},  // X520.GenerationalQualifier
+   {OID({2, 5, 4, 46}), 64},     // X520.DNQualifier
+   {OID({2, 5, 4, 5}), 64},      // X520.SerialNumber
+   {OID({2, 5, 4, 6}), 3},       // X520.Country
+   {OID({2, 5, 4, 65}), 128},    // X520.Pseudonym
+   {OID({2, 5, 4, 7}), 128},     // X520.Locality
+   {OID({2, 5, 4, 8}), 128},     // X520.State
+   {OID({2, 5, 4, 9}), 128}      // X520.StreetAddress
+};
 
-}
+}  // namespace
 
 //static
-size_t X509_DN::lookup_ub(const OID& oid)
-   {
+size_t X509_DN::lookup_ub(const OID& oid) {
    auto ub_entry = DN_UB.find(oid);
-   if(ub_entry != DN_UB.end())
-      {
+   if(ub_entry != DN_UB.end()) {
       return ub_entry->second;
-      }
-   else
-      {
+   } else {
       return 0;
-      }
    }
 }
-
+}  // namespace Botan

@@ -20,12 +20,11 @@
 
 namespace Botan {
 
-class Dilithium_Common_Symmetric_Primitives : public Dilithium_Symmetric_Primitives
-   {
+class Dilithium_Common_Symmetric_Primitives : public Dilithium_Symmetric_Primitives {
    public:
-      std::unique_ptr<StreamCipher> XOF(const XofType type, std::span<const uint8_t> seed,
-                                        uint16_t nonce) const override
-         {
+      std::unique_ptr<StreamCipher> XOF(const XofType type,
+                                        std::span<const uint8_t> seed,
+                                        uint16_t nonce) const override {
          // Input is a concatination of seed | nonce used as input for shake128
          std::vector<uint8_t> input;
          input.reserve(seed.size() + 2);
@@ -34,22 +33,21 @@ class Dilithium_Common_Symmetric_Primitives : public Dilithium_Symmetric_Primiti
          input.push_back(static_cast<uint8_t>(nonce >> 8));
 
          std::unique_ptr<StreamCipher> cipher;
-         switch(type)
-            {
+         switch(type) {
             case XofType::k128:
                cipher = std::make_unique<SHAKE_128_Cipher>();
                break;
             case XofType::k256:
                cipher = std::make_unique<SHAKE_256_Cipher>();
                break;
-            }
+         }
 
          cipher->set_key(input);
 
          return cipher;
-         }
-   };
+      }
+};
 
-} // namespace Botan
+}  // namespace Botan
 
 #endif

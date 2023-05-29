@@ -20,8 +20,8 @@ namespace Botan {
 * @param kek the key encryption key
 * @return key encrypted under kek
 */
-secure_vector<uint8_t> BOTAN_PUBLIC_API(2,0) rfc3394_keywrap(const secure_vector<uint8_t>& key,
-                                                             const SymmetricKey& kek);
+secure_vector<uint8_t> BOTAN_PUBLIC_API(2, 0)
+   rfc3394_keywrap(const secure_vector<uint8_t>& key, const SymmetricKey& kek);
 
 /**
 * Decrypt a key under a key encryption key using the algorithm
@@ -31,9 +31,9 @@ secure_vector<uint8_t> BOTAN_PUBLIC_API(2,0) rfc3394_keywrap(const secure_vector
 * @param kek the key encryption key
 * @return key decrypted under kek
 */
-secure_vector<uint8_t> BOTAN_PUBLIC_API(2,0) rfc3394_keyunwrap(const secure_vector<uint8_t>& key,
-                                                               const SymmetricKey& kek);
+secure_vector<uint8_t> BOTAN_PUBLIC_API(2, 0)
+   rfc3394_keyunwrap(const secure_vector<uint8_t>& key, const SymmetricKey& kek);
 
-}
+}  // namespace Botan
 
 #endif

@@ -43,6 +43,6 @@ BOTAN_TEST_API std::string latin1_to_utf8(const uint8_t latin1[], size_t len);
 */
 std::string format_char_for_display(char c);
 
-}
+}  // namespace Botan
 
 #endif

@@ -18,35 +18,30 @@
 
 namespace Botan {
 
-class BOTAN_PUBLIC_API(3,0) DilithiumMode
-   {
+class BOTAN_PUBLIC_API(3, 0) DilithiumMode {
    public:
-      enum Mode
-         {
-         Dilithium4x4 = 1,
-         Dilithium4x4_AES,
-         Dilithium6x5,
-         Dilithium6x5_AES,
-         Dilithium8x7,
-         Dilithium8x7_AES
-         };
+      enum Mode { Dilithium4x4 = 1, Dilithium4x4_AES, Dilithium6x5, Dilithium6x5_AES, Dilithium8x7, Dilithium8x7_AES };
 
    public:
       DilithiumMode(Mode mode) : m_mode(mode) {}
+
       explicit DilithiumMode(const OID& oid);
       explicit DilithiumMode(std::string_view str);
 
       OID object_identifier() const;
       std::string to_string() const;
 
-      bool is_aes() const { return m_mode == Dilithium4x4_AES || m_mode == Dilithium6x5_AES || m_mode == Dilithium8x7_AES; }
+      bool is_aes() const {
+         return m_mode == Dilithium4x4_AES || m_mode == Dilithium6x5_AES || m_mode == Dilithium8x7_AES;
+      }
+
       bool is_modern() const { return !is_aes(); }
 
       Mode mode() const { return m_mode; }
 
    private:
       Mode m_mode;
-   };
+};
 
 class Dilithium_PublicKeyInternal;
 class Dilithium_PrivateKeyInternal;
@@ -57,8 +52,7 @@ class Dilithium_PrivateKeyInternal;
  *
  * Note that this is _not_ compatible with the round 3 submission of the NIST competition.
  */
-class BOTAN_PUBLIC_API(3, 0) Dilithium_PublicKey : public virtual Public_Key
-   {
+class BOTAN_PUBLIC_API(3, 0) Dilithium_PublicKey : public virtual Public_Key {
    public:
       Dilithium_PublicKey& operator=(const Dilithium_PublicKey& other) = default;
 
@@ -78,21 +72,17 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PublicKey : public virtual Public_Key
 
       bool check_key(RandomNumberGenerator&, bool) const override;
 
-      bool supports_operation(PublicKeyOperation op) const override
-         {
-         return (op == PublicKeyOperation::Signature);
-         }
+      bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::Signature); }
+
       Dilithium_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> pk);
 
       Dilithium_PublicKey(std::span<const uint8_t> pk, DilithiumMode mode);
 
-      std::unique_ptr<PK_Ops::Verification>
-      create_verification_op(std::string_view params,
-                             std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
+                                                                   std::string_view provider) const override;
 
-      std::unique_ptr<PK_Ops::Verification>
-         create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
-                                     std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Verification> create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
+                                                                        std::string_view provider) const override;
 
    protected:
       Dilithium_PublicKey() = default;
@@ -101,14 +91,13 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PublicKey : public virtual Public_Key
       friend class Dilithium_Signature_Operation;
 
       std::shared_ptr<Dilithium_PublicKeyInternal> m_public;
-   };
+};
 
 BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 
 class BOTAN_PUBLIC_API(3, 0) Dilithium_PrivateKey final : public virtual Dilithium_PublicKey,
-   public virtual Botan::Private_Key
-   {
+                                                          public virtual Botan::Private_Key {
    public:
       std::unique_ptr<Public_Key> public_key() const override;
 
@@ -137,16 +126,17 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PrivateKey final : public virtual Dilithi
        * strings as @p params. Default (i.e. empty @p params is "Randomized").
        */
       std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator&,
-            std::string_view params, std::string_view provider) const override;
+                                                             std::string_view params,
+                                                             std::string_view provider) const override;
 
    private:
       friend class Dilithium_Signature_Operation;
 
       std::shared_ptr<Dilithium_PrivateKeyInternal> m_private;
-   };
+};
 
 BOTAN_DIAGNOSTIC_POP
 
-} // namespace Botan
+}  // namespace Botan
 
 #endif

@@ -9,19 +9,18 @@
 #ifndef BOTAN_DLIES_H_
 #define BOTAN_DLIES_H_
 
-#include <botan/pubkey.h>
-#include <botan/mac.h>
-#include <botan/kdf.h>
-#include <botan/dh.h>
 #include <botan/cipher_mode.h>
+#include <botan/dh.h>
+#include <botan/kdf.h>
+#include <botan/mac.h>
+#include <botan/pubkey.h>
 
 namespace Botan {
 
 /**
 * DLIES Encryption
 */
-class BOTAN_PUBLIC_API(2,0) DLIES_Encryptor final : public PK_Encryptor
-   {
+class BOTAN_PUBLIC_API(2, 0) DLIES_Encryptor final : public PK_Encryptor {
    public:
       /**
       * Stream mode: use KDF to provide a stream of bytes to xor with the message
@@ -62,20 +61,13 @@ class BOTAN_PUBLIC_API(2,0) DLIES_Encryptor final : public PK_Encryptor
                       size_t mac_key_len = 20);
 
       // Set the other parties public key
-      inline void set_other_key(const std::vector<uint8_t>& other_pub_key)
-         {
-         m_other_pub_key = other_pub_key;
-         }
+      inline void set_other_key(const std::vector<uint8_t>& other_pub_key) { m_other_pub_key = other_pub_key; }
 
       /// Set the initialization vector for the data encryption method
-      inline void set_initialization_vector(const InitializationVector& iv)
-         {
-         m_iv = iv;
-         }
+      inline void set_initialization_vector(const InitializationVector& iv) { m_iv = iv; }
 
    private:
-      std::vector<uint8_t> enc(const uint8_t[], size_t,
-                            RandomNumberGenerator&) const override;
+      std::vector<uint8_t> enc(const uint8_t[], size_t, RandomNumberGenerator&) const override;
 
       size_t maximum_input_size() const override;
 
@@ -90,13 +82,12 @@ class BOTAN_PUBLIC_API(2,0) DLIES_Encryptor final : public PK_Encryptor
       std::unique_ptr<MessageAuthenticationCode> m_mac;
       const size_t m_mac_keylen;
       InitializationVector m_iv;
-   };
+};
 
 /**
 * DLIES Decryption
 */
-class BOTAN_PUBLIC_API(2,0) DLIES_Decryptor final : public PK_Decryptor
-   {
+class BOTAN_PUBLIC_API(2, 0) DLIES_Decryptor final : public PK_Decryptor {
    public:
       /**
       * Stream mode: use KDF to provide a stream of bytes to xor with the message
@@ -137,14 +128,10 @@ class BOTAN_PUBLIC_API(2,0) DLIES_Decryptor final : public PK_Decryptor
                       size_t mac_key_len = 20);
 
       /// Set the initialization vector for the data decryption method
-      inline void set_initialization_vector(const InitializationVector& iv)
-         {
-         m_iv = iv;
-         }
+      inline void set_initialization_vector(const InitializationVector& iv) { m_iv = iv; }
 
    private:
-      secure_vector<uint8_t> do_decrypt(uint8_t& valid_mask,
-                                     const uint8_t in[], size_t in_len) const override;
+      secure_vector<uint8_t> do_decrypt(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const override;
 
       size_t plaintext_length(size_t ctext_len) const override;
 
@@ -156,8 +143,8 @@ class BOTAN_PUBLIC_API(2,0) DLIES_Decryptor final : public PK_Decryptor
       std::unique_ptr<MessageAuthenticationCode> m_mac;
       const size_t m_mac_keylen;
       InitializationVector m_iv;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

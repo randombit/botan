@@ -14,13 +14,13 @@
 #include <boost/version.hpp>
 #if BOOST_VERSION >= 106600
 
-#include <botan/asio_error.h>
+   #include <botan/asio_error.h>
 
-// We need to define BOOST_ASIO_DISABLE_SERIAL_PORT before any asio imports. Otherwise asio will include <termios.h>,
-// which interferes with Botan's amalgamation by defining macros like 'B0' and 'FF1'.
-#define BOOST_ASIO_DISABLE_SERIAL_PORT
-#include <boost/asio.hpp>
-#include <boost/asio/yield.hpp>
+   // We need to define BOOST_ASIO_DISABLE_SERIAL_PORT before any asio imports. Otherwise asio will include <termios.h>,
+   // which interferes with Botan's amalgamation by defining macros like 'B0' and 'FF1'.
+   #define BOOST_ASIO_DISABLE_SERIAL_PORT
+   #include <boost/asio.hpp>
+   #include <boost/asio/yield.hpp>
 
 namespace Botan {
 namespace TLS {
@@ -65,29 +65,21 @@ namespace detail {
  * \tparam Allocator Type of the allocator to be used
  */
 template <class Handler, class Executor1, class Allocator>
-class AsyncBase : public boost::asio::coroutine
-   {
+class AsyncBase : public boost::asio::coroutine {
    public:
       using allocator_type = boost::asio::associated_allocator_t<Handler, Allocator>;
       using executor_type = boost::asio::associated_executor_t<Handler, Executor1>;
 
-      allocator_type get_allocator() const noexcept
-         {
-         return boost::asio::get_associated_allocator(m_handler);
-         }
+      allocator_type get_allocator() const noexcept { return boost::asio::get_associated_allocator(m_handler); }
 
-      executor_type get_executor() const noexcept
-         {
+      executor_type get_executor() const noexcept {
          return boost::asio::get_associated_executor(m_handler, m_work_guard_1.get_executor());
-         }
+      }
 
    protected:
       template <class HandlerT>
-      AsyncBase(HandlerT&& handler, const Executor1& executor)
-         : m_handler(std::forward<HandlerT>(handler))
-         , m_work_guard_1(executor)
-         {
-         }
+      AsyncBase(HandlerT&& handler, const Executor1& executor) :
+            m_handler(std::forward<HandlerT>(handler)), m_work_guard_1(executor) {}
 
       /**
        * Call the completion handler.
@@ -96,20 +88,18 @@ class AsyncBase : public boost::asio::coroutine
        *
        * @param args Arguments forwarded to the completion handler function.
        */
-      template<class... Args>
-      void complete_now(Args&& ... args)
-         {
+      template <class... Args>
+      void complete_now(Args&&... args) {
          m_work_guard_1.reset();
          m_handler(std::forward<Args>(args)...);
-         }
+      }
 
       Handler m_handler;
       boost::asio::executor_work_guard<Executor1> m_work_guard_1;
-   };
+};
 
 template <class Handler, class Stream, class MutableBufferSequence, class Allocator = std::allocator<void>>
-class AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_type, Allocator>
-   {
+class AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_type, Allocator> {
    public:
       /**
        * Construct and invoke an AsyncReadOperation.
@@ -123,77 +113,65 @@ class AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_t
       AsyncReadOperation(HandlerT&& handler,
                          Stream& stream,
                          const MutableBufferSequence& buffers,
-                         const boost::system::error_code& ec = {})
-         : AsyncBase<Handler, typename Stream::executor_type, Allocator>(
-              std::forward<HandlerT>(handler),
-              stream.get_executor())
-         , m_stream(stream)
-         , m_buffers(buffers)
-         , m_decodedBytes(0)
-         {
+                         const boost::system::error_code& ec = {}) :
+            AsyncBase<Handler, typename Stream::executor_type, Allocator>(std::forward<HandlerT>(handler),
+                                                                          stream.get_executor()),
+            m_stream(stream),
+            m_buffers(buffers),
+            m_decodedBytes(0) {
          this->operator()(ec, std::size_t(0), false);
-         }
+      }
 
       AsyncReadOperation(AsyncReadOperation&&) = default;
 
-      void operator()(boost::system::error_code ec, std::size_t bytes_transferred, bool isContinuation = true)
-         {
-         reenter(this)
-            {
-            if(bytes_transferred > 0 && !ec)
-               {
+      void operator()(boost::system::error_code ec, std::size_t bytes_transferred, bool isContinuation = true) {
+         reenter(this) {
+            if(bytes_transferred > 0 && !ec) {
                // We have received encrypted data from the network, now hand it to TLS::Channel for decryption.
                boost::asio::const_buffer read_buffer{m_stream.input_buffer().data(), bytes_transferred};
                m_stream.process_encrypted_data(read_buffer, ec);
-               }
+            }
 
-            if (m_stream.shutdown_received())
-               {
+            if(m_stream.shutdown_received()) {
                // we just received a 'close_notify' from the peer and don't expect any more data
                ec = boost::asio::error::eof;
-               }
-            else if (ec == boost::asio::error::eof)
-               {
+            } else if(ec == boost::asio::error::eof) {
                // we did not expect this disconnection from the peer
                ec = StreamError::StreamTruncated;
-               }
+            }
 
-            if(!m_stream.has_received_data() && !ec && boost::asio::buffer_size(m_buffers) > 0)
-               {
+            if(!m_stream.has_received_data() && !ec && boost::asio::buffer_size(m_buffers) > 0) {
                // The channel did not decrypt a complete record yet, we need more data from the socket.
                m_stream.next_layer().async_read_some(m_stream.input_buffer(), std::move(*this));
                return;
-               }
+            }
 
-            if(m_stream.has_received_data() && !ec)
-               {
+            if(m_stream.has_received_data() && !ec) {
                // The channel has decrypted a TLS record, now copy it to the output buffers.
                m_decodedBytes = m_stream.copy_received_data(m_buffers);
-               }
+            }
 
-            if(!isContinuation)
-               {
+            if(!isContinuation) {
                // Make sure the handler is not called without an intermediate initiating function.
                // "Reading" into a zero-byte buffer will complete immediately.
                m_ec = ec;
                yield m_stream.next_layer().async_read_some(boost::asio::mutable_buffer(), std::move(*this));
                ec = m_ec;
-               }
+            }
 
             this->complete_now(ec, m_decodedBytes);
-            }
          }
+      }
 
    private:
-      Stream&                   m_stream;
-      MutableBufferSequence     m_buffers;
-      std::size_t               m_decodedBytes;
+      Stream& m_stream;
+      MutableBufferSequence m_buffers;
+      std::size_t m_decodedBytes;
       boost::system::error_code m_ec;
-   };
+};
 
 template <typename Handler, class Stream, class Allocator = std::allocator<void>>
-class AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor_type, Allocator>
-   {
+class AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor_type, Allocator> {
    public:
       /**
        * Construct and invoke an AsyncWriteOperation.
@@ -210,62 +188,54 @@ class AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor_
       AsyncWriteOperation(HandlerT&& handler,
                           Stream& stream,
                           std::size_t plainBytesTransferred,
-                          const boost::system::error_code& ec = {})
-         : AsyncBase<Handler, typename Stream::executor_type, Allocator>(
-              std::forward<HandlerT>(handler),
-              stream.get_executor())
-         , m_stream(stream)
-         , m_plainBytesTransferred(plainBytesTransferred)
-         {
+                          const boost::system::error_code& ec = {}) :
+            AsyncBase<Handler, typename Stream::executor_type, Allocator>(std::forward<HandlerT>(handler),
+                                                                          stream.get_executor()),
+            m_stream(stream),
+            m_plainBytesTransferred(plainBytesTransferred) {
          this->operator()(ec, std::size_t(0), false);
-         }
+      }
 
       AsyncWriteOperation(AsyncWriteOperation&&) = default;
 
-      void operator()(boost::system::error_code ec, std::size_t bytes_transferred, bool isContinuation = true)
-         {
-         reenter(this)
-            {
+      void operator()(boost::system::error_code ec, std::size_t bytes_transferred, bool isContinuation = true) {
+         reenter(this) {
             // mark the number of encrypted bytes sent to the network as "consumed"
             // Note: bytes_transferred will be zero on first call
             m_stream.consume_send_buffer(bytes_transferred);
 
-            if(m_stream.has_data_to_send() && !ec)
-               {
+            if(m_stream.has_data_to_send() && !ec) {
                m_stream.next_layer().async_write_some(m_stream.send_buffer(), std::move(*this));
                return;
-               }
+            }
 
-            if (ec == boost::asio::error::eof && !m_stream.shutdown_received())
-               {
+            if(ec == boost::asio::error::eof && !m_stream.shutdown_received()) {
                // transport layer was closed by peer without receiving 'close_notify'
                ec = StreamError::StreamTruncated;
-               }
+            }
 
-            if(!isContinuation)
-               {
+            if(!isContinuation) {
                // Make sure the handler is not called without an intermediate initiating function.
                // "Writing" to a zero-byte buffer will complete immediately.
                m_ec = ec;
                yield m_stream.next_layer().async_write_some(boost::asio::const_buffer(), std::move(*this));
                ec = m_ec;
-               }
+            }
 
             // The size of the sent TLS record can differ from the size of the payload due to TLS encryption. We need to
             // tell the handler how many bytes of the original data we already processed.
             this->complete_now(ec, m_plainBytesTransferred);
-            }
          }
+      }
 
    private:
-      Stream&                   m_stream;
-      std::size_t               m_plainBytesTransferred;
+      Stream& m_stream;
+      std::size_t m_plainBytesTransferred;
       boost::system::error_code m_ec;
-   };
+};
 
 template <class Handler, class Stream, class Allocator = std::allocator<void>>
-class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::executor_type, Allocator>
-   {
+class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::executor_type, Allocator> {
    public:
       /**
        * Construct and invoke an AsyncHandshakeOperation.
@@ -274,39 +244,29 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
        * @param stream The stream from which the data will be read
        * @param ec Optional error code; used to report an error to the handler function.
        */
-      template<class HandlerT>
-      AsyncHandshakeOperation(
-         HandlerT&& handler,
-         Stream& stream,
-         const boost::system::error_code& ec = {})
-         : AsyncBase<Handler, typename Stream::executor_type, Allocator>(
-              std::forward<HandlerT>(handler),
-              stream.get_executor())
-         , m_stream(stream)
-         {
+      template <class HandlerT>
+      AsyncHandshakeOperation(HandlerT&& handler, Stream& stream, const boost::system::error_code& ec = {}) :
+            AsyncBase<Handler, typename Stream::executor_type, Allocator>(std::forward<HandlerT>(handler),
+                                                                          stream.get_executor()),
+            m_stream(stream) {
          this->operator()(ec, std::size_t(0), false);
-         }
+      }
 
       AsyncHandshakeOperation(AsyncHandshakeOperation&&) = default;
 
-      void operator()(boost::system::error_code ec, std::size_t bytesTransferred, bool isContinuation = true)
-         {
-         reenter(this)
-            {
-            if(ec == boost::asio::error::eof)
-               {
+      void operator()(boost::system::error_code ec, std::size_t bytesTransferred, bool isContinuation = true) {
+         reenter(this) {
+            if(ec == boost::asio::error::eof) {
                ec = StreamError::StreamTruncated;
-               }
+            }
 
-            if(bytesTransferred > 0 && !ec)
-               {
+            if(bytesTransferred > 0 && !ec) {
                // Provide encrypted TLS data received from the network to TLS::Channel for decryption
-               boost::asio::const_buffer read_buffer {m_stream.input_buffer().data(), bytesTransferred};
+               boost::asio::const_buffer read_buffer{m_stream.input_buffer().data(), bytesTransferred};
                m_stream.process_encrypted_data(read_buffer, ec);
-               }
+            }
 
-            if(m_stream.has_data_to_send() && !ec)
-               {
+            if(m_stream.has_data_to_send() && !ec) {
                // Write encrypted TLS data provided by the TLS::Channel on the wire
 
                // Note: we construct `AsyncWriteOperation` with 0 as its last parameter (`plainBytesTransferred`). This
@@ -316,40 +276,38 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
                AsyncWriteOperation<AsyncHandshakeOperation<typename std::decay<Handler>::type, Stream, Allocator>,
                                    Stream,
                                    Allocator>
-                                   op{std::move(*this), m_stream, 0};
+                  op{std::move(*this), m_stream, 0};
                return;
-               }
+            }
 
-            if(!m_stream.native_handle()->is_active() && !ec)
-               {
+            if(!m_stream.native_handle()->is_active() && !ec) {
                // Read more encrypted TLS data from the network
                m_stream.next_layer().async_read_some(m_stream.input_buffer(), std::move(*this));
                return;
-               }
+            }
 
-            if(!isContinuation)
-               {
+            if(!isContinuation) {
                // Make sure the handler is not called without an intermediate initiating function.
                // "Reading" into a zero-byte buffer will complete immediately.
                m_ec = ec;
                yield m_stream.next_layer().async_read_some(boost::asio::mutable_buffer(), std::move(*this));
                ec = m_ec;
-               }
+            }
 
             this->complete_now(ec);
-            }
          }
+      }
 
    private:
-      Stream&                   m_stream;
+      Stream& m_stream;
       boost::system::error_code m_ec;
-   };
+};
 
 }  // namespace detail
 }  // namespace TLS
 }  // namespace Botan
 
-#include <boost/asio/unyield.hpp>
+   #include <boost/asio/unyield.hpp>
 
-#endif // BOOST_VERSION
-#endif // BOTAN_ASIO_ASYNC_OPS_H_
+#endif  // BOOST_VERSION
+#endif  // BOTAN_ASIO_ASYNC_OPS_H_

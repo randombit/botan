@@ -6,10 +6,10 @@
 
 #include <botan/internal/sha2_32.h>
 
-#include <botan/internal/sha2_32_f.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
-#include <botan/internal/bit_ops.h>
+#include <botan/internal/sha2_32_f.h>
 
 namespace Botan {
 
@@ -20,26 +20,21 @@ flags, GCC and Clang use the BMI2 instructions without further help.
 
 Likely instruction scheduling could be improved by using inline asm.
 */
-void SHA_256::compress_digest_x86_bmi2(secure_vector<uint32_t>& digest,
-                                       const uint8_t input[],
-                                       size_t blocks)
-   {
-   uint32_t A = digest[0], B = digest[1], C = digest[2],
-            D = digest[3], E = digest[4], F = digest[5],
-            G = digest[6], H = digest[7];
+void SHA_256::compress_digest_x86_bmi2(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks) {
+   uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3], E = digest[4], F = digest[5], G = digest[6],
+            H = digest[7];
 
-   for(size_t i = 0; i != blocks; ++i)
-      {
-      uint32_t W00 = load_be<uint32_t>(input,  0);
-      uint32_t W01 = load_be<uint32_t>(input,  1);
-      uint32_t W02 = load_be<uint32_t>(input,  2);
-      uint32_t W03 = load_be<uint32_t>(input,  3);
-      uint32_t W04 = load_be<uint32_t>(input,  4);
-      uint32_t W05 = load_be<uint32_t>(input,  5);
-      uint32_t W06 = load_be<uint32_t>(input,  6);
-      uint32_t W07 = load_be<uint32_t>(input,  7);
-      uint32_t W08 = load_be<uint32_t>(input,  8);
-      uint32_t W09 = load_be<uint32_t>(input,  9);
+   for(size_t i = 0; i != blocks; ++i) {
+      uint32_t W00 = load_be<uint32_t>(input, 0);
+      uint32_t W01 = load_be<uint32_t>(input, 1);
+      uint32_t W02 = load_be<uint32_t>(input, 2);
+      uint32_t W03 = load_be<uint32_t>(input, 3);
+      uint32_t W04 = load_be<uint32_t>(input, 4);
+      uint32_t W05 = load_be<uint32_t>(input, 5);
+      uint32_t W06 = load_be<uint32_t>(input, 6);
+      uint32_t W07 = load_be<uint32_t>(input, 7);
+      uint32_t W08 = load_be<uint32_t>(input, 8);
+      uint32_t W09 = load_be<uint32_t>(input, 9);
       uint32_t W10 = load_be<uint32_t>(input, 10);
       uint32_t W11 = load_be<uint32_t>(input, 11);
       uint32_t W12 = load_be<uint32_t>(input, 12);
@@ -125,7 +120,7 @@ void SHA_256::compress_digest_x86_bmi2(secure_vector<uint32_t>& digest,
       H = (digest[7] += H);
 
       input += 64;
-      }
    }
-
 }
+
+}  // namespace Botan

@@ -8,9 +8,9 @@
 #ifndef BOTAN_X509_CRL_H_
 #define BOTAN_X509_CRL_H_
 
-#include <botan/x509_obj.h>
 #include <botan/asn1_obj.h>
 #include <botan/pkix_enums.h>
+#include <botan/x509_obj.h>
 #include <vector>
 
 namespace Botan {
@@ -25,8 +25,7 @@ struct CRL_Data;
 /**
 * This class represents CRL entries
 */
-class BOTAN_PUBLIC_API(2,0) CRL_Entry final : public ASN1_Object
-   {
+class BOTAN_PUBLIC_API(2, 0) CRL_Entry final : public ASN1_Object {
    public:
       void encode_into(DER_Encoder&) const override;
       void decode_from(BER_Decoder&) override;
@@ -64,8 +63,7 @@ class BOTAN_PUBLIC_API(2,0) CRL_Entry final : public ASN1_Object
       * @param cert the certificate to revoke
       * @param reason the reason code to set in the entry
       */
-      CRL_Entry(const X509_Certificate& cert,
-                CRL_Code reason = CRL_Code::Unspecified);
+      CRL_Entry(const X509_Certificate& cert, CRL_Code reason = CRL_Code::Unspecified);
 
    private:
       friend class X509_CRL;
@@ -73,23 +71,22 @@ class BOTAN_PUBLIC_API(2,0) CRL_Entry final : public ASN1_Object
       const CRL_Entry_Data& data() const;
 
       std::shared_ptr<CRL_Entry_Data> m_data;
-   };
+};
 
 /**
 * Test two CRL entries for equality in all fields.
 */
-BOTAN_PUBLIC_API(2,0) bool operator==(const CRL_Entry&, const CRL_Entry&);
+BOTAN_PUBLIC_API(2, 0) bool operator==(const CRL_Entry&, const CRL_Entry&);
 
 /**
 * Test two CRL entries for inequality in at least one field.
 */
-BOTAN_PUBLIC_API(2,0) bool operator!=(const CRL_Entry&, const CRL_Entry&);
+BOTAN_PUBLIC_API(2, 0) bool operator!=(const CRL_Entry&, const CRL_Entry&);
 
 /**
 * This class represents X.509 Certificate Revocation Lists (CRLs).
 */
-class BOTAN_PUBLIC_API(2,0) X509_CRL final : public X509_Object
-   {
+class BOTAN_PUBLIC_API(2, 0) X509_CRL final : public X509_Object {
    public:
       /**
       * Check if this particular certificate is listed in the CRL
@@ -175,8 +172,10 @@ class BOTAN_PUBLIC_API(2,0) X509_CRL final : public X509_Object
       * @param nextUpdate valid until
       * @param revoked entries to be included in the CRL
       */
-      X509_CRL(const X509_DN& issuer, const X509_Time& thisUpdate,
-               const X509_Time& nextUpdate, const std::vector<CRL_Entry>& revoked);
+      X509_CRL(const X509_DN& issuer,
+               const X509_Time& thisUpdate,
+               const X509_Time& nextUpdate,
+               const std::vector<CRL_Entry>& revoked);
 
    private:
       std::string PEM_label() const override;
@@ -188,8 +187,8 @@ class BOTAN_PUBLIC_API(2,0) X509_CRL final : public X509_Object
       const CRL_Data& data() const;
 
       std::shared_ptr<CRL_Data> m_data;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

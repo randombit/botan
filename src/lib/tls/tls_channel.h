@@ -11,26 +11,25 @@
 #ifndef BOTAN_TLS_CHANNEL_H_
 #define BOTAN_TLS_CHANNEL_H_
 
-#include <botan/tls_session.h>
 #include <botan/tls_alert.h>
-#include <botan/tls_session_manager.h>
 #include <botan/tls_callbacks.h>
+#include <botan/tls_session.h>
+#include <botan/tls_session_manager.h>
 #include <botan/x509cert.h>
 
-#include <vector>
+#include <span>
 #include <string>
 #include <string_view>
-#include <span>
+#include <vector>
 
 namespace Botan::TLS {
 
 /**
 * Generic interface for TLS endpoint
 */
-class BOTAN_PUBLIC_API(2,0) Channel
-   {
+class BOTAN_PUBLIC_API(2, 0) Channel {
    public:
-      static constexpr size_t IO_BUF_DEFAULT_SIZE = 10*1024;
+      static constexpr size_t IO_BUF_DEFAULT_SIZE = 10 * 1024;
 
       virtual ~Channel() = default;
 
@@ -44,26 +43,23 @@ class BOTAN_PUBLIC_API(2,0) Channel
       * @return a hint as to how many more bytes we need to process the
       *         current record (this may be 0 if on a record boundary)
       */
-      size_t received_data(std::span<const uint8_t> data)
-         { return this->from_peer(data); }
-      size_t received_data(const uint8_t buf[], size_t buf_size)
-         { return this->from_peer(std::span(buf, buf_size)); }
-      
-      /**
-      * Inject plaintext intended for counterparty
-      * Throws an exception if is_active() is false
-      */
-      void send(std::span<const uint8_t> data)
-         { this->to_peer(data); }
-      void send(const uint8_t buf[], size_t buf_size)
-         { this->to_peer(std::span(buf, buf_size)); }
+      size_t received_data(std::span<const uint8_t> data) { return this->from_peer(data); }
+
+      size_t received_data(const uint8_t buf[], size_t buf_size) { return this->from_peer(std::span(buf, buf_size)); }
 
       /**
       * Inject plaintext intended for counterparty
       * Throws an exception if is_active() is false
       */
-      void send(std::string_view val)
-         { this->send(std::span(cast_char_ptr_to_uint8(val.data()), val.size())); }
+      void send(std::span<const uint8_t> data) { this->to_peer(data); }
+
+      void send(const uint8_t buf[], size_t buf_size) { this->to_peer(std::span(buf, buf_size)); }
+
+      /**
+      * Inject plaintext intended for counterparty
+      * Throws an exception if is_active() is false
+      */
+      void send(std::string_view val) { this->send(std::span(cast_char_ptr_to_uint8(val.data()), val.size())); }
 
       /**
       * Inject plaintext intended for counterparty
@@ -133,8 +129,8 @@ class BOTAN_PUBLIC_API(2,0) Channel
       * @return key of length bytes
       */
       virtual SymmetricKey key_material_export(std::string_view label,
-                                       std::string_view context,
-                                       size_t length) const = 0;
+                                               std::string_view context,
+                                               size_t length) const = 0;
 
       /**
       * Attempt to renegotiate the session
@@ -166,7 +162,7 @@ class BOTAN_PUBLIC_API(2,0) Channel
       virtual bool timeout_check() = 0;
 
       virtual std::string application_protocol() const = 0;
-   };
-}
+};
+}  // namespace Botan::TLS
 
 #endif

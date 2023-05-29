@@ -9,9 +9,9 @@
 #define BOTAN_CERT_STORE_SQL_H_
 
 #include <botan/certstor.h>
-#include <botan/x509cert.h>
-#include <botan/x509_crl.h>
 #include <botan/database.h>
+#include <botan/x509_crl.h>
+#include <botan/x509cert.h>
 
 namespace Botan {
 
@@ -21,8 +21,7 @@ class RandomNumberGenerator;
 /**
  * Certificate and private key store backed by an SQL database.
  */
-class BOTAN_PUBLIC_API(2,0) Certificate_Store_In_SQL : public Certificate_Store
-   {
+class BOTAN_PUBLIC_API(2, 0) Certificate_Store_In_SQL : public Certificate_Store {
    public:
       /**
       * Create/open a certificate store.
@@ -39,21 +38,20 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Store_In_SQL : public Certificate_Store
       /**
       * Returns the first certificate with matching subject DN and optional key ID.
       */
-      std::optional<X509_Certificate>
-         find_cert(const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const override;
+      std::optional<X509_Certificate> find_cert(const X509_DN& subject_dn,
+                                                const std::vector<uint8_t>& key_id) const override;
 
       /*
       * Find all certificates with a given Subject DN.
       * Subject DN and even the key identifier might not be unique.
       */
-      std::vector<X509_Certificate> find_all_certs(
-         const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const override;
+      std::vector<X509_Certificate> find_all_certs(const X509_DN& subject_dn,
+                                                   const std::vector<uint8_t>& key_id) const override;
 
-      std::optional<X509_Certificate>
-         find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const override;
+      std::optional<X509_Certificate> find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const override;
 
-      std::optional<X509_Certificate>
-         find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& subject_hash) const override;
+      std::optional<X509_Certificate> find_cert_by_raw_subject_dn_sha256(
+         const std::vector<uint8_t>& subject_hash) const override;
 
       /**
       * Returns all subject DNs known to the store instance.
@@ -76,8 +74,7 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Store_In_SQL : public Certificate_Store
       std::shared_ptr<const Private_Key> find_key(const X509_Certificate&) const;
 
       /// Returns all certificates for private key "key".
-      std::vector<X509_Certificate>
-         find_certs_for_key(const Private_Key& key) const;
+      std::vector<X509_Certificate> find_certs_for_key(const Private_Key& key) const;
 
       /**
       * Inserts "key" for "cert" into the store, returns false if the key is
@@ -103,15 +100,14 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Store_In_SQL : public Certificate_Store
       /**
       * Generates a CRL for all certificates issued by the given issuer.
       */
-      std::optional<X509_CRL>
-         find_crl_for(const X509_Certificate& issuer) const override;
+      std::optional<X509_CRL> find_crl_for(const X509_Certificate& issuer) const override;
 
    private:
       RandomNumberGenerator& m_rng;
       std::shared_ptr<SQL_Database> m_database;
       std::string m_prefix;
       std::string m_password;
-   };
+};
 
-}
+}  // namespace Botan
 #endif

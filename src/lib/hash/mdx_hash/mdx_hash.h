@@ -15,8 +15,7 @@ namespace Botan {
 /**
 * MDx Hash Function Base Class
 */
-class MDx_HashFunction : public HashFunction
-   {
+class MDx_HashFunction : public HashFunction {
    public:
       /**
       * @param block_length is the number of bytes per block, which must
@@ -25,12 +24,10 @@ class MDx_HashFunction : public HashFunction
       * @param big_bit_endian specifies if the hash uses big-endian bits
       * @param counter_size specifies the size of the counter var in bytes
       */
-      MDx_HashFunction(size_t block_length,
-                       bool big_byte_endian,
-                       bool big_bit_endian,
-                       uint8_t counter_size = 8);
+      MDx_HashFunction(size_t block_length, bool big_byte_endian, bool big_bit_endian, uint8_t counter_size = 8);
 
       size_t hash_block_size() const override final { return m_buffer.size(); }
+
    protected:
       void add_data(const uint8_t input[], size_t length) override final;
       void final_result(uint8_t output[]) override final;
@@ -49,6 +46,7 @@ class MDx_HashFunction : public HashFunction
       * @param buffer to put the output into
       */
       virtual void copy_out(uint8_t buffer[]) = 0;
+
    private:
       const uint8_t m_pad_char;
       const uint8_t m_counter_size;
@@ -58,8 +56,8 @@ class MDx_HashFunction : public HashFunction
       uint64_t m_count;
       secure_vector<uint8_t> m_buffer;
       size_t m_position;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

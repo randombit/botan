@@ -12,7 +12,6 @@
 
 namespace Botan::TLS {
 
-Session_Manager_Noop::Session_Manager_Noop()
- : Session_Manager(std::make_shared<Null_RNG>()) {}
+Session_Manager_Noop::Session_Manager_Noop() : Session_Manager(std::make_shared<Null_RNG>()) {}
 
-}
+}  // namespace Botan::TLS

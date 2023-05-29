@@ -10,6 +10,7 @@ Under ``src`` there are directories
 * ``lib`` is the library itself, more on that below
 * ``cli`` is the command line application ``botan``
 * ``tests`` contain what you would expect. Input files go under ``tests/data``.
+* ``python/botan3.py`` is the Python ctypes wrapper
 * ``bogo_shim`` contains the shim binary and configuration for
   `BoringSSL's TLS test suite <https://github.com/google/boringssl/tree/master/ssl/test>`_
 * ``fuzzer`` contains fuzz targets for various modules of the library
@@ -18,8 +19,8 @@ Under ``src`` there are directories
 * ``examples`` contains usage examples used in the documentation.
 * ``scripts`` contains misc scripts: install, distribution, various
   codegen things. Scripts controlling CI go under ``scripts/ci``.
-* ``configs`` contains configuration files for emacs, astyle, pylint, etc
-* ``python/botan3.py`` is the Python ctypes wrapper
+* ``configs`` contains configuration files tools like pylint
+* ``editors`` contains configuration files for editors like vscode and emacs
 
 Under ``doc`` one finds the sources of this documentation
 
@@ -197,12 +198,14 @@ declaration and know it will not be modified is useful.
 Use ``override`` annotations whenever overriding a virtual function.  If
 introducing a new type that is not intended for derivation, mark it ``final``.
 
-Avoid explicit ``delete`` - use RAII.
+Avoid explicit ``new`` or ``delete``, use RAII, ``make_unique``, etc.
 
 Use ``m_`` prefix on all member variables.
 
-For formatting, there are configs for emacs and astyle in ``src/configs``.
-No tabs, and remove trailing whitespace.
+``clang-format`` is used for all C++ formatting. The configuration is in
+``.clang-format`` in the root directory. You can rerun the formatter using
+``make fmt`` or by invoking the script
+``src/scripts/dev_tools/run_clang_format.py``
 
 Prefer using braces on both sides of if/else blocks, even if only using a single
 statement. The current code doesn't always do this.

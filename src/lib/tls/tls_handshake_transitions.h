@@ -21,8 +21,7 @@ namespace Botan::TLS {
  * This does not bear any knowledge about the actual state machine but is a mere
  * helper to implement state transition validation.
  */
-class BOTAN_TEST_API Handshake_Transitions
-   {
+class BOTAN_TEST_API Handshake_Transitions {
    public:
       /**
        * Return true iff we have received a particular message already
@@ -59,8 +58,8 @@ class BOTAN_TEST_API Handshake_Transitions
    private:
       uint32_t m_hand_expecting_mask = 0;
       uint32_t m_hand_received_mask = 0;
-   };
+};
 
-}
+}  // namespace Botan::TLS
 
 #endif

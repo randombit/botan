@@ -8,16 +8,15 @@
 #ifndef BOTAN_OUTPUT_FEEDBACK_MODE_H_
 #define BOTAN_OUTPUT_FEEDBACK_MODE_H_
 
-#include <botan/stream_cipher.h>
 #include <botan/block_cipher.h>
+#include <botan/stream_cipher.h>
 
 namespace Botan {
 
 /**
 * Output Feedback Mode
 */
-class OFB final : public StreamCipher
-   {
+class OFB final : public StreamCipher {
    public:
       size_t default_iv_length() const override;
 
@@ -41,6 +40,7 @@ class OFB final : public StreamCipher
       explicit OFB(std::unique_ptr<BlockCipher> cipher);
 
       void seek(uint64_t offset) override;
+
    private:
       void key_schedule(const uint8_t key[], size_t key_len) override;
       void cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) override;
@@ -49,8 +49,8 @@ class OFB final : public StreamCipher
       std::unique_ptr<BlockCipher> m_cipher;
       secure_vector<uint8_t> m_buffer;
       size_t m_buf_pos;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

@@ -8,13 +8,12 @@
 #define BOTAN_TIMER_H_
 
 #include <botan/types.h>
-#include <string>
 #include <chrono>
+#include <string>
 
 namespace Botan {
 
-class BOTAN_TEST_API Timer final
-   {
+class BOTAN_TEST_API Timer final {
    public:
       Timer(std::string_view name,
             std::string_view provider,
@@ -24,13 +23,9 @@ class BOTAN_TEST_API Timer final
             double clock_cycle_ratio,
             uint64_t clock_speed);
 
-      Timer(std::string_view name) :
-         Timer(name, "", "", 1, 0, 0.0, 0)
-         {}
+      Timer(std::string_view name) : Timer(name, "", "", 1, 0, 0.0, 0) {}
 
-      Timer(std::string_view name, size_t buf_size) :
-         Timer(name, "", "", buf_size, buf_size, 0.0, 0)
-         {}
+      Timer(std::string_view name, size_t buf_size) : Timer(name, "", "", buf_size, buf_size, 0.0, 0) {}
 
       Timer(const Timer& other) = default;
       Timer& operator=(const Timer& other) = default;
@@ -39,116 +34,65 @@ class BOTAN_TEST_API Timer final
 
       void stop();
 
-      bool under(std::chrono::milliseconds msec)
-         {
+      bool under(std::chrono::milliseconds msec) { return (milliseconds() < msec.count()); }
 
-         return (milliseconds() < msec.count());
-         }
-
-      class Timer_Scope final
-         {
+      class Timer_Scope final {
          public:
-            explicit Timer_Scope(Timer& timer)
-               : m_timer(timer)
-               {
-               m_timer.start();
-               }
-            ~Timer_Scope()
-               {
-               try
-                  {
+            explicit Timer_Scope(Timer& timer) : m_timer(timer) { m_timer.start(); }
+
+            ~Timer_Scope() {
+               try {
                   m_timer.stop();
-                  }
-               catch(...) {}
-               }
+               } catch(...) {}
+            }
+
          private:
             Timer& m_timer;
-         };
+      };
 
-      template<typename F>
-      auto run(F f) -> decltype(f())
-         {
+      template <typename F>
+      auto run(F f) -> decltype(f()) {
          Timer_Scope timer(*this);
          return f();
-         }
+      }
 
-      template<typename F>
-      void run_until_elapsed(std::chrono::milliseconds msec, F f)
-         {
-         while(this->under(msec))
-            {
+      template <typename F>
+      void run_until_elapsed(std::chrono::milliseconds msec, F f) {
+         while(this->under(msec)) {
             run(f);
-            }
          }
+      }
 
-      uint64_t value() const
-         {
-         return m_time_used;
-         }
+      uint64_t value() const { return m_time_used; }
 
-      double seconds() const
-         {
-         return milliseconds() / 1000.0;
-         }
+      double seconds() const { return milliseconds() / 1000.0; }
 
-      double milliseconds() const
-         {
-         return value() / 1000000.0;
-         }
+      double milliseconds() const { return value() / 1000000.0; }
 
-      double ms_per_event() const
-         {
-         return milliseconds() / events();
-         }
+      double ms_per_event() const { return milliseconds() / events(); }
 
-      uint64_t cycles_consumed() const
-         {
-         if(m_clock_speed != 0)
-            {
+      uint64_t cycles_consumed() const {
+         if(m_clock_speed != 0) {
             return static_cast<uint64_t>((m_clock_speed * value()) / 1000.0);
-            }
+         }
          return m_cpu_cycles_used;
-         }
+      }
 
-      uint64_t events() const
-         {
-         return m_event_count * m_event_mult;
-         }
+      uint64_t events() const { return m_event_count * m_event_mult; }
 
-      const std::string get_name() const
-         {
-         return m_name;
-         }
+      const std::string get_name() const { return m_name; }
 
-      const std::string doing() const
-         {
-         return m_doing;
-         }
+      const std::string doing() const { return m_doing; }
 
-      size_t buf_size() const
-         {
-         return m_buf_size;
-         }
+      size_t buf_size() const { return m_buf_size; }
 
-      double bytes_per_second() const
-         {
-         return seconds() > 0.0 ? events() / seconds() : 0.0;
-         }
+      double bytes_per_second() const { return seconds() > 0.0 ? events() / seconds() : 0.0; }
 
-      double events_per_second() const
-         {
-         return seconds() > 0.0 ? events() / seconds() : 0.0;
-         }
+      double events_per_second() const { return seconds() > 0.0 ? events() / seconds() : 0.0; }
 
-      double seconds_per_event() const
-         {
-         return events() > 0 ? seconds() / events() : 0.0;
-         }
+      double seconds_per_event() const { return events() > 0 ? seconds() / events() : 0.0; }
 
-      void set_custom_msg(std::string_view s)
-         {
-         m_custom_msg = s;
-         }
+      void set_custom_msg(std::string_view s) { m_custom_msg = s; }
 
       bool operator<(const Timer& other) const;
 
@@ -172,8 +116,8 @@ class BOTAN_TEST_API Timer final
 
       uint64_t m_max_time = 0, m_min_time = 0;
       uint64_t m_cpu_cycles_start = 0, m_cpu_cycles_used = 0;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

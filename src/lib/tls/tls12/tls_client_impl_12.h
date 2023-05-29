@@ -9,12 +9,12 @@
 #ifndef BOTAN_TLS_CLIENT_IMPL_12_H_
 #define BOTAN_TLS_CLIENT_IMPL_12_H_
 
+#include <botan/credentials_manager.h>
 #include <botan/tls_channel.h>
 #include <botan/tls_policy.h>
-#include <botan/credentials_manager.h>
 #include <botan/internal/tls_channel_impl_12.h>
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace Botan {
 
@@ -23,10 +23,8 @@ namespace TLS {
 /**
 * SSL/TLS Client 1.2 implementation
 */
-class Client_Impl_12 : public Channel_Impl_12
-   {
+class Client_Impl_12 : public Channel_Impl_12 {
    public:
-
       /**
       * Set up a new TLS client session
       *
@@ -59,8 +57,7 @@ class Client_Impl_12 : public Channel_Impl_12
                               Server_Information server_info = Server_Information(),
                               bool datagram = false,
                               const std::vector<std::string>& next_protocols = {},
-                              size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE
-          );
+                              size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE);
 
       explicit Client_Impl_12(const Channel_Impl::Downgrade_Information& downgrade_info);
 
@@ -68,12 +65,11 @@ class Client_Impl_12 : public Channel_Impl_12
       * @return network protocol as advertised by the TLS server, if server sent the ALPN extension
       */
       std::string application_protocol() const override { return m_application_protocol; }
-   private:
-      std::vector<X509_Certificate>
-         get_peer_cert_chain(const Handshake_State& state) const override;
 
-      void initiate_handshake(Handshake_State& state,
-                              bool force_full_renegotiation) override;
+   private:
+      std::vector<X509_Certificate> get_peer_cert_chain(const Handshake_State& state) const override;
+
+      void initiate_handshake(Handshake_State& state, bool force_full_renegotiation) override;
 
       void send_client_hello(Handshake_State& state,
                              bool force_full_renegotiation,
@@ -92,10 +88,10 @@ class Client_Impl_12 : public Channel_Impl_12
       std::shared_ptr<Credentials_Manager> m_creds;
       const Server_Information m_info;
       std::string m_application_protocol;
-   };
+};
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif

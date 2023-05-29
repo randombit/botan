@@ -10,11 +10,11 @@
 #ifndef BOTAN_MP_CORE_OPS_H_
 #define BOTAN_MP_CORE_OPS_H_
 
-#include <botan/types.h>
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
-#include <botan/internal/mp_asmi.h>
+#include <botan/types.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/mp_asmi.h>
 #include <algorithm>
 
 namespace Botan {
@@ -26,22 +26,18 @@ const word MP_WORD_MAX = ~static_cast<word>(0);
 * If cond > 0, swaps x[0:size] with y[0:size]
 * Runs in constant time
 */
-inline void bigint_cnd_swap(word cnd, word x[], word y[], size_t size)
-   {
+inline void bigint_cnd_swap(word cnd, word x[], word y[], size_t size) {
    const auto mask = CT::Mask<word>::expand(cnd);
 
-   for(size_t i = 0; i != size; ++i)
-      {
+   for(size_t i = 0; i != size; ++i) {
       const word a = x[i];
       const word b = y[i];
       x[i] = mask.select(b, a);
       y[i] = mask.select(a, b);
-      }
    }
+}
 
-inline word bigint_cnd_add(word cnd, word x[], word x_size,
-                           const word y[], size_t y_size)
-   {
+inline word bigint_cnd_add(word cnd, word x[], word x_size, const word y[], size_t y_size) {
    BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
 
    const auto mask = CT::Mask<word>::expand(cnd);
@@ -49,46 +45,39 @@ inline word bigint_cnd_add(word cnd, word x[], word x_size,
    word carry = 0;
 
    const size_t blocks = y_size - (y_size % 8);
-   word z[8] = { 0 };
+   word z[8] = {0};
 
-   for(size_t i = 0; i != blocks; i += 8)
-      {
+   for(size_t i = 0; i != blocks; i += 8) {
       carry = word8_add3(z, x + i, y + i, carry);
       mask.select_n(x + i, z, x + i, 8);
-      }
+   }
 
-   for(size_t i = blocks; i != y_size; ++i)
-      {
+   for(size_t i = blocks; i != y_size; ++i) {
       z[0] = word_add(x[i], y[i], &carry);
       x[i] = mask.select(z[0], x[i]);
-      }
+   }
 
-   for(size_t i = y_size; i != x_size; ++i)
-      {
+   for(size_t i = y_size; i != x_size; ++i) {
       z[0] = word_add(x[i], 0, &carry);
       x[i] = mask.select(z[0], x[i]);
-      }
+   }
 
    return mask.if_set_return(carry);
-   }
+}
 
 /*
 * If cond > 0 adds x[0:size] and y[0:size] and returns carry
 * Runs in constant time
 */
-inline word bigint_cnd_add(word cnd, word x[], const word y[], size_t size)
-   {
+inline word bigint_cnd_add(word cnd, word x[], const word y[], size_t size) {
    return bigint_cnd_add(cnd, x, size, y, size);
-   }
+}
 
 /*
 * If cond > 0 subtracts x[0:size] and y[0:size] and returns borrow
 * Runs in constant time
 */
-inline word bigint_cnd_sub(word cnd,
-                           word x[], size_t x_size,
-                           const word y[], size_t y_size)
-   {
+inline word bigint_cnd_sub(word cnd, word x[], size_t x_size, const word y[], size_t y_size) {
    BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
 
    const auto mask = CT::Mask<word>::expand(cnd);
@@ -96,38 +85,33 @@ inline word bigint_cnd_sub(word cnd,
    word carry = 0;
 
    const size_t blocks = y_size - (y_size % 8);
-   word z[8] = { 0 };
+   word z[8] = {0};
 
-   for(size_t i = 0; i != blocks; i += 8)
-      {
+   for(size_t i = 0; i != blocks; i += 8) {
       carry = word8_sub3(z, x + i, y + i, carry);
       mask.select_n(x + i, z, x + i, 8);
-      }
+   }
 
-   for(size_t i = blocks; i != y_size; ++i)
-      {
+   for(size_t i = blocks; i != y_size; ++i) {
       z[0] = word_sub(x[i], y[i], &carry);
       x[i] = mask.select(z[0], x[i]);
-      }
+   }
 
-   for(size_t i = y_size; i != x_size; ++i)
-      {
+   for(size_t i = y_size; i != x_size; ++i) {
       z[0] = word_sub(x[i], 0, &carry);
       x[i] = mask.select(z[0], x[i]);
-      }
+   }
 
    return mask.if_set_return(carry);
-   }
+}
 
 /*
 * If cond > 0 adds x[0:size] and y[0:size] and returns carry
 * Runs in constant time
 */
-inline word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size)
-   {
+inline word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size) {
    return bigint_cnd_sub(cnd, x, size, y, size);
-   }
-
+}
 
 /*
 * Equivalent to
@@ -136,33 +120,30 @@ inline word bigint_cnd_sub(word cnd, word x[], const word y[], size_t size)
 *
 * Mask must be either 0 or all 1 bits
 */
-inline void bigint_cnd_add_or_sub(CT::Mask<word> mask, word x[], const word y[], size_t size)
-   {
+inline void bigint_cnd_add_or_sub(CT::Mask<word> mask, word x[], const word y[], size_t size) {
    const size_t blocks = size - (size % 8);
 
    word carry = 0;
    word borrow = 0;
 
-   word t0[8] = { 0 };
-   word t1[8] = { 0 };
+   word t0[8] = {0};
+   word t1[8] = {0};
 
-   for(size_t i = 0; i != blocks; i += 8)
-      {
+   for(size_t i = 0; i != blocks; i += 8) {
       carry = word8_add3(t0, x + i, y + i, carry);
       borrow = word8_sub3(t1, x + i, y + i, borrow);
 
       for(size_t j = 0; j != 8; ++j)
-         x[i+j] = mask.select(t0[j], t1[j]);
-      }
+         x[i + j] = mask.select(t0[j], t1[j]);
+   }
 
-   for(size_t i = blocks; i != size; ++i)
-      {
+   for(size_t i = blocks; i != size; ++i) {
       const word a = word_add(x[i], y[i], &carry);
       const word s = word_sub(x[i], y[i], &borrow);
 
       x[i] = mask.select(a, s);
-      }
    }
+}
 
 /*
 * Equivalent to
@@ -173,59 +154,51 @@ inline void bigint_cnd_add_or_sub(CT::Mask<word> mask, word x[], const word y[],
 *
 * Returns the carry or borrow resp
 */
-inline word bigint_cnd_addsub(CT::Mask<word> mask, word x[],
-                              const word y[], const word z[],
-                              size_t size)
-   {
+inline word bigint_cnd_addsub(CT::Mask<word> mask, word x[], const word y[], const word z[], size_t size) {
    const size_t blocks = size - (size % 8);
 
    word carry = 0;
    word borrow = 0;
 
-   word t0[8] = { 0 };
-   word t1[8] = { 0 };
+   word t0[8] = {0};
+   word t1[8] = {0};
 
-   for(size_t i = 0; i != blocks; i += 8)
-      {
+   for(size_t i = 0; i != blocks; i += 8) {
       carry = word8_add3(t0, x + i, y + i, carry);
       borrow = word8_sub3(t1, x + i, z + i, borrow);
 
       for(size_t j = 0; j != 8; ++j)
-         x[i+j] = mask.select(t0[j], t1[j]);
-      }
+         x[i + j] = mask.select(t0[j], t1[j]);
+   }
 
-   for(size_t i = blocks; i != size; ++i)
-      {
+   for(size_t i = blocks; i != size; ++i) {
       t0[0] = word_add(x[i], y[i], &carry);
       t1[0] = word_sub(x[i], z[i], &borrow);
       x[i] = mask.select(t0[0], t1[0]);
-      }
+   }
 
    return mask.select(carry, borrow);
-   }
+}
 
 /*
 * 2s complement absolute value
 * If cond > 0 sets x to ~x + 1
 * Runs in constant time
 */
-inline void bigint_cnd_abs(word cnd, word x[], size_t size)
-   {
+inline void bigint_cnd_abs(word cnd, word x[], size_t size) {
    const auto mask = CT::Mask<word>::expand(cnd);
 
    word carry = mask.if_set_return(1);
-   for(size_t i = 0; i != size; ++i)
-      {
+   for(size_t i = 0; i != size; ++i) {
       const word z = word_add(~x[i], 0, &carry);
       x[i] = mask.select(z, x[i]);
-      }
    }
+}
 
 /**
 * Two operand addition with carry out
 */
-inline word bigint_add2_nc(word x[], size_t x_size, const word y[], size_t y_size)
-   {
+inline word bigint_add2_nc(word x[], size_t x_size, const word y[], size_t y_size) {
    word carry = 0;
 
    BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
@@ -242,17 +215,15 @@ inline word bigint_add2_nc(word x[], size_t x_size, const word y[], size_t y_siz
       x[i] = word_add(x[i], 0, &carry);
 
    return carry;
-   }
+}
 
 /**
 * Three operand addition with carry out
 */
-inline word bigint_add3_nc(word z[],
-                           const word x[], size_t x_size,
-                           const word y[], size_t y_size)
-   {
-   if(x_size < y_size)
-      { return bigint_add3_nc(z, y, y_size, x, x_size); }
+inline word bigint_add3_nc(word z[], const word x[], size_t x_size, const word y[], size_t y_size) {
+   if(x_size < y_size) {
+      return bigint_add3_nc(z, y, y_size, x, x_size);
+   }
 
    word carry = 0;
 
@@ -268,7 +239,7 @@ inline word bigint_add3_nc(word z[],
       z[i] = word_add(x[i], 0, &carry);
 
    return carry;
-   }
+}
 
 /**
 * Two operand addition
@@ -277,29 +248,21 @@ inline word bigint_add3_nc(word z[],
 * @param y the second operand
 * @param y_size size of y (must be <= x_size)
 */
-inline void bigint_add2(word x[], size_t x_size,
-                        const word y[], size_t y_size)
-   {
+inline void bigint_add2(word x[], size_t x_size, const word y[], size_t y_size) {
    x[x_size] += bigint_add2_nc(x, x_size, y, y_size);
-   }
+}
 
 /**
 * Three operand addition
 */
-inline void bigint_add3(word z[],
-                        const word x[], size_t x_size,
-                        const word y[], size_t y_size)
-   {
-   z[x_size > y_size ? x_size : y_size] +=
-      bigint_add3_nc(z, x, x_size, y, y_size);
-   }
+inline void bigint_add3(word z[], const word x[], size_t x_size, const word y[], size_t y_size) {
+   z[x_size > y_size ? x_size : y_size] += bigint_add3_nc(z, x, x_size, y, y_size);
+}
 
 /**
 * Two operand subtraction
 */
-inline word bigint_sub2(word x[], size_t x_size,
-                        const word y[], size_t y_size)
-   {
+inline word bigint_sub2(word x[], size_t x_size, const word y[], size_t y_size) {
    word borrow = 0;
 
    BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
@@ -316,13 +279,12 @@ inline word bigint_sub2(word x[], size_t x_size,
       x[i] = word_sub(x[i], 0, &borrow);
 
    return borrow;
-   }
+}
 
 /**
 * Two operand subtraction, x = y - x; assumes y >= x
 */
-inline void bigint_sub2_rev(word x[], const word y[], size_t y_size)
-   {
+inline void bigint_sub2_rev(word x[], const word y[], size_t y_size) {
    word borrow = 0;
 
    const size_t blocks = y_size - (y_size % 8);
@@ -334,7 +296,7 @@ inline void bigint_sub2_rev(word x[], const word y[], size_t y_size)
       x[i] = word_sub(y[i], x[i], &borrow);
 
    BOTAN_ASSERT(borrow == 0, "y must be greater than x");
-   }
+}
 
 /**
 * Three operand subtraction
@@ -343,10 +305,7 @@ inline void bigint_sub2_rev(word x[], const word y[], size_t y_size)
 *
 * Writes to z[0:x_size] and returns borrow
 */
-inline word bigint_sub3(word z[],
-                        const word x[], size_t x_size,
-                        const word y[], size_t y_size)
-   {
+inline word bigint_sub3(word z[], const word x[], size_t x_size, const word y[], size_t y_size) {
    word borrow = 0;
 
    BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
@@ -363,7 +322,7 @@ inline word bigint_sub3(word z[],
       z[i] = word_sub(x[i], 0, &borrow);
 
    return borrow;
-   }
+}
 
 /**
 * Return abs(x-y), ie if x >= y, then compute z = x - y
@@ -377,11 +336,7 @@ inline word bigint_sub3(word z[],
 * @param N length of x and y
 * @param ws array of at least 2*N words
 */
-inline CT::Mask<word>
-bigint_sub_abs(word z[],
-               const word x[], const word y[], size_t N,
-               word ws[])
-   {
+inline CT::Mask<word> bigint_sub_abs(word z[], const word x[], const word y[], size_t N, word ws[]) {
    // Subtract in both direction then conditional copy out the result
 
    word* ws0 = ws;
@@ -392,27 +347,23 @@ bigint_sub_abs(word z[],
 
    const size_t blocks = N - (N % 8);
 
-   for(size_t i = 0; i != blocks; i += 8)
-      {
+   for(size_t i = 0; i != blocks; i += 8) {
       borrow0 = word8_sub3(ws0 + i, x + i, y + i, borrow0);
       borrow1 = word8_sub3(ws1 + i, y + i, x + i, borrow1);
-      }
+   }
 
-   for(size_t i = blocks; i != N; ++i)
-      {
+   for(size_t i = blocks; i != N; ++i) {
       ws0[i] = word_sub(x[i], y[i], &borrow0);
       ws1[i] = word_sub(y[i], x[i], &borrow1);
-      }
+   }
 
    return CT::conditional_copy_mem(borrow0, z, ws1, ws0, N);
-   }
+}
 
 /*
 * Shift Operations
 */
-inline void bigint_shl1(word x[], size_t x_size, size_t x_words,
-                        size_t word_shift, size_t bit_shift)
-   {
+inline void bigint_shl1(word x[], size_t x_size, size_t x_words, size_t word_shift, size_t bit_shift) {
    copy_mem(x + word_shift, x, x_words);
    clear_mem(x, word_shift);
 
@@ -420,17 +371,14 @@ inline void bigint_shl1(word x[], size_t x_size, size_t x_words,
    const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
 
    word carry = 0;
-   for(size_t i = word_shift; i != x_size; ++i)
-      {
+   for(size_t i = word_shift; i != x_size; ++i) {
       const word w = x[i];
       x[i] = (w << bit_shift) | carry;
       carry = carry_mask.if_set_return(w >> carry_shift);
-      }
    }
+}
 
-inline void bigint_shr1(word x[], size_t x_size,
-                        size_t word_shift, size_t bit_shift)
-   {
+inline void bigint_shr1(word x[], size_t x_size, size_t word_shift, size_t bit_shift) {
    const size_t top = x_size >= word_shift ? (x_size - word_shift) : 0;
 
    if(top > 0)
@@ -442,34 +390,28 @@ inline void bigint_shr1(word x[], size_t x_size,
 
    word carry = 0;
 
-   for(size_t i = 0; i != top; ++i)
-      {
+   for(size_t i = 0; i != top; ++i) {
       const word w = x[top - i - 1];
-      x[top-i-1] = (w >> bit_shift) | carry;
+      x[top - i - 1] = (w >> bit_shift) | carry;
       carry = carry_mask.if_set_return(w << carry_shift);
-      }
    }
+}
 
-inline void bigint_shl2(word y[], const word x[], size_t x_size,
-                        size_t word_shift, size_t bit_shift)
-   {
+inline void bigint_shl2(word y[], const word x[], size_t x_size, size_t word_shift, size_t bit_shift) {
    copy_mem(y + word_shift, x, x_size);
 
    const auto carry_mask = CT::Mask<word>::expand(bit_shift);
    const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
 
    word carry = 0;
-   for(size_t i = word_shift; i != x_size + word_shift + 1; ++i)
-      {
+   for(size_t i = word_shift; i != x_size + word_shift + 1; ++i) {
       const word w = y[i];
       y[i] = (w << bit_shift) | carry;
       carry = carry_mask.if_set_return(w >> carry_shift);
-      }
    }
+}
 
-inline void bigint_shr2(word y[], const word x[], size_t x_size,
-                        size_t word_shift, size_t bit_shift)
-   {
+inline void bigint_shr2(word y[], const word x[], size_t x_size, size_t word_shift, size_t bit_shift) {
    const size_t new_size = x_size < word_shift ? 0 : (x_size - word_shift);
 
    if(new_size > 0)
@@ -479,19 +421,17 @@ inline void bigint_shr2(word y[], const word x[], size_t x_size,
    const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
 
    word carry = 0;
-   for(size_t i = new_size; i > 0; --i)
-      {
-      word w = y[i-1];
-      y[i-1] = (w >> bit_shift) | carry;
+   for(size_t i = new_size; i > 0; --i) {
+      word w = y[i - 1];
+      y[i - 1] = (w >> bit_shift) | carry;
       carry = carry_mask.if_set_return(w << carry_shift);
-      }
    }
+}
 
 /*
 * Linear Multiply - returns the carry
 */
-[[nodiscard]] inline word bigint_linmul2(word x[], size_t x_size, word y)
-   {
+[[nodiscard]] inline word bigint_linmul2(word x[], size_t x_size, word y) {
    const size_t blocks = x_size - (x_size % 8);
 
    word carry = 0;
@@ -503,10 +443,9 @@ inline void bigint_shr2(word y[], const word x[], size_t x_size,
       x[i] = word_madd2(x[i], y, &carry);
 
    return carry;
-   }
+}
 
-inline void bigint_linmul3(word z[], const word x[], size_t x_size, word y)
-   {
+inline void bigint_linmul3(word z[], const word x[], size_t x_size, word y) {
    const size_t blocks = x_size - (x_size % 8);
 
    word carry = 0;
@@ -518,7 +457,7 @@ inline void bigint_linmul3(word z[], const word x[], size_t x_size, word y)
       z[i] = word_madd2(x[i], y, &carry);
 
    z[x_size] = carry;
-   }
+}
 
 /**
 * Compare x and y
@@ -526,9 +465,7 @@ inline void bigint_linmul3(word z[], const word x[], size_t x_size, word y)
 * Return 0 if x == y
 * Return 1 if x > y
 */
-inline int32_t bigint_cmp(const word x[], size_t x_size,
-                          const word y[], size_t y_size)
-   {
+inline int32_t bigint_cmp(const word x[], size_t x_size, const word y[], size_t y_size) {
    static_assert(sizeof(word) >= sizeof(uint32_t), "Size assumption");
 
    const word LT = static_cast<word>(-1);
@@ -537,109 +474,91 @@ inline int32_t bigint_cmp(const word x[], size_t x_size,
 
    const size_t common_elems = std::min(x_size, y_size);
 
-   word result = EQ; // until found otherwise
+   word result = EQ;  // until found otherwise
 
-   for(size_t i = 0; i != common_elems; i++)
-      {
+   for(size_t i = 0; i != common_elems; i++) {
       const auto is_eq = CT::Mask<word>::is_equal(x[i], y[i]);
       const auto is_lt = CT::Mask<word>::is_lt(x[i], y[i]);
 
       result = is_eq.select(result, is_lt.select(LT, GT));
-      }
+   }
 
-   if(x_size < y_size)
-      {
+   if(x_size < y_size) {
       word mask = 0;
       for(size_t i = x_size; i != y_size; i++)
          mask |= y[i];
 
       // If any bits were set in high part of y, then x < y
       result = CT::Mask<word>::is_zero(mask).select(result, LT);
-      }
-   else if(y_size < x_size)
-      {
+   } else if(y_size < x_size) {
       word mask = 0;
       for(size_t i = y_size; i != x_size; i++)
          mask |= x[i];
 
       // If any bits were set in high part of x, then x > y
       result = CT::Mask<word>::is_zero(mask).select(result, GT);
-      }
+   }
 
    CT::unpoison(result);
    BOTAN_DEBUG_ASSERT(result == LT || result == GT || result == EQ);
    return static_cast<int32_t>(result);
-   }
+}
 
 /**
 * Compare x and y
 * Return ~0 if x[0:x_size] < y[0:y_size] or 0 otherwise
 * If lt_or_equal is true, returns ~0 also for x == y
 */
-inline CT::Mask<word>
-bigint_ct_is_lt(const word x[], size_t x_size,
-                const word y[], size_t y_size,
-                bool lt_or_equal = false)
-   {
+inline CT::Mask<word> bigint_ct_is_lt(
+   const word x[], size_t x_size, const word y[], size_t y_size, bool lt_or_equal = false) {
    const size_t common_elems = std::min(x_size, y_size);
 
    auto is_lt = CT::Mask<word>::expand(lt_or_equal);
 
-   for(size_t i = 0; i != common_elems; i++)
-      {
+   for(size_t i = 0; i != common_elems; i++) {
       const auto eq = CT::Mask<word>::is_equal(x[i], y[i]);
       const auto lt = CT::Mask<word>::is_lt(x[i], y[i]);
       is_lt = eq.select_mask(is_lt, lt);
-      }
+   }
 
-   if(x_size < y_size)
-      {
+   if(x_size < y_size) {
       word mask = 0;
       for(size_t i = x_size; i != y_size; i++)
          mask |= y[i];
       // If any bits were set in high part of y, then is_lt should be forced true
       is_lt |= CT::Mask<word>::expand(mask);
-      }
-   else if(y_size < x_size)
-      {
+   } else if(y_size < x_size) {
       word mask = 0;
       for(size_t i = y_size; i != x_size; i++)
          mask |= x[i];
 
       // If any bits were set in high part of x, then is_lt should be false
       is_lt &= CT::Mask<word>::is_zero(mask);
-      }
-
-   return is_lt;
    }
 
-inline CT::Mask<word>
-bigint_ct_is_eq(const word x[], size_t x_size,
-                const word y[], size_t y_size)
-   {
+   return is_lt;
+}
+
+inline CT::Mask<word> bigint_ct_is_eq(const word x[], size_t x_size, const word y[], size_t y_size) {
    const size_t common_elems = std::min(x_size, y_size);
 
    word diff = 0;
 
-   for(size_t i = 0; i != common_elems; i++)
-      {
+   for(size_t i = 0; i != common_elems; i++) {
       diff |= (x[i] ^ y[i]);
-      }
+   }
 
    // If any bits were set in high part of x/y, then they are not equal
-   if(x_size < y_size)
-      {
+   if(x_size < y_size) {
       for(size_t i = x_size; i != y_size; i++)
          diff |= y[i];
-      }
-   else if(y_size < x_size)
-      {
+   } else if(y_size < x_size) {
       for(size_t i = y_size; i != x_size; i++)
          diff |= x[i];
-      }
+   }
 
    return CT::Mask<word>::is_zero(diff);
-   }
+}
 
 /**
 * Set z to abs(x-y), ie if x >= y, then compute z = x - y
@@ -654,11 +573,7 @@ bigint_ct_is_eq(const word x[], size_t x_size,
 * @param y input param
 * @param y_size length of y
 */
-inline int32_t
-bigint_sub_abs(word z[],
-               const word x[], size_t x_size,
-               const word y[], size_t y_size)
-   {
+inline int32_t bigint_sub_abs(word z[], const word x[], size_t x_size, const word y[], size_t y_size) {
    const int32_t relative_size = bigint_cmp(x, x_size, y, y_size);
 
    // Swap if relative_size == -1
@@ -676,7 +591,7 @@ bigint_sub_abs(word z[],
    bigint_sub3(z, x, x_size, y, y_size);
 
    return relative_size;
-   }
+}
 
 /**
 * Set t to t-s modulo mod
@@ -687,9 +602,7 @@ bigint_sub_abs(word z[],
 * @param mod_sw size of t, s, and mod
 * @param ws workspace of size mod_sw
 */
-inline void
-bigint_mod_sub(word t[], const word s[], const word mod[], size_t mod_sw, word ws[])
-   {
+inline void bigint_mod_sub(word t[], const word s[], const word mod[], size_t mod_sw, word ws[]) {
    // is t < s or not?
    const auto is_lt = bigint_ct_is_lt(t, mod_sw, s, mod_sw);
 
@@ -701,11 +614,10 @@ bigint_mod_sub(word t[], const word s[], const word mod[], size_t mod_sw, word w
 
    BOTAN_DEBUG_ASSERT(borrow == 0 && carry == 0);
    BOTAN_UNUSED(carry, borrow);
-   }
+}
 
-template<size_t N>
-inline void bigint_mod_sub_n(word t[], const word s[], const word mod[], word ws[])
-   {
+template <size_t N>
+inline void bigint_mod_sub_n(word t[], const word s[], const word mod[], word ws[]) {
    // is t < s or not?
    const auto is_lt = bigint_ct_is_lt(t, N, s, N);
 
@@ -717,13 +629,12 @@ inline void bigint_mod_sub_n(word t[], const word s[], const word mod[], word ws
 
    BOTAN_DEBUG_ASSERT(borrow == 0 && carry == 0);
    BOTAN_UNUSED(carry, borrow);
-   }
+}
 
 /**
 * Compute ((n1<<bits) + n0) / d
 */
-inline word bigint_divop(word n1, word n0, word d)
-   {
+inline word bigint_divop(word n1, word n0, word d) {
    if(d == 0)
       throw Invalid_Argument("bigint_divop divide by zero");
 
@@ -734,30 +645,27 @@ inline word bigint_divop(word n1, word n0, word d)
    word high = n1 % d;
    word quotient = 0;
 
-   for(size_t i = 0; i != BOTAN_MP_WORD_BITS; ++i)
-      {
-      const word high_top_bit = high >> (BOTAN_MP_WORD_BITS-1);
+   for(size_t i = 0; i != BOTAN_MP_WORD_BITS; ++i) {
+      const word high_top_bit = high >> (BOTAN_MP_WORD_BITS - 1);
 
       high <<= 1;
-      high |= (n0 >> (BOTAN_MP_WORD_BITS-1-i)) & 1;
+      high |= (n0 >> (BOTAN_MP_WORD_BITS - 1 - i)) & 1;
       quotient <<= 1;
 
-      if(high_top_bit || high >= d)
-         {
+      if(high_top_bit || high >= d) {
          high -= d;
          quotient |= 1;
-         }
       }
+   }
 
    return quotient;
 #endif
-   }
+}
 
 /**
 * Compute ((n1<<bits) + n0) % d
 */
-inline word bigint_modop(word n1, word n0, word d)
-   {
+inline word bigint_modop(word n1, word n0, word d) {
    if(d == 0)
       throw Invalid_Argument("bigint_modop divide by zero");
 
@@ -767,9 +675,9 @@ inline word bigint_modop(word n1, word n0, word d)
    word z = bigint_divop(n1, n0, d);
    word dummy = 0;
    z = word_madd2(z, d, &dummy);
-   return (n0-z);
+   return (n0 - z);
 #endif
-   }
+}
 
 /*
 * Comba Multiplication / Squaring
@@ -804,10 +712,7 @@ BOTAN_FUZZER_API void bigint_monty_redc_24(word z[48], const word p[24], word p_
 BOTAN_FUZZER_API void bigint_monty_redc_32(word z[64], const word p[32], word p_dash, word ws[]);
 
 BOTAN_FUZZER_API
-void bigint_monty_redc_generic(word z[], size_t z_size,
-                               const word p[], size_t p_size, word p_dash,
-                               word ws[]);
-
+void bigint_monty_redc_generic(word z[], size_t z_size, const word p[], size_t p_size, word p_dash, word ws[]);
 
 /**
 * Montgomery Reduction
@@ -820,16 +725,10 @@ void bigint_monty_redc_generic(word z[], size_t z_size,
 * @param ws array of at least p_size+1 words
 * @param ws_size size of ws in words
 */
-inline void bigint_monty_redc(word z[],
-                              const word p[], size_t p_size,
-                              word p_dash,
-                              word ws[],
-                              size_t ws_size)
-   {
-   const size_t z_size = 2*p_size;
+inline void bigint_monty_redc(word z[], const word p[], size_t p_size, word p_dash, word ws[], size_t ws_size) {
+   const size_t z_size = 2 * p_size;
 
-   BOTAN_ARG_CHECK(ws_size >= p_size + 1,
-                   "Montgomery workspace too small");
+   BOTAN_ARG_CHECK(ws_size >= p_size + 1, "Montgomery workspace too small");
 
    if(p_size == 4)
       bigint_monty_redc_4(z, p, p_dash, ws);
@@ -845,36 +744,36 @@ inline void bigint_monty_redc(word z[],
       bigint_monty_redc_32(z, p, p_dash, ws);
    else
       bigint_monty_redc_generic(z, z_size, p, p_size, p_dash, ws);
-   }
+}
 
 /**
 * Basecase O(N^2) multiplication
 */
 BOTAN_FUZZER_API
-void basecase_mul(word z[], size_t z_size,
-                  const word x[], size_t x_size,
-                  const word y[], size_t y_size);
+void basecase_mul(word z[], size_t z_size, const word x[], size_t x_size, const word y[], size_t y_size);
 
 /**
 * Basecase O(N^2) squaring
 */
 BOTAN_FUZZER_API
-void basecase_sqr(word z[], size_t z_size,
-                  const word x[], size_t x_size);
-
+void basecase_sqr(word z[], size_t z_size, const word x[], size_t x_size);
 
 /*
 * High Level Multiplication/Squaring Interfaces
 */
-void bigint_mul(word z[], size_t z_size,
-                const word x[], size_t x_size, size_t x_sw,
-                const word y[], size_t y_size, size_t y_sw,
-                word workspace[], size_t ws_size);
+void bigint_mul(word z[],
+                size_t z_size,
+                const word x[],
+                size_t x_size,
+                size_t x_sw,
+                const word y[],
+                size_t y_size,
+                size_t y_sw,
+                word workspace[],
+                size_t ws_size);
 
-void bigint_sqr(word z[], size_t z_size,
-                const word x[], size_t x_size, size_t x_sw,
-                word workspace[], size_t ws_size);
+void bigint_sqr(word z[], size_t z_size, const word x[], size_t x_size, size_t x_sw, word workspace[], size_t ws_size);
 
-}
+}  // namespace Botan
 
 #endif

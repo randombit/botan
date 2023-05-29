@@ -9,36 +9,28 @@
 
 #if defined(BOTAN_HAS_CIPHER_MODES)
 
-#include <botan/cipher_mode.h>
-#include <botan/hex.h>
-#include <sstream>
+   #include <botan/cipher_mode.h>
+   #include <botan/hex.h>
+   #include <sstream>
 
-#if defined(BOTAN_HAS_AEAD_MODES)
-  #include <botan/aead.h>
-#endif
+   #if defined(BOTAN_HAS_AEAD_MODES)
+      #include <botan/aead.h>
+   #endif
 
 namespace Botan_CLI {
 
-class Cipher final : public Command
-   {
+class Cipher final : public Command {
    public:
       Cipher() : Command("cipher --cipher=AES-256/GCM --decrypt --key= --nonce= --ad= --buf-size=4096 input-file") {}
 
-      std::string group() const override
-         {
-         return "crypto";
-         }
+      std::string group() const override { return "crypto"; }
 
-      std::string description() const override
-         {
-         return "Encrypt or decrypt with a symmetric cipher";
-         }
+      std::string description() const override { return "Encrypt or decrypt with a symmetric cipher"; }
 
-      void go() override
-         {
+      void go() override {
          const std::string cipher_algo = get_arg_or("cipher", "");
          const std::string key_hex = get_arg("key");
-         const std::string nonce_hex  = get_arg("nonce");
+         const std::string nonce_hex = get_arg("nonce");
          const std::string ad_hex = get_arg_or("ad", "");
          const std::string input_file = get_arg_or("input-file", "-");
          const size_t buf_size = get_arg_sz("buf-size");
@@ -57,19 +49,16 @@ class Cipher final : public Command
          cipher->set_key(key);
 
          // Set associated data
-         if(!ad.empty())
-            {
-#if defined(BOTAN_HAS_AEAD_MODES)
-            if(Botan::AEAD_Mode* aead = dynamic_cast<Botan::AEAD_Mode*>(cipher.get()))
-               {
+         if(!ad.empty()) {
+   #if defined(BOTAN_HAS_AEAD_MODES)
+            if(Botan::AEAD_Mode* aead = dynamic_cast<Botan::AEAD_Mode*>(cipher.get())) {
                aead->set_associated_data(ad);
-               }
-            else
-#endif
-               {
+            } else
+   #endif
+            {
                throw CLI_Usage_Error("Cannot specify associated data with non-AEAD mode");
-               }
             }
+         }
 
          // Set nonce
          cipher->start(nonce.bits_of());
@@ -80,11 +69,11 @@ class Cipher final : public Command
          cipher->finish(buf);
 
          write_output(buf);
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_COMMAND("cipher", Cipher);
 
-}
+}  // namespace Botan_CLI
 
 #endif

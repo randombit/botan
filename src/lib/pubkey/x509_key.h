@@ -8,8 +8,8 @@
 #ifndef BOTAN_X509_PUBLIC_KEY_H_
 #define BOTAN_X509_PUBLIC_KEY_H_
 
-#include <botan/pk_keys.h>
 #include <botan/data_src.h>
+#include <botan/pk_keys.h>
 #include <string>
 #include <vector>
 
@@ -25,24 +25,21 @@ namespace X509 {
 * @param key the public key to encode
 * @return BER encoding of this key
 */
-inline std::vector<uint8_t> BER_encode(const Public_Key& key)
-   {
-   return key.subject_public_key();
-   }
+inline std::vector<uint8_t> BER_encode(const Public_Key& key) { return key.subject_public_key(); }
 
 /**
 * PEM encode a public key into a string.
 * @param key the key to encode
 * @return PEM encoded key
 */
-BOTAN_PUBLIC_API(2,0) std::string PEM_encode(const Public_Key& key);
+BOTAN_PUBLIC_API(2, 0) std::string PEM_encode(const Public_Key& key);
 
 /**
 * Create a public key from a data source.
 * @param source the source providing the DER or PEM encoded key
 * @return new public key object
 */
-BOTAN_PUBLIC_API(3,0) std::unique_ptr<Public_Key> load_key(DataSource& source);
+BOTAN_PUBLIC_API(3, 0) std::unique_ptr<Public_Key> load_key(DataSource& source);
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 /**
@@ -50,11 +47,10 @@ BOTAN_PUBLIC_API(3,0) std::unique_ptr<Public_Key> load_key(DataSource& source);
 * @param filename pathname to the file to load
 * @return new public key object
 */
-inline std::unique_ptr<Public_Key> load_key(std::string_view filename)
-   {
+inline std::unique_ptr<Public_Key> load_key(std::string_view filename) {
    DataSource_Stream source(filename, true);
    return X509::load_key(source);
-   }
+}
 #endif
 
 /**
@@ -62,36 +58,33 @@ inline std::unique_ptr<Public_Key> load_key(std::string_view filename)
 * @param enc the memory region containing the DER or PEM encoded key
 * @return new public key object
 */
-inline std::unique_ptr<Public_Key> load_key(std::vector<uint8_t> enc)
-   {
+inline std::unique_ptr<Public_Key> load_key(std::vector<uint8_t> enc) {
    DataSource_Memory source(std::move(enc));
    return X509::load_key(source);
-   }
+}
 
 /**
 * Create a public key from a memory region.
 * @param enc the memory region containing the DER or PEM encoded key
 * @return new public key object
 */
-inline std::unique_ptr<Public_Key> load_key(std::span<const uint8_t> enc)
-   {
+inline std::unique_ptr<Public_Key> load_key(std::span<const uint8_t> enc) {
    DataSource_Memory source(enc);
    return X509::load_key(source);
-   }
+}
 
 /**
 * Copy a key.
 * @param key the public key to copy
 * @return new public key object
 */
-inline std::unique_ptr<Public_Key> copy_key(const Public_Key& key)
-   {
+inline std::unique_ptr<Public_Key> copy_key(const Public_Key& key) {
    DataSource_Memory source(PEM_encode(key));
    return X509::load_key(source);
-   }
-
 }
 
-}
+}  // namespace X509
+
+}  // namespace Botan
 
 #endif

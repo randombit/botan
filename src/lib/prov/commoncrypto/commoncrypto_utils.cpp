@@ -7,27 +7,22 @@
 
 #include <botan/internal/commoncrypto.h>
 
-#include <botan/internal/commoncrypto_utils.h>
 #include <botan/cipher_mode.h>
+#include <botan/internal/commoncrypto_utils.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/scan_name.h>
-#include <botan/internal/fmt.h>
 
 namespace Botan {
 
-CommonCrypto_Error::CommonCrypto_Error(std::string_view what) :
-   Exception(what),
-   m_rc(0) {}
+CommonCrypto_Error::CommonCrypto_Error(std::string_view what) : Exception(what), m_rc(0) {}
 
 CommonCrypto_Error::CommonCrypto_Error(std::string_view what, int32_t status) :
-   Exception(fmt("CommonCrypto op {} failed with err {} ({})",
-                 what, status, ccryptorstatus_to_string(status))),
-   m_rc(status) {}
+      Exception(fmt("CommonCrypto op {} failed with err {} ({})", what, status, ccryptorstatus_to_string(status))),
+      m_rc(status) {}
 
-std::string CommonCrypto_Error::ccryptorstatus_to_string(CCCryptorStatus status)
-   {
-   switch(status)
-      {
+std::string CommonCrypto_Error::ccryptorstatus_to_string(CCCryptorStatus status) {
+   switch(status) {
       case kCCSuccess:
          return "Success";
       case kCCParamError:
@@ -54,72 +49,50 @@ std::string CommonCrypto_Error::ccryptorstatus_to_string(CCCryptorStatus status)
          return "KeySizeError";
       default:
          return "Unknown";
-      }
-   };
+   }
+};
 
-
-CommonCryptor_Opts commoncrypto_opts_from_algo_name(std::string_view algo_name)
-   {
+CommonCryptor_Opts commoncrypto_opts_from_algo_name(std::string_view algo_name) {
    CommonCryptor_Opts opts;
 
-   if(algo_name.compare(0, 3, "AES") == 0)
-      {
+   if(algo_name.compare(0, 3, "AES") == 0) {
       opts.algo = kCCAlgorithmAES;
       opts.block_size = kCCBlockSizeAES128;
-      if(algo_name == "AES-128")
-         {
+      if(algo_name == "AES-128") {
          opts.key_spec = Key_Length_Specification(kCCKeySizeAES128);
-         }
-      else if(algo_name == "AES-192")
-         {
+      } else if(algo_name == "AES-192") {
          opts.key_spec = Key_Length_Specification(kCCKeySizeAES192);
-         }
-      else if(algo_name == "AES-256")
-         {
+      } else if(algo_name == "AES-256") {
          opts.key_spec = Key_Length_Specification(kCCKeySizeAES256);
-         }
-      else
-         {
+      } else {
          throw CommonCrypto_Error("Unknown AES algorithm");
-         }
       }
-   else if(algo_name == "DES")
-      {
+   } else if(algo_name == "DES") {
       opts.algo = kCCAlgorithmDES;
       opts.block_size = kCCBlockSizeDES;
       opts.key_spec = Key_Length_Specification(kCCKeySizeDES);
-      }
-   else if(algo_name == "TripleDES")
-      {
+   } else if(algo_name == "TripleDES") {
       opts.algo = kCCAlgorithm3DES;
       opts.block_size = kCCBlockSize3DES;
       opts.key_spec = Key_Length_Specification(16, kCCKeySize3DES, 8);
-      }
-   else if(algo_name == "Blowfish")
-      {
+   } else if(algo_name == "Blowfish") {
       opts.algo = kCCAlgorithmBlowfish;
       opts.block_size = kCCBlockSizeBlowfish;
       opts.key_spec = Key_Length_Specification(1, kCCKeySizeMaxBlowfish, 1);
-      }
-   else if(algo_name == "CAST-128")
-      {
+   } else if(algo_name == "CAST-128") {
       opts.algo = kCCAlgorithmCAST;
       opts.block_size = kCCBlockSizeCAST;
       // Botan's base implementation of CAST does not support shorter keys
       // so we limit its minimum key size to 11 here.
       opts.key_spec = Key_Length_Specification(11, kCCKeySizeMaxCAST, 1);
-      }
-   else
-      {
+   } else {
       throw CommonCrypto_Error("Unsupported cipher");
-      }
-
-   return opts;
    }
 
+   return opts;
+}
 
-CommonCryptor_Opts commoncrypto_opts_from_algo(std::string_view algo)
-   {
+CommonCryptor_Opts commoncrypto_opts_from_algo(std::string_view algo) {
    SCAN_Name spec(algo);
 
    std::string algo_name = spec.algo_name();
@@ -129,55 +102,41 @@ CommonCryptor_Opts commoncrypto_opts_from_algo(std::string_view algo)
    CommonCryptor_Opts opts = commoncrypto_opts_from_algo_name(algo_name);
 
    //TODO add CFB and XTS support
-   if(cipher_mode.empty() || cipher_mode == "ECB")
-      {
+   if(cipher_mode.empty() || cipher_mode == "ECB") {
       opts.mode = kCCModeECB;
-      }
-   else if(cipher_mode == "CBC")
-      {
+   } else if(cipher_mode == "CBC") {
       opts.mode = kCCModeCBC;
-      }
-   else if(cipher_mode == "CTR")
-      {
+   } else if(cipher_mode == "CTR") {
       opts.mode = kCCModeCTR;
-      }
-   else if(cipher_mode == "OFB")
-      {
+   } else if(cipher_mode == "OFB") {
       opts.mode = kCCModeOFB;
-      }
-   else
-      {
+   } else {
       throw CommonCrypto_Error("Unsupported cipher mode!");
-      }
+   }
 
-   if(cipher_mode_padding == "NoPadding")
-      {
+   if(cipher_mode_padding == "NoPadding") {
       opts.padding = ccNoPadding;
-      }
+   }
    /*
    else if(cipher_mode_padding.empty() || cipher_mode_padding == "PKCS7")
       {
       opts.padding = ccPKCS7Padding;
       }
    */
-   else
-      {
+   else {
       throw CommonCrypto_Error("Unsupported cipher mode padding!");
-      }
-
-   return opts;
    }
 
+   return opts;
+}
 
-void commoncrypto_adjust_key_size(const uint8_t key[], size_t length,
+void commoncrypto_adjust_key_size(const uint8_t key[],
+                                  size_t length,
                                   const CommonCryptor_Opts& opts,
-                                  secure_vector<uint8_t>& full_key)
-   {
-   if(opts.algo == kCCAlgorithmBlowfish && length < 8)
-      {
+                                  secure_vector<uint8_t>& full_key) {
+   if(opts.algo == kCCAlgorithmBlowfish && length < 8) {
       size_t repeat;
-      switch(length)
-         {
+      switch(length) {
          case 1:
             repeat = 8;
             break;
@@ -190,17 +149,14 @@ void commoncrypto_adjust_key_size(const uint8_t key[], size_t length,
          default:
             repeat = 2;
             break;
-         }
+      }
 
       full_key.resize(length * repeat);
-      for(size_t i = 0; i < repeat; i++)
-         {
+      for(size_t i = 0; i < repeat; i++) {
          copy_mem(full_key.data() + i * length, key, length);
-         }
       }
-   else if(opts.algo == kCCAlgorithm3DES && length == 16)
-      {
+   } else if(opts.algo == kCCAlgorithm3DES && length == 16) {
       full_key += std::make_pair(key, 8);
-      }
    }
 }
+}  // namespace Botan

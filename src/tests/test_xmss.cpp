@@ -10,9 +10,9 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_XMSS_RFC8391)
-   #include <botan/xmss.h>
-   #include "test_rng.h"
    #include "test_pubkey.h"
+   #include "test_rng.h"
+   #include <botan/xmss.h>
 #endif
 
 namespace Botan_Tests {
@@ -21,126 +21,90 @@ namespace {
 
 #if defined(BOTAN_HAS_XMSS_RFC8391)
 
-class XMSS_Signature_Tests final : public PK_Signature_Generation_Test
-   {
+class XMSS_Signature_Tests final : public PK_Signature_Generation_Test {
    public:
-      XMSS_Signature_Tests()
-         : PK_Signature_Generation_Test(
-              "XMSS",
-              "pubkey/xmss_sig.vec",
-              "Params,Msg,PrivateKey,Signature") {}
+      XMSS_Signature_Tests() :
+            PK_Signature_Generation_Test("XMSS", "pubkey/xmss_sig.vec", "Params,Msg,PrivateKey,Signature") {}
 
-      bool skip_this_test(const std::string& /*header*/,
-                          const VarMap& vars) override
-         {
-         if(Test::run_long_tests() == false)
-            {
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
+         if(Test::run_long_tests() == false) {
             const std::string params = vars.get_req_str("Params");
 
-            if(params == "SHAKE_10_256" || params == "SHA2_10_192")
-               {
+            if(params == "SHAKE_10_256" || params == "SHA2_10_192") {
                return false;
-               }
-
-            return true;
             }
 
+            return true;
+         }
+
          return false;
-         }
+      }
 
-      std::string default_padding(const VarMap& vars) const override
-         {
-         return vars.get_req_str("Params");
-         }
+      std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Params"); }
 
-      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
-         {
+      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override {
          const std::vector<uint8_t> raw_key = vars.get_req_bin("PrivateKey");
          const Botan::secure_vector<uint8_t> sec_key(raw_key.begin(), raw_key.end());
 
          return std::make_unique<Botan::XMSS_PrivateKey>(sec_key);
-         }
-   };
+      }
+};
 
-class XMSS_Signature_Verify_Tests final : public PK_Signature_Verification_Test
-   {
+class XMSS_Signature_Verify_Tests final : public PK_Signature_Verification_Test {
    public:
-      XMSS_Signature_Verify_Tests()
-         : PK_Signature_Verification_Test(
-              "XMSS",
-              "pubkey/xmss_verify.vec",
-              "Params,Msg,PublicKey,Signature") {}
+      XMSS_Signature_Verify_Tests() :
+            PK_Signature_Verification_Test("XMSS", "pubkey/xmss_verify.vec", "Params,Msg,PublicKey,Signature") {}
 
-      std::string default_padding(const VarMap& vars) const override
-         {
-         return vars.get_req_str("Params");
-         }
+      std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Params"); }
 
-      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
-         {
+      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
          const std::vector<uint8_t> raw_key = vars.get_req_bin("PublicKey");
          return std::make_unique<Botan::XMSS_PublicKey>(raw_key);
-         }
-   };
+      }
+};
 
-class XMSS_Signature_Verify_Invalid_Tests final : public PK_Signature_NonVerification_Test
-   {
+class XMSS_Signature_Verify_Invalid_Tests final : public PK_Signature_NonVerification_Test {
    public:
-       XMSS_Signature_Verify_Invalid_Tests()
-          : PK_Signature_NonVerification_Test(
-               "XMSS",
-               "pubkey/xmss_invalid.vec",
-               "Params,Msg,PublicKey,InvalidSignature") {}
+      XMSS_Signature_Verify_Invalid_Tests() :
+            PK_Signature_NonVerification_Test(
+               "XMSS", "pubkey/xmss_invalid.vec", "Params,Msg,PublicKey,InvalidSignature") {}
 
-       std::string default_padding(const VarMap& vars) const override
-          {
-          return vars.get_req_str("Params");
-          }
+      std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Params"); }
 
-      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override
-         {
+      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
          const std::vector<uint8_t> raw_key = vars.get_req_bin("PublicKey");
          return std::make_unique<Botan::XMSS_PublicKey>(raw_key);
-         }
-   };
+      }
+};
 
-class XMSS_Keygen_Tests final : public PK_Key_Generation_Test
-   {
+class XMSS_Keygen_Tests final : public PK_Key_Generation_Test {
    public:
-      std::vector<std::string> keygen_params() const override
-         {
-         return { "XMSS-SHA2_10_256", "XMSS-SHA2_10_192" };
-         }
-      std::string algo_name() const override
-         {
-         return "XMSS";
-         }
-   };
+      std::vector<std::string> keygen_params() const override { return {"XMSS-SHA2_10_256", "XMSS-SHA2_10_192"}; }
+
+      std::string algo_name() const override { return "XMSS"; }
+};
 
 /**
  * Tests that the key generation is compatible with the reference implementation
  *   based on: https://github.com/XMSS/xmss-reference/tree/171ccbd
  */
-class XMSS_Keygen_Reference_Test final : public Text_Based_Test
-   {
+class XMSS_Keygen_Reference_Test final : public Text_Based_Test {
    public:
-      XMSS_Keygen_Reference_Test()
-         : Text_Based_Test("pubkey/xmss_keygen_reference.vec", "Params,SecretSeed,PublicSeed,SecretPrf,PublicKey,PrivateKey")
-      {}
+      XMSS_Keygen_Reference_Test() :
+            Text_Based_Test("pubkey/xmss_keygen_reference.vec",
+                            "Params,SecretSeed,PublicSeed,SecretPrf,PublicKey,PrivateKey") {}
 
-      Test::Result run_one_test(const std::string&, const VarMap& vars) final
-         {
+      Test::Result run_one_test(const std::string&, const VarMap& vars) final {
          Test::Result result(vars.get_req_str("Params"));
 
          Fixed_Output_RNG fixed_rng;
-         auto add_entropy = [&](auto v)
-            { fixed_rng.add_entropy(v.data(), v.size()); };
+         auto add_entropy = [&](auto v) { fixed_rng.add_entropy(v.data(), v.size()); };
 
          // The order of the RNG values is dependent on the order they are pulled
          // from the RNG in the production implementation.
-         add_entropy(vars.get_req_bin("PublicSeed")); // XMSS_PublicKey constructor's initializer list
-         add_entropy(vars.get_req_bin("SecretPrf"));  // XMSS_PrivateKey constructor's call to ..._Internal constructor
-         add_entropy(vars.get_req_bin("SecretSeed")); // XMSS_PrivateKey constructor's call to ..._Internal constructor
+         add_entropy(vars.get_req_bin("PublicSeed"));  // XMSS_PublicKey constructor's initializer list
+         add_entropy(vars.get_req_bin("SecretPrf"));   // XMSS_PrivateKey constructor's call to ..._Internal constructor
+         add_entropy(vars.get_req_bin("SecretSeed"));  // XMSS_PrivateKey constructor's call to ..._Internal constructor
 
          const auto xmss_algo = Botan::XMSS_Parameters::xmss_id_from_string(vars.get_req_str("Params"));
          Botan::XMSS_PrivateKey keypair(xmss_algo, fixed_rng);
@@ -149,66 +113,59 @@ class XMSS_Keygen_Reference_Test final : public Text_Based_Test
          result.test_eq("Generated public key matches", keypair.raw_public_key(), vars.get_req_bin("PublicKey"));
 
          return result;
+      }
+
+      bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
+         if(Test::run_long_tests()) {
+            return false;
          }
 
-      bool skip_this_test(const std::string& /*header*/,
-                          const VarMap& vars) override
-         {
-         if(Test::run_long_tests())
-            { return false; }
-
-         else if(vars.get_req_str("Params") == "XMSS-SHA2_10_256")
-            { return false; }
-
-         else
-            { return true; }
+         else if(vars.get_req_str("Params") == "XMSS-SHA2_10_256") {
+            return false;
          }
-   };
 
-std::vector<Test::Result> xmss_statefulness()
-   {
-   auto sign_something = [](auto& sk)
-      {
+         else {
+            return true;
+         }
+      }
+};
+
+std::vector<Test::Result> xmss_statefulness() {
+   auto sign_something = [](auto& sk) {
       auto msg = Botan::hex_decode("deadbeef");
 
       Botan::PK_Signer signer(sk, Test::rng(), "SHA2_10_256");
       signer.sign_message(msg, Test::rng());
-      };
+   };
 
-   return
-      {
-      CHECK("signing alters state", [&](auto& result)
-         {
-         Botan::XMSS_PrivateKey sk(Botan::XMSS_Parameters::XMSS_SHA2_10_256, Test::rng());
-         result.require("allows 1024 signatures", sk.remaining_signatures() == 1024);
+   return {CHECK("signing alters state",
+                 [&](auto& result) {
+                    Botan::XMSS_PrivateKey sk(Botan::XMSS_Parameters::XMSS_SHA2_10_256, Test::rng());
+                    result.require("allows 1024 signatures", sk.remaining_signatures() == 1024);
 
-         sign_something(sk);
+                    sign_something(sk);
 
-         result.require("allows 1023 signatures", sk.remaining_signatures() == 1023);
-         }),
+                    result.require("allows 1023 signatures", sk.remaining_signatures() == 1023);
+                 }),
 
-      CHECK("state can become exhausted", [&](auto& result)
-         {
-         const auto skbytes = Botan::hex_decode(
-            "000000011BBB81273E8057724A2A894593A1A688B3271410B3BEAB9F5587337BCDCBBF5C4E43AB"
-            "0AB2F88258E5AC54BB252E39335AE9B0D4AF0C0347EA45B8AA0AA3804C000003FFAC0C29C1ACD3"
-            //                                                         ~~1023~~
-            "19DA96E9C8EE4E28C2078441A76B6BB8BAFD358F67FBCBFC559B55C37C01FFADBB118099759EEB"
-            "A3B07643F73BCB4AAC546E244B57782D6BEABC"
-         );
-         Botan::XMSS_PrivateKey sk(skbytes);
-         result.require("allow one last signature", sk.remaining_signatures() == 1);
+           CHECK("state can become exhausted", [&](auto& result) {
+              const auto skbytes = Botan::hex_decode(
+                 "000000011BBB81273E8057724A2A894593A1A688B3271410B3BEAB9F5587337BCDCBBF5C4E43AB"
+                 "0AB2F88258E5AC54BB252E39335AE9B0D4AF0C0347EA45B8AA0AA3804C000003FFAC0C29C1ACD3"
+                 //                                                         ~~1023~~
+                 "19DA96E9C8EE4E28C2078441A76B6BB8BAFD358F67FBCBFC559B55C37C01FFADBB118099759EEB"
+                 "A3B07643F73BCB4AAC546E244B57782D6BEABC");
+              Botan::XMSS_PrivateKey sk(skbytes);
+              result.require("allow one last signature", sk.remaining_signatures() == 1);
 
-         sign_something(sk);
+              sign_something(sk);
 
-         result.require("allow no more signatures", sk.remaining_signatures() == 0);
-         result.test_throws("no more signing", [&] { sign_something(sk); });
-         })
-      };
-   }
+              result.require("allow no more signatures", sk.remaining_signatures() == 0);
+              result.test_throws("no more signing", [&] { sign_something(sk); });
+           })};
+}
 
-std::vector<Test::Result> xmss_legacy_private_key()
-   {
+std::vector<Test::Result> xmss_legacy_private_key() {
    const auto legacy_xmss_public_key = Botan::hex_decode(
       "00000001C49B128365E23D97C2D36A2AC26E0B448FCEF77A5ED68EFDC460E787D0EDB67"
       "68EAC3E82B04B84571C49684ED822F8179FDFF1C825DA9F9EA78F5D50A21E6341");
@@ -301,36 +258,35 @@ std::vector<Test::Result> xmss_legacy_private_key()
    const auto message = Botan::hex_decode("deadcafe");
    const auto algo_name = "SHA2_10_256";
 
-   return
-      {
-      Botan_Tests::CHECK("Use a legacy private key to create a signature", [&](auto& result)
-         {
-         Botan::PK_Signer signer(legacy_secret_key, Test::rng(), algo_name);
-         auto signature = signer.sign_message(message, Test::rng());
+   return {
+      Botan_Tests::CHECK("Use a legacy private key to create a signature",
+                         [&](auto& result) {
+                            Botan::PK_Signer signer(legacy_secret_key, Test::rng(), algo_name);
+                            auto signature = signer.sign_message(message, Test::rng());
 
-         Botan::PK_Verifier verifier(public_key_from_secret_key, algo_name);
-         result.confirm("legacy private key generates signatures that are still verifiable",
-                        verifier.verify_message(message, signature));
-         }),
+                            Botan::PK_Verifier verifier(public_key_from_secret_key, algo_name);
+                            result.confirm("legacy private key generates signatures that are still verifiable",
+                                           verifier.verify_message(message, signature));
+                         }),
 
-      Botan_Tests::CHECK("Verify a legacy signature", [&](auto& result)
-         {
-         Botan::PK_Verifier verifier(public_key_from_secret_key, algo_name);
-         result.confirm("legacy private key generates signatures that are still verifiable",
-                        verifier.verify_message(message, legacy_signature));
-         }),
+      Botan_Tests::CHECK("Verify a legacy signature",
+                         [&](auto& result) {
+                            Botan::PK_Verifier verifier(public_key_from_secret_key, algo_name);
+                            result.confirm("legacy private key generates signatures that are still verifiable",
+                                           verifier.verify_message(message, legacy_signature));
+                         }),
 
-      Botan_Tests::CHECK("Verify a new signature by a legacy private key with a legacy public key", [&](auto& result)
-         {
-         Botan::PK_Signer signer(legacy_secret_key, Test::rng(), algo_name);
-         auto signature = signer.sign_message(message, Test::rng());
+      Botan_Tests::CHECK("Verify a new signature by a legacy private key with a legacy public key",
+                         [&](auto& result) {
+                            Botan::PK_Signer signer(legacy_secret_key, Test::rng(), algo_name);
+                            auto signature = signer.sign_message(message, Test::rng());
 
-         Botan::PK_Verifier verifier(legacy_public_key, algo_name);
-         result.confirm("legacy private key generates signatures that are still verifiable",
-                        verifier.verify_message(message, legacy_signature));
-         }),
-      };
-   }
+                            Botan::PK_Verifier verifier(legacy_public_key, algo_name);
+                            result.confirm("legacy private key generates signatures that are still verifiable",
+                                           verifier.verify_message(message, legacy_signature));
+                         }),
+   };
+}
 
 BOTAN_REGISTER_TEST("pubkey", "xmss_sign", XMSS_Signature_Tests);
 BOTAN_REGISTER_TEST("pubkey", "xmss_verify", XMSS_Signature_Verify_Tests);
@@ -341,6 +297,6 @@ BOTAN_REGISTER_TEST_FN("pubkey", "xmss_unit_tests", xmss_statefulness, xmss_lega
 
 #endif
 
-}
+}  // namespace
 
-}
+}  // namespace Botan_Tests

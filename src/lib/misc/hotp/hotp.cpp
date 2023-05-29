@@ -7,14 +7,12 @@
 
 #include <botan/otp.h>
 
-#include <botan/internal/loadstor.h>
 #include <botan/exceptn.h>
+#include <botan/internal/loadstor.h>
 
 namespace Botan {
 
-HOTP::HOTP(const uint8_t key[], size_t key_len,
-           std::string_view hash_algo, size_t digits)
-   {
+HOTP::HOTP(const uint8_t key[], size_t key_len, std::string_view hash_algo, size_t digits) {
    BOTAN_ARG_CHECK(digits == 6 || digits == 7 || digits == 8, "Invalid HOTP digits");
 
    if(digits == 6)
@@ -38,27 +36,23 @@ HOTP::HOTP(const uint8_t key[], size_t key_len,
       throw Invalid_Argument("Unsupported HOTP hash function");
 
    m_mac->set_key(key, key_len);
-   }
+}
 
-uint32_t HOTP::generate_hotp(uint64_t counter)
-   {
+uint32_t HOTP::generate_hotp(uint64_t counter) {
    m_mac->update_be(counter);
    const secure_vector<uint8_t> mac = m_mac->final();
 
-   const size_t offset = mac[mac.size()-1] & 0x0F;
+   const size_t offset = mac[mac.size() - 1] & 0x0F;
    const uint32_t code = load_be<uint32_t>(mac.data() + offset, 0) & 0x7FFFFFFF;
    return code % m_digit_mod;
-   }
-
-std::pair<bool,uint64_t> HOTP::verify_hotp(uint32_t otp, uint64_t starting_counter, size_t resync_range)
-   {
-   for(size_t i = 0; i <= resync_range; ++i)
-      {
-      if(generate_hotp(starting_counter + i) == otp)
-         return std::make_pair(true, starting_counter + i + 1);
-      }
-   return std::make_pair(false, starting_counter);
-   }
-
 }
 
+std::pair<bool, uint64_t> HOTP::verify_hotp(uint32_t otp, uint64_t starting_counter, size_t resync_range) {
+   for(size_t i = 0; i <= resync_range; ++i) {
+      if(generate_hotp(starting_counter + i) == otp)
+         return std::make_pair(true, starting_counter + i + 1);
+   }
+   return std::make_pair(false, starting_counter);
+}
+
+}  // namespace Botan

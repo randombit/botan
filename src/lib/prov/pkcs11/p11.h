@@ -9,33 +9,28 @@
 #ifndef BOTAN_P11_H_
 #define BOTAN_P11_H_
 
-#include <botan/secmem.h>
 #include <botan/exceptn.h>
+#include <botan/secmem.h>
 
-#include <vector>
-#include <string>
 #include <map>
+#include <string>
+#include <vector>
 
 #define CK_PTR *
 
 #if defined(_MSC_VER)
-#define CK_DECLARE_FUNCTION(returnType, name) \
-   returnType __declspec(dllimport) name
+   #define CK_DECLARE_FUNCTION(returnType, name) returnType __declspec(dllimport) name
 #else
-#define CK_DECLARE_FUNCTION(returnType, name) \
-   returnType name
+   #define CK_DECLARE_FUNCTION(returnType, name) returnType name
 #endif
 
 #if defined(_MSC_VER)
-#define CK_DECLARE_FUNCTION_POINTER(returnType, name) \
-   returnType __declspec(dllimport) (* name)
+   #define CK_DECLARE_FUNCTION_POINTER(returnType, name) returnType __declspec(dllimport)(*name)
 #else
-#define CK_DECLARE_FUNCTION_POINTER(returnType, name) \
-   returnType (* name)
+   #define CK_DECLARE_FUNCTION_POINTER(returnType, name) returnType(*name)
 #endif
 
-#define CK_CALLBACK_FUNCTION(returnType, name) \
-   returnType (* name)
+#define CK_CALLBACK_FUNCTION(returnType, name) returnType(*name)
 
 #ifndef NULL_PTR
    #define NULL_PTR nullptr
@@ -51,8 +46,9 @@
    #pragma pack(pop, cryptoki)
 #endif
 
-static_assert(CRYPTOKI_VERSION_MAJOR == 2 && CRYPTOKI_VERSION_MINOR == 40,
-              "The Botan PKCS#11 module was implemented against PKCS#11 v2.40. Please use the correct PKCS#11 headers.");
+static_assert(
+   CRYPTOKI_VERSION_MAJOR == 2 && CRYPTOKI_VERSION_MINOR == 40,
+   "The Botan PKCS#11 module was implemented against PKCS#11 v2.40. Please use the correct PKCS#11 headers.");
 
 namespace Botan {
 
@@ -62,8 +58,7 @@ namespace PKCS11 {
 
 using secure_string = secure_vector<uint8_t>;
 
-enum class AttributeType : CK_ATTRIBUTE_TYPE
-   {
+enum class AttributeType : CK_ATTRIBUTE_TYPE {
    Class = CKA_CLASS,
    Token = CKA_TOKEN,
    Private = CKA_PRIVATE,
@@ -172,28 +167,25 @@ enum class AttributeType : CK_ATTRIBUTE_TYPE
    SupportedCmsAttributes = CKA_SUPPORTED_CMS_ATTRIBUTES,
    AllowedMechanisms = CKA_ALLOWED_MECHANISMS,
    VendorDefined = CKA_VENDOR_DEFINED,
-   };
+};
 
-enum class CertificateType : CK_CERTIFICATE_TYPE
-   {
+enum class CertificateType : CK_CERTIFICATE_TYPE {
    X509 = CKC_X_509,
    X509AttrCert = CKC_X_509_ATTR_CERT,
    Wtls = CKC_WTLS,
    VendorDefined = CKC_VENDOR_DEFINED,
-   };
+};
 
 /// Indicates if a stored certificate is a user certificate for which the corresponding private key is available
 /// on the token ("token user"), a CA certificate ("authority"), or another end-entity certificate ("other entity").
-enum class CertificateCategory : CK_ULONG
-   {
+enum class CertificateCategory : CK_ULONG {
    Unspecified = CK_CERTIFICATE_CATEGORY_UNSPECIFIED,
    TokenUser = CK_CERTIFICATE_CATEGORY_TOKEN_USER,
    Authority = CK_CERTIFICATE_CATEGORY_AUTHORITY,
    OtherEntity = CK_CERTIFICATE_CATEGORY_OTHER_ENTITY
-   };
+};
 
-enum class KeyDerivation : CK_ULONG
-   {
+enum class KeyDerivation : CK_ULONG {
    Null = CKD_NULL,
    Sha1Kdf = CKD_SHA1_KDF,
    Sha1KdfAsn1 = CKD_SHA1_KDF_ASN1,
@@ -203,10 +195,9 @@ enum class KeyDerivation : CK_ULONG
    Sha384Kdf = CKD_SHA384_KDF,
    Sha512Kdf = CKD_SHA512_KDF,
    CpdiversifyKdf = CKD_CPDIVERSIFY_KDF,
-   };
+};
 
-enum class Flag : CK_FLAGS
-   {
+enum class Flag : CK_FLAGS {
    None = 0,
    TokenPresent = CKF_TOKEN_PRESENT,
    RemovableDevice = CKF_REMOVABLE_DEVICE,
@@ -262,32 +253,26 @@ enum class Flag : CK_FLAGS
    ExcludeChallenge = CKF_EXCLUDE_CHALLENGE,
    ExcludePin = CKF_EXCLUDE_PIN,
    UserFriendlyOtp = CKF_USER_FRIENDLY_OTP,
-   };
+};
 
-inline Flag operator | (Flag a, Flag b)
-   {
-   return static_cast< Flag >(static_cast< CK_FLAGS >(a) | static_cast< CK_FLAGS >(b));
-   }
+inline Flag operator|(Flag a, Flag b) { return static_cast<Flag>(static_cast<CK_FLAGS>(a) | static_cast<CK_FLAGS>(b)); }
 
-enum class MGF : CK_RSA_PKCS_MGF_TYPE
-   {
+enum class MGF : CK_RSA_PKCS_MGF_TYPE {
    Mgf1Sha1 = CKG_MGF1_SHA1,
    Mgf1Sha256 = CKG_MGF1_SHA256,
    Mgf1Sha384 = CKG_MGF1_SHA384,
    Mgf1Sha512 = CKG_MGF1_SHA512,
    Mgf1Sha224 = CKG_MGF1_SHA224,
-   };
+};
 
-enum class HardwareType : CK_HW_FEATURE_TYPE
-   {
+enum class HardwareType : CK_HW_FEATURE_TYPE {
    MonotonicCounter = CKH_MONOTONIC_COUNTER,
    Clock = CKH_CLOCK,
    UserInterface = CKH_USER_INTERFACE,
    VendorDefined = CKH_VENDOR_DEFINED,
-   };
+};
 
-enum class KeyType : CK_KEY_TYPE
-   {
+enum class KeyType : CK_KEY_TYPE {
    Rsa = CKK_RSA,
    Dsa = CKK_DSA,
    Dh = CKK_DH,
@@ -332,10 +317,9 @@ enum class KeyType : CK_KEY_TYPE
    Gostr3411 = CKK_GOSTR3411,
    Gost28147 = CKK_GOST28147,
    VendorDefined = CKK_VENDOR_DEFINED,
-   };
+};
 
-enum class MechanismType : CK_MECHANISM_TYPE
-   {
+enum class MechanismType : CK_MECHANISM_TYPE {
    RsaPkcsKeyPairGen = CKM_RSA_PKCS_KEY_PAIR_GEN,
    RsaPkcs = CKM_RSA_PKCS,
    Rsa9796 = CKM_RSA_9796,
@@ -669,16 +653,14 @@ enum class MechanismType : CK_MECHANISM_TYPE
    RsaPkcsTpm11 = CKM_RSA_PKCS_TPM_1_1,
    RsaPkcsOaepTpm11 = CKM_RSA_PKCS_OAEP_TPM_1_1,
    VendorDefined = CKM_VENDOR_DEFINED,
-   };
+};
 
-enum class Notification : CK_NOTIFICATION
-   {
+enum class Notification : CK_NOTIFICATION {
    Surrender = CKN_SURRENDER,
    OtpChanged = CKN_OTP_CHANGED,
-   };
+};
 
-enum class ObjectClass : CK_OBJECT_CLASS
-   {
+enum class ObjectClass : CK_OBJECT_CLASS {
    Data = CKO_DATA,
    Certificate = CKO_CERTIFICATE,
    PublicKey = CKO_PUBLIC_KEY,
@@ -689,10 +671,9 @@ enum class ObjectClass : CK_OBJECT_CLASS
    Mechanism = CKO_MECHANISM,
    OtpKey = CKO_OTP_KEY,
    VendorDefined = CKO_VENDOR_DEFINED,
-   };
+};
 
-enum class PseudoRandom : CK_PKCS5_PBKD2_PSEUDO_RANDOM_FUNCTION_TYPE
-   {
+enum class PseudoRandom : CK_PKCS5_PBKD2_PSEUDO_RANDOM_FUNCTION_TYPE {
    Pkcs5Pbkd2HmacSha1 = CKP_PKCS5_PBKD2_HMAC_SHA1,
    Pkcs5Pbkd2HmacGostr3411 = CKP_PKCS5_PBKD2_HMAC_GOSTR3411,
    Pkcs5Pbkd2HmacSha224 = CKP_PKCS5_PBKD2_HMAC_SHA224,
@@ -701,19 +682,17 @@ enum class PseudoRandom : CK_PKCS5_PBKD2_PSEUDO_RANDOM_FUNCTION_TYPE
    Pkcs5Pbkd2HmacSha512 = CKP_PKCS5_PBKD2_HMAC_SHA512,
    Pkcs5Pbkd2HmacSha512224 = CKP_PKCS5_PBKD2_HMAC_SHA512_224,
    Pkcs5Pbkd2HmacSha512256 = CKP_PKCS5_PBKD2_HMAC_SHA512_256,
-   };
+};
 
-enum class SessionState : CK_STATE
-   {
+enum class SessionState : CK_STATE {
    RoPublicSession = CKS_RO_PUBLIC_SESSION,
    RoUserFunctions = CKS_RO_USER_FUNCTIONS,
    RwPublicSession = CKS_RW_PUBLIC_SESSION,
    RwUserFunctions = CKS_RW_USER_FUNCTIONS,
    RwSoFunctions = CKS_RW_SO_FUNCTIONS,
-   };
+};
 
-enum class ReturnValue : CK_RV
-   {
+enum class ReturnValue : CK_RV {
    OK = CKR_OK,
    Cancel = CKR_CANCEL,
    HostMemory = CKR_HOST_MEMORY,
@@ -809,20 +788,15 @@ enum class ReturnValue : CK_RV
    PublicKeyInvalid = CKR_PUBLIC_KEY_INVALID,
    FunctionRejected = CKR_FUNCTION_REJECTED,
    VendorDefined = CKR_VENDOR_DEFINED,
-   };
+};
 
-enum class UserType : CK_USER_TYPE
-   {
+enum class UserType : CK_USER_TYPE {
    SO = CKU_SO,
    User = CKU_USER,
    ContextSpecific = CKU_CONTEXT_SPECIFIC,
-   };
+};
 
-enum class PublicPointEncoding : uint32_t
-   {
-   Raw,
-   Der
-   };
+enum class PublicPointEncoding : uint32_t { Raw, Der };
 
 using FunctionListPtr = CK_FUNCTION_LIST_PTR;
 using VoidPtr = CK_VOID_PTR;
@@ -852,15 +826,12 @@ using RsaPkcsPssParams = CK_RSA_PKCS_PSS_PARAMS;
 using Ecdh1DeriveParams = CK_ECDH1_DERIVE_PARAMS;
 using Date = CK_DATE;
 
-BOTAN_PUBLIC_API(2,0) extern ReturnValue* ThrowException;
+BOTAN_PUBLIC_API(2, 0) extern ReturnValue* ThrowException;
 
 const Bbool True = CK_TRUE;
 const Bbool False = CK_FALSE;
 
-inline Flags flags(Flag flags)
-   {
-   return static_cast<Flags>(flags);
-   }
+inline Flags flags(Flag flags) { return static_cast<Flags>(flags); }
 
 class Slot;
 
@@ -871,8 +842,8 @@ class Slot;
 * @param so_pin PIN of the security officer. Will be set if the token is uninitialized other this has to be the current SO_PIN
 * @param pin The user PIN that will be set
 */
-BOTAN_PUBLIC_API(2,0) void initialize_token(Slot& slot, std::string_view label, const secure_string& so_pin,
-                                const secure_string& pin);
+BOTAN_PUBLIC_API(2, 0)
+void initialize_token(Slot& slot, std::string_view label, const secure_string& so_pin, const secure_string& pin);
 
 /**
 * Change PIN with old PIN to new PIN
@@ -881,7 +852,7 @@ BOTAN_PUBLIC_API(2,0) void initialize_token(Slot& slot, std::string_view label, 
 * @param new_pin The new user PIN
 */
 
-BOTAN_PUBLIC_API(2,0) void change_pin(Slot& slot, const secure_string& old_pin, const secure_string& new_pin);
+BOTAN_PUBLIC_API(2, 0) void change_pin(Slot& slot, const secure_string& old_pin, const secure_string& new_pin);
 
 /**
 * Change SO_PIN with old SO_PIN to new SO_PIN
@@ -889,7 +860,7 @@ BOTAN_PUBLIC_API(2,0) void change_pin(Slot& slot, const secure_string& old_pin, 
 * @param old_so_pin The old SO_PIN
 * @param new_so_pin The new SO_PIN
 */
-BOTAN_PUBLIC_API(2,0) void change_so_pin(Slot& slot, const secure_string& old_so_pin, const secure_string& new_so_pin);
+BOTAN_PUBLIC_API(2, 0) void change_so_pin(Slot& slot, const secure_string& old_so_pin, const secure_string& new_so_pin);
 
 /**
 * Sets user PIN with SO_PIN
@@ -897,11 +868,10 @@ BOTAN_PUBLIC_API(2,0) void change_so_pin(Slot& slot, const secure_string& old_so
 * @param so_pin PIN of the security officer
 * @param pin The user PIN that should be set
 */
-BOTAN_PUBLIC_API(2,0) void set_pin(Slot& slot, const secure_string& so_pin, const secure_string& pin);
+BOTAN_PUBLIC_API(2, 0) void set_pin(Slot& slot, const secure_string& so_pin, const secure_string& pin);
 
 /// Provides access to all PKCS#11 functions
-class BOTAN_PUBLIC_API(2,0) LowLevel
-   {
+class BOTAN_PUBLIC_API(2, 0) LowLevel {
    public:
       /// @param ptr the functon list pointer to use. Can be retrieved via `LowLevel::C_GetFunctionList`
       explicit LowLevel(FunctionListPtr ptr);
@@ -919,8 +889,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li NeedToCreateThreads \li OK
       * @return true on success, false otherwise
       */
-      bool C_Initialize(VoidPtr init_args,
-                        ReturnValue* return_value = ThrowException) const;
+      bool C_Initialize(VoidPtr init_args, ReturnValue* return_value = ThrowException) const;
 
       /**
       * C_Finalize indicates that an application is done with the Cryptoki library.
@@ -932,8 +901,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li GeneralError \li HostMemory \li OK
       * @return true on success, false otherwise
       */
-      bool C_Finalize(VoidPtr reserved,
-                      ReturnValue* return_value = ThrowException) const;
+      bool C_Finalize(VoidPtr reserved, ReturnValue* return_value = ThrowException) const;
 
       /**
       * C_GetInfo returns general information about Cryptoki.
@@ -945,8 +913,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li GeneralError \li HostMemory \li OK
       * @return true on success, false otherwise
       */
-      bool C_GetInfo(Info* info_ptr,
-                     ReturnValue* return_value = ThrowException) const;
+      bool C_GetInfo(Info* info_ptr, ReturnValue* return_value = ThrowException) const;
 
       /**
       * C_GetFunctionList returns the function list.
@@ -1011,9 +978,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li OK \li SlotIdInvalid
       * @return true on success, false otherwise
       */
-      bool C_GetSlotInfo(SlotId slot_id,
-                         SlotInfo* info_ptr,
-                         ReturnValue* return_value = ThrowException) const;
+      bool C_GetSlotInfo(SlotId slot_id, SlotInfo* info_ptr, ReturnValue* return_value = ThrowException) const;
 
       /**
       * C_GetTokenInfo obtains information about a particular token in the system.
@@ -1028,9 +993,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li TokenNotPresent \li TokenNotRecognized \li ArgumentsBad
       * @return true on success, false otherwise
       */
-      bool C_GetTokenInfo(SlotId slot_id,
-                          TokenInfo* info_ptr,
-                          ReturnValue* return_value = ThrowException) const;
+      bool C_GetTokenInfo(SlotId slot_id, TokenInfo* info_ptr, ReturnValue* return_value = ThrowException) const;
 
       /**
       * C_WaitForSlotEvent waits for a slot event (token insertion, removal, etc.) to occur.
@@ -1147,24 +1110,22 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li TokenWriteProtected \li ArgumentsBad
       * @return true on success, false otherwise
       */
-      template<typename TAlloc>
+      template <typename TAlloc>
       bool C_InitToken(SlotId slot_id,
                        const std::vector<uint8_t, TAlloc>& so_pin,
                        std::string_view label,
-                       ReturnValue* return_value = ThrowException) const
-         {
+                       ReturnValue* return_value = ThrowException) const {
          std::string padded_label(label);
-         if(label.size() < 32)
-            {
+         if(label.size() < 32) {
             padded_label.insert(padded_label.end(), 32 - label.size(), ' ');
-            }
+         }
 
          return C_InitToken(slot_id,
-                            reinterpret_cast< Utf8Char* >(const_cast< uint8_t* >(so_pin.data())),
+                            reinterpret_cast<Utf8Char*>(const_cast<uint8_t*>(so_pin.data())),
                             static_cast<Ulong>(so_pin.size()),
-                            reinterpret_cast< Utf8Char* >(const_cast< char* >(padded_label.c_str())),
+                            reinterpret_cast<Utf8Char*>(const_cast<char*>(padded_label.c_str())),
                             return_value);
-         }
+      }
 
       /**
       * C_InitPIN initializes the normal user's PIN.
@@ -1202,16 +1163,15 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li UserNotLoggedIn \li ArgumentsBad
       * @return true on success, false otherwise
       */
-      template<typename TAlloc>
+      template <typename TAlloc>
       bool C_InitPIN(SessionHandle session,
                      const std::vector<uint8_t, TAlloc>& pin,
-                     ReturnValue* return_value = ThrowException) const
-         {
+                     ReturnValue* return_value = ThrowException) const {
          return C_InitPIN(session,
-                          reinterpret_cast< Utf8Char* >(const_cast< uint8_t* >(pin.data())),
+                          reinterpret_cast<Utf8Char*>(const_cast<uint8_t*>(pin.data())),
                           static_cast<Ulong>(pin.size()),
                           return_value);
-         }
+      }
 
       /**
       * C_SetPIN modifies the PIN of the user who is logged in.
@@ -1254,20 +1214,18 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li SessionReadOnly \li TokenWriteProtected \li ArgumentsBad
       * @return true on success, false otherwise
       */
-      template<typename TAlloc>
+      template <typename TAlloc>
       bool C_SetPIN(SessionHandle session,
                     const std::vector<uint8_t, TAlloc>& old_pin,
                     const std::vector<uint8_t, TAlloc>& new_pin,
-                    ReturnValue* return_value = ThrowException) const
-         {
+                    ReturnValue* return_value = ThrowException) const {
          return C_SetPIN(session,
-                         reinterpret_cast< Utf8Char* >(const_cast< uint8_t* >(old_pin.data())),
+                         reinterpret_cast<Utf8Char*>(const_cast<uint8_t*>(old_pin.data())),
                          static_cast<Ulong>(old_pin.size()),
-                         reinterpret_cast< Utf8Char* >(const_cast< uint8_t* >(new_pin.data())),
+                         reinterpret_cast<Utf8Char*>(const_cast<uint8_t*>(new_pin.data())),
                          static_cast<Ulong>(new_pin.size()),
                          return_value);
-         }
-
+      }
 
       /****************************** Session management ******************************/
 
@@ -1308,8 +1266,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
-      bool C_CloseSession(SessionHandle session,
-                          ReturnValue* return_value = ThrowException) const;
+      bool C_CloseSession(SessionHandle session, ReturnValue* return_value = ThrowException) const;
 
       /**
       * C_CloseAllSessions closes all sessions with a token.
@@ -1323,8 +1280,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li TokenNotPresent
       * @return true on success, false otherwise
       */
-      bool C_CloseAllSessions(SlotId slot_id,
-                              ReturnValue* return_value = ThrowException) const;
+      bool C_CloseAllSessions(SlotId slot_id, ReturnValue* return_value = ThrowException) const;
 
       /**
       * C_GetSessionInfo obtains information about the session.
@@ -1428,17 +1384,17 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li UserPinNotInitialized \li UserTooManyTypes \li UserTypeInvalid
       * @return true on success, false otherwise
       */
-      template<typename TAlloc>
+      template <typename TAlloc>
       bool C_Login(SessionHandle session,
                    UserType user_type,
                    const std::vector<uint8_t, TAlloc>& pin,
-                   ReturnValue* return_value = ThrowException) const
-         {
-         return C_Login(session, user_type,
-                        reinterpret_cast< Utf8Char* >(const_cast< uint8_t* >(pin.data())),
+                   ReturnValue* return_value = ThrowException) const {
+         return C_Login(session,
+                        user_type,
+                        reinterpret_cast<Utf8Char*>(const_cast<uint8_t*>(pin.data())),
                         static_cast<Ulong>(pin.size()),
                         return_value);
-         }
+      }
 
       /**
       * C_Logout logs a user out from a token.
@@ -1452,8 +1408,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
-      bool C_Logout(SessionHandle session,
-                    ReturnValue* return_value = ThrowException) const;
+      bool C_Logout(SessionHandle session, ReturnValue* return_value = ThrowException) const;
 
       /****************************** Object management functions ******************************/
 
@@ -1583,44 +1538,41 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li OK \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
-      template<typename TAlloc>
+      template <typename TAlloc>
       bool C_GetAttributeValue(SessionHandle session,
                                ObjectHandle object,
                                std::map<AttributeType, std::vector<uint8_t, TAlloc>>& attribute_values,
-                               ReturnValue* return_value = ThrowException) const
-         {
+                               ReturnValue* return_value = ThrowException) const {
          std::vector<Attribute> getter_template;
 
-         for(const auto& entry : attribute_values)
-            {
-            getter_template.emplace_back(Attribute{ static_cast< CK_ATTRIBUTE_TYPE >(entry.first), nullptr, 0 });
-            }
+         for(const auto& entry : attribute_values) {
+            getter_template.emplace_back(Attribute{static_cast<CK_ATTRIBUTE_TYPE>(entry.first), nullptr, 0});
+         }
 
          bool success = C_GetAttributeValue(session,
                                             object,
-                                            const_cast< Attribute* >(getter_template.data()),
+                                            const_cast<Attribute*>(getter_template.data()),
                                             static_cast<Ulong>(getter_template.size()),
                                             return_value);
 
-         if(!success)
-            {
+         if(!success) {
             return success;
-            }
+         }
 
          size_t i = 0;
-         for(auto& entry : attribute_values)
-            {
+         for(auto& entry : attribute_values) {
             entry.second.clear();
             entry.second.resize(getter_template.at(i).ulValueLen);
-            getter_template.at(i).pValue = const_cast< uint8_t* >(entry.second.data());
+            getter_template.at(i).pValue = const_cast<uint8_t*>(entry.second.data());
             i++;
-            }
+         }
 
-         return C_GetAttributeValue(session, object,
-                                    const_cast< Attribute* >(getter_template.data()),
+         return C_GetAttributeValue(session,
+                                    object,
+                                    const_cast<Attribute*>(getter_template.data()),
                                     static_cast<Ulong>(getter_template.size()),
                                     return_value);
-         }
+      }
 
       /**
       * C_SetAttributeValue modifies the value of one or more object attributes.
@@ -1663,24 +1615,25 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li TokenWriteProtected \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
-      template<typename TAlloc>
+      template <typename TAlloc>
       bool C_SetAttributeValue(SessionHandle session,
                                ObjectHandle object,
                                std::map<AttributeType, std::vector<uint8_t, TAlloc>>& attribute_values,
-                               ReturnValue* return_value = ThrowException) const
-         {
+                               ReturnValue* return_value = ThrowException) const {
          std::vector<Attribute> setter_template;
 
-         for(auto& entry : attribute_values)
-            {
-            setter_template.emplace_back(Attribute{ static_cast< CK_ATTRIBUTE_TYPE >(entry.first), entry.second.data(), static_cast<CK_ULONG>(entry.second.size()) });
-            }
+         for(auto& entry : attribute_values) {
+            setter_template.emplace_back(Attribute{static_cast<CK_ATTRIBUTE_TYPE>(entry.first),
+                                                   entry.second.data(),
+                                                   static_cast<CK_ULONG>(entry.second.size())});
+         }
 
-         return C_SetAttributeValue(session, object,
-                                    const_cast< Attribute* >(setter_template.data()),
+         return C_SetAttributeValue(session,
+                                    object,
+                                    const_cast<Attribute*>(setter_template.data()),
                                     static_cast<Ulong>(setter_template.size()),
                                     return_value);
-         }
+      }
 
       /**
       * C_FindObjectsInit initializes a search for token and session objects that match a template.
@@ -1735,8 +1688,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
-      bool C_FindObjectsFinal(SessionHandle session,
-                              ReturnValue* return_value = ThrowException) const;
+      bool C_FindObjectsFinal(SessionHandle session, ReturnValue* return_value = ThrowException) const;
 
       /****************************** Encryption functions ******************************/
 
@@ -1803,34 +1755,33 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
-      template<typename TAllocA, typename TAllocB>
+      template <typename TAllocA, typename TAllocB>
       bool C_Encrypt(SessionHandle session,
                      const std::vector<uint8_t, TAllocA>& plaintext_data,
                      std::vector<uint8_t, TAllocB>& encrypted_data,
-                     ReturnValue* return_value = ThrowException) const
-         {
+                     ReturnValue* return_value = ThrowException) const {
          Ulong encrypted_size = 0;
          if(!C_Encrypt(session,
                        const_cast<Byte*>((plaintext_data.data())),
                        static_cast<Ulong>(plaintext_data.size()),
-                       nullptr, &encrypted_size,
-                       return_value))
-            {
+                       nullptr,
+                       &encrypted_size,
+                       return_value)) {
             return false;
-            }
+         }
 
          encrypted_data.resize(encrypted_size);
-         if (!C_Encrypt(session,
-                          const_cast<Byte*>(plaintext_data.data()),
-                          static_cast<Ulong>(plaintext_data.size()),
-                          encrypted_data.data(),
-                          &encrypted_size, return_value))
-            {
+         if(!C_Encrypt(session,
+                       const_cast<Byte*>(plaintext_data.data()),
+                       static_cast<Ulong>(plaintext_data.size()),
+                       encrypted_data.data(),
+                       &encrypted_size,
+                       return_value)) {
             return false;
-            }
+         }
          encrypted_data.resize(encrypted_size);
          return true;
-         }
+      }
 
       /**
       * C_EncryptUpdate continues a multiple-part encryption operation.
@@ -1941,34 +1892,33 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
-      template<typename TAllocA, typename TAllocB>
+      template <typename TAllocA, typename TAllocB>
       bool C_Decrypt(SessionHandle session,
                      const std::vector<uint8_t, TAllocA>& encrypted_data,
                      std::vector<uint8_t, TAllocB>& decrypted_data,
-                     ReturnValue* return_value = ThrowException) const
-         {
+                     ReturnValue* return_value = ThrowException) const {
          Ulong decrypted_size = 0;
          if(!C_Decrypt(session,
                        const_cast<Byte*>((encrypted_data.data())),
                        static_cast<Ulong>(encrypted_data.size()),
-                       nullptr, &decrypted_size,
-                       return_value))
-            {
+                       nullptr,
+                       &decrypted_size,
+                       return_value)) {
             return false;
-            }
+         }
 
          decrypted_data.resize(decrypted_size);
          if(!C_Decrypt(session,
                        const_cast<Byte*>(encrypted_data.data()),
                        static_cast<Ulong>(encrypted_data.size()),
                        decrypted_data.data(),
-                       &decrypted_size, return_value))
-            {
+                       &decrypted_size,
+                       return_value)) {
             return false;
-            }
+         }
          decrypted_data.resize(decrypted_size);
          return true;
-         }
+      }
 
       /**
       * C_DecryptUpdate continues a multiple-part decryption operation.
@@ -2095,9 +2045,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li OperationNotInitialized \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
-      bool C_DigestKey(SessionHandle session,
-                       ObjectHandle key,
-                       ReturnValue* return_value = ThrowException) const;
+      bool C_DigestKey(SessionHandle session, ObjectHandle key, ReturnValue* return_value = ThrowException) const;
 
       /**
       * C_DigestFinal finishes a multiple-part message-digesting operation.
@@ -2184,36 +2132,28 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li SessionHandleInvalid \li UserNotLoggedIn \li FunctionRejected
       * @return true on success, false otherwise
       */
-      template<typename TAllocA, typename TAllocB>
+      template <typename TAllocA, typename TAllocB>
       bool C_Sign(SessionHandle session,
                   const std::vector<uint8_t, TAllocA>& data,
                   std::vector<uint8_t, TAllocB>& signature,
-                  ReturnValue* return_value = ThrowException) const
-         {
+                  ReturnValue* return_value = ThrowException) const {
          Ulong signature_size = 0;
+         if(!C_Sign(session, data.data(), static_cast<Ulong>(data.size()), nullptr, &signature_size, return_value)) {
+            return false;
+         }
+
+         signature.resize(signature_size);
          if(!C_Sign(session,
                     data.data(),
                     static_cast<Ulong>(data.size()),
-                    nullptr,
+                    signature.data(),
                     &signature_size,
-                    return_value))
-            {
+                    return_value)) {
             return false;
-            }
-
-         signature.resize(signature_size);
-         if (!C_Sign(session,
-                     data.data(),
-                     static_cast<Ulong>(data.size()),
-                     signature.data(),
-                     &signature_size,
-                     return_value))
-            {
-            return false;
-            }
+         }
          signature.resize(signature_size);
          return true;
-         }
+      }
 
       /**
       * C_SignUpdate continues a multiple-part signature operation, where the signature is (will be) an appendix to the data, and plaintext cannot be recovered from the signature.
@@ -2249,16 +2189,12 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li SessionClosed \li SessionHandleInvalid \li UserNotLoggedIn
       * @return true on success, false otherwise
       */
-      template<typename TAlloc>
+      template <typename TAlloc>
       bool C_SignUpdate(SessionHandle session,
                         const std::vector<uint8_t, TAlloc>& part,
-                        ReturnValue* return_value = ThrowException) const
-         {
-         return C_SignUpdate(session,
-                             part.data(),
-                             static_cast<Ulong>(part.size()),
-                             return_value);
-         }
+                        ReturnValue* return_value = ThrowException) const {
+         return C_SignUpdate(session, part.data(), static_cast<Ulong>(part.size()), return_value);
+      }
 
       /**
       * C_SignFinal finishes a multiple-part signature operation, returning the signature.
@@ -2296,25 +2232,22 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li UserNotLoggedIn \li FunctionRejected
       * @return true on success, false otherwise
       */
-      template<typename TAlloc>
+      template <typename TAlloc>
       bool C_SignFinal(SessionHandle session,
                        std::vector<uint8_t, TAlloc>& signature,
-                       ReturnValue* return_value = ThrowException) const
-         {
+                       ReturnValue* return_value = ThrowException) const {
          Ulong signature_size = 0;
-         if(!C_SignFinal(session, nullptr, &signature_size, return_value))
-            {
+         if(!C_SignFinal(session, nullptr, &signature_size, return_value)) {
             return false;
-            }
+         }
 
          signature.resize(signature_size);
-         if (!C_SignFinal(session, signature.data(), &signature_size, return_value))
-            {
+         if(!C_SignFinal(session, signature.data(), &signature_size, return_value)) {
             return false;
-            }
+         }
          signature.resize(signature_size);
          return true;
-         }
+      }
 
       /**
       * C_SignRecoverInit initializes a signature operation, where the data can be recovered from the signature.
@@ -2428,19 +2361,18 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li SignatureInvalid \li SignatureLenRange
       * @return true on success, false otherwise
       */
-      template<typename TAllocA, typename TAllocB>
+      template <typename TAllocA, typename TAllocB>
       bool C_Verify(SessionHandle session,
                     const std::vector<uint8_t, TAllocA>& data,
                     std::vector<uint8_t, TAllocB>& signature,
-                    ReturnValue* return_value = ThrowException) const
-         {
+                    ReturnValue* return_value = ThrowException) const {
          return C_Verify(session,
                          data.data(),
                          static_cast<Ulong>(data.size()),
                          signature.data(),
                          static_cast<Ulong>(signature.size()),
                          return_value);
-         }
+      }
 
       /**
       * C_VerifyUpdate continues a multiple-part verification operation, where the signature is an appendix to the data, and plaintext cannot be recovered from the signature.
@@ -2476,13 +2408,12 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li SessionClosed \li SessionHandleInvalid
       * @return true on success, false otherwise
       */
-      template<typename TAlloc>
+      template <typename TAlloc>
       bool C_VerifyUpdate(SessionHandle session,
                           std::vector<uint8_t, TAlloc> part,
-                          ReturnValue* return_value = ThrowException) const
-         {
+                          ReturnValue* return_value = ThrowException) const {
          return C_VerifyUpdate(session, part.data(), static_cast<Ulong>(part.size()), return_value);
-         }
+      }
 
       /**
       * C_VerifyFinal finishes a multiple-part verification operation, checking the signature.
@@ -2576,7 +2507,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
                                  Ulong part_len,
                                  Byte* encrypted_part_ptr,
                                  Ulong* encrypted_part_len_ptr,
-                                 ReturnValue* return_value = ThrowException) const ;
+                                 ReturnValue* return_value = ThrowException) const;
 
       /**
       * C_DecryptDigestUpdate continues a multiple-part decryption and digesting operation.
@@ -2870,8 +2801,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li SessionClosed
       * @return true on success, false otherwise
       */
-      bool C_GetFunctionStatus(SessionHandle session,
-                               ReturnValue* return_value = ThrowException) const;
+      bool C_GetFunctionStatus(SessionHandle session, ReturnValue* return_value = ThrowException) const;
 
       /**
       * C_CancelFunction is a legacy function; it cancels a function running in parallel.
@@ -2884,8 +2814,7 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       *     \li SessionClosed
       * @return true on success, false otherwise
       */
-      bool C_CancelFunction(SessionHandle session,
-                            ReturnValue* return_value = ThrowException) const;
+      bool C_CancelFunction(SessionHandle session, ReturnValue* return_value = ThrowException) const;
 
       /**
       * Return the PKCS11 function list that this LowLevel class contains.
@@ -2904,45 +2833,33 @@ class BOTAN_PUBLIC_API(2,0) LowLevel
       * handling mechanisms as the rest of the library.
       */
       static bool handle_return_value(const CK_RV function_result, ReturnValue* return_value);
+
    private:
       const FunctionListPtr m_func_list_ptr;
-   };
+};
 
-class BOTAN_PUBLIC_API(2,0) PKCS11_Error : public Exception
-   {
+class BOTAN_PUBLIC_API(2, 0) PKCS11_Error : public Exception {
    public:
-      explicit PKCS11_Error(std::string_view what) :
-         Exception("PKCS11 error", what)
-         {
-         }
+      explicit PKCS11_Error(std::string_view what) : Exception("PKCS11 error", what) {}
 
       ErrorType error_type() const noexcept override { return ErrorType::Pkcs11Error; }
-   };
+};
 
-class BOTAN_PUBLIC_API(2,0) PKCS11_ReturnError final : public PKCS11_Error
-   {
+class BOTAN_PUBLIC_API(2, 0) PKCS11_ReturnError final : public PKCS11_Error {
    public:
       explicit PKCS11_ReturnError(ReturnValue return_val) :
-         PKCS11_Error(std::to_string(static_cast< uint32_t >(return_val))),
-         m_return_val(return_val)
-         {}
+            PKCS11_Error(std::to_string(static_cast<uint32_t>(return_val))), m_return_val(return_val) {}
 
-      inline ReturnValue get_return_value() const
-         {
-         return m_return_val;
-         }
+      inline ReturnValue get_return_value() const { return m_return_val; }
 
-      int error_code() const noexcept override
-         {
-         return static_cast<int>(m_return_val);
-         }
+      int error_code() const noexcept override { return static_cast<int>(m_return_val); }
 
    private:
       const ReturnValue m_return_val;
-   };
+};
 
-}
+}  // namespace PKCS11
 
-}
+}  // namespace Botan
 
 #endif

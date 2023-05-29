@@ -7,149 +7,103 @@
 
 #include <botan/elgamal.h>
 
-#include <botan/internal/dl_scheme.h>
-#include <botan/internal/pk_ops_impl.h>
-#include <botan/internal/monty_exp.h>
-#include <botan/internal/keypair.h>
 #include <botan/internal/blinding.h>
+#include <botan/internal/dl_scheme.h>
+#include <botan/internal/keypair.h>
+#include <botan/internal/monty_exp.h>
+#include <botan/internal/pk_ops_impl.h>
 
 namespace Botan {
 
-ElGamal_PublicKey::ElGamal_PublicKey(const DL_Group& group, const BigInt& y)
-   {
+ElGamal_PublicKey::ElGamal_PublicKey(const DL_Group& group, const BigInt& y) {
    m_public_key = std::make_shared<DL_PublicKey>(group, y);
-   }
+}
 
-ElGamal_PublicKey::ElGamal_PublicKey(const AlgorithmIdentifier& alg_id,
-                                     std::span<const uint8_t> key_bits)
-   {
+ElGamal_PublicKey::ElGamal_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
    m_public_key = std::make_shared<DL_PublicKey>(alg_id, key_bits, DL_Group_Format::ANSI_X9_42);
-   }
+}
 
-size_t ElGamal_PublicKey::estimated_strength() const
-   {
-   return m_public_key->estimated_strength();
-   }
+size_t ElGamal_PublicKey::estimated_strength() const { return m_public_key->estimated_strength(); }
 
-size_t ElGamal_PublicKey::key_length() const
-   {
-   return m_public_key->p_bits();
-   }
+size_t ElGamal_PublicKey::key_length() const { return m_public_key->p_bits(); }
 
-AlgorithmIdentifier ElGamal_PublicKey::algorithm_identifier() const
-   {
-   return AlgorithmIdentifier(
-      object_identifier(),
-      m_public_key->group().DER_encode(DL_Group_Format::ANSI_X9_42));
-   }
+AlgorithmIdentifier ElGamal_PublicKey::algorithm_identifier() const {
+   return AlgorithmIdentifier(object_identifier(), m_public_key->group().DER_encode(DL_Group_Format::ANSI_X9_42));
+}
 
-std::vector<uint8_t> ElGamal_PublicKey::public_key_bits() const
-   {
-   return m_public_key->DER_encode();
-   }
+std::vector<uint8_t> ElGamal_PublicKey::public_key_bits() const { return m_public_key->DER_encode(); }
 
-const BigInt& ElGamal_PublicKey::get_int_field(std::string_view field) const
-   {
+const BigInt& ElGamal_PublicKey::get_int_field(std::string_view field) const {
    return m_public_key->get_int_field(algo_name(), field);
-   }
+}
 
-bool ElGamal_PublicKey::check_key(RandomNumberGenerator& rng, bool strong) const
-   {
+bool ElGamal_PublicKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    return m_public_key->check_key(rng, strong);
-   }
+}
 
-ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng,
-                                       const DL_Group& group)
-   {
+ElGamal_PrivateKey::ElGamal_PrivateKey(RandomNumberGenerator& rng, const DL_Group& group) {
    m_private_key = std::make_shared<DL_PrivateKey>(group, rng);
    m_public_key = m_private_key->public_key();
-   }
+}
 
-ElGamal_PrivateKey::ElGamal_PrivateKey(const DL_Group& group,
-                                       const BigInt& x)
-   {
+ElGamal_PrivateKey::ElGamal_PrivateKey(const DL_Group& group, const BigInt& x) {
    m_private_key = std::make_shared<DL_PrivateKey>(group, x);
    m_public_key = m_private_key->public_key();
-   }
+}
 
-ElGamal_PrivateKey::ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id,
-                                       std::span<const uint8_t> key_bits)
-   {
+ElGamal_PrivateKey::ElGamal_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
    m_private_key = std::make_shared<DL_PrivateKey>(alg_id, key_bits, DL_Group_Format::ANSI_X9_42);
    m_public_key = m_private_key->public_key();
-   }
+}
 
-std::unique_ptr<Public_Key> ElGamal_PrivateKey::public_key() const
-   {
+std::unique_ptr<Public_Key> ElGamal_PrivateKey::public_key() const {
    return std::unique_ptr<Public_Key>(new ElGamal_PublicKey(m_public_key));
-   }
+}
 
-const BigInt& ElGamal_PrivateKey::get_int_field(std::string_view field) const
-   {
+const BigInt& ElGamal_PrivateKey::get_int_field(std::string_view field) const {
    return m_private_key->get_int_field(algo_name(), field);
-   }
+}
 
-secure_vector<uint8_t> ElGamal_PrivateKey::private_key_bits() const
-   {
-   return m_private_key->DER_encode();
-   }
+secure_vector<uint8_t> ElGamal_PrivateKey::private_key_bits() const { return m_private_key->DER_encode(); }
 
-secure_vector<uint8_t> ElGamal_PrivateKey::raw_private_key_bits() const
-   {
+secure_vector<uint8_t> ElGamal_PrivateKey::raw_private_key_bits() const {
    return m_private_key->raw_private_key_bits();
-   }
+}
 
-bool ElGamal_PrivateKey::check_key(RandomNumberGenerator& rng,
-                                   bool strong) const
-   {
+bool ElGamal_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    if(!m_private_key->check_key(rng, strong))
       return false;
 
    return KeyPair::encryption_consistency_check(rng, *this, "OAEP(SHA-256)");
-   }
+}
 
 namespace {
 
 /**
 * ElGamal encryption operation
 */
-class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_EME
-   {
+class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_EME {
    public:
-
-      ElGamal_Encryption_Operation(const std::shared_ptr<const DL_PublicKey>& key,
-                                   std::string_view eme) :
-         PK_Ops::Encryption_with_EME(eme),
-         m_key(key)
-         {
+      ElGamal_Encryption_Operation(const std::shared_ptr<const DL_PublicKey>& key, std::string_view eme) :
+            PK_Ops::Encryption_with_EME(eme), m_key(key) {
          const size_t powm_window = 4;
-         m_monty_y_p = monty_precompute(m_key->group().monty_params_p(),
-                                        m_key->public_key(),
-                                        powm_window);
-         }
+         m_monty_y_p = monty_precompute(m_key->group().monty_params_p(), m_key->public_key(), powm_window);
+      }
 
-      size_t ciphertext_length(size_t /*ptext_len*/) const override
-         {
-         return 2*m_key->group().p_bytes();
-         }
+      size_t ciphertext_length(size_t /*ptext_len*/) const override { return 2 * m_key->group().p_bytes(); }
 
-      size_t max_ptext_input_bits() const override
-         {
-         return m_key->group().p_bits() - 1;
-         }
+      size_t max_ptext_input_bits() const override { return m_key->group().p_bits() - 1; }
 
-      secure_vector<uint8_t> raw_encrypt(const uint8_t msg[], size_t msg_len,
-                                      RandomNumberGenerator& rng) override;
+      secure_vector<uint8_t> raw_encrypt(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& rng) override;
 
    private:
       std::shared_ptr<const DL_PublicKey> m_key;
       std::shared_ptr<const Montgomery_Exponentation_State> m_monty_y_p;
-   };
+};
 
-secure_vector<uint8_t>
-ElGamal_Encryption_Operation::raw_encrypt(const uint8_t msg[], size_t msg_len,
-                                          RandomNumberGenerator& rng)
-   {
+secure_vector<uint8_t> ElGamal_Encryption_Operation::raw_encrypt(const uint8_t msg[],
+                                                                 size_t msg_len,
+                                                                 RandomNumberGenerator& rng) {
    BigInt m(msg, msg_len);
 
    const auto& group = m_key->group();
@@ -172,45 +126,36 @@ ElGamal_Encryption_Operation::raw_encrypt(const uint8_t msg[], size_t msg_len,
    const BigInt b = group.multiply_mod_p(m, monty_execute(*m_monty_y_p, k, k_bits));
 
    return BigInt::encode_fixed_length_int_pair(a, b, group.p_bytes());
-   }
+}
 
 /**
 * ElGamal decryption operation
 */
-class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_EME
-   {
+class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_EME {
    public:
-
       ElGamal_Decryption_Operation(const std::shared_ptr<const DL_PrivateKey>& key,
                                    std::string_view eme,
                                    RandomNumberGenerator& rng) :
-         PK_Ops::Decryption_with_EME(eme),
-         m_key(key),
-         m_blinder(m_key->group().get_p(),
-                   rng,
-                   [](const BigInt& k) { return k; },
-                   [this](const BigInt& k) { return powermod_x_p(k); })
-         {}
+            PK_Ops::Decryption_with_EME(eme),
+            m_key(key),
+            m_blinder(
+               m_key->group().get_p(),
+               rng,
+               [](const BigInt& k) { return k; },
+               [this](const BigInt& k) { return powermod_x_p(k); }) {}
 
-      size_t plaintext_length(size_t /*ctext_len*/) const override
-         {
-         return m_key->group().p_bytes();
-         }
+      size_t plaintext_length(size_t /*ctext_len*/) const override { return m_key->group().p_bytes(); }
 
       secure_vector<uint8_t> raw_decrypt(const uint8_t msg[], size_t msg_len) override;
+
    private:
-      BigInt powermod_x_p(const BigInt& v) const
-         {
-         return m_key->group().power_b_p(v, m_key->private_key());
-         }
+      BigInt powermod_x_p(const BigInt& v) const { return m_key->group().power_b_p(v, m_key->private_key()); }
 
       std::shared_ptr<const DL_PrivateKey> m_key;
       Blinder m_blinder;
-   };
+};
 
-secure_vector<uint8_t>
-ElGamal_Decryption_Operation::raw_decrypt(const uint8_t msg[], size_t msg_len)
-   {
+secure_vector<uint8_t> ElGamal_Decryption_Operation::raw_decrypt(const uint8_t msg[], size_t msg_len) {
    const auto& group = m_key->group();
 
    const size_t p_bytes = group.p_bytes();
@@ -229,28 +174,24 @@ ElGamal_Decryption_Operation::raw_decrypt(const uint8_t msg[], size_t msg_len)
    const BigInt r = group.multiply_mod_p(group.inverse_mod_p(powermod_x_p(a)), b);
 
    return BigInt::encode_1363(m_blinder.unblind(r), p_bytes);
-   }
-
 }
 
-std::unique_ptr<PK_Ops::Encryption>
-ElGamal_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
-                                        std::string_view params,
-                                        std::string_view provider) const
-   {
+}  // namespace
+
+std::unique_ptr<PK_Ops::Encryption> ElGamal_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
+                                                                            std::string_view params,
+                                                                            std::string_view provider) const {
    if(provider == "base" || provider.empty())
       return std::make_unique<ElGamal_Encryption_Operation>(this->m_public_key, params);
    throw Provider_Not_Found(algo_name(), provider);
-   }
+}
 
-std::unique_ptr<PK_Ops::Decryption>
-ElGamal_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
-                                         std::string_view params,
-                                         std::string_view provider) const
-   {
+std::unique_ptr<PK_Ops::Decryption> ElGamal_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
+                                                                             std::string_view params,
+                                                                             std::string_view provider) const {
    if(provider == "base" || provider.empty())
       return std::make_unique<ElGamal_Decryption_Operation>(this->m_private_key, params, rng);
    throw Provider_Not_Found(algo_name(), provider);
-   }
-
 }
+
+}  // namespace Botan

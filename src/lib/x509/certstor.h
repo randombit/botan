@@ -8,8 +8,8 @@
 #ifndef BOTAN_CERT_STORE_H_
 #define BOTAN_CERT_STORE_H_
 
-#include <botan/x509cert.h>
 #include <botan/x509_crl.h>
+#include <botan/x509cert.h>
 #include <optional>
 
 namespace Botan {
@@ -17,8 +17,7 @@ namespace Botan {
 /**
 * Certificate Store Interface
 */
-class BOTAN_PUBLIC_API(2,0) Certificate_Store
-   {
+class BOTAN_PUBLIC_API(2, 0) Certificate_Store {
    public:
       virtual ~Certificate_Store();
 
@@ -30,16 +29,15 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Store
       * If more than one certificate in the certificate store matches, then
       * a single value is selected arbitrarily.
       */
-      virtual std::optional<X509_Certificate>
-         find_cert(const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const;
+      virtual std::optional<X509_Certificate> find_cert(const X509_DN& subject_dn,
+                                                        const std::vector<uint8_t>& key_id) const;
 
       /**
       * Find all certificates with a given Subject DN.
       * Subject DN and even the key identifier might not be unique.
       */
-      virtual std::vector<X509_Certificate> find_all_certs(
-         const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const = 0;
-
+      virtual std::vector<X509_Certificate> find_all_certs(const X509_DN& subject_dn,
+                                                           const std::vector<uint8_t>& key_id) const = 0;
 
       /**
       * Find a certificate by searching for one with a matching SHA-1 hash of
@@ -47,8 +45,7 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Store
       * @param key_hash SHA-1 hash of the subject's public key
       * @return a matching certificate or nullopt otherwise
       */
-      virtual std::optional<X509_Certificate>
-         find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const = 0;
+      virtual std::optional<X509_Certificate> find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const = 0;
 
       /**
       * Find a certificate by searching for one with a matching SHA-256 hash of
@@ -56,8 +53,8 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Store
       * @param subject_hash SHA-256 hash of the subject's raw name
       * @return a matching certificate or nullopt otherwise
       */
-      virtual std::optional<X509_Certificate>
-         find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& subject_hash) const = 0;
+      virtual std::optional<X509_Certificate> find_cert_by_raw_subject_dn_sha256(
+         const std::vector<uint8_t>& subject_hash) const = 0;
 
       /**
       * Finds a CRL for the given certificate
@@ -70,20 +67,18 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Store
       * @return whether the certificate is known
       * @param cert certififcate to be searched
       */
-      bool certificate_known(const X509_Certificate& cert) const
-         {
+      bool certificate_known(const X509_Certificate& cert) const {
          return find_cert(cert.subject_dn(), cert.subject_key_id()).has_value();
-         }
+      }
 
       // remove this (used by TLS::Server)
       virtual std::vector<X509_DN> all_subjects() const = 0;
-   };
+};
 
 /**
 * In Memory Certificate Store
 */
-class BOTAN_PUBLIC_API(2,0) Certificate_Store_In_Memory final : public Certificate_Store
-   {
+class BOTAN_PUBLIC_API(2, 0) Certificate_Store_In_Memory final : public Certificate_Store {
    public:
       /**
       * Attempt to parse all files in dir (including subdirectories)
@@ -122,33 +117,32 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Store_In_Memory final : public Certifica
       * Find a certificate by Subject DN and (optionally) key identifier
       * @return the first certificate that matches
       */
-      std::optional<X509_Certificate> find_cert(
-         const X509_DN& subject_dn,
-         const std::vector<uint8_t>& key_id) const override;
+      std::optional<X509_Certificate> find_cert(const X509_DN& subject_dn,
+                                                const std::vector<uint8_t>& key_id) const override;
 
       /*
       * Find all certificates with a given Subject DN.
       * Subject DN and even the key identifier might not be unique.
       */
-      std::vector<X509_Certificate> find_all_certs(
-         const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const override;
+      std::vector<X509_Certificate> find_all_certs(const X509_DN& subject_dn,
+                                                   const std::vector<uint8_t>& key_id) const override;
 
-      std::optional<X509_Certificate>
-         find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const override;
+      std::optional<X509_Certificate> find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const override;
 
-      std::optional<X509_Certificate>
-         find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& subject_hash) const override;
+      std::optional<X509_Certificate> find_cert_by_raw_subject_dn_sha256(
+         const std::vector<uint8_t>& subject_hash) const override;
 
       /**
       * Finds a CRL for the given certificate
       */
       std::optional<X509_CRL> find_crl_for(const X509_Certificate& subject) const override;
+
    private:
       // TODO: Add indexing on the DN and key id to avoid linear search
       std::vector<X509_Certificate> m_certs;
       std::vector<X509_CRL> m_crls;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

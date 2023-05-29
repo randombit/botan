@@ -6,8 +6,8 @@
 
 #include <botan/internal/poly_dbl.h>
 
-#include <botan/internal/loadstor.h>
 #include <botan/exceptn.h>
+#include <botan/internal/loadstor.h>
 
 namespace Botan {
 
@@ -21,17 +21,16 @@ namespace {
 * http://www.hpl.hp.com/techreports/98/HPL-98-135.pdf
 */
 enum class MinWeightPolynomial : uint64_t {
-   P64   = 0x1B,
-   P128  = 0x87,
-   P192  = 0x87,
-   P256  = 0x425,
-   P512  = 0x125,
+   P64 = 0x1B,
+   P128 = 0x87,
+   P192 = 0x87,
+   P256 = 0x425,
+   P512 = 0x125,
    P1024 = 0x80043,
 };
 
-template<size_t LIMBS, MinWeightPolynomial P>
-void poly_double(uint8_t out[], const uint8_t in[])
-   {
+template <size_t LIMBS, MinWeightPolynomial P>
+void poly_double(uint8_t out[], const uint8_t in[]) {
    uint64_t W[LIMBS];
    load_be(W, in, LIMBS);
 
@@ -39,44 +38,39 @@ void poly_double(uint8_t out[], const uint8_t in[])
 
    const uint64_t carry = POLY * (W[0] >> 63);
 
-   if constexpr(LIMBS > 0)
-      {
+   if constexpr(LIMBS > 0) {
       for(size_t i = 0; i != LIMBS - 1; ++i)
-         W[i] = (W[i] << 1) ^ (W[i+1] >> 63);
-      }
-
-   W[LIMBS-1] = (W[LIMBS-1] << 1) ^ carry;
-
-   copy_out_be(out, LIMBS*8, W);
+         W[i] = (W[i] << 1) ^ (W[i + 1] >> 63);
    }
 
-template<size_t LIMBS, MinWeightPolynomial P>
-void poly_double_le(uint8_t out[], const uint8_t in[])
-   {
+   W[LIMBS - 1] = (W[LIMBS - 1] << 1) ^ carry;
+
+   copy_out_be(out, LIMBS * 8, W);
+}
+
+template <size_t LIMBS, MinWeightPolynomial P>
+void poly_double_le(uint8_t out[], const uint8_t in[]) {
    uint64_t W[LIMBS];
    load_le(W, in, LIMBS);
 
    const uint64_t POLY = static_cast<uint64_t>(P);
 
-   const uint64_t carry = POLY * (W[LIMBS-1] >> 63);
+   const uint64_t carry = POLY * (W[LIMBS - 1] >> 63);
 
-   if constexpr(LIMBS > 0)
-      {
+   if constexpr(LIMBS > 0) {
       for(size_t i = 0; i != LIMBS - 1; ++i)
-         W[LIMBS-1-i] = (W[LIMBS-1-i] << 1) ^ (W[LIMBS-2-i] >> 63);
-      }
+         W[LIMBS - 1 - i] = (W[LIMBS - 1 - i] << 1) ^ (W[LIMBS - 2 - i] >> 63);
+   }
 
    W[0] = (W[0] << 1) ^ carry;
 
-   copy_out_le(out, LIMBS*8, W);
-   }
-
+   copy_out_le(out, LIMBS * 8, W);
 }
 
-void poly_double_n(uint8_t out[], const uint8_t in[], size_t n)
-   {
-   switch(n)
-      {
+}  // namespace
+
+void poly_double_n(uint8_t out[], const uint8_t in[], size_t n) {
+   switch(n) {
       case 8:
          return poly_double<1, MinWeightPolynomial::P64>(out, in);
       case 16:
@@ -91,13 +85,11 @@ void poly_double_n(uint8_t out[], const uint8_t in[], size_t n)
          return poly_double<16, MinWeightPolynomial::P1024>(out, in);
       default:
          throw Invalid_Argument("Unsupported size for poly_double_n");
-      }
    }
+}
 
-void poly_double_n_le(uint8_t out[], const uint8_t in[], size_t n)
-   {
-   switch(n)
-      {
+void poly_double_n_le(uint8_t out[], const uint8_t in[], size_t n) {
+   switch(n) {
       case 8:
          return poly_double_le<1, MinWeightPolynomial::P64>(out, in);
       case 16:
@@ -112,7 +104,7 @@ void poly_double_n_le(uint8_t out[], const uint8_t in[], size_t n)
          return poly_double_le<16, MinWeightPolynomial::P1024>(out, in);
       default:
          throw Invalid_Argument("Unsupported size for poly_double_n_le");
-      }
    }
-
 }
+
+}  // namespace Botan

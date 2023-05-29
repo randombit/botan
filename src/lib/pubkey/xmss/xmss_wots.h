@@ -14,8 +14,8 @@
 #include <botan/pk_keys.h>
 #include <botan/rng.h>
 #include <botan/secmem.h>
-#include <botan/internal/xmss_hash.h>
 #include <botan/xmss_parameters.h>
+#include <botan/internal/xmss_hash.h>
 #include <map>
 #include <memory>
 #include <string>
@@ -28,28 +28,25 @@ class XMSS_WOTS_PrivateKey;
 
 typedef std::vector<secure_vector<uint8_t>> wots_keysig_t;
 
-class XMSS_WOTS_Base
-   {
+class XMSS_WOTS_Base {
    public:
-      XMSS_WOTS_Base(XMSS_WOTS_Parameters params)
-         : m_params(std::move(params)) {}
+      XMSS_WOTS_Base(XMSS_WOTS_Parameters params) : m_params(std::move(params)) {}
 
-      XMSS_WOTS_Base(XMSS_WOTS_Parameters params, wots_keysig_t key_data)
-         : m_params(std::move(params)), m_key_data(std::move(key_data)) {}
+      XMSS_WOTS_Base(XMSS_WOTS_Parameters params, wots_keysig_t key_data) :
+            m_params(std::move(params)), m_key_data(std::move(key_data)) {}
 
       const wots_keysig_t& key_data() const { return m_key_data; }
 
    protected:
       XMSS_WOTS_Parameters m_params;
       wots_keysig_t m_key_data;
-   };
+};
 
 /**
  * A Winternitz One Time Signature public key for use with Extended Hash-Based
  * Signatures.
  **/
-class XMSS_WOTS_PublicKey : public XMSS_WOTS_Base
-   {
+class XMSS_WOTS_PublicKey : public XMSS_WOTS_Base {
    public:
       /**
        * Algorithm 4: "WOTS_genPK"
@@ -93,13 +90,12 @@ class XMSS_WOTS_PublicKey : public XMSS_WOTS_Base
                           const secure_vector<uint8_t>& msg,
                           XMSS_Address& adrs,
                           XMSS_Hash& hash);
-   };
+};
 
 /** A Winternitz One Time Signature private key for use with Extended Hash-Based
  * Signatures.
  **/
-class XMSS_WOTS_PrivateKey : public XMSS_WOTS_Base
-   {
+class XMSS_WOTS_PrivateKey : public XMSS_WOTS_Base {
    public:
       /**
        * Algorithm 3: "Generating a WOTS+ Private Key".
@@ -166,9 +162,8 @@ class XMSS_WOTS_PrivateKey : public XMSS_WOTS_Base
                          std::span<const uint8_t> public_seed,
                          XMSS_Address& adrs,
                          XMSS_Hash& hash);
+};
 
-   };
-
-}
+}  // namespace Botan
 
 #endif

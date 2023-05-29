@@ -7,9 +7,9 @@
 #ifndef BOTAN_TLS_ALGO_IDS_H_
 #define BOTAN_TLS_ALGO_IDS_H_
 
-#include <botan/types.h>
 #include <botan/asn1_obj.h>
 #include <botan/pk_keys.h>
+#include <botan/types.h>
 #include <string>
 #include <vector>
 
@@ -99,31 +99,18 @@ enum class Group_Params : uint16_t {
    FFDHE_8192 = 260,
 };
 
-constexpr bool is_x25519(const Group_Params group)
-   {
-   return group == Group_Params::X25519;
-   }
+constexpr bool is_x25519(const Group_Params group) { return group == Group_Params::X25519; }
 
-constexpr bool is_ecdh(const Group_Params group)
-   {
-   return
-      group == Group_Params::SECP256R1      ||
-      group == Group_Params::SECP384R1      ||
-      group == Group_Params::SECP521R1      ||
-      group == Group_Params::BRAINPOOL256R1 ||
-      group == Group_Params::BRAINPOOL384R1 ||
-      group == Group_Params::BRAINPOOL512R1;
-   }
+constexpr bool is_ecdh(const Group_Params group) {
+   return group == Group_Params::SECP256R1 || group == Group_Params::SECP384R1 || group == Group_Params::SECP521R1 ||
+          group == Group_Params::BRAINPOOL256R1 || group == Group_Params::BRAINPOOL384R1 ||
+          group == Group_Params::BRAINPOOL512R1;
+}
 
-constexpr bool is_dh(const Group_Params group)
-   {
-   return
-      group == Group_Params::FFDHE_2048 ||
-      group == Group_Params::FFDHE_3072 ||
-      group == Group_Params::FFDHE_4096 ||
-      group == Group_Params::FFDHE_6144 ||
-      group == Group_Params::FFDHE_8192;
-   }
+constexpr bool is_dh(const Group_Params group) {
+   return group == Group_Params::FFDHE_2048 || group == Group_Params::FFDHE_3072 || group == Group_Params::FFDHE_4096 ||
+          group == Group_Params::FFDHE_6144 || group == Group_Params::FFDHE_8192;
+}
 
 std::string group_param_to_string(Group_Params group);
 Group_Params group_param_from_string(std::string_view group_name);
@@ -144,15 +131,12 @@ enum class Kex_Algo {
 std::string BOTAN_TEST_API kex_method_to_string(Kex_Algo method);
 Kex_Algo BOTAN_TEST_API kex_method_from_string(std::string_view str);
 
-inline bool key_exchange_is_psk(Kex_Algo m)
-   {
-   return (m == Kex_Algo::PSK ||
-           m == Kex_Algo::ECDHE_PSK ||
-           m == Kex_Algo::DHE_PSK);
-   }
-
+inline bool key_exchange_is_psk(Kex_Algo m) {
+   return (m == Kex_Algo::PSK || m == Kex_Algo::ECDHE_PSK || m == Kex_Algo::DHE_PSK);
 }
 
-}
+}  // namespace TLS
+
+}  // namespace Botan
 
 #endif

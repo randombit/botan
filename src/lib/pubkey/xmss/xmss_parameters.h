@@ -8,11 +8,11 @@
 #ifndef BOTAN_XMSS_PARAMETERS_H_
 #define BOTAN_XMSS_PARAMETERS_H_
 
-#include <string>
 #include <map>
+#include <string>
 
-#include <botan/types.h>
 #include <botan/secmem.h>
+#include <botan/types.h>
 
 namespace Botan {
 
@@ -28,11 +28,9 @@ namespace Botan {
  *     Release: October 2020.
  *     https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-208.pdf
  **/
-class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_Parameters final
-   {
+class BOTAN_PUBLIC_API(2, 0) XMSS_WOTS_Parameters final {
    public:
-      enum ots_algorithm_t
-         {
+      enum ots_algorithm_t {
          // from RFC 8391
          WOTSP_SHA2_256 = 0x00000001,
 
@@ -46,7 +44,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_Parameters final
          WOTSP_SHA2_192 = 0x00000005,
          WOTSP_SHAKE_256_256 = 0x00000006,
          WOTSP_SHAKE_256_192 = 0x00000007,
-         };
+      };
 
       explicit XMSS_WOTS_Parameters(std::string_view algo_name);
       XMSS_WOTS_Parameters(ots_algorithm_t ots_spec);
@@ -70,10 +68,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_Parameters final
       /**
        * @return XMSS WOTS registry name for the chosen parameter set.
        **/
-      const std::string name() const
-         {
-         return m_name;
-         }
+      const std::string name() const { return m_name; }
 
       /**
        * Retrieves the uniform length of a message, and the size of
@@ -104,10 +99,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_Parameters final
 
       size_t estimated_strength() const { return m_strength; }
 
-      bool operator==(const XMSS_WOTS_Parameters& p) const
-         {
-         return m_oid == p.m_oid;
-         }
+      bool operator==(const XMSS_WOTS_Parameters& p) const { return m_oid == p.m_oid; }
 
    private:
       static const std::map<std::string, ots_algorithm_t> m_oid_name_lut;
@@ -121,7 +113,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_Parameters final
       size_t m_len;
       size_t m_strength;
       uint8_t m_lg_w;
-   };
+};
 
 /**
  * Descibes a signature method for XMSS, as defined in:
@@ -134,11 +126,9 @@ class BOTAN_PUBLIC_API(2,0) XMSS_WOTS_Parameters final
  *     Release: October 2020.
  *     https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-208.pdf
  **/
-class BOTAN_PUBLIC_API(2,0) XMSS_Parameters
-   {
+class BOTAN_PUBLIC_API(2, 0) XMSS_Parameters {
    public:
-      enum xmss_algorithm_t
-         {
+      enum xmss_algorithm_t {
          // from RFC 8391
          XMSS_SHA2_10_256 = 0x00000001,
          XMSS_SHA2_16_256 = 0x00000002,
@@ -166,7 +156,7 @@ class BOTAN_PUBLIC_API(2,0) XMSS_Parameters
          XMSS_SHAKE256_10_192 = 0x00000013,
          XMSS_SHAKE256_16_192 = 0x00000014,
          XMSS_SHAKE256_20_192 = 0x00000015,
-         };
+      };
 
       static xmss_algorithm_t xmss_id_from_string(std::string_view algo_name);
 
@@ -176,15 +166,9 @@ class BOTAN_PUBLIC_API(2,0) XMSS_Parameters
       /**
        * @return XMSS registry name for the chosen parameter set.
        **/
-      const std::string name() const
-         {
-         return m_name;
-         }
+      const std::string name() const { return m_name; }
 
-      const std::string hash_function_name() const
-         {
-         return m_hash_name;
-         }
+      const std::string hash_function_name() const { return m_hash_name; }
 
       /**
        * Retrieves the uniform length of a message, and the size of
@@ -227,42 +211,25 @@ class BOTAN_PUBLIC_API(2,0) XMSS_Parameters
 
       xmss_algorithm_t oid() const { return m_oid; }
 
-      XMSS_WOTS_Parameters::ots_algorithm_t ots_oid() const
-         {
-         return m_wots_oid;
-         }
+      XMSS_WOTS_Parameters::ots_algorithm_t ots_oid() const { return m_wots_oid; }
 
       /**
        * Returns the estimated pre-quantum security level of
        * the chosen algorithm.
        **/
-      size_t estimated_strength() const
-         {
-         return m_strength;
-         }
+      size_t estimated_strength() const { return m_strength; }
 
-      size_t raw_public_key_size() const
-         {
-         return sizeof(uint32_t) + 2 * element_size();
-         }
+      size_t raw_public_key_size() const { return sizeof(uint32_t) + 2 * element_size(); }
 
-      size_t raw_legacy_private_key_size() const
-         {
-         return raw_public_key_size() +
-                sizeof(uint32_t) +
-                2 * element_size();
-         }
+      size_t raw_legacy_private_key_size() const {
+         return raw_public_key_size() + sizeof(uint32_t) + 2 * element_size();
+      }
 
-      size_t raw_private_key_size() const
-         {
-         return raw_legacy_private_key_size()
-                + 1 /* identifier for WOTS+ key derivation method */;
-         }
+      size_t raw_private_key_size() const {
+         return raw_legacy_private_key_size() + 1 /* identifier for WOTS+ key derivation method */;
+      }
 
-      bool operator==(const XMSS_Parameters& p) const
-         {
-         return m_oid == p.m_oid;
-         }
+      bool operator==(const XMSS_Parameters& p) const { return m_oid == p.m_oid; }
 
    private:
       xmss_algorithm_t m_oid;
@@ -275,8 +242,8 @@ class BOTAN_PUBLIC_API(2,0) XMSS_Parameters
       size_t m_w;
       size_t m_len;
       size_t m_strength;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

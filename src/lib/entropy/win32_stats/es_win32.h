@@ -15,13 +15,13 @@ namespace Botan {
 /**
 * Win32 Entropy Source
 */
-class Win32_EntropySource final : public Entropy_Source
-   {
+class Win32_EntropySource final : public Entropy_Source {
    public:
       std::string name() const override { return "system_stats"; }
-      size_t poll(RandomNumberGenerator& rng) override;
-   };
 
-}
+      size_t poll(RandomNumberGenerator& rng) override;
+};
+
+}  // namespace Botan
 
 #endif

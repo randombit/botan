@@ -9,18 +9,17 @@
 #define BOTAN_TEST_RUNNER_H_
 
 #include <iosfwd>
-#include <string>
-#include <vector>
 #include <memory>
 #include <optional>
+#include <string>
+#include <vector>
 
 namespace Botan_Tests {
 
 class Test_Options;
 class Reporter;
 
-class Test_Runner final
-   {
+class Test_Runner final {
    public:
       Test_Runner(std::ostream& out);
       ~Test_Runner();
@@ -33,13 +32,12 @@ class Test_Runner final
 
       /// @return true iff all tests passed
       bool run_tests(const std::vector<std::string>& tests_to_run);
-      bool run_tests_multithreaded(const std::vector<std::string>& tests_to_run,
-                                   size_t test_threads);
+      bool run_tests_multithreaded(const std::vector<std::string>& tests_to_run, size_t test_threads);
 
       std::ostream& m_output;
       std::vector<std::unique_ptr<Reporter>> m_reporters;
-   };
+};
 
-}
+}  // namespace Botan_Tests
 
 #endif

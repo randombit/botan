@@ -24,9 +24,7 @@ namespace TLS {
 * sessions are stored in the database in plaintext. This may be a
 * serious privacy risk in some situations.
 */
-class BOTAN_PUBLIC_API(3,0)
-Session_Manager_SQLite final : public Session_Manager_SQL
-   {
+class BOTAN_PUBLIC_API(3, 0) Session_Manager_SQLite final : public Session_Manager_SQL {
    public:
       /**
       * @param passphrase used to encrypt the session data
@@ -43,8 +41,8 @@ Session_Manager_SQLite final : public Session_Manager_SQL
                              size_t max_sessions = 1000);
 };
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif

@@ -81,6 +81,6 @@ BOTAN_TEST_API const BigInt& prime_p192();
 */
 BOTAN_TEST_API void redc_p192(BigInt& x, secure_vector<word>& ws);
 
-}
+}  // namespace Botan
 
 #endif

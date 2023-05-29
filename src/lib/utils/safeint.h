@@ -14,23 +14,20 @@
 #include <string_view>
 
 #if defined(_MSC_VER)
-#include <intsafe.h>
+   #include <intsafe.h>
 #endif
 
 namespace Botan {
 
-class Integer_Overflow_Detected final : public Exception
-   {
+class Integer_Overflow_Detected final : public Exception {
    public:
       Integer_Overflow_Detected(std::string_view file, int line) :
-         Exception(fmt("Integer overflow detected at {}:{}", file, line))
-         {}
+            Exception(fmt("Integer overflow detected at {}:{}", file, line)) {}
 
       ErrorType error_type() const noexcept override { return ErrorType::InternalError; }
-   };
+};
 
-inline size_t checked_add(size_t x, size_t y, const char* file, int line)
-   {
+inline size_t checked_add(size_t x, size_t y, const char* file, int line) {
 #if BOTAN_COMPILER_HAS_BUILTIN(__builtin_add_overflow)
    size_t z;
    if(__builtin_add_overflow(x, y, &z)) [[unlikely]]
@@ -41,14 +38,13 @@ inline size_t checked_add(size_t x, size_t y, const char* file, int line)
    size_t z = x + y;
    if(z < x) [[unlikely]]
 #endif
-      {
-      throw Integer_Overflow_Detected(file, line);
-      }
-   return z;
-   }
-
-inline std::optional<size_t> checked_mul(size_t x, size_t y)
    {
+      throw Integer_Overflow_Detected(file, line);
+   }
+   return z;
+}
+
+inline std::optional<size_t> checked_mul(size_t x, size_t y) {
 #if BOTAN_COMPILER_HAS_BUILTIN(__builtin_add_overflow)
    size_t z;
    if(__builtin_mul_overflow(x, y, &z)) [[unlikely]]
@@ -59,24 +55,23 @@ inline std::optional<size_t> checked_mul(size_t x, size_t y)
    size_t z = x * y;
    if(y && z / y != x) [[unlikely]]
 #endif
-      {
-      return std::nullopt;
-      }
-   return z;
-   }
-
-template<typename RT, typename AT>
-RT checked_cast_to(AT i)
    {
+      return std::nullopt;
+   }
+   return z;
+}
+
+template <typename RT, typename AT>
+RT checked_cast_to(AT i) {
    RT c = static_cast<RT>(i);
    if(i != static_cast<AT>(c))
       throw Internal_Error("Error during integer conversion");
    return c;
-   }
-
-#define BOTAN_CHECKED_ADD(x,y) checked_add(x,y,__FILE__,__LINE__)
-#define BOTAN_CHECKED_MUL(x,y) checked_mul(x,y)
-
 }
+
+#define BOTAN_CHECKED_ADD(x, y) checked_add(x, y, __FILE__, __LINE__)
+#define BOTAN_CHECKED_MUL(x, y) checked_mul(x, y)
+
+}  // namespace Botan
 
 #endif

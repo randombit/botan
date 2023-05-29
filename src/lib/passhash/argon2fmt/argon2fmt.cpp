@@ -6,25 +6,23 @@
 
 #include <botan/argon2fmt.h>
 
+#include <botan/base64.h>
 #include <botan/pwdhash.h>
 #include <botan/rng.h>
-#include <botan/base64.h>
-#include <botan/internal/parsing.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/parsing.h>
 
 namespace Botan {
 
 namespace {
 
-std::string strip_padding(std::string s)
-   {
-   while(!s.empty() && s[s.size()-1] == '=')
+std::string strip_padding(std::string s) {
+   while(!s.empty() && s[s.size() - 1] == '=')
       s.resize(s.size() - 1);
    return s;
-   }
+}
 
-std::string argon2_family(uint8_t y)
-   {
+std::string argon2_family(uint8_t y) {
    if(y == 0)
       return "Argon2d";
    else if(y == 1)
@@ -33,15 +31,19 @@ std::string argon2_family(uint8_t y)
       return "Argon2id";
    else
       throw Not_Implemented("Unknown Argon2 family type");
-   }
-
 }
 
-std::string argon2_generate_pwhash(const char* password, size_t password_len,
+}  // namespace
+
+std::string argon2_generate_pwhash(const char* password,
+                                   size_t password_len,
                                    RandomNumberGenerator& rng,
-                                   size_t p, size_t M, size_t t,
-                                   uint8_t y, size_t salt_len, size_t output_len)
-   {
+                                   size_t p,
+                                   size_t M,
+                                   size_t t,
+                                   uint8_t y,
+                                   size_t salt_len,
+                                   size_t output_len) {
    std::vector<uint8_t> salt(salt_len);
    rng.randomize(salt.data(), salt.size());
 
@@ -50,31 +52,24 @@ std::string argon2_generate_pwhash(const char* password, size_t password_len,
    auto pwdhash_fam = PasswordHashFamily::create_or_throw(argon2_family(y));
    auto pwdhash = pwdhash_fam->from_params(M, t, p);
 
-   pwdhash->derive_key(output.data(), output.size(),
-                       password, password_len,
-                       salt.data(), salt.size());
+   pwdhash->derive_key(output.data(), output.size(), password, password_len, salt.data(), salt.size());
 
    const auto enc_salt = strip_padding(base64_encode(salt));
    const auto enc_output = strip_padding(base64_encode(output));
 
-   const std::string argon2_mode = [&]() -> std::string
-      {
+   const std::string argon2_mode = [&]() -> std::string {
       if(y == 0)
          return "d";
       else if(y == 1)
          return "i";
       else
          return "id";
-      }();
+   }();
 
-   return fmt("$argon2{}$v=19$m={},t={},p={}${}${}",
-              argon2_mode, M, t, p,
-              enc_salt, enc_output);
-   }
+   return fmt("$argon2{}$v=19$m={},t={},p={}${}${}", argon2_mode, M, t, p, enc_salt, enc_output);
+}
 
-bool argon2_check_pwhash(const char* password, size_t password_len,
-                         std::string_view input_hash)
-   {
+bool argon2_check_pwhash(const char* password, size_t password_len, std::string_view input_hash) {
    const std::vector<std::string> parts = split_on(input_hash, '$');
 
    if(parts.size() != 5)
@@ -101,8 +96,7 @@ bool argon2_check_pwhash(const char* password, size_t password_len,
 
    size_t M = 0, t = 0, p = 0;
 
-   for(const auto& param_str : params)
-      {
+   for(const auto& param_str : params) {
       const std::vector<std::string> param = split_on(param_str, '=');
 
       if(param.size() != 2)
@@ -118,7 +112,7 @@ bool argon2_check_pwhash(const char* password, size_t password_len,
          p = val;
       else
          return false;
-      }
+   }
 
    std::vector<uint8_t> salt(base64_decode_max_output(parts[3].size()));
    salt.resize(base64_decode(salt.data(), parts[3], false));
@@ -133,11 +127,9 @@ bool argon2_check_pwhash(const char* password, size_t password_len,
    auto pwdhash_fam = PasswordHashFamily::create_or_throw(argon2_family(family));
    auto pwdhash = pwdhash_fam->from_params(M, t, p);
 
-   pwdhash->derive_key(generated.data(), generated.size(),
-                       password, password_len,
-                       salt.data(), salt.size());
+   pwdhash->derive_key(generated.data(), generated.size(), password, password_len, salt.data(), salt.size());
 
    return constant_time_compare(generated.data(), hash.data(), generated.size());
-   }
-
 }
+
+}  // namespace Botan

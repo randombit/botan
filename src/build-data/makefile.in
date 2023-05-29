@@ -48,7 +48,7 @@ docs: %{doc_stamp_file}
 # Misc targets
 
 %{if make_supports_phony}
-.PHONY: all cli libs tests check docs clean distclean install
+.PHONY: all cli libs tests check docs clean distclean install fmt
 %{endif}
 
 %{doc_stamp_file}: %{doc_dir}/*.rst %{doc_dir}/api_ref/*.rst %{doc_dir}/dev_ref/*.rst
@@ -65,6 +65,9 @@ install: %{install_targets}
 
 check: tests
 	"$(PYTHON_EXE)" "$(SCRIPTS_DIR)/check.py" --build-dir="%{build_dir}"
+
+fmt:
+	"$(PYTHON_EXE)" "$(SCRIPTS_DIR)/dev_tools/run_clang_format.py"
 
 # Object Files
 LIBOBJS = %{join lib_objs}

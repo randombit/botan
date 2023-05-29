@@ -7,12 +7,12 @@
 
 #include <botan/x509_ca.h>
 
-#include <botan/x509_key.h>
-#include <botan/pkcs10.h>
-#include <botan/x509_ext.h>
-#include <botan/pubkey.h>
-#include <botan/der_enc.h>
 #include <botan/bigint.h>
+#include <botan/der_enc.h>
+#include <botan/pkcs10.h>
+#include <botan/pubkey.h>
+#include <botan/x509_ext.h>
+#include <botan/x509_key.h>
 
 namespace Botan {
 
@@ -24,24 +24,21 @@ X509_CA::X509_CA(const X509_Certificate& cert,
                  std::string_view hash_fn,
                  std::string_view padding_method,
                  RandomNumberGenerator& rng) :
-   m_ca_cert(cert)
-   {
+      m_ca_cert(cert) {
    if(!m_ca_cert.is_CA_cert())
       throw Invalid_Argument("X509_CA: This certificate is not for a CA");
 
    m_signer = X509_Object::choose_sig_format(key, rng, hash_fn, padding_method);
    m_ca_sig_algo = m_signer->algorithm_identifier();
    m_hash_fn = m_signer->hash_function();
-   }
+}
 
 X509_CA::~X509_CA() = default;
 
 Extensions X509_CA::choose_extensions(const PKCS10_Request& req,
                                       const X509_Certificate& ca_cert,
-                                      std::string_view hash_fn)
-   {
-   const auto constraints =
-      req.is_CA() ? Key_Constraints::ca_constraints() : req.constraints();
+                                      std::string_view hash_fn) {
+   const auto constraints = req.is_CA() ? Key_Constraints::ca_constraints() : req.constraints();
 
    auto key = req.subject_public_key();
    if(!constraints.compatible_with(*key))
@@ -49,41 +46,40 @@ Extensions X509_CA::choose_extensions(const PKCS10_Request& req,
 
    Extensions extensions = req.extensions();
 
-   extensions.replace(
-      std::make_unique<Cert_Extension::Basic_Constraints>(req.is_CA(), req.path_limit()),
-      true);
+   extensions.replace(std::make_unique<Cert_Extension::Basic_Constraints>(req.is_CA(), req.path_limit()), true);
 
-   if(!constraints.empty())
-      {
+   if(!constraints.empty()) {
       extensions.replace(std::make_unique<Cert_Extension::Key_Usage>(constraints), true);
-      }
+   }
 
    extensions.replace(std::make_unique<Cert_Extension::Authority_Key_ID>(ca_cert.subject_key_id()));
    extensions.replace(std::make_unique<Cert_Extension::Subject_Key_ID>(req.raw_public_key(), hash_fn));
 
-   extensions.replace(
-      std::make_unique<Cert_Extension::Subject_Alternative_Name>(req.subject_alt_name()));
+   extensions.replace(std::make_unique<Cert_Extension::Subject_Alternative_Name>(req.subject_alt_name()));
 
-   extensions.replace(
-      std::make_unique<Cert_Extension::Extended_Key_Usage>(req.ex_constraints()));
+   extensions.replace(std::make_unique<Cert_Extension::Extended_Key_Usage>(req.ex_constraints()));
 
    return extensions;
-   }
+}
 
 X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
                                        RandomNumberGenerator& rng,
                                        const BigInt& serial_number,
                                        const X509_Time& not_before,
-                                       const X509_Time& not_after) const
-   {
+                                       const X509_Time& not_after) const {
    auto extensions = choose_extensions(req, m_ca_cert, m_hash_fn);
 
-   return make_cert(*m_signer, rng, serial_number,
-                    algorithm_identifier(), req.raw_public_key(),
-                    not_before, not_after,
-                    ca_certificate().subject_dn(), req.subject_dn(),
+   return make_cert(*m_signer,
+                    rng,
+                    serial_number,
+                    algorithm_identifier(),
+                    req.raw_public_key(),
+                    not_before,
+                    not_after,
+                    ca_certificate().subject_dn(),
+                    req.subject_dn(),
                     extensions);
-   }
+}
 
 /*
 * Sign a PKCS #10 certificate request
@@ -91,16 +87,19 @@ X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
 X509_Certificate X509_CA::sign_request(const PKCS10_Request& req,
                                        RandomNumberGenerator& rng,
                                        const X509_Time& not_before,
-                                       const X509_Time& not_after) const
-   {
+                                       const X509_Time& not_after) const {
    auto extensions = choose_extensions(req, m_ca_cert, m_hash_fn);
 
-   return make_cert(*m_signer, rng, algorithm_identifier(),
+   return make_cert(*m_signer,
+                    rng,
+                    algorithm_identifier(),
                     req.raw_public_key(),
-                    not_before, not_after,
-                    ca_certificate().subject_dn(), req.subject_dn(),
+                    not_before,
+                    not_after,
+                    ca_certificate().subject_dn(),
+                    req.subject_dn(),
                     extensions);
-   }
+}
 
 X509_Certificate X509_CA::make_cert(PK_Signer& signer,
                                     RandomNumberGenerator& rng,
@@ -110,14 +109,13 @@ X509_Certificate X509_CA::make_cert(PK_Signer& signer,
                                     const X509_Time& not_after,
                                     const X509_DN& issuer_dn,
                                     const X509_DN& subject_dn,
-                                    const Extensions& extensions)
-   {
+                                    const Extensions& extensions) {
    const size_t SERIAL_BITS = 128;
    BigInt serial_no(rng, SERIAL_BITS);
 
-   return make_cert(signer, rng, serial_no, sig_algo, pub_key,
-                    not_before, not_after, issuer_dn, subject_dn, extensions);
-   }
+   return make_cert(
+      signer, rng, serial_no, sig_algo, pub_key, not_before, not_after, issuer_dn, subject_dn, extensions);
+}
 
 /*
 * Create a new certificate
@@ -131,8 +129,7 @@ X509_Certificate X509_CA::make_cert(PK_Signer& signer,
                                     const X509_Time& not_after,
                                     const X509_DN& issuer_dn,
                                     const X509_DN& subject_dn,
-                                    const Extensions& extensions)
-   {
+                                    const Extensions& extensions) {
    const size_t X509_CERT_VERSION = 3;
 
    // clang-format off
@@ -165,18 +162,14 @@ X509_Certificate X509_CA::make_cert(PK_Signer& signer,
       .get_contents()
       ));
    // clang-format on
-   }
+}
 
 /*
 * Create a new, empty CRL
 */
-X509_CRL X509_CA::new_crl(RandomNumberGenerator& rng,
-                          uint32_t next_update) const
-   {
-   return new_crl(rng,
-                  std::chrono::system_clock::now(),
-                  std::chrono::seconds(next_update));
-   }
+X509_CRL X509_CA::new_crl(RandomNumberGenerator& rng, uint32_t next_update) const {
+   return new_crl(rng, std::chrono::system_clock::now(), std::chrono::seconds(next_update));
+}
 
 /*
 * Update a CRL with new entries
@@ -184,35 +177,28 @@ X509_CRL X509_CA::new_crl(RandomNumberGenerator& rng,
 X509_CRL X509_CA::update_crl(const X509_CRL& crl,
                              const std::vector<CRL_Entry>& new_revoked,
                              RandomNumberGenerator& rng,
-                             uint32_t next_update) const
-   {
-   return update_crl(crl, new_revoked, rng,
-                     std::chrono::system_clock::now(),
-                     std::chrono::seconds(next_update));
-   }
-
+                             uint32_t next_update) const {
+   return update_crl(crl, new_revoked, rng, std::chrono::system_clock::now(), std::chrono::seconds(next_update));
+}
 
 X509_CRL X509_CA::new_crl(RandomNumberGenerator& rng,
                           std::chrono::system_clock::time_point issue_time,
-                          std::chrono::seconds next_update) const
-   {
+                          std::chrono::seconds next_update) const {
    std::vector<CRL_Entry> empty;
    return make_crl(empty, 1, rng, issue_time, next_update);
-   }
+}
 
 X509_CRL X509_CA::update_crl(const X509_CRL& last_crl,
                              const std::vector<CRL_Entry>& new_revoked,
                              RandomNumberGenerator& rng,
                              std::chrono::system_clock::time_point issue_time,
-                             std::chrono::seconds next_update) const
-   {
+                             std::chrono::seconds next_update) const {
    std::vector<CRL_Entry> revoked = last_crl.get_revoked();
 
-   std::copy(new_revoked.begin(), new_revoked.end(),
-             std::back_inserter(revoked));
+   std::copy(new_revoked.begin(), new_revoked.end(), std::back_inserter(revoked));
 
    return make_crl(revoked, last_crl.crl_number() + 1, rng, issue_time, next_update);
-   }
+}
 
 /*
 * Create a CRL
@@ -221,8 +207,7 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
                            uint32_t crl_number,
                            RandomNumberGenerator& rng,
                            std::chrono::system_clock::time_point issue_time,
-                           std::chrono::seconds next_update) const
-   {
+                           std::chrono::seconds next_update) const {
    const size_t X509_CRL_VERSION = 2;
 
    auto expire_time = issue_time + next_update;
@@ -256,6 +241,6 @@ X509_CRL X509_CA::make_crl(const std::vector<CRL_Entry>& revoked,
    // clang-format on
 
    return X509_CRL(crl);
-   }
-
 }
+
+}  // namespace Botan

@@ -7,29 +7,28 @@
 
 #include <iostream>
 
-int main(int argc, char *argv[]) {
-  if (argc != 2)
-    return 1;
-  std::string plaintext("Your great-grandfather gave this watch to your granddad for good luck. "
-                        "Unfortunately, Dane's luck wasn't as good as his old man's.");
-  std::vector<uint8_t> pt(plaintext.data(), plaintext.data() + plaintext.length());
-  Botan::AutoSeeded_RNG rng;
+int main(int argc, char* argv[]) {
+   if(argc != 2)
+      return 1;
+   std::string plaintext(
+      "Your great-grandfather gave this watch to your granddad for good luck. "
+      "Unfortunately, Dane's luck wasn't as good as his old man's.");
+   std::vector<uint8_t> pt(plaintext.data(), plaintext.data() + plaintext.length());
+   Botan::AutoSeeded_RNG rng;
 
-  // load keypair
-  Botan::DataSource_Stream in(argv[1]);
-  auto kp = Botan::PKCS8::load_key(in);
+   // load keypair
+   Botan::DataSource_Stream in(argv[1]);
+   auto kp = Botan::PKCS8::load_key(in);
 
-  // encrypt with pk
-  Botan::PK_Encryptor_EME enc(*kp, rng, "OAEP(SHA-256)");
-  std::vector<uint8_t> ct = enc.encrypt(pt, rng);
+   // encrypt with pk
+   Botan::PK_Encryptor_EME enc(*kp, rng, "OAEP(SHA-256)");
+   std::vector<uint8_t> ct = enc.encrypt(pt, rng);
 
-  // decrypt with sk
-  Botan::PK_Decryptor_EME dec(*kp, rng, "OAEP(SHA-256)");
-  Botan::secure_vector<uint8_t> pt2 = dec.decrypt(ct);
+   // decrypt with sk
+   Botan::PK_Decryptor_EME dec(*kp, rng, "OAEP(SHA-256)");
+   Botan::secure_vector<uint8_t> pt2 = dec.decrypt(ct);
 
-  std::cout << std::endl
-            << "enc: " << Botan::hex_encode(ct) << std::endl
-            << "dec: " << Botan::hex_encode(pt2);
+   std::cout << std::endl << "enc: " << Botan::hex_encode(ct) << std::endl << "dec: " << Botan::hex_encode(pt2);
 
-  return 0;
+   return 0;
 }

@@ -18,10 +18,7 @@
 namespace Botan {
 
 BOTAN_FUNC_ISA("sha,ssse3,sse4.1")
-void SHA_1::sha1_compress_x86(secure_vector<uint32_t>& digest,
-                                const uint8_t input[],
-                                size_t blocks)
-   {
+void SHA_1::sha1_compress_x86(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks) {
    const __m128i MASK = _mm_set_epi64x(0x0001020304050607, 0x08090a0b0c0d0e0f);
    const __m128i* input_mm = reinterpret_cast<const __m128i*>(input);
 
@@ -32,8 +29,7 @@ void SHA_1::sha1_compress_x86(secure_vector<uint32_t>& digest,
    __m128i E0 = _mm_set_epi32(state[4], 0, 0, 0);
    ABCD = _mm_shuffle_epi32(ABCD, 0x1B);
 
-   while (blocks)
-      {
+   while(blocks) {
       // Save current hash
       const __m128i ABCD_SAVE = ABCD;
       const __m128i E0_SAVE = E0;
@@ -42,14 +38,14 @@ void SHA_1::sha1_compress_x86(secure_vector<uint32_t>& digest,
       __m128i E1;
 
       // Rounds 0-3
-      MSG0 = _mm_loadu_si128(input_mm+0);
+      MSG0 = _mm_loadu_si128(input_mm + 0);
       MSG0 = _mm_shuffle_epi8(MSG0, MASK);
       E0 = _mm_add_epi32(E0, MSG0);
       E1 = ABCD;
       ABCD = _mm_sha1rnds4_epu32(ABCD, E0, 0);
 
       // Rounds 4-7
-      MSG1 = _mm_loadu_si128(input_mm+1);
+      MSG1 = _mm_loadu_si128(input_mm + 1);
       MSG1 = _mm_shuffle_epi8(MSG1, MASK);
       E1 = _mm_sha1nexte_epu32(E1, MSG1);
       E0 = ABCD;
@@ -57,7 +53,7 @@ void SHA_1::sha1_compress_x86(secure_vector<uint32_t>& digest,
       MSG0 = _mm_sha1msg1_epu32(MSG0, MSG1);
 
       // Rounds 8-11
-      MSG2 = _mm_loadu_si128(input_mm+2);
+      MSG2 = _mm_loadu_si128(input_mm + 2);
       MSG2 = _mm_shuffle_epi8(MSG2, MASK);
       E0 = _mm_sha1nexte_epu32(E0, MSG2);
       E1 = ABCD;
@@ -66,7 +62,7 @@ void SHA_1::sha1_compress_x86(secure_vector<uint32_t>& digest,
       MSG0 = _mm_xor_si128(MSG0, MSG2);
 
       // Rounds 12-15
-      MSG3 = _mm_loadu_si128(input_mm+3);
+      MSG3 = _mm_loadu_si128(input_mm + 3);
       MSG3 = _mm_shuffle_epi8(MSG3, MASK);
       E1 = _mm_sha1nexte_epu32(E1, MSG3);
       E0 = ABCD;
@@ -203,12 +199,12 @@ void SHA_1::sha1_compress_x86(secure_vector<uint32_t>& digest,
 
       input_mm += 4;
       blocks--;
-      }
+   }
 
    // Save state
    ABCD = _mm_shuffle_epi32(ABCD, 0x1B);
    _mm_storeu_si128(reinterpret_cast<__m128i*>(state), ABCD);
    state[4] = _mm_extract_epi32(E0, 3);
-   }
-
 }
+
+}  // namespace Botan

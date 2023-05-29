@@ -15,8 +15,7 @@ namespace Botan {
 /**
 * Certificate and private key store backed by an sqlite (https://sqlite.org) database.
 */
-class BOTAN_PUBLIC_API(2,0) Certificate_Store_In_SQLite final : public Certificate_Store_In_SQL
-   {
+class BOTAN_PUBLIC_API(2, 0) Certificate_Store_In_SQLite final : public Certificate_Store_In_SQL {
    public:
       /**
       * Create/open a certificate store.
@@ -29,6 +28,6 @@ class BOTAN_PUBLIC_API(2,0) Certificate_Store_In_SQLite final : public Certifica
                                   std::string_view passwd,
                                   RandomNumberGenerator& rng,
                                   std::string_view table_prefix = "");
-   };
-}
+};
+}  // namespace Botan
 #endif

@@ -9,16 +9,15 @@
 #ifndef BOTAN_MODE_XTS_H_
 #define BOTAN_MODE_XTS_H_
 
-#include <botan/cipher_mode.h>
 #include <botan/block_cipher.h>
+#include <botan/cipher_mode.h>
 
 namespace Botan {
 
 /**
 * IEEE P1619 XTS Mode
 */
-class XTS_Mode : public Cipher_Mode
-   {
+class XTS_Mode : public Cipher_Mode {
    public:
       std::string name() const override final;
 
@@ -39,6 +38,7 @@ class XTS_Mode : public Cipher_Mode
       void reset() override final;
 
       bool has_keying_material() const override final;
+
    protected:
       explicit XTS_Mode(std::unique_ptr<BlockCipher> cipher);
 
@@ -64,46 +64,42 @@ class XTS_Mode : public Cipher_Mode
       const size_t m_cipher_block_size;
       const size_t m_cipher_parallelism;
       const size_t m_tweak_blocks;
-   };
+};
 
 /**
 * IEEE P1619 XTS Encryption
 */
-class XTS_Encryption final : public XTS_Mode
-   {
+class XTS_Encryption final : public XTS_Mode {
    public:
       /**
       * @param cipher underlying block cipher
       */
-      explicit XTS_Encryption(std::unique_ptr<BlockCipher> cipher) :
-         XTS_Mode(std::move(cipher)) {}
+      explicit XTS_Encryption(std::unique_ptr<BlockCipher> cipher) : XTS_Mode(std::move(cipher)) {}
 
       size_t output_length(size_t input_length) const override;
 
    private:
       size_t process_msg(uint8_t buf[], size_t size) override;
       void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-   };
+};
 
 /**
 * IEEE P1619 XTS Decryption
 */
-class XTS_Decryption final : public XTS_Mode
-   {
+class XTS_Decryption final : public XTS_Mode {
    public:
       /**
       * @param cipher underlying block cipher
       */
-      explicit XTS_Decryption(std::unique_ptr<BlockCipher> cipher) :
-         XTS_Mode(std::move(cipher)) {}
+      explicit XTS_Decryption(std::unique_ptr<BlockCipher> cipher) : XTS_Mode(std::move(cipher)) {}
 
       size_t output_length(size_t input_length) const override;
 
    private:
       size_t process_msg(uint8_t buf[], size_t size) override;
       void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

@@ -18,8 +18,7 @@ namespace Botan {
 * Base class for CCM encryption and decryption
 * @see RFC 3610
 */
-class CCM_Mode : public AEAD_Mode
-   {
+class CCM_Mode : public AEAD_Mode {
    public:
       void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) override final;
 
@@ -64,6 +63,7 @@ class CCM_Mode : public AEAD_Mode
 
       secure_vector<uint8_t> format_b0(size_t msg_size);
       secure_vector<uint8_t> format_c0();
+
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override final;
       size_t process_msg(uint8_t buf[], size_t sz) override final;
@@ -75,13 +75,12 @@ class CCM_Mode : public AEAD_Mode
 
       std::unique_ptr<BlockCipher> m_cipher;
       secure_vector<uint8_t> m_nonce, m_msg_buf, m_ad_buf;
-   };
+};
 
 /**
 * CCM Encryption
 */
-class CCM_Encryption final : public CCM_Mode
-   {
+class CCM_Encryption final : public CCM_Mode {
    public:
       /**
       * @param cipher a 128-bit block cipher
@@ -91,22 +90,20 @@ class CCM_Encryption final : public CCM_Mode
       *           must be less than 2**L bytes, and the nonce is 15-L bytes.
       */
       CCM_Encryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16, size_t L = 3) :
-         CCM_Mode(std::move(cipher), tag_size, L) {}
+            CCM_Mode(std::move(cipher), tag_size, L) {}
 
-      size_t output_length(size_t input_length) const override
-         { return input_length + tag_size(); }
+      size_t output_length(size_t input_length) const override { return input_length + tag_size(); }
 
       size_t minimum_final_size() const override { return 0; }
 
    private:
       void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-   };
+};
 
 /**
 * CCM Decryption
 */
-class CCM_Decryption final : public CCM_Mode
-   {
+class CCM_Decryption final : public CCM_Mode {
    public:
       /**
       * @param cipher a 128-bit block cipher
@@ -116,20 +113,19 @@ class CCM_Decryption final : public CCM_Mode
       *           must be less than 2**L bytes, and the nonce is 15-L bytes.
       */
       CCM_Decryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16, size_t L = 3) :
-         CCM_Mode(std::move(cipher), tag_size, L) {}
+            CCM_Mode(std::move(cipher), tag_size, L) {}
 
-      size_t output_length(size_t input_length) const override
-         {
+      size_t output_length(size_t input_length) const override {
          BOTAN_ARG_CHECK(input_length >= tag_size(), "Sufficient input");
          return input_length - tag_size();
-         }
+      }
 
       size_t minimum_final_size() const override { return tag_size(); }
 
    private:
       void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

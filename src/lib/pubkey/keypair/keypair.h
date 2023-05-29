@@ -23,11 +23,10 @@ namespace KeyPair {
 * @param padding the encryption padding method to use
 * @return true if consistent otherwise false
 */
-bool
-encryption_consistency_check(RandomNumberGenerator& rng,
-                             const Private_Key& private_key,
-                             const Public_Key& public_key,
-                             std::string_view padding);
+bool encryption_consistency_check(RandomNumberGenerator& rng,
+                                  const Private_Key& private_key,
+                                  const Public_Key& public_key,
+                                  std::string_view padding);
 
 /**
 * Tests whether the key is consistent for signatures; whether a
@@ -38,11 +37,10 @@ encryption_consistency_check(RandomNumberGenerator& rng,
 * @param padding the signature padding method to use
 * @return true if consistent otherwise false
 */
-bool
-signature_consistency_check(RandomNumberGenerator& rng,
-                            const Private_Key& private_key,
-                            const Public_Key& public_key,
-                            std::string_view padding);
+bool signature_consistency_check(RandomNumberGenerator& rng,
+                                 const Private_Key& private_key,
+                                 const Public_Key& public_key,
+                                 std::string_view padding);
 
 /**
 * Tests whether the key is consistent for encryption; whether
@@ -52,13 +50,9 @@ signature_consistency_check(RandomNumberGenerator& rng,
 * @param padding the encryption padding method to use
 * @return true if consistent otherwise false
 */
-inline bool
-encryption_consistency_check(RandomNumberGenerator& rng,
-                             const Private_Key& key,
-                             std::string_view padding)
-   {
+inline bool encryption_consistency_check(RandomNumberGenerator& rng, const Private_Key& key, std::string_view padding) {
    return encryption_consistency_check(rng, key, key, padding);
-   }
+}
 
 /**
 * Tests whether the key is consistent for signatures; whether a
@@ -68,16 +62,12 @@ encryption_consistency_check(RandomNumberGenerator& rng,
 * @param padding the signature padding method to use
 * @return true if consistent otherwise false
 */
-inline bool
-signature_consistency_check(RandomNumberGenerator& rng,
-                            const Private_Key& key,
-                            std::string_view padding)
-   {
+inline bool signature_consistency_check(RandomNumberGenerator& rng, const Private_Key& key, std::string_view padding) {
    return signature_consistency_check(rng, key, key, padding);
-   }
-
 }
 
-}
+}  // namespace KeyPair
+
+}  // namespace Botan
 
 #endif

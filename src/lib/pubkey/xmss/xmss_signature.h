@@ -8,27 +8,25 @@
 #ifndef BOTAN_XMSS_SIGNATURE_H_
 #define BOTAN_XMSS_SIGNATURE_H_
 
-#include <cstddef>
 #include <botan/exceptn.h>
-#include <botan/types.h>
 #include <botan/secmem.h>
+#include <botan/types.h>
 #include <botan/xmss_parameters.h>
 #include <botan/internal/xmss_wots.h>
+#include <cstddef>
 
 namespace Botan {
 
 /**
  * Helper class for marshalling an XMSS signature
  */
-class XMSS_Signature final
-   {
+class XMSS_Signature final {
    public:
-      struct TreeSignature final
-         {
+      struct TreeSignature final {
          public:
             wots_keysig_t ots_signature;
             wots_keysig_t authentication_path;
-         };
+      };
 
    public:
       /**
@@ -39,8 +37,7 @@ class XMSS_Signature final
        * @param raw_sig An XMSS signature serialized using
        *                XMSS_Signature::bytes().
        **/
-      XMSS_Signature(XMSS_Parameters::xmss_algorithm_t oid,
-                     const secure_vector<uint8_t>& raw_sig);
+      XMSS_Signature(XMSS_Parameters::xmss_algorithm_t oid, const secure_vector<uint8_t>& raw_sig);
 
       /**
        * Creates an XMSS Signature from a leaf index used for signature
@@ -50,44 +47,24 @@ class XMSS_Signature final
        * @param randomness A random value.
        * @param tree_sig A tree signature.
        **/
-      XMSS_Signature(size_t leaf_idx,
-                     secure_vector<uint8_t> randomness,
-                     XMSS_Signature::TreeSignature tree_sig)
-         : m_leaf_idx(leaf_idx), m_randomness(std::move(randomness)),
-           m_tree_sig(std::move(tree_sig)) {}
+      XMSS_Signature(size_t leaf_idx, secure_vector<uint8_t> randomness, XMSS_Signature::TreeSignature tree_sig) :
+            m_leaf_idx(leaf_idx), m_randomness(std::move(randomness)), m_tree_sig(std::move(tree_sig)) {}
 
       size_t unused_leaf_index() const { return m_leaf_idx; }
+
       void set_unused_leaf_idx(size_t idx) { m_leaf_idx = idx; }
 
-      const secure_vector<uint8_t> randomness() const
-         {
-         return m_randomness;
-         }
+      const secure_vector<uint8_t> randomness() const { return m_randomness; }
 
-      secure_vector<uint8_t>& randomness()
-         {
-         return m_randomness;
-         }
+      secure_vector<uint8_t>& randomness() { return m_randomness; }
 
-      void set_randomness(secure_vector<uint8_t> randomness)
-         {
-         m_randomness = std::move(randomness);
-         }
+      void set_randomness(secure_vector<uint8_t> randomness) { m_randomness = std::move(randomness); }
 
-      const XMSS_Signature::TreeSignature& tree() const
-         {
-         return m_tree_sig;
-         }
+      const XMSS_Signature::TreeSignature& tree() const { return m_tree_sig; }
 
-      XMSS_Signature::TreeSignature& tree()
-         {
-         return m_tree_sig;
-         }
+      XMSS_Signature::TreeSignature& tree() { return m_tree_sig; }
 
-      void set_tree(XMSS_Signature::TreeSignature tree_sig)
-         {
-         m_tree_sig = std::move(tree_sig);
-         }
+      void set_tree(XMSS_Signature::TreeSignature tree_sig) { m_tree_sig = std::move(tree_sig); }
 
       /**
        * Generates a serialized representation of XMSS Signature by
@@ -107,8 +84,8 @@ class XMSS_Signature final
       size_t m_leaf_idx;
       secure_vector<uint8_t> m_randomness;
       XMSS_Signature::TreeSignature m_tree_sig;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

@@ -11,13 +11,13 @@
 #ifndef BOTAN_TLS_CALLBACKS_H_
 #define BOTAN_TLS_CALLBACKS_H_
 
-#include <botan/tls_session.h>
-#include <botan/tls_alert.h>
 #include <botan/dl_group.h>
-#include <botan/pubkey.h>
 #include <botan/ocsp.h>
-#include <optional>
+#include <botan/pubkey.h>
+#include <botan/tls_alert.h>
+#include <botan/tls_session.h>
 #include <chrono>
+#include <optional>
 
 namespace Botan {
 
@@ -41,12 +41,11 @@ class Certificate_Status_Request;
 * Encapsulates the callbacks that a TLS channel will make which are due to
 * channel specific operations.
 */
-class BOTAN_PUBLIC_API(2,0) Callbacks
-   {
+class BOTAN_PUBLIC_API(2, 0) Callbacks {
    public:
-       virtual ~Callbacks() = default;
+      virtual ~Callbacks() = default;
 
-       /**
+      /**
        * Mandatory callback: output function
        * The channel will call this with data which needs to be sent to the peer
        * (eg, over a socket or some other form of IPC). The array will be overwritten
@@ -55,9 +54,9 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        *
        * @param data a contiguous data buffer to send
        */
-       virtual void tls_emit_data(std::span<const uint8_t> data) = 0;
+      virtual void tls_emit_data(std::span<const uint8_t> data) = 0;
 
-       /**
+      /**
        * Mandatory callback: process application data
        * Called when application data record is received from the peer.
        * Again the array is overwritten immediately after the function returns.
@@ -66,9 +65,9 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        *
        * @param data a contiguous data buffer containing the received record
        */
-       virtual void tls_record_received(uint64_t seq_no, std::span<const uint8_t> data) = 0;
+      virtual void tls_record_received(uint64_t seq_no, std::span<const uint8_t> data) = 0;
 
-       /**
+      /**
        * Mandatory callback: alert received
        * Called when an alert is received from the peer
        * If fatal, the connection is closing. If not fatal, the connection may
@@ -76,24 +75,24 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        *
        * @param alert the source of the alert
        */
-       virtual void tls_alert(Alert alert) = 0;
+      virtual void tls_alert(Alert alert) = 0;
 
-       /**
+      /**
        * Optional callback: session established
        * Called when a session is established. Throw an exception to abort
        * the connection.
        *
        * @param session the session descriptor
        */
-       virtual void tls_session_established(const Session_Summary& session) { BOTAN_UNUSED(session); }
+      virtual void tls_session_established(const Session_Summary& session) { BOTAN_UNUSED(session); }
 
-       /**
+      /**
        * Optional callback: session activated
        * Called when a session is active and can be written to
        */
-       virtual void tls_session_activated() {}
+      virtual void tls_session_activated() {}
 
-       /**
+      /**
        * Optional callback: peer closed connection (sent a "close_notify" alert)
        *
        * The peer signaled that it wishes to shut down the connection. The
@@ -113,12 +112,9 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        *
        * @return true causes the implementation to respond with a "close_notify"
        */
-       virtual bool tls_peer_closed_connection()
-         {
-         return true;
-         }
+      virtual bool tls_peer_closed_connection() { return true; }
 
-       /**
+      /**
        * Optional callback: Resumption information was received/established
        *
        * TLS 1.3 calls this when we sent or received a TLS 1.3 session ticket at
@@ -136,9 +132,9 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * @return false to prevent the resumption information from being cached,
        *         and true to cache it in the configured Session_Manager
        */
-       virtual bool tls_should_persist_resumption_information(const Session& session);
+      virtual bool tls_should_persist_resumption_information(const Session& session);
 
-       /**
+      /**
        * Optional callback with default impl: verify cert chain
        *
        * Default implementation performs a standard PKIX validation
@@ -168,25 +164,23 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * @param policy the TLS policy associated with the session being authenticated
        *        using the certificate chain
        */
-       virtual void tls_verify_cert_chain(
-          const std::vector<X509_Certificate>& cert_chain,
-          const std::vector<std::optional<OCSP::Response>>& ocsp_responses,
-          const std::vector<Certificate_Store*>& trusted_roots,
-          Usage_Type usage,
-          std::string_view hostname,
-          const TLS::Policy& policy);
+      virtual void tls_verify_cert_chain(const std::vector<X509_Certificate>& cert_chain,
+                                         const std::vector<std::optional<OCSP::Response>>& ocsp_responses,
+                                         const std::vector<Certificate_Store*>& trusted_roots,
+                                         Usage_Type usage,
+                                         std::string_view hostname,
+                                         const TLS::Policy& policy);
 
-       /**
+      /**
        * Called by default `tls_verify_cert_chain` to get the timeout to use for OCSP
        * requests. Return 0 to disable online OCSP checks.
        *
        * This function should not be "const" since the implementation might need
        * to perform some side effecting operation to compute the result.
        */
-       virtual std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const
-          {
-          return std::chrono::milliseconds(0);
-          }
+      virtual std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const {
+         return std::chrono::milliseconds(0);
+      }
 
       /**
        * Called by the TLS server whenever the client included the
@@ -198,13 +192,12 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * empty vector to indicate that no response is available, and thus
        * suppress the Certificate_Status message.
        */
-       virtual std::vector<uint8_t> tls_provide_cert_status(const std::vector<X509_Certificate>& chain,
-                                                            const Certificate_Status_Request& csr)
-          {
-          BOTAN_UNUSED(chain);
-          BOTAN_UNUSED(csr);
-          return std::vector<uint8_t>();
-          }
+      virtual std::vector<uint8_t> tls_provide_cert_status(const std::vector<X509_Certificate>& chain,
+                                                           const Certificate_Status_Request& csr) {
+         BOTAN_UNUSED(chain);
+         BOTAN_UNUSED(csr);
+         return std::vector<uint8_t>();
+      }
 
       /**
        * Called by TLS 1.3 client or server whenever the peer indicated that
@@ -219,10 +212,10 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        *         certificate (at the same list index). The returned vector
        *         MUST be exactly the same length as the incoming \p chain.
        */
-      virtual std::vector<std::vector<uint8_t>> tls_provide_cert_chain_status(const std::vector<X509_Certificate>& chain,
-                                                                              const Certificate_Status_Request& csr);
+      virtual std::vector<std::vector<uint8_t>> tls_provide_cert_chain_status(
+         const std::vector<X509_Certificate>& chain, const Certificate_Status_Request& csr);
 
-       /**
+      /**
        * Optional callback with default impl: sign a message
        *
        * Default implementation uses PK_Signer::sign_message().
@@ -236,14 +229,13 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        *
        * @return the signature
        */
-       virtual std::vector<uint8_t> tls_sign_message(
-          const Private_Key& key,
-          RandomNumberGenerator& rng,
-          std::string_view padding,
-          Signature_Format format,
-          const std::vector<uint8_t>& msg);
+      virtual std::vector<uint8_t> tls_sign_message(const Private_Key& key,
+                                                    RandomNumberGenerator& rng,
+                                                    std::string_view padding,
+                                                    Signature_Format format,
+                                                    const std::vector<uint8_t>& msg);
 
-       /**
+      /**
        * Optional callback with default impl: verify a message signature
        *
        * Default implementation uses PK_Verifier::verify_message().
@@ -257,12 +249,11 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        *
        * @return true if the signature is valid, false otherwise
        */
-       virtual bool tls_verify_message(
-          const Public_Key& key,
-          std::string_view padding,
-          Signature_Format format,
-          const std::vector<uint8_t>& msg,
-          const std::vector<uint8_t>& sig);
+      virtual bool tls_verify_message(const Public_Key& key,
+                                      std::string_view padding,
+                                      Signature_Format format,
+                                      const std::vector<uint8_t>& msg,
+                                      const std::vector<uint8_t>& sig);
 
       /**
        * Generate an ephemeral key pair for the TLS handshake.
@@ -286,8 +277,7 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * @return a private key of an algorithm usable for key agreement
        */
       virtual std::unique_ptr<PK_Key_Agreement_Key> tls_generate_ephemeral_key(
-         const std::variant<TLS::Group_Params, DL_Group>& group,
-         RandomNumberGenerator& rng);
+         const std::variant<TLS::Group_Params, DL_Group>& group, RandomNumberGenerator& rng);
 
       /**
        * Agree on a shared secret with the peer's ephemeral public key for
@@ -313,14 +303,13 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        *
        * @return the shared secret derived from public_value and private_key
        */
-      virtual secure_vector<uint8_t> tls_ephemeral_key_agreement(
-         const std::variant<TLS::Group_Params, DL_Group>& group,
-         const PK_Key_Agreement_Key& private_key,
-         const std::vector<uint8_t>& public_value,
-         RandomNumberGenerator& rng,
-         const Policy& policy);
+      virtual secure_vector<uint8_t> tls_ephemeral_key_agreement(const std::variant<TLS::Group_Params, DL_Group>& group,
+                                                                 const PK_Key_Agreement_Key& private_key,
+                                                                 const std::vector<uint8_t>& public_value,
+                                                                 RandomNumberGenerator& rng,
+                                                                 const Policy& policy);
 
-       /**
+      /**
        * Optional callback: inspect handshake message
        * Throw an exception to abort the handshake.
        * Default simply ignores the message.
@@ -330,9 +319,9 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        *
        * @param message the handshake message
        */
-       virtual void tls_inspect_handshake_msg(const Handshake_Message& message);
+      virtual void tls_inspect_handshake_msg(const Handshake_Message& message);
 
-       /**
+      /**
        * Optional callback for server: choose ALPN protocol
        *
        * ALPN (RFC 7301) works by the client sending a list of application
@@ -353,7 +342,7 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * It is highly recommended to support ALPN whenever possible to avoid
        * cross-protocol attacks.
        */
-       virtual std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos);
+      virtual std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos);
 
       /**
        * Optional callback: examine/modify Extensions before sending.
@@ -369,9 +358,9 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        *                   applications role in the exchange.
        * @param which_message will state the handshake message type containing the extensions
        */
-       virtual void tls_modify_extensions(Extensions& extn, Connection_Side which_side, Handshake_Type which_message);
+      virtual void tls_modify_extensions(Extensions& extn, Connection_Side which_side, Handshake_Type which_message);
 
-       /**
+      /**
        * Optional callback: examine peer extensions.
        *
        * Both client and server will call this callback with the Extensions
@@ -387,7 +376,9 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        *        the server) or Connection_Side::Server if these are the server extensions (we are the client).
        * @param which_message will state the handshake message type containing the extensions
        */
-       virtual void tls_examine_extensions(const Extensions& extn, Connection_Side which_side, Handshake_Type which_message);
+      virtual void tls_examine_extensions(const Extensions& extn,
+                                          Connection_Side which_side,
+                                          Handshake_Type which_message);
 
       /**
        * Optional callback: parse a single OCSP Response
@@ -405,9 +396,9 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * @param raw_response raw OCSP response buffer
        * @returns the parsed OCSP response or std::nullopt on error
        */
-       virtual std::optional<OCSP::Response> tls_parse_ocsp_response(const std::vector<uint8_t>& raw_response);
+      virtual std::optional<OCSP::Response> tls_parse_ocsp_response(const std::vector<uint8_t>& raw_response);
 
-       /**
+      /**
        * Optional callback: return peer network identity
        *
        * There is no expected or specified format. The only expectation is this
@@ -417,9 +408,9 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * This is used to bind the DTLS cookie to a particular network identity.
        * It is only called if the dtls-cookie-secret PSK is also defined.
        */
-       virtual std::string tls_peer_network_identity();
+      virtual std::string tls_peer_network_identity();
 
-       /**
+      /**
        * Optional callback: return a custom time stamp value
        *
        * This allows the library user to specify a custom "now" timestamp when
@@ -428,40 +419,33 @@ class BOTAN_PUBLIC_API(2,0) Callbacks
        * Note that typical usages will not need to override this callback but it
        * is useful for testing purposes to allow for deterministic test outcomes.
        */
-       virtual std::chrono::system_clock::time_point tls_current_timestamp();
+      virtual std::chrono::system_clock::time_point tls_current_timestamp();
 
-       /**
+      /**
        * Optional callback: error logging. (not currently called)
        * @param err An error message related to this connection.
        */
-       virtual void tls_log_error(const char* err)
-          {
-          BOTAN_UNUSED(err);
-          }
+      virtual void tls_log_error(const char* err) { BOTAN_UNUSED(err); }
 
-       /**
+      /**
        * Optional callback: debug logging. (not currently called)
        * @param what Some hopefully informative string
        */
-       virtual void tls_log_debug(const char* what)
-          {
-          BOTAN_UNUSED(what);
-          }
+      virtual void tls_log_debug(const char* what) { BOTAN_UNUSED(what); }
 
-       /**
+      /**
        * Optional callback: debug logging taking a buffer. (not currently called)
        * @param descr What this buffer is
        * @param val the bytes
        * @param val_len length of val
        */
-       virtual void tls_log_debug_bin(const char* descr, const uint8_t val[], size_t val_len)
-          {
-          BOTAN_UNUSED(descr, val, val_len);
-          }
-   };
+      virtual void tls_log_debug_bin(const char* descr, const uint8_t val[], size_t val_len) {
+         BOTAN_UNUSED(descr, val, val_len);
+      }
+};
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif

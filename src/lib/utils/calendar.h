@@ -18,10 +18,8 @@ namespace Botan {
 /**
 * Struct representing a particular date and time
 */
-class BOTAN_TEST_API calendar_point
-   {
+class BOTAN_TEST_API calendar_point {
    public:
-
       /** The year */
       uint32_t year() const { return m_year; }
 
@@ -52,7 +50,7 @@ class BOTAN_TEST_API calendar_point
       * @param sec the second
       */
       calendar_point(uint32_t y, uint32_t mon, uint32_t d, uint32_t h, uint32_t min, uint32_t sec) :
-        m_year(y), m_month(mon), m_day(d), m_hour(h), m_minutes(min), m_seconds(sec) {}
+            m_year(y), m_month(mon), m_day(d), m_hour(h), m_minutes(min), m_seconds(sec) {}
 
       /**
       * Convert a time_point to a calendar_point
@@ -78,8 +76,8 @@ class BOTAN_TEST_API calendar_point
       uint32_t m_hour;
       uint32_t m_minutes;
       uint32_t m_seconds;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

@@ -29,8 +29,7 @@ enum class EC_Point_Format {
 /**
 * This class represents one point on a curve of GF(p)
 */
-class BOTAN_PUBLIC_API(2,0) EC_Point final
-   {
+class BOTAN_PUBLIC_API(2, 0) EC_Point final {
    public:
       typedef EC_Point_Format Compression_Type;
       using enum EC_Point_Format;
@@ -56,10 +55,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Point final
       /**
       * Move Constructor
       */
-      EC_Point(EC_Point&& other)
-         {
-         this->swap(other);
-         }
+      EC_Point(EC_Point&& other) { this->swap(other); }
 
       /**
       * Standard Assignment
@@ -69,12 +65,11 @@ class BOTAN_PUBLIC_API(2,0) EC_Point final
       /**
       * Move Assignment
       */
-      EC_Point& operator=(EC_Point&& other)
-         {
+      EC_Point& operator=(EC_Point&& other) {
          if(this != &other)
             this->swap(other);
          return (*this);
-         }
+      }
 
       /**
       * Construct a point from its affine coordinates
@@ -116,12 +111,11 @@ class BOTAN_PUBLIC_API(2,0) EC_Point final
       * Negate this point
       * @return *this
       */
-      EC_Point& negate()
-         {
+      EC_Point& negate() {
          if(!is_zero())
             m_coord_y = m_curve.get_p() - m_coord_y;
          return *this;
-         }
+      }
 
       /**
       * get affine x coordinate
@@ -156,12 +150,11 @@ class BOTAN_PUBLIC_API(2,0) EC_Point final
       */
       const BigInt& get_z() const { return m_coord_z; }
 
-      void swap_coords(BigInt& new_x, BigInt& new_y, BigInt& new_z)
-         {
+      void swap_coords(BigInt& new_x, BigInt& new_y, BigInt& new_z) {
          m_coord_x.swap(new_x);
          m_coord_y.swap(new_y);
          m_coord_z.swap(new_z);
-         }
+      }
 
       /**
       * Force this point to affine coordinates
@@ -171,8 +164,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Point final
       /**
       * Force all points on the list to affine coordinates
       */
-      static void force_all_affine(std::vector<EC_Point>& points,
-                                   secure_vector<word>& ws);
+      static void force_all_affine(std::vector<EC_Point>& points, secure_vector<word>& ws);
 
       bool is_affine() const;
 
@@ -217,17 +209,19 @@ class BOTAN_PUBLIC_API(2,0) EC_Point final
       * @param other the point to add to *this
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       */
-      void add(const EC_Point& other, std::vector<BigInt>& workspace)
-         {
+      void add(const EC_Point& other, std::vector<BigInt>& workspace) {
          BOTAN_ARG_CHECK(m_curve == other.m_curve, "cannot add points on different curves");
 
          const size_t p_words = m_curve.get_p_words();
 
-         add(other.m_coord_x.data(), std::min(p_words, other.m_coord_x.size()),
-             other.m_coord_y.data(), std::min(p_words, other.m_coord_y.size()),
-             other.m_coord_z.data(), std::min(p_words, other.m_coord_z.size()),
+         add(other.m_coord_x.data(),
+             std::min(p_words, other.m_coord_x.size()),
+             other.m_coord_y.data(),
+             std::min(p_words, other.m_coord_y.size()),
+             other.m_coord_z.data(),
+             std::min(p_words, other.m_coord_z.size()),
              workspace);
-         }
+      }
 
       /**
       * Point addition. Array version.
@@ -240,9 +234,12 @@ class BOTAN_PUBLIC_API(2,0) EC_Point final
       * @param z_size size of z_words
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       */
-      void add(const word x_words[], size_t x_size,
-               const word y_words[], size_t y_size,
-               const word z_words[], size_t z_size,
+      void add(const word x_words[],
+               size_t x_size,
+               const word y_words[],
+               size_t y_size,
+               const word z_words[],
+               size_t z_size,
                std::vector<BigInt>& workspace);
 
       /**
@@ -250,16 +247,17 @@ class BOTAN_PUBLIC_API(2,0) EC_Point final
       * @param other affine point to add - assumed to be affine!
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       */
-      void add_affine(const EC_Point& other, std::vector<BigInt>& workspace)
-         {
+      void add_affine(const EC_Point& other, std::vector<BigInt>& workspace) {
          BOTAN_ASSERT_NOMSG(m_curve == other.m_curve);
          BOTAN_DEBUG_ASSERT(other.is_affine());
 
          const size_t p_words = m_curve.get_p_words();
-         add_affine(other.m_coord_x.data(), std::min(p_words, other.m_coord_x.size()),
-                    other.m_coord_y.data(), std::min(p_words, other.m_coord_y.size()),
+         add_affine(other.m_coord_x.data(),
+                    std::min(p_words, other.m_coord_x.size()),
+                    other.m_coord_y.data(),
+                    std::min(p_words, other.m_coord_y.size()),
                     workspace);
-         }
+      }
 
       /**
       * Point addition - mixed J+A. Array version.
@@ -270,9 +268,8 @@ class BOTAN_PUBLIC_API(2,0) EC_Point final
       * @param y_size size of y_words
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       */
-      void add_affine(const word x_words[], size_t x_size,
-                      const word y_words[], size_t y_size,
-                      std::vector<BigInt>& workspace);
+      void add_affine(
+         const word x_words[], size_t x_size, const word y_words[], size_t y_size, std::vector<BigInt>& workspace);
 
       /**
       * Point doubling
@@ -293,24 +290,22 @@ class BOTAN_PUBLIC_API(2,0) EC_Point final
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       * @return other plus *this
       */
-      EC_Point plus(const EC_Point& other, std::vector<BigInt>& workspace) const
-         {
+      EC_Point plus(const EC_Point& other, std::vector<BigInt>& workspace) const {
          EC_Point x = (*this);
          x.add(other, workspace);
          return x;
-         }
+      }
 
       /**
       * Point doubling
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       * @return *this doubled
       */
-      EC_Point double_of(std::vector<BigInt>& workspace) const
-         {
+      EC_Point double_of(std::vector<BigInt>& workspace) const {
          EC_Point x = (*this);
          x.mult2(workspace);
          return x;
-         }
+      }
 
       /**
       * Return the zero (aka infinite) point associated with this curve
@@ -328,7 +323,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Point final
    private:
       CurveGFp m_curve;
       BigInt m_coord_x, m_coord_y, m_coord_z;
-   };
+};
 
 /**
 * Point multiplication operator
@@ -336,7 +331,7 @@ class BOTAN_PUBLIC_API(2,0) EC_Point final
 * @param point the point value
 * @return scalar*point on the curve
 */
-BOTAN_PUBLIC_API(2,0) EC_Point operator*(const BigInt& scalar, const EC_Point& point);
+BOTAN_PUBLIC_API(2, 0) EC_Point operator*(const BigInt& scalar, const EC_Point& point);
 
 /**
 * ECC point multiexponentiation - not constant time!
@@ -346,45 +341,32 @@ BOTAN_PUBLIC_API(2,0) EC_Point operator*(const BigInt& scalar, const EC_Point& p
 * @param z2 a scalar
 * @result (p1 * z1 + p2 * z2)
 */
-BOTAN_PUBLIC_API(2,0) EC_Point multi_exponentiate(
-   const EC_Point& p1, const BigInt& z1,
-   const EC_Point& p2, const BigInt& z2);
+BOTAN_PUBLIC_API(2, 0)
+EC_Point multi_exponentiate(const EC_Point& p1, const BigInt& z1, const EC_Point& p2, const BigInt& z2);
 
 // relational operators
-inline bool operator!=(const EC_Point& lhs, const EC_Point& rhs)
-   {
-   return !(rhs == lhs);
-   }
+inline bool operator!=(const EC_Point& lhs, const EC_Point& rhs) { return !(rhs == lhs); }
 
 // arithmetic operators
-inline EC_Point operator-(const EC_Point& lhs)
-   {
-   return EC_Point(lhs).negate();
-   }
+inline EC_Point operator-(const EC_Point& lhs) { return EC_Point(lhs).negate(); }
 
-inline EC_Point operator+(const EC_Point& lhs, const EC_Point& rhs)
-   {
+inline EC_Point operator+(const EC_Point& lhs, const EC_Point& rhs) {
    EC_Point tmp(lhs);
    return tmp += rhs;
-   }
+}
 
-inline EC_Point operator-(const EC_Point& lhs, const EC_Point& rhs)
-   {
+inline EC_Point operator-(const EC_Point& lhs, const EC_Point& rhs) {
    EC_Point tmp(lhs);
    return tmp -= rhs;
-   }
+}
 
-inline EC_Point operator*(const EC_Point& point, const BigInt& scalar)
-   {
-   return scalar * point;
-   }
+inline EC_Point operator*(const EC_Point& point, const BigInt& scalar) { return scalar * point; }
 
 /**
 * Perform point decoding
 * Use EC_Group::OS2ECP instead
 */
-EC_Point BOTAN_PUBLIC_API(2,0) OS2ECP(const uint8_t data[], size_t data_len,
-                                      const CurveGFp& curve);
+EC_Point BOTAN_PUBLIC_API(2, 0) OS2ECP(const uint8_t data[], size_t data_len, const CurveGFp& curve);
 
 /**
 * Perform point decoding
@@ -396,28 +378,28 @@ EC_Point BOTAN_PUBLIC_API(2,0) OS2ECP(const uint8_t data[], size_t data_len,
 * @param curve_a the curve equation a parameter
 * @param curve_b the curve equation b parameter
 */
-std::pair<BigInt, BigInt> BOTAN_UNSTABLE_API OS2ECP(const uint8_t data[], size_t data_len,
-                                                    const BigInt& curve_p,
-                                                    const BigInt& curve_a,
-                                                    const BigInt& curve_b);
+std::pair<BigInt, BigInt> BOTAN_UNSTABLE_API
+OS2ECP(const uint8_t data[], size_t data_len, const BigInt& curve_p, const BigInt& curve_a, const BigInt& curve_b);
 
-template<typename Alloc>
-EC_Point OS2ECP(const std::vector<uint8_t, Alloc>& data, const CurveGFp& curve)
-   { return OS2ECP(data.data(), data.size(), curve); }
+template <typename Alloc>
+EC_Point OS2ECP(const std::vector<uint8_t, Alloc>& data, const CurveGFp& curve) {
+   return OS2ECP(data.data(), data.size(), curve);
+}
 
 class EC_Point_Var_Point_Precompute;
 
 // The name used for this type in older versions
 typedef EC_Point PointGFp;
 
-}
+}  // namespace Botan
 
 namespace std {
 
-template<>
-inline void swap<Botan::EC_Point>(Botan::EC_Point& x, Botan::EC_Point& y)
-   { x.swap(y); }
-
+template <>
+inline void swap<Botan::EC_Point>(Botan::EC_Point& x, Botan::EC_Point& y) {
+   x.swap(y);
 }
+
+}  // namespace std
 
 #endif

@@ -9,16 +9,16 @@
 #ifndef BOTAN_TLS_HANDSHAKE_STATE_H_
 #define BOTAN_TLS_HANDSHAKE_STATE_H_
 
+#include <botan/pk_keys.h>
+#include <botan/pubkey.h>
+#include <botan/tls_callbacks.h>
+#include <botan/tls_ciphersuite.h>
+#include <botan/tls_exceptn.h>
+#include <botan/tls_handshake_msg.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_transitions.h>
 #include <botan/internal/tls_session_key.h>
-#include <botan/tls_ciphersuite.h>
-#include <botan/tls_exceptn.h>
-#include <botan/tls_handshake_msg.h>
-#include <botan/tls_callbacks.h>
-#include <botan/pk_keys.h>
-#include <botan/pubkey.h>
 #include <functional>
 #include <optional>
 
@@ -56,8 +56,7 @@ class Finished_12;
 * TODO: currently it implements some logic for TLS 1.2, which should be removed
 * TODO: investigate moving the handshake_io to the channel
 */
-class Handshake_State
-   {
+class Handshake_State {
    public:
       Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& callbacks);
       virtual ~Handshake_State();
@@ -85,23 +84,20 @@ class Handshake_State
       */
       void set_expected_next(Handshake_Type msg_type);
 
-      std::pair<Handshake_Type, std::vector<uint8_t>>
-         get_next_handshake_msg();
+      std::pair<Handshake_Type, std::vector<uint8_t>> get_next_handshake_msg();
 
       Session_Ticket session_ticket() const;
 
-      std::pair<std::string, Signature_Format>
-         parse_sig_format(const Public_Key& key,
-                          Signature_Scheme scheme,
-                          const std::vector<Signature_Scheme>& offered_schemes,
-                          bool for_client_auth,
-                          const Policy& policy) const;
+      std::pair<std::string, Signature_Format> parse_sig_format(const Public_Key& key,
+                                                                Signature_Scheme scheme,
+                                                                const std::vector<Signature_Scheme>& offered_schemes,
+                                                                bool for_client_auth,
+                                                                const Policy& policy) const;
 
-      std::pair<std::string, Signature_Format>
-         choose_sig_format(const Private_Key& key,
-                           Signature_Scheme& scheme,
-                           bool for_client_auth,
-                           const Policy& policy) const;
+      std::pair<std::string, Signature_Format> choose_sig_format(const Private_Key& key,
+                                                                 Signature_Scheme& scheme,
+                                                                 bool for_client_auth,
+                                                                 const Policy& policy) const;
 
       std::unique_ptr<KDF> protocol_specific_prf() const;
 
@@ -132,47 +128,33 @@ class Handshake_State
 
       void new_session_ticket(New_Session_Ticket_12* new_session_ticket);
 
-      const Client_Hello_12* client_hello() const
-         { return m_client_hello.get(); }
+      const Client_Hello_12* client_hello() const { return m_client_hello.get(); }
 
-      const Server_Hello_12* server_hello() const
-         { return m_server_hello.get(); }
+      const Server_Hello_12* server_hello() const { return m_server_hello.get(); }
 
-      const Certificate_12* server_certs() const
-         { return m_server_certs.get(); }
+      const Certificate_12* server_certs() const { return m_server_certs.get(); }
 
-      const Server_Key_Exchange* server_kex() const
-         { return m_server_kex.get(); }
+      const Server_Key_Exchange* server_kex() const { return m_server_kex.get(); }
 
-      const Certificate_Request_12* cert_req() const
-         { return m_cert_req.get(); }
+      const Certificate_Request_12* cert_req() const { return m_cert_req.get(); }
 
-      const Server_Hello_Done* server_hello_done() const
-         { return m_server_hello_done.get(); }
+      const Server_Hello_Done* server_hello_done() const { return m_server_hello_done.get(); }
 
-      const Certificate_12* client_certs() const
-         { return m_client_certs.get(); }
+      const Certificate_12* client_certs() const { return m_client_certs.get(); }
 
-      const Client_Key_Exchange* client_kex() const
-         { return m_client_kex.get(); }
+      const Client_Key_Exchange* client_kex() const { return m_client_kex.get(); }
 
-      const Certificate_Verify_12* client_verify() const
-         { return m_client_verify.get(); }
+      const Certificate_Verify_12* client_verify() const { return m_client_verify.get(); }
 
-      const Certificate_Verify_12* server_verify() const
-         { return m_server_verify.get(); }
+      const Certificate_Verify_12* server_verify() const { return m_server_verify.get(); }
 
-      const Certificate_Status* server_cert_status() const
-         { return m_server_cert_status.get(); }
+      const Certificate_Status* server_cert_status() const { return m_server_cert_status.get(); }
 
-      const New_Session_Ticket_12* new_session_ticket() const
-         { return m_new_session_ticket.get(); }
+      const New_Session_Ticket_12* new_session_ticket() const { return m_new_session_ticket.get(); }
 
-      const Finished_12* server_finished() const
-         { return m_server_finished.get(); }
+      const Finished_12* server_finished() const { return m_server_finished.get(); }
 
-      const Finished_12* client_finished() const
-         { return m_client_finished.get(); }
+      const Finished_12* client_finished() const { return m_client_finished.get(); }
 
       const Ciphersuite& ciphersuite() const;
 
@@ -189,8 +171,8 @@ class Handshake_State
       const Handshake_Hash& hash() const { return m_handshake_hash; }
 
       void note_message(const Handshake_Message& msg);
-   private:
 
+   private:
       Callbacks& m_callbacks;
 
       std::unique_ptr<Handshake_IO> m_handshake_io;
@@ -216,10 +198,10 @@ class Handshake_State
       std::unique_ptr<New_Session_Ticket_12> m_new_session_ticket;
       std::unique_ptr<Finished_12> m_server_finished;
       std::unique_ptr<Finished_12> m_client_finished;
-   };
+};
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif

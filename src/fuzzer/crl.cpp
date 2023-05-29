@@ -6,15 +6,12 @@
 
 #include "fuzzers.h"
 
-#include <botan/x509_crl.h>
 #include <botan/data_src.h>
+#include <botan/x509_crl.h>
 
-void fuzz(const uint8_t in[], size_t len)
-   {
-   try
-      {
+void fuzz(const uint8_t in[], size_t len) {
+   try {
       Botan::DataSource_Memory input(in, len);
       Botan::X509_CRL crl(input);
-      }
-   catch(Botan::Exception& e) {}
-   }
+   } catch(Botan::Exception& e) {}
+}

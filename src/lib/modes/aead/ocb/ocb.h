@@ -28,8 +28,7 @@ class L_computer;
 *      block ciphers with larger block sizes.
 * @see https://mailarchive.ietf.org/arch/msg/cfrg/qLTveWOdTJcLn4HP3ev-vrj05Vg/
 */
-class BOTAN_TEST_API OCB_Mode : public AEAD_Mode
-   {
+class BOTAN_TEST_API OCB_Mode : public AEAD_Mode {
    public:
       void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) override final;
 
@@ -52,6 +51,7 @@ class BOTAN_TEST_API OCB_Mode : public AEAD_Mode
       bool has_keying_material() const override final;
 
       ~OCB_Mode();
+
    protected:
       /**
       * @param cipher the block cipher to use
@@ -60,7 +60,9 @@ class BOTAN_TEST_API OCB_Mode : public AEAD_Mode
       OCB_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size);
 
       size_t block_size() const { return m_block_size; }
+
       size_t par_blocks() const { return m_par_blocks; }
+
       size_t par_bytes() const { return m_checksum.size(); }
 
       // fixme make these private
@@ -71,6 +73,7 @@ class BOTAN_TEST_API OCB_Mode : public AEAD_Mode
 
       secure_vector<uint8_t> m_checksum;
       secure_vector<uint8_t> m_ad_hash;
+
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override final;
 
@@ -85,20 +88,18 @@ class BOTAN_TEST_API OCB_Mode : public AEAD_Mode
       secure_vector<uint8_t> m_stretch;
       secure_vector<uint8_t> m_nonce_buf;
       secure_vector<uint8_t> m_offset;
-   };
+};
 
-class BOTAN_TEST_API OCB_Encryption final : public OCB_Mode
-   {
+class BOTAN_TEST_API OCB_Encryption final : public OCB_Mode {
    public:
       /**
       * @param cipher the block cipher to use
       * @param tag_size is how big the auth tag will be
       */
       OCB_Encryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16) :
-         OCB_Mode(std::move(cipher), tag_size) {}
+            OCB_Mode(std::move(cipher), tag_size) {}
 
-      size_t output_length(size_t input_length) const override
-         { return input_length + tag_size(); }
+      size_t output_length(size_t input_length) const override { return input_length + tag_size(); }
 
       size_t minimum_final_size() const override { return 0; }
 
@@ -106,23 +107,21 @@ class BOTAN_TEST_API OCB_Encryption final : public OCB_Mode
       void encrypt(uint8_t input[], size_t blocks);
       size_t process_msg(uint8_t buf[], size_t size) override;
       void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-   };
+};
 
-class BOTAN_TEST_API OCB_Decryption final : public OCB_Mode
-   {
+class BOTAN_TEST_API OCB_Decryption final : public OCB_Mode {
    public:
       /**
       * @param cipher the block cipher to use
       * @param tag_size is how big the auth tag will be
       */
       OCB_Decryption(std::unique_ptr<BlockCipher> cipher, size_t tag_size = 16) :
-         OCB_Mode(std::move(cipher), tag_size) {}
+            OCB_Mode(std::move(cipher), tag_size) {}
 
-      size_t output_length(size_t input_length) const override
-         {
+      size_t output_length(size_t input_length) const override {
          BOTAN_ASSERT(input_length >= tag_size(), "Sufficient input");
          return input_length - tag_size();
-         }
+      }
 
       size_t minimum_final_size() const override { return tag_size(); }
 
@@ -130,8 +129,8 @@ class BOTAN_TEST_API OCB_Decryption final : public OCB_Mode
       void decrypt(uint8_t input[], size_t blocks);
       size_t process_msg(uint8_t buf[], size_t size) override;
       void finish_msg(secure_vector<uint8_t>& final_block, size_t offset = 0) override;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

@@ -11,8 +11,7 @@
 
 namespace Botan {
 
-uint64_t prefetch_array_raw(size_t bytes, const void* arrayv) noexcept
-   {
+uint64_t prefetch_array_raw(size_t bytes, const void* arrayv) noexcept {
    // Android NDK is garbage and defines the feature macro, but not the variable
 #if defined(__cpp_lib_hardware_interference_size) && !defined(BOTAN_TARGET_OS_IS_ANDROID)
    const size_t cache_line_size = std::hardware_destructive_interference_size;
@@ -28,15 +27,14 @@ uint64_t prefetch_array_raw(size_t bytes, const void* arrayv) noexcept
 
    volatile uint64_t combiner = 1;
 
-   for(size_t idx = 0; idx < bytes; idx += cache_line_size)
-      {
+   for(size_t idx = 0; idx < bytes; idx += cache_line_size) {
 #if BOTAN_COMPILER_HAS_BUILTIN(__builtin_prefetch)
       // we have no way of knowing if the compiler will emit anything here
       __builtin_prefetch(&array[idx]);
 #endif
 
       combiner = combiner | array[idx];
-      }
+   }
 
    /*
    * The combiner variable is initialized with 1, and we accumulate using OR, so
@@ -44,6 +42,6 @@ uint64_t prefetch_array_raw(size_t bytes, const void* arrayv) noexcept
    * always return zero here. Hopefully the compiler will not figure this out.
    */
    return ct_is_zero(combiner);
-   }
-
 }
+
+}  // namespace Botan

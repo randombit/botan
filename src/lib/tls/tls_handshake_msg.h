@@ -10,8 +10,8 @@
 #define BOTAN_TLS_HANDSHAKE_MSG_H_
 
 #include <botan/tls_magic.h>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace Botan {
 
@@ -23,8 +23,7 @@ class Handshake_Hash;
 /**
 * TLS Handshake Message Base Class
 */
-class BOTAN_PUBLIC_API(2,0) Handshake_Message
-   {
+class BOTAN_PUBLIC_API(2, 0) Handshake_Message {
    public:
       /**
       * @return string representation of this message type
@@ -39,12 +38,11 @@ class BOTAN_PUBLIC_API(2,0) Handshake_Message
       /**
        * @return the wire representation of the message's type
        */
-      virtual Handshake_Type wire_type() const
-         {
+      virtual Handshake_Type wire_type() const {
          // Usually equal to the Handshake_Type enum value,
          // with the exception of TLS 1.3 Hello Retry Request.
          return type();
-         }
+      }
 
       /**
       * @return DER representation of this message
@@ -57,10 +55,10 @@ class BOTAN_PUBLIC_API(2,0) Handshake_Message
       Handshake_Message(Handshake_Message&&) = default;
       Handshake_Message& operator=(const Handshake_Message&) = delete;
       Handshake_Message& operator=(Handshake_Message&&) = default;
-   };
+};
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif

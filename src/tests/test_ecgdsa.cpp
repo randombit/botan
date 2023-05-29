@@ -19,59 +19,42 @@ namespace {
 
 #if defined(BOTAN_HAS_ECGDSA)
 
-class ECGDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test
-   {
+class ECGDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
    public:
-      ECGDSA_Signature_KAT_Tests() : PK_Signature_Generation_Test(
-            "ECGDSA",
-            "pubkey/ecgdsa.vec",
-            "Group,X,Hash,Msg,Nonce,Signature") {}
+      ECGDSA_Signature_KAT_Tests() :
+            PK_Signature_Generation_Test("ECGDSA", "pubkey/ecgdsa.vec", "Group,X,Hash,Msg,Nonce,Signature") {}
 
-      bool clear_between_callbacks() const override
-         {
-         return false;
-         }
+      bool clear_between_callbacks() const override { return false; }
 
-      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override
-         {
+      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override {
          const std::string group_id = vars.get_req_str("Group");
          const BigInt x = vars.get_req_bn("X");
          Botan::EC_Group group(Botan::OID::from_string(group_id));
 
          return std::make_unique<Botan::ECGDSA_PrivateKey>(Test::rng(), group, x);
-         }
+      }
 
-      std::string default_padding(const VarMap& vars) const override
-         {
-         return vars.get_req_str("Hash");
-         }
+      std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Hash"); }
 
-      std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const override
-         {
+      std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const override {
          // ecgdsa signature generation extracts more random than just the nonce,
          // but the nonce is extracted first
          return std::make_unique<Fixed_Output_Position_RNG>(nonce, 1);
-         }
-   };
+      }
+};
 
-class ECGDSA_Keygen_Tests final : public PK_Key_Generation_Test
-   {
+class ECGDSA_Keygen_Tests final : public PK_Key_Generation_Test {
    public:
-      std::vector<std::string> keygen_params() const override
-         {
-         return { "secp256r1", "secp384r1", "secp521r1" };
-         }
-      std::string algo_name() const override
-         {
-         return "ECGDSA";
-         }
-   };
+      std::vector<std::string> keygen_params() const override { return {"secp256r1", "secp384r1", "secp521r1"}; }
+
+      std::string algo_name() const override { return "ECGDSA"; }
+};
 
 BOTAN_REGISTER_TEST("pubkey", "ecgdsa_sign", ECGDSA_Signature_KAT_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecgdsa_keygen", ECGDSA_Keygen_Tests);
 
 #endif
 
-}
+}  // namespace
 
-}
+}  // namespace Botan_Tests

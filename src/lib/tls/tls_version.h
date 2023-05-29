@@ -17,41 +17,36 @@ namespace Botan {
 
 namespace TLS {
 
-enum class Version_Code: uint16_t {
-   TLS_V11            = 0x0302,  // not supported by Botan
-   TLS_V12            = 0x0303,
-   TLS_V13            = 0x0304,
-   DTLS_V12           = 0xFEFD,
-   DTLS_V13           = 0xFEFC,  // not supported by Botan
+enum class Version_Code : uint16_t {
+   TLS_V11 = 0x0302,  // not supported by Botan
+   TLS_V12 = 0x0303,
+   TLS_V13 = 0x0304,
+   DTLS_V12 = 0xFEFD,
+   DTLS_V13 = 0xFEFC,  // not supported by Botan
 };
 
 /**
 * TLS Protocol Version
 */
-class BOTAN_PUBLIC_API(2,0) Protocol_Version final
-   {
+class BOTAN_PUBLIC_API(2, 0) Protocol_Version final {
    public:
       using enum Version_Code;
 
       /**
       * @return latest known TLS version
       */
-      static Protocol_Version latest_tls_version()
-         {
+      static Protocol_Version latest_tls_version() {
 #if defined(BOTAN_HAS_TLS_13)
          return Protocol_Version(TLS_V13);
 #else
          return Protocol_Version(TLS_V12);
 #endif
-         }
+      }
 
       /**
       * @return latest known DTLS version
       */
-      static Protocol_Version latest_dtls_version()
-         {
-         return Protocol_Version(DTLS_V12);
-         }
+      static Protocol_Version latest_dtls_version() { return Protocol_Version(DTLS_V12); }
 
       Protocol_Version() : m_version(0) {}
 
@@ -60,15 +55,14 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
       /**
       * @param named_version a specific named version of the protocol
       */
-      Protocol_Version(Version_Code named_version) :
-         Protocol_Version(static_cast<uint16_t>(named_version)) {}
+      Protocol_Version(Version_Code named_version) : Protocol_Version(static_cast<uint16_t>(named_version)) {}
 
       /**
       * @param major the major version
       * @param minor the minor version
       */
       Protocol_Version(uint8_t major, uint8_t minor) :
-         Protocol_Version(static_cast<uint16_t>((static_cast<uint16_t>(major) << 8) | minor)) {}
+            Protocol_Version(static_cast<uint16_t>((static_cast<uint16_t>(major) << 8) | minor)) {}
 
       /**
       * @return true if this is a valid protocol version
@@ -118,18 +112,12 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
       /**
       * @return if this version is equal to other
       */
-      bool operator==(const Protocol_Version& other) const
-         {
-         return (m_version == other.m_version);
-         }
+      bool operator==(const Protocol_Version& other) const { return (m_version == other.m_version); }
 
       /**
       * @return if this version is not equal to other
       */
-      bool operator!=(const Protocol_Version& other) const
-         {
-         return (m_version != other.m_version);
-         }
+      bool operator!=(const Protocol_Version& other) const { return (m_version != other.m_version); }
 
       /**
       * @return if this version is later than other
@@ -139,34 +127,24 @@ class BOTAN_PUBLIC_API(2,0) Protocol_Version final
       /**
       * @return if this version is later than or equal to other
       */
-      bool operator>=(const Protocol_Version& other) const
-         {
-         return (*this == other || *this > other);
-         }
+      bool operator>=(const Protocol_Version& other) const { return (*this == other || *this > other); }
 
       /**
       * @return if this version is earlier to other
       */
-      bool operator<(const Protocol_Version& other) const
-         {
-         return !(*this >= other);
-         }
+      bool operator<(const Protocol_Version& other) const { return !(*this >= other); }
 
       /**
       * @return if this version is earlier than or equal to other
       */
-      bool operator<=(const Protocol_Version& other) const
-         {
-         return (*this == other || *this < other);
-         }
+      bool operator<=(const Protocol_Version& other) const { return (*this == other || *this < other); }
 
    private:
       uint16_t m_version;
-   };
+};
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif
-

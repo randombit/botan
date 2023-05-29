@@ -12,8 +12,7 @@ namespace Botan {
 
 //static
 BOTAN_AVX2_FN
-void ChaCha::chacha_avx2_x8(uint8_t output[64*8], uint32_t state[16], size_t rounds)
-   {
+void ChaCha::chacha_avx2_x8(uint8_t output[64 * 8], uint32_t state[16], size_t rounds) {
    SIMD_8x32::reset_registers();
 
    BOTAN_ASSERT(rounds % 2 == 0, "Valid rounds");
@@ -22,16 +21,16 @@ void ChaCha::chacha_avx2_x8(uint8_t output[64*8], uint32_t state[16], size_t rou
    const uint32_t C = 0xFFFFFFFF - state[12];
    const SIMD_8x32 CTR1 = SIMD_8x32(0, C < 1, C < 2, C < 3, C < 4, C < 5, C < 6, C < 7);
 
-   SIMD_8x32 R00 = SIMD_8x32::splat(state[ 0]);
-   SIMD_8x32 R01 = SIMD_8x32::splat(state[ 1]);
-   SIMD_8x32 R02 = SIMD_8x32::splat(state[ 2]);
-   SIMD_8x32 R03 = SIMD_8x32::splat(state[ 3]);
-   SIMD_8x32 R04 = SIMD_8x32::splat(state[ 4]);
-   SIMD_8x32 R05 = SIMD_8x32::splat(state[ 5]);
-   SIMD_8x32 R06 = SIMD_8x32::splat(state[ 6]);
-   SIMD_8x32 R07 = SIMD_8x32::splat(state[ 7]);
-   SIMD_8x32 R08 = SIMD_8x32::splat(state[ 8]);
-   SIMD_8x32 R09 = SIMD_8x32::splat(state[ 9]);
+   SIMD_8x32 R00 = SIMD_8x32::splat(state[0]);
+   SIMD_8x32 R01 = SIMD_8x32::splat(state[1]);
+   SIMD_8x32 R02 = SIMD_8x32::splat(state[2]);
+   SIMD_8x32 R03 = SIMD_8x32::splat(state[3]);
+   SIMD_8x32 R04 = SIMD_8x32::splat(state[4]);
+   SIMD_8x32 R05 = SIMD_8x32::splat(state[5]);
+   SIMD_8x32 R06 = SIMD_8x32::splat(state[6]);
+   SIMD_8x32 R07 = SIMD_8x32::splat(state[7]);
+   SIMD_8x32 R08 = SIMD_8x32::splat(state[8]);
+   SIMD_8x32 R09 = SIMD_8x32::splat(state[9]);
    SIMD_8x32 R10 = SIMD_8x32::splat(state[10]);
    SIMD_8x32 R11 = SIMD_8x32::splat(state[11]);
    SIMD_8x32 R12 = SIMD_8x32::splat(state[12]) + CTR0;
@@ -39,8 +38,7 @@ void ChaCha::chacha_avx2_x8(uint8_t output[64*8], uint32_t state[16], size_t rou
    SIMD_8x32 R14 = SIMD_8x32::splat(state[14]);
    SIMD_8x32 R15 = SIMD_8x32::splat(state[15]);
 
-   for(size_t r = 0; r != rounds / 2; ++r)
-      {
+   for(size_t r = 0; r != rounds / 2; ++r) {
       R00 += R04;
       R01 += R05;
       R02 += R06;
@@ -160,7 +158,7 @@ void ChaCha::chacha_avx2_x8(uint8_t output[64*8], uint32_t state[16], size_t rou
       R06 = R06.rotl<7>();
       R07 = R07.rotl<7>();
       R04 = R04.rotl<7>();
-      }
+   }
 
    R00 += SIMD_8x32::splat(state[0]);
    R01 += SIMD_8x32::splat(state[1]);
@@ -183,26 +181,26 @@ void ChaCha::chacha_avx2_x8(uint8_t output[64*8], uint32_t state[16], size_t rou
    SIMD_8x32::transpose(R08, R09, R10, R11, R12, R13, R14, R15);
 
    R00.store_le(output);
-   R08.store_le(output + 32*1);
-   R01.store_le(output + 32*2);
-   R09.store_le(output + 32*3);
-   R02.store_le(output + 32*4);
-   R10.store_le(output + 32*5);
-   R03.store_le(output + 32*6);
-   R11.store_le(output + 32*7);
-   R04.store_le(output + 32*8);
-   R12.store_le(output + 32*9);
-   R05.store_le(output + 32*10);
-   R13.store_le(output + 32*11);
-   R06.store_le(output + 32*12);
-   R14.store_le(output + 32*13);
-   R07.store_le(output + 32*14);
-   R15.store_le(output + 32*15);
+   R08.store_le(output + 32 * 1);
+   R01.store_le(output + 32 * 2);
+   R09.store_le(output + 32 * 3);
+   R02.store_le(output + 32 * 4);
+   R10.store_le(output + 32 * 5);
+   R03.store_le(output + 32 * 6);
+   R11.store_le(output + 32 * 7);
+   R04.store_le(output + 32 * 8);
+   R12.store_le(output + 32 * 9);
+   R05.store_le(output + 32 * 10);
+   R13.store_le(output + 32 * 11);
+   R06.store_le(output + 32 * 12);
+   R14.store_le(output + 32 * 13);
+   R07.store_le(output + 32 * 14);
+   R15.store_le(output + 32 * 15);
 
    SIMD_8x32::zero_registers();
 
    state[12] += 8;
    if(state[12] < 8)
       state[13]++;
-   }
 }
+}  // namespace Botan

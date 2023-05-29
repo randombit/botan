@@ -15,12 +15,12 @@ namespace Botan_Tests {
 /**
  * Summary data holder for an individual test (i.e. one `Test::Result` instance)
  */
-class TestSummary final
-   {
+class TestSummary final {
    public:
       TestSummary(const Test::Result& result);
 
       bool passed() const { return failures.empty(); }
+
       bool failed() const { return !failures.empty(); }
 
    public:
@@ -33,20 +33,19 @@ class TestSummary final
 
       const std::chrono::system_clock::time_point timestamp;
       const std::optional<std::chrono::nanoseconds> elapsed_time;
-   };
-
+};
 
 /**
  * Summary data holder for a test suite containing potentially many test cases
  */
-class Testsuite final
-   {
+class Testsuite final {
    public:
       Testsuite(std::string name);
 
       void record(const Test::Result& result);
 
       size_t tests_run() const { return m_results.size(); }
+
       size_t tests_passed() const;
       size_t tests_failed() const;
 
@@ -57,21 +56,20 @@ class Testsuite final
       std::optional<std::chrono::nanoseconds> elapsed_time() const;
 
       const std::string& name() const { return m_name; }
+
       const std::vector<TestSummary>& results() const { return m_results; }
 
    private:
-      const std::string        m_name;
+      const std::string m_name;
       std::vector<TestSummary> m_results;
-   };
-
+};
 
 /**
  * @brief Base class for Botan's test result reporting facility
  *
  * Note that this class is currently not thread safe.
  */
-class Reporter
-   {
+class Reporter {
    public:
       using TestsuiteMap = std::map<std::string, Testsuite>;
       using PropertyMap = std::map<std::string, std::string>;
@@ -132,8 +130,7 @@ class Reporter
        *
        * Note that this merges test results with the same name
        */
-      void record(const std::string& test_name,
-                  const std::vector<Botan_Tests::Test::Result>& results);
+      void record(const std::string& test_name, const std::vector<Botan_Tests::Test::Result>& results);
 
       /**
        * Called once all test results have been reported for a single run.
@@ -150,10 +147,7 @@ class Reporter
        *
        * @param name  the name of the test suite that is going to start
        */
-      virtual void next_testsuite(const std::string& name)
-         {
-         BOTAN_UNUSED(name);
-         }
+      virtual void next_testsuite(const std::string& name) { BOTAN_UNUSED(name); }
 
       /**
        * @brief Prepare the reporter for the next test run
@@ -167,9 +161,11 @@ class Reporter
       std::chrono::nanoseconds elapsed_time() const;
 
       const PropertyMap& properties() const { return m_properties; }
+
       const TestsuiteMap& testsuites() const { return m_testsuites; }
 
       size_t current_test_run() const { return m_current_test_run; }
+
       size_t total_test_runs() const { return m_total_test_runs; }
 
    private:
@@ -180,8 +176,8 @@ class Reporter
 
       TestsuiteMap m_testsuites;
       std::chrono::high_resolution_clock::time_point m_start_time;
-   };
+};
 
-}
+}  // namespace Botan_Tests
 
 #endif

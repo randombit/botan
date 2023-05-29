@@ -11,36 +11,30 @@
 
 namespace Botan::TLS {
 
-Alert::Alert(const secure_vector<uint8_t>& buf)
-   {
+Alert::Alert(const secure_vector<uint8_t>& buf) {
    if(buf.size() != 2)
-      throw Decoding_Error("Bad size (" + std::to_string(buf.size()) +
-                           ") for TLS alert message");
+      throw Decoding_Error("Bad size (" + std::to_string(buf.size()) + ") for TLS alert message");
 
-   if(buf[0] == 1)      m_fatal = false;
-   else if(buf[0] == 2) m_fatal = true;
+   if(buf[0] == 1)
+      m_fatal = false;
+   else if(buf[0] == 2)
+      m_fatal = true;
    else
       throw TLS_Exception(Alert::IllegalParameter, "Bad code for TLS alert level");
 
    const uint8_t dc = buf[1];
 
    m_type_code = static_cast<Type>(dc);
-   }
+}
 
-std::vector<uint8_t> Alert::serialize() const
-   {
-   return std::vector<uint8_t>({
-      static_cast<uint8_t>(is_fatal() ? 2 : 1),
-      static_cast<uint8_t>(type())
-      });
-   }
+std::vector<uint8_t> Alert::serialize() const {
+   return std::vector<uint8_t>({static_cast<uint8_t>(is_fatal() ? 2 : 1), static_cast<uint8_t>(type())});
+}
 
 namespace {
 
-const char* alert_type_to_string(AlertType type)
-   {
-   switch(type)
-      {
+const char* alert_type_to_string(AlertType type) {
+   switch(type) {
       case AlertType::CloseNotify:
          return "close_notify";
       case AlertType::UnexpectedMessage:
@@ -112,19 +106,18 @@ const char* alert_type_to_string(AlertType type)
 
       case AlertType::None:
          return "none";
-      }
-
-   return nullptr;
    }
 
+   return nullptr;
 }
 
-std::string Alert::type_string() const
-   {
+}  // namespace
+
+std::string Alert::type_string() const {
    if(const char* known_alert = alert_type_to_string(type()))
       return std::string(known_alert);
 
    return "unrecognized_alert_" + std::to_string(static_cast<size_t>(type()));
-   }
-
 }
+
+}  // namespace Botan::TLS

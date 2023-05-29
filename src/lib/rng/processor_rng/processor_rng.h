@@ -16,8 +16,7 @@ namespace Botan {
 * On x86, the RDRAND instruction is used.
 * on POWER, the DARN instruction is used.
 */
-class BOTAN_PUBLIC_API(2,15) Processor_RNG final : public Hardware_RNG
-   {
+class BOTAN_PUBLIC_API(2, 15) Processor_RNG final : public Hardware_RNG {
    public:
       /**
       * Constructor will throw if CPU does not have RDRAND bit set
@@ -30,6 +29,7 @@ class BOTAN_PUBLIC_API(2,15) Processor_RNG final : public Hardware_RNG
       static bool available();
 
       bool accepts_input() const override { return false; }
+
       bool is_seeded() const override { return true; }
 
       /*
@@ -41,8 +41,8 @@ class BOTAN_PUBLIC_API(2,15) Processor_RNG final : public Hardware_RNG
 
    private:
       void fill_bytes_with_input(std::span<uint8_t> out, std::span<const uint8_t> in) override;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

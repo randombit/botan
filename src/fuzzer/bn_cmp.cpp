@@ -8,11 +8,10 @@
 
 #include <botan/bigint.h>
 
-void fuzz(const uint8_t in[], size_t len)
-   {
+void fuzz(const uint8_t in[], size_t len) {
    const size_t max_bits = 512;
 
-   if(len < 3 || len > 1 + 2*(max_bits/8))
+   if(len < 3 || len > 1 + 2 * (max_bits / 8))
       return;
 
    const uint8_t signs = in[0];
@@ -37,38 +36,32 @@ void fuzz(const uint8_t in[], size_t len)
    const bool is_lte = (x <= y);
    const bool is_gte = (x >= y);
 
-   if(is_eq)
-      {
+   if(is_eq) {
       FUZZER_ASSERT_TRUE(d1.is_zero());
       FUZZER_ASSERT_TRUE(d2.is_zero());
-      }
+   }
 
-   if(is_lte)
-      {
+   if(is_lte) {
       FUZZER_ASSERT_TRUE(is_lt || is_eq);
-      }
+   }
 
-   if(is_gte)
-      {
+   if(is_gte) {
       FUZZER_ASSERT_TRUE(is_gt || is_eq);
-      }
+   }
 
-   if(is_lt)
-      {
+   if(is_lt) {
       FUZZER_ASSERT_TRUE(!is_gt);
       FUZZER_ASSERT_TRUE(d1.is_nonzero());
       FUZZER_ASSERT_TRUE(d2.is_nonzero());
       FUZZER_ASSERT_TRUE(d1.is_negative());
       FUZZER_ASSERT_TRUE(d2.is_positive());
-      }
+   }
 
-   if(is_gt)
-      {
+   if(is_gt) {
       FUZZER_ASSERT_TRUE(!is_lt);
       FUZZER_ASSERT_TRUE(d1.is_nonzero());
       FUZZER_ASSERT_TRUE(d2.is_nonzero());
       FUZZER_ASSERT_TRUE(d1.is_positive());
       FUZZER_ASSERT_TRUE(d2.is_negative());
-      }
    }
-
+}

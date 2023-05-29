@@ -18,8 +18,7 @@ namespace TLS {
 /**
 * Represents information known about a TLS server.
 */
-class BOTAN_PUBLIC_API(2,0) Server_Information final
-   {
+class BOTAN_PUBLIC_API(2, 0) Server_Information final {
    public:
       /**
       * An empty server info - nothing known
@@ -31,9 +30,8 @@ class BOTAN_PUBLIC_API(2,0) Server_Information final
       * @param port specifies the protocol port of the server (eg for
       *        TCP/UDP). Zero represents unknown.
       */
-      Server_Information(std::string_view hostname,
-                        uint16_t port = 0) :
-         m_hostname(hostname), m_service(""), m_port(port) {}
+      Server_Information(std::string_view hostname, uint16_t port = 0) :
+            m_hostname(hostname), m_service(""), m_port(port) {}
 
       /**
       * @param hostname the host's DNS name, if known
@@ -42,10 +40,8 @@ class BOTAN_PUBLIC_API(2,0) Server_Information final
       * @param port specifies the protocol port of the server (eg for
       *        TCP/UDP). Zero represents unknown.
       */
-      Server_Information(std::string_view hostname,
-                        std::string_view service,
-                        uint16_t port = 0) :
-         m_hostname(hostname), m_service(service), m_port(port) {}
+      Server_Information(std::string_view hostname, std::string_view service, uint16_t port = 0) :
+            m_hostname(hostname), m_service(service), m_port(port) {}
 
       /**
       * @return the host's DNS name, if known
@@ -71,34 +67,26 @@ class BOTAN_PUBLIC_API(2,0) Server_Information final
    private:
       std::string m_hostname, m_service;
       uint16_t m_port;
-   };
+};
 
-inline bool operator==(const Server_Information& a, const Server_Information& b)
-   {
-   return (a.hostname() == b.hostname()) &&
-          (a.service() == b.service()) &&
-          (a.port() == b.port());
+inline bool operator==(const Server_Information& a, const Server_Information& b) {
+   return (a.hostname() == b.hostname()) && (a.service() == b.service()) && (a.port() == b.port());
+}
 
-   }
+inline bool operator!=(const Server_Information& a, const Server_Information& b) { return !(a == b); }
 
-inline bool operator!=(const Server_Information& a, const Server_Information& b)
-   {
-   return !(a == b);
-   }
-
-inline bool operator<(const Server_Information& a, const Server_Information& b)
-   {
+inline bool operator<(const Server_Information& a, const Server_Information& b) {
    if(a.hostname() != b.hostname())
       return (a.hostname() < b.hostname());
    if(a.service() != b.service())
       return (a.service() < b.service());
    if(a.port() != b.port())
       return (a.port() < b.port());
-   return false; // equal
-   }
-
+   return false;  // equal
 }
 
-}
+}  // namespace TLS
+
+}  // namespace Botan
 
 #endif

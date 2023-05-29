@@ -9,63 +9,55 @@
 #ifndef BOTAN_P11_RSA_H_
 #define BOTAN_P11_RSA_H_
 
-#include <botan/p11_types.h>
-#include <botan/p11_object.h>
-#include <botan/pk_keys.h>
 #include <botan/bigint.h>
+#include <botan/p11_object.h>
+#include <botan/p11_types.h>
+#include <botan/pk_keys.h>
 
 #if defined(BOTAN_HAS_RSA)
-#include <botan/rsa.h>
-#include <utility>
+   #include <botan/rsa.h>
+   #include <utility>
 
 namespace Botan {
 namespace PKCS11 {
 
 /// Properties for generating a PKCS#11 RSA public key
-class BOTAN_PUBLIC_API(2,0) RSA_PublicKeyGenerationProperties final : public PublicKeyProperties
-   {
+class BOTAN_PUBLIC_API(2, 0) RSA_PublicKeyGenerationProperties final : public PublicKeyProperties {
    public:
       /// @param bits length in bits of modulus n
       explicit RSA_PublicKeyGenerationProperties(Ulong bits);
 
       /// @param pub_exponent public exponent e
-      inline void set_pub_exponent(const BigInt& pub_exponent = BigInt::from_word(0x10001))
-         {
+      inline void set_pub_exponent(const BigInt& pub_exponent = BigInt::from_word(0x10001)) {
          add_binary(AttributeType::PublicExponent, BigInt::encode(pub_exponent));
-         }
+      }
 
       virtual ~RSA_PublicKeyGenerationProperties() = default;
-   };
+};
 
 /// Properties for importing a PKCS#11 RSA public key
-class BOTAN_PUBLIC_API(2,0) RSA_PublicKeyImportProperties final : public PublicKeyProperties
-   {
+class BOTAN_PUBLIC_API(2, 0) RSA_PublicKeyImportProperties final : public PublicKeyProperties {
    public:
       /// @param modulus modulus n
       /// @param pub_exponent public exponent e
       RSA_PublicKeyImportProperties(const BigInt& modulus, const BigInt& pub_exponent);
 
       /// @return the modulus
-      inline const BigInt& modulus() const
-         {
-         return m_modulus;
-         }
+      inline const BigInt& modulus() const { return m_modulus; }
 
       /// @return the public exponent
-      inline const BigInt& pub_exponent() const
-         {
-         return m_pub_exponent;
-         }
+      inline const BigInt& pub_exponent() const { return m_pub_exponent; }
 
       virtual ~RSA_PublicKeyImportProperties() = default;
+
    private:
       const BigInt m_modulus;
       const BigInt m_pub_exponent;
-   };
+};
 
 /// Represents a PKCS#11 RSA public key
-class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PublicKey : public Object, public RSA_PublicKey
-   {
+class BOTAN_PUBLIC_API(2, 0) PKCS11_RSA_PublicKey : public Object,
+                                                    public RSA_PublicKey {
    public:
       static const ObjectClass Class = ObjectClass::PublicKey;
 
@@ -83,19 +75,16 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PublicKey : public Object, public RSA_Pub
       */
       PKCS11_RSA_PublicKey(Session& session, const RSA_PublicKeyImportProperties& pubkey_props);
 
-      std::unique_ptr<PK_Ops::Encryption>
-         create_encryption_op(RandomNumberGenerator& rng,
-                              std::string_view params,
-                              std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Encryption> create_encryption_op(RandomNumberGenerator& rng,
+                                                               std::string_view params,
+                                                               std::string_view provider) const override;
 
-      std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(std::string_view params,
-                                std::string_view provider) const override;
-   };
+      std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
+                                                                   std::string_view provider) const override;
+};
 
 /// Properties for importing a PKCS#11 RSA private key
-class BOTAN_PUBLIC_API(2,0) RSA_PrivateKeyImportProperties final : public PrivateKeyProperties
-   {
+class BOTAN_PUBLIC_API(2, 0) RSA_PrivateKeyImportProperties final : public PrivateKeyProperties {
    public:
       /**
       * @param modulus modulus n
@@ -104,79 +93,56 @@ class BOTAN_PUBLIC_API(2,0) RSA_PrivateKeyImportProperties final : public Privat
       RSA_PrivateKeyImportProperties(const BigInt& modulus, const BigInt& priv_exponent);
 
       /// @param pub_exponent public exponent e
-      inline void set_pub_exponent(const BigInt& pub_exponent)
-         {
+      inline void set_pub_exponent(const BigInt& pub_exponent) {
          add_binary(AttributeType::PublicExponent, BigInt::encode(pub_exponent));
-         }
+      }
 
       /// @param prime1 prime p
-      inline void set_prime_1(const BigInt& prime1)
-         {
-         add_binary(AttributeType::Prime1, BigInt::encode(prime1));
-         }
+      inline void set_prime_1(const BigInt& prime1) { add_binary(AttributeType::Prime1, BigInt::encode(prime1)); }
 
       /// @param prime2 prime q
-      inline void set_prime_2(const BigInt& prime2)
-         {
-         add_binary(AttributeType::Prime2, BigInt::encode(prime2));
-         }
+      inline void set_prime_2(const BigInt& prime2) { add_binary(AttributeType::Prime2, BigInt::encode(prime2)); }
 
       /// @param exp1 private exponent d modulo p-1
-      inline void set_exponent_1(const BigInt& exp1)
-         {
-         add_binary(AttributeType::Exponent1, BigInt::encode(exp1));
-         }
+      inline void set_exponent_1(const BigInt& exp1) { add_binary(AttributeType::Exponent1, BigInt::encode(exp1)); }
 
       /// @param exp2 private exponent d modulo q-1
-      inline void set_exponent_2(const BigInt& exp2)
-         {
-         add_binary(AttributeType::Exponent2, BigInt::encode(exp2));
-         }
+      inline void set_exponent_2(const BigInt& exp2) { add_binary(AttributeType::Exponent2, BigInt::encode(exp2)); }
 
       /// @param coeff CRT coefficient q^-1 mod p
-      inline void set_coefficient(const BigInt& coeff)
-         {
+      inline void set_coefficient(const BigInt& coeff) {
          add_binary(AttributeType::Coefficient, BigInt::encode(coeff));
-         }
+      }
 
       /// @return the modulus
-      inline const BigInt& modulus() const
-         {
-         return m_modulus;
-         }
+      inline const BigInt& modulus() const { return m_modulus; }
 
       /// @return the private exponent
-      inline const BigInt& priv_exponent() const
-         {
-         return m_priv_exponent;
-         }
+      inline const BigInt& priv_exponent() const { return m_priv_exponent; }
 
       virtual ~RSA_PrivateKeyImportProperties() = default;
 
    private:
       const BigInt m_modulus;
       const BigInt m_priv_exponent;
-   };
+};
 
 /// Properties for generating a PKCS#11 RSA private key
-class BOTAN_PUBLIC_API(2,0) RSA_PrivateKeyGenerationProperties final : public PrivateKeyProperties
-   {
+class BOTAN_PUBLIC_API(2, 0) RSA_PrivateKeyGenerationProperties final : public PrivateKeyProperties {
    public:
-      RSA_PrivateKeyGenerationProperties()
-         : PrivateKeyProperties(KeyType::Rsa)
-         {}
+      RSA_PrivateKeyGenerationProperties() : PrivateKeyProperties(KeyType::Rsa) {}
 
       virtual ~RSA_PrivateKeyGenerationProperties() = default;
-   };
+};
 
 /// Represents a PKCS#11 RSA private key
 
 BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 
-class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PrivateKey final :
-   public Object, public Private_Key, public RSA_PublicKey
-   {
+class BOTAN_PUBLIC_API(2, 0) PKCS11_RSA_PrivateKey final : public Object,
+                                                           public Private_Key,
+                                                           public RSA_PublicKey {
    public:
       static const ObjectClass Class = ObjectClass::PrivateKey;
 
@@ -210,25 +176,24 @@ class BOTAN_PUBLIC_API(2,0) PKCS11_RSA_PrivateKey final :
        * @param software_padding  if true, perform the unpadding in software
        */
       void set_use_software_padding(bool software_padding) { m_use_software_padding = software_padding; }
+
       bool uses_software_padding() const { return m_use_software_padding; }
 
       secure_vector<uint8_t> private_key_bits() const override;
 
       std::unique_ptr<Public_Key> public_key() const override;
 
-      std::unique_ptr<PK_Ops::Decryption>
-         create_decryption_op(RandomNumberGenerator& rng,
-                              std::string_view params,
-                              std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Decryption> create_decryption_op(RandomNumberGenerator& rng,
+                                                               std::string_view params,
+                                                               std::string_view provider) const override;
 
-      std::unique_ptr<PK_Ops::Signature>
-         create_signature_op(RandomNumberGenerator& rng,
-                             std::string_view params,
-                             std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
+                                                             std::string_view params,
+                                                             std::string_view provider) const override;
 
    private:
       bool m_use_software_padding = false;
-   };
+};
 
 BOTAN_DIAGNOSTIC_POP
 
@@ -240,11 +205,13 @@ using PKCS11_RSA_KeyPair = std::pair<PKCS11_RSA_PublicKey, PKCS11_RSA_PrivateKey
 * @param pub_props properties of the public key
 * @param priv_props properties of the private key
 */
-BOTAN_PUBLIC_API(2,0) PKCS11_RSA_KeyPair generate_rsa_keypair(Session& session, const RSA_PublicKeyGenerationProperties& pub_props,
-      const RSA_PrivateKeyGenerationProperties& priv_props);
-}
+BOTAN_PUBLIC_API(2, 0)
+PKCS11_RSA_KeyPair generate_rsa_keypair(Session& session,
+                                        const RSA_PublicKeyGenerationProperties& pub_props,
+                                        const RSA_PrivateKeyGenerationProperties& priv_props);
+}  // namespace PKCS11
 
-}
+}  // namespace Botan
 #endif
 
 #endif

@@ -8,8 +8,8 @@
 #ifndef BOTAN_TLS_SQL_SESSION_MANAGER_H_
 #define BOTAN_TLS_SQL_SESSION_MANAGER_H_
 
-#include <botan/tls_session_manager.h>
 #include <botan/database.h>
+#include <botan/tls_session_manager.h>
 
 namespace Botan {
 
@@ -25,8 +25,7 @@ namespace TLS {
 * sessions are stored in the database in plaintext. This may be a
 * serious privacy risk in some situations.
 */
-class BOTAN_PUBLIC_API(3,0) Session_Manager_SQL : public Session_Manager
-   {
+class BOTAN_PUBLIC_API(3, 0) Session_Manager_SQL : public Session_Manager {
    public:
       /**
       * @param db A connection to the database to use
@@ -64,7 +63,6 @@ class BOTAN_PUBLIC_API(3,0) Session_Manager_SQL : public Session_Manager
       virtual bool database_is_threadsafe() const { return m_db->is_threadsafe(); }
 
    private:
-
       // Database Schema Revision history
       //
       // 0        - empty database (needs creation with latest schema)
@@ -72,13 +70,12 @@ class BOTAN_PUBLIC_API(3,0) Session_Manager_SQL : public Session_Manager
       // 20120609 - older (Botan 2.0) database scheme
       // 20230113 - adapt to Botan 3.0 Session_Manager API
       //            (Session objects don't contain Session_ID, Session_Ticket)
-      enum Schema_Revision
-         {
-         EMPTY         = 0,
-         CORRUPTED     = 1,
+      enum Schema_Revision {
+         EMPTY = 0,
+         CORRUPTED = 1,
          PRE_BOTAN_3_0 = 20120609,
-         BOTAN_3_0     = 20230112,
-         };
+         BOTAN_3_0 = 20230112,
+      };
 
       void create_or_migrate_and_open(std::string_view passphrase);
       Schema_Revision detect_schema_revision();
@@ -91,10 +88,10 @@ class BOTAN_PUBLIC_API(3,0) Session_Manager_SQL : public Session_Manager
       std::shared_ptr<SQL_Database> m_db;
       SymmetricKey m_session_key;
       size_t m_max_sessions;
-   };
+};
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif

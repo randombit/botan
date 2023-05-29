@@ -16,8 +16,7 @@ namespace Botan {
 /**
  * NIST SP 800-56C KDF
  */
-class SP800_56C final : public KDF
-   {
+class SP800_56C final : public KDF {
    public:
       std::string name() const override;
 
@@ -38,24 +37,26 @@ class SP800_56C final : public KDF
       * @param label label for the expansion step
       * @param label_len size of label in bytes
       */
-      void kdf(uint8_t key[], size_t key_len,
-               const uint8_t secret[], size_t secret_len,
-               const uint8_t salt[], size_t salt_len,
-               const uint8_t label[], size_t label_len) const override;
+      void kdf(uint8_t key[],
+               size_t key_len,
+               const uint8_t secret[],
+               size_t secret_len,
+               const uint8_t salt[],
+               size_t salt_len,
+               const uint8_t label[],
+               size_t label_len) const override;
 
       /**
       * @param mac MAC algorithm used for randomness extraction
       * @param exp KDF used for key expansion
       */
-      SP800_56C(std::unique_ptr<MessageAuthenticationCode> mac,
-                std::unique_ptr<KDF> exp) :
-         m_prf(std::move(mac)),
-         m_exp(std::move(exp))
-         {}
+      SP800_56C(std::unique_ptr<MessageAuthenticationCode> mac, std::unique_ptr<KDF> exp) :
+            m_prf(std::move(mac)), m_exp(std::move(exp)) {}
+
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
       std::unique_ptr<KDF> m_exp;
-   };
-}
+};
+}  // namespace Botan
 
 #endif

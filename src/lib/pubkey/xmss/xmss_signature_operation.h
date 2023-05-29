@@ -8,8 +8,8 @@
 #ifndef BOTAN_XMSS_SIGNATURE_OPERATION_H_
 #define BOTAN_XMSS_SIGNATURE_OPERATION_H_
 
-#include <botan/internal/pk_ops.h>
 #include <botan/xmss.h>
+#include <botan/internal/pk_ops.h>
 #include <botan/internal/xmss_address.h>
 #include <botan/internal/xmss_signature.h>
 #include <botan/internal/xmss_wots.h>
@@ -25,8 +25,7 @@ namespace Botan {
  *     Release: May 2018.
  *     https://datatracker.ietf.org/doc/rfc8391/
  **/
-class XMSS_Signature_Operation final : public virtual PK_Ops::Signature
-   {
+class XMSS_Signature_Operation final : public virtual PK_Ops::Signature {
    public:
       XMSS_Signature_Operation(const XMSS_PrivateKey& private_key);
 
@@ -55,10 +54,9 @@ class XMSS_Signature_Operation final : public virtual PK_Ops::Signature
        * @param xmss_priv_key A XMSS private key.
        * @param adrs A XMSS Address.
        **/
-      XMSS_Signature::TreeSignature generate_tree_signature(
-         const secure_vector<uint8_t>& msg,
-         XMSS_PrivateKey& xmss_priv_key,
-         XMSS_Address& adrs);
+      XMSS_Signature::TreeSignature generate_tree_signature(const secure_vector<uint8_t>& msg,
+                                                            XMSS_PrivateKey& xmss_priv_key,
+                                                            XMSS_Address& adrs);
 
       /**
        * Algorithm 12: "XMSS_sign"
@@ -70,12 +68,9 @@ class XMSS_Signature_Operation final : public virtual PK_Ops::Signature
        *
        * @return The signature of msg signed using xmss_priv_key.
        **/
-      XMSS_Signature sign(
-         const secure_vector<uint8_t>& msg,
-         XMSS_PrivateKey& xmss_priv_key);
+      XMSS_Signature sign(const secure_vector<uint8_t>& msg, XMSS_PrivateKey& xmss_priv_key);
 
-      wots_keysig_t build_auth_path(XMSS_PrivateKey& priv_key,
-                                    XMSS_Address& adrs);
+      wots_keysig_t build_auth_path(XMSS_PrivateKey& priv_key, XMSS_Address& adrs);
 
       void initialize();
 
@@ -84,9 +79,8 @@ class XMSS_Signature_Operation final : public virtual PK_Ops::Signature
       secure_vector<uint8_t> m_randomness;
       uint32_t m_leaf_idx;
       bool m_is_initialized;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif
-

@@ -29,6 +29,6 @@ std::vector<uint8_t> BOTAN_TEST_API pkcs_hash_id(std::string_view hash_name);
 */
 uint8_t ieee1363_hash_id(std::string_view hash_name);
 
-}
+}  // namespace Botan
 
 #endif

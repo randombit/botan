@@ -17,8 +17,8 @@ namespace Botan {
 /**
 * A queue that knows how to zeroize itself
 */
-class BOTAN_TEST_API SecureQueue final : public Fanout_Filter, public DataSource
-   {
+class BOTAN_TEST_API SecureQueue final : public Fanout_Filter,
+                                         public DataSource {
    public:
       std::string name() const override { return "Queue"; }
 
@@ -68,8 +68,8 @@ class BOTAN_TEST_API SecureQueue final : public Fanout_Filter, public DataSource
       size_t m_bytes_read;
       class SecureQueueNode* m_head;
       class SecureQueueNode* m_tail;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

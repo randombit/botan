@@ -13,8 +13,7 @@ namespace Botan {
 
 namespace {
 
-std::string clean_ws(std::string_view s)
-   {
+std::string clean_ws(std::string_view s) {
    const char* ws = " \t\n";
    auto start = s.find_first_not_of(ws);
    auto end = s.find_last_not_of(ws);
@@ -26,17 +25,15 @@ std::string clean_ws(std::string_view s)
       return std::string(s.substr(start, end));
    else
       return std::string(s.substr(start, start + end + 1));
-   }
-
 }
 
-std::map<std::string, std::string> read_cfg(std::istream& is)
-   {
+}  // namespace
+
+std::map<std::string, std::string> read_cfg(std::istream& is) {
    std::map<std::string, std::string> kv;
    size_t line = 0;
 
-   while(is.good())
-      {
+   while(is.good()) {
       std::string s;
 
       std::getline(is, s);
@@ -60,9 +57,9 @@ std::map<std::string, std::string> read_cfg(std::istream& is)
       const std::string val = clean_ws(s.substr(eq + 1, std::string::npos));
 
       kv[key] = val;
-      }
-
-   return kv;
    }
 
+   return kv;
 }
+
+}  // namespace Botan

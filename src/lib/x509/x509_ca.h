@@ -8,8 +8,8 @@
 #ifndef BOTAN_X509_CA_H_
 #define BOTAN_X509_CA_H_
 
-#include <botan/x509cert.h>
 #include <botan/x509_crl.h>
+#include <botan/x509cert.h>
 #include <chrono>
 #include <map>
 
@@ -24,8 +24,7 @@ class PK_Signer;
 /**
 * An interface capable of creating new X.509 certificates
 */
-class BOTAN_PUBLIC_API(2,0) X509_CA final
-   {
+class BOTAN_PUBLIC_API(2, 0) X509_CA final {
    public:
       /**
       * Return the algorithm identifier used to identify signatures that
@@ -110,8 +109,7 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
       * as the offset from the current time
       * @return new CRL
       */
-      X509_CRL new_crl(RandomNumberGenerator& rng,
-                       uint32_t next_update = 604800) const;
+      X509_CRL new_crl(RandomNumberGenerator& rng, uint32_t next_update = 604800) const;
 
       /**
       * Create a new CRL by with additional entries.
@@ -213,11 +211,7 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
               const Private_Key& key,
               std::string_view hash_fn,
               RandomNumberGenerator& rng) :
-         X509_CA(ca_certificate,
-                 key,
-                 hash_fn,
-                 "",
-                 rng) {}
+            X509_CA(ca_certificate, key, hash_fn, "", rng) {}
 
       /**
       * Create a new CA object.
@@ -228,12 +222,13 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
       * @param rng the random generator to use
       */
       BOTAN_DEPRECATED("Use version taking padding as an explicit arg")
+
       X509_CA(const X509_Certificate& ca_certificate,
               const Private_Key& key,
-              const std::map<std::string,std::string>& opts,
+              const std::map<std::string, std::string>& opts,
               std::string_view hash_fn,
               RandomNumberGenerator& rng) :
-         X509_CA(ca_certificate, key, hash_fn, opts.at("padding"), rng) {}
+            X509_CA(ca_certificate, key, hash_fn, opts.at("padding"), rng) {}
 
       X509_CA(const X509_CA&) = delete;
       X509_CA& operator=(const X509_CA&) = delete;
@@ -254,8 +249,8 @@ class BOTAN_PUBLIC_API(2,0) X509_CA final
       X509_Certificate m_ca_cert;
       std::string m_hash_fn;
       std::unique_ptr<PK_Signer> m_signer;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

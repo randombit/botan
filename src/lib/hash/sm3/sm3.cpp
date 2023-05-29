@@ -8,33 +8,32 @@
 
 #include <botan/internal/sm3.h>
 
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
-#include <botan/internal/bit_ops.h>
 
 namespace Botan {
 
-std::unique_ptr<HashFunction> SM3::copy_state() const
-   {
-   return std::make_unique<SM3>(*this);
-   }
+std::unique_ptr<HashFunction> SM3::copy_state() const { return std::make_unique<SM3>(*this); }
 
 namespace {
 
 const uint32_t SM3_IV[] = {
-   0x7380166fUL, 0x4914b2b9UL, 0x172442d7UL, 0xda8a0600UL,
-   0xa96f30bcUL, 0x163138aaUL, 0xe38dee4dUL, 0xb0fb0e4eUL
-};
+   0x7380166fUL, 0x4914b2b9UL, 0x172442d7UL, 0xda8a0600UL, 0xa96f30bcUL, 0x163138aaUL, 0xe38dee4dUL, 0xb0fb0e4eUL};
 
-inline uint32_t P0(uint32_t X)
-   {
-   return X ^ rotl<9>(X) ^ rotl<17>(X);
-   }
+inline uint32_t P0(uint32_t X) { return X ^ rotl<9>(X) ^ rotl<17>(X); }
 
-inline void R1(uint32_t A, uint32_t& B, uint32_t C, uint32_t& D,
-               uint32_t E, uint32_t& F, uint32_t G, uint32_t& H,
-               uint32_t TJ, uint32_t Wi, uint32_t Wj)
-   {
+inline void R1(uint32_t A,
+               uint32_t& B,
+               uint32_t C,
+               uint32_t& D,
+               uint32_t E,
+               uint32_t& F,
+               uint32_t G,
+               uint32_t& H,
+               uint32_t TJ,
+               uint32_t Wi,
+               uint32_t Wj) {
    const uint32_t A12 = rotl<12>(A);
    const uint32_t SS1 = rotl<7>(A12 + E + TJ);
    const uint32_t TT1 = (A ^ B ^ C) + D + (SS1 ^ A12) + Wj;
@@ -44,12 +43,19 @@ inline void R1(uint32_t A, uint32_t& B, uint32_t C, uint32_t& D,
    D = TT1;
    F = rotl<19>(F);
    H = P0(TT2);
-   }
+}
 
-inline void R2(uint32_t A, uint32_t& B, uint32_t C, uint32_t& D,
-               uint32_t E, uint32_t& F, uint32_t G, uint32_t& H,
-               uint32_t TJ, uint32_t Wi, uint32_t Wj)
-   {
+inline void R2(uint32_t A,
+               uint32_t& B,
+               uint32_t C,
+               uint32_t& D,
+               uint32_t E,
+               uint32_t& F,
+               uint32_t G,
+               uint32_t& H,
+               uint32_t TJ,
+               uint32_t Wi,
+               uint32_t Wj) {
    const uint32_t A12 = rotl<12>(A);
    const uint32_t SS1 = rotl<7>(A12 + E + TJ);
    const uint32_t TT1 = majority(A, B, C) + D + (SS1 ^ A12) + Wj;
@@ -59,30 +65,24 @@ inline void R2(uint32_t A, uint32_t& B, uint32_t C, uint32_t& D,
    D = TT1;
    F = rotl<19>(F);
    H = P0(TT2);
-   }
-
-inline uint32_t P1(uint32_t X)
-   {
-   return X ^ rotl<15>(X) ^ rotl<23>(X);
-   }
-
-inline uint32_t SM3_E(uint32_t W0, uint32_t W7, uint32_t W13, uint32_t W3, uint32_t W10)
-   {
-   return P1(W0 ^ W7 ^ rotl<15>(W13)) ^ rotl<7>(W3) ^ W10;
-   }
-
 }
+
+inline uint32_t P1(uint32_t X) { return X ^ rotl<15>(X) ^ rotl<23>(X); }
+
+inline uint32_t SM3_E(uint32_t W0, uint32_t W7, uint32_t W13, uint32_t W3, uint32_t W10) {
+   return P1(W0 ^ W7 ^ rotl<15>(W13)) ^ rotl<7>(W3) ^ W10;
+}
+
+}  // namespace
 
 /*
 * SM3 Compression Function
 */
-void SM3::compress_n(const uint8_t input[], size_t blocks)
-   {
-   uint32_t A = m_digest[0], B = m_digest[1], C = m_digest[2], D = m_digest[3],
-            E = m_digest[4], F = m_digest[5], G = m_digest[6], H = m_digest[7];
+void SM3::compress_n(const uint8_t input[], size_t blocks) {
+   uint32_t A = m_digest[0], B = m_digest[1], C = m_digest[2], D = m_digest[3], E = m_digest[4], F = m_digest[5],
+            G = m_digest[6], H = m_digest[7];
 
-   for(size_t i = 0; i != blocks; ++i)
-      {
+   for(size_t i = 0; i != blocks; ++i) {
       uint32_t W00 = load_be<uint32_t>(input, 0);
       uint32_t W01 = load_be<uint32_t>(input, 1);
       uint32_t W02 = load_be<uint32_t>(input, 2);
@@ -227,24 +227,20 @@ void SM3::compress_n(const uint8_t input[], size_t blocks)
       H = (m_digest[7] ^= H);
 
       input += hash_block_size();
-      }
    }
+}
 
 /*
 * Copy out the digest
 */
-void SM3::copy_out(uint8_t output[])
-   {
-   copy_out_vec_be(output, output_length(), m_digest);
-   }
+void SM3::copy_out(uint8_t output[]) { copy_out_vec_be(output, output_length(), m_digest); }
 
 /*
 * Clear memory of sensitive data
 */
-void SM3::clear()
-   {
+void SM3::clear() {
    MDx_HashFunction::clear();
    std::copy(std::begin(SM3_IV), std::end(SM3_IV), m_digest.begin());
-   }
-
 }
+
+}  // namespace Botan

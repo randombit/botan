@@ -9,9 +9,9 @@
 #define BOTAN_OCSP_H_
 
 #include <botan/asn1_obj.h>
+#include <botan/bigint.h>
 #include <botan/pkix_types.h>
 #include <botan/x509cert.h>
-#include <botan/bigint.h>
 
 #include <chrono>
 #include <optional>
@@ -22,16 +22,13 @@ class Certificate_Store;
 
 namespace OCSP {
 
-class BOTAN_PUBLIC_API(2,0) CertID final : public ASN1_Object
-   {
+class BOTAN_PUBLIC_API(2, 0) CertID final : public ASN1_Object {
    public:
       CertID() = default;
 
-      CertID(const X509_Certificate& issuer,
-             const BigInt& subject_serial);
+      CertID(const X509_Certificate& issuer, const BigInt& subject_serial);
 
-      bool is_id_for(const X509_Certificate& issuer,
-                     const X509_Certificate& subject) const;
+      bool is_id_for(const X509_Certificate& issuer, const X509_Certificate& subject) const;
 
       void encode_into(DER_Encoder& to) const override;
 
@@ -44,10 +41,9 @@ class BOTAN_PUBLIC_API(2,0) CertID final : public ASN1_Object
       std::vector<uint8_t> m_issuer_dn_hash;
       std::vector<uint8_t> m_issuer_key_hash;
       BigInt m_subject_serial;
-   };
+};
 
-class BOTAN_PUBLIC_API(2,0) SingleResponse final : public ASN1_Object
-   {
+class BOTAN_PUBLIC_API(2, 0) SingleResponse final : public ASN1_Object {
    public:
       const CertID& certid() const { return m_certid; }
 
@@ -60,29 +56,27 @@ class BOTAN_PUBLIC_API(2,0) SingleResponse final : public ASN1_Object
       void encode_into(DER_Encoder& to) const override;
 
       void decode_from(BER_Decoder& from) override;
+
    private:
       CertID m_certid;
-      size_t m_cert_status = 2; // unknown
+      size_t m_cert_status = 2;  // unknown
       X509_Time m_thisupdate;
       X509_Time m_nextupdate;
-   };
+};
 
 /**
 * An OCSP request.
 */
-class BOTAN_PUBLIC_API(2,0) Request final
-   {
+class BOTAN_PUBLIC_API(2, 0) Request final {
    public:
       /**
       * Create an OCSP request.
       * @param issuer_cert issuer certificate
       * @param subject_cert subject certificate
       */
-      Request(const X509_Certificate& issuer_cert,
-              const X509_Certificate& subject_cert);
+      Request(const X509_Certificate& issuer_cert, const X509_Certificate& subject_cert);
 
-      Request(const X509_Certificate& issuer_cert,
-              const BigInt& subject_serial);
+      Request(const X509_Certificate& issuer_cert, const BigInt& subject_serial);
 
       /**
       * @return BER-encoded OCSP request
@@ -104,12 +98,12 @@ class BOTAN_PUBLIC_API(2,0) Request final
       */
       const X509_Certificate& subject() const { throw Not_Implemented("Method have been deprecated"); }
 
-      const std::vector<uint8_t>& issuer_key_hash() const
-         { return m_certid.issuer_key_hash(); }
+      const std::vector<uint8_t>& issuer_key_hash() const { return m_certid.issuer_key_hash(); }
+
    private:
       X509_Certificate m_issuer;
       CertID m_certid;
-   };
+};
 
 /**
 * OCSP response status.
@@ -130,8 +124,7 @@ enum class Response_Status_Code {
 *
 * Note this class is only usable as an OCSP client
 */
-class BOTAN_PUBLIC_API(2,0) Response final
-   {
+class BOTAN_PUBLIC_API(2, 0) Response final {
    public:
       /**
       * Create a fake OCSP response from a given status code.
@@ -143,17 +136,14 @@ class BOTAN_PUBLIC_API(2,0) Response final
       * Parses an OCSP response.
       * @param response_bits response bits received
       */
-      Response(const std::vector<uint8_t>& response_bits) :
-         Response(response_bits.data(), response_bits.size())
-         {}
+      Response(const std::vector<uint8_t>& response_bits) : Response(response_bits.data(), response_bits.size()) {}
 
       /**
       * Parses an OCSP response.
       * @param response_bits response bits received
       * @param response_bits_len length of response in bytes
       */
-      Response(const uint8_t response_bits[],
-               size_t response_bits_len);
+      Response(const uint8_t response_bits[], size_t response_bits_len);
 
       /**
       * Find the certificate that signed this OCSP response from all possible
@@ -165,9 +155,8 @@ class BOTAN_PUBLIC_API(2,0) Response final
       *
       * @return the certificate that signed this response or std::nullopt if not found
       */
-      std::optional<X509_Certificate>
-      find_signing_certificate(const X509_Certificate& issuer_certificate,
-                               const Certificate_Store* trusted_ocsp_responders = nullptr) const;
+      std::optional<X509_Certificate> find_signing_certificate(
+         const X509_Certificate& issuer_certificate, const Certificate_Store* trusted_ocsp_responders = nullptr) const;
 
       /**
       * Check signature of the OCSP response.
@@ -220,15 +209,16 @@ class BOTAN_PUBLIC_API(2,0) Response final
        *         OCSP_BAD_STATUS,
        *         OCSP_CERT_NOT_LISTED
        */
-      Certificate_Status_Code status_for(const X509_Certificate& issuer,
-                                         const X509_Certificate& subject,
-                                         std::chrono::system_clock::time_point ref_time = std::chrono::system_clock::now(),
-                                         std::chrono::seconds max_age = std::chrono::seconds::zero()) const;
+      Certificate_Status_Code status_for(
+         const X509_Certificate& issuer,
+         const X509_Certificate& subject,
+         std::chrono::system_clock::time_point ref_time = std::chrono::system_clock::now(),
+         std::chrono::seconds max_age = std::chrono::seconds::zero()) const;
 
       /**
        * @return the certificate chain, if provided in response
        */
-      const std::vector<X509_Certificate> &certificates() const { return  m_certs; }
+      const std::vector<X509_Certificate>& certificates() const { return m_certs; }
 
       /**
       * @return the dummy response if this is a 'fake' OCSP response otherwise std::nullopt
@@ -252,7 +242,7 @@ class BOTAN_PUBLIC_API(2,0) Response final
       std::vector<SingleResponse> m_responses;
 
       std::optional<Certificate_Status_Code> m_dummy_response_status;
-   };
+};
 
 #if defined(BOTAN_HAS_HTTP_UTIL)
 
@@ -264,7 +254,7 @@ class BOTAN_PUBLIC_API(2,0) Response final
 * @param timeout a timeout on the HTTP request
 * @return OCSP response
 */
-BOTAN_PUBLIC_API(3,0)
+BOTAN_PUBLIC_API(3, 0)
 Response online_check(const X509_Certificate& issuer,
                       const BigInt& subject_serial,
                       std::string_view ocsp_responder,
@@ -277,15 +267,15 @@ Response online_check(const X509_Certificate& issuer,
 * @param timeout a timeout on the HTTP request
 * @return OCSP response
 */
-BOTAN_PUBLIC_API(3,0)
+BOTAN_PUBLIC_API(3, 0)
 Response online_check(const X509_Certificate& issuer,
                       const X509_Certificate& subject,
                       std::chrono::milliseconds timeout = std::chrono::milliseconds(3000));
 
 #endif
 
-}
+}  // namespace OCSP
 
-}
+}  // namespace Botan
 
 #endif

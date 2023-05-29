@@ -14,9 +14,7 @@ namespace Botan {
 
 namespace {
 
-BOTAN_FUNC_ISA("sse2")
-inline __m128i mul(__m128i X, uint16_t K_16)
-   {
+BOTAN_FUNC_ISA("sse2") inline __m128i mul(__m128i X, uint16_t K_16) {
    const __m128i zeros = _mm_set1_epi16(0);
    const __m128i ones = _mm_set1_epi16(1);
 
@@ -32,8 +30,7 @@ inline __m128i mul(__m128i X, uint16_t K_16)
 
    // Unsigned compare; cmp = 1 if mul_lo < mul_hi else 0
    const __m128i subs = _mm_subs_epu16(mul_hi, mul_lo);
-   const __m128i cmp = _mm_min_epu8(
-     _mm_or_si128(subs, _mm_srli_epi16(subs, 8)), ones);
+   const __m128i cmp = _mm_min_epu8(_mm_or_si128(subs, _mm_srli_epi16(subs, 8)), ones);
 
    T = _mm_add_epi16(T, cmp);
 
@@ -44,16 +41,12 @@ inline __m128i mul(__m128i X, uint16_t K_16)
       constant time implementation which is a nice bonus.
    */
 
-   T = _mm_or_si128(
-      _mm_andnot_si128(X_is_zero, T),
-      _mm_and_si128(_mm_sub_epi16(ones, K), X_is_zero));
+   T = _mm_or_si128(_mm_andnot_si128(X_is_zero, T), _mm_and_si128(_mm_sub_epi16(ones, K), X_is_zero));
 
-   T = _mm_or_si128(
-      _mm_andnot_si128(K_is_zero, T),
-      _mm_and_si128(_mm_sub_epi16(ones, X), K_is_zero));
+   T = _mm_or_si128(_mm_andnot_si128(K_is_zero, T), _mm_and_si128(_mm_sub_epi16(ones, X), K_is_zero));
 
    return T;
-   }
+}
 
 /*
 * 4x8 matrix transpose
@@ -63,9 +56,7 @@ inline __m128i mul(__m128i X, uint16_t K_16)
 * that extra unpack could easily save 3-4 cycles per block, and would
 * also help a lot with register pressure on 32-bit x86
 */
-BOTAN_FUNC_ISA("sse2")
-void transpose_in(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3)
-   {
+BOTAN_FUNC_ISA("sse2") void transpose_in(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3) {
    __m128i T0 = _mm_unpackhi_epi32(B0, B1);
    __m128i T1 = _mm_unpacklo_epi32(B0, B1);
    __m128i T2 = _mm_unpackhi_epi32(B2, B3);
@@ -95,14 +86,12 @@ void transpose_in(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3)
    B1 = _mm_unpackhi_epi64(T0, T2);
    B2 = _mm_unpacklo_epi64(T1, T3);
    B3 = _mm_unpackhi_epi64(T1, T3);
-   }
+}
 
 /*
 * 4x8 matrix transpose (reverse)
 */
-BOTAN_FUNC_ISA("sse2")
-void transpose_out(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3)
-   {
+BOTAN_FUNC_ISA("sse2") void transpose_out(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3) {
    __m128i T0 = _mm_unpacklo_epi64(B0, B1);
    __m128i T1 = _mm_unpacklo_epi64(B2, B3);
    __m128i T2 = _mm_unpackhi_epi64(B0, B1);
@@ -127,16 +116,14 @@ void transpose_out(__m128i& B0, __m128i& B1, __m128i& B2, __m128i& B3)
    B1 = _mm_unpackhi_epi32(T0, T1);
    B2 = _mm_unpacklo_epi32(T2, T3);
    B3 = _mm_unpackhi_epi32(T2, T3);
-   }
-
 }
+
+}  // namespace
 
 /*
 * 8 wide IDEA encryption/decryption in SSE2
 */
-BOTAN_FUNC_ISA("sse2")
-void IDEA::sse2_idea_op_8(const uint8_t in[64], uint8_t out[64], const uint16_t EK[52])
-   {
+BOTAN_FUNC_ISA("sse2") void IDEA::sse2_idea_op_8(const uint8_t in[64], uint8_t out[64], const uint16_t EK[52]) {
    CT::poison(in, 64);
    CT::poison(out, 64);
    CT::poison(EK, 52);
@@ -156,22 +143,21 @@ void IDEA::sse2_idea_op_8(const uint8_t in[64], uint8_t out[64], const uint16_t 
    B2 = _mm_or_si128(_mm_slli_epi16(B2, 8), _mm_srli_epi16(B2, 8));
    B3 = _mm_or_si128(_mm_slli_epi16(B3, 8), _mm_srli_epi16(B3, 8));
 
-   for(size_t i = 0; i != 8; ++i)
-      {
-      B0 = mul(B0, EK[6*i+0]);
-      B1 = _mm_add_epi16(B1, _mm_set1_epi16(EK[6*i+1]));
-      B2 = _mm_add_epi16(B2, _mm_set1_epi16(EK[6*i+2]));
-      B3 = mul(B3, EK[6*i+3]);
+   for(size_t i = 0; i != 8; ++i) {
+      B0 = mul(B0, EK[6 * i + 0]);
+      B1 = _mm_add_epi16(B1, _mm_set1_epi16(EK[6 * i + 1]));
+      B2 = _mm_add_epi16(B2, _mm_set1_epi16(EK[6 * i + 2]));
+      B3 = mul(B3, EK[6 * i + 3]);
 
       __m128i T0 = B2;
       B2 = _mm_xor_si128(B2, B0);
-      B2 = mul(B2, EK[6*i+4]);
+      B2 = mul(B2, EK[6 * i + 4]);
 
       __m128i T1 = B1;
 
       B1 = _mm_xor_si128(B1, B3);
       B1 = _mm_add_epi16(B1, B2);
-      B1 = mul(B1, EK[6*i+5]);
+      B1 = mul(B1, EK[6 * i + 5]);
 
       B2 = _mm_add_epi16(B2, B1);
 
@@ -179,7 +165,7 @@ void IDEA::sse2_idea_op_8(const uint8_t in[64], uint8_t out[64], const uint16_t 
       B1 = _mm_xor_si128(B1, T0);
       B3 = _mm_xor_si128(B3, B2);
       B2 = _mm_xor_si128(B2, T1);
-      }
+   }
 
    B0 = mul(B0, EK[48]);
    B1 = _mm_add_epi16(B1, _mm_set1_epi16(EK[50]));
@@ -204,6 +190,6 @@ void IDEA::sse2_idea_op_8(const uint8_t in[64], uint8_t out[64], const uint16_t 
    CT::unpoison(in, 64);
    CT::unpoison(out, 64);
    CT::unpoison(EK, 52);
-   }
-
 }
+
+}  // namespace Botan

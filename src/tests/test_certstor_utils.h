@@ -15,7 +15,7 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 
-#include <botan/pkix_types.h>
+   #include <botan/pkix_types.h>
 
 namespace Botan_Tests {
 
@@ -29,14 +29,14 @@ std::vector<uint8_t> get_key_id();
 std::string get_subject_cn();
 
 std::vector<uint8_t> get_pubkey_sha1_of_cert_with_different_key_id();
-Botan::X509_DN       get_dn_of_cert_with_different_key_id();
+Botan::X509_DN get_dn_of_cert_with_different_key_id();
 
 Botan::X509_DN get_unknown_dn();
 
 Botan::X509_DN get_skewed_dn();
 
 std::vector<uint8_t> get_unknown_key_id();
-}
+}  // namespace Botan_Tests
 
 #endif
 

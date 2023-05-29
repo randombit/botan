@@ -8,10 +8,10 @@
 #ifndef BOTAN_XMSS_COMMON_OPS_H_
 #define BOTAN_XMSS_COMMON_OPS_H_
 
-#include <vector>
 #include <botan/secmem.h>
 #include <botan/xmss_parameters.h>
 #include <botan/internal/xmss_address.h>
+#include <vector>
 
 namespace Botan {
 
@@ -22,8 +22,7 @@ typedef std::vector<secure_vector<uint8_t>> wots_keysig_t;
 /**
  * Operations shared by XMSS signature generation and verification operations.
  **/
-class XMSS_Common_Ops
-   {
+class XMSS_Common_Ops {
    public:
       /**
         * Algorithm 7: "RAND_HASH"
@@ -43,14 +42,13 @@ class XMSS_Common_Ops
         *            executing generate_public_key.
         * @param[in] params parameters
         **/
-      static void randomize_tree_hash(
-         secure_vector<uint8_t>& result,
-         const secure_vector<uint8_t>& left,
-         const secure_vector<uint8_t>& right,
-         XMSS_Address& adrs,
-         const secure_vector<uint8_t>& seed,
-         XMSS_Hash& hash,
-         const XMSS_Parameters& params);
+      static void randomize_tree_hash(secure_vector<uint8_t>& result,
+                                      const secure_vector<uint8_t>& left,
+                                      const secure_vector<uint8_t>& right,
+                                      XMSS_Address& adrs,
+                                      const secure_vector<uint8_t>& seed,
+                                      XMSS_Hash& hash,
+                                      const XMSS_Parameters& params);
 
       /**
        * Algorithm 8: "ltree"
@@ -75,8 +73,8 @@ class XMSS_Common_Ops
                                 const secure_vector<uint8_t>& seed,
                                 XMSS_Hash& hash,
                                 const XMSS_Parameters& params);
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

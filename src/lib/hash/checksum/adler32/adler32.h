@@ -15,24 +15,31 @@ namespace Botan {
 /**
 * The Adler32 checksum, used in zlib
 */
-class Adler32 final : public HashFunction
-   {
+class Adler32 final : public HashFunction {
    public:
       std::string name() const override { return "Adler32"; }
+
       size_t output_length() const override { return 4; }
+
       std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<Adler32>(); }
+
       std::unique_ptr<HashFunction> copy_state() const override;
 
-      void clear() override { m_S1 = 1; m_S2 = 0; }
+      void clear() override {
+         m_S1 = 1;
+         m_S2 = 0;
+      }
 
       Adler32() { clear(); }
+
       ~Adler32() { clear(); }
+
    private:
       void add_data(const uint8_t[], size_t) override;
       void final_result(uint8_t[]) override;
       uint16_t m_S1, m_S2;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

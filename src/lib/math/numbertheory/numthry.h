@@ -27,7 +27,7 @@ inline BigInt abs(const BigInt& n) { return n.abs(); }
 * @param y a positive integer
 * @return gcd(x,y)
 */
-BigInt BOTAN_PUBLIC_API(2,0) gcd(const BigInt& x, const BigInt& y);
+BigInt BOTAN_PUBLIC_API(2, 0) gcd(const BigInt& x, const BigInt& y);
 
 /**
 * Least common multiple
@@ -35,13 +35,13 @@ BigInt BOTAN_PUBLIC_API(2,0) gcd(const BigInt& x, const BigInt& y);
 * @param y a positive integer
 * @return z, smallest integer such that z % x == 0 and z % y == 0
 */
-BigInt BOTAN_PUBLIC_API(2,0) lcm(const BigInt& x, const BigInt& y);
+BigInt BOTAN_PUBLIC_API(2, 0) lcm(const BigInt& x, const BigInt& y);
 
 /**
 * @param x an integer
 * @return (x*x)
 */
-BigInt BOTAN_PUBLIC_API(2,0) square(const BigInt& x);
+BigInt BOTAN_PUBLIC_API(2, 0) square(const BigInt& x);
 
 /**
 * Modular inversion. This algorithm is const time with respect to x,
@@ -55,8 +55,7 @@ BigInt BOTAN_PUBLIC_API(2,0) square(const BigInt& x);
 * @param modulus a positive integer
 * @return y st (x*y) % modulus == 1 or 0 if no such value
 */
-BigInt BOTAN_PUBLIC_API(2,0) inverse_mod(const BigInt& x,
-                                         const BigInt& modulus);
+BigInt BOTAN_PUBLIC_API(2, 0) inverse_mod(const BigInt& x, const BigInt& modulus);
 
 /**
 * Compute the Jacobi symbol. If n is prime, this is equivalent
@@ -67,7 +66,7 @@ BigInt BOTAN_PUBLIC_API(2,0) inverse_mod(const BigInt& x,
 * @param n is an odd integer > 1
 * @return (n / m)
 */
-int32_t BOTAN_PUBLIC_API(2,0) jacobi(const BigInt& a, const BigInt& n);
+int32_t BOTAN_PUBLIC_API(2, 0) jacobi(const BigInt& a, const BigInt& n);
 
 /**
 * Modular exponentation
@@ -76,9 +75,7 @@ int32_t BOTAN_PUBLIC_API(2,0) jacobi(const BigInt& a, const BigInt& n);
 * @param m a positive modulus
 * @return (b^x) % m
 */
-BigInt BOTAN_PUBLIC_API(2,0) power_mod(const BigInt& b,
-                                       const BigInt& x,
-                                       const BigInt& m);
+BigInt BOTAN_PUBLIC_API(2, 0) power_mod(const BigInt& b, const BigInt& x, const BigInt& m);
 
 /**
 * Compute the square root of x modulo a prime using the Tonelli-Shanks
@@ -91,7 +88,7 @@ BigInt BOTAN_PUBLIC_API(2,0) power_mod(const BigInt& b,
 * @param p the prime modulus
 * @return y such that (y*y)%p == x, or -1 if no such integer
 */
-BigInt BOTAN_PUBLIC_API(3,0) sqrt_modulo_prime(const BigInt& x, const BigInt& p);
+BigInt BOTAN_PUBLIC_API(3, 0) sqrt_modulo_prime(const BigInt& x, const BigInt& p);
 
 /**
 * @param x an integer
@@ -99,7 +96,7 @@ BigInt BOTAN_PUBLIC_API(3,0) sqrt_modulo_prime(const BigInt& x, const BigInt& p)
 *         largest value of n such that 2^n divides x evenly. Returns
 *         zero if x is equal to zero.
 */
-size_t BOTAN_PUBLIC_API(2,0) low_zero_bits(const BigInt& x);
+size_t BOTAN_PUBLIC_API(2, 0) low_zero_bits(const BigInt& x);
 
 /**
 * Check for primality
@@ -109,10 +106,8 @@ size_t BOTAN_PUBLIC_API(2,0) low_zero_bits(const BigInt& x);
 * @param is_random true if n was randomly chosen by us
 * @return true if all primality tests passed, otherwise false
 */
-bool BOTAN_PUBLIC_API(2,0) is_prime(const BigInt& n,
-                                    RandomNumberGenerator& rng,
-                                    size_t prob = 64,
-                                    bool is_random = false);
+bool BOTAN_PUBLIC_API(2, 0)
+   is_prime(const BigInt& n, RandomNumberGenerator& rng, size_t prob = 64, bool is_random = false);
 
 /**
 * Test if the positive integer x is a perfect square ie if there
@@ -121,7 +116,7 @@ bool BOTAN_PUBLIC_API(2,0) is_prime(const BigInt& n,
 * @return 0 if the integer is not a perfect square, otherwise
 *         returns the positive y st y*y == x
 */
-BigInt BOTAN_PUBLIC_API(2,8) is_perfect_square(const BigInt& x);
+BigInt BOTAN_PUBLIC_API(2, 8) is_perfect_square(const BigInt& x);
 
 /**
 * Randomly generate a prime suitable for discrete logarithm parameters
@@ -134,12 +129,12 @@ BigInt BOTAN_PUBLIC_API(2,8) is_perfect_square(const BigInt& x);
 * @param prob use test so false positive is bounded by 1/2**prob
 * @return random prime with the specified criteria
 */
-BigInt BOTAN_PUBLIC_API(2,0) random_prime(RandomNumberGenerator& rng,
-                                          size_t bits,
-                                          const BigInt& coprime = BigInt::from_u64(0),
-                                          size_t equiv = 1,
-                                          size_t equiv_mod = 2,
-                                          size_t prob = 128);
+BigInt BOTAN_PUBLIC_API(2, 0) random_prime(RandomNumberGenerator& rng,
+                                           size_t bits,
+                                           const BigInt& coprime = BigInt::from_u64(0),
+                                           size_t equiv = 1,
+                                           size_t equiv_mod = 2,
+                                           size_t prob = 128);
 
 /**
 * Generate a prime suitable for RSA p/q
@@ -150,11 +145,11 @@ BigInt BOTAN_PUBLIC_API(2,0) random_prime(RandomNumberGenerator& rng,
 * @param prob use test so false positive is bounded by 1/2**prob
 * @return random prime with the specified criteria
 */
-BigInt BOTAN_PUBLIC_API(2,7) generate_rsa_prime(RandomNumberGenerator& keygen_rng,
-                                                RandomNumberGenerator& prime_test_rng,
-                                                size_t bits,
-                                                const BigInt& coprime,
-                                                size_t prob = 128);
+BigInt BOTAN_PUBLIC_API(2, 7) generate_rsa_prime(RandomNumberGenerator& keygen_rng,
+                                                 RandomNumberGenerator& prime_test_rng,
+                                                 size_t bits,
+                                                 const BigInt& coprime,
+                                                 size_t prob = 128);
 
 /**
 * Return a 'safe' prime, of the form p=2*q+1 with q prime
@@ -162,8 +157,7 @@ BigInt BOTAN_PUBLIC_API(2,7) generate_rsa_prime(RandomNumberGenerator& keygen_rn
 * @param bits is how long the resulting prime should be
 * @return prime randomly chosen from safe primes of length bits
 */
-BigInt BOTAN_PUBLIC_API(2,0) random_safe_prime(RandomNumberGenerator& rng,
-                                               size_t bits);
+BigInt BOTAN_PUBLIC_API(2, 0) random_safe_prime(RandomNumberGenerator& rng, size_t bits);
 
 /**
 * The size of the PRIMES[] array
@@ -173,8 +167,8 @@ const size_t PRIME_TABLE_SIZE = 6541;
 /**
 * A const array of all odd primes less than 65535
 */
-extern const uint16_t BOTAN_PUBLIC_API(2,0) PRIMES[];
+extern const uint16_t BOTAN_PUBLIC_API(2, 0) PRIMES[];
 
-}
+}  // namespace Botan
 
 #endif

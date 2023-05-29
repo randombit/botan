@@ -12,9 +12,9 @@
 
 #include <botan/internal/xmss_wots.h>
 
+#include <botan/internal/stl_util.h>
 #include <botan/internal/xmss_address.h>
 #include <botan/internal/xmss_tools.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -47,8 +47,7 @@ void chain(const XMSS_WOTS_Parameters& params,
            size_t steps,
            XMSS_Address& adrs,
            std::span<const uint8_t> seed,
-           XMSS_Hash& hash)
-   {
+           XMSS_Hash& hash) {
    BOTAN_ASSERT_NOMSG(result.size() == hash.output_length());
    BOTAN_ASSERT_NOMSG(start_idx + steps < params.wots_parameter());
    secure_vector<uint8_t> prf_output(hash.output_length());
@@ -58,10 +57,7 @@ void chain(const XMSS_WOTS_Parameters& params,
    // recursion base with 'steps == 0'.
    // Instead, we implement it iteratively using 'i' as iterator. This makes
    // 'adrs.set_hash_address(i)' equivalent to 'ADRS.setHashAddress(i + s - 1)'.
-   for(size_t i = start_idx;
-         i < (start_idx + steps) && i < params.wots_parameter();
-         i++)
-      {
+   for(size_t i = start_idx; i < (start_idx + steps) && i < params.wots_parameter(); i++) {
       adrs.set_hash_address(static_cast<uint32_t>(i));
 
       // Calculate tmp XOR bitmask
@@ -75,42 +71,35 @@ void chain(const XMSS_WOTS_Parameters& params,
       // Calculate f(key, tmp XOR bitmask)
       hash.prf(prf_output, seed, adrs.bytes());
       hash.f(result, prf_output, result);
-      }
    }
-
 }
+
+}  // namespace
 
 XMSS_WOTS_PublicKey::XMSS_WOTS_PublicKey(XMSS_WOTS_Parameters params,
                                          std::span<const uint8_t> public_seed,
                                          const XMSS_WOTS_PrivateKey& private_key,
                                          XMSS_Address& adrs,
-                                         XMSS_Hash& hash)
-   : XMSS_WOTS_Base(std::move(params), private_key.key_data())
-   {
-   for(size_t i = 0; i < m_params.len(); ++i)
-      {
+                                         XMSS_Hash& hash) :
+      XMSS_WOTS_Base(std::move(params), private_key.key_data()) {
+   for(size_t i = 0; i < m_params.len(); ++i) {
       adrs.set_chain_address(static_cast<uint32_t>(i));
       chain(m_params, m_key_data[i], 0, m_params.wots_parameter() - 1, adrs, public_seed, hash);
-      }
    }
+}
 
 XMSS_WOTS_PublicKey::XMSS_WOTS_PublicKey(XMSS_WOTS_Parameters params,
                                          std::span<const uint8_t> public_seed,
                                          wots_keysig_t signature,
                                          const secure_vector<uint8_t>& msg,
                                          XMSS_Address& adrs,
-                                         XMSS_Hash& hash)
-   : XMSS_WOTS_Base(std::move(params), std::move(signature))
-   {
-   secure_vector<uint8_t> msg_digest
-      {
-      m_params.base_w(msg, m_params.len_1())
-      };
+                                         XMSS_Hash& hash) :
+      XMSS_WOTS_Base(std::move(params), std::move(signature)) {
+   secure_vector<uint8_t> msg_digest{m_params.base_w(msg, m_params.len_1())};
 
    m_params.append_checksum(msg_digest);
 
-   for(size_t i = 0; i < m_params.len(); i++)
-      {
+   for(size_t i = 0; i < m_params.len(); i++) {
       adrs.set_chain_address(static_cast<uint32_t>(i));
       chain(m_params,
             m_key_data[i],
@@ -119,65 +108,55 @@ XMSS_WOTS_PublicKey::XMSS_WOTS_PublicKey(XMSS_WOTS_Parameters params,
             adrs,
             public_seed,
             hash);
-      }
    }
+}
 
 wots_keysig_t XMSS_WOTS_PrivateKey::sign(const secure_vector<uint8_t>& msg,
                                          std::span<const uint8_t> public_seed,
                                          XMSS_Address& adrs,
-                                         XMSS_Hash& hash)
-   {
-   secure_vector<uint8_t> msg_digest
-      {
-      m_params.base_w(msg, m_params.len_1())
-      };
+                                         XMSS_Hash& hash) {
+   secure_vector<uint8_t> msg_digest{m_params.base_w(msg, m_params.len_1())};
 
    m_params.append_checksum(msg_digest);
    auto sig = this->key_data();
 
-   for(size_t i = 0; i < m_params.len(); i++)
-      {
+   for(size_t i = 0; i < m_params.len(); i++) {
       adrs.set_chain_address(static_cast<uint32_t>(i));
-      chain(m_params, sig[i], 0 , msg_digest[i], adrs, public_seed, hash);
-      }
+      chain(m_params, sig[i], 0, msg_digest[i], adrs, public_seed, hash);
+   }
 
    return sig;
-   }
+}
 
 XMSS_WOTS_PrivateKey::XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters params,
                                            std::span<const uint8_t> public_seed,
                                            std::span<const uint8_t> private_seed,
                                            XMSS_Address adrs,
-                                           XMSS_Hash& hash)
-   : XMSS_WOTS_Base(std::move(params))
-   {
+                                           XMSS_Hash& hash) :
+      XMSS_WOTS_Base(std::move(params)) {
    m_key_data.resize(m_params.len());
-   for(size_t i = 0; i < m_params.len(); ++i)
-      {
+   for(size_t i = 0; i < m_params.len(); ++i) {
       adrs.set_chain_address(static_cast<uint32_t>(i));
       const auto data = concat_as<std::vector<uint8_t>>(public_seed, adrs.bytes());
       hash.prf_keygen(m_key_data[i], private_seed, data);
-      }
    }
-
+}
 
 // Constructor for legacy XMSS_PrivateKeys
 XMSS_WOTS_PrivateKey::XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters params,
                                            std::span<const uint8_t> private_seed,
                                            XMSS_Address adrs,
-                                           XMSS_Hash& hash)
-   : XMSS_WOTS_Base(std::move(params))
-   {
+                                           XMSS_Hash& hash) :
+      XMSS_WOTS_Base(std::move(params)) {
    m_key_data.resize(m_params.len());
 
    secure_vector<uint8_t> r;
    hash.prf(r, private_seed, adrs.bytes());
 
-   for(size_t i = 0; i < m_params.len(); ++i)
-      {
+   for(size_t i = 0; i < m_params.len(); ++i) {
       XMSS_Tools::concat<size_t>(m_key_data[i], i, 32);
       hash.prf(m_key_data[i], r, m_key_data[i]);
-      }
    }
-
 }
+
+}  // namespace Botan

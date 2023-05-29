@@ -7,43 +7,39 @@
 
 #include <botan/x509_crl.h>
 
-#include <botan/x509cert.h>
-#include <botan/x509_ext.h>
-#include <botan/der_enc.h>
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
+#include <botan/der_enc.h>
+#include <botan/x509_ext.h>
+#include <botan/x509cert.h>
 
 namespace Botan {
 
-struct CRL_Entry_Data
-   {
-   std::vector<uint8_t> m_serial;
-   X509_Time m_time;
-   CRL_Code m_reason = CRL_Code::Unspecified;
-   Extensions m_extensions;
-   };
+struct CRL_Entry_Data {
+      std::vector<uint8_t> m_serial;
+      X509_Time m_time;
+      CRL_Code m_reason = CRL_Code::Unspecified;
+      Extensions m_extensions;
+};
 
 /*
 * Create a CRL_Entry
 */
-CRL_Entry::CRL_Entry(const X509_Certificate& cert, CRL_Code why)
-   {
+CRL_Entry::CRL_Entry(const X509_Certificate& cert, CRL_Code why) {
    m_data = std::make_shared<CRL_Entry_Data>();
    m_data->m_serial = cert.serial_number();
    m_data->m_time = X509_Time(std::chrono::system_clock::now());
    m_data->m_reason = why;
 
-   if(why != CRL_Code::Unspecified)
-      {
+   if(why != CRL_Code::Unspecified) {
       m_data->m_extensions.add(std::make_unique<Cert_Extension::CRL_ReasonCode>(why));
-      }
    }
+}
 
 /*
 * Compare two CRL_Entrys for equality
 */
-bool operator==(const CRL_Entry& a1, const CRL_Entry& a2)
-   {
+bool operator==(const CRL_Entry& a1, const CRL_Entry& a2) {
    if(a1.serial_number() != a2.serial_number())
       return false;
    if(a1.expire_time() != a2.expire_time())
@@ -51,35 +47,30 @@ bool operator==(const CRL_Entry& a1, const CRL_Entry& a2)
    if(a1.reason_code() != a2.reason_code())
       return false;
    return true;
-   }
+}
 
 /*
 * Compare two CRL_Entrys for inequality
 */
-bool operator!=(const CRL_Entry& a1, const CRL_Entry& a2)
-   {
-   return !(a1 == a2);
-   }
+bool operator!=(const CRL_Entry& a1, const CRL_Entry& a2) { return !(a1 == a2); }
 
 /*
 * DER encode a CRL_Entry
 */
-void CRL_Entry::encode_into(DER_Encoder& der) const
-   {
+void CRL_Entry::encode_into(DER_Encoder& der) const {
    der.start_sequence()
       .encode(BigInt::decode(serial_number()))
       .encode(expire_time())
       .start_sequence()
-         .encode(extensions())
+      .encode(extensions())
       .end_cons()
-   .end_cons();
-   }
+      .end_cons();
+}
 
 /*
 * Decode a BER encoded CRL_Entry
 */
-void CRL_Entry::decode_from(BER_Decoder& source)
-   {
+void CRL_Entry::decode_from(BER_Decoder& source) {
    BigInt serial_number_bn;
 
    auto data = std::make_unique<CRL_Entry_Data>();
@@ -89,53 +80,34 @@ void CRL_Entry::decode_from(BER_Decoder& source)
    entry.decode(serial_number_bn).decode(data->m_time);
    data->m_serial = BigInt::encode(serial_number_bn);
 
-   if(entry.more_items())
-      {
+   if(entry.more_items()) {
       entry.decode(data->m_extensions);
-      if(auto ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_ReasonCode>())
-         {
+      if(auto ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_ReasonCode>()) {
          data->m_reason = ext->get_reason();
-         }
-      else
-         {
+      } else {
          data->m_reason = CRL_Code::Unspecified;
-         }
       }
+   }
 
    entry.end_cons();
 
    m_data = std::move(data);
-   }
+}
 
-const CRL_Entry_Data& CRL_Entry::data() const
-   {
-   if(!m_data)
-      {
+const CRL_Entry_Data& CRL_Entry::data() const {
+   if(!m_data) {
       throw Invalid_State("CRL_Entry_Data uninitialized");
-      }
+   }
 
    return *m_data;
-   }
-
-const std::vector<uint8_t>& CRL_Entry::serial_number() const
-   {
-   return data().m_serial;
-   }
-
-const X509_Time& CRL_Entry::expire_time() const
-   {
-   return data().m_time;
-   }
-
-CRL_Code CRL_Entry::reason_code() const
-   {
-   return data().m_reason;
-   }
-
-const Extensions& CRL_Entry::extensions() const
-   {
-   return data().m_extensions;
-   }
-
-
 }
+
+const std::vector<uint8_t>& CRL_Entry::serial_number() const { return data().m_serial; }
+
+const X509_Time& CRL_Entry::expire_time() const { return data().m_time; }
+
+CRL_Code CRL_Entry::reason_code() const { return data().m_reason; }
+
+const Extensions& CRL_Entry::extensions() const { return data().m_extensions; }
+
+}  // namespace Botan

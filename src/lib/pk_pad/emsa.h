@@ -20,8 +20,7 @@ class RandomNumberGenerator;
 *
 * Any way of encoding/padding signatures
 */
-class BOTAN_TEST_API EMSA
-   {
+class BOTAN_TEST_API EMSA {
    public:
       virtual ~EMSA() = default;
 
@@ -61,8 +60,8 @@ class BOTAN_TEST_API EMSA
       * @return encoded signature
       */
       virtual std::vector<uint8_t> encoding_of(const std::vector<uint8_t>& msg,
-                                             size_t output_bits,
-                                             RandomNumberGenerator& rng) = 0;
+                                               size_t output_bits,
+                                               RandomNumberGenerator& rng) = 0;
 
       /**
       * Verify the encoding
@@ -71,9 +70,7 @@ class BOTAN_TEST_API EMSA
       * @param key_bits the size of the key in bits
       * @return true if coded is a valid encoding of raw, otherwise false
       */
-      virtual bool verify(const std::vector<uint8_t>& coded,
-                          const std::vector<uint8_t>& raw,
-                          size_t key_bits) = 0;
+      virtual bool verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>& raw, size_t key_bits) = 0;
 
       /**
       * Return the hash function being used by this padding scheme
@@ -84,8 +81,8 @@ class BOTAN_TEST_API EMSA
       * @return the SCAN name of the encoding/padding scheme
       */
       virtual std::string name() const = 0;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

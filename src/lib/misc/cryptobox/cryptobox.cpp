@@ -8,13 +8,13 @@
 #include <botan/cryptobox.h>
 
 #include <botan/cipher_mode.h>
-#include <botan/mac.h>
-#include <botan/rng.h>
-#include <botan/pwdhash.h>
 #include <botan/data_src.h>
-#include <botan/pem.h>
-#include <botan/internal/loadstor.h>
+#include <botan/mac.h>
 #include <botan/mem_ops.h>
+#include <botan/pem.h>
+#include <botan/pwdhash.h>
+#include <botan/rng.h>
+#include <botan/internal/loadstor.h>
 
 namespace Botan::CryptoBox {
 
@@ -36,12 +36,9 @@ const size_t PBKDF_ITERATIONS = 8 * 1024;
 
 const size_t CRYPTOBOX_HEADER_LEN = VERSION_CODE_LEN + PBKDF_SALT_LEN + MAC_OUTPUT_LEN;
 
-}
+}  // namespace
 
-std::string encrypt(const uint8_t input[], size_t input_len,
-                    std::string_view passphrase,
-                    RandomNumberGenerator& rng)
-   {
+std::string encrypt(const uint8_t input[], size_t input_len, std::string_view passphrase, RandomNumberGenerator& rng) {
    /*
    Output format is:
       version # (4 bytes)
@@ -63,10 +60,12 @@ std::string encrypt(const uint8_t input[], size_t input_len,
 
    secure_vector<uint8_t> master_key(CIPHER_KEY_LEN + MAC_KEY_LEN + CIPHER_IV_LEN);
 
-   pbkdf->derive_key(
-      master_key.data(), master_key.size(),
-      passphrase.data(), passphrase.size(),
-      &out_buf[VERSION_CODE_LEN], PBKDF_SALT_LEN);
+   pbkdf->derive_key(master_key.data(),
+                     master_key.size(),
+                     passphrase.data(),
+                     passphrase.size(),
+                     &out_buf[VERSION_CODE_LEN],
+                     PBKDF_SALT_LEN);
 
    const uint8_t* mk = master_key.data();
    const uint8_t* cipher_key = mk;
@@ -79,8 +78,7 @@ std::string encrypt(const uint8_t input[], size_t input_len,
    ctr->start(iv, CIPHER_IV_LEN);
    ctr->finish(out_buf, CRYPTOBOX_HEADER_LEN);
 
-   std::unique_ptr<MessageAuthenticationCode> hmac =
-      MessageAuthenticationCode::create_or_throw("HMAC(SHA-512)");
+   std::unique_ptr<MessageAuthenticationCode> hmac = MessageAuthenticationCode::create_or_throw("HMAC(SHA-512)");
    hmac->set_key(mac_key, MAC_KEY_LEN);
    if(input_len > 0)
       hmac->update(&out_buf[CRYPTOBOX_HEADER_LEN], input_len);
@@ -90,26 +88,20 @@ std::string encrypt(const uint8_t input[], size_t input_len,
    copy_mem(&out_buf[VERSION_CODE_LEN + PBKDF_SALT_LEN], mac.data(), MAC_OUTPUT_LEN);
 
    return PEM_Code::encode(out_buf, "BOTAN CRYPTOBOX MESSAGE");
-   }
+}
 
-secure_vector<uint8_t>
-decrypt_bin(const uint8_t input[], size_t input_len,
-            std::string_view passphrase)
-   {
+secure_vector<uint8_t> decrypt_bin(const uint8_t input[], size_t input_len, std::string_view passphrase) {
    DataSource_Memory input_src(input, input_len);
-   secure_vector<uint8_t> ciphertext =
-      PEM_Code::decode_check_label(input_src,
-                                   "BOTAN CRYPTOBOX MESSAGE");
+   secure_vector<uint8_t> ciphertext = PEM_Code::decode_check_label(input_src, "BOTAN CRYPTOBOX MESSAGE");
 
    if(ciphertext.size() < CRYPTOBOX_HEADER_LEN)
       throw Decoding_Error("Invalid CryptoBox input");
 
-   for(size_t i = 0; i != VERSION_CODE_LEN; ++i)
-      {
+   for(size_t i = 0; i != VERSION_CODE_LEN; ++i) {
       uint32_t version = load_be<uint32_t>(ciphertext.data(), 0);
       if(version != CRYPTOBOX_VERSION_CODE)
          throw Decoding_Error("Bad CryptoBox version");
-      }
+   }
 
    const uint8_t* pbkdf_salt = &ciphertext[VERSION_CODE_LEN];
    const uint8_t* box_mac = &ciphertext[VERSION_CODE_LEN + PBKDF_SALT_LEN];
@@ -120,9 +112,7 @@ decrypt_bin(const uint8_t input[], size_t input_len,
    secure_vector<uint8_t> master_key(CIPHER_KEY_LEN + MAC_KEY_LEN + CIPHER_IV_LEN);
 
    pbkdf->derive_key(
-      master_key.data(), master_key.size(),
-      passphrase.data(), passphrase.size(),
-      pbkdf_salt, PBKDF_SALT_LEN);
+      master_key.data(), master_key.size(), passphrase.data(), passphrase.size(), pbkdf_salt, PBKDF_SALT_LEN);
 
    const uint8_t* mk = master_key.data();
    const uint8_t* cipher_key = mk;
@@ -130,15 +120,12 @@ decrypt_bin(const uint8_t input[], size_t input_len,
    const uint8_t* iv = mk + CIPHER_KEY_LEN + MAC_KEY_LEN;
 
    // Now authenticate and decrypt
-   std::unique_ptr<MessageAuthenticationCode> hmac =
-      MessageAuthenticationCode::create_or_throw("HMAC(SHA-512)");
+   std::unique_ptr<MessageAuthenticationCode> hmac = MessageAuthenticationCode::create_or_throw("HMAC(SHA-512)");
    hmac->set_key(mac_key, MAC_KEY_LEN);
 
-   if(ciphertext.size() > CRYPTOBOX_HEADER_LEN)
-      {
-      hmac->update(&ciphertext[CRYPTOBOX_HEADER_LEN],
-                   ciphertext.size() - CRYPTOBOX_HEADER_LEN);
-      }
+   if(ciphertext.size() > CRYPTOBOX_HEADER_LEN) {
+      hmac->update(&ciphertext[CRYPTOBOX_HEADER_LEN], ciphertext.size() - CRYPTOBOX_HEADER_LEN);
+   }
    secure_vector<uint8_t> computed_mac = hmac->final();
 
    if(!constant_time_compare(computed_mac.data(), box_mac, MAC_OUTPUT_LEN))
@@ -151,34 +138,25 @@ decrypt_bin(const uint8_t input[], size_t input_len,
 
    ciphertext.erase(ciphertext.begin(), ciphertext.begin() + CRYPTOBOX_HEADER_LEN);
    return ciphertext;
-   }
+}
 
 BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
 
-secure_vector<uint8_t> decrypt_bin(std::string_view input,
-                                   std::string_view passphrase)
-   {
-   return decrypt_bin(cast_char_ptr_to_uint8(input.data()),
-                      input.size(),
-                      passphrase);
-   }
+secure_vector<uint8_t> decrypt_bin(std::string_view input, std::string_view passphrase) {
+   return decrypt_bin(cast_char_ptr_to_uint8(input.data()), input.size(), passphrase);
+}
 
-std::string decrypt(const uint8_t input[], size_t input_len,
-                    std::string_view passphrase)
-   {
+std::string decrypt(const uint8_t input[], size_t input_len, std::string_view passphrase) {
    const secure_vector<uint8_t> bin = decrypt_bin(input, input_len, passphrase);
 
-   return std::string(cast_uint8_ptr_to_char(&bin[0]),
-                      bin.size());
-   }
+   return std::string(cast_uint8_ptr_to_char(&bin[0]), bin.size());
+}
 
-std::string decrypt(std::string_view input,
-                    std::string_view passphrase)
-   {
-   return decrypt(cast_char_ptr_to_uint8(input.data()),
-                  input.size(), passphrase);
-   }
+std::string decrypt(std::string_view input, std::string_view passphrase) {
+   return decrypt(cast_char_ptr_to_uint8(input.data()), input.size(), passphrase);
+}
+
 BOTAN_DIAGNOSTIC_POP
 
-}
+}  // namespace Botan::CryptoBox

@@ -9,14 +9,13 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/mutex.h>
-#include <unordered_map>
-#include <string_view>
 #include <string>
+#include <string_view>
+#include <unordered_map>
 
 namespace Botan {
 
-class OID_Map final
-   {
+class OID_Map final {
    public:
       void add_oid(const OID& oid, std::string_view str);
 
@@ -29,6 +28,7 @@ class OID_Map final
       OID str2oid(std::string_view str);
 
       static OID_Map& global_registry();
+
    private:
       static std::unordered_map<std::string, std::string> load_oid2str_map();
       static std::unordered_map<std::string, OID> load_str2oid_map();
@@ -38,8 +38,8 @@ class OID_Map final
       mutex_type m_mutex;
       std::unordered_map<std::string, OID> m_str2oid;
       std::unordered_map<std::string, std::string> m_oid2str;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

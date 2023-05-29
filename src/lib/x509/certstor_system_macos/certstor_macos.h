@@ -22,8 +22,7 @@ class Certificate_Store_MacOS_Impl;
 * opens a handle to the macOS keychain and serves certificate queries directly
 * from there.
 */
-class BOTAN_PUBLIC_API(2, 10) Certificate_Store_MacOS final : public Certificate_Store
-   {
+class BOTAN_PUBLIC_API(2, 10) Certificate_Store_MacOS final : public Certificate_Store {
    public:
       Certificate_Store_MacOS();
 
@@ -41,30 +40,28 @@ class BOTAN_PUBLIC_API(2, 10) Certificate_Store_MacOS final : public Certificate
       * Find a certificate by Subject DN and (optionally) key identifier
       * @return the first certificate that matches
       */
-      std::optional<X509_Certificate> find_cert(
-         const X509_DN& subject_dn,
-         const std::vector<uint8_t>& key_id) const override;
+      std::optional<X509_Certificate> find_cert(const X509_DN& subject_dn,
+                                                const std::vector<uint8_t>& key_id) const override;
 
       /**
       * Find all certificates with a given Subject DN.
       * Subject DN and even the key identifier might not be unique.
       */
-      std::vector<X509_Certificate> find_all_certs(
-               const X509_DN& subject_dn, const std::vector<uint8_t>& key_id) const override;
+      std::vector<X509_Certificate> find_all_certs(const X509_DN& subject_dn,
+                                                   const std::vector<uint8_t>& key_id) const override;
 
       /**
       * Find a certificate by searching for one with a matching SHA-1 hash of
       * public key.
       * @return a matching certificate or nullptr otherwise
       */
-      std::optional<X509_Certificate>
-      find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const override;
+      std::optional<X509_Certificate> find_cert_by_pubkey_sha1(const std::vector<uint8_t>& key_hash) const override;
 
       /**
        * @throws Not_Implemented
        */
-      std::optional<X509_Certificate>
-      find_cert_by_raw_subject_dn_sha256(const std::vector<uint8_t>& subject_hash) const override;
+      std::optional<X509_Certificate> find_cert_by_raw_subject_dn_sha256(
+         const std::vector<uint8_t>& subject_hash) const override;
 
       /**
        * Fetching CRLs is not supported by the keychain on macOS. This will
@@ -74,8 +71,8 @@ class BOTAN_PUBLIC_API(2, 10) Certificate_Store_MacOS final : public Certificate
 
    private:
       std::shared_ptr<Certificate_Store_MacOS_Impl> m_impl;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

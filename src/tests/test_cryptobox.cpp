@@ -4,8 +4,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "tests.h"
 #include "test_rng.h"
+#include "tests.h"
 
 #if defined(BOTAN_HAS_CRYPTO_BOX)
    #include <botan/cryptobox.h>
@@ -18,63 +18,52 @@ namespace {
 
 #if defined(BOTAN_HAS_CRYPTO_BOX)
 
-class Cryptobox_KAT final : public Text_Based_Test
-   {
+class Cryptobox_KAT final : public Text_Based_Test {
    public:
       Cryptobox_KAT() : Text_Based_Test("cryptobox.vec", "Input,Passphrase,Salt,Output") {}
 
-      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override
-         {
+      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
          Test::Result result("Cryptobox");
 
          const std::string password = vars.get_req_str("Passphrase");
-         const std::vector<uint8_t> input    = vars.get_req_bin("Input");
-         const std::vector<uint8_t> salt     = vars.get_req_bin("Salt");
+         const std::vector<uint8_t> input = vars.get_req_bin("Input");
+         const std::vector<uint8_t> salt = vars.get_req_bin("Salt");
          const std::vector<uint8_t> expected = vars.get_req_bin("Output");
 
          const std::string expected_pem = Botan::PEM_Code::encode(expected, "BOTAN CRYPTOBOX MESSAGE");
 
          Fixed_Output_RNG salt_rng(salt);
 
-BOTAN_DIAGNOSTIC_PUSH
-BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
+         BOTAN_DIAGNOSTIC_PUSH
+         BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
 
-         const std::string ciphertext =
-            Botan::CryptoBox::encrypt(input.data(), input.size(), password, salt_rng);
+         const std::string ciphertext = Botan::CryptoBox::encrypt(input.data(), input.size(), password, salt_rng);
 
          result.test_eq("encryption is expected value", ciphertext, expected_pem);
 
          result.test_eq("decryption works", Botan::CryptoBox::decrypt_bin(ciphertext, password), input);
 
          // Now corrupt a bit and ensure it fails
-         try
-            {
+         try {
             const std::vector<uint8_t> corrupted = Test::mutate_vec(expected);
             const std::string corrupted_pem = Botan::PEM_Code::encode(corrupted, "BOTAN CRYPTOBOX MESSAGE");
 
             Botan::CryptoBox::decrypt(corrupted_pem, password);
             result.test_failure("Decrypted corrupted cryptobox message", corrupted);
-            }
-         catch(Botan::Decoding_Error&)
-            {
+         } catch(Botan::Decoding_Error&) {
             result.test_success("Rejected corrupted cryptobox message");
-            }
-         catch(Botan::Invalid_Argument&)
-            {
-            result.test_success("Rejected corrupted cryptobox message");
-            }
+         } catch(Botan::Invalid_Argument&) { result.test_success("Rejected corrupted cryptobox message"); }
 
-BOTAN_DIAGNOSTIC_POP
+         BOTAN_DIAGNOSTIC_POP
 
          return result;
-         }
-
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("misc", "cryptobox", Cryptobox_KAT);
 
 #endif
 
-}
+}  // namespace
 
-}
+}  // namespace Botan_Tests

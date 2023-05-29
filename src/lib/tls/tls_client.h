@@ -11,11 +11,11 @@
 #ifndef BOTAN_TLS_CLIENT_H_
 #define BOTAN_TLS_CLIENT_H_
 
+#include <botan/credentials_manager.h>
 #include <botan/tls_channel.h>
 #include <botan/tls_policy.h>
-#include <botan/credentials_manager.h>
-#include <vector>
 #include <memory>
+#include <vector>
 
 namespace Botan {
 
@@ -27,10 +27,8 @@ class Handshake_IO;
 /**
 * SSL/TLS Client
 */
-class BOTAN_PUBLIC_API(2,0) Client final : public Channel
-   {
+class BOTAN_PUBLIC_API(2, 0) Client final : public Channel {
    public:
-
       /**
       * Set up a new TLS client session
       *
@@ -56,16 +54,15 @@ class BOTAN_PUBLIC_API(2,0) Client final : public Channel
       *        be preallocated for the read and write buffers. Smaller
       *        values just mean reallocations and copies are more likely.
       */
-     Client(const std::shared_ptr<Callbacks>& callbacks,
-            const std::shared_ptr<Session_Manager>& session_manager,
-            const std::shared_ptr<Credentials_Manager>& creds,
-            const std::shared_ptr<const Policy>& policy,
-            const std::shared_ptr<RandomNumberGenerator>& rng,
-            Server_Information server_info = Server_Information(),
-            Protocol_Version offer_version = Protocol_Version::latest_tls_version(),
-            const std::vector<std::string>& next_protocols = {},
-            size_t reserved_io_buffer_size = TLS::Client::IO_BUF_DEFAULT_SIZE
-         );
+      Client(const std::shared_ptr<Callbacks>& callbacks,
+             const std::shared_ptr<Session_Manager>& session_manager,
+             const std::shared_ptr<Credentials_Manager>& creds,
+             const std::shared_ptr<const Policy>& policy,
+             const std::shared_ptr<RandomNumberGenerator>& rng,
+             Server_Information server_info = Server_Information(),
+             Protocol_Version offer_version = Protocol_Version::latest_tls_version(),
+             const std::vector<std::string>& next_protocols = {},
+             size_t reserved_io_buffer_size = TLS::Client::IO_BUF_DEFAULT_SIZE);
 
       ~Client();
 
@@ -84,9 +81,7 @@ class BOTAN_PUBLIC_API(2,0) Client final : public Channel
 
       std::vector<X509_Certificate> peer_cert_chain() const override;
 
-      SymmetricKey key_material_export(std::string_view label,
-                                       std::string_view context,
-                                       size_t length) const override;
+      SymmetricKey key_material_export(std::string_view label, std::string_view context, size_t length) const override;
 
       void renegotiate(bool force_full_renegotiation = false) override;
 
@@ -111,8 +106,8 @@ class BOTAN_PUBLIC_API(2,0) Client final : public Channel
 
    private:
       std::unique_ptr<Channel_Impl> m_impl;
-   };
-}
-}
+};
+}  // namespace TLS
+}  // namespace Botan
 
 #endif

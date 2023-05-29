@@ -16,8 +16,7 @@ namespace Botan {
 /**
  * NIST SP 800-108 KDF in Counter Mode (5.1)
  */
-class SP800_108_Counter final : public KDF
-   {
+class SP800_108_Counter final : public KDF {
    public:
       std::string name() const override;
 
@@ -40,24 +39,28 @@ class SP800_108_Counter final : public KDF
       *
       * @throws Invalid_Argument key_len > 2^32
       */
-      void kdf(uint8_t key[], size_t key_len,
-                 const uint8_t secret[], size_t secret_len,
-                 const uint8_t salt[], size_t salt_len,
-                 const uint8_t label[], size_t label_len) const override;
+      void kdf(uint8_t key[],
+               size_t key_len,
+               const uint8_t secret[],
+               size_t secret_len,
+               const uint8_t salt[],
+               size_t salt_len,
+               const uint8_t label[],
+               size_t label_len) const override;
 
       /**
       * @param mac MAC algorithm to use
       */
       explicit SP800_108_Counter(std::unique_ptr<MessageAuthenticationCode> mac) : m_prf(std::move(mac)) {}
+
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
-   };
+};
 
 /**
  * NIST SP 800-108 KDF in Feedback Mode (5.2)
  */
-class SP800_108_Feedback final : public KDF
-   {
+class SP800_108_Feedback final : public KDF {
    public:
       std::string name() const override;
 
@@ -80,21 +83,25 @@ class SP800_108_Feedback final : public KDF
       *
       * @throws Invalid_Argument key_len > 2^32
       */
-      void kdf(uint8_t key[], size_t key_len,
-                 const uint8_t secret[], size_t secret_len,
-                 const uint8_t salt[], size_t salt_len,
-                 const uint8_t label[], size_t label_len) const override;
+      void kdf(uint8_t key[],
+               size_t key_len,
+               const uint8_t secret[],
+               size_t secret_len,
+               const uint8_t salt[],
+               size_t salt_len,
+               const uint8_t label[],
+               size_t label_len) const override;
 
       explicit SP800_108_Feedback(std::unique_ptr<MessageAuthenticationCode> mac) : m_prf(std::move(mac)) {}
+
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
-   };
+};
 
 /**
  * NIST SP 800-108 KDF in Double Pipeline Mode (5.3)
  */
-class SP800_108_Pipeline final : public KDF
-   {
+class SP800_108_Pipeline final : public KDF {
    public:
       std::string name() const override;
 
@@ -117,17 +124,21 @@ class SP800_108_Pipeline final : public KDF
       *
       * @throws Invalid_Argument key_len > 2^32
       */
-      void kdf(uint8_t key[], size_t key_len,
-                 const uint8_t secret[], size_t secret_len,
-                 const uint8_t salt[], size_t salt_len,
-                 const uint8_t label[], size_t label_len) const override;
+      void kdf(uint8_t key[],
+               size_t key_len,
+               const uint8_t secret[],
+               size_t secret_len,
+               const uint8_t salt[],
+               size_t salt_len,
+               const uint8_t label[],
+               size_t label_len) const override;
 
       explicit SP800_108_Pipeline(std::unique_ptr<MessageAuthenticationCode> mac) : m_prf(std::move(mac)) {}
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

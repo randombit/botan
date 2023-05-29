@@ -7,49 +7,41 @@
 
 #include <botan/bigint.h>
 
-#include <botan/internal/mp_core.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/mp_core.h>
 #include <algorithm>
 
 namespace Botan {
 
-BigInt& BigInt::add(const word y[], size_t y_words, Sign y_sign)
-   {
+BigInt& BigInt::add(const word y[], size_t y_words, Sign y_sign) {
    const size_t x_sw = sig_words();
 
    grow_to(std::max(x_sw, y_words) + 1);
 
-   if(sign() == y_sign)
-      {
+   if(sign() == y_sign) {
       bigint_add2(mutable_data(), size() - 1, y, y_words);
-      }
-   else
-      {
+   } else {
       const int32_t relative_size = bigint_cmp(data(), x_sw, y, y_words);
 
-      if(relative_size >= 0)
-         {
+      if(relative_size >= 0) {
          // *this >= y
          bigint_sub2(mutable_data(), x_sw, y, y_words);
-         }
-      else
-         {
+      } else {
          // *this < y
          bigint_sub2_rev(mutable_data(), y, y_words);
-         }
+      }
 
       //this->sign_fixup(relative_size, y_sign);
       if(relative_size < 0)
          set_sign(y_sign);
       else if(relative_size == 0)
          set_sign(Positive);
-      }
-
-   return (*this);
    }
 
-BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>& ws)
-   {
+   return (*this);
+}
+
+BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>& ws) {
    if(this->is_negative() || s.is_negative() || mod.is_negative())
       throw Invalid_Argument("BigInt::mod_add expects all arguments are positive");
 
@@ -73,8 +65,8 @@ BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>&
    s.grow_to(mod_sw);
 
    // First mod_sw for p - s, 2*mod_sw for bigint_addsub workspace
-   if(ws.size() < 3*mod_sw)
-      ws.resize(3*mod_sw);
+   if(ws.size() < 3 * mod_sw)
+      ws.resize(3 * mod_sw);
 
    word borrow = bigint_sub3(&ws[0], mod.data(), mod_sw, s.data(), mod_sw);
    BOTAN_DEBUG_ASSERT(borrow == 0);
@@ -84,16 +76,15 @@ BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>&
    borrow = bigint_sub3(&ws[mod_sw], this->data(), mod_sw, &ws[0], mod_sw);
 
    // Compute t + s
-   bigint_add3_nc(&ws[mod_sw*2], this->data(), mod_sw, s.data(), mod_sw);
+   bigint_add3_nc(&ws[mod_sw * 2], this->data(), mod_sw, s.data(), mod_sw);
 
-   CT::conditional_copy_mem(borrow, &ws[0], &ws[mod_sw*2], &ws[mod_sw], mod_sw);
+   CT::conditional_copy_mem(borrow, &ws[0], &ws[mod_sw * 2], &ws[mod_sw], mod_sw);
    set_words(&ws[0], mod_sw);
 
    return (*this);
-   }
+}
 
-BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>& ws)
-   {
+BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>& ws) {
    if(this->is_negative() || s.is_negative() || mod.is_negative())
       throw Invalid_Argument("BigInt::mod_sub expects all arguments are positive");
 
@@ -117,10 +108,9 @@ BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>&
       bigint_mod_sub(mutable_data(), s.data(), mod.data(), mod_sw, ws.data());
 
    return (*this);
-   }
+}
 
-BigInt& BigInt::mod_mul(uint8_t y, const BigInt& mod, secure_vector<word>& ws)
-   {
+BigInt& BigInt::mod_mul(uint8_t y, const BigInt& mod, secure_vector<word>& ws) {
    BOTAN_ARG_CHECK(this->is_negative() == false, "*this must be positive");
    BOTAN_ARG_CHECK(y < 16, "y too large");
 
@@ -129,10 +119,9 @@ BigInt& BigInt::mod_mul(uint8_t y, const BigInt& mod, secure_vector<word>& ws)
    *this *= static_cast<word>(y);
    this->reduce_below(mod, ws);
    return (*this);
-   }
+}
 
-BigInt& BigInt::rev_sub(const word y[], size_t y_sw, secure_vector<word>& ws)
-   {
+BigInt& BigInt::rev_sub(const word y[], size_t y_sw, secure_vector<word>& ws) {
    if(this->sign() != BigInt::Positive)
       throw Invalid_State("BigInt::sub_rev requires this is positive");
 
@@ -147,126 +136,101 @@ BigInt& BigInt::rev_sub(const word y[], size_t y_sw, secure_vector<word>& ws)
    this->swap_reg(ws);
 
    return (*this);
-   }
+}
 
 /*
 * Multiplication Operator
 */
-BigInt& BigInt::operator*=(const BigInt& y)
-   {
+BigInt& BigInt::operator*=(const BigInt& y) {
    secure_vector<word> ws;
    return this->mul(y, ws);
-   }
+}
 
-BigInt& BigInt::mul(const BigInt& y, secure_vector<word>& ws)
-   {
+BigInt& BigInt::mul(const BigInt& y, secure_vector<word>& ws) {
    const size_t x_sw = sig_words();
    const size_t y_sw = y.sig_words();
    set_sign((sign() == y.sign()) ? Positive : Negative);
 
-   if(x_sw == 0 || y_sw == 0)
-      {
+   if(x_sw == 0 || y_sw == 0) {
       clear();
       set_sign(Positive);
-      }
-   else if(x_sw == 1 && y_sw)
-      {
+   } else if(x_sw == 1 && y_sw) {
       grow_to(y_sw + 1);
       bigint_linmul3(mutable_data(), y.data(), y_sw, word_at(0));
-      }
-   else if(y_sw == 1 && x_sw)
-      {
+   } else if(y_sw == 1 && x_sw) {
       word carry = bigint_linmul2(mutable_data(), x_sw, y.word_at(0));
       set_word_at(x_sw, carry);
-      }
-   else
-      {
+   } else {
       const size_t new_size = x_sw + y_sw + 1;
       ws.resize(new_size);
       secure_vector<word> z_reg(new_size);
 
-      bigint_mul(z_reg.data(), z_reg.size(),
-                 data(), size(), x_sw,
-                 y.data(), y.size(), y_sw,
-                 ws.data(), ws.size());
+      bigint_mul(z_reg.data(), z_reg.size(), data(), size(), x_sw, y.data(), y.size(), y_sw, ws.data(), ws.size());
 
       this->swap_reg(z_reg);
-      }
-
-   return (*this);
    }
 
-BigInt& BigInt::square(secure_vector<word>& ws)
-   {
+   return (*this);
+}
+
+BigInt& BigInt::square(secure_vector<word>& ws) {
    const size_t sw = sig_words();
 
-   secure_vector<word> z(2*sw);
+   secure_vector<word> z(2 * sw);
    ws.resize(z.size());
 
-   bigint_sqr(z.data(), z.size(),
-              data(), size(), sw,
-              ws.data(), ws.size());
+   bigint_sqr(z.data(), z.size(), data(), size(), sw, ws.data(), ws.size());
 
    swap_reg(z);
    set_sign(BigInt::Positive);
 
    return (*this);
-   }
+}
 
-BigInt& BigInt::operator*=(word y)
-   {
-   if(y == 0)
-      {
+BigInt& BigInt::operator*=(word y) {
+   if(y == 0) {
       clear();
       set_sign(Positive);
-      }
+   }
 
    const word carry = bigint_linmul2(mutable_data(), size(), y);
    set_word_at(size(), carry);
 
    return (*this);
-   }
+}
 
 /*
 * Division Operator
 */
-BigInt& BigInt::operator/=(const BigInt& y)
-   {
+BigInt& BigInt::operator/=(const BigInt& y) {
    if(y.sig_words() == 1 && is_power_of_2(y.word_at(0)))
       (*this) >>= (y.bits() - 1);
    else
       (*this) = (*this) / y;
    return (*this);
-   }
+}
 
 /*
 * Modulo Operator
 */
-BigInt& BigInt::operator%=(const BigInt& mod)
-   {
-   return (*this = (*this) % mod);
-   }
+BigInt& BigInt::operator%=(const BigInt& mod) { return (*this = (*this) % mod); }
 
 /*
 * Modulo Operator
 */
-word BigInt::operator%=(word mod)
-   {
+word BigInt::operator%=(word mod) {
    if(mod == 0)
       throw Invalid_Argument("BigInt::operator%= divide by zero");
 
    word remainder = 0;
 
-   if(is_power_of_2(mod))
-       {
-       remainder = (word_at(0) & (mod - 1));
-       }
-   else
-      {
+   if(is_power_of_2(mod)) {
+      remainder = (word_at(0) & (mod - 1));
+   } else {
       const size_t sw = sig_words();
       for(size_t i = sw; i > 0; --i)
-         remainder = bigint_modop(remainder, word_at(i-1), mod);
-      }
+         remainder = bigint_modop(remainder, word_at(i - 1), mod);
+   }
 
    if(remainder && sign() == BigInt::Negative)
       remainder = mod - remainder;
@@ -275,15 +239,14 @@ word BigInt::operator%=(word mod)
    m_data.set_word_at(0, remainder);
    set_sign(BigInt::Positive);
    return remainder;
-   }
+}
 
 /*
 * Left Shift Operator
 */
-BigInt& BigInt::operator<<=(size_t shift)
-   {
+BigInt& BigInt::operator<<=(size_t shift) {
    const size_t shift_words = shift / BOTAN_MP_WORD_BITS;
-   const size_t shift_bits  = shift % BOTAN_MP_WORD_BITS;
+   const size_t shift_bits = shift % BOTAN_MP_WORD_BITS;
    const size_t size = sig_words();
 
    const size_t bits_free = top_bits_free();
@@ -295,15 +258,14 @@ BigInt& BigInt::operator<<=(size_t shift)
    bigint_shl1(m_data.mutable_data(), new_size, size, shift_words, shift_bits);
 
    return (*this);
-   }
+}
 
 /*
 * Right Shift Operator
 */
-BigInt& BigInt::operator>>=(size_t shift)
-   {
+BigInt& BigInt::operator>>=(size_t shift) {
    const size_t shift_words = shift / BOTAN_MP_WORD_BITS;
-   const size_t shift_bits  = shift % BOTAN_MP_WORD_BITS;
+   const size_t shift_bits = shift % BOTAN_MP_WORD_BITS;
 
    bigint_shr1(m_data.mutable_data(), m_data.size(), shift_words, shift_bits);
 
@@ -311,6 +273,6 @@ BigInt& BigInt::operator>>=(size_t shift)
       set_sign(Positive);
 
    return (*this);
-   }
-
 }
+
+}  // namespace Botan

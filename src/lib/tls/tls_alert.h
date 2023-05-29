@@ -21,43 +21,43 @@ namespace TLS {
 * The enumeration value matches the wire encoding
 */
 enum class AlertType {
-   CloseNotify                    = 0,
-   UnexpectedMessage              = 10,
-   BadRecordMac                   = 20,
-   DecryptionFailed               = 21,
-   RecordOverflow                 = 22,
-   DecompressionFailure           = 30,
-   HandshakeFailure               = 40,
-   NoCertificate                  = 41, // SSLv3 only
-   BadCertificate                 = 42,
-   UnsupportedCertificate         = 43,
-   CertificateRevoked             = 44,
-   CertificateExpired             = 45,
-   CertificateUnknown             = 46,
-   IllegalParameter               = 47,
-   UnknownCA                      = 48,
-   AccessDenied                   = 49,
-   DecodeError                    = 50,
-   DecryptError                   = 51,
-   ExportRestriction              = 60,
-   ProtocolVersion                = 70,
-   InsufficientSecurity           = 71,
-   InternalError                  = 80,
-   InappropriateFallback          = 86,
-   UserCanceled                   = 90,
-   NoRenegotiation                = 100,
-   MissingExtension               = 109, // RFC 8446
-   UnsupportedExtension           = 110,
-   CertificateUnobtainable        = 111,
-   UnrecognizedName               = 112,
-   BadCertificateStatusResponse   = 113,
-   BadCertificateHashValue        = 114,
-   UnknownPSKIdentity             = 115,
-   CertificateRequired            = 116, // RFC 8446
-   NoApplicationProtocol          = 120, // RFC 7301
+   CloseNotify = 0,
+   UnexpectedMessage = 10,
+   BadRecordMac = 20,
+   DecryptionFailed = 21,
+   RecordOverflow = 22,
+   DecompressionFailure = 30,
+   HandshakeFailure = 40,
+   NoCertificate = 41,  // SSLv3 only
+   BadCertificate = 42,
+   UnsupportedCertificate = 43,
+   CertificateRevoked = 44,
+   CertificateExpired = 45,
+   CertificateUnknown = 46,
+   IllegalParameter = 47,
+   UnknownCA = 48,
+   AccessDenied = 49,
+   DecodeError = 50,
+   DecryptError = 51,
+   ExportRestriction = 60,
+   ProtocolVersion = 70,
+   InsufficientSecurity = 71,
+   InternalError = 80,
+   InappropriateFallback = 86,
+   UserCanceled = 90,
+   NoRenegotiation = 100,
+   MissingExtension = 109,  // RFC 8446
+   UnsupportedExtension = 110,
+   CertificateUnobtainable = 111,
+   UnrecognizedName = 112,
+   BadCertificateStatusResponse = 113,
+   BadCertificateHashValue = 114,
+   UnknownPSKIdentity = 115,
+   CertificateRequired = 116,    // RFC 8446
+   NoApplicationProtocol = 120,  // RFC 7301
 
    // pseudo alert values
-   None                          = 256,
+   None = 256,
 
    // Compat enum variants, will be removed in a future major release
    CLOSE_NOTIFY BOTAN_DEPRECATED("Use CloseNotify") = CloseNotify,
@@ -68,8 +68,7 @@ enum class AlertType {
 /**
 * SSL/TLS Alert Message
 */
-class BOTAN_PUBLIC_API(2,0) Alert final
-   {
+class BOTAN_PUBLIC_API(2, 0) Alert final {
    public:
       typedef AlertType Type;
       using enum AlertType;
@@ -116,17 +115,17 @@ class BOTAN_PUBLIC_API(2,0) Alert final
       * @param type_code the type of alert
       * @param fatal specifies if this is a fatal alert
       */
-      Alert(Type type_code, bool fatal = false) :
-         m_fatal(fatal), m_type_code(type_code) {}
+      Alert(Type type_code, bool fatal = false) : m_fatal(fatal), m_type_code(type_code) {}
 
       Alert() : m_fatal(false), m_type_code(AlertType::None) {}
+
    private:
       bool m_fatal;
       Type m_type_code;
-   };
+};
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif

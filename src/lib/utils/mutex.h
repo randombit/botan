@@ -11,15 +11,16 @@
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
 
-#include <mutex>
+   #include <mutex>
 
 namespace Botan {
 
-template<typename T> using lock_guard_type = std::lock_guard<T>;
+template <typename T>
+using lock_guard_type = std::lock_guard<T>;
 using mutex_type = std::mutex;
 using recursive_mutex_type = std::recursive_mutex;
 
-}
+}  // namespace Botan
 
 #else
 
@@ -27,33 +28,33 @@ using recursive_mutex_type = std::recursive_mutex;
 
 namespace Botan {
 
-template<typename Mutex>
-class lock_guard final
-   {
+template <typename Mutex>
+class lock_guard final {
    public:
-      explicit lock_guard(Mutex& m) : m_mutex(m)
-         { m_mutex.lock(); }
+      explicit lock_guard(Mutex& m) : m_mutex(m) { m_mutex.lock(); }
 
       ~lock_guard() { m_mutex.unlock(); }
 
       lock_guard(const lock_guard& other) = delete;
       lock_guard& operator=(const lock_guard& other) = delete;
+
    private:
       Mutex& m_mutex;
-   };
+};
 
-class noop_mutex final
-   {
+class noop_mutex final {
    public:
       void lock() {}
+
       void unlock() {}
-   };
+};
 
 typedef noop_mutex mutex_type;
 typedef noop_mutex recursive_mutex_type;
-template<typename T> using lock_guard_type = lock_guard<T>;
+template <typename T>
+using lock_guard_type = lock_guard<T>;
 
-}
+}  // namespace Botan
 
 #endif
 

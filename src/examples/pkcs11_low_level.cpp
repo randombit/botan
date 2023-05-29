@@ -4,16 +4,16 @@
 #include <vector>
 
 int main() {
-  Botan::PKCS11::Module module("C:\\pkcs11-middleware\\library.dll");
+   Botan::PKCS11::Module module("C:\\pkcs11-middleware\\library.dll");
 
-  // C_Initialize is automatically called by the constructor of the Module
+   // C_Initialize is automatically called by the constructor of the Module
 
-  // work with the token
+   // work with the token
 
-  std::vector<Botan::PKCS11::SlotId> slot_ids;
-  [[maybe_unused]] bool success = module->C_GetSlotList(true, slot_ids);
+   std::vector<Botan::PKCS11::SlotId> slot_ids;
+   [[maybe_unused]] bool success = module->C_GetSlotList(true, slot_ids);
 
-  // C_Finalize is automatically called by the destructor of the Module
+   // C_Finalize is automatically called by the destructor of the Module
 
-  return 0;
+   return 0;
 }

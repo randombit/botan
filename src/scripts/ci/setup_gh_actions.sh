@@ -77,6 +77,9 @@ if type -p "apt-get"; then
 
     elif [ "$TARGET" = "docs" ]; then
         sudo apt-get -qq install doxygen python-docutils python3-sphinx
+
+    elif [ "$TARGET" = "format" ]; then
+        sudo apt-get -qq install clang-format-15
     fi
 else
     export HOMEBREW_NO_AUTO_UPDATE=1

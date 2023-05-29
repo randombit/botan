@@ -89,8 +89,7 @@ namespace Botan {
 
 namespace {
 
-size_t choose_bucket(size_t n)
-   {
+size_t choose_bucket(size_t n) {
    const size_t MINIMUM_ALLOCATION = 16;
    const size_t MAXIMUM_ALLOCATION = 256;
 
@@ -100,94 +99,95 @@ size_t choose_bucket(size_t n)
    // Need to tune these
 
    const size_t buckets[] = {
-      16, 24, 32, 48, 64, 80, 96, 112, 128, 160, 192, 256, 0,
+      16,
+      24,
+      32,
+      48,
+      64,
+      80,
+      96,
+      112,
+      128,
+      160,
+      192,
+      256,
+      0,
    };
 
-   for(size_t i = 0; buckets[i]; ++i)
-      {
-      if(n <= buckets[i])
-         {
+   for(size_t i = 0; buckets[i]; ++i) {
+      if(n <= buckets[i]) {
          return buckets[i];
-         }
       }
-
-   return 0;
    }
 
-inline bool ptr_in_pool(const void* pool_ptr, size_t poolsize,
-                        const void* buf_ptr, size_t bufsize)
-   {
+   return 0;
+}
+
+inline bool ptr_in_pool(const void* pool_ptr, size_t poolsize, const void* buf_ptr, size_t bufsize) {
    const uintptr_t pool = reinterpret_cast<uintptr_t>(pool_ptr);
    const uintptr_t buf = reinterpret_cast<uintptr_t>(buf_ptr);
    return (buf >= pool) && (buf + bufsize <= pool + poolsize);
-   }
+}
 
 // return index of first set bit
-template<typename T>
-size_t find_set_bit(T b)
-   {
-   size_t s = 8*sizeof(T) / 2;
+template <typename T>
+size_t find_set_bit(T b) {
+   size_t s = 8 * sizeof(T) / 2;
    size_t bit = 0;
 
    // In this context we don't need to be const-time
-   while(s > 0)
-      {
+   while(s > 0) {
       const T mask = (static_cast<T>(1) << s) - 1;
-      if((b & mask) == 0)
-         {
+      if((b & mask) == 0) {
          bit += s;
          b >>= s;
-         }
-      s /= 2;
       }
-
-   return bit;
+      s /= 2;
    }
 
-class BitMap final
-   {
+   return bit;
+}
+
+class BitMap final {
    public:
-      explicit BitMap(size_t bits) : m_len(bits)
-         {
+      explicit BitMap(size_t bits) : m_len(bits) {
          m_bits.resize((bits + BITMASK_BITS - 1) / BITMASK_BITS);
          // MSVC warns if the cast isn't there, clang-tidy warns that the cast is pointless
-         m_main_mask = static_cast<bitmask_type>(~0); // NOLINT(bugprone-misplaced-widening-cast)
+         m_main_mask = static_cast<bitmask_type>(~0);  // NOLINT(bugprone-misplaced-widening-cast)
          m_last_mask = m_main_mask;
 
          if(bits % BITMASK_BITS != 0)
             m_last_mask = (static_cast<bitmask_type>(1) << (bits % BITMASK_BITS)) - 1;
-         }
+      }
 
       bool find_free(size_t* bit);
 
-      void free(size_t bit)
-         {
+      void free(size_t bit) {
          BOTAN_ASSERT_NOMSG(bit <= m_len);
          const size_t w = bit / BITMASK_BITS;
          BOTAN_ASSERT_NOMSG(w < m_bits.size());
          const bitmask_type mask = static_cast<bitmask_type>(1) << (bit % BITMASK_BITS);
          m_bits[w] = m_bits[w] & (~mask);
-         }
+      }
 
-      bool empty() const
-         {
-         for(auto bitset : m_bits)
-            {
-            if(bitset != 0)
-               {
+      bool empty() const {
+         for(auto bitset : m_bits) {
+            if(bitset != 0) {
                return false;
-               }
             }
+         }
 
          return true;
-         }
+      }
 
-  private:
+   private:
 #if defined(BOTAN_ENABLE_DEBUG_ASSERTS)
       using bitmask_type = uint8_t;
+
       enum { BITMASK_BITS = 8 };
 #else
       using bitmask_type = word;
+
       enum { BITMASK_BITS = BOTAN_MP_WORD_BITS };
 #endif
 
@@ -195,63 +195,53 @@ class BitMap final
       bitmask_type m_main_mask;
       bitmask_type m_last_mask;
       std::vector<bitmask_type> m_bits;
-   };
+};
 
-bool BitMap::find_free(size_t* bit)
-   {
-   for(size_t i = 0; i != m_bits.size(); ++i)
-      {
+bool BitMap::find_free(size_t* bit) {
+   for(size_t i = 0; i != m_bits.size(); ++i) {
       const bitmask_type mask = (i == m_bits.size() - 1) ? m_last_mask : m_main_mask;
-      if((m_bits[i] & mask) != mask)
-         {
+      if((m_bits[i] & mask) != mask) {
          const size_t free_bit = find_set_bit(~m_bits[i]);
          const bitmask_type bmask = static_cast<bitmask_type>(1) << (free_bit % BITMASK_BITS);
          BOTAN_ASSERT_NOMSG((m_bits[i] & bmask) == 0);
          m_bits[i] |= bmask;
-         *bit = BITMASK_BITS*i + free_bit;
+         *bit = BITMASK_BITS * i + free_bit;
          return true;
-         }
       }
-
-   return false;
    }
 
+   return false;
 }
 
-class Bucket final
-   {
+}  // namespace
+
+class Bucket final {
    public:
       Bucket(uint8_t* mem, size_t mem_size, size_t item_size) :
-         m_item_size(item_size),
-         m_page_size(mem_size),
-         m_range(mem),
-         m_bitmap(mem_size / item_size),
-         m_is_full(false)
-         {
-         }
+            m_item_size(item_size),
+            m_page_size(mem_size),
+            m_range(mem),
+            m_bitmap(mem_size / item_size),
+            m_is_full(false) {}
 
-      uint8_t* alloc()
-         {
-         if(m_is_full)
-            {
+      uint8_t* alloc() {
+         if(m_is_full) {
             // I know I am full
             return nullptr;
-            }
+         }
 
          size_t offset;
-         if(!m_bitmap.find_free(&offset))
-            {
+         if(!m_bitmap.find_free(&offset)) {
             // I just found out I am full
             m_is_full = true;
             return nullptr;
-            }
-
-         BOTAN_ASSERT(offset * m_item_size < m_page_size, "Offset is in range");
-         return m_range + m_item_size*offset;
          }
 
-      bool free(void* p)
-         {
+         BOTAN_ASSERT(offset * m_item_size < m_page_size, "Offset is in range");
+         return m_range + m_item_size * offset;
+      }
+
+      bool free(void* p) {
          if(!in_this_bucket(p))
             return false;
 
@@ -267,22 +257,13 @@ class Bucket final
          m_is_full = false;
 
          return true;
-         }
+      }
 
-      bool in_this_bucket(void* p) const
-         {
-         return ptr_in_pool(m_range, m_page_size, p, m_item_size);
-         }
+      bool in_this_bucket(void* p) const { return ptr_in_pool(m_range, m_page_size, p, m_item_size); }
 
-      bool empty() const
-         {
-         return m_bitmap.empty();
-         }
+      bool empty() const { return m_bitmap.empty(); }
 
-      uint8_t* ptr() const
-         {
-         return m_range;
-         }
+      uint8_t* ptr() const { return m_range; }
 
    private:
       size_t m_item_size;
@@ -290,16 +271,13 @@ class Bucket final
       uint8_t* m_range;
       BitMap m_bitmap;
       bool m_is_full;
-   };
+};
 
-Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) :
-   m_page_size(page_size)
-   {
+Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) : m_page_size(page_size) {
    m_min_page_ptr = ~static_cast<uintptr_t>(0);
    m_max_page_ptr = 0;
 
-   for(auto page : pages)
-      {
+   for(auto page : pages) {
       const uintptr_t p = reinterpret_cast<uintptr_t>(page);
 
       m_min_page_ptr = std::min(p, m_min_page_ptr);
@@ -310,34 +288,31 @@ Memory_Pool::Memory_Pool(const std::vector<void*>& pages, size_t page_size) :
       OS::page_prohibit_access(page);
 #endif
       m_free_pages.push_back(static_cast<uint8_t*>(page));
-      }
+   }
 
    /*
    Right now this points to the start of the last page, adjust it to instead
    point to the first byte of the following page
    */
    m_max_page_ptr += page_size;
-   }
+}
 
-Memory_Pool::~Memory_Pool() // NOLINT(*-use-equals-default)
-   {
+Memory_Pool::~Memory_Pool()  // NOLINT(*-use-equals-default)
+{
 #if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
-   for(size_t i = 0; i != m_free_pages.size(); ++i)
-      {
+   for(size_t i = 0; i != m_free_pages.size(); ++i) {
       OS::page_allow_access(m_free_pages[i]);
-      }
-#endif
    }
+#endif
+}
 
-void* Memory_Pool::allocate(size_t n)
-   {
+void* Memory_Pool::allocate(size_t n) {
    if(n > m_page_size)
       return nullptr;
 
    const size_t n_bucket = choose_bucket(n);
 
-   if(n_bucket > 0)
-      {
+   if(n_bucket > 0) {
       lock_guard_type<mutex_type> lock(m_mutex);
 
       std::deque<Bucket>& buckets = m_buckets_for[n_bucket];
@@ -348,17 +323,15 @@ void* Memory_Pool::allocate(size_t n)
       chance of becoming later freed and then the whole page can be
       recycled.
       */
-      for(auto& bucket : buckets)
-         {
+      for(auto& bucket : buckets) {
          if(uint8_t* p = bucket.alloc())
             return p;
 
          // If the bucket is full, maybe move it to the end of the list?
          // Otoh bucket search should be very fast
-         }
+      }
 
-      if(!m_free_pages.empty())
-         {
+      if(!m_free_pages.empty()) {
          uint8_t* ptr = m_free_pages[0];
          m_free_pages.pop_front();
 #if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
@@ -368,15 +341,14 @@ void* Memory_Pool::allocate(size_t n)
          void* p = buckets[0].alloc();
          BOTAN_ASSERT_NOMSG(p != nullptr);
          return p;
-         }
       }
+   }
 
    // out of room
    return nullptr;
-   }
+}
 
-bool Memory_Pool::deallocate(void* p, size_t len) noexcept
-   {
+bool Memory_Pool::deallocate(void* p, size_t len) noexcept {
    // Do a fast range check first, before taking the lock
    const uintptr_t p_val = reinterpret_cast<uintptr_t>(p);
    if(p_val < m_min_page_ptr || p_val > m_max_page_ptr)
@@ -384,21 +356,16 @@ bool Memory_Pool::deallocate(void* p, size_t len) noexcept
 
    const size_t n_bucket = choose_bucket(len);
 
-   if(n_bucket != 0)
-      {
-      try
-         {
+   if(n_bucket != 0) {
+      try {
          lock_guard_type<mutex_type> lock(m_mutex);
 
          std::deque<Bucket>& buckets = m_buckets_for[n_bucket];
 
-         for(size_t i = 0; i != buckets.size(); ++i)
-            {
+         for(size_t i = 0; i != buckets.size(); ++i) {
             Bucket& bucket = buckets[i];
-            if(bucket.free(p))
-               {
-               if(bucket.empty())
-                  {
+            if(bucket.free(p)) {
+               if(bucket.empty()) {
 #if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
                   OS::page_prohibit_access(bucket.ptr());
 #endif
@@ -407,13 +374,11 @@ bool Memory_Pool::deallocate(void* p, size_t len) noexcept
                   if(i != buckets.size() - 1)
                      std::swap(buckets.back(), buckets[i]);
                   buckets.pop_back();
-                  }
-               return true;
                }
+               return true;
             }
          }
-      catch(...)
-         {
+      } catch(...) {
          /*
          * The only exception throws that can occur in the above code are from
          * either the STL or BOTAN_ASSERT failures. In either case, such an
@@ -428,10 +393,10 @@ bool Memory_Pool::deallocate(void* p, size_t len) noexcept
          * this, call terminate directly.
          */
          std::terminate();
-         }
       }
-
-   return false;
    }
 
+   return false;
 }
+
+}  // namespace Botan

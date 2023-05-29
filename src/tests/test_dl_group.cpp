@@ -17,41 +17,36 @@ namespace Botan_Tests {
 
 namespace {
 
-class DL_Group_Tests final : public Test
-   {
+class DL_Group_Tests final : public Test {
    public:
-      std::vector<Test::Result> run() override
-         {
+      std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
 
          results.push_back(test_dl_encoding());
          results.push_back(test_dl_errors());
 
          return results;
-         }
+      }
 
    private:
-      static Test::Result test_dl_errors()
-         {
+      static Test::Result test_dl_errors() {
          Test::Result result("DL_Group errors");
-         result.test_throws("Uninitialized",
-                            "DL_Group uninitialized",
-                            []() { Botan::DL_Group dl; dl.get_p(); });
+         result.test_throws("Uninitialized", "DL_Group uninitialized", []() {
+            Botan::DL_Group dl;
+            dl.get_p();
+         });
 
-#if !defined(BOTAN_HAS_SANITIZER_UNDEFINED)
-         result.test_throws("Bad generator param",
-                            "DL_Group unknown PrimeType",
-                            []() {
-                            auto invalid_type = static_cast<Botan::DL_Group::PrimeType>(9);
-                            Botan::DL_Group dl(Test::rng(), invalid_type, 1024);
-             });
-#endif
+   #if !defined(BOTAN_HAS_SANITIZER_UNDEFINED)
+         result.test_throws("Bad generator param", "DL_Group unknown PrimeType", []() {
+            auto invalid_type = static_cast<Botan::DL_Group::PrimeType>(9);
+            Botan::DL_Group dl(Test::rng(), invalid_type, 1024);
+         });
+   #endif
 
          return result;
-         }
+      }
 
-      static Test::Result test_dl_encoding()
-         {
+      static Test::Result test_dl_encoding() {
          Test::Result result("DL_Group encoding");
 
          const Botan::DL_Group orig("modp/ietf/1024");
@@ -79,16 +74,14 @@ class DL_Group_Tests final : public Test
          result.test_eq("Same g in X9.57 decoding", group3.get_g(), orig.get_g());
 
          return result;
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("pubkey", "dl_group", DL_Group_Tests);
 
-class DL_Generate_Group_Tests final : public Test
-   {
+class DL_Generate_Group_Tests final : public Test {
    public:
-      std::vector<Test::Result> run() override
-         {
+      std::vector<Test::Result> run() override {
          Test::Result result("DL_Group generate");
 
          result.start_timer();
@@ -107,15 +100,14 @@ class DL_Generate_Group_Tests final : public Test
          result.test_lte("DH g size", dh_implicit_q.get_g().bits(), 1040);
          result.test_eq("DH group verifies", dh_implicit_q.verify_group(rng, false), true);
 
-         if(Test::run_long_tests())
-            {
+         if(Test::run_long_tests()) {
             Botan::DL_Group dh_strong(rng, Botan::DL_Group::Strong, 1025);
             result.test_eq("DH p size", dh_strong.get_p().bits(), 1025);
             result.test_eq("DH q size", dh_strong.get_q().bits(), 1024);
             result.test_eq("DH group verifies", dh_strong.verify_group(rng, false), true);
-            }
+         }
 
-#if defined(BOTAN_HAS_SHA1)
+   #if defined(BOTAN_HAS_SHA1)
          Botan::DL_Group dsa1024(rng, Botan::DL_Group::DSA_Kosherizer, 1024);
          result.test_eq("DSA p size", dsa1024.get_p().bits(), 1024);
          result.test_eq("DSA q size", dsa1024.get_q().bits(), 160);
@@ -128,11 +120,12 @@ class DL_Generate_Group_Tests final : public Test
 
          result.test_throws("DSA seed does not generate group",
                             "DL_Group: The seed given does not generate a DSA group",
-                            [&rng,&invalid_seed]() { Botan::DL_Group dsa(rng, invalid_seed, 1024, 160); });
+                            [&rng, &invalid_seed]() { Botan::DL_Group dsa(rng, invalid_seed, 1024, 160); });
 
-         result.test_throws("DSA seed is too short",
-                            "Generating a DSA parameter set with a 160 bit long q requires a seed at least as many bits long",
-                            [&rng,&short_seed]() { Botan::DL_Group dsa(rng, short_seed, 1024, 160); });
+         result.test_throws(
+            "DSA seed is too short",
+            "Generating a DSA parameter set with a 160 bit long q requires a seed at least as many bits long",
+            [&rng, &short_seed]() { Botan::DL_Group dsa(rng, short_seed, 1024, 160); });
 
          // From FIPS 186-3 test data
          const std::vector<uint8_t> seed = Botan::hex_decode("1F5DA0AF598EEADEE6E6665BF880E63D8B609BA2");
@@ -143,62 +136,42 @@ class DL_Generate_Group_Tests final : public Test
 
          Botan::DL_Group dsa_from_seed(rng, seed, 1024, 160);
 
-         result.test_eq("DSA q from seed", dsa_from_seed.get_q(),
-                        Botan::BigInt("0xAB1A788BCE3C557A965A5BFA6908FAA665FDEB7D"));
+         result.test_eq(
+            "DSA q from seed", dsa_from_seed.get_q(), Botan::BigInt("0xAB1A788BCE3C557A965A5BFA6908FAA665FDEB7D"));
 
          // Modulo just to avoid embedding entire 1024-bit P in src file
          result.test_eq("DSA p from seed", static_cast<size_t>(dsa_from_seed.get_p() % 4294967291), size_t(2513712339));
 
          result.test_eq("DSA group from seed verifies", dsa_from_seed.verify_group(rng, false), true);
-#endif
+   #endif
 
          result.end_timer();
 
          return {result};
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("pubkey", "dl_group_gen", DL_Generate_Group_Tests);
 
-class DL_Named_Group_Tests final : public Test
-   {
+class DL_Named_Group_Tests final : public Test {
    public:
-      std::vector<Test::Result> run() override
-         {
-         const std::vector<std::string> dl_named =
-            {
-            "modp/ietf/1024",
-            "modp/ietf/1536",
-            "modp/ietf/2048",
-            "modp/ietf/3072",
-            "modp/ietf/4096",
-            "modp/ietf/6144",
-            "modp/ietf/8192",
+      std::vector<Test::Result> run() override {
+         const std::vector<std::string> dl_named = {
+            "modp/ietf/1024",  "modp/ietf/1536",  "modp/ietf/2048",  "modp/ietf/3072",  "modp/ietf/4096",
+            "modp/ietf/6144",  "modp/ietf/8192",
 
-            "modp/srp/1024",
-            "modp/srp/1536",
-            "modp/srp/2048",
-            "modp/srp/3072",
-            "modp/srp/4096",
-            "modp/srp/6144",
-            "modp/srp/8192",
+            "modp/srp/1024",   "modp/srp/1536",   "modp/srp/2048",   "modp/srp/3072",   "modp/srp/4096",
+            "modp/srp/6144",   "modp/srp/8192",
 
-            "dsa/jce/1024",
-            "dsa/botan/2048",
-            "dsa/botan/3072",
+            "dsa/jce/1024",    "dsa/botan/2048",  "dsa/botan/3072",
 
-            "ffdhe/ietf/2048",
-            "ffdhe/ietf/3072",
-            "ffdhe/ietf/4096",
-            "ffdhe/ietf/6144",
-            "ffdhe/ietf/8192",
-            };
+            "ffdhe/ietf/2048", "ffdhe/ietf/3072", "ffdhe/ietf/4096", "ffdhe/ietf/6144", "ffdhe/ietf/8192",
+         };
 
          Test::Result result("DL_Group named");
          result.start_timer();
 
-         for(const std::string& name : dl_named)
-            {
+         for(const std::string& name : dl_named) {
             // Confirm we can load every group we expect
             Botan::DL_Group group(name);
 
@@ -212,31 +185,26 @@ class DL_Named_Group_Tests final : public Test
 
             result.confirm("Expected source", group.source() == Botan::DL_Group_Source::Builtin);
 
-            if(name.find("modp/srp/") == std::string::npos)
-               {
+            if(name.find("modp/srp/") == std::string::npos) {
                result.test_ne("DL_Group q is set", group.get_q(), 0);
-               }
-            else
-               {
+            } else {
                result.test_eq("DL_Group q is not set for SRP groups", group.get_q(), 0);
-               }
-
-            if(group.p_bits() <= 1536 || Test::run_long_tests())
-               {
-               result.test_eq(name + " verifies", group.verify_group(Test::rng()), true);
-               }
-
             }
+
+            if(group.p_bits() <= 1536 || Test::run_long_tests()) {
+               result.test_eq(name + " verifies", group.verify_group(Test::rng()), true);
+            }
+         }
          result.end_timer();
 
          return {result};
-         }
-   };
+      }
+};
 
 BOTAN_REGISTER_TEST("pubkey", "dl_group_named", DL_Named_Group_Tests);
 
-}
+}  // namespace
 
 #endif
 
-}
+}  // namespace Botan_Tests

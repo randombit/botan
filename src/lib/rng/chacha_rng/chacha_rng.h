@@ -8,9 +8,9 @@
 #ifndef BOTAN_CHACHA_RNG_H_
 #define BOTAN_CHACHA_RNG_H_
 
+#include <botan/mac.h>
 #include <botan/stateful_rng.h>
 #include <botan/stream_cipher.h>
-#include <botan/mac.h>
 
 namespace Botan {
 
@@ -37,8 +37,7 @@ class Entropy_Sources;
 * The primary reason to use it is in cases where the other RNGs are
 * not fast enough.
 */
-class BOTAN_PUBLIC_API(2,3) ChaCha_RNG final : public Stateful_RNG
-   {
+class BOTAN_PUBLIC_API(2, 3) ChaCha_RNG final : public Stateful_RNG {
    public:
       /**
       * Automatic reseeding is disabled completely, as it has no access to
@@ -73,8 +72,7 @@ class BOTAN_PUBLIC_API(2,3) ChaCha_RNG final : public Stateful_RNG
       * @param reseed_interval specifies a limit of how many times
       * the RNG will be called before automatic reseeding is performed
       */
-      ChaCha_RNG(RandomNumberGenerator& underlying_rng,
-                 size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
+      ChaCha_RNG(RandomNumberGenerator& underlying_rng, size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
 
       /**
       * Automatic reseeding from @p entropy_sources will take place after
@@ -84,8 +82,7 @@ class BOTAN_PUBLIC_API(2,3) ChaCha_RNG final : public Stateful_RNG
       * @param reseed_interval specifies a limit of how many times
       * the RNG will be called before automatic reseeding is performed.
       */
-      ChaCha_RNG(Entropy_Sources& entropy_sources,
-                 size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
+      ChaCha_RNG(Entropy_Sources& entropy_sources, size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
 
       /**
       * Automatic reseeding from @p underlying_rng and @p entropy_sources
@@ -117,8 +114,8 @@ class BOTAN_PUBLIC_API(2,3) ChaCha_RNG final : public Stateful_RNG
 
       std::unique_ptr<MessageAuthenticationCode> m_hmac;
       std::unique_ptr<StreamCipher> m_chacha;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

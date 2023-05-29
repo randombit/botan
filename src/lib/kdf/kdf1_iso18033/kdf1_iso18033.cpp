@@ -7,16 +7,19 @@
 
 #include <botan/internal/kdf1_iso18033.h>
 
-#include <botan/internal/fmt.h>
 #include <botan/exceptn.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
-void KDF1_18033::kdf(uint8_t key[], size_t key_len,
-                     const uint8_t secret[], size_t secret_len,
-                     const uint8_t salt[], size_t salt_len,
-                     const uint8_t label[], size_t label_len) const
-   {
+void KDF1_18033::kdf(uint8_t key[],
+                     size_t key_len,
+                     const uint8_t secret[],
+                     size_t secret_len,
+                     const uint8_t salt[],
+                     size_t salt_len,
+                     const uint8_t label[],
+                     size_t label_len) const {
    if(key_len == 0)
       return;
 
@@ -29,8 +32,7 @@ void KDF1_18033::kdf(uint8_t key[], size_t key_len,
    secure_vector<uint8_t> h;
 
    size_t offset = 0;
-   while(offset != key_len)
-      {
+   while(offset != key_len) {
       m_hash->update(secret, secret_len);
       m_hash->update_be(counter++);
       m_hash->update(label, label_len);
@@ -40,17 +42,11 @@ void KDF1_18033::kdf(uint8_t key[], size_t key_len,
       const size_t added = std::min(h.size(), key_len - offset);
       copy_mem(&key[offset], h.data(), added);
       offset += added;
-      }
    }
-
-std::string KDF1_18033::name() const
-   {
-   return fmt("KDF1-18033({})", m_hash->name());
-   }
-
-std::unique_ptr<KDF> KDF1_18033::new_object() const
-   {
-   return std::make_unique<KDF1_18033>(m_hash->new_object());
-   }
-
 }
+
+std::string KDF1_18033::name() const { return fmt("KDF1-18033({})", m_hash->name()); }
+
+std::unique_ptr<KDF> KDF1_18033::new_object() const { return std::make_unique<KDF1_18033>(m_hash->new_object()); }
+
+}  // namespace Botan

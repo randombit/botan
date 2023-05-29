@@ -10,8 +10,8 @@
 
 #include <botan/concepts.h>
 #include <botan/secmem.h>
-#include <string_view>
 #include <span>
+#include <string_view>
 
 namespace Botan {
 
@@ -19,8 +19,7 @@ namespace Botan {
 * This class represents any kind of computation which uses an internal
 * state, such as hash functions or MACs
 */
-class BOTAN_PUBLIC_API(2,0) Buffered_Computation
-   {
+class BOTAN_PUBLIC_API(2, 0) Buffered_Computation {
    public:
       /**
       * @return length of the output of this function in bytes
@@ -38,10 +37,7 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
       * Add new input to process.
       * @param in the input to process as a contiguous data range
       */
-      void update(std::span<const uint8_t> in)
-         {
-         add_data(in.data(), in.size());
-         }
+      void update(std::span<const uint8_t> in) { add_data(in.data(), in.size()); }
 
       void update_be(uint16_t val);
       void update_be(uint32_t val);
@@ -56,10 +52,7 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
       * @param str the input to process as a std::string_view. Will be interpreted
       * as a byte array based on the strings encoding.
       */
-      void update(std::string_view str)
-         {
-         add_data(cast_char_ptr_to_uint8(str.data()), str.size());
-         }
+      void update(std::string_view str) { add_data(cast_char_ptr_to_uint8(str.data()), str.size()); }
 
       /**
       * Process a single byte.
@@ -80,31 +73,25 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
       * final result as a container of your choice.
       * @return a contiguous container holding the result
       */
-      template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
-      T final()
-         {
+      template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      T final() {
          T output(output_length());
          final_result(output.data());
          return output;
-         }
+      }
 
-      std::vector<uint8_t> final_stdvec()
-         {
-         return final<std::vector<uint8_t>>();
-         }
+      std::vector<uint8_t> final_stdvec() { return final<std::vector<uint8_t>>(); }
 
-      void final(std::span<uint8_t> out)
-         {
+      void final(std::span<uint8_t> out) {
          BOTAN_ASSERT_NOMSG(out.size() >= output_length());
          final_result(out.data());
-         }
+      }
 
-      template<concepts::resizable_byte_buffer T>
-      void final(T& out)
-         {
+      template <concepts::resizable_byte_buffer T>
+      void final(T& out) {
          out.resize(output_length());
          final_result(out.data());
-         }
+      }
 
       /**
       * Update and finalize computation. Does the same as calling update()
@@ -113,12 +100,11 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
       * @param length the length of the byte array
       * @result the result of the call to final()
       */
-      template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
-      T process(const uint8_t in[], size_t length)
-         {
+      template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      T process(const uint8_t in[], size_t length) {
          update(in, length);
          return final<T>();
-         }
+      }
 
       /**
       * Update and finalize computation. Does the same as calling update()
@@ -126,12 +112,11 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
       * @param in the input to process as a string
       * @result the result of the call to final()
       */
-      template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
-      T process(std::string_view in)
-         {
+      template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      T process(std::string_view in) {
          update(in);
          return final<T>();
-         }
+      }
 
       /**
       * Update and finalize computation. Does the same as calling update()
@@ -139,14 +124,14 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
       * @param in the input to process as a contiguous container
       * @result the result of the call to final()
       */
-      template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
-      T process(std::span<const uint8_t> in)
-         {
+      template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      T process(std::span<const uint8_t> in) {
          update(in);
          return final<T>();
-         }
+      }
 
       virtual ~Buffered_Computation() = default;
+
    private:
       /**
       * Add more data to the computation
@@ -160,8 +145,8 @@ class BOTAN_PUBLIC_API(2,0) Buffered_Computation
       * @param out is an output buffer of output_length()
       */
       virtual void final_result(uint8_t out[]) = 0;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

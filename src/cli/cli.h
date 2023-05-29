@@ -7,15 +7,15 @@
 #ifndef BOTAN_CLI_H_
 #define BOTAN_CLI_H_
 
+#include "cli_exceptions.h"
 #include <botan/types.h>
 #include <functional>
-#include <ostream>
-#include <optional>
 #include <map>
 #include <memory>
+#include <optional>
+#include <ostream>
 #include <string>
 #include <vector>
-#include "cli_exceptions.h"
 
 namespace Botan {
 
@@ -28,13 +28,11 @@ namespace Botan_CLI {
 class Argument_Parser;
 
 /* Declared in cli_rng.cpp */
-std::shared_ptr<Botan::RandomNumberGenerator>
-cli_make_rng(const std::string& type = "", const std::string& hex_drbg_seed = "");
+std::shared_ptr<Botan::RandomNumberGenerator> cli_make_rng(const std::string& type = "",
+                                                           const std::string& hex_drbg_seed = "");
 
-class Command
-   {
+class Command {
    public:
-
       /**
       * Get a registered command
       */
@@ -93,10 +91,7 @@ class Command
 
       virtual std::string help_text() const;
 
-      const std::string& cmd_spec() const
-         {
-         return m_spec;
-         }
+      const std::string& cmd_spec() const { return m_spec; }
 
       std::string cmd_name() const;
 
@@ -115,10 +110,7 @@ class Command
 
       std::ostream& error_output();
 
-      bool verbose() const
-         {
-         return flag_set("verbose");
-         }
+      bool verbose() const { return flag_set("verbose"); }
 
       std::string get_passphrase(const std::string& prompt);
 
@@ -126,12 +118,10 @@ class Command
 
       static std::string format_blob(const std::string& format, const uint8_t bits[], size_t len);
 
-      template<typename Alloc>
-      static std::string format_blob(const std::string& format,
-                                     const std::vector<uint8_t, Alloc>& vec)
-         {
+      template <typename Alloc>
+      static std::string format_blob(const std::string& format, const std::vector<uint8_t, Alloc>& vec) {
          return format_blob(format, vec.data(), vec.size());
-         }
+      }
 
       std::string get_arg(const std::string& opt_name) const;
 
@@ -139,8 +129,7 @@ class Command
       * Like get_arg but if the value is '-' then reads a passphrase from
       * the terminal with echo suppressed.
       */
-      std::string get_passphrase_arg(const std::string& prompt,
-                                     const std::string& opt_name);
+      std::string get_passphrase_arg(const std::string& prompt, const std::string& opt_name);
 
       /*
       * Like get_arg() but if the argument was not specified or is empty, returns otherwise
@@ -163,34 +152,31 @@ class Command
       /*
       * Read an entire file into memory and return the contents
       */
-      std::vector<uint8_t> slurp_file(const std::string& input_file,
-                                      size_t buf_size = 0) const;
+      std::vector<uint8_t> slurp_file(const std::string& input_file, size_t buf_size = 0) const;
 
-      std::string slurp_file_as_str(const std::string& input_file,
-                                    size_t buf_size = 0) const;
+      std::string slurp_file_as_str(const std::string& input_file, size_t buf_size = 0) const;
 
       /*
       * Read a file calling consumer_fn() with the inputs
       */
       static void read_file(const std::string& input_file,
-                            const std::function<void (uint8_t[], size_t)>& consumer_fn,
+                            const std::function<void(uint8_t[], size_t)>& consumer_fn,
                             size_t buf_size = 0);
 
       static void do_read_file(std::istream& in,
-                               const std::function<void (uint8_t[], size_t)>& consumer_fn,
+                               const std::function<void(uint8_t[], size_t)>& consumer_fn,
                                size_t buf_size = 0);
 
-      template<typename Alloc>
-      void write_output(const std::vector<uint8_t, Alloc>& vec)
-         {
+      template <typename Alloc>
+      void write_output(const std::vector<uint8_t, Alloc>& vec) {
          output().write(reinterpret_cast<const char*>(vec.data()), vec.size());
-         }
+      }
 
       Botan::RandomNumberGenerator& rng();
       std::shared_ptr<Botan::RandomNumberGenerator> rng_as_shared();
 
    private:
-      typedef std::function<std::unique_ptr<Command> ()> cmd_maker_fn;
+      typedef std::function<std::unique_ptr<Command>()> cmd_maker_fn;
       static std::map<std::string, cmd_maker_fn>& global_registry();
 
       void parse_spec();
@@ -210,17 +196,16 @@ class Command
    public:
       // the registry interface:
 
-      class Registration final
-         {
+      class Registration final {
          public:
             Registration(const std::string& name, const cmd_maker_fn& maker_fn);
-         };
-   };
+      };
+};
 
-#define BOTAN_REGISTER_COMMAND(name, CLI_Class)                          \
-   const Botan_CLI::Command::Registration reg_cmd_ ## CLI_Class(name,         \
-     []() -> std::unique_ptr<Botan_CLI::Command> { return std::make_unique<CLI_Class>(); })
+#define BOTAN_REGISTER_COMMAND(name, CLI_Class)                \
+   const Botan_CLI::Command::Registration reg_cmd_##CLI_Class( \
+      name, []() -> std::unique_ptr<Botan_CLI::Command> { return std::make_unique<CLI_Class>(); })
 
-}
+}  // namespace Botan_CLI
 
 #endif

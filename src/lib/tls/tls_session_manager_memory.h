@@ -9,12 +9,12 @@
 #ifndef BOTAN_TLS_SESSION_MANAGER_IN_MEMORY_H_
 #define BOTAN_TLS_SESSION_MANAGER_IN_MEMORY_H_
 
+#include <botan/mutex.h>
 #include <botan/tls_session.h>
 #include <botan/tls_session_manager.h>
-#include <botan/mutex.h>
 
-#include <map>
 #include <deque>
+#include <map>
 
 namespace Botan {
 
@@ -36,8 +36,7 @@ namespace TLS {
  * For applications that implement a TLS client and that do not want to persist
  * sessions to non-volatile memory, this is typically a good default option.
  */
-class BOTAN_PUBLIC_API(3, 0) Session_Manager_In_Memory : public Session_Manager
-   {
+class BOTAN_PUBLIC_API(3, 0) Session_Manager_In_Memory : public Session_Manager {
    public:
       /**
        * @param rng a RNG used for generating session key and for
@@ -45,8 +44,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_In_Memory : public Session_Manager
        * @param max_sessions a hint on the maximum number of sessions
        *        to keep in memory at any one time. (If zero, don't cap)
        */
-      Session_Manager_In_Memory(const std::shared_ptr<RandomNumberGenerator>& rng,
-                                size_t max_sessions = 1000);
+      Session_Manager_In_Memory(const std::shared_ptr<RandomNumberGenerator>& rng, size_t max_sessions = 1000);
 
       void store(const Session& session, const Session_Handle& handle) override;
       size_t remove(const Session_Handle& handle) override;
@@ -58,7 +56,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_In_Memory : public Session_Manager
 
    protected:
       std::optional<Session> retrieve_one(const Session_Handle& handle) override;
-      std::vector<Session_with_Handle> find_some(const Server_Information& info, const size_t max_sessions_hint) override;
+      std::vector<Session_with_Handle> find_some(const Server_Information& info,
+                                                 const size_t max_sessions_hint) override;
 
    private:
       size_t remove_internal(const Session_Handle& handle);
@@ -68,10 +67,10 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_In_Memory : public Session_Manager
 
       std::map<Session_ID, Session_with_Handle> m_sessions;
       std::optional<std::deque<Session_ID>> m_fifo;
-   };
+};
 
-}
+}  // namespace TLS
 
-}
+}  // namespace Botan
 
 #endif

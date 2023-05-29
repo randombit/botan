@@ -9,9 +9,9 @@
 #ifndef BOTAN_OPENPGP_S2K_H_
 #define BOTAN_OPENPGP_S2K_H_
 
+#include <botan/hash.h>
 #include <botan/pbkdf.h>
 #include <botan/pwdhash.h>
-#include <botan/hash.h>
 #include <botan/rfc4880.h>
 
 // Use pwdhash.h
@@ -36,46 +36,35 @@ namespace Botan {
 * Note that unlike PBKDF2, OpenPGP S2K's "iterations" are defined as
 * the number of bytes hashed.
 */
-class BOTAN_PUBLIC_API(2,2) OpenPGP_S2K final : public PBKDF
-   {
+class BOTAN_PUBLIC_API(2, 2) OpenPGP_S2K final : public PBKDF {
    public:
       /**
       * @param hash the hash function to use
       */
       explicit OpenPGP_S2K(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {}
 
-      std::string name() const override
-         {
-         return "OpenPGP-S2K(" + m_hash->name() + ")";
-         }
+      std::string name() const override { return "OpenPGP-S2K(" + m_hash->name() + ")"; }
 
-      std::unique_ptr<PBKDF> new_object() const override
-         {
-         return std::make_unique<OpenPGP_S2K>(m_hash->new_object());
-         }
+      std::unique_ptr<PBKDF> new_object() const override { return std::make_unique<OpenPGP_S2K>(m_hash->new_object()); }
 
-      size_t pbkdf(uint8_t output_buf[], size_t output_len,
+      size_t pbkdf(uint8_t output_buf[],
+                   size_t output_len,
                    std::string_view passphrase,
-                   const uint8_t salt[], size_t salt_len,
+                   const uint8_t salt[],
+                   size_t salt_len,
                    size_t iterations,
                    std::chrono::milliseconds msec) const override;
 
       /**
       * RFC 4880 encodes the iteration count to a single-byte value
       */
-      static uint8_t encode_count(size_t iterations)
-         {
-         return RFC4880_encode_count(iterations);
-         }
+      static uint8_t encode_count(size_t iterations) { return RFC4880_encode_count(iterations); }
 
-      static size_t decode_count(uint8_t encoded_iter)
-         {
-         return RFC4880_decode_count(encoded_iter);
-         }
+      static size_t decode_count(uint8_t encoded_iter) { return RFC4880_decode_count(encoded_iter); }
 
    private:
       std::unique_ptr<HashFunction> m_hash;
-   };
+};
 
 /**
 * OpenPGP's S2K
@@ -88,8 +77,7 @@ class BOTAN_PUBLIC_API(2,2) OpenPGP_S2K final : public PBKDF
 * Note that unlike PBKDF2, OpenPGP S2K's "iterations" are defined as
 * the number of bytes hashed.
 */
-class BOTAN_PUBLIC_API(2,8) RFC4880_S2K final : public PasswordHash
-   {
+class BOTAN_PUBLIC_API(2, 8) RFC4880_S2K final : public PasswordHash {
    public:
       /**
       * @param hash the hash function to use
@@ -101,17 +89,19 @@ class BOTAN_PUBLIC_API(2,8) RFC4880_S2K final : public PasswordHash
 
       size_t iterations() const override { return m_iterations; }
 
-      void derive_key(uint8_t out[], size_t out_len,
-                      const char* password, size_t password_len,
-                      const uint8_t salt[], size_t salt_len) const override;
+      void derive_key(uint8_t out[],
+                      size_t out_len,
+                      const char* password,
+                      size_t password_len,
+                      const uint8_t salt[],
+                      size_t salt_len) const override;
 
    private:
       std::unique_ptr<HashFunction> m_hash;
       size_t m_iterations;
-   };
+};
 
-class BOTAN_PUBLIC_API(2,8) RFC4880_S2K_Family final : public PasswordHashFamily
-   {
+class BOTAN_PUBLIC_API(2, 8) RFC4880_S2K_Family final : public PasswordHashFamily {
    public:
       RFC4880_S2K_Family(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {}
 
@@ -131,12 +121,12 @@ class BOTAN_PUBLIC_API(2,8) RFC4880_S2K_Family final : public PasswordHashFamily
 
       std::unique_ptr<PasswordHash> from_iterations(size_t iter) const override;
 
-      std::unique_ptr<PasswordHash> from_params(
-         size_t iter, size_t, size_t) const override;
+      std::unique_ptr<PasswordHash> from_params(size_t iter, size_t, size_t) const override;
+
    private:
       std::unique_ptr<HashFunction> m_hash;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

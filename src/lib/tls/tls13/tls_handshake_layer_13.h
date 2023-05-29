@@ -25,10 +25,10 @@ class Transcript_Hash_State;
  * This component transforms payload bytes received in TLS records
  * from the peer into parsed handshake messages and vice versa.
  */
-class BOTAN_TEST_API Handshake_Layer
-   {
+class BOTAN_TEST_API Handshake_Layer {
    public:
-      Handshake_Layer(Connection_Side whoami) : m_peer(whoami == Connection_Side::Server ? Connection_Side::Client : Connection_Side::Server) {}
+      Handshake_Layer(Connection_Side whoami) :
+            m_peer(whoami == Connection_Side::Server ? Connection_Side::Client : Connection_Side::Server) {}
 
       /**
        * Reads data that was received in handshake records and stores it internally for further
@@ -66,7 +66,8 @@ class BOTAN_TEST_API Handshake_Layer
        *
        * @return the marshalled handshake message
        */
-      static std::vector<uint8_t> prepare_message(const Handshake_Message_13_Ref message, Transcript_Hash_State& transcript_hash);
+      static std::vector<uint8_t> prepare_message(const Handshake_Message_13_Ref message,
+                                                  Transcript_Hash_State& transcript_hash);
 
       /**
        * Marshalls one post-handshake message for sending in an (encrypted) record.
@@ -86,8 +87,8 @@ class BOTAN_TEST_API Handshake_Layer
    private:
       std::vector<uint8_t> m_read_buffer;
       Connection_Side m_peer;
-   };
+};
 
-}
+}  // namespace Botan::TLS
 
 #endif

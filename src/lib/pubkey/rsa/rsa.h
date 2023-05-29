@@ -8,10 +8,10 @@
 #ifndef BOTAN_RSA_H_
 #define BOTAN_RSA_H_
 
-#include <botan/pk_keys.h>
 #include <botan/bigint.h>
-#include <string>
+#include <botan/pk_keys.h>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace Botan {
@@ -22,16 +22,14 @@ class RSA_Private_Data;
 /**
 * RSA Public Key
 */
-class BOTAN_PUBLIC_API(2,0) RSA_PublicKey : public virtual Public_Key
-   {
+class BOTAN_PUBLIC_API(2, 0) RSA_PublicKey : public virtual Public_Key {
    public:
       /**
       * Load a public key.
       * @param alg_id the X.509 algorithm identifier
       * @param key_bits DER encoded public key bits
       */
-      RSA_PublicKey(const AlgorithmIdentifier& alg_id,
-                    std::span<const uint8_t> key_bits);
+      RSA_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
 
       /**
       * Create a public key.
@@ -68,22 +66,18 @@ class BOTAN_PUBLIC_API(2,0) RSA_PublicKey : public virtual Public_Key
       // internal functions:
       std::shared_ptr<const RSA_Public_Data> public_data() const;
 
-      std::unique_ptr<PK_Ops::Encryption>
-         create_encryption_op(RandomNumberGenerator& rng,
-                              std::string_view params,
-                              std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Encryption> create_encryption_op(RandomNumberGenerator& rng,
+                                                               std::string_view params,
+                                                               std::string_view provider) const override;
 
-      std::unique_ptr<PK_Ops::KEM_Encryption>
-         create_kem_encryption_op(std::string_view params,
-                                  std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(std::string_view params,
+                                                                       std::string_view provider) const override;
 
-      std::unique_ptr<PK_Ops::Verification>
-         create_verification_op(std::string_view params,
-                                std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
+                                                                   std::string_view provider) const override;
 
-      std::unique_ptr<PK_Ops::Verification>
-         create_x509_verification_op(const AlgorithmIdentifier& alg_id,
-                                     std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Verification> create_x509_verification_op(const AlgorithmIdentifier& alg_id,
+                                                                        std::string_view provider) const override;
 
    protected:
       RSA_PublicKey() = default;
@@ -91,7 +85,7 @@ class BOTAN_PUBLIC_API(2,0) RSA_PublicKey : public virtual Public_Key
       void init(BigInt&& n, BigInt&& e);
 
       std::shared_ptr<const RSA_Public_Data> m_public;
-   };
+};
 
 /**
 * RSA Private Key
@@ -100,16 +94,15 @@ class BOTAN_PUBLIC_API(2,0) RSA_PublicKey : public virtual Public_Key
 BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 
-class BOTAN_PUBLIC_API(2,0) RSA_PrivateKey final : public Private_Key, public RSA_PublicKey
-   {
+class BOTAN_PUBLIC_API(2, 0) RSA_PrivateKey final : public Private_Key,
+                                                    public RSA_PublicKey {
    public:
       /**
       * Load a private key.
       * @param alg_id the X.509 algorithm identifier
       * @param key_bits PKCS#1 RSAPrivateKey bits
       */
-      RSA_PrivateKey(const AlgorithmIdentifier& alg_id,
-                     std::span<const uint8_t> key_bits);
+      RSA_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
 
       /**
       * Construct a private key from the specified parameters.
@@ -122,7 +115,9 @@ class BOTAN_PUBLIC_API(2,0) RSA_PrivateKey final : public Private_Key, public RS
       * @param n if specified, this must be n = p * q. Leave it as 0
       * if you wish to the constructor to calculate it.
       */
-      RSA_PrivateKey(const BigInt& p, const BigInt& q, const BigInt& e,
+      RSA_PrivateKey(const BigInt& p,
+                     const BigInt& q,
+                     const BigInt& e,
                      const BigInt& d = BigInt::zero(),
                      const BigInt& n = BigInt::zero());
 
@@ -132,8 +127,7 @@ class BOTAN_PUBLIC_API(2,0) RSA_PrivateKey final : public Private_Key, public RS
       * @param bits the desired bit length of the private key
       * @param exp the public exponent to be used
       */
-      RSA_PrivateKey(RandomNumberGenerator& rng,
-                     size_t bits, size_t exp = 65537);
+      RSA_PrivateKey(RandomNumberGenerator& rng, size_t bits, size_t exp = 65537);
 
       std::unique_ptr<Public_Key> public_key() const override;
 
@@ -168,30 +162,26 @@ class BOTAN_PUBLIC_API(2,0) RSA_PrivateKey final : public Private_Key, public RS
       // internal functions:
       std::shared_ptr<const RSA_Private_Data> private_data() const;
 
-      std::unique_ptr<PK_Ops::Decryption>
-         create_decryption_op(RandomNumberGenerator& rng,
-                              std::string_view params,
-                              std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Decryption> create_decryption_op(RandomNumberGenerator& rng,
+                                                               std::string_view params,
+                                                               std::string_view provider) const override;
 
-      std::unique_ptr<PK_Ops::KEM_Decryption>
-         create_kem_decryption_op(RandomNumberGenerator& rng,
-                                  std::string_view params,
-                                  std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(RandomNumberGenerator& rng,
+                                                                       std::string_view params,
+                                                                       std::string_view provider) const override;
 
-      std::unique_ptr<PK_Ops::Signature>
-         create_signature_op(RandomNumberGenerator& rng,
-                             std::string_view params,
-                             std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
+                                                             std::string_view params,
+                                                             std::string_view provider) const override;
 
    private:
-
       void init(BigInt&& d, BigInt&& p, BigInt&& q, BigInt&& d1, BigInt&& d2, BigInt&& c);
 
       std::shared_ptr<const RSA_Private_Data> m_private;
-   };
+};
 
 BOTAN_DIAGNOSTIC_POP
 
-}
+}  // namespace Botan
 
 #endif

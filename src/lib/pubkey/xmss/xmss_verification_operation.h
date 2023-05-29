@@ -8,9 +8,9 @@
 #ifndef BOTAN_XMSS_VERIFICATION_OPERATION_H_
 #define BOTAN_XMSS_VERIFICATION_OPERATION_H_
 
+#include <botan/xmss.h>
 #include <botan/internal/pk_ops.h>
 #include <botan/internal/xmss_signature.h>
-#include <botan/xmss.h>
 
 namespace Botan {
 
@@ -18,17 +18,16 @@ namespace Botan {
  * Provides signature verification capabilities for Extended Hash-Based
  * Signatures (XMSS).
  **/
- class XMSS_Verification_Operation final : public virtual PK_Ops::Verification
-   {
+class XMSS_Verification_Operation final : public virtual PK_Ops::Verification {
    public:
-      XMSS_Verification_Operation(
-         const XMSS_PublicKey& public_key);
+      XMSS_Verification_Operation(const XMSS_PublicKey& public_key);
 
       bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
 
       void update(const uint8_t msg[], size_t msg_len) override;
 
       std::string hash_function() const override { return m_hash.hash_function(); }
+
    private:
       /**
        * Algorithm 13: "XMSS_rootFromSig"
@@ -42,11 +41,10 @@ namespace Botan {
        * @return An n-byte string holding the value of the root of a tree
        *         defined by the input parameters.
        **/
-      secure_vector<uint8_t> root_from_signature(
-         const XMSS_Signature& sig,
-         const secure_vector<uint8_t>& msg,
-         XMSS_Address& ards,
-         const secure_vector<uint8_t>& seed);
+      secure_vector<uint8_t> root_from_signature(const XMSS_Signature& sig,
+                                                 const secure_vector<uint8_t>& msg,
+                                                 XMSS_Address& ards,
+                                                 const secure_vector<uint8_t>& seed);
 
       /**
        * Algorithm 14: "XMSS_verify"
@@ -58,15 +56,13 @@ namespace Botan {
        *
        * @return true if signature sig is valid for msg, false otherwise.
        **/
-      bool verify(const XMSS_Signature& sig,
-                  const secure_vector<uint8_t>& msg,
-                  const XMSS_PublicKey& pub_key);
+      bool verify(const XMSS_Signature& sig, const secure_vector<uint8_t>& msg, const XMSS_PublicKey& pub_key);
 
       const XMSS_PublicKey& m_pub_key;
       XMSS_Hash m_hash;
       secure_vector<uint8_t> m_msg_buf;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

@@ -15,26 +15,28 @@ namespace Botan {
 /**
 * CAST-128
 */
-class CAST_128 final : public Block_Cipher_Fixed_Params<8, 11, 16>
-   {
+class CAST_128 final : public Block_Cipher_Fixed_Params<8, 11, 16> {
    public:
       void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
 
       void clear() override;
+
       std::string name() const override { return "CAST-128"; }
+
       std::unique_ptr<BlockCipher> new_object() const override { return std::make_unique<CAST_128>(); }
+
       bool has_keying_material() const override;
+
    private:
       void key_schedule(const uint8_t[], size_t) override;
 
-      static void cast_ks(secure_vector<uint32_t>& ks,
-                          secure_vector<uint32_t>& user_key);
+      static void cast_ks(secure_vector<uint32_t>& ks, secure_vector<uint32_t>& user_key);
 
       secure_vector<uint32_t> m_MK;
       secure_vector<uint8_t> m_RK;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

@@ -13,25 +13,16 @@ namespace Botan {
 
 // called from sha2_32.cpp
 BOTAN_FUNC_ISA("sha,sse4.1,ssse3")
-void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks)
-   {
+void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks) {
    alignas(64) static const uint32_t K[] = {
-      0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
-      0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
-      0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3,
-      0x72BE5D74, 0x80DEB1FE, 0x9BDC06A7, 0xC19BF174,
-      0xE49B69C1, 0xEFBE4786, 0x0FC19DC6, 0x240CA1CC,
-      0x2DE92C6F, 0x4A7484AA, 0x5CB0A9DC, 0x76F988DA,
-      0x983E5152, 0xA831C66D, 0xB00327C8, 0xBF597FC7,
-      0xC6E00BF3, 0xD5A79147, 0x06CA6351, 0x14292967,
-      0x27B70A85, 0x2E1B2138, 0x4D2C6DFC, 0x53380D13,
-      0x650A7354, 0x766A0ABB, 0x81C2C92E, 0x92722C85,
-      0xA2BFE8A1, 0xA81A664B, 0xC24B8B70, 0xC76C51A3,
-      0xD192E819, 0xD6990624, 0xF40E3585, 0x106AA070,
-      0x19A4C116, 0x1E376C08, 0x2748774C, 0x34B0BCB5,
-      0x391C0CB3, 0x4ED8AA4A, 0x5B9CCA4F, 0x682E6FF3,
-      0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208,
-      0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2,
+      0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5, 0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
+      0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3, 0x72BE5D74, 0x80DEB1FE, 0x9BDC06A7, 0xC19BF174,
+      0xE49B69C1, 0xEFBE4786, 0x0FC19DC6, 0x240CA1CC, 0x2DE92C6F, 0x4A7484AA, 0x5CB0A9DC, 0x76F988DA,
+      0x983E5152, 0xA831C66D, 0xB00327C8, 0xBF597FC7, 0xC6E00BF3, 0xD5A79147, 0x06CA6351, 0x14292967,
+      0x27B70A85, 0x2E1B2138, 0x4D2C6DFC, 0x53380D13, 0x650A7354, 0x766A0ABB, 0x81C2C92E, 0x92722C85,
+      0xA2BFE8A1, 0xA81A664B, 0xC24B8B70, 0xC76C51A3, 0xD192E819, 0xD6990624, 0xF40E3585, 0x106AA070,
+      0x19A4C116, 0x1E376C08, 0x2748774C, 0x34B0BCB5, 0x391C0CB3, 0x4ED8AA4A, 0x5B9CCA4F, 0x682E6FF3,
+      0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208, 0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2,
    };
 
    const __m128i* K_mm = reinterpret_cast<const __m128i*>(K);
@@ -45,15 +36,14 @@ void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t
    __m128i STATE0 = _mm_loadu_si128(reinterpret_cast<__m128i*>(&state[0]));
    __m128i STATE1 = _mm_loadu_si128(reinterpret_cast<__m128i*>(&state[4]));
 
-   STATE0 = _mm_shuffle_epi32(STATE0, 0xB1); // CDAB
-   STATE1 = _mm_shuffle_epi32(STATE1, 0x1B); // EFGH
+   STATE0 = _mm_shuffle_epi32(STATE0, 0xB1);  // CDAB
+   STATE1 = _mm_shuffle_epi32(STATE1, 0x1B);  // EFGH
 
-   __m128i TMP = _mm_alignr_epi8(STATE0, STATE1, 8); // ABEF
-   STATE1 = _mm_blend_epi16(STATE1, STATE0, 0xF0); // CDGH
+   __m128i TMP = _mm_alignr_epi8(STATE0, STATE1, 8);  // ABEF
+   STATE1 = _mm_blend_epi16(STATE1, STATE0, 0xF0);    // CDGH
    STATE0 = TMP;
 
-   while(blocks > 0)
-      {
+   while(blocks > 0) {
       // Save current state
       const __m128i ABEF_SAVE = STATE0;
       const __m128i CDGH_SAVE = STATE1;
@@ -201,14 +191,14 @@ void SHA_256::compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t
 
       input_mm += 4;
       blocks--;
-      }
-
-   STATE0 = _mm_shuffle_epi32(STATE0, 0x1B); // FEBA
-   STATE1 = _mm_shuffle_epi32(STATE1, 0xB1); // DCHG
-
-   // Save state
-   _mm_storeu_si128(reinterpret_cast<__m128i*>(&state[0]), _mm_blend_epi16(STATE0, STATE1, 0xF0)); // DCBA
-   _mm_storeu_si128(reinterpret_cast<__m128i*>(&state[4]), _mm_alignr_epi8(STATE1, STATE0, 8)); // ABEF
    }
 
+   STATE0 = _mm_shuffle_epi32(STATE0, 0x1B);  // FEBA
+   STATE1 = _mm_shuffle_epi32(STATE1, 0xB1);  // DCHG
+
+   // Save state
+   _mm_storeu_si128(reinterpret_cast<__m128i*>(&state[0]), _mm_blend_epi16(STATE0, STATE1, 0xF0));  // DCBA
+   _mm_storeu_si128(reinterpret_cast<__m128i*>(&state[4]), _mm_alignr_epi8(STATE1, STATE0, 8));     // ABEF
 }
+
+}  // namespace Botan

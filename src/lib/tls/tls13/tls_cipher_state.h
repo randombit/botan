@@ -22,7 +22,7 @@ class HashFunction;
 class HKDF_Extract;
 class HKDF_Expand;
 
-}
+}  // namespace Botan
 
 namespace Botan::TLS {
 
@@ -58,8 +58,7 @@ class Ciphersuite;
  *
  * PSKs calculation is described in RFC 8446 4.6.1.
  */
-class BOTAN_TEST_API Cipher_State
-   {
+class BOTAN_TEST_API Cipher_State {
    public:
       enum class PSK_Type {
          Resumption,
@@ -72,20 +71,18 @@ class BOTAN_TEST_API Cipher_State
       /**
        * Construct a Cipher_State from a Pre-Shared-Key.
        */
-      static std::unique_ptr<Cipher_State> init_with_psk(
-         const Connection_Side side,
-         const PSK_Type type,
-         secure_vector<uint8_t>&& psk,
-         const Ciphersuite& cipher);
+      static std::unique_ptr<Cipher_State> init_with_psk(const Connection_Side side,
+                                                         const PSK_Type type,
+                                                         secure_vector<uint8_t>&& psk,
+                                                         const Ciphersuite& cipher);
 
       /**
        * Construct a Cipher_State after receiving a server hello message.
        */
-      static std::unique_ptr<Cipher_State> init_with_server_hello(
-         const Connection_Side side,
-         secure_vector<uint8_t>&& shared_secret,
-         const Ciphersuite& cipher,
-         const Transcript_Hash& transcript_hash);
+      static std::unique_ptr<Cipher_State> init_with_server_hello(const Connection_Side side,
+                                                                  secure_vector<uint8_t>&& shared_secret,
+                                                                  const Ciphersuite& cipher,
+                                                                  const Transcript_Hash& transcript_hash);
 
       /**
        * Transition internal secrets/keys for transporting early application data.
@@ -160,8 +157,7 @@ class BOTAN_TEST_API Cipher_State
       /**
        * Validate a MAC received in a TLS "Finished" handshake message (RFC 8446 4.4.4)
        */
-      bool verify_peer_finished_mac(const Transcript_Hash& transcript_hash,
-                                    const std::vector<uint8_t>& peer_mac) const;
+      bool verify_peer_finished_mac(const Transcript_Hash& transcript_hash, const std::vector<uint8_t>& peer_mac) const;
 
       /**
        * Calculate the PSK for the given nonce (RFC 8446 4.6.1)
@@ -191,20 +187,16 @@ class BOTAN_TEST_API Cipher_State
        * @param length    the length of the desired key in bytes
        * @return          key of length bytes
        */
-      secure_vector<uint8_t> export_key(std::string_view label,
-                                        std::string_view context,
-                                        size_t length) const;
+      secure_vector<uint8_t> export_key(std::string_view label, std::string_view context, size_t length) const;
 
       /**
        * Indicates whether the appropriate secrets to export keys are available
        */
-      bool can_export_keys() const
-         {
-         return (m_state == State::EarlyTraffic       ||
-                 m_state == State::ServerApplicationTraffic ||
+      bool can_export_keys() const {
+         return (m_state == State::EarlyTraffic || m_state == State::ServerApplicationTraffic ||
                  m_state == State::Completed) &&
                 !m_exporter_master_secret.empty();
-         }
+      }
 
       /**
        * Indicates whether unprotected Alert records are to be expected
@@ -286,42 +278,39 @@ class BOTAN_TEST_API Cipher_State
       /**
        * HKDF-Expand-Label from RFC 8446 7.1
        */
-      secure_vector<uint8_t> hkdf_expand_label(
-         const secure_vector<uint8_t>& secret,
-         std::string_view            label,
-         const std::vector<uint8_t>&   context,
-         const size_t                  length) const;
+      secure_vector<uint8_t> hkdf_expand_label(const secure_vector<uint8_t>& secret,
+                                               std::string_view label,
+                                               const std::vector<uint8_t>& context,
+                                               const size_t length) const;
 
       /**
        * Derive-Secret from RFC 8446 7.1
        */
-      secure_vector<uint8_t> derive_secret(
-         const secure_vector<uint8_t>& secret,
-         std::string_view            label,
-         const Transcript_Hash&        messages_hash) const;
+      secure_vector<uint8_t> derive_secret(const secure_vector<uint8_t>& secret,
+                                           std::string_view label,
+                                           const Transcript_Hash& messages_hash) const;
 
       std::vector<uint8_t> empty_hash() const;
 
    private:
-      enum class State
-         {
+      enum class State {
          Uninitialized,
          PskBinder,
          EarlyTraffic,
          HandshakeTraffic,
          ServerApplicationTraffic,
          Completed
-         };
+      };
 
    private:
-      State           m_state;
+      State m_state;
       Connection_Side m_connection_side;
 
       std::unique_ptr<AEAD_Mode> m_encrypt;
       std::unique_ptr<AEAD_Mode> m_decrypt;
 
       std::unique_ptr<HKDF_Extract> m_extract;
-      std::unique_ptr<HKDF_Expand>  m_expand;
+      std::unique_ptr<HKDF_Expand> m_expand;
       std::unique_ptr<HashFunction> m_hash;
 
       secure_vector<uint8_t> m_salt;
@@ -346,8 +335,8 @@ class BOTAN_TEST_API Cipher_State
 
       secure_vector<uint8_t> m_early_secret;
       secure_vector<uint8_t> m_binder_key;
-   };
+};
 
-}
+}  // namespace Botan::TLS
 
-#endif // BOTAN_TLS_CIPHER_STATE_H_
+#endif  // BOTAN_TLS_CIPHER_STATE_H_

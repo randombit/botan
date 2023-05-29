@@ -16,8 +16,7 @@ namespace Botan {
 /**
 * HOTP one time passwords (RFC 4226)
 */
-class BOTAN_PUBLIC_API(2,2) HOTP final
-   {
+class BOTAN_PUBLIC_API(2, 2) HOTP final {
    public:
       /**
       * @param key the secret key shared between client and server
@@ -25,7 +24,7 @@ class BOTAN_PUBLIC_API(2,2) HOTP final
       * @param digits the number of digits in the OTP (must be 6, 7, or 8)
       */
       HOTP(const SymmetricKey& key, std::string_view hash_algo = "SHA-1", size_t digits = 6) :
-         HOTP(key.begin(), key.size(), hash_algo, digits) {}
+            HOTP(key.begin(), key.size(), hash_algo, digits) {}
 
       /**
       * @param key the secret key shared between client and server
@@ -33,9 +32,7 @@ class BOTAN_PUBLIC_API(2,2) HOTP final
       * @param hash_algo the hash algorithm to use, should be SHA-1 or SHA-256
       * @param digits the number of digits in the OTP (must be 6, 7, or 8)
       */
-      HOTP(const uint8_t key[], size_t key_len,
-           std::string_view hash_algo = "SHA-1",
-           size_t digits = 6);
+      HOTP(const uint8_t key[], size_t key_len, std::string_view hash_algo = "SHA-1", size_t digits = 6);
 
       /**
       * Generate the HOTP for a particular counter value
@@ -53,17 +50,17 @@ class BOTAN_PUBLIC_API(2,2) HOTP final
       * returns (false,starting_counter). Otherwise returns (true,next_counter)
       * where next_counter is at most starting_counter + resync_range + 1
       */
-      std::pair<bool,uint64_t> verify_hotp(uint32_t otp, uint64_t starting_counter, size_t resync_range = 0);
+      std::pair<bool, uint64_t> verify_hotp(uint32_t otp, uint64_t starting_counter, size_t resync_range = 0);
+
    private:
       std::unique_ptr<MessageAuthenticationCode> m_mac;
       uint32_t m_digit_mod;
-   };
+};
 
 /**
 * TOTP (time based) one time passwords (RFC 6238)
 */
-class BOTAN_PUBLIC_API(2,2) TOTP final
-   {
+class BOTAN_PUBLIC_API(2, 2) TOTP final {
    public:
       /**
       * @param key the secret key shared between client and server
@@ -71,10 +68,8 @@ class BOTAN_PUBLIC_API(2,2) TOTP final
       * @param digits the number of digits in the OTP (must be 6, 7, or 8)
       * @param time_step granularity of OTP in seconds
       */
-      TOTP(const SymmetricKey& key,
-           std::string_view hash_algo = "SHA-1",
-           size_t digits = 6, size_t time_step = 30) :
-         TOTP(key.begin(), key.size(), hash_algo, digits, time_step) {}
+      TOTP(const SymmetricKey& key, std::string_view hash_algo = "SHA-1", size_t digits = 6, size_t time_step = 30) :
+            TOTP(key.begin(), key.size(), hash_algo, digits, time_step) {}
 
       /**
       * @param key the secret key shared between client and server
@@ -83,7 +78,8 @@ class BOTAN_PUBLIC_API(2,2) TOTP final
       * @param digits the number of digits in the OTP (must be 6, 7, or 8)
       * @param time_step granularity of OTP in seconds
       */
-      TOTP(const uint8_t key[], size_t key_len,
+      TOTP(const uint8_t key[],
+           size_t key_len,
            std::string_view hash_algo = "SHA-1",
            size_t digits = 6,
            size_t time_step = 30);
@@ -99,19 +95,16 @@ class BOTAN_PUBLIC_API(2,2) TOTP final
       */
       uint32_t generate_totp(uint64_t unix_time);
 
-      bool verify_totp(uint32_t otp,
-                       std::chrono::system_clock::time_point time,
-                       size_t clock_drift_accepted = 0);
+      bool verify_totp(uint32_t otp, std::chrono::system_clock::time_point time, size_t clock_drift_accepted = 0);
 
-      bool verify_totp(uint32_t otp, uint64_t unix_time,
-                       size_t clock_drift_accepted = 0);
+      bool verify_totp(uint32_t otp, uint64_t unix_time, size_t clock_drift_accepted = 0);
 
    private:
       HOTP m_hotp;
       size_t m_time_step;
       std::chrono::system_clock::time_point m_unix_epoch;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

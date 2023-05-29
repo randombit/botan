@@ -17,10 +17,8 @@ namespace Botan {
 /**
 * SHA-3
 */
-class SHA_3 : public HashFunction
-   {
+class SHA_3 : public HashFunction {
    public:
-
       /**
       * @param output_bits the size of the hash output; must be one of
       *                    224, 256, 384, or 512
@@ -28,6 +26,7 @@ class SHA_3 : public HashFunction
       explicit SHA_3(size_t output_bits);
 
       size_t hash_block_size() const override { return m_bitrate / 8; }
+
       size_t output_length() const override { return m_output_bits / 8; }
 
       std::unique_ptr<HashFunction> new_object() const override;
@@ -46,9 +45,8 @@ class SHA_3 : public HashFunction
       * @param input the input data
       * @param length size of input in bytes
       */
-      static size_t absorb(size_t bitrate,
-                           secure_vector<uint64_t>& S, size_t S_pos,
-                           const uint8_t input[], size_t length);
+      static size_t absorb(
+         size_t bitrate, secure_vector<uint64_t>& S, size_t S_pos, const uint8_t input[], size_t length);
 
       /**
       * Add final padding and permute. The padding is assumed to be
@@ -60,9 +58,7 @@ class SHA_3 : public HashFunction
       * @param init_pad the leading pad bits
       * @param fini_pad the final pad bits
       */
-      static void finish(size_t bitrate,
-                         secure_vector<uint64_t>& S, size_t S_pos,
-                         uint8_t init_pad, uint8_t fini_pad);
+      static void finish(size_t bitrate, secure_vector<uint64_t>& S, size_t S_pos, uint8_t init_pad, uint8_t fini_pad);
 
       /**
       * Expand from provided state
@@ -71,9 +67,7 @@ class SHA_3 : public HashFunction
       * @param output the output buffer
       * @param output_length the size of output in bytes
       */
-      static void expand(size_t bitrate,
-                         secure_vector<uint64_t>& S,
-                         uint8_t output[], size_t output_length);
+      static void expand(size_t bitrate, secure_vector<uint64_t>& S, uint8_t output[], size_t output_length);
 
       /**
       * The bare Keccak-1600 permutation
@@ -91,44 +85,40 @@ class SHA_3 : public HashFunction
       size_t m_output_bits, m_bitrate;
       secure_vector<uint64_t> m_S;
       size_t m_S_pos;
-   };
+};
 
 /**
 * SHA-3-224
 */
-class SHA_3_224 final : public SHA_3
-   {
+class SHA_3_224 final : public SHA_3 {
    public:
       SHA_3_224() : SHA_3(224) {}
-   };
+};
 
 /**
 * SHA-3-256
 */
-class SHA_3_256 final : public SHA_3
-   {
+class SHA_3_256 final : public SHA_3 {
    public:
       SHA_3_256() : SHA_3(256) {}
-   };
+};
 
 /**
 * SHA-3-384
 */
-class SHA_3_384 final : public SHA_3
-   {
+class SHA_3_384 final : public SHA_3 {
    public:
       SHA_3_384() : SHA_3(384) {}
-   };
+};
 
 /**
 * SHA-3-512
 */
-class SHA_3_512 final : public SHA_3
-   {
+class SHA_3_512 final : public SHA_3 {
    public:
       SHA_3_512() : SHA_3(512) {}
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

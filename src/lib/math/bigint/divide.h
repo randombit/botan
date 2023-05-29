@@ -20,10 +20,7 @@ namespace Botan {
 * @param r will be set to x % y
 */
 BOTAN_TEST_API
-void vartime_divide(const BigInt& x,
-                    const BigInt& y,
-                    BigInt& q,
-                    BigInt& r);
+void vartime_divide(const BigInt& x, const BigInt& y, BigInt& q, BigInt& r);
 
 /**
 * BigInt division, const time variant
@@ -37,10 +34,7 @@ void vartime_divide(const BigInt& x,
 * @param r will be set to x % y
 */
 BOTAN_TEST_API
-void ct_divide(const BigInt& x,
-               const BigInt& y,
-               BigInt& q,
-               BigInt& r);
+void ct_divide(const BigInt& x, const BigInt& y, BigInt& q, BigInt& r);
 
 /**
 * BigInt division, const time variant
@@ -52,12 +46,11 @@ void ct_divide(const BigInt& x,
 * @param y a non-zero integer
 * @return x/y with remainder discarded
 */
-inline BigInt ct_divide(const BigInt& x, const BigInt& y)
-   {
+inline BigInt ct_divide(const BigInt& x, const BigInt& y) {
    BigInt q, r;
    ct_divide(x, y, q, r);
    return q;
-   }
+}
 
 /**
 * BigInt division, const time variant
@@ -71,10 +64,7 @@ inline BigInt ct_divide(const BigInt& x, const BigInt& y)
 * @param r will be set to x % y
 */
 BOTAN_TEST_API
-void ct_divide_word(const BigInt& x,
-                    word y,
-                    BigInt& q,
-                    word& r);
+void ct_divide_word(const BigInt& x, word y, BigInt& q, word& r);
 
 /**
 * BigInt modulo, const time variant
@@ -87,9 +77,8 @@ void ct_divide_word(const BigInt& x,
 * @return result x % modulo
 */
 BOTAN_TEST_API
-BigInt ct_modulo(const BigInt& x,
-                 const BigInt& modulo);
+BigInt ct_modulo(const BigInt& x, const BigInt& modulo);
 
-}
+}  // namespace Botan
 
 #endif

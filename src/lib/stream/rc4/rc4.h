@@ -16,8 +16,7 @@ namespace Botan {
 /**
 * RC4 stream cipher
 */
-class RC4 final : public StreamCipher
-   {
+class RC4 final : public StreamCipher {
    public:
       void clear() override;
       std::string name() const override;
@@ -51,8 +50,8 @@ class RC4 final : public StreamCipher
       secure_vector<uint8_t> m_state;
       secure_vector<uint8_t> m_buffer;
       size_t m_position = 0;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

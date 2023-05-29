@@ -7,22 +7,21 @@
 
 #include <botan/tls_messages.h>
 
-#include <botan/tls_extensions.h>
-#include <botan/internal/tls_reader.h>
-#include <botan/internal/tls_handshake_io.h>
-#include <botan/internal/tls_handshake_hash.h>
-#include <botan/der_enc.h>
 #include <botan/ber_dec.h>
+#include <botan/der_enc.h>
 #include <botan/ocsp.h>
+#include <botan/tls_extensions.h>
+#include <botan/internal/tls_handshake_hash.h>
+#include <botan/internal/tls_handshake_io.h>
+#include <botan/internal/tls_reader.h>
 
 namespace Botan::TLS {
 
-Certificate_Status::Certificate_Status(const std::vector<uint8_t>& buf, const Connection_Side)
-   {
+Certificate_Status::Certificate_Status(const std::vector<uint8_t>& buf, const Connection_Side) {
    if(buf.size() < 5)
       throw Decoding_Error("Invalid Certificate_Status message: too small");
 
-   if(buf[0] != 1) // not OCSP
+   if(buf[0] != 1)  // not OCSP
       throw Decoding_Error("Unexpected Certificate_Status message: unexpected response type");
 
    size_t len = make_uint32(0, buf[1], buf[2], buf[3]);
@@ -32,42 +31,37 @@ Certificate_Status::Certificate_Status(const std::vector<uint8_t>& buf, const Co
       throw Decoding_Error("Invalid Certificate_Status: invalid length field");
 
    m_response.assign(buf.begin() + 4, buf.end());
-   }
+}
 
-Certificate_Status::Certificate_Status(Handshake_IO& io,
-                                       Handshake_Hash& hash,
-                                       const OCSP::Response& ocsp) :
-   m_response(ocsp.raw_bits())
-   {
+Certificate_Status::Certificate_Status(Handshake_IO& io, Handshake_Hash& hash, const OCSP::Response& ocsp) :
+      m_response(ocsp.raw_bits()) {
    hash.update(io.send(*this));
-   }
+}
 
 Certificate_Status::Certificate_Status(Handshake_IO& io,
                                        Handshake_Hash& hash,
                                        std::vector<uint8_t> raw_response_bytes) :
-   Certificate_Status(std::move(raw_response_bytes))
-   {
+      Certificate_Status(std::move(raw_response_bytes)) {
    hash.update(io.send(*this));
-   }
+}
 
 Certificate_Status::Certificate_Status(std::vector<uint8_t> raw_response_bytes) :
-   m_response(std::move(raw_response_bytes)) {}
+      m_response(std::move(raw_response_bytes)) {}
 
-std::vector<uint8_t> Certificate_Status::serialize() const
-   {
-   if(m_response.size() > 0xFFFFFF) // unlikely
+std::vector<uint8_t> Certificate_Status::serialize() const {
+   if(m_response.size() > 0xFFFFFF)  // unlikely
       throw Encoding_Error("OCSP response too long to encode in TLS");
 
    const uint32_t response_len = static_cast<uint32_t>(m_response.size());
 
    std::vector<uint8_t> buf;
    buf.reserve(1 + 3 + m_response.size());
-   buf.push_back(1); // type OCSP
+   buf.push_back(1);  // type OCSP
    for(size_t i = 1; i < 4; ++i)
       buf.push_back(get_byte_var(i, response_len));
 
    buf += m_response;
    return buf;
-   }
-
 }
+
+}  // namespace Botan::TLS

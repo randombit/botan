@@ -9,12 +9,12 @@
 #define BOTAN_CIPHER_MODE_H_
 
 #include <botan/concepts.h>
+#include <botan/exceptn.h>
 #include <botan/secmem.h>
 #include <botan/sym_algo.h>
-#include <botan/exceptn.h>
-#include <string_view>
-#include <string>
 #include <span>
+#include <string>
+#include <string_view>
 #include <vector>
 
 namespace Botan {
@@ -34,8 +34,7 @@ enum class Cipher_Dir : int {
 /**
 * Interface for cipher modes
 */
-class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
-   {
+class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
    public:
       /**
       * @return list of available providers for this algorithm, empty if not available
@@ -87,20 +86,14 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       * Begin processing a message with a fresh nonce.
       * @param nonce the per message nonce
       */
-      void start(std::span<const uint8_t> nonce)
-         {
-         start_msg(nonce.data(), nonce.size());
-         }
+      void start(std::span<const uint8_t> nonce) { start_msg(nonce.data(), nonce.size()); }
 
       /**
       * Begin processing a message with a fresh nonce.
       * @param nonce the per message nonce
       * @param nonce_len length of nonce
       */
-      void start(const uint8_t nonce[], size_t nonce_len)
-         {
-         start_msg(nonce, nonce_len);
-         }
+      void start(const uint8_t nonce[], size_t nonce_len) { start_msg(nonce, nonce_len); }
 
       /**
       * Begin processing a message.
@@ -112,10 +105,7 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       * ciphertext block to be used as the nonce of the new message; doing this
       * isn't a good idea, but some (mostly older) protocols do this.
       */
-      void start()
-         {
-         return start_msg(nullptr, 0);
-         }
+      void start() { return start_msg(nullptr, 0); }
 
       /**
       * Process message blocks
@@ -130,23 +120,21 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       * @param msg the message to be processed
       * @return bytes written in-place
       */
-      size_t process(std::span<uint8_t> msg)
-         { return this->process_msg(msg.data(), msg.size()); }
-      size_t process(uint8_t msg[], size_t msg_len)
-         { return this->process_msg(msg, msg_len); }
+      size_t process(std::span<uint8_t> msg) { return this->process_msg(msg.data(), msg.size()); }
+
+      size_t process(uint8_t msg[], size_t msg_len) { return this->process_msg(msg, msg_len); }
 
       /**
       * Process some data. Input must be in size update_granularity() uint8_t blocks.
       * @param buffer in/out parameter which will possibly be resized
       * @param offset an offset into blocks to begin processing
       */
-      template<concepts::resizable_byte_buffer T>
-      void update(T& buffer, size_t offset = 0)
-         {
+      template <concepts::resizable_byte_buffer T>
+      void update(T& buffer, size_t offset = 0) {
          BOTAN_ASSERT(buffer.size() >= offset, "Offset ok");
          const size_t written = process(std::span(buffer).subspan(offset));
          buffer.resize(offset + written);
-         }
+      }
 
       /**
       * Complete processing of a message.
@@ -155,10 +143,7 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       *        minimum_final_size() bytes, and will be set to any final output
       * @param offset an offset into final_block to begin processing
       */
-      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0)
-         {
-         finish_msg(final_block, offset);
-         }
+      void finish(secure_vector<uint8_t>& final_block, size_t offset = 0) { finish_msg(final_block, offset); }
 
       /**
       * Complete procession of a message.
@@ -170,14 +155,13 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       *        minimum_final_size() bytes, and will be set to any final output
       * @param offset an offset into final_block to begin processing
       */
-      template<concepts::resizable_byte_buffer T>
-      void finish(T& final_block, size_t offset = 0)
-         {
+      template <concepts::resizable_byte_buffer T>
+      void finish(T& final_block, size_t offset = 0) {
          Botan::secure_vector<uint8_t> tmp(final_block.begin(), final_block.end());
          finish_msg(tmp, offset);
          final_block.resize(tmp.size());
          std::copy(tmp.begin(), tmp.end(), final_block.begin());
-         }
+      }
 
       /**
       * Returns the size of the output if this transform is used to process a
@@ -248,7 +232,7 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
       * might also return "sse2", "avx2", "openssl", or some other arbitrary string.
       */
       virtual std::string provider() const { return "base"; }
-   };
+};
 
 /**
 * Get a cipher mode by name (eg "AES-128/CBC" or "Serpent/XTS")
@@ -257,13 +241,11 @@ class BOTAN_PUBLIC_API(2,0) Cipher_Mode : public SymmetricAlgorithm
 * @param provider provider implementation to choose
 */
 BOTAN_DEPRECATED("Use Cipher_Mode::create")
-inline Cipher_Mode* get_cipher_mode(std::string_view algo_spec,
-                                    Cipher_Dir direction,
-                                    std::string_view provider = "")
-   {
-   return Cipher_Mode::create(algo_spec, direction, provider).release();
-   }
 
+inline Cipher_Mode* get_cipher_mode(std::string_view algo_spec, Cipher_Dir direction, std::string_view provider = "") {
+   return Cipher_Mode::create(algo_spec, direction, provider).release();
 }
+
+}  // namespace Botan
 
 #endif

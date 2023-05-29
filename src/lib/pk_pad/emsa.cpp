@@ -6,9 +6,9 @@
 
 #include <botan/internal/emsa.h>
 
+#include <botan/exceptn.h>
 #include <botan/hash.h>
 #include <botan/internal/scan_name.h>
-#include <botan/exceptn.h>
 
 #if defined(BOTAN_HAS_EMSA_X931)
    #include <botan/internal/emsa_x931.h>
@@ -32,149 +32,106 @@
 
 namespace Botan {
 
-std::unique_ptr<EMSA> EMSA::create(std::string_view algo_spec)
-   {
+std::unique_ptr<EMSA> EMSA::create(std::string_view algo_spec) {
    SCAN_Name req(algo_spec);
 
 #if defined(BOTAN_HAS_EMSA_PKCS1)
-   if(req.algo_name() == "EMSA_PKCS1" ||
-      req.algo_name() == "PKCS1v15" ||
-      req.algo_name() == "EMSA-PKCS1-v1_5" ||
-      req.algo_name() == "EMSA3")
-      {
-      if(req.arg_count() == 2 && req.arg(0) == "Raw")
-         {
+   if(req.algo_name() == "EMSA_PKCS1" || req.algo_name() == "PKCS1v15" || req.algo_name() == "EMSA-PKCS1-v1_5" ||
+      req.algo_name() == "EMSA3") {
+      if(req.arg_count() == 2 && req.arg(0) == "Raw") {
          return std::make_unique<EMSA_PKCS1v15_Raw>(req.arg(1));
-         }
-      else if(req.arg_count() == 1)
-         {
-         if(req.arg(0) == "Raw")
-            {
+      } else if(req.arg_count() == 1) {
+         if(req.arg(0) == "Raw") {
             return std::make_unique<EMSA_PKCS1v15_Raw>();
-            }
-         else
-            {
-            if(auto hash = HashFunction::create(req.arg(0)))
-               {
+         } else {
+            if(auto hash = HashFunction::create(req.arg(0))) {
                return std::make_unique<EMSA_PKCS1v15>(std::move(hash));
-               }
             }
          }
       }
+   }
 #endif
 
 #if defined(BOTAN_HAS_EMSA_PSSR)
-   if(req.algo_name() == "PSS_Raw" ||
-      req.algo_name() == "PSSR_Raw")
-      {
-      if(req.arg_count_between(1, 3) && req.arg(1, "MGF1") == "MGF1")
-         {
-         if(auto hash = HashFunction::create(req.arg(0)))
-            {
-            if(req.arg_count() == 3)
-               {
+   if(req.algo_name() == "PSS_Raw" || req.algo_name() == "PSSR_Raw") {
+      if(req.arg_count_between(1, 3) && req.arg(1, "MGF1") == "MGF1") {
+         if(auto hash = HashFunction::create(req.arg(0))) {
+            if(req.arg_count() == 3) {
                const size_t salt_size = req.arg_as_integer(2, 0);
                return std::make_unique<PSSR_Raw>(std::move(hash), salt_size);
-               }
-            else
-               {
+            } else {
                return std::make_unique<PSSR_Raw>(std::move(hash));
-               }
             }
          }
       }
+   }
 
-   if(req.algo_name() == "PSS" ||
-      req.algo_name() == "PSSR" ||
-      req.algo_name() == "EMSA-PSS" ||
-      req.algo_name() == "PSS-MGF1" ||
-      req.algo_name() == "EMSA4")
-      {
-      if(req.arg_count_between(1, 3) && req.arg(1, "MGF1") == "MGF1")
-         {
-         if(auto hash = HashFunction::create(req.arg(0)))
-            {
-            if(req.arg_count() == 3)
-               {
+   if(req.algo_name() == "PSS" || req.algo_name() == "PSSR" || req.algo_name() == "EMSA-PSS" ||
+      req.algo_name() == "PSS-MGF1" || req.algo_name() == "EMSA4") {
+      if(req.arg_count_between(1, 3) && req.arg(1, "MGF1") == "MGF1") {
+         if(auto hash = HashFunction::create(req.arg(0))) {
+            if(req.arg_count() == 3) {
                const size_t salt_size = req.arg_as_integer(2, 0);
                return std::make_unique<PSSR>(std::move(hash), salt_size);
-               }
-            else
-               {
+            } else {
                return std::make_unique<PSSR>(std::move(hash));
-               }
             }
          }
       }
+   }
 #endif
 
 #if defined(BOTAN_HAS_ISO_9796)
-   if(req.algo_name() == "ISO_9796_DS2")
-      {
-      if(req.arg_count_between(1, 3))
-         {
-         if(auto hash = HashFunction::create(req.arg(0)))
-            {
+   if(req.algo_name() == "ISO_9796_DS2") {
+      if(req.arg_count_between(1, 3)) {
+         if(auto hash = HashFunction::create(req.arg(0))) {
             const size_t salt_size = req.arg_as_integer(2, hash->output_length());
             const bool implicit = req.arg(1, "exp") == "imp";
             return std::make_unique<ISO_9796_DS2>(std::move(hash), implicit, salt_size);
-            }
          }
       }
+   }
    //ISO-9796-2 DS 3 is deterministic and DS2 without a salt
-   if(req.algo_name() == "ISO_9796_DS3")
-      {
-      if(req.arg_count_between(1, 2))
-         {
-         if(auto hash = HashFunction::create(req.arg(0)))
-            {
+   if(req.algo_name() == "ISO_9796_DS3") {
+      if(req.arg_count_between(1, 2)) {
+         if(auto hash = HashFunction::create(req.arg(0))) {
             const bool implicit = req.arg(1, "exp") == "imp";
             return std::make_unique<ISO_9796_DS3>(std::move(hash), implicit);
-            }
          }
       }
+   }
 #endif
 
 #if defined(BOTAN_HAS_EMSA_X931)
-   if(req.algo_name() == "EMSA_X931" ||
-         req.algo_name() == "EMSA2" ||
-         req.algo_name() == "X9.31")
-      {
-      if(req.arg_count() == 1)
-         {
-         if(auto hash = HashFunction::create(req.arg(0)))
-            {
+   if(req.algo_name() == "EMSA_X931" || req.algo_name() == "EMSA2" || req.algo_name() == "X9.31") {
+      if(req.arg_count() == 1) {
+         if(auto hash = HashFunction::create(req.arg(0))) {
             return std::make_unique<EMSA_X931>(std::move(hash));
-            }
          }
       }
+   }
 #endif
 
 #if defined(BOTAN_HAS_EMSA_RAW)
-   if(req.algo_name() == "Raw")
-      {
-      if(req.arg_count() == 0)
-         {
+   if(req.algo_name() == "Raw") {
+      if(req.arg_count() == 0) {
          return std::make_unique<EMSA_Raw>();
-         }
-      else
-         {
+      } else {
          auto hash = HashFunction::create(req.arg(0));
          if(hash)
             return std::make_unique<EMSA_Raw>(hash->output_length());
-         }
       }
+   }
 #endif
 
    return nullptr;
-   }
+}
 
-std::unique_ptr<EMSA> EMSA::create_or_throw(std::string_view algo_spec)
-   {
+std::unique_ptr<EMSA> EMSA::create_or_throw(std::string_view algo_spec) {
    auto emsa = EMSA::create(algo_spec);
    if(emsa)
       return emsa;
    throw Algorithm_Not_Found(algo_spec);
-   }
-
 }
+
+}  // namespace Botan

@@ -20,24 +20,28 @@ namespace Botan::TLS {
  * For applications that do not want to support session resumption at all,
  * this is typically a good choice.
  */
-class BOTAN_PUBLIC_API(3, 0) Session_Manager_Noop final : public Session_Manager
-   {
+class BOTAN_PUBLIC_API(3, 0) Session_Manager_Noop final : public Session_Manager {
    public:
       Session_Manager_Noop();
 
       std::optional<Session_Handle> establish(const Session&,
                                               const std::optional<Session_ID>& = std::nullopt,
-                                              bool = false) override { return std::nullopt; }
+                                              bool = false) override {
+         return std::nullopt;
+      }
 
       void store(const Session&, const Session_Handle&) override {}
+
       size_t remove(const Session_Handle&) override { return 0; }
+
       size_t remove_all() override { return 0; }
 
    protected:
       std::optional<Session> retrieve_one(const Session_Handle&) override { return std::nullopt; }
-      std::vector<Session_with_Handle> find_some(const Server_Information&, const size_t) override { return {}; }
-   };
 
-}
+      std::vector<Session_with_Handle> find_some(const Server_Information&, const size_t) override { return {}; }
+};
+
+}  // namespace Botan::TLS
 
 #endif

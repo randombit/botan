@@ -8,95 +8,66 @@
 
 #include <botan/dsa.h>
 
-#include <botan/internal/keypair.h>
-#include <botan/internal/dl_scheme.h>
-#include <botan/internal/pk_ops_impl.h>
-#include <botan/internal/divide.h>
 #include <botan/numthry.h>
+#include <botan/internal/divide.h>
+#include <botan/internal/dl_scheme.h>
+#include <botan/internal/keypair.h>
+#include <botan/internal/pk_ops_impl.h>
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-  #include <botan/internal/rfc6979.h>
+   #include <botan/internal/rfc6979.h>
 #endif
 
 namespace Botan {
 
-size_t DSA_PublicKey::message_part_size() const
-   {
-   return m_public_key->group().q_bytes();
-   }
+size_t DSA_PublicKey::message_part_size() const { return m_public_key->group().q_bytes(); }
 
-size_t DSA_PublicKey::estimated_strength() const
-   {
-   return m_public_key->estimated_strength();
-   }
+size_t DSA_PublicKey::estimated_strength() const { return m_public_key->estimated_strength(); }
 
-size_t DSA_PublicKey::key_length() const
-   {
-   return m_public_key->p_bits();
-   }
+size_t DSA_PublicKey::key_length() const { return m_public_key->p_bits(); }
 
-const BigInt& DSA_PublicKey::get_int_field(std::string_view field) const
-   {
+const BigInt& DSA_PublicKey::get_int_field(std::string_view field) const {
    return m_public_key->get_int_field(algo_name(), field);
-   }
+}
 
-AlgorithmIdentifier DSA_PublicKey::algorithm_identifier() const
-   {
-   return AlgorithmIdentifier(
-      object_identifier(),
-      m_public_key->group().DER_encode(DL_Group_Format::ANSI_X9_57));
-   }
+AlgorithmIdentifier DSA_PublicKey::algorithm_identifier() const {
+   return AlgorithmIdentifier(object_identifier(), m_public_key->group().DER_encode(DL_Group_Format::ANSI_X9_57));
+}
 
-std::vector<uint8_t> DSA_PublicKey::public_key_bits() const
-   {
-   return m_public_key->DER_encode();
-   }
+std::vector<uint8_t> DSA_PublicKey::public_key_bits() const { return m_public_key->DER_encode(); }
 
-bool DSA_PublicKey::check_key(RandomNumberGenerator& rng, bool strong) const
-   {
+bool DSA_PublicKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    return m_public_key->check_key(rng, strong);
-   }
+}
 
-DSA_PublicKey::DSA_PublicKey(const AlgorithmIdentifier& alg_id,
-                             std::span<const uint8_t> key_bits)
-   {
+DSA_PublicKey::DSA_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
    m_public_key = std::make_shared<DL_PublicKey>(alg_id, key_bits, DL_Group_Format::ANSI_X9_57);
 
-   BOTAN_ARG_CHECK(m_public_key->group().has_q(),
-                   "Q parameter must be set for DSA");
-   }
+   BOTAN_ARG_CHECK(m_public_key->group().has_q(), "Q parameter must be set for DSA");
+}
 
-DSA_PublicKey::DSA_PublicKey(const DL_Group& group, const BigInt& y)
-   {
+DSA_PublicKey::DSA_PublicKey(const DL_Group& group, const BigInt& y) {
    m_public_key = std::make_shared<DL_PublicKey>(group, y);
 
-   BOTAN_ARG_CHECK(m_public_key->group().has_q(),
-                   "Q parameter must be set for DSA");
-   }
+   BOTAN_ARG_CHECK(m_public_key->group().has_q(), "Q parameter must be set for DSA");
+}
 
-DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng,
-                               const DL_Group& group)
-   {
+DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng, const DL_Group& group) {
    m_private_key = std::make_shared<DL_PrivateKey>(group, rng);
    m_public_key = m_private_key->public_key();
-   }
+}
 
-DSA_PrivateKey::DSA_PrivateKey(const DL_Group& group,
-                               const BigInt& x)
-   {
+DSA_PrivateKey::DSA_PrivateKey(const DL_Group& group, const BigInt& x) {
    m_private_key = std::make_shared<DL_PrivateKey>(group, x);
    m_public_key = m_private_key->public_key();
-   }
+}
 
-DSA_PrivateKey::DSA_PrivateKey(const AlgorithmIdentifier& alg_id,
-                               std::span<const uint8_t> key_bits)
-   {
+DSA_PrivateKey::DSA_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
    m_private_key = std::make_shared<DL_PrivateKey>(alg_id, key_bits, DL_Group_Format::ANSI_X9_57);
    m_public_key = m_private_key->public_key();
-   }
+}
 
-bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
-   {
+bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    if(!m_private_key->check_key(rng, strong))
       return false;
 
@@ -104,69 +75,56 @@ bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const
       return false;
 
    return KeyPair::signature_consistency_check(rng, *this, "SHA-256");
-   }
+}
 
-secure_vector<uint8_t> DSA_PrivateKey::private_key_bits() const
-   {
-   return m_private_key->DER_encode();
-   }
+secure_vector<uint8_t> DSA_PrivateKey::private_key_bits() const { return m_private_key->DER_encode(); }
 
-secure_vector<uint8_t> DSA_PrivateKey::raw_private_key_bits() const
-   {
-   return m_private_key->raw_private_key_bits();
-   }
+secure_vector<uint8_t> DSA_PrivateKey::raw_private_key_bits() const { return m_private_key->raw_private_key_bits(); }
 
-const BigInt& DSA_PrivateKey::get_int_field(std::string_view field) const
-   {
+const BigInt& DSA_PrivateKey::get_int_field(std::string_view field) const {
    return m_private_key->get_int_field(algo_name(), field);
-   }
+}
 
-std::unique_ptr<Public_Key> DSA_PrivateKey::public_key() const
-   {
+std::unique_ptr<Public_Key> DSA_PrivateKey::public_key() const {
    // can't use make_unique here due to private constructor
    return std::unique_ptr<DSA_PublicKey>(new DSA_PublicKey(m_public_key));
-   }
+}
 
 namespace {
 
 /**
 * Object that can create a DSA signature
 */
-class DSA_Signature_Operation final : public PK_Ops::Signature_with_Hash
-   {
+class DSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    public:
       DSA_Signature_Operation(const std::shared_ptr<const DL_PrivateKey>& key,
                               std::string_view emsa,
                               RandomNumberGenerator& rng) :
-         PK_Ops::Signature_with_Hash(emsa),
-         m_key(key)
-         {
+            PK_Ops::Signature_with_Hash(emsa), m_key(key) {
          m_b = BigInt::random_integer(rng, 2, m_key->group().get_q());
          m_b_inv = m_key->group().inverse_mod_q(m_b);
-         }
+      }
 
-      size_t signature_length() const override { return 2*m_key->group().q_bytes(); }
+      size_t signature_length() const override { return 2 * m_key->group().q_bytes(); }
 
-      secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len,
-                                      RandomNumberGenerator& rng) override;
+      secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& rng) override;
 
       AlgorithmIdentifier algorithm_identifier() const override;
+
    private:
       std::shared_ptr<const DL_PrivateKey> m_key;
       BigInt m_b, m_b_inv;
-   };
+};
 
-AlgorithmIdentifier DSA_Signature_Operation::algorithm_identifier() const
-   {
+AlgorithmIdentifier DSA_Signature_Operation::algorithm_identifier() const {
    const std::string full_name = "DSA/" + hash_function();
    const OID oid = OID::from_string(full_name);
    return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
-   }
+}
 
-secure_vector<uint8_t>
-DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
-                                  RandomNumberGenerator& rng)
-   {
+secure_vector<uint8_t> DSA_Signature_Operation::raw_sign(const uint8_t msg[],
+                                                         size_t msg_len,
+                                                         RandomNumberGenerator& rng) {
    const DL_Group& group = m_key->group();
    const BigInt& q = group.get_q();
 
@@ -177,8 +135,7 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
    BOTAN_UNUSED(rng);
-   const BigInt k = generate_rfc6979_nonce(m_key->private_key(), q, m,
-                                           this->rfc6979_hash_function());
+   const BigInt k = generate_rfc6979_nonce(m_key->private_key(), q, m, this->rfc6979_hash_function());
 #else
    const BigInt k = BigInt::random_integer(rng, 1, q);
 #endif
@@ -205,50 +162,39 @@ DSA_Signature_Operation::raw_sign(const uint8_t msg[], size_t msg_len,
    m = group.multiply_mod_q(m_b, m);
    const BigInt xr = group.multiply_mod_q(m_b, m_key->private_key(), r);
 
-   const BigInt s = group.multiply_mod_q(m_b_inv, k_inv, group.mod_q(xr+m));
+   const BigInt s = group.multiply_mod_q(m_b_inv, k_inv, group.mod_q(xr + m));
 
    // With overwhelming probability, a bug rather than actual zero r/s
    if(r.is_zero() || s.is_zero())
       throw Internal_Error("Computed zero r/s during DSA signature");
 
    return BigInt::encode_fixed_length_int_pair(r, s, q.bytes());
-   }
+}
 
 /**
 * Object that can verify a DSA signature
 */
-class DSA_Verification_Operation final : public PK_Ops::Verification_with_Hash
-   {
+class DSA_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
-      DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key,
-                                 std::string_view emsa) :
-         PK_Ops::Verification_with_Hash(emsa),
-         m_key(key)
-         {
-         }
+      DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key, std::string_view emsa) :
+            PK_Ops::Verification_with_Hash(emsa), m_key(key) {}
 
-      DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key,
-                                 const AlgorithmIdentifier& alg_id) :
-         PK_Ops::Verification_with_Hash(alg_id, "DSA"),
-         m_key(key)
-         {
-         }
+      DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key, const AlgorithmIdentifier& alg_id) :
+            PK_Ops::Verification_with_Hash(alg_id, "DSA"), m_key(key) {}
 
-      bool verify(const uint8_t msg[], size_t msg_len,
-                  const uint8_t sig[], size_t sig_len) override;
+      bool verify(const uint8_t msg[], size_t msg_len, const uint8_t sig[], size_t sig_len) override;
+
    private:
       std::shared_ptr<const DL_PublicKey> m_key;
-   };
+};
 
-bool DSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
-                                        const uint8_t sig[], size_t sig_len)
-   {
+bool DSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len, const uint8_t sig[], size_t sig_len) {
    const auto group = m_key->group();
 
    const BigInt& q = group.get_q();
    const size_t q_bytes = q.bytes();
 
-   if(sig_len != 2*q_bytes)
+   if(sig_len != 2 * q_bytes)
       return false;
 
    BigInt r(sig, q_bytes);
@@ -269,37 +215,31 @@ bool DSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
 
    // s is too big for Barrett, and verification doesn't need to be const-time
    return (s % group.get_q() == r);
-   }
-
 }
 
-std::unique_ptr<PK_Ops::Verification>
-DSA_PublicKey::create_verification_op(std::string_view params,
-                                      std::string_view provider) const
-   {
+}  // namespace
+
+std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::create_verification_op(std::string_view params,
+                                                                            std::string_view provider) const {
    if(provider == "base" || provider.empty())
       return std::make_unique<DSA_Verification_Operation>(this->m_public_key, params);
    throw Provider_Not_Found(algo_name(), provider);
-   }
+}
 
-std::unique_ptr<PK_Ops::Verification>
-DSA_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
-                                           std::string_view provider) const
-   {
+std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::create_x509_verification_op(
+   const AlgorithmIdentifier& signature_algorithm, std::string_view provider) const {
    if(provider == "base" || provider.empty())
       return std::make_unique<DSA_Verification_Operation>(this->m_public_key, signature_algorithm);
 
    throw Provider_Not_Found(algo_name(), provider);
-   }
+}
 
-std::unique_ptr<PK_Ops::Signature>
-DSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                    std::string_view params,
-                                    std::string_view provider) const
-   {
+std::unique_ptr<PK_Ops::Signature> DSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
+                                                                       std::string_view params,
+                                                                       std::string_view provider) const {
    if(provider == "base" || provider.empty())
       return std::make_unique<DSA_Signature_Operation>(this->m_private_key, params, rng);
    throw Provider_Not_Found(algo_name(), provider);
-   }
-
 }
+
+}  // namespace Botan

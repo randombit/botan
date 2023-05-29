@@ -15,8 +15,7 @@ namespace Botan {
 /**
 * DJB's Salsa20 (and XSalsa20)
 */
-class Salsa20 final : public StreamCipher
-   {
+class Salsa20 final : public StreamCipher {
    public:
       bool valid_iv_length(size_t iv_len) const override;
       size_t default_iv_length() const override;
@@ -48,8 +47,8 @@ class Salsa20 final : public StreamCipher
       secure_vector<uint32_t> m_state;
       secure_vector<uint8_t> m_buffer;
       size_t m_position = 0;
-   };
+};
 
-}
+}  // namespace Botan
 
 #endif

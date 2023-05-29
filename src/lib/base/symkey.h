@@ -9,8 +9,8 @@
 #define BOTAN_SYMKEY_H_
 
 #include <botan/secmem.h>
-#include <string>
 #include <span>
+#include <string>
 
 namespace Botan {
 
@@ -19,14 +19,15 @@ class RandomNumberGenerator;
 /**
 * Octet String
 */
-class BOTAN_PUBLIC_API(2,0) OctetString final
-   {
+class BOTAN_PUBLIC_API(2, 0) OctetString final {
    public:
       /**
       * @return size of this octet string in bytes
       */
       size_t length() const { return m_data.size(); }
+
       size_t size() const { return m_data.size(); }
+
       bool empty() const { return m_data.empty(); }
 
       /**
@@ -42,7 +43,7 @@ class BOTAN_PUBLIC_API(2,0) OctetString final
       /**
       * @return end of this string
       */
-      const uint8_t* end() const   { return begin() + m_data.size(); }
+      const uint8_t* end() const { return begin() + m_data.size(); }
 
       /**
       * @return this encoded as hex
@@ -100,7 +101,7 @@ class BOTAN_PUBLIC_API(2,0) OctetString final
 
    private:
       secure_vector<uint8_t> m_data;
-   };
+};
 
 /**
 * Compare two strings
@@ -108,8 +109,7 @@ class BOTAN_PUBLIC_API(2,0) OctetString final
 * @param y an octet string
 * @return if x is equal to y
 */
-BOTAN_PUBLIC_API(2,0) bool operator==(const OctetString& x,
-                          const OctetString& y);
+BOTAN_PUBLIC_API(2, 0) bool operator==(const OctetString& x, const OctetString& y);
 
 /**
 * Compare two strings
@@ -117,8 +117,7 @@ BOTAN_PUBLIC_API(2,0) bool operator==(const OctetString& x,
 * @param y an octet string
 * @return if x is not equal to y
 */
-BOTAN_PUBLIC_API(2,0) bool operator!=(const OctetString& x,
-                          const OctetString& y);
+BOTAN_PUBLIC_API(2, 0) bool operator!=(const OctetString& x, const OctetString& y);
 
 /**
 * Concatenate two strings
@@ -126,8 +125,7 @@ BOTAN_PUBLIC_API(2,0) bool operator!=(const OctetString& x,
 * @param y an octet string
 * @return x concatenated with y
 */
-BOTAN_PUBLIC_API(2,0) OctetString operator+(const OctetString& x,
-                                const OctetString& y);
+BOTAN_PUBLIC_API(2, 0) OctetString operator+(const OctetString& x, const OctetString& y);
 
 /**
 * XOR two strings
@@ -135,9 +133,7 @@ BOTAN_PUBLIC_API(2,0) OctetString operator+(const OctetString& x,
 * @param y an octet string
 * @return x XORed with y
 */
-BOTAN_PUBLIC_API(2,0) OctetString operator^(const OctetString& x,
-                                const OctetString& y);
-
+BOTAN_PUBLIC_API(2, 0) OctetString operator^(const OctetString& x, const OctetString& y);
 
 /**
 * Alternate name for octet string showing intent to use as a key
@@ -149,6 +145,6 @@ using SymmetricKey = OctetString;
 */
 using InitializationVector = OctetString;
 
-}
+}  // namespace Botan
 
 #endif

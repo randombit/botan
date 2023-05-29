@@ -14,8 +14,7 @@ namespace Botan {
 /*
 * Write the BigInt into a stream
 */
-std::ostream& operator<<(std::ostream& stream, const BigInt& n)
-   {
+std::ostream& operator<<(std::ostream& stream, const BigInt& n) {
    const auto stream_flags = stream.flags();
    if(stream_flags & std::ios::oct)
       throw Invalid_Argument("Octal output of BigInt not supported");
@@ -34,19 +33,18 @@ std::ostream& operator<<(std::ostream& stream, const BigInt& n)
    if(!stream.good())
       throw Stream_IO_Error("BigInt output operator has failed");
    return stream;
-   }
+}
 
 /*
 * Read the BigInt from a stream
 */
-std::istream& operator>>(std::istream& stream, BigInt& n)
-   {
+std::istream& operator>>(std::istream& stream, BigInt& n) {
    std::string str;
    std::getline(stream, str);
    if(stream.bad() || (stream.fail() && !stream.eof()))
       throw Stream_IO_Error("BigInt input operator has failed");
    n = BigInt(str);
    return stream;
-   }
-
 }
+
+}  // namespace Botan
