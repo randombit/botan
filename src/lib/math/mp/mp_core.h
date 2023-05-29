@@ -716,9 +716,8 @@ void bigint_monty_redc_generic(word z[], size_t z_size, const word p[], size_t p
 
 /**
 * Montgomery Reduction
-* @param z integer to reduce, of size exactly 2*p_size.
-           Output is in the first p_size+1 words, higher
-           words are set to zero.
+* @param z integer to reduce, of size exactly 2*p_size. Output is in
+* the first p_size+1 words, higher words are set to zero.
 * @param p modulus
 * @param p_size size of p
 * @param p_dash Montgomery value
