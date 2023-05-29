@@ -13,7 +13,6 @@ import multiprocessing
 import difflib
 import time
 import os
-import tempfile
 import re
 from multiprocessing.pool import ThreadPool
 
