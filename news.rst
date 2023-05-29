@@ -1,18 +1,56 @@
 Release Notes
 ========================================
 
-Version 3.0.1, Not Yet Released
+Version 3.1.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Several small TLS compliance fixes, primarily around rejecting
+  invalid behavior from the peer (GH #3520 #3537)
+
+* Fix custom key exchange logic integration for TLS 1.2 server (GH #3539)
+
+* Add support for using AVX-512 (GH #3206)
+
+* Add support for an environmental variable which can disable CPU extensions
+  (GH #3535)
+
+* Update the BSI policy to match the latest TR (GH #3482)
+
+* The entire codebase has been reformatted using ``clang-format``. (GH #3502)
 
 * Fix bugs related to ``--library-suffix`` option. (GH #3511)
 
 * Improve cli handling of PBKDF configuration (GH #3518)
 
+* Add support for using PSK in the TLS CLI utilities (GH #3552)
+
+* Add an example of hybrid RSA+symmetric encryption (GH #3551)
+
+* In the Python module, the pbkdf function defaulted to 10K iterations.
+  This has been changed to 100K.
+
 * Switch to using coveralls.io for coverage report (GH #3512)
+
+* Add a script to analyze the output of ``botan timing_test``
 
 * Due to problems that arise if the build directory and source
   directory are on different filesystems, now hardlinks are only
   used during the build if explicitly requested. (GH #3504)
+
+* The ``ffi.h`` header no longer depends on the ``compiler.h`` header.
+  (GH #3531)
+
+* Avoid using varargs macros for ``BOTAN_UNUSED`` (GH #3530)
+
+* Small base64 encoding optimization (GH #3528)
+
+* If the build system detects that the compiler in use is not supported,
+  it will error immediately rather than allow a failing build. Currently
+  this is only supported for GCC, Clang, and MSVC. (GH #3526)
+
+* The examples are now a first class build target; include
+  ``examples`` in the set provided to ``--build-targets=`` option in
+  order to enable them. (GH #3527)
 
 * Remove the (undocumented, unsupported) support for CMake (GH #3501)
 
