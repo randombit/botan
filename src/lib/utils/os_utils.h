@@ -13,9 +13,7 @@
 #include <string>
 #include <vector>
 
-namespace Botan {
-
-namespace OS {
+namespace Botan::OS {
 
 /*
 * This header is internal (not installed) and these functions are not
@@ -197,8 +195,6 @@ class BOTAN_UNSTABLE_API Echo_Suppression {
 */
 std::unique_ptr<Echo_Suppression> BOTAN_UNSTABLE_API suppress_echo_on_terminal();
 
-}  // namespace OS
-
-}  // namespace Botan
+}  // namespace Botan::OS
 
 #endif
