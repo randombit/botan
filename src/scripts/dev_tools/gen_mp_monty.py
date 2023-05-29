@@ -17,7 +17,9 @@ def monty_redc_code(n):
     lines.append("ws[0] = w0 * p_dash;")
 
     lines.append("word3_muladd(&w2, &w1, &w0, ws[0], p[0]);")
-    lines.append("w0 = w1; w1 = w2; w2 = 0;")
+    lines.append("w0 = w1;")
+    lines.append("w1 = w2;")
+    lines.append("w2 = 0;")
 
     for i in range(1, n):
         for j in range(0, i):
@@ -27,7 +29,9 @@ def monty_redc_code(n):
         lines.append("ws[%d] = w0 * p_dash;" % (i))
 
         lines.append("word3_muladd(&w2, &w1, &w0, ws[%d], p[0]);" % (i))
-        lines.append("w0 = w1; w1 = w2; w2 = 0;")
+        lines.append("w0 = w1;")
+        lines.append("w1 = w2;")
+        lines.append("w2 = 0;")
 
     for i in range(0, n - 1):
         for j in range(i + 1, n):
@@ -35,7 +39,9 @@ def monty_redc_code(n):
 
         lines.append("word3_add(&w2, &w1, &w0, z[%d]);" % (n+i))
         lines.append("ws[%d] = w0;" % (i))
-        lines.append("w0 = w1; w1 = w2; w2 = 0;")
+        lines.append("w0 = w1;")
+        lines.append("w1 = w2;")
+        lines.append("w2 = 0;")
 
     lines.append("word3_add(&w2, &w1, &w0, z[%d]);" % (2*n-1));
 
@@ -67,20 +73,20 @@ def main(args = None):
 */
 
 #include <botan/internal/mp_core.h>
+
 #include <botan/internal/ct_utils.h>
 
 namespace Botan {
 """ % (sys.argv[0], datetime.date.today().strftime("%Y-%m-%d")))
 
     for n in sizes:
-        print("void bigint_monty_redc_%d(word z[%d], const word p[%d], word p_dash, word ws[])" % (n, 2*n, n))
-        print("   {")
+        print("void bigint_monty_redc_%d(word z[%d], const word p[%d], word p_dash, word ws[]) {" % (n, 2*n, n))
 
         monty_redc_code(n)
 
-        print("   }\n")
+        print("}\n")
 
-    print("}")
+    print("}  // namespace Botan")
 
     return 0
 
