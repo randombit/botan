@@ -17,6 +17,5 @@ simd_avx512
 
 # MSVC miscompiles this code
 <cc>
-gcc
-clang
+!msvc
 </cc>

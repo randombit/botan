@@ -10,8 +10,3 @@ brief -> "SHA-256 using BMI2 instructions"
 <isa>
 bmi2
 </isa>
-
-<cc>
-gcc
-clang
-</cc>

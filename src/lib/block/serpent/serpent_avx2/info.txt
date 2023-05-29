@@ -17,6 +17,5 @@ simd_avx2
 
 # MSVC 2019 miscompiles this code (see #2120)
 <cc>
-gcc
-clang
+!msvc
 </cc>

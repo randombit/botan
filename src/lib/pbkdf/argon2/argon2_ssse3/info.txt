@@ -13,7 +13,5 @@ ssse3
 
 # MSVC miscompiles this code on x86-32
 <cc>
-gcc
-clang
-icc
+!msvc
 </cc>

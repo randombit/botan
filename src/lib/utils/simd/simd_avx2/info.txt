@@ -14,13 +14,3 @@ avx2
 <header:internal>
 simd_avx2.h
 </header:internal>
-
-<cc>
-gcc
-clang
-msvc
-
-# Intel C++ 2020 doesn't support target attribute on overloaded
-# operators, see GH #2260
-#icc
-</cc>

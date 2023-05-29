@@ -10,8 +10,3 @@ brief -> "SHA-256 using ARMv8 crypto instructions"
 <isa>
 armv8crypto
 </isa>
-
-<cc>
-gcc
-clang
-</cc>

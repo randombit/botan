@@ -32,10 +32,3 @@ ppc64
 <requires>
 simd
 </requires>
-
-<cc>
-gcc
-clang
-msvc
-sunstudio
-</cc>

@@ -26,9 +26,3 @@ arm64
 <requires>
 simd
 </requires>
-
-<cc>
-gcc
-clang
-msvc
-</cc>

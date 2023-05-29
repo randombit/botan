@@ -14,8 +14,3 @@ shacal2
 <isa>
 armv8crypto
 </isa>
-
-<cc>
-gcc
-clang
-</cc>
