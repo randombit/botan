@@ -14,7 +14,7 @@ from collections import defaultdict
 
 def format_oid(oid):
     #return '"' + oid + '"'
-    return "{" + oid.replace('.', ',') + '}'
+    return "{" + oid.replace('.', ', ') + '}'
 
 def format_map(m, for_oid = False):
     s = ''
@@ -25,9 +25,9 @@ def format_map(m, for_oid = False):
             s += '      '
 
         if for_oid:
-            s += '{ "%s", OID(%s) },\n' % (k,format_oid(v))
+            s += '{"%s", OID(%s)},\n' % (k,format_oid(v))
         else:
-            s += '{ "%s", "%s" },\n' % (k,v)
+            s += '{"%s", "%s"},\n' % (k,v)
 
     s = s[:-2] # chomp last two chars
 
@@ -51,23 +51,23 @@ def format_as_map(oid2str, str2oid):
 
 namespace Botan {
 
-std::unordered_map<std::string, std::string> OID_Map::load_oid2str_map()
-   {
-   return std::unordered_map<std::string,std::string>{
-      %s
-      };
-   }
+std::unordered_map<std::string, std::string> OID_Map::load_oid2str_map() {
+   return std::unordered_map<std::string, std::string>{
 
-std::unordered_map<std::string, OID> OID_Map::load_str2oid_map()
-   {
-   return std::unordered_map<std::string,OID>{
-      %s
-      };
-   }
-
+      %s};
 }
-""" % (sys.argv[0], datetime.date.today().strftime("%Y-%m-%d"),
-       format_map(oid2str), format_map(str2oid, True))
+
+std::unordered_map<std::string, OID> OID_Map::load_str2oid_map() {
+   return std::unordered_map<std::string, OID>{
+
+      %s};
+}
+
+}  // namespace Botan""" % (
+    sys.argv[0],
+    datetime.date.today().strftime("%Y-%m-%d"),
+    format_map(oid2str),
+    format_map(str2oid, True))
 
 def format_dn_ub_map(dn_ub, oid2str):
     s = ''
