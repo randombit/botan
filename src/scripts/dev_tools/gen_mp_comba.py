@@ -46,14 +46,13 @@ def comba_multiply_code(N):
 
     for (i,idx) in zip(range(0, len(indexes)), indexes):
         for pair in idx:
-            print("   word3_muladd(&%s, &%s, &%s, x[%2d], y[%2d]);" % (w2, w1, w0, pair[0], pair[1]))
+            print("   word3_muladd(&%s, &%s, &%s, x[%d], y[%d]);" % (w2, w1, w0, pair[0], pair[1]))
 
         if i < 2*N-2:
-            print("   z[%2d] = %s; %s = 0;\n" % (i, w0, w0))
+            print("   z[%d] = %s;\n   %s = 0;\n" % (i, w0, w0))
         else:
-            print("   z[%2d] = %s;" % (i, w0))
+            print("   z[%d] = %s;" % (i, w0))
         (w0,w1,w2) = (w1,w2,w0)
-        #print("z[%2d] = w0; w0 = w1; w1 = w2; w2 = 0;" % (i))
 
 def comba_square_code(N):
     indexes = comba_sqr_indexes(N)
@@ -65,14 +64,14 @@ def comba_square_code(N):
     for (rnd,idx) in zip(range(0, len(indexes)), indexes):
         for (i,pair) in zip(range(0, len(idx)), idx):
             if pair[0] == pair[1]:
-                print("   word3_muladd  (&%s, &%s, &%s, x[%2d], x[%2d]);" % (w2, w1, w0, pair[0], pair[1]))
+                print("   word3_muladd(&%s, &%s, &%s, x[%d], x[%d]);" % (w2, w1, w0, pair[0], pair[1]))
             elif i % 2 == 0:
-                print("   word3_muladd_2(&%s, &%s, &%s, x[%2d], x[%2d]);" % (w2, w1, w0, pair[0], pair[1]))
+                print("   word3_muladd_2(&%s, &%s, &%s, x[%d], x[%d]);" % (w2, w1, w0, pair[0], pair[1]))
 
         if rnd < 2*N-2:
-            print("   z[%2d] = %s; %s = 0;\n" % (rnd, w0, w0))
+            print("   z[%d] = %s;\n   %s = 0;\n" % (rnd, w0, w0))
         else:
-            print("   z[%2d] = %s;" % (rnd, w0))
+            print("   z[%d] = %s;" % (rnd, w0))
 
         (w0,w1,w2) = (w1,w2,w0)
 
@@ -100,24 +99,22 @@ namespace Botan {
 
     for n in sizes:
         print("/*\n* Comba %dx%d Squaring\n*/" % (n, n))
-        print("void bigint_comba_sqr%d(word z[%d], const word x[%d])" % (n, 2*n, n))
-        print("   {")
+        print("void bigint_comba_sqr%d(word z[%d], const word x[%d]) {" % (n, 2*n, n))
         print("   word w2 = 0, w1 = 0, w0 = 0;\n")
 
         comba_square_code(n)
 
-        print("   }\n")
+        print("}\n")
 
         print("/*\n* Comba %dx%d Multiplication\n*/" % (n, n))
-        print("void bigint_comba_mul%d(word z[%d], const word x[%d], const word y[%d])" % (n, 2*n, n, n))
-        print("   {")
+        print("void bigint_comba_mul%d(word z[%d], const word x[%d], const word y[%d]) {" % (n, 2*n, n, n))
         print("   word w2 = 0, w1 = 0, w0 = 0;\n")
 
         comba_multiply_code(n)
 
-        print("   }\n")
+        print("}\n")
 
-    print("}")
+    print("}  // namespace Botan")
 
     return 0
 
