@@ -14,3 +14,9 @@ avx512
 <requires>
 simd_avx512
 </requires>
+
+# MSVC miscompiles this code
+<cc>
+gcc
+clang
+</cc>
