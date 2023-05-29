@@ -74,7 +74,7 @@ def format_dn_ub_map(dn_ub, oid2str):
     for k in sorted(dn_ub.keys()):
         v = dn_ub[k]
 
-        expr = "   { OID({%s}), %s }, " % (k.replace('.',','), v)
+        expr = "   {OID({%s}), %s}, " % (k.replace('.', ', '), v)
         s += expr
         s += ' '*(32 - len(expr))
         s += ' // %s\n' % (oid2str[k])
@@ -100,6 +100,7 @@ def format_dn_ub_as_map(dn_ub, oid2str):
 */
 
 #include <botan/pkix_types.h>
+
 #include <botan/asn1_obj.h>
 #include <map>
 
@@ -113,28 +114,23 @@ namespace {
  * Maps OID string representations instead of human readable strings in order
  * to avoid an additional lookup.
  */
-const std::map<OID, size_t> DN_UB =
-   {
+const std::map<OID, size_t> DN_UB = {
 %s
-   };
+};
 
-}
+}  // namespace
 
 //static
-size_t X509_DN::lookup_ub(const OID& oid)
-   {
+size_t X509_DN::lookup_ub(const OID& oid) {
    auto ub_entry = DN_UB.find(oid);
-   if(ub_entry != DN_UB.end())
-      {
+   if(ub_entry != DN_UB.end()) {
       return ub_entry->second;
-      }
-   else
-      {
+   } else {
       return 0;
-      }
    }
 }
-""" % (sys.argv[0], datetime.date.today().strftime("%Y-%m-%d"),
+
+}  // namespace Botan""" % (sys.argv[0], datetime.date.today().strftime("%Y-%m-%d"),
        format_dn_ub_map(dn_ub,oid2str))
 
 
@@ -165,7 +161,8 @@ def main(args = None):
     if args is None:
         args = sys.argv
     if len(args) < 2:
-        raise Exception("Use either 'oids', 'dn_ub' as first argument")
+        print("Use either 'oids' or 'dn_ub' as first argument")
+        return 1
 
     oid_lines = open('./src/build-data/oids.txt').readlines()
 
