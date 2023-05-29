@@ -10,6 +10,7 @@ import subprocess
 import sys
 import optparse # pylint: disable=deprecated-module
 import multiprocessing
+import difflib
 import time
 import os
 import tempfile
@@ -37,21 +38,18 @@ def apply_clang_format(clang_format, source_file):
         return False
     return True
 
-def run_diff(source_file, formatted):
-    contents = open(source_file, encoding='utf8').read()
-    if contents == formatted:
+def run_diff(source_file, formatted_contents):
+    original_contents = open(source_file, encoding='utf8').read()
+    if original_contents == formatted_contents:
         return ''
 
-    (tmp, tmpname) = tempfile.mkstemp(suffix='.cpp', text=True)
-    tmpf = os.fdopen(tmp, 'w', encoding='utf8')
-    tmpf.write(formatted)
-    tmpf.close()
-
-    (diff, _stderr) = run_command(['diff', '-u', source_file, tmpname])
-
-    os.unlink(tmpname)
-
-    return diff
+    return '\n'.join(difflib.unified_diff(
+        original_contents.splitlines(),
+        formatted_contents.splitlines(),
+        fromfile="%s (original)" % (source_file),
+        tofile="%s" % (source_file),
+        lineterm="",
+    ))
 
 def check_clang_format(clang_format, source_file):
     cmdline = [clang_format, source_file]
@@ -63,7 +61,7 @@ def check_clang_format(clang_format, source_file):
 
     diff = run_diff(source_file, stdout)
     if diff != '':
-        print("File %s needs formatting:\n%s" % (source_file, diff))
+        print(diff)
         return False
 
     return True
