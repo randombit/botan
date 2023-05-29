@@ -50,18 +50,20 @@ def format_int(x):
 
 def print_curve(curve):
     template_str = """   // %s
-   if(%s)
-      return load_EC_group_info("%s",
-                                "%s",
-                                "%s",
-                                "%s",
-                                "%s",
-                                "%s",
-                                %s);
+   if(%s) {
+      return load_EC_group_info(
+         "%s",
+         "%s",
+         "%s",
+         "%s",
+         "%s",
+         "%s",
+         %s);
+   }
 """
 
     name = curve['Name']
-    oids = ['OID{%s}' % (oid.replace('.', ',')) for oid in curve['OID']]
+    oids = ['OID{%s}' % (oid.replace('.', ', ')) for oid in curve['OID']]
     p = format_int(curve['P'])
     a = format_int(curve['A'])
     b = format_int(curve['B'])
@@ -90,7 +92,7 @@ def format_orders(orders):
         if order in orders_seen:
             raise Exception("Duplicate EC group order %s" % (order))
         orders_seen.add(order)
-        oid = oid[0].replace('.', ',')
+        oid = oid[0].replace('.', ', ')
         yield template_str % (low_bits, order, oid)
 
 def main():
@@ -104,7 +106,7 @@ def main():
     this_script = sys.argv[0]
     today = datetime.date.today().strftime("%Y-%m-%d")
 
-    print(template_str % (this_script, today, curves, orders, names))
+    print(template_str % (this_script, today, curves, orders, names), end='')
     return 0
 
 if __name__ == '__main__':
