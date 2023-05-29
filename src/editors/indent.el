@@ -3,9 +3,6 @@
 ; your .emacs file, or use M-x eval-buffer. Make sure to also set
 ; indent-tabs-mode to nil so spaces are inserted instead.
 ;
-; This style is basically Whitesmiths style with 3 space indents (the Emacs
-; "whitesmith" style seems more like a weird Whitesmiths/Allman mutant style).
-;
 ; To activate using this style, open the file you want to edit and run this:
 ; M-x c-set-style <RET> and then enter "botan".
 
@@ -16,23 +13,25 @@
       (c . 0)
       (comment-intro . 0)
 
-      (statement-block-intro . 0)
+      (statement-block-intro . +)
       (statement-cont . +)
 
       (substatement . +)
       (substatement-open . +)
 
-      (block-open . +)
+      (block-open . 0)
       (block-close . 0)
+
+      (case-label . +)
 
       (defun-open . +)
       (defun-close . 0)
-      (defun-block-intro . 0)
+      (defun-block-intro . +)
       (func-decl-cont . +)
 
-      (class-open . +)
-      (class-close . +)
-      (inclass . +)
+      (class-open . 0)
+      (class-close . 0)
+      (inclass . ++)
       (access-label . -)
       (inline-open . +)
       (inline-close . 0)
@@ -47,7 +46,7 @@
       (namespace-close . 0)
       (innamespace . 0)
 
-      (label . 0)
+      (label . +)
       )
 ))
 
