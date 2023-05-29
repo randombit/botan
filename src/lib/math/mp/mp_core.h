@@ -638,8 +638,8 @@ inline word bigint_divop(word n1, word n0, word d) {
    if(d == 0)
       throw Invalid_Argument("bigint_divop divide by zero");
 
-#if defined(BOTAN_HAS_MP_DWORD)
-   return static_cast<word>(((static_cast<dword>(n1) << BOTAN_MP_WORD_BITS) | n0) / d);
+#if defined(BOTAN_MP_DWORD)
+   return static_cast<word>(((static_cast<BOTAN_MP_DWORD>(n1) << BOTAN_MP_WORD_BITS) | n0) / d);
 #else
 
    word high = n1 % d;
@@ -669,8 +669,8 @@ inline word bigint_modop(word n1, word n0, word d) {
    if(d == 0)
       throw Invalid_Argument("bigint_modop divide by zero");
 
-#if defined(BOTAN_HAS_MP_DWORD)
-   return ((static_cast<dword>(n1) << BOTAN_MP_WORD_BITS) | n0) % d;
+#if defined(BOTAN_MP_DWORD)
+   return ((static_cast<BOTAN_MP_DWORD>(n1) << BOTAN_MP_WORD_BITS) | n0) % d;
 #else
    word z = bigint_divop(n1, n0, d);
    word dummy = 0;

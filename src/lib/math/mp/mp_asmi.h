@@ -15,13 +15,11 @@
 namespace Botan {
 
 #if(BOTAN_MP_WORD_BITS == 32)
-typedef uint64_t dword;
-   #define BOTAN_HAS_MP_DWORD
+   #define BOTAN_MP_DWORD uint64_t
 
 #elif(BOTAN_MP_WORD_BITS == 64)
    #if defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
-typedef uint128_t dword;
-      #define BOTAN_HAS_MP_DWORD
+      #define BOTAN_MP_DWORD uint128_t
    #else
       // No native 128 bit integer type; use mul64x64_128 instead
    #endif
@@ -68,8 +66,8 @@ inline word word_madd2(word a, word b, word* c) {
 
    return a;
 
-#elif defined(BOTAN_HAS_MP_DWORD)
-   const dword s = static_cast<dword>(a) * b + *c;
+#elif defined(BOTAN_MP_DWORD)
+   const BOTAN_MP_DWORD s = static_cast<BOTAN_MP_DWORD>(a) * b + *c;
    *c = static_cast<word>(s >> BOTAN_MP_WORD_BITS);
    return static_cast<word>(s);
 #else
@@ -123,8 +121,8 @@ inline word word_madd3(word a, word b, word c, word* d) {
 
    return a;
 
-#elif defined(BOTAN_HAS_MP_DWORD)
-   const dword s = static_cast<dword>(a) * b + c + *d;
+#elif defined(BOTAN_MP_DWORD)
+   const BOTAN_MP_DWORD s = static_cast<BOTAN_MP_DWORD>(a) * b + c + *d;
    *d = static_cast<word>(s >> BOTAN_MP_WORD_BITS);
    return static_cast<word>(s);
 #else
