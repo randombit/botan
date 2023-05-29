@@ -14,9 +14,3 @@ avx512
 <header:internal>
 simd_avx512.h
 </header:internal>
-
-<cc>
-gcc
-clang
-msvc
-</cc>

@@ -15,10 +15,3 @@ sse2 # for mm_pause see #2139
 <header:internal>
 rdseed.h
 </header:internal>
-
-<cc>
-gcc
-clang
-icc
-msvc
-</cc>

@@ -7,13 +7,6 @@ name -> "Processor RNG"
 brief -> "Directly invokes a CPU specific instruction to generate random numbers"
 </module_info>
 
-<cc>
-gcc
-clang
-icc
-msvc
-</cc>
-
 <arch>
 x86_32
 x86_64

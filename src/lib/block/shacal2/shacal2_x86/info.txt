@@ -16,10 +16,3 @@ sha
 sse2
 ssse3
 </isa>
-
-<cc>
-gcc
-clang
-msvc
-</cc>
-

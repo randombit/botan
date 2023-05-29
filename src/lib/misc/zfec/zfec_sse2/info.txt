@@ -10,9 +10,3 @@ brief -> "ZFEC using SSE2 instructions"
 <isa>
 sse2
 </isa>
-
-<cc>
-gcc
-clang
-msvc
-</cc>

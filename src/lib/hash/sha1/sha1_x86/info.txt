@@ -13,9 +13,3 @@ sse2
 ssse3
 sse41
 </isa>
-
-<cc>
-clang
-gcc
-msvc
-</cc>

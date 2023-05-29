@@ -950,6 +950,9 @@ class ModuleInfo(InfoObject):
 
         for supp_cc in self.cc:
             if supp_cc not in cc_info:
+                if supp_cc.startswith('!') and supp_cc[1:] in cc_info:
+                    continue
+
                 colon_idx = supp_cc.find(':')
                 # a versioned compiler dependency
                 if colon_idx > 0 and supp_cc[0:colon_idx] in cc_info:
@@ -1061,6 +1064,14 @@ class ModuleInfo(InfoObject):
 
             if ccinfo.basename in self.cc:
                 # compiler is supported, independent of version
+                return True
+
+            if '!%s' % (ccinfo.basename) in self.cc:
+                # an explicit exclusion of this compiler
+                return False
+
+            # If just exclusions are given, treat as accept if we do not match
+            if all(cc.startswith('!') for cc in self.cc):
                 return True
 
             # Maybe a versioned compiler dep

@@ -32,9 +32,3 @@ x86_64
 arm64
 ppc64
 </arch>
-
-<cc>
-gcc
-clang
-msvc
-</cc>
