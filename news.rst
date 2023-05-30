@@ -9,14 +9,16 @@ Version 3.1.0, Not Yet Released
 
 * Fix custom key exchange logic integration for TLS 1.2 server (GH #3539)
 
-* Add support for using AVX-512 (GH #3206)
+* Add initial wrappers for using AVX-512, and implement AVX-512 versions
+  of ChaCha and Serpent. (GH #3206 #3536)
 
 * Add support for an environmental variable which can disable CPU extensions
   (GH #3535)
 
 * Update the BSI policy to match the latest TR (GH #3482)
 
-* The entire codebase has been reformatted using ``clang-format``. (GH #3502)
+* The entire codebase has been reformatted using ``clang-format``.
+  (GH #3502 #3558 #3559)
 
 * Fix bugs related to ``--library-suffix`` option. (GH #3511)
 
