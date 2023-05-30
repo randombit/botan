@@ -721,33 +721,31 @@ int botan_pubkey_x25519_get_pubkey(botan_pubkey_t key, uint8_t output[32]) {
 * Algorithm specific key operations: Kyber
 */
 
-int botan_privkey_load_kyber(botan_privkey_t* key,
-                             const uint8_t privkey[], size_t key_len)
-   {
+int botan_privkey_load_kyber(botan_privkey_t* key, const uint8_t privkey[], size_t key_len) {
 #if defined(BOTAN_HAS_KYBER)
    *key = nullptr;
-   switch (key_len) {
+   switch(key_len) {
       case 1632:
          return ffi_guard_thunk(__func__, [=]() -> int {
             const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 1632);
             auto kyber512 = std::make_unique<Botan::Kyber_PrivateKey>(privkey_vec, Botan::KyberMode::Kyber512);
             *key = new botan_privkey_struct(std::move(kyber512));
             return BOTAN_FFI_SUCCESS;
-            });
+         });
       case 2400:
          return ffi_guard_thunk(__func__, [=]() -> int {
             const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 2400);
             auto kyber768 = std::make_unique<Botan::Kyber_PrivateKey>(privkey_vec, Botan::KyberMode::Kyber768);
             *key = new botan_privkey_struct(std::move(kyber768));
             return BOTAN_FFI_SUCCESS;
-            });
+         });
       case 3168:
          return ffi_guard_thunk(__func__, [=]() -> int {
             const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 3168);
             auto kyber1024 = std::make_unique<Botan::Kyber_PrivateKey>(privkey_vec, Botan::KyberMode::Kyber1024);
             *key = new botan_privkey_struct(std::move(kyber1024));
             return BOTAN_FFI_SUCCESS;
-            });
+         });
       default:
          BOTAN_UNUSED(key, privkey, key_len);
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
@@ -756,14 +754,12 @@ int botan_privkey_load_kyber(botan_privkey_t* key,
    BOTAN_UNUSED(key, privkey);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
-   }
+}
 
-int botan_pubkey_load_kyber(botan_pubkey_t* key,
-                            const uint8_t pubkey[], size_t key_len)
-   {
+int botan_pubkey_load_kyber(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len) {
 #if defined(BOTAN_HAS_KYBER)
    *key = nullptr;
-   switch (key_len) {
+   switch(key_len) {
       case 800:
          return ffi_guard_thunk(__func__, [=]() -> int {
             const std::vector<uint8_t> pubkey_vec(pubkey, pubkey + 800);
@@ -777,14 +773,14 @@ int botan_pubkey_load_kyber(botan_pubkey_t* key,
             auto kyber768 = std::make_unique<Botan::Kyber_PublicKey>(pubkey_vec, Botan::KyberMode::Kyber768);
             *key = new botan_pubkey_struct(std::move(kyber768));
             return BOTAN_FFI_SUCCESS;
-            });
+         });
       case 1568:
          return ffi_guard_thunk(__func__, [=]() -> int {
             const std::vector<uint8_t> pubkey_vec(pubkey, pubkey + 1568);
             auto kyber1024 = std::make_unique<Botan::Kyber_PublicKey>(pubkey_vec, Botan::KyberMode::Kyber1024);
             *key = new botan_pubkey_struct(std::move(kyber1024));
             return BOTAN_FFI_SUCCESS;
-            });
+         });
       default:
          BOTAN_UNUSED(key, pubkey, key_len);
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
@@ -793,47 +789,37 @@ int botan_pubkey_load_kyber(botan_pubkey_t* key,
    BOTAN_UNUSED(key, pubkey, key_len);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
-   }
+}
 
-int botan_privkey_view_kyber_raw_key(botan_privkey_t key, botan_view_ctx ctx, botan_view_bin_fn view)
-   {
+int botan_privkey_view_kyber_raw_key(botan_privkey_t key, botan_view_ctx ctx, botan_view_bin_fn view) {
 #if defined(BOTAN_HAS_KYBER)
    return BOTAN_FFI_VISIT(key, [=](const auto& k) -> int {
-      if(auto kyber = dynamic_cast<const Botan::Kyber_PrivateKey*>(&k))
-         {
+      if(auto kyber = dynamic_cast<const Botan::Kyber_PrivateKey*>(&k)) {
          return invoke_view_callback(view, ctx, kyber->raw_private_key_bits());
-         }
-      else
-         {
+      } else {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
-         }
-      });
+      }
+   });
 #else
    BOTAN_UNUSED(key, ctx, view);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
-   }
+}
 
-int botan_pubkey_view_kyber_raw_key(botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view)
-   {
+int botan_pubkey_view_kyber_raw_key(botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view) {
 #if defined(BOTAN_HAS_KYBER)
    return BOTAN_FFI_VISIT(key, [=](const auto& k) -> int {
-
-      if(auto kyber = dynamic_cast<const Botan::Kyber_PublicKey*>(&k))
-         {
+      if(auto kyber = dynamic_cast<const Botan::Kyber_PublicKey*>(&k)) {
          return invoke_view_callback(view, ctx, kyber->public_key_bits());
-         }
-      else
-         {
+      } else {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
-         }
-      });
+      }
+   });
 #else
    BOTAN_UNUSED(key, ctx, view);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
-   }
-
+}
 
 int botan_pubkey_view_ec_public_point(const botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view) {
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)

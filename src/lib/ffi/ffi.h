@@ -1435,21 +1435,15 @@ BOTAN_FFI_EXPORT(2, 8) int botan_pubkey_x25519_get_pubkey(botan_pubkey_t key, ui
 * Algorithm specific key operations: Kyber
 */
 
-BOTAN_FFI_EXPORT(3,1) int botan_privkey_load_kyber(botan_privkey_t* key,
-                                                   const uint8_t privkey[],
-                                                   size_t key_len);
+BOTAN_FFI_EXPORT(3, 1) int botan_privkey_load_kyber(botan_privkey_t* key, const uint8_t privkey[], size_t key_len);
 
-BOTAN_FFI_EXPORT(3,1) int botan_pubkey_load_kyber(botan_pubkey_t* key,
-                                                  const uint8_t pubkey[],
-                                                  size_t key_len);
+BOTAN_FFI_EXPORT(3, 1) int botan_pubkey_load_kyber(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len);
 
-BOTAN_FFI_EXPORT(3,1) int botan_privkey_view_kyber_raw_key(botan_privkey_t key,
-                                                           botan_view_ctx ctx,
-                                                           botan_view_bin_fn view);
+BOTAN_FFI_EXPORT(3, 1)
+int botan_privkey_view_kyber_raw_key(botan_privkey_t key, botan_view_ctx ctx, botan_view_bin_fn view);
 
-BOTAN_FFI_EXPORT(3,1) int botan_pubkey_view_kyber_raw_key(botan_pubkey_t key,
-                                                          botan_view_ctx ctx,
-                                                          botan_view_bin_fn view);
+BOTAN_FFI_EXPORT(3, 1)
+int botan_pubkey_view_kyber_raw_key(botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view);
 
 /*
 * Algorithm specific key operations: ECDSA and ECDH
