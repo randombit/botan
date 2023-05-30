@@ -10,6 +10,7 @@
 
 #include <botan/types.h>
 #include <cstring>
+#include <span>
 #include <type_traits>
 #include <vector>
 
@@ -277,8 +278,7 @@ inline void xor_buf(uint8_t out[], const uint8_t in[], const uint8_t in2[], size
    }
 }
 
-template <typename Alloc, typename Alloc2>
-void xor_buf(std::vector<uint8_t, Alloc>& out, const std::vector<uint8_t, Alloc2>& in, size_t n) {
+inline void xor_buf(std::span<uint8_t> out, std::span<const uint8_t> in, size_t n) {
    xor_buf(out.data(), in.data(), n);
 }
 
