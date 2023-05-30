@@ -637,7 +637,7 @@ def main(args=None):
 
         make_cmd = [options.make_tool]
         if build_dir != '.':
-            make_cmd = ['indir:%s' % build_dir] + make_cmd
+            make_cmd += ['-f%s' % (os.path.join(build_dir, 'Makefile'))]
         if options.build_jobs > 1 and options.make_tool != 'nmake':
             make_cmd += ['-j%d' % (options.build_jobs)]
 
