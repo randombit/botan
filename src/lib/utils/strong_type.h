@@ -16,12 +16,27 @@
 
 namespace Botan {
 
+/**
+ * Added as an additional "capability tag" to enable arithmetic operators with
+ * plain numbers for Strong<> types that wrap a number.
+ */
+struct EnableArithmeticWithPlainNumber {};
+
 namespace detail {
+
+/**
+ * Checks whether the @p CapabilityT is included in the @p Tags type pack.
+ */
+template <typename CapabilityT, typename... Tags>
+constexpr bool has_capability = (std::is_same_v<CapabilityT, Tags> || ...);
 
 template <typename T>
 class Strong_Base {
    private:
       T m_value;
+
+   public:
+      using wrapped_type = T;
 
    public:
       Strong_Base() = default;
@@ -30,7 +45,7 @@ class Strong_Base {
       Strong_Base& operator=(const Strong_Base&) = default;
       Strong_Base& operator=(Strong_Base&&) = default;
 
-      explicit Strong_Base(T v) : m_value(std::move(v)) {}
+      constexpr explicit Strong_Base(T v) : m_value(std::move(v)) {}
 
       T& get() { return m_value; }
 
@@ -39,6 +54,12 @@ class Strong_Base {
 
 template <typename T>
 class Strong_Adapter : public Strong_Base<T> {
+   public:
+      using Strong_Base<T>::Strong_Base;
+};
+
+template <concepts::integral T>
+class Strong_Adapter<T> : public Strong_Base<T> {
    public:
       using Strong_Base<T>::Strong_Base;
 };
@@ -63,6 +84,9 @@ class Strong_Adapter<T> : public Strong_Base<T> {
       explicit Strong_Adapter(size_t size)
          requires(concepts::resizable_container<T>)
             : Strong_Adapter(T(size)) {}
+
+      template <typename InputIt>
+      Strong_Adapter(InputIt begin, InputIt end) : Strong_Adapter(T(begin, end)) {}
 
       // Disambiguates the usage of string literals, otherwise:
       // Strong_Adapter(std::span<>) and Strong_Adapter(const char*)
@@ -128,7 +152,7 @@ class Strong_Adapter<T> : public Strong_Base<T> {
  * This implementation was inspired by:
  *   https://stackoverflow.com/a/69030899
  */
-template <typename T, typename TagTypeT>
+template <typename T, typename TagTypeT, typename... Capabilities>
 class Strong : public detail::Strong_Adapter<T> {
    public:
       using detail::Strong_Adapter<T>::Strong_Adapter;
@@ -154,6 +178,390 @@ template <typename T, typename... Tags>
 auto operator<=>(const Strong<T, Tags...>& lhs, const Strong<T, Tags...>& rhs) {
    return lhs.get() <=> rhs.get();
 }
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+auto operator<=>(T1 a, Strong<T2, Tags...> b) {
+   return a <=> b.get();
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+auto operator<=>(Strong<T1, Tags...> a, T2 b) {
+   return a.get() <=> b;
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+auto operator==(T1 a, Strong<T2, Tags...> b) {
+   return a == b.get();
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+auto operator==(Strong<T1, Tags...> a, T2 b) {
+   return a.get() == b;
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator+(T1 a, Strong<T2, Tags...> b) {
+   return Strong<T2, Tags...>(a + b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator+(Strong<T1, Tags...> a, T2 b) {
+   return Strong<T1, Tags...>(a.get() + b);
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr decltype(auto) operator+(Strong<T, Tags...> a, Strong<T, Tags...> b) {
+   return Strong<T, Tags...>(a.get() + b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator-(T1 a, Strong<T2, Tags...> b) {
+   return Strong<T2, Tags...>(a - b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator-(Strong<T1, Tags...> a, T2 b) {
+   return Strong<T1, Tags...>(a.get() - b);
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr decltype(auto) operator-(Strong<T, Tags...> a, Strong<T, Tags...> b) {
+   return Strong<T, Tags...>(a.get() - b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator*(T1 a, Strong<T2, Tags...> b) {
+   return Strong<T2, Tags...>(a * b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator*(Strong<T1, Tags...> a, T2 b) {
+   return Strong<T1, Tags...>(a.get() * b);
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr decltype(auto) operator*(Strong<T, Tags...> a, Strong<T, Tags...> b) {
+   return Strong<T, Tags...>(a.get() * b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator/(T1 a, Strong<T2, Tags...> b) {
+   return Strong<T2, Tags...>(a / b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator/(Strong<T1, Tags...> a, T2 b) {
+   return Strong<T1, Tags...>(a.get() / b);
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr decltype(auto) operator/(Strong<T, Tags...> a, Strong<T, Tags...> b) {
+   return Strong<T, Tags...>(a.get() / b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator^(T1 a, Strong<T2, Tags...> b) {
+   return Strong<T2, Tags...>(a ^ b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator^(Strong<T1, Tags...> a, T2 b) {
+   return Strong<T1, Tags...>(a.get() ^ b);
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr decltype(auto) operator^(Strong<T, Tags...> a, Strong<T, Tags...> b) {
+   return Strong<T, Tags...>(a.get() ^ b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator&(T1 a, Strong<T2, Tags...> b) {
+   return Strong<T2, Tags...>(a & b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator&(Strong<T1, Tags...> a, T2 b) {
+   return Strong<T1, Tags...>(a.get() & b);
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr decltype(auto) operator&(Strong<T, Tags...> a, Strong<T, Tags...> b) {
+   return Strong<T, Tags...>(a.get() & b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator|(T1 a, Strong<T2, Tags...> b) {
+   return Strong<T2, Tags...>(a | b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator|(Strong<T1, Tags...> a, T2 b) {
+   return Strong<T1, Tags...>(a.get() | b);
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr decltype(auto) operator|(Strong<T, Tags...> a, Strong<T, Tags...> b) {
+   return Strong<T, Tags...>(a.get() | b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator>>(T1 a, Strong<T2, Tags...> b) {
+   return Strong<T2, Tags...>(a >> b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator>>(Strong<T1, Tags...> a, T2 b) {
+   return Strong<T1, Tags...>(a.get() >> b);
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr decltype(auto) operator>>(Strong<T, Tags...> a, Strong<T, Tags...> b) {
+   return Strong<T, Tags...>(a.get() >> b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator<<(T1 a, Strong<T2, Tags...> b) {
+   return Strong<T2, Tags...>(a << b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr decltype(auto) operator<<(Strong<T1, Tags...> a, T2 b) {
+   return Strong<T1, Tags...>(a.get() << b);
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr decltype(auto) operator<<(Strong<T, Tags...> a, Strong<T, Tags...> b) {
+   return Strong<T, Tags...>(a.get() << b.get());
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr auto operator+=(Strong<T1, Tags...>& a, T2 b) {
+   a.get() += b;
+   return a;
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr auto operator+=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
+   a.get() += b.get();
+   return a;
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr auto operator-=(Strong<T1, Tags...>& a, T2 b) {
+   a.get() -= b;
+   return a;
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr auto operator-=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
+   a.get() -= b.get();
+   return a;
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr auto operator*=(Strong<T1, Tags...>& a, T2 b) {
+   a.get() *= b;
+   return a;
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr auto operator*=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
+   a.get() *= b.get();
+   return a;
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr auto operator/=(Strong<T1, Tags...>& a, T2 b) {
+   a.get() /= b;
+   return a;
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr auto operator/=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
+   a.get() /= b.get();
+   return a;
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr auto operator^=(Strong<T1, Tags...>& a, T2 b) {
+   a.get() ^= b;
+   return a;
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr auto operator^=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
+   a.get() ^= b.get();
+   return a;
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr auto operator&=(Strong<T1, Tags...>& a, T2 b) {
+   a.get() &= b;
+   return a;
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr auto operator&=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
+   a.get() &= b.get();
+   return a;
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr auto operator|=(Strong<T1, Tags...>& a, T2 b) {
+   a.get() |= b;
+   return a;
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr auto operator|=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
+   a.get() |= b.get();
+   return a;
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr auto operator>>=(Strong<T1, Tags...>& a, T2 b) {
+   a.get() >>= b;
+   return a;
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr auto operator>>=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
+   a.get() >>= b.get();
+   return a;
+}
+
+template <concepts::integral T1, concepts::integral T2, typename... Tags>
+   requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
+constexpr auto operator<<=(Strong<T1, Tags...>& a, T2 b) {
+   a.get() <<= b;
+   return a;
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr auto operator<<=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
+   a.get() <<= b.get();
+   return a;
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr auto operator++(Strong<T, Tags...>& a, int) {
+   auto tmp = a;
+   ++a.get();
+   return tmp;
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr auto operator++(Strong<T, Tags...>& a) {
+   ++a.get();
+   return a;
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr auto operator--(Strong<T, Tags...>& a, int) {
+   auto tmp = a;
+   --a.get();
+   return tmp;
+}
+
+template <concepts::integral T, typename... Tags>
+constexpr auto operator--(Strong<T, Tags...>& a) {
+   --a.get();
+   return a;
+}
+
+/**
+ * This mimmicks a std::span but keeps track of the strong-type information. Use
+ * this when you would want to use `const Strong<...>&` as a parameter
+ * declaration. In particular this allows assigning strong-type information to
+ * slices of a bigger buffer without copying the bytes. E.g:
+ *
+ *    using Foo = Strong<std::vector<uint8_t>, Foo_>;
+ *
+ *    void bar(StrongSpan<Foo> foo) { ... }
+ *
+ *    std::vector<uint8_t> buffer;
+ *    BufferSlicer slicer(buffer);
+ *    bar(slicer.take<Foo>());  // This does not copy the data from buffer but
+ *                              // just annotates the 'Foo' strong-type info.
+ */
+template <concepts::contiguous_strong_type T>
+class StrongSpan {
+      using underlying_span = std::
+         conditional_t<std::is_const_v<T>, std::span<const typename T::value_type>, std::span<typename T::value_type>>;
+
+   public:
+      using value_type = typename underlying_span::value_type;
+      using size_type = typename underlying_span::size_type;
+      using iterator = typename underlying_span::iterator;
+      using pointer = typename underlying_span::pointer;
+      using const_pointer = typename underlying_span::const_pointer;
+
+      StrongSpan() = default;
+
+      explicit StrongSpan(underlying_span span) : m_span(span) {}
+
+      StrongSpan(T& strong) : m_span(strong) {}
+
+      // allows implicit conversion from `StrongSpan<T>` to `StrongSpan<const T>`
+      // -> if T is a const type, the compiler will generate a copy-constructor
+      //    allowing copies from `StrongSpan<T>` and `StrongSpan<const T>`
+      // -> if T is a non-const type, no additional copy-constructor will be
+      //    generated. Instead this explicitly defines it. As a result, implicit
+      //    cast from a `StrongSpan<const T>` to `StrongSpan<T>` is prohibited.
+      StrongSpan(const StrongSpan<std::remove_const_t<T>>& other) : m_span(other.get()) {}
+
+      ~StrongSpan() = default;
+
+      /**
+       * @returns the underlying std::span without any type constraints
+       */
+      underlying_span get() const { return m_span; }
+
+      decltype(auto) data() noexcept(noexcept(this->m_span.data())) { return this->m_span.data(); }
+
+      decltype(auto) data() const noexcept(noexcept(this->m_span.data())) { return this->m_span.data(); }
+
+      decltype(auto) size() const noexcept(noexcept(this->m_span.size())) { return this->m_span.size(); }
+
+      bool empty() const noexcept(noexcept(this->m_span.empty())) { return this->m_span.empty(); }
+
+      decltype(auto) begin() noexcept(noexcept(this->m_span.begin())) { return this->m_span.begin(); }
+
+      decltype(auto) begin() const noexcept(noexcept(this->m_span.begin())) { return this->m_span.begin(); }
+
+      decltype(auto) end() noexcept(noexcept(this->m_span.end())) { return this->m_span.end(); }
+
+      decltype(auto) end() const noexcept(noexcept(this->m_span.end())) { return this->m_span.end(); }
+
+   private:
+      underlying_span m_span;
+};
 
 }  // namespace Botan
 

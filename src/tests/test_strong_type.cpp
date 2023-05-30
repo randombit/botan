@@ -191,8 +191,203 @@ std::vector<Test::Result> test_container_strong_type() {
    };
 }
 
+std::vector<Test::Result> test_integer_strong_type() {
+   using StrongInt = Botan::Strong<int, struct StrongInt_>;
+   using StrongIntWithPodArithmetics = Botan::Strong<int, struct StrongInt_, Botan::EnableArithmeticWithPlainNumber>;
+
+   return {
+      Botan_Tests::CHECK("comparison operators with POD are always allowed",
+                         [](auto& result) {
+                            StrongInt i(42);
+
+                            result.confirm("i ==", i == 42);
+                            result.confirm("i !=", i != 0);
+                            result.confirm("i >", i > 41);
+                            result.confirm("i >= 1", i >= 41);
+                            result.confirm("i >= 2", i >= 42);
+                            result.confirm("i <", i < 43);
+                            result.confirm("i <= 1", i <= 43);
+                            result.confirm("i <= 2", i <= 42);
+
+                            result.confirm("== i", 42 == i);
+                            result.confirm("!= i", 0 != i);
+                            result.confirm("> i", 43 > i);
+                            result.confirm(">= 1 i", 43 >= i);
+                            result.confirm(">= 2 i", 42 >= i);
+                            result.confirm("< i", 41 < i);
+                            result.confirm("<= 1 i", 41 <= i);
+                            result.confirm("<= 2 i", 42 <= i);
+                         }),
+
+      Botan_Tests::CHECK("increment/decrement are always allowed",
+                         [](auto& result) {
+                            StrongInt i(42);
+
+                            result.confirm("i++", i++ == 42);
+                            result.confirm("i post-incremented", i == 43);
+                            result.confirm("++i", ++i == 44);
+                            result.confirm("i pre-incremented", i == 44);
+
+                            result.confirm("i--", i-- == 44);
+                            result.confirm("i post-decremented", i == 43);
+                            result.confirm("--i", --i == 42);
+                            result.confirm("i pre-decremented", i == 42);
+                         }),
+
+      Botan_Tests::CHECK("comparison operators with Strong<>",
+                         [](auto& result) {
+                            StrongInt i(42);
+                            StrongInt i42(42);
+                            StrongInt i41(41);
+                            StrongInt i43(43);
+                            StrongInt i0(0);
+
+                            result.confirm("==", i == i42);
+                            result.confirm("!=", i != i0);
+                            result.confirm(">", i > i41);
+                            result.confirm(">= 1", i >= i41);
+                            result.confirm(">= 2", i >= i42);
+                            result.confirm("<", i < i43);
+                            result.confirm("<= 1", i <= i43);
+                            result.confirm("<= 2", i <= i42);
+                         }),
+
+      Botan_Tests::CHECK("arithmetics with Strong<>",
+                         [](auto& result) {
+                            StrongInt i(42);
+                            StrongInt i2(2);
+                            StrongInt i4(4);
+                            StrongInt i12(12);
+
+                            result.confirm("+", i + i == 84);
+                            result.confirm("-", i - i == 0);
+                            result.confirm("*", i * i == 1764);
+                            result.confirm("/", i / i == 1);
+                            result.confirm("^", (i ^ i) == 0);
+                            result.confirm("&", (i & i) == 42);
+                            result.confirm("|", (i | i) == 42);
+                            result.confirm(">>", (i >> i2) == 10);
+                            result.confirm("<<", (i << i2) == 168);
+
+                            result.confirm("+=", (i += i2) == 44);
+                            result.confirm("-=", (i -= i2) == 42);
+                            result.confirm("*=", (i *= i2) == 84);
+                            result.confirm("/=", (i /= i2) == 42);
+                            result.confirm("^=", (i ^= i2) == 40);
+                            result.confirm("&=", (i &= i12) == 8);
+                            result.confirm("|=", (i |= i2) == 10);
+                            result.confirm("<<=", (i <<= i2) == 40);
+                            result.confirm(">>=", (i >>= i4) == 2);
+                         }),
+
+      Botan_Tests::CHECK("arithmetics with POD",
+                         [](auto& result) {
+                            StrongIntWithPodArithmetics i(42);
+                            StrongIntWithPodArithmetics i2(2);
+
+                            result.confirm("i +", i + 1 == 43);
+                            result.confirm("i -", i - 1 == 41);
+                            result.confirm("i *", i * 2 == 84);
+                            result.confirm("i /", i / 2 == 21);
+                            result.confirm("i ^", (i ^ 10) == 32);
+                            result.confirm("i &", (i & 15) == 10);
+                            result.confirm("i |", (i | 4) == 46);
+                            result.confirm("i >>", (i >> 2) == 10);
+                            result.confirm("i <<", (i << 2) == 168);
+
+                            result.confirm("+ i", 1 + i == 43);
+                            result.confirm("- i", 1 - i == -41);
+                            result.confirm("* i", 2 * i == 84);
+                            result.confirm("/ i", 84 / i == 2);
+                            result.confirm("^ i", (10 ^ i) == 32);
+                            result.confirm("& i", (15 & i) == 10);
+                            result.confirm("| i", (4 | i) == 46);
+                            result.confirm(">> i", (4 >> i2) == 1);
+                            result.confirm("<< i", (2 << i2) == 8);
+
+                            result.confirm("i +=", (i += 2) == 44);
+                            result.confirm("i -=", (i -= 2) == 42);
+                            result.confirm("i *=", (i *= 2) == 84);
+                            result.confirm("i /=", (i /= 2) == 42);
+                            result.confirm("i ^=", (i ^= 2) == 40);
+                            result.confirm("i &=", (i &= 12) == 8);
+                            result.confirm("i |=", (i |= 2) == 10);
+                            result.confirm("i <<=", (i <<= 2) == 40);
+                            result.confirm("i >>=", (i >>= 4) == 2);
+                         }),
+
+      Botan_Tests::CHECK("arithmetics with POD is still Strong<>",
+                         [](auto& result) {
+                            StrongIntWithPodArithmetics i(42);
+                            StrongIntWithPodArithmetics i2(2);
+
+                            result.confirm("i +", Botan::is_strong_type_v<decltype(i + 1)>);
+                            result.confirm("i -", Botan::is_strong_type_v<decltype(i - 1)>);
+                            result.confirm("i *", Botan::is_strong_type_v<decltype(i * 2)>);
+                            result.confirm("i /", Botan::is_strong_type_v<decltype(i / 2)>);
+                            result.confirm("i ^", Botan::is_strong_type_v<decltype((i ^ 10))>);
+                            result.confirm("i &", Botan::is_strong_type_v<decltype((i & 15))>);
+                            result.confirm("i |", Botan::is_strong_type_v<decltype((i | 4))>);
+                            result.confirm("i >>", Botan::is_strong_type_v<decltype((i >> 2))>);
+                            result.confirm("i <<", Botan::is_strong_type_v<decltype((i << 2))>);
+
+                            result.confirm("+ i", Botan::is_strong_type_v<decltype(1 + i)>);
+                            result.confirm("- i", Botan::is_strong_type_v<decltype(1 - i)>);
+                            result.confirm("* i", Botan::is_strong_type_v<decltype(2 * i)>);
+                            result.confirm("/ i", Botan::is_strong_type_v<decltype(84 / i)>);
+                            result.confirm("^ i", Botan::is_strong_type_v<decltype((10 ^ i))>);
+                            result.confirm("& i", Botan::is_strong_type_v<decltype((15 & i))>);
+                            result.confirm("| i", Botan::is_strong_type_v<decltype((4 | i))>);
+                            result.confirm(">> i", Botan::is_strong_type_v<decltype((4 >> i2))>);
+                            result.confirm("<< i", Botan::is_strong_type_v<decltype((2 << i2))>);
+
+                            result.confirm("i +=", Botan::is_strong_type_v<decltype(i += 2)>);
+                            result.confirm("i -=", Botan::is_strong_type_v<decltype(i -= 2)>);
+                            result.confirm("i *=", Botan::is_strong_type_v<decltype(i *= 2)>);
+                            result.confirm("i /=", Botan::is_strong_type_v<decltype(i /= 2)>);
+                            result.confirm("i ^=", Botan::is_strong_type_v<decltype(i ^= 2)>);
+                            result.confirm("i &=", Botan::is_strong_type_v<decltype(i &= 12)>);
+                            result.confirm("i |=", Botan::is_strong_type_v<decltype(i |= 2)>);
+                            result.confirm("i <<=", Botan::is_strong_type_v<decltype(i <<= 2)>);
+                            result.confirm("i >>=", Botan::is_strong_type_v<decltype(i >>= 4)>);
+                         }),
+   };
+}
+
+using Test_Foo = Botan::Strong<std::vector<uint8_t>, struct Test_Foo_>;
+using Test_Bar = Botan::Strong<std::vector<uint8_t>, struct Test_Bar_>;
+
+[[maybe_unused]] int test_strong_helper(Botan::StrongSpan<Test_Foo>) { return 0; }
+
+[[maybe_unused]] int test_strong_helper(Botan::StrongSpan<const Test_Foo>) { return 1; }
+
+[[maybe_unused]] int test_strong_helper(Botan::StrongSpan<Test_Bar>) { return 2; }
+
+Test::Result test_strong_span() {
+   Test::Result result("StrongSpan<>");
+
+   const Test_Foo foo(Botan::hex_decode("DEADBEEF"));
+   result.test_is_eq("binds to StrongSpan<const Test_Foo>", test_strong_helper(foo), 1);
+
+   Test_Bar bar(Botan::hex_decode("CAFECAFE"));
+   result.test_is_eq("binds to StrongSpan<Test_Bar>", test_strong_helper(bar), 2);
+
+   Botan::StrongSpan<const Test_Foo> span(foo);
+
+   result.confirm("underlying type is uint8_t", std::is_same_v<decltype(span)::value_type, uint8_t>);
+   result.confirm("strong type is a contiguous buffer", Botan::concepts::contiguous_container<decltype(foo)>);
+   result.confirm("strong type is a contiguous strong type buffer",
+                  Botan::concepts::contiguous_strong_type<decltype(foo)>);
+   result.confirm("strong span is not a contiguous buffer", !Botan::concepts::contiguous_container<decltype(span)>);
+   result.confirm("strong span is not a contiguous strong type buffer",
+                  !Botan::concepts::contiguous_strong_type<decltype(span)>);
+
+   return result;
+}
+
 }  // namespace
 
-BOTAN_REGISTER_TEST_FN("utils", "strong_type", test_strong_type, test_container_strong_type);
+BOTAN_REGISTER_TEST_FN(
+   "utils", "strong_type", test_strong_type, test_container_strong_type, test_integer_strong_type, test_strong_span);
 
 }  // namespace Botan_Tests
