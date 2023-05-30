@@ -39,8 +39,9 @@ EAX_Mode::EAX_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size) :
       m_cipher(std::move(cipher)),
       m_ctr(std::make_unique<CTR_BE>(m_cipher->new_object())),
       m_cmac(std::make_unique<CMAC>(m_cipher->new_object())) {
-   if(m_tag_size < 8 || m_tag_size > m_cmac->output_length())
+   if(m_tag_size < 8 || m_tag_size > m_cmac->output_length()) {
       throw Invalid_Argument(fmt("Tag size {} is not allowed for {}", tag_size, name()));
+   }
 }
 
 void EAX_Mode::clear() {
@@ -87,21 +88,24 @@ void EAX_Mode::key_schedule(const uint8_t key[], size_t length) {
 */
 void EAX_Mode::set_associated_data_n(size_t idx, std::span<const uint8_t> ad) {
    BOTAN_ARG_CHECK(idx == 0, "EAX: cannot handle non-zero index in set_associated_data_n");
-   if(m_nonce_mac.empty() == false)
+   if(m_nonce_mac.empty() == false) {
       throw Invalid_State("Cannot set AD for EAX while processing a message");
+   }
    m_ad_mac = eax_prf(1, block_size(), *m_cmac, ad.data(), ad.size());
 }
 
 void EAX_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
-   if(!valid_nonce_length(nonce_len))
+   if(!valid_nonce_length(nonce_len)) {
       throw Invalid_IV_Length(name(), nonce_len);
+   }
 
    m_nonce_mac = eax_prf(0, block_size(), *m_cmac, nonce, nonce_len);
 
    m_ctr->set_iv(m_nonce_mac.data(), m_nonce_mac.size());
 
-   for(size_t i = 0; i != block_size() - 1; ++i)
+   for(size_t i = 0; i != block_size() - 1; ++i) {
       m_cmac->update(0);
+   }
    m_cmac->update(2);
 }
 
@@ -168,8 +172,9 @@ void EAX_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    m_nonce_mac.clear();
 
-   if(!accept_mac)
+   if(!accept_mac) {
       throw Invalid_Authentication_Tag("EAX tag check failed");
+   }
 }
 
 }  // namespace Botan

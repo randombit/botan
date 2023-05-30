@@ -129,10 +129,11 @@ secure_vector<uint8_t> oaep_find_delim(uint8_t& valid_mask,
 * Return the max input size for a given key size
 */
 size_t OAEP::maximum_input_size(size_t keybits) const {
-   if(keybits / 8 > 2 * m_Phash.size() + 1)
+   if(keybits / 8 > 2 * m_Phash.size() + 1) {
       return ((keybits / 8) - 2 * m_Phash.size() - 1);
-   else
+   } else {
       return 0;
+   }
 }
 
 OAEP::OAEP(std::unique_ptr<HashFunction> hash, std::string_view P) : m_mgf1_hash(std::move(hash)) {

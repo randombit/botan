@@ -384,8 +384,9 @@ inline void ks_expand(uint32_t B[8], const uint32_t K[], size_t r) {
    This is bit_transpose of K[r..r+4] || K[r..r+4], we can save some computation
    due to knowing the first and second halves are the same data.
    */
-   for(size_t i = 0; i != 4; ++i)
+   for(size_t i = 0; i != 4; ++i) {
       B[i] = K[r + i];
+   }
 
    swap_bits<uint32_t>(B[1], B[0], 0x55555555, 1);
    swap_bits<uint32_t>(B[3], B[2], 0x55555555, 1);
@@ -522,8 +523,9 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks, const secur
 
       CT::poison(B, 8);
 
-      for(size_t i = 0; i != 8; ++i)
+      for(size_t i = 0; i != 8; ++i) {
          B[i] ^= EK[i % 4];
+      }
 
       bit_transpose(B);
 
@@ -532,8 +534,9 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks, const secur
          shift_rows(B);
          mix_columns(B);
 
-         for(size_t i = 0; i != 8; ++i)
+         for(size_t i = 0; i != 8; ++i) {
             B[i] ^= KS[8 * r + i];
+         }
       }
 
       // Final round:
@@ -541,8 +544,9 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks, const secur
       shift_rows(B);
       bit_transpose(B);
 
-      for(size_t i = 0; i != 8; ++i)
+      for(size_t i = 0; i != 8; ++i) {
          B[i] ^= EK[4 * rounds + i % 4];
+      }
 
       CT::unpoison(B, 8);
 
@@ -579,8 +583,9 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks, const secur
 
       load_be(B, in, this_loop * 4);
 
-      for(size_t i = 0; i != 8; ++i)
+      for(size_t i = 0; i != 8; ++i) {
          B[i] ^= DK[i % 4];
+      }
 
       bit_transpose(B);
 
@@ -589,8 +594,9 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks, const secur
          inv_shift_rows(B);
          inv_mix_columns(B);
 
-         for(size_t i = 0; i != 8; ++i)
+         for(size_t i = 0; i != 8; ++i) {
             B[i] ^= KS[8 * r + i];
+         }
       }
 
       // Final round:
@@ -598,8 +604,9 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks, const secur
       inv_shift_rows(B);
       bit_transpose(B);
 
-      for(size_t i = 0; i != 8; ++i)
+      for(size_t i = 0; i != 8; ++i) {
          B[i] ^= DK[4 * rounds + i % 4];
+      }
 
       CT::unpoison(B, 8);
 
@@ -641,15 +648,17 @@ void InvMixColumn_x4(uint32_t x[4]) {
 uint32_t SE_word(uint32_t x) {
    uint32_t I[8] = {0};
 
-   for(size_t i = 0; i != 8; ++i)
+   for(size_t i = 0; i != 8; ++i) {
       I[i] = (x >> (7 - i)) & 0x01010101;
+   }
 
    AES_SBOX(I);
 
    x = 0;
 
-   for(size_t i = 0; i != 8; ++i)
+   for(size_t i = 0; i != 8; ++i) {
       x |= ((I[i] & 0x01010101) << (7 - i));
+   }
 
    return x;
 }
@@ -685,8 +694,9 @@ void aes_key_schedule(const uint8_t key[],
    EK.resize(length + 28);
    DK.resize(length + 28);
 
-   for(size_t i = 0; i != X; ++i)
+   for(size_t i = 0; i != X; ++i) {
       EK[i] = load_be<uint32_t>(key, i);
+   }
 
    for(size_t i = X; i < 4 * (rounds + 1); i += X) {
       EK[i] = EK[i - X] ^ RC[(i - X) / X] ^ rotl<8>(SE_word(EK[i - 1]));
@@ -694,10 +704,11 @@ void aes_key_schedule(const uint8_t key[],
       for(size_t j = 1; j != X && (i + j) < EK.size(); ++j) {
          EK[i + j] = EK[i + j - X];
 
-         if(X == 8 && j == 4)
+         if(X == 8 && j == 4) {
             EK[i + j] ^= SE_word(EK[i + j - 1]);
-         else
+         } else {
             EK[i + j] ^= EK[i + j - 1];
+         }
       }
    }
 
@@ -714,10 +725,12 @@ void aes_key_schedule(const uint8_t key[],
 
    if(bswap_keys) {
       // HW AES on little endian needs the subkeys to be byte reversed
-      for(size_t i = 0; i != EK.size(); ++i)
+      for(size_t i = 0; i != EK.size(); ++i) {
          EK[i] = reverse_bytes(EK[i]);
-      for(size_t i = 0; i != DK.size(); ++i)
+      }
+      for(size_t i = 0; i != DK.size(); ++i) {
          DK[i] = reverse_bytes(DK[i]);
+      }
    }
 
    CT::unpoison(EK.data(), EK.size());

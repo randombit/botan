@@ -63,22 +63,28 @@ X509_Cert_Options::X509_Cert_Options(std::string_view initial_opts, uint32_t exp
    start = X509_Time(now);
    end = X509_Time(now + std::chrono::seconds(expiration_time));
 
-   if(initial_opts.empty())
+   if(initial_opts.empty()) {
       return;
+   }
 
    std::vector<std::string> parsed = split_on(initial_opts, '/');
 
-   if(parsed.size() > 4)
+   if(parsed.size() > 4) {
       throw Invalid_Argument("X.509 cert options: Too many names");
+   }
 
-   if(!parsed.empty())
+   if(!parsed.empty()) {
       common_name = parsed[0];
-   if(parsed.size() >= 2)
+   }
+   if(parsed.size() >= 2) {
       country = parsed[1];
-   if(parsed.size() >= 3)
+   }
+   if(parsed.size() >= 3) {
       organization = parsed[2];
-   if(parsed.size() == 4)
+   }
+   if(parsed.size() == 4) {
       org_unit = parsed[3];
+   }
 }
 
 }  // namespace Botan

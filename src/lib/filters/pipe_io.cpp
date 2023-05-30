@@ -20,8 +20,9 @@ std::ostream& operator<<(std::ostream& stream, Pipe& pipe) {
       const size_t got = pipe.read(buffer.data(), buffer.size());
       stream.write(cast_uint8_ptr_to_char(buffer.data()), got);
    }
-   if(!stream.good())
+   if(!stream.good()) {
       throw Stream_IO_Error("Pipe output operator (iostream) has failed");
+   }
    return stream;
 }
 
@@ -35,8 +36,9 @@ std::istream& operator>>(std::istream& stream, Pipe& pipe) {
       const size_t got = static_cast<size_t>(stream.gcount());
       pipe.write(buffer.data(), got);
    }
-   if(stream.bad() || (stream.fail() && !stream.eof()))
+   if(stream.bad() || (stream.fail() && !stream.eof())) {
       throw Stream_IO_Error("Pipe input operator (iostream) has failed");
+   }
    return stream;
 }
 

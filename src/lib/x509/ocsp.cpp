@@ -47,8 +47,9 @@ void decode_optional_list(BER_Decoder& ber, ASN1_Type tag, std::vector<X509_Cert
 
 Request::Request(const X509_Certificate& issuer_cert, const X509_Certificate& subject_cert) :
       m_issuer(issuer_cert), m_certid(m_issuer, BigInt::decode(subject_cert.serial_number())) {
-   if(subject_cert.issuer_dn() != issuer_cert.subject_dn())
+   if(subject_cert.issuer_dn() != issuer_cert.subject_dn()) {
       throw Invalid_Argument("Invalid cert pair to OCSP::Request (mismatched issuer,subject args?)");
+   }
 }
 
 Request::Request(const X509_Certificate& issuer_cert, const BigInt& subject_serial) :
@@ -126,10 +127,12 @@ Response::Response(const uint8_t response_bits[], size_t response_bits_len) :
       const bool has_signer = !m_signer_name.empty();
       const bool has_key_hash = !m_key_hash.empty();
 
-      if(has_signer && has_key_hash)
+      if(has_signer && has_key_hash) {
          throw Decoding_Error("OCSP response includes both byName and byKey in responderID field");
-      if(!has_signer && !has_key_hash)
+      }
+      if(!has_signer && !has_key_hash) {
          throw Decoding_Error("OCSP response contains neither byName nor byKey in responderID field");
+      }
    }
 
    response_outer.end_cons();
@@ -148,24 +151,28 @@ bool Response::is_issued_by(const X509_Certificate& candidate) const {
 }
 
 Certificate_Status_Code Response::verify_signature(const X509_Certificate& issuer) const {
-   if(m_dummy_response_status)
+   if(m_dummy_response_status) {
       return m_dummy_response_status.value();
+   }
 
-   if(m_signer_name.empty() && m_key_hash.empty())
+   if(m_signer_name.empty() && m_key_hash.empty()) {
       return Certificate_Status_Code::OCSP_RESPONSE_INVALID;
+   }
 
-   if(!is_issued_by(issuer))
+   if(!is_issued_by(issuer)) {
       return Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND;
+   }
 
    try {
       auto pub_key = issuer.subject_public_key();
 
       PK_Verifier verifier(*pub_key, m_sig_algo);
 
-      if(verifier.verify_message(ASN1::put_in_sequence(m_tbs_bits), m_signature))
+      if(verifier.verify_message(ASN1::put_in_sequence(m_tbs_bits), m_signature)) {
          return Certificate_Status_Code::OCSP_SIGNATURE_OK;
-      else
+      } else {
          return Certificate_Status_Code::OCSP_SIGNATURE_ERROR;
+      }
    } catch(Exception&) { return Certificate_Status_Code::OCSP_SIGNATURE_ERROR; }
 }
 
@@ -188,14 +195,16 @@ std::optional<X509_Certificate> Response::find_signing_certificate(
    if(trusted_ocsp_responders) {
       if(!m_key_hash.empty()) {
          auto signing_cert = trusted_ocsp_responders->find_cert_by_pubkey_sha1(m_key_hash);
-         if(signing_cert)
+         if(signing_cert) {
             return signing_cert;
+         }
       }
 
       if(!m_signer_name.empty()) {
          auto signing_cert = trusted_ocsp_responders->find_cert(m_signer_name, {});
-         if(signing_cert)
+         if(signing_cert) {
             return signing_cert;
+         }
       }
    }
 
@@ -248,8 +257,9 @@ Response online_check(const X509_Certificate& issuer,
                       const BigInt& subject_serial,
                       std::string_view ocsp_responder,
                       std::chrono::milliseconds timeout) {
-   if(ocsp_responder.empty())
+   if(ocsp_responder.empty()) {
       throw Invalid_Argument("No OCSP responder specified");
+   }
 
    OCSP::Request req(issuer, subject_serial);
 
@@ -265,8 +275,9 @@ Response online_check(const X509_Certificate& issuer,
 Response online_check(const X509_Certificate& issuer,
                       const X509_Certificate& subject,
                       std::chrono::milliseconds timeout) {
-   if(subject.issuer_dn() != issuer.subject_dn())
+   if(subject.issuer_dn() != issuer.subject_dn()) {
       throw Invalid_Argument("Invalid cert pair to OCSP::online_check (mismatched issuer,subject args?)");
+   }
 
    return online_check(issuer, BigInt::decode(subject.serial_number()), subject.ocsp_responder(), timeout);
 }

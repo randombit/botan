@@ -97,12 +97,14 @@ void CurveGFp_Montgomery::to_curve_rep(BigInt& x, secure_vector<word>& ws) const
 }
 
 void CurveGFp_Montgomery::from_curve_rep(BigInt& z, secure_vector<word>& ws) const {
-   if(ws.size() < get_ws_size())
+   if(ws.size() < get_ws_size()) {
       ws.resize(get_ws_size());
+   }
 
    const size_t output_size = 2 * m_p_words;
-   if(z.size() < output_size)
+   if(z.size() < output_size) {
       z.grow_to(output_size);
+   }
 
    bigint_monty_redc(z.mutable_data(), m_p.data(), m_p_words, m_p_dash, ws.data(), ws.size());
 }
@@ -111,12 +113,14 @@ void CurveGFp_Montgomery::curve_mul_words(
    BigInt& z, const word x_w[], size_t x_size, const BigInt& y, secure_vector<word>& ws) const {
    BOTAN_DEBUG_ASSERT(y.sig_words() <= m_p_words);
 
-   if(ws.size() < get_ws_size())
+   if(ws.size() < get_ws_size()) {
       ws.resize(get_ws_size());
+   }
 
    const size_t output_size = 2 * m_p_words;
-   if(z.size() < output_size)
+   if(z.size() < output_size) {
       z.grow_to(output_size);
+   }
 
    bigint_mul(z.mutable_data(),
               z.size(),
@@ -133,12 +137,14 @@ void CurveGFp_Montgomery::curve_mul_words(
 }
 
 void CurveGFp_Montgomery::curve_sqr_words(BigInt& z, const word x[], size_t x_size, secure_vector<word>& ws) const {
-   if(ws.size() < get_ws_size())
+   if(ws.size() < get_ws_size()) {
       ws.resize(get_ws_size());
+   }
 
    const size_t output_size = 2 * m_p_words;
-   if(z.size() < output_size)
+   if(z.size() < output_size) {
       z.grow_to(output_size);
+   }
 
    bigint_sqr(z.mutable_data(), z.size(), x, x_size, std::min(m_p_words, x_size), ws.data(), ws.size());
 
@@ -211,12 +217,14 @@ void CurveGFp_NIST::curve_mul_words(
    BigInt& z, const word x_w[], size_t x_size, const BigInt& y, secure_vector<word>& ws) const {
    BOTAN_DEBUG_ASSERT(y.sig_words() <= m_p_words);
 
-   if(ws.size() < get_ws_size())
+   if(ws.size() < get_ws_size()) {
       ws.resize(get_ws_size());
+   }
 
    const size_t output_size = 2 * m_p_words;
-   if(z.size() < output_size)
+   if(z.size() < output_size) {
       z.grow_to(output_size);
+   }
 
    bigint_mul(z.mutable_data(),
               z.size(),
@@ -233,12 +241,14 @@ void CurveGFp_NIST::curve_mul_words(
 }
 
 void CurveGFp_NIST::curve_sqr_words(BigInt& z, const word x[], size_t x_size, secure_vector<word>& ws) const {
-   if(ws.size() < get_ws_size())
+   if(ws.size() < get_ws_size()) {
       ws.resize(get_ws_size());
+   }
 
    const size_t output_size = 2 * m_p_words;
-   if(z.size() < output_size)
+   if(z.size() < output_size) {
       z.grow_to(output_size);
+   }
 
    bigint_sqr(z.mutable_data(), output_size, x, x_size, std::min(m_p_words, x_size), ws.data(), ws.size());
 
@@ -298,50 +308,61 @@ BigInt CurveGFp_P256::invert_element(const BigInt& x, secure_vector<word>& ws) c
    curve_mul(p4, r, p2, ws);
 
    curve_sqr(r, p4, ws);
-   for(size_t i = 0; i != 3; ++i)
+   for(size_t i = 0; i != 3; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul(p8, r, p4, ws);
 
    curve_sqr(r, p8, ws);
-   for(size_t i = 0; i != 7; ++i)
+   for(size_t i = 0; i != 7; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul(p16, r, p8, ws);
 
    curve_sqr(r, p16, ws);
-   for(size_t i = 0; i != 15; ++i)
+   for(size_t i = 0; i != 15; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul(p32, r, p16, ws);
 
    curve_sqr(r, p32, ws);
-   for(size_t i = 0; i != 31; ++i)
+   for(size_t i = 0; i != 31; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, x, tmp, ws);
 
-   for(size_t i = 0; i != 32 * 4; ++i)
+   for(size_t i = 0; i != 32 * 4; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, p32, tmp, ws);
 
-   for(size_t i = 0; i != 32; ++i)
+   for(size_t i = 0; i != 32; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, p32, tmp, ws);
 
-   for(size_t i = 0; i != 16; ++i)
+   for(size_t i = 0; i != 16; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, p16, tmp, ws);
-   for(size_t i = 0; i != 8; ++i)
+   for(size_t i = 0; i != 8; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, p8, tmp, ws);
 
-   for(size_t i = 0; i != 4; ++i)
+   for(size_t i = 0; i != 4; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, p4, tmp, ws);
 
-   for(size_t i = 0; i != 2; ++i)
+   for(size_t i = 0; i != 2; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, p2, tmp, ws);
 
-   for(size_t i = 0; i != 2; ++i)
+   for(size_t i = 0; i != 2; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, x, tmp, ws);
 
    return r;
@@ -377,57 +398,69 @@ BigInt CurveGFp_P384::invert_element(const BigInt& x, secure_vector<word>& ws) c
 
    x3 = r;
 
-   for(size_t i = 0; i != 3; ++i)
+   for(size_t i = 0; i != 3; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, x3, tmp, ws);
 
    rl = r;
-   for(size_t i = 0; i != 6; ++i)
+   for(size_t i = 0; i != 6; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, rl, tmp, ws);
 
-   for(size_t i = 0; i != 3; ++i)
+   for(size_t i = 0; i != 3; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, x3, tmp, ws);
 
    x15 = r;
-   for(size_t i = 0; i != 15; ++i)
+   for(size_t i = 0; i != 15; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, x15, tmp, ws);
 
    x30 = r;
-   for(size_t i = 0; i != 30; ++i)
+   for(size_t i = 0; i != 30; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, x30, tmp, ws);
 
    rl = r;
-   for(size_t i = 0; i != 60; ++i)
+   for(size_t i = 0; i != 60; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, rl, tmp, ws);
 
    rl = r;
-   for(size_t i = 0; i != 120; ++i)
+   for(size_t i = 0; i != 120; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, rl, tmp, ws);
 
-   for(size_t i = 0; i != 15; ++i)
+   for(size_t i = 0; i != 15; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, x15, tmp, ws);
 
-   for(size_t i = 0; i != 31; ++i)
+   for(size_t i = 0; i != 31; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, x30, tmp, ws);
 
-   for(size_t i = 0; i != 2; ++i)
+   for(size_t i = 0; i != 2; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, x2, tmp, ws);
 
-   for(size_t i = 0; i != 94; ++i)
+   for(size_t i = 0; i != 94; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, x30, tmp, ws);
 
-   for(size_t i = 0; i != 2; ++i)
+   for(size_t i = 0; i != 2; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
 
    curve_mul_tmp(r, x, tmp, ws);
 
@@ -465,8 +498,9 @@ BigInt CurveGFp_P521::invert_element(const BigInt& x, secure_vector<word>& ws) c
 
    rl = r;
 
-   for(size_t i = 0; i != 3; ++i)
+   for(size_t i = 0; i != 3; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, rl, tmp, ws);
 
    curve_sqr_tmp(r, tmp, ws);
@@ -477,41 +511,49 @@ BigInt CurveGFp_P521::invert_element(const BigInt& x, secure_vector<word>& ws) c
    curve_mul_tmp(r, x, tmp, ws);
 
    rl = r;
-   for(size_t i = 0; i != 8; ++i)
+   for(size_t i = 0; i != 8; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, rl, tmp, ws);
 
    rl = r;
-   for(size_t i = 0; i != 16; ++i)
+   for(size_t i = 0; i != 16; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, rl, tmp, ws);
 
    rl = r;
-   for(size_t i = 0; i != 32; ++i)
+   for(size_t i = 0; i != 32; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, rl, tmp, ws);
 
    rl = r;
-   for(size_t i = 0; i != 64; ++i)
+   for(size_t i = 0; i != 64; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, rl, tmp, ws);
 
    rl = r;
-   for(size_t i = 0; i != 128; ++i)
+   for(size_t i = 0; i != 128; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, rl, tmp, ws);
 
    rl = r;
-   for(size_t i = 0; i != 256; ++i)
+   for(size_t i = 0; i != 256; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, rl, tmp, ws);
 
-   for(size_t i = 0; i != 7; ++i)
+   for(size_t i = 0; i != 7; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, a7, tmp, ws);
 
-   for(size_t i = 0; i != 2; ++i)
+   for(size_t i = 0; i != 2; ++i) {
       curve_sqr_tmp(r, tmp, ws);
+   }
    curve_mul_tmp(r, x, tmp, ws);
 
    return r;
@@ -520,16 +562,21 @@ BigInt CurveGFp_P521::invert_element(const BigInt& x, secure_vector<word>& ws) c
 }  // namespace
 
 std::shared_ptr<CurveGFp_Repr> CurveGFp::choose_repr(const BigInt& p, const BigInt& a, const BigInt& b) {
-   if(p == prime_p192())
+   if(p == prime_p192()) {
       return std::make_shared<CurveGFp_P192>(a, b);
-   if(p == prime_p224())
+   }
+   if(p == prime_p224()) {
       return std::make_shared<CurveGFp_P224>(a, b);
-   if(p == prime_p256())
+   }
+   if(p == prime_p256()) {
       return std::make_shared<CurveGFp_P256>(a, b);
-   if(p == prime_p384())
+   }
+   if(p == prime_p384()) {
       return std::make_shared<CurveGFp_P384>(a, b);
-   if(p == prime_p521())
+   }
+   if(p == prime_p521()) {
       return std::make_shared<CurveGFp_P521>(a, b);
+   }
 
    return std::make_shared<CurveGFp_Montgomery>(p, a, b);
 }

@@ -14,8 +14,9 @@ namespace Botan {
 
 ChaCha20Poly1305_Mode::ChaCha20Poly1305_Mode() :
       m_chacha(StreamCipher::create("ChaCha")), m_poly1305(MessageAuthenticationCode::create("Poly1305")) {
-   if(!m_chacha || !m_poly1305)
+   if(!m_chacha || !m_poly1305) {
       throw Algorithm_Not_Found("ChaCha20Poly1305");
+   }
 }
 
 bool ChaCha20Poly1305_Mode::valid_nonce_length(size_t n) const { return (n == 8 || n == 12 || n == 24); }
@@ -42,8 +43,9 @@ void ChaCha20Poly1305_Mode::key_schedule(const uint8_t key[], size_t length) { m
 
 void ChaCha20Poly1305_Mode::set_associated_data_n(size_t idx, std::span<const uint8_t> ad) {
    BOTAN_ARG_CHECK(idx == 0, "ChaCha20Poly1305: cannot handle non-zero index in set_associated_data_n");
-   if(m_ctext_len > 0 || m_nonce_len > 0)
+   if(m_ctext_len > 0 || m_nonce_len > 0) {
       throw Invalid_State("Cannot set AD for ChaCha20Poly1305 while processing a message");
+   }
    m_ad.assign(ad.begin(), ad.end());
 }
 
@@ -54,8 +56,9 @@ void ChaCha20Poly1305_Mode::update_len(size_t len) {
 }
 
 void ChaCha20Poly1305_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
-   if(!valid_nonce_length(nonce_len))
+   if(!valid_nonce_length(nonce_len)) {
       throw Invalid_IV_Length(name(), nonce_len);
+   }
 
    m_ctext_len = 0;
    m_nonce_len = nonce_len;
@@ -145,8 +148,9 @@ void ChaCha20Poly1305_Decryption::finish_msg(secure_vector<uint8_t>& buffer, siz
    m_ctext_len = 0;
    m_nonce_len = 0;
 
-   if(!constant_time_compare(mac, included_tag, tag_size()))
+   if(!constant_time_compare(mac, included_tag, tag_size())) {
       throw Invalid_Authentication_Tag("ChaCha20Poly1305 tag check failed");
+   }
    buffer.resize(offset + remaining);
 }
 

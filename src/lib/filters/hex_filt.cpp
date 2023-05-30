@@ -42,9 +42,9 @@ Hex_Encoder::Hex_Encoder(Case c) : m_casing(c), m_line_length(0) {
 void Hex_Encoder::encode_and_send(const uint8_t block[], size_t length) {
    hex_encode(cast_uint8_ptr_to_char(m_out.data()), block, length, m_casing == Uppercase);
 
-   if(m_line_length == 0)
+   if(m_line_length == 0) {
       send(m_out, 2 * length);
-   else {
+   } else {
       size_t remaining = 2 * length, offset = 0;
       while(remaining) {
          size_t sent = std::min(m_line_length - m_counter, remaining);
@@ -85,8 +85,9 @@ void Hex_Encoder::write(const uint8_t input[], size_t length) {
 */
 void Hex_Encoder::end_msg() {
    encode_and_send(m_in.data(), m_position);
-   if(m_counter && m_line_length)
+   if(m_counter && m_line_length) {
       send('\n');
+   }
    m_counter = m_position = 0;
 }
 
@@ -117,8 +118,9 @@ void Hex_Decoder::write(const uint8_t input[], size_t length) {
       if(consumed != m_position) {
          copy_mem(m_in.data(), m_in.data() + consumed, m_position - consumed);
          m_position = m_position - consumed;
-      } else
+      } else {
          m_position = 0;
+      }
 
       length -= to_copy;
       input += to_copy;
@@ -139,8 +141,9 @@ void Hex_Decoder::end_msg() {
 
    m_position = 0;
 
-   if(not_full_bytes)
+   if(not_full_bytes) {
       throw Invalid_Argument("Hex_Decoder: Input not full bytes");
+   }
 }
 
 }  // namespace Botan

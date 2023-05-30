@@ -23,8 +23,9 @@ class Prime_Sieve final {
    public:
       Prime_Sieve(const BigInt& init_value, size_t sieve_size, word step, bool check_2p1) :
             m_sieve(std::min(sieve_size, PRIME_TABLE_SIZE)), m_step(step), m_check_2p1(check_2p1) {
-         for(size_t i = 0; i != m_sieve.size(); ++i)
+         for(size_t i = 0; i != m_sieve.size(); ++i) {
             m_sieve[i] = init_value % PRIMES[i];
+         }
       }
 
       size_t sieve_size() const { return m_sieve.size(); }
@@ -107,14 +108,16 @@ BigInt random_prime(
 
    equiv %= modulo;
 
-   if(equiv == 0)
+   if(equiv == 0) {
       throw Invalid_Argument("random_prime Invalid value for equiv/modulo");
+   }
 
    // Handle small values:
 
    if(bits <= 16) {
-      if(equiv != 1 || modulo != 2 || coprime != 0)
+      if(equiv != 1 || modulo != 2 || coprime != 0) {
          throw Not_Implemented("random_prime equiv/modulo/coprime options not usable for small primes");
+      }
 
       if(bits == 2) {
          return BigInt::from_word(((rng.next_byte() % 2) ? 2 : 3));
@@ -130,8 +133,9 @@ BigInt random_prime(
             const size_t idx = load_le<uint32_t>(b, 0) % PRIME_TABLE_SIZE;
             const uint16_t small_prime = PRIMES[idx];
 
-            if(high_bit(small_prime) == bits)
+            if(high_bit(small_prime) == bits) {
                return BigInt::from_word(small_prime);
+            }
          }
       }
    }
@@ -156,12 +160,14 @@ BigInt random_prime(
       for(size_t attempt = 0; attempt <= MAX_ATTEMPTS; ++attempt) {
          p += modulo;
 
-         if(!sieve.next())
+         if(!sieve.next()) {
             continue;
+         }
 
          // here p can be even if modulo is odd, continue on in that case
-         if(p.is_even())
+         if(p.is_even()) {
             continue;
+         }
 
          BOTAN_DEBUG_ASSERT(no_small_multiples(p, sieve));
 
@@ -172,25 +178,30 @@ BigInt random_prime(
             First do a single M-R iteration to quickly elimate most non-primes,
             before doing the coprimality check which is expensive
             */
-            if(is_miller_rabin_probable_prime(p, mod_p, rng, 1) == false)
+            if(is_miller_rabin_probable_prime(p, mod_p, rng, 1) == false) {
                continue;
+            }
 
             /*
             * Check if p - 1 and coprime are relatively prime, using gcd.
             * The gcd computation is const-time
             */
-            if(gcd(p - 1, coprime) > 1)
+            if(gcd(p - 1, coprime) > 1) {
                continue;
+            }
          }
 
-         if(p.bits() > bits)
+         if(p.bits() > bits) {
             break;
+         }
 
-         if(is_miller_rabin_probable_prime(p, mod_p, rng, mr_trials) == false)
+         if(is_miller_rabin_probable_prime(p, mod_p, rng, mr_trials) == false) {
             continue;
+         }
 
-         if(prob > 32 && !is_lucas_probable_prime(p, mod_p))
+         if(prob > 32 && !is_lucas_probable_prime(p, mod_p)) {
             continue;
+         }
 
          return p;
       }
@@ -202,16 +213,18 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
                           size_t bits,
                           const BigInt& coprime,
                           size_t prob) {
-   if(bits < 512)
+   if(bits < 512) {
       throw Invalid_Argument("generate_rsa_prime bits too small");
+   }
 
    /*
    * The restriction on coprime <= 64 bits is arbitrary but generally speaking
    * very large RSA public exponents are a bad idea both for performance and due
    * to attacks on small d.
    */
-   if(coprime <= 1 || coprime.is_even() || coprime.bits() > 64)
+   if(coprime <= 1 || coprime.is_even() || coprime.bits() > 64) {
       throw Invalid_Argument("generate_rsa_prime coprime must be small odd positive integer");
+   }
 
    const size_t MAX_ATTEMPTS = 32 * 1024;
 
@@ -240,8 +253,9 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
       for(size_t attempt = 0; attempt <= MAX_ATTEMPTS; ++attempt) {
          p += step;
 
-         if(!sieve.next())
+         if(!sieve.next()) {
             continue;
+         }
 
          BOTAN_DEBUG_ASSERT(no_small_multiples(p, sieve));
 
@@ -252,20 +266,24 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
          * currently a single Miller-Rabin test is faster than computing gcd,
          * and this eliminates almost all wasted gcd computations.
          */
-         if(is_miller_rabin_probable_prime(p, mod_p, prime_test_rng, 1) == false)
+         if(is_miller_rabin_probable_prime(p, mod_p, prime_test_rng, 1) == false) {
             continue;
+         }
 
          /*
          * Check if p - 1 and coprime are relatively prime.
          */
-         if(gcd(p - 1, coprime) > 1)
+         if(gcd(p - 1, coprime) > 1) {
             continue;
+         }
 
-         if(p.bits() > bits)
+         if(p.bits() > bits) {
             break;
+         }
 
-         if(is_miller_rabin_probable_prime(p, mod_p, prime_test_rng, mr_trials) == true)
+         if(is_miller_rabin_probable_prime(p, mod_p, prime_test_rng, mr_trials) == true) {
             return p;
+         }
       }
    }
 }
@@ -274,8 +292,9 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
 * Generate a random safe prime
 */
 BigInt random_safe_prime(RandomNumberGenerator& rng, size_t bits) {
-   if(bits <= 64)
+   if(bits <= 64) {
       throw Invalid_Argument("random_safe_prime: Can't make a prime of " + std::to_string(bits) + " bits");
+   }
 
    const size_t error_bound = 128;
 

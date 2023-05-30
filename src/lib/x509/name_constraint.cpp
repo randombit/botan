@@ -165,8 +165,9 @@ bool GeneralName::matches_ip(const std::string& nam) const {
    uint32_t ip = string_to_ipv4(nam);
    std::vector<std::string> p = split_on(name(), '/');
 
-   if(p.size() != 2)
+   if(p.size() != 2) {
       throw Decoding_Error("failed to parse IPv4 address");
+   }
 
    uint32_t net = string_to_ipv4(p.at(0));
    uint32_t mask = string_to_ipv4(p.at(1));
@@ -202,8 +203,9 @@ void GeneralSubtree::decode_from(BER_Decoder& ber) {
       .decode_optional(m_minimum, ASN1_Type(0), ASN1_Class::ContextSpecific, size_t(0))
       .end_cons();
 
-   if(m_minimum != 0)
+   if(m_minimum != 0) {
       throw Decoding_Error("GeneralSubtree minimum must be 0");
+   }
 
    m_maximum = std::numeric_limits<std::size_t>::max();
 }

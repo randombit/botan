@@ -64,10 +64,11 @@ void CTR_BE::key_schedule(const uint8_t key[], size_t key_len) {
 }
 
 std::string CTR_BE::name() const {
-   if(m_ctr_size == m_block_size)
+   if(m_ctr_size == m_block_size) {
       return fmt("CTR-BE({})", m_cipher->name());
-   else
+   } else {
       return fmt("CTR-BE({},{})", m_cipher->name(), m_ctr_size);
+   }
 }
 
 void CTR_BE::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) {
@@ -136,8 +137,9 @@ void CTR_BE::generate_keystream(uint8_t out[], size_t length) {
 }
 
 void CTR_BE::set_iv_bytes(const uint8_t iv[], size_t iv_len) {
-   if(!valid_iv_length(iv_len))
+   if(!valid_iv_length(iv_len)) {
       throw Invalid_IV_Length(name(), iv_len);
+   }
 
    m_iv.resize(m_block_size);
    zeroise(m_iv);
@@ -229,14 +231,17 @@ void CTR_BE::seek(uint64_t offset) {
       for(size_t i = 1; i != m_ctr_blocks; ++i) {
          buffer_insert(m_counter, i * BS, &m_counter[(i - 1) * BS], BS);
 
-         for(size_t j = 0; j != m_ctr_size; ++j)
-            if(++m_counter[i * BS + (BS - 1 - j)])
+         for(size_t j = 0; j != m_ctr_size; ++j) {
+            if(++m_counter[i * BS + (BS - 1 - j)]) {
                break;
+            }
+         }
       }
    }
 
-   if(base_counter > 0)
+   if(base_counter > 0) {
       add_counter(base_counter);
+   }
 
    m_cipher->encrypt_n(m_counter.data(), m_pad.data(), m_ctr_blocks);
    m_pad_pos = offset % m_counter.size();

@@ -17,14 +17,16 @@ BOTAN_FFI_DECLARE_STRUCT(botan_block_cipher_struct, Botan::BlockCipher, 0x64C297
 
 int botan_block_cipher_init(botan_block_cipher_t* bc, const char* bc_name) {
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(bc == nullptr || bc_name == nullptr || *bc_name == 0)
+      if(bc == nullptr || bc_name == nullptr || *bc_name == 0) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
 
       *bc = nullptr;
 
       auto cipher = Botan::BlockCipher::create(bc_name);
-      if(cipher == nullptr)
+      if(cipher == nullptr) {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+      }
 
       *bc = new botan_block_cipher_struct(std::move(cipher));
       return BOTAN_FFI_SUCCESS;
@@ -44,8 +46,9 @@ int botan_block_cipher_clear(botan_block_cipher_t bc) {
 * Set the key for a block cipher instance
 */
 int botan_block_cipher_set_key(botan_block_cipher_t bc, const uint8_t key[], size_t len) {
-   if(key == nullptr)
+   if(key == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
    return BOTAN_FFI_VISIT(bc, [=](auto& b) { b.set_key(key, len); });
 }
 
@@ -58,20 +61,23 @@ int botan_block_cipher_block_size(botan_block_cipher_t bc) {
 }
 
 int botan_block_cipher_encrypt_blocks(botan_block_cipher_t bc, const uint8_t in[], uint8_t out[], size_t blocks) {
-   if(in == nullptr || out == nullptr)
+   if(in == nullptr || out == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
    return BOTAN_FFI_VISIT(bc, [=](const auto& b) { b.encrypt_n(in, out, blocks); });
 }
 
 int botan_block_cipher_decrypt_blocks(botan_block_cipher_t bc, const uint8_t in[], uint8_t out[], size_t blocks) {
-   if(in == nullptr || out == nullptr)
+   if(in == nullptr || out == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
    return BOTAN_FFI_VISIT(bc, [=](const auto& b) { b.decrypt_n(in, out, blocks); });
 }
 
 int botan_block_cipher_name(botan_block_cipher_t cipher, char* name, size_t* name_len) {
-   if(name_len == nullptr)
+   if(name_len == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    return BOTAN_FFI_VISIT(cipher, [=](const auto& bc) { return write_str_output(name, name_len, bc.name()); });
 }

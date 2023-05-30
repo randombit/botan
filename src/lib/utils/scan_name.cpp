@@ -21,8 +21,9 @@ std::string make_arg(const std::vector<std::pair<size_t, std::string>>& name, si
    size_t paren_depth = 0;
 
    for(size_t i = start + 1; i != name.size(); ++i) {
-      if(name[i].first <= name[start].first)
+      if(name[i].first <= name[start].first) {
          break;
+      }
 
       if(name[i].first > level) {
          output += "(" + name[i].second;
@@ -34,16 +35,18 @@ std::string make_arg(const std::vector<std::pair<size_t, std::string>>& name, si
          }
          output += "," + name[i].second;
       } else {
-         if(output[output.size() - 1] != '(')
+         if(output[output.size() - 1] != '(') {
             output += ",";
+         }
          output += name[i].second;
       }
 
       level = name[i].first;
    }
 
-   for(size_t i = 0; i != paren_depth; ++i)
+   for(size_t i = 0; i != paren_depth; ++i) {
       output += ")";
+   }
 
    return output;
 }
@@ -53,8 +56,9 @@ std::string make_arg(const std::vector<std::pair<size_t, std::string>>& name, si
 SCAN_Name::SCAN_Name(const char* algo_spec) : SCAN_Name(std::string(algo_spec)) {}
 
 SCAN_Name::SCAN_Name(std::string_view algo_spec) : m_orig_algo_spec(algo_spec), m_alg_name(), m_args(), m_mode_info() {
-   if(algo_spec.empty())
+   if(algo_spec.empty()) {
       throw Invalid_Argument("Expected algorithm name, got empty string");
+   }
 
    std::vector<std::pair<size_t, std::string>> name;
    size_t level = 0;
@@ -64,33 +68,39 @@ SCAN_Name::SCAN_Name(std::string_view algo_spec) : m_orig_algo_spec(algo_spec), 
 
    for(char c : algo_spec) {
       if(c == '/' || c == ',' || c == '(' || c == ')') {
-         if(c == '(')
+         if(c == '(') {
             ++level;
-         else if(c == ')') {
-            if(level == 0)
+         } else if(c == ')') {
+            if(level == 0) {
                throw Decoding_Error(decoding_error + "Mismatched parens");
+            }
             --level;
          }
 
-         if(c == '/' && level > 0)
+         if(c == '/' && level > 0) {
             accum.second.push_back(c);
-         else {
-            if(!accum.second.empty())
+         } else {
+            if(!accum.second.empty()) {
                name.push_back(accum);
+            }
             accum = std::make_pair(level, "");
          }
-      } else
+      } else {
          accum.second.push_back(c);
+      }
    }
 
-   if(!accum.second.empty())
+   if(!accum.second.empty()) {
       name.push_back(accum);
+   }
 
-   if(level != 0)
+   if(level != 0) {
       throw Decoding_Error(decoding_error + "Missing close paren");
+   }
 
-   if(name.empty())
+   if(name.empty()) {
       throw Decoding_Error(decoding_error + "Empty name");
+   }
 
    m_alg_name = name[0].second;
 
@@ -100,26 +110,30 @@ SCAN_Name::SCAN_Name(std::string_view algo_spec) : m_orig_algo_spec(algo_spec), 
       if(name[i].first == 0) {
          m_mode_info.push_back(make_arg(name, i));
          in_modes = true;
-      } else if(name[i].first == 1 && !in_modes)
+      } else if(name[i].first == 1 && !in_modes) {
          m_args.push_back(make_arg(name, i));
+      }
    }
 }
 
 std::string SCAN_Name::arg(size_t i) const {
-   if(i >= arg_count())
+   if(i >= arg_count()) {
       throw Invalid_Argument("SCAN_Name::arg " + std::to_string(i) + " out of range for '" + to_string() + "'");
+   }
    return m_args[i];
 }
 
 std::string SCAN_Name::arg(size_t i, std::string_view def_value) const {
-   if(i >= arg_count())
+   if(i >= arg_count()) {
       return std::string(def_value);
+   }
    return m_args[i];
 }
 
 size_t SCAN_Name::arg_as_integer(size_t i, size_t def_value) const {
-   if(i >= arg_count())
+   if(i >= arg_count()) {
       return def_value;
+   }
    return to_u32bit(m_args[i]);
 }
 

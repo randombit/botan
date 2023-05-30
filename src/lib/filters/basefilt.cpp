@@ -34,11 +34,12 @@ Chain::Chain(Filter* f1, Filter* f2, Filter* f3, Filter* f4) {
 * Chain Constructor
 */
 Chain::Chain(Filter* filters[], size_t count) {
-   for(size_t j = 0; j != count; ++j)
+   for(size_t j = 0; j != count; ++j) {
       if(filters[j]) {
          attach(filters[j]);
          incr_owns();
       }
+   }
 }
 
 /*

@@ -27,8 +27,9 @@ Test::Result thread_pool() {
    auto sleep_or_throw = [](size_t x) -> size_t {
       std::this_thread::sleep_for(std::chrono::milliseconds((x * 97) % 127));
 
-      if(x % 2 == 0)
+      if(x % 2 == 0) {
          throw x;  // NOLINT(hicpp-exception-baseclass)
+      }
       return x;
    };
 

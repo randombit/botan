@@ -24,11 +24,13 @@ void KDF1::kdf(uint8_t key[],
                size_t salt_len,
                const uint8_t label[],
                size_t label_len) const {
-   if(key_len == 0)
+   if(key_len == 0) {
       return;
+   }
 
-   if(key_len > m_hash->output_length())
+   if(key_len > m_hash->output_length()) {
       throw Invalid_Argument("KDF1 maximum output length exceeeded");
+   }
 
    m_hash->update(secret, secret_len);
    m_hash->update(label, label_len);

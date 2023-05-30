@@ -68,11 +68,13 @@ DSA_PrivateKey::DSA_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<cons
 }
 
 bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
-   if(!m_private_key->check_key(rng, strong))
+   if(!m_private_key->check_key(rng, strong)) {
       return false;
+   }
 
-   if(m_private_key->private_key() >= m_private_key->group().get_q())
+   if(m_private_key->private_key() >= m_private_key->group().get_q()) {
       return false;
+   }
 
    return KeyPair::signature_consistency_check(rng, *this, "SHA-256");
 }
@@ -130,8 +132,9 @@ secure_vector<uint8_t> DSA_Signature_Operation::raw_sign(const uint8_t msg[],
 
    BigInt m = BigInt::from_bytes_with_max_bits(msg, msg_len, group.q_bits());
 
-   if(m >= q)
+   if(m >= q) {
       m -= q;
+   }
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
    BOTAN_UNUSED(rng);
@@ -165,8 +168,9 @@ secure_vector<uint8_t> DSA_Signature_Operation::raw_sign(const uint8_t msg[],
    const BigInt s = group.multiply_mod_q(m_b_inv, k_inv, group.mod_q(xr + m));
 
    // With overwhelming probability, a bug rather than actual zero r/s
-   if(r.is_zero() || s.is_zero())
+   if(r.is_zero() || s.is_zero()) {
       throw Internal_Error("Computed zero r/s during DSA signature");
+   }
 
    return BigInt::encode_fixed_length_int_pair(r, s, q.bytes());
 }
@@ -194,17 +198,20 @@ bool DSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len, con
    const BigInt& q = group.get_q();
    const size_t q_bytes = q.bytes();
 
-   if(sig_len != 2 * q_bytes)
+   if(sig_len != 2 * q_bytes) {
       return false;
+   }
 
    BigInt r(sig, q_bytes);
    BigInt s(sig + q_bytes, q_bytes);
    BigInt i = BigInt::from_bytes_with_max_bits(msg, msg_len, group.q_bits());
-   if(i >= q)
+   if(i >= q) {
       i -= q;
+   }
 
-   if(r <= 0 || r >= q || s <= 0 || s >= q)
+   if(r <= 0 || r >= q || s <= 0 || s >= q) {
       return false;
+   }
 
    s = inverse_mod(s, q);
 
@@ -221,15 +228,17 @@ bool DSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len, con
 
 std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::create_verification_op(std::string_view params,
                                                                             std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<DSA_Verification_Operation>(this->m_public_key, params);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 
 std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::create_x509_verification_op(
    const AlgorithmIdentifier& signature_algorithm, std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<DSA_Verification_Operation>(this->m_public_key, signature_algorithm);
+   }
 
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -237,8 +246,9 @@ std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::create_x509_verification_op
 std::unique_ptr<PK_Ops::Signature> DSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
                                                                        std::string_view params,
                                                                        std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<DSA_Signature_Operation>(this->m_private_key, params, rng);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 

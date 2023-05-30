@@ -93,8 +93,9 @@ size_t choose_bucket(size_t n) {
    const size_t MINIMUM_ALLOCATION = 16;
    const size_t MAXIMUM_ALLOCATION = 256;
 
-   if(n < MINIMUM_ALLOCATION || n > MAXIMUM_ALLOCATION)
+   if(n < MINIMUM_ALLOCATION || n > MAXIMUM_ALLOCATION) {
       return 0;
+   }
 
    // Need to tune these
 
@@ -156,8 +157,9 @@ class BitMap final {
          m_main_mask = static_cast<bitmask_type>(~0);  // NOLINT(bugprone-misplaced-widening-cast)
          m_last_mask = m_main_mask;
 
-         if(bits % BITMASK_BITS != 0)
+         if(bits % BITMASK_BITS != 0) {
             m_last_mask = (static_cast<bitmask_type>(1) << (bits % BITMASK_BITS)) - 1;
+         }
       }
 
       bool find_free(size_t* bit);
@@ -242,8 +244,9 @@ class Bucket final {
       }
 
       bool free(void* p) {
-         if(!in_this_bucket(p))
+         if(!in_this_bucket(p)) {
             return false;
+         }
 
          /*
          Zero also any trailing bytes, which should not have been written to,
@@ -307,8 +310,9 @@ Memory_Pool::~Memory_Pool()  // NOLINT(*-use-equals-default)
 }
 
 void* Memory_Pool::allocate(size_t n) {
-   if(n > m_page_size)
+   if(n > m_page_size) {
       return nullptr;
+   }
 
    const size_t n_bucket = choose_bucket(n);
 
@@ -324,8 +328,9 @@ void* Memory_Pool::allocate(size_t n) {
       recycled.
       */
       for(auto& bucket : buckets) {
-         if(uint8_t* p = bucket.alloc())
+         if(uint8_t* p = bucket.alloc()) {
             return p;
+         }
 
          // If the bucket is full, maybe move it to the end of the list?
          // Otoh bucket search should be very fast
@@ -351,8 +356,9 @@ void* Memory_Pool::allocate(size_t n) {
 bool Memory_Pool::deallocate(void* p, size_t len) noexcept {
    // Do a fast range check first, before taking the lock
    const uintptr_t p_val = reinterpret_cast<uintptr_t>(p);
-   if(p_val < m_min_page_ptr || p_val > m_max_page_ptr)
+   if(p_val < m_min_page_ptr || p_val > m_max_page_ptr) {
       return false;
+   }
 
    const size_t n_bucket = choose_bucket(len);
 
@@ -371,8 +377,9 @@ bool Memory_Pool::deallocate(void* p, size_t len) noexcept {
 #endif
                   m_free_pages.push_back(bucket.ptr());
 
-                  if(i != buckets.size() - 1)
+                  if(i != buckets.size() - 1) {
                      std::swap(buckets.back(), buckets[i]);
+                  }
                   buckets.pop_back();
                }
                return true;

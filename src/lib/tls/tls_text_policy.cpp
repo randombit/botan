@@ -208,20 +208,23 @@ std::vector<Group_Params> Text_Policy::read_group_list(std::string_view group_st
          try {
             size_t consumed = 0;
             unsigned long ll_id = std::stoul(group_name, &consumed, 0);
-            if(consumed != group_name.size())
+            if(consumed != group_name.size()) {
                continue;  // some other cruft
+            }
 
             const uint16_t id = static_cast<uint16_t>(ll_id);
 
-            if(id != ll_id)
+            if(id != ll_id) {
                continue;  // integer too large
+            }
 
             group_id = static_cast<Group_Params>(id);
          } catch(...) { continue; }
       }
 
-      if(group_id != Group_Params::NONE)
+      if(group_id != Group_Params::NONE) {
          groups.push_back(group_id);
+      }
    }
 
    return groups;
@@ -284,8 +287,9 @@ std::string Text_Policy::get_str(const std::string& key, const std::string& def)
 bool Text_Policy::set_value(const std::string& key, std::string_view val, bool overwrite) {
    auto i = m_kv.find(key);
 
-   if(overwrite == false && i != m_kv.end())
+   if(overwrite == false && i != m_kv.end()) {
       return false;
+   }
 
    m_kv.insert(i, std::make_pair(key, val));
    return true;

@@ -93,31 +93,33 @@ std::shared_ptr<DL_PublicKey> DL_PrivateKey::public_key() const {
 }
 
 const BigInt& DL_PublicKey::get_int_field(std::string_view algo, std::string_view field) const {
-   if(field == "p")
+   if(field == "p") {
       return m_group.get_p();
-   else if(field == "q")
+   } else if(field == "q") {
       return m_group.get_q();
-   else if(field == "g")
+   } else if(field == "g") {
       return m_group.get_g();
-   else if(field == "y")
+   } else if(field == "y") {
       return m_public_key;
-   else
+   } else {
       throw Unknown_PK_Field_Name(algo, field);
+   }
 }
 
 const BigInt& DL_PrivateKey::get_int_field(std::string_view algo, std::string_view field) const {
-   if(field == "p")
+   if(field == "p") {
       return m_group.get_p();
-   else if(field == "q")
+   } else if(field == "q") {
       return m_group.get_q();
-   else if(field == "g")
+   } else if(field == "g") {
       return m_group.get_g();
-   else if(field == "x")
+   } else if(field == "x") {
       return m_private_key;
-   else if(field == "y")
+   } else if(field == "y") {
       return m_public_key;
-   else
+   } else {
       throw Unknown_PK_Field_Name(algo, field);
+   }
 }
 
 }  // namespace Botan

@@ -64,9 +64,9 @@ secure_vector<uint8_t> PKCS8_decode(DataSource& source,
          key_data = PEM_Code::decode(source, label);
 
          // todo remove autodetect for pem as well?
-         if(label == "PRIVATE KEY")
+         if(label == "PRIVATE KEY") {
             is_encrypted = false;
-         else if(label == "ENCRYPTED PRIVATE KEY") {
+         } else if(label == "ENCRYPTED PRIVATE KEY") {
             DataSource_Memory key_source(key_data);
             key_data = PKCS8_extract(key_source, pbe_alg_id);
          } else {
@@ -74,8 +74,9 @@ secure_vector<uint8_t> PKCS8_decode(DataSource& source,
          }
       }
 
-      if(key_data.empty())
+      if(key_data.empty()) {
          throw PKCS8_Exception("No key data found");
+      }
    } catch(Decoding_Error& e) { throw Decoding_Error("PKCS #8 private key decoding", e); }
 
    try {
@@ -90,8 +91,9 @@ secure_vector<uint8_t> PKCS8_decode(DataSource& source,
          BOTAN_UNUSED(get_passphrase);
          throw Decoding_Error("Private key is encrypted but PBES2 was disabled in build");
 #endif
-      } else
+      } else {
          key = key_data;
+      }
 
       BER_Decoder(key)
          .start_sequence()
@@ -182,8 +184,9 @@ std::string PEM_encode(const Private_Key& key,
                        std::string_view pass,
                        std::chrono::milliseconds msec,
                        std::string_view pbe_algo) {
-   if(pass.empty())
+   if(pass.empty()) {
       return PEM_encode(key);
+   }
 
    return PEM_Code::encode(PKCS8::BER_encode(key, rng, pass, msec, pbe_algo), "ENCRYPTED PRIVATE KEY");
 }

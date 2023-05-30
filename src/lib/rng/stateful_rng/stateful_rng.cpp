@@ -121,10 +121,11 @@ void Stateful_RNG::reseed_check() {
       }
 
       if(!is_seeded()) {
-         if(fork_detected)
+         if(fork_detected) {
             throw Invalid_State("Detected use of fork but cannot reseed DRBG");
-         else
+         } else {
             throw PRNG_Unseeded(name());
+         }
       }
    } else {
       BOTAN_ASSERT(m_reseed_counter != 0, "RNG is seeded");

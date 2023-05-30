@@ -58,8 +58,9 @@ class Ed25519_Signature_Tests final : public PK_Signature_Generation_Test {
 
          auto key = std::make_unique<Botan::Ed25519_PrivateKey>(seed);
 
-         if(key->get_public_key() != pubkey)
+         if(key->get_public_key() != pubkey) {
             throw Test_Error("Invalid Ed25519 key in test data");
+         }
 
          return key;
       }

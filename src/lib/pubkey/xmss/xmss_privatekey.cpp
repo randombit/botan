@@ -416,8 +416,9 @@ std::unique_ptr<Public_Key> XMSS_PrivateKey::public_key() const {
 std::unique_ptr<PK_Ops::Signature> XMSS_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
                                                                         std::string_view /*params*/,
                                                                         std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<XMSS_Signature_Operation>(*this);
+   }
 
    throw Provider_Not_Found(algo_name(), provider);
 }

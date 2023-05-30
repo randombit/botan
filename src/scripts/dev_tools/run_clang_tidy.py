@@ -40,7 +40,6 @@ disabled_checks_non_lib = [
 
 # these might be worth being clean for
 disabled_needs_work = [
-    '*-braces-around-statements', # should fix (need clang-format)
     '*-named-parameter',
     '*-member-init', # seems bad
     'bugprone-lambda-function-name', # should be an easy fix

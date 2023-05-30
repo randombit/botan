@@ -14,27 +14,31 @@
 namespace Botan {
 
 void* mlock_allocator::allocate(size_t num_elems, size_t elem_size) {
-   if(!m_pool)
+   if(!m_pool) {
       return nullptr;
+   }
 
    const auto n = BOTAN_CHECKED_MUL(num_elems, elem_size);
-   if(!n.has_value())
+   if(!n.has_value()) {
       return nullptr;  // overflow!
+   }
 
    return m_pool->allocate(n.value());
 }
 
 bool mlock_allocator::deallocate(void* p, size_t num_elems, size_t elem_size) noexcept {
-   if(!m_pool)
+   if(!m_pool) {
       return false;
+   }
 
    /*
    We return nullptr in allocate if there was an overflow, so if an
    overflow occurs here we know the pointer was not allocated by this pool.
    */
    const auto n = BOTAN_CHECKED_MUL(num_elems, elem_size);
-   if(!n.has_value())
+   if(!n.has_value()) {
       return false;
+   }
 
    return m_pool->deallocate(p, n.value());
 }

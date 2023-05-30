@@ -32,18 +32,20 @@ BigInt& BigInt::add(const word y[], size_t y_words, Sign y_sign) {
       }
 
       //this->sign_fixup(relative_size, y_sign);
-      if(relative_size < 0)
+      if(relative_size < 0) {
          set_sign(y_sign);
-      else if(relative_size == 0)
+      } else if(relative_size == 0) {
          set_sign(Positive);
+      }
    }
 
    return (*this);
 }
 
 BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>& ws) {
-   if(this->is_negative() || s.is_negative() || mod.is_negative())
+   if(this->is_negative() || s.is_negative() || mod.is_negative()) {
       throw Invalid_Argument("BigInt::mod_add expects all arguments are positive");
+   }
 
    BOTAN_DEBUG_ASSERT(*this < mod);
    BOTAN_DEBUG_ASSERT(s < mod);
@@ -65,8 +67,9 @@ BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>&
    s.grow_to(mod_sw);
 
    // First mod_sw for p - s, 2*mod_sw for bigint_addsub workspace
-   if(ws.size() < 3 * mod_sw)
+   if(ws.size() < 3 * mod_sw) {
       ws.resize(3 * mod_sw);
+   }
 
    word borrow = bigint_sub3(&ws[0], mod.data(), mod_sw, s.data(), mod_sw);
    BOTAN_DEBUG_ASSERT(borrow == 0);
@@ -85,8 +88,9 @@ BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>&
 }
 
 BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>& ws) {
-   if(this->is_negative() || s.is_negative() || mod.is_negative())
+   if(this->is_negative() || s.is_negative() || mod.is_negative()) {
       throw Invalid_Argument("BigInt::mod_sub expects all arguments are positive");
+   }
 
    // We are assuming in this function that *this and s are no more than mod_sw words long
    BOTAN_DEBUG_ASSERT(*this < mod);
@@ -97,15 +101,17 @@ BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>&
    this->grow_to(mod_sw);
    s.grow_to(mod_sw);
 
-   if(ws.size() < mod_sw)
+   if(ws.size() < mod_sw) {
       ws.resize(mod_sw);
+   }
 
-   if(mod_sw == 4)
+   if(mod_sw == 4) {
       bigint_mod_sub_n<4>(mutable_data(), s.data(), mod.data(), ws.data());
-   else if(mod_sw == 6)
+   } else if(mod_sw == 6) {
       bigint_mod_sub_n<6>(mutable_data(), s.data(), mod.data(), ws.data());
-   else
+   } else {
       bigint_mod_sub(mutable_data(), s.data(), mod.data(), mod_sw, ws.data());
+   }
 
    return (*this);
 }
@@ -122,8 +128,9 @@ BigInt& BigInt::mod_mul(uint8_t y, const BigInt& mod, secure_vector<word>& ws) {
 }
 
 BigInt& BigInt::rev_sub(const word y[], size_t y_sw, secure_vector<word>& ws) {
-   if(this->sign() != BigInt::Positive)
+   if(this->sign() != BigInt::Positive) {
       throw Invalid_State("BigInt::sub_rev requires this is positive");
+   }
 
    const size_t x_sw = this->sig_words();
 
@@ -203,10 +210,11 @@ BigInt& BigInt::operator*=(word y) {
 * Division Operator
 */
 BigInt& BigInt::operator/=(const BigInt& y) {
-   if(y.sig_words() == 1 && is_power_of_2(y.word_at(0)))
+   if(y.sig_words() == 1 && is_power_of_2(y.word_at(0))) {
       (*this) >>= (y.bits() - 1);
-   else
+   } else {
       (*this) = (*this) / y;
+   }
    return (*this);
 }
 
@@ -219,8 +227,9 @@ BigInt& BigInt::operator%=(const BigInt& mod) { return (*this = (*this) % mod); 
 * Modulo Operator
 */
 word BigInt::operator%=(word mod) {
-   if(mod == 0)
+   if(mod == 0) {
       throw Invalid_Argument("BigInt::operator%= divide by zero");
+   }
 
    word remainder = 0;
 
@@ -228,12 +237,14 @@ word BigInt::operator%=(word mod) {
       remainder = (word_at(0) & (mod - 1));
    } else {
       const size_t sw = sig_words();
-      for(size_t i = sw; i > 0; --i)
+      for(size_t i = sw; i > 0; --i) {
          remainder = bigint_modop(remainder, word_at(i - 1), mod);
+      }
    }
 
-   if(remainder && sign() == BigInt::Negative)
+   if(remainder && sign() == BigInt::Negative) {
       remainder = mod - remainder;
+   }
 
    m_data.set_to_zero();
    m_data.set_word_at(0, remainder);
@@ -269,8 +280,9 @@ BigInt& BigInt::operator>>=(size_t shift) {
 
    bigint_shr1(m_data.mutable_data(), m_data.size(), shift_words, shift_bits);
 
-   if(is_negative() && is_zero())
+   if(is_negative() && is_zero()) {
       set_sign(Positive);
+   }
 
    return (*this);
 }

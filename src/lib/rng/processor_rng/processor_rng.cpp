@@ -82,8 +82,9 @@ hwrng_output read_hwrng(bool& success) {
 
 #endif
 
-   if(success)
+   if(success) {
       return output;
+   }
 
    return 0;
 }
@@ -93,8 +94,9 @@ hwrng_output read_hwrng() {
       bool success = false;
       hwrng_output output = read_hwrng(success);
 
-      if(success)
+      if(success) {
          return output;
+      }
    }
 
    throw PRNG_Unseeded("Processor RNG instruction failed to produce output within expected iterations");
@@ -139,14 +141,16 @@ void Processor_RNG::fill_bytes_with_input(std::span<uint8_t> out, std::span<cons
       uint8_t hwrng_bytes[sizeof(hwrng_output)];
       store_le(r, hwrng_bytes);
 
-      for(size_t i = 0; i != out.size(); ++i)
+      for(size_t i = 0; i != out.size(); ++i) {
          out[i] = hwrng_bytes[i];
+      }
    }
 }
 
 Processor_RNG::Processor_RNG() {
-   if(!Processor_RNG::available())
+   if(!Processor_RNG::available()) {
       throw Invalid_State("Current CPU does not support RNG instruction");
+   }
 }
 
 size_t Processor_RNG::reseed(Entropy_Sources& /*srcs*/,

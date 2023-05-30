@@ -12,8 +12,9 @@
 namespace Botan::TLS {
 
 Hello_Verify_Request::Hello_Verify_Request(const std::vector<uint8_t>& buf) {
-   if(buf.size() < 3)
+   if(buf.size() < 3) {
       throw Decoding_Error("Hello verify request too small");
+   }
 
    Protocol_Version version(buf[0], buf[1]);
 
@@ -21,8 +22,9 @@ Hello_Verify_Request::Hello_Verify_Request(const std::vector<uint8_t>& buf) {
       throw Decoding_Error("Unknown version from server in hello verify request");
    }
 
-   if(static_cast<size_t>(buf[2]) + 3 != buf.size())
+   if(static_cast<size_t>(buf[2]) + 3 != buf.size()) {
       throw Decoding_Error("Bad length in hello verify request");
+   }
 
    m_cookie.assign(buf.begin() + 3, buf.end());
 }

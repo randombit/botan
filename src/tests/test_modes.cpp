@@ -45,10 +45,12 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
             auto dec = Botan::Cipher_Mode::create(algo, Botan::Cipher_Dir::Decryption, provider_ask);
 
             if(!enc || !dec) {
-               if(enc)
+               if(enc) {
                   result.test_failure("Provider " + provider_ask + " has encrypt but not decrypt");
-               if(dec)
+               }
+               if(dec) {
                   result.test_failure("Provider " + provider_ask + " has decrypt but not encrypt");
+               }
                result.note_missing(algo);
                return result;
             }
@@ -379,8 +381,9 @@ class Cipher_Mode_IV_Carry_Tests final : public Test {
 
             dec->finish(msg);
 
-            for(size_t j = 0; j != msg.size(); ++j)
+            for(size_t j = 0; j != msg.size(); ++j) {
                result.test_eq("Plaintext zeros", static_cast<size_t>(msg[j]), 0);
+            }
          }
    #endif
          return result;

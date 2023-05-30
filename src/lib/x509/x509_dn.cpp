@@ -35,40 +35,51 @@ bool x500_name_cmp(std::string_view name1, std::string_view name2) {
    auto p1 = name1.begin();
    auto p2 = name2.begin();
 
-   while((p1 != name1.end()) && is_space(*p1))
+   while((p1 != name1.end()) && is_space(*p1)) {
       ++p1;
-   while((p2 != name2.end()) && is_space(*p2))
+   }
+   while((p2 != name2.end()) && is_space(*p2)) {
       ++p2;
+   }
 
    while(p1 != name1.end() && p2 != name2.end()) {
       if(is_space(*p1)) {
-         if(!is_space(*p2))
+         if(!is_space(*p2)) {
             return false;
+         }
 
-         while((p1 != name1.end()) && is_space(*p1))
+         while((p1 != name1.end()) && is_space(*p1)) {
             ++p1;
-         while((p2 != name2.end()) && is_space(*p2))
+         }
+         while((p2 != name2.end()) && is_space(*p2)) {
             ++p2;
+         }
 
-         if(p1 == name1.end() && p2 == name2.end())
+         if(p1 == name1.end() && p2 == name2.end()) {
             return true;
-         if(p1 == name1.end() || p2 == name2.end())
+         }
+         if(p1 == name1.end() || p2 == name2.end()) {
             return false;
+         }
       }
 
-      if(!caseless_cmp(*p1, *p2))
+      if(!caseless_cmp(*p1, *p2)) {
          return false;
+      }
       ++p1;
       ++p2;
    }
 
-   while((p1 != name1.end()) && is_space(*p1))
+   while((p1 != name1.end()) && is_space(*p1)) {
       ++p1;
-   while((p2 != name2.end()) && is_space(*p2))
+   }
+   while((p2 != name2.end()) && is_space(*p2)) {
       ++p2;
+   }
 
-   if((p1 != name1.end()) || (p2 != name2.end()))
+   if((p1 != name1.end()) || (p2 != name2.end())) {
       return false;
+   }
    return true;
 }
 
@@ -83,8 +94,9 @@ void X509_DN::add_attribute(std::string_view type, std::string_view str) { add_a
 * Add an attribute to a X509_DN
 */
 void X509_DN::add_attribute(const OID& oid, const ASN1_String& str) {
-   if(str.empty())
+   if(str.empty()) {
       return;
+   }
 
    m_rdn.push_back(std::make_pair(oid, str));
    m_dn_bits.clear();
@@ -96,8 +108,9 @@ void X509_DN::add_attribute(const OID& oid, const ASN1_String& str) {
 std::multimap<OID, std::string> X509_DN::get_attributes() const {
    std::multimap<OID, std::string> retval;
 
-   for(auto& i : m_rdn)
+   for(auto& i : m_rdn) {
       multimap_insert(retval, i.first, i.second.value());
+   }
    return retval;
 }
 
@@ -116,8 +129,9 @@ std::multimap<std::string, std::string> X509_DN::contents() const {
 bool X509_DN::has_field(std::string_view attr) const {
    try {
       const OID o = OID::from_string(deref_info_field(attr));
-      if(o.has_value())
+      if(o.has_value()) {
          return has_field(o);
+      }
    } catch(Lookup_Error&) {}
 
    return false;
@@ -125,8 +139,9 @@ bool X509_DN::has_field(std::string_view attr) const {
 
 bool X509_DN::has_field(const OID& oid) const {
    for(auto& i : m_rdn) {
-      if(i.first == oid)
+      if(i.first == oid) {
          return true;
+      }
    }
 
    return false;
@@ -168,22 +183,30 @@ std::vector<std::string> X509_DN::get_attribute(std::string_view attr) const {
 * Deref aliases in a subject/issuer info request
 */
 std::string X509_DN::deref_info_field(std::string_view info) {
-   if(info == "Name" || info == "CommonName" || info == "CN")
+   if(info == "Name" || info == "CommonName" || info == "CN") {
       return "X520.CommonName";
-   if(info == "SerialNumber" || info == "SN")
+   }
+   if(info == "SerialNumber" || info == "SN") {
       return "X520.SerialNumber";
-   if(info == "Country" || info == "C")
+   }
+   if(info == "Country" || info == "C") {
       return "X520.Country";
-   if(info == "Organization" || info == "O")
+   }
+   if(info == "Organization" || info == "O") {
       return "X520.Organization";
-   if(info == "Organizational Unit" || info == "OrgUnit" || info == "OU")
+   }
+   if(info == "Organizational Unit" || info == "OrgUnit" || info == "OU") {
       return "X520.OrganizationalUnit";
-   if(info == "Locality" || info == "L")
+   }
+   if(info == "Locality" || info == "L") {
       return "X520.Locality";
-   if(info == "State" || info == "Province" || info == "ST")
+   }
+   if(info == "State" || info == "Province" || info == "ST") {
       return "X520.State";
-   if(info == "Email")
+   }
+   if(info == "Email") {
       return "RFC822";
+   }
    return std::string(info);
 }
 
@@ -194,23 +217,29 @@ bool operator==(const X509_DN& dn1, const X509_DN& dn2) {
    auto attr1 = dn1.get_attributes();
    auto attr2 = dn2.get_attributes();
 
-   if(attr1.size() != attr2.size())
+   if(attr1.size() != attr2.size()) {
       return false;
+   }
 
    auto p1 = attr1.begin();
    auto p2 = attr2.begin();
 
    while(true) {
-      if(p1 == attr1.end() && p2 == attr2.end())
+      if(p1 == attr1.end() && p2 == attr2.end()) {
          break;
-      if(p1 == attr1.end())
+      }
+      if(p1 == attr1.end()) {
          return false;
-      if(p2 == attr2.end())
+      }
+      if(p2 == attr2.end()) {
          return false;
-      if(p1->first != p2->first)
+      }
+      if(p1->first != p2->first) {
          return false;
-      if(!x500_name_cmp(p1->second, p2->second))
+      }
+      if(!x500_name_cmp(p1->second, p2->second)) {
          return false;
+      }
       ++p1;
       ++p2;
    }
@@ -230,10 +259,12 @@ bool operator<(const X509_DN& dn1, const X509_DN& dn2) {
    auto attr2 = dn2.get_attributes();
 
    // If they are not the same size, choose the smaller as the "lessor"
-   if(attr1.size() < attr2.size())
+   if(attr1.size() < attr2.size()) {
       return true;
-   if(attr1.size() > attr2.size())
+   }
+   if(attr1.size() > attr2.size()) {
       return false;
+   }
 
    // We know they are the same # of elements, now compare the OIDs:
    auto p1 = attr1.begin();
@@ -341,17 +372,21 @@ namespace {
 std::string to_short_form(const OID& oid) {
    std::string long_id = oid.to_formatted_string();
 
-   if(long_id == "X520.CommonName")
+   if(long_id == "X520.CommonName") {
       return "CN";
+   }
 
-   if(long_id == "X520.Country")
+   if(long_id == "X520.Country") {
       return "C";
+   }
 
-   if(long_id == "X520.Organization")
+   if(long_id == "X520.Organization") {
       return "O";
+   }
 
-   if(long_id == "X520.OrganizationalUnit")
+   if(long_id == "X520.OrganizationalUnit") {
       return "OU";
+   }
 
    return long_id;
 }
@@ -394,24 +429,26 @@ std::istream& operator>>(std::istream& in, X509_DN& dn) {
       while(in.good()) {
          in >> c;
 
-         if(std::isspace(c) && key.empty())
+         if(std::isspace(c) && key.empty()) {
             continue;
-         else if(!std::isspace(c)) {
+         } else if(!std::isspace(c)) {
             key.push_back(c);
             break;
-         } else
+         } else {
             break;
+         }
       }
 
       while(in.good()) {
          in >> c;
 
-         if(!std::isspace(c) && c != '=')
+         if(!std::isspace(c) && c != '=') {
             key.push_back(c);
-         else if(c == '=')
+         } else if(c == '=') {
             break;
-         else
+         } else {
             throw Invalid_Argument("Ill-formed X.509 DN");
+         }
       }
 
       bool in_quotes = false;
@@ -419,26 +456,30 @@ std::istream& operator>>(std::istream& in, X509_DN& dn) {
          in >> c;
 
          if(std::isspace(c)) {
-            if(!in_quotes && !val.empty())
+            if(!in_quotes && !val.empty()) {
                break;
-            else if(in_quotes)
+            } else if(in_quotes) {
                val.push_back(' ');
-         } else if(c == '"')
+            }
+         } else if(c == '"') {
             in_quotes = !in_quotes;
-         else if(c == '\\') {
-            if(in.good())
+         } else if(c == '\\') {
+            if(in.good()) {
                in >> c;
+            }
             val.push_back(c);
-         } else if(c == ',' && !in_quotes)
+         } else if(c == ',' && !in_quotes) {
             break;
-         else
+         } else {
             val.push_back(c);
+         }
       }
 
-      if(!key.empty() && !val.empty())
+      if(!key.empty() && !val.empty()) {
          dn.add_attribute(X509_DN::deref_info_field(key), val);
-      else
+      } else {
          break;
+      }
    } while(in.good());
    return in;
 }

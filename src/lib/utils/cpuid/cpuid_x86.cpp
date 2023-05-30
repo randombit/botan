@@ -93,18 +93,24 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
          RDRAND = (1ULL << 62)
       };
 
-      if(flags0 & x86_CPUID_1_bits::RDTSC)
+      if(flags0 & x86_CPUID_1_bits::RDTSC) {
          features_detected |= CPUID::CPUID_RDTSC_BIT;
-      if(flags0 & x86_CPUID_1_bits::SSE2)
+      }
+      if(flags0 & x86_CPUID_1_bits::SSE2) {
          features_detected |= CPUID::CPUID_SSE2_BIT;
-      if(flags0 & x86_CPUID_1_bits::CLMUL)
+      }
+      if(flags0 & x86_CPUID_1_bits::CLMUL) {
          features_detected |= CPUID::CPUID_CLMUL_BIT;
-      if(flags0 & x86_CPUID_1_bits::SSSE3)
+      }
+      if(flags0 & x86_CPUID_1_bits::SSSE3) {
          features_detected |= CPUID::CPUID_SSSE3_BIT;
-      if(flags0 & x86_CPUID_1_bits::AESNI)
+      }
+      if(flags0 & x86_CPUID_1_bits::AESNI) {
          features_detected |= CPUID::CPUID_AESNI_BIT;
-      if(flags0 & x86_CPUID_1_bits::RDRAND)
+      }
+      if(flags0 & x86_CPUID_1_bits::RDRAND) {
          features_detected |= CPUID::CPUID_RDRAND_BIT;
+      }
 
       if((flags0 & x86_CPUID_1_bits::AVX) && (flags0 & x86_CPUID_1_bits::OSXSAVE)) {
          const uint64_t xcr_flags = xgetbv();
@@ -140,14 +146,18 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
 
       const uint64_t flags7 = (static_cast<uint64_t>(cpuid[2]) << 32) | cpuid[1];
 
-      if((flags7 & x86_CPUID_7_bits::AVX2) && has_os_ymm_support)
+      if((flags7 & x86_CPUID_7_bits::AVX2) && has_os_ymm_support) {
          features_detected |= CPUID::CPUID_AVX2_BIT;
-      if(flags7 & x86_CPUID_7_bits::RDSEED)
+      }
+      if(flags7 & x86_CPUID_7_bits::RDSEED) {
          features_detected |= CPUID::CPUID_RDSEED_BIT;
-      if(flags7 & x86_CPUID_7_bits::ADX)
+      }
+      if(flags7 & x86_CPUID_7_bits::ADX) {
          features_detected |= CPUID::CPUID_ADX_BIT;
-      if(flags7 & x86_CPUID_7_bits::SHA)
+      }
+      if(flags7 & x86_CPUID_7_bits::SHA) {
          features_detected |= CPUID::CPUID_SHA_BIT;
+      }
 
       /*
       We only set the BMI bit if both BMI1 and BMI2 are supported, since
@@ -182,10 +192,12 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
          if((flags7 & AVX512_PROFILE_FLAGS) == AVX512_PROFILE_FLAGS) {
             features_detected |= CPUID::CPUID_AVX512_BIT;
 
-            if(flags7 & x86_CPUID_7_bits::AVX512_VAES)
+            if(flags7 & x86_CPUID_7_bits::AVX512_VAES) {
                features_detected |= CPUID::CPUID_AVX512_AES_BIT;
-            if(flags7 & x86_CPUID_7_bits::AVX512_VCLMUL)
+            }
+            if(flags7 & x86_CPUID_7_bits::AVX512_VCLMUL) {
                features_detected |= CPUID::CPUID_AVX512_CLMUL_BIT;
+            }
          }
       }
    }

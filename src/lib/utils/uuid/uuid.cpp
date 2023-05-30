@@ -41,8 +41,9 @@ UUID::UUID(std::string_view uuid_str) {
 
    std::string just_hex;
    for(char c : uuid_str) {
-      if(c == '-')
+      if(c == '-') {
          continue;
+      }
 
       just_hex += c;
    }
@@ -55,16 +56,18 @@ UUID::UUID(std::string_view uuid_str) {
 }
 
 std::string UUID::to_string() const {
-   if(is_valid() == false)
+   if(is_valid() == false) {
       throw Invalid_State("UUID object is empty cannot convert to string");
+   }
 
    const std::string raw = hex_encode(m_uuid);
 
    std::ostringstream formatted;
 
    for(size_t i = 0; i != raw.size(); ++i) {
-      if(i == 8 || i == 12 || i == 16 || i == 20)
+      if(i == 8 || i == 12 || i == 16 || i == 20) {
          formatted << "-";
+      }
       formatted << raw[i];
    }
 

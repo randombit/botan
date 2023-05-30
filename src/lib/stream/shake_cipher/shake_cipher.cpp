@@ -72,8 +72,9 @@ void SHAKE_Cipher::generate_keystream(uint8_t out[], size_t length) {
       }
    }
 
-   if(length == 0)
+   if(length == 0) {
       return;
+   }
 
    BOTAN_ASSERT_NOMSG(m_buf_pos == 0);
 

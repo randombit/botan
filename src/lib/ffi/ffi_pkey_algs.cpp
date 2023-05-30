@@ -71,8 +71,9 @@ namespace {
 
 template <class ECPrivateKey_t>
 int privkey_load_ec(std::unique_ptr<ECPrivateKey_t>& key, const Botan::BigInt& scalar, const char* curve_name) {
-   if(curve_name == nullptr)
+   if(curve_name == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    Botan::Null_RNG null_rng;
    Botan::EC_Group grp(curve_name);
@@ -85,8 +86,9 @@ int pubkey_load_ec(std::unique_ptr<ECPublicKey_t>& key,
                    const Botan::BigInt& public_x,
                    const Botan::BigInt& public_y,
                    const char* curve_name) {
-   if(curve_name == nullptr)
+   if(curve_name == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    Botan::EC_Group grp(curve_name);
    Botan::EC_Point uncompressed_point = grp.point(public_x, public_y);
@@ -100,10 +102,11 @@ Botan::BigInt pubkey_get_field(const Botan::Public_Key& key, std::string_view fi
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
    // Not currently handled by get_int_field
    if(const Botan::EC_PublicKey* ecc = dynamic_cast<const Botan::EC_PublicKey*>(&key)) {
-      if(field == "public_x")
+      if(field == "public_x") {
          return ecc->public_point().get_affine_x();
-      else if(field == "public_y")
+      } else if(field == "public_y") {
          return ecc->public_point().get_affine_y();
+      }
    }
 #endif
 
@@ -118,10 +121,11 @@ Botan::BigInt privkey_get_field(const Botan::Private_Key& key, std::string_view 
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
    // Not currently handled by get_int_field
    if(const Botan::EC_PublicKey* ecc = dynamic_cast<const Botan::EC_PublicKey*>(&key)) {
-      if(field == "public_x")
+      if(field == "public_x") {
          return ecc->public_point().get_affine_x();
-      else if(field == "public_y")
+      } else if(field == "public_y") {
          return ecc->public_point().get_affine_y();
+      }
    }
 #endif
 
@@ -139,8 +143,9 @@ extern "C" {
 using namespace Botan_FFI;
 
 int botan_pubkey_get_field(botan_mp_t output, botan_pubkey_t key, const char* field_name_cstr) {
-   if(field_name_cstr == nullptr)
+   if(field_name_cstr == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    const std::string field_name(field_name_cstr);
 
@@ -148,8 +153,9 @@ int botan_pubkey_get_field(botan_mp_t output, botan_pubkey_t key, const char* fi
 }
 
 int botan_privkey_get_field(botan_mp_t output, botan_privkey_t key, const char* field_name_cstr) {
-   if(field_name_cstr == nullptr)
+   if(field_name_cstr == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    const std::string field_name(field_name_cstr);
 
@@ -159,8 +165,9 @@ int botan_privkey_get_field(botan_mp_t output, botan_privkey_t key, const char* 
 /* RSA specific operations */
 
 int botan_privkey_create_rsa(botan_privkey_t* key_obj, botan_rng_t rng_obj, size_t n_bits) {
-   if(n_bits < 1024 || n_bits > 16 * 1024)
+   if(n_bits < 1024 || n_bits > 16 * 1024) {
       return BOTAN_FFI_ERROR_BAD_PARAMETER;
+   }
 
    std::string n_str = std::to_string(n_bits);
 
@@ -251,8 +258,9 @@ int botan_privkey_rsa_get_privkey(botan_privkey_t rsa_key, uint8_t out[], size_t
 int botan_privkey_create_dsa(botan_privkey_t* key, botan_rng_t rng_obj, size_t pbits, size_t qbits) {
 #if defined(BOTAN_HAS_DSA)
 
-   if((rng_obj == nullptr) || (key == nullptr))
+   if((rng_obj == nullptr) || (key == nullptr)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    if((pbits % 64) || (qbits % 8) || (pbits < 1024) || (pbits > 3072) || (qbits < 160) || (qbits > 256)) {
       return BOTAN_FFI_ERROR_BAD_PARAMETER;
@@ -328,8 +336,9 @@ int botan_pubkey_load_ecdsa(botan_pubkey_t* key,
       std::unique_ptr<Botan::ECDSA_PublicKey> p_key;
 
       int rc = pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name);
-      if(rc == BOTAN_FFI_SUCCESS)
+      if(rc == BOTAN_FFI_SUCCESS) {
          *key = new botan_pubkey_struct(std::move(p_key));
+      }
 
       return rc;
    });
@@ -344,8 +353,9 @@ int botan_privkey_load_ecdsa(botan_privkey_t* key, const botan_mp_t scalar, cons
    return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::ECDSA_PrivateKey> p_key;
       int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
-      if(rc == BOTAN_FFI_SUCCESS)
+      if(rc == BOTAN_FFI_SUCCESS) {
          *key = new botan_privkey_struct(std::move(p_key));
+      }
       return rc;
    });
 #else
@@ -358,8 +368,9 @@ int botan_privkey_load_ecdsa(botan_privkey_t* key, const botan_mp_t scalar, cons
 int botan_privkey_create_elgamal(botan_privkey_t* key, botan_rng_t rng_obj, size_t pbits, size_t qbits) {
 #if defined(BOTAN_HAS_ELGAMAL)
 
-   if((rng_obj == nullptr) || (key == nullptr))
+   if((rng_obj == nullptr) || (key == nullptr)) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    if((pbits < 1024) || (qbits < 160)) {
       return BOTAN_FFI_ERROR_BAD_PARAMETER;
@@ -450,13 +461,15 @@ int botan_pubkey_load_dh(botan_pubkey_t* key, botan_mp_t p, botan_mp_t g, botan_
 /* ECDH + x25519 specific operations */
 
 int botan_privkey_create_ecdh(botan_privkey_t* key_obj, botan_rng_t rng_obj, const char* param_str) {
-   if(param_str == nullptr)
+   if(param_str == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    const std::string params(param_str);
 
-   if(params == "curve25519")
+   if(params == "curve25519") {
       return botan_privkey_create(key_obj, "Curve25519", "", rng_obj);
+   }
 
    return botan_privkey_create(key_obj, "ECDH", param_str, rng_obj);
 }
@@ -470,8 +483,9 @@ int botan_pubkey_load_ecdh(botan_pubkey_t* key,
       std::unique_ptr<Botan::ECDH_PublicKey> p_key;
       int rc = pubkey_load_ec(p_key, safe_get(public_x), safe_get(public_y), curve_name);
 
-      if(rc == BOTAN_FFI_SUCCESS)
+      if(rc == BOTAN_FFI_SUCCESS) {
          *key = new botan_pubkey_struct(std::move(p_key));
+      }
       return rc;
    });
 #else
@@ -485,8 +499,9 @@ int botan_privkey_load_ecdh(botan_privkey_t* key, const botan_mp_t scalar, const
    return ffi_guard_thunk(__func__, [=]() -> int {
       std::unique_ptr<Botan::ECDH_PrivateKey> p_key;
       int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
-      if(rc == BOTAN_FFI_SUCCESS)
+      if(rc == BOTAN_FFI_SUCCESS) {
          *key = new botan_privkey_struct(std::move(p_key));
+      }
       return rc;
    });
 #else
@@ -499,21 +514,25 @@ int botan_privkey_load_ecdh(botan_privkey_t* key, const botan_mp_t scalar, const
 
 int botan_pubkey_sm2_compute_za(
    uint8_t out[], size_t* out_len, const char* ident, const char* hash_algo, const botan_pubkey_t key) {
-   if(out == nullptr || out_len == nullptr)
+   if(out == nullptr || out_len == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
-   if(ident == nullptr || hash_algo == nullptr || key == nullptr)
+   }
+   if(ident == nullptr || hash_algo == nullptr || key == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
 #if defined(BOTAN_HAS_SM2)
    return ffi_guard_thunk(__func__, [=]() -> int {
       const Botan::Public_Key& pub_key = safe_get(key);
       const Botan::EC_PublicKey* ec_key = dynamic_cast<const Botan::EC_PublicKey*>(&pub_key);
 
-      if(ec_key == nullptr)
+      if(ec_key == nullptr) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
 
-      if(ec_key->algo_name() != "SM2")
+      if(ec_key->algo_name() != "SM2") {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
 
       const std::string ident_str(ident);
       std::unique_ptr<Botan::HashFunction> hash = Botan::HashFunction::create_or_throw(hash_algo);
@@ -552,8 +571,9 @@ int botan_privkey_load_sm2(botan_privkey_t* key, const botan_mp_t scalar, const 
       std::unique_ptr<Botan::SM2_PrivateKey> p_key;
       int rc = privkey_load_ec(p_key, safe_get(scalar), curve_name);
 
-      if(rc == BOTAN_FFI_SUCCESS)
+      if(rc == BOTAN_FFI_SUCCESS) {
          *key = new botan_privkey_struct(std::move(p_key));
+      }
       return rc;
    });
 #else

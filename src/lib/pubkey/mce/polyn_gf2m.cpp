@@ -32,8 +32,9 @@ gf2m generate_gf2m_mask(gf2m a) {
 */
 unsigned nlz_16bit(uint16_t x) {
    unsigned n;
-   if(x == 0)
+   if(x == 0) {
       return 16;
+   }
    n = 0;
    if(x <= 0x00FF) {
       n = n + 8;
@@ -165,8 +166,9 @@ void polyn_gf2m::set_to_zero() {
 
 int polyn_gf2m::get_degree() const {
    int d = static_cast<int>(this->m_coeff.size()) - 1;
-   while((d >= 0) && (this->m_coeff[d] == 0))
+   while((d >= 0) && (this->m_coeff[d] == 0)) {
       --d;
+   }
    const_cast<polyn_gf2m*>(this)->m_deg = d;
    return d;
 }
@@ -174,12 +176,13 @@ int polyn_gf2m::get_degree() const {
 static gf2m eval_aux(const gf2m* /*restrict*/ coeff, gf2m a, int d, const std::shared_ptr<GF2m_Field>& sp_field) {
    gf2m b;
    b = coeff[d--];
-   for(; d >= 0; --d)
+   for(; d >= 0; --d) {
       if(b != 0) {
          b = sp_field->gf_mul(b, a) ^ coeff[d];
       } else {
          b = coeff[d];
       }
+   }
    return b;
 }
 
@@ -207,16 +210,18 @@ void polyn_gf2m::remainder(polyn_gf2m& p, const polyn_gf2m& g) {
          }
       }
       p.set_degree(g.get_degree() - 1);
-      while((p.get_degree() >= 0) && (p[p.get_degree()] == 0))
+      while((p.get_degree() >= 0) && (p[p.get_degree()] == 0)) {
          p.set_degree(p.get_degree() - 1);
+      }
    }
 }
 
 std::vector<polyn_gf2m> polyn_gf2m::sqmod_init(const polyn_gf2m& g) {
    std::vector<polyn_gf2m> sq;
    const int signed_deg = g.get_degree();
-   if(signed_deg <= 0)
+   if(signed_deg <= 0) {
       throw Invalid_Argument("cannot compute sqmod for such low degree");
+   }
 
    const uint32_t d = static_cast<uint32_t>(signed_deg);
    uint32_t t = g.m_deg;
@@ -267,16 +272,17 @@ polyn_gf2m polyn_gf2m::sqmod(const std::vector<polyn_gf2m>& sq, int d) {
 
    // Update degre
    result.set_degree(d - 1);
-   while((result.get_degree() >= 0) && (result[result.get_degree()] == 0))
+   while((result.get_degree() >= 0) && (result[result.get_degree()] == 0)) {
       result.set_degree(result.get_degree() - 1);
+   }
    return result;
 }
 
 // destructive
 polyn_gf2m polyn_gf2m::gcd_aux(polyn_gf2m& p1, polyn_gf2m& p2) {
-   if(p2.get_degree() == -1)
+   if(p2.get_degree() == -1) {
       return p1;
-   else {
+   } else {
       polyn_gf2m::remainder(p1, p2);
       return polyn_gf2m::gcd_aux(p2, p1);
    }
@@ -531,8 +537,9 @@ polyn_gf2m::polyn_gf2m(size_t t, RandomNumberGenerator& rng, const std::shared_p
 
       const size_t degree = polyn_gf2m::degppf(*this);
 
-      if(degree >= t)
+      if(degree >= t) {
          break;
+      }
    }
 }
 

@@ -48,10 +48,11 @@ class Gen_Prime final : public Command {
          for(size_t i = 0; i != cnt; ++i) {
             const Botan::BigInt p = Botan::random_prime(rng(), bits);
 
-            if(hex)
+            if(hex) {
                output() << "0x" << std::hex << p << "\n";
-            else
+            } else {
                output() << p << "\n";
+            }
          }
       }
 };
@@ -171,8 +172,9 @@ class Factor final : public Command {
                   break;
                }
 
-               if(d != 1)
+               if(d != 1) {
                   return d;
+               }
             }
 
             if(i == k) {

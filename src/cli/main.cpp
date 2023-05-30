@@ -16,10 +16,12 @@ int main(int argc, char* argv[]) {
 
    if(argc >= 2) {
       cmd_name = argv[1];
-      if(cmd_name == "--help" || cmd_name == "-h")
+      if(cmd_name == "--help" || cmd_name == "-h") {
          cmd_name = "help";
-      if(cmd_name == "--version" || cmd_name == "-V")
+      }
+      if(cmd_name == "--version" || cmd_name == "-V") {
          cmd_name = "version";
+      }
    }
 
    std::unique_ptr<Botan_CLI::Command> cmd(Botan_CLI::Command::get_cmd(cmd_name));

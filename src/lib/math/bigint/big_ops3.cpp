@@ -28,12 +28,13 @@ BigInt BigInt::add2(const BigInt& x, const word y[], size_t y_words, BigInt::Sig
       const int32_t relative_size = bigint_sub_abs(z.mutable_data(), x.data(), x_sw, y, y_words);
 
       //z.sign_fixup(relative_size, y_sign);
-      if(relative_size < 0)
+      if(relative_size < 0) {
          z.set_sign(y_sign);
-      else if(relative_size == 0)
+      } else if(relative_size == 0) {
          z.set_sign(BigInt::Positive);
-      else
+      } else {
          z.set_sign(x.sign());
+      }
    }
 
    return z;
@@ -48,11 +49,11 @@ BigInt operator*(const BigInt& x, const BigInt& y) {
 
    BigInt z = BigInt::with_capacity(x.size() + y.size());
 
-   if(x_sw == 1 && y_sw)
+   if(x_sw == 1 && y_sw) {
       bigint_linmul3(z.mutable_data(), y.data(), y_sw, x.word_at(0));
-   else if(y_sw == 1 && x_sw)
+   } else if(y_sw == 1 && x_sw) {
       bigint_linmul3(z.mutable_data(), x.data(), x_sw, y.word_at(0));
-   else if(x_sw && y_sw) {
+   } else if(x_sw && y_sw) {
       secure_vector<word> workspace(z.size());
 
       bigint_mul(z.mutable_data(),
@@ -105,8 +106,9 @@ BigInt operator/(const BigInt& x, const BigInt& y) {
 * Division Operator
 */
 BigInt operator/(const BigInt& x, word y) {
-   if(y == 0)
+   if(y == 0) {
       throw Invalid_Argument("BigInt::operator/ divide by zero");
+   }
 
    BigInt q;
    word r;
@@ -118,12 +120,15 @@ BigInt operator/(const BigInt& x, word y) {
 * Modulo Operator
 */
 BigInt operator%(const BigInt& n, const BigInt& mod) {
-   if(mod.is_zero())
+   if(mod.is_zero()) {
       throw Invalid_Argument("BigInt::operator% divide by zero");
-   if(mod.is_negative())
+   }
+   if(mod.is_negative()) {
       throw Invalid_Argument("BigInt::operator% modulus must be > 0");
-   if(n.is_positive() && mod.is_positive() && n < mod)
+   }
+   if(n.is_positive() && mod.is_positive() && n < mod) {
       return n;
+   }
 
    if(mod.sig_words() == 1) {
       return BigInt::from_word(n % mod.word_at(0));
@@ -138,11 +143,13 @@ BigInt operator%(const BigInt& n, const BigInt& mod) {
 * Modulo Operator
 */
 word operator%(const BigInt& n, word mod) {
-   if(mod == 0)
+   if(mod == 0) {
       throw Invalid_Argument("BigInt::operator% divide by zero");
+   }
 
-   if(mod == 1)
+   if(mod == 1) {
       return 0;
+   }
 
    word remainder = 0;
 
@@ -155,8 +162,9 @@ word operator%(const BigInt& n, word mod) {
       }
    }
 
-   if(remainder && n.sign() == BigInt::Negative)
+   if(remainder && n.sign() == BigInt::Negative) {
       return mod - remainder;
+   }
    return remainder;
 }
 
@@ -182,16 +190,18 @@ BigInt operator>>(const BigInt& x, size_t shift) {
    const size_t shift_bits = shift % BOTAN_MP_WORD_BITS;
    const size_t x_sw = x.sig_words();
 
-   if(shift_words >= x_sw)
+   if(shift_words >= x_sw) {
       return BigInt::zero();
+   }
 
    BigInt y = BigInt::with_capacity(x_sw - shift_words);
    bigint_shr2(y.mutable_data(), x.data(), x_sw, shift_words, shift_bits);
 
-   if(x.is_negative() && y.is_zero())
+   if(x.is_negative() && y.is_zero()) {
       y.set_sign(BigInt::Positive);
-   else
+   } else {
       y.set_sign(x.sign());
+   }
 
    return y;
 }

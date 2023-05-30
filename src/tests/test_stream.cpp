@@ -137,12 +137,14 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
             }
 
             {
-               if(nonce.empty())
+               if(nonce.empty()) {
                   cipher->set_key(key);
-               else
+               } else {
                   cipher->set_iv(nonce.data(), nonce.size());
-               if(seek != 0)
+               }
+               if(seek != 0) {
                   cipher->seek(seek);
+               }
                std::vector<uint8_t> buf = input;
                cipher->encrypt(buf);
                result.test_eq(provider, "encrypt 2", buf, expected);
@@ -150,8 +152,9 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
 
             if(!nonce.empty()) {
                cipher->set_iv(nonce.data(), nonce.size());
-               if(seek != 0)
+               if(seek != 0) {
                   cipher->seek(seek);
+               }
                std::vector<uint8_t> buf = input;
                cipher->encrypt(buf);
                result.test_eq(provider, "second encrypt", buf, expected);
@@ -162,8 +165,9 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
 
                cipher->set_iv(nonce.data(), nonce.size());
 
-               if(seek != 0)
+               if(seek != 0) {
                   cipher->seek(seek);
+               }
 
                std::vector<uint8_t> buf(input.size(), 0xAB);
 
@@ -177,8 +181,9 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
                   buf_len -= next;
                }
 
-               for(size_t i = 0; i != input.size(); ++i)
+               for(size_t i = 0; i != input.size(); ++i) {
                   buf[i] ^= input[i];
+               }
                result.test_eq(provider, "write_keystream", buf, expected);
             }
 

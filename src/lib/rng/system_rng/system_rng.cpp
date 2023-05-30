@@ -214,8 +214,9 @@ class System_RNG_Impl final : public RandomNumberGenerator {
             const ssize_t got = ::getrandom(buf, len, flags);
 
             if(got < 0) {
-               if(errno == EINTR)
+               if(errno == EINTR) {
                   continue;
+               }
                throw System_Error("System_RNG getrandom failed", errno);
             }
 

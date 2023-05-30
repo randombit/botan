@@ -97,8 +97,9 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager {
          BOTAN_UNUSED(context);
          std::vector<Botan::X509_Certificate> chain;
 
-         if(m_acceptable_cas.empty())
+         if(m_acceptable_cas.empty()) {
             m_acceptable_cas = acceptable_CAs;
+         }
 
          if(type == "tls-server" || (type == "tls-client" && m_provides_client_certs)) {
             for(const auto& key_type : cert_key_types) {
@@ -375,10 +376,11 @@ class TLS_Handshake_Test final {
                      const std::vector<uint8_t> val = unknown_ext->value();
 
                      if(m_results.test_eq("Expected size for test extn", val.size(), 7)) {
-                        if(which_side == Botan::TLS::Connection_Side::Client)
+                        if(which_side == Botan::TLS::Connection_Side::Client) {
                            m_results.test_eq("Expected extension value", val, "06636C69656E74");
-                        else
+                        } else {
                            m_results.test_eq("Expected extension value", val, "06736572766572");
+                        }
                      }
                   } else {
                      m_results.test_failure("Unknown extension type had unexpected type at runtime");
@@ -515,11 +517,13 @@ void TLS_Handshake_Test::go() {
          break;
       }
 
-      if(client_handshake_completed == false && client->is_active())
+      if(client_handshake_completed == false && client->is_active()) {
          client_handshake_completed = true;
+      }
 
-      if(server_handshake_completed == false && m_server->is_active())
+      if(server_handshake_completed == false && m_server->is_active()) {
          server_handshake_completed = true;
+      }
 
       if(client->is_active() && client_has_written == false) {
          m_results.test_eq("client ALPN protocol", client->application_protocol(), "test/3");

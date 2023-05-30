@@ -23,8 +23,9 @@ BOTAN_FFI_DECLARE_STRUCT(botan_hotp_struct, Botan::HOTP, 0x89CBF191);
 #endif
 
 int botan_hotp_init(botan_hotp_t* hotp, const uint8_t key[], size_t key_len, const char* hash_algo, size_t digits) {
-   if(hotp == nullptr || key == nullptr || hash_algo == nullptr)
+   if(hotp == nullptr || key == nullptr || hash_algo == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    *hotp = nullptr;
 
@@ -52,8 +53,9 @@ int botan_hotp_destroy(botan_hotp_t hotp) {
 
 int botan_hotp_generate(botan_hotp_t hotp, uint32_t* hotp_code, uint64_t hotp_counter) {
 #if defined(BOTAN_HAS_HOTP)
-   if(hotp == nullptr || hotp_code == nullptr)
+   if(hotp == nullptr || hotp_code == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    return BOTAN_FFI_VISIT(hotp, [=](auto& h) { *hotp_code = h.generate_hotp(hotp_counter); });
 

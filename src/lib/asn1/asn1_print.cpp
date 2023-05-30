@@ -22,11 +22,13 @@ namespace {
 bool all_printable_chars(const uint8_t bits[], size_t bits_len) {
    for(size_t i = 0; i != bits_len; ++i) {
       int c = bits[i];
-      if(c > 127)
+      if(c > 127) {
          return false;
+      }
 
-      if((std::isalnum(c) || c == '.' || c == ':' || c == '/' || c == '-') == false)
+      if((std::isalnum(c) || c == '.' || c == ':' || c == '/' || c == '-') == false) {
          return false;
+      }
    }
    return true;
 }
@@ -35,17 +37,21 @@ bool all_printable_chars(const uint8_t bits[], size_t bits_len) {
 * Special hack to handle GeneralName [2] and [6] (DNS name and URI)
 */
 bool possibly_a_general_name(const uint8_t bits[], size_t bits_len) {
-   if(bits_len <= 2)
+   if(bits_len <= 2) {
       return false;
+   }
 
-   if(bits[0] != 0x82 && bits[0] != 0x86)
+   if(bits[0] != 0x82 && bits[0] != 0x86) {
       return false;
+   }
 
-   if(bits[1] != bits_len - 2)
+   if(bits[1] != bits_len - 2) {
       return false;
+   }
 
-   if(all_printable_chars(bits + 2, bits_len - 2) == false)
+   if(all_printable_chars(bits + 2, bits_len - 2) == false) {
       return false;
+   }
 
    return true;
 }
@@ -183,16 +189,19 @@ void ASN1_Formatter::decode(std::ostream& output, BER_Decoder& decoder, size_t l
 namespace {
 
 std::string format_type(ASN1_Type type_tag, ASN1_Class class_tag) {
-   if(class_tag == ASN1_Class::Universal)
+   if(class_tag == ASN1_Class::Universal) {
       return asn1_tag_to_string(type_tag);
+   }
 
-   if(class_tag == ASN1_Class::Constructed && (type_tag == ASN1_Type::Sequence || type_tag == ASN1_Type::Set))
+   if(class_tag == ASN1_Class::Constructed && (type_tag == ASN1_Type::Sequence || type_tag == ASN1_Type::Set)) {
       return asn1_tag_to_string(type_tag);
+   }
 
    std::ostringstream oss;
 
-   if(intersects(class_tag, ASN1_Class::Constructed))
+   if(intersects(class_tag, ASN1_Class::Constructed)) {
       oss << "cons ";
+   }
 
    oss << "[" << std::to_string(static_cast<uint32_t>(type_tag)) << "]";
 
@@ -245,15 +254,17 @@ std::string ASN1_Pretty_Printer::format_bin(ASN1_Type /*type_tag*/,
                                             const std::vector<uint8_t>& vec) const {
    if(all_printable_chars(vec.data(), vec.size())) {
       return std::string(cast_uint8_ptr_to_char(vec.data()), vec.size());
-   } else
+   } else {
       return hex_encode(vec);
+   }
 }
 
 std::string ASN1_Pretty_Printer::format_bn(const BigInt& bn) const {
-   if(bn.bits() < 16)
+   if(bn.bits() < 16) {
       return bn.to_dec_string();
-   else
+   } else {
       return bn.to_hex_string();
+   }
 }
 
 }  // namespace Botan

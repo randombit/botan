@@ -35,8 +35,9 @@ size_t RC4::buffer_size() const { return 256; }
 Key_Length_Specification RC4::key_spec() const { return Key_Length_Specification(1, 256); }
 
 void RC4::set_iv_bytes(const uint8_t* /*iv*/, size_t length) {
-   if(length > 0)
+   if(length > 0) {
       throw Invalid_IV_Length("RC4", length);
+   }
 }
 
 /*
@@ -88,16 +89,18 @@ void RC4::key_schedule(const uint8_t key[], size_t length) {
 
    m_position = m_X = m_Y = 0;
 
-   for(size_t i = 0; i != 256; ++i)
+   for(size_t i = 0; i != 256; ++i) {
       m_state[i] = static_cast<uint8_t>(i);
+   }
 
    for(size_t i = 0, state_index = 0; i != 256; ++i) {
       state_index = (state_index + key[i % length] + m_state[i]) % 256;
       std::swap(m_state[i], m_state[state_index]);
    }
 
-   for(size_t i = 0; i <= m_SKIP; i += m_buffer.size())
+   for(size_t i = 0; i <= m_SKIP; i += m_buffer.size()) {
       generate();
+   }
 
    m_position += (m_SKIP % m_buffer.size());
 }
@@ -106,12 +109,13 @@ void RC4::key_schedule(const uint8_t key[], size_t length) {
 * Return the name of this type
 */
 std::string RC4::name() const {
-   if(m_SKIP == 0)
+   if(m_SKIP == 0) {
       return "RC4";
-   else if(m_SKIP == 256)
+   } else if(m_SKIP == 256) {
       return "MARK-4";
-   else
+   } else {
       return "RC4(" + std::to_string(m_SKIP) + ")";
+   }
 }
 
 /*

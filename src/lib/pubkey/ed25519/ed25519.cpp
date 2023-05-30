@@ -102,12 +102,15 @@ bool ed25519_verify(const uint8_t* m,
    // RFC 8032 adds the requirement that we verify that s < order in
    // the signature; this did not exist in the original Ed25519 spec.
    for(size_t i = 0; i != 4; ++i) {
-      if(s[i] > CURVE25519_ORDER[i])
+      if(s[i] > CURVE25519_ORDER[i]) {
          return false;
-      if(s[i] < CURVE25519_ORDER[i])
+      }
+      if(s[i] < CURVE25519_ORDER[i]) {
          break;
-      if(i == 3)  // here s == order
+      }
+      if(i == 3) {  // here s == order
          return false;
+      }
    }
 
    sha.update(domain_sep, domain_sep_len);

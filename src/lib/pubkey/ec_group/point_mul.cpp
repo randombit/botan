@@ -77,8 +77,9 @@ EC_Point EC_Point_Base_Point_Precompute::mul(const BigInt& k,
                                              RandomNumberGenerator& rng,
                                              const BigInt& group_order,
                                              std::vector<BigInt>& ws) const {
-   if(k.is_negative())
+   if(k.is_negative()) {
       throw Invalid_Argument("EC_Point_Base_Point_Precompute scalar must be positive");
+   }
 
    // Instead of reducing k mod group order should we alter the mask size??
    BigInt scalar = m_mod_order.reduce(k);
@@ -95,8 +96,9 @@ EC_Point EC_Point_Base_Point_Precompute::mul(const BigInt& k,
       bound does not leak information about the high bits of the scalar.
       */
       scalar += group_order;
-      if(scalar.bits() == group_order.bits())
+      if(scalar.bits() == group_order.bits()) {
          scalar += group_order;
+      }
       BOTAN_DEBUG_ASSERT(scalar.bits() == group_order.bits() + 1);
    }
 
@@ -108,8 +110,9 @@ EC_Point EC_Point_Base_Point_Precompute::mul(const BigInt& k,
 
    EC_Point R = m_base_point.zero();
 
-   if(ws.size() < EC_Point::WORKSPACE_SIZE)
+   if(ws.size() < EC_Point::WORKSPACE_SIZE) {
       ws.resize(EC_Point::WORKSPACE_SIZE);
+   }
 
    // the precomputed multiples are not secret so use std::vector
    std::vector<word> Wt(elem_size);
@@ -162,8 +165,9 @@ EC_Point_Var_Point_Precompute::EC_Point_Var_Point_Precompute(const EC_Point& poi
                                                              RandomNumberGenerator& rng,
                                                              std::vector<BigInt>& ws) :
       m_curve(point.get_curve()), m_p_words(m_curve.get_p().sig_words()), m_window_bits(4) {
-   if(ws.size() < EC_Point::WORKSPACE_SIZE)
+   if(ws.size() < EC_Point::WORKSPACE_SIZE) {
       ws.resize(EC_Point::WORKSPACE_SIZE);
+   }
 
    std::vector<EC_Point> U(static_cast<size_t>(1) << m_window_bits);
    U[0] = point.zero();
@@ -220,10 +224,12 @@ EC_Point EC_Point_Var_Point_Precompute::mul(const BigInt& k,
                                             RandomNumberGenerator& rng,
                                             const BigInt& group_order,
                                             std::vector<BigInt>& ws) const {
-   if(k.is_negative())
+   if(k.is_negative()) {
       throw Invalid_Argument("EC_Point_Var_Point_Precompute scalar must be positive");
-   if(ws.size() < EC_Point::WORKSPACE_SIZE)
+   }
+   if(ws.size() < EC_Point::WORKSPACE_SIZE) {
       ws.resize(EC_Point::WORKSPACE_SIZE);
+   }
 
    // Choose a small mask m and use k' = k + m*order (Coron's 1st countermeasure)
    const BigInt mask(rng, blinding_size(group_order), false);
@@ -325,8 +331,9 @@ EC_Point_Multi_Point_Precompute::EC_Point_Multi_Point_Precompute(const EC_Point&
 
    bool no_infinity = true;
    for(auto& pt : m_M) {
-      if(pt.is_zero())
+      if(pt.is_zero()) {
          no_infinity = false;
+      }
    }
 
    if(no_infinity) {
@@ -337,8 +344,9 @@ EC_Point_Multi_Point_Precompute::EC_Point_Multi_Point_Precompute(const EC_Point&
 }
 
 EC_Point EC_Point_Multi_Point_Precompute::multi_exp(const BigInt& z1, const BigInt& z2) const {
-   if(m_M.size() == 1)
+   if(m_M.size() == 1) {
       return m_M[0];
+   }
 
    std::vector<BigInt> ws(EC_Point::WORKSPACE_SIZE);
 
@@ -358,15 +366,17 @@ EC_Point EC_Point_Multi_Point_Precompute::multi_exp(const BigInt& z1, const BigI
 
       // This function is not intended to be const time
       if(z12) {
-         if(m_no_infinity)
+         if(m_no_infinity) {
             H.add_affine(m_M[z12 - 1], ws);
-         else
+         } else {
             H.add(m_M[z12 - 1], ws);
+         }
       }
    }
 
-   if(z1.is_negative() != z2.is_negative())
+   if(z1.is_negative() != z2.is_negative()) {
       H.negate();
+   }
 
    return H;
 }

@@ -91,10 +91,11 @@ class Block_Cipher_Tests final : public Text_Based_Test {
 
             if(!tweak.empty()) {
                Botan::Tweakable_Block_Cipher* tbc = dynamic_cast<Botan::Tweakable_Block_Cipher*>(cipher.get());
-               if(tbc == nullptr)
+               if(tbc == nullptr) {
                   result.test_failure("Tweak set in test data but cipher is not a Tweakable_Block_Cipher");
-               else
+               } else {
                   tbc->set_tweak(tweak.data(), tweak.size());
+               }
             }
 
             // Test that clone works and does not affect parent object

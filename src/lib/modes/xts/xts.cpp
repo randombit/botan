@@ -54,16 +54,18 @@ bool XTS_Mode::has_keying_material() const {
 void XTS_Mode::key_schedule(const uint8_t key[], size_t length) {
    const size_t key_half = length / 2;
 
-   if(length % 2 == 1 || !m_cipher->valid_keylength(key_half))
+   if(length % 2 == 1 || !m_cipher->valid_keylength(key_half)) {
       throw Invalid_Key_Length(name(), length);
+   }
 
    m_cipher->set_key(key, key_half);
    m_tweak_cipher->set_key(&key[key_half], key_half);
 }
 
 void XTS_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
-   if(!valid_nonce_length(nonce_len))
+   if(!valid_nonce_length(nonce_len)) {
       throw Invalid_IV_Length(name(), nonce_len);
+   }
 
    m_tweak.resize(m_cipher_parallelism);
    clear_mem(m_tweak.data(), m_tweak.size());
@@ -76,13 +78,15 @@ void XTS_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
 void XTS_Mode::update_tweak(size_t which) {
    const size_t BS = m_tweak_cipher->block_size();
 
-   if(which > 0)
+   if(which > 0) {
       poly_double_n_le(m_tweak.data(), &m_tweak[(which - 1) * BS], BS);
+   }
 
    const size_t blocks_in_tweak = tweak_blocks();
 
-   for(size_t i = 1; i < blocks_in_tweak; ++i)
+   for(size_t i = 1; i < blocks_in_tweak; ++i) {
       poly_double_n_le(&m_tweak[i * BS], &m_tweak[(i - 1) * BS], BS);
+   }
 }
 
 size_t XTS_Encryption::output_length(size_t input_length) const { return input_length; }

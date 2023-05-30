@@ -24,16 +24,18 @@ AlgorithmIdentifier Ed25519_PublicKey::algorithm_identifier() const {
 }
 
 bool Ed25519_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
-   if(m_public.size() != 32)
+   if(m_public.size() != 32) {
       return false;
+   }
 
    /*
    This function was derived from public domain code in Tor's blinding.c
    */
 
    const uint8_t identity_element[32] = {1};
-   if(same_mem(m_public.data(), identity_element, 32))
+   if(same_mem(m_public.data(), identity_element, 32)) {
       return false;
+   }
 
    // The order of the Ed25519 group encoded
    const uint8_t modm_m[32] = {0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7,
@@ -47,29 +49,33 @@ bool Ed25519_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*
    copy_mem(pkcopy, m_public.data(), 32);
    pkcopy[31] ^= (1 << 7);  // flip sign
    ge_p3 point;
-   if(ge_frombytes_negate_vartime(&point, pkcopy) != 0)
+   if(ge_frombytes_negate_vartime(&point, pkcopy) != 0) {
       return false;
+   }
 
    uint8_t result[32];
    ge_double_scalarmult_vartime(result, modm_m, &point, zero);
 
-   if(!same_mem(result, identity_element, 32))
+   if(!same_mem(result, identity_element, 32)) {
       return false;
+   }
 
    return true;
 }
 
 Ed25519_PublicKey::Ed25519_PublicKey(const uint8_t pub_key[], size_t pub_len) {
-   if(pub_len != 32)
+   if(pub_len != 32) {
       throw Decoding_Error("Invalid length for Ed25519 key");
+   }
    m_public.assign(pub_key, pub_key + pub_len);
 }
 
 Ed25519_PublicKey::Ed25519_PublicKey(const AlgorithmIdentifier& /*unused*/, std::span<const uint8_t> key_bits) {
    m_public.assign(key_bits.begin(), key_bits.end());
 
-   if(m_public.size() != 32)
+   if(m_public.size() != 32) {
       throw Decoding_Error("Invalid size for Ed25519 public key");
+   }
 }
 
 std::vector<uint8_t> Ed25519_PublicKey::public_key_bits() const { return m_public; }
@@ -82,8 +88,9 @@ Ed25519_PrivateKey::Ed25519_PrivateKey(const secure_vector<uint8_t>& secret_key)
       m_public.resize(32);
       m_private.resize(64);
       ed25519_gen_keypair(m_public.data(), m_private.data(), secret_key.data());
-   } else
+   } else {
       throw Decoding_Error("Invalid size for Ed25519 private key");
+   }
 }
 
 Ed25519_PrivateKey::Ed25519_PrivateKey(RandomNumberGenerator& rng) {
@@ -97,8 +104,9 @@ Ed25519_PrivateKey::Ed25519_PrivateKey(const AlgorithmIdentifier& /*unused*/, st
    secure_vector<uint8_t> bits;
    BER_Decoder(key_bits).decode(bits, ASN1_Type::OctetString).discard_remaining();
 
-   if(bits.size() != 32)
+   if(bits.size() != 32) {
       throw Decoding_Error("Invalid size for Ed25519 private key");
+   }
    m_public.resize(32);
    m_private.resize(64);
    ed25519_gen_keypair(m_public.data(), m_private.data(), bits.data());
@@ -129,8 +137,9 @@ class Ed25519_Pure_Verify_Operation final : public PK_Ops::Verification {
       void update(const uint8_t msg[], size_t msg_len) override { m_msg.insert(m_msg.end(), msg, msg + msg_len); }
 
       bool is_valid_signature(const uint8_t sig[], size_t sig_len) override {
-         if(sig_len != 64)
+         if(sig_len != 64) {
             return false;
+         }
 
          const std::vector<uint8_t>& pub_key = m_key.get_public_key();
          BOTAN_ASSERT_EQUAL(pub_key.size(), 32, "Expected size");
@@ -164,8 +173,9 @@ class Ed25519_Hashed_Verify_Operation final : public PK_Ops::Verification {
       void update(const uint8_t msg[], size_t msg_len) override { m_hash->update(msg, msg_len); }
 
       bool is_valid_signature(const uint8_t sig[], size_t sig_len) override {
-         if(sig_len != 64)
+         if(sig_len != 64) {
             return false;
+         }
          std::vector<uint8_t> msg_hash(m_hash->output_length());
          m_hash->final(msg_hash.data());
 
@@ -256,12 +266,13 @@ class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature {
 std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::create_verification_op(std::string_view params,
                                                                                 std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
-      if(params.empty() || params == "Identity" || params == "Pure")
+      if(params.empty() || params == "Identity" || params == "Pure") {
          return std::make_unique<Ed25519_Pure_Verify_Operation>(*this);
-      else if(params == "Ed25519ph")
+      } else if(params == "Ed25519ph") {
          return std::make_unique<Ed25519_Hashed_Verify_Operation>(*this, "SHA-512", true);
-      else
+      } else {
          return std::make_unique<Ed25519_Hashed_Verify_Operation>(*this, params, false);
+      }
    }
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -269,8 +280,9 @@ std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::create_verification_op(
 std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
                                                                                      std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
-      if(alg_id != this->algorithm_identifier())
+      if(alg_id != this->algorithm_identifier()) {
          throw Decoding_Error("Unexpected AlgorithmIdentifier for Ed25519 X509 signature");
+      }
 
       return std::make_unique<Ed25519_Pure_Verify_Operation>(*this);
    }
@@ -281,12 +293,13 @@ std::unique_ptr<PK_Ops::Signature> Ed25519_PrivateKey::create_signature_op(Rando
                                                                            std::string_view params,
                                                                            std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
-      if(params.empty() || params == "Identity" || params == "Pure")
+      if(params.empty() || params == "Identity" || params == "Pure") {
          return std::make_unique<Ed25519_Pure_Sign_Operation>(*this);
-      else if(params == "Ed25519ph")
+      } else if(params == "Ed25519ph") {
          return std::make_unique<Ed25519_Hashed_Sign_Operation>(*this, "SHA-512", true);
-      else
+      } else {
          return std::make_unique<Ed25519_Hashed_Sign_Operation>(*this, params, false);
+      }
    }
    throw Provider_Not_Found(algo_name(), provider);
 }

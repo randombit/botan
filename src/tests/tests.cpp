@@ -39,8 +39,9 @@ namespace Botan_Tests {
 
 void Test::Result::merge(const Result& other, bool ignore_test_name) {
    if(who() != other.who()) {
-      if(!ignore_test_name)
+      if(!ignore_test_name) {
          throw Test_Error("Merging tests from different sources");
+      }
 
       // When deliberately merging results with different names, the code location is
       // likely inconsistent and must be discarded.
@@ -94,19 +95,24 @@ bool Test::Result::ThrowExpectations::check(const std::string& test_name, Test::
 
    try {
       m_fn();
-      if(!m_expect_success)
+      if(!m_expect_success) {
          return result.test_failure(test_name + " failed to throw expected exception");
+      }
    } catch(const std::exception& ex) {
-      if(m_expect_success)
+      if(m_expect_success) {
          return result.test_failure(test_name + " threw unexpected exception: " + ex.what());
-      if(m_expected_exception_type.has_value() && m_expected_exception_type.value() != typeid(ex))
+      }
+      if(m_expected_exception_type.has_value() && m_expected_exception_type.value() != typeid(ex)) {
          return result.test_failure(test_name + " threw unexpected exception: " + ex.what());
-      if(m_expected_message.has_value() && m_expected_message.value() != ex.what())
+      }
+      if(m_expected_message.has_value() && m_expected_message.value() != ex.what()) {
          return result.test_failure(test_name + " threw exception with unexpected message (expected: '" +
                                     m_expected_message.value() + "', got: '" + ex.what() + "')");
+      }
    } catch(...) {
-      if(m_expect_success || m_expected_exception_type.has_value() || m_expected_message.has_value())
+      if(m_expect_success || m_expected_exception_type.has_value() || m_expected_message.has_value()) {
          return result.test_failure(test_name + " threw unexpected unknown exception");
+      }
    }
 
    return result.test_success(test_name + " behaved as expected");
@@ -347,15 +353,17 @@ bool Test::Result::test_rc_init(const std::string& func, int rc) {
       msg << " " << func;
 
       // -40 is BOTAN_FFI_ERROR_NOT_IMPLEMENTED
-      if(rc == -40)
+      if(rc == -40) {
          msg << " returned not implemented";
-      else
+      } else {
          msg << " unexpectedly failed with error code " << rc;
+      }
 
-      if(rc == -40)
+      if(rc == -40) {
          this->test_note(msg.str());
-      else
+      } else {
          this->test_failure(msg.str());
+      }
       return false;
    }
 }
@@ -390,8 +398,9 @@ std::string Test::format_time(uint64_t ns) {
 }
 
 Test::Result::Result(std::string who, const std::vector<Result>& downstream_results) : Result(std::move(who)) {
-   for(const auto& result : downstream_results)
+   for(const auto& result : downstream_results) {
       merge(result, true /* ignore non-matching test names */);
+   }
 }
 
 // TODO: this should move to `StdoutReporter`
@@ -456,20 +465,25 @@ class Test_Registry {
                          bool smoke_test,
                          bool needs_serialization,
                          std::function<std::unique_ptr<Test>()> maker_fn) {
-         if(m_tests.contains(name))
+         if(m_tests.contains(name)) {
             throw Test_Error("Duplicate registration of test '" + name + "'");
+         }
 
-         if(m_tests.contains(category))
+         if(m_tests.contains(category)) {
             throw Test_Error("'" + category + "' cannot be used as category, test exists");
+         }
 
-         if(m_categories.contains(name))
+         if(m_categories.contains(name)) {
             throw Test_Error("'" + name + "' cannot be used as test name, category exists");
+         }
 
-         if(smoke_test)
+         if(smoke_test) {
             m_smoke_tests.push_back(name);
+         }
 
-         if(needs_serialization)
+         if(needs_serialization) {
             m_mutexed_tests.push_back(name);
+         }
 
          m_tests.emplace(name, std::move(maker_fn));
          m_categories.emplace(std::move(category), std::move(name));
@@ -493,8 +507,9 @@ class Test_Registry {
 
          // TODO: this is O(n^2), but we have a relatively small number of tests.
          auto insert_if_not_exists_and_not_skipped = [&](const std::string& test_name) {
-            if(!Botan::value_exists(result, test_name) && to_be_skipped.find(test_name) == to_be_skipped.end())
+            if(!Botan::value_exists(result, test_name) && to_be_skipped.find(test_name) == to_be_skipped.end()) {
                result.push_back(test_name);
+            }
          };
 
          if(requested.empty()) {
@@ -1035,21 +1050,24 @@ std::vector<Test::Result> Text_Based_Test::run() {
       std::string key = strip_ws(std::string(line.begin(), line.begin() + equal_i - 1));
       std::string val = strip_ws(std::string(line.begin() + equal_i + 1, line.end()));
 
-      if(!m_required_keys.contains(key) && !m_optional_keys.contains(key))
+      if(!m_required_keys.contains(key) && !m_optional_keys.contains(key)) {
          results.push_back(Test::Result::Failure(header_or_name, test_id + " failed unknown key " + key));
+      }
 
       vars.add(key, val);
 
       if(key == m_output_key) {
          try {
             for(auto& req_key : m_required_keys) {
-               if(!vars.has_key(req_key))
+               if(!vars.has_key(req_key)) {
                   results.push_back(
                      Test::Result::Failure(header_or_name, test_id + " missing required key " + req_key));
+               }
             }
 
-            if(skip_this_test(header, vars))
+            if(skip_this_test(header, vars)) {
                continue;
+            }
 
             ++test_cnt;
 
@@ -1072,12 +1090,14 @@ std::vector<Test::Result> Text_Based_Test::run() {
             if(result.tests_failed()) {
                std::ostringstream oss;
                oss << "Test # " << test_cnt << " ";
-               if(!header.empty())
+               if(!header.empty()) {
                   oss << header << " ";
+               }
                oss << "failed ";
 
-               for(const auto& k : m_required_keys)
+               for(const auto& k : m_required_keys) {
                   oss << k << "=" << vars.get_req_str(k) << " ";
+               }
 
                result.test_note(oss.str());
             }
@@ -1085,11 +1105,13 @@ std::vector<Test::Result> Text_Based_Test::run() {
          } catch(std::exception& e) {
             std::ostringstream oss;
             oss << "Test # " << test_cnt << " ";
-            if(!header.empty())
+            if(!header.empty()) {
                oss << header << " ";
+            }
 
-            for(const auto& k : m_required_keys)
+            for(const auto& k : m_required_keys) {
                oss << k << "=" << vars.get_req_str(k) << " ";
+            }
 
             oss << "failed with exception '" << e.what() << "'";
 

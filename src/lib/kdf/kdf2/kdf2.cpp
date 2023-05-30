@@ -24,13 +24,15 @@ void KDF2::kdf(uint8_t key[],
                size_t salt_len,
                const uint8_t label[],
                size_t label_len) const {
-   if(key_len == 0)
+   if(key_len == 0) {
       return;
+   }
 
    const size_t blocks_required = key_len / m_hash->output_length();
 
-   if(blocks_required >= 0xFFFFFFFE)
+   if(blocks_required >= 0xFFFFFFFE) {
       throw Invalid_Argument("KDF2 maximum output length exceeeded");
+   }
 
    uint32_t counter = 1;
    secure_vector<uint8_t> h;

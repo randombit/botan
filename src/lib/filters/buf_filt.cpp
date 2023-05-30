@@ -17,11 +17,13 @@ namespace Botan {
 * Buffered_Filter Constructor
 */
 Buffered_Filter::Buffered_Filter(size_t b, size_t f) : m_main_block_mod(b), m_final_minimum(f) {
-   if(m_main_block_mod == 0)
+   if(m_main_block_mod == 0) {
       throw Invalid_Argument("m_main_block_mod == 0");
+   }
 
-   if(m_final_minimum > m_main_block_mod)
+   if(m_final_minimum > m_main_block_mod) {
       throw Invalid_Argument("m_final_minimum > m_main_block_mod");
+   }
 
    m_buffer.resize(2 * m_main_block_mod);
    m_buffer_pos = 0;
@@ -31,8 +33,9 @@ Buffered_Filter::Buffered_Filter(size_t b, size_t f) : m_main_block_mod(b), m_fi
 * Buffer input into blocks, trying to minimize copying
 */
 void Buffered_Filter::write(const uint8_t input[], size_t input_size) {
-   if(!input_size)
+   if(!input_size) {
       return;
+   }
 
    if(m_buffer_pos + input_size >= m_main_block_mod + m_final_minimum) {
       size_t to_copy = std::min<size_t>(m_buffer.size() - m_buffer_pos, input_size);
@@ -73,8 +76,9 @@ void Buffered_Filter::write(const uint8_t input[], size_t input_size) {
 * Finish/flush operation
 */
 void Buffered_Filter::end_msg() {
-   if(m_buffer_pos < m_final_minimum)
+   if(m_buffer_pos < m_final_minimum) {
       throw Invalid_State("Buffered filter end_msg without enough input");
+   }
 
    size_t spare_blocks = (m_buffer_pos - m_final_minimum) / m_main_block_mod;
 

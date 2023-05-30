@@ -129,10 +129,11 @@ class TLS_Server final : public Command {
          const std::string dump_traces_to = get_arg("dump-traces");
          const auto psk = [this]() -> std::optional<Botan::SymmetricKey> {
             auto psk_hex = get_arg_maybe("psk");
-            if(psk_hex)
+            if(psk_hex) {
                return Botan::SymmetricKey(Botan::hex_decode_locked(psk_hex.value()));
-            else
+            } else {
                return {};
+            }
          }();
          const std::optional<std::string> psk_identity = get_arg_maybe("psk-identity");
    #if defined(BOTAN_SO_SOCKETID)
@@ -162,8 +163,9 @@ class TLS_Server final : public Command {
          size_t clients_served = 0;
 
          while(true) {
-            if(max_clients > 0 && clients_served >= max_clients)
+            if(max_clients > 0 && clients_served >= max_clients) {
                break;
+            }
 
             if(m_is_tcp) {
                m_socket = ::accept(server_fd, nullptr, nullptr);

@@ -265,15 +265,17 @@ class EC_Group_Tests : public Test {
             const auto pt_mult_by_order = group.get_base_point() * group.get_order();
             result.confirm("Multiplying point by the order results in zero point", pt_mult_by_order.is_zero());
 
-            if(group.a_is_minus_3())
+            if(group.a_is_minus_3()) {
                result.test_eq("Group A equals -3", group.get_a(), group.get_p() - 3);
-            else
+            } else {
                result.test_ne("Group " + group_name + " A does not equal -3", group.get_a(), group.get_p() - 3);
+            }
 
-            if(group.a_is_zero())
+            if(group.a_is_zero()) {
                result.test_eq("Group A is zero", group.get_a(), BigInt(0));
-            else
+            } else {
                result.test_ne("Group " + group_name + " A does not equal zero", group.get_a(), BigInt(0));
+            }
 
             // get a valid point
             Botan::EC_Point p = group.get_base_point() * Test::rng().next_nonzero_byte();

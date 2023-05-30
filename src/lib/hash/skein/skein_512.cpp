@@ -21,17 +21,19 @@ Skein_512::Skein_512(size_t arg_output_bits, std::string_view arg_personalizatio
       m_T(2),
       m_buffer(64),
       m_buf_pos(0) {
-   if(m_output_bits == 0 || m_output_bits % 8 != 0 || m_output_bits > 512)
+   if(m_output_bits == 0 || m_output_bits % 8 != 0 || m_output_bits > 512) {
       throw Invalid_Argument("Bad output bits size for Skein-512");
+   }
 
    initial_block();
 }
 
 std::string Skein_512::name() const {
-   if(m_personalization.empty())
+   if(m_personalization.empty()) {
       return fmt("Skein-512({})", m_output_bits);
-   else
+   } else {
       return fmt("Skein-512({},{})", m_output_bits, m_personalization);
+   }
 }
 
 std::unique_ptr<HashFunction> Skein_512::new_object() const {
@@ -79,8 +81,9 @@ void Skein_512::initial_block() {
         algorithm specification. Could be fixed relatively easily, but
         doesn't seem worth the trouble.
       */
-      if(m_personalization.length() > 64)
+      if(m_personalization.length() > 64) {
          throw Invalid_Argument("Skein personalization must be less than 64 bytes");
+      }
 
       const uint8_t* bits = cast_char_ptr_to_uint8(m_personalization.data());
       reset_tweak(SKEIN_PERSONALIZATION, true);
@@ -100,8 +103,9 @@ void Skein_512::ubi_512(const uint8_t msg[], size_t msg_len) {
       load_le(M.data(), msg, to_proc / 8);
 
       if(to_proc % 8) {
-         for(size_t j = 0; j != to_proc % 8; ++j)
+         for(size_t j = 0; j != to_proc % 8; ++j) {
             M[to_proc / 8] |= static_cast<uint64_t>(msg[8 * (to_proc / 8) + j]) << (8 * j);
+         }
       }
 
       m_threefish->skein_feedfwd(M, m_T);
@@ -115,8 +119,9 @@ void Skein_512::ubi_512(const uint8_t msg[], size_t msg_len) {
 }
 
 void Skein_512::add_data(const uint8_t input[], size_t length) {
-   if(length == 0)
+   if(length == 0) {
       return;
+   }
 
    if(m_buf_pos) {
       buffer_insert(m_buffer, m_buf_pos, input, length);
@@ -131,8 +136,9 @@ void Skein_512::add_data(const uint8_t input[], size_t length) {
 
    const size_t full_blocks = (length - 1) / 64;
 
-   if(full_blocks)
+   if(full_blocks) {
       ubi_512(input, 64 * full_blocks);
+   }
 
    length -= full_blocks * 64;
 
@@ -143,8 +149,9 @@ void Skein_512::add_data(const uint8_t input[], size_t length) {
 void Skein_512::final_result(uint8_t out[]) {
    m_T[1] |= (static_cast<uint64_t>(1) << 63);  // final block flag
 
-   for(size_t i = m_buf_pos; i != m_buffer.size(); ++i)
+   for(size_t i = m_buf_pos; i != m_buffer.size(); ++i) {
       m_buffer[i] = 0;
+   }
 
    ubi_512(m_buffer.data(), m_buf_pos);
 

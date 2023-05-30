@@ -40,8 +40,9 @@ Montgomery_Exponentation_State::Montgomery_Exponentation_State(const std::shared
       m_params(params), m_window_bits(window_bits == 0 ? 4 : window_bits) {
    BOTAN_ARG_CHECK(g < m_params->p(), "Montgomery base too big");
 
-   if(m_window_bits < 1 || m_window_bits > 12)  // really even 8 is too large ...
+   if(m_window_bits < 1 || m_window_bits > 12) {  // really even 8 is too large ...
       throw Invalid_Argument("Invalid window bits for Montgomery exponentiation");
+   }
 
    const size_t window_size = (static_cast<size_t>(1) << m_window_bits);
 
@@ -58,8 +59,9 @@ Montgomery_Exponentation_State::Montgomery_Exponentation_State(const std::shared
    // Resize each element to exactly p words
    for(size_t i = 0; i != window_size; ++i) {
       m_g[i].fix_size();
-      if(const_time)
+      if(const_time) {
          m_g[i].const_time_poison();
+      }
    }
 }
 
@@ -96,8 +98,9 @@ BigInt Montgomery_Exponentation_State::exponentiation(const BigInt& scalar, size
 
    const size_t exp_nibbles = (max_k_bits + m_window_bits - 1) / m_window_bits;
 
-   if(exp_nibbles == 0)
+   if(exp_nibbles == 0) {
       return BigInt::one();
+   }
 
    secure_vector<word> e_bits(m_params->p_words());
    secure_vector<word> ws;
@@ -120,8 +123,9 @@ BigInt Montgomery_Exponentation_State::exponentiation_vartime(const BigInt& scal
 
    secure_vector<word> ws;
 
-   if(exp_nibbles == 0)
+   if(exp_nibbles == 0) {
       return BigInt::one();
+   }
 
    Montgomery_Int x = m_g[scalar.get_substring(m_window_bits * (exp_nibbles - 1), m_window_bits)];
 
@@ -129,8 +133,9 @@ BigInt Montgomery_Exponentation_State::exponentiation_vartime(const BigInt& scal
       x.square_this_n_times(ws, m_window_bits);
 
       const uint32_t nibble = scalar.get_substring(m_window_bits * (i - 1), m_window_bits);
-      if(nibble > 0)
+      if(nibble > 0) {
          x.mul_by(m_g[nibble], ws);
+      }
    }
 
    x.const_time_unpoison();
@@ -155,8 +160,9 @@ BigInt monty_multi_exp(const std::shared_ptr<const Montgomery_Params>& params_p,
                        const BigInt& z1,
                        const BigInt& y_bn,
                        const BigInt& z2) {
-   if(z1.is_negative() || z2.is_negative())
+   if(z1.is_negative() || z2.is_negative()) {
       throw Invalid_Argument("multi_exponentiate exponents must be positive");
+   }
 
    const size_t z_bits = round_up(std::max(z1.bits(), z2.bits()), 2);
 

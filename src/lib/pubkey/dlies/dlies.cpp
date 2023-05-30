@@ -61,8 +61,9 @@ std::vector<uint8_t> DLIES_Encryptor::enc(const uint8_t in[], size_t length, Ran
       SymmetricKey enc_key(secret_keys.data(), cipher_key_len);
       m_cipher->set_key(enc_key);
 
-      if(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size()))
+      if(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size())) {
          throw Invalid_Argument("DLIES with " + m_cipher->name() + " requires an IV be set");
+      }
       m_cipher->start(m_iv.bits_of());
       m_cipher->finish(ciphertext);
    } else {
@@ -120,8 +121,9 @@ DLIES_Decryptor::DLIES_Decryptor(const DH_PrivateKey& own_priv_key,
       DLIES_Decryptor(own_priv_key, rng, std::move(kdf), nullptr, 0, std::move(mac), mac_key_length) {}
 
 size_t DLIES_Decryptor::plaintext_length(size_t ctext_len) const {
-   if(ctext_len < m_pub_key_size + m_mac->output_length())
+   if(ctext_len < m_pub_key_size + m_mac->output_length()) {
       return 0;  // will throw if attempted
+   }
 
    return ctext_len - (m_pub_key_size + m_mac->output_length());
 }
@@ -168,8 +170,9 @@ secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
             // the decryption can fail:
             // e.g. Invalid_Authentication_Tag is thrown if GCM is used and the message does not have a valid tag
 
-            if(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size()))
+            if(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size())) {
                throw Invalid_Argument("DLIES with " + m_cipher->name() + " requires an IV be set");
+            }
             m_cipher->start(m_iv.bits_of());
             m_cipher->finish(ciphertext);
          } catch(...) { valid_mask = 0; }

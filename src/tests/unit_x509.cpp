@@ -556,8 +556,9 @@ Test::Result test_x509_authority_info_access_extension() {
    const auto ca_issuers = aia_cert.ca_issuers();
 
    result.test_eq("number of ca_issuers URLs", ca_issuers.size(), 1);
-   if(result.tests_failed())
+   if(result.tests_failed()) {
       return result;
+   }
 
    result.test_eq("CA issuer URL matches", ca_issuers[0], "http://gp.symcb.com/gp.crt");
    result.test_eq("OCSP responder URL matches", aia_cert.ocsp_responder(), "http://gp.symcd.com");
@@ -569,8 +570,9 @@ Test::Result test_x509_authority_info_access_extension() {
    const auto ca_issuers2 = aia_cert_2ca.ca_issuers();
 
    result.test_eq("number of ca_issuers URLs", ca_issuers2.size(), 2);
-   if(result.tests_failed())
+   if(result.tests_failed()) {
       return result;
+   }
 
    result.test_eq(
       "CA issuer URL matches", ca_issuers2[0], "http://www.d-trust.net/cgi-bin/Bdrive_Test_CA_1-2_2017.crt");
@@ -1378,17 +1380,18 @@ Test::Result test_hashes(const Botan::Private_Key& key, const std::string& hash_
 }
 
 std::vector<std::string> get_sig_paddings(const std::string& sig_algo, const std::string& hash) {
-   if(sig_algo == "RSA")
+   if(sig_algo == "RSA") {
       return {"EMSA3(" + hash + ")", "EMSA4(" + hash + ")"};
-   else if(sig_algo == "DSA" || sig_algo == "ECDSA" || sig_algo == "ECGDSA" || sig_algo == "ECKCDSA" ||
-           sig_algo == "GOST-34.10")
+   } else if(sig_algo == "DSA" || sig_algo == "ECDSA" || sig_algo == "ECGDSA" || sig_algo == "ECKCDSA" ||
+             sig_algo == "GOST-34.10") {
       return {hash};
-   else if(sig_algo == "Ed25519")
+   } else if(sig_algo == "Ed25519") {
       return {"Pure"};
-   else if(sig_algo == "Dilithium")
+   } else if(sig_algo == "Dilithium") {
       return {"Randomized"};
-   else
+   } else {
       return {};
+   }
 }
 
 class X509_Cert_Unit_Tests final : public Test {
@@ -1407,15 +1410,18 @@ class X509_Cert_Unit_Tests final : public Test {
 
             std::string hash = "SHA-256";
 
-            if(algo == "Ed25519")
+            if(algo == "Ed25519") {
                hash = "SHA-512";
-            if(algo == "Dilithium")
+            }
+            if(algo == "Dilithium") {
                hash = "SHAKE-256(512)";
+            }
 
             auto key = make_a_private_key(algo);
 
-            if(key == nullptr)
+            if(key == nullptr) {
                continue;
+            }
 
             results.push_back(test_hashes(*key, hash));
             results.push_back(test_valid_constraints(*key, algo));

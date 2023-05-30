@@ -171,8 +171,9 @@ void SEED::key_schedule(const uint8_t key[], size_t /*length*/) {
 
    secure_vector<uint32_t> WK(4);
 
-   for(size_t i = 0; i != 4; ++i)
+   for(size_t i = 0; i != 4; ++i) {
       WK[i] = load_be<uint32_t>(key, i);
+   }
 
    m_K.resize(32);
 

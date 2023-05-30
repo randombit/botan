@@ -230,19 +230,22 @@ class BigInt_Cmp_Test final : public Text_Based_Test {
          } else if(op == "LT") {
             result.confirm("Values LT", x < y, expected);
 
-            if(expected)
+            if(expected) {
                result.confirm("If LT then reverse is GT", y >= x);
-            else
+            } else {
                result.confirm("If not LT then GTE", x >= y);
+            }
          } else if(op == "LTE") {
             result.confirm("Values LTE", x <= y, expected);
 
-            if(expected)
+            if(expected) {
                result.confirm("If LTE then either LT or EQ", x < y || x == y);
-            else
+            } else {
                result.confirm("If not LTE then GT", x > y);
-         } else
+            }
+         } else {
             throw Test_Error("Unknown BigInt comparison type " + op);
+         }
 
          return result;
       }
@@ -471,12 +474,13 @@ class BigInt_Jacobi_Test final : public Text_Based_Test {
 
          const int32_t j = Botan::jacobi(a, n);
 
-         if(j == 0)
+         if(j == 0) {
             result.test_eq("jacobi", expected, "0");
-         else if(j == -1)
+         } else if(j == -1) {
             result.test_eq("jacobi", expected, "-1");
-         else
+         } else {
             result.test_eq("jacobi", expected, "1");
+         }
 
          return result;
       }
@@ -689,10 +693,11 @@ class Lucas_Primality_Test final : public Test {
 
             const bool is_lucas_pp = (is_prime == false && passes_lucas == true);
 
-            if(is_lucas_pp)
+            if(is_lucas_pp) {
                result.confirm("Lucas pseudoprime is in list", lucas_pp.count(i) == 1);
-            else
+            } else {
                result.confirm("Lucas non-pseudoprime is not in list", !lucas_pp.contains(i));
+            }
          }
 
          return {result};

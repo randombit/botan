@@ -119,8 +119,9 @@ std::optional<Certificate_Request_13> Certificate_Request_13::maybe_create(const
 }
 
 std::vector<X509_DN> Certificate_Request_13::acceptable_CAs() const {
-   if(m_extensions.has<Certificate_Authorities>())
+   if(m_extensions.has<Certificate_Authorities>()) {
       return m_extensions.get<Certificate_Authorities>()->distinguished_names();
+   }
    return {};
 }
 

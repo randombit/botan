@@ -99,8 +99,9 @@ std::unique_ptr<BlockCipher> BlockCipher::create(std::string_view algo, std::str
    // TODO: /dev/crypto
 
    // Only base providers from here on out
-   if(provider.empty() == false && provider != "base")
+   if(provider.empty() == false && provider != "base") {
       return nullptr;
+   }
 
 #if defined(BOTAN_HAS_AES)
    if(algo == "AES-128") {
@@ -227,8 +228,9 @@ std::unique_ptr<BlockCipher> BlockCipher::create(std::string_view algo, std::str
       auto c1 = BlockCipher::create(req.arg(0));
       auto c2 = BlockCipher::create(req.arg(1));
 
-      if(c1 && c2)
+      if(c1 && c2) {
          return std::make_unique<Cascade_Cipher>(std::move(c1), std::move(c2));
+      }
    }
 #endif
 

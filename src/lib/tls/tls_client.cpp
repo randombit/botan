@@ -53,17 +53,20 @@ Client::Client(const std::shared_ptr<Callbacks>& callbacks,
          // requested a downgrade right away.
          downgrade();
       }
-   } else
+
+      return;
+   }
 #endif
-      m_impl = std::make_unique<Client_Impl_12>(callbacks,
-                                                session_manager,
-                                                creds,
-                                                policy,
-                                                rng,
-                                                std::move(info),
-                                                offer_version.is_datagram_protocol(),
-                                                next_protocols,
-                                                io_buf_sz);
+
+   m_impl = std::make_unique<Client_Impl_12>(callbacks,
+                                             session_manager,
+                                             creds,
+                                             policy,
+                                             rng,
+                                             std::move(info),
+                                             offer_version.is_datagram_protocol(),
+                                             next_protocols,
+                                             io_buf_sz);
 }
 
 Client::~Client() = default;

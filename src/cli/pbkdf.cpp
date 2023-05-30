@@ -32,8 +32,9 @@ class PBKDF_Tune final : public Command {
 
          auto pwdhash_fam = Botan::PasswordHashFamily::create(algo);
 
-         if(!pwdhash_fam)
+         if(!pwdhash_fam) {
             throw CLI_Error_Unsupported("Password hashing", algo);
+         }
 
          for(const std::string& time : get_arg_list("times")) {
             std::unique_ptr<Botan::PasswordHash> pwhash;

@@ -49,8 +49,9 @@ void GOST_34_11::add_data(const uint8_t input[], size_t length) {
    const size_t full_blocks = length / hash_block_size();
    const size_t remaining = length % hash_block_size();
 
-   if(full_blocks)
+   if(full_blocks) {
       compress_n(input, full_blocks);
+   }
 
    buffer_insert(m_buffer, m_position, input + full_blocks * hash_block_size(), remaining);
    m_position += remaining;
@@ -79,15 +80,17 @@ void GOST_34_11::compress_n(const uint8_t input[], size_t blocks) {
          // P transformation
          for(size_t k = 0; k != 4; ++k) {
             const uint64_t UVk = U[k] ^ V[k];
-            for(size_t l = 0; l != 8; ++l)
+            for(size_t l = 0; l != 8; ++l) {
                key[4 * l + k] = get_byte_var(l, UVk);
+            }
          }
 
          m_cipher.set_key(key, 32);
          m_cipher.encrypt(&m_hash[8 * j], S + 8 * j);
 
-         if(j == 3)
+         if(j == 3) {
             break;
+         }
 
          // A(x)
          uint64_t A_U = U[0];

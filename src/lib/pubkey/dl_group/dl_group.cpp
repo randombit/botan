@@ -90,8 +90,9 @@ class DL_Group_Data final {
       bool q_is_set() const { return m_q_bits > 0; }
 
       void assert_q_is_set(std::string_view function) const {
-         if(q_is_set() == false)
+         if(q_is_set() == false) {
             throw Invalid_State(fmt("DL_Group::{}: q is not set for this group", function));
+         }
       }
 
       DL_Group_Source source() const { return m_source; }
@@ -128,8 +129,9 @@ std::shared_ptr<DL_Group_Data> DL_Group::BER_decode_DL_group(const uint8_t data[
    } else if(format == DL_Group_Format::PKCS_3) {
       // q is left as zero
       ber.decode(p).decode(g).discard_remaining();
-   } else
+   } else {
       throw Invalid_Argument("Unknown DL_Group encoding");
+   }
 
    return std::make_shared<DL_Group_Data>(p, q, g, source);
 }
@@ -155,14 +157,15 @@ std::shared_ptr<DL_Group_Data> DL_Group::load_DL_group_info(const char* p_str, c
 namespace {
 
 DL_Group_Format pem_label_to_dl_format(std::string_view label) {
-   if(label == "DH PARAMETERS")
+   if(label == "DH PARAMETERS") {
       return DL_Group_Format::PKCS_3;
-   else if(label == "DSA PARAMETERS")
+   } else if(label == "DSA PARAMETERS") {
       return DL_Group_Format::ANSI_X9_57;
-   else if(label == "X942 DH PARAMETERS" || label == "X9.42 DH PARAMETERS")
+   } else if(label == "X942 DH PARAMETERS" || label == "X9.42 DH PARAMETERS") {
       return DL_Group_Format::ANSI_X9_42;
-   else
+   } else {
       throw Decoding_Error(fmt("DL_Group: Unknown PEM label '{}'", label));
+   }
 }
 
 }  // namespace
@@ -184,8 +187,9 @@ DL_Group::DL_Group(std::string_view str) {
       } catch(...) {}
    }
 
-   if(m_data == nullptr)
+   if(m_data == nullptr) {
       throw Invalid_Argument(fmt("DL_Group: Unknown group '{}'", str));
+   }
 }
 
 namespace {
@@ -197,14 +201,16 @@ BigInt make_dsa_generator(const BigInt& p, const BigInt& q) {
    BigInt e, r;
    vartime_divide(p - 1, q, e, r);
 
-   if(e == 0 || r > 0)
+   if(e == 0 || r > 0) {
       throw Invalid_Argument("make_dsa_generator q does not divide p-1");
+   }
 
    for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i) {
       // TODO precompute!
       BigInt g = power_mod(BigInt::from_word(PRIMES[i]), e, p);
-      if(g > 1)
+      if(g > 1) {
          return g;
+      }
    }
 
    throw Internal_Error("DL_Group: Couldn't create a suitable generator");
@@ -216,15 +222,18 @@ BigInt make_dsa_generator(const BigInt& p, const BigInt& q) {
 * DL_Group Constructor
 */
 DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, size_t qbits) {
-   if(pbits < 1024)
+   if(pbits < 1024) {
       throw Invalid_Argument(fmt("DL_Group: requested prime size {} is too small", pbits));
+   }
 
-   if(qbits >= pbits)
+   if(qbits >= pbits) {
       throw Invalid_Argument(fmt("DL_Group: requested q size {} is too big for p {}", qbits, pbits));
+   }
 
    if(type == Strong) {
-      if(qbits != 0 && qbits != pbits - 1)
+      if(qbits != 0 && qbits != pbits - 1) {
          throw Invalid_Argument("Cannot create strong-prime DL_Group with specified q bits");
+      }
 
       const BigInt p = random_safe_prime(rng, pbits);
       const BigInt q = (p - 1) / 2;
@@ -238,15 +247,17 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, siz
          // prime table does not contain 2
          for(size_t i = 0; i < PRIME_TABLE_SIZE; ++i) {
             g = BigInt::from_word(PRIMES[i]);
-            if(jacobi(g, p) == 1)
+            if(jacobi(g, p) == 1) {
                break;
+            }
          }
       }
 
       m_data = std::make_shared<DL_Group_Data>(p, q, g, DL_Group_Source::RandomlyGenerated);
    } else if(type == Prime_Subgroup) {
-      if(qbits == 0)
+      if(qbits == 0) {
          qbits = dl_exponent_size(pbits);
+      }
 
       const BigInt q = random_prime(rng, qbits);
       Modular_Reducer mod_2q(2 * q);
@@ -260,8 +271,9 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, siz
       const BigInt g = make_dsa_generator(p, q);
       m_data = std::make_shared<DL_Group_Data>(p, q, g, DL_Group_Source::RandomlyGenerated);
    } else if(type == DSA_Kosherizer) {
-      if(qbits == 0)
+      if(qbits == 0) {
          qbits = ((pbits <= 1024) ? 160 : 256);
+      }
 
       BigInt p, q;
       generate_dsa_primes(rng, p, q, pbits, qbits);
@@ -278,8 +290,9 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, siz
 DL_Group::DL_Group(RandomNumberGenerator& rng, const std::vector<uint8_t>& seed, size_t pbits, size_t qbits) {
    BigInt p, q;
 
-   if(!generate_dsa_primes(rng, p, q, pbits, qbits, seed))
+   if(!generate_dsa_primes(rng, p, q, pbits, qbits, seed)) {
       throw Invalid_Argument("DL_Group: The seed given does not generate a DSA group");
+   }
 
    BigInt g = make_dsa_generator(p, q);
 
@@ -301,8 +314,9 @@ DL_Group::DL_Group(const BigInt& p, const BigInt& q, const BigInt& g) {
 }
 
 const DL_Group_Data& DL_Group::data() const {
-   if(m_data)
+   if(m_data) {
       return *m_data;
+   }
 
    throw Invalid_State("DL_Group uninitialized");
 }
@@ -311,12 +325,14 @@ bool DL_Group::verify_public_element(const BigInt& y) const {
    const BigInt& p = get_p();
    const BigInt& q = get_q();
 
-   if(y <= 1 || y >= p)
+   if(y <= 1 || y >= p) {
       return false;
+   }
 
    if(q.is_zero() == false) {
-      if(data().power_b_p_vartime(y, q) != 1)
+      if(data().power_b_p_vartime(y, q) != 1) {
          return false;
+      }
    }
 
    return true;
@@ -326,11 +342,13 @@ bool DL_Group::verify_private_element(const BigInt& x) const {
    const BigInt& p = get_p();
    const BigInt& q = get_q();
 
-   if(x <= 1 || x >= p)
+   if(x <= 1 || x >= p) {
       return false;
+   }
 
-   if(q > 0 && x > q)
+   if(q > 0 && x > q) {
       return false;
+   }
 
    return true;
 }
@@ -338,11 +356,13 @@ bool DL_Group::verify_private_element(const BigInt& x) const {
 bool DL_Group::verify_element_pair(const BigInt& y, const BigInt& x) const {
    const BigInt& p = get_p();
 
-   if(y <= 1 || y >= p || x <= 1 || x >= p)
+   if(y <= 1 || y >= p || x <= 1 || x >= p) {
       return false;
+   }
 
-   if(y != this->power_g_p(x))
+   if(y != this->power_g_p(x)) {
       return false;
+   }
 
    return true;
 }
@@ -353,15 +373,17 @@ bool DL_Group::verify_element_pair(const BigInt& y, const BigInt& x) const {
 bool DL_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
    const bool from_builtin = (source() == DL_Group_Source::Builtin);
 
-   if(!strong && from_builtin)
+   if(!strong && from_builtin) {
       return true;
+   }
 
    const BigInt& p = get_p();
    const BigInt& q = get_q();
    const BigInt& g = get_g();
 
-   if(g < 2 || p < 3 || q < 0)
+   if(g < 2 || p < 3 || q < 0) {
       return false;
+   }
 
    const size_t test_prob = 128;
    const bool is_randomly_generated = (source() != DL_Group_Source::ExternalSource);
@@ -490,8 +512,9 @@ DL_Group_Source DL_Group::source() const { return data().source(); }
 * DER encode the parameters
 */
 std::vector<uint8_t> DL_Group::DER_encode(DL_Group_Format format) const {
-   if(get_q().is_zero() && (format != DL_Group_Format::PKCS_3))
+   if(get_q().is_zero() && (format != DL_Group_Format::PKCS_3)) {
       throw Encoding_Error("Cannot encode DL_Group in ANSI formats when q param is missing");
+   }
 
    std::vector<uint8_t> output;
    DER_Encoder der(output);
@@ -502,8 +525,9 @@ std::vector<uint8_t> DL_Group::DER_encode(DL_Group_Format format) const {
       der.start_sequence().encode(get_p()).encode(get_g()).encode(get_q()).end_cons();
    } else if(format == DL_Group_Format::PKCS_3) {
       der.start_sequence().encode(get_p()).encode(get_g()).end_cons();
-   } else
+   } else {
       throw Invalid_Argument("Unknown DL_Group encoding");
+   }
 
    return output;
 }
@@ -514,14 +538,15 @@ std::vector<uint8_t> DL_Group::DER_encode(DL_Group_Format format) const {
 std::string DL_Group::PEM_encode(DL_Group_Format format) const {
    const std::vector<uint8_t> encoding = DER_encode(format);
 
-   if(format == DL_Group_Format::PKCS_3)
+   if(format == DL_Group_Format::PKCS_3) {
       return PEM_Code::encode(encoding, "DH PARAMETERS");
-   else if(format == DL_Group_Format::ANSI_X9_57)
+   } else if(format == DL_Group_Format::ANSI_X9_57) {
       return PEM_Code::encode(encoding, "DSA PARAMETERS");
-   else if(format == DL_Group_Format::ANSI_X9_42)
+   } else if(format == DL_Group_Format::ANSI_X9_42) {
       return PEM_Code::encode(encoding, "X9.42 DH PARAMETERS");
-   else
+   } else {
       throw Invalid_Argument("Unknown DL_Group encoding");
+   }
 }
 
 DL_Group::DL_Group(const uint8_t ber[], size_t ber_len, DL_Group_Format format) {

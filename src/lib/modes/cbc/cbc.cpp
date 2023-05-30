@@ -30,10 +30,11 @@ void CBC_Mode::clear() {
 void CBC_Mode::reset() { m_state.clear(); }
 
 std::string CBC_Mode::name() const {
-   if(m_padding)
+   if(m_padding) {
       return fmt("{}/CBC/{}", cipher().name(), padding().name());
-   else
+   } else {
       return fmt("{}/CBC/CTS", cipher().name());
+   }
 }
 
 size_t CBC_Mode::update_granularity() const { return cipher().block_size(); }
@@ -54,28 +55,31 @@ void CBC_Mode::key_schedule(const uint8_t key[], size_t length) {
 }
 
 void CBC_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
-   if(!valid_nonce_length(nonce_len))
+   if(!valid_nonce_length(nonce_len)) {
       throw Invalid_IV_Length(name(), nonce_len);
+   }
 
    /*
    * A nonce of zero length means carry the last ciphertext value over
    * as the new IV, as unfortunately some protocols require this. If
    * this is the first message then we use an IV of all zeros.
    */
-   if(nonce_len)
+   if(nonce_len) {
       m_state.assign(nonce, nonce + nonce_len);
-   else if(m_state.empty())
+   } else if(m_state.empty()) {
       m_state.resize(m_cipher->block_size());
+   }
    // else leave the state alone
 }
 
 size_t CBC_Encryption::minimum_final_size() const { return 0; }
 
 size_t CBC_Encryption::output_length(size_t input_length) const {
-   if(input_length == 0)
+   if(input_length == 0) {
       return block_size();
-   else
+   } else {
       return round_up(input_length, block_size());
+   }
 }
 
 size_t CBC_Encryption::process_msg(uint8_t buf[], size_t sz) {
@@ -131,15 +135,17 @@ void CTS_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    const size_t BS = block_size();
 
-   if(sz < BS + 1)
+   if(sz < BS + 1) {
       throw Encoding_Error(name() + ": insufficient data to encrypt");
+   }
 
    if(sz % BS == 0) {
       update(buffer, offset);
 
       // swap last two blocks
-      for(size_t i = 0; i != BS; ++i)
+      for(size_t i = 0; i != BS; ++i) {
          std::swap(buffer[buffer.size() - BS + i], buffer[buffer.size() - 2 * BS + i]);
+      }
    } else {
       const size_t full_blocks = ((sz / BS) - 1) * BS;
       const size_t final_bytes = sz - full_blocks;
@@ -202,8 +208,9 @@ void CBC_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    const size_t BS = block_size();
 
-   if(sz == 0 || sz % BS)
+   if(sz == 0 || sz % BS) {
       throw Decoding_Error(name() + ": Ciphertext not a multiple of block size");
+   }
 
    update(buffer, offset);
 
@@ -231,14 +238,16 @@ void CTS_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    const size_t BS = block_size();
 
-   if(sz < BS + 1)
+   if(sz < BS + 1) {
       throw Encoding_Error(name() + ": insufficient data to decrypt");
+   }
 
    if(sz % BS == 0) {
       // swap last two blocks
 
-      for(size_t i = 0; i != BS; ++i)
+      for(size_t i = 0; i != BS; ++i) {
          std::swap(buffer[buffer.size() - BS + i], buffer[buffer.size() - 2 * BS + i]);
+      }
 
       update(buffer, offset);
    } else {
@@ -254,8 +263,9 @@ void CTS_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
       xor_buf(last.data(), &last[BS], final_bytes - BS);
 
-      for(size_t i = 0; i != final_bytes - BS; ++i)
+      for(size_t i = 0; i != final_bytes - BS; ++i) {
          std::swap(last[i], last[i + BS]);
+      }
 
       cipher().decrypt(last.data());
       xor_buf(last.data(), state_ptr(), BS);

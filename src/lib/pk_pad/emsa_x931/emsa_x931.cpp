@@ -22,10 +22,12 @@ std::vector<uint8_t> emsa2_encoding(const std::vector<uint8_t>& msg,
 
    size_t output_length = (output_bits + 1) / 8;
 
-   if(msg.size() != HASH_SIZE)
+   if(msg.size() != HASH_SIZE) {
       throw Encoding_Error("EMSA_X931::encoding_of: Bad input length");
-   if(output_length < HASH_SIZE + 4)
+   }
+   if(output_length < HASH_SIZE + 4) {
       throw Encoding_Error("EMSA_X931::encoding_of: Output length is too small");
+   }
 
    const bool empty_input = (msg == empty_hash);
 
@@ -75,8 +77,9 @@ EMSA_X931::EMSA_X931(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash
 
    m_hash_id = ieee1363_hash_id(m_hash->name());
 
-   if(!m_hash_id)
+   if(!m_hash_id) {
       throw Encoding_Error("EMSA_X931 no hash identifier for " + m_hash->name());
+   }
 }
 
 }  // namespace Botan

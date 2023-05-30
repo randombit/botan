@@ -42,13 +42,15 @@ std::shared_ptr<Botan::RandomNumberGenerator> cli_make_rng(const std::string& rn
    if(rng_type == "auto" || rng_type == "entropy" || rng_type.empty()) {
       std::shared_ptr<Botan::RandomNumberGenerator> rng;
 
-      if(rng_type == "entropy")
+      if(rng_type == "entropy") {
          rng = std::make_shared<Botan::AutoSeeded_RNG>(Botan::Entropy_Sources::global_sources());
-      else
+      } else {
          rng = std::make_shared<Botan::AutoSeeded_RNG>();
+      }
 
-      if(!drbg_seed.empty())
+      if(!drbg_seed.empty()) {
          rng->add_entropy(drbg_seed.data(), drbg_seed.size());
+      }
       return rng;
    }
 #endif
@@ -59,9 +61,10 @@ std::shared_ptr<Botan::RandomNumberGenerator> cli_make_rng(const std::string& rn
       auto rng = std::make_shared<Botan::HMAC_DRBG>(std::move(mac));
       rng->add_entropy(drbg_seed.data(), drbg_seed.size());
 
-      if(rng->is_seeded() == false)
+      if(rng->is_seeded() == false) {
          throw CLI_Error("For " + rng->name() + " a seed of at least " + std::to_string(rng->security_level() / 8) +
                          " bytes must be provided");
+      }
 
       return rng;
    }
@@ -69,17 +72,19 @@ std::shared_ptr<Botan::RandomNumberGenerator> cli_make_rng(const std::string& rn
 
 #if defined(BOTAN_HAS_PROCESSOR_RNG)
    if(rng_type == "rdrand" || rng_type == "cpu" || rng_type.empty()) {
-      if(Botan::Processor_RNG::available())
+      if(Botan::Processor_RNG::available()) {
          return std::make_shared<Botan::Processor_RNG>();
-      else if(rng_type.empty() == false)
+      } else if(rng_type.empty() == false) {
          throw CLI_Error("RNG instruction not supported on this processor");
+      }
    }
 #endif
 
-   if(rng_type.empty())
+   if(rng_type.empty()) {
       throw CLI_Error_Unsupported("No random number generator seems to be available in the current build");
-   else
+   } else {
       throw CLI_Error_Unsupported("RNG", rng_type);
+   }
 }
 
 class RNG final : public Command {

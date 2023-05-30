@@ -93,10 +93,11 @@ secure_vector<uint8_t> EME_PKCS1v15::unpad(uint8_t& valid_mask, const uint8_t in
 * Return the max input size for a given key size
 */
 size_t EME_PKCS1v15::maximum_input_size(size_t keybits) const {
-   if(keybits / 8 > 10)
+   if(keybits / 8 > 10) {
       return ((keybits / 8) - 10);
-   else
+   } else {
       return 0;
+   }
 }
 
 }  // namespace Botan

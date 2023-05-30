@@ -40,12 +40,15 @@ CRL_Entry::CRL_Entry(const X509_Certificate& cert, CRL_Code why) {
 * Compare two CRL_Entrys for equality
 */
 bool operator==(const CRL_Entry& a1, const CRL_Entry& a2) {
-   if(a1.serial_number() != a2.serial_number())
+   if(a1.serial_number() != a2.serial_number()) {
       return false;
-   if(a1.expire_time() != a2.expire_time())
+   }
+   if(a1.expire_time() != a2.expire_time()) {
       return false;
-   if(a1.reason_code() != a2.reason_code())
+   }
+   if(a1.reason_code() != a2.reason_code()) {
       return false;
+   }
    return true;
 }
 

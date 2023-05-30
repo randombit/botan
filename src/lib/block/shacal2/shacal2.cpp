@@ -178,10 +178,11 @@ void SHACAL2::key_schedule(const uint8_t key[], size_t len) {
       0x19A4C116, 0x1E376C08, 0x2748774C, 0x34B0BCB5, 0x391C0CB3, 0x4ED8AA4A, 0x5B9CCA4F, 0x682E6FF3,
       0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208, 0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2};
 
-   if(m_RK.empty())
+   if(m_RK.empty()) {
       m_RK.resize(64);
-   else
+   } else {
       clear_mem(m_RK.data(), m_RK.size());
+   }
 
    load_be(m_RK.data(), key, len / 4);
 

@@ -82,7 +82,7 @@ def format_names(names):
         yield '      \"%s\",' % (nm)
 
 def format_orders(orders):
-    template_str = """   if(low_bits == %s && order == BigInt("%s"))\n      return OID{%s};\n""";
+    template_str = """   if(low_bits == %s && order == BigInt("%s")) {\n      return OID{%s};\n   }\n""";
 
     orders_seen = set([])
 

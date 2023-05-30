@@ -47,10 +47,11 @@ BigInt BigInt::from_word(word n) {
 
 //static
 BigInt BigInt::from_s32(int32_t n) {
-   if(n >= 0)
+   if(n >= 0) {
       return BigInt::from_u64(static_cast<uint64_t>(n));
-   else
+   } else {
       return -BigInt::from_u64(static_cast<uint64_t>(-n));
+   }
 }
 
 //static
@@ -80,10 +81,11 @@ BigInt::BigInt(std::string_view str) {
 
    *this = decode(cast_char_ptr_to_uint8(str.data()) + markers, str.length() - markers, base);
 
-   if(negative)
+   if(negative) {
       set_sign(Negative);
-   else
+   } else {
       set_sign(Positive);
+   }
 }
 
 BigInt::BigInt(const uint8_t input[], size_t length) { binary_decode(input, length); }
@@ -119,12 +121,14 @@ uint8_t BigInt::byte_at(size_t n) const {
 }
 
 int32_t BigInt::cmp_word(word other) const {
-   if(is_negative())
+   if(is_negative()) {
       return -1;  // other is positive ...
+   }
 
    const size_t sw = this->sig_words();
-   if(sw > 1)
+   if(sw > 1) {
       return 1;  // must be larger since other is just one word ...
+   }
 
    return bigint_cmp(this->data(), sw, &other, 1);
 }
@@ -134,32 +138,38 @@ int32_t BigInt::cmp_word(word other) const {
 */
 int32_t BigInt::cmp(const BigInt& other, bool check_signs) const {
    if(check_signs) {
-      if(other.is_positive() && this->is_negative())
+      if(other.is_positive() && this->is_negative()) {
          return -1;
+      }
 
-      if(other.is_negative() && this->is_positive())
+      if(other.is_negative() && this->is_positive()) {
          return 1;
+      }
 
-      if(other.is_negative() && this->is_negative())
+      if(other.is_negative() && this->is_negative()) {
          return (-bigint_cmp(this->data(), this->size(), other.data(), other.size()));
+      }
    }
 
    return bigint_cmp(this->data(), this->size(), other.data(), other.size());
 }
 
 bool BigInt::is_equal(const BigInt& other) const {
-   if(this->sign() != other.sign())
+   if(this->sign() != other.sign()) {
       return false;
+   }
 
    return bigint_ct_is_eq(this->data(), this->sig_words(), other.data(), other.sig_words()).is_set();
 }
 
 bool BigInt::is_less_than(const BigInt& other) const {
-   if(this->is_negative() && other.is_positive())
+   if(this->is_negative() && other.is_positive()) {
       return true;
+   }
 
-   if(this->is_positive() && other.is_negative())
+   if(this->is_positive() && other.is_negative()) {
       return false;
+   }
 
    if(other.is_negative() && this->is_negative()) {
       return bigint_ct_is_lt(other.data(), other.sig_words(), this->data(), this->sig_words()).is_set();
@@ -171,8 +181,9 @@ bool BigInt::is_less_than(const BigInt& other) const {
 void BigInt::encode_words(word out[], size_t size) const {
    const size_t words = sig_words();
 
-   if(words > size)
+   if(words > size) {
       throw Encoding_Error("BigInt::encode_words value too large to encode");
+   }
 
    clear_mem(out, size);
    copy_mem(out, data(), words);
@@ -203,8 +214,9 @@ size_t BigInt::Data::calc_sig_words() const {
 * Return bits {offset...offset+length}
 */
 uint32_t BigInt::get_substring(size_t offset, size_t length) const {
-   if(length == 0 || length > 32)
+   if(length == 0 || length > 32) {
       throw Invalid_Argument("BigInt::get_substring invalid substring length");
+   }
 
    const uint32_t mask = 0xFFFFFFFF >> (32 - length);
 
@@ -230,14 +242,17 @@ uint32_t BigInt::get_substring(size_t offset, size_t length) const {
 * Convert this number to a uint32_t, if possible
 */
 uint32_t BigInt::to_u32bit() const {
-   if(is_negative())
+   if(is_negative()) {
       throw Encoding_Error("BigInt::to_u32bit: Number is negative");
-   if(bits() > 32)
+   }
+   if(bits() > 32) {
       throw Encoding_Error("BigInt::to_u32bit: Number is too big to convert");
+   }
 
    uint32_t out = 0;
-   for(size_t i = 0; i != 4; ++i)
+   for(size_t i = 0; i != 4; ++i) {
       out = (out << 8) | byte_at(3 - i);
+   }
    return out;
 }
 
@@ -267,8 +282,9 @@ size_t BigInt::top_bits_free() const {
 size_t BigInt::bits() const {
    const size_t words = sig_words();
 
-   if(words == 0)
+   if(words == 0) {
       return 0;
+   }
 
    const size_t full_words = (words - 1) * BOTAN_MP_WORD_BITS;
    const size_t top_bits = BOTAN_MP_WORD_BITS - top_bits_free();
@@ -286,16 +302,19 @@ BigInt BigInt::operator-() const {
 }
 
 size_t BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws) {
-   if(p.is_negative() || this->is_negative())
+   if(p.is_negative() || this->is_negative()) {
       throw Invalid_Argument("BigInt::reduce_below both values must be positive");
+   }
 
    const size_t p_words = p.sig_words();
 
-   if(size() < p_words + 1)
+   if(size() < p_words + 1) {
       grow_to(p_words + 1);
+   }
 
-   if(ws.size() < p_words + 1)
+   if(ws.size() < p_words + 1) {
       ws.resize(p_words + 1);
+   }
 
    clear_mem(ws.data(), ws.size());
 
@@ -303,8 +322,9 @@ size_t BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws) {
 
    for(;;) {
       word borrow = bigint_sub3(ws.data(), data(), p_words + 1, p.data(), p_words);
-      if(borrow)
+      if(borrow) {
          break;
+      }
 
       ++reductions;
       swap_reg(ws);
@@ -314,8 +334,9 @@ size_t BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws) {
 }
 
 void BigInt::ct_reduce_below(const BigInt& mod, secure_vector<word>& ws, size_t bound) {
-   if(mod.is_negative() || this->is_negative())
+   if(mod.is_negative() || this->is_negative()) {
       throw Invalid_Argument("BigInt::ct_reduce_below both values must be positive");
+   }
 
    const size_t mod_words = mod.sig_words();
 
@@ -382,16 +403,18 @@ void BigInt::binary_decode(const uint8_t buf[], size_t length) {
    }
 
    if(extra_bytes > 0) {
-      for(size_t i = 0; i != extra_bytes; ++i)
+      for(size_t i = 0; i != extra_bytes; ++i) {
          reg[full_words] = (reg[full_words] << 8) | buf[i];
+      }
    }
 
    m_data.swap(reg);
 }
 
 void BigInt::ct_cond_add(bool predicate, const BigInt& value) {
-   if(this->is_negative() || value.is_negative())
+   if(this->is_negative() || value.is_negative()) {
       throw Invalid_Argument("BigInt::ct_cond_add requires both values to be positive");
+   }
    this->grow_to(1 + value.sig_words());
 
    bigint_cnd_add(static_cast<word>(predicate), this->mutable_data(), this->size(), value.data(), value.sig_words());
@@ -421,8 +444,9 @@ void BigInt::ct_cond_assign(bool predicate, const BigInt& other) {
    const size_t t_words = size();
    const size_t o_words = other.size();
 
-   if(o_words < t_words)
+   if(o_words < t_words) {
       grow_to(o_words);
+   }
 
    const size_t r_words = std::max(t_words, o_words);
 

@@ -22,8 +22,9 @@ int operator<<(int fd, Pipe& pipe) {
       size_t position = 0;
       while(got) {
          ssize_t ret = ::write(fd, &buffer[position], got);
-         if(ret < 0)
+         if(ret < 0) {
             throw Stream_IO_Error("Pipe output operator (unixfd) has failed");
+         }
 
          position += static_cast<size_t>(ret);
          got -= static_cast<size_t>(ret);
@@ -39,10 +40,11 @@ int operator>>(int fd, Pipe& pipe) {
    secure_vector<uint8_t> buffer(BOTAN_DEFAULT_BUFFER_SIZE);
    while(true) {
       ssize_t ret = ::read(fd, buffer.data(), buffer.size());
-      if(ret < 0)
+      if(ret < 0) {
          throw Stream_IO_Error("Pipe input operator (unixfd) has failed");
-      else if(ret == 0)
+      } else if(ret == 0) {
          break;
+      }
       pipe.write(buffer.data(), static_cast<size_t>(ret));
    }
    return fd;

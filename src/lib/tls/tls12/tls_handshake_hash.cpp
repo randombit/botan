@@ -16,8 +16,9 @@ namespace Botan::TLS {
 */
 secure_vector<uint8_t> Handshake_Hash::final(std::string_view mac_algo) const {
    std::string hash_algo(mac_algo);
-   if(hash_algo == "SHA-1")
+   if(hash_algo == "SHA-1") {
       hash_algo = "SHA-256";
+   }
 
    auto hash = HashFunction::create_or_throw(hash_algo);
    hash->update(m_data);

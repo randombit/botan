@@ -34,9 +34,11 @@ std::optional<X509_CRL> Certificate_Store::find_crl_for(const X509_Certificate& 
 }
 
 void Certificate_Store_In_Memory::add_certificate(const X509_Certificate& cert) {
-   for(const auto& c : m_certs)
-      if(c == cert)
+   for(const auto& c : m_certs) {
+      if(c == cert) {
          return;
+      }
+   }
 
    m_certs.push_back(cert);
 }
@@ -44,8 +46,9 @@ void Certificate_Store_In_Memory::add_certificate(const X509_Certificate& cert) 
 std::vector<X509_DN> Certificate_Store_In_Memory::all_subjects() const {
    std::vector<X509_DN> subjects;
    subjects.reserve(m_certs.size());
-   for(const auto& cert : m_certs)
+   for(const auto& cert : m_certs) {
       subjects.push_back(cert.subject_dn());
+   }
    return subjects;
 }
 
@@ -56,12 +59,14 @@ std::optional<X509_Certificate> Certificate_Store_In_Memory::find_cert(const X50
       if(!key_id.empty()) {
          const std::vector<uint8_t>& skid = cert.subject_key_id();
 
-         if(!skid.empty() && skid != key_id)  // no match
+         if(!skid.empty() && skid != key_id) {  // no match
             continue;
+         }
       }
 
-      if(cert.subject_dn() == subject_dn)
+      if(cert.subject_dn() == subject_dn) {
          return cert;
+      }
    }
 
    return std::nullopt;
@@ -75,12 +80,14 @@ std::vector<X509_Certificate> Certificate_Store_In_Memory::find_all_certs(const 
       if(!key_id.empty()) {
          const std::vector<uint8_t>& skid = cert.subject_key_id();
 
-         if(!skid.empty() && skid != key_id)  // no match
+         if(!skid.empty() && skid != key_id) {  // no match
             continue;
+         }
       }
 
-      if(cert.subject_dn() == subject_dn)
+      if(cert.subject_dn() == subject_dn) {
          matches.push_back(cert);
+      }
    }
 
    return matches;
@@ -88,15 +95,17 @@ std::vector<X509_Certificate> Certificate_Store_In_Memory::find_all_certs(const 
 
 std::optional<X509_Certificate> Certificate_Store_In_Memory::find_cert_by_pubkey_sha1(
    const std::vector<uint8_t>& key_hash) const {
-   if(key_hash.size() != 20)
+   if(key_hash.size() != 20) {
       throw Invalid_Argument("Certificate_Store_In_Memory::find_cert_by_pubkey_sha1 invalid hash");
+   }
 
    auto hash = HashFunction::create("SHA-1");
 
    for(const auto& cert : m_certs) {
       hash->update(cert.subject_public_key_bitstring());
-      if(key_hash == hash->final_stdvec())  //final_stdvec also clears the hash to initial state
+      if(key_hash == hash->final_stdvec()) {  //final_stdvec also clears the hash to initial state
          return cert;
+      }
    }
 
    return std::nullopt;
@@ -104,15 +113,17 @@ std::optional<X509_Certificate> Certificate_Store_In_Memory::find_cert_by_pubkey
 
 std::optional<X509_Certificate> Certificate_Store_In_Memory::find_cert_by_raw_subject_dn_sha256(
    const std::vector<uint8_t>& subject_hash) const {
-   if(subject_hash.size() != 32)
+   if(subject_hash.size() != 32) {
       throw Invalid_Argument("Certificate_Store_In_Memory::find_cert_by_raw_subject_dn_sha256 invalid hash");
+   }
 
    auto hash = HashFunction::create("SHA-256");
 
    for(const auto& cert : m_certs) {
       hash->update(cert.raw_subject_dn());
-      if(subject_hash == hash->final_stdvec())  //final_stdvec also clears the hash to initial state
+      if(subject_hash == hash->final_stdvec()) {  //final_stdvec also clears the hash to initial state
          return cert;
+      }
    }
 
    return std::nullopt;
@@ -124,8 +135,9 @@ void Certificate_Store_In_Memory::add_crl(const X509_CRL& crl) {
    for(auto& c : m_crls) {
       // Found an update of a previously existing one; replace it
       if(c.issuer_dn() == crl_issuer) {
-         if(c.this_update() <= crl.this_update())
+         if(c.this_update() <= crl.this_update()) {
             c = crl;
+         }
          return;
       }
    }
@@ -142,12 +154,14 @@ std::optional<X509_CRL> Certificate_Store_In_Memory::find_crl_for(const X509_Cer
       if(!key_id.empty()) {
          const std::vector<uint8_t>& akid = c.authority_key_id();
 
-         if(!akid.empty() && akid != key_id)  // no match
+         if(!akid.empty() && akid != key_id) {  // no match
             continue;
+         }
       }
 
-      if(c.issuer_dn() == subject.issuer_dn())
+      if(c.issuer_dn() == subject.issuer_dn()) {
          return c;
+      }
    }
 
    return {};
@@ -157,8 +171,9 @@ Certificate_Store_In_Memory::Certificate_Store_In_Memory(const X509_Certificate&
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 Certificate_Store_In_Memory::Certificate_Store_In_Memory(std::string_view dir) {
-   if(dir.empty())
+   if(dir.empty()) {
       return;
+   }
 
    std::vector<std::string> maybe_certs = get_files_recursive(dir);
 

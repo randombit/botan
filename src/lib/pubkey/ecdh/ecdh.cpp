@@ -38,8 +38,9 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 
          const EC_Point S = m_group.blinded_var_point_multiply(input_point, m_l_times_priv, m_rng, m_ws);
 
-         if(S.on_the_curve() == false)
+         if(S.on_the_curve() == false) {
             throw Internal_Error("ECDH agreed value was not on the curve");
+         }
          return BigInt::encode_1363(S.get_affine_x(), m_group.get_p_bytes());
       }
 
@@ -55,8 +56,9 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 std::unique_ptr<PK_Ops::Key_Agreement> ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
                                                                                 std::string_view params,
                                                                                 std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<ECDH_KA_Operation>(*this, params, rng);
+   }
 
    throw Provider_Not_Found(algo_name(), provider);
 }

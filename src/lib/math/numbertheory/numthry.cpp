@@ -41,13 +41,15 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
    BOTAN_ARG_CHECK(a >= 0, "value to solve for must not be negative");
 
    // some very easy cases
-   if(p == 2 || a <= 1)
+   if(p == 2 || a <= 1) {
       return a;
+   }
 
    BOTAN_ARG_CHECK(p.is_odd(), "invalid prime");
 
-   if(jacobi(a, p) != 1)  // not a quadratic residue
+   if(jacobi(a, p) != 1) {  // not a quadratic residue
       return BigInt::from_s32(-1);
+   }
 
    Modular_Reducer mod_p(p);
    auto monty_p = std::make_shared<Montgomery_Params>(p, mod_p);
@@ -68,14 +70,16 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
    BigInt n = mod_p.multiply(a, mod_p.square(r));
    r = mod_p.multiply(r, a);
 
-   if(n == 1)
+   if(n == 1) {
       return r;
+   }
 
    // find random quadratic nonresidue z
    word z = 2;
    for(;;) {
-      if(jacobi(BigInt::from_word(z), p) == -1)  // found one
+      if(jacobi(BigInt::from_word(z), p) == -1) {  // found one
          break;
+      }
 
       z += 1;  // try next z
 
@@ -84,8 +88,9 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
       * prime is 2. If we have not found one after 256 then almost
       * certainly we have been given a non-prime p.
       */
-      if(z >= 256)
+      if(z >= 256) {
          return BigInt::from_s32(-1);
+      }
    }
 
    BigInt c = monty_exp_vartime(monty_p, BigInt::from_word(z), (q << 1) + 1);
@@ -121,8 +126,9 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
 * Calculate the Jacobi symbol
 */
 int32_t jacobi(const BigInt& a, const BigInt& n) {
-   if(n.is_even() || n < 2)
+   if(n.is_even() || n < 2) {
       throw Invalid_Argument("jacobi: second argument must be odd and > 1");
+   }
 
    BigInt x = a % n;
    BigInt y = n;
@@ -132,22 +138,26 @@ int32_t jacobi(const BigInt& a, const BigInt& n) {
       x %= y;
       if(x > y / 2) {
          x = y - x;
-         if(y % 4 == 3)
+         if(y % 4 == 3) {
             J = -J;
+         }
       }
-      if(x.is_zero())
+      if(x.is_zero()) {
          return 0;
+      }
 
       size_t shifts = low_zero_bits(x);
       x >>= shifts;
       if(shifts % 2) {
          word y_mod_8 = y % 8;
-         if(y_mod_8 == 3 || y_mod_8 == 5)
+         if(y_mod_8 == 3 || y_mod_8 == 5) {
             J = -J;
+         }
       }
 
-      if(x % 4 == 3 && y % 4 == 3)
+      if(x % 4 == 3 && y % 4 == 3) {
          J = -J;
+      }
       std::swap(x, y);
    }
    return J;
@@ -202,12 +212,15 @@ size_t safegcd_loop_bound(size_t f_bits, size_t g_bits) {
 * Calculate the GCD
 */
 BigInt gcd(const BigInt& a, const BigInt& b) {
-   if(a.is_zero())
+   if(a.is_zero()) {
       return abs(b);
-   if(b.is_zero())
+   }
+   if(b.is_zero()) {
       return abs(a);
-   if(a == 1 || b == 1)
+   }
+   if(a == 1 || b == 1) {
       return BigInt::one();
+   }
 
    // See https://gcd.cr.yp.to/safegcd-20190413.pdf fig 1.2
 
@@ -262,8 +275,9 @@ BigInt gcd(const BigInt& a, const BigInt& b) {
 * Calculate the LCM
 */
 BigInt lcm(const BigInt& a, const BigInt& b) {
-   if(a == b)
+   if(a == b) {
       return a;
+   }
 
    auto ab = a * b;
    ab.set_sign(BigInt::Positive);  // ignore the signs of a & b
@@ -280,8 +294,9 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod) {
    }
 
    if(base.is_zero() || mod.is_zero()) {
-      if(exp.is_zero())
+      if(exp.is_zero()) {
          return BigInt::one();
+      }
       return BigInt::zero();
    }
 
@@ -311,10 +326,12 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod) {
 }
 
 BigInt is_perfect_square(const BigInt& C) {
-   if(C < 1)
+   if(C < 1) {
       throw Invalid_Argument("is_perfect_square requires C >= 1");
-   if(C == 1)
+   }
+   if(C == 1) {
       return BigInt::one();
+   }
 
    const size_t n = C.bits();
    const size_t m = (n + 1) / 2;
@@ -327,24 +344,28 @@ BigInt is_perfect_square(const BigInt& C) {
       X = (X2 + C) / (2 * X);
       X2 = (X * X);
 
-      if(X2 < B)
+      if(X2 < B) {
          break;
+      }
    }
 
-   if(X2 == C)
+   if(X2 == C) {
       return X;
-   else
+   } else {
       return BigInt::zero();
+   }
 }
 
 /*
 * Test for primality using Miller-Rabin
 */
 bool is_prime(const BigInt& n, RandomNumberGenerator& rng, size_t prob, bool is_random) {
-   if(n == 2)
+   if(n == 2) {
       return true;
-   if(n <= 1 || n.is_even())
+   }
+   if(n <= 1 || n.is_even()) {
       return false;
+   }
 
    const size_t n_bits = n.bits();
 
@@ -360,13 +381,15 @@ bool is_prime(const BigInt& n, RandomNumberGenerator& rng, size_t prob, bool is_
    if(rng.is_seeded()) {
       const size_t t = miller_rabin_test_iterations(n_bits, prob, is_random);
 
-      if(is_miller_rabin_probable_prime(n, mod_n, rng, t) == false)
+      if(is_miller_rabin_probable_prime(n, mod_n, rng, t) == false) {
          return false;
+      }
 
-      if(is_random)
+      if(is_random) {
          return true;
-      else
+      } else {
          return is_lucas_probable_prime(n, mod_n);
+      }
    } else {
       return is_bailie_psw_probable_prime(n, mod_n);
    }

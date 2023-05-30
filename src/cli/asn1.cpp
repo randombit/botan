@@ -28,12 +28,15 @@ class ASN1_Printer final : public Command {
       std::string description() const override { return "Decode and print file with ASN.1 Basic Encoding Rules (BER)"; }
 
       static bool first_n(const std::vector<uint8_t>& data, size_t n, uint8_t b) {
-         if(data.size() < n)
+         if(data.size() < n) {
             return false;
+         }
 
-         for(size_t i = 0; i != n; ++i)
-            if(data[i] != b)
+         for(size_t i = 0; i != n; ++i) {
+            if(data[i] != b) {
                return false;
+            }
+         }
 
          return true;
       }
@@ -84,17 +87,19 @@ class OID_Info final : public Command {
       void go() override {
          const std::string oid_str = get_arg("oid");
 
-         if(oid_str.empty())
+         if(oid_str.empty()) {
             throw CLI_Usage_Error("Must provide non-empty OID string");
+         }
 
          try {
             Botan::OID oid(oid_str);
 
             std::string name = oid.human_name_or_empty();
-            if(name.empty())
+            if(name.empty()) {
                output() << "OID " << oid_str << " is not recognized\n";
-            else
+            } else {
                output() << "OID " << oid_str << " is associated with " << name << "\n";
+            }
 
             return;
          } catch(Botan::Decoding_Error&) {}

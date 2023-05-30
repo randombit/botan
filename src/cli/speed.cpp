@@ -162,8 +162,9 @@ class JSON_Output final {
                 << "\"op\": \"" << t.doing() << "\", "
                 << "\"events\": " << t.events() << ", ";
 
-            if(t.cycles_consumed() > 0)
+            if(t.cycles_consumed() > 0) {
                out << "\"cycles\": " << t.cycles_consumed() << ", ";
+            }
 
             if(t.buf_size() > 0) {
                out << "\"bps\": " << static_cast<uint64_t>(t.events() / (t.value() / 1000000000.0)) << ", ";
@@ -172,8 +173,9 @@ class JSON_Output final {
 
             out << "\"nanos\": " << t.value() << "}";
 
-            if(i != m_results.size() - 1)
+            if(i != m_results.size() - 1) {
                out << ",";
+            }
 
             out << "\n";
          }
@@ -220,8 +222,9 @@ class Summary final {
 
             // add table entries
             for(const auto& entry : m_bps_entries) {
-               if(entry.second.empty())
+               if(entry.second.empty()) {
                   continue;
+               }
 
                result_ss << std::setw(name_padding) << std::left << (entry.first.second) << std::setw(op_name_padding)
                          << std::left << (entry.first.first);
@@ -280,17 +283,20 @@ std::vector<size_t> unique_buffer_sizes(const std::string& cmdline_arg) {
          size_t converted = 0;
          x = static_cast<size_t>(std::stoul(size_str, &converted, 0));
 
-         if(converted != size_str.size())
+         if(converted != size_str.size()) {
             throw CLI_Usage_Error("Invalid integer");
+         }
       } catch(std::exception&) {
          throw CLI_Usage_Error("Invalid integer value '" + size_str + "' for option buf-size");
       }
 
-      if(x == 0)
+      if(x == 0) {
          throw CLI_Usage_Error("Cannot have a zero-sized buffer");
+      }
 
-      if(x > MAX_BUF_SIZE)
+      if(x > MAX_BUF_SIZE) {
          throw CLI_Usage_Error("Specified buffer size is too large");
+      }
 
       buf.insert(x);
    }
@@ -408,8 +414,9 @@ class Speed final : public Command {
          * any machine where the cycle counter increments faster than the actual
          * clock.
          */
-         if(m_clock_cycle_ratio < 0.0 || m_clock_cycle_ratio > 1.0)
+         if(m_clock_cycle_ratio < 0.0 || m_clock_cycle_ratio > 1.0) {
             throw CLI_Usage_Error("Unlikely CPU clock ratio of " + clock_ratio);
+         }
 
          m_clock_cycle_ratio = 1.0 / m_clock_cycle_ratio;
 
@@ -419,12 +426,13 @@ class Speed final : public Command {
                               "Expected incorrect results\n\n";
          }
 
-         if(format == "table")
+         if(format == "table") {
             m_summary = std::make_unique<Summary>();
-         else if(format == "json")
+         } else if(format == "json") {
             m_json = std::make_unique<JSON_Output>();
-         else if(format != "default")
+         } else if(format != "default") {
             throw CLI_Usage_Error("Unknown --format type '" + format + "'");
+         }
 
 #if defined(BOTAN_HAS_ECC_GROUP)
          if(ecc_groups.empty()) {
@@ -738,8 +746,9 @@ class Speed final : public Command {
             m_json->add(*t);
          } else {
             output() << t->to_string() << std::flush;
-            if(m_summary)
+            if(m_summary) {
                m_summary->add(*t);
+            }
          }
       }
 
@@ -788,10 +797,11 @@ class Speed final : public Command {
          const size_t bs = cipher.block_size();
          std::set<size_t> buf_sizes_in_blocks;
          for(size_t buf_size : buf_sizes) {
-            if(buf_size % bs == 0)
+            if(buf_size % bs == 0) {
                buf_sizes_in_blocks.insert(buf_size);
-            else
+            } else {
                buf_sizes_in_blocks.insert(buf_size + bs - (buf_size % bs));
+            }
          }
 
          for(size_t buf_size : buf_sizes_in_blocks) {
@@ -1653,8 +1663,9 @@ class Speed final : public Command {
             }
          }
 
-         if(invalid_sigs > 0)
+         if(invalid_sigs > 0) {
             error_output() << invalid_sigs << " generated signatures rejected in " << nm << " signature bench\n";
+         }
 
          const size_t events = static_cast<size_t>(std::min(sig_timer->events(), ver_timer->events()));
 
@@ -1967,8 +1978,9 @@ class Speed final : public Command {
                keygen_timer->run([&] { return Botan::create_private_key("XMSS", rng(), params); }));
 
             record_result(keygen_timer);
-            if(bench_pk_sig(*key, params, provider, "", msec) == 1)
+            if(bench_pk_sig(*key, params, provider, "", msec) == 1) {
                break;
+            }
          }
       }
 #endif
@@ -2067,8 +2079,9 @@ class Speed final : public Command {
          const std::string password = "not a very good password";
 
          for(uint8_t alg = 0; alg <= 4; ++alg) {
-            if(Botan::is_passhash9_alg_supported(alg) == false)
+            if(Botan::is_passhash9_alg_supported(alg) == false) {
                continue;
+            }
 
             for(auto work_factor : {10, 15}) {
                auto timer = make_timer("passhash9 alg=" + std::to_string(alg) + " wf=" + std::to_string(work_factor));
@@ -2109,8 +2122,9 @@ class Speed final : public Command {
 
                   record_result(scrypt_timer);
 
-                  if(scrypt_timer->events() == 1)
+                  if(scrypt_timer->events() == 1) {
                      break;
+                  }
                }
             }
          }

@@ -66,8 +66,9 @@ class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 
          const EC_Point S = group.blinded_var_point_multiply(input_point, m_key.private_value(), m_rng, m_ws);
 
-         if(S.on_the_curve() == false)
+         if(S.on_the_curve() == false) {
             throw Internal_Error("ECDH agreed value was not on the curve");
+         }
          return BigInt::encode_1363(S.get_affine_x(), group.get_p_bytes());
       }
 
@@ -262,8 +263,9 @@ std::vector<uint8_t> ECIES_Encryptor::enc(const uint8_t data[],
    // encryption
 
    m_cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
-   if(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size()))
+   if(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size())) {
       throw Invalid_Argument("ECIES with " + m_cipher->name() + " requires an IV be set");
+   }
 
    m_cipher->start(m_iv.bits_of());
 
@@ -307,8 +309,9 @@ size_t ECIES_Decryptor::plaintext_length(size_t ctext_len) const {
    const size_t point_size = m_params.domain().point_size(m_params.compression_type());
    const size_t overhead = point_size + m_mac->output_length();
 
-   if(ctext_len < overhead)
+   if(ctext_len < overhead) {
       return 0;
+   }
 
    return m_cipher->output_length(ctext_len - overhead);
 }
@@ -353,8 +356,9 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
       // decrypt data
 
       m_cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
-      if(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size()))
+      if(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size())) {
          throw Invalid_Argument("ECIES with " + m_cipher->name() + " requires an IV be set");
+      }
       m_cipher->start(m_iv.bits_of());
 
       try {

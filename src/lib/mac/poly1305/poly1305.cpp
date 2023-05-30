@@ -194,8 +194,9 @@ void Poly1305::add_data(const uint8_t input[], size_t length) {
    const size_t full_blocks = length / m_buf.size();
    const size_t remaining = length % m_buf.size();
 
-   if(full_blocks)
+   if(full_blocks) {
       poly1305_blocks(m_poly, input, full_blocks);
+   }
 
    buffer_insert(m_buf, m_buf_pos, input + full_blocks * m_buf.size(), remaining);
    m_buf_pos += remaining;

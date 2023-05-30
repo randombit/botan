@@ -181,8 +181,9 @@ void IDEA::key_schedule(const uint8_t key[], size_t /*length*/) {
    K[1] = load_be<uint64_t>(key, 1);
 
    for(size_t off = 0; off != 48; off += 8) {
-      for(size_t i = 0; i != 8; ++i)
+      for(size_t i = 0; i != 8; ++i) {
          m_EK[off + i] = static_cast<uint16_t>(K[i / 4] >> (48 - 16 * (i % 4)));
+      }
 
       const uint64_t Kx = (K[0] >> 39);
       const uint64_t Ky = (K[1] >> 39);
@@ -191,8 +192,9 @@ void IDEA::key_schedule(const uint8_t key[], size_t /*length*/) {
       K[1] = (K[1] << 25) | Kx;
    }
 
-   for(size_t i = 0; i != 4; ++i)
+   for(size_t i = 0; i != 4; ++i) {
       m_EK[48 + i] = static_cast<uint16_t>(K[i / 4] >> (48 - 16 * (i % 4)));
+   }
 
    m_DK[0] = mul_inv(m_EK[48]);
    m_DK[1] = -m_EK[49];

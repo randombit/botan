@@ -19,8 +19,9 @@ void ANSI_X919_MAC::add_data(const uint8_t input[], size_t length) {
    xor_buf(&m_state[m_position], input, xored);
    m_position += xored;
 
-   if(m_position < 8)
+   if(m_position < 8) {
       return;
+   }
 
    m_des1->encrypt(m_state);
    input += xored;
@@ -40,8 +41,9 @@ void ANSI_X919_MAC::add_data(const uint8_t input[], size_t length) {
 * Finalize an ANSI X9.19 MAC Calculation
 */
 void ANSI_X919_MAC::final_result(uint8_t mac[]) {
-   if(m_position)
+   if(m_position) {
       m_des1->encrypt(m_state);
+   }
    m_des2->decrypt(m_state.data(), mac);
    m_des1->encrypt(mac);
    zeroise(m_state);
@@ -60,8 +62,9 @@ void ANSI_X919_MAC::key_schedule(const uint8_t key[], size_t length) {
 
    m_des1->set_key(key, 8);
 
-   if(length == 16)
+   if(length == 16) {
       key += 8;
+   }
 
    m_des2->set_key(key, 8);
 }

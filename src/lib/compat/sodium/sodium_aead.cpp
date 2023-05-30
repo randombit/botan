@@ -35,8 +35,9 @@ int sodium_aead_chacha20poly1305_encrypt(uint8_t ctext[],
    chacha20poly1305->finish(buf);
 
    copy_mem(ctext, buf.data(), buf.size());
-   if(ctext_len)
+   if(ctext_len) {
       *ctext_len = buf.size();
+   }
    return 0;
 }
 
@@ -49,8 +50,9 @@ int sodium_aead_chacha20poly1305_decrypt(uint8_t ptext[],
                                          const uint8_t nonce[],
                                          size_t nonce_len,
                                          const uint8_t key[]) {
-   if(ctext_len < 16)
+   if(ctext_len < 16) {
       return -1;
+   }
 
    *ptext_len = 0;
 
@@ -174,8 +176,9 @@ int Sodium::crypto_aead_chacha20poly1305_ietf_encrypt_detached(uint8_t ctext[],
                                                                const uint8_t key[]) {
    BOTAN_UNUSED(unused_secret_nonce);
 
-   if(mac_len)
+   if(mac_len) {
       *mac_len = 16;
+   }
 
    return sodium_aead_chacha20poly1305_encrypt_detached(
       ctext, mac, ptext, ptext_len, ad, ad_len, nonce, crypto_aead_chacha20poly1305_ietf_npubbytes(), key);
@@ -235,8 +238,9 @@ int Sodium::crypto_aead_chacha20poly1305_encrypt_detached(uint8_t ctext[],
                                                           const uint8_t nonce[],
                                                           const uint8_t key[]) {
    BOTAN_UNUSED(unused_secret_nonce);
-   if(mac_len)
+   if(mac_len) {
       *mac_len = 16;
+   }
 
    return sodium_aead_chacha20poly1305_encrypt_detached(
       ctext, mac, ptext, ptext_len, ad, ad_len, nonce, crypto_aead_chacha20poly1305_npubbytes(), key);
@@ -298,8 +302,9 @@ int Sodium::crypto_aead_xchacha20poly1305_ietf_encrypt_detached(uint8_t ctext[],
                                                                 const uint8_t nonce[],
                                                                 const uint8_t key[]) {
    BOTAN_UNUSED(unused_secret_nonce);
-   if(mac_len)
+   if(mac_len) {
       *mac_len = 16;
+   }
 
    return sodium_aead_chacha20poly1305_encrypt_detached(
       ctext, mac, ptext, ptext_len, ad, ad_len, nonce, crypto_aead_xchacha20poly1305_ietf_npubbytes(), key);

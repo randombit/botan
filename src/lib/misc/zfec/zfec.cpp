@@ -126,8 +126,9 @@ void invert_matrix(uint8_t matrix[], size_t K) {
             }
 
             for(size_t row = 0; row != K; ++row) {
-               if(m_ipiv[row])
+               if(m_ipiv[row]) {
                   continue;
+               }
 
                for(size_t i = 0; i != K; ++i) {
                   if(m_ipiv[i] == false && matrix[row * K + i] != 0) {
@@ -161,8 +162,9 @@ void invert_matrix(uint8_t matrix[], size_t K) {
       * optimizing.
       */
       if(irow != icol) {
-         for(size_t i = 0; i != K; ++i)
+         for(size_t i = 0; i != K; ++i) {
             std::swap(matrix[irow * K + i], matrix[icol * K + i]);
+         }
       }
 
       indxr[col] = irow;
@@ -171,13 +173,15 @@ void invert_matrix(uint8_t matrix[], size_t K) {
       const uint8_t c = pivot_row[icol];
       pivot_row[icol] = 1;
 
-      if(c == 0)
+      if(c == 0) {
          throw Invalid_Argument("ZFEC: singlar matrix");
+      }
 
       if(c != 1) {
          const uint8_t* mul_c = GF_MUL_TABLE(GF_INVERSE[c]);
-         for(size_t i = 0; i != K; ++i)
+         for(size_t i = 0; i != K; ++i) {
             pivot_row[i] = mul_c[pivot_row[i]];
+         }
       }
 
       /*
@@ -192,16 +196,18 @@ void invert_matrix(uint8_t matrix[], size_t K) {
 
             // This is equivalent to addmul()
             const uint8_t* mul_z = GF_MUL_TABLE(z);
-            for(size_t j = 0; j != K; ++j)
+            for(size_t j = 0; j != K; ++j) {
                matrix[i * K + j] ^= mul_z[pivot_row[j]];
+            }
          }
       }
    }
 
    for(size_t i = 0; i != K; ++i) {
       if(indxr[i] != indxc[i]) {
-         for(size_t row = 0; row != K; ++row)
+         for(size_t row = 0; row != K; ++row) {
             std::swap(matrix[row * K + indxr[i]], matrix[row * K + indxc[i]]);
+         }
       }
    }
 }
@@ -246,8 +252,9 @@ void create_inverted_vdm(uint8_t vdm[], size_t K) {
    for(size_t i = 1; i < K; ++i) {
       const uint8_t* mul_p_i = GF_MUL_TABLE(GF_EXP[i]);
 
-      for(size_t j = K - 1 - (i - 1); j < K - 1; ++j)
+      for(size_t j = K - 1 - (i - 1); j < K - 1; ++j) {
          c[j] ^= mul_p_i[c[j + 1]];
+      }
       c[K - 1] ^= GF_EXP[i];
    }
 
@@ -263,8 +270,9 @@ void create_inverted_vdm(uint8_t vdm[], size_t K) {
       }
 
       const uint8_t* mul_t_inv = GF_MUL_TABLE(GF_INVERSE[t]);
-      for(size_t col = 0; col != K; ++col)
+      for(size_t col = 0; col != K; ++col) {
          vdm[col * K + row] = mul_t_inv[b[col]];
+      }
    }
 }
 
@@ -274,8 +282,9 @@ void create_inverted_vdm(uint8_t vdm[], size_t K) {
 * addmul() computes z[] = z[] + x[] * y
 */
 void ZFEC::addmul(uint8_t z[], const uint8_t x[], uint8_t y, size_t size) {
-   if(y == 0)
+   if(y == 0) {
       return;
+   }
 
    const uint8_t* GF_MUL_Y = GF_MUL_TABLE(y);
 
@@ -329,8 +338,9 @@ void ZFEC::addmul(uint8_t z[], const uint8_t x[], uint8_t y, size_t size) {
    }
 
    // Clean up the trailing pieces
-   for(size_t i = 0; i != size; ++i)
+   for(size_t i = 0; i != size; ++i) {
       z[i] ^= GF_MUL_Y[x[i]];
+   }
 }
 
 /*
@@ -343,8 +353,9 @@ void ZFEC::addmul(uint8_t z[], const uint8_t x[], uint8_t y, size_t size) {
 * ZFEC constructor
 */
 ZFEC::ZFEC(size_t K, size_t N) : m_K(K), m_N(N), m_enc_matrix(N * K) {
-   if(m_K == 0 || m_N == 0 || m_K > 256 || m_N > 256 || m_K > N)
+   if(m_K == 0 || m_N == 0 || m_K > 256 || m_N > 256 || m_K > N) {
       throw Invalid_Argument("ZFEC: violated 1 <= K <= N <= 256");
+   }
 
    std::vector<uint8_t> temp_matrix(m_N * m_K);
 
@@ -355,14 +366,16 @@ ZFEC::ZFEC(size_t K, size_t N) : m_K(K), m_N(N), m_enc_matrix(N * K) {
    */
    create_inverted_vdm(&temp_matrix[0], m_K);
 
-   for(size_t i = m_K * m_K; i != temp_matrix.size(); ++i)
+   for(size_t i = m_K * m_K; i != temp_matrix.size(); ++i) {
       temp_matrix[i] = GF_EXP[((i / m_K) * (i % m_K)) % 255];
+   }
 
    /*
    * the upper part of the encoding matrix is I
    */
-   for(size_t i = 0; i != m_K; ++i)
+   for(size_t i = 0; i != m_K; ++i) {
       m_enc_matrix[i * (m_K + 1)] = 1;
+   }
 
    /*
    * computes C = AB where A is n*K, B is K*m, C is n*m
@@ -384,14 +397,16 @@ ZFEC::ZFEC(size_t K, size_t N) : m_K(K), m_N(N), m_enc_matrix(N * K) {
 * ZFEC encoding routine
 */
 void ZFEC::encode(const uint8_t input[], size_t size, const output_cb_t& output_cb) const {
-   if(size % m_K != 0)
+   if(size % m_K != 0) {
       throw Invalid_Argument("ZFEC::encode: input must be multiple of K uint8_ts");
+   }
 
    const size_t share_size = size / m_K;
 
    std::vector<const uint8_t*> shares;
-   for(size_t i = 0; i != m_K; ++i)
+   for(size_t i = 0; i != m_K; ++i) {
       shares.push_back(input + i * share_size);
+   }
 
    this->encode_shares(shares, share_size, output_cb);
 }
@@ -399,12 +414,14 @@ void ZFEC::encode(const uint8_t input[], size_t size, const output_cb_t& output_
 void ZFEC::encode_shares(const std::vector<const uint8_t*>& shares,
                          size_t share_size,
                          const output_cb_t& output_cb) const {
-   if(shares.size() != m_K)
+   if(shares.size() != m_K) {
       throw Invalid_Argument("ZFEC::encode_shares must provide K shares");
+   }
 
    // The initial shares are just the original input shares
-   for(size_t i = 0; i != m_K; ++i)
+   for(size_t i = 0; i != m_K; ++i) {
       output_cb(i, shares[i], share_size);
+   }
 
    std::vector<uint8_t> fec_buf(share_size);
 
@@ -434,8 +451,9 @@ void ZFEC::decode_shares(const std::map<size_t, const uint8_t*>& shares,
    Assert share_size % K == 0
    */
 
-   if(shares.size() < m_K)
+   if(shares.size() < m_K) {
       throw Decoding_Error("ZFEC: could not decode, less than K surviving shares");
+   }
 
    std::vector<uint8_t> decoding_matrix(m_K * m_K);
    std::vector<size_t> indexes(m_K);
@@ -462,8 +480,9 @@ void ZFEC::decode_shares(const std::map<size_t, const uint8_t*>& shares,
          missing_primary_share = true;
       }
 
-      if(share_id >= m_N)
+      if(share_id >= m_N) {
          throw Decoding_Error("ZFEC: invalid share id detected during decode");
+      }
 
       /*
       This is a systematic code (encoding matrix includes K*K identity

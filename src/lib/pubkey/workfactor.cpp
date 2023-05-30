@@ -32,8 +32,9 @@ size_t nfs_workfactor(size_t bits, double log2_k) {
 }  // namespace
 
 size_t if_work_factor(size_t bits) {
-   if(bits < 512)
+   if(bits < 512) {
       return 0;
+   }
 
    // RFC 3766 estimates k at .02 and o(1) to be effectively zero for sizes of interest
 
@@ -47,18 +48,24 @@ size_t dl_work_factor(size_t bits) {
 }
 
 size_t dl_exponent_size(size_t bits) {
-   if(bits == 0)
+   if(bits == 0) {
       return 0;
-   if(bits <= 256)
+   }
+   if(bits <= 256) {
       return bits - 1;
-   if(bits <= 1024)
+   }
+   if(bits <= 1024) {
       return 192;
-   if(bits <= 1536)
+   }
+   if(bits <= 1536) {
       return 224;
-   if(bits <= 2048)
+   }
+   if(bits <= 2048) {
       return 256;
-   if(bits <= 4096)
+   }
+   if(bits <= 4096) {
       return 384;
+   }
    return 512;
 }
 

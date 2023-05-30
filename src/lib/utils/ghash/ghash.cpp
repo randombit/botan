@@ -17,13 +17,15 @@ namespace Botan {
 
 std::string GHASH::provider() const {
 #if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
-   if(CPUID::has_carryless_multiply())
+   if(CPUID::has_carryless_multiply()) {
       return "clmul";
+   }
 #endif
 
 #if defined(BOTAN_HAS_GHASH_CLMUL_VPERM)
-   if(CPUID::has_vperm())
+   if(CPUID::has_vperm()) {
       return "vperm";
+   }
 #endif
 
    return "base";
@@ -145,8 +147,9 @@ void GHASH::start(const uint8_t nonce[], size_t len) {
 }
 
 void GHASH::set_associated_data(const uint8_t input[], size_t length) {
-   if(m_ghash.empty() == false)
+   if(m_ghash.empty() == false) {
       throw Invalid_State("Too late to set AD in GHASH");
+   }
 
    zeroise(m_H_ad);
 
@@ -182,8 +185,9 @@ void GHASH::final(uint8_t mac[], size_t mac_len) {
    assert_key_material_set();
    add_final_block(m_ghash, m_ad_len, m_text_len);
 
-   for(size_t i = 0; i != mac_len; ++i)
+   for(size_t i = 0; i != mac_len; ++i) {
       mac[i] = m_ghash[i] ^ m_nonce[i];
+   }
 
    m_ghash.clear();
    m_text_len = 0;

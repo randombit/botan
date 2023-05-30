@@ -150,8 +150,9 @@ bool McEliece_PrivateKey::check_key(RandomNumberGenerator& rng, bool /*unused*/)
    secure_vector<uint8_t> errors_out;
    mceliece_decrypt(plaintext_out, errors_out, ciphertext, *this);
 
-   if(errors != errors_out || plaintext != plaintext_out)
+   if(errors != errors_out || plaintext != plaintext_out) {
       return false;
+   }
 
    return true;
 }
@@ -168,8 +169,9 @@ McEliece_PrivateKey::McEliece_PrivateKey(std::span<const uint8_t> key_bits) {
                         .decode(m_public_matrix, ASN1_Type::OctetString)
                         .decode(enc_g, ASN1_Type::OctetString);
 
-   if(t == 0 || n == 0)
+   if(t == 0 || n == 0) {
       throw Decoding_Error("invalid McEliece parameters");
+   }
 
    uint32_t ext_deg = ceil_log2(n);
    m_code_length = n;
@@ -329,16 +331,18 @@ class MCE_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF {
 
 std::unique_ptr<PK_Ops::KEM_Encryption> McEliece_PublicKey::create_kem_encryption_op(std::string_view params,
                                                                                      std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<MCE_KEM_Encryptor>(*this, params);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 
 std::unique_ptr<PK_Ops::KEM_Decryption> McEliece_PrivateKey::create_kem_decryption_op(RandomNumberGenerator& /*rng*/,
                                                                                       std::string_view params,
                                                                                       std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<MCE_KEM_Decryptor>(*this, params);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 

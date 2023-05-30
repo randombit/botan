@@ -50,8 +50,9 @@ class Check_Argon2 final : public Command {
 
          output() << "Password is " << (ok ? "valid" : "NOT valid") << std::endl;
 
-         if(ok == false)
+         if(ok == false) {
             set_return_code(1);
+         }
       }
 };
 

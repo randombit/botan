@@ -62,8 +62,9 @@ size_t euclids_algorithm(size_t a, size_t b) {
 }
 
 size_t block_size_for_cascade(size_t bs, size_t bs2) {
-   if(bs == bs2)
+   if(bs == bs2) {
       return bs;
+   }
 
    const size_t gcd = euclids_algorithm(bs, bs2);
 

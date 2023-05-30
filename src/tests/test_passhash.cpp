@@ -105,8 +105,9 @@ class Argon2_Tests final : public Text_Based_Test {
             result.test_eq("expected hash generated", generated, passhash);
             const bool accepted = Botan::argon2_check_pwhash(password.data(), password.size(), generated);
             result.test_eq("generated hash accepted", accepted, true);
-         } else
+         } else {
             throw Test_Error("Unexpected header in Argon2 password hash test file");
+         }
 
          return result;
       }

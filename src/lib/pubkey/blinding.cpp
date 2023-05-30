@@ -29,8 +29,9 @@ Blinder::Blinder(const BigInt& modulus,
 BigInt Blinder::blinding_nonce() const { return BigInt(m_rng, m_modulus_bits - 1); }
 
 BigInt Blinder::blind(const BigInt& i) const {
-   if(!m_reducer.initialized())
+   if(!m_reducer.initialized()) {
       throw Invalid_State("Blinder not initialized, cannot blind");
+   }
 
    ++m_counter;
 
@@ -48,8 +49,9 @@ BigInt Blinder::blind(const BigInt& i) const {
 }
 
 BigInt Blinder::unblind(const BigInt& i) const {
-   if(!m_reducer.initialized())
+   if(!m_reducer.initialized()) {
       throw Invalid_State("Blinder not initialized, cannot unblind");
+   }
 
    return m_reducer.multiply(i, m_d);
 }

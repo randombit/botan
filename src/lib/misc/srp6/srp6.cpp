@@ -53,8 +53,9 @@ std::string srp6_group_identifier(const BigInt& N, const BigInt& g) {
 
       DL_Group group(group_name);
 
-      if(group.get_p() == N && group.get_g() == g)
+      if(group.get_p() == N && group.get_g() == g) {
          return group_name;
+      }
    } catch(...) {}
 
    // If we didn't return, the group was unknown or did not match
@@ -89,12 +90,14 @@ std::pair<BigInt, SymmetricKey> srp6_client_agree(std::string_view identifier,
 
    const size_t p_bytes = group.p_bytes();
 
-   if(B <= 0 || B >= p)
+   if(B <= 0 || B >= p) {
       throw Decoding_Error("Invalid SRP parameter from server");
+   }
 
    auto hash_fn = HashFunction::create_or_throw(hash_id);
-   if(8 * hash_fn->output_length() >= group.p_bits())
+   if(8 * hash_fn->output_length() >= group.p_bits()) {
       throw Invalid_Argument(fmt("Hash function {} too large for SRP6 with this group", hash_fn->name()));
+   }
 
    const BigInt k = hash_seq(*hash_fn, p_bytes, p, g);
 
@@ -137,8 +140,9 @@ BigInt srp6_generate_verifier(std::string_view identifier,
                               const DL_Group& group,
                               std::string_view hash_id) {
    auto hash_fn = HashFunction::create_or_throw(hash_id);
-   if(8 * hash_fn->output_length() >= group.p_bits())
+   if(8 * hash_fn->output_length() >= group.p_bits()) {
       throw Invalid_Argument(fmt("Hash function {} too large for SRP6 with this group", hash_fn->name()));
+   }
 
    const BigInt x = compute_x(*hash_fn, identifier, password, salt);
    return group.power_g_p(x, hash_fn->output_length() * 8);
@@ -167,8 +171,9 @@ BigInt SRP6_Server_Session::step1(
    m_hash_id = hash_id;
 
    auto hash_fn = HashFunction::create_or_throw(hash_id);
-   if(8 * hash_fn->output_length() >= group.p_bits())
+   if(8 * hash_fn->output_length() >= group.p_bits()) {
       throw Invalid_Argument(fmt("Hash function {} too large for SRP6 with this group", hash_fn->name()));
+   }
 
    const BigInt k = hash_seq(*hash_fn, m_group.p_bytes(), p, g);
    m_B = group.mod_p(v * k + group.power_g_p(m_b, b_bits));
@@ -177,12 +182,14 @@ BigInt SRP6_Server_Session::step1(
 }
 
 SymmetricKey SRP6_Server_Session::step2(const BigInt& A) {
-   if(A <= 0 || A >= m_group.get_p())
+   if(A <= 0 || A >= m_group.get_p()) {
       throw Decoding_Error("Invalid SRP parameter from client");
+   }
 
    auto hash_fn = HashFunction::create_or_throw(m_hash_id);
-   if(8 * hash_fn->output_length() >= m_group.p_bits())
+   if(8 * hash_fn->output_length() >= m_group.p_bits()) {
       throw Invalid_Argument(fmt("Hash function {} too large for SRP6 with this group", hash_fn->name()));
+   }
 
    const BigInt u = hash_seq(*hash_fn, m_group.p_bytes(), A, m_B);
 

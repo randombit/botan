@@ -23,8 +23,9 @@ secure_vector<uint8_t> PK_Decryptor::decrypt(const uint8_t in[], size_t length) 
 
    secure_vector<uint8_t> decoded = do_decrypt(valid_mask, in, length);
 
-   if(valid_mask == 0)
+   if(valid_mask == 0) {
       throw Decoding_Error("Invalid public key ciphertext, cannot decrypt");
+   }
 
    return decoded;
 }
@@ -220,12 +221,14 @@ void PK_Signer::update(const uint8_t in[], size_t length) { m_op->update(in, len
 namespace {
 
 std::vector<uint8_t> der_encode_signature(const std::vector<uint8_t>& sig, size_t parts, size_t part_size) {
-   if(sig.size() % parts != 0 || sig.size() != parts * part_size)
+   if(sig.size() % parts != 0 || sig.size() != parts * part_size) {
       throw Encoding_Error("Unexpected size for DER signature");
+   }
 
    std::vector<BigInt> sig_parts(parts);
-   for(size_t i = 0; i != sig_parts.size(); ++i)
+   for(size_t i = 0; i != sig_parts.size(); ++i) {
       sig_parts[i].binary_decode(&sig[part_size * i], part_size);
+   }
 
    std::vector<uint8_t> output;
    DER_Encoder(output).start_sequence().encode_list(sig_parts).end_cons();
@@ -241,8 +244,9 @@ size_t PK_Signer::signature_length() const {
       // This is a large over-estimate but its easier than computing
       // the exact value
       return m_op->signature_length() + (8 + 4 * m_parts);
-   } else
+   } else {
       throw Internal_Error("PK_Signer: Invalid signature format enum");
+   }
 }
 
 std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng) {
@@ -252,8 +256,9 @@ std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng) {
       return sig;
    } else if(m_sig_format == Signature_Format::DerSequence) {
       return der_encode_signature(sig, m_parts, m_part_size);
-   } else
+   } else {
       throw Internal_Error("PK_Signer: Invalid signature format enum");
+   }
 }
 
 PK_Verifier::PK_Verifier(const Public_Key& key,
@@ -319,8 +324,9 @@ std::vector<uint8_t> decode_der_signature(const uint8_t sig[], size_t length, si
       ++count;
    }
 
-   if(count != sig_parts)
+   if(count != sig_parts) {
       throw Decoding_Error("PK_Verifier: signature size invalid");
+   }
 
    const std::vector<uint8_t> reencoded = der_encode_signature(real_sig, sig_parts, sig_part_size);
 
@@ -348,8 +354,9 @@ bool PK_Verifier::check_signature(const uint8_t sig[], size_t length) {
          bool accept = m_op->is_valid_signature(real_sig.data(), real_sig.size());
 
          return accept && decoding_success;
-      } else
+      } else {
          throw Internal_Error("PK_Verifier: Invalid signature format enum");
+      }
    } catch(Invalid_Argument&) { return false; } catch(Decoding_Error&) {
       return false;
    } catch(Encoding_Error&) { return false; }

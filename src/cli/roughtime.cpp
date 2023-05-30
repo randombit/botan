@@ -121,8 +121,9 @@ class Roughtime final : public Command {
             }
             output() << " Local clock match";
          }
-         if(chain)
+         if(chain) {
             chain->append({response_raw, public_key, blind}, max_chain_size);
+         }
          output() << '\n';
       }
 

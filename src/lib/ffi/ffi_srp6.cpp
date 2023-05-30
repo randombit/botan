@@ -44,8 +44,9 @@ int botan_srp6_server_session_destroy(botan_srp6_server_session_t srp6) { return
 
 int botan_srp6_group_size(const char* group_id, size_t* group_p_bytes) {
 #if defined(BOTAN_HAS_SRP6)
-   if(group_id == nullptr || group_p_bytes == nullptr)
+   if(group_id == nullptr || group_p_bytes == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       Botan::DL_Group group(group_id);

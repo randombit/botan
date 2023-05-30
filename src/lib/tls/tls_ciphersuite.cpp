@@ -19,10 +19,11 @@ namespace Botan::TLS {
 size_t Ciphersuite::nonce_bytes_from_handshake() const {
    switch(m_nonce_format) {
       case Nonce_Format::CBC_MODE: {
-         if(cipher_algo() == "3DES")
+         if(cipher_algo() == "3DES") {
             return 8;
-         else
+         } else {
             return 16;
+         }
       }
       case Nonce_Format::AEAD_IMPLICIT_4:
          return 4;
@@ -95,8 +96,9 @@ std::optional<Ciphersuite> Ciphersuite::from_name(std::string_view name) {
    const std::vector<Ciphersuite>& all_suites = all_known_ciphersuites();
 
    for(auto suite : all_suites) {
-      if(suite.to_string() == name)
+      if(suite.to_string() == name) {
          return suite;
+      }
    }
 
    return std::nullopt;  // some unknown ciphersuite
@@ -113,11 +115,13 @@ bool have_cipher(std::string_view cipher) {
 }  // namespace
 
 bool Ciphersuite::is_usable() const {
-   if(!m_cipher_keylen)  // uninitialized object
+   if(!m_cipher_keylen) {  // uninitialized object
       return false;
+   }
 
-   if(!have_hash(prf_algo()))
+   if(!have_hash(prf_algo())) {
       return false;
+   }
 
 #if !defined(BOTAN_HAS_TLS_CBC)
    if(cbc_ciphersuite())
@@ -132,8 +136,9 @@ bool Ciphersuite::is_usable() const {
       } else {
          auto cipher_and_mode = split_on(cipher_algo(), '/');
          BOTAN_ASSERT(cipher_and_mode.size() == 2, "Expected format for AEAD algo");
-         if(!have_cipher(cipher_and_mode[0]))
+         if(!have_cipher(cipher_and_mode[0])) {
             return false;
+         }
 
          const auto mode = cipher_and_mode[1];
 
@@ -154,10 +159,12 @@ bool Ciphersuite::is_usable() const {
       }
    } else {
       // Old non-AEAD schemes
-      if(!have_cipher(cipher_algo()))
+      if(!have_cipher(cipher_algo())) {
          return false;
-      if(!have_hash(mac_algo()))  // HMAC
+      }
+      if(!have_hash(mac_algo())) {  // HMAC
          return false;
+      }
    }
 
    if(kex_method() == Kex_Algo::ECDH || kex_method() == Kex_Algo::ECDHE_PSK) {

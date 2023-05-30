@@ -30,28 +30,33 @@ Certificate_12::Certificate_12(Handshake_IO& io, Handshake_Hash& hash, const std
 * Deserialize a Certificate message
 */
 Certificate_12::Certificate_12(const std::vector<uint8_t>& buf, const Policy& policy) {
-   if(buf.size() < 3)
+   if(buf.size() < 3) {
       throw Decoding_Error("Certificate: Message malformed");
+   }
 
    const size_t total_size = make_uint32(0, buf[0], buf[1], buf[2]);
 
-   if(total_size != buf.size() - 3)
+   if(total_size != buf.size() - 3) {
       throw Decoding_Error("Certificate: Message malformed");
+   }
 
    const size_t max_size = policy.maximum_certificate_chain_size();
-   if(max_size > 0 && total_size > max_size)
+   if(max_size > 0 && total_size > max_size) {
       throw Decoding_Error("Certificate chain exceeds policy specified maximum size");
+   }
 
    const uint8_t* certs = buf.data() + 3;
 
    while(size_t remaining_bytes = buf.data() + buf.size() - certs) {
-      if(remaining_bytes < 3)
+      if(remaining_bytes < 3) {
          throw Decoding_Error("Certificate: Message malformed");
+      }
 
       const size_t cert_size = make_uint32(0, certs[0], certs[1], certs[2]);
 
-      if(remaining_bytes < (3 + cert_size))
+      if(remaining_bytes < (3 + cert_size)) {
          throw Decoding_Error("Certificate: Message malformed");
+      }
 
       DataSource_Memory cert_buf(&certs[3], cert_size);
       m_certs.push_back(X509_Certificate(cert_buf));
@@ -87,8 +92,9 @@ std::vector<uint8_t> Certificate_12::serialize() const {
    }
 
    const size_t buf_size = buf.size() - 3;
-   for(size_t i = 0; i != 3; ++i)
+   for(size_t i = 0; i != 3; ++i) {
       buf[i] = get_byte_var(i + 1, static_cast<uint32_t>(buf_size));
+   }
 
    return buf;
 }

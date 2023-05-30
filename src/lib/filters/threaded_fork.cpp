@@ -64,8 +64,9 @@ Threaded_Fork::~Threaded_Fork() {
 
    m_thread_data->m_input_ready_semaphore.release(m_threads.size());
 
-   for(auto& thread : m_threads)
+   for(auto& thread : m_threads) {
       thread->join();
+   }
 }
 
 std::string Threaded_Fork::name() const { return "Threaded Fork"; }
@@ -74,9 +75,9 @@ void Threaded_Fork::set_next(Filter* f[], size_t n) {
    Fork::set_next(f, n);
    n = m_next.size();
 
-   if(n < m_threads.size())
+   if(n < m_threads.size()) {
       m_threads.resize(n);
-   else {
+   } else {
       m_threads.reserve(n);
       for(size_t i = m_threads.size(); i != n; ++i) {
          m_threads.push_back(std::make_shared<std::thread>(std::bind(&Threaded_Fork::thread_entry, this, m_next[i])));
@@ -85,19 +86,23 @@ void Threaded_Fork::set_next(Filter* f[], size_t n) {
 }
 
 void Threaded_Fork::send(const uint8_t input[], size_t length) {
-   if(!m_write_queue.empty())
+   if(!m_write_queue.empty()) {
       thread_delegate_work(m_write_queue.data(), m_write_queue.size());
+   }
    thread_delegate_work(input, length);
 
    bool nothing_attached = true;
-   for(size_t j = 0; j != total_ports(); ++j)
-      if(m_next[j])
+   for(size_t j = 0; j != total_ports(); ++j) {
+      if(m_next[j]) {
          nothing_attached = false;
+      }
+   }
 
-   if(nothing_attached)
+   if(nothing_attached) {
       m_write_queue += std::make_pair(input, length);
-   else
+   } else {
       m_write_queue.clear();
+   }
 }
 
 void Threaded_Fork::thread_delegate_work(const uint8_t input[], size_t length) {
@@ -121,8 +126,9 @@ void Threaded_Fork::thread_entry(Filter* filter) {
    while(true) {
       m_thread_data->m_input_ready_semaphore.acquire();
 
-      if(!m_thread_data->m_input)
+      if(!m_thread_data->m_input) {
          break;
+      }
 
       filter->write(m_thread_data->m_input, m_thread_data->m_input_length);
       m_thread_data->m_input_complete_barrier.sync();

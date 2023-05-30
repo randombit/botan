@@ -40,14 +40,16 @@ bool ECKCDSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) cons
 namespace {
 
 std::unique_ptr<HashFunction> eckcdsa_signature_hash(std::string_view padding) {
-   if(auto hash = HashFunction::create(padding))
+   if(auto hash = HashFunction::create(padding)) {
       return hash;
+   }
 
    SCAN_Name req(padding);
 
    if(req.algo_name() == "EMSA1" && req.arg_count() == 1) {
-      if(auto hash = HashFunction::create(req.arg(0)))
+      if(auto hash = HashFunction::create(req.arg(0))) {
          return hash;
+      }
    }
 
    // intentionally not supporting Raw for ECKCDSA, we need to know
@@ -187,8 +189,9 @@ secure_vector<uint8_t> ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[]
    w = m_group.mod_order(w);
 
    const BigInt s = m_group.multiply_mod_order(m_x, k - w);
-   if(s.is_zero())
+   if(s.is_zero()) {
       throw Internal_Error("During ECKCDSA signature generation created zero s");
+   }
 
    secure_vector<uint8_t> output = BigInt::encode_1363(r, c.size());
    output += BigInt::encode_1363(s, m_group.get_order_bytes());
@@ -291,15 +294,17 @@ bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
 
 std::unique_ptr<PK_Ops::Verification> ECKCDSA_PublicKey::create_verification_op(std::string_view params,
                                                                                 std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<ECKCDSA_Verification_Operation>(*this, params);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 
 std::unique_ptr<PK_Ops::Verification> ECKCDSA_PublicKey::create_x509_verification_op(
    const AlgorithmIdentifier& signature_algorithm, std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<ECKCDSA_Verification_Operation>(*this, signature_algorithm);
+   }
 
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -307,8 +312,9 @@ std::unique_ptr<PK_Ops::Verification> ECKCDSA_PublicKey::create_x509_verificatio
 std::unique_ptr<PK_Ops::Signature> ECKCDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
                                                                            std::string_view params,
                                                                            std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<ECKCDSA_Signature_Operation>(*this, params);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 

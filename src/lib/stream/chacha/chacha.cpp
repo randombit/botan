@@ -72,13 +72,15 @@ ChaCha::ChaCha(size_t rounds) : m_rounds(rounds) {
 
 size_t ChaCha::parallelism() {
 #if defined(BOTAN_HAS_CHACHA_AVX512)
-   if(CPUID::has_avx512())
+   if(CPUID::has_avx512()) {
       return 16;
+   }
 #endif
 
 #if defined(BOTAN_HAS_CHACHA_AVX2)
-   if(CPUID::has_avx2())
+   if(CPUID::has_avx2()) {
       return 8;
+   }
 #endif
 
    return 4;
@@ -312,8 +314,9 @@ bool ChaCha::valid_iv_length(size_t iv_len) const {
 void ChaCha::set_iv_bytes(const uint8_t iv[], size_t length) {
    assert_key_material_set();
 
-   if(!valid_iv_length(length))
+   if(!valid_iv_length(length)) {
       throw Invalid_IV_Length(name(), length);
+   }
 
    initialize_state();
 

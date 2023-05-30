@@ -37,10 +37,11 @@ ASN1_Type choose_encoding(std::string_view str) {
       all_printable &= is_printable;
    }
 
-   if(all_printable.is_set())
+   if(all_printable.is_set()) {
       return ASN1_Type::PrintableString;
-   else
+   } else {
       return ASN1_Type::Utf8String;
+   }
 }
 
 bool is_utf8_subset_string_type(ASN1_Type tag) {

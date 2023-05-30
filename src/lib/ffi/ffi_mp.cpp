@@ -20,8 +20,9 @@ using namespace Botan_FFI;
 
 int botan_mp_init(botan_mp_t* mp_out) {
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(mp_out == nullptr)
+      if(mp_out == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
 
       auto mp = std::make_unique<Botan::BigInt>();
       *mp_out = new botan_mp_struct(std::move(mp));

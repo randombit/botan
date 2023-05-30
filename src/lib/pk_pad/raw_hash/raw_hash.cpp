@@ -32,8 +32,9 @@ std::unique_ptr<HashFunction> RawHashFunction::new_object() const {
 }
 
 size_t RawHashFunction::output_length() const {
-   if(m_output_length > 0)
+   if(m_output_length > 0) {
       return m_output_length;
+   }
    return m_bits.size();
 }
 

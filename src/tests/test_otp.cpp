@@ -27,8 +27,9 @@ class HOTP_KAT_Tests final : public Text_Based_Test {
          Test::Result result("HOTP " + hash_algo);
 
          auto hash_test = Botan::HashFunction::create(hash_algo);
-         if(!hash_test)
+         if(!hash_test) {
             return {result};
+         }
 
          const auto key = Botan::SymmetricKey(vars.get_req_bin("Key"));
          const uint32_t otp = static_cast<uint32_t>(vars.get_req_sz("OTP"));
@@ -74,8 +75,9 @@ class TOTP_KAT_Tests final : public Text_Based_Test {
          Test::Result result("TOTP " + hash_algo);
 
          auto hash_test = Botan::HashFunction::create(hash_algo);
-         if(!hash_test)
+         if(!hash_test) {
             return {result};
+         }
 
          const auto key = Botan::SymmetricKey(vars.get_req_bin("Key"));
          const uint32_t otp = static_cast<uint32_t>(vars.get_req_sz("OTP"));
@@ -102,8 +104,9 @@ class TOTP_KAT_Tests final : public Text_Based_Test {
 
    private:
       static std::chrono::system_clock::time_point from_timestring(const std::string& time_str) {
-         if(time_str.size() != 19)
+         if(time_str.size() != 19) {
             throw Test_Error("Invalid TOTP timestamp string " + time_str);
+         }
          // YYYY-MM-DDTHH:MM:SS
          // 0123456789012345678
          const uint32_t year = static_cast<uint32_t>(std::stoi(time_str.substr(0, 4)));

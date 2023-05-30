@@ -57,8 +57,9 @@ class NIST_Keywrap_Tests final : public Text_Based_Test {
          Test::Result result("NIST keywrap");
 
          try {
-            if(typ != "KW" && typ != "KWP")
+            if(typ != "KW" && typ != "KWP") {
                throw Test_Error("Unknown type in NIST key wrap tests");
+            }
 
             const std::vector<uint8_t> expected = vars.get_req_bin("Output");
             const std::vector<uint8_t> input = vars.get_req_bin("Input");
@@ -107,8 +108,9 @@ class NIST_Keywrap_Invalid_Tests final : public Text_Based_Test {
          Test::Result result("NIST keywrap (invalid inputs)");
 
          try {
-            if(typ != "KW" && typ != "KWP")
+            if(typ != "KW" && typ != "KWP") {
                throw Test_Error("Unknown type in NIST key wrap tests");
+            }
 
             const std::vector<uint8_t> input = vars.get_req_bin("Input");
             const std::vector<uint8_t> key = vars.get_req_bin("Key");

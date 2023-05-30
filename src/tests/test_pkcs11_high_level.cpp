@@ -769,8 +769,9 @@ Test::Result test_rsa_encrypt_decrypt() {
          } catch(Botan::PKCS11::PKCS11_ReturnError& e) {
             std::ostringstream err;
             err << "PKCS11 RSA decrypt " << padding;
-            if(blinding)
+            if(blinding) {
                err << " with userspace blinding";
+            }
 
             result.test_failure(err.str(), e.what());
          }

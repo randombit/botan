@@ -118,8 +118,9 @@ std::unique_ptr<EMSA> EMSA::create(std::string_view algo_spec) {
          return std::make_unique<EMSA_Raw>();
       } else {
          auto hash = HashFunction::create(req.arg(0));
-         if(hash)
+         if(hash) {
             return std::make_unique<EMSA_Raw>(hash->output_length());
+         }
       }
    }
 #endif
@@ -129,8 +130,9 @@ std::unique_ptr<EMSA> EMSA::create(std::string_view algo_spec) {
 
 std::unique_ptr<EMSA> EMSA::create_or_throw(std::string_view algo_spec) {
    auto emsa = EMSA::create(algo_spec);
-   if(emsa)
+   if(emsa) {
       return emsa;
+   }
    throw Algorithm_Not_Found(algo_spec);
 }
 

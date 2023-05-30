@@ -34,8 +34,9 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
                                              std::string_view hostname,
                                              Usage_Type usage,
                                              const Path_Validation_Restrictions& restrictions) {
-   if(cert_path.empty())
+   if(cert_path.empty()) {
       throw Invalid_Argument("PKIX::check_chain cert_path empty");
+   }
 
    const bool self_signed_ee_cert = (cert_path.size() == 1);
 
@@ -43,12 +44,14 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
 
    CertificatePathStatusCodes cert_status(cert_path.size());
 
-   if(!hostname.empty() && !cert_path[0].matches_dns_name(hostname))
+   if(!hostname.empty() && !cert_path[0].matches_dns_name(hostname)) {
       cert_status[0].insert(Certificate_Status_Code::CERT_NAME_NOMATCH);
+   }
 
    if(!cert_path[0].allowed_usage(usage)) {
-      if(usage == Usage_Type::OCSP_RESPONDER)
+      if(usage == Usage_Type::OCSP_RESPONDER) {
          cert_status[0].insert(Certificate_Status_Code::OCSP_RESPONSE_MISSING_KEYUSAGE);
+      }
       cert_status[0].insert(Certificate_Status_Code::INVALID_USAGE);
    }
 
@@ -96,15 +99,18 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
       }
 
       // Check all certs for valid time range
-      if(validation_time < subject.not_before())
+      if(validation_time < subject.not_before()) {
          status.insert(Certificate_Status_Code::CERT_NOT_YET_VALID);
+      }
 
-      if(validation_time > subject.not_after())
+      if(validation_time > subject.not_after()) {
          status.insert(Certificate_Status_Code::CERT_HAS_EXPIRED);
+      }
 
       // Check issuer constraints
-      if(!issuer.is_CA_cert() && !self_signed_ee_cert)
+      if(!issuer.is_CA_cert() && !self_signed_ee_cert) {
          status.insert(Certificate_Status_Code::CA_CERT_NOT_FOR_CERT_ISSUER);
+      }
 
       auto issuer_key = issuer.subject_public_key();
 
@@ -125,15 +131,17 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
 
                // Ignore untrusted hashes on self-signed roots
                if(!trusted_hashes.empty() && !at_self_signed_root) {
-                  if(!trusted_hashes.contains(hash_used_for_signature))
+                  if(!trusted_hashes.contains(hash_used_for_signature)) {
                      status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
+                  }
                }
             } else {
                status.insert(sig_status.first);
             }
 
-            if(issuer_key->estimated_strength() < restrictions.minimum_key_strength())
+            if(issuer_key->estimated_strength() < restrictions.minimum_key_strength()) {
                status.insert(Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK);
+            }
          }
       }
 
@@ -203,15 +211,17 @@ Certificate_Status_Code verify_ocsp_signing_cert(const X509_Certificate& signing
    //
    //    1. Matches a local configuration of OCSP signing authority
    //       for the certificate in question, or
-   if(restrictions.trusted_ocsp_responders()->certificate_known(signing_cert))
+   if(restrictions.trusted_ocsp_responders()->certificate_known(signing_cert)) {
       return Certificate_Status_Code::OK;
+   }
 
    // RFC 6960 4.2.2.2
    //
    //    2. Is the certificate of the CA that issued the certificate
    //       in question, or
-   if(signing_cert == ca)
+   if(signing_cert == ca) {
       return Certificate_Status_Code::OK;
+   }
 
    // RFC 6960 4.2.2.2
    //
@@ -254,8 +264,9 @@ CertificatePathStatusCodes PKIX::check_ocsp(const std::vector<X509_Certificate>&
                                             const std::vector<Certificate_Store*>& certstores,
                                             std::chrono::system_clock::time_point ref_time,
                                             const Path_Validation_Restrictions& restrictions) {
-   if(cert_path.empty())
+   if(cert_path.empty()) {
       throw Invalid_Argument("PKIX::check_ocsp cert_path empty");
+   }
 
    CertificatePathStatusCodes cert_status(cert_path.size() - 1);
 
@@ -294,8 +305,9 @@ CertificatePathStatusCodes PKIX::check_ocsp(const std::vector<X509_Certificate>&
       }
    }
 
-   while(!cert_status.empty() && cert_status.back().empty())
+   while(!cert_status.empty() && cert_status.back().empty()) {
       cert_status.pop_back();
+   }
 
    return cert_status;
 }
@@ -303,8 +315,9 @@ CertificatePathStatusCodes PKIX::check_ocsp(const std::vector<X509_Certificate>&
 CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
                                            const std::vector<std::optional<X509_CRL>>& crls,
                                            std::chrono::system_clock::time_point ref_time) {
-   if(cert_path.empty())
+   if(cert_path.empty()) {
       throw Invalid_Argument("PKIX::check_crl cert_path empty");
+   }
 
    CertificatePathStatusCodes cert_status(cert_path.size());
    const X509_Time validation_time(ref_time);
@@ -316,23 +329,28 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
          const X509_Certificate& subject = cert_path.at(i);
          const X509_Certificate& ca = cert_path.at(i + 1);
 
-         if(!ca.allowed_usage(Key_Constraints::CrlSign))
+         if(!ca.allowed_usage(Key_Constraints::CrlSign)) {
             status.insert(Certificate_Status_Code::CA_CERT_NOT_FOR_CRL_ISSUER);
+         }
 
-         if(validation_time < crls[i]->this_update())
+         if(validation_time < crls[i]->this_update()) {
             status.insert(Certificate_Status_Code::CRL_NOT_YET_VALID);
+         }
 
-         if(validation_time > crls[i]->next_update())
+         if(validation_time > crls[i]->next_update()) {
             status.insert(Certificate_Status_Code::CRL_HAS_EXPIRED);
+         }
 
          auto ca_key = ca.subject_public_key();
-         if(crls[i]->check_signature(*ca_key) == false)
+         if(crls[i]->check_signature(*ca_key) == false) {
             status.insert(Certificate_Status_Code::CRL_BAD_SIGNATURE);
+         }
 
          status.insert(Certificate_Status_Code::VALID_CRL_CHECKED);
 
-         if(crls[i]->is_revoked(subject))
+         if(crls[i]->is_revoked(subject)) {
             status.insert(Certificate_Status_Code::CERT_IS_REVOKED);
+         }
 
          std::string dp = subject.crl_distribution_point();
          if(!dp.empty()) {
@@ -356,8 +374,9 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
       }
    }
 
-   while(!cert_status.empty() && cert_status.back().empty())
+   while(!cert_status.empty() && cert_status.back().empty()) {
       cert_status.pop_back();
+   }
 
    return cert_status;
 }
@@ -365,19 +384,22 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
 CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
                                            const std::vector<Certificate_Store*>& certstores,
                                            std::chrono::system_clock::time_point ref_time) {
-   if(cert_path.empty())
+   if(cert_path.empty()) {
       throw Invalid_Argument("PKIX::check_crl cert_path empty");
+   }
 
-   if(certstores.empty())
+   if(certstores.empty()) {
       throw Invalid_Argument("PKIX::check_crl certstores empty");
+   }
 
    std::vector<std::optional<X509_CRL>> crls(cert_path.size());
 
    for(size_t i = 0; i != cert_path.size(); ++i) {
       for(auto certstore : certstores) {
          crls[i] = certstore->find_crl_for(cert_path[i]);
-         if(crls[i])
+         if(crls[i]) {
             break;
+         }
       }
    }
 
@@ -391,17 +413,20 @@ CertificatePathStatusCodes PKIX::check_ocsp_online(const std::vector<X509_Certif
                                                    std::chrono::system_clock::time_point ref_time,
                                                    std::chrono::milliseconds timeout,
                                                    const Path_Validation_Restrictions& restrictions) {
-   if(cert_path.empty())
+   if(cert_path.empty()) {
       throw Invalid_Argument("PKIX::check_ocsp_online cert_path empty");
+   }
 
    std::vector<std::future<std::optional<OCSP::Response>>> ocsp_response_futures;
 
    size_t to_ocsp = 1;
 
-   if(restrictions.ocsp_all_intermediates())
+   if(restrictions.ocsp_all_intermediates()) {
       to_ocsp = cert_path.size() - 1;
-   if(cert_path.size() == 1)
+   }
+   if(cert_path.size() == 1) {
       to_ocsp = 0;
+   }
 
    for(size_t i = 0; i < to_ocsp; ++i) {
       const X509_Certificate& subject = cert_path.at(i);
@@ -425,8 +450,9 @@ CertificatePathStatusCodes PKIX::check_ocsp_online(const std::vector<X509_Certif
             } catch(std::exception&) {
                // log e.what() ?
             }
-            if(http.status_code() != 200)
+            if(http.status_code() != 200) {
                return OCSP::Response(Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE);
+            }
             // Check the MIME type?
 
             return OCSP::Response(http.body());
@@ -449,10 +475,12 @@ CertificatePathStatusCodes PKIX::check_crl_online(const std::vector<X509_Certifi
                                                   Certificate_Store_In_Memory* crl_store,
                                                   std::chrono::system_clock::time_point ref_time,
                                                   std::chrono::milliseconds timeout) {
-   if(cert_path.empty())
+   if(cert_path.empty()) {
       throw Invalid_Argument("PKIX::check_crl_online cert_path empty");
-   if(certstores.empty())
+   }
+   if(certstores.empty()) {
       throw Invalid_Argument("PKIX::check_crl_online certstores empty");
+   }
 
    std::vector<std::future<std::optional<X509_CRL>>> future_crls;
    std::vector<std::optional<X509_CRL>> crls(cert_path.size());
@@ -461,8 +489,9 @@ CertificatePathStatusCodes PKIX::check_crl_online(const std::vector<X509_Certifi
       const std::optional<X509_Certificate>& cert = cert_path.at(i);
       for(auto certstore : certstores) {
          crls[i] = certstore->find_crl_for(*cert);
-         if(crls[i].has_value())
+         if(crls[i].has_value()) {
             break;
+         }
       }
 
       // TODO: check if CRL is expired and re-request?
@@ -540,8 +569,9 @@ Certificate_Status_Code PKIX::build_certificate_path(std::vector<X509_Certificat
    certs_seen.insert(end_entity.fingerprint("SHA-256"));
 
    Certificate_Store_In_Memory ee_extras;
-   for(const auto& cert : end_entity_extra)
+   for(const auto& cert : end_entity_extra) {
       ee_extras.add_certificate(cert);
+   }
 
    // iterate until we reach a root or cannot find the issuer
    for(;;) {
@@ -565,8 +595,9 @@ Certificate_Status_Code PKIX::build_certificate_path(std::vector<X509_Certificat
          issuer = ee_extras.find_cert(issuer_dn, auth_key_id);
       }
 
-      if(!issuer)
+      if(!issuer) {
          return Certificate_Status_Code::CERT_ISSUER_NOT_FOUND;
+      }
 
       const std::string fprint = issuer->fingerprint("SHA-256");
 
@@ -726,11 +757,12 @@ Certificate_Status_Code PKIX::build_all_certificate_paths(std::vector<std::vecto
 
    // could not construct any potentially valid path
    if(cert_paths_out.empty()) {
-      if(stats.empty())
+      if(stats.empty()) {
          throw Internal_Error("X509 path building failed for unknown reasons");
-      else
+      } else {
          // arbitrarily return the first error
          return stats[0];
+      }
    } else {
       return Certificate_Status_Code::OK;
    }
@@ -740,8 +772,9 @@ void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
                                    const CertificatePathStatusCodes& crl,
                                    const CertificatePathStatusCodes& ocsp,
                                    const Path_Validation_Restrictions& restrictions) {
-   if(chain_status.empty())
+   if(chain_status.empty()) {
       throw Invalid_Argument("PKIX::merge_revocation_status chain_status was empty");
+   }
 
    for(size_t i = 0; i != chain_status.size() - 1; ++i) {
       bool had_crl = false, had_ocsp = false;
@@ -778,8 +811,9 @@ void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
 }
 
 Certificate_Status_Code PKIX::overall_status(const CertificatePathStatusCodes& cert_status) {
-   if(cert_status.empty())
+   if(cert_status.empty()) {
       throw Invalid_Argument("PKIX::overall_status empty cert status");
+   }
 
    Certificate_Status_Code overall_status = Certificate_Status_Code::OK;
 
@@ -947,10 +981,12 @@ Path_Validation_Result::Path_Validation_Result(CertificatePathStatusCodes status
       m_overall(PKIX::overall_status(m_all_status)) {}
 
 const X509_Certificate& Path_Validation_Result::trust_root() const {
-   if(m_cert_path.empty())
+   if(m_cert_path.empty()) {
       throw Invalid_State("Path_Validation_Result::trust_root no path set");
-   if(result() != Certificate_Status_Code::VERIFIED)
+   }
+   if(result() != Certificate_Status_Code::VERIFIED) {
       throw Invalid_State("Path_Validation_Result::trust_root meaningless with invalid status");
+   }
 
    return m_cert_path[m_cert_path.size() - 1];
 }
@@ -961,9 +997,11 @@ bool Path_Validation_Result::successful_validation() const {
 }
 
 bool Path_Validation_Result::no_warnings() const {
-   for(const auto& status_set_i : m_warnings)
-      if(!status_set_i.empty())
+   for(const auto& status_set_i : m_warnings) {
+      if(!status_set_i.empty()) {
          return false;
+      }
+   }
    return true;
 }
 
@@ -972,8 +1010,9 @@ CertificatePathStatusCodes Path_Validation_Result::warnings() const { return m_w
 std::string Path_Validation_Result::result_string() const { return status_string(result()); }
 
 const char* Path_Validation_Result::status_string(Certificate_Status_Code code) {
-   if(const char* s = to_string(code))
+   if(const char* s = to_string(code)) {
       return s;
+   }
 
    return "Unknown error";
 }
@@ -989,8 +1028,9 @@ std::string Path_Validation_Result::warnings_string() const {
 
    std::string res = oss.str();
    // remove last sep
-   if(res.size() >= sep.size())
+   if(res.size() >= sep.size()) {
       res = res.substr(0, res.size() - sep.size());
+   }
    return res;
 }
 }  // namespace Botan

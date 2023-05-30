@@ -226,8 +226,9 @@ class CT_Mask_Tests final : public Test {
                      } else {
                         result.test_eq_sz("CT::copy_output length", output.size(), input.size() - offset);
 
-                        for(size_t i = 0; i != output.size(); ++i)
+                        for(size_t i = 0; i != output.size(); ++i) {
                            result.test_eq_sz("CT::copy_output offset", output[i], input[i + offset]);
+                        }
                      }
                   }
                }
@@ -535,8 +536,9 @@ class ReadKV_Tests final : public Text_Based_Test {
    private:
       static std::vector<std::string> split_group(const std::string& str) {
          std::vector<std::string> elems;
-         if(str.empty())
+         if(str.empty()) {
             return elems;
+         }
 
          std::string substr;
          for(auto i = str.begin(); i != str.end(); ++i) {
@@ -548,8 +550,9 @@ class ReadKV_Tests final : public Text_Based_Test {
             }
          }
 
-         if(!substr.empty())
+         if(!substr.empty()) {
             elems.push_back(substr);
+         }
 
          return elems;
       }
@@ -557,8 +560,9 @@ class ReadKV_Tests final : public Text_Based_Test {
       static void confirm_kv(Test::Result& result,
                              const std::map<std::string, std::string>& kv,
                              const std::vector<std::string>& expected) {
-         if(!result.test_eq("expected size", expected.size() % 2, size_t(0)))
+         if(!result.test_eq("expected size", expected.size() % 2, size_t(0))) {
             return;
+         }
 
          for(size_t i = 0; i != expected.size(); i += 2) {
             auto j = kv.find(expected[i]);

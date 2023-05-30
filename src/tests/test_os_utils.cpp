@@ -76,8 +76,9 @@ class OS_Utils_Tests final : public Test {
          }
 
          size_t counts = 0;
-         while(counts < max_trials && (Botan::OS::get_cpu_cycle_counter() == proc_ts1))
+         while(counts < max_trials && (Botan::OS::get_cpu_cycle_counter() == proc_ts1)) {
             ++counts;
+         }
 
          result.test_lt("CPU cycle counter eventually changes value", counts, max_repeats);
 
@@ -95,8 +96,9 @@ class OS_Utils_Tests final : public Test {
          result.confirm("high resolution timestamp value is never zero", hr_ts1 != 0);
 
          size_t counts = 0;
-         while(counts < max_trials && (Botan::OS::get_high_resolution_clock() == hr_ts1))
+         while(counts < max_trials && (Botan::OS::get_high_resolution_clock() == hr_ts1)) {
             ++counts;
+         }
 
          result.test_lt("high resolution clock eventually changes value", counts, max_repeats);
 

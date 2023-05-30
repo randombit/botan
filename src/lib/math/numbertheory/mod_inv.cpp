@@ -99,12 +99,14 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod) {
    }
 
    auto a_is_0 = CT::Mask<word>::set();
-   for(size_t i = 0; i != mod_words; ++i)
+   for(size_t i = 0; i != mod_words; ++i) {
       a_is_0 &= CT::Mask<word>::is_zero(a_w[i]);
+   }
 
    auto b_is_1 = CT::Mask<word>::is_equal(b_w[0], 1);
-   for(size_t i = 1; i != mod_words; ++i)
+   for(size_t i = 1; i != mod_words; ++i) {
       b_is_1 &= CT::Mask<word>::is_zero(b_w[i]);
+   }
 
    BOTAN_ASSERT(a_is_0.is_set(), "A is zero");
 
@@ -132,10 +134,12 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k) {
    * https://eprint.iacr.org/2017/411.pdf sections 5 and 7.
    */
 
-   if(a1.is_even() || k == 0)
+   if(a1.is_even() || k == 0) {
       return BigInt::zero();
-   if(k == 1)
+   }
+   if(k == 1) {
       return BigInt::one();
+   }
 
    BigInt a = a1;
    a.mask_bits(k);
@@ -172,22 +176,26 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k) {
 }  // namespace
 
 BigInt inverse_mod(const BigInt& n, const BigInt& mod) {
-   if(mod.is_zero())
+   if(mod.is_zero()) {
       throw Invalid_Argument("inverse_mod modulus cannot be zero");
-   if(mod.is_negative() || n.is_negative())
+   }
+   if(mod.is_negative() || n.is_negative()) {
       throw Invalid_Argument("inverse_mod: arguments must be non-negative");
-   if(n.is_zero() || (n.is_even() && mod.is_even()))
+   }
+   if(n.is_zero() || (n.is_even() && mod.is_even())) {
       return BigInt::zero();
+   }
 
    if(mod.is_odd()) {
       /*
       Fastpath for common case. This leaks if n is greater than mod or
       not, but we don't guarantee const time behavior in that case.
       */
-      if(n < mod)
+      if(n < mod) {
          return inverse_mod_odd_modulus(n, mod);
-      else
+      } else {
          return inverse_mod_odd_modulus(ct_modulo(n, mod), mod);
+      }
    }
 
    // If n is even and mod is even we already returned 0
@@ -224,8 +232,9 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod) {
       const BigInt inv_o = inverse_mod_odd_modulus(n_redc, o);
 
       // No modular inverse in this case:
-      if(inv_o == 0)
+      if(inv_o == 0) {
          return BigInt::zero();
+      }
 
       BigInt h = inv_o;
       h.ct_cond_add(!inv_o.get_bit(0), o);
@@ -245,8 +254,9 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod) {
    const BigInt inv_2k = inverse_mod_pow2(n, mod_lz);
 
    // No modular inverse in this case:
-   if(inv_o == 0 || inv_2k == 0)
+   if(inv_o == 0 || inv_2k == 0) {
       return BigInt::zero();
+   }
 
    const BigInt m2k = BigInt::power_of_2(mod_lz);
    // Compute the CRT parameter

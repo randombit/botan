@@ -307,8 +307,9 @@ void Blowfish::key_schedule(const uint8_t key[], size_t length) {
 void Blowfish::key_expansion(const uint8_t key[], size_t length, const uint8_t salt[], size_t salt_length) {
    BOTAN_ASSERT_NOMSG(salt_length % 4 == 0);
 
-   for(size_t i = 0, j = 0; i != 18; ++i, j += 4)
+   for(size_t i = 0, j = 0; i != 18; ++i, j += 4) {
       m_P[i] ^= make_uint32(key[(j) % length], key[(j + 1) % length], key[(j + 2) % length], key[(j + 3) % length]);
+   }
 
    const size_t P_salt_offset = (salt_length > 0) ? 18 % (salt_length / 4) : 0;
 

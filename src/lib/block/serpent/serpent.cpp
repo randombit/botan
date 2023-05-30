@@ -324,8 +324,9 @@ void Serpent::key_schedule(const uint8_t key[], size_t length) {
    const uint32_t PHI = 0x9E3779B9;
 
    secure_vector<uint32_t> W(140);
-   for(size_t i = 0; i != length / 4; ++i)
+   for(size_t i = 0; i != length / 4; ++i) {
       W[i] = load_le<uint32_t>(key, i);
+   }
 
    W[length / 4] |= uint32_t(1) << ((length % 4) * 8);
 

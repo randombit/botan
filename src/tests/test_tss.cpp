@@ -40,8 +40,9 @@ class TSS_Recovery_Tests final : public Text_Based_Test {
             auto reconstructed_secret_all = Botan::RTSS_Share::reconstruct(shares);
             result.test_eq("Reconstructed secret correctly from all shares", reconstructed_secret_all, input);
 
-            if(header == "Invalid")
+            if(header == "Invalid") {
                result.test_failure("Invalid shares should not result in recovery");
+            }
 
             if(N != M) {
                while(shares.size() > M) {
@@ -57,10 +58,11 @@ class TSS_Recovery_Tests final : public Text_Based_Test {
             }
 
          } catch(std::exception& e) {
-            if(header == "Valid")
+            if(header == "Valid") {
                result.test_failure("Valid TSS failed to recover", e.what());
-            else
+            } else {
                result.test_success("Invalid TSS rejected as expected");
+            }
          }
 
          return result;
@@ -74,14 +76,15 @@ class TSS_Generation_Tests final : public Text_Based_Test {
       TSS_Generation_Tests() : Text_Based_Test("tss/generation.vec", "Input,RNG,Hash,Id,N,M,Shares") {}
 
       static size_t tss_hash_len(const std::string& hash) {
-         if(hash == "None")
+         if(hash == "None") {
             return 0;
-         else if(hash == "SHA-1")
+         } else if(hash == "SHA-1") {
             return 20;
-         else if(hash == "SHA-256")
+         } else if(hash == "SHA-256") {
             return 32;
-         else
+         } else {
             throw Test_Error("Unknown TSS hash algorithm " + hash);
+         }
       }
 
       Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
@@ -95,11 +98,13 @@ class TSS_Generation_Tests final : public Text_Based_Test {
          const std::string hash = vars.get_req_str("Hash");
          const std::vector<std::vector<uint8_t>> expected_shares = vars.get_req_bin_list("Shares");
 
-         if(expected_shares.size() != N)
+         if(expected_shares.size() != N) {
             throw Test_Error("Invalid test data for TSS share count != N");
+         }
 
-         if(rng_data.size() != (input.size() + tss_hash_len(hash)) * (M - 1))
+         if(rng_data.size() != (input.size() + tss_hash_len(hash)) * (M - 1)) {
             throw Test_Error("Invalid test data for TSS share bad RNG input size");
+         }
 
          Fixed_Output_RNG fixed_rng(rng_data);
 

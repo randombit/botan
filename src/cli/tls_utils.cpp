@@ -119,16 +119,18 @@ class TLS_Client_Hello_Reader final : public Command {
          oss << "Version: " << hello.legacy_version().to_string() << "\n"
              << "Random: " << Botan::hex_encode(hello.random()) << "\n";
 
-         if(!hello.session_id().empty())
+         if(!hello.session_id().empty()) {
             oss << "SessionID: " << Botan::hex_encode(hello.session_id().get()) << "\n";
+         }
          for(uint16_t csuite_id : hello.ciphersuites()) {
             const auto csuite = Botan::TLS::Ciphersuite::by_id(csuite_id);
-            if(csuite && csuite->valid())
+            if(csuite && csuite->valid()) {
                oss << "Cipher: " << csuite->to_string() << "\n";
-            else if(csuite_id == 0x00FF)
+            } else if(csuite_id == 0x00FF) {
                oss << "Cipher: EMPTY_RENEGOTIATION_INFO_SCSV\n";
-            else
+            } else {
                oss << "Cipher: Unknown (" << std::hex << csuite_id << ")\n";
+            }
          }
 
          oss << "Supported signature schemes: ";
@@ -151,8 +153,9 @@ class TLS_Client_Hello_Reader final : public Command {
          hello_flags["Extended Master Secret"] = hello.supports_extended_master_secret();
          hello_flags["Session Ticket"] = hello.supports_session_ticket();
 
-         for(auto&& i : hello_flags)
+         for(auto&& i : hello_flags) {
             oss << "Supports " << i.first << "? " << (i.second ? "yes" : "no") << "\n";
+         }
 
          return oss.str();
       }

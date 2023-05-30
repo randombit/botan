@@ -25,11 +25,13 @@ std::unique_ptr<Public_Key> SM2_PrivateKey::public_key() const {
 }
 
 bool SM2_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
-   if(!public_point().on_the_curve())
+   if(!public_point().on_the_curve()) {
       return false;
+   }
 
-   if(!strong)
+   if(!strong) {
       return true;
+   }
 
    return KeyPair::signature_consistency_check(rng, *this, "user@example.com,SM3");
 }
@@ -48,8 +50,9 @@ std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
                                     std::string_view user_id,
                                     const EC_Group& domain,
                                     const EC_Point& pubkey) {
-   if(user_id.size() >= 8192)
+   if(user_id.size() >= 8192) {
       throw Invalid_Argument("SM2 user id too long to represent");
+   }
 
    const uint16_t uid_len = static_cast<uint16_t>(8 * user_id.size());
 
@@ -183,25 +186,29 @@ bool SM2_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t 
       m_digest.clear();
    }
 
-   if(sig_len != m_group.get_order().bytes() * 2)
+   if(sig_len != m_group.get_order().bytes() * 2) {
       return false;
+   }
 
    const BigInt r(sig, sig_len / 2);
    const BigInt s(sig + sig_len / 2, sig_len / 2);
 
-   if(r <= 0 || r >= m_group.get_order() || s <= 0 || s >= m_group.get_order())
+   if(r <= 0 || r >= m_group.get_order() || s <= 0 || s >= m_group.get_order()) {
       return false;
+   }
 
    const BigInt t = m_group.mod_order(r + s);
 
-   if(t == 0)
+   if(t == 0) {
       return false;
+   }
 
    const EC_Point R = m_gy_mul.multi_exp(s, t);
 
    // ???
-   if(R.is_zero())
+   if(R.is_zero()) {
       return false;
+   }
 
    return (m_group.mod_order(R.get_affine_x() + e) == r);
 }

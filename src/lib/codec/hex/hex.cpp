@@ -43,8 +43,9 @@ void hex_encode(char output[], const uint8_t input[], size_t input_length, bool 
 std::string hex_encode(const uint8_t input[], size_t input_length, bool uppercase) {
    std::string output(2 * input_length, 0);
 
-   if(input_length)
+   if(input_length) {
       hex_encode(&output.front(), input, input_length, uppercase);
+   }
 
    return output;
 }
@@ -87,20 +88,23 @@ size_t hex_decode(uint8_t output[], const char input[], size_t input_length, siz
       const uint8_t bin = hex_char_to_bin(input[i]);
 
       if(bin >= 0x10) {
-         if(bin == 0x80 && ignore_ws)
+         if(bin == 0x80 && ignore_ws) {
             continue;
+         }
 
          throw Invalid_Argument(fmt("hex_decode: invalid character '{}'", format_char_for_display(input[i])));
       }
 
-      if(top_nibble)
+      if(top_nibble) {
          *out_ptr |= bin << 4;
-      else
+      } else {
          *out_ptr |= bin;
+      }
 
       top_nibble = !top_nibble;
-      if(top_nibble)
+      if(top_nibble) {
          ++out_ptr;
+      }
    }
 
    input_consumed = input_length;
@@ -122,8 +126,9 @@ size_t hex_decode(uint8_t output[], const char input[], size_t input_length, boo
    size_t consumed = 0;
    size_t written = hex_decode(output, input, input_length, consumed, ignore_ws);
 
-   if(consumed != input_length)
+   if(consumed != input_length) {
       throw Invalid_Argument("hex_decode: input did not have full bytes");
+   }
 
    return written;
 }

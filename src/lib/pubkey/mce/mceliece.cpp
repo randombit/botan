@@ -92,8 +92,9 @@ secure_vector<uint8_t> create_random_error_vector(size_t code_length, size_t err
 
       const uint8_t mask = (1 << bit_pos);
 
-      if(result[byte_pos] & mask)
+      if(result[byte_pos] & mask) {
          continue;  // already set this bit
+      }
 
       result[byte_pos] |= mask;
       bits_set++;

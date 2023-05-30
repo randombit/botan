@@ -184,8 +184,9 @@ void transform(const uint8_t in[], uint8_t out[], size_t blocks, const secure_ve
          t2 ^= KS[4 * r + 6];
          t3 ^= KS[4 * r + 7];
 
-         if(r != ROUNDS - 2)
+         if(r != ROUNDS - 2) {
             ARIA_FE(t0, t1, t2, t3);
+         }
       }
 
       out[16 * i + 0] = X1[get_byte<0>(t0)] ^ get_byte<0>(KS[4 * ROUNDS]);
@@ -307,12 +308,13 @@ void key_schedule(secure_vector<uint32_t>& ERK, secure_vector<uint32_t>& DRK, co
    w3[2] ^= w1[2];
    w3[3] ^= w1[3];
 
-   if(length == 16)
+   if(length == 16) {
       ERK.resize(4 * 13);
-   else if(length == 24)
+   } else if(length == 24) {
       ERK.resize(4 * 15);
-   else if(length == 32)
+   } else if(length == 32) {
       ERK.resize(4 * 17);
+   }
 
    ARIA_ROL128<19>(w0, w1, &ERK[0]);
    ARIA_ROL128<19>(w1, w2, &ERK[4]);

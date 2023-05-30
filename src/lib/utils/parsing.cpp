@@ -22,8 +22,9 @@ namespace Botan {
 uint16_t to_uint16(std::string_view str) {
    const uint32_t x = to_u32bit(str);
 
-   if(x >> 16)
+   if(x >> 16) {
       throw Invalid_Argument("Integer value exceeds 16 bit range");
+   }
 
    return static_cast<uint16_t>(x);
 }
@@ -69,51 +70,60 @@ std::vector<std::string> parse_algorithm_name(std::string_view namex) {
    for(auto i = name.begin(); i != name.end(); ++i) {
       char c = *i;
 
-      if(c == '(')
+      if(c == '(') {
          ++level;
+      }
       if(c == ')') {
          if(level == 1 && i == name.end() - 1) {
-            if(elems.size() == 1)
+            if(elems.size() == 1) {
                elems.push_back(substring.substr(1));
-            else
+            } else {
                elems.push_back(substring);
+            }
             return elems;
          }
 
-         if(level == 0 || (level == 1 && i != name.end() - 1))
+         if(level == 0 || (level == 1 && i != name.end() - 1)) {
             throw Invalid_Algorithm_Name(namex);
+         }
          --level;
       }
 
       if(c == ',' && level == 1) {
-         if(elems.size() == 1)
+         if(elems.size() == 1) {
             elems.push_back(substring.substr(1));
-         else
+         } else {
             elems.push_back(substring);
+         }
          substring.clear();
-      } else
+      } else {
          substring += c;
+      }
    }
 
-   if(!substring.empty())
+   if(!substring.empty()) {
       throw Invalid_Algorithm_Name(namex);
+   }
 
    return elems;
 }
 
 std::vector<std::string> split_on(std::string_view str, char delim) {
    std::vector<std::string> elems;
-   if(str.empty())
+   if(str.empty()) {
       return elems;
+   }
 
    std::string substr;
    for(auto i = str.begin(); i != str.end(); ++i) {
       if(*i == delim) {
-         if(!substr.empty())
+         if(!substr.empty()) {
             elems.push_back(substr);
+         }
          substr.clear();
-      } else
+      } else {
          substr += *i;
+      }
    }
 
    if(substr.empty()) {
@@ -131,8 +141,9 @@ std::string string_join(const std::vector<std::string>& strs, char delim) {
    std::ostringstream out;
 
    for(size_t i = 0; i != strs.size(); ++i) {
-      if(i != 0)
+      if(i != 0) {
          out << delim;
+      }
       out << strs[i];
    }
 
@@ -186,8 +197,9 @@ std::string tolower_string(std::string_view in) {
    std::string s(in);
    for(size_t i = 0; i != s.size(); ++i) {
       const int cu = static_cast<unsigned char>(s[i]);
-      if(std::isalpha(cu))
+      if(std::isalpha(cu)) {
          s[i] = static_cast<char>(std::tolower(cu));
+      }
    }
    return s;
 }
@@ -196,32 +208,38 @@ bool host_wildcard_match(std::string_view issued_, std::string_view host_) {
    const std::string issued = tolower_string(issued_);
    const std::string host = tolower_string(host_);
 
-   if(host.empty() || issued.empty())
+   if(host.empty() || issued.empty()) {
       return false;
+   }
 
    /*
    If there are embedded nulls in your issued name
    Well I feel bad for you son
    */
-   if(std::count(issued.begin(), issued.end(), char(0)) > 0)
+   if(std::count(issued.begin(), issued.end(), char(0)) > 0) {
       return false;
+   }
 
    // If more than one wildcard, then issued name is invalid
    const size_t stars = std::count(issued.begin(), issued.end(), '*');
-   if(stars > 1)
+   if(stars > 1) {
       return false;
+   }
 
    // '*' is not a valid character in DNS names so should not appear on the host side
-   if(std::count(host.begin(), host.end(), '*') != 0)
+   if(std::count(host.begin(), host.end(), '*') != 0) {
       return false;
+   }
 
    // Similarly a DNS name can't end in .
-   if(host[host.size() - 1] == '.')
+   if(host[host.size() - 1] == '.') {
       return false;
+   }
 
    // And a host can't have an empty name component, so reject that
-   if(host.find("..") != std::string::npos)
+   if(host.find("..") != std::string::npos) {
       return false;
+   }
 
    // Exact match: accept
    if(issued == host) {
@@ -274,12 +292,14 @@ bool host_wildcard_match(std::string_view issued_, std::string_view host_) {
          */
          const size_t advance = (host.size() - issued.size() + 1);
 
-         if(host_idx + advance > host.size())  // shouldn't happen
+         if(host_idx + advance > host.size()) {  // shouldn't happen
             return false;
+         }
 
          // Can't be any intervening .s that we would have skipped
-         if(std::count(host.begin() + host_idx, host.begin() + host_idx + advance, '.') != 0)
+         if(std::count(host.begin() + host_idx, host.begin() + host_idx + advance, '.') != 0) {
             return false;
+         }
 
          host_idx += advance;
       } else {

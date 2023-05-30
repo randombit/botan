@@ -79,8 +79,9 @@ void Streebog::add_data(const uint8_t input[], size_t length) {
 void Streebog::final_result(uint8_t output[]) {
    m_buffer[m_position++] = 0x01;
 
-   if(m_position != m_buffer.size())
+   if(m_position != m_buffer.size()) {
       clear_mem(&m_buffer[m_position], m_buffer.size() - m_position);
+   }
 
    compress(m_buffer.data());
    m_count += (m_position - 1) * 8;
@@ -147,13 +148,15 @@ void Streebog::compress_64(const uint64_t M[], bool last_block) {
    }
 
    for(size_t i = 0; i < 12; ++i) {
-      for(size_t j = 0; j != 8; ++j)
+      for(size_t j = 0; j != 8; ++j) {
          A[j] ^= force_le(STREEBOG_C[i][j]);
+      }
       lps(A);
 
       lps(hN);
-      for(size_t j = 0; j != 8; ++j)
+      for(size_t j = 0; j != 8; ++j) {
          hN[j] ^= A[j];
+      }
    }
 
    for(size_t i = 0; i != 8; ++i) {
@@ -168,8 +171,9 @@ void Streebog::compress_64(const uint64_t M[], bool last_block) {
          const uint64_t t = hi + m + carry;
 
          m_S[i] = force_le(t);
-         if(t != m)
+         if(t != m) {
             carry = (t < m);
+         }
       }
    }
 }

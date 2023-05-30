@@ -24,8 +24,9 @@ namespace Botan {
 */
 void DataSink_Stream::write(const uint8_t out[], size_t length) {
    m_sink.write(cast_uint8_ptr_to_char(out), length);
-   if(!m_sink.good())
+   if(!m_sink.good()) {
       throw Stream_IO_Error("DataSink_Stream: Failure writing to " + m_identifier);
+   }
 }
 
 /*

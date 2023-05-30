@@ -175,8 +175,9 @@ void CRC24::add_data(const uint8_t input[], size_t length) {
    static const uint8_t WA = sizeof(size_t) - 1;
 
    // Ensure input is word aligned before processing in parallel
-   for(; length && (reinterpret_cast<uintptr_t>(input) & WA); length--)
+   for(; length && (reinterpret_cast<uintptr_t>(input) & WA); length--) {
       tmp = process8(tmp, *input++);
+   }
 
    while(length >= 16) {
       uint32_t d[4];
@@ -190,8 +191,9 @@ void CRC24::add_data(const uint8_t input[], size_t length) {
       length -= 16;
    }
 
-   while(length--)
+   while(length--) {
       tmp = process8(tmp, *input++);
+   }
 
    m_crc = tmp;
 }

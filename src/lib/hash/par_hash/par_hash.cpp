@@ -11,8 +11,9 @@
 namespace Botan {
 
 void Parallel::add_data(const uint8_t input[], size_t length) {
-   for(auto&& hash : m_hashes)
+   for(auto&& hash : m_hashes) {
       hash->update(input, length);
+   }
 }
 
 void Parallel::final_result(uint8_t out[]) {
@@ -27,8 +28,9 @@ void Parallel::final_result(uint8_t out[]) {
 size_t Parallel::output_length() const {
    size_t sum = 0;
 
-   for(auto&& hash : m_hashes)
+   for(auto&& hash : m_hashes) {
       sum += hash->output_length();
+   }
    return sum;
 }
 
@@ -38,8 +40,9 @@ std::string Parallel::name() const {
    name << "Parallel(";
 
    for(size_t i = 0; i != m_hashes.size(); ++i) {
-      if(i != 0)
+      if(i != 0) {
          name << ",";
+      }
       name << m_hashes[i]->name();
    }
 
@@ -52,8 +55,9 @@ std::unique_ptr<HashFunction> Parallel::new_object() const {
    std::vector<std::unique_ptr<HashFunction>> hash_copies;
    hash_copies.reserve(m_hashes.size());
 
-   for(auto&& hash : m_hashes)
+   for(auto&& hash : m_hashes) {
       hash_copies.push_back(std::unique_ptr<HashFunction>(hash->new_object()));
+   }
 
    return std::make_unique<Parallel>(hash_copies);
 }
@@ -70,8 +74,9 @@ std::unique_ptr<HashFunction> Parallel::copy_state() const {
 }
 
 void Parallel::clear() {
-   for(auto&& hash : m_hashes)
+   for(auto&& hash : m_hashes) {
       hash->clear();
+   }
 }
 
 Parallel::Parallel(std::vector<std::unique_ptr<HashFunction>>& hashes) {

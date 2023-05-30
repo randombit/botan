@@ -24,8 +24,9 @@ class L_computer final {
          m_L_dollar = poly_double(star());
          m_L.push_back(poly_double(dollar()));
 
-         while(m_L.size() < 8)
+         while(m_L.size() < 8) {
             m_L.push_back(poly_double(m_L.back()));
+         }
 
          m_offset_buf.resize(m_BS * m_max_blocks);
       }
@@ -41,8 +42,9 @@ class L_computer final {
       const secure_vector<uint8_t>& offset() const { return m_offset; }
 
       const secure_vector<uint8_t>& get(size_t i) const {
-         while(m_L.size() <= i)
+         while(m_L.size() <= i) {
             m_L.push_back(poly_double(m_L.back()));
+         }
 
          return m_L[i];
       }
@@ -180,12 +182,14 @@ void OCB_Mode::reset() {
 }
 
 bool OCB_Mode::valid_nonce_length(size_t length) const {
-   if(length == 0)
+   if(length == 0) {
       return false;
-   if(block_size() == 16)
+   }
+   if(block_size() == 16) {
       return length < 16;
-   else
+   } else {
       return length < (block_size() - 1);
+   }
 }
 
 std::string OCB_Mode::name() const {
@@ -259,17 +263,21 @@ const secure_vector<uint8_t>& OCB_Mode::update_nonce(const uint8_t nonce[], size
                  +----------+---------+-------+---------+
       */
       if(BS == 16) {
-         for(size_t i = 0; i != BS / 2; ++i)
+         for(size_t i = 0; i != BS / 2; ++i) {
             m_nonce_buf.push_back(m_nonce_buf[i] ^ m_nonce_buf[i + 1]);
+         }
       } else if(BS == 24) {
-         for(size_t i = 0; i != 16; ++i)
+         for(size_t i = 0; i != 16; ++i) {
             m_nonce_buf.push_back(m_nonce_buf[i] ^ m_nonce_buf[i + 5]);
+         }
       } else if(BS == 32) {
-         for(size_t i = 0; i != BS; ++i)
+         for(size_t i = 0; i != BS; ++i) {
             m_nonce_buf.push_back(m_nonce_buf[i] ^ (m_nonce_buf[i] << 1) ^ (m_nonce_buf[i + 1] >> 7));
+         }
       } else if(BS == 64) {
-         for(size_t i = 0; i != BS / 2; ++i)
+         for(size_t i = 0; i != BS / 2; ++i) {
             m_nonce_buf.push_back(m_nonce_buf[i] ^ m_nonce_buf[i + 22]);
+         }
       }
 
       m_stretch = m_nonce_buf;
@@ -291,8 +299,9 @@ const secure_vector<uint8_t>& OCB_Mode::update_nonce(const uint8_t nonce[], size
 }
 
 void OCB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
-   if(!valid_nonce_length(nonce_len))
+   if(!valid_nonce_length(nonce_len)) {
       throw Invalid_IV_Length(name(), nonce_len);
+   }
 
    assert_key_material_set();
 
@@ -447,8 +456,9 @@ void OCB_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
          xor_buf(m_checksum.data(), remainder, final_bytes);
          m_checksum[final_bytes] ^= 0x80;
       }
-   } else
+   } else {
       mac = m_L->offset();
+   }
 
    // compute the mac
 
@@ -468,8 +478,9 @@ void OCB_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    // compare mac
    const uint8_t* included_tag = &buf[remaining];
 
-   if(!constant_time_compare(mac.data(), included_tag, tag_size()))
+   if(!constant_time_compare(mac.data(), included_tag, tag_size())) {
       throw Invalid_Authentication_Tag("OCB tag check failed");
+   }
 
    // remove tag from end of message
    buffer.resize(remaining + offset);

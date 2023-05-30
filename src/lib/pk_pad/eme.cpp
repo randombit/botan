@@ -27,13 +27,15 @@ namespace Botan {
 
 std::unique_ptr<EME> EME::create(std::string_view algo_spec) {
 #if defined(BOTAN_HAS_EME_RAW)
-   if(algo_spec == "Raw")
+   if(algo_spec == "Raw") {
       return std::make_unique<EME_Raw>();
+   }
 #endif
 
 #if defined(BOTAN_HAS_EME_PKCS1)
-   if(algo_spec == "PKCS1v15" || algo_spec == "EME-PKCS1-v1_5")
+   if(algo_spec == "PKCS1v15" || algo_spec == "EME-PKCS1-v1_5") {
       return std::make_unique<EME_PKCS1v15>();
+   }
 #endif
 
 #if defined(BOTAN_HAS_EME_OAEP)
@@ -41,8 +43,9 @@ std::unique_ptr<EME> EME::create(std::string_view algo_spec) {
 
    if(req.algo_name() == "OAEP" || req.algo_name() == "EME-OAEP" || req.algo_name() == "EME1") {
       if(req.arg_count() == 1 || ((req.arg_count() == 2 || req.arg_count() == 3) && req.arg(1) == "MGF1")) {
-         if(auto hash = HashFunction::create(req.arg(0)))
+         if(auto hash = HashFunction::create(req.arg(0))) {
             return std::make_unique<OAEP>(std::move(hash), req.arg(2, ""));
+         }
       } else if(req.arg_count() == 2 || req.arg_count() == 3) {
          auto mgf_params = parse_algorithm_name(req.arg(1));
 

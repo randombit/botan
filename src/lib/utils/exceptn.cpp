@@ -84,10 +84,11 @@ Invalid_Argument::Invalid_Argument(std::string_view msg, const std::exception& e
 namespace {
 
 std::string format_lookup_error(std::string_view type, std::string_view algo, std::string_view provider) {
-   if(provider.empty())
+   if(provider.empty()) {
       return fmt("Unavailable {} {}", type, algo);
-   else
+   } else {
       return fmt("Unavailable {} {} for provider {}", type, algo, provider);
+   }
 }
 
 }  // namespace

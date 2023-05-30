@@ -211,10 +211,11 @@ class Test_Tests final : public Test {
          }
 
          for(size_t i = 0; i != 256; ++i) {
-            if(histogram[i] < RUNS / 2 || histogram[i] > RUNS * 2)
+            if(histogram[i] < RUNS / 2 || histogram[i] > RUNS * 2) {
                result.test_failure("Testsuite_RNG produced non-uniform output");
-            else
+            } else {
                result.test_success("Testsuite_RNG seemed roughly uniform");
+            }
          }
 
          return result;
@@ -226,8 +227,9 @@ class Test_Tests final : public Test {
             const std::string result_str = test_result.result_string();
 
             result.confirm("result string contains FAIL", result_str.find("FAIL") != std::string::npos);
-         } else
+         } else {
             result.test_failure("Expected test to fail for " + what);
+         }
       }
 };
 

@@ -113,23 +113,26 @@ bool Policy::use_ecc_point_compression() const { return false; }
 
 Group_Params Policy::choose_key_exchange_group(const std::vector<Group_Params>& supported_by_peer,
                                                const std::vector<Group_Params>& offered_by_peer) const {
-   if(supported_by_peer.empty())
+   if(supported_by_peer.empty()) {
       return Group_Params::NONE;
+   }
 
    const std::vector<Group_Params> our_groups = key_exchange_groups();
 
    // Prefer groups that were offered by the peer for the sake of saving
    // an additional round trip. For TLS 1.2, this won't be used.
    for(auto g : offered_by_peer) {
-      if(value_exists(our_groups, g))
+      if(value_exists(our_groups, g)) {
          return g;
+      }
    }
 
    // If no pre-offered groups fit our supported set, we prioritize our
    // own preference.
    for(auto g : our_groups) {
-      if(value_exists(supported_by_peer, g))
+      if(value_exists(supported_by_peer, g)) {
          return g;
+      }
    }
 
    return Group_Params::NONE;
@@ -140,8 +143,9 @@ Group_Params Policy::default_dh_group() const {
    * Return the first listed or just default to 2048
    */
    for(auto g : key_exchange_groups()) {
-      if(group_param_is_dh(g))
+      if(group_param_is_dh(g)) {
          return g;
+      }
    }
 
    return Group_Params::FFDHE_2048;
@@ -166,8 +170,9 @@ std::vector<Group_Params> Policy::key_exchange_groups_to_offer() const {
    // by default, we offer a key share for the most-preferred group, only
    std::vector<Group_Params> groups_to_offer;
    const auto supported_groups = key_exchange_groups();
-   if(!supported_groups.empty())
+   if(!supported_groups.empty()) {
       groups_to_offer.push_back(supported_groups.front());
+   }
    return groups_to_offer;
 }
 
@@ -215,12 +220,13 @@ void Policy::check_peer_key_acceptable(const Public_Key& public_key) const {
    }
    // else some other algo, so leave expected_keylength as zero and the check is a no-op
 
-   if(keylength < expected_keylength)
+   if(keylength < expected_keylength) {
       throw TLS_Exception(Alert::InsufficientSecurity,
                           "Peer sent " + std::to_string(keylength) + " bit " + algo_name +
                              " key"
                              ", policy requires at least " +
                              std::to_string(expected_keylength));
+   }
 }
 
 size_t Policy::maximum_session_tickets_per_client_hello() const { return 1; }
@@ -233,16 +239,19 @@ size_t Policy::new_session_tickets_upon_handshake_success() const { return 1; }
 
 bool Policy::acceptable_protocol_version(Protocol_Version version) const {
 #if defined(BOTAN_HAS_TLS_13)
-   if(version == Protocol_Version::TLS_V13 && allow_tls13())
+   if(version == Protocol_Version::TLS_V13 && allow_tls13()) {
       return true;
+   }
 #endif
 
 #if defined(BOTAN_HAS_TLS_12)
-   if(version == Protocol_Version::TLS_V12 && allow_tls12())
+   if(version == Protocol_Version::TLS_V12 && allow_tls12()) {
       return true;
+   }
 
-   if(version == Protocol_Version::DTLS_V12 && allow_dtls12())
+   if(version == Protocol_Version::DTLS_V12 && allow_dtls12()) {
       return true;
+   }
 #endif
 
    return false;
@@ -250,16 +259,19 @@ bool Policy::acceptable_protocol_version(Protocol_Version version) const {
 
 Protocol_Version Policy::latest_supported_version(bool datagram) const {
    if(datagram) {
-      if(acceptable_protocol_version(Protocol_Version::DTLS_V12))
+      if(acceptable_protocol_version(Protocol_Version::DTLS_V12)) {
          return Protocol_Version::DTLS_V12;
+      }
       throw Invalid_State("Policy forbids all available DTLS version");
    } else {
 #if defined(BOTAN_HAS_TLS_13)
-      if(acceptable_protocol_version(Protocol_Version::TLS_V13))
+      if(acceptable_protocol_version(Protocol_Version::TLS_V13)) {
          return Protocol_Version::TLS_V13;
+      }
 #endif
-      if(acceptable_protocol_version(Protocol_Version::TLS_V12))
+      if(acceptable_protocol_version(Protocol_Version::TLS_V12)) {
          return Protocol_Version::TLS_V12;
+      }
       throw Invalid_State("Policy forbids all available TLS version");
    }
 }
@@ -354,44 +366,54 @@ class Ciphersuite_Preference_Ordering final {
       bool operator()(const Ciphersuite& a, const Ciphersuite& b) const {
          if(a.kex_method() != b.kex_method()) {
             for(const auto& i : m_kex) {
-               if(a.kex_algo() == i)
+               if(a.kex_algo() == i) {
                   return true;
-               if(b.kex_algo() == i)
+               }
+               if(b.kex_algo() == i) {
                   return false;
+               }
             }
          }
 
          if(a.cipher_algo() != b.cipher_algo()) {
             for(const auto& m_cipher : m_ciphers) {
-               if(a.cipher_algo() == m_cipher)
+               if(a.cipher_algo() == m_cipher) {
                   return true;
-               if(b.cipher_algo() == m_cipher)
+               }
+               if(b.cipher_algo() == m_cipher) {
                   return false;
+               }
             }
          }
 
          if(a.cipher_keylen() != b.cipher_keylen()) {
-            if(a.cipher_keylen() < b.cipher_keylen())
+            if(a.cipher_keylen() < b.cipher_keylen()) {
                return false;
-            if(a.cipher_keylen() > b.cipher_keylen())
+            }
+            if(a.cipher_keylen() > b.cipher_keylen()) {
                return true;
+            }
          }
 
          if(a.auth_method() != b.auth_method()) {
             for(const auto& m_sig : m_sigs) {
-               if(a.sig_algo() == m_sig)
+               if(a.sig_algo() == m_sig) {
                   return true;
-               if(b.sig_algo() == m_sig)
+               }
+               if(b.sig_algo() == m_sig) {
                   return false;
+               }
             }
          }
 
          if(a.mac_algo() != b.mac_algo()) {
             for(const auto& m_mac : m_macs) {
-               if(a.mac_algo() == m_mac)
+               if(a.mac_algo() == m_mac) {
                   return true;
-               if(b.mac_algo() == m_mac)
+               }
+               if(b.mac_algo() == m_mac) {
                   return false;
+               }
             }
          }
 
@@ -414,33 +436,40 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version) const {
 
    for(auto&& suite : Ciphersuite::all_known_ciphersuites()) {
       // Can we use it?
-      if(!suite.valid())
+      if(!suite.valid()) {
          continue;
+      }
 
       // Can we use it in this version?
-      if(!suite.usable_in_version(version))
+      if(!suite.usable_in_version(version)) {
          continue;
+      }
 
       // Is it acceptable to the policy?
-      if(!this->acceptable_ciphersuite(suite))
+      if(!this->acceptable_ciphersuite(suite)) {
          continue;
+      }
 
-      if(!value_exists(ciphers, suite.cipher_algo()))
+      if(!value_exists(ciphers, suite.cipher_algo())) {
          continue;  // unsupported cipher
+      }
 
       // these checks are irrelevant for TLS 1.3
       // TODO: consider making a method for this logic
       if(version.is_pre_tls_13()) {
-         if(!value_exists(kex, suite.kex_algo()))
+         if(!value_exists(kex, suite.kex_algo())) {
             continue;  // unsupported key exchange
+         }
 
-         if(!value_exists(macs, suite.mac_algo()))
+         if(!value_exists(macs, suite.mac_algo())) {
             continue;  // unsupported MAC algo
+         }
 
          if(!value_exists(sigs, suite.sig_algo())) {
             // allow if it's an empty sig algo and we want to use PSK
-            if(suite.auth_method() != Auth_Method::IMPLICIT || !suite.psk_ciphersuite())
+            if(suite.auth_method() != Auth_Method::IMPLICIT || !suite.psk_ciphersuite()) {
                continue;
+            }
          }
       }
 
@@ -457,8 +486,9 @@ std::vector<uint16_t> Policy::ciphersuite_list(Protocol_Version version) const {
 
    std::vector<uint16_t> ciphersuite_codes;
    ciphersuite_codes.reserve(ciphersuites.size());
-   for(auto i : ciphersuites)
+   for(auto i : ciphersuites) {
       ciphersuite_codes.push_back(i.ciphersuite_code());
+   }
    return ciphersuite_codes;
 }
 
@@ -468,8 +498,9 @@ void print_vec(std::ostream& o, const char* key, const std::vector<std::string>&
    o << key << " = ";
    for(size_t i = 0; i != v.size(); ++i) {
       o << v[i];
-      if(i != v.size() - 1)
+      if(i != v.size() - 1) {
          o << ' ';
+      }
    }
    o << '\n';
 }
@@ -478,8 +509,9 @@ void print_vec(std::ostream& o, const char* key, const std::vector<Group_Params>
    o << key << " = ";
    for(size_t i = 0; i != v.size(); ++i) {
       o << group_param_to_string(v[i]);
-      if(i != v.size() - 1)
+      if(i != v.size() - 1) {
          o << ' ';
+      }
    }
    o << '\n';
 }

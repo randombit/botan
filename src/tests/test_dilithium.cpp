@@ -57,8 +57,9 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
          auto signature = signer.sign_message(ref_msg.data(), ref_msg.size(), *dilithium_test_rng);
 
          result.test_eq("generated expected signature hash", sha3_256->process(signature), ref_sig_hash);
-         if(!ref_sig.empty())
+         if(!ref_sig.empty()) {
             result.test_eq("generated expected signature", signature, ref_sig);
+         }
 
          Botan::Dilithium_PublicKey pub_key(priv_key.public_key_bits(), DerivedT::mode);
          auto verifier = Botan::PK_Verifier(pub_key, "");

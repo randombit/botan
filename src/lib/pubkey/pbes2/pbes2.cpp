@@ -42,11 +42,13 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
                           AlgorithmIdentifier("HMAC(SHA-1)", AlgorithmIdentifier::USE_NULL_PARAM))
          .end_cons();
 
-      if(salt.size() < 8)
+      if(salt.size() < 8) {
          throw Decoding_Error("PBE-PKCS5 v2.0: Encoded salt is too small");
+      }
 
-      if(key_length == 0)
+      if(key_length == 0) {
          key_length = default_key_size;
+      }
 
       const std::string prf = prf_algo.oid().human_name_or_empty();
       if(prf.empty() || !prf.starts_with("HMAC")) {
@@ -74,8 +76,9 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
          .decode_optional(key_length, ASN1_Type::Integer, ASN1_Class::Universal)
          .end_cons();
 
-      if(key_length == 0)
+      if(key_length == 0) {
          key_length = default_key_size;
+      }
 
       secure_vector<uint8_t> derived_key(key_length);
 
@@ -117,8 +120,9 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
       const size_t r = pwhash->iterations();
       const size_t p = pwhash->parallelism();
 
-      if(msec_in_iterations_out)
+      if(msec_in_iterations_out) {
          *msec_in_iterations_out = 0;
+      }
 
       std::vector<uint8_t> scrypt_params;
       DER_Encoder(scrypt_params)
@@ -157,8 +161,9 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
 
       const size_t iterations = pwhash->iterations();
 
-      if(msec_in_iterations_out)
+      if(msec_in_iterations_out) {
          *msec_in_iterations_out = iterations;
+      }
 
       DER_Encoder(pbkdf2_params)
          .start_sequence()
@@ -244,8 +249,9 @@ std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbes2_encrypt_msec(std::spa
 
    auto ret = pbes2_encrypt_shared(key_bits, passphrase, &msec_in_iterations_out, 0, cipher, digest, rng);
 
-   if(out_iterations_if_nonnull)
+   if(out_iterations_if_nonnull) {
       *out_iterations_if_nonnull = msec_in_iterations_out;
+   }
 
    return ret;
 }

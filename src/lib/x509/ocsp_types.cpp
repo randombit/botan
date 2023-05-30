@@ -29,17 +29,20 @@ CertID::CertID(const X509_Certificate& issuer, const BigInt& subject_serial) {
 
 bool CertID::is_id_for(const X509_Certificate& issuer, const X509_Certificate& subject) const {
    try {
-      if(BigInt::decode(subject.serial_number()) != m_subject_serial)
+      if(BigInt::decode(subject.serial_number()) != m_subject_serial) {
          return false;
+      }
 
       const std::string hash_algo = m_hash_id.oid().to_formatted_string();
       auto hash = HashFunction::create_or_throw(hash_algo);
 
-      if(m_issuer_dn_hash != unlock(hash->process(subject.raw_issuer_dn())))
+      if(m_issuer_dn_hash != unlock(hash->process(subject.raw_issuer_dn()))) {
          return false;
+      }
 
-      if(m_issuer_key_hash != unlock(hash->process(issuer.subject_public_key_bitstring())))
+      if(m_issuer_key_hash != unlock(hash->process(issuer.subject_public_key_bitstring()))) {
          return false;
+      }
    } catch(...) { return false; }
 
    return true;

@@ -65,8 +65,9 @@ void Channel_Impl_12::reset_active_association_state() {
    m_write_cipher_states[0] = nullptr;
    m_read_cipher_states[0] = nullptr;
 
-   if(m_sequence_numbers)
+   if(m_sequence_numbers) {
       m_sequence_numbers->reset();
+   }
 }
 
 Channel_Impl_12::~Channel_Impl_12() = default;
@@ -93,14 +94,16 @@ std::shared_ptr<Connection_Cipher_State> Channel_Impl_12::write_cipher_state_epo
 }
 
 std::vector<X509_Certificate> Channel_Impl_12::peer_cert_chain() const {
-   if(auto active = active_state())
+   if(auto active = active_state()) {
       return get_peer_cert_chain(*active);
+   }
    return std::vector<X509_Certificate>();
 }
 
 Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version version) {
-   if(pending_state())
+   if(pending_state()) {
       throw Internal_Error("create_handshake_state called during handshake");
+   }
 
    if(auto active = active_state()) {
       Protocol_Version active_version = active->version();
@@ -113,10 +116,11 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
    }
 
    if(!m_sequence_numbers) {
-      if(version.is_datagram_protocol())
+      if(version.is_datagram_protocol()) {
          m_sequence_numbers = std::make_unique<Datagram_Sequence_Numbers>();
-      else
+      } else {
          m_sequence_numbers = std::make_unique<Stream_Sequence_Numbers>();
+      }
    }
 
    using namespace std::placeholders;
@@ -135,31 +139,36 @@ Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version versio
 
    m_pending_state = new_handshake_state(std::move(io));
 
-   if(auto active = active_state())
+   if(auto active = active_state()) {
       m_pending_state->set_version(active->version());
+   }
 
    return *m_pending_state;
 }
 
 bool Channel_Impl_12::timeout_check() {
-   if(m_pending_state)
+   if(m_pending_state) {
       return m_pending_state->handshake_io().timeout_check();
+   }
 
    //FIXME: scan cipher suites and remove epochs older than 2*MSL
    return false;
 }
 
 void Channel_Impl_12::renegotiate(bool force_full_renegotiation) {
-   if(pending_state())  // currently in handshake?
+   if(pending_state()) {  // currently in handshake?
       return;
+   }
 
    if(auto active = active_state()) {
-      if(force_full_renegotiation == false)
+      if(force_full_renegotiation == false) {
          force_full_renegotiation = !policy().allow_resumption_for_renegotiation();
+      }
 
       initiate_handshake(create_handshake_state(active->version()), force_full_renegotiation);
-   } else
+   } else {
       throw Invalid_State("Cannot renegotiate on inactive connection");
+   }
 }
 
 void Channel_Impl_12::update_traffic_keys(bool) {
@@ -171,8 +180,9 @@ void Channel_Impl_12::change_cipher_spec_reader(Connection_Side side) {
 
    BOTAN_ASSERT(pending && pending->server_hello(), "Have received server hello");
 
-   if(pending->server_hello()->compression_method() != 0)
+   if(pending->server_hello()->compression_method() != 0) {
       throw Internal_Error("Negotiated unknown compression algorithm");
+   }
 
    sequence_numbers().new_read_cipher_state();
 
@@ -197,8 +207,9 @@ void Channel_Impl_12::change_cipher_spec_writer(Connection_Side side) {
 
    BOTAN_ASSERT(pending && pending->server_hello(), "Have received server hello");
 
-   if(pending->server_hello()->compression_method() != 0)
+   if(pending->server_hello()->compression_method() != 0) {
       throw Internal_Error("Negotiated unknown compression algorithm");
+   }
 
    sequence_numbers().new_write_cipher_state();
 
@@ -218,8 +229,9 @@ void Channel_Impl_12::change_cipher_spec_writer(Connection_Side side) {
 }
 
 bool Channel_Impl_12::is_active() const {
-   if(is_closed())
+   if(is_closed()) {
       return false;
+   }
    return (active_state() != nullptr);
 }
 
@@ -275,16 +287,18 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
 
          BOTAN_ASSERT(input_size == 0 || needed == 0, "Got a full record or consumed all input");
 
-         if(input_size == 0 && needed != 0)
+         if(input_size == 0 && needed != 0) {
             return needed;  // need more data to complete record
+         }
 
          // Ignore invalid records in DTLS
          if(m_is_datagram && record.type() == Record_Type::Invalid) {
             return 0;
          }
 
-         if(m_record_buf.size() > MAX_PLAINTEXT_SIZE)
+         if(m_record_buf.size() > MAX_PLAINTEXT_SIZE) {
             throw TLS_Exception(Alert::RecordOverflow, "TLS plaintext record is larger than allowed maximum");
+         }
 
          const bool epoch0_restart = m_is_datagram && record.epoch() == 0 && active_state();
          BOTAN_ASSERT_IMPLICATION(epoch0_restart, allow_epoch0_restart, "Allowed state");
@@ -309,20 +323,24 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
          }
 
          if(record.type() == Record_Type::Handshake || record.type() == Record_Type::ChangeCipherSpec) {
-            if(m_has_been_closed)
+            if(m_has_been_closed) {
                throw TLS_Exception(Alert::UnexpectedMessage, "Received handshake data after connection closure");
+            }
             process_handshake_ccs(m_record_buf, record.sequence(), record.type(), record.version(), epoch0_restart);
          } else if(record.type() == Record_Type::ApplicationData) {
-            if(m_has_been_closed)
+            if(m_has_been_closed) {
                throw TLS_Exception(Alert::UnexpectedMessage, "Received application data after connection closure");
-            if(pending_state() != nullptr)
+            }
+            if(pending_state() != nullptr) {
                throw TLS_Exception(Alert::UnexpectedMessage, "Can't interleave application and handshake data");
+            }
             process_application_data(record.sequence(), m_record_buf);
          } else if(record.type() == Record_Type::Alert) {
             process_alert(m_record_buf);
-         } else if(record.type() != Record_Type::Invalid)
+         } else if(record.type() != Record_Type::Invalid) {
             throw Unexpected_Message("Unexpected record type " + std::to_string(static_cast<size_t>(record.type())) +
                                      " from counterparty");
+         }
       }
 
       return 0;  // on a record boundary
@@ -379,20 +397,23 @@ void Channel_Impl_12::process_handshake_ccs(const secure_vector<uint8_t>& record
       while(auto pending = m_pending_state.get()) {
          auto msg = pending->get_next_handshake_msg();
 
-         if(msg.first == Handshake_Type::None)  // no full handshake yet
+         if(msg.first == Handshake_Type::None) {  // no full handshake yet
             break;
+         }
 
          process_handshake_msg(active_state(), *pending, msg.first, msg.second, epoch0_restart);
 
-         if(!m_pending_state)
+         if(!m_pending_state) {
             break;
+         }
       }
    }
 }
 
 void Channel_Impl_12::process_application_data(uint64_t seq_no, const secure_vector<uint8_t>& record) {
-   if(!active_state())
+   if(!active_state()) {
       throw Unexpected_Message("Application data before handshake done");
+   }
 
    callbacks().tls_record_received(seq_no, record);
 }
@@ -400,8 +421,9 @@ void Channel_Impl_12::process_application_data(uint64_t seq_no, const secure_vec
 void Channel_Impl_12::process_alert(const secure_vector<uint8_t>& record) {
    Alert alert_msg(record);
 
-   if(alert_msg.type() == Alert::NoRenegotiation)
+   if(alert_msg.type() == Alert::NoRenegotiation) {
       m_pending_state.reset();
+   }
 
    callbacks().tls_alert(alert_msg);
 
@@ -448,8 +470,9 @@ void Channel_Impl_12::write_record(Connection_Cipher_State* cipher_state,
 }
 
 void Channel_Impl_12::send_record_array(uint16_t epoch, Record_Type type, const uint8_t input[], size_t length) {
-   if(length == 0)
+   if(length == 0) {
       return;
+   }
 
    auto cipher_state = write_cipher_state_epoch(epoch);
 
@@ -473,8 +496,9 @@ void Channel_Impl_12::send_record_under_epoch(uint16_t epoch,
 }
 
 void Channel_Impl_12::to_peer(std::span<const uint8_t> data) {
-   if(!is_active())
+   if(!is_active()) {
       throw Invalid_State("Data cannot be sent on inactive TLS connection");
+   }
 
    send_record_array(sequence_numbers().current_write_epoch(), Record_Type::ApplicationData, data.data(), data.size());
 }
@@ -488,8 +512,9 @@ void Channel_Impl_12::send_alert(const Alert& alert) {
       }
    }
 
-   if(alert.type() == Alert::NoRenegotiation)
+   if(alert.type() == Alert::NoRenegotiation) {
       m_pending_state.reset();
+   }
 
    if(alert.is_fatal()) {
       if(auto active = active_state()) {
@@ -512,15 +537,17 @@ void Channel_Impl_12::secure_renegotiation_check(const Client_Hello_12* client_h
    if(auto active = active_state()) {
       const bool active_sr = active->client_hello()->secure_renegotiation();
 
-      if(active_sr != secure_renegotiation)
+      if(active_sr != secure_renegotiation) {
          throw TLS_Exception(Alert::HandshakeFailure, "Client changed its mind about secure renegotiation");
+      }
    }
 
    if(secure_renegotiation) {
       const std::vector<uint8_t>& data = client_hello->renegotiation_info();
 
-      if(data != secure_renegotiation_data_for_client_hello())
+      if(data != secure_renegotiation_data_for_client_hello()) {
          throw TLS_Exception(Alert::HandshakeFailure, "Client sent bad values for secure renegotiation");
+      }
    }
 }
 
@@ -530,21 +557,24 @@ void Channel_Impl_12::secure_renegotiation_check(const Server_Hello_12* server_h
    if(auto active = active_state()) {
       const bool active_sr = active->server_hello()->secure_renegotiation();
 
-      if(active_sr != secure_renegotiation)
+      if(active_sr != secure_renegotiation) {
          throw TLS_Exception(Alert::HandshakeFailure, "Server changed its mind about secure renegotiation");
+      }
    }
 
    if(secure_renegotiation) {
       const std::vector<uint8_t>& data = server_hello->renegotiation_info();
 
-      if(data != secure_renegotiation_data_for_server_hello())
+      if(data != secure_renegotiation_data_for_server_hello()) {
          throw TLS_Exception(Alert::HandshakeFailure, "Server sent bad values for secure renegotiation");
+      }
    }
 }
 
 std::vector<uint8_t> Channel_Impl_12::secure_renegotiation_data_for_client_hello() const {
-   if(auto active = active_state())
+   if(auto active = active_state()) {
       return active->client_finished()->verify_data();
+   }
    return std::vector<uint8_t>();
 }
 
@@ -559,12 +589,15 @@ std::vector<uint8_t> Channel_Impl_12::secure_renegotiation_data_for_server_hello
 }
 
 bool Channel_Impl_12::secure_renegotiation_supported() const {
-   if(auto active = active_state())
+   if(auto active = active_state()) {
       return active->server_hello()->secure_renegotiation();
+   }
 
-   if(auto pending = pending_state())
-      if(auto hello = pending->server_hello())
+   if(auto pending = pending_state()) {
+      if(auto hello = pending->server_hello()) {
          return hello->secure_renegotiation();
+      }
+   }
 
    return false;
 }
@@ -587,8 +620,9 @@ SymmetricKey Channel_Impl_12::key_material_export(std::string_view label,
 
       if(!context.empty()) {
          size_t context_size = context.length();
-         if(context_size > 0xFFFF)
+         if(context_size > 0xFFFF) {
             throw Invalid_Argument("key_material_export context is too long");
+         }
          salt.push_back(get_byte<0>(static_cast<uint16_t>(context_size)));
          salt.push_back(get_byte<1>(static_cast<uint16_t>(context_size)));
          salt += to_byte_vector(context);

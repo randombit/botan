@@ -46,8 +46,9 @@ class OCB_Wide_Test_Block_Cipher final : public Botan::BlockCipher {
             Botan::copy_mem(out, in, m_bs);
             Botan::poly_double_n(out, m_bs);
 
-            for(size_t i = 0; i != m_bs; ++i)
+            for(size_t i = 0; i != m_bs; ++i) {
                out[i] ^= m_key[i];
+            }
 
             blocks--;
             in += block_size();
@@ -57,8 +58,9 @@ class OCB_Wide_Test_Block_Cipher final : public Botan::BlockCipher {
 
       void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override {
          while(blocks) {
-            for(size_t i = 0; i != m_bs; ++i)
+            for(size_t i = 0; i != m_bs; ++i) {
                out[i] = in[i] ^ m_key[i];
+            }
 
             uint8_t carry = in[m_bs - 1] & 0x01;
 
@@ -71,8 +73,9 @@ class OCB_Wide_Test_Block_Cipher final : public Botan::BlockCipher {
                } else if(m_bs == 64) {
                   out[m_bs - 2] ^= 0x1;
                   out[m_bs - 1] ^= 0x25;
-               } else
+               } else {
                   throw Test_Error("Bad OCB test block size");
+               }
             }
 
             carry <<= 7;
@@ -151,16 +154,17 @@ class OCB_Wide_Long_KAT_Tests final : public Text_Based_Test {
             return {result};
    #endif
          } else {
-            if(algo == "Toy128")
+            if(algo == "Toy128") {
                bs = 16;
-            else if(algo == "Toy192")
+            } else if(algo == "Toy192") {
                bs = 24;
-            else if(algo == "Toy256")
+            } else if(algo == "Toy256") {
                bs = 32;
-            else if(algo == "Toy512")
+            } else if(algo == "Toy512") {
                bs = 64;
-            else
+            } else {
                throw Test_Error("Unknown cipher for OCB wide block long test");
+            }
             cipher = std::make_unique<OCB_Wide_Test_Block_Cipher>(bs);
          }
 
@@ -187,8 +191,9 @@ class OCB_Wide_Long_KAT_Tests final : public Text_Based_Test {
          */
 
          std::vector<uint8_t> key(bs);
-         for(size_t i = 0; i != bs; ++i)
+         for(size_t i = 0; i != bs; ++i) {
             key[i] = static_cast<uint8_t>(0xA0 + i);
+         }
 
          enc.set_key(key);
 
@@ -198,8 +203,9 @@ class OCB_Wide_Long_KAT_Tests final : public Text_Based_Test {
 
          for(size_t i = 0; i != 128; ++i) {
             std::vector<uint8_t> S(i);
-            for(size_t j = 0; j != S.size(); ++j)
+            for(size_t j = 0; j != S.size(); ++j) {
                S[j] = static_cast<uint8_t>(0x50 + j);
+            }
 
             Botan::store_be(static_cast<uint16_t>(3 * i + 1), &N[0]);
 

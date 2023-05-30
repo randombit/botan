@@ -32,8 +32,9 @@ std::string create_hex_fingerprint(const uint8_t bits[], size_t bits_len, std::s
    std::string fprint;
 
    for(size_t i = 0; i != hex_hash.size(); i += 2) {
-      if(i != 0)
+      if(i != 0) {
          fprint.push_back(':');
+      }
 
       fprint.push_back(hex_hash[i]);
       fprint.push_back(hex_hash[i + 1]);

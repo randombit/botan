@@ -69,8 +69,9 @@ class Stateful_RNG_Tests : public Test {
          * in the child, any attempt to allocate or free memory will cause a
          * deadlock.
          */
-         if(Test::options().test_threads() == 1)
+         if(Test::options().test_threads() == 1) {
             results.push_back(test_fork_safety());
+         }
 
          return results;
       }
@@ -403,16 +404,17 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests {
          std::unique_ptr<Botan::MessageAuthenticationCode> mac =
             Botan::MessageAuthenticationCode::create("HMAC(SHA-256)");
 
-         if(underlying_rng && underlying_es)
+         if(underlying_rng && underlying_es) {
             return std::make_unique<Botan::HMAC_DRBG>(std::move(mac), *underlying_rng, *underlying_es, reseed_interval);
-         else if(underlying_rng)
+         } else if(underlying_rng) {
             return std::make_unique<Botan::HMAC_DRBG>(std::move(mac), *underlying_rng, reseed_interval);
-         else if(underlying_es)
+         } else if(underlying_es) {
             return std::make_unique<Botan::HMAC_DRBG>(std::move(mac), *underlying_es, reseed_interval);
-         else if(reseed_interval == 0)
+         } else if(reseed_interval == 0) {
             return std::make_unique<Botan::HMAC_DRBG>(std::move(mac));
-         else
+         } else {
             throw Test_Error("Invalid reseed interval in HMAC_DRBG unit test");
+         }
       }
 
       Test::Result test_max_number_of_bytes_per_request() override {
@@ -604,16 +606,17 @@ class ChaCha_RNG_Unit_Tests final : public Stateful_RNG_Tests {
       std::unique_ptr<Botan::Stateful_RNG> create_rng(Botan::RandomNumberGenerator* underlying_rng,
                                                       Botan::Entropy_Sources* underlying_es,
                                                       size_t reseed_interval) override {
-         if(underlying_rng && underlying_es)
+         if(underlying_rng && underlying_es) {
             return std::make_unique<Botan::ChaCha_RNG>(*underlying_rng, *underlying_es, reseed_interval);
-         else if(underlying_rng)
+         } else if(underlying_rng) {
             return std::make_unique<Botan::ChaCha_RNG>(*underlying_rng, reseed_interval);
-         else if(underlying_es)
+         } else if(underlying_es) {
             return std::make_unique<Botan::ChaCha_RNG>(*underlying_es, reseed_interval);
-         else if(reseed_interval == 0)
+         } else if(reseed_interval == 0) {
             return std::make_unique<Botan::ChaCha_RNG>();
-         else
+         } else {
             throw Test_Error("Invalid reseed interval in ChaCha_RNG unit test");
+         }
       }
 
       Test::Result test_security_level() override {

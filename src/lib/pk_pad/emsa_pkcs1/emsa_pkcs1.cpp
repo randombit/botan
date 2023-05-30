@@ -19,8 +19,9 @@ std::vector<uint8_t> emsa3_encoding(const std::vector<uint8_t>& msg,
                                     const uint8_t hash_id[],
                                     size_t hash_id_length) {
    size_t output_length = output_bits / 8;
-   if(output_length < hash_id_length + msg.size() + 10)
+   if(output_length < hash_id_length + msg.size() + 10) {
       throw Encoding_Error("emsa3_encoding: Output length is too small");
+   }
 
    std::vector<uint8_t> T(output_length);
    const size_t P_LENGTH = output_length - msg.size() - hash_id_length - 2;
@@ -47,15 +48,17 @@ std::vector<uint8_t> EMSA_PKCS1v15::raw_data() { return m_hash->final_stdvec(); 
 std::vector<uint8_t> EMSA_PKCS1v15::encoding_of(const std::vector<uint8_t>& msg,
                                                 size_t output_bits,
                                                 RandomNumberGenerator& /*rng*/) {
-   if(msg.size() != m_hash->output_length())
+   if(msg.size() != m_hash->output_length()) {
       throw Encoding_Error("EMSA_PKCS1v15::encoding_of: Bad input length");
+   }
 
    return emsa3_encoding(msg, output_bits, m_hash_id.data(), m_hash_id.size());
 }
 
 bool EMSA_PKCS1v15::verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>& raw, size_t key_bits) {
-   if(raw.size() != m_hash->output_length())
+   if(raw.size() != m_hash->output_length()) {
       return false;
+   }
 
    try {
       return (coded == emsa3_encoding(raw, key_bits, m_hash_id.data(), m_hash_id.size()));
@@ -84,8 +87,9 @@ std::vector<uint8_t> EMSA_PKCS1v15_Raw::raw_data() {
    std::vector<uint8_t> ret;
    std::swap(ret, m_message);
 
-   if(m_hash_output_len > 0 && ret.size() != m_hash_output_len)
+   if(m_hash_output_len > 0 && ret.size() != m_hash_output_len) {
       throw Encoding_Error("EMSA_PKCS1v15_Raw::encoding_of: Bad input length");
+   }
 
    return ret;
 }
@@ -97,8 +101,9 @@ std::vector<uint8_t> EMSA_PKCS1v15_Raw::encoding_of(const std::vector<uint8_t>& 
 }
 
 bool EMSA_PKCS1v15_Raw::verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>& raw, size_t key_bits) {
-   if(m_hash_output_len > 0 && raw.size() != m_hash_output_len)
+   if(m_hash_output_len > 0 && raw.size() != m_hash_output_len) {
       return false;
+   }
 
    try {
       return (coded == emsa3_encoding(raw, key_bits, m_hash_id.data(), m_hash_id.size()));

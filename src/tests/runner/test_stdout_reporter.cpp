@@ -57,10 +57,11 @@ void StdoutReporter::render_preamble() const {
 void StdoutReporter::render_summary() const {
    const auto total_ns = elapsed_time();
 
-   if(total_test_runs() == 1)
+   if(total_test_runs() == 1) {
       m_out << "Tests";
-   else
+   } else {
       m_out << "Test run " << current_test_run() << "/" << total_test_runs();
+   }
 
    m_out << " complete ran " << m_tests_run << " tests in " << Botan_Tests::Test::format_time(total_ns) << " ";
 
@@ -69,8 +70,9 @@ void StdoutReporter::render_summary() const {
 
       bool first = true;
       for(const auto& test : m_tests_failed_names) {
-         if(!first)
+         if(!first) {
             m_out << " ";
+         }
          first = false;
          m_out << test;
       }

@@ -44,8 +44,9 @@ for details and explaination. The code is slightly simplified by our assumption
 that the date is at least 1970, which is sufficient for our purposes.
 */
 size_t days_since_epoch(uint32_t year, uint32_t month, uint32_t day) {
-   if(month <= 2)
+   if(month <= 2) {
       year -= 1;
+   }
    const uint32_t era = year / 400;
    const uint32_t yoe = year - era * 400;                                          // [0, 399]
    const uint32_t doy = (153 * (month + (month > 2 ? -3 : 9)) + 2) / 5 + day - 1;  // [0, 365]
@@ -56,8 +57,9 @@ size_t days_since_epoch(uint32_t year, uint32_t month, uint32_t day) {
 }  // namespace
 
 std::chrono::system_clock::time_point calendar_point::to_std_timepoint() const {
-   if(year() < 1970)
+   if(year() < 1970) {
       throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years before 1970");
+   }
 
    // 32 bit time_t ends at January 19, 2038
    // https://msdn.microsoft.com/en-us/library/2093ets1.aspx

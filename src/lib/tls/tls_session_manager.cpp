@@ -41,8 +41,9 @@ std::optional<Session> Session_Manager::retrieve(const Session_Handle& handle,
    // more than once, but removing an already removed ticket is a harmless NOOP.
 
    auto session = retrieve_one(handle);
-   if(!session.has_value())
+   if(!session.has_value()) {
       return std::nullopt;
+   }
 
    // A value of '0' means: No policy restrictions.
    const std::chrono::seconds policy_lifetime =

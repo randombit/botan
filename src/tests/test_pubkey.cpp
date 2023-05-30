@@ -73,8 +73,9 @@ void check_invalid_ciphertexts(Test::Result& result,
 }
 
 std::string PK_Test::choose_padding(const VarMap& vars, const std::string& pad_hdr) {
-   if(!pad_hdr.empty())
+   if(!pad_hdr.empty()) {
       return pad_hdr;
+   }
    return vars.get_opt_str("Padding", this->default_padding(vars));
 }
 
@@ -89,8 +90,9 @@ Test::Result PK_Signature_Generation_Test::run_one_test(const std::string& pad_h
 
    std::ostringstream test_name;
    test_name << algo_name();
-   if(vars.has_key("Group"))
+   if(vars.has_key("Group")) {
       test_name << "-" << vars.get_req_str("Group");
+   }
    test_name << "/" << padding << " signature generation";
 
    Test::Result result(test_name.str());
@@ -184,10 +186,12 @@ Test::Result PK_Signature_Verification_Test::run_one_test(const std::string& pad
 
    std::ostringstream result_name;
    result_name << algo_name();
-   if(vars.has_key("Group"))
+   if(vars.has_key("Group")) {
       result_name << "-" << vars.get_req_str("Group");
-   if(!padding.empty())
+   }
+   if(!padding.empty()) {
       result_name << "/" << padding;
+   }
    result_name << " signature verification";
    Test::Result result(result_name.str());
 
@@ -628,8 +632,9 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
 Test::Result PK_Key_Validity_Test::run_one_test(const std::string& header, const VarMap& vars) {
    Test::Result result(algo_name() + " key validity");
 
-   if(header != "Valid" && header != "Invalid")
+   if(header != "Valid" && header != "Invalid") {
       throw Test_Error("Unexpected header for PK_Key_Validity_Test");
+   }
 
    const bool expected_valid = (header == "Valid");
    auto pubkey = load_public_key(vars);
@@ -655,8 +660,9 @@ Test::Result PK_Key_Generation_Stability_Test::run_one_test(const std::string&, 
    std::ostringstream report_name;
 
    report_name << algo_name();
-   if(!key_param.empty())
+   if(!key_param.empty()) {
       report_name << " " << key_param;
+   }
    report_name << " keygen stability";
 
    Test::Result result(report_name.str());
@@ -672,8 +678,9 @@ Test::Result PK_Key_Generation_Stability_Test::run_one_test(const std::string&, 
    #endif
 
    if(rng_algo == "Fixed") {
-      if(!rng_params.empty())
+      if(!rng_params.empty()) {
          throw Test_Error("Expected empty RngParams for Fixed RNG");
+      }
       rng = std::make_unique<Fixed_Output_RNG>();
    }
 

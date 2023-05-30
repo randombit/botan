@@ -109,8 +109,9 @@ std::unique_ptr<PK_Ops::Verification> XMSS_PublicKey::create_verification_op(std
 std::unique_ptr<PK_Ops::Verification> XMSS_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
                                                                                   std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
-      if(alg_id != this->algorithm_identifier())
+      if(alg_id != this->algorithm_identifier()) {
          throw Decoding_Error("Unexpected AlgorithmIdentifier for XMSS X509 signature");
+      }
       return std::make_unique<XMSS_Verification_Operation>(*this);
    }
    throw Provider_Not_Found(algo_name(), provider);

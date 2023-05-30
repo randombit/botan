@@ -30,8 +30,9 @@ AlgorithmIdentifier::AlgorithmIdentifier(std::string_view oid, const std::vector
 AlgorithmIdentifier::AlgorithmIdentifier(const OID& oid, Encoding_Option option) : m_oid(oid), m_parameters() {
    const uint8_t DER_NULL[] = {0x05, 0x00};
 
-   if(option == USE_NULL_PARAM)
+   if(option == USE_NULL_PARAM) {
       m_parameters.assign(DER_NULL, DER_NULL + 2);
+   }
 }
 
 /*
@@ -41,8 +42,9 @@ AlgorithmIdentifier::AlgorithmIdentifier(std::string_view oid, Encoding_Option o
       m_oid(OID::from_string(oid)), m_parameters() {
    const uint8_t DER_NULL[] = {0x05, 0x00};
 
-   if(option == USE_NULL_PARAM)
+   if(option == USE_NULL_PARAM) {
       m_parameters.assign(DER_NULL, DER_NULL + 2);
+   }
 }
 
 bool AlgorithmIdentifier::parameters_are_null() const {
@@ -50,8 +52,9 @@ bool AlgorithmIdentifier::parameters_are_null() const {
 }
 
 bool operator==(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2) {
-   if(a1.oid() != a2.oid())
+   if(a1.oid() != a2.oid()) {
       return false;
+   }
 
    /*
    * Treat NULL and empty as equivalent

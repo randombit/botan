@@ -28,8 +28,9 @@ std::unique_ptr<MessageAuthenticationCode> auto_rng_hmac() {
    };
 
    for(const auto& hmac : possible_auto_rng_hmacs) {
-      if(auto mac = MessageAuthenticationCode::create_or_throw(hmac))
+      if(auto mac = MessageAuthenticationCode::create_or_throw(hmac)) {
          return mac;
+      }
    }
 
    // This shouldn't happen since this module has a dependency on sha2_32

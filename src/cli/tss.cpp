@@ -34,13 +34,15 @@ class TSS_Split final : public Command {
          const size_t N = get_arg_sz("N");
          const size_t M = get_arg_sz("M");
 
-         if(M <= 1 || N <= 1 || M > N || N >= 255)
+         if(M <= 1 || N <= 1 || M > N || N >= 255) {
             throw CLI_Usage_Error("Invalid N/M parameters for secret splitting");
+         }
 
          Botan::secure_vector<uint8_t> secret = slurp_file_lvec(input);
 
-         if(secret.size() > 0xFFFF)
+         if(secret.size() > 0xFFFF) {
             throw CLI_Usage_Error("Secret is too large for this TSS format");
+         }
 
          std::vector<uint8_t> id = Botan::hex_decode(id_str);
 
@@ -60,8 +62,9 @@ class TSS_Split final : public Command {
          for(size_t i = 0; i != shares.size(); ++i) {
             const std::string share_name = share_prefix + std::to_string(i + 1) + "." + share_suffix;
             std::ofstream out(share_name.c_str());
-            if(!out)
+            if(!out) {
                throw CLI_Error("Failed to open output file " + share_name);
+            }
 
             out.write(reinterpret_cast<const char*>(shares[i].data().data()), shares[i].data().size());
          }

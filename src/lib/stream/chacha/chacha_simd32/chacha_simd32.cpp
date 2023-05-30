@@ -197,8 +197,9 @@ void ChaCha::chacha_simd32_x4(uint8_t output[64 * 4], uint32_t state[16], size_t
    R15.store_le(output + 15 * 16);
 
    state[12] += 4;
-   if(state[12] < 4)
+   if(state[12] < 4) {
       state[13]++;
+   }
 }
 
 }  // namespace Botan

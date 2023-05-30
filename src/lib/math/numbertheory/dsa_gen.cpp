@@ -21,22 +21,26 @@ namespace {
 * Check if this size is allowed by FIPS 186-3
 */
 bool fips186_3_valid_size(size_t pbits, size_t qbits) {
-   if(qbits == 160)
+   if(qbits == 160) {
       return (pbits == 1024);
+   }
 
-   if(qbits == 224)
+   if(qbits == 224) {
       return (pbits == 2048);
+   }
 
-   if(qbits == 256)
+   if(qbits == 256) {
       return (pbits == 2048 || pbits == 3072);
+   }
 
    return false;
 }
 
 // qbits assumed to be a valid size for FIPS param gen
 std::string hash_function_for(size_t qbits) {
-   if(qbits == 160)
+   if(qbits == 160) {
       return "SHA-1";
+   }
 
    return "SHA-" + std::to_string(qbits);
 }
@@ -74,9 +78,11 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
          const std::vector<uint8_t>& value() const { return m_seed; }
 
          Seed& operator++() {
-            for(size_t j = m_seed.size(); j > 0; --j)
-               if(++m_seed[j - 1])
+            for(size_t j = m_seed.size(); j > 0; --j) {
+               if(++m_seed[j - 1]) {
                   break;
+               }
+            }
             return (*this);
          }
 
@@ -90,8 +96,9 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
    q.set_bit(qbits - 1);
    q.set_bit(0);
 
-   if(!is_prime(q, rng, 128, true))
+   if(!is_prime(q, rng, 128, true)) {
       return false;
+   }
 
    const size_t n = (pbits - 1) / (HASH_SIZE * 8), b = (pbits - 1) % (HASH_SIZE * 8);
 
@@ -113,8 +120,9 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
 
          p = X - (mod_2q.reduce(X) - 1);
 
-         if(p.bits() == pbits && is_prime(p, rng, 128, true))
+         if(p.bits() == pbits && is_prime(p, rng, 128, true)) {
             return true;
+         }
       }
    }
    return false;
@@ -128,8 +136,9 @@ std::vector<uint8_t> generate_dsa_primes(RandomNumberGenerator& rng, BigInt& p, 
       std::vector<uint8_t> seed(qbits / 8);
       rng.randomize(seed.data(), seed.size());
 
-      if(generate_dsa_primes(rng, p, q, pbits, qbits, seed))
+      if(generate_dsa_primes(rng, p, q, pbits, qbits, seed)) {
          return seed;
+      }
    }
 }
 

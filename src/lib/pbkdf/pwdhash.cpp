@@ -43,10 +43,11 @@ void PasswordHash::derive_key(uint8_t out[],
                               size_t key_len) const {
    BOTAN_UNUSED(ad, key);
 
-   if(ad_len == 0 && key_len == 0)
+   if(ad_len == 0 && key_len == 0) {
       return this->derive_key(out, out_len, password, password_len, salt, salt_len);
-   else
+   } else {
       throw Not_Implemented("PasswordHash " + this->to_string() + " does not support AD or key");
+   }
 }
 
 std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(std::string_view algo_spec, std::string_view provider) {
@@ -55,11 +56,13 @@ std::unique_ptr<PasswordHashFamily> PasswordHashFamily::create(std::string_view 
 #if defined(BOTAN_HAS_PBKDF2)
    if(req.algo_name() == "PBKDF2") {
       if(provider.empty() || provider == "base") {
-         if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")"))
+         if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")")) {
             return std::make_unique<PBKDF2_Family>(std::move(mac));
+         }
 
-         if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
+         if(auto mac = MessageAuthenticationCode::create(req.arg(0))) {
             return std::make_unique<PBKDF2_Family>(std::move(mac));
+         }
       }
 
       return nullptr;

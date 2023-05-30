@@ -25,8 +25,9 @@ void CTR_DRBG_AES256::clear() {
 
 void CTR_DRBG_AES256::fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) {
    if(!input.empty()) {
-      if(input.size() != 48)
+      if(input.size() != 48) {
          throw Test_Error("CTR_DRBG(AES-256) assumes 48 byte input");
+      }
 
       clear();
       update(input);
@@ -36,8 +37,9 @@ void CTR_DRBG_AES256::fill_bytes_with_input(std::span<uint8_t> output, std::span
       const size_t full_blocks = output.size() / 16;
       const size_t leftover_bytes = output.size() % 16;
 
-      for(size_t i = 0; i != full_blocks; ++i)
+      for(size_t i = 0; i != full_blocks; ++i) {
          incr_V_into(output.subspan(i * 16, 16));
+      }
 
       m_cipher->encrypt_n(output.data(), output.data(), full_blocks);
 
@@ -61,8 +63,9 @@ void CTR_DRBG_AES256::incr_V_into(std::span<uint8_t> output) {
    BOTAN_ASSERT_NOMSG(output.size() == 16);
 
    m_V1 += 1;
-   if(m_V1 == 0)
+   if(m_V1 == 0) {
       m_V0 += 1;
+   }
 
    Botan::store_be<uint64_t>(output.data(), m_V0, m_V1);
 }
@@ -79,8 +82,9 @@ void CTR_DRBG_AES256::update(std::span<const uint8_t> provided_data) {
 
    if(!provided_data.empty()) {
       BOTAN_ASSERT_NOMSG(provided_data.size() == temp.size());
-      for(size_t i = 0; i != provided_data.size(); i++)
+      for(size_t i = 0; i != provided_data.size(); i++) {
          temp[i] ^= provided_data[i];
+      }
    }
 
    m_cipher->set_key(temp.data(), 32);  // TODO: adapt after GH #3297

@@ -117,8 +117,9 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
          */
          const size_t elem_size = m_key.domain().get_order_bytes();
 
-         if(ptext_len < 2 * elem_size + m_hash->output_length())
+         if(ptext_len < 2 * elem_size + m_hash->output_length()) {
             return 0;
+         }
 
          return ptext_len - (2 * elem_size + m_hash->output_length());
       }
@@ -156,18 +157,21 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
             .encode(masked_msg, ASN1_Type::OctetString)
             .end_cons();
 
-         if(recode_ctext.size() != ciphertext_len)
+         if(recode_ctext.size() != ciphertext_len) {
             return secure_vector<uint8_t>();
+         }
 
-         if(same_mem(recode_ctext.data(), ciphertext, ciphertext_len) == false)
+         if(same_mem(recode_ctext.data(), ciphertext, ciphertext_len) == false) {
             return secure_vector<uint8_t>();
+         }
 
          EC_Point C1 = group.point(x1, y1);
          C1.randomize_repr(m_rng);
 
          // Here C1 is publically invalid, so no problem with early return:
-         if(!C1.on_the_curve())
+         if(!C1.on_the_curve()) {
             return secure_vector<uint8_t>();
+         }
 
          if(cofactor > 1 && (C1 * cofactor).is_zero()) {
             return secure_vector<uint8_t>();
@@ -197,8 +201,9 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
          m_hash->update(y2_bytes);
          secure_vector<uint8_t> u = m_hash->final();
 
-         if(constant_time_compare(u.data(), C3.data(), m_hash->output_length()) == false)
+         if(constant_time_compare(u.data(), C3.data(), m_hash->output_length()) == false) {
             return secure_vector<uint8_t>();
+         }
 
          valid_mask = 0xFF;
          return masked_msg;
@@ -218,10 +223,11 @@ std::unique_ptr<PK_Ops::Encryption> SM2_PublicKey::create_encryption_op(RandomNu
                                                                         std::string_view params,
                                                                         std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
-      if(params.empty())
+      if(params.empty()) {
          return std::make_unique<SM2_Encryption_Operation>(*this, rng, "SM3");
-      else
+      } else {
          return std::make_unique<SM2_Encryption_Operation>(*this, rng, params);
+      }
    }
 
    throw Provider_Not_Found(algo_name(), provider);
@@ -231,10 +237,11 @@ std::unique_ptr<PK_Ops::Decryption> SM2_PrivateKey::create_decryption_op(RandomN
                                                                          std::string_view params,
                                                                          std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
-      if(params.empty())
+      if(params.empty()) {
          return std::make_unique<SM2_Decryption_Operation>(*this, rng, "SM3");
-      else
+      } else {
          return std::make_unique<SM2_Decryption_Operation>(*this, rng, params);
+      }
    }
 
    throw Provider_Not_Found(algo_name(), provider);

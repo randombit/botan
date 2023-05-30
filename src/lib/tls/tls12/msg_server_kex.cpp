@@ -60,8 +60,9 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
          m_shared_group = policy.choose_key_exchange_group(dh_groups, {});
       }
 
-      if(m_shared_group.value() == Group_Params::NONE)
+      if(m_shared_group.value() == Group_Params::NONE) {
          throw TLS_Exception(Alert::HandshakeFailure, "Could not agree on a DH group with the client");
+      }
 
       BOTAN_ASSERT(group_param_is_dh(m_shared_group.value()), "DH ciphersuite is using a finite field group");
 
@@ -85,13 +86,15 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
    } else if(kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK) {
       const std::vector<Group_Params> ec_groups = state.client_hello()->supported_ecc_curves();
 
-      if(ec_groups.empty())
+      if(ec_groups.empty()) {
          throw Internal_Error("Client sent no ECC extension but we negotiated ECDH");
+      }
 
       m_shared_group = policy.choose_key_exchange_group(ec_groups, {});
 
-      if(m_shared_group.value() == Group_Params::NONE)
+      if(m_shared_group.value() == Group_Params::NONE) {
          throw TLS_Exception(Alert::HandshakeFailure, "No shared ECC group with client");
+      }
 
       std::vector<uint8_t> ecdh_public_val;
 
@@ -170,8 +173,9 @@ Server_Key_Exchange::Server_Key_Exchange(const std::vector<uint8_t>& buf,
       reader.get_byte();                     // curve type
       reader.get_uint16_t();                 // curve id
       reader.get_range<uint8_t>(1, 1, 255);  // public key
-   } else if(kex_algo != Kex_Algo::PSK)
+   } else if(kex_algo != Kex_Algo::PSK) {
       throw Decoding_Error("Server_Key_Exchange: Unsupported kex type " + kex_method_to_string(kex_algo));
+   }
 
    m_params.assign(buf.data(), buf.data() + reader.read_so_far());
 
