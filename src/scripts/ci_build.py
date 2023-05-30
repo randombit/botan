@@ -472,7 +472,7 @@ def parse_args(args):
                       help='Set path to compiler')
     parser.add_option('--root-dir', metavar='D', default='.',
                       help='Set directory to execute from (default %default)')
-    parser.add_option('--build-dir', metavar='D', default='.',
+    parser.add_option('--build-dir', metavar='D', default='build',
                       help='Set directory to place build artifacts into (default %default)')
     parser.add_option('--boringssl-dir', metavar='D', default='boringssl',
                       help='Set directory of BoringSSL checkout to use for BoGo tests')
