@@ -25,7 +25,7 @@ def remove_dir(d):
             shutil.rmtree(d)
         else:
             logging.debug('Directory %s was missing', d)
-    except Exception as e: # pylint: disable=broad-except
+    except Exception as e:
         logging.error('Failed removing directory "%s": %s', d, e)
 
 def remove_file(f):
@@ -90,7 +90,7 @@ def main(args=None):
         build_config_file = open(build_config_path, encoding='utf8')
         build_config_str = build_config_file.read()
         build_config_file.close()
-    except Exception: # pylint: disable=broad-except
+    except Exception:
         # Ugh have to do generic catch as different exception type thrown in Python2
         logging.error("Unable to access build_config.json in build dir")
         return 1

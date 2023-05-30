@@ -89,7 +89,7 @@ def filter_files(files, filters):
 
     return files_to_fmt
 
-def main(args = None): # pylint: disable=too-many-locals
+def main(args = None):
     if args is None:
         args = sys.argv
 

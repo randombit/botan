@@ -96,7 +96,6 @@ def _errcheck(rc, fn, _args):
     raise BotanException('%s failed' % (fn.__name__), rc)
 
 def _set_prototypes(dll):
-    # pylint: disable=too-many-statements,line-too-long
     def ffi_api(fn, args, allowed_errors=None):
         if allowed_errors is None:
             allowed_errors = [-10]
@@ -1567,7 +1566,6 @@ class X509Cert: # pylint: disable=invalid-name
                hostname=None,
                reference_time=0,
                crls=None):
-        #pylint: disable=too-many-locals
 
         if intermediates is not None:
             c_intermediates = len(intermediates) * c_void_p
@@ -1639,7 +1637,7 @@ class X509CRL:
         return self.__obj
 
 
-class MPI: # pylint: disable=too-many-public-methods
+class MPI:
 
     def __init__(self, initial_value=None, radix=None):
 

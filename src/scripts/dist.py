@@ -225,7 +225,6 @@ def rewrite_version_file(version_file, target_version, snapshot_branch, rev_id, 
     open(version_file, 'w', encoding='utf8').write(new_contents)
 
 def write_archive(version, output_basename, archive_type, rel_epoch, all_files, hash_file):
-    # pylint: disable=too-many-locals
     def archive_suffix(archive_type):
         if archive_type == 'tgz':
             return 'tgz'
@@ -321,7 +320,6 @@ def configure_logging(options):
     logging.getLogger().setLevel(log_level())
 
 def main(args=None):
-    # pylint: disable=too-many-branches,too-many-locals,too-many-statements
     if args is None:
         args = sys.argv[1:]
 
@@ -461,7 +459,7 @@ def main(args=None):
 if __name__ == '__main__':
     try:
         sys.exit(main())
-    except Exception as e: # pylint: disable=broad-except
+    except Exception as e:
         logging.info(traceback.format_exc())
         logging.error(e)
         sys.exit(1)

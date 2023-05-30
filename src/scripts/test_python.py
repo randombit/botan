@@ -37,8 +37,6 @@ def test_data(relpath):
     return os.path.join(TEST_DATA_DIR, relpath)
 
 class BotanPythonTests(unittest.TestCase):
-    # pylint: disable=too-many-public-methods,too-many-locals
-
     def test_version(self):
         version_str = botan.version_string()
         self.assertTrue(version_str.startswith('Botan '))
@@ -279,7 +277,7 @@ ofvkP1EDmpx50fHLawIDAQAB
         rsapub = botan.PublicKey.load(rsa_pub_pem)
         self.assertEqual(rsapub.to_pem(), rsa_pub_pem)
 
-        n = 0xB5AD8818DCA1F256FF8FAB0888D0667D95DF2098B0D201A4C75590D3EBDFA159DD91C64AFDA082609EF885B2D1F4DC055C8FF9FA371C2F3398E0B612C603151131C81DB322C8D15E53EB56B4DF7325F05046889CB25021DE4282E16B9B28F5CBB2B8DDECE0F8E4E8A77F674F26AE92B7220920A1FBE43F51039A9C79D1F1CB6B # pylint: disable=line-too-long
+        n = 0xB5AD8818DCA1F256FF8FAB0888D0667D95DF2098B0D201A4C75590D3EBDFA159DD91C64AFDA082609EF885B2D1F4DC055C8FF9FA371C2F3398E0B612C603151131C81DB322C8D15E53EB56B4DF7325F05046889CB25021DE4282E16B9B28F5CBB2B8DDECE0F8E4E8A77F674F26AE92B7220920A1FBE43F51039A9C79D1F1CB6B
         e = 0x10001
 
         rsapub2 = botan.PublicKey.load_rsa(n, e)
@@ -325,7 +323,6 @@ ofvkP1EDmpx50fHLawIDAQAB
             self.assertEqual(str(e), "botan_pubkey_load_rsa failed: -1 (Invalid input): Invalid RSA public key parameters")
 
     def test_rsa(self):
-        # pylint: disable=too-many-locals
         rng = botan.RandomNumberGenerator()
         rsapriv = botan.PrivateKey.create('RSA', '1024', rng)
         self.assertEqual(rsapriv.algo_name(), 'RSA')
@@ -477,7 +474,6 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertTrue(verifier.check_signature(signature))
 
     def test_ecdh(self):
-        # pylint: disable=too-many-locals
         a_rng = botan.RandomNumberGenerator('user')
         b_rng = botan.RandomNumberGenerator('user')
 
@@ -515,7 +511,6 @@ ofvkP1EDmpx50fHLawIDAQAB
             self.assertEqual(a_pem, new_a.to_pem())
 
     def test_certs(self):
-        # pylint: disable=too-many-statements
         cert = botan.X509Cert(filename=test_data("src/tests/data/x509/ecc/CSCA.CSCA.csca-germany.1.crt"))
         pubkey = cert.subject_public_key()
 
@@ -597,7 +592,6 @@ ofvkP1EDmpx50fHLawIDAQAB
 
 
     def test_mpi(self):
-        # pylint: disable=too-many-statements,too-many-locals
         z = botan.MPI()
         self.assertEqual(z.bit_count(), 0)
         five = botan.MPI('5')

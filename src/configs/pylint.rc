@@ -37,7 +37,8 @@ confidence=
 #   not libraries
 # * fixme is marking TODOs in the future
 # * no-else-return is often awkward
-disable=missing-docstring,fixme,duplicate-code,no-else-return,consider-using-f-string,consider-using-with,broad-exception-raised
+# * too-many-x is just like, your opinion man
+disable=missing-docstring,fixme,duplicate-code,no-else-return,consider-using-f-string,consider-using-with,broad-exception-raised,too-many-lines,too-many-locals,too-many-statements,too-many-branches,too-many-arguments,too-many-instance-attributes,broad-except,line-too-long,too-many-public-methods
 
 [REPORTS]
 

@@ -72,7 +72,6 @@ def test_cli(cmd, cmd_options,
              expected_stderr=None,
              use_drbg=True,
              extra_env=None):
-    # pylint: disable=too-many-locals
     global TESTS_RUN
 
     TESTS_RUN += 1
@@ -549,7 +548,6 @@ def cli_rng_tests(_tmp_dir):
             logging.error('Unexpected RNG output %s', output)
 
 def cli_roughtime_check_tests(tmp_dir):
-    # pylint: disable=line-too-long
     if not check_for_command("roughtime_check"):
         return
     chain = os.path.join(tmp_dir, 'roughtime-chain')
@@ -579,8 +577,6 @@ ed25519 cj8GsiNlRkqiDElAeNMSBBMwrAl15hYPgX50+GWX/lA= Tsy82BBU2xxVqNe1ip11OyEGoKW
     test_cli("roughtime_check", chain, expected_stderr='Error: Roughtime: Invalid signature or public key')
 
 def cli_roughtime_tests(tmp_dir):
-    # pylint: disable=line-too-long
-    # pylint: disable=too-many-locals
     if not check_for_command("roughtime"):
         return
 
@@ -753,7 +749,6 @@ def cli_dl_group_info_tests(_tmp_dir):
 
 def cli_ec_group_info_tests(_tmp_dir):
 
-    # pylint: disable=line-too-long
     secp256r1_info = """P = 0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF
 A = 0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC
 B = 0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B
@@ -890,7 +885,6 @@ MCACAQUTBnN0cmluZzEGAQH/AgFjBAUAAAAAAAMEAP///w==
     test_cli("oid_info", "1.2.3.4", "OID 1.2.3.4 is not recognized")
 
 def cli_tls_socket_tests(tmp_dir):
-    # pylint: disable=too-many-locals,too-many-statements
     if not run_socket_tests() or not check_for_command("tls_client") or not check_for_command("tls_server"):
         return
 
@@ -1009,7 +1003,6 @@ def cli_tls_socket_tests(tmp_dir):
         logging.error("server said (stderr): %s", srv_stderr)
 
 def cli_tls_http_server_tests(tmp_dir):
-    # pylint: disable=too-many-locals
     if not run_socket_tests() or not check_for_command("tls_http_server"):
         return
 
@@ -1067,7 +1060,6 @@ def cli_tls_http_server_tests(tmp_dir):
         logging.error("Unexpected return code from https_server %d", rc)
 
 def cli_tls_proxy_tests(tmp_dir):
-    # pylint: disable=too-many-locals,too-many-statements
     if not run_socket_tests() or not check_for_command("tls_proxy"):
         return
 
@@ -1244,7 +1236,6 @@ def cli_uuid_tests(_tmp_dir):
 
 def cli_tls_client_hello_tests(_tmp_dir):
 
-    # pylint: disable=line-too-long
     chello = "16030100cf010000cb03035b3cf2457b864d7bef2a4b1f84fc3ced2b68d9551f3455ffdd305af277a91bb200003a16b816b716ba16b9cca9cca8c02cc030c02bc02fc0adc0acc024c00ac028c014c023c009c027c013ccaa009f009ec09fc09e006b003900670033010000680000000e000c000009676d61696c2e636f6d000500050100000000000a001a0018001d0017001a0018001b0019001c01000101010201030104000b00020100000d00140012080508040806050106010401050306030403001600000017000000230000ff01000100"
 
     output = test_cli("tls_client_hello", ["--hex", "-"], None, chello)
@@ -1349,7 +1340,6 @@ def cli_speed_math_tests(_tmp_dir):
                 logging.error("Unexpected line %s", line)
 
 def cli_speed_tests(_tmp_dir):
-    # pylint: disable=too-many-branches
 
     msec = 1
 
@@ -1358,7 +1348,6 @@ def cli_speed_tests(_tmp_dir):
     if len(output) % 4 != 0:
         logging.error("Unexpected number of lines for AES-128 speed test")
 
-    # pylint: disable=line-too-long
     format_re = re.compile(r'^AES-128 .* buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB\/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms\)')
     for line in output:
         if format_re.match(line) is None:
@@ -1366,7 +1355,6 @@ def cli_speed_tests(_tmp_dir):
 
     output = test_cli("speed", ["--msec=%d" % (msec), "ChaCha20", "SHA-256", "HMAC(SHA-256)"], None).split('\n')
 
-    # pylint: disable=line-too-long
     format_re = re.compile(r'^.* buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB\/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms\)')
     for line in output:
         if format_re.match(line) is None:
@@ -1425,7 +1413,7 @@ def run_test(fn_name, fn):
     tmp_dir = tempfile.mkdtemp(prefix='botan_cli_')
     try:
         fn(tmp_dir)
-    except Exception as e: # pylint: disable=broad-except
+    except Exception as e:
         logging.info(traceback.format_exc())
         logging.error("Test %s threw exception: %s", fn_name, e)
 
@@ -1434,7 +1422,6 @@ def run_test(fn_name, fn):
     logging.info("Ran %s in %.02f sec", fn_name, end-start)
 
 def main(args=None):
-    # pylint: disable=too-many-branches,too-many-locals
     if args is None:
         args = sys.argv
 
