@@ -1,17 +1,18 @@
 {
     "[cpp]": {
-        "editor.defaultFormatter": "chiehyu.vscode-astyle"
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "xaver.clang-format"
     },
-    "astyle.astylerc": "${workspaceRoot}/src/configs/astyle.rc",
-    "astyle.cmd_options": [
-        "--suffix=none"
-    ],
     "C_Cpp.default.cppStandard": "c++20",
     "C_Cpp.default.cStandard": "c17",
+    "C_Cpp.formatting": "disabled",
+    "clangd.arguments": [
+        "--header-insertion=never"
+    ],
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
     "python.linting.pylintArgs": [
         "--rcfile=src/configs/pylint.rc"
     ],
-    "python.linting.lintOnSave": true
+    "python.linting.lintOnSave": true,
 }
