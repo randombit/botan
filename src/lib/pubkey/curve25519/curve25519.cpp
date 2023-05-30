@@ -23,8 +23,9 @@ void curve25519_basepoint(uint8_t mypublic[32], const uint8_t secret[32]) {
 namespace {
 
 void size_check(size_t size, const char* thing) {
-   if(size != 32)
+   if(size != 32) {
       throw Decoding_Error(fmt("Invalid size {} for Curve2551 {}", size, thing));
+   }
 }
 
 secure_vector<uint8_t> curve25519(const secure_vector<uint8_t>& secret, const uint8_t pubval[32]) {
@@ -52,8 +53,9 @@ Curve25519_PublicKey::Curve25519_PublicKey(const AlgorithmIdentifier& /*unused*/
 std::vector<uint8_t> Curve25519_PublicKey::public_key_bits() const { return m_public; }
 
 Curve25519_PrivateKey::Curve25519_PrivateKey(const secure_vector<uint8_t>& secret_key) {
-   if(secret_key.size() != 32)
+   if(secret_key.size() != 32) {
       throw Decoding_Error("Invalid size for Curve25519 private key");
+   }
 
    m_public.resize(32);
    m_private = secret_key;
@@ -116,8 +118,9 @@ class Curve25519_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 std::unique_ptr<PK_Ops::Key_Agreement> Curve25519_PrivateKey::create_key_agreement_op(RandomNumberGenerator& /*rng*/,
                                                                                       std::string_view params,
                                                                                       std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<Curve25519_KA_Operation>(*this, params);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 

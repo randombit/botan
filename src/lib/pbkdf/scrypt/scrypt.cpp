@@ -66,8 +66,9 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
 
    // No timer events seems strange, perhaps something is wrong - give
    // up on this and just return default params
-   if(timer.events() == 0)
+   if(timer.events() == 0) {
       return default_params();
+   }
 
    // nsec per eval of scrypt with initial params
    const uint64_t measured_time = timer.value() / timer.events();
@@ -91,14 +92,16 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
       if(target_nsec / est_nsec >= 2) {
          N *= 2;
          est_nsec *= 2;
-      } else
+      } else {
          break;
+      }
    }
 
    // If we have extra runtime budget, increment p
 
-   if(target_nsec / est_nsec > 2)
+   if(target_nsec / est_nsec > 2) {
       p *= std::min<size_t>(1024, static_cast<size_t>(target_nsec / est_nsec));
+   }
 
    return std::make_unique<Scrypt>(N, r, p);
 }
@@ -113,26 +116,33 @@ std::unique_ptr<PasswordHash> Scrypt_Family::from_iterations(size_t iter) const 
 
    size_t N = 8192;
 
-   if(iter > 50000)
+   if(iter > 50000) {
       N = 16384;
-   if(iter > 100000)
+   }
+   if(iter > 100000) {
       N = 32768;
-   if(iter > 150000)
+   }
+   if(iter > 150000) {
       N = 65536;
+   }
 
    return std::make_unique<Scrypt>(N, r, p);
 }
 
 Scrypt::Scrypt(size_t N, size_t r, size_t p) : m_N(N), m_r(r), m_p(p) {
-   if(!is_power_of_2(N))
+   if(!is_power_of_2(N)) {
       throw Invalid_Argument("Scrypt N parameter must be a power of 2");
+   }
 
-   if(p == 0 || p > 1024)
+   if(p == 0 || p > 1024) {
       throw Invalid_Argument("Invalid or unsupported scrypt p");
-   if(r == 0 || r > 256)
+   }
+   if(r == 0 || r > 256) {
       throw Invalid_Argument("Invalid or unsupported scrypt r");
-   if(N < 1 || N > 4194304)
+   }
+   if(N < 1 || N > 4194304) {
       throw Invalid_Argument("Invalid or unsupported scrypt N");
+   }
 }
 
 std::string Scrypt::to_string() const { return fmt("Scrypt({},{},{})", m_N, m_r, m_p); }

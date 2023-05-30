@@ -17,8 +17,9 @@ namespace Botan {
 * Modular_Reducer Constructor
 */
 Modular_Reducer::Modular_Reducer(const BigInt& mod) {
-   if(mod < 0)
+   if(mod < 0) {
       throw Invalid_Argument("Modular_Reducer: modulus must be positive");
+   }
 
    // Left uninitialized if mod == 0
    m_mod_words = 0;
@@ -46,8 +47,9 @@ namespace {
 * Like if(cnd) x.rev_sub(...) but in const time
 */
 void cnd_rev_sub(bool cnd, BigInt& x, const word y[], size_t y_sw, secure_vector<word>& ws) {
-   if(x.sign() != BigInt::Positive)
+   if(x.sign() != BigInt::Positive) {
       throw Invalid_State("BigInt::sub_rev requires this is positive");
+   }
 
    const size_t x_sw = x.sig_words();
 
@@ -65,10 +67,12 @@ void cnd_rev_sub(bool cnd, BigInt& x, const word y[], size_t y_sw, secure_vector
 }  // namespace
 
 void Modular_Reducer::reduce(BigInt& t1, const BigInt& x, secure_vector<word>& ws) const {
-   if(&t1 == &x)
+   if(&t1 == &x) {
       throw Invalid_State("Modular_Reducer arguments cannot alias");
-   if(m_mod_words == 0)
+   }
+   if(m_mod_words == 0) {
       throw Invalid_State("Modular_Reducer: Never initalized");
+   }
 
    const size_t x_sw = x.sig_words();
 
@@ -98,8 +102,9 @@ void Modular_Reducer::reduce(BigInt& t1, const BigInt& x, secure_vector<word>& w
    */
    const word t1_neg = t1.is_negative();
 
-   if(ws.size() < m_mod_words + 2)
+   if(ws.size() < m_mod_words + 2) {
       ws.resize(m_mod_words + 2);
+   }
    clear_mem(ws.data(), ws.size());
    ws[m_mod_words + 1] = t1_neg;
 

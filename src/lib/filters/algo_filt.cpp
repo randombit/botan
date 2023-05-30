@@ -45,10 +45,11 @@ Hash_Filter::Hash_Filter(std::string_view hash_name, size_t len) :
 
 void Hash_Filter::end_msg() {
    secure_vector<uint8_t> output = m_hash->final();
-   if(m_out_len)
+   if(m_out_len) {
       send(output, std::min<size_t>(m_out_len, output.size()));
-   else
+   } else {
       send(output);
+   }
 }
 #endif
 
@@ -63,10 +64,11 @@ MAC_Filter::MAC_Filter(std::string_view mac_name, const SymmetricKey& key, size_
 
 void MAC_Filter::end_msg() {
    secure_vector<uint8_t> output = m_mac->final();
-   if(m_out_len)
+   if(m_out_len) {
       send(output, std::min<size_t>(m_out_len, output.size()));
-   else
+   } else {
       send(output);
+   }
 }
 
 #endif

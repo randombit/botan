@@ -231,14 +231,16 @@ size_t OS::get_cpu_available() {
 
    #if defined(_SC_NPROCESSORS_ONLN)
    const long cpu_online = ::sysconf(_SC_NPROCESSORS_ONLN);
-   if(cpu_online > 0)
+   if(cpu_online > 0) {
       return static_cast<size_t>(cpu_online);
+   }
    #endif
 
    #if defined(_SC_NPROCESSORS_CONF)
    const long cpu_conf = ::sysconf(_SC_NPROCESSORS_CONF);
-   if(cpu_conf > 0)
+   if(cpu_conf > 0) {
       return static_cast<size_t>(cpu_conf);
+   }
    #endif
 
 #endif
@@ -248,16 +250,18 @@ size_t OS::get_cpu_available() {
    // well defined or not computable.
    const size_t hw_concur = std::thread::hardware_concurrency();
 
-   if(hw_concur > 0)
+   if(hw_concur > 0) {
       return hw_concur;
+   }
 #endif
 
    return 1;
 }
 
 uint64_t OS::get_high_resolution_clock() {
-   if(uint64_t cpu_clock = OS::get_cpu_cycle_counter())
+   if(uint64_t cpu_clock = OS::get_cpu_cycle_counter()) {
       return cpu_clock;
+   }
 
 #if defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
    return emscripten_get_now();
@@ -321,10 +325,11 @@ size_t OS::system_page_size() {
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    long p = ::sysconf(_SC_PAGESIZE);
-   if(p > 1)
+   if(p > 1) {
       return static_cast<size_t>(p);
-   else
+   } else {
       return default_page_size;
+   }
 #elif defined(BOTAN_TARGET_OS_HAS_VIRTUAL_LOCK)
    BOTAN_UNUSED(default_page_size);
    SYSTEM_INFO sys_info;
@@ -399,8 +404,9 @@ size_t OS::get_memory_locking_limit() {
 bool OS::read_env_variable(std::string& value_out, std::string_view name_view) {
    value_out = "";
 
-   if(running_in_privileged_state())
+   if(running_in_privileged_state()) {
       return false;
+   }
 
 #if defined(BOTAN_TARGET_OS_HAS_WIN32) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
    const std::string name(name_view);
@@ -637,8 +643,9 @@ int OS::run_cpu_instruction_probe(const std::function<int()>& probe_fn) {
 
    int rc = ::sigaction(SIGILL, &sigaction, &old_sigaction);
 
-   if(rc != 0)
+   if(rc != 0) {
       throw System_Error("run_cpu_instruction_probe sigaction failed", errno);
+   }
 
    rc = sigsetjmp(g_sigill_jmp_buf, /*save sigs*/ 1);
 
@@ -652,8 +659,9 @@ int OS::run_cpu_instruction_probe(const std::function<int()>& probe_fn) {
 
    // Restore old SIGILL handler, if any
    rc = ::sigaction(SIGILL, &old_sigaction, nullptr);
-   if(rc != 0)
+   if(rc != 0) {
       throw System_Error("run_cpu_instruction_probe sigaction restore failed", errno);
+   }
 
 #else
    BOTAN_UNUSED(probe_fn);
@@ -668,21 +676,24 @@ std::unique_ptr<OS::Echo_Suppression> OS::suppress_echo_on_terminal() {
       public:
          POSIX_Echo_Suppression() {
             m_stdin_fd = fileno(stdin);
-            if(::tcgetattr(m_stdin_fd, &m_old_termios) != 0)
+            if(::tcgetattr(m_stdin_fd, &m_old_termios) != 0) {
                throw System_Error("Getting terminal status failed", errno);
+            }
 
             struct termios noecho_flags = m_old_termios;
             noecho_flags.c_lflag &= ~ECHO;
             noecho_flags.c_lflag |= ECHONL;
 
-            if(::tcsetattr(m_stdin_fd, TCSANOW, &noecho_flags) != 0)
+            if(::tcsetattr(m_stdin_fd, TCSANOW, &noecho_flags) != 0) {
                throw System_Error("Clearing terminal echo bit failed", errno);
+            }
          }
 
          void reenable_echo() override {
             if(m_stdin_fd > 0) {
-               if(::tcsetattr(m_stdin_fd, TCSANOW, &m_old_termios) != 0)
+               if(::tcsetattr(m_stdin_fd, TCSANOW, &m_old_termios) != 0) {
                   throw System_Error("Restoring terminal echo bit failed", errno);
+               }
                m_stdin_fd = -1;
             }
          }

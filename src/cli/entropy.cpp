@@ -30,10 +30,11 @@ class Entropy final : public Command {
          auto& entropy_sources = Botan::Entropy_Sources::global_sources();
 
          std::vector<std::string> sources;
-         if(req_source == "all")
+         if(req_source == "all") {
             sources = entropy_sources.enabled_sources();
-         else
+         } else {
             sources.push_back(req_source);
+         }
 
          for(const std::string& source : sources) {
             Botan_Tests::SeedCapturing_RNG rng;

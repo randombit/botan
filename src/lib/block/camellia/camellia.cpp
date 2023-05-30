@@ -211,14 +211,16 @@ void decrypt(const uint8_t in[], uint8_t out[], size_t blocks, const secure_vect
 }
 
 inline uint64_t left_rot_hi(uint64_t h, uint64_t l, size_t shift) {
-   if(shift >= 64)
+   if(shift >= 64) {
       shift -= 64;
+   }
    return (h << shift) | (l >> (64 - shift));
 }
 
 inline uint64_t left_rot_lo(uint64_t h, uint64_t l, size_t shift) {
-   if(shift >= 64)
+   if(shift >= 64) {
       shift -= 64;
+   }
    return (h >> (64 - shift)) | (l << shift);
 }
 

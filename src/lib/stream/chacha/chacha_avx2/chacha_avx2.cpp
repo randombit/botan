@@ -200,7 +200,8 @@ void ChaCha::chacha_avx2_x8(uint8_t output[64 * 8], uint32_t state[16], size_t r
    SIMD_8x32::zero_registers();
 
    state[12] += 8;
-   if(state[12] < 8)
+   if(state[12] < 8) {
       state[13]++;
+   }
 }
 }  // namespace Botan

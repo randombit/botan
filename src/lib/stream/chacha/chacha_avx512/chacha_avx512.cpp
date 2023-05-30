@@ -197,7 +197,8 @@ void ChaCha::chacha_avx512_x16(uint8_t output[64 * 16], uint32_t state[16], size
    SIMD_16x32::zero_registers();
 
    state[12] += 16;
-   if(state[12] < 16)
+   if(state[12] < 16) {
       state[13]++;
+   }
 }
 }  // namespace Botan

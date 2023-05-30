@@ -137,8 +137,9 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
                   } else if(m_downgrade_info != nullptr) {
                      // We received a TLS 1.3 error alert that could have been a TLS 1.2 warning alert.
                      // Now that we know that we are talking to a TLS 1.3 server, shut down.
-                     if(m_downgrade_info->received_tls_13_error_alert)
+                     if(m_downgrade_info->received_tls_13_error_alert) {
                         shutdown();
+                     }
 
                      // Downgrade can only be indicated in the first received peer message. This was not the case.
                      m_downgrade_info.reset();
@@ -349,8 +350,9 @@ void Channel_Impl_13::process_alert(const secure_vector<uint8_t>& record) {
 
    if(is_close_notify_alert(alert)) {
       m_can_read = false;
-      if(m_cipher_state)
+      if(m_cipher_state) {
          m_cipher_state->clear_read_keys();
+      }
       m_record_layer.clear_read_buffer();
    }
 
@@ -373,14 +375,16 @@ void Channel_Impl_13::process_alert(const secure_vector<uint8_t>& record) {
       }
    }
 
-   if(alert.is_fatal())
+   if(alert.is_fatal()) {
       shutdown();
+   }
 
    callbacks().tls_alert(alert);
 
    // Respond with our "close_notify" if the application requests us to.
-   if(is_close_notify_alert(alert) && callbacks().tls_peer_closed_connection())
+   if(is_close_notify_alert(alert) && callbacks().tls_peer_closed_connection()) {
       close();
+   }
 }
 
 void Channel_Impl_13::shutdown() {

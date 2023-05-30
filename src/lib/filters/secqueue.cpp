@@ -47,8 +47,9 @@ class SecureQueueNode final {
 
       size_t peek(uint8_t output[], size_t length, size_t offset = 0) {
          const size_t left = m_end - m_start;
-         if(offset >= left)
+         if(offset >= left) {
             return 0;
+         }
          size_t copied = std::min(length, left - offset);
          copy_mem(output, m_buffer.data() + m_start + offset, copied);
          return copied;
@@ -104,8 +105,9 @@ void SecureQueue::destroy() {
 * Copy a SecureQueue
 */
 SecureQueue& SecureQueue::operator=(const SecureQueue& input) {
-   if(this == &input)
+   if(this == &input) {
       return *this;
+   }
 
    destroy();
    m_bytes_read = input.get_bytes_read();
@@ -122,8 +124,9 @@ SecureQueue& SecureQueue::operator=(const SecureQueue& input) {
 * Add some bytes to the queue
 */
 void SecureQueue::write(const uint8_t input[], size_t length) {
-   if(!m_head)
+   if(!m_head) {
       m_head = m_tail = new SecureQueueNode;
+   }
    while(length) {
       const size_t n = m_tail->write(input, length);
       input += n;
@@ -165,8 +168,9 @@ size_t SecureQueue::peek(uint8_t output[], size_t length, size_t offset) const {
       if(offset >= current->size()) {
          offset -= current->size();
          current = current->m_next;
-      } else
+      } else {
          break;
+      }
    }
 
    size_t got = 0;

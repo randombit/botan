@@ -77,49 +77,63 @@ const uint8_t SM3_PKCS_ID[] = {
 */
 std::vector<uint8_t> pkcs_hash_id(std::string_view name) {
    // Special case for SSL/TLS RSA signatures
-   if(name == "Parallel(MD5,SHA-1)")
+   if(name == "Parallel(MD5,SHA-1)") {
       return std::vector<uint8_t>();
+   }
 
    // If you add a value to this function, also update test_hash_id.cpp
 
-   if(name == "MD5")
+   if(name == "MD5") {
       return std::vector<uint8_t>(MD5_PKCS_ID, MD5_PKCS_ID + sizeof(MD5_PKCS_ID));
+   }
 
-   if(name == "RIPEMD-160")
+   if(name == "RIPEMD-160") {
       return std::vector<uint8_t>(RIPEMD_160_PKCS_ID, RIPEMD_160_PKCS_ID + sizeof(RIPEMD_160_PKCS_ID));
+   }
 
-   if(name == "SHA-1")
+   if(name == "SHA-1") {
       return std::vector<uint8_t>(SHA_1_PKCS_ID, SHA_1_PKCS_ID + sizeof(SHA_1_PKCS_ID));
+   }
 
-   if(name == "SHA-224")
+   if(name == "SHA-224") {
       return std::vector<uint8_t>(SHA_224_PKCS_ID, SHA_224_PKCS_ID + sizeof(SHA_224_PKCS_ID));
+   }
 
-   if(name == "SHA-256")
+   if(name == "SHA-256") {
       return std::vector<uint8_t>(SHA_256_PKCS_ID, SHA_256_PKCS_ID + sizeof(SHA_256_PKCS_ID));
+   }
 
-   if(name == "SHA-384")
+   if(name == "SHA-384") {
       return std::vector<uint8_t>(SHA_384_PKCS_ID, SHA_384_PKCS_ID + sizeof(SHA_384_PKCS_ID));
+   }
 
-   if(name == "SHA-512")
+   if(name == "SHA-512") {
       return std::vector<uint8_t>(SHA_512_PKCS_ID, SHA_512_PKCS_ID + sizeof(SHA_512_PKCS_ID));
+   }
 
-   if(name == "SHA-512-256")
+   if(name == "SHA-512-256") {
       return std::vector<uint8_t>(SHA_512_256_PKCS_ID, SHA_512_256_PKCS_ID + sizeof(SHA_512_256_PKCS_ID));
+   }
 
-   if(name == "SHA-3(224)")
+   if(name == "SHA-3(224)") {
       return std::vector<uint8_t>(SHA3_224_PKCS_ID, SHA3_224_PKCS_ID + sizeof(SHA3_224_PKCS_ID));
+   }
 
-   if(name == "SHA-3(256)")
+   if(name == "SHA-3(256)") {
       return std::vector<uint8_t>(SHA3_256_PKCS_ID, SHA3_256_PKCS_ID + sizeof(SHA3_256_PKCS_ID));
+   }
 
-   if(name == "SHA-3(384)")
+   if(name == "SHA-3(384)") {
       return std::vector<uint8_t>(SHA3_384_PKCS_ID, SHA3_384_PKCS_ID + sizeof(SHA3_384_PKCS_ID));
+   }
 
-   if(name == "SHA-3(512)")
+   if(name == "SHA-3(512)") {
       return std::vector<uint8_t>(SHA3_512_PKCS_ID, SHA3_512_PKCS_ID + sizeof(SHA3_512_PKCS_ID));
+   }
 
-   if(name == "SM3")
+   if(name == "SM3") {
       return std::vector<uint8_t>(SM3_PKCS_ID, SM3_PKCS_ID + sizeof(SM3_PKCS_ID));
+   }
 
    throw Invalid_Argument("No PKCS #1 identifier for " + std::string(name));
 }
@@ -128,23 +142,30 @@ std::vector<uint8_t> pkcs_hash_id(std::string_view name) {
 * HashID as specified by IEEE 1363/X9.31
 */
 uint8_t ieee1363_hash_id(std::string_view name) {
-   if(name == "SHA-1")
+   if(name == "SHA-1") {
       return 0x33;
+   }
 
-   if(name == "SHA-224")
+   if(name == "SHA-224") {
       return 0x38;
-   if(name == "SHA-256")
+   }
+   if(name == "SHA-256") {
       return 0x34;
-   if(name == "SHA-384")
+   }
+   if(name == "SHA-384") {
       return 0x36;
-   if(name == "SHA-512")
+   }
+   if(name == "SHA-512") {
       return 0x35;
+   }
 
-   if(name == "RIPEMD-160")
+   if(name == "RIPEMD-160") {
       return 0x31;
+   }
 
-   if(name == "Whirlpool")
+   if(name == "Whirlpool") {
       return 0x37;
+   }
 
    return 0;
 }

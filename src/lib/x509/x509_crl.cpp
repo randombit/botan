@@ -66,15 +66,17 @@ bool X509_CRL::is_revoked(const X509_Certificate& cert) const {
    If the cert wasn't issued by the CRL issuer, it's possible the cert
    is revoked, but not by this CRL. Maybe throw an exception instead?
    */
-   if(cert.issuer_dn() != issuer_dn())
+   if(cert.issuer_dn() != issuer_dn()) {
       return false;
+   }
 
    std::vector<uint8_t> crl_akid = authority_key_id();
    const std::vector<uint8_t>& cert_akid = cert.authority_key_id();
 
    if(!crl_akid.empty() && !cert_akid.empty()) {
-      if(crl_akid != cert_akid)
+      if(crl_akid != cert_akid) {
          return false;
+      }
    }
 
    const std::vector<uint8_t>& cert_serial = cert.serial_number();
@@ -84,10 +86,11 @@ bool X509_CRL::is_revoked(const X509_Certificate& cert) const {
    // FIXME would be nice to avoid a linear scan here - maybe sort the entries?
    for(const CRL_Entry& entry : get_revoked()) {
       if(cert_serial == entry.serial_number()) {
-         if(entry.reason_code() == CRL_Code::RemoveFromCrl)
+         if(entry.reason_code() == CRL_Code::RemoveFromCrl) {
             is_revoked = false;
-         else
+         } else {
             is_revoked = true;
+         }
       }
    }
 
@@ -107,14 +110,16 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body, cons
    size_t version;
    tbs_crl.decode_optional(version, ASN1_Type::Integer, ASN1_Class::Universal);
 
-   if(version != 0 && version != 1)
+   if(version != 0 && version != 1) {
       throw Decoding_Error("Unknown X.509 CRL version " + std::to_string(version + 1));
+   }
 
    AlgorithmIdentifier sig_algo_inner;
    tbs_crl.decode(sig_algo_inner);
 
-   if(sig_algo != sig_algo_inner)
+   if(sig_algo != sig_algo_inner) {
       throw Decoding_Error("Algorithm identifier mismatch in CRL");
+   }
 
    tbs_crl.decode(data->m_issuer).decode(data->m_this_update).decode(data->m_next_update);
 
@@ -137,8 +142,9 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body, cons
       next = tbs_crl.get_next_object();
    }
 
-   if(next.is_set())
+   if(next.is_set()) {
       throw Decoding_Error("Unknown tag following extensions in CRL");
+   }
 
    tbs_crl.verify_end();
 

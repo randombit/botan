@@ -138,8 +138,9 @@ void Session_Manager_SQL::initialize_existing_database(std::string_view passphra
 
    const size_t check_val_created = make_uint16(derived_key[0], derived_key[1]);
 
-   if(check_val_created != check_val_db)
+   if(check_val_created != check_val_db) {
       throw Invalid_Argument("Session database password not valid");
+   }
 
    m_session_key = SymmetricKey(std::span(derived_key).subspan(2));
 }
@@ -270,8 +271,9 @@ size_t Session_Manager_SQL::remove_all() {
 void Session_Manager_SQL::prune_session_cache() {
    // internal API: assuming that the lock is held already if needed
 
-   if(m_max_sessions == 0)
+   if(m_max_sessions == 0) {
       return;
+   }
 
    auto remove_oldest = m_db->new_statement(
       "DELETE FROM tls_sessions WHERE session_id NOT IN "

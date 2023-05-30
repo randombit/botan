@@ -217,10 +217,11 @@ class TLS_Client final : public Command {
 
          const auto psk = [this]() -> std::optional<Botan::SymmetricKey> {
             auto psk_hex = get_arg_maybe("psk");
-            if(psk_hex)
+            if(psk_hex) {
                return Botan::SymmetricKey(Botan::hex_decode_locked(psk_hex.value()));
-            else
+            } else {
                return {};
+            }
          }();
          const std::optional<std::string> psk_identity = get_arg_maybe("psk-identity");
 

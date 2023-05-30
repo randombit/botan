@@ -187,8 +187,9 @@ const Transcript_Hash& Transcript_Hash_State::truncated() const {
 
 void Transcript_Hash_State::set_algorithm(std::string_view algo_spec) {
    BOTAN_STATE_CHECK(m_hash == nullptr || m_hash->name() == algo_spec);
-   if(m_hash != nullptr)
+   if(m_hash != nullptr) {
       return;
+   }
 
    m_hash = HashFunction::create_or_throw(algo_spec);
    for(const auto& msg : m_unprocessed_transcript) {

@@ -21,10 +21,12 @@ EC_Point::EC_Point(const CurveGFp& curve) : m_curve(curve), m_coord_x(0), m_coor
 
 EC_Point::EC_Point(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
       m_curve(curve), m_coord_x(x), m_coord_y(y), m_coord_z(m_curve.get_1_rep()) {
-   if(x < 0 || x >= curve.get_p())
+   if(x < 0 || x >= curve.get_p()) {
       throw Invalid_Argument("Invalid EC_Point affine x");
-   if(y < 0 || y >= curve.get_p())
+   }
+   if(y < 0 || y >= curve.get_p()) {
       throw Invalid_Argument("Invalid EC_Point affine y");
+   }
 
    secure_vector<word> monty_ws(m_curve.get_ws_size());
    m_curve.to_rep(m_coord_x, monty_ws);
@@ -59,9 +61,11 @@ namespace {
 inline void resize_ws(std::vector<BigInt>& ws_bn, size_t cap_size) {
    BOTAN_ASSERT(ws_bn.size() >= EC_Point::WORKSPACE_SIZE, "Expected size for EC_Point workspace");
 
-   for(auto& ws : ws_bn)
-      if(ws.size() < cap_size)
+   for(auto& ws : ws_bn) {
+      if(ws.size() < cap_size) {
          ws.get_word_vector().resize(cap_size);
+      }
+   }
 }
 
 }  // namespace
@@ -150,8 +154,9 @@ void EC_Point::add(const word x_words[],
                    const word z_words[],
                    size_t z_size,
                    std::vector<BigInt>& ws_bn) {
-   if((CT::all_zeros(x_words, x_size) & CT::all_zeros(z_words, z_size)).is_set())
+   if((CT::all_zeros(x_words, x_size) & CT::all_zeros(z_words, z_size)).is_set()) {
       return;
+   }
 
    if(is_zero()) {
       m_coord_x.set_words(x_words, x_size);
@@ -229,8 +234,9 @@ void EC_Point::add(const word x_words[],
 }
 
 void EC_Point::mult2i(size_t iterations, std::vector<BigInt>& ws_bn) {
-   if(iterations == 0)
+   if(iterations == 0) {
       return;
+   }
 
    if(m_coord_y.is_zero()) {
       *this = EC_Point(m_curve);  // setting myself to zero
@@ -241,14 +247,16 @@ void EC_Point::mult2i(size_t iterations, std::vector<BigInt>& ws_bn) {
    TODO we can save 2 squarings per iteration by computing
    a*Z^4 using values cached from previous iteration
    */
-   for(size_t i = 0; i != iterations; ++i)
+   for(size_t i = 0; i != iterations; ++i) {
       mult2(ws_bn);
+   }
 }
 
 // *this *= 2
 void EC_Point::mult2(std::vector<BigInt>& ws_bn) {
-   if(is_zero())
+   if(is_zero()) {
       return;
+   }
 
    if(m_coord_y.is_zero()) {
       *this = EC_Point(m_curve);  // setting myself to zero
@@ -338,10 +346,11 @@ EC_Point& EC_Point::operator+=(const EC_Point& rhs) {
 EC_Point& EC_Point::operator-=(const EC_Point& rhs) {
    EC_Point minus_rhs = EC_Point(rhs).negate();
 
-   if(is_zero())
+   if(is_zero()) {
       *this = minus_rhs;
-   else
+   } else {
       *this += minus_rhs;
+   }
 
    return *this;
 }
@@ -366,8 +375,9 @@ EC_Point operator*(const BigInt& scalar, const EC_Point& point) {
       R[b].mult2(ws);
    }
 
-   if(scalar.is_negative())
+   if(scalar.is_negative()) {
       R[0].negate();
+   }
 
    BOTAN_DEBUG_ASSERT(R[0].on_the_curve());
 
@@ -377,14 +387,16 @@ EC_Point operator*(const BigInt& scalar, const EC_Point& point) {
 //static
 void EC_Point::force_all_affine(std::vector<EC_Point>& points, secure_vector<word>& ws) {
    if(points.size() <= 1) {
-      for(auto& point : points)
+      for(auto& point : points) {
          point.force_affine();
+      }
       return;
    }
 
    for(auto& point : points) {
-      if(point.is_zero())
+      if(point.is_zero()) {
          throw Invalid_State("Cannot convert zero ECC point to affine");
+      }
    }
 
    /*
@@ -399,8 +411,9 @@ void EC_Point::force_all_affine(std::vector<EC_Point>& points, secure_vector<wor
    const CurveGFp& curve = points[0].m_curve;
    const BigInt& rep_1 = curve.get_1_rep();
 
-   if(ws.size() < curve.get_ws_size())
+   if(ws.size() < curve.get_ws_size()) {
       ws.resize(curve.get_ws_size());
+   }
 
    std::vector<BigInt> c(points.size());
    c[0] = points[0].m_coord_z;
@@ -435,8 +448,9 @@ void EC_Point::force_all_affine(std::vector<EC_Point>& points, secure_vector<wor
 }
 
 void EC_Point::force_affine() {
-   if(is_zero())
+   if(is_zero()) {
       throw Invalid_State("Cannot convert zero ECC point to affine");
+   }
 
    secure_vector<word> ws;
 
@@ -451,13 +465,15 @@ void EC_Point::force_affine() {
 bool EC_Point::is_affine() const { return m_curve.is_one(m_coord_z); }
 
 BigInt EC_Point::get_affine_x() const {
-   if(is_zero())
+   if(is_zero()) {
       throw Invalid_State("Cannot convert zero point to affine");
+   }
 
    secure_vector<word> monty_ws;
 
-   if(is_affine())
+   if(is_affine()) {
       return m_curve.from_rep_to_tmp(m_coord_x, monty_ws);
+   }
 
    BigInt z2 = m_curve.sqr_to_tmp(m_coord_z, monty_ws);
    z2 = m_curve.invert_element(z2, monty_ws);
@@ -469,13 +485,15 @@ BigInt EC_Point::get_affine_x() const {
 }
 
 BigInt EC_Point::get_affine_y() const {
-   if(is_zero())
+   if(is_zero()) {
       throw Invalid_State("Cannot convert zero point to affine");
+   }
 
    secure_vector<word> monty_ws;
 
-   if(is_affine())
+   if(is_affine()) {
       return m_curve.from_rep_to_tmp(m_coord_y, monty_ws);
+   }
 
    const BigInt z2 = m_curve.sqr_to_tmp(m_coord_z, monty_ws);
    const BigInt z3 = m_curve.mul_to_tmp(m_coord_z, z2, monty_ws);
@@ -494,8 +512,9 @@ bool EC_Point::on_the_curve() const {
    If somehow the state is corrupted, which suggests a fault attack
    (or internal computational error), then return false.
    */
-   if(is_zero())
+   if(is_zero()) {
       return true;
+   }
 
    secure_vector<word> monty_ws;
 
@@ -506,16 +525,18 @@ bool EC_Point::on_the_curve() const {
 
    if(m_coord_z == z2)  // Is z equal to 1 (in Montgomery form)?
    {
-      if(y2 != m_curve.from_rep_to_tmp(x3 + ax + m_curve.get_b_rep(), monty_ws))
+      if(y2 != m_curve.from_rep_to_tmp(x3 + ax + m_curve.get_b_rep(), monty_ws)) {
          return false;
+      }
    }
 
    const BigInt z3 = m_curve.mul_to_tmp(m_coord_z, z2, monty_ws);
    const BigInt ax_z4 = m_curve.mul_to_tmp(ax, m_curve.sqr_to_tmp(z2, monty_ws), monty_ws);
    const BigInt b_z6 = m_curve.mul_to_tmp(m_curve.get_b_rep(), m_curve.sqr_to_tmp(z3, monty_ws), monty_ws);
 
-   if(y2 != m_curve.from_rep_to_tmp(x3 + ax_z4 + b_z6, monty_ws))
+   if(y2 != m_curve.from_rep_to_tmp(x3 + ax_z4 + b_z6, monty_ws)) {
       return false;
+   }
 
    return true;
 }
@@ -529,20 +550,23 @@ void EC_Point::swap(EC_Point& other) {
 }
 
 bool EC_Point::operator==(const EC_Point& other) const {
-   if(m_curve != other.m_curve)
+   if(m_curve != other.m_curve) {
       return false;
+   }
 
    // If this is zero, only equal if other is also zero
-   if(is_zero())
+   if(is_zero()) {
       return other.is_zero();
+   }
 
    return (get_affine_x() == other.get_affine_x() && get_affine_y() == other.get_affine_y());
 }
 
 // encoding and decoding
 std::vector<uint8_t> EC_Point::encode(EC_Point_Format format) const {
-   if(is_zero())
+   if(is_zero()) {
       return std::vector<uint8_t>(1);  // single 0 byte
+   }
 
    const size_t p_bytes = m_curve.get_p().bytes();
 
@@ -565,8 +589,9 @@ std::vector<uint8_t> EC_Point::encode(EC_Point_Format format) const {
       result[0] = 0x06 | static_cast<uint8_t>(y.get_bit(0));
       BigInt::encode_1363(&result[1], p_bytes, x);
       BigInt::encode_1363(&result[1 + p_bytes], p_bytes, y);
-   } else
+   } else {
       throw Invalid_Argument("EC2OSP illegal point encoding");
+   }
 
    return result;
 }
@@ -584,11 +609,13 @@ BigInt decompress_point(
 
    BigInt z = sqrt_modulo_prime(g, curve_p);
 
-   if(z < 0)
+   if(z < 0) {
       throw Decoding_Error("Error during EC point decompression");
+   }
 
-   if(z.get_bit(0) != yMod2)
+   if(z.get_bit(0) != yMod2) {
       z = curve_p - z;
+   }
 
    return z;
 }
@@ -597,23 +624,26 @@ BigInt decompress_point(
 
 EC_Point OS2ECP(const uint8_t data[], size_t data_len, const CurveGFp& curve) {
    // Should we really be doing this?
-   if(data_len <= 1)
+   if(data_len <= 1) {
       return EC_Point(curve);  // return zero
+   }
 
    std::pair<BigInt, BigInt> xy = OS2ECP(data, data_len, curve.get_p(), curve.get_a(), curve.get_b());
 
    EC_Point point(curve, xy.first, xy.second);
 
-   if(!point.on_the_curve())
+   if(!point.on_the_curve()) {
       throw Decoding_Error("OS2ECP: Decoded point was not on the curve");
+   }
 
    return point;
 }
 
 std::pair<BigInt, BigInt> OS2ECP(
    const uint8_t data[], size_t data_len, const BigInt& curve_p, const BigInt& curve_a, const BigInt& curve_b) {
-   if(data_len <= 1)
+   if(data_len <= 1) {
       throw Decoding_Error("OS2ECP invalid point");
+   }
 
    const uint8_t pc = data[0];
 
@@ -640,10 +670,12 @@ std::pair<BigInt, BigInt> OS2ECP(
 
       const bool y_mod_2 = ((pc & 0x01) == 1);
 
-      if(decompress_point(y_mod_2, x, curve_p, curve_a, curve_b) != y)
+      if(decompress_point(y_mod_2, x, curve_p, curve_a, curve_b) != y) {
          throw Decoding_Error("OS2ECP: Decoding error in hybrid format");
-   } else
+      }
+   } else {
       throw Invalid_Argument("OS2ECP: Unknown format type " + std::to_string(pc));
+   }
 
    return std::make_pair(x, y);
 }

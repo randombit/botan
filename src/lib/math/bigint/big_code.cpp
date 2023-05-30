@@ -66,16 +66,18 @@ std::string BigInt::to_dec_string() const {
    std::string s;
    s.reserve(1 + digits.size());
 
-   if(is_negative())
+   if(is_negative()) {
       s += "-";
+   }
 
    // Reverse and convert to textual digits
    for(auto i = digits.rbegin(); i != digits.rend(); ++i) {
       s.push_back(*i + '0');  // assumes ASCII
    }
 
-   if(s.empty())
+   if(s.empty()) {
       s += "0";
+   }
 
    return s;
 }
@@ -84,12 +86,14 @@ std::string BigInt::to_hex_string() const {
    const size_t this_bytes = this->bytes();
    std::vector<uint8_t> bits(std::max<size_t>(1, this_bytes));
 
-   if(this_bytes > 0)
+   if(this_bytes > 0) {
       this->binary_encode(bits.data());
+   }
 
    std::string hrep;
-   if(is_negative())
+   if(is_negative()) {
       hrep += "-";
+   }
    hrep += "0x";
    hrep += hex_encode(bits);
    return hrep;
@@ -99,8 +103,9 @@ std::string BigInt::to_hex_string() const {
 * Encode a BigInt, with leading 0s if needed
 */
 secure_vector<uint8_t> BigInt::encode_1363(const BigInt& n, size_t bytes) {
-   if(n.bytes() > bytes)
+   if(n.bytes() > bytes) {
       throw Encoding_Error("encode_1363: n is too large to encode properly");
+   }
 
    secure_vector<uint8_t> output(bytes);
    n.binary_encode(output.data(), output.size());
@@ -109,8 +114,9 @@ secure_vector<uint8_t> BigInt::encode_1363(const BigInt& n, size_t bytes) {
 
 //static
 void BigInt::encode_1363(uint8_t output[], size_t bytes, const BigInt& n) {
-   if(n.bytes() > bytes)
+   if(n.bytes() > bytes) {
       throw Encoding_Error("encode_1363: n is too large to encode properly");
+   }
 
    n.binary_encode(output, bytes);
 }
@@ -119,10 +125,12 @@ void BigInt::encode_1363(uint8_t output[], size_t bytes, const BigInt& n) {
 * Encode two BigInt, with leading 0s if needed, and concatenate
 */
 secure_vector<uint8_t> BigInt::encode_fixed_length_int_pair(const BigInt& n1, const BigInt& n2, size_t bytes) {
-   if(n1.is_negative() || n2.is_negative())
+   if(n1.is_negative() || n2.is_negative()) {
       throw Encoding_Error("encode_fixed_length_int_pair: values must be positive");
-   if(n1.bytes() > bytes || n2.bytes() > bytes)
+   }
+   if(n1.bytes() > bytes || n2.bytes() > bytes) {
       throw Encoding_Error("encode_fixed_length_int_pair: values too large to encode properly");
+   }
    secure_vector<uint8_t> output(2 * bytes);
    n1.binary_encode(output.data(), bytes);
    n2.binary_encode(output.data() + bytes, bytes);
@@ -146,8 +154,9 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base) {
          binary = hex_decode_locked(buf0_with_leading_0, 2);
 
          binary += hex_decode_locked(cast_uint8_ptr_to_char(&buf[1]), length - 1, false);
-      } else
+      } else {
          binary = hex_decode_locked(cast_uint8_ptr_to_char(buf), length, false);
+      }
 
       r.binary_decode(binary.data(), binary.size());
    } else if(base == Decimal) {
@@ -155,8 +164,9 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base) {
       for(size_t i = 0; i != length; ++i) {
          const char c = buf[i];
 
-         if(c < '0' || c > '9')
+         if(c < '0' || c > '9') {
             throw Invalid_Argument("BigInt::decode: invalid decimal char");
+         }
 
          const uint8_t x = c - '0';
          BOTAN_ASSERT_NOMSG(x < 10);
@@ -164,8 +174,9 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base) {
          r *= 10;
          r += x;
       }
-   } else
+   } else {
       throw Invalid_Argument("Unknown BigInt decoding method");
+   }
    return r;
 }
 

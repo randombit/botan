@@ -39,27 +39,31 @@ namespace Botan {
 std::unique_ptr<StreamCipher> StreamCipher::create(std::string_view algo_spec, std::string_view provider) {
 #if defined(BOTAN_HAS_SHAKE_CIPHER)
    if(algo_spec == "SHAKE-128" || algo_spec == "SHAKE-128-XOF") {
-      if(provider.empty() || provider == "base")
+      if(provider.empty() || provider == "base") {
          return std::make_unique<SHAKE_128_Cipher>();
+      }
    }
 
    if(algo_spec == "SHAKE-256" || algo_spec == "SHAKE-256-XOF") {
-      if(provider.empty() || provider == "base")
+      if(provider.empty() || provider == "base") {
          return std::make_unique<SHAKE_256_Cipher>();
+      }
    }
 #endif
 
 #if defined(BOTAN_HAS_CHACHA)
    if(algo_spec == "ChaCha20") {
-      if(provider.empty() || provider == "base")
+      if(provider.empty() || provider == "base") {
          return std::make_unique<ChaCha>(20);
+      }
    }
 #endif
 
 #if defined(BOTAN_HAS_SALSA20)
    if(algo_spec == "Salsa20") {
-      if(provider.empty() || provider == "base")
+      if(provider.empty() || provider == "base") {
          return std::make_unique<Salsa20>();
+      }
    }
 #endif
 
@@ -79,16 +83,18 @@ std::unique_ptr<StreamCipher> StreamCipher::create(std::string_view algo_spec, s
 
 #if defined(BOTAN_HAS_CHACHA)
    if(req.algo_name() == "ChaCha") {
-      if(provider.empty() || provider == "base")
+      if(provider.empty() || provider == "base") {
          return std::make_unique<ChaCha>(req.arg_as_integer(0, 20));
+      }
    }
 #endif
 
 #if defined(BOTAN_HAS_OFB)
    if(req.algo_name() == "OFB" && req.arg_count() == 1) {
       if(provider.empty() || provider == "base") {
-         if(auto cipher = BlockCipher::create(req.arg(0)))
+         if(auto cipher = BlockCipher::create(req.arg(0))) {
             return std::make_unique<OFB>(std::move(cipher));
+         }
       }
    }
 #endif

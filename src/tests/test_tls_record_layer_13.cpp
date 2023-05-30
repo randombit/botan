@@ -788,8 +788,9 @@ std::vector<Test::Result> legacy_version_handling() {
 
       while(dr.has_remaining()) {
          dr.discard_next(1);  // record type
-         if(dr.get_uint16_t() != version)
+         if(dr.get_uint16_t() != version) {
             return false;
+         }
          const auto record_size = dr.get_uint16_t();
          dr.discard_next(record_size);
       }

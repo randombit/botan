@@ -425,8 +425,9 @@ class FFI_ZFEC_Test final : public FFI_Test {
          // First encode the complete input string into N blocks where K are
          // required for reconstruction.  The N encoded blocks will end up in
          // `encoded`.
-         if(!TEST_FFI_INIT(botan_zfec_encode, (K, N, input, totalSize, encoded.data())))
+         if(!TEST_FFI_INIT(botan_zfec_encode, (K, N, input, totalSize, encoded.data()))) {
             return;
+         }
 
          // Any K blocks can be decoded to reproduce the original input (split
          // across an array of K strings of blockSize bytes each).  This loop
@@ -488,8 +489,9 @@ class FFI_CRL_Test final : public FFI_Test {
             "-----END X509 CRL-----";
 
          botan_x509_crl_t bytecrl;
-         if(!TEST_FFI_INIT(botan_x509_crl_load, (&bytecrl, reinterpret_cast<const uint8_t*>(crl_string), 966)))
+         if(!TEST_FFI_INIT(botan_x509_crl_load, (&bytecrl, reinterpret_cast<const uint8_t*>(crl_string), 966))) {
             return;
+         }
 
          botan_x509_crl_t crl;
          REQUIRE_FFI_OK(botan_x509_crl_load_file, (&crl, Test::data_file("x509/nist/root.crl").c_str()));
@@ -518,8 +520,9 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          botan_x509_cert_t root;
          int rc;
 
-         if(!TEST_FFI_INIT(botan_x509_cert_load_file, (&root, Test::data_file("x509/nist/root.crt").c_str())))
+         if(!TEST_FFI_INIT(botan_x509_cert_load_file, (&root, Test::data_file("x509/nist/root.crt").c_str()))) {
             return;
+         }
 
          botan_x509_cert_t end2;
          botan_x509_cert_t sub2;
@@ -1773,8 +1776,9 @@ class FFI_TOTP_Test final : public FFI_Test {
          const size_t timestep = 30;
          botan_totp_t totp;
 
-         if(!TEST_FFI_INIT(botan_totp_init, (&totp, key.data(), key.size(), "SHA-1", digits, timestep)))
+         if(!TEST_FFI_INIT(botan_totp_init, (&totp, key.data(), key.size(), "SHA-1", digits, timestep))) {
             return;
+         }
 
          uint32_t code;
          TEST_FFI_OK(botan_totp_generate, (totp, &code, 59));
@@ -1802,8 +1806,9 @@ class FFI_HOTP_Test final : public FFI_Test {
          botan_hotp_t hotp;
          uint32_t hotp_val;
 
-         if(!TEST_FFI_INIT(botan_hotp_init, (&hotp, key.data(), key.size(), "SHA-1", digits)))
+         if(!TEST_FFI_INIT(botan_hotp_init, (&hotp, key.data(), key.size(), "SHA-1", digits))) {
             return;
+         }
 
          TEST_FFI_OK(botan_hotp_generate, (hotp, &hotp_val, 0));
          result.confirm("Valid value for counter 0", hotp_val == 755224);
@@ -2141,8 +2146,9 @@ class FFI_ECDSA_Test final : public FFI_Test {
          botan_privkey_t priv;
          botan_pubkey_t pub;
 
-         if(!TEST_FFI_INIT(botan_privkey_create_ecdsa, (&priv, rng, kCurve)))
+         if(!TEST_FFI_INIT(botan_privkey_create_ecdsa, (&priv, rng, kCurve))) {
             return;
+         }
 
          TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
          ffi_test_pubkey_export(result, pub, priv, rng);
@@ -2249,8 +2255,9 @@ class FFI_SM2_Sig_Test final : public FFI_Test {
          botan_privkey_t loaded_privkey;
          botan_pubkey_t loaded_pubkey;
 
-         if(!TEST_FFI_INIT(botan_privkey_create, (&priv, "SM2_Sig", kCurve, rng)))
+         if(!TEST_FFI_INIT(botan_privkey_create, (&priv, "SM2_Sig", kCurve, rng))) {
             return;
+         }
 
          TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
          ffi_test_pubkey_export(result, pub, priv, rng);
@@ -2347,8 +2354,9 @@ class FFI_SM2_Enc_Test final : public FFI_Test {
          botan_privkey_t loaded_privkey;
          botan_pubkey_t loaded_pubkey;
 
-         if(!TEST_FFI_INIT(botan_privkey_create, (&priv, "SM2_Enc", kCurve, rng)))
+         if(!TEST_FFI_INIT(botan_privkey_create, (&priv, "SM2_Enc", kCurve, rng))) {
             return;
+         }
 
          TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
          ffi_test_pubkey_export(result, pub, priv, rng);
@@ -2420,8 +2428,9 @@ class FFI_ECDH_Test final : public FFI_Test {
 
       void ffi_test(Test::Result& result, botan_rng_t rng) override {
          botan_privkey_t priv1;
-         if(!TEST_FFI_INIT(botan_privkey_create_ecdh, (&priv1, rng, "secp256r1")))
+         if(!TEST_FFI_INIT(botan_privkey_create_ecdh, (&priv1, rng, "secp256r1"))) {
             return;
+         }
 
          botan_privkey_t priv2;
          REQUIRE_FFI_OK(botan_privkey_create_ecdh, (&priv2, rng, "secp256r1"));
@@ -2545,8 +2554,9 @@ class FFI_Ed25519_Test final : public FFI_Test {
             "56f90cca98e2102637bd983fdb16c131dfd27ed82bf4dde5606e0d756aed3366"
             "d09c4fa11527f038e0f57f2201d82f2ea2c9033265fa6ceb489e854bae61b404");
 
-         if(!TEST_FFI_INIT(botan_privkey_load_ed25519, (&priv, seed.data())))
+         if(!TEST_FFI_INIT(botan_privkey_load_ed25519, (&priv, seed.data()))) {
             return;
+         }
 
          uint8_t retr_privkey[64];
          TEST_FFI_OK(botan_privkey_ed25519_get_privkey, (priv, retr_privkey));
@@ -2612,8 +2622,9 @@ class FFI_X25519_Test final : public FFI_Test {
             Botan::hex_decode("4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742");
 
          botan_privkey_t b_priv;
-         if(!TEST_FFI_INIT(botan_privkey_load_x25519, (&b_priv, b_priv_bits.data())))
+         if(!TEST_FFI_INIT(botan_privkey_load_x25519, (&b_priv, b_priv_bits.data()))) {
             return;
+         }
 
          std::vector<uint8_t> privkey_read(32);
          TEST_FFI_OK(botan_privkey_x25519_get_privkey, (b_priv, privkey_read.data()));
@@ -2741,8 +2752,9 @@ class FFI_DH_Test final : public FFI_Test {
 
       void ffi_test(Test::Result& result, botan_rng_t rng) override {
          botan_privkey_t priv1;
-         if(!TEST_FFI_INIT(botan_privkey_create_dh, (&priv1, rng, "modp/ietf/2048")))
+         if(!TEST_FFI_INIT(botan_privkey_create_dh, (&priv1, rng, "modp/ietf/2048"))) {
             return;
+         }
 
          botan_privkey_t priv2;
          REQUIRE_FFI_OK(botan_privkey_create_dh, (&priv2, rng, "modp/ietf/2048"));

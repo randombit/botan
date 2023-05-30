@@ -45,12 +45,14 @@ class PK_Encrypt final : public Command {
 
          std::unique_ptr<Botan::AEAD_Mode> aead = Botan::AEAD_Mode::create(aead_algo, Botan::Cipher_Dir::Encryption);
 
-         if(!aead)
+         if(!aead) {
             throw CLI_Usage_Error("The AEAD '" + aead_algo + "' is not available");
+         }
 
          const Botan::OID aead_oid = Botan::OID::from_string(aead_algo);
-         if(aead_oid.empty())
+         if(aead_oid.empty()) {
             throw CLI_Usage_Error("No OID defined for AEAD '" + aead_algo + "'");
+         }
 
          Botan::secure_vector<uint8_t> data;
          auto insert_fn = [&](const uint8_t b[], size_t l) { data.insert(data.end(), b, b + l); };

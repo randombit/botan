@@ -194,8 +194,9 @@ bool maybe_BER(DataSource& source) {
    }
 
    const auto cons_seq = static_cast<uint8_t>(ASN1_Class::Constructed) | static_cast<uint8_t>(ASN1_Type::Sequence);
-   if(first_u8 == cons_seq)
+   if(first_u8 == cons_seq) {
       return true;
+   }
    return false;
 }
 

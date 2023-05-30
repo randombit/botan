@@ -110,8 +110,9 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 secure_vector<uint8_t> DH_KA_Operation::raw_agree(const uint8_t w[], size_t w_len) {
    BigInt v = BigInt::decode(w, w_len);
 
-   if(v <= 1 || v >= group().get_p())
+   if(v <= 1 || v >= group().get_p()) {
       throw Invalid_Argument("DH agreement - invalid key provided");
+   }
 
    v = m_blinder.blind(v);
    v = powermod_x_p(v);
@@ -125,8 +126,9 @@ secure_vector<uint8_t> DH_KA_Operation::raw_agree(const uint8_t w[], size_t w_le
 std::unique_ptr<PK_Ops::Key_Agreement> DH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
                                                                               std::string_view params,
                                                                               std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<DH_KA_Operation>(this->m_private_key, params, rng);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 

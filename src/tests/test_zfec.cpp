@@ -39,10 +39,11 @@ class ZFEC_KAT final : public Text_Based_Test {
 
          for(size_t i = 0; i != N; ++i) {
             const uint8_t* expected_share = nullptr;
-            if(i < K)
+            if(i < K) {
                expected_share = &input[share_size * i];
-            else
+            } else {
                expected_share = &expected[share_size * (i - K)];
+            }
 
             shares.insert(std::make_pair(i, expected_share));
          }

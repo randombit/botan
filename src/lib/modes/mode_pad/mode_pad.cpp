@@ -17,20 +17,25 @@ namespace Botan {
 * Get a block cipher padding method by name
 */
 std::unique_ptr<BlockCipherModePaddingMethod> BlockCipherModePaddingMethod::create(std::string_view algo_spec) {
-   if(algo_spec == "NoPadding")
+   if(algo_spec == "NoPadding") {
       return std::make_unique<Null_Padding>();
+   }
 
-   if(algo_spec == "PKCS7")
+   if(algo_spec == "PKCS7") {
       return std::make_unique<PKCS7_Padding>();
+   }
 
-   if(algo_spec == "OneAndZeros")
+   if(algo_spec == "OneAndZeros") {
       return std::make_unique<OneAndZeros_Padding>();
+   }
 
-   if(algo_spec == "X9.23")
+   if(algo_spec == "X9.23") {
       return std::make_unique<ANSI_X923_Padding>();
+   }
 
-   if(algo_spec == "ESP")
+   if(algo_spec == "ESP") {
       return std::make_unique<ESP_Padding>();
+   }
 
    return nullptr;
 }
@@ -75,8 +80,9 @@ void PKCS7_Padding::add_padding(secure_vector<uint8_t>& buffer, size_t last_byte
 * Unpad with PKCS #7 Method
 */
 size_t PKCS7_Padding::unpad(const uint8_t input[], size_t input_length) const {
-   if(!valid_blocksize(input_length))
+   if(!valid_blocksize(input_length)) {
       return input_length;
+   }
 
    CT::poison(input, input_length);
 
@@ -145,8 +151,9 @@ void ANSI_X923_Padding::add_padding(secure_vector<uint8_t>& buffer, size_t last_
 * Unpad with ANSI X9.23 Method
 */
 size_t ANSI_X923_Padding::unpad(const uint8_t input[], size_t input_length) const {
-   if(!valid_blocksize(input_length))
+   if(!valid_blocksize(input_length)) {
       return input_length;
+   }
 
    CT::poison(input, input_length);
 
@@ -210,8 +217,9 @@ void OneAndZeros_Padding::add_padding(secure_vector<uint8_t>& buffer, size_t las
 * Unpad with One and Zeros Method
 */
 size_t OneAndZeros_Padding::unpad(const uint8_t input[], size_t input_length) const {
-   if(!valid_blocksize(input_length))
+   if(!valid_blocksize(input_length)) {
       return input_length;
+   }
 
    CT::poison(input, input_length);
 
@@ -280,8 +288,9 @@ void ESP_Padding::add_padding(secure_vector<uint8_t>& buffer, size_t last_byte_p
 * Unpad with ESP Padding Method
 */
 size_t ESP_Padding::unpad(const uint8_t input[], size_t input_length) const {
-   if(!valid_blocksize(input_length))
+   if(!valid_blocksize(input_length)) {
       return input_length;
+   }
 
    CT::poison(input, input_length);
 

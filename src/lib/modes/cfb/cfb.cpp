@@ -33,10 +33,11 @@ void CFB_Mode::reset() {
 }
 
 std::string CFB_Mode::name() const {
-   if(feedback() == cipher().block_size())
+   if(feedback() == cipher().block_size()) {
       return fmt("{}/CFB", cipher().name());
-   else
+   } else {
       return fmt("{}/CFB({})", cipher().name(), feedback() * 8);
+   }
 }
 
 size_t CFB_Mode::output_length(size_t input_length) const { return input_length; }
@@ -64,8 +65,9 @@ void CFB_Mode::key_schedule(const uint8_t key[], size_t length) {
 }
 
 void CFB_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
-   if(!valid_nonce_length(nonce_len))
+   if(!valid_nonce_length(nonce_len)) {
       throw Invalid_IV_Length(name(), nonce_len);
+   }
 
    assert_key_material_set();
 

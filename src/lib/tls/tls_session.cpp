@@ -425,8 +425,9 @@ std::vector<uint8_t> Session::encrypt(const SymmetricKey& key, RandomNumberGener
 Session Session::decrypt(std::span<const uint8_t> in, const SymmetricKey& key) {
    try {
       const size_t min_session_size = 48 + 4;  // serious under-estimate
-      if(in.size() < TLS_SESSION_CRYPT_OVERHEAD + min_session_size)
+      if(in.size() < TLS_SESSION_CRYPT_OVERHEAD + min_session_size) {
          throw Decoding_Error("Encrypted session too short to be valid");
+      }
 
       // TODO: replace those raw pointers with sub-spans into `in`
       const uint8_t* magic = in.data();
@@ -436,8 +437,9 @@ Session Session::decrypt(std::span<const uint8_t> in, const SymmetricKey& key) {
       const uint8_t* ctext = aead_nonce + TLS_SESSION_CRYPT_AEAD_NONCE_LEN;
       const size_t ctext_len = in.size() - TLS_SESSION_CRYPT_HDR_LEN;  // includes the tag
 
-      if(load_be<uint64_t>(magic, 0) != TLS_SESSION_CRYPT_MAGIC)
+      if(load_be<uint64_t>(magic, 0) != TLS_SESSION_CRYPT_MAGIC) {
          throw Decoding_Error("Missing expected magic numbers");
+      }
 
       auto hmac = MessageAuthenticationCode::create_or_throw(TLS_SESSION_CRYPT_HMAC);
       hmac->set_key(key);
@@ -447,8 +449,9 @@ Session Session::decrypt(std::span<const uint8_t> in, const SymmetricKey& key) {
       hmac->update(TLS_SESSION_CRYPT_KEY_NAME);
       hmac->final(cmp_key_name.data());
 
-      if(same_mem(cmp_key_name.data(), key_name, TLS_SESSION_CRYPT_KEY_NAME_LEN) == false)
+      if(same_mem(cmp_key_name.data(), key_name, TLS_SESSION_CRYPT_KEY_NAME_LEN) == false) {
          throw Decoding_Error("Wrong key name for encrypted session");
+      }
 
       hmac->update(key_seed, TLS_SESSION_CRYPT_AEAD_KEY_SEED_LEN);
       const secure_vector<uint8_t> aead_key = hmac->final();

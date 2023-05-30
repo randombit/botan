@@ -36,8 +36,9 @@ void load_info(const X509_Cert_Options& opts, X509_DN& subject_dn, AlternativeNa
    subject_alt = AlternativeName(opts.email, opts.uri, opts.dns, opts.ip);
    subject_alt.add_othername(OID::from_string("PKIX.XMPPAddr"), opts.xmpp, ASN1_Type::Utf8String);
 
-   for(const auto& dns : opts.more_dns)
+   for(const auto& dns : opts.more_dns) {
       subject_alt.add_attribute("DNS", dns);
+   }
 }
 }  // namespace
 
@@ -63,8 +64,9 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
 
    const auto constraints = opts.is_CA ? Key_Constraints::ca_constraints() : opts.constraints;
 
-   if(!constraints.compatible_with(key))
+   if(!constraints.compatible_with(key)) {
       throw Invalid_Argument("The requested key constraints are incompatible with the algorithm");
+   }
 
    extensions.add_new(std::make_unique<Cert_Extension::Basic_Constraints>(opts.is_CA, opts.path_limit), true);
 
@@ -97,8 +99,9 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
 
    const auto constraints = opts.is_CA ? Key_Constraints::ca_constraints() : opts.constraints;
 
-   if(!constraints.compatible_with(key))
+   if(!constraints.compatible_with(key)) {
       throw Invalid_Argument("The requested key constraints are incompatible with the algorithm");
+   }
 
    Extensions extensions = opts.extensions;
 

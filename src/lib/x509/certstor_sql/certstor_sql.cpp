@@ -111,8 +111,9 @@ std::optional<X509_CRL> Certificate_Store_In_SQL::find_crl_for(const X509_Certif
    auto all_crls = generate_crls();
 
    for(auto crl : all_crls) {
-      if(!crl.get_revoked().empty() && crl.issuer_dn() == subject.issuer_dn())
+      if(!crl.get_revoked().empty() && crl.issuer_dn() == subject.issuer_dn()) {
          return crl;
+      }
    }
 
    return std::optional<X509_CRL>();
@@ -159,8 +160,9 @@ bool Certificate_Store_In_SQL::insert_cert(const X509_Certificate& cert) {
 }
 
 bool Certificate_Store_In_SQL::remove_cert(const X509_Certificate& cert) {
-   if(!find_cert(cert.subject_dn(), cert.subject_key_id()))
+   if(!find_cert(cert.subject_dn(), cert.subject_key_id())) {
       return false;
+   }
 
    auto stmt = m_database->new_statement("DELETE FROM " + m_prefix + "certificates WHERE fingerprint == ?1");
 
@@ -210,8 +212,9 @@ std::vector<X509_Certificate> Certificate_Store_In_SQL::find_certs_for_key(const
 bool Certificate_Store_In_SQL::insert_key(const X509_Certificate& cert, const Private_Key& key) {
    insert_cert(cert);
 
-   if(find_key(cert))
+   if(find_key(cert)) {
       return false;
+   }
 
    auto pkcs8 = PKCS8::BER_encode(key, m_rng, m_password);
    auto fpr = key.fingerprint_private("SHA-256");

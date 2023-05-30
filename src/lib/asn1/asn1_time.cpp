@@ -33,12 +33,13 @@ ASN1_Time::ASN1_Time(const std::chrono::system_clock::time_point& time) {
 ASN1_Time::ASN1_Time(std::string_view t_spec, ASN1_Type tag) { set_to(t_spec, tag); }
 
 ASN1_Time::ASN1_Time(std::string_view t_spec) {
-   if(t_spec.size() == 13)
+   if(t_spec.size() == 13) {
       set_to(t_spec, ASN1_Type::UtcTime);
-   else if(t_spec.size() == 15)
+   } else if(t_spec.size() == 15) {
       set_to(t_spec, ASN1_Type::GeneralizedTime);
-   else
+   } else {
       throw Invalid_Argument("Time string could not be parsed as GeneralizedTime or UTCTime.");
+   }
 }
 
 void ASN1_Time::encode_into(DER_Encoder& der) const {
@@ -54,8 +55,9 @@ void ASN1_Time::decode_from(BER_Decoder& source) {
 }
 
 std::string ASN1_Time::to_string() const {
-   if(time_is_set() == false)
+   if(time_is_set() == false) {
       throw Invalid_State("ASN1_Time::to_string: No time set");
+   }
 
    uint32_t full_year = m_year;
 
@@ -86,8 +88,9 @@ std::string ASN1_Time::to_string() const {
 }
 
 std::string ASN1_Time::readable_string() const {
-   if(time_is_set() == false)
+   if(time_is_set() == false) {
       throw Invalid_State("ASN1_Time::readable_string: No time set");
+   }
 
    // desired format: "%04d/%02d/%02d %02d:%02d:%02d UTC"
    std::stringstream output;
@@ -101,35 +104,48 @@ std::string ASN1_Time::readable_string() const {
 bool ASN1_Time::time_is_set() const { return (m_year != 0); }
 
 int32_t ASN1_Time::cmp(const ASN1_Time& other) const {
-   if(!time_is_set() || !other.time_is_set())
+   if(!time_is_set() || !other.time_is_set()) {
       throw Invalid_State("ASN1_Time::cmp: Cannot compare empty times");
+   }
 
    const int32_t EARLIER = -1, LATER = 1, SAME_TIME = 0;
 
-   if(m_year < other.m_year)
+   if(m_year < other.m_year) {
       return EARLIER;
-   if(m_year > other.m_year)
+   }
+   if(m_year > other.m_year) {
       return LATER;
-   if(m_month < other.m_month)
+   }
+   if(m_month < other.m_month) {
       return EARLIER;
-   if(m_month > other.m_month)
+   }
+   if(m_month > other.m_month) {
       return LATER;
-   if(m_day < other.m_day)
+   }
+   if(m_day < other.m_day) {
       return EARLIER;
-   if(m_day > other.m_day)
+   }
+   if(m_day > other.m_day) {
       return LATER;
-   if(m_hour < other.m_hour)
+   }
+   if(m_hour < other.m_hour) {
       return EARLIER;
-   if(m_hour > other.m_hour)
+   }
+   if(m_hour > other.m_hour) {
       return LATER;
-   if(m_minute < other.m_minute)
+   }
+   if(m_minute < other.m_minute) {
       return EARLIER;
-   if(m_minute > other.m_minute)
+   }
+   if(m_minute > other.m_minute) {
       return LATER;
-   if(m_second < other.m_second)
+   }
+   if(m_second < other.m_second) {
       return EARLIER;
-   if(m_second > other.m_second)
+   }
+   if(m_second > other.m_second) {
       return LATER;
+   }
 
    return SAME_TIME;
 }
@@ -165,10 +181,11 @@ void ASN1_Time::set_to(std::string_view t_spec, ASN1_Type spec_tag) {
    m_tag = spec_tag;
 
    if(spec_tag == ASN1_Type::UtcTime) {
-      if(m_year >= 50)
+      if(m_year >= 50) {
          m_year += 1900;
-      else
+      } else {
          m_year += 2000;
+      }
    }
 
    if(!passes_sanity_check()) {
@@ -181,26 +198,32 @@ void ASN1_Time::set_to(std::string_view t_spec, ASN1_Type spec_tag) {
 */
 bool ASN1_Time::passes_sanity_check() const {
    // AppVeyor's trust store includes a cert with expiration date in 3016 ...
-   if(m_year < 1950 || m_year > 3100)
+   if(m_year < 1950 || m_year > 3100) {
       return false;
-   if(m_month == 0 || m_month > 12)
+   }
+   if(m_month == 0 || m_month > 12) {
       return false;
+   }
 
    const uint32_t days_in_month[12] = {31, 28 + 1, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
-   if(m_day == 0 || m_day > days_in_month[m_month - 1])
+   if(m_day == 0 || m_day > days_in_month[m_month - 1]) {
       return false;
-
-   if(m_month == 2 && m_day == 29) {
-      if(m_year % 4 != 0)
-         return false;  // not a leap year
-
-      if(m_year % 100 == 0 && m_year % 400 != 0)
-         return false;
    }
 
-   if(m_hour >= 24 || m_minute >= 60 || m_second > 60)
+   if(m_month == 2 && m_day == 29) {
+      if(m_year % 4 != 0) {
+         return false;  // not a leap year
+      }
+
+      if(m_year % 100 == 0 && m_year % 400 != 0) {
+         return false;
+      }
+   }
+
+   if(m_hour >= 24 || m_minute >= 60 || m_second > 60) {
       return false;
+   }
 
    if(m_tag == ASN1_Type::UtcTime) {
       /*

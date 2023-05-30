@@ -60,8 +60,9 @@ class Roughtime_Response_Tests final : public Text_Based_Test {
             const auto response = Botan::Roughtime::Response::from_bits(response_v, nonce);
 
             const auto pubkey = vars.get_req_bin("Pubkey");
-            if(pubkey.size() != 32)
+            if(pubkey.size() != 32) {
                throw Test_Error("Unexpected Roughtime Ed25519 pubkey size");
+            }
 
             if(!response.validate(Botan::Ed25519_PublicKey(pubkey))) {
                result.confirm("fail_validation", type == "Invalid");

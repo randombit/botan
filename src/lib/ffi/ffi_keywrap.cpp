@@ -28,17 +28,19 @@ int botan_nist_kw_enc(const char* cipher_algo,
                       size_t* wrapped_key_len) {
 #if defined(BOTAN_HAS_NIST_KEYWRAP)
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(padded != 0 && padded != 1)
+      if(padded != 0 && padded != 1) {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+      }
       auto bc = Botan::BlockCipher::create_or_throw(cipher_algo);
       bc->set_key(kek, kek_len);
 
       std::vector<uint8_t> output;
 
-      if(padded == 0)
+      if(padded == 0) {
          output = Botan::nist_key_wrap(key, key_len, *bc);
-      else
+      } else {
          output = Botan::nist_key_wrap_padded(key, key_len, *bc);
+      }
 
       return write_vec_output(wrapped_key, wrapped_key_len, output);
    });
@@ -58,18 +60,20 @@ int botan_nist_kw_dec(const char* cipher_algo,
                       size_t* key_len) {
 #if defined(BOTAN_HAS_NIST_KEYWRAP)
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(padded != 0 && padded != 1)
+      if(padded != 0 && padded != 1) {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+      }
 
       auto bc = Botan::BlockCipher::create_or_throw(cipher_algo);
       bc->set_key(kek, kek_len);
 
       Botan::secure_vector<uint8_t> output;
 
-      if(padded == 0)
+      if(padded == 0) {
          output = Botan::nist_key_unwrap(wrapped_key, wrapped_key_len, *bc);
-      else
+      } else {
          output = Botan::nist_key_unwrap_padded(wrapped_key, wrapped_key_len, *bc);
+      }
 
       return write_vec_output(key, key_len, output);
    });

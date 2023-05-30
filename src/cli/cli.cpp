@@ -55,8 +55,9 @@ int Command::run(const std::vector<std::string>& params) {
 
          if(!output_file.empty()) {
             m_output_stream = std::make_unique<std::ofstream>(output_file, std::ios::binary);
-            if(!m_output_stream->good())
+            if(!m_output_stream->good()) {
                throw CLI_IO_Error("opening", output_file);
+            }
          }
       }
 
@@ -65,8 +66,9 @@ int Command::run(const std::vector<std::string>& params) {
 
          if(!output_file.empty()) {
             m_error_output_stream = std::make_unique<std::ofstream>(output_file, std::ios::binary);
-            if(!m_error_output_stream->good())
+            if(!m_error_output_stream->good()) {
                throw CLI_IO_Error("opening", output_file);
+            }
          }
       }
 
@@ -103,25 +105,28 @@ std::string Command::get_arg_or(const std::string& opt_name, const std::string& 
 
 std::optional<std::string> Command::get_arg_maybe(const std::string& opt_name) const {
    auto arg = m_args->get_arg(opt_name);
-   if(arg.empty())
+   if(arg.empty()) {
       return std::nullopt;
-   else
+   } else {
       return arg;
+   }
 }
 
 size_t Command::get_arg_sz(const std::string& opt_name) const { return m_args->get_arg_sz(opt_name); }
 
 uint16_t Command::get_arg_u16(const std::string& opt_name) const {
    const size_t val = get_arg_sz(opt_name);
-   if(static_cast<uint16_t>(val) != val)
+   if(static_cast<uint16_t>(val) != val) {
       throw CLI_Usage_Error("Argument " + opt_name + " has value out of allowed range");
+   }
    return static_cast<uint16_t>(val);
 }
 
 uint32_t Command::get_arg_u32(const std::string& opt_name) const {
    const size_t val = get_arg_sz(opt_name);
-   if(static_cast<uint32_t>(val) != val)
+   if(static_cast<uint32_t>(val) != val) {
       throw CLI_Usage_Error("Argument " + opt_name + " has value out of allowed range");
+   }
    return static_cast<uint32_t>(val);
 }
 
@@ -195,8 +200,9 @@ std::shared_ptr<Botan::RandomNumberGenerator> Command::rng_as_shared() {
 
 std::string Command::get_passphrase_arg(const std::string& prompt, const std::string& opt_name) {
    std::string s = get_arg(opt_name);
-   if(s != "-")
+   if(s != "-") {
       return s;
+   }
    return get_passphrase(prompt);
 }
 
@@ -210,8 +216,9 @@ bool echo_suppression_supported() {
 }  // namespace
 
 std::string Command::get_passphrase(const std::string& prompt) {
-   if(echo_suppression_supported() == false)
+   if(echo_suppression_supported() == false) {
       error_output() << "Warning: terminal echo suppression not enabled for this platform\n";
+   }
 
    error_output() << prompt << ": " << std::flush;
    std::string pass;
@@ -271,8 +278,9 @@ std::map<std::string, Command::cmd_maker_fn>& Command::global_registry() {
 //static
 std::vector<std::string> Command::registered_cmds() {
    std::vector<std::string> cmds;
-   for(auto& cmd : Command::global_registry())
+   for(auto& cmd : Command::global_registry()) {
       cmds.push_back(cmd.first);
+   }
    return cmds;
 }
 

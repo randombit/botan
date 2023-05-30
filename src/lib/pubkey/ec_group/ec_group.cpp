@@ -157,8 +157,9 @@ class EC_Group_Data_Map final {
          lock_guard_type<mutex_type> lock(m_mutex);
 
          for(auto i : m_registered_curves) {
-            if(i->oid() == oid)
+            if(i->oid() == oid) {
                return i;
+            }
          }
 
          // Not found, check hardcoded data
@@ -249,8 +250,9 @@ class EC_Group_Data_Map final {
 
          if(oid.has_value()) {
             std::shared_ptr<EC_Group_Data> data = EC_Group::EC_group_info(oid);
-            if(data != nullptr && !new_group->params_match(*data))
+            if(data != nullptr && !new_group->params_match(*data)) {
                throw Invalid_Argument("Attempting to register an EC group under OID of hardcoded group");
+            }
          } else {
             // Here try to use the order as a hint to look up the group id, to identify common groups
             const OID oid_from_store = EC_Group::EC_group_identity_from_order(order);
@@ -351,20 +353,25 @@ std::shared_ptr<EC_Group_Data> EC_Group::BER_decode_EC_group(const uint8_t bits[
          .end_cons()
          .verify_end();
 
-      if(p.bits() < 64 || p.is_negative() || !is_bailie_psw_probable_prime(p))
+      if(p.bits() < 64 || p.is_negative() || !is_bailie_psw_probable_prime(p)) {
          throw Decoding_Error("Invalid ECC p parameter");
+      }
 
-      if(a.is_negative() || a >= p)
+      if(a.is_negative() || a >= p) {
          throw Decoding_Error("Invalid ECC a parameter");
+      }
 
-      if(b <= 0 || b >= p)
+      if(b <= 0 || b >= p) {
          throw Decoding_Error("Invalid ECC b parameter");
+      }
 
-      if(order <= 0 || !is_bailie_psw_probable_prime(order))
+      if(order <= 0 || !is_bailie_psw_probable_prime(order)) {
          throw Decoding_Error("Invalid ECC order parameter");
+      }
 
-      if(cofactor <= 0 || cofactor >= 16)
+      if(cofactor <= 0 || cofactor >= 16) {
          throw Decoding_Error("Invalid ECC cofactor parameter");
+      }
 
       std::pair<BigInt, BigInt> base_xy = Botan::OS2ECP(base_pt.data(), base_pt.size(), p, a, b);
 
@@ -380,18 +387,21 @@ EC_Group::~EC_Group() = default;
 
 EC_Group::EC_Group(const OID& domain_oid) {
    this->m_data = ec_group_data().lookup(domain_oid);
-   if(!this->m_data)
+   if(!this->m_data) {
       throw Invalid_Argument("Unknown EC_Group " + domain_oid.to_string());
+   }
 }
 
 EC_Group::EC_Group(std::string_view str) {
-   if(str.empty())
+   if(str.empty()) {
       return;  // no initialization / uninitialized
+   }
 
    try {
       const OID oid = OID::from_string(str);
-      if(oid.has_value())
+      if(oid.has_value()) {
          m_data = ec_group_data().lookup(oid);
+      }
    } catch(...) {}
 
    if(m_data == nullptr) {
@@ -402,8 +412,9 @@ EC_Group::EC_Group(std::string_view str) {
       }
    }
 
-   if(m_data == nullptr)
+   if(m_data == nullptr) {
       throw Invalid_Argument(fmt("Unknown ECC group '{}'", str));
+   }
 }
 
 //static
@@ -429,8 +440,9 @@ EC_Group::EC_Group(const uint8_t ber[], size_t ber_len) {
 }
 
 const EC_Group_Data& EC_Group::data() const {
-   if(m_data == nullptr)
+   if(m_data == nullptr) {
       throw Invalid_State("EC_Group uninitialized");
+   }
    return *m_data;
 }
 
@@ -480,10 +492,11 @@ EC_Group_Source EC_Group::source() const { return data().source(); }
 
 size_t EC_Group::point_size(EC_Point_Format format) const {
    // Hybrid and standard format are (x,y), compressed is y, +1 format byte
-   if(format == EC_Point_Format::Compressed)
+   if(format == EC_Point_Format::Compressed) {
       return (1 + get_p_bytes());
-   else
+   } else {
       return (1 + 2 * get_p_bytes());
+   }
 }
 
 EC_Point EC_Group::OS2ECP(const uint8_t bits[], size_t len) const { return Botan::OS2ECP(bits, len, data().curve()); }
@@ -509,8 +522,9 @@ BigInt EC_Group::blinded_base_point_multiply_x(const BigInt& k,
                                                std::vector<BigInt>& ws) const {
    const EC_Point pt = data().blinded_base_point_multiply(k, rng, ws);
 
-   if(pt.is_zero())
+   if(pt.is_zero()) {
       return BigInt::zero();
+   }
    return pt.get_affine_x();
 }
 
@@ -604,8 +618,9 @@ std::string EC_Group::PEM_encode() const {
 }
 
 bool EC_Group::operator==(const EC_Group& other) const {
-   if(m_data == other.m_data)
+   if(m_data == other.m_data) {
       return true;  // same shared rep
+   }
 
    return (get_p() == other.get_p() && get_a() == other.get_a() && get_b() == other.get_b() &&
            get_g_x() == other.get_g_x() && get_g_y() == other.get_g_y() && get_order() == other.get_order() &&
@@ -614,20 +629,24 @@ bool EC_Group::operator==(const EC_Group& other) const {
 
 bool EC_Group::verify_public_element(const EC_Point& point) const {
    //check that public point is not at infinity
-   if(point.is_zero())
+   if(point.is_zero()) {
       return false;
+   }
 
    //check that public point is on the curve
-   if(point.on_the_curve() == false)
+   if(point.on_the_curve() == false) {
       return false;
+   }
 
    //check that public point has order q
-   if((point * get_order()).is_zero() == false)
+   if((point * get_order()).is_zero() == false) {
       return false;
+   }
 
    if(get_cofactor() > 1) {
-      if((point * get_cofactor()).is_zero())
+      if((point * get_cofactor()).is_zero()) {
          return false;
+      }
    }
 
    return true;
@@ -636,8 +655,9 @@ bool EC_Group::verify_public_element(const EC_Point& point) const {
 bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
    const bool is_builtin = source() == EC_Group_Source::Builtin;
 
-   if(is_builtin && !strong)
+   if(is_builtin && !strong) {
       return true;
+   }
 
    const BigInt& p = get_p();
    const BigInt& a = get_a();
@@ -645,12 +665,15 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
    const BigInt& order = get_order();
    const EC_Point& base_point = get_base_point();
 
-   if(p <= 3 || order <= 0)
+   if(p <= 3 || order <= 0) {
       return false;
-   if(a < 0 || a >= p)
+   }
+   if(a < 0 || a >= p) {
       return false;
-   if(b <= 0 || b >= p)
+   }
+   if(b <= 0 || b >= p) {
       return false;
+   }
 
    const size_t test_prob = 128;
    const bool is_randomly_generated = is_builtin;

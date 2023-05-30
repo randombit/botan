@@ -28,8 +28,9 @@ BOTAN_FFI_DECLARE_STRUCT(botan_x509_cert_struct, Botan::X509_Certificate, 0x8F62
 #endif
 
 int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* cert_path) {
-   if(!cert_obj || !cert_path)
+   if(!cert_obj || !cert_path) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
@@ -45,8 +46,9 @@ int botan_x509_cert_load_file(botan_x509_cert_t* cert_obj, const char* cert_path
 }
 
 int botan_x509_cert_dup(botan_x509_cert_t* cert_obj, botan_x509_cert_t cert) {
-   if(!cert_obj)
+   if(!cert_obj) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
@@ -63,8 +65,9 @@ int botan_x509_cert_dup(botan_x509_cert_t* cert_obj, botan_x509_cert_t cert) {
 }
 
 int botan_x509_cert_load(botan_x509_cert_t* cert_obj, const uint8_t cert_bits[], size_t cert_bits_len) {
-   if(!cert_obj || !cert_bits)
+   if(!cert_obj || !cert_bits) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
@@ -80,8 +83,9 @@ int botan_x509_cert_load(botan_x509_cert_t* cert_obj, const uint8_t cert_bits[],
 }
 
 int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key) {
-   if(key == nullptr)
+   if(key == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    *key = nullptr;
 
@@ -244,8 +248,9 @@ int botan_x509_cert_view_public_key_bits(botan_x509_cert_t cert, botan_view_ctx 
 }
 
 int botan_x509_cert_hostname_match(botan_x509_cert_t cert, const char* hostname) {
-   if(hostname == nullptr)
+   if(hostname == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_VISIT(cert, [=](const auto& c) { return c.matches_dns_name(hostname) ? 0 : -1; });
@@ -265,8 +270,9 @@ int botan_x509_cert_verify(int* result_code,
                            size_t required_strength,
                            const char* hostname_cstr,
                            uint64_t reference_time) {
-   if(required_strength == 0)
+   if(required_strength == 0) {
       required_strength = 110;
+   }
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
@@ -278,8 +284,9 @@ int botan_x509_cert_verify(int* result_code,
 
       std::vector<Botan::X509_Certificate> end_certs;
       end_certs.push_back(safe_get(cert));
-      for(size_t i = 0; i != intermediates_len; ++i)
+      for(size_t i = 0; i != intermediates_len; ++i) {
          end_certs.push_back(safe_get(intermediates[i]));
+      }
 
       std::unique_ptr<Botan::Certificate_Store> trusted_from_path;
       std::unique_ptr<Botan::Certificate_Store_In_Memory> trusted_extra;
@@ -303,13 +310,15 @@ int botan_x509_cert_verify(int* result_code,
       auto validation_result =
          Botan::x509_path_validate(end_certs, restrictions, trusted_roots, hostname, usage, validation_time);
 
-      if(result_code)
+      if(result_code) {
          *result_code = static_cast<int>(validation_result.result());
+      }
 
-      if(validation_result.successful_validation())
+      if(validation_result.successful_validation()) {
          return 0;
-      else
+      } else {
          return 1;
+      }
    });
 #else
    BOTAN_UNUSED(result_code, cert, intermediates, intermediates_len, trusted);
@@ -319,8 +328,9 @@ int botan_x509_cert_verify(int* result_code,
 }
 
 const char* botan_x509_cert_validation_status(int code) {
-   if(code < 0)
+   if(code < 0) {
       return nullptr;
+   }
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    Botan::Certificate_Status_Code sc = static_cast<Botan::Certificate_Status_Code>(code);
@@ -337,8 +347,9 @@ BOTAN_FFI_DECLARE_STRUCT(botan_x509_crl_struct, Botan::X509_CRL, 0x2C628910);
 #endif
 
 int botan_x509_crl_load_file(botan_x509_crl_t* crl_obj, const char* crl_path) {
-   if(!crl_obj || !crl_path)
+   if(!crl_obj || !crl_path) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
@@ -354,8 +365,9 @@ int botan_x509_crl_load_file(botan_x509_crl_t* crl_obj, const char* crl_path) {
 }
 
 int botan_x509_crl_load(botan_x509_crl_t* crl_obj, const uint8_t crl_bits[], size_t crl_bits_len) {
-   if(!crl_obj || !crl_bits)
+   if(!crl_obj || !crl_bits) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
@@ -401,8 +413,9 @@ int botan_x509_cert_verify_with_crl(int* result_code,
                                     size_t required_strength,
                                     const char* hostname_cstr,
                                     uint64_t reference_time) {
-   if(required_strength == 0)
+   if(required_strength == 0) {
       required_strength = 110;
+   }
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return ffi_guard_thunk(__func__, [=]() -> int {
@@ -414,8 +427,9 @@ int botan_x509_cert_verify_with_crl(int* result_code,
 
       std::vector<Botan::X509_Certificate> end_certs;
       end_certs.push_back(safe_get(cert));
-      for(size_t i = 0; i != intermediates_len; ++i)
+      for(size_t i = 0; i != intermediates_len; ++i) {
          end_certs.push_back(safe_get(intermediates[i]));
+      }
 
       std::unique_ptr<Botan::Certificate_Store> trusted_from_path;
       std::unique_ptr<Botan::Certificate_Store_In_Memory> trusted_extra;
@@ -448,13 +462,15 @@ int botan_x509_cert_verify_with_crl(int* result_code,
       auto validation_result =
          Botan::x509_path_validate(end_certs, restrictions, trusted_roots, hostname, usage, validation_time);
 
-      if(result_code)
+      if(result_code) {
          *result_code = static_cast<int>(validation_result.result());
+      }
 
-      if(validation_result.successful_validation())
+      if(validation_result.successful_validation()) {
          return 0;
-      else
+      } else {
          return 1;
+      }
    });
 #else
    BOTAN_UNUSED(result_code, cert, intermediates, intermediates_len, trusted);

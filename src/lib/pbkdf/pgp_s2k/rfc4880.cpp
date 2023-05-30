@@ -45,11 +45,13 @@ const uint32_t OPENPGP_S2K_ITERS[256] = {
 }  // namespace
 
 uint8_t RFC4880_encode_count(size_t desired_iterations) {
-   if(desired_iterations <= OPENPGP_S2K_ITERS[0])
+   if(desired_iterations <= OPENPGP_S2K_ITERS[0]) {
       return 0;
+   }
 
-   if(desired_iterations >= OPENPGP_S2K_ITERS[255])
+   if(desired_iterations >= OPENPGP_S2K_ITERS[255]) {
       return 255;
+   }
 
    const uint32_t* i = std::lower_bound(OPENPGP_S2K_ITERS, OPENPGP_S2K_ITERS + 256, desired_iterations);
 

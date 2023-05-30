@@ -29,12 +29,14 @@ int botan_privkey_create(botan_privkey_t* key_obj,
                          const char* algo_params,
                          botan_rng_t rng_obj) {
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(key_obj == nullptr)
+      if(key_obj == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
 
       *key_obj = nullptr;
-      if(rng_obj == nullptr)
+      if(rng_obj == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
 
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
       std::unique_ptr<Botan::Private_Key> key(
@@ -83,8 +85,9 @@ int botan_pubkey_load(botan_pubkey_t* key, const uint8_t bits[], size_t bits_len
       Botan::DataSource_Memory src(bits, bits_len);
       std::unique_ptr<Botan::Public_Key> pubkey(Botan::X509::load_key(src));
 
-      if(pubkey == nullptr)
+      if(pubkey == nullptr) {
          return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
+      }
 
       *key = new botan_pubkey_struct(std::move(pubkey));
       return BOTAN_FFI_SUCCESS;
@@ -125,12 +128,13 @@ int botan_privkey_check_key(botan_privkey_t key, botan_rng_t rng, uint32_t flags
 }
 
 int botan_pubkey_export(botan_pubkey_t key, uint8_t out[], size_t* out_len, uint32_t flags) {
-   if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
+   if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER) {
       return copy_view_bin(out, out_len, botan_pubkey_view_der, key);
-   else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
+   } else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM) {
       return copy_view_str(out, out_len, botan_pubkey_view_pem, key);
-   else
+   } else {
       return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
 }
 
 int botan_pubkey_view_der(botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view) {
@@ -144,12 +148,13 @@ int botan_pubkey_view_pem(botan_pubkey_t key, botan_view_ctx ctx, botan_view_str
 }
 
 int botan_privkey_export(botan_privkey_t key, uint8_t out[], size_t* out_len, uint32_t flags) {
-   if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER)
+   if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER) {
       return copy_view_bin(out, out_len, botan_privkey_view_der, key);
-   else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM)
+   } else if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_PEM) {
       return copy_view_str(out, out_len, botan_privkey_view_pem, key);
-   else
+   } else {
       return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
 }
 
 int botan_privkey_view_der(botan_privkey_t key, botan_view_ctx ctx, botan_view_bin_fn view) {
@@ -182,8 +187,9 @@ int botan_privkey_export_encrypted_pbkdf_msec(botan_privkey_t key,
                                               const char* cipher,
                                               const char* pbkdf_hash,
                                               uint32_t flags) {
-   if(pbkdf_iters_out)
+   if(pbkdf_iters_out) {
       *pbkdf_iters_out = 0;
+   }
 
    if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER) {
       return copy_view_bin(
@@ -204,8 +210,9 @@ int botan_privkey_view_encrypted_der_timed(botan_privkey_t key,
                                            size_t pbkdf_runtime_msec,
                                            botan_view_ctx ctx,
                                            botan_view_bin_fn view) {
-   if(passphrase == nullptr)
+   if(passphrase == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       const std::chrono::milliseconds pbkdf_time(pbkdf_runtime_msec);
@@ -229,8 +236,9 @@ int botan_privkey_view_encrypted_pem_timed(botan_privkey_t key,
                                            size_t pbkdf_runtime_msec,
                                            botan_view_ctx ctx,
                                            botan_view_str_fn view) {
-   if(passphrase == nullptr)
+   if(passphrase == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       const std::chrono::milliseconds pbkdf_time(pbkdf_runtime_msec);
@@ -274,8 +282,9 @@ int botan_privkey_view_encrypted_der(botan_privkey_t key,
                                      size_t maybe_pbkdf_iterations,
                                      botan_view_ctx ctx,
                                      botan_view_bin_fn view) {
-   if(passphrase == nullptr)
+   if(passphrase == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
@@ -298,8 +307,9 @@ int botan_privkey_view_encrypted_pem(botan_privkey_t key,
                                      size_t maybe_pbkdf_iterations,
                                      botan_view_ctx ctx,
                                      botan_view_str_fn view) {
-   if(passphrase == nullptr)
+   if(passphrase == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    return BOTAN_FFI_VISIT(key, [=](const auto& k) {
       Botan::RandomNumberGenerator& rng = safe_get(rng_obj);

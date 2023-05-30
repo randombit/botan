@@ -60,12 +60,15 @@ class URI_Tests final : public Test {
                result.confirm("port", uri.port == port);
             };
 
-            if(t.type != Botan::URI::Type::IPv4)
+            if(t.type != Botan::URI::Type::IPv4) {
                result.test_throws("invalid", [&t]() { Botan::URI::fromIPv4(t.uri); });
-            if(t.type != Botan::URI::Type::IPv6)
+            }
+            if(t.type != Botan::URI::Type::IPv6) {
                result.test_throws("invalid", [&t]() { Botan::URI::fromIPv6(t.uri); });
-            if(t.type != Botan::URI::Type::Domain)
+            }
+            if(t.type != Botan::URI::Type::Domain) {
                result.test_throws("invalid", [&t]() { Botan::URI::fromDomain(t.uri); });
+            }
             if(t.type == Botan::URI::Type::NotSet) {
                result.test_throws("invalid", [&t]() { Botan::URI::fromAny(t.uri); });
             } else {

@@ -61,8 +61,9 @@ std::string argon2_family_name(uint8_t f) {
 std::string Argon2::to_string() const { return fmt("{}({},{},{})", argon2_family_name(m_family), m_M, m_t, m_p); }
 
 Argon2_Family::Argon2_Family(uint8_t family) : m_family(family) {
-   if(m_family != 0 && m_family != 1 && m_family != 2)
+   if(m_family != 0 && m_family != 1 && m_family != 2) {
       throw Invalid_Argument("Unknown Argon2 family identifier");
+   }
 }
 
 std::string Argon2_Family::name() const { return argon2_family_name(m_family); }
@@ -88,8 +89,9 @@ std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
       pwhash->derive_key(output, sizeof(output), "test", 4, nullptr, 0);
    });
 
-   if(timer.events() == 0 || timer.value() == 0)
+   if(timer.events() == 0 || timer.value() == 0) {
       return default_params();
+   }
 
    size_t M = 4 * 1024;
 

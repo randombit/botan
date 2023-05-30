@@ -24,12 +24,15 @@ MDx_HashFunction::MDx_HashFunction(size_t block_len, bool byte_big_endian, bool 
       m_count(0),
       m_buffer(block_len),
       m_position(0) {
-   if(!is_power_of_2(block_len))
+   if(!is_power_of_2(block_len)) {
       throw Invalid_Argument("MDx_HashFunction block length must be a power of 2");
-   if(m_block_bits < 3 || m_block_bits > 16)
+   }
+   if(m_block_bits < 3 || m_block_bits > 16) {
       throw Invalid_Argument("MDx_HashFunction block size too large or too small");
-   if(m_counter_size < 8 || m_counter_size > block_len)
+   }
+   if(m_counter_size < 8 || m_counter_size > block_len) {
       throw Invalid_State("MDx_HashFunction invalid counter length");
+   }
 }
 
 /*
@@ -90,10 +93,11 @@ void MDx_HashFunction::final_result(uint8_t output[]) {
 
    const uint64_t bit_count = m_count * 8;
 
-   if(m_count_big_endian)
+   if(m_count_big_endian) {
       store_be(bit_count, &m_buffer[block_len - 8]);
-   else
+   } else {
       store_le(bit_count, &m_buffer[block_len - 8]);
+   }
 
    compress_n(m_buffer.data(), 1);
    copy_out(output);

@@ -180,8 +180,9 @@ class BSD_Socket final : public OS::Socket {
       static bool nonblocking_connect_in_progress() { return (errno == EINPROGRESS); }
 
       static void set_nonblocking(socket_type s) {
-         if(::fcntl(s, F_SETFL, O_NONBLOCK) < 0)
+         if(::fcntl(s, F_SETFL, O_NONBLOCK) < 0) {
             throw System_Error("Setting socket to non-blocking state failed", errno);
+         }
       }
 
       static void socket_init() {}
@@ -212,8 +213,9 @@ class BSD_Socket final : public OS::Socket {
          }
 
          for(addrinfo* rp = res; (m_socket == invalid_socket()) && (rp != nullptr); rp = rp->ai_next) {
-            if(rp->ai_family != AF_INET && rp->ai_family != AF_INET6)
+            if(rp->ai_family != AF_INET && rp->ai_family != AF_INET6) {
                continue;
+            }
 
             m_socket = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 
@@ -241,8 +243,10 @@ class BSD_Socket final : public OS::Socket {
                      int socket_error = 0;
                      socklen_t len = sizeof(socket_error);
 
-                     if(::getsockopt(m_socket, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&socket_error), &len) < 0)
+                     if(::getsockopt(m_socket, SOL_SOCKET, SO_ERROR, reinterpret_cast<char*>(&socket_error), &len) <
+                        0) {
                         throw System_Error("Error calling getsockopt", errno);
+                     }
 
                      if(socket_error != 0) {
                         active = 0;
@@ -287,16 +291,18 @@ class BSD_Socket final : public OS::Socket {
             struct timeval timeout = make_timeout_tv();
             int active = ::select(static_cast<int>(m_socket + 1), nullptr, &write_set, nullptr, &timeout);
 
-            if(active == 0)
+            if(active == 0) {
                throw System_Error("Timeout during socket write");
+            }
 
             const size_t left = len - sent_so_far;
             socket_op_ret_type sent =
                ::send(m_socket, cast_uint8_ptr_to_char(&buf[sent_so_far]), static_cast<sendrecv_len_type>(left), 0);
-            if(sent < 0)
+            if(sent < 0) {
                throw System_Error("Socket write failed", errno);
-            else
+            } else {
                sent_so_far += static_cast<size_t>(sent);
+            }
          }
       }
 
@@ -308,13 +314,15 @@ class BSD_Socket final : public OS::Socket {
          struct timeval timeout = make_timeout_tv();
          int active = ::select(static_cast<int>(m_socket + 1), &read_set, nullptr, nullptr, &timeout);
 
-         if(active == 0)
+         if(active == 0) {
             throw System_Error("Timeout during socket read");
+         }
 
          socket_op_ret_type got = ::recv(m_socket, cast_uint8_ptr_to_char(buf), static_cast<sendrecv_len_type>(len), 0);
 
-         if(got < 0)
+         if(got < 0) {
             throw System_Error("Socket read failed", errno);
+         }
 
          return static_cast<size_t>(got);
       }

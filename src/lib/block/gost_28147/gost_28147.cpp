@@ -42,12 +42,13 @@ GOST_28147_89_Params::GOST_28147_89_Params(std::string_view n) : m_name(n) {
       0xD1, 0x3E, 0x1A, 0x38, 0xC7, 0xB1, 0x81, 0xC6, 0xE6, 0x56, 0x05, 0x87, 0x03, 0x25, 0xEB, 0xFE,
       0x9C, 0x6D, 0xF8, 0x6D, 0x2E, 0xAB, 0xDE, 0x20, 0xBA, 0x89, 0x3C, 0x92, 0xF8, 0xD3, 0x53, 0xBC};
 
-   if(m_name == "R3411_94_TestParam")
+   if(m_name == "R3411_94_TestParam") {
       m_sboxes = GOST_R_3411_TEST_PARAMS;
-   else if(m_name == "R3411_CryptoPro")
+   } else if(m_name == "R3411_CryptoPro") {
       m_sboxes = GOST_R_3411_CRYPTOPRO_PARAMS;
-   else
+   } else {
       throw Invalid_Argument(fmt("GOST_28147_89_Params: Unknown sbox params '{}'", m_name));
+   }
 }
 
 /*
@@ -147,8 +148,9 @@ bool GOST_28147_89::has_keying_material() const { return !m_EK.empty(); }
 */
 void GOST_28147_89::key_schedule(const uint8_t key[], size_t /*length*/) {
    m_EK.resize(8);
-   for(size_t i = 0; i != 8; ++i)
+   for(size_t i = 0; i != 8; ++i) {
       m_EK[i] = load_le<uint32_t>(key, i);
+   }
 }
 
 void GOST_28147_89::clear() { zap(m_EK); }

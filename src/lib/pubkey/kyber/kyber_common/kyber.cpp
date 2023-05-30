@@ -50,18 +50,24 @@ namespace Botan {
 namespace {
 
 KyberMode::Mode kyber_mode_from_string(std::string_view str) {
-   if(str == "Kyber-512-90s-r3")
+   if(str == "Kyber-512-90s-r3") {
       return KyberMode::Kyber512_90s;
-   if(str == "Kyber-768-90s-r3")
+   }
+   if(str == "Kyber-768-90s-r3") {
       return KyberMode::Kyber768_90s;
-   if(str == "Kyber-1024-90s-r3")
+   }
+   if(str == "Kyber-1024-90s-r3") {
       return KyberMode::Kyber1024_90s;
-   if(str == "Kyber-512-r3")
+   }
+   if(str == "Kyber-512-r3") {
       return KyberMode::Kyber512;
-   if(str == "Kyber-768-r3")
+   }
+   if(str == "Kyber-768-r3") {
       return KyberMode::Kyber768;
-   if(str == "Kyber-1024-r3")
+   }
+   if(str == "Kyber-1024-r3") {
       return KyberMode::Kyber1024;
+   }
 
    throw Invalid_Argument(fmt("'{}' is not a valid Kyber mode name", str));
 }
@@ -794,10 +800,11 @@ class Ciphertext {
             size_t offset = 0;
             for(size_t i = 0; i < mode.k(); ++i) {
                for(size_t j = 0; j < KyberConstants::N / 4; ++j) {
-                  for(size_t k = 0; k < 4; ++k)
+                  for(size_t k = 0; k < 4; ++k) {
                      t[k] = (((static_cast<uint32_t>(pv[i][4 * j + k]) << 10) + KyberConstants::Q / 2) /
                              KyberConstants::Q) &
                             0x3ff;
+                  }
 
                   r[0 + offset] = static_cast<uint8_t>(t[0] >> 0);
                   r[1 + offset] = static_cast<uint8_t>((t[0] >> 8) | (t[1] << 2));
@@ -812,10 +819,11 @@ class Ciphertext {
             size_t offset = 0;
             for(size_t i = 0; i < mode.k(); ++i) {
                for(size_t j = 0; j < KyberConstants::N / 8; ++j) {
-                  for(size_t k = 0; k < 8; ++k)
+                  for(size_t k = 0; k < 8; ++k) {
                      t[k] = (((static_cast<uint32_t>(pv[i][8 * j + k]) << 11) + KyberConstants::Q / 2) /
                              KyberConstants::Q) &
                             0x7ff;
+                  }
 
                   r[0 + offset] = static_cast<uint8_t>(t[0] >> 0);
                   r[1 + offset] = static_cast<uint8_t>((t[0] >> 8) | (t[1] << 3));
@@ -845,9 +853,10 @@ class Ciphertext {
          if(mode.k() == 2 || mode.k() == 3) {
             size_t offset = 0;
             for(size_t i = 0; i < p.size() / 8; ++i) {
-               for(size_t j = 0; j < 8; ++j)
+               for(size_t j = 0; j < 8; ++j) {
                   t[j] =
                      (((static_cast<uint16_t>(p[8 * i + j]) << 4) + KyberConstants::Q / 2) / KyberConstants::Q) & 15;
+               }
 
                r[0 + offset] = t[0] | (t[1] << 4);
                r[1 + offset] = t[2] | (t[3] << 4);
@@ -858,9 +867,10 @@ class Ciphertext {
          } else if(mode.k() == 4) {
             size_t offset = 0;
             for(size_t i = 0; i < p.size() / 8; ++i) {
-               for(size_t j = 0; j < 8; ++j)
+               for(size_t j = 0; j < 8; ++j) {
                   t[j] =
                      (((static_cast<uint32_t>(p[8 * i + j]) << 5) + KyberConstants::Q / 2) / KyberConstants::Q) & 31;
+               }
 
                r[0 + offset] = (t[0] >> 0) | (t[1] << 5);
                r[1 + offset] = (t[1] >> 3) | (t[2] << 2) | (t[3] << 7);
@@ -896,8 +906,9 @@ class Ciphertext {
                   t[7] = (a[9] >> 5) | (static_cast<uint16_t>(a[10]) << 3);
                   a += 11;
 
-                  for(size_t k = 0; k < 8; ++k)
+                  for(size_t k = 0; k < 8; ++k) {
                      r[i][8 * j + k] = (static_cast<uint32_t>(t[k] & 0x7FF) * KyberConstants::Q + 1024) >> 11;
+                  }
                }
             }
          } else {
@@ -910,8 +921,9 @@ class Ciphertext {
                   t[3] = (a[3] >> 6) | (static_cast<uint16_t>(a[4]) << 2);
                   a += 5;
 
-                  for(size_t k = 0; k < 4; ++k)
+                  for(size_t k = 0; k < 4; ++k) {
                      r[i][4 * j + k] = (static_cast<uint32_t>(t[k] & 0x3FF) * KyberConstants::Q + 512) >> 10;
+                  }
                }
             }
          }
@@ -1286,8 +1298,9 @@ secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const {
 
 std::unique_ptr<PK_Ops::KEM_Encryption> Kyber_PublicKey::create_kem_encryption_op(std::string_view params,
                                                                                   std::string_view provider) const {
-   if(provider.empty() || provider == "base")
+   if(provider.empty() || provider == "base") {
       return std::make_unique<Kyber_KEM_Encryptor>(*this, params);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 
@@ -1295,8 +1308,9 @@ std::unique_ptr<PK_Ops::KEM_Decryption> Kyber_PrivateKey::create_kem_decryption_
                                                                                    std::string_view params,
                                                                                    std::string_view provider) const {
    BOTAN_UNUSED(rng);
-   if(provider.empty() || provider == "base")
+   if(provider.empty() || provider == "base") {
       return std::make_unique<Kyber_KEM_Decryptor>(*this, params);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 

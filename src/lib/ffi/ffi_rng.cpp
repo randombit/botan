@@ -25,8 +25,9 @@ using namespace Botan_FFI;
 
 int botan_rng_init(botan_rng_t* rng_out, const char* rng_type) {
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(rng_out == nullptr)
+      if(rng_out == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
 
       const std::string rng_type_s(rng_type ? rng_type : "system");
 
@@ -61,14 +62,17 @@ int botan_rng_init_custom(botan_rng_t* rng_out,
                           int (*add_entropy_cb)(void* context, const uint8_t input[], size_t length),
                           void (*destroy_cb)(void* context)) {
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(rng_out == nullptr)
+      if(rng_out == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
 
-      if(rng_name == nullptr)
+      if(rng_name == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
 
-      if(get_cb == nullptr)
+      if(get_cb == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
 
       class Custom_RNG : public Botan::RandomNumberGenerator {
          public:

@@ -41,8 +41,9 @@ size_t DataSource::discard_next(size_t n) {
       discarded += got;
       n -= got;
 
-      if(got == 0)
+      if(got == 0) {
          break;
+      }
    }
 
    return discarded;
@@ -65,8 +66,9 @@ bool DataSource_Memory::check_available(size_t n) { return (n <= (m_source.size(
 */
 size_t DataSource_Memory::peek(uint8_t out[], size_t length, size_t peek_offset) const {
    const size_t bytes_left = m_source.size() - m_offset;
-   if(peek_offset >= bytes_left)
+   if(peek_offset >= bytes_left) {
       return 0;
+   }
 
    const size_t got = std::min(bytes_left - peek_offset, length);
    copy_mem(out, &m_source[m_offset + peek_offset], got);
@@ -89,8 +91,9 @@ DataSource_Memory::DataSource_Memory(std::string_view in) :
 */
 size_t DataSource_Stream::read(uint8_t out[], size_t length) {
    m_source.read(cast_uint8_ptr_to_char(out), length);
-   if(m_source.bad())
+   if(m_source.bad()) {
       throw Stream_IO_Error("DataSource_Stream::read: Source failure");
+   }
 
    const size_t got = static_cast<size_t>(m_source.gcount());
    m_total_read += got;
@@ -109,28 +112,32 @@ bool DataSource_Stream::check_available(size_t n) {
 * Peek into a stream
 */
 size_t DataSource_Stream::peek(uint8_t out[], size_t length, size_t offset) const {
-   if(end_of_data())
+   if(end_of_data()) {
       throw Invalid_State("DataSource_Stream: Cannot peek when out of data");
+   }
 
    size_t got = 0;
 
    if(offset) {
       secure_vector<uint8_t> buf(offset);
       m_source.read(cast_uint8_ptr_to_char(buf.data()), buf.size());
-      if(m_source.bad())
+      if(m_source.bad()) {
          throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
+      }
       got = static_cast<size_t>(m_source.gcount());
    }
 
    if(got == offset) {
       m_source.read(cast_uint8_ptr_to_char(out), length);
-      if(m_source.bad())
+      if(m_source.bad()) {
          throw Stream_IO_Error("DataSource_Stream::peek: Source failure");
+      }
       got = static_cast<size_t>(m_source.gcount());
    }
 
-   if(m_source.eof())
+   if(m_source.eof()) {
       m_source.clear();
+   }
    m_source.seekg(m_total_read, std::ios::beg);
 
    return got;

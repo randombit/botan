@@ -35,13 +35,16 @@ AlternativeName::AlternativeName(std::string_view email_addr,
 * Add an attribute to an alternative name
 */
 void AlternativeName::add_attribute(std::string_view type, std::string_view value) {
-   if(type.empty() || value.empty())
+   if(type.empty() || value.empty()) {
       return;
+   }
 
    auto range = m_alt_info.equal_range(type);
-   for(auto j = range.first; j != range.second; ++j)
-      if(j->second == value)
+   for(auto j = range.first; j != range.second; ++j) {
+      if(j->second == value) {
          return;
+      }
+   }
 
    m_alt_info.emplace(type, value);
 }
@@ -50,8 +53,9 @@ void AlternativeName::add_attribute(std::string_view type, std::string_view valu
 * Add an OtherName field
 */
 void AlternativeName::add_othername(const OID& oid, std::string_view value, ASN1_Type type) {
-   if(value.empty())
+   if(value.empty()) {
       return;
+   }
    multimap_insert(m_othernames, oid, ASN1_String(value, type));
 }
 
@@ -79,8 +83,9 @@ bool AlternativeName::has_field(std::string_view attr) const {
 
 std::string AlternativeName::get_first_attribute(std::string_view attr) const {
    auto i = m_alt_info.lower_bound(attr);
-   if(i != m_alt_info.end() && i->first == attr)
+   if(i != m_alt_info.end() && i->first == attr) {
       return i->second;
+   }
 
    return "";
 }
@@ -88,8 +93,9 @@ std::string AlternativeName::get_first_attribute(std::string_view attr) const {
 std::vector<std::string> AlternativeName::get_attribute(std::string_view attr) const {
    std::vector<std::string> results;
    auto range = m_alt_info.equal_range(attr);
-   for(auto i = range.first; i != range.second; ++i)
+   for(auto i = range.first; i != range.second; ++i) {
       results.push_back(i->second);
+   }
    return results;
 }
 
@@ -185,8 +191,9 @@ void AlternativeName::decode_from(BER_Decoder& source) {
             BER_Object othername_value_outer = othername.get_next_object();
             othername.verify_end();
 
-            if(othername_value_outer.is_a(0, ASN1_Class::ExplicitContextSpecific) == false)
+            if(othername_value_outer.is_a(0, ASN1_Class::ExplicitContextSpecific) == false) {
                throw Decoding_Error("Invalid tags on otherName value");
+            }
 
             BER_Decoder othername_value_inner(othername_value_outer);
 

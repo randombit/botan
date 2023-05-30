@@ -112,8 +112,9 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(const uint8_t record[],
             nonce.swap(m_nonce);
             return nonce;
          }
-         if(record_len < nonce_bytes_from_record())
+         if(record_len < nonce_bytes_from_record()) {
             throw Decoding_Error("Invalid CBC packet too short to be valid");
+         }
          std::vector<uint8_t> nonce(record, record + nonce_bytes_from_record());
          return nonce;
       }
@@ -125,8 +126,9 @@ std::vector<uint8_t> Connection_Cipher_State::aead_nonce(const uint8_t record[],
       }
       case Nonce_Format::AEAD_IMPLICIT_4: {
          BOTAN_ASSERT_NOMSG(m_nonce.size() == 4);
-         if(record_len < nonce_bytes_from_record())
+         if(record_len < nonce_bytes_from_record()) {
             throw Decoding_Error("Invalid AEAD packet too short to be valid");
+         }
          std::vector<uint8_t> nonce(12);
          copy_mem(&nonce[0], m_nonce.data(), 4);
          copy_mem(&nonce[nonce_bytes_from_handshake()], record, nonce_bytes_from_record());
@@ -173,8 +175,9 @@ void write_record_header(secure_vector<uint8_t>& output,
    output.push_back(version.minor_version());
 
    if(version.is_datagram_protocol()) {
-      for(size_t i = 0; i != 8; ++i)
+      for(size_t i = 0; i != 8; ++i) {
          output.push_back(get_byte_var(i, record_sequence));
+      }
    }
 }
 
@@ -186,8 +189,9 @@ void write_unencrypted_record(secure_vector<uint8_t>& output,
                               uint64_t record_sequence,
                               const uint8_t* message,
                               size_t message_len) {
-   if(record_type == Record_Type::ApplicationData)
+   if(record_type == Record_Type::ApplicationData) {
       throw Internal_Error("Writing an unencrypted TLS application data record");
+   }
    write_record_header(output, record_type, version, record_sequence);
    append_u16_len(output, message_len);
    output.insert(output.end(), message, message + message_len);
@@ -217,10 +221,11 @@ void write_record(secure_vector<uint8_t>& output,
    append_u16_len(output, rec_size);
 
    if(cs.nonce_bytes_from_record() > 0) {
-      if(cs.nonce_format() == Nonce_Format::CBC_MODE)
+      if(cs.nonce_format() == Nonce_Format::CBC_MODE) {
          output += nonce;
-      else
+      } else {
          output += std::make_pair(&nonce[cs.nonce_bytes_from_handshake()], cs.nonce_bytes_from_record());
+      }
    }
 
    const size_t header_size = output.size();
@@ -236,8 +241,9 @@ namespace {
 
 size_t fill_buffer_to(
    secure_vector<uint8_t>& readbuf, const uint8_t*& input, size_t& input_size, size_t& input_consumed, size_t desired) {
-   if(readbuf.size() >= desired)
+   if(readbuf.size() >= desired) {
       return 0;  // already have it
+   }
 
    const size_t taken = std::min(input_size, desired - readbuf.size());
 
@@ -269,8 +275,9 @@ void decrypt_record(secure_vector<uint8_t>& output,
    * tools which are attempting automated detection of padding oracles,
    * including older versions of TLS-Attacker.
    */
-   if(msg_length < aead.minimum_final_size())
+   if(msg_length < aead.minimum_final_size()) {
       throw TLS_Exception(Alert::BadRecordMac, "AEAD packet is shorter than the tag");
+   }
 
    const size_t ptext_size = aead.output_length(msg_length);
 
@@ -329,10 +336,11 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
 
       std::ostringstream oss;
       oss << "TLS record ";
-      if(bad_record_type)
+      if(bad_record_type) {
          oss << "type";
-      else
+      } else {
          oss << "version";
+      }
       oss << " had unexpected value";
 
       throw TLS_Exception(Alert::ProtocolVersion, oss.str());
@@ -340,16 +348,19 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
 
    const Protocol_Version version(readbuf[1], readbuf[2]);
 
-   if(version.is_datagram_protocol())
+   if(version.is_datagram_protocol()) {
       throw TLS_Exception(Alert::ProtocolVersion, "Expected TLS but got a record with DTLS version");
+   }
 
    const size_t record_size = make_uint16(readbuf[TLS_HEADER_SIZE - 2], readbuf[TLS_HEADER_SIZE - 1]);
 
-   if(record_size > MAX_CIPHERTEXT_SIZE)
+   if(record_size > MAX_CIPHERTEXT_SIZE) {
       throw TLS_Exception(Alert::RecordOverflow, "Received a record that exceeds maximum size");
+   }
 
-   if(record_size == 0)
+   if(record_size == 0) {
       throw TLS_Exception(Alert::DecodeError, "Received a completely empty record");
+   }
 
    if(size_t needed = fill_buffer_to(readbuf, input, input_len, consumed, TLS_HEADER_SIZE + record_size)) {
       return Record_Header(needed);
@@ -384,8 +395,9 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
 
    decrypt_record(recbuf, &readbuf[TLS_HEADER_SIZE], record_size, sequence, version, type, *cs);
 
-   if(sequence_numbers)
+   if(sequence_numbers) {
       sequence_numbers->read_accept(sequence);
+   }
 
    readbuf.clear();
    return Record_Header(sequence, version, type);
@@ -448,8 +460,9 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
    {
       recbuf.assign(readbuf.begin() + DTLS_HEADER_SIZE, readbuf.begin() + DTLS_HEADER_SIZE + record_size);
       readbuf.clear();
-      if(sequence_numbers)
+      if(sequence_numbers) {
          sequence_numbers->read_accept(sequence);
+      }
       return Record_Header(sequence, version, type);
    }
 
@@ -465,8 +478,9 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
       return Record_Header(0);
    }
 
-   if(sequence_numbers)
+   if(sequence_numbers) {
       sequence_numbers->read_accept(sequence);
+   }
 
    readbuf.clear();
    return Record_Header(sequence, version, type);
@@ -483,11 +497,12 @@ Record_Header read_record(bool is_datagram,
                           Connection_Sequence_Numbers* sequence_numbers,
                           const get_cipherstate_fn& get_cipherstate,
                           bool allow_epoch0_restart) {
-   if(is_datagram)
+   if(is_datagram) {
       return read_dtls_record(
          readbuf, input, input_len, consumed, recbuf, sequence_numbers, get_cipherstate, allow_epoch0_restart);
-   else
+   } else {
       return read_tls_record(readbuf, input, input_len, consumed, recbuf, sequence_numbers, get_cipherstate);
+   }
 }
 
 }  // namespace Botan::TLS

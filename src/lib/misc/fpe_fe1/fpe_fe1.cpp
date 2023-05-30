@@ -39,41 +39,48 @@ void factor(BigInt n, BigInt& a, BigInt& b) {
    for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i) {
       while(n % PRIMES[i] == 0) {
          a *= PRIMES[i];
-         if(a > b)
+         if(a > b) {
             std::swap(a, b);
+         }
          n /= BigInt::from_word(PRIMES[i]);
       }
    }
 
-   if(a > b)
+   if(a > b) {
       std::swap(a, b);
+   }
    a *= n;
 
-   if(a <= 1 || b <= 1)
+   if(a <= 1 || b <= 1) {
       throw Internal_Error("Could not factor n for use in FPE");
+   }
 }
 
 }  // namespace
 
 FPE_FE1::FPE_FE1(const BigInt& n, size_t rounds, bool compat_mode, std::string_view mac_algo) : m_rounds(rounds) {
-   if(m_rounds < 3)
+   if(m_rounds < 3) {
       throw Invalid_Argument("FPE_FE1 rounds too small");
+   }
 
    m_mac = MessageAuthenticationCode::create_or_throw(mac_algo);
 
    m_n_bytes = BigInt::encode(n);
 
-   if(m_n_bytes.size() > MAX_N_BYTES)
+   if(m_n_bytes.size() > MAX_N_BYTES) {
       throw Invalid_Argument("N is too large for FPE encryption");
+   }
 
    factor(n, m_a, m_b);
 
    if(compat_mode) {
-      if(m_a < m_b)
+      if(m_a < m_b) {
          std::swap(m_a, m_b);
+      }
    } else {
-      if(m_a > m_b)
+      if(m_a > m_b) {
          std::swap(m_a, m_b);
+      }
    }
 
    mod_a = std::make_unique<Modular_Reducer>(m_a);
@@ -112,8 +119,9 @@ secure_vector<uint8_t> FPE_FE1::compute_tweak_mac(const uint8_t tweak[], size_t 
    m_mac->update(m_n_bytes.data(), m_n_bytes.size());
 
    m_mac->update_be(static_cast<uint32_t>(tweak_len));
-   if(tweak_len > 0)
+   if(tweak_len > 0) {
       m_mac->update(tweak, tweak_len);
+   }
 
    return m_mac->final();
 }

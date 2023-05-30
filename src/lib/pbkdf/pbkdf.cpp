@@ -28,11 +28,13 @@ std::unique_ptr<PBKDF> PBKDF::create(std::string_view algo_spec, std::string_vie
       // TODO OpenSSL
 
       if(provider.empty() || provider == "base") {
-         if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")"))
+         if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")")) {
             return std::make_unique<PKCS5_PBKDF2>(std::move(mac));
+         }
 
-         if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
+         if(auto mac = MessageAuthenticationCode::create(req.arg(0))) {
             return std::make_unique<PKCS5_PBKDF2>(std::move(mac));
+         }
       }
 
       return nullptr;
@@ -41,8 +43,9 @@ std::unique_ptr<PBKDF> PBKDF::create(std::string_view algo_spec, std::string_vie
 
 #if defined(BOTAN_HAS_PGP_S2K)
    if(req.algo_name() == "OpenPGP-S2K" && req.arg_count() == 1) {
-      if(auto hash = HashFunction::create(req.arg(0)))
+      if(auto hash = HashFunction::create(req.arg(0))) {
          return std::make_unique<OpenPGP_S2K>(std::move(hash));
+      }
    }
 #endif
 
@@ -78,8 +81,9 @@ void PBKDF::pbkdf_iterations(uint8_t out[],
                              const uint8_t salt[],
                              size_t salt_len,
                              size_t iterations) const {
-   if(iterations == 0)
+   if(iterations == 0) {
       throw Invalid_Argument(name() + ": Invalid iteration count");
+   }
 
    const size_t iterations_run =
       pbkdf(out, out_len, passphrase, salt, salt_len, iterations, std::chrono::milliseconds(0));

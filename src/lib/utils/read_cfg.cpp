@@ -18,13 +18,15 @@ std::string clean_ws(std::string_view s) {
    auto start = s.find_first_not_of(ws);
    auto end = s.find_last_not_of(ws);
 
-   if(start == std::string::npos)
+   if(start == std::string::npos) {
       return "";
+   }
 
-   if(end == std::string::npos)
+   if(end == std::string::npos) {
       return std::string(s.substr(start, end));
-   else
+   } else {
       return std::string(s.substr(start, start + end + 1));
+   }
 }
 
 }  // namespace
@@ -40,18 +42,21 @@ std::map<std::string, std::string> read_cfg(std::istream& is) {
 
       ++line;
 
-      if(s.empty() || s[0] == '#')
+      if(s.empty() || s[0] == '#') {
          continue;
+      }
 
       s = clean_ws(s.substr(0, s.find('#')));
 
-      if(s.empty())
+      if(s.empty()) {
          continue;
+      }
 
       auto eq = s.find('=');
 
-      if(eq == std::string::npos || eq == 0 || eq == s.size() - 1)
+      if(eq == std::string::npos || eq == 0 || eq == s.size() - 1) {
          throw Decoding_Error("Bad read_cfg input '" + s + "' on line " + std::to_string(line));
+      }
 
       const std::string key = clean_ws(s.substr(0, eq));
       const std::string val = clean_ws(s.substr(eq + 1, std::string::npos));

@@ -26,8 +26,9 @@ size_t tune_pbkdf2(MessageAuthenticationCode& prf,
                    size_t output_length,
                    std::chrono::milliseconds msec,
                    std::chrono::milliseconds tune_time = std::chrono::milliseconds(10)) {
-   if(output_length == 0)
+   if(output_length == 0) {
       output_length = 1;
+   }
 
    const size_t prf_sz = prf.output_length();
    BOTAN_ASSERT_NOMSG(prf_sz > 0);
@@ -47,24 +48,27 @@ size_t tune_pbkdf2(MessageAuthenticationCode& prf,
       pbkdf2(prf, out, sizeof(out), salt, sizeof(salt), trial_iterations);
    });
 
-   if(timer.events() == 0)
+   if(timer.events() == 0) {
       return trial_iterations;
+   }
 
    const uint64_t duration_nsec = timer.value() / timer.events();
 
    const uint64_t desired_nsec = static_cast<uint64_t>(msec.count()) * 1000000;
 
-   if(duration_nsec > desired_nsec)
+   if(duration_nsec > desired_nsec) {
       return trial_iterations;
+   }
 
    const size_t blocks_needed = (output_length + prf_sz - 1) / prf_sz;
 
    const size_t multiplier = static_cast<size_t>(desired_nsec / duration_nsec / blocks_needed);
 
-   if(multiplier == 0)
+   if(multiplier == 0) {
       return trial_iterations;
-   else
+   } else {
       return trial_iterations * multiplier;
+   }
 }
 
 }  // namespace
@@ -94,13 +98,15 @@ void pbkdf2(MessageAuthenticationCode& prf,
             const uint8_t salt[],
             size_t salt_len,
             size_t iterations) {
-   if(iterations == 0)
+   if(iterations == 0) {
       throw Invalid_Argument("PBKDF2: Invalid iteration count");
+   }
 
    clear_mem(out, out_len);
 
-   if(out_len == 0)
+   if(out_len == 0) {
       return;
+   }
 
    const size_t prf_sz = prf.output_length();
    BOTAN_ASSERT_NOMSG(prf_sz > 0);

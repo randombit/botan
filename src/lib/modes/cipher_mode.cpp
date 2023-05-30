@@ -41,8 +41,9 @@ namespace Botan {
 std::unique_ptr<Cipher_Mode> Cipher_Mode::create_or_throw(std::string_view algo,
                                                           Cipher_Dir direction,
                                                           std::string_view provider) {
-   if(auto mode = Cipher_Mode::create(algo, direction, provider))
+   if(auto mode = Cipher_Mode::create(algo, direction, provider)) {
       return mode;
+   }
 
    throw Lookup_Error("Cipher mode", algo, provider);
 }
@@ -79,16 +80,19 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(std::string_view algo,
       std::string_view cipher_name = algo_parts[0];
       const std::vector<std::string> mode_info = parse_algorithm_name(algo_parts[1]);
 
-      if(mode_info.empty())
+      if(mode_info.empty()) {
          return std::unique_ptr<Cipher_Mode>();
+      }
 
       std::ostringstream mode_name;
 
       mode_name << mode_info[0] << '(' << cipher_name;
-      for(size_t i = 1; i < mode_info.size(); ++i)
+      for(size_t i = 1; i < mode_info.size(); ++i) {
          mode_name << ',' << mode_info[i];
-      for(size_t i = 2; i < algo_parts.size(); ++i)
+      }
+      for(size_t i = 2; i < algo_parts.size(); ++i) {
          mode_name << ',' << algo_parts[i];
+      }
       mode_name << ')';
 
       return Cipher_Mode::create(mode_name.str(), direction, provider);
@@ -113,18 +117,20 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(std::string_view algo,
       const std::string padding = spec.arg(1, "PKCS7");
 
       if(padding == "CTS") {
-         if(direction == Cipher_Dir::Encryption)
+         if(direction == Cipher_Dir::Encryption) {
             return std::make_unique<CTS_Encryption>(std::move(bc));
-         else
+         } else {
             return std::make_unique<CTS_Decryption>(std::move(bc));
+         }
       } else {
          auto pad = BlockCipherModePaddingMethod::create(padding);
 
          if(pad) {
-            if(direction == Cipher_Dir::Encryption)
+            if(direction == Cipher_Dir::Encryption) {
                return std::make_unique<CBC_Encryption>(std::move(bc), std::move(pad));
-            else
+            } else {
                return std::make_unique<CBC_Decryption>(std::move(bc), std::move(pad));
+            }
          }
       }
    }
@@ -132,20 +138,22 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(std::string_view algo,
 
    #if defined(BOTAN_HAS_MODE_XTS)
    if(spec.algo_name() == "XTS") {
-      if(direction == Cipher_Dir::Encryption)
+      if(direction == Cipher_Dir::Encryption) {
          return std::make_unique<XTS_Encryption>(std::move(bc));
-      else
+      } else {
          return std::make_unique<XTS_Decryption>(std::move(bc));
+      }
    }
    #endif
 
    #if defined(BOTAN_HAS_MODE_CFB)
    if(spec.algo_name() == "CFB") {
       const size_t feedback_bits = spec.arg_as_integer(1, 8 * bc->block_size());
-      if(direction == Cipher_Dir::Encryption)
+      if(direction == Cipher_Dir::Encryption) {
          return std::make_unique<CFB_Encryption>(std::move(bc), feedback_bits);
-      else
+      } else {
          return std::make_unique<CFB_Decryption>(std::move(bc), feedback_bits);
+      }
    }
    #endif
 

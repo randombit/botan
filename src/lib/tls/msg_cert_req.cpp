@@ -34,10 +34,12 @@ std::string cert_type_code_to_name(uint8_t code) {
 }
 
 uint8_t cert_type_name_to_code(std::string_view name) {
-   if(name == "RSA")
+   if(name == "RSA") {
       return 1;
-   if(name == "ECDSA")
+   }
+   if(name == "ECDSA") {
       return 64;
+   }
 
    throw Invalid_Argument(fmt("Unknown/unhandled TLS cert type {}", name));
 }
@@ -60,8 +62,9 @@ Certificate_Request_12::Certificate_Request_12(Handshake_IO& io,
 * Deserialize a Certificate Request message
 */
 Certificate_Request_12::Certificate_Request_12(const std::vector<uint8_t>& buf) {
-   if(buf.size() < 4)
+   if(buf.size() < 4) {
       throw Decoding_Error("Certificate_Req: Bad certificate request");
+   }
 
    TLS_Data_Reader reader("CertificateRequest", buf);
 
@@ -70,16 +73,18 @@ Certificate_Request_12::Certificate_Request_12(const std::vector<uint8_t>& buf) 
    for(const auto cert_type_code : cert_type_codes) {
       const std::string cert_type_name = cert_type_code_to_name(cert_type_code);
 
-      if(cert_type_name.empty())  // something we don't know
+      if(cert_type_name.empty()) {  // something we don't know
          continue;
+      }
 
       m_cert_key_types.emplace_back(cert_type_name);
    }
 
    const std::vector<uint8_t> algs = reader.get_range_vector<uint8_t>(2, 2, 65534);
 
-   if(algs.size() % 2 != 0)
+   if(algs.size() % 2 != 0) {
       throw Decoding_Error("Bad length for signature IDs in certificate request");
+   }
 
    for(size_t i = 0; i != algs.size(); i += 2) {
       m_schemes.emplace_back(make_uint16(algs[i], algs[i + 1]));
@@ -87,8 +92,9 @@ Certificate_Request_12::Certificate_Request_12(const std::vector<uint8_t>& buf) 
 
    const uint16_t purported_size = reader.get_uint16_t();
 
-   if(reader.remaining_bytes() != purported_size)
+   if(reader.remaining_bytes() != purported_size) {
       throw Decoding_Error("Inconsistent length in certificate request");
+   }
 
    while(reader.has_remaining()) {
       std::vector<uint8_t> name_bits = reader.get_range_vector<uint8_t>(2, 0, 65535);
@@ -115,13 +121,15 @@ std::vector<uint8_t> Certificate_Request_12::serialize() const {
    std::vector<uint8_t> cert_types;
 
    cert_types.reserve(m_cert_key_types.size());
-   for(const auto& cert_key_type : m_cert_key_types)
+   for(const auto& cert_key_type : m_cert_key_types) {
       cert_types.push_back(cert_type_name_to_code(cert_key_type));
+   }
 
    append_tls_length_value(buf, cert_types, 1);
 
-   if(!m_schemes.empty())
+   if(!m_schemes.empty()) {
       buf += Signature_Algorithms(m_schemes).serialize(Connection_Side::Server);
+   }
 
    std::vector<uint8_t> encoded_names;
 

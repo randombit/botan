@@ -55,8 +55,9 @@ class PSK::PSK_Internal {
 
 PSK::PSK(TLS_Data_Reader& reader, uint16_t extension_size, Handshake_Type message_type) {
    if(message_type == Handshake_Type::ServerHello) {
-      if(extension_size != 2)
+      if(extension_size != 2) {
          throw TLS_Exception(Alert::DecodeError, "Server provided a malformed PSK extension");
+      }
 
       m_impl = std::make_unique<PSK_Internal>(
          Server_PSK{.selected_identity = reader.get_uint16_t(), .session_to_resume = std::nullopt});
@@ -150,8 +151,9 @@ PSK::PSK(Session session_to_resume, const uint16_t psk_index) :
 PSK::~PSK() = default;
 
 bool PSK::empty() const {
-   if(std::holds_alternative<Server_PSK>(m_impl->psk))
+   if(std::holds_alternative<Server_PSK>(m_impl->psk)) {
       return false;
+   }
 
    BOTAN_ASSERT_NOMSG(std::holds_alternative<std::vector<Client_PSK>>(m_impl->psk));
    return std::get<std::vector<Client_PSK>>(m_impl->psk).empty();

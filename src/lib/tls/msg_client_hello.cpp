@@ -384,8 +384,9 @@ std::vector<uint8_t> Hello_Request::serialize() const { return std::vector<uint8
 Client_Hello_12::Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data) : Client_Hello(std::move(data)) {
    if(offered_suite(static_cast<uint16_t>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV))) {
       if(Renegotiation_Extension* reneg = m_data->extensions().get<Renegotiation_Extension>()) {
-         if(!reneg->renegotiation_info().empty())
+         if(!reneg->renegotiation_info().empty()) {
             throw TLS_Exception(Alert::HandshakeFailure, "Client sent renegotiation SCSV and non-empty extension");
+         }
       } else {
          // add fake extension
          m_data->extensions().add(new Renegotiation_Extension());
@@ -413,9 +414,10 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    m_data->m_random = make_hello_random(rng, cb, policy);
    m_data->m_suites = policy.ciphersuite_list(client_settings.protocol_version());
 
-   if(!policy.acceptable_protocol_version(m_data->legacy_version()))
+   if(!policy.acceptable_protocol_version(m_data->legacy_version())) {
       throw Internal_Error("Offering " + m_data->legacy_version().to_string() +
                            " but our own policy does not accept it");
+   }
 
    /*
    * Place all empty extensions in front to avoid a bug in some systems
@@ -439,8 +441,9 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
       m_data->extensions().add(new Server_Name_Indicator(client_settings.hostname()));
    }
 
-   if(policy.support_cert_status_message())
+   if(policy.support_cert_status_message()) {
       m_data->extensions().add(new Certificate_Status_Request({}, {}));
+   }
 
    auto supported_groups = std::make_unique<Supported_Groups>(policy.key_exchange_groups());
    if(!supported_groups->ec_groups().empty()) {
@@ -492,9 +495,10 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
    m_data->m_session_id = session.handle.id().value_or(Session_ID(make_hello_random(rng, cb, policy)));
    m_data->m_suites = policy.ciphersuite_list(m_data->legacy_version());
 
-   if(!policy.acceptable_protocol_version(session.session.version()))
+   if(!policy.acceptable_protocol_version(session.session.version())) {
       throw Internal_Error("Offering " + m_data->legacy_version().to_string() +
                            " but our own policy does not accept it");
+   }
 
    if(!value_exists(m_data->ciphersuites(), session.session.ciphersuite_code())) {
       m_data->m_suites.push_back(session.session.ciphersuite_code());
@@ -520,8 +524,9 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
 
    m_data->extensions().add(new Server_Name_Indicator(session.session.server_info().hostname()));
 
-   if(policy.support_cert_status_message())
+   if(policy.support_cert_status_message()) {
       m_data->extensions().add(new Certificate_Status_Request({}, {}));
+   }
 
    auto supported_groups = std::make_unique<Supported_Groups>(policy.key_exchange_groups());
 
@@ -708,8 +713,9 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
       m_data->m_session_id = Session_ID(make_hello_random(rng, cb, policy));
    }
 
-   if(!hostname.empty())
+   if(!hostname.empty()) {
       m_data->extensions().add(new Server_Name_Indicator(hostname));
+   }
 
    m_data->extensions().add(new Supported_Groups(policy.key_exchange_groups()));
 
@@ -730,17 +736,20 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
    //       support at all (e.g. to disable support for session resumption).
    m_data->extensions().add(new PSK_Key_Exchange_Modes({PSK_Key_Exchange_Mode::PSK_DHE_KE}));
 
-   if(policy.support_cert_status_message())
+   if(policy.support_cert_status_message()) {
       m_data->extensions().add(new Certificate_Status_Request({}, {}));
+   }
 
    // We currently support "record_size_limit" for TLS 1.3 exclusively. Hence,
    // when TLS 1.2 is advertised as a supported protocol, we must not offer this
    // extension.
-   if(policy.record_size_limit().has_value() && !policy.allow_tls12())
+   if(policy.record_size_limit().has_value() && !policy.allow_tls12()) {
       m_data->extensions().add(new Record_Size_Limit(policy.record_size_limit().value()));
+   }
 
-   if(!next_protocols.empty())
+   if(!next_protocols.empty()) {
       m_data->extensions().add(new Application_Layer_Protocol_Notification(next_protocols));
+   }
 
    if(policy.allow_tls12()) {
       m_data->extensions().add(new Renegotiation_Extension());
@@ -749,12 +758,14 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
       // EMS must always be used with TLS 1.2, regardless of the policy
       m_data->extensions().add(new Extended_Master_Secret);
 
-      if(policy.negotiate_encrypt_then_mac())
+      if(policy.negotiate_encrypt_then_mac()) {
          m_data->extensions().add(new Encrypt_then_MAC);
+      }
 
       if(m_data->extensions().has<Supported_Groups>() &&
-         !m_data->extensions().get<Supported_Groups>()->ec_groups().empty())
+         !m_data->extensions().get<Supported_Groups>()->ec_groups().empty()) {
          m_data->extensions().add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
+      }
    }
 
    if(session.has_value()) {
@@ -779,10 +790,11 @@ std::variant<Client_Hello_13, Client_Hello_12> Client_Hello_13::parse(const std:
    auto data = std::make_unique<Client_Hello_Internal>(buf);
    const auto version = data->version();
 
-   if(version.is_pre_tls_13())
+   if(version.is_pre_tls_13()) {
       return Client_Hello_12(std::move(data));
-   else
+   } else {
       return Client_Hello_13(std::move(data));
+   }
 }
 
 void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
@@ -795,8 +807,9 @@ void Client_Hello_13::retry(const Hello_Retry_Request& hrr,
    auto hrr_ks = hrr.extensions().get<Key_Share>();
    const auto& supported_groups = m_data->extensions().get<Supported_Groups>()->groups();
 
-   if(hrr.extensions().has<Key_Share>())
+   if(hrr.extensions().has<Key_Share>()) {
       m_data->extensions().get<Key_Share>()->retry_offer(*hrr_ks, supported_groups, cb, rng);
+   }
 
    // RFC 8446 4.2.2
    //    When sending the new ClientHello, the client MUST copy
@@ -857,14 +870,16 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch) {
          const auto ext = extensions().get(oldext);
 
          // We don't make any assumptions about unimplemented extensions.
-         if(!ext->is_implemented())
+         if(!ext->is_implemented()) {
             continue;
+         }
 
          // RFC 8446 4.1.2
          //    Removing the "early_data" extension (Section 4.2.10) if one was
          //    present.  Early data is not permitted after a HelloRetryRequest.
-         if(oldext == EarlyDataIndication::static_type())
+         if(oldext == EarlyDataIndication::static_type()) {
             continue;
+         }
 
          // RFC 8446 4.1.2
          //    Optionally adding, removing, or changing the length of the
@@ -884,14 +899,16 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch) {
          const auto ext = new_ch.extensions().get(newext);
 
          // We don't make any assumptions about unimplemented extensions.
-         if(!ext->is_implemented())
+         if(!ext->is_implemented()) {
             continue;
+         }
 
          // RFC 8446 4.1.2
          //    Including a "cookie" extension if one was provided in the
          //    HelloRetryRequest.
-         if(newext == Cookie::static_type())
+         if(newext == Cookie::static_type()) {
             continue;
+         }
 
          // RFC 8446 4.1.2
          //    Optionally adding, removing, or changing the length of the
@@ -930,8 +947,9 @@ void Client_Hello_13::validate_updates(const Client_Hello_13& new_ch) {
 
 void Client_Hello_13::calculate_psk_binders(Transcript_Hash_State ths) {
    auto psk = m_data->extensions().get<PSK>();
-   if(!psk || psk->empty())
+   if(!psk || psk->empty()) {
       return;
+   }
 
    // RFC 8446 4.2.11.2
    //    Each entry in the binders list is computed as an HMAC over a

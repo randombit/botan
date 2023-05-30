@@ -25,8 +25,9 @@ int Sodium::crypto_stream_chacha20_xor(
 
 int Sodium::crypto_stream_chacha20_xor_ic(
    uint8_t out[], const uint8_t in[], size_t in_len, const uint8_t nonce[], uint64_t ic, const uint8_t key[]) {
-   if((ic >> 6) != 0)  // otherwise multiply overflows
+   if((ic >> 6) != 0) {  // otherwise multiply overflows
       return -1;
+   }
 
    auto chacha = StreamCipher::create_or_throw("ChaCha(20)");
    chacha->set_key(key, crypto_stream_chacha20_KEYBYTES);
@@ -74,8 +75,9 @@ int Sodium::crypto_stream_xchacha20_xor(
 
 int Sodium::crypto_stream_xchacha20_xor_ic(
    uint8_t out[], const uint8_t in[], size_t in_len, const uint8_t nonce[], uint64_t ic, const uint8_t key[]) {
-   if((ic >> 6) != 0)  // otherwise multiply overflows
+   if((ic >> 6) != 0) {  // otherwise multiply overflows
       return -1;
+   }
 
    auto chacha = StreamCipher::create_or_throw("ChaCha(20)");
    chacha->set_key(key, crypto_stream_xchacha20_KEYBYTES);

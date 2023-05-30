@@ -34,8 +34,9 @@ int botan_view_str_bounce_fn(botan_view_ctx vctx, const char* str, size_t len) {
 }
 
 int botan_view_bin_bounce_fn(botan_view_ctx vctx, const uint8_t* buf, size_t len) {
-   if(vctx == nullptr || buf == nullptr)
+   if(vctx == nullptr || buf == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    botan_view_bounce_struct* ctx = static_cast<botan_view_bounce_struct*>(vctx);
 
@@ -43,8 +44,9 @@ int botan_view_bin_bounce_fn(botan_view_ctx vctx, const uint8_t* buf, size_t len
    *ctx->out_len = len;
 
    if(avail < len || ctx->out_ptr == nullptr) {
-      if(ctx->out_ptr)
+      if(ctx->out_ptr) {
          Botan::clear_mem(ctx->out_ptr, avail);
+      }
       return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
    } else {
       Botan::copy_mem(ctx->out_ptr, buf, len);
@@ -212,32 +214,39 @@ uint32_t botan_ffi_api_version() { return BOTAN_HAS_FFI; }
 
 int botan_ffi_supports_api(uint32_t api_version) {
    // This is the API introduced in 3.0
-   if(api_version == 20230403)
+   if(api_version == 20230403) {
       return BOTAN_FFI_SUCCESS;
+   }
 
    // This is the API introduced in 2.18
-   if(api_version == 20210220)
+   if(api_version == 20210220) {
       return BOTAN_FFI_SUCCESS;
+   }
 
    // This is the API introduced in 2.13
-   if(api_version == 20191214)
+   if(api_version == 20191214) {
       return BOTAN_FFI_SUCCESS;
+   }
 
    // This is the API introduced in 2.8
-   if(api_version == 20180713)
+   if(api_version == 20180713) {
       return BOTAN_FFI_SUCCESS;
+   }
 
    // This is the API introduced in 2.3
-   if(api_version == 20170815)
+   if(api_version == 20170815) {
       return BOTAN_FFI_SUCCESS;
+   }
 
    // This is the API introduced in 2.1
-   if(api_version == 20170327)
+   if(api_version == 20170327) {
       return BOTAN_FFI_SUCCESS;
+   }
 
    // This is the API introduced in 2.0
-   if(api_version == 20150515)
+   if(api_version == 20150515) {
       return BOTAN_FFI_SUCCESS;
+   }
 
    // Something else:
    return -1;

@@ -32,8 +32,9 @@ std::string CPUID::to_string() {
    std::vector<std::string> flags;
 
    auto append_fn = [&](bool flag, const char* flag_name) {
-      if(flag)
+      if(flag) {
          flags.push_back(flag_name);
+      }
    };
 
    // NOLINTNEXTLINE(*-macro-usage)
@@ -128,8 +129,9 @@ CPUID::CPUID_Data::CPUID_Data() {
 
    m_processor_features |= CPUID::CPUID_INITIALIZED_BIT;
 
-   if(runtime_check_if_big_endian())
+   if(runtime_check_if_big_endian()) {
       m_processor_features |= CPUID::CPUID_IS_BIG_ENDIAN_BIT;
+   }
 
    std::string clear_cpuid_env;
    if(OS::read_env_variable(clear_cpuid_env, "BOTAN_CLEAR_CPUID")) {
@@ -144,36 +146,50 @@ CPUID::CPUID_Data::CPUID_Data() {
 
 std::vector<CPUID::CPUID_bits> CPUID::bit_from_string(std::string_view tok) {
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-   if(tok == "sse2" || tok == "simd")
+   if(tok == "sse2" || tok == "simd") {
       return {CPUID::CPUID_SSE2_BIT};
-   if(tok == "ssse3")
+   }
+   if(tok == "ssse3") {
       return {CPUID::CPUID_SSSE3_BIT};
+   }
    // aes_ni is the string printed on the console when running "botan cpuid"
-   if(tok == "aesni" || tok == "aes_ni")
+   if(tok == "aesni" || tok == "aes_ni") {
       return {CPUID::CPUID_AESNI_BIT};
-   if(tok == "clmul")
+   }
+   if(tok == "clmul") {
       return {CPUID::CPUID_CLMUL_BIT};
-   if(tok == "avx2")
+   }
+   if(tok == "avx2") {
       return {CPUID::CPUID_AVX2_BIT};
-   if(tok == "avx512")
+   }
+   if(tok == "avx512") {
       return {CPUID::CPUID_AVX512_BIT};
+   }
    // there were two if statements testing "sha" and "intel_sha" separately; combined
-   if(tok == "sha" || tok == "intel_sha")
+   if(tok == "sha" || tok == "intel_sha") {
       return {CPUID::CPUID_SHA_BIT};
-   if(tok == "rdtsc")
+   }
+   if(tok == "rdtsc") {
       return {CPUID::CPUID_RDTSC_BIT};
-   if(tok == "bmi2")
+   }
+   if(tok == "bmi2") {
       return {CPUID::CPUID_BMI_BIT};
-   if(tok == "adx")
+   }
+   if(tok == "adx") {
       return {CPUID::CPUID_ADX_BIT};
-   if(tok == "rdrand")
+   }
+   if(tok == "rdrand") {
       return {CPUID::CPUID_RDRAND_BIT};
-   if(tok == "rdseed")
+   }
+   if(tok == "rdseed") {
       return {CPUID::CPUID_RDSEED_BIT};
-   if(tok == "avx512_aes")
+   }
+   if(tok == "avx512_aes") {
       return {CPUID::CPUID_AVX512_AES_BIT};
-   if(tok == "avx512_clmul")
+   }
+   if(tok == "avx512_clmul") {
       return {CPUID::CPUID_AVX512_CLMUL_BIT};
+   }
 
 #elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
    if(tok == "altivec" || tok == "simd")

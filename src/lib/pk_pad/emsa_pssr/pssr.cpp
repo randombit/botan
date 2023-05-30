@@ -26,15 +26,18 @@ std::vector<uint8_t> pss_encode(HashFunction& hash,
    const size_t HASH_SIZE = hash.output_length();
    const size_t SALT_SIZE = salt.size();
 
-   if(msg.size() != HASH_SIZE)
+   if(msg.size() != HASH_SIZE) {
       throw Encoding_Error("Cannot encode PSS string, input length invalid for hash");
-   if(output_bits < 8 * HASH_SIZE + 8 * SALT_SIZE + 9)
+   }
+   if(output_bits < 8 * HASH_SIZE + 8 * SALT_SIZE + 9) {
       throw Encoding_Error("Cannot encode PSS string, output length too small");
+   }
 
    const size_t output_length = (output_bits + 7) / 8;
 
-   for(size_t i = 0; i != 8; ++i)
+   for(size_t i = 0; i != 8; ++i) {
       hash.update(0);
+   }
    hash.update(msg);
    hash.update(salt);
    std::vector<uint8_t> H = hash.final_stdvec();
@@ -58,17 +61,21 @@ bool pss_verify(HashFunction& hash,
    const size_t HASH_SIZE = hash.output_length();
    const size_t KEY_BYTES = (key_bits + 7) / 8;
 
-   if(key_bits < 8 * HASH_SIZE + 9)
+   if(key_bits < 8 * HASH_SIZE + 9) {
       return false;
+   }
 
-   if(message_hash.size() != HASH_SIZE)
+   if(message_hash.size() != HASH_SIZE) {
       return false;
+   }
 
-   if(pss_repr.size() > KEY_BYTES || pss_repr.size() <= 1)
+   if(pss_repr.size() > KEY_BYTES || pss_repr.size() <= 1) {
       return false;
+   }
 
-   if(pss_repr[pss_repr.size() - 1] != 0xBC)
+   if(pss_repr[pss_repr.size() - 1] != 0xBC) {
       return false;
+   }
 
    std::vector<uint8_t> coded = pss_repr;
    if(coded.size() < KEY_BYTES) {
@@ -78,8 +85,9 @@ bool pss_verify(HashFunction& hash,
    }
 
    const size_t TOP_BITS = 8 * ((key_bits + 7) / 8) - key_bits;
-   if(TOP_BITS > 8 - high_bit(coded[0]))
+   if(TOP_BITS > 8 - high_bit(coded[0])) {
       return false;
+   }
 
    uint8_t* DB = coded.data();
    const size_t DB_size = coded.size() - HASH_SIZE - 1;
@@ -96,16 +104,19 @@ bool pss_verify(HashFunction& hash,
          salt_offset = j + 1;
          break;
       }
-      if(DB[j])
+      if(DB[j]) {
          return false;
+      }
    }
-   if(salt_offset == 0)
+   if(salt_offset == 0) {
       return false;
+   }
 
    const size_t salt_size = DB_size - salt_offset;
 
-   for(size_t j = 0; j != 8; ++j)
+   for(size_t j = 0; j != 8; ++j) {
       hash.update(0);
+   }
    hash.update(message_hash);
    hash.update(&DB[salt_offset], salt_size);
 
@@ -113,8 +124,9 @@ bool pss_verify(HashFunction& hash,
 
    const bool ok = constant_time_compare(H, H2.data(), HASH_SIZE);
 
-   if(out_salt_size && ok)
+   if(out_salt_size && ok) {
       *out_salt_size = salt_size;
+   }
 
    return ok;
 }
@@ -151,8 +163,9 @@ bool PSSR::verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>&
    size_t salt_size = 0;
    const bool ok = pss_verify(*m_hash, coded, raw, key_bits, &salt_size);
 
-   if(m_required_salt_len && salt_size != m_salt_size)
+   if(m_required_salt_len && salt_size != m_salt_size) {
       return false;
+   }
 
    return ok;
 }
@@ -177,8 +190,9 @@ std::vector<uint8_t> PSSR_Raw::raw_data() {
    std::vector<uint8_t> ret;
    std::swap(ret, m_msg);
 
-   if(ret.size() != m_hash->output_length())
+   if(ret.size() != m_hash->output_length()) {
       throw Encoding_Error("PSSR_Raw Bad input length, did not match hash");
+   }
 
    return ret;
 }
@@ -197,8 +211,9 @@ bool PSSR_Raw::verify(const std::vector<uint8_t>& coded, const std::vector<uint8
    size_t salt_size = 0;
    const bool ok = pss_verify(*m_hash, coded, raw, key_bits, &salt_size);
 
-   if(m_required_salt_len && salt_size != m_salt_size)
+   if(m_required_salt_len && salt_size != m_salt_size) {
       return false;
+   }
 
    return ok;
 }

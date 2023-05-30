@@ -46,10 +46,11 @@ class Hash final : public Command {
 
                const std::string digest = format_blob(format, hash_fn->final());
 
-               if(no_fsname)
+               if(no_fsname) {
                   output() << digest << "\n";
-               else
+               } else {
                   output() << digest << " " << fsname << "\n";
+               }
             } catch(CLI_IO_Error& e) { error_output() << e.what() << "\n"; }
          }
       }

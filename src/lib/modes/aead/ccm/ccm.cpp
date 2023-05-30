@@ -21,14 +21,17 @@ static const size_t CCM_BS = 16;
 */
 CCM_Mode::CCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size, size_t L) :
       m_tag_size(tag_size), m_L(L), m_cipher(std::move(cipher)) {
-   if(m_cipher->block_size() != CCM_BS)
+   if(m_cipher->block_size() != CCM_BS) {
       throw Invalid_Argument(m_cipher->name() + " cannot be used with CCM mode");
+   }
 
-   if(L < 2 || L > 8)
+   if(L < 2 || L > 8) {
       throw Invalid_Argument(fmt("Invalid CCM L value {}", L));
+   }
 
-   if(tag_size < 4 || tag_size > 16 || tag_size % 2 != 0)
+   if(tag_size < 4 || tag_size > 16 || tag_size % 2 != 0) {
       throw Invalid_Argument(fmt("Invalid CCM tag length {}", tag_size));
+   }
 }
 
 void CCM_Mode::clear() {
@@ -75,14 +78,16 @@ void CCM_Mode::set_associated_data_n(size_t idx, std::span<const uint8_t> ad) {
       m_ad_buf.push_back(get_byte<0>(static_cast<uint16_t>(ad.size())));
       m_ad_buf.push_back(get_byte<1>(static_cast<uint16_t>(ad.size())));
       m_ad_buf.insert(m_ad_buf.end(), ad.begin(), ad.end());
-      while(m_ad_buf.size() % CCM_BS)
+      while(m_ad_buf.size() % CCM_BS) {
          m_ad_buf.push_back(0);  // pad with zeros to full block size
+      }
    }
 }
 
 void CCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
-   if(!valid_nonce_length(nonce_len))
+   if(!valid_nonce_length(nonce_len)) {
       throw Invalid_IV_Length(name(), nonce_len);
+   }
 
    m_nonce.assign(nonce, nonce + nonce_len);
    m_msg_buf.clear();
@@ -99,22 +104,27 @@ void CCM_Mode::encode_length(uint64_t len, uint8_t out[]) {
 
    BOTAN_ASSERT_NOMSG(len_bytes >= 2 && len_bytes <= 8);
 
-   for(size_t i = 0; i != len_bytes; ++i)
+   for(size_t i = 0; i != len_bytes; ++i) {
       out[len_bytes - 1 - i] = get_byte_var(sizeof(uint64_t) - 1 - i, len);
+   }
 
-   if(len_bytes < 8 && (len >> (len_bytes * 8)) > 0)
+   if(len_bytes < 8 && (len >> (len_bytes * 8)) > 0) {
       throw Encoding_Error("CCM message length too long to encode in L field");
+   }
 }
 
 void CCM_Mode::inc(secure_vector<uint8_t>& C) {
-   for(size_t i = 0; i != C.size(); ++i)
-      if(++C[C.size() - i - 1])
+   for(size_t i = 0; i != C.size(); ++i) {
+      if(++C[C.size() - i - 1]) {
          break;
+      }
+   }
 }
 
 secure_vector<uint8_t> CCM_Mode::format_b0(size_t sz) {
-   if(m_nonce.size() != 15 - L())
+   if(m_nonce.size() != 15 - L()) {
       throw Invalid_State("CCM mode must set nonce");
+   }
    secure_vector<uint8_t> B0(CCM_BS);
 
    const uint8_t b_flags =
@@ -128,8 +138,9 @@ secure_vector<uint8_t> CCM_Mode::format_b0(size_t sz) {
 }
 
 secure_vector<uint8_t> CCM_Mode::format_c0() {
-   if(m_nonce.size() != 15 - L())
+   if(m_nonce.size() != 15 - L()) {
       throw Invalid_State("CCM mode must set nonce");
+   }
    secure_vector<uint8_t> C(CCM_BS);
 
    const uint8_t a_flags = static_cast<uint8_t>(L() - 1);
@@ -238,8 +249,9 @@ void CCM_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    T ^= S0;
 
-   if(!constant_time_compare(T.data(), buf_end, tag_size()))
+   if(!constant_time_compare(T.data(), buf_end, tag_size())) {
       throw Invalid_Authentication_Tag("CCM tag check failed");
+   }
 
    buffer.resize(buffer.size() - tag_size());
 

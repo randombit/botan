@@ -16,8 +16,9 @@ namespace Botan {
 namespace {
 
 void append_utf8_for(std::string& s, uint32_t c) {
-   if(c >= 0xD800 && c < 0xE000)
+   if(c >= 0xD800 && c < 0xE000) {
       throw Decoding_Error("Invalid Unicode character");
+   }
 
    if(c <= 0x7F) {
       const uint8_t b0 = static_cast<uint8_t>(c);
@@ -43,15 +44,17 @@ void append_utf8_for(std::string& s, uint32_t c) {
       s.push_back(static_cast<char>(b1));
       s.push_back(static_cast<char>(b2));
       s.push_back(static_cast<char>(b3));
-   } else
+   } else {
       throw Decoding_Error("Invalid Unicode character");
+   }
 }
 
 }  // namespace
 
 std::string ucs2_to_utf8(const uint8_t ucs2[], size_t len) {
-   if(len % 2 != 0)
+   if(len % 2 != 0) {
       throw Decoding_Error("Invalid length for UCS-2 string");
+   }
 
    const size_t chars = len / 2;
 
@@ -65,8 +68,9 @@ std::string ucs2_to_utf8(const uint8_t ucs2[], size_t len) {
 }
 
 std::string ucs4_to_utf8(const uint8_t ucs4[], size_t len) {
-   if(len % 4 != 0)
+   if(len % 4 != 0) {
       throw Decoding_Error("Invalid length for UCS-4 string");
+   }
 
    const size_t chars = len / 4;
 

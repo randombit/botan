@@ -68,8 +68,9 @@ void TLS::Callbacks::tls_verify_cert_chain(const std::vector<X509_Certificate>& 
                                            Usage_Type usage,
                                            std::string_view hostname,
                                            const TLS::Policy& policy) {
-   if(cert_chain.empty())
+   if(cert_chain.empty()) {
       throw Invalid_Argument("Certificate chain was empty");
+   }
 
    Path_Validation_Restrictions restrictions(policy.require_cert_revocation_info(),
                                              policy.minimum_signature_strength());
@@ -194,8 +195,9 @@ secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(
        * our key is ephemeral there does not seem to be any
        * advantage to bogus keys anyway.
        */
-      if(Y <= 1 || Y >= dl_group.get_p() - 1)
+      if(Y <= 1 || Y >= dl_group.get_p() - 1) {
          throw TLS_Exception(Alert::IllegalParameter, "Server sent bad DH key for DHE exchange");
+      }
 
       DH_PublicKey peer_key(dl_group, Y);
       policy.check_peer_key_acceptable(peer_key);

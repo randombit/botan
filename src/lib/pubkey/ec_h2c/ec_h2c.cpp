@@ -21,17 +21,20 @@ void expand_message_xmd(std::string_view hash_fn,
                         size_t input_len,
                         const uint8_t domain_sep[],
                         size_t domain_sep_len) {
-   if(domain_sep_len > 0xFF)
+   if(domain_sep_len > 0xFF) {
       throw Invalid_Argument("expand_message_xmd domain seperator too long");
+   }
 
    auto hash = HashFunction::create_or_throw(hash_fn);
    const size_t block_size = hash->hash_block_size();
-   if(block_size == 0)
+   if(block_size == 0) {
       throw Invalid_Argument(fmt("expand_message_xmd cannot be used with {}", hash_fn));
+   }
 
    const size_t hash_output_size = hash->output_length();
-   if(output_len > 255 * hash_output_size || output_len > 0xFFFF)
+   if(output_len > 255 * hash_output_size || output_len > 0xFFFF) {
       throw Invalid_Argument("expand_message_xmd requested output length too long");
+   }
 
    // Compute b_0 = H(msg_prime) = H(Z_pad || msg || l_i_b_str || 0x00 || DST_prime)
 
@@ -104,12 +107,15 @@ BigInt sswu_z(const EC_Group& group) {
    const BigInt& p = group.get_p();
    const OID& oid = group.get_curve_oid();
 
-   if(oid == OID{1, 2, 840, 10045, 3, 1, 7})  // secp256r1
+   if(oid == OID{1, 2, 840, 10045, 3, 1, 7}) {  // secp256r1
       return p - 10;
-   if(oid == OID{1, 3, 132, 0, 34})  // secp384r1
+   }
+   if(oid == OID{1, 3, 132, 0, 34}) {  // secp384r1
       return p - 12;
-   if(oid == OID{1, 3, 132, 0, 35})  // secp521r1
+   }
+   if(oid == OID{1, 3, 132, 0, 35}) {  // secp521r1
       return p - 4;
+   }
 
    return 0;
 }
@@ -126,8 +132,9 @@ EC_Point map_to_curve_sswu(const EC_Group& group, const Modular_Reducer& mod_p, 
    const BigInt& B = group.get_b();
    const BigInt Z = sswu_z(group);
 
-   if(Z.is_zero() || A.is_zero() || B.is_zero() || p % 4 != 3)
+   if(Z.is_zero() || A.is_zero() || B.is_zero() || p % 4 != 3) {
       throw Invalid_Argument("map_to_curve_sswu does not support this curve");
+   }
 
    // These values could be precomputed:
    const BigInt c1 = mod_p.multiply(p - B, inverse_mod(A, p));
@@ -189,8 +196,9 @@ EC_Point hash_to_curve_sswu(const EC_Group& group,
 
    EC_Point pt = map_to_curve_sswu(group, mod_p, u[0]);
 
-   for(size_t i = 1; i != u.size(); ++i)
+   for(size_t i = 1; i != u.size(); ++i) {
       pt += map_to_curve_sswu(group, mod_p, u[i]);
+   }
 
    return pt;
 }

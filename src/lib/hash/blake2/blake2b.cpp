@@ -117,10 +117,12 @@ void BLAKE2b::compress(const uint8_t* input, size_t blocks, uint64_t increment) 
 
       input += BLAKE2B_BLOCKBYTES;
 
-      for(size_t i = 0; i < 8; i++)
+      for(size_t i = 0; i < 8; i++) {
          v[i] = m_H[i];
-      for(size_t i = 0; i != 8; ++i)
+      }
+      for(size_t i = 0; i != 8; ++i) {
          v[i + 8] = blake2b_IV[i];
+      }
 
       v[12] ^= m_T[0];
       v[13] ^= m_T[1];
@@ -147,8 +149,9 @@ void BLAKE2b::compress(const uint8_t* input, size_t blocks, uint64_t increment) 
 }
 
 void BLAKE2b::add_data(const uint8_t input[], size_t length) {
-   if(length == 0)
+   if(length == 0) {
       return;
+   }
 
    if(m_bufpos > 0) {
       if(m_bufpos < BLAKE2B_BLOCKBYTES) {
@@ -180,8 +183,9 @@ void BLAKE2b::add_data(const uint8_t input[], size_t length) {
 }
 
 void BLAKE2b::final_result(uint8_t output[]) {
-   if(m_bufpos != BLAKE2B_BLOCKBYTES)
+   if(m_bufpos != BLAKE2B_BLOCKBYTES) {
       clear_mem(&m_buffer[m_bufpos], BLAKE2B_BLOCKBYTES - m_bufpos);
+   }
    m_F[0] = 0xFFFFFFFFFFFFFFFF;
    compress(m_buffer.data(), 1, m_bufpos);
    copy_out_vec_le(output, output_length(), m_H);

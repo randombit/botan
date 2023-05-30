@@ -72,8 +72,9 @@ std::string base58_encode(BigInt v, size_t leading_zeros) {
       v.swap(q);
    }
 
-   for(size_t i = 0; i != leading_zeros; ++i)
+   for(size_t i = 0; i != leading_zeros; ++i) {
       result.push_back('1');  // 'zero' byte
+   }
 
    return std::string(result.rbegin(), result.rend());
 }
@@ -82,8 +83,9 @@ template <typename T, typename Z>
 size_t count_leading_zeros(const T input[], size_t input_length, Z zero) {
    size_t leading_zeros = 0;
 
-   while(leading_zeros < input_length && input[leading_zeros] == zero)
+   while(leading_zeros < input_length && input[leading_zeros] == zero) {
       leading_zeros += 1;
+   }
 
    return leading_zeros;
 }
@@ -142,13 +144,15 @@ std::vector<uint8_t> base58_decode(const char input[], size_t input_length) {
    for(size_t i = leading_zeros; i != input_length; ++i) {
       const char c = input[i];
 
-      if(c == ' ' || c == '\n')
+      if(c == ' ' || c == '\n') {
          continue;
+      }
 
       const uint8_t idx = base58_value_of(c);
 
-      if(idx == 0xFF)
+      if(idx == 0xFF) {
          throw Decoding_Error("Invalid base58");
+      }
 
       v *= 58;
       v += idx;
@@ -162,14 +166,16 @@ std::vector<uint8_t> base58_decode(const char input[], size_t input_length) {
 std::vector<uint8_t> base58_check_decode(const char input[], size_t input_length) {
    std::vector<uint8_t> dec = base58_decode(input, input_length);
 
-   if(dec.size() < 4)
+   if(dec.size() < 4) {
       throw Decoding_Error("Invalid base58 too short for checksum");
+   }
 
    const uint32_t computed_checksum = sha256_d_checksum(dec.data(), dec.size() - 4);
    const uint32_t checksum = load_be<uint32_t>(&dec[dec.size() - 4], 0);
 
-   if(checksum != computed_checksum)
+   if(checksum != computed_checksum) {
       throw Decoding_Error("Invalid base58 checksum");
+   }
 
    dec.resize(dec.size() - 4);
 

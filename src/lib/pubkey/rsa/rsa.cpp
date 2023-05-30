@@ -118,12 +118,13 @@ class RSA_Private_Data final {
 std::shared_ptr<const RSA_Public_Data> RSA_PublicKey::public_data() const { return m_public; }
 
 const BigInt& RSA_PublicKey::get_int_field(std::string_view field) const {
-   if(field == "n")
+   if(field == "n") {
       return m_public->get_n();
-   else if(field == "e")
+   } else if(field == "e") {
       return m_public->get_e();
-   else
+   } else {
       return Public_Key::get_int_field(field);
+   }
 }
 
 const BigInt& RSA_PublicKey::get_n() const { return m_public->get_n(); }
@@ -131,8 +132,9 @@ const BigInt& RSA_PublicKey::get_n() const { return m_public->get_n(); }
 const BigInt& RSA_PublicKey::get_e() const { return m_public->get_e(); }
 
 void RSA_PublicKey::init(BigInt&& n, BigInt&& e) {
-   if(n.is_negative() || n.is_even() || n.bits() < 5 /* n >= 3*5 */ || e.is_negative() || e.is_even())
+   if(n.is_negative() || n.is_even() || n.bits() < 5 /* n >= 3*5 */ || e.is_negative() || e.is_even()) {
       throw Decoding_Error("Invalid RSA public key parameters");
+   }
    m_public = std::make_shared<RSA_Public_Data>(std::move(n), std::move(e));
 }
 
@@ -174,8 +176,9 @@ std::vector<uint8_t> RSA_PublicKey::public_key_bits() const {
 * Check RSA Public Parameters
 */
 bool RSA_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
-   if(get_n() < 35 || get_n().is_even() || get_e() < 3 || get_e().is_even())
+   if(get_n() < 35 || get_n().is_even() || get_e() < 3 || get_e().is_even()) {
       return false;
+   }
    return true;
 }
 
@@ -240,8 +243,9 @@ RSA_PrivateKey::RSA_PrivateKey(
    BigInt p = prime1;
    BigInt q = prime2;
    BigInt n = mod;
-   if(n.is_zero())
+   if(n.is_zero()) {
       n = p * q;
+   }
 
    BigInt e = exp;
 
@@ -283,21 +287,24 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng, size_t bits, size_t e
    BigInt e = BigInt::from_u64(exp);
 
    for(size_t attempt = 0;; ++attempt) {
-      if(attempt > 10)
+      if(attempt > 10) {
          throw Internal_Error("RNG failure during RSA key generation");
+      }
 
       // TODO could generate primes in thread pool
       p = generate_rsa_prime(rng, rng, p_bits, e);
       q = generate_rsa_prime(rng, rng, q_bits, e);
 
       const BigInt diff = p - q;
-      if(diff.bits() < (bits / 2) - 100)
+      if(diff.bits() < (bits / 2) - 100) {
          continue;
+      }
 
       n = p * q;
 
-      if(n.bits() != bits)
+      if(n.bits() != bits) {
          continue;
+      }
 
       break;
    }
@@ -320,20 +327,21 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng, size_t bits, size_t e
 }
 
 const BigInt& RSA_PrivateKey::get_int_field(std::string_view field) const {
-   if(field == "p")
+   if(field == "p") {
       return m_private->get_p();
-   else if(field == "q")
+   } else if(field == "q") {
       return m_private->get_q();
-   else if(field == "d")
+   } else if(field == "d") {
       return m_private->get_d();
-   else if(field == "c")
+   } else if(field == "c") {
       return m_private->get_c();
-   else if(field == "d1")
+   } else if(field == "d1") {
       return m_private->get_d1();
-   else if(field == "d2")
+   } else if(field == "d2") {
       return m_private->get_d2();
-   else
+   } else {
       return RSA_PublicKey::get_int_field(field);
+   }
 }
 
 std::unique_ptr<Public_Key> RSA_PrivateKey::public_key() const {
@@ -344,35 +352,45 @@ std::unique_ptr<Public_Key> RSA_PrivateKey::public_key() const {
 * Check Private RSA Parameters
 */
 bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
-   if(get_n() < 35 || get_n().is_even() || get_e() < 3 || get_e().is_even())
+   if(get_n() < 35 || get_n().is_even() || get_e() < 3 || get_e().is_even()) {
       return false;
+   }
 
-   if(get_d() < 2 || get_p() < 3 || get_q() < 3)
+   if(get_d() < 2 || get_p() < 3 || get_q() < 3) {
       return false;
+   }
 
-   if(get_p() * get_q() != get_n())
+   if(get_p() * get_q() != get_n()) {
       return false;
+   }
 
-   if(get_p() == get_q())
+   if(get_p() == get_q()) {
       return false;
+   }
 
-   if(get_d1() != ct_modulo(get_d(), get_p() - 1))
+   if(get_d1() != ct_modulo(get_d(), get_p() - 1)) {
       return false;
-   if(get_d2() != ct_modulo(get_d(), get_q() - 1))
+   }
+   if(get_d2() != ct_modulo(get_d(), get_q() - 1)) {
       return false;
-   if(get_c() != inverse_mod(get_q(), get_p()))
+   }
+   if(get_c() != inverse_mod(get_q(), get_p())) {
       return false;
+   }
 
    const size_t prob = (strong) ? 128 : 12;
 
-   if(!is_prime(get_p(), rng, prob))
+   if(!is_prime(get_p(), rng, prob)) {
       return false;
-   if(!is_prime(get_q(), rng, prob))
+   }
+   if(!is_prime(get_q(), rng, prob)) {
       return false;
+   }
 
    if(strong) {
-      if(ct_modulo(get_e() * get_d(), lcm(get_p() - 1, get_q() - 1)) != 1)
+      if(ct_modulo(get_e() * get_d(), lcm(get_p() - 1, get_q() - 1)) != 1) {
          return false;
+      }
 
       return KeyPair::signature_consistency_check(rng, *this, "EMSA4(SHA-256)");
    }
@@ -404,11 +422,13 @@ class RSA_Private_Operation {
             m_max_d2_bits(m_private->q_bits() + m_blinding_bits) {}
 
       secure_vector<uint8_t> raw_op(const uint8_t input[], size_t input_len) {
-         if(input_len > public_modulus_bytes())
+         if(input_len > public_modulus_bytes()) {
             throw Decoding_Error("RSA input is too long for this key");
+         }
          const BigInt input_bn(input, input_len);
-         if(input_bn >= m_public->get_n())
+         if(input_bn >= m_public->get_n()) {
             throw Decoding_Error("RSA input is too large for this key");
+         }
 
          // TODO: This should be a function on blinder
          // BigInt Blinder::run_blinded_function(std::function<BigInt, BigInt> fn, const BigInt& input);
@@ -570,8 +590,9 @@ class RSA_Public_Operation {
 
    protected:
       BigInt public_op(const BigInt& m) const {
-         if(m >= m_public->get_n())
+         if(m >= m_public->get_n()) {
             throw Decoding_Error("RSA public op - input is too large");
+         }
 
          return m_public->public_op(m);
       }
@@ -620,8 +641,9 @@ class RSA_Verify_Operation final : public PK_Ops::Verification,
 
    private:
       std::vector<uint8_t> recover_message_repr(const uint8_t input[], size_t input_len) {
-         if(input_len > public_modulus_bytes())
+         if(input_len > public_modulus_bytes()) {
             throw Decoding_Error("RSA signature too large to be valid for this key");
+         }
          BigInt input_bn(input, input_len);
          return BigInt::encode(public_op(input_bn));
       }
@@ -656,22 +678,25 @@ class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KD
 std::unique_ptr<PK_Ops::Encryption> RSA_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
                                                                         std::string_view params,
                                                                         std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<RSA_Encryption_Operation>(*this, params);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 
 std::unique_ptr<PK_Ops::KEM_Encryption> RSA_PublicKey::create_kem_encryption_op(std::string_view params,
                                                                                 std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<RSA_KEM_Encryption_Operation>(*this, params);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 
 std::unique_ptr<PK_Ops::Verification> RSA_PublicKey::create_verification_op(std::string_view params,
                                                                             std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<RSA_Verify_Operation>(*this, params);
+   }
 
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -681,8 +706,9 @@ namespace {
 std::string parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id) {
    const auto sig_info = split_on(alg_id.oid().to_formatted_string(), '/');
 
-   if(sig_info.empty() || sig_info.size() != 2 || sig_info[0] != "RSA")
+   if(sig_info.empty() || sig_info.size() != 2 || sig_info[0] != "RSA") {
       throw Decoding_Error("Unknown AlgorithmIdentifier for RSA X.509 signatures");
+   }
 
    std::string padding = sig_info[1];
 
@@ -727,8 +753,9 @@ std::string parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id) {
 
 std::unique_ptr<PK_Ops::Verification> RSA_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
                                                                                  std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<RSA_Verify_Operation>(*this, parse_rsa_signature_algorithm(alg_id));
+   }
 
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -736,8 +763,9 @@ std::unique_ptr<PK_Ops::Verification> RSA_PublicKey::create_x509_verification_op
 std::unique_ptr<PK_Ops::Decryption> RSA_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
                                                                          std::string_view params,
                                                                          std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<RSA_Decryption_Operation>(*this, params, rng);
+   }
 
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -745,8 +773,9 @@ std::unique_ptr<PK_Ops::Decryption> RSA_PrivateKey::create_decryption_op(RandomN
 std::unique_ptr<PK_Ops::KEM_Decryption> RSA_PrivateKey::create_kem_decryption_op(RandomNumberGenerator& rng,
                                                                                  std::string_view params,
                                                                                  std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<RSA_KEM_Decryption_Operation>(*this, params, rng);
+   }
 
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -754,8 +783,9 @@ std::unique_ptr<PK_Ops::KEM_Decryption> RSA_PrivateKey::create_kem_decryption_op
 std::unique_ptr<PK_Ops::Signature> RSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
                                                                        std::string_view params,
                                                                        std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<RSA_Signature_Operation>(*this, params, rng);
+   }
 
    throw Provider_Not_Found(algo_name(), provider);
 }

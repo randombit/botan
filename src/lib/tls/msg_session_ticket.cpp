@@ -33,8 +33,9 @@ New_Session_Ticket_12::New_Session_Ticket_12(Handshake_IO& io,
 New_Session_Ticket_12::New_Session_Ticket_12(Handshake_IO& io, Handshake_Hash& hash) { hash.update(io.send(*this)); }
 
 New_Session_Ticket_12::New_Session_Ticket_12(const std::vector<uint8_t>& buf) {
-   if(buf.size() < 6)
+   if(buf.size() < 6) {
       throw Decoding_Error("Session ticket message too short to be valid");
+   }
 
    TLS_Data_Reader reader("SessionTicket", buf);
 
@@ -104,8 +105,9 @@ New_Session_Ticket_13::New_Session_Ticket_13(const std::vector<uint8_t>& buf, Co
 }
 
 std::optional<uint32_t> New_Session_Ticket_13::early_data_byte_limit() const {
-   if(!m_extensions.has<EarlyDataIndication>())
+   if(!m_extensions.has<EarlyDataIndication>()) {
       return std::nullopt;
+   }
 
    const EarlyDataIndication* ext = m_extensions.get<EarlyDataIndication>();
    BOTAN_ASSERT_NOMSG(ext->max_early_data_size().has_value());

@@ -42,8 +42,9 @@ class Cipher final : public Command {
          auto direction = flag_set("decrypt") ? Botan::Cipher_Dir::Decryption : Botan::Cipher_Dir::Encryption;
 
          auto cipher = Botan::Cipher_Mode::create(cipher_algo, direction);
-         if(!cipher)
+         if(!cipher) {
             throw CLI_Error_Unsupported("Cipher algorithm '" + cipher_algo + "' not available");
+         }
 
          // Set key
          cipher->set_key(key);

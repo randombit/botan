@@ -112,8 +112,9 @@ class Pwdhash_Tests : public Test {
                default_pwhash->hash(output3, password, salt);
 
                result.end_timer();
-            } else
+            } else {
                result.test_note("No such algo " + pwdhash);
+            }
 
             results.push_back(result);
          }
@@ -178,8 +179,9 @@ class Scrypt_KAT_Tests final : public Text_Based_Test {
 
          Test::Result result("scrypt");
 
-         if(N >= 1048576 && Test::run_long_tests() == false)
+         if(N >= 1048576 && Test::run_long_tests() == false) {
             return result;
+         }
 
          auto pwdhash_fam = Botan::PasswordHashFamily::create("Scrypt");
 

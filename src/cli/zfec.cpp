@@ -43,16 +43,19 @@ class FEC_Share final {
       static FEC_Share deserialize(const uint8_t bits[], size_t len, Botan::HashFunction& hash) {
          const size_t hash_len = hash.output_length();
 
-         if(len < FEC_SHARE_HEADER_LEN + hash_len)
+         if(len < FEC_SHARE_HEADER_LEN + hash_len) {
             throw CLI_Error("FEC share is too short to be valid");
+         }
 
-         if(Botan::load_be<uint32_t>(bits, 0) != FEC_MAGIC)
+         if(Botan::load_be<uint32_t>(bits, 0) != FEC_MAGIC) {
             throw CLI_Error("FEC share does not have expected magic bytes");
+         }
 
          // verify that reserved bytes are zero
          for(size_t i = 8; i != 12; ++i) {
-            if(bits[i] != 0)
+            if(bits[i] != 0) {
                throw CLI_Error("FEC share has reserved header bytes set");
+            }
          }
 
          size_t share_id = bits[4];
@@ -60,16 +63,18 @@ class FEC_Share final {
          size_t n = bits[6];
          size_t padding = bits[7];
 
-         if(share_id >= n || k >= n || padding >= k)
+         if(share_id >= n || k >= n || padding >= k) {
             throw CLI_Error("FEC share has invalid k/n/padding fields");
+         }
 
          hash.update(bits, len - hash_len);
          auto share_hash = hash.final();
 
          const bool digest_ok = Botan::same_mem(share_hash.data(), &bits[len - hash_len], hash_len);
 
-         if(!digest_ok)
+         if(!digest_ok) {
             throw CLI_Error("FEC share has invalid hash");
+         }
 
          return FEC_Share(
             share_id, k, n, padding, bits + FEC_SHARE_HEADER_LEN, len - (FEC_SHARE_HEADER_LEN + hash_len));
@@ -143,18 +148,21 @@ class FEC_Encode final : public Command {
          auto encoder_fn = [&](size_t share, const uint8_t bits[], size_t len) {
             std::ostringstream output_fsname;
 
-            if(!output_dir.empty())
+            if(!output_dir.empty()) {
                output_fsname << output_dir << "/";
+            }
 
-            if(!prefix.empty())
+            if(!prefix.empty()) {
                output_fsname << prefix;
-            else
+            } else {
                output_fsname << input;
+            }
 
             output_fsname << "." << (share + 1) << "_" << n;
 
-            if(!suffix.empty())
+            if(!suffix.empty()) {
                output_fsname << "." << suffix;
+            }
 
             std::ofstream output(output_fsname.str(), std::ios::binary);
 
@@ -235,19 +243,23 @@ class FEC_Decode final : public Command {
 
          std::map<size_t, const uint8_t*> share_ptrs;
 
-         for(auto& share : shares)
+         for(auto& share : shares) {
             share_ptrs[share.share_id()] = share.share_data();
+         }
 
          fec.decode_shares(share_ptrs, share_size, decoder_fn);
 
          auto decoded_digest = hash->process(decoded.data(), decoded.size() - (hash_len + padding));
 
-         if(!Botan::same_mem(decoded_digest.data(), &decoded[decoded.size() - (hash_len + padding)], hash_len))
+         if(!Botan::same_mem(decoded_digest.data(), &decoded[decoded.size() - (hash_len + padding)], hash_len)) {
             throw CLI_Error("Recovered data failed digest check");
+         }
 
-         for(size_t i = 0; i != padding; ++i)
-            if(decoded[decoded.size() - padding + i] != 0)
+         for(size_t i = 0; i != padding; ++i) {
+            if(decoded[decoded.size() - padding + i] != 0) {
                throw CLI_Error("Recovered data had non-zero padding bytes");
+            }
+         }
 
          output().write(reinterpret_cast<const char*>(decoded.data()), decoded.size() - (hash_len + padding));
       }

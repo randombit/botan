@@ -16,8 +16,9 @@ namespace Botan {
 namespace {
 
 std::string format_timer_name(std::string_view name, std::string_view provider) {
-   if(provider.empty() || provider == "base")
+   if(provider.empty() || provider == "base") {
       return std::string(name);
+   }
 
    std::ostringstream out;
    out << name << " [" << provider << "]";
@@ -76,8 +77,9 @@ void Timer::stop() {
 }
 
 bool Timer::operator<(const Timer& other) const {
-   if(this->doing() != other.doing())
+   if(this->doing() != other.doing()) {
       return (this->doing() < other.doing());
+   }
 
    return (this->get_name() < other.get_name());
 }
@@ -109,11 +111,12 @@ std::string Timer::result_string_bps() const {
       oss << " buffer size " << buf_size() << " bytes:";
    }
 
-   if(events() == 0)
+   if(events() == 0) {
       oss << " "
           << "N/A";
-   else
+   } else {
       oss << " " << std::fixed << std::setprecision(3) << MiB_per_sec << " MiB/sec";
+   }
 
    if(cycles_consumed() != 0) {
       const double cycles_per_byte = static_cast<double>(cycles_consumed()) / events();

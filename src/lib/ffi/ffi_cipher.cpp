@@ -51,8 +51,9 @@ size_t ffi_choose_update_size(Botan::Cipher_Mode& mode) {
    }
 
    size_t buf_size = std::max(update_granularity, minimum_final_size + 1);
-   if(buf_size % update_granularity != 0)
+   if(buf_size % update_granularity != 0) {
       buf_size += update_granularity - (buf_size % update_granularity);
+   }
 
    return buf_size;
 }
@@ -65,8 +66,9 @@ int botan_cipher_init(botan_cipher_t* cipher, const char* cipher_name, uint32_t 
       const Botan::Cipher_Dir dir = encrypt_p ? Botan::Cipher_Dir::Encryption : Botan::Cipher_Dir::Decryption;
 
       std::unique_ptr<Botan::Cipher_Mode> mode(Botan::Cipher_Mode::create(cipher_name, dir));
-      if(!mode)
+      if(!mode) {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+      }
 
       const size_t update_size = ffi_choose_update_size(*mode);
 
@@ -86,8 +88,9 @@ int botan_cipher_reset(botan_cipher_t cipher) {
 }
 
 int botan_cipher_output_length(botan_cipher_t cipher, size_t in_len, size_t* out_len) {
-   if(out_len == nullptr)
+   if(out_len == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    return BOTAN_FFI_VISIT(cipher, [=](const auto& c) { *out_len = c.output_length(in_len); });
 }

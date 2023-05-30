@@ -26,10 +26,11 @@ namespace {
 void raise_runtime_loader_exception(std::string_view lib_name, const char* msg) {
    std::ostringstream err;
    err << "Failed to load " << lib_name << ": ";
-   if(msg)
+   if(msg) {
       err << msg;
-   else
+   } else {
       err << "Unknown error";
+   }
 
    throw System_Error(err.str(), 0);
 }
@@ -40,8 +41,9 @@ Dynamically_Loaded_Library::Dynamically_Loaded_Library(std::string_view library)
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    m_lib = ::dlopen(m_lib_name.c_str(), RTLD_LAZY);
 
-   if(!m_lib)
+   if(!m_lib) {
       raise_runtime_loader_exception(m_lib_name, ::dlerror());
+   }
 
 #elif defined(BOTAN_TARGET_OS_HAS_WIN32)
    m_lib = ::LoadLibraryA(m_lib_name.c_str());
@@ -50,8 +52,9 @@ Dynamically_Loaded_Library::Dynamically_Loaded_Library(std::string_view library)
       raise_runtime_loader_exception(m_lib_name, "LoadLibrary failed");
 #endif
 
-   if(!m_lib)
+   if(!m_lib) {
       raise_runtime_loader_exception(m_lib_name, "Dynamic load not supported");
+   }
 }
 
 Dynamically_Loaded_Library::~Dynamically_Loaded_Library() {

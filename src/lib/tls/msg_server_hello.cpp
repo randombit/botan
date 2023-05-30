@@ -264,12 +264,13 @@ Server_Hello_12::Server_Hello_12(Handshake_IO& io,
       if(!server_srtp.empty() && !client_srtp.empty()) {
          uint16_t shared = 0;
          // always using server preferences for now
-         for(auto s_srtp : server_srtp)
+         for(auto s_srtp : server_srtp) {
             for(auto c_srtp : client_srtp) {
                if(shared == 0 && s_srtp == c_srtp) {
                   shared = s_srtp;
                }
             }
+         }
 
          if(shared) {
             m_data->extensions().add(new SRTP_Protection_Profiles(shared));

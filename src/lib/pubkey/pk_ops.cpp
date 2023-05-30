@@ -49,32 +49,37 @@ secure_vector<uint8_t> PK_Ops::Decryption_with_EME::decrypt(uint8_t& valid_mask,
 }
 
 PK_Ops::Key_Agreement_with_KDF::Key_Agreement_with_KDF(std::string_view kdf) {
-   if(kdf != "Raw")
+   if(kdf != "Raw") {
       m_kdf = KDF::create_or_throw(kdf);
+   }
 }
 
 secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(
    size_t key_len, const uint8_t w[], size_t w_len, const uint8_t salt[], size_t salt_len) {
-   if(salt_len > 0 && m_kdf == nullptr)
+   if(salt_len > 0 && m_kdf == nullptr) {
       throw Invalid_Argument("PK_Key_Agreement::derive_key requires a KDF to use a salt");
+   }
 
    secure_vector<uint8_t> z = raw_agree(w, w_len);
-   if(m_kdf)
+   if(m_kdf) {
       return m_kdf->derive_key(key_len, z, salt, salt_len);
+   }
    return z;
 }
 
 namespace {
 
 std::unique_ptr<HashFunction> create_signature_hash(std::string_view padding) {
-   if(auto hash = HashFunction::create(padding))
+   if(auto hash = HashFunction::create(padding)) {
       return hash;
+   }
 
    SCAN_Name req(padding);
 
    if(req.algo_name() == "EMSA1" && req.arg_count() == 1) {
-      if(auto hash = HashFunction::create(req.arg(0)))
+      if(auto hash = HashFunction::create(req.arg(0))) {
          return hash;
+      }
    }
 
 #if defined(BOTAN_HAS_RAW_HASH_FN)
@@ -84,8 +89,9 @@ std::unique_ptr<HashFunction> create_signature_hash(std::string_view padding) {
       }
 
       if(req.arg_count() == 1) {
-         if(auto hash = HashFunction::create(req.arg(0)))
+         if(auto hash = HashFunction::create(req.arg(0))) {
             return std::make_unique<RawHashFunction>(std::move(hash));
+         }
       }
    }
 #endif
@@ -101,8 +107,9 @@ PK_Ops::Signature_with_Hash::Signature_with_Hash(std::string_view hash) :
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
 std::string PK_Ops::Signature_with_Hash::rfc6979_hash_function() const {
    std::string hash = m_hash->name();
-   if(hash != "Raw")
+   if(hash != "Raw") {
       return hash;
+   }
    return "SHA-512";
 }
 #endif
@@ -148,10 +155,11 @@ bool PK_Ops::Verification_with_Hash::is_valid_signature(const uint8_t sig[], siz
 }
 
 size_t PK_Ops::KEM_Encryption_with_KDF::shared_key_length(size_t desired_shared_key_len) const {
-   if(m_kdf)
+   if(m_kdf) {
       return desired_shared_key_len;
-   else
+   } else {
       return this->raw_kem_shared_key_length();
+   }
 }
 
 void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
@@ -160,8 +168,9 @@ void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(secure_vector<uint8_t>& out_en
                                                   RandomNumberGenerator& rng,
                                                   const uint8_t salt[],
                                                   size_t salt_len) {
-   if(salt_len > 0 && m_kdf == nullptr)
+   if(salt_len > 0 && m_kdf == nullptr) {
       throw Invalid_Argument("PK_KEM_Encryptor::encrypt requires a KDF to use a salt");
+   }
 
    secure_vector<uint8_t> raw_shared;
    this->raw_kem_encrypt(out_encapsulated_key, raw_shared, rng);
@@ -180,21 +189,24 @@ void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(secure_vector<uint8_t>& out_en
 }
 
 PK_Ops::KEM_Encryption_with_KDF::KEM_Encryption_with_KDF(std::string_view kdf) {
-   if(kdf != "Raw")
+   if(kdf != "Raw") {
       m_kdf = KDF::create_or_throw(kdf);
+   }
 }
 
 size_t PK_Ops::KEM_Decryption_with_KDF::shared_key_length(size_t desired_shared_key_len) const {
-   if(m_kdf)
+   if(m_kdf) {
       return desired_shared_key_len;
-   else
+   } else {
       return this->raw_kem_shared_key_length();
+   }
 }
 
 secure_vector<uint8_t> PK_Ops::KEM_Decryption_with_KDF::kem_decrypt(
    const uint8_t encap_key[], size_t len, size_t desired_shared_key_len, const uint8_t salt[], size_t salt_len) {
-   if(salt_len > 0 && m_kdf == nullptr)
+   if(salt_len > 0 && m_kdf == nullptr) {
       throw Invalid_Argument("PK_KEM_Decryptor::decrypt requires a KDF to use a salt");
+   }
 
    secure_vector<uint8_t> raw_shared = this->raw_kem_decrypt(encap_key, len);
 
@@ -202,14 +214,16 @@ secure_vector<uint8_t> PK_Ops::KEM_Decryption_with_KDF::kem_decrypt(
                       this->raw_kem_shared_key_length(),
                       "KEM produced shared key with different length than expected");
 
-   if(m_kdf)
+   if(m_kdf) {
       return m_kdf->derive_key(desired_shared_key_len, raw_shared.data(), raw_shared.size(), salt, salt_len);
+   }
    return raw_shared;
 }
 
 PK_Ops::KEM_Decryption_with_KDF::KEM_Decryption_with_KDF(std::string_view kdf) {
-   if(kdf != "Raw")
+   if(kdf != "Raw") {
       m_kdf = KDF::create_or_throw(kdf);
+   }
 }
 
 }  // namespace Botan

@@ -36,8 +36,9 @@ std::unique_ptr<Public_Key> load_key(DataSource& source) {
          BER_Decoder(ber).start_sequence().decode(alg_id).decode(key_bits, ASN1_Type::BitString).end_cons();
       }
 
-      if(key_bits.empty())
+      if(key_bits.empty()) {
          throw Decoding_Error("X.509 public key decoding");
+      }
 
       return load_public_key(alg_id, key_bits);
    } catch(Decoding_Error& e) { throw Decoding_Error("X.509 public key decoding", e); }

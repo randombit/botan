@@ -26,11 +26,13 @@ BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_kem_encrypt_struct, Botan::PK_KEM_Encryptor
 BOTAN_FFI_DECLARE_STRUCT(botan_pk_op_kem_decrypt_struct, Botan::PK_KEM_Decryptor, 0x1743D8E6);
 
 int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op, botan_pubkey_t key_obj, const char* padding, uint32_t flags) {
-   if(op == nullptr)
+   if(op == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
-   if(flags != 0 && flags != BOTAN_PUBKEY_DER_FORMAT_SIGNATURE)
+   if(flags != 0 && flags != BOTAN_PUBKEY_DER_FORMAT_SIGNATURE) {
       return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
@@ -44,8 +46,9 @@ int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op, botan_pubkey_t key_obj
 int botan_pk_op_encrypt_destroy(botan_pk_op_encrypt_t op) { return BOTAN_FFI_CHECKED_DELETE(op); }
 
 int botan_pk_op_encrypt_output_length(botan_pk_op_encrypt_t op, size_t ptext_len, size_t* ctext_len) {
-   if(ctext_len == nullptr)
+   if(ctext_len == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
    return BOTAN_FFI_VISIT(op, [=](const auto& o) { *ctext_len = o.ciphertext_length(ptext_len); });
 }
 
@@ -67,11 +70,13 @@ int botan_pk_op_decrypt_create(botan_pk_op_decrypt_t* op,
                                botan_privkey_t key_obj,
                                const char* padding,
                                uint32_t flags) {
-   if(op == nullptr)
+   if(op == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
-   if(flags != 0)
+   if(flags != 0) {
       return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
@@ -85,8 +90,9 @@ int botan_pk_op_decrypt_create(botan_pk_op_decrypt_t* op,
 int botan_pk_op_decrypt_destroy(botan_pk_op_decrypt_t op) { return BOTAN_FFI_CHECKED_DELETE(op); }
 
 int botan_pk_op_decrypt_output_length(botan_pk_op_decrypt_t op, size_t ctext_len, size_t* ptext_len) {
-   if(ptext_len == nullptr)
+   if(ptext_len == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
    return BOTAN_FFI_VISIT(op, [=](const auto& o) { *ptext_len = o.plaintext_length(ctext_len); });
 }
 
@@ -100,11 +106,13 @@ int botan_pk_op_decrypt(
 * Signature Generation
 */
 int botan_pk_op_sign_create(botan_pk_op_sign_t* op, botan_privkey_t key_obj, const char* hash, uint32_t flags) {
-   if(op == nullptr)
+   if(op == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
-   if(flags != 0 && flags != BOTAN_PUBKEY_DER_FORMAT_SIGNATURE)
+   if(flags != 0 && flags != BOTAN_PUBKEY_DER_FORMAT_SIGNATURE) {
       return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
@@ -121,8 +129,9 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op, botan_privkey_t key_obj, con
 int botan_pk_op_sign_destroy(botan_pk_op_sign_t op) { return BOTAN_FFI_CHECKED_DELETE(op); }
 
 int botan_pk_op_sign_output_length(botan_pk_op_sign_t op, size_t* sig_len) {
-   if(sig_len == nullptr)
+   if(sig_len == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    return BOTAN_FFI_VISIT(op, [=](const auto& o) { *sig_len = o.signature_length(); });
 }
@@ -136,11 +145,13 @@ int botan_pk_op_sign_finish(botan_pk_op_sign_t op, botan_rng_t rng_obj, uint8_t 
 }
 
 int botan_pk_op_verify_create(botan_pk_op_verify_t* op, botan_pubkey_t key_obj, const char* hash, uint32_t flags) {
-   if(op == nullptr)
+   if(op == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
-   if(flags != 0 && flags != BOTAN_PUBKEY_DER_FORMAT_SIGNATURE)
+   if(flags != 0 && flags != BOTAN_PUBKEY_DER_FORMAT_SIGNATURE) {
       return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
@@ -170,11 +181,13 @@ int botan_pk_op_verify_finish(botan_pk_op_verify_t op, const uint8_t sig[], size
 }
 
 int botan_pk_op_key_agreement_create(botan_pk_op_ka_t* op, botan_privkey_t key_obj, const char* kdf, uint32_t flags) {
-   if(op == nullptr)
+   if(op == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
-   if(flags != 0)
+   if(flags != 0) {
       return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
@@ -222,8 +235,9 @@ int botan_pk_op_key_agreement(botan_pk_op_ka_t op,
 }
 
 int botan_pk_op_kem_encrypt_create(botan_pk_op_kem_encrypt_t* op, botan_pubkey_t key_obj, const char* padding) {
-   if(op == nullptr || padding == nullptr)
+   if(op == nullptr || padding == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto pk = std::make_unique<Botan::PK_KEM_Encryptor>(safe_get(key_obj), padding);
@@ -237,8 +251,9 @@ int botan_pk_op_kem_encrypt_destroy(botan_pk_op_kem_encrypt_t op) { return BOTAN
 int botan_pk_op_kem_encrypt_shared_key_length(botan_pk_op_kem_encrypt_t op,
                                               size_t desired_shared_key_length,
                                               size_t* output_shared_key_length) {
-   if(output_shared_key_length == nullptr)
+   if(output_shared_key_length == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    return BOTAN_FFI_VISIT(op, [=](auto& kem) {
       *output_shared_key_length = kem.shared_key_length(desired_shared_key_length);
@@ -248,8 +263,9 @@ int botan_pk_op_kem_encrypt_shared_key_length(botan_pk_op_kem_encrypt_t op,
 
 int botan_pk_op_kem_encrypt_encapsulated_key_length(botan_pk_op_kem_encrypt_t op,
                                                     size_t* output_encapsulated_key_length) {
-   if(output_encapsulated_key_length == nullptr)
+   if(output_encapsulated_key_length == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    return BOTAN_FFI_VISIT(op, [=](auto& kem) {
       *output_encapsulated_key_length = kem.encapsulated_key_length();
@@ -282,8 +298,9 @@ int botan_pk_op_kem_encrypt_create_shared_key(botan_pk_op_kem_encrypt_t op,
 }
 
 int botan_pk_op_kem_decrypt_create(botan_pk_op_kem_decrypt_t* op, botan_privkey_t key_obj, const char* padding) {
-   if(op == nullptr || padding == nullptr)
+   if(op == nullptr || padding == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto pk = std::make_unique<Botan::PK_KEM_Decryptor>(safe_get(key_obj), Botan::system_rng(), padding);
@@ -295,8 +312,9 @@ int botan_pk_op_kem_decrypt_create(botan_pk_op_kem_decrypt_t* op, botan_privkey_
 int botan_pk_op_kem_decrypt_shared_key_length(botan_pk_op_kem_decrypt_t op,
                                               size_t desired_shared_key_length,
                                               size_t* output_shared_key_length) {
-   if(output_shared_key_length == nullptr)
+   if(output_shared_key_length == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    return BOTAN_FFI_VISIT(op, [=](auto& kem) {
       *output_shared_key_length = kem.shared_key_length(desired_shared_key_length);

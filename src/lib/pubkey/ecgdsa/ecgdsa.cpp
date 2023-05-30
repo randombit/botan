@@ -20,11 +20,13 @@ std::unique_ptr<Public_Key> ECGDSA_PrivateKey::public_key() const {
 }
 
 bool ECGDSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
-   if(!public_point().on_the_curve())
+   if(!public_point().on_the_curve()) {
       return false;
+   }
 
-   if(!strong)
+   if(!strong) {
       return true;
+   }
 
    return KeyPair::signature_consistency_check(rng, *this, "SHA-256");
 }
@@ -71,8 +73,9 @@ secure_vector<uint8_t> ECGDSA_Signature_Operation::raw_sign(const uint8_t msg[],
    const BigInt s = m_group.multiply_mod_order(m_x, kr - m);
 
    // With overwhelming probability, a bug rather than actual zero r/s
-   if(r.is_zero() || s.is_zero())
+   if(r.is_zero() || s.is_zero()) {
       throw Internal_Error("During ECGDSA signature generated zero r/s");
+   }
 
    return BigInt::encode_fixed_length_int_pair(r, s, m_group.get_order_bytes());
 }
@@ -100,16 +103,18 @@ class ECGDSA_Verification_Operation final : public PK_Ops::Verification_with_Has
 };
 
 bool ECGDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len, const uint8_t sig[], size_t sig_len) {
-   if(sig_len != m_group.get_order_bytes() * 2)
+   if(sig_len != m_group.get_order_bytes() * 2) {
       return false;
+   }
 
    const BigInt e = BigInt::from_bytes_with_max_bits(msg, msg_len, m_group.get_order_bits());
 
    const BigInt r(sig, sig_len / 2);
    const BigInt s(sig + sig_len / 2, sig_len / 2);
 
-   if(r <= 0 || r >= m_group.get_order() || s <= 0 || s >= m_group.get_order())
+   if(r <= 0 || r >= m_group.get_order() || s <= 0 || s >= m_group.get_order()) {
       return false;
+   }
 
    const BigInt w = m_group.inverse_mod_order(r);
 
@@ -117,8 +122,9 @@ bool ECGDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len, 
    const BigInt u2 = m_group.multiply_mod_order(s, w);
    const EC_Point R = m_gy_mul.multi_exp(u1, u2);
 
-   if(R.is_zero())
+   if(R.is_zero()) {
       return false;
+   }
 
    const BigInt v = m_group.mod_order(R.get_affine_x());
    return (v == r);
@@ -128,15 +134,17 @@ bool ECGDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len, 
 
 std::unique_ptr<PK_Ops::Verification> ECGDSA_PublicKey::create_verification_op(std::string_view params,
                                                                                std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<ECGDSA_Verification_Operation>(*this, params);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 
 std::unique_ptr<PK_Ops::Verification> ECGDSA_PublicKey::create_x509_verification_op(
    const AlgorithmIdentifier& signature_algorithm, std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<ECGDSA_Verification_Operation>(*this, signature_algorithm);
+   }
 
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -144,8 +152,9 @@ std::unique_ptr<PK_Ops::Verification> ECGDSA_PublicKey::create_x509_verification
 std::unique_ptr<PK_Ops::Signature> ECGDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
                                                                           std::string_view params,
                                                                           std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<ECGDSA_Signature_Operation>(*this, params);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 

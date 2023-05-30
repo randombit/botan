@@ -41,8 +41,9 @@ void aes_192_key_expansion(
    *K1 = key1;
    _mm_storeu_si128(reinterpret_cast<__m128i*>(&out[offset]), key1);
 
-   if(offset == 48)  // last key
+   if(offset == 48) {  // last key
       return;
+   }
 
    key2 = _mm_xor_si128(key2, _mm_slli_si128(key2, 4));
    key2 = _mm_xor_si128(key2, _mm_shuffle_epi32(key1, _MM_SHUFFLE(3, 3, 3, 3)));

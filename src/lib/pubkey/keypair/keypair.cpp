@@ -26,15 +26,17 @@ bool encryption_consistency_check(RandomNumberGenerator& rng,
    Weird corner case, if the key is too small to encrypt anything at
    all. This can happen with very small RSA keys with PSS
    */
-   if(encryptor.maximum_input_size() == 0)
+   if(encryptor.maximum_input_size() == 0) {
       return true;
+   }
 
    std::vector<uint8_t> plaintext;
    rng.random_vec(plaintext, encryptor.maximum_input_size() - 1);
 
    std::vector<uint8_t> ciphertext = encryptor.encrypt(plaintext, rng);
-   if(ciphertext == plaintext)
+   if(ciphertext == plaintext) {
       return false;
+   }
 
    std::vector<uint8_t> decrypted = unlock(decryptor.decrypt(ciphertext));
 
@@ -60,14 +62,16 @@ bool signature_consistency_check(RandomNumberGenerator& rng,
       signature = signer.sign_message(message, rng);
    } catch(Encoding_Error&) { return false; }
 
-   if(!verifier.verify_message(message, signature))
+   if(!verifier.verify_message(message, signature)) {
       return false;
+   }
 
    // Now try to check a corrupt signature, ensure it does not succeed
    ++signature[0];
 
-   if(verifier.verify_message(message, signature))
+   if(verifier.verify_message(message, signature)) {
       return false;
+   }
 
    return true;
 }

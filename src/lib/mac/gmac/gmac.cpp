@@ -96,8 +96,9 @@ void GMAC::final_result(uint8_t mac[]) {
    // This ensures the GMAC computation has been initialized with a fresh
    // nonce. The aim of this check is to prevent developers from re-using
    // nonces (and potential nonce-reuse attacks).
-   if(m_initialized == false)
+   if(m_initialized == false) {
       throw Invalid_State("GMAC was not used with a fresh nonce");
+   }
 
    // process the rest of the aad buffer. Even if it is a partial block only
    // ghash_update will process it properly.

@@ -25,10 +25,11 @@ size_t EC_PublicKey::estimated_strength() const { return ecp_work_factor(key_len
 namespace {
 
 EC_Group_Encoding default_encoding_for(EC_Group& group) {
-   if(group.get_curve_oid().empty())
+   if(group.get_curve_oid().empty()) {
       return EC_Group_Encoding::Explicit;
-   else
+   } else {
       return EC_Group_Encoding::NamedCurve;
+   }
 }
 
 }  // namespace
@@ -52,22 +53,25 @@ AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const {
 std::vector<uint8_t> EC_PublicKey::public_key_bits() const { return public_point().encode(point_encoding()); }
 
 void EC_PublicKey::set_point_encoding(EC_Point_Format enc) {
-   if(enc != EC_Point_Format::Compressed && enc != EC_Point_Format::Uncompressed && enc != EC_Point_Format::Hybrid)
+   if(enc != EC_Point_Format::Compressed && enc != EC_Point_Format::Uncompressed && enc != EC_Point_Format::Hybrid) {
       throw Invalid_Argument("Invalid point encoding for EC_PublicKey");
+   }
 
    m_point_encoding = enc;
 }
 
 void EC_PublicKey::set_parameter_encoding(EC_Group_Encoding form) {
-   if(form == EC_Group_Encoding::NamedCurve && m_domain_params.get_curve_oid().empty())
+   if(form == EC_Group_Encoding::NamedCurve && m_domain_params.get_curve_oid().empty()) {
       throw Invalid_Argument("Cannot used NamedCurve encoding for a curve without an OID");
+   }
 
    m_domain_encoding = form;
 }
 
 const BigInt& EC_PrivateKey::private_value() const {
-   if(m_private_key == 0)
+   if(m_private_key == 0) {
       throw Invalid_State("EC_PrivateKey::private_value - uninitialized");
+   }
 
    return m_private_key;
 }
@@ -153,29 +157,31 @@ const BigInt& EC_PublicKey::get_int_field(std::string_view field) const {
    } else if(field == "public_y") {
       BOTAN_ASSERT_NOMSG(this->public_point().is_affine());
       return this->public_point().get_y();
-   } else if(field == "base_x")
+   } else if(field == "base_x") {
       return this->domain().get_g_x();
-   else if(field == "base_y")
+   } else if(field == "base_y") {
       return this->domain().get_g_y();
-   else if(field == "p")
+   } else if(field == "p") {
       return this->domain().get_p();
-   else if(field == "a")
+   } else if(field == "a") {
       return this->domain().get_a();
-   else if(field == "b")
+   } else if(field == "b") {
       return this->domain().get_b();
-   else if(field == "cofactor")
+   } else if(field == "cofactor") {
       return this->domain().get_cofactor();
-   else if(field == "order")
+   } else if(field == "order") {
       return this->domain().get_order();
-   else
+   } else {
       return Public_Key::get_int_field(field);
+   }
 }
 
 const BigInt& EC_PrivateKey::get_int_field(std::string_view field) const {
-   if(field == "x")
+   if(field == "x") {
       return this->private_value();
-   else
+   } else {
       return EC_PublicKey::get_int_field(field);
+   }
 }
 
 }  // namespace Botan

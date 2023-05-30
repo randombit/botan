@@ -441,10 +441,11 @@ void TripleDES::key_schedule(const uint8_t key[], size_t length) {
    des_key_schedule(&m_round_key[0], key);
    des_key_schedule(&m_round_key[32], key + 8);
 
-   if(length == 24)
+   if(length == 24) {
       des_key_schedule(&m_round_key[64], key + 16);
-   else
+   } else {
       copy_mem(&m_round_key[64], &m_round_key[0], 32);
+   }
 }
 
 void TripleDES::clear() { zap(m_round_key); }

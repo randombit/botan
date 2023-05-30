@@ -21,8 +21,9 @@ SIV_Mode::SIV_Mode(std::unique_ptr<BlockCipher> cipher) :
       m_ctr(std::make_unique<CTR_BE>(cipher->new_object(), 8)),
       m_mac(std::make_unique<CMAC>(std::move(cipher))) {
    // Not really true but only 128 bit allowed at the moment
-   if(m_bs != 16)
+   if(m_bs != 16) {
       throw Invalid_Argument("SIV requires a 128 bit block cipher");
+   }
 }
 
 SIV_Mode::~SIV_Mode() = default;
@@ -67,23 +68,27 @@ size_t SIV_Mode::maximum_associated_data_inputs() const { return block_size() * 
 
 void SIV_Mode::set_associated_data_n(size_t n, std::span<const uint8_t> ad) {
    const size_t max_ads = maximum_associated_data_inputs();
-   if(n > max_ads)
+   if(n > max_ads) {
       throw Invalid_Argument(name() + " allows no more than " + std::to_string(max_ads) + " ADs");
+   }
 
-   if(n >= m_ad_macs.size())
+   if(n >= m_ad_macs.size()) {
       m_ad_macs.resize(n + 1);
+   }
 
    m_ad_macs[n] = m_mac->process(ad);
 }
 
 void SIV_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
-   if(!valid_nonce_length(nonce_len))
+   if(!valid_nonce_length(nonce_len)) {
       throw Invalid_IV_Length(name(), nonce_len);
+   }
 
-   if(nonce_len)
+   if(nonce_len) {
       m_nonce = m_mac->process(nonce, nonce_len);
-   else
+   } else {
       m_nonce.clear();
+   }
 
    m_msg_buf.clear();
 }
@@ -168,8 +173,9 @@ void SIV_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    const secure_vector<uint8_t> T = S2V(buffer.data() + offset, buffer.size() - offset - V.size());
 
-   if(!constant_time_compare(T.data(), V.data(), T.size()))
+   if(!constant_time_compare(T.data(), V.data(), T.size())) {
       throw Invalid_Authentication_Tag("SIV tag check failed");
+   }
 
    buffer.resize(buffer.size() - tag_size());
 }

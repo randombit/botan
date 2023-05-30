@@ -39,8 +39,9 @@ void X509_Object::load_data(DataSource& in) {
                }
             }
 
-            if(!is_alternate)
+            if(!is_alternate) {
                throw Decoding_Error("Unexpected PEM label for " + PEM_label() + " of " + got_label);
+            }
          }
 
          BER_Decoder dec(ber);
@@ -97,10 +98,11 @@ std::pair<Certificate_Status_Code, std::string> X509_Object::verify_signature(co
       PK_Verifier verifier(pub_key, signature_algorithm());
       const bool valid = verifier.verify_message(tbs_data(), signature());
 
-      if(valid)
+      if(valid) {
          return std::make_pair(Certificate_Status_Code::VERIFIED, verifier.hash_function());
-      else
+      } else {
          return std::make_pair(Certificate_Status_Code::SIGNATURE_ERROR, "");
+      }
    } catch(Decoding_Error&) {
       return std::make_pair(Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS, "");
    } catch(Algorithm_Not_Found&) {
@@ -146,15 +148,17 @@ std::string x509_signature_padding_for(const std::string& algo_name,
       // set to PKCSv1.5 for compatibility reasons, originally it was the only option
 
       if(user_specified_padding.empty()) {
-         if(hash_fn.empty())
+         if(hash_fn.empty()) {
             return "EMSA3(SHA-256)";
-         else
+         } else {
             return fmt("EMSA3({})", hash_fn);
+         }
       } else {
-         if(hash_fn.empty())
+         if(hash_fn.empty()) {
             return fmt("{}(SHA-256)", user_specified_padding);
-         else
+         } else {
             return fmt("{}({})", user_specified_padding, hash_fn);
+         }
       }
    } else if(algo_name == "Ed25519") {
       return user_specified_padding.empty() ? "Pure" : std::string(user_specified_padding);
@@ -174,13 +178,16 @@ std::string format_padding_error_message(std::string_view key_name,
 
    oss << "Specified hash function " << user_hash_fn << " is incompatible with " << key_name;
 
-   if(!signer_hash_fn.empty())
+   if(!signer_hash_fn.empty()) {
       oss << " chose hash function " << signer_hash_fn;
+   }
 
-   if(!chosen_padding.empty())
+   if(!chosen_padding.empty()) {
       oss << " chose padding " << chosen_padding;
-   if(!user_specified_padding.empty())
+   }
+   if(!user_specified_padding.empty()) {
       oss << " with user specified padding " << user_specified_padding;
+   }
 
    return oss.str();
 }

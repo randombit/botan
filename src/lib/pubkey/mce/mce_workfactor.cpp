@@ -66,17 +66,19 @@ double cout_total(size_t n, size_t k, size_t w, size_t p, size_t l) {
 }
 
 double best_wf(size_t n, size_t k, size_t w, size_t p) {
-   if(p >= k / 2)
+   if(p >= k / 2) {
       return -1;
+   }
 
    double min = cout_total(n, k, w, p, 0);
 
    for(size_t l = 1; l < n - k; ++l) {
       const double lwf = cout_total(n, k, w, p, l);
-      if(lwf < min)
+      if(lwf < min) {
          min = lwf;
-      else
+      } else {
          break;
+      }
    }
 
    return min;
@@ -90,8 +92,9 @@ size_t mceliece_work_factor(size_t n, size_t t) {
    double min = cout_total(n, k, t, 0, 0);  // correspond a p=1
    for(size_t p = 0; p != t / 2; ++p) {
       double lwf = best_wf(n, k + 1, t, p);
-      if(lwf < 0)
+      if(lwf < 0) {
          break;
+      }
 
       min = std::min(min, lwf);
    }

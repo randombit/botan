@@ -100,10 +100,11 @@ namespace {
 std::string choose_sig_padding(const std::string& key, const std::string& padding, const std::string& hash) {
    if(key == "RSA") {
       std::ostringstream oss;
-      if(padding.empty())
+      if(padding.empty()) {
          oss << "PSS";
-      else
+      } else {
          oss << padding;
+      }
 
       oss << "(" << hash << ")";
       return oss.str();
@@ -187,17 +188,19 @@ class PK_Sign final : public Command {
 
          const std::string hash_fn = get_arg("hash");
 
-         if(!hash_fn.empty() && !Botan::HashFunction::create(hash_fn))
+         if(!hash_fn.empty() && !Botan::HashFunction::create(hash_fn)) {
             throw CLI_Error_Unsupported("hashing", hash_fn);
+         }
 
          const std::string sig_padding = choose_sig_padding(key->algo_name(), get_arg("padding"), hash_fn);
 
          auto format = Botan::Signature_Format::Standard;
 
          if(flag_set("der-format")) {
-            if(key->message_parts() == 1)
+            if(key->message_parts() == 1) {
                throw CLI_Usage_Error("Key type " + key->algo_name() +
                                      " does not support DER formatting for signatures");
+            }
             format = Botan::Signature_Format::DerSequence;
          }
 
@@ -243,16 +246,18 @@ class PK_Verify final : public Command {
 
          const std::string hash_fn = get_arg("hash");
 
-         if(!hash_fn.empty() && !Botan::HashFunction::create(hash_fn))
+         if(!hash_fn.empty() && !Botan::HashFunction::create(hash_fn)) {
             throw CLI_Error_Unsupported("hashing", hash_fn);
+         }
 
          const std::string sig_padding = choose_sig_padding(key->algo_name(), get_arg("padding"), hash_fn);
 
          auto format = Botan::Signature_Format::Standard;
          if(flag_set("der-format")) {
-            if(key->message_parts() == 1)
+            if(key->message_parts() == 1) {
                throw CLI_Usage_Error("Key type " + key->algo_name() +
                                      " does not support DER formatting for signatures");
+            }
             format = Botan::Signature_Format::DerSequence;
          }
 

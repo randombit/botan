@@ -20,8 +20,9 @@ namespace Botan {
 */
 GCM_Mode::GCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size) :
       m_tag_size(tag_size), m_cipher_name(cipher->name()) {
-   if(cipher->block_size() != GCM_BS)
+   if(cipher->block_size() != GCM_BS) {
       throw Invalid_Argument("Invalid block cipher for GCM");
+   }
 
    /* We allow any of the values 128, 120, 112, 104, or 96 bits as a tag size */
    /* 64 bit tag is still supported but deprecated and will be removed in the future */
@@ -77,11 +78,13 @@ void GCM_Mode::set_associated_data_n(size_t idx, std::span<const uint8_t> ad) {
 }
 
 void GCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
-   if(!valid_nonce_length(nonce_len))
+   if(!valid_nonce_length(nonce_len)) {
       throw Invalid_IV_Length(name(), nonce_len);
+   }
 
-   if(m_y0.size() != GCM_BS)
+   if(m_y0.size() != GCM_BS) {
       m_y0.resize(GCM_BS);
+   }
 
    clear_mem(m_y0.data(), m_y0.size());
 
@@ -148,8 +151,9 @@ void GCM_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    const uint8_t* included_tag = &buffer[remaining + offset];
 
-   if(!constant_time_compare(mac, included_tag, tag_size()))
+   if(!constant_time_compare(mac, included_tag, tag_size())) {
       throw Invalid_Authentication_Tag("GCM tag check failed");
+   }
 
    buffer.resize(offset + remaining);
 }

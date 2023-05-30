@@ -326,19 +326,22 @@ std::string Cipher_State::hash_algorithm() const {
 }
 
 bool Cipher_State::is_compatible_with(const Ciphersuite& cipher) const {
-   if(!cipher.usable_in_version(Protocol_Version::TLS_V13))
+   if(!cipher.usable_in_version(Protocol_Version::TLS_V13)) {
       return false;
+   }
 
-   if(hash_algorithm() != cipher.prf_algo())
+   if(hash_algorithm() != cipher.prf_algo()) {
       return false;
+   }
 
    BOTAN_ASSERT_NOMSG((m_encrypt == nullptr) == (m_decrypt == nullptr));
    // TODO: Find a better way to check that the instantiated cipher algorithm
    //       is compatible with the one required by the cipher suite.
    // AEAD_Mode::create() sets defaults the tag length to 16 which is then
    // reported via AEAD_Mode::name() and hinders the trivial string comparison.
-   if(m_encrypt && m_encrypt->name() != cipher.cipher_algo() && m_encrypt->name() != cipher.cipher_algo() + "(16)")
+   if(m_encrypt && m_encrypt->name() != cipher.cipher_algo() && m_encrypt->name() != cipher.cipher_algo() + "(16)") {
       return false;
+   }
 
    return true;
 }

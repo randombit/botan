@@ -94,14 +94,16 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body) {
 
    size_t version;
    cert_req_info.decode(version);
-   if(version != 0)
+   if(version != 0) {
       throw Decoding_Error("Unknown version code in PKCS #10 request: " + std::to_string(version));
+   }
 
    cert_req_info.decode(data->m_subject_dn);
 
    BER_Object public_key = cert_req_info.get_next_object();
-   if(public_key.is_a(ASN1_Type::Sequence, ASN1_Class::Constructed) == false)
+   if(public_key.is_a(ASN1_Type::Sequence, ASN1_Class::Constructed) == false) {
       throw BER_Bad_Tag("PKCS10_Request: Unexpected tag for public key", public_key.tagging());
+   }
 
    data->m_public_key_bits = ASN1::put_in_sequence(public_key.bits(), public_key.length());
 
@@ -131,8 +133,9 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body) {
          }
       }
       attributes.verify_end();
-   } else if(attr_bits.is_set())
+   } else if(attr_bits.is_set()) {
       throw BER_Bad_Tag("PKCS10_Request: Unexpected tag for attributes", attr_bits.tagging());
+   }
 
    cert_req_info.verify_end();
 
@@ -155,13 +158,15 @@ void PKCS10_Request::force_decode() {
    m_data = decode_pkcs10(signed_body());
 
    auto key = this->subject_public_key();
-   if(!this->check_signature(*key))
+   if(!this->check_signature(*key)) {
       throw Decoding_Error("PKCS #10 request: Bad signature detected");
+   }
 }
 
 const PKCS10_Data& PKCS10_Request::data() const {
-   if(m_data == nullptr)
+   if(m_data == nullptr) {
       throw Decoding_Error("PKCS10_Request decoding failed");
+   }
    return *m_data;
 }
 

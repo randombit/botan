@@ -133,8 +133,9 @@ std::optional<Post_Handshake_Message_13> Handshake_Layer::next_post_handshake_me
    TLS::TLS_Data_Reader reader("post handshake message", m_read_buffer);
 
    auto msg = parse_message<Post_Handshake_Message_13>(reader, policy, m_peer);
-   if(msg.has_value())
+   if(msg.has_value()) {
       m_read_buffer.erase(m_read_buffer.cbegin(), m_read_buffer.cbegin() + reader.read_so_far());
+   }
 
    return msg;
 }

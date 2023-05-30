@@ -44,17 +44,20 @@ class Trust_Root_Info final : public Command {
          const auto dn_list = trust_roots.all_subjects();
 
          if(flag_set("dn-only")) {
-            for(const auto& dn : dn_list)
+            for(const auto& dn : dn_list) {
                output() << dn << "\n";
+            }
          } else {
             for(const auto& dn : dn_list) {
                // Some certstores have more than one cert with a particular DN
                for(const auto& cert : trust_roots.find_all_certs(dn, std::vector<uint8_t>())) {
-                  if(flag_set("dn"))
+                  if(flag_set("dn")) {
                      output() << "# " << dn << "\n";
+                  }
 
-                  if(flag_set("display"))
+                  if(flag_set("display")) {
                      output() << cert.to_string() << "\n";
+                  }
 
                   output() << cert.PEM_encode() << "\n";
                }
@@ -144,8 +147,9 @@ class Cert_Info final : public Command {
                   output() << "X509_Certificate::to_string failed: " << e.what() << "\n";
                }
 
-               if(flag_set("fingerprint"))
+               if(flag_set("fingerprint")) {
                   output() << "Fingerprint: " << cert.fingerprint("SHA-256") << std::endl;
+               }
             } catch(Botan::Exception& e) {
                if(!in.end_of_data()) {
                   output() << "X509_Certificate parsing failed " << e.what() << "\n";
@@ -258,8 +262,9 @@ class Gen_Self_Signed final : public Command {
 
          std::string emsa = get_arg("emsa");
 
-         if(emsa.empty() == false)
+         if(emsa.empty() == false) {
             opts.set_padding_scheme(emsa);
+         }
 
          if(flag_set("ca")) {
             opts.CA_key(get_arg_sz("path-limit"));
@@ -270,8 +275,9 @@ class Gen_Self_Signed final : public Command {
          if(der_format) {
             auto der = cert.BER_encode();
             output().write(reinterpret_cast<const char*>(der.data()), der.size());
-         } else
+         } else {
             output() << cert.PEM_encode();
+         }
       }
 };
 
@@ -314,8 +320,9 @@ class Generate_PKCS10 final : public Command {
 
          std::string emsa = get_arg("emsa");
 
-         if(emsa.empty() == false)
+         if(emsa.empty() == false) {
             opts.set_padding_scheme(emsa);
+         }
 
          Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *key, get_arg("hash"), rng());
 

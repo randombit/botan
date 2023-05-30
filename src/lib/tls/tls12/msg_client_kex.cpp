@@ -73,8 +73,9 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          const auto generator = BigInt::decode(reader.get_range<uint8_t>(2, 1, 65535));
          const std::vector<uint8_t> peer_public_value = reader.get_range<uint8_t>(2, 1, 65535);
 
-         if(reader.remaining_bytes())
+         if(reader.remaining_bytes()) {
             throw Decoding_Error("Bad params size for DH key exchange");
+         }
 
          DL_Group group(modulus, generator);
 
@@ -86,9 +87,9 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          auto shared_secret = CT::strip_leading_zeros(
             state.callbacks().tls_ephemeral_key_agreement(group, *private_key, peer_public_value, rng, policy));
 
-         if(kex_algo == Kex_Algo::DH)
+         if(kex_algo == Kex_Algo::DH) {
             m_pre_master = std::move(shared_secret);
-         else {
+         } else {
             append_tls_length_value(m_pre_master, shared_secret, 2);
             append_tls_length_value(m_pre_master, psk.bits_of(), 2);
          }
@@ -96,8 +97,9 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          append_tls_length_value(m_key_material, private_key->public_value(), 2);
       } else if(kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK) {
          const uint8_t curve_type = reader.get_byte();
-         if(curve_type != 3)
+         if(curve_type != 3) {
             throw Decoding_Error("Server sent non-named ECC curve");
+         }
 
          const Group_Params curve_id = static_cast<Group_Params>(reader.get_uint16_t());
          const std::vector<uint8_t> peer_public_value = reader.get_range<uint8_t>(1, 1, 255);
@@ -146,11 +148,13 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
    } else {
       // No server key exchange msg better mean RSA kex + RSA key in cert
 
-      if(kex_algo != Kex_Algo::STATIC_RSA)
+      if(kex_algo != Kex_Algo::STATIC_RSA) {
          throw Unexpected_Message("No server kex message, but negotiated a key exchange that required it");
+      }
 
-      if(!server_public_key)
+      if(!server_public_key) {
          throw Internal_Error("No server public key for RSA exchange");
+      }
 
       if(auto rsa_pub = dynamic_cast<const RSA_PublicKey*>(server_public_key)) {
          const Protocol_Version offered_version = state.client_hello()->legacy_version();
@@ -164,9 +168,10 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          const std::vector<uint8_t> encrypted_key = encryptor.encrypt(m_pre_master, rng);
 
          append_tls_length_value(m_key_material, encrypted_key, 2);
-      } else
+      } else {
          throw TLS_Exception(Alert::HandshakeFailure,
                              "Expected a RSA key in server cert but got " + server_public_key->algo_name());
+      }
    }
 
    state.hash().update(io.send(*this));
@@ -187,11 +192,13 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
       BOTAN_ASSERT(state.server_certs() && !state.server_certs()->cert_chain().empty(),
                    "RSA key exchange negotiated so server sent a certificate");
 
-      if(!server_rsa_kex_key)
+      if(!server_rsa_kex_key) {
          throw Internal_Error("Expected RSA kex but no server kex key set");
+      }
 
-      if(server_rsa_kex_key->algo_name() != "RSA")
+      if(server_rsa_kex_key->algo_name() != "RSA") {
          throw Internal_Error("Expected RSA key but got " + server_rsa_kex_key->algo_name());
+      }
 
       TLS_Data_Reader reader("ClientKeyExchange", contents);
       const std::vector<uint8_t> encrypted_pre_master = reader.get_range<uint8_t>(2, 0, 65535);
@@ -231,10 +238,11 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
          psk = creds.psk("tls-server", state.client_hello()->sni_hostname(), psk_identity);
 
          if(psk.length() == 0) {
-            if(policy.hide_unknown_users())
+            if(policy.hide_unknown_users()) {
                psk = SymmetricKey(rng, 16);
-            else
+            } else {
                throw TLS_Exception(Alert::UnknownPSKIdentity, "No PSK for identifier " + psk_identity);
+            }
          }
       }
 
@@ -256,8 +264,9 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
             auto shared_secret =
                state.callbacks().tls_ephemeral_key_agreement(shared_group.value(), ka_key, client_pubkey, rng, policy);
 
-            if(ka_key.algo_name() == "DH")
+            if(ka_key.algo_name() == "DH") {
                shared_secret = CT::strip_leading_zeros(shared_secret);
+            }
 
             if(kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK) {
                // RFC 8422 - 5.11.
@@ -274,8 +283,9 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
             if(kex_algo == Kex_Algo::ECDHE_PSK) {
                append_tls_length_value(m_pre_master, shared_secret, 2);
                append_tls_length_value(m_pre_master, psk.bits_of(), 2);
-            } else
+            } else {
                m_pre_master = shared_secret;
+            }
          } catch(Invalid_Argument& e) {
             throw TLS_Exception(Alert::IllegalParameter, e.what());
          } catch(TLS_Exception& e) { throw e; } catch(std::exception&) {
@@ -289,8 +299,9 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
          }
 
          reader.assert_done();
-      } else
+      } else {
          throw Internal_Error("Client_Key_Exchange: Unknown key exchange negotiated");
+      }
    }
 }
 

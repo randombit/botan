@@ -47,26 +47,33 @@ std::string kex_method_to_string(Kex_Algo method) {
 }
 
 Kex_Algo kex_method_from_string(std::string_view str) {
-   if(str == "RSA")
+   if(str == "RSA") {
       return Kex_Algo::STATIC_RSA;
+   }
 
-   if(str == "DH")
+   if(str == "DH") {
       return Kex_Algo::DH;
+   }
 
-   if(str == "ECDH")
+   if(str == "ECDH") {
       return Kex_Algo::ECDH;
+   }
 
-   if(str == "PSK")
+   if(str == "PSK") {
       return Kex_Algo::PSK;
+   }
 
-   if(str == "ECDHE_PSK")
+   if(str == "ECDHE_PSK") {
       return Kex_Algo::ECDHE_PSK;
+   }
 
-   if(str == "DHE_PSK")
+   if(str == "DHE_PSK") {
       return Kex_Algo::DHE_PSK;
+   }
 
-   if(str == "UNDEFINED")
+   if(str == "UNDEFINED") {
       return Kex_Algo::UNDEFINED;
+   }
 
    throw Invalid_Argument(fmt("Unknown kex method '{}'", str));
 }
@@ -87,14 +94,18 @@ std::string auth_method_to_string(Auth_Method method) {
 }
 
 Auth_Method auth_method_from_string(std::string_view str) {
-   if(str == "RSA")
+   if(str == "RSA") {
       return Auth_Method::RSA;
-   if(str == "ECDSA")
+   }
+   if(str == "ECDSA") {
       return Auth_Method::ECDSA;
-   if(str == "IMPLICIT")
+   }
+   if(str == "IMPLICIT") {
       return Auth_Method::IMPLICIT;
-   if(str == "UNDEFINED")
+   }
+   if(str == "UNDEFINED") {
       return Auth_Method::UNDEFINED;
+   }
 
    throw Invalid_Argument(fmt("Unknown TLS signature method '{}'", str));
 }
@@ -105,31 +116,43 @@ bool group_param_is_dh(Group_Params group) {
 }
 
 Group_Params group_param_from_string(std::string_view group_name) {
-   if(group_name == "secp256r1")
+   if(group_name == "secp256r1") {
       return Group_Params::SECP256R1;
-   if(group_name == "secp384r1")
+   }
+   if(group_name == "secp384r1") {
       return Group_Params::SECP384R1;
-   if(group_name == "secp521r1")
+   }
+   if(group_name == "secp521r1") {
       return Group_Params::SECP521R1;
-   if(group_name == "brainpool256r1")
+   }
+   if(group_name == "brainpool256r1") {
       return Group_Params::BRAINPOOL256R1;
-   if(group_name == "brainpool384r1")
+   }
+   if(group_name == "brainpool384r1") {
       return Group_Params::BRAINPOOL384R1;
-   if(group_name == "brainpool512r1")
+   }
+   if(group_name == "brainpool512r1") {
       return Group_Params::BRAINPOOL512R1;
-   if(group_name == "x25519")
+   }
+   if(group_name == "x25519") {
       return Group_Params::X25519;
+   }
 
-   if(group_name == "ffdhe/ietf/2048")
+   if(group_name == "ffdhe/ietf/2048") {
       return Group_Params::FFDHE_2048;
-   if(group_name == "ffdhe/ietf/3072")
+   }
+   if(group_name == "ffdhe/ietf/3072") {
       return Group_Params::FFDHE_3072;
-   if(group_name == "ffdhe/ietf/4096")
+   }
+   if(group_name == "ffdhe/ietf/4096") {
       return Group_Params::FFDHE_4096;
-   if(group_name == "ffdhe/ietf/6144")
+   }
+   if(group_name == "ffdhe/ietf/6144") {
       return Group_Params::FFDHE_6144;
-   if(group_name == "ffdhe/ietf/8192")
+   }
+   if(group_name == "ffdhe/ietf/8192") {
       return Group_Params::FFDHE_8192;
+   }
 
    return Group_Params::NONE;  // unknown
 }

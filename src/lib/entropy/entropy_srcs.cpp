@@ -147,8 +147,9 @@ size_t Entropy_Sources::poll(RandomNumberGenerator& rng, size_t poll_bits, std::
    for(auto& src : m_srcs) {
       bits_collected += src->poll(rng);
 
-      if(bits_collected >= poll_bits || clock::now() > deadline)
+      if(bits_collected >= poll_bits || clock::now() > deadline) {
          break;
+      }
    }
 
    return bits_collected;

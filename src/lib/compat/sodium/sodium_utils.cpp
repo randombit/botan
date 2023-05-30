@@ -19,8 +19,9 @@ namespace Botan {
 void Sodium::randombytes_buf(void* buf, size_t len) { system_rng().randomize(static_cast<uint8_t*>(buf), len); }
 
 uint32_t Sodium::randombytes_uniform(uint32_t upper_bound) {
-   if(upper_bound <= 1)
+   if(upper_bound <= 1) {
       return 0;
+   }
 
    // Not completely uniform
    uint64_t x;
@@ -68,8 +69,9 @@ int Sodium::sodium_compare(const uint8_t x[], const uint8_t y[], size_t len) {
 
 int Sodium::sodium_is_zero(const uint8_t b[], size_t len) {
    uint8_t sum = 0;
-   for(size_t i = 0; i != len; ++i)
+   for(size_t i = 0; i != len; ++i) {
       sum |= b[i];
+   }
    return static_cast<int>(CT::Mask<uint8_t>::expand(sum).if_not_set_return(1));
 }
 
@@ -92,8 +94,9 @@ void Sodium::sodium_add(uint8_t a[], const uint8_t b[], size_t len) {
 void* Sodium::sodium_malloc(size_t size) {
    const uint64_t len = size;
 
-   if(size + sizeof(len) < size)
+   if(size + sizeof(len) < size) {
       return nullptr;
+   }
 
    // NOLINTNEXTLINE(*-no-malloc)
    uint8_t* p = static_cast<uint8_t*>(std::calloc(size + sizeof(len), 1));
@@ -102,8 +105,9 @@ void* Sodium::sodium_malloc(size_t size) {
 }
 
 void Sodium::sodium_free(void* ptr) {
-   if(ptr == nullptr)
+   if(ptr == nullptr) {
       return;
+   }
 
    uint8_t* p = static_cast<uint8_t*>(ptr) - 8;
    const uint64_t len = load_le<uint64_t>(p, 0);
@@ -114,8 +118,9 @@ void Sodium::sodium_free(void* ptr) {
 
 void* Sodium::sodium_allocarray(size_t count, size_t size) {
    const size_t bytes = count * size;
-   if(bytes < count || bytes < size)
+   if(bytes < count || bytes < size) {
       return nullptr;
+   }
    return sodium_malloc(bytes);
 }
 

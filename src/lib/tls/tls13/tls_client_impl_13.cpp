@@ -62,8 +62,9 @@ Client_Impl_13::Client_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
    //    its second ClientHello or before its encrypted handshake flight.
    //
    // TODO: don't schedule ccs here when early data is used
-   if(policy->tls_13_middlebox_compatibility_mode())
+   if(policy->tls_13_middlebox_compatibility_mode()) {
       m_should_send_ccs = true;
+   }
 
    m_transitions.set_expected_next({Handshake_Type::ServerHello, Handshake_Type::HelloRetryRequest});
 }

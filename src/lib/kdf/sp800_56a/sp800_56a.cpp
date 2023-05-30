@@ -60,8 +60,9 @@ void SP800_56A_Hash::kdf(uint8_t key[],
                          size_t label_len) const {
    BOTAN_UNUSED(salt);
 
-   if(salt_len > 0)
+   if(salt_len > 0) {
       throw Invalid_Argument("SP800_56A_Hash does not support a non-empty salt");
+   }
 
    SP800_56A_kdf(*m_hash, key, key_len, secret, secret_len, label, label_len);
 }

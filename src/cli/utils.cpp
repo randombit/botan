@@ -115,8 +115,9 @@ class Has_Command final : public Command {
             output() << "Command '" << cmd << "' is " << (exists ? "" : "not ") << "available\n";
          }
 
-         if(exists == false)
+         if(exists == false) {
             this->set_return_code(1);
+         }
       }
 };
 
@@ -146,8 +147,9 @@ class Config_Info final : public Command {
          } else if(arg == "cflags") {
             output() << "-I" << BOTAN_INSTALL_PREFIX << "/" << BOTAN_INSTALL_HEADER_DIR << "\n";
          } else if(arg == "ldflags") {
-            if(*BOTAN_LINK_FLAGS)
+            if(*BOTAN_LINK_FLAGS) {
                output() << BOTAN_LINK_FLAGS << ' ';
+            }
             output() << "-L" << BOTAN_INSTALL_LIB_DIR << "\n";
          } else if(arg == "libs") {
             output() << "-lbotan-" << Botan::version_major() << " " << BOTAN_LIB_LINK << "\n";

@@ -228,15 +228,17 @@ MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(std::string_view pa
 MechanismWrapper MechanismWrapper::create_ecdsa_mechanism(std::string_view hash_spec_view) {
    const std::string hash_spec(hash_spec_view);
    auto mechanism = EcdsaHash.find(hash_spec);
-   if(mechanism != EcdsaHash.end())
+   if(mechanism != EcdsaHash.end()) {
       return MechanismWrapper(mechanism->second);
+   }
 
    SCAN_Name req(hash_spec);
 
    if(req.algo_name() == "EMSA1" && req.arg_count() == 1) {
       mechanism = EcdsaHash.find(req.arg(0));
-      if(mechanism != EcdsaHash.end())
+      if(mechanism != EcdsaHash.end()) {
          return MechanismWrapper(mechanism->second);
+      }
    }
 
    throw Lookup_Error(fmt("PKCS #11 ECDSA sign/verify does not support {}", hash_spec));

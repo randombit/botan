@@ -39,8 +39,9 @@ class Test_Map_PSK_Db : public Botan::Encrypted_PSK_Database {
 
       std::string kv_get(std::string_view index) const override {
          auto i = m_vals.find(index);
-         if(i == m_vals.end())
+         if(i == m_vals.end()) {
             return "";
+         }
          return i->second;
       }
 

@@ -282,8 +282,9 @@ bool Signature_Scheme::is_compatible_with(const Protocol_Version& protocol_versi
    //   CertificateVerify messages.
    //
    // Note that Botan enforces that for TLS 1.2 as well.
-   if(hash_function_name() == "SHA-1")
+   if(hash_function_name() == "SHA-1") {
       return false;
+   }
 
    // RFC 8446 4.4.3:
    //   RSA signatures MUST use an RSASSA-PSS algorithm, regardless of whether
@@ -291,29 +292,35 @@ bool Signature_Scheme::is_compatible_with(const Protocol_Version& protocol_versi
    //
    // Note that this is enforced for TLS 1.3 and above only.
    if(!protocol_version.is_pre_tls_13() && (m_code == RSA_PKCS1_SHA1 || m_code == RSA_PKCS1_SHA256 ||
-                                            m_code == RSA_PKCS1_SHA384 || m_code == RSA_PKCS1_SHA512))
+                                            m_code == RSA_PKCS1_SHA384 || m_code == RSA_PKCS1_SHA512)) {
       return false;
+   }
 
    return true;
 }
 
 bool Signature_Scheme::is_suitable_for(const Private_Key& private_key) const noexcept {
-   if(algorithm_name() != private_key.algo_name())
+   if(algorithm_name() != private_key.algo_name()) {
       return false;
+   }
 
    // The ECDSA private key length must match the utilized hash output length.
    const auto keylen = private_key.key_length();
-   if(keylen <= 250)
+   if(keylen <= 250) {
       return false;
+   }
 
-   if(m_code == ECDSA_SHA256 && !(keylen >= 250 && keylen <= 350))
+   if(m_code == ECDSA_SHA256 && !(keylen >= 250 && keylen <= 350)) {
       return false;
+   }
 
-   if(m_code == ECDSA_SHA384 && !(keylen >= 350 && keylen <= 450))
+   if(m_code == ECDSA_SHA384 && !(keylen >= 350 && keylen <= 450)) {
       return false;
+   }
 
-   if(m_code == ECDSA_SHA512 && !(keylen >= 450 && keylen <= 550))
+   if(m_code == ECDSA_SHA512 && !(keylen >= 450 && keylen <= 550)) {
       return false;
+   }
 
    return true;
 }

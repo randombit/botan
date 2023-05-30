@@ -17,20 +17,22 @@ namespace Botan {
 namespace {
 
 std::string strip_padding(std::string s) {
-   while(!s.empty() && s[s.size() - 1] == '=')
+   while(!s.empty() && s[s.size() - 1] == '=') {
       s.resize(s.size() - 1);
+   }
    return s;
 }
 
 std::string argon2_family(uint8_t y) {
-   if(y == 0)
+   if(y == 0) {
       return "Argon2d";
-   else if(y == 1)
+   } else if(y == 1) {
       return "Argon2i";
-   else if(y == 2)
+   } else if(y == 2) {
       return "Argon2id";
-   else
+   } else {
       throw Not_Implemented("Unknown Argon2 family type");
+   }
 }
 
 }  // namespace
@@ -58,12 +60,13 @@ std::string argon2_generate_pwhash(const char* password,
    const auto enc_output = strip_padding(base64_encode(output));
 
    const std::string argon2_mode = [&]() -> std::string {
-      if(y == 0)
+      if(y == 0) {
          return "d";
-      else if(y == 1)
+      } else if(y == 1) {
          return "i";
-      else
+      } else {
          return "id";
+      }
    }();
 
    return fmt("$argon2{}$v=19$m={},t={},p={}${}${}", argon2_mode, M, t, p, enc_salt, enc_output);
@@ -72,46 +75,52 @@ std::string argon2_generate_pwhash(const char* password,
 bool argon2_check_pwhash(const char* password, size_t password_len, std::string_view input_hash) {
    const std::vector<std::string> parts = split_on(input_hash, '$');
 
-   if(parts.size() != 5)
+   if(parts.size() != 5) {
       return false;
+   }
 
    uint8_t family = 0;
 
-   if(parts[0] == "argon2d")
+   if(parts[0] == "argon2d") {
       family = 0;
-   else if(parts[0] == "argon2i")
+   } else if(parts[0] == "argon2i") {
       family = 1;
-   else if(parts[0] == "argon2id")
+   } else if(parts[0] == "argon2id") {
       family = 2;
-   else
+   } else {
       return false;
+   }
 
-   if(parts[1] != "v=19")
+   if(parts[1] != "v=19") {
       return false;
+   }
 
    const std::vector<std::string> params = split_on(parts[2], ',');
 
-   if(params.size() != 3)
+   if(params.size() != 3) {
       return false;
+   }
 
    size_t M = 0, t = 0, p = 0;
 
    for(const auto& param_str : params) {
       const std::vector<std::string> param = split_on(param_str, '=');
 
-      if(param.size() != 2)
+      if(param.size() != 2) {
          return false;
+      }
 
       std::string_view key = param[0];
       const size_t val = to_u32bit(param[1]);
-      if(key == "m")
+      if(key == "m") {
          M = val;
-      else if(key == "t")
+      } else if(key == "t") {
          t = val;
-      else if(key == "p")
+      } else if(key == "p") {
          p = val;
-      else
+      } else {
          return false;
+      }
    }
 
    std::vector<uint8_t> salt(base64_decode_max_output(parts[3].size()));
@@ -120,8 +129,9 @@ bool argon2_check_pwhash(const char* password, size_t password_len, std::string_
    std::vector<uint8_t> hash(base64_decode_max_output(parts[4].size()));
    hash.resize(base64_decode(hash.data(), parts[4], false));
 
-   if(hash.size() < 4)
+   if(hash.size() < 4) {
       return false;
+   }
 
    std::vector<uint8_t> generated(hash.size());
    auto pwdhash_fam = PasswordHashFamily::create_or_throw(argon2_family(family));

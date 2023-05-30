@@ -128,8 +128,9 @@ class TLS_CBC_Tests final : public Text_Based_Test {
             void add_data(const uint8_t /*input*/[], size_t /*length*/) override {}
 
             void final_result(uint8_t out[]) override {
-               for(size_t i = 0; i != m_mac_len; ++i)
+               for(size_t i = 0; i != m_mac_len; ++i) {
                   out[i] = 0;
+               }
             }
 
             bool has_keying_material() const override { return true; }
@@ -210,15 +211,17 @@ class TLS_CBC_Tests final : public Text_Based_Test {
 
          try {
             tls_cbc.finish(vec, 0);
-            if(is_valid)
+            if(is_valid) {
                result.test_success("Accepted valid TLS-CBC ciphertext");
-            else
+            } else {
                result.test_failure("Accepted invalid TLS-CBC ciphertext");
+            }
          } catch(std::exception&) {
-            if(is_valid)
+            if(is_valid) {
                result.test_failure("Rejected valid TLS-CBC ciphertext");
-            else
+            } else {
                result.test_success("Accepted invalid TLS-CBC ciphertext");
+            }
          }
 
          return result;

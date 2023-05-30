@@ -91,83 +91,99 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
    std::string_view alg_name = alg_info[0];
 
 #if defined(BOTAN_HAS_RSA)
-   if(alg_name == "RSA")
+   if(alg_name == "RSA") {
       return std::make_unique<RSA_PublicKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_CURVE_25519)
-   if(alg_name == "Curve25519")
+   if(alg_name == "Curve25519") {
       return std::make_unique<Curve25519_PublicKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_MCELIECE)
-   if(alg_name == "McEliece")
+   if(alg_name == "McEliece") {
       return std::make_unique<McEliece_PublicKey>(key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
-   if(alg_name == "Kyber" || alg_name.starts_with("Kyber-"))
+   if(alg_name == "Kyber" || alg_name.starts_with("Kyber-")) {
       return std::make_unique<Kyber_PublicKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
-   if(alg_name == "ECDSA")
+   if(alg_name == "ECDSA") {
       return std::make_unique<ECDSA_PublicKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ECDH)
-   if(alg_name == "ECDH")
+   if(alg_name == "ECDH") {
       return std::make_unique<ECDH_PublicKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-   if(alg_name == "DH")
+   if(alg_name == "DH") {
       return std::make_unique<DH_PublicKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_DSA)
-   if(alg_name == "DSA")
+   if(alg_name == "DSA") {
       return std::make_unique<DSA_PublicKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
-   if(alg_name == "ElGamal")
+   if(alg_name == "ElGamal") {
       return std::make_unique<ElGamal_PublicKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ECGDSA)
-   if(alg_name == "ECGDSA")
+   if(alg_name == "ECGDSA") {
       return std::make_unique<ECGDSA_PublicKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ECKCDSA)
-   if(alg_name == "ECKCDSA")
+   if(alg_name == "ECKCDSA") {
       return std::make_unique<ECKCDSA_PublicKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ED25519)
-   if(alg_name == "Ed25519")
+   if(alg_name == "Ed25519") {
       return std::make_unique<Ed25519_PublicKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
-   if(alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256" || alg_name == "GOST-34.10-2012-512")
+   if(alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256" || alg_name == "GOST-34.10-2012-512") {
       return std::make_unique<GOST_3410_PublicKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_SM2)
-   if(alg_name == "SM2" || alg_name == "SM2_Sig" || alg_name == "SM2_Enc")
+   if(alg_name == "SM2" || alg_name == "SM2_Sig" || alg_name == "SM2_Enc") {
       return std::make_unique<SM2_PublicKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_XMSS_RFC8391)
-   if(alg_name == "XMSS")
+   if(alg_name == "XMSS") {
       return std::make_unique<XMSS_PublicKey>(key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
-   if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-"))
+   if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-")) {
       return std::make_unique<Dilithium_PublicKey>(alg_id, key_bits);
+   }
 #endif
 
    throw Decoding_Error(fmt("Unknown or unavailable public key algorithm '{}'", alg_name));
@@ -180,83 +196,99 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
    std::string_view alg_name = alg_info[0];
 
 #if defined(BOTAN_HAS_RSA)
-   if(alg_name == "RSA")
+   if(alg_name == "RSA") {
       return std::make_unique<RSA_PrivateKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_CURVE_25519)
-   if(alg_name == "Curve25519")
+   if(alg_name == "Curve25519") {
       return std::make_unique<Curve25519_PrivateKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
-   if(alg_name == "ECDSA")
+   if(alg_name == "ECDSA") {
       return std::make_unique<ECDSA_PrivateKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ECDH)
-   if(alg_name == "ECDH")
+   if(alg_name == "ECDH") {
       return std::make_unique<ECDH_PrivateKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-   if(alg_name == "DH")
+   if(alg_name == "DH") {
       return std::make_unique<DH_PrivateKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_DSA)
-   if(alg_name == "DSA")
+   if(alg_name == "DSA") {
       return std::make_unique<DSA_PrivateKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
-   if(alg_name == "Kyber" || alg_name.starts_with("Kyber-"))
+   if(alg_name == "Kyber" || alg_name.starts_with("Kyber-")) {
       return std::make_unique<Kyber_PrivateKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_MCELIECE)
-   if(alg_name == "McEliece")
+   if(alg_name == "McEliece") {
       return std::make_unique<McEliece_PrivateKey>(key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ECGDSA)
-   if(alg_name == "ECGDSA")
+   if(alg_name == "ECGDSA") {
       return std::make_unique<ECGDSA_PrivateKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ECKCDSA)
-   if(alg_name == "ECKCDSA")
+   if(alg_name == "ECKCDSA") {
       return std::make_unique<ECKCDSA_PrivateKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ED25519)
-   if(alg_name == "Ed25519")
+   if(alg_name == "Ed25519") {
       return std::make_unique<Ed25519_PrivateKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
-   if(alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256" || alg_name == "GOST-34.10-2012-512")
+   if(alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256" || alg_name == "GOST-34.10-2012-512") {
       return std::make_unique<GOST_3410_PrivateKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_SM2)
-   if(alg_name == "SM2" || alg_name == "SM2_Sig" || alg_name == "SM2_Enc")
+   if(alg_name == "SM2" || alg_name == "SM2_Sig" || alg_name == "SM2_Enc") {
       return std::make_unique<SM2_PrivateKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ELGAMAL)
-   if(alg_name == "ElGamal")
+   if(alg_name == "ElGamal") {
       return std::make_unique<ElGamal_PrivateKey>(alg_id, key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_XMSS_RFC8391)
-   if(alg_name == "XMSS")
+   if(alg_name == "XMSS") {
       return std::make_unique<XMSS_PrivateKey>(key_bits);
+   }
 #endif
 
 #if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
-   if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-"))
+   if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-")) {
       return std::make_unique<Dilithium_PrivateKey>(alg_id, key_bits);
+   }
 #endif
 
    throw Decoding_Error(fmt("Unknown or unavailable public key algorithm '{}'", alg_name));
@@ -269,33 +301,39 @@ std::unique_ptr<Private_Key> create_ec_private_key(std::string_view alg_name,
    BOTAN_UNUSED(alg_name, ec_group, rng);
 
 #if defined(BOTAN_HAS_ECDSA)
-   if(alg_name == "ECDSA")
+   if(alg_name == "ECDSA") {
       return std::make_unique<ECDSA_PrivateKey>(rng, ec_group);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ECDH)
-   if(alg_name == "ECDH")
+   if(alg_name == "ECDH") {
       return std::make_unique<ECDH_PrivateKey>(rng, ec_group);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ECKCDSA)
-   if(alg_name == "ECKCDSA")
+   if(alg_name == "ECKCDSA") {
       return std::make_unique<ECKCDSA_PrivateKey>(rng, ec_group);
+   }
 #endif
 
 #if defined(BOTAN_HAS_GOST_34_10_2001)
-   if(alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256" || alg_name == "GOST-34.10-2012-512")
+   if(alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256" || alg_name == "GOST-34.10-2012-512") {
       return std::make_unique<GOST_3410_PrivateKey>(rng, ec_group);
+   }
 #endif
 
 #if defined(BOTAN_HAS_SM2)
-   if(alg_name == "SM2" || alg_name == "SM2_Sig" || alg_name == "SM2_Enc")
+   if(alg_name == "SM2" || alg_name == "SM2_Sig" || alg_name == "SM2_Enc") {
       return std::make_unique<SM2_PrivateKey>(rng, ec_group);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ECGDSA)
-   if(alg_name == "ECGDSA")
+   if(alg_name == "ECGDSA") {
       return std::make_unique<ECGDSA_PrivateKey>(rng, ec_group);
+   }
 #endif
 
    return nullptr;
@@ -310,8 +348,9 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
    */
 
 #if defined(BOTAN_HAS_CURVE_25519)
-   if(alg_name == "Curve25519")
+   if(alg_name == "Curve25519") {
       return std::make_unique<Curve25519_PrivateKey>(rng);
+   }
 #endif
 
 #if defined(BOTAN_HAS_RSA)
@@ -324,8 +363,9 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 #if defined(BOTAN_HAS_MCELIECE)
    if(alg_name == "McEliece") {
       const auto [n, t] = [&]() -> std::pair<size_t, size_t> {
-         if(params.empty())
+         if(params.empty()) {
             return {2960, 57};
+         }
 
          const auto mce_params = split_on(params, ',');
 
@@ -345,8 +385,9 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
    if(alg_name == "Kyber") {
       const auto mode = [&]() -> KyberMode {
-         if(params.empty())
+         if(params.empty()) {
             return KyberMode::Kyber1024;
+         }
          return KyberMode(params);
       }();
 
@@ -357,8 +398,9 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 #if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
    if(alg_name == "Dilithium" || alg_name == "Dilithium-") {
       const auto mode = [&]() -> DilithiumMode {
-         if(params.empty())
+         if(params.empty()) {
             return DilithiumMode::Dilithium6x5;
+         }
          return DilithiumMode(params);
       }();
 
@@ -369,8 +411,9 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 #if defined(BOTAN_HAS_XMSS_RFC8391)
    if(alg_name == "XMSS") {
       const auto xmss_oid = [&]() -> XMSS_Parameters::xmss_algorithm_t {
-         if(params.empty())
+         if(params.empty()) {
             return XMSS_Parameters::XMSS_SHA2_10_512;
+         }
          return XMSS_Parameters(params).oid();
       }();
 
@@ -391,16 +434,21 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
       alg_name == "SM2_Sig" || alg_name == "SM2_Enc" || alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256" ||
       alg_name == "GOST-34.10-2012-512") {
       const std::string group_id = [&]() -> std::string {
-         if(!params.empty())
+         if(!params.empty()) {
             return std::string(params);
-         if(alg_name == "SM2" || alg_name == "SM2_Enc" || alg_name == "SM2_Sig")
+         }
+         if(alg_name == "SM2" || alg_name == "SM2_Enc" || alg_name == "SM2_Sig") {
             return "sm2p256v1";
-         if(alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256")
+         }
+         if(alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256") {
             return "gost_256A";
-         if(alg_name == "GOST-34.10-2012-512")
+         }
+         if(alg_name == "GOST-34.10-2012-512") {
             return "gost_512A";
-         if(alg_name == "ECGDSA")
+         }
+         if(alg_name == "ECGDSA") {
             return "brainpool256r1";
+         }
          return "secp256r1";
       }();
 
@@ -413,28 +461,33 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 #if defined(BOTAN_HAS_DL_GROUP)
    if(alg_name == "DH" || alg_name == "DSA" || alg_name == "ElGamal") {
       const std::string group_id = [&]() -> std::string {
-         if(!params.empty())
+         if(!params.empty()) {
             return std::string(params);
-         if(alg_name == "DSA")
+         }
+         if(alg_name == "DSA") {
             return "dsa/botan/2048";
+         }
          return "modp/ietf/2048";
       }();
 
       DL_Group modp_group(group_id);
 
    #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-      if(alg_name == "DH")
+      if(alg_name == "DH") {
          return std::make_unique<DH_PrivateKey>(rng, modp_group);
+      }
    #endif
 
    #if defined(BOTAN_HAS_DSA)
-      if(alg_name == "DSA")
+      if(alg_name == "DSA") {
          return std::make_unique<DSA_PrivateKey>(rng, modp_group);
+      }
    #endif
 
    #if defined(BOTAN_HAS_ELGAMAL)
-      if(alg_name == "ElGamal")
+      if(alg_name == "ElGamal") {
          return std::make_unique<ElGamal_PrivateKey>(rng, modp_group);
+      }
    #endif
    }
 #endif
@@ -449,8 +502,9 @@ std::vector<std::string> probe_provider_private_key(std::string_view alg_name,
    std::vector<std::string> providers;
 
    for(auto&& prov : possible) {
-      if(prov == "base")
+      if(prov == "base") {
          providers.push_back(prov);
+      }
    }
 
    BOTAN_UNUSED(alg_name);

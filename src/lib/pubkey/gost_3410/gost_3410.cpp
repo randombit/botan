@@ -43,10 +43,11 @@ std::vector<uint8_t> GOST_3410_PublicKey::public_key_bits() const {
 std::string GOST_3410_PublicKey::algo_name() const {
    const size_t p_bits = domain().get_p_bits();
 
-   if(p_bits == 256 || p_bits == 512)
+   if(p_bits == 256 || p_bits == 512) {
       return fmt("GOST-34.10-2012-{}", p_bits);
-   else
+   } else {
       throw Encoding_Error("GOST-34.10-2012 is not defined for parameters of this size");
+   }
 }
 
 AlgorithmIdentifier GOST_3410_PublicKey::algorithm_identifier() const {
@@ -69,14 +70,16 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id, std:
    m_domain_params = EC_Group(ecc_param_id);
 
    const size_t p_bits = m_domain_params.get_p_bits();
-   if(p_bits != 256 && p_bits != 512)
+   if(p_bits != 256 && p_bits != 512) {
       throw Decoding_Error(fmt("GOST-34.10-2012 is not defined for parameters of size {}", p_bits));
+   }
 
    secure_vector<uint8_t> bits;
    BER_Decoder(key_bits).decode(bits, ASN1_Type::OctetString);
 
-   if(bits.size() != 2 * (p_bits / 8))
+   if(bits.size() != 2 * (p_bits / 8)) {
       throw Decoding_Error("GOST-34.10-2020 invalid encoding of public key");
+   }
 
    const size_t part_size = bits.size() / 2;
 
@@ -111,8 +114,9 @@ namespace {
 BigInt decode_le(const uint8_t msg[], size_t msg_len) {
    secure_vector<uint8_t> msg_le(msg, msg + msg_len);
 
-   for(size_t i = 0; i != msg_le.size() / 2; ++i)
+   for(size_t i = 0; i != msg_le.size() / 2; ++i) {
       std::swap(msg_le[i], msg_le[msg_le.size() - 1 - i]);
+   }
 
    return BigInt(msg_le.data(), msg_le.size());
 }
@@ -143,17 +147,19 @@ AlgorithmIdentifier GOST_3410_Signature_Operation::algorithm_identifier() const 
    const size_t p_bits = m_group.get_p_bits();
 
    std::string oid_name;
-   if(hash_fn == "GOST-R-34.11-94")
+   if(hash_fn == "GOST-R-34.11-94") {
       oid_name = "GOST-34.10/GOST-R-34.11-94";
-   else if(hash_fn == "Streebog-256" && p_bits == 256)
+   } else if(hash_fn == "Streebog-256" && p_bits == 256) {
       oid_name = "GOST-34.10-2012-256/Streebog-256";
-   else if(hash_fn == "Streebog-512" && p_bits == 512)
+   } else if(hash_fn == "Streebog-512" && p_bits == 512) {
       oid_name = "GOST-34.10-2012-512/Streebog-512";
-   else if(hash_fn == "SHA-256" && p_bits == 256)
+   } else if(hash_fn == "SHA-256" && p_bits == 256) {
       oid_name = "GOST-34.10-2012-256/SHA-256";
+   }
 
-   if(oid_name.empty())
+   if(oid_name.empty()) {
       throw Not_Implemented("No encoding defined for GOST with " + hash_fn);
+   }
 
    return AlgorithmIdentifier(oid_name, AlgorithmIdentifier::USE_EMPTY_PARAM);
 }
@@ -166,32 +172,39 @@ secure_vector<uint8_t> GOST_3410_Signature_Operation::raw_sign(const uint8_t msg
    BigInt e = decode_le(msg, msg_len);
 
    e = m_group.mod_order(e);
-   if(e.is_zero())
+   if(e.is_zero()) {
       e = BigInt::one();
+   }
 
    const BigInt r = m_group.mod_order(m_group.blinded_base_point_multiply_x(k, rng, m_ws));
 
    const BigInt s = m_group.mod_order(m_group.multiply_mod_order(r, m_x) + m_group.multiply_mod_order(k, e));
 
-   if(r == 0 || s == 0)
+   if(r == 0 || s == 0) {
       throw Internal_Error("GOST 34.10 signature generation failed, r/s equal to zero");
+   }
 
    return BigInt::encode_fixed_length_int_pair(s, r, m_group.get_order_bytes());
 }
 
 std::string gost_hash_from_algid(const AlgorithmIdentifier& alg_id) {
-   if(!alg_id.parameters_are_empty())
+   if(!alg_id.parameters_are_empty()) {
       throw Decoding_Error("Unexpected non-empty AlgorithmIdentifier parameters for GOST 34.10 signature");
+   }
 
    const std::string oid_str = alg_id.oid().to_formatted_string();
-   if(oid_str == "GOST-34.10/GOST-R-34.11-94")
+   if(oid_str == "GOST-34.10/GOST-R-34.11-94") {
       return "GOST-R-34.11-94";
-   if(oid_str == "GOST-34.10-2012-256/Streebog-256")
+   }
+   if(oid_str == "GOST-34.10-2012-256/Streebog-256") {
       return "Streebog-256";
-   if(oid_str == "GOST-34.10-2012-512/Streebog-512")
+   }
+   if(oid_str == "GOST-34.10-2012-512/Streebog-512") {
       return "Streebog-512";
-   if(oid_str == "GOST-34.10-2012-256/SHA-256")
+   }
+   if(oid_str == "GOST-34.10-2012-256/SHA-256") {
       return "SHA-256";
+   }
 
    throw Decoding_Error(fmt("Unknown OID ({}) for GOST 34.10 signatures", alg_id.oid()));
 }
@@ -222,21 +235,24 @@ bool GOST_3410_Verification_Operation::verify(const uint8_t msg[],
                                               size_t msg_len,
                                               const uint8_t sig[],
                                               size_t sig_len) {
-   if(sig_len != m_group.get_order_bytes() * 2)
+   if(sig_len != m_group.get_order_bytes() * 2) {
       return false;
+   }
 
    const BigInt s(sig, sig_len / 2);
    const BigInt r(sig + sig_len / 2, sig_len / 2);
 
    const BigInt& order = m_group.get_order();
 
-   if(r <= 0 || r >= order || s <= 0 || s >= order)
+   if(r <= 0 || r >= order || s <= 0 || s >= order) {
       return false;
+   }
 
    BigInt e = decode_le(msg, msg_len);
    e = m_group.mod_order(e);
-   if(e.is_zero())
+   if(e.is_zero()) {
       e = BigInt::one();
+   }
 
    const BigInt v = m_group.inverse_mod_order(e);
 
@@ -245,8 +261,9 @@ bool GOST_3410_Verification_Operation::verify(const uint8_t msg[],
 
    const EC_Point R = m_gy_mul.multi_exp(z1, z2);
 
-   if(R.is_zero())
+   if(R.is_zero()) {
       return false;
+   }
 
    return (R.get_affine_x() == r);
 }
@@ -255,15 +272,17 @@ bool GOST_3410_Verification_Operation::verify(const uint8_t msg[],
 
 std::unique_ptr<PK_Ops::Verification> GOST_3410_PublicKey::create_verification_op(std::string_view params,
                                                                                   std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<GOST_3410_Verification_Operation>(*this, params);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 
 std::unique_ptr<PK_Ops::Verification> GOST_3410_PublicKey::create_x509_verification_op(
    const AlgorithmIdentifier& signature_algorithm, std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<GOST_3410_Verification_Operation>(*this, signature_algorithm);
+   }
 
    throw Provider_Not_Found(algo_name(), provider);
 }
@@ -271,8 +290,9 @@ std::unique_ptr<PK_Ops::Verification> GOST_3410_PublicKey::create_x509_verificat
 std::unique_ptr<PK_Ops::Signature> GOST_3410_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
                                                                              std::string_view params,
                                                                              std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<GOST_3410_Signature_Operation>(*this, params);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 

@@ -250,8 +250,9 @@ class Key_Share_ClientHello {
       std::vector<Named_Group> offered_groups() const {
          std::vector<Named_Group> offered_groups;
          offered_groups.reserve(m_client_shares.size());
-         for(const auto& share : m_client_shares)
+         for(const auto& share : m_client_shares) {
             offered_groups.push_back(share.group());
+         }
          return offered_groups;
       }
 

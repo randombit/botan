@@ -60,17 +60,20 @@ int botan_pwdhash(const char* algo,
                   size_t password_len,
                   const uint8_t salt[],
                   size_t salt_len) {
-   if(algo == nullptr || password == nullptr)
+   if(algo == nullptr || password == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
-   if(password_len == 0)
+   if(password_len == 0) {
       password_len = std::strlen(password);
+   }
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto pwdhash_fam = Botan::PasswordHashFamily::create(algo);
 
-      if(!pwdhash_fam)
+      if(!pwdhash_fam) {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+      }
 
       auto pwdhash = pwdhash_fam->from_params(param1, param2, param3);
 
@@ -91,26 +94,32 @@ int botan_pwdhash_timed(const char* algo,
                         size_t password_len,
                         const uint8_t salt[],
                         size_t salt_len) {
-   if(algo == nullptr || password == nullptr)
+   if(algo == nullptr || password == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
-   if(password_len == 0)
+   if(password_len == 0) {
       password_len = std::strlen(password);
+   }
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto pwdhash_fam = Botan::PasswordHashFamily::create(algo);
 
-      if(!pwdhash_fam)
+      if(!pwdhash_fam) {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+      }
 
       auto pwdhash = pwdhash_fam->tune(out_len, std::chrono::milliseconds(msec));
 
-      if(param1)
+      if(param1) {
          *param1 = pwdhash->iterations();
-      if(param2)
+      }
+      if(param2) {
          *param2 = pwdhash->parallelism();
-      if(param3)
+      }
+      if(param3) {
          *param3 = pwdhash->memory_param();
+      }
 
       pwdhash->derive_key(out, out_len, password, password_len, salt, salt_len);
 
@@ -149,14 +158,17 @@ int botan_bcrypt_generate(
    uint8_t* out, size_t* out_len, const char* pass, botan_rng_t rng_obj, size_t wf, uint32_t flags) {
 #if defined(BOTAN_HAS_BCRYPT)
    return ffi_guard_thunk(__func__, [=]() -> int {
-      if(out == nullptr || out_len == nullptr || pass == nullptr)
+      if(out == nullptr || out_len == nullptr || pass == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
 
-      if(flags != 0)
+      if(flags != 0) {
          return BOTAN_FFI_ERROR_BAD_FLAG;
+      }
 
-      if(wf < 4 || wf > 18)
+      if(wf < 4 || wf > 18) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
 
       if(*out_len < 61) {
          *out_len = 61;

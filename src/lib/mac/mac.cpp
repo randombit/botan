@@ -56,8 +56,9 @@ std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create(std
 #if defined(BOTAN_HAS_GMAC)
    if(req.algo_name() == "GMAC" && req.arg_count() == 1) {
       if(provider.empty() || provider == "base") {
-         if(auto bc = BlockCipher::create(req.arg(0)))
+         if(auto bc = BlockCipher::create(req.arg(0))) {
             return std::make_unique<GMAC>(std::move(bc));
+         }
       }
    }
 #endif
@@ -65,16 +66,18 @@ std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create(std
 #if defined(BOTAN_HAS_HMAC)
    if(req.algo_name() == "HMAC" && req.arg_count() == 1) {
       if(provider.empty() || provider == "base") {
-         if(auto hash = HashFunction::create(req.arg(0)))
+         if(auto hash = HashFunction::create(req.arg(0))) {
             return std::make_unique<HMAC>(std::move(hash));
+         }
       }
    }
 #endif
 
 #if defined(BOTAN_HAS_POLY1305)
    if(req.algo_name() == "Poly1305" && req.arg_count() == 0) {
-      if(provider.empty() || provider == "base")
+      if(provider.empty() || provider == "base") {
          return std::make_unique<Poly1305>();
+      }
    }
 #endif
 
@@ -89,8 +92,9 @@ std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create(std
 #if defined(BOTAN_HAS_CMAC)
    if((req.algo_name() == "CMAC" || req.algo_name() == "OMAC") && req.arg_count() == 1) {
       if(provider.empty() || provider == "base") {
-         if(auto bc = BlockCipher::create(req.arg(0)))
+         if(auto bc = BlockCipher::create(req.arg(0))) {
             return std::make_unique<CMAC>(std::move(bc));
+         }
       }
    }
 #endif
@@ -124,8 +128,9 @@ std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create_or_
 
 void MessageAuthenticationCode::start_msg(const uint8_t nonce[], size_t nonce_len) {
    BOTAN_UNUSED(nonce);
-   if(nonce_len > 0)
+   if(nonce_len > 0) {
       throw Invalid_IV_Length(name(), nonce_len);
+   }
 }
 
 /*
@@ -134,8 +139,9 @@ void MessageAuthenticationCode::start_msg(const uint8_t nonce[], size_t nonce_le
 bool MessageAuthenticationCode::verify_mac_result(const uint8_t mac[], size_t length) {
    secure_vector<uint8_t> our_mac = final();
 
-   if(our_mac.size() != length)
+   if(our_mac.size() != length) {
       return false;
+   }
 
    return constant_time_compare(our_mac.data(), mac, length);
 }

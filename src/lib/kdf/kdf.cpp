@@ -55,11 +55,13 @@ namespace {
 
 template <typename KDF_Type>
 std::unique_ptr<KDF> kdf_create_mac_or_hash(std::string_view nm) {
-   if(auto mac = MessageAuthenticationCode::create(fmt("HMAC({})", nm)))
+   if(auto mac = MessageAuthenticationCode::create(fmt("HMAC({})", nm))) {
       return std::make_unique<KDF_Type>(std::move(mac));
+   }
 
-   if(auto mac = MessageAuthenticationCode::create(nm))
+   if(auto mac = MessageAuthenticationCode::create(nm)) {
       return std::make_unique<KDF_Type>(std::move(mac));
+   }
 
    return nullptr;
 }
@@ -92,8 +94,9 @@ std::unique_ptr<KDF> KDF::create(std::string_view algo_spec, std::string_view pr
 #if defined(BOTAN_HAS_KDF2)
    if(req.algo_name() == "KDF2" && req.arg_count() == 1) {
       if(provider.empty() || provider == "base") {
-         if(auto hash = HashFunction::create(req.arg(0)))
+         if(auto hash = HashFunction::create(req.arg(0))) {
             return std::make_unique<KDF2>(std::move(hash));
+         }
       }
    }
 #endif
@@ -101,8 +104,9 @@ std::unique_ptr<KDF> KDF::create(std::string_view algo_spec, std::string_view pr
 #if defined(BOTAN_HAS_KDF1_18033)
    if(req.algo_name() == "KDF1-18033" && req.arg_count() == 1) {
       if(provider.empty() || provider == "base") {
-         if(auto hash = HashFunction::create(req.arg(0)))
+         if(auto hash = HashFunction::create(req.arg(0))) {
             return std::make_unique<KDF1_18033>(std::move(hash));
+         }
       }
    }
 #endif
@@ -110,8 +114,9 @@ std::unique_ptr<KDF> KDF::create(std::string_view algo_spec, std::string_view pr
 #if defined(BOTAN_HAS_KDF1)
    if(req.algo_name() == "KDF1" && req.arg_count() == 1) {
       if(provider.empty() || provider == "base") {
-         if(auto hash = HashFunction::create(req.arg(0)))
+         if(auto hash = HashFunction::create(req.arg(0))) {
             return std::make_unique<KDF1>(std::move(hash));
+         }
       }
    }
 #endif
@@ -154,10 +159,12 @@ std::unique_ptr<KDF> KDF::create(std::string_view algo_spec, std::string_view pr
 
 #if defined(BOTAN_HAS_SP800_56A)
    if(req.algo_name() == "SP800-56A" && req.arg_count() == 1) {
-      if(auto hash = HashFunction::create(req.arg(0)))
+      if(auto hash = HashFunction::create(req.arg(0))) {
          return std::make_unique<SP800_56A_Hash>(std::move(hash));
-      if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
+      }
+      if(auto mac = MessageAuthenticationCode::create(req.arg(0))) {
          return std::make_unique<SP800_56A_HMAC>(std::move(mac));
+      }
    }
 #endif
 
@@ -165,11 +172,13 @@ std::unique_ptr<KDF> KDF::create(std::string_view algo_spec, std::string_view pr
    if(req.algo_name() == "SP800-56C" && req.arg_count() == 1) {
       std::unique_ptr<KDF> exp(kdf_create_mac_or_hash<SP800_108_Feedback>(req.arg(0)));
       if(exp) {
-         if(auto mac = MessageAuthenticationCode::create(req.arg(0)))
+         if(auto mac = MessageAuthenticationCode::create(req.arg(0))) {
             return std::make_unique<SP800_56C>(std::move(mac), std::move(exp));
+         }
 
-         if(auto mac = MessageAuthenticationCode::create(fmt("HMAC({})", req.arg(0))))
+         if(auto mac = MessageAuthenticationCode::create(fmt("HMAC({})", req.arg(0)))) {
             return std::make_unique<SP800_56C>(std::move(mac), std::move(exp));
+         }
       }
    }
 #endif

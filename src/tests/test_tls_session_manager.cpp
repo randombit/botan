@@ -1038,8 +1038,9 @@ std::vector<Test::Result> tls_session_manager_expiry() {
 
          CHECK_all("expired sessions are not found",
                    [&](const std::string& type, auto factory, auto& result) {
-                      if(type == "Stateless")
+                      if(type == "Stateless") {
                          return;  // this manager can neither store nor find anything
+                      }
 
                       auto mgr = factory();
 
@@ -1064,8 +1065,9 @@ std::vector<Test::Result> tls_session_manager_expiry() {
          CHECK_all(
             "session tickets are not reused",
             [&](const std::string& type, auto factory, auto& result) {
-               if(type == "Stateless")
+               if(type == "Stateless") {
                   return;  // this manager can neither store nor find anything
+               }
 
                auto mgr = factory();
 
@@ -1102,8 +1104,9 @@ std::vector<Test::Result> tls_session_manager_expiry() {
          CHECK_all(
             "number of found tickets is capped",
             [&](const std::string& type, auto factory, auto& result) {
-               if(type == "Stateless")
+               if(type == "Stateless") {
                   return;  // this manager can neither store nor find anything
+               }
 
                auto mgr = factory();
 

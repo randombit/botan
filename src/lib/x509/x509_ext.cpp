@@ -24,47 +24,61 @@ namespace Botan {
 namespace {
 
 std::unique_ptr<Certificate_Extension> extension_from_oid(const OID& oid) {
-   if(oid == Cert_Extension::Subject_Key_ID::static_oid())
+   if(oid == Cert_Extension::Subject_Key_ID::static_oid()) {
       return std::make_unique<Cert_Extension::Subject_Key_ID>();
+   }
 
-   if(oid == Cert_Extension::Key_Usage::static_oid())
+   if(oid == Cert_Extension::Key_Usage::static_oid()) {
       return std::make_unique<Cert_Extension::Key_Usage>();
+   }
 
-   if(oid == Cert_Extension::Subject_Alternative_Name::static_oid())
+   if(oid == Cert_Extension::Subject_Alternative_Name::static_oid()) {
       return std::make_unique<Cert_Extension::Subject_Alternative_Name>();
+   }
 
-   if(oid == Cert_Extension::Issuer_Alternative_Name::static_oid())
+   if(oid == Cert_Extension::Issuer_Alternative_Name::static_oid()) {
       return std::make_unique<Cert_Extension::Issuer_Alternative_Name>();
+   }
 
-   if(oid == Cert_Extension::Basic_Constraints::static_oid())
+   if(oid == Cert_Extension::Basic_Constraints::static_oid()) {
       return std::make_unique<Cert_Extension::Basic_Constraints>();
+   }
 
-   if(oid == Cert_Extension::CRL_Number::static_oid())
+   if(oid == Cert_Extension::CRL_Number::static_oid()) {
       return std::make_unique<Cert_Extension::CRL_Number>();
+   }
 
-   if(oid == Cert_Extension::CRL_ReasonCode::static_oid())
+   if(oid == Cert_Extension::CRL_ReasonCode::static_oid()) {
       return std::make_unique<Cert_Extension::CRL_ReasonCode>();
+   }
 
-   if(oid == Cert_Extension::Authority_Key_ID::static_oid())
+   if(oid == Cert_Extension::Authority_Key_ID::static_oid()) {
       return std::make_unique<Cert_Extension::Authority_Key_ID>();
+   }
 
-   if(oid == Cert_Extension::Name_Constraints::static_oid())
+   if(oid == Cert_Extension::Name_Constraints::static_oid()) {
       return std::make_unique<Cert_Extension::Name_Constraints>();
+   }
 
-   if(oid == Cert_Extension::CRL_Distribution_Points::static_oid())
+   if(oid == Cert_Extension::CRL_Distribution_Points::static_oid()) {
       return std::make_unique<Cert_Extension::CRL_Distribution_Points>();
+   }
 
-   if(oid == Cert_Extension::CRL_Issuing_Distribution_Point::static_oid())
+   if(oid == Cert_Extension::CRL_Issuing_Distribution_Point::static_oid()) {
       return std::make_unique<Cert_Extension::CRL_Issuing_Distribution_Point>();
+   }
 
-   if(oid == Cert_Extension::Certificate_Policies::static_oid())
+   if(oid == Cert_Extension::Certificate_Policies::static_oid()) {
       return std::make_unique<Cert_Extension::Certificate_Policies>();
+   }
 
-   if(oid == Cert_Extension::Extended_Key_Usage::static_oid())
+   if(oid == Cert_Extension::Extended_Key_Usage::static_oid()) {
       return std::make_unique<Cert_Extension::Extended_Key_Usage>();
+   }
 
-   if(oid == Cert_Extension::Authority_Information_Access::static_oid())
+   if(oid == Cert_Extension::Authority_Information_Access::static_oid()) {
       return std::make_unique<Cert_Extension::Authority_Information_Access>();
+   }
 
    return nullptr;  // unknown
 }
@@ -156,23 +170,26 @@ bool Extensions::extension_set(const OID& oid) const { return (m_extension_info.
 
 bool Extensions::critical_extension_set(const OID& oid) const {
    auto i = m_extension_info.find(oid);
-   if(i != m_extension_info.end())
+   if(i != m_extension_info.end()) {
       return i->second.is_critical();
+   }
    return false;
 }
 
 std::vector<uint8_t> Extensions::get_extension_bits(const OID& oid) const {
    auto i = m_extension_info.find(oid);
-   if(i == m_extension_info.end())
+   if(i == m_extension_info.end()) {
       throw Invalid_Argument("Extensions::get_extension_bits no such extension set");
+   }
 
    return i->second.bits();
 }
 
 const Certificate_Extension* Extensions::get_extension_object(const OID& oid) const {
    auto extn = m_extension_info.find(oid);
-   if(extn == m_extension_info.end())
+   if(extn == m_extension_info.end()) {
       return nullptr;
+   }
 
    return &extn->second.obj();
 }
@@ -257,8 +274,9 @@ namespace Cert_Extension {
 * Checked accessor for the path_limit member
 */
 size_t Basic_Constraints::get_path_limit() const {
-   if(!m_is_ca)
+   if(!m_is_ca) {
       throw Invalid_State("Basic_Constraints::get_path_limit: Not a CA");
+   }
    return m_path_limit;
 }
 
@@ -284,16 +302,18 @@ void Basic_Constraints::decode_inner(const std::vector<uint8_t>& in) {
       .decode_optional(m_path_limit, ASN1_Type::Integer, ASN1_Class::Universal, NO_CERT_PATH_LIMIT)
       .end_cons();
 
-   if(m_is_ca == false)
+   if(m_is_ca == false) {
       m_path_limit = 0;
+   }
 }
 
 /*
 * Encode the extension
 */
 std::vector<uint8_t> Key_Usage::encode_inner() const {
-   if(m_constraints.empty())
+   if(m_constraints.empty()) {
       throw Encoding_Error("Cannot encode empty PKIX key constraints");
+   }
 
    const size_t constraint_bits = m_constraints.value();
    const size_t unused_bits = ctz(static_cast<uint32_t>(constraint_bits));
@@ -303,8 +323,9 @@ std::vector<uint8_t> Key_Usage::encode_inner() const {
    der.push_back(2 + ((unused_bits < 8) ? 1 : 0));
    der.push_back(unused_bits % 8);
    der.push_back((constraint_bits >> 8) & 0xFF);
-   if(constraint_bits & 0xFF)
+   if(constraint_bits & 0xFF) {
       der.push_back(constraint_bits & 0xFF);
+   }
 
    return der;
 }
@@ -319,15 +340,17 @@ void Key_Usage::decode_inner(const std::vector<uint8_t>& in) {
 
    obj.assert_is_a(ASN1_Type::BitString, ASN1_Class::Universal, "usage constraint");
 
-   if(obj.length() != 2 && obj.length() != 3)
+   if(obj.length() != 2 && obj.length() != 3) {
       throw BER_Decoding_Error("Bad size for BITSTRING in usage constraint");
+   }
 
    uint16_t usage = 0;
 
    const uint8_t* bits = obj.bits();
 
-   if(bits[0] >= 8)
+   if(bits[0] >= 8) {
       throw BER_Decoding_Error("Invalid unused bits in usage constraint");
+   }
 
    const uint8_t mask = static_cast<uint8_t>(0xFF << bits[0]);
 
@@ -369,8 +392,9 @@ Subject_Key_ID::Subject_Key_ID(const std::vector<uint8_t>& pub_key, std::string_
 
    // Truncate longer hashes, 192 bits here seems plenty
    const size_t max_skid_len = (192 / 8);
-   if(m_key_id.size() > max_skid_len)
+   if(m_key_id.size() > max_skid_len) {
       m_key_id.resize(max_skid_len);
+   }
 }
 
 /*
@@ -451,22 +475,25 @@ void Name_Constraints::decode_inner(const std::vector<uint8_t>& in) {
    ext.push_back(per);
    if(per.is_a(0, ASN1_Class::Constructed | ASN1_Class::ContextSpecific)) {
       ext.decode_list(permit, ASN1_Type(0), ASN1_Class::Constructed | ASN1_Class::ContextSpecific);
-      if(permit.empty())
+      if(permit.empty()) {
          throw Encoding_Error("Empty Name Contraint list");
+      }
    }
 
    BER_Object exc = ext.get_next_object();
    ext.push_back(exc);
    if(per.is_a(1, ASN1_Class::Constructed | ASN1_Class::ContextSpecific)) {
       ext.decode_list(exclude, ASN1_Type(1), ASN1_Class::Constructed | ASN1_Class::ContextSpecific);
-      if(exclude.empty())
+      if(exclude.empty()) {
          throw Encoding_Error("Empty Name Contraint list");
+      }
    }
 
    ext.end_cons();
 
-   if(permit.empty() && exclude.empty())
+   if(permit.empty() && exclude.empty()) {
       throw Encoding_Error("Empty Name Contraint extension");
+   }
 
    m_name_constraints = NameConstraints(std::move(permit), std::move(exclude));
 }
@@ -556,8 +583,9 @@ std::vector<uint8_t> Certificate_Policies::encode_inner() const {
    std::vector<Policy_Information> policies;
 
    policies.reserve(m_oids.size());
-   for(const auto& oid : m_oids)
+   for(const auto& oid : m_oids) {
       policies.push_back(Policy_Information(oid));
+   }
 
    std::vector<uint8_t> output;
    DER_Encoder(output).start_sequence().encode_list(policies).end_cons();
@@ -572,8 +600,9 @@ void Certificate_Policies::decode_inner(const std::vector<uint8_t>& in) {
 
    BER_Decoder(in).decode_list(policies);
    m_oids.clear();
-   for(const auto& policy : policies)
+   for(const auto& policy : policies) {
       m_oids.push_back(policy.oid());
+   }
 }
 
 void Certificate_Policies::validate(const X509_Certificate& /*subject*/,
@@ -632,8 +661,9 @@ void Authority_Information_Access::decode_inner(const std::vector<uint8_t>& in) 
 * Checked accessor for the crl_number member
 */
 size_t CRL_Number::get_crl_number() const {
-   if(!m_has_value)
+   if(!m_has_value) {
       throw Invalid_State("CRL_Number::get_crl_number: Not set");
+   }
    return m_crl_number;
 }
 
@@ -641,8 +671,9 @@ size_t CRL_Number::get_crl_number() const {
 * Copy a CRL_Number extension
 */
 std::unique_ptr<Certificate_Extension> CRL_Number::copy() const {
-   if(!m_has_value)
+   if(!m_has_value) {
       throw Invalid_State("CRL_Number::copy: Not set");
+   }
    return std::make_unique<CRL_Number>(m_crl_number);
 }
 

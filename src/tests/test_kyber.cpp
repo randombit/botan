@@ -208,12 +208,14 @@ class Kyber_Encoding_Test : public Text_Based_Test {
       bool skip_this_test(const std::string& algo_name, const VarMap& /*vars*/) override {
          const auto mode = name_to_mode(algo_name);
    #if defined(BOTAN_HAS_KYBER)
-         if(!mode.is_90s())
+         if(!mode.is_90s()) {
             return false;
+         }
    #endif
    #if defined(BOTAN_HAS_KYBER_90S)
-         if(mode.is_90s())
+         if(mode.is_90s()) {
             return false;
+         }
    #endif
 
          BOTAN_UNUSED(algo_name, mode);
@@ -233,10 +235,12 @@ class Kyber_Encoding_Test : public Text_Based_Test {
             // negative tests
 
             result.test_throws("failing decoding", error, [&] {
-               if(!sk_raw.empty())
+               if(!sk_raw.empty()) {
                   Botan::Kyber_PrivateKey(sk_raw, mode);
-               if(!pk_raw.empty())
+               }
+               if(!pk_raw.empty()) {
                   Botan::Kyber_PublicKey(pk_raw, mode);
+               }
             });
 
             return result;

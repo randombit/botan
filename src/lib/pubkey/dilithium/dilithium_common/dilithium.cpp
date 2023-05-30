@@ -393,11 +393,12 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
 
          size_t k = 0;
          for(size_t i = 0; i < mode.k(); ++i) {
-            for(size_t j = 0; j < DilithiumModeConstants::N; ++j)
+            for(size_t j = 0; j < DilithiumModeConstants::N; ++j) {
                if(h.m_vec[i].m_coeffs[j] != 0) {
                   sig[position + k] = static_cast<uint8_t>(j);
                   k++;
                }
+            }
             sig[position + mode.omega() + i] = static_cast<uint8_t>(k);
          }
          return sig;
@@ -530,16 +531,18 @@ bool Dilithium_PublicKey::check_key(RandomNumberGenerator&, bool) const {
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_verification_op(std::string_view params,
                                                                                   std::string_view provider) const {
    BOTAN_ARG_CHECK(params.empty() || params == "Pure", "Unexpected parameters for verifying with Dilithium");
-   if(provider.empty() || provider == "base")
+   if(provider.empty() || provider == "base") {
       return std::make_unique<Dilithium_Verification_Operation>(*this);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_x509_verification_op(
    const AlgorithmIdentifier& alg_id, std::string_view provider) const {
    if(provider.empty() || provider == "base") {
-      if(alg_id != this->algorithm_identifier())
+      if(alg_id != this->algorithm_identifier()) {
          throw Decoding_Error("Unexpected AlgorithmIdentifier for Dilithium X.509 signature");
+      }
       return std::make_unique<Dilithium_Verification_Operation>(*this);
    }
    throw Provider_Not_Found(algo_name(), provider);
@@ -605,8 +608,9 @@ std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::create_signature_op(Ran
                    "Unexpected parameters for signing with Dilithium");
 
    const bool randomized = (params == "Randomized");
-   if(provider.empty() || provider == "base")
+   if(provider.empty() || provider == "base") {
       return std::make_unique<Dilithium_Signature_Operation>(*this, randomized);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 

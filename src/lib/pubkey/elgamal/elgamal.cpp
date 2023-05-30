@@ -71,8 +71,9 @@ secure_vector<uint8_t> ElGamal_PrivateKey::raw_private_key_bits() const {
 }
 
 bool ElGamal_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
-   if(!m_private_key->check_key(rng, strong))
+   if(!m_private_key->check_key(rng, strong)) {
       return false;
+   }
 
    return KeyPair::encryption_consistency_check(rng, *this, "OAEP(SHA-256)");
 }
@@ -108,8 +109,9 @@ secure_vector<uint8_t> ElGamal_Encryption_Operation::raw_encrypt(const uint8_t m
 
    const auto& group = m_key->group();
 
-   if(m >= group.get_p())
+   if(m >= group.get_p()) {
       throw Invalid_Argument("ElGamal encryption: Input is too large");
+   }
 
    /*
    Some weird PGP implementations generate keys using bad parameters
@@ -160,14 +162,16 @@ secure_vector<uint8_t> ElGamal_Decryption_Operation::raw_decrypt(const uint8_t m
 
    const size_t p_bytes = group.p_bytes();
 
-   if(msg_len != 2 * p_bytes)
+   if(msg_len != 2 * p_bytes) {
       throw Invalid_Argument("ElGamal decryption: Invalid message");
+   }
 
    BigInt a(msg, p_bytes);
    const BigInt b(msg + p_bytes, p_bytes);
 
-   if(a >= group.get_p() || b >= group.get_p())
+   if(a >= group.get_p() || b >= group.get_p()) {
       throw Invalid_Argument("ElGamal decryption: Invalid message");
+   }
 
    a = m_blinder.blind(a);
 
@@ -181,16 +185,18 @@ secure_vector<uint8_t> ElGamal_Decryption_Operation::raw_decrypt(const uint8_t m
 std::unique_ptr<PK_Ops::Encryption> ElGamal_PublicKey::create_encryption_op(RandomNumberGenerator& /*rng*/,
                                                                             std::string_view params,
                                                                             std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<ElGamal_Encryption_Operation>(this->m_public_key, params);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 
 std::unique_ptr<PK_Ops::Decryption> ElGamal_PrivateKey::create_decryption_op(RandomNumberGenerator& rng,
                                                                              std::string_view params,
                                                                              std::string_view provider) const {
-   if(provider == "base" || provider.empty())
+   if(provider == "base" || provider.empty()) {
       return std::make_unique<ElGamal_Decryption_Operation>(this->m_private_key, params, rng);
+   }
    throw Provider_Not_Found(algo_name(), provider);
 }
 

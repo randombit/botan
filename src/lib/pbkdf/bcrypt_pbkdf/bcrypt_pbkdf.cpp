@@ -30,8 +30,9 @@ std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::tune(size_t output_length,
 
    const size_t blocks = (output_length + 32 - 1) / 32;
 
-   if(blocks == 0)
+   if(blocks == 0) {
       return default_params();
+   }
 
    const size_t starting_iter = 2;
 
@@ -42,8 +43,9 @@ std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::tune(size_t output_length,
       pwhash->derive_key(output, sizeof(output), "test", 4, nullptr, 0);
    });
 
-   if(timer.events() < blocks || timer.value() == 0)
+   if(timer.events() < blocks || timer.value() == 0) {
       return default_params();
+   }
 
    const uint64_t measured_time = timer.value() / (timer.events() / blocks);
 
@@ -51,8 +53,9 @@ std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::tune(size_t output_length,
 
    const uint64_t desired_increase = target_nsec / measured_time;
 
-   if(desired_increase == 0)
+   if(desired_increase == 0) {
       return this->from_iterations(starting_iter);
+   }
 
    return this->from_iterations(static_cast<size_t>(desired_increase * starting_iter));
 }
@@ -90,8 +93,9 @@ void bcrypt_round(Blowfish& blowfish,
       pass_hash.data(), pass_hash.size(), salt_hash.data(), salt_hash.size(), BCRYPT_PBKDF_WORKFACTOR, true);
 
    copy_mem(tmp.data(), BCRYPT_PBKDF_MAGIC, BCRYPT_PBKDF_OUTPUT);
-   for(size_t i = 0; i != BCRYPT_PBKDF_ROUNDS; ++i)
+   for(size_t i = 0; i != BCRYPT_PBKDF_ROUNDS; ++i) {
       blowfish.encrypt(tmp);
+   }
 
    /*
    Bcrypt PBKDF loads the Blowfish output as big endian for no reason
@@ -116,8 +120,9 @@ void Bcrypt_PBKDF::derive_key(uint8_t output[],
                               const uint8_t salt[],
                               size_t salt_len) const {
    // No output desired, so we are all done already...
-   if(output_len == 0)
+   if(output_len == 0) {
       return;
+   }
 
    BOTAN_ARG_CHECK(output_len <= 10 * 1024 * 1024, "Too much output for Bcrypt PBKDF");
 
@@ -152,8 +157,9 @@ void Bcrypt_PBKDF::derive_key(uint8_t output[],
 
       for(size_t i = 0; i != BCRYPT_BLOCK_SIZE; ++i) {
          const size_t dest = i * blocks + block;
-         if(dest < output_len)
+         if(dest < output_len) {
             output[dest] = out[i];
+         }
       }
    }
 }

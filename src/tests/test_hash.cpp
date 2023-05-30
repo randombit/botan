@@ -111,8 +111,9 @@ class Hash_Function_Tests final : public Text_Based_Test {
 
                const size_t bytes_to_misalign = 15 - current_alignment;
 
-               for(size_t i = 0; i != bytes_to_misalign; ++i)
+               for(size_t i = 0; i != bytes_to_misalign; ++i) {
                   misaligned.insert(misaligned.begin(), 0x23);
+               }
 
                hash->update(&misaligned[bytes_to_misalign], input.size());
                result.test_eq(provider, "hashing misaligned data", hash->final(), expected);
@@ -129,8 +130,9 @@ class Hash_Function_Tests final : public Text_Based_Test {
                while(so_far < input.size()) {
                   size_t take = Test::rng().next_byte() % (input.size() - so_far);
 
-                  if(input.size() - so_far == 1)
+                  if(input.size() - so_far == 1) {
                      take = 1;
+                  }
 
                   hash->update(&input[so_far], take);
                   so_far += take;
@@ -229,8 +231,9 @@ class Hash_LongRepeat_Tests final : public Text_Based_Test {
          std::vector<uint8_t> output;
          output.reserve(min_len);
 
-         while(output.size() < min_len)
+         while(output.size() < min_len) {
             output.insert(output.end(), input.begin(), input.end());
+         }
 
          return output;
       }
@@ -264,11 +267,13 @@ class Hash_LongRepeat_Tests final : public Text_Based_Test {
             const size_t full_inputs = total_len / input.size();
             const size_t leftover = total_len % input.size();
 
-            for(size_t i = 0; i != full_inputs; ++i)
+            for(size_t i = 0; i != full_inputs; ++i) {
                hash->update(input);
+            }
 
-            if(leftover > 0)
+            if(leftover > 0) {
                hash->update(input.data(), leftover);
+            }
 
             std::vector<uint8_t> output(hash->output_length());
             hash->final(output.data());

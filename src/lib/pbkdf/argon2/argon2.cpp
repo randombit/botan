@@ -83,16 +83,18 @@ void extract_key(uint8_t output[], size_t output_len, const secure_vector<uint64
    if(output_len <= 64) {
       auto blake2b = HashFunction::create_or_throw(fmt("BLAKE2b({})", output_len * 8));
       blake2b->update_le(static_cast<uint32_t>(output_len));
-      for(size_t i = 0; i != 128; ++i)
+      for(size_t i = 0; i != 128; ++i) {
          blake2b->update_le(sum[i]);
+      }
       blake2b->final(output);
    } else {
       secure_vector<uint8_t> T(64);
 
       auto blake2b = HashFunction::create_or_throw("BLAKE2b(512)");
       blake2b->update_le(static_cast<uint32_t>(output_len));
-      for(size_t i = 0; i != 128; ++i)
+      for(size_t i = 0; i != 128; ++i) {
          blake2b->update_le(sum[i]);
+      }
       blake2b->final(&T[0]);
 
       while(output_len > 64) {
@@ -164,13 +166,15 @@ BOTAN_FORCE_INLINE void blamka_G(uint64_t& A, uint64_t& B, uint64_t& C, uint64_t
 
 void Argon2::blamka(uint64_t N[128], uint64_t T[128]) {
 #if defined(BOTAN_HAS_ARGON2_AVX2)
-   if(CPUID::has_avx2())
+   if(CPUID::has_avx2()) {
       return Argon2::blamka_avx2(N, T);
+   }
 #endif
 
 #if defined(BOTAN_HAS_ARGON2_SSSE3)
-   if(CPUID::has_ssse3())
+   if(CPUID::has_ssse3()) {
       return Argon2::blamka_ssse3(N, T);
+   }
 #endif
 
    copy_mem(T, N, 128);
@@ -199,8 +203,9 @@ void Argon2::blamka(uint64_t N[128], uint64_t T[128]) {
       blamka_G(T[i + 17], T[i + 32], T[i + 65], T[i + 112]);
    }
 
-   for(size_t i = 0; i != 128; ++i)
+   for(size_t i = 0; i != 128; ++i) {
       N[i] ^= T[i];
+   }
 }
 
 namespace {
@@ -233,24 +238,28 @@ uint32_t index_alpha(
    uint64_t random, size_t lanes, size_t segments, size_t threads, size_t n, size_t slice, size_t lane, size_t index) {
    size_t ref_lane = static_cast<uint32_t>(random >> 32) % threads;
 
-   if(n == 0 && slice == 0)
+   if(n == 0 && slice == 0) {
       ref_lane = lane;
+   }
 
    size_t m = 3 * segments;
    size_t s = ((slice + 1) % 4) * segments;
 
-   if(lane == ref_lane)
+   if(lane == ref_lane) {
       m += index;
+   }
 
    if(n == 0) {
       m = slice * segments;
       s = 0;
-      if(slice == 0 || lane == ref_lane)
+      if(slice == 0 || lane == ref_lane) {
          m += index;
+      }
    }
 
-   if(index == 0 || lane == ref_lane)
+   if(index == 0 || lane == ref_lane) {
       m -= 1;
+   }
 
    uint64_t p = static_cast<uint32_t>(random);
    p = (p * p) >> 32;
@@ -271,8 +280,9 @@ void process_block(secure_vector<uint64_t>& B,
                    size_t time) {
    uint64_t T[128];
    size_t index = 0;
-   if(n == 0 && slice == 0)
+   if(n == 0 && slice == 0) {
       index = 2;
+   }
 
    const bool use_2i = mode == 1 || (mode == 2 && n == 0 && slice < SYNC_POINTS / 2);
 
@@ -287,8 +297,9 @@ void process_block(secure_vector<uint64_t>& B,
       const size_t offset = lane * lanes + slice * segments + index;
 
       size_t prev = offset - 1;
-      if(index == 0 && slice == 0)
+      if(index == 0 && slice == 0) {
          prev += lanes;
+      }
 
       if(use_2i && index > 0 && index % 128 == 0) {
          address_counter += 1;
@@ -299,13 +310,15 @@ void process_block(secure_vector<uint64_t>& B,
       const size_t new_offset = index_alpha(random, lanes, segments, threads, n, slice, lane, index);
 
       uint64_t N[128];
-      for(size_t i = 0; i != 128; ++i)
+      for(size_t i = 0; i != 128; ++i) {
          N[i] = B[128 * prev + i] ^ B[128 * new_offset + i];
+      }
 
       Argon2::blamka(N, T);
 
-      for(size_t i = 0; i != 128; ++i)
+      for(size_t i = 0; i != 128; ++i) {
          B[128 * offset + i] ^= N[i];
+      }
 
       index += 1;
    }
@@ -331,8 +344,9 @@ void process_blocks(secure_vector<uint64_t>& B, size_t t, size_t memory, size_t 
                   process_block, std::ref(B), n, slice, lane, lanes, segments, threads, mode, memory, t));
             }
 
-            for(auto& fut : fut_results)
+            for(auto& fut : fut_results) {
                fut.get();
+            }
 
             continue;
          }

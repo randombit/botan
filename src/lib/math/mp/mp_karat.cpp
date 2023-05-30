@@ -18,8 +18,9 @@ namespace Botan {
 * Simple O(N^2) Multiplication
 */
 void basecase_mul(word z[], size_t z_size, const word x[], size_t x_size, const word y[], size_t y_size) {
-   if(z_size < x_size + y_size)
+   if(z_size < x_size + y_size) {
       throw Invalid_Argument("basecase_mul z_size too small");
+   }
 
    const size_t x_size_8 = x_size - (x_size % 8);
 
@@ -30,19 +31,22 @@ void basecase_mul(word z[], size_t z_size, const word x[], size_t x_size, const 
 
       word carry = 0;
 
-      for(size_t j = 0; j != x_size_8; j += 8)
+      for(size_t j = 0; j != x_size_8; j += 8) {
          carry = word8_madd3(z + i + j, x + j, y_i, carry);
+      }
 
-      for(size_t j = x_size_8; j != x_size; ++j)
+      for(size_t j = x_size_8; j != x_size; ++j) {
          z[i + j] = word_madd3(x[j], y_i, z[i + j], &carry);
+      }
 
       z[x_size + i] = carry;
    }
 }
 
 void basecase_sqr(word z[], size_t z_size, const word x[], size_t x_size) {
-   if(z_size < 2 * x_size)
+   if(z_size < 2 * x_size) {
       throw Invalid_Argument("basecase_sqr z_size too small");
+   }
 
    const size_t x_size_8 = x_size - (x_size % 8);
 
@@ -53,11 +57,13 @@ void basecase_sqr(word z[], size_t z_size, const word x[], size_t x_size) {
 
       word carry = 0;
 
-      for(size_t j = 0; j != x_size_8; j += 8)
+      for(size_t j = 0; j != x_size_8; j += 8) {
          carry = word8_madd3(z + i + j, x + j, x_i, carry);
+      }
 
-      for(size_t j = x_size_8; j != x_size; ++j)
+      for(size_t j = x_size_8; j != x_size; ++j) {
          z[i + j] = word_madd3(x[j], x_i, z[i + j], &carry);
+      }
 
       z[x_size + i] = carry;
    }
@@ -194,31 +200,37 @@ void karatsuba_sqr(word z[], const word x[], size_t N, word workspace[]) {
 * Pick a good size for the Karatsuba multiply
 */
 size_t karatsuba_size(size_t z_size, size_t x_size, size_t x_sw, size_t y_size, size_t y_sw) {
-   if(x_sw > x_size || x_sw > y_size || y_sw > x_size || y_sw > y_size)
+   if(x_sw > x_size || x_sw > y_size || y_sw > x_size || y_sw > y_size) {
       return 0;
+   }
 
-   if(((x_size == x_sw) && (x_size % 2)) || ((y_size == y_sw) && (y_size % 2)))
+   if(((x_size == x_sw) && (x_size % 2)) || ((y_size == y_sw) && (y_size % 2))) {
       return 0;
+   }
 
    const size_t start = (x_sw > y_sw) ? x_sw : y_sw;
    const size_t end = (x_size < y_size) ? x_size : y_size;
 
    if(start == end) {
-      if(start % 2)
+      if(start % 2) {
          return 0;
+      }
       return start;
    }
 
    for(size_t j = start; j <= end; ++j) {
-      if(j % 2)
+      if(j % 2) {
          continue;
+      }
 
-      if(2 * j > z_size)
+      if(2 * j > z_size) {
          return 0;
+      }
 
       if(x_sw <= j && j <= x_size && y_sw <= j && j <= y_size) {
-         if(j % 4 == 2 && (j + 2) <= x_size && (j + 2) <= y_size && 2 * (j + 2) <= z_size)
+         if(j % 4 == 2 && (j + 2) <= x_size && (j + 2) <= y_size && 2 * (j + 2) <= z_size) {
             return j + 2;
+         }
          return j;
       }
    }
@@ -231,20 +243,24 @@ size_t karatsuba_size(size_t z_size, size_t x_size, size_t x_sw, size_t y_size, 
 */
 size_t karatsuba_size(size_t z_size, size_t x_size, size_t x_sw) {
    if(x_sw == x_size) {
-      if(x_sw % 2)
+      if(x_sw % 2) {
          return 0;
+      }
       return x_sw;
    }
 
    for(size_t j = x_sw; j <= x_size; ++j) {
-      if(j % 2)
+      if(j % 2) {
          continue;
+      }
 
-      if(2 * j > z_size)
+      if(2 * j > z_size) {
          return 0;
+      }
 
-      if(j % 4 == 2 && (j + 2) <= x_size && 2 * (j + 2) <= z_size)
+      if(j % 4 == 2 && (j + 2) <= x_size && 2 * (j + 2) <= z_size) {
          return j + 2;
+      }
       return j;
    }
 
@@ -296,10 +312,11 @@ void bigint_mul(word z[],
    } else {
       const size_t N = karatsuba_size(z_size, x_size, x_sw, y_size, y_sw);
 
-      if(N && z_size >= 2 * N && ws_size >= 2 * N)
+      if(N && z_size >= 2 * N && ws_size >= 2 * N) {
          karatsuba_mul(z, x, y, N, workspace);
-      else
+      } else {
          basecase_mul(z, z_size, x, x_sw, y, y_sw);
+      }
    }
 }
 
@@ -330,10 +347,11 @@ void bigint_sqr(word z[], size_t z_size, const word x[], size_t x_size, size_t x
    } else {
       const size_t N = karatsuba_size(z_size, x_size, x_sw);
 
-      if(N && z_size >= 2 * N && ws_size >= 2 * N)
+      if(N && z_size >= 2 * N && ws_size >= 2 * N) {
          karatsuba_sqr(z, x, N, workspace);
-      else
+      } else {
          basecase_sqr(z, z_size, x, x_sw);
+      }
    }
 }
 

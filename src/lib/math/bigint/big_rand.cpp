@@ -24,12 +24,14 @@ void BigInt::randomize(RandomNumberGenerator& rng, size_t bitsize, bool set_high
       secure_vector<uint8_t> array = rng.random_vec(round_up(bitsize, 8) / 8);
 
       // Always cut unwanted bits
-      if(bitsize % 8)
+      if(bitsize % 8) {
          array[0] &= 0xFF >> (8 - (bitsize % 8));
+      }
 
       // Set the highest bit if wanted
-      if(set_high_bit)
+      if(set_high_bit) {
          array[0] |= 0x80 >> ((bitsize % 8) ? (8 - bitsize % 8) : 0);
+      }
 
       binary_decode(array);
    }
@@ -39,8 +41,9 @@ void BigInt::randomize(RandomNumberGenerator& rng, size_t bitsize, bool set_high
 * Generate a random integer within given range
 */
 BigInt BigInt::random_integer(RandomNumberGenerator& rng, const BigInt& min, const BigInt& max) {
-   if(min.is_negative() || max.is_negative() || max <= min)
+   if(min.is_negative() || max.is_negative() || max <= min) {
       throw Invalid_Argument("BigInt::random_integer invalid range");
+   }
 
    BigInt r;
 

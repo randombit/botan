@@ -16,8 +16,9 @@ namespace {
 size_t choose_update_size(size_t update_granularity) {
    const size_t target_size = 1024;
 
-   if(update_granularity >= target_size)
+   if(update_granularity >= target_size) {
       return update_granularity;
+   }
 
    return round_up(target_size, update_granularity);
 }
@@ -47,8 +48,9 @@ void Cipher_Mode_Filter::write(const uint8_t input[], size_t input_length) {
 void Cipher_Mode_Filter::end_msg() { Buffered_Filter::end_msg(); }
 
 void Cipher_Mode_Filter::start_msg() {
-   if(m_nonce.empty() && !m_mode->valid_nonce_length(0))
+   if(m_nonce.empty() && !m_mode->valid_nonce_length(0)) {
       throw Invalid_State("Cipher " + m_mode->name() + " requires a fresh nonce for each message");
+   }
 
    m_mode->start(m_nonce);
    m_nonce.clear();

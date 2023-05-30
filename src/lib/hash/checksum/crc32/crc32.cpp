@@ -72,8 +72,9 @@ void CRC32::add_data(const uint8_t input[], size_t length) {
       length -= 16;
    }
 
-   for(size_t i = 0; i != length; ++i)
+   for(size_t i = 0; i != length; ++i) {
       tmp = CRC32_T0[(tmp ^ input[i]) & 0xFF] ^ (tmp >> 8);
+   }
 
    m_crc = tmp;
 }

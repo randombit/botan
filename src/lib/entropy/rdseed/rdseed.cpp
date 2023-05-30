@@ -72,8 +72,9 @@ size_t Intel_Rdseed::poll(RandomNumberGenerator& rng) {
          it is better to quit now rather than (presumably) face very high retry
          times for the rest of the poll.
          */
-         if(!read_rdseed(seed))
+         if(!read_rdseed(seed)) {
             break;
+         }
       }
 
       if(!seed.empty()) {

@@ -111,8 +111,9 @@ std::unique_ptr<HashFunction> HashFunction::create(std::string_view algo_spec, s
    }
 #endif
 
-   if(provider.empty() == false && provider != "base")
+   if(provider.empty() == false && provider != "base") {
       return nullptr;  // unknown provider
+   }
 
 #if defined(BOTAN_HAS_SHA1)
    if(algo_spec == "SHA-1") {
@@ -274,8 +275,9 @@ std::unique_ptr<HashFunction> HashFunction::create(std::string_view algo_spec, s
       auto h1 = HashFunction::create(req.arg(0));
       auto h2 = HashFunction::create(req.arg(1));
 
-      if(h1 && h2)
+      if(h1 && h2) {
          return std::make_unique<Comb4P>(std::move(h1), std::move(h2));
+      }
    }
 #endif
 

@@ -379,11 +379,13 @@ class Test_Credentials : public Botan::Credentials_Manager {
                                                           const std::string& context) override {
          BOTAN_UNUSED(cert, context);
 
-         if(type == "tls-client")
+         if(type == "tls-client") {
             return m_client_private_key;
+         }
 
-         if(m_alternative_server_certificate)
+         if(m_alternative_server_certificate) {
             return m_bogus_alternative_server_private_key;
+         }
 
          return m_server_private_key;
       }
@@ -501,10 +503,11 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager {
 
       std::optional<Session> retrieve_one(const Session_Handle& handle) override {
          auto itr = std::find_if(m_sessions.begin(), m_sessions.end(), find_by_handle(handle));
-         if(itr == m_sessions.end())
+         if(itr == m_sessions.end()) {
             return std::nullopt;
-         else
+         } else {
             return itr->session;
+         }
       }
 
       std::vector<Session_with_Handle> find_some(const Server_Information& info, const size_t) override {
@@ -757,8 +760,9 @@ std::vector<MockSignature> make_mock_signatures(const VarMap& vars) {
    std::vector<MockSignature> result;
 
    auto mock = [&](const std::string& msg, const std::string& sig) {
-      if(vars.has_key(msg) && vars.has_key(sig))
+      if(vars.has_key(msg) && vars.has_key(sig)) {
          result.push_back({vars.get_opt_bin(msg), vars.get_opt_bin(sig)});
+      }
    };
 
    mock("Server_MessageToSign", "Server_MessageSignature");
@@ -847,19 +851,20 @@ class Test_TLS_RFC8448 : public Text_Based_Test {
                             "HelloRetryRequest_Cookie") {}
 
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override {
-         if(header == "Simple_1RTT_Handshake")
+         if(header == "Simple_1RTT_Handshake") {
             return Test::Result("Simple 1-RTT (" + side() + " side)", simple_1_rtt(vars));
-         else if(header == "Resumed_0RTT_Handshake")
+         } else if(header == "Resumed_0RTT_Handshake") {
             return Test::Result("Resumption with 0-RTT data (" + side() + " side)", resumed_handshake_with_0_rtt(vars));
-         else if(header == "HelloRetryRequest_Handshake")
+         } else if(header == "HelloRetryRequest_Handshake") {
             return Test::Result("Handshake involving Hello Retry Request (" + side() + " side)",
                                 hello_retry_request(vars));
-         else if(header == "Client_Authentication_Handshake")
+         } else if(header == "Client_Authentication_Handshake") {
             return Test::Result("Client Authentication (" + side() + " side)", client_authentication(vars));
-         else if(header == "Middlebox_Compatibility_Mode")
+         } else if(header == "Middlebox_Compatibility_Mode") {
             return Test::Result("Middlebox Compatibility Mode (" + side() + " side)", middlebox_compatibility(vars));
-         else
+         } else {
             return Test::Result::Failure("test dispatcher", "unknown sub-test: " + header);
+         }
       }
 };
 

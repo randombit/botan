@@ -109,14 +109,17 @@ bool Test_Runner::run(const Test_Options& opts) {
 
    for(auto& reporter : m_reporters) {
       const std::string cpuid = Botan::CPUID::to_string();
-      if(!cpuid.empty())
+      if(!cpuid.empty()) {
          reporter->set_property("CPU flags", cpuid);
+      }
 
-      if(!opts.pkcs11_lib().empty())
+      if(!opts.pkcs11_lib().empty()) {
          reporter->set_property("pkcs11 library", opts.pkcs11_lib());
+      }
 
-      if(!opts.provider().empty())
+      if(!opts.provider().empty()) {
          reporter->set_property("provider", opts.provider());
+      }
 
       reporter->set_property("drbg_seed", Botan::hex_encode(seed));
    }
@@ -137,8 +140,9 @@ bool Test_Runner::run(const Test_Options& opts) {
          reporter->render();
       }
 
-      if(!passed)
+      if(!passed) {
          return false;
+      }
    }
 
    return true;

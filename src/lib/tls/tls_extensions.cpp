@@ -111,8 +111,9 @@ void Extensions::deserialize(TLS_Data_Reader& reader, const Connection_Side from
    if(reader.has_remaining()) {
       const uint16_t all_extn_size = reader.get_uint16_t();
 
-      if(reader.remaining_bytes() != all_extn_size)
+      if(reader.remaining_bytes() != all_extn_size) {
          throw Decoding_Error("Bad extension size");
+      }
 
       while(reader.has_remaining()) {
          const uint16_t extension_code = reader.get_uint16_t();
@@ -174,8 +175,9 @@ std::vector<uint8_t> Extensions::serialize(Connection_Side whoami) const {
    std::vector<uint8_t> buf(2);  // 2 bytes for length field
 
    for(const auto& extn : m_extensions) {
-      if(extn->empty())
+      if(extn->empty()) {
          continue;
+      }
 
       const uint16_t extn_code = static_cast<uint16_t>(extn->type());
 
@@ -196,8 +198,9 @@ std::vector<uint8_t> Extensions::serialize(Connection_Side whoami) const {
    buf[1] = get_byte<1>(extn_size);
 
    // avoid sending a completely empty extensions block
-   if(buf.size() == 2)
+   if(buf.size() == 2) {
       return std::vector<uint8_t>();
+   }
 
    return buf;
 }
@@ -220,13 +223,15 @@ Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader, uint16_t e
    /*
    * This is used by the server to confirm that it knew the name
    */
-   if(extension_size == 0)
+   if(extension_size == 0) {
       return;
+   }
 
    uint16_t name_bytes = reader.get_uint16_t();
 
-   if(name_bytes + 2 != extension_size)
+   if(name_bytes + 2 != extension_size) {
       throw Decoding_Error("Bad encoding of SNI extension");
+   }
 
    while(name_bytes) {
       uint8_t name_type = reader.get_byte();
@@ -271,8 +276,9 @@ std::vector<uint8_t> Server_Name_Indicator::serialize(Connection_Side whoami) co
 
 Renegotiation_Extension::Renegotiation_Extension(TLS_Data_Reader& reader, uint16_t extension_size) :
       m_reneg_data(reader.get_range<uint8_t>(1, 0, 255)) {
-   if(m_reneg_data.size() + 1 != extension_size)
+   if(m_reneg_data.size() + 1 != extension_size) {
       throw Decoding_Error("Bad encoding for secure renegotiation extn");
+   }
 }
 
 std::vector<uint8_t> Renegotiation_Extension::serialize(Connection_Side /*whoami*/) const {
@@ -284,24 +290,28 @@ std::vector<uint8_t> Renegotiation_Extension::serialize(Connection_Side /*whoami
 Application_Layer_Protocol_Notification::Application_Layer_Protocol_Notification(TLS_Data_Reader& reader,
                                                                                  uint16_t extension_size,
                                                                                  Connection_Side from) {
-   if(extension_size == 0)
+   if(extension_size == 0) {
       return;  // empty extension
+   }
 
    const uint16_t name_bytes = reader.get_uint16_t();
 
    size_t bytes_remaining = extension_size - 2;
 
-   if(name_bytes != bytes_remaining)
+   if(name_bytes != bytes_remaining) {
       throw Decoding_Error("Bad encoding of ALPN extension, bad length field");
+   }
 
    while(bytes_remaining) {
       const std::string p = reader.get_string(1, 0, 255);
 
-      if(bytes_remaining < p.size() + 1)
+      if(bytes_remaining < p.size() + 1) {
          throw Decoding_Error("Bad encoding of ALPN, length field too long");
+      }
 
-      if(p.empty())
+      if(p.empty()) {
          throw Decoding_Error("Empty ALPN protocol not allowed");
+      }
 
       bytes_remaining -= (p.size() + 1);
 
@@ -328,10 +338,12 @@ std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize(Connecti
    std::vector<uint8_t> buf(2);
 
    for(auto&& p : m_protocols) {
-      if(p.length() >= 256)
+      if(p.length() >= 256) {
          throw TLS_Exception(Alert::InternalError, "ALPN name too long");
-      if(!p.empty())
+      }
+      if(!p.empty()) {
          append_tls_length_value(buf, cast_char_ptr_to_uint8(p.data()), p.size(), 1);
+      }
    }
 
    buf[0] = get_byte<0>(static_cast<uint16_t>(buf.size() - 2));
@@ -347,8 +359,9 @@ const std::vector<Group_Params>& Supported_Groups::groups() const { return m_gro
 std::vector<Group_Params> Supported_Groups::ec_groups() const {
    std::vector<Group_Params> ec;
    for(auto g : m_groups) {
-      if(group_param_is_dh(g) == false)
+      if(group_param_is_dh(g) == false) {
          ec.push_back(g);
+      }
    }
    return ec;
 }
@@ -356,8 +369,9 @@ std::vector<Group_Params> Supported_Groups::ec_groups() const {
 std::vector<Group_Params> Supported_Groups::dh_groups() const {
    std::vector<Group_Params> dh;
    for(auto g : m_groups) {
-      if(group_param_is_dh(g) == true)
+      if(group_param_is_dh(g) == true) {
          dh.push_back(g);
+      }
    }
    return dh;
 }
@@ -383,19 +397,22 @@ std::vector<uint8_t> Supported_Groups::serialize(Connection_Side /*whoami*/) con
 Supported_Groups::Supported_Groups(TLS_Data_Reader& reader, uint16_t extension_size) {
    const uint16_t len = reader.get_uint16_t();
 
-   if(len + 2 != extension_size)
+   if(len + 2 != extension_size) {
       throw Decoding_Error("Inconsistent length field in supported groups list");
+   }
 
-   if(len % 2 == 1)
+   if(len % 2 == 1) {
       throw Decoding_Error("Supported groups list of strange size");
+   }
 
    const size_t elems = len / 2;
 
    for(size_t i = 0; i != elems; ++i) {
       const auto group = static_cast<Group_Params>(reader.get_uint16_t());
       // Note: RFC 8446 does not explicitly enforce that groups must be unique.
-      if(!value_exists(m_groups, group))
+      if(!value_exists(m_groups, group)) {
          m_groups.push_back(group);
+      }
    }
 }
 
@@ -411,8 +428,9 @@ std::vector<uint8_t> Supported_Point_Formats::serialize(Connection_Side /*whoami
 Supported_Point_Formats::Supported_Point_Formats(TLS_Data_Reader& reader, uint16_t extension_size) {
    uint8_t len = reader.get_byte();
 
-   if(len + 1 != extension_size)
+   if(len + 1 != extension_size) {
       throw Decoding_Error("Inconsistent length field in supported point formats list");
+   }
 
    bool includes_uncompressed = false;
    for(size_t i = 0; i != len; ++i) {
@@ -507,11 +525,13 @@ SRTP_Protection_Profiles::SRTP_Protection_Profiles(TLS_Data_Reader& reader, uint
       m_pp(reader.get_range<uint16_t>(2, 0, 65535)) {
    const std::vector<uint8_t> mki = reader.get_range<uint8_t>(1, 0, 255);
 
-   if(m_pp.size() * 2 + mki.size() + 3 != extension_size)
+   if(m_pp.size() * 2 + mki.size() + 3 != extension_size) {
       throw Decoding_Error("Bad encoding for SRTP protection extension");
+   }
 
-   if(!mki.empty())
+   if(!mki.empty()) {
       throw Decoding_Error("Unhandled non-empty MKI for SRTP protection extension");
+   }
 }
 
 std::vector<uint8_t> SRTP_Protection_Profiles::serialize(Connection_Side /*whoami*/) const {
@@ -532,8 +552,9 @@ std::vector<uint8_t> SRTP_Protection_Profiles::serialize(Connection_Side /*whoam
 }
 
 Extended_Master_Secret::Extended_Master_Secret(TLS_Data_Reader& /*unused*/, uint16_t extension_size) {
-   if(extension_size != 0)
+   if(extension_size != 0) {
       throw Decoding_Error("Invalid extended_master_secret extension");
+   }
 }
 
 std::vector<uint8_t> Extended_Master_Secret::serialize(Connection_Side /*whoami*/) const {
@@ -541,8 +562,9 @@ std::vector<uint8_t> Extended_Master_Secret::serialize(Connection_Side /*whoami*
 }
 
 Encrypt_then_MAC::Encrypt_then_MAC(TLS_Data_Reader& /*unused*/, uint16_t extension_size) {
-   if(extension_size != 0)
+   if(extension_size != 0) {
       throw Decoding_Error("Invalid encrypt_then_mac extension");
+   }
 }
 
 std::vector<uint8_t> Encrypt_then_MAC::serialize(Connection_Side /*whoami*/) const { return std::vector<uint8_t>(); }
@@ -572,41 +594,49 @@ std::vector<uint8_t> Supported_Versions::serialize(Connection_Side whoami) const
 Supported_Versions::Supported_Versions(Protocol_Version offer, const Policy& policy) {
    if(offer.is_datagram_protocol()) {
 #if defined(BOTAN_HAS_TLS_12)
-      if(offer >= Protocol_Version::DTLS_V12 && policy.allow_dtls12())
+      if(offer >= Protocol_Version::DTLS_V12 && policy.allow_dtls12()) {
          m_versions.push_back(Protocol_Version::DTLS_V12);
+      }
 #endif
    } else {
 #if defined(BOTAN_HAS_TLS_13)
-      if(offer >= Protocol_Version::TLS_V13 && policy.allow_tls13())
+      if(offer >= Protocol_Version::TLS_V13 && policy.allow_tls13()) {
          m_versions.push_back(Protocol_Version::TLS_V13);
+      }
 #endif
 #if defined(BOTAN_HAS_TLS_12)
-      if(offer >= Protocol_Version::TLS_V12 && policy.allow_tls12())
+      if(offer >= Protocol_Version::TLS_V12 && policy.allow_tls12()) {
          m_versions.push_back(Protocol_Version::TLS_V12);
+      }
 #endif
    }
 }
 
 Supported_Versions::Supported_Versions(TLS_Data_Reader& reader, uint16_t extension_size, Connection_Side from) {
    if(from == Connection_Side::Server) {
-      if(extension_size != 2)
+      if(extension_size != 2) {
          throw Decoding_Error("Server sent invalid supported_versions extension");
+      }
       m_versions.push_back(Protocol_Version(reader.get_uint16_t()));
    } else {
       auto versions = reader.get_range<uint16_t>(1, 1, 127);
 
-      for(auto v : versions)
+      for(auto v : versions) {
          m_versions.push_back(Protocol_Version(v));
+      }
 
-      if(extension_size != 1 + 2 * versions.size())
+      if(extension_size != 1 + 2 * versions.size()) {
          throw Decoding_Error("Client sent invalid supported_versions extension");
+      }
    }
 }
 
 bool Supported_Versions::supports(Protocol_Version version) const {
-   for(auto v : m_versions)
-      if(version == v)
+   for(auto v : m_versions) {
+      if(version == v) {
          return true;
+      }
+   }
    return false;
 }
 
@@ -735,8 +765,9 @@ Certificate_Authorities::Certificate_Authorities(TLS_Data_Reader& reader, uint16
 
    const uint16_t purported_size = reader.get_uint16_t();
 
-   if(reader.remaining_bytes() != purported_size)
+   if(reader.remaining_bytes() != purported_size) {
       throw Decoding_Error("Inconsistent length in certificate_authorities extension");
+   }
 
    while(reader.has_remaining()) {
       std::vector<uint8_t> name_bits = reader.get_tls_length_value(2);

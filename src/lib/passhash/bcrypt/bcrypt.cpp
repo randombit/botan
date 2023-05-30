@@ -76,11 +76,13 @@ uint8_t bcrypt_encoding_to_base64(uint8_t c) {
 std::string bcrypt_base64_encode(const uint8_t input[], size_t length) {
    std::string b64 = base64_encode(input, length);
 
-   while(!b64.empty() && b64[b64.size() - 1] == '=')
+   while(!b64.empty() && b64[b64.size() - 1] == '=') {
       b64 = b64.substr(0, b64.size() - 1);
+   }
 
-   for(size_t i = 0; i != b64.size(); ++i)
+   for(size_t i = 0; i != b64.size(); ++i) {
       b64[i] = static_cast<char>(base64_to_bcrypt_encoding(static_cast<uint8_t>(b64[i])));
+   }
 
    return b64;
 }
@@ -119,14 +121,16 @@ std::string make_bcrypt(std::string_view pass, const std::vector<uint8_t>& salt,
 
    std::vector<uint8_t> ctext(BCRYPT_MAGIC, BCRYPT_MAGIC + 8 * 3);
 
-   for(size_t i = 0; i != 64; ++i)
+   for(size_t i = 0; i != 64; ++i) {
       blowfish.encrypt_n(ctext.data(), ctext.data(), 3);
+   }
 
    std::string salt_b64 = bcrypt_base64_encode(salt.data(), salt.size());
 
    std::string work_factor_str = std::to_string(work_factor);
-   if(work_factor_str.length() == 1)
+   if(work_factor_str.length() == 1) {
       work_factor_str = "0" + work_factor_str;
+   }
 
    return fmt("$2{}${}${}{}",
               version,
@@ -143,8 +147,9 @@ std::string generate_bcrypt(std::string_view pass, RandomNumberGenerator& rng, u
    never had the truncation or signed char bugs in the first place.
    */
 
-   if(version != 'a' && version != 'b' && version != 'y')
+   if(version != 'a' && version != 'b' && version != 'y') {
       throw Invalid_Argument("Unknown bcrypt version '" + std::string(1, version) + "'");
+   }
 
    std::vector<uint8_t> salt;
    rng.random_vec(salt, 16);
@@ -165,8 +170,9 @@ bool check_bcrypt(std::string_view pass, std::string_view hash) {
    const uint16_t workfactor = to_uint16(hash.substr(4, 2));
 
    const std::vector<uint8_t> salt = bcrypt_base64_decode(hash.substr(7, 22));
-   if(salt.size() != 16)
+   if(salt.size() != 16) {
       return false;
+   }
 
    const std::string compare = make_bcrypt(pass, salt, workfactor, bcrypt_version);
 

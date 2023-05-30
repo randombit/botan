@@ -44,8 +44,9 @@ std::vector<std::string> impl_readdir(std::string_view dir_path) {
       if(dir) {
          while(struct dirent* dirent = ::readdir(dir.get())) {
             const std::string filename = dirent->d_name;
-            if(filename == "." || filename == "..")
+            if(filename == "." || filename == "..") {
                continue;
+            }
 
             std::ostringstream full_path_sstr;
             full_path_sstr << cur_path << "/" << filename;
@@ -53,13 +54,15 @@ std::vector<std::string> impl_readdir(std::string_view dir_path) {
 
             struct stat stat_buf;
 
-            if(::stat(full_path.c_str(), &stat_buf) == -1)
+            if(::stat(full_path.c_str(), &stat_buf) == -1) {
                continue;
+            }
 
-            if(S_ISDIR(stat_buf.st_mode))
+            if(S_ISDIR(stat_buf.st_mode)) {
                dir_list.push_back(full_path);
-            else if(S_ISREG(stat_buf.st_mode))
+            } else if(S_ISREG(stat_buf.st_mode)) {
                out.push_back(full_path);
+            }
          }
       }
    }

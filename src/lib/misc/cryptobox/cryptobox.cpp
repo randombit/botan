@@ -50,8 +50,9 @@ std::string encrypt(const uint8_t input[], size_t input_len, std::string_view pa
    store_be(CRYPTOBOX_VERSION_CODE, out_buf.data());
    rng.randomize(&out_buf[VERSION_CODE_LEN], PBKDF_SALT_LEN);
    // space left for MAC here
-   if(input_len > 0)
+   if(input_len > 0) {
       copy_mem(&out_buf[CRYPTOBOX_HEADER_LEN], input, input_len);
+   }
 
    // Generate the keys and IV
 
@@ -80,8 +81,9 @@ std::string encrypt(const uint8_t input[], size_t input_len, std::string_view pa
 
    std::unique_ptr<MessageAuthenticationCode> hmac = MessageAuthenticationCode::create_or_throw("HMAC(SHA-512)");
    hmac->set_key(mac_key, MAC_KEY_LEN);
-   if(input_len > 0)
+   if(input_len > 0) {
       hmac->update(&out_buf[CRYPTOBOX_HEADER_LEN], input_len);
+   }
 
    // Can't write directly because of MAC truncation
    secure_vector<uint8_t> mac = hmac->final();
@@ -94,13 +96,15 @@ secure_vector<uint8_t> decrypt_bin(const uint8_t input[], size_t input_len, std:
    DataSource_Memory input_src(input, input_len);
    secure_vector<uint8_t> ciphertext = PEM_Code::decode_check_label(input_src, "BOTAN CRYPTOBOX MESSAGE");
 
-   if(ciphertext.size() < CRYPTOBOX_HEADER_LEN)
+   if(ciphertext.size() < CRYPTOBOX_HEADER_LEN) {
       throw Decoding_Error("Invalid CryptoBox input");
+   }
 
    for(size_t i = 0; i != VERSION_CODE_LEN; ++i) {
       uint32_t version = load_be<uint32_t>(ciphertext.data(), 0);
-      if(version != CRYPTOBOX_VERSION_CODE)
+      if(version != CRYPTOBOX_VERSION_CODE) {
          throw Decoding_Error("Bad CryptoBox version");
+      }
    }
 
    const uint8_t* pbkdf_salt = &ciphertext[VERSION_CODE_LEN];
@@ -128,8 +132,9 @@ secure_vector<uint8_t> decrypt_bin(const uint8_t input[], size_t input_len, std:
    }
    secure_vector<uint8_t> computed_mac = hmac->final();
 
-   if(!constant_time_compare(computed_mac.data(), box_mac, MAC_OUTPUT_LEN))
+   if(!constant_time_compare(computed_mac.data(), box_mac, MAC_OUTPUT_LEN)) {
       throw Decoding_Error("CryptoBox integrity failure");
+   }
 
    auto ctr = Cipher_Mode::create_or_throw("Serpent/CTR-BE", Cipher_Dir::Decryption);
    ctr->set_key(cipher_key, CIPHER_KEY_LEN);

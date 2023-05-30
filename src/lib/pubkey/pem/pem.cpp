@@ -70,27 +70,32 @@ secure_vector<uint8_t> decode(DataSource& source, std::string& label) {
 
    while(position != PEM_HEADER1.length()) {
       uint8_t b;
-      if(!source.read_byte(b))
+      if(!source.read_byte(b)) {
          throw Decoding_Error("PEM: No PEM header found");
-      if(static_cast<char>(b) == PEM_HEADER1[position])
+      }
+      if(static_cast<char>(b) == PEM_HEADER1[position]) {
          ++position;
-      else if(position >= RANDOM_CHAR_LIMIT)
+      } else if(position >= RANDOM_CHAR_LIMIT) {
          throw Decoding_Error("PEM: Malformed PEM header");
-      else
+      } else {
          position = 0;
+      }
    }
    position = 0;
    while(position != PEM_HEADER2.length()) {
       uint8_t b;
-      if(!source.read_byte(b))
+      if(!source.read_byte(b)) {
          throw Decoding_Error("PEM: No PEM header found");
-      if(static_cast<char>(b) == PEM_HEADER2[position])
+      }
+      if(static_cast<char>(b) == PEM_HEADER2[position]) {
          ++position;
-      else if(position)
+      } else if(position) {
          throw Decoding_Error("PEM: Malformed PEM header");
+      }
 
-      if(position == 0)
+      if(position == 0) {
          label += static_cast<char>(b);
+      }
    }
 
    std::vector<char> b64;
@@ -99,15 +104,18 @@ secure_vector<uint8_t> decode(DataSource& source, std::string& label) {
    position = 0;
    while(position != PEM_TRAILER.length()) {
       uint8_t b;
-      if(!source.read_byte(b))
+      if(!source.read_byte(b)) {
          throw Decoding_Error("PEM: No PEM trailer found");
-      if(static_cast<char>(b) == PEM_TRAILER[position])
+      }
+      if(static_cast<char>(b) == PEM_TRAILER[position]) {
          ++position;
-      else if(position)
+      } else if(position) {
          throw Decoding_Error("PEM: Malformed PEM trailer");
+      }
 
-      if(position == 0)
+      if(position == 0) {
          b64.push_back(b);
+      }
    }
 
    return base64_decode(b64.data(), b64.size());
@@ -132,8 +140,9 @@ bool matches(DataSource& source, std::string_view extra, size_t search_range) {
    secure_vector<uint8_t> search_buf(search_range);
    const size_t got = source.peek(search_buf.data(), search_buf.size(), 0);
 
-   if(got < PEM_HEADER.length())
+   if(got < PEM_HEADER.length()) {
       return false;
+   }
 
    size_t index = 0;
 

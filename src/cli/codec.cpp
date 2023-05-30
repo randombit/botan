@@ -77,10 +77,11 @@ class Base58_Encode final : public Command {
       void go() override {
          auto data = slurp_file(get_arg("file"));
 
-         if(flag_set("check"))
+         if(flag_set("check")) {
             output() << Botan::base58_check_encode(data);
-         else
+         } else {
             output() << Botan::base58_encode(data);
+         }
       }
 };
 
@@ -99,10 +100,11 @@ class Base58_Decode final : public Command {
 
          std::vector<uint8_t> bin;
 
-         if(flag_set("check"))
+         if(flag_set("check")) {
             bin = Botan::base58_check_decode(data);
-         else
+         } else {
             bin = Botan::base58_decode(data);
+         }
 
          output().write(reinterpret_cast<const char*>(bin.data()), bin.size());
       }

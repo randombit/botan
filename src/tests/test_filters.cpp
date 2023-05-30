@@ -673,8 +673,9 @@ class Filter_Tests final : public Test {
 
    #if defined(BOTAN_HAS_PIPE_UNIXFD_IO) && defined(BOTAN_HAS_CODEC_FILTERS)
          int fd[2];
-         if(::pipe(fd) != 0)
+         if(::pipe(fd) != 0) {
             return result;  // pipe unavailable?
+         }
 
          Botan::Pipe hex_enc(new Botan::Hex_Encoder);
          Botan::Pipe hex_dec(new Botan::Hex_Decoder);

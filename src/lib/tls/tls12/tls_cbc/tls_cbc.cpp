@@ -45,10 +45,11 @@ TLS_CBC_HMAC_AEAD_Mode::TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir dir,
    m_mac = std::move(mac);
 
    auto null_padding = std::make_unique<Null_Padding>();
-   if(dir == Cipher_Dir::Encryption)
+   if(dir == Cipher_Dir::Encryption) {
       m_cbc = std::make_unique<CBC_Encryption>(std::move(cipher), std::move(null_padding));
-   else
+   } else {
       m_cbc = std::make_unique<CBC_Decryption>(std::move(cipher), std::move(null_padding));
+   }
 }
 
 void TLS_CBC_HMAC_AEAD_Mode::clear() {
@@ -74,8 +75,9 @@ size_t TLS_CBC_HMAC_AEAD_Mode::ideal_granularity() const {
 }
 
 bool TLS_CBC_HMAC_AEAD_Mode::valid_nonce_length(size_t nl) const {
-   if(m_cbc_state.empty())
+   if(m_cbc_state.empty()) {
       return nl == block_size();
+   }
    return nl == iv_size();
 }
 
@@ -90,8 +92,9 @@ bool TLS_CBC_HMAC_AEAD_Mode::has_keying_material() const {
 void TLS_CBC_HMAC_AEAD_Mode::key_schedule(const uint8_t key[], size_t keylen) {
    // Both keys are of fixed length specified by the ciphersuite
 
-   if(keylen != m_cipher_keylen + m_mac_keylen)
+   if(keylen != m_cipher_keylen + m_mac_keylen) {
       throw Invalid_Key_Length(name(), keylen);
+   }
 
    mac().set_key(&key[0], m_mac_keylen);
    cbc().set_key(&key[m_mac_keylen], m_cipher_keylen);
@@ -124,8 +127,9 @@ std::vector<uint8_t> TLS_CBC_HMAC_AEAD_Mode::assoc_data_with_len(uint16_t len) {
 
 void TLS_CBC_HMAC_AEAD_Mode::set_associated_data_n(size_t idx, std::span<const uint8_t> ad) {
    BOTAN_ARG_CHECK(idx == 0, "TLS 1.2 CBC/HMAC: cannot handle non-zero index in set_associated_data_n");
-   if(ad.size() != 13)
+   if(ad.size() != 13) {
       throw Invalid_Argument("Invalid TLS AEAD associated data length");
+   }
    m_ad.assign(ad.begin(), ad.end());
 }
 
@@ -225,8 +229,9 @@ void TLS_CBC_HMAC_AEAD_Encryption::finish_msg(secure_vector<uint8_t>& buffer, si
 * This approach is suggested in section 6.2.3.2 of RFC 5246.
 */
 uint16_t check_tls_cbc_padding(const uint8_t record[], size_t record_len) {
-   if(record_len == 0 || record_len > 0xFFFF)
+   if(record_len == 0 || record_len > 0xFFFF) {
       return 0;
+   }
 
    const uint16_t rec16 = static_cast<uint16_t>(record_len);
 
@@ -252,8 +257,9 @@ uint16_t check_tls_cbc_padding(const uint8_t record[], size_t record_len) {
 }
 
 void TLS_CBC_HMAC_AEAD_Decryption::cbc_decrypt_record(uint8_t record_contents[], size_t record_len) {
-   if(record_len == 0 || record_len % block_size() != 0)
+   if(record_len == 0 || record_len % block_size() != 0) {
       throw Decoding_Error("Received TLS CBC ciphertext with invalid length");
+   }
 
    cbc().start(cbc_state());
    cbc_state().assign(record_contents + record_len - block_size(), record_contents + record_len);
@@ -449,8 +455,9 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish_msg(secure_vector<uint8_t>& buffer, si
          * MAC state be reset for future packets. This extra timing channel may
          * be exploitable in a Lucky13 variant.
          */
-         if(is_datagram_protocol())
+         if(is_datagram_protocol()) {
             mac().final(mac_buf);
+         }
          throw TLS_Exception(Alert::BadRecordMac, "Message authentication failure");
       }
    }
