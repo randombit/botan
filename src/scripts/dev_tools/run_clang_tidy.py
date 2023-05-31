@@ -53,6 +53,7 @@ disabled_needs_work = [
     'cppcoreguidelines-slicing', # private->public key slicing
     'hicpp-explicit-conversions',
     'misc-const-correctness', # pretty noisy
+    'misc-redundant-expression', # BigInt seems to confuse clang-tidy
     'misc-misplaced-const',
     'misc-confusable-identifiers',
     'modernize-avoid-bind', # used a lot in pkcs11
