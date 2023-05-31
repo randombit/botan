@@ -149,10 +149,14 @@ def run_clang_tidy(compile_commands_file,
     stdout = run_command(cmdline)
 
     if options.verbose:
-        print(source_file)
+        print("Checked", source_file)
+        sys.stdout.flush()
     if stdout != "":
         print(stdout)
         sys.stdout.flush()
+        return False
+
+    return True
 
 def file_matches(file, args):
     if args is None or len(args) == 0:
@@ -221,14 +225,20 @@ def main(args = None):
              file,
              options)))
 
+    fail_cnt = 0
     for result in results:
-        result.get()
+        if not result.get():
+            fail_cnt += 1
 
     time_consumed = time.time() - start_time
 
     print("Checked %d files in %d seconds" % (files_checked, time_consumed))
 
-    return 0
+    if fail_cnt == 0:
+        return 0
+    else:
+        print("Found clang-tidy errors in %d files" % (fail_cnt))
+        return 1
 
 if __name__ == '__main__':
     sys.exit(main())
