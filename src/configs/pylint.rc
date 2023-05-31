@@ -31,14 +31,25 @@ confidence=
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
 
-# * consider-using-f-string and consider-using-with could be fixed now
-#   that we support only Python3, but neither seems that important
-# * missing-docstring isn't considered important because these are scripts
-#   not libraries
-# * fixme is marking TODOs in the future
-# * no-else-return is often awkward
-# * too-many-x is just like, your opinion man
-disable=missing-docstring,fixme,duplicate-code,no-else-return,consider-using-f-string,consider-using-with,broad-exception-raised,too-many-lines,too-many-locals,too-many-statements,too-many-branches,too-many-arguments,too-many-instance-attributes,broad-except,line-too-long,too-many-public-methods
+disable=
+  # too-many-* is just like, your opinion man
+  too-many-lines,
+  too-many-locals,
+  too-many-statements,
+  too-many-branches,
+  too-many-arguments,
+  too-many-instance-attributes,
+  too-many-public-methods,
+
+  missing-docstring,       # nice to have, but not necessary in every script
+  fixme,                   # is it better to omit the note that something is worth improving???
+  duplicate-code,          # this triggers incorrectly all the time
+  no-else-return,          # often leads to awkward code
+  broad-exception-raised,  # this is fine to do in simple scripts
+  broad-except,            # there should be a catch-all handler
+  line-too-long,           # sometimes needed eg for test data
+  consider-using-f-string, # could fix this if we wanted, now that we are Python3 only
+  consider-using-with,     # could fix this if we wanted, now that we are Python3 only
 
 [REPORTS]
 
