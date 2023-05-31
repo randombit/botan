@@ -70,10 +70,6 @@ extern "C" char** environ;
 
 #if defined(BOTAN_TARGET_OS_HAS_PRCTL)
    #include <sys/prctl.h>
-   #if !defined(PR_SET_VMA)
-      #define PR_SET_VMA 0x53564d41
-      #define PR_SET_VMA_ANON_NAME 0
-   #endif
 #endif
 
 namespace Botan {
@@ -609,7 +605,7 @@ void OS::free_locked_pages(const std::vector<void*>& pages) {
 }
 
 void OS::page_named(void* page, size_t size) {
-#if defined(BOTAN_TARGET_OS_HAS_PRCTL)
+#if defined(BOTAN_TARGET_OS_HAS_PRCTL) && defined(PR_SET_VMA) && defined(PR_SET_VMA_ANON_NAME)
    static constexpr char name[] = "Botan mlock pool";
    int r = prctl(PR_SET_VMA, PR_SET_VMA_ANON_NAME, reinterpret_cast<uintptr_t>(page), size, name);
    BOTAN_UNUSED(r);
