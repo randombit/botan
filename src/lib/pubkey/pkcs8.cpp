@@ -77,7 +77,9 @@ secure_vector<uint8_t> PKCS8_decode(DataSource& source,
       if(key_data.empty()) {
          throw PKCS8_Exception("No key data found");
       }
-   } catch(Decoding_Error& e) { throw Decoding_Error("PKCS #8 private key decoding", e); }
+   } catch(Decoding_Error& e) {
+      throw Decoding_Error("PKCS #8 private key decoding", e);
+   }
 
    try {
       if(is_encrypted) {
@@ -102,7 +104,9 @@ secure_vector<uint8_t> PKCS8_decode(DataSource& source,
          .decode(key, ASN1_Type::OctetString)
          .discard_remaining()
          .end_cons();
-   } catch(std::exception& e) { throw Decoding_Error("PKCS #8 private key decoding", e); }
+   } catch(std::exception& e) {
+      throw Decoding_Error("PKCS #8 private key decoding", e);
+   }
    return key;
 }
 

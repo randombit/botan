@@ -18,7 +18,9 @@ void fuzz(const uint8_t in[], size_t len) {
       Botan::BER_Decoder ber(in, len);
       dn1.decode_from(ber);
       dn2.decode_from(ber);
-   } catch(...) { return; }
+   } catch(...) {
+      return;
+   }
 
    const bool eq = dn1 == dn2;
    const bool lt1 = dn1 < dn2;

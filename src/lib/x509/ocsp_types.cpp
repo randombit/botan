@@ -43,7 +43,9 @@ bool CertID::is_id_for(const X509_Certificate& issuer, const X509_Certificate& s
       if(m_issuer_key_hash != unlock(hash->process(issuer.subject_public_key_bitstring()))) {
          return false;
       }
-   } catch(...) { return false; }
+   } catch(...) {
+      return false;
+   }
 
    return true;
 }

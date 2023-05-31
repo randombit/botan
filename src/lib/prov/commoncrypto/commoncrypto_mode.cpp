@@ -204,6 +204,8 @@ std::unique_ptr<Cipher_Mode> make_commoncrypto_cipher_mode(std::string_view name
    try {
       CommonCryptor_Opts opts = commoncrypto_opts_from_algo(name);
       return std::make_unique<CommonCrypto_Cipher_Mode>(name, direction, opts);
-   } catch(CommonCrypto_Error& e) { return nullptr; }
+   } catch(CommonCrypto_Error& e) {
+      return nullptr;
+   }
 }
 }  // namespace Botan

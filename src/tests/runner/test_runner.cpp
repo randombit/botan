@@ -169,7 +169,9 @@ std::vector<Test::Result> run_a_test(const std::string& test_name) {
       } else {
          results.push_back(Test::Result::Note(test_name, "Test missing or unavailable"));
       }
-   } catch(std::exception& e) { results.push_back(Test::Result::Failure(test_name, e.what())); } catch(...) {
+   } catch(std::exception& e) {
+      results.push_back(Test::Result::Failure(test_name, e.what()));
+   } catch(...) {
       results.push_back(Test::Result::Failure(test_name, "unknown exception"));
    }
 

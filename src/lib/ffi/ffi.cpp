@@ -122,7 +122,9 @@ int ffi_guard_thunk(const char* func_name, const std::function<int()>& thunk) {
       return ffi_error_exception_thrown(func_name, e.what(), e.error_code());
    } catch(Botan::Exception& e) {
       return ffi_error_exception_thrown(func_name, e.what(), ffi_map_error_type(e.error_type()));
-   } catch(std::exception& e) { return ffi_error_exception_thrown(func_name, e.what()); } catch(...) {
+   } catch(std::exception& e) {
+      return ffi_error_exception_thrown(func_name, e.what());
+   } catch(...) {
       return ffi_error_exception_thrown(func_name, "unknown exception");
    }
 

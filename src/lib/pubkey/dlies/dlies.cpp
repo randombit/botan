@@ -175,7 +175,9 @@ secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
             }
             m_cipher->start(m_iv.bits_of());
             m_cipher->finish(ciphertext);
-         } catch(...) { valid_mask = 0; }
+         } catch(...) {
+            valid_mask = 0;
+         }
 
       } else {
          return secure_vector<uint8_t>();

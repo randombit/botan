@@ -827,7 +827,9 @@ uint64_t VarMap::get_req_u64(const std::string& key) const {
    }
    try {
       return std::stoull(i->second);
-   } catch(std::exception&) { throw Test_Error("Invalid u64 value '" + i->second + "'"); }
+   } catch(std::exception&) {
+      throw Test_Error("Invalid u64 value '" + i->second + "'");
+   }
 }
 
 size_t VarMap::get_opt_sz(const std::string& key, const size_t def_value) const {
@@ -845,7 +847,9 @@ uint64_t VarMap::get_opt_u64(const std::string& key, const uint64_t def_value) c
    }
    try {
       return std::stoull(i->second);
-   } catch(std::exception&) { throw Test_Error("Invalid u64 value '" + i->second + "'"); }
+   } catch(std::exception&) {
+      throw Test_Error("Invalid u64 value '" + i->second + "'");
+   }
 }
 
 std::vector<uint8_t> VarMap::get_opt_bin(const std::string& key) const {
@@ -856,7 +860,9 @@ std::vector<uint8_t> VarMap::get_opt_bin(const std::string& key) const {
 
    try {
       return Botan::hex_decode(i->second);
-   } catch(std::exception&) { throw Test_Error("Test invalid hex input '" + i->second + "'" + +" for key " + key); }
+   } catch(std::exception&) {
+      throw Test_Error("Test invalid hex input '" + i->second + "'" + +" for key " + key);
+   }
 }
 
 std::string VarMap::get_req_str(const std::string& key) const {
@@ -876,7 +882,9 @@ Botan::BigInt VarMap::get_req_bn(const std::string& key) const {
 
    try {
       return Botan::BigInt(i->second);
-   } catch(std::exception&) { throw Test_Error("Test invalid bigint input '" + i->second + "' for key " + key); }
+   } catch(std::exception&) {
+      throw Test_Error("Test invalid bigint input '" + i->second + "' for key " + key);
+   }
 }
 
 Botan::BigInt VarMap::get_opt_bn(const std::string& key, const Botan::BigInt& def_value) const
@@ -889,7 +897,9 @@ Botan::BigInt VarMap::get_opt_bn(const std::string& key, const Botan::BigInt& de
 
    try {
       return Botan::BigInt(i->second);
-   } catch(std::exception&) { throw Test_Error("Test invalid bigint input '" + i->second + "' for key " + key); }
+   } catch(std::exception&) {
+      throw Test_Error("Test invalid bigint input '" + i->second + "' for key " + key);
+   }
 }
 #endif
 

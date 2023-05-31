@@ -308,7 +308,9 @@ class AEAD_Tests final : public Text_Based_Test {
                result.test_eq("decrypt process", buf, expected);
             }
 
-         } catch(Botan::Exception& e) { result.test_failure("Failure processing AEAD ciphertext", e.what()); }
+         } catch(Botan::Exception& e) {
+            result.test_failure("Failure processing AEAD ciphertext", e.what());
+         }
 
          // test decryption with modified ciphertext
          const std::vector<uint8_t> mutated_input = mutate_vec(input, true);

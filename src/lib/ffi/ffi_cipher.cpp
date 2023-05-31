@@ -155,7 +155,9 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
 
          try {
             cipher.finish(mbuf);
-         } catch(Invalid_Authentication_Tag&) { return BOTAN_FFI_ERROR_BAD_MAC; }
+         } catch(Invalid_Authentication_Tag&) {
+            return BOTAN_FFI_ERROR_BAD_MAC;
+         }
 
          *output_written = mbuf.size();
 

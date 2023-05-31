@@ -72,7 +72,9 @@ std::optional<SymmetricKey> Session_Manager_Stateless::get_ticket_key() noexcept
          return std::nullopt;
       }
       return key;
-   } catch(...) { return std::nullopt; }
+   } catch(...) {
+      return std::nullopt;
+   }
 }
 
 }  // namespace Botan::TLS

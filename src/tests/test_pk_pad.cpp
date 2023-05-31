@@ -103,7 +103,9 @@ class EMSA_unit_tests final : public Test {
                name_tests.test_eq("EMSA_name_test for " + pad, emsa_1->name(), emsa_2->name());
             } catch(Botan::Lookup_Error&) {
                name_tests.test_note("Skipping test due to missing hash");
-            } catch(const std::exception& e) { name_tests.test_failure("EMSA_name_test for " + pad + ": " + e.what()); }
+            } catch(const std::exception& e) {
+               name_tests.test_failure("EMSA_name_test for " + pad + ": " + e.what());
+            }
          }
 
          for(const auto& pad : pads_need_hash) {
@@ -126,7 +128,9 @@ class EMSA_unit_tests final : public Test {
                name_tests.test_eq("EMSA_name_test for " + pad, emsa_1->name(), emsa_2->name());
             } catch(Botan::Lookup_Error&) {
                name_tests.test_note("Skipping test due to missing hash");
-            } catch(const std::exception& e) { name_tests.test_failure("EMSA_name_test for " + pad + ": " + e.what()); }
+            } catch(const std::exception& e) {
+               name_tests.test_failure("EMSA_name_test for " + pad + ": " + e.what());
+            }
          }
 
          return {name_tests};

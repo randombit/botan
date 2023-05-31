@@ -66,7 +66,9 @@ std::vector<uint8_t> EMSA_X931::encoding_of(const std::vector<uint8_t>& msg,
 bool EMSA_X931::verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>& raw, size_t key_bits) {
    try {
       return (coded == emsa2_encoding(raw, key_bits, m_empty_hash, m_hash_id));
-   } catch(...) { return false; }
+   } catch(...) {
+      return false;
+   }
 }
 
 /*

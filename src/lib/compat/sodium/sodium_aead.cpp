@@ -68,7 +68,9 @@ int sodium_aead_chacha20poly1305_decrypt(uint8_t ptext[],
 
    try {
       chacha20poly1305->finish(buf);
-   } catch(Invalid_Authentication_Tag&) { return -1; }
+   } catch(Invalid_Authentication_Tag&) {
+      return -1;
+   }
 
    *ptext_len = ctext_len - 16;
 
@@ -126,7 +128,9 @@ int sodium_aead_chacha20poly1305_decrypt_detached(uint8_t ptext[],
 
    try {
       chacha20poly1305->finish(buf);
-   } catch(Invalid_Authentication_Tag&) { return -1; }
+   } catch(Invalid_Authentication_Tag&) {
+      return -1;
+   }
 
    copy_mem(ptext, buf.data(), buf.size());
    return 0;

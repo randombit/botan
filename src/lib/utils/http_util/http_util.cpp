@@ -37,7 +37,9 @@ std::string http_transact(std::string_view hostname,
       if(!socket) {
          throw Not_Implemented("No socket support enabled in build");
       }
-   } catch(std::exception& e) { throw HTTP_Error(fmt("HTTP connection to {} failed: {}", hostname, e.what())); }
+   } catch(std::exception& e) {
+      throw HTTP_Error(fmt("HTTP connection to {} failed: {}", hostname, e.what()));
+   }
 
    // Blocks until entire message has been written
    socket->write(cast_char_ptr_to_uint8(message.data()), message.size());

@@ -691,7 +691,9 @@ class TLS_Unit_Tests final : public Test {
                test_resumption.go();
                results.push_back(test_resumption.results());
             }
-         } catch(std::exception& e) { results.push_back(Test::Result::Failure(test_descr, e.what())); }
+         } catch(std::exception& e) {
+            results.push_back(Test::Result::Failure(test_descr, e.what()));
+         }
       }
 
       static void test_all_versions(const std::string& test_descr,

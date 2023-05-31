@@ -367,7 +367,9 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
          secure_vector<uint8_t> decrypted_data(encrypted_data.begin(), encrypted_data.end());
          m_cipher->finish(decrypted_data);
          return decrypted_data;
-      } catch(...) { valid_mask = 0; }
+      } catch(...) {
+         valid_mask = 0;
+      }
    }
    return secure_vector<uint8_t>();
 }

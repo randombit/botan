@@ -19,7 +19,9 @@ namespace {
 void pbkdf2_set_key(MessageAuthenticationCode& prf, const char* password, size_t password_len) {
    try {
       prf.set_key(cast_char_ptr_to_uint8(password), password_len);
-   } catch(Invalid_Key_Length&) { throw Invalid_Argument("PBKDF2 cannot accept passphrase of the given size"); }
+   } catch(Invalid_Key_Length&) {
+      throw Invalid_Argument("PBKDF2 cannot accept passphrase of the given size");
+   }
 }
 
 size_t tune_pbkdf2(MessageAuthenticationCode& prf,

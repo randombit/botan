@@ -70,11 +70,15 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
 
             try {
                test_mode(result, algo, provider_ask, "encryption", *enc, key, nonce, input, expected);
-            } catch(Botan::Exception& e) { result.test_failure("Encryption tests failed", e.what()); }
+            } catch(Botan::Exception& e) {
+               result.test_failure("Encryption tests failed", e.what());
+            }
 
             try {
                test_mode(result, algo, provider_ask, "decryption", *dec, key, nonce, expected, input);
-            } catch(Botan::Exception& e) { result.test_failure("Decryption tests failed", e.what()); }
+            } catch(Botan::Exception& e) {
+               result.test_failure("Decryption tests failed", e.what());
+            }
          }
 
          return result;

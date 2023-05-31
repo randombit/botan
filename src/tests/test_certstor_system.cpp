@@ -33,7 +33,9 @@ Test::Result find_certificate_by_pubkey_sha1(Botan::Certificate_Store& certstore
          result.test_is_eq("exactly one CN", cns.size(), size_t(1));
          result.test_eq("CN", cns.front(), get_subject_cn());
       }
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    result.test_throws("on invalid SHA1 hash data", [&] { certstore.find_cert_by_pubkey_sha1({}); });
 
@@ -58,7 +60,9 @@ Test::Result find_certificate_by_pubkey_sha1_with_unmatching_key_id(Botan::Certi
          result.test_is_eq("exactly one CN", cns.size(), size_t(1));
          result.test_eq("CN", cns.front(), "SecureTrust CA");
       }
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    return result;
 }
@@ -78,7 +82,9 @@ Test::Result find_cert_by_subject_dn(Botan::Certificate_Store& certstore) {
          result.test_is_eq("exactly one CN", cns.size(), size_t(1));
          result.test_eq("CN", cns.front(), get_subject_cn());
       }
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    return result;
 }
@@ -98,7 +104,9 @@ Test::Result find_cert_by_utf8_subject_dn(Botan::Certificate_Store& certstore) {
          result.test_is_eq("exactly one CN", cns.size(), size_t(1));
          result.test_eq("CN", cns.front(), "D-TRUST Root Class 3 CA 2 EV 2009");
       }
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    return result;
 }
@@ -118,7 +126,9 @@ Test::Result find_cert_by_subject_dn_and_key_id(Botan::Certificate_Store& certst
          result.test_is_eq("exactly one CN", cns.size(), size_t(1));
          result.test_eq("CN", cns.front(), get_subject_cn());
       }
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    return result;
 }
@@ -139,7 +149,9 @@ Test::Result find_certs_by_subject_dn_and_key_id(Botan::Certificate_Store& certs
          result.test_is_eq("exactly one CN", cns.size(), size_t(1));
          result.test_eq("CN", cns.front(), get_subject_cn());
       }
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    return result;
 }
@@ -167,7 +179,9 @@ Test::Result find_all_certs_by_subject_dn(Botan::Certificate_Store& certstore) {
          result.test_gte("at least one CN", cns.size(), size_t(1));
          result.test_eq("CN", cns.front(), get_subject_cn());
       }
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    return result;
 }
@@ -189,7 +203,9 @@ Test::Result find_all_subjects(Botan::Certificate_Store& certstore) {
             result.confirm("expected certificate", *needle == dn);
          }
       }
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    return result;
 }
@@ -210,7 +226,9 @@ Test::Result no_certificate_matches(Botan::Certificate_Store& certstore) {
       result.confirm("find_all_certs did not find the dummy", certs.empty());
       result.confirm("find_cert did not find the dummy", !cert);
       result.confirm("find_cert_by_pubkey_sha1 did not find the dummy", !pubk_cert);
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    return result;
 }
@@ -234,7 +252,9 @@ Test::Result certificate_matching_with_dn_normalization(Botan::Certificate_Store
             "it is the correct cert", certs.front().subject_dn().get_first_attribute("CN"), get_subject_cn());
          result.test_eq("it is the correct cert", cert->subject_dn().get_first_attribute("CN"), get_subject_cn());
       }
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    return result;
 }

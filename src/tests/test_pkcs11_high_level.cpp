@@ -75,7 +75,9 @@ std::vector<Test::Result> run_pkcs11_tests(const std::string& name,
          if(e.get_return_value() == Botan::PKCS11::ReturnValue::PinIncorrect) {
             break;  // Do not continue to not potentially lock the token
          }
-      } catch(std::exception& e) { results.push_back(Test::Result::Failure(name + " test " + fns[i].first, e.what())); }
+      } catch(std::exception& e) {
+         results.push_back(Test::Result::Failure(name + " test " + fns[i].first, e.what()));
+      }
    }
 
    return results;

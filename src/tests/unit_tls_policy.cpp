@@ -59,7 +59,9 @@ class TLS_Policy_Unit_Tests final : public Test {
          try {
             policy.check_peer_key_acceptable(*rsa_key_1024);
             result.test_failure("Incorrectly accepting 1024 bit RSA keys");
-         } catch(Botan::TLS::TLS_Exception&) { result.test_success("Correctly rejecting 1024 bit RSA keys"); }
+         } catch(Botan::TLS::TLS_Exception&) {
+            result.test_success("Correctly rejecting 1024 bit RSA keys");
+         }
 
          auto rsa_key_2048 = std::make_unique<Botan::RSA_PrivateKey>(Test::rng(), 2048);
          policy.check_peer_key_acceptable(*rsa_key_2048);
@@ -78,7 +80,9 @@ class TLS_Policy_Unit_Tests final : public Test {
          try {
             policy.check_peer_key_acceptable(*ecdh_192);
             result.test_failure("Incorrectly accepting 192 bit EC keys");
-         } catch(Botan::TLS::TLS_Exception&) { result.test_success("Correctly rejecting 192 bit EC keys"); }
+         } catch(Botan::TLS::TLS_Exception&) {
+            result.test_success("Correctly rejecting 192 bit EC keys");
+         }
 
          Botan::EC_Group group_256("secp256r1");
          auto ecdh_256 = std::make_unique<Botan::ECDH_PrivateKey>(Test::rng(), group_256);
@@ -98,7 +102,9 @@ class TLS_Policy_Unit_Tests final : public Test {
          try {
             policy.check_peer_key_acceptable(*ecdsa_192);
             result.test_failure("Incorrectly accepting 192 bit EC keys");
-         } catch(Botan::TLS::TLS_Exception&) { result.test_success("Correctly rejecting 192 bit EC keys"); }
+         } catch(Botan::TLS::TLS_Exception&) {
+            result.test_success("Correctly rejecting 192 bit EC keys");
+         }
 
          Botan::EC_Group group_256("secp256r1");
          auto ecdsa_256 = std::make_unique<Botan::ECDSA_PrivateKey>(Test::rng(), group_256);
@@ -121,7 +127,9 @@ class TLS_Policy_Unit_Tests final : public Test {
          try {
             policy.check_peer_key_acceptable(*dhkey);
             result.test_failure("Incorrectly accepting short bit DH keys");
-         } catch(Botan::TLS::TLS_Exception&) { result.test_success("Correctly rejecting short bit DH keys"); }
+         } catch(Botan::TLS::TLS_Exception&) {
+            result.test_success("Correctly rejecting short bit DH keys");
+         }
    #endif
          return result;
       }

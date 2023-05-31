@@ -158,13 +158,17 @@ std::unique_ptr<Botan::Private_Key> load_private_key(const std::string& key_file
    try {
       Botan::DataSource_Stream input(key_filename);
       return Botan::PKCS8::load_key(input, passphrase);
-   } catch(Botan::Exception& e) { err_string = e.what(); }
+   } catch(Botan::Exception& e) {
+      err_string = e.what();
+   }
 
    if(passphrase.empty()) {
       try {
          Botan::DataSource_Stream input(key_filename);
          return Botan::PKCS8::load_key(input);
-      } catch(Botan::Exception& e) { err_string = e.what(); }
+      } catch(Botan::Exception& e) {
+         err_string = e.what();
+      }
    }
 
    throw CLI_Error("Loading private key failed (" + err_string + ")");

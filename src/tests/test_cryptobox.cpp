@@ -52,7 +52,9 @@ class Cryptobox_KAT final : public Text_Based_Test {
             result.test_failure("Decrypted corrupted cryptobox message", corrupted);
          } catch(Botan::Decoding_Error&) {
             result.test_success("Rejected corrupted cryptobox message");
-         } catch(Botan::Invalid_Argument&) { result.test_success("Rejected corrupted cryptobox message"); }
+         } catch(Botan::Invalid_Argument&) {
+            result.test_success("Rejected corrupted cryptobox message");
+         }
 
          BOTAN_DIAGNOSTIC_POP
 

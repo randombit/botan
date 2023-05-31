@@ -219,7 +219,9 @@ std::vector<Group_Params> Text_Policy::read_group_list(std::string_view group_st
             }
 
             group_id = static_cast<Group_Params>(id);
-         } catch(...) { continue; }
+         } catch(...) {
+            continue;
+         }
       }
 
       if(group_id != Group_Params::NONE) {

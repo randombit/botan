@@ -43,7 +43,9 @@ class Invalid_Hash_Name_Tests final : public Test {
             const std::string algo_not_found_msg = "Unavailable Hash " + name;
             const std::string msg = e.what();
             result.test_eq("expected error message", msg, algo_not_found_msg);
-         } catch(std::exception& e) { result.test_failure("some unknown exception", e.what()); } catch(...) {
+         } catch(std::exception& e) {
+            result.test_failure("some unknown exception", e.what());
+         } catch(...) {
             result.test_failure("some unknown exception");
          }
       }

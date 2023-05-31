@@ -77,7 +77,9 @@ int botan_srp6_server_session_step1(botan_srp6_server_session_t srp6,
          auto v_bn = Botan::BigInt::decode(verifier, verifier_len);
          auto b_pub_bn = s.step1(v_bn, group_id, hash_id, rng);
          return write_vec_output(b_pub, b_pub_len, Botan::BigInt::encode(b_pub_bn));
-      } catch(Botan::Decoding_Error&) { return BOTAN_FFI_ERROR_BAD_PARAMETER; } catch(Botan::Lookup_Error&) {
+      } catch(Botan::Decoding_Error&) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      } catch(Botan::Lookup_Error&) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
    });
@@ -98,7 +100,9 @@ int botan_srp6_server_session_step2(
          Botan::BigInt a_bn = Botan::BigInt::decode(a, a_len);
          auto key_sk = s.step2(a_bn);
          return write_vec_output(key, key_len, key_sk.bits_of());
-      } catch(Botan::Decoding_Error&) { return BOTAN_FFI_ERROR_BAD_PARAMETER; }
+      } catch(Botan::Decoding_Error&) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
    });
 #else
    BOTAN_UNUSED(srp6, a, a_len, key, key_len);
@@ -123,7 +127,9 @@ int botan_srp6_generate_verifier(const char* username,
          std::vector<uint8_t> salt_vec(salt, salt + salt_len);
          auto verifier_bn = Botan::srp6_generate_verifier(username, password, salt_vec, group_id, hash_id);
          return write_vec_output(verifier, verifier_len, Botan::BigInt::encode(verifier_bn));
-      } catch(Botan::Lookup_Error&) { return BOTAN_FFI_ERROR_BAD_PARAMETER; }
+      } catch(Botan::Lookup_Error&) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
    });
 #else
    BOTAN_UNUSED(username, password, group_id, hash_id);
@@ -164,7 +170,9 @@ int botan_srp6_client_agree(const char* identity,
             return ret_k;
          }
          return BOTAN_FFI_SUCCESS;
-      } catch(Botan::Lookup_Error&) { return BOTAN_FFI_ERROR_BAD_PARAMETER; }
+      } catch(Botan::Lookup_Error&) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
    });
 #else
    BOTAN_UNUSED(identity, password, group_id, hash_id, rng_obj);

@@ -103,7 +103,9 @@ Test::Result test_add_and_lookup() {
    try {
       Botan::OID::register_oid(oid2, name2);
       result.test_failure("Registration of second name to the same OID was accepted");
-   } catch(Botan::Invalid_State&) { result.test_success("Registration of second name to the same OID fails"); }
+   } catch(Botan::Invalid_State&) {
+      result.test_success("Registration of second name to the same OID fails");
+   }
 
    return result;
 }

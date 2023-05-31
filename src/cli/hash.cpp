@@ -51,7 +51,9 @@ class Hash final : public Command {
                } else {
                   output() << digest << " " << fsname << "\n";
                }
-            } catch(CLI_IO_Error& e) { error_output() << e.what() << "\n"; }
+            } catch(CLI_IO_Error& e) {
+               error_output() << e.what() << "\n";
+            }
          }
       }
 };

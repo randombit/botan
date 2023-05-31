@@ -484,7 +484,9 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
 
             callbacks().tls_verify_cert_chain(
                server_certs, {}, trusted_CAs, Usage_Type::TLS_SERVER_AUTH, m_info.hostname(), policy());
-         } catch(TLS_Exception&) { throw; } catch(std::exception& e) {
+         } catch(TLS_Exception&) {
+            throw;
+         } catch(std::exception& e) {
             throw TLS_Exception(Alert::InternalError, e.what());
          }
       }
@@ -536,7 +538,9 @@ void Client_Impl_12::process_handshake_msg(const Handshake_State* active_state,
                                               Usage_Type::TLS_SERVER_AUTH,
                                               m_info.hostname(),
                                               policy());
-         } catch(TLS_Exception&) { throw; } catch(std::exception& e) {
+         } catch(TLS_Exception&) {
+            throw;
+         } catch(std::exception& e) {
             throw TLS_Exception(Alert::InternalError, e.what());
          }
       }

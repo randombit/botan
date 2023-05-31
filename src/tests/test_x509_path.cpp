@@ -249,7 +249,9 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run() {
             end_user, restrictions, store, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
          result.test_eq(test_name + " path validation result", validation_result.result_string(), expected_result);
-      } catch(std::exception& e) { result.test_failure(test_name, e.what()); }
+      } catch(std::exception& e) {
+         result.test_failure(test_name, e.what());
+      }
 
       result.end_timer();
       results.push_back(result);

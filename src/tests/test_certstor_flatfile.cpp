@@ -33,7 +33,9 @@ Test::Result open_certificate_store() {
       Botan::Flatfile_Certificate_Store unused(get_valid_ca_bundle_path());
       result.end_timer();
       result.test_gt("found some certificates", unused.all_subjects().size(), 0);
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    result.test_success();
 
@@ -54,7 +56,9 @@ Test::Result find_certificate_by_pubkey_sha1() {
          result.test_int_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), get_subject_cn());
       }
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    result.test_throws("on invalid SHA1 hash data", [&] {
       Botan::Flatfile_Certificate_Store certstore(get_valid_ca_bundle_path());
@@ -80,7 +84,9 @@ Test::Result find_cert_by_subject_dn() {
          result.test_int_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), get_subject_cn());
       }
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    return result;
 }
@@ -102,7 +108,9 @@ Test::Result find_cert_by_utf8_subject_dn() {
          result.test_is_eq("exactly one CN", cns.size(), size_t(1));
          result.test_eq("CN", cns.front(), "D-TRUST Root Class 3 CA 2 EV 2009");
       }
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    return result;
 }
@@ -123,7 +131,9 @@ Test::Result find_cert_by_subject_dn_and_key_id() {
          result.test_int_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), get_subject_cn());
       }
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    return result;
 }
@@ -145,7 +155,9 @@ Test::Result find_certs_by_subject_dn_and_key_id() {
          result.test_int_eq("exactly one CN", cns.size(), 1);
          result.test_eq("CN", cns.front(), get_subject_cn());
       }
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    return result;
 }
@@ -168,7 +180,9 @@ Test::Result find_all_subjects() {
             result.confirm("expected certificate", *needle == dn);
          }
       }
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    return result;
 }
@@ -191,7 +205,9 @@ Test::Result no_certificate_matches() {
       result.confirm("find_all_certs did not find the dummy", certs.empty());
       result.confirm("find_cert did not find the dummy", !cert);
       result.confirm("find_cert_by_pubkey_sha1 did not find the dummy", !pubk_cert);
-   } catch(std::exception& e) { result.test_failure(e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure(e.what());
+   }
 
    return result;
 }
@@ -203,7 +219,9 @@ Test::Result certstore_contains_user_certificate() {
       result.start_timer();
       Botan::Flatfile_Certificate_Store certstore(get_ca_bundle_containing_user_cert());
       result.test_failure("CA bundle with non-CA certs should be rejected");
-   } catch(Botan::Invalid_Argument&) { result.test_success(); }
+   } catch(Botan::Invalid_Argument&) {
+      result.test_success();
+   }
 
    return result;
 }

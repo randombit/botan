@@ -188,7 +188,9 @@ class ECDSA_Key_Recovery_Tests final : public Text_Based_Test {
             auto sig = Botan::BigInt::encode_fixed_length_int_pair(R, S, group.get_order_bytes());
 
             result.confirm("Signature verifies", verifier.verify_message(msg, sig));
-         } catch(Botan::Exception& e) { result.test_failure("Failed to recover ECDSA public key", e.what()); }
+         } catch(Botan::Exception& e) {
+            result.test_failure("Failed to recover ECDSA public key", e.what());
+         }
 
          return result;
       }

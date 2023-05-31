@@ -86,7 +86,9 @@ class Filter_Tests final : public Test {
             Botan::SecureQueue queue_b;
             queue_a = queue_b;
             result.test_eq("bytes_read is set correctly", queue_a.get_bytes_read(), 0);
-         } catch(std::exception& e) { result.test_failure("SecureQueue", e.what()); }
+         } catch(std::exception& e) {
+            result.test_failure("SecureQueue", e.what());
+         }
 
          return result;
       }

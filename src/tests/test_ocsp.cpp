@@ -44,7 +44,9 @@ class OCSP_Tests final : public Test {
                Botan::OCSP::Response resp(Test::read_binary_data_file(ocsp_input_path));
                result.confirm("parsing was successful", resp.status() == Botan::OCSP::Response_Status_Code::Successful);
                result.test_success("Parsed input " + ocsp_input_path);
-            } catch(Botan::Exception& e) { result.test_failure("Parsing failed", e.what()); }
+            } catch(Botan::Exception& e) {
+               result.test_failure("Parsing failed", e.what());
+            }
          }
 
          Botan::OCSP::Response resp(
@@ -72,7 +74,9 @@ class OCSP_Tests final : public Test {
             Botan::OCSP::Response resp2(Test::read_binary_data_file("x509/ocsp/resp2.der"));
             const auto& certs2 = resp2.certificates();
             result.test_eq("Expect no certificates", certs2.size(), 0);
-         } catch(Botan::Exception& e) { result.test_failure("Parsing failed", e.what()); }
+         } catch(Botan::Exception& e) {
+            result.test_failure("Parsing failed", e.what());
+         }
 
          return result;
       }
@@ -86,7 +90,9 @@ class OCSP_Tests final : public Test {
          try {
             const Botan::OCSP::Request bogus(end_entity, issuer);
             result.test_failure("Bad arguments (swapped end entity, issuer) accepted");
-         } catch(Botan::Invalid_Argument&) { result.test_success("Bad arguments rejected"); }
+         } catch(Botan::Invalid_Argument&) {
+            result.test_success("Bad arguments rejected");
+         }
 
          const std::string expected_request =
             "ME4wTKADAgEAMEUwQzBBMAkGBSsOAwIaBQAEFPLgavmFih2NcJtJGSN6qbUaKH5kBBRK3QYWG7z2aLV29YG2u2IaulqBLwIIQkg+DF+RYMY=";

@@ -108,7 +108,9 @@ class Compression_Tests final : public Test {
                result.end_timer();
 
                results.emplace_back(result);
-            } catch(std::exception& e) { results.emplace_back(Test::Result::Failure("testing " + algo, e.what())); }
+            } catch(std::exception& e) {
+               results.emplace_back(Test::Result::Failure("testing " + algo, e.what()));
+            }
          }
 
          return results;
@@ -150,7 +152,9 @@ class Compression_Tests final : public Test {
                decompressed += final_outputs;
 
                result.test_eq("compression round tripped", msg, decompressed);
-            } catch(Botan::Exception& e) { result.test_failure(e.what()); }
+            } catch(Botan::Exception& e) {
+               result.test_failure(e.what());
+            }
          }
 
          return compressed.size();
@@ -187,7 +191,9 @@ class CompressionCreate_Tests final : public Test {
                result.test_ne("Not the same name after create_or_throw", c2->name(), d2->name());
 
                results.emplace_back(result);
-            } catch(std::exception& e) { results.emplace_back(Test::Result::Failure("testing " + algo, e.what())); }
+            } catch(std::exception& e) {
+               results.emplace_back(Test::Result::Failure("testing " + algo, e.what()));
+            }
          }
 
          {

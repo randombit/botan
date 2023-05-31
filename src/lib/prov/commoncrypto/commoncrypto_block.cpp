@@ -134,6 +134,8 @@ std::unique_ptr<BlockCipher> make_commoncrypto_block_cipher(std::string_view nam
    try {
       CommonCryptor_Opts opts = commoncrypto_opts_from_algo_name(name);
       return std::make_unique<CommonCrypto_BlockCipher>(name, opts);
-   } catch(CommonCrypto_Error& e) { return nullptr; }
+   } catch(CommonCrypto_Error& e) {
+      return nullptr;
+   }
 }
 }  // namespace Botan

@@ -65,7 +65,9 @@ void check_invalid_ciphertexts(Test::Result& result,
          if(!result.test_ne("incorrect ciphertext different", decrypted, plaintext)) {
             result.test_eq("used corrupted ciphertext", bad_ctext, ciphertext);
          }
-      } catch(std::exception&) { ++ciphertext_rejected; }
+      } catch(std::exception&) {
+         ++ciphertext_rejected;
+      }
    }
 
    result.test_note("Accepted " + std::to_string(ciphertext_accepted) + " invalid ciphertexts, rejected " +
@@ -220,7 +222,9 @@ Test::Result PK_Signature_Verification_Test::run_one_test(const std::string& pad
             } else {
                result.confirm("incorrect signature is rejected", verified == false);
             }
-         } catch(std::exception& e) { result.test_failure("verification threw exception", e.what()); }
+         } catch(std::exception& e) {
+            result.test_failure("verification threw exception", e.what());
+         }
       }
    }
 
@@ -243,7 +247,9 @@ Test::Result PK_Signature_NonVerification_Test::run_one_test(const std::string& 
          verifier =
             std::make_unique<Botan::PK_Verifier>(*pubkey, padding, Botan::Signature_Format::Standard, verify_provider);
          result.test_eq("incorrect signature rejected", verifier->verify_message(message, invalid_signature), false);
-      } catch(Botan::Lookup_Error&) { result.test_note("Skipping verifying with " + verify_provider); }
+      } catch(Botan::Lookup_Error&) {
+         result.test_note("Skipping verifying with " + verify_provider);
+      }
    }
 
    return result;
@@ -266,7 +272,9 @@ std::vector<Test::Result> PK_Sign_Verify_DER_Test::run() {
             *privkey, Test::rng(), padding, Botan::Signature_Format::DerSequence, provider);
          verifier =
             std::make_unique<Botan::PK_Verifier>(*privkey, padding, Botan::Signature_Format::DerSequence, provider);
-      } catch(Botan::Lookup_Error& e) { result.test_note("Skipping sign/verify with " + provider, e.what()); }
+      } catch(Botan::Lookup_Error& e) {
+         result.test_note("Skipping sign/verify with " + provider, e.what());
+      }
 
       if(signer && verifier) {
          try {
@@ -278,7 +286,9 @@ std::vector<Test::Result> PK_Sign_Verify_DER_Test::run() {
             if(test_random_invalid_sigs()) {
                check_invalid_signatures(result, *verifier, message, generated_signature);
             }
-         } catch(std::exception& e) { result.test_failure("verification threw exception", e.what()); }
+         } catch(std::exception& e) {
+            result.test_failure("verification threw exception", e.what());
+         }
       }
    }
 
@@ -314,14 +324,18 @@ Test::Result PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_
 
       try {
          decryptor = std::make_unique<Botan::PK_Decryptor_EME>(*privkey, Test::rng(), padding, dec_provider);
-      } catch(Botan::Lookup_Error&) { continue; }
+      } catch(Botan::Lookup_Error&) {
+         continue;
+      }
 
       Botan::secure_vector<uint8_t> decrypted;
       try {
          decrypted = decryptor->decrypt(ciphertext);
 
          result.test_lte("Plaintext within length", decrypted.size(), decryptor->plaintext_length(ciphertext.size()));
-      } catch(Botan::Exception& e) { result.test_failure("Failed to decrypt KAT ciphertext", e.what()); }
+      } catch(Botan::Exception& e) {
+         result.test_failure("Failed to decrypt KAT ciphertext", e.what());
+      }
 
       result.test_eq(dec_provider, "decryption of KAT", decrypted, plaintext);
       check_invalid_ciphertexts(result, *decryptor, plaintext, ciphertext);
@@ -332,7 +346,9 @@ Test::Result PK_Encryption_Decryption_Test::run_one_test(const std::string& pad_
 
       try {
          encryptor = std::make_unique<Botan::PK_Encryptor_EME>(*pubkey, Test::rng(), padding, enc_provider);
-      } catch(Botan::Lookup_Error&) { continue; }
+      } catch(Botan::Lookup_Error&) {
+         continue;
+      }
 
       std::unique_ptr<Botan::RandomNumberGenerator> kat_rng;
       if(vars.has_key("Nonce")) {
@@ -380,12 +396,16 @@ Test::Result PK_Decryption_Test::run_one_test(const std::string& pad_hdr, const 
 
       try {
          decryptor = std::make_unique<Botan::PK_Decryptor_EME>(*privkey, Test::rng(), padding, dec_provider);
-      } catch(Botan::Lookup_Error&) { continue; }
+      } catch(Botan::Lookup_Error&) {
+         continue;
+      }
 
       Botan::secure_vector<uint8_t> decrypted;
       try {
          decrypted = decryptor->decrypt(ciphertext);
-      } catch(Botan::Exception& e) { result.test_failure("Failed to decrypt KAT ciphertext", e.what()); }
+      } catch(Botan::Exception& e) {
+         result.test_failure("Failed to decrypt KAT ciphertext", e.what());
+      }
 
       result.test_eq(dec_provider, "decryption of KAT", decrypted, plaintext);
       check_invalid_ciphertexts(result, *decryptor, plaintext, ciphertext);
@@ -511,7 +531,9 @@ void test_pbe_roundtrip(Test::Result& result,
       result.confirm("recovered private key from encrypted blob", loaded != nullptr);
       result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
       result.test_eq("reloaded key has same encoding", loaded->private_key_info(), pkcs8);
-   } catch(std::exception& e) { result.test_failure("roundtrip encrypted PEM private key", e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure("roundtrip encrypted PEM private key", e.what());
+   }
 
    try {
       Botan::DataSource_Memory data_src(
@@ -522,7 +544,9 @@ void test_pbe_roundtrip(Test::Result& result,
       result.confirm("recovered private key from BER blob", loaded != nullptr);
       result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
       result.test_eq("reloaded key has same encoding", loaded->private_key_info(), pkcs8);
-   } catch(std::exception& e) { result.test_failure("roundtrip encrypted BER private key", e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure("roundtrip encrypted BER private key", e.what());
+   }
 }
    #endif
 
@@ -578,7 +602,9 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
             try {
                result.test_eq("public key passes checks", loaded->check_key(Test::rng(), false), true);
             } catch(Botan::Lookup_Error&) {}
-         } catch(std::exception& e) { result.test_failure("roundtrip PEM public key", e.what()); }
+         } catch(std::exception& e) {
+            result.test_failure("roundtrip PEM public key", e.what());
+         }
 
          // Test DER public key round trips OK
          try {
@@ -589,7 +615,9 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
             result.confirm("recovered public key from private", loaded != nullptr);
             result.test_eq("public key has same type", loaded->algo_name(), key.algo_name());
             result.test_eq("public key has same encoding", loaded->subject_public_key(), ber);
-         } catch(std::exception& e) { result.test_failure("roundtrip BER public key", e.what()); }
+         } catch(std::exception& e) {
+            result.test_failure("roundtrip BER public key", e.what());
+         }
 
          // Test PEM private key round trips OK
          try {
@@ -600,7 +628,9 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
             result.confirm("recovered private key from PEM blob", loaded != nullptr);
             result.test_eq("reloaded key has same type", loaded->algo_name(), key.algo_name());
             result.test_eq("reloaded key has same encoding", loaded->private_key_info(), ber);
-         } catch(std::exception& e) { result.test_failure("roundtrip PEM private key", e.what()); }
+         } catch(std::exception& e) {
+            result.test_failure("roundtrip PEM private key", e.what());
+         }
 
          try {
             Botan::DataSource_Memory data_src(Botan::PKCS8::BER_encode(key));
@@ -608,7 +638,9 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
 
             result.confirm("recovered public key from private", loaded != nullptr);
             result.test_eq("public key has same type", loaded->algo_name(), key.algo_name());
-         } catch(std::exception& e) { result.test_failure("roundtrip BER private key", e.what()); }
+         } catch(std::exception& e) {
+            result.test_failure("roundtrip BER private key", e.what());
+         }
 
    #if defined(BOTAN_HAS_PKCS5_PBES2) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_SHA2_32)
 
@@ -691,7 +723,9 @@ Test::Result PK_Key_Generation_Stability_Test::run_one_test(const std::string&, 
          auto key = Botan::create_private_key(algo_name(), *rng, key_param);
          const auto key_bits = key->private_key_info();
          result.test_eq("Generated key matched expected value", key_bits, expected_key);
-      } catch(Botan::Exception& e) { result.test_note("failed to create key", e.what()); }
+      } catch(Botan::Exception& e) {
+         result.test_note("failed to create key", e.what());
+      }
    } else {
       result.test_note("Skipping test due to unavailable RNG");
    }
