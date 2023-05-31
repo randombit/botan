@@ -19,7 +19,7 @@ namespace Botan {
 * KECCAK FIPS
 *
 * This file implements Keccak[c] which is specified by NIST FIPS 202 [1], where
-* "c" is the variable capacity of the this hash primitive. Keccak[c] is not  a
+* "c" is the variable capacity of this hash primitive. Keccak[c] is not  a
 * general purpose hash function, but used as the basic primitive for algorithms
 * such as SHA-3 and KMAC. This is not be confused with the "informal" general purpose hash
 * function which is referred to as "Keccak" and apparently refers to the final
