@@ -38,8 +38,10 @@ disabled_checks_non_lib = [
     'performance-no-automatic-move',
 ]
 
-# these might be worth being clean for
+# these are ones that ideally we would be clean for, but
+# currently are not
 disabled_needs_work = [
+    'misc-non-private-member-variables-in-classes',
     '*-named-parameter',
     '*-member-init', # seems bad
     'bugprone-lambda-function-name', # should be an easy fix
