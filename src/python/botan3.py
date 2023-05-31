@@ -343,6 +343,10 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_pubkey_load_x25519, [c_void_p, c_char_p])
     ffi_api(dll.botan_privkey_x25519_get_privkey, [c_void_p, c_char_p])
     ffi_api(dll.botan_pubkey_x25519_get_pubkey, [c_void_p, c_char_p])
+    ffi_api(dll.botan_privkey_load_kyber, [c_void_p, c_char_p])
+    ffi_api(dll.botan_pubkey_load_kyber, [c_void_p, c_char_p])
+    ffi_api(dll.botan_privkey_view_kyber_raw_key, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_pubkey_view_kyber_raw_key, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_privkey_load_ecdsa, [c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_pubkey_load_ecdsa, [c_void_p, c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_pubkey_load_ecdh, [c_void_p, c_void_p, c_void_p, c_char_p])
@@ -1068,6 +1072,12 @@ class PublicKey: # pylint: disable=invalid-name
         _DLL.botan_pubkey_load_sm2(byref(obj), pub_x.handle_(), pub_y.handle_(), _ctype_str(curve))
         return PublicKey(obj)
 
+    @classmethod
+    def load_kyber(cls, key):
+        obj = c_void_p(0)
+        _DLL.botan_pubkey_load_kyber(byref(obj), key, len(key))
+        return PublicKey(obj)
+
     def __del__(self):
         _DLL.botan_pubkey_destroy(self.__obj)
 
@@ -1098,6 +1108,9 @@ class PublicKey: # pylint: disable=invalid-name
 
     def to_pem(self):
         return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_pubkey_view_pem(self.__obj, vc, vfn))
+
+    def view_kyber_raw_key(self):
+        return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_pubkey_view_kyber_raw_key(self.__obj, vc, vfn))
 
     def fingerprint(self, hash_algorithm='SHA-256'):
         n = HashFunction(hash_algorithm).output_length()
@@ -1211,6 +1224,12 @@ class PrivateKey:
         _DLL.botan_privkey_load_sm2(byref(obj), x.handle_(), _ctype_str(curve))
         return PrivateKey(obj)
 
+    @classmethod
+    def load_kyber(cls, key):
+        obj = c_void_p(0)
+        result = _DLL.botan_privkey_load_kyber(byref(obj), key, len(key))
+        return PrivateKey(obj)
+
     def __del__(self):
         _DLL.botan_privkey_destroy(self.__obj)
 
@@ -1235,6 +1254,9 @@ class PrivateKey:
 
     def to_pem(self):
         return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_privkey_view_pem(self.__obj, vc, vfn))
+
+    def view_kyber_raw_key(self):
+        return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_privkey_view_kyber_raw_key(self.__obj, vc, vfn))
 
     def export(self, pem=False):
         if pem:
