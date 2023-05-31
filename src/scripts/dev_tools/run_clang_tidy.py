@@ -38,8 +38,10 @@ disabled_checks_non_lib = [
     'performance-no-automatic-move',
 ]
 
-# these might be worth being clean for
+# these are ones that ideally we would be clean for, but
+# currently are not
 disabled_needs_work = [
+    'misc-non-private-member-variables-in-classes',
     '*-named-parameter',
     '*-member-init', # seems bad
     'bugprone-lambda-function-name', # should be an easy fix
@@ -51,6 +53,7 @@ disabled_needs_work = [
     'cppcoreguidelines-slicing', # private->public key slicing
     'hicpp-explicit-conversions',
     'misc-const-correctness', # pretty noisy
+    'misc-redundant-expression', # BigInt seems to confuse clang-tidy
     'misc-misplaced-const',
     'misc-confusable-identifiers',
     'modernize-avoid-bind', # used a lot in pkcs11
@@ -149,10 +152,14 @@ def run_clang_tidy(compile_commands_file,
     stdout = run_command(cmdline)
 
     if options.verbose:
-        print(source_file)
+        print("Checked", source_file)
+        sys.stdout.flush()
     if stdout != "":
         print(stdout)
         sys.stdout.flush()
+        return False
+
+    return True
 
 def file_matches(file, args):
     if args is None or len(args) == 0:
@@ -221,14 +228,20 @@ def main(args = None):
              file,
              options)))
 
+    fail_cnt = 0
     for result in results:
-        result.get()
+        if not result.get():
+            fail_cnt += 1
 
     time_consumed = time.time() - start_time
 
     print("Checked %d files in %d seconds" % (files_checked, time_consumed))
 
-    return 0
+    if fail_cnt == 0:
+        return 0
+    else:
+        print("Found clang-tidy errors in %d files" % (fail_cnt))
+        return 1
 
 if __name__ == '__main__':
     sys.exit(main())

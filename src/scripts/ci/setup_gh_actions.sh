@@ -20,7 +20,7 @@ if type -p "apt-get"; then
     sudo apt-get -qq update
     sudo apt-get -qq install ccache
 
-    if [ "$TARGET" = "valgrind" ]; then
+    if [ "$TARGET" = "valgrind" ] || [ "$TARGET" = "valgrind-full" ]; then
         sudo apt-get -qq install valgrind
 
     elif [ "$TARGET" = "shared" ] || [ "$TARGET" = "examples" ] ; then

@@ -57,6 +57,7 @@ def known_targets():
         'shared',
         'static',
         'valgrind',
+        'valgrind-full',
     ]
 
 def build_targets(target, target_os):
@@ -185,23 +186,24 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target in ['coverage', 'sanitizer', 'fuzzers']:
         flags += ['--terminate-on-asserts']
 
-    if target == 'valgrind':
+    if target in ['valgrind', 'valgrind-full']:
         flags += ['--with-valgrind']
         test_prefix = ['valgrind', '--error-exitcode=9', '-v', '--leak-check=full', '--show-reachable=yes']
         # valgrind is single threaded anyway
         test_cmd += ['--test-threads=1']
 
-        # valgrind is slow
-        slow_tests = [
-            'argon2', 'bcrypt', 'bcrypt_pbkdf', 'compression', 'cryptobox',
-            'dh_invalid', 'dh_kat', 'dh_keygen', 'dl_group_gen', 'dlies',
-            'dsa_kat_verify', 'dsa_param', 'ecc_basemul', 'ecdsa_verify_wycheproof',
-            'ed25519_sign', 'elgamal_decrypt', 'elgamal_encrypt', 'elgamal_keygen',
-            'ffi_dsa', 'ffi_elgamal', 'mce_keygen', 'passhash9', 'pbkdf', 'rsa_encrypt',
-            'rsa_pss', 'rsa_pss_raw', 'scrypt', 'srp6_kat', 'x509_path_bsi',
-            'x509_path_rsa_pss', 'xmss_keygen', 'xmss_keygen_reference', 'xmss_sign']
+        if target != 'valgrind-full':
+            # valgrind is slow
+            slow_tests = [
+                'argon2', 'bcrypt', 'bcrypt_pbkdf', 'compression', 'cryptobox',
+                'dh_invalid', 'dh_kat', 'dh_keygen', 'dl_group_gen', 'dlies',
+                'dsa_kat_verify', 'dsa_param', 'ecc_basemul', 'ecdsa_verify_wycheproof',
+                'ed25519_sign', 'elgamal_decrypt', 'elgamal_encrypt', 'elgamal_keygen',
+                'ffi_dsa', 'ffi_elgamal', 'mce_keygen', 'passhash9', 'pbkdf', 'rsa_encrypt',
+                'rsa_pss', 'rsa_pss_raw', 'scrypt', 'srp6_kat', 'x509_path_bsi',
+                'x509_path_rsa_pss', 'xmss_keygen', 'xmss_keygen_reference', 'xmss_sign']
 
-        disabled_tests += slow_tests
+            disabled_tests += slow_tests
 
     if target == 'examples':
         flags += ['--with-boost']
@@ -221,7 +223,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         else:
             flags += ['--enable-sanitizers=address']
 
-    if target in ['valgrind', 'sanitizer', 'fuzzers']:
+    if target in ['valgrind', 'valgrind-full', 'sanitizer', 'fuzzers']:
         flags += ['--disable-modules=locking_allocator']
 
     if target == 'emscripten':

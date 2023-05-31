@@ -146,8 +146,9 @@ class Test_Tests final : public Test {
          {
             Test::Result test_result(testcase_name);
             test_result.test_throws("test_throws", "expected msg", []() {
+               // NOLINTNEXTLINE(hicpp-exception-baseclass)
                throw std::string("not even a std::exception");
-            });  // NOLINT(hicpp-exception-baseclass)
+            });
             verify_failure("test_throws 3", result, test_result);
          }
 

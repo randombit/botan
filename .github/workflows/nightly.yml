@@ -1,0 +1,53 @@
+
+# (C) 2023 Jack Lloyd
+#
+# Botan is released under the Simplified BSD License (see license.txt)
+
+name: nightly
+
+permissions:
+  contents: read
+  # implicitly all other scopes not listed become none
+
+on:
+  schedule:
+    # runs every day at 3:23 AM UTC
+    - cron:  '23 3 * * *'
+
+jobs:
+  clang_tidy:
+    name: "clang-tidy"
+
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Build Agent
+        uses: ./.github/actions/setup-build-agent
+        with:
+          target: clang-tidy
+          cache-key: linux-x86_64-clang-tidy
+
+      - name: Configure Build
+        run: python3 ./configure.py --cc=clang
+
+      - name: Run Clang Tidy
+        run: python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose
+
+  valgrind:
+    name: "valgrind"
+
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Build Agent
+        uses: ./.github/actions/setup-build-agent
+        with:
+          target: valgrind-full
+          cache-key: linux-x86_64-valgrind-full
+
+      - name: Valgrind Checks
+        run: python3 ./src/scripts/ci_build.py --cc=gcc --make-tool=make valgrind-full
