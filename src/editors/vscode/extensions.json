@@ -5,7 +5,7 @@
     "recommendations": [
         "ms-vscode.cpptools",
         "ms-python.python",
-        "chiehyu.vscode-astyle",
+        "xaver.clang-format",
         "EditorConfig.EditorConfig"
     ],
     // List of extensions recommended by VS Code that should not be recommended for users of this workspace.
