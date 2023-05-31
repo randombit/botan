@@ -83,8 +83,8 @@ XMSS_PublicKey::XMSS_PublicKey(std::span<const uint8_t> key_bits) :
    BufferSlicer s(m_raw_key);
    s.skip(4 /* algorithm ID -- already consumed by `deserialize_xmss_oid()` */);
 
-   m_root = s.take_secure_vector(m_xmss_params.element_size());
-   m_public_seed = s.take_secure_vector(m_xmss_params.element_size());
+   m_root = s.copy_as_secure_vector(m_xmss_params.element_size());
+   m_public_seed = s.copy_as_secure_vector(m_xmss_params.element_size());
 }
 
 XMSS_PublicKey::XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid,

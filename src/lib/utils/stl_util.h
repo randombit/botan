@@ -17,7 +17,9 @@
 #include <variant>
 #include <vector>
 
+#include <botan/concepts.h>
 #include <botan/secmem.h>
+#include <botan/strong_type.h>
 
 namespace Botan {
 
@@ -109,21 +111,26 @@ class BufferSlicer final {
    public:
       BufferSlicer(std::span<const uint8_t> buffer) : m_remaining(buffer) {}
 
-      template <typename ContainerT>
-      auto take_as(const size_t count) {
+      template <concepts::contiguous_container ContainerT>
+      auto copy(const size_t count) {
          const auto result = take(count);
          return ContainerT(result.begin(), result.end());
       }
 
-      auto take_vector(const size_t count) { return take_as<std::vector<uint8_t>>(count); }
+      auto copy_as_vector(const size_t count) { return copy<std::vector<uint8_t>>(count); }
 
-      auto take_secure_vector(const size_t count) { return take_as<secure_vector<uint8_t>>(count); }
+      auto copy_as_secure_vector(const size_t count) { return copy<secure_vector<uint8_t>>(count); }
 
       std::span<const uint8_t> take(const size_t count) {
          BOTAN_STATE_CHECK(remaining() >= count);
          auto result = m_remaining.first(count);
          m_remaining = m_remaining.subspan(count);
          return result;
+      }
+
+      template <concepts::contiguous_strong_type T>
+      StrongSpan<const T> take(const size_t count) {
+         return StrongSpan<const T>(take(count));
       }
 
       void copy_into(std::span<uint8_t> sink) {
@@ -139,6 +146,47 @@ class BufferSlicer final {
 
    private:
       std::span<const uint8_t> m_remaining;
+};
+
+/**
+ * @brief Helper class to ease in-place marshalling of concatenated fixed-length
+ *        values.
+ *
+ * The size of the final buffer must be known from the start, reallocations are
+ * not performed.
+ */
+class BufferStuffer {
+   public:
+      BufferStuffer(std::span<uint8_t> buffer) : m_buffer(buffer) {}
+
+      /**
+       * @returns a span for the next @p bytes bytes in the concatenated buffer.
+       *          Checks that the buffer is not exceded.
+       */
+      std::span<uint8_t> next(size_t bytes) {
+         BOTAN_STATE_CHECK(m_buffer.size() >= bytes);
+
+         auto result = m_buffer.first(bytes);
+         m_buffer = m_buffer.subspan(bytes);
+         return result;
+      }
+
+      template <concepts::contiguous_strong_type StrongT>
+      StrongSpan<StrongT> next(size_t bytes) {
+         return StrongSpan<StrongT>(next(bytes));
+      }
+
+      void append(std::span<const uint8_t> buffer) {
+         auto sink = next(buffer.size());
+         std::copy(buffer.begin(), buffer.end(), sink.begin());
+      }
+
+      bool full() const { return m_buffer.empty(); }
+
+      size_t remaining_capacity() const { return m_buffer.size(); }
+
+   private:
+      std::span<uint8_t> m_buffer;
 };
 
 /**

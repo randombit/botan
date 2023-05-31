@@ -1203,7 +1203,7 @@ std::shared_ptr<Kyber_PublicKeyInternal> Kyber_PublicKey::initialize_from_encodi
    BufferSlicer s(pub_key);
 
    auto poly_vec = s.take(mode.polynomial_vector_byte_length());
-   auto seed = s.take_vector(KyberConstants::kSeedLength);
+   auto seed = s.copy_as_vector(KyberConstants::kSeedLength);
    BOTAN_ASSERT_NOMSG(s.empty());
 
    return std::make_shared<Kyber_PublicKeyInternal>(std::move(mode), poly_vec, std::move(seed));
@@ -1239,7 +1239,7 @@ Kyber_PrivateKey::Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode m) {
    const auto middle = G->output_length() / 2;
 
    BufferSlicer s(seed);
-   auto seed1 = s.take_vector(middle);
+   auto seed1 = s.copy_as_vector(middle);
    auto seed2 = s.take(middle);
    BOTAN_ASSERT_NOMSG(s.empty());
 
@@ -1275,7 +1275,7 @@ Kyber_PrivateKey::Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode m) {
    auto skpv = PolynomialVector::from_bytes(s.take(mode.polynomial_vector_byte_length()), mode);
    auto pub_key = s.take(mode.public_key_byte_length());
    s.skip(KyberConstants::kPublicKeyHashLength);
-   auto z = s.take_secure_vector(KyberConstants::kZLength);
+   auto z = s.copy_as_secure_vector(KyberConstants::kZLength);
 
    BOTAN_ASSERT_NOMSG(s.empty());
 

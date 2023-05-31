@@ -116,8 +116,8 @@ class XMSS_PrivateKey_Internal {
             throw Decoding_Error("XMSS private key leaf index out of bounds");
          }
 
-         m_prf = s.take_secure_vector(m_xmss_params.element_size());
-         m_private_seed = s.take_secure_vector(m_xmss_params.element_size());
+         m_prf = s.copy_as_secure_vector(m_xmss_params.element_size());
+         m_private_seed = s.copy_as_secure_vector(m_xmss_params.element_size());
          set_unused_leaf_index(unused_leaf);
 
          // Legacy keys generated prior to Botan 3.x don't feature a

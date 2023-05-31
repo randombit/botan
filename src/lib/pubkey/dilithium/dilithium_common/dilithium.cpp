@@ -119,7 +119,7 @@ class Dilithium_PublicKeyInternal {
          BOTAN_ASSERT_NOMSG(raw_pk.size() == m_mode.public_key_bytes());
 
          BufferSlicer s(raw_pk);
-         m_rho = s.take_vector(DilithiumModeConstants::SEEDBYTES);
+         m_rho = s.copy_as_vector(DilithiumModeConstants::SEEDBYTES);
          m_t1 = Dilithium::PolynomialVector::unpack_t1(s.take(DilithiumModeConstants::POLYT1_PACKEDBYTES * m_mode.k()),
                                                        m_mode);
 
@@ -208,9 +208,9 @@ class Dilithium_PrivateKeyInternal {
          BOTAN_ASSERT_NOMSG(sk.size() == m_mode.private_key_bytes());
 
          BufferSlicer s(sk);
-         m_rho = s.take_vector(DilithiumModeConstants::SEEDBYTES);
-         m_key = s.take_secure_vector(DilithiumModeConstants::SEEDBYTES);
-         m_tr = s.take_secure_vector(DilithiumModeConstants::SEEDBYTES);
+         m_rho = s.copy_as_vector(DilithiumModeConstants::SEEDBYTES);
+         m_key = s.copy_as_secure_vector(DilithiumModeConstants::SEEDBYTES);
+         m_tr = s.copy_as_secure_vector(DilithiumModeConstants::SEEDBYTES);
          m_s1 = Dilithium::PolynomialVector::unpack_eta(
             s.take(m_mode.l() * m_mode.polyeta_packedbytes()), m_mode.l(), m_mode);
          m_s2 = Dilithium::PolynomialVector::unpack_eta(
