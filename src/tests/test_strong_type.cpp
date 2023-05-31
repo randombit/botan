@@ -357,11 +357,11 @@ std::vector<Test::Result> test_integer_strong_type() {
 using Test_Foo = Botan::Strong<std::vector<uint8_t>, struct Test_Foo_>;
 using Test_Bar = Botan::Strong<std::vector<uint8_t>, struct Test_Bar_>;
 
-[[maybe_unused]] int test_strong_helper(Botan::StrongSpan<Test_Foo>) { return 0; }
+[[maybe_unused]] int test_strong_helper(const Botan::StrongSpan<Test_Foo>&) { return 0; }
 
-[[maybe_unused]] int test_strong_helper(Botan::StrongSpan<const Test_Foo>) { return 1; }
+[[maybe_unused]] int test_strong_helper(const Botan::StrongSpan<const Test_Foo>&) { return 1; }
 
-[[maybe_unused]] int test_strong_helper(Botan::StrongSpan<Test_Bar>) { return 2; }
+[[maybe_unused]] int test_strong_helper(const Botan::StrongSpan<Test_Bar>&) { return 2; }
 
 Test::Result test_strong_span() {
    Test::Result result("StrongSpan<>");
