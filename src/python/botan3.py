@@ -1227,7 +1227,7 @@ class PrivateKey:
     @classmethod
     def load_kyber(cls, key):
         obj = c_void_p(0)
-        result = _DLL.botan_privkey_load_kyber(byref(obj), key, len(key))
+        _DLL.botan_privkey_load_kyber(byref(obj), key, len(key))
         return PrivateKey(obj)
 
     def __del__(self):
