@@ -135,7 +135,6 @@ def read_config(config):
     return cfg
 
 def main(args=None):
-    # pylint: disable=too-many-branches
 
     if args is None:
         args = sys.argv

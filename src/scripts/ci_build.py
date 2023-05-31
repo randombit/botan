@@ -86,7 +86,6 @@ def build_targets(target, target_os):
 def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                     root_dir, build_dir, test_results_dir, pkcs11_lib, use_gdb,
                     disable_werror, extra_cxxflags, disabled_tests):
-    # pylint: disable=too-many-branches,too-many-statements,too-many-arguments,too-many-locals
 
     """
     Return the configure.py flags as well as make/test running prefixes
@@ -520,7 +519,6 @@ def have_prog(prog):
     return False
 
 def main(args=None):
-    # pylint: disable=too-many-branches,too-many-statements,too-many-locals,too-many-return-statements,too-many-locals
     """
     Parse options, do the things
     """

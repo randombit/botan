@@ -46,10 +46,6 @@ def run_fuzzer_many_files(fuzzer_bin, corpus_files):
     return (fuzzer_proc.returncode, stdout.decode('ascii'), stderr.decode('ascii'))
 
 def main(args=None):
-    #pylint: disable=too-many-branches
-    #pylint: disable=too-many-statements
-    #pylint: disable=too-many-locals
-
     if args is None:
         args = sys.argv
 

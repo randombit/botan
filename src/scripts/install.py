@@ -113,8 +113,6 @@ def calculate_exec_mode(options):
     return out
 
 def main(args):
-    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
-
     logging.basicConfig(stream=sys.stdout,
                         format='%(levelname) 7s: %(message)s')
 
@@ -246,7 +244,7 @@ def main(args):
 if __name__ == '__main__':
     try:
         sys.exit(main(sys.argv))
-    except Exception as e: # pylint: disable=broad-except
+    except Exception as e:
         logging.error('Failure: %s', str(e))
         logging.info(traceback.format_exc())
         sys.exit(1)
