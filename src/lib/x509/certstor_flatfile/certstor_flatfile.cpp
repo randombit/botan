@@ -78,7 +78,9 @@ std::vector<X509_Certificate> Flatfile_Certificate_Store::find_all_certs(const X
             found_certs.push_back(cert);
          }
       }
-   } catch(const std::out_of_range&) { return {}; }
+   } catch(const std::out_of_range&) {
+      return {};
+   }
 
    return found_certs;
 }

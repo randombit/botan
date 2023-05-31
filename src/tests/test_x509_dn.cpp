@@ -47,7 +47,9 @@ class X509_DN_Comparisons_Tests final : public Text_Based_Test {
                result.test_eq("different means one is less than", lt1 || lt2, true);
                result.test_eq("different means only one is less than", lt1 && lt2, false);
             }
-         } catch(Botan::Exception& e) { result.test_failure(e.what()); }
+         } catch(Botan::Exception& e) {
+            result.test_failure(e.what());
+         }
 
          return result;
       }

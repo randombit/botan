@@ -149,7 +149,9 @@ std::vector<Test::Result> ECC_Randomized_Tests::run() {
             result.test_eq("Q1", Q1, Q);
             result.test_eq("R1", R1, R);
          }
-      } catch(std::exception& e) { result.test_failure(group_name, e.what()); }
+      } catch(std::exception& e) {
+         result.test_failure(group_name, e.what());
+      }
       result.end_timer();
       results.push_back(result);
    }
@@ -677,7 +679,9 @@ Test::Result test_ec_group_bad_registration() {
    try {
       Botan::EC_Group reg_group(p, a, b, g_x, g_y, order, 1, oid);
       result.test_failure("Should have failed");
-   } catch(Botan::Invalid_Argument&) { result.test_success("Got expected exception"); }
+   } catch(Botan::Invalid_Argument&) {
+      result.test_success("Got expected exception");
+   }
 
    return result;
 }

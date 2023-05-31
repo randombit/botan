@@ -319,7 +319,9 @@ class OCB_Long_KAT_Tests final : public Text_Based_Test {
             dec.finish(buf, 0);
 
             result.test_eq("OCB round tripped", buf, pt);
-         } catch(std::exception& e) { result.test_failure("OCB round trip error", e.what()); }
+         } catch(std::exception& e) {
+            result.test_failure("OCB round trip error", e.what());
+         }
       }
 };
 

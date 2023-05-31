@@ -323,7 +323,9 @@ class Stateful_RNG_Tests : public Test {
             BOTAN_UNUSED(written);
             try {
                rng->randomize(&child_bytes[0], child_bytes.size());
-            } catch(std::exception& e) { static_cast<void>(fprintf(stderr, "%s", e.what())); }
+            } catch(std::exception& e) {
+               static_cast<void>(fprintf(stderr, "%s", e.what()));
+            }
             written = ::write(fd[1], &child_bytes[0], child_bytes.size());
             BOTAN_UNUSED(written);
             ::close(fd[1]);  // close write end in child
@@ -684,15 +686,21 @@ class AutoSeeded_RNG_Tests final : public Test {
          try {
             Botan::AutoSeeded_RNG rng(no_entropy_for_you);
             result.test_failure("AutoSeeded_RNG should have rejected useless entropy source");
-         } catch(Botan::PRNG_Unseeded&) { result.test_success("AutoSeeded_RNG rejected empty entropy source"); }
+         } catch(Botan::PRNG_Unseeded&) {
+            result.test_success("AutoSeeded_RNG rejected empty entropy source");
+         }
 
          try {
             Botan::AutoSeeded_RNG rng(null_rng);
-         } catch(Botan::PRNG_Unseeded&) { result.test_success("AutoSeeded_RNG rejected useless RNG"); }
+         } catch(Botan::PRNG_Unseeded&) {
+            result.test_success("AutoSeeded_RNG rejected useless RNG");
+         }
 
          try {
             Botan::AutoSeeded_RNG rng(null_rng, no_entropy_for_you);
-         } catch(Botan::PRNG_Unseeded&) { result.test_success("AutoSeeded_RNG rejected useless RNG+entropy sources"); }
+         } catch(Botan::PRNG_Unseeded&) {
+            result.test_success("AutoSeeded_RNG rejected useless RNG+entropy sources");
+         }
 
          Botan::AutoSeeded_RNG rng;
 

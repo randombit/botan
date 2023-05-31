@@ -173,7 +173,9 @@ Certificate_Status_Code Response::verify_signature(const X509_Certificate& issue
       } else {
          return Certificate_Status_Code::OCSP_SIGNATURE_ERROR;
       }
-   } catch(Exception&) { return Certificate_Status_Code::OCSP_SIGNATURE_ERROR; }
+   } catch(Exception&) {
+      return Certificate_Status_Code::OCSP_SIGNATURE_ERROR;
+   }
 }
 
 std::optional<X509_Certificate> Response::find_signing_certificate(

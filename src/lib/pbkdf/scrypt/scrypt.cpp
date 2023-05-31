@@ -215,7 +215,9 @@ void Scrypt::derive_key(uint8_t output[],
 
    try {
       hmac_sha256->set_key(cast_char_ptr_to_uint8(password), password_len);
-   } catch(Invalid_Key_Length&) { throw Invalid_Argument("Scrypt cannot accept passphrases of the provided length"); }
+   } catch(Invalid_Key_Length&) {
+      throw Invalid_Argument("Scrypt cannot accept passphrases of the provided length");
+   }
 
    pbkdf2(*hmac_sha256, B.data(), B.size(), salt, salt_len, 1);
 

@@ -97,7 +97,9 @@ size_t Argument_Parser::get_arg_sz(const std::string& opt_name) const {
 
    try {
       return static_cast<size_t>(std::stoul(s));
-   } catch(std::exception&) { throw CLI_Usage_Error("Invalid integer value '" + s + "' for option " + opt_name); }
+   } catch(std::exception&) {
+      throw CLI_Usage_Error("Invalid integer value '" + s + "' for option " + opt_name);
+   }
 }
 
 std::vector<std::string> Argument_Parser::get_arg_list(const std::string& what) const {

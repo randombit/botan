@@ -75,7 +75,9 @@ class Roughtime_Response_Tests final : public Text_Based_Test {
                result.confirm("radius", response.utc_radius() == radius);
                result.confirm("OK", type == "Valid");
             }
-         } catch(const Botan::Roughtime::Roughtime_Error& e) { result.confirm(e.what(), type == "Invalid"); }
+         } catch(const Botan::Roughtime::Roughtime_Error& e) {
+            result.confirm(e.what(), type == "Invalid");
+         }
 
          return result;
       }
@@ -238,7 +240,9 @@ class Roughtime final : public Test {
             const auto diff_abs =
                now >= response.utc_midpoint() ? now - response.utc_midpoint() : response.utc_midpoint() - now;
             result.confirm("online", diff_abs <= (response.utc_radius() + local_clock_max_error));
-         } catch(const std::exception& e) { result.test_failure(e.what()); }
+         } catch(const std::exception& e) {
+            result.test_failure(e.what());
+         }
          return result;
       }
 

@@ -739,9 +739,13 @@ class Stream {
       void try_with_error_code(Fun f, boost::system::error_code& ec) {
          try {
             f();
-         } catch(const TLS_Exception& e) { ec = e.type(); } catch(const Exception& e) {
+         } catch(const TLS_Exception& e) {
+            ec = e.type();
+         } catch(const Exception& e) {
             ec = e.error_type();
-         } catch(const std::exception&) { ec = ErrorType::Unknown; }
+         } catch(const std::exception&) {
+            ec = ErrorType::Unknown;
+         }
       }
 
       std::shared_ptr<Context> m_context;

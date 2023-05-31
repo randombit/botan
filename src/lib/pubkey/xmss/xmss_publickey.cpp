@@ -57,7 +57,9 @@ std::vector<uint8_t> extract_raw_public_key(std::span<const uint8_t> key_bits) {
          raw_key.size() != params.raw_legacy_private_key_size()) {
          throw Decoding_Error("unpacked XMSS key does not have the correct length");
       }
-   } catch(Decoding_Error&) { raw_key.assign(key_bits.begin(), key_bits.end()); } catch(Not_Implemented&) {
+   } catch(Decoding_Error&) {
+      raw_key.assign(key_bits.begin(), key_bits.end());
+   } catch(Not_Implemented&) {
       raw_key.assign(key_bits.begin(), key_bits.end());
    }
 

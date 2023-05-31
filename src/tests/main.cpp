@@ -103,7 +103,9 @@ int main(int argc, char* argv[]) {
       Botan_Tests::Test_Runner tests(std::cout);
 
       return tests.run(opts) ? 0 : 1;
-   } catch(std::exception& e) { std::cerr << "Exiting with error: " << e.what() << std::endl; } catch(...) {
+   } catch(std::exception& e) {
+      std::cerr << "Exiting with error: " << e.what() << std::endl;
+   } catch(...) {
       std::cerr << "Exiting with unknown exception" << std::endl;
    }
    return 2;

@@ -62,7 +62,9 @@ bool EMSA_PKCS1v15::verify(const std::vector<uint8_t>& coded, const std::vector<
 
    try {
       return (coded == emsa3_encoding(raw, key_bits, m_hash_id.data(), m_hash_id.size()));
-   } catch(...) { return false; }
+   } catch(...) {
+      return false;
+   }
 }
 
 EMSA_PKCS1v15::EMSA_PKCS1v15(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {
@@ -107,7 +109,9 @@ bool EMSA_PKCS1v15_Raw::verify(const std::vector<uint8_t>& coded, const std::vec
 
    try {
       return (coded == emsa3_encoding(raw, key_bits, m_hash_id.data(), m_hash_id.size()));
-   } catch(...) { return false; }
+   } catch(...) {
+      return false;
+   }
 }
 
 }  // namespace Botan

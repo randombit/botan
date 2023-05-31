@@ -22,7 +22,9 @@ const BigInt& Asymmetric_Key::get_int_field(std::string_view field) const {
 OID Asymmetric_Key::object_identifier() const {
    try {
       return OID::from_string(algo_name());
-   } catch(Lookup_Error&) { throw Lookup_Error(fmt("Public key algorithm {} has no defined OIDs", algo_name())); }
+   } catch(Lookup_Error&) {
+      throw Lookup_Error(fmt("Public key algorithm {} has no defined OIDs", algo_name()));
+   }
 }
 
 std::string create_hex_fingerprint(const uint8_t bits[], size_t bits_len, std::string_view hash_name) {

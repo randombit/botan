@@ -103,7 +103,9 @@ class Entropy_Source_Tests final : public Test {
                   }
                }
 #endif
-            } catch(std::exception& e) { result.test_failure("during entropy collection test", e.what()); }
+            } catch(std::exception& e) {
+               result.test_failure("during entropy collection test", e.what());
+            }
 
             result.end_timer();
             results.push_back(result);

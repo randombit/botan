@@ -45,7 +45,9 @@ class PBKDF_Tune final : public Command {
                size_t msec = 0;
                try {
                   msec = std::stoul(time);
-               } catch(std::exception&) { throw CLI_Usage_Error("Unknown time value '" + time + "' for pbkdf_tune"); }
+               } catch(std::exception&) {
+                  throw CLI_Usage_Error("Unknown time value '" + time + "' for pbkdf_tune");
+               }
 
                pwhash = pwdhash_fam->tune(output_len, std::chrono::milliseconds(msec), max_mem, tune_msec);
             }

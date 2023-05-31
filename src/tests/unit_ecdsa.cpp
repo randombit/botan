@@ -177,7 +177,9 @@ Test::Result test_ec_sign() {
       }
 
       result.test_eq("invalid ECDSA signature invalid", verifier.check_signature(sig), false);
-   } catch(std::exception& e) { result.test_failure("test_ec_sign", e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure("test_ec_sign", e.what());
+   }
 
    return result;
 }
@@ -197,7 +199,9 @@ Test::Result test_ecdsa_create_save_load() {
       msg_signature = signer.sign_message(msg, Test::rng());
 
       ecc_private_key_pem = Botan::PKCS8::PEM_encode(key);
-   } catch(std::exception& e) { result.test_failure("create_pkcs8", e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure("create_pkcs8", e.what());
+   }
 
    Botan::DataSource_Memory pem_src(ecc_private_key_pem);
    auto loaded_key = Botan::PKCS8::load_key(pem_src);
@@ -319,8 +323,12 @@ Test::Result test_read_pkcs8() {
          Botan::DataSource_Stream key_stream2(Test::data_file("x509/ecc/withdompar_private.pkcs8.pem"));
          auto should_fail = Botan::PKCS8::load_key(key_stream2);
          result.test_failure("loaded key with unknown OID");
-      } catch(std::exception&) { result.test_note("rejected key with unknown OID"); }
-   } catch(std::exception& e) { result.test_failure("read_pkcs8", e.what()); }
+      } catch(std::exception&) {
+         result.test_note("rejected key with unknown OID");
+      }
+   } catch(std::exception& e) {
+      result.test_failure("read_pkcs8", e.what());
+   }
 
    return result;
 }
@@ -335,7 +343,9 @@ Test::Result test_ecc_key_with_rfc5915_extensions() {
       result.confirm("loaded RFC 5915 key", pkcs8 != nullptr);
       result.test_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
       result.confirm("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()) != nullptr);
-   } catch(std::exception& e) { result.test_failure("load_rfc5915_ext", e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure("load_rfc5915_ext", e.what());
+   }
 
    return result;
 }
@@ -350,7 +360,9 @@ Test::Result test_ecc_key_with_rfc5915_parameters() {
       result.confirm("loaded RFC 5915 key", pkcs8 != nullptr);
       result.test_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
       result.confirm("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()) != nullptr);
-   } catch(std::exception& e) { result.test_failure("load_rfc5915_params", e.what()); }
+   } catch(std::exception& e) {
+      result.test_failure("load_rfc5915_params", e.what());
+   }
 
    return result;
 }
@@ -372,7 +384,9 @@ Test::Result test_curve_registry() {
          const std::vector<uint8_t> sig = signer.sign_message(msg, Test::rng());
 
          result.confirm("verified signature", verifier.verify_message(msg, sig));
-      } catch(Botan::Invalid_Argument& e) { result.test_failure("testing " + group_name + ": " + e.what()); }
+      } catch(Botan::Invalid_Argument& e) {
+         result.test_failure("testing " + group_name + ": " + e.what());
+      }
    }
 
    return result;

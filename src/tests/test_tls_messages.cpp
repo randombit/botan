@@ -150,7 +150,9 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
                   throw Test_Error("Unknown message type " + algo + " in TLS parsing tests");
                }
                result.test_success("Correct parsing");
-            } catch(std::exception& e) { result.test_failure(e.what()); }
+            } catch(std::exception& e) {
+               result.test_failure(e.what());
+            }
          } else {
             if(algo == "cert_verify") {
                result.test_throws("invalid cert_verify input", exception, [&buffer]() {
@@ -372,7 +374,9 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
                   throw Test_Error("Unknown extension type " + extension + " in TLS parsing tests");
                }
                result.test_success("Correct parsing");
-            } catch(std::exception& e) { result.test_failure(e.what()); }
+            } catch(std::exception& e) {
+               result.test_failure(e.what());
+            }
          } else {
          }
 

@@ -375,7 +375,9 @@ class Synchronous_Test : public TestBase {
                m_result.test_failure(std::string("sync client failed with: ") + ex.what());
             } catch(const boost::exception&) {
                m_result.test_failure("sync client failed with boost exception");
-            } catch(...) { m_result.test_failure("sync client failed with unknown error"); }
+            } catch(...) {
+               m_result.test_failure("sync client failed with unknown error");
+            }
          });
       }
 
@@ -747,7 +749,9 @@ struct SystemConfiguration {
                ioc.run();
                break;
             } catch(const Timeout_Exception&) { /* timeout is reported via Test::Result object */
-            } catch(const boost::exception&) { t->fail("boost exception"); } catch(const std::exception& ex) {
+            } catch(const boost::exception&) {
+               t->fail("boost exception");
+            } catch(const std::exception& ex) {
                t->fail(ex.what());
             }
          }

@@ -62,13 +62,17 @@ class Block_Cipher_Tests final : public Text_Based_Test {
                std::vector<uint8_t> block(cipher->block_size());
                cipher->encrypt(block);
                result.test_failure("Was able to encrypt without a key being set");
-            } catch(Botan::Invalid_State&) { result.test_success("Trying to encrypt with no key set fails"); }
+            } catch(Botan::Invalid_State&) {
+               result.test_success("Trying to encrypt with no key set fails");
+            }
 
             try {
                std::vector<uint8_t> block(cipher->block_size());
                cipher->decrypt(block);
                result.test_failure("Was able to decrypt without a key being set");
-            } catch(Botan::Invalid_State&) { result.test_success("Trying to encrypt with no key set fails"); }
+            } catch(Botan::Invalid_State&) {
+               result.test_success("Trying to encrypt with no key set fails");
+            }
 
             // Test to make sure clear() resets what we need it to
             cipher->set_key(Test::rng().random_vec(cipher->key_spec().maximum_keylength()));

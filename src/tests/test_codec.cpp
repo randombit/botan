@@ -67,7 +67,9 @@ class Base32_Tests final : public Text_Based_Test {
 
                try {
                   result.test_eq("base32 decoding with whitespace", Botan::base32_decode(b32_ws, true), "66");
-               } catch(std::exception& e) { result.test_failure(b32_ws, e.what()); }
+               } catch(std::exception& e) {
+                  result.test_failure(b32_ws, e.what());
+               }
             }
          }
 
@@ -196,7 +198,9 @@ class Base64_Tests final : public Text_Based_Test {
 
                try {
                   result.test_eq("base64 decoding with whitespace", Botan::base64_decode(b64_ws, true), "66");
-               } catch(std::exception& e) { result.test_failure(b64_ws, e.what()); }
+               } catch(std::exception& e) {
+                  result.test_failure(b64_ws, e.what());
+               }
             }
          }
 

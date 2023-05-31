@@ -57,7 +57,9 @@ class TPM_Tests final : public Test {
             // TODO export public key
             // TODO generate a signature, verify it
             // TODO test key registration mechanisms
-         } catch(Botan::Exception& e) { result.test_failure("TPM problem", e.what()); }
+         } catch(Botan::Exception& e) {
+            result.test_failure("TPM problem", e.what());
+         }
 
          return {result};
       }

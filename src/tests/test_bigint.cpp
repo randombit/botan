@@ -63,7 +63,9 @@ class BigInt_Unit_Tests final : public Test {
                   try {
                      a.to_u32bit();
                      result.test_failure("BigInt::to_u32bit roundtripped out of range value");
-                  } catch(std::exception&) { result.test_success("BigInt::to_u32bit rejected out of range"); }
+                  } catch(std::exception&) {
+                     result.test_success("BigInt::to_u32bit rejected out of range");
+                  }
                }
 
                a--;

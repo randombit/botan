@@ -41,7 +41,9 @@ std::unique_ptr<Public_Key> load_key(DataSource& source) {
       }
 
       return load_public_key(alg_id, key_bits);
-   } catch(Decoding_Error& e) { throw Decoding_Error("X.509 public key decoding", e); }
+   } catch(Decoding_Error& e) {
+      throw Decoding_Error("X.509 public key decoding", e);
+   }
 }
 
 }  // namespace Botan::X509

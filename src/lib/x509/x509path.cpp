@@ -301,7 +301,9 @@ CertificatePathStatusCodes PKIX::check_ocsp(const std::vector<X509_Certificate>&
             } else {
                status.insert(ocsp_response->status_for(ca, subject, ref_time, restrictions.max_ocsp_age()));
             }
-         } catch(Exception&) { status.insert(Certificate_Status_Code::OCSP_RESPONSE_INVALID); }
+         } catch(Exception&) {
+            status.insert(Certificate_Status_Code::OCSP_RESPONSE_INVALID);
+         }
       }
    }
 

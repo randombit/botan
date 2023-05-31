@@ -1717,8 +1717,12 @@ int main(int /*argc*/, char* argv[]) {
             }
          }
       }
-   } catch(Shim_Exception& e) { shim_exit_with_error(e.what(), e.rc()); } catch(std::exception& e) {
+   } catch(Shim_Exception& e) {
+      shim_exit_with_error(e.what(), e.rc());
+   } catch(std::exception& e) {
       shim_exit_with_error(map_to_bogo_error(e.what()));
-   } catch(...) { shim_exit_with_error("Unknown exception", 3); }
+   } catch(...) {
+      shim_exit_with_error("Unknown exception", 3);
+   }
    return 0;
 }

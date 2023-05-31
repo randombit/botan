@@ -495,7 +495,9 @@ Test::Result test_x509_utf8() {
       result.test_eq("OU", issuer_dn.get_first_attribute("OU"), organization_unit);
       result.test_eq("CN", issuer_dn.get_first_attribute("CN"), common_name);
       result.test_eq("L", issuer_dn.get_first_attribute("L"), location);
-   } catch(const Botan::Decoding_Error& ex) { result.test_failure(ex.what()); }
+   } catch(const Botan::Decoding_Error& ex) {
+      result.test_failure(ex.what());
+   }
 
    return result;
 }
@@ -519,7 +521,9 @@ Test::Result test_x509_bmpstring() {
       result.test_eq("O", issuer_dn.get_first_attribute("O"), organization);
       result.test_eq("CN", issuer_dn.get_first_attribute("CN"), common_name);
       result.test_eq("L", issuer_dn.get_first_attribute("L"), location);
-   } catch(const Botan::Decoding_Error& ex) { result.test_failure(ex.what()); }
+   } catch(const Botan::Decoding_Error& ex) {
+      result.test_failure(ex.what());
+   }
 
    return result;
 }
@@ -536,7 +540,9 @@ Test::Result test_x509_teletex() {
 
       result.test_eq("O", issuer_dn.get_first_attribute("O"), "neam CA");
       result.test_eq("CN", issuer_dn.get_first_attribute("CN"), common_name);
-   } catch(const Botan::Decoding_Error& ex) { result.test_failure(ex.what()); }
+   } catch(const Botan::Decoding_Error& ex) {
+      result.test_failure(ex.what());
+   }
 
    return result;
 }
@@ -593,7 +599,9 @@ Test::Result test_parse_rsa_pss_cert() {
    try {
       Botan::X509_Certificate rsa_pss(Test::data_file("x509/misc/rsa_pss.pem"));
       result.test_success("Was able to parse RSA-PSS certificate signed with ECDSA");
-   } catch(Botan::Exception& e) { result.test_failure("Parsing failed", e.what()); }
+   } catch(Botan::Exception& e) {
+      result.test_failure("Parsing failed", e.what());
+   }
 
    return result;
 }
@@ -614,7 +622,9 @@ Test::Result test_verify_gost2012_cert() {
          Botan::x509_path_validate(root_int, restrictions, trusted);
 
       result.confirm("GOST certificate validates", validation_result.successful_validation());
-   } catch(const Botan::Decoding_Error& e) { result.test_failure(e.what()); }
+   } catch(const Botan::Decoding_Error& e) {
+      result.test_failure(e.what());
+   }
       #endif
 
    return result;
@@ -1429,7 +1439,9 @@ class X509_Cert_Unit_Tests final : public Test {
             Test::Result usage_result("X509 Usage");
             try {
                usage_result.merge(test_usage(*key, algo, hash));
-            } catch(std::exception& e) { usage_result.test_failure("test_usage " + algo, e.what()); }
+            } catch(std::exception& e) {
+               usage_result.test_failure("test_usage " + algo, e.what());
+            }
             results.push_back(usage_result);
 
             for(const auto& padding_scheme : get_sig_paddings(algo, hash)) {
@@ -1437,31 +1449,41 @@ class X509_Cert_Unit_Tests final : public Test {
 
                try {
                   cert_result.merge(test_x509_cert(*key, algo, padding_scheme, hash));
-               } catch(std::exception& e) { cert_result.test_failure("test_x509_cert " + algo, e.what()); }
+               } catch(std::exception& e) {
+                  cert_result.test_failure("test_x509_cert " + algo, e.what());
+               }
                results.push_back(cert_result);
 
                Test::Result pkcs10_result("PKCS10 extensions");
                try {
                   pkcs10_result.merge(test_pkcs10_ext(*key, padding_scheme, hash));
-               } catch(std::exception& e) { pkcs10_result.test_failure("test_pkcs10_ext " + algo, e.what()); }
+               } catch(std::exception& e) {
+                  pkcs10_result.test_failure("test_pkcs10_ext " + algo, e.what());
+               }
                results.push_back(pkcs10_result);
 
                Test::Result self_issued_result("X509 Self Issued");
                try {
                   self_issued_result.merge(test_self_issued(*key, algo, padding_scheme, hash));
-               } catch(std::exception& e) { self_issued_result.test_failure("test_self_issued " + algo, e.what()); }
+               } catch(std::exception& e) {
+                  self_issued_result.test_failure("test_self_issued " + algo, e.what());
+               }
                results.push_back(self_issued_result);
 
                Test::Result extensions_result("X509 Extensions");
                try {
                   extensions_result.merge(test_x509_extensions(*key, algo, padding_scheme, hash));
-               } catch(std::exception& e) { extensions_result.test_failure("test_extensions " + algo, e.what()); }
+               } catch(std::exception& e) {
+                  extensions_result.test_failure("test_extensions " + algo, e.what());
+               }
                results.push_back(extensions_result);
 
                Test::Result custom_dn_result("X509 Custom DN");
                try {
                   custom_dn_result.merge(test_custom_dn_attr(*key, algo, padding_scheme, hash));
-               } catch(std::exception& e) { custom_dn_result.test_failure("test_custom_dn_attr " + algo, e.what()); }
+               } catch(std::exception& e) {
+                  custom_dn_result.test_failure("test_custom_dn_attr " + algo, e.what());
+               }
                results.push_back(custom_dn_result);
             }
          }
@@ -1484,7 +1506,9 @@ class X509_Cert_Unit_Tests final : public Test {
          Test::Result pad_config_result("X509 Padding Config");
          try {
             pad_config_result.merge(test_padding_config());
-         } catch(const std::exception& e) { pad_config_result.test_failure("test_padding_config", e.what()); }
+         } catch(const std::exception& e) {
+            pad_config_result.test_failure("test_padding_config", e.what());
+         }
          results.push_back(pad_config_result);
    #endif
 

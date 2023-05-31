@@ -867,7 +867,9 @@ Test::Result CHECK(const char* name, FunT check_fun) {
       check_fun(r);
    } catch(const Botan_Tests::Test_Aborted&) {
       // pass, failure was already noted in the responsible `require`
-   } catch(const std::exception& ex) { r.test_failure("failed unexpectedly", ex.what()); } catch(...) {
+   } catch(const std::exception& ex) {
+      r.test_failure("failed unexpectedly", ex.what());
+   } catch(...) {
       r.test_failure("failed with unknown exception");
    }
 

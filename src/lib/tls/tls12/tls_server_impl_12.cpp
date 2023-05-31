@@ -512,7 +512,9 @@ void Server_Impl_12::process_certificate_verify_msg(Server_Handshake_State& pend
                                         Usage_Type::TLS_CLIENT_AUTH,
                                         sni_hostname,
                                         policy());
-   } catch(std::exception& e) { throw TLS_Exception(Alert::BadCertificate, e.what()); }
+   } catch(std::exception& e) {
+      throw TLS_Exception(Alert::BadCertificate, e.what());
+   }
 
    pending_state.set_expected_next(Handshake_Type::HandshakeCCS);
 }

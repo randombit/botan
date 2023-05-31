@@ -38,7 +38,9 @@ class RFC3394_Keywrap_Tests final : public Text_Based_Test {
 
             result.test_eq("encryption", Botan::rfc3394_keywrap(key_l, kek_sym), expected);
             result.test_eq("decryption", Botan::rfc3394_keyunwrap(exp_l, kek_sym), key);
-         } catch(std::exception& e) { result.test_failure("", e.what()); }
+         } catch(std::exception& e) {
+            result.test_failure("", e.what());
+         }
 
          return result;
       }
@@ -92,7 +94,9 @@ class NIST_Keywrap_Tests final : public Text_Based_Test {
             } catch(Botan::Integrity_Failure& e) {
                result.test_failure("NIST key unwrap failed with integrity failure", e.what());
             }
-         } catch(std::exception& e) { result.test_failure("", e.what()); }
+         } catch(std::exception& e) {
+            result.test_failure("", e.what());
+         }
 
          return result;
       }
@@ -129,8 +133,12 @@ class NIST_Keywrap_Invalid_Tests final : public Text_Based_Test {
                }
 
                result.test_failure("Was able to unwrap invalid keywrap input");
-            } catch(Botan::Integrity_Failure&) { result.test_success("Rejected invalid input"); }
-         } catch(std::exception& e) { result.test_failure("", e.what()); }
+            } catch(Botan::Integrity_Failure&) {
+               result.test_success("Rejected invalid input");
+            }
+         } catch(std::exception& e) {
+            result.test_failure("", e.what());
+         }
 
          return result;
       }

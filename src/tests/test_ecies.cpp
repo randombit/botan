@@ -70,7 +70,9 @@ void check_encrypt_decrypt(Test::Result& result,
       last_byte = ~last_byte;
       result.test_throws("throw on invalid ciphertext",
                          [&ecies_dec, &invalid_encrypted] { ecies_dec.decrypt(invalid_encrypted); });
-   } catch(Botan::Lookup_Error& e) { result.test_note(std::string("Test not executed: ") + e.what()); }
+   } catch(Botan::Lookup_Error& e) {
+      result.test_note(std::string("Test not executed: ") + e.what());
+   }
 }
 
 void check_encrypt_decrypt(Test::Result& result,

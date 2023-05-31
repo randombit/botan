@@ -67,7 +67,9 @@ class PKCS_HashID_Test final : public Test {
 
                result.test_eq("Encoded ID matches hardcoded", encoded_id, pkcs_id);
 
-            } catch(Botan::Exception& e) { result.test_failure(e.what()); }
+            } catch(Botan::Exception& e) {
+               result.test_failure(e.what());
+            }
 
             results.push_back(result);
          }

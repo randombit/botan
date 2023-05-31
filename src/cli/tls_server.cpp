@@ -250,7 +250,9 @@ class TLS_Server final : public Command {
                      }
                   }
                }
-            } catch(Botan::Exception& e) { error_output() << "Connection failed: " << e.what() << "\n"; }
+            } catch(Botan::Exception& e) {
+               error_output() << "Connection failed: " << e.what() << "\n";
+            }
 
             if(m_is_tcp) {
                close_socket(m_socket);

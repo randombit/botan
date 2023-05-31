@@ -57,7 +57,9 @@ class Message_Auth_Tests final : public Text_Based_Test {
                std::vector<uint8_t> buf(128);
                mac->update(buf.data(), buf.size());
                result.test_failure("Was able to MAC without a key being set");
-            } catch(Botan::Invalid_State&) { result.test_success("Trying to MAC with no key set fails"); }
+            } catch(Botan::Invalid_State&) {
+               result.test_success("Trying to MAC with no key set fails");
+            }
 
             result.test_eq("key not set", mac->has_keying_material(), false);
             mac->set_key(key);
@@ -128,13 +130,17 @@ class Message_Auth_Tests final : public Text_Based_Test {
                std::vector<uint8_t> buf(128);
                mac->update(buf.data(), buf.size());
                result.test_failure("Was able to MAC without a key being set");
-            } catch(Botan::Invalid_State&) { result.test_success("Trying to MAC with no key set (after clear) fails"); }
+            } catch(Botan::Invalid_State&) {
+               result.test_success("Trying to MAC with no key set (after clear) fails");
+            }
 
             try {
                std::vector<uint8_t> buf(mac->output_length());
                mac->final(buf.data());
                result.test_failure("Was able to MAC without a key being set");
-            } catch(Botan::Invalid_State&) { result.test_success("Trying to MAC with no key set (after clear) fails"); }
+            } catch(Botan::Invalid_State&) {
+               result.test_success("Trying to MAC with no key set (after clear) fails");
+            }
          }
 
          return result;

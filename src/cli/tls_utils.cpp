@@ -110,7 +110,9 @@ class TLS_Client_Hello_Reader final : public Command {
             Botan::TLS::Client_Hello_12 hello(input);
 
             output() << format_hello(hello);
-         } catch(std::exception& e) { error_output() << "Parsing client hello failed: " << e.what() << "\n"; }
+         } catch(std::exception& e) {
+            error_output() << "Parsing client hello failed: " << e.what() << "\n";
+         }
       }
 
    private:
@@ -142,7 +144,9 @@ class TLS_Client_Hello_Reader final : public Command {
                try {
                   auto s = scheme.to_string();
                   oss << s << " ";
-               } catch(...) { oss << "(" << std::hex << static_cast<unsigned int>(scheme.wire_code()) << ") "; }
+               } catch(...) {
+                  oss << "(" << std::hex << static_cast<unsigned int>(scheme.wire_code()) << ") ";
+               }
             }
             oss << "\n";
          }

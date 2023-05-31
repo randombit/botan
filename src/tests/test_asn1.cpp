@@ -90,7 +90,9 @@ Test::Result test_asn1_utf8_ascii_parsing() {
       str.decode_from(dec);
 
       result.test_eq("value()", str.value(), moscow_plain);
-   } catch(const Botan::Decoding_Error& ex) { result.test_failure(ex.what()); }
+   } catch(const Botan::Decoding_Error& ex) {
+      result.test_failure(ex.what());
+   }
 
    return result;
 }
@@ -111,7 +113,9 @@ Test::Result test_asn1_utf8_parsing() {
       str.decode_from(dec);
 
       result.test_eq("value()", str.value(), moscow_plain);
-   } catch(const Botan::Decoding_Error& ex) { result.test_failure(ex.what()); }
+   } catch(const Botan::Decoding_Error& ex) {
+      result.test_failure(ex.what());
+   }
 
    return result;
 }
@@ -133,7 +137,9 @@ Test::Result test_asn1_ucs2_parsing() {
       str.decode_from(dec);
 
       result.test_eq("value()", str.value(), moscow_plain);
-   } catch(const Botan::Decoding_Error& ex) { result.test_failure(ex.what()); }
+   } catch(const Botan::Decoding_Error& ex) {
+      result.test_failure(ex.what());
+   }
 
    return result;
 }
@@ -155,7 +161,9 @@ Test::Result test_asn1_ucs4_parsing() {
       str.decode_from(dec);
 
       result.test_eq("value()", str.value(), moscow_plain);
-   } catch(const Botan::Decoding_Error& ex) { result.test_failure(ex.what()); }
+   } catch(const Botan::Decoding_Error& ex) {
+      result.test_failure(ex.what());
+   }
 
    return result;
 }
@@ -179,7 +187,9 @@ Test::Result test_asn1_ascii_encoding() {
       result.test_eq("encoding result", encodingResult, moscowEncoded);
 
       result.test_success("No crash");
-   } catch(const std::exception& ex) { result.test_failure(ex.what()); }
+   } catch(const std::exception& ex) {
+      result.test_failure(ex.what());
+   }
 
    return result;
 }
@@ -203,7 +213,9 @@ Test::Result test_asn1_utf8_encoding() {
       result.test_eq("encoding result", encodingResult, moscowEncoded);
 
       result.test_success("No crash");
-   } catch(const std::exception& ex) { result.test_failure(ex.what()); }
+   } catch(const std::exception& ex) {
+      result.test_failure(ex.what());
+   }
 
    return result;
 }

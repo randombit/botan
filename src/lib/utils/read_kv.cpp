@@ -20,7 +20,9 @@ std::map<std::string, std::string> read_kv(std::string_view kv) {
 
    try {
       parts = split_on(kv, ',');
-   } catch(std::exception&) { throw Invalid_Argument("Bad KV spec"); }
+   } catch(std::exception&) {
+      throw Invalid_Argument("Bad KV spec");
+   }
 
    bool escaped = false;
    bool reading_key = true;

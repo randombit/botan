@@ -48,11 +48,15 @@ void fuzz(const uint8_t in[], size_t len) {
          lib_rejected = false;
       else
          FUZZER_WRITE_AND_CRASH("Invalid valid_mask from unpad");
-   } catch(Botan::Decoding_Error&) { lib_rejected = true; }
+   } catch(Botan::Decoding_Error&) {
+      lib_rejected = true;
+   }
 
    try {
       ref_result = simple_pkcs1_unpad(in, len);
-   } catch(Botan::Decoding_Error& e) { ref_rejected = true; }
+   } catch(Botan::Decoding_Error& e) {
+      ref_rejected = true;
+   }
 
    if(lib_rejected == true && ref_rejected == false) {
       FUZZER_WRITE_AND_CRASH("Library rejected input accepted by ref " << Botan::hex_encode(ref_result));

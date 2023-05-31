@@ -47,7 +47,9 @@ void X509_Object::load_data(DataSource& in) {
          BER_Decoder dec(ber);
          decode_from(dec);
       }
-   } catch(Decoding_Error& e) { throw Decoding_Error(PEM_label() + " decoding", e); }
+   } catch(Decoding_Error& e) {
+      throw Decoding_Error(PEM_label() + " decoding", e);
+   }
 }
 
 void X509_Object::encode_into(DER_Encoder& to) const {

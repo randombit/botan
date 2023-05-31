@@ -494,7 +494,9 @@ std::vector<std::string> X509_Certificate::issuer_info(std::string_view req) con
 std::unique_ptr<Public_Key> X509_Certificate::subject_public_key() const {
    try {
       return std::unique_ptr<Public_Key>(X509::load_key(subject_public_key_info()));
-   } catch(std::exception& e) { throw Decoding_Error("X509_Certificate::subject_public_key", e); }
+   } catch(std::exception& e) {
+      throw Decoding_Error("X509_Certificate::subject_public_key", e);
+   }
 }
 
 std::unique_ptr<Public_Key> X509_Certificate::load_subject_public_key() const { return this->subject_public_key(); }
