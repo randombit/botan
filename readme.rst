@@ -28,7 +28,11 @@ If you think you have found a security issue, see the `security page
 
 .. image:: https://github.com/randombit/botan/actions/workflows/ci.yml/badge.svg?branch=master
     :target: https://github.com/randombit/botan/actions/workflows/ci.yml
-    :alt: GitHub Actions results
+    :alt: CI status
+
+.. image:: https://github.com/randombit/botan/actions/workflows/nightly.yml/badge.svg?branch=master
+    :target: https://github.com/randombit/botan/actions/workflows/nightly.yml
+    :alt: nightly CI status
 
 .. image:: https://img.shields.io/coverallsCoverage/github/randombit/botan?branch=master
     :target: https://coveralls.io/github/randombit/botan
