@@ -11,6 +11,8 @@ on a local machine.
 Github Actions
 ---------------
 
+https://github.com/randombit/botan/actions/workflows/ci.yml
+
 Github Actions is the primary CI, and tests the Linux, Windows, macOS, and iOS
 builds. Among other things it runs tests using valgrind, cross-compilation
 for various architectures (currently including ARM and PPC64), MinGW build,
@@ -25,22 +27,26 @@ cache locations.
 Then ``src/scripts/ci_build.py`` is invoked to steer the actual build and test
 runs.
 
-Coverity
----------
+Github Actions (nightly)
+-------------------------
 
-https://scan.coverity.com/projects/624
+https://github.com/randombit/botan/actions/workflows/nightly.yml
 
-An automated source code scanner. Use of Coverity scanner is rate-limited,
-sometimes it is very slow to produce a new report, and occasionally the service
-goes offline for days or weeks at a time. New reports are kicked off manually by
-rebasing branch ``coverity_scan`` against the most recent master and force
-pushing it.
+Some checks are just too slow to include in the main CI builds. These
+are instead delegated to a scheduled job that runs every night against
+master.
+
+Currently these checks include a full run of ``valgrind`` (the valgrind build in
+CI only runs a subset of the tests), and a run of ``clang-tidy`` with all
+warnings (that we are currently clean for) enabled. Each of these jobs takes
+about an hour to run. In the main CI, we aim to have no job take more than
+half an hour.
 
 OSS-Fuzz
 ----------
 
 https://github.com/google/oss-fuzz/
 
-OSS-Fuzz is a distributed fuzzer run by Google. Every night, each library fuzzers
+OSS-Fuzz is a distributed fuzzer run by Google. Every night, the fuzzer harnesses
 in ``src/fuzzer`` are built and run on many machines, with any findings reported
 to the developers via email.
