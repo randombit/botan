@@ -190,7 +190,7 @@ def main(args = None):
 
     jobs = options.jobs
     if jobs == 0:
-        jobs = multiprocessing.cpu_count()
+        jobs = multiprocessing.cpu_count() + 1
 
     (compile_commands_file, compile_commands) = load_compile_commands(options.build_dir)
 
