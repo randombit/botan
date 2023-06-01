@@ -16,6 +16,12 @@ import re
 import time
 from multiprocessing.pool import ThreadPool
 
+quick_checks = [
+    '-clang-analyzer*', # has to be explicitly disabled
+    'modernize-use-nullptr',
+    'readability-braces-around-statements'
+]
+
 enabled_checks = [
     'bugprone-*',
     'cert-*',
@@ -181,6 +187,7 @@ def main(args = None):
     parser.add_option('--fixit', action='store_true', default=False)
     parser.add_option('--build-dir', default='build')
     parser.add_option('--list-checks', action='store_true', default=False)
+    parser.add_option('--fast-checks-only', action='store_true', default=False)
 
     (options, args) = parser.parse_args(args)
 
@@ -199,11 +206,15 @@ def main(args = None):
 
     compile_commands = [x for x in compile_commands if not remove_bad(x)]
 
-    check_config_lib = create_check_option(enabled_checks, disabled_checks)
-    check_config_rest = create_check_option(enabled_checks, disabled_checks_non_lib)
+    if options.fast_checks_only:
+        check_config_lib = ','.join(quick_checks)
+        check_config_rest = check_config_lib
+    else:
+        check_config_lib = create_check_option(enabled_checks, disabled_checks)
+        check_config_rest = create_check_option(enabled_checks, disabled_checks_non_lib)
 
     if options.list_checks:
-        print(run_command(['clang-tidy', '-list-checks', '-checks', check_config_lib]))
+        print(run_command(['clang-tidy', '-list-checks', '-checks', check_config_lib]), end='')
         return 0
 
     pool = ThreadPool(jobs)
