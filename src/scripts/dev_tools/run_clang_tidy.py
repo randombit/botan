@@ -9,10 +9,9 @@ Botan is released under the Simplified BSD License (see license.txt)
 import subprocess
 import sys
 import json
-import optparse
+import optparse # pylint: disable=deprecated-module
 import os
 import multiprocessing
-import re
 import time
 from multiprocessing.pool import ThreadPool
 
@@ -125,18 +124,16 @@ def create_check_option(enabled, disabled):
 
 def load_compile_commands(build_dir):
     compile_commands_file = os.path.join(build_dir, 'compile_commands.json')
-    compile_commands = open(compile_commands_file).read()
+    compile_commands = open(compile_commands_file, encoding='utf8').read()
     return (compile_commands_file, json.loads(compile_commands))
 
 def run_command(cmdline):
     proc = subprocess.Popen(cmdline,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
+                            stdout=subprocess.PIPE)
 
-    (stdout, stderr) = proc.communicate()
+    (stdout, _) = proc.communicate()
 
     stdout = stdout.decode('utf8')
-    # stderr discarded
 
     return stdout
 
@@ -256,4 +253,3 @@ def main(args = None):
 
 if __name__ == '__main__':
     sys.exit(main())
-

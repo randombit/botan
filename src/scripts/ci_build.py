@@ -609,6 +609,7 @@ def main(args=None):
             'src/scripts/python_unittests.py',
             'src/scripts/python_unittests_unix.py',
             'src/scripts/dev_tools/run_clang_format.py',
+            'src/scripts/dev_tools/run_clang_tidy.py',
             'src/editors/vscode/scripts/bogo.py',
             'src/editors/vscode/scripts/common.py',
             'src/editors/vscode/scripts/test.py']
