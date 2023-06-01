@@ -169,7 +169,7 @@ Lists:
  * ``header:public`` is a the list of headers (from the
    current module) which should be exported for public use. If neither
    ``header:internal`` nor ``header:public`` are used then all headers
-   in the current directory are assumed public.
+   in the current directory are assumed internal.
 
    .. note:: If you omit a header from both internal and public lists, it will
       be ignored.
@@ -183,7 +183,9 @@ Lists:
    on a specific architecture, e.g. ``x86_64:ssse3``.
  * ``cc`` is a list of compilers which can be used with this module. If the
    compiler name is suffixed with a version (like "gcc:5.0") then only compilers
-   with that minimum version can use the module.
+   with that minimum version can use the module. If you need to exclude just
+   one specific compiler (for example because that compiler miscompiles the code
+   in the module), you can prefix a compiler name with ``!`` - like ``!msvc``.
  * ``os_features`` is a list of OS features which are required in order to use this
    module. Each line can specify one or more features combined with ','. Alternatives
    can be specified on additional lines.
