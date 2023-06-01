@@ -18,11 +18,8 @@ Pre Release Testing
 Do maintainer-mode builds with Clang and GCC to catch any warnings
 that should be corrected.
 
-And remember that CI doesn't test everything. In particular, not all
-tests run under valgrind or on the qemu cross builds due to time
-constraints. So before release:
+Other checks which are not in CI:
 
- - Run under valgrind, building with ``--with-valgrind`` flag
  - Native compile on FreeBSD x86-64
  - Native compile on at least one unusual platform (AIX, NetBSD, ...)
  - Build the website content to detect any Doxygen problems
