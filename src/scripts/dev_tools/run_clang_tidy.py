@@ -44,12 +44,11 @@ disabled_checks_non_lib = [
     'performance-no-automatic-move',
 ]
 
-# these are ones that ideally we would be clean for, but
-# currently are not
+# these are ones that we might want to be clean for in the future,
+# but currently are not
 disabled_needs_work = [
-    'misc-non-private-member-variables-in-classes',
     '*-named-parameter',
-    '*-member-init', # seems bad
+    '*-member-init', # should definitely fix this one
     'bugprone-lambda-function-name', # should be an easy fix
     'bugprone-unchecked-optional-access', # clang-tidy seems buggy (many false positives)
     'cert-err58-cpp', # many false positives eg __m128i
@@ -62,10 +61,10 @@ disabled_needs_work = [
     'misc-redundant-expression', # BigInt seems to confuse clang-tidy
     'misc-misplaced-const',
     'misc-confusable-identifiers',
-    'modernize-avoid-bind', # used a lot in pkcs11
+    'modernize-avoid-bind',
     'modernize-pass-by-value',
     'readability-convert-member-functions-to-static',
-    'readability-implicit-bool-conversion', # maybe fix this
+    'readability-implicit-bool-conversion',
     'readability-inconsistent-declaration-parameter-name', # should fix this, blocked by https://github.com/llvm/llvm-project/issues/60845
     'readability-qualified-auto',
     'readability-simplify-boolean-expr', # sometimes ok
@@ -88,7 +87,6 @@ disabled_not_interested = [
     'bugprone-branch-clone', # doesn't interact well with feature macros
     'bugprone-easily-swappable-parameters',
     'bugprone-implicit-widening-of-multiplication-result',
-    'cppcoreguidelines-avoid-non-const-global-variables',
     'cppcoreguidelines-non-private-member-variables-in-classes', # pk split keys
     'cppcoreguidelines-pro-bounds-pointer-arithmetic',
     'cppcoreguidelines-pro-bounds-constant-array-index',

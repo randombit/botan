@@ -423,9 +423,9 @@ std::vector<uint8_t> Server_Hello_Done::serialize() const { return std::vector<u
 
 #if defined(BOTAN_HAS_TLS_13)
 
-Server_Hello_13::Server_Hello_Tag Server_Hello_13::as_server_hello;
-Server_Hello_13::Hello_Retry_Request_Tag Server_Hello_13::as_hello_retry_request;
-Server_Hello_13::Hello_Retry_Request_Creation_Tag Server_Hello_13::as_new_hello_retry_request;
+const Server_Hello_13::Server_Hello_Tag Server_Hello_13::as_server_hello;
+const Server_Hello_13::Hello_Retry_Request_Tag Server_Hello_13::as_hello_retry_request;
+const Server_Hello_13::Hello_Retry_Request_Creation_Tag Server_Hello_13::as_new_hello_retry_request;
 
 std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const Client_Hello_13& ch,
                                                                            bool hello_retry_request_allowed,

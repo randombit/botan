@@ -50,6 +50,7 @@ class PSK::PSK_Internal {
 
       PSK_Internal(std::vector<Client_PSK> clt_psks) : psk(std::move(clt_psks)) {}
 
+      // NOLINTNEXTLINE(*-non-private-member-variables-in-classes)
       std::variant<std::vector<Client_PSK>, Server_PSK> psk;
 };
 

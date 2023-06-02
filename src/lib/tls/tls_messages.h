@@ -394,13 +394,13 @@ class Hello_Retry_Request;
 
 class BOTAN_UNSTABLE_API Server_Hello_13 : public Server_Hello {
    protected:
-      static struct Server_Hello_Tag {
+      static const struct Server_Hello_Tag {
       } as_server_hello;
 
-      static struct Hello_Retry_Request_Tag {
+      static const struct Hello_Retry_Request_Tag {
       } as_hello_retry_request;
 
-      static struct Hello_Retry_Request_Creation_Tag {
+      static const struct Hello_Retry_Request_Creation_Tag {
       } as_new_hello_retry_request;
 
       // These constructors are meant for instantiating Server Hellos

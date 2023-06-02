@@ -681,7 +681,9 @@ std::vector<uint8_t> Test::read_binary_data_file(const std::string& path) {
 
 // static member variables of Test
 
+// NOLINTNEXTLINE(*-avoid-non-const-global-variables)
 Test_Options Test::m_opts;
+// NOLINTNEXTLINE(*-avoid-non-const-global-variables)
 std::shared_ptr<Botan::RandomNumberGenerator> Test::m_test_rng;
 
 //static
