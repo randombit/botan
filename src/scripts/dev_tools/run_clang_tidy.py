@@ -18,7 +18,8 @@ from multiprocessing.pool import ThreadPool
 quick_checks = [
     '-clang-analyzer*', # has to be explicitly disabled
     'modernize-use-nullptr',
-    'readability-braces-around-statements'
+    'readability-braces-around-statements',
+    'performance-unnecessary-value-param',
 ]
 
 enabled_checks = [
@@ -129,11 +130,13 @@ def load_compile_commands(build_dir):
 
 def run_command(cmdline):
     proc = subprocess.Popen(cmdline,
-                            stdout=subprocess.PIPE)
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
 
-    (stdout, _) = proc.communicate()
+    (stdout, _stderr) = proc.communicate()
 
     stdout = stdout.decode('utf8')
+    # stderr is discarded
 
     return stdout
 
@@ -185,8 +188,30 @@ def main(args = None):
     parser.add_option('--build-dir', default='build')
     parser.add_option('--list-checks', action='store_true', default=False)
     parser.add_option('--fast-checks-only', action='store_true', default=False)
+    parser.add_option('--only-changed-files', action='store_true', default=False)
 
     (options, args) = parser.parse_args(args)
+
+    if len(args) > 1:
+        print("ERROR: Unknown extra arguments to run_clang_tidy.py")
+        return 1
+
+    files_to_check = []
+    if options.only_changed_files:
+        if len(args) > 1:
+            print("ERROR: --only-changed-files is incompatible with file restrictions")
+            return 1
+
+        changes = run_command(['git', 'diff', '--name-only', '-r', 'master'])
+
+        files_to_check = []
+        for file in changes.split():
+            if file.endswith('.cpp') or file.endswith('.h'):
+                files_to_check.append(os.path.basename(file))
+
+        if len(files_to_check) == 0:
+            print("No C++ files were modified vs master, skipping clang-tidy checks")
+            return 0
 
     jobs = options.jobs
     if jobs == 0:
@@ -223,7 +248,7 @@ def main(args = None):
     for info in compile_commands:
         file = info['file']
 
-        if not file_matches(file, args[1:]):
+        if len(files_to_check) > 0 and os.path.basename(file) not in files_to_check:
             continue
 
         config = check_config_lib if file.startswith('src/lib') else check_config_rest

@@ -190,7 +190,7 @@ jobs:
         run: python3 ./configure.py --cc=clang
 
       - name: Run Clang Tidy
-        run: python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose --fast-checks-only
+        run: python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose --only-changed-files --fast-checks-only
 
   specials:
     name: "Special"
