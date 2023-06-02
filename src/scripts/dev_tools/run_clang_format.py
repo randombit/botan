@@ -127,7 +127,7 @@ def main(args = None):
 
     jobs = options.jobs
     if jobs == 0:
-        jobs = multiprocessing.cpu_count()
+        jobs = multiprocessing.cpu_count() + 1
 
     pool = ThreadPool(jobs)
 
@@ -144,6 +144,14 @@ def main(args = None):
     if len(files_to_fmt) == 0:
         print("Error: filter does not match any files")
         return 1
+
+    # this file is incredibly slow to format so start it early
+    slow_to_format = ['os_utils.cpp']
+
+    first = [x for x in files_to_fmt if os.path.basename(x) in slow_to_format]
+    rest = [x for x in files_to_fmt if x not in first]
+
+    files_to_fmt = first + rest
 
     results = []
     for file in files_to_fmt:
