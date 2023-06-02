@@ -9,12 +9,18 @@ Botan is released under the Simplified BSD License (see license.txt)
 import subprocess
 import sys
 import json
-import optparse
+import optparse # pylint: disable=deprecated-module
 import os
 import multiprocessing
-import re
 import time
 from multiprocessing.pool import ThreadPool
+
+quick_checks = [
+    '-clang-analyzer*', # has to be explicitly disabled
+    'modernize-use-nullptr',
+    'readability-braces-around-statements',
+    'performance-unnecessary-value-param',
+]
 
 enabled_checks = [
     'bugprone-*',
@@ -119,7 +125,7 @@ def create_check_option(enabled, disabled):
 
 def load_compile_commands(build_dir):
     compile_commands_file = os.path.join(build_dir, 'compile_commands.json')
-    compile_commands = open(compile_commands_file).read()
+    compile_commands = open(compile_commands_file, encoding='utf8').read()
     return (compile_commands_file, json.loads(compile_commands))
 
 def run_command(cmdline):
@@ -127,10 +133,10 @@ def run_command(cmdline):
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
 
-    (stdout, stderr) = proc.communicate()
+    (stdout, _stderr) = proc.communicate()
 
     stdout = stdout.decode('utf8')
-    # stderr discarded
+    # stderr is discarded
 
     return stdout
 
@@ -181,12 +187,35 @@ def main(args = None):
     parser.add_option('--fixit', action='store_true', default=False)
     parser.add_option('--build-dir', default='build')
     parser.add_option('--list-checks', action='store_true', default=False)
+    parser.add_option('--fast-checks-only', action='store_true', default=False)
+    parser.add_option('--only-changed-files', action='store_true', default=False)
 
     (options, args) = parser.parse_args(args)
 
+    if len(args) > 1:
+        print("ERROR: Unknown extra arguments to run_clang_tidy.py")
+        return 1
+
+    files_to_check = []
+    if options.only_changed_files:
+        if len(args) > 1:
+            print("ERROR: --only-changed-files is incompatible with file restrictions")
+            return 1
+
+        changes = run_command(['git', 'diff', '--name-only', '-r', 'master'])
+
+        files_to_check = []
+        for file in changes.split():
+            if file.endswith('.cpp') or file.endswith('.h'):
+                files_to_check.append(os.path.basename(file))
+
+        if len(files_to_check) == 0:
+            print("No C++ files were modified vs master, skipping clang-tidy checks")
+            return 0
+
     jobs = options.jobs
     if jobs == 0:
-        jobs = multiprocessing.cpu_count()
+        jobs = multiprocessing.cpu_count() + 1
 
     (compile_commands_file, compile_commands) = load_compile_commands(options.build_dir)
 
@@ -199,11 +228,15 @@ def main(args = None):
 
     compile_commands = [x for x in compile_commands if not remove_bad(x)]
 
-    check_config_lib = create_check_option(enabled_checks, disabled_checks)
-    check_config_rest = create_check_option(enabled_checks, disabled_checks_non_lib)
+    if options.fast_checks_only:
+        check_config_lib = ','.join(quick_checks)
+        check_config_rest = check_config_lib
+    else:
+        check_config_lib = create_check_option(enabled_checks, disabled_checks)
+        check_config_rest = create_check_option(enabled_checks, disabled_checks_non_lib)
 
     if options.list_checks:
-        print(run_command(['clang-tidy', '-list-checks', '-checks', check_config_lib]))
+        print(run_command(['clang-tidy', '-list-checks', '-checks', check_config_lib]), end='')
         return 0
 
     pool = ThreadPool(jobs)
@@ -215,7 +248,7 @@ def main(args = None):
     for info in compile_commands:
         file = info['file']
 
-        if not file_matches(file, args[1:]):
+        if len(files_to_check) > 0 and os.path.basename(file) not in files_to_check:
             continue
 
         config = check_config_lib if file.startswith('src/lib') else check_config_rest
@@ -245,4 +278,3 @@ def main(args = None):
 
 if __name__ == '__main__':
     sys.exit(main())
-
