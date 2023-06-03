@@ -1,0 +1,436 @@
+  d= 0, l=5304: SEQUENCE
+  d= 1, l=   9:  OBJECT                                     1.2.840.113549.1.7.2
+  d= 1, l=5289:  cons [0] context
+  d= 2, l=5285:   SEQUENCE
+  d= 3, l=   1:    INTEGER                                  1
+  d= 3, l=  15:    SET
+  d= 4, l=  13:     SEQUENCE
+  d= 5, l=   9:      OBJECT                                 SHA-256 [2.16.840.1.101.3.4.2.1]
+  d= 5, l=   0:      NULL
+  d= 3, l=  13:    SEQUENCE
+  d= 4, l=   9:     OBJECT                                  1.2.840.113549.1.7.1
+  d= 3, l=4679:    cons [0] context
+  d= 4, l=1799:     SEQUENCE
+  d= 5, l=1391:      SEQUENCE
+  d= 6, l=   3:       cons [0] context
+  d= 7, l=   1:        INTEGER                              2
+  d= 6, l=  12:       INTEGER                               0x65B2C9AC0000000059529C96
+  d= 6, l=  13:       SEQUENCE
+  d= 7, l=   9:        OBJECT                               RSA/EMSA3(SHA-256) [1.2.840.113549.1.1.11]
+  d= 7, l=   0:        NULL
+  d= 6, l=  93:       SEQUENCE
+  d= 7, l=  11:        SET
+  d= 8, l=   9:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.Country [2.5.4.6]
+  d= 9, l=   2:          PRINTABLE STRING                   SI
+  d= 7, l=  31:        SET
+  d= 8, l=  29:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.Organization [2.5.4.10]
+  d= 9, l=  22:          PRINTABLE STRING                   POSTA SLOVENIJE d.o.o.
+  d= 7, l=  23:        SET
+  d= 8, l=  21:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             2.5.4.97
+  d= 9, l=  14:          PRINTABLE STRING                   VATSI-25028022
+  d= 7, l=  20:        SET
+  d= 8, l=  18:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.CommonName [2.5.4.3]
+  d= 9, l=  11:          PRINTABLE STRING                   POSTArCA G2
+  d= 6, l=  30:       SEQUENCE
+  d= 7, l=  13:        UTC TIME                             2018/10/18 09:59:28 UTC
+  d= 7, l=  13:        UTC TIME                             2023/10/18 10:29:28 UTC
+  d= 6, l= 102:       SEQUENCE
+  d= 7, l=  11:        SET
+  d= 8, l=   9:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.Country [2.5.4.6]
+  d= 9, l=   2:          PRINTABLE STRING                   SI
+  d= 7, l=  45:        SET
+  d= 8, l=  20:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.Organization [2.5.4.10]
+  d= 9, l=  13:          PRINTABLE STRING                   SETCCE D.O.O.
+  d= 8, l=  21:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             2.5.4.97
+  d= 9, l=  14:          PRINTABLE STRING                   VATSI-39705684
+  d= 7, l=  40:        SET
+  d= 8, l=  13:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.SerialNumber [2.5.4.5]
+  d= 9, l=   6:          PRINTABLE STRING                   248283
+  d= 8, l=  23:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.CommonName [2.5.4.3]
+  d= 9, l=  16:          PRINTABLE STRING                   ePero START test
+  d= 6, l= 290:       SEQUENCE
+  d= 7, l=  13:        SEQUENCE
+  d= 8, l=   9:         OBJECT                              RSA [1.2.840.113549.1.1.1]
+  d= 8, l=   0:         NULL
+  d= 7, l= 271:        BIT STRING
+  d= 8, l= 266:         SEQUENCE
+  d= 9, l= 257:          INTEGER                            0xA16169899D1BB6DE2D11D40A7E43E0E4DF074DEB93EC617A8D18C1807FC7CDBCCDA0AD9E2A04C77586C24B296FEE041DD9BEBB901C64CAF246EE1E94D168DFB0DCDEFC0CAA17C1A76493DFD007CF299B6CD6D7745D876676B1EA61906E45AC4B816D22DBC86E6702952AC52164E913E5A97109305420CB54F16318351386F18A74420A5B3964EF7D842E7FFE3576EE190E861A8184CCB595C16077A6FC258824B2A6F686287B2535FE0BCF2959B76FF60E3152764BC50932295B521DEA50D5CB1FA6E7AD4E4D6B84F02FE9ADB56D412209E574E983B968E2718DFFD1E776D432D60ADB01EE7029723009D21701E820B1EF1E6ECB93AEF012D627A5B72DA03FE7
+  d= 9, l=   3:          INTEGER                            0x010001
+  d= 6, l= 828:       cons [3] context
+  d= 7, l= 824:        SEQUENCE
+  d= 8, l=  14:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X509v3.KeyUsage [2.5.29.15]
+  d= 9, l=   1:          BOOLEAN                            true
+  d= 9, l=   4:          OCTET STRING
+  d=10, l=   2:           BIT STRING                        E0
+  d= 8, l=  87:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X509v3.CertificatePolicies [2.5.29.32]
+  d= 9, l=  80:          OCTET STRING
+  d=10, l=  78:           SEQUENCE
+  d=11, l=  65:            SEQUENCE
+  d=12, l=  13:             OBJECT                          1.3.6.1.4.1.15284.1.4.2.1.2.1
+  d=12, l=  48:             SEQUENCE
+  d=13, l=  46:              SEQUENCE
+  d=14, l=   8:               OBJECT                        1.3.6.1.5.5.7.2.1
+  d=14, l=  34:               IA5 STRING                    http://postarca.posta.si/dokumenti
+  d=11, l=   9:            SEQUENCE
+  d=12, l=   7:             OBJECT                          0.4.0.194112.1.1
+  d= 8, l= 186:         SEQUENCE
+  d= 9, l=   8:          OBJECT                             1.3.6.1.5.5.7.1.3
+  d= 9, l= 173:          OCTET STRING
+  d=10, l= 170:           SEQUENCE
+  d=11, l=   8:            SEQUENCE
+  d=12, l=   6:             OBJECT                          0.4.0.1862.1.1
+  d=11, l= 136:            SEQUENCE
+  d=12, l=   6:             OBJECT                          0.4.0.1862.1.5
+  d=12, l= 126:             SEQUENCE
+  d=13, l=  61:              SEQUENCE
+  d=14, l=  55:               IA5 STRING                    https://postarca.posta.si/dokumenti/postarca_pds_en.pdf
+  d=14, l=   2:               PRINTABLE STRING              en
+  d=13, l=  61:              SEQUENCE
+  d=14, l=  55:               IA5 STRING                    https://postarca.posta.si/dokumenti/postarca_pds_sl.pdf
+  d=14, l=   2:               PRINTABLE STRING              sl
+  d=11, l=  19:            SEQUENCE
+  d=12, l=   6:             OBJECT                          0.4.0.1862.1.6
+  d=12, l=   9:             SEQUENCE
+  d=13, l=   7:              OBJECT                         0.4.0.1862.1.6.2
+  d= 8, l= 108:         SEQUENCE
+  d= 9, l=   8:          OBJECT                             PKIX.AuthorityInformationAccess [1.3.6.1.5.5.7.1.1]
+  d= 9, l=  96:          OCTET STRING
+  d=10, l=  94:           SEQUENCE
+  d=11, l=  58:            SEQUENCE
+  d=12, l=   8:             OBJECT                          PKIX.CertificateAuthorityIssuers [1.3.6.1.5.5.7.48.2]
+  d=12, l=  12:             [6] context                     http://postarca.posta.si/files/POSTArCA-G2.cer
+  d=11, l=  32:            SEQUENCE
+  d=12, l=   8:             OBJECT                          PKIX.OCSP [1.3.6.1.5.5.7.48.1]
+  d=12, l=  12:             [6] context                     http://ocsp.posta.si
+  d= 8, l=  27:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X509v3.SubjectAlternativeName [2.5.29.17]
+  d= 9, l=  20:          OCTET STRING
+  d=10, l=  18:           SEQUENCE
+  d=11, l=  16:            [2] context                      8210655065726F2053544152542074657374
+  d= 8, l= 336:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X509v3.CRLDistributionPoints [2.5.29.31]
+  d= 9, l= 327:          OCTET STRING
+  d=10, l= 323:           SEQUENCE
+  d=11, l= 201:            SEQUENCE
+  d=12, l= 198:             cons [0] context
+  d=13, l= 195:              cons [0] context
+  d=14, l=  14:               [6] context                   http://postarca.posta.si/crl/postarca-g2.crl
+  d=14, l= 146:               [6] context                   8681926C6461703A2F2F706F7374617263612E706F7374612E73692F636E3D504F53544172434125323047322C6F7267616E697A6174696F6E4964656E7469666965723D56415453492D32353032383032322C6F3D504F535441253230534C4F56454E494A45253230642E6F2E6F2E2C633D53493F63657274696669636174655265766F636174696F6E4C6973743B62696E617279
+  d=11, l= 117:            SEQUENCE
+  d=12, l= 115:             cons [0] context
+  d=13, l= 113:              cons [0] context
+  d=14, l= 111:               cons [4] context
+  d=15, l= 109:                SEQUENCE
+  d=16, l=  11:                 SET
+  d=17, l=   9:                  SEQUENCE
+  d=18, l=   3:                   OBJECT                    X520.Country [2.5.4.6]
+  d=18, l=   2:                   PRINTABLE STRING          SI
+  d=16, l=  31:                 SET
+  d=17, l=  29:                  SEQUENCE
+  d=18, l=   3:                   OBJECT                    X520.Organization [2.5.4.10]
+  d=18, l=  22:                   PRINTABLE STRING          POSTA SLOVENIJE d.o.o.
+  d=16, l=  23:                 SET
+  d=17, l=  21:                  SEQUENCE
+  d=18, l=   3:                   OBJECT                    2.5.4.97
+  d=18, l=  14:                   PRINTABLE STRING          VATSI-25028022
+  d=16, l=  20:                 SET
+  d=17, l=  18:                  SEQUENCE
+  d=18, l=   3:                   OBJECT                    X520.CommonName [2.5.4.3]
+  d=18, l=  11:                   PRINTABLE STRING          POSTArCA G2
+  d=16, l=  14:                 SET
+  d=17, l=  12:                  SEQUENCE
+  d=18, l=   3:                   OBJECT                    X520.CommonName [2.5.4.3]
+  d=18, l=   5:                   PRINTABLE STRING          CRL10
+  d= 8, l=  19:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X509v3.AuthorityKeyIdentifier [2.5.29.35]
+  d= 9, l=  12:          OCTET STRING
+  d=10, l=  10:           SEQUENCE
+  d=11, l=   8:            [0] context                      80084B00EDF20E97A37C
+  d= 8, l=  17:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X509v3.SubjectKeyIdentifier [2.5.29.14]
+  d= 9, l=  10:          OCTET STRING
+  d=10, l=   8:           OCTET STRING                      4640F5FF6DBC3B6A
+  d= 8, l=   9:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X509v3.BasicConstraints [2.5.29.19]
+  d= 9, l=   2:          OCTET STRING
+  d=10, l=   0:           SEQUENCE
+  d= 5, l=  13:      SEQUENCE
+  d= 6, l=   9:       OBJECT                                RSA/EMSA3(SHA-256) [1.2.840.113549.1.1.11]
+  d= 6, l=   0:       NULL
+  d= 5, l= 385:      BIT STRING                             58BB2D5BEB4E08D3FBA2009E3B96012A087BE6F136151C3BBF57F88AD41EC3E1DC37F19298FB49CCD6C569DBEBC0DB7AD90156B89902CA67307E4D82A91DD83BF7DD8E3D742D16B26216664837318A5B718F48804D9ADBF2A9CF3C431936DE5DEF1DAE01BBEB7D61DD2864F42502F649E88D6960A70DE9F6222353427370D78DFAA10DF01BA4FF4360A5823A51D91A62CB41387FCF3678028125FEB7D789570E475B8B0D55F0065B9EDF6507CFC7374EFA3B98AF2D955893AEB9A93AE36DF8F145FFA32B450C84D489AFF992CE18464260A41806DC1938111E3AB93EBAB243557768D3E137764C95645915ABE369BB0E8A4D4F31D666DBEF38F217227762E260EC92A0498764B46DFE6E74231C6A35FF5B714A9D9CDB262D6C787DF149DED7A808CA699F522AB136B837F039C2BB0A3DD89F309ABAA6B6842E89DFBBC8336B945414F8D976482B5DABFDEA8D12B8109F6A58FFCD21F21D31CF6948C9A4EE761A983A546910AE0F6508595167A2E27313CCD108761AF95365C234AF00529A5020
+  d= 4, l=1699:     SEQUENCE
+  d= 5, l=1291:      SEQUENCE
+  d= 6, l=   3:       cons [0] context
+  d= 7, l=   1:        INTEGER                              2
+  d= 6, l=  12:       INTEGER                               0x16D01B840000000059522321
+  d= 6, l=  13:       SEQUENCE
+  d= 7, l=   9:        OBJECT                               RSA/EMSA3(SHA-256) [1.2.840.113549.1.1.11]
+  d= 7, l=   0:        NULL
+  d= 6, l=  95:       SEQUENCE
+  d= 7, l=  11:        SET
+  d= 8, l=   9:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.Country [2.5.4.6]
+  d= 9, l=   2:          PRINTABLE STRING                   SI
+  d= 7, l=  31:        SET
+  d= 8, l=  29:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.Organization [2.5.4.10]
+  d= 9, l=  22:          PRINTABLE STRING                   POSTA SLOVENIJE d.o.o.
+  d= 7, l=  23:        SET
+  d= 8, l=  21:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             2.5.4.97
+  d= 9, l=  14:          PRINTABLE STRING                   VATSI-25028022
+  d= 7, l=  22:        SET
+  d= 8, l=  20:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.CommonName [2.5.4.3]
+  d= 9, l=  13:          PRINTABLE STRING                   POSTArCA Root
+  d= 6, l=  30:       SEQUENCE
+  d= 7, l=  13:        UTC TIME                             2017/06/27 09:52:52 UTC
+  d= 7, l=  13:        UTC TIME                             2035/06/27 10:22:52 UTC
+  d= 6, l=  93:       SEQUENCE
+  d= 7, l=  11:        SET
+  d= 8, l=   9:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.Country [2.5.4.6]
+  d= 9, l=   2:          PRINTABLE STRING                   SI
+  d= 7, l=  31:        SET
+  d= 8, l=  29:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.Organization [2.5.4.10]
+  d= 9, l=  22:          PRINTABLE STRING                   POSTA SLOVENIJE d.o.o.
+  d= 7, l=  23:        SET
+  d= 8, l=  21:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             2.5.4.97
+  d= 9, l=  14:          PRINTABLE STRING                   VATSI-25028022
+  d= 7, l=  20:        SET
+  d= 8, l=  18:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.CommonName [2.5.4.3]
+  d= 9, l=  11:          PRINTABLE STRING                   POSTArCA G2
+  d= 6, l= 418:       SEQUENCE
+  d= 7, l=  13:        SEQUENCE
+  d= 8, l=   9:         OBJECT                              RSA [1.2.840.113549.1.1.1]
+  d= 8, l=   0:         NULL
+  d= 7, l= 399:        BIT STRING
+  d= 8, l= 394:         SEQUENCE
+  d= 9, l= 385:          INTEGER                            0x9586C256B0B5060EE226E8D638DB28B7AA6A8B13217325BC1E6E0F0D77A4389488FB074DC5814CF1A14156289589130F017892D9A72B7F24A6A201333E07446E89C853232A94F7699BEFC6426780CD03ABD89441F881472C447CCA8394010E6859C0E841168A35C4CCD97709E19C25E0C61A948D0E2D771625155958D7EFA351ADDD941EA914CB0F5CC876B3428DDCB5C6D622755F8451121CB16ACD69993B872B43E4148A31662FB2CF085478D83C1A03FFF0944FF795885D3A30566815A820743760A9D574D5C6B571D828D1EDC66EBC787B6FC8A0DABEB4E0576E734DBF7CFD3FEBBC906467E0A0F6EB8F55D0C6DB7E6C0CEA5AEF0F3057FE426C895F2D5FEAEA79E34A22EF46F40D62EB64FB32EB782B53FDA0297E391C345E63FC9C82CB7F5DAFAC6E33F3BDAFE5172A1DF3EB25B5E1200B997B0911BFD852B95915A1A0D14B71AA4B0C628FF2BADF19A1C69444E6CB225AD4CD2244F239E234ACE7B53535DDE3734EA1CD2AD558880530098A44B1F28E6563381B506BF6218C948F4C35
+  d= 9, l=   3:          INTEGER                            0x010001
+  d= 6, l= 607:       cons [3] context
+  d= 7, l= 603:        SEQUENCE
+  d= 8, l=  18:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X509v3.BasicConstraints [2.5.29.19]
+  d= 9, l=   1:          BOOLEAN                            true
+  d= 9, l=   8:          OCTET STRING
+  d=10, l=   6:           SEQUENCE
+  d=11, l=   1:            BOOLEAN                          true
+  d=11, l=   1:            INTEGER                          0
+  d= 8, l=  14:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X509v3.KeyUsage [2.5.29.15]
+  d= 9, l=   1:          BOOLEAN                            true
+  d= 9, l=   4:          OCTET STRING
+  d=10, l=   2:           BIT STRING                        06
+  d= 8, l=  68:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X509v3.CertificatePolicies [2.5.29.32]
+  d= 9, l=  61:          OCTET STRING
+  d=10, l=  59:           SEQUENCE
+  d=11, l=  57:            SEQUENCE
+  d=12, l=   4:             OBJECT                          X509v3.AnyPolicy [2.5.29.32.0]
+  d=12, l=  49:             SEQUENCE
+  d=13, l=  47:              SEQUENCE
+  d=14, l=   8:               OBJECT                        1.3.6.1.5.5.7.2.1
+  d=14, l=  35:               IA5 STRING                    http://postarca.posta.si/dokumenti/
+  d= 8, l= 110:         SEQUENCE
+  d= 9, l=   8:          OBJECT                             PKIX.AuthorityInformationAccess [1.3.6.1.5.5.7.1.1]
+  d= 9, l=  98:          OCTET STRING
+  d=10, l=  96:           SEQUENCE
+  d=11, l=  60:            SEQUENCE
+  d=12, l=   8:             OBJECT                          PKIX.CertificateAuthorityIssuers [1.3.6.1.5.5.7.48.2]
+  d=12, l=  12:             [6] context                     http://postarca.posta.si/files/POSTArCA-Root.cer
+  d=11, l=  32:            SEQUENCE
+  d=12, l=   8:             OBJECT                          PKIX.OCSP [1.3.6.1.5.5.7.48.1]
+  d=12, l=  12:             [6] context                     http://ocsp.posta.si
+  d= 8, l= 341:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X509v3.CRLDistributionPoints [2.5.29.31]
+  d= 9, l= 332:          OCTET STRING
+  d=10, l= 328:           SEQUENCE
+  d=11, l= 205:            SEQUENCE
+  d=12, l= 202:             cons [0] context
+  d=13, l= 199:              cons [0] context
+  d=14, l=  14:               [6] context                   http://postarca.posta.si/crl/POSTArCA-Root.crl
+  d=14, l= 148:               [6] context                   8681946C6461703A2F2F706F7374617263612E706F7374612E73692F636E3D504F535441724341253230526F6F742C6F7267616E697A6174696F6E4964656E7469666965723D56415453492D32353032383032322C6F3D504F535441253230534C4F56454E494A45253230642E6F2E6F2E2C633D53493F63657274696669636174655265766F636174696F6E4C6973743B62696E617279
+  d=11, l= 118:            SEQUENCE
+  d=12, l= 116:             cons [0] context
+  d=13, l= 114:              cons [0] context
+  d=14, l= 112:               cons [4] context
+  d=15, l= 110:                SEQUENCE
+  d=16, l=  11:                 SET
+  d=17, l=   9:                  SEQUENCE
+  d=18, l=   3:                   OBJECT                    X520.Country [2.5.4.6]
+  d=18, l=   2:                   PRINTABLE STRING          SI
+  d=16, l=  31:                 SET
+  d=17, l=  29:                  SEQUENCE
+  d=18, l=   3:                   OBJECT                    X520.Organization [2.5.4.10]
+  d=18, l=  22:                   PRINTABLE STRING          POSTA SLOVENIJE d.o.o.
+  d=16, l=  23:                 SET
+  d=17, l=  21:                  SEQUENCE
+  d=18, l=   3:                   OBJECT                    2.5.4.97
+  d=18, l=  14:                   PRINTABLE STRING          VATSI-25028022
+  d=16, l=  22:                 SET
+  d=17, l=  20:                  SEQUENCE
+  d=18, l=   3:                   OBJECT                    X520.CommonName [2.5.4.3]
+  d=18, l=  13:                   PRINTABLE STRING          POSTArCA Root
+  d=16, l=  13:                 SET
+  d=17, l=  11:                  SEQUENCE
+  d=18, l=   3:                   OBJECT                    X520.CommonName [2.5.4.3]
+  d=18, l=   4:                   PRINTABLE STRING          CRL1
+  d= 8, l=  19:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X509v3.AuthorityKeyIdentifier [2.5.29.35]
+  d= 9, l=  12:          OCTET STRING
+  d=10, l=  10:           SEQUENCE
+  d=11, l=   8:            [0] context                      80084389A6EB178A6F7E
+  d= 8, l=  17:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X509v3.SubjectKeyIdentifier [2.5.29.14]
+  d= 9, l=  10:          OCTET STRING
+  d=10, l=   8:           OCTET STRING                      4B00EDF20E97A37C
+  d= 5, l=  13:      SEQUENCE
+  d= 6, l=   9:       OBJECT                                RSA/EMSA3(SHA-256) [1.2.840.113549.1.1.11]
+  d= 6, l=   0:       NULL
+  d= 5, l= 385:      BIT STRING                             5A08D49570D193B320DC4DE516E7C6C28BA8A2A7C1ED5C769267BF5135E677B3379C4BC447A49A27680B3E468C5A8EBD44B4B1D24E1AE2B4517C758E23E4D9FE0110D33A541BCC1C037861F4917C7DC440946BF45B1BA55642C3DE4E82A6FB90A73F6F2D6C8A6FA67FFF72DB562BDB1EB429D2CBA1158CDFB693F8523FBCC7873A5CEC4BD3CF9867DBA2368162C82115FB01A6766D9EC116249FABDE1C1494BED41B584B6488D7C9A5AAED6D791FDDBCEB6E7BD66FA38B69B130019A7A680EFC275B1FDD043B4C2FFF50C5CBD47D1F855214081BC89E531404C2AFC85B1939B658F6B3BE22AEF80EB905CA3C3FA437E8D8F2AF792F0DEC1CAC1C65B18317D385324839A080669EF58C04EDF4FBC4333B30A7A6B9BF7F7F25E0477BEFC7BF5588060535C9D0D85FF0D65AEAD1F8D1E40EBEC8787ACE78FAAC081896754DAB860271782FDC00F3F9C4DEDFB27DB9E0DE579B4C74A76D02119FED18BBB4497D8B346A6F654D3300C733C7F1B36511D12AD5723BEE1A932D2FAE8C9570E42EC47E18
+  d= 4, l=1167:     SEQUENCE
+  d= 5, l= 759:      SEQUENCE
+  d= 6, l=   3:       cons [0] context
+  d= 7, l=   1:        INTEGER                              2
+  d= 6, l=  12:       INTEGER                               0x252A24F900000000595222E6
+  d= 6, l=  13:       SEQUENCE
+  d= 7, l=   9:        OBJECT                               RSA/EMSA3(SHA-256) [1.2.840.113549.1.1.11]
+  d= 7, l=   0:        NULL
+  d= 6, l=  95:       SEQUENCE
+  d= 7, l=  11:        SET
+  d= 8, l=   9:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.Country [2.5.4.6]
+  d= 9, l=   2:          PRINTABLE STRING                   SI
+  d= 7, l=  31:        SET
+  d= 8, l=  29:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.Organization [2.5.4.10]
+  d= 9, l=  22:          PRINTABLE STRING                   POSTA SLOVENIJE d.o.o.
+  d= 7, l=  23:        SET
+  d= 8, l=  21:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             2.5.4.97
+  d= 9, l=  14:          PRINTABLE STRING                   VATSI-25028022
+  d= 7, l=  22:        SET
+  d= 8, l=  20:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.CommonName [2.5.4.3]
+  d= 9, l=  13:          PRINTABLE STRING                   POSTArCA Root
+  d= 6, l=  30:       SEQUENCE
+  d= 7, l=  13:        UTC TIME                             2017/06/27 08:48:44 UTC
+  d= 7, l=  13:        UTC TIME                             2037/06/27 09:18:44 UTC
+  d= 6, l=  95:       SEQUENCE
+  d= 7, l=  11:        SET
+  d= 8, l=   9:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.Country [2.5.4.6]
+  d= 9, l=   2:          PRINTABLE STRING                   SI
+  d= 7, l=  31:        SET
+  d= 8, l=  29:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.Organization [2.5.4.10]
+  d= 9, l=  22:          PRINTABLE STRING                   POSTA SLOVENIJE d.o.o.
+  d= 7, l=  23:        SET
+  d= 8, l=  21:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             2.5.4.97
+  d= 9, l=  14:          PRINTABLE STRING                   VATSI-25028022
+  d= 7, l=  22:        SET
+  d= 8, l=  20:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.CommonName [2.5.4.3]
+  d= 9, l=  13:          PRINTABLE STRING                   POSTArCA Root
+  d= 6, l= 418:       SEQUENCE
+  d= 7, l=  13:        SEQUENCE
+  d= 8, l=   9:         OBJECT                              RSA [1.2.840.113549.1.1.1]
+  d= 8, l=   0:         NULL
+  d= 7, l= 399:        BIT STRING
+  d= 8, l= 394:         SEQUENCE
+  d= 9, l= 385:          INTEGER                            0x81B8BCD16C412F119A8C7A1E6B489D426894233C61589AE71C993F2DDBDB61F4DD22A098D602F860B722F2066547D631FC106A9546AAC4A152C181A958602261A81AEA82D0D477354C9C81E3F0C6690442633E7F00F8013134E52EAA274F674E94D881F75FF74EAC3FACFBA39F2F885D3BE1C9976FF3A4F6926AD2D36620CC8D20690B643F7132872BCC17ADB385BE1C4CA67B2099483627A7B84B99E51D511562ED873C804B6F7C5F1299752AAB04EC22AD19FDC9C6DA4C557007C4EA6EA8594D14F151B28468417C47E940082A353ED869BEE0484C077F915066C8621BDDE69014637908AB8641214B9D85779AA120E53705A0D28C64B5786258E90FD14058159212024B6B1D59751DF8EFFA59E73C9683DB09350A8CBD522A306D06D133FD303025EC4B93C0FBF5F1015BAD5B7A223F9545D4121291DC3EC2D1A68193D914E7C8C15FE9A35DDFFDFE3BC37EB08206748EB45772524DB07FC9A45F0A04C4E985456C06C56B6C2467C455C74723C68BD0A5D8C191AA560C6B1B758B7F926DD5
+  d= 9, l=   3:          INTEGER                            0x010001
+  d= 6, l=  75:       cons [3] context
+  d= 7, l=  73:        SEQUENCE
+  d= 8, l=  15:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X509v3.BasicConstraints [2.5.29.19]
+  d= 9, l=   1:          BOOLEAN                            true
+  d= 9, l=   5:          OCTET STRING
+  d=10, l=   3:           SEQUENCE
+  d=11, l=   1:            BOOLEAN                          true
+  d= 8, l=  14:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X509v3.KeyUsage [2.5.29.15]
+  d= 9, l=   1:          BOOLEAN                            true
+  d= 9, l=   4:          OCTET STRING
+  d=10, l=   2:           BIT STRING                        06
+  d= 8, l=  19:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X509v3.AuthorityKeyIdentifier [2.5.29.35]
+  d= 9, l=  12:          OCTET STRING
+  d=10, l=  10:           SEQUENCE
+  d=11, l=   8:            [0] context                      80084389A6EB178A6F7E
+  d= 8, l=  17:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X509v3.SubjectKeyIdentifier [2.5.29.14]
+  d= 9, l=  10:          OCTET STRING
+  d=10, l=   8:           OCTET STRING                      4389A6EB178A6F7E
+  d= 5, l=  13:      SEQUENCE
+  d= 6, l=   9:       OBJECT                                RSA/EMSA3(SHA-256) [1.2.840.113549.1.1.11]
+  d= 6, l=   0:       NULL
+  d= 5, l= 385:      BIT STRING                             7CD78E35C1BE71BD5E865022B9996C136BEB7099A9DD0B1EC27EE56952EC0CA0151485BDA364F4765A83D023A6DAC9DA8FC764E3A9E3B7FAE6EF4136D45C24594E689E718F7E66392C88A3BE192531C4854739B6953F8A1D853DD67BA61ACDB815BFF52AA29856E7AB708AB881944E84770222F97FEB01999CE9AC03E58475A246B9C8FE2F443FE01F687F7CB7081490980D0DCB6CE739A55FFB51920D34102C1DB9E5A3A2AD123937A495B6C14E784E835FD3AFFCEFC30861E60B31B8834B38A7909A2345ED6A1D6AADB155FFA04FAD6138F139B52BC0772EBDC971AC3F39F27237C2F73494EDCAF0BA6BA1FA29B2C412B1AB0B95DC21A6756D1789292420DC090129BF34ECC320B5C775920DF477B10E5E3581C16FC20FF7060C7AA8A427AD600FF65DF5C33C3B8FEA8015EADF6E6DAF6A33009684EEDEA3E3A68F2937B30F959B3341D0161321793F4529E823C7BA435E76BB5692A27FC2D778A959AE097CDBAA504EB9A0078E4F22B3B5EF3D68F5439B6C4608C991F9457E7A6732C17A85
+  d= 3, l= 563:    SET
+  d= 4, l= 559:     SEQUENCE
+  d= 5, l=   1:      INTEGER                                1
+  d= 5, l= 109:      SEQUENCE
+  d= 6, l=  93:       SEQUENCE
+  d= 7, l=  11:        SET
+  d= 8, l=   9:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.Country [2.5.4.6]
+  d= 9, l=   2:          PRINTABLE STRING                   SI
+  d= 7, l=  31:        SET
+  d= 8, l=  29:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.Organization [2.5.4.10]
+  d= 9, l=  22:          PRINTABLE STRING                   POSTA SLOVENIJE d.o.o.
+  d= 7, l=  23:        SET
+  d= 8, l=  21:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             2.5.4.97
+  d= 9, l=  14:          PRINTABLE STRING                   VATSI-25028022
+  d= 7, l=  20:        SET
+  d= 8, l=  18:         SEQUENCE
+  d= 9, l=   3:          OBJECT                             X520.CommonName [2.5.4.3]
+  d= 9, l=  11:          PRINTABLE STRING                   POSTArCA G2
+  d= 6, l=  12:       INTEGER                               0x65B2C9AC0000000059529C96
+  d= 5, l=  13:      SEQUENCE
+  d= 6, l=   9:       OBJECT                                SHA-256 [2.16.840.1.101.3.4.2.1]
+  d= 6, l=   0:       NULL
+  d= 5, l= 152:      cons [0] context
+  d= 6, l=  24:       SEQUENCE
+  d= 7, l=   9:        OBJECT                               PKCS9.ContentType [1.2.840.113549.1.9.3]
+  d= 7, l=  11:        SET
+  d= 8, l=   9:         OBJECT                              1.2.840.113549.1.7.1
+  d= 6, l=  28:       SEQUENCE
+  d= 7, l=   9:        OBJECT                               1.2.840.113549.1.9.5
+  d= 7, l=  15:        SET
+  d= 8, l=  13:         UTC TIME                            2023/05/08 11:20:37 UTC
+  d= 6, l=  45:       SEQUENCE
+  d= 7, l=   9:        OBJECT                               1.2.840.113549.1.9.52
+  d= 7, l=  32:        SET
+  d= 8, l=  30:         SEQUENCE
+  d= 9, l=  13:          SEQUENCE
+  d=10, l=   9:           OBJECT                            SHA-256 [2.16.840.1.101.3.4.2.1]
+  d=10, l=   0:           NULL
+  d= 9, l=  13:          cons [1] context
+  d=10, l=   9:           OBJECT                            RSA/EMSA3(SHA-256) [1.2.840.113549.1.1.11]
+  d=10, l=   0:           NULL
+  d= 6, l=  47:       SEQUENCE
+  d= 7, l=   9:        OBJECT                               PKCS9.MessageDigest [1.2.840.113549.1.9.4]
+  d= 7, l=  34:        SET
+  d= 8, l=  32:         OCTET STRING                        5A4D9A1CACCB8C234ED57AE79A8EDF24B7EEC08394715E95E4CD2AB0378812D3
+  d= 5, l=  13:      SEQUENCE
+  d= 6, l=   9:       OBJECT                                RSA/EMSA3(SHA-256) [1.2.840.113549.1.1.11]
+  d= 6, l=   0:       NULL
+  d= 5, l= 256:      OCTET STRING                           7892013AD5525C1FFD74CFA536CB33F463A8EDEC07BA15DDCCB71CC5D3817A3023AB425C3FFCDEDD092A06375DD26B192F697D708408211EA18DD0FBEEFC1FC6DB946250582EB9BCE788354C6D4E1FAF1C8D436A5EDA0776C3A9B7518E27EEC80F50D45BFCF975B3545A65E322F885ADA76875769AB5485C84787B3C82599983C04B30B3E1C6764252A127C57747317DA707D76AB028D9827891673C565224F5833277CFE555061C46FBCFA8A7100B873998D63C8F6E7CB515900F81232BA9D8B8B2BE6E1B85A5368B70441AAA53AB9E9EE81D464F749D61005E2B15442BEC23A6EB32672E95CC818C3F0F09D74BB4250B5943B2988B410BDFABB7B4B8FDC960

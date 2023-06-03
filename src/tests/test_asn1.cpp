@@ -10,6 +10,7 @@
    #include <botan/asn1_print.h>
    #include <botan/ber_dec.h>
    #include <botan/der_enc.h>
+   #include <botan/internal/fmt.h>
 #endif
 
 namespace Botan_Tests {
@@ -301,14 +302,19 @@ class ASN1_Printer_Tests final : public Test {
 
          Botan::ASN1_Pretty_Printer printer;
 
-         const size_t num_tests = 6;
+         const size_t num_tests = 7;
 
          for(size_t i = 1; i <= num_tests; ++i) {
             std::string i_str = std::to_string(i);
-            const std::vector<uint8_t> input1 = Test::read_binary_data_file("asn1_print/input" + i_str + ".der");
-            const std::string expected1 = Test::read_data_file("asn1_print/output" + i_str + ".txt");
+            const std::vector<uint8_t> input_data = Test::read_binary_data_file("asn1_print/input" + i_str + ".der");
+            const std::string expected_output = Test::read_data_file("asn1_print/output" + i_str + ".txt");
 
-            result.test_eq("Test " + i_str, printer.print(input1), expected1);
+            try {
+               const std::string output = printer.print(input_data);
+               result.test_eq("Test " + i_str, output, expected_output);
+            } catch(Botan::Exception& e) {
+               result.test_failure(Botan::fmt("Printing test {} failed with an exception: '{}'", i, e.what()));
+            }
          }
 
          return {result};
