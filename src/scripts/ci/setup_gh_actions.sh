@@ -98,6 +98,10 @@ fi
 
 echo "CCACHE_MAXSIZE=200M" >> "${GITHUB_ENV}"
 
+echo "gh cli"
+gh pr diff --name-only
+
+echo "show head"
 git show HEAD
 
 echo "Git branch list"
