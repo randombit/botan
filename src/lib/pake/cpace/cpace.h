@@ -8,23 +8,32 @@
 #define BOTAN_PAKE_CPACE_H_
 
 #include <botan/pake.h>
+#include <botan/ec_group.h>
 #include <memory>
+#include <optional>
 
 namespace Botan {
+
+class HashFunction;
 
 class PAKE_Cpace final : public PasswordAuthenticatedKeyExchange {
    public:
       PAKE_Cpace(std::string_view group_id, std::string_view hash_fn);
 
-      void reset();
+      ~PAKE_Cpace();
 
-      void initialize(std::string_view password,
-                      std::span<const uint8_t> channel_id,
-                      std::span<const uint8_t> session_id,
-                      std::span<const uint8_t> assoc_a,
-                      std::span<const uint8_t> assoc_b);
+      PasswordAuthenticatedKeyExchange::Status status() const override;
+
+      std::vector<uint8_t>
+      begin(std::string_view password,
+            std::span<const uint8_t> channel_id,
+            std::span<const uint8_t> session_id,
+            std::span<const uint8_t> assoc_a,
+            std::span<const uint8_t> assoc_b);
 
       std::optional<std::vector<uint8_t>> step(std::span<const uint8_t> peer_message);
+
+      std::vector<uint8_t> shared_secret() const;
 
    private:
       // pimpl this?

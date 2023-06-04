@@ -13,13 +13,6 @@ namespace Botan {
 
 class PasswordAuthenticatedKeyExchange {
    public:
-      static std::unique_ptr<PasswordAuthenticatedKeyExchange> void create(std::string_view algo_name,
-                                                                           std::string_view group_type,
-                                                                           std::string_view hash_fn);
-
-      virtual ~PasswordAuthenticatedKeyExchange() = default;
-
-#if 0
       enum class Role {
          Initiator,
          Responder
@@ -31,8 +24,15 @@ class PasswordAuthenticatedKeyExchange {
          Completed,
       };
 
+      static std::unique_ptr<PasswordAuthenticatedKeyExchange> create(std::string_view algo_name,
+                                                                      std::string_view group_type,
+                                                                      std::string_view hash_fn);
+
       virtual Status status() const = 0;
 
+      virtual ~PasswordAuthenticatedKeyExchange() = default;
+
+#if 0
       /**
       * Begin
       */
