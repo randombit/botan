@@ -98,6 +98,8 @@ fi
 
 echo "CCACHE_MAXSIZE=200M" >> "${GITHUB_ENV}"
 
+git show HEAD
+
 echo "Git branch list"
 git branch -l
 
