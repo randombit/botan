@@ -202,7 +202,7 @@ def main(args = None):
             print("ERROR: --only-changed-files is incompatible with file restrictions")
             return 1
 
-        changes = run_command(['git', 'diff', '--name-only', '-r', 'master'])
+        changes = run_command(['git', 'diff', '--name-only', '-r', 'origin/master'])
 
         files_to_check = []
         for file in changes.split():
