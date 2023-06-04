@@ -25,11 +25,11 @@ class PAKE_Cpace final : public PasswordAuthenticatedKeyExchange {
       PasswordAuthenticatedKeyExchange::Status status() const override;
 
       std::vector<uint8_t>
-      begin(std::string_view password,
-            std::span<const uint8_t> channel_id,
-            std::span<const uint8_t> session_id,
-            std::span<const uint8_t> assoc_a,
-            std::span<const uint8_t> assoc_b);
+      initiate(std::string_view password,
+               std::span<const uint8_t> channel_id,
+               std::span<const uint8_t> session_id,
+               std::span<const uint8_t> assoc_a,
+               std::span<const uint8_t> assoc_b);
 
       std::optional<std::vector<uint8_t>> step(std::span<const uint8_t> peer_message);
 
