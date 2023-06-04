@@ -167,7 +167,7 @@ class DataSource_BERObject final : public DataSource {
          }
 
          const size_t got = std::min(bytes_left - peek_offset, length);
-         copy_mem(out, m_obj.bits() + peek_offset, got);
+         copy_mem(out, m_obj.bits() + m_offset + peek_offset, got);
          return got;
       }
 
