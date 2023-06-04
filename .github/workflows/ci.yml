@@ -176,6 +176,9 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
+        # needed to have master available to compare
+        with:
+           fetch-depth: 0
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
