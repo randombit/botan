@@ -98,6 +98,9 @@ fi
 
 echo "CCACHE_MAXSIZE=200M" >> "${GITHUB_ENV}"
 
+echo "Git branch list"
+git branch -l
+
 echo "Does this work..."
 git diff --name-only -r master
 echo "End of git diff"
