@@ -33,6 +33,7 @@ ct_utils.h
 donna128.h
 filesystem.h
 fmt.h
+leb128.h
 loadstor.h
 mul128.h
 os_utils.h
