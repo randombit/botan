@@ -11,6 +11,8 @@
 
 namespace Botan {
 
+/* anybody home?? */
+
 namespace {
 
 // clang-format off
