@@ -189,6 +189,7 @@ def main(args = None):
     parser.add_option('--list-checks', action='store_true', default=False)
     parser.add_option('--fast-checks-only', action='store_true', default=False)
     parser.add_option('--only-changed-files', action='store_true', default=False)
+    parser.add_option('--changed-vs-ref', default='master')
 
     (options, args) = parser.parse_args(args)
 
@@ -202,7 +203,7 @@ def main(args = None):
             print("ERROR: --only-changed-files is incompatible with file restrictions")
             return 1
 
-        changes = run_command(['git', 'diff', '--name-only', '-r', 'origin/master'])
+        changes = run_command(['git', 'diff', '--name-only', '-r', options.changed_vs_ref])
 
         files_to_check = []
         for file in changes.split():

@@ -176,9 +176,9 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-        # needed to have master available to compare
-        with:
-           fetch-depth: 0
+
+      - name: Checkout master
+        run: git fetch --depth=1 origin/master
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
@@ -190,7 +190,7 @@ jobs:
         run: python3 ./configure.py --cc=clang
 
       - name: Run Clang Tidy
-        run: python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose --only-changed-files --fast-checks-only
+        run: python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose --only-changed-files --fast-checks-only --changed-vs-ref=origin/master
 
   specials:
     if: false
