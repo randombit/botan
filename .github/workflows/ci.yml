@@ -174,24 +174,6 @@ jobs:
       - name: Build and Test Botan
         run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
-  clang-tidy:
-    name: "Clang Tidy"
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Build Agent
-        uses: ./.github/actions/setup-build-agent
-        with:
-          target: clang-tidy
-          cache-key: linux-x86_64-clang-tidy
-
-      - name: Configure Build
-        run: python3 ./configure.py --cc=clang
-
-      - name: Run Clang Tidy
-        run: python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose --only-changed-files --fast-checks-only
-
   specials:
     name: "Special"
     strategy:
