@@ -99,5 +99,5 @@ fi
 echo "CCACHE_MAXSIZE=200M" >> "${GITHUB_ENV}"
 
 echo "Does this work..."
-git diff --name-only -r master
+git diff --name-only -r origin/master
 echo "End of git diff"
