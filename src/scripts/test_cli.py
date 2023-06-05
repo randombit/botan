@@ -413,6 +413,9 @@ def cli_xmss_sign_tests(tmp_dir):
     msg = os.path.join(tmp_dir, 'input')
     sig1 = os.path.join(tmp_dir, 'sig1')
     sig2 = os.path.join(tmp_dir, 'sig2')
+    root_crt = os.path.join(tmp_dir, 'root.crt')
+    int_csr = os.path.join(tmp_dir, 'int.csr')
+    int_crt = os.path.join(tmp_dir, 'int.crt')
 
     test_cli("rng", ['--output=%s' % (msg)], "")
     test_cli("hash", ["--no-fsname", msg], "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855")
@@ -439,6 +442,19 @@ def cli_xmss_sign_tests(tmp_dir):
     test_cli("pkcs8", "--pub-out --output=%s %s" % (pub_key2, priv_key), "")
     test_cli("fingerprint", ['--no-fsname', pub_key2],
              "6F:C4:08:CB:C3:61:CC:49:8A:25:90:3B:2F:D4:4D:B8:7F:2F:27:06:8C:8F:01:E0:01:DB:42:1F:B4:09:09:D9")
+
+    # verify that key is updated when creating a self-signed certificate
+    test_cli("gen_self_signed",
+             [priv_key, "Root", "--ca", "--path-limit=2", "--output="+root_crt], "")
+    test_cli("hash", ["--no-fsname", priv_key], "ACFD94CDF5D0674EE5489039CF70850A1FFF95480A94E8C6C6FD2BF006909D07")
+
+    # verify that key is updated after signing a certificate request
+    test_cli("gen_pkcs10", "%s Intermediate --ca --output=%s" % (priv_key, int_csr))
+    test_cli("hash", ["--no-fsname", priv_key], "BE6F8F868DB495D95F73B50A370A218225253048E2F1C7C3E286568FDE203700")
+
+    # verify that key is updated after issuing a certificate
+    test_cli("sign_cert", "%s %s %s --output=%s" % (root_crt, priv_key, int_csr, int_crt))
+    test_cli("hash", ["--no-fsname", priv_key], "8D3B736D8A708C342F9263163E0E3BAFE4132F74AE53A8EDF78074422CF80496")
 
 def cli_pbkdf_tune_tests(_tmp_dir):
     if not check_for_command("pbkdf_tune"):

@@ -26,7 +26,40 @@
       #include <botan/certstor_system.h>
    #endif
 
+   #include <fstream>
+
 namespace Botan_CLI {
+
+namespace {
+
+std::unique_ptr<Botan::Private_Key> load_private_key(const std::string& key_file, const std::string& passphrase) {
+   Botan::DataSource_Stream key_stream(key_file);
+   auto key = Botan::PKCS8::load_key(key_stream, passphrase);
+
+   if(!key) {
+      throw CLI_Error("Failed to load key from " + key_file);
+   }
+
+   return key;
+}
+
+void update_stateful_private_key(const Botan::Private_Key& key,
+                                 Botan::RandomNumberGenerator& rng,
+                                 const std::string& key_file,
+                                 const std::string& pass) {
+   if(!key.stateful_operation()) {
+      return;
+   }
+
+   std::ofstream updated_key(key_file);
+   if(pass.empty()) {
+      updated_key << Botan::PKCS8::PEM_encode(key);
+   } else {
+      updated_key << Botan::PKCS8::PEM_encode(key, rng, pass);
+   }
+}
+
+}  // namespace
 
    #if defined(BOTAN_HAS_CERTSTOR_SYSTEM)
 
@@ -89,17 +122,7 @@ class Sign_Cert final : public Command {
          const std::string emsa = get_arg("emsa");
          const std::string hash = get_arg("hash");
 
-         std::unique_ptr<Botan::Private_Key> key;
-         Botan::DataSource_Stream key_stream(key_file);
-         if(!pass.empty()) {
-            key = Botan::PKCS8::load_key(key_stream, pass);
-         } else {
-            key = Botan::PKCS8::load_key(key_stream);
-         }
-
-         if(!key) {
-            throw CLI_Error("Failed to load key from " + key_file);
-         }
+         auto key = load_private_key(key_file, pass);
 
          Botan::X509_CA ca(ca_cert, *key, hash, emsa, rng());
 
@@ -114,6 +137,7 @@ class Sign_Cert final : public Command {
          Botan::X509_Time end_time(now + days(get_arg_sz("duration")));
 
          Botan::X509_Certificate new_cert = ca.sign_request(req, rng(), start_time, end_time);
+         update_stateful_private_key(*key, rng(), key_file, pass);
 
          output() << new_cert.PEM_encode();
       }
@@ -242,12 +266,7 @@ class Gen_Self_Signed final : public Command {
       void go() override {
          const std::string key_file = get_arg("key");
          const std::string passphrase = get_passphrase_arg("Passphrase for " + key_file, "key-pass");
-         Botan::DataSource_Stream key_stream(key_file);
-         std::unique_ptr<Botan::Private_Key> key = Botan::PKCS8::load_key(key_stream, passphrase);
-
-         if(!key) {
-            throw CLI_Error("Failed to load key from " + get_arg("key"));
-         }
+         auto key = load_private_key(key_file, passphrase);
 
          const uint32_t lifetime = static_cast<uint32_t>(get_arg_sz("days") * 24 * 60 * 60);
 
@@ -271,6 +290,7 @@ class Gen_Self_Signed final : public Command {
          }
 
          Botan::X509_Certificate cert = Botan::X509::create_self_signed_cert(opts, *key, get_arg("hash"), rng());
+         update_stateful_private_key(*key, rng(), key_file, passphrase);
 
          if(der_format) {
             auto der = cert.BER_encode();
@@ -295,12 +315,10 @@ class Generate_PKCS10 final : public Command {
       std::string description() const override { return "Generate a PKCS #10 certificate signing request (CSR)"; }
 
       void go() override {
-         Botan::DataSource_Stream key_stream(get_arg("key"));
-         std::unique_ptr<Botan::Private_Key> key = Botan::PKCS8::load_key(key_stream, get_arg("key-pass"));
+         const std::string key_file = get_arg("key");
+         const std::string passphrase = get_passphrase_arg("Passphrase for " + key_file, "key-pass");
 
-         if(!key) {
-            throw CLI_Error("Failed to load key from " + get_arg("key"));
-         }
+         auto key = load_private_key(key_file, passphrase);
 
          Botan::X509_Cert_Options opts;
 
@@ -325,6 +343,7 @@ class Generate_PKCS10 final : public Command {
          }
 
          Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, *key, get_arg("hash"), rng());
+         update_stateful_private_key(*key, rng(), key_file, passphrase);
 
          output() << req.PEM_encode();
       }
