@@ -456,6 +456,8 @@ def cli_xmss_sign_tests(tmp_dir):
     test_cli("sign_cert", "%s %s %s --output=%s" % (root_crt, priv_key, int_csr, int_crt))
     test_cli("hash", ["--no-fsname", priv_key], "8D3B736D8A708C342F9263163E0E3BAFE4132F74AE53A8EDF78074422CF80496")
 
+    test_cli("cert_verify", "%s %s" % (int_crt, root_crt), "Certificate passes validation checks")
+
 def cli_pbkdf_tune_tests(_tmp_dir):
     if not check_for_command("pbkdf_tune"):
         return
