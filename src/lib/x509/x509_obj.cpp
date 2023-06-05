@@ -166,6 +166,9 @@ std::string x509_signature_padding_for(const std::string& algo_name,
       return user_specified_padding.empty() ? "Pure" : std::string(user_specified_padding);
    } else if(algo_name.starts_with("Dilithium-")) {
       return user_specified_padding.empty() ? "Randomized" : std::string(user_specified_padding);
+   } else if(algo_name == "XMSS") {
+      // XMSS does not take any padding, but if the user insists, we pass it along
+      return std::string(user_specified_padding);
    } else {
       throw Invalid_Argument("Unknown X.509 signing key type: " + algo_name);
    }
