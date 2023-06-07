@@ -54,8 +54,8 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
    Modular_Reducer mod_p(p);
    auto monty_p = std::make_shared<Montgomery_Params>(p, mod_p);
 
-   if(p % 4 == 3)  // The easy case
-   {
+   // If p == 3 (mod 4) there is a simple solution
+   if(p % 4 == 3) {
       return monty_exp_vartime(monty_p, a, ((p + 1) >> 2));
    }
 
