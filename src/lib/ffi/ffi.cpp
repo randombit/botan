@@ -17,6 +17,7 @@
 
 namespace Botan_FFI {
 
+// NOLINTNEXTLINE(*-avoid-non-const-global-variables)
 thread_local std::string g_last_exception_what;
 
 int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc) {

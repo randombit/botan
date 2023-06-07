@@ -154,15 +154,16 @@ class Client_Hello_Internal {
       Extensions& extensions() { return m_extensions; }
 
    public:
-      Protocol_Version m_legacy_version;
-      Session_ID m_session_id;
-      std::vector<uint8_t> m_random;
-      std::vector<uint16_t> m_suites;
-      std::vector<uint8_t> m_comp_methods;
-      Extensions m_extensions;
+      Protocol_Version m_legacy_version;    // NOLINT(*-non-private-member-variables-in-classes)
+      Session_ID m_session_id;              // NOLINT(*-non-private-member-variables-in-classes)
+      std::vector<uint8_t> m_random;        // NOLINT(*-non-private-member-variables-in-classes)
+      std::vector<uint16_t> m_suites;       // NOLINT(*-non-private-member-variables-in-classes)
+      std::vector<uint8_t> m_comp_methods;  // NOLINT(*-non-private-member-variables-in-classes)
+      Extensions m_extensions;              // NOLINT(*-non-private-member-variables-in-classes)
 
-      std::vector<uint8_t> m_hello_cookie;       // DTLS only
-      std::vector<uint8_t> m_cookie_input_bits;  // DTLS only
+      // These fields are only for DTLS:
+      std::vector<uint8_t> m_hello_cookie;       // NOLINT(*-non-private-member-variables-in-classes)
+      std::vector<uint8_t> m_cookie_input_bits;  // NOLINT(*-non-private-member-variables-in-classes)
 };
 
 Client_Hello::Client_Hello(Client_Hello&&) noexcept = default;

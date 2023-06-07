@@ -65,9 +65,9 @@ class RFC6066_Certificate_Status_Request {
          };
       }
 
-      std::vector<uint8_t> ocsp_names;
-      std::vector<std::vector<uint8_t>> ocsp_keys;
-      std::vector<uint8_t> extension_bytes;
+      std::vector<uint8_t> ocsp_names;              // NOLINT(*-non-private-member-variables-in-classes)
+      std::vector<std::vector<uint8_t>> ocsp_keys;  // NOLINT(*-non-private-member-variables-in-classes)
+      std::vector<uint8_t> extension_bytes;         // NOLINT(*-non-private-member-variables-in-classes)
 };
 
 }  // namespace
@@ -80,7 +80,7 @@ class Certificate_Status_Request_Internal {
    public:
       Certificate_Status_Request_Internal(Contents c) : content(std::move(c)) {}
 
-      Contents content;
+      Contents content;  // NOLINT(*-non-private-member-variables-in-classes)
 };
 
 Certificate_Status_Request::Certificate_Status_Request(TLS_Data_Reader& reader,

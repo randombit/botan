@@ -385,6 +385,7 @@ class Key_Share::Key_Share_Impl {
 
       Key_Share_Impl(Key_Share_Type ks) : key_share(std::move(ks)) {}
 
+      // NOLINTNEXTLINE(*-non-private-member-variables-in-classes)
       Key_Share_Type key_share;
 };
 
