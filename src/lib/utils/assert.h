@@ -118,20 +118,23 @@ void ignore_params(T&&... args) {
 #define BOTAN_UNUSED Botan::ignore_params
 
 /*
-* Define Botan::unreachable()
+* Define Botan::assert_unreachable and BOTAN_ASSERT_UNREACHABLE
 *
-* There is a pending WG21 proposal for `std::unreachable()`
-*   http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0627r3.pdf
+* This is intended to be used in the same situations as `std::unreachable()`;
+* a codepath that (should not) be reachable but where the compiler cannot
+* tell that it is unreachable.
+*
+* Unlike `std::unreachable()`, or equivalent compiler builtins like GCC's
+* `__builtin_unreachable`, this function is not UB. By default it will
+* throw an exception. If `BOTAN_TERMINATE_ON_ASSERTS` is defined, it will
+* instead print a message to stderr and abort.
+*
+* Due to this difference, and the fact that it is not inlined, calling
+* this is significantly more costly than using `std::unreachable`.
 */
-[[noreturn]] BOTAN_FORCE_INLINE void unreachable() {
-#if BOTAN_COMPILER_HAS_BUILTIN(__builtin_unreachable)
-   __builtin_unreachable();
-#elif defined(_MSC_VER)  // MSVC
-   __assume(false);
-#else
-   return;  // undefined behaviour, just like the others...
-#endif
-}
+[[noreturn]] void assert_unreachable(const char* file, int line);
+
+#define BOTAN_ASSERT_UNREACHABLE() Botan::assert_unreachable(__FILE__, __LINE__)
 
 }  // namespace Botan
 
