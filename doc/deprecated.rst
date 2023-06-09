@@ -46,6 +46,12 @@ in a future major release.
   None of the builtin groups have composite order, and in the future
   it will be impossible to create composite order EC_Groups.
 
+- Prior to 2.8.0, SM2 algorithms were implemented as two distinct key
+  types, one used for encryption and the other for signatures. In 2.8,
+  the two types were merged. However it is still possible to refer to
+  SM2 using the split names of "SM2_Enc" or "SM2_Sig". In a future major
+  release this will be removed, and only "SM2" will be recognized.
+
 - DSA, ECDSA, ECGDSA, ECKCDSA, and GOST-34.10 previously (before Botan 3)
   required that the hash be named as "EMSA1(HASH_NAME)". This is no longer
   required. In a future major release, only "HASH_NAME" will be accepted.
