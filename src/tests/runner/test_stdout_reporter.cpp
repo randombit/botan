@@ -25,6 +25,7 @@ void StdoutReporter::next_testsuite(const std::string& name) { m_out << name << 
 
 void StdoutReporter::record(const std::string& name, const Test::Result& result) {
    m_out << result.result_string();
+   m_out << std::flush;
    m_tests_run += result.tests_run();
 
    const size_t failed = result.tests_failed();
