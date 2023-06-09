@@ -51,8 +51,8 @@ void assertion_failure(const char* expr_str, const char* assertion_made, const c
 #endif
 }
 
-void unexpected_codepath(const char* file, int line) {
-   const std::string msg = fmt("Unexpected codepath reached @{}:{}", file, line);
+void assert_unreachable(const char* file, int line) {
+   const std::string msg = fmt("Codepath that was marked unreachable was reached @{}:{}", file, line);
 
 #if defined(BOTAN_TERMINATE_ON_ASSERTS)
    std::cerr << msg << '\n';

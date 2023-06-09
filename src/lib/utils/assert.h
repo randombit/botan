@@ -118,22 +118,23 @@ void ignore_params(T&&... args) {
 #define BOTAN_UNUSED Botan::ignore_params
 
 /*
-* Define Botan::unexpected_codepath
+* Define Botan::assert_unreachable and BOTAN_ASSERT_UNREACHABLE
 *
 * This is intended to be used in the same situations as `std::unreachable()`;
 * a codepath that (should not) be reachable but where the compiler cannot
 * tell that it is unreachable.
 *
 * Unlike `std::unreachable()`, or equivalent compiler builtins like GCC's
-* `__builtin_unreachable`, this function is not UB. It will either throw,
-* or abort, depending on in if `BOTAN_TERMINATE_ON_ASSERTS` is defined.
+* `__builtin_unreachable`, this function is not UB. By default it will
+* throw an exception. If `BOTAN_TERMINATE_ON_ASSERTS` is defined, it will
+* instead print a message to stderr and abort.
 *
-* Due to this, and the fact that it is not inlined, this is a significantly
-* more costly than `std::unreachable`.
+* Due to this difference, and the fact that it is not inlined, calling
+* this is significantly more costly than using `std::unreachable`.
 */
-[[noreturn]] void unexpected_codepath(const char* file, int line);
+[[noreturn]] void assert_unreachable(const char* file, int line);
 
-#define BOTAN_UNEXPECTED_CODEPATH() Botan::unexpected_codepath(__FILE__, __LINE__)
+#define BOTAN_ASSERT_UNREACHABLE() Botan::assert_unreachable(__FILE__, __LINE__)
 
 }  // namespace Botan
 
