@@ -29,11 +29,17 @@ std::string sha512_provider() {
 
 }  // namespace
 
-std::unique_ptr<HashFunction> SHA_384::copy_state() const { return std::make_unique<SHA_384>(*this); }
+std::unique_ptr<HashFunction> SHA_384::copy_state() const {
+   return std::make_unique<SHA_384>(*this);
+}
 
-std::unique_ptr<HashFunction> SHA_512::copy_state() const { return std::make_unique<SHA_512>(*this); }
+std::unique_ptr<HashFunction> SHA_512::copy_state() const {
+   return std::make_unique<SHA_512>(*this);
+}
 
-std::unique_ptr<HashFunction> SHA_512_256::copy_state() const { return std::make_unique<SHA_512_256>(*this); }
+std::unique_ptr<HashFunction> SHA_512_256::copy_state() const {
+   return std::make_unique<SHA_512_256>(*this);
+}
 
 /*
 * SHA-{384,512} Compression Function
@@ -163,25 +169,41 @@ void SHA_512::compress_digest(secure_vector<uint64_t>& digest, const uint8_t inp
 
 #undef SHA2_64_F
 
-std::string SHA_512_256::provider() const { return sha512_provider(); }
+std::string SHA_512_256::provider() const {
+   return sha512_provider();
+}
 
-std::string SHA_384::provider() const { return sha512_provider(); }
+std::string SHA_384::provider() const {
+   return sha512_provider();
+}
 
-std::string SHA_512::provider() const { return sha512_provider(); }
+std::string SHA_512::provider() const {
+   return sha512_provider();
+}
 
 void SHA_512_256::compress_n(const uint8_t input[], size_t blocks) {
    SHA_512::compress_digest(m_digest, input, blocks);
 }
 
-void SHA_384::compress_n(const uint8_t input[], size_t blocks) { SHA_512::compress_digest(m_digest, input, blocks); }
+void SHA_384::compress_n(const uint8_t input[], size_t blocks) {
+   SHA_512::compress_digest(m_digest, input, blocks);
+}
 
-void SHA_512::compress_n(const uint8_t input[], size_t blocks) { SHA_512::compress_digest(m_digest, input, blocks); }
+void SHA_512::compress_n(const uint8_t input[], size_t blocks) {
+   SHA_512::compress_digest(m_digest, input, blocks);
+}
 
-void SHA_512_256::copy_out(uint8_t output[]) { copy_out_vec_be(output, output_length(), m_digest); }
+void SHA_512_256::copy_out(uint8_t output[]) {
+   copy_out_vec_be(output, output_length(), m_digest);
+}
 
-void SHA_384::copy_out(uint8_t output[]) { copy_out_vec_be(output, output_length(), m_digest); }
+void SHA_384::copy_out(uint8_t output[]) {
+   copy_out_vec_be(output, output_length(), m_digest);
+}
 
-void SHA_512::copy_out(uint8_t output[]) { copy_out_vec_be(output, output_length(), m_digest); }
+void SHA_512::copy_out(uint8_t output[]) {
+   copy_out_vec_be(output, output_length(), m_digest);
+}
 
 void SHA_512_256::clear() {
    MDx_HashFunction::clear();

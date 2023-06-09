@@ -585,7 +585,9 @@ std::vector<Test::Result> Test::flatten_result_lists(std::vector<std::vector<Tes
 }
 
 //static
-std::set<std::string> Test::registered_tests() { return Test_Registry::instance().registered_tests(); }
+std::set<std::string> Test::registered_tests() {
+   return Test_Registry::instance().registered_tests();
+}
 
 //static
 std::set<std::string> Test::registered_test_categories() {
@@ -687,13 +689,19 @@ Test_Options Test::m_opts;
 std::shared_ptr<Botan::RandomNumberGenerator> Test::m_test_rng;
 
 //static
-void Test::set_test_options(const Test_Options& opts) { m_opts = opts; }
+void Test::set_test_options(const Test_Options& opts) {
+   m_opts = opts;
+}
 
 //static
-void Test::set_test_rng(std::shared_ptr<Botan::RandomNumberGenerator> rng) { m_test_rng = std::move(rng); }
+void Test::set_test_rng(std::shared_ptr<Botan::RandomNumberGenerator> rng) {
+   m_test_rng = std::move(rng);
+}
 
 //static
-std::string Test::data_file(const std::string& what) { return Test::data_dir() + "/" + what; }
+std::string Test::data_file(const std::string& what) {
+   return Test::data_dir() + "/" + what;
+}
 
 //static
 std::string Test::data_file_as_temporary_copy(const std::string& what) {
@@ -820,7 +828,9 @@ uint8_t VarMap::get_req_u8(const std::string& key) const {
    return static_cast<uint8_t>(s);
 }
 
-uint32_t VarMap::get_req_u32(const std::string& key) const { return static_cast<uint32_t>(get_req_sz(key)); }
+uint32_t VarMap::get_req_u32(const std::string& key) const {
+   return static_cast<uint32_t>(get_req_sz(key));
+}
 
 uint64_t VarMap::get_req_u64(const std::string& key) const {
    auto i = m_vars.find(key);
@@ -1008,7 +1018,9 @@ std::vector<uint64_t> parse_cpuid_bits(const std::vector<std::string>& tok) {
 
 }  // namespace
 
-bool Text_Based_Test::skip_this_test(const std::string& /*header*/, const VarMap& /*vars*/) { return false; }
+bool Text_Based_Test::skip_this_test(const std::string& /*header*/, const VarMap& /*vars*/) {
+   return false;
+}
 
 std::vector<Test::Result> Text_Based_Test::run() {
    std::vector<Test::Result> results;

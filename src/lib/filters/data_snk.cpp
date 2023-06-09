@@ -32,7 +32,9 @@ void DataSink_Stream::write(const uint8_t out[], size_t length) {
 /*
 * Flush the stream
 */
-void DataSink_Stream::end_msg() { m_sink.flush(); }
+void DataSink_Stream::end_msg() {
+   m_sink.flush();
+}
 
 /*
 * DataSink_Stream Constructor

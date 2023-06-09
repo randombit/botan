@@ -46,7 +46,9 @@ void invoke_cpuid(uint32_t type, uint32_t out[4]) {
    #endif
 }
 
-BOTAN_FUNC_ISA("xsave") uint64_t xgetbv() { return _xgetbv(0); }
+BOTAN_FUNC_ISA("xsave") uint64_t xgetbv() {
+   return _xgetbv(0);
+}
 
 void invoke_cpuid_sublevel(uint32_t type, uint32_t level, uint32_t out[4]) {
    #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)

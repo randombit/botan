@@ -325,7 +325,9 @@ void DES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    }
 }
 
-bool DES::has_keying_material() const { return !m_round_key.empty(); }
+bool DES::has_keying_material() const {
+   return !m_round_key.empty();
+}
 
 /*
 * DES Key Schedule
@@ -335,7 +337,9 @@ void DES::key_schedule(const uint8_t key[], size_t /*length*/) {
    des_key_schedule(m_round_key.data(), key);
 }
 
-void DES::clear() { zap(m_round_key); }
+void DES::clear() {
+   zap(m_round_key);
+}
 
 /*
 * TripleDES Encryption
@@ -431,7 +435,9 @@ void TripleDES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
    }
 }
 
-bool TripleDES::has_keying_material() const { return !m_round_key.empty(); }
+bool TripleDES::has_keying_material() const {
+   return !m_round_key.empty();
+}
 
 /*
 * TripleDES Key Schedule
@@ -448,6 +454,8 @@ void TripleDES::key_schedule(const uint8_t key[], size_t length) {
    }
 }
 
-void TripleDES::clear() { zap(m_round_key); }
+void TripleDES::clear() {
+   zap(m_round_key);
+}
 
 }  // namespace Botan

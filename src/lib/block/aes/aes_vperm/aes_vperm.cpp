@@ -140,9 +140,13 @@ const SIMD_4x32 mc_backward[4] = {
 
 const SIMD_4x32 lo_nibs_mask = SIMD_4x32::splat_u8(0x0F);
 
-inline SIMD_4x32 low_nibs(SIMD_4x32 x) { return lo_nibs_mask & x; }
+inline SIMD_4x32 low_nibs(SIMD_4x32 x) {
+   return lo_nibs_mask & x;
+}
 
-inline SIMD_4x32 high_nibs(SIMD_4x32 x) { return (x.shr<4>() & lo_nibs_mask); }
+inline SIMD_4x32 high_nibs(SIMD_4x32 x) {
+   return (x.shr<4>() & lo_nibs_mask);
+}
 
 inline SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) aes_enc_first_round(SIMD_4x32 B, SIMD_4x32 K) {
    return shuffle(k_ipt1, low_nibs(B)) ^ shuffle(k_ipt2, high_nibs(B)) ^ K;

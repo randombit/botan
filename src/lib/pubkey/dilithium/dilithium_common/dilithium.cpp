@@ -89,7 +89,9 @@ DilithiumMode::DilithiumMode(const OID& oid) : m_mode(dilithium_mode_from_string
 
 DilithiumMode::DilithiumMode(std::string_view str) : m_mode(dilithium_mode_from_string(str)) {}
 
-OID DilithiumMode::object_identifier() const { return OID::from_string(to_string()); }
+OID DilithiumMode::object_identifier() const {
+   return OID::from_string(to_string());
+}
 
 std::string DilithiumMode::to_string() const {
    switch(m_mode) {
@@ -510,19 +512,29 @@ Dilithium_PublicKey::Dilithium_PublicKey(std::span<const uint8_t> pk, DilithiumM
    m_public = std::make_shared<Dilithium_PublicKeyInternal>(std::move(mode), pk);
 }
 
-std::string Dilithium_PublicKey::algo_name() const { return object_identifier().to_formatted_string(); }
+std::string Dilithium_PublicKey::algo_name() const {
+   return object_identifier().to_formatted_string();
+}
 
 AlgorithmIdentifier Dilithium_PublicKey::algorithm_identifier() const {
    return AlgorithmIdentifier(object_identifier(), AlgorithmIdentifier::USE_EMPTY_PARAM);
 }
 
-OID Dilithium_PublicKey::object_identifier() const { return m_public->mode().oid(); }
+OID Dilithium_PublicKey::object_identifier() const {
+   return m_public->mode().oid();
+}
 
-size_t Dilithium_PublicKey::key_length() const { return m_public->mode().public_key_bytes(); }
+size_t Dilithium_PublicKey::key_length() const {
+   return m_public->mode().public_key_bytes();
+}
 
-size_t Dilithium_PublicKey::estimated_strength() const { return m_public->mode().nist_security_strength(); }
+size_t Dilithium_PublicKey::estimated_strength() const {
+   return m_public->mode().nist_security_strength();
+}
 
-std::vector<uint8_t> Dilithium_PublicKey::public_key_bits() const { return m_public->raw_pk(); }
+std::vector<uint8_t> Dilithium_PublicKey::public_key_bits() const {
+   return m_public->raw_pk();
+}
 
 bool Dilithium_PublicKey::check_key(RandomNumberGenerator&, bool) const {
    return true;  // ???
@@ -595,9 +607,13 @@ Dilithium_PrivateKey::Dilithium_PrivateKey(std::span<const uint8_t> sk, Dilithiu
       m_private->mode(), m_private->rho(), m_private->s1(), m_private->s2());
 }
 
-secure_vector<uint8_t> Dilithium_PrivateKey::raw_private_key_bits() const { return this->private_key_bits(); }
+secure_vector<uint8_t> Dilithium_PrivateKey::raw_private_key_bits() const {
+   return this->private_key_bits();
+}
 
-secure_vector<uint8_t> Dilithium_PrivateKey::private_key_bits() const { return m_private->raw_sk(); }
+secure_vector<uint8_t> Dilithium_PrivateKey::private_key_bits() const {
+   return m_private->raw_sk();
+}
 
 std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
                                                                              std::string_view params,

@@ -50,7 +50,9 @@ Curve25519_PublicKey::Curve25519_PublicKey(const AlgorithmIdentifier& /*unused*/
    size_check(m_public.size(), "public key");
 }
 
-std::vector<uint8_t> Curve25519_PublicKey::public_key_bits() const { return m_public; }
+std::vector<uint8_t> Curve25519_PublicKey::public_key_bits() const {
+   return m_public;
+}
 
 Curve25519_PrivateKey::Curve25519_PrivateKey(const secure_vector<uint8_t>& secret_key) {
    if(secret_key.size() != 32) {

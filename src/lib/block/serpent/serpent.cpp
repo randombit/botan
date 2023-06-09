@@ -313,7 +313,9 @@ void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    }
 }
 
-bool Serpent::has_keying_material() const { return !m_round_key.empty(); }
+bool Serpent::has_keying_material() const {
+   return !m_round_key.empty();
+}
 
 /*
 * Serpent Key Schedule
@@ -379,7 +381,9 @@ void Serpent::key_schedule(const uint8_t key[], size_t length) {
    m_round_key.assign(W.begin() + 8, W.end());
 }
 
-void Serpent::clear() { zap(m_round_key); }
+void Serpent::clear() {
+   zap(m_round_key);
+}
 
 std::string Serpent::provider() const {
 #if defined(BOTAN_HAS_SERPENT_AVX512)

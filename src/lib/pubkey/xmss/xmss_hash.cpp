@@ -42,8 +42,12 @@ void XMSS_Hash::h_msg_init(std::span<const uint8_t> randomness,
    m_msg_hash->update(index_bytes.data(), index_bytes.size());
 }
 
-void XMSS_Hash::h_msg_update(std::span<const uint8_t> data) { m_msg_hash->update(data.data(), data.size()); }
+void XMSS_Hash::h_msg_update(std::span<const uint8_t> data) {
+   m_msg_hash->update(data.data(), data.size());
+}
 
-secure_vector<uint8_t> XMSS_Hash::h_msg_final() { return m_msg_hash->final(); }
+secure_vector<uint8_t> XMSS_Hash::h_msg_final() {
+   return m_msg_hash->final();
+}
 
 }  // namespace Botan

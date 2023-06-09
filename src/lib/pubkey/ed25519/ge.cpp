@@ -1951,7 +1951,9 @@ inline uint8_t equal(int8_t b, int8_t c) {
    return static_cast<uint8_t>(y);
 }
 
-inline int32_t equal32(int8_t b, int8_t c) { return -static_cast<int32_t>(equal(b, c)); }
+inline int32_t equal32(int8_t b, int8_t c) {
+   return -static_cast<int32_t>(equal(b, c));
+}
 
 inline uint8_t negative(int8_t b) {
    /* 18446744073709551361..18446744073709551615: yes; 0..255: no */

@@ -13,7 +13,9 @@
 
 namespace Botan {
 
-std::unique_ptr<HashFunction> MD4::copy_state() const { return std::make_unique<MD4>(*this); }
+std::unique_ptr<HashFunction> MD4::copy_state() const {
+   return std::make_unique<MD4>(*this);
+}
 
 namespace {
 
@@ -124,7 +126,9 @@ void MD4::compress_n(const uint8_t input[], size_t blocks) {
 /*
 * Copy out the digest
 */
-void MD4::copy_out(uint8_t output[]) { copy_out_vec_le(output, output_length(), m_digest); }
+void MD4::copy_out(uint8_t output[]) {
+   copy_out_vec_le(output, output_length(), m_digest);
+}
 
 /*
 * Clear memory of sensitive data

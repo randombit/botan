@@ -934,22 +934,32 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
 /*
 * Arithmetic Operators
 */
-inline BigInt operator+(const BigInt& x, const BigInt& y) { return BigInt::add2(x, y.data(), y.sig_words(), y.sign()); }
+inline BigInt operator+(const BigInt& x, const BigInt& y) {
+   return BigInt::add2(x, y.data(), y.sig_words(), y.sign());
+}
 
-inline BigInt operator+(const BigInt& x, word y) { return BigInt::add2(x, &y, 1, BigInt::Positive); }
+inline BigInt operator+(const BigInt& x, word y) {
+   return BigInt::add2(x, &y, 1, BigInt::Positive);
+}
 
-inline BigInt operator+(word x, const BigInt& y) { return y + x; }
+inline BigInt operator+(word x, const BigInt& y) {
+   return y + x;
+}
 
 inline BigInt operator-(const BigInt& x, const BigInt& y) {
    return BigInt::add2(x, y.data(), y.sig_words(), y.reverse_sign());
 }
 
-inline BigInt operator-(const BigInt& x, word y) { return BigInt::add2(x, &y, 1, BigInt::Negative); }
+inline BigInt operator-(const BigInt& x, word y) {
+   return BigInt::add2(x, &y, 1, BigInt::Negative);
+}
 
 BigInt BOTAN_PUBLIC_API(2, 0) operator*(const BigInt& x, const BigInt& y);
 BigInt BOTAN_PUBLIC_API(2, 8) operator*(const BigInt& x, word y);
 
-inline BigInt operator*(word x, const BigInt& y) { return y * x; }
+inline BigInt operator*(word x, const BigInt& y) {
+   return y * x;
+}
 
 BigInt BOTAN_PUBLIC_API(2, 0) operator/(const BigInt& x, const BigInt& d);
 BigInt BOTAN_PUBLIC_API(2, 0) operator/(const BigInt& x, word m);
@@ -961,29 +971,53 @@ BigInt BOTAN_PUBLIC_API(2, 0) operator>>(const BigInt& x, size_t n);
 /*
 * Comparison Operators
 */
-inline bool operator==(const BigInt& a, const BigInt& b) { return a.is_equal(b); }
+inline bool operator==(const BigInt& a, const BigInt& b) {
+   return a.is_equal(b);
+}
 
-inline bool operator!=(const BigInt& a, const BigInt& b) { return !a.is_equal(b); }
+inline bool operator!=(const BigInt& a, const BigInt& b) {
+   return !a.is_equal(b);
+}
 
-inline bool operator<=(const BigInt& a, const BigInt& b) { return (a.cmp(b) <= 0); }
+inline bool operator<=(const BigInt& a, const BigInt& b) {
+   return (a.cmp(b) <= 0);
+}
 
-inline bool operator>=(const BigInt& a, const BigInt& b) { return (a.cmp(b) >= 0); }
+inline bool operator>=(const BigInt& a, const BigInt& b) {
+   return (a.cmp(b) >= 0);
+}
 
-inline bool operator<(const BigInt& a, const BigInt& b) { return a.is_less_than(b); }
+inline bool operator<(const BigInt& a, const BigInt& b) {
+   return a.is_less_than(b);
+}
 
-inline bool operator>(const BigInt& a, const BigInt& b) { return b.is_less_than(a); }
+inline bool operator>(const BigInt& a, const BigInt& b) {
+   return b.is_less_than(a);
+}
 
-inline bool operator==(const BigInt& a, word b) { return (a.cmp_word(b) == 0); }
+inline bool operator==(const BigInt& a, word b) {
+   return (a.cmp_word(b) == 0);
+}
 
-inline bool operator!=(const BigInt& a, word b) { return (a.cmp_word(b) != 0); }
+inline bool operator!=(const BigInt& a, word b) {
+   return (a.cmp_word(b) != 0);
+}
 
-inline bool operator<=(const BigInt& a, word b) { return (a.cmp_word(b) <= 0); }
+inline bool operator<=(const BigInt& a, word b) {
+   return (a.cmp_word(b) <= 0);
+}
 
-inline bool operator>=(const BigInt& a, word b) { return (a.cmp_word(b) >= 0); }
+inline bool operator>=(const BigInt& a, word b) {
+   return (a.cmp_word(b) >= 0);
+}
 
-inline bool operator<(const BigInt& a, word b) { return (a.cmp_word(b) < 0); }
+inline bool operator<(const BigInt& a, word b) {
+   return (a.cmp_word(b) < 0);
+}
 
-inline bool operator>(const BigInt& a, word b) { return (a.cmp_word(b) > 0); }
+inline bool operator>(const BigInt& a, word b) {
+   return (a.cmp_word(b) > 0);
+}
 
 /*
 * I/O Operators

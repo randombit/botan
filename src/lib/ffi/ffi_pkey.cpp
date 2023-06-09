@@ -76,7 +76,9 @@ int botan_privkey_load(
    });
 }
 
-int botan_privkey_destroy(botan_privkey_t key) { return BOTAN_FFI_CHECKED_DELETE(key); }
+int botan_privkey_destroy(botan_privkey_t key) {
+   return BOTAN_FFI_CHECKED_DELETE(key);
+}
 
 int botan_pubkey_load(botan_pubkey_t* key, const uint8_t bits[], size_t bits_len) {
    *key = nullptr;
@@ -94,7 +96,9 @@ int botan_pubkey_load(botan_pubkey_t* key, const uint8_t bits[], size_t bits_len
    });
 }
 
-int botan_pubkey_destroy(botan_pubkey_t key) { return BOTAN_FFI_CHECKED_DELETE(key); }
+int botan_pubkey_destroy(botan_pubkey_t key) {
+   return BOTAN_FFI_CHECKED_DELETE(key);
+}
 
 int botan_privkey_export_pubkey(botan_pubkey_t* pubout, botan_privkey_t key_obj) {
    return ffi_guard_thunk(__func__, [=]() -> int {

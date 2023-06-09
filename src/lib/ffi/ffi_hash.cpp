@@ -34,7 +34,9 @@ int botan_hash_init(botan_hash_t* hash, const char* hash_name, uint32_t flags) {
    });
 }
 
-int botan_hash_destroy(botan_hash_t hash) { return BOTAN_FFI_CHECKED_DELETE(hash); }
+int botan_hash_destroy(botan_hash_t hash) {
+   return BOTAN_FFI_CHECKED_DELETE(hash);
+}
 
 int botan_hash_output_length(botan_hash_t hash, size_t* out) {
    if(out == nullptr) {

@@ -15,13 +15,17 @@
 
 namespace Botan::TLS {
 
-std::vector<std::string> Text_Policy::allowed_ciphers() const { return get_list("ciphers", Policy::allowed_ciphers()); }
+std::vector<std::string> Text_Policy::allowed_ciphers() const {
+   return get_list("ciphers", Policy::allowed_ciphers());
+}
 
 std::vector<std::string> Text_Policy::allowed_signature_hashes() const {
    return get_list("signature_hashes", Policy::allowed_signature_hashes());
 }
 
-std::vector<std::string> Text_Policy::allowed_macs() const { return get_list("macs", Policy::allowed_macs()); }
+std::vector<std::string> Text_Policy::allowed_macs() const {
+   return get_list("macs", Policy::allowed_macs());
+}
 
 std::vector<std::string> Text_Policy::allowed_key_exchange_methods() const {
    return get_list("key_exchange_methods", Policy::allowed_key_exchange_methods());
@@ -35,11 +39,17 @@ bool Text_Policy::use_ecc_point_compression() const {
    return get_bool("use_ecc_point_compression", Policy::use_ecc_point_compression());
 }
 
-bool Text_Policy::allow_tls12() const { return get_bool("allow_tls12", Policy::allow_tls12()); }
+bool Text_Policy::allow_tls12() const {
+   return get_bool("allow_tls12", Policy::allow_tls12());
+}
 
-bool Text_Policy::allow_tls13() const { return get_bool("allow_tls13", Policy::allow_tls13()); }
+bool Text_Policy::allow_tls13() const {
+   return get_bool("allow_tls13", Policy::allow_tls13());
+}
 
-bool Text_Policy::allow_dtls12() const { return get_bool("allow_dtls12", Policy::allow_dtls12()); }
+bool Text_Policy::allow_dtls12() const {
+   return get_bool("allow_dtls12", Policy::allow_dtls12());
+}
 
 bool Text_Policy::allow_insecure_renegotiation() const {
    return get_bool("allow_insecure_renegotiation", Policy::allow_insecure_renegotiation());
@@ -123,13 +133,17 @@ size_t Text_Policy::minimum_dh_group_size() const {
    return get_len("minimum_dh_group_size", Policy::minimum_dh_group_size());
 }
 
-size_t Text_Policy::minimum_rsa_bits() const { return get_len("minimum_rsa_bits", Policy::minimum_rsa_bits()); }
+size_t Text_Policy::minimum_rsa_bits() const {
+   return get_len("minimum_rsa_bits", Policy::minimum_rsa_bits());
+}
 
 size_t Text_Policy::minimum_signature_strength() const {
    return get_len("minimum_signature_strength", Policy::minimum_signature_strength());
 }
 
-size_t Text_Policy::dtls_default_mtu() const { return get_len("dtls_default_mtu", Policy::dtls_default_mtu()); }
+size_t Text_Policy::dtls_default_mtu() const {
+   return get_len("dtls_default_mtu", Policy::dtls_default_mtu());
+}
 
 size_t Text_Policy::dtls_initial_timeout() const {
    return get_len("dtls_initial_timeout", Policy::dtls_initial_timeout());
@@ -143,7 +157,9 @@ bool Text_Policy::require_cert_revocation_info() const {
    return get_bool("require_cert_revocation_info", Policy::require_cert_revocation_info());
 }
 
-bool Text_Policy::hide_unknown_users() const { return get_bool("hide_unknown_users", Policy::hide_unknown_users()); }
+bool Text_Policy::hide_unknown_users() const {
+   return get_bool("hide_unknown_users", Policy::hide_unknown_users());
+}
 
 size_t Text_Policy::maximum_session_tickets_per_client_hello() const {
    return get_len("maximum_session_tickets_per_client_hello", Policy::maximum_session_tickets_per_client_hello());
@@ -173,9 +189,13 @@ bool Text_Policy::tls_13_middlebox_compatibility_mode() const {
    return get_bool("tls_13_middlebox_compatibility_mode", Policy::tls_13_middlebox_compatibility_mode());
 }
 
-bool Text_Policy::hash_hello_random() const { return get_bool("hash_hello_random", Policy::hash_hello_random()); }
+bool Text_Policy::hash_hello_random() const {
+   return get_bool("hash_hello_random", Policy::hash_hello_random());
+}
 
-void Text_Policy::set(const std::string& key, const std::string& value) { m_kv[key] = value; }
+void Text_Policy::set(const std::string& key, const std::string& value) {
+   m_kv[key] = value;
+}
 
 Text_Policy::Text_Policy(std::string_view s) {
    std::istringstream iss{std::string(s)};  // FIXME C++23 avoid copy

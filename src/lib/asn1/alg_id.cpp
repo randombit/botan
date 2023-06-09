@@ -66,7 +66,9 @@ bool operator==(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2) {
    return (a1.parameters() == a2.parameters());
 }
 
-bool operator!=(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2) { return !(a1 == a2); }
+bool operator!=(const AlgorithmIdentifier& a1, const AlgorithmIdentifier& a2) {
+   return !(a1 == a2);
+}
 
 /*
 * DER encode an AlgorithmIdentifier

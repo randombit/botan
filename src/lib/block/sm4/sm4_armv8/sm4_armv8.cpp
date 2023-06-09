@@ -19,7 +19,9 @@ inline uint32x4_t qswap_32(uint32x4_t B) {
    return vreinterpretq_u32_u8(vqtbl1q_u8(vreinterpretq_u8_u32(B), vld1q_u8(qswap_tbl)));
 }
 
-inline uint32x4_t bswap_32(uint32x4_t B) { return vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(B))); }
+inline uint32x4_t bswap_32(uint32x4_t B) {
+   return vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(B)));
+}
 
 /*
  Swap both the quad-words and bytes within each word

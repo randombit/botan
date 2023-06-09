@@ -196,13 +196,21 @@ std::string OCB_Mode::name() const {
    return m_cipher->name() + "/OCB";  // include tag size?
 }
 
-size_t OCB_Mode::update_granularity() const { return block_size(); }
+size_t OCB_Mode::update_granularity() const {
+   return block_size();
+}
 
-size_t OCB_Mode::ideal_granularity() const { return (m_par_blocks * block_size()); }
+size_t OCB_Mode::ideal_granularity() const {
+   return (m_par_blocks * block_size());
+}
 
-Key_Length_Specification OCB_Mode::key_spec() const { return m_cipher->key_spec(); }
+Key_Length_Specification OCB_Mode::key_spec() const {
+   return m_cipher->key_spec();
+}
 
-bool OCB_Mode::has_keying_material() const { return m_cipher->has_keying_material(); }
+bool OCB_Mode::has_keying_material() const {
+   return m_cipher->has_keying_material();
+}
 
 void OCB_Mode::key_schedule(const uint8_t key[], size_t length) {
    m_cipher->set_key(key, length);

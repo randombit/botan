@@ -44,7 +44,9 @@ std::string BOTAN_PUBLIC_API(2, 0) base64_encode(const uint8_t input[], size_t i
 * @param input some input
 * @return base64adecimal representation of input
 */
-inline std::string base64_encode(std::span<const uint8_t> input) { return base64_encode(input.data(), input.size()); }
+inline std::string base64_encode(std::span<const uint8_t> input) {
+   return base64_encode(input.data(), input.size());
+}
 
 /**
 * Perform base64 decoding

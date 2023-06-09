@@ -197,7 +197,9 @@ class BOTAN_UNSTABLE_API CurveGFp final {
       std::shared_ptr<CurveGFp_Repr> m_repr;
 };
 
-inline bool operator!=(const CurveGFp& lhs, const CurveGFp& rhs) { return !(lhs == rhs); }
+inline bool operator!=(const CurveGFp& lhs, const CurveGFp& rhs) {
+   return !(lhs == rhs);
+}
 
 }  // namespace Botan
 

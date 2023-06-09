@@ -298,7 +298,9 @@ EC_Group_Data_Map& EC_Group::ec_group_data() {
 }
 
 //static
-size_t EC_Group::clear_registered_curve_data() { return ec_group_data().clear(); }
+size_t EC_Group::clear_registered_curve_data() {
+   return ec_group_data().clear();
+}
 
 //static
 std::shared_ptr<EC_Group_Data> EC_Group::load_EC_group_info(const char* p_str,
@@ -446,49 +448,89 @@ const EC_Group_Data& EC_Group::data() const {
    return *m_data;
 }
 
-bool EC_Group::a_is_minus_3() const { return data().a_is_minus_3(); }
+bool EC_Group::a_is_minus_3() const {
+   return data().a_is_minus_3();
+}
 
-bool EC_Group::a_is_zero() const { return data().a_is_zero(); }
+bool EC_Group::a_is_zero() const {
+   return data().a_is_zero();
+}
 
-size_t EC_Group::get_p_bits() const { return data().p_bits(); }
+size_t EC_Group::get_p_bits() const {
+   return data().p_bits();
+}
 
-size_t EC_Group::get_p_bytes() const { return data().p_bytes(); }
+size_t EC_Group::get_p_bytes() const {
+   return data().p_bytes();
+}
 
-size_t EC_Group::get_order_bits() const { return data().order_bits(); }
+size_t EC_Group::get_order_bits() const {
+   return data().order_bits();
+}
 
-size_t EC_Group::get_order_bytes() const { return data().order_bytes(); }
+size_t EC_Group::get_order_bytes() const {
+   return data().order_bytes();
+}
 
-const BigInt& EC_Group::get_p() const { return data().p(); }
+const BigInt& EC_Group::get_p() const {
+   return data().p();
+}
 
-const BigInt& EC_Group::get_a() const { return data().a(); }
+const BigInt& EC_Group::get_a() const {
+   return data().a();
+}
 
-const BigInt& EC_Group::get_b() const { return data().b(); }
+const BigInt& EC_Group::get_b() const {
+   return data().b();
+}
 
-const EC_Point& EC_Group::get_base_point() const { return data().base_point(); }
+const EC_Point& EC_Group::get_base_point() const {
+   return data().base_point();
+}
 
-const BigInt& EC_Group::get_order() const { return data().order(); }
+const BigInt& EC_Group::get_order() const {
+   return data().order();
+}
 
-const BigInt& EC_Group::get_g_x() const { return data().g_x(); }
+const BigInt& EC_Group::get_g_x() const {
+   return data().g_x();
+}
 
-const BigInt& EC_Group::get_g_y() const { return data().g_y(); }
+const BigInt& EC_Group::get_g_y() const {
+   return data().g_y();
+}
 
-const BigInt& EC_Group::get_cofactor() const { return data().cofactor(); }
+const BigInt& EC_Group::get_cofactor() const {
+   return data().cofactor();
+}
 
-BigInt EC_Group::mod_order(const BigInt& k) const { return data().mod_order(k); }
+BigInt EC_Group::mod_order(const BigInt& k) const {
+   return data().mod_order(k);
+}
 
-BigInt EC_Group::square_mod_order(const BigInt& x) const { return data().square_mod_order(x); }
+BigInt EC_Group::square_mod_order(const BigInt& x) const {
+   return data().square_mod_order(x);
+}
 
-BigInt EC_Group::multiply_mod_order(const BigInt& x, const BigInt& y) const { return data().multiply_mod_order(x, y); }
+BigInt EC_Group::multiply_mod_order(const BigInt& x, const BigInt& y) const {
+   return data().multiply_mod_order(x, y);
+}
 
 BigInt EC_Group::multiply_mod_order(const BigInt& x, const BigInt& y, const BigInt& z) const {
    return data().multiply_mod_order(x, y, z);
 }
 
-BigInt EC_Group::inverse_mod_order(const BigInt& x) const { return data().inverse_mod_order(x); }
+BigInt EC_Group::inverse_mod_order(const BigInt& x) const {
+   return data().inverse_mod_order(x);
+}
 
-const OID& EC_Group::get_curve_oid() const { return data().oid(); }
+const OID& EC_Group::get_curve_oid() const {
+   return data().oid();
+}
 
-EC_Group_Source EC_Group::source() const { return data().source(); }
+EC_Group_Source EC_Group::source() const {
+   return data().source();
+}
 
 size_t EC_Group::point_size(EC_Point_Format format) const {
    // Hybrid and standard format are (x,y), compressed is y, +1 format byte
@@ -499,7 +541,9 @@ size_t EC_Group::point_size(EC_Point_Format format) const {
    }
 }
 
-EC_Point EC_Group::OS2ECP(const uint8_t bits[], size_t len) const { return Botan::OS2ECP(bits, len, data().curve()); }
+EC_Point EC_Group::OS2ECP(const uint8_t bits[], size_t len) const {
+   return Botan::OS2ECP(bits, len, data().curve());
+}
 
 EC_Point EC_Group::point(const BigInt& x, const BigInt& y) const {
    // TODO: randomize the representation?
@@ -540,7 +584,9 @@ EC_Point EC_Group::blinded_var_point_multiply(const EC_Point& point,
    return mul.mul(k, rng, get_order(), ws);
 }
 
-EC_Point EC_Group::zero_point() const { return EC_Point(data().curve()); }
+EC_Point EC_Group::zero_point() const {
+   return EC_Point(data().curve());
+}
 
 EC_Point EC_Group::hash_to_curve(std::string_view hash_fn,
                                  const uint8_t input[],

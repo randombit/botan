@@ -36,7 +36,9 @@ int botan_block_cipher_init(botan_block_cipher_t* bc, const char* bc_name) {
 /**
 * Destroy a block cipher object
 */
-int botan_block_cipher_destroy(botan_block_cipher_t bc) { return BOTAN_FFI_CHECKED_DELETE(bc); }
+int botan_block_cipher_destroy(botan_block_cipher_t bc) {
+   return BOTAN_FFI_CHECKED_DELETE(bc);
+}
 
 int botan_block_cipher_clear(botan_block_cipher_t bc) {
    return BOTAN_FFI_VISIT(bc, [](auto& b) { b.clear(); });

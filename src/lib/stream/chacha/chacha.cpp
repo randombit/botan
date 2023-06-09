@@ -282,9 +282,13 @@ void ChaCha::initialize_state() {
    m_position = 0;
 }
 
-bool ChaCha::has_keying_material() const { return !m_state.empty(); }
+bool ChaCha::has_keying_material() const {
+   return !m_state.empty();
+}
 
-size_t ChaCha::buffer_size() const { return 64; }
+size_t ChaCha::buffer_size() const {
+   return 64;
+}
 
 /*
 * ChaCha Key Schedule
@@ -301,11 +305,17 @@ void ChaCha::key_schedule(const uint8_t key[], size_t length) {
    set_iv(nullptr, 0);
 }
 
-size_t ChaCha::default_iv_length() const { return 24; }
+size_t ChaCha::default_iv_length() const {
+   return 24;
+}
 
-Key_Length_Specification ChaCha::key_spec() const { return Key_Length_Specification(16, 32, 16); }
+Key_Length_Specification ChaCha::key_spec() const {
+   return Key_Length_Specification(16, 32, 16);
+}
 
-std::unique_ptr<StreamCipher> ChaCha::new_object() const { return std::make_unique<ChaCha>(m_rounds); }
+std::unique_ptr<StreamCipher> ChaCha::new_object() const {
+   return std::make_unique<ChaCha>(m_rounds);
+}
 
 bool ChaCha::valid_iv_length(size_t iv_len) const {
    return (iv_len == 0 || iv_len == 8 || iv_len == 12 || iv_len == 24);
@@ -365,7 +375,9 @@ void ChaCha::clear() {
    m_position = 0;
 }
 
-std::string ChaCha::name() const { return fmt("ChaCha({})", m_rounds); }
+std::string ChaCha::name() const {
+   return fmt("ChaCha({})", m_rounds);
+}
 
 void ChaCha::seek(uint64_t offset) {
    assert_key_material_set();

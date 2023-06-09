@@ -26,9 +26,13 @@ namespace {
 using Test_Size = Botan::Strong<size_t, struct Test_Size_>;
 using Test_Length = Botan::Strong<size_t, struct Test_Length_>;
 
-std::string foo(Test_Size) { return "some size"; }
+std::string foo(Test_Size) {
+   return "some size";
+}
 
-std::string foo(Test_Length) { return "some length"; }
+std::string foo(Test_Length) {
+   return "some length";
+}
 
 using Test_Nonce = Botan::Strong<std::vector<uint8_t>, struct Test_Nonce_>;
 using Test_Hash_Name = Botan::Strong<std::string, struct Test_Hash_Name_>;
@@ -357,11 +361,17 @@ std::vector<Test::Result> test_integer_strong_type() {
 using Test_Foo = Botan::Strong<std::vector<uint8_t>, struct Test_Foo_>;
 using Test_Bar = Botan::Strong<std::vector<uint8_t>, struct Test_Bar_>;
 
-[[maybe_unused]] int test_strong_helper(const Botan::StrongSpan<Test_Foo>&) { return 0; }
+[[maybe_unused]] int test_strong_helper(const Botan::StrongSpan<Test_Foo>&) {
+   return 0;
+}
 
-[[maybe_unused]] int test_strong_helper(const Botan::StrongSpan<const Test_Foo>&) { return 1; }
+[[maybe_unused]] int test_strong_helper(const Botan::StrongSpan<const Test_Foo>&) {
+   return 1;
+}
 
-[[maybe_unused]] int test_strong_helper(const Botan::StrongSpan<Test_Bar>&) { return 2; }
+[[maybe_unused]] int test_strong_helper(const Botan::StrongSpan<Test_Bar>&) {
+   return 2;
+}
 
 Test::Result test_strong_span() {
    Test::Result result("StrongSpan<>");

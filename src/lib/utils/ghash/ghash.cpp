@@ -100,7 +100,9 @@ void GHASH::ghash_update(secure_vector<uint8_t>& ghash, const uint8_t input[], s
    }
 }
 
-bool GHASH::has_keying_material() const { return !m_ghash.empty(); }
+bool GHASH::has_keying_material() const {
+   return !m_ghash.empty();
+}
 
 void GHASH::key_schedule(const uint8_t key[], size_t length) {
    m_H.assign(key, key + length);

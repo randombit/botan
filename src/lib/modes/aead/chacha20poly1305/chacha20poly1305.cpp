@@ -19,11 +19,17 @@ ChaCha20Poly1305_Mode::ChaCha20Poly1305_Mode() :
    }
 }
 
-bool ChaCha20Poly1305_Mode::valid_nonce_length(size_t n) const { return (n == 8 || n == 12 || n == 24); }
+bool ChaCha20Poly1305_Mode::valid_nonce_length(size_t n) const {
+   return (n == 8 || n == 12 || n == 24);
+}
 
-size_t ChaCha20Poly1305_Mode::update_granularity() const { return 1; }
+size_t ChaCha20Poly1305_Mode::update_granularity() const {
+   return 1;
+}
 
-size_t ChaCha20Poly1305_Mode::ideal_granularity() const { return 128; }
+size_t ChaCha20Poly1305_Mode::ideal_granularity() const {
+   return 128;
+}
 
 void ChaCha20Poly1305_Mode::clear() {
    m_chacha->clear();
@@ -37,9 +43,13 @@ void ChaCha20Poly1305_Mode::reset() {
    m_nonce_len = 0;
 }
 
-bool ChaCha20Poly1305_Mode::has_keying_material() const { return m_chacha->has_keying_material(); }
+bool ChaCha20Poly1305_Mode::has_keying_material() const {
+   return m_chacha->has_keying_material();
+}
 
-void ChaCha20Poly1305_Mode::key_schedule(const uint8_t key[], size_t length) { m_chacha->set_key(key, length); }
+void ChaCha20Poly1305_Mode::key_schedule(const uint8_t key[], size_t length) {
+   m_chacha->set_key(key, length);
+}
 
 void ChaCha20Poly1305_Mode::set_associated_data_n(size_t idx, std::span<const uint8_t> ad) {
    BOTAN_ARG_CHECK(idx == 0, "ChaCha20Poly1305: cannot handle non-zero index in set_associated_data_n");

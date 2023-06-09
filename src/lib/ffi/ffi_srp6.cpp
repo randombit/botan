@@ -40,7 +40,9 @@ int botan_srp6_server_session_init(botan_srp6_server_session_t* srp6) {
 #endif
 }
 
-int botan_srp6_server_session_destroy(botan_srp6_server_session_t srp6) { return BOTAN_FFI_CHECKED_DELETE(srp6); }
+int botan_srp6_server_session_destroy(botan_srp6_server_session_t srp6) {
+   return BOTAN_FFI_CHECKED_DELETE(srp6);
+}
 
 int botan_srp6_group_size(const char* group_id, size_t* group_p_bytes) {
 #if defined(BOTAN_HAS_SRP6)

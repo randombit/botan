@@ -88,7 +88,9 @@ std::vector<uint8_t> DLIES_Encryptor::enc(const uint8_t in[], size_t length, Ran
 * We assume DLIES is only used for key transport and limit the maximum size
 * to 512 bits
 */
-size_t DLIES_Encryptor::maximum_input_size() const { return 64; }
+size_t DLIES_Encryptor::maximum_input_size() const {
+   return 64;
+}
 
 size_t DLIES_Encryptor::ciphertext_length(size_t ptext_len) const {
    return m_own_pub_key.size() + m_mac->output_length() + m_cipher->output_length(ptext_len);

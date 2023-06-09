@@ -45,26 +45,42 @@ void CCM_Mode::reset() {
    m_ad_buf.clear();
 }
 
-std::string CCM_Mode::name() const { return fmt("{}/CCM({},{})", m_cipher->name(), tag_size(), L()); }
+std::string CCM_Mode::name() const {
+   return fmt("{}/CCM({},{})", m_cipher->name(), tag_size(), L());
+}
 
-bool CCM_Mode::valid_nonce_length(size_t n) const { return (n == (15 - L())); }
+bool CCM_Mode::valid_nonce_length(size_t n) const {
+   return (n == (15 - L()));
+}
 
-size_t CCM_Mode::default_nonce_length() const { return (15 - L()); }
+size_t CCM_Mode::default_nonce_length() const {
+   return (15 - L());
+}
 
-size_t CCM_Mode::update_granularity() const { return 1; }
+size_t CCM_Mode::update_granularity() const {
+   return 1;
+}
 
 size_t CCM_Mode::ideal_granularity() const {
    // Completely arbitrary
    return m_cipher->parallel_bytes();
 }
 
-bool CCM_Mode::requires_entire_message() const { return true; }
+bool CCM_Mode::requires_entire_message() const {
+   return true;
+}
 
-Key_Length_Specification CCM_Mode::key_spec() const { return m_cipher->key_spec(); }
+Key_Length_Specification CCM_Mode::key_spec() const {
+   return m_cipher->key_spec();
+}
 
-bool CCM_Mode::has_keying_material() const { return m_cipher->has_keying_material(); }
+bool CCM_Mode::has_keying_material() const {
+   return m_cipher->has_keying_material();
+}
 
-void CCM_Mode::key_schedule(const uint8_t key[], size_t length) { m_cipher->set_key(key, length); }
+void CCM_Mode::key_schedule(const uint8_t key[], size_t length) {
+   m_cipher->set_key(key, length);
+}
 
 void CCM_Mode::set_associated_data_n(size_t idx, std::span<const uint8_t> ad) {
    BOTAN_ARG_CHECK(idx == 0, "CCM: cannot handle non-zero index in set_associated_data_n");

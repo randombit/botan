@@ -59,9 +59,13 @@ bool DL_PublicKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    return m_group.verify_group(rng, strong) && m_group.verify_public_element(m_public_key);
 }
 
-size_t DL_PublicKey::estimated_strength() const { return m_group.estimated_strength(); }
+size_t DL_PublicKey::estimated_strength() const {
+   return m_group.estimated_strength();
+}
 
-size_t DL_PublicKey::p_bits() const { return m_group.p_bits(); }
+size_t DL_PublicKey::p_bits() const {
+   return m_group.p_bits();
+}
 
 DL_PrivateKey::DL_PrivateKey(const DL_Group& group, const BigInt& private_key) :
       m_group(group),
@@ -80,9 +84,13 @@ DL_PrivateKey::DL_PrivateKey(const AlgorithmIdentifier& alg_id,
       m_private_key(check_dl_private_key_input(decode_single_bigint(key_bits), m_group)),
       m_public_key(m_group.power_g_p(m_private_key, m_group.p_bits())) {}
 
-secure_vector<uint8_t> DL_PrivateKey::DER_encode() const { return DER_Encoder().encode(m_private_key).get_contents(); }
+secure_vector<uint8_t> DL_PrivateKey::DER_encode() const {
+   return DER_Encoder().encode(m_private_key).get_contents();
+}
 
-secure_vector<uint8_t> DL_PrivateKey::raw_private_key_bits() const { return BigInt::encode_locked(m_private_key); }
+secure_vector<uint8_t> DL_PrivateKey::raw_private_key_bits() const {
+   return BigInt::encode_locked(m_private_key);
+}
 
 bool DL_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    return m_group.verify_group(rng, strong) && m_group.verify_private_element(m_private_key);

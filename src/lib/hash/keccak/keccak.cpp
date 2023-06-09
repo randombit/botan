@@ -14,7 +14,9 @@
 
 namespace Botan {
 
-std::unique_ptr<HashFunction> Keccak_1600::copy_state() const { return std::make_unique<Keccak_1600>(*this); }
+std::unique_ptr<HashFunction> Keccak_1600::copy_state() const {
+   return std::make_unique<Keccak_1600>(*this);
+}
 
 Keccak_1600::Keccak_1600(size_t output_bits) :
       m_output_bits(output_bits), m_bitrate(1600 - 2 * output_bits), m_S(25), m_S_pos(0) {
@@ -25,9 +27,13 @@ Keccak_1600::Keccak_1600(size_t output_bits) :
    }
 }
 
-std::string Keccak_1600::name() const { return fmt("Keccak-1600({})", m_output_bits); }
+std::string Keccak_1600::name() const {
+   return fmt("Keccak-1600({})", m_output_bits);
+}
 
-std::unique_ptr<HashFunction> Keccak_1600::new_object() const { return std::make_unique<Keccak_1600>(m_output_bits); }
+std::unique_ptr<HashFunction> Keccak_1600::new_object() const {
+   return std::make_unique<Keccak_1600>(m_output_bits);
+}
 
 void Keccak_1600::clear() {
    zeroise(m_S);

@@ -179,8 +179,12 @@ secure_vector<uint8_t> base64_decode(std::string_view input, bool ignore_ws) {
    return base64_decode(input.data(), input.size(), ignore_ws);
 }
 
-size_t base64_encode_max_output(size_t input_length) { return Base64::encode_max_output(input_length); }
+size_t base64_encode_max_output(size_t input_length) {
+   return Base64::encode_max_output(input_length);
+}
 
-size_t base64_decode_max_output(size_t input_length) { return Base64::decode_max_output(input_length); }
+size_t base64_decode_max_output(size_t input_length) {
+   return Base64::decode_max_output(input_length);
+}
 
 }  // namespace Botan

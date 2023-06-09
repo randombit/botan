@@ -389,17 +389,29 @@ void ARIA_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    ARIA_F::transform(in, out, blocks, m_DRK);
 }
 
-bool ARIA_128::has_keying_material() const { return !m_ERK.empty(); }
+bool ARIA_128::has_keying_material() const {
+   return !m_ERK.empty();
+}
 
-bool ARIA_192::has_keying_material() const { return !m_ERK.empty(); }
+bool ARIA_192::has_keying_material() const {
+   return !m_ERK.empty();
+}
 
-bool ARIA_256::has_keying_material() const { return !m_ERK.empty(); }
+bool ARIA_256::has_keying_material() const {
+   return !m_ERK.empty();
+}
 
-void ARIA_128::key_schedule(const uint8_t key[], size_t length) { ARIA_F::key_schedule(m_ERK, m_DRK, key, length); }
+void ARIA_128::key_schedule(const uint8_t key[], size_t length) {
+   ARIA_F::key_schedule(m_ERK, m_DRK, key, length);
+}
 
-void ARIA_192::key_schedule(const uint8_t key[], size_t length) { ARIA_F::key_schedule(m_ERK, m_DRK, key, length); }
+void ARIA_192::key_schedule(const uint8_t key[], size_t length) {
+   ARIA_F::key_schedule(m_ERK, m_DRK, key, length);
+}
 
-void ARIA_256::key_schedule(const uint8_t key[], size_t length) { ARIA_F::key_schedule(m_ERK, m_DRK, key, length); }
+void ARIA_256::key_schedule(const uint8_t key[], size_t length) {
+   ARIA_F::key_schedule(m_ERK, m_DRK, key, length);
+}
 
 void ARIA_128::clear() {
    zap(m_ERK);

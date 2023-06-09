@@ -19,13 +19,19 @@ namespace Botan {
 
 namespace {
 
-size_t scrypt_memory_usage(size_t N, size_t r, size_t p) { return 128 * r * (N + p); }
+size_t scrypt_memory_usage(size_t N, size_t r, size_t p) {
+   return 128 * r * (N + p);
+}
 
 }  // namespace
 
-std::string Scrypt_Family::name() const { return "Scrypt"; }
+std::string Scrypt_Family::name() const {
+   return "Scrypt";
+}
 
-std::unique_ptr<PasswordHash> Scrypt_Family::default_params() const { return std::make_unique<Scrypt>(32768, 8, 1); }
+std::unique_ptr<PasswordHash> Scrypt_Family::default_params() const {
+   return std::make_unique<Scrypt>(32768, 8, 1);
+}
 
 std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
                                                   std::chrono::milliseconds msec,
@@ -145,7 +151,9 @@ Scrypt::Scrypt(size_t N, size_t r, size_t p) : m_N(N), m_r(r), m_p(p) {
    }
 }
 
-std::string Scrypt::to_string() const { return fmt("Scrypt({},{},{})", m_N, m_r, m_p); }
+std::string Scrypt::to_string() const {
+   return fmt("Scrypt({},{},{})", m_N, m_r, m_p);
+}
 
 size_t Scrypt::total_memory_usage() const {
    const size_t N = memory_param();

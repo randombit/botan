@@ -45,11 +45,15 @@ std::vector<uint8_t> finished_compute_verify_12(const Handshake_State& state, Co
 
 }  // namespace
 
-std::vector<uint8_t> Finished::serialize() const { return m_verification_data; }
+std::vector<uint8_t> Finished::serialize() const {
+   return m_verification_data;
+}
 
 Finished::Finished(const std::vector<uint8_t>& buf) : m_verification_data(buf) {}
 
-std::vector<uint8_t> Finished::verify_data() const { return m_verification_data; }
+std::vector<uint8_t> Finished::verify_data() const {
+   return m_verification_data;
+}
 
 Finished_12::Finished_12(Handshake_IO& io, Handshake_State& state, Connection_Side side) {
    m_verification_data = finished_compute_verify_12(state, side);

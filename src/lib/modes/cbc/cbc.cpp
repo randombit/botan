@@ -27,7 +27,9 @@ void CBC_Mode::clear() {
    reset();
 }
 
-void CBC_Mode::reset() { m_state.clear(); }
+void CBC_Mode::reset() {
+   m_state.clear();
+}
 
 std::string CBC_Mode::name() const {
    if(m_padding) {
@@ -37,17 +39,29 @@ std::string CBC_Mode::name() const {
    }
 }
 
-size_t CBC_Mode::update_granularity() const { return cipher().block_size(); }
+size_t CBC_Mode::update_granularity() const {
+   return cipher().block_size();
+}
 
-size_t CBC_Mode::ideal_granularity() const { return cipher().parallel_bytes(); }
+size_t CBC_Mode::ideal_granularity() const {
+   return cipher().parallel_bytes();
+}
 
-Key_Length_Specification CBC_Mode::key_spec() const { return cipher().key_spec(); }
+Key_Length_Specification CBC_Mode::key_spec() const {
+   return cipher().key_spec();
+}
 
-size_t CBC_Mode::default_nonce_length() const { return block_size(); }
+size_t CBC_Mode::default_nonce_length() const {
+   return block_size();
+}
 
-bool CBC_Mode::valid_nonce_length(size_t n) const { return (n == 0 || n == block_size()); }
+bool CBC_Mode::valid_nonce_length(size_t n) const {
+   return (n == 0 || n == block_size());
+}
 
-bool CBC_Mode::has_keying_material() const { return m_cipher->has_keying_material(); }
+bool CBC_Mode::has_keying_material() const {
+   return m_cipher->has_keying_material();
+}
 
 void CBC_Mode::key_schedule(const uint8_t key[], size_t length) {
    m_cipher->set_key(key, length);
@@ -72,7 +86,9 @@ void CBC_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
    // else leave the state alone
 }
 
-size_t CBC_Encryption::minimum_final_size() const { return 0; }
+size_t CBC_Encryption::minimum_final_size() const {
+   return 0;
+}
 
 size_t CBC_Encryption::output_length(size_t input_length) const {
    if(input_length == 0) {
@@ -119,9 +135,13 @@ void CBC_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    update(buffer, offset);
 }
 
-bool CTS_Encryption::valid_nonce_length(size_t n) const { return (n == block_size()); }
+bool CTS_Encryption::valid_nonce_length(size_t n) const {
+   return (n == block_size());
+}
 
-size_t CTS_Encryption::minimum_final_size() const { return block_size() + 1; }
+size_t CTS_Encryption::minimum_final_size() const {
+   return block_size() + 1;
+}
 
 size_t CTS_Encryption::output_length(size_t input_length) const {
    return input_length;  // no ciphertext expansion in CTS
@@ -173,7 +193,9 @@ size_t CBC_Decryption::output_length(size_t input_length) const {
    return input_length;  // precise for CTS, worst case otherwise
 }
 
-size_t CBC_Decryption::minimum_final_size() const { return block_size(); }
+size_t CBC_Decryption::minimum_final_size() const {
+   return block_size();
+}
 
 size_t CBC_Decryption::process_msg(uint8_t buf[], size_t sz) {
    BOTAN_STATE_CHECK(state().empty() == false);
@@ -226,9 +248,13 @@ void CBC_Decryption::reset() {
    zeroise(m_tempbuf);
 }
 
-bool CTS_Decryption::valid_nonce_length(size_t n) const { return (n == block_size()); }
+bool CTS_Decryption::valid_nonce_length(size_t n) const {
+   return (n == block_size());
+}
 
-size_t CTS_Decryption::minimum_final_size() const { return block_size() + 1; }
+size_t CTS_Decryption::minimum_final_size() const {
+   return block_size() + 1;
+}
 
 void CTS_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    BOTAN_STATE_CHECK(state().empty() == false);

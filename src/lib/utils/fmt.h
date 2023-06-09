@@ -17,7 +17,9 @@ namespace Botan {
 
 namespace fmt_detail {
 
-inline void do_fmt(std::ostringstream& oss, std::string_view format) { oss << format; }
+inline void do_fmt(std::ostringstream& oss, std::string_view format) {
+   oss << format;
+}
 
 template <typename T, typename... Ts>
 void do_fmt(std::ostringstream& oss, std::string_view format, const T& val, const Ts&... rest) {

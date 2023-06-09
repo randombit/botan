@@ -16,7 +16,9 @@
 
 namespace Botan {
 
-void Sodium::randombytes_buf(void* buf, size_t len) { system_rng().randomize(static_cast<uint8_t*>(buf), len); }
+void Sodium::randombytes_buf(void* buf, size_t len) {
+   system_rng().randomize(static_cast<uint8_t*>(buf), len);
+}
 
 uint32_t Sodium::randombytes_uniform(uint32_t upper_bound) {
    if(upper_bound <= 1) {
@@ -38,13 +40,21 @@ void Sodium::randombytes_buf_deterministic(void* buf, size_t size, const uint8_t
    chacha.write_keystream(static_cast<uint8_t*>(buf), size);
 }
 
-int Sodium::crypto_verify_16(const uint8_t x[16], const uint8_t y[16]) { return same_mem(x, y, 16); }
+int Sodium::crypto_verify_16(const uint8_t x[16], const uint8_t y[16]) {
+   return same_mem(x, y, 16);
+}
 
-int Sodium::crypto_verify_32(const uint8_t x[32], const uint8_t y[32]) { return same_mem(x, y, 32); }
+int Sodium::crypto_verify_32(const uint8_t x[32], const uint8_t y[32]) {
+   return same_mem(x, y, 32);
+}
 
-int Sodium::crypto_verify_64(const uint8_t x[64], const uint8_t y[64]) { return same_mem(x, y, 64); }
+int Sodium::crypto_verify_64(const uint8_t x[64], const uint8_t y[64]) {
+   return same_mem(x, y, 64);
+}
 
-void Sodium::sodium_memzero(void* ptr, size_t len) { secure_scrub_memory(ptr, len); }
+void Sodium::sodium_memzero(void* ptr, size_t len) {
+   secure_scrub_memory(ptr, len);
+}
 
 int Sodium::sodium_memcmp(const void* x, const void* y, size_t len) {
    const bool same = constant_time_compare(static_cast<const uint8_t*>(x), static_cast<const uint8_t*>(y), len);

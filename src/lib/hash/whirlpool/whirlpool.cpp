@@ -212,9 +212,13 @@ void Whirlpool::compress_n(const uint8_t in[], size_t blocks) {
 /*
 * Copy out the digest
 */
-void Whirlpool::copy_out(uint8_t output[]) { copy_out_vec_be(output, output_length(), m_digest); }
+void Whirlpool::copy_out(uint8_t output[]) {
+   copy_out_vec_be(output, output_length(), m_digest);
+}
 
-std::unique_ptr<HashFunction> Whirlpool::copy_state() const { return std::make_unique<Whirlpool>(*this); }
+std::unique_ptr<HashFunction> Whirlpool::copy_state() const {
+   return std::make_unique<Whirlpool>(*this);
+}
 
 /*
 * Clear memory of sensitive data

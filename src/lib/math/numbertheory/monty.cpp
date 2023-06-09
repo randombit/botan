@@ -309,11 +309,17 @@ std::vector<uint8_t> Montgomery_Int::serialize() const {
    return v;
 }
 
-size_t Montgomery_Int::size() const { return m_params->p().bytes(); }
+size_t Montgomery_Int::size() const {
+   return m_params->p().bytes();
+}
 
-bool Montgomery_Int::is_one() const { return m_v == m_params->R1(); }
+bool Montgomery_Int::is_one() const {
+   return m_v == m_params->R1();
+}
 
-bool Montgomery_Int::is_zero() const { return m_v.is_zero(); }
+bool Montgomery_Int::is_zero() const {
+   return m_v.is_zero();
+}
 
 BigInt Montgomery_Int::value() const {
    secure_vector<word> ws;
@@ -409,7 +415,9 @@ Montgomery_Int Montgomery_Int::multiplicative_inverse() const {
    return Montgomery_Int(m_params, iv, false);
 }
 
-Montgomery_Int Montgomery_Int::additive_inverse() const { return Montgomery_Int(m_params, m_params->p()) - (*this); }
+Montgomery_Int Montgomery_Int::additive_inverse() const {
+   return Montgomery_Int(m_params, m_params->p()) - (*this);
+}
 
 Montgomery_Int& Montgomery_Int::mul_by_2(secure_vector<word>& ws) {
    m_v.mod_mul(2, m_params->p(), ws);

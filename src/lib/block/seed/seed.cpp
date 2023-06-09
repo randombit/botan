@@ -146,7 +146,9 @@ void SEED::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    }
 }
 
-bool SEED::has_keying_material() const { return !m_K.empty(); }
+bool SEED::has_keying_material() const {
+   return !m_K.empty();
+}
 
 /*
 * SEED Key Schedule
@@ -194,6 +196,8 @@ void SEED::key_schedule(const uint8_t key[], size_t /*length*/) {
    }
 }
 
-void SEED::clear() { zap(m_K); }
+void SEED::clear() {
+   zap(m_K);
+}
 
 }  // namespace Botan

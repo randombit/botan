@@ -21,7 +21,9 @@ namespace Botan {
 
 namespace {
 
-bool known_pbes_cipher_mode(std::string_view mode) { return (mode == "CBC" || mode == "GCM" || mode == "SIV"); }
+bool known_pbes_cipher_mode(std::string_view mode) {
+   return (mode == "CBC" || mode == "GCM" || mode == "SIV");
+}
 
 secure_vector<uint8_t> derive_key(std::string_view passphrase,
                                   const AlgorithmIdentifier& kdf_algo,

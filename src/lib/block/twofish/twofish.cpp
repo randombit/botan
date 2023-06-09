@@ -183,7 +183,9 @@ void Twofish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    }
 }
 
-bool Twofish::has_keying_material() const { return !m_SB.empty(); }
+bool Twofish::has_keying_material() const {
+   return !m_SB.empty();
+}
 
 /*
 * Twofish Key Schedule

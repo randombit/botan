@@ -19,7 +19,9 @@ namespace Botan_Tests {
 
 namespace {
 
-std::string get_valid_ca_bundle_path() { return Test::data_file("x509/misc/certstor/valid_ca_bundle.pem"); }
+std::string get_valid_ca_bundle_path() {
+   return Test::data_file("x509/misc/certstor/valid_ca_bundle.pem");
+}
 
 std::string get_ca_bundle_containing_user_cert() {
    return Test::data_file("x509/misc/certstor/ca_bundle_containing_non_ca.pem");

@@ -31,21 +31,33 @@ Cipher_Mode_Filter::Cipher_Mode_Filter(Cipher_Mode* mode) :
       m_nonce(mode->default_nonce_length()),
       m_buffer(m_mode->ideal_granularity()) {}
 
-std::string Cipher_Mode_Filter::name() const { return m_mode->name(); }
+std::string Cipher_Mode_Filter::name() const {
+   return m_mode->name();
+}
 
-void Cipher_Mode_Filter::set_iv(const InitializationVector& iv) { m_nonce = unlock(iv.bits_of()); }
+void Cipher_Mode_Filter::set_iv(const InitializationVector& iv) {
+   m_nonce = unlock(iv.bits_of());
+}
 
-void Cipher_Mode_Filter::set_key(const SymmetricKey& key) { m_mode->set_key(key); }
+void Cipher_Mode_Filter::set_key(const SymmetricKey& key) {
+   m_mode->set_key(key);
+}
 
-Key_Length_Specification Cipher_Mode_Filter::key_spec() const { return m_mode->key_spec(); }
+Key_Length_Specification Cipher_Mode_Filter::key_spec() const {
+   return m_mode->key_spec();
+}
 
-bool Cipher_Mode_Filter::valid_iv_length(size_t length) const { return m_mode->valid_nonce_length(length); }
+bool Cipher_Mode_Filter::valid_iv_length(size_t length) const {
+   return m_mode->valid_nonce_length(length);
+}
 
 void Cipher_Mode_Filter::write(const uint8_t input[], size_t input_length) {
    Buffered_Filter::write(input, input_length);
 }
 
-void Cipher_Mode_Filter::end_msg() { Buffered_Filter::end_msg(); }
+void Cipher_Mode_Filter::end_msg() {
+   Buffered_Filter::end_msg();
+}
 
 void Cipher_Mode_Filter::start_msg() {
    if(m_nonce.empty() && !m_mode->valid_nonce_length(0)) {

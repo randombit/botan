@@ -90,9 +90,13 @@ std::unique_ptr<HashFunction> get_rtss_hash_by_id(uint8_t id) {
 
 }  // namespace
 
-RTSS_Share::RTSS_Share(std::string_view hex_input) { m_contents = hex_decode_locked(hex_input); }
+RTSS_Share::RTSS_Share(std::string_view hex_input) {
+   m_contents = hex_decode_locked(hex_input);
+}
 
-RTSS_Share::RTSS_Share(const uint8_t bin[], size_t len) { m_contents.assign(bin, bin + len); }
+RTSS_Share::RTSS_Share(const uint8_t bin[], size_t len) {
+   m_contents.assign(bin, bin + len);
+}
 
 uint8_t RTSS_Share::share_id() const {
    if(!initialized()) {
@@ -106,7 +110,9 @@ uint8_t RTSS_Share::share_id() const {
    return m_contents[20];
 }
 
-std::string RTSS_Share::to_string() const { return hex_encode(m_contents.data(), m_contents.size()); }
+std::string RTSS_Share::to_string() const {
+   return hex_encode(m_contents.data(), m_contents.size());
+}
 
 std::vector<RTSS_Share> RTSS_Share::split(
    uint8_t M, uint8_t N, const uint8_t S[], uint16_t S_len, const uint8_t identifier[16], RandomNumberGenerator& rng) {

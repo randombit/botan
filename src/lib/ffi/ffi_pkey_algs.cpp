@@ -224,19 +224,33 @@ int botan_pubkey_load_rsa(botan_pubkey_t* key, botan_mp_t n, botan_mp_t e) {
 #endif
 }
 
-int botan_privkey_rsa_get_p(botan_mp_t p, botan_privkey_t key) { return botan_privkey_get_field(p, key, "p"); }
+int botan_privkey_rsa_get_p(botan_mp_t p, botan_privkey_t key) {
+   return botan_privkey_get_field(p, key, "p");
+}
 
-int botan_privkey_rsa_get_q(botan_mp_t q, botan_privkey_t key) { return botan_privkey_get_field(q, key, "q"); }
+int botan_privkey_rsa_get_q(botan_mp_t q, botan_privkey_t key) {
+   return botan_privkey_get_field(q, key, "q");
+}
 
-int botan_privkey_rsa_get_n(botan_mp_t n, botan_privkey_t key) { return botan_privkey_get_field(n, key, "n"); }
+int botan_privkey_rsa_get_n(botan_mp_t n, botan_privkey_t key) {
+   return botan_privkey_get_field(n, key, "n");
+}
 
-int botan_privkey_rsa_get_e(botan_mp_t e, botan_privkey_t key) { return botan_privkey_get_field(e, key, "e"); }
+int botan_privkey_rsa_get_e(botan_mp_t e, botan_privkey_t key) {
+   return botan_privkey_get_field(e, key, "e");
+}
 
-int botan_privkey_rsa_get_d(botan_mp_t d, botan_privkey_t key) { return botan_privkey_get_field(d, key, "d"); }
+int botan_privkey_rsa_get_d(botan_mp_t d, botan_privkey_t key) {
+   return botan_privkey_get_field(d, key, "d");
+}
 
-int botan_pubkey_rsa_get_e(botan_mp_t e, botan_pubkey_t key) { return botan_pubkey_get_field(e, key, "e"); }
+int botan_pubkey_rsa_get_e(botan_mp_t e, botan_pubkey_t key) {
+   return botan_pubkey_get_field(e, key, "e");
+}
 
-int botan_pubkey_rsa_get_n(botan_mp_t n, botan_pubkey_t key) { return botan_pubkey_get_field(n, key, "n"); }
+int botan_pubkey_rsa_get_n(botan_mp_t n, botan_pubkey_t key) {
+   return botan_pubkey_get_field(n, key, "n");
+}
 
 int botan_privkey_rsa_get_privkey(botan_privkey_t rsa_key, uint8_t out[], size_t* out_len, uint32_t flags) {
 #if defined(BOTAN_HAS_RSA)
@@ -315,15 +329,25 @@ int botan_pubkey_load_dsa(botan_pubkey_t* key, botan_mp_t p, botan_mp_t q, botan
 #endif
 }
 
-int botan_privkey_dsa_get_x(botan_mp_t x, botan_privkey_t key) { return botan_privkey_get_field(x, key, "x"); }
+int botan_privkey_dsa_get_x(botan_mp_t x, botan_privkey_t key) {
+   return botan_privkey_get_field(x, key, "x");
+}
 
-int botan_pubkey_dsa_get_p(botan_mp_t p, botan_pubkey_t key) { return botan_pubkey_get_field(p, key, "p"); }
+int botan_pubkey_dsa_get_p(botan_mp_t p, botan_pubkey_t key) {
+   return botan_pubkey_get_field(p, key, "p");
+}
 
-int botan_pubkey_dsa_get_q(botan_mp_t q, botan_pubkey_t key) { return botan_pubkey_get_field(q, key, "q"); }
+int botan_pubkey_dsa_get_q(botan_mp_t q, botan_pubkey_t key) {
+   return botan_pubkey_get_field(q, key, "q");
+}
 
-int botan_pubkey_dsa_get_g(botan_mp_t g, botan_pubkey_t key) { return botan_pubkey_get_field(g, key, "g"); }
+int botan_pubkey_dsa_get_g(botan_mp_t g, botan_pubkey_t key) {
+   return botan_pubkey_get_field(g, key, "g");
+}
 
-int botan_pubkey_dsa_get_y(botan_mp_t y, botan_pubkey_t key) { return botan_pubkey_get_field(y, key, "y"); }
+int botan_pubkey_dsa_get_y(botan_mp_t y, botan_pubkey_t key) {
+   return botan_pubkey_get_field(y, key, "y");
+}
 
 int botan_privkey_create_ecdsa(botan_privkey_t* key_obj, botan_rng_t rng_obj, const char* param_str) {
    return botan_privkey_create(key_obj, "ECDSA", param_str, rng_obj);

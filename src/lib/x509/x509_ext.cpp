@@ -166,7 +166,9 @@ void Extensions::replace(std::unique_ptr<Certificate_Extension> extn, bool criti
    m_extension_info.emplace(oid, info);
 }
 
-bool Extensions::extension_set(const OID& oid) const { return (m_extension_info.find(oid) != m_extension_info.end()); }
+bool Extensions::extension_set(const OID& oid) const {
+   return (m_extension_info.find(oid) != m_extension_info.end());
+}
 
 bool Extensions::critical_extension_set(const OID& oid) const {
    auto i = m_extension_info.find(oid);
@@ -437,12 +439,16 @@ std::vector<uint8_t> Issuer_Alternative_Name::encode_inner() const {
 /*
 * Decode the extension
 */
-void Subject_Alternative_Name::decode_inner(const std::vector<uint8_t>& in) { BER_Decoder(in).decode(m_alt_name); }
+void Subject_Alternative_Name::decode_inner(const std::vector<uint8_t>& in) {
+   BER_Decoder(in).decode(m_alt_name);
+}
 
 /*
 * Decode the extension
 */
-void Issuer_Alternative_Name::decode_inner(const std::vector<uint8_t>& in) { BER_Decoder(in).decode(m_alt_name); }
+void Issuer_Alternative_Name::decode_inner(const std::vector<uint8_t>& in) {
+   BER_Decoder(in).decode(m_alt_name);
+}
 
 /*
 * Encode the extension
@@ -456,12 +462,16 @@ std::vector<uint8_t> Extended_Key_Usage::encode_inner() const {
 /*
 * Decode the extension
 */
-void Extended_Key_Usage::decode_inner(const std::vector<uint8_t>& in) { BER_Decoder(in).decode_list(m_oids); }
+void Extended_Key_Usage::decode_inner(const std::vector<uint8_t>& in) {
+   BER_Decoder(in).decode_list(m_oids);
+}
 
 /*
 * Encode the extension
 */
-std::vector<uint8_t> Name_Constraints::encode_inner() const { throw Not_Implemented("Name_Constraints encoding"); }
+std::vector<uint8_t> Name_Constraints::encode_inner() const {
+   throw Not_Implemented("Name_Constraints encoding");
+}
 
 /*
 * Decode the extension
@@ -756,9 +766,13 @@ void CRL_Issuing_Distribution_Point::decode_inner(const std::vector<uint8_t>& bu
    BER_Decoder(buf).decode(m_distribution_point).verify_end();
 }
 
-void OCSP_NoCheck::decode_inner(const std::vector<uint8_t>& buf) { BER_Decoder(buf).verify_end(); }
+void OCSP_NoCheck::decode_inner(const std::vector<uint8_t>& buf) {
+   BER_Decoder(buf).verify_end();
+}
 
-std::vector<uint8_t> Unknown_Extension::encode_inner() const { return m_bytes; }
+std::vector<uint8_t> Unknown_Extension::encode_inner() const {
+   return m_bytes;
+}
 
 void Unknown_Extension::decode_inner(const std::vector<uint8_t>& bytes) {
    // Just treat as an opaque blob at this level

@@ -348,11 +348,17 @@ class TLS_Server final : public Command {
 
 namespace {
 
-std::ostream& Callbacks::output() { return m_server_command.output(); }
+std::ostream& Callbacks::output() {
+   return m_server_command.output();
+}
 
-void Callbacks::send(std::span<const uint8_t> buffer) { m_server_command.send(buffer); }
+void Callbacks::send(std::span<const uint8_t> buffer) {
+   m_server_command.send(buffer);
+}
 
-void Callbacks::push_pending_output(std::string line) { m_server_command.push_pending_output(std::move(line)); }
+void Callbacks::push_pending_output(std::string line) {
+   m_server_command.push_pending_output(std::move(line));
+}
 
 }  // namespace
 

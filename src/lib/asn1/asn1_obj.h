@@ -67,7 +67,9 @@ enum class ASN1_Type : uint32_t {
    NoObject = 0xFF00,
 };
 
-inline bool intersects(ASN1_Class x, ASN1_Class y) { return static_cast<uint32_t>(x) & static_cast<uint32_t>(y); }
+inline bool intersects(ASN1_Class x, ASN1_Class y) {
+   return static_cast<uint32_t>(x) & static_cast<uint32_t>(y);
+}
 
 inline ASN1_Type operator|(ASN1_Type x, ASN1_Type y) {
    return static_cast<ASN1_Type>(static_cast<uint32_t>(x) | static_cast<uint32_t>(y));
@@ -77,9 +79,13 @@ inline ASN1_Class operator|(ASN1_Class x, ASN1_Class y) {
    return static_cast<ASN1_Class>(static_cast<uint32_t>(x) | static_cast<uint32_t>(y));
 }
 
-inline uint32_t operator|(ASN1_Type x, ASN1_Class y) { return static_cast<uint32_t>(x) | static_cast<uint32_t>(y); }
+inline uint32_t operator|(ASN1_Type x, ASN1_Class y) {
+   return static_cast<uint32_t>(x) | static_cast<uint32_t>(y);
+}
 
-inline uint32_t operator|(ASN1_Class x, ASN1_Type y) { return static_cast<uint32_t>(x) | static_cast<uint32_t>(y); }
+inline uint32_t operator|(ASN1_Class x, ASN1_Type y) {
+   return static_cast<uint32_t>(x) | static_cast<uint32_t>(y);
+}
 
 std::string BOTAN_UNSTABLE_API asn1_tag_to_string(ASN1_Type type);
 std::string BOTAN_UNSTABLE_API asn1_class_to_string(ASN1_Class type);
@@ -317,7 +323,9 @@ std::ostream& operator<<(std::ostream& out, const OID& oid);
 * @param b the second OID
 * @return true if a is not equal to b
 */
-inline bool operator!=(const OID& a, const OID& b) { return !(a == b); }
+inline bool operator!=(const OID& a, const OID& b) {
+   return !(a == b);
+}
 
 /**
 * Compare two OIDs.

@@ -79,11 +79,17 @@ void AutoSeeded_RNG::force_reseed() {
    }
 }
 
-bool AutoSeeded_RNG::is_seeded() const { return m_rng->is_seeded(); }
+bool AutoSeeded_RNG::is_seeded() const {
+   return m_rng->is_seeded();
+}
 
-void AutoSeeded_RNG::clear() { m_rng->clear(); }
+void AutoSeeded_RNG::clear() {
+   m_rng->clear();
+}
 
-std::string AutoSeeded_RNG::name() const { return m_rng->name(); }
+std::string AutoSeeded_RNG::name() const {
+   return m_rng->name();
+}
 
 size_t AutoSeeded_RNG::reseed(Entropy_Sources& srcs, size_t poll_bits, std::chrono::milliseconds poll_timeout) {
    return m_rng->reseed(srcs, poll_bits, poll_timeout);

@@ -35,7 +35,9 @@ TestSummary::TestSummary(const Test::Result& result) :
 
 Testsuite::Testsuite(std::string name) : m_name(std::move(name)) {}
 
-void Testsuite::record(const Test::Result& result) { m_results.emplace_back(result); }
+void Testsuite::record(const Test::Result& result) {
+   m_results.emplace_back(result);
+}
 
 size_t Testsuite::tests_passed() const {
    return std::count_if(m_results.begin(), m_results.end(), [](const auto& r) { return r.passed(); });

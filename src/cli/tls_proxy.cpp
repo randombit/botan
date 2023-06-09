@@ -47,13 +47,17 @@ namespace {
 
 using boost::asio::ip::tcp;
 
-void log_exception(const char* where, const std::exception& e) { std::cout << where << ' ' << e.what() << std::endl; }
+void log_exception(const char* where, const std::exception& e) {
+   std::cout << where << ' ' << e.what() << std::endl;
+}
 
 void log_error(const char* where, const boost::system::error_code& error) {
    std::cout << where << ' ' << error.message() << std::endl;
 }
 
-void log_error(const char* msg) { std::cout << msg << std::endl; }
+void log_error(const char* msg) {
+   std::cout << msg << std::endl;
+}
 
 void log_binary_message(const char* where, const uint8_t buf[], size_t buf_len) {
    BOTAN_UNUSED(where, buf, buf_len);

@@ -53,6 +53,8 @@ Fork::Fork(Filter* f1, Filter* f2, Filter* f3, Filter* f4) {
 /*
 * Fork Constructor
 */
-Fork::Fork(Filter* filters[], size_t count) { set_next(filters, count); }
+Fork::Fork(Filter* filters[], size_t count) {
+   set_next(filters, count);
+}
 
 }  // namespace Botan

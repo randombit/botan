@@ -129,6 +129,8 @@ std::vector<std::string> StreamCipher::providers(std::string_view algo_spec) {
    return probe_providers_of<StreamCipher>(algo_spec);
 }
 
-size_t StreamCipher::default_iv_length() const { return 0; }
+size_t StreamCipher::default_iv_length() const {
+   return 0;
+}
 
 }  // namespace Botan

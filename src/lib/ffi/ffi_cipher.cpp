@@ -77,7 +77,9 @@ int botan_cipher_init(botan_cipher_t* cipher, const char* cipher_name, uint32_t 
    });
 }
 
-int botan_cipher_destroy(botan_cipher_t cipher) { return BOTAN_FFI_CHECKED_DELETE(cipher); }
+int botan_cipher_destroy(botan_cipher_t cipher) {
+   return BOTAN_FFI_CHECKED_DELETE(cipher);
+}
 
 int botan_cipher_clear(botan_cipher_t cipher) {
    return BOTAN_FFI_VISIT(cipher, [](auto& c) { c.clear(); });

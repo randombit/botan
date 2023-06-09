@@ -29,7 +29,9 @@ GeneralName::GeneralName(const std::string& str) : GeneralName() {
    }
 }
 
-void GeneralName::encode_into(DER_Encoder& /*to*/) const { throw Not_Implemented("GeneralName encoding"); }
+void GeneralName::encode_into(DER_Encoder& /*to*/) const {
+   throw Not_Implemented("GeneralName encoding");
+}
 
 void GeneralName::decode_from(BER_Decoder& ber) {
    BER_Object obj = ber.get_next_object();
@@ -195,7 +197,9 @@ GeneralSubtree::GeneralSubtree(const std::string& str) : GeneralSubtree() {
    }
 }
 
-void GeneralSubtree::encode_into(DER_Encoder& /*to*/) const { throw Not_Implemented("General Subtree encoding"); }
+void GeneralSubtree::encode_into(DER_Encoder& /*to*/) const {
+   throw Not_Implemented("General Subtree encoding");
+}
 
 void GeneralSubtree::decode_from(BER_Decoder& ber) {
    ber.start_sequence()

@@ -181,7 +181,9 @@ std::vector<uint8_t> put_in_sequence(const uint8_t bits[], size_t len) {
 /*
 * Convert a BER object into a string object
 */
-std::string to_string(const BER_Object& obj) { return std::string(cast_uint8_ptr_to_char(obj.bits()), obj.length()); }
+std::string to_string(const BER_Object& obj) {
+   return std::string(cast_uint8_ptr_to_char(obj.bits()), obj.length());
+}
 
 /*
 * Do heuristic tests for BER data

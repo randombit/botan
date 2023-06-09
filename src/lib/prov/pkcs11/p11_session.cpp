@@ -71,6 +71,8 @@ void Session::set_pin(const secure_string& old_pin, const secure_string& new_pin
 }
 
 // NOLINTNEXTLINE(readability-make-member-function-const)
-void Session::init_pin(const secure_string& new_pin) { module()->C_InitPIN(m_handle, new_pin); }
+void Session::init_pin(const secure_string& new_pin) {
+   module()->C_InitPIN(m_handle, new_pin);
+}
 
 }  // namespace Botan::PKCS11

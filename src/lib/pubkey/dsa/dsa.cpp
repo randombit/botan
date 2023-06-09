@@ -20,11 +20,17 @@
 
 namespace Botan {
 
-size_t DSA_PublicKey::message_part_size() const { return m_public_key->group().q_bytes(); }
+size_t DSA_PublicKey::message_part_size() const {
+   return m_public_key->group().q_bytes();
+}
 
-size_t DSA_PublicKey::estimated_strength() const { return m_public_key->estimated_strength(); }
+size_t DSA_PublicKey::estimated_strength() const {
+   return m_public_key->estimated_strength();
+}
 
-size_t DSA_PublicKey::key_length() const { return m_public_key->p_bits(); }
+size_t DSA_PublicKey::key_length() const {
+   return m_public_key->p_bits();
+}
 
 const BigInt& DSA_PublicKey::get_int_field(std::string_view field) const {
    return m_public_key->get_int_field(algo_name(), field);
@@ -34,7 +40,9 @@ AlgorithmIdentifier DSA_PublicKey::algorithm_identifier() const {
    return AlgorithmIdentifier(object_identifier(), m_public_key->group().DER_encode(DL_Group_Format::ANSI_X9_57));
 }
 
-std::vector<uint8_t> DSA_PublicKey::public_key_bits() const { return m_public_key->DER_encode(); }
+std::vector<uint8_t> DSA_PublicKey::public_key_bits() const {
+   return m_public_key->DER_encode();
+}
 
 bool DSA_PublicKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    return m_public_key->check_key(rng, strong);
@@ -79,9 +87,13 @@ bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    return KeyPair::signature_consistency_check(rng, *this, "SHA-256");
 }
 
-secure_vector<uint8_t> DSA_PrivateKey::private_key_bits() const { return m_private_key->DER_encode(); }
+secure_vector<uint8_t> DSA_PrivateKey::private_key_bits() const {
+   return m_private_key->DER_encode();
+}
 
-secure_vector<uint8_t> DSA_PrivateKey::raw_private_key_bits() const { return m_private_key->raw_private_key_bits(); }
+secure_vector<uint8_t> DSA_PrivateKey::raw_private_key_bits() const {
+   return m_private_key->raw_private_key_bits();
+}
 
 const BigInt& DSA_PrivateKey::get_int_field(std::string_view field) const {
    return m_private_key->get_int_field(algo_name(), field);

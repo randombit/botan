@@ -43,12 +43,16 @@ void Pipe::write(const uint8_t input[], size_t length) {
 /*
 * Write a string into a Pipe
 */
-void Pipe::write(std::string_view str) { write(cast_char_ptr_to_uint8(str.data()), str.size()); }
+void Pipe::write(std::string_view str) {
+   write(cast_char_ptr_to_uint8(str.data()), str.size());
+}
 
 /*
 * Write a single byte into a Pipe
 */
-void Pipe::write(uint8_t input) { write(&input, 1); }
+void Pipe::write(uint8_t input) {
+   write(&input, 1);
+}
 
 /*
 * Write the contents of a DataSource into a Pipe
@@ -71,12 +75,16 @@ size_t Pipe::read(uint8_t output[], size_t length, message_id msg) {
 /*
 * Read some data from the pipe
 */
-size_t Pipe::read(uint8_t output[], size_t length) { return read(output, length, DEFAULT_MESSAGE); }
+size_t Pipe::read(uint8_t output[], size_t length) {
+   return read(output, length, DEFAULT_MESSAGE);
+}
 
 /*
 * Read a single byte from the pipe
 */
-size_t Pipe::read(uint8_t& out, message_id msg) { return read(&out, 1, msg); }
+size_t Pipe::read(uint8_t& out, message_id msg) {
+   return read(&out, 1, msg);
+}
 
 /*
 * Return all data in the pipe
@@ -112,7 +120,9 @@ std::string Pipe::read_all_as_string(message_id msg) {
 /*
 * Find out how many bytes are ready to read
 */
-size_t Pipe::remaining(message_id msg) const { return m_outputs->remaining(get_message_no("remaining", msg)); }
+size_t Pipe::remaining(message_id msg) const {
+   return m_outputs->remaining(get_message_no("remaining", msg));
+}
 
 /*
 * Peek at some data in the pipe
@@ -131,14 +141,24 @@ size_t Pipe::peek(uint8_t output[], size_t length, size_t offset) const {
 /*
 * Peek at a byte in the pipe
 */
-size_t Pipe::peek(uint8_t& out, size_t offset, message_id msg) const { return peek(&out, 1, offset, msg); }
+size_t Pipe::peek(uint8_t& out, size_t offset, message_id msg) const {
+   return peek(&out, 1, offset, msg);
+}
 
-size_t Pipe::get_bytes_read() const { return m_outputs->get_bytes_read(default_msg()); }
+size_t Pipe::get_bytes_read() const {
+   return m_outputs->get_bytes_read(default_msg());
+}
 
-size_t Pipe::get_bytes_read(message_id msg) const { return m_outputs->get_bytes_read(msg); }
+size_t Pipe::get_bytes_read(message_id msg) const {
+   return m_outputs->get_bytes_read(msg);
+}
 
-bool Pipe::check_available(size_t n) { return (n <= remaining(default_msg())); }
+bool Pipe::check_available(size_t n) {
+   return (n <= remaining(default_msg()));
+}
 
-bool Pipe::check_available_msg(size_t n, message_id msg) const { return (n <= remaining(msg)); }
+bool Pipe::check_available_msg(size_t n, message_id msg) const {
+   return (n <= remaining(msg));
+}
 
 }  // namespace Botan

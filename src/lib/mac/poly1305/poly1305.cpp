@@ -167,7 +167,9 @@ void Poly1305::clear() {
    m_buf_pos = 0;
 }
 
-bool Poly1305::has_keying_material() const { return m_poly.size() == 8; }
+bool Poly1305::has_keying_material() const {
+   return m_poly.size() == 8;
+}
 
 void Poly1305::key_schedule(const uint8_t key[], size_t /*length*/) {
    m_buf_pos = 0;

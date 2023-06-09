@@ -142,12 +142,16 @@ PSSR::PSSR(std::unique_ptr<HashFunction> hash, size_t salt_size) :
 /*
 * PSSR Update Operation
 */
-void PSSR::update(const uint8_t input[], size_t length) { m_hash->update(input, length); }
+void PSSR::update(const uint8_t input[], size_t length) {
+   m_hash->update(input, length);
+}
 
 /*
 * Return the raw (unencoded) data
 */
-std::vector<uint8_t> PSSR::raw_data() { return m_hash->final_stdvec(); }
+std::vector<uint8_t> PSSR::raw_data() {
+   return m_hash->final_stdvec();
+}
 
 std::vector<uint8_t> PSSR::encoding_of(const std::vector<uint8_t>& msg,
                                        size_t output_bits,
@@ -170,7 +174,9 @@ bool PSSR::verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>&
    return ok;
 }
 
-std::string PSSR::name() const { return "EMSA4(" + m_hash->name() + ",MGF1," + std::to_string(m_salt_size) + ")"; }
+std::string PSSR::name() const {
+   return "EMSA4(" + m_hash->name() + ",MGF1," + std::to_string(m_salt_size) + ")";
+}
 
 PSSR_Raw::PSSR_Raw(std::unique_ptr<HashFunction> hash) :
       m_hash(std::move(hash)), m_salt_size(m_hash->output_length()), m_required_salt_len(false) {}
@@ -181,7 +187,9 @@ PSSR_Raw::PSSR_Raw(std::unique_ptr<HashFunction> hash, size_t salt_size) :
 /*
 * PSSR_Raw Update Operation
 */
-void PSSR_Raw::update(const uint8_t input[], size_t length) { m_msg.insert(m_msg.end(), input, input + length); }
+void PSSR_Raw::update(const uint8_t input[], size_t length) {
+   m_msg.insert(m_msg.end(), input, input + length);
+}
 
 /*
 * Return the raw (unencoded) data

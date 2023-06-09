@@ -162,7 +162,9 @@ void SHACAL2::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    }
 }
 
-bool SHACAL2::has_keying_material() const { return !m_RK.empty(); }
+bool SHACAL2::has_keying_material() const {
+   return !m_RK.empty();
+}
 
 /*
 * SHACAL2 Key Schedule
@@ -256,6 +258,8 @@ std::string SHACAL2::provider() const {
 /*
 * Clear memory of sensitive data
 */
-void SHACAL2::clear() { zap(m_RK); }
+void SHACAL2::clear() {
+   zap(m_RK);
+}
 
 }  // namespace Botan

@@ -23,7 +23,9 @@ inline bool poly_double_supported_size(size_t n) {
    return (n == 8 || n == 16 || n == 24 || n == 32 || n == 64 || n == 128);
 }
 
-inline void poly_double_n(uint8_t buf[], size_t n) { return poly_double_n(buf, buf, n); }
+inline void poly_double_n(uint8_t buf[], size_t n) {
+   return poly_double_n(buf, buf, n);
+}
 
 /*
 * Little endian convention - used for XTS

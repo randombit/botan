@@ -235,7 +235,9 @@ bool Channel_Impl_12::is_active() const {
    return (active_state() != nullptr);
 }
 
-bool Channel_Impl_12::is_closed() const { return m_has_been_closed; }
+bool Channel_Impl_12::is_closed() const {
+   return m_has_been_closed;
+}
 
 void Channel_Impl_12::activate_session() {
    std::swap(m_active_state, m_pending_state);

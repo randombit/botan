@@ -14,7 +14,9 @@
 
 namespace Botan {
 
-std::unique_ptr<HashFunction> SHA_1::copy_state() const { return std::make_unique<SHA_1>(*this); }
+std::unique_ptr<HashFunction> SHA_1::copy_state() const {
+   return std::make_unique<SHA_1>(*this);
+}
 
 namespace SHA1_F {
 
@@ -196,7 +198,9 @@ void SHA_1::compress_n(const uint8_t input[], size_t blocks) {
 /*
 * Copy out the digest
 */
-void SHA_1::copy_out(uint8_t output[]) { copy_out_vec_be(output, output_length(), m_digest); }
+void SHA_1::copy_out(uint8_t output[]) {
+   copy_out_vec_be(output, output_length(), m_digest);
+}
 
 /*
 * Clear memory of sensitive data

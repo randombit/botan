@@ -43,9 +43,13 @@ static const auto k_endpoints = std::vector<tcp::endpoint>{tcp::endpoint{net::ip
 
 enum { max_msg_length = 512 };
 
-static std::string server_cert() { return Botan_Tests::Test::data_dir() + "/x509/certstor/cert1.crt"; }
+static std::string server_cert() {
+   return Botan_Tests::Test::data_dir() + "/x509/certstor/cert1.crt";
+}
 
-static std::string server_key() { return Botan_Tests::Test::data_dir() + "/x509/certstor/key01.pem"; }
+static std::string server_key() {
+   return Botan_Tests::Test::data_dir() + "/x509/certstor/key01.pem";
+}
 
 class Timeout_Exception : public std::runtime_error {
       using std::runtime_error::runtime_error;

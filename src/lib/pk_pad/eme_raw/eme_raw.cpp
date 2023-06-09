@@ -23,5 +23,7 @@ secure_vector<uint8_t> EME_Raw::unpad(uint8_t& valid_mask, const uint8_t in[], s
    return CT::strip_leading_zeros(in, in_length);
 }
 
-size_t EME_Raw::maximum_input_size(size_t keybits) const { return keybits / 8; }
+size_t EME_Raw::maximum_input_size(size_t keybits) const {
+   return keybits / 8;
+}
 }  // namespace Botan

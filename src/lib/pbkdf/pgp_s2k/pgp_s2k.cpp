@@ -87,7 +87,9 @@ size_t OpenPGP_S2K::pbkdf(uint8_t output_buf[],
    return iterations;
 }
 
-std::string RFC4880_S2K_Family::name() const { return fmt("OpenPGP-S2K({})", m_hash->name()); }
+std::string RFC4880_S2K_Family::name() const {
+   return fmt("OpenPGP-S2K({})", m_hash->name());
+}
 
 std::unique_ptr<PasswordHash> RFC4880_S2K_Family::tune(size_t output_len,
                                                        std::chrono::milliseconds msec,
@@ -126,7 +128,9 @@ std::unique_ptr<PasswordHash> RFC4880_S2K_Family::from_iterations(size_t iter) c
 RFC4880_S2K::RFC4880_S2K(std::unique_ptr<HashFunction> hash, size_t iterations) :
       m_hash(std::move(hash)), m_iterations(iterations) {}
 
-std::string RFC4880_S2K::to_string() const { return fmt("OpenPGP-S2K({},{})", m_hash->name(), m_iterations); }
+std::string RFC4880_S2K::to_string() const {
+   return fmt("OpenPGP-S2K({},{})", m_hash->name(), m_iterations);
+}
 
 void RFC4880_S2K::derive_key(uint8_t out[],
                              size_t out_len,

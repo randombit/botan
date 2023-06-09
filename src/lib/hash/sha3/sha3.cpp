@@ -114,7 +114,9 @@ SHA_3::SHA_3(size_t output_bits) : m_output_bits(output_bits), m_bitrate(1600 - 
    }
 }
 
-std::string SHA_3::name() const { return fmt("SHA-3({})", m_output_bits); }
+std::string SHA_3::name() const {
+   return fmt("SHA-3({})", m_output_bits);
+}
 
 std::string SHA_3::provider() const {
 #if defined(BOTAN_HAS_SHA3_BMI2)
@@ -126,9 +128,13 @@ std::string SHA_3::provider() const {
    return "base";
 }
 
-std::unique_ptr<HashFunction> SHA_3::copy_state() const { return std::make_unique<SHA_3>(*this); }
+std::unique_ptr<HashFunction> SHA_3::copy_state() const {
+   return std::make_unique<SHA_3>(*this);
+}
 
-std::unique_ptr<HashFunction> SHA_3::new_object() const { return std::make_unique<SHA_3>(m_output_bits); }
+std::unique_ptr<HashFunction> SHA_3::new_object() const {
+   return std::make_unique<SHA_3>(m_output_bits);
+}
 
 void SHA_3::clear() {
    zeroise(m_S);

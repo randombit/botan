@@ -14,14 +14,18 @@
 
 namespace Botan {
 
-std::unique_ptr<HashFunction> SM3::copy_state() const { return std::make_unique<SM3>(*this); }
+std::unique_ptr<HashFunction> SM3::copy_state() const {
+   return std::make_unique<SM3>(*this);
+}
 
 namespace {
 
 const uint32_t SM3_IV[] = {
    0x7380166fUL, 0x4914b2b9UL, 0x172442d7UL, 0xda8a0600UL, 0xa96f30bcUL, 0x163138aaUL, 0xe38dee4dUL, 0xb0fb0e4eUL};
 
-inline uint32_t P0(uint32_t X) { return X ^ rotl<9>(X) ^ rotl<17>(X); }
+inline uint32_t P0(uint32_t X) {
+   return X ^ rotl<9>(X) ^ rotl<17>(X);
+}
 
 inline void R1(uint32_t A,
                uint32_t& B,
@@ -67,7 +71,9 @@ inline void R2(uint32_t A,
    H = P0(TT2);
 }
 
-inline uint32_t P1(uint32_t X) { return X ^ rotl<15>(X) ^ rotl<23>(X); }
+inline uint32_t P1(uint32_t X) {
+   return X ^ rotl<15>(X) ^ rotl<23>(X);
+}
 
 inline uint32_t SM3_E(uint32_t W0, uint32_t W7, uint32_t W13, uint32_t W3, uint32_t W10) {
    return P1(W0 ^ W7 ^ rotl<15>(W13)) ^ rotl<7>(W3) ^ W10;
@@ -233,7 +239,9 @@ void SM3::compress_n(const uint8_t input[], size_t blocks) {
 /*
 * Copy out the digest
 */
-void SM3::copy_out(uint8_t output[]) { copy_out_vec_be(output, output_length(), m_digest); }
+void SM3::copy_out(uint8_t output[]) {
+   copy_out_vec_be(output, output_length(), m_digest);
+}
 
 /*
 * Clear memory of sensitive data

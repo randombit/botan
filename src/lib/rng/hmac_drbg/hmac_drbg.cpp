@@ -118,7 +118,9 @@ void HMAC_DRBG::clear_state() {
    m_mac->set_key(std::vector<uint8_t>(m_V.size(), 0x00));
 }
 
-std::string HMAC_DRBG::name() const { return fmt("HMAC_DRBG({})", m_mac->name()); }
+std::string HMAC_DRBG::name() const {
+   return fmt("HMAC_DRBG({})", m_mac->name());
+}
 
 /*
 * HMAC_DRBG generation
@@ -170,5 +172,7 @@ void HMAC_DRBG::update(std::span<const uint8_t> input) {
    }
 }
 
-size_t HMAC_DRBG::security_level() const { return m_security_level; }
+size_t HMAC_DRBG::security_level() const {
+   return m_security_level;
+}
 }  // namespace Botan

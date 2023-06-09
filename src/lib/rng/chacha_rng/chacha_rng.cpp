@@ -67,6 +67,8 @@ void ChaCha_RNG::update(std::span<const uint8_t> input) {
    m_hmac->set_key(mac_key);
 }
 
-size_t ChaCha_RNG::security_level() const { return 256; }
+size_t ChaCha_RNG::security_level() const {
+   return 256;
+}
 
 }  // namespace Botan

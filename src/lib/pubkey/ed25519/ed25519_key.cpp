@@ -78,7 +78,9 @@ Ed25519_PublicKey::Ed25519_PublicKey(const AlgorithmIdentifier& /*unused*/, std:
    }
 }
 
-std::vector<uint8_t> Ed25519_PublicKey::public_key_bits() const { return m_public; }
+std::vector<uint8_t> Ed25519_PublicKey::public_key_bits() const {
+   return m_public;
+}
 
 Ed25519_PrivateKey::Ed25519_PrivateKey(const secure_vector<uint8_t>& secret_key) {
    if(secret_key.size() == 64) {

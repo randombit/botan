@@ -64,7 +64,9 @@ void TLS_CBC_HMAC_AEAD_Mode::reset() {
    m_msg.clear();
 }
 
-std::string TLS_CBC_HMAC_AEAD_Mode::name() const { return "TLS_CBC(" + m_cipher_name + "," + m_mac_name + ")"; }
+std::string TLS_CBC_HMAC_AEAD_Mode::name() const {
+   return "TLS_CBC(" + m_cipher_name + "," + m_mac_name + ")";
+}
 
 size_t TLS_CBC_HMAC_AEAD_Mode::update_granularity() const {
    return 1;  // just buffers anyway

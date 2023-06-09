@@ -40,22 +40,34 @@ void SIV_Mode::reset() {
    m_ad_macs.clear();
 }
 
-std::string SIV_Mode::name() const { return m_name; }
+std::string SIV_Mode::name() const {
+   return m_name;
+}
 
-bool SIV_Mode::valid_nonce_length(size_t /*nonce_len*/) const { return true; }
+bool SIV_Mode::valid_nonce_length(size_t /*nonce_len*/) const {
+   return true;
+}
 
-size_t SIV_Mode::update_granularity() const { return 1; }
+size_t SIV_Mode::update_granularity() const {
+   return 1;
+}
 
 size_t SIV_Mode::ideal_granularity() const {
    // Completely arbitrary value:
    return 128;
 }
 
-bool SIV_Mode::requires_entire_message() const { return true; }
+bool SIV_Mode::requires_entire_message() const {
+   return true;
+}
 
-Key_Length_Specification SIV_Mode::key_spec() const { return m_mac->key_spec().multiple(2); }
+Key_Length_Specification SIV_Mode::key_spec() const {
+   return m_mac->key_spec().multiple(2);
+}
 
-bool SIV_Mode::has_keying_material() const { return m_ctr->has_keying_material() && m_mac->has_keying_material(); }
+bool SIV_Mode::has_keying_material() const {
+   return m_ctr->has_keying_material() && m_mac->has_keying_material();
+}
 
 void SIV_Mode::key_schedule(const uint8_t key[], size_t length) {
    const size_t keylen = length / 2;
@@ -64,7 +76,9 @@ void SIV_Mode::key_schedule(const uint8_t key[], size_t length) {
    m_ad_macs.clear();
 }
 
-size_t SIV_Mode::maximum_associated_data_inputs() const { return block_size() * 8 - 2; }
+size_t SIV_Mode::maximum_associated_data_inputs() const {
+   return block_size() * 8 - 2;
+}
 
 void SIV_Mode::set_associated_data_n(size_t n, std::span<const uint8_t> ad) {
    const size_t max_ads = maximum_associated_data_inputs();

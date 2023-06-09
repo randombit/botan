@@ -43,15 +43,21 @@ std::vector<uint8_t> BOTAN_PUBLIC_API(2, 9) base58_check_decode(const char input
 
 // Some convenience wrappers:
 
-inline std::string base58_encode(std::span<const uint8_t> vec) { return base58_encode(vec.data(), vec.size()); }
+inline std::string base58_encode(std::span<const uint8_t> vec) {
+   return base58_encode(vec.data(), vec.size());
+}
 
 inline std::string base58_check_encode(std::span<const uint8_t> vec) {
    return base58_check_encode(vec.data(), vec.size());
 }
 
-inline std::vector<uint8_t> base58_decode(std::string_view s) { return base58_decode(s.data(), s.size()); }
+inline std::vector<uint8_t> base58_decode(std::string_view s) {
+   return base58_decode(s.data(), s.size());
+}
 
-inline std::vector<uint8_t> base58_check_decode(std::string_view s) { return base58_check_decode(s.data(), s.size()); }
+inline std::vector<uint8_t> base58_check_decode(std::string_view s) {
+   return base58_check_decode(s.data(), s.size());
+}
 
 }  // namespace Botan
 

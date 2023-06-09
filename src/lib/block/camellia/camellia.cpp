@@ -370,22 +370,40 @@ void Camellia_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) c
    Camellia_F::decrypt(in, out, blocks, m_SK, 12);
 }
 
-bool Camellia_128::has_keying_material() const { return !m_SK.empty(); }
+bool Camellia_128::has_keying_material() const {
+   return !m_SK.empty();
+}
 
-bool Camellia_192::has_keying_material() const { return !m_SK.empty(); }
+bool Camellia_192::has_keying_material() const {
+   return !m_SK.empty();
+}
 
-bool Camellia_256::has_keying_material() const { return !m_SK.empty(); }
+bool Camellia_256::has_keying_material() const {
+   return !m_SK.empty();
+}
 
-void Camellia_128::key_schedule(const uint8_t key[], size_t length) { Camellia_F::key_schedule(m_SK, key, length); }
+void Camellia_128::key_schedule(const uint8_t key[], size_t length) {
+   Camellia_F::key_schedule(m_SK, key, length);
+}
 
-void Camellia_192::key_schedule(const uint8_t key[], size_t length) { Camellia_F::key_schedule(m_SK, key, length); }
+void Camellia_192::key_schedule(const uint8_t key[], size_t length) {
+   Camellia_F::key_schedule(m_SK, key, length);
+}
 
-void Camellia_256::key_schedule(const uint8_t key[], size_t length) { Camellia_F::key_schedule(m_SK, key, length); }
+void Camellia_256::key_schedule(const uint8_t key[], size_t length) {
+   Camellia_F::key_schedule(m_SK, key, length);
+}
 
-void Camellia_128::clear() { zap(m_SK); }
+void Camellia_128::clear() {
+   zap(m_SK);
+}
 
-void Camellia_192::clear() { zap(m_SK); }
+void Camellia_192::clear() {
+   zap(m_SK);
+}
 
-void Camellia_256::clear() { zap(m_SK); }
+void Camellia_256::clear() {
+   zap(m_SK);
+}
 
 }  // namespace Botan

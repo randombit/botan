@@ -1007,9 +1007,13 @@ bool Path_Validation_Result::no_warnings() const {
    return true;
 }
 
-CertificatePathStatusCodes Path_Validation_Result::warnings() const { return m_warnings; }
+CertificatePathStatusCodes Path_Validation_Result::warnings() const {
+   return m_warnings;
+}
 
-std::string Path_Validation_Result::result_string() const { return status_string(result()); }
+std::string Path_Validation_Result::result_string() const {
+   return status_string(result());
+}
 
 const char* Path_Validation_Result::status_string(Certificate_Status_Code code) {
    if(const char* s = to_string(code)) {

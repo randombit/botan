@@ -88,12 +88,16 @@ BigInt::BigInt(std::string_view str) {
    }
 }
 
-BigInt::BigInt(const uint8_t input[], size_t length) { binary_decode(input, length); }
+BigInt::BigInt(const uint8_t input[], size_t length) {
+   binary_decode(input, length);
+}
 
 /*
 * Construct a BigInt from an encoded BigInt
 */
-BigInt::BigInt(const uint8_t input[], size_t length, Base base) { *this = decode(input, length, base); }
+BigInt::BigInt(const uint8_t input[], size_t length, Base base) {
+   *this = decode(input, length, base);
+}
 
 //static
 BigInt BigInt::from_bytes_with_max_bits(const uint8_t input[], size_t length, size_t max_bits) {
@@ -114,7 +118,9 @@ BigInt BigInt::from_bytes_with_max_bits(const uint8_t input[], size_t length, si
 /*
 * Construct a BigInt from an encoded BigInt
 */
-BigInt::BigInt(RandomNumberGenerator& rng, size_t bits, bool set_high_bit) { randomize(rng, bits, set_high_bit); }
+BigInt::BigInt(RandomNumberGenerator& rng, size_t bits, bool set_high_bit) {
+   randomize(rng, bits, set_high_bit);
+}
 
 uint8_t BigInt::byte_at(size_t n) const {
    return get_byte_var(sizeof(word) - (n % sizeof(word)) - 1, word_at(n / sizeof(word)));
@@ -268,7 +274,9 @@ void BigInt::clear_bit(size_t n) {
    }
 }
 
-size_t BigInt::bytes() const { return round_up(bits(), 8) / 8; }
+size_t BigInt::bytes() const {
+   return round_up(bits(), 8) / 8;
+}
 
 size_t BigInt::top_bits_free() const {
    const size_t words = sig_words();
@@ -364,7 +372,9 @@ BigInt BigInt::abs() const {
    return x;
 }
 
-void BigInt::binary_encode(uint8_t buf[]) const { this->binary_encode(buf, bytes()); }
+void BigInt::binary_encode(uint8_t buf[]) const {
+   this->binary_encode(buf, bytes());
+}
 
 /*
 * Encode this number into bytes
@@ -463,9 +473,13 @@ void BigInt::ct_cond_assign(bool predicate, const BigInt& other) {
 }
 
 #if defined(BOTAN_HAS_VALGRIND)
-void BigInt::const_time_poison() const { CT::poison(m_data.const_data(), m_data.size()); }
+void BigInt::const_time_poison() const {
+   CT::poison(m_data.const_data(), m_data.size());
+}
 
-void BigInt::const_time_unpoison() const { CT::unpoison(m_data.const_data(), m_data.size()); }
+void BigInt::const_time_unpoison() const {
+   CT::unpoison(m_data.const_data(), m_data.size());
+}
 #endif
 
 }  // namespace Botan

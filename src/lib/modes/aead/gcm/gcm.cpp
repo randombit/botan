@@ -42,24 +42,38 @@ void GCM_Mode::clear() {
    reset();
 }
 
-void GCM_Mode::reset() { m_ghash->reset(); }
+void GCM_Mode::reset() {
+   m_ghash->reset();
+}
 
-std::string GCM_Mode::name() const { return fmt("{}/GCM({})", m_cipher_name, tag_size()); }
+std::string GCM_Mode::name() const {
+   return fmt("{}/GCM({})", m_cipher_name, tag_size());
+}
 
-std::string GCM_Mode::provider() const { return m_ghash->provider(); }
+std::string GCM_Mode::provider() const {
+   return m_ghash->provider();
+}
 
-size_t GCM_Mode::update_granularity() const { return GCM_BS; }
+size_t GCM_Mode::update_granularity() const {
+   return GCM_BS;
+}
 
-size_t GCM_Mode::ideal_granularity() const { return GCM_BS * std::max<size_t>(2, BOTAN_BLOCK_CIPHER_PAR_MULT); }
+size_t GCM_Mode::ideal_granularity() const {
+   return GCM_BS * std::max<size_t>(2, BOTAN_BLOCK_CIPHER_PAR_MULT);
+}
 
 bool GCM_Mode::valid_nonce_length(size_t len) const {
    // GCM does not support empty nonces
    return (len > 0);
 }
 
-Key_Length_Specification GCM_Mode::key_spec() const { return m_ctr->key_spec(); }
+Key_Length_Specification GCM_Mode::key_spec() const {
+   return m_ctr->key_spec();
+}
 
-bool GCM_Mode::has_keying_material() const { return m_ctr->has_keying_material(); }
+bool GCM_Mode::has_keying_material() const {
+   return m_ctr->has_keying_material();
+}
 
 void GCM_Mode::key_schedule(const uint8_t key[], size_t keylen) {
    m_ctr->set_key(key, keylen);

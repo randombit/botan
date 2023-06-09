@@ -102,7 +102,9 @@ polyn_gf2m::polyn_gf2m(int d, const std::shared_ptr<GF2m_Field>& sp_field) :
 /**
 * doesn't save coefficients:
 */
-void polyn_gf2m::realloc(uint32_t new_size) { this->m_coeff = secure_vector<gf2m>(new_size); }
+void polyn_gf2m::realloc(uint32_t new_size) {
+   this->m_coeff = secure_vector<gf2m>(new_size);
+}
 
 polyn_gf2m::polyn_gf2m(const uint8_t* mem, uint32_t mem_len, const std::shared_ptr<GF2m_Field>& sp_field) :
       m_deg(-1), m_sp_field(sp_field) {
@@ -186,7 +188,9 @@ static gf2m eval_aux(const gf2m* /*restrict*/ coeff, gf2m a, int d, const std::s
    return b;
 }
 
-gf2m polyn_gf2m::eval(gf2m a) { return eval_aux(&this->m_coeff[0], a, this->m_deg, this->m_sp_field); }
+gf2m polyn_gf2m::eval(gf2m a) {
+   return eval_aux(&this->m_coeff[0], a, this->m_deg, this->m_sp_field);
+}
 
 // p will contain it's remainder modulo g
 void polyn_gf2m::remainder(polyn_gf2m& p, const polyn_gf2m& g) {

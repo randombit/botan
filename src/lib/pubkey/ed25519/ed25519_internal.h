@@ -20,7 +20,9 @@ inline uint64_t load_3(const uint8_t in[3]) {
    return static_cast<uint64_t>(in[0]) | (static_cast<uint64_t>(in[1]) << 8) | (static_cast<uint64_t>(in[2]) << 16);
 }
 
-inline uint64_t load_4(const uint8_t* in) { return load_le<uint32_t>(in, 0); }
+inline uint64_t load_4(const uint8_t* in) {
+   return load_le<uint32_t>(in, 0);
+}
 
 template <size_t S, int64_t MUL = 1>
 inline void carry(int64_t& h0, int64_t& h1)

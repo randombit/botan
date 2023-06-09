@@ -53,7 +53,9 @@ Pipe::Pipe(std::initializer_list<Filter*> args) {
 /*
 * Pipe Destructor
 */
-Pipe::~Pipe() { destruct(m_pipe); }
+Pipe::~Pipe() {
+   destruct(m_pipe);
+}
 
 /*
 * Reset the Pipe
@@ -80,7 +82,9 @@ void Pipe::destruct(Filter* to_kill) {
 /*
 * Test if the Pipe has any data in it
 */
-bool Pipe::end_of_data() const { return (remaining() == 0); }
+bool Pipe::end_of_data() const {
+   return (remaining() == 0);
+}
 
 /*
 * Set the default read message
@@ -104,14 +108,20 @@ void Pipe::process_msg(const uint8_t input[], size_t length) {
 /*
 * Process a full message at once
 */
-void Pipe::process_msg(const secure_vector<uint8_t>& input) { process_msg(input.data(), input.size()); }
+void Pipe::process_msg(const secure_vector<uint8_t>& input) {
+   process_msg(input.data(), input.size());
+}
 
-void Pipe::process_msg(const std::vector<uint8_t>& input) { process_msg(input.data(), input.size()); }
+void Pipe::process_msg(const std::vector<uint8_t>& input) {
+   process_msg(input.data(), input.size());
+}
 
 /*
 * Process a full message at once
 */
-void Pipe::process_msg(std::string_view input) { process_msg(cast_char_ptr_to_uint8(input.data()), input.length()); }
+void Pipe::process_msg(std::string_view input) {
+   process_msg(cast_char_ptr_to_uint8(input.data()), input.length());
+}
 
 /*
 * Process a full message at once
@@ -185,7 +195,9 @@ void Pipe::clear_endpoints(Filter* f) {
    }
 }
 
-void Pipe::append(Filter* filter) { do_append(filter); }
+void Pipe::append(Filter* filter) {
+   do_append(filter);
+}
 
 void Pipe::append_filter(Filter* filter) {
    if(m_outputs->message_count() != 0) {
@@ -195,7 +207,9 @@ void Pipe::append_filter(Filter* filter) {
    do_append(filter);
 }
 
-void Pipe::prepend(Filter* filter) { do_prepend(filter); }
+void Pipe::prepend(Filter* filter) {
+   do_prepend(filter);
+}
 
 void Pipe::prepend_filter(Filter* filter) {
    if(m_outputs->message_count() != 0) {
@@ -284,7 +298,9 @@ void Pipe::pop() {
 /*
 * Return the number of messages in this Pipe
 */
-Pipe::message_id Pipe::message_count() const { return m_outputs->message_count(); }
+Pipe::message_id Pipe::message_count() const {
+   return m_outputs->message_count();
+}
 
 /*
 * Static Member Variables

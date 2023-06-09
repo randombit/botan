@@ -58,7 +58,9 @@ bool Signature_Scheme::is_available() const noexcept {
    return value_exists(Signature_Scheme::all_available_schemes(), *this);
 }
 
-bool Signature_Scheme::is_set() const noexcept { return m_code != NONE; }
+bool Signature_Scheme::is_set() const noexcept {
+   return m_code != NONE;
+}
 
 std::string Signature_Scheme::to_string() const noexcept {
    switch(m_code) {

@@ -48,7 +48,9 @@ McEliece_PrivateKey::McEliece_PrivateKey(RandomNumberGenerator& rng, size_t code
    *this = generate_mceliece_key(rng, ext_deg, code_length, t);
 }
 
-const polyn_gf2m& McEliece_PrivateKey::get_goppa_polyn() const { return m_g[0]; }
+const polyn_gf2m& McEliece_PrivateKey::get_goppa_polyn() const {
+   return m_g[0];
+}
 
 size_t McEliece_PublicKey::get_message_word_bit_length() const {
    size_t codimension = ceil_log2(m_code_length) * m_t;
@@ -87,9 +89,13 @@ std::vector<uint8_t> McEliece_PublicKey::public_key_bits() const {
    return output;
 }
 
-size_t McEliece_PublicKey::key_length() const { return m_code_length; }
+size_t McEliece_PublicKey::key_length() const {
+   return m_code_length;
+}
 
-size_t McEliece_PublicKey::estimated_strength() const { return mceliece_work_factor(m_code_length, m_t); }
+size_t McEliece_PublicKey::estimated_strength() const {
+   return mceliece_work_factor(m_code_length, m_t);
+}
 
 McEliece_PublicKey::McEliece_PublicKey(std::span<const uint8_t> key_bits) {
    BER_Decoder dec(key_bits);

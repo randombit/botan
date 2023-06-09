@@ -52,9 +52,13 @@ void Compression_Alloc_Info::do_free(void* ptr) {
    }
 }
 
-void Stream_Compression::clear() { m_stream.reset(); }
+void Stream_Compression::clear() {
+   m_stream.reset();
+}
 
-void Stream_Compression::start(size_t level) { m_stream = make_stream(level); }
+void Stream_Compression::start(size_t level) {
+   m_stream = make_stream(level);
+}
 
 void Stream_Compression::process(secure_vector<uint8_t>& buf, size_t offset, uint32_t flags) {
    BOTAN_ASSERT(m_stream, "Initialized");
@@ -111,9 +115,13 @@ void Stream_Compression::finish(secure_vector<uint8_t>& buf, size_t offset) {
    clear();
 }
 
-void Stream_Decompression::clear() { m_stream.reset(); }
+void Stream_Decompression::clear() {
+   m_stream.reset();
+}
 
-void Stream_Decompression::start() { m_stream = make_stream(); }
+void Stream_Decompression::start() {
+   m_stream = make_stream();
+}
 
 void Stream_Decompression::process(secure_vector<uint8_t>& buf, size_t offset, uint32_t flags) {
    BOTAN_ASSERT(m_stream, "Initialized");

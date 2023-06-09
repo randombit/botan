@@ -22,7 +22,9 @@
 
 namespace {
 
-constexpr bool isdigit(char ch) { return ch >= '0' && ch <= '9'; }
+constexpr bool isdigit(char ch) {
+   return ch >= '0' && ch <= '9';
+}
 
 bool isDomain(std::string_view domain) {
    std::string domain_str(domain);
@@ -166,13 +168,21 @@ std::string URI::to_string() const {
 
 namespace Botan {
 
-URI URI::fromDomain(std::string_view) { throw Not_Implemented("No socket support enabled in build"); }
+URI URI::fromDomain(std::string_view) {
+   throw Not_Implemented("No socket support enabled in build");
+}
 
-URI URI::fromIPv4(std::string_view) { throw Not_Implemented("No socket support enabled in build"); }
+URI URI::fromIPv4(std::string_view) {
+   throw Not_Implemented("No socket support enabled in build");
+}
 
-URI URI::fromIPv6(std::string_view) { throw Not_Implemented("No socket support enabled in build"); }
+URI URI::fromIPv6(std::string_view) {
+   throw Not_Implemented("No socket support enabled in build");
+}
 
-URI URI::fromAny(std::string_view) { throw Not_Implemented("No socket support enabled in build"); }
+URI URI::fromAny(std::string_view) {
+   throw Not_Implemented("No socket support enabled in build");
+}
 
 }  // namespace Botan
 

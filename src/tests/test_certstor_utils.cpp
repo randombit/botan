@@ -47,7 +47,9 @@ std::vector<uint8_t> get_key_id() {
    return Botan::hex_decode("79B459E67BB6E5E40173800888C81A58F6E99B6E");
 }
 
-std::string get_subject_cn() { return "ISRG Root X1"; }
+std::string get_subject_cn() {
+   return "ISRG Root X1";
+}
 
 std::vector<uint8_t> get_pubkey_sha1_of_cert_with_different_key_id() {
    // see https://github.com/randombit/botan/issues/2779 for details

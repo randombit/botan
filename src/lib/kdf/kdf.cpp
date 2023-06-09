@@ -197,6 +197,8 @@ std::unique_ptr<KDF> KDF::create_or_throw(std::string_view algo, std::string_vie
    throw Lookup_Error("KDF", algo, provider);
 }
 
-std::vector<std::string> KDF::providers(std::string_view algo_spec) { return probe_providers_of<KDF>(algo_spec); }
+std::vector<std::string> KDF::providers(std::string_view algo_spec) {
+   return probe_providers_of<KDF>(algo_spec);
+}
 
 }  // namespace Botan

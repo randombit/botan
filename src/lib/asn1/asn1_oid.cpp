@@ -52,7 +52,9 @@ std::vector<uint32_t> parse_oid_str(std::string_view oid) {
 }  // namespace
 
 //static
-void OID::register_oid(const OID& oid, std::string_view name) { OID_Map::global_registry().add_oid(oid, name); }
+void OID::register_oid(const OID& oid, std::string_view name) {
+   OID_Map::global_registry().add_oid(oid, name);
+}
 
 //static
 std::optional<OID> OID::from_name(std::string_view name) {
@@ -117,9 +119,13 @@ std::string OID::to_formatted_string() const {
    return this->to_string();
 }
 
-std::string OID::human_name_or_empty() const { return OID_Map::global_registry().oid2str(*this); }
+std::string OID::human_name_or_empty() const {
+   return OID_Map::global_registry().oid2str(*this);
+}
 
-bool OID::registered_oid() const { return !human_name_or_empty().empty(); }
+bool OID::registered_oid() const {
+   return !human_name_or_empty().empty();
+}
 
 /*
 * Compare two OIDs

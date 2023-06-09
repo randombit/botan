@@ -59,7 +59,9 @@ void CMAC::final_result(uint8_t mac[]) {
    m_position = 0;
 }
 
-bool CMAC::has_keying_material() const { return m_cipher->has_keying_material(); }
+bool CMAC::has_keying_material() const {
+   return m_cipher->has_keying_material();
+}
 
 /*
 * CMAC Key Schedule
@@ -87,7 +89,9 @@ void CMAC::clear() {
 /*
 * Return the name of this type
 */
-std::string CMAC::name() const { return fmt("CMAC({})", m_cipher->name()); }
+std::string CMAC::name() const {
+   return fmt("CMAC({})", m_cipher->name());
+}
 
 /*
 * Return a new_object of this object

@@ -192,15 +192,25 @@ void BLAKE2b::final_result(uint8_t output[]) {
    state_init();
 }
 
-Key_Length_Specification BLAKE2b::key_spec() const { return Key_Length_Specification(1, 64); }
+Key_Length_Specification BLAKE2b::key_spec() const {
+   return Key_Length_Specification(1, 64);
+}
 
-std::string BLAKE2b::name() const { return fmt("BLAKE2b({})", m_output_bits); }
+std::string BLAKE2b::name() const {
+   return fmt("BLAKE2b({})", m_output_bits);
+}
 
-std::unique_ptr<HashFunction> BLAKE2b::new_object() const { return std::make_unique<BLAKE2b>(m_output_bits); }
+std::unique_ptr<HashFunction> BLAKE2b::new_object() const {
+   return std::make_unique<BLAKE2b>(m_output_bits);
+}
 
-std::unique_ptr<HashFunction> BLAKE2b::copy_state() const { return std::make_unique<BLAKE2b>(*this); }
+std::unique_ptr<HashFunction> BLAKE2b::copy_state() const {
+   return std::make_unique<BLAKE2b>(*this);
+}
 
-bool BLAKE2b::has_keying_material() const { return m_key_size > 0; }
+bool BLAKE2b::has_keying_material() const {
+   return m_key_size > 0;
+}
 
 void BLAKE2b::key_schedule(const uint8_t key[], size_t length) {
    BOTAN_ASSERT_NOMSG(length <= m_buffer.size());

@@ -114,7 +114,9 @@ std::string PK_Ops::Signature_with_Hash::rfc6979_hash_function() const {
 }
 #endif
 
-void PK_Ops::Signature_with_Hash::update(const uint8_t msg[], size_t msg_len) { m_hash->update(msg, msg_len); }
+void PK_Ops::Signature_with_Hash::update(const uint8_t msg[], size_t msg_len) {
+   m_hash->update(msg, msg_len);
+}
 
 secure_vector<uint8_t> PK_Ops::Signature_with_Hash::sign(RandomNumberGenerator& rng) {
    const secure_vector<uint8_t> msg = m_hash->final();
@@ -147,7 +149,9 @@ PK_Ops::Verification_with_Hash::Verification_with_Hash(const AlgorithmIdentifier
    m_hash = HashFunction::create_or_throw(oid_info[1]);
 }
 
-void PK_Ops::Verification_with_Hash::update(const uint8_t msg[], size_t msg_len) { m_hash->update(msg, msg_len); }
+void PK_Ops::Verification_with_Hash::update(const uint8_t msg[], size_t msg_len) {
+   m_hash->update(msg, msg_len);
+}
 
 bool PK_Ops::Verification_with_Hash::is_valid_signature(const uint8_t sig[], size_t sig_len) {
    const secure_vector<uint8_t> msg = m_hash->final();

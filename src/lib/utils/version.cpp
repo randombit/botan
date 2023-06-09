@@ -57,20 +57,32 @@ const char* version_cstr() {
 /*
 * Return the version as a string
 */
-std::string version_string() { return std::string(version_cstr()); }
+std::string version_string() {
+   return std::string(version_cstr());
+}
 
-std::string short_version_string() { return std::string(short_version_cstr()); }
+std::string short_version_string() {
+   return std::string(short_version_cstr());
+}
 
-uint32_t version_datestamp() { return BOTAN_VERSION_DATESTAMP; }
+uint32_t version_datestamp() {
+   return BOTAN_VERSION_DATESTAMP;
+}
 
 /*
 * Return parts of the version as integers
 */
-uint32_t version_major() { return BOTAN_VERSION_MAJOR; }
+uint32_t version_major() {
+   return BOTAN_VERSION_MAJOR;
+}
 
-uint32_t version_minor() { return BOTAN_VERSION_MINOR; }
+uint32_t version_minor() {
+   return BOTAN_VERSION_MINOR;
+}
 
-uint32_t version_patch() { return BOTAN_VERSION_PATCH; }
+uint32_t version_patch() {
+   return BOTAN_VERSION_PATCH;
+}
 
 std::string runtime_version_check(uint32_t major, uint32_t minor, uint32_t patch) {
    if(major != version_major() || minor != version_minor() || patch != version_patch()) {

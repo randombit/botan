@@ -180,21 +180,37 @@ Client_Hello::Client_Hello(std::unique_ptr<Client_Hello_Internal> data) : m_data
    BOTAN_ASSERT_NONNULL(m_data);
 }
 
-Handshake_Type Client_Hello::type() const { return Handshake_Type::ClientHello; }
+Handshake_Type Client_Hello::type() const {
+   return Handshake_Type::ClientHello;
+}
 
-Protocol_Version Client_Hello::legacy_version() const { return m_data->legacy_version(); }
+Protocol_Version Client_Hello::legacy_version() const {
+   return m_data->legacy_version();
+}
 
-const std::vector<uint8_t>& Client_Hello::random() const { return m_data->random(); }
+const std::vector<uint8_t>& Client_Hello::random() const {
+   return m_data->random();
+}
 
-const Session_ID& Client_Hello::session_id() const { return m_data->session_id(); }
+const Session_ID& Client_Hello::session_id() const {
+   return m_data->session_id();
+}
 
-const std::vector<uint8_t>& Client_Hello::compression_methods() const { return m_data->comp_methods(); }
+const std::vector<uint8_t>& Client_Hello::compression_methods() const {
+   return m_data->comp_methods();
+}
 
-const std::vector<uint16_t>& Client_Hello::ciphersuites() const { return m_data->ciphersuites(); }
+const std::vector<uint16_t>& Client_Hello::ciphersuites() const {
+   return m_data->ciphersuites();
+}
 
-std::set<Extension_Code> Client_Hello::extension_types() const { return m_data->extensions().extension_types(); }
+std::set<Extension_Code> Client_Hello::extension_types() const {
+   return m_data->extensions().extension_types();
+}
 
-const Extensions& Client_Hello::extensions() const { return m_data->extensions(); }
+const Extensions& Client_Hello::extensions() const {
+   return m_data->extensions();
+}
 
 void Client_Hello_12::update_hello_cookie(const Hello_Verify_Request& hello_verify) {
    BOTAN_STATE_CHECK(m_data->legacy_version().is_datagram_protocol());
@@ -294,7 +310,9 @@ std::string Client_Hello::sni_hostname() const {
    return "";
 }
 
-bool Client_Hello_12::secure_renegotiation() const { return m_data->extensions().has<Renegotiation_Extension>(); }
+bool Client_Hello_12::secure_renegotiation() const {
+   return m_data->extensions().has<Renegotiation_Extension>();
+}
 
 std::vector<uint8_t> Client_Hello_12::renegotiation_info() const {
    if(Renegotiation_Extension* reneg = m_data->extensions().get<Renegotiation_Extension>()) {
@@ -310,7 +328,9 @@ std::vector<Protocol_Version> Client_Hello::supported_versions() const {
    return {};
 }
 
-bool Client_Hello_12::supports_session_ticket() const { return m_data->extensions().has<Session_Ticket_Extension>(); }
+bool Client_Hello_12::supports_session_ticket() const {
+   return m_data->extensions().has<Session_Ticket_Extension>();
+}
 
 Session_Ticket Client_Hello_12::session_ticket() const {
    if(auto* ticket = m_data->extensions().get<Session_Ticket_Extension>()) {
@@ -333,7 +353,9 @@ std::optional<Session_Handle> Client_Hello_12::session_handle() const {
    }
 }
 
-bool Client_Hello::supports_alpn() const { return m_data->extensions().has<Application_Layer_Protocol_Notification>(); }
+bool Client_Hello::supports_alpn() const {
+   return m_data->extensions().has<Application_Layer_Protocol_Notification>();
+}
 
 bool Client_Hello_12::supports_extended_master_secret() const {
    return m_data->extensions().has<Extended_Master_Secret>();
@@ -343,9 +365,13 @@ bool Client_Hello_12::supports_cert_status_message() const {
    return m_data->extensions().has<Certificate_Status_Request>();
 }
 
-bool Client_Hello_12::supports_encrypt_then_mac() const { return m_data->extensions().has<Encrypt_then_MAC>(); }
+bool Client_Hello_12::supports_encrypt_then_mac() const {
+   return m_data->extensions().has<Encrypt_then_MAC>();
+}
 
-bool Client_Hello::sent_signature_algorithms() const { return m_data->extensions().has<Signature_Algorithms>(); }
+bool Client_Hello::sent_signature_algorithms() const {
+   return m_data->extensions().has<Signature_Algorithms>();
+}
 
 std::vector<std::string> Client_Hello::next_protocols() const {
    if(auto alpn = m_data->extensions().get<Application_Layer_Protocol_Notification>()) {
@@ -361,12 +387,16 @@ std::vector<uint16_t> Client_Hello::srtp_profiles() const {
    return {};
 }
 
-const std::vector<uint8_t>& Client_Hello::cookie() const { return m_data->hello_cookie(); }
+const std::vector<uint8_t>& Client_Hello::cookie() const {
+   return m_data->hello_cookie();
+}
 
 /*
 * Create a new Hello Request message
 */
-Hello_Request::Hello_Request(Handshake_IO& io) { io.send(*this); }
+Hello_Request::Hello_Request(Handshake_IO& io) {
+   io.send(*this);
+}
 
 /*
 * Deserialize a Hello Request message
@@ -380,7 +410,9 @@ Hello_Request::Hello_Request(const std::vector<uint8_t>& buf) {
 /*
 * Serialize a Hello Request message
 */
-std::vector<uint8_t> Hello_Request::serialize() const { return std::vector<uint8_t>(); }
+std::vector<uint8_t> Hello_Request::serialize() const {
+   return std::vector<uint8_t>();
+}
 
 Client_Hello_12::Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data) : Client_Hello(std::move(data)) {
    if(offered_suite(static_cast<uint16_t>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV))) {

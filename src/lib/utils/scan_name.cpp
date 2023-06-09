@@ -137,6 +137,8 @@ size_t SCAN_Name::arg_as_integer(size_t i, size_t def_value) const {
    return to_u32bit(m_args[i]);
 }
 
-size_t SCAN_Name::arg_as_integer(size_t i) const { return to_u32bit(arg(i)); }
+size_t SCAN_Name::arg_as_integer(size_t i) const {
+   return to_u32bit(arg(i));
+}
 
 }  // namespace Botan

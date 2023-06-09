@@ -55,7 +55,9 @@ bool operator==(const CRL_Entry& a1, const CRL_Entry& a2) {
 /*
 * Compare two CRL_Entrys for inequality
 */
-bool operator!=(const CRL_Entry& a1, const CRL_Entry& a2) { return !(a1 == a2); }
+bool operator!=(const CRL_Entry& a1, const CRL_Entry& a2) {
+   return !(a1 == a2);
+}
 
 /*
 * DER encode a CRL_Entry
@@ -105,12 +107,20 @@ const CRL_Entry_Data& CRL_Entry::data() const {
    return *m_data;
 }
 
-const std::vector<uint8_t>& CRL_Entry::serial_number() const { return data().m_serial; }
+const std::vector<uint8_t>& CRL_Entry::serial_number() const {
+   return data().m_serial;
+}
 
-const X509_Time& CRL_Entry::expire_time() const { return data().m_time; }
+const X509_Time& CRL_Entry::expire_time() const {
+   return data().m_time;
+}
 
-CRL_Code CRL_Entry::reason_code() const { return data().m_reason; }
+CRL_Code CRL_Entry::reason_code() const {
+   return data().m_reason;
+}
 
-const Extensions& CRL_Entry::extensions() const { return data().m_extensions; }
+const Extensions& CRL_Entry::extensions() const {
+   return data().m_extensions;
+}
 
 }  // namespace Botan

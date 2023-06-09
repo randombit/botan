@@ -462,7 +462,9 @@ void EC_Point::force_affine() {
    m_coord_z = m_curve.get_1_rep();
 }
 
-bool EC_Point::is_affine() const { return m_curve.is_one(m_coord_z); }
+bool EC_Point::is_affine() const {
+   return m_curve.is_one(m_coord_z);
+}
 
 BigInt EC_Point::get_affine_x() const {
    if(is_zero()) {

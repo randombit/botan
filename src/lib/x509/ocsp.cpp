@@ -74,7 +74,9 @@ std::vector<uint8_t> Request::BER_encode() const {
    return output;
 }
 
-std::string Request::base64_encode() const { return Botan::base64_encode(BER_encode()); }
+std::string Request::base64_encode() const {
+   return Botan::base64_encode(BER_encode());
+}
 
 Response::Response(Certificate_Status_Code status) :
       m_status(Response_Status_Code::Successful), m_dummy_response_status(status) {}

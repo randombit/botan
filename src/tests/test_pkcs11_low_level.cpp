@@ -143,7 +143,9 @@ class RAII_LowLevel {
       bool m_is_logged_in;
 };
 
-bool no_op(ReturnValue* /*unused*/) { return true; }
+bool no_op(ReturnValue* /*unused*/) {
+   return true;
+}
 
 using PKCS11_BoundTestFunction = std::function<bool(ReturnValue* return_value)>;
 

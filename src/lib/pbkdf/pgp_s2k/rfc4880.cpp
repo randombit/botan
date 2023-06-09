@@ -58,6 +58,8 @@ uint8_t RFC4880_encode_count(size_t desired_iterations) {
    return static_cast<uint8_t>(i - OPENPGP_S2K_ITERS);
 }
 
-size_t RFC4880_decode_count(uint8_t iter) { return OPENPGP_S2K_ITERS[iter]; }
+size_t RFC4880_decode_count(uint8_t iter) {
+   return OPENPGP_S2K_ITERS[iter];
+}
 
 }  // namespace Botan

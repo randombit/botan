@@ -140,7 +140,9 @@ int botan_rng_init_custom(botan_rng_t* rng_out,
    });
 }
 
-int botan_rng_destroy(botan_rng_t rng) { return BOTAN_FFI_CHECKED_DELETE(rng); }
+int botan_rng_destroy(botan_rng_t rng) {
+   return BOTAN_FFI_CHECKED_DELETE(rng);
+}
 
 int botan_rng_get(botan_rng_t rng, uint8_t* out, size_t out_len) {
    return BOTAN_FFI_VISIT(rng, [=](auto& r) { r.randomize(out, out_len); });

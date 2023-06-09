@@ -94,13 +94,17 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
 
 PK_Encryptor_EME::~PK_Encryptor_EME() = default;
 
-size_t PK_Encryptor_EME::ciphertext_length(size_t ptext_len) const { return m_op->ciphertext_length(ptext_len); }
+size_t PK_Encryptor_EME::ciphertext_length(size_t ptext_len) const {
+   return m_op->ciphertext_length(ptext_len);
+}
 
 std::vector<uint8_t> PK_Encryptor_EME::enc(const uint8_t in[], size_t length, RandomNumberGenerator& rng) const {
    return unlock(m_op->encrypt(in, length, rng));
 }
 
-size_t PK_Encryptor_EME::maximum_input_size() const { return m_op->max_input_bits() / 8; }
+size_t PK_Encryptor_EME::maximum_input_size() const {
+   return m_op->max_input_bits() / 8;
+}
 
 PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
                                    RandomNumberGenerator& rng,
@@ -114,7 +118,9 @@ PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
 
 PK_Decryptor_EME::~PK_Decryptor_EME() = default;
 
-size_t PK_Decryptor_EME::plaintext_length(size_t ctext_len) const { return m_op->plaintext_length(ctext_len); }
+size_t PK_Decryptor_EME::plaintext_length(size_t ctext_len) const {
+   return m_op->plaintext_length(ctext_len);
+}
 
 secure_vector<uint8_t> PK_Decryptor_EME::do_decrypt(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const {
    return m_op->decrypt(valid_mask, in, in_len);
@@ -133,7 +139,9 @@ size_t PK_KEM_Encryptor::shared_key_length(size_t desired_shared_key_len) const 
    return m_op->shared_key_length(desired_shared_key_len);
 }
 
-size_t PK_KEM_Encryptor::encapsulated_key_length() const { return m_op->encapsulated_key_length(); }
+size_t PK_KEM_Encryptor::encapsulated_key_length() const {
+   return m_op->encapsulated_key_length();
+}
 
 void PK_KEM_Encryptor::encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                                secure_vector<uint8_t>& out_shared_key,
@@ -182,7 +190,9 @@ PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
 
 PK_Key_Agreement::~PK_Key_Agreement() = default;
 
-size_t PK_Key_Agreement::agreed_value_size() const { return m_op->agreed_value_size(); }
+size_t PK_Key_Agreement::agreed_value_size() const {
+   return m_op->agreed_value_size();
+}
 
 SymmetricKey PK_Key_Agreement::derive_key(
    size_t key_len, const uint8_t in[], size_t in_len, const uint8_t salt[], size_t salt_len) const {
@@ -210,13 +220,19 @@ PK_Signer::PK_Signer(const Private_Key& key,
    check_der_format_supported(format, m_parts);
 }
 
-AlgorithmIdentifier PK_Signer::algorithm_identifier() const { return m_op->algorithm_identifier(); }
+AlgorithmIdentifier PK_Signer::algorithm_identifier() const {
+   return m_op->algorithm_identifier();
+}
 
-std::string PK_Signer::hash_function() const { return m_op->hash_function(); }
+std::string PK_Signer::hash_function() const {
+   return m_op->hash_function();
+}
 
 PK_Signer::~PK_Signer() = default;
 
-void PK_Signer::update(const uint8_t in[], size_t length) { m_op->update(in, length); }
+void PK_Signer::update(const uint8_t in[], size_t length) {
+   m_op->update(in, length);
+}
 
 namespace {
 
@@ -292,7 +308,9 @@ PK_Verifier::PK_Verifier(const Public_Key& key,
 
 PK_Verifier::~PK_Verifier() = default;
 
-std::string PK_Verifier::hash_function() const { return m_op->hash_function(); }
+std::string PK_Verifier::hash_function() const {
+   return m_op->hash_function();
+}
 
 void PK_Verifier::set_input_format(Signature_Format format) {
    check_der_format_supported(format, m_parts);
@@ -304,7 +322,9 @@ bool PK_Verifier::verify_message(const uint8_t msg[], size_t msg_length, const u
    return check_signature(sig, sig_length);
 }
 
-void PK_Verifier::update(const uint8_t in[], size_t length) { m_op->update(in, length); }
+void PK_Verifier::update(const uint8_t in[], size_t length) {
+   m_op->update(in, length);
+}
 
 namespace {
 

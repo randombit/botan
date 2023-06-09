@@ -13,7 +13,9 @@ namespace Botan {
 /*
 * Clear memory of sensitive data
 */
-void BLAKE2bMAC::clear() { m_blake.clear(); }
+void BLAKE2bMAC::clear() {
+   m_blake.clear();
+}
 
 /*
 * Return a new_object of this object

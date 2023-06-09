@@ -106,7 +106,9 @@ void SipHash::final_result(uint8_t mac[]) {
    m_words = 0;
 }
 
-bool SipHash::has_keying_material() const { return !m_V.empty(); }
+bool SipHash::has_keying_material() const {
+   return !m_V.empty();
+}
 
 void SipHash::key_schedule(const uint8_t key[], size_t /*length*/) {
    const uint64_t K0 = load_le<uint64_t>(key, 0);
@@ -131,8 +133,12 @@ void SipHash::clear() {
    m_words = 0;
 }
 
-std::string SipHash::name() const { return fmt("SipHash({},{})", m_C, m_D); }
+std::string SipHash::name() const {
+   return fmt("SipHash({},{})", m_C, m_D);
+}
 
-std::unique_ptr<MessageAuthenticationCode> SipHash::new_object() const { return std::make_unique<SipHash>(m_C, m_D); }
+std::unique_ptr<MessageAuthenticationCode> SipHash::new_object() const {
+   return std::make_unique<SipHash>(m_C, m_D);
+}
 
 }  // namespace Botan

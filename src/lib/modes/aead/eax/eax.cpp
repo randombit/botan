@@ -61,15 +61,25 @@ void EAX_Mode::reset() {
    } catch(Key_Not_Set&) {}
 }
 
-std::string EAX_Mode::name() const { return (m_cipher->name() + "/EAX"); }
+std::string EAX_Mode::name() const {
+   return (m_cipher->name() + "/EAX");
+}
 
-size_t EAX_Mode::update_granularity() const { return 1; }
+size_t EAX_Mode::update_granularity() const {
+   return 1;
+}
 
-size_t EAX_Mode::ideal_granularity() const { return m_cipher->parallel_bytes(); }
+size_t EAX_Mode::ideal_granularity() const {
+   return m_cipher->parallel_bytes();
+}
 
-Key_Length_Specification EAX_Mode::key_spec() const { return m_ctr->key_spec(); }
+Key_Length_Specification EAX_Mode::key_spec() const {
+   return m_ctr->key_spec();
+}
 
-bool EAX_Mode::has_keying_material() const { return m_ctr->has_keying_material() && m_cmac->has_keying_material(); }
+bool EAX_Mode::has_keying_material() const {
+   return m_ctr->has_keying_material() && m_cmac->has_keying_material();
+}
 
 /*
 * Set the EAX key

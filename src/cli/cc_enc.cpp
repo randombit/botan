@@ -38,7 +38,9 @@ uint8_t luhn_checksum(uint64_t cc_number) {
    return (sum % 10);
 }
 
-bool luhn_check(uint64_t cc_number) { return (luhn_checksum(cc_number) == 0); }
+bool luhn_check(uint64_t cc_number) {
+   return (luhn_checksum(cc_number) == 0);
+}
 
 uint64_t cc_rank(uint64_t cc_number) {
    // Remove Luhn checksum

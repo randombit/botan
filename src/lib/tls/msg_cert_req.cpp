@@ -18,7 +18,9 @@
 
 namespace Botan::TLS {
 
-Handshake_Type Certificate_Request_12::type() const { return Handshake_Type::CertificateRequest; }
+Handshake_Type Certificate_Request_12::type() const {
+   return Handshake_Type::CertificateRequest;
+}
 
 namespace {
 
@@ -106,11 +108,17 @@ Certificate_Request_12::Certificate_Request_12(const std::vector<uint8_t>& buf) 
    }
 }
 
-const std::vector<std::string>& Certificate_Request_12::acceptable_cert_types() const { return m_cert_key_types; }
+const std::vector<std::string>& Certificate_Request_12::acceptable_cert_types() const {
+   return m_cert_key_types;
+}
 
-const std::vector<X509_DN>& Certificate_Request_12::acceptable_CAs() const { return m_names; }
+const std::vector<X509_DN>& Certificate_Request_12::acceptable_CAs() const {
+   return m_names;
+}
 
-const std::vector<Signature_Scheme>& Certificate_Request_12::signature_schemes() const { return m_schemes; }
+const std::vector<Signature_Scheme>& Certificate_Request_12::signature_schemes() const {
+   return m_schemes;
+}
 
 /**
 * Serialize a Certificate Request message

@@ -115,7 +115,9 @@ class RSA_Private_Data final {
       size_t m_q_bits;
 };
 
-std::shared_ptr<const RSA_Public_Data> RSA_PublicKey::public_data() const { return m_public; }
+std::shared_ptr<const RSA_Public_Data> RSA_PublicKey::public_data() const {
+   return m_public;
+}
 
 const BigInt& RSA_PublicKey::get_int_field(std::string_view field) const {
    if(field == "n") {
@@ -127,9 +129,13 @@ const BigInt& RSA_PublicKey::get_int_field(std::string_view field) const {
    }
 }
 
-const BigInt& RSA_PublicKey::get_n() const { return m_public->get_n(); }
+const BigInt& RSA_PublicKey::get_n() const {
+   return m_public->get_n();
+}
 
-const BigInt& RSA_PublicKey::get_e() const { return m_public->get_e(); }
+const BigInt& RSA_PublicKey::get_e() const {
+   return m_public->get_e();
+}
 
 void RSA_PublicKey::init(BigInt&& n, BigInt&& e) {
    if(n.is_negative() || n.is_even() || n.bits() < 5 /* n >= 3*5 */ || e.is_negative() || e.is_even()) {
@@ -156,9 +162,13 @@ RSA_PublicKey::RSA_PublicKey(const BigInt& modulus, const BigInt& exponent) {
    init(std::move(n), std::move(e));
 }
 
-size_t RSA_PublicKey::key_length() const { return m_public->public_modulus_bits(); }
+size_t RSA_PublicKey::key_length() const {
+   return m_public->public_modulus_bits();
+}
 
-size_t RSA_PublicKey::estimated_strength() const { return if_work_factor(key_length()); }
+size_t RSA_PublicKey::estimated_strength() const {
+   return if_work_factor(key_length());
+}
 
 AlgorithmIdentifier RSA_PublicKey::algorithm_identifier() const {
    return AlgorithmIdentifier(object_identifier(), AlgorithmIdentifier::USE_NULL_PARAM);
@@ -182,7 +192,9 @@ bool RSA_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) c
    return true;
 }
 
-std::shared_ptr<const RSA_Private_Data> RSA_PrivateKey::private_data() const { return m_private; }
+std::shared_ptr<const RSA_Private_Data> RSA_PrivateKey::private_data() const {
+   return m_private;
+}
 
 secure_vector<uint8_t> RSA_PrivateKey::private_key_bits() const {
    return DER_Encoder()
@@ -200,17 +212,29 @@ secure_vector<uint8_t> RSA_PrivateKey::private_key_bits() const {
       .get_contents();
 }
 
-const BigInt& RSA_PrivateKey::get_p() const { return m_private->get_p(); }
+const BigInt& RSA_PrivateKey::get_p() const {
+   return m_private->get_p();
+}
 
-const BigInt& RSA_PrivateKey::get_q() const { return m_private->get_q(); }
+const BigInt& RSA_PrivateKey::get_q() const {
+   return m_private->get_q();
+}
 
-const BigInt& RSA_PrivateKey::get_d() const { return m_private->get_d(); }
+const BigInt& RSA_PrivateKey::get_d() const {
+   return m_private->get_d();
+}
 
-const BigInt& RSA_PrivateKey::get_c() const { return m_private->get_c(); }
+const BigInt& RSA_PrivateKey::get_c() const {
+   return m_private->get_c();
+}
 
-const BigInt& RSA_PrivateKey::get_d1() const { return m_private->get_d1(); }
+const BigInt& RSA_PrivateKey::get_d1() const {
+   return m_private->get_d1();
+}
 
-const BigInt& RSA_PrivateKey::get_d2() const { return m_private->get_d2(); }
+const BigInt& RSA_PrivateKey::get_d2() const {
+   return m_private->get_d2();
+}
 
 void RSA_PrivateKey::init(BigInt&& d, BigInt&& p, BigInt&& q, BigInt&& d1, BigInt&& d2, BigInt&& c) {
    m_private = std::make_shared<RSA_Private_Data>(

@@ -65,7 +65,9 @@ Flatfile_Certificate_Store::Flatfile_Certificate_Store(std::string_view file, bo
    }
 }
 
-std::vector<X509_DN> Flatfile_Certificate_Store::all_subjects() const { return m_all_subjects; }
+std::vector<X509_DN> Flatfile_Certificate_Store::all_subjects() const {
+   return m_all_subjects;
+}
 
 std::vector<X509_Certificate> Flatfile_Certificate_Store::find_all_certs(const X509_DN& subject_dn,
                                                                          const std::vector<uint8_t>& key_id) const {

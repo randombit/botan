@@ -47,7 +47,9 @@ Comb4P::Comb4P(std::unique_ptr<HashFunction> h1, std::unique_ptr<HashFunction> h
    clear();
 }
 
-std::string Comb4P::name() const { return fmt("Comb4P({},{})", m_hash1->name(), m_hash2->name()); }
+std::string Comb4P::name() const {
+   return fmt("Comb4P({},{})", m_hash1->name(), m_hash2->name());
+}
 
 std::unique_ptr<HashFunction> Comb4P::new_object() const {
    return std::make_unique<Comb4P>(m_hash1->new_object(), m_hash2->new_object());

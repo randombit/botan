@@ -40,7 +40,9 @@ namespace PKCS8 {
 * @param key the private key to encode
 * @return BER encoded key
 */
-inline secure_vector<uint8_t> BER_encode(const Private_Key& key) { return key.private_key_info(); }
+inline secure_vector<uint8_t> BER_encode(const Private_Key& key) {
+   return key.private_key_info();
+}
 
 /**
 * Get a string containing a PEM encoded private key.
