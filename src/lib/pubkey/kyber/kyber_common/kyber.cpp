@@ -98,7 +98,7 @@ std::string KyberMode::to_string() const {
          return "Kyber-1024-r3";
    }
 
-   unreachable();
+   BOTAN_UNEXPECTED_CODEPATH();
 }
 
 namespace {

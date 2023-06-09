@@ -107,7 +107,7 @@ std::string DilithiumMode::to_string() const {
          return "Dilithium-8x7-AES-r3";
    }
 
-   unreachable();
+   BOTAN_UNEXPECTED_CODEPATH();
 }
 
 class Dilithium_PublicKeyInternal {

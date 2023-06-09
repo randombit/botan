@@ -118,20 +118,22 @@ void ignore_params(T&&... args) {
 #define BOTAN_UNUSED Botan::ignore_params
 
 /*
-* Define Botan::unreachable()
+* Define Botan::unexpected_codepath
 *
-* There is a pending WG21 proposal for `std::unreachable()`
-*   http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0627r3.pdf
+* This is intended to be used in the same situations as `std::unreachable()`;
+* a codepath that (should not) be reachable but where the compiler cannot
+* tell that it is unreachable.
+*
+* Unlike `std::unreachable()`, or equivalent compiler builtins like GCC's
+* `__builtin_unreachable`, this function is not UB. It will either throw,
+* or abort, depending on in if `BOTAN_TERMINATE_ON_ASSERTS` is defined.
+*
+* Due to this, and the fact that it is not inlined, this is a significantly
+* more costly than `std::unreachable`.
 */
-[[noreturn]] BOTAN_FORCE_INLINE void unreachable() {
-#if BOTAN_COMPILER_HAS_BUILTIN(__builtin_unreachable)
-   __builtin_unreachable();
-#elif defined(_MSC_VER)  // MSVC
-   __assume(false);
-#else
-   return;  // undefined behaviour, just like the others...
-#endif
-}
+[[noreturn]] void unexpected_codepath(const char* file, int line);
+
+#define BOTAN_UNEXPECTED_CODEPATH() Botan::unexpected_codepath(__FILE__, __LINE__)
 
 }  // namespace Botan
 
