@@ -28,11 +28,17 @@ void RC4::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) {
    m_position += length;
 }
 
-std::unique_ptr<StreamCipher> RC4::new_object() const { return std::make_unique<RC4>(m_SKIP); }
+std::unique_ptr<StreamCipher> RC4::new_object() const {
+   return std::make_unique<RC4>(m_SKIP);
+}
 
-size_t RC4::buffer_size() const { return 256; }
+size_t RC4::buffer_size() const {
+   return 256;
+}
 
-Key_Length_Specification RC4::key_spec() const { return Key_Length_Specification(1, 256); }
+Key_Length_Specification RC4::key_spec() const {
+   return Key_Length_Specification(1, 256);
+}
 
 void RC4::set_iv_bytes(const uint8_t* /*iv*/, size_t length) {
    if(length > 0) {
@@ -78,7 +84,9 @@ void RC4::generate() {
    m_position = 0;
 }
 
-bool RC4::has_keying_material() const { return !m_state.empty(); }
+bool RC4::has_keying_material() const {
+   return !m_state.empty();
+}
 
 /*
 * RC4 Key Schedule
@@ -132,5 +140,7 @@ void RC4::clear() {
 */
 RC4::RC4(size_t s) : m_SKIP(s) {}
 
-void RC4::seek(uint64_t /*offset*/) { throw Not_Implemented("RC4 does not support seeking"); }
+void RC4::seek(uint64_t /*offset*/) {
+   throw Not_Implemented("RC4 does not support seeking");
+}
 }  // namespace Botan

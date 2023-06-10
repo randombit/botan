@@ -22,12 +22,16 @@ namespace Botan {
 /*
 * Read a single byte from the DataSource
 */
-size_t DataSource::read_byte(uint8_t& out) { return read(&out, 1); }
+size_t DataSource::read_byte(uint8_t& out) {
+   return read(&out, 1);
+}
 
 /*
 * Peek a single byte from the DataSource
 */
-size_t DataSource::peek_byte(uint8_t& out) const { return peek(&out, 1, 0); }
+size_t DataSource::peek_byte(uint8_t& out) const {
+   return peek(&out, 1, 0);
+}
 
 /*
 * Discard the next N bytes of the data
@@ -59,7 +63,9 @@ size_t DataSource_Memory::read(uint8_t out[], size_t length) {
    return got;
 }
 
-bool DataSource_Memory::check_available(size_t n) { return (n <= (m_source.size() - m_offset)); }
+bool DataSource_Memory::check_available(size_t n) {
+   return (n <= (m_source.size() - m_offset));
+}
 
 /*
 * Peek into a memory buffer
@@ -78,7 +84,9 @@ size_t DataSource_Memory::peek(uint8_t out[], size_t length, size_t peek_offset)
 /*
 * Check if the memory buffer is empty
 */
-bool DataSource_Memory::end_of_data() const { return (m_offset == m_source.size()); }
+bool DataSource_Memory::end_of_data() const {
+   return (m_offset == m_source.size());
+}
 
 /*
 * DataSource_Memory Constructor
@@ -146,12 +154,16 @@ size_t DataSource_Stream::peek(uint8_t out[], size_t length, size_t offset) cons
 /*
 * Check if the stream is empty or in error
 */
-bool DataSource_Stream::end_of_data() const { return (!m_source.good()); }
+bool DataSource_Stream::end_of_data() const {
+   return (!m_source.good());
+}
 
 /*
 * Return a human-readable ID for this stream
 */
-std::string DataSource_Stream::id() const { return m_identifier; }
+std::string DataSource_Stream::id() const {
+   return m_identifier;
+}
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 

@@ -155,16 +155,22 @@ size_t PKCS5_PBKDF2::pbkdf(uint8_t key[],
    return iterations;
 }
 
-std::string PKCS5_PBKDF2::name() const { return fmt("PBKDF2({})", m_mac->name()); }
+std::string PKCS5_PBKDF2::name() const {
+   return fmt("PBKDF2({})", m_mac->name());
+}
 
-std::unique_ptr<PBKDF> PKCS5_PBKDF2::new_object() const { return std::make_unique<PKCS5_PBKDF2>(m_mac->new_object()); }
+std::unique_ptr<PBKDF> PKCS5_PBKDF2::new_object() const {
+   return std::make_unique<PKCS5_PBKDF2>(m_mac->new_object());
+}
 
 // PasswordHash interface
 
 PBKDF2::PBKDF2(const MessageAuthenticationCode& prf, size_t olen, std::chrono::milliseconds msec) :
       m_prf(prf.new_object()), m_iterations(tune_pbkdf2(*m_prf, olen, msec)) {}
 
-std::string PBKDF2::to_string() const { return fmt("PBKDF2({},{})", m_prf->name(), m_iterations); }
+std::string PBKDF2::to_string() const {
+   return fmt("PBKDF2({},{})", m_prf->name(), m_iterations);
+}
 
 void PBKDF2::derive_key(uint8_t out[],
                         size_t out_len,
@@ -176,7 +182,9 @@ void PBKDF2::derive_key(uint8_t out[],
    pbkdf2(*m_prf, out, out_len, salt, salt_len, m_iterations);
 }
 
-std::string PBKDF2_Family::name() const { return fmt("PBKDF2({})", m_prf->name()); }
+std::string PBKDF2_Family::name() const {
+   return fmt("PBKDF2({})", m_prf->name());
+}
 
 std::unique_ptr<PasswordHash> PBKDF2_Family::tune(size_t output_len,
                                                   std::chrono::milliseconds msec,
@@ -186,7 +194,9 @@ std::unique_ptr<PasswordHash> PBKDF2_Family::tune(size_t output_len,
    return std::make_unique<PBKDF2>(*m_prf, iterations);
 }
 
-std::unique_ptr<PasswordHash> PBKDF2_Family::default_params() const { return std::make_unique<PBKDF2>(*m_prf, 150000); }
+std::unique_ptr<PasswordHash> PBKDF2_Family::default_params() const {
+   return std::make_unique<PBKDF2>(*m_prf, 150000);
+}
 
 std::unique_ptr<PasswordHash> PBKDF2_Family::from_params(size_t iter, size_t /*i2*/, size_t /*i3*/) const {
    return std::make_unique<PBKDF2>(*m_prf, iter);

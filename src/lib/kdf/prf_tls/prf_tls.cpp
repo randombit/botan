@@ -50,9 +50,13 @@ void P_hash(uint8_t out[],
 
 }  // namespace
 
-std::string TLS_12_PRF::name() const { return fmt("TLS-12-PRF({})", m_mac->name()); }
+std::string TLS_12_PRF::name() const {
+   return fmt("TLS-12-PRF({})", m_mac->name());
+}
 
-std::unique_ptr<KDF> TLS_12_PRF::new_object() const { return std::make_unique<TLS_12_PRF>(m_mac->new_object()); }
+std::unique_ptr<KDF> TLS_12_PRF::new_object() const {
+   return std::make_unique<TLS_12_PRF>(m_mac->new_object());
+}
 
 void TLS_12_PRF::kdf(uint8_t key[],
                      size_t key_len,

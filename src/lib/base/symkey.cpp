@@ -16,7 +16,9 @@ namespace Botan {
 /*
 * Create an OctetString from RNG output
 */
-OctetString::OctetString(RandomNumberGenerator& rng, size_t len) { rng.random_vec(m_data, len); }
+OctetString::OctetString(RandomNumberGenerator& rng, size_t len) {
+   rng.random_vec(m_data, len);
+}
 
 /*
 * Create an OctetString from a hex string
@@ -31,7 +33,9 @@ OctetString::OctetString(std::string_view hex_string) {
 /*
 * Create an OctetString from a byte string
 */
-OctetString::OctetString(const uint8_t in[], size_t n) { m_data.assign(in, in + n); }
+OctetString::OctetString(const uint8_t in[], size_t n) {
+   m_data.assign(in, in + n);
+}
 
 namespace {
 
@@ -58,7 +62,9 @@ void OctetString::set_odd_parity() {
 /*
 * Hex encode an OctetString
 */
-std::string OctetString::to_string() const { return hex_encode(m_data.data(), m_data.size()); }
+std::string OctetString::to_string() const {
+   return hex_encode(m_data.data(), m_data.size());
+}
 
 /*
 * XOR Operation for OctetStrings
@@ -75,12 +81,16 @@ OctetString& OctetString::operator^=(const OctetString& k) {
 /*
 * Equality Operation for OctetStrings
 */
-bool operator==(const OctetString& s1, const OctetString& s2) { return (s1.bits_of() == s2.bits_of()); }
+bool operator==(const OctetString& s1, const OctetString& s2) {
+   return (s1.bits_of() == s2.bits_of());
+}
 
 /*
 * Unequality Operation for OctetStrings
 */
-bool operator!=(const OctetString& s1, const OctetString& s2) { return !(s1 == s2); }
+bool operator!=(const OctetString& s1, const OctetString& s2) {
+   return !(s1 == s2);
+}
 
 /*
 * Append Operation for OctetStrings

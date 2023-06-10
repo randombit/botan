@@ -32,7 +32,9 @@ int botan_mac_init(botan_mac_t* mac, const char* mac_name, uint32_t flags) {
    });
 }
 
-int botan_mac_destroy(botan_mac_t mac) { return BOTAN_FFI_CHECKED_DELETE(mac); }
+int botan_mac_destroy(botan_mac_t mac) {
+   return BOTAN_FFI_CHECKED_DELETE(mac);
+}
 
 int botan_mac_set_key(botan_mac_t mac, const uint8_t* key, size_t key_len) {
    return BOTAN_FFI_VISIT(mac, [=](auto& m) { m.set_key(key, key_len); });

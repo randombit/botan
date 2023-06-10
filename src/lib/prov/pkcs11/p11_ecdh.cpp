@@ -17,7 +17,9 @@
 
 namespace Botan::PKCS11 {
 
-ECDH_PublicKey PKCS11_ECDH_PublicKey::export_key() const { return ECDH_PublicKey(domain(), public_point()); }
+ECDH_PublicKey PKCS11_ECDH_PublicKey::export_key() const {
+   return ECDH_PublicKey(domain(), public_point());
+}
 
 ECDH_PrivateKey PKCS11_ECDH_PrivateKey::export_key() const {
    auto priv_key = get_attribute_value(AttributeType::Value);
@@ -30,7 +32,9 @@ std::unique_ptr<Public_Key> PKCS11_ECDH_PrivateKey::public_key() const {
    return std::make_unique<ECDH_PublicKey>(domain(), public_point());
 }
 
-secure_vector<uint8_t> PKCS11_ECDH_PrivateKey::private_key_bits() const { return export_key().private_key_bits(); }
+secure_vector<uint8_t> PKCS11_ECDH_PrivateKey::private_key_bits() const {
+   return export_key().private_key_bits();
+}
 
 namespace {
 class PKCS11_ECDH_KA_Operation final : public PK_Ops::Key_Agreement {

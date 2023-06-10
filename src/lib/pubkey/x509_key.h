@@ -25,7 +25,9 @@ namespace X509 {
 * @param key the public key to encode
 * @return BER encoding of this key
 */
-inline std::vector<uint8_t> BER_encode(const Public_Key& key) { return key.subject_public_key(); }
+inline std::vector<uint8_t> BER_encode(const Public_Key& key) {
+   return key.subject_public_key();
+}
 
 /**
 * PEM encode a public key into a string.

@@ -749,7 +749,9 @@ void add_renegotiation_extension(Botan::TLS::Extensions& exts) {
    exts.add(new Renegotiation_Extension());
 }
 
-void add_early_data_indication(Botan::TLS::Extensions& exts) { exts.add(new Botan::TLS::EarlyDataIndication()); }
+void add_early_data_indication(Botan::TLS::Extensions& exts) {
+   exts.add(new Botan::TLS::EarlyDataIndication());
+}
 
 std::vector<uint8_t> strip_message_header(const std::vector<uint8_t>& msg) {
    BOTAN_ASSERT_NOMSG(msg.size() >= 4);

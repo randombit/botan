@@ -45,11 +45,17 @@ std::vector<uint8_t> emsa2_encoding(const std::vector<uint8_t>& msg,
 
 }  // namespace
 
-std::string EMSA_X931::name() const { return "EMSA2(" + m_hash->name() + ")"; }
+std::string EMSA_X931::name() const {
+   return "EMSA2(" + m_hash->name() + ")";
+}
 
-void EMSA_X931::update(const uint8_t input[], size_t length) { m_hash->update(input, length); }
+void EMSA_X931::update(const uint8_t input[], size_t length) {
+   m_hash->update(input, length);
+}
 
-std::vector<uint8_t> EMSA_X931::raw_data() { return m_hash->final_stdvec(); }
+std::vector<uint8_t> EMSA_X931::raw_data() {
+   return m_hash->final_stdvec();
+}
 
 /*
 * EMSA_X931 Encode Operation

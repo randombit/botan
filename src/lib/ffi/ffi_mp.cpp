@@ -109,7 +109,9 @@ int botan_mp_to_uint32(const botan_mp_t mp, uint32_t* val) {
    return BOTAN_FFI_VISIT(mp, [=](const auto& bn) { *val = bn.to_u32bit(); });
 }
 
-int botan_mp_destroy(botan_mp_t mp) { return BOTAN_FFI_CHECKED_DELETE(mp); }
+int botan_mp_destroy(botan_mp_t mp) {
+   return BOTAN_FFI_CHECKED_DELETE(mp);
+}
 
 int botan_mp_add(botan_mp_t result, const botan_mp_t x, const botan_mp_t y) {
    return BOTAN_FFI_VISIT(result, [=](auto& res) {

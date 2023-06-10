@@ -11,7 +11,9 @@
 
 namespace Botan::PKCS11 {
 
-AttributeContainer::AttributeContainer(ObjectClass object_class) { add_class(object_class); }
+AttributeContainer::AttributeContainer(ObjectClass object_class) {
+   add_class(object_class);
+}
 
 void AttributeContainer::add_class(ObjectClass object_class) {
    m_numerics.emplace_back(static_cast<uint64_t>(object_class));
@@ -163,7 +165,9 @@ void Object::set_attribute_value(AttributeType attribute, const secure_vector<ui
    module()->C_SetAttributeValue(m_session.get().handle(), m_handle, attribute_map);
 }
 
-void Object::destroy() const { module()->C_DestroyObject(m_session.get().handle(), m_handle); }
+void Object::destroy() const {
+   module()->C_DestroyObject(m_session.get().handle(), m_handle);
+}
 
 ObjectHandle Object::copy(const AttributeContainer& modified_attributes) const {
    ObjectHandle copied_handle;

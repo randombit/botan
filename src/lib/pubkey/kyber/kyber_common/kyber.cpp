@@ -80,7 +80,9 @@ KyberMode::KyberMode(const OID& oid) : m_mode(kyber_mode_from_string(oid.to_form
 
 KyberMode::KyberMode(std::string_view str) : m_mode(kyber_mode_from_string(str)) {}
 
-OID KyberMode::object_identifier() const { return OID::from_string(to_string()); }
+OID KyberMode::object_identifier() const {
+   return OID::from_string(to_string());
+}
 
 std::string KyberMode::to_string() const {
    switch(m_mode) {
@@ -1180,17 +1182,25 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
       const Kyber_PrivateKey& m_key;
 };
 
-KyberMode Kyber_PublicKey::mode() const { return m_public->mode().mode(); }
+KyberMode Kyber_PublicKey::mode() const {
+   return m_public->mode().mode();
+}
 
-std::string Kyber_PublicKey::algo_name() const { return object_identifier().to_formatted_string(); }
+std::string Kyber_PublicKey::algo_name() const {
+   return object_identifier().to_formatted_string();
+}
 
 AlgorithmIdentifier Kyber_PublicKey::algorithm_identifier() const {
    return AlgorithmIdentifier(mode().object_identifier(), AlgorithmIdentifier::USE_EMPTY_PARAM);
 }
 
-OID Kyber_PublicKey::object_identifier() const { return mode().object_identifier(); }
+OID Kyber_PublicKey::object_identifier() const {
+   return mode().object_identifier();
+}
 
-size_t Kyber_PublicKey::estimated_strength() const { return m_public->mode().estimated_strength(); }
+size_t Kyber_PublicKey::estimated_strength() const {
+   return m_public->mode().estimated_strength();
+}
 
 std::shared_ptr<Kyber_PublicKeyInternal> Kyber_PublicKey::initialize_from_encoding(std::span<const uint8_t> pub_key,
                                                                                    KyberMode m) {
@@ -1218,13 +1228,21 @@ Kyber_PublicKey::Kyber_PublicKey(std::span<const uint8_t> pub_key, KyberMode m) 
 Kyber_PublicKey::Kyber_PublicKey(const Kyber_PublicKey& other) :
       m_public(std::make_shared<Kyber_PublicKeyInternal>(*other.m_public)) {}
 
-std::vector<uint8_t> Kyber_PublicKey::public_key_bits() const { return public_key_bits_raw(); }
+std::vector<uint8_t> Kyber_PublicKey::public_key_bits() const {
+   return public_key_bits_raw();
+}
 
-const std::vector<uint8_t>& Kyber_PublicKey::public_key_bits_raw() const { return m_public->public_key_bits_raw(); }
+const std::vector<uint8_t>& Kyber_PublicKey::public_key_bits_raw() const {
+   return m_public->public_key_bits_raw();
+}
 
-const std::vector<uint8_t>& Kyber_PublicKey::H_public_key_bits_raw() const { return m_public->H_public_key_bits_raw(); }
+const std::vector<uint8_t>& Kyber_PublicKey::H_public_key_bits_raw() const {
+   return m_public->H_public_key_bits_raw();
+}
 
-size_t Kyber_PublicKey::key_length() const { return m_public->mode().public_key_byte_length(); }
+size_t Kyber_PublicKey::key_length() const {
+   return m_public->mode().public_key_byte_length();
+}
 
 bool Kyber_PublicKey::check_key(RandomNumberGenerator&, bool) const {
    return true;  // ??
@@ -1285,9 +1303,13 @@ Kyber_PrivateKey::Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode m) {
    BOTAN_ASSERT(m_private && m_public, "reading private key encoding");
 }
 
-std::unique_ptr<Public_Key> Kyber_PrivateKey::public_key() const { return std::make_unique<Kyber_PublicKey>(*this); }
+std::unique_ptr<Public_Key> Kyber_PrivateKey::public_key() const {
+   return std::make_unique<Kyber_PublicKey>(*this);
+}
 
-secure_vector<uint8_t> Kyber_PrivateKey::raw_private_key_bits() const { return this->private_key_bits(); }
+secure_vector<uint8_t> Kyber_PrivateKey::raw_private_key_bits() const {
+   return this->private_key_bits();
+}
 
 secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const {
    return concat(m_private->polynomials().to_bytes<secure_vector<uint8_t>>(),

@@ -27,7 +27,9 @@ class Public_Key;
 
 BOTAN_DEPRECATED("Use Key_Constraints::to_string")
 
-inline std::string key_constraints_to_string(Key_Constraints c) { return c.to_string(); }
+inline std::string key_constraints_to_string(Key_Constraints c) {
+   return c.to_string();
+}
 
 /**
 * Distinguished Name

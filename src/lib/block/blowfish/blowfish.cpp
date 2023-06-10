@@ -289,7 +289,9 @@ void Blowfish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    }
 }
 
-bool Blowfish::has_keying_material() const { return !m_P.empty(); }
+bool Blowfish::has_keying_material() const {
+   return !m_P.empty();
+}
 
 /*
 * Blowfish Key Schedule

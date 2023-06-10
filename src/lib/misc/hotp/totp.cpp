@@ -27,7 +27,9 @@ uint32_t TOTP::generate_totp(std::chrono::system_clock::time_point current_time)
    return this->generate_totp(unix_time);
 }
 
-uint32_t TOTP::generate_totp(uint64_t unix_time) { return m_hotp.generate_hotp(unix_time / m_time_step); }
+uint32_t TOTP::generate_totp(uint64_t unix_time) {
+   return m_hotp.generate_hotp(unix_time / m_time_step);
+}
 
 bool TOTP::verify_totp(uint32_t otp, std::chrono::system_clock::time_point current_time, size_t clock_drift_accepted) {
    const uint64_t unix_time = std::chrono::duration_cast<std::chrono::seconds>(current_time - m_unix_epoch).count();

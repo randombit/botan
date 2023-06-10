@@ -175,7 +175,9 @@ Test::Result PK_Signature_Generation_Test::run_one_test(const std::string& pad_h
    return result;
 }
 
-Botan::Signature_Format PK_Signature_Verification_Test::sig_format() const { return Botan::Signature_Format::Standard; }
+Botan::Signature_Format PK_Signature_Verification_Test::sig_format() const {
+   return Botan::Signature_Format::Standard;
+}
 
 Test::Result PK_Signature_Verification_Test::run_one_test(const std::string& pad_hdr, const VarMap& vars) {
    const std::vector<uint8_t> message = vars.get_req_bin("Msg");

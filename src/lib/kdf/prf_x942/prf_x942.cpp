@@ -90,6 +90,8 @@ void X942_PRF::kdf(uint8_t key[],
    }
 }
 
-std::string X942_PRF::name() const { return "X9.42-PRF(" + m_key_wrap_oid.to_formatted_string() + ")"; }
+std::string X942_PRF::name() const {
+   return "X9.42-PRF(" + m_key_wrap_oid.to_formatted_string() + ")";
+}
 
 }  // namespace Botan

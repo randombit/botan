@@ -330,7 +330,9 @@ void CAST_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
    }
 }
 
-bool CAST_128::has_keying_material() const { return !m_RK.empty(); }
+bool CAST_128::has_keying_material() const {
+   return !m_RK.empty();
+}
 
 /*
 * CAST-128 Key Schedule

@@ -24,7 +24,9 @@ bool caseless_cmp(char a, char b) {
    return (std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b)));
 }
 
-bool is_space(char c) { return std::isspace(static_cast<unsigned char>(c)); }
+bool is_space(char c) {
+   return std::isspace(static_cast<unsigned char>(c));
+}
 
 }  // namespace
 
@@ -88,7 +90,9 @@ bool x500_name_cmp(std::string_view name1, std::string_view name2) {
 /*
 * Add an attribute to a X509_DN
 */
-void X509_DN::add_attribute(std::string_view type, std::string_view str) { add_attribute(OID::from_string(type), str); }
+void X509_DN::add_attribute(std::string_view type, std::string_view str) {
+   add_attribute(OID::from_string(type), str);
+}
 
 /*
 * Add an attribute to a X509_DN
@@ -249,7 +253,9 @@ bool operator==(const X509_DN& dn1, const X509_DN& dn2) {
 /*
 * Compare two X509_DNs for inequality
 */
-bool operator!=(const X509_DN& dn1, const X509_DN& dn2) { return !(dn1 == dn2); }
+bool operator!=(const X509_DN& dn1, const X509_DN& dn2) {
+   return !(dn1 == dn2);
+}
 
 /*
 * Induce an arbitrary ordering on DNs

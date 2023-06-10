@@ -160,7 +160,9 @@ Nonce::Nonce(const std::vector<uint8_t>& nonce) {
    m_nonce = typecast_copy<std::array<uint8_t, 64>>(nonce.data());
 }
 
-Nonce::Nonce(RandomNumberGenerator& rng) { rng.randomize(m_nonce.data(), m_nonce.size()); }
+Nonce::Nonce(RandomNumberGenerator& rng) {
+   rng.randomize(m_nonce.data(), m_nonce.size());
+}
 
 std::array<uint8_t, request_min_size> encode_request(const Nonce& nonce) {
    std::array<uint8_t, request_min_size> buf = {{2, 0, 0, 0, 64, 0, 0, 0, 'N', 'O', 'N', 'C', 'P', 'A', 'D', 0xff}};

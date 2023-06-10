@@ -115,7 +115,9 @@ secure_vector<uint8_t> PKCS8_decode(DataSource& source,
 /*
 * PEM encode a PKCS #8 private key, unencrypted
 */
-std::string PEM_encode(const Private_Key& key) { return PEM_Code::encode(key.private_key_info(), "PRIVATE KEY"); }
+std::string PEM_encode(const Private_Key& key) {
+   return PEM_Code::encode(key.private_key_info(), "PRIVATE KEY");
+}
 
 #if defined(BOTAN_HAS_PKCS5_PBES2)
 

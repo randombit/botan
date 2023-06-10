@@ -41,9 +41,13 @@ std::vector<uint8_t> emsa3_encoding(const std::vector<uint8_t>& msg,
 
 }  // namespace
 
-void EMSA_PKCS1v15::update(const uint8_t input[], size_t length) { m_hash->update(input, length); }
+void EMSA_PKCS1v15::update(const uint8_t input[], size_t length) {
+   m_hash->update(input, length);
+}
 
-std::vector<uint8_t> EMSA_PKCS1v15::raw_data() { return m_hash->final_stdvec(); }
+std::vector<uint8_t> EMSA_PKCS1v15::raw_data() {
+   return m_hash->final_stdvec();
+}
 
 std::vector<uint8_t> EMSA_PKCS1v15::encoding_of(const std::vector<uint8_t>& msg,
                                                 size_t output_bits,
@@ -83,7 +87,9 @@ EMSA_PKCS1v15_Raw::EMSA_PKCS1v15_Raw(std::string_view hash_algo) {
    m_hash_output_len = hash->output_length();
 }
 
-void EMSA_PKCS1v15_Raw::update(const uint8_t input[], size_t length) { m_message += std::make_pair(input, length); }
+void EMSA_PKCS1v15_Raw::update(const uint8_t input[], size_t length) {
+   m_message += std::make_pair(input, length);
+}
 
 std::vector<uint8_t> EMSA_PKCS1v15_Raw::raw_data() {
    std::vector<uint8_t> ret;

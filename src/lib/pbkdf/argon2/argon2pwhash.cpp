@@ -58,7 +58,9 @@ std::string argon2_family_name(uint8_t f) {
 
 }  // namespace
 
-std::string Argon2::to_string() const { return fmt("{}({},{},{})", argon2_family_name(m_family), m_M, m_t, m_p); }
+std::string Argon2::to_string() const {
+   return fmt("{}({},{},{})", argon2_family_name(m_family), m_M, m_t, m_p);
+}
 
 Argon2_Family::Argon2_Family(uint8_t family) : m_family(family) {
    if(m_family != 0 && m_family != 1 && m_family != 2) {
@@ -66,7 +68,9 @@ Argon2_Family::Argon2_Family(uint8_t family) : m_family(family) {
    }
 }
 
-std::string Argon2_Family::name() const { return argon2_family_name(m_family); }
+std::string Argon2_Family::name() const {
+   return argon2_family_name(m_family);
+}
 
 std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
                                                   std::chrono::milliseconds msec,
@@ -128,7 +132,9 @@ std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
    return this->from_params(M, t, p);
 }
 
-std::unique_ptr<PasswordHash> Argon2_Family::default_params() const { return this->from_params(128 * 1024, 1, 1); }
+std::unique_ptr<PasswordHash> Argon2_Family::default_params() const {
+   return this->from_params(128 * 1024, 1, 1);
+}
 
 std::unique_ptr<PasswordHash> Argon2_Family::from_iterations(size_t iter) const {
    /*

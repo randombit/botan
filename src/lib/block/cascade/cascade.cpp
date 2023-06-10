@@ -39,7 +39,9 @@ void Cascade_Cipher::clear() {
    m_cipher2->clear();
 }
 
-std::string Cascade_Cipher::name() const { return fmt("Cascade({},{})", m_cipher1->name(), m_cipher2->name()); }
+std::string Cascade_Cipher::name() const {
+   return fmt("Cascade({},{})", m_cipher1->name(), m_cipher2->name());
+}
 
 bool Cascade_Cipher::has_keying_material() const {
    return m_cipher1->has_keying_material() && m_cipher2->has_keying_material();

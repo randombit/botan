@@ -13,7 +13,9 @@
 
 namespace Botan {
 
-std::unique_ptr<HashFunction> MD5::copy_state() const { return std::make_unique<MD5>(*this); }
+std::unique_ptr<HashFunction> MD5::copy_state() const {
+   return std::make_unique<MD5>(*this);
+}
 
 namespace {
 
@@ -145,7 +147,9 @@ void MD5::compress_n(const uint8_t input[], size_t blocks) {
 /*
 * Copy out the digest
 */
-void MD5::copy_out(uint8_t output[]) { copy_out_vec_le(output, output_length(), m_digest); }
+void MD5::copy_out(uint8_t output[]) {
+   copy_out_vec_le(output, output_length(), m_digest);
+}
 
 /*
 * Clear memory of sensitive data

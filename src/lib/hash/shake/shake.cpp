@@ -19,11 +19,17 @@ SHAKE_128::SHAKE_128(size_t output_bits) : m_output_bits(output_bits), m_S(25), 
    }
 }
 
-std::string SHAKE_128::name() const { return fmt("SHAKE-128({})", m_output_bits); }
+std::string SHAKE_128::name() const {
+   return fmt("SHAKE-128({})", m_output_bits);
+}
 
-std::unique_ptr<HashFunction> SHAKE_128::new_object() const { return std::make_unique<SHAKE_128>(m_output_bits); }
+std::unique_ptr<HashFunction> SHAKE_128::new_object() const {
+   return std::make_unique<SHAKE_128>(m_output_bits);
+}
 
-std::unique_ptr<HashFunction> SHAKE_128::copy_state() const { return std::make_unique<SHAKE_128>(*this); }
+std::unique_ptr<HashFunction> SHAKE_128::copy_state() const {
+   return std::make_unique<SHAKE_128>(*this);
+}
 
 void SHAKE_128::clear() {
    zeroise(m_S);
@@ -46,11 +52,17 @@ SHAKE_256::SHAKE_256(size_t output_bits) : m_output_bits(output_bits), m_S(25), 
    }
 }
 
-std::string SHAKE_256::name() const { return fmt("SHAKE-256({})", m_output_bits); }
+std::string SHAKE_256::name() const {
+   return fmt("SHAKE-256({})", m_output_bits);
+}
 
-std::unique_ptr<HashFunction> SHAKE_256::new_object() const { return std::make_unique<SHAKE_256>(m_output_bits); }
+std::unique_ptr<HashFunction> SHAKE_256::new_object() const {
+   return std::make_unique<SHAKE_256>(m_output_bits);
+}
 
-std::unique_ptr<HashFunction> SHAKE_256::copy_state() const { return std::make_unique<SHAKE_256>(*this); }
+std::unique_ptr<HashFunction> SHAKE_256::copy_state() const {
+   return std::make_unique<SHAKE_256>(*this);
+}
 
 void SHAKE_256::clear() {
    zeroise(m_S);

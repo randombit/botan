@@ -21,7 +21,9 @@ std::string EMSA_Raw::name() const {
 /*
 * EMSA-Raw Encode Operation
 */
-void EMSA_Raw::update(const uint8_t input[], size_t length) { m_message += std::make_pair(input, length); }
+void EMSA_Raw::update(const uint8_t input[], size_t length) {
+   m_message += std::make_pair(input, length);
+}
 
 /*
 * Return the raw (unencoded) data

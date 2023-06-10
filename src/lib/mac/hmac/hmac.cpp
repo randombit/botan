@@ -38,9 +38,13 @@ Key_Length_Specification HMAC::key_spec() const {
    return Key_Length_Specification(0, 4096);
 }
 
-size_t HMAC::output_length() const { return m_hash_output_length; }
+size_t HMAC::output_length() const {
+   return m_hash_output_length;
+}
 
-bool HMAC::has_keying_material() const { return !m_okey.empty(); }
+bool HMAC::has_keying_material() const {
+   return !m_okey.empty();
+}
 
 /*
 * HMAC Key Schedule
@@ -113,7 +117,9 @@ void HMAC::clear() {
 /*
 * Return the name of this type
 */
-std::string HMAC::name() const { return fmt("HMAC({})", m_hash->name()); }
+std::string HMAC::name() const {
+   return fmt("HMAC({})", m_hash->name());
+}
 
 /*
 * Return a new_object of this object

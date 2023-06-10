@@ -144,7 +144,9 @@ void Server_Impl_13::process_dummy_change_cipher_spec() {
    // ... no further processing.
 }
 
-bool Server_Impl_13::handshake_finished() const { return m_handshake_state.handshake_finished(); }
+bool Server_Impl_13::handshake_finished() const {
+   return m_handshake_state.handshake_finished();
+}
 
 void Server_Impl_13::downgrade() {
    BOTAN_ASSERT_NOMSG(expects_downgrade());

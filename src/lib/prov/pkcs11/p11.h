@@ -255,7 +255,9 @@ enum class Flag : CK_FLAGS {
    UserFriendlyOtp = CKF_USER_FRIENDLY_OTP,
 };
 
-inline Flag operator|(Flag a, Flag b) { return static_cast<Flag>(static_cast<CK_FLAGS>(a) | static_cast<CK_FLAGS>(b)); }
+inline Flag operator|(Flag a, Flag b) {
+   return static_cast<Flag>(static_cast<CK_FLAGS>(a) | static_cast<CK_FLAGS>(b));
+}
 
 enum class MGF : CK_RSA_PKCS_MGF_TYPE {
    Mgf1Sha1 = CKG_MGF1_SHA1,
@@ -831,7 +833,9 @@ BOTAN_PUBLIC_API(2, 0) extern ReturnValue* ThrowException;
 const Bbool True = CK_TRUE;
 const Bbool False = CK_FALSE;
 
-inline Flags flags(Flag flags) { return static_cast<Flags>(flags); }
+inline Flags flags(Flag flags) {
+   return static_cast<Flags>(flags);
+}
 
 class Slot;
 

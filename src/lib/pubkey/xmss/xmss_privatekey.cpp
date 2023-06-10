@@ -397,17 +397,29 @@ secure_vector<uint8_t> XMSS_PrivateKey::private_key_bits() const {
    return DER_Encoder().encode(raw_private_key(), ASN1_Type::OctetString).get_contents();
 }
 
-size_t XMSS_PrivateKey::reserve_unused_leaf_index() { return m_private->reserve_unused_leaf_index(); }
+size_t XMSS_PrivateKey::reserve_unused_leaf_index() {
+   return m_private->reserve_unused_leaf_index();
+}
 
-size_t XMSS_PrivateKey::unused_leaf_index() const { return m_private->unused_leaf_index(); }
+size_t XMSS_PrivateKey::unused_leaf_index() const {
+   return m_private->unused_leaf_index();
+}
 
-size_t XMSS_PrivateKey::remaining_signatures() const { return m_private->remaining_signatures(); }
+size_t XMSS_PrivateKey::remaining_signatures() const {
+   return m_private->remaining_signatures();
+}
 
-const secure_vector<uint8_t>& XMSS_PrivateKey::prf_value() const { return m_private->prf_value(); }
+const secure_vector<uint8_t>& XMSS_PrivateKey::prf_value() const {
+   return m_private->prf_value();
+}
 
-secure_vector<uint8_t> XMSS_PrivateKey::raw_private_key() const { return m_private->serialize(raw_public_key()); }
+secure_vector<uint8_t> XMSS_PrivateKey::raw_private_key() const {
+   return m_private->serialize(raw_public_key());
+}
 
-WOTS_Derivation_Method XMSS_PrivateKey::wots_derivation_method() const { return m_private->wots_derivation_method(); }
+WOTS_Derivation_Method XMSS_PrivateKey::wots_derivation_method() const {
+   return m_private->wots_derivation_method();
+}
 
 std::unique_ptr<Public_Key> XMSS_PrivateKey::public_key() const {
    return std::make_unique<XMSS_PublicKey>(xmss_parameters().oid(), root(), public_seed());

@@ -125,6 +125,8 @@ void Filter::set_next(Filter* filters[], size_t size) {
 /*
 * Return the total number of ports
 */
-size_t Filter::total_ports() const { return m_next.size(); }
+size_t Filter::total_ports() const {
+   return m_next.size();
+}
 
 }  // namespace Botan

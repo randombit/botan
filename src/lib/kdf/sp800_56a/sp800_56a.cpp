@@ -67,7 +67,9 @@ void SP800_56A_Hash::kdf(uint8_t key[],
    SP800_56A_kdf(*m_hash, key, key_len, secret, secret_len, label, label_len);
 }
 
-std::string SP800_56A_Hash::name() const { return fmt("SP800-56A({})", m_hash->name()); }
+std::string SP800_56A_Hash::name() const {
+   return fmt("SP800-56A({})", m_hash->name());
+}
 
 std::unique_ptr<KDF> SP800_56A_Hash::new_object() const {
    return std::make_unique<SP800_56A_Hash>(m_hash->new_object());
@@ -99,7 +101,9 @@ void SP800_56A_HMAC::kdf(uint8_t key[],
    SP800_56A_kdf(*m_mac, key, key_len, secret, secret_len, label, label_len);
 }
 
-std::string SP800_56A_HMAC::name() const { return fmt("SP800-56A({})", m_mac->name()); }
+std::string SP800_56A_HMAC::name() const {
+   return fmt("SP800-56A({})", m_mac->name());
+}
 
 std::unique_ptr<KDF> SP800_56A_HMAC::new_object() const {
    return std::make_unique<SP800_56A_HMAC>(m_mac->new_object());

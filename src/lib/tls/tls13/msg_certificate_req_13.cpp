@@ -14,7 +14,9 @@
 
 namespace Botan::TLS {
 
-Handshake_Type Certificate_Request_13::type() const { return TLS::Handshake_Type::CertificateRequest; }
+Handshake_Type Certificate_Request_13::type() const {
+   return TLS::Handshake_Type::CertificateRequest;
+}
 
 Certificate_Request_13::Certificate_Request_13(const std::vector<uint8_t>& buf, const Connection_Side side) {
    TLS_Data_Reader reader("Certificate_Request_13", buf);

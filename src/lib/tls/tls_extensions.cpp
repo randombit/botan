@@ -217,7 +217,9 @@ std::set<Extension_Code> Extensions::extension_types() const {
 Unknown_Extension::Unknown_Extension(Extension_Code type, TLS_Data_Reader& reader, uint16_t extension_size) :
       m_type(type), m_value(reader.get_fixed<uint8_t>(extension_size)) {}
 
-std::vector<uint8_t> Unknown_Extension::serialize(Connection_Side /*whoami*/) const { return m_value; }
+std::vector<uint8_t> Unknown_Extension::serialize(Connection_Side /*whoami*/) const {
+   return m_value;
+}
 
 Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader, uint16_t extension_size) {
    /*
@@ -354,7 +356,9 @@ std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize(Connecti
 
 Supported_Groups::Supported_Groups(const std::vector<Group_Params>& groups) : m_groups(groups) {}
 
-const std::vector<Group_Params>& Supported_Groups::groups() const { return m_groups; }
+const std::vector<Group_Params>& Supported_Groups::groups() const {
+   return m_groups;
+}
 
 std::vector<Group_Params> Supported_Groups::ec_groups() const {
    std::vector<Group_Params> ec;
@@ -567,7 +571,9 @@ Encrypt_then_MAC::Encrypt_then_MAC(TLS_Data_Reader& /*unused*/, uint16_t extensi
    }
 }
 
-std::vector<uint8_t> Encrypt_then_MAC::serialize(Connection_Side /*whoami*/) const { return std::vector<uint8_t>(); }
+std::vector<uint8_t> Encrypt_then_MAC::serialize(Connection_Side /*whoami*/) const {
+   return std::vector<uint8_t>();
+}
 
 std::vector<uint8_t> Supported_Versions::serialize(Connection_Side whoami) const {
    std::vector<uint8_t> buf;

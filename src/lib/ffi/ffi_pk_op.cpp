@@ -43,7 +43,9 @@ int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op, botan_pubkey_t key_obj
    });
 }
 
-int botan_pk_op_encrypt_destroy(botan_pk_op_encrypt_t op) { return BOTAN_FFI_CHECKED_DELETE(op); }
+int botan_pk_op_encrypt_destroy(botan_pk_op_encrypt_t op) {
+   return BOTAN_FFI_CHECKED_DELETE(op);
+}
 
 int botan_pk_op_encrypt_output_length(botan_pk_op_encrypt_t op, size_t ptext_len, size_t* ctext_len) {
    if(ctext_len == nullptr) {
@@ -87,7 +89,9 @@ int botan_pk_op_decrypt_create(botan_pk_op_decrypt_t* op,
    });
 }
 
-int botan_pk_op_decrypt_destroy(botan_pk_op_decrypt_t op) { return BOTAN_FFI_CHECKED_DELETE(op); }
+int botan_pk_op_decrypt_destroy(botan_pk_op_decrypt_t op) {
+   return BOTAN_FFI_CHECKED_DELETE(op);
+}
 
 int botan_pk_op_decrypt_output_length(botan_pk_op_decrypt_t op, size_t ctext_len, size_t* ptext_len) {
    if(ptext_len == nullptr) {
@@ -126,7 +130,9 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op, botan_privkey_t key_obj, con
    });
 }
 
-int botan_pk_op_sign_destroy(botan_pk_op_sign_t op) { return BOTAN_FFI_CHECKED_DELETE(op); }
+int botan_pk_op_sign_destroy(botan_pk_op_sign_t op) {
+   return BOTAN_FFI_CHECKED_DELETE(op);
+}
 
 int botan_pk_op_sign_output_length(botan_pk_op_sign_t op, size_t* sig_len) {
    if(sig_len == nullptr) {
@@ -163,7 +169,9 @@ int botan_pk_op_verify_create(botan_pk_op_verify_t* op, botan_pubkey_t key_obj, 
    });
 }
 
-int botan_pk_op_verify_destroy(botan_pk_op_verify_t op) { return BOTAN_FFI_CHECKED_DELETE(op); }
+int botan_pk_op_verify_destroy(botan_pk_op_verify_t op) {
+   return BOTAN_FFI_CHECKED_DELETE(op);
+}
 
 int botan_pk_op_verify_update(botan_pk_op_verify_t op, const uint8_t in[], size_t in_len) {
    return BOTAN_FFI_VISIT(op, [=](auto& o) { o.update(in, in_len); });
@@ -197,7 +205,9 @@ int botan_pk_op_key_agreement_create(botan_pk_op_ka_t* op, botan_privkey_t key_o
    });
 }
 
-int botan_pk_op_key_agreement_destroy(botan_pk_op_ka_t op) { return BOTAN_FFI_CHECKED_DELETE(op); }
+int botan_pk_op_key_agreement_destroy(botan_pk_op_ka_t op) {
+   return BOTAN_FFI_CHECKED_DELETE(op);
+}
 
 int botan_pk_op_key_agreement_export_public(botan_privkey_t key, uint8_t out[], size_t* out_len) {
    return copy_view_bin(out, out_len, botan_pk_op_key_agreement_view_public, key);
@@ -246,7 +256,9 @@ int botan_pk_op_kem_encrypt_create(botan_pk_op_kem_encrypt_t* op, botan_pubkey_t
    });
 }
 
-int botan_pk_op_kem_encrypt_destroy(botan_pk_op_kem_encrypt_t op) { return BOTAN_FFI_CHECKED_DELETE(op); }
+int botan_pk_op_kem_encrypt_destroy(botan_pk_op_kem_encrypt_t op) {
+   return BOTAN_FFI_CHECKED_DELETE(op);
+}
 
 int botan_pk_op_kem_encrypt_shared_key_length(botan_pk_op_kem_encrypt_t op,
                                               size_t desired_shared_key_length,
@@ -338,5 +350,7 @@ int botan_pk_op_kem_decrypt_shared_key(botan_pk_op_kem_decrypt_t op,
    });
 }
 
-int botan_pk_op_kem_decrypt_destroy(botan_pk_op_kem_decrypt_t op) { return BOTAN_FFI_CHECKED_DELETE(op); }
+int botan_pk_op_kem_decrypt_destroy(botan_pk_op_kem_decrypt_t op) {
+   return BOTAN_FFI_CHECKED_DELETE(op);
+}
 }

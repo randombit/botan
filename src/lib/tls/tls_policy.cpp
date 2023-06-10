@@ -35,7 +35,9 @@ std::vector<Signature_Scheme> Policy::allowed_signature_schemes() const {
    return schemes;
 }
 
-std::vector<Signature_Scheme> Policy::acceptable_signature_schemes() const { return this->allowed_signature_schemes(); }
+std::vector<Signature_Scheme> Policy::acceptable_signature_schemes() const {
+   return this->allowed_signature_schemes();
+}
 
 std::optional<std::vector<Signature_Scheme>> Policy::acceptable_certificate_signature_schemes() const {
    // the restrictions of ::acceptable_signature_schemes() shall apply
@@ -109,7 +111,9 @@ bool Policy::allowed_signature_hash(std::string_view sig_hash) const {
    return value_exists(allowed_signature_hashes(), sig_hash);
 }
 
-bool Policy::use_ecc_point_compression() const { return false; }
+bool Policy::use_ecc_point_compression() const {
+   return false;
+}
 
 Group_Params Policy::choose_key_exchange_group(const std::vector<Group_Params>& supported_by_peer,
                                                const std::vector<Group_Params>& offered_by_peer) const {
@@ -176,7 +180,9 @@ std::vector<Group_Params> Policy::key_exchange_groups_to_offer() const {
    return groups_to_offer;
 }
 
-size_t Policy::minimum_dh_group_size() const { return 2048; }
+size_t Policy::minimum_dh_group_size() const {
+   return 2048;
+}
 
 size_t Policy::minimum_ecdsa_group_size() const {
    // Here we are at the mercy of whatever the CA signed, but most certs should be 256 bit by now
@@ -188,9 +194,13 @@ size_t Policy::minimum_ecdh_group_size() const {
    return 255;
 }
 
-size_t Policy::minimum_signature_strength() const { return 110; }
+size_t Policy::minimum_signature_strength() const {
+   return 110;
+}
 
-bool Policy::require_cert_revocation_info() const { return true; }
+bool Policy::require_cert_revocation_info() const {
+   return true;
+}
 
 size_t Policy::minimum_rsa_bits() const {
    /* Default assumption is all end-entity certificates should
@@ -229,13 +239,21 @@ void Policy::check_peer_key_acceptable(const Public_Key& public_key) const {
    }
 }
 
-size_t Policy::maximum_session_tickets_per_client_hello() const { return 1; }
+size_t Policy::maximum_session_tickets_per_client_hello() const {
+   return 1;
+}
 
-std::chrono::seconds Policy::session_ticket_lifetime() const { return std::chrono::days(1); }
+std::chrono::seconds Policy::session_ticket_lifetime() const {
+   return std::chrono::days(1);
+}
 
-bool Policy::reuse_session_tickets() const { return false; }
+bool Policy::reuse_session_tickets() const {
+   return false;
+}
 
-size_t Policy::new_session_tickets_upon_handshake_success() const { return 1; }
+size_t Policy::new_session_tickets_upon_handshake_success() const {
+   return 1;
+}
 
 bool Policy::acceptable_protocol_version(Protocol_Version version) const {
 #if defined(BOTAN_HAS_TLS_13)
@@ -281,11 +299,17 @@ bool Policy::acceptable_ciphersuite(const Ciphersuite& ciphersuite) const {
           value_exists(allowed_macs(), ciphersuite.mac_algo());
 }
 
-bool Policy::allow_client_initiated_renegotiation() const { return false; }
+bool Policy::allow_client_initiated_renegotiation() const {
+   return false;
+}
 
-bool Policy::allow_server_initiated_renegotiation() const { return false; }
+bool Policy::allow_server_initiated_renegotiation() const {
+   return false;
+}
 
-bool Policy::allow_insecure_renegotiation() const { return false; }
+bool Policy::allow_insecure_renegotiation() const {
+   return false;
+}
 
 bool Policy::allow_tls12() const {
 #if defined(BOTAN_HAS_TLS_12)
@@ -311,47 +335,83 @@ bool Policy::allow_dtls12() const {
 #endif
 }
 
-bool Policy::include_time_in_hello_random() const { return true; }
+bool Policy::include_time_in_hello_random() const {
+   return true;
+}
 
-bool Policy::hide_unknown_users() const { return false; }
+bool Policy::hide_unknown_users() const {
+   return false;
+}
 
-bool Policy::server_uses_own_ciphersuite_preferences() const { return true; }
+bool Policy::server_uses_own_ciphersuite_preferences() const {
+   return true;
+}
 
-bool Policy::negotiate_encrypt_then_mac() const { return true; }
+bool Policy::negotiate_encrypt_then_mac() const {
+   return true;
+}
 
-std::optional<uint16_t> Policy::record_size_limit() const { return std::nullopt; }
+std::optional<uint16_t> Policy::record_size_limit() const {
+   return std::nullopt;
+}
 
-bool Policy::support_cert_status_message() const { return true; }
+bool Policy::support_cert_status_message() const {
+   return true;
+}
 
-bool Policy::allow_resumption_for_renegotiation() const { return true; }
+bool Policy::allow_resumption_for_renegotiation() const {
+   return true;
+}
 
-bool Policy::tls_13_middlebox_compatibility_mode() const { return true; }
+bool Policy::tls_13_middlebox_compatibility_mode() const {
+   return true;
+}
 
-bool Policy::hash_hello_random() const { return true; }
+bool Policy::hash_hello_random() const {
+   return true;
+}
 
-bool Policy::only_resume_with_exact_version() const { return true; }
+bool Policy::only_resume_with_exact_version() const {
+   return true;
+}
 
-bool Policy::require_client_certificate_authentication() const { return false; }
+bool Policy::require_client_certificate_authentication() const {
+   return false;
+}
 
-bool Policy::request_client_certificate_authentication() const { return require_client_certificate_authentication(); }
+bool Policy::request_client_certificate_authentication() const {
+   return require_client_certificate_authentication();
+}
 
-bool Policy::abort_connection_on_undesired_renegotiation() const { return false; }
+bool Policy::abort_connection_on_undesired_renegotiation() const {
+   return false;
+}
 
-bool Policy::allow_dtls_epoch0_restart() const { return false; }
+bool Policy::allow_dtls_epoch0_restart() const {
+   return false;
+}
 
-size_t Policy::maximum_certificate_chain_size() const { return 0; }
+size_t Policy::maximum_certificate_chain_size() const {
+   return 0;
+}
 
 // 1 second initial timeout, 60 second max - see RFC 6347 sec 4.2.4.1
-size_t Policy::dtls_initial_timeout() const { return 1 * 1000; }
+size_t Policy::dtls_initial_timeout() const {
+   return 1 * 1000;
+}
 
-size_t Policy::dtls_maximum_timeout() const { return 60 * 1000; }
+size_t Policy::dtls_maximum_timeout() const {
+   return 60 * 1000;
+}
 
 size_t Policy::dtls_default_mtu() const {
    // default MTU is IPv6 min MTU minus UDP/IP headers
    return 1280 - 40 - 8;
 }
 
-std::vector<uint16_t> Policy::srtp_profiles() const { return std::vector<uint16_t>(); }
+std::vector<uint16_t> Policy::srtp_profiles() const {
+   return std::vector<uint16_t>();
+}
 
 namespace {
 
@@ -516,7 +576,9 @@ void print_vec(std::ostream& o, const char* key, const std::vector<Group_Params>
    o << '\n';
 }
 
-void print_bool(std::ostream& o, const char* key, bool b) { o << key << " = " << (b ? "true" : "false") << '\n'; }
+void print_bool(std::ostream& o, const char* key, bool b) {
+   o << key << " = " << (b ? "true" : "false") << '\n';
+}
 
 }  // namespace
 
@@ -568,10 +630,16 @@ std::vector<std::string> Strict_Policy::allowed_ciphers() const {
    return {"ChaCha20Poly1305", "AES-256/GCM", "AES-128/GCM"};
 }
 
-std::vector<std::string> Strict_Policy::allowed_signature_hashes() const { return {"SHA-512", "SHA-384"}; }
+std::vector<std::string> Strict_Policy::allowed_signature_hashes() const {
+   return {"SHA-512", "SHA-384"};
+}
 
-std::vector<std::string> Strict_Policy::allowed_macs() const { return {"AEAD"}; }
+std::vector<std::string> Strict_Policy::allowed_macs() const {
+   return {"AEAD"};
+}
 
-std::vector<std::string> Strict_Policy::allowed_key_exchange_methods() const { return {"ECDH"}; }
+std::vector<std::string> Strict_Policy::allowed_key_exchange_methods() const {
+   return {"ECDH"};
+}
 
 }  // namespace Botan::TLS

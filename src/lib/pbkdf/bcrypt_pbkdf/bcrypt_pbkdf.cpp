@@ -18,9 +18,13 @@ Bcrypt_PBKDF::Bcrypt_PBKDF(size_t iterations) : m_iterations(iterations) {
    BOTAN_ARG_CHECK(m_iterations > 0, "Invalid Bcrypt-PBKDF iterations");
 }
 
-std::string Bcrypt_PBKDF::to_string() const { return fmt("Bcrypt-PBKDF({})", m_iterations); }
+std::string Bcrypt_PBKDF::to_string() const {
+   return fmt("Bcrypt-PBKDF({})", m_iterations);
+}
 
-std::string Bcrypt_PBKDF_Family::name() const { return "Bcrypt-PBKDF"; }
+std::string Bcrypt_PBKDF_Family::name() const {
+   return "Bcrypt-PBKDF";
+}
 
 std::unique_ptr<PasswordHash> Bcrypt_PBKDF_Family::tune(size_t output_length,
                                                         std::chrono::milliseconds msec,

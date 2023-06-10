@@ -13,7 +13,9 @@
 
 namespace Botan {
 
-void Truncated_Hash::add_data(const uint8_t input[], size_t length) { m_hash->update(input, length); }
+void Truncated_Hash::add_data(const uint8_t input[], size_t length) {
+   m_hash->update(input, length);
+}
 
 void Truncated_Hash::final_result(uint8_t out[]) {
    BOTAN_ASSERT_NOMSG(m_hash->output_length() * 8 >= m_output_bits);
@@ -31,9 +33,13 @@ void Truncated_Hash::final_result(uint8_t out[]) {
    out[bytes - 1] &= bitmask;
 }
 
-size_t Truncated_Hash::output_length() const { return (m_output_bits + 7) / 8; }
+size_t Truncated_Hash::output_length() const {
+   return (m_output_bits + 7) / 8;
+}
 
-std::string Truncated_Hash::name() const { return fmt("Truncated({},{})", m_hash->name(), m_output_bits); }
+std::string Truncated_Hash::name() const {
+   return fmt("Truncated({},{})", m_hash->name(), m_output_bits);
+}
 
 std::unique_ptr<HashFunction> Truncated_Hash::new_object() const {
    return std::make_unique<Truncated_Hash>(m_hash->new_object(), m_output_bits);
@@ -43,7 +49,9 @@ std::unique_ptr<HashFunction> Truncated_Hash::copy_state() const {
    return std::make_unique<Truncated_Hash>(m_hash->copy_state(), m_output_bits);
 }
 
-void Truncated_Hash::clear() { m_hash->clear(); }
+void Truncated_Hash::clear() {
+   m_hash->clear();
+}
 
 Truncated_Hash::Truncated_Hash(std::unique_ptr<HashFunction> hash, size_t bits) :
       m_hash(std::move(hash)), m_output_bits(bits) {

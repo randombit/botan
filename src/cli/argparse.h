@@ -71,9 +71,13 @@ std::vector<std::string> Argument_Parser::split_on(const std::string& str, char 
    return elems;
 }
 
-bool Argument_Parser::flag_set(const std::string& flag_name) const { return m_user_flags.count(flag_name) > 0; }
+bool Argument_Parser::flag_set(const std::string& flag_name) const {
+   return m_user_flags.count(flag_name) > 0;
+}
 
-bool Argument_Parser::has_arg(const std::string& opt_name) const { return m_user_args.count(opt_name) > 0; }
+bool Argument_Parser::has_arg(const std::string& opt_name) const {
+   return m_user_args.count(opt_name) > 0;
+}
 
 std::string Argument_Parser::get_arg(const std::string& opt_name) const {
    auto i = m_user_args.find(opt_name);

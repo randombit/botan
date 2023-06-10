@@ -99,11 +99,15 @@ SecureQueue* Output_Buffers::get(Pipe::message_id msg) const {
 /*
 * Return the total number of messages
 */
-Pipe::message_id Output_Buffers::message_count() const { return (m_offset + m_buffers.size()); }
+Pipe::message_id Output_Buffers::message_count() const {
+   return (m_offset + m_buffers.size());
+}
 
 /*
 * Output_Buffers Constructor
 */
-Output_Buffers::Output_Buffers() { m_offset = 0; }
+Output_Buffers::Output_Buffers() {
+   m_offset = 0;
+}
 
 }  // namespace Botan

@@ -114,7 +114,9 @@ X509_DN AlternativeName::dn() const {
 /*
 * Return if this object has anything useful
 */
-bool AlternativeName::has_items() const { return (!m_alt_info.empty() || !m_othernames.empty()); }
+bool AlternativeName::has_items() const {
+   return (!m_alt_info.empty() || !m_othernames.empty());
+}
 
 namespace {
 

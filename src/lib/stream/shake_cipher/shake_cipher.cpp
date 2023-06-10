@@ -34,9 +34,13 @@ void SHAKE_Cipher::set_iv_bytes(const uint8_t /*iv*/[], size_t length) {
    }
 }
 
-size_t SHAKE_Cipher::buffer_size() const { return m_shake_rate; }
+size_t SHAKE_Cipher::buffer_size() const {
+   return m_shake_rate;
+}
 
-void SHAKE_Cipher::seek(uint64_t /*offset*/) { throw Not_Implemented("SHAKE_Cipher::seek"); }
+void SHAKE_Cipher::seek(uint64_t /*offset*/) {
+   throw Not_Implemented("SHAKE_Cipher::seek");
+}
 
 void SHAKE_Cipher::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) {
    assert_key_material_set();
@@ -91,7 +95,9 @@ void SHAKE_Cipher::generate_keystream(uint8_t out[], size_t length) {
    m_buf_pos += length;
 }
 
-bool SHAKE_Cipher::has_keying_material() const { return !m_state.empty(); }
+bool SHAKE_Cipher::has_keying_material() const {
+   return !m_state.empty();
+}
 
 void SHAKE_Cipher::key_schedule(const uint8_t key[], size_t length) {
    const size_t SHAKE_BITRATE = m_shake_rate * 8;
@@ -105,7 +111,9 @@ void SHAKE_Cipher::key_schedule(const uint8_t key[], size_t length) {
    m_buf_pos = 0;
 }
 
-Key_Length_Specification SHAKE_Cipher::key_spec() const { return Key_Length_Specification(1, 160); }
+Key_Length_Specification SHAKE_Cipher::key_spec() const {
+   return Key_Length_Specification(1, 160);
+}
 
 SHAKE_128_Cipher::SHAKE_128_Cipher() : SHAKE_Cipher((1600 - 256) / 8) {}
 

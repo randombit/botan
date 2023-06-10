@@ -23,15 +23,21 @@ ElGamal_PublicKey::ElGamal_PublicKey(const AlgorithmIdentifier& alg_id, std::spa
    m_public_key = std::make_shared<DL_PublicKey>(alg_id, key_bits, DL_Group_Format::ANSI_X9_42);
 }
 
-size_t ElGamal_PublicKey::estimated_strength() const { return m_public_key->estimated_strength(); }
+size_t ElGamal_PublicKey::estimated_strength() const {
+   return m_public_key->estimated_strength();
+}
 
-size_t ElGamal_PublicKey::key_length() const { return m_public_key->p_bits(); }
+size_t ElGamal_PublicKey::key_length() const {
+   return m_public_key->p_bits();
+}
 
 AlgorithmIdentifier ElGamal_PublicKey::algorithm_identifier() const {
    return AlgorithmIdentifier(object_identifier(), m_public_key->group().DER_encode(DL_Group_Format::ANSI_X9_42));
 }
 
-std::vector<uint8_t> ElGamal_PublicKey::public_key_bits() const { return m_public_key->DER_encode(); }
+std::vector<uint8_t> ElGamal_PublicKey::public_key_bits() const {
+   return m_public_key->DER_encode();
+}
 
 const BigInt& ElGamal_PublicKey::get_int_field(std::string_view field) const {
    return m_public_key->get_int_field(algo_name(), field);
@@ -64,7 +70,9 @@ const BigInt& ElGamal_PrivateKey::get_int_field(std::string_view field) const {
    return m_private_key->get_int_field(algo_name(), field);
 }
 
-secure_vector<uint8_t> ElGamal_PrivateKey::private_key_bits() const { return m_private_key->DER_encode(); }
+secure_vector<uint8_t> ElGamal_PrivateKey::private_key_bits() const {
+   return m_private_key->DER_encode();
+}
 
 secure_vector<uint8_t> ElGamal_PrivateKey::raw_private_key_bits() const {
    return m_private_key->raw_private_key_bits();

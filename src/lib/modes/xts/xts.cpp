@@ -31,21 +31,37 @@ void XTS_Mode::clear() {
    reset();
 }
 
-size_t XTS_Mode::update_granularity() const { return m_cipher_block_size; }
+size_t XTS_Mode::update_granularity() const {
+   return m_cipher_block_size;
+}
 
-size_t XTS_Mode::ideal_granularity() const { return m_cipher_parallelism; }
+size_t XTS_Mode::ideal_granularity() const {
+   return m_cipher_parallelism;
+}
 
-void XTS_Mode::reset() { m_tweak.clear(); }
+void XTS_Mode::reset() {
+   m_tweak.clear();
+}
 
-std::string XTS_Mode::name() const { return cipher().name() + "/XTS"; }
+std::string XTS_Mode::name() const {
+   return cipher().name() + "/XTS";
+}
 
-size_t XTS_Mode::minimum_final_size() const { return cipher_block_size(); }
+size_t XTS_Mode::minimum_final_size() const {
+   return cipher_block_size();
+}
 
-Key_Length_Specification XTS_Mode::key_spec() const { return cipher().key_spec().multiple(2); }
+Key_Length_Specification XTS_Mode::key_spec() const {
+   return cipher().key_spec().multiple(2);
+}
 
-size_t XTS_Mode::default_nonce_length() const { return cipher_block_size(); }
+size_t XTS_Mode::default_nonce_length() const {
+   return cipher_block_size();
+}
 
-bool XTS_Mode::valid_nonce_length(size_t n) const { return n <= cipher_block_size(); }
+bool XTS_Mode::valid_nonce_length(size_t n) const {
+   return n <= cipher_block_size();
+}
 
 bool XTS_Mode::has_keying_material() const {
    return m_cipher->has_keying_material() && m_tweak_cipher->has_keying_material();
@@ -89,7 +105,9 @@ void XTS_Mode::update_tweak(size_t which) {
    }
 }
 
-size_t XTS_Encryption::output_length(size_t input_length) const { return input_length; }
+size_t XTS_Encryption::output_length(size_t input_length) const {
+   return input_length;
+}
 
 size_t XTS_Encryption::process_msg(uint8_t buf[], size_t sz) {
    BOTAN_STATE_CHECK(tweak_set());
@@ -153,7 +171,9 @@ void XTS_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    }
 }
 
-size_t XTS_Decryption::output_length(size_t input_length) const { return input_length; }
+size_t XTS_Decryption::output_length(size_t input_length) const {
+   return input_length;
+}
 
 size_t XTS_Decryption::process_msg(uint8_t buf[], size_t sz) {
    BOTAN_STATE_CHECK(tweak_set());

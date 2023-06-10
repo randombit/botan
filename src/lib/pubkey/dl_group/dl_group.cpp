@@ -423,25 +423,39 @@ bool DL_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
 /*
 * Return the prime
 */
-const BigInt& DL_Group::get_p() const { return data().p(); }
+const BigInt& DL_Group::get_p() const {
+   return data().p();
+}
 
 /*
 * Return the generator
 */
-const BigInt& DL_Group::get_g() const { return data().g(); }
+const BigInt& DL_Group::get_g() const {
+   return data().g();
+}
 
 /*
 * Return the subgroup
 */
-const BigInt& DL_Group::get_q() const { return data().q(); }
+const BigInt& DL_Group::get_q() const {
+   return data().q();
+}
 
-std::shared_ptr<const Montgomery_Params> DL_Group::monty_params_p() const { return data().monty_params_p(); }
+std::shared_ptr<const Montgomery_Params> DL_Group::monty_params_p() const {
+   return data().monty_params_p();
+}
 
-bool DL_Group::has_q() const { return data().q_is_set(); }
+bool DL_Group::has_q() const {
+   return data().q_is_set();
+}
 
-size_t DL_Group::p_bits() const { return data().p_bits(); }
+size_t DL_Group::p_bits() const {
+   return data().p_bits();
+}
 
-size_t DL_Group::p_bytes() const { return data().p_bytes(); }
+size_t DL_Group::p_bytes() const {
+   return data().p_bytes();
+}
 
 size_t DL_Group::q_bits() const {
    data().assert_q_is_set("q_bits");
@@ -453,18 +467,26 @@ size_t DL_Group::q_bytes() const {
    return data().q_bytes();
 }
 
-size_t DL_Group::estimated_strength() const { return data().estimated_strength(); }
+size_t DL_Group::estimated_strength() const {
+   return data().estimated_strength();
+}
 
-size_t DL_Group::exponent_bits() const { return data().exponent_bits(); }
+size_t DL_Group::exponent_bits() const {
+   return data().exponent_bits();
+}
 
 BigInt DL_Group::inverse_mod_p(const BigInt& x) const {
    // precompute??
    return inverse_mod(x, get_p());
 }
 
-BigInt DL_Group::mod_p(const BigInt& x) const { return data().mod_p(x); }
+BigInt DL_Group::mod_p(const BigInt& x) const {
+   return data().mod_p(x);
+}
 
-BigInt DL_Group::multiply_mod_p(const BigInt& x, const BigInt& y) const { return data().multiply_mod_p(x, y); }
+BigInt DL_Group::multiply_mod_p(const BigInt& x, const BigInt& y) const {
+   return data().multiply_mod_p(x, y);
+}
 
 BigInt DL_Group::inverse_mod_q(const BigInt& x) const {
    data().assert_q_is_set("inverse_mod_q");
@@ -496,17 +518,25 @@ BigInt DL_Group::multi_exponentiate(const BigInt& x, const BigInt& y, const BigI
    return monty_multi_exp(data().monty_params_p(), get_g(), x, y, z);
 }
 
-BigInt DL_Group::power_g_p(const BigInt& x) const { return data().power_g_p(x, x.bits()); }
+BigInt DL_Group::power_g_p(const BigInt& x) const {
+   return data().power_g_p(x, x.bits());
+}
 
-BigInt DL_Group::power_g_p(const BigInt& x, size_t max_x_bits) const { return data().power_g_p(x, max_x_bits); }
+BigInt DL_Group::power_g_p(const BigInt& x, size_t max_x_bits) const {
+   return data().power_g_p(x, max_x_bits);
+}
 
-BigInt DL_Group::power_b_p(const BigInt& b, const BigInt& x) const { return this->power_b_p(b, x, data().p_bits()); }
+BigInt DL_Group::power_b_p(const BigInt& b, const BigInt& x) const {
+   return this->power_b_p(b, x, data().p_bits());
+}
 
 BigInt DL_Group::power_b_p(const BigInt& b, const BigInt& x, size_t max_x_bits) const {
    return data().power_b_p(b, x, max_x_bits);
 }
 
-DL_Group_Source DL_Group::source() const { return data().source(); }
+DL_Group_Source DL_Group::source() const {
+   return data().source();
+}
 
 /*
 * DER encode the parameters

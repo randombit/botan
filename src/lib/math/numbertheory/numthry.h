@@ -19,7 +19,9 @@ class RandomNumberGenerator;
 * @param n an integer
 * @return absolute value of n
 */
-inline BigInt abs(const BigInt& n) { return n.abs(); }
+inline BigInt abs(const BigInt& n) {
+   return n.abs();
+}
 
 /**
 * Compute the greatest common divisor

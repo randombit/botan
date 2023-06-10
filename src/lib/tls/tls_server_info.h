@@ -73,7 +73,9 @@ inline bool operator==(const Server_Information& a, const Server_Information& b)
    return (a.hostname() == b.hostname()) && (a.service() == b.service()) && (a.port() == b.port());
 }
 
-inline bool operator!=(const Server_Information& a, const Server_Information& b) { return !(a == b); }
+inline bool operator!=(const Server_Information& a, const Server_Information& b) {
+   return !(a == b);
+}
 
 inline bool operator<(const Server_Information& a, const Server_Information& b) {
    if(a.hostname() != b.hostname())

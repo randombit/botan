@@ -47,8 +47,12 @@ void KDF1_18033::kdf(uint8_t key[],
    }
 }
 
-std::string KDF1_18033::name() const { return fmt("KDF1-18033({})", m_hash->name()); }
+std::string KDF1_18033::name() const {
+   return fmt("KDF1-18033({})", m_hash->name());
+}
 
-std::unique_ptr<KDF> KDF1_18033::new_object() const { return std::make_unique<KDF1_18033>(m_hash->new_object()); }
+std::unique_ptr<KDF> KDF1_18033::new_object() const {
+   return std::make_unique<KDF1_18033>(m_hash->new_object());
+}
 
 }  // namespace Botan

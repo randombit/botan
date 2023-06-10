@@ -18,7 +18,9 @@ namespace Botan::X509 {
 /*
 * PEM encode a X.509 public key
 */
-std::string PEM_encode(const Public_Key& key) { return PEM_Code::encode(key.subject_public_key(), "PUBLIC KEY"); }
+std::string PEM_encode(const Public_Key& key) {
+   return PEM_Code::encode(key.subject_public_key(), "PUBLIC KEY");
+}
 
 /*
 * Extract a public key and return it

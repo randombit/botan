@@ -17,7 +17,9 @@ namespace Botan {
 extern const uint64_t STREEBOG_Ax[8][256];
 extern const uint64_t STREEBOG_C[12][8];
 
-std::unique_ptr<HashFunction> Streebog::copy_state() const { return std::make_unique<Streebog>(*this); }
+std::unique_ptr<HashFunction> Streebog::copy_state() const {
+   return std::make_unique<Streebog>(*this);
+}
 
 Streebog::Streebog(size_t output_bits) :
       m_output_bits(output_bits), m_count(0), m_position(0), m_buffer(64), m_h(8), m_S(8) {
@@ -28,7 +30,9 @@ Streebog::Streebog(size_t output_bits) :
    clear();
 }
 
-std::string Streebog::name() const { return fmt("Streebog-{}", m_output_bits); }
+std::string Streebog::name() const {
+   return fmt("Streebog-{}", m_output_bits);
+}
 
 /*
 * Clear memory of sensitive data

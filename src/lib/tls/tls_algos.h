@@ -99,7 +99,9 @@ enum class Group_Params : uint16_t {
    FFDHE_8192 = 260,
 };
 
-constexpr bool is_x25519(const Group_Params group) { return group == Group_Params::X25519; }
+constexpr bool is_x25519(const Group_Params group) {
+   return group == Group_Params::X25519;
+}
 
 constexpr bool is_ecdh(const Group_Params group) {
    return group == Group_Params::SECP256R1 || group == Group_Params::SECP384R1 || group == Group_Params::SECP521R1 ||

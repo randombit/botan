@@ -68,7 +68,9 @@ void CertID::decode_from(BER_Decoder& from) {
       .end_cons();
 }
 
-void SingleResponse::encode_into(DER_Encoder& /*to*/) const { throw Not_Implemented("SingleResponse::encode_into"); }
+void SingleResponse::encode_into(DER_Encoder& /*to*/) const {
+   throw Not_Implemented("SingleResponse::encode_into");
+}
 
 void SingleResponse::decode_from(BER_Decoder& from) {
    BER_Object cert_status;

@@ -161,9 +161,13 @@ void Salsa20::initialize_state() {
    m_position = 0;
 }
 
-bool Salsa20::has_keying_material() const { return !m_state.empty(); }
+bool Salsa20::has_keying_material() const {
+   return !m_state.empty();
+}
 
-size_t Salsa20::buffer_size() const { return 64; }
+size_t Salsa20::buffer_size() const {
+   return 64;
+}
 
 /*
 * Salsa20 Key Schedule
@@ -230,15 +234,25 @@ void Salsa20::set_iv_bytes(const uint8_t iv[], size_t length) {
    m_position = 0;
 }
 
-bool Salsa20::valid_iv_length(size_t iv_len) const { return (iv_len == 0 || iv_len == 8 || iv_len == 24); }
+bool Salsa20::valid_iv_length(size_t iv_len) const {
+   return (iv_len == 0 || iv_len == 8 || iv_len == 24);
+}
 
-size_t Salsa20::default_iv_length() const { return 24; }
+size_t Salsa20::default_iv_length() const {
+   return 24;
+}
 
-Key_Length_Specification Salsa20::key_spec() const { return Key_Length_Specification(16, 32, 16); }
+Key_Length_Specification Salsa20::key_spec() const {
+   return Key_Length_Specification(16, 32, 16);
+}
 
-std::unique_ptr<StreamCipher> Salsa20::new_object() const { return std::make_unique<Salsa20>(); }
+std::unique_ptr<StreamCipher> Salsa20::new_object() const {
+   return std::make_unique<Salsa20>();
+}
 
-std::string Salsa20::name() const { return "Salsa20"; }
+std::string Salsa20::name() const {
+   return "Salsa20";
+}
 
 /*
 * Clear memory of sensitive data

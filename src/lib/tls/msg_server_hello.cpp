@@ -194,21 +194,37 @@ std::vector<uint8_t> Server_Hello::serialize() const {
    return buf;
 }
 
-Handshake_Type Server_Hello::type() const { return Handshake_Type::ServerHello; }
+Handshake_Type Server_Hello::type() const {
+   return Handshake_Type::ServerHello;
+}
 
-Protocol_Version Server_Hello::legacy_version() const { return m_data->legacy_version(); }
+Protocol_Version Server_Hello::legacy_version() const {
+   return m_data->legacy_version();
+}
 
-const std::vector<uint8_t>& Server_Hello::random() const { return m_data->random(); }
+const std::vector<uint8_t>& Server_Hello::random() const {
+   return m_data->random();
+}
 
-uint8_t Server_Hello::compression_method() const { return m_data->comp_method(); }
+uint8_t Server_Hello::compression_method() const {
+   return m_data->comp_method();
+}
 
-const Session_ID& Server_Hello::session_id() const { return m_data->session_id(); }
+const Session_ID& Server_Hello::session_id() const {
+   return m_data->session_id();
+}
 
-uint16_t Server_Hello::ciphersuite() const { return m_data->ciphersuite(); }
+uint16_t Server_Hello::ciphersuite() const {
+   return m_data->ciphersuite();
+}
 
-std::set<Extension_Code> Server_Hello::extension_types() const { return m_data->extensions().extension_types(); }
+std::set<Extension_Code> Server_Hello::extension_types() const {
+   return m_data->extensions().extension_types();
+}
 
-const Extensions& Server_Hello::extensions() const { return m_data->extensions(); }
+const Extensions& Server_Hello::extensions() const {
+   return m_data->extensions();
+}
 
 // New session case
 Server_Hello_12::Server_Hello_12(Handshake_IO& io,
@@ -341,9 +357,13 @@ Server_Hello_12::Server_Hello_12(std::unique_ptr<Server_Hello_Internal> data) : 
    }
 }
 
-Protocol_Version Server_Hello_12::selected_version() const { return legacy_version(); }
+Protocol_Version Server_Hello_12::selected_version() const {
+   return legacy_version();
+}
 
-bool Server_Hello_12::secure_renegotiation() const { return m_data->extensions().has<Renegotiation_Extension>(); }
+bool Server_Hello_12::secure_renegotiation() const {
+   return m_data->extensions().has<Renegotiation_Extension>();
+}
 
 std::vector<uint8_t> Server_Hello_12::renegotiation_info() const {
    if(Renegotiation_Extension* reneg = m_data->extensions().get<Renegotiation_Extension>()) {
@@ -356,13 +376,17 @@ bool Server_Hello_12::supports_extended_master_secret() const {
    return m_data->extensions().has<Extended_Master_Secret>();
 }
 
-bool Server_Hello_12::supports_encrypt_then_mac() const { return m_data->extensions().has<Encrypt_then_MAC>(); }
+bool Server_Hello_12::supports_encrypt_then_mac() const {
+   return m_data->extensions().has<Encrypt_then_MAC>();
+}
 
 bool Server_Hello_12::supports_certificate_status_message() const {
    return m_data->extensions().has<Certificate_Status_Request>();
 }
 
-bool Server_Hello_12::supports_session_ticket() const { return m_data->extensions().has<Session_Ticket_Extension>(); }
+bool Server_Hello_12::supports_session_ticket() const {
+   return m_data->extensions().has<Session_Ticket_Extension>();
+}
 
 uint16_t Server_Hello_12::srtp_profile() const {
    if(auto srtp = m_data->extensions().get<SRTP_Protection_Profiles>()) {
@@ -405,7 +429,9 @@ std::optional<Protocol_Version> Server_Hello_12::random_signals_downgrade() cons
 /*
 * Create a new Server Hello Done message
 */
-Server_Hello_Done::Server_Hello_Done(Handshake_IO& io, Handshake_Hash& hash) { hash.update(io.send(*this)); }
+Server_Hello_Done::Server_Hello_Done(Handshake_IO& io, Handshake_Hash& hash) {
+   hash.update(io.send(*this));
+}
 
 /*
 * Deserialize a Server Hello Done message
@@ -419,7 +445,9 @@ Server_Hello_Done::Server_Hello_Done(const std::vector<uint8_t>& buf) {
 /*
 * Serialize a Server Hello Done message
 */
-std::vector<uint8_t> Server_Hello_Done::serialize() const { return std::vector<uint8_t>(); }
+std::vector<uint8_t> Server_Hello_Done::serialize() const {
+   return std::vector<uint8_t>();
+}
 
 #if defined(BOTAN_HAS_TLS_13)
 

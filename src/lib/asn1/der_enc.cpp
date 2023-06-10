@@ -117,7 +117,9 @@ void DER_Encoder::DER_Sequence::add_bytes(const uint8_t hdr[], size_t hdr_len, c
 /*
 * Return the type and class taggings
 */
-uint32_t DER_Encoder::DER_Sequence::tag_of() const { return m_type_tag | m_class_tag; }
+uint32_t DER_Encoder::DER_Sequence::tag_of() const {
+   return m_type_tag | m_class_tag;
+}
 
 /*
 * DER_Sequence Constructor
@@ -195,7 +197,9 @@ DER_Encoder& DER_Encoder::start_explicit(uint16_t type_no) {
 /*
 * Finish the current ASN.1 EXPLICIT encoding
 */
-DER_Encoder& DER_Encoder::end_explicit() { return end_cons(); }
+DER_Encoder& DER_Encoder::end_explicit() {
+   return end_cons();
+}
 
 /*
 * Write raw bytes into the stream
@@ -236,12 +240,16 @@ DER_Encoder& DER_Encoder::add_object(ASN1_Type type_tag, ASN1_Class class_tag, c
 /*
 * Encode a NULL object
 */
-DER_Encoder& DER_Encoder::encode_null() { return add_object(ASN1_Type::Null, ASN1_Class::Universal, nullptr, 0); }
+DER_Encoder& DER_Encoder::encode_null() {
+   return add_object(ASN1_Type::Null, ASN1_Class::Universal, nullptr, 0);
+}
 
 /*
 * DER encode a BOOLEAN
 */
-DER_Encoder& DER_Encoder::encode(bool is_true) { return encode(is_true, ASN1_Type::Boolean, ASN1_Class::Universal); }
+DER_Encoder& DER_Encoder::encode(bool is_true) {
+   return encode(is_true, ASN1_Type::Boolean, ASN1_Class::Universal);
+}
 
 /*
 * DER encode a small INTEGER
@@ -253,7 +261,9 @@ DER_Encoder& DER_Encoder::encode(size_t n) {
 /*
 * DER encode a small INTEGER
 */
-DER_Encoder& DER_Encoder::encode(const BigInt& n) { return encode(n, ASN1_Type::Integer, ASN1_Class::Universal); }
+DER_Encoder& DER_Encoder::encode(const BigInt& n) {
+   return encode(n, ASN1_Type::Integer, ASN1_Class::Universal);
+}
 
 /*
 * Encode this object

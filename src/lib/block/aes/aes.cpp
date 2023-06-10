@@ -773,23 +773,41 @@ const char* aes_provider() {
 
 }  // namespace
 
-std::string AES_128::provider() const { return aes_provider(); }
+std::string AES_128::provider() const {
+   return aes_provider();
+}
 
-std::string AES_192::provider() const { return aes_provider(); }
+std::string AES_192::provider() const {
+   return aes_provider();
+}
 
-std::string AES_256::provider() const { return aes_provider(); }
+std::string AES_256::provider() const {
+   return aes_provider();
+}
 
-size_t AES_128::parallelism() const { return aes_parallelism(); }
+size_t AES_128::parallelism() const {
+   return aes_parallelism();
+}
 
-size_t AES_192::parallelism() const { return aes_parallelism(); }
+size_t AES_192::parallelism() const {
+   return aes_parallelism();
+}
 
-size_t AES_256::parallelism() const { return aes_parallelism(); }
+size_t AES_256::parallelism() const {
+   return aes_parallelism();
+}
 
-bool AES_128::has_keying_material() const { return !m_EK.empty(); }
+bool AES_128::has_keying_material() const {
+   return !m_EK.empty();
+}
 
-bool AES_192::has_keying_material() const { return !m_EK.empty(); }
+bool AES_192::has_keying_material() const {
+   return !m_EK.empty();
+}
 
-bool AES_256::has_keying_material() const { return !m_EK.empty(); }
+bool AES_256::has_keying_material() const {
+   return !m_EK.empty();
+}
 
 void AES_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();

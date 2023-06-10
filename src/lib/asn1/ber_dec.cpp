@@ -202,7 +202,9 @@ bool BER_Decoder::more_items() const {
 /*
 * Verify that no bytes remain in the source
 */
-BER_Decoder& BER_Decoder::verify_end() { return verify_end("BER_Decoder::verify_end called, but data remains"); }
+BER_Decoder& BER_Decoder::verify_end() {
+   return verify_end("BER_Decoder::verify_end called, but data remains");
+}
 
 /*
 * Verify that no bytes remain in the source
@@ -309,7 +311,9 @@ BER_Decoder::BER_Decoder(BER_Object&& obj, BER_Decoder* parent) {
 /*
 * BER_Decoder Constructor
 */
-BER_Decoder::BER_Decoder(DataSource& src) { m_source = &src; }
+BER_Decoder::BER_Decoder(DataSource& src) {
+   m_source = &src;
+}
 
 /*
 * BER_Decoder Constructor

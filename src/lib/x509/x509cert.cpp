@@ -67,11 +67,17 @@ struct X509_Certificate_Data {
       bool m_serial_negative = false;
 };
 
-std::string X509_Certificate::PEM_label() const { return "CERTIFICATE"; }
+std::string X509_Certificate::PEM_label() const {
+   return "CERTIFICATE";
+}
 
-std::vector<std::string> X509_Certificate::alternate_PEM_labels() const { return {"X509 CERTIFICATE"}; }
+std::vector<std::string> X509_Certificate::alternate_PEM_labels() const {
+   return {"X509 CERTIFICATE"};
+}
 
-X509_Certificate::X509_Certificate(DataSource& src) { load_data(src); }
+X509_Certificate::X509_Certificate(DataSource& src) {
+   load_data(src);
+}
 
 X509_Certificate::X509_Certificate(const std::vector<uint8_t>& vec) {
    DataSource_Memory src(vec.data(), vec.size());
@@ -285,21 +291,33 @@ const X509_Certificate_Data& X509_Certificate::data() const {
    return *m_data;
 }
 
-uint32_t X509_Certificate::x509_version() const { return static_cast<uint32_t>(data().m_version); }
+uint32_t X509_Certificate::x509_version() const {
+   return static_cast<uint32_t>(data().m_version);
+}
 
-bool X509_Certificate::is_self_signed() const { return data().m_self_signed; }
+bool X509_Certificate::is_self_signed() const {
+   return data().m_self_signed;
+}
 
-const X509_Time& X509_Certificate::not_before() const { return data().m_not_before; }
+const X509_Time& X509_Certificate::not_before() const {
+   return data().m_not_before;
+}
 
-const X509_Time& X509_Certificate::not_after() const { return data().m_not_after; }
+const X509_Time& X509_Certificate::not_after() const {
+   return data().m_not_after;
+}
 
 const AlgorithmIdentifier& X509_Certificate::subject_public_key_algo() const {
    return data().m_subject_public_key_algid;
 }
 
-const std::vector<uint8_t>& X509_Certificate::v2_issuer_key_id() const { return data().m_v2_issuer_key_id; }
+const std::vector<uint8_t>& X509_Certificate::v2_issuer_key_id() const {
+   return data().m_v2_issuer_key_id;
+}
 
-const std::vector<uint8_t>& X509_Certificate::v2_subject_key_id() const { return data().m_v2_subject_key_id; }
+const std::vector<uint8_t>& X509_Certificate::v2_subject_key_id() const {
+   return data().m_v2_subject_key_id;
+}
 
 const std::vector<uint8_t>& X509_Certificate::subject_public_key_bits() const {
    return data().m_subject_public_key_bits;
@@ -321,21 +339,37 @@ const std::vector<uint8_t>& X509_Certificate::subject_public_key_bitstring_sha1(
    return data().m_subject_public_key_bitstring_sha1;
 }
 
-const std::vector<uint8_t>& X509_Certificate::authority_key_id() const { return data().m_authority_key_id; }
+const std::vector<uint8_t>& X509_Certificate::authority_key_id() const {
+   return data().m_authority_key_id;
+}
 
-const std::vector<uint8_t>& X509_Certificate::subject_key_id() const { return data().m_subject_key_id; }
+const std::vector<uint8_t>& X509_Certificate::subject_key_id() const {
+   return data().m_subject_key_id;
+}
 
-const std::vector<uint8_t>& X509_Certificate::serial_number() const { return data().m_serial; }
+const std::vector<uint8_t>& X509_Certificate::serial_number() const {
+   return data().m_serial;
+}
 
-bool X509_Certificate::is_serial_negative() const { return data().m_serial_negative; }
+bool X509_Certificate::is_serial_negative() const {
+   return data().m_serial_negative;
+}
 
-const X509_DN& X509_Certificate::issuer_dn() const { return data().m_issuer_dn; }
+const X509_DN& X509_Certificate::issuer_dn() const {
+   return data().m_issuer_dn;
+}
 
-const X509_DN& X509_Certificate::subject_dn() const { return data().m_subject_dn; }
+const X509_DN& X509_Certificate::subject_dn() const {
+   return data().m_subject_dn;
+}
 
-const std::vector<uint8_t>& X509_Certificate::raw_issuer_dn() const { return data().m_issuer_dn_bits; }
+const std::vector<uint8_t>& X509_Certificate::raw_issuer_dn() const {
+   return data().m_issuer_dn_bits;
+}
 
-const std::vector<uint8_t>& X509_Certificate::raw_subject_dn() const { return data().m_subject_dn_bits; }
+const std::vector<uint8_t>& X509_Certificate::raw_subject_dn() const {
+   return data().m_subject_dn_bits;
+}
 
 bool X509_Certificate::is_CA_cert() const {
    if(data().m_version < 3 && data().m_self_signed) {
@@ -353,15 +387,25 @@ uint32_t X509_Certificate::path_limit() const {
    return static_cast<uint32_t>(data().m_path_len_constraint);
 }
 
-Key_Constraints X509_Certificate::constraints() const { return data().m_key_constraints; }
+Key_Constraints X509_Certificate::constraints() const {
+   return data().m_key_constraints;
+}
 
-const std::vector<OID>& X509_Certificate::extended_key_usage() const { return data().m_extended_key_usage; }
+const std::vector<OID>& X509_Certificate::extended_key_usage() const {
+   return data().m_extended_key_usage;
+}
 
-const std::vector<OID>& X509_Certificate::certificate_policy_oids() const { return data().m_cert_policies; }
+const std::vector<OID>& X509_Certificate::certificate_policy_oids() const {
+   return data().m_cert_policies;
+}
 
-const NameConstraints& X509_Certificate::name_constraints() const { return data().m_name_constraints; }
+const NameConstraints& X509_Certificate::name_constraints() const {
+   return data().m_name_constraints;
+}
 
-const Extensions& X509_Certificate::v3_extensions() const { return data().m_v3_extensions; }
+const Extensions& X509_Certificate::v3_extensions() const {
+   return data().m_v3_extensions;
+}
 
 bool X509_Certificate::has_constraints(Key_Constraints usage) const {
    // Unlike allowed_usage, returns false if constraints was not set
@@ -438,9 +482,13 @@ bool X509_Certificate::is_critical(std::string_view ex_name) const {
    return v3_extensions().critical_extension_set(OID::from_string(ex_name));
 }
 
-std::string X509_Certificate::ocsp_responder() const { return data().m_ocsp_responder; }
+std::string X509_Certificate::ocsp_responder() const {
+   return data().m_ocsp_responder;
+}
 
-std::vector<std::string> X509_Certificate::ca_issuers() const { return data().m_ca_issuers; }
+std::vector<std::string> X509_Certificate::ca_issuers() const {
+   return data().m_ca_issuers;
+}
 
 std::string X509_Certificate::crl_distribution_point() const {
    // just returns the first (arbitrarily)
@@ -450,9 +498,13 @@ std::string X509_Certificate::crl_distribution_point() const {
    return "";
 }
 
-const AlternativeName& X509_Certificate::subject_alt_name() const { return data().m_subject_alt_name; }
+const AlternativeName& X509_Certificate::subject_alt_name() const {
+   return data().m_subject_alt_name;
+}
 
-const AlternativeName& X509_Certificate::issuer_alt_name() const { return data().m_issuer_alt_name; }
+const AlternativeName& X509_Certificate::issuer_alt_name() const {
+   return data().m_issuer_alt_name;
+}
 
 /*
 * Return information about the subject
@@ -499,7 +551,9 @@ std::unique_ptr<Public_Key> X509_Certificate::subject_public_key() const {
    }
 }
 
-std::unique_ptr<Public_Key> X509_Certificate::load_subject_public_key() const { return this->subject_public_key(); }
+std::unique_ptr<Public_Key> X509_Certificate::load_subject_public_key() const {
+   return this->subject_public_key();
+}
 
 std::vector<uint8_t> X509_Certificate::raw_issuer_dn_sha256() const {
    if(data().m_issuer_dn_bits_sha256.empty()) {
@@ -576,7 +630,9 @@ bool X509_Certificate::operator<(const X509_Certificate& other) const {
 /*
 * X.509 Certificate Comparison
 */
-bool operator!=(const X509_Certificate& cert1, const X509_Certificate& cert2) { return !(cert1 == cert2); }
+bool operator!=(const X509_Certificate& cert1, const X509_Certificate& cert2) {
+   return !(cert1 == cert2);
+}
 
 std::string X509_Certificate::to_string() const {
    std::ostringstream out;

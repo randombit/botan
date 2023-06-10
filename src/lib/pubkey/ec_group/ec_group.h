@@ -390,7 +390,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       std::shared_ptr<EC_Group_Data> m_data;
 };
 
-inline bool operator!=(const EC_Group& lhs, const EC_Group& rhs) { return !(lhs == rhs); }
+inline bool operator!=(const EC_Group& lhs, const EC_Group& rhs) {
+   return !(lhs == rhs);
+}
 
 }  // namespace Botan
 

@@ -63,7 +63,9 @@ std::unique_ptr<PBKDF> PBKDF::create_or_throw(std::string_view algo, std::string
    throw Lookup_Error("PBKDF", algo, provider);
 }
 
-std::vector<std::string> PBKDF::providers(std::string_view algo_spec) { return probe_providers_of<PBKDF>(algo_spec); }
+std::vector<std::string> PBKDF::providers(std::string_view algo_spec) {
+   return probe_providers_of<PBKDF>(algo_spec);
+}
 
 void PBKDF::pbkdf_timed(uint8_t out[],
                         size_t out_len,

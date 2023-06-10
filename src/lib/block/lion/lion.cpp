@@ -72,7 +72,9 @@ void Lion::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    }
 }
 
-bool Lion::has_keying_material() const { return !m_key1.empty() && !m_key2.empty(); }
+bool Lion::has_keying_material() const {
+   return !m_key1.empty() && !m_key2.empty();
+}
 
 /*
 * Lion Key Schedule
@@ -93,7 +95,9 @@ void Lion::key_schedule(const uint8_t key[], size_t length) {
 /*
 * Return the name of this type
 */
-std::string Lion::name() const { return fmt("Lion({},{},{})", m_hash->name(), m_cipher->name(), block_size()); }
+std::string Lion::name() const {
+   return fmt("Lion({},{},{})", m_hash->name(), m_cipher->name(), block_size());
+}
 
 std::unique_ptr<BlockCipher> Lion::new_object() const {
    return std::make_unique<Lion>(m_hash->new_object(), m_cipher->new_object(), block_size());

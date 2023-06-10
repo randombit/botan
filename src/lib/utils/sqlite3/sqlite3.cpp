@@ -168,8 +168,12 @@ size_t Sqlite3_Database::Sqlite3_Statement::spin() {
    return steps;
 }
 
-bool Sqlite3_Database::Sqlite3_Statement::step() { return (::sqlite3_step(m_stmt) == SQLITE_ROW); }
+bool Sqlite3_Database::Sqlite3_Statement::step() {
+   return (::sqlite3_step(m_stmt) == SQLITE_ROW);
+}
 
-Sqlite3_Database::Sqlite3_Statement::~Sqlite3_Statement() { ::sqlite3_finalize(m_stmt); }
+Sqlite3_Database::Sqlite3_Statement::~Sqlite3_Statement() {
+   ::sqlite3_finalize(m_stmt);
+}
 
 }  // namespace Botan

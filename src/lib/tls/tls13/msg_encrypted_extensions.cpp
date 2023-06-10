@@ -105,6 +105,8 @@ Encrypted_Extensions::Encrypted_Extensions(const std::vector<uint8_t>& buf) {
    }
 }
 
-std::vector<uint8_t> Encrypted_Extensions::serialize() const { return m_extensions.serialize(Connection_Side::Server); }
+std::vector<uint8_t> Encrypted_Extensions::serialize() const {
+   return m_extensions.serialize(Connection_Side::Server);
+}
 
 }  // namespace Botan::TLS

@@ -245,7 +245,9 @@ inline PBKDF* get_pbkdf(std::string_view algo_spec, std::string_view provider = 
 
 BOTAN_DEPRECATED("Use PBKDF::create_or_throw")
 
-inline PBKDF* get_s2k(std::string_view algo_spec) { return PBKDF::create_or_throw(algo_spec).release(); }
+inline PBKDF* get_s2k(std::string_view algo_spec) {
+   return PBKDF::create_or_throw(algo_spec).release();
+}
 
 }  // namespace Botan
 

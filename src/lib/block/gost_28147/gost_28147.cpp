@@ -66,7 +66,9 @@ GOST_28147_89::GOST_28147_89(const GOST_28147_89_Params& param) :
    }
 }
 
-std::string GOST_28147_89::name() const { return m_name; }
+std::string GOST_28147_89::name() const {
+   return m_name;
+}
 
 namespace {
 
@@ -141,7 +143,9 @@ void GOST_28147_89::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
    }
 }
 
-bool GOST_28147_89::has_keying_material() const { return !m_EK.empty(); }
+bool GOST_28147_89::has_keying_material() const {
+   return !m_EK.empty();
+}
 
 /*
 * GOST Key Schedule
@@ -153,6 +157,8 @@ void GOST_28147_89::key_schedule(const uint8_t key[], size_t /*length*/) {
    }
 }
 
-void GOST_28147_89::clear() { zap(m_EK); }
+void GOST_28147_89::clear() {
+   zap(m_EK);
+}
 
 }  // namespace Botan

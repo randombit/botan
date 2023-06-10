@@ -44,7 +44,9 @@ std::string BOTAN_PUBLIC_API(2, 7) base32_encode(const uint8_t input[], size_t i
 * @param input some input
 * @return base32 representation of input
 */
-inline std::string base32_encode(std::span<const uint8_t> input) { return base32_encode(input.data(), input.size()); }
+inline std::string base32_encode(std::span<const uint8_t> input) {
+   return base32_encode(input.data(), input.size());
+}
 
 /**
 * Perform base32 decoding

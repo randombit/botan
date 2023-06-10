@@ -188,7 +188,9 @@ size_t SecureQueue::peek(uint8_t output[], size_t length, size_t offset) const {
 /**
 * Return how many bytes have been read so far.
 */
-size_t SecureQueue::get_bytes_read() const { return m_bytes_read; }
+size_t SecureQueue::get_bytes_read() const {
+   return m_bytes_read;
+}
 
 /*
 * Return how many bytes the queue holds
@@ -207,8 +209,12 @@ size_t SecureQueue::size() const {
 /*
 * Test if the queue has any data in it
 */
-bool SecureQueue::end_of_data() const { return (size() == 0); }
+bool SecureQueue::end_of_data() const {
+   return (size() == 0);
+}
 
-bool SecureQueue::empty() const { return (size() == 0); }
+bool SecureQueue::empty() const {
+   return (size() == 0);
+}
 
 }  // namespace Botan

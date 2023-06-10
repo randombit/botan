@@ -30,7 +30,9 @@ New_Session_Ticket_12::New_Session_Ticket_12(Handshake_IO& io,
    hash.update(io.send(*this));
 }
 
-New_Session_Ticket_12::New_Session_Ticket_12(Handshake_IO& io, Handshake_Hash& hash) { hash.update(io.send(*this)); }
+New_Session_Ticket_12::New_Session_Ticket_12(Handshake_IO& io, Handshake_Hash& hash) {
+   hash.update(io.send(*this));
+}
 
 New_Session_Ticket_12::New_Session_Ticket_12(const std::vector<uint8_t>& buf) {
    if(buf.size() < 6) {

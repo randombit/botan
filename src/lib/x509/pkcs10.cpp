@@ -25,11 +25,17 @@ struct PKCS10_Data {
       Extensions m_extensions;
 };
 
-std::string PKCS10_Request::PEM_label() const { return "CERTIFICATE REQUEST"; }
+std::string PKCS10_Request::PEM_label() const {
+   return "CERTIFICATE REQUEST";
+}
 
-std::vector<std::string> PKCS10_Request::alternate_PEM_labels() const { return {"NEW CERTIFICATE REQUEST"}; }
+std::vector<std::string> PKCS10_Request::alternate_PEM_labels() const {
+   return {"NEW CERTIFICATE REQUEST"};
+}
 
-PKCS10_Request::PKCS10_Request(DataSource& src) { load_data(src); }
+PKCS10_Request::PKCS10_Request(DataSource& src) {
+   load_data(src);
+}
 
 PKCS10_Request::PKCS10_Request(const std::vector<uint8_t>& vec) {
    DataSource_Memory src(vec.data(), vec.size());
@@ -173,17 +179,23 @@ const PKCS10_Data& PKCS10_Request::data() const {
 /*
 * Return the challenge password (if any)
 */
-std::string PKCS10_Request::challenge_password() const { return data().m_challenge; }
+std::string PKCS10_Request::challenge_password() const {
+   return data().m_challenge;
+}
 
 /*
 * Return the name of the requestor
 */
-const X509_DN& PKCS10_Request::subject_dn() const { return data().m_subject_dn; }
+const X509_DN& PKCS10_Request::subject_dn() const {
+   return data().m_subject_dn;
+}
 
 /*
 * Return the public key of the requestor
 */
-const std::vector<uint8_t>& PKCS10_Request::raw_public_key() const { return data().m_public_key_bits; }
+const std::vector<uint8_t>& PKCS10_Request::raw_public_key() const {
+   return data().m_public_key_bits;
+}
 
 /*
 * Return the public key of the requestor
@@ -196,12 +208,16 @@ std::unique_ptr<Public_Key> PKCS10_Request::subject_public_key() const {
 /*
 * Return the alternative names of the requestor
 */
-const AlternativeName& PKCS10_Request::subject_alt_name() const { return data().m_alt_name; }
+const AlternativeName& PKCS10_Request::subject_alt_name() const {
+   return data().m_alt_name;
+}
 
 /*
 * Return the X509v3 extensions
 */
-const Extensions& PKCS10_Request::extensions() const { return data().m_extensions; }
+const Extensions& PKCS10_Request::extensions() const {
+   return data().m_extensions;
+}
 
 /*
 * Return the key constraints (if any)

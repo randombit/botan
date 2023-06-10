@@ -28,11 +28,17 @@ struct CRL_Data {
       std::string m_issuing_distribution_point;
 };
 
-std::string X509_CRL::PEM_label() const { return "X509 CRL"; }
+std::string X509_CRL::PEM_label() const {
+   return "X509 CRL";
+}
 
-std::vector<std::string> X509_CRL::alternate_PEM_labels() const { return {"CRL"}; }
+std::vector<std::string> X509_CRL::alternate_PEM_labels() const {
+   return {"CRL"};
+}
 
-X509_CRL::X509_CRL(DataSource& src) { load_data(src); }
+X509_CRL::X509_CRL(DataSource& src) {
+   load_data(src);
+}
 
 X509_CRL::X509_CRL(const std::vector<uint8_t>& vec) {
    DataSource_Memory src(vec.data(), vec.size());
@@ -169,7 +175,9 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body, cons
 
 }  // namespace
 
-void X509_CRL::force_decode() { m_data.reset(decode_crl_body(signed_body(), signature_algorithm()).release()); }
+void X509_CRL::force_decode() {
+   m_data.reset(decode_crl_body(signed_body(), signature_algorithm()).release());
+}
 
 const CRL_Data& X509_CRL::data() const {
    if(!m_data) {
@@ -178,40 +186,56 @@ const CRL_Data& X509_CRL::data() const {
    return *m_data;
 }
 
-const Extensions& X509_CRL::extensions() const { return data().m_extensions; }
+const Extensions& X509_CRL::extensions() const {
+   return data().m_extensions;
+}
 
 /*
 * Return the list of revoked certificates
 */
-const std::vector<CRL_Entry>& X509_CRL::get_revoked() const { return data().m_entries; }
+const std::vector<CRL_Entry>& X509_CRL::get_revoked() const {
+   return data().m_entries;
+}
 
 /*
 * Return the distinguished name of the issuer
 */
-const X509_DN& X509_CRL::issuer_dn() const { return data().m_issuer; }
+const X509_DN& X509_CRL::issuer_dn() const {
+   return data().m_issuer;
+}
 
 /*
 * Return the key identifier of the issuer
 */
-const std::vector<uint8_t>& X509_CRL::authority_key_id() const { return data().m_auth_key_id; }
+const std::vector<uint8_t>& X509_CRL::authority_key_id() const {
+   return data().m_auth_key_id;
+}
 
 /*
 * Return the CRL number of this CRL
 */
-uint32_t X509_CRL::crl_number() const { return static_cast<uint32_t>(data().m_crl_number); }
+uint32_t X509_CRL::crl_number() const {
+   return static_cast<uint32_t>(data().m_crl_number);
+}
 
 /*
 * Return the issue data of the CRL
 */
-const X509_Time& X509_CRL::this_update() const { return data().m_this_update; }
+const X509_Time& X509_CRL::this_update() const {
+   return data().m_this_update;
+}
 
 /*
 * Return the date when a new CRL will be issued
 */
-const X509_Time& X509_CRL::next_update() const { return data().m_next_update; }
+const X509_Time& X509_CRL::next_update() const {
+   return data().m_next_update;
+}
 
 /*
 * Return the CRL's distribution point
 */
-std::string X509_CRL::crl_issuing_distribution_point() const { return data().m_issuing_distribution_point; }
+std::string X509_CRL::crl_issuing_distribution_point() const {
+   return data().m_issuing_distribution_point;
+}
 }  // namespace Botan

@@ -16,7 +16,9 @@
 
 namespace Botan::TLS {
 
-std::string Handshake_Message::type_string() const { return handshake_type_to_string(type()); }
+std::string Handshake_Message::type_string() const {
+   return handshake_type_to_string(type());
+}
 
 const char* handshake_type_to_string(Handshake_Type type) {
    switch(type) {
@@ -93,7 +95,9 @@ Handshake_State::~Handshake_State() = default;
 Handshake_State::Handshake_State(std::unique_ptr<Handshake_IO> io, Callbacks& cb) :
       m_callbacks(cb), m_handshake_io(std::move(io)), m_version(m_handshake_io->initial_record_version()) {}
 
-void Handshake_State::note_message(const Handshake_Message& msg) { m_callbacks.tls_inspect_handshake_msg(msg); }
+void Handshake_State::note_message(const Handshake_Message& msg) {
+   m_callbacks.tls_inspect_handshake_msg(msg);
+}
 
 void Handshake_State::hello_verify_request(const Hello_Verify_Request& hello_verify) {
    note_message(hello_verify);
@@ -187,7 +191,9 @@ const Ciphersuite& Handshake_State::ciphersuite() const {
    return m_ciphersuite.value();
 }
 
-void Handshake_State::set_version(const Protocol_Version& version) { m_version = version; }
+void Handshake_State::set_version(const Protocol_Version& version) {
+   m_version = version;
+}
 
 void Handshake_State::compute_session_keys() {
    m_session_keys = Session_Keys(this, client_kex()->pre_master_secret(), false);

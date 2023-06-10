@@ -40,24 +40,38 @@ std::string CFB_Mode::name() const {
    }
 }
 
-size_t CFB_Mode::output_length(size_t input_length) const { return input_length; }
+size_t CFB_Mode::output_length(size_t input_length) const {
+   return input_length;
+}
 
-size_t CFB_Mode::update_granularity() const { return feedback(); }
+size_t CFB_Mode::update_granularity() const {
+   return feedback();
+}
 
 size_t CFB_Mode::ideal_granularity() const {
    // Multiplier here is arbitrary
    return 16 * feedback();
 }
 
-size_t CFB_Mode::minimum_final_size() const { return 0; }
+size_t CFB_Mode::minimum_final_size() const {
+   return 0;
+}
 
-Key_Length_Specification CFB_Mode::key_spec() const { return cipher().key_spec(); }
+Key_Length_Specification CFB_Mode::key_spec() const {
+   return cipher().key_spec();
+}
 
-size_t CFB_Mode::default_nonce_length() const { return block_size(); }
+size_t CFB_Mode::default_nonce_length() const {
+   return block_size();
+}
 
-bool CFB_Mode::valid_nonce_length(size_t n) const { return (n == 0 || n == block_size()); }
+bool CFB_Mode::valid_nonce_length(size_t n) const {
+   return (n == 0 || n == block_size());
+}
 
-bool CFB_Mode::has_keying_material() const { return m_cipher->has_keying_material(); }
+bool CFB_Mode::has_keying_material() const {
+   return m_cipher->has_keying_material();
+}
 
 void CFB_Mode::key_schedule(const uint8_t key[], size_t length) {
    m_cipher->set_key(key, length);
@@ -136,7 +150,9 @@ size_t CFB_Encryption::process_msg(uint8_t buf[], size_t sz) {
    return sz;
 }
 
-void CFB_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) { update(buffer, offset); }
+void CFB_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
+   update(buffer, offset);
+}
 
 namespace {
 
@@ -187,6 +203,8 @@ size_t CFB_Decryption::process_msg(uint8_t buf[], size_t sz) {
    return sz;
 }
 
-void CFB_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) { update(buffer, offset); }
+void CFB_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
+   update(buffer, offset);
+}
 
 }  // namespace Botan

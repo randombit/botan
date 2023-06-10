@@ -17,7 +17,9 @@
 
 namespace Botan::PKCS11 {
 
-ECDSA_PublicKey PKCS11_ECDSA_PublicKey::export_key() const { return ECDSA_PublicKey(domain(), public_point()); }
+ECDSA_PublicKey PKCS11_ECDSA_PublicKey::export_key() const {
+   return ECDSA_PublicKey(domain(), public_point());
+}
 
 bool PKCS11_ECDSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    if(!public_point().on_the_curve()) {
@@ -39,7 +41,9 @@ ECDSA_PrivateKey PKCS11_ECDSA_PrivateKey::export_key() const {
    return ECDSA_PrivateKey(rng, domain(), BigInt::decode(priv_key));
 }
 
-secure_vector<uint8_t> PKCS11_ECDSA_PrivateKey::private_key_bits() const { return export_key().private_key_bits(); }
+secure_vector<uint8_t> PKCS11_ECDSA_PrivateKey::private_key_bits() const {
+   return export_key().private_key_bits();
+}
 
 std::unique_ptr<Public_Key> PKCS11_ECDSA_PrivateKey::public_key() const {
    return std::make_unique<ECDSA_PublicKey>(domain(), public_point());

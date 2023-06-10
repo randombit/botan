@@ -97,38 +97,68 @@ size_t Client::from_peer(std::span<const uint8_t> data) {
    return read;
 }
 
-bool Client::is_active() const { return m_impl->is_active(); }
+bool Client::is_active() const {
+   return m_impl->is_active();
+}
 
-bool Client::is_closed() const { return m_impl->is_closed(); }
+bool Client::is_closed() const {
+   return m_impl->is_closed();
+}
 
-bool Client::is_closed_for_reading() const { return m_impl->is_closed_for_reading(); }
+bool Client::is_closed_for_reading() const {
+   return m_impl->is_closed_for_reading();
+}
 
-bool Client::is_closed_for_writing() const { return m_impl->is_closed_for_writing(); }
+bool Client::is_closed_for_writing() const {
+   return m_impl->is_closed_for_writing();
+}
 
-std::vector<X509_Certificate> Client::peer_cert_chain() const { return m_impl->peer_cert_chain(); }
+std::vector<X509_Certificate> Client::peer_cert_chain() const {
+   return m_impl->peer_cert_chain();
+}
 
 SymmetricKey Client::key_material_export(std::string_view label, std::string_view context, size_t length) const {
    return m_impl->key_material_export(label, context, length);
 }
 
-void Client::renegotiate(bool force_full_renegotiation) { m_impl->renegotiate(force_full_renegotiation); }
+void Client::renegotiate(bool force_full_renegotiation) {
+   m_impl->renegotiate(force_full_renegotiation);
+}
 
-void Client::update_traffic_keys(bool request_peer_update) { m_impl->update_traffic_keys(request_peer_update); }
+void Client::update_traffic_keys(bool request_peer_update) {
+   m_impl->update_traffic_keys(request_peer_update);
+}
 
-bool Client::secure_renegotiation_supported() const { return m_impl->secure_renegotiation_supported(); }
+bool Client::secure_renegotiation_supported() const {
+   return m_impl->secure_renegotiation_supported();
+}
 
-void Client::to_peer(std::span<const uint8_t> data) { m_impl->to_peer(data); }
+void Client::to_peer(std::span<const uint8_t> data) {
+   m_impl->to_peer(data);
+}
 
-void Client::send_alert(const Alert& alert) { m_impl->send_alert(alert); }
+void Client::send_alert(const Alert& alert) {
+   m_impl->send_alert(alert);
+}
 
-void Client::send_warning_alert(Alert::Type type) { m_impl->send_warning_alert(type); }
+void Client::send_warning_alert(Alert::Type type) {
+   m_impl->send_warning_alert(type);
+}
 
-void Client::send_fatal_alert(Alert::Type type) { m_impl->send_fatal_alert(type); }
+void Client::send_fatal_alert(Alert::Type type) {
+   m_impl->send_fatal_alert(type);
+}
 
-void Client::close() { m_impl->close(); }
+void Client::close() {
+   m_impl->close();
+}
 
-bool Client::timeout_check() { return m_impl->timeout_check(); }
+bool Client::timeout_check() {
+   return m_impl->timeout_check();
+}
 
-std::string Client::application_protocol() const { return m_impl->application_protocol(); }
+std::string Client::application_protocol() const {
+   return m_impl->application_protocol();
+}
 
 }  // namespace Botan::TLS

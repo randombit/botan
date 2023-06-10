@@ -26,7 +26,9 @@ Blinder::Blinder(const BigInt& modulus,
    m_d = m_inv_fn(k);
 }
 
-BigInt Blinder::blinding_nonce() const { return BigInt(m_rng, m_modulus_bits - 1); }
+BigInt Blinder::blinding_nonce() const {
+   return BigInt(m_rng, m_modulus_bits - 1);
+}
 
 BigInt Blinder::blind(const BigInt& i) const {
    if(!m_reducer.initialized()) {

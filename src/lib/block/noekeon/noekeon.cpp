@@ -191,7 +191,9 @@ void Noekeon::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    }
 }
 
-bool Noekeon::has_keying_material() const { return !m_EK.empty(); }
+bool Noekeon::has_keying_material() const {
+   return !m_EK.empty();
+}
 
 /*
 * Noekeon Key Schedule

@@ -221,7 +221,9 @@ BigInt& BigInt::operator/=(const BigInt& y) {
 /*
 * Modulo Operator
 */
-BigInt& BigInt::operator%=(const BigInt& mod) { return (*this = (*this) % mod); }
+BigInt& BigInt::operator%=(const BigInt& mod) {
+   return (*this = (*this) % mod);
+}
 
 /*
 * Modulo Operator

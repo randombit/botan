@@ -42,9 +42,13 @@ std::string sha256_provider() {
 
 }  // namespace
 
-std::unique_ptr<HashFunction> SHA_224::copy_state() const { return std::make_unique<SHA_224>(*this); }
+std::unique_ptr<HashFunction> SHA_224::copy_state() const {
+   return std::make_unique<SHA_224>(*this);
+}
 
-std::unique_ptr<HashFunction> SHA_256::copy_state() const { return std::make_unique<SHA_256>(*this); }
+std::unique_ptr<HashFunction> SHA_256::copy_state() const {
+   return std::make_unique<SHA_256>(*this);
+}
 
 /*
 * SHA-224 / SHA-256 compression function
@@ -170,19 +174,27 @@ void SHA_256::compress_digest(secure_vector<uint32_t>& digest, const uint8_t inp
    }
 }
 
-std::string SHA_224::provider() const { return sha256_provider(); }
+std::string SHA_224::provider() const {
+   return sha256_provider();
+}
 
-std::string SHA_256::provider() const { return sha256_provider(); }
+std::string SHA_256::provider() const {
+   return sha256_provider();
+}
 
 /*
 * SHA-224 compression function
 */
-void SHA_224::compress_n(const uint8_t input[], size_t blocks) { SHA_256::compress_digest(m_digest, input, blocks); }
+void SHA_224::compress_n(const uint8_t input[], size_t blocks) {
+   SHA_256::compress_digest(m_digest, input, blocks);
+}
 
 /*
 * Copy out the digest
 */
-void SHA_224::copy_out(uint8_t output[]) { copy_out_vec_be(output, output_length(), m_digest); }
+void SHA_224::copy_out(uint8_t output[]) {
+   copy_out_vec_be(output, output_length(), m_digest);
+}
 
 /*
 * Clear memory of sensitive data
@@ -202,12 +214,16 @@ void SHA_224::clear() {
 /*
 * SHA-256 compression function
 */
-void SHA_256::compress_n(const uint8_t input[], size_t blocks) { SHA_256::compress_digest(m_digest, input, blocks); }
+void SHA_256::compress_n(const uint8_t input[], size_t blocks) {
+   SHA_256::compress_digest(m_digest, input, blocks);
+}
 
 /*
 * Copy out the digest
 */
-void SHA_256::copy_out(uint8_t output[]) { copy_out_vec_be(output, output_length(), m_digest); }
+void SHA_256::copy_out(uint8_t output[]) {
+   copy_out_vec_be(output, output_length(), m_digest);
+}
 
 /*
 * Clear memory of sensitive data

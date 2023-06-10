@@ -14,9 +14,13 @@
 
 namespace Botan {
 
-std::unique_ptr<KDF> HKDF::new_object() const { return std::make_unique<HKDF>(m_prf->new_object()); }
+std::unique_ptr<KDF> HKDF::new_object() const {
+   return std::make_unique<HKDF>(m_prf->new_object());
+}
 
-std::string HKDF::name() const { return fmt("HKDF({})", m_prf->name()); }
+std::string HKDF::name() const {
+   return fmt("HKDF({})", m_prf->name());
+}
 
 void HKDF::kdf(uint8_t key[],
                size_t key_len,
@@ -34,9 +38,13 @@ void HKDF::kdf(uint8_t key[],
    expand.kdf(key, key_len, prk.data(), prk.size(), nullptr, 0, label, label_len);
 }
 
-std::unique_ptr<KDF> HKDF_Extract::new_object() const { return std::make_unique<HKDF_Extract>(m_prf->new_object()); }
+std::unique_ptr<KDF> HKDF_Extract::new_object() const {
+   return std::make_unique<HKDF_Extract>(m_prf->new_object());
+}
 
-std::string HKDF_Extract::name() const { return fmt("HKDF-Extract({})", m_prf->name()); }
+std::string HKDF_Extract::name() const {
+   return fmt("HKDF-Extract({})", m_prf->name());
+}
 
 void HKDF_Extract::kdf(uint8_t key[],
                        size_t key_len,
@@ -77,9 +85,13 @@ void HKDF_Extract::kdf(uint8_t key[],
    }
 }
 
-std::unique_ptr<KDF> HKDF_Expand::new_object() const { return std::make_unique<HKDF_Expand>(m_prf->new_object()); }
+std::unique_ptr<KDF> HKDF_Expand::new_object() const {
+   return std::make_unique<HKDF_Expand>(m_prf->new_object());
+}
 
-std::string HKDF_Expand::name() const { return fmt("HKDF-Expand({})", m_prf->name()); }
+std::string HKDF_Expand::name() const {
+   return fmt("HKDF-Expand({})", m_prf->name());
+}
 
 void HKDF_Expand::kdf(uint8_t key[],
                       size_t key_len,

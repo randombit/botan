@@ -43,8 +43,8 @@ EmptyLineBeforeAccessModifier: Always
 BreakConstructorInitializers: AfterColon
 BreakInheritanceList: AfterComma
 AllowShortBlocksOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: Inline
 SpaceBeforeParens: Never
-AllowShortFunctionsOnASingleLine: All
 IndentPPDirectives: BeforeHash
 FixNamespaceComments: true
 SeparateDefinitionBlocks: Always

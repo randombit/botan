@@ -98,7 +98,9 @@ X509_DN normalize(const X509_DN& dn) {
    return result;
 }
 
-std::vector<uint8_t> normalizeAndSerialize(const X509_DN& dn) { return normalize(dn).DER_encode(); }
+std::vector<uint8_t> normalizeAndSerialize(const X509_DN& dn) {
+   return normalize(dn).DER_encode();
+}
 
 std::string to_string(const CFStringRef cfstring) {
    const char* ccstr = CFStringGetCStringPtr(cfstring, kCFStringEncodingUTF8);

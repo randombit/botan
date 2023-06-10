@@ -97,7 +97,9 @@ std::unique_ptr<Public_Key> PKCS11_RSA_PrivateKey::public_key() const {
                                           BigInt::decode(get_attribute_value(AttributeType::PublicExponent)));
 }
 
-secure_vector<uint8_t> PKCS11_RSA_PrivateKey::private_key_bits() const { return export_key().private_key_bits(); }
+secure_vector<uint8_t> PKCS11_RSA_PrivateKey::private_key_bits() const {
+   return export_key().private_key_bits();
+}
 
 namespace {
 // note: multiple-part decryption operations (with C_DecryptUpdate/C_DecryptFinal)

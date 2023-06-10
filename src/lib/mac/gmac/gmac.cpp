@@ -34,11 +34,17 @@ void GMAC::clear() {
 
 GMAC::~GMAC() = default;
 
-Key_Length_Specification GMAC::key_spec() const { return m_cipher->key_spec(); }
+Key_Length_Specification GMAC::key_spec() const {
+   return m_cipher->key_spec();
+}
 
-std::string GMAC::name() const { return fmt("GMAC({})", m_cipher->name()); }
+std::string GMAC::name() const {
+   return fmt("GMAC({})", m_cipher->name());
+}
 
-size_t GMAC::output_length() const { return GCM_BS; }
+size_t GMAC::output_length() const {
+   return GCM_BS;
+}
 
 void GMAC::add_data(const uint8_t input[], size_t size) {
    if(m_aad_buf_pos > 0) {
@@ -65,7 +71,9 @@ void GMAC::add_data(const uint8_t input[], size_t size) {
    }
 }
 
-bool GMAC::has_keying_material() const { return m_cipher->has_keying_material(); }
+bool GMAC::has_keying_material() const {
+   return m_cipher->has_keying_material();
+}
 
 void GMAC::key_schedule(const uint8_t key[], size_t size) {
    clear();

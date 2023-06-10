@@ -23,9 +23,13 @@
 
 namespace Botan {
 
-inline std::vector<uint8_t> to_byte_vector(std::string_view s) { return std::vector<uint8_t>(s.cbegin(), s.cend()); }
+inline std::vector<uint8_t> to_byte_vector(std::string_view s) {
+   return std::vector<uint8_t>(s.cbegin(), s.cend());
+}
 
-inline std::string to_string(const secure_vector<uint8_t>& bytes) { return std::string(bytes.cbegin(), bytes.cend()); }
+inline std::string to_string(const secure_vector<uint8_t>& bytes) {
+   return std::string(bytes.cbegin(), bytes.cend());
+}
 
 /**
 * Return the keys of a map as a std::set

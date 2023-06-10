@@ -50,7 +50,9 @@ namespace {
 
 using boost::asio::ip::tcp;
 
-inline void log_error(const char* msg) { std::cout << msg << std::endl; }
+inline void log_error(const char* msg) {
+   std::cout << msg << std::endl;
+}
 
 inline void log_exception(const char* where, const std::exception& e) {
    std::cout << where << ' ' << e.what() << std::endl;

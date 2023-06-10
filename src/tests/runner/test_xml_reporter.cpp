@@ -141,7 +141,9 @@ std::string format_cdata(std::string str) {
 
 }  // namespace
 
-void XmlReporter::render_preamble(std::ostream& out) const { out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"; }
+void XmlReporter::render_preamble(std::ostream& out) const {
+   out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+}
 
 void XmlReporter::render_properties(std::ostream& out) const {
    if(properties().empty()) {

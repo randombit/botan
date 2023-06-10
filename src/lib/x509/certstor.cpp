@@ -167,7 +167,9 @@ std::optional<X509_CRL> Certificate_Store_In_Memory::find_crl_for(const X509_Cer
    return {};
 }
 
-Certificate_Store_In_Memory::Certificate_Store_In_Memory(const X509_Certificate& cert) { add_certificate(cert); }
+Certificate_Store_In_Memory::Certificate_Store_In_Memory(const X509_Certificate& cert) {
+   add_certificate(cert);
+}
 
 #if defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 Certificate_Store_In_Memory::Certificate_Store_In_Memory(std::string_view dir) {

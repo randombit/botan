@@ -20,9 +20,13 @@
 #include <array>
 
 namespace {
-bool is_user_canceled_alert(const Botan::TLS::Alert& alert) { return alert.type() == Botan::TLS::Alert::UserCanceled; }
+bool is_user_canceled_alert(const Botan::TLS::Alert& alert) {
+   return alert.type() == Botan::TLS::Alert::UserCanceled;
+}
 
-bool is_close_notify_alert(const Botan::TLS::Alert& alert) { return alert.type() == Botan::TLS::Alert::CloseNotify; }
+bool is_close_notify_alert(const Botan::TLS::Alert& alert) {
+   return alert.type() == Botan::TLS::Alert::CloseNotify;
+}
 
 bool is_error_alert(const Botan::TLS::Alert& alert) {
    // In TLS 1.3 all alerts except for closure alerts are considered error alerts.

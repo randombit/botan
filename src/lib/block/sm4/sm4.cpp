@@ -275,7 +275,9 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    }
 }
 
-bool SM4::has_keying_material() const { return !m_RK.empty(); }
+bool SM4::has_keying_material() const {
+   return !m_RK.empty();
+}
 
 /*
 * SM4 Key Schedule
@@ -303,7 +305,9 @@ void SM4::key_schedule(const uint8_t key[], size_t /*length*/) {
    }
 }
 
-void SM4::clear() { zap(m_RK); }
+void SM4::clear() {
+   zap(m_RK);
+}
 
 size_t SM4::parallelism() const {
 #if defined(BOTAN_HAS_SM4_ARMV8)

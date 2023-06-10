@@ -46,7 +46,9 @@ inline std::shared_ptr<Botan::RandomNumberGenerator> fuzzer_rng_as_shared() {
    return rng;
 }
 
-inline Botan::RandomNumberGenerator& fuzzer_rng() { return *fuzzer_rng_as_shared(); }
+inline Botan::RandomNumberGenerator& fuzzer_rng() {
+   return *fuzzer_rng_as_shared();
+}
 
 #define FUZZER_WRITE_AND_CRASH(expr)                                             \
    do {                                                                          \

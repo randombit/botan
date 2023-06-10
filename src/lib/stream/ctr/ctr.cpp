@@ -42,19 +42,29 @@ void CTR_BE::clear() {
    m_pad_pos = 0;
 }
 
-size_t CTR_BE::default_iv_length() const { return m_block_size; }
+size_t CTR_BE::default_iv_length() const {
+   return m_block_size;
+}
 
-bool CTR_BE::valid_iv_length(size_t iv_len) const { return (iv_len <= m_block_size); }
+bool CTR_BE::valid_iv_length(size_t iv_len) const {
+   return (iv_len <= m_block_size);
+}
 
-size_t CTR_BE::buffer_size() const { return m_pad.size(); }
+size_t CTR_BE::buffer_size() const {
+   return m_pad.size();
+}
 
-Key_Length_Specification CTR_BE::key_spec() const { return m_cipher->key_spec(); }
+Key_Length_Specification CTR_BE::key_spec() const {
+   return m_cipher->key_spec();
+}
 
 std::unique_ptr<StreamCipher> CTR_BE::new_object() const {
    return std::make_unique<CTR_BE>(m_cipher->new_object(), m_ctr_size);
 }
 
-bool CTR_BE::has_keying_material() const { return m_cipher->has_keying_material(); }
+bool CTR_BE::has_keying_material() const {
+   return m_cipher->has_keying_material();
+}
 
 void CTR_BE::key_schedule(const uint8_t key[], size_t key_len) {
    m_cipher->set_key(key, key_len);

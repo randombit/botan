@@ -18,7 +18,9 @@
 
 namespace Botan {
 
-std::string SM2_PublicKey::algo_name() const { return "SM2"; }
+std::string SM2_PublicKey::algo_name() const {
+   return "SM2";
+}
 
 std::unique_ptr<Public_Key> SM2_PrivateKey::public_key() const {
    return std::make_unique<SM2_Signature_PublicKey>(domain(), public_point());

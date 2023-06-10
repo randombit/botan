@@ -30,7 +30,9 @@ ASN1_Time::ASN1_Time(const std::chrono::system_clock::time_point& time) {
    m_tag = (m_year >= 2050) ? ASN1_Type::GeneralizedTime : ASN1_Type::UtcTime;
 }
 
-ASN1_Time::ASN1_Time(std::string_view t_spec, ASN1_Type tag) { set_to(t_spec, tag); }
+ASN1_Time::ASN1_Time(std::string_view t_spec, ASN1_Type tag) {
+   set_to(t_spec, tag);
+}
 
 ASN1_Time::ASN1_Time(std::string_view t_spec) {
    if(t_spec.size() == 13) {
@@ -101,7 +103,9 @@ std::string ASN1_Time::readable_string() const {
    return output.str();
 }
 
-bool ASN1_Time::time_is_set() const { return (m_year != 0); }
+bool ASN1_Time::time_is_set() const {
+   return (m_year != 0);
+}
 
 int32_t ASN1_Time::cmp(const ASN1_Time& other) const {
    if(!time_is_set() || !other.time_is_set()) {
@@ -253,16 +257,28 @@ uint64_t ASN1_Time::time_since_epoch() const {
 /*
 * Compare two ASN1_Times for in various ways
 */
-bool operator==(const ASN1_Time& t1, const ASN1_Time& t2) { return (t1.cmp(t2) == 0); }
+bool operator==(const ASN1_Time& t1, const ASN1_Time& t2) {
+   return (t1.cmp(t2) == 0);
+}
 
-bool operator!=(const ASN1_Time& t1, const ASN1_Time& t2) { return (t1.cmp(t2) != 0); }
+bool operator!=(const ASN1_Time& t1, const ASN1_Time& t2) {
+   return (t1.cmp(t2) != 0);
+}
 
-bool operator<=(const ASN1_Time& t1, const ASN1_Time& t2) { return (t1.cmp(t2) <= 0); }
+bool operator<=(const ASN1_Time& t1, const ASN1_Time& t2) {
+   return (t1.cmp(t2) <= 0);
+}
 
-bool operator>=(const ASN1_Time& t1, const ASN1_Time& t2) { return (t1.cmp(t2) >= 0); }
+bool operator>=(const ASN1_Time& t1, const ASN1_Time& t2) {
+   return (t1.cmp(t2) >= 0);
+}
 
-bool operator<(const ASN1_Time& t1, const ASN1_Time& t2) { return (t1.cmp(t2) < 0); }
+bool operator<(const ASN1_Time& t1, const ASN1_Time& t2) {
+   return (t1.cmp(t2) < 0);
+}
 
-bool operator>(const ASN1_Time& t1, const ASN1_Time& t2) { return (t1.cmp(t2) > 0); }
+bool operator>(const ASN1_Time& t1, const ASN1_Time& t2) {
+   return (t1.cmp(t2) > 0);
+}
 
 }  // namespace Botan

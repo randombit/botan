@@ -272,9 +272,13 @@ BigInt TPM_PrivateKey::get_e() const {
    return m_e;
 }
 
-size_t TPM_PrivateKey::estimated_strength() const { return if_work_factor(key_length()); }
+size_t TPM_PrivateKey::estimated_strength() const {
+   return if_work_factor(key_length());
+}
 
-size_t TPM_PrivateKey::key_length() const { return get_n().bits(); }
+size_t TPM_PrivateKey::key_length() const {
+   return get_n().bits();
+}
 
 AlgorithmIdentifier TPM_PrivateKey::algorithm_identifier() const {
    return AlgorithmIdentifier(object_identifier(), AlgorithmIdentifier::USE_NULL_PARAM);

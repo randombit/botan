@@ -351,7 +351,9 @@ secure_vector<uint8_t> Session::DER_encode() const {
       .get_contents();
 }
 
-std::string Session::PEM_encode() const { return PEM_Code::encode(this->DER_encode(), "TLS SESSION"); }
+std::string Session::PEM_encode() const {
+   return PEM_Code::encode(this->DER_encode(), "TLS SESSION");
+}
 
 secure_vector<uint8_t> Session::extract_master_secret() {
    BOTAN_STATE_CHECK(!m_master_secret.empty());

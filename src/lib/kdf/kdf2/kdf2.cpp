@@ -12,9 +12,13 @@
 
 namespace Botan {
 
-std::string KDF2::name() const { return fmt("KDF2({})", m_hash->name()); }
+std::string KDF2::name() const {
+   return fmt("KDF2({})", m_hash->name());
+}
 
-std::unique_ptr<KDF> KDF2::new_object() const { return std::make_unique<KDF2>(m_hash->new_object()); }
+std::unique_ptr<KDF> KDF2::new_object() const {
+   return std::make_unique<KDF2>(m_hash->new_object());
+}
 
 void KDF2::kdf(uint8_t key[],
                size_t key_len,

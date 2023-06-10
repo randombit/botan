@@ -18,7 +18,9 @@ namespace Botan::TLS {
 
 namespace {
 
-inline size_t load_be24(const uint8_t q[3]) { return make_uint32(0, q[0], q[1], q[2]); }
+inline size_t load_be24(const uint8_t q[3]) {
+   return make_uint32(0, q[0], q[1], q[2]);
+}
 
 void store_be24(uint8_t out[3], size_t val) {
    out[0] = get_byte<1>(static_cast<uint32_t>(val));
@@ -33,7 +35,9 @@ uint64_t steady_clock_ms() {
 
 }  // namespace
 
-Protocol_Version Stream_Handshake_IO::initial_record_version() const { return Protocol_Version::TLS_V12; }
+Protocol_Version Stream_Handshake_IO::initial_record_version() const {
+   return Protocol_Version::TLS_V12;
+}
 
 void Stream_Handshake_IO::add_record(const uint8_t record[],
                                      size_t record_len,
@@ -110,7 +114,9 @@ std::vector<uint8_t> Stream_Handshake_IO::send(const Handshake_Message& msg) {
    return buf;
 }
 
-Protocol_Version Datagram_Handshake_IO::initial_record_version() const { return Protocol_Version::DTLS_V12; }
+Protocol_Version Datagram_Handshake_IO::initial_record_version() const {
+   return Protocol_Version::DTLS_V12;
+}
 
 void Datagram_Handshake_IO::retransmit_last_flight() {
    const size_t flight_idx = (m_flights.size() == 1) ? 0 : (m_flights.size() - 2);
@@ -138,7 +144,9 @@ void Datagram_Handshake_IO::retransmit_flight(size_t flight_idx) {
    }
 }
 
-bool Datagram_Handshake_IO::have_more_data() const { return false; }
+bool Datagram_Handshake_IO::have_more_data() const {
+   return false;
+}
 
 bool Datagram_Handshake_IO::timeout_check() {
    if(m_last_write == 0 || (m_flights.size() > 1 && !m_flights.rbegin()->empty())) {

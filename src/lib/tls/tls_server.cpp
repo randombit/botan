@@ -65,41 +65,75 @@ size_t Server::from_peer(std::span<const uint8_t> data) {
    return read;
 }
 
-bool Server::is_active() const { return m_impl->is_active(); }
+bool Server::is_active() const {
+   return m_impl->is_active();
+}
 
-bool Server::is_closed() const { return m_impl->is_closed(); }
+bool Server::is_closed() const {
+   return m_impl->is_closed();
+}
 
-bool Server::is_closed_for_reading() const { return m_impl->is_closed_for_reading(); }
+bool Server::is_closed_for_reading() const {
+   return m_impl->is_closed_for_reading();
+}
 
-bool Server::is_closed_for_writing() const { return m_impl->is_closed_for_writing(); }
+bool Server::is_closed_for_writing() const {
+   return m_impl->is_closed_for_writing();
+}
 
-std::vector<X509_Certificate> Server::peer_cert_chain() const { return m_impl->peer_cert_chain(); }
+std::vector<X509_Certificate> Server::peer_cert_chain() const {
+   return m_impl->peer_cert_chain();
+}
 
 SymmetricKey Server::key_material_export(std::string_view label, std::string_view context, size_t length) const {
    return m_impl->key_material_export(label, context, length);
 }
 
-void Server::renegotiate(bool force_full_renegotiation) { m_impl->renegotiate(force_full_renegotiation); }
+void Server::renegotiate(bool force_full_renegotiation) {
+   m_impl->renegotiate(force_full_renegotiation);
+}
 
-bool Server::new_session_ticket_supported() const { return m_impl->new_session_ticket_supported(); }
+bool Server::new_session_ticket_supported() const {
+   return m_impl->new_session_ticket_supported();
+}
 
-size_t Server::send_new_session_tickets(const size_t tickets) { return m_impl->send_new_session_tickets(tickets); }
+size_t Server::send_new_session_tickets(const size_t tickets) {
+   return m_impl->send_new_session_tickets(tickets);
+}
 
-void Server::update_traffic_keys(bool request_peer_update) { m_impl->update_traffic_keys(request_peer_update); }
+void Server::update_traffic_keys(bool request_peer_update) {
+   m_impl->update_traffic_keys(request_peer_update);
+}
 
-bool Server::secure_renegotiation_supported() const { return m_impl->secure_renegotiation_supported(); }
+bool Server::secure_renegotiation_supported() const {
+   return m_impl->secure_renegotiation_supported();
+}
 
-void Server::to_peer(std::span<const uint8_t> data) { m_impl->to_peer(data); }
+void Server::to_peer(std::span<const uint8_t> data) {
+   m_impl->to_peer(data);
+}
 
-void Server::send_alert(const Alert& alert) { m_impl->send_alert(alert); }
+void Server::send_alert(const Alert& alert) {
+   m_impl->send_alert(alert);
+}
 
-void Server::send_warning_alert(Alert::Type type) { m_impl->send_warning_alert(type); }
+void Server::send_warning_alert(Alert::Type type) {
+   m_impl->send_warning_alert(type);
+}
 
-void Server::send_fatal_alert(Alert::Type type) { m_impl->send_fatal_alert(type); }
+void Server::send_fatal_alert(Alert::Type type) {
+   m_impl->send_fatal_alert(type);
+}
 
-void Server::close() { m_impl->close(); }
+void Server::close() {
+   m_impl->close();
+}
 
-bool Server::timeout_check() { return m_impl->timeout_check(); }
+bool Server::timeout_check() {
+   return m_impl->timeout_check();
+}
 
-std::string Server::application_protocol() const { return m_impl->application_protocol(); }
+std::string Server::application_protocol() const {
+   return m_impl->application_protocol();
+}
 }  // namespace Botan::TLS

@@ -345,10 +345,14 @@ BOTAN_PUBLIC_API(2, 0)
 EC_Point multi_exponentiate(const EC_Point& p1, const BigInt& z1, const EC_Point& p2, const BigInt& z2);
 
 // relational operators
-inline bool operator!=(const EC_Point& lhs, const EC_Point& rhs) { return !(rhs == lhs); }
+inline bool operator!=(const EC_Point& lhs, const EC_Point& rhs) {
+   return !(rhs == lhs);
+}
 
 // arithmetic operators
-inline EC_Point operator-(const EC_Point& lhs) { return EC_Point(lhs).negate(); }
+inline EC_Point operator-(const EC_Point& lhs) {
+   return EC_Point(lhs).negate();
+}
 
 inline EC_Point operator+(const EC_Point& lhs, const EC_Point& rhs) {
    EC_Point tmp(lhs);
@@ -360,7 +364,9 @@ inline EC_Point operator-(const EC_Point& lhs, const EC_Point& rhs) {
    return tmp -= rhs;
 }
 
-inline EC_Point operator*(const EC_Point& point, const BigInt& scalar) { return scalar * point; }
+inline EC_Point operator*(const EC_Point& point, const BigInt& scalar) {
+   return scalar * point;
+}
 
 /**
 * Perform point decoding

@@ -33,7 +33,9 @@ std::string Protocol_Version::to_string() const {
    return "Unknown " + std::to_string(maj) + "." + std::to_string(min);
 }
 
-bool Protocol_Version::is_datagram_protocol() const { return major_version() > 250; }
+bool Protocol_Version::is_datagram_protocol() const {
+   return major_version() > 250;
+}
 
 bool Protocol_Version::is_pre_tls_13() const {
    return (!is_datagram_protocol() && *this <= Protocol_Version::TLS_V12) ||

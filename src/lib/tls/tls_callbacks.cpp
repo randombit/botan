@@ -31,9 +31,13 @@ void TLS::Callbacks::tls_inspect_handshake_msg(const Handshake_Message& /*unused
    // default is no op
 }
 
-std::string TLS::Callbacks::tls_server_choose_app_protocol(const std::vector<std::string>& /*unused*/) { return ""; }
+std::string TLS::Callbacks::tls_server_choose_app_protocol(const std::vector<std::string>& /*unused*/) {
+   return "";
+}
 
-std::string TLS::Callbacks::tls_peer_network_identity() { return ""; }
+std::string TLS::Callbacks::tls_peer_network_identity() {
+   return "";
+}
 
 std::chrono::system_clock::time_point TLS::Callbacks::tls_current_timestamp() {
    return std::chrono::system_clock::now();

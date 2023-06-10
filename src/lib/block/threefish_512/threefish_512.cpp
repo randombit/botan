@@ -254,7 +254,9 @@ void Threefish_512::set_tweak(const uint8_t tweak[], size_t len) {
    m_T[2] = m_T[0] ^ m_T[1];
 }
 
-bool Threefish_512::has_keying_material() const { return !m_K.empty(); }
+bool Threefish_512::has_keying_material() const {
+   return !m_K.empty();
+}
 
 void Threefish_512::key_schedule(const uint8_t key[], size_t /*length*/) {
    // todo: define key schedule for smaller keys

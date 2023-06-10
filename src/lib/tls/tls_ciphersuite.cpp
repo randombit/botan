@@ -75,11 +75,17 @@ bool Ciphersuite::usable_in_version(Protocol_Version version) const {
    return version.is_pre_tls_13() == is_legacy_suite;
 }
 
-bool Ciphersuite::cbc_ciphersuite() const { return (mac_algo() != "AEAD"); }
+bool Ciphersuite::cbc_ciphersuite() const {
+   return (mac_algo() != "AEAD");
+}
 
-bool Ciphersuite::aead_ciphersuite() const { return (mac_algo() == "AEAD"); }
+bool Ciphersuite::aead_ciphersuite() const {
+   return (mac_algo() == "AEAD");
+}
 
-bool Ciphersuite::signature_used() const { return auth_method() != Auth_Method::IMPLICIT; }
+bool Ciphersuite::signature_used() const {
+   return auth_method() != Auth_Method::IMPLICIT;
+}
 
 std::optional<Ciphersuite> Ciphersuite::by_id(uint16_t suite) {
    const std::vector<Ciphersuite>& all_suites = all_known_ciphersuites();
@@ -106,7 +112,9 @@ std::optional<Ciphersuite> Ciphersuite::from_name(std::string_view name) {
 
 namespace {
 
-bool have_hash(std::string_view prf) { return (!HashFunction::providers(prf).empty()); }
+bool have_hash(std::string_view prf) {
+   return (!HashFunction::providers(prf).empty());
+}
 
 bool have_cipher(std::string_view cipher) {
    return (!BlockCipher::providers(cipher).empty()) || (!StreamCipher::providers(cipher).empty());

@@ -88,15 +88,25 @@ FPE_FE1::FPE_FE1(const BigInt& n, size_t rounds, bool compat_mode, std::string_v
 
 FPE_FE1::~FPE_FE1() = default;
 
-void FPE_FE1::clear() { m_mac->clear(); }
+void FPE_FE1::clear() {
+   m_mac->clear();
+}
 
-std::string FPE_FE1::name() const { return fmt("FPE_FE1({},{})", m_mac->name(), m_rounds); }
+std::string FPE_FE1::name() const {
+   return fmt("FPE_FE1({},{})", m_mac->name(), m_rounds);
+}
 
-Key_Length_Specification FPE_FE1::key_spec() const { return m_mac->key_spec(); }
+Key_Length_Specification FPE_FE1::key_spec() const {
+   return m_mac->key_spec();
+}
 
-bool FPE_FE1::has_keying_material() const { return m_mac->has_keying_material(); }
+bool FPE_FE1::has_keying_material() const {
+   return m_mac->has_keying_material();
+}
 
-void FPE_FE1::key_schedule(const uint8_t key[], size_t length) { m_mac->set_key(key, length); }
+void FPE_FE1::key_schedule(const uint8_t key[], size_t length) {
+   m_mac->set_key(key, length);
+}
 
 BigInt FPE_FE1::F(const BigInt& R,
                   size_t round,

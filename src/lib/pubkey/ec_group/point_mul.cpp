@@ -15,7 +15,9 @@ namespace Botan {
 
 namespace {
 
-size_t blinding_size(const BigInt& group_order) { return (group_order.bits() + 1) / 2; }
+size_t blinding_size(const BigInt& group_order) {
+   return (group_order.bits() + 1) / 2;
+}
 
 }  // namespace
 

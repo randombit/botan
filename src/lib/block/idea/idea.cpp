@@ -162,7 +162,9 @@ void IDEA::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    idea_op(in, out, blocks, m_DK.data());
 }
 
-bool IDEA::has_keying_material() const { return !m_EK.empty(); }
+bool IDEA::has_keying_material() const {
+   return !m_EK.empty();
+}
 
 /*
 * IDEA Key Schedule

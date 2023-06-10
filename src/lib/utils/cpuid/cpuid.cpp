@@ -85,7 +85,9 @@ std::string CPUID::to_string() {
 }
 
 //static
-void CPUID::initialize() { state() = CPUID_Data(); }
+void CPUID::initialize() {
+   state() = CPUID_Data();
+}
 
 namespace {
 

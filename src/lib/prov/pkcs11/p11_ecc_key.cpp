@@ -101,13 +101,17 @@ PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session,
    m_public_key = decode_public_point(public_key.get_attribute_value(AttributeType::EcPoint), m_domain_params);
 }
 
-size_t PKCS11_EC_PrivateKey::key_length() const { return m_domain_params.get_order().bits(); }
+size_t PKCS11_EC_PrivateKey::key_length() const {
+   return m_domain_params.get_order().bits();
+}
 
 std::vector<uint8_t> PKCS11_EC_PrivateKey::public_key_bits() const {
    return public_point().encode(EC_Point_Format::Compressed);
 }
 
-size_t PKCS11_EC_PrivateKey::estimated_strength() const { return ecp_work_factor(key_length()); }
+size_t PKCS11_EC_PrivateKey::estimated_strength() const {
+   return ecp_work_factor(key_length());
+}
 
 bool PKCS11_EC_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
    return m_public_key.on_the_curve();

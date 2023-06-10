@@ -32,9 +32,13 @@ Command::Command(const std::string& cmd_spec) : m_spec(cmd_spec) {
 
 Command::~Command() = default;
 
-std::string Command::cmd_name() const { return m_spec.substr(0, m_spec.find(' ')); }
+std::string Command::cmd_name() const {
+   return m_spec.substr(0, m_spec.find(' '));
+}
 
-std::string Command::help_text() const { return "Usage: " + m_spec; }
+std::string Command::help_text() const {
+   return "Usage: " + m_spec;
+}
 
 //static
 std::vector<std::string> Command::split_on(const std::string& str, char delim) {
@@ -92,9 +96,13 @@ int Command::run(const std::vector<std::string>& params) {
    }
 }
 
-bool Command::flag_set(const std::string& flag_name) const { return m_args->flag_set(flag_name); }
+bool Command::flag_set(const std::string& flag_name) const {
+   return m_args->flag_set(flag_name);
+}
 
-std::string Command::get_arg(const std::string& opt_name) const { return m_args->get_arg(opt_name); }
+std::string Command::get_arg(const std::string& opt_name) const {
+   return m_args->get_arg(opt_name);
+}
 
 /*
 * Like get_arg() but if the argument was not specified or is empty, returns otherwise
@@ -112,7 +120,9 @@ std::optional<std::string> Command::get_arg_maybe(const std::string& opt_name) c
    }
 }
 
-size_t Command::get_arg_sz(const std::string& opt_name) const { return m_args->get_arg_sz(opt_name); }
+size_t Command::get_arg_sz(const std::string& opt_name) const {
+   return m_args->get_arg_sz(opt_name);
+}
 
 uint16_t Command::get_arg_u16(const std::string& opt_name) const {
    const size_t val = get_arg_sz(opt_name);
@@ -130,7 +140,9 @@ uint32_t Command::get_arg_u32(const std::string& opt_name) const {
    return static_cast<uint32_t>(val);
 }
 
-std::vector<std::string> Command::get_arg_list(const std::string& what) const { return m_args->get_arg_list(what); }
+std::vector<std::string> Command::get_arg_list(const std::string& what) const {
+   return m_args->get_arg_list(what);
+}
 
 std::ostream& Command::output() {
    if(m_output_stream) {
@@ -188,7 +200,9 @@ void Command::do_read_file(std::istream& in,
    }
 }
 
-Botan::RandomNumberGenerator& Command::rng() { return *rng_as_shared(); }
+Botan::RandomNumberGenerator& Command::rng() {
+   return *rng_as_shared();
+}
 
 std::shared_ptr<Botan::RandomNumberGenerator> Command::rng_as_shared() {
    if(m_rng == nullptr) {

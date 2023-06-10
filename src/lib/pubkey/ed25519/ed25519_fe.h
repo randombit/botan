@@ -145,37 +145,69 @@ t[0]+2^26 t[1]+2^51 t[2]+2^77 t[3]+2^102 t[4]+...+2^230 t[9].
 Bounds on each t[i] vary depending on context.
 */
 
-inline void fe_frombytes(fe& x, const uint8_t* b) { x.from_bytes(b); }
+inline void fe_frombytes(fe& x, const uint8_t* b) {
+   x.from_bytes(b);
+}
 
-inline void fe_tobytes(uint8_t* b, const fe& x) { x.to_bytes(b); }
+inline void fe_tobytes(uint8_t* b, const fe& x) {
+   x.to_bytes(b);
+}
 
-inline void fe_copy(fe& a, const fe& b) { a = b; }
+inline void fe_copy(fe& a, const fe& b) {
+   a = b;
+}
 
-inline int fe_isnonzero(const fe& x) { return x.is_zero() ? 0 : 1; }
+inline int fe_isnonzero(const fe& x) {
+   return x.is_zero() ? 0 : 1;
+}
 
-inline int fe_isnegative(const fe& x) { return x.is_negative(); }
+inline int fe_isnegative(const fe& x) {
+   return x.is_negative();
+}
 
-inline void fe_0(fe& x) { x = FE_25519(); }
+inline void fe_0(fe& x) {
+   x = FE_25519();
+}
 
-inline void fe_1(fe& x) { x = FE_25519(1); }
+inline void fe_1(fe& x) {
+   x = FE_25519(1);
+}
 
-inline void fe_add(fe& x, const fe& a, const fe& b) { x = FE_25519::add(a, b); }
+inline void fe_add(fe& x, const fe& a, const fe& b) {
+   x = FE_25519::add(a, b);
+}
 
-inline void fe_sub(fe& x, const fe& a, const fe& b) { x = FE_25519::sub(a, b); }
+inline void fe_sub(fe& x, const fe& a, const fe& b) {
+   x = FE_25519::sub(a, b);
+}
 
-inline void fe_neg(fe& x, const fe& z) { x = FE_25519::negate(z); }
+inline void fe_neg(fe& x, const fe& z) {
+   x = FE_25519::negate(z);
+}
 
-inline void fe_mul(fe& x, const fe& a, const fe& b) { x = FE_25519::mul(a, b); }
+inline void fe_mul(fe& x, const fe& a, const fe& b) {
+   x = FE_25519::mul(a, b);
+}
 
-inline void fe_sq(fe& x, const fe& z) { x = FE_25519::sqr(z); }
+inline void fe_sq(fe& x, const fe& z) {
+   x = FE_25519::sqr(z);
+}
 
-inline void fe_sq_iter(fe& x, const fe& z, size_t iter) { x = FE_25519::sqr_iter(z, iter); }
+inline void fe_sq_iter(fe& x, const fe& z, size_t iter) {
+   x = FE_25519::sqr_iter(z, iter);
+}
 
-inline void fe_sq2(fe& x, const fe& z) { x = FE_25519::sqr2(z); }
+inline void fe_sq2(fe& x, const fe& z) {
+   x = FE_25519::sqr2(z);
+}
 
-inline void fe_invert(fe& x, const fe& z) { x = FE_25519::invert(z); }
+inline void fe_invert(fe& x, const fe& z) {
+   x = FE_25519::invert(z);
+}
 
-inline void fe_pow22523(fe& x, const fe& y) { x = FE_25519::pow_22523(y); }
+inline void fe_pow22523(fe& x, const fe& y) {
+   x = FE_25519::pow_22523(y);
+}
 
 }  // namespace Botan
 

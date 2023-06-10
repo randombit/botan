@@ -621,7 +621,9 @@ namespace {
 // NOLINTNEXTLINE(*-avoid-non-const-global-variables)
 ::sigjmp_buf g_sigill_jmp_buf;
 
-void botan_sigill_handler(int /*unused*/) { siglongjmp(g_sigill_jmp_buf, /*non-zero return value*/ 1); }
+void botan_sigill_handler(int /*unused*/) {
+   siglongjmp(g_sigill_jmp_buf, /*non-zero return value*/ 1);
+}
 
 }  // namespace
 

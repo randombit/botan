@@ -30,6 +30,8 @@ Key_Update::Key_Update(const std::vector<uint8_t>& buf) {
    m_update_requested = update_requested == 1;
 }
 
-std::vector<uint8_t> Key_Update::serialize() const { return std::vector<uint8_t>(1, (m_update_requested ? 1 : 0)); }
+std::vector<uint8_t> Key_Update::serialize() const {
+   return std::vector<uint8_t>(1, (m_update_requested ? 1 : 0));
+}
 
 }  // namespace Botan::TLS

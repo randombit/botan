@@ -63,7 +63,9 @@ std::optional<Session> Session_Manager_Stateless::retrieve_one(const Session_Han
    }
 }
 
-bool Session_Manager_Stateless::emits_session_tickets() { return get_ticket_key().has_value(); }
+bool Session_Manager_Stateless::emits_session_tickets() {
+   return get_ticket_key().has_value();
+}
 
 std::optional<SymmetricKey> Session_Manager_Stateless::get_ticket_key() noexcept {
    try {

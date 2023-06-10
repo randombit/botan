@@ -16,7 +16,9 @@
 
 namespace Botan::TLS {
 
-Transcript_Hash_State::Transcript_Hash_State(std::string_view algo_spec) { set_algorithm(algo_spec); }
+Transcript_Hash_State::Transcript_Hash_State(std::string_view algo_spec) {
+   set_algorithm(algo_spec);
+}
 
 Transcript_Hash_State::Transcript_Hash_State(const Transcript_Hash_State& other) :
       m_hash((other.m_hash != nullptr) ? other.m_hash->copy_state() : nullptr),
@@ -198,6 +200,8 @@ void Transcript_Hash_State::set_algorithm(std::string_view algo_spec) {
    m_unprocessed_transcript.clear();
 }
 
-Transcript_Hash_State Transcript_Hash_State::clone() const { return *this; }
+Transcript_Hash_State Transcript_Hash_State::clone() const {
+   return *this;
+}
 
 }  // namespace Botan::TLS

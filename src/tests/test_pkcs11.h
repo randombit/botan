@@ -36,13 +36,21 @@ inline Botan::PKCS11::secure_string to_sec_string(const std::string& str) {
    return Botan::PKCS11::secure_string(str.begin(), str.end());
 }
 
-inline Botan::PKCS11::secure_string PIN() { return to_sec_string(PKCS11_USER_PIN); }
+inline Botan::PKCS11::secure_string PIN() {
+   return to_sec_string(PKCS11_USER_PIN);
+}
 
-inline Botan::PKCS11::secure_string SO_PIN() { return to_sec_string(PKCS11_SO_PIN); }
+inline Botan::PKCS11::secure_string SO_PIN() {
+   return to_sec_string(PKCS11_SO_PIN);
+}
 
-inline Botan::PKCS11::secure_string TEST_PIN() { return to_sec_string(PKCS11_TEST_USER_PIN); }
+inline Botan::PKCS11::secure_string TEST_PIN() {
+   return to_sec_string(PKCS11_TEST_USER_PIN);
+}
 
-inline Botan::PKCS11::secure_string TEST_SO_PIN() { return to_sec_string(PKCS11_TEST_SO_PIN); }
+inline Botan::PKCS11::secure_string TEST_SO_PIN() {
+   return to_sec_string(PKCS11_TEST_SO_PIN);
+}
 
 std::vector<Test::Result> run_pkcs11_tests(const std::string& name,
                                            std::vector<std::pair<std::string, std::function<Test::Result()>>>& fns);

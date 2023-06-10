@@ -174,13 +174,21 @@ inline constexpr void set_mem(uint8_t* ptr, size_t n, uint8_t val) {
    }
 }
 
-inline const uint8_t* cast_char_ptr_to_uint8(const char* s) { return reinterpret_cast<const uint8_t*>(s); }
+inline const uint8_t* cast_char_ptr_to_uint8(const char* s) {
+   return reinterpret_cast<const uint8_t*>(s);
+}
 
-inline const char* cast_uint8_ptr_to_char(const uint8_t* b) { return reinterpret_cast<const char*>(b); }
+inline const char* cast_uint8_ptr_to_char(const uint8_t* b) {
+   return reinterpret_cast<const char*>(b);
+}
 
-inline uint8_t* cast_char_ptr_to_uint8(char* s) { return reinterpret_cast<uint8_t*>(s); }
+inline uint8_t* cast_char_ptr_to_uint8(char* s) {
+   return reinterpret_cast<uint8_t*>(s);
+}
 
-inline char* cast_uint8_ptr_to_char(uint8_t* b) { return reinterpret_cast<char*>(b); }
+inline char* cast_uint8_ptr_to_char(uint8_t* b) {
+   return reinterpret_cast<char*>(b);
+}
 
 /**
 * Memory comparison, input insensitive

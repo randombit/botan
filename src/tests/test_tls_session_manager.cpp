@@ -91,11 +91,17 @@ class Session_Manager_Policy : public Botan::TLS::Policy {
 
 namespace {
 
-decltype(auto) random_id() { return Test::rng().random_vec<Botan::TLS::Session_ID>(32); }
+decltype(auto) random_id() {
+   return Test::rng().random_vec<Botan::TLS::Session_ID>(32);
+}
 
-decltype(auto) random_ticket() { return Test::rng().random_vec<Botan::TLS::Session_Ticket>(32); }
+decltype(auto) random_ticket() {
+   return Test::rng().random_vec<Botan::TLS::Session_Ticket>(32);
+}
 
-decltype(auto) random_opaque_handle() { return Test::rng().random_vec<Botan::TLS::Opaque_Session_Handle>(32); }
+decltype(auto) random_opaque_handle() {
+   return Test::rng().random_vec<Botan::TLS::Opaque_Session_Handle>(32);
+}
 
 const Botan::TLS::Server_Information server_info("botan.randombit.net");
 

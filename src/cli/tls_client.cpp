@@ -387,11 +387,17 @@ class TLS_Client final : public Command {
 
 namespace {
 
-std::ostream& Callbacks::output() { return m_client_command.output(); }
+std::ostream& Callbacks::output() {
+   return m_client_command.output();
+}
 
-bool Callbacks::flag_set(const std::string& flag_name) const { return m_client_command.flag_set(flag_name); }
+bool Callbacks::flag_set(const std::string& flag_name) const {
+   return m_client_command.flag_set(flag_name);
+}
 
-void Callbacks::send(std::span<const uint8_t> buffer) { m_client_command.send(buffer); }
+void Callbacks::send(std::span<const uint8_t> buffer) {
+   m_client_command.send(buffer);
+}
 
 }  // namespace
 

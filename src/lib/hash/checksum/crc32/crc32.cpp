@@ -88,6 +88,8 @@ void CRC32::final_result(uint8_t output[]) {
    clear();
 }
 
-std::unique_ptr<HashFunction> CRC32::copy_state() const { return std::make_unique<CRC32>(*this); }
+std::unique_ptr<HashFunction> CRC32::copy_state() const {
+   return std::make_unique<CRC32>(*this);
+}
 
 }  // namespace Botan

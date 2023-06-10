@@ -79,7 +79,9 @@ void ANSI_X919_MAC::clear() {
    m_position = 0;
 }
 
-std::string ANSI_X919_MAC::name() const { return "X9.19-MAC"; }
+std::string ANSI_X919_MAC::name() const {
+   return "X9.19-MAC";
+}
 
 std::unique_ptr<MessageAuthenticationCode> ANSI_X919_MAC::new_object() const {
    return std::make_unique<ANSI_X919_MAC>();

@@ -133,9 +133,13 @@ void CommonCrypto_Cipher_Mode::finish_msg(secure_vector<uint8_t>& buffer, size_t
    written += outl;
 }
 
-size_t CommonCrypto_Cipher_Mode::update_granularity() const { return m_opts.block_size; }
+size_t CommonCrypto_Cipher_Mode::update_granularity() const {
+   return m_opts.block_size;
+}
 
-size_t CommonCrypto_Cipher_Mode::ideal_granularity() const { return m_opts.block_size * BOTAN_BLOCK_CIPHER_PAR_MULT; }
+size_t CommonCrypto_Cipher_Mode::ideal_granularity() const {
+   return m_opts.block_size * BOTAN_BLOCK_CIPHER_PAR_MULT;
+}
 
 size_t CommonCrypto_Cipher_Mode::minimum_final_size() const {
    if(m_direction == Cipher_Dir::Encryption)
@@ -144,7 +148,9 @@ size_t CommonCrypto_Cipher_Mode::minimum_final_size() const {
       return m_opts.block_size;
 }
 
-size_t CommonCrypto_Cipher_Mode::default_nonce_length() const { return m_opts.block_size; }
+size_t CommonCrypto_Cipher_Mode::default_nonce_length() const {
+   return m_opts.block_size;
+}
 
 bool CommonCrypto_Cipher_Mode::valid_nonce_length(size_t nonce_len) const {
    return (nonce_len == 0 || nonce_len == m_opts.block_size);
@@ -184,7 +190,9 @@ void CommonCrypto_Cipher_Mode::reset() {
    }
 }
 
-Key_Length_Specification CommonCrypto_Cipher_Mode::key_spec() const { return m_opts.key_spec; }
+Key_Length_Specification CommonCrypto_Cipher_Mode::key_spec() const {
+   return m_opts.key_spec;
+}
 
 void CommonCrypto_Cipher_Mode::key_schedule(const uint8_t key[], size_t length) {
    CCCryptorStatus status;

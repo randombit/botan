@@ -139,7 +139,9 @@ alignas(256) const uint32_t CRC24_T3[256] = {
    0x00698EB4, 0x00D7B036, 0x0085B900, 0x0073A25A, 0x0021AB6C, 0x00F493D8, 0x00A69AEE, 0x005081B4, 0x00028882,
    0x00BCB600, 0x00EEBF36, 0x0018A46C, 0x004AAD5A};
 
-inline uint32_t process8(uint32_t crc, uint8_t data) { return (crc >> 8) ^ CRC24_T0[get_byte<3>(crc) ^ data]; }
+inline uint32_t process8(uint32_t crc, uint8_t data) {
+   return (crc >> 8) ^ CRC24_T0[get_byte<3>(crc) ^ data];
+}
 
 inline uint32_t process32(uint32_t crc, uint32_t word) {
    const uint32_t sum = crc ^ word;
@@ -149,7 +151,9 @@ inline uint32_t process32(uint32_t crc, uint32_t word) {
 }
 }  // namespace
 
-std::unique_ptr<HashFunction> CRC24::copy_state() const { return std::make_unique<CRC24>(*this); }
+std::unique_ptr<HashFunction> CRC24::copy_state() const {
+   return std::make_unique<CRC24>(*this);
+}
 
 /*
 * Update a CRC24 Checksum

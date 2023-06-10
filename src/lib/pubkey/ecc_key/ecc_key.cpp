@@ -18,9 +18,13 @@
 
 namespace Botan {
 
-size_t EC_PublicKey::key_length() const { return domain().get_p_bits(); }
+size_t EC_PublicKey::key_length() const {
+   return domain().get_p_bits();
+}
 
-size_t EC_PublicKey::estimated_strength() const { return ecp_work_factor(key_length()); }
+size_t EC_PublicKey::estimated_strength() const {
+   return ecp_work_factor(key_length());
+}
 
 namespace {
 
@@ -50,7 +54,9 @@ AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const {
    return AlgorithmIdentifier(object_identifier(), DER_domain());
 }
 
-std::vector<uint8_t> EC_PublicKey::public_key_bits() const { return public_point().encode(point_encoding()); }
+std::vector<uint8_t> EC_PublicKey::public_key_bits() const {
+   return public_point().encode(point_encoding());
+}
 
 void EC_PublicKey::set_point_encoding(EC_Point_Format enc) {
    if(enc != EC_Point_Format::Compressed && enc != EC_Point_Format::Uncompressed && enc != EC_Point_Format::Hybrid) {
@@ -104,7 +110,9 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
    BOTAN_ASSERT(m_public_key.on_the_curve(), "Generated public key point was on the curve");
 }
 
-secure_vector<uint8_t> EC_PrivateKey::raw_private_key_bits() const { return BigInt::encode_locked(m_private_key); }
+secure_vector<uint8_t> EC_PrivateKey::raw_private_key_bits() const {
+   return BigInt::encode_locked(m_private_key);
+}
 
 secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const {
    return DER_Encoder()

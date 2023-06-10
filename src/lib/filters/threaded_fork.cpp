@@ -69,7 +69,9 @@ Threaded_Fork::~Threaded_Fork() {
    }
 }
 
-std::string Threaded_Fork::name() const { return "Threaded Fork"; }
+std::string Threaded_Fork::name() const {
+   return "Threaded Fork";
+}
 
 void Threaded_Fork::set_next(Filter* f[], size_t n) {
    Fork::set_next(f, n);

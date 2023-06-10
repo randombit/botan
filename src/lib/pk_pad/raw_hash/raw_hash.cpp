@@ -10,7 +10,9 @@
 
 namespace Botan {
 
-void RawHashFunction::add_data(const uint8_t input[], size_t length) { m_bits += std::make_pair(input, length); }
+void RawHashFunction::add_data(const uint8_t input[], size_t length) {
+   m_bits += std::make_pair(input, length);
+}
 
 void RawHashFunction::final_result(uint8_t out[]) {
    if(m_output_length > 0 && m_bits.size() != m_output_length) {
@@ -23,9 +25,13 @@ void RawHashFunction::final_result(uint8_t out[]) {
    m_bits.clear();
 }
 
-void RawHashFunction::clear() { m_bits.clear(); }
+void RawHashFunction::clear() {
+   m_bits.clear();
+}
 
-std::unique_ptr<HashFunction> RawHashFunction::copy_state() const { return std::make_unique<RawHashFunction>(*this); }
+std::unique_ptr<HashFunction> RawHashFunction::copy_state() const {
+   return std::make_unique<RawHashFunction>(*this);
+}
 
 std::unique_ptr<HashFunction> RawHashFunction::new_object() const {
    return std::make_unique<RawHashFunction>(m_name, m_output_length);
