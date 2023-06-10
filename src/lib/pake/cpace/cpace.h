@@ -43,6 +43,12 @@ class PAKE_Cpace final : public PasswordAuthenticatedKeyExchange {
       std::optional<BigInt> m_x;
 };
 
+BOTAN_TEST_API
+EC_Point cpace_generator(const EC_Group& group,
+                         const std::string& password,
+                         std::span<const uint8_t> channel_id,
+                         std::span<const uint8_t> session_id);
+
 }  // namespace Botan
 
 #endif
