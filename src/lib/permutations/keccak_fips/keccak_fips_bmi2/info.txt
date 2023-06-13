@@ -1,10 +1,10 @@
 <defines>
-SHA3_BMI2 -> 20190117
+KECCAK_FIPS_BMI2 -> 20230612
 </defines>
 
 <module_info>
-name -> "SHA-3 BMI2"
-brief -> "SHA-3 using BMI2 instructions"
+name -> "KECCAK-FIPS BMI2"
+brief -> "KECCAK-FIPS for SHA-3-related functions using BMI2 instructions"
 </module_info>
 
 <isa>
