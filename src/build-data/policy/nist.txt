@@ -56,7 +56,7 @@ sha2_32_x86
 sha2_32_armv8
 sha2_32_bmi2
 sha2_64_bmi2
-sha3_bmi2
+keccak_perm_bmi2
 
 # modes
 ghash_cpu

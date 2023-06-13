@@ -9,8 +9,8 @@
 #ifndef BOTAN_SHAKE_CIPHER_H_
 #define BOTAN_SHAKE_CIPHER_H_
 
-#include <botan/secmem.h>
 #include <botan/stream_cipher.h>
+#include <botan/internal/keccak_perm.h>
 
 namespace Botan {
 
@@ -19,7 +19,7 @@ namespace Botan {
 */
 class SHAKE_Cipher : public StreamCipher {
    protected:
-      explicit SHAKE_Cipher(size_t shake_rate);
+      explicit SHAKE_Cipher(size_t keccak_capacity);
 
    public:
       /**
@@ -31,9 +31,9 @@ class SHAKE_Cipher : public StreamCipher {
 
       Key_Length_Specification key_spec() const final;
 
-      bool has_keying_material() const final;
+      bool has_keying_material() const final { return m_has_keying_material; }
 
-      size_t buffer_size() const final;
+      size_t buffer_size() const final { return m_keccak.byte_rate(); }
 
    private:
       void key_schedule(const uint8_t key[], size_t key_len) final;
@@ -43,17 +43,18 @@ class SHAKE_Cipher : public StreamCipher {
       void cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) final;
       void generate_keystream(uint8_t out[], size_t length) override;
 
+      void generate_keystream_internal(std::span<uint8_t> out);
+
       /**
       * IV not supported, this function will throw unless iv_len == 0
       */
       void set_iv_bytes(const uint8_t iv[], size_t iv_len) final;
 
-   protected:
-      size_t m_shake_rate;
-
-      secure_vector<uint64_t> m_state;  // internal state
-      secure_vector<uint8_t> m_buffer;  // ciphertext buffer
-      size_t m_buf_pos;                 // position in m_buffer
+   private:
+      Keccak_Permutation m_keccak;
+      bool m_has_keying_material;
+      secure_vector<uint8_t> m_keystream_buffer;
+      size_t m_bytes_generated;
 };
 
 class SHAKE_128_Cipher final : public SHAKE_Cipher {

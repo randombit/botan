@@ -8,5 +8,5 @@ brief -> "SHAKE-128 and SHAKE-256 XOF presented as stream ciphers"
 </module_info>
 
 <requires>
-sha3
+keccak_perm
 </requires>

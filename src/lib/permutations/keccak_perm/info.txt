@@ -1,0 +1,7 @@
+<defines>
+KECCAK_PERM -> 20230613
+</defines>
+
+<module_info>
+name -> "Keccak-permutation"
+</module_info>
