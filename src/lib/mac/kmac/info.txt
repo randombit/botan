@@ -1,0 +1,12 @@
+<defines>
+KMAC -> 20230601
+</defines>
+
+<module_info>
+name -> "KMAC"
+</module_info>
+
+<requires>
+cshake_xof
+</requires>
+

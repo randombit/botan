@@ -41,6 +41,10 @@
    #include <botan/internal/blake2bmac.h>
 #endif
 
+#if defined(BOTAN_HAS_KMAC)
+   #include <botan/internal/kmac.h>
+#endif
+
 namespace Botan {
 
 std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create(std::string_view algo_spec,
@@ -103,6 +107,18 @@ std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create(std
    if(req.algo_name() == "X9.19-MAC") {
       if(provider.empty() || provider == "base") {
          return std::make_unique<ANSI_X919_MAC>();
+      }
+   }
+#endif
+
+#if defined(BOTAN_HAS_KMAC)
+   if(req.algo_name() == "KMAC-256") {
+      if(provider.empty() || provider == "base") {
+         if(req.arg_count() != 1) {
+            throw Invalid_Argument(
+               "invalid algorithm specification for KMAC: need exactly one argument for output bit length");
+         }
+         return std::make_unique<KMAC256>(req.arg_as_integer(0));
       }
    }
 #endif
