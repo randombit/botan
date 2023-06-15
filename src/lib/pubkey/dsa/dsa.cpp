@@ -61,11 +61,15 @@ DSA_PublicKey::DSA_PublicKey(const DL_Group& group, const BigInt& y) {
 }
 
 DSA_PrivateKey::DSA_PrivateKey(RandomNumberGenerator& rng, const DL_Group& group) {
+   BOTAN_ARG_CHECK(group.has_q(), "Q parameter must be set for DSA");
+
    m_private_key = std::make_shared<DL_PrivateKey>(group, rng);
    m_public_key = m_private_key->public_key();
 }
 
 DSA_PrivateKey::DSA_PrivateKey(const DL_Group& group, const BigInt& x) {
+   BOTAN_ARG_CHECK(group.has_q(), "Q parameter must be set for DSA");
+
    m_private_key = std::make_shared<DL_PrivateKey>(group, x);
    m_public_key = m_private_key->public_key();
 }
@@ -73,6 +77,8 @@ DSA_PrivateKey::DSA_PrivateKey(const DL_Group& group, const BigInt& x) {
 DSA_PrivateKey::DSA_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
    m_private_key = std::make_shared<DL_PrivateKey>(alg_id, key_bits, DL_Group_Format::ANSI_X9_57);
    m_public_key = m_private_key->public_key();
+
+   BOTAN_ARG_CHECK(m_private_key->group().has_q(), "Q parameter must be set for DSA");
 }
 
 bool DSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
