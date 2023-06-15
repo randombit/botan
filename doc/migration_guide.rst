@@ -362,7 +362,7 @@ EMSA1 indicates that effectively the plain hash is signed, with no other
 padding. It is typically used for algorithms like ECSDA, but was allowed for
 RSA. This is now no longer implemented.
 
-If you must generates such signatures for some horrible reason, you can pre-hash
+If you must generate such signatures for some horrible reason, you can pre-hash
 the message using a hash function as usual, and then sign using a "Raw" padding,
 which will allow you to sign any arbitrary bits with no preprocessing.
 
@@ -405,7 +405,7 @@ Keys based on the discrete logarithm problem no longer derive from the
 DL_Scheme_PrivateKey and DL_Scheme_PublicKey classes; these classes
 have been removed.
 
-Functions to access DL algorithm interal fields (such as the integer value of
+Functions to access DL algorithm internal fields (such as the integer value of
 the private key using ``get_x``) have been removed. If you need access to this
 information you can use the new ``get_int_field`` function.
 
