@@ -1270,6 +1270,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
 
             Botan_Tests::CHECK("Server Hello",
                                [&](auto& result) {
+                                  result.require("ctx is available", ctx != nullptr);
                                   ctx->client.received_data(vars.get_req_bin("Record_ServerHello"));
 
                                   ctx->check_callback_invocations(result,
@@ -1283,6 +1284,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
 
             Botan_Tests::CHECK("other handshake messages and client auth",
                                [&](Test::Result& result) {
+                                  result.require("ctx is available", ctx != nullptr);
                                   ctx->client.received_data(vars.get_req_bin("Record_ServerHandshakeMessages"));
 
                                   ctx->check_callback_invocations(result,
@@ -1316,6 +1318,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
             Botan_Tests::CHECK(
                "Close Connection",
                [&](Test::Result& result) {
+                  result.require("ctx is available", ctx != nullptr);
                   ctx->client.close();
                   result.test_eq(
                      "Client close_notify", ctx->pull_send_buffer(), vars.get_req_bin("Record_Client_CloseNotify"));
