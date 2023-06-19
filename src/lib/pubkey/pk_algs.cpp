@@ -297,7 +297,7 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 std::unique_ptr<Private_Key> create_ec_private_key(std::string_view alg_name,
                                                    const EC_Group& ec_group,
                                                    RandomNumberGenerator& rng) {
-   // Potentially unused if all EC algorthms are disabled
+   // Potentially unused if all EC algorithms are disabled
    BOTAN_UNUSED(alg_name, ec_group, rng);
 
 #if defined(BOTAN_HAS_ECDSA)
