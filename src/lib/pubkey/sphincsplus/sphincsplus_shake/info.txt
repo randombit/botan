@@ -1,0 +1,16 @@
+<defines>
+SPHINCS_PLUS_WITH_SHAKE -> 20230531
+</defines>
+
+<module_info>
+name -> "SPHINCS+ (SHAKE-256)"
+</module_info>
+
+<requires>
+sphincsplus_common
+shake
+</requires>
+
+<header:internal>
+sp_hash_shake.h
+</header:internal>

@@ -39,6 +39,33 @@ Values currently assigned are::
   dilithium-aes-6x5 OBJECT IDENTIFIER ::= { dilithium-aes 2 }
   dilithium-aes-8x7 OBJECT IDENTIFIER ::= { dilithium-aes 3 }
 
+  SphincsPlus OBJECT IDENTIFIER ::= { publicKey 12 }
+
+  SphincsPlus-shake  OBJECT IDENTIFIER ::= { SphincsPlus 1 }
+  SphincsPlus-sha2   OBJECT IDENTIFIER ::= { SphincsPlus 2 }
+  SphincsPlus-haraka OBJECT IDENTIFIER ::= { SphincsPlus 3 }
+
+  SphincsPlus-shake-128s-r3.1 OBJECT IDENTIFIER ::= { SphincsPlus-shake256 1 }
+  SphincsPlus-shake-128f-r3.1  OBJECT IDENTIFIER ::= { SphincsPlus-shake256 2 }
+  SphincsPlus-shake-192s-r3.1 OBJECT IDENTIFIER ::= { SphincsPlus-shake256 3 }
+  SphincsPlus-shake-192f-r3.1  OBJECT IDENTIFIER ::= { SphincsPlus-shake256 4 }
+  SphincsPlus-shake-256s-r3.1 OBJECT IDENTIFIER ::= { SphincsPlus-shake256 5 }
+  SphincsPlus-shake-256f-r3.1  OBJECT IDENTIFIER ::= { SphincsPlus-shake256 6 }
+
+  SphincsPlus-sha2-128s-r3.1 OBJECT IDENTIFIER ::= { SphincsPlus-sha256 1 }
+  SphincsPlus-sha2-128f-r3.1  OBJECT IDENTIFIER ::= { SphincsPlus-sha256 2 }
+  SphincsPlus-sha2-192s-r3.1 OBJECT IDENTIFIER ::= { SphincsPlus-sha256 3 }
+  SphincsPlus-sha2-192f-r3.1  OBJECT IDENTIFIER ::= { SphincsPlus-sha256 4 }
+  SphincsPlus-sha2-256s-r3.1 OBJECT IDENTIFIER ::= { SphincsPlus-sha256 5 }
+  SphincsPlus-sha2-256f-r3.1  OBJECT IDENTIFIER ::= { SphincsPlus-sha256 6 }
+
+  SphincsPlus-haraka-128s-r3.1 OBJECT IDENTIFIER ::= { SphincsPlus-haraka 1 }
+  SphincsPlus-haraka-128f-r3.1  OBJECT IDENTIFIER ::= { SphincsPlus-haraka 2 }
+  SphincsPlus-haraka-192s-r3.1 OBJECT IDENTIFIER ::= { SphincsPlus-haraka 3 }
+  SphincsPlus-haraka-192f-r3.1  OBJECT IDENTIFIER ::= { SphincsPlus-haraka 4 }
+  SphincsPlus-haraka-256s-r3.1 OBJECT IDENTIFIER ::= { SphincsPlus-haraka 5 }
+  SphincsPlus-haraka-256f-r3.1  OBJECT IDENTIFIER ::= { SphincsPlus-haraka 6 }
+
   symmetricKey OBJECT IDENTIFIER ::= { randombit 3 }
 
   ocbModes OBJECT IDENTIFIER ::= { symmetricKey 2 }

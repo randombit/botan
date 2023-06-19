@@ -20,11 +20,12 @@ void Truncated_Hash::add_data(const uint8_t input[], size_t length) {
 void Truncated_Hash::final_result(uint8_t out[]) {
    BOTAN_ASSERT_NOMSG(m_hash->output_length() * 8 >= m_output_bits);
 
-   const auto full_output = m_hash->final();
+   m_hash->final(m_buffer);
 
    // truncate output to a full number of bytes
    const auto bytes = output_length();
-   std::copy_n(full_output.begin(), bytes, out);
+   std::copy_n(m_buffer.begin(), bytes, out);
+   zeroise(m_buffer);
 
    // mask the unwanted bits in the final byte
    const uint8_t bits_in_last_byte = ((m_output_bits - 1) % 8) + 1;
@@ -54,7 +55,7 @@ void Truncated_Hash::clear() {
 }
 
 Truncated_Hash::Truncated_Hash(std::unique_ptr<HashFunction> hash, size_t bits) :
-      m_hash(std::move(hash)), m_output_bits(bits) {
+      m_hash(std::move(hash)), m_output_bits(bits), m_buffer(m_hash->output_length()) {
    BOTAN_ASSERT_NONNULL(m_hash);
 
    if(m_output_bits == 0) {

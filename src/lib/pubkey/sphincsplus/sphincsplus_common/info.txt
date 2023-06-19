@@ -1,0 +1,30 @@
+<defines>
+SPHINCS_PLUS_COMMON -> 20230426
+</defines>
+
+<module_info>
+name -> "SPHINCS+ (common)"
+brief -> "Base implementation of SPHINCS+"
+type -> "Internal"
+</module_info>
+
+<header:public>
+sphincsplus.h
+sp_parameters.h
+</header:public>
+
+<header:internal>
+sp_fors.h
+sp_address.h
+sp_hash.h
+sp_hypertree.h
+sp_types.h
+sp_wots.h
+sp_treehash.h
+sp_xmss.h
+</header:internal>
+
+<requires>
+pubkey
+hash
+</requires>

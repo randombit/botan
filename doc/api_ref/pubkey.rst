@@ -114,6 +114,14 @@ signatures can be created. If the same state is ever used to generate two
 signatures, then the whole scheme becomes insecure, and signatures can be
 forged.
 
+SPHINCS+
+~~~~~~~~~
+
+A post-quantum secure signature scheme whose security is based (only) on the
+security of a hash function. Unlike XMSS, it is a stateless signature
+scheme, meaning that the private key does not change with each signature. It
+has high security but very long signatures and high runtime.
+
 McEliece
 ~~~~~~~~~~
 

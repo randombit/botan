@@ -136,6 +136,16 @@ constexpr uint8_t ceil_log2(T x)
    return result;
 }
 
+/**
+ * Return the number of bytes necessary to contain @p bits bits.
+ */
+template <typename T>
+inline constexpr T ceil_tobytes(T bits)
+   requires(std::is_integral<T>::value)
+{
+   return (bits + 7) / 8;
+}
+
 // Potentially variable time ctz used for OCB
 inline constexpr size_t var_ctz32(uint32_t n) {
 #if BOTAN_COMPILER_HAS_BUILTIN(__builtin_ctz)

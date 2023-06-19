@@ -43,6 +43,8 @@ class Truncated_Hash final : public HashFunction {
 
       std::unique_ptr<HashFunction> m_hash;
       size_t m_output_bits;
+
+      secure_vector<uint8_t> m_buffer;
 };
 
 }  // namespace Botan

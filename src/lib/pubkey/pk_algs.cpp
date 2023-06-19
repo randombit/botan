@@ -82,6 +82,10 @@
    #include <botan/dilithium.h>
 #endif
 
+#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+   #include <botan/sphincsplus.h>
+#endif
+
 namespace Botan {
 
 std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
@@ -183,6 +187,12 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
    if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-")) {
       return std::make_unique<Dilithium_PublicKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+   if(alg_name == "SPHINCS+" || alg_name.starts_with("SphincsPlus-")) {
+      return std::make_unique<SphincsPlus_PublicKey>(alg_id, key_bits);
    }
 #endif
 
@@ -288,6 +298,12 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
    if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-")) {
       return std::make_unique<Dilithium_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+   if(alg_name == "SPHINCS+" || alg_name.starts_with("SphincsPlus-")) {
+      return std::make_unique<SphincsPlus_PrivateKey>(alg_id, key_bits);
    }
 #endif
 
@@ -405,6 +421,14 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
       }();
 
       return std::make_unique<Dilithium_PrivateKey>(rng, mode);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+   if(alg_name == "SPHINCS+" || alg_name == "SphincsPlus-") {
+      auto sphincs_params = Sphincs_Parameters::create(params);
+
+      return std::make_unique<SphincsPlus_PrivateKey>(rng, sphincs_params);
    }
 #endif
 
