@@ -132,7 +132,7 @@ void ignore_params(T&&... args) {
 * Due to this difference, and the fact that it is not inlined, calling
 * this is significantly more costly than using `std::unreachable`.
 */
-[[noreturn]] void assert_unreachable(const char* file, int line);
+[[noreturn]] void BOTAN_UNSTABLE_API assert_unreachable(const char* file, int line);
 
 #define BOTAN_ASSERT_UNREACHABLE() Botan::assert_unreachable(__FILE__, __LINE__)
 
