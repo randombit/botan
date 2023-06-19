@@ -90,7 +90,7 @@ std::tuple<SphincsHashedMessage, XmssTreeIndexInLayer, TreeNodeIndex> Sphincs_Ha
 
    auto tree_index = from_first_n_bits<XmssTreeIndexInLayer>(p.h() - p.xmss_tree_height(), tree_index_bytes);
    auto leaf_index = from_first_n_bits<TreeNodeIndex>(p.xmss_tree_height(), leaf_index_bytes);
-   return {std::move(msg_hash), tree_index, leaf_index};
+   return {std::move(msg_hash), std::move(tree_index), std::move(leaf_index)};
 }
 
 }  // namespace Botan
