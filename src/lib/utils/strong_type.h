@@ -543,6 +543,11 @@ class StrongSpan {
        */
       underlying_span get() const { return m_span; }
 
+      /**
+       * @returns the underlying std::span without any type constraints
+       */
+      underlying_span get() { return m_span; }
+
       decltype(auto) data() noexcept(noexcept(this->m_span.data())) { return this->m_span.data(); }
 
       decltype(auto) data() const noexcept(noexcept(this->m_span.data())) { return this->m_span.data(); }
