@@ -4,6 +4,8 @@ Release Notes
 Version 3.1.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add SPHINCS+ post quantum hash based signature scheme (GH #3564 #3549)
+
 * Several small TLS compliance fixes, primarily around rejecting
   invalid behavior from the peer (GH #3520 #3537)
 
