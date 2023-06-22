@@ -1992,8 +1992,9 @@ class Speed final : public Command {
                   keygen_timer->run([&] { return Botan::create_private_key("SPHINCS+", rng(), params); }));
 
                record_result(keygen_timer);
-               if(bench_pk_sig(*key, params, provider, "", msec) == 1)
+               if(bench_pk_sig(*key, params, provider, "", msec) == 1) {
                   break;
+               }
             } catch(Botan::Not_Implemented&) {
                continue;
             }
