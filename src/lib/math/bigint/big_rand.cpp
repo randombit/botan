@@ -45,9 +45,25 @@ BigInt BigInt::random_integer(RandomNumberGenerator& rng, const BigInt& min, con
       throw Invalid_Argument("BigInt::random_integer invalid range");
    }
 
-   BigInt r;
+   /*
+   If min is > 1 then we generate a random number `r` in [0,max-min)
+   and return min + r.
+
+   This same logic could also be reasonbly chosen for min == 1, but
+   that breaks certain tests which expect stability of this function
+   when generating within [1,n)
+   */
+   if(min > 1) {
+      const BigInt diff = max - min;
+      // This call is recursive, but will not recurse further
+      return min + BigInt::random_integer(rng, BigInt::zero(), diff);
+   }
+
+   BOTAN_DEBUG_ASSERT(min <= 1);
 
    const size_t bits = max.bits();
+
+   BigInt r;
 
    do {
       r.randomize(rng, bits, false);
