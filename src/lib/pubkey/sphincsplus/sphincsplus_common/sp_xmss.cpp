@@ -43,7 +43,7 @@ SphincsTreeNode xmss_sign_and_pkgen(StrongSpan<SphincsXmssSignature> out_sig,
 
    pk_addr.set_type(Sphincs_Address_Type::WotsPublicKeyCompression);
 
-   GenerateLeafFunction xmss_gen_leaf = [&](StrongSpan<SphincsTreeNode> out_root, TreeNodeIndex address_index) {
+   GenerateLeafFunction xmss_gen_leaf = [&](const StrongSpan<SphincsTreeNode>& out_root, TreeNodeIndex address_index) {
       wots_sign_and_pkgen(
          wots_bytes_s, out_root, secret_seed, address_index, idx_leaf, steps, leaf_addr, pk_addr, params, hashes);
    };

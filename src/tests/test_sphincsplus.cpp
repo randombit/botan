@@ -10,9 +10,6 @@
 
 #if(defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)) && defined(BOTAN_HAS_AES)
 
-   #include <botan/hash.h>
-   #include <botan/hex.h>
-
    #include <botan/assert.h>
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
