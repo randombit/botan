@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_STREAM_CIPHER)
    #include <botan/stream_cipher.h>
+   #include <botan/internal/fmt.h>
 #endif
 
 namespace Botan_Tests {
@@ -42,7 +43,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
             auto cipher = Botan::StreamCipher::create(algo, provider_ask);
 
             if(!cipher) {
-               result.test_failure("Stream " + algo + " supported by " + provider_ask + " but not found");
+               result.test_failure(Botan::fmt("Stream cipher {} supported by {} but not found", algo, provider_ask));
                continue;
             }
 

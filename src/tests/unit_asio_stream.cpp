@@ -28,6 +28,7 @@
       #endif
 
       #include <boost/bind.hpp>
+      #include <utility>
 
 namespace Botan_Tests {
 
@@ -46,7 +47,7 @@ static_assert(sizeof(TEST_DATA) == TEST_DATA_SIZE, "size of TEST_DATA must match
 class MockChannel {
    public:
       MockChannel(std::shared_ptr<Botan::TLS::Callbacks> core) :
-            m_callbacks(core), m_bytes_till_complete_record(TEST_DATA_SIZE), m_active(false) {}
+            m_callbacks(std::move(core)), m_bytes_till_complete_record(TEST_DATA_SIZE), m_active(false) {}
 
    public:
       std::size_t received_data(std::span<const uint8_t> data) {
@@ -61,7 +62,7 @@ class MockChannel {
 
       void send(std::span<const uint8_t> buf) { m_callbacks->tls_emit_data(buf); }
 
-      bool is_active() { return m_active; }
+      bool is_active() const { return m_active; }
 
    protected:
       std::shared_ptr<Botan::TLS::Callbacks> m_callbacks;
@@ -73,7 +74,7 @@ class ThrowingMockChannel : public MockChannel {
    public:
       static boost::system::error_code expected_ec() { return Botan::TLS::Alert::UnexpectedMessage; }
 
-      ThrowingMockChannel(std::shared_ptr<Botan::TLS::Callbacks> core) : MockChannel(core) {}
+      ThrowingMockChannel(std::shared_ptr<Botan::TLS::Callbacks> core) : MockChannel(std::move(core)) {}
 
       std::size_t received_data(std::span<const uint8_t>) { throw Botan::TLS::Unexpected_Message("test_error"); }
 
@@ -97,7 +98,7 @@ class AsioStream : public Botan::TLS::Stream<TestStream, MockChannel> {
          m_native_handle = std::make_unique<MockChannel>(m_core);
       }
 
-      virtual ~AsioStream() = default;
+      ~AsioStream() override = default;
 };
 
 class ThrowingAsioStream : public Botan::TLS::Stream<TestStream, ThrowingMockChannel> {
@@ -107,7 +108,7 @@ class ThrowingAsioStream : public Botan::TLS::Stream<TestStream, ThrowingMockCha
          m_native_handle = std::make_unique<ThrowingMockChannel>(m_core);
       }
 
-      virtual ~ThrowingAsioStream() = default;
+      ~ThrowingAsioStream() override = default;
 };
 
 /**

@@ -9,6 +9,7 @@
 #include <botan/hex.h>
 #include <botan/internal/cpuid.h>
 #include <botan/internal/filesystem.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/stl_util.h>
 #include <fstream>
@@ -1075,7 +1076,8 @@ std::vector<Test::Result> Text_Based_Test::run() {
       std::string val = strip_ws(std::string(line.begin() + equal_i + 1, line.end()));
 
       if(!m_required_keys.contains(key) && !m_optional_keys.contains(key)) {
-         results.push_back(Test::Result::Failure(header_or_name, test_id + " failed unknown key " + key));
+         auto r = Test::Result::Failure(header_or_name, Botan::fmt("{} failed unknown key {}", test_id, key));
+         results.push_back(r);
       }
 
       vars.add(key, val);
@@ -1084,8 +1086,9 @@ std::vector<Test::Result> Text_Based_Test::run() {
          try {
             for(auto& req_key : m_required_keys) {
                if(!vars.has_key(req_key)) {
-                  results.push_back(
-                     Test::Result::Failure(header_or_name, test_id + " missing required key " + req_key));
+                  auto r =
+                     Test::Result::Failure(header_or_name, Botan::fmt("{} missing required key {}", test_id, req_key));
+                  results.push_back(r);
                }
             }
 

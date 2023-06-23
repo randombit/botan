@@ -27,13 +27,31 @@ namespace {
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_HAS_RSA) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
-struct CertificateAndKey {
-      const Botan::X509_Certificate certificate;
-      const std::shared_ptr<Botan::Private_Key> private_key;
+class CertificateAndKey {
+   public:
+      CertificateAndKey(const Botan::X509_Certificate& cert, std::shared_ptr<Botan::Private_Key> key) :
+            m_certificate(cert), m_private_key(std::move(key)) {}
 
       bool operator!=(const CertificateAndKey& rhs) const {
-         return std::tie(certificate, private_key) != std::tie(rhs.certificate, rhs.private_key);
+         if(m_certificate != rhs.m_certificate) {
+            return false;
+         }
+         // XXX: this is comparing the pointers, is that really correct?
+         if(m_private_key != rhs.m_private_key) {
+            return false;
+         }
+         return true;
       }
+
+      const Botan::X509_DN& subject_dn() const { return certificate().subject_dn(); }
+
+      const Botan::X509_Certificate& certificate() const { return m_certificate; }
+
+      const Botan::Private_Key& private_key() const { return *m_private_key; }
+
+   private:
+      const Botan::X509_Certificate m_certificate;
+      const std::shared_ptr<Botan::Private_Key> m_private_key;
 };
 
    #if defined(BOTAN_HAS_CERTSTOR_SQLITE3)
@@ -47,12 +65,12 @@ Test::Result test_certstor_sqlite3_insert_find_remove_test(const std::vector<Cer
       Botan::Certificate_Store_In_SQLite store(":memory:", passwd, rng);
 
       for(const auto& a : certsandkeys) {
-         store.insert_key(a.certificate, *a.private_key);
+         store.insert_key(a.certificate(), a.private_key());
       }
 
       for(const auto& certandkey : certsandkeys) {
-         const auto cert = certandkey.certificate;
-         const auto key = certandkey.private_key;
+         const auto& cert = certandkey.certificate();
+         const auto& key = certandkey.private_key();
          const auto wo_keyid = store.find_cert(cert.subject_dn(), {});
          const auto w_keyid = store.find_cert(cert.subject_dn(), cert.subject_key_id());
 
@@ -70,7 +88,7 @@ Test::Result test_certstor_sqlite3_insert_find_remove_test(const std::vector<Cer
          result.test_eq("Got wrong certificate", cert.fingerprint(), w_keyid->fingerprint());
 
          if(priv) {
-            result.test_eq("Got wrong private key", key->private_key_bits(), priv->private_key_bits());
+            result.test_eq("Got wrong private key", key.private_key_bits(), priv->private_key_bits());
 
             const auto rev_certs = store.find_certs_for_key(*priv);
 
@@ -94,7 +112,7 @@ Test::Result test_certstor_sqlite3_insert_find_remove_test(const std::vector<Cer
          result.test_eq("Can't remove certificate", !store.find_cert(cert.subject_dn(), cert.subject_key_id()), true);
 
          if(priv) {
-            store.remove_key(*key);
+            store.remove_key(key);
          }
 
          result.test_eq("Can't remove key", !store.find_key(cert), true);
@@ -116,12 +134,12 @@ Test::Result test_certstor_sqlite3_crl_test(const std::vector<CertificateAndKey>
       Botan::Certificate_Store_In_SQLite store(":memory:", passwd, rng);
 
       for(const auto& a : certsandkeys) {
-         store.insert_cert(a.certificate);
+         store.insert_cert(a.certificate());
       }
 
-      store.revoke_cert(certsandkeys[0].certificate, Botan::CRL_Code::CaCompromise);
-      store.revoke_cert(certsandkeys[3].certificate, Botan::CRL_Code::CaCompromise);
-      store.revoke_cert(certsandkeys[3].certificate, Botan::CRL_Code::CaCompromise);
+      store.revoke_cert(certsandkeys[0].certificate(), Botan::CRL_Code::CaCompromise);
+      store.revoke_cert(certsandkeys[3].certificate(), Botan::CRL_Code::CaCompromise);
+      store.revoke_cert(certsandkeys[3].certificate(), Botan::CRL_Code::CaCompromise);
 
       {
          const auto crls = store.generate_crls();
@@ -129,32 +147,32 @@ Test::Result test_certstor_sqlite3_crl_test(const std::vector<CertificateAndKey>
          result.test_eq("Can't revoke certificate", crls.size(), 2);
          result.test_eq(
             "Can't revoke certificate",
-            crls[0].is_revoked(certsandkeys[0].certificate) ^ crls[1].is_revoked(certsandkeys[0].certificate),
+            crls[0].is_revoked(certsandkeys[0].certificate()) ^ crls[1].is_revoked(certsandkeys[0].certificate()),
             true);
          result.test_eq(
             "Can't revoke certificate",
-            crls[0].is_revoked(certsandkeys[3].certificate) ^ crls[1].is_revoked(certsandkeys[3].certificate),
+            crls[0].is_revoked(certsandkeys[3].certificate()) ^ crls[1].is_revoked(certsandkeys[3].certificate()),
             true);
       }
 
-      store.affirm_cert(certsandkeys[3].certificate);
+      store.affirm_cert(certsandkeys[3].certificate());
 
       {
          const auto crls = store.generate_crls();
 
          result.test_eq("Can't revoke certificate, wrong crl size", crls.size(), 1);
          result.test_eq(
-            "Can't revoke certificate, cert 0 not revoked", crls[0].is_revoked(certsandkeys[0].certificate), true);
+            "Can't revoke certificate, cert 0 not revoked", crls[0].is_revoked(certsandkeys[0].certificate()), true);
       }
 
-      const auto cert0_crl = store.find_crl_for(certsandkeys[0].certificate);
+      const auto cert0_crl = store.find_crl_for(certsandkeys[0].certificate());
 
       result.test_eq("Can't revoke certificate, crl for cert 0", !cert0_crl, false);
       result.test_eq("Can't revoke certificate, crl for cert 0 size check", cert0_crl->get_revoked().size(), 1);
       result.test_eq(
-         "Can't revoke certificate, no crl for cert 0", cert0_crl->is_revoked(certsandkeys[0].certificate), true);
+         "Can't revoke certificate, no crl for cert 0", cert0_crl->is_revoked(certsandkeys[0].certificate()), true);
 
-      const auto cert3_crl = store.find_crl_for(certsandkeys[3].certificate);
+      const auto cert3_crl = store.find_crl_for(certsandkeys[3].certificate());
 
       result.test_eq("Can't revoke certificate, crl for cert 3", !cert3_crl, true);
 
@@ -174,7 +192,7 @@ Test::Result test_certstor_sqlite3_all_subjects_test(const std::vector<Certifica
       Botan::Certificate_Store_In_SQLite store(":memory:", passwd, rng);
 
       for(const auto& a : certsandkeys) {
-         store.insert_cert(a.certificate);
+         store.insert_cert(a.certificate());
       }
 
       const auto subjects = store.all_subjects();
@@ -185,12 +203,11 @@ Test::Result test_certstor_sqlite3_all_subjects_test(const std::vector<Certifica
          std::stringstream ss;
 
          ss << sub;
-         result.test_eq(
-            "Check subject " + ss.str(),
-            certsandkeys[0].certificate.subject_dn() == sub || certsandkeys[1].certificate.subject_dn() == sub ||
-               certsandkeys[2].certificate.subject_dn() == sub || certsandkeys[3].certificate.subject_dn() == sub ||
-               certsandkeys[4].certificate.subject_dn() == sub || certsandkeys[5].certificate.subject_dn() == sub,
-            true);
+         result.test_eq("Check subject " + ss.str(),
+                        certsandkeys[0].subject_dn() == sub || certsandkeys[1].subject_dn() == sub ||
+                           certsandkeys[2].subject_dn() == sub || certsandkeys[3].subject_dn() == sub ||
+                           certsandkeys[4].subject_dn() == sub || certsandkeys[5].subject_dn() == sub,
+                        true);
       }
       return result;
    } catch(std::exception& e) {
@@ -208,17 +225,17 @@ Test::Result test_certstor_sqlite3_find_all_certs_test(const std::vector<Certifi
       Botan::Certificate_Store_In_SQLite store(":memory:", passwd, rng);
 
       for(const auto& a : certsandkeys) {
-         store.insert_cert(a.certificate);
+         store.insert_cert(a.certificate());
       }
 
       for(const auto& a : certsandkeys) {
-         auto res_vec = store.find_all_certs(a.certificate.subject_dn(), a.certificate.subject_key_id());
+         auto res_vec = store.find_all_certs(a.subject_dn(), a.certificate().subject_key_id());
          if(res_vec.size() != 1) {
             result.test_failure("SQLITE all lookup error");
             return result;
          } else {
             std::stringstream a_ss;
-            a_ss << a.certificate.subject_dn();
+            a_ss << a.subject_dn();
             std::stringstream res_ss;
             res_ss << res_vec.at(0).subject_dn();
             result.test_eq("Check subject " + a_ss.str(), a_ss.str(), res_ss.str());
@@ -263,11 +280,11 @@ Test::Result test_certstor_find_hash_subject(const std::vector<CertificateAndKey
       Botan::Certificate_Store_In_Memory store;
 
       for(const auto& a : certsandkeys) {
-         store.add_certificate(a.certificate);
+         store.add_certificate(a.certificate());
       }
 
       for(const auto& certandkey : certsandkeys) {
-         const auto cert = certandkey.certificate;
+         const auto& cert = certandkey.certificate();
          const auto hash = cert.raw_subject_dn_sha256();
 
          const auto found = store.find_cert_by_raw_subject_dn_sha256(hash);
@@ -360,7 +377,7 @@ class Certstor_Tests final : public Test {
                return {result};
             }
 
-            certsandkeys.push_back({certificate, private_key});
+            certsandkeys.push_back(CertificateAndKey(certificate, private_key));
          }
 
          std::vector<Test::Result> results;

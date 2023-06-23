@@ -82,7 +82,7 @@ class Curve25519_Roundtrip_Test final : public Test {
             Botan::DataSource_Memory a_priv_ds(a_priv_pem);
             Botan::DataSource_Memory b_priv_ds(b_priv_pem);
 
-            auto a_priv = Botan::PKCS8::load_key(a_priv_ds, [a_pass]() { return a_pass; });
+            auto a_priv = Botan::PKCS8::load_key(a_priv_ds, [a_pass]() { return std::string(a_pass); });
             auto b_priv = Botan::PKCS8::load_key(b_priv_ds, b_pass);
    #else
             const std::string a_priv_pem = Botan::PKCS8::PEM_encode(a_priv_gen);

@@ -9,6 +9,7 @@
 
 #if defined(BOTAN_HAS_MAC)
    #include <botan/mac.h>
+   #include <botan/internal/fmt.h>
 #endif
 
 namespace Botan_Tests {
@@ -44,7 +45,7 @@ class Message_Auth_Tests final : public Text_Based_Test {
             auto mac = Botan::MessageAuthenticationCode::create(algo, provider_ask);
 
             if(!mac) {
-               result.test_failure("MAC " + algo + " supported by " + provider_ask + " but not found");
+               result.test_failure(Botan::fmt("MAC {} supported by {} but not found", algo, provider_ask));
                continue;
             }
 

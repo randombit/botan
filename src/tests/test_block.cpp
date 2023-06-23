@@ -7,10 +7,13 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
-
    #include <botan/block_cipher.h>
+   #include <botan/internal/fmt.h>
+#endif
 
 namespace Botan_Tests {
+
+#if defined(BOTAN_HAS_BLOCK_CIPHER)
 
 class Block_Cipher_Tests final : public Text_Based_Test {
    public:
@@ -44,7 +47,7 @@ class Block_Cipher_Tests final : public Text_Based_Test {
             auto cipher = Botan::BlockCipher::create(algo, provider_ask);
 
             if(!cipher) {
-               result.test_failure("Cipher " + algo + " supported by " + provider_ask + " but not found");
+               result.test_failure(Botan::fmt("Cipher {} supported by {} but not found", algo, provider_ask));
                continue;
             }
 
@@ -179,6 +182,6 @@ class Block_Cipher_Tests final : public Text_Based_Test {
 
 BOTAN_REGISTER_SERIALIZED_SMOKE_TEST("block", "block_ciphers", Block_Cipher_Tests);
 
-}  // namespace Botan_Tests
-
 #endif
+
+}  // namespace Botan_Tests
