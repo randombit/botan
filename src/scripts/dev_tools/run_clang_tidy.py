@@ -35,15 +35,6 @@ enabled_checks = [
     'readability-*',
 ]
 
-# these checks are ignored for cli/tests
-disabled_checks_non_lib = [
-    'cert-err58-cpp',
-    'cppcoreguidelines-macro-usage',
-    'misc-non-private-member-variables-in-classes',
-    'performance-inefficient-string-concatenation',
-    'performance-no-automatic-move',
-]
-
 # these are ones that we might want to be clean for in the future,
 # but currently are not
 disabled_needs_work = [
@@ -116,7 +107,6 @@ disabled_not_interested = [
 ]
 
 disabled_checks = disabled_needs_work + disabled_not_interested
-disabled_checks_non_lib = disabled_checks + disabled_checks_non_lib
 
 def create_check_option(enabled, disabled):
     return ','.join(enabled) + ',' + ','.join(['-' + d for d in disabled])
@@ -227,14 +217,12 @@ def main(args = None):
     compile_commands = [x for x in compile_commands if not remove_bad(x)]
 
     if options.fast_checks_only:
-        check_config_lib = ','.join(quick_checks)
-        check_config_rest = check_config_lib
+        check_config = ','.join(quick_checks)
     else:
-        check_config_lib = create_check_option(enabled_checks, disabled_checks)
-        check_config_rest = create_check_option(enabled_checks, disabled_checks_non_lib)
+        check_config = create_check_option(enabled_checks, disabled_checks)
 
     if options.list_checks:
-        print(run_command(['clang-tidy', '-list-checks', '-checks', check_config_lib]), end='')
+        print(run_command(['clang-tidy', '-list-checks', '-checks', check_config]), end='')
         return 0
 
     pool = ThreadPool(jobs)
@@ -249,13 +237,11 @@ def main(args = None):
         if len(files_to_check) > 0 and os.path.basename(file) not in files_to_check:
             continue
 
-        config = check_config_lib if file.startswith('src/lib') else check_config_rest
-
         files_checked += 1
         results.append(pool.apply_async(
             run_clang_tidy,
             (compile_commands_file,
-             config,
+             check_config,
              file,
              options)))
 
