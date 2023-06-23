@@ -30,7 +30,7 @@ jobs:
           cache-key: linux-x86_64-clang-tidy
 
       - name: Configure Build
-        run: python3 ./configure.py --cc=clang
+        run: python3 ./configure.py --cc=clang --build-targets=shared,cli,tests,examples,bogo_shim --build-fuzzers=test --with-boost --with-sqlite
 
       - name: Run Clang Tidy
         run: python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose
