@@ -28,8 +28,9 @@ int main() {
    Botan::PK_Key_Agreement ka_b(key_b, rng, kdf);
    const auto sB = ka_b.derive_key(32, key_apub).bits_of();
 
-   if(sA != sB)
+   if(sA != sB) {
       return 1;
+   }
 
    std::cout << "agreed key: " << std::endl << Botan::hex_encode(sA);
    return 0;
