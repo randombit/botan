@@ -5,7 +5,6 @@
 */
 
 #include "tests.h"
-#include <sstream>
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    #include <botan/certstor.h>
@@ -200,10 +199,9 @@ Test::Result test_certstor_sqlite3_all_subjects_test(const std::vector<Certifica
       result.test_eq("Check subject list length", subjects.size(), 6);
 
       for(const auto& sub : subjects) {
-         std::stringstream ss;
+         const std::string ss = sub.to_string();
 
-         ss << sub;
-         result.test_eq("Check subject " + ss.str(),
+         result.test_eq("Check subject " + ss,
                         certsandkeys[0].subject_dn() == sub || certsandkeys[1].subject_dn() == sub ||
                            certsandkeys[2].subject_dn() == sub || certsandkeys[3].subject_dn() == sub ||
                            certsandkeys[4].subject_dn() == sub || certsandkeys[5].subject_dn() == sub,
@@ -234,11 +232,9 @@ Test::Result test_certstor_sqlite3_find_all_certs_test(const std::vector<Certifi
             result.test_failure("SQLITE all lookup error");
             return result;
          } else {
-            std::stringstream a_ss;
-            a_ss << a.subject_dn();
-            std::stringstream res_ss;
-            res_ss << res_vec.at(0).subject_dn();
-            result.test_eq("Check subject " + a_ss.str(), a_ss.str(), res_ss.str());
+            const std::string a_str = a.subject_dn().to_string();
+            const std::string res_str = res_vec.at(0).subject_dn().to_string();
+            result.test_eq("Check subject " + a_str, a_str, res_str);
          }
       }
 
@@ -255,14 +251,13 @@ Test::Result test_certstor_sqlite3_find_all_certs_test(const std::vector<Certifi
          result.test_failure("SQLITE all lookup error (duplicate) " + std::to_string(res_vec.size()));
          return result;
       } else {
-         std::stringstream cert_ss;
-         cert_ss << same_dn_1.subject_dn();
-         std::stringstream res_ss;
-         res_ss << res_vec.at(0).subject_dn();
-         result.test_eq("Check subject " + cert_ss.str(), cert_ss.str(), res_ss.str());
-         res_ss.str("");
-         res_ss << res_vec.at(1).subject_dn();
-         result.test_eq("Check subject " + cert_ss.str(), cert_ss.str(), res_ss.str());
+         const std::string cert_dn = same_dn_1.subject_dn().to_string();
+         const std::string res0_dn = res_vec.at(0).subject_dn().to_string();
+
+         result.test_eq("Check subject " + cert_dn, cert_dn, res0_dn);
+
+         const std::string res1_dn = res_vec.at(1).subject_dn().to_string();
+         result.test_eq("Check subject " + cert_dn, cert_dn, res1_dn);
       }
    } catch(const std::exception& e) {
       result.test_failure(e.what());
