@@ -10,8 +10,9 @@
 #include <botan/x509cert.h>
 
 void fuzz(const uint8_t in[], size_t len) {
-   if(len > max_fuzzer_input_size)
+   if(len > max_fuzzer_input_size) {
       return;
+   }
 
    try {
       Botan::DataSource_Memory input(in, len);

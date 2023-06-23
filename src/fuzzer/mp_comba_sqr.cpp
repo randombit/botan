@@ -9,8 +9,9 @@
 void fuzz(const uint8_t in[], size_t in_len) {
    const size_t words = (in_len + sizeof(word) - 1) / sizeof(word);
 
-   if(in_len == 0 || words > 24)
+   if(in_len == 0 || words > 24) {
       return;
+   }
 
    word x[24] = {0};
 
@@ -66,16 +67,21 @@ void fuzz(const uint8_t in[], size_t in_len) {
       compare_word_vec(z24m, 2 * 24, z24, 2 * 24, "sqr24 vs mul24");
    }
 
-   if(words <= 4)
+   if(words <= 4) {
       compare_word_vec(z4, 2 * 4, z6, 2 * 6, "sqr4 vs sqr6");
-   if(words <= 6)
+   }
+   if(words <= 6) {
       compare_word_vec(z6, 2 * 6, z8, 2 * 8, "sqr6 vs sqr8");
-   if(words <= 8)
+   }
+   if(words <= 8) {
       compare_word_vec(z8, 2 * 8, z9, 2 * 9, "sqr8 vs sqr9");
-   if(words <= 9)
+   }
+   if(words <= 9) {
       compare_word_vec(z9, 2 * 9, z16, 2 * 16, "sqr9 vs sqr16");
-   if(words <= 16)
+   }
+   if(words <= 16) {
       compare_word_vec(z16, 2 * 16, z24, 2 * 24, "sqr16 vs sqr24");
+   }
 
    compare_word_vec(z24, 2 * 24, z_ref, 2 * 24, "sqr24 vs basecase sqr");
 }

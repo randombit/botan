@@ -10,10 +10,12 @@
 namespace {
 
 Botan::BigInt ref_inverse_mod(const Botan::BigInt& n, const Botan::BigInt& mod) {
-   if(n == 0 || mod < 2)
+   if(n == 0 || mod < 2) {
       return 0;
-   if(n.is_even() && mod.is_even())
+   }
+   if(n.is_even() && mod.is_even()) {
       return 0;
+   }
    Botan::BigInt u = mod, v = n;
    Botan::BigInt A = 1, B = 0, C = 0, D = 1;
 
@@ -51,13 +53,16 @@ Botan::BigInt ref_inverse_mod(const Botan::BigInt& n, const Botan::BigInt& mod) 
       }
    }
 
-   if(v != 1)
+   if(v != 1) {
       return 0;  // no modular inverse
+   }
 
-   while(D.is_negative())
+   while(D.is_negative()) {
       D += mod;
-   while(D >= mod)
+   }
+   while(D >= mod) {
       D -= mod;
+   }
 
    return D;
 }
@@ -67,14 +72,16 @@ Botan::BigInt ref_inverse_mod(const Botan::BigInt& n, const Botan::BigInt& mod) 
 void fuzz(const uint8_t in[], size_t len) {
    static const size_t max_bits = 4096;
 
-   if(len > 2 * max_bits / 8)
+   if(len > 2 * max_bits / 8) {
       return;
+   }
 
    const Botan::BigInt x = Botan::BigInt::decode(in, len / 2);
    Botan::BigInt mod = Botan::BigInt::decode(in + len / 2, len - len / 2);
 
-   if(mod < 2)
+   if(mod < 2) {
       return;
+   }
 
    const Botan::BigInt lib = Botan::inverse_mod(x, mod);
    const Botan::BigInt ref = ref_inverse_mod(x, mod);

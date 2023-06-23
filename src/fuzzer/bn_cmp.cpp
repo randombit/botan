@@ -11,8 +11,9 @@
 void fuzz(const uint8_t in[], size_t len) {
    const size_t max_bits = 512;
 
-   if(len < 3 || len > 1 + 2 * (max_bits / 8))
+   if(len < 3 || len > 1 + 2 * (max_bits / 8)) {
       return;
+   }
 
    const uint8_t signs = in[0];
    const size_t x_len = (len - 1) / 2;
@@ -20,10 +21,12 @@ void fuzz(const uint8_t in[], size_t len) {
    Botan::BigInt x = Botan::BigInt::decode(in + 1, x_len);
    Botan::BigInt y = Botan::BigInt::decode(in + 1 + x_len, len - x_len - 1);
 
-   if(signs & 1)
+   if(signs & 1) {
       x.flip_sign();
-   if(signs & 2)
+   }
+   if(signs & 2) {
       y.flip_sign();
+   }
 
    const Botan::BigInt d1 = x - y;
    const Botan::BigInt d2 = y - x;

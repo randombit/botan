@@ -8,8 +8,9 @@
 #include <botan/internal/divide.h>
 
 void fuzz(const uint8_t in[], size_t len) {
-   if(len > 2 * 4096 / 8)
+   if(len > 2 * 4096 / 8) {
       return;
+   }
 
    // Save on allocations by making these static
    static Botan::BigInt x, y, q, r, ct_q, ct_r, z;
@@ -17,8 +18,9 @@ void fuzz(const uint8_t in[], size_t len) {
    x = Botan::BigInt::decode(in, len / 2);
    y = Botan::BigInt::decode(in + len / 2, len - (len / 2));
 
-   if(y == 0)
+   if(y == 0) {
       return;
+   }
 
    Botan::vartime_divide(x, y, q, r);
 
@@ -36,8 +38,9 @@ void fuzz(const uint8_t in[], size_t len) {
    // Now divide by just low word of y
 
    y = y.word_at(0);
-   if(y == 0)
+   if(y == 0) {
       return;
+   }
 
    Botan::vartime_divide(x, y, q, r);
 

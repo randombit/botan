@@ -25,8 +25,9 @@ Botan::BigInt ref_gcd(Botan::BigInt a, Botan::BigInt b) {
 void fuzz(const uint8_t in[], size_t len) {
    static const size_t max_bits = 4096;
 
-   if(2 * len * 8 > max_bits)
+   if(2 * len * 8 > max_bits) {
       return;
+   }
 
    const Botan::BigInt x = Botan::BigInt::decode(in, len / 2);
    const Botan::BigInt y = Botan::BigInt::decode(in + len / 2, len - (len / 2));

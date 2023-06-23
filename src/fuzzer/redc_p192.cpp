@@ -10,8 +10,9 @@
 #include <botan/internal/curve_nistp.h>
 
 void fuzz(const uint8_t in[], size_t len) {
-   if(len > 2 * 192 / 8)
+   if(len > 2 * 192 / 8) {
       return;
+   }
 
    static const Botan::BigInt& prime = Botan::prime_p192();
    static const Botan::BigInt prime_2 = prime * prime;

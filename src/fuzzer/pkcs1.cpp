@@ -12,16 +12,19 @@
 namespace {
 
 std::vector<uint8_t> simple_pkcs1_unpad(const uint8_t in[], size_t len) {
-   if(len < 10)
+   if(len < 10) {
       throw Botan::Decoding_Error("bad len");
+   }
 
-   if(in[0] != 0 || in[1] != 2)
+   if(in[0] != 0 || in[1] != 2) {
       throw Botan::Decoding_Error("bad header field");
+   }
 
    for(size_t i = 2; i < len; ++i) {
       if(in[i] == 0) {
-         if(i < 10)  // at least 8 padding bytes required
+         if(i < 10) {  // at least 8 padding bytes required
             throw Botan::Decoding_Error("insufficient padding bytes");
+         }
          return std::vector<uint8_t>(in + i + 1, in + len);
       }
    }
@@ -42,12 +45,13 @@ void fuzz(const uint8_t in[], size_t len) {
       uint8_t valid_mask = 0;
       Botan::secure_vector<uint8_t> decoded = (static_cast<Botan::EME*>(&pkcs1))->unpad(valid_mask, in, len);
 
-      if(valid_mask == 0)
+      if(valid_mask == 0) {
          lib_rejected = true;
-      else if(valid_mask == 0xFF)
+      } else if(valid_mask == 0xFF) {
          lib_rejected = false;
-      else
+      } else {
          FUZZER_WRITE_AND_CRASH("Invalid valid_mask from unpad");
+      }
    } catch(Botan::Decoding_Error&) {
       lib_rejected = true;
    }
