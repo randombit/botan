@@ -141,11 +141,11 @@ class PSK_DB_Tests final : public Test {
    #if defined(BOTAN_HAS_SQLITE3)
 
       void test_entry(Test::Result& result,
-                      std::shared_ptr<Botan::SQL_Database> db,
+                      Botan::SQL_Database& db,
                       const std::string& table,
                       const std::string& expected_name,
                       const std::string& expected_value) {
-         auto stmt = db->new_statement("select psk_value from " + table + " where psk_name='" + expected_name + "'");
+         auto stmt = db.new_statement("select psk_value from " + table + " where psk_name='" + expected_name + "'");
 
          bool got_it = stmt->step();
          result.confirm("Had expected name", got_it);
@@ -167,24 +167,24 @@ class PSK_DB_Tests final : public Test {
          Botan::Encrypted_PSK_Database_SQL db(zeros, sqldb, table_name);
          db.set_str("name", "value");
 
-         test_entry(result, sqldb, table_name, "CUCJjJgWSa079ubutJQwlw==", "clYJSAf9CThuL96CP+rAfA==");
+         test_entry(result, *sqldb, table_name, "CUCJjJgWSa079ubutJQwlw==", "clYJSAf9CThuL96CP+rAfA==");
          result.test_eq("DB read", db.get_str("name"), "value");
 
          db.set_str("name", "value1");
-         test_entry(result, sqldb, table_name, "CUCJjJgWSa079ubutJQwlw==", "7R8am3x/gLawOzMp5WwIJg==");
+         test_entry(result, *sqldb, table_name, "CUCJjJgWSa079ubutJQwlw==", "7R8am3x/gLawOzMp5WwIJg==");
          result.test_eq("DB read", db.get_str("name"), "value1");
 
          db.set_str("name", "value");
-         test_entry(result, sqldb, table_name, "CUCJjJgWSa079ubutJQwlw==", "clYJSAf9CThuL96CP+rAfA==");
+         test_entry(result, *sqldb, table_name, "CUCJjJgWSa079ubutJQwlw==", "clYJSAf9CThuL96CP+rAfA==");
          result.test_eq("DB read", db.get_str("name"), "value");
 
          db.set_str("name2", "value");
-         test_entry(result, sqldb, table_name, "7CvsM7HDCZsV6VsFwWylNg==", "BqVQo4rdwOmf+ItCzEmjAg==");
+         test_entry(result, *sqldb, table_name, "7CvsM7HDCZsV6VsFwWylNg==", "BqVQo4rdwOmf+ItCzEmjAg==");
          result.test_eq("DB read", db.get_str("name2"), "value");
 
          db.set_vec("name2", zeros);
          test_entry(result,
-                    sqldb,
+                    *sqldb,
                     table_name,
                     "7CvsM7HDCZsV6VsFwWylNg==",
                     "x+I1bUF/fJYPOTvKwOihEPWGR1XGzVuyRdsw4n5gpBRzNR7LjH7vjw==");
@@ -193,7 +193,7 @@ class PSK_DB_Tests final : public Test {
          // Test longer names
          db.set_str("leroy jeeeeeeeenkins", "chicken");
          test_entry(
-            result, sqldb, table_name, "KyYo272vlSjClM2F0OZBMlRYjr33ZXv2jN1oY8OfCEs=", "tCl1qShSTsXi9tA5Kpo9vg==");
+            result, *sqldb, table_name, "KyYo272vlSjClM2F0OZBMlRYjr33ZXv2jN1oY8OfCEs=", "tCl1qShSTsXi9tA5Kpo9vg==");
          result.test_eq("DB read", db.get_str("leroy jeeeeeeeenkins"), "chicken");
 
          /*
