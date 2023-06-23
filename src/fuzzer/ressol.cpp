@@ -15,8 +15,9 @@ void fuzz(const uint8_t in[], size_t len) {
    static const Botan::BigInt p = random_prime(fuzzer_rng(), p_bits);
    static const Botan::Modular_Reducer mod_p(p);
 
-   if(len > p_bits / 8)
+   if(len > p_bits / 8) {
       return;
+   }
 
    try {
       const Botan::BigInt a = Botan::BigInt::decode(in, len);
@@ -34,6 +35,4 @@ void fuzz(const uint8_t in[], size_t len) {
          }
       }
    } catch(Botan::Exception& e) {}
-
-   return;
 }

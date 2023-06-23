@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_HASH)
    #include <botan/hash.h>
+   #include <botan/internal/fmt.h>
 #endif
 
 namespace Botan_Tests {
@@ -78,7 +79,7 @@ class Hash_Function_Tests final : public Text_Based_Test {
             auto hash = Botan::HashFunction::create(algo, provider_ask);
 
             if(!hash) {
-               result.test_failure("Hash " + algo + " supported by " + provider_ask + " but not found");
+               result.test_failure(Botan::fmt("Hash {} supported by {} but not found", algo, provider_ask));
                continue;
             }
 
@@ -183,7 +184,7 @@ class Hash_NIST_MonteCarlo_Tests final : public Text_Based_Test {
             auto hash = Botan::HashFunction::create(algo, provider_ask);
 
             if(!hash) {
-               result.test_failure("Hash " + algo + " supported by " + provider_ask + " but not found");
+               result.test_failure(Botan::fmt("Hash {} supported by {} but not found", algo, provider_ask));
                continue;
             }
 
@@ -262,7 +263,7 @@ class Hash_LongRepeat_Tests final : public Text_Based_Test {
             auto hash = Botan::HashFunction::create(algo, provider_ask);
 
             if(!hash) {
-               result.test_failure("Hash " + algo + " supported by " + provider_ask + " but not found");
+               result.test_failure(Botan::fmt("Hash {} supported by {} but not found", algo, provider_ask));
                continue;
             }
 

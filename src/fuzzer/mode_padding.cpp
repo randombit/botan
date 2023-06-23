@@ -12,32 +12,37 @@
 namespace {
 
 size_t ref_pkcs7_unpad(const uint8_t in[], size_t len) {
-   if(len <= 2)
+   if(len <= 2) {
       return len;
+   }
 
    const size_t padding_length = in[len - 1];
 
-   if(padding_length == 0 || padding_length > len)
+   if(padding_length == 0 || padding_length > len) {
       return len;
+   }
 
    const size_t padding_start = len - padding_length;
 
    for(size_t i = padding_start; i != len; ++i) {
-      if(in[i] != padding_length)
+      if(in[i] != padding_length) {
          return len;
+      }
    }
 
    return len - padding_length;
 }
 
 size_t ref_x923_unpad(const uint8_t in[], size_t len) {
-   if(len <= 2)
+   if(len <= 2) {
       return len;
+   }
 
    const size_t padding_length = in[len - 1];
 
-   if(padding_length == 0 || padding_length > len)
+   if(padding_length == 0 || padding_length > len) {
       return len;
+   }
    const size_t padding_start = len - padding_length;
 
    for(size_t i = padding_start; i != len - 1; ++i) {
@@ -50,29 +55,33 @@ size_t ref_x923_unpad(const uint8_t in[], size_t len) {
 }
 
 size_t ref_oneandzero_unpad(const uint8_t in[], size_t len) {
-   if(len <= 2)
+   if(len <= 2) {
       return len;
+   }
 
    size_t idx = len - 1;
 
    for(;;) {
       if(in[idx] == 0) {
-         if(idx == 0)
+         if(idx == 0) {
             return len;
+         }
          idx -= 1;
          continue;
       } else if(in[idx] == 0x80) {
          return idx;
-      } else
+      } else {
          return len;
+      }
    }
 
    return len;
 }
 
 size_t ref_esp_unpad(const uint8_t in[], size_t len) {
-   if(len <= 2)
+   if(len <= 2) {
       return len;
+   }
 
    const size_t padding_bytes = in[len - 1];
 
@@ -91,21 +100,24 @@ size_t ref_esp_unpad(const uint8_t in[], size_t len) {
 }
 
 uint16_t ref_tls_cbc_unpad(const uint8_t in[], size_t len) {
-   if(len == 0)
+   if(len == 0) {
       return 0;
+   }
 
    const size_t padding_length = in[(len - 1)];
 
-   if(padding_length >= len)
+   if(padding_length >= len) {
       return 0;
+   }
 
    /*
    * TLS v1.0 and up require all the padding bytes be the same value
    * and allows up to 255 bytes.
    */
    for(size_t i = 0; i != 1 + padding_length; ++i) {
-      if(in[(len - i - 1)] != padding_length)
+      if(in[(len - i - 1)] != padding_length) {
          return 0;
+      }
    }
    return padding_length + 1;
 }

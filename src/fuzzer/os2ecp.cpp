@@ -19,8 +19,9 @@ void check_os2ecp(const Botan::EC_Group& group, const uint8_t in[], size_t len) 
 }  // namespace
 
 void fuzz(const uint8_t in[], size_t len) {
-   if(len >= 256)
+   if(len >= 256) {
       return;
+   }
 
    static Botan::EC_Group p192("secp192r1");
    static Botan::EC_Group p224("secp224r1");

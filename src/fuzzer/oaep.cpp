@@ -43,8 +43,9 @@ Botan::secure_vector<uint8_t> ref_oaep_unpad(uint8_t& valid_mask,
 
 inline bool all_zeros(const Botan::secure_vector<uint8_t>& v) {
    for(size_t i = 0; i != v.size(); ++i) {
-      if(v[i] != 0)
+      if(v[i] != 0) {
          return false;
+      }
    }
    return true;
 }

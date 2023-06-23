@@ -55,7 +55,7 @@ class Asio_SocketUDP final : public OS::SocketUDP {
 
          boost::system::error_code ec = boost::asio::error::would_block;
 
-         auto connect_cb = [&ec](const boost::system::error_code& e, boost::asio::ip::udp::resolver::iterator) {
+         auto connect_cb = [&ec](const boost::system::error_code& e, const boost::asio::ip::udp::resolver::iterator&) {
             ec = e;
          };
 

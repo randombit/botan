@@ -55,7 +55,7 @@ class Asio_Socket final : public OS::Socket {
 
          boost::system::error_code ec = boost::asio::error::would_block;
 
-         auto connect_cb = [&ec](const boost::system::error_code& e, boost::asio::ip::tcp::resolver::iterator) {
+         auto connect_cb = [&ec](const boost::system::error_code& e, const boost::asio::ip::tcp::resolver::iterator&) {
             ec = e;
          };
 
@@ -65,10 +65,12 @@ class Asio_Socket final : public OS::Socket {
             m_io.run_one();
          }
 
-         if(ec)
+         if(ec) {
             throw boost::system::system_error(ec);
-         if(m_tcp.is_open() == false)
+         }
+         if(m_tcp.is_open() == false) {
             throw System_Error(fmt("Connection to host {} failed", hostname));
+         }
       }
 
       void write(const uint8_t buf[], size_t len) override {
@@ -103,8 +105,9 @@ class Asio_Socket final : public OS::Socket {
          }
 
          if(ec) {
-            if(ec == boost::asio::error::eof)
+            if(ec == boost::asio::error::eof) {
                return 0;
+            }
             throw boost::system::system_error(ec);  // Some other error.
          }
 

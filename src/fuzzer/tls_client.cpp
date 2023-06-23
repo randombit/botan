@@ -26,8 +26,9 @@ class Fuzzer_TLS_Policy : public Botan::TLS::Policy {
          std::vector<uint16_t> ciphersuites;
 
          for(auto&& suite : Botan::TLS::Ciphersuite::all_known_ciphersuites()) {
-            if(suite.valid() == false)
+            if(suite.valid() == false) {
                ciphersuites.push_back(suite.ciphersuite_code());
+            }
          }
 
          return ciphersuites;
@@ -65,8 +66,9 @@ class Fuzzer_TLS_Client_Callbacks : public Botan::TLS::Callbacks {
 };
 
 void fuzz(const uint8_t in[], size_t len) {
-   if(len == 0)
+   if(len == 0) {
       return;
+   }
 
    auto session_manager = std::make_shared<Botan::TLS::Session_Manager_Noop>();
    auto policy = std::make_shared<Fuzzer_TLS_Policy>();

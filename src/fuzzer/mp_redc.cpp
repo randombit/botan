@@ -25,23 +25,25 @@ void fuzz_mp_redc(const uint8_t in[], size_t in_len) {
    std::memcpy(p, in + sizeof(z), sizeof(p));
    std::memcpy(&p_dash, in + sizeof(z) + sizeof(p), sizeof(p_dash));
 
-   for(size_t i = 0; i != 2 * N; ++i)
+   for(size_t i = 0; i != 2 * N; ++i) {
       z_script[i] = z_ref[i] = z[i];
+   }
 
-   if(N == 4)
+   if(N == 4) {
       Botan::bigint_monty_redc_4(z_script, p, p_dash, ws);
-   else if(N == 6)
+   } else if(N == 6) {
       Botan::bigint_monty_redc_6(z_script, p, p_dash, ws);
-   else if(N == 8)
+   } else if(N == 8) {
       Botan::bigint_monty_redc_8(z_script, p, p_dash, ws);
-   else if(N == 16)
+   } else if(N == 16) {
       Botan::bigint_monty_redc_16(z_script, p, p_dash, ws);
-   else if(N == 24)
+   } else if(N == 24) {
       Botan::bigint_monty_redc_24(z_script, p, p_dash, ws);
-   else if(N == 32)
+   } else if(N == 32) {
       Botan::bigint_monty_redc_32(z_script, p, p_dash, ws);
-   else
+   } else {
       std::abort();
+   }
 
    Botan::bigint_monty_redc_generic(z_ref, 2 * N, p, N, p_dash, ws);
 
@@ -61,8 +63,9 @@ void fuzz_mp_redc(const uint8_t in[], size_t in_len) {
 }  // namespace
 
 void fuzz(const uint8_t in[], size_t len) {
-   if(len == 0 || len % sizeof(word) != 0)
+   if(len == 0 || len % sizeof(word) != 0) {
       return;
+   }
 
    const size_t words = len / sizeof(word);
 
@@ -79,5 +82,7 @@ void fuzz(const uint8_t in[], size_t len) {
          return fuzz_mp_redc<24>(in, len);
       case 32 * 3 + 1:
          return fuzz_mp_redc<32>(in, len);
+      default:
+         return;
    }
 }

@@ -19,6 +19,7 @@
    #include <botan/tls_session_manager_hybrid.h>
    #include <botan/tls_session_manager_memory.h>
    #include <botan/tls_session_manager_stateless.h>
+   #include <botan/internal/fmt.h>
 
    #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
       #include <botan/tls_session_manager_sqlite.h>
@@ -80,13 +81,17 @@ class Session_Manager_Policy : public Botan::TLS::Policy {
    public:
       std::chrono::seconds session_ticket_lifetime() const override { return std::chrono::minutes(30); }
 
-      bool reuse_session_tickets() const override { return allow_session_reuse; }
+      bool reuse_session_tickets() const override { return m_allow_session_reuse; }
 
-      size_t maximum_session_tickets_per_client_hello() const override { return session_limit; }
+      size_t maximum_session_tickets_per_client_hello() const override { return m_session_limit; }
 
-   public:
-      size_t session_limit = 1000;  // basically 'no limit'
-      bool allow_session_reuse = true;
+      void set_session_limit(size_t l) { m_session_limit = l; }
+
+      void set_allow_session_reuse(bool b) { m_allow_session_reuse = b; }
+
+   private:
+      size_t m_session_limit = 1000;  // basically 'no limit'
+      bool m_allow_session_reuse = true;
 };
 
 namespace {
@@ -699,8 +704,9 @@ std::vector<Test::Result> test_session_manager_hybrid() {
                stateful_manager_factory(), creds, Test::rng_as_shared(), prefer_tickets);
          };
 
-         results.push_back(Botan_Tests::CHECK(std::string(name + " (" + stateful_manager_name + ")").c_str(),
-                                              std::bind(lambda, make_manager, _1)));
+         auto nm = Botan::fmt("{} ({})", name, stateful_manager_name);
+         auto fn = std::bind(lambda, make_manager, _1);
+         results.push_back(Botan_Tests::CHECK(nm.c_str(), fn));
       }
       return results;
    };
@@ -1023,8 +1029,9 @@ std::vector<Test::Result> tls_session_manager_expiry() {
       results.reserve(stateful_manager_factories.size());
       using namespace std::placeholders;
       for(auto& [sub_name, factory] : stateful_manager_factories) {
-         results.push_back(Botan_Tests::CHECK(std::string(name + " (" + sub_name + ")").c_str(),
-                                              std::bind(lambda, sub_name, factory, _1)));
+         auto nm = Botan::fmt("{} ({})", name, sub_name);
+         auto fn = std::bind(lambda, sub_name, factory, _1);
+         results.push_back(Botan_Tests::CHECK(nm.c_str(), fn));
       }
       return results;
    };
@@ -1093,7 +1100,7 @@ std::vector<Test::Result> tls_session_manager_expiry() {
                           handle_4);
    #endif
 
-               plcy.allow_session_reuse = false;
+               plcy.set_allow_session_reuse(false);
 
                auto sessions_and_handles1 = mgr->find(server_info, cbs, plcy);
                result.require("all sessions are found", sessions_and_handles1.size() > 1);
@@ -1107,32 +1114,35 @@ std::vector<Test::Result> tls_session_manager_expiry() {
                               sessions_and_handles2.front().session.version().is_pre_tls_13());
             }),
 
-         CHECK_all(
-            "number of found tickets is capped",
-            [&](const std::string& type, auto factory, auto& result) {
-               if(type == "Stateless") {
-                  return;  // this manager can neither store nor find anything
-               }
+         CHECK_all("number of found tickets is capped",
+                   [&](const std::string& type, auto factory, auto& result) {
+                      if(type == "Stateless") {
+                         return;  // this manager can neither store nor find anything
+                      }
 
-               auto mgr = factory();
+                      auto mgr = factory();
 
-               std::array<Botan::TLS::Session_Ticket, 5> tickets;
-               for(auto& ticket : tickets) {
-                  ticket = random_ticket();
-                  mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs), ticket);
-               }
+                      std::array<Botan::TLS::Session_Ticket, 5> tickets;
+                      for(auto& ticket : tickets) {
+                         ticket = random_ticket();
+                         mgr->store(default_session(Botan::TLS::Connection_Side::Client, cbs), ticket);
+                      }
 
-               plcy.allow_session_reuse = true;
+                      plcy.set_allow_session_reuse(true);
 
-               plcy.session_limit = 1;
-               result.test_is_eq("find one", mgr->find(server_info, cbs, plcy).size(), size_t(plcy.session_limit));
+                      plcy.set_session_limit(1);
+                      result.test_is_eq("find one",
+                                        mgr->find(server_info, cbs, plcy).size(),
+                                        size_t(plcy.maximum_session_tickets_per_client_hello()));
 
-               plcy.session_limit = 3;
-               result.test_is_eq("find three", mgr->find(server_info, cbs, plcy).size(), size_t(plcy.session_limit));
+                      plcy.set_session_limit(3);
+                      result.test_is_eq("find three",
+                                        mgr->find(server_info, cbs, plcy).size(),
+                                        size_t(plcy.maximum_session_tickets_per_client_hello()));
 
-               plcy.session_limit = 10;
-               result.test_is_eq("find all five", mgr->find(server_info, cbs, plcy).size(), size_t(5));
-            }),
+                      plcy.set_session_limit(10);
+                      result.test_is_eq("find all five", mgr->find(server_info, cbs, plcy).size(), size_t(5));
+                   }),
 
    #if defined(BOTAN_HAS_TLS_13)
          CHECK_all("expired tickets are not selected for PSK resumption", [&](auto, auto factory, auto& result) {

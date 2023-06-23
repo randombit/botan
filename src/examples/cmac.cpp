@@ -7,8 +7,9 @@ int main() {
    const std::vector<uint8_t> key = Botan::hex_decode("2B7E151628AED2A6ABF7158809CF4F3C");
    std::vector<uint8_t> data = Botan::hex_decode("6BC1BEE22E409F96E93D7E117393172A");
    std::unique_ptr<Botan::MessageAuthenticationCode> mac(Botan::MessageAuthenticationCode::create("CMAC(AES-128)"));
-   if(!mac)
+   if(!mac) {
       return 1;
+   }
    mac->set_key(key);
    mac->update(data);
    Botan::secure_vector<uint8_t> tag = mac->final();

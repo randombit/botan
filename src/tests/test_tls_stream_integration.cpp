@@ -16,6 +16,7 @@
    #if BOOST_VERSION >= 106600
 
       #include <functional>
+      #include <memory>
       #include <optional>
       #include <thread>
 
@@ -38,16 +39,16 @@ using ssl_stream = Botan::TLS::Stream<net::ip::tcp::socket>;
 using namespace std::placeholders;
 using Result = Botan_Tests::Test::Result;
 
-static const auto k_timeout = std::chrono::seconds(30);
-static const auto k_endpoints = std::vector<tcp::endpoint>{tcp::endpoint{net::ip::make_address("127.0.0.1"), 8082}};
+const auto k_timeout = std::chrono::seconds(30);
+const auto k_endpoints = std::vector<tcp::endpoint>{tcp::endpoint{net::ip::make_address("127.0.0.1"), 8082}};
 
 enum { max_msg_length = 512 };
 
-static std::string server_cert() {
+std::string server_cert() {
    return Botan_Tests::Test::data_dir() + "/x509/certstor/cert1.crt";
 }
 
-static std::string server_key() {
+std::string server_key() {
    return Botan_Tests::Test::data_dir() + "/x509/certstor/key01.pem";
 }
 
@@ -57,14 +58,14 @@ class Timeout_Exception : public std::runtime_error {
 
 class Peer {
    public:
-      Peer(std::shared_ptr<const Botan::TLS::Policy> policy, net::io_context& ioc) :
+      Peer(const std::shared_ptr<const Botan::TLS::Policy>& policy, net::io_context& ioc) :
             m_rng(std::make_shared<Botan::AutoSeeded_RNG>()),
             m_credentials_manager(std::make_shared<Basic_Credentials_Manager>(true, "")),
             m_session_mgr(std::make_shared<Botan::TLS::Session_Manager_Noop>()),
             m_ctx(std::make_shared<Botan::TLS::Context>(m_credentials_manager, m_rng, m_session_mgr, policy)),
             m_timeout_timer(ioc) {}
 
-      Peer(std::shared_ptr<const Botan::TLS::Policy> policy,
+      Peer(const std::shared_ptr<const Botan::TLS::Policy>& policy,
            net::io_context& ioc,
            const std::string& server_cert,
            const std::string& server_key) :
@@ -98,7 +99,7 @@ class Peer {
 
       void on_timeout(std::function<void(const std::string&)> cb) { m_on_timeout = std::move(cb); }
 
-      void reset_timeout(std::string message) {
+      void reset_timeout(const std::string& message) {
          m_timeout_timer.expires_after(k_timeout);
          m_timeout_timer.async_wait([=, this](const error_code& ec) {
             if(ec != net::error::operation_aborted)  // timer cancelled
@@ -163,8 +164,8 @@ class Result_Wrapper {
 class Server : public Peer,
                public std::enable_shared_from_this<Server> {
    public:
-      Server(std::shared_ptr<const Botan::TLS::Policy> policy, net::io_context& ioc, std::string test_name) :
-            Peer(policy, ioc, server_cert(), server_key()),
+      Server(std::shared_ptr<const Botan::TLS::Policy> policy, net::io_context& ioc, const std::string& test_name) :
+            Peer(std::move(policy), ioc, server_cert(), server_key()),
             m_acceptor(ioc),
             m_result("Server (" + test_name + ")"),
             m_short_read_expected(false),
@@ -183,7 +184,7 @@ class Server : public Peer,
 
       void listen() {
          error_code ec;
-         const auto endpoint = k_endpoints.back();
+         const auto& endpoint = k_endpoints.back();
 
          m_acceptor.open(endpoint.protocol(), ec);
          m_acceptor.set_option(net::socket_base::reuse_address(true), ec);
@@ -213,9 +214,9 @@ class Server : public Peer,
          if(m_move_before_accept) {
             // regression test for #2635
             ssl_stream s(std::move(socket), m_ctx);
-            m_stream = std::unique_ptr<ssl_stream>(new ssl_stream(std::move(s)));
+            m_stream = std::make_unique<ssl_stream>(std::move(s));
          } else {
-            m_stream = std::unique_ptr<ssl_stream>(new ssl_stream(std::move(socket), m_ctx));
+            m_stream = std::make_unique<ssl_stream>(std::move(socket), m_ctx);
          }
 
          reset_timeout("handshake");
@@ -303,9 +304,9 @@ class Client : public Peer {
                              const Botan::TLS::Policy&) {}
 
    public:
-      Client(std::shared_ptr<const Botan::TLS::Policy> policy, net::io_context& ioc) : Peer(policy, ioc) {
+      Client(std::shared_ptr<const Botan::TLS::Policy> policy, net::io_context& ioc) : Peer(std::move(policy), ioc) {
          m_ctx->set_verify_callback(accept_all);
-         m_stream = std::unique_ptr<ssl_stream>(new ssl_stream(ioc, m_ctx));
+         m_stream = std::make_unique<ssl_stream>(ioc, m_ctx);
       }
 
       ssl_stream& stream() { return *m_stream; }
@@ -325,8 +326,8 @@ class Client : public Peer {
 class TestBase {
    public:
       TestBase(net::io_context& ioc,
-               std::shared_ptr<const Botan::TLS::Policy> client_policy,
-               std::shared_ptr<const Botan::TLS::Policy> server_policy,
+               const std::shared_ptr<const Botan::TLS::Policy>& client_policy,
+               const std::shared_ptr<const Botan::TLS::Policy>& server_policy,
                const std::string& name,
                const std::string& config_name) :
             m_name(name + " (" + config_name + ")"),
@@ -402,11 +403,11 @@ class Test_Conversation : public TestBase,
                           public std::enable_shared_from_this<Test_Conversation> {
    public:
       Test_Conversation(net::io_context& ioc,
-                        std::string config_name,
+                        const std::string& config_name,
                         std::shared_ptr<const Botan::TLS::Policy> client_policy,
                         std::shared_ptr<const Botan::TLS::Policy> server_policy,
-                        std::string test_name = "Test Conversation") :
-            TestBase(ioc, client_policy, server_policy, test_name, config_name) {}
+                        const std::string& test_name = "Test Conversation") :
+            TestBase(ioc, std::move(client_policy), std::move(server_policy), test_name, config_name) {}
 
       void run(const error_code& ec) {
          static auto test_case = &Test_Conversation::run;
@@ -454,10 +455,11 @@ class Test_Conversation : public TestBase,
 class Test_Conversation_Sync : public Synchronous_Test {
    public:
       Test_Conversation_Sync(net::io_context& ioc,
-                             std::string config_name,
+                             const std::string& config_name,
                              std::shared_ptr<const Botan::TLS::Policy> client_policy,
                              std::shared_ptr<const Botan::TLS::Policy> server_policy) :
-            Synchronous_Test(ioc, client_policy, server_policy, "Test Conversation Sync", config_name) {}
+            Synchronous_Test(
+               ioc, std::move(client_policy), std::move(server_policy), "Test Conversation Sync", config_name) {}
 
       void run_synchronous_client() override {
          const std::string message("Time is an illusion. Lunchtime doubly so.");
@@ -499,10 +501,10 @@ class Test_Eager_Close : public TestBase,
                          public std::enable_shared_from_this<Test_Eager_Close> {
    public:
       Test_Eager_Close(net::io_context& ioc,
-                       std::string config_name,
+                       const std::string& config_name,
                        std::shared_ptr<const Botan::TLS::Policy> client_policy,
                        std::shared_ptr<const Botan::TLS::Policy> server_policy) :
-            TestBase(ioc, client_policy, server_policy, "Test Eager Close", config_name) {}
+            TestBase(ioc, std::move(client_policy), std::move(server_policy), "Test Eager Close", config_name) {}
 
       void run(const error_code& ec) {
          static auto test_case = &Test_Eager_Close::run;
@@ -532,10 +534,11 @@ class Test_Eager_Close : public TestBase,
 class Test_Eager_Close_Sync : public Synchronous_Test {
    public:
       Test_Eager_Close_Sync(net::io_context& ioc,
-                            std::string config_name,
+                            const std::string& config_name,
                             std::shared_ptr<const Botan::TLS::Policy> client_policy,
                             std::shared_ptr<const Botan::TLS::Policy> server_policy) :
-            Synchronous_Test(ioc, client_policy, server_policy, "Test Eager Close Sync", config_name) {}
+            Synchronous_Test(
+               ioc, std::move(client_policy), std::move(server_policy), "Test Eager Close Sync", config_name) {}
 
       void run_synchronous_client() override {
          error_code ec;
@@ -564,10 +567,11 @@ class Test_Close_Without_Shutdown : public TestBase,
                                     public std::enable_shared_from_this<Test_Close_Without_Shutdown> {
    public:
       Test_Close_Without_Shutdown(net::io_context& ioc,
-                                  std::string config_name,
+                                  const std::string& config_name,
                                   std::shared_ptr<const Botan::TLS::Policy> client_policy,
                                   std::shared_ptr<const Botan::TLS::Policy> server_policy) :
-            TestBase(ioc, client_policy, server_policy, "Test Close Without Shutdown", config_name) {}
+            TestBase(
+               ioc, std::move(client_policy), std::move(server_policy), "Test Close Without Shutdown", config_name) {}
 
       void run(const error_code& ec) {
          static auto test_case = &Test_Close_Without_Shutdown::run;
@@ -610,10 +614,14 @@ class Test_Close_Without_Shutdown : public TestBase,
 class Test_Close_Without_Shutdown_Sync : public Synchronous_Test {
    public:
       Test_Close_Without_Shutdown_Sync(net::io_context& ioc,
-                                       std::string config_name,
+                                       const std::string& config_name,
                                        std::shared_ptr<const Botan::TLS::Policy> client_policy,
                                        std::shared_ptr<const Botan::TLS::Policy> server_policy) :
-            Synchronous_Test(ioc, client_policy, server_policy, "Test Close Without Shutdown Sync", config_name) {}
+            Synchronous_Test(ioc,
+                             std::move(client_policy),
+                             std::move(server_policy),
+                             "Test Close Without Shutdown Sync",
+                             config_name) {}
 
       void run_synchronous_client() override {
          error_code ec;
@@ -641,10 +649,11 @@ class Test_No_Shutdown_Response : public TestBase,
                                   public std::enable_shared_from_this<Test_No_Shutdown_Response> {
    public:
       Test_No_Shutdown_Response(net::io_context& ioc,
-                                std::string config_name,
+                                const std::string& config_name,
                                 std::shared_ptr<const Botan::TLS::Policy> client_policy,
                                 std::shared_ptr<const Botan::TLS::Policy> server_policy) :
-            TestBase(ioc, client_policy, server_policy, "Test No Shutdown Response", config_name) {}
+            TestBase(
+               ioc, std::move(client_policy), std::move(server_policy), "Test No Shutdown Response", config_name) {}
 
       void run(const error_code& ec) {
          static auto test_case = &Test_No_Shutdown_Response::run;
@@ -685,10 +694,12 @@ class Test_No_Shutdown_Response : public TestBase,
 class Test_No_Shutdown_Response_Sync : public Synchronous_Test {
    public:
       Test_No_Shutdown_Response_Sync(net::io_context& ioc,
-                                     std::string config_name,
+                                     const std::string& config_name,
                                      std::shared_ptr<const Botan::TLS::Policy> client_policy,
                                      std::shared_ptr<const Botan::TLS::Policy> server_policy) :
-            Synchronous_Test(ioc, client_policy, server_policy, "Test No Shutdown Response Sync", config_name) {}
+            Synchronous_Test(
+               ioc, std::move(client_policy), std::move(server_policy), "Test No Shutdown Response Sync", config_name) {
+      }
 
       void run_synchronous_client() override {
          error_code ec;
@@ -721,13 +732,17 @@ class Test_Conversation_With_Move : public Test_Conversation {
                                   std::string config_name,
                                   std::shared_ptr<const Botan::TLS::Policy> client_policy,
                                   std::shared_ptr<const Botan::TLS::Policy> server_policy) :
-            Test_Conversation(
-               ioc, std::move(config_name), client_policy, server_policy, "Test Conversation With Move") {
+            Test_Conversation(ioc,
+                              std::move(config_name),
+                              std::move(client_policy),
+                              std::move(server_policy),
+                              "Test Conversation With Move") {
          m_server->move_before_accept();
       }
 };
 
       #include <boost/asio/unyield.hpp>
+      #include <utility>
 
 struct SystemConfiguration {
       std::string name;
@@ -735,7 +750,7 @@ struct SystemConfiguration {
       std::shared_ptr<Botan::TLS::Text_Policy> client_policy;
       std::shared_ptr<Botan::TLS::Text_Policy> server_policy;
 
-      SystemConfiguration(std::string n, std::string cp, std::string sp) :
+      SystemConfiguration(std::string n, const std::string& cp, const std::string& sp) :
             name(std::move(n)),
             client_policy(std::make_shared<Botan::TLS::Text_Policy>(cp)),
             server_policy(std::make_shared<Botan::TLS::Text_Policy>(sp)) {}

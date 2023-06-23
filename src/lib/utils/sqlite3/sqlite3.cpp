@@ -30,8 +30,9 @@ Sqlite3_Database::Sqlite3_Database(std::string_view db_filename, std::optional<i
 }
 
 Sqlite3_Database::~Sqlite3_Database() {
-   if(m_db) [[likely]]
+   if(m_db) [[likely]] {
       ::sqlite3_close(m_db);
+   }
    m_db = nullptr;
 }
 
@@ -42,10 +43,11 @@ std::shared_ptr<SQL_Database::Statement> Sqlite3_Database::new_statement(std::st
 size_t Sqlite3_Database::row_count(std::string_view table_name) {
    auto stmt = new_statement(fmt("select count(*) from {}", table_name));
 
-   if(stmt->step())
+   if(stmt->step()) {
       return stmt->get_size_t(0);
-   else
+   } else {
       throw SQL_DB_Error(fmt("Querying size of table '{}' failed", table_name));
+   }
 }
 
 void Sqlite3_Database::create_table(std::string_view table_schema) {
@@ -90,22 +92,27 @@ bool Sqlite3_Database::is_threadsafe() const {
 Sqlite3_Database::Sqlite3_Statement::Sqlite3_Statement(sqlite3* db, std::string_view base_sql) {
    int rc = ::sqlite3_prepare_v2(db, base_sql.data(), static_cast<int>(base_sql.size()), &m_stmt, nullptr);
 
-   if(rc != SQLITE_OK)
+   if(rc != SQLITE_OK) {
       throw SQL_DB_Error(fmt("sqlite3_prepare failed on '{}' with err {}", base_sql, rc), rc);
+   }
 }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, std::string_view val) {
    int rc = ::sqlite3_bind_text(m_stmt, column, val.data(), static_cast<int>(val.size()), SQLITE_TRANSIENT);
-   if(rc != SQLITE_OK)
+   if(rc != SQLITE_OK) {
       throw SQL_DB_Error("sqlite3_bind_text failed", rc);
+   }
 }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, size_t val) {
-   if(val != static_cast<size_t>(static_cast<int>(val)))  // is this cast legit?
+   // XXX: is this cast doing what we want?
+   if(val != static_cast<size_t>(static_cast<int>(val))) {
       throw SQL_DB_Error("sqlite3 cannot store " + std::to_string(val) + " without truncation");
+   }
    int rc = ::sqlite3_bind_int(m_stmt, column, static_cast<int>(val));
-   if(rc != SQLITE_OK)
+   if(rc != SQLITE_OK) {
       throw SQL_DB_Error("sqlite3_bind_int failed", rc);
+   }
 }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, std::chrono::system_clock::time_point time) {
@@ -115,14 +122,16 @@ void Sqlite3_Database::Sqlite3_Statement::bind(int column, std::chrono::system_c
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, const std::vector<uint8_t>& val) {
    int rc = ::sqlite3_bind_blob(m_stmt, column, val.data(), static_cast<int>(val.size()), SQLITE_TRANSIENT);
-   if(rc != SQLITE_OK)
+   if(rc != SQLITE_OK) {
       throw SQL_DB_Error("sqlite3_bind_text failed", rc);
+   }
 }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, const uint8_t* p, size_t len) {
    int rc = ::sqlite3_bind_blob(m_stmt, column, p, static_cast<int>(len), SQLITE_TRANSIENT);
-   if(rc != SQLITE_OK)
+   if(rc != SQLITE_OK) {
       throw SQL_DB_Error("sqlite3_bind_text failed", rc);
+   }
 }
 
 std::pair<const uint8_t*, size_t> Sqlite3_Database::Sqlite3_Statement::get_blob(int column) {

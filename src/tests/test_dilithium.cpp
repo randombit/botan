@@ -78,6 +78,7 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
       }
 };
 
+   // NOLINTNEXTLINE(*-macro-usage)
    #define REGISTER_DILITHIUM_KAT_TEST(m, rand)                                          \
       class DILITHIUM##m##rand final : public Dilithium_KAT_Tests<DILITHIUM##m##rand> {  \
          public:                                                                         \

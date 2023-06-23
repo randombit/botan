@@ -8,8 +8,9 @@
 #include <iostream>
 
 int main(int argc, char* argv[]) {
-   if(argc != 2)
+   if(argc != 2) {
       return 1;
+   }
    std::string plaintext(
       "Your great-grandfather gave this watch to your granddad for good luck. "
       "Unfortunately, Dane's luck wasn't as good as his old man's.");

@@ -25,11 +25,16 @@ namespace {
 
 #if defined(BOTAN_HAS_FFI)
 
+   // NOLINTNEXTLINE(*-macro-usage)
    #define TEST_FFI_OK(func, args) result.test_rc_ok(#func, func args)
+   // NOLINTNEXTLINE(*-macro-usage)
    #define TEST_FFI_INIT(func, args) result.test_rc_init(#func, func args)
+   // NOLINTNEXTLINE(*-macro-usage)
    #define TEST_FFI_FAIL(msg, func, args) result.test_rc_fail(#func, msg, func args)
+   // NOLINTNEXTLINE(*-macro-usage)
    #define TEST_FFI_RC(rc, func, args) result.test_rc(#func, rc, func args)
 
+   // NOLINTNEXTLINE(*-macro-usage)
    #define REQUIRE_FFI_OK(func, args)                           \
       if(!TEST_FFI_OK(func, args)) {                            \
          result.test_note("Exiting test early due to failure"); \

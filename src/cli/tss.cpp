@@ -10,6 +10,7 @@
    #include <botan/hex.h>
    #include <botan/rng.h>
    #include <botan/tss.h>
+   #include <botan/internal/fmt.h>
    #include <fstream>
 #endif
 
@@ -60,7 +61,7 @@ class TSS_Split final : public Command {
                                                                           rng());
 
          for(size_t i = 0; i != shares.size(); ++i) {
-            const std::string share_name = share_prefix + std::to_string(i + 1) + "." + share_suffix;
+            const std::string share_name = Botan::fmt("{}{}.{}", share_prefix, i + 1, share_suffix);
             std::ofstream out(share_name.c_str());
             if(!out) {
                throw CLI_Error("Failed to open output file " + share_name);

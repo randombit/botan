@@ -16,6 +16,7 @@
    #include <botan/x509path.h>
    #include <botan/internal/calendar.h>
    #include <botan/internal/filesystem.h>
+   #include <botan/internal/fmt.h>
    #include <botan/internal/parsing.h>
 
    #include <algorithm>
@@ -215,7 +216,7 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run() {
       try {
          const std::string expected_result = i->second;
 
-         const std::string test_dir = nist_test_dir + "/" + test_name;
+         const std::string test_dir = Botan::fmt("{}/{}", nist_test_dir, test_name);
 
          const std::vector<std::string> all_files = Botan::get_files_recursive(test_dir);
 
@@ -284,7 +285,7 @@ std::vector<Test::Result> Extended_Path_Validation_Tests::run() {
       const std::string test_name = i->first;
       const std::string expected_result = i->second;
 
-      const std::string test_dir = extended_x509_test_dir + "/" + test_name;
+      const std::string test_dir = Botan::fmt("{}/{}", extended_x509_test_dir, test_name);
 
       Test::Result result("Extended X509 path validation");
       result.start_timer();
@@ -346,7 +347,7 @@ std::vector<Test::Result> PSS_Path_Validation_Tests::run() {
       const std::string test_name = i->first;
       const std::string expected_result = i->second;
 
-      const std::string test_dir = pss_x509_test_dir + "/" + test_name;
+      const std::string test_dir = Botan::fmt("{}/{}", pss_x509_test_dir, test_name);
 
       Test::Result result("RSA-PSS X509 signature validation");
       result.start_timer();
@@ -657,7 +658,7 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run() {
          expected_result = "Certificate signed with unknown/unavailable algorithm";
       #endif
 
-      const std::string test_dir = bsi_test_dir + "/" + test_name;
+      const std::string test_dir = Botan::fmt("{}/{}", bsi_test_dir, test_name);
 
       Test::Result result("BSI path validation");
       result.start_timer();

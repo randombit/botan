@@ -28,14 +28,17 @@ struct RawPage {
    public:
       RawPage(void* p) : m_p(p) {}
 
-      ~RawPage() { std::free(m_p); }
+      ~RawPage() {
+         // NOLINTNEXTLINE(*-no-malloc)
+         std::free(m_p);
+      }
 
       RawPage(const RawPage& other) = default;
       RawPage& operator=(const RawPage& other) = default;
 
-      RawPage(RawPage&& other) : m_p(nullptr) { std::swap(m_p, other.m_p); }
+      RawPage(RawPage&& other) noexcept : m_p(nullptr) { std::swap(m_p, other.m_p); }
 
-      RawPage& operator=(RawPage&& other) {
+      RawPage& operator=(RawPage&& other) noexcept {
          if(this != &other) {
             std::swap(m_p, other.m_p);
          }
@@ -77,8 +80,9 @@ void fuzz(const uint8_t in[], size_t in_len) {
 
    std::vector<void*> mem_pages;
    mem_pages.reserve(raw_mem.size());
-   for(size_t i = 0; i != raw_mem.size(); ++i)
+   for(size_t i = 0; i != raw_mem.size(); ++i) {
       mem_pages.push_back(raw_mem[i].ptr());
+   }
 
    Botan::Memory_Pool pool(mem_pages, page_size);
    std::map<uint8_t*, size_t> ptrs;
@@ -147,8 +151,9 @@ void fuzz(const uint8_t in[], size_t in_len) {
             }
          }
       } else if(op == 1) {
-         if(ptrs.empty())
+         if(ptrs.empty()) {
             continue;
+         }
 
          size_t which_ptr = idx % ptrs.size();
 

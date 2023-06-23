@@ -8,14 +8,15 @@
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 #include <boost/bind.hpp>
+#include <utility>
 
 namespace http = boost::beast::http;
-namespace _ = boost::asio::placeholders;
+namespace ap = boost::asio::placeholders;
 
 // very basic credentials manager
 class Credentials_Manager : public Botan::Credentials_Manager {
    public:
-      Credentials_Manager() {}
+      Credentials_Manager() = default;
 
       std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(const std::string&,
                                                                              const std::string&) override {
@@ -31,15 +32,16 @@ class client {
    public:
       client(boost::asio::io_context& io_context,
              boost::asio::ip::tcp::resolver::iterator endpoint_iterator,
-             http::request<http::string_body> req) :
+             const http::request<http::string_body>& req) :
             m_request(req),
             m_ctx(std::make_shared<Botan::TLS::Context>(std::make_shared<Credentials_Manager>(),
                                                         std::make_shared<Botan::AutoSeeded_RNG>(),
                                                         std::make_shared<Botan::TLS::Session_Manager_Noop>(),
                                                         std::make_shared<Botan::TLS::Policy>())),
             m_stream(io_context, m_ctx) {
-         boost::asio::async_connect(
-            m_stream.lowest_layer(), endpoint_iterator, boost::bind(&client::handle_connect, this, _::error));
+         boost::asio::async_connect(m_stream.lowest_layer(),
+                                    std::move(endpoint_iterator),
+                                    boost::bind(&client::handle_connect, this, ap::error));
       }
 
       void handle_connect(const boost::system::error_code& error) {
@@ -48,7 +50,7 @@ class client {
             return;
          }
          m_stream.async_handshake(Botan::TLS::Connection_Side::Client,
-                                  boost::bind(&client::handle_handshake, this, _::error));
+                                  boost::bind(&client::handle_handshake, this, ap::error));
       }
 
       void handle_handshake(const boost::system::error_code& error) {
@@ -57,7 +59,7 @@ class client {
             return;
          }
          http::async_write(
-            m_stream, m_request, boost::bind(&client::handle_write, this, _::error, _::bytes_transferred));
+            m_stream, m_request, boost::bind(&client::handle_write, this, ap::error, ap::bytes_transferred));
       }
 
       void handle_write(const boost::system::error_code& error, size_t) {
@@ -66,7 +68,7 @@ class client {
             return;
          }
          http::async_read(
-            m_stream, m_reply, m_response, boost::bind(&client::handle_read, this, _::error, _::bytes_transferred));
+            m_stream, m_reply, m_response, boost::bind(&client::handle_read, this, ap::error, ap::bytes_transferred));
       }
 
       void handle_read(const boost::system::error_code& error, size_t) {
@@ -88,21 +90,26 @@ class client {
 };
 
 int main() {
-   boost::asio::io_context io_context;
+   try {
+      boost::asio::io_context io_context;
 
-   boost::asio::ip::tcp::resolver resolver(io_context);
-   boost::asio::ip::tcp::resolver::query query("botan.randombit.net", "443");
-   boost::asio::ip::tcp::resolver::iterator iterator = resolver.resolve(query);
+      boost::asio::ip::tcp::resolver resolver(io_context);
+      boost::asio::ip::tcp::resolver::query query("botan.randombit.net", "443");
+      boost::asio::ip::tcp::resolver::iterator iterator = resolver.resolve(query);
 
-   http::request<http::string_body> req;
-   req.version(11);
-   req.method(http::verb::get);
-   req.target("/news.html");
-   req.set(http::field::host, "botan.randombit.net");
+      http::request<http::string_body> req;
+      req.version(11);
+      req.method(http::verb::get);
+      req.target("/news.html");
+      req.set(http::field::host, "botan.randombit.net");
 
-   client c(io_context, iterator, req);
+      client c(io_context, iterator, req);
 
-   io_context.run();
+      io_context.run();
+   } catch(std::exception& e) {
+      std::cerr << e.what();
+      return 1;
+   }
 
    return 0;
 }

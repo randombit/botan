@@ -13,7 +13,7 @@ int main() {
    // create a new public/private key pair using SHA2 256 as hash
    // function and a tree height of 10.
    Botan::XMSS_PrivateKey private_key(Botan::XMSS_Parameters::xmss_algorithm_t::XMSS_SHA2_10_256, rng);
-   Botan::XMSS_PublicKey public_key(private_key);
+   const Botan::XMSS_PublicKey& public_key(private_key);
 
    // create Public Key Signer using the private key.
    Botan::PK_Signer signer(private_key, rng, "");

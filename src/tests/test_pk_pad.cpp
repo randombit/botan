@@ -14,6 +14,8 @@
    #include <botan/internal/eme_pkcs.h>
 #endif
 
+#include <botan/internal/fmt.h>
+
 namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_EME_PKCS1)
@@ -98,7 +100,7 @@ class EMSA_unit_tests final : public Test {
          for(const auto& pad : pads_need_hash) {
             try {
                const std::string hash_to_use = "SHA-256";
-               auto emsa_1 = Botan::EMSA::create(pad + "(" + hash_to_use + ")");
+               auto emsa_1 = Botan::EMSA::create(Botan::fmt("{}({})", pad, hash_to_use));
                auto emsa_2 = Botan::EMSA::create(emsa_1->name());
                name_tests.test_eq("EMSA_name_test for " + pad, emsa_1->name(), emsa_2->name());
             } catch(Botan::Lookup_Error&) {

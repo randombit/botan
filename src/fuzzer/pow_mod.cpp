@@ -13,8 +13,9 @@ namespace {
 
 Botan::BigInt simple_power_mod(Botan::BigInt x, Botan::BigInt n, const Botan::BigInt& p) {
    if(n == 0) {
-      if(p == 1)
+      if(p == 1) {
          return 0;
+      }
       return 1;
    }
 
@@ -36,13 +37,15 @@ Botan::BigInt simple_power_mod(Botan::BigInt x, Botan::BigInt n, const Botan::Bi
 void fuzz(const uint8_t in[], size_t len) {
    static const size_t max_bits = 2048;
 
-   if(len % 3 != 0)
+   if(len % 3 != 0) {
       return;
+   }
 
    const size_t part_size = len / 3;
 
-   if(part_size * 8 > max_bits)
+   if(part_size * 8 > max_bits) {
       return;
+   }
 
    const Botan::BigInt g = Botan::BigInt::decode(in, part_size);
    const Botan::BigInt x = Botan::BigInt::decode(in + part_size, part_size);

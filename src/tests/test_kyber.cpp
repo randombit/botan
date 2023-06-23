@@ -150,6 +150,7 @@ Test::Result check_kyber_kat(const char* test_name,
 
 }  // namespace
 
+      // NOLINTNEXTLINE(*-macro-usage)
       #define REGISTER_KYBER_KAT_TEST(mode)                                                                    \
          class KYBER_KAT_##mode final : public Text_Based_Test {                                               \
             public:                                                                                            \
@@ -166,6 +167,7 @@ REGISTER_KYBER_KAT_TEST(512_90s);
 REGISTER_KYBER_KAT_TEST(768_90s);
 REGISTER_KYBER_KAT_TEST(1024_90s);
       #endif
+
       #if defined(BOTAN_HAS_KYBER)
 REGISTER_KYBER_KAT_TEST(512);
 REGISTER_KYBER_KAT_TEST(768);

@@ -36,7 +36,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager_SQLite final : public Session_Manag
       *        to keep in memory at any one time. (If zero, don't cap)
       */
       Session_Manager_SQLite(std::string_view passphrase,
-                             std::shared_ptr<RandomNumberGenerator> rng,
+                             const std::shared_ptr<RandomNumberGenerator>& rng,
                              std::string_view db_filename,
                              size_t max_sessions = 1000);
 };

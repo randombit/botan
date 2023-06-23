@@ -22,30 +22,19 @@
 #if defined(BOTAN_CAN_RUN_TEST_TLS_RFC8448)
    #include "test_rng.h"
 
+   #include <botan/assert.h>
    #include <botan/credentials_manager.h>
+   #include <botan/data_src.h>
    #include <botan/ecdsa.h>
    #include <botan/hash.h>
-   #include <botan/rsa.h>
-   #include <botan/tls_alert.h>
-   #include <botan/tls_callbacks.h>
-   #include <botan/tls_client.h>
-   #include <botan/tls_messages.h>
-   #include <botan/tls_policy.h>
-   #include <botan/tls_server.h>
-   #include <botan/tls_server_info.h>
-   #include <botan/tls_session.h>
-   #include <botan/tls_session_manager.h>
-   #include <botan/tls_version.h>
-   #include <botan/internal/tls_reader.h>
-
-   #include <botan/assert.h>
-   #include <botan/internal/stl_util.h>
-
-   #include <botan/internal/loadstor.h>
-
-   #include <botan/data_src.h>
    #include <botan/pk_algs.h>
    #include <botan/pkcs8.h>
+   #include <botan/rsa.h>
+   #include <botan/tls.h>
+   #include <botan/tls_extensions.h>
+   #include <botan/tls_messages.h>
+   #include <botan/internal/fmt.h>
+   #include <botan/internal/stl_util.h>
 #endif
 
 namespace Botan_Tests {
@@ -332,10 +321,10 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks {
       }
 
    public:
-      bool session_activated_called;
-
-      std::vector<Botan::X509_Certificate> certificate_chain;
-      std::map<std::string, std::vector<std::vector<uint8_t>>> serialized_messages;
+      bool session_activated_called;                           // NOLINT(*-non-private-member-variables-in-classes)
+      std::vector<Botan::X509_Certificate> certificate_chain;  // NOLINT(*-non-private-member-variables-in-classes)
+      std::map<std::string, std::vector<std::vector<uint8_t>>>
+         serialized_messages;  // NOLINT(*-non-private-member-variables-in-classes)
 
    private:
       std::vector<uint8_t> send_buffer;
@@ -597,7 +586,7 @@ class TLS_Context {
                                       const std::vector<std::string>& callback_names) {
          const auto& invokes = m_callbacks->callback_invocations();
          for(const auto& cbn : callback_names) {
-            result.confirm(cbn + " was invoked (Context: " + context + ")",
+            result.confirm(Botan::fmt("{} was invoked (Context: {})", cbn, context),
                            invokes.contains(cbn) && invokes.at(cbn) > 0);
          }
 
@@ -625,12 +614,12 @@ class TLS_Context {
       virtual void send(const std::vector<uint8_t>& data) = 0;
 
    protected:
-      std::shared_ptr<Test_TLS_13_Callbacks> m_callbacks;
-      std::shared_ptr<Test_Credentials> m_creds;
+      std::shared_ptr<Test_TLS_13_Callbacks> m_callbacks;  // NOLINT(*-non-private-member-variables-in-classes)
+      std::shared_ptr<Test_Credentials> m_creds;           // NOLINT(*-non-private-member-variables-in-classes)
 
-      std::shared_ptr<Botan::RandomNumberGenerator> m_rng;
-      std::shared_ptr<RFC8448_Session_Manager> m_session_mgr;
-      std::shared_ptr<const RFC8448_Text_Policy> m_policy;
+      std::shared_ptr<Botan::RandomNumberGenerator> m_rng;     // NOLINT(*-non-private-member-variables-in-classes)
+      std::shared_ptr<RFC8448_Session_Manager> m_session_mgr;  // NOLINT(*-non-private-member-variables-in-classes)
+      std::shared_ptr<const RFC8448_Text_Policy> m_policy;     // NOLINT(*-non-private-member-variables-in-classes)
 };
 
 class Client_Context : public TLS_Context {
@@ -658,7 +647,7 @@ class Client_Context : public TLS_Context {
 
       void send(const std::vector<uint8_t>& data) override { client.send(data.data(), data.size()); }
 
-      Botan::TLS::Client client;
+      Botan::TLS::Client client;  // NOLINT(*-non-private-member-variables-in-classes)
 };
 
 class Server_Context : public TLS_Context {
@@ -681,7 +670,7 @@ class Server_Context : public TLS_Context {
 
       void send(const std::vector<uint8_t>& data) override { server.send(data.data(), data.size()); }
 
-      Botan::TLS::Server server;
+      Botan::TLS::Server server;  // NOLINT(*-non-private-member-variables-in-classes)
 };
 
 /**

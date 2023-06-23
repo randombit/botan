@@ -13,23 +13,27 @@
 void fuzz(const uint8_t in[], size_t len) {
    static const size_t max_bits = 4096;
 
-   if(len <= 4)
+   if(len <= 4) {
       return;
+   }
 
-   if(len > 2 * (max_bits / 8))
+   if(len > 2 * (max_bits / 8)) {
       return;
+   }
 
    const size_t x_len = 2 * ((len + 2) / 3);
 
    Botan::BigInt x = Botan::BigInt::decode(in, x_len);
    const Botan::BigInt p = Botan::BigInt::decode(in + x_len, len - x_len);
 
-   if(p.is_zero())
+   if(p.is_zero()) {
       return;
+   }
 
    const size_t x_bits = x.bits();
-   if(x_bits % 8 == 0 && x_bits / 8 == x_len)
+   if(x_bits % 8 == 0 && x_bits / 8 == x_len) {
       x.flip_sign();
+   }
 
    const Botan::BigInt ref = x % p;
 

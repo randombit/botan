@@ -20,6 +20,7 @@
 #include <botan/entropy_src.h>
 #include <botan/version.h>
 #include <botan/internal/cpuid.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/os_utils.h>
 #include <botan/internal/timer.h>
 
@@ -1618,7 +1619,7 @@ class Speed final : public Command {
                             const std::vector<std::string>& params,
                             std::chrono::milliseconds msec) {
          for(std::string grp : params) {
-            const std::string nm = grp.empty() ? algo : (algo + "-" + grp);
+            const std::string nm = grp.empty() ? algo : Botan::fmt("{}-{}", algo, grp);
 
             auto keygen_timer = make_timer(nm, provider, "keygen");
 
