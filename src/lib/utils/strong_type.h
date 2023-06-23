@@ -528,13 +528,21 @@ class StrongSpan {
 
       StrongSpan(T& strong) : m_span(strong) {}
 
-      // allows implicit conversion from `StrongSpan<T>` to `StrongSpan<const T>`
-      // -> if T is a const type, the compiler will generate a copy-constructor
-      //    allowing copies from `StrongSpan<T>` and `StrongSpan<const T>`
-      // -> if T is a non-const type, no additional copy-constructor will be
-      //    generated. Instead this explicitly defines it. As a result, implicit
-      //    cast from a `StrongSpan<const T>` to `StrongSpan<T>` is prohibited.
-      StrongSpan(const StrongSpan<std::remove_const_t<T>>& other) : m_span(other.get()) {}
+      // Allows implicit conversion from `StrongSpan<T>` to `StrongSpan<const T>`.
+      // Note that this is not bi-directional. Conversion from `StrongSpan<const T>`
+      // to `StrongSpan<T>` is not allowed.
+      //
+      // TODO: Technically, we should be able to phrase this with a `requires std::is_const_v<T>`
+      //       instead of the `std::enable_if` constructions. clang-tidy (14 or 15) doesn't seem
+      //       to pick up on that (yet?). As a result, for a non-const T it assumes this to be
+      //       a declaration of an ordinary copy constructor. The existance of a copy constructor
+      //       is interpreted as "not cheap to copy", setting off the `performance-unnecessary-value-param` check.
+      //       See also: https://github.com/randombit/botan/issues/3591
+      template <concepts::contiguous_strong_type T2,
+                typename = std::enable_if_t<std::is_same_v<T2, std::remove_const_t<T>>>>
+      StrongSpan(const StrongSpan<T2>& other) : m_span(other.get()) {}
+
+      StrongSpan(const StrongSpan& other) = default;
 
       ~StrongSpan() = default;
 
