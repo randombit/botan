@@ -26,6 +26,21 @@ For Botan 3, the tier-2 supported platforms are
 * Linux x86-32, GCC 11 or later
 * FreeBSD x86-64, Clang 14 or later
 
+.. note::
+
+   Notice that the minimum version requirements for XCode and NDK is different
+   from other compilers. With GCC or Clang, we fix the minimum required compiler
+   version and aim to maintain that support for the entire lifecycle of
+   Botan 3. In contrast, for XCode and NDK the minimum version is floating;
+   namely, we will only support the very latest version. It's possible earlier
+   versions will work, but this is not guaranteed.
+
+.. note::
+
+   As of June 2023, it is known that at least XCode 13.3 is required, since
+   earlier versions did not support certain C++20 language features that the
+   library uses. XCode 14.2 or higher is recommended.
+
 Some (but not all) of the tier-2 platforms are tested by CI. Everything should
 work, and if problems are encountered, the developers will probably be able to
 help. But they are not as carefully tested as tier-1.
