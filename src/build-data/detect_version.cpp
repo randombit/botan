@@ -56,7 +56,8 @@ CLANG 15 0
 CLANG 16 0
    #endif
 
-XCODE __clang_major__ __clang__minor__
+XCODE_VER XCODE_VER
+XCODE __clang_major__ __clang_minor__
 #elif defined(__clang__)
 
 CLANG __clang_major__ __clang_minor__
