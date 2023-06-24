@@ -3462,7 +3462,7 @@ def main(argv):
     logging.info('%s invoked with options "%s"', argv[0], ' '.join(argv[1:]))
     logging.info('Configuring to build Botan %s (revision %s)',
                  Version.as_string(), Version.vc_rev())
-    logging.info('Running under %s', sys.version.replace('\n', ''))
+    logging.info('Python identifies as '%s'', sys.version.replace('\n', ''))
 
     take_options_from_env(options)
 
