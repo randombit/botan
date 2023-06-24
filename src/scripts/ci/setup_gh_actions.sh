@@ -90,6 +90,8 @@ else
     fi
 
     sudo xcrun xcode-select --switch '/Applications/Xcode_14.3.1.app/Contents/Developer'
+
+    clang++ -E src/build-data/detect_version.cpp
 fi
 
 # find the ccache cache location and store it in the build job's environment
