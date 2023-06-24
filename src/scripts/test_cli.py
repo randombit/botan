@@ -62,9 +62,25 @@ def setup_logging(options):
     logging.getLogger().addHandler(lh)
     logging.getLogger().setLevel(log_level)
 
-def random_port_number():
-    return random.randint(1024, 65535)
+def port_for(service):
+    # use ports in range 63000-63100 for tests, which will hopefully
+    # avoid conflicts with local services
 
+    base_port = 63000
+
+    port_assignments = {
+        'tls_server': 0,
+        'tls_http_server': 1,
+        'tls_proxy': 2,
+        'tls_proxy_backend': 3,
+        'roughtime': 4,
+    }
+
+    if service in port_assignments:
+        return base_port + port_assignments.get(service)
+    else:
+        logging.warning("Unknown service '%s', update port_for function", service)
+        return base_port + random.randint(30, 100)
 
 def test_cli(cmd, cmd_options,
              expected_output=None,
@@ -598,7 +614,7 @@ def cli_roughtime_tests(tmp_dir):
     if not check_for_command("roughtime"):
         return
 
-    server_port = random_port_number()
+    server_port = port_for('roughtime')
     chain_file = os.path.join(tmp_dir, 'roughtime-chain')
     ecosystem = os.path.join(tmp_dir, 'ecosystem')
 
@@ -907,7 +923,7 @@ def cli_tls_socket_tests(tmp_dir):
         return
 
     client_msg = b'Client message %d with extra stuff to test record_size_limit: %s\n' % (random.randint(0, 2**128), b'oO' * 64)
-    server_port = random_port_number()
+    server_port = port_for('tls_server')
 
     psk = "FEEDFACECAFEBEEF"
     psk_identity = "test-psk"
@@ -1024,7 +1040,7 @@ def cli_tls_http_server_tests(tmp_dir):
     if not run_socket_tests() or not check_for_command("tls_http_server"):
         return
 
-    server_port = random_port_number()
+    server_port = port_for('tls_http_server')
 
     priv_key = os.path.join(tmp_dir, 'priv.pem')
     ca_cert = os.path.join(tmp_dir, 'ca.crt')
@@ -1081,11 +1097,8 @@ def cli_tls_proxy_tests(tmp_dir):
     if not run_socket_tests() or not check_for_command("tls_proxy"):
         return
 
-    server_port = random_port_number()
-    proxy_port = random_port_number()
-
-    while server_port == proxy_port:
-        proxy_port = random_port_number()
+    server_port = port_for('tls_proxy_backend')
+    proxy_port = port_for('tls_proxy')
 
     priv_key = os.path.join(tmp_dir, 'priv.pem')
     ca_cert = os.path.join(tmp_dir, 'ca.crt')
