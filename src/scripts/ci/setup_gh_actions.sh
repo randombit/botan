@@ -89,13 +89,15 @@ else
         brew install boost
     fi
 
-    clang++ -dM -E -x c /dev/null
+    clang++ -E src/build-data/detect_version.cpp
 
+    sudo xcrun xcode-select --switch '/Applications/Xcode_14.3.app/Contents/Developer'
     clang++ -E src/build-data/detect_version.cpp
 
     sudo xcrun xcode-select --switch '/Applications/Xcode_14.3.1.app/Contents/Developer'
+    clang++ -E src/build-data/detect_version.cpp
 
-    clang++ -dM -E -x c /dev/null
+    sudo xcrun xcode-select --switch '/Applications/Xcode_15.0.app/Contents/Developer'
     clang++ -E src/build-data/detect_version.cpp
 
     exit 1
