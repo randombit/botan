@@ -58,6 +58,7 @@ CLANG 16 0
 
 XCODE_VER XCODE_VER
 XCODE __clang_major__ __clang_minor__
+APV __apple_build_version__ 
 #elif defined(__clang__)
 
 CLANG __clang_major__ __clang_minor__
