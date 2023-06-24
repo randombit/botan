@@ -91,10 +91,19 @@ else
 
     clang++ -E src/build-data/detect_version.cpp
 
+    sudo xcrun xcode-select --switch '/Applications/Xcode_14.1.app/Contents/Developer'
+    clang++ -E src/build-data/detect_version.cpp
+
+    sudo xcrun xcode-select --switch '/Applications/Xcode_14.2.app/Contents/Developer'
+    clang++ -E src/build-data/detect_version.cpp
+
     sudo xcrun xcode-select --switch '/Applications/Xcode_14.3.app/Contents/Developer'
     clang++ -E src/build-data/detect_version.cpp
 
     sudo xcrun xcode-select --switch '/Applications/Xcode_14.3.1.app/Contents/Developer'
+    clang++ -E src/build-data/detect_version.cpp
+
+    sudo xcrun xcode-select --switch '/Applications/Xcode_15.0.app/Contents/Developer'
     clang++ -E src/build-data/detect_version.cpp
 
     exit 1
