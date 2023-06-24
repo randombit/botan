@@ -10,7 +10,6 @@ X.509 certificates, modern AEAD ciphers, PKCS#11 and TPM hardware support,
 password hashing, and post quantum crypto schemes. A Python binding is included,
 and several other `language bindings
 <https://github.com/randombit/botan/wiki/Language-Bindings>`_ are available.
-It is used in many `open source and commercial products <https://github.com/randombit/botan/wiki/Users>`_.
 The library is accompanied by a featureful
 `command line interface <https://botan.randombit.net/handbook/cli.html>`_.
 
@@ -19,10 +18,8 @@ information about included features.
 
 Development is coordinated on `GitHub <https://github.com/randombit/botan>`_
 and contributions are welcome. If you need help, please open an issue on
-`GitHub <https://github.com/randombit/botan/issues>`_ or email the
-`botan-devel mailing list <https://lists.randombit.net/mailman/listinfo/botan-devel/>`_.
-New releases are announced on the `botan-announce mailing list
-<https://lists.randombit.net/mailman/listinfo/botan-announce/>`_.
+`GitHub <https://github.com/randombit/botan/issues>`_.
+
 If you think you have found a security issue, see the `security page
 <https://botan.randombit.net/security.html>`_ for contact information.
 
@@ -99,7 +96,7 @@ Public Key Cryptography
 * RSA signatures and encryption
 * DH and ECDH key agreement
 * Signature schemes ECDSA, DSA, Ed25519, ECGDSA, ECKCDSA, SM2, GOST 34.10
-* Post-quantum signature schemes Dilithium and XMSS
+* Post-quantum signature schemes Dilithium, SPHINCS+, and XMSS
 * Post-quantum key agreement schemes McEliece and Kyber
 * ElGamal encryption
 * Padding schemes OAEP, PSS, PKCS #1 v1.5, X9.31
