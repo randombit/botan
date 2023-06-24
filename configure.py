@@ -3238,8 +3238,11 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
 
     major_version = int(match.group(1), 0)
     minor_version = int(match.group(2), 0)
+
     cc_version = "%d.%d" % (major_version, minor_version)
-    logging.info('Auto-detected compiler version %s %s', cxx, cc_version)
+
+    if cc_version != '0.0':
+        logging.info('Auto-detected compiler version %s %s', cxx, cc_version)
 
     if ccinfo.minimum_supported_version:
         # compare as floats

@@ -27,36 +27,33 @@ EMCC __EMSCRIPTEN_major__ __EMSCRIPTEN_minor__
 #elif defined(__clang__) && defined(__apple_build_version__)
 
 /*
-   Apple's Clang is a long-term fork of Clang and the version of XCode
-   has no correspondence with a specific LLVM Clang version.
+Apple's Clang is a long-term fork of Clang and the version of XCode
+has no correspondence with a specific LLVM Clang version.
 
-   This is a rough map from the XCode Clang to the upstream Clang
-   versions. It is not correct, but is sufficient for our purposes.
+This is a rough map from the XCode Clang to the upstream Clang
+versions. It is not correct, but is sufficient for our purposes.
 
-   Wikipedia has a mapping table from Apple Clang version to underlying
-   LLVM version: https://en.wikipedia.org/wiki/Xcode
+Wikipedia has a mapping table from Apple Clang version to underlying
+LLVM version: https://en.wikipedia.org/wiki/Xcode
 
-   We omit any mapping logic for versions before XCode 13 since we no longer
-   support those versions. The only reason to detect them is so we can tell that
-   the version of Clang is too old and stop configuration immediately.
-   */
+We omit any mapping logic for versions before XCode 13.3 since it
+is known that at least 13.3 is required. For such versions we emit
+`CLANG 0 0` which will cause the minimum version detection to kick
+in and stop the build.
+*/
 
-   #if __clang_major__ < 13
-CLANG __clang_major__ 0
-   #elif __clang_major__ == 13
-      #if __clang_minor__ < 3
-CLANG 12 0
-      #else
+   #define XCODE_VER (__clang_major__ * 100 + __clang_minor__)
+
+   #if XCODE_VER < 1303
+CLANG 0 0
+   #elif XCODE_VER < 1400
 CLANG 13 0
-      #endif
-   #elif __clang_major__ == 14
-      #if __clang_minor__ < 3
+   #elif XCODE_VER < 1403
 CLANG 14 0
-      #else
+   #elif XCODE_VER == 1403
 CLANG 15 0
-      #endif
-   #elif __clang_major__ >= 15
-CLANG 15 0
+   #else
+CLANG 16 0
    #endif
 
 #elif defined(__clang__)
