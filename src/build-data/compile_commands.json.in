@@ -24,7 +24,7 @@
     { "directory": "%{abs_root_dir}",
       "command": "%{cxx}  %{cc_sysroot} %{cxx_abi_flags} %{cc_lang_flags} %{os_feature_macros} %{cc_compile_flags} -DBOTAN_IS_BEING_BUILT %{cc_warning_flags} %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}%{obj}",
       "file": "%{src}"
-    }
+    },
 %{endfor}
 
 %{if build_bogo_shim}
