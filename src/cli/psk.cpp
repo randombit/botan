@@ -73,8 +73,9 @@ class PSK_Tool_List final : public PSK_Tool_Base {
       void psk_operation(Botan::PSK_Database& db) override {
          const std::set<std::string> names = db.list_names();
 
-         for(std::string name : names)
+         for(const auto& name : names) {
             output() << name << "\n";
+         }
       }
 };
 
