@@ -29,6 +29,9 @@ jobs:
           target: clang-tidy
           cache-key: linux-x86_64-clang-tidy
 
+      - name: Install Boost
+        run: sudo apt-get -qq install libboost-dev
+
       - name: Configure Build
         run: python3 ./configure.py --cc=clang --build-targets=shared,cli,tests,examples,bogo_shim --build-fuzzers=test --with-boost --with-sqlite
 
