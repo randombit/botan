@@ -11,6 +11,7 @@ import sys
 import json
 import optparse # pylint: disable=deprecated-module
 import os
+import re
 import multiprocessing
 import time
 from multiprocessing.pool import ThreadPool
@@ -177,6 +178,7 @@ def main(args = None):
     parser.add_option('--list-checks', action='store_true', default=False)
     parser.add_option('--fast-checks-only', action='store_true', default=False)
     parser.add_option('--only-changed-files', action='store_true', default=False)
+    parser.add_option('--only-matching', metavar='REGEX', default='.*')
 
     (options, args) = parser.parse_args(args)
 
@@ -186,10 +188,6 @@ def main(args = None):
 
     files_to_check = []
     if options.only_changed_files:
-        if len(args) > 1:
-            print("ERROR: --only-changed-files is incompatible with file restrictions")
-            return 1
-
         changes = run_command(['git', 'diff', '--name-only', '-r', 'master'])
 
         files_to_check = []
@@ -230,11 +228,16 @@ def main(args = None):
     start_time = time.time()
     files_checked = 0
 
+    file_matcher = re.compile(options.only_matching)
+
     results = []
     for info in compile_commands:
         file = info['file']
 
         if len(files_to_check) > 0 and os.path.basename(file) not in files_to_check:
+            continue
+
+        if file_matcher.search(file) is None:
             continue
 
         files_checked += 1
