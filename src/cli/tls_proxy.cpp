@@ -15,9 +15,9 @@
    #include <iostream>
    #include <string>
    #include <thread>
+   #include <utility>
    #include <vector>
 
-   #define _GLIBCXX_HAVE_GTHR_DEFAULT
    #include <botan/internal/os_utils.h>
    #include <boost/asio.hpp>
    #include <boost/bind.hpp>
@@ -35,17 +35,21 @@
 
    #include "tls_helpers.h"
 
-   #if BOOST_VERSION >= 107000
-      #define GET_IO_SERVICE(s) (static_cast<boost::asio::io_context&>((s).get_executor().context()))
-   #else
-      #define GET_IO_SERVICE(s) ((s).get_io_service())
-   #endif
-
 namespace Botan_CLI {
 
 namespace {
 
 using boost::asio::ip::tcp;
+
+template <typename T>
+boost::asio::io_context& get_io_service(T& s) {
+   #if BOOST_VERSION >= 107000
+   //NOLINTNEXTLINE(*-type-static-cast-downcast)
+   return static_cast<boost::asio::io_context&>((s).get_executor().context());
+   #else
+   return s.get_io_service();
+   #endif
+}
 
 void log_exception(const char* where, const std::exception& e) {
    std::cout << where << ' ' << e.what() << std::endl;
@@ -75,8 +79,9 @@ class ServerStatus {
       ServerStatus(size_t max_clients) : m_max_clients(max_clients), m_clients_serviced(0) {}
 
       bool should_exit() const {
-         if(m_max_clients == 0)
+         if(m_max_clients == 0) {
             return false;
+         }
 
          return clients_serviced() >= m_max_clients;
       }
@@ -98,10 +103,10 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
       typedef std::shared_ptr<tls_proxy_session> pointer;
 
       static pointer create(boost::asio::io_service& io,
-                            std::shared_ptr<Botan::TLS::Session_Manager> session_manager,
-                            std::shared_ptr<Botan::Credentials_Manager> credentials,
-                            std::shared_ptr<Botan::TLS::Policy> policy,
-                            tcp::resolver::iterator endpoints) {
+                            const std::shared_ptr<Botan::TLS::Session_Manager>& session_manager,
+                            const std::shared_ptr<Botan::Credentials_Manager>& credentials,
+                            const std::shared_ptr<Botan::TLS::Policy>& policy,
+                            const tcp::resolver::iterator& endpoints) {
          auto session = std::make_shared<tls_proxy_session>(io, endpoints);
 
          // Defer the setup of the TLS server to make use of
@@ -137,15 +142,15 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
 
       tls_proxy_session(boost::asio::io_service& io, tcp::resolver::iterator endpoints) :
             m_strand(io),
-            m_server_endpoints(endpoints),
+            m_server_endpoints(std::move(endpoints)),
             m_client_socket(io),
             m_server_socket(io),
             m_rng(cli_make_rng()) {}
 
    private:
-      void setup(std::shared_ptr<Botan::TLS::Session_Manager> session_manager,
-                 std::shared_ptr<Botan::Credentials_Manager> credentials,
-                 std::shared_ptr<Botan::TLS::Policy> policy) {
+      void setup(const std::shared_ptr<Botan::TLS::Session_Manager>& session_manager,
+                 const std::shared_ptr<Botan::Credentials_Manager>& credentials,
+                 const std::shared_ptr<Botan::TLS::Policy>& policy) {
          m_tls = std::make_unique<Botan::TLS::Server>(shared_from_this(), session_manager, credentials, policy, m_rng);
       }
 
@@ -277,7 +282,7 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
       }
 
       void tls_session_activated() override {
-         auto onConnect = [this](boost::system::error_code ec, tcp::resolver::iterator /*endpoint*/) {
+         auto onConnect = [this](boost::system::error_code ec, const tcp::resolver::iterator& /*endpoint*/) {
             if(ec) {
                log_error("Server connection", ec);
                return;
@@ -333,10 +338,10 @@ class tls_proxy_server final {
                        std::shared_ptr<Botan::TLS::Session_Manager> session_mgr,
                        size_t max_clients) :
             m_acceptor(io, tcp::endpoint(tcp::v4(), port)),
-            m_server_endpoints(endpoints),
-            m_creds(creds),
-            m_policy(policy),
-            m_session_manager(session_mgr),
+            m_server_endpoints(std::move(endpoints)),
+            m_creds(std::move(creds)),
+            m_policy(std::move(policy)),
+            m_session_manager(std::move(session_mgr)),
             m_status(max_clients) {
          session::pointer new_session = make_session();
 
@@ -347,7 +352,7 @@ class tls_proxy_server final {
 
    private:
       session::pointer make_session() {
-         return session::create(GET_IO_SERVICE(m_acceptor), m_session_manager, m_creds, m_policy, m_server_endpoints);
+         return session::create(get_io_service(m_acceptor), m_session_manager, m_creds, m_policy, m_server_endpoints);
       }
 
       void serve_one_session() {
@@ -358,7 +363,7 @@ class tls_proxy_server final {
             boost::bind(&tls_proxy_server::handle_accept, this, new_session, boost::asio::placeholders::error));
       }
 
-      void handle_accept(session::pointer new_session, const boost::system::error_code& error) {
+      void handle_accept(const session::pointer& new_session, const boost::system::error_code& error) {
          if(!error) {
             new_session->start();
             m_status.client_serviced();
@@ -392,10 +397,12 @@ class TLS_Proxy final : public Command {
       std::string description() const override { return "Proxies requests between a TLS client and a TLS server"; }
 
       size_t thread_count() const {
-         if(size_t t = get_arg_sz("threads"))
+         if(size_t t = get_arg_sz("threads")) {
             return t;
-         if(size_t t = Botan::OS::get_cpu_available())
+         }
+         if(size_t t = Botan::OS::get_cpu_available()) {
             return t;
+         }
          return 2;
       }
 
