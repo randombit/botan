@@ -40,9 +40,12 @@ We omit any mapping logic for versions before XCode 13.3 since it
 is known that at least 13.3 is required. For such versions we emit
 `CLANG 0 0` which will cause the minimum version detection to kick
 in and stop the build.
+
+Bizarrely, XCode uses the patch level to indicate the minor number,
+and __clang_minor__ is always set to 0.
 */
 
-   #define XCODE_VER (__clang_major__ * 100 + __clang_minor__)
+   #define XCODE_VER (__clang_major__ * 100 + __clang_patchlevel__)
 
    #if XCODE_VER < 1303
 CLANG 0 0
