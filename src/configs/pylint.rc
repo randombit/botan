@@ -40,6 +40,7 @@ disable=
   too-many-arguments,
   too-many-instance-attributes,
   too-many-public-methods,
+  too-many-return-statements,
 
   missing-docstring,       # nice to have, but not necessary in every script
   fixme,                   # is it better to omit the note that something is worth improving???
