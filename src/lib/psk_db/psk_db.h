@@ -65,9 +65,7 @@ class BOTAN_PUBLIC_API(2, 4) PSK_Database {
       }
 
       template <typename Alloc>
-      void set_vec(std::string_view name, const std::vector<uint8_t, Alloc>& psk)
-
-      {
+      void set_vec(std::string_view name, const std::vector<uint8_t, Alloc>& psk) {
          set(name, psk.data(), psk.size());
       }
 
