@@ -19,12 +19,14 @@
       #include <memory>
       #include <optional>
       #include <thread>
+      #include <utility>
 
       #include <botan/asio_stream.h>
       #include <botan/auto_rng.h>
       #include <botan/tls_session_manager_noop.h>
 
       #include <boost/asio.hpp>
+      #include <boost/asio/yield.hpp>
       #include <boost/exception/exception.hpp>
 
       #include "../cli/tls_helpers.h"  // for Basic_Credentials_Manager
@@ -75,6 +77,12 @@ class Peer {
             m_ctx(std::make_shared<Botan::TLS::Context>(m_credentials_manager, m_rng, m_session_mgr, policy)),
             m_timeout_timer(ioc) {}
 
+      Peer(const Peer& other) = delete;
+      Peer(Peer&& other) = delete;
+      Peer& operator=(const Peer& other) = delete;
+      Peer& operator=(Peer&& other) = delete;
+
+      // NOLINTNEXTLINE(*-exception-escape)
       virtual ~Peer() { cancel_timeout(); }
 
       net::mutable_buffer buffer() { return net::buffer(m_data, max_msg_length); }
@@ -122,7 +130,16 @@ class Peer {
 
       void cancel_timeout() { m_timeout_timer.cancel(); }
 
-   protected:
+      ssl_stream& stream() { return *m_stream; }
+
+      void create_stream(std::unique_ptr<ssl_stream> stream) {
+         BOTAN_ASSERT(!m_stream, "Stream is only assigned once");
+         m_stream = std::move(stream);
+      }
+
+      std::shared_ptr<Botan::TLS::Context> ctx() { return m_ctx; }
+
+   private:
       std::shared_ptr<Botan::AutoSeeded_RNG> m_rng;
       std::shared_ptr<Basic_Credentials_Manager> m_credentials_manager;
       std::shared_ptr<Botan::TLS::Session_Manager_Noop> m_session_mgr;
@@ -161,26 +178,28 @@ class Result_Wrapper {
       Result m_result;
 };
 
+// Control messages
+// The messages below can be used by the test clients in order to configure the server's behavior during a test
+// case.
+//
+// Tell the server that the next read should result in a StreamTruncated error
+const std::string EXPECT_SHORT_READ_MESSAGE = "SHORT_READ";
+// Prepare the server for the test case "Shutdown No Response"
+const std::string PREPARE_SHUTDOWN_NO_RESPONSE_MESSAGE = "SHUTDOWN_NOW";
+
 class Server : public Peer,
                public std::enable_shared_from_this<Server> {
    public:
-      Server(std::shared_ptr<const Botan::TLS::Policy> policy, net::io_context& ioc, const std::string& test_name) :
-            Peer(std::move(policy), ioc, server_cert(), server_key()),
+      Server(const std::shared_ptr<const Botan::TLS::Policy>& policy,
+             net::io_context& ioc,
+             const std::string& test_name) :
+            Peer(policy, ioc, server_cert(), server_key()),
             m_acceptor(ioc),
             m_result("Server (" + test_name + ")"),
             m_short_read_expected(false),
             m_move_before_accept(false) {
          reset_timeout("startup");
       }
-
-      // Control messages
-      // The messages below can be used by the test clients in order to configure the server's behavior during a test
-      // case.
-      //
-      // Tell the server that the next read should result in a StreamTruncated error
-      std::string expect_short_read_message = "SHORT_READ";
-      // Prepare the server for the test case "Shutdown No Response"
-      std::string prepare_shutdown_no_response_message = "SHUTDOWN_NOW";
 
       void listen() {
          error_code ec;
@@ -213,20 +232,20 @@ class Server : public Peer,
 
          if(m_move_before_accept) {
             // regression test for #2635
-            ssl_stream s(std::move(socket), m_ctx);
-            m_stream = std::make_unique<ssl_stream>(std::move(s));
+            ssl_stream s(std::move(socket), ctx());
+            create_stream(std::make_unique<ssl_stream>(std::move(s)));
          } else {
-            m_stream = std::make_unique<ssl_stream>(std::move(socket), m_ctx);
+            create_stream(std::make_unique<ssl_stream>(std::move(socket), ctx()));
          }
 
          reset_timeout("handshake");
-         m_stream->async_handshake(Botan::TLS::Connection_Side::Server,
-                                   std::bind(&Server::handle_handshake, shared_from_this(), _1));
+         stream().async_handshake(Botan::TLS::Connection_Side::Server,
+                                  std::bind(&Server::handle_handshake, shared_from_this(), _1));
       }
 
       void shutdown() {
          error_code shutdown_ec;
-         m_stream->shutdown(shutdown_ec);
+         stream().shutdown(shutdown_ec);
          m_result.expect_success("shutdown", shutdown_ec);
          handle_write(error_code{});
       }
@@ -239,7 +258,7 @@ class Server : public Peer,
       void handle_write(const error_code& ec) {
          m_result.expect_success("send_response", ec);
          reset_timeout("read_message");
-         net::async_read(*m_stream,
+         net::async_read(stream(),
                          buffer(),
                          std::bind(&Server::received_zero_byte, shared_from_this(), _1, _2),
                          std::bind(&Server::handle_read, shared_from_this(), _1, _2));
@@ -253,10 +272,10 @@ class Server : public Peer,
          }
 
          if(ec) {
-            if(m_stream->shutdown_received()) {
+            if(stream().shutdown_received()) {
                m_result.expect_ec("received EOF after close_notify", net::error::eof, ec);
                reset_timeout("shutdown");
-               m_stream->async_shutdown(std::bind(&Server::handle_shutdown, shared_from_this(), _1));
+               stream().async_shutdown(std::bind(&Server::handle_shutdown, shared_from_this(), _1));
             } else {
                m_result.test_failure("Unexpected error code: " + ec.message());
                cancel_timeout();
@@ -266,19 +285,19 @@ class Server : public Peer,
 
          m_result.expect_success("read_message", ec);
 
-         if(message() == prepare_shutdown_no_response_message) {
+         if(message() == PREPARE_SHUTDOWN_NO_RESPONSE_MESSAGE) {
             m_short_read_expected = true;
             shutdown();
             return;
          }
 
-         if(message() == expect_short_read_message) {
+         if(message() == EXPECT_SHORT_READ_MESSAGE) {
             m_short_read_expected = true;
          }
 
          reset_timeout("send_response");
          net::async_write(
-            *m_stream, buffer(bytes_transferred), std::bind(&Server::handle_write, shared_from_this(), _1));
+            stream(), buffer(bytes_transferred), std::bind(&Server::handle_write, shared_from_this(), _1));
       }
 
       void handle_shutdown(const error_code& ec) {
@@ -304,24 +323,20 @@ class Client : public Peer {
                              const Botan::TLS::Policy&) {}
 
    public:
-      Client(std::shared_ptr<const Botan::TLS::Policy> policy, net::io_context& ioc) : Peer(std::move(policy), ioc) {
-         m_ctx->set_verify_callback(accept_all);
-         m_stream = std::make_unique<ssl_stream>(ioc, m_ctx);
+      Client(const std::shared_ptr<const Botan::TLS::Policy>& policy, net::io_context& ioc) : Peer(policy, ioc) {
+         ctx()->set_verify_callback(accept_all);
+         create_stream(std::make_unique<ssl_stream>(ioc, ctx()));
       }
-
-      ssl_stream& stream() { return *m_stream; }
 
       void close_socket() {
          // Shutdown on TCP level before closing the socket for portable behavior. Otherwise the peer will see a
          // connection_reset error rather than EOF on Windows.
          // See the remark in
          // https://www.boost.org/doc/libs/1_68_0/doc/html/boost_asio/reference/basic_stream_socket/close/overload1.html
-         m_stream->lowest_layer().shutdown(tcp::socket::shutdown_both);
-         m_stream->lowest_layer().close();
+         stream().lowest_layer().shutdown(tcp::socket::shutdown_both);
+         stream().lowest_layer().close();
       }
 };
-
-      #include <boost/asio/yield.hpp>
 
 class TestBase {
    public:
@@ -344,6 +359,11 @@ class TestBase {
 
       virtual ~TestBase() = default;
 
+      TestBase(const TestBase& other) = delete;
+      TestBase(TestBase&& other) = delete;
+      TestBase& operator=(const TestBase& other) = delete;
+      TestBase& operator=(TestBase&& other) = delete;
+
       virtual void finishAsynchronousWork() {}
 
       void fail(const std::string& msg) { m_result.test_failure(msg); }
@@ -357,7 +377,13 @@ class TestBase {
       //! retire client and server instances after a job well done
       void teardown() { m_client->cancel_timeout(); }
 
-   protected:
+      std::shared_ptr<Client>& client() { return m_client; }
+
+      std::shared_ptr<Server>& server() { return m_server; }
+
+      Result_Wrapper& result() { return m_result; }
+
+   private:
       std::string m_name;
 
       std::shared_ptr<Client> m_client;
@@ -377,11 +403,11 @@ class Synchronous_Test : public TestBase {
             try {
                this->run_synchronous_client();
             } catch(const std::exception& ex) {
-               m_result.test_failure(std::string("sync client failed with: ") + ex.what());
+               result().test_failure(std::string("sync client failed with: ") + ex.what());
             } catch(const boost::exception&) {
-               m_result.test_failure("sync client failed with boost exception");
+               result().test_failure("sync client failed with boost exception");
             } catch(...) {
-               m_result.test_failure("sync client failed with unknown error");
+               result().test_failure("sync client failed with unknown error");
             }
          });
       }
@@ -404,48 +430,48 @@ class Test_Conversation : public TestBase,
    public:
       Test_Conversation(net::io_context& ioc,
                         const std::string& config_name,
-                        std::shared_ptr<const Botan::TLS::Policy> client_policy,
-                        std::shared_ptr<const Botan::TLS::Policy> server_policy,
+                        const std::shared_ptr<const Botan::TLS::Policy>& client_policy,
+                        const std::shared_ptr<const Botan::TLS::Policy>& server_policy,
                         const std::string& test_name = "Test Conversation") :
-            TestBase(ioc, std::move(client_policy), std::move(server_policy), test_name, config_name) {}
+            TestBase(ioc, client_policy, server_policy, test_name, config_name) {}
 
       void run(const error_code& ec) {
          static auto test_case = &Test_Conversation::run;
          const std::string message("Time is an illusion. Lunchtime doubly so.");
 
          reenter(*this) {
-            m_client->reset_timeout("connect");
+            client()->reset_timeout("connect");
             yield net::async_connect(
-               m_client->stream().lowest_layer(), k_endpoints, std::bind(test_case, shared_from_this(), _1));
-            m_result.expect_success("connect", ec);
+               client()->stream().lowest_layer(), k_endpoints, std::bind(test_case, shared_from_this(), _1));
+            result().expect_success("connect", ec);
 
-            m_client->reset_timeout("handshake");
-            yield m_client->stream().async_handshake(Botan::TLS::Connection_Side::Client,
+            client()->reset_timeout("handshake");
+            yield client()->stream().async_handshake(Botan::TLS::Connection_Side::Client,
                                                      std::bind(test_case, shared_from_this(), _1));
-            m_result.expect_success("handshake", ec);
+            result().expect_success("handshake", ec);
 
-            m_client->reset_timeout("send_message");
-            yield net::async_write(m_client->stream(),
+            client()->reset_timeout("send_message");
+            yield net::async_write(client()->stream(),
                                    net::buffer(message.c_str(), message.size() + 1),  // including \0 termination
                                    std::bind(test_case, shared_from_this(), _1));
-            m_result.expect_success("send_message", ec);
+            result().expect_success("send_message", ec);
 
-            m_client->reset_timeout("receive_response");
-            yield net::async_read(m_client->stream(),
-                                  m_client->buffer(),
-                                  std::bind(&Client::received_zero_byte, m_client.get(), _1, _2),
+            client()->reset_timeout("receive_response");
+            yield net::async_read(client()->stream(),
+                                  client()->buffer(),
+                                  std::bind(&Client::received_zero_byte, client().get(), _1, _2),
                                   std::bind(test_case, shared_from_this(), _1));
-            m_result.expect_success("receive_response", ec);
-            m_result.confirm("correct message", m_client->message() == message);
+            result().expect_success("receive_response", ec);
+            result().confirm("correct message", client()->message() == message);
 
-            m_client->reset_timeout("shutdown");
-            yield m_client->stream().async_shutdown(std::bind(test_case, shared_from_this(), _1));
-            m_result.expect_success("shutdown", ec);
+            client()->reset_timeout("shutdown");
+            yield client()->stream().async_shutdown(std::bind(test_case, shared_from_this(), _1));
+            result().expect_success("shutdown", ec);
 
-            m_client->reset_timeout("await close_notify");
-            yield net::async_read(m_client->stream(), m_client->buffer(), std::bind(test_case, shared_from_this(), _1));
-            m_result.confirm("received close_notify", m_client->stream().shutdown_received());
-            m_result.expect_ec("closed with EOF", net::error::eof, ec);
+            client()->reset_timeout("await close_notify");
+            yield net::async_read(client()->stream(), client()->buffer(), std::bind(test_case, shared_from_this(), _1));
+            result().confirm("received close_notify", client()->stream().shutdown_received());
+            result().expect_ec("closed with EOF", net::error::eof, ec);
 
             teardown();
          }
@@ -456,37 +482,36 @@ class Test_Conversation_Sync : public Synchronous_Test {
    public:
       Test_Conversation_Sync(net::io_context& ioc,
                              const std::string& config_name,
-                             std::shared_ptr<const Botan::TLS::Policy> client_policy,
-                             std::shared_ptr<const Botan::TLS::Policy> server_policy) :
-            Synchronous_Test(
-               ioc, std::move(client_policy), std::move(server_policy), "Test Conversation Sync", config_name) {}
+                             const std::shared_ptr<const Botan::TLS::Policy>& client_policy,
+                             const std::shared_ptr<const Botan::TLS::Policy>& server_policy) :
+            Synchronous_Test(ioc, client_policy, server_policy, "Test Conversation Sync", config_name) {}
 
       void run_synchronous_client() override {
          const std::string message("Time is an illusion. Lunchtime doubly so.");
          error_code ec;
 
-         net::connect(m_client->stream().lowest_layer(), k_endpoints, ec);
-         m_result.expect_success("connect", ec);
+         net::connect(client()->stream().lowest_layer(), k_endpoints, ec);
+         result().expect_success("connect", ec);
 
-         m_client->stream().handshake(Botan::TLS::Connection_Side::Client, ec);
-         m_result.expect_success("handshake", ec);
+         client()->stream().handshake(Botan::TLS::Connection_Side::Client, ec);
+         result().expect_success("handshake", ec);
 
-         net::write(m_client->stream(),
+         net::write(client()->stream(),
                     net::buffer(message.c_str(), message.size() + 1),  // including \0 termination
                     ec);
-         m_result.expect_success("send_message", ec);
+         result().expect_success("send_message", ec);
 
          net::read(
-            m_client->stream(), m_client->buffer(), std::bind(&Client::received_zero_byte, m_client.get(), _1, _2), ec);
-         m_result.expect_success("receive_response", ec);
-         m_result.confirm("correct message", m_client->message() == message);
+            client()->stream(), client()->buffer(), std::bind(&Client::received_zero_byte, client().get(), _1, _2), ec);
+         result().expect_success("receive_response", ec);
+         result().confirm("correct message", client()->message() == message);
 
-         m_client->stream().shutdown(ec);
-         m_result.expect_success("shutdown", ec);
+         client()->stream().shutdown(ec);
+         result().expect_success("shutdown", ec);
 
-         net::read(m_client->stream(), m_client->buffer(), ec);
-         m_result.confirm("received close_notify", m_client->stream().shutdown_received());
-         m_result.expect_ec("closed with EOF", net::error::eof, ec);
+         net::read(client()->stream(), client()->buffer(), ec);
+         result().confirm("received close_notify", client()->stream().shutdown_received());
+         result().expect_ec("closed with EOF", net::error::eof, ec);
 
          teardown();
       }
@@ -502,29 +527,29 @@ class Test_Eager_Close : public TestBase,
    public:
       Test_Eager_Close(net::io_context& ioc,
                        const std::string& config_name,
-                       std::shared_ptr<const Botan::TLS::Policy> client_policy,
-                       std::shared_ptr<const Botan::TLS::Policy> server_policy) :
-            TestBase(ioc, std::move(client_policy), std::move(server_policy), "Test Eager Close", config_name) {}
+                       const std::shared_ptr<const Botan::TLS::Policy>& client_policy,
+                       const std::shared_ptr<const Botan::TLS::Policy>& server_policy) :
+            TestBase(ioc, client_policy, server_policy, "Test Eager Close", config_name) {}
 
       void run(const error_code& ec) {
          static auto test_case = &Test_Eager_Close::run;
          reenter(*this) {
-            m_client->reset_timeout("connect");
+            client()->reset_timeout("connect");
             yield net::async_connect(
-               m_client->stream().lowest_layer(), k_endpoints, std::bind(test_case, shared_from_this(), _1));
-            m_result.expect_success("connect", ec);
+               client()->stream().lowest_layer(), k_endpoints, std::bind(test_case, shared_from_this(), _1));
+            result().expect_success("connect", ec);
 
-            m_client->reset_timeout("handshake");
-            yield m_client->stream().async_handshake(Botan::TLS::Connection_Side::Client,
+            client()->reset_timeout("handshake");
+            yield client()->stream().async_handshake(Botan::TLS::Connection_Side::Client,
                                                      std::bind(test_case, shared_from_this(), _1));
-            m_result.expect_success("handshake", ec);
+            result().expect_success("handshake", ec);
 
-            m_client->reset_timeout("shutdown");
-            yield m_client->stream().async_shutdown(std::bind(test_case, shared_from_this(), _1));
-            m_result.expect_success("shutdown", ec);
+            client()->reset_timeout("shutdown");
+            yield client()->stream().async_shutdown(std::bind(test_case, shared_from_this(), _1));
+            result().expect_success("shutdown", ec);
 
-            m_client->close_socket();
-            m_result.confirm("did not receive close_notify", !m_client->stream().shutdown_received());
+            client()->close_socket();
+            result().confirm("did not receive close_notify", !client()->stream().shutdown_received());
 
             teardown();
          }
@@ -535,25 +560,24 @@ class Test_Eager_Close_Sync : public Synchronous_Test {
    public:
       Test_Eager_Close_Sync(net::io_context& ioc,
                             const std::string& config_name,
-                            std::shared_ptr<const Botan::TLS::Policy> client_policy,
-                            std::shared_ptr<const Botan::TLS::Policy> server_policy) :
-            Synchronous_Test(
-               ioc, std::move(client_policy), std::move(server_policy), "Test Eager Close Sync", config_name) {}
+                            const std::shared_ptr<const Botan::TLS::Policy>& client_policy,
+                            const std::shared_ptr<const Botan::TLS::Policy>& server_policy) :
+            Synchronous_Test(ioc, client_policy, server_policy, "Test Eager Close Sync", config_name) {}
 
       void run_synchronous_client() override {
          error_code ec;
 
-         net::connect(m_client->stream().lowest_layer(), k_endpoints, ec);
-         m_result.expect_success("connect", ec);
+         net::connect(client()->stream().lowest_layer(), k_endpoints, ec);
+         result().expect_success("connect", ec);
 
-         m_client->stream().handshake(Botan::TLS::Connection_Side::Client, ec);
-         m_result.expect_success("handshake", ec);
+         client()->stream().handshake(Botan::TLS::Connection_Side::Client, ec);
+         result().expect_success("handshake", ec);
 
-         m_client->stream().shutdown(ec);
-         m_result.expect_success("shutdown", ec);
+         client()->stream().shutdown(ec);
+         result().expect_success("shutdown", ec);
 
-         m_client->close_socket();
-         m_result.confirm("did not receive close_notify", !m_client->stream().shutdown_received());
+         client()->close_socket();
+         result().confirm("did not receive close_notify", !client()->stream().shutdown_received());
 
          teardown();
       }
@@ -568,43 +592,41 @@ class Test_Close_Without_Shutdown : public TestBase,
    public:
       Test_Close_Without_Shutdown(net::io_context& ioc,
                                   const std::string& config_name,
-                                  std::shared_ptr<const Botan::TLS::Policy> client_policy,
-                                  std::shared_ptr<const Botan::TLS::Policy> server_policy) :
-            TestBase(
-               ioc, std::move(client_policy), std::move(server_policy), "Test Close Without Shutdown", config_name) {}
+                                  const std::shared_ptr<const Botan::TLS::Policy>& client_policy,
+                                  const std::shared_ptr<const Botan::TLS::Policy>& server_policy) :
+            TestBase(ioc, client_policy, server_policy, "Test Close Without Shutdown", config_name) {}
 
       void run(const error_code& ec) {
          static auto test_case = &Test_Close_Without_Shutdown::run;
          reenter(*this) {
-            m_client->reset_timeout("connect");
+            client()->reset_timeout("connect");
             yield net::async_connect(
-               m_client->stream().lowest_layer(), k_endpoints, std::bind(test_case, shared_from_this(), _1));
-            m_result.expect_success("connect", ec);
+               client()->stream().lowest_layer(), k_endpoints, std::bind(test_case, shared_from_this(), _1));
+            result().expect_success("connect", ec);
 
-            m_client->reset_timeout("handshake");
-            yield m_client->stream().async_handshake(Botan::TLS::Connection_Side::Client,
+            client()->reset_timeout("handshake");
+            yield client()->stream().async_handshake(Botan::TLS::Connection_Side::Client,
                                                      std::bind(test_case, shared_from_this(), _1));
-            m_result.expect_success("handshake", ec);
+            result().expect_success("handshake", ec);
 
             // send the control message to configure the server to expect a short-read
-            m_client->reset_timeout("send expect_short_read message");
-            yield net::async_write(
-               m_client->stream(),
-               net::buffer(m_server->expect_short_read_message.c_str(),
-                           m_server->expect_short_read_message.size() + 1),  // including \0 termination
-               std::bind(test_case, shared_from_this(), _1));
-            m_result.expect_success("send expect_short_read message", ec);
+            client()->reset_timeout("send expect_short_read message");
+            yield net::async_write(client()->stream(),
+                                   net::buffer(EXPECT_SHORT_READ_MESSAGE.c_str(),
+                                               EXPECT_SHORT_READ_MESSAGE.size() + 1),  // including \0 termination
+                                   std::bind(test_case, shared_from_this(), _1));
+            result().expect_success("send expect_short_read message", ec);
 
             // read the confirmation of the control message above
-            m_client->reset_timeout("receive_response");
-            yield net::async_read(m_client->stream(),
-                                  m_client->buffer(),
-                                  std::bind(&Client::received_zero_byte, m_client.get(), _1, _2),
+            client()->reset_timeout("receive_response");
+            yield net::async_read(client()->stream(),
+                                  client()->buffer(),
+                                  std::bind(&Client::received_zero_byte, client().get(), _1, _2),
                                   std::bind(test_case, shared_from_this(), _1));
-            m_result.expect_success("receive_response", ec);
+            result().expect_success("receive_response", ec);
 
-            m_client->close_socket();
-            m_result.confirm("did not receive close_notify", !m_client->stream().shutdown_received());
+            client()->close_socket();
+            result().confirm("did not receive close_notify", !client()->stream().shutdown_received());
 
             teardown();
          }
@@ -615,26 +637,22 @@ class Test_Close_Without_Shutdown_Sync : public Synchronous_Test {
    public:
       Test_Close_Without_Shutdown_Sync(net::io_context& ioc,
                                        const std::string& config_name,
-                                       std::shared_ptr<const Botan::TLS::Policy> client_policy,
-                                       std::shared_ptr<const Botan::TLS::Policy> server_policy) :
-            Synchronous_Test(ioc,
-                             std::move(client_policy),
-                             std::move(server_policy),
-                             "Test Close Without Shutdown Sync",
-                             config_name) {}
+                                       const std::shared_ptr<const Botan::TLS::Policy>& client_policy,
+                                       const std::shared_ptr<const Botan::TLS::Policy>& server_policy) :
+            Synchronous_Test(ioc, client_policy, server_policy, "Test Close Without Shutdown Sync", config_name) {}
 
       void run_synchronous_client() override {
          error_code ec;
-         net::connect(m_client->stream().lowest_layer(), k_endpoints, ec);
-         m_result.expect_success("connect", ec);
+         net::connect(client()->stream().lowest_layer(), k_endpoints, ec);
+         result().expect_success("connect", ec);
 
-         m_client->stream().handshake(Botan::TLS::Connection_Side::Client, ec);
-         m_result.expect_success("handshake", ec);
+         client()->stream().handshake(Botan::TLS::Connection_Side::Client, ec);
+         result().expect_success("handshake", ec);
 
-         m_server->expect_short_read();
+         server()->expect_short_read();
 
-         m_client->close_socket();
-         m_result.confirm("did not receive close_notify", !m_client->stream().shutdown_received());
+         client()->close_socket();
+         result().confirm("did not receive close_notify", !client()->stream().shutdown_received());
 
          teardown();
       }
@@ -650,41 +668,40 @@ class Test_No_Shutdown_Response : public TestBase,
    public:
       Test_No_Shutdown_Response(net::io_context& ioc,
                                 const std::string& config_name,
-                                std::shared_ptr<const Botan::TLS::Policy> client_policy,
-                                std::shared_ptr<const Botan::TLS::Policy> server_policy) :
-            TestBase(
-               ioc, std::move(client_policy), std::move(server_policy), "Test No Shutdown Response", config_name) {}
+                                const std::shared_ptr<const Botan::TLS::Policy>& client_policy,
+                                const std::shared_ptr<const Botan::TLS::Policy>& server_policy) :
+            TestBase(ioc, client_policy, server_policy, "Test No Shutdown Response", config_name) {}
 
       void run(const error_code& ec) {
          static auto test_case = &Test_No_Shutdown_Response::run;
          reenter(*this) {
-            m_client->reset_timeout("connect");
+            client()->reset_timeout("connect");
             yield net::async_connect(
-               m_client->stream().lowest_layer(), k_endpoints, std::bind(test_case, shared_from_this(), _1));
-            m_result.expect_success("connect", ec);
+               client()->stream().lowest_layer(), k_endpoints, std::bind(test_case, shared_from_this(), _1));
+            result().expect_success("connect", ec);
 
-            m_client->reset_timeout("handshake");
-            yield m_client->stream().async_handshake(Botan::TLS::Connection_Side::Client,
+            client()->reset_timeout("handshake");
+            yield client()->stream().async_handshake(Botan::TLS::Connection_Side::Client,
                                                      std::bind(test_case, shared_from_this(), _1));
-            m_result.expect_success("handshake", ec);
+            result().expect_success("handshake", ec);
 
             // send a control message to make the server shut down
-            m_client->reset_timeout("send shutdown message");
+            client()->reset_timeout("send shutdown message");
             yield net::async_write(
-               m_client->stream(),
-               net::buffer(m_server->prepare_shutdown_no_response_message.c_str(),
-                           m_server->prepare_shutdown_no_response_message.size() + 1),  // including \0 termination
+               client()->stream(),
+               net::buffer(PREPARE_SHUTDOWN_NO_RESPONSE_MESSAGE.c_str(),
+                           PREPARE_SHUTDOWN_NO_RESPONSE_MESSAGE.size() + 1),  // including \0 termination
                std::bind(test_case, shared_from_this(), _1));
-            m_result.expect_success("send shutdown message", ec);
+            result().expect_success("send shutdown message", ec);
 
             // read the server's close-notify message
-            m_client->reset_timeout("read close_notify");
-            yield net::async_read(m_client->stream(), m_client->buffer(), std::bind(test_case, shared_from_this(), _1));
-            m_result.expect_ec("read gives EOF", net::error::eof, ec);
-            m_result.confirm("received close_notify", m_client->stream().shutdown_received());
+            client()->reset_timeout("read close_notify");
+            yield net::async_read(client()->stream(), client()->buffer(), std::bind(test_case, shared_from_this(), _1));
+            result().expect_ec("read gives EOF", net::error::eof, ec);
+            result().confirm("received close_notify", client()->stream().shutdown_received());
 
             // close the socket rather than shutting down
-            m_client->close_socket();
+            client()->close_socket();
 
             teardown();
          }
@@ -695,32 +712,30 @@ class Test_No_Shutdown_Response_Sync : public Synchronous_Test {
    public:
       Test_No_Shutdown_Response_Sync(net::io_context& ioc,
                                      const std::string& config_name,
-                                     std::shared_ptr<const Botan::TLS::Policy> client_policy,
-                                     std::shared_ptr<const Botan::TLS::Policy> server_policy) :
-            Synchronous_Test(
-               ioc, std::move(client_policy), std::move(server_policy), "Test No Shutdown Response Sync", config_name) {
-      }
+                                     const std::shared_ptr<const Botan::TLS::Policy>& client_policy,
+                                     const std::shared_ptr<const Botan::TLS::Policy>& server_policy) :
+            Synchronous_Test(ioc, client_policy, server_policy, "Test No Shutdown Response Sync", config_name) {}
 
       void run_synchronous_client() override {
          error_code ec;
-         net::connect(m_client->stream().lowest_layer(), k_endpoints, ec);
-         m_result.expect_success("connect", ec);
+         net::connect(client()->stream().lowest_layer(), k_endpoints, ec);
+         result().expect_success("connect", ec);
 
-         m_client->stream().handshake(Botan::TLS::Connection_Side::Client, ec);
-         m_result.expect_success("handshake", ec);
+         client()->stream().handshake(Botan::TLS::Connection_Side::Client, ec);
+         result().expect_success("handshake", ec);
 
-         net::write(m_client->stream(),
-                    net::buffer(m_server->prepare_shutdown_no_response_message.c_str(),
-                                m_server->prepare_shutdown_no_response_message.size() + 1),  // including \0 termination
+         net::write(client()->stream(),
+                    net::buffer(PREPARE_SHUTDOWN_NO_RESPONSE_MESSAGE.c_str(),
+                                PREPARE_SHUTDOWN_NO_RESPONSE_MESSAGE.size() + 1),  // including \0 termination
                     ec);
-         m_result.expect_success("send expect_short_read message", ec);
+         result().expect_success("send expect_short_read message", ec);
 
-         net::read(m_client->stream(), m_client->buffer(), ec);
-         m_result.expect_ec("read gives EOF", net::error::eof, ec);
-         m_result.confirm("received close_notify", m_client->stream().shutdown_received());
+         net::read(client()->stream(), client()->buffer(), ec);
+         result().expect_ec("read gives EOF", net::error::eof, ec);
+         result().confirm("received close_notify", client()->stream().shutdown_received());
 
          // close the socket rather than shutting down
-         m_client->close_socket();
+         client()->close_socket();
 
          teardown();
       }
@@ -729,37 +744,26 @@ class Test_No_Shutdown_Response_Sync : public Synchronous_Test {
 class Test_Conversation_With_Move : public Test_Conversation {
    public:
       Test_Conversation_With_Move(net::io_context& ioc,
-                                  std::string config_name,
-                                  std::shared_ptr<const Botan::TLS::Policy> client_policy,
-                                  std::shared_ptr<const Botan::TLS::Policy> server_policy) :
-            Test_Conversation(ioc,
-                              std::move(config_name),
-                              std::move(client_policy),
-                              std::move(server_policy),
-                              "Test Conversation With Move") {
-         m_server->move_before_accept();
+                                  const std::string& config_name,
+                                  const std::shared_ptr<const Botan::TLS::Policy>& client_policy,
+                                  const std::shared_ptr<const Botan::TLS::Policy>& server_policy) :
+            Test_Conversation(ioc, config_name, client_policy, server_policy, "Test Conversation With Move") {
+         server()->move_before_accept();
       }
 };
 
-      #include <boost/asio/unyield.hpp>
-      #include <utility>
-
-struct SystemConfiguration {
-      std::string name;
-
-      std::shared_ptr<Botan::TLS::Text_Policy> client_policy;
-      std::shared_ptr<Botan::TLS::Text_Policy> server_policy;
-
+class SystemConfiguration {
+   public:
       SystemConfiguration(std::string n, const std::string& cp, const std::string& sp) :
-            name(std::move(n)),
-            client_policy(std::make_shared<Botan::TLS::Text_Policy>(cp)),
-            server_policy(std::make_shared<Botan::TLS::Text_Policy>(sp)) {}
+            m_name(std::move(n)),
+            m_client_policy(std::make_shared<Botan::TLS::Text_Policy>(cp)),
+            m_server_policy(std::make_shared<Botan::TLS::Text_Policy>(sp)) {}
 
       template <typename TestT>
       void run(std::vector<Result>& results) {
          net::io_context ioc;
 
-         auto t = std::make_shared<TestT>(ioc, name, server_policy, client_policy);
+         auto t = std::make_shared<TestT>(ioc, m_name, m_server_policy, m_client_policy);
 
          t->run(error_code{});
 
@@ -778,6 +782,12 @@ struct SystemConfiguration {
          t->finishAsynchronousWork();
          t->extend_results(results);
       }
+
+   private:
+      std::string m_name;
+
+      std::shared_ptr<Botan::TLS::Text_Policy> m_client_policy;
+      std::shared_ptr<Botan::TLS::Text_Policy> m_server_policy;
 };
 
 std::vector<SystemConfiguration> get_configurations() {

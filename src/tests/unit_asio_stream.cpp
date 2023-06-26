@@ -64,7 +64,7 @@ class MockChannel {
 
       bool is_active() const { return m_active; }
 
-   protected:
+   private:
       std::shared_ptr<Botan::TLS::Callbacks> m_callbacks;
       std::size_t m_bytes_till_complete_record;  // number of bytes still to read before tls record is completed
       bool m_active;
@@ -97,8 +97,6 @@ class AsioStream : public Botan::TLS::Stream<TestStream, MockChannel> {
       AsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) : Stream(context, args...) {
          m_native_handle = std::make_unique<MockChannel>(m_core);
       }
-
-      ~AsioStream() override = default;
 };
 
 class ThrowingAsioStream : public Botan::TLS::Stream<TestStream, ThrowingMockChannel> {
@@ -107,8 +105,6 @@ class ThrowingAsioStream : public Botan::TLS::Stream<TestStream, ThrowingMockCha
       ThrowingAsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) : Stream(context, args...) {
          m_native_handle = std::make_unique<ThrowingMockChannel>(m_core);
       }
-
-      ~ThrowingAsioStream() override = default;
 };
 
 /**
