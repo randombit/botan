@@ -222,15 +222,6 @@ def main(args = None): # pylint: disable=too-many-return-statements
 
     (compile_commands_file, compile_commands) = load_compile_commands(options.build_dir)
 
-    # For some reason clang-tidy takes an enourmous amount of time
-    # on this file; skip it for now
-    def remove_bad(cc):
-        if cc['file'].find('tls_client_impl_12.cpp') > 0:
-            return True
-        return False
-
-    compile_commands = [x for x in compile_commands if not remove_bad(x)]
-
     if options.fast_checks_only:
         check_config = ','.join(quick_checks)
     else:
