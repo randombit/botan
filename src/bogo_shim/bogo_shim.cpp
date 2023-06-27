@@ -225,7 +225,7 @@ std::string map_to_bogo_error(const std::string& e) {
       {"Server sent ECC curve prohibited by policy", ":WRONG_CURVE:"},
       {"group was not advertised as supported", ":WRONG_CURVE:"},
       {"group was already offered", ":WRONG_CURVE:"},
-      {"Server selected an unexpected key exchange group.", ":WRONG_CURVE:"},
+      {"Server selected a key exchange group we didn't offer.", ":WRONG_CURVE:"},
       {"TLS 1.3 Server Hello selected a different version", ":SECOND_SERVERHELLO_VERSION_MISMATCH:"},
       {"Version downgrade received after Hello Retry", ":SECOND_SERVERHELLO_VERSION_MISMATCH:"},
       {"protected change cipher spec received", ":UNEXPECTED_RECORD:"},

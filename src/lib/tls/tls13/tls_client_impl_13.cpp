@@ -298,8 +298,7 @@ void Client_Impl_13::handle(const Server_Hello_13& sh) {
    }
 
    auto my_keyshare = ch.extensions().get<Key_Share>();
-   auto shared_secret = my_keyshare->exchange(*sh.extensions().get<Key_Share>(), policy(), callbacks(), rng());
-   my_keyshare->erase();
+   auto shared_secret = my_keyshare->decapsulate(*sh.extensions().get<Key_Share>(), policy(), callbacks(), rng());
 
    m_transcript_hash.set_algorithm(cipher.value().prf_algo());
 

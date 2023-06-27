@@ -253,18 +253,17 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
       // Currently, PSK without DHE is not implemented...
       const auto my_keyshare = m_handshake_state.server_hello().extensions().get<Key_Share>();
       BOTAN_ASSERT_NONNULL(my_keyshare);
-      auto shared_secret = my_keyshare->exchange(*exts.get<Key_Share>(), policy(), callbacks(), rng());
-      my_keyshare->erase();
 
       if(uses_psk) {
          BOTAN_ASSERT_NONNULL(psk_cipher_state);
          psk_cipher_state->advance_with_client_hello(m_transcript_hash.previous());
-         psk_cipher_state->advance_with_server_hello(cipher, std::move(shared_secret), m_transcript_hash.current());
+         psk_cipher_state->advance_with_server_hello(
+            cipher, my_keyshare->take_shared_secret(), m_transcript_hash.current());
 
          return std::move(psk_cipher_state);
       } else {
          return Cipher_State::init_with_server_hello(
-            m_side, std::move(shared_secret), cipher, m_transcript_hash.current());
+            m_side, my_keyshare->take_shared_secret(), cipher, m_transcript_hash.current());
       }
    }();
 

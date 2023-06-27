@@ -255,6 +255,98 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
                                       const std::vector<uint8_t>& msg,
                                       const std::vector<uint8_t>& sig);
 
+      struct Encapsulation_Result {
+            std::vector<uint8_t> encapsulated_bytes;
+            secure_vector<uint8_t> shared_secret;
+      };
+
+      /**
+       * Generate an ephemeral KEM key for a TLS 1.3 handshake
+       *
+       * Applications may use this to add custom KEM algorithms or entirely
+       * different key exchange schemes to the TLS 1.3 handshake. For instance,
+       * this could provide an entry point to implement a hybrid key exchange
+       * with both a traditional algorithm like ECDH and a quantum-secure KEM.
+       * Typical use cases of the library don't need to do that and serious
+       * security risks are associated with customizing TLS's key encapsulation
+       * mechanism.
+       *
+       * Note that the KEM interface is usable for TLS 1.3 handshakes, only.
+       *
+       * The default implementation simply delegates this to the
+       * tls_generate_ephemeral_key() call when appropriate.
+       *
+       * @param group the group identifier to generate an ephemeral keypair for
+       * @param rng   a random number generator
+       *
+       * @returns a keypair whose public key will be provided to the peer and
+       *          the private key will be provided to tls_kem_decapsulate later
+       *          in the handshake.
+       */
+      virtual std::unique_ptr<Private_Key> tls_kem_generate_key(TLS::Group_Params group, RandomNumberGenerator& rng);
+
+      /**
+       * Performs a key encapsulation operation (used for TLS 1.3 servers)
+       *
+       * Applications may use this to add custom KEM algorithms or entirely
+       * different key exchange schemes to the TLS 1.3 handshake. For instance,
+       * this could provide an entry point to implement a hybrid key exchange
+       * with both a traditional algorithm like ECDH and a quantum-secure KEM.
+       * Typical use cases of the library don't need to do that and serious
+       * security risks are associated with customizing TLS's key encapsulation
+       * mechanism.
+       *
+       * Note that the KEM interface is usable for TLS 1.3 handshakes, only.
+       *
+       * The default implementation implements this key encapsulation as a
+       * combination of tls_generate_ephemeral_key() followed by
+       * tls_ephemeral_key_agreement() with the provided @p encoded_public_key.
+       * The just-generated ephemeral private key is destroyed immediately.
+       *
+       * @param group the group identifier of the KEM/KEX algorithm
+       * @param encoded_public_key the public key used for encapsulation/KEX
+       * @param rng a random number generator
+       * @param policy a TLS policy object
+       *
+       * @returns the shared secret both in plaintext and encapsulated with
+       *          @p encoded_public_key.
+       */
+      virtual Encapsulation_Result tls_kem_encapsulate(TLS::Group_Params group,
+                                                       const std::vector<uint8_t>& encoded_public_key,
+                                                       RandomNumberGenerator& rng,
+                                                       const Policy& policy);
+
+      /**
+       * Performs a key decapsulation operation (used for TLS 1.3 clients).
+       *
+       * Applications may use this to add custom KEM algorithms or entirely
+       * different key exchange schemes to the TLS 1.3 handshake. For instance,
+       * this could provide an entry point to implement a hybrid key exchange
+       * with both a traditional algorithm like ECDH and a quantum-secure KEM.
+       * Typical use cases of the library don't need to do that and serious
+       * security risks are associated with customizing TLS's key encapsulation
+       * mechanism.
+       *
+       * Note that the KEM interface is usable for TLS 1.3 handshakes, only.
+       *
+       * The default implementation simply delegates this to the
+       * tls_ephemeral_key_agreement() callback to obtain the shared secret.
+       *
+       * @param group the group identifier of the KEM/KEX algorithm
+       * @param private_key the private key used for decapsulation/KEX
+       * @param encapsulated_bytes the content to decapsulate (or the public key share)
+       * @param rng a random number generator
+       * @param policy a TLS policy object
+       *
+       * @returns the plaintext shared secret from @p encapsulated_bytes after
+       *          decapsulation with @p private_key.
+       */
+      virtual secure_vector<uint8_t> tls_kem_decapsulate(TLS::Group_Params group,
+                                                         const Private_Key& private_key,
+                                                         const std::vector<uint8_t>& encapsulated_bytes,
+                                                         RandomNumberGenerator& rng,
+                                                         const Policy& policy);
+
       /**
        * Generate an ephemeral key pair for the TLS handshake.
        *

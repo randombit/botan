@@ -663,13 +663,31 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension {
       bool empty() const override;
 
       /**
-       * Perform key exchange with the peer's key share.
-       * This method can be called on a ClientHello's Key_Share with a ServerHello's Key_Share or vice versa.
+       * Creates a Key_Share extension meant for the Server Hello that
+       * performs a key encapsulation with the selected public key from
+       * the client.
+       *
+       * @note This will retain the shared secret in the Key_Share extension
+       *       until it is retrieved via take_shared_secret().
        */
-      secure_vector<uint8_t> exchange(const Key_Share& peer_keyshare,
-                                      const Policy& policy,
-                                      Callbacks& cb,
-                                      RandomNumberGenerator& rng) const;
+      static std::unique_ptr<Key_Share> create_as_encapsulation(Group_Params selected_group,
+                                                                const Key_Share& client_keyshare,
+                                                                const Policy& policy,
+                                                                Callbacks& cb,
+                                                                RandomNumberGenerator& rng);
+
+      /**
+       * Decapsulate the shared secret with the peer's key share. This method
+       * can be called on a ClientHello's Key_Share with a ServerHello's
+       * Key_Share.
+       *
+       * @note After the decapsulation the client's private key is destroyed.
+       *       Multiple calls will result in an exception.
+       */
+      secure_vector<uint8_t> decapsulate(const Key_Share& server_keyshare,
+                                         const Policy& policy,
+                                         Callbacks& cb,
+                                         RandomNumberGenerator& rng);
 
       /**
        * Update a ClientHello's Key_Share to comply with a HelloRetryRequest.
@@ -692,23 +710,33 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension {
       Named_Group selected_group() const;
 
       /**
-       * Delete all private keys that might be contained in Key_Share_Entries in this extension.
+       * @returns the shared secret that was obtained by constructing this
+       *          Key_Share object with the peer's.
+       *
+       * @note the shared secret value is std:move'd out. Multiple calls will
+       *       result in an exception.
        */
-      void erase();
+      secure_vector<uint8_t> take_shared_secret();
 
       Key_Share(TLS_Data_Reader& reader, uint16_t extension_size, Handshake_Type message_type);
 
       // constructor used for ClientHello msg
       Key_Share(const Policy& policy, Callbacks& cb, RandomNumberGenerator& rng);
 
-      // constructor used for ServerHello msg
-      Key_Share(Named_Group group, Callbacks& cb, RandomNumberGenerator& rng);
-
       // constructor used for HelloRetryRequest msg
       explicit Key_Share(Named_Group selected_group);
 
       // destructor implemented in .cpp to hide Key_Share_Impl
       ~Key_Share();
+
+   private:
+      // constructor used for ServerHello
+      // (called via create_as_encapsulation())
+      Key_Share(Group_Params selected_group,
+                const Key_Share& client_keyshare,
+                const Policy& policy,
+                Callbacks& cb,
+                RandomNumberGenerator& rng);
 
    private:
       class Key_Share_Impl;

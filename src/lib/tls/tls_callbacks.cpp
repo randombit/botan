@@ -14,6 +14,7 @@
 #include <botan/dl_group.h>
 #include <botan/ecdh.h>
 #include <botan/ocsp.h>
+#include <botan/pk_algs.h>
 #include <botan/tls_algos.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
@@ -129,6 +130,32 @@ bool TLS::Callbacks::tls_verify_message(const Public_Key& key,
    PK_Verifier verifier(key, padding, format);
 
    return verifier.verify_message(msg, sig);
+}
+
+std::unique_ptr<Private_Key> TLS::Callbacks::tls_kem_generate_key(TLS::Group_Params group, RandomNumberGenerator& rng) {
+   return tls_generate_ephemeral_key(group, rng);
+}
+
+TLS::Callbacks::Encapsulation_Result TLS::Callbacks::tls_kem_encapsulate(TLS::Group_Params group,
+                                                                         const std::vector<uint8_t>& encoded_public_key,
+                                                                         RandomNumberGenerator& rng,
+                                                                         const Policy& policy) {
+   auto ephemeral_keypair = tls_generate_ephemeral_key(group, rng);
+   return {ephemeral_keypair->public_value(),
+           tls_ephemeral_key_agreement(group, *ephemeral_keypair, encoded_public_key, rng, policy)};
+}
+
+secure_vector<uint8_t> TLS::Callbacks::tls_kem_decapsulate(TLS::Group_Params group,
+                                                           const Private_Key& private_key,
+                                                           const std::vector<uint8_t>& encapsulated_bytes,
+                                                           RandomNumberGenerator& rng,
+                                                           const Policy& policy) {
+   try {
+      auto& key_agreement_key = dynamic_cast<const PK_Key_Agreement_Key&>(private_key);
+      return tls_ephemeral_key_agreement(group, key_agreement_key, encapsulated_bytes, rng, policy);
+   } catch(const std::bad_cast&) {
+      throw Invalid_Argument("provided ephemeral key is not a PK_Key_Agreement_Key");
+   }
 }
 
 namespace {
