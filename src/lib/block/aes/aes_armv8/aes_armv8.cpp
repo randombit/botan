@@ -15,37 +15,57 @@
 
 namespace Botan {
 
-#define AES_ENC_4_ROUNDS(K)              \
-   do {                                  \
-      B0 = vaesmcq_u8(vaeseq_u8(B0, K)); \
-      B1 = vaesmcq_u8(vaeseq_u8(B1, K)); \
-      B2 = vaesmcq_u8(vaeseq_u8(B2, K)); \
-      B3 = vaesmcq_u8(vaeseq_u8(B3, K)); \
-   } while(0)
+namespace AES_AARCH64 {
 
-#define AES_ENC_4_LAST_ROUNDS(K, K2)       \
-   do {                                    \
-      B0 = veorq_u8(vaeseq_u8(B0, K), K2); \
-      B1 = veorq_u8(vaeseq_u8(B1, K), K2); \
-      B2 = veorq_u8(vaeseq_u8(B2, K), K2); \
-      B3 = veorq_u8(vaeseq_u8(B3, K), K2); \
-   } while(0)
+BOTAN_FUNC_ISA_INLINE("+crypto") void enc(uint8x16_t& B, uint8x16_t K) {
+   B = vaesmcq_u8(vaeseq_u8(B, K));
+}
 
-#define AES_DEC_4_ROUNDS(K)               \
-   do {                                   \
-      B0 = vaesimcq_u8(vaesdq_u8(B0, K)); \
-      B1 = vaesimcq_u8(vaesdq_u8(B1, K)); \
-      B2 = vaesimcq_u8(vaesdq_u8(B2, K)); \
-      B3 = vaesimcq_u8(vaesdq_u8(B3, K)); \
-   } while(0)
+BOTAN_FUNC_ISA_INLINE("+crypto")
+void enc4(uint8x16_t& B0, uint8x16_t& B1, uint8x16_t& B2, uint8x16_t& B3, uint8x16_t K) {
+   B0 = vaesmcq_u8(vaeseq_u8(B0, K));
+   B1 = vaesmcq_u8(vaeseq_u8(B1, K));
+   B2 = vaesmcq_u8(vaeseq_u8(B2, K));
+   B3 = vaesmcq_u8(vaeseq_u8(B3, K));
+}
 
-#define AES_DEC_4_LAST_ROUNDS(K, K2)       \
-   do {                                    \
-      B0 = veorq_u8(vaesdq_u8(B0, K), K2); \
-      B1 = veorq_u8(vaesdq_u8(B1, K), K2); \
-      B2 = veorq_u8(vaesdq_u8(B2, K), K2); \
-      B3 = veorq_u8(vaesdq_u8(B3, K), K2); \
-   } while(0)
+BOTAN_FUNC_ISA_INLINE("+crypto") void enc_last(uint8x16_t& B, uint8x16_t K, uint8x16_t K2) {
+   B = veorq_u8(vaeseq_u8(B, K), K2);
+}
+
+BOTAN_FUNC_ISA_INLINE("+crypto")
+void enc4_last(uint8x16_t& B0, uint8x16_t& B1, uint8x16_t& B2, uint8x16_t& B3, uint8x16_t K, uint8x16_t K2) {
+   B0 = veorq_u8(vaeseq_u8(B0, K), K2);
+   B1 = veorq_u8(vaeseq_u8(B1, K), K2);
+   B2 = veorq_u8(vaeseq_u8(B2, K), K2);
+   B3 = veorq_u8(vaeseq_u8(B3, K), K2);
+}
+
+BOTAN_FUNC_ISA_INLINE("+crypto") void dec(uint8x16_t& B, uint8x16_t K) {
+   B = vaesimcq_u8(vaesdq_u8(B, K));
+}
+
+BOTAN_FUNC_ISA_INLINE("+crypto")
+void dec4(uint8x16_t& B0, uint8x16_t& B1, uint8x16_t& B2, uint8x16_t& B3, uint8x16_t K) {
+   B0 = vaesimcq_u8(vaesdq_u8(B0, K));
+   B1 = vaesimcq_u8(vaesdq_u8(B1, K));
+   B2 = vaesimcq_u8(vaesdq_u8(B2, K));
+   B3 = vaesimcq_u8(vaesdq_u8(B3, K));
+}
+
+BOTAN_FUNC_ISA_INLINE("+crypto") void dec_last(uint8x16_t& B, uint8x16_t K, uint8x16_t K2) {
+   B = veorq_u8(vaesdq_u8(B, K), K2);
+}
+
+BOTAN_FUNC_ISA_INLINE("+crypto")
+void dec4_last(uint8x16_t& B0, uint8x16_t& B1, uint8x16_t& B2, uint8x16_t& B3, uint8x16_t K, uint8x16_t K2) {
+   B0 = veorq_u8(vaesdq_u8(B0, K), K2);
+   B1 = veorq_u8(vaesdq_u8(B1, K), K2);
+   B2 = veorq_u8(vaesdq_u8(B2, K), K2);
+   B3 = veorq_u8(vaesdq_u8(B3, K), K2);
+}
+
+}  // namespace AES_AARCH64
 
 /*
 * AES-128 Encryption
@@ -65,22 +85,24 @@ BOTAN_FUNC_ISA("+crypto") void AES_128::hw_aes_encrypt_n(const uint8_t in[], uin
    const uint8x16_t K9 = vld1q_u8(skey + 9 * 16);
    const uint8x16_t K10 = vld1q_u8(skey + 10 * 16);
 
+   using namespace AES_AARCH64;
+
    while(blocks >= 4) {
       uint8x16_t B0 = vld1q_u8(in);
       uint8x16_t B1 = vld1q_u8(in + 16);
       uint8x16_t B2 = vld1q_u8(in + 32);
       uint8x16_t B3 = vld1q_u8(in + 48);
 
-      AES_ENC_4_ROUNDS(K0);
-      AES_ENC_4_ROUNDS(K1);
-      AES_ENC_4_ROUNDS(K2);
-      AES_ENC_4_ROUNDS(K3);
-      AES_ENC_4_ROUNDS(K4);
-      AES_ENC_4_ROUNDS(K5);
-      AES_ENC_4_ROUNDS(K6);
-      AES_ENC_4_ROUNDS(K7);
-      AES_ENC_4_ROUNDS(K8);
-      AES_ENC_4_LAST_ROUNDS(K9, K10);
+      enc4(B0, B1, B2, B3, K0);
+      enc4(B0, B1, B2, B3, K1);
+      enc4(B0, B1, B2, B3, K2);
+      enc4(B0, B1, B2, B3, K3);
+      enc4(B0, B1, B2, B3, K4);
+      enc4(B0, B1, B2, B3, K5);
+      enc4(B0, B1, B2, B3, K6);
+      enc4(B0, B1, B2, B3, K7);
+      enc4(B0, B1, B2, B3, K8);
+      enc4_last(B0, B1, B2, B3, K9, K10);
 
       vst1q_u8(out, B0);
       vst1q_u8(out + 16, B1);
@@ -94,16 +116,16 @@ BOTAN_FUNC_ISA("+crypto") void AES_128::hw_aes_encrypt_n(const uint8_t in[], uin
 
    for(size_t i = 0; i != blocks; ++i) {
       uint8x16_t B = vld1q_u8(in + 16 * i);
-      B = vaesmcq_u8(vaeseq_u8(B, K0));
-      B = vaesmcq_u8(vaeseq_u8(B, K1));
-      B = vaesmcq_u8(vaeseq_u8(B, K2));
-      B = vaesmcq_u8(vaeseq_u8(B, K3));
-      B = vaesmcq_u8(vaeseq_u8(B, K4));
-      B = vaesmcq_u8(vaeseq_u8(B, K5));
-      B = vaesmcq_u8(vaeseq_u8(B, K6));
-      B = vaesmcq_u8(vaeseq_u8(B, K7));
-      B = vaesmcq_u8(vaeseq_u8(B, K8));
-      B = veorq_u8(vaeseq_u8(B, K9), K10);
+      enc(B, K0);
+      enc(B, K1);
+      enc(B, K2);
+      enc(B, K3);
+      enc(B, K4);
+      enc(B, K5);
+      enc(B, K6);
+      enc(B, K7);
+      enc(B, K8);
+      enc_last(B, K9, K10);
       vst1q_u8(out + 16 * i, B);
    }
 }
@@ -126,22 +148,24 @@ BOTAN_FUNC_ISA("+crypto") void AES_128::hw_aes_decrypt_n(const uint8_t in[], uin
    const uint8x16_t K9 = vld1q_u8(skey + 9 * 16);
    const uint8x16_t K10 = vld1q_u8(skey + 10 * 16);
 
+   using namespace AES_AARCH64;
+
    while(blocks >= 4) {
       uint8x16_t B0 = vld1q_u8(in);
       uint8x16_t B1 = vld1q_u8(in + 16);
       uint8x16_t B2 = vld1q_u8(in + 32);
       uint8x16_t B3 = vld1q_u8(in + 48);
 
-      AES_DEC_4_ROUNDS(K0);
-      AES_DEC_4_ROUNDS(K1);
-      AES_DEC_4_ROUNDS(K2);
-      AES_DEC_4_ROUNDS(K3);
-      AES_DEC_4_ROUNDS(K4);
-      AES_DEC_4_ROUNDS(K5);
-      AES_DEC_4_ROUNDS(K6);
-      AES_DEC_4_ROUNDS(K7);
-      AES_DEC_4_ROUNDS(K8);
-      AES_DEC_4_LAST_ROUNDS(K9, K10);
+      dec4(B0, B1, B2, B3, K0);
+      dec4(B0, B1, B2, B3, K1);
+      dec4(B0, B1, B2, B3, K2);
+      dec4(B0, B1, B2, B3, K3);
+      dec4(B0, B1, B2, B3, K4);
+      dec4(B0, B1, B2, B3, K5);
+      dec4(B0, B1, B2, B3, K6);
+      dec4(B0, B1, B2, B3, K7);
+      dec4(B0, B1, B2, B3, K8);
+      dec4_last(B0, B1, B2, B3, K9, K10);
 
       vst1q_u8(out, B0);
       vst1q_u8(out + 16, B1);
@@ -155,15 +179,15 @@ BOTAN_FUNC_ISA("+crypto") void AES_128::hw_aes_decrypt_n(const uint8_t in[], uin
 
    for(size_t i = 0; i != blocks; ++i) {
       uint8x16_t B = vld1q_u8(in + 16 * i);
-      B = vaesimcq_u8(vaesdq_u8(B, K0));
-      B = vaesimcq_u8(vaesdq_u8(B, K1));
-      B = vaesimcq_u8(vaesdq_u8(B, K2));
-      B = vaesimcq_u8(vaesdq_u8(B, K3));
-      B = vaesimcq_u8(vaesdq_u8(B, K4));
-      B = vaesimcq_u8(vaesdq_u8(B, K5));
-      B = vaesimcq_u8(vaesdq_u8(B, K6));
-      B = vaesimcq_u8(vaesdq_u8(B, K7));
-      B = vaesimcq_u8(vaesdq_u8(B, K8));
+      dec(B, K0);
+      dec(B, K1);
+      dec(B, K2);
+      dec(B, K3);
+      dec(B, K4);
+      dec(B, K5);
+      dec(B, K6);
+      dec(B, K7);
+      dec(B, K8);
       B = veorq_u8(vaesdq_u8(B, K9), K10);
       vst1q_u8(out + 16 * i, B);
    }
@@ -189,24 +213,26 @@ BOTAN_FUNC_ISA("+crypto") void AES_192::hw_aes_encrypt_n(const uint8_t in[], uin
    const uint8x16_t K11 = vld1q_u8(skey + 11 * 16);
    const uint8x16_t K12 = vld1q_u8(skey + 12 * 16);
 
+   using namespace AES_AARCH64;
+
    while(blocks >= 4) {
       uint8x16_t B0 = vld1q_u8(in);
       uint8x16_t B1 = vld1q_u8(in + 16);
       uint8x16_t B2 = vld1q_u8(in + 32);
       uint8x16_t B3 = vld1q_u8(in + 48);
 
-      AES_ENC_4_ROUNDS(K0);
-      AES_ENC_4_ROUNDS(K1);
-      AES_ENC_4_ROUNDS(K2);
-      AES_ENC_4_ROUNDS(K3);
-      AES_ENC_4_ROUNDS(K4);
-      AES_ENC_4_ROUNDS(K5);
-      AES_ENC_4_ROUNDS(K6);
-      AES_ENC_4_ROUNDS(K7);
-      AES_ENC_4_ROUNDS(K8);
-      AES_ENC_4_ROUNDS(K9);
-      AES_ENC_4_ROUNDS(K10);
-      AES_ENC_4_LAST_ROUNDS(K11, K12);
+      enc4(B0, B1, B2, B3, K0);
+      enc4(B0, B1, B2, B3, K1);
+      enc4(B0, B1, B2, B3, K2);
+      enc4(B0, B1, B2, B3, K3);
+      enc4(B0, B1, B2, B3, K4);
+      enc4(B0, B1, B2, B3, K5);
+      enc4(B0, B1, B2, B3, K6);
+      enc4(B0, B1, B2, B3, K7);
+      enc4(B0, B1, B2, B3, K8);
+      enc4(B0, B1, B2, B3, K9);
+      enc4(B0, B1, B2, B3, K10);
+      enc4_last(B0, B1, B2, B3, K11, K12);
 
       vst1q_u8(out, B0);
       vst1q_u8(out + 16, B1);
@@ -220,17 +246,17 @@ BOTAN_FUNC_ISA("+crypto") void AES_192::hw_aes_encrypt_n(const uint8_t in[], uin
 
    for(size_t i = 0; i != blocks; ++i) {
       uint8x16_t B = vld1q_u8(in + 16 * i);
-      B = vaesmcq_u8(vaeseq_u8(B, K0));
-      B = vaesmcq_u8(vaeseq_u8(B, K1));
-      B = vaesmcq_u8(vaeseq_u8(B, K2));
-      B = vaesmcq_u8(vaeseq_u8(B, K3));
-      B = vaesmcq_u8(vaeseq_u8(B, K4));
-      B = vaesmcq_u8(vaeseq_u8(B, K5));
-      B = vaesmcq_u8(vaeseq_u8(B, K6));
-      B = vaesmcq_u8(vaeseq_u8(B, K7));
-      B = vaesmcq_u8(vaeseq_u8(B, K8));
-      B = vaesmcq_u8(vaeseq_u8(B, K9));
-      B = vaesmcq_u8(vaeseq_u8(B, K10));
+      enc(B, K0);
+      enc(B, K1);
+      enc(B, K2);
+      enc(B, K3);
+      enc(B, K4);
+      enc(B, K5);
+      enc(B, K6);
+      enc(B, K7);
+      enc(B, K8);
+      enc(B, K9);
+      enc(B, K10);
       B = veorq_u8(vaeseq_u8(B, K11), K12);
       vst1q_u8(out + 16 * i, B);
    }
@@ -256,24 +282,26 @@ BOTAN_FUNC_ISA("+crypto") void AES_192::hw_aes_decrypt_n(const uint8_t in[], uin
    const uint8x16_t K11 = vld1q_u8(skey + 11 * 16);
    const uint8x16_t K12 = vld1q_u8(skey + 12 * 16);
 
+   using namespace AES_AARCH64;
+
    while(blocks >= 4) {
       uint8x16_t B0 = vld1q_u8(in);
       uint8x16_t B1 = vld1q_u8(in + 16);
       uint8x16_t B2 = vld1q_u8(in + 32);
       uint8x16_t B3 = vld1q_u8(in + 48);
 
-      AES_DEC_4_ROUNDS(K0);
-      AES_DEC_4_ROUNDS(K1);
-      AES_DEC_4_ROUNDS(K2);
-      AES_DEC_4_ROUNDS(K3);
-      AES_DEC_4_ROUNDS(K4);
-      AES_DEC_4_ROUNDS(K5);
-      AES_DEC_4_ROUNDS(K6);
-      AES_DEC_4_ROUNDS(K7);
-      AES_DEC_4_ROUNDS(K8);
-      AES_DEC_4_ROUNDS(K9);
-      AES_DEC_4_ROUNDS(K10);
-      AES_DEC_4_LAST_ROUNDS(K11, K12);
+      dec4(B0, B1, B2, B3, K0);
+      dec4(B0, B1, B2, B3, K1);
+      dec4(B0, B1, B2, B3, K2);
+      dec4(B0, B1, B2, B3, K3);
+      dec4(B0, B1, B2, B3, K4);
+      dec4(B0, B1, B2, B3, K5);
+      dec4(B0, B1, B2, B3, K6);
+      dec4(B0, B1, B2, B3, K7);
+      dec4(B0, B1, B2, B3, K8);
+      dec4(B0, B1, B2, B3, K9);
+      dec4(B0, B1, B2, B3, K10);
+      dec4_last(B0, B1, B2, B3, K11, K12);
 
       vst1q_u8(out, B0);
       vst1q_u8(out + 16, B1);
@@ -287,17 +315,17 @@ BOTAN_FUNC_ISA("+crypto") void AES_192::hw_aes_decrypt_n(const uint8_t in[], uin
 
    for(size_t i = 0; i != blocks; ++i) {
       uint8x16_t B = vld1q_u8(in + 16 * i);
-      B = vaesimcq_u8(vaesdq_u8(B, K0));
-      B = vaesimcq_u8(vaesdq_u8(B, K1));
-      B = vaesimcq_u8(vaesdq_u8(B, K2));
-      B = vaesimcq_u8(vaesdq_u8(B, K3));
-      B = vaesimcq_u8(vaesdq_u8(B, K4));
-      B = vaesimcq_u8(vaesdq_u8(B, K5));
-      B = vaesimcq_u8(vaesdq_u8(B, K6));
-      B = vaesimcq_u8(vaesdq_u8(B, K7));
-      B = vaesimcq_u8(vaesdq_u8(B, K8));
-      B = vaesimcq_u8(vaesdq_u8(B, K9));
-      B = vaesimcq_u8(vaesdq_u8(B, K10));
+      dec(B, K0);
+      dec(B, K1);
+      dec(B, K2);
+      dec(B, K3);
+      dec(B, K4);
+      dec(B, K5);
+      dec(B, K6);
+      dec(B, K7);
+      dec(B, K8);
+      dec(B, K9);
+      dec(B, K10);
       B = veorq_u8(vaesdq_u8(B, K11), K12);
       vst1q_u8(out + 16 * i, B);
    }
@@ -325,26 +353,30 @@ BOTAN_FUNC_ISA("+crypto") void AES_256::hw_aes_encrypt_n(const uint8_t in[], uin
    const uint8x16_t K13 = vld1q_u8(skey + 13 * 16);
    const uint8x16_t K14 = vld1q_u8(skey + 14 * 16);
 
+   using namespace AES_AARCH64;
+
+   using namespace AES_AARCH64;
+
    while(blocks >= 4) {
       uint8x16_t B0 = vld1q_u8(in);
       uint8x16_t B1 = vld1q_u8(in + 16);
       uint8x16_t B2 = vld1q_u8(in + 32);
       uint8x16_t B3 = vld1q_u8(in + 48);
 
-      AES_ENC_4_ROUNDS(K0);
-      AES_ENC_4_ROUNDS(K1);
-      AES_ENC_4_ROUNDS(K2);
-      AES_ENC_4_ROUNDS(K3);
-      AES_ENC_4_ROUNDS(K4);
-      AES_ENC_4_ROUNDS(K5);
-      AES_ENC_4_ROUNDS(K6);
-      AES_ENC_4_ROUNDS(K7);
-      AES_ENC_4_ROUNDS(K8);
-      AES_ENC_4_ROUNDS(K9);
-      AES_ENC_4_ROUNDS(K10);
-      AES_ENC_4_ROUNDS(K11);
-      AES_ENC_4_ROUNDS(K12);
-      AES_ENC_4_LAST_ROUNDS(K13, K14);
+      enc4(B0, B1, B2, B3, K0);
+      enc4(B0, B1, B2, B3, K1);
+      enc4(B0, B1, B2, B3, K2);
+      enc4(B0, B1, B2, B3, K3);
+      enc4(B0, B1, B2, B3, K4);
+      enc4(B0, B1, B2, B3, K5);
+      enc4(B0, B1, B2, B3, K6);
+      enc4(B0, B1, B2, B3, K7);
+      enc4(B0, B1, B2, B3, K8);
+      enc4(B0, B1, B2, B3, K9);
+      enc4(B0, B1, B2, B3, K10);
+      enc4(B0, B1, B2, B3, K11);
+      enc4(B0, B1, B2, B3, K12);
+      enc4_last(B0, B1, B2, B3, K13, K14);
 
       vst1q_u8(out, B0);
       vst1q_u8(out + 16, B1);
@@ -358,19 +390,19 @@ BOTAN_FUNC_ISA("+crypto") void AES_256::hw_aes_encrypt_n(const uint8_t in[], uin
 
    for(size_t i = 0; i != blocks; ++i) {
       uint8x16_t B = vld1q_u8(in + 16 * i);
-      B = vaesmcq_u8(vaeseq_u8(B, K0));
-      B = vaesmcq_u8(vaeseq_u8(B, K1));
-      B = vaesmcq_u8(vaeseq_u8(B, K2));
-      B = vaesmcq_u8(vaeseq_u8(B, K3));
-      B = vaesmcq_u8(vaeseq_u8(B, K4));
-      B = vaesmcq_u8(vaeseq_u8(B, K5));
-      B = vaesmcq_u8(vaeseq_u8(B, K6));
-      B = vaesmcq_u8(vaeseq_u8(B, K7));
-      B = vaesmcq_u8(vaeseq_u8(B, K8));
-      B = vaesmcq_u8(vaeseq_u8(B, K9));
-      B = vaesmcq_u8(vaeseq_u8(B, K10));
-      B = vaesmcq_u8(vaeseq_u8(B, K11));
-      B = vaesmcq_u8(vaeseq_u8(B, K12));
+      enc(B, K0);
+      enc(B, K1);
+      enc(B, K2);
+      enc(B, K3);
+      enc(B, K4);
+      enc(B, K5);
+      enc(B, K6);
+      enc(B, K7);
+      enc(B, K8);
+      enc(B, K9);
+      enc(B, K10);
+      enc(B, K11);
+      enc(B, K12);
       B = veorq_u8(vaeseq_u8(B, K13), K14);
       vst1q_u8(out + 16 * i, B);
    }
@@ -398,26 +430,28 @@ BOTAN_FUNC_ISA("+crypto") void AES_256::hw_aes_decrypt_n(const uint8_t in[], uin
    const uint8x16_t K13 = vld1q_u8(skey + 13 * 16);
    const uint8x16_t K14 = vld1q_u8(skey + 14 * 16);
 
+   using namespace AES_AARCH64;
+
    while(blocks >= 4) {
       uint8x16_t B0 = vld1q_u8(in);
       uint8x16_t B1 = vld1q_u8(in + 16);
       uint8x16_t B2 = vld1q_u8(in + 32);
       uint8x16_t B3 = vld1q_u8(in + 48);
 
-      AES_DEC_4_ROUNDS(K0);
-      AES_DEC_4_ROUNDS(K1);
-      AES_DEC_4_ROUNDS(K2);
-      AES_DEC_4_ROUNDS(K3);
-      AES_DEC_4_ROUNDS(K4);
-      AES_DEC_4_ROUNDS(K5);
-      AES_DEC_4_ROUNDS(K6);
-      AES_DEC_4_ROUNDS(K7);
-      AES_DEC_4_ROUNDS(K8);
-      AES_DEC_4_ROUNDS(K9);
-      AES_DEC_4_ROUNDS(K10);
-      AES_DEC_4_ROUNDS(K11);
-      AES_DEC_4_ROUNDS(K12);
-      AES_DEC_4_LAST_ROUNDS(K13, K14);
+      dec4(B0, B1, B2, B3, K0);
+      dec4(B0, B1, B2, B3, K1);
+      dec4(B0, B1, B2, B3, K2);
+      dec4(B0, B1, B2, B3, K3);
+      dec4(B0, B1, B2, B3, K4);
+      dec4(B0, B1, B2, B3, K5);
+      dec4(B0, B1, B2, B3, K6);
+      dec4(B0, B1, B2, B3, K7);
+      dec4(B0, B1, B2, B3, K8);
+      dec4(B0, B1, B2, B3, K9);
+      dec4(B0, B1, B2, B3, K10);
+      dec4(B0, B1, B2, B3, K11);
+      dec4(B0, B1, B2, B3, K12);
+      dec4_last(B0, B1, B2, B3, K13, K14);
 
       vst1q_u8(out, B0);
       vst1q_u8(out + 16, B1);
@@ -431,27 +465,22 @@ BOTAN_FUNC_ISA("+crypto") void AES_256::hw_aes_decrypt_n(const uint8_t in[], uin
 
    for(size_t i = 0; i != blocks; ++i) {
       uint8x16_t B = vld1q_u8(in + 16 * i);
-      B = vaesimcq_u8(vaesdq_u8(B, K0));
-      B = vaesimcq_u8(vaesdq_u8(B, K1));
-      B = vaesimcq_u8(vaesdq_u8(B, K2));
-      B = vaesimcq_u8(vaesdq_u8(B, K3));
-      B = vaesimcq_u8(vaesdq_u8(B, K4));
-      B = vaesimcq_u8(vaesdq_u8(B, K5));
-      B = vaesimcq_u8(vaesdq_u8(B, K6));
-      B = vaesimcq_u8(vaesdq_u8(B, K7));
-      B = vaesimcq_u8(vaesdq_u8(B, K8));
-      B = vaesimcq_u8(vaesdq_u8(B, K9));
-      B = vaesimcq_u8(vaesdq_u8(B, K10));
-      B = vaesimcq_u8(vaesdq_u8(B, K11));
-      B = vaesimcq_u8(vaesdq_u8(B, K12));
+      dec(B, K0);
+      dec(B, K1);
+      dec(B, K2);
+      dec(B, K3);
+      dec(B, K4);
+      dec(B, K5);
+      dec(B, K6);
+      dec(B, K7);
+      dec(B, K8);
+      dec(B, K9);
+      dec(B, K10);
+      dec(B, K11);
+      dec(B, K12);
       B = veorq_u8(vaesdq_u8(B, K13), K14);
       vst1q_u8(out + 16 * i, B);
    }
 }
-
-#undef AES_ENC_4_ROUNDS
-#undef AES_ENC_4_LAST_ROUNDS
-#undef AES_DEC_4_ROUNDS
-#undef AES_DEC_4_LAST_ROUNDS
 
 }  // namespace Botan

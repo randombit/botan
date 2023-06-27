@@ -18,7 +18,7 @@ namespace Botan {
 
 namespace {
 
-BOTAN_FORCE_INLINE SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_VPERM_ISA) reverse_vector(const SIMD_4x32& in) {
+BOTAN_FUNC_ISA_INLINE(BOTAN_VPERM_ISA) SIMD_4x32 reverse_vector(const SIMD_4x32& in) {
 #if defined(BOTAN_SIMD_USE_SSE2)
    const __m128i BSWAP_MASK = _mm_set_epi8(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
    return SIMD_4x32(_mm_shuffle_epi8(in.raw(), BSWAP_MASK));

@@ -129,6 +129,4 @@ void SHA_512::compress_digest_bmi2(secure_vector<uint64_t>& digest, const uint8_
    }
 }
 
-#undef SHA2_64_F
-
 }  // namespace Botan

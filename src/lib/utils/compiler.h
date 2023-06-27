@@ -82,6 +82,11 @@
 #endif
 
 /*
+* Define BOTAN_FUNC_ISA_INLINE
+*/
+#define BOTAN_FUNC_ISA_INLINE(isa) BOTAN_FUNC_ISA(isa) BOTAN_FORCE_INLINE
+
+/*
 * Define BOTAN_MALLOC_FN
 */
 #if BOTAN_COMPILER_HAS_ATTRIBUTE(malloc)

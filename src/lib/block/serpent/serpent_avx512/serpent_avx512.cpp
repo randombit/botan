@@ -10,8 +10,7 @@
 
 namespace Botan {
 
-BOTAN_FORCE_INLINE
-void SBoxE0(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
+BOTAN_FORCE_INLINE void SBoxE0(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    const SIMD_16x32 t0 = SIMD_16x32::ternary_fn<0xb9>(b, d, c);
    const SIMD_16x32 t1 = SIMD_16x32::ternary_fn<0xe2>(a, b, d);
    const SIMD_16x32 t2 = SIMD_16x32::ternary_fn<0x36>(a, b, d);
@@ -26,8 +25,7 @@ void SBoxE0(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    d = o3;
 }
 
-BOTAN_FORCE_INLINE
-void SBoxE1(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
+BOTAN_FORCE_INLINE void SBoxE1(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    const SIMD_16x32 t0 = SIMD_16x32::ternary_fn<0xe5>(d, b, c);
    const SIMD_16x32 t1 = SIMD_16x32::ternary_fn<0x26>(c, d, b);
    const SIMD_16x32 t2 = SIMD_16x32::ternary_fn<0xa6>(a, b, c);
@@ -42,8 +40,7 @@ void SBoxE1(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    d = o3;
 }
 
-BOTAN_FORCE_INLINE
-void SBoxE2(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
+BOTAN_FORCE_INLINE void SBoxE2(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    const SIMD_16x32 t0 = SIMD_16x32::ternary_fn<0x96>(c, b, d);
    const SIMD_16x32 t1 = SIMD_16x32::ternary_fn<0xda>(a, b, c);
    const SIMD_16x32 t2 = SIMD_16x32::ternary_fn<0x66>(d, t0, c);
@@ -59,8 +56,7 @@ void SBoxE2(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    d = o3;
 }
 
-BOTAN_FORCE_INLINE
-void SBoxE3(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
+BOTAN_FORCE_INLINE void SBoxE3(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    const SIMD_16x32 t0 = SIMD_16x32::ternary_fn<0x92>(d, c, b);
    const SIMD_16x32 t1 = SIMD_16x32::ternary_fn<0x3b>(d, b, c);
    const SIMD_16x32 t2 = SIMD_16x32::ternary_fn<0xbc>(a, c, t0);
@@ -76,8 +72,7 @@ void SBoxE3(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    d = o3;
 }
 
-BOTAN_FORCE_INLINE
-void SBoxE4(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
+BOTAN_FORCE_INLINE void SBoxE4(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    const SIMD_16x32 t0 = SIMD_16x32::ternary_fn<0xc2>(c, b, d);
    const SIMD_16x32 t1 = SIMD_16x32::ternary_fn<0x79>(b, c, d);
    const SIMD_16x32 t2 = SIMD_16x32::ternary_fn<0x71>(a, b, d);
@@ -93,8 +88,7 @@ void SBoxE4(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    d = o3;
 }
 
-BOTAN_FORCE_INLINE
-void SBoxE5(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
+BOTAN_FORCE_INLINE void SBoxE5(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    const SIMD_16x32 t0 = SIMD_16x32::ternary_fn<0xa9>(b, d, c);
    const SIMD_16x32 t1 = SIMD_16x32::ternary_fn<0x93>(b, c, d);
    const SIMD_16x32 t2 = SIMD_16x32::ternary_fn<0xc3>(a, b, c);
@@ -110,8 +104,7 @@ void SBoxE5(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    d = o3;
 }
 
-BOTAN_FORCE_INLINE
-void SBoxE6(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
+BOTAN_FORCE_INLINE void SBoxE6(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    const SIMD_16x32 t0 = SIMD_16x32::ternary_fn<0x61>(d, c, b);
    const SIMD_16x32 t1 = SIMD_16x32::ternary_fn<0x9c>(b, d, t0);
    const SIMD_16x32 t2 = SIMD_16x32::ternary_fn<0x93>(a, b, d);
@@ -127,8 +120,7 @@ void SBoxE6(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    d = o3;
 }
 
-BOTAN_FORCE_INLINE
-void SBoxE7(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
+BOTAN_FORCE_INLINE void SBoxE7(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    const SIMD_16x32 t0 = SIMD_16x32::ternary_fn<0x9b>(b, c, d);
    const SIMD_16x32 t1 = SIMD_16x32::ternary_fn<0x61>(c, b, d);
    const SIMD_16x32 t2 = SIMD_16x32::ternary_fn<0xe3>(a, d, t1);
@@ -144,8 +136,7 @@ void SBoxE7(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    d = o3;
 }
 
-BOTAN_FORCE_INLINE
-void SBoxD0(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
+BOTAN_FORCE_INLINE void SBoxD0(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    const SIMD_16x32 t0 = SIMD_16x32::ternary_fn<0x67>(c, d, b);
    const SIMD_16x32 t1 = SIMD_16x32::ternary_fn<0x49>(b, d, c);
    const SIMD_16x32 o0 = SIMD_16x32::ternary_fn<0xac>(a, t0, t1);
@@ -160,8 +151,7 @@ void SBoxD0(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    d = o3;
 }
 
-BOTAN_FORCE_INLINE
-void SBoxD1(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
+BOTAN_FORCE_INLINE void SBoxD1(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    const SIMD_16x32 t0 = SIMD_16x32::ternary_fn<0x73>(d, b, c);
    const SIMD_16x32 t1 = SIMD_16x32::ternary_fn<0x68>(c, d, b);
    const SIMD_16x32 t2 = SIMD_16x32::ternary_fn<0xc5>(a, b, d);
@@ -176,8 +166,7 @@ void SBoxD1(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    d = o3;
 }
 
-BOTAN_FORCE_INLINE
-void SBoxD2(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
+BOTAN_FORCE_INLINE void SBoxD2(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    const SIMD_16x32 t0 = SIMD_16x32::ternary_fn<0xc6>(d, b, c);
    const SIMD_16x32 t1 = SIMD_16x32::ternary_fn<0x9c>(d, c, b);
    const SIMD_16x32 t2 = SIMD_16x32::ternary_fn<0xe1>(a, b, c);
@@ -192,8 +181,7 @@ void SBoxD2(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    d = o3;
 }
 
-BOTAN_FORCE_INLINE
-void SBoxD3(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
+BOTAN_FORCE_INLINE void SBoxD3(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    const SIMD_16x32 t0 = SIMD_16x32::ternary_fn<0x94>(c, d, b);
    const SIMD_16x32 t1 = SIMD_16x32::ternary_fn<0x99>(b, d, t0);
    const SIMD_16x32 o0 = SIMD_16x32::ternary_fn<0xac>(a, t0, t1);
@@ -209,8 +197,7 @@ void SBoxD3(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    d = o3;
 }
 
-BOTAN_FORCE_INLINE
-void SBoxD4(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
+BOTAN_FORCE_INLINE void SBoxD4(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    const SIMD_16x32 t0 = SIMD_16x32::ternary_fn<0xa9>(d, c, b);
    const SIMD_16x32 t1 = SIMD_16x32::ternary_fn<0xa6>(d, b, c);
    const SIMD_16x32 t2 = SIMD_16x32::ternary_fn<0xb5>(a, b, d);
@@ -226,8 +213,7 @@ void SBoxD4(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    d = o3;
 }
 
-BOTAN_FORCE_INLINE
-void SBoxD5(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
+BOTAN_FORCE_INLINE void SBoxD5(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    const SIMD_16x32 t0 = SIMD_16x32::ternary_fn<0xc9>(a, b, c);
    const SIMD_16x32 t1 = SIMD_16x32::ternary_fn<0x65>(a, b, c);
    const SIMD_16x32 t2 = SIMD_16x32::ternary_fn<0x25>(a, b, d);
@@ -243,8 +229,7 @@ void SBoxD5(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    d = o3;
 }
 
-BOTAN_FORCE_INLINE
-void SBoxD6(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
+BOTAN_FORCE_INLINE void SBoxD6(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    const SIMD_16x32 t0 = SIMD_16x32::ternary_fn<0x07>(d, b, c);
    const SIMD_16x32 t1 = SIMD_16x32::ternary_fn<0x9e>(c, d, b);
    const SIMD_16x32 t2 = SIMD_16x32::ternary_fn<0xc6>(a, b, c);
@@ -260,8 +245,7 @@ void SBoxD6(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    d = o3;
 }
 
-BOTAN_FORCE_INLINE
-void SBoxD7(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
+BOTAN_FORCE_INLINE void SBoxD7(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    const SIMD_16x32 t0 = SIMD_16x32::ternary_fn<0x67>(b, d, c);
    const SIMD_16x32 t1 = SIMD_16x32::ternary_fn<0x3e>(a, c, d);
    const SIMD_16x32 t2 = SIMD_16x32::ternary_fn<0x1c>(a, b, d);

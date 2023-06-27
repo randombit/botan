@@ -216,8 +216,6 @@ void Threefish_512::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
    }
 }
 
-#undef THREEFISH_ENC_8_ROUNDS
-
 void Threefish_512::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    using namespace Threefish_F;
 

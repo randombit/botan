@@ -73,48 +73,44 @@ BOTAN_FORCE_INLINE void keyxor(SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4
    B3 ^= K;
 }
 
-BOTAN_FUNC_ISA("aes") BOTAN_FORCE_INLINE void aesenc(SIMD_4x32 K, SIMD_4x32& B) {
+BOTAN_FUNC_ISA_INLINE("aes") void aesenc(SIMD_4x32 K, SIMD_4x32& B) {
    B = SIMD_4x32(_mm_aesenc_si128(B.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA("aes")
-BOTAN_FORCE_INLINE void aesenc(SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
+BOTAN_FUNC_ISA_INLINE("aes") void aesenc(SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
    B0 = SIMD_4x32(_mm_aesenc_si128(B0.raw(), K.raw()));
    B1 = SIMD_4x32(_mm_aesenc_si128(B1.raw(), K.raw()));
    B2 = SIMD_4x32(_mm_aesenc_si128(B2.raw(), K.raw()));
    B3 = SIMD_4x32(_mm_aesenc_si128(B3.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA("aes") BOTAN_FORCE_INLINE void aesenclast(SIMD_4x32 K, SIMD_4x32& B) {
+BOTAN_FUNC_ISA_INLINE("aes") void aesenclast(SIMD_4x32 K, SIMD_4x32& B) {
    B = SIMD_4x32(_mm_aesenclast_si128(B.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA("aes")
-BOTAN_FORCE_INLINE void aesenclast(SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
+BOTAN_FUNC_ISA_INLINE("aes") void aesenclast(SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
    B0 = SIMD_4x32(_mm_aesenclast_si128(B0.raw(), K.raw()));
    B1 = SIMD_4x32(_mm_aesenclast_si128(B1.raw(), K.raw()));
    B2 = SIMD_4x32(_mm_aesenclast_si128(B2.raw(), K.raw()));
    B3 = SIMD_4x32(_mm_aesenclast_si128(B3.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA("aes") BOTAN_FORCE_INLINE void aesdec(SIMD_4x32 K, SIMD_4x32& B) {
+BOTAN_FUNC_ISA_INLINE("aes") void aesdec(SIMD_4x32 K, SIMD_4x32& B) {
    B = SIMD_4x32(_mm_aesdec_si128(B.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA("aes")
-BOTAN_FORCE_INLINE void aesdec(SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
+BOTAN_FUNC_ISA_INLINE("aes") void aesdec(SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
    B0 = SIMD_4x32(_mm_aesdec_si128(B0.raw(), K.raw()));
    B1 = SIMD_4x32(_mm_aesdec_si128(B1.raw(), K.raw()));
    B2 = SIMD_4x32(_mm_aesdec_si128(B2.raw(), K.raw()));
    B3 = SIMD_4x32(_mm_aesdec_si128(B3.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA("aes") BOTAN_FORCE_INLINE void aesdeclast(SIMD_4x32 K, SIMD_4x32& B) {
+BOTAN_FUNC_ISA_INLINE("aes") void aesdeclast(SIMD_4x32 K, SIMD_4x32& B) {
    B = SIMD_4x32(_mm_aesdeclast_si128(B.raw(), K.raw()));
 }
 
-BOTAN_FUNC_ISA("aes")
-BOTAN_FORCE_INLINE void aesdeclast(SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
+BOTAN_FUNC_ISA_INLINE("aes") void aesdeclast(SIMD_4x32 K, SIMD_4x32& B0, SIMD_4x32& B1, SIMD_4x32& B2, SIMD_4x32& B3) {
    B0 = SIMD_4x32(_mm_aesdeclast_si128(B0.raw(), K.raw()));
    B1 = SIMD_4x32(_mm_aesdeclast_si128(B1.raw(), K.raw()));
    B2 = SIMD_4x32(_mm_aesdeclast_si128(B2.raw(), K.raw()));
