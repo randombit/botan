@@ -42,22 +42,30 @@ class Bzip2_Compression_Stream final : public Bzip2_Stream {
          * compression is not overly affected by the size, though
          * more memory is required.
          */
-         if(block_size == 0 || block_size >= 9)
+         if(block_size == 0 || block_size >= 9) {
             block_size = 9;
+         }
 
          int rc = BZ2_bzCompressInit(streamp(), static_cast<unsigned int>(block_size), 0, 0);
 
-         if(rc != BZ_OK)
+         if(rc != BZ_OK) {
             throw Compression_Error("BZ2_bzCompressInit", ErrorType::Bzip2Error, rc);
+         }
       }
 
-      ~Bzip2_Compression_Stream() { BZ2_bzCompressEnd(streamp()); }
+      Bzip2_Compression_Stream(const Bzip2_Compression_Stream& other) = delete;
+      Bzip2_Compression_Stream(Bzip2_Compression_Stream&& other) = delete;
+      Bzip2_Compression_Stream& operator=(const Bzip2_Compression_Stream& other) = delete;
+      Bzip2_Compression_Stream& operator=(Bzip2_Compression_Stream&& other) = delete;
+
+      ~Bzip2_Compression_Stream() override { BZ2_bzCompressEnd(streamp()); }
 
       bool run(uint32_t flags) override {
          int rc = BZ2_bzCompress(streamp(), flags);
 
-         if(rc < 0)
+         if(rc < 0) {
             throw Compression_Error("BZ2_bzCompress", ErrorType::Bzip2Error, rc);
+         }
 
          return (rc == BZ_STREAM_END);
       }
@@ -68,17 +76,24 @@ class Bzip2_Decompression_Stream final : public Bzip2_Stream {
       Bzip2_Decompression_Stream() {
          int rc = BZ2_bzDecompressInit(streamp(), 0, 0);
 
-         if(rc != BZ_OK)
+         if(rc != BZ_OK) {
             throw Compression_Error("BZ2_bzDecompressInit", ErrorType::Bzip2Error, rc);
+         }
       }
 
-      ~Bzip2_Decompression_Stream() { BZ2_bzDecompressEnd(streamp()); }
+      Bzip2_Decompression_Stream(const Bzip2_Decompression_Stream& other) = delete;
+      Bzip2_Decompression_Stream(Bzip2_Decompression_Stream&& other) = delete;
+      Bzip2_Decompression_Stream& operator=(const Bzip2_Decompression_Stream& other) = delete;
+      Bzip2_Decompression_Stream& operator=(Bzip2_Decompression_Stream&& other) = delete;
+
+      ~Bzip2_Decompression_Stream() override { BZ2_bzDecompressEnd(streamp()); }
 
       bool run(uint32_t) override {
          int rc = BZ2_bzDecompress(streamp());
 
-         if(rc != BZ_OK && rc != BZ_STREAM_END)
+         if(rc != BZ_OK && rc != BZ_STREAM_END) {
             throw Compression_Error("BZ2_bzDecompress", ErrorType::Bzip2Error, rc);
+         }
 
          return (rc == BZ_STREAM_END);
       }

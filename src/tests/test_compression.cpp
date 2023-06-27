@@ -16,7 +16,7 @@ namespace Botan_Tests {
 
 namespace {
 
-const char* text_str =
+const char* const COMPRESSION_TEST_TEXT =
    "'Twas brillig, and the slithy toves"
    "Did gyre and gimble in the wabe:"
    "All mimsy were the borogoves,"
@@ -56,7 +56,7 @@ class Compression_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
-         const size_t text_len = std::strlen(text_str);
+         const size_t text_len = std::strlen(COMPRESSION_TEST_TEXT);
 
          for(std::string algo : {"zlib", "deflate", "gzip", "bz2", "lzma"}) {
             try {
@@ -79,7 +79,7 @@ class Compression_Tests final : public Test {
                const Botan::secure_vector<uint8_t> random_binary = Test::rng().random_vec(text_len);
                const Botan::secure_vector<uint8_t> short_text = {'f', 'o', 'o', '\n'};
 
-               const uint8_t* textb = reinterpret_cast<const uint8_t*>(text_str);
+               const uint8_t* textb = reinterpret_cast<const uint8_t*>(COMPRESSION_TEST_TEXT);
                const Botan::secure_vector<uint8_t> text(textb, textb + text_len);
 
                const size_t c1_e = run_compression(result, 1, *c, *d, empty);

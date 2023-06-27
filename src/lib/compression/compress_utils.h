@@ -55,6 +55,11 @@ class Zlib_Style_Stream : public Compression_Stream {
 
       Zlib_Style_Stream() : m_allocs(std::make_unique<Compression_Alloc_Info>()) { clear_mem(&m_stream, 1); }
 
+      Zlib_Style_Stream(const Zlib_Style_Stream& other) = delete;
+      Zlib_Style_Stream(Zlib_Style_Stream&& other) = delete;
+      Zlib_Style_Stream& operator=(const Zlib_Style_Stream& other) = delete;
+      Zlib_Style_Stream& operator=(Zlib_Style_Stream&& other) = delete;
+
       ~Zlib_Style_Stream() { clear_mem(&m_stream, 1); }
 
    protected:

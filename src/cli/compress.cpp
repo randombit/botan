@@ -28,7 +28,7 @@ class Compress final : public Command {
          };
 
          auto suffix_info = suffixes.find(comp_type);
-         if(suffixes.count(comp_type) == 0) {
+         if(!suffixes.contains(comp_type)) {
             throw CLI_Error_Unsupported("Compressing", comp_type);
          }
 
