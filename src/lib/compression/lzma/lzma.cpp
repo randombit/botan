@@ -27,13 +27,19 @@ class LZMA_Stream : public Zlib_Style_Stream<lzma_stream, uint8_t> {
          streamp()->allocator = &m_allocator;
       }
 
-      ~LZMA_Stream() { ::lzma_end(streamp()); }
+      ~LZMA_Stream() override { ::lzma_end(streamp()); }
+
+      LZMA_Stream(const LZMA_Stream& other) = delete;
+      LZMA_Stream(LZMA_Stream&& other) = delete;
+      LZMA_Stream& operator=(const LZMA_Stream& other) = delete;
+      LZMA_Stream& operator=(LZMA_Stream&& other) = delete;
 
       bool run(uint32_t flags) override {
          lzma_ret rc = ::lzma_code(streamp(), static_cast<lzma_action>(flags));
 
-         if(rc != LZMA_OK && rc != LZMA_STREAM_END)
+         if(rc != LZMA_OK && rc != LZMA_STREAM_END) {
             throw Compression_Error("lzma_code", ErrorType::LzmaError, rc);
+         }
 
          return (rc == LZMA_STREAM_END);
       }
@@ -51,15 +57,17 @@ class LZMA_Stream : public Zlib_Style_Stream<lzma_stream, uint8_t> {
 class LZMA_Compression_Stream final : public LZMA_Stream {
    public:
       explicit LZMA_Compression_Stream(size_t level) {
-         if(level == 0)
+         if(level == 0) {
             level = 6;  // default
-         else if(level > 9)
+         } else if(level > 9) {
             level = 9;  // clamp to maximum allowed value
+         }
 
          lzma_ret rc = ::lzma_easy_encoder(streamp(), static_cast<uint32_t>(level), LZMA_CHECK_CRC64);
 
-         if(rc != LZMA_OK)
+         if(rc != LZMA_OK) {
             throw Compression_Error("lzam_easy_encoder", ErrorType::LzmaError, rc);
+         }
       }
 };
 
@@ -68,8 +76,9 @@ class LZMA_Decompression_Stream final : public LZMA_Stream {
       LZMA_Decompression_Stream() {
          lzma_ret rc = ::lzma_stream_decoder(streamp(), UINT64_MAX, LZMA_TELL_UNSUPPORTED_CHECK);
 
-         if(rc != LZMA_OK)
+         if(rc != LZMA_OK) {
             throw Compression_Error("lzma_stream_decoder", ErrorType::LzmaError, rc);
+         }
       }
 };
 

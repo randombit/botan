@@ -26,8 +26,7 @@ Compression_Filter::Compression_Filter(std::string_view type, size_t level, size
    }
 }
 
-Compression_Filter::~Compression_Filter() { /* for unique_ptr */
-}
+Compression_Filter::~Compression_Filter() = default;
 
 std::string Compression_Filter::name() const {
    return m_comp->name();
@@ -71,8 +70,7 @@ Decompression_Filter::Decompression_Filter(std::string_view type, size_t bs) :
    }
 }
 
-Decompression_Filter::~Decompression_Filter() { /* for unique_ptr */
-}
+Decompression_Filter::~Decompression_Filter() = default;
 
 std::string Decompression_Filter::name() const {
    return m_comp->name();

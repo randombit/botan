@@ -33,7 +33,7 @@ jobs:
         run: sudo apt-get -qq install libboost-dev
 
       - name: Configure Build
-        run: python3 ./configure.py --cc=clang --build-targets=shared,cli,tests,examples,bogo_shim --build-fuzzers=test --with-boost --with-sqlite
+        run: python3 ./configure.py --cc=clang --build-targets=shared,cli,tests,examples,bogo_shim --build-fuzzers=test --with-boost --with-sqlite --with-zlib --with-lzma --with-bzip2
 
       - name: Run Clang Tidy
         run: python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose

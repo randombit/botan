@@ -22,7 +22,7 @@ void* Compression_Alloc_Info::do_malloc(size_t n, size_t size) {
       return nullptr;
    }
 
-   void* ptr = std::calloc(n, size);
+   void* ptr = std::calloc(n, size);  // NOLINT(*-no-malloc)
 
    /*
    * Return null rather than throwing here as we are being called by a
@@ -43,11 +43,12 @@ void Compression_Alloc_Info::do_free(void* ptr) {
    if(ptr) {
       auto i = m_current_allocs.find(ptr);
 
-      if(i == m_current_allocs.end())
+      if(i == m_current_allocs.end()) {
          throw Internal_Error("Compression_Alloc_Info::free got pointer not allocated by us");
+      }
 
       secure_scrub_memory(ptr, i->second);
-      std::free(ptr);
+      std::free(ptr);  // NOLINT(*-no-malloc)
       m_current_allocs.erase(i);
    }
 }
@@ -69,16 +70,18 @@ void Stream_Compression::process(secure_vector<uint8_t>& buf, size_t offset, uin
       return;
    }
 
-   if(m_buffer.size() < buf.size() + offset)
+   if(m_buffer.size() < buf.size() + offset) {
       m_buffer.resize(buf.size() + offset);
+   }
 
    // If the output buffer has zero length, .data() might return nullptr. This would
    // make some compression algorithms (notably those provided by zlib) fail.
    // Any small positive value works fine, but we choose 32 as it is the smallest power
    // of two that is large enough to hold all the headers and trailers of the common
    // formats, preventing further resizings to make room for output data.
-   if(m_buffer.size() == 0)
+   if(m_buffer.empty()) {
       m_buffer.resize(32);
+   }
 
    m_stream->next_in(buf.data() + offset, buf.size() - offset);
    m_stream->next_out(m_buffer.data() + offset, m_buffer.size() - offset);
@@ -127,8 +130,9 @@ void Stream_Decompression::process(secure_vector<uint8_t>& buf, size_t offset, u
    BOTAN_ASSERT(m_stream, "Initialized");
    BOTAN_ASSERT(buf.size() >= offset, "Offset is sane");
 
-   if(m_buffer.size() < buf.size() + offset)
+   if(m_buffer.size() < buf.size() + offset) {
       m_buffer.resize(buf.size() + offset);
+   }
 
    m_stream->next_in(buf.data() + offset, buf.size() - offset);
    m_stream->next_out(m_buffer.data() + offset, m_buffer.size() - offset);
@@ -169,11 +173,13 @@ void Stream_Decompression::update(secure_vector<uint8_t>& buf, size_t offset) {
 }
 
 void Stream_Decompression::finish(secure_vector<uint8_t>& buf, size_t offset) {
-   if(buf.size() != offset || m_stream.get())
+   if(buf.size() != offset || m_stream.get()) {
       process(buf, offset, m_stream->finish_flag());
+   }
 
-   if(m_stream.get())
+   if(m_stream) {
       throw Invalid_State(fmt("{} finished but not at stream end", name()));
+   }
 }
 
 }  // namespace Botan

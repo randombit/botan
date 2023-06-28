@@ -28,22 +28,27 @@ namespace Botan {
 //static
 std::unique_ptr<Compression_Algorithm> Compression_Algorithm::create(std::string_view name) {
 #if defined(BOTAN_HAS_ZLIB)
-   if(name == "Zlib" || name == "zlib")
+   if(name == "Zlib" || name == "zlib") {
       return std::make_unique<Zlib_Compression>();
-   if(name == "Gzip" || name == "gzip" || name == "gz")
+   }
+   if(name == "Gzip" || name == "gzip" || name == "gz") {
       return std::make_unique<Gzip_Compression>();
-   if(name == "Deflate" || name == "deflate")
+   }
+   if(name == "Deflate" || name == "deflate") {
       return std::make_unique<Deflate_Compression>();
+   }
 #endif
 
 #if defined(BOTAN_HAS_BZIP2)
-   if(name == "bzip2" || name == "bz2" || name == "Bzip2")
+   if(name == "bzip2" || name == "bz2" || name == "Bzip2") {
       return std::make_unique<Bzip2_Compression>();
+   }
 #endif
 
 #if defined(BOTAN_HAS_LZMA)
-   if(name == "lzma" || name == "xz" || name == "LZMA")
+   if(name == "lzma" || name == "xz" || name == "LZMA") {
       return std::make_unique<LZMA_Compression>();
+   }
 #endif
 
    BOTAN_UNUSED(name);
@@ -61,22 +66,27 @@ std::unique_ptr<Compression_Algorithm> Compression_Algorithm::create_or_throw(st
 //static
 std::unique_ptr<Decompression_Algorithm> Decompression_Algorithm::create(std::string_view name) {
 #if defined(BOTAN_HAS_ZLIB)
-   if(name == "Zlib" || name == "zlib")
+   if(name == "Zlib" || name == "zlib") {
       return std::make_unique<Zlib_Decompression>();
-   if(name == "Gzip" || name == "gzip" || name == "gz")
+   }
+   if(name == "Gzip" || name == "gzip" || name == "gz") {
       return std::make_unique<Gzip_Decompression>();
-   if(name == "Deflate" || name == "deflate")
+   }
+   if(name == "Deflate" || name == "deflate") {
       return std::make_unique<Deflate_Decompression>();
+   }
 #endif
 
 #if defined(BOTAN_HAS_BZIP2)
-   if(name == "bzip2" || name == "bz2" || name == "Bzip2")
+   if(name == "bzip2" || name == "bz2" || name == "Bzip2") {
       return std::make_unique<Bzip2_Decompression>();
+   }
 #endif
 
 #if defined(BOTAN_HAS_LZMA)
-   if(name == "lzma" || name == "xz" || name == "LZMA")
+   if(name == "lzma" || name == "xz" || name == "LZMA") {
       return std::make_unique<LZMA_Decompression>();
+   }
 #endif
 
    BOTAN_UNUSED(name);
