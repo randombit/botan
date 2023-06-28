@@ -167,8 +167,6 @@ void SHA_512::compress_digest(secure_vector<uint64_t>& digest, const uint8_t inp
    }
 }
 
-#undef SHA2_64_F
-
 std::string SHA_512_256::provider() const {
    return sha512_provider();
 }
