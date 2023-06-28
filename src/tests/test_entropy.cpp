@@ -76,7 +76,7 @@ class Entropy_Source_Tests final : public Test {
 
                         result.test_note("poll 2 result", rng2.seed_material());
 
-                        if(rng.seed_material().size() > 0 && rng2.seed_material().size() > 0) {
+                        if(!rng.seed_material().empty() && !rng2.seed_material().empty()) {
                            try {
                               Botan::secure_vector<uint8_t> compressed;
                               compressed.insert(
