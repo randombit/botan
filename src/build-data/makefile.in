@@ -48,7 +48,7 @@ docs: %{doc_stamp_file}
 # Misc targets
 
 %{if make_supports_phony}
-.PHONY: all cli libs tests check docs clean distclean install fmt
+.PHONY: all cli libs tests check docs clean distclean install fmt tidy
 %{endif}
 
 %{doc_stamp_file}: %{doc_dir}/*.rst %{doc_dir}/api_ref/*.rst %{doc_dir}/dev_ref/*.rst
@@ -68,6 +68,9 @@ check: tests
 
 fmt:
 	"$(PYTHON_EXE)" "$(SCRIPTS_DIR)/dev_tools/run_clang_format.py"
+
+tidy:
+	"$(PYTHON_EXE)" "$(SCRIPTS_DIR)/dev_tools/run_clang_tidy.py" --only-changed-files
 
 # Object Files
 LIBOBJS = %{join lib_objs}
