@@ -207,6 +207,9 @@ class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello {
       bool supports_encrypt_then_mac() const;
 
       void update_hello_cookie(const Hello_Verify_Request& hello_verify);
+
+   private:
+      void add_tls12_supported_groups_extensions(const Policy& policy);
 };
 
 #if defined(BOTAN_HAS_TLS_13)

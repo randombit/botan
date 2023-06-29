@@ -95,6 +95,26 @@ enum class Group_Params : uint16_t {
    FFDHE_4096 = 258,
    FFDHE_6144 = 259,
    FFDHE_8192 = 260,
+
+   // libOQS defines those in:
+   // https://github.com/open-quantum-safe/oqs-provider/blob/main/oqs-template/oqs-kem-info.md
+   KYBER_512_R3 = 0x023A,
+   KYBER_768_R3 = 0x023C,
+   KYBER_1024_R3 = 0x023D,
+
+   // Cloudflare code points for hybrid PQC
+   // https://blog.cloudflare.com/post-quantum-for-all/
+   HYBRID_X25519_KYBER_512_R3_CLOUDFLARE = 0xFE30,
+   HYBRID_X25519_KYBER_768_R3_CLOUDFLARE = 0xFE31,
+
+   // libOQS defines those in:
+   // https://github.com/open-quantum-safe/oqs-provider/blob/main/oqs-template/oqs-kem-info.md
+   HYBRID_X25519_KYBER_512_R3_OQS = 0x2F39,
+   HYBRID_X25519_KYBER_768_R3_OQS = 0x6399,
+
+   HYBRID_SECP256R1_KYBER_512_R3_OQS = 0x2F3A,
+   HYBRID_SECP384R1_KYBER_768_R3_OQS = 0x2F3C,
+   HYBRID_SECP521R1_KYBER_1024_R3_OQS = 0x2F3D,
 };
 
 constexpr bool is_x25519(const Group_Params group) {
@@ -112,12 +132,28 @@ constexpr bool is_dh(const Group_Params group) {
           group == Group_Params::FFDHE_6144 || group == Group_Params::FFDHE_8192;
 }
 
-constexpr bool is_kem(const Group_Params) {
-   return false;  // no KEMs implemented, yet
+constexpr bool is_pure_kyber(const Group_Params group) {
+   return group == Group_Params::KYBER_512_R3 || group == Group_Params::KYBER_768_R3 ||
+          group == Group_Params::KYBER_1024_R3;
+}
+
+constexpr bool is_hybrid(const Group_Params group) {
+   return group == Group_Params::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE ||
+          group == Group_Params::HYBRID_X25519_KYBER_768_R3_CLOUDFLARE ||
+          group == Group_Params::HYBRID_X25519_KYBER_512_R3_OQS ||
+          group == Group_Params::HYBRID_X25519_KYBER_768_R3_OQS ||
+          group == Group_Params::HYBRID_SECP256R1_KYBER_512_R3_OQS ||
+          group == Group_Params::HYBRID_SECP384R1_KYBER_768_R3_OQS ||
+          group == Group_Params::HYBRID_SECP521R1_KYBER_1024_R3_OQS;
+}
+
+constexpr bool is_kem(const Group_Params group) {
+   return is_pure_kyber(group) || is_hybrid(group);
 }
 
 std::string group_param_to_string(Group_Params group);
 Group_Params group_param_from_string(std::string_view group_name);
+std::vector<std::pair<std::string, std::string>> hybrid_group_param_to_algorithm_specs(Group_Params group);
 bool group_param_is_dh(Group_Params group);
 
 enum class Kex_Algo {

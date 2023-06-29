@@ -15,6 +15,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace Botan {
 
@@ -558,14 +559,17 @@ class KEM_Encapsulation final {
       */
       const std::vector<uint8_t>& encapsulated_shared_key() const { return m_encapsulated_shared_key; }
 
-      std::vector<uint8_t>& encapsulated_shared_key() { return m_encapsulated_shared_key; }
-
       /**
       * @returns the plaintext shared secret
       */
       const secure_vector<uint8_t>& shared_key() const { return m_shared_key; }
 
-      secure_vector<uint8_t>& shared_key() { return m_shared_key; }
+      /**
+       * @returns the pair (encapsulated key, key) extracted from @p kem
+       */
+      static std::pair<std::vector<uint8_t>, secure_vector<uint8_t>> destructure(KEM_Encapsulation&& kem) {
+         return std::make_pair(std::exchange(kem.m_encapsulated_shared_key, {}), std::exchange(kem.m_shared_key, {}));
+      }
 
    private:
       friend class PK_KEM_Encryptor;
@@ -651,13 +655,11 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
       KEM_Encapsulation encrypt(RandomNumberGenerator& rng,
                                 size_t desired_shared_key_len = 32,
                                 std::span<const uint8_t> salt = {}) {
-         KEM_Encapsulation result(encapsulated_key_length(), shared_key_length(desired_shared_key_len));
-         encrypt(std::span{result.encapsulated_shared_key()},
-                 std::span{result.shared_key()},
-                 rng,
-                 desired_shared_key_len,
-                 salt);
-         return result;
+         std::vector<uint8_t> encapsulated_shared_key(encapsulated_key_length());
+         secure_vector<uint8_t> shared_key(shared_key_length(desired_shared_key_len));
+
+         encrypt(std::span{encapsulated_shared_key}, std::span{shared_key}, rng, desired_shared_key_len, salt);
+         return KEM_Encapsulation(std::move(encapsulated_shared_key), std::move(shared_key));
       }
 
       /**

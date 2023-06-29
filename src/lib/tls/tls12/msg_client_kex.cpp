@@ -105,6 +105,11 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          const Group_Params curve_id = static_cast<Group_Params>(reader.get_uint16_t());
          const std::vector<uint8_t> peer_public_value = reader.get_range<uint8_t>(1, 1, 255);
 
+         if(!is_ecdh(curve_id) && !is_x25519(curve_id)) {
+            throw TLS_Exception(Alert::HandshakeFailure,
+                                "Server selected a group that is not compatible with the negotiated ciphersuite");
+         }
+
          if(policy.choose_key_exchange_group({curve_id}, {}) != curve_id) {
             throw TLS_Exception(Alert::HandshakeFailure, "Server sent ECC curve prohibited by policy");
          }

@@ -255,11 +255,6 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
                                       const std::vector<uint8_t>& msg,
                                       const std::vector<uint8_t>& sig);
 
-      struct Encapsulation_Result {
-            std::vector<uint8_t> encapsulated_bytes;
-            secure_vector<uint8_t> shared_secret;
-      };
-
       /**
        * Generate an ephemeral KEM key for a TLS 1.3 handshake
        *

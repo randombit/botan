@@ -414,6 +414,27 @@ std::vector<uint8_t> Hello_Request::serialize() const {
    return std::vector<uint8_t>();
 }
 
+void Client_Hello_12::add_tls12_supported_groups_extensions(const Policy& policy) {
+   // RFC 7919 3.
+   //    A client that offers a group MUST be able and willing to perform a DH
+   //    key exchange using that group.
+   //
+   // We don't support hybrid key exchange in TLS 1.2
+   const std::vector<Group_Params> kex_groups = policy.key_exchange_groups();
+   std::vector<Group_Params> compatible_kex_groups;
+   std::copy_if(kex_groups.begin(), kex_groups.end(), std::back_inserter(compatible_kex_groups), [](const auto group) {
+      return is_ecdh(group) || is_dh(group) || is_x25519(group);
+   });
+
+   auto supported_groups = std::make_unique<Supported_Groups>(std::move(compatible_kex_groups));
+
+   if(!supported_groups->ec_groups().empty()) {
+      m_data->extensions().add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
+   }
+
+   m_data->extensions().add(std::move(supported_groups));
+}
+
 Client_Hello_12::Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data) : Client_Hello(std::move(data)) {
    if(offered_suite(static_cast<uint16_t>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV))) {
       if(Renegotiation_Extension* reneg = m_data->extensions().get<Renegotiation_Extension>()) {
@@ -478,11 +499,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
       m_data->extensions().add(new Certificate_Status_Request({}, {}));
    }
 
-   auto supported_groups = std::make_unique<Supported_Groups>(policy.key_exchange_groups());
-   if(!supported_groups->ec_groups().empty()) {
-      m_data->extensions().add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
-   }
-   m_data->extensions().add(supported_groups.release());
+   add_tls12_supported_groups_extensions(policy);
 
    m_data->extensions().add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
    if(auto cert_signing_prefs = policy.acceptable_certificate_signature_schemes()) {
@@ -561,13 +578,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
       m_data->extensions().add(new Certificate_Status_Request({}, {}));
    }
 
-   auto supported_groups = std::make_unique<Supported_Groups>(policy.key_exchange_groups());
-
-   if(!supported_groups->ec_groups().empty()) {
-      m_data->extensions().add(new Supported_Point_Formats(policy.use_ecc_point_compression()));
-   }
-
-   m_data->extensions().add(supported_groups.release());
+   add_tls12_supported_groups_extensions(policy);
 
    m_data->extensions().add(new Signature_Algorithms(policy.acceptable_signature_schemes()));
    if(auto cert_signing_prefs = policy.acceptable_certificate_signature_schemes()) {

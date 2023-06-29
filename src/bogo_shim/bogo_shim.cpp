@@ -222,6 +222,7 @@ std::string map_to_bogo_error(const std::string& e) {
       {"Server resumed session and removed extended master secret", ":RESUMED_EMS_SESSION_WITHOUT_EMS_EXTENSION:"},
       {"Server resumed session but added extended master secret", ":RESUMED_NON_EMS_SESSION_WITH_EMS_EXTENSION:"},
       {"Server resumed session but with wrong version", ":OLD_SESSION_VERSION_NOT_RETURNED:"},
+      {"Server selected a group that is not compatible with the negotiated ciphersuite", ":WRONG_CURVE:"},
       {"Server sent ECC curve prohibited by policy", ":WRONG_CURVE:"},
       {"group was not advertised as supported", ":WRONG_CURVE:"},
       {"group was already offered", ":WRONG_CURVE:"},
@@ -982,6 +983,15 @@ class Shim_Policy final : public Botan::TLS::Policy {
             for(size_t pref : m_args.get_int_vec_opt("curves")) {
                const auto group = static_cast<Botan::TLS::Group_Params>(pref);
                if(std::find(supported_groups.cbegin(), supported_groups.cend(), group) != supported_groups.end()) {
+                  groups.push_back(group);
+               }
+
+               // Given that this is still a draft-standard, we didn't add the
+               // hybrid groups to the default policy, yet.
+               //
+               // TODO: once `TLS::Policy::key_exchange_groups()` contains it by
+               //       default, remove this explicit check.
+               if(group == Botan::TLS::Group_Params::HYBRID_X25519_KYBER_768_R3_OQS) {
                   groups.push_back(group);
                }
             }

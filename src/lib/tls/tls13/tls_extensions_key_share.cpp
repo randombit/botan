@@ -99,9 +99,10 @@ class Key_Share_Entry {
                                          const Policy& policy,
                                          Callbacks& cb,
                                          RandomNumberGenerator& rng) {
-         auto kem_result = cb.tls_kem_encapsulate(m_group, client_share.m_key_exchange, rng, policy);
-         m_key_exchange = std::move(kem_result.encapsulated_shared_key());
-         return std::move(kem_result.shared_key());
+         auto [encapsulated_shared_key, shared_key] =
+            KEM_Encapsulation::destructure(cb.tls_kem_encapsulate(m_group, client_share.m_key_exchange, rng, policy));
+         m_key_exchange = std::move(encapsulated_shared_key);
+         return std::move(shared_key);
       }
 
       /**
