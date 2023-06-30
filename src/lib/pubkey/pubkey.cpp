@@ -135,7 +135,7 @@ secure_vector<uint8_t> PK_Decryptor_EME::do_decrypt(uint8_t& valid_mask, const u
 PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, std::string_view param, std::string_view provider) {
    m_op = key.create_kem_encryption_op(param, provider);
    if(!m_op) {
-      throw Invalid_Argument(fmt("Key type {} does not support KEM encryption"));
+      throw Invalid_Argument(fmt("Key type {} does not support KEM encryption", key.algo_name()));
    }
 }
 
