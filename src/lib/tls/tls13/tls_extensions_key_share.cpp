@@ -20,6 +20,7 @@
 
 #include <functional>
 #include <iterator>
+#include <utility>
 
 #if defined(BOTAN_HAS_CURVE_25519)
    #include <botan/curve25519.h>
@@ -41,7 +42,7 @@ class Key_Share_Entry {
          m_key_exchange = reader.get_tls_length_value(2);
       }
 
-      // Create a blanco Key_Share_Entry with the selected group
+      // Create an empty Key_Share_Entry with the selected group
       // but don't pre-generate a keypair, yet.
       Key_Share_Entry(const TLS::Group_Params group) : m_group(group) {}
 
