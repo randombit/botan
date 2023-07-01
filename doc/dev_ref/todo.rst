@@ -117,6 +117,7 @@ New C APIs
 
 * PKCS10 requests
 * Certificate signing
+* CRLs
 * Expose TLS
 * Expose NIST key wrap with padding
 * Expose secret sharing
@@ -135,7 +136,6 @@ Build/Test
 * Run Android binary under simulator in CI
 * Run the TPM tests against an emulator
   (https://github.com/PeterHuewe/tpm-emulator)
-* Add clang-tidy, clang-analyzer, cppcheck to CI
 * Add support for vxWorks
 
 CLI
@@ -153,6 +153,7 @@ CLI
 * Password store utility
 * TOTP calculator
 * Clone of magic wormhole
+* ACVP client (https://github.com/usnistgov/ACVP)
 
 Documentation
 ----------------------------------------
