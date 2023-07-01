@@ -34,6 +34,7 @@ std::string GHASH::provider() const {
 void GHASH::ghash_multiply(secure_vector<uint8_t>& x, const uint8_t input[], size_t blocks) {
 #if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
    if(CPUID::has_carryless_multiply()) {
+      BOTAN_ASSERT_NOMSG(!m_H_pow.empty());
       return ghash_multiply_cpu(x.data(), m_H_pow.data(), input, blocks);
    }
 #endif
