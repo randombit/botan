@@ -148,13 +148,10 @@ void PK_KEM_Encryptor::encrypt(std::span<uint8_t> out_encapsulated_key,
                                RandomNumberGenerator& rng,
                                size_t desired_shared_key_len,
                                std::span<const uint8_t> salt) {
-   secure_vector<uint8_t> encaps;
-   secure_vector<uint8_t> key;
-   m_op->kem_encrypt(encaps, key, desired_shared_key_len, rng, salt.data(), salt.size());
-   BOTAN_ASSERT_EQUAL(encaps.size(), out_encapsulated_key.size(), "enough room for encapsulated key");
-   BOTAN_ASSERT_EQUAL(key.size(), out_shared_key.size(), "enough room for shared key");
-   std::copy(encaps.begin(), encaps.end(), out_encapsulated_key.begin());
-   std::copy(key.begin(), key.end(), out_shared_key.begin());
+   BOTAN_ARG_CHECK(out_encapsulated_key.size() == encapsulated_key_length(), "not enough space for encapsulated key");
+   BOTAN_ARG_CHECK(out_shared_key.size() == shared_key_length(desired_shared_key_len),
+                   "not enough space for shared key");
+   m_op->kem_encrypt(out_encapsulated_key, out_shared_key, rng, desired_shared_key_len, salt);
 }
 
 size_t PK_KEM_Decryptor::shared_key_length(size_t desired_shared_key_len) const {

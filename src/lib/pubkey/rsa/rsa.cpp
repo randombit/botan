@@ -686,14 +686,15 @@ class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KD
 
       size_t encapsulated_key_length() const override { return public_modulus_bytes(); }
 
-      void raw_kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
-                           secure_vector<uint8_t>& raw_shared_key,
+      void raw_kem_encrypt(std::span<uint8_t> out_encapsulated_key,
+                           std::span<uint8_t> raw_shared_key,
                            RandomNumberGenerator& rng) override {
          const BigInt r = BigInt::random_integer(rng, 1, get_n());
          const BigInt c = public_op(r);
 
-         out_encapsulated_key = BigInt::encode_1363(c, public_modulus_bytes());
-         raw_shared_key = BigInt::encode_1363(r, public_modulus_bytes());
+         // TODO: simplify that once BigInt::encode_1363() has a std::span<> overload
+         BigInt::encode_1363(out_encapsulated_key.data(), out_encapsulated_key.size(), c);
+         BigInt::encode_1363(raw_shared_key.data(), raw_shared_key.size(), r);
       }
 };
 

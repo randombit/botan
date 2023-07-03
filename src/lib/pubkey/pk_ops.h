@@ -139,12 +139,11 @@ class Key_Agreement {
 */
 class KEM_Encryption {
    public:
-      virtual void kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
-                               secure_vector<uint8_t>& out_shared_key,
-                               size_t desired_shared_key_len,
+      virtual void kem_encrypt(std::span<uint8_t> out_encapsulated_key,
+                               std::span<uint8_t> out_shared_key,
                                RandomNumberGenerator& rng,
-                               const uint8_t salt[],
-                               size_t salt_len) = 0;
+                               size_t desired_shared_key_len,
+                               std::span<const uint8_t> salt) = 0;
 
       virtual size_t shared_key_length(size_t desired_shared_key_len) const = 0;
 

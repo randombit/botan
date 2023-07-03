@@ -1092,8 +1092,8 @@ class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
          }
       }
 
-      void raw_kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
-                           secure_vector<uint8_t>& out_shared_key,
+      void raw_kem_encrypt(std::span<uint8_t> out_encapsulated_key,
+                           std::span<uint8_t> out_shared_key,
                            RandomNumberGenerator& rng) override {
          // naming from kyber spec
          auto H = mode().H();
@@ -1113,11 +1113,15 @@ class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
          const auto lower_g_out = std::span(g_out).subspan(0, 32);
          const auto upper_g_out = std::span(g_out).subspan(32, 32);
 
-         out_encapsulated_key = indcpa_enc(shared_secret, upper_g_out);
+         const auto encapsulation = indcpa_enc(shared_secret, upper_g_out);
+
+         // TODO: avoid copy by letting Ciphertext write straight into std::span<>
+         BOTAN_ASSERT_NOMSG(encapsulation.size() == out_encapsulated_key.size());
+         std::copy(encapsulation.begin(), encapsulation.end(), out_encapsulated_key.begin());
 
          KDF->update(lower_g_out.data(), lower_g_out.size());
          KDF->update(H->process(out_encapsulated_key));
-         out_shared_key = KDF->final();
+         KDF->final(out_shared_key);
       }
 
    private:

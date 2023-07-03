@@ -121,18 +121,17 @@ class Key_Agreement_with_KDF : public Key_Agreement {
 
 class KEM_Encryption_with_KDF : public KEM_Encryption {
    public:
-      void kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
-                       secure_vector<uint8_t>& out_shared_key,
-                       size_t desired_shared_key_len,
+      void kem_encrypt(std::span<uint8_t> out_encapsulated_key,
+                       std::span<uint8_t> out_shared_key,
                        RandomNumberGenerator& rng,
-                       const uint8_t salt[],
-                       size_t salt_len) override final;
+                       size_t desired_shared_key_len,
+                       std::span<const uint8_t> salt) override final;
 
       size_t shared_key_length(size_t desired_shared_key_len) const override final;
 
    protected:
-      virtual void raw_kem_encrypt(secure_vector<uint8_t>& out_encapsulated_key,
-                                   secure_vector<uint8_t>& raw_shared_key,
+      virtual void raw_kem_encrypt(std::span<uint8_t> out_encapsulated_key,
+                                   std::span<uint8_t> raw_shared_key,
                                    RandomNumberGenerator& rng) = 0;
 
       virtual size_t raw_kem_shared_key_length() const = 0;
