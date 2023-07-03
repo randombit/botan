@@ -143,13 +143,18 @@ size_t PK_KEM_Encryptor::encapsulated_key_length() const {
    return m_op->encapsulated_key_length();
 }
 
-void PK_KEM_Encryptor::encrypt(secure_vector<uint8_t>& out_encapsulated_key,
-                               secure_vector<uint8_t>& out_shared_key,
-                               size_t desired_shared_key_len,
+void PK_KEM_Encryptor::encrypt(std::span<uint8_t> out_encapsulated_key,
+                               std::span<uint8_t> out_shared_key,
                                RandomNumberGenerator& rng,
-                               const uint8_t salt[],
-                               size_t salt_len) {
-   m_op->kem_encrypt(out_encapsulated_key, out_shared_key, desired_shared_key_len, rng, salt, salt_len);
+                               size_t desired_shared_key_len,
+                               std::span<const uint8_t> salt) {
+   secure_vector<uint8_t> encaps;
+   secure_vector<uint8_t> key;
+   m_op->kem_encrypt(encaps, key, desired_shared_key_len, rng, salt.data(), salt.size());
+   BOTAN_ASSERT_EQUAL(encaps.size(), out_encapsulated_key.size(), "enough room for encapsulated key");
+   BOTAN_ASSERT_EQUAL(key.size(), out_shared_key.size(), "enough room for shared key");
+   std::copy(encaps.begin(), encaps.end(), out_encapsulated_key.begin());
+   std::copy(key.begin(), key.end(), out_shared_key.begin());
 }
 
 size_t PK_KEM_Decryptor::shared_key_length(size_t desired_shared_key_len) const {

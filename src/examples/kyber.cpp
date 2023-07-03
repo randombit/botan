@@ -18,15 +18,13 @@ int main() {
 
    Botan::PK_KEM_Encryptor enc(*pub_key, kdf);
 
-   Botan::secure_vector<uint8_t> encapsulated_key;
-   Botan::secure_vector<uint8_t> enc_shared_key;
-   enc.encrypt(encapsulated_key, enc_shared_key, shared_key_len, rng, salt);
+   const auto kem_result = enc.encrypt(rng, shared_key_len, salt);
 
    Botan::PK_KEM_Decryptor dec(priv_key, rng, kdf);
 
-   auto dec_shared_key = dec.decrypt(encapsulated_key, shared_key_len, salt);
+   auto dec_shared_key = dec.decrypt(kem_result.encapsulated_shared_key(), shared_key_len, salt);
 
-   if(dec_shared_key != enc_shared_key) {
+   if(dec_shared_key != kem_result.shared_key()) {
       std::cerr << "Shared keys differ\n";
       return 1;
    }

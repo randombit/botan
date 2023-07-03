@@ -540,6 +540,39 @@ class BOTAN_PUBLIC_API(2, 0) PK_Decryptor_EME final : public PK_Decryptor {
 };
 
 /**
+   * Result of a key encapsulation operation.
+   */
+class KEM_Encapsulation final {
+   public:
+      KEM_Encapsulation(std::vector<uint8_t> encapsulated_shared_key, secure_vector<uint8_t> shared_key) :
+            m_encapsulated_shared_key(std::move(encapsulated_shared_key)), m_shared_key(std::move(shared_key)) {}
+
+      /**
+         * @returns the encapsulated shared secret (encrypted with the public key)
+         */
+      const std::vector<uint8_t>& encapsulated_shared_key() const { return m_encapsulated_shared_key; }
+
+      /**
+         * @returns the plaintext shared secret
+         */
+      const secure_vector<uint8_t>& shared_key() const { return m_shared_key; }
+
+   private:
+      friend class PK_KEM_Encryptor;
+
+      KEM_Encapsulation(size_t encapsulated_size, size_t shared_key_size) :
+            m_encapsulated_shared_key(encapsulated_size), m_shared_key(shared_key_size) {}
+
+      std::vector<uint8_t>& encapsulated_shared_key() { return m_encapsulated_shared_key; }
+
+      secure_vector<uint8_t>& shared_key() { return m_shared_key; }
+
+   private:
+      std::vector<uint8_t> m_encapsulated_shared_key;
+      secure_vector<uint8_t> m_shared_key;
+};
+
+/**
 * Public Key Key Encapsulation Mechanism Encryption.
 */
 class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
@@ -599,49 +632,79 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
 
       /**
       * Generate a shared key for data encryption.
-      * @param out_encapsulated_key the generated encapsulated key
-      * @param out_shared_key the generated shared key
+      *
+      * @param rng                    the RNG to use
+      * @param desired_shared_key_len desired size of the shared key in bytes for the KDF
+      *                               (ignored if no KDF is used)
+      * @param salt                   a salt value used in the KDF
+      *                               (ignored if no KDF is used)
+      *
+      * @returns a struct with both the shared secret and its encapsulation
+      */
+      KEM_Encapsulation encrypt(RandomNumberGenerator& rng,
+                                size_t desired_shared_key_len = 32,
+                                std::span<const uint8_t> salt = {}) {
+         KEM_Encapsulation result(encapsulated_key_length(), shared_key_length(desired_shared_key_len));
+         encrypt(result.encapsulated_shared_key(), result.shared_key(), rng, desired_shared_key_len, salt);
+         return result;
+      }
+
+      /**
+      * Generate a shared key for data encryption.
+      * @param out_encapsulated_key   the generated encapsulated key
+      * @param out_shared_key         the generated shared key
       * @param desired_shared_key_len desired size of the shared key in bytes
-      * @param rng the RNG to use
-      * @param salt a salt value used in the KDF
-      * @param salt_len size of the salt value in bytes
+      *                               (ignored if no KDF is used)
+      * @param rng                    the RNG to use
+      * @param salt                   a salt value used in the KDF
+      *                               (ignored if no KDF is used)
+      * @param salt_len               size of the salt value in bytes
+      *                               (ignored if no KDF is used)
       */
       void encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                    secure_vector<uint8_t>& out_shared_key,
                    size_t desired_shared_key_len,
                    RandomNumberGenerator& rng,
                    const uint8_t salt[],
-                   size_t salt_len);
+                   size_t salt_len) {
+         this->encrypt(out_encapsulated_key, out_shared_key, desired_shared_key_len, rng, {salt, salt_len});
+      }
 
       /**
       * Generate a shared key for data encryption.
-      * @param out_encapsulated_key the generated encapsulated key
-      * @param out_shared_key the generated shared key
+      * @param out_encapsulated_key   the generated encapsulated key
+      * @param out_shared_key         the generated shared key
       * @param desired_shared_key_len desired size of the shared key in bytes
-      * @param rng the RNG to use
-      * @param salt a salt value used in the KDF
+      *                               (ignored if no KDF is used)
+      * @param rng                    the RNG to use
+      * @param salt                   a salt value used in the KDF
+      *                               (ignored if no KDF is used)
       */
       void encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                    secure_vector<uint8_t>& out_shared_key,
                    size_t desired_shared_key_len,
                    RandomNumberGenerator& rng,
-                   std::span<const uint8_t> salt) {
-         this->encrypt(out_encapsulated_key, out_shared_key, desired_shared_key_len, rng, salt.data(), salt.size());
+                   std::span<const uint8_t> salt = {}) {
+         out_encapsulated_key.resize(encapsulated_key_length());
+         out_shared_key.resize(shared_key_length(desired_shared_key_len));
+         encrypt(out_encapsulated_key, out_shared_key, rng, desired_shared_key_len, salt);
       }
 
       /**
       * Generate a shared key for data encryption.
-      * @param out_encapsulated_key the generated encapsulated key
-      * @param out_shared_key the generated shared key
+      * @param out_encapsulated_key   the generated encapsulated key
+      * @param out_shared_key         the generated shared key
+      * @param rng                    the RNG to use
       * @param desired_shared_key_len desired size of the shared key in bytes
-      * @param rng the RNG to use
+      *                               (ignored if no KDF is used)
+      * @param salt                   a salt value used in the KDF
+      *                               (ignored if no KDF is used)
       */
-      void encrypt(secure_vector<uint8_t>& out_encapsulated_key,
-                   secure_vector<uint8_t>& out_shared_key,
-                   size_t desired_shared_key_len,
-                   RandomNumberGenerator& rng) {
-         this->encrypt(out_encapsulated_key, out_shared_key, desired_shared_key_len, rng, nullptr, 0);
-      }
+      void encrypt(std::span<uint8_t> out_encapsulated_key,
+                   std::span<uint8_t> out_shared_key,
+                   RandomNumberGenerator& rng,
+                   size_t desired_shared_key_len = 32,
+                   std::span<const uint8_t> salt = {});
 
    private:
       std::unique_ptr<PK_Ops::KEM_Encryption> m_op;
