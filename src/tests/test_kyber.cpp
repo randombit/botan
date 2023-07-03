@@ -50,14 +50,13 @@ class KYBER_Tests final : public Test {
          // Bob (reading from serialized public key)
          Botan::Kyber_PublicKey alice_pub_key(pub_key_bits, mode);
          auto enc = Botan::PK_KEM_Encryptor(alice_pub_key, "Raw", "base");
-         Botan::secure_vector<uint8_t> cipher_text, key_bob;
-         enc.encrypt(cipher_text, key_bob, 0 /* no KDF */, Test::rng());
+         const auto kem_result = enc.encrypt(Test::rng());
 
          // Alice (reading from serialized private key)
          Botan::Kyber_PrivateKey alice_priv_key(priv_key_bits, mode);
          auto dec = Botan::PK_KEM_Decryptor(alice_priv_key, Test::rng(), "Raw", "base");
-         const auto key_alice = dec.decrypt(cipher_text, 0 /* no KDF */, empty_salt);
-         result.test_eq("shared secrets are equal", key_alice, key_bob);
+         const auto key_alice = dec.decrypt(kem_result.encapsulated_shared_key(), 0 /* no KDF */, empty_salt);
+         result.test_eq("shared secrets are equal", key_alice, kem_result.shared_key());
 
          //
          // negative tests
@@ -65,20 +64,22 @@ class KYBER_Tests final : public Test {
 
          // Broken cipher_text from Alice (wrong length)
          result.test_throws("fail to read cipher_text", "Kyber: unexpected ciphertext length", [&] {
-            auto short_cipher_text = cipher_text;
+            auto short_cipher_text = kem_result.encapsulated_shared_key();
             short_cipher_text.pop_back();
             dec.decrypt(short_cipher_text, 0, empty_salt);
          });
 
          // Invalid cipher_text from Alice
          Botan::secure_vector<uint8_t> reverse_cipher_text;
-         std::copy(cipher_text.crbegin(), cipher_text.crend(), std::back_inserter(reverse_cipher_text));
+         std::copy(kem_result.encapsulated_shared_key().crbegin(),
+                   kem_result.encapsulated_shared_key().crend(),
+                   std::back_inserter(reverse_cipher_text));
          const auto key_alice_rev = dec.decrypt(reverse_cipher_text, 0, empty_salt);
          result.confirm("shared secrets are not equal", key_alice != key_alice_rev);
 
          // Try to decrypt the valid ciphertext again
-         const auto key_alice_try2 = dec.decrypt(cipher_text, 0 /* no KDF */, empty_salt);
-         result.test_eq("shared secrets are equal", key_alice_try2, key_bob);
+         const auto key_alice_try2 = dec.decrypt(kem_result.encapsulated_shared_key(), 0 /* no KDF */, empty_salt);
+         result.test_eq("shared secrets are equal", key_alice_try2, kem_result.shared_key());
 
          return result;
       }
@@ -130,14 +131,13 @@ Test::Result check_kyber_kat(const char* test_name,
 
    // Bob
    auto enc = Botan::PK_KEM_Encryptor(*pub_key, "Raw", "base");
-   Botan::secure_vector<uint8_t> cipher_text, key_bob;
-   enc.encrypt(cipher_text, key_bob, 0 /* no KDF */, ctr_drbg);
-   result.test_eq("Cipher-Text Output", cipher_text, ct_in);
-   result.test_eq("Key B Output", key_bob, ss_in);
+   const auto kem_result = enc.encrypt(ctr_drbg);
+   result.test_eq("Cipher-Text Output", kem_result.encapsulated_shared_key(), ct_in);
+   result.test_eq("Key B Output", kem_result.shared_key(), ss_in);
 
    // Alice
    auto dec = Botan::PK_KEM_Decryptor(priv_key, ctr_drbg, "Raw", "base");
-   const auto key_alice = dec.decrypt(cipher_text, 0 /* no KDF */, std::vector<uint8_t>());
+   const auto key_alice = dec.decrypt(kem_result.encapsulated_shared_key(), 0 /* no KDF */, std::vector<uint8_t>());
    result.test_eq("Key A Output", key_alice, ss_in);
 
    // Algorithm identifiers

@@ -1593,18 +1593,17 @@ class Speed final : public Command {
          auto kem_dec_timer = make_timer(nm, provider, "KEM decrypt");
 
          while(kem_enc_timer->under(msec) && kem_dec_timer->under(msec)) {
-            Botan::secure_vector<uint8_t> encap_key, enc_shared_key;
             Botan::secure_vector<uint8_t> salt = rng().random_vec(16);
 
             kem_enc_timer->start();
-            enc.encrypt(encap_key, enc_shared_key, 64, rng(), salt);
+            const auto kem_result = enc.encrypt(rng(), 64, salt);
             kem_enc_timer->stop();
 
             kem_dec_timer->start();
-            Botan::secure_vector<uint8_t> dec_shared_key = dec.decrypt(encap_key, 64, salt);
+            Botan::secure_vector<uint8_t> dec_shared_key = dec.decrypt(kem_result.encapsulated_shared_key(), 64, salt);
             kem_dec_timer->stop();
 
-            if(enc_shared_key != dec_shared_key) {
+            if(kem_result.shared_key() != dec_shared_key) {
                error_output() << "KEM mismatch in PK bench\n";
             }
          }

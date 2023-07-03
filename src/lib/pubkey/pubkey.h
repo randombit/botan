@@ -645,7 +645,11 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
                                 size_t desired_shared_key_len = 32,
                                 std::span<const uint8_t> salt = {}) {
          KEM_Encapsulation result(encapsulated_key_length(), shared_key_length(desired_shared_key_len));
-         encrypt(result.encapsulated_shared_key(), result.shared_key(), rng, desired_shared_key_len, salt);
+         encrypt(std::span{result.encapsulated_shared_key()},
+                 std::span{result.shared_key()},
+                 rng,
+                 desired_shared_key_len,
+                 salt);
          return result;
       }
 
@@ -653,41 +657,20 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
       * Generate a shared key for data encryption.
       * @param out_encapsulated_key   the generated encapsulated key
       * @param out_shared_key         the generated shared key
+      * @param rng                    the RNG to use
       * @param desired_shared_key_len desired size of the shared key in bytes
       *                               (ignored if no KDF is used)
-      * @param rng                    the RNG to use
-      * @param salt                   a salt value used in the KDF
-      *                               (ignored if no KDF is used)
-      * @param salt_len               size of the salt value in bytes
-      *                               (ignored if no KDF is used)
-      */
-      void encrypt(secure_vector<uint8_t>& out_encapsulated_key,
-                   secure_vector<uint8_t>& out_shared_key,
-                   size_t desired_shared_key_len,
-                   RandomNumberGenerator& rng,
-                   const uint8_t salt[],
-                   size_t salt_len) {
-         this->encrypt(out_encapsulated_key, out_shared_key, desired_shared_key_len, rng, {salt, salt_len});
-      }
-
-      /**
-      * Generate a shared key for data encryption.
-      * @param out_encapsulated_key   the generated encapsulated key
-      * @param out_shared_key         the generated shared key
-      * @param desired_shared_key_len desired size of the shared key in bytes
-      *                               (ignored if no KDF is used)
-      * @param rng                    the RNG to use
       * @param salt                   a salt value used in the KDF
       *                               (ignored if no KDF is used)
       */
       void encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                    secure_vector<uint8_t>& out_shared_key,
-                   size_t desired_shared_key_len,
                    RandomNumberGenerator& rng,
+                   size_t desired_shared_key_len = 32,
                    std::span<const uint8_t> salt = {}) {
          out_encapsulated_key.resize(encapsulated_key_length());
          out_shared_key.resize(shared_key_length(desired_shared_key_len));
-         encrypt(out_encapsulated_key, out_shared_key, rng, desired_shared_key_len, salt);
+         encrypt(std::span{out_encapsulated_key}, std::span{out_shared_key}, rng, desired_shared_key_len, salt);
       }
 
       /**
@@ -705,6 +688,29 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
                    RandomNumberGenerator& rng,
                    size_t desired_shared_key_len = 32,
                    std::span<const uint8_t> salt = {});
+
+      BOTAN_DEPRECATED("use overload with salt as std::span<>")
+
+      void encrypt(secure_vector<uint8_t>& out_encapsulated_key,
+                   secure_vector<uint8_t>& out_shared_key,
+                   size_t desired_shared_key_len,
+                   RandomNumberGenerator& rng,
+                   const uint8_t salt[],
+                   size_t salt_len) {
+         this->encrypt(out_encapsulated_key, out_shared_key, rng, desired_shared_key_len, {salt, salt_len});
+      }
+
+      BOTAN_DEPRECATED("use overload where rng comes after the out-paramters")
+
+      void encrypt(secure_vector<uint8_t>& out_encapsulated_key,
+                   secure_vector<uint8_t>& out_shared_key,
+                   size_t desired_shared_key_len,
+                   RandomNumberGenerator& rng,
+                   std::span<const uint8_t> salt = {}) {
+         out_encapsulated_key.resize(encapsulated_key_length());
+         out_shared_key.resize(shared_key_length(desired_shared_key_len));
+         encrypt(out_encapsulated_key, out_shared_key, rng, desired_shared_key_len, salt);
+      }
 
    private:
       std::unique_ptr<PK_Ops::KEM_Encryption> m_op;

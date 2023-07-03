@@ -443,16 +443,17 @@ Test::Result PK_KEM_Test::run_one_test(const std::string& /*header*/, const VarM
 
    Fixed_Output_RNG fixed_output_rng(vars.get_req_bin("R"));
 
-   Botan::secure_vector<uint8_t> produced_encap_key, shared_key;
-   enc->encrypt(produced_encap_key, shared_key, desired_key_len, fixed_output_rng, salt);
+   const auto kem_result = enc->encrypt(fixed_output_rng, desired_key_len, salt);
+
+   result.test_eq("encapsulated key length matches expected",
+                  kem_result.encapsulated_shared_key().size(),
+                  enc->encapsulated_key_length());
 
    result.test_eq(
-      "encapsulated key length matches expected", produced_encap_key.size(), enc->encapsulated_key_length());
+      "shared key length matches expected", kem_result.shared_key().size(), enc->shared_key_length(desired_key_len));
 
-   result.test_eq("shared key length matches expected", shared_key.size(), enc->shared_key_length(desired_key_len));
-
-   result.test_eq("C0 matches", produced_encap_key, C0);
-   result.test_eq("K matches", shared_key, K);
+   result.test_eq("C0 matches", kem_result.encapsulated_shared_key(), C0);
+   result.test_eq("K matches", kem_result.shared_key(), K);
 
    std::unique_ptr<Botan::PK_KEM_Decryptor> dec;
    try {
