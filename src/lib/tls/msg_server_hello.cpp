@@ -482,6 +482,21 @@ std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const
       throw TLS_Exception(Alert::HandshakeFailure, "Client did not offer any acceptable group");
    }
 
+   // RFC 8446 4.2.8:
+   //    Servers MUST NOT send a KeyShareEntry for any group not indicated in the
+   //    client's "supported_groups" extension [...]
+   if(!value_exists(supported_by_client, selected_group)) {
+      throw TLS_Exception(Alert::InternalError, "Application selected a group that is not supported by the client");
+   }
+
+   // RFC 8446 4.1.4
+   //    The server will send this message in response to a ClientHello
+   //    message if it is able to find an acceptable set of parameters but the
+   //    ClientHello does not contain sufficient information to proceed with
+   //    the handshake.
+   //
+   // In this case, the Client Hello did not contain a key share offer for
+   // the group selected by the application.
    if(!value_exists(offered_by_client, selected_group)) {
       // RFC 8446 4.1.4
       //    If a client receives a second HelloRetryRequest in the same
@@ -709,7 +724,9 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
    m_data->extensions().add(new Supported_Versions(Protocol_Version::TLS_V13));
 
    if(key_exchange_group.has_value()) {
-      m_data->extensions().add(new Key_Share(key_exchange_group.value(), cb, rng));
+      BOTAN_ASSERT_NOMSG(ch.extensions().has<Key_Share>());
+      m_data->extensions().add(Key_Share::create_as_encapsulation(
+         key_exchange_group.value(), *ch.extensions().get<Key_Share>(), policy, cb, rng));
    }
 
    auto& ch_exts = ch.extensions();

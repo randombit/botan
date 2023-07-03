@@ -114,6 +114,10 @@ constexpr bool is_dh(const Group_Params group) {
           group == Group_Params::FFDHE_6144 || group == Group_Params::FFDHE_8192;
 }
 
+constexpr bool is_kem(const Group_Params) {
+   return false;  // no KEMs implemented, yet
+}
+
 std::string group_param_to_string(Group_Params group);
 Group_Params group_param_from_string(std::string_view group_name);
 bool group_param_is_dh(Group_Params group);
