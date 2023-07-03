@@ -323,15 +323,15 @@ class MCE_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF {
          return ptext_sz + err_sz;
       }
 
-      secure_vector<uint8_t> raw_kem_decrypt(const uint8_t encap_key[], size_t len) override {
+      void raw_kem_decrypt(std::span<uint8_t> out_shared_key, std::span<const uint8_t> encapsulated_key) override {
          secure_vector<uint8_t> plaintext, error_mask;
-         mceliece_decrypt(plaintext, error_mask, encap_key, len, m_key);
+         mceliece_decrypt(plaintext, error_mask, encapsulated_key.data(), encapsulated_key.size(), m_key);
 
-         secure_vector<uint8_t> output;
-         output.reserve(plaintext.size() + error_mask.size());
-         output.insert(output.end(), plaintext.begin(), plaintext.end());
-         output.insert(output.end(), error_mask.begin(), error_mask.end());
-         return output;
+         // TODO: perhaps avoid the copies below
+         BOTAN_ASSERT_NOMSG(out_shared_key.size() == plaintext.size() + error_mask.size());
+         BufferStuffer bs(out_shared_key);
+         bs.append(plaintext);
+         bs.append(error_mask);
       }
 
       const McEliece_PrivateKey& m_key;

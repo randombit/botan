@@ -598,8 +598,12 @@ class RSA_KEM_Decryption_Operation final : public PK_Ops::KEM_Decryption_with_KD
 
       size_t raw_kem_shared_key_length() const override { return public_modulus_bytes(); }
 
-      secure_vector<uint8_t> raw_kem_decrypt(const uint8_t encap_key[], size_t len) override {
-         return raw_op(encap_key, len);
+      void raw_kem_decrypt(std::span<uint8_t> out_shared_key, std::span<const uint8_t> encapsulated_key) override {
+         auto shared_key = raw_op(encapsulated_key.data(), encapsulated_key.size());
+
+         // TODO: avoid copy by letting raw_op() work on std::span<>
+         BOTAN_ASSERT_NOMSG(out_shared_key.size() == shared_key.size());
+         std::copy(shared_key.begin(), shared_key.end(), out_shared_key.data());
       }
 };
 

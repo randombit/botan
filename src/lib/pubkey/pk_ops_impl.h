@@ -131,7 +131,7 @@ class KEM_Encryption_with_KDF : public KEM_Encryption {
 
    protected:
       virtual void raw_kem_encrypt(std::span<uint8_t> out_encapsulated_key,
-                                   std::span<uint8_t> raw_shared_key,
+                                   std::span<uint8_t> out_raw_shared_key,
                                    RandomNumberGenerator& rng) = 0;
 
       virtual size_t raw_kem_shared_key_length() const = 0;
@@ -145,16 +145,16 @@ class KEM_Encryption_with_KDF : public KEM_Encryption {
 
 class KEM_Decryption_with_KDF : public KEM_Decryption {
    public:
-      secure_vector<uint8_t> kem_decrypt(const uint8_t encap_key[],
-                                         size_t len,
-                                         size_t desired_shared_key_len,
-                                         const uint8_t salt[],
-                                         size_t salt_len) override final;
+      void kem_decrypt(std::span<uint8_t> out_shared_key,
+                       std::span<const uint8_t> encapsulated_key,
+                       size_t desired_shared_key_len,
+                       std::span<const uint8_t> salt) override final;
 
       size_t shared_key_length(size_t desired_shared_key_len) const override final;
 
    protected:
-      virtual secure_vector<uint8_t> raw_kem_decrypt(const uint8_t encap_key[], size_t len) = 0;
+      virtual void raw_kem_decrypt(std::span<uint8_t> out_raw_shared_key,
+                                   std::span<const uint8_t> encapsulated_key) = 0;
 
       virtual size_t raw_kem_shared_key_length() const = 0;
 

@@ -757,41 +757,60 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Decryptor final {
 
       /**
       * Decrypts the shared key for data encryption.
-      * @param encap_key the encapsulated key
-      * @param encap_key_len size of the encapsulated key in bytes
+      *
+      * @param out_shared_key         the generated shared key
+      * @param encap_key              the encapsulated key
       * @param desired_shared_key_len desired size of the shared key in bytes
-      * @param salt a salt value used in the KDF
-      * @param salt_len size of the salt value in bytes
+      *                               (ignored if no KDF is used)
+      * @param salt                   a salt value used in the KDF
+      *                               (ignored if no KDF is used)
+      */
+      void decrypt(std::span<uint8_t> out_shared_key,
+                   std::span<const uint8_t> encap_key,
+                   size_t desired_shared_key_len = 32,
+                   std::span<const uint8_t> salt = {});
+
+      /**
+      * Decrypts the shared key for data encryption.
+      *
+      * @param encap_key              the encapsulated key
+      * @param encap_key_len          size of the encapsulated key in bytes
+      * @param desired_shared_key_len desired size of the shared key in bytes
+      *                               (ignored if no KDF is used)
+      * @param salt                   a salt value used in the KDF
+      *                               (ignored if no KDF is used)
+      * @param salt_len               size of the salt value in bytes
+      *                               (ignored if no KDF is used)
+      *
       * @return the shared data encryption key
       */
       secure_vector<uint8_t> decrypt(const uint8_t encap_key[],
                                      size_t encap_key_len,
                                      size_t desired_shared_key_len,
-                                     const uint8_t salt[],
-                                     size_t salt_len);
-
-      /**
-      * Decrypts the shared key for data encryption.
-      * @param encap_key the encapsulated key
-      * @param encap_key_len size of the encapsulated key in bytes
-      * @param desired_shared_key_len desired size of the shared key in bytes
-      * @return the shared data encryption key
-      */
-      secure_vector<uint8_t> decrypt(const uint8_t encap_key[], size_t encap_key_len, size_t desired_shared_key_len) {
-         return this->decrypt(encap_key, encap_key_len, desired_shared_key_len, nullptr, 0);
+                                     const uint8_t salt[] = nullptr,
+                                     size_t salt_len = 0) {
+         secure_vector<uint8_t> shared_key(shared_key_length(desired_shared_key_len));
+         decrypt(shared_key, {encap_key, encap_key_len}, desired_shared_key_len, {salt, salt_len});
+         return shared_key;
       }
 
       /**
       * Decrypts the shared key for data encryption.
-      * @param encap_key the encapsulated key
+      *
+      * @param encap_key              the encapsulated key
       * @param desired_shared_key_len desired size of the shared key in bytes
-      * @param salt a salt value used in the KDF
+      *                               (ignored if no KDF is used)
+      * @param salt                   a salt value used in the KDF
+      *                               (ignored if no KDF is used)
+      *
       * @return the shared data encryption key
       */
       secure_vector<uint8_t> decrypt(std::span<const uint8_t> encap_key,
-                                     size_t desired_shared_key_len,
-                                     std::span<const uint8_t> salt) {
-         return this->decrypt(encap_key.data(), encap_key.size(), desired_shared_key_len, salt.data(), salt.size());
+                                     size_t desired_shared_key_len = 32,
+                                     std::span<const uint8_t> salt = {}) {
+         secure_vector<uint8_t> shared_key(shared_key_length(desired_shared_key_len));
+         decrypt(shared_key, encap_key, desired_shared_key_len, salt);
+         return shared_key;
       }
 
    private:

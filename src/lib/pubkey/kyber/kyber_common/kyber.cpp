@@ -1136,13 +1136,13 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
 
       size_t raw_kem_shared_key_length() const override { return 32; }
 
-      secure_vector<uint8_t> raw_kem_decrypt(const uint8_t encap_key[], size_t len_encap_key) override {
+      void raw_kem_decrypt(std::span<uint8_t> out_shared_key, std::span<const uint8_t> encapsulated_key) override {
          // naming from kyber spec
          auto H = mode().H();
          auto G = mode().G();
          auto KDF = mode().KDF();
 
-         const auto shared_secret = indcpa_dec(encap_key, len_encap_key);
+         const auto shared_secret = indcpa_dec(encapsulated_key);
 
          // Multitarget countermeasure for coins + contributory KEM
          G->update(shared_secret);
@@ -1155,14 +1155,15 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
          const auto lower_g_out = std::span(g_out).subspan(0, 32);
          const auto upper_g_out = std::span(g_out).subspan(32, 32);
 
-         H->update(encap_key, len_encap_key);
+         H->update(encapsulated_key);
 
          const auto cmp = indcpa_enc(shared_secret, upper_g_out);
-         BOTAN_ASSERT(len_encap_key == cmp.size(), "output of indcpa_enc has unexpected length");
+         BOTAN_ASSERT(encapsulated_key.size() == cmp.size(), "output of indcpa_enc has unexpected length");
 
          // Overwrite pre-k with z on re-encryption failure (constant time)
          secure_vector<uint8_t> lower_g_out_final(lower_g_out.size());
-         const uint8_t reencrypt_success = constant_time_compare(encap_key, cmp.data(), len_encap_key);
+         const uint8_t reencrypt_success =
+            constant_time_compare(encapsulated_key.data(), cmp.data(), encapsulated_key.size());
          BOTAN_ASSERT_NOMSG(lower_g_out.size() == m_key.m_private->z().size());
          CT::conditional_copy_mem(reencrypt_success,
                                   lower_g_out_final.data(),
@@ -1172,13 +1173,12 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
 
          KDF->update(lower_g_out_final);
          KDF->update(H->final());
-
-         return KDF->final();
+         KDF->final(out_shared_key);
       }
 
    private:
-      secure_vector<uint8_t> indcpa_dec(const uint8_t c[], size_t c_len) {
-         auto ct = Ciphertext::from_bytes(std::span(c, c_len), mode());
+      secure_vector<uint8_t> indcpa_dec(std::span<const uint8_t> c) {
+         auto ct = Ciphertext::from_bytes(c, mode());
          return ct.indcpa_decrypt(m_key.m_private->polynomials());
       }
 
