@@ -136,13 +136,13 @@ std::unique_ptr<Private_Key> TLS::Callbacks::tls_kem_generate_key(TLS::Group_Par
    return tls_generate_ephemeral_key(group, rng);
 }
 
-TLS::Callbacks::Encapsulation_Result TLS::Callbacks::tls_kem_encapsulate(TLS::Group_Params group,
-                                                                         const std::vector<uint8_t>& encoded_public_key,
-                                                                         RandomNumberGenerator& rng,
-                                                                         const Policy& policy) {
+KEM_Encapsulation TLS::Callbacks::tls_kem_encapsulate(TLS::Group_Params group,
+                                                      const std::vector<uint8_t>& encoded_public_key,
+                                                      RandomNumberGenerator& rng,
+                                                      const Policy& policy) {
    auto ephemeral_keypair = tls_generate_ephemeral_key(group, rng);
-   return {ephemeral_keypair->public_value(),
-           tls_ephemeral_key_agreement(group, *ephemeral_keypair, encoded_public_key, rng, policy)};
+   return KEM_Encapsulation(ephemeral_keypair->public_value(),
+                            tls_ephemeral_key_agreement(group, *ephemeral_keypair, encoded_public_key, rng, policy));
 }
 
 secure_vector<uint8_t> TLS::Callbacks::tls_kem_decapsulate(TLS::Group_Params group,

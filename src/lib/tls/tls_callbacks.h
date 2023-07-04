@@ -311,10 +311,10 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
        * @returns the shared secret both in plaintext and encapsulated with
        *          @p encoded_public_key.
        */
-      virtual Encapsulation_Result tls_kem_encapsulate(TLS::Group_Params group,
-                                                       const std::vector<uint8_t>& encoded_public_key,
-                                                       RandomNumberGenerator& rng,
-                                                       const Policy& policy);
+      virtual KEM_Encapsulation tls_kem_encapsulate(TLS::Group_Params group,
+                                                    const std::vector<uint8_t>& encoded_public_key,
+                                                    RandomNumberGenerator& rng,
+                                                    const Policy& policy);
 
       /**
        * Performs a key decapsulation operation (used for TLS 1.3 clients).

@@ -546,32 +546,32 @@ class BOTAN_PUBLIC_API(2, 0) PK_Decryptor_EME final : public PK_Decryptor {
 };
 
 /**
-   * Result of a key encapsulation operation.
-   */
+* Result of a key encapsulation operation.
+*/
 class KEM_Encapsulation final {
    public:
       KEM_Encapsulation(std::vector<uint8_t> encapsulated_shared_key, secure_vector<uint8_t> shared_key) :
             m_encapsulated_shared_key(std::move(encapsulated_shared_key)), m_shared_key(std::move(shared_key)) {}
 
       /**
-         * @returns the encapsulated shared secret (encrypted with the public key)
-         */
+      * @returns the encapsulated shared secret (encrypted with the public key)
+      */
       const std::vector<uint8_t>& encapsulated_shared_key() const { return m_encapsulated_shared_key; }
 
+      std::vector<uint8_t>& encapsulated_shared_key() { return m_encapsulated_shared_key; }
+
       /**
-         * @returns the plaintext shared secret
-         */
+      * @returns the plaintext shared secret
+      */
       const secure_vector<uint8_t>& shared_key() const { return m_shared_key; }
+
+      secure_vector<uint8_t>& shared_key() { return m_shared_key; }
 
    private:
       friend class PK_KEM_Encryptor;
 
       KEM_Encapsulation(size_t encapsulated_size, size_t shared_key_size) :
             m_encapsulated_shared_key(encapsulated_size), m_shared_key(shared_key_size) {}
-
-      std::vector<uint8_t>& encapsulated_shared_key() { return m_encapsulated_shared_key; }
-
-      secure_vector<uint8_t>& shared_key() { return m_shared_key; }
 
    private:
       std::vector<uint8_t> m_encapsulated_shared_key;
