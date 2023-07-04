@@ -3,14 +3,30 @@
     "tasks": [
         {
             "label": "Configure (gcc)",
-            "detail": "Default ./configure.py invocation. Run your own if you want.",
+            "detail": "Default ./configure.py invocation for gcc. Run your own if you want.",
             "group": "build",
             "type": "shell",
             "command": "python3 ./configure.py --cc gcc --compiler-cache=ccache --without-documentation --debug-mode --build-targets=\"static,tests,bogo_shim\"",
             "presentation": {
                 "reveal": "always",
                 "panel": "shared",
-                "close": true
+                "close": false
+            }
+        },
+        {
+            "label": "Configure (msvc)",
+            "detail": "Default ./configure.py invocation for msvc. Run your own if you want.",
+            "group": "build",
+            "type": "shell",
+            "shell": {
+                "args": [
+                ]
+            },
+            "command": "python ./configure.py --cc msvc --compiler-cache=sccache.exe --without-documentation --debug-mode --build-targets=\"static,tests\"",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "close": false
             }
         },
         {
@@ -18,17 +34,22 @@
             "group": "build",
             "type": "shell",
             "linux": {
-                "command": "make -j $(nproc)"
+                "command": "make -j $(nproc)",
+                "problemMatcher": "$gcc"
             },
             "osx": {
-                "command": "make -j $(sysctl -n hw.logicalcpu)"
+                "command": "make -j $(sysctl -n hw.logicalcpu)",
+                "problemMatcher": "$gcc"
+            },
+            "windows": {
+                "command": "jom",
+                "problemMatcher": "$msCompile"
             },
             "presentation": {
                 "reveal": "always",
                 "panel": "shared",
-                "close": true
-            },
-            "problemMatcher": "$gcc"
+                "close": false
+            }
         },
         {
             "label": "Build Unittests",
