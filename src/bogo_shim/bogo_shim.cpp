@@ -358,7 +358,7 @@ class Shim_Socket final {
       using unique_addrinfo_t = std::unique_ptr<addrinfo, decltype(&::freeaddrinfo)>;
 
    public:
-      Shim_Socket(const std::string& hostname, int port) : m_socket(-1) {
+      Shim_Socket(const std::string& hostname, int port, const bool ipv6) : m_socket(-1) {
          addrinfo hints;
          std::memset(&hints, 0, sizeof(hints));
          hints.ai_family = AF_UNSPEC;
@@ -381,7 +381,7 @@ class Shim_Socket final {
          }
 
          for(addrinfo* rp = res.get(); (m_socket == -1) && (rp != nullptr); rp = rp->ai_next) {
-            if(rp->ai_family != AF_INET && rp->ai_family != AF_INET6) {
+            if((!ipv6 && rp->ai_family != AF_INET) || (ipv6 && rp->ai_family != AF_INET6)) {
                continue;
             }
 
@@ -715,6 +715,7 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[]) {
       "implicit-handshake",
       "install-cert-compression-algs",
       "install-ddos-callback",
+      "ipv6",
       "is-handshaker-supported",
       //"jdk11-workaround",
       "key-update",
@@ -827,6 +828,7 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[]) {
       "read-size",
       "resume-count",
       "resumption-delay",
+      "shim-id",
    };
 
    const std::set<std::string> bogo_shim_int_vec_opts{
@@ -1689,9 +1691,17 @@ int main(int /*argc*/, char* argv[]) {
 
       for(size_t i = 0; i != resume_count + 1; ++i) {
          auto execute_test = [&](const std::string& hostname) {
-            Shim_Socket socket(hostname, port);
+            Shim_Socket socket(hostname, port, args->flag_set("ipv6"));
 
             shim_log("Connection " + std::to_string(i + 1) + "/" + std::to_string(resume_count + 1));
+
+            // The ShimID must be written on the socket as a 64-bit little-endian integer
+            // *before* any test data is transferred
+            // See: https://github.com/google/boringssl/commit/50ee09552cde1c2019bef24520848d041920cfd4
+            shim_log("Sending ShimID: " + std::to_string(args->get_int_opt("shim-id")));
+            std::array<uint8_t, 8> shim_id;
+            Botan::store_le(static_cast<uint64_t>(args->get_int_opt("shim-id")), shim_id.data());
+            socket.write(shim_id.data(), shim_id.size());
 
             auto policy = std::make_shared<Shim_Policy>(*args);
             auto callbacks = std::make_shared<Shim_Callbacks>(*args, socket, *policy);
