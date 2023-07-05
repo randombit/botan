@@ -852,27 +852,47 @@ class Shim_Policy final : public Botan::TLS::Policy {
       void incr_session_established() { m_sessions += 1; }
 
       std::vector<std::string> allowed_ciphers() const override {
-         return {
+         std::vector<std::string> allowed_without_aes = {
+            "ChaCha20Poly1305",
+            "Camellia-256/GCM",
+            "Camellia-128/GCM",
+            "ARIA-256/GCM",
+            "ARIA-128/GCM",
+            "Camellia-256",
+            "Camellia-128",
+            "SEED",
+         };
+
+         std::vector<std::string> allowed_just_aes = {
             "AES-256/OCB(12)",
             "AES-128/OCB(12)",
-            "ChaCha20Poly1305",
             "AES-256/GCM",
             "AES-128/GCM",
             "AES-256/CCM",
             "AES-128/CCM",
             "AES-256/CCM(8)",
             "AES-128/CCM(8)",
-            "Camellia-256/GCM",
-            "Camellia-128/GCM",
-            "ARIA-256/GCM",
-            "ARIA-128/GCM",
             "AES-256",
             "AES-128",
-            "Camellia-256",
-            "Camellia-128",
-            "SEED",
-            "3DES",
          };
+
+         // 3DES is not supported by default anymore, only if the test runner
+         // explicitly enables it via -cipher=
+         const std::string cipher_limit = m_args.get_string_opt_or_else("cipher", "");
+         if(cipher_limit == "3DES") {
+            return {"3DES"};
+         } else if(cipher_limit == "DEFAULT:!AES") {
+            return allowed_without_aes;
+         } else {
+            // ignore this very specific config (handled in the overload of ciphersuite_list)
+            if(!cipher_limit.empty() &&
+               cipher_limit !=
+                  "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:[TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384|TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256|TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA]:TLS_RSA_WITH_AES_128_GCM_SHA256:TLS_RSA_WITH_AES_128_CBC_SHA:[TLS_RSA_WITH_AES_256_GCM_SHA384|TLS_RSA_WITH_AES_256_CBC_SHA]") {
+               shim_exit_with_error("Unknown cipher limit " + cipher_limit);
+            }
+         }
+
+         return Botan::concat(allowed_without_aes, allowed_just_aes);
       }
 
       std::vector<std::string> allowed_signature_hashes() const override {
@@ -1191,23 +1211,9 @@ std::vector<uint16_t> Shim_Policy::ciphersuite_list(Botan::TLS::Protocol_Version
          const auto suite = *i;
 
          // Can we use it?
-         if(suite.valid() == false || !suite.usable_in_version(version)) {
+         if(suite.valid() == false || !suite.usable_in_version(version) ||
+            !Botan::value_exists(allowed_ciphers(), suite.cipher_algo())) {
             continue;
-         }
-
-         if(!cipher_limit.empty()) {
-            if(cipher_limit == "DEFAULT:!AES") {
-               const std::string suite_algo = suite.cipher_algo();
-
-               if(suite_algo == "AES-128" || suite_algo == "AES-256" || suite_algo == "AES-128/GCM" ||
-                  suite_algo == "AES-256/GCM" || suite_algo == "AES-128/CCM" || suite_algo == "AES-256/CCM" ||
-                  suite_algo == "AES-128/CCM(8)" || suite_algo == "AES-256/CCM(8)" || suite_algo == "AES-128/OCB(12)" ||
-                  suite_algo == "AES-256/OCB(12)") {
-                  continue;
-               }
-            } else {
-               shim_exit_with_error("Unknown cipher " + cipher_limit);
-            }
          }
 
          ciphersuite_codes.push_back(suite.ciphersuite_code());
