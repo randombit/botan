@@ -32,6 +32,8 @@
 
         "*RSA_PKCS1_MD5_SHA1": "We do not implement MD5/SHA1 concatenation anyway",
         "Compliance-fips202205-*": "We do not have explicit support for a FIPS TLS policy",
+        "Compliance-fips-202205-*": "We do not have explicit support for a FIPS TLS policy",
+        "Compliance-wpa-202304-*": "We do not have explicit support for the WPA Enterprise mode",
 
         "CBCRecordSplitting*": "No need to split CBC records in TLS 1.2",
         "DelegatedCredentials*": "No support of -delegated-cerdential",
@@ -114,6 +116,7 @@
         "ClientHelloPadding": "No support for client hello padding extension",
         "TLSUnique*": "Not supported",
         "*CECPQ2*": "Not implemented",
+        "*Kyber*": "Not implemented",
         "PQExperimentSignal*": "Not implemented",
         "*P-224*": "P-224 not supported in TLS",
         "*V2ClientHello*": "No support for SSLv2 client hellos",
@@ -187,6 +190,7 @@
         "SendUnencryptedFinished-DTLS": "Need to check for buffered messages when CCS (bug)",
 
         "RSAKeyUsage-*-TLS12": "We always enforce key usage",
+        "RSAKeyUsage-Client-WantSignature-GotEncipherment-AlwaysEnforced-TLS13": "We always enforce key usage",
 
         "AllExtensions-Client-Permute-TLS-TLS12" : "Requires new shim flags that are NYI (as of March 2022)",
         "AllExtensions-Client-Permute-DTLS-TLS12" : "Requires new shim flags that are NYI (as of March 2022)",

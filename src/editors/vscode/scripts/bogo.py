@@ -6,7 +6,7 @@ from common import run_cmd, get_concurrency
 
 
 BORING_REPO = "https://github.com/randombit/boringssl.git"
-BORING_BRANCH = "rene/runner-20230313"
+BORING_BRANCH = "rene/runner-20230705"
 
 BORING_PATH = "build_deps/boringssl"
 BOGO_PATH = os.path.join(BORING_PATH, "ssl", "test", "runner")
