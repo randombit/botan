@@ -14,7 +14,7 @@
 #include <botan/types.h>
 
 #if defined(BOTAN_HAS_TLS_13)
-   #include <botan/tls_ticket_13.h>
+   #include <botan/tls_psk_identity_13.h>
 #endif
 
 #include <chrono>
@@ -116,7 +116,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager {
        * @note if no PSK is chosen, the server will attempt a regular handshake.
        */
       virtual std::optional<std::pair<Session, uint16_t>> choose_from_offered_tickets(
-         const std::vector<Ticket>& tickets,
+         const std::vector<PskIdentity>& tickets,
          std::string_view hash_function,
          Callbacks& callbacks,
          const Policy& policy);

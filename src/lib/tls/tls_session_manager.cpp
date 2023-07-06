@@ -204,12 +204,15 @@ std::vector<Session_with_Handle> Session_Manager::find(const Server_Information&
 #if defined(BOTAN_HAS_TLS_13)
 
 std::optional<std::pair<Session, uint16_t>> Session_Manager::choose_from_offered_tickets(
-   const std::vector<Ticket>& tickets, std::string_view hash_function, Callbacks& callbacks, const Policy& policy) {
+   const std::vector<PskIdentity>& tickets,
+   std::string_view hash_function,
+   Callbacks& callbacks,
+   const Policy& policy) {
    // Note that the TLS server currently does not ensure that tickets aren't
    // reused. As a result, no locking is required on this level.
 
    for(uint16_t i = 0; const auto& ticket : tickets) {
-      auto session = retrieve(ticket.identity(), callbacks, policy);
+      auto session = retrieve(Opaque_Session_Handle(ticket.identity()), callbacks, policy);
       if(session.has_value() && session->ciphersuite().prf_algo() == hash_function &&
          session->version().is_tls_13_or_later()) {
          return std::pair{std::move(session.value()), i};

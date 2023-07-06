@@ -418,7 +418,7 @@ std::vector<Test::Result> test_session_manager_choose_ticket() {
    };
 
    auto ticket = [&](std::span<const uint8_t> identity) {
-      return Botan::TLS::Ticket(Botan::TLS::Opaque_Session_Handle(identity), 0);
+      return Botan::TLS::PskIdentity(std::vector(identity.begin(), identity.end()), 0);
    };
 
    return {
@@ -1147,7 +1147,7 @@ std::vector<Test::Result> tls_session_manager_expiry() {
    #if defined(BOTAN_HAS_TLS_13)
          CHECK_all("expired tickets are not selected for PSK resumption", [&](auto, auto factory, auto& result) {
             auto ticket = [&](const Botan::TLS::Session_Handle& handle) {
-               return Botan::TLS::Ticket(handle.opaque_handle(), 0);
+               return Botan::TLS::PskIdentity(handle.opaque_handle().get(), 0);
             };
 
             auto mgr = factory();

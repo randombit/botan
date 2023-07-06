@@ -11,6 +11,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/certstor.h>
 #include <botan/pk_keys.h>
+#include <botan/strong_type.h>
 #include <botan/symkey.h>
 #include <botan/x509cert.h>
 #include <string>
@@ -19,6 +20,9 @@ namespace Botan {
 
 class X509_DN;
 class BigInt;
+
+/// @brief holds a PSK identity as used in TLS 1.3
+using PresharedKeyID = Strong<std::vector<uint8_t>, struct PresharedKeyID_>;
 
 /**
 * Interface for a credentials manager.
