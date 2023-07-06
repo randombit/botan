@@ -211,7 +211,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
       psk_cipher_state = Cipher_State::init_with_psk(Connection_Side::Server,
                                                      Cipher_State::PSK_Type::Resumption,
                                                      m_resumed_session->extract_master_secret(),
-                                                     cipher);
+                                                     cipher.prf_algo());
 
       // RFC 8446 4.2.11
       //    Prior to accepting PSK key establishment, the server MUST validate
