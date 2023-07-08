@@ -8,7 +8,7 @@ brief -> "TLS 1.3 protocol implementation"
 </module_info>
 
 <header:public>
-tls_ticket_13.h
+tls_psk_identity_13.h
 </header:public>
 
 <header:internal>

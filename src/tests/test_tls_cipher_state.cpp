@@ -546,11 +546,11 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
    auto cs_client = Cipher_State::init_with_psk(Connection_Side::Client,
                                                 Cipher_State::PSK_Type::Resumption,
                                                 secure_vector<uint8_t>(psk.begin(), psk.end()),
-                                                cipher);
+                                                cipher.prf_algo());
    auto cs_server = Cipher_State::init_with_psk(Connection_Side::Server,
                                                 Cipher_State::PSK_Type::Resumption,
                                                 secure_vector<uint8_t>(psk.begin(), psk.end()),
-                                                cipher);
+                                                cipher.prf_algo());
 
    auto CHECK_both = make_CHECK_both(cs_client.get(), cs_server.get());
 

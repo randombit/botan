@@ -74,7 +74,7 @@ class BOTAN_TEST_API Cipher_State {
       static std::unique_ptr<Cipher_State> init_with_psk(const Connection_Side side,
                                                          const PSK_Type type,
                                                          secure_vector<uint8_t>&& psk,
-                                                         const Ciphersuite& cipher);
+                                                         std::string_view prf_algo);
 
       /**
        * Construct a Cipher_State after receiving a server hello message.

@@ -129,8 +129,8 @@ std::unique_ptr<Cipher_State> Cipher_State::init_with_server_hello(const Connect
 std::unique_ptr<Cipher_State> Cipher_State::init_with_psk(const Connection_Side side,
                                                           const Cipher_State::PSK_Type type,
                                                           secure_vector<uint8_t>&& psk,
-                                                          const Ciphersuite& cipher) {
-   auto cs = std::unique_ptr<Cipher_State>(new Cipher_State(side, cipher.prf_algo()));
+                                                          std::string_view prf_algo) {
+   auto cs = std::unique_ptr<Cipher_State>(new Cipher_State(side, prf_algo));
    cs->advance_with_psk(type, std::move(psk));
    return cs;
 }
