@@ -6,10 +6,10 @@ Supported Platforms
 
 For Botan 3, the tier-1 supported platforms are
 
-* Linux x86-64, GCC 11 or later
+* Linux x86-64, GCC 11.2 or later
 * Linux x86-64, Clang 14 or later
-* Linux aarch64, GCC 11 or later
-* Linux ppc64le, GCC 11 or later
+* Linux aarch64, GCC 11.2 or later
+* Linux ppc64le, GCC 11.2 or later
 * Windows x86-64, Visual C++ 2022 or later
 
 These platforms are all tested by continuous integration, and the developers
@@ -22,8 +22,8 @@ For Botan 3, the tier-2 supported platforms are
 * iOS aarch64, latest XCode Clang
 * Windows x86-64, latest MinGW GCC
 * Android aarch64, latest NDK Clang
-* Linux arm32, GCC 11 or later
-* Linux x86-32, GCC 11 or later
+* Linux arm32, GCC 11.2 or later
+* Linux x86-32, GCC 11.2 or later
 * FreeBSD x86-64, Clang 14 or later
 
 .. note::
@@ -62,7 +62,7 @@ Branch Support Status
 -------------------------
 
 Following table provides the support status for Botan branches, as of
-May 2023.
+July 2023.
 
 "Active development" refers to adding new features and optimizations. At the
 conclusion of the active development phase, only bugfixes are applied.
