@@ -147,7 +147,7 @@ class BOTAN_TEST_API Cipher_State {
        * the transcript hash passed into this method is computed from a partial
        * Client Hello (RFC 8446 4.2.11.2)
        */
-      std::vector<uint8_t> psk_binder_mac(const Transcript_Hash& transcript_hash_with_truncated_client_hello);
+      std::vector<uint8_t> psk_binder_mac(const Transcript_Hash& transcript_hash_with_truncated_client_hello) const;
 
       /**
        * Calculate the MAC for a TLS "Finished" handshake message (RFC 8446 4.4.4)

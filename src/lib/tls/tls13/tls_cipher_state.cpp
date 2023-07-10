@@ -346,7 +346,8 @@ bool Cipher_State::is_compatible_with(const Ciphersuite& cipher) const {
    return true;
 }
 
-std::vector<uint8_t> Cipher_State::psk_binder_mac(const Transcript_Hash& transcript_hash_with_truncated_client_hello) {
+std::vector<uint8_t> Cipher_State::psk_binder_mac(
+   const Transcript_Hash& transcript_hash_with_truncated_client_hello) const {
    BOTAN_ASSERT_NOMSG(m_state == State::PskBinder);
 
    auto hmac = HMAC(m_hash->new_object());
