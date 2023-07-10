@@ -21,6 +21,7 @@ quick_checks = [
     'modernize-use-nullptr',
     'readability-braces-around-statements',
     'performance-unnecessary-value-param',
+    '*-non-private-member-variables-in-classes',
 ]
 
 enabled_checks = [
@@ -196,11 +197,16 @@ def main(args = None): # pylint: disable=too-many-return-statements
     parser.add_option('--fast-checks-only', action='store_true', default=False)
     parser.add_option('--only-changed-files', action='store_true', default=False)
     parser.add_option('--only-matching', metavar='REGEX', default='.*')
+    parser.add_option('--take-file-list-from-stdin', action='store_true', default=False)
 
     (options, args) = parser.parse_args(args)
 
     if len(args) > 1:
         print("ERROR: Unknown extra arguments to run_clang_tidy.py")
+        return 1
+
+    if options.only_changed_files and options.take_file_list_from_stdin:
+        print("Cannot use both --only-changed-files and --take-file-list-from-stdin", file=sys.stderr)
         return 1
 
     files_to_check = []
@@ -214,6 +220,15 @@ def main(args = None): # pylint: disable=too-many-return-statements
 
         if len(files_to_check) == 0:
             print("No C++ files were modified vs master, skipping clang-tidy checks")
+            return 0
+    elif options.take_file_list_from_stdin:
+        for line in sys.stdin:
+            file = os.path.basename(line)
+            if file.endswith('.cpp') or file.endswith('.h'):
+                files_to_check.append(file)
+
+        if len(files_to_check) == 0:
+            print("No C++ files were provided on stdin, skipping clang-tidy checks")
             return 0
 
     jobs = options.jobs
