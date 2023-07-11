@@ -105,6 +105,12 @@ class Channel_Impl {
       virtual std::vector<X509_Certificate> peer_cert_chain() const = 0;
 
       /**
+       * @return identity of the PSK used for this connection
+       *         or std::nullopt if no PSK was used.
+       */
+      virtual std::optional<std::string> external_psk_identity() const = 0;
+
+      /**
       * Key material export (RFC 5705)
       * @param label a disambiguating label string
       * @param context a per-association context value

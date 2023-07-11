@@ -57,7 +57,13 @@ class Callbacks : public Botan::TLS::Callbacks {
 
       void tls_session_established(const Botan::TLS::Session_Summary& session) override {
          output() << "Handshake complete, " << session.version().to_string() << " using "
-                  << session.ciphersuite().to_string() << std::endl;
+                  << session.ciphersuite().to_string();
+
+         if(const auto& psk = session.external_psk_identity()) {
+            output() << " (utilized PSK identity: " << maybe_hex_encode(psk.value()) << ")";
+         }
+
+         output() << std::endl;
 
          if(const auto& session_id = session.session_id(); !session_id.empty()) {
             output() << "Session ID " << Botan::hex_encode(session_id.get()) << std::endl;
@@ -99,11 +105,11 @@ class TLS_Server final : public Command {
    #if defined(BOTAN_SO_SOCKETID)
       TLS_Server() :
             Command(
-               "tls_server cert key --port=443 --psk= --psk-identity=  --type=tcp --policy=default --dump-traces= --max-clients=0 --socket-id=0")
+               "tls_server cert key --port=443 --psk= --psk-identity= --psk-prf=SHA-256 --type=tcp --policy=default --dump-traces= --max-clients=0 --socket-id=0")
    #else
       TLS_Server() :
             Command(
-               "tls_server cert key --port=443 --psk= --psk-identity=  --type=tcp --policy=default --dump-traces= --max-clients=0")
+               "tls_server cert key --port=443 --psk= --psk-identity= --psk-prf=SHA-256 --type=tcp --policy=default --dump-traces= --max-clients=0")
    #endif
       {
          init_sockets();
@@ -136,6 +142,8 @@ class TLS_Server final : public Command {
             }
          }();
          const std::optional<std::string> psk_identity = get_arg_maybe("psk-identity");
+         const std::optional<std::string> psk_prf = get_arg_maybe("psk-prf");
+
    #if defined(BOTAN_SO_SOCKETID)
          m_socket_id = static_cast<uint32_t>(get_arg_sz("socket-id"));
    #endif
@@ -149,7 +157,8 @@ class TLS_Server final : public Command {
          auto policy = load_tls_policy(get_arg("policy"));
          auto session_manager =
             std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng_as_shared());  // TODO sqlite3
-         auto creds = std::make_shared<Basic_Credentials_Manager>(server_crt, server_key, std::move(psk), psk_identity);
+         auto creds =
+            std::make_shared<Basic_Credentials_Manager>(server_crt, server_key, std::move(psk), psk_identity, psk_prf);
          auto callbacks = std::make_shared<Callbacks>(*this);
 
          output() << "Listening for new connections on " << transport << " port " << port << std::endl;

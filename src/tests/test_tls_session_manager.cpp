@@ -43,15 +43,15 @@ namespace Botan_Tests {
 
 class Test_Credentials_Manager : public Botan::Credentials_Manager {
    public:
-      Botan::SymmetricKey psk(const std::string&, const std::string&, const std::string&) override {
-         return Botan::SymmetricKey("DEADBEEFCAFEC0DE");
+      Botan::secure_vector<uint8_t> session_ticket_key() override {
+         return Botan::hex_decode_locked("DEADFACECAFEBAAD");
       }
 };
 
 class Other_Test_Credentials_Manager : public Botan::Credentials_Manager {
    public:
-      Botan::SymmetricKey psk(const std::string&, const std::string&, const std::string&) override {
-         return Botan::SymmetricKey("1337BEEFC0DECAFE");
+      Botan::secure_vector<uint8_t> session_ticket_key() override {
+         return Botan::hex_decode_locked("CAFEBAADFACEBABE");
       }
 };
 

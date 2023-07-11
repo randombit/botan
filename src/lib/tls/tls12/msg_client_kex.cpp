@@ -13,6 +13,7 @@
 
 #include <botan/credentials_manager.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/stl_util.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_state.h>
@@ -43,11 +44,11 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          identity_hint = reader.get_string(2, 0, 65535);
       }
 
-      const std::string psk_identity = creds.psk_identity("tls-client", std::string(hostname), identity_hint);
+      m_psk_identity = creds.psk_identity("tls-client", std::string(hostname), identity_hint);
 
-      append_tls_length_value(m_key_material, psk_identity, 2);
+      append_tls_length_value(m_key_material, to_byte_vector(m_psk_identity.value()), 2);
 
-      SymmetricKey psk = creds.psk("tls-client", std::string(hostname), psk_identity);
+      SymmetricKey psk = creds.psk("tls-client", std::string(hostname), m_psk_identity.value());
 
       std::vector<uint8_t> zeros(psk.length());
 
@@ -61,11 +62,11 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
       if(kex_algo == Kex_Algo::ECDHE_PSK) {
          std::string identity_hint = reader.get_string(2, 0, 65535);
 
-         const std::string psk_identity = creds.psk_identity("tls-client", std::string(hostname), identity_hint);
+         m_psk_identity = creds.psk_identity("tls-client", std::string(hostname), identity_hint);
 
-         append_tls_length_value(m_key_material, psk_identity, 2);
+         append_tls_length_value(m_key_material, to_byte_vector(m_psk_identity.value()), 2);
 
-         psk = creds.psk("tls-client", std::string(hostname), psk_identity);
+         psk = creds.psk("tls-client", std::string(hostname), m_psk_identity.value());
       }
 
       if(kex_algo == Kex_Algo::DH) {
@@ -233,15 +234,15 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
       SymmetricKey psk;
 
       if(key_exchange_is_psk(kex_algo)) {
-         const std::string psk_identity = reader.get_string(2, 0, 65535);
+         m_psk_identity = reader.get_string(2, 0, 65535);
 
-         psk = creds.psk("tls-server", state.client_hello()->sni_hostname(), psk_identity);
+         psk = creds.psk("tls-server", state.client_hello()->sni_hostname(), m_psk_identity.value());
 
          if(psk.length() == 0) {
             if(policy.hide_unknown_users()) {
                psk = SymmetricKey(rng, 16);
             } else {
-               throw TLS_Exception(Alert::UnknownPSKIdentity, "No PSK for identifier " + psk_identity);
+               throw TLS_Exception(Alert::UnknownPSKIdentity, "No PSK for identifier " + m_psk_identity.value());
             }
          }
       }

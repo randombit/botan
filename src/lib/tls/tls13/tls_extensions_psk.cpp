@@ -1,13 +1,15 @@
 /*
 * TLS Extension Pre Shared Key
-* (C) 2022 Jack Lloyd
-*     2022 René Meusel, neXenio GmbH
+* (C) 2022-2023 Jack Lloyd
+*     2022 René Meusel - neXenio GmbH
+*     2023 Fabian Albert, René Meusel - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/tls_extensions.h>
 
+#include <botan/credentials_manager.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_session.h>
@@ -43,7 +45,14 @@ class Client_PSK {
                        session_to_resume.session.extract_master_secret(),
                        Cipher_State::PSK_Type::Resumption) {}
 
-      Client_PSK(PskIdentity id, std::vector<uint8_t> bndr) : m_identity(std::move(id)), m_binder(std::move(bndr)) {}
+      Client_PSK(ExternalPSK&& psk) :
+            Client_PSK(PskIdentity(PresharedKeyID(psk.identity())),
+                       psk.prf_algo(),
+                       psk.extract_master_secret(),
+                       Cipher_State::PSK_Type::External) {}
+
+      Client_PSK(PskIdentity id, std::vector<uint8_t> bndr) :
+            m_identity(std::move(id)), m_binder(std::move(bndr)), m_is_resumption(false) {}
 
       Client_PSK(PskIdentity id,
                  std::string_view prf_algo,
@@ -65,12 +74,15 @@ class Client_PSK {
             // `Client_Hello_13::truncate()` to split them off before calculating the
             // transcript hash that underpins the PSK binders. S.a. `calculate_binders()`
             m_binder(HashFunction::create_or_throw(prf_algo)->output_length()),
+            m_is_resumption(psk_type == Cipher_State::PSK_Type::Resumption),
             m_cipher_state(
                Cipher_State::init_with_psk(Connection_Side::Client, psk_type, std::move(master_secret), prf_algo)) {}
 
       const PskIdentity& identity() const { return m_identity; }
 
       const std::vector<uint8_t>& binder() const { return m_binder; }
+
+      bool is_resumption() const { return m_is_resumption; }
 
       void set_binder(std::vector<uint8_t> binder) { m_binder = std::move(binder); }
 
@@ -79,11 +91,12 @@ class Client_PSK {
          return *m_cipher_state;
       }
 
-      std::unique_ptr<Cipher_State> take_cipher_state() { return std::move(m_cipher_state); }
+      std::unique_ptr<Cipher_State> take_cipher_state() { return std::exchange(m_cipher_state, nullptr); }
 
    private:
       PskIdentity m_identity;
       std::vector<uint8_t> m_binder;
+      bool m_is_resumption;
 
       // Clients set up associated cipher states for PSKs
       // Servers leave this as nullptr
@@ -92,32 +105,32 @@ class Client_PSK {
 
 class Server_PSK {
    public:
-      Server_PSK(uint16_t id) : m_selected_identity(id), m_session_to_resume(std::nullopt) {}
+      Server_PSK(uint16_t id) : m_selected_identity(id), m_session_to_resume_or_psk(std::monostate()) {}
 
-      Server_PSK(uint16_t id, Session session) : m_selected_identity(id), m_session_to_resume(std::move(session)) {}
+      Server_PSK(uint16_t id, Session session) :
+            m_selected_identity(id), m_session_to_resume_or_psk(std::move(session)) {}
+
+      Server_PSK(uint16_t id, ExternalPSK psk) : m_selected_identity(id), m_session_to_resume_or_psk(std::move(psk)) {}
 
       uint16_t selected_identity() const { return m_selected_identity; }
 
-      Session take_session_to_resume() {
-         BOTAN_STATE_CHECK(m_session_to_resume.has_value());
-         Session s = std::move(m_session_to_resume.value());
-         m_session_to_resume = std::nullopt;
-         return s;
+      std::variant<std::monostate, Session, ExternalPSK> take_session_to_resume_or_psk() {
+         BOTAN_STATE_CHECK(!std::holds_alternative<std::monostate>(m_session_to_resume_or_psk));
+         return std::exchange(m_session_to_resume_or_psk, std::monostate());
       }
 
    private:
       uint16_t m_selected_identity;
 
-      // Servers store the Session to resume from the selected PSK
-      // Clients leave this as std::nullopt
-      std::optional<Session> m_session_to_resume;
+      // Servers store the Session to resume or the PSK of their selection
+      std::variant<std::monostate, Session, ExternalPSK> m_session_to_resume_or_psk;
 };
 
 }  // namespace
 
 class PSK::PSK_Internal {
    public:
-      PSK_Internal(Server_PSK srv_psk) : psk(srv_psk) {}
+      PSK_Internal(Server_PSK srv_psk) : psk(std::move(srv_psk)) {}
 
       PSK_Internal(std::vector<Client_PSK> clt_psks) : psk(std::move(clt_psks)) {}
 
@@ -178,14 +191,25 @@ PSK::PSK(TLS_Data_Reader& reader, uint16_t extension_size, Handshake_Type messag
    }
 }
 
-PSK::PSK(Session_with_Handle& session_to_resume, Callbacks& callbacks) {
+PSK::PSK(std::optional<Session_with_Handle>& session_to_resume, std::vector<ExternalPSK> psks, Callbacks& callbacks) {
    std::vector<Client_PSK> cpsk;
-   cpsk.emplace_back(session_to_resume, callbacks.tls_current_timestamp());
+
+   if(session_to_resume.has_value()) {
+      cpsk.emplace_back(session_to_resume.value(), callbacks.tls_current_timestamp());
+   }
+
+   for(auto&& psk : psks) {
+      cpsk.emplace_back(std::move(psk));
+   }
+
    m_impl = std::make_unique<PSK_Internal>(std::move(cpsk));
 }
 
 PSK::PSK(Session session_to_resume, const uint16_t psk_index) :
       m_impl(std::make_unique<PSK_Internal>(Server_PSK(psk_index, std::move(session_to_resume)))) {}
+
+PSK::PSK(ExternalPSK psk, const uint16_t psk_index) :
+      m_impl(std::make_unique<PSK_Internal>(Server_PSK(psk_index, std::move(psk)))) {}
 
 PSK::~PSK() = default;
 
@@ -198,7 +222,8 @@ bool PSK::empty() const {
    return std::get<std::vector<Client_PSK>>(m_impl->psk).empty();
 }
 
-std::unique_ptr<Cipher_State> PSK::select_cipher_state(const PSK& server_psk, const Ciphersuite& cipher) {
+std::pair<std::optional<std::string>, std::unique_ptr<Cipher_State>> PSK::take_selected_psk_info(
+   const PSK& server_psk, const Ciphersuite& cipher) {
    BOTAN_STATE_CHECK(std::holds_alternative<std::vector<Client_PSK>>(m_impl->psk));
    BOTAN_STATE_CHECK(std::holds_alternative<Server_PSK>(server_psk.m_impl->psk));
 
@@ -214,8 +239,17 @@ std::unique_ptr<Cipher_State> PSK::select_cipher_state(const PSK& server_psk, co
       throw TLS_Exception(Alert::IllegalParameter, "PSK identity selected by server is out of bounds");
    }
 
-   auto cipher_state = ids[id].take_cipher_state();
+   auto& selected_psk = ids.at(id);
+   auto cipher_state = selected_psk.take_cipher_state();
+
    BOTAN_ASSERT_NONNULL(cipher_state);
+
+   auto psk_id = [&]() -> std::optional<std::string> {
+      if(selected_psk.is_resumption()) {
+         return std::nullopt;
+      }
+      return selected_psk.identity().identity_as_string();
+   }();
 
    // destroy cipher states and PSKs that were not selected by the server
    ids.clear();
@@ -229,22 +263,28 @@ std::unique_ptr<Cipher_State> PSK::select_cipher_state(const PSK& server_psk, co
       throw TLS_Exception(Alert::IllegalParameter, "PSK and ciphersuite selected by server are not compatible");
    }
 
-   return cipher_state;
+   return {std::move(psk_id), std::move(cipher_state)};
 }
 
-std::unique_ptr<PSK> PSK::select_offered_psk(const Ciphersuite& cipher,
+std::unique_ptr<PSK> PSK::select_offered_psk(std::string_view host,
+                                             const Ciphersuite& cipher,
                                              Session_Manager& session_mgr,
+                                             Credentials_Manager& credentials_mgr,
                                              Callbacks& callbacks,
                                              const Policy& policy) {
    BOTAN_STATE_CHECK(std::holds_alternative<std::vector<Client_PSK>>(m_impl->psk));
 
    auto& psks = std::get<std::vector<Client_PSK>>(m_impl->psk);
+
+   //
+   // PSK for Session Resumption
+   //
    std::vector<PskIdentity> psk_identities;
    std::transform(
       psks.begin(), psks.end(), std::back_inserter(psk_identities), [&](const auto& psk) { return psk.identity(); });
-
-   if(auto selection = session_mgr.choose_from_offered_tickets(psk_identities, cipher.prf_algo(), callbacks, policy)) {
-      auto& [session, psk_index] = selection.value();
+   if(auto selected_session =
+         session_mgr.choose_from_offered_tickets(psk_identities, cipher.prf_algo(), callbacks, policy)) {
+      auto& [session, psk_index] = selected_session.value();
 
       // RFC 8446 4.6.1
       //    Any ticket MUST only be resumed with a cipher suite that has the
@@ -256,9 +296,53 @@ std::unique_ptr<PSK> PSK::select_offered_psk(const Ciphersuite& cipher,
       }
 
       return std::unique_ptr<PSK>(new PSK(std::move(session), psk_index));
-   } else {
-      return nullptr;
    }
+
+   //
+   // Externally provided PSKs
+   //
+   std::vector<std::string> psk_ids;
+   std::transform(psks.begin(), psks.end(), std::back_inserter(psk_ids), [&](const auto& psk) {
+      return psk.identity().identity_as_string();
+   });
+   if(auto selected_psk =
+         credentials_mgr.choose_preshared_key(host, Connection_Side::Server, psk_ids, cipher.prf_algo())) {
+      auto& psk = selected_psk.value();
+
+      // RFC 8446 4.2.11
+      //    Each PSK is associated with a single Hash algorithm. [...]
+      //    The server MUST ensure that it selects a compatible PSK (if any)
+      //    and cipher suite.
+      if(psk.prf_algo() != cipher.prf_algo()) {
+         throw TLS_Exception(Alert::InternalError,
+                             "Application chose a PSK that is not compatible with the negotiated ciphersuite");
+      }
+
+      const auto selected_itr =
+         std::find_if(psk_identities.begin(), psk_identities.end(), [&](const auto& offered_psk) {
+            return offered_psk.identity_as_string() == psk.identity();
+         });
+      if(selected_itr == psk_identities.end()) {
+         throw TLS_Exception(Alert::InternalError,
+                             "Application provided a PSK with an identity that was not offered by the client");
+      }
+
+      // When implementing a server that works with PSKs exclusively, we might
+      // want to take TLS::Policy::hide_unknown_users() into account and
+      // obfuscate malicious "identity guesses" by generating a random PSK and
+      // letting the handshake continue.
+      //
+      // Currently, we do not have a notion of "a server that solely supports
+      // PSK handshakes". However, such applications are free to implement such
+      // a mitigation in their override of Credentials_Manager::choose_preshared_key().
+      //
+      // TODO: Take RFC 8446 Appendix E.6 into account, especially when
+      //       implementing PSK_KE (aka. PSK-only mode).
+      return std::unique_ptr<PSK>(
+         new PSK(std::move(psk), static_cast<uint16_t>(std::distance(psk_identities.begin(), selected_itr))));
+   }
+
+   return nullptr;
 }
 
 void PSK::filter(const Ciphersuite& cipher) {
@@ -272,9 +356,18 @@ void PSK::filter(const Ciphersuite& cipher) {
    psks.erase(r, psks.end());
 }
 
-Session PSK::take_session_to_resume() {
+std::variant<Session, ExternalPSK> PSK::take_session_to_resume_or_psk() {
    BOTAN_STATE_CHECK(std::holds_alternative<Server_PSK>(m_impl->psk));
-   return std::get<Server_PSK>(m_impl->psk).take_session_to_resume();
+
+   return std::visit(
+      [](auto out) -> std::variant<Session, ExternalPSK> {
+         if constexpr(std::is_same_v<decltype(out), std::monostate>) {
+            throw TLS_Exception(AlertType::InternalError, "cannot extract an empty PSK");
+         } else {
+            return out;
+         }
+      },
+      std::get<Server_PSK>(m_impl->psk).take_session_to_resume_or_psk());
 }
 
 std::vector<uint8_t> PSK::serialize(Connection_Side side) const {

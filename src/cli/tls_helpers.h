@@ -10,6 +10,7 @@
 
 #include <botan/credentials_manager.h>
 #include <botan/data_src.h>
+#include <botan/hex.h>
 #include <botan/pkcs8.h>
 #include <botan/tls_policy.h>
 #include <botan/x509self.h>
@@ -29,6 +30,14 @@ inline bool value_exists(const std::vector<std::string>& vec, const std::string&
       }
    }
    return false;
+}
+
+inline std::string maybe_hex_encode(std::string_view v) {
+   auto is_printable_char = [](uint8_t c) { return c >= 32 && c < 127; };
+   if(!std::all_of(v.begin(), v.end(), is_printable_char)) {
+      return Botan::hex_encode(std::span<const uint8_t>(reinterpret_cast<const uint8_t*>(v.data()), v.size()));
+   }
+   return std::string(v);
 }
 
 class Basic_Credentials_Manager : public Botan::Credentials_Manager {
@@ -57,8 +66,15 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
                                 std::optional<std::string> client_crt = std::nullopt,
                                 std::optional<std::string> client_key = std::nullopt,
                                 std::optional<Botan::secure_vector<uint8_t>> psk = std::nullopt,
-                                std::optional<std::string> psk_identity = std::nullopt) :
-            m_psk(std::move(psk)), m_psk_identity(std::move(psk_identity)) {
+                                std::optional<std::string> psk_identity = std::nullopt,
+                                const std::optional<std::string>& psk_prf = std::nullopt) :
+            m_psk(std::move(psk)),
+            m_psk_identity(std::move(psk_identity)),
+
+            // RFC 8446 4.2.11
+            //    the Hash algorithm MUST be set when the PSK is established or
+            //    default to SHA-256 if no such algorithm is defined.
+            m_psk_prf(psk_prf.value_or("SHA-256")) {
          if(ca_path.empty() == false) {
             m_certstores.push_back(std::make_shared<Botan::Certificate_Store_In_Memory>(ca_path));
          }
@@ -82,8 +98,15 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
       Basic_Credentials_Manager(const std::string& server_crt,
                                 const std::string& server_key,
                                 std::optional<Botan::secure_vector<uint8_t>> psk = std::nullopt,
-                                std::optional<std::string> psk_identity = std::nullopt) :
-            m_psk(std::move(psk)), m_psk_identity(std::move(psk_identity)) {
+                                std::optional<std::string> psk_identity = std::nullopt,
+                                const std::optional<std::string>& psk_prf = std::nullopt) :
+            m_psk(std::move(psk)),
+            m_psk_identity(std::move(psk_identity)),
+
+            // RFC 8446 4.2.11
+            //    the Hash algorithm MUST be set when the PSK is established or
+            //    default to SHA-256 if no such algorithm is defined.
+            m_psk_prf(psk_prf.value_or("SHA-256")) {
          load_credentials(server_crt, server_key);
       }
 

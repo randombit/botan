@@ -9,7 +9,7 @@
 #ifndef BOTAN_TLS_13_TICKET_H_
 #define BOTAN_TLS_13_TICKET_H_
 
-#include <botan/credentials_manager.h>
+#include <botan/tls_external_psk.h>
 #include <botan/tls_session.h>
 #include <botan/types.h>
 

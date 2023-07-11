@@ -158,6 +158,8 @@ class Handshake_State {
 
       const Ciphersuite& ciphersuite() const;
 
+      std::optional<std::string> psk_identity() const;
+
       const Session_Keys& session_keys() const { return m_session_keys; }
 
       Callbacks& callbacks() const { return m_callbacks; }

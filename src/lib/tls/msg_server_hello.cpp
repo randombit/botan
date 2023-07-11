@@ -458,6 +458,7 @@ const Server_Hello_13::Hello_Retry_Request_Creation_Tag Server_Hello_13::as_new_
 std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const Client_Hello_13& ch,
                                                                            bool hello_retry_request_allowed,
                                                                            Session_Manager& session_mgr,
+                                                                           Credentials_Manager& credentials_mgr,
                                                                            RandomNumberGenerator& rng,
                                                                            const Policy& policy,
                                                                            Callbacks& cb) {
@@ -506,7 +507,7 @@ std::variant<Hello_Retry_Request, Server_Hello_13> Server_Hello_13::create(const
       BOTAN_STATE_CHECK(hello_retry_request_allowed);
       return Hello_Retry_Request(ch, selected_group, policy, cb);
    } else {
-      return Server_Hello_13(ch, selected_group, session_mgr, rng, cb, policy);
+      return Server_Hello_13(ch, selected_group, session_mgr, credentials_mgr, rng, cb, policy);
    }
 }
 
@@ -703,6 +704,7 @@ uint16_t choose_ciphersuite(const Client_Hello_13& ch, const Policy& policy) {
 Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
                                  std::optional<Named_Group> key_exchange_group,
                                  Session_Manager& session_mgr,
+                                 Credentials_Manager& credentials_mgr,
                                  RandomNumberGenerator& rng,
                                  Callbacks& cb,
                                  const Policy& policy) :
@@ -746,7 +748,8 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
       // TODO: also support PSK_Key_Exchange_Mode::PSK_KE
       //       (PSK-based handshake without an additional ephemeral key exchange)
       if(value_exists(psk_modes->modes(), PSK_Key_Exchange_Mode::PSK_DHE_KE)) {
-         if(auto server_psk = ch_exts.get<PSK>()->select_offered_psk(cs.value(), session_mgr, cb, policy)) {
+         if(auto server_psk = ch_exts.get<PSK>()->select_offered_psk(
+               ch.sni_hostname(), cs.value(), session_mgr, credentials_mgr, cb, policy)) {
             // RFC 8446 4.2.11
             //    In order to accept PSK key establishment, the server sends a
             //    "pre_shared_key" extension indicating the selected identity.

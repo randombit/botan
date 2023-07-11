@@ -85,6 +85,10 @@ std::vector<X509_Certificate> Server::peer_cert_chain() const {
    return m_impl->peer_cert_chain();
 }
 
+std::optional<std::string> Server::external_psk_identity() const {
+   return m_impl->external_psk_identity();
+}
+
 SymmetricKey Server::key_material_export(std::string_view label, std::string_view context, size_t length) const {
    return m_impl->key_material_export(label, context, length);
 }

@@ -223,7 +223,8 @@ class BOTAN_UNSTABLE_API Client_Hello_13 final : public Client_Hello {
                       RandomNumberGenerator& rng,
                       std::string_view hostname,
                       const std::vector<std::string>& next_protocols,
-                      std::optional<Session_with_Handle>& session);
+                      std::optional<Session_with_Handle>& session,
+                      std::vector<ExternalPSK> psks);
 
       static std::variant<Client_Hello_13, Client_Hello_12> parse(const std::vector<uint8_t>& buf);
 
@@ -416,6 +417,7 @@ class BOTAN_UNSTABLE_API Server_Hello_13 : public Server_Hello {
       Server_Hello_13(const Client_Hello_13& ch,
                       std::optional<Named_Group> key_exchange_group,
                       Session_Manager& session_mgr,
+                      Credentials_Manager& credentials_mgr,
                       RandomNumberGenerator& rng,
                       Callbacks& cb,
                       const Policy& policy);
@@ -426,6 +428,7 @@ class BOTAN_UNSTABLE_API Server_Hello_13 : public Server_Hello {
       static std::variant<Hello_Retry_Request, Server_Hello_13> create(const Client_Hello_13& ch,
                                                                        bool hello_retry_request_allowed,
                                                                        Session_Manager& session_mgr,
+                                                                       Credentials_Manager& credentials_mgr,
                                                                        RandomNumberGenerator& rng,
                                                                        const Policy& policy,
                                                                        Callbacks& cb);
@@ -481,6 +484,11 @@ class BOTAN_UNSTABLE_API Client_Key_Exchange final : public Handshake_Message {
 
       const secure_vector<uint8_t>& pre_master_secret() const { return m_pre_master; }
 
+      /**
+       * @returns the agreed upon PSK identity or std::nullopt if not applicable
+       */
+      const std::optional<std::string>& psk_identity() const { return m_psk_identity; }
+
       Client_Key_Exchange(Handshake_IO& io,
                           Handshake_State& state,
                           const Policy& policy,
@@ -501,6 +509,7 @@ class BOTAN_UNSTABLE_API Client_Key_Exchange final : public Handshake_Message {
 
       std::vector<uint8_t> m_key_material;
       secure_vector<uint8_t> m_pre_master;
+      std::optional<std::string> m_psk_identity;
 };
 
 /**
