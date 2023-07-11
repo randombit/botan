@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 3.1.0, Not Yet Released
+Version 3.1.0, 2023-07-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add SPHINCS+ post quantum hash based signature scheme (GH #3564 #3549)
