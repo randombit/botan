@@ -9,6 +9,9 @@ Version 3.1.0, Not Yet Released
 * Several small TLS compliance fixes, primarily around rejecting
   invalid behavior from the peer (GH #3520 #3537)
 
+* Adapt TLS 1.3 to use a KEM interface to prepare for PQ key exchange
+  (GH #3608)
+
 * Fix custom key exchange logic integration for TLS 1.2 server (GH #3539)
 
 * Add initial wrappers for using AVX-512, and implement AVX-512 versions
@@ -19,12 +22,25 @@ Version 3.1.0, Not Yet Released
 
 * Update the BSI policy to match the latest TR (GH #3482)
 
+* Update the BoringSSL test suite shim (GH #3616)
+
+* Add FFI functions relating to Kyber key management (GH #3546)
+
 * The entire codebase has been reformatted using ``clang-format``.
   (GH #3502 #3558 #3559)
+
+* Fix many warnings generated from ``clang-tidy``.
+
+* ``BigInt::random_integer`` could take a long time if requested to
+  generate a number within a small range between two large integers.
+  (GH #3594)
 
 * Fix bugs related to ``--library-suffix`` option. (GH #3511)
 
 * Improve cli handling of PBKDF configuration (GH #3518)
+
+* Fix the cli to properly update stateful keys (namely XMSS) when using such
+  a key to sign a X.509 certificate (GH #3579)
 
 * Add support for using PSK in the TLS CLI utilities (GH #3552)
 
