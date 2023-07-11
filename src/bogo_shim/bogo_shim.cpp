@@ -1228,10 +1228,18 @@ std::vector<uint16_t> Shim_Policy::ciphersuite_list(Botan::TLS::Protocol_Version
 class Shim_Credentials final : public Botan::Credentials_Manager {
    public:
       Shim_Credentials(const Shim_Arguments& args) : m_args(args) {
-         m_psk_identity = m_args.get_string_opt_or_else("psk-identity", "");
+         const auto psk_identity = m_args.get_string_opt_or_else("psk-identity", "");
+         const auto psk_str = m_args.get_string_opt_or_else("psk", "");
 
-         const std::string psk_str = m_args.get_string_opt_or_else("psk", "");
-         m_psk = Botan::SymmetricKey(reinterpret_cast<const uint8_t*>(psk_str.data()), psk_str.size());
+         if(!psk_identity.empty() || !psk_str.empty()) {
+            // If the shim received a -psk param but no -psk-identity param,
+            // we have to initialize the identity as "empty string".
+            m_psk_identity = psk_identity;
+         }
+
+         if(!psk_str.empty()) {
+            m_psk = Botan::SymmetricKey(reinterpret_cast<const uint8_t*>(psk_str.data()), psk_str.size());
+         }
 
          if(m_args.option_used("key-file") && m_args.option_used("cert-file")) {
             Botan::DataSource_Stream key_stream(m_args.get_string_opt("key-file"));
@@ -1267,28 +1275,51 @@ class Shim_Credentials final : public Botan::Credentials_Manager {
       std::string psk_identity(const std::string& /*type*/,
                                const std::string& /*context*/,
                                const std::string& /*identity_hint*/) override {
-         return m_psk_identity;
+         return m_psk_identity.value_or("");
       }
 
       std::string psk_identity_hint(const std::string& /*type*/, const std::string& /*context*/) override {
-         return m_psk_identity;
+         return m_psk_identity.value_or("");
       }
 
-      Botan::SymmetricKey psk(const std::string& type,
-                              const std::string& context,
-                              const std::string& identity) override {
-         if(type == "tls-server" && context == "session-ticket") {
-            return Botan::SymmetricKey("ABCDEF0123456789");
+      Botan::secure_vector<uint8_t> session_ticket_key() override {
+         return Botan::hex_decode_locked("ABCDEF0123456789");
+      }
+
+      Botan::secure_vector<uint8_t> dtls_cookie_secret() override {
+         return Botan::hex_decode_locked("F00FB00FD00F100F700F");
+      }
+
+      std::vector<Botan::TLS::ExternalPSK> find_preshared_keys(
+         std::string_view host,
+         Botan::TLS::Connection_Side whoami,
+         const std::vector<std::string>& identities = {},
+         const std::optional<std::string>& prf = std::nullopt) override {
+         if(!m_psk_identity.has_value()) {
+            return Botan::Credentials_Manager::find_preshared_keys(host, whoami, identities, prf);
          }
 
-         if(type == "tls-server" && context == "dtls-cookie-secret") {
-            return Botan::SymmetricKey("F00FB00FD00F100F700F");
-         }
+         auto id_matches =
+            identities.empty() || std::find(identities.begin(), identities.end(), m_psk_identity) != identities.end();
 
-         if(identity != m_psk_identity) {
+         if(!id_matches) {
             throw Shim_Exception("Unexpected PSK identity");
          }
-         return m_psk;
+
+         if(!m_psk.has_value()) {
+            throw Shim_Exception("PSK identified but not set");
+         }
+
+         std::vector<Botan::TLS::ExternalPSK> psks;
+
+         // Currently, BoGo tests PSK with TLS 1.2 only. In TLS 1.2 the PRF does not
+         // need to be specified for PSKs.
+         //
+         // TODO: Once BoGo has tests for TLS 1.3 with externally provided PSKs, this
+         //       will need to be handled somehow.
+         const std::string psk_prf = "SHA-256";
+         psks.emplace_back(m_psk_identity.value(), psk_prf, m_psk->bits_of());
+         return psks;
       }
 
       std::vector<Botan::X509_Certificate> cert_chain(
@@ -1320,8 +1351,8 @@ class Shim_Credentials final : public Botan::Credentials_Manager {
 
    private:
       const Shim_Arguments& m_args;
-      Botan::SymmetricKey m_psk;
-      std::string m_psk_identity;
+      std::optional<Botan::SymmetricKey> m_psk;
+      std::optional<std::string> m_psk_identity;
       std::shared_ptr<Botan::Private_Key> m_key;
       std::vector<Botan::X509_Certificate> m_cert_chain;
 };

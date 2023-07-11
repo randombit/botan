@@ -130,26 +130,40 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager {
          return nullptr;
       }
 
-      Botan::SymmetricKey psk(const std::string& type,
-                              const std::string& context,
-                              const std::string& /*identity*/) override {
-         if(type == "tls-server" && context == "session-ticket") {
-            return Botan::SymmetricKey("AABBCCDDEEFF012345678012345678");
+      Botan::secure_vector<uint8_t> session_ticket_key() override {
+         return Botan::hex_decode_locked("AABBCCDDEEFF012345678012345678");
+      }
+
+      Botan::secure_vector<uint8_t> dtls_cookie_secret() override {
+         return Botan::hex_decode_locked("4AEA5EAD279CADEB537A594DA0E9DE3A");
+      }
+
+      std::vector<Botan::TLS::ExternalPSK> find_preshared_keys(
+         std::string_view host,
+         Botan::TLS::Connection_Side whoami,
+         const std::vector<std::string>& identities = {},
+         const std::optional<std::string>& prf = std::nullopt) override {
+         if(identities.empty()) {
+            return find_preshared_keys(host, whoami, identities, prf);
          }
 
-         if(type == "tls-server" && context == "dtls-cookie-secret") {
-            return Botan::SymmetricKey("4AEA5EAD279CADEB537A594DA0E9DE3A");
+         std::vector<Botan::TLS::ExternalPSK> psks;
+
+         if(host == "server.example.com") {
+            // PSKs for server and client are equal. For the sake of clarity,
+            // we're not simplifying this code further
+            if(whoami == Botan::TLS::Connection_Side::Client) {
+               psks.emplace_back(
+                  std::string{}, "SHA-256", Botan::hex_decode_locked("20B602D1475F2DF888FCB60D2AE03AFD"));
+            }
+
+            if(whoami == Botan::TLS::Connection_Side::Server) {
+               psks.emplace_back(
+                  std::string{}, "SHA-256", Botan::hex_decode_locked("20B602D1475F2DF888FCB60D2AE03AFD"));
+            }
          }
 
-         if(context == "server.example.com" && type == "tls-client") {
-            return Botan::SymmetricKey("20B602D1475F2DF888FCB60D2AE03AFD");
-         }
-
-         if(context == "server.example.com" && type == "tls-server") {
-            return Botan::SymmetricKey("20B602D1475F2DF888FCB60D2AE03AFD");
-         }
-
-         throw Test_Error("No PSK set for " + type + "/" + context);
+         return psks;
       }
 
       const std::vector<Botan::X509_DN>& get_acceptable_cas() const { return m_acceptable_cas; }

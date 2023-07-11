@@ -56,7 +56,7 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
                                 std::string ca_path,
                                 std::optional<std::string> client_crt = std::nullopt,
                                 std::optional<std::string> client_key = std::nullopt,
-                                std::optional<Botan::SymmetricKey> psk = std::nullopt,
+                                std::optional<Botan::secure_vector<uint8_t>> psk = std::nullopt,
                                 std::optional<std::string> psk_identity = std::nullopt) :
             m_psk(std::move(psk)), m_psk_identity(std::move(psk_identity)) {
          if(ca_path.empty() == false) {
@@ -81,7 +81,7 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
 
       Basic_Credentials_Manager(const std::string& server_crt,
                                 const std::string& server_key,
-                                std::optional<Botan::SymmetricKey> psk = std::nullopt,
+                                std::optional<Botan::secure_vector<uint8_t>> psk = std::nullopt,
                                 std::optional<std::string> psk_identity = std::nullopt) :
             m_psk(std::move(psk)), m_psk_identity(std::move(psk_identity)) {
          load_credentials(server_crt, server_key);
@@ -155,13 +155,25 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
                    : Botan::Credentials_Manager::psk_identity(type, context, identity_hint);
       }
 
-      Botan::SymmetricKey psk(const std::string& type,
-                              const std::string& context,
-                              const std::string& identity) override {
-         return (m_psk && m_psk_identity && identity == m_psk_identity.value() &&
-                 (type == "tls-client" || type == "tls-server"))
-                   ? m_psk.value()
-                   : Botan::Credentials_Manager::psk(type, context, identity);
+      std::vector<Botan::TLS::ExternalPSK> find_preshared_keys(
+         std::string_view host,
+         Botan::TLS::Connection_Side peer_type,
+         const std::vector<std::string>& ids = {},
+         const std::optional<std::string>& prf = std::nullopt) override {
+         if(!m_psk.has_value() || !m_psk_identity.has_value()) {
+            return Botan::Credentials_Manager::find_preshared_keys(host, peer_type, ids, prf);
+         }
+
+         std::vector<Botan::TLS::ExternalPSK> psks;
+
+         const bool prf_matches = !prf.has_value() || m_psk_prf == prf.value();
+         const bool id_matches = ids.empty() || std::find(ids.begin(), ids.end(), m_psk_identity.value()) != ids.end();
+
+         if(prf_matches && id_matches) {
+            psks.emplace_back(m_psk_identity.value(), m_psk_prf, m_psk.value());
+         }
+
+         return psks;
       }
 
    private:
@@ -172,8 +184,9 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
 
       std::vector<Certificate_Info> m_creds;
       std::vector<std::shared_ptr<Botan::Certificate_Store>> m_certstores;
-      std::optional<Botan::SymmetricKey> m_psk;
+      std::optional<Botan::secure_vector<uint8_t>> m_psk;
       std::optional<std::string> m_psk_identity;
+      std::string m_psk_prf;
 };
 
 class TLS_All_Policy final : public Botan::TLS::Policy {

@@ -19,6 +19,7 @@ tls_ciphersuite.h
 tls_client.h
 tls_exceptn.h
 tls_extensions.h
+tls_external_psk.h
 tls_handshake_msg.h
 tls_magic.h
 tls_messages.h

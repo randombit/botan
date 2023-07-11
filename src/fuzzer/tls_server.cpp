@@ -7,6 +7,7 @@
 #include "fuzzers.h"
 
 #include <botan/data_src.h>
+#include <botan/hex.h>
 #include <botan/pkcs8.h>
 #include <botan/tls_server.h>
 #include <botan/tls_session_manager_noop.h>
@@ -103,12 +104,30 @@ class Fuzzer_TLS_Server_Creds : public Botan::Credentials_Manager {
          return nullptr;
       }
 
+      Botan::secure_vector<uint8_t> session_ticket_key() override {
+         return Botan::hex_decode_locked("AABBCCDDEEFF00112233445566778899");
+      }
+
+      Botan::secure_vector<uint8_t> dtls_cookie_secret() override {
+         return Botan::hex_decode_locked("AABBCCDDEEFF00112233445566778899");
+      }
+
       std::string psk_identity_hint(const std::string&, const std::string&) override { return "psk_hint"; }
 
       std::string psk_identity(const std::string&, const std::string&, const std::string&) override { return "psk_id"; }
 
-      Botan::SymmetricKey psk(const std::string&, const std::string&, const std::string&) override {
-         return Botan::SymmetricKey("AABBCCDDEEFF00112233445566778899");
+      std::vector<Botan::TLS::ExternalPSK> find_preshared_keys(
+         std::string_view host,
+         Botan::TLS::Connection_Side whoami,
+         const std::vector<std::string>& identities = {},
+         const std::optional<std::string>& prf = std::nullopt) override {
+         if(!identities.empty() && std::find(identities.begin(), identities.end(), "psk_id") == identities.end()) {
+            return Botan::Credentials_Manager::find_preshared_keys(host, whoami, identities, prf);
+         }
+
+         std::vector<Botan::TLS::ExternalPSK> psks;
+         psks.emplace_back("psk_id", "SHA-256", Botan::hex_decode_locked("AABBCCDDEEFF00112233445566778899"));
+         return psks;
       }
 
    private:
