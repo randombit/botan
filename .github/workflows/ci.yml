@@ -131,7 +131,7 @@ jobs:
 
       - name: Run Clang Tidy
         run: |
-           ./src/scripts/ci/gh_get_changes_in_pr.py ${{ github.event.after }} --api-token=${{ secrets.GITHUB_TOKEN }} | \
+           ./src/scripts/ci/gh_get_changes_in_pr.py $(git rev-parse HEAD) --api-token=${{ secrets.GITHUB_TOKEN }} | \
              python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose --take-file-list-from-stdin
 
   analysis:

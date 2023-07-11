@@ -223,7 +223,7 @@ def main(args = None): # pylint: disable=too-many-return-statements
             return 0
     elif options.take_file_list_from_stdin:
         for line in sys.stdin:
-            file = os.path.basename(line)
+            file = os.path.basename(line.strip())
             if file.endswith('.cpp') or file.endswith('.h'):
                 files_to_check.append(file)
 
