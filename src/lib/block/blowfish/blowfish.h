@@ -49,7 +49,7 @@ class BOTAN_TEST_API Blowfish final : public Block_Cipher_Fixed_Params<8, 1, 56>
                          const uint8_t salt[],
                          size_t salt_length,
                          size_t salt_off) const;
-
+   public:
       secure_vector<uint32_t> m_S, m_P;
 };
 
