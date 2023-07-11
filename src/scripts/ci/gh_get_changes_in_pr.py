@@ -68,6 +68,7 @@ def main(args = None):
     j = json.loads(body)
 
     if 'files' not in j:
+        print("no files in patch")
         return 0
 
     for f in j['files']:
