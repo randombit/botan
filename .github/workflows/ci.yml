@@ -114,6 +114,26 @@ jobs:
       - name: Build and Test Botan
         run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
 
+  clang-tidy:
+    name: "Clang Tidy"
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Build Agent
+        uses: ./.github/actions/setup-build-agent
+        with:
+          target: clang-tidy
+          cache-key: linux-x86_64-clang-tidy
+
+      - name: Configure Build
+        run: python3 ./configure.py --cc=clang
+
+      - name: Run Clang Tidy
+        run: |
+           ./src/scripts/ci/gh_get_changes_in_pr.py ${{ github.event.after }} --api-token=${{ secrets.GITHUB_TOKEN }} | \
+             python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose --take-file-list-from-stdin
+
   analysis:
     name: "Analysis"
     strategy:
