@@ -68,11 +68,11 @@ def main(args = None):
     j = json.loads(body)
 
     if 'files' not in j:
-        print("no files in patch")
+        print("no files in patch", file=sys.stderr)
         return 0
 
     for f in j['files']:
-        print(f['filename'], file=sys.stdout)
+        print(f['filename'], file=sys.stderr)
         print(f['filename'])
 
     return 0
