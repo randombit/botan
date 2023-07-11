@@ -71,6 +71,7 @@ def main(args = None):
         return 0
 
     for f in j['files']:
+        print(f['filename'], file=sys.stdout)
         print(f['filename'])
 
     return 0
