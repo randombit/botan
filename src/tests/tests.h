@@ -659,7 +659,7 @@ class TestClassRegistration {
                             bool smoke_test,
                             bool needs_serialization,
                             CodeLocation registration_location) {
-         Test::register_test(std::move(category), std::move(name), smoke_test, needs_serialization, [=] {
+         Test::register_test(std::move(category), name, smoke_test, needs_serialization, [=] {
             auto test = std::make_unique<Test_Class>();
             test->set_test_name(name);
             test->set_registration_location(registration_location);
@@ -737,7 +737,7 @@ class TestFnRegistration {
                          bool needs_serialization,
                          CodeLocation registration_location,
                          TestFns... fn) {
-         Test::register_test(std::move(category), std::move(name), smoke_test, needs_serialization, [=] {
+         Test::register_test(std::move(category), name, smoke_test, needs_serialization, [=] {
             auto test = std::make_unique<FnTest>(fn...);
             test->set_test_name(name);
             test->set_registration_location(std::move(registration_location));
