@@ -555,6 +555,10 @@ class Test {
 
       virtual std::vector<std::string> possible_providers(const std::string&);
 
+      void set_test_name(const std::string& name) { m_test_name = name; }
+
+      const std::string& test_name() const { return m_test_name; }
+
       void set_registration_location(CodeLocation location) { m_registration_location = std::move(location); }
 
       const std::optional<CodeLocation>& registration_location() const { return m_registration_location; }
@@ -640,6 +644,7 @@ class Test {
       static Test_Options m_opts;
       static std::shared_ptr<Botan::RandomNumberGenerator> m_test_rng;
 
+      std::string m_test_name;                              // The string ID that was used to register this test
       std::optional<CodeLocation> m_registration_location;  /// The source file location where the test was registered
 };
 
@@ -656,6 +661,7 @@ class TestClassRegistration {
                             CodeLocation registration_location) {
          Test::register_test(std::move(category), std::move(name), smoke_test, needs_serialization, [=] {
             auto test = std::make_unique<Test_Class>();
+            test->set_test_name(name);
             test->set_registration_location(registration_location);
             return test;
          });
@@ -733,6 +739,7 @@ class TestFnRegistration {
                          TestFns... fn) {
          Test::register_test(std::move(category), std::move(name), smoke_test, needs_serialization, [=] {
             auto test = std::make_unique<FnTest>(fn...);
+            test->set_test_name(name);
             test->set_registration_location(std::move(registration_location));
             return test;
          });

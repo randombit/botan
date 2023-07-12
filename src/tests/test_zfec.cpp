@@ -102,7 +102,7 @@ class ZFEC_KAT final : public Text_Based_Test {
       }
 };
 
-BOTAN_REGISTER_TEST("zfec", "zfec", ZFEC_KAT);
+BOTAN_REGISTER_SERIALIZED_TEST("zfec", "zfec", ZFEC_KAT);
 
 }  // namespace Botan_Tests
 
