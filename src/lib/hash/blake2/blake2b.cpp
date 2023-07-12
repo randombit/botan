@@ -51,7 +51,7 @@ void BLAKE2b::state_init() {
    copy_mem(m_H.data(), blake2b_IV, BLAKE2B_IVU64COUNT);
    m_H[0] ^= (0x01010000 | (static_cast<uint8_t>(m_key_size) << 8) | static_cast<uint8_t>(output_length()));
    m_T[0] = m_T[1] = 0;
-   m_F[0] = m_F[1] = 0;
+   m_F = 0;
 
    if(m_key_size == 0) {
       m_bufpos = 0;
@@ -126,8 +126,7 @@ void BLAKE2b::compress(const uint8_t* input, size_t blocks, uint64_t increment) 
 
       v[12] ^= m_T[0];
       v[13] ^= m_T[1];
-      v[14] ^= m_F[0];
-      v[15] ^= m_F[1];
+      v[14] ^= m_F;
 
       ROUND<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15>(v, M);
       ROUND<14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3>(v, M);
@@ -186,7 +185,7 @@ void BLAKE2b::final_result(uint8_t output[]) {
    if(m_bufpos != BLAKE2B_BLOCKBYTES) {
       clear_mem(&m_buffer[m_bufpos], BLAKE2B_BLOCKBYTES - m_bufpos);
    }
-   m_F[0] = 0xFFFFFFFFFFFFFFFF;
+   m_F = 0xFFFFFFFFFFFFFFFF;
    compress(m_buffer.data(), 1, m_bufpos);
    copy_out_vec_le(output, output_length(), m_H);
    state_init();
