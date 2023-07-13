@@ -12,6 +12,7 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <limits>
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
    #include <botan/internal/thread_pool.h>
@@ -371,7 +372,12 @@ void Argon2::argon2(uint8_t output[],
                     size_t key_len,
                     const uint8_t ad[],
                     size_t ad_len) const {
-   BOTAN_ARG_CHECK(output_len >= 4, "Invalid Argon2 output length");
+   BOTAN_ARG_CHECK(output_len >= 4 && output_len <= std::numeric_limits<uint32_t>::max(),
+                   "Invalid Argon2 output length");
+   BOTAN_ARG_CHECK(password_len <= std::numeric_limits<uint32_t>::max(), "Invalid Argon2 password length");
+   BOTAN_ARG_CHECK(salt_len <= std::numeric_limits<uint32_t>::max(), "Invalid Argon2 salt length");
+   BOTAN_ARG_CHECK(key_len <= std::numeric_limits<uint32_t>::max(), "Invalid Argon2 key length");
+   BOTAN_ARG_CHECK(ad_len <= std::numeric_limits<uint32_t>::max(), "Invalid Argon2 ad length");
 
    auto blake2 = HashFunction::create_or_throw("BLAKE2b");
 

@@ -10,13 +10,14 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/timer.h>
 #include <algorithm>
+#include <limits>
 
 namespace Botan {
 
 Argon2::Argon2(uint8_t family, size_t M, size_t t, size_t p) : m_family(family), m_M(M), m_t(t), m_p(p) {
    BOTAN_ARG_CHECK(m_p >= 1 && m_p <= 128, "Invalid Argon2 threads parameter");
    BOTAN_ARG_CHECK(m_M >= 8 * m_p && m_M <= 8192 * 1024, "Invalid Argon2 M parameter");
-   BOTAN_ARG_CHECK(m_t >= 1, "Invalid Argon2 t parameter");
+   BOTAN_ARG_CHECK(m_t >= 1 && m_t <= std::numeric_limits<uint32_t>::max(), "Invalid Argon2 t parameter");
 }
 
 void Argon2::derive_key(uint8_t output[],
