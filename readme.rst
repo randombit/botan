@@ -56,7 +56,7 @@ The latest release from the Botan2 release series is
 released on 2022-11-16.
 
 The latest release from the Botan3 release series is
-`3.1.0 <https://botan.randombit.net/releases/Botan-3.1.1.tar.xz>`_
+`3.1.1 <https://botan.randombit.net/releases/Botan-3.1.1.tar.xz>`_
 `(sig) <https://botan.randombit.net/releases/Botan-3.1.1.tar.xz.asc>`_,
 released on 2023-07-13.
 
