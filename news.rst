@@ -1,8 +1,12 @@
 Release Notes
 ========================================
 
-Version 3.2.0, Not Yet Released
+Version 3.1.1, 2023-07-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix two tests which were insufficiently serialized. This would
+  cause sporadic test failures, particularly on machines with
+  many cores. (GH #3625 #3623)
 
 Version 3.1.0, 2023-07-11
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
