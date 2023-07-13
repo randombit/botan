@@ -743,7 +743,7 @@ class ECC_Unit_Tests final : public Test {
       }
 };
 
-BOTAN_REGISTER_TEST("pubkey", "ecc_unit", ECC_Unit_Tests);
+BOTAN_REGISTER_SERIALIZED_TEST("pubkey", "ecc_unit", ECC_Unit_Tests);
 
    #if defined(BOTAN_HAS_ECDSA)
 

@@ -1048,6 +1048,10 @@ std::vector<Test::Result> Text_Based_Test::run() {
             throw Test_Error("Unknown test pragma '" + line + "' in " + m_cur_src_name);
          }
 
+         if(!Test_Registry::instance().needs_serialization(this->test_name())) {
+            throw Test_Error(Botan::fmt("'{}' used cpuid control but is not serialized", this->test_name()));
+         }
+
          m_cpu_flags = parse_cpuid_bits(pragma_tokens);
 
          continue;
