@@ -41,6 +41,8 @@ Thread_Pool& Thread_Pool::global_instance() {
 
 Thread_Pool::Thread_Pool(std::optional<size_t> opt_pool_size) {
    m_shutdown = false;
+   // On Linux, it is 16 length max, including terminator
+   const std::string tname = "Botan thread";
 
    if(!opt_pool_size.has_value()) {
       return;
@@ -65,8 +67,11 @@ Thread_Pool::Thread_Pool(std::optional<size_t> opt_pool_size) {
       }
    }
 
+   m_workers.resize(pool_size);
+
    for(size_t i = 0; i != pool_size; ++i) {
-      m_workers.push_back(std::thread(&Thread_Pool::worker_thread, this));
+      m_workers[i] = std::thread(&Thread_Pool::worker_thread, this);
+      OS::set_thread_name(m_workers[i], tname);
    }
 }
 
