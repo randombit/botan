@@ -3,6 +3,7 @@
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "xaver.clang-format"
     },
+    "C_Cpp.codeAnalysis.clangTidy.enabled": true,
     "C_Cpp.default.cppStandard": "c++20",
     "C_Cpp.default.cStandard": "c17",
     "C_Cpp.formatting": "disabled",
