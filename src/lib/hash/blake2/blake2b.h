@@ -62,7 +62,7 @@ class BLAKE2b final : public HashFunction,
 
       secure_vector<uint64_t> m_H;
       uint64_t m_T[2];
-      uint64_t m_F[2];
+      uint64_t m_F;
 
       size_t m_key_size;
       secure_vector<uint8_t> m_padded_key_buffer;
