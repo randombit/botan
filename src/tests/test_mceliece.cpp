@@ -69,13 +69,13 @@ class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test {
             Botan::PK_KEM_Encryptor kem_enc(mce_priv, "KDF1(SHA-512)");
             Botan::PK_KEM_Decryptor kem_dec(mce_priv, Test::rng(), "KDF1(SHA-512)");
 
-            Botan::secure_vector<uint8_t> encap_key, prod_shared_key;
-            kem_enc.encrypt(encap_key, prod_shared_key, 64, rng);
+            const auto kem_result = kem_enc.encrypt(rng, 64);
 
-            Botan::secure_vector<uint8_t> dec_shared_key = kem_dec.decrypt(encap_key.data(), encap_key.size(), 64);
+            Botan::secure_vector<uint8_t> dec_shared_key =
+               kem_dec.decrypt(kem_result.encapsulated_shared_key(), 64, {});
 
-            result.test_eq("ciphertext", encap_key, ciphertext);
-            result.test_eq("encrypt shared", prod_shared_key, shared_key);
+            result.test_eq("ciphertext", kem_result.encapsulated_shared_key(), ciphertext);
+            result.test_eq("encrypt shared", kem_result.shared_key(), shared_key);
             result.test_eq("decrypt shared", dec_shared_key, shared_key);
          } catch(Botan::Lookup_Error&) {}
 
@@ -183,12 +183,11 @@ class McEliece_Tests final : public Test {
          for(size_t i = 0; i < trials; i++) {
             Botan::secure_vector<uint8_t> salt = Test::rng().random_vec(i);
 
-            Botan::secure_vector<uint8_t> encap_key, shared_key;
-            enc_op.encrypt(encap_key, shared_key, 64, Test::rng(), salt);
+            const auto kem_result = enc_op.encrypt(Test::rng(), 64, salt);
 
-            Botan::secure_vector<uint8_t> shared_key2 = dec_op.decrypt(encap_key, 64, salt);
+            Botan::secure_vector<uint8_t> shared_key2 = dec_op.decrypt(kem_result.encapsulated_shared_key(), 64, salt);
 
-            result.test_eq("same key", shared_key, shared_key2);
+            result.test_eq("same key", kem_result.shared_key(), shared_key2);
          }
          result.end_timer();
          return result;

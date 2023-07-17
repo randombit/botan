@@ -143,13 +143,15 @@ size_t PK_KEM_Encryptor::encapsulated_key_length() const {
    return m_op->encapsulated_key_length();
 }
 
-void PK_KEM_Encryptor::encrypt(secure_vector<uint8_t>& out_encapsulated_key,
-                               secure_vector<uint8_t>& out_shared_key,
-                               size_t desired_shared_key_len,
+void PK_KEM_Encryptor::encrypt(std::span<uint8_t> out_encapsulated_key,
+                               std::span<uint8_t> out_shared_key,
                                RandomNumberGenerator& rng,
-                               const uint8_t salt[],
-                               size_t salt_len) {
-   m_op->kem_encrypt(out_encapsulated_key, out_shared_key, desired_shared_key_len, rng, salt, salt_len);
+                               size_t desired_shared_key_len,
+                               std::span<const uint8_t> salt) {
+   BOTAN_ARG_CHECK(out_encapsulated_key.size() == encapsulated_key_length(), "not enough space for encapsulated key");
+   BOTAN_ARG_CHECK(out_shared_key.size() == shared_key_length(desired_shared_key_len),
+                   "not enough space for shared key");
+   m_op->kem_encrypt(out_encapsulated_key, out_shared_key, rng, desired_shared_key_len, salt);
 }
 
 size_t PK_KEM_Decryptor::shared_key_length(size_t desired_shared_key_len) const {
@@ -168,12 +170,13 @@ PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key,
 
 PK_KEM_Decryptor::~PK_KEM_Decryptor() = default;
 
-secure_vector<uint8_t> PK_KEM_Decryptor::decrypt(const uint8_t encap_key[],
-                                                 size_t encap_key_len,
-                                                 size_t desired_shared_key_len,
-                                                 const uint8_t salt[],
-                                                 size_t salt_len) {
-   return m_op->kem_decrypt(encap_key, encap_key_len, desired_shared_key_len, salt, salt_len);
+void PK_KEM_Decryptor::decrypt(std::span<uint8_t> out_shared_key,
+                               std::span<const uint8_t> encap_key,
+                               size_t desired_shared_key_len,
+                               std::span<const uint8_t> salt) {
+   BOTAN_ARG_CHECK(out_shared_key.size() == shared_key_length(desired_shared_key_len),
+                   "inconsistent size of shared key output buffer");
+   m_op->kem_decrypt(out_shared_key, encap_key, desired_shared_key_len, salt);
 }
 
 PK_Key_Agreement::PK_Key_Agreement(PK_Key_Agreement&&) noexcept = default;

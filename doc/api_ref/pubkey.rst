@@ -826,13 +826,45 @@ encapulated key and returns the shared secret.
 
      Create a KEM encryptor
 
+  .. cpp:function:: size_t shared_key_length(size_t desired_shared_key_len) const
+
+     Size in bytes of the shared key being produced by this PK_KEM_Encryptor.
+
+  .. cpp:function:: size_t encapsulated_key_length() const
+
+     Size in bytes of the encapsulated key being produced by this PK_KEM_Encryptor.
+
+  .. cpp:function:: KEM_Encapsulation encrypt(RandomNumberGenerator& rng,
+                                size_t desired_shared_key_len = 32,
+                                std::span<const uint8_t> salt = {})
+
+     Perform a key encapsulation operation with the result being returned
+     as a convenient struct.
+
+  .. cpp:function:: void encrypt(std::span<uint8_t> out_encapsulated_key,
+                   std::span<uint8_t> out_shared_key,
+                   RandomNumberGenerator& rng,
+                   size_t desired_shared_key_len = 32,
+                   std::span<const uint8_t> salt = {})
+
+     Perform a key encapsulation operation by passing in out-buffers of
+     the correct output length. Use encapsulated_key_length() and
+     shared_key_length() to pre-allocate the output buffers.
+
   .. cpp:function:: void encrypt(secure_vector<uint8_t>& out_encapsulated_key, \
                    secure_vector<uint8_t>& out_shared_key, \
                    size_t desired_shared_key_len, \
                    RandomNumberGenerator& rng, \
                    std::span<const uint8_t> salt)
 
-      Perform a key encapsulation operation
+      Perform a key encapsulation operation by passing in out-vectors
+      that will be re-allocated to the correct output size.
+
+.. cpp:class:: KEM_Encapsulation
+
+  .. cpp:function::  std::vector<uint8_t> encapsulated_shared_key() const
+
+  .. cpp:function:: secure_vector<uint8_t> shared_key() const
 
 .. cpp:class:: PK_KEM_Decryptor
 
@@ -842,11 +874,23 @@ encapulated key and returns the shared secret.
 
      Create a KEM decryptor
 
+  .. cpp:function:: size_t shared_key_length(size_t desired_shared_key_len) const
+
+     Size in bytes of the shared key being produced by this PK_KEM_Encryptor.
+
   .. cpp:function:: secure_vector<uint8> decrypt(std::span<const uint8> encapsulated_key, \
                     size_t desired_shared_key_len, \
                     std::span<const uint8_t> salt)
 
       Perform a key decapsulation operation
+
+  .. cpp:function:: void decrypt(std::span<uint8_t> out_shared_key,
+                   std::span<const uint8_t> encap_key,
+                   size_t desired_shared_key_len = 32,
+                   std::span<const uint8_t> salt = {})
+
+      Perform a key decapsulation operation by passing in a pre-allocated
+      out-buffer. Use shared_key_length() to determine the byte-length required.
 
 Botan implements the following KEM schemes:
 

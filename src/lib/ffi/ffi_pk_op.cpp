@@ -295,17 +295,14 @@ int botan_pk_op_kem_encrypt_create_shared_key(botan_pk_op_kem_encrypt_t op,
                                               uint8_t encapsulated_key_out[],
                                               size_t* encapsulated_key_len) {
    return BOTAN_FFI_VISIT(op, [=](auto& kem) {
-      Botan::secure_vector<uint8_t> encapsulated_key;
-      Botan::secure_vector<uint8_t> shared_key;
+      const auto result = kem.encrypt(safe_get(rng), desired_shared_key_len, {salt, salt_len});
 
-      kem.encrypt(encapsulated_key, shared_key, desired_shared_key_len, safe_get(rng), salt, salt_len);
-
-      int rc = write_vec_output(encapsulated_key_out, encapsulated_key_len, encapsulated_key);
+      int rc = write_vec_output(encapsulated_key_out, encapsulated_key_len, result.encapsulated_shared_key());
 
       if(rc != 0)
          return rc;
 
-      return write_vec_output(shared_key_out, shared_key_len, shared_key);
+      return write_vec_output(shared_key_out, shared_key_len, result.shared_key());
    });
 }
 
