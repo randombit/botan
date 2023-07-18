@@ -19,6 +19,9 @@
 
 namespace Botan::TLS {
 
+/// @brief holds a PSK identity as used in TLS 1.3
+using PresharedKeyID = Strong<std::string, struct PresharedKeyID_>;
+
 /**
  * Represents a TLS 1.3 PSK identity as found in the Preshared Key extension
  * with an opaque identity and an associated (obfuscated) ticket age. The latter
@@ -40,15 +43,11 @@ class BOTAN_PUBLIC_API(3, 1) PskIdentity {
       /**
        * Construct from an externally provided PSK in the client
        */
-      PskIdentity(PresharedKeyID identity) :
-            m_identity(std::move(identity.get())),
-
-            // RFC 8446 4.2.11
-            //    For identities established externally, an obfuscated_ticket_age of
-            //    0 SHOULD be used, and servers MUST ignore the value.
-            m_obfuscated_age(0) {}
+      PskIdentity(PresharedKeyID identity);
 
       const std::vector<uint8_t>& identity() const { return m_identity; }
+
+      std::string identity_as_string() const;
 
       /**
        * If this represents a PSK for session resumption, it returns the

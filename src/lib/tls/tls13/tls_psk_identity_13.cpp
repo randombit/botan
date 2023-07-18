@@ -8,6 +8,8 @@
 
 #include <botan/tls_psk_identity_13.h>
 
+#include <botan/internal/stl_util.h>
+
 namespace Botan::TLS {
 
 namespace {
@@ -28,8 +30,20 @@ PskIdentity::PskIdentity(Opaque_Session_Handle identity,
                          const uint32_t ticket_age_add) :
       PskIdentity(std::move(identity.get()), obfuscate_ticket_age(age.count(), ticket_age_add)) {}
 
+PskIdentity::PskIdentity(PresharedKeyID identity) :
+      m_identity(to_byte_vector(identity.get())),
+
+      // RFC 8446 4.2.11
+      //    For identities established externally, an obfuscated_ticket_age of
+      //    0 SHOULD be used, and servers MUST ignore the value.
+      m_obfuscated_age(0) {}
+
 std::chrono::milliseconds PskIdentity::age(const uint32_t ticket_age_add) const {
    return std::chrono::milliseconds(obfuscate_ticket_age(m_obfuscated_age, ticket_age_add));
+}
+
+std::string PskIdentity::identity_as_string() const {
+   return Botan::to_string(m_identity);
 }
 
 }  // namespace Botan::TLS

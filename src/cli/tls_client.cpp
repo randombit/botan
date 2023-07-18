@@ -215,10 +215,10 @@ class TLS_Client final : public Command {
          const auto client_crt_path = get_arg_maybe("client-cert");
          const auto client_key_path = get_arg_maybe("client-cert-key");
 
-         const auto psk = [this]() -> std::optional<Botan::SymmetricKey> {
+         auto psk = [this]() -> std::optional<Botan::secure_vector<uint8_t>> {
             auto psk_hex = get_arg_maybe("psk");
             if(psk_hex) {
-               return Botan::SymmetricKey(Botan::hex_decode_locked(psk_hex.value()));
+               return Botan::hex_decode_locked(psk_hex.value());
             } else {
                return {};
             }
@@ -226,7 +226,7 @@ class TLS_Client final : public Command {
          const std::optional<std::string> psk_identity = get_arg_maybe("psk-identity");
 
          auto creds = std::make_shared<Basic_Credentials_Manager>(
-            use_system_cert_store, trusted_CAs, client_crt_path, client_key_path, psk, psk_identity);
+            use_system_cert_store, trusted_CAs, client_crt_path, client_key_path, std::move(psk), psk_identity);
 
          Botan::TLS::Client client(callbacks,
                                    session_mgr,

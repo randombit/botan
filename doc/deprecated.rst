@@ -36,6 +36,11 @@ in a future major release:
 
 - All ciphersuites using static RSA key exchange
 
+- ``Credentials_Manager::psk()`` to provide various TLS-specific keys and
+  secrets, most notably "session-ticket", "dtls-cookie-secret" and the actual
+  TLS PSKs for given identities and hosts. Instead, use the dedicated methods in
+  ``Credentials_Manager`` and do not override the ``psk()`` method any longer.
+
 Deprecated Functionality
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

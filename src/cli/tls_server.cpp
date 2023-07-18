@@ -127,10 +127,10 @@ class TLS_Server final : public Command {
          const size_t max_clients = get_arg_sz("max-clients");
          const std::string transport = get_arg("type");
          const std::string dump_traces_to = get_arg("dump-traces");
-         const auto psk = [this]() -> std::optional<Botan::SymmetricKey> {
+         auto psk = [this]() -> std::optional<Botan::secure_vector<uint8_t>> {
             auto psk_hex = get_arg_maybe("psk");
             if(psk_hex) {
-               return Botan::SymmetricKey(Botan::hex_decode_locked(psk_hex.value()));
+               return Botan::hex_decode_locked(psk_hex.value());
             } else {
                return {};
             }
@@ -149,7 +149,7 @@ class TLS_Server final : public Command {
          auto policy = load_tls_policy(get_arg("policy"));
          auto session_manager =
             std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng_as_shared());  // TODO sqlite3
-         auto creds = std::make_shared<Basic_Credentials_Manager>(server_crt, server_key, psk, psk_identity);
+         auto creds = std::make_shared<Basic_Credentials_Manager>(server_crt, server_key, std::move(psk), psk_identity);
          auto callbacks = std::make_shared<Callbacks>(*this);
 
          output() << "Listening for new connections on " << transport << " port " << port << std::endl;
