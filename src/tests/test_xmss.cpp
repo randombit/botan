@@ -12,6 +12,7 @@
 #if defined(BOTAN_HAS_XMSS_RFC8391)
    #include "test_pubkey.h"
    #include "test_rng.h"
+   #include <botan/hash.h>
    #include <botan/xmss.h>
 #endif
 
@@ -116,6 +117,12 @@ class XMSS_Keygen_Reference_Test final : public Text_Based_Test {
       }
 
       bool skip_this_test(const std::string& /*header*/, const VarMap& vars) override {
+         // skip if this build does not provide the requested hash function
+         const auto params = Botan::XMSS_Parameters(vars.get_req_str("Params"));
+         if(Botan::HashFunction::create(params.hash_function_name()) == nullptr) {
+            return true;
+         }
+
          if(Test::run_long_tests()) {
             return false;
          }
