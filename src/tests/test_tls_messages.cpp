@@ -206,6 +206,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
 BOTAN_REGISTER_TEST("tls", "tls_messages", TLS_Message_Parsing_Test);
 
    #if defined(BOTAN_HAS_TLS_13)
+      #if defined(BOTAN_HAS_CURVE_25519)
 class TLS_Key_Share_CH_Generation_Test final : public Text_Based_Test {
    public:
       TLS_Key_Share_CH_Generation_Test() :
@@ -237,6 +238,10 @@ class TLS_Key_Share_CH_Generation_Test final : public Text_Based_Test {
          return result;
       }
 };
+
+BOTAN_REGISTER_TEST("tls_extensions", "tls_extensions_key_share_client_hello", TLS_Key_Share_CH_Generation_Test);
+
+      #endif
 
 class TLS_Extension_Parsing_Test final : public Text_Based_Test {
    public:
@@ -393,7 +398,6 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_TEST("tls_extensions", "tls_extensions_parsing", TLS_Extension_Parsing_Test);
-BOTAN_REGISTER_TEST("tls_extensions", "tls_extensions_key_share_client_hello", TLS_Key_Share_CH_Generation_Test);
 
 class TLS_13_Message_Parsing_Test final : public Text_Based_Test {
    public:
