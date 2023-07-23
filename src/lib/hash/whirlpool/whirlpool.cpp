@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/whrlpool.h>
+#include <botan/internal/whirlpool.h>
 
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
