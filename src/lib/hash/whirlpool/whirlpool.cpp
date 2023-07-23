@@ -68,7 +68,20 @@ alignas(256) const uint64_t WHIRL_S[256] = {
    0x98985A98B4C22D2C, 0xA4A4AAA4490E55ED, 0x2828A0285D885075, 0x5C5C6D5CDA31B886, 0xF8F8C7F8933FED6B,
    0x8686228644A411C2};
 
+uint64_t whirl(uint64_t x0, uint64_t x1, uint64_t x2, uint64_t x3, uint64_t x4, uint64_t x5, uint64_t x6, uint64_t x7) {
+   const uint64_t s0 = WHIRL_S[get_byte<0>(x0)];
+   const uint64_t s1 = WHIRL_S[get_byte<1>(x1)];
+   const uint64_t s2 = WHIRL_S[get_byte<2>(x2)];
+   const uint64_t s3 = WHIRL_S[get_byte<3>(x3)];
+   const uint64_t s4 = WHIRL_S[get_byte<4>(x4)];
+   const uint64_t s5 = WHIRL_S[get_byte<5>(x5)];
+   const uint64_t s6 = WHIRL_S[get_byte<6>(x6)];
+   const uint64_t s7 = WHIRL_S[get_byte<7>(x7)];
+
+   return s0 ^ rotr<8>(s1) ^ rotr<16>(s2) ^ rotr<24>(s3) ^ rotr<32>(s4) ^ rotr<40>(s5) ^ rotr<48>(s6) ^ rotr<56>(s7);
 }
+
+}  // namespace
 
 /*
 * Whirlpool Compression Function
@@ -86,105 +99,60 @@ void Whirlpool::compress_n(const uint8_t in[], size_t blocks) {
                                    0xCA2DBF07AD5A8333};
 
    for(size_t i = 0; i != blocks; ++i) {
-      load_be(m_M.data(), in, m_M.size());
+      uint64_t K[11 * 8] = {0};
 
-      uint64_t K0, K1, K2, K3, K4, K5, K6, K7;
-      K0 = m_digest[0];
-      K1 = m_digest[1];
-      K2 = m_digest[2];
-      K3 = m_digest[3];
-      K4 = m_digest[4];
-      K5 = m_digest[5];
-      K6 = m_digest[6];
-      K7 = m_digest[7];
+      K[0] = m_digest[0];
+      K[1] = m_digest[1];
+      K[2] = m_digest[2];
+      K[3] = m_digest[3];
+      K[4] = m_digest[4];
+      K[5] = m_digest[5];
+      K[6] = m_digest[6];
+      K[7] = m_digest[7];
 
-      uint64_t B0, B1, B2, B3, B4, B5, B6, B7;
-      B0 = K0 ^ m_M[0];
-      B1 = K1 ^ m_M[1];
-      B2 = K2 ^ m_M[2];
-      B3 = K3 ^ m_M[3];
-      B4 = K4 ^ m_M[4];
-      B5 = K5 ^ m_M[5];
-      B6 = K6 ^ m_M[6];
-      B7 = K7 ^ m_M[7];
+      // Whirlpool key schedule:
+      for(size_t r = 1; r != 11; ++r) {
+         const uint64_t PK0 = K[8 * (r - 1) + 0];
+         const uint64_t PK1 = K[8 * (r - 1) + 1];
+         const uint64_t PK2 = K[8 * (r - 1) + 2];
+         const uint64_t PK3 = K[8 * (r - 1) + 3];
+         const uint64_t PK4 = K[8 * (r - 1) + 4];
+         const uint64_t PK5 = K[8 * (r - 1) + 5];
+         const uint64_t PK6 = K[8 * (r - 1) + 6];
+         const uint64_t PK7 = K[8 * (r - 1) + 7];
 
-      for(size_t j = 0; j != 10; ++j) {
-         uint64_t T0, T1, T2, T3, T4, T5, T6, T7;
-         T0 = WHIRL_S[get_byte<0>(K0)] ^ rotr<8>(WHIRL_S[get_byte<1>(K7)]) ^ rotr<16>(WHIRL_S[get_byte<2>(K6)]) ^
-              rotr<24>(WHIRL_S[get_byte<3>(K5)]) ^ rotr<32>(WHIRL_S[get_byte<4>(K4)]) ^
-              rotr<40>(WHIRL_S[get_byte<5>(K3)]) ^ rotr<48>(WHIRL_S[get_byte<6>(K2)]) ^
-              rotr<56>(WHIRL_S[get_byte<7>(K1)]) ^ RC[j];
+         K[8 * r + 0] = whirl(PK0, PK7, PK6, PK5, PK4, PK3, PK2, PK1) ^ RC[r - 1];
+         K[8 * r + 1] = whirl(PK1, PK0, PK7, PK6, PK5, PK4, PK3, PK2);
+         K[8 * r + 2] = whirl(PK2, PK1, PK0, PK7, PK6, PK5, PK4, PK3);
+         K[8 * r + 3] = whirl(PK3, PK2, PK1, PK0, PK7, PK6, PK5, PK4);
+         K[8 * r + 4] = whirl(PK4, PK3, PK2, PK1, PK0, PK7, PK6, PK5);
+         K[8 * r + 5] = whirl(PK5, PK4, PK3, PK2, PK1, PK0, PK7, PK6);
+         K[8 * r + 6] = whirl(PK6, PK5, PK4, PK3, PK2, PK1, PK0, PK7);
+         K[8 * r + 7] = whirl(PK7, PK6, PK5, PK4, PK3, PK2, PK1, PK0);
+      }
 
-         T1 = WHIRL_S[get_byte<0>(K1)] ^ rotr<8>(WHIRL_S[get_byte<1>(K0)]) ^ rotr<16>(WHIRL_S[get_byte<2>(K7)]) ^
-              rotr<24>(WHIRL_S[get_byte<3>(K6)]) ^ rotr<32>(WHIRL_S[get_byte<4>(K5)]) ^
-              rotr<40>(WHIRL_S[get_byte<5>(K4)]) ^ rotr<48>(WHIRL_S[get_byte<6>(K3)]) ^
-              rotr<56>(WHIRL_S[get_byte<7>(K2)]);
-         T2 = WHIRL_S[get_byte<0>(K2)] ^ rotr<8>(WHIRL_S[get_byte<1>(K1)]) ^ rotr<16>(WHIRL_S[get_byte<2>(K0)]) ^
-              rotr<24>(WHIRL_S[get_byte<3>(K7)]) ^ rotr<32>(WHIRL_S[get_byte<4>(K6)]) ^
-              rotr<40>(WHIRL_S[get_byte<5>(K5)]) ^ rotr<48>(WHIRL_S[get_byte<6>(K4)]) ^
-              rotr<56>(WHIRL_S[get_byte<7>(K3)]);
-         T3 = WHIRL_S[get_byte<0>(K3)] ^ rotr<8>(WHIRL_S[get_byte<1>(K2)]) ^ rotr<16>(WHIRL_S[get_byte<2>(K1)]) ^
-              rotr<24>(WHIRL_S[get_byte<3>(K0)]) ^ rotr<32>(WHIRL_S[get_byte<4>(K7)]) ^
-              rotr<40>(WHIRL_S[get_byte<5>(K6)]) ^ rotr<48>(WHIRL_S[get_byte<6>(K5)]) ^
-              rotr<56>(WHIRL_S[get_byte<7>(K4)]);
-         T4 = WHIRL_S[get_byte<0>(K4)] ^ rotr<8>(WHIRL_S[get_byte<1>(K3)]) ^ rotr<16>(WHIRL_S[get_byte<2>(K2)]) ^
-              rotr<24>(WHIRL_S[get_byte<3>(K1)]) ^ rotr<32>(WHIRL_S[get_byte<4>(K0)]) ^
-              rotr<40>(WHIRL_S[get_byte<5>(K7)]) ^ rotr<48>(WHIRL_S[get_byte<6>(K6)]) ^
-              rotr<56>(WHIRL_S[get_byte<7>(K5)]);
-         T5 = WHIRL_S[get_byte<0>(K5)] ^ rotr<8>(WHIRL_S[get_byte<1>(K4)]) ^ rotr<16>(WHIRL_S[get_byte<2>(K3)]) ^
-              rotr<24>(WHIRL_S[get_byte<3>(K2)]) ^ rotr<32>(WHIRL_S[get_byte<4>(K1)]) ^
-              rotr<40>(WHIRL_S[get_byte<5>(K0)]) ^ rotr<48>(WHIRL_S[get_byte<6>(K7)]) ^
-              rotr<56>(WHIRL_S[get_byte<7>(K6)]);
-         T6 = WHIRL_S[get_byte<0>(K6)] ^ rotr<8>(WHIRL_S[get_byte<1>(K5)]) ^ rotr<16>(WHIRL_S[get_byte<2>(K4)]) ^
-              rotr<24>(WHIRL_S[get_byte<3>(K3)]) ^ rotr<32>(WHIRL_S[get_byte<4>(K2)]) ^
-              rotr<40>(WHIRL_S[get_byte<5>(K1)]) ^ rotr<48>(WHIRL_S[get_byte<6>(K0)]) ^
-              rotr<56>(WHIRL_S[get_byte<7>(K7)]);
-         T7 = WHIRL_S[get_byte<0>(K7)] ^ rotr<8>(WHIRL_S[get_byte<1>(K6)]) ^ rotr<16>(WHIRL_S[get_byte<2>(K5)]) ^
-              rotr<24>(WHIRL_S[get_byte<3>(K4)]) ^ rotr<32>(WHIRL_S[get_byte<4>(K3)]) ^
-              rotr<40>(WHIRL_S[get_byte<5>(K2)]) ^ rotr<48>(WHIRL_S[get_byte<6>(K1)]) ^
-              rotr<56>(WHIRL_S[get_byte<7>(K0)]);
+      uint64_t M[8] = {0};
+      load_be(M, in, 8);
 
-         K0 = T0;
-         K1 = T1;
-         K2 = T2;
-         K3 = T3;
-         K4 = T4;
-         K5 = T5;
-         K6 = T6;
-         K7 = T7;
+      // First round (key masking)
+      uint64_t B0 = M[0] ^ K[0];
+      uint64_t B1 = M[1] ^ K[1];
+      uint64_t B2 = M[2] ^ K[2];
+      uint64_t B3 = M[3] ^ K[3];
+      uint64_t B4 = M[4] ^ K[4];
+      uint64_t B5 = M[5] ^ K[5];
+      uint64_t B6 = M[6] ^ K[6];
+      uint64_t B7 = M[7] ^ K[7];
 
-         T0 = WHIRL_S[get_byte<0>(B0)] ^ rotr<8>(WHIRL_S[get_byte<1>(B7)]) ^ rotr<16>(WHIRL_S[get_byte<2>(B6)]) ^
-              rotr<24>(WHIRL_S[get_byte<3>(B5)]) ^ rotr<32>(WHIRL_S[get_byte<4>(B4)]) ^
-              rotr<40>(WHIRL_S[get_byte<5>(B3)]) ^ rotr<48>(WHIRL_S[get_byte<6>(B2)]) ^
-              rotr<56>(WHIRL_S[get_byte<7>(B1)]) ^ K0;
-         T1 = WHIRL_S[get_byte<0>(B1)] ^ rotr<8>(WHIRL_S[get_byte<1>(B0)]) ^ rotr<16>(WHIRL_S[get_byte<2>(B7)]) ^
-              rotr<24>(WHIRL_S[get_byte<3>(B6)]) ^ rotr<32>(WHIRL_S[get_byte<4>(B5)]) ^
-              rotr<40>(WHIRL_S[get_byte<5>(B4)]) ^ rotr<48>(WHIRL_S[get_byte<6>(B3)]) ^
-              rotr<56>(WHIRL_S[get_byte<7>(B2)]) ^ K1;
-         T2 = WHIRL_S[get_byte<0>(B2)] ^ rotr<8>(WHIRL_S[get_byte<1>(B1)]) ^ rotr<16>(WHIRL_S[get_byte<2>(B0)]) ^
-              rotr<24>(WHIRL_S[get_byte<3>(B7)]) ^ rotr<32>(WHIRL_S[get_byte<4>(B6)]) ^
-              rotr<40>(WHIRL_S[get_byte<5>(B5)]) ^ rotr<48>(WHIRL_S[get_byte<6>(B4)]) ^
-              rotr<56>(WHIRL_S[get_byte<7>(B3)]) ^ K2;
-         T3 = WHIRL_S[get_byte<0>(B3)] ^ rotr<8>(WHIRL_S[get_byte<1>(B2)]) ^ rotr<16>(WHIRL_S[get_byte<2>(B1)]) ^
-              rotr<24>(WHIRL_S[get_byte<3>(B0)]) ^ rotr<32>(WHIRL_S[get_byte<4>(B7)]) ^
-              rotr<40>(WHIRL_S[get_byte<5>(B6)]) ^ rotr<48>(WHIRL_S[get_byte<6>(B5)]) ^
-              rotr<56>(WHIRL_S[get_byte<7>(B4)]) ^ K3;
-         T4 = WHIRL_S[get_byte<0>(B4)] ^ rotr<8>(WHIRL_S[get_byte<1>(B3)]) ^ rotr<16>(WHIRL_S[get_byte<2>(B2)]) ^
-              rotr<24>(WHIRL_S[get_byte<3>(B1)]) ^ rotr<32>(WHIRL_S[get_byte<4>(B0)]) ^
-              rotr<40>(WHIRL_S[get_byte<5>(B7)]) ^ rotr<48>(WHIRL_S[get_byte<6>(B6)]) ^
-              rotr<56>(WHIRL_S[get_byte<7>(B5)]) ^ K4;
-         T5 = WHIRL_S[get_byte<0>(B5)] ^ rotr<8>(WHIRL_S[get_byte<1>(B4)]) ^ rotr<16>(WHIRL_S[get_byte<2>(B3)]) ^
-              rotr<24>(WHIRL_S[get_byte<3>(B2)]) ^ rotr<32>(WHIRL_S[get_byte<4>(B1)]) ^
-              rotr<40>(WHIRL_S[get_byte<5>(B0)]) ^ rotr<48>(WHIRL_S[get_byte<6>(B7)]) ^
-              rotr<56>(WHIRL_S[get_byte<7>(B6)]) ^ K5;
-         T6 = WHIRL_S[get_byte<0>(B6)] ^ rotr<8>(WHIRL_S[get_byte<1>(B5)]) ^ rotr<16>(WHIRL_S[get_byte<2>(B4)]) ^
-              rotr<24>(WHIRL_S[get_byte<3>(B3)]) ^ rotr<32>(WHIRL_S[get_byte<4>(B2)]) ^
-              rotr<40>(WHIRL_S[get_byte<5>(B1)]) ^ rotr<48>(WHIRL_S[get_byte<6>(B0)]) ^
-              rotr<56>(WHIRL_S[get_byte<7>(B7)]) ^ K6;
-         T7 = WHIRL_S[get_byte<0>(B7)] ^ rotr<8>(WHIRL_S[get_byte<1>(B6)]) ^ rotr<16>(WHIRL_S[get_byte<2>(B5)]) ^
-              rotr<24>(WHIRL_S[get_byte<3>(B4)]) ^ rotr<32>(WHIRL_S[get_byte<4>(B3)]) ^
-              rotr<40>(WHIRL_S[get_byte<5>(B2)]) ^ rotr<48>(WHIRL_S[get_byte<6>(B1)]) ^
-              rotr<56>(WHIRL_S[get_byte<7>(B0)]) ^ K7;
+      for(size_t r = 1; r != 11; ++r) {
+         uint64_t T0 = whirl(B0, B7, B6, B5, B4, B3, B2, B1) ^ K[8 * r + 0];
+         uint64_t T1 = whirl(B1, B0, B7, B6, B5, B4, B3, B2) ^ K[8 * r + 1];
+         uint64_t T2 = whirl(B2, B1, B0, B7, B6, B5, B4, B3) ^ K[8 * r + 2];
+         uint64_t T3 = whirl(B3, B2, B1, B0, B7, B6, B5, B4) ^ K[8 * r + 3];
+         uint64_t T4 = whirl(B4, B3, B2, B1, B0, B7, B6, B5) ^ K[8 * r + 4];
+         uint64_t T5 = whirl(B5, B4, B3, B2, B1, B0, B7, B6) ^ K[8 * r + 5];
+         uint64_t T6 = whirl(B6, B5, B4, B3, B2, B1, B0, B7) ^ K[8 * r + 6];
+         uint64_t T7 = whirl(B7, B6, B5, B4, B3, B2, B1, B0) ^ K[8 * r + 7];
 
          B0 = T0;
          B1 = T1;
@@ -196,14 +164,14 @@ void Whirlpool::compress_n(const uint8_t in[], size_t blocks) {
          B7 = T7;
       }
 
-      m_digest[0] ^= B0 ^ m_M[0];
-      m_digest[1] ^= B1 ^ m_M[1];
-      m_digest[2] ^= B2 ^ m_M[2];
-      m_digest[3] ^= B3 ^ m_M[3];
-      m_digest[4] ^= B4 ^ m_M[4];
-      m_digest[5] ^= B5 ^ m_M[5];
-      m_digest[6] ^= B6 ^ m_M[6];
-      m_digest[7] ^= B7 ^ m_M[7];
+      m_digest[0] ^= B0 ^ M[0];
+      m_digest[1] ^= B1 ^ M[1];
+      m_digest[2] ^= B2 ^ M[2];
+      m_digest[3] ^= B3 ^ M[3];
+      m_digest[4] ^= B4 ^ M[4];
+      m_digest[5] ^= B5 ^ M[5];
+      m_digest[6] ^= B6 ^ M[6];
+      m_digest[7] ^= B7 ^ M[7];
 
       in += hash_block_size();
    }
@@ -225,7 +193,6 @@ std::unique_ptr<HashFunction> Whirlpool::copy_state() const {
 */
 void Whirlpool::clear() {
    MDx_HashFunction::clear();
-   zeroise(m_M);
    zeroise(m_digest);
 }
 
