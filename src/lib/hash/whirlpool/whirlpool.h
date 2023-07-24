@@ -27,13 +27,13 @@ class Whirlpool final : public MDx_HashFunction {
 
       void clear() override;
 
-      Whirlpool() : MDx_HashFunction(64, true, true, 32), m_M(8), m_digest(8) { clear(); }
+      Whirlpool() : MDx_HashFunction(64, true, true, 32), m_digest(8) { clear(); }
 
    private:
       void compress_n(const uint8_t[], size_t blocks) override;
       void copy_out(uint8_t[]) override;
 
-      secure_vector<uint64_t> m_M, m_digest;
+      secure_vector<uint64_t> m_digest;
 };
 
 }  // namespace Botan

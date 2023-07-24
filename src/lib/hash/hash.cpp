@@ -75,7 +75,7 @@
 #endif
 
 #if defined(BOTAN_HAS_WHIRLPOOL)
-   #include <botan/internal/whrlpool.h>
+   #include <botan/internal/whirlpool.h>
 #endif
 
 #if defined(BOTAN_HAS_PARALLEL_HASH)
