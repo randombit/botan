@@ -522,6 +522,23 @@ def have_prog(prog):
                 return True
     return False
 
+def validate_make_tool(make_tool, build_jobs):
+    if make_tool == '':
+        return validate_make_tool('make', build_jobs)
+
+    if make_tool not in ['nmake', 'jom', 'make']:
+        raise Exception("Don't know about %s as a make tool" % (make_tool))
+
+    # Hack to work around jom occasionally failing to install
+    # https://github.com/randombit/botan/issues/3629
+    if make_tool == 'jom' and not have_prog('jom'):
+        return ['nmake']
+
+    if make_tool in ['make', 'jom']:
+        return [make_tool, '-j%d' % (build_jobs)]
+    else:
+        return [make_tool]
+
 def main(args=None):
     """
     Parse options, do the things
@@ -635,14 +652,9 @@ def main(args=None):
 
         cmds.append([py_interp, os.path.join(root_dir, 'configure.py')] + config_flags)
 
-        if options.make_tool == '':
-            options.make_tool = 'make'
-
-        make_cmd = [options.make_tool]
+        make_cmd = validate_make_tool(options.make_tool, options.build_jobs)
         if build_dir != '.':
             make_cmd = ['indir:%s' % build_dir] + make_cmd
-        if options.build_jobs > 1 and options.make_tool != 'nmake':
-            make_cmd += ['-j%d' % (options.build_jobs)]
 
         make_cmd += ['-k']
 
