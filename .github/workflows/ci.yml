@@ -132,7 +132,11 @@ jobs:
       - name: Run Clang Tidy
         run: |
            ./src/scripts/ci/gh_get_changes_in_pr.py $(git rev-parse HEAD) --api-token=${{ secrets.GITHUB_TOKEN }} | \
-             python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose --take-file-list-from-stdin
+             python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose --take-file-list-from-stdin --export-fixes-dir=clang_tidy_diagnostics
+
+      - name: Display Clang Tidy Results
+        if: failure()
+        run: ./src/scripts/ci/gh_clang_tidy_fixes_in_pr.py clang_tidy_diagnostics
 
   analysis:
     name: "Analysis"
