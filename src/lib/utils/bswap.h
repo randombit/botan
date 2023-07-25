@@ -59,17 +59,6 @@ inline constexpr uint64_t reverse_bytes(uint64_t x) {
 #endif
 }
 
-/**
-* Swap 4 Ts in an array
-*/
-template <typename T>
-inline constexpr void bswap_4(T x[4]) {
-   x[0] = reverse_bytes(x[0]);
-   x[1] = reverse_bytes(x[1]);
-   x[2] = reverse_bytes(x[2]);
-   x[3] = reverse_bytes(x[3]);
-}
-
 }  // namespace Botan
 
 #endif
