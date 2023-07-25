@@ -204,6 +204,11 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
       }
 
       void stop() {
+         if(!m_tls) {
+            // Server is already closed
+            return;
+         }
+
          m_tls->close();
 
          // Need to explicitly destroy the TLS::Server object to break the
@@ -287,6 +292,10 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
       }
 
       void handle_http_request(const HTTP_Parser::Request& request) override {
+         if(!m_tls) {
+            log_error("Received client data after close");
+            return;
+         }
          std::ostringstream response;
          if(request.verb() == "GET") {
             if(request.location() == "/" || request.location() == "/status") {
@@ -382,6 +391,10 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
       }
 
       void tls_alert(Botan::TLS::Alert alert) override {
+         if(!m_tls) {
+            log_error("Received client data after close");
+            return;
+         }
          if(alert.type() == Botan::TLS::Alert::CloseNotify) {
             m_tls->close();
          } else {
