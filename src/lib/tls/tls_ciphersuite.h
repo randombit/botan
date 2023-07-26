@@ -15,9 +15,7 @@
 #include <string>
 #include <vector>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /**
 * Ciphersuite Information
@@ -181,8 +179,6 @@ class BOTAN_PUBLIC_API(2, 0) Ciphersuite final {
       bool m_usable = false;
 };
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

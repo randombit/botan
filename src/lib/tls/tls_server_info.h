@@ -11,9 +11,7 @@
 #include <botan/types.h>
 #include <string>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /**
 * Represents information known about a TLS server.
@@ -90,8 +88,6 @@ inline bool operator<(const Server_Information& a, const Server_Information& b) 
    return false;  // equal
 }
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

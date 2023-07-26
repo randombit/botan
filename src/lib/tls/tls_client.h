@@ -17,9 +17,7 @@
 #include <memory>
 #include <vector>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 class Channel_Impl;
 class Handshake_IO;
@@ -107,7 +105,6 @@ class BOTAN_PUBLIC_API(2, 0) Client final : public Channel {
    private:
       std::unique_ptr<Channel_Impl> m_impl;
 };
-}  // namespace TLS
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

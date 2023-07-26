@@ -11,9 +11,7 @@
 #include <botan/exceptn.h>
 #include <map>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 class Connection_Sequence_Numbers {
    public:
@@ -159,8 +157,6 @@ class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers {
       uint64_t m_window_bits = 0;
 };
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

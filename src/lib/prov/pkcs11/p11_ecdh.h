@@ -19,8 +19,7 @@
    #include <string>
    #include <vector>
 
-namespace Botan {
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 class Session;
 
 /// Represents a PKCS#11 ECDH public key
@@ -119,9 +118,7 @@ BOTAN_PUBLIC_API(2, 0)
 PKCS11_ECDH_KeyPair generate_ecdh_keypair(Session& session,
                                           const EC_PublicKeyGenerationProperties& pub_props,
                                           const EC_PrivateKeyGenerationProperties& priv_props);
-}  // namespace PKCS11
-
-}  // namespace Botan
+}  // namespace Botan::PKCS11
 
 #endif
 #endif

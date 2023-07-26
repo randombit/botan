@@ -104,8 +104,7 @@ inline boost::system::error_code make_error_code(Botan::ErrorType e) {
  * Add a template specialization of `is_error_code_enum` for each kind of error to allow automatic conversion to an
  * error code.
  */
-namespace boost {
-namespace system {
+namespace boost::system {
 
 template <>
 struct is_error_code_enum<Botan::TLS::Alert::Type> {
@@ -122,8 +121,7 @@ struct is_error_code_enum<Botan::ErrorType> {
       static const bool value = true;
 };
 
-}  // namespace system
-}  // namespace boost
+}  // namespace boost::system
 
 #endif  // BOOST_VERSION
 #endif  // BOTAN_ASIO_ERROR_H_

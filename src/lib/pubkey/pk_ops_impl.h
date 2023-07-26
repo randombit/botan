@@ -13,9 +13,7 @@
 #include <botan/internal/eme.h>
 #include <botan/internal/pk_ops.h>
 
-namespace Botan {
-
-namespace PK_Ops {
+namespace Botan::PK_Ops {
 
 class Encryption_with_EME : public Encryption {
    public:
@@ -165,8 +163,6 @@ class KEM_Decryption_with_KDF : public KEM_Decryption {
       std::unique_ptr<KDF> m_kdf;
 };
 
-}  // namespace PK_Ops
-
-}  // namespace Botan
+}  // namespace Botan::PK_Ops
 
 #endif

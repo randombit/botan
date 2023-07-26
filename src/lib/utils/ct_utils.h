@@ -23,9 +23,7 @@
    #include <valgrind/memcheck.h>
 #endif
 
-namespace Botan {
-
-namespace CT {
+namespace Botan::CT {
 
 /**
 * Use valgrind to mark the contents of memory as being undefined.
@@ -350,8 +348,6 @@ inline secure_vector<uint8_t> strip_leading_zeros(const secure_vector<uint8_t>& 
    return strip_leading_zeros(in.data(), in.size());
 }
 
-}  // namespace CT
-
-}  // namespace Botan
+}  // namespace Botan::CT
 
 #endif

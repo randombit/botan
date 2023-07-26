@@ -15,8 +15,7 @@
 #include <string>
 #include <utility>
 
-namespace Botan {
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 /**
 * Simple class to build and hold the data for a CK_MECHANISM struct
@@ -100,8 +99,6 @@ class MechanismWrapper final {
       size_t m_padding_size = 0;
 };
 
-}  // namespace PKCS11
-
-}  // namespace Botan
+}  // namespace Botan::PKCS11
 
 #endif

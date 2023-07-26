@@ -11,9 +11,7 @@
 #include <botan/secmem.h>
 #include <string>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /**
 * Type codes for TLS alerts
@@ -124,8 +122,6 @@ class BOTAN_PUBLIC_API(2, 0) Alert final {
       Type m_type_code;
 };
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

@@ -18,9 +18,7 @@
 #include <utility>
 #include <vector>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 class Handshake_Message;
 
@@ -220,8 +218,6 @@ class Datagram_Handshake_IO final : public Handshake_IO {
       uint16_t m_mtu;
 };
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

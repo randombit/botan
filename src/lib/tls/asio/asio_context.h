@@ -24,8 +24,7 @@
    #include <botan/tls_server_info.h>
    #include <botan/tls_session_manager.h>
 
-namespace Botan {
-namespace TLS {
+namespace Botan::TLS {
 
 namespace detail {
 template <typename FunT>
@@ -98,8 +97,7 @@ class Context {
       Verify_Callback m_verify_callback;
 };
 
-}  // namespace TLS
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif  // BOOST_VERSION
 #endif  // BOTAN_ASIO_TLS_CONTEXT_H_

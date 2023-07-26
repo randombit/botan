@@ -18,8 +18,7 @@
    #include <botan/ecc_key.h>
    #include <vector>
 
-namespace Botan {
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 class Session;
 
@@ -191,9 +190,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_EC_PrivateKey : public virtual Private_Key,
       EC_Point m_public_key;
       PublicPointEncoding m_point_encoding = PublicPointEncoding::Der;
 };
-}  // namespace PKCS11
-
-}  // namespace Botan
+}  // namespace Botan::PKCS11
 
 #endif
 

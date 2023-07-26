@@ -19,8 +19,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace Botan {
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 class Module;
 
@@ -586,8 +585,6 @@ std::vector<T> Object::search(Session& session) {
    return search<T>(session, AttributeContainer(T::Class).attributes());
 }
 
-}  // namespace PKCS11
-
-}  // namespace Botan
+}  // namespace Botan::PKCS11
 
 #endif

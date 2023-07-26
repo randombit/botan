@@ -8,9 +8,7 @@
 #ifndef BOTAN_PK_OPERATIONS_FWD_H_
 #define BOTAN_PK_OPERATIONS_FWD_H_
 
-namespace Botan {
-
-namespace PK_Ops {
+namespace Botan::PK_Ops {
 
 class Encryption;
 class Decryption;
@@ -20,8 +18,6 @@ class Key_Agreement;
 class KEM_Encryption;
 class KEM_Decryption;
 
-}  // namespace PK_Ops
-
-}  // namespace Botan
+}  // namespace Botan::PK_Ops
 
 #endif

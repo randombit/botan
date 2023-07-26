@@ -13,12 +13,7 @@
 #include <string>
 #include <vector>
 
-namespace Botan {
-
-/**
-* This namespace contains functions for handling X.509 public keys
-*/
-namespace X509 {
+namespace Botan::X509 {
 
 /**
 * BER encode a key
@@ -85,8 +80,6 @@ inline std::unique_ptr<Public_Key> copy_key(const Public_Key& key) {
    return X509::load_key(source);
 }
 
-}  // namespace X509
-
-}  // namespace Botan
+}  // namespace Botan::X509
 
 #endif

@@ -12,9 +12,7 @@
 
 BOTAN_DEPRECATED_HEADER("oids.h")
 
-namespace Botan {
-
-namespace OIDS {
+namespace Botan::OIDS {
 
 /**
 * Register an OID to string mapping.
@@ -86,8 +84,6 @@ inline OID lookup(std::string_view name) {
    return OID::from_name(name).value_or(OID());
 }
 
-}  // namespace OIDS
-
-}  // namespace Botan
+}  // namespace Botan::OIDS
 
 #endif

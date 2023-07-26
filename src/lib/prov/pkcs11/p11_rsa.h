@@ -18,8 +18,7 @@
    #include <botan/rsa.h>
    #include <utility>
 
-namespace Botan {
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 /// Properties for generating a PKCS#11 RSA public key
 class BOTAN_PUBLIC_API(2, 0) RSA_PublicKeyGenerationProperties final : public PublicKeyProperties {
@@ -209,9 +208,7 @@ BOTAN_PUBLIC_API(2, 0)
 PKCS11_RSA_KeyPair generate_rsa_keypair(Session& session,
                                         const RSA_PublicKeyGenerationProperties& pub_props,
                                         const RSA_PrivateKeyGenerationProperties& priv_props);
-}  // namespace PKCS11
-
-}  // namespace Botan
+}  // namespace Botan::PKCS11
 #endif
 
 #endif

@@ -16,9 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /**
 * Helper class for decoding TLS protocol messages
@@ -213,8 +211,6 @@ void append_tls_length_value(std::vector<uint8_t, Alloc>& buf, std::string_view 
    append_tls_length_value(buf, cast_char_ptr_to_uint8(str.data()), str.size(), tag_size);
 }
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

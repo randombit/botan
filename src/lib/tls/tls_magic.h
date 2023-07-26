@@ -14,9 +14,7 @@
 
 //BOTAN_FUTURE_INTERNAL_HEADER(tls_magic.h)
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /**
 * Protocol Constants for SSL/TLS
@@ -82,8 +80,6 @@ BOTAN_TEST_API const char* handshake_type_to_string(Handshake_Type t);
 
 using Transcript_Hash = std::vector<uint8_t>;
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

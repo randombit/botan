@@ -18,9 +18,7 @@
 #include <functional>
 #include <vector>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 class Callbacks;
 class Ciphersuite;
@@ -156,8 +154,6 @@ Record_Header read_record(bool is_datagram,
                           const get_cipherstate_fn& get_cipherstate,
                           bool allow_epoch0_restart);
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

@@ -13,9 +13,7 @@
 #include <string>
 #include <vector>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 class Handshake_IO;
 class Handshake_Hash;
@@ -57,8 +55,6 @@ class BOTAN_PUBLIC_API(2, 0) Handshake_Message {
       Handshake_Message& operator=(Handshake_Message&&) = default;
 };
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

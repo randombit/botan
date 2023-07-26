@@ -12,9 +12,7 @@
 #include <chrono>
 #include <string>
 
-namespace Botan {
-
-namespace OS {
+namespace Botan::OS {
 
 /*
 * This header is internal (not installed) and these functions are not
@@ -61,7 +59,6 @@ std::unique_ptr<SocketUDP> BOTAN_TEST_API open_socket_udp(std::string_view hostn
 */
 std::unique_ptr<SocketUDP> BOTAN_TEST_API open_socket_udp(std::string_view uri, std::chrono::microseconds timeout);
 
-}  // namespace OS
-}  // namespace Botan
+}  // namespace Botan::OS
 
 #endif

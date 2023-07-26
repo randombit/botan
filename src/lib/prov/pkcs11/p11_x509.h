@@ -16,8 +16,7 @@
    #include <botan/x509cert.h>
    #include <vector>
 
-namespace Botan {
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 class Session;
 
@@ -89,8 +88,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_X509_Certificate final : public Object,
       PKCS11_X509_Certificate(Session& session, const X509_CertificateProperties& props);
 };
 
-}  // namespace PKCS11
-}  // namespace Botan
+}  // namespace Botan::PKCS11
 
 #endif
 

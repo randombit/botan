@@ -9,13 +9,11 @@
 
 #include <botan/types.h>
 
-namespace Botan {
-
 /**
-* The Sodium namespace contains a partial implementation of the
+* The Botan::Sodium namespace contains a partial implementation of the
 * libsodium API.
 */
-namespace Sodium {
+namespace Botan::Sodium {
 
 // sodium/randombytes.h
 enum Sodium_Constants : size_t {
@@ -1310,8 +1308,6 @@ inline int crypto_sign_verify_detached(const uint8_t sig[], const uint8_t in[], 
    return crypto_sign_ed25519_verify_detached(sig, in, in_len, pk);
 }
 
-}  // namespace Sodium
-
-}  // namespace Botan
+}  // namespace Botan::Sodium
 
 #endif

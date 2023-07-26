@@ -14,9 +14,7 @@
 #include <botan/mac.h>
 #include <botan/tls_version.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /**
 * TLS CBC+HMAC AEAD base class (GenericBlockCipher in TLS spec)
@@ -179,8 +177,6 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Decryption final : public TLS_CBC_HMAC_AE
 */
 BOTAN_TEST_API uint16_t check_tls_cbc_padding(const uint8_t record[], size_t record_len);
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

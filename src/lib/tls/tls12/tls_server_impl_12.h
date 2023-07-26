@@ -14,9 +14,7 @@
 #include <botan/internal/tls_channel_impl_12.h>
 #include <vector>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 class Server_Handshake_State;
 
@@ -106,8 +104,6 @@ class Server_Impl_12 : public Channel_Impl_12 {
       std::string m_next_protocol;
 };
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

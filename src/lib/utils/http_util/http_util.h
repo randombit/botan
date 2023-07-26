@@ -16,9 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace Botan {
-
-namespace HTTP {
+namespace Botan::HTTP {
 
 /**
 * HTTP_Error Exception
@@ -91,8 +89,6 @@ Response POST_sync(std::string_view url,
 
 std::string url_encode(std::string_view url);
 
-}  // namespace HTTP
-
-}  // namespace Botan
+}  // namespace Botan::HTTP
 
 #endif
