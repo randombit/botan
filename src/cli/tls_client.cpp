@@ -31,6 +31,8 @@
    #include "socket_utils.h"
    #include "tls_helpers.h"
 
+   #include <iostream>
+
 namespace Botan_CLI {
 
 class TLS_Client;
@@ -109,6 +111,9 @@ class Callbacks : public Botan::TLS::Callbacks {
             output() << "<< " << Botan::hex_encode(buf) << "\n";
          }
 
+         static unsigned int record_number = 0;
+         std::cout << "Record " << (++record_number) << " = " << Botan::hex_encode(buf) << std::endl;
+
          send(buf);
       }
 
@@ -127,6 +132,17 @@ class Callbacks : public Botan::TLS::Callbacks {
                                             const std::vector<uint8_t>& msg) override {
          output() << "Performing client authentication\n";
          return Botan::TLS::Callbacks::tls_sign_message(key, rng, padding, format, msg);
+      }
+
+      std::chrono::system_clock::time_point tls_current_timestamp() override {
+         const int64_t msecs = 1651826546100;
+
+         const int64_t secs_since_epoch = msecs / 1000;
+         const uint32_t additional_millis = msecs % 1000;
+
+         BOTAN_ASSERT_NOMSG(secs_since_epoch <= std::numeric_limits<time_t>::max());
+         return std::chrono::system_clock::from_time_t(static_cast<time_t>(secs_since_epoch)) +
+                std::chrono::milliseconds(additional_millis);
       }
 
    private:
@@ -246,7 +262,7 @@ class TLS_Client final : public Command {
                                    creds,
                                    policy,
                                    rng_as_shared(),
-                                   Botan::TLS::Server_Information(hostname, port),
+                                   Botan::TLS::Server_Information("server", port),
                                    version,
                                    protocols_to_offer);
 

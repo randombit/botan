@@ -29,6 +29,7 @@
    #include <botan/hex.h>
    #include <botan/mem_ops.h>
    #include <botan/tls_callbacks.h>
+   #include <botan/tls_messages.h>
    #include <botan/tls_policy.h>
    #include <botan/tls_server.h>
    #include <botan/tls_session_manager_memory.h>
@@ -37,6 +38,8 @@
    #include <fstream>
    #include <list>
    #include <memory>
+
+   #include <iostream>
 
    #include "socket_utils.h"
    #include "tls_helpers.h"
@@ -84,7 +87,22 @@ class Callbacks : public Botan::TLS::Callbacks {
          }
       }
 
-      void tls_emit_data(std::span<const uint8_t> buf) override { send(buf); }
+      void tls_emit_data(std::span<const uint8_t> buf) override {
+         static unsigned int record_number = 0;
+         std::cout << "Record " << (++record_number) << " = " << Botan::hex_encode(buf) << std::endl;
+         send(buf);
+      }
+
+      void tls_inspect_handshake_msg(const Botan::TLS::Handshake_Message& message) override {
+         std::vector<uint8_t> msg_with_header;
+         msg_with_header.push_back(static_cast<uint8_t>(message.type()));
+         const auto msg = message.serialize();
+         msg_with_header.push_back(static_cast<uint8_t>(msg.size() >> 16));
+         msg_with_header.push_back(static_cast<uint8_t>(msg.size() >> 8));
+         msg_with_header.push_back(static_cast<uint8_t>(msg.size() >> 0));
+         msg_with_header.insert(msg_with_header.end(), msg.begin(), msg.end());
+         std::cout << "Message " << message.type_string() << " = " << Botan::hex_encode(msg_with_header) << std::endl;
+      }
 
       void tls_alert(Botan::TLS::Alert alert) override { output() << "Alert: " << alert.type_string() << std::endl; }
 

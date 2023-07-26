@@ -26,6 +26,9 @@
    #include <botan/curve25519.h>
 #endif
 
+#include <botan/hex.h>
+#include <iostream>
+
 namespace Botan {
 
 void TLS::Callbacks::tls_inspect_handshake_msg(const Handshake_Message& /*unused*/) {
@@ -195,7 +198,9 @@ std::unique_ptr<PK_Key_Agreement_Key> TLS::Callbacks::tls_generate_ephemeral_key
 
 #if defined(BOTAN_HAS_CURVE_25519)
    if(is_x25519(group_params)) {
-      return std::make_unique<X25519_PrivateKey>(rng);
+      auto key = std::make_unique<X25519_PrivateKey>(rng);
+      std::cout << "Private Key Bits: " << Botan::hex_encode(key->raw_private_key_bits()) << std::endl;
+      return key;
    }
 #endif
 

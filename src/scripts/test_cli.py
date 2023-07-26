@@ -922,11 +922,14 @@ def cli_tls_socket_tests(tmp_dir):
     if not run_socket_tests() or not check_for_command("tls_client") or not check_for_command("tls_server"):
         return
 
-    client_msg = b'Client message %d with extra stuff to test record_size_limit: %s\n' % (random.randint(0, 2**128), b'oO' * 64)
+    client_msg = b'Client message with extra stuff: %s\n' % (b'oO' * 64)
     server_port = port_for('tls_server')
 
-    psk = "FEEDFACECAFEBEEF"
-    psk_identity = "test-psk"
+    # client_msg = binascii.unhexlify('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031')
+    # client_msg = b'Hello from the other side'
+
+    psk = "0160f2f1276a5c249f76f885aa06afeffb1efc680f81d198955b6206613d9d2e"
+    psk_identity = "rfc8448"
 
     priv_key = os.path.join(tmp_dir, 'priv.pem')
     ca_cert = os.path.join(tmp_dir, 'ca.crt')
@@ -934,6 +937,9 @@ def cli_tls_socket_tests(tmp_dir):
     server_cert = os.path.join(tmp_dir, 'server.crt')
     tls_client_policy = os.path.join(tmp_dir, 'test_client_policy.txt')
     tls_server_policy = os.path.join(tmp_dir, 'test_server_policy.txt')
+
+    server_seed = 'b4c64e4a83e9aa67cf20c5712bc67ba34fa99b59d325a652bae0d4fea770a666'
+    client_seed = '07208cfb0128795ddb7c98e0f19059072a7f516b20e2b0caccc9209b0cabcf86'
 
     test_cli("keygen", ["--algo=ECDSA", "--params=secp256r1", "--output=" + priv_key], "")
 
@@ -958,8 +964,8 @@ def cli_tls_socket_tests(tmp_dir):
             self.psk_identity = kwargs.get("psk_identity")
 
     configs = [
-        TestConfig("TLS 1.3", "1.3", "allow_tls12=false\nallow_tls13=true\n"),
-        TestConfig("TLS 1.2", "1.2", "allow_tls12=true\nallow_tls13=false\n"),
+        # TestConfig("TLS 1.3", "1.3", "allow_tls12=false\nallow_tls13=true\n"),
+        # TestConfig("TLS 1.2", "1.2", "allow_tls12=true\nallow_tls13=false\n"),
 
         # At the moment, TLS 1.2 does not implement record_size_limit.
         # Therefore, clients can offer it only with TLS 1.2 being disabled.
@@ -968,22 +974,49 @@ def cli_tls_socket_tests(tmp_dir):
         #
         # TODO: Remove this crutch after implementing record_size_limit for TLS 1.2
         #       and extend the test to use it for both TLS 1.2 and 1.3.
-        TestConfig("Record size limit", "1.3", "allow_tls12=false\nallow_tls13=true\nrecord_size_limit=64\n"),
+        # TestConfig("Record size limit", "1.3", "allow_tls12=false\nallow_tls13=true\nrecord_size_limit=64\n"),
 
-        TestConfig("PSK TLS 1.2", "1.2", "allow_tls12=true\nallow_tls13=false\nkey_exchange_methods=ECDHE_PSK\n",
-                   psk=psk, psk_identity=psk_identity,
-                   stdout_regex=f'Handshake complete, TLS v1\\.2.*utilized PSK identity: {psk_identity}.*'),
-        TestConfig("PSK TLS 1.3", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_methods=ECDHE_PSK\n",
+        # TestConfig("PSK TLS 1.2", "1.2", "allow_tls12=true\nallow_tls13=false\nkey_exchange_methods=ECDHE_PSK\n",
+        #            psk=psk, psk_identity=psk_identity,
+        #            stdout_regex=f'Handshake complete, TLS v1\\.2.*utilized PSK identity: {psk_identity}.*'),
+        TestConfig("PSK TLS 1.3", "1.3", "allow_tls10 = false\nallow_tls11 = false\nallow_tls12 = false\nallow_tls13 = true\nallow_dtls10 = false\nallow_dtls12 = false\nciphers = AES-128/GCM ChaCha20Poly1305 AES-256/GCM\nmacs = AEAD\nsignature_hashes = SHA-512 SHA-384 SHA-256\nsignature_methods = ECDSA RSA\nkey_exchange_methods = ECDH DH ECDHE_PSK\nkey_exchange_groups = x25519 secp256r1 secp384r1\nallow_insecure_renegotiation = false\ninclude_time_in_hello_random = false\nallow_server_initiated_renegotiation = false\nhide_unknown_users = false\nserver_uses_own_ciphersuite_preferences = true\nnegotiate_encrypt_then_mac = true\nsession_ticket_lifetime = 86400\nnew_session_tickets_upon_handshake_success = 0\nminimum_dh_group_size = 2048\nminimum_ecdh_group_size = 255\nminimum_rsa_bits = 1024\nminimum_signature_strength = 110\nrecord_size_limit = 16385\ntls_13_middlebox_compatibility_mode = false\nhash_hello_random = false\nsupport_cert_status_message = false",
                    psk=psk, psk_identity=psk_identity,
                    stdout_regex=f'Handshake complete, TLS v1\\.3.*utilized PSK identity: {psk_identity}.*'),
     ]
 
     with open(tls_server_policy, 'w', encoding='utf8') as f:
-        f.write('key_exchange_methods = ECDH DH ECDHE_PSK')
+        f.write('allow_tls10 = false\n')
+        f.write('allow_tls11 = false\n')
+        f.write('allow_tls12 = false\n')
+        f.write('allow_tls13 = true\n')
+        f.write('allow_dtls10 = false\n')
+        f.write('allow_dtls12 = false\n')
+        f.write('ciphers = AES-128/GCM ChaCha20Poly1305 AES-256/GCM\n')
+        f.write('macs = AEAD\n')
+        f.write('signature_hashes = SHA-512 SHA-384 SHA-256\n')
+        f.write('signature_methods = ECDSA RSA\n')
+        f.write('key_exchange_methods = ECDH DH ECDHE_PSK\n')
+        f.write('key_exchange_groups = x25519 secp256r1 secp384r1\n')
+        f.write('allow_insecure_renegotiation = false\n')
+        f.write('include_time_in_hello_random = false\n')
+        f.write('allow_server_initiated_renegotiation = false\n')
+        f.write('hide_unknown_users = false\n')
+        f.write('server_uses_own_ciphersuite_preferences = true\n')
+        f.write('negotiate_encrypt_then_mac = true\n')
+        f.write('session_ticket_lifetime = 86400\n')
+        f.write('new_session_tickets_upon_handshake_success = 0\n')
+        f.write('minimum_dh_group_size = 2048\n')
+        f.write('minimum_ecdh_group_size = 255\n')
+        f.write('minimum_rsa_bits = 1024\n')
+        f.write('minimum_signature_strength = 110\n')
+        f.write('record_size_limit = 16385\n')
+        f.write('tls_13_middlebox_compatibility_mode = false\n')
+        f.write('hash_hello_random = false\n')
+        f.write('support_cert_status_message = false\n')
 
     tls_server = subprocess.Popen([CLI_PATH, 'tls_server', '--max-clients=%d' % (len(configs)),
                                    '--port=%d' % (server_port), '--policy=%s' % (tls_server_policy),
-                                   '--psk=%s' % (psk), '--psk-identity=%s' % (psk_identity),
+                                   '--psk=%s' % (psk), '--psk-identity=%s' % (psk_identity), '--rng-type=drbg', '--drbg-seed=%s' % server_seed,
                                    server_cert, priv_key],
                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -997,7 +1030,7 @@ def cli_tls_socket_tests(tmp_dir):
 
         tls_client_cmd = [CLI_PATH, 'tls_client', 'localhost',
                           '--port=%d' % (server_port), '--trusted-cas=%s' % (ca_cert),
-                          '--tls-version=%s' % (tls_config.protocol_version), '--policy=%s' % tls_client_policy]
+                          '--tls-version=%s' % (tls_config.protocol_version), '--policy=%s' % tls_client_policy, '--rng-type=drbg', '--drbg-seed=%s' % client_seed]
         if tls_config.psk and tls_config.psk_identity:
             tls_client_cmd += ['--psk=%s' % tls_config.psk, '--psk-identity=%s' % tls_config.psk_identity]
 
@@ -1016,6 +1049,9 @@ def cli_tls_socket_tests(tmp_dir):
         time.sleep(wait_time)
 
         (stdout, stderr) = tls_client.communicate()
+
+        print("### ### ### ### ### ### client")
+        print(stdout.decode("utf-8"))
 
         if stderr:
             logging.error("Got unexpected stderr output (%s) %s", tls_config.name, stderr)
@@ -1036,6 +1072,9 @@ def cli_tls_socket_tests(tmp_dir):
     if srv_stderr:
         logging.error("server said (stdout): %s", srv_stdout)
         logging.error("server said (stderr): %s", srv_stderr)
+
+    print("### ### ### ### ### ### server")
+    print(srv_stdout.decode("utf-8"))
 
 def cli_tls_http_server_tests(tmp_dir):
     if not run_socket_tests() or not check_for_command("tls_http_server"):

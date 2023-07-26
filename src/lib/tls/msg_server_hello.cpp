@@ -24,6 +24,9 @@
 
 #include <array>
 
+#include <botan/hex.h>
+#include <iostream>
+
 namespace Botan::TLS {
 
 namespace {
@@ -715,6 +718,8 @@ Server_Hello_13::Server_Hello_13(const Client_Hello_13& ch,
          choose_ciphersuite(ch, policy),
          uint8_t(0) /* compression method */
          )) {
+   std::cout << "Server Hello Random: " << Botan::hex_encode(m_data->random()) << std::endl;
+
    // RFC 8446 4.2.1
    //    A server which negotiates TLS 1.3 MUST respond by sending a
    //    "supported_versions" extension containing the selected version
