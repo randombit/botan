@@ -122,8 +122,9 @@ template <typename T>
 constexpr uint8_t ceil_log2(T x)
    requires(std::is_integral<T>::value && sizeof(T) < 32)
 {
-   if(x >> (sizeof(T) * 8 - 1))
+   if(x >> (sizeof(T) * 8 - 1)) {
       return sizeof(T) * 8;
+   }
 
    uint8_t result = 0;
    T compare = 1;
@@ -149,8 +150,9 @@ inline constexpr T ceil_tobytes(T bits)
 // Potentially variable time ctz used for OCB
 inline constexpr size_t var_ctz32(uint32_t n) {
 #if BOTAN_COMPILER_HAS_BUILTIN(__builtin_ctz)
-   if(n == 0)
+   if(n == 0) {
       return 32;
+   }
    return __builtin_ctz(n);
 #else
    return ctz<uint32_t>(n);

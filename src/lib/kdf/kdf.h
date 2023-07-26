@@ -213,11 +213,13 @@ BOTAN_DEPRECATED("Use KDF::create")
 
 inline KDF* get_kdf(std::string_view algo_spec) {
    auto kdf = KDF::create(algo_spec);
-   if(kdf)
+   if(kdf) {
       return kdf.release();
+   }
 
-   if(algo_spec == "Raw")
+   if(algo_spec == "Raw") {
       return nullptr;
+   }
 
    throw Algorithm_Not_Found(algo_spec);
 }

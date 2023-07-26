@@ -114,8 +114,9 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
          if(type == "tls-client") {
             for(const auto& dn : acceptable_cas) {
                for(const auto& cred : m_creds) {
-                  if(dn == cred.certs[0].issuer_dn())
+                  if(dn == cred.certs[0].issuer_dn()) {
                      return cred.certs;
+                  }
                }
             }
          } else if(type == "tls-server") {

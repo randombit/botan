@@ -64,8 +64,9 @@ inline std::optional<size_t> checked_mul(size_t x, size_t y) {
 template <typename RT, typename AT>
 RT checked_cast_to(AT i) {
    RT c = static_cast<RT>(i);
-   if(i != static_cast<AT>(c))
+   if(i != static_cast<AT>(c)) {
       throw Internal_Error("Error during integer conversion");
+   }
    return c;
 }
 

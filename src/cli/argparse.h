@@ -51,21 +51,25 @@ class Argument_Parser final {
 
 std::vector<std::string> Argument_Parser::split_on(const std::string& str, char delim) {
    std::vector<std::string> elems;
-   if(str.empty())
+   if(str.empty()) {
       return elems;
+   }
 
    std::string substr;
    for(auto i = str.begin(); i != str.end(); ++i) {
       if(*i == delim) {
-         if(!substr.empty())
+         if(!substr.empty()) {
             elems.push_back(substr);
+         }
          substr.clear();
-      } else
+      } else {
          substr += *i;
+      }
    }
 
-   if(substr.empty())
+   if(substr.empty()) {
       throw CLI_Error("Unable to split string: " + str);
+   }
    elems.push_back(substr);
 
    return elems;
@@ -107,8 +111,9 @@ size_t Argument_Parser::get_arg_sz(const std::string& opt_name) const {
 }
 
 std::vector<std::string> Argument_Parser::get_arg_list(const std::string& what) const {
-   if(what == m_spec_rest)
+   if(what == m_spec_rest) {
       return m_user_rest;
+   }
 
    return split_on(get_arg(what), ',');
 }
@@ -151,8 +156,9 @@ void Argument_Parser::parse_args(const std::vector<std::string>& params) {
       }
    }
 
-   if(flag_set("help"))
+   if(flag_set("help")) {
       return;
+   }
 
    if(args.size() < m_spec_args.size()) {
       // not enough arguments
@@ -242,10 +248,12 @@ Argument_Parser::Argument_Parser(const std::string& spec,
       }
    }
 
-   for(std::string flag : extra_flags)
+   for(std::string flag : extra_flags) {
       m_spec_flags.insert(flag);
-   for(std::string opt : extra_opts)
+   }
+   for(std::string opt : extra_opts) {
       m_spec_opts.insert(std::make_pair(opt, ""));
+   }
 }
 
 }  // namespace Botan_CLI

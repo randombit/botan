@@ -201,8 +201,9 @@ template <typename T>
 inline bool same_mem(const T* p1, const T* p2, size_t n) {
    volatile T difference = 0;
 
-   for(size_t i = 0; i != n; ++i)
+   for(size_t i = 0; i != n; ++i) {
       difference = difference | (p1[i] ^ p2[i]);
+   }
 
    return difference == 0;
 }
@@ -302,8 +303,9 @@ void xor_buf(std::vector<uint8_t, Alloc>& out, const uint8_t* in, const std::vec
 
 template <typename Alloc, typename Alloc2>
 std::vector<uint8_t, Alloc>& operator^=(std::vector<uint8_t, Alloc>& out, const std::vector<uint8_t, Alloc2>& in) {
-   if(out.size() < in.size())
+   if(out.size() < in.size()) {
       out.resize(in.size());
+   }
 
    xor_buf(out.data(), in.data(), in.size());
    return out;

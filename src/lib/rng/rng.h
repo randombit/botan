@@ -228,8 +228,9 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       */
       uint8_t next_nonzero_byte() {
          uint8_t b = this->next_byte();
-         while(b == 0)
+         while(b == 0) {
             b = this->next_byte();
+         }
          return b;
       }
 

@@ -243,8 +243,9 @@ class Mask final {
       * cleared (resp)
       */
       void select_n(T output[], const T x[], const T y[], size_t len) const {
-         for(size_t i = 0; i != len; ++i)
+         for(size_t i = 0; i != len; ++i) {
             output[i] = this->select(x[i], y[i]);
+         }
       }
 
       /**
@@ -319,8 +320,9 @@ inline void conditional_swap_ptr(bool cnd, T& x, T& y) {
 template <typename T>
 inline CT::Mask<T> all_zeros(const T elem[], size_t len) {
    T sum = 0;
-   for(size_t i = 0; i != len; ++i)
+   for(size_t i = 0; i != len; ++i) {
       sum |= elem[i];
+   }
    return CT::Mask<T>::is_zero(sum);
 }
 

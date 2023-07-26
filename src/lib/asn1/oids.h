@@ -68,8 +68,9 @@ BOTAN_DEPRECATED("Use OID::human_name_or_empty")
 
 inline std::string oid2str_or_throw(const OID& oid) {
    std::string s = oid.human_name_or_empty();
-   if(s.empty())
+   if(s.empty()) {
       throw Lookup_Error("No name associated with OID " + oid.to_string());
+   }
    return s;
 }
 

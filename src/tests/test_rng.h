@@ -69,10 +69,11 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator {
 
       uint8_t random() {
          if(m_buf.empty()) {
-            if(m_fallback.has_value())
+            if(m_fallback.has_value()) {
                return m_fallback.value()->next_byte();
-            else
+            } else {
                throw Test_Error("Fixed output RNG ran out of bytes, test bug?");
+            }
          }
 
          uint8_t out = m_buf.front();
@@ -178,10 +179,12 @@ class Request_Counting_RNG final : public Botan::RandomNumberGenerator {
          The HMAC_DRBG and ChaCha reseed KATs assume this RNG type
          outputs all 0x80
          */
-         for(auto& out : output)
+         for(auto& out : output) {
             out = 0x80;
-         if(!output.empty())
+         }
+         if(!output.empty()) {
             m_randomize_count++;
+         }
       }
 
    private:

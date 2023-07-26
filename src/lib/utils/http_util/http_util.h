@@ -49,8 +49,9 @@ class Response final {
       std::string status_message() const { return m_status_message; }
 
       void throw_unless_ok() {
-         if(status_code() != 200)
+         if(status_code() != 200) {
             throw HTTP_Error(status_message());
+         }
       }
 
    private:

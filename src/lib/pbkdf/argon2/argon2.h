@@ -157,14 +157,15 @@ inline void argon2(uint8_t output[],
                    size_t t) {
    std::unique_ptr<PasswordHashFamily> pwdhash_fam;
 
-   if(y == 0)
+   if(y == 0) {
       pwdhash_fam = PasswordHashFamily::create_or_throw("Argon2d");
-   else if(y == 1)
+   } else if(y == 1) {
       pwdhash_fam = PasswordHashFamily::create_or_throw("Argon2i");
-   else if(y == 2)
+   } else if(y == 2) {
       pwdhash_fam = PasswordHashFamily::create_or_throw("Argon2id");
-   else
+   } else {
       throw Not_Implemented("Unknown Argon2 family type");
+   }
 
    auto pwdhash = pwdhash_fam->from_params(M, t, p);
 

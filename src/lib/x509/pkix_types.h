@@ -39,13 +39,15 @@ class BOTAN_PUBLIC_API(2, 0) X509_DN final : public ASN1_Object {
       X509_DN() = default;
 
       explicit X509_DN(const std::multimap<OID, std::string>& args) {
-         for(auto i : args)
+         for(auto i : args) {
             add_attribute(i.first, i.second);
+         }
       }
 
       explicit X509_DN(const std::multimap<std::string, std::string>& args) {
-         for(auto i : args)
+         for(auto i : args) {
             add_attribute(i.first, i.second);
+         }
       }
 
       void encode_into(DER_Encoder&) const override;

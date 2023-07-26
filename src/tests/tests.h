@@ -318,18 +318,20 @@ class Test {
 
             template <typename T>
             bool test_not_null(const std::string& what, const T& ptr) {
-               if(ptr == nullptr)
+               if(ptr == nullptr) {
                   return test_failure(what + " was null");
-               else
+               } else {
                   return test_success(what + " was not null");
+               }
             }
 
             template <typename T>
             bool test_not_nullopt(const std::string& what, std::optional<T> val) {
-               if(val == std::nullopt)
+               if(val == std::nullopt) {
                   return test_failure(what + " was nullopt");
-               else
+               } else {
                   return test_success(what + " was not nullopt");
+               }
             }
 
             bool test_eq(const std::string& what, const char* produced, const char* expected);
@@ -525,18 +527,19 @@ class Test {
          private:
             template <typename T>
             std::string to_string(const T& v) {
-               if constexpr(detail::is_optional_v<T>)
+               if constexpr(detail::is_optional_v<T>) {
                   return (v.has_value()) ? to_string(v.value()) : std::string("std::nullopt");
-               else if constexpr(detail::has_Botan_to_string<T>)
+               } else if constexpr(detail::has_Botan_to_string<T>) {
                   return Botan::to_string(v);
-               else if constexpr(detail::has_ostream_operator<T>) {
+               } else if constexpr(detail::has_ostream_operator<T>) {
                   std::ostringstream oss;
                   oss << v;
                   return oss.str();
-               } else if constexpr(detail::has_std_to_string<T>)
+               } else if constexpr(detail::has_std_to_string<T>) {
                   return std::to_string(v);
-               else
+               } else {
                   return "<?>";
+               }
             }
 
          private:

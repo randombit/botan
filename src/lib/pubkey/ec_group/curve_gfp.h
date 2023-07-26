@@ -185,8 +185,9 @@ class BOTAN_UNSTABLE_API CurveGFp final {
       * @return true iff *this is the same as other
       */
       inline bool operator==(const CurveGFp& other) const {
-         if(m_repr.get() == other.m_repr.get())
+         if(m_repr.get() == other.m_repr.get()) {
             return true;
+         }
 
          return (get_p() == other.get_p()) && (get_a() == other.get_a()) && (get_b() == other.get_b());
       }

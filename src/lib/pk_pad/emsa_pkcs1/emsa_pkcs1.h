@@ -68,10 +68,11 @@ class EMSA_PKCS1v15_Raw final : public EMSA {
       std::string hash_function() const override { return m_hash_name; }
 
       std::string name() const override {
-         if(m_hash_name.empty())
+         if(m_hash_name.empty()) {
             return "EMSA3(Raw)";
-         else
+         } else {
             return "EMSA3(Raw," + m_hash_name + ")";
+         }
       }
 
    private:

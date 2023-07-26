@@ -122,15 +122,17 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
 
       template <typename T>
       DER_Encoder& encode_optional(const T& value, const T& default_value) {
-         if(value != default_value)
+         if(value != default_value) {
             encode(value);
+         }
          return (*this);
       }
 
       template <typename T>
       DER_Encoder& encode_list(const std::vector<T>& values) {
-         for(size_t i = 0; i != values.size(); ++i)
+         for(size_t i = 0; i != values.size(); ++i) {
             encode(values[i]);
+         }
          return (*this);
       }
 
@@ -143,14 +145,16 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
       * Conditionally write some values to the stream
       */
       DER_Encoder& encode_if(bool pred, DER_Encoder& enc) {
-         if(pred)
+         if(pred) {
             return raw_bytes(enc.get_contents());
+         }
          return (*this);
       }
 
       DER_Encoder& encode_if(bool pred, const ASN1_Object& obj) {
-         if(pred)
+         if(pred) {
             encode(obj);
+         }
          return (*this);
       }
 

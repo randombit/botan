@@ -32,8 +32,9 @@ class Stream_Cipher_Mode final : public Cipher_Mode {
       size_t ideal_granularity() const override {
          const size_t buf_size = m_cipher->buffer_size();
          BOTAN_ASSERT_NOMSG(buf_size > 0);
-         if(buf_size >= 256)
+         if(buf_size >= 256) {
             return buf_size;
+         }
          return buf_size * (256 / buf_size);
       }
 

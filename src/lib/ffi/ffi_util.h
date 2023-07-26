@@ -8,6 +8,7 @@
 #define BOTAN_FFI_UTILS_H_
 
 #include <botan/exceptn.h>
+#include <botan/ffi.h>
 #include <botan/mem_ops.h>
 #include <cstdint>
 #include <functional>
@@ -60,13 +61,16 @@ int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc = 
 
 template <typename T, uint32_t M>
 T& safe_get(botan_struct<T, M>* p) {
-   if(!p)
+   if(!p) {
       throw FFI_Error("Null pointer argument", BOTAN_FFI_ERROR_NULL_POINTER);
-   if(p->magic_ok() == false)
+   }
+   if(p->magic_ok() == false) {
       throw FFI_Error("Bad magic in ffi object", BOTAN_FFI_ERROR_INVALID_OBJECT);
+   }
 
-   if(T* t = p->unsafe_get())
+   if(T* t = p->unsafe_get()) {
       return *t;
+   }
 
    throw FFI_Error("Invalid object pointer", BOTAN_FFI_ERROR_INVALID_OBJECT);
 }
@@ -79,15 +83,18 @@ int botan_ffi_visit(botan_struct<T, M>* o, F func, const char* func_name) {
    static_assert(std::is_void_v<RetT> || std::is_same_v<RetT, BOTAN_FFI_ERROR> || std::is_same_v<RetT, int>,
                  "BOTAN_FFI_DO must be used with a block that returns either nothing, int or BOTAN_FFI_ERROR");
 
-   if(!o)
+   if(!o) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
-   if(o->magic_ok() == false)
+   if(o->magic_ok() == false) {
       return BOTAN_FFI_ERROR_INVALID_OBJECT;
+   }
 
    T* p = o->unsafe_get();
-   if(p == nullptr)
+   if(p == nullptr) {
       return BOTAN_FFI_ERROR_INVALID_OBJECT;
+   }
 
    if constexpr(std::is_void_v<RetT>) {
       return ffi_guard_thunk(func_name, [&] {
@@ -120,11 +127,13 @@ template <typename T, uint32_t M>
 int ffi_delete_object(botan_struct<T, M>* obj, const char* func_name) {
    return ffi_guard_thunk(func_name, [=]() -> int {
       // ignore delete of null objects
-      if(obj == nullptr)
+      if(obj == nullptr) {
          return BOTAN_FFI_SUCCESS;
+      }
 
-      if(obj->magic_ok() == false)
+      if(obj->magic_ok() == false) {
          return BOTAN_FFI_ERROR_INVALID_OBJECT;
+      }
 
       delete obj;
       return BOTAN_FFI_SUCCESS;
@@ -160,8 +169,9 @@ int copy_view_bin(uint8_t out[], size_t* out_len, Fn fn, Args... args) {
 
 template <typename Fn, typename... Args>
 int copy_view_str(uint8_t out[], size_t* out_len, Fn fn, Args... args) {
-   if(fn == nullptr)
+   if(fn == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
    botan_view_bounce_struct ctx;
    ctx.out_ptr = out;
    ctx.out_len = out_len;
@@ -169,8 +179,9 @@ int copy_view_str(uint8_t out[], size_t* out_len, Fn fn, Args... args) {
 }
 
 inline int write_output(uint8_t out[], size_t* out_len, const uint8_t buf[], size_t buf_len) {
-   if(out_len == nullptr)
+   if(out_len == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
 
    const size_t avail = *out_len;
    *out_len = buf_len;
