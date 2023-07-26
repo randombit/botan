@@ -158,7 +158,10 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks {
          return false;
       }
 
-      void tls_session_established(const Botan::TLS::Session_Summary&) override {
+      void tls_session_established(const Botan::TLS::Session_Summary& summary) override {
+         if(summary.psk_used()) {
+            negotiated_psk_identity = summary.external_psk_identity().value();
+         }
          count_callback_invocation("tls_session_established");
       }
 
@@ -323,6 +326,7 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks {
    public:
       bool session_activated_called;                           // NOLINT(*-non-private-member-variables-in-classes)
       std::vector<Botan::X509_Certificate> certificate_chain;  // NOLINT(*-non-private-member-variables-in-classes)
+      std::string negotiated_psk_identity;                     // NOLINT(*-non-private-member-variables-in-classes)
       std::map<std::string, std::vector<std::vector<uint8_t>>>
          serialized_messages;  // NOLINT(*-non-private-member-variables-in-classes)
 
@@ -339,8 +343,9 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks {
 
 class Test_Credentials : public Botan::Credentials_Manager {
    public:
-      explicit Test_Credentials(bool use_alternative_server_certificate) :
-            m_alternative_server_certificate(use_alternative_server_certificate) {
+      explicit Test_Credentials(bool use_alternative_server_certificate, std::optional<ExternalPSK> external_psk) :
+            m_alternative_server_certificate(use_alternative_server_certificate),
+            m_external_psk(std::move(external_psk)) {
          Botan::DataSource_Memory in(Test::read_data_file("tls_13_rfc8448/server_key.pem"));
          m_server_private_key.reset(Botan::PKCS8::load_key(in).release());
 
@@ -379,8 +384,36 @@ class Test_Credentials : public Botan::Credentials_Manager {
          return m_server_private_key;
       }
 
+      std::vector<TLS::ExternalPSK> find_preshared_keys(std::string_view /* host */,
+                                                        TLS::Connection_Side /* whoami */,
+                                                        const std::vector<std::string>& identities,
+                                                        const std::optional<std::string>& prf) override {
+         if(!m_external_psk.has_value()) {
+            return {};
+         }
+
+         ExternalPSK& epsk = m_external_psk.value();
+         const auto found = std::find(identities.begin(), identities.end(), epsk.identity());
+         if(!identities.empty() && found == identities.end()) {
+            return {};
+         }
+
+         if(prf && prf != epsk.prf_algo()) {
+            return {};
+         }
+
+         // ExternalPSK has a deleted copy constructor. We need to do some gymnastics
+         // to copy it and leave the data in m_external_psk intact
+         const auto secret = epsk.extract_master_secret();
+         m_external_psk = ExternalPSK(epsk.identity(), epsk.prf_algo(), secret);
+         std::vector<ExternalPSK> psks;
+         psks.emplace_back(epsk.identity(), epsk.prf_algo(), secret);
+         return psks;
+      }
+
    private:
       bool m_alternative_server_certificate;
+      std::optional<ExternalPSK> m_external_psk;
       std::shared_ptr<Private_Key> m_client_private_key;
       std::shared_ptr<Private_Key> m_bogus_alternative_server_private_key;
       std::shared_ptr<Private_Key> m_server_private_key;
@@ -400,9 +433,14 @@ class RFC8448_Text_Policy : public Botan::TLS::Text_Policy {
       }
 
    public:
-      RFC8448_Text_Policy(const std::string& policy_file) : Botan::TLS::Text_Policy(read_policy(policy_file)) {}
+      RFC8448_Text_Policy(const std::string& policy_file, bool rfc8448 = true) :
+            Botan::TLS::Text_Policy(read_policy(policy_file)), m_rfc8448(rfc8448) {}
 
       std::vector<Botan::TLS::Signature_Scheme> allowed_signature_schemes() const override {
+         if(!m_rfc8448) {
+            return Botan::TLS::Text_Policy::allowed_signature_schemes();
+         }
+
          // We extend the allowed signature schemes with algorithms that we don't
          // actually support. The nature of the RFC 8448 test forces us to generate
          // bit-compatible TLS messages. Unfortunately, the test data offers all
@@ -441,6 +479,9 @@ class RFC8448_Text_Policy : public Botan::TLS::Text_Policy {
 
          return selected_group != supported_by_us.end() ? *selected_group : Named_Group::NONE;
       }
+
+   private:
+      bool m_rfc8448;
 };
 
 /**
@@ -548,10 +589,11 @@ class TLS_Context {
                   std::vector<MockSignature> mock_signatures,
                   uint64_t timestamp,
                   std::optional<std::pair<Session, Session_Ticket>> session_and_ticket,
+                  std::optional<ExternalPSK> external_psk,
                   bool use_alternative_server_certificate) :
             m_callbacks(std::make_shared<Test_TLS_13_Callbacks>(
                std::move(modify_exts_cb), std::move(mock_signatures), timestamp)),
-            m_creds(std::make_shared<Test_Credentials>(use_alternative_server_certificate)),
+            m_creds(std::make_shared<Test_Credentials>(use_alternative_server_certificate, std::move(external_psk))),
             m_rng(std::move(rng_in)),
             m_session_mgr(std::make_shared<RFC8448_Session_Manager>()),
             m_policy(std::move(policy)) {
@@ -606,6 +648,8 @@ class TLS_Context {
 
       const std::vector<Botan::X509_Certificate>& certs_verified() const { return m_callbacks->certificate_chain; }
 
+      const std::string& psk_identity_negotiated() const { return m_callbacks->negotiated_psk_identity; }
+
       decltype(auto) observed_handshake_messages() const { return m_callbacks->serialized_messages; }
 
       /**
@@ -629,6 +673,7 @@ class Client_Context : public TLS_Context {
                      uint64_t timestamp,
                      Modify_Exts_Fn modify_exts_cb,
                      std::optional<std::pair<Session, Session_Ticket>> session_and_ticket = std::nullopt,
+                     std::optional<ExternalPSK> external_psk = std::nullopt,
                      std::vector<MockSignature> mock_signatures = {}) :
             TLS_Context(std::move(rng_in),
                         std::move(policy),
@@ -636,6 +681,7 @@ class Client_Context : public TLS_Context {
                         std::move(mock_signatures),
                         timestamp,
                         std::move(session_and_ticket),
+                        std::move(external_psk),
                         false),
             client(m_callbacks,
                    m_session_mgr,
@@ -658,13 +704,15 @@ class Server_Context : public TLS_Context {
                      Modify_Exts_Fn modify_exts_cb,
                      std::vector<MockSignature> mock_signatures,
                      bool use_alternative_server_certificate = false,
-                     std::optional<std::pair<Session, Session_Ticket>> session_and_ticket = std::nullopt) :
+                     std::optional<std::pair<Session, Session_Ticket>> session_and_ticket = std::nullopt,
+                     std::optional<ExternalPSK> external_psk = std::nullopt) :
             TLS_Context(std::move(rng),
                         std::move(policy),
                         std::move(modify_exts_cb),
                         std::move(mock_signatures),
                         timestamp,
                         std::move(session_and_ticket),
+                        std::move(external_psk),
                         use_alternative_server_certificate),
             server(m_callbacks, m_session_mgr, m_creds, m_policy, m_rng, false /* DTLS NYI */) {}
 
@@ -839,7 +887,10 @@ class Test_TLS_RFC8448 : public Text_Based_Test {
                             "Server_MessageSignature,"
                             "Client_MessageToSign,"
                             "Client_MessageSignature,"
-                            "HelloRetryRequest_Cookie") {}
+                            "HelloRetryRequest_Cookie,"
+                            "PskIdentity,"
+                            "PskPRF,"
+                            "PskSecret") {}
 
       Test::Result run_one_test(const std::string& header, const VarMap& vars) override {
          if(header == "Simple_1RTT_Handshake") {
@@ -1241,6 +1292,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                          std::make_shared<RFC8448_Text_Policy>("rfc8448_1rtt"),
                                                          vars.get_req_u64("CurrentTimestamp"),
                                                          add_extensions_and_sort,
+                                                         std::nullopt,
                                                          std::nullopt,
                                                          make_mock_signatures(vars));
 
