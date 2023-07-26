@@ -9,7 +9,6 @@
 
 #include <botan/pkix_types.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/stl_util.h>
 
 namespace Botan {
 

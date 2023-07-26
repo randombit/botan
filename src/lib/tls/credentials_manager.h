@@ -16,7 +16,6 @@
 #include <botan/tls_external_psk.h>
 #include <botan/tls_magic.h>
 #include <botan/x509cert.h>
-
 #include <string>
 
 namespace Botan {
