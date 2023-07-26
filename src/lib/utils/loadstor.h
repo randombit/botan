@@ -303,14 +303,8 @@ inline constexpr void load_le(T out[], const uint8_t in[], size_t count) {
 #elif defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
       typecast_copy(out, in, count);
 
-      const size_t blocks = count - (count % 4);
-      const size_t left = count - blocks;
-
-      for(size_t i = 0; i != blocks; i += 4)
-         bswap_4(out + i);
-
-      for(size_t i = 0; i != left; ++i)
-         out[blocks + i] = reverse_bytes(out[blocks + i]);
+      for(size_t i = 0; i != count; ++i)
+         out[i] = reverse_bytes(out[i]);
 #else
       for(size_t i = 0; i != count; ++i)
          out[i] = load_le<T>(in, i);
@@ -384,14 +378,9 @@ inline constexpr void load_be(T out[], const uint8_t in[], size_t count) {
 
 #elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
       typecast_copy(out, in, count);
-      const size_t blocks = count - (count % 4);
-      const size_t left = count - blocks;
 
-      for(size_t i = 0; i != blocks; i += 4)
-         bswap_4(out + i);
-
-      for(size_t i = 0; i != left; ++i)
-         out[blocks + i] = reverse_bytes(out[blocks + i]);
+      for(size_t i = 0; i != count; ++i)
+         out[i] = reverse_bytes(out[i]);
 #else
       for(size_t i = 0; i != count; ++i)
          out[i] = load_be<T>(in, i);

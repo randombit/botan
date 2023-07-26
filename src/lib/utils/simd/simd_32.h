@@ -480,15 +480,7 @@ class SIMD_4x32 final {
          return SIMD_4x32(_mm_or_si128(_mm_srli_epi16(T, 8), _mm_slli_epi16(T, 8)));
 
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
-
-         union {
-               __vector unsigned int V;
-               uint32_t R[4];
-         } vec;
-
-         vec.V = m_simd;
-         bswap_4(vec.R);
-         return SIMD_4x32(vec.R[0], vec.R[1], vec.R[2], vec.R[3]);
+         return SIMD_4x32(vec_revb(m_simd));
 
 #elif defined(BOTAN_SIMD_USE_NEON)
          return SIMD_4x32(vreinterpretq_u32_u8(vrev32q_u8(vreinterpretq_u8_u32(m_simd))));
