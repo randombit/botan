@@ -30,7 +30,7 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Store_In_SQL : public Certificate_Store
       * @param rng used for encrypting keys
       * @param table_prefix optional prefix for db table names
       */
-      explicit Certificate_Store_In_SQL(const std::shared_ptr<SQL_Database> db,
+      explicit Certificate_Store_In_SQL(std::shared_ptr<SQL_Database> db,
                                         std::string_view passwd,
                                         RandomNumberGenerator& rng,
                                         std::string_view table_prefix = "");

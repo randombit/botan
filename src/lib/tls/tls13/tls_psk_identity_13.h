@@ -38,7 +38,7 @@ class BOTAN_PUBLIC_API(3, 1) PskIdentity {
       /**
        * Construct from a session stored by the client
        */
-      PskIdentity(Opaque_Session_Handle identity, const std::chrono::milliseconds age, const uint32_t ticket_age_add);
+      PskIdentity(Opaque_Session_Handle identity, std::chrono::milliseconds age, uint32_t ticket_age_add);
 
       /**
        * Construct from an externally provided PSK in the client
@@ -55,7 +55,7 @@ class BOTAN_PUBLIC_API(3, 1) PskIdentity {
        * externally provided PSKs this method does not provide any meaningful
        * information.
        */
-      std::chrono::milliseconds age(const uint32_t ticket_age_add) const;
+      std::chrono::milliseconds age(uint32_t ticket_age_add) const;
 
       uint32_t obfuscated_age() const { return m_obfuscated_age; }
 

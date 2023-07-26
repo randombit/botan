@@ -50,7 +50,7 @@ class Dilithium_Symmetric_Primitives {
       }
 
       // Mode dependent function
-      virtual std::unique_ptr<StreamCipher> XOF(const XofType type,
+      virtual std::unique_ptr<StreamCipher> XOF(XofType type,
                                                 std::span<const uint8_t> seed,
                                                 uint16_t matrix_position) const = 0;
 };

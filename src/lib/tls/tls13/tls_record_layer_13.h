@@ -71,7 +71,7 @@ class BOTAN_TEST_API Record_Layer {
        */
       ReadResult<Record> next_record(Cipher_State* cipher_state = nullptr);
 
-      std::vector<uint8_t> prepare_records(const Record_Type type,
+      std::vector<uint8_t> prepare_records(Record_Type type,
                                            std::span<const uint8_t> data,
                                            Cipher_State* cipher_state = nullptr) const;
 
@@ -94,7 +94,7 @@ class BOTAN_TEST_API Record_Layer {
        * @param incoming_limit  the maximal number of plaintext bytes to be
        *                        accepted in a received protected record
        */
-      void set_record_size_limits(const uint16_t outgoing_limit, const uint16_t incoming_limit);
+      void set_record_size_limits(uint16_t outgoing_limit, uint16_t incoming_limit);
 
       void disable_sending_compat_mode() { m_sending_compat_mode = false; }
 

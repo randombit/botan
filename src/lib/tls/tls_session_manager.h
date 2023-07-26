@@ -257,8 +257,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager {
        * @return the found sessions along with their handles (containing either a
        *         session ID or a ticket)
        */
-      virtual std::vector<Session_with_Handle> find_some(const Server_Information& info,
-                                                         const size_t max_sessions_hint) = 0;
+      virtual std::vector<Session_with_Handle> find_some(const Server_Information& info, size_t max_sessions_hint) = 0;
 
       /**
        * Returns the base class' recursive mutex for reuse in derived classes

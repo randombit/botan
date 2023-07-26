@@ -580,7 +580,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
       * @param policy the TLS policy
       * @param side is this a Connection_Side::Server or Connection_Side::Client certificate message
       */
-      Certificate_13(const std::vector<uint8_t>& buf, const Policy& policy, const Connection_Side side);
+      Certificate_13(const std::vector<uint8_t>& buf, const Policy& policy, Connection_Side side);
 
       /**
       * Validate a Certificate message regarding what extensions are expected based on
@@ -628,7 +628,7 @@ class BOTAN_UNSTABLE_API Certificate_Status final : public Handshake_Message {
 
       const std::vector<uint8_t>& response() const { return m_response; }
 
-      explicit Certificate_Status(const std::vector<uint8_t>& buf, const Connection_Side from);
+      explicit Certificate_Status(const std::vector<uint8_t>& buf, Connection_Side from);
 
       Certificate_Status(Handshake_IO& io, Handshake_Hash& hash, const OCSP::Response& response);
 
@@ -679,7 +679,7 @@ class BOTAN_UNSTABLE_API Certificate_Request_13 final : public Handshake_Message
    public:
       Handshake_Type type() const override;
 
-      Certificate_Request_13(const std::vector<uint8_t>& buf, const Connection_Side side);
+      Certificate_Request_13(const std::vector<uint8_t>& buf, Connection_Side side);
 
       //! Creates a Certificate_Request message if it is required by the configuration
       //! @return std::nullopt if configuration does not require client authentication
@@ -758,7 +758,7 @@ class BOTAN_UNSTABLE_API Certificate_Verify_13 final : public Certificate_Verify
       * @param buf the serialized message
       * @param side is this a Connection_Side::Server or Connection_Side::Client certificate message
       */
-      Certificate_Verify_13(const std::vector<uint8_t>& buf, const Connection_Side side);
+      Certificate_Verify_13(const std::vector<uint8_t>& buf, Connection_Side side);
 
       Certificate_Verify_13(const Certificate_13& certificate_message,
                             const std::vector<Signature_Scheme>& peer_allowed_schemes,
@@ -980,7 +980,7 @@ class BOTAN_UNSTABLE_API Key_Update final : public Handshake_Message {
    public:
       Handshake_Type type() const override { return Handshake_Type::KeyUpdate; }
 
-      explicit Key_Update(const bool request_peer_update);
+      explicit Key_Update(bool request_peer_update);
       explicit Key_Update(const std::vector<uint8_t>& buf);
 
       std::vector<uint8_t> serialize() const override;

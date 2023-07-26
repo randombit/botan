@@ -122,11 +122,8 @@ class BOTAN_PUBLIC_API(2, 0) SRP6_Server_Session final {
       * @param b_bits size of secret exponent in bits
       * @return SRP-6 B value
       */
-      BigInt step1(const BigInt& v,
-                   const DL_Group& group,
-                   std::string_view hash_id,
-                   const size_t b_bits,
-                   RandomNumberGenerator& rng);
+      BigInt step1(
+         const BigInt& v, const DL_Group& group, std::string_view hash_id, size_t b_bits, RandomNumberGenerator& rng);
 
       /**
       * Server side step 2

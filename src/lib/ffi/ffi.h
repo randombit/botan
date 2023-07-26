@@ -348,7 +348,7 @@ BOTAN_FFI_EXPORT(2, 0) int botan_hash_init(botan_hash_t* hash, const char* hash_
 * @param source source hash object
 * @return 0 on success, a negative value on failure
 */
-BOTAN_FFI_EXPORT(2, 2) int botan_hash_copy_state(botan_hash_t* dest, const botan_hash_t source);
+BOTAN_FFI_EXPORT(2, 2) int botan_hash_copy_state(botan_hash_t* dest, botan_hash_t source);
 
 /**
 * Writes the output length of the hash function to *output_length
@@ -856,12 +856,12 @@ BOTAN_FFI_EXPORT(2, 1) int botan_mp_destroy(botan_mp_t mp);
 /**
 * Convert the MPI to a hex string. Writes botan_mp_num_bytes(mp)*2 + 1 bytes
 */
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_to_hex(const botan_mp_t mp, char* out);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_to_hex(botan_mp_t mp, char* out);
 
 /**
 * Convert the MPI to a string. Currently base == 10 and base == 16 are supported.
 */
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_to_str(const botan_mp_t mp, uint8_t base, char* out, size_t* out_len);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_to_str(botan_mp_t mp, uint8_t base, char* out, size_t* out_len);
 
 /**
 * Set the MPI to zero
@@ -876,7 +876,7 @@ BOTAN_FFI_EXPORT(2, 1) int botan_mp_set_from_int(botan_mp_t mp, int initial_valu
 /**
 * Set the MPI value from another MP object
 */
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_set_from_mp(botan_mp_t dest, const botan_mp_t source);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_set_from_mp(botan_mp_t dest, botan_mp_t source);
 
 /**
 * Set the MPI value from a string
@@ -892,73 +892,73 @@ BOTAN_FFI_EXPORT(2, 1) int botan_mp_set_from_radix_str(botan_mp_t dest, const ch
 /**
 * Return the number of significant bits in the MPI
 */
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_num_bits(const botan_mp_t n, size_t* bits);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_num_bits(botan_mp_t n, size_t* bits);
 
 /**
 * Return the number of significant bytes in the MPI
 */
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_num_bytes(const botan_mp_t n, size_t* bytes);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_num_bytes(botan_mp_t n, size_t* bytes);
 
 /*
 * Convert the MPI to a big-endian binary string. Writes botan_mp_num_bytes to vec
 */
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_to_bin(const botan_mp_t mp, uint8_t vec[]);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_to_bin(botan_mp_t mp, uint8_t vec[]);
 
 /*
 * Set an MP to the big-endian binary value
 */
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_from_bin(const botan_mp_t mp, const uint8_t vec[], size_t vec_len);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_from_bin(botan_mp_t mp, const uint8_t vec[], size_t vec_len);
 
 /*
 * Convert the MPI to a uint32_t, if possible. Fails if MPI is negative or too large.
 */
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_to_uint32(const botan_mp_t mp, uint32_t* val);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_to_uint32(botan_mp_t mp, uint32_t* val);
 
 /**
 * This function should have been named mp_is_non_negative. Returns 1
 * iff mp is greater than *or equal to* zero. Use botan_mp_is_negative
 * to detect negative numbers, botan_mp_is_zero to check for zero.
 */
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_is_positive(const botan_mp_t mp);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_is_positive(botan_mp_t mp);
 
 /**
 * Return 1 iff mp is less than 0
 */
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_is_negative(const botan_mp_t mp);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_is_negative(botan_mp_t mp);
 
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_flip_sign(botan_mp_t mp);
 
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_is_zero(const botan_mp_t mp);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_is_zero(botan_mp_t mp);
 
-BOTAN_FFI_DEPRECATED("Use botan_mp_get_bit(0)") BOTAN_FFI_EXPORT(2, 1) int botan_mp_is_odd(const botan_mp_t mp);
-BOTAN_FFI_DEPRECATED("Use botan_mp_get_bit(0)") BOTAN_FFI_EXPORT(2, 1) int botan_mp_is_even(const botan_mp_t mp);
+BOTAN_FFI_DEPRECATED("Use botan_mp_get_bit(0)") BOTAN_FFI_EXPORT(2, 1) int botan_mp_is_odd(botan_mp_t mp);
+BOTAN_FFI_DEPRECATED("Use botan_mp_get_bit(0)") BOTAN_FFI_EXPORT(2, 1) int botan_mp_is_even(botan_mp_t mp);
 
-BOTAN_FFI_EXPORT(2, 8) int botan_mp_add_u32(botan_mp_t result, const botan_mp_t x, uint32_t y);
-BOTAN_FFI_EXPORT(2, 8) int botan_mp_sub_u32(botan_mp_t result, const botan_mp_t x, uint32_t y);
+BOTAN_FFI_EXPORT(2, 8) int botan_mp_add_u32(botan_mp_t result, botan_mp_t x, uint32_t y);
+BOTAN_FFI_EXPORT(2, 8) int botan_mp_sub_u32(botan_mp_t result, botan_mp_t x, uint32_t y);
 
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_add(botan_mp_t result, const botan_mp_t x, const botan_mp_t y);
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_sub(botan_mp_t result, const botan_mp_t x, const botan_mp_t y);
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_mul(botan_mp_t result, const botan_mp_t x, const botan_mp_t y);
-
-BOTAN_FFI_EXPORT(2, 1)
-int botan_mp_div(botan_mp_t quotient, botan_mp_t remainder, const botan_mp_t x, const botan_mp_t y);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_add(botan_mp_t result, botan_mp_t x, botan_mp_t y);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_sub(botan_mp_t result, botan_mp_t x, botan_mp_t y);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_mul(botan_mp_t result, botan_mp_t x, botan_mp_t y);
 
 BOTAN_FFI_EXPORT(2, 1)
-int botan_mp_mod_mul(botan_mp_t result, const botan_mp_t x, const botan_mp_t y, const botan_mp_t mod);
+int botan_mp_div(botan_mp_t quotient, botan_mp_t remainder, botan_mp_t x, botan_mp_t y);
+
+BOTAN_FFI_EXPORT(2, 1)
+int botan_mp_mod_mul(botan_mp_t result, botan_mp_t x, botan_mp_t y, botan_mp_t mod);
 
 /*
 * Returns 0 if x != y
 * Returns 1 if x == y
 * Returns negative number on error
 */
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_equal(const botan_mp_t x, const botan_mp_t y);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_equal(botan_mp_t x, botan_mp_t y);
 
 /*
 * Sets *result to comparison result:
 * -1 if x < y, 0 if x == y, 1 if x > y
 * Returns negative number on error or zero on success
 */
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_cmp(int* result, const botan_mp_t x, const botan_mp_t y);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_cmp(int* result, botan_mp_t x, botan_mp_t y);
 
 /*
 * Swap two botan_mp_t
@@ -967,36 +967,33 @@ BOTAN_FFI_EXPORT(2, 1) int botan_mp_swap(botan_mp_t x, botan_mp_t y);
 
 /* Return (base^exponent) % modulus */
 BOTAN_FFI_EXPORT(2, 1)
-int botan_mp_powmod(botan_mp_t out, const botan_mp_t base, const botan_mp_t exponent, const botan_mp_t modulus);
+int botan_mp_powmod(botan_mp_t out, botan_mp_t base, botan_mp_t exponent, botan_mp_t modulus);
 
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_lshift(botan_mp_t out, const botan_mp_t in, size_t shift);
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_rshift(botan_mp_t out, const botan_mp_t in, size_t shift);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_lshift(botan_mp_t out, botan_mp_t in, size_t shift);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_rshift(botan_mp_t out, botan_mp_t in, size_t shift);
 
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_mod_inverse(botan_mp_t out, const botan_mp_t in, const botan_mp_t modulus);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_mod_inverse(botan_mp_t out, botan_mp_t in, botan_mp_t modulus);
 
 BOTAN_FFI_EXPORT(2, 1) int botan_mp_rand_bits(botan_mp_t rand_out, botan_rng_t rng, size_t bits);
 
 BOTAN_FFI_EXPORT(2, 1)
-int botan_mp_rand_range(botan_mp_t rand_out,
-                        botan_rng_t rng,
-                        const botan_mp_t lower_bound,
-                        const botan_mp_t upper_bound);
+int botan_mp_rand_range(botan_mp_t rand_out, botan_rng_t rng, botan_mp_t lower_bound, botan_mp_t upper_bound);
 
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_gcd(botan_mp_t out, const botan_mp_t x, const botan_mp_t y);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_gcd(botan_mp_t out, botan_mp_t x, botan_mp_t y);
 
 /**
 * Returns 0 if n is not prime
 * Returns 1 if n is prime
 * Returns negative number on error
 */
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_is_prime(const botan_mp_t n, botan_rng_t rng, size_t test_prob);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_is_prime(botan_mp_t n, botan_rng_t rng, size_t test_prob);
 
 /**
 * Returns 0 if specified bit of n is not set
 * Returns 1 if specified bit of n is set
 * Returns negative number on error
 */
-BOTAN_FFI_EXPORT(2, 1) int botan_mp_get_bit(const botan_mp_t n, size_t bit);
+BOTAN_FFI_EXPORT(2, 1) int botan_mp_get_bit(botan_mp_t n, size_t bit);
 
 /**
 * Set the specified bit
@@ -1449,52 +1446,40 @@ int botan_pubkey_view_kyber_raw_key(botan_pubkey_t key, botan_view_ctx ctx, bota
 * Algorithm specific key operations: ECDSA and ECDH
 */
 BOTAN_FFI_EXPORT(2, 2)
-int botan_privkey_load_ecdsa(botan_privkey_t* key, const botan_mp_t scalar, const char* curve_name);
+int botan_privkey_load_ecdsa(botan_privkey_t* key, botan_mp_t scalar, const char* curve_name);
 
 BOTAN_FFI_EXPORT(2, 2)
-int botan_pubkey_load_ecdsa(botan_pubkey_t* key,
-                            const botan_mp_t public_x,
-                            const botan_mp_t public_y,
-                            const char* curve_name);
+int botan_pubkey_load_ecdsa(botan_pubkey_t* key, botan_mp_t public_x, botan_mp_t public_y, const char* curve_name);
 
 BOTAN_FFI_EXPORT(2, 2)
-int botan_pubkey_load_ecdh(botan_pubkey_t* key,
-                           const botan_mp_t public_x,
-                           const botan_mp_t public_y,
-                           const char* curve_name);
+int botan_pubkey_load_ecdh(botan_pubkey_t* key, botan_mp_t public_x, botan_mp_t public_y, const char* curve_name);
 
 BOTAN_FFI_EXPORT(2, 2)
-int botan_privkey_load_ecdh(botan_privkey_t* key, const botan_mp_t scalar, const char* curve_name);
+int botan_privkey_load_ecdh(botan_privkey_t* key, botan_mp_t scalar, const char* curve_name);
 
 BOTAN_FFI_EXPORT(2, 2)
-int botan_pubkey_load_sm2(botan_pubkey_t* key,
-                          const botan_mp_t public_x,
-                          const botan_mp_t public_y,
-                          const char* curve_name);
+int botan_pubkey_load_sm2(botan_pubkey_t* key, botan_mp_t public_x, botan_mp_t public_y, const char* curve_name);
 
 BOTAN_FFI_EXPORT(2, 2)
-int botan_privkey_load_sm2(botan_privkey_t* key, const botan_mp_t scalar, const char* curve_name);
+int botan_privkey_load_sm2(botan_privkey_t* key, botan_mp_t scalar, const char* curve_name);
 
 BOTAN_FFI_DEPRECATED("Use botan_pubkey_load_sm2")
 BOTAN_FFI_EXPORT(2, 2)
-int botan_pubkey_load_sm2_enc(botan_pubkey_t* key,
-                              const botan_mp_t public_x,
-                              const botan_mp_t public_y,
-                              const char* curve_name);
+int botan_pubkey_load_sm2_enc(botan_pubkey_t* key, botan_mp_t public_x, botan_mp_t public_y, const char* curve_name);
 
 BOTAN_FFI_DEPRECATED("Use botan_privkey_load_sm2")
 BOTAN_FFI_EXPORT(2, 2)
-int botan_privkey_load_sm2_enc(botan_privkey_t* key, const botan_mp_t scalar, const char* curve_name);
+int botan_privkey_load_sm2_enc(botan_privkey_t* key, botan_mp_t scalar, const char* curve_name);
 
 BOTAN_FFI_EXPORT(2, 3)
 int botan_pubkey_sm2_compute_za(
-   uint8_t out[], size_t* out_len, const char* ident, const char* hash_algo, const botan_pubkey_t key);
+   uint8_t out[], size_t* out_len, const char* ident, const char* hash_algo, botan_pubkey_t key);
 
 /**
 * View the uncompressed public point associated with the key
 */
 BOTAN_FFI_EXPORT(3, 0)
-int botan_pubkey_view_ec_public_point(const botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view);
+int botan_pubkey_view_ec_public_point(botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view);
 
 /*
 * Public Key Encryption
@@ -2131,7 +2116,7 @@ int botan_zfec_encode(size_t K, size_t N, const uint8_t* input, size_t size, uin
  */
 BOTAN_FFI_EXPORT(3, 0)
 int botan_zfec_decode(
-   size_t K, size_t N, const size_t* indexes, uint8_t* const* const inputs, size_t shareSize, uint8_t** outputs);
+   size_t K, size_t N, const size_t* indexes, uint8_t* const* inputs, size_t shareSize, uint8_t** outputs);
 
 #ifdef __cplusplus
 }

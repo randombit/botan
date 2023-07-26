@@ -75,7 +75,7 @@ class Channel_Impl_13 : public Channel_Impl {
              * updates the handshake transcript hash regardless of sending the
              * message.
              */
-            AggregatedHandshakeMessages& add(const Handshake_Message_13_Ref message);
+            AggregatedHandshakeMessages& add(Handshake_Message_13_Ref message);
 
          private:
             Transcript_Hash_State& m_transcript_hash;
@@ -283,7 +283,7 @@ class Channel_Impl_13 : public Channel_Impl {
        * @param incoming_limit  the maximal number of plaintext bytes to be
        *                        accepted in a received protected record
        */
-      void set_record_size_limits(const uint16_t outgoing_limit, const uint16_t incoming_limit);
+      void set_record_size_limits(uint16_t outgoing_limit, uint16_t incoming_limit);
 
    private:
       /* callbacks */

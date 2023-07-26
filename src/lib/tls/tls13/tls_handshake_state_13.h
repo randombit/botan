@@ -70,16 +70,16 @@ class BOTAN_TEST_API Handshake_State_13_Base {
    protected:
       Handshake_State_13_Base(Connection_Side whoami) : m_side(whoami) {}
 
-      Client_Hello_13& store(Client_Hello_13 client_hello, const bool from_peer);
-      Client_Hello_12& store(Client_Hello_12 client_hello, const bool from_peer);
-      Server_Hello_13& store(Server_Hello_13 server_hello, const bool from_peer);
-      Server_Hello_12& store(Server_Hello_12 server_hello, const bool from_peer);
-      Hello_Retry_Request& store(Hello_Retry_Request hello_retry_request, const bool from_peer);
-      Encrypted_Extensions& store(Encrypted_Extensions encrypted_extensions, const bool from_peer);
-      Certificate_Request_13& store(Certificate_Request_13 certificate_request, const bool from_peer);
-      Certificate_13& store(Certificate_13 certificate, const bool from_peer);
-      Certificate_Verify_13& store(Certificate_Verify_13 certificate_verify, const bool from_peer);
-      Finished_13& store(Finished_13 finished, const bool from_peer);
+      Client_Hello_13& store(Client_Hello_13 client_hello, bool from_peer);
+      Client_Hello_12& store(Client_Hello_12 client_hello, bool from_peer);
+      Server_Hello_13& store(Server_Hello_13 server_hello, bool from_peer);
+      Server_Hello_12& store(Server_Hello_12 server_hello, bool from_peer);
+      Hello_Retry_Request& store(Hello_Retry_Request hello_retry_request, bool from_peer);
+      Encrypted_Extensions& store(Encrypted_Extensions encrypted_extensions, bool from_peer);
+      Certificate_Request_13& store(Certificate_Request_13 certificate_request, bool from_peer);
+      Certificate_13& store(Certificate_13 certificate, bool from_peer);
+      Certificate_Verify_13& store(Certificate_Verify_13 certificate_verify, bool from_peer);
+      Finished_13& store(Finished_13 finished, bool from_peer);
 
    private:
       template <typename MessageT>

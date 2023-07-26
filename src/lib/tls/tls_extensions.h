@@ -485,7 +485,7 @@ class BOTAN_UNSTABLE_API Record_Size_Limit final : public Extension {
 
       Extension_Code type() const override { return static_type(); }
 
-      explicit Record_Size_Limit(const uint16_t limit);
+      explicit Record_Size_Limit(uint16_t limit);
 
       Record_Size_Limit(TLS_Data_Reader& reader, uint16_t extension_size, Connection_Side from);
 
@@ -642,7 +642,7 @@ class BOTAN_UNSTABLE_API PSK final : public Extension {
        *
        * Note: This constructor is called internally in PSK::select_offered_psk().
        */
-      PSK(Session session_to_resume, const uint16_t psk_index);
+      PSK(Session session_to_resume, uint16_t psk_index);
 
    private:
       class PSK_Internal;
@@ -832,7 +832,7 @@ class BOTAN_UNSTABLE_API Extensions final {
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const;
 
-      void deserialize(TLS_Data_Reader& reader, const Connection_Side from, const Handshake_Type message_type);
+      void deserialize(TLS_Data_Reader& reader, Connection_Side from, Handshake_Type message_type);
 
       /**
        * @param allowed_extensions        extension types that are allowed
@@ -840,7 +840,7 @@ class BOTAN_UNSTABLE_API Extensions final {
        * @returns true if this contains any extensions that are not contained in @p allowed_extensions.
        */
       bool contains_other_than(const std::set<Extension_Code>& allowed_extensions,
-                               const bool allow_unknown_extensions = false) const;
+                               bool allow_unknown_extensions = false) const;
 
       /**
        * @param allowed_extensions  extension types that are allowed

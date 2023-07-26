@@ -27,7 +27,7 @@ class BOTAN_TEST_API Blowfish final : public Block_Cipher_Fixed_Params<8, 1, 56>
                           size_t key_length,
                           const uint8_t salt[],
                           size_t salt_length,
-                          const size_t workfactor,
+                          size_t workfactor,
                           bool salt_first = false);
 
       void clear() override;
