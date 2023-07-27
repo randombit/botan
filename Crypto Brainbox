@@ -1,0 +1,4 @@
+best option for cryptography in C++ by offering the tools necessary to implement a range of practical systems, such as TLS protocol, X.509 certificates, modern AEAD ciphers, PKCS#11 and TPM hardware support, password hashing, and post quantum crypto schemes. A Python binding is included, and several other language bindings are available. The library is accompanied by a featureful command line interface.
+See the documentation for more information about included features.
+Development is coordinated on GitHub and contributions are welcome. If you need help, please open an issue on GitHub.
+If you think you have found a security issue, see the security page for contact information.@Qubuhub
