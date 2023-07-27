@@ -21,26 +21,26 @@ namespace Botan {
 */
 class EAX_Mode : public AEAD_Mode {
    public:
-      void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) override final;
+      void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) final;
 
-      std::string name() const override final;
+      std::string name() const final;
 
-      size_t update_granularity() const override final;
+      size_t update_granularity() const final;
 
-      size_t ideal_granularity() const override final;
+      size_t ideal_granularity() const final;
 
-      Key_Length_Specification key_spec() const override final;
+      Key_Length_Specification key_spec() const final;
 
       // EAX supports arbitrary nonce lengths
-      bool valid_nonce_length(size_t) const override final { return true; }
+      bool valid_nonce_length(size_t) const final { return true; }
 
-      size_t tag_size() const override final { return m_tag_size; }
+      size_t tag_size() const final { return m_tag_size; }
 
-      void clear() override final;
+      void clear() final;
 
-      void reset() override final;
+      void reset() final;
 
-      bool has_keying_material() const override final;
+      bool has_keying_material() const final;
 
    protected:
       /**
@@ -62,9 +62,9 @@ class EAX_Mode : public AEAD_Mode {
       secure_vector<uint8_t> m_nonce_mac;
 
    private:
-      void start_msg(const uint8_t nonce[], size_t nonce_len) override final;
+      void start_msg(const uint8_t nonce[], size_t nonce_len) final;
 
-      void key_schedule(const uint8_t key[], size_t length) override final;
+      void key_schedule(const uint8_t key[], size_t length) final;
 };
 
 /**

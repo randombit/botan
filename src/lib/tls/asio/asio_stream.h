@@ -555,7 +555,7 @@ class Stream {
          public:
             StreamCore(std::weak_ptr<Botan::TLS::Context> context) : shutdown_received(false), m_context(context) {}
 
-            virtual ~StreamCore() = default;
+            ~StreamCore() override = default;
 
             void tls_emit_data(std::span<const uint8_t> data) override {
                send_buffer.commit(boost::asio::buffer_copy(send_buffer.prepare(data.size()),

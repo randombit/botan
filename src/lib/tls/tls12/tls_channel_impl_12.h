@@ -71,7 +71,7 @@ class Channel_Impl_12 : public Channel_Impl {
 
       Channel_Impl_12& operator=(const Channel_Impl_12&) = delete;
 
-      virtual ~Channel_Impl_12();
+      ~Channel_Impl_12() override;
 
       size_t from_peer(std::span<const uint8_t> data) override;
       void to_peer(std::span<const uint8_t> data) override;

@@ -66,16 +66,16 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
 
       void initialize_with(const uint8_t input[], size_t length) { this->initialize_with(std::span(input, length)); }
 
-      bool is_seeded() const override final;
+      bool is_seeded() const final;
 
-      bool accepts_input() const override final { return true; }
+      bool accepts_input() const final { return true; }
 
       /**
       * Mark state as requiring a reseed on next use
       */
       void force_reseed();
 
-      void reseed_from_rng(RandomNumberGenerator& rng, size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS) override final;
+      void reseed_from_rng(RandomNumberGenerator& rng, size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS) final;
 
       /**
       * Poll provided sources for up to poll_bits bits of entropy
@@ -105,7 +105,7 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
 
       size_t reseed_interval() const { return m_reseed_interval; }
 
-      void clear() override final;
+      void clear() final;
 
    protected:
       void reseed_check();
@@ -119,7 +119,7 @@ class BOTAN_PUBLIC_API(2, 0) Stateful_RNG : public RandomNumberGenerator {
    private:
       void generate_batched_output(std::span<uint8_t> output, std::span<const uint8_t> input);
 
-      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override final;
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) final;
 
       void reset_reseed_counter();
 

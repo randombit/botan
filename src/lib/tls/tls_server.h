@@ -54,7 +54,7 @@ class BOTAN_PUBLIC_API(2, 0) Server final : public Channel {
              bool is_datagram = false,
              size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE);
 
-      ~Server();
+      ~Server() override;
 
       /**
       * Return the protocol notification set by the client (using the

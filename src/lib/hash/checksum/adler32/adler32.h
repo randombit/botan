@@ -32,7 +32,7 @@ class Adler32 final : public HashFunction {
 
       Adler32() { clear(); }
 
-      ~Adler32() { clear(); }
+      ~Adler32() override { clear(); }
 
    private:
       void add_data(const uint8_t[], size_t) override;

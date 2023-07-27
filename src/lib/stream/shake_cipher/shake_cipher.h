@@ -25,28 +25,28 @@ class SHAKE_Cipher : public StreamCipher {
       /**
       * Seeking is not supported, this function will throw
       */
-      void seek(uint64_t offset) override final;
+      void seek(uint64_t offset) final;
 
-      void clear() override final;
+      void clear() final;
 
-      Key_Length_Specification key_spec() const override final;
+      Key_Length_Specification key_spec() const final;
 
-      bool has_keying_material() const override final;
+      bool has_keying_material() const final;
 
-      size_t buffer_size() const override final;
+      size_t buffer_size() const final;
 
    private:
-      void key_schedule(const uint8_t key[], size_t key_len) override final;
+      void key_schedule(const uint8_t key[], size_t key_len) final;
       /**
       * Produce more XOF output
       */
-      void cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) override final;
+      void cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) final;
       void generate_keystream(uint8_t out[], size_t length) override;
 
       /**
       * IV not supported, this function will throw unless iv_len == 0
       */
-      void set_iv_bytes(const uint8_t iv[], size_t iv_len) override final;
+      void set_iv_bytes(const uint8_t iv[], size_t iv_len) final;
 
    protected:
       size_t m_shake_rate;

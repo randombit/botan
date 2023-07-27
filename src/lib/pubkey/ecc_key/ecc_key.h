@@ -29,7 +29,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
    public:
       EC_PublicKey(const EC_PublicKey& other) = default;
       EC_PublicKey& operator=(const EC_PublicKey& other) = default;
-      virtual ~EC_PublicKey() = default;
+      ~EC_PublicKey() override = default;
 
       /**
       * Get the public point of this key.
@@ -121,9 +121,9 @@ BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 class BOTAN_PUBLIC_API(2, 0) EC_PrivateKey : public virtual EC_PublicKey,
                                              public virtual Private_Key {
    public:
-      secure_vector<uint8_t> private_key_bits() const override final;
+      secure_vector<uint8_t> private_key_bits() const final;
 
-      secure_vector<uint8_t> raw_private_key_bits() const override final;
+      secure_vector<uint8_t> raw_private_key_bits() const final;
 
       /**
       * Get the private key value of this key object.
@@ -133,9 +133,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_PrivateKey : public virtual EC_PublicKey,
 
       EC_PrivateKey(const EC_PrivateKey& other) = default;
       EC_PrivateKey& operator=(const EC_PrivateKey& other) = default;
-      ~EC_PrivateKey() = default;
+      ~EC_PrivateKey() override = default;
 
-      const BigInt& get_int_field(std::string_view field) const override final;
+      const BigInt& get_int_field(std::string_view field) const final;
 
    protected:
       /*

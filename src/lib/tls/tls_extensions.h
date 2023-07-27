@@ -626,7 +626,7 @@ class BOTAN_UNSTABLE_API PSK final : public Extension {
        */
       PSK(Session_with_Handle& session_to_resume, Callbacks& callbacks);
 
-      ~PSK();
+      ~PSK() override;
 
       void calculate_binders(const Transcript_Hash_State& truncated_transcript_hash);
       bool validate_binder(const PSK& server_psk, const std::vector<uint8_t>& binder) const;
@@ -727,7 +727,7 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension {
       explicit Key_Share(Named_Group selected_group);
 
       // destructor implemented in .cpp to hide Key_Share_Impl
-      ~Key_Share();
+      ~Key_Share() override;
 
    private:
       // constructor used for ServerHello

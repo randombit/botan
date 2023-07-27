@@ -21,7 +21,7 @@ class Encryption_with_EME : public Encryption {
 
       secure_vector<uint8_t> encrypt(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& rng) override;
 
-      ~Encryption_with_EME() = default;
+      ~Encryption_with_EME() override = default;
 
    protected:
       explicit Encryption_with_EME(std::string_view eme);
@@ -37,7 +37,7 @@ class Decryption_with_EME : public Decryption {
    public:
       secure_vector<uint8_t> decrypt(uint8_t& valid_mask, const uint8_t msg[], size_t msg_len) override;
 
-      ~Decryption_with_EME() = default;
+      ~Decryption_with_EME() override = default;
 
    protected:
       explicit Decryption_with_EME(std::string_view eme);
@@ -49,12 +49,12 @@ class Decryption_with_EME : public Decryption {
 
 class Verification_with_Hash : public Verification {
    public:
-      ~Verification_with_Hash() = default;
+      ~Verification_with_Hash() override = default;
 
       void update(const uint8_t msg[], size_t msg_len) override;
       bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
 
-      std::string hash_function() const override final { return m_hash->name(); }
+      std::string hash_function() const final { return m_hash->name(); }
 
    protected:
       explicit Verification_with_Hash(std::string_view hash);
@@ -86,9 +86,9 @@ class Signature_with_Hash : public Signature {
    protected:
       explicit Signature_with_Hash(std::string_view hash);
 
-      ~Signature_with_Hash() = default;
+      ~Signature_with_Hash() override = default;
 
-      std::string hash_function() const override final { return m_hash->name(); }
+      std::string hash_function() const final { return m_hash->name(); }
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
       std::string rfc6979_hash_function() const;
@@ -110,7 +110,7 @@ class Key_Agreement_with_KDF : public Key_Agreement {
 
    protected:
       explicit Key_Agreement_with_KDF(std::string_view kdf);
-      ~Key_Agreement_with_KDF() = default;
+      ~Key_Agreement_with_KDF() override = default;
 
    private:
       virtual secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) = 0;
@@ -123,9 +123,9 @@ class KEM_Encryption_with_KDF : public KEM_Encryption {
                        std::span<uint8_t> out_shared_key,
                        RandomNumberGenerator& rng,
                        size_t desired_shared_key_len,
-                       std::span<const uint8_t> salt) override final;
+                       std::span<const uint8_t> salt) final;
 
-      size_t shared_key_length(size_t desired_shared_key_len) const override final;
+      size_t shared_key_length(size_t desired_shared_key_len) const final;
 
    protected:
       virtual void raw_kem_encrypt(std::span<uint8_t> out_encapsulated_key,
@@ -135,7 +135,7 @@ class KEM_Encryption_with_KDF : public KEM_Encryption {
       virtual size_t raw_kem_shared_key_length() const = 0;
 
       explicit KEM_Encryption_with_KDF(std::string_view kdf);
-      ~KEM_Encryption_with_KDF() = default;
+      ~KEM_Encryption_with_KDF() override = default;
 
    private:
       std::unique_ptr<KDF> m_kdf;
@@ -146,9 +146,9 @@ class KEM_Decryption_with_KDF : public KEM_Decryption {
       void kem_decrypt(std::span<uint8_t> out_shared_key,
                        std::span<const uint8_t> encapsulated_key,
                        size_t desired_shared_key_len,
-                       std::span<const uint8_t> salt) override final;
+                       std::span<const uint8_t> salt) final;
 
-      size_t shared_key_length(size_t desired_shared_key_len) const override final;
+      size_t shared_key_length(size_t desired_shared_key_len) const final;
 
    protected:
       virtual void raw_kem_decrypt(std::span<uint8_t> out_raw_shared_key,
@@ -157,7 +157,7 @@ class KEM_Decryption_with_KDF : public KEM_Decryption {
       virtual size_t raw_kem_shared_key_length() const = 0;
 
       explicit KEM_Decryption_with_KDF(std::string_view kdf);
-      ~KEM_Decryption_with_KDF() = default;
+      ~KEM_Decryption_with_KDF() override = default;
 
    private:
       std::unique_ptr<KDF> m_kdf;

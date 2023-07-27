@@ -22,27 +22,27 @@ namespace Botan::TLS {
 */
 class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode {
    public:
-      std::string name() const override final;
+      std::string name() const final;
 
       void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) override;
 
-      size_t update_granularity() const override final;
+      size_t update_granularity() const final;
 
-      size_t ideal_granularity() const override final;
+      size_t ideal_granularity() const final;
 
-      Key_Length_Specification key_spec() const override final;
+      Key_Length_Specification key_spec() const final;
 
-      bool valid_nonce_length(size_t nl) const override final;
+      bool valid_nonce_length(size_t nl) const final;
 
-      size_t tag_size() const override final { return m_tag_size; }
+      size_t tag_size() const final { return m_tag_size; }
 
-      size_t default_nonce_length() const override final { return m_iv_size; }
+      size_t default_nonce_length() const final { return m_iv_size; }
 
-      void clear() override final;
+      void clear() final;
 
-      void reset() override final;
+      void reset() final;
 
-      bool has_keying_material() const override final;
+      bool has_keying_material() const final;
 
    protected:
       TLS_CBC_HMAC_AEAD_Mode(Cipher_Dir direction,
@@ -81,10 +81,10 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode {
       std::vector<uint8_t> assoc_data_with_len(uint16_t len);
 
    private:
-      void start_msg(const uint8_t nonce[], size_t nonce_len) override final;
-      size_t process_msg(uint8_t buf[], size_t sz) override final;
+      void start_msg(const uint8_t nonce[], size_t nonce_len) final;
+      size_t process_msg(uint8_t buf[], size_t sz) final;
 
-      void key_schedule(const uint8_t key[], size_t length) override final;
+      void key_schedule(const uint8_t key[], size_t length) final;
 
       const std::string m_cipher_name;
       const std::string m_mac_name;

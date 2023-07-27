@@ -47,7 +47,7 @@ class BOTAN_PUBLIC_API(2, 0) MessageAuthenticationCode : public Buffered_Computa
       */
       static std::vector<std::string> providers(std::string_view algo_spec);
 
-      virtual ~MessageAuthenticationCode() = default;
+      ~MessageAuthenticationCode() override = default;
 
       /**
       * Prepare for processing a message under the specified nonce

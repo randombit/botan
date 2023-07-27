@@ -187,14 +187,14 @@ class Compression_Stream {
 */
 class Stream_Compression : public Compression_Algorithm {
    public:
-      void update(secure_vector<uint8_t>& buf, size_t offset, bool flush) final override;
+      void update(secure_vector<uint8_t>& buf, size_t offset, bool flush) final;
 
-      void finish(secure_vector<uint8_t>& buf, size_t offset) final override;
+      void finish(secure_vector<uint8_t>& buf, size_t offset) final;
 
-      void clear() final override;
+      void clear() final;
 
    private:
-      void start(size_t level) final override;
+      void start(size_t level) final;
 
       void process(secure_vector<uint8_t>& buf, size_t offset, uint32_t flags);
 
@@ -209,14 +209,14 @@ class Stream_Compression : public Compression_Algorithm {
 */
 class Stream_Decompression : public Decompression_Algorithm {
    public:
-      void update(secure_vector<uint8_t>& buf, size_t offset) final override;
+      void update(secure_vector<uint8_t>& buf, size_t offset) final;
 
-      void finish(secure_vector<uint8_t>& buf, size_t offset) final override;
+      void finish(secure_vector<uint8_t>& buf, size_t offset) final;
 
-      void clear() final override;
+      void clear() final;
 
    private:
-      void start() final override;
+      void start() final;
 
       void process(secure_vector<uint8_t>& buf, size_t offset, uint32_t flags);
 

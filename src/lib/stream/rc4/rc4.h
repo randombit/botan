@@ -36,7 +36,7 @@ class RC4 final : public StreamCipher {
       */
       explicit RC4(size_t skip = 0);
 
-      ~RC4() { clear(); }
+      ~RC4() override { clear(); }
 
    private:
       void key_schedule(const uint8_t[], size_t) override;

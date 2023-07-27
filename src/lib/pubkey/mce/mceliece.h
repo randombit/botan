@@ -29,7 +29,7 @@ class BOTAN_PUBLIC_API(2, 0) McEliece_PublicKey : public virtual Public_Key {
 
       McEliece_PublicKey(const McEliece_PublicKey& other) = default;
       McEliece_PublicKey& operator=(const McEliece_PublicKey& other) = default;
-      virtual ~McEliece_PublicKey() = default;
+      ~McEliece_PublicKey() override = default;
 
       secure_vector<uint8_t> random_plaintext_element(RandomNumberGenerator& rng) const;
 
@@ -99,7 +99,7 @@ class BOTAN_PUBLIC_API(2, 0) McEliece_PrivateKey final : public virtual McEliece
                           const std::vector<gf2m>& inverse_support,
                           const std::vector<uint8_t>& public_matrix);
 
-      ~McEliece_PrivateKey();
+      ~McEliece_PrivateKey() override;
 
       McEliece_PrivateKey(const McEliece_PrivateKey&);
       McEliece_PrivateKey& operator=(const McEliece_PrivateKey&);

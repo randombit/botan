@@ -20,23 +20,23 @@ namespace Botan {
 */
 class CBC_Mode : public Cipher_Mode {
    public:
-      std::string name() const override final;
+      std::string name() const final;
 
-      size_t update_granularity() const override final;
+      size_t update_granularity() const final;
 
-      size_t ideal_granularity() const override final;
+      size_t ideal_granularity() const final;
 
-      Key_Length_Specification key_spec() const override final;
+      Key_Length_Specification key_spec() const final;
 
-      size_t default_nonce_length() const override final;
+      size_t default_nonce_length() const final;
 
       bool valid_nonce_length(size_t n) const override;
 
-      void clear() override final;
+      void clear() final;
 
       void reset() override;
 
-      bool has_keying_material() const override final;
+      bool has_keying_material() const final;
 
    protected:
       CBC_Mode(std::unique_ptr<BlockCipher> cipher, std::unique_ptr<BlockCipherModePaddingMethod> padding);
