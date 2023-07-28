@@ -45,10 +45,10 @@ class GCM_Mode : public AEAD_Mode {
 
       bool has_keying_material() const override final;
 
+      ~GCM_Mode();
+
    protected:
       GCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size);
-
-      ~GCM_Mode();
 
       static const size_t GCM_BS = 16;
 

@@ -83,10 +83,10 @@ class Signature_with_Hash : public Signature {
 
       secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override;
 
+      ~Signature_with_Hash() override = default;
+
    protected:
       explicit Signature_with_Hash(std::string_view hash);
-
-      ~Signature_with_Hash() override = default;
 
       std::string hash_function() const final { return m_hash->name(); }
 
@@ -108,9 +108,10 @@ class Key_Agreement_with_KDF : public Key_Agreement {
                                    const uint8_t salt[],
                                    size_t salt_len) override;
 
+      ~Key_Agreement_with_KDF() override = default;
+
    protected:
       explicit Key_Agreement_with_KDF(std::string_view kdf);
-      ~Key_Agreement_with_KDF() override = default;
 
    private:
       virtual secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) = 0;
@@ -127,6 +128,8 @@ class KEM_Encryption_with_KDF : public KEM_Encryption {
 
       size_t shared_key_length(size_t desired_shared_key_len) const final;
 
+      ~KEM_Encryption_with_KDF() override = default;
+
    protected:
       virtual void raw_kem_encrypt(std::span<uint8_t> out_encapsulated_key,
                                    std::span<uint8_t> out_raw_shared_key,
@@ -135,7 +138,6 @@ class KEM_Encryption_with_KDF : public KEM_Encryption {
       virtual size_t raw_kem_shared_key_length() const = 0;
 
       explicit KEM_Encryption_with_KDF(std::string_view kdf);
-      ~KEM_Encryption_with_KDF() override = default;
 
    private:
       std::unique_ptr<KDF> m_kdf;
@@ -150,6 +152,8 @@ class KEM_Decryption_with_KDF : public KEM_Decryption {
 
       size_t shared_key_length(size_t desired_shared_key_len) const final;
 
+      ~KEM_Decryption_with_KDF() override = default;
+
    protected:
       virtual void raw_kem_decrypt(std::span<uint8_t> out_raw_shared_key,
                                    std::span<const uint8_t> encapsulated_key) = 0;
@@ -157,7 +161,6 @@ class KEM_Decryption_with_KDF : public KEM_Decryption {
       virtual size_t raw_kem_shared_key_length() const = 0;
 
       explicit KEM_Decryption_with_KDF(std::string_view kdf);
-      ~KEM_Decryption_with_KDF() override = default;
 
    private:
       std::unique_ptr<KDF> m_kdf;
