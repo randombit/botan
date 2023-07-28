@@ -31,8 +31,10 @@ class Atomic final {
 
       ~Atomic() = default;
 
-      Atomic& operator=(const Atomic& a) {
-         m_data.store(a.m_data.load());
+      Atomic& operator=(const Atomic& other) {
+         if(this != &other) {
+            m_data.store(other.m_data.load());
+         }
          return *this;
       }
 

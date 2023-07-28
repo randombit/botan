@@ -35,8 +35,7 @@
    #include <memory>
    #include <type_traits>
 
-namespace Botan {
-namespace TLS {
+namespace Botan::TLS {
 
 /**
  * @brief boost::asio compatible SSL/TLS stream
@@ -759,8 +758,7 @@ class Stream {
       const boost::asio::mutable_buffer m_input_buffer;
 };
 
-}  // namespace TLS
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif  // BOOST_VERSION
 #endif  // BOTAN_ASIO_STREAM_H_

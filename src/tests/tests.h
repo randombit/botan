@@ -356,7 +356,7 @@ class Test {
 
             template <typename I1, typename I2>
             bool test_int_eq(const std::string& what, I1 x, I2 y) {
-               return test_eq(what.c_str(), static_cast<size_t>(x), static_cast<size_t>(y));
+               return test_eq(what, static_cast<size_t>(x), static_cast<size_t>(y));
             }
 
             bool test_lt(const std::string& what, size_t produced, size_t expected);

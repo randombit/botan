@@ -20,11 +20,11 @@ inline std::ostream& operator<<(std::ostream& o, const Botan::EC_Point& point) {
    return o;
 }
 
-Botan::BigInt decompress_point(bool yMod2,
-                               const Botan::BigInt& x,
-                               const Botan::BigInt& curve_p,
-                               const Botan::BigInt& curve_a,
-                               const Botan::BigInt& curve_b) {
+inline Botan::BigInt decompress_point(bool yMod2,
+                                      const Botan::BigInt& x,
+                                      const Botan::BigInt& curve_p,
+                                      const Botan::BigInt& curve_a,
+                                      const Botan::BigInt& curve_b) {
    Botan::BigInt xpow3 = x * x * x;
 
    Botan::BigInt g = curve_a * x;
@@ -45,7 +45,7 @@ Botan::BigInt decompress_point(bool yMod2,
    return z;
 }
 
-void check_ecc_math(const Botan::EC_Group& group, const uint8_t in[], size_t len) {
+inline void check_ecc_math(const Botan::EC_Group& group, const uint8_t in[], size_t len) {
    // These depend only on the group, which is also static
    static const Botan::EC_Point base_point = group.get_base_point();
 

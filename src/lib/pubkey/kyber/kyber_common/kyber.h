@@ -91,7 +91,7 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key {
       KyberMode mode() const;
 
    protected:
-      Kyber_PublicKey() {}
+      Kyber_PublicKey() = default;
 
       static std::shared_ptr<Kyber_PublicKeyInternal> initialize_from_encoding(std::span<const uint8_t> pub_key,
                                                                                KyberMode m);

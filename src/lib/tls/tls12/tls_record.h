@@ -43,7 +43,7 @@ class Connection_Cipher_State final {
 
       AEAD_Mode& aead() {
          BOTAN_ASSERT_NONNULL(m_aead.get());
-         return *m_aead.get();
+         return *m_aead;
       }
 
       std::vector<uint8_t> aead_nonce(uint64_t seq, RandomNumberGenerator& rng);

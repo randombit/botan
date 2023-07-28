@@ -248,10 +248,10 @@ Argument_Parser::Argument_Parser(const std::string& spec,
       }
    }
 
-   for(std::string flag : extra_flags) {
+   for(const std::string& flag : extra_flags) {
       m_spec_flags.insert(flag);
    }
-   for(std::string opt : extra_opts) {
+   for(const std::string& opt : extra_opts) {
       m_spec_opts.insert(std::make_pair(opt, ""));
    }
 }

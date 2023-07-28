@@ -21,7 +21,7 @@ using Botan::word;
 
 namespace {
 
-void dump_word_vec(const char* name, const word x[], size_t x_len) {
+inline void dump_word_vec(const char* name, const word x[], size_t x_len) {
    fprintf(stderr, "%s = ", name);
    for(size_t i = 0; i != x_len; ++i) {
       fprintf(stderr, WORD_FORMAT_STRING, x[i]);
@@ -30,7 +30,7 @@ void dump_word_vec(const char* name, const word x[], size_t x_len) {
    fprintf(stderr, "\n");
 }
 
-void compare_word_vec(const word x[], size_t x_len, const word y[], size_t y_len, const char* comparing) {
+inline void compare_word_vec(const word x[], size_t x_len, const word y[], size_t y_len, const char* comparing) {
    const size_t common_words = std::min(x_len, y_len);
 
    for(size_t i = 0; i != common_words; ++i) {

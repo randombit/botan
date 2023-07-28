@@ -22,7 +22,7 @@ namespace Botan {
 
 class Kyber_XOF {
    public:
-      virtual ~Kyber_XOF() {}
+      virtual ~Kyber_XOF() = default;
 
       virtual void set_position(const std::tuple<uint8_t, uint8_t>& matrix_position) = 0;
 

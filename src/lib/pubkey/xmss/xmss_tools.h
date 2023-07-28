@@ -21,6 +21,7 @@ namespace Botan {
  **/
 class XMSS_Tools final {
    public:
+      XMSS_Tools() = delete;
       XMSS_Tools(const XMSS_Tools&) = delete;
       void operator=(const XMSS_Tools&) = delete;
 
@@ -47,9 +48,6 @@ class XMSS_Tools final {
        **/
       template <typename T, typename U = typename std::enable_if<std::is_integral<T>::value, void>::type>
       static void concat(secure_vector<uint8_t>& target, const T& src, size_t len);
-
-   private:
-      XMSS_Tools();
 };
 
 template <typename T, typename U>

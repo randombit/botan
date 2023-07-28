@@ -39,11 +39,10 @@ struct StreamCategory : public boost::system::error_category {
       const char* name() const noexcept override { return "Botan TLS Stream"; }
 
       std::string message(int value) const override {
-         switch(value) {
-            case StreamTruncated:
-               return "stream truncated";
-            default:
-               return "generic error";
+         if(value == StreamTruncated) {
+            return "stream truncated";
+         } else {
+            return "generic error";
          }
       }
 };
