@@ -66,7 +66,7 @@ class BOTAN_TEST_API Handshake_Layer {
        *
        * @return the marshalled handshake message
        */
-      static std::vector<uint8_t> prepare_message(const Handshake_Message_13_Ref message,
+      static std::vector<uint8_t> prepare_message(Handshake_Message_13_Ref message,
                                                   Transcript_Hash_State& transcript_hash);
 
       /**

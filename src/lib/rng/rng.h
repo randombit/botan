@@ -228,8 +228,9 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       */
       uint8_t next_nonzero_byte() {
          uint8_t b = this->next_byte();
-         while(b == 0)
+         while(b == 0) {
             b = this->next_byte();
+         }
          return b;
       }
 
@@ -262,7 +263,7 @@ typedef RandomNumberGenerator RNG;
 */
 class BOTAN_PUBLIC_API(2, 0) Hardware_RNG : public RandomNumberGenerator {
    public:
-      virtual void clear() final override { /* no way to clear state of hardware RNG */
+      void clear() final { /* no way to clear state of hardware RNG */
       }
 };
 
@@ -283,7 +284,7 @@ class BOTAN_PUBLIC_API(2, 0) Null_RNG final : public RandomNumberGenerator {
    private:
       void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) override {
          // throw if caller tries to obtain random bytes
-         if(output.size() > 0) {
+         if(!output.empty()) {
             throw PRNG_Unseeded("Null_RNG called");
          }
       }

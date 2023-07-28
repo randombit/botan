@@ -91,7 +91,7 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_KA_Params {
 
       inline EC_Point_Format compression_type() const { return m_compression_mode; }
 
-      const std::string kdf_spec() const { return m_kdf_spec; }
+      const std::string& kdf_spec() const { return m_kdf_spec; }
 
    private:
       const EC_Group m_domain;
@@ -139,7 +139,7 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_System_Params final : public ECIES_KA_Params 
 
       ECIES_System_Params(const ECIES_System_Params&) = default;
       ECIES_System_Params& operator=(const ECIES_System_Params&) = delete;
-      virtual ~ECIES_System_Params() = default;
+      ~ECIES_System_Params() override = default;
 
       /// creates an instance of the message authentication code
       std::unique_ptr<MessageAuthenticationCode> create_mac() const;

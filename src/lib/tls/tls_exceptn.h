@@ -11,9 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/tls_alert.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /**
 * TLS Exception Base Class
@@ -41,8 +39,6 @@ class BOTAN_PUBLIC_API(2, 0) Unexpected_Message final : public TLS_Exception {
       explicit Unexpected_Message(std::string_view err) : TLS_Exception(AlertType::UnexpectedMessage, err) {}
 };
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

@@ -131,7 +131,7 @@ class BOTAN_PUBLIC_API(2, 0) AEAD_Mode : public Cipher_Mode {
       */
       size_t default_nonce_length() const override { return 12; }
 
-      virtual ~AEAD_Mode() = default;
+      ~AEAD_Mode() override = default;
 };
 
 /**

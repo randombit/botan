@@ -11,9 +11,7 @@
 #include <botan/secmem.h>
 #include <botan/tls_version.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /**
 * TLS Handshake Hash
@@ -34,8 +32,6 @@ class Handshake_Hash final {
       std::vector<uint8_t> m_data;
 };
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

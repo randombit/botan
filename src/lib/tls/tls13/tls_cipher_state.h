@@ -71,15 +71,15 @@ class BOTAN_TEST_API Cipher_State {
       /**
        * Construct a Cipher_State from a Pre-Shared-Key.
        */
-      static std::unique_ptr<Cipher_State> init_with_psk(const Connection_Side side,
-                                                         const PSK_Type type,
+      static std::unique_ptr<Cipher_State> init_with_psk(Connection_Side side,
+                                                         PSK_Type type,
                                                          secure_vector<uint8_t>&& psk,
                                                          std::string_view prf_algo);
 
       /**
        * Construct a Cipher_State after receiving a server hello message.
        */
-      static std::unique_ptr<Cipher_State> init_with_server_hello(const Connection_Side side,
+      static std::unique_ptr<Cipher_State> init_with_server_hello(Connection_Side side,
                                                                   secure_vector<uint8_t>&& shared_secret,
                                                                   const Ciphersuite& cipher,
                                                                   const Transcript_Hash& transcript_hash);
@@ -130,12 +130,12 @@ class BOTAN_TEST_API Cipher_State {
       /**
        * @returns  number of bytes needed to encrypt \p input_length bytes
        */
-      size_t encrypt_output_length(const size_t input_length) const;
+      size_t encrypt_output_length(size_t input_length) const;
 
       /**
        * @returns  number of bytes needed to decrypt \p input_length bytes
        */
-      size_t decrypt_output_length(const size_t input_length) const;
+      size_t decrypt_output_length(size_t input_length) const;
 
       /**
        * @returns  the minimum ciphertext length for decryption
@@ -266,9 +266,8 @@ class BOTAN_TEST_API Cipher_State {
       void advance_without_psk();
 
       void derive_write_traffic_key(const secure_vector<uint8_t>& traffic_secret,
-                                    const bool handshake_traffic_secret = false);
-      void derive_read_traffic_key(const secure_vector<uint8_t>& traffic_secret,
-                                   const bool handshake_traffic_secret = false);
+                                    bool handshake_traffic_secret = false);
+      void derive_read_traffic_key(const secure_vector<uint8_t>& traffic_secret, bool handshake_traffic_secret = false);
 
       /**
        * HKDF-Extract from RFC 8446 7.1
@@ -281,7 +280,7 @@ class BOTAN_TEST_API Cipher_State {
       secure_vector<uint8_t> hkdf_expand_label(const secure_vector<uint8_t>& secret,
                                                std::string_view label,
                                                const std::vector<uint8_t>& context,
-                                               const size_t length) const;
+                                               size_t length) const;
 
       /**
        * Derive-Secret from RFC 8446 7.1

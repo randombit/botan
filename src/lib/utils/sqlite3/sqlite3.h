@@ -28,7 +28,7 @@ class BOTAN_PUBLIC_API(2, 0) Sqlite3_Database final : public SQL_Database {
        */
       Sqlite3_Database(std::string_view file, std::optional<int> sqlite_open_flags = std::nullopt);
 
-      ~Sqlite3_Database();
+      ~Sqlite3_Database() override;
 
       size_t row_count(std::string_view table_name) override;
 
@@ -57,7 +57,7 @@ class BOTAN_PUBLIC_API(2, 0) Sqlite3_Database final : public SQL_Database {
             bool step() override;
 
             Sqlite3_Statement(sqlite3* db, std::string_view base_sql);
-            ~Sqlite3_Statement();
+            ~Sqlite3_Statement() override;
 
          private:
             sqlite3_stmt* m_stmt;

@@ -19,27 +19,27 @@ namespace Botan {
 */
 class CFB_Mode : public Cipher_Mode {
    public:
-      std::string name() const override final;
+      std::string name() const final;
 
-      size_t update_granularity() const override final;
+      size_t update_granularity() const final;
 
-      size_t ideal_granularity() const override final;
+      size_t ideal_granularity() const final;
 
-      size_t minimum_final_size() const override final;
+      size_t minimum_final_size() const final;
 
-      Key_Length_Specification key_spec() const override final;
+      Key_Length_Specification key_spec() const final;
 
-      size_t output_length(size_t input_length) const override final;
+      size_t output_length(size_t input_length) const final;
 
-      size_t default_nonce_length() const override final;
+      size_t default_nonce_length() const final;
 
-      bool valid_nonce_length(size_t n) const override final;
+      bool valid_nonce_length(size_t n) const final;
 
-      void clear() override final;
+      void clear() final;
 
-      void reset() override final;
+      void reset() final;
 
-      bool has_keying_material() const override final;
+      bool has_keying_material() const final;
 
    protected:
       CFB_Mode(std::unique_ptr<BlockCipher> cipher, size_t feedback_bits);

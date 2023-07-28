@@ -35,8 +35,6 @@ class Parallel final : public HashFunction {
       Parallel& operator=(const Parallel&) = delete;
 
    private:
-      Parallel() = delete;
-
       void add_data(const uint8_t[], size_t) override;
       void final_result(uint8_t[]) override;
 

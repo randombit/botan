@@ -48,7 +48,7 @@ class CTR_BE final : public StreamCipher {
       void cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) override;
       void generate_keystream(uint8_t out[], size_t length) override;
       void set_iv_bytes(const uint8_t iv[], size_t iv_len) override;
-      void add_counter(const uint64_t counter);
+      void add_counter(uint64_t counter);
 
       std::unique_ptr<BlockCipher> m_cipher;
 

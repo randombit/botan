@@ -22,9 +22,7 @@
    #include <boost/asio.hpp>
    #include <boost/asio/yield.hpp>
 
-namespace Botan {
-namespace TLS {
-namespace detail {
+namespace Botan::TLS::detail {
 
 /**
  * Base class for asynchronous stream operations.
@@ -303,9 +301,7 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
       boost::system::error_code m_ec;
 };
 
-}  // namespace detail
-}  // namespace TLS
-}  // namespace Botan
+}  // namespace Botan::TLS::detail
 
    #include <boost/asio/unyield.hpp>
 

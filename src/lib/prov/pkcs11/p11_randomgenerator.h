@@ -16,8 +16,7 @@
 #include <functional>
 #include <string>
 
-namespace Botan {
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 class Module;
 
@@ -49,8 +48,6 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_RNG final : public Hardware_RNG {
    private:
       const std::reference_wrapper<Session> m_session;
 };
-}  // namespace PKCS11
-
-}  // namespace Botan
+}  // namespace Botan::PKCS11
 
 #endif

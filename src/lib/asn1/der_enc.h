@@ -46,7 +46,7 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
       * DER encode, calling append to write output
       * If this constructor is used, get_contents* may not be called.
       */
-      DER_Encoder(append_fn append) : m_append_output(append) {}
+      DER_Encoder(append_fn append) : m_append_output(std::move(append)) {}
 
       secure_vector<uint8_t> get_contents();
 
@@ -122,15 +122,17 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
 
       template <typename T>
       DER_Encoder& encode_optional(const T& value, const T& default_value) {
-         if(value != default_value)
+         if(value != default_value) {
             encode(value);
+         }
          return (*this);
       }
 
       template <typename T>
       DER_Encoder& encode_list(const std::vector<T>& values) {
-         for(size_t i = 0; i != values.size(); ++i)
+         for(size_t i = 0; i != values.size(); ++i) {
             encode(values[i]);
+         }
          return (*this);
       }
 
@@ -143,14 +145,16 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
       * Conditionally write some values to the stream
       */
       DER_Encoder& encode_if(bool pred, DER_Encoder& enc) {
-         if(pred)
+         if(pred) {
             return raw_bytes(enc.get_contents());
+         }
          return (*this);
       }
 
       DER_Encoder& encode_if(bool pred, const ASN1_Object& obj) {
-         if(pred)
+         if(pred) {
             encode(obj);
+         }
          return (*this);
       }
 
@@ -181,13 +185,13 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
 
             DER_Sequence(ASN1_Type, ASN1_Class);
 
-            DER_Sequence(DER_Sequence&& seq) :
+            DER_Sequence(DER_Sequence&& seq) noexcept :
                   m_type_tag(std::move(seq.m_type_tag)),
                   m_class_tag(std::move(seq.m_class_tag)),
                   m_contents(std::move(seq.m_contents)),
                   m_set_contents(std::move(seq.m_set_contents)) {}
 
-            DER_Sequence& operator=(DER_Sequence&& seq) {
+            DER_Sequence& operator=(DER_Sequence&& seq) noexcept {
                std::swap(m_type_tag, seq.m_type_tag);
                std::swap(m_class_tag, seq.m_class_tag);
                std::swap(m_contents, seq.m_contents);

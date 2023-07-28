@@ -24,7 +24,7 @@ namespace Botan {
 */
 class ChaCha20Poly1305_Mode : public AEAD_Mode {
    public:
-      void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) override final;
+      void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) final;
 
       bool associated_data_requires_key() const override { return false; }
 
@@ -44,7 +44,7 @@ class ChaCha20Poly1305_Mode : public AEAD_Mode {
 
       void reset() override;
 
-      bool has_keying_material() const override final;
+      bool has_keying_material() const final;
 
    protected:
       std::unique_ptr<StreamCipher> m_chacha;

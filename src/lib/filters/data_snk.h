@@ -23,7 +23,7 @@ class BOTAN_PUBLIC_API(2, 0) DataSink : public Filter {
       bool attachable() override { return false; }
 
       DataSink() = default;
-      virtual ~DataSink() = default;
+      ~DataSink() override = default;
 
       DataSink& operator=(const DataSink&) = delete;
       DataSink(const DataSink&) = delete;
@@ -58,7 +58,7 @@ class BOTAN_PUBLIC_API(2, 0) DataSink_Stream final : public DataSink {
 
       void end_msg() override;
 
-      ~DataSink_Stream();
+      ~DataSink_Stream() override;
 
    private:
       const std::string m_identifier;

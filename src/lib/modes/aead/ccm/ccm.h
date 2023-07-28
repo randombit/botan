@@ -20,31 +20,31 @@ namespace Botan {
 */
 class CCM_Mode : public AEAD_Mode {
    public:
-      void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) override final;
+      void set_associated_data_n(size_t idx, std::span<const uint8_t> ad) final;
 
-      bool associated_data_requires_key() const override final { return false; }
+      bool associated_data_requires_key() const final { return false; }
 
-      std::string name() const override final;
+      std::string name() const final;
 
-      size_t update_granularity() const override final;
+      size_t update_granularity() const final;
 
-      size_t ideal_granularity() const override final;
+      size_t ideal_granularity() const final;
 
-      bool requires_entire_message() const override final;
+      bool requires_entire_message() const final;
 
-      Key_Length_Specification key_spec() const override final;
+      Key_Length_Specification key_spec() const final;
 
-      bool valid_nonce_length(size_t) const override final;
+      bool valid_nonce_length(size_t) const final;
 
-      size_t default_nonce_length() const override final;
+      size_t default_nonce_length() const final;
 
-      void clear() override final;
+      void clear() final;
 
-      void reset() override final;
+      void reset() final;
 
-      size_t tag_size() const override final { return m_tag_size; }
+      size_t tag_size() const final { return m_tag_size; }
 
-      bool has_keying_material() const override final;
+      bool has_keying_material() const final;
 
    protected:
       CCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size, size_t L);
@@ -65,10 +65,10 @@ class CCM_Mode : public AEAD_Mode {
       secure_vector<uint8_t> format_c0();
 
    private:
-      void start_msg(const uint8_t nonce[], size_t nonce_len) override final;
-      size_t process_msg(uint8_t buf[], size_t sz) override final;
+      void start_msg(const uint8_t nonce[], size_t nonce_len) final;
+      size_t process_msg(uint8_t buf[], size_t sz) final;
 
-      void key_schedule(const uint8_t key[], size_t length) override final;
+      void key_schedule(const uint8_t key[], size_t length) final;
 
       const size_t m_tag_size;
       const size_t m_L;

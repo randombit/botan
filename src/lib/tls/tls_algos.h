@@ -15,9 +15,7 @@
 
 //BOTAN_FUTURE_INTERNAL_HEADER(tls_algos.h)
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 enum class Cipher_Algo {
    CHACHA20_POLY1305,
@@ -141,8 +139,6 @@ inline bool key_exchange_is_psk(Kex_Algo m) {
    return (m == Kex_Algo::PSK || m == Kex_Algo::ECDHE_PSK || m == Kex_Algo::DHE_PSK);
 }
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

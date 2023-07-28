@@ -11,9 +11,7 @@
 #include <botan/secmem.h>
 #include <botan/tls_magic.h>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 class Handshake_State;
 
@@ -70,8 +68,6 @@ class Session_Keys final {
       std::vector<uint8_t> m_c_nonce, m_s_nonce;
 };
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

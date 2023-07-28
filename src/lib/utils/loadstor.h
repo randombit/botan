@@ -106,8 +106,9 @@ template <typename T>
 inline constexpr T load_be(const uint8_t in[], size_t off) {
    in += off * sizeof(T);
    T out = 0;
-   for(size_t i = 0; i != sizeof(T); ++i)
+   for(size_t i = 0; i != sizeof(T); ++i) {
       out = static_cast<T>((out << 8) | in[i]);
+   }
    return out;
 }
 
@@ -121,8 +122,9 @@ template <typename T>
 inline constexpr T load_le(const uint8_t in[], size_t off) {
    in += off * sizeof(T);
    T out = 0;
-   for(size_t i = 0; i != sizeof(T); ++i)
+   for(size_t i = 0; i != sizeof(T); ++i) {
       out = (out << 8) | in[sizeof(T) - 1 - i];
+   }
    return out;
 }
 
@@ -379,8 +381,9 @@ inline constexpr void load_be(T out[], const uint8_t in[], size_t count) {
 #elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
       typecast_copy(out, in, count);
 
-      for(size_t i = 0; i != count; ++i)
+      for(size_t i = 0; i != count; ++i) {
          out[i] = reverse_bytes(out[i]);
+      }
 #else
       for(size_t i = 0; i != count; ++i)
          out[i] = load_be<T>(in, i);
@@ -607,8 +610,9 @@ void copy_out_be(uint8_t out[], size_t out_bytes, const T in[]) {
       in += 1;
    }
 
-   for(size_t i = 0; i != out_bytes; ++i)
+   for(size_t i = 0; i != out_bytes; ++i) {
       out[i] = get_byte_var(i % 8, in[0]);
+   }
 }
 
 template <typename T, typename Alloc>
@@ -625,8 +629,9 @@ void copy_out_le(uint8_t out[], size_t out_bytes, const T in[]) {
       in += 1;
    }
 
-   for(size_t i = 0; i != out_bytes; ++i)
+   for(size_t i = 0; i != out_bytes; ++i) {
       out[i] = get_byte_var(sizeof(T) - 1 - (i % 8), in[0]);
+   }
 }
 
 template <typename T, typename Alloc>

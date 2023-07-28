@@ -2836,7 +2836,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * implement wrappers for vendor specific extensions using the same error
       * handling mechanisms as the rest of the library.
       */
-      static bool handle_return_value(const CK_RV function_result, ReturnValue* return_value);
+      static bool handle_return_value(CK_RV function_result, ReturnValue* return_value);
 
    private:
       const FunctionListPtr m_func_list_ptr;

@@ -215,7 +215,7 @@ class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
       /**
       * Create an uninitialied OID object
       */
-      explicit OID() {}
+      explicit OID() = default;
 
       /**
       * Construct an OID from a string.

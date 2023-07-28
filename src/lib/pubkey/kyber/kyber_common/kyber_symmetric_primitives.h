@@ -22,7 +22,7 @@ namespace Botan {
 
 class Kyber_XOF {
    public:
-      virtual ~Kyber_XOF() {}
+      virtual ~Kyber_XOF() = default;
 
       virtual void set_position(const std::tuple<uint8_t, uint8_t>& matrix_position) = 0;
 
@@ -43,9 +43,7 @@ class Kyber_Symmetric_Primitives {
 
       virtual std::unique_ptr<Kyber_XOF> XOF(std::span<const uint8_t> seed) const = 0;
 
-      virtual secure_vector<uint8_t> PRF(std::span<const uint8_t> seed,
-                                         const uint8_t nonce,
-                                         const size_t outlen) const = 0;
+      virtual secure_vector<uint8_t> PRF(std::span<const uint8_t> seed, uint8_t nonce, size_t outlen) const = 0;
 };
 
 }  // namespace Botan

@@ -8,7 +8,7 @@
 #ifndef BOTAN_UTIL_FILESYSTEM_H_
 #define BOTAN_UTIL_FILESYSTEM_H_
 
-#include <botan/types.h>
+#include <botan/exceptn.h>
 #include <string>
 #include <vector>
 

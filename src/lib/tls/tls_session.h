@@ -23,9 +23,7 @@
 #include <span>
 #include <variant>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 // Different flavors of session handles are used, depending on the usage
 // scenario and the TLS protocol version.
@@ -158,7 +156,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Base {
             m_server_info(std::move(server_info)) {}
 
    protected:
-      Session_Base() {}
+      Session_Base() = default;
 
    public:
       /**
@@ -454,8 +452,6 @@ struct BOTAN_PUBLIC_API(3, 0) Session_with_Handle {
       Session_Handle handle;
 };
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

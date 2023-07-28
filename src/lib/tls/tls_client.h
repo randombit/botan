@@ -17,9 +17,7 @@
 #include <memory>
 #include <vector>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 class Channel_Impl;
 class Handshake_IO;
@@ -64,7 +62,7 @@ class BOTAN_PUBLIC_API(2, 0) Client final : public Channel {
              const std::vector<std::string>& next_protocols = {},
              size_t reserved_io_buffer_size = TLS::Client::IO_BUF_DEFAULT_SIZE);
 
-      ~Client();
+      ~Client() override;
 
       /**
       * @return network protocol as advertised by the TLS server, if server sent the ALPN extension
@@ -107,7 +105,6 @@ class BOTAN_PUBLIC_API(2, 0) Client final : public Channel {
    private:
       std::unique_ptr<Channel_Impl> m_impl;
 };
-}  // namespace TLS
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

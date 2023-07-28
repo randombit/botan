@@ -94,7 +94,7 @@ class BOTAN_PUBLIC_API(2, 4) Encrypted_PSK_Database : public PSK_Database {
       */
       Encrypted_PSK_Database(const secure_vector<uint8_t>& master_key);
 
-      ~Encrypted_PSK_Database();
+      ~Encrypted_PSK_Database() override;
 
       std::set<std::string> list_names() const override;
 
@@ -142,7 +142,7 @@ class BOTAN_PUBLIC_API(2, 4) Encrypted_PSK_Database_SQL : public Encrypted_PSK_D
                                  std::shared_ptr<SQL_Database> db,
                                  std::string_view table_name);
 
-      ~Encrypted_PSK_Database_SQL();
+      ~Encrypted_PSK_Database_SQL() override;
 
    private:
       void kv_set(std::string_view index, std::string_view value) override;

@@ -16,9 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace Botan {
-
-namespace HTTP {
+namespace Botan::HTTP {
 
 /**
 * HTTP_Error Exception
@@ -48,9 +46,10 @@ class Response final {
 
       std::string status_message() const { return m_status_message; }
 
-      void throw_unless_ok() {
-         if(status_code() != 200)
+      void throw_unless_ok() const {
+         if(status_code() != 200) {
             throw HTTP_Error(status_message());
+         }
       }
 
    private:
@@ -90,8 +89,6 @@ Response POST_sync(std::string_view url,
 
 std::string url_encode(std::string_view url);
 
-}  // namespace HTTP
-
-}  // namespace Botan
+}  // namespace Botan::HTTP
 
 #endif

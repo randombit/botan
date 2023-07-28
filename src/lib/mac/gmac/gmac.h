@@ -43,7 +43,7 @@ class GMAC final : public MessageAuthenticationCode {
       GMAC(const GMAC&) = delete;
       GMAC& operator=(const GMAC&) = delete;
 
-      ~GMAC();
+      ~GMAC() override;
 
    private:
       void add_data(const uint8_t[], size_t) override;

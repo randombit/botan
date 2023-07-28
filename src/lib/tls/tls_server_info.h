@@ -11,9 +11,7 @@
 #include <botan/types.h>
 #include <string>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /**
 * Represents information known about a TLS server.
@@ -23,7 +21,7 @@ class BOTAN_PUBLIC_API(2, 0) Server_Information final {
       /**
       * An empty server info - nothing known
       */
-      Server_Information() : m_hostname(""), m_service(""), m_port(0) {}
+      Server_Information() : m_hostname(), m_service(), m_port(0) {}
 
       /**
       * @param hostname the host's DNS name, if known
@@ -31,7 +29,7 @@ class BOTAN_PUBLIC_API(2, 0) Server_Information final {
       *        TCP/UDP). Zero represents unknown.
       */
       Server_Information(std::string_view hostname, uint16_t port = 0) :
-            m_hostname(hostname), m_service(""), m_port(port) {}
+            m_hostname(hostname), m_service(), m_port(port) {}
 
       /**
       * @param hostname the host's DNS name, if known
@@ -78,17 +76,18 @@ inline bool operator!=(const Server_Information& a, const Server_Information& b)
 }
 
 inline bool operator<(const Server_Information& a, const Server_Information& b) {
-   if(a.hostname() != b.hostname())
+   if(a.hostname() != b.hostname()) {
       return (a.hostname() < b.hostname());
-   if(a.service() != b.service())
+   }
+   if(a.service() != b.service()) {
       return (a.service() < b.service());
-   if(a.port() != b.port())
+   }
+   if(a.port() != b.port()) {
       return (a.port() < b.port());
+   }
    return false;  // equal
 }
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

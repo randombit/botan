@@ -34,7 +34,7 @@ class BOTAN_TEST_API Timer final {
 
       void stop();
 
-      bool under(std::chrono::milliseconds msec) { return (milliseconds() < msec.count()); }
+      bool under(std::chrono::milliseconds msec) const { return (milliseconds() < msec.count()); }
 
       class Timer_Scope final {
          public:
@@ -80,9 +80,9 @@ class BOTAN_TEST_API Timer final {
 
       uint64_t events() const { return m_event_count * m_event_mult; }
 
-      const std::string get_name() const { return m_name; }
+      const std::string& get_name() const { return m_name; }
 
-      const std::string doing() const { return m_doing; }
+      const std::string& doing() const { return m_doing; }
 
       size_t buf_size() const { return m_buf_size; }
 

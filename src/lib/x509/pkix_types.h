@@ -39,13 +39,15 @@ class BOTAN_PUBLIC_API(2, 0) X509_DN final : public ASN1_Object {
       X509_DN() = default;
 
       explicit X509_DN(const std::multimap<OID, std::string>& args) {
-         for(auto i : args)
+         for(const auto& i : args) {
             add_attribute(i.first, i.second);
+         }
       }
 
       explicit X509_DN(const std::multimap<std::string, std::string>& args) {
-         for(auto i : args)
+         for(const auto& i : args) {
             add_attribute(i.first, i.second);
+         }
       }
 
       void encode_into(DER_Encoder&) const override;
@@ -488,7 +490,7 @@ class BOTAN_PUBLIC_API(2, 0) Extensions final : public ASN1_Object {
 
          if(extn_info != m_extension_info.end()) {
             // Unknown_Extension oid_name is empty
-            if(extn_info->second.obj().oid_name() == "") {
+            if(extn_info->second.obj().oid_name().empty()) {
                auto ext = std::make_unique<T>();
                ext->decode_inner(extn_info->second.bits());
                return ext;
@@ -512,7 +514,7 @@ class BOTAN_PUBLIC_API(2, 0) Extensions final : public ASN1_Object {
       */
       std::map<OID, std::pair<std::vector<uint8_t>, bool>> extensions_raw() const;
 
-      Extensions() {}
+      Extensions() = default;
 
       Extensions(const Extensions&) = default;
       Extensions& operator=(const Extensions&) = default;
@@ -541,7 +543,7 @@ class BOTAN_PUBLIC_API(2, 0) Extensions final : public ASN1_Object {
 
             const Certificate_Extension& obj() const {
                BOTAN_ASSERT_NONNULL(m_obj.get());
-               return *m_obj.get();
+               return *m_obj;
             }
 
          private:

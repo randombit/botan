@@ -36,8 +36,6 @@ class Truncated_Hash final : public HashFunction {
       Truncated_Hash(std::unique_ptr<HashFunction> hash, size_t length);
 
    private:
-      Truncated_Hash() = delete;
-
       void add_data(const uint8_t[], size_t) override;
       void final_result(uint8_t[]) override;
 

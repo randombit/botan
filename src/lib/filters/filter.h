@@ -54,6 +54,9 @@ class BOTAN_PUBLIC_API(2, 0) Filter {
 
       virtual ~Filter() = default;
 
+      Filter(const Filter&) = delete;
+      Filter& operator=(const Filter&) = delete;
+
    protected:
       /**
       * @param in some input for the filter
@@ -85,10 +88,6 @@ class BOTAN_PUBLIC_API(2, 0) Filter {
       }
 
       Filter();
-
-      Filter(const Filter&) = delete;
-
-      Filter& operator=(const Filter&) = delete;
 
    private:
       /**

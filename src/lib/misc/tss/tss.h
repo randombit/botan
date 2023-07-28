@@ -94,7 +94,7 @@ class BOTAN_PUBLIC_API(2, 0) RTSS_Share final {
       /**
       * @return if this TSS share was initialized or not
       */
-      bool initialized() const { return (m_contents.size() > 0); }
+      bool initialized() const { return (!m_contents.empty()); }
 
    private:
       secure_vector<uint8_t> m_contents;

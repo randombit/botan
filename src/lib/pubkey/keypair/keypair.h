@@ -10,9 +10,7 @@
 
 #include <botan/pk_keys.h>
 
-namespace Botan {
-
-namespace KeyPair {
+namespace Botan::KeyPair {
 
 /**
 * Tests whether the key is consistent for encryption; whether
@@ -66,8 +64,6 @@ inline bool signature_consistency_check(RandomNumberGenerator& rng, const Privat
    return signature_consistency_check(rng, key, key, padding);
 }
 
-}  // namespace KeyPair
-
-}  // namespace Botan
+}  // namespace Botan::KeyPair
 
 #endif

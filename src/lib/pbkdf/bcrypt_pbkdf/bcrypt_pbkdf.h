@@ -50,7 +50,7 @@ class BOTAN_PUBLIC_API(2, 11) Bcrypt_PBKDF final : public PasswordHash {
 
 class BOTAN_PUBLIC_API(2, 11) Bcrypt_PBKDF_Family final : public PasswordHashFamily {
    public:
-      Bcrypt_PBKDF_Family() {}
+      Bcrypt_PBKDF_Family() = default;
 
       std::string name() const override;
 

@@ -26,11 +26,11 @@ class MDx_HashFunction : public HashFunction {
       */
       MDx_HashFunction(size_t block_length, bool big_byte_endian, bool big_bit_endian, uint8_t counter_size = 8);
 
-      size_t hash_block_size() const override final { return m_buffer.size(); }
+      size_t hash_block_size() const final { return m_buffer.size(); }
 
    protected:
-      void add_data(const uint8_t input[], size_t length) override final;
-      void final_result(uint8_t output[]) override final;
+      void add_data(const uint8_t input[], size_t length) final;
+      void final_result(uint8_t output[]) final;
 
       /**
       * Run the hash's compression function over a set of blocks

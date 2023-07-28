@@ -8,12 +8,10 @@
 #ifndef BOTAN_TLS_SEQ_NUMBERS_H_
 #define BOTAN_TLS_SEQ_NUMBERS_H_
 
-#include <botan/types.h>
+#include <botan/exceptn.h>
 #include <map>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 class Connection_Sequence_Numbers {
    public:
@@ -130,10 +128,11 @@ class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers {
             const uint64_t offset = sequence - m_window_highest;
             m_window_highest += offset;
 
-            if(offset >= window_size)
+            if(offset >= window_size) {
                m_window_bits = 0;
-            else
+            } else {
                m_window_bits <<= offset;
+            }
 
             m_window_bits |= 0x01;
          } else {
@@ -158,8 +157,6 @@ class Datagram_Sequence_Numbers final : public Connection_Sequence_Numbers {
       uint64_t m_window_bits = 0;
 };
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

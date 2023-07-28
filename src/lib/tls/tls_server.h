@@ -16,9 +16,7 @@
 #include <botan/tls_policy.h>
 #include <vector>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 class Channel_Impl;
 
@@ -56,7 +54,7 @@ class BOTAN_PUBLIC_API(2, 0) Server final : public Channel {
              bool is_datagram = false,
              size_t reserved_io_buffer_size = TLS::Channel::IO_BUF_DEFAULT_SIZE);
 
-      ~Server();
+      ~Server() override;
 
       /**
       * Return the protocol notification set by the client (using the
@@ -82,7 +80,7 @@ class BOTAN_PUBLIC_API(2, 0) Server final : public Channel {
       void renegotiate(bool force_full_renegotiation = false) override;
 
       bool new_session_ticket_supported() const;
-      size_t send_new_session_tickets(const size_t tickets = 1);
+      size_t send_new_session_tickets(size_t tickets = 1);
 
       void update_traffic_keys(bool request_peer_update = false) override;
 
@@ -103,8 +101,6 @@ class BOTAN_PUBLIC_API(2, 0) Server final : public Channel {
    private:
       std::unique_ptr<Channel_Impl> m_impl;
 };
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

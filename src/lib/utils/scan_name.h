@@ -36,12 +36,12 @@ class SCAN_Name final {
       /**
       * @return original input string
       */
-      const std::string to_string() const { return m_orig_algo_spec; }
+      const std::string& to_string() const { return m_orig_algo_spec; }
 
       /**
       * @return algorithm name
       */
-      const std::string algo_name() const { return m_alg_name; }
+      const std::string& algo_name() const { return m_alg_name; }
 
       /**
       * @return number of arguments
@@ -86,7 +86,7 @@ class SCAN_Name final {
       /**
       * @return cipher mode (if any)
       */
-      std::string cipher_mode() const { return (m_mode_info.size() >= 1) ? m_mode_info[0] : ""; }
+      std::string cipher_mode() const { return (!m_mode_info.empty()) ? m_mode_info[0] : ""; }
 
       /**
       * @return cipher mode padding (if any)

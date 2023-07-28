@@ -16,9 +16,7 @@
 #include <memory>
 #include <vector>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 /**
 * SSL/TLS Client 1.2 implementation
@@ -90,8 +88,6 @@ class Client_Impl_12 : public Channel_Impl_12 {
       std::string m_application_protocol;
 };
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

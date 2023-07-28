@@ -30,7 +30,7 @@ class BOTAN_TEST_API Montgomery_Int final {
       /**
       * Create a zero-initialized Montgomery_Int
       */
-      Montgomery_Int(std::shared_ptr<const Montgomery_Params> params) : m_params(params) {}
+      Montgomery_Int(std::shared_ptr<const Montgomery_Params> params) : m_params(std::move(params)) {}
 
       /**
       * Create a Montgomery_Int

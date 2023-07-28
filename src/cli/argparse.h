@@ -51,32 +51,36 @@ class Argument_Parser final {
 
 std::vector<std::string> Argument_Parser::split_on(const std::string& str, char delim) {
    std::vector<std::string> elems;
-   if(str.empty())
+   if(str.empty()) {
       return elems;
+   }
 
    std::string substr;
    for(auto i = str.begin(); i != str.end(); ++i) {
       if(*i == delim) {
-         if(!substr.empty())
+         if(!substr.empty()) {
             elems.push_back(substr);
+         }
          substr.clear();
-      } else
+      } else {
          substr += *i;
+      }
    }
 
-   if(substr.empty())
+   if(substr.empty()) {
       throw CLI_Error("Unable to split string: " + str);
+   }
    elems.push_back(substr);
 
    return elems;
 }
 
 bool Argument_Parser::flag_set(const std::string& flag_name) const {
-   return m_user_flags.count(flag_name) > 0;
+   return m_user_flags.contains(flag_name);
 }
 
 bool Argument_Parser::has_arg(const std::string& opt_name) const {
-   return m_user_args.count(opt_name) > 0;
+   return m_user_args.contains(opt_name);
 }
 
 std::string Argument_Parser::get_arg(const std::string& opt_name) const {
@@ -107,8 +111,9 @@ size_t Argument_Parser::get_arg_sz(const std::string& opt_name) const {
 }
 
 std::vector<std::string> Argument_Parser::get_arg_list(const std::string& what) const {
-   if(what == m_spec_rest)
+   if(what == m_spec_rest) {
       return m_user_rest;
+   }
 
    return split_on(get_arg(what), ',');
 }
@@ -123,8 +128,8 @@ void Argument_Parser::parse_args(const std::vector<std::string>& params) {
          if(eq == std::string::npos) {
             const std::string opt_name = param.substr(2, std::string::npos);
 
-            if(m_spec_flags.count(opt_name) == 0) {
-               if(m_spec_opts.count(opt_name)) {
+            if(!m_spec_flags.contains(opt_name)) {
+               if(m_spec_opts.contains(opt_name)) {
                   throw CLI_Usage_Error("Invalid usage of option --" + opt_name + " without value");
                } else {
                   throw CLI_Usage_Error("Unknown flag --" + opt_name);
@@ -135,7 +140,7 @@ void Argument_Parser::parse_args(const std::vector<std::string>& params) {
             const std::string opt_name = param.substr(2, eq - 2);
             const std::string opt_val = param.substr(eq + 1, std::string::npos);
 
-            if(m_spec_opts.count(opt_name) == 0) {
+            if(!m_spec_opts.contains(opt_name)) {
                throw CLI_Usage_Error("Unknown option --" + opt_name);
             }
 
@@ -151,8 +156,9 @@ void Argument_Parser::parse_args(const std::vector<std::string>& params) {
       }
    }
 
-   if(flag_set("help"))
+   if(flag_set("help")) {
       return;
+   }
 
    if(args.size() < m_spec_args.size()) {
       // not enough arguments
@@ -185,7 +191,7 @@ void Argument_Parser::parse_args(const std::vector<std::string>& params) {
 
    // Now insert any defaults for options not supplied by the user
    for(const auto& opt : m_spec_opts) {
-      if(m_user_args.count(opt.first) == 0) {
+      if(!m_user_args.contains(opt.first)) {
          m_user_args.insert(opt);
       }
    }
@@ -202,15 +208,15 @@ Argument_Parser::Argument_Parser(const std::string& spec,
 
    const std::vector<std::string> parts = split_on(spec, ' ');
 
-   if(parts.size() == 0) {
+   if(parts.empty()) {
       throw CLI_Error_Invalid_Spec(spec);
    }
 
    for(size_t i = 1; i != parts.size(); ++i) {
-      const std::string s = parts[i];
+      const auto& s = parts[i];
 
-      if(s.empty())  // ?!? (shouldn't happen)
-      {
+      if(s.empty()) {
+         // ?!? (shouldn't happen)
          throw CLI_Error_Invalid_Spec(spec);
       }
 
@@ -242,10 +248,12 @@ Argument_Parser::Argument_Parser(const std::string& spec,
       }
    }
 
-   for(std::string flag : extra_flags)
+   for(const std::string& flag : extra_flags) {
       m_spec_flags.insert(flag);
-   for(std::string opt : extra_opts)
+   }
+   for(const std::string& opt : extra_opts) {
       m_spec_opts.insert(std::make_pair(opt, ""));
+   }
 }
 
 }  // namespace Botan_CLI

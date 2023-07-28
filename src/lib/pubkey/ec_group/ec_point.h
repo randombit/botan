@@ -66,8 +66,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       * Move Assignment
       */
       EC_Point& operator=(EC_Point&& other) {
-         if(this != &other)
+         if(this != &other) {
             this->swap(other);
+         }
          return (*this);
       }
 
@@ -112,8 +113,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       * @return *this
       */
       EC_Point& negate() {
-         if(!is_zero())
+         if(!is_zero()) {
             m_coord_y = m_curve.get_p() - m_coord_y;
+         }
          return *this;
       }
 

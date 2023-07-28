@@ -63,7 +63,7 @@ class BOTAN_UNSTABLE_API CurveGFp_Repr {
       }
 
       virtual void curve_mul_words(
-         BigInt& z, const word x_words[], const size_t x_size, const BigInt& y, secure_vector<word>& ws) const = 0;
+         BigInt& z, const word x_words[], size_t x_size, const BigInt& y, secure_vector<word>& ws) const = 0;
 
       void curve_sqr(BigInt& z, const BigInt& x, secure_vector<word>& ws) const {
          BOTAN_DEBUG_ASSERT(x.sig_words() <= get_p_words());
@@ -185,8 +185,9 @@ class BOTAN_UNSTABLE_API CurveGFp final {
       * @return true iff *this is the same as other
       */
       inline bool operator==(const CurveGFp& other) const {
-         if(m_repr.get() == other.m_repr.get())
+         if(m_repr.get() == other.m_repr.get()) {
             return true;
+         }
 
          return (get_p() == other.get_p()) && (get_a() == other.get_a()) && (get_b() == other.get_b());
       }

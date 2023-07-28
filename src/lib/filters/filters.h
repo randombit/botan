@@ -127,8 +127,9 @@ class BOTAN_PUBLIC_API(2, 0) Keyed_Filter : public Filter {
       * @param iv the initialization vector to use
       */
       virtual void set_iv(const InitializationVector& iv) {
-         if(iv.length() != 0)
+         if(iv.length() != 0) {
             throw Invalid_IV_Length(name(), iv.length());
+         }
       }
 
       /**
@@ -232,8 +233,9 @@ inline Keyed_Filter* get_cipher(std::string_view algo_spec,
                                 const InitializationVector& iv,
                                 Cipher_Dir direction) {
    Keyed_Filter* cipher = get_cipher(algo_spec, key, direction);
-   if(iv.length())
+   if(iv.length()) {
       cipher->set_iv(iv);
+   }
    return cipher;
 }
 
@@ -432,7 +434,7 @@ class BOTAN_PUBLIC_API(2, 0) Compression_Filter final : public Filter {
 
       Compression_Filter(std::string_view type, size_t compression_level, size_t buffer_size = 4096);
 
-      ~Compression_Filter();
+      ~Compression_Filter() override;
 
    private:
       std::unique_ptr<Compression_Algorithm> m_comp;
@@ -453,7 +455,7 @@ class BOTAN_PUBLIC_API(2, 0) Decompression_Filter final : public Filter {
 
       Decompression_Filter(std::string_view type, size_t buffer_size = 4096);
 
-      ~Decompression_Filter();
+      ~Decompression_Filter() override;
 
    private:
       std::unique_ptr<Decompression_Algorithm> m_comp;
@@ -680,7 +682,7 @@ class BOTAN_PUBLIC_API(2, 0) Threaded_Fork final : public Fork {
       */
       Threaded_Fork(Filter* filter_arr[], size_t length);
 
-      ~Threaded_Fork();
+      ~Threaded_Fork() override;
 
    private:
       void set_next(Filter* f[], size_t n);

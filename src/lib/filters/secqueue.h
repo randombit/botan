@@ -61,7 +61,7 @@ class BOTAN_TEST_API SecureQueue final : public Fanout_Filter,
       */
       SecureQueue(const SecureQueue& other);
 
-      ~SecureQueue() { destroy(); }
+      ~SecureQueue() override { destroy(); }
 
    private:
       void destroy();

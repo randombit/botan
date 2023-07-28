@@ -12,9 +12,7 @@
 #include <chrono>
 #include <string>
 
-namespace Botan {
-
-namespace OS {
+namespace Botan::OS {
 
 /*
 * This header is internal (not installed) and these functions are not
@@ -55,7 +53,6 @@ std::unique_ptr<Socket> BOTAN_TEST_API open_socket(std::string_view hostname,
                                                    std::string_view service,
                                                    std::chrono::milliseconds timeout);
 
-}  // namespace OS
-}  // namespace Botan
+}  // namespace Botan::OS
 
 #endif

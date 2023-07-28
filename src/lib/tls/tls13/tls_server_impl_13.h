@@ -30,7 +30,7 @@ class Server_Impl_13 : public Channel_Impl_13 {
       std::vector<X509_Certificate> peer_cert_chain() const override;
 
       bool new_session_ticket_supported() const override;
-      size_t send_new_session_tickets(const size_t tickets) override;
+      size_t send_new_session_tickets(size_t tickets) override;
 
    private:
       void process_handshake_msg(Handshake_Message_13 msg) override;

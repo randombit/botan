@@ -38,7 +38,7 @@ BigInt monty_execute(const Montgomery_Exponentation_State& precomputed_state, co
 */
 BigInt monty_execute_vartime(const Montgomery_Exponentation_State& precomputed_state, const BigInt& k);
 
-inline BigInt monty_exp(std::shared_ptr<const Montgomery_Params> params_p,
+inline BigInt monty_exp(const std::shared_ptr<const Montgomery_Params>& params_p,
                         const BigInt& g,
                         const BigInt& k,
                         size_t max_k_bits) {
@@ -46,7 +46,9 @@ inline BigInt monty_exp(std::shared_ptr<const Montgomery_Params> params_p,
    return monty_execute(*precomputed, k, max_k_bits);
 }
 
-inline BigInt monty_exp_vartime(std::shared_ptr<const Montgomery_Params> params_p, const BigInt& g, const BigInt& k) {
+inline BigInt monty_exp_vartime(const std::shared_ptr<const Montgomery_Params>& params_p,
+                                const BigInt& g,
+                                const BigInt& k) {
    auto precomputed = monty_precompute(params_p, g, 4, false);
    return monty_execute_vartime(*precomputed, k);
 }

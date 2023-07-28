@@ -48,7 +48,7 @@ class BOTAN_PUBLIC_API(2, 0) HashFunction : public Buffered_Computation {
       */
       virtual std::string provider() const { return "base"; }
 
-      virtual ~HashFunction() = default;
+      ~HashFunction() override = default;
 
       /**
       * Reset the state.

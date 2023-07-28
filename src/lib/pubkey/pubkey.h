@@ -489,7 +489,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Encryptor_EME final : public PK_Encryptor {
                        std::string_view padding,
                        std::string_view provider = "");
 
-      ~PK_Encryptor_EME();
+      ~PK_Encryptor_EME() override;
 
       PK_Encryptor_EME(const PK_Encryptor_EME&) = delete;
       PK_Encryptor_EME(PK_Encryptor_EME&&) = delete;
@@ -527,7 +527,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Decryptor_EME final : public PK_Decryptor {
 
       size_t plaintext_length(size_t ptext_len) const override;
 
-      ~PK_Decryptor_EME();
+      ~PK_Decryptor_EME() override;
       PK_Decryptor_EME(const PK_Decryptor_EME&) = delete;
       PK_Decryptor_EME(PK_Decryptor_EME&&) = delete;
       PK_Decryptor_EME& operator=(const PK_Decryptor_EME&) = delete;

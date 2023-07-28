@@ -32,7 +32,7 @@ class CRC24 final : public HashFunction {
 
       CRC24() { clear(); }
 
-      ~CRC24() { clear(); }
+      ~CRC24() override { clear(); }
 
    private:
       void add_data(const uint8_t[], size_t) override;

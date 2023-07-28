@@ -56,7 +56,7 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PublicKey : public virtual Public_Key {
    public:
       Dilithium_PublicKey& operator=(const Dilithium_PublicKey& other) = default;
 
-      virtual ~Dilithium_PublicKey() = default;
+      ~Dilithium_PublicKey() override = default;
 
       std::string algo_name() const override;
 

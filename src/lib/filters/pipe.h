@@ -328,7 +328,7 @@ class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
       Pipe(const Pipe&) = delete;
       Pipe& operator=(const Pipe&) = delete;
 
-      ~Pipe();
+      ~Pipe() override;
 
    private:
       void destruct(Filter*);

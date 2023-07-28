@@ -52,15 +52,16 @@ class XMSS_Signature final {
 
       size_t unused_leaf_index() const { return m_leaf_idx; }
 
-      void set_unused_leaf_idx(size_t idx) { m_leaf_idx = idx; }
+      const secure_vector<uint8_t>& randomness() const { return m_randomness; }
 
-      const secure_vector<uint8_t> randomness() const { return m_randomness; }
+      const XMSS_Signature::TreeSignature& tree() const { return m_tree_sig; }
+
+      // These mutating operations should be removed:
+      void set_unused_leaf_idx(size_t idx) { m_leaf_idx = idx; }
 
       secure_vector<uint8_t>& randomness() { return m_randomness; }
 
       void set_randomness(secure_vector<uint8_t> randomness) { m_randomness = std::move(randomness); }
-
-      const XMSS_Signature::TreeSignature& tree() const { return m_tree_sig; }
 
       XMSS_Signature::TreeSignature& tree() { return m_tree_sig; }
 

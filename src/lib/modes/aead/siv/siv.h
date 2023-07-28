@@ -10,11 +10,11 @@
 #define BOTAN_AEAD_SIV_H_
 
 #include <botan/aead.h>
+#include <botan/block_cipher.h>
 #include <botan/stream_cipher.h>
 
 namespace Botan {
 
-class BlockCipher;
 class MessageAuthenticationCode;
 
 /**

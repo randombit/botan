@@ -13,12 +13,7 @@
 #include <string>
 #include <vector>
 
-namespace Botan {
-
-/**
-* This namespace contains functions for handling X.509 public keys
-*/
-namespace X509 {
+namespace Botan::X509 {
 
 /**
 * BER encode a key
@@ -60,8 +55,8 @@ inline std::unique_ptr<Public_Key> load_key(std::string_view filename) {
 * @param enc the memory region containing the DER or PEM encoded key
 * @return new public key object
 */
-inline std::unique_ptr<Public_Key> load_key(std::vector<uint8_t> enc) {
-   DataSource_Memory source(std::move(enc));
+inline std::unique_ptr<Public_Key> load_key(const std::vector<uint8_t>& enc) {
+   DataSource_Memory source(enc);
    return X509::load_key(source);
 }
 
@@ -85,8 +80,6 @@ inline std::unique_ptr<Public_Key> copy_key(const Public_Key& key) {
    return X509::load_key(source);
 }
 
-}  // namespace X509
-
-}  // namespace Botan
+}  // namespace Botan::X509
 
 #endif

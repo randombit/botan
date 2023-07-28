@@ -81,7 +81,7 @@ class BOTAN_PUBLIC_API(2, 0) AutoSeeded_RNG final : public RandomNumberGenerator
                      Entropy_Sources& entropy_sources,
                      size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL);
 
-      ~AutoSeeded_RNG();
+      ~AutoSeeded_RNG() override;
 
    private:
       void fill_bytes_with_input(std::span<uint8_t> out, std::span<const uint8_t> in) override;

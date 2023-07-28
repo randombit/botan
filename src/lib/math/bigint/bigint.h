@@ -150,8 +150,9 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
      * Move assignment
      */
       BigInt& operator=(BigInt&& other) {
-         if(this != &other)
+         if(this != &other) {
             this->swap(other);
+         }
 
          return (*this);
       }
@@ -539,8 +540,9 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
      * @result the opposite sign of the represented integer value
      */
       Sign reverse_sign() const {
-         if(sign() == Positive)
+         if(sign() == Positive) {
             return Negative;
+         }
          return Positive;
       }
 
@@ -554,8 +556,9 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
      * @param sign new Sign to set
      */
       void set_sign(Sign sign) {
-         if(sign == Negative && is_zero())
+         if(sign == Negative && is_zero()) {
             sign = Positive;
+         }
 
          m_signedness = sign;
       }
@@ -786,8 +789,9 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
      */
       template <typename Alloc>
       static BigInt decode(const std::vector<uint8_t, Alloc>& buf, Base base) {
-         if(base == Binary)
+         if(base == Binary) {
             return BigInt(buf);
+         }
          return BigInt::decode(buf.data(), buf.size(), base);
       }
 
@@ -828,16 +832,18 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
             const secure_vector<word>& const_vector() const { return m_reg; }
 
             word get_word_at(size_t n) const {
-               if(n < m_reg.size())
+               if(n < m_reg.size()) {
                   return m_reg[n];
+               }
                return 0;
             }
 
             void set_word_at(size_t i, word w) {
                invalidate_sig_words();
                if(i >= m_reg.size()) {
-                  if(w == 0)
+                  if(w == 0) {
                      return;
+                  }
                   grow_to(i + 1);
                }
                m_reg[i] = w;
@@ -881,10 +887,11 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
 
             void grow_to(size_t n) const {
                if(n > size()) {
-                  if(n <= m_reg.capacity())
+                  if(n <= m_reg.capacity()) {
                      m_reg.resize(n);
-                  else
+                  } else {
                      m_reg.resize(n + (8 - (n % 8)));
+                  }
                }
             }
 

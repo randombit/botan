@@ -19,8 +19,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace Botan {
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 class Module;
 
@@ -536,8 +535,9 @@ class BOTAN_PUBLIC_API(2, 0) Object {
       Object(Session& session) : m_session(session) {}
 
       void reset_handle(ObjectHandle handle) {
-         if(m_handle != CK_INVALID_HANDLE)
+         if(m_handle != CK_INVALID_HANDLE) {
             throw Invalid_Argument("Cannot reset handle on already valid PKCS11 object");
+         }
          m_handle = handle;
       }
 
@@ -585,8 +585,6 @@ std::vector<T> Object::search(Session& session) {
    return search<T>(session, AttributeContainer(T::Class).attributes());
 }
 
-}  // namespace PKCS11
-
-}  // namespace Botan
+}  // namespace Botan::PKCS11
 
 #endif

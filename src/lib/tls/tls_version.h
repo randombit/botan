@@ -13,9 +13,7 @@
 #include <botan/types.h>
 #include <string>
 
-namespace Botan {
-
-namespace TLS {
+namespace Botan::TLS {
 
 enum class Version_Code : uint16_t {
    TLS_V11 = 0x0302,  // not supported by Botan
@@ -143,8 +141,6 @@ class BOTAN_PUBLIC_API(2, 0) Protocol_Version final {
       uint16_t m_version;
 };
 
-}  // namespace TLS
-
-}  // namespace Botan
+}  // namespace Botan::TLS
 
 #endif

@@ -282,7 +282,7 @@ class BOTAN_UNSTABLE_API Supported_Point_Formats final : public Extension {
 
       bool empty() const override { return false; }
 
-      bool prefers_compressed() { return m_prefers_compressed; }
+      bool prefers_compressed() const { return m_prefers_compressed; }
 
    private:
       bool m_prefers_compressed = false;
@@ -485,7 +485,7 @@ class BOTAN_UNSTABLE_API Record_Size_Limit final : public Extension {
 
       Extension_Code type() const override { return static_type(); }
 
-      explicit Record_Size_Limit(const uint16_t limit);
+      explicit Record_Size_Limit(uint16_t limit);
 
       Record_Size_Limit(TLS_Data_Reader& reader, uint16_t extension_size, Connection_Side from);
 
@@ -626,7 +626,7 @@ class BOTAN_UNSTABLE_API PSK final : public Extension {
        */
       PSK(Session_with_Handle& session_to_resume, Callbacks& callbacks);
 
-      ~PSK();
+      ~PSK() override;
 
       void calculate_binders(const Transcript_Hash_State& truncated_transcript_hash);
       bool validate_binder(const PSK& server_psk, const std::vector<uint8_t>& binder) const;
@@ -642,7 +642,7 @@ class BOTAN_UNSTABLE_API PSK final : public Extension {
        *
        * Note: This constructor is called internally in PSK::select_offered_psk().
        */
-      PSK(Session session_to_resume, const uint16_t psk_index);
+      PSK(Session session_to_resume, uint16_t psk_index);
 
    private:
       class PSK_Internal;
@@ -727,7 +727,7 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension {
       explicit Key_Share(Named_Group selected_group);
 
       // destructor implemented in .cpp to hide Key_Share_Impl
-      ~Key_Share();
+      ~Key_Share() override;
 
    private:
       // constructor used for ServerHello
@@ -832,7 +832,7 @@ class BOTAN_UNSTABLE_API Extensions final {
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const;
 
-      void deserialize(TLS_Data_Reader& reader, const Connection_Side from, const Handshake_Type message_type);
+      void deserialize(TLS_Data_Reader& reader, Connection_Side from, Handshake_Type message_type);
 
       /**
        * @param allowed_extensions        extension types that are allowed
@@ -840,7 +840,7 @@ class BOTAN_UNSTABLE_API Extensions final {
        * @returns true if this contains any extensions that are not contained in @p allowed_extensions.
        */
       bool contains_other_than(const std::set<Extension_Code>& allowed_extensions,
-                               const bool allow_unknown_extensions = false) const;
+                               bool allow_unknown_extensions = false) const;
 
       /**
        * @param allowed_extensions  extension types that are allowed
@@ -885,6 +885,8 @@ class BOTAN_UNSTABLE_API Extensions final {
       bool remove_extension(Extension_Code type) { return take(type) != nullptr; }
 
       Extensions() = default;
+      Extensions(const Extensions&) = delete;
+      Extensions& operator=(const Extensions&) = delete;
       Extensions(Extensions&&) = default;
       Extensions& operator=(Extensions&&) = default;
 
@@ -893,9 +895,6 @@ class BOTAN_UNSTABLE_API Extensions final {
       }
 
    private:
-      Extensions(const Extensions&) = delete;
-      Extensions& operator=(const Extensions&) = delete;
-
       std::vector<std::unique_ptr<Extension>> m_extensions;
 };
 

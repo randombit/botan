@@ -41,9 +41,9 @@ class Strong_Base {
    public:
       Strong_Base() = default;
       Strong_Base(const Strong_Base&) = default;
-      Strong_Base(Strong_Base&&) = default;
+      Strong_Base(Strong_Base&&) noexcept = default;
       Strong_Base& operator=(const Strong_Base&) = default;
-      Strong_Base& operator=(Strong_Base&&) = default;
+      Strong_Base& operator=(Strong_Base&&) noexcept = default;
 
       constexpr explicit Strong_Base(T v) : m_value(std::move(v)) {}
 

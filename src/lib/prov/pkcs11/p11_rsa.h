@@ -18,8 +18,7 @@
    #include <botan/rsa.h>
    #include <utility>
 
-namespace Botan {
-namespace PKCS11 {
+namespace Botan::PKCS11 {
 
 /// Properties for generating a PKCS#11 RSA public key
 class BOTAN_PUBLIC_API(2, 0) RSA_PublicKeyGenerationProperties final : public PublicKeyProperties {
@@ -32,7 +31,7 @@ class BOTAN_PUBLIC_API(2, 0) RSA_PublicKeyGenerationProperties final : public Pu
          add_binary(AttributeType::PublicExponent, BigInt::encode(pub_exponent));
       }
 
-      virtual ~RSA_PublicKeyGenerationProperties() = default;
+      ~RSA_PublicKeyGenerationProperties() override = default;
 };
 
 /// Properties for importing a PKCS#11 RSA public key
@@ -48,7 +47,7 @@ class BOTAN_PUBLIC_API(2, 0) RSA_PublicKeyImportProperties final : public Public
       /// @return the public exponent
       inline const BigInt& pub_exponent() const { return m_pub_exponent; }
 
-      virtual ~RSA_PublicKeyImportProperties() = default;
+      ~RSA_PublicKeyImportProperties() override = default;
 
    private:
       const BigInt m_modulus;
@@ -120,7 +119,7 @@ class BOTAN_PUBLIC_API(2, 0) RSA_PrivateKeyImportProperties final : public Priva
       /// @return the private exponent
       inline const BigInt& priv_exponent() const { return m_priv_exponent; }
 
-      virtual ~RSA_PrivateKeyImportProperties() = default;
+      ~RSA_PrivateKeyImportProperties() override = default;
 
    private:
       const BigInt m_modulus;
@@ -132,7 +131,7 @@ class BOTAN_PUBLIC_API(2, 0) RSA_PrivateKeyGenerationProperties final : public P
    public:
       RSA_PrivateKeyGenerationProperties() : PrivateKeyProperties(KeyType::Rsa) {}
 
-      virtual ~RSA_PrivateKeyGenerationProperties() = default;
+      ~RSA_PrivateKeyGenerationProperties() override = default;
 };
 
 /// Represents a PKCS#11 RSA private key
@@ -209,9 +208,7 @@ BOTAN_PUBLIC_API(2, 0)
 PKCS11_RSA_KeyPair generate_rsa_keypair(Session& session,
                                         const RSA_PublicKeyGenerationProperties& pub_props,
                                         const RSA_PrivateKeyGenerationProperties& priv_props);
-}  // namespace PKCS11
-
-}  // namespace Botan
+}  // namespace Botan::PKCS11
 #endif
 
 #endif

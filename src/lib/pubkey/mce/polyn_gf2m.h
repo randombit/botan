@@ -60,9 +60,9 @@ class polyn_gf2m {
 
       bool operator!=(const polyn_gf2m& other) const { return !(*this == other); }
 
-      polyn_gf2m(polyn_gf2m&& other) { this->swap(other); }
+      polyn_gf2m(polyn_gf2m&& other) noexcept { this->swap(other); }
 
-      polyn_gf2m& operator=(polyn_gf2m&& other) {
+      polyn_gf2m& operator=(polyn_gf2m&& other) noexcept {
          if(this != &other) {
             this->swap(other);
          }

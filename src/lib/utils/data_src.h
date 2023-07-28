@@ -168,7 +168,7 @@ class BOTAN_PUBLIC_API(2, 0) DataSource_Stream final : public DataSource {
 
       DataSource_Stream& operator=(const DataSource_Stream&) = delete;
 
-      ~DataSource_Stream();
+      ~DataSource_Stream() override;
 
       size_t get_bytes_read() const override { return m_total_read; }
 

@@ -36,7 +36,7 @@ class BOTAN_PUBLIC_API(2, 5) FPE_FE1 final : public SymmetricAlgorithm {
               bool compat_mode = false,
               std::string_view mac_algo = "HMAC(SHA-256)");
 
-      ~FPE_FE1();
+      ~FPE_FE1() override;
 
       Key_Length_Specification key_spec() const override;
 

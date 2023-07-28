@@ -144,9 +144,10 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
          BER_Object obj = get_next_object();
          obj.assert_is_a(type_tag, class_tag);
 
-         if(obj.length() != sizeof(T))
+         if(obj.length() != sizeof(T)) {
             throw BER_Decoding_Error("Size mismatch. Object value size is " + std::to_string(obj.length()) +
                                      "; Output type size is " + std::to_string(sizeof(T)));
+         }
 
          copy_mem(reinterpret_cast<uint8_t*>(&out), obj.bits(), obj.length());
 
@@ -160,8 +161,9 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       BER_Decoder& raw_bytes(std::vector<uint8_t, Alloc>& out) {
          out.clear();
          uint8_t buf;
-         while(m_source->read_byte(buf))
+         while(m_source->read_byte(buf)) {
             out.push_back(buf);
+         }
          return (*this);
       }
 
@@ -255,8 +257,9 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
          T actual;
          decode(actual);
 
-         if(actual != expected)
+         if(actual != expected) {
             throw Decoding_Error(error_msg);
+         }
 
          return (*this);
       }
