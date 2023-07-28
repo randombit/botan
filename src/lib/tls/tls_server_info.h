@@ -21,7 +21,7 @@ class BOTAN_PUBLIC_API(2, 0) Server_Information final {
       /**
       * An empty server info - nothing known
       */
-      Server_Information() : m_hostname(""), m_service(""), m_port(0) {}
+      Server_Information() : m_hostname(), m_service(), m_port(0) {}
 
       /**
       * @param hostname the host's DNS name, if known
@@ -29,7 +29,7 @@ class BOTAN_PUBLIC_API(2, 0) Server_Information final {
       *        TCP/UDP). Zero represents unknown.
       */
       Server_Information(std::string_view hostname, uint16_t port = 0) :
-            m_hostname(hostname), m_service(""), m_port(port) {}
+            m_hostname(hostname), m_service(), m_port(port) {}
 
       /**
       * @param hostname the host's DNS name, if known
