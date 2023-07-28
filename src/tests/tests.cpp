@@ -461,8 +461,8 @@ class Test_Registry {
          return registry;
       }
 
-      void register_test(std::string category,
-                         std::string name,
+      void register_test(const std::string& category,
+                         const std::string& name,
                          bool smoke_test,
                          bool needs_serialization,
                          std::function<std::unique_ptr<Test>()> maker_fn) {
@@ -487,7 +487,7 @@ class Test_Registry {
          }
 
          m_tests.emplace(name, std::move(maker_fn));
-         m_categories.emplace(std::move(category), std::move(name));
+         m_categories.emplace(category, name);
       }
 
       std::unique_ptr<Test> get_test(const std::string& test_name) const {
@@ -559,13 +559,12 @@ class Test_Registry {
 // static Test:: functions
 
 //static
-void Test::register_test(std::string category,
-                         std::string name,
+void Test::register_test(const std::string& category,
+                         const std::string& name,
                          bool smoke_test,
                          bool needs_serialization,
                          std::function<std::unique_ptr<Test>()> maker_fn) {
-   Test_Registry::instance().register_test(
-      std::move(category), std::move(name), smoke_test, needs_serialization, std::move(maker_fn));
+   Test_Registry::instance().register_test(category, name, smoke_test, needs_serialization, std::move(maker_fn));
 }
 
 //static

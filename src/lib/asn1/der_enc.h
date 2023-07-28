@@ -46,7 +46,7 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
       * DER encode, calling append to write output
       * If this constructor is used, get_contents* may not be called.
       */
-      DER_Encoder(append_fn append) : m_append_output(append) {}
+      DER_Encoder(append_fn append) : m_append_output(std::move(append)) {}
 
       secure_vector<uint8_t> get_contents();
 

@@ -53,7 +53,7 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
 
    public:
       Basic_Credentials_Manager(bool use_system_store,
-                                std::string ca_path,
+                                const std::string& ca_path,
                                 std::optional<std::string> client_crt = std::nullopt,
                                 std::optional<std::string> client_key = std::nullopt,
                                 std::optional<Botan::secure_vector<uint8_t>> psk = std::nullopt,
@@ -225,7 +225,7 @@ class TLS_All_Policy final : public Botan::TLS::Policy {
       bool allow_tls12() const override { return true; }
 };
 
-inline std::shared_ptr<Botan::TLS::Policy> load_tls_policy(const std::string policy_type) {
+inline std::shared_ptr<Botan::TLS::Policy> load_tls_policy(const std::string& policy_type) {
    if(policy_type == "default" || policy_type == "") {
       return std::make_shared<Botan::TLS::Policy>();
    } else if(policy_type == "suiteb_128") {

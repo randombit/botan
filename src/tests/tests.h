@@ -567,8 +567,8 @@ class Test {
       const std::optional<CodeLocation>& registration_location() const { return m_registration_location; }
 
       /// @p smoke_test are run first in an unfiltered test run
-      static void register_test(std::string category,
-                                std::string name,
+      static void register_test(const std::string& category,
+                                const std::string& name,
                                 bool smoke_test,
                                 bool needs_serialization,
                                 std::function<std::unique_ptr<Test>()> maker_fn);
@@ -657,12 +657,12 @@ class Test {
 template <typename Test_Class>
 class TestClassRegistration {
    public:
-      TestClassRegistration(std::string category,
-                            std::string name,
+      TestClassRegistration(const std::string& category,
+                            const std::string& name,
                             bool smoke_test,
                             bool needs_serialization,
                             CodeLocation registration_location) {
-         Test::register_test(std::move(category), name, smoke_test, needs_serialization, [=] {
+         Test::register_test(category, name, smoke_test, needs_serialization, [=] {
             auto test = std::make_unique<Test_Class>();
             test->set_test_name(name);
             test->set_registration_location(registration_location);
@@ -734,13 +734,13 @@ class FnTest : public Test {
 class TestFnRegistration {
    public:
       template <typename... TestFns>
-      TestFnRegistration(std::string category,
-                         std::string name,
+      TestFnRegistration(const std::string& category,
+                         const std::string& name,
                          bool smoke_test,
                          bool needs_serialization,
                          CodeLocation registration_location,
                          TestFns... fn) {
-         Test::register_test(std::move(category), name, smoke_test, needs_serialization, [=] {
+         Test::register_test(category, name, smoke_test, needs_serialization, [=] {
             auto test = std::make_unique<FnTest>(fn...);
             test->set_test_name(name);
             test->set_registration_location(std::move(registration_location));
