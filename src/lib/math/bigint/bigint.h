@@ -142,14 +142,14 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
      * Move constructor
      */
-      BigInt(BigInt&& other) { this->swap(other); }
+      BigInt(BigInt&& other) noexcept { this->swap(other); }
 
       ~BigInt() { const_time_unpoison(); }
 
       /**
      * Move assignment
      */
-      BigInt& operator=(BigInt&& other) {
+      BigInt& operator=(BigInt&& other) noexcept {
          if(this != &other) {
             this->swap(other);
          }

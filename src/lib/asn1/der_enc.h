@@ -185,13 +185,13 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
 
             DER_Sequence(ASN1_Type, ASN1_Class);
 
-            DER_Sequence(DER_Sequence&& seq) :
+            DER_Sequence(DER_Sequence&& seq) noexcept :
                   m_type_tag(std::move(seq.m_type_tag)),
                   m_class_tag(std::move(seq.m_class_tag)),
                   m_contents(std::move(seq.m_contents)),
                   m_set_contents(std::move(seq.m_set_contents)) {}
 
-            DER_Sequence& operator=(DER_Sequence&& seq) {
+            DER_Sequence& operator=(DER_Sequence&& seq) noexcept {
                std::swap(m_type_tag, seq.m_type_tag);
                std::swap(m_class_tag, seq.m_class_tag);
                std::swap(m_contents, seq.m_contents);
