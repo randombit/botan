@@ -150,9 +150,9 @@ class BOTAN_UNSTABLE_API Client_Hello_12 final : public Client_Hello {
             Settings(const Protocol_Version version, std::string_view hostname = "") :
                   m_new_session_version(version), m_hostname(hostname) {}
 
-            const Protocol_Version protocol_version() const { return m_new_session_version; }
+            Protocol_Version protocol_version() const { return m_new_session_version; }
 
-            const std::string hostname() const { return m_hostname; }
+            const std::string& hostname() const { return m_hostname; }
 
          private:
             const Protocol_Version m_new_session_version;
@@ -696,7 +696,7 @@ class BOTAN_UNSTABLE_API Certificate_Request_13 final : public Handshake_Message
 
       std::vector<uint8_t> serialize() const override;
 
-      const std::vector<uint8_t> context() const { return m_context; }
+      const std::vector<uint8_t>& context() const { return m_context; }
 
    private:
       Certificate_Request_13(std::vector<X509_DN> acceptable_CAs, const Policy& policy, Callbacks& callbacks);

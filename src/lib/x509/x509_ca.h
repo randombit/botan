@@ -30,7 +30,7 @@ class BOTAN_PUBLIC_API(2, 0) X509_CA final {
       * Return the algorithm identifier used to identify signatures that
       * this CA will create.
       */
-      const AlgorithmIdentifier algorithm_identifier() const { return m_ca_sig_algo; }
+      const AlgorithmIdentifier& algorithm_identifier() const { return m_ca_sig_algo; }
 
       /**
       * Return the CA's certificate

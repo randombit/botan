@@ -91,7 +91,7 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_KA_Params {
 
       inline EC_Point_Format compression_type() const { return m_compression_mode; }
 
-      const std::string kdf_spec() const { return m_kdf_spec; }
+      const std::string& kdf_spec() const { return m_kdf_spec; }
 
    private:
       const EC_Group m_domain;

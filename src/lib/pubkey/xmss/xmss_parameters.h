@@ -68,7 +68,7 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_WOTS_Parameters final {
       /**
        * @return XMSS WOTS registry name for the chosen parameter set.
        **/
-      const std::string name() const { return m_name; }
+      const std::string& name() const { return m_name; }
 
       /**
        * Retrieves the uniform length of a message, and the size of
@@ -166,9 +166,9 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_Parameters {
       /**
        * @return XMSS registry name for the chosen parameter set.
        **/
-      const std::string name() const { return m_name; }
+      const std::string& name() const { return m_name; }
 
-      const std::string hash_function_name() const { return m_hash_name; }
+      const std::string& hash_function_name() const { return m_hash_name; }
 
       /**
        * Retrieves the uniform length of a message, and the size of

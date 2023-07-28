@@ -319,7 +319,7 @@ class BOTAN_PUBLIC_API(2, 0) Authority_Information_Access final : public Certifi
 
       OID oid_of() const override { return static_oid(); }
 
-      const std::vector<std::string> ca_issuers() const { return m_ca_issuers; }
+      const std::vector<std::string>& ca_issuers() const { return m_ca_issuers; }
 
    private:
       std::string oid_name() const override { return "PKIX.AuthorityInformationAccess"; }
