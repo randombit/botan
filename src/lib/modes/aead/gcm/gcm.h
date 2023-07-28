@@ -10,11 +10,11 @@
 #define BOTAN_AEAD_GCM_H_
 
 #include <botan/aead.h>
+#include <botan/block_cipher.h>
 #include <botan/sym_algo.h>
 
 namespace Botan {
 
-class BlockCipher;
 class StreamCipher;
 class GHASH;
 
