@@ -885,6 +885,8 @@ class BOTAN_UNSTABLE_API Extensions final {
       bool remove_extension(Extension_Code type) { return take(type) != nullptr; }
 
       Extensions() = default;
+      Extensions(const Extensions&) = delete;
+      Extensions& operator=(const Extensions&) = delete;
       Extensions(Extensions&&) = default;
       Extensions& operator=(Extensions&&) = default;
 
@@ -893,9 +895,6 @@ class BOTAN_UNSTABLE_API Extensions final {
       }
 
    private:
-      Extensions(const Extensions&) = delete;
-      Extensions& operator=(const Extensions&) = delete;
-
       std::vector<std::unique_ptr<Extension>> m_extensions;
 };
 
