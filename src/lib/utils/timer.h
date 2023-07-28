@@ -34,7 +34,7 @@ class BOTAN_TEST_API Timer final {
 
       void stop();
 
-      bool under(std::chrono::milliseconds msec) { return (milliseconds() < msec.count()); }
+      bool under(std::chrono::milliseconds msec) const { return (milliseconds() < msec.count()); }
 
       class Timer_Scope final {
          public:

@@ -282,7 +282,7 @@ class BOTAN_UNSTABLE_API Supported_Point_Formats final : public Extension {
 
       bool empty() const override { return false; }
 
-      bool prefers_compressed() { return m_prefers_compressed; }
+      bool prefers_compressed() const { return m_prefers_compressed; }
 
    private:
       bool m_prefers_compressed = false;
