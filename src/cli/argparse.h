@@ -213,10 +213,10 @@ Argument_Parser::Argument_Parser(const std::string& spec,
    }
 
    for(size_t i = 1; i != parts.size(); ++i) {
-      const std::string s = parts[i];
+      const auto& s = parts[i];
 
-      if(s.empty())  // ?!? (shouldn't happen)
-      {
+      if(s.empty()) {
+         // ?!? (shouldn't happen)
          throw CLI_Error_Invalid_Spec(spec);
       }
 
