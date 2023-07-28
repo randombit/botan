@@ -490,7 +490,7 @@ class BOTAN_PUBLIC_API(2, 0) Extensions final : public ASN1_Object {
 
          if(extn_info != m_extension_info.end()) {
             // Unknown_Extension oid_name is empty
-            if(extn_info->second.obj().oid_name() == "") {
+            if(extn_info->second.obj().oid_name().empty()) {
                auto ext = std::make_unique<T>();
                ext->decode_inner(extn_info->second.bits());
                return ext;

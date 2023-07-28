@@ -284,7 +284,7 @@ class BOTAN_PUBLIC_API(2, 0) Null_RNG final : public RandomNumberGenerator {
    private:
       void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) override {
          // throw if caller tries to obtain random bytes
-         if(output.size() > 0) {
+         if(!output.empty()) {
             throw PRNG_Unseeded("Null_RNG called");
          }
       }

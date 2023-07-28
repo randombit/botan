@@ -125,7 +125,7 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
                   continue;
                }
 
-               if(hostname != "" && !i.certs[0].matches_dns_name(hostname)) {
+               if(!hostname.empty() && !i.certs[0].matches_dns_name(hostname)) {
                   continue;
                }
 
@@ -226,7 +226,7 @@ class TLS_All_Policy final : public Botan::TLS::Policy {
 };
 
 inline std::shared_ptr<Botan::TLS::Policy> load_tls_policy(const std::string& policy_type) {
-   if(policy_type == "default" || policy_type == "") {
+   if(policy_type == "default" || policy_type.empty()) {
       return std::make_shared<Botan::TLS::Policy>();
    } else if(policy_type == "suiteb_128") {
       return std::make_shared<Botan::TLS::NSA_Suite_B_128>();

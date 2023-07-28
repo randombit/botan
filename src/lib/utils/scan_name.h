@@ -86,7 +86,7 @@ class SCAN_Name final {
       /**
       * @return cipher mode (if any)
       */
-      std::string cipher_mode() const { return (m_mode_info.size() >= 1) ? m_mode_info[0] : ""; }
+      std::string cipher_mode() const { return (!m_mode_info.empty()) ? m_mode_info[0] : ""; }
 
       /**
       * @return cipher mode padding (if any)

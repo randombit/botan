@@ -102,7 +102,7 @@ class BOTAN_PUBLIC_API(2, 0) Subject_Key_ID final : public Certificate_Extension
    private:
       std::string oid_name() const override { return "X509v3.SubjectKeyIdentifier"; }
 
-      bool should_encode() const override { return (m_key_id.size() > 0); }
+      bool should_encode() const override { return (!m_key_id.empty()); }
 
       std::vector<uint8_t> encode_inner() const override;
       void decode_inner(const std::vector<uint8_t>&) override;
@@ -132,7 +132,7 @@ class BOTAN_PUBLIC_API(2, 0) Authority_Key_ID final : public Certificate_Extensi
    private:
       std::string oid_name() const override { return "X509v3.AuthorityKeyIdentifier"; }
 
-      bool should_encode() const override { return (m_key_id.size() > 0); }
+      bool should_encode() const override { return (!m_key_id.empty()); }
 
       std::vector<uint8_t> encode_inner() const override;
       void decode_inner(const std::vector<uint8_t>&) override;
@@ -218,7 +218,7 @@ class BOTAN_PUBLIC_API(2, 0) Extended_Key_Usage final : public Certificate_Exten
    private:
       std::string oid_name() const override { return "X509v3.ExtendedKeyUsage"; }
 
-      bool should_encode() const override { return (m_oids.size() > 0); }
+      bool should_encode() const override { return (!m_oids.empty()); }
 
       std::vector<uint8_t> encode_inner() const override;
       void decode_inner(const std::vector<uint8_t>&) override;
@@ -290,7 +290,7 @@ class BOTAN_PUBLIC_API(2, 0) Certificate_Policies final : public Certificate_Ext
    private:
       std::string oid_name() const override { return "X509v3.CertificatePolicies"; }
 
-      bool should_encode() const override { return (m_oids.size() > 0); }
+      bool should_encode() const override { return (!m_oids.empty()); }
 
       std::vector<uint8_t> encode_inner() const override;
       void decode_inner(const std::vector<uint8_t>&) override;
