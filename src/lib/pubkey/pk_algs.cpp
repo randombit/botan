@@ -66,6 +66,10 @@
    #include <botan/mceliece.h>
 #endif
 
+#if defined(BOTAN_HAS_FRODOKEM)
+   #include <botan/frodokem.h>
+#endif
+
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
    #include <botan/kyber.h>
 #endif
@@ -109,6 +113,12 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_MCELIECE)
    if(alg_name == "McEliece") {
       return std::make_unique<McEliece_PublicKey>(key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_FRODOKEM)
+   if(alg_name == "FrodoKEM" || alg_name.starts_with("FrodoKEM-") || alg_name.starts_with("eFrodoKEM-")) {
+      return std::make_unique<FrodoKEM_PublicKey>(alg_id, key_bits);
    }
 #endif
 
@@ -238,6 +248,12 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_DSA)
    if(alg_name == "DSA") {
       return std::make_unique<DSA_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_FRODOKEM)
+   if(alg_name == "FrodoKEM" || alg_name.starts_with("FrodoKEM-") || alg_name.starts_with("eFrodoKEM-")) {
+      return std::make_unique<FrodoKEM_PrivateKey>(alg_id, key_bits);
    }
 #endif
 
@@ -395,6 +411,13 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
       }();
 
       return std::make_unique<McEliece_PrivateKey>(rng, n, t);
+   }
+#endif
+
+#if defined(BOTAN_HAS_FRODOKEM)
+   if(alg_name == "FrodoKEM") {
+      const auto mode = params.empty() ? FrodoKEMMode::FrodoKEM976_SHAKE : FrodoKEMMode(params);
+      return std::make_unique<FrodoKEM_PrivateKey>(rng, mode);
    }
 #endif
 

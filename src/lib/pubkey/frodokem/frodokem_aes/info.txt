@@ -1,0 +1,12 @@
+<defines>
+FRODOKEM_AES -> 20231103
+</defines>
+
+<module_info>
+name -> "FrodoKEM (AES)"
+</module_info>
+
+<requires>
+aes
+frodokem_common
+</requires>
