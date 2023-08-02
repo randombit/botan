@@ -650,9 +650,13 @@ def main(args=None):
             options.pkcs11_lib, options.use_gdb, options.disable_werror,
             options.extra_cxxflags, options.disabled_tests)
 
-        cmds.append([py_interp, os.path.join(root_dir, 'configure.py')] + config_flags)
-
         make_cmd = validate_make_tool(options.make_tool, options.build_jobs)
+
+        cmds.append([py_interp,
+            os.path.join(root_dir, 'configure.py')] +
+            ['--build-tool=' + options.make_tool] +
+            config_flags)
+
         if build_dir != '.':
             make_cmd = ['indir:%s' % build_dir] + make_cmd
 
