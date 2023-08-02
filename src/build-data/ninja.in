@@ -33,12 +33,33 @@ CLI           = %{cli_exe}
 TEST          = %{test_exe}
 LIBRARIES     = %{library_targets}
 
+
+# Library targets
+
 %{if build_static_lib}
 
 rule link_static
   command = %{ar_command} %{ar_options} %{ar_output_to}$out $in
 
 build %{out_dir}/%{static_lib_name}: link_static %{join lib_objs}
+
+%{endif}
+%{if build_shared_lib}
+
+rule link_shared
+  command = %{lib_link_cmd} ${ABI_FLAGS} ${LDFLAGS} $in ${LIB_LINKS_TO} %{dash_o}$out
+
+build %{out_dir}/%{shared_lib_name}: link_shared %{join lib_objs}
+
+%{endif}
+%{if symlink_shared_lib}
+
+rule symlink_shared
+  command = cd %{out_dir} && ln -fs $in $out
+
+# TODO create symlinks
+#symlink_shared %{soname_base}
+#symlink_shared %{soname_patch}
 
 %{endif}
 
@@ -49,12 +70,37 @@ rule link_tests
   command = %{exe_link_cmd} %{cc_sysroot} %{cxx_abi_flags} $in %{build_dir_link_path} %{cc_lang_binary_linker_flags} %{ldflags} %{external_link_cmd} ${EXE_LINKS_TO} %{output_to_exe}$out
 
 
+# Executable targets
+
+# TODO don't always link statically?
 build %{cli_exe}: link_cli %{join cli_objs} | %{out_dir}/%{static_lib_name}
 
 build %{test_exe}: link_tests %{join test_objs} | %{out_dir}/%{static_lib_name}
 
 
-# Executable targets
+# Misc targets
+
+rule build_docs
+  command = "${PYTHON_EXE}" "${SCRIPTS_DIR}/build_docs.py" --build-dir="%{build_dir}"
+
+build %{doc_stamp_file}: build_docs
+
+
+# Target aliases
+
+build cli: phony %{cli_exe}
+
+build tests: phony %{test_exe}
+
+build libs: phony %{library_targets}
+
+build docs: phony %{doc_stamp_file}
+
+build all: phony libs docs cli tests
+
+
+# Build Commands
+
 %{for lib_build_info}
 build %{obj}: compile_obj %{src}
   isa_flags = %{isa_flags}

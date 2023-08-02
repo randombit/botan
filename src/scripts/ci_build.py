@@ -526,7 +526,7 @@ def validate_make_tool(make_tool, build_jobs):
     if make_tool == '':
         return validate_make_tool('make', build_jobs)
 
-    if make_tool not in ['nmake', 'jom', 'make']:
+    if make_tool not in ['ninja', 'nmake', 'jom', 'make']:
         raise Exception("Don't know about %s as a make tool" % (make_tool))
 
     # Hack to work around jom occasionally failing to install
@@ -656,7 +656,7 @@ def main(args=None):
         if build_dir != '.':
             make_cmd = ['indir:%s' % build_dir] + make_cmd
 
-        make_cmd += ['-k']
+        #make_cmd += ['-k']
 
         if target == 'docs':
             cmds.append(make_cmd + ['docs'])
