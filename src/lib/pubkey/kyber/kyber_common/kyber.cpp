@@ -1070,6 +1070,23 @@ class Kyber_KEM_Cryptor {
       const PolynomialMatrix m_at;
 };
 
+namespace {
+
+size_t kyber_key_length_to_encap_key_length(size_t kl) {
+   switch(kl) {
+      case 800:
+         return 768;
+      case 1184:
+         return 1088;
+      case 1568:
+         return 1568;
+      default:
+         throw Internal_Error("Unexpected Kyber key length");
+   }
+}
+
+}  // namespace
+
 class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
                                   protected Kyber_KEM_Cryptor {
    public:
@@ -1079,17 +1096,7 @@ class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
       size_t raw_kem_shared_key_length() const override { return 32; }
 
       size_t encapsulated_key_length() const override {
-         const size_t key_length = m_key.key_length();
-         switch(key_length) {
-            case 800:
-               return 768;
-            case 1184:
-               return 1088;
-            case 1568:
-               return 1568;
-            default:
-               throw Internal_Error("Unexpected Kyber key length");
-         }
+         return kyber_key_length_to_encap_key_length(m_key.key_length());
       }
 
       void raw_kem_encrypt(std::span<uint8_t> out_encapsulated_key,
@@ -1135,6 +1142,10 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
             PK_Ops::KEM_Decryption_with_KDF(kdf), Kyber_KEM_Cryptor(key.m_public), m_key(key) {}
 
       size_t raw_kem_shared_key_length() const override { return 32; }
+
+      size_t encapsulated_key_length() const override {
+         return kyber_key_length_to_encap_key_length(m_key.key_length());
+      }
 
       void raw_kem_decrypt(std::span<uint8_t> out_shared_key, std::span<const uint8_t> encapsulated_key) override {
          // naming from kyber spec

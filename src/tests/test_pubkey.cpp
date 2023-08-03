@@ -463,6 +463,10 @@ Test::Result PK_KEM_Test::run_one_test(const std::string& /*header*/, const VarM
       return result;
    }
 
+   result.test_eq("encapsulated key length matches expected",
+                  kem_result.encapsulated_shared_key().size(),
+                  dec->encapsulated_key_length());
+
    const Botan::secure_vector<uint8_t> decr_shared_key =
       dec->decrypt(C0.data(), C0.size(), desired_key_len, salt.data(), salt.size());
 

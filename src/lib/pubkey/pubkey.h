@@ -756,6 +756,11 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Decryptor final {
       size_t shared_key_length(size_t desired_shared_key_len) const;
 
       /**
+      * Return the length of the encapsulated key expected by this KEM
+      */
+      size_t encapsulated_key_length() const;
+
+      /**
       * Decrypts the shared key for data encryption.
       *
       * @param out_shared_key         the generated shared key

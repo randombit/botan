@@ -598,6 +598,8 @@ class RSA_KEM_Decryption_Operation final : public PK_Ops::KEM_Decryption_with_KD
 
       size_t raw_kem_shared_key_length() const override { return public_modulus_bytes(); }
 
+      size_t encapsulated_key_length() const override { return public_modulus_bytes(); }
+
       void raw_kem_decrypt(std::span<uint8_t> out_shared_key, std::span<const uint8_t> encapsulated_key) override {
          auto shared_key = raw_op(encapsulated_key.data(), encapsulated_key.size());
 

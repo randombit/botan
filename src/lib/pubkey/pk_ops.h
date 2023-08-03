@@ -161,6 +161,8 @@ class KEM_Decryption {
 
       virtual size_t shared_key_length(size_t desired_shared_key_len) const = 0;
 
+      virtual size_t encapsulated_key_length() const = 0;
+
       virtual ~KEM_Decryption() = default;
 };
 

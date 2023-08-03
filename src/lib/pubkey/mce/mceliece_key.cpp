@@ -323,6 +323,8 @@ class MCE_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF {
          return ptext_sz + err_sz;
       }
 
+      size_t encapsulated_key_length() const override { return (m_key.get_code_length() + 7) / 8; }
+
       void raw_kem_decrypt(std::span<uint8_t> out_shared_key, std::span<const uint8_t> encapsulated_key) override {
          secure_vector<uint8_t> plaintext, error_mask;
          mceliece_decrypt(plaintext, error_mask, encapsulated_key.data(), encapsulated_key.size(), m_key);
