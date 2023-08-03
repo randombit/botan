@@ -874,6 +874,10 @@ encapulated key and returns the shared secret.
 
      Create a KEM decryptor
 
+  .. cpp:function:: size_t encapsulated_key_length() const
+
+     Size in bytes of the encapsulated key expected by this PK_KEM_Decryptor.
+
   .. cpp:function:: size_t shared_key_length(size_t desired_shared_key_len) const
 
      Size in bytes of the shared key being produced by this PK_KEM_Encryptor.
