@@ -70,10 +70,9 @@ rule link_tests
 
 # Executable targets
 
-# TODO don't always link statically
-build %{cli_exe}: link_cli %{join cli_objs} | %{out_dir}/%{static_lib_name}
+build %{cli_exe}: link_cli %{join cli_objs}
 
-build %{test_exe}: link_tests %{join test_objs} | %{out_dir}/%{static_lib_name}
+build %{test_exe}: link_tests %{join test_objs}
 
 
 # Misc targets
