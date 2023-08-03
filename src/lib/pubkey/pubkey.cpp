@@ -183,8 +183,6 @@ void PK_KEM_Decryptor::decrypt(std::span<uint8_t> out_shared_key,
    m_op->kem_decrypt(out_shared_key, encap_key, desired_shared_key_len, salt);
 }
 
-PK_Key_Agreement::PK_Key_Agreement(PK_Key_Agreement&&) noexcept = default;
-
 PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
                                    RandomNumberGenerator& rng,
                                    std::string_view kdf,
