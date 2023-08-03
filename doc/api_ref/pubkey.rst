@@ -834,17 +834,17 @@ encapulated key and returns the shared secret.
 
      Size in bytes of the encapsulated key being produced by this PK_KEM_Encryptor.
 
-  .. cpp:function:: KEM_Encapsulation encrypt(RandomNumberGenerator& rng,
-                                size_t desired_shared_key_len = 32,
+  .. cpp:function:: KEM_Encapsulation encrypt(RandomNumberGenerator& rng, \
+                                size_t desired_shared_key_len = 32, \
                                 std::span<const uint8_t> salt = {})
 
      Perform a key encapsulation operation with the result being returned
      as a convenient struct.
 
-  .. cpp:function:: void encrypt(std::span<uint8_t> out_encapsulated_key,
-                   std::span<uint8_t> out_shared_key,
-                   RandomNumberGenerator& rng,
-                   size_t desired_shared_key_len = 32,
+  .. cpp:function:: void encrypt(std::span<uint8_t> out_encapsulated_key, \
+                   std::span<uint8_t> out_shared_key, \
+                   RandomNumberGenerator& rng, \
+                   size_t desired_shared_key_len = 32, \
                    std::span<const uint8_t> salt = {})
 
      Perform a key encapsulation operation by passing in out-buffers of
@@ -888,9 +888,9 @@ encapulated key and returns the shared secret.
 
       Perform a key decapsulation operation
 
-  .. cpp:function:: void decrypt(std::span<uint8_t> out_shared_key,
-                   std::span<const uint8_t> encap_key,
-                   size_t desired_shared_key_len = 32,
+  .. cpp:function:: void decrypt(std::span<uint8_t> out_shared_key, \
+                   std::span<const uint8_t> encap_key, \
+                   size_t desired_shared_key_len = 32, \
                    std::span<const uint8_t> salt = {})
 
       Perform a key decapsulation operation by passing in a pre-allocated
