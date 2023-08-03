@@ -50,16 +50,14 @@ rule link_shared
   command = %{lib_link_cmd} ${ABI_FLAGS} ${LDFLAGS} $in ${LIB_LINKS_TO} %{dash_o}$out
 
 build %{out_dir}/%{shared_lib_name}: link_shared %{join lib_objs}
-
 %{endif}
 %{if symlink_shared_lib}
 
-rule symlink_shared
+rule symlink
   command = cd %{out_dir} && ln -fs $in $out
 
-# TODO create symlinks
-#symlink_shared %{soname_base}
-#symlink_shared %{soname_patch}
+build %{out_dir}/%{soname_base}: symlink %{out_dir}/%{shared_lib_name}
+build %{out_dir}/%{soname_patch}: symlink %{out_dir}/%{shared_lib_name}
 
 %{endif}
 
@@ -72,7 +70,7 @@ rule link_tests
 
 # Executable targets
 
-# TODO don't always link statically?
+# TODO don't always link statically
 build %{cli_exe}: link_cli %{join cli_objs} | %{out_dir}/%{static_lib_name}
 
 build %{test_exe}: link_tests %{join test_objs} | %{out_dir}/%{static_lib_name}
@@ -85,6 +83,11 @@ rule build_docs
 
 build %{doc_stamp_file}: build_docs
 
+rule install
+  command = "${PYTHON_EXE}" "${SCRIPTS_DIR}/install.py" --build-dir="build"
+
+build install: install
+
 
 # Target aliases
 
@@ -92,7 +95,10 @@ build cli: phony %{cli_exe}
 
 build tests: phony %{test_exe}
 
-build libs: phony %{library_targets}
+build libs: phony %{library_targets} $
+%{if symlink_shared_lib}
+  %{out_dir}/%{soname_base} %{out_dir}/%{soname_patch}
+%{endif}
 
 build docs: phony %{doc_stamp_file}
 
