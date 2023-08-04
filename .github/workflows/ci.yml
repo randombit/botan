@@ -243,6 +243,9 @@ jobs:
           - target: cross-arm64
             compiler: gcc
             host_os: ubuntu-22.04
+          - target: cross-mips64
+            compiler: gcc
+            host_os: ubuntu-22.04
           - target: cross-ppc64
             compiler: gcc
             host_os: ubuntu-22.04
@@ -264,6 +267,9 @@ jobs:
             host_os: macos-13
           - target: emscripten
             compiler: emcc
+            host_os: ubuntu-22.04
+          - target: baremetal
+            compiler: gcc
             host_os: ubuntu-22.04
 
     runs-on: ${{ matrix.host_os }}
