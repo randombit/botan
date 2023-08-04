@@ -179,6 +179,8 @@ class BOTAN_UNSTABLE_API CurveGFp final {
 
       void swap(CurveGFp& other) { std::swap(m_repr, other.m_repr); }
 
+      friend void swap(CurveGFp& x, CurveGFp& y) { x.swap(y); }
+
       /**
       * Equality operator
       * @param other a curve
@@ -203,14 +205,5 @@ inline bool operator!=(const CurveGFp& lhs, const CurveGFp& rhs) {
 }
 
 }  // namespace Botan
-
-namespace std {
-
-template <>
-inline void swap<Botan::CurveGFp>(Botan::CurveGFp& curve1, Botan::CurveGFp& curve2) noexcept {
-   curve1.swap(curve2);
-}
-
-}  // namespace std
 
 #endif
