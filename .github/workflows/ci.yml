@@ -244,7 +244,7 @@ jobs:
           - target: cross-mips64
             compiler: gcc
             host_os: ubuntu-22.04
-          - target: baremetal
+          - target: cross-arm32-baremetal
             compiler: gcc
             host_os: ubuntu-22.04
 
