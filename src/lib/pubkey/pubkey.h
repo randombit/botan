@@ -172,8 +172,8 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
       PK_Signer(const PK_Signer&) = delete;
       PK_Signer& operator=(const PK_Signer&) = delete;
 
-      PK_Signer(PK_Signer&&) noexcept = default;
-      PK_Signer& operator=(PK_Signer&&) noexcept = default;
+      PK_Signer(PK_Signer&&) noexcept;
+      PK_Signer& operator=(PK_Signer&&) noexcept;
 
       /**
       * Sign a message all in one go
@@ -302,8 +302,8 @@ class BOTAN_PUBLIC_API(2, 0) PK_Verifier final {
       PK_Verifier(const PK_Verifier&) = delete;
       PK_Verifier& operator=(const PK_Verifier&) = delete;
 
-      PK_Verifier(PK_Verifier&&) noexcept = default;
-      PK_Verifier& operator=(PK_Verifier&&) noexcept = default;
+      PK_Verifier(PK_Verifier&&) noexcept;
+      PK_Verifier& operator=(PK_Verifier&&) noexcept;
 
       /**
       * Verify a signature.
@@ -412,8 +412,8 @@ class BOTAN_PUBLIC_API(2, 0) PK_Key_Agreement final {
       PK_Key_Agreement(const PK_Key_Agreement&) = delete;
       PK_Key_Agreement& operator=(const PK_Key_Agreement&) = delete;
 
-      PK_Key_Agreement(PK_Key_Agreement&&) = default;
-      PK_Key_Agreement& operator=(PK_Key_Agreement&&) = default;
+      PK_Key_Agreement(PK_Key_Agreement&&);
+      PK_Key_Agreement& operator=(PK_Key_Agreement&&);
 
       /**
       * Perform Key Agreement Operation
@@ -497,8 +497,8 @@ class BOTAN_PUBLIC_API(2, 0) PK_Encryptor_EME final : public PK_Encryptor {
       PK_Encryptor_EME(const PK_Encryptor_EME&) = delete;
       PK_Encryptor_EME& operator=(const PK_Encryptor_EME&) = delete;
 
-      PK_Encryptor_EME(PK_Encryptor_EME&&) = default;
-      PK_Encryptor_EME& operator=(PK_Encryptor_EME&&) = default;
+      PK_Encryptor_EME(PK_Encryptor_EME&&);
+      PK_Encryptor_EME& operator=(PK_Encryptor_EME&&);
 
       /**
       * Return an upper bound on the ciphertext length for a particular
@@ -536,8 +536,8 @@ class BOTAN_PUBLIC_API(2, 0) PK_Decryptor_EME final : public PK_Decryptor {
       PK_Decryptor_EME(const PK_Decryptor_EME&) = delete;
       PK_Decryptor_EME& operator=(const PK_Decryptor_EME&) = delete;
 
-      PK_Decryptor_EME(PK_Decryptor_EME&&) = default;
-      PK_Decryptor_EME& operator=(PK_Decryptor_EME&&) = default;
+      PK_Decryptor_EME(PK_Decryptor_EME&&);
+      PK_Decryptor_EME& operator=(PK_Decryptor_EME&&);
 
    private:
       secure_vector<uint8_t> do_decrypt(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const override;
@@ -613,8 +613,8 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
       PK_KEM_Encryptor(const PK_KEM_Encryptor&) = delete;
       PK_KEM_Encryptor& operator=(const PK_KEM_Encryptor&) = delete;
 
-      PK_KEM_Encryptor(PK_KEM_Encryptor&&) = default;
-      PK_KEM_Encryptor& operator=(PK_KEM_Encryptor&&) = default;
+      PK_KEM_Encryptor(PK_KEM_Encryptor&&);
+      PK_KEM_Encryptor& operator=(PK_KEM_Encryptor&&);
 
       /**
       * Return the length of the shared key returned by this KEM
@@ -744,8 +744,8 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Decryptor final {
       PK_KEM_Decryptor(const PK_KEM_Decryptor&) = delete;
       PK_KEM_Decryptor& operator=(const PK_KEM_Decryptor&) = delete;
 
-      PK_KEM_Decryptor(PK_KEM_Decryptor&&) = default;
-      PK_KEM_Decryptor& operator=(PK_KEM_Decryptor&&) = default;
+      PK_KEM_Decryptor(PK_KEM_Decryptor&&);
+      PK_KEM_Decryptor& operator=(PK_KEM_Decryptor&&);
 
       /**
       * Return the length of the shared key returned by this KEM

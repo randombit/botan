@@ -94,6 +94,9 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
 
 PK_Encryptor_EME::~PK_Encryptor_EME() = default;
 
+PK_Encryptor_EME::PK_Encryptor_EME(PK_Encryptor_EME&&) = default;
+PK_Encryptor_EME& PK_Encryptor_EME::operator=(PK_Encryptor_EME&&) = default;
+
 size_t PK_Encryptor_EME::ciphertext_length(size_t ptext_len) const {
    return m_op->ciphertext_length(ptext_len);
 }
@@ -118,6 +121,9 @@ PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
 
 PK_Decryptor_EME::~PK_Decryptor_EME() = default;
 
+PK_Decryptor_EME::PK_Decryptor_EME(PK_Decryptor_EME&&) = default;
+PK_Decryptor_EME& PK_Decryptor_EME::operator=(PK_Decryptor_EME&&) = default;
+
 size_t PK_Decryptor_EME::plaintext_length(size_t ctext_len) const {
    return m_op->plaintext_length(ctext_len);
 }
@@ -134,6 +140,9 @@ PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, std::string_view param
 }
 
 PK_KEM_Encryptor::~PK_KEM_Encryptor() = default;
+
+PK_KEM_Encryptor::PK_KEM_Encryptor(PK_KEM_Encryptor&&) = default;
+PK_KEM_Encryptor& PK_KEM_Encryptor::operator=(PK_KEM_Encryptor&&) = default;
 
 size_t PK_KEM_Encryptor::shared_key_length(size_t desired_shared_key_len) const {
    return m_op->shared_key_length(desired_shared_key_len);
@@ -174,6 +183,9 @@ PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key,
 
 PK_KEM_Decryptor::~PK_KEM_Decryptor() = default;
 
+PK_KEM_Decryptor::PK_KEM_Decryptor(PK_KEM_Decryptor&&) = default;
+PK_KEM_Decryptor& PK_KEM_Decryptor::operator=(PK_KEM_Decryptor&&) = default;
+
 void PK_KEM_Decryptor::decrypt(std::span<uint8_t> out_shared_key,
                                std::span<const uint8_t> encap_key,
                                size_t desired_shared_key_len,
@@ -194,6 +206,9 @@ PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
 }
 
 PK_Key_Agreement::~PK_Key_Agreement() = default;
+
+PK_Key_Agreement::PK_Key_Agreement(PK_Key_Agreement&&) = default;
+PK_Key_Agreement& PK_Key_Agreement::operator=(PK_Key_Agreement&&) = default;
 
 size_t PK_Key_Agreement::agreed_value_size() const {
    return m_op->agreed_value_size();
@@ -234,6 +249,9 @@ std::string PK_Signer::hash_function() const {
 }
 
 PK_Signer::~PK_Signer() = default;
+
+PK_Signer::PK_Signer(PK_Signer&&) noexcept = default;
+PK_Signer& PK_Signer::operator=(PK_Signer&&) noexcept = default;
 
 void PK_Signer::update(const uint8_t in[], size_t length) {
    m_op->update(in, length);
@@ -312,6 +330,9 @@ PK_Verifier::PK_Verifier(const Public_Key& key,
 }
 
 PK_Verifier::~PK_Verifier() = default;
+
+PK_Verifier::PK_Verifier(PK_Verifier&&) noexcept = default;
+PK_Verifier& PK_Verifier::operator=(PK_Verifier&&) noexcept = default;
 
 std::string PK_Verifier::hash_function() const {
    return m_op->hash_function();
