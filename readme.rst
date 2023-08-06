@@ -43,6 +43,10 @@ If you think you have found a security issue, see the `security page
     :target: https://repology.org/project/botan/versions
     :alt: Packaging status
 
+.. image:: https://api.securityscorecards.dev/projects/github.com/randombit/botan/badge
+    :target: https://securityscorecards.dev/viewer/?uri=github.com/randombit/botan
+    :alt: CII Best Practices statement
+
 .. image:: https://bestpractices.coreinfrastructure.org/projects/531/badge
     :target: https://bestpractices.coreinfrastructure.org/projects/531
     :alt: CII Best Practices statement
