@@ -94,8 +94,8 @@ PK_Encryptor_EME::PK_Encryptor_EME(const Public_Key& key,
 
 PK_Encryptor_EME::~PK_Encryptor_EME() = default;
 
-PK_Encryptor_EME::PK_Encryptor_EME(PK_Encryptor_EME&&) = default;
-PK_Encryptor_EME& PK_Encryptor_EME::operator=(PK_Encryptor_EME&&) = default;
+PK_Encryptor_EME::PK_Encryptor_EME(PK_Encryptor_EME&&) noexcept = default;
+PK_Encryptor_EME& PK_Encryptor_EME::operator=(PK_Encryptor_EME&&) noexcept = default;
 
 size_t PK_Encryptor_EME::ciphertext_length(size_t ptext_len) const {
    return m_op->ciphertext_length(ptext_len);
@@ -121,8 +121,8 @@ PK_Decryptor_EME::PK_Decryptor_EME(const Private_Key& key,
 
 PK_Decryptor_EME::~PK_Decryptor_EME() = default;
 
-PK_Decryptor_EME::PK_Decryptor_EME(PK_Decryptor_EME&&) = default;
-PK_Decryptor_EME& PK_Decryptor_EME::operator=(PK_Decryptor_EME&&) = default;
+PK_Decryptor_EME::PK_Decryptor_EME(PK_Decryptor_EME&&) noexcept = default;
+PK_Decryptor_EME& PK_Decryptor_EME::operator=(PK_Decryptor_EME&&) noexcept = default;
 
 size_t PK_Decryptor_EME::plaintext_length(size_t ctext_len) const {
    return m_op->plaintext_length(ctext_len);
@@ -141,8 +141,8 @@ PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, std::string_view param
 
 PK_KEM_Encryptor::~PK_KEM_Encryptor() = default;
 
-PK_KEM_Encryptor::PK_KEM_Encryptor(PK_KEM_Encryptor&&) = default;
-PK_KEM_Encryptor& PK_KEM_Encryptor::operator=(PK_KEM_Encryptor&&) = default;
+PK_KEM_Encryptor::PK_KEM_Encryptor(PK_KEM_Encryptor&&) noexcept = default;
+PK_KEM_Encryptor& PK_KEM_Encryptor::operator=(PK_KEM_Encryptor&&) noexcept = default;
 
 size_t PK_KEM_Encryptor::shared_key_length(size_t desired_shared_key_len) const {
    return m_op->shared_key_length(desired_shared_key_len);
@@ -183,8 +183,8 @@ PK_KEM_Decryptor::PK_KEM_Decryptor(const Private_Key& key,
 
 PK_KEM_Decryptor::~PK_KEM_Decryptor() = default;
 
-PK_KEM_Decryptor::PK_KEM_Decryptor(PK_KEM_Decryptor&&) = default;
-PK_KEM_Decryptor& PK_KEM_Decryptor::operator=(PK_KEM_Decryptor&&) = default;
+PK_KEM_Decryptor::PK_KEM_Decryptor(PK_KEM_Decryptor&&) noexcept = default;
+PK_KEM_Decryptor& PK_KEM_Decryptor::operator=(PK_KEM_Decryptor&&) noexcept = default;
 
 void PK_KEM_Decryptor::decrypt(std::span<uint8_t> out_shared_key,
                                std::span<const uint8_t> encap_key,
@@ -207,8 +207,8 @@ PK_Key_Agreement::PK_Key_Agreement(const Private_Key& key,
 
 PK_Key_Agreement::~PK_Key_Agreement() = default;
 
-PK_Key_Agreement::PK_Key_Agreement(PK_Key_Agreement&&) = default;
-PK_Key_Agreement& PK_Key_Agreement::operator=(PK_Key_Agreement&&) = default;
+PK_Key_Agreement::PK_Key_Agreement(PK_Key_Agreement&&) noexcept = default;
+PK_Key_Agreement& PK_Key_Agreement::operator=(PK_Key_Agreement&&) noexcept = default;
 
 size_t PK_Key_Agreement::agreed_value_size() const {
    return m_op->agreed_value_size();
