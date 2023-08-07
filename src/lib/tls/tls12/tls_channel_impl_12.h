@@ -102,6 +102,8 @@ class Channel_Impl_12 : public Channel_Impl {
       */
       std::vector<X509_Certificate> peer_cert_chain() const override;
 
+      std::optional<std::string> external_psk_identity() const override;
+
       /**
       * Key material export (RFC 5705)
       * @param label a disambiguating label string

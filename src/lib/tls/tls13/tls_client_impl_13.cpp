@@ -50,7 +50,13 @@ Client_Impl_13::Client_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
    }
 
    auto msg = send_handshake_message(m_handshake_state.sending(
-      Client_Hello_13(*policy, *callbacks, *rng, m_info.hostname(), next_protocols, m_resumed_session)));
+      Client_Hello_13(*policy,
+                      *callbacks,
+                      *rng,
+                      m_info.hostname(),
+                      next_protocols,
+                      m_resumed_session,
+                      creds->find_preshared_keys(m_info.hostname(), Connection_Side::Client))));
 
    if(expects_downgrade()) {
       preserve_client_hello(msg);
@@ -303,12 +309,15 @@ void Client_Impl_13::handle(const Server_Hello_13& sh) {
    m_transcript_hash.set_algorithm(cipher.value().prf_algo());
 
    if(sh.extensions().has<PSK>()) {
-      m_cipher_state = ch.extensions().get<PSK>()->select_cipher_state(*sh.extensions().get<PSK>(), cipher.value());
+      std::tie(m_psk_identity, m_cipher_state) =
+         ch.extensions().get<PSK>()->take_selected_psk_info(*sh.extensions().get<PSK>(), cipher.value());
 
-      // TODO: When implementing pure PSK (negotiated out-of-band not as session
-      //       tickets), we might mix resumption and external PSKs in a single
-      //       handshake. In that case we might need to reset `m_resumed_session`
-      //       if the server selected an out-of-band PSK over a resumption PSK!
+      // If we offered a session for resumption *and* an externally provided PSK
+      // and the latter was chosen by the server over the offered resumption, we
+      // want to invalidate the now-outdated session in m_resumed_session.
+      if(m_psk_identity.has_value() && m_resumed_session.has_value()) {
+         m_resumed_session.reset();
+      }
 
       // TODO: When implementing early data, `advance_with_client_hello` must
       //       happen _before_ encrypting any early application data.
@@ -509,6 +518,8 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
    callbacks().tls_session_established(Session_Summary(m_handshake_state.server_hello(),
                                                        Connection_Side::Server,
                                                        peer_cert_chain(),
+                                                       external_psk_identity(),
+                                                       m_resumed_session.has_value(),
                                                        m_info,
                                                        callbacks().tls_current_timestamp()));
 
@@ -573,6 +584,10 @@ std::vector<X509_Certificate> Client_Impl_13::peer_cert_chain() const {
    }
 
    return {};
+}
+
+std::optional<std::string> Client_Impl_13::external_psk_identity() const {
+   return m_psk_identity;
 }
 
 bool Client_Impl_13::prepend_ccs() {

@@ -552,8 +552,8 @@ void Server_Impl_12::process_finished_msg(Server_Handshake_State& pending_state,
 
       // Give the application a chance for a final veto before fully
       // establishing the connection.
-      callbacks().tls_session_established([&] {
-         Session_Summary summary(session_info, pending_state.is_a_resumption());
+      callbacks().tls_session_established([&, this] {
+         Session_Summary summary(session_info, pending_state.is_a_resumption(), external_psk_identity());
          summary.set_session_id(pending_state.server_hello()->session_id());
          return summary;
       }());
@@ -661,8 +661,8 @@ void Server_Impl_12::session_resume(Server_Handshake_State& pending_state, const
 
    // Give the application a chance for a final veto before fully
    // establishing the connection.
-   callbacks().tls_session_established([&] {
-      Session_Summary summary(session.session, pending_state.is_a_resumption());
+   callbacks().tls_session_established([&, this] {
+      Session_Summary summary(session.session, pending_state.is_a_resumption(), external_psk_identity());
       summary.set_session_id(pending_state.server_hello()->session_id());
       if(auto ticket = session.handle.ticket()) {
          summary.set_session_ticket(std::move(ticket.value()));

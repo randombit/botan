@@ -52,6 +52,10 @@ std::vector<X509_Certificate> Server_Impl_13::peer_cert_chain() const {
    }
 }
 
+std::optional<std::string> Server_Impl_13::external_psk_identity() const {
+   return m_psk_identity;
+}
+
 bool Server_Impl_13::new_session_ticket_supported() const {
    // RFC 8446 4.2.9
    //    This extension also restricts the modes for use with PSK resumption.
@@ -205,13 +209,24 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
 
    std::unique_ptr<Cipher_State> psk_cipher_state;
    if(uses_psk) {
-      auto psk = server_hello.extensions().get<PSK>();
-      m_resumed_session.emplace(psk->take_session_to_resume());
+      auto psk_extension = server_hello.extensions().get<PSK>();
 
-      psk_cipher_state = Cipher_State::init_with_psk(Connection_Side::Server,
-                                                     Cipher_State::PSK_Type::Resumption,
-                                                     m_resumed_session->extract_master_secret(),
-                                                     cipher.prf_algo());
+      psk_cipher_state =
+         std::visit(overloaded{[&, this](Session session) {
+                                  m_resumed_session = std::move(session);
+                                  return Cipher_State::init_with_psk(Connection_Side::Server,
+                                                                     Cipher_State::PSK_Type::Resumption,
+                                                                     m_resumed_session->extract_master_secret(),
+                                                                     cipher.prf_algo());
+                               },
+                               [&, this](ExternalPSK psk) {
+                                  m_psk_identity = psk.identity();
+                                  return Cipher_State::init_with_psk(Connection_Side::Server,
+                                                                     Cipher_State::PSK_Type::External,
+                                                                     psk.extract_master_secret(),
+                                                                     cipher.prf_algo());
+                               }},
+                    psk_extension->take_session_to_resume_or_psk());
 
       // RFC 8446 4.2.11
       //    Prior to accepting PSK key establishment, the server MUST validate
@@ -224,7 +239,8 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
       //
       // Note: PSK selection was performed earlier, resulting in the existence
       //       of this extension in the first place.
-      if(!exts.get<PSK>()->validate_binder(*psk, psk_cipher_state->psk_binder_mac(m_transcript_hash.truncated()))) {
+      if(!exts.get<PSK>()->validate_binder(*psk_extension,
+                                           psk_cipher_state->psk_binder_mac(m_transcript_hash.truncated()))) {
          throw TLS_Exception(Alert::DecryptError, "PSK binder does not check out");
       }
 
@@ -410,9 +426,14 @@ void Server_Impl_13::handle(const Client_Hello_13& client_hello) {
    }
 
    callbacks().tls_examine_extensions(exts, Connection_Side::Client, client_hello.type());
-   std::visit(
-      [this](auto msg) { handle_reply_to_client_hello(std::move(msg)); },
-      Server_Hello_13::create(client_hello, is_initial_client_hello, session_manager(), rng(), policy(), callbacks()));
+   std::visit([this](auto msg) { handle_reply_to_client_hello(std::move(msg)); },
+              Server_Hello_13::create(client_hello,
+                                      is_initial_client_hello,
+                                      session_manager(),
+                                      credentials_manager(),
+                                      rng(),
+                                      policy(),
+                                      callbacks()));
 }
 
 void Server_Impl_13::handle(const Certificate_13& certificate_msg) {
@@ -511,6 +532,8 @@ void Server_Impl_13::handle(const Finished_13& finished_msg) {
       Session_Summary(m_handshake_state.server_hello(),
                       Connection_Side::Server,
                       peer_cert_chain(),
+                      m_psk_identity,
+                      m_resumed_session.has_value(),
                       Server_Information(m_handshake_state.client_hello().sni_hostname()),
                       callbacks().tls_current_timestamp()));
 

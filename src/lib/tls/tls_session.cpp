@@ -91,13 +91,14 @@ Ciphersuite Session_Base::ciphersuite() const {
    return suite.value();
 }
 
-Session_Summary::Session_Summary(const Session_Base& base, bool was_resumption) : Session_Base(base) {
+Session_Summary::Session_Summary(const Session_Base& base,
+                                 bool was_resumption,
+                                 std::optional<std::string> psk_identity) :
+      Session_Base(base), m_external_psk_identity(std::move(psk_identity)), m_was_resumption(was_resumption) {
    BOTAN_ARG_CHECK(version().is_pre_tls_13(), "Instantiated a TLS 1.2 session summary with an newer TLS version");
 
    const auto cs = ciphersuite();
-   m_psk_used = cs.psk_ciphersuite();
    m_kex_algo = cs.kex_algo();
-   m_was_resumption = was_resumption;
 }
 
 #if defined(BOTAN_HAS_TLS_13)
@@ -105,6 +106,8 @@ Session_Summary::Session_Summary(const Session_Base& base, bool was_resumption) 
 Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
                                  Connection_Side side,
                                  std::vector<X509_Certificate> peer_certs,
+                                 std::optional<std::string> psk_identity,
+                                 bool session_was_resumed,
                                  Server_Information server_info,
                                  std::chrono::system_clock::time_point current_timestamp) :
       Session_Base(current_timestamp,
@@ -125,22 +128,16 @@ Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
                    // TLS 1.3 uses AEADs, so technically encrypt-then-MAC is not applicable.
                    false,
                    std::move(peer_certs),
-                   std::move(server_info)) {
+                   std::move(server_info)),
+      m_external_psk_identity(std::move(psk_identity)),
+      m_was_resumption(session_was_resumed) {
    BOTAN_ARG_CHECK(version().is_tls_13_or_later(), "Instantiated a TLS 1.3 session summary with an older TLS version");
    set_session_id(server_hello.session_id());
-
-   // Currently, we use PSK exclusively for session resumption. Hence, a
-   // server hello with a PSK extension indicates a session resumption.
-   //
-   // TODO: once manually configured PSKs are implemented, this will need
-   //       extra consideration to tell PSK usage and resumption apart.
-   m_psk_used = server_hello.extensions().has<PSK>();
-   m_was_resumption = m_psk_used;
 
    // In TLS 1.3 the key exchange algorithm is not negotiated in the ciphersuite
    // anymore. This provides a compatible identifier for applications to use.
    m_kex_algo = kex_method_to_string([&] {
-      if(m_psk_used) {
+      if(psk_used() || was_resumption()) {
          if(const auto keyshare = server_hello.extensions().get<Key_Share>()) {
             const auto group = keyshare->selected_group();
             if(is_dh(group)) {

@@ -28,6 +28,7 @@ class Server_Impl_13 : public Channel_Impl_13 {
 
       std::string application_protocol() const override;
       std::vector<X509_Certificate> peer_cert_chain() const override;
+      std::optional<std::string> external_psk_identity() const override;
 
       bool new_session_ticket_supported() const override;
       size_t send_new_session_tickets(size_t tickets) override;
@@ -58,6 +59,7 @@ class Server_Impl_13 : public Channel_Impl_13 {
       Handshake_Transitions m_transitions;
 
       std::optional<Session> m_resumed_session;
+      std::optional<std::string> m_psk_identity;
 };
 
 }  // namespace Botan::TLS

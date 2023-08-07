@@ -246,8 +246,31 @@ class BOTAN_PUBLIC_API(3, 0) Session_Summary : public Session_Base {
        */
       const std::optional<Session_Ticket>& session_ticket() const { return m_session_ticket; }
 
-      bool psk_used() const { return m_psk_used; }
+      /**
+       * The negotiated identity of an externally provided preshared key used to
+       * establish this session. For TLS 1.3 this may be any of the externally
+       * provided PSKs offered by the client. PSK identities used as session
+       * tickets for TLS 1.3 session resumption won't be shown here.
+       */
+      const std::optional<std::string>& external_psk_identity() const { return m_external_psk_identity; }
 
+      /**
+       * Indicates that the session was established using an externally provided
+       * PSK. Session resumptions in TLS 1.3 (while technically implemented
+       * using a PSK) are not considered here. @sa was_resumption()
+       *
+       * @note Botan 3.0 and 3.1 did incorrectly report true for session resumption.
+       *
+       * @returns true if the session was established using an externally
+       *          provided PSK.
+       */
+      bool psk_used() const { return m_external_psk_identity.has_value(); }
+
+      /**
+       * Indicates that the session was resumed from a previous handshake state.
+       *
+       * @returns true if this session is a resumption, otherwise false
+       */
       bool was_resumption() const { return m_was_resumption; }
 
       std::string kex_algo() const { return m_kex_algo; }
@@ -264,12 +287,14 @@ class BOTAN_PUBLIC_API(3, 0) Session_Summary : public Session_Base {
       friend class Client_Impl_12;
       friend class Client_Impl_13;
 
-      Session_Summary(const Session_Base& base, bool was_resumption);
+      Session_Summary(const Session_Base& base, bool was_resumption, std::optional<std::string> psk_identity);
 
 #if defined(BOTAN_HAS_TLS_13)
       Session_Summary(const Server_Hello_13& server_hello,
                       Connection_Side side,
                       std::vector<X509_Certificate> peer_certs,
+                      std::optional<std::string> psk_identity,
+                      bool session_was_resumed,
                       Server_Information server_info,
                       std::chrono::system_clock::time_point current_timestamp);
 #endif
@@ -281,8 +306,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Summary : public Session_Base {
    private:
       Session_ID m_session_id;
       std::optional<Session_Ticket> m_session_ticket;
+      std::optional<std::string> m_external_psk_identity;
 
-      bool m_psk_used;
       bool m_was_resumption;
       std::string m_kex_algo;
 };

@@ -719,7 +719,8 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
                                  RandomNumberGenerator& rng,
                                  std::string_view hostname,
                                  const std::vector<std::string>& next_protocols,
-                                 std::optional<Session_with_Handle>& session) {
+                                 std::optional<Session_with_Handle>& session,
+                                 std::vector<ExternalPSK> psks) {
    // RFC 8446 4.1.2
    //    In TLS 1.3, the client indicates its version preferences in the
    //    "supported_versions" extension (Section 4.2.1) and the
@@ -801,8 +802,8 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
       }
    }
 
-   if(session.has_value()) {
-      m_data->extensions().add(new PSK(session.value(), cb));
+   if(session.has_value() || !psks.empty()) {
+      m_data->extensions().add(new PSK(session, std::move(psks), cb));
    }
 
    cb.tls_modify_extensions(m_data->extensions(), Connection_Side::Client, type());

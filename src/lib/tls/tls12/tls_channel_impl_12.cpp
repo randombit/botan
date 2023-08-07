@@ -100,6 +100,15 @@ std::vector<X509_Certificate> Channel_Impl_12::peer_cert_chain() const {
    return std::vector<X509_Certificate>();
 }
 
+std::optional<std::string> Channel_Impl_12::external_psk_identity() const {
+   const auto* state = (active_state() != nullptr) ? active_state() : pending_state();
+   if(state) {
+      return state->psk_identity();
+   } else {
+      return std::nullopt;
+   }
+}
+
 Handshake_State& Channel_Impl_12::create_handshake_state(Protocol_Version version) {
    if(pending_state()) {
       throw Internal_Error("create_handshake_state called during handshake");

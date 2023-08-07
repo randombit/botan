@@ -79,6 +79,8 @@ class BOTAN_PUBLIC_API(2, 0) Client final : public Channel {
 
       std::vector<X509_Certificate> peer_cert_chain() const override;
 
+      std::optional<std::string> external_psk_identity() const override;
+
       SymmetricKey key_material_export(std::string_view label, std::string_view context, size_t length) const override;
 
       void renegotiate(bool force_full_renegotiation = false) override;

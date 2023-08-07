@@ -62,6 +62,12 @@ class Client_Impl_13 : public Channel_Impl_13 {
       */
       std::vector<X509_Certificate> peer_cert_chain() const override;
 
+      /**
+       * @return identity of the PSK used for this connection
+       *         or std::nullopt if no PSK was used.
+       */
+      std::optional<std::string> external_psk_identity() const override;
+
    private:
       void process_handshake_msg(Handshake_Message_13 msg) override;
       void process_post_handshake_msg(Post_Handshake_Message_13 msg) override;
@@ -93,6 +99,7 @@ class Client_Impl_13 : public Channel_Impl_13 {
       bool m_should_send_ccs;
 
       std::optional<Session_with_Handle> m_resumed_session;
+      std::optional<std::string> m_psk_identity;
 };
 
 }  // namespace TLS

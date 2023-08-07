@@ -12,6 +12,7 @@
 #ifndef BOTAN_TLS_EXTENSIONS_H_
 #define BOTAN_TLS_EXTENSIONS_H_
 
+#include <botan/credentials_manager.h>
 #include <botan/pkix_types.h>
 #include <botan/secmem.h>
 #include <botan/tls_algos.h>
@@ -31,6 +32,7 @@
 namespace Botan {
 
 class RandomNumberGenerator;
+class Credentials_Manager;
 
 namespace TLS {
 
@@ -582,19 +584,28 @@ class BOTAN_UNSTABLE_API PSK final : public Extension {
       std::vector<uint8_t> serialize(Connection_Side side) const override;
 
       /**
-       * Returns the cipher state representing the PSK selected by the server.
-       * Note that this destructs the list of offered PSKs and its cipher states
-       * and must therefore not be called more than once.
+       * Returns the PSK identity (in case of an externally provided PSK) and
+       * the cipher state representing the PSK selected by the server. Note that
+       * this destructs the list of offered PSKs and its cipher states and must
+       * therefore not be called more than once.
+       *
+       * @note Technically, PSKs used for resumption also carry an identity.
+       *       Though, typically, this is an opaque value meaningful only to the
+       *       peer and of no authorative value for the user. We therefore
+       *       report the identity of externally provided PSKs only.
        */
-      std::unique_ptr<Cipher_State> select_cipher_state(const PSK& server_psk, const Ciphersuite& cipher);
+      std::pair<std::optional<std::string>, std::unique_ptr<Cipher_State>> take_selected_psk_info(
+         const PSK& server_psk, const Ciphersuite& cipher);
 
       /**
        * Selects one of the offered PSKs that is compatible with \p cipher.
        * @retval PSK extension object that can be added to the Server Hello response
        * @retval std::nullptr if no PSK offered by the client is convenient
        */
-      std::unique_ptr<PSK> select_offered_psk(const Ciphersuite& cipher,
+      std::unique_ptr<PSK> select_offered_psk(std::string_view host,
+                                              const Ciphersuite& cipher,
                                               Session_Manager& session_mgr,
+                                              Credentials_Manager& credentials_mgr,
                                               Callbacks& callbacks,
                                               const Policy& policy);
 
@@ -606,9 +617,10 @@ class BOTAN_UNSTABLE_API PSK final : public Extension {
       void filter(const Ciphersuite& cipher);
 
       /**
-       * Pulls the Session to resume from a PSK extension in Server Hello.
+       * Pulls the preshared key or the Session to resume from a PSK extension
+       * in Server Hello.
        */
-      Session take_session_to_resume();
+      std::variant<Session, ExternalPSK> take_session_to_resume_or_psk();
 
       bool empty() const override;
 
@@ -622,9 +634,11 @@ class BOTAN_UNSTABLE_API PSK final : public Extension {
        * @param session_to_resume  the session to be resumed; note that the
        *                           master secret will be taken away from the
        *                           session object.
+       * @param psks               a list of non-resumption PSKs that should be
+       *                           offered to the server
        * @param callbacks          the application's callbacks
        */
-      PSK(Session_with_Handle& session_to_resume, Callbacks& callbacks);
+      PSK(std::optional<Session_with_Handle>& session_to_resume, std::vector<ExternalPSK> psks, Callbacks& callbacks);
 
       ~PSK() override;
 
@@ -643,6 +657,15 @@ class BOTAN_UNSTABLE_API PSK final : public Extension {
        * Note: This constructor is called internally in PSK::select_offered_psk().
        */
       PSK(Session session_to_resume, uint16_t psk_index);
+
+      /**
+       * Creates a PSK extension that specifies the server's selection of an
+       * externally provided PSK offered by the client. The @p psk is kept
+       * internally and used later for the initialization of the Cipher_State object.
+       *
+       * Note: This constructor is called internally in PSK::select_offered_psk().
+       */
+      PSK(ExternalPSK psk, const uint16_t psk_index);
 
    private:
       class PSK_Internal;

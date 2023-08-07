@@ -970,11 +970,12 @@ def cli_tls_socket_tests(tmp_dir):
         #       and extend the test to use it for both TLS 1.2 and 1.3.
         TestConfig("Record size limit", "1.3", "allow_tls12=false\nallow_tls13=true\nrecord_size_limit=64\n"),
 
-        # At the moment, TLS 1.3 does not implement externally provided PSKs.
-        # TODO: Once implemented, add a test that exercises PSK mode for TLS 1.3
-        TestConfig("PSK", "1.2", "allow_tls12=true\nallow_tls13=false\nkey_exchange_methods=ECDHE_PSK\n",
+        TestConfig("PSK TLS 1.2", "1.2", "allow_tls12=true\nallow_tls13=false\nkey_exchange_methods=ECDHE_PSK\n",
                    psk=psk, psk_identity=psk_identity,
-                   stdout_regex=r'TLS v1.2 using ECDHE_PSK_.*'),
+                   stdout_regex=f'Handshake complete, TLS v1\\.2.*utilized PSK identity: {psk_identity}.*'),
+        TestConfig("PSK TLS 1.3", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_methods=ECDHE_PSK\n",
+                   psk=psk, psk_identity=psk_identity,
+                   stdout_regex=f'Handshake complete, TLS v1\\.3.*utilized PSK identity: {psk_identity}.*'),
     ]
 
     with open(tls_server_policy, 'w', encoding='utf8') as f:

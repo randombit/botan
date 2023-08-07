@@ -36,6 +36,7 @@ namespace Botan_CLI {
 class TLS_Client;
 
 namespace {
+
 class Callbacks : public Botan::TLS::Callbacks {
    public:
       Callbacks(TLS_Client& client_command) : m_client_command(client_command) {}
@@ -76,7 +77,13 @@ class Callbacks : public Botan::TLS::Callbacks {
 
       void tls_session_established(const Botan::TLS::Session_Summary& session) override {
          output() << "Handshake complete, " << session.version().to_string() << " using "
-                  << session.ciphersuite().to_string() << "\n";
+                  << session.ciphersuite().to_string();
+
+         if(const auto& psk = session.external_psk_identity()) {
+            output() << " (utilized PSK identity: " << maybe_hex_encode(psk.value()) << ")";
+         }
+
+         output() << std::endl;
 
          if(const auto& session_id = session.session_id(); !session_id.empty()) {
             output() << "Session ID " << Botan::hex_encode(session_id.get()) << "\n";
@@ -135,7 +142,7 @@ class TLS_Client final : public Command {
                "tls_client host --port=443 --print-certs --policy=default "
                "--skip-system-cert-store --trusted-cas= --tls-version=default "
                "--session-db= --session-db-pass= --next-protocols= --type=tcp "
-               "--client-cert= --client-cert-key= --psk= --psk-identity= --debug") {
+               "--client-cert= --client-cert-key= --psk= --psk-identity= --psk-prf=SHA-256 --debug") {
          init_sockets();
       }
 
@@ -224,9 +231,15 @@ class TLS_Client final : public Command {
             }
          }();
          const std::optional<std::string> psk_identity = get_arg_maybe("psk-identity");
+         const std::optional<std::string> psk_prf = get_arg_maybe("psk-prf");
 
-         auto creds = std::make_shared<Basic_Credentials_Manager>(
-            use_system_cert_store, trusted_CAs, client_crt_path, client_key_path, std::move(psk), psk_identity);
+         auto creds = std::make_shared<Basic_Credentials_Manager>(use_system_cert_store,
+                                                                  trusted_CAs,
+                                                                  client_crt_path,
+                                                                  client_key_path,
+                                                                  std::move(psk),
+                                                                  psk_identity,
+                                                                  psk_prf);
 
          Botan::TLS::Client client(callbacks,
                                    session_mgr,

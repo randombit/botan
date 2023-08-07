@@ -191,6 +191,13 @@ const Ciphersuite& Handshake_State::ciphersuite() const {
    return m_ciphersuite.value();
 }
 
+std::optional<std::string> Handshake_State::psk_identity() const {
+   if(!m_client_kex) {
+      return std::nullopt;
+   }
+   return m_client_kex->psk_identity();
+}
+
 void Handshake_State::set_version(const Protocol_Version& version) {
    m_version = version;
 }
