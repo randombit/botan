@@ -1445,6 +1445,9 @@ int botan_pubkey_view_kyber_raw_key(botan_pubkey_t key, botan_view_ctx ctx, bota
 /*
 * Algorithm specific key operations: ECDSA and ECDH
 */
+BOTAN_FFI_EXPORT(3, 2)
+int botan_pubkey_ecc_key_used_explicit_encoding(botan_pubkey_t key);
+
 BOTAN_FFI_EXPORT(2, 2)
 int botan_privkey_load_ecdsa(botan_privkey_t* key, botan_mp_t scalar, const char* curve_name);
 

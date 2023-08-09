@@ -688,6 +688,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             botan_pubkey_t pub;
             if(TEST_FFI_OK(botan_x509_cert_get_public_key, (cert, &pub))) {
+               TEST_FFI_RC(1, botan_pubkey_ecc_key_used_explicit_encoding, (pub));
                TEST_FFI_OK(botan_pubkey_destroy, (pub));
             }
 

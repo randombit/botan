@@ -355,6 +355,24 @@ int botan_privkey_create_ecdsa(botan_privkey_t* key_obj, botan_rng_t rng_obj, co
 
 /* ECDSA specific operations */
 
+int botan_pubkey_ecc_key_used_explicit_encoding(botan_pubkey_t key) {
+#if defined(BOTAN_HAS_ECC_KEY)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const Botan::Public_Key& pub_key = safe_get(key);
+      const Botan::EC_PublicKey* ec_key = dynamic_cast<const Botan::EC_PublicKey*>(&pub_key);
+
+      if(ec_key == nullptr) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+
+      return ec_key->domain().used_explicit_encoding() ? 1 : 0;
+   });
+#else
+   BOTAN_UNUSED(key);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 int botan_pubkey_load_ecdsa(botan_pubkey_t* key,
                             const botan_mp_t public_x,
                             const botan_mp_t public_y,
