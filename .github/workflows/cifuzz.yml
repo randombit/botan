@@ -1,4 +1,9 @@
 name: CIFuzz
+
+permissions:
+  contents: read
+  # implicitly all other scopes not listed become none
+
 on: [pull_request]
 jobs:
   Fuzzing:
