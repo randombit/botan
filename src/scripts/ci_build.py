@@ -32,6 +32,7 @@ def known_targets():
     return [
         'amalgamation',
         'bsi',
+        'codeql',
         'coverage',
         'cross-android-arm32',
         'cross-android-arm64',
@@ -167,6 +168,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
     if target == 'docs':
         flags += ['--with-doxygen', '--with-sphinx', '--with-rst2man']
+        test_cmd = None
+
+    if target == 'codeql':
         test_cmd = None
 
     if target == 'cross-win64':

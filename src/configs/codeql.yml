@@ -1,0 +1,8 @@
+
+query-filters:
+ - exclude:
+     id: cpp/fixme-comment
+ - exclude:
+     id: cpp/weak-cryptographic-algorithm
+ - exclude:
+     id: py/clear-text-logging-sensitive-data
