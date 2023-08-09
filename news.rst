@@ -4,9 +4,15 @@ Release Notes
 Version 3.2.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add improved APIs for key encsapsulation (GH #3611)
+* Add support for TLS PSK (GH #3618)
+
+* Add improved APIs for key encsapsulation (GH #3611 #3652)
 
 * Remove an unused variable in BLAKE2b (GH #3624)
+
+* Fix a number of clang-tidy warnings in the headers (GH #3646)
+
+* Add checks for invalid length AD in Argon2 (GH #3626)
 
 Version 3.1.1, 2023-07-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
