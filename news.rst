@@ -8,6 +8,8 @@ Version 3.2.0, Not Yet Released
 
 * Add improved APIs for key encsapsulation (GH #3611 #3652)
 
+* The types defined in pubkey.h can now be moved (GH #3655)
+
 * Remove an unused variable in BLAKE2b (GH #3624)
 
 * Fix a number of clang-tidy warnings in the headers (GH #3646)
