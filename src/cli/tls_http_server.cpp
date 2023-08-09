@@ -242,6 +242,9 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
             log_exception("TLS connection failed", e);
             return stop();
          }
+         if(m_tls->is_closed_for_reading()) {
+            return stop();
+         }
 
          m_client_socket.async_read_some(boost::asio::buffer(&m_c2s[0], m_c2s.size()),
                                          m_strand.wrap(boost::bind(&TLS_Asio_HTTP_Session::client_read,
