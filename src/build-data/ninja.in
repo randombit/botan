@@ -4,10 +4,11 @@ CXX            = %{cxx}
 LINKER         = %{linker}
 PYTHON_EXE     = %{python_exe}
 
-lib_flags =
-
-rule compile_obj
+rule compile_lib
   command = %{cxx} %{lib_flags} ${BUILD_FLAGS} ${isa_flags} %{include_paths} %{dash_c} $in %{dash_o}$out
+
+rule compile_exe
+  command = %{cxx} ${BUILD_FLAGS} ${isa_flags} %{include_paths} %{dash_c} $in %{dash_o}$out
 
 ABI_FLAGS      = %{cc_sysroot} %{cxx_abi_flags}
 LANG_FLAGS     = %{cc_lang_flags} %{os_feature_macros}
@@ -107,14 +108,13 @@ build all: phony libs docs cli tests
 # Build Commands
 
 %{for lib_build_info}
-build %{obj}: compile_obj %{src}
-  lib_flags = %{lib_flags}
+build %{obj}: compile_lib %{src}
 %{endfor}
 
 %{for cli_build_info}
-build %{obj}: compile_obj %{src}
+build %{obj}: compile_exe %{src}
 %{endfor}
 
 %{for test_build_info}
-build %{obj}: compile_obj %{src}
+build %{obj}: compile_exe %{src}
 %{endfor}
