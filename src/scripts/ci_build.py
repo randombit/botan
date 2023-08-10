@@ -532,12 +532,13 @@ def validate_make_tool(make_tool, build_jobs):
     # Hack to work around jom occasionally failing to install
     # https://github.com/randombit/botan/issues/3629
     if make_tool == 'jom' and not have_prog('jom'):
-        return ['nmake']
+        return 'nmake', []
 
     if make_tool in ['make', 'jom']:
-        return [make_tool, '-j%d' % (build_jobs)]
+        return make_tool, ['-j%d' % (build_jobs), '-k']
+
     else:
-        return [make_tool]
+        return make_tool, []
 
 def main(args=None):
     """
@@ -650,17 +651,17 @@ def main(args=None):
             options.pkcs11_lib, options.use_gdb, options.disable_werror,
             options.extra_cxxflags, options.disabled_tests)
 
-        make_cmd = validate_make_tool(options.make_tool, options.build_jobs)
+        make_tool, make_opts = validate_make_tool(options.make_tool, options.build_jobs)
 
         cmds.append([py_interp,
             os.path.join(root_dir, 'configure.py')] +
-            ['--build-tool=' + options.make_tool] +
+            ['--build-tool=' + make_tool] +
             config_flags)
 
-        if build_dir != '.':
-            make_cmd = ['indir:%s' % build_dir] + make_cmd
+        make_cmd = [make_tool] + make_opts
 
-        #make_cmd += ['-k']
+        if build_dir != '.':
+            make_cmd = ['indir:%s' % build_dir] + [make_tool] + make_opts
 
         if target == 'docs':
             cmds.append(make_cmd + ['docs'])
