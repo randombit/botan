@@ -4,10 +4,10 @@ CXX            = %{cxx}
 LINKER         = %{linker}
 PYTHON_EXE     = %{python_exe}
 
-isa_flags =
+lib_flags =
 
 rule compile_obj
-  command = %{cxx} ${BUILD_FLAGS} ${isa_flags} %{include_paths} %{dash_c} $in %{dash_o}$out
+  command = %{cxx} %{lib_flags} ${BUILD_FLAGS} ${isa_flags} %{include_paths} %{dash_c} $in %{dash_o}$out
 
 ABI_FLAGS      = %{cc_sysroot} %{cxx_abi_flags}
 LANG_FLAGS     = %{cc_lang_flags} %{os_feature_macros}
@@ -47,7 +47,7 @@ build %{out_dir}/%{static_lib_name}: link_static %{join lib_objs}
 %{if build_shared_lib}
 
 rule link_shared
-  command = %{lib_link_cmd} ${ABI_FLAGS} ${LDFLAGS} $in ${LIB_LINKS_TO} %{dash_o}$out
+  command = %{lib_link_cmd} ${ABI_FLAGS} ${LDFLAGS} $in ${LIB_LINKS_TO} %{output_to_exe}$out
 
 build %{out_dir}/%{shared_lib_name}: link_shared %{join lib_objs}
 %{endif}
@@ -62,10 +62,10 @@ build %{out_dir}/%{soname_patch}: symlink %{out_dir}/%{shared_lib_name}
 %{endif}
 
 rule link_cli
-  command = %{exe_link_cmd} %{cc_sysroot} %{cxx_abi_flags} $in %{build_dir_link_path} %{cc_lang_binary_linker_flags} %{ldflags} %{external_link_cmd} ${EXE_LINKS_TO} %{output_to_exe}$out
+  command = %{exe_link_cmd} ${ABI_FLAGS} $in ${BUILD_DIR_LINK_PATH} ${LANG_EXE_FLAGS} ${LDFLAGS} ${EXE_LINKS_TO} %{output_to_exe}$out
 
 rule link_tests
-  command = %{exe_link_cmd} %{cc_sysroot} %{cxx_abi_flags} $in %{build_dir_link_path} %{cc_lang_binary_linker_flags} %{ldflags} %{external_link_cmd} ${EXE_LINKS_TO} %{output_to_exe}$out
+  command = %{exe_link_cmd} ${ABI_FLAGS} $in ${build_dir_link_path} ${LANG_EXE_FLAGS} ${LDFLAGS} %{test_exe_extra_ldflags} ${EXE_LINKS_TO} %{output_to_exe}$out
 
 
 # Executable targets
@@ -108,7 +108,7 @@ build all: phony libs docs cli tests
 
 %{for lib_build_info}
 build %{obj}: compile_obj %{src}
-  isa_flags = %{isa_flags}
+  lib_flags = %{lib_flags}
 %{endfor}
 
 %{for cli_build_info}
