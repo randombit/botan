@@ -96,6 +96,19 @@ class BotanPythonTests(unittest.TestCase):
 
         self.assertEqual(pbkdf, cmp_pbkdf)
 
+    def test_argon2i(self):
+        m = 8
+        p = 1
+        passphrase = 'pass'
+        salt = hex_decode('6161616161616161')
+        out_len = 16
+
+        output = botan.argon2('Argon2id', out_len, passphrase, salt, m, 1, p)
+        self.assertEqual(hex_encode(output), '39cc496a60824ddea31a83b0aecdb7a1')
+
+        output = botan.argon2('Argon2id', out_len, passphrase, salt, m, 2, p)
+        self.assertEqual(hex_encode(output), 'dfc6f1993cb9f0090c1c6e25629e607b')
+
     def test_scrypt(self):
         scrypt = botan.scrypt(10, '', '', 16, 1, 1)
         self.assertEqual(hex_encode(scrypt), "77d6576238657b203b19")
