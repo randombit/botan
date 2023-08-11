@@ -63,17 +63,17 @@ build %{out_dir}/%{soname_patch}: symlink %{out_dir}/%{shared_lib_name}
 %{endif}
 
 rule link_cli
-  command = %{exe_link_cmd} ${ABI_FLAGS} $in ${BUILD_DIR_LINK_PATH} ${LANG_EXE_FLAGS} ${LDFLAGS} ${EXE_LINKS_TO} %{output_to_exe}$out
+  command = ${EXE_LINK_CMD} ${ABI_FLAGS} $in ${BUILD_DIR_LINK_PATH} ${LANG_EXE_FLAGS} ${LDFLAGS} ${EXE_LINKS_TO} %{output_to_exe}$out
 
 rule link_tests
-  command = %{exe_link_cmd} ${ABI_FLAGS} $in ${build_dir_link_path} ${LANG_EXE_FLAGS} ${LDFLAGS} %{test_exe_extra_ldflags} ${EXE_LINKS_TO} %{output_to_exe}$out
+  command = ${EXE_LINK_CMD} ${ABI_FLAGS} $in ${BUILD_DIR_LINK_PATH} ${LANG_EXE_FLAGS} ${LDFLAGS} %{test_exe_extra_ldflags} ${EXE_LINKS_TO} %{output_to_exe}$out
 
 
 # Executable targets
 
-build %{cli_exe}: link_cli %{join cli_objs}
+build %{cli_exe}: link_cli %{join cli_objs} | %{library_targets}
 
-build %{test_exe}: link_tests %{join test_objs}
+build %{test_exe}: link_tests %{join test_objs} | %{library_targets}
 
 
 # Misc targets
