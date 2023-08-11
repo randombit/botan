@@ -754,8 +754,13 @@ def main(args=None):
                 # Otherwise generate a local HTML report
                 cmds.append(['genhtml', cov_file, '--output-directory', os.path.join(build_dir, 'lcov-out')])
 
-        cmds.append(make_cmd + ['clean'])
-        cmds.append(make_cmd + ['distclean'])
+        if make_tool != 'ninja':
+            cmds.append(make_cmd + ['-t'] + ['clean'])
+        else:
+            cmds.append(make_cmd + ['clean'])
+
+        if make_tool != 'ninja':
+            cmds.append(make_cmd + ['distclean'])
 
     for cmd in cmds:
         if options.dry_run:
