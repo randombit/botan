@@ -83,11 +83,23 @@ rule build_docs
 
 build %{doc_stamp_file}: build_docs
 
+rule clean
+  command = "${PYTHON_EXE}" "${SCRIPTS_DIR}/cleanup.py" --build-dir="%{build_dir}"
+
+rule distclean
+  command = "${PYTHON_EXE}" "${SCRIPTS_DIR}/cleanup.py" --build-dir="%{build_dir}" --distclean
+
 rule install
-  command = "${PYTHON_EXE}" "${SCRIPTS_DIR}/install.py" --build-dir="build"
+  command = "${PYTHON_EXE}" "${SCRIPTS_DIR}/install.py" --build-dir="%{build_dir}"
 
-build install: install
+rule check
+  command = "${PYTHON_EXE}" "${SCRIPTS_DIR}/check.py" --build-dir="%{build_dir}"
 
+rule fmt
+  command = "${PYTHON_EXE}" "${SCRIPTS_DIR}/dev_tools/run_clang_format.py"
+
+rule tidy
+  command = "${PYTHON_EXE}" "${SCRIPTS_DIR}/dev_tools/run_clang_tidy.py" --only-changed-files
 
 # Target aliases
 
@@ -102,7 +114,19 @@ build libs: phony %{library_targets} $
 
 build docs: phony %{doc_stamp_file}
 
-build all: phony libs docs cli tests
+build clean: clean
+
+build distclean: distclean
+
+build install: install | %{install_targets}
+
+build check: check | tests
+
+build fmt: fmt
+
+build tidy: tidy
+
+build all: phony cli libs tests check docs clean distclean install fmt tidy
 
 
 # Build Commands
