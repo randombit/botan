@@ -179,6 +179,13 @@ class OS_Utils_Tests final : public Test {
             return 3;
          };
 
+   #elif defined(BOTAN_TARGET_CPU_IS_RISCV_FAMILY)
+	 //This is the closest so far as having an invalid opcode
+	 //it is between what int3 and ud2 is for x86
+         crash_probe = []() noexcept -> int {
+            asm volatile("ebreak");
+            return 3;
+         };
    #else
             /*
          PPC: "The instruction with primary opcode 0, when the instruction does not consist
