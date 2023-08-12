@@ -24,9 +24,6 @@ namespace {
 // This exists to work around a LGTM false positive
 static_assert(Roughtime::request_min_size == 1024, "Expected minimum size");
 
-template <bool B, class T = void>
-using enable_if_t = typename std::enable_if<B, T>::type;
-
 template <class T>
 struct is_array : std::false_type {};
 
@@ -45,12 +42,12 @@ T from_little_endian(const uint8_t* t) {
    return impl_from_little_endian<T>(t, sizeof(T) - 1);
 }
 
-template <typename T, enable_if_t<is_array<T>::value>* = nullptr>
+template <typename T, std::enable_if_t<is_array<T>::value>* = nullptr>
 T copy(const uint8_t* t) {
    return typecast_copy<T>(t);  //arrays are endianess indepedent, so we do a memcpy
 }
 
-template <typename T, enable_if_t<!is_array<T>::value>* = nullptr>
+template <typename T, std::enable_if_t<!is_array<T>::value>* = nullptr>
 T copy(const uint8_t* t) {
    return from_little_endian<T>(
       t);  //other types are arithmetic, so we account that roughtime serializes as little endian
