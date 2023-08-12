@@ -147,7 +147,7 @@ jobs:
           - target: sanitizer
             compiler: msvc
             host_os: windows-2022
-            make_tool: jom
+            make_tool: ninja
           - target: sanitizer
             compiler: clang
             host_os: ubuntu-22.04

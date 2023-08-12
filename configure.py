@@ -3156,7 +3156,7 @@ def validate_options(options, info_os, info_cc, available_module_policies):
             raise UserError('Building for KLEE requires targeting LLVM')
 
     if options.build_tool not in ['make', 'ninja']:
-        raise UserError("Unknown --build-tool option (possibly values: make, ninja)")
+        raise UserError("Unknown --build-tool option (possible values: make, ninja)")
 
     if options.build_static_lib is False and options.build_shared_lib is False:
         raise UserError('With both --disable-static-library and --disable-shared-library, nothing to do')
