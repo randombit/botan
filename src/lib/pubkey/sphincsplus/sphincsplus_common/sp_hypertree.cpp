@@ -100,7 +100,7 @@ bool ht_verify(const SphincsTreeNode& signed_msg,
                    leaf,
                    idx_leaf,
                    0,
-                   sig_s.take<SphincsAuthenticationPath>(params.xmss_tree_height() * params.n()),
+                   sig_s.take<SphincsAuthenticationPath>(params.xmss_tree_height() * params.n() * uint64_t{1}),
                    params.xmss_tree_height(),
                    tree_addr);
 

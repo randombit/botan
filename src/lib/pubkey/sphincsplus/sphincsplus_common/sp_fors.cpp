@@ -57,7 +57,7 @@ SphincsTreeNode fors_sign_and_pkgen(StrongSpan<ForsSignature> sig_out,
 
    auto fors_pk_addr = Sphincs_Address::as_keypair_from(address).set_type(Sphincs_Address::ForsTreeRootsCompression);
 
-   std::vector<uint8_t> roots_buffer(params.k() * params.n());
+   std::vector<uint8_t> roots_buffer(params.k() * params.n() * uint64_t{1});
    BufferStuffer roots(roots_buffer);
    BufferStuffer sig(sig_out);
 
@@ -92,7 +92,7 @@ SphincsTreeNode fors_sign_and_pkgen(StrongSpan<ForsSignature> sig_out,
       };
 
       treehash(roots.next<SphincsTreeNode>(params.n()),
-               sig.next<SphincsAuthenticationPath>(params.a() * params.n()),
+               sig.next<SphincsAuthenticationPath>(params.a() * params.n() * uint64_t{1}),
                params,
                hashes,
                indices[i],
@@ -121,7 +121,7 @@ SphincsTreeNode fors_public_key_from_signature(const SphincsHashedMessage& hashe
    auto fors_pk_addr = Sphincs_Address::as_keypair_from(address).set_type(Sphincs_Address::ForsTreeRootsCompression);
 
    BufferSlicer s(signature);
-   std::vector<uint8_t> roots_buffer(params.k() * params.n());
+   std::vector<uint8_t> roots_buffer(params.k() * params.n() * uint64_t{1});
    BufferStuffer roots(roots_buffer);
 
    // For each of the k FORS subtrees: Reconstruct the subtree's root node by using the
@@ -133,7 +133,7 @@ SphincsTreeNode fors_public_key_from_signature(const SphincsHashedMessage& hashe
       // Compute the FORS leaf by using the secret leaf contained in the signature
       fors_tree_addr.set_tree_height(TreeLayerIndex(0)).set_tree_index(indices[i] + idx_offset);
       auto fors_leaf_secret = s.take<ForsLeafSecret>(params.n());
-      auto auth_path = s.take<SphincsAuthenticationPath>(params.n() * params.a());
+      auto auth_path = s.take<SphincsAuthenticationPath>(params.n() * params.a() * uint64_t{1});
       auto leaf = hashes.T<SphincsTreeNode>(fors_tree_addr, fors_leaf_secret);
 
       // Reconstruct the subtree's root using the authentication path
