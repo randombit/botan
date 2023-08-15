@@ -1,0 +1,12 @@
+<defines>
+XOF -> 20230815
+</defines>
+
+<module_info>
+name -> "eXtendable Output Function"
+brief -> "Implementations of XOFs"
+</module_info>
+
+<header:public>
+xof.h
+</header:public>
