@@ -1,5 +1,6 @@
 
 # (C) 2023 Jack Lloyd
+# (C) 2023 Fabian Albert, Rohde & Schwarz Cybersecurity
 #
 # Botan is released under the Simplified BSD License (see license.txt)
 
@@ -54,3 +55,35 @@ jobs:
 
       - name: Valgrind Checks
         run: python3 ./src/scripts/ci_build.py --cc=gcc --make-tool=make valgrind-full
+
+  tls_anvil_server_test:
+    name: "TLS-Anvil - Botan Server Test"
+
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Fetch Botan Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Build Agent
+        uses: ./.github/actions/setup-build-agent
+        with:
+          target: tlsanvil
+          cache-key: linux-x86_64-tlsanvil
+
+      - name: Build and Test Botan Server with TLS-Anvil
+        run: >
+          python3 ./src/scripts/ci/ci_tlsanvil_test.py
+          --botan-dir .
+          --test-target server
+          --parallel $(nproc)
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: tls-anvil-server-test-results
+          path: |
+            ./TestSuiteResults/
+            ./logs/
+
+      - name: Check TLS-Anvil Test Results
+        run: python3 ./src/scripts/ci/ci_tlsanvil_check.py --verbose ./TestSuiteResults
