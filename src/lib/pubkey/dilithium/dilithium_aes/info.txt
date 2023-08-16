@@ -8,8 +8,7 @@ name -> "Dilithium (AES)"
 
 <requires>
 dilithium_common
-aes
-ctr
+aes_crystals_xof
 </requires>
 
 <header:internal>
