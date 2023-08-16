@@ -17,6 +17,12 @@
       // and is therefore not registered in the XOF::create() factory.
       #include <botan/internal/cshake_xof.h>
    #endif
+
+   #if defined(BOTAN_HAS_AES_CRYSTALS_XOF)
+      // This XOF implementation is not exposed via the library's public interface
+      // and is therefore not registered in the XOF::create() factory.
+      #include <botan/internal/aes_crystals_xof.h>
+   #endif
 #endif
 
 namespace Botan_Tests {
@@ -45,6 +51,11 @@ class XOF_Tests final : public Text_Based_Test {
             }
    #endif
 
+   #if defined(BOTAN_HAS_AES_CRYSTALS_XOF)
+            if(algo == "CTR-BE(AES-256)") {
+               return {"base"};
+            }
+   #endif
             return provider_filter(Botan::XOF::providers(algo));
          }();
 
@@ -61,6 +72,12 @@ class XOF_Tests final : public Text_Based_Test {
                }
                if(algo == "cSHAKE-256") {
                   return std::make_unique<Botan::cSHAKE_256_XOF>(name);
+               }
+   #endif
+
+   #if defined(BOTAN_HAS_AES_CRYSTALS_XOF)
+               if(algo == "CTR-BE(AES-256)") {
+                  return std::make_unique<Botan::AES_256_CTR_XOF>();
                }
    #endif
                return Botan::XOF::create(algo, provider_ask);
@@ -165,18 +182,30 @@ class XOF_Tests final : public Text_Based_Test {
       std::vector<Test::Result> run_final_tests() override {
          return {
    #if defined(BOTAN_HAS_CSHAKE_XOF)
-            Botan_Tests::CHECK("cSHAKE without a name", [](Test::Result& result) {
-               std::vector<std::unique_ptr<Botan::XOF>> cshakes;
-               cshakes.push_back(std::make_unique<Botan::cSHAKE_128_XOF>(""));
-               cshakes.push_back(std::make_unique<Botan::cSHAKE_256_XOF>(""));
+            Botan_Tests::CHECK(
+               "cSHAKE without a name",
+               [](Test::Result& result) {
+                  std::vector<std::unique_ptr<Botan::XOF>> cshakes;
+                  cshakes.push_back(std::make_unique<Botan::cSHAKE_128_XOF>(""));
+                  cshakes.push_back(std::make_unique<Botan::cSHAKE_256_XOF>(""));
 
-               for(auto& cshake : cshakes) {
-                  result.confirm("cSHAKE without a name rejects empty salt", !cshake->valid_salt_length(0));
-                  result.confirm("cSHAKE without a name requests at least one byte of salt",
-                                 cshake->valid_salt_length(1));
-                  result.test_throws("cSHAKE without a name throws without salt", [&]() { cshake->start({}); });
-               }
-            }),
+                  for(auto& cshake : cshakes) {
+                     result.confirm("cSHAKE without a name rejects empty salt", !cshake->valid_salt_length(0));
+                     result.confirm("cSHAKE without a name requests at least one byte of salt",
+                                    cshake->valid_salt_length(1));
+                     result.test_throws("cSHAKE without a name throws without salt", [&]() { cshake->start({}); });
+                  }
+               }),
+   #endif
+   #if defined(BOTAN_HAS_AES_CRYSTALS_XOF)
+               Botan_Tests::CHECK("AES-256/CTR XOF failure modes", [](Test::Result& result) {
+                  Botan::AES_256_CTR_XOF aes_xof;
+                  result.test_throws("AES-256/CTR XOF throws for empty key", [&]() { aes_xof.start({}, {}); });
+                  result.test_throws("AES-256/CTR XOF throws for too long key",
+                                     [&]() { aes_xof.start({}, std::vector<uint8_t>(33)); });
+                  result.test_throws("AES-256/CTR XOF throws for too long IV",
+                                     [&]() { aes_xof.start(std::vector<uint8_t>(17), std::vector<uint8_t>(32)); });
+               }),
    #endif
          };
       }
