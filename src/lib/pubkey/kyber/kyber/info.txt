@@ -8,8 +8,9 @@ name -> "Kyber"
 
 <requires>
 kyber_common
+sha3
 shake
-shake_cipher
+shake_xof
 </requires>
 
 <header:internal>

@@ -10,12 +10,12 @@
 #define BOTAN_KYBER_MODERN_H_
 
 #include <botan/hash.h>
-#include <botan/stream_cipher.h>
+#include <botan/xof.h>
 
 #include <botan/internal/kyber_symmetric_primitives.h>
 #include <botan/internal/shake.h>
-#include <botan/internal/shake_cipher.h>
 
+#include <array>
 #include <memory>
 #include <vector>
 
@@ -26,7 +26,8 @@ class Kyber_Modern_Symmetric_Primitives : public Kyber_Symmetric_Primitives {
       Kyber_Modern_Symmetric_Primitives() :
             m_sha3_512(HashFunction::create_or_throw("SHA-3(512)")),
             m_sha3_256(HashFunction::create_or_throw("SHA-3(256)")),
-            m_shake256_256(HashFunction::create_or_throw("SHAKE-256(256)")) {}
+            m_shake256_256(HashFunction::create_or_throw("SHAKE-256(256)")),
+            m_shake128(Botan::XOF::create_or_throw("SHAKE-128")) {}
 
       std::unique_ptr<HashFunction> G() const override { return m_sha3_512->new_object(); }
 
@@ -34,30 +35,14 @@ class Kyber_Modern_Symmetric_Primitives : public Kyber_Symmetric_Primitives {
 
       std::unique_ptr<HashFunction> KDF() const override { return m_shake256_256->new_object(); }
 
-      std::unique_ptr<Kyber_XOF> XOF(std::span<const uint8_t> seed) const override {
-         class Kyber_Modern_XOF final : public Kyber_XOF {
-            public:
-               Kyber_Modern_XOF(std::span<const uint8_t> seed) : m_cipher(std::make_unique<SHAKE_128_Cipher>()) {
-                  m_key.reserve(seed.size() + 2);
-                  m_key.insert(m_key.end(), seed.begin(), seed.end());
-                  m_key.push_back(0);
-                  m_key.push_back(0);
-               }
+      Botan::XOF& XOF(std::span<const uint8_t> seed, std::tuple<uint8_t, uint8_t> matrix_position) const override {
+         m_shake128->clear();
+         m_shake128->update(seed);
 
-               void set_position(const std::tuple<uint8_t, uint8_t>& matrix_position) override {
-                  m_key[m_key.size() - 2] = std::get<0>(matrix_position);
-                  m_key[m_key.size() - 1] = std::get<1>(matrix_position);
-                  m_cipher->set_key(m_key);
-               }
-
-               void write_output(std::span<uint8_t> out) override { m_cipher->write_keystream(out.data(), out.size()); }
-
-            private:
-               std::unique_ptr<StreamCipher> m_cipher;
-               secure_vector<uint8_t> m_key;
-         };
-
-         return std::make_unique<Kyber_Modern_XOF>(seed);
+         const std::array<uint8_t, 2> matrix_position_buffer{std::get<0>(matrix_position),
+                                                             std::get<1>(matrix_position)};
+         m_shake128->update(matrix_position_buffer);
+         return *m_shake128;
       }
 
       secure_vector<uint8_t> PRF(std::span<const uint8_t> seed,
@@ -73,6 +58,7 @@ class Kyber_Modern_Symmetric_Primitives : public Kyber_Symmetric_Primitives {
       std::unique_ptr<HashFunction> m_sha3_512;
       std::unique_ptr<HashFunction> m_sha3_256;
       std::unique_ptr<HashFunction> m_shake256_256;
+      std::unique_ptr<Botan::XOF> m_shake128;
 };
 
 }  // namespace Botan
