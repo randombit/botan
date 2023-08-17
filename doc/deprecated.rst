@@ -67,6 +67,8 @@ in a future major release.
 
 - GOST 34.10 signature scheme
 
+- Stream cipher SHAKE (this does not affect SHAKE used as a HashFunction or XOF)
+
 - The utility functions in cryptobox.h
 
 - X9.42 KDF

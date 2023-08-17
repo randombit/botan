@@ -166,11 +166,18 @@ Available if ``BOTAN_HAS_SALSA20`` is defined.
 SHAKE-128
 ~~~~~~~~~~~~
 
-This is the SHAKE-128 XOF exposed as a stream cipher. It is slower than ChaCha
-and somewhat obscure. It does not support IVs or seeking within the cipher
-stream.
+This is the SHAKE-128 XOF exposed as a stream cipher. It is slower
+than ChaCha and somewhat obscure, and was primarily implemented to
+support a particular post-quantum scheme which is no longer supported.
+
+SHAKE does not support IVs, nor seeking within the cipher stream.
 
 Available if ``BOTAN_HAS_SHAKE_CIPHER`` is defined.
+
+.. warning::
+
+  SHAKE support (as a stream cipher) is deprecated and will be removed
+  in a future major release.
 
 RC4
 ~~~~
