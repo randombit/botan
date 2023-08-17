@@ -73,107 +73,20 @@ class SIMD_4x64 final {
          requires(ROT > 0 && ROT < 64)
       {
          if constexpr(ROT == 16) {
-            auto tab = _mm256_setr_epi8(2,
-                                        3,
-                                        4,
-                                        5,
-                                        6,
-                                        7,
-                                        0,
-                                        1,
-                                        10,
-                                        11,
-                                        12,
-                                        13,
-                                        14,
-                                        15,
-                                        8,
-                                        9,
-                                        2,
-                                        3,
-                                        4,
-                                        5,
-                                        6,
-                                        7,
-                                        0,
-                                        1,
-                                        10,
-                                        11,
-                                        12,
-                                        13,
-                                        14,
-                                        15,
-                                        8,
-                                        9);
-            return SIMD_4x64(_mm256_shuffle_epi8(m_simd, tab));
+            auto shuf_rot_16 =
+               _mm256_set_epi64x(0x09080f0e0d0c0b0a, 0x0100070605040302, 0x09080f0e0d0c0b0a, 0x0100070605040302);
+
+            return SIMD_4x64(_mm256_shuffle_epi8(m_simd, shuf_rot_16));
          } else if constexpr(ROT == 24) {
-            auto tab = _mm256_setr_epi8(3,
-                                        4,
-                                        5,
-                                        6,
-                                        7,
-                                        0,
-                                        1,
-                                        2,
-                                        11,
-                                        12,
-                                        13,
-                                        14,
-                                        15,
-                                        8,
-                                        9,
-                                        10,
-                                        3,
-                                        4,
-                                        5,
-                                        6,
-                                        7,
-                                        0,
-                                        1,
-                                        2,
-                                        11,
-                                        12,
-                                        13,
-                                        14,
-                                        15,
-                                        8,
-                                        9,
-                                        10);
-            return SIMD_4x64(_mm256_shuffle_epi8(m_simd, tab));
+            auto shuf_rot_24 =
+               _mm256_set_epi64x(0x0a09080f0e0d0c0b, 0x0201000706050403, 0x0a09080f0e0d0c0b, 0x0201000706050403);
+
+            return SIMD_4x64(_mm256_shuffle_epi8(m_simd, shuf_rot_24));
          } else if constexpr(ROT == 32) {
-            auto tab = _mm256_setr_epi8(4,
-                                        5,
-                                        6,
-                                        7,
-                                        0,
-                                        1,
-                                        2,
-                                        3,
-                                        12,
-                                        13,
-                                        14,
-                                        15,
-                                        8,
-                                        9,
-                                        10,
-                                        11,
-                                        4,
-                                        5,
-                                        6,
-                                        7,
-                                        0,
-                                        1,
-                                        2,
-                                        3,
-                                        12,
-                                        13,
-                                        14,
-                                        15,
-                                        8,
-                                        9,
-                                        10,
-                                        11);
-            return SIMD_4x64(_mm256_shuffle_epi8(m_simd, tab));
+            auto shuf_rot_32 =
+               _mm256_set_epi64x(0x0b0a09080f0e0d0c, 0x0302010007060504, 0x0b0a09080f0e0d0c, 0x0302010007060504);
+
+            return SIMD_4x64(_mm256_shuffle_epi8(m_simd, shuf_rot_32));
          } else {
             return SIMD_4x64(_mm256_or_si256(_mm256_srli_epi64(m_simd, static_cast<int>(ROT)),
                                              _mm256_slli_epi64(m_simd, static_cast<int>(64 - ROT))));

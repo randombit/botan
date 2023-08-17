@@ -69,73 +69,13 @@ class SIMD_8x32 final {
          return SIMD_8x32(_mm256_rol_epi32(m_avx2, ROT));
 #else
          if constexpr(ROT == 8) {
-            const __m256i shuf_rotl_8 = _mm256_set_epi8(14,
-                                                        13,
-                                                        12,
-                                                        15,
-                                                        10,
-                                                        9,
-                                                        8,
-                                                        11,
-                                                        6,
-                                                        5,
-                                                        4,
-                                                        7,
-                                                        2,
-                                                        1,
-                                                        0,
-                                                        3,
-                                                        14,
-                                                        13,
-                                                        12,
-                                                        15,
-                                                        10,
-                                                        9,
-                                                        8,
-                                                        11,
-                                                        6,
-                                                        5,
-                                                        4,
-                                                        7,
-                                                        2,
-                                                        1,
-                                                        0,
-                                                        3);
+            const __m256i shuf_rotl_8 =
+               _mm256_set_epi64x(0x0e0d0c0f'0a09080b, 0x06050407'02010003, 0x0e0d0c0f'0a09080b, 0x06050407'02010003);
 
             return SIMD_8x32(_mm256_shuffle_epi8(m_avx2, shuf_rotl_8));
          } else if constexpr(ROT == 16) {
-            const __m256i shuf_rotl_16 = _mm256_set_epi8(13,
-                                                         12,
-                                                         15,
-                                                         14,
-                                                         9,
-                                                         8,
-                                                         11,
-                                                         10,
-                                                         5,
-                                                         4,
-                                                         7,
-                                                         6,
-                                                         1,
-                                                         0,
-                                                         3,
-                                                         2,
-                                                         13,
-                                                         12,
-                                                         15,
-                                                         14,
-                                                         9,
-                                                         8,
-                                                         11,
-                                                         10,
-                                                         5,
-                                                         4,
-                                                         7,
-                                                         6,
-                                                         1,
-                                                         0,
-                                                         3,
-                                                         2);
+            const __m256i shuf_rotl_16 =
+               _mm256_set_epi64x(0x0d0c0f0e'09080b0a, 0x05040706'01000302, 0x0d0c0f0e'09080b0a, 0x05040706'01000302);
 
             return SIMD_8x32(_mm256_shuffle_epi8(m_avx2, shuf_rotl_16));
          } else {
