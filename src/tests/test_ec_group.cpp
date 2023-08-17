@@ -245,6 +245,7 @@ class EC_Group_Tests : public Test {
 
             result.confirm("EC_Group is known", !group.get_curve_oid().empty());
             result.confirm("EC_Group is considered valid", group.verify_group(Test::rng(), true));
+            result.confirm("EC_Group is not considered explict encoding", !group.used_explicit_encoding());
 
             result.test_eq("EC_Group has correct bit size", group.get_p().bits(), group.get_p_bits());
             result.test_eq("EC_Group has byte size", group.get_p().bytes(), group.get_p_bytes());
@@ -263,6 +264,16 @@ class EC_Group_Tests : public Test {
                                        group.get_cofactor());
 
             result.confirm("Same group is same even with copy", group == copy);
+
+            const auto group_der_oid = group.DER_encode(Botan::EC_Group_Encoding::NamedCurve);
+            const Botan::EC_Group group_via_oid(group_der_oid);
+            result.confirm("EC_Group via OID is not considered explict encoding",
+                           !group_via_oid.used_explicit_encoding());
+
+            const auto group_der_explicit = group.DER_encode(Botan::EC_Group_Encoding::Explicit);
+            const Botan::EC_Group group_via_explicit(group_der_explicit);
+            result.confirm("EC_Group via explicit DER is considered explict encoding",
+                           group_via_explicit.used_explicit_encoding());
 
             const auto pt_mult_by_order = group.get_base_point() * group.get_order();
             result.confirm("Multiplying point by the order results in zero point", pt_mult_by_order.is_zero());

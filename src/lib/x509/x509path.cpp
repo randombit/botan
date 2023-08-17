@@ -24,6 +24,10 @@
    #include <future>
 #endif
 
+#if defined(BOTAN_HAS_ECC_KEY)
+   #include <botan/ecc_key.h>
+#endif
+
 namespace Botan {
 
 /*

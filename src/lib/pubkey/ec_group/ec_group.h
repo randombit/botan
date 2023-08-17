@@ -351,6 +351,14 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       EC_Group_Source source() const;
 
       /**
+      * Return true if this EC_Group was derived from an explicit encoding
+      *
+      * Explicit encoding of groups is deprecated; when support for explicit curves
+      * is removed in a future major release, this function will also be removed.
+      */
+      bool used_explicit_encoding() const { return m_explicit_encoding; }
+
+      /**
       * Return a set of known named EC groups
       */
       static const std::set<std::string>& known_named_groups();
@@ -373,9 +381,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
    private:
       static EC_Group_Data_Map& ec_group_data();
 
-      static std::shared_ptr<EC_Group_Data> BER_decode_EC_group(const uint8_t bits[],
-                                                                size_t len,
-                                                                EC_Group_Source source);
+      static std::pair<std::shared_ptr<EC_Group_Data>, bool> BER_decode_EC_group(const uint8_t bits[],
+                                                                                 size_t len,
+                                                                                 EC_Group_Source source);
 
       static std::shared_ptr<EC_Group_Data> load_EC_group_info(const char* p,
                                                                const char* a,
@@ -388,6 +396,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       // Member data
       const EC_Group_Data& data() const;
       std::shared_ptr<EC_Group_Data> m_data;
+      bool m_explicit_encoding = false;
 };
 
 inline bool operator!=(const EC_Group& lhs, const EC_Group& rhs) {

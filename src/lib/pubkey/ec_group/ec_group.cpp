@@ -322,17 +322,19 @@ std::shared_ptr<EC_Group_Data> EC_Group::load_EC_group_info(const char* p_str,
 }
 
 //static
-std::shared_ptr<EC_Group_Data> EC_Group::BER_decode_EC_group(const uint8_t bits[], size_t len, EC_Group_Source source) {
+std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(const uint8_t bits[],
+                                                                              size_t len,
+                                                                              EC_Group_Source source) {
    BER_Decoder ber(bits, len);
    BER_Object obj = ber.get_next_object();
 
-   if(obj.type() == ASN1_Type::Null) [[unlikely]] {
-      throw Decoding_Error("Cannot handle ImplicitCA ECC parameters");
-   } else if(obj.type() == ASN1_Type::ObjectId) {
+   if(obj.type() == ASN1_Type::ObjectId) {
       OID dom_par_oid;
       BER_Decoder(bits, len).decode(dom_par_oid);
-      return ec_group_data().lookup(dom_par_oid);
-   } else if(obj.type() == ASN1_Type::Sequence) {
+      return std::make_pair(ec_group_data().lookup(dom_par_oid), false);
+   }
+
+   if(obj.type() == ASN1_Type::Sequence) {
       BigInt p, a, b, order, cofactor;
       std::vector<uint8_t> base_pt;
       std::vector<uint8_t> seed;
@@ -377,9 +379,15 @@ std::shared_ptr<EC_Group_Data> EC_Group::BER_decode_EC_group(const uint8_t bits[
 
       std::pair<BigInt, BigInt> base_xy = Botan::OS2ECP(base_pt.data(), base_pt.size(), p, a, b);
 
-      return ec_group_data().lookup_or_create(p, a, b, base_xy.first, base_xy.second, order, cofactor, OID(), source);
+      auto data =
+         ec_group_data().lookup_or_create(p, a, b, base_xy.first, base_xy.second, order, cofactor, OID(), source);
+      return std::make_pair(data, true);
+   }
+
+   if(obj.type() == ASN1_Type::Null) {
+      throw Decoding_Error("Cannot handle ImplicitCA ECC parameters");
    } else {
-      throw Decoding_Error("Unexpected tag while decoding ECC domain params");
+      throw Decoding_Error(fmt("Unexpected tag {} while decoding ECC domain params", asn1_tag_to_string(obj.type())));
    }
 }
 
@@ -410,7 +418,10 @@ EC_Group::EC_Group(std::string_view str) {
       if(str.size() > 30 && str.substr(0, 29) == "-----BEGIN EC PARAMETERS-----") {
          // OK try it as PEM ...
          secure_vector<uint8_t> ber = PEM_Code::decode_check_label(str, "EC PARAMETERS");
-         this->m_data = BER_decode_EC_group(ber.data(), ber.size(), EC_Group_Source::ExternalSource);
+
+         auto data = BER_decode_EC_group(ber.data(), ber.size(), EC_Group_Source::ExternalSource);
+         this->m_data = data.first;
+         this->m_explicit_encoding = data.second;
       }
    }
 
@@ -438,7 +449,9 @@ EC_Group::EC_Group(const BigInt& p,
 }
 
 EC_Group::EC_Group(const uint8_t ber[], size_t ber_len) {
-   m_data = BER_decode_EC_group(ber, ber_len, EC_Group_Source::ExternalSource);
+   auto data = BER_decode_EC_group(ber, ber_len, EC_Group_Source::ExternalSource);
+   m_data = data.first;
+   m_explicit_encoding = data.second;
 }
 
 const EC_Group_Data& EC_Group::data() const {

@@ -312,6 +312,8 @@ Test::Result test_read_pkcs8() {
          throw Test_Error("Unable to load valid PKCS8 ECDSA key");
       }
 
+      result.confirm("EC_Group is marked as explicit encoding", ecdsa_nodp->domain().used_explicit_encoding());
+
       Botan::PK_Signer signer(*ecdsa_nodp, Test::rng(), "SHA-256");
       Botan::PK_Verifier verifier(*ecdsa_nodp, "SHA-256");
 
