@@ -90,7 +90,7 @@ class Keccak_Permutation final {
       static void finish(
          size_t bitrate, secure_vector<uint64_t>& S, size_t S_pos, uint64_t custom_padd, uint8_t custom_padd_bit_len);
 
-      void finish(std::span<uint8_t> output);
+      void finish();
 
       /**
       * Expand from provided state
@@ -114,7 +114,8 @@ class Keccak_Permutation final {
 #endif
 
       size_t m_output_bits;
-      uint32_t m_capacity, m_bitrate;
+      uint32_t m_capacity;
+      uint32_t m_bitrate;
       uint64_t m_custom_padd;
       uint8_t m_custom_padd_bit_len;
       secure_vector<uint64_t> m_S;

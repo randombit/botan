@@ -43,7 +43,9 @@ void Keccak_1600::add_data(const uint8_t input[], size_t length) {
 }
 
 void Keccak_1600::final_result(uint8_t output[]) {
-   m_keccak.finish(std::span(output, m_keccak.output_length()));
+   m_keccak.finish();
+   m_keccak.expand(std::span(output, m_keccak.output_length()));
+   m_keccak.clear();
 }
 
 }  // namespace Botan

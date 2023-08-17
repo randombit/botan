@@ -163,17 +163,17 @@ void Keccak_Permutation::absorb(std::span<const uint8_t> input) {
    m_S_pos = Keccak_Permutation::absorb(m_bitrate, m_S, m_S_pos, input);
 }
 
-void Keccak_Permutation::finish(std::span<uint8_t> output) {
+void Keccak_Permutation::finish() {
    Keccak_Permutation::finish(m_bitrate, m_S, m_S_pos, m_custom_padd, m_custom_padd_bit_len);
 
-   BOTAN_ASSERT_NOMSG(output.size() >= m_output_bits / 8);
+   //BOTAN_ASSERT_NOMSG(output.size() >= m_output_bits / 8);
 
    /*
    * We never have to run the permutation again because we only support
    * limited output lengths
    */
-   copy_out_vec_le(output.data(), m_output_bits / 8, m_S);
-   clear();
+   //copy_out_vec_le(output.data(), m_output_bits / 8, m_S);
+   //clear();
 }
 
 }  // namespace Botan
