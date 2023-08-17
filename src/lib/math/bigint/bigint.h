@@ -171,6 +171,8 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
          std::swap(m_signedness, other.m_signedness);
       }
 
+      friend void swap(BigInt& x, BigInt& y) { x.swap(y); }
+
       void swap_reg(secure_vector<word>& reg) {
          m_data.swap(reg);
          // sign left unchanged
@@ -1033,14 +1035,5 @@ BOTAN_PUBLIC_API(2, 0) std::ostream& operator<<(std::ostream&, const BigInt&);
 BOTAN_PUBLIC_API(2, 0) std::istream& operator>>(std::istream&, BigInt&);
 
 }  // namespace Botan
-
-namespace std {
-
-template <>
-inline void swap<Botan::BigInt>(Botan::BigInt& x, Botan::BigInt& y) {
-   x.swap(y);
-}
-
-}  // namespace std
 
 #endif

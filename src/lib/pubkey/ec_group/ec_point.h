@@ -189,6 +189,8 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       */
       void swap(EC_Point& other);
 
+      friend void swap(EC_Point& x, EC_Point& y) { x.swap(y); }
+
       /**
       * Randomize the point representation
       * The actual value (get_affine_x, get_affine_y) does not change
@@ -400,14 +402,5 @@ class EC_Point_Var_Point_Precompute;
 typedef EC_Point PointGFp;
 
 }  // namespace Botan
-
-namespace std {
-
-template <>
-inline void swap<Botan::EC_Point>(Botan::EC_Point& x, Botan::EC_Point& y) {
-   x.swap(y);
-}
-
-}  // namespace std
 
 #endif
