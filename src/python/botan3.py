@@ -984,6 +984,27 @@ def scrypt(out_len, password, salt, n=1024, r=8, p=8):
 
     return out_buf.raw
 
+# Argon2
+#
+# The variant param should be "Argon2i", "Argon2d", or "Argon2id"
+#
+# m specifies megabytes of memory used during processing
+# t specifies the number of passes
+# p specifies the parallelism
+#
+# returns an output of out_len bytes
+def argon2(variant, out_len, password, salt, m=256, t=1, p=1):
+    out_buf = create_string_buffer(out_len)
+    passbits = _ctype_str(password)
+    saltbits = _ctype_bits(salt)
+
+    _DLL.botan_pwdhash(_ctype_str(variant), m, t, p,
+                       out_buf, out_len,
+                       passbits, len(passbits),
+                       saltbits, len(saltbits))
+
+    return out_buf.raw
+
 #
 # KDF
 #
