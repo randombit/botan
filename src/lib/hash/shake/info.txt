@@ -7,5 +7,5 @@ name -> "SHAKE"
 </module_info>
 
 <requires>
-keccak_fips
+keccak_perm
 </requires>

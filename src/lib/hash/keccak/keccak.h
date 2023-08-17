@@ -10,7 +10,7 @@
 
 #include <botan/hash.h>
 #include <botan/secmem.h>
-#include <botan/internal/keccak_fips.h>
+#include <botan/internal/keccak_perm.h>
 #include <string>
 
 namespace Botan {
@@ -53,7 +53,7 @@ class Keccak_1600 final : public HashFunction {
       void add_data(const uint8_t input[], size_t length) override;
       void final_result(uint8_t out[]) override;
 
-      Keccak_FIPS m_keccak;
+      Keccak_Permutation m_keccak;
 };
 
 }  // namespace Botan

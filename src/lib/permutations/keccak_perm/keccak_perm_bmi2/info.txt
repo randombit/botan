@@ -1,0 +1,17 @@
+<defines>
+KECCAK_PERM_BMI2 -> 20230612
+</defines>
+
+<module_info>
+name -> "KECCAK-permutation BMI2"
+brief -> "KECCAK-permutation for SHA-3-related functions using BMI2 instructions"
+</module_info>
+
+<isa>
+bmi2
+</isa>
+
+# Needs 64-bit registers to be useful
+<arch>
+x86_64
+</arch>

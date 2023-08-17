@@ -8,5 +8,5 @@ name -> "SHA-3"
 
 
 <requires>
-keccak_fips
+keccak_perm
 </requires>

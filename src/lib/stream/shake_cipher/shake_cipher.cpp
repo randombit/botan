@@ -51,7 +51,7 @@ void SHAKE_Cipher::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length
       in += (m_shake_rate - m_buf_pos);
       out += (m_shake_rate - m_buf_pos);
 
-      Keccak_FIPS::permute(m_state.data());
+      Keccak_Permutation::permute(m_state.data());
       copy_out_le(m_buffer.data(), m_shake_rate, m_state.data());
 
       m_buf_pos = 0;
@@ -71,7 +71,7 @@ void SHAKE_Cipher::generate_keystream(uint8_t out[], size_t length) {
       m_buf_pos += take;
 
       if(m_buf_pos == m_shake_rate) {
-         Keccak_FIPS::permute(m_state.data());
+         Keccak_Permutation::permute(m_state.data());
          m_buf_pos = 0;
       }
    }
@@ -84,7 +84,7 @@ void SHAKE_Cipher::generate_keystream(uint8_t out[], size_t length) {
 
    while(length >= m_shake_rate) {
       copy_out_le(out, m_shake_rate, m_state.data());
-      Keccak_FIPS::permute(m_state.data());
+      Keccak_Permutation::permute(m_state.data());
       length -= m_shake_rate;
       out += m_shake_rate;
    }
@@ -105,8 +105,8 @@ void SHAKE_Cipher::key_schedule(const uint8_t key[], size_t length) {
    m_buffer.resize(m_shake_rate);
    zeroise(m_state);
 
-   const size_t S_pos = Keccak_FIPS::absorb(SHAKE_BITRATE, m_state, 0, std::span(key, length));
-   Keccak_FIPS::finish(SHAKE_BITRATE, m_state, S_pos, 0xF, 4);
+   const size_t S_pos = Keccak_Permutation::absorb(SHAKE_BITRATE, m_state, 0, std::span(key, length));
+   Keccak_Permutation::finish(SHAKE_BITRATE, m_state, S_pos, 0xF, 4);
    copy_out_le(m_buffer.data(), m_buffer.size(), m_state.data());
    m_buf_pos = 0;
 }

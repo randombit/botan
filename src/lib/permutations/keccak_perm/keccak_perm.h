@@ -6,8 +6,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_KECCAK_FIPS_H_
-#define BOTAN_KECCAK_FIPS_H_
+#ifndef BOTAN_KECCAK_PERM_H_
+#define BOTAN_KECCAK_PERM_H_
 
 #include <botan/secmem.h>
 #include <string>
@@ -34,13 +34,13 @@ namespace Botan {
 * [2] https://csrc.nist.gov/projects/hash-functions/sha-3-project
 */
 
-class Keccak_FIPS final {
+class Keccak_Permutation final {
    public:
       /**
       * @param output_bits the size of the hash output; must be one of
       *                    224, 256, 384, or 512
       */
-      explicit Keccak_FIPS(size_t output_bits, size_t capacity_bits, uint64_t custom_padd, uint8_t custom_padd_bit_len);
+      explicit Keccak_Permutation(size_t output_bits, size_t capacity_bits, uint64_t custom_padd, uint8_t custom_padd_bit_len);
 
       size_t hash_block_size() const { return m_bitrate / 8; }
 
@@ -83,7 +83,7 @@ class Keccak_FIPS final {
       * @param bitrate the bitrate to absorb into the sponge
       * @param S the sponge state
       * @param S_pos where to begin absorbing into S
-      * @param custom_padd the custom padding bits used by the primitive derived from Keccak_FIPS
+      * @param custom_padd the custom padding bits used by the primitive derived from Keccak_Permutation
       * @param custom_padd_bit_len the bit length of the custom padding
       */
 
@@ -109,7 +109,7 @@ class Keccak_FIPS final {
       void permute();
 
    private:
-#if defined(BOTAN_HAS_KECCAK_FIPS_BMI2)
+#if defined(BOTAN_HAS_KECCAK_PERM_BMI2)
       static void permute_bmi2(uint64_t A[25]);
 #endif
 

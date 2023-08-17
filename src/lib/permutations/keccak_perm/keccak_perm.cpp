@@ -6,18 +6,18 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/keccak_fips.h>
+#include <botan/internal/keccak_perm.h>
 
 #include <botan/exceptn.h>
 #include <botan/internal/cpuid.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/keccak_fips_round.h>
+#include <botan/internal/keccak_perm_round.h>
 #include <botan/internal/loadstor.h>
 
 namespace Botan {
 
 // static
-void Keccak_FIPS::permute(uint64_t A[25]) {
+void Keccak_Permutation::permute(uint64_t A[25]) {
 #if defined(BOTAN_HAS_KECCKAK_FIPS_BMI2)
    if(CPUID::has_bmi2()) {
       return permute_bmi2(A);
@@ -34,18 +34,18 @@ void Keccak_FIPS::permute(uint64_t A[25]) {
    uint64_t T[25];
 
    for(size_t i = 0; i != 24; i += 2) {
-      Keccak_FIPS_round(T, A, RC[i + 0]);
-      Keccak_FIPS_round(A, T, RC[i + 1]);
+      Keccak_Permutation_round(T, A, RC[i + 0]);
+      Keccak_Permutation_round(A, T, RC[i + 1]);
    }
 }
 
-void Keccak_FIPS::permute() {
-   Keccak_FIPS::permute(m_S.data());
+void Keccak_Permutation::permute() {
+   Keccak_Permutation::permute(m_S.data());
 }
 
 //static
 
-uint32_t Keccak_FIPS::absorb(size_t bitrate,
+uint32_t Keccak_Permutation::absorb(size_t bitrate,
                              secure_vector<uint64_t>& S,
                              size_t S_pos,
                              std::span<const uint8_t> input_span) {
@@ -81,7 +81,7 @@ uint32_t Keccak_FIPS::absorb(size_t bitrate,
       }
 
       if(S_pos == bitrate / 8) {
-         Keccak_FIPS::permute(S.data());
+         Keccak_Permutation::permute(S.data());
          S_pos = 0;
       }
    }
@@ -91,7 +91,7 @@ uint32_t Keccak_FIPS::absorb(size_t bitrate,
 
 //static
 
-void Keccak_FIPS::finish(
+void Keccak_Permutation::finish(
    size_t bitrate, secure_vector<uint64_t>& S, size_t S_pos, uint64_t custom_padd, uint8_t custom_padd_bit_len) {
    BOTAN_ARG_CHECK(bitrate % 64 == 0, "Keccak-FIPS bitrate must be multiple of 64");
    // append the first bit of the final padding after the custom padding
@@ -99,12 +99,12 @@ void Keccak_FIPS::finish(
    S[S_pos / 8] ^= static_cast<uint64_t>(init_pad) << (8 * (S_pos % 8));
    // final bit of the padding of the last block
    S[(bitrate / 64) - 1] ^= static_cast<uint64_t>(0x80) << 56;
-   Keccak_FIPS::permute(S.data());
+   Keccak_Permutation::permute(S.data());
 }
 
 //static
 
-void Keccak_FIPS::expand(size_t bitrate, secure_vector<uint64_t>& S, std::span<uint8_t> output_span) {
+void Keccak_Permutation::expand(size_t bitrate, secure_vector<uint64_t>& S, std::span<uint8_t> output_span) {
    uint8_t* output = output_span.data();
    size_t output_length = output_span.size();
    BOTAN_ARG_CHECK(bitrate % 64 == 0, "Keccak-FIPS bitrate must be multiple of 64");
@@ -120,16 +120,16 @@ void Keccak_FIPS::expand(size_t bitrate, secure_vector<uint64_t>& S, std::span<u
       output_length -= copying;
 
       if(output_length > 0) {
-         Keccak_FIPS::permute(S.data());
+         Keccak_Permutation::permute(S.data());
       }
    }
 }
 
-void Keccak_FIPS::expand(std::span<uint8_t> output_span) {
+void Keccak_Permutation::expand(std::span<uint8_t> output_span) {
    expand(m_bitrate, m_S, output_span);
 }
 
-Keccak_FIPS::Keccak_FIPS(size_t output_bits, size_t capacity, uint64_t custom_padd, uint8_t custom_padd_bit_len) :
+Keccak_Permutation::Keccak_Permutation(size_t output_bits, size_t capacity, uint64_t custom_padd, uint8_t custom_padd_bit_len) :
       m_output_bits(output_bits),
       m_capacity(static_cast<uint32_t>(capacity)),
       m_bitrate(static_cast<uint32_t>(1600 - capacity)),
@@ -140,11 +140,11 @@ Keccak_FIPS::Keccak_FIPS(size_t output_bits, size_t capacity, uint64_t custom_pa
    // We only support the parameters for Keccak-FIPS in this constructor
    BOTAN_ASSERT_NOMSG(output_bits % 8 == 0);
    if(output_bits > 1600) {
-      throw Invalid_Argument("Keccak_FIPS: Invalid output length " + std::to_string(output_bits));
+      throw Invalid_Argument("Keccak_Permutation: Invalid output length " + std::to_string(output_bits));
    }
 }
 
-std::string Keccak_FIPS::provider() const {
+std::string Keccak_Permutation::provider() const {
 #if defined(BOTAN_HAS_KECCKAK_FIPS_BMI2)
    if(CPUID::has_bmi2()) {
       return "bmi2";
@@ -154,17 +154,17 @@ std::string Keccak_FIPS::provider() const {
    return "base";
 }
 
-void Keccak_FIPS::clear() {
+void Keccak_Permutation::clear() {
    zeroise(m_S);
    m_S_pos = 0;
 }
 
-void Keccak_FIPS::absorb(std::span<const uint8_t> input) {
-   m_S_pos = Keccak_FIPS::absorb(m_bitrate, m_S, m_S_pos, input);
+void Keccak_Permutation::absorb(std::span<const uint8_t> input) {
+   m_S_pos = Keccak_Permutation::absorb(m_bitrate, m_S, m_S_pos, input);
 }
 
-void Keccak_FIPS::finish(std::span<uint8_t> output) {
-   Keccak_FIPS::finish(m_bitrate, m_S, m_S_pos, m_custom_padd, m_custom_padd_bit_len);
+void Keccak_Permutation::finish(std::span<uint8_t> output) {
+   Keccak_Permutation::finish(m_bitrate, m_S, m_S_pos, m_custom_padd, m_custom_padd_bit_len);
 
    BOTAN_ASSERT_NOMSG(output.size() >= m_output_bits / 8);
 

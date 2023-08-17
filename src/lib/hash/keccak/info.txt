@@ -7,5 +7,5 @@ name -> "Keccak"
 </module_info>
 
 <requires>
-keccak_fips
+keccak_perm
 </requires>
