@@ -1,7 +1,8 @@
 /*
-* Keccak-FIPS
+* Keccak Permutation
 * (C) 2010,2016 Jack Lloyd
 * (C) 2023 Falko Strenzke
+* (C) 2023 René Meusel - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -13,14 +14,116 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/keccak_perm_round.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
-// static
-void Keccak_Permutation::permute(uint64_t A[25]) {
-#if defined(BOTAN_HAS_KECCKAK_FIPS_BMI2)
+Keccak_Permutation::Keccak_Permutation(size_t capacity, uint64_t custom_padding, uint8_t custom_padding_bit_len) :
+      m_capacity(capacity),
+      m_byterate((1600 - capacity) / 8),
+      m_custom_padding(custom_padding),
+      m_custom_padding_bit_len(custom_padding_bit_len),
+      m_S(25),  // 1600 bit
+      m_S_inpos(0),
+      m_S_outpos(0) {
+   BOTAN_ARG_CHECK(capacity % 64 == 0, "capacity must be a multiple of 64");
+}
+
+std::string Keccak_Permutation::provider() const {
+#if defined(BOTAN_HAS_KECCAK_PERM_BMI2)
    if(CPUID::has_bmi2()) {
-      return permute_bmi2(A);
+      return "bmi2";
+   }
+#endif
+
+   return "base";
+}
+
+void Keccak_Permutation::clear() {
+   zeroise(m_S);
+   m_S_inpos = 0;
+   m_S_outpos = 0;
+}
+
+void Keccak_Permutation::absorb(std::span<const uint8_t> input) {
+   BufferSlicer input_slicer(input);
+
+   // Block-wise incorporation of the input data into the sponge state until
+   // all input bytes are processed
+   while(!input_slicer.empty()) {
+      const size_t to_take_this_round = std::min(input_slicer.remaining(), m_byterate - m_S_inpos);
+      BufferSlicer input_this_round(input_slicer.take(to_take_this_round));
+
+      // If necessary, try to get aligned with the sponge state's 64-bit integer array
+      for(; !input_this_round.empty() && m_S_inpos % 8; ++m_S_inpos) {
+         m_S[m_S_inpos / 8] ^= static_cast<uint64_t>(input_this_round.take_byte()) << (8 * (m_S_inpos % 8));
+      }
+
+      // Process as many aligned 64-bit integer values as possible
+      for(; input_this_round.remaining() >= 8; m_S_inpos += 8) {
+         m_S[m_S_inpos / 8] ^= load_le<uint64_t>(input_this_round.take(8).data(), 0);
+      }
+
+      // Read remaining output data, causing misalignment, if necessary
+      for(; !input_this_round.empty(); ++m_S_inpos) {
+         m_S[m_S_inpos / 8] ^= static_cast<uint64_t>(input_this_round.take_byte()) << (8 * (m_S_inpos % 8));
+      }
+
+      // We reached the end of a sponge state block... permute() and start over
+      if(m_S_inpos == m_byterate) {
+         permute();
+         m_S_inpos = 0;
+      }
+   }
+}
+
+void Keccak_Permutation::squeeze(std::span<uint8_t> output) {
+   BufferStuffer output_stuffer(output);
+
+   // Block-wise readout of the sponge state until enough bytes
+   // were filled into the output buffer
+   while(!output_stuffer.full()) {
+      const size_t bytes_in_this_round = std::min(output_stuffer.remaining_capacity(), m_byterate - m_S_outpos);
+      BufferStuffer output_this_round(output_stuffer.next(bytes_in_this_round));
+
+      // If necessary, try to get aligned with the sponge state's 64-bit integer array
+      for(; !output_this_round.full() && m_S_outpos % 8 != 0; ++m_S_outpos) {
+         output_this_round.next_byte() = static_cast<uint8_t>(m_S[m_S_outpos / 8] >> (8 * (m_S_outpos % 8)));
+      }
+
+      // Read out as many aligned 64-bit integer values as possible
+      for(; output_this_round.remaining_capacity() >= 8; m_S_outpos += 8) {
+         store_le(m_S[m_S_outpos / 8], output_this_round.next(8).data());
+      }
+
+      // Read remaining output data, causing misalignment, if necessary
+      for(; !output_this_round.full(); ++m_S_outpos) {
+         output_this_round.next_byte() = static_cast<uint8_t>(m_S[m_S_outpos / 8] >> (8 * (m_S_outpos % 8)));
+      }
+
+      // We reached the end of a sponge state block... permute() and start over
+      if(m_S_outpos == m_byterate) {
+         permute();
+         m_S_outpos = 0;
+      }
+   }
+}
+
+void Keccak_Permutation::finish() {
+   // append the first bit of the final padding after the custom padding
+   uint8_t init_pad = static_cast<uint8_t>(m_custom_padding | uint64_t(1) << m_custom_padding_bit_len);
+   m_S[m_S_inpos / 8] ^= static_cast<uint64_t>(init_pad) << (8 * (m_S_inpos % 8));
+
+   // final bit of the padding of the last block
+   m_S[(m_byterate / 8) - 1] ^= static_cast<uint64_t>(0x80) << 56;
+
+   permute();
+}
+
+void Keccak_Permutation::permute() {
+#if defined(BOTAN_HAS_KECCAK_PERM_BMI2)
+   if(CPUID::has_bmi2()) {
+      return permute_bmi2();
    }
 #endif
 
@@ -34,140 +137,9 @@ void Keccak_Permutation::permute(uint64_t A[25]) {
    uint64_t T[25];
 
    for(size_t i = 0; i != 24; i += 2) {
-      Keccak_Permutation_round(T, A, RC[i + 0]);
-      Keccak_Permutation_round(A, T, RC[i + 1]);
+      Keccak_Permutation_round(T, m_S.data(), RC[i + 0]);
+      Keccak_Permutation_round(m_S.data(), T, RC[i + 1]);
    }
-}
-
-void Keccak_Permutation::permute() {
-   Keccak_Permutation::permute(m_S.data());
-}
-
-//static
-
-uint32_t Keccak_Permutation::absorb(size_t bitrate,
-                             secure_vector<uint64_t>& S,
-                             size_t S_pos,
-                             std::span<const uint8_t> input_span) {
-   const uint8_t* input = input_span.data();
-   size_t length = input_span.size();
-
-   while(length > 0) {
-      size_t to_take = std::min(length, bitrate / 8 - S_pos);
-
-      length -= to_take;
-
-      while(to_take && S_pos % 8) {
-         S[S_pos / 8] ^= static_cast<uint64_t>(input[0]) << (8 * (S_pos % 8));
-
-         ++S_pos;
-         ++input;
-         --to_take;
-      }
-
-      while(to_take && to_take % 8 == 0) {
-         S[S_pos / 8] ^= load_le<uint64_t>(input, 0);
-         S_pos += 8;
-         input += 8;
-         to_take -= 8;
-      }
-
-      while(to_take) {
-         S[S_pos / 8] ^= static_cast<uint64_t>(input[0]) << (8 * (S_pos % 8));
-
-         ++S_pos;
-         ++input;
-         --to_take;
-      }
-
-      if(S_pos == bitrate / 8) {
-         Keccak_Permutation::permute(S.data());
-         S_pos = 0;
-      }
-   }
-
-   return static_cast<uint32_t>(S_pos);
-}
-
-//static
-
-void Keccak_Permutation::finish(
-   size_t bitrate, secure_vector<uint64_t>& S, size_t S_pos, uint64_t custom_padd, uint8_t custom_padd_bit_len) {
-   BOTAN_ARG_CHECK(bitrate % 64 == 0, "Keccak-FIPS bitrate must be multiple of 64");
-   // append the first bit of the final padding after the custom padding
-   uint8_t init_pad = static_cast<uint8_t>(custom_padd | uint64_t(1) << custom_padd_bit_len);
-   S[S_pos / 8] ^= static_cast<uint64_t>(init_pad) << (8 * (S_pos % 8));
-   // final bit of the padding of the last block
-   S[(bitrate / 64) - 1] ^= static_cast<uint64_t>(0x80) << 56;
-   Keccak_Permutation::permute(S.data());
-}
-
-//static
-
-void Keccak_Permutation::expand(size_t bitrate, secure_vector<uint64_t>& S, std::span<uint8_t> output_span) {
-   uint8_t* output = output_span.data();
-   size_t output_length = output_span.size();
-   BOTAN_ARG_CHECK(bitrate % 64 == 0, "Keccak-FIPS bitrate must be multiple of 64");
-
-   const size_t byterate = bitrate / 8;
-
-   while(output_length > 0) {
-      const size_t copying = std::min(byterate, output_length);
-
-      copy_out_vec_le(output, copying, S);
-
-      output += copying;
-      output_length -= copying;
-
-      if(output_length > 0) {
-         Keccak_Permutation::permute(S.data());
-      }
-   }
-}
-
-void Keccak_Permutation::expand(std::span<uint8_t> output_span) {
-   expand(m_bitrate, m_S, output_span);
-}
-
-Keccak_Permutation::Keccak_Permutation(size_t capacity, uint64_t custom_padd, uint8_t custom_padd_bit_len) :
-      m_capacity(static_cast<uint32_t>(capacity)),
-      m_bitrate(static_cast<uint32_t>(1600 - capacity)),
-      m_custom_padd(custom_padd),
-      m_custom_padd_bit_len(custom_padd_bit_len),
-      m_S(25),  // 1600 bit
-      m_S_pos(0) {
-}
-
-std::string Keccak_Permutation::provider() const {
-#if defined(BOTAN_HAS_KECCKAK_FIPS_BMI2)
-   if(CPUID::has_bmi2()) {
-      return "bmi2";
-   }
-#endif
-
-   return "base";
-}
-
-void Keccak_Permutation::clear() {
-   zeroise(m_S);
-   m_S_pos = 0;
-}
-
-void Keccak_Permutation::absorb(std::span<const uint8_t> input) {
-   m_S_pos = Keccak_Permutation::absorb(m_bitrate, m_S, m_S_pos, input);
-}
-
-void Keccak_Permutation::finish() {
-   Keccak_Permutation::finish(m_bitrate, m_S, m_S_pos, m_custom_padd, m_custom_padd_bit_len);
-
-   //BOTAN_ASSERT_NOMSG(output.size() >= m_output_bits / 8);
-
-   /*
-   * We never have to run the permutation again because we only support
-   * limited output lengths
-   */
-   //copy_out_vec_le(output.data(), m_output_bits / 8, m_S);
-   //clear();
 }
 
 }  // namespace Botan

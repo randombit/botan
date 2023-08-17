@@ -19,7 +19,7 @@ namespace Botan {
 * Keccak[1600], the SHA-3 submission without any final bit padding. Not an official NIST SHA-3-derived hash function.
 *
 * In the terminology of the official SHA-3 specification [1],
-* the instantiations of this hash function 
+* the instantiations of this hash function
 * (with the output bit size in brackets) are given as
 *
 * Keccak1600[224](M) = KECCAK[448] (M, 224)
@@ -40,7 +40,7 @@ class Keccak_1600 final : public HashFunction {
       */
       explicit Keccak_1600(size_t output_bits = 512);
 
-      size_t hash_block_size() const override { return m_keccak.bit_rate() / 8; }
+      size_t hash_block_size() const override { return m_keccak.byte_rate(); }
 
       size_t output_length() const override { return m_output_length; }
 
@@ -48,13 +48,15 @@ class Keccak_1600 final : public HashFunction {
       std::unique_ptr<HashFunction> copy_state() const override;
       std::string name() const override;
       void clear() override;
+      std::string provider() const override;
+
+   private:
+      void add_data(const uint8_t input[], size_t length) override;
+      void final_result(uint8_t out[]) override;
 
    private:
       Keccak_Permutation m_keccak;
       size_t m_output_length;
-      void add_data(const uint8_t input[], size_t length) override;
-      void final_result(uint8_t out[]) override;
-
 };
 
 }  // namespace Botan

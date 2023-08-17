@@ -6,7 +6,6 @@ SHA3 -> 20161018
 name -> "SHA-3"
 </module_info>
 
-
 <requires>
 keccak_perm
 </requires>

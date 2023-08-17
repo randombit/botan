@@ -18,9 +18,8 @@ std::unique_ptr<HashFunction> Keccak_1600::copy_state() const {
    return std::make_unique<Keccak_1600>(*this);
 }
 
-Keccak_1600::Keccak_1600(size_t output_bits) : m_keccak(2 * output_bits, 0, 0), m_output_length(output_bits/8) {
+Keccak_1600::Keccak_1600(size_t output_bits) : m_keccak(2 * output_bits, 0, 0), m_output_length(output_bits / 8) {
    // We only support the parameters for the SHA-3 proposal
-
 
    if(output_bits != 224 && output_bits != 256 && output_bits != 384 && output_bits != 512) {
       throw Invalid_Argument(fmt("Keccak_1600: Invalid output length {}", output_bits));
@@ -39,13 +38,17 @@ void Keccak_1600::clear() {
    m_keccak.clear();
 }
 
+std::string Keccak_1600::provider() const {
+   return m_keccak.provider();
+}
+
 void Keccak_1600::add_data(const uint8_t input[], size_t length) {
-   m_keccak.absorb(std::span(input, length));
+   m_keccak.absorb({input, length});
 }
 
 void Keccak_1600::final_result(uint8_t output[]) {
    m_keccak.finish();
-   m_keccak.expand(std::span(output, m_output_length));
+   m_keccak.squeeze({output, m_output_length});
    m_keccak.clear();
 }
 

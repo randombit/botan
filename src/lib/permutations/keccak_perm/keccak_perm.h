@@ -1,7 +1,8 @@
 /*
-* Keccak-FIPS
+* Keccak Permutation
 * (C) 2010,2016 Jack Lloyd
 * (C) 2023 Falko Strenzke
+* (C) 2023 René Meusel - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -33,91 +34,66 @@ namespace Botan {
 *       https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.202.pdf#page=28
 * [2] https://csrc.nist.gov/projects/hash-functions/sha-3-project
 */
-
 class Keccak_Permutation final {
    public:
-       /**
+      /**
         * @brief Instantiate a Keccak permutation
         *
+        * The @p custom_padding is assumed to be init_pad || 00... || fini_pad
+        *
         * @param capacity_bits Keccak capacity
-        * @param custom_padd the custom bit padding that is to be appended on the call to finish
-        * @param custom_padd_bit_len the bit length of the custom_padd
+        * @param custom_padding the custom bit padding that is to be appended on the call to finish
+        * @param custom_padding_bit_len the bit length of the custom_padd
         */
-      explicit Keccak_Permutation(size_t capacity_bits, uint64_t custom_padd, uint8_t custom_padd_bit_len);
-
-      size_t hash_block_size() const { return m_bitrate / 8; }
+      Keccak_Permutation(size_t capacity_bits, uint64_t custom_padding, uint8_t custom_padding_bit_len);
 
       size_t capacity() const { return m_capacity; }
 
-      size_t bit_rate() const { return m_bitrate; }
+      size_t bit_rate() const { return m_byterate * 8; }
+
+      size_t byte_rate() const { return m_byterate; }
 
       void clear();
       std::string provider() const;
 
-      secure_vector<uint64_t>& internal_state() { return m_S; }
-
-      const secure_vector<uint64_t>& internal_state() const { return m_S; }
-
-      void set_internal_pos(uint32_t pos) { m_S_pos = pos; }
-
-      uint32_t internal_pos() const { return m_S_pos; }
-
-      // Static functions for internal usage
-
       /**
-      * Absorb data into the provided state
-      * @param bitrate the bitrate to absorb into the sponge
-      * @param S the sponge state
-      * @param S_pos where to begin absorbing into S
+      * @brief Absorb input data into the Keccak sponge
+      *
+      * This method can be called multiple times with arbitrary-length buffers.
+      *
       * @param input the input data
       */
-      static uint32_t absorb(size_t bitrate, secure_vector<uint64_t>& S, size_t S_pos, std::span<const uint8_t> input);
-
       void absorb(std::span<const uint8_t> input);
 
       /**
-      * Add final padding and permute. The padding is assumed to be
-      * init_pad || 00... || fini_pad
+      * @brief Expand output data from the current Keccak state
       *
-      * @param bitrate the bitrate to absorb into the sponge
-      * @param S the sponge state
-      * @param S_pos where to begin absorbing into S
-      * @param custom_padd the custom padding bits used by the primitive derived from Keccak_Permutation
-      * @param custom_padd_bit_len the bit length of the custom padding
-      */
-
-      static void finish(
-         size_t bitrate, secure_vector<uint64_t>& S, size_t S_pos, uint64_t custom_padd, uint8_t custom_padd_bit_len);
-
-      void finish();
-
-      /**
-      * Expand from provided state
-      * @param bitrate sponge parameter
-      * @param S the state
+      * This method can be called multiple times with arbitrary-length buffers.
+      *
       * @param output the designated output memory
       */
-      static void expand(size_t bitrate, secure_vector<uint64_t>& S, std::span<uint8_t> output);
-
-      void expand(std::span<uint8_t> output);
+      void squeeze(std::span<uint8_t> output);
 
       /**
-      * The bare Keccak[c] permutation
+      * @brief Add final padding (as provided in the constructor) and permute
       */
-      static void permute(uint64_t A[25]);
-      void permute();
+      void finish();
 
    private:
+      void permute();
+
 #if defined(BOTAN_HAS_KECCAK_PERM_BMI2)
-      static void permute_bmi2(uint64_t A[25]);
+      void permute_bmi2();
 #endif
 
-      size_t m_capacity;
-      size_t m_bitrate;
-      uint64_t m_custom_padd;
-      uint8_t m_custom_padd_bit_len;
+   private:
+      const size_t m_capacity;
+      const size_t m_byterate;
+      const uint64_t m_custom_padding;
+      const uint8_t m_custom_padding_bit_len;
       secure_vector<uint64_t> m_S;
-      uint32_t m_S_pos;
+      uint8_t m_S_inpos;
+      uint8_t m_S_outpos;
 };
 
 }  // namespace Botan

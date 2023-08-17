@@ -15,7 +15,7 @@
 
 namespace Botan {
 
-SHA_3::SHA_3(size_t output_bits) : m_keccak(2 * output_bits, 2, 2), m_output_length(output_bits/8) {
+SHA_3::SHA_3(size_t output_bits) : m_keccak(2 * output_bits, 2, 2), m_output_length(output_bits / 8) {
    // We only support the parameters for SHA-3 in this constructor
 
    if(output_bits != 224 && output_bits != 256 && output_bits != 384 && output_bits != 512) {
@@ -44,12 +44,12 @@ void SHA_3::clear() {
 }
 
 void SHA_3::add_data(const uint8_t input[], size_t length) {
-   m_keccak.absorb(std::span(input, length));
+   m_keccak.absorb({input, length});
 }
 
 void SHA_3::final_result(uint8_t output[]) {
    m_keccak.finish();
-   m_keccak.expand(std::span(output, m_output_length));
+   m_keccak.squeeze({output, m_output_length});
    m_keccak.clear();
 }
 

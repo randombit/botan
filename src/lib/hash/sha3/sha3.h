@@ -26,7 +26,7 @@ class SHA_3 : public HashFunction {
       */
       explicit SHA_3(size_t output_bits);
 
-      size_t hash_block_size() const override { return m_keccak.hash_block_size(); }
+      size_t hash_block_size() const override { return m_keccak.byte_rate(); }
 
       size_t output_length() const override { return m_output_length; }
 
@@ -37,43 +37,10 @@ class SHA_3 : public HashFunction {
       std::string provider() const override;
 
    private:
-      /**
-      * Add final padding and permute. The padding is assumed to be
-      * init_pad || 00... || fini_pad
-      *
-      * @param bitrate the bitrate to absorb into the sponge
-      * @param S the sponge state
-      * @param S_pos where to begin absorbing into S
-      */
-      static void finish(size_t bitrate, secure_vector<uint64_t>& S, size_t S_pos);
-      /**
-      * Absorb data into the provided state
-      * @param bitrate the bitrate to absorb into the sponge
-      * @param S the sponge state
-      * @param S_pos where to begin absorbing into S
-      * @param input the input data
-      * @param length size of input in bytes
-      */
-      static size_t absorb(
-         size_t bitrate, secure_vector<uint64_t>& S, size_t S_pos, const uint8_t input[], size_t length);
-
-      /**
-      * Expand from provided state
-      * @param bitrate sponge parameter
-      * @param S the state
-      * @param output the output buffer
-      * @param output_length the size of output in bytes
-      */
-      static void expand(size_t bitrate, secure_vector<uint64_t>& S, uint8_t output[], size_t output_length);
-
-      /**
-      * The bare Keccak-1600 permutation
-      */
-      static void permute(uint64_t A[25]);
-
       void add_data(const uint8_t input[], size_t length) override;
       void final_result(uint8_t out[]) override;
 
+   private:
       Keccak_Permutation m_keccak;
       size_t m_output_length;
 };
