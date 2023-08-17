@@ -42,7 +42,7 @@ class Keccak_1600 final : public HashFunction {
 
       size_t hash_block_size() const override { return m_keccak.bit_rate() / 8; }
 
-      size_t output_length() const override { return m_keccak.output_length(); }
+      size_t output_length() const override { return m_output_length; }
 
       std::unique_ptr<HashFunction> new_object() const override;
       std::unique_ptr<HashFunction> copy_state() const override;
@@ -50,10 +50,11 @@ class Keccak_1600 final : public HashFunction {
       void clear() override;
 
    private:
+      Keccak_Permutation m_keccak;
+      size_t m_output_length;
       void add_data(const uint8_t input[], size_t length) override;
       void final_result(uint8_t out[]) override;
 
-      Keccak_Permutation m_keccak;
 };
 
 }  // namespace Botan

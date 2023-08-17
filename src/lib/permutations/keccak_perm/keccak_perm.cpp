@@ -129,19 +129,13 @@ void Keccak_Permutation::expand(std::span<uint8_t> output_span) {
    expand(m_bitrate, m_S, output_span);
 }
 
-Keccak_Permutation::Keccak_Permutation(size_t output_bits, size_t capacity, uint64_t custom_padd, uint8_t custom_padd_bit_len) :
-      m_output_bits(output_bits),
+Keccak_Permutation::Keccak_Permutation(size_t capacity, uint64_t custom_padd, uint8_t custom_padd_bit_len) :
       m_capacity(static_cast<uint32_t>(capacity)),
       m_bitrate(static_cast<uint32_t>(1600 - capacity)),
       m_custom_padd(custom_padd),
       m_custom_padd_bit_len(custom_padd_bit_len),
       m_S(25),  // 1600 bit
       m_S_pos(0) {
-   // We only support the parameters for Keccak-FIPS in this constructor
-   BOTAN_ASSERT_NOMSG(output_bits % 8 == 0);
-   if(output_bits > 1600) {
-      throw Invalid_Argument("Keccak_Permutation: Invalid output length " + std::to_string(output_bits));
-   }
 }
 
 std::string Keccak_Permutation::provider() const {

@@ -28,7 +28,7 @@ class SHA_3 : public HashFunction {
 
       size_t hash_block_size() const override { return m_keccak.hash_block_size(); }
 
-      size_t output_length() const override { return m_keccak.output_length(); }
+      size_t output_length() const override { return m_output_length; }
 
       std::unique_ptr<HashFunction> new_object() const override;
       std::unique_ptr<HashFunction> copy_state() const override;
@@ -75,6 +75,7 @@ class SHA_3 : public HashFunction {
       void final_result(uint8_t out[]) override;
 
       Keccak_Permutation m_keccak;
+      size_t m_output_length;
 };
 
 /**

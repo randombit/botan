@@ -36,21 +36,20 @@ namespace Botan {
 
 class Keccak_Permutation final {
    public:
-      /**
-      * @param output_bits the size of the hash output; must be one of
-      *                    224, 256, 384, or 512
-      */
-      explicit Keccak_Permutation(size_t output_bits, size_t capacity_bits, uint64_t custom_padd, uint8_t custom_padd_bit_len);
+       /**
+        * @brief Instantiate a Keccak permutation
+        *
+        * @param capacity_bits Keccak capacity
+        * @param custom_padd the custom bit padding that is to be appended on the call to finish
+        * @param custom_padd_bit_len the bit length of the custom_padd
+        */
+      explicit Keccak_Permutation(size_t capacity_bits, uint64_t custom_padd, uint8_t custom_padd_bit_len);
 
       size_t hash_block_size() const { return m_bitrate / 8; }
 
-      size_t output_length() const { return m_output_bits / 8; }
-
-      size_t output_bits() const { return m_output_bits; }
-
       size_t capacity() const { return m_capacity; }
 
-      uint32_t bit_rate() const { return m_bitrate; }
+      size_t bit_rate() const { return m_bitrate; }
 
       void clear();
       std::string provider() const;
@@ -113,9 +112,8 @@ class Keccak_Permutation final {
       static void permute_bmi2(uint64_t A[25]);
 #endif
 
-      size_t m_output_bits;
-      uint32_t m_capacity;
-      uint32_t m_bitrate;
+      size_t m_capacity;
+      size_t m_bitrate;
       uint64_t m_custom_padd;
       uint8_t m_custom_padd_bit_len;
       secure_vector<uint64_t> m_S;
