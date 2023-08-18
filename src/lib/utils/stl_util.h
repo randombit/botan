@@ -143,6 +143,8 @@ class BufferSlicer final {
          return StrongSpan<const T>(take(count));
       }
 
+      uint8_t take_byte() { return take(1)[0]; }
+
       void copy_into(std::span<uint8_t> sink) {
          const auto data = take(sink.size());
          std::copy(data.begin(), data.end(), sink.begin());
@@ -185,6 +187,11 @@ class BufferStuffer {
       StrongSpan<StrongT> next(size_t bytes) {
          return StrongSpan<StrongT>(next(bytes));
       }
+
+      /**
+       * @returns a reference to the next single byte in the buffer
+       */
+      uint8_t& next_byte() { return next(1)[0]; }
 
       void append(std::span<const uint8_t> buffer) {
          auto sink = next(buffer.size());
