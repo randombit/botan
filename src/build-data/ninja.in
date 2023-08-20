@@ -75,6 +75,40 @@ build %{cli_exe}: link_cli %{join cli_objs} | %{library_targets}
 
 build %{test_exe}: link_tests %{join test_objs} | %{library_targets}
 
+%{if build_fuzzers}
+
+build fuzzers: phony %{fuzzer_bin}
+
+rule fuzzer_corpus
+  command = git clone --depth=1 https://github.com/randombit/crypto-corpus.git fuzzer_corpus
+
+build fuzzer_corpus: fuzzer_corpus
+
+rule fuzzer_corpus_zip
+  command = %{base_dir}/src/scripts/create_corpus_zip.py fuzzer_corpus %{fuzzobj_dir}
+
+build fuzzer_corpus_zip: fuzzer_corpus_zip | fuzzer_corpus
+
+rule link_fuzzer
+  command =	${EXE_LINK_CMD} ${ABI_FLAGS} $in ${BUILD_DIR_LINK_PATH} ${LANG_EXE_FLAGS} ${LDFLAGS} ${EXE_LINKS_TO} %{fuzzer_lib} %{output_to_exe}$out
+
+%{endif}
+
+%{if build_examples}
+
+build examples: link_cli %{example_bin} | %{library_targets}
+
+%{endif}
+
+
+%{if build_bogo_shim}
+
+build bogo_shim: link_cli botan_bogo_shim | %{library_targets}
+
+# BoGo shim
+build %{out_dir}/botan_bogo_shim: compile_exe %{bogo_shim_src}
+
+%{endif}
 
 # Misc targets
 
@@ -141,4 +175,16 @@ build %{obj}: compile_exe %{src}
 
 %{for test_build_info}
 build %{obj}: compile_exe %{src}
+%{endfor}
+
+%{for fuzzer_build_info}
+build %{obj}: compile_exe %{src}
+
+build %{exe}: link_fuzzer %{obj} | %{library_targets}
+%{endfor}
+
+%{for examples_build_info}
+build %{obj}: compile_exe %{src}
+
+build %{exe}: link_cli %{obj} | %{library_targets}
 %{endfor}
