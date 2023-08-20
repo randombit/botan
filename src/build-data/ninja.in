@@ -30,6 +30,10 @@ EXE_LINKS_TO        = %{link_to_botan} ${LIB_LINKS_TO} %{extra_libs}
 SCRIPTS_DIR    = %{scripts_dir}
 INSTALLED_LIB_DIR = %{libdir}
 
+# The primary target
+build all: phony %{all_targets}
+default all
+
 CLI           = %{cli_exe}
 TEST          = %{test_exe}
 LIBRARIES     = %{library_targets}
@@ -159,8 +163,6 @@ build check: check | tests
 build fmt: fmt
 
 build tidy: tidy
-
-build all: phony cli libs tests check docs clean distclean install fmt tidy
 
 
 # Build Commands
