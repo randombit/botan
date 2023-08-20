@@ -526,15 +526,10 @@ def validate_make_tool(make_tool, build_jobs):
     if make_tool == '':
         return validate_make_tool('make', build_jobs)
 
-    if make_tool not in ['ninja', 'nmake', 'jom', 'make']:
+    if make_tool not in ['ninja', 'nmake', 'make']:
         raise Exception("Don't know about %s as a make tool" % (make_tool))
 
-    # Hack to work around jom occasionally failing to install
-    # https://github.com/randombit/botan/issues/3629
-    if make_tool == 'jom' and not have_prog('jom'):
-        return 'nmake', []
-
-    if make_tool in ['make', 'jom']:
+    if make_tool in ['make']:
         return make_tool, ['-j%d' % (build_jobs), '-k']
 
     else:

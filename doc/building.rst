@@ -181,8 +181,8 @@ On macOS
 
 A build on macOS works much like that on any other Unix-like system.
 
-To build a universal binary for macOS, for older macOs releases, 
-you need to set some additional build flags. 
+To build a universal binary for macOS, for older macOs releases,
+you need to set some additional build flags.
 Do this with the `configure.py` flag `--cc-abi-flags`::
 
   --cc-abi-flags="-force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc"
@@ -209,13 +209,18 @@ shell), and run::
    $ nmake check
    $ nmake install
 
-Botan supports the nmake replacement `Jom <https://wiki.qt.io/Jom>`_
-which enables you to run multiple build jobs in parallel.
-
 For MinGW, use::
 
    $ python3 configure.py --cc=gcc --os=mingw
    $ make
+
+Botan supports the `ninja <https://ninja-build.org>`_  build system
+which enables you to run multiple build jobs in parallel::
+
+   $ python3 configure.py --cc=msvc --os=windows --build-tool=ninja
+   $ ninja
+   $ ninja check
+   $ ninja install
 
 By default the install target will be ``C:\botan``; you can modify
 this with the ``--prefix`` option.
