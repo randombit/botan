@@ -46,6 +46,10 @@
    #include <botan/internal/idea.h>
 #endif
 
+#if defined(BOTAN_HAS_KUZNYECHIK)
+   #include <botan/internal/kuznyechik.h>
+#endif
+
 #if defined(BOTAN_HAS_LION)
    #include <botan/internal/lion.h>
 #endif
@@ -200,6 +204,12 @@ std::unique_ptr<BlockCipher> BlockCipher::create(std::string_view algo, std::str
 #if defined(BOTAN_HAS_IDEA)
    if(algo == "IDEA") {
       return std::make_unique<IDEA>();
+   }
+#endif
+
+#if defined(BOTAN_HAS_KUZNYECHIK)
+   if(algo == "Kuznyechik") {
+      return std::make_unique<Kuznyechik>();
    }
 #endif
 

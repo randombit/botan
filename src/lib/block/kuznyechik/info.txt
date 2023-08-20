@@ -1,0 +1,7 @@
+<defines>
+KUZNYECHIK -> 20230820
+</defines>
+
+<module_info>
+name -> "Kuznyechik"
+</module_info>
