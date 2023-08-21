@@ -334,16 +334,13 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
                              "Client sent plaintext HTTP proxy CONNECT request instead of TLS handshake");
       }
 
-      std::ostringstream oss;
-      oss << "TLS record ";
       if(bad_record_type) {
-         oss << "type";
-      } else {
-         oss << "version";
+         // RFC 5246 Section 6.
+         //   If a TLS implementation receives an unexpected record type, it MUST
+         //   send an unexpected_message alert.
+         throw TLS_Exception(Alert::UnexpectedMessage, "TLS record type had unexpected value");
       }
-      oss << " had unexpected value";
-
-      throw TLS_Exception(Alert::ProtocolVersion, oss.str());
+      throw TLS_Exception(Alert::ProtocolVersion, "TLS record version had unexpected value");
    }
 
    const Protocol_Version version(readbuf[1], readbuf[2]);
