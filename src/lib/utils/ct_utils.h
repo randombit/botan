@@ -77,7 +77,7 @@ inline void unpoison(T& p) {
 * since you never know what a compiler might do.
 */
 template <typename T>
-   requires std::is_unsigned<T>::value
+   requires(std::is_unsigned<T>::value && !std::is_same<bool, T>::value)
 class Mask final {
    public:
       Mask(const Mask<T>& other) = default;
