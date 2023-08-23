@@ -519,6 +519,9 @@ def process_command_line(args):
     build_group.add_option('--build-targets', default=None, dest="build_targets", action='append',
                            help="build specific targets and tools (%s)" % ', '.join(ACCEPTABLE_BUILD_TARGETS))
 
+    build_group.add_option('--build-tool', default='make',
+                           help="specify the build tool (make, ninja)")
+
     build_group.add_option('--with-pkg-config', action='store_true', default=None,
                            help=optparse.SUPPRESS_HELP)
     build_group.add_option('--without-pkg-config', dest='with_pkg_config', action='store_false',
@@ -3152,6 +3155,9 @@ def validate_options(options, info_os, info_cc, available_module_policies):
         if options.build_fuzzers == 'klee' and options.os != 'llvm':
             raise UserError('Building for KLEE requires targeting LLVM')
 
+    if options.build_tool not in ['make', 'ninja']:
+        raise UserError("Unknown --build-tool option (possible values: make, ninja)")
+
     if options.build_static_lib is False and options.build_shared_lib is False:
         raise UserError('With both --disable-static-library and --disable-shared-library, nothing to do')
 
@@ -3290,12 +3296,16 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
             if ex.errno != errno.EEXIST:
                 logging.error('Error while creating "%s": %s', build_dir, ex)
 
-    def write_template_with_variables(sink, template, variables):
-        with open(sink, 'w', encoding='utf8') as f:
-            f.write(process_template(template, variables))
+    def write_template_with_variables(sink, template, variables, postproc_fn = None):
+        output = process_template(template, variables)
+        if postproc_fn:
+            output = postproc_fn(output)
 
-    def write_template(sink, template):
-        write_template_with_variables(sink, template, template_vars)
+        with open(sink, 'w', encoding='utf8') as f:
+            f.write(output)
+
+    def write_template(sink, template, postproc_fn = None):
+        write_template_with_variables(sink, template, template_vars, postproc_fn)
 
     def in_build_dir(p):
         return os.path.join(build_paths.build_dir, p)
@@ -3351,7 +3361,25 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
     if options.with_compilation_database:
         write_template(in_build_dir('compile_commands.json'), in_build_data('compile_commands.json.in'))
 
-    write_template(template_vars['makefile_path'], in_build_data('makefile.in'))
+    if options.build_tool == 'make':
+        write_template(template_vars['makefile_path'], in_build_data('makefile.in'))
+    elif options.build_tool == 'ninja':
+        def escape_build_lines(contents):
+            ninja_build_line = re.compile('^build (.*): (.*)')
+
+            output = []
+            for line in contents.split('\n'):
+                match = ninja_build_line.match(line)
+                if match:
+                    escaped1 = match.group(1).replace(':', '$:')
+                    escaped2 = match.group(2).replace(':', '$:')
+                    output.append('build %s: %s' % (escaped1, escaped2))
+                else:
+                    output.append(line)
+
+            return "\n".join(output)
+
+        write_template(template_vars['ninja_build_path'], in_build_data('ninja.in'), escape_build_lines)
 
     if options.with_doxygen:
         for module_name, info in info_modules.items():

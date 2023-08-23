@@ -530,18 +530,14 @@ def validate_make_tool(make_tool, build_jobs):
     if make_tool == '':
         return validate_make_tool('make', build_jobs)
 
-    if make_tool not in ['nmake', 'jom', 'make']:
+    if make_tool not in ['ninja', 'nmake', 'make']:
         raise Exception("Don't know about %s as a make tool" % (make_tool))
 
-    # Hack to work around jom occasionally failing to install
-    # https://github.com/randombit/botan/issues/3629
-    if make_tool == 'jom' and not have_prog('jom'):
-        return ['nmake']
+    if make_tool in ['make']:
+        return make_tool, ['-j%d' % (build_jobs), '-k']
 
-    if make_tool in ['make', 'jom']:
-        return [make_tool, '-j%d' % (build_jobs)]
     else:
-        return [make_tool]
+        return make_tool, []
 
 def main(args=None):
     """
@@ -654,13 +650,17 @@ def main(args=None):
             options.pkcs11_lib, options.use_gdb, options.disable_werror,
             options.extra_cxxflags, options.disabled_tests)
 
-        cmds.append([py_interp, os.path.join(root_dir, 'configure.py')] + config_flags)
+        make_tool, make_opts = validate_make_tool(options.make_tool, options.build_jobs)
 
-        make_cmd = validate_make_tool(options.make_tool, options.build_jobs)
+        cmds.append([py_interp,
+            os.path.join(root_dir, 'configure.py')] +
+            ['--build-tool=' + make_tool] +
+            config_flags)
+
+        make_cmd = [make_tool] + make_opts
+
         if build_dir != '.':
-            make_cmd = ['indir:%s' % build_dir] + make_cmd
-
-        make_cmd += ['-k']
+            make_cmd = ['indir:%s' % build_dir] + [make_tool] + make_opts
 
         if target == 'docs':
             cmds.append(make_cmd + ['docs'])

@@ -1,0 +1,184 @@
+ninja_required_version = 1.3
+
+CXX            = %{cxx}
+LINKER         = %{linker}
+PYTHON_EXE     = %{python_exe}
+
+ABI_FLAGS      = %{cc_sysroot} %{cxx_abi_flags}
+LANG_FLAGS     = %{cc_lang_flags} %{os_feature_macros}
+LANG_EXE_FLAGS = %{cc_lang_binary_linker_flags}
+CXXFLAGS       = %{cc_compile_flags} -DBOTAN_IS_BEING_BUILT
+WARN_FLAGS     = %{cc_warning_flags}
+
+LDFLAGS        = %{ldflags}
+
+EXE_LINK_CMD   = %{exe_link_cmd}
+
+LIB_LINKS_TO        = %{external_link_cmd} %{link_to}
+BUILD_DIR_LINK_PATH = %{build_dir_link_path}
+EXE_LINKS_TO        = %{link_to_botan} ${LIB_LINKS_TO} %{extra_libs}
+
+SCRIPTS_DIR    = %{scripts_dir}
+INSTALLED_LIB_DIR = %{libdir}
+
+rule compile_lib
+  command = %{cxx} %{lib_flags} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} ${WARN_FLAGS} ${isa_flags} %{include_paths} %{dash_c} $in %{dash_o}$out
+
+rule compile_exe
+  command = %{cxx} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} ${WARN_FLAGS} ${isa_flags} %{include_paths} %{dash_c} $in %{dash_o}$out
+
+# The primary target
+build all: phony %{all_targets}
+default all
+
+# Library targets
+
+%{if build_static_lib}
+
+rule link_static
+  command = %{ar_command} %{ar_options} %{ar_output_to}$out $in
+
+build %{out_dir}/%{static_lib_name}: link_static %{join lib_objs}
+
+%{endif}
+%{if build_shared_lib}
+
+rule link_shared
+  command = %{lib_link_cmd} ${ABI_FLAGS} ${LDFLAGS} $in ${LIB_LINKS_TO} %{output_to_exe}$out
+
+build %{out_dir}/%{shared_lib_name}: link_shared %{join lib_objs}
+%{endif}
+%{if symlink_shared_lib}
+
+rule symlink
+  command = cd %{out_dir} && ln -fs $in $out
+
+build %{out_dir}/%{soname_base}: symlink %{out_dir}/%{shared_lib_name}
+build %{out_dir}/%{soname_patch}: symlink %{out_dir}/%{shared_lib_name}
+
+%{endif}
+
+rule link_cli
+  command = ${EXE_LINK_CMD} ${ABI_FLAGS} $in ${BUILD_DIR_LINK_PATH} ${LANG_EXE_FLAGS} ${LDFLAGS} ${EXE_LINKS_TO} %{output_to_exe}$out
+
+rule link_tests
+  command = ${EXE_LINK_CMD} ${ABI_FLAGS} $in ${BUILD_DIR_LINK_PATH} ${LANG_EXE_FLAGS} ${LDFLAGS} %{test_exe_extra_ldflags} ${EXE_LINKS_TO} %{output_to_exe}$out
+
+
+# Executable targets
+
+build %{cli_exe}: link_cli %{join cli_objs} | %{library_targets}
+
+build %{test_exe}: link_tests %{join test_objs} | %{library_targets}
+
+%{if build_fuzzers}
+
+build fuzzers: phony %{fuzzer_bin}
+
+rule fuzzer_corpus
+  command = git clone --depth=1 https://github.com/randombit/crypto-corpus.git fuzzer_corpus
+
+build fuzzer_corpus: fuzzer_corpus
+
+rule fuzzer_corpus_zip
+  command = %{base_dir}/src/scripts/create_corpus_zip.py fuzzer_corpus %{fuzzobj_dir}
+
+build fuzzer_corpus_zip: fuzzer_corpus_zip | fuzzer_corpus
+
+rule link_fuzzer
+  command =	${EXE_LINK_CMD} ${ABI_FLAGS} $in ${BUILD_DIR_LINK_PATH} ${LANG_EXE_FLAGS} ${LDFLAGS} ${EXE_LINKS_TO} %{fuzzer_lib} %{output_to_exe}$out
+
+%{endif}
+
+%{if build_examples}
+
+build examples: link_cli %{example_bin} | %{library_targets}
+
+%{endif}
+
+
+%{if build_bogo_shim}
+
+build bogo_shim: link_cli botan_bogo_shim | %{library_targets}
+
+# BoGo shim
+build %{out_dir}/botan_bogo_shim: compile_exe %{bogo_shim_src}
+
+%{endif}
+
+# Misc targets
+
+rule build_docs
+  command = "${PYTHON_EXE}" "${SCRIPTS_DIR}/build_docs.py" --build-dir="%{build_dir}"
+
+build %{doc_stamp_file}: build_docs
+
+rule clean
+  command = "${PYTHON_EXE}" "${SCRIPTS_DIR}/cleanup.py" --build-dir="%{build_dir}"
+
+rule distclean
+  command = "${PYTHON_EXE}" "${SCRIPTS_DIR}/cleanup.py" --build-dir="%{build_dir}" --distclean
+
+rule install
+  command = "${PYTHON_EXE}" "${SCRIPTS_DIR}/install.py" --build-dir="%{build_dir}"
+
+rule check
+  command = "${PYTHON_EXE}" "${SCRIPTS_DIR}/check.py" --build-dir="%{build_dir}"
+
+rule fmt
+  command = "${PYTHON_EXE}" "${SCRIPTS_DIR}/dev_tools/run_clang_format.py"
+
+rule tidy
+  command = "${PYTHON_EXE}" "${SCRIPTS_DIR}/dev_tools/run_clang_tidy.py" --only-changed-files
+
+# Target aliases
+
+build cli: phony %{cli_exe}
+
+build tests: phony %{test_exe}
+
+build libs: phony %{library_targets} $
+%{if symlink_shared_lib}
+  %{out_dir}/%{soname_base} %{out_dir}/%{soname_patch}
+%{endif}
+
+build docs: phony %{doc_stamp_file}
+
+build clean: clean
+
+build distclean: distclean
+
+build install: install | %{install_targets}
+
+build check: check | tests
+
+build fmt: fmt
+
+build tidy: tidy
+
+
+# Build Commands
+
+%{for lib_build_info}
+build %{obj}: compile_lib %{src}
+%{endfor}
+
+%{for cli_build_info}
+build %{obj}: compile_exe %{src}
+%{endfor}
+
+%{for test_build_info}
+build %{obj}: compile_exe %{src}
+%{endfor}
+
+%{for fuzzer_build_info}
+build %{obj}: compile_exe %{src}
+
+build %{exe}: link_fuzzer %{obj} | %{library_targets}
+%{endfor}
+
+%{for examples_build_info}
+build %{obj}: compile_exe %{src}
+
+build %{exe}: link_cli %{obj} | %{library_targets}
+%{endfor}

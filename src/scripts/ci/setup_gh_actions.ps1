@@ -2,6 +2,7 @@
 #
 # (C) 2022 Jack Lloyd
 # (C) 2022 René Meusel, Rohde & Schwarz Cybersecurity
+# (C) 2023 René Fischer, Rohde & Schwarz Cybersecurity
 #
 # Botan is released under the Simplified BSD License (see license.txt)
 
@@ -11,7 +12,6 @@ param(
     [String]$ARCH
 )
 
-choco install -y jom
 choco install -y sccache
 
 # find the sccache cache location and store it in the build job's environment
