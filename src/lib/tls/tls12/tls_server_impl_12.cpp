@@ -125,6 +125,11 @@ uint16_t choose_ciphersuite(const Policy& policy,
    const bool have_shared_ecc_curve =
       (policy.choose_key_exchange_group(client_hello.supported_ecc_curves(), {}) != Group_Params::NONE);
 
+   const bool client_supports_ffdhe_groups = !client_hello.supported_dh_groups().empty();
+
+   const bool have_shared_dh_group =
+      (policy.choose_key_exchange_group(client_hello.supported_dh_groups(), {}) != Group_Params::NONE);
+
    /*
    Walk down one list in preference order
    */
@@ -147,6 +152,10 @@ uint16_t choose_ciphersuite(const Policy& policy,
       }
 
       if(have_shared_ecc_curve == false && suite->ecc_ciphersuite()) {
+         continue;
+      }
+
+      if(suite->kex_method() == Kex_Algo::DH && client_supports_ffdhe_groups && !have_shared_dh_group) {
          continue;
       }
 
@@ -188,6 +197,16 @@ uint16_t choose_ciphersuite(const Policy& policy,
       }
 
       return suite_id;
+   }
+
+   // RFC 7919 Section 4.
+   //   If the [Supported Groups] extension is present
+   //   with FFDHE groups, none of the client’s offered groups are acceptable
+   //   by the server, and none of the client’s proposed non-FFDHE cipher
+   //   suites are acceptable to the server, the server MUST end the
+   //   connection with a fatal TLS alert of type insufficient_security(71).
+   if(client_supports_ffdhe_groups && !have_shared_dh_group) {
+      throw TLS_Exception(Alert::InsufficientSecurity, "Can't agree on a sufficiently strong ciphersuite with client");
    }
 
    throw TLS_Exception(Alert::HandshakeFailure, "Can't agree on a ciphersuite with client");

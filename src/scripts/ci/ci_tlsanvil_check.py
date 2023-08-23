@@ -21,20 +21,19 @@ result_level = {
 
 def expected_result_for(method_id: str):
     """ Get the expected result for a given test id """
-    # TODO: Analyze failing tests and document if/why they are allowed to fail
     allowed_to_conceptually_succeed = {
-        "both.tls13.rfc8446.RecordProtocol.sendEncryptedAppRecordWithNoNonZeroOctet",
-        "server.tls13.rfc8446.PreSharedKey.isLastButDuplicatedExtension",
-        "server.tls12.rfc7919.FfDheShare.abortsWhenGroupsDontOverlap",
-        "server.tls12.rfc5246.TLSRecordProtocol.sendNotDefinedRecordTypesWithCCSAndFinished",
-        "both.tls13.rfc8446.RecordProtocol.sendEncryptedHandshakeRecordWithNoNonZeroOctet"
+        # Okay: RFC does not specifically define an alert. Bogo Test expects an DecodeError Alert
+        #   while TLS-Anvil expects an IllegalParameter Alert. We use the DecodeError Alert.
+        "server.tls13.rfc8446.PreSharedKey.isLastButDuplicatedExtension"
     }
 
+    # TODO: Analyze partially failing tests and document if/why they are allowed to fail
     allowed_to_partially_fail = {
         "server.tls12.statemachine.StateMachine.earlyChangeCipherSpec",
         "server.tls12.rfc7568.DoNotUseSSLVersion30.sendClientHelloVersion0300RecordVersion"
     }
 
+    # TODO: Analyze failing tests and document if/why they are allowed to fail
     allowed_to_fully_fail = {
         "both.tls13.rfc8446.KeyUpdate.respondsWithValidKeyUpdate",
         "server.tls13.rfc8446.ClientHello.invalidLegacyVersion_ssl3",

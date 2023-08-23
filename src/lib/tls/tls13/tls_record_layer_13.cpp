@@ -341,7 +341,11 @@ Record_Layer::ReadResult<Record> Record_Layer::next_record(Cipher_State* cipher_
          std::find_if(record.fragment.crbegin(), record.fragment.crend(), [](auto byte) { return byte != 0x00; });
 
       if(end_of_content == record.fragment.crend()) {
-         throw TLS_Exception(Alert::DecodeError, "No content type found in encrypted record");
+         // RFC 8446 5.4
+         //   If a receiving implementation does not
+         //   find a non-zero octet in the cleartext, it MUST terminate the
+         //   connection with an "unexpected_message" alert.
+         throw TLS_Exception(Alert::UnexpectedMessage, "No content type found in encrypted record");
       }
 
       // hydrate the actual content type from TLSInnerPlaintext
