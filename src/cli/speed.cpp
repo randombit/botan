@@ -41,6 +41,10 @@
    #include <botan/hash.h>
 #endif
 
+#if defined(BOTAN_HAS_XOF)
+   #include <botan/xof.h>
+#endif
+
 #if defined(BOTAN_HAS_CIPHER_MODES)
    #include <botan/cipher_mode.h>
 #endif
@@ -383,6 +387,10 @@ class Speed final : public Command {
             "Blake2b",
             "Whirlpool",
 
+            /* XOFs */
+            "SHAKE-128",
+            "SHAKE-256",
+
             /* MACs */
             "CMAC(AES-128)",
             "HMAC(SHA-256)",
@@ -485,6 +493,12 @@ class Speed final : public Command {
             else if(!Botan::HashFunction::providers(algo).empty()) {
                bench_providers_of<Botan::HashFunction>(
                   algo, provider, msec, buf_sizes, std::bind(&Speed::bench_hash, this, _1, _2, _3, _4));
+            }
+#endif
+#if defined(BOTAN_HAS_XOF)
+            else if(!Botan::XOF::providers(algo).empty()) {
+               bench_providers_of<Botan::XOF>(
+                  algo, provider, msec, buf_sizes, std::bind(&Speed::bench_xof, this, _1, _2, _3, _4));
             }
 #endif
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
@@ -884,6 +898,27 @@ class Speed final : public Command {
                hash.final(output.data());
             });
             record_result(timer);
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_XOF)
+      void bench_xof(Botan::XOF& xof,
+                     const std::string& provider,
+                     const std::chrono::milliseconds runtime,
+                     const std::vector<size_t>& buf_sizes) {
+         for(auto buf_size : buf_sizes) {
+            Botan::secure_vector<uint8_t> in = rng().random_vec(buf_size);
+            Botan::secure_vector<uint8_t> out(buf_size);
+
+            auto in_timer = make_timer(xof.name(), in.size(), "input", provider, buf_size);
+            in_timer->run_until_elapsed(runtime / 2, [&]() { xof.update(in); });
+
+            auto out_timer = make_timer(xof.name(), out.size(), "output", provider, buf_size);
+            out_timer->run_until_elapsed(runtime / 2, [&] { xof.output(out); });
+
+            record_result(in_timer);
+            record_result(out_timer);
          }
       }
 #endif
