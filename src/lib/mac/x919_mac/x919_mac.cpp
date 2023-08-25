@@ -7,45 +7,46 @@
 
 #include <botan/internal/x919_mac.h>
 
+#include <botan/internal/stl_util.h>
+
 namespace Botan {
 
 /*
 * Update an ANSI X9.19 MAC Calculation
 */
-void ANSI_X919_MAC::add_data(const uint8_t input[], size_t length) {
+void ANSI_X919_MAC::add_data(std::span<const uint8_t> input) {
    assert_key_material_set();
 
-   size_t xored = std::min(8 - m_position, length);
-   xor_buf(&m_state[m_position], input, xored);
-   m_position += xored;
+   BufferSlicer in(input);
+
+   const auto to_be_xored = in.take(std::min(8 - m_position, in.remaining()));
+   xor_buf(&m_state[m_position], to_be_xored.data(), to_be_xored.size());
+   m_position += to_be_xored.size();
 
    if(m_position < 8) {
       return;
    }
 
    m_des1->encrypt(m_state);
-   input += xored;
-   length -= xored;
-   while(length >= 8) {
-      xor_buf(m_state, input, 8);
+   while(in.remaining() >= 8) {
+      xor_buf(m_state, in.take(8).data(), 8);
       m_des1->encrypt(m_state);
-      input += 8;
-      length -= 8;
    }
 
-   xor_buf(m_state, input, length);
-   m_position = length;
+   const auto remaining = in.take(in.remaining());
+   xor_buf(m_state, remaining.data(), remaining.size());
+   m_position = remaining.size();
 }
 
 /*
 * Finalize an ANSI X9.19 MAC Calculation
 */
-void ANSI_X919_MAC::final_result(uint8_t mac[]) {
+void ANSI_X919_MAC::final_result(std::span<uint8_t> mac) {
    if(m_position) {
       m_des1->encrypt(m_state);
    }
-   m_des2->decrypt(m_state.data(), mac);
-   m_des1->encrypt(mac);
+   m_des2->decrypt(m_state.data(), mac.data());
+   m_des1->encrypt(mac.data());
    zeroise(m_state);
    m_position = 0;
 }

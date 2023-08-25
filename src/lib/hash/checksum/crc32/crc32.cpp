@@ -49,9 +49,9 @@ alignas(256) const uint32_t CRC32_T0[256] = {
 /*
 * Update a CRC32 Checksum
 */
-void CRC32::add_data(const uint8_t input[], size_t length) {
+void CRC32::add_data(std::span<const uint8_t> input) {
    uint32_t tmp = m_crc;
-   while(length >= 16) {
+   for(; input.size() >= 16; input = input.last(input.size() - 16)) {
       tmp = CRC32_T0[(tmp ^ input[0]) & 0xFF] ^ (tmp >> 8);
       tmp = CRC32_T0[(tmp ^ input[1]) & 0xFF] ^ (tmp >> 8);
       tmp = CRC32_T0[(tmp ^ input[2]) & 0xFF] ^ (tmp >> 8);
@@ -68,11 +68,9 @@ void CRC32::add_data(const uint8_t input[], size_t length) {
       tmp = CRC32_T0[(tmp ^ input[13]) & 0xFF] ^ (tmp >> 8);
       tmp = CRC32_T0[(tmp ^ input[14]) & 0xFF] ^ (tmp >> 8);
       tmp = CRC32_T0[(tmp ^ input[15]) & 0xFF] ^ (tmp >> 8);
-      input += 16;
-      length -= 16;
    }
 
-   for(size_t i = 0; i != length; ++i) {
+   for(size_t i = 0; i != input.size(); ++i) {
       tmp = CRC32_T0[(tmp ^ input[i]) & 0xFF] ^ (tmp >> 8);
    }
 
@@ -82,9 +80,9 @@ void CRC32::add_data(const uint8_t input[], size_t length) {
 /*
 * Finalize a CRC32 Checksum
 */
-void CRC32::final_result(uint8_t output[]) {
+void CRC32::final_result(std::span<uint8_t> output) {
    m_crc ^= 0xFFFFFFFF;
-   store_be(m_crc, output);
+   store_be(m_crc, output.data());
    clear();
 }
 

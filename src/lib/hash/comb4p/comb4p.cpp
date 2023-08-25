@@ -9,6 +9,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -84,12 +85,12 @@ std::unique_ptr<HashFunction> Comb4P::copy_state() const {
    return copy;
 }
 
-void Comb4P::add_data(const uint8_t input[], size_t length) {
-   m_hash1->update(input, length);
-   m_hash2->update(input, length);
+void Comb4P::add_data(std::span<const uint8_t> input) {
+   m_hash1->update(input);
+   m_hash2->update(input);
 }
 
-void Comb4P::final_result(uint8_t out[]) {
+void Comb4P::final_result(std::span<uint8_t> output) {
    secure_vector<uint8_t> h1 = m_hash1->final();
    secure_vector<uint8_t> h2 = m_hash2->final();
 
@@ -102,8 +103,9 @@ void Comb4P::final_result(uint8_t out[]) {
    // Third round
    comb4p_round(h1, h2, 2, *m_hash1, *m_hash2);
 
-   copy_mem(out, h1.data(), h1.size());
-   copy_mem(out + h1.size(), h2.data(), h2.size());
+   BufferStuffer out(output);
+   copy_mem(out.next(h1.size()).data(), h1.data(), h1.size());
+   copy_mem(out.next(h2.size()).data(), h2.data(), h2.size());
 
    // Prep for processing next message, if any
    m_hash1->update(0);

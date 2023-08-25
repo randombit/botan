@@ -26,9 +26,9 @@ class RawHashFunction : public HashFunction {
 
       RawHashFunction(std::string_view name, size_t output_length) : m_name(name), m_output_length(output_length) {}
 
-      void add_data(const uint8_t input[], size_t length) override;
+      void add_data(std::span<const uint8_t> input) override;
 
-      void final_result(uint8_t out[]) override;
+      void final_result(std::span<uint8_t> out) override;
 
       void clear() override;
 

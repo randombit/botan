@@ -10,18 +10,18 @@
 
 namespace Botan {
 
-void RawHashFunction::add_data(const uint8_t input[], size_t length) {
-   m_bits += std::make_pair(input, length);
+void RawHashFunction::add_data(std::span<const uint8_t> input) {
+   m_bits += std::make_pair(input.data(), input.size());
 }
 
-void RawHashFunction::final_result(uint8_t out[]) {
+void RawHashFunction::final_result(std::span<uint8_t> out) {
    if(m_output_length > 0 && m_bits.size() != m_output_length) {
       m_bits.clear();
       throw Invalid_Argument("Raw padding was configured to use a " + std::to_string(m_output_length) +
                              " byte hash but instead was used for a " + std::to_string(m_bits.size()) + " byte hash");
    }
 
-   copy_mem(out, m_bits.data(), m_bits.size());
+   copy_mem(out.data(), m_bits.data(), m_bits.size());
    m_bits.clear();
 }
 

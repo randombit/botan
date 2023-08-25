@@ -68,23 +68,22 @@ void adler32_update(const uint8_t input[], size_t length, uint16_t& S1, uint16_t
 /*
 * Update an Adler32 Checksum
 */
-void Adler32::add_data(const uint8_t input[], size_t length) {
+void Adler32::add_data(std::span<const uint8_t> input) {
    const size_t PROCESS_AMOUNT = 5552;
 
-   while(length >= PROCESS_AMOUNT) {
-      adler32_update(input, PROCESS_AMOUNT, m_S1, m_S2);
-      input += PROCESS_AMOUNT;
-      length -= PROCESS_AMOUNT;
+   while(input.size() >= PROCESS_AMOUNT) {
+      adler32_update(input.data(), PROCESS_AMOUNT, m_S1, m_S2);
+      input = input.last(input.size() - PROCESS_AMOUNT);
    }
 
-   adler32_update(input, length, m_S1, m_S2);
+   adler32_update(input.data(), input.size(), m_S1, m_S2);
 }
 
 /*
 * Finalize an Adler32 Checksum
 */
-void Adler32::final_result(uint8_t output[]) {
-   store_be(output, m_S2, m_S1);
+void Adler32::final_result(std::span<uint8_t> output) {
+   store_be(output.data(), m_S2, m_S1);
    clear();
 }
 

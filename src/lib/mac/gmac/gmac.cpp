@@ -12,6 +12,7 @@
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/ghash.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -46,13 +47,13 @@ size_t GMAC::output_length() const {
    return GCM_BS;
 }
 
-void GMAC::add_data(const uint8_t input[], size_t size) {
+void GMAC::add_data(std::span<const uint8_t> input) {
+   BufferSlicer in(input);
+
    if(m_aad_buf_pos > 0) {
-      const size_t taking = std::min(GCM_BS - m_aad_buf_pos, size);
-      copy_mem(&m_aad_buf[m_aad_buf_pos], input, taking);
-      m_aad_buf_pos += taking;
-      input += taking;
-      size -= taking;
+      const auto part = in.take(std::min(GCM_BS - m_aad_buf_pos, in.remaining()));
+      copy_mem(&m_aad_buf[m_aad_buf_pos], part.data(), part.size());
+      m_aad_buf_pos += part.size();
 
       if(m_aad_buf_pos == GCM_BS) {
          m_ghash->update_associated_data(m_aad_buf.data(), GCM_BS);
@@ -60,14 +61,14 @@ void GMAC::add_data(const uint8_t input[], size_t size) {
       }
    }
 
-   const size_t left_over = size % GCM_BS;
-   const size_t full_blocks = size - left_over;
-   m_ghash->update_associated_data(input, full_blocks);
-   input += full_blocks;
+   const size_t left_over = in.remaining() % GCM_BS;
+   const size_t full_blocks = in.remaining() - left_over;
+   m_ghash->update_associated_data(in.take(full_blocks).data(), full_blocks);
 
-   if(left_over > 0) {
-      copy_mem(&m_aad_buf[m_aad_buf_pos], input, left_over);
-      m_aad_buf_pos += left_over;
+   if(!in.empty()) {
+      const auto remaining = in.take(in.remaining());
+      copy_mem(&m_aad_buf[m_aad_buf_pos], remaining.data(), remaining.size());
+      m_aad_buf_pos += remaining.size();
    }
 }
 
@@ -100,7 +101,7 @@ void GMAC::start_msg(const uint8_t nonce[], size_t nonce_len) {
    m_initialized = true;
 }
 
-void GMAC::final_result(uint8_t mac[]) {
+void GMAC::final_result(std::span<uint8_t> mac) {
    // This ensures the GMAC computation has been initialized with a fresh
    // nonce. The aim of this check is to prevent developers from re-using
    // nonces (and potential nonce-reuse attacks).
@@ -114,7 +115,7 @@ void GMAC::final_result(uint8_t mac[]) {
       m_ghash->update_associated_data(m_aad_buf.data(), m_aad_buf_pos);
    }
 
-   m_ghash->final(mac, output_length());
+   m_ghash->final(mac.data(), output_length());
    m_ghash->set_key(m_H);
    m_aad_buf_pos = 0;
 }

@@ -10,6 +10,7 @@
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/stl_util.h>
 #include <algorithm>
 
 namespace Botan {
@@ -118,35 +119,35 @@ void Skein_512::ubi_512(const uint8_t msg[], size_t msg_len) {
    } while(msg_len);
 }
 
-void Skein_512::add_data(const uint8_t input[], size_t length) {
-   if(length == 0) {
+void Skein_512::add_data(std::span<const uint8_t> input) {
+   if(input.empty()) {
       return;
    }
 
    if(m_buf_pos) {
-      buffer_insert(m_buffer, m_buf_pos, input, length);
-      if(m_buf_pos + length > 64) {
+      buffer_insert(m_buffer, m_buf_pos, input.data(), input.size());
+      if(m_buf_pos + input.size() > 64) {
          ubi_512(m_buffer.data(), m_buffer.size());
 
-         input += (64 - m_buf_pos);
-         length -= (64 - m_buf_pos);
+         input = input.last(input.size() - 64 + m_buf_pos);
          m_buf_pos = 0;
       }
    }
 
-   const size_t full_blocks = (length - 1) / 64;
+   const size_t full_blocks = (input.size() - 1) / 64;
+   BufferSlicer in(input);
 
    if(full_blocks) {
-      ubi_512(input, 64 * full_blocks);
+      const auto blocks = in.take(64 * full_blocks);
+      ubi_512(blocks.data(), blocks.size());
    }
 
-   length -= full_blocks * 64;
-
-   buffer_insert(m_buffer, m_buf_pos, input + full_blocks * 64, length);
-   m_buf_pos += length;
+   const auto remaining = in.take(in.remaining());
+   buffer_insert(m_buffer, m_buf_pos, remaining.data(), remaining.size());
+   m_buf_pos += remaining.size();
 }
 
-void Skein_512::final_result(uint8_t out[]) {
+void Skein_512::final_result(std::span<uint8_t> out) {
    m_T[1] |= (static_cast<uint64_t>(1) << 63);  // final block flag
 
    for(size_t i = m_buf_pos; i != m_buffer.size(); ++i) {
@@ -160,7 +161,7 @@ void Skein_512::final_result(uint8_t out[]) {
    reset_tweak(SKEIN_OUTPUT, true);
    ubi_512(counter, sizeof(counter));
 
-   copy_out_vec_le(out, m_output_bits / 8, m_threefish->m_K);
+   copy_out_vec_le(out.data(), m_output_bits / 8, m_threefish->m_K);
 
    m_buf_pos = 0;
    initial_block();

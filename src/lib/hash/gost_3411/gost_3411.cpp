@@ -8,6 +8,7 @@
 #include <botan/internal/gost_3411.h>
 
 #include <botan/internal/loadstor.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -34,29 +35,29 @@ std::unique_ptr<HashFunction> GOST_34_11::copy_state() const {
 /**
 * Hash additional inputs
 */
-void GOST_34_11::add_data(const uint8_t input[], size_t length) {
-   m_count += length;
+void GOST_34_11::add_data(std::span<const uint8_t> input) {
+   m_count += input.size();
 
    if(m_position) {
-      buffer_insert(m_buffer, m_position, input, length);
+      buffer_insert(m_buffer, m_position, input.data(), input.size());
 
-      if(m_position + length >= hash_block_size()) {
+      if(m_position + input.size() >= hash_block_size()) {
          compress_n(m_buffer.data(), 1);
-         input += (hash_block_size() - m_position);
-         length -= (hash_block_size() - m_position);
+         input = input.last(input.size() - hash_block_size() + m_position);
          m_position = 0;
       }
    }
 
-   const size_t full_blocks = length / hash_block_size();
-   const size_t remaining = length % hash_block_size();
+   BufferSlicer in(input);
+   const size_t full_blocks = in.remaining() / hash_block_size();
 
    if(full_blocks) {
-      compress_n(input, full_blocks);
+      compress_n(in.take(full_blocks * hash_block_size()).data(), full_blocks);
    }
 
-   buffer_insert(m_buffer, m_position, input + full_blocks * hash_block_size(), remaining);
-   m_position += remaining;
+   const auto remaining = in.take(in.remaining());
+   buffer_insert(m_buffer, m_position, remaining.data(), remaining.size());
+   m_position += remaining.size();
 }
 
 /**
@@ -206,7 +207,7 @@ void GOST_34_11::compress_n(const uint8_t input[], size_t blocks) {
 /**
 * Produce the final GOST 34.11 output
 */
-void GOST_34_11::final_result(uint8_t out[]) {
+void GOST_34_11::final_result(std::span<uint8_t> out) {
    if(m_position) {
       clear_mem(m_buffer.data() + m_position, m_buffer.size() - m_position);
       compress_n(m_buffer.data(), 1);
@@ -221,7 +222,7 @@ void GOST_34_11::final_result(uint8_t out[]) {
    compress_n(length_buf.data(), 1);
    compress_n(sum_buf.data(), 1);
 
-   copy_mem(out, m_hash.data(), 32);
+   copy_mem(out.data(), m_hash.data(), 32);
 
    clear();
 }

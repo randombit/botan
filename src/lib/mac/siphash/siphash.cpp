@@ -10,6 +10,7 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -46,18 +47,18 @@ void SipRounds(uint64_t M, secure_vector<uint64_t>& V, size_t r) {
 
 }  // namespace
 
-void SipHash::add_data(const uint8_t input[], size_t length) {
+void SipHash::add_data(std::span<const uint8_t> input) {
    assert_key_material_set();
 
    // SipHash counts the message length mod 256
-   m_words += static_cast<uint8_t>(length);
+   m_words += static_cast<uint8_t>(input.size());
+
+   BufferSlicer in(input);
 
    if(m_mbuf_pos) {
-      while(length && m_mbuf_pos != 8) {
-         m_mbuf = (m_mbuf >> 8) | (static_cast<uint64_t>(input[0]) << 56);
+      while(!in.empty() && m_mbuf_pos != 8) {
+         m_mbuf = (m_mbuf >> 8) | (static_cast<uint64_t>(in.take_byte()) << 56);
          ++m_mbuf_pos;
-         ++input;
-         length--;
       }
 
       if(m_mbuf_pos == 8) {
@@ -67,19 +68,17 @@ void SipHash::add_data(const uint8_t input[], size_t length) {
       }
    }
 
-   while(length >= 8) {
-      SipRounds(load_le<uint64_t>(input, 0), m_V, m_C);
-      input += 8;
-      length -= 8;
+   while(in.remaining() >= 8) {
+      SipRounds(load_le<uint64_t>(in.take(8).data(), 0), m_V, m_C);
    }
 
-   for(size_t i = 0; i != length; ++i) {
-      m_mbuf = (m_mbuf >> 8) | (static_cast<uint64_t>(input[i]) << 56);
+   while(!in.empty()) {
+      m_mbuf = (m_mbuf >> 8) | (static_cast<uint64_t>(in.take_byte()) << 56);
       m_mbuf_pos++;
    }
 }
 
-void SipHash::final_result(uint8_t mac[]) {
+void SipHash::final_result(std::span<uint8_t> mac) {
    assert_key_material_set();
 
    if(m_mbuf_pos == 0) {
@@ -95,7 +94,7 @@ void SipHash::final_result(uint8_t mac[]) {
 
    const uint64_t X = m_V[0] ^ m_V[1] ^ m_V[2] ^ m_V[3];
 
-   store_le(X, mac);
+   store_le(X, mac.data());
 
    m_V[0] = m_K[0] ^ 0x736F6D6570736575;
    m_V[1] = m_K[1] ^ 0x646F72616E646F6D;

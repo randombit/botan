@@ -31,13 +31,13 @@ class BOTAN_PUBLIC_API(2, 0) Buffered_Computation {
       * @param in the input to process as a byte array
       * @param length of param in in bytes
       */
-      void update(const uint8_t in[], size_t length) { add_data(in, length); }
+      void update(const uint8_t in[], size_t length) { add_data({in, length}); }
 
       /**
       * Add new input to process.
       * @param in the input to process as a contiguous data range
       */
-      void update(std::span<const uint8_t> in) { add_data(in.data(), in.size()); }
+      void update(std::span<const uint8_t> in) { add_data(in); }
 
       void update_be(uint16_t val);
       void update_be(uint32_t val);
@@ -52,13 +52,13 @@ class BOTAN_PUBLIC_API(2, 0) Buffered_Computation {
       * @param str the input to process as a std::string_view. Will be interpreted
       * as a byte array based on the strings encoding.
       */
-      void update(std::string_view str) { add_data(cast_char_ptr_to_uint8(str.data()), str.size()); }
+      void update(std::string_view str) { add_data({cast_char_ptr_to_uint8(str.data()), str.size()}); }
 
       /**
       * Process a single byte.
       * @param in the byte to process
       */
-      void update(uint8_t in) { add_data(&in, 1); }
+      void update(uint8_t in) { add_data({&in, 1}); }
 
       /**
       * Complete the computation and retrieve the
@@ -66,7 +66,7 @@ class BOTAN_PUBLIC_API(2, 0) Buffered_Computation {
       * @param out The byte array to be filled with the result.
       * Must be of length output_length()
       */
-      void final(uint8_t out[]) { final_result(out); }
+      void final(uint8_t out[]) { final_result({out, output_length()}); }
 
       /**
       * Complete the computation and retrieve the
@@ -76,7 +76,7 @@ class BOTAN_PUBLIC_API(2, 0) Buffered_Computation {
       template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
       T final() {
          T output(output_length());
-         final_result(output.data());
+         final_result(output);
          return output;
       }
 
@@ -84,13 +84,13 @@ class BOTAN_PUBLIC_API(2, 0) Buffered_Computation {
 
       void final(std::span<uint8_t> out) {
          BOTAN_ASSERT_NOMSG(out.size() >= output_length());
-         final_result(out.data());
+         final_result(out);
       }
 
       template <concepts::resizable_byte_buffer T>
       void final(T& out) {
          out.resize(output_length());
-         final_result(out.data());
+         final_result(out);
       }
 
       /**
@@ -136,15 +136,14 @@ class BOTAN_PUBLIC_API(2, 0) Buffered_Computation {
       /**
       * Add more data to the computation
       * @param input is an input buffer
-      * @param length is the length of input in bytes
       */
-      virtual void add_data(const uint8_t input[], size_t length) = 0;
+      virtual void add_data(std::span<const uint8_t> input) = 0;
 
       /**
       * Write the final output to out
       * @param out is an output buffer of output_length()
       */
-      virtual void final_result(uint8_t out[]) = 0;
+      virtual void final_result(std::span<uint8_t> out) = 0;
 };
 
 }  // namespace Botan
