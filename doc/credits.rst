@@ -82,9 +82,9 @@ snail-mail address (S), and Bitcoin address (B).
   D: Locking in Algo_Registry for Windows OS
   S: Slovenia
 
-  N: René Korthaus
-  E: r.korthaus@sirrix.com
-  W: https://www.sirrix.com
+  N: René Fischer (formerly Korthaus)
+  E: rene.fischer@rohde-schwarz.com
+  W: https://www.rohde-schwarz.com/cybersecurity
   P: C196 FF9D 3DDC A5E7 F98C E745 9AD0 F9FA 587E 74D6
   D: CI, ECGDSA, ECKCDSA
   S: Bochum, Germany
@@ -135,14 +135,14 @@ snail-mail address (S), and Bitcoin address (B).
   S: Germany
 
   N: Philipp Weber
-  E: p.weber@sirrix.com
-  W: https://sirrix.com/
+  E: philipp.weber@rohde-schwarz.com
+  W: https://www.rohde-schwarz.com/cybersecurity
   D: KDF1-18033, ECIES
   S: Saarland, Germany
 
   N: Daniel Neus
-  E: d.neus@sirrix.com
-  W: https://sirrix.com/
+  E: daniel.neus@rohde-schwarz.com
+  W: https://www.rohde-schwarz.com/cybersecurity
   D: CI, PKCS#11, RdSeed, BSI module policy
   S: Bochum, Germany
 
@@ -159,3 +159,21 @@ snail-mail address (S), and Bitcoin address (B).
   E: rhudoliy@gmail.com
   D: SRP6 FFI
   S: Ukraine/Denmark
+
+  N: René Meusel
+  E: rene.meusel@rohde-schwarz.com
+  W: https://www.rohde-schwarz.com/cybersecurity
+  D: CI, TLS 1.3, Kyber, Dilithium, SPHINCS+
+  S: Berlin, Germany
+
+  N: Philippe Lieser
+  E: philippe.lieser@rohde-schwarz.com
+  W: https://www.rohde-schwarz.com/cybersecurity
+  D: CI, BSI module policy, various minor contributions
+  S: Saarland, Germany
+
+  N: Fabian Albert
+  E: fabian.albert@rohde-schwarz.com
+  W: https://www.rohde-schwarz.com/cybersecurity
+  D: SPHINCS+
+  S: Bochum, Germany
