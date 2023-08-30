@@ -169,18 +169,18 @@ bool IDEA::has_keying_material() const {
 /*
 * IDEA Key Schedule
 */
-void IDEA::key_schedule(const uint8_t key[], size_t /*length*/) {
+void IDEA::key_schedule(std::span<const uint8_t> key) {
    m_EK.resize(52);
    m_DK.resize(52);
 
-   CT::poison(key, 16);
+   CT::poison(key.data(), 16);
    CT::poison(m_EK.data(), 52);
    CT::poison(m_DK.data(), 52);
 
    secure_vector<uint64_t> K(2);
 
-   K[0] = load_be<uint64_t>(key, 0);
-   K[1] = load_be<uint64_t>(key, 1);
+   K[0] = load_be<uint64_t>(key.data(), 0);
+   K[1] = load_be<uint64_t>(key.data(), 1);
 
    for(size_t off = 0; off != 48; off += 8) {
       for(size_t i = 0; i != 8; ++i) {
@@ -214,7 +214,7 @@ void IDEA::key_schedule(const uint8_t key[], size_t /*length*/) {
 
    std::swap(m_DK[49], m_DK[50]);
 
-   CT::unpoison(key, 16);
+   CT::unpoison(key.data(), 16);
    CT::unpoison(m_EK.data(), 52);
    CT::unpoison(m_DK.data(), 52);
 }

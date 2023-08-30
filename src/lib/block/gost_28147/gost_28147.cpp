@@ -150,10 +150,10 @@ bool GOST_28147_89::has_keying_material() const {
 /*
 * GOST Key Schedule
 */
-void GOST_28147_89::key_schedule(const uint8_t key[], size_t /*length*/) {
+void GOST_28147_89::key_schedule(std::span<const uint8_t> key) {
    m_EK.resize(8);
    for(size_t i = 0; i != 8; ++i) {
-      m_EK[i] = load_le<uint32_t>(key, i);
+      m_EK[i] = load_le<uint32_t>(key.data(), i);
    }
 }
 

@@ -41,7 +41,7 @@ class Noekeon final : public Block_Cipher_Fixed_Params<16, 16> {
       */
       static const uint8_t RC[17];
 
-      void key_schedule(const uint8_t[], size_t) override;
+      void key_schedule(std::span<const uint8_t> key) override;
       secure_vector<uint32_t> m_EK, m_DK;
 };
 

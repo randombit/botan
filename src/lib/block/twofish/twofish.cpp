@@ -190,13 +190,13 @@ bool Twofish::has_keying_material() const {
 /*
 * Twofish Key Schedule
 */
-void Twofish::key_schedule(const uint8_t key[], size_t length) {
+void Twofish::key_schedule(std::span<const uint8_t> key) {
    m_SB.resize(1024);
    m_RK.resize(40);
 
    secure_vector<uint8_t> S(16);
 
-   for(size_t i = 0; i != length; ++i) {
+   for(size_t i = 0; i != key.size(); ++i) {
       /*
       * Do one column of the RS matrix multiplcation
       */
@@ -215,7 +215,7 @@ void Twofish::key_schedule(const uint8_t key[], size_t length) {
       }
    }
 
-   if(length == 16) {
+   if(key.size() == 16) {
       for(size_t i = 0; i != 256; ++i) {
          m_SB[i] = MDS0[Q0[Q0[i] ^ S[0]] ^ S[4]];
          m_SB[256 + i] = MDS1[Q0[Q1[i] ^ S[1]] ^ S[5]];
@@ -235,7 +235,7 @@ void Twofish::key_schedule(const uint8_t key[], size_t length) {
          m_RK[i] = X;
          m_RK[i + 1] = rotl<9>(Y);
       }
-   } else if(length == 24) {
+   } else if(key.size() == 24) {
       for(size_t i = 0; i != 256; ++i) {
          m_SB[i] = MDS0[Q0[Q0[Q1[i] ^ S[0]] ^ S[4]] ^ S[8]];
          m_SB[256 + i] = MDS1[Q0[Q1[Q1[i] ^ S[1]] ^ S[5]] ^ S[9]];
@@ -258,7 +258,7 @@ void Twofish::key_schedule(const uint8_t key[], size_t length) {
          m_RK[i] = X;
          m_RK[i + 1] = rotl<9>(Y);
       }
-   } else if(length == 32) {
+   } else if(key.size() == 32) {
       for(size_t i = 0; i != 256; ++i) {
          m_SB[i] = MDS0[Q0[Q0[Q1[Q1[i] ^ S[0]] ^ S[4]] ^ S[8]] ^ S[12]];
          m_SB[256 + i] = MDS1[Q0[Q1[Q1[Q0[i] ^ S[1]] ^ S[5]] ^ S[9]] ^ S[13]];

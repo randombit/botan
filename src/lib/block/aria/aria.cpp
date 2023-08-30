@@ -249,12 +249,12 @@ void aria_ks_dk_transform(uint32_t& K0, uint32_t& K1, uint32_t& K2, uint32_t& K3
 /*
 * ARIA Key Schedule
 */
-void key_schedule(secure_vector<uint32_t>& ERK, secure_vector<uint32_t>& DRK, const uint8_t key[], size_t length) {
+void key_schedule(secure_vector<uint32_t>& ERK, secure_vector<uint32_t>& DRK, std::span<const uint8_t> key) {
    const uint32_t KRK[3][4] = {{0x517cc1b7, 0x27220a94, 0xfe13abe8, 0xfa9a6ee0},
                                {0x6db14acc, 0x9e21c820, 0xff28b1d5, 0xef5de2b0},
                                {0xdb92371d, 0x2126e970, 0x03249775, 0x04e8c90e}};
 
-   const size_t CK0 = (length / 8) - 2;
+   const size_t CK0 = (key.size() / 8) - 2;
    const size_t CK1 = (CK0 + 1) % 3;
    const size_t CK2 = (CK1 + 1) % 3;
 
@@ -263,10 +263,10 @@ void key_schedule(secure_vector<uint32_t>& ERK, secure_vector<uint32_t>& DRK, co
    uint32_t w2[4];
    uint32_t w3[4];
 
-   w0[0] = load_be<uint32_t>(key, 0);
-   w0[1] = load_be<uint32_t>(key, 1);
-   w0[2] = load_be<uint32_t>(key, 2);
-   w0[3] = load_be<uint32_t>(key, 3);
+   w0[0] = load_be<uint32_t>(key.data(), 0);
+   w0[1] = load_be<uint32_t>(key.data(), 1);
+   w0[2] = load_be<uint32_t>(key.data(), 2);
+   w0[3] = load_be<uint32_t>(key.data(), 3);
 
    w1[0] = w0[0] ^ KRK[CK0][0];
    w1[1] = w0[1] ^ KRK[CK0][1];
@@ -275,13 +275,13 @@ void key_schedule(secure_vector<uint32_t>& ERK, secure_vector<uint32_t>& DRK, co
 
    ARIA_FO(w1[0], w1[1], w1[2], w1[3]);
 
-   if(length == 24 || length == 32) {
-      w1[0] ^= load_be<uint32_t>(key, 4);
-      w1[1] ^= load_be<uint32_t>(key, 5);
+   if(key.size() == 24 || key.size() == 32) {
+      w1[0] ^= load_be<uint32_t>(key.data(), 4);
+      w1[1] ^= load_be<uint32_t>(key.data(), 5);
    }
-   if(length == 32) {
-      w1[2] ^= load_be<uint32_t>(key, 6);
-      w1[3] ^= load_be<uint32_t>(key, 7);
+   if(key.size() == 32) {
+      w1[2] ^= load_be<uint32_t>(key.data(), 6);
+      w1[3] ^= load_be<uint32_t>(key.data(), 7);
    }
 
    w2[0] = w1[0] ^ KRK[CK1][0];
@@ -308,11 +308,11 @@ void key_schedule(secure_vector<uint32_t>& ERK, secure_vector<uint32_t>& DRK, co
    w3[2] ^= w1[2];
    w3[3] ^= w1[3];
 
-   if(length == 16) {
+   if(key.size() == 16) {
       ERK.resize(4 * 13);
-   } else if(length == 24) {
+   } else if(key.size() == 24) {
       ERK.resize(4 * 15);
-   } else if(length == 32) {
+   } else if(key.size() == 32) {
       ERK.resize(4 * 17);
    }
 
@@ -330,11 +330,11 @@ void key_schedule(secure_vector<uint32_t>& ERK, secure_vector<uint32_t>& DRK, co
    ARIA_ROL128<67>(w3, w0, &ERK[44]);
    ARIA_ROL128<97>(w0, w1, &ERK[48]);
 
-   if(length == 24 || length == 32) {
+   if(key.size() == 24 || key.size() == 32) {
       ARIA_ROL128<97>(w1, w2, &ERK[52]);
       ARIA_ROL128<97>(w2, w3, &ERK[56]);
 
-      if(length == 32) {
+      if(key.size() == 32) {
          ARIA_ROL128<97>(w3, w0, &ERK[60]);
          ARIA_ROL128<109>(w0, w1, &ERK[64]);
       }
@@ -401,16 +401,16 @@ bool ARIA_256::has_keying_material() const {
    return !m_ERK.empty();
 }
 
-void ARIA_128::key_schedule(const uint8_t key[], size_t length) {
-   ARIA_F::key_schedule(m_ERK, m_DRK, key, length);
+void ARIA_128::key_schedule(std::span<const uint8_t> key) {
+   ARIA_F::key_schedule(m_ERK, m_DRK, key);
 }
 
-void ARIA_192::key_schedule(const uint8_t key[], size_t length) {
-   ARIA_F::key_schedule(m_ERK, m_DRK, key, length);
+void ARIA_192::key_schedule(std::span<const uint8_t> key) {
+   ARIA_F::key_schedule(m_ERK, m_DRK, key);
 }
 
-void ARIA_256::key_schedule(const uint8_t key[], size_t length) {
-   ARIA_F::key_schedule(m_ERK, m_DRK, key, length);
+void ARIA_256::key_schedule(std::span<const uint8_t> key) {
+   ARIA_F::key_schedule(m_ERK, m_DRK, key);
 }
 
 void ARIA_128::clear() {

@@ -227,7 +227,7 @@ inline uint64_t left_rot_lo(uint64_t h, uint64_t l, size_t shift) {
 /*
 * Camellia Key Schedule
 */
-void key_schedule(secure_vector<uint64_t>& SK, const uint8_t key[], size_t length) {
+void key_schedule(secure_vector<uint64_t>& SK, std::span<const uint8_t> key) {
    const uint64_t Sigma1 = 0xA09E667F3BCC908B;
    const uint64_t Sigma2 = 0xB67AE8584CAA73B2;
    const uint64_t Sigma3 = 0xC6EF372FE94F82BE;
@@ -235,11 +235,11 @@ void key_schedule(secure_vector<uint64_t>& SK, const uint8_t key[], size_t lengt
    const uint64_t Sigma5 = 0x10E527FADE682D1D;
    const uint64_t Sigma6 = 0xB05688C2B3E6C1FD;
 
-   const uint64_t KL_H = load_be<uint64_t>(key, 0);
-   const uint64_t KL_L = load_be<uint64_t>(key, 1);
+   const uint64_t KL_H = load_be<uint64_t>(key.data(), 0);
+   const uint64_t KL_L = load_be<uint64_t>(key.data(), 1);
 
-   const uint64_t KR_H = (length >= 24) ? load_be<uint64_t>(key, 2) : 0;
-   const uint64_t KR_L = (length == 32) ? load_be<uint64_t>(key, 3) : ((length == 24) ? ~KR_H : 0);
+   const uint64_t KR_H = (key.size() >= 24) ? load_be<uint64_t>(key.data(), 2) : 0;
+   const uint64_t KR_L = (key.size() == 32) ? load_be<uint64_t>(key.data(), 3) : ((key.size() == 24) ? ~KR_H : 0);
 
    uint64_t D1 = KL_H ^ KR_H;
    uint64_t D2 = KL_L ^ KR_L;
@@ -261,7 +261,7 @@ void key_schedule(secure_vector<uint64_t>& SK, const uint8_t key[], size_t lengt
    const uint64_t KB_H = D1;
    const uint64_t KB_L = D2;
 
-   if(length == 16) {
+   if(key.size() == 16) {
       SK.resize(26);
 
       SK[0] = KL_H;
@@ -382,16 +382,16 @@ bool Camellia_256::has_keying_material() const {
    return !m_SK.empty();
 }
 
-void Camellia_128::key_schedule(const uint8_t key[], size_t length) {
-   Camellia_F::key_schedule(m_SK, key, length);
+void Camellia_128::key_schedule(std::span<const uint8_t> key) {
+   Camellia_F::key_schedule(m_SK, key);
 }
 
-void Camellia_192::key_schedule(const uint8_t key[], size_t length) {
-   Camellia_F::key_schedule(m_SK, key, length);
+void Camellia_192::key_schedule(std::span<const uint8_t> key) {
+   Camellia_F::key_schedule(m_SK, key);
 }
 
-void Camellia_256::key_schedule(const uint8_t key[], size_t length) {
-   Camellia_F::key_schedule(m_SK, key, length);
+void Camellia_256::key_schedule(std::span<const uint8_t> key) {
+   Camellia_F::key_schedule(m_SK, key);
 }
 
 void Camellia_128::clear() {

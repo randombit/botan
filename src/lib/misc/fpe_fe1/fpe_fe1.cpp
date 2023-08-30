@@ -104,8 +104,8 @@ bool FPE_FE1::has_keying_material() const {
    return m_mac->has_keying_material();
 }
 
-void FPE_FE1::key_schedule(const uint8_t key[], size_t length) {
-   m_mac->set_key(key, length);
+void FPE_FE1::key_schedule(std::span<const uint8_t> key) {
+   m_mac->set_key(key);
 }
 
 BigInt FPE_FE1::F(const BigInt& R,

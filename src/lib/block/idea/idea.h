@@ -36,7 +36,7 @@ class IDEA final : public Block_Cipher_Fixed_Params<8, 16> {
       static void sse2_idea_op_8(const uint8_t in[64], uint8_t out[64], const uint16_t EK[52]);
 #endif
 
-      void key_schedule(const uint8_t[], size_t) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
       secure_vector<uint16_t> m_EK, m_DK;
 };

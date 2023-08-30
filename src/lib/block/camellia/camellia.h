@@ -29,7 +29,7 @@ class Camellia_128 final : public Block_Cipher_Fixed_Params<16, 16> {
       bool has_keying_material() const override;
 
    private:
-      void key_schedule(const uint8_t key[], size_t length) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
       secure_vector<uint64_t> m_SK;
 };
@@ -51,7 +51,7 @@ class Camellia_192 final : public Block_Cipher_Fixed_Params<16, 24> {
       bool has_keying_material() const override;
 
    private:
-      void key_schedule(const uint8_t key[], size_t length) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
       secure_vector<uint64_t> m_SK;
 };
@@ -73,7 +73,7 @@ class Camellia_256 final : public Block_Cipher_Fixed_Params<16, 32> {
       bool has_keying_material() const override;
 
    private:
-      void key_schedule(const uint8_t key[], size_t length) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
       secure_vector<uint64_t> m_SK;
 };

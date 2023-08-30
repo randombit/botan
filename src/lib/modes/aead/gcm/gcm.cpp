@@ -75,8 +75,8 @@ bool GCM_Mode::has_keying_material() const {
    return m_ctr->has_keying_material();
 }
 
-void GCM_Mode::key_schedule(const uint8_t key[], size_t keylen) {
-   m_ctr->set_key(key, keylen);
+void GCM_Mode::key_schedule(std::span<const uint8_t> key) {
+   m_ctr->set_key(key);
 
    const std::vector<uint8_t> zeros(GCM_BS);
    m_ctr->set_iv(zeros.data(), zeros.size());

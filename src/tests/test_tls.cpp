@@ -144,7 +144,7 @@ class TLS_CBC_Tests final : public Text_Based_Test {
             }
 
          private:
-            void key_schedule(const uint8_t /*key*/[], size_t /*length*/) override {}
+            void key_schedule(std::span<const uint8_t> /* key */) override {}
 
             size_t m_mac_len;
       };
@@ -178,7 +178,7 @@ class TLS_CBC_Tests final : public Text_Based_Test {
             }
 
          private:
-            void key_schedule(const uint8_t /*key*/[], size_t /*length*/) override {}
+            void key_schedule(std::span<const uint8_t> /*key*/) override {}
 
             size_t m_bs;
       };

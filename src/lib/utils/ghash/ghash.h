@@ -62,7 +62,7 @@ class GHASH final : public SymmetricAlgorithm {
       static void ghash_multiply_vperm(uint8_t x[16], const uint64_t HM[256], const uint8_t input[], size_t blocks);
 #endif
 
-      void key_schedule(const uint8_t key[], size_t key_len) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
       void ghash_multiply(secure_vector<uint8_t>& x, const uint8_t input[], size_t blocks);
 

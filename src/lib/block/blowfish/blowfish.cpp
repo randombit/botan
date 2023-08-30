@@ -296,14 +296,14 @@ bool Blowfish::has_keying_material() const {
 /*
 * Blowfish Key Schedule
 */
-void Blowfish::key_schedule(const uint8_t key[], size_t length) {
+void Blowfish::key_schedule(std::span<const uint8_t> key) {
    m_P.resize(18);
    copy_mem(m_P.data(), P_INIT, 18);
 
    m_S.resize(1024);
    copy_mem(m_S.data(), S_INIT, 1024);
 
-   key_expansion(key, length, nullptr, 0);
+   key_expansion(key.data(), key.size(), nullptr, 0);
 }
 
 void Blowfish::key_expansion(const uint8_t key[], size_t length, const uint8_t salt[], size_t salt_length) {

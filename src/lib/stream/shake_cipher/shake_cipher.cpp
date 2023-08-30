@@ -81,9 +81,9 @@ void SHAKE_Cipher::generate_keystream_internal(std::span<uint8_t> out) {
    m_bytes_generated += out.size();
 }
 
-void SHAKE_Cipher::key_schedule(const uint8_t key[], size_t length) {
+void SHAKE_Cipher::key_schedule(std::span<const uint8_t> key) {
    clear();
-   m_keccak.absorb({key, length});
+   m_keccak.absorb(key);
    m_keccak.finish();
    m_has_keying_material = true;
 }

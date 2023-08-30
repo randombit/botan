@@ -31,7 +31,7 @@ class Threefish_512 final : public Block_Cipher_Fixed_Params<64, 64, 0, 1, Tweak
       bool has_keying_material() const override;
 
    private:
-      void key_schedule(const uint8_t key[], size_t key_len) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
       // Interface for Skein
       friend class Skein_512;

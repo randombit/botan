@@ -153,7 +153,7 @@ bool SEED::has_keying_material() const {
 /*
 * SEED Key Schedule
 */
-void SEED::key_schedule(const uint8_t key[], size_t /*length*/) {
+void SEED::key_schedule(std::span<const uint8_t> key) {
    const uint32_t RC[16] = {0x9E3779B9,
                             0x3C6EF373,
                             0x78DDE6E6,
@@ -174,7 +174,7 @@ void SEED::key_schedule(const uint8_t key[], size_t /*length*/) {
    secure_vector<uint32_t> WK(4);
 
    for(size_t i = 0; i != 4; ++i) {
-      WK[i] = load_be<uint32_t>(key, i);
+      WK[i] = load_be<uint32_t>(key.data(), i);
    }
 
    m_K.resize(32);

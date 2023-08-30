@@ -76,9 +76,9 @@ bool GMAC::has_keying_material() const {
    return m_cipher->has_keying_material();
 }
 
-void GMAC::key_schedule(const uint8_t key[], size_t size) {
+void GMAC::key_schedule(std::span<const uint8_t> key) {
    clear();
-   m_cipher->set_key(key, size);
+   m_cipher->set_key(key);
 
    m_cipher->encrypt(m_H);
    m_ghash->set_key(m_H);

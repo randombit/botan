@@ -70,7 +70,7 @@ class BOTAN_TEST_API SIV_Mode : public AEAD_Mode {
       void start_msg(const uint8_t nonce[], size_t nonce_len) override final;
       size_t process_msg(uint8_t buf[], size_t size) override final;
 
-      void key_schedule(const uint8_t key[], size_t length) override final;
+      void key_schedule(std::span<const uint8_t> key) override final;
 
       const std::string m_name;
       const size_t m_bs;

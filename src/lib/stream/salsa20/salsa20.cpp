@@ -172,9 +172,9 @@ size_t Salsa20::buffer_size() const {
 /*
 * Salsa20 Key Schedule
 */
-void Salsa20::key_schedule(const uint8_t key[], size_t length) {
-   m_key.resize(length / 4);
-   load_le<uint32_t>(m_key.data(), key, m_key.size());
+void Salsa20::key_schedule(std::span<const uint8_t> key) {
+   m_key.resize(key.size() / 4);
+   load_le<uint32_t>(m_key.data(), key.data(), m_key.size());
 
    m_state.resize(16);
    m_buffer.resize(64);

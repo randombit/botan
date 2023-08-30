@@ -29,7 +29,7 @@ class DES final : public Block_Cipher_Fixed_Params<8, 8> {
       bool has_keying_material() const override;
 
    private:
-      void key_schedule(const uint8_t[], size_t) override;
+      void key_schedule(std::span<const uint8_t>) override;
 
       secure_vector<uint32_t> m_round_key;
 };
@@ -51,7 +51,7 @@ class TripleDES final : public Block_Cipher_Fixed_Params<8, 16, 24, 8> {
       bool has_keying_material() const override;
 
    private:
-      void key_schedule(const uint8_t[], size_t) override;
+      void key_schedule(std::span<const uint8_t>) override;
 
       secure_vector<uint32_t> m_round_key;
 };

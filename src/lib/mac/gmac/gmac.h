@@ -49,7 +49,7 @@ class GMAC final : public MessageAuthenticationCode {
       void add_data(std::span<const uint8_t>) override;
       void final_result(std::span<uint8_t>) override;
       void start_msg(const uint8_t nonce[], size_t nonce_len) override;
-      void key_schedule(const uint8_t key[], size_t size) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
       static const size_t GCM_BS = 16;
       std::unique_ptr<BlockCipher> m_cipher;

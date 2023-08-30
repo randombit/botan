@@ -212,8 +212,8 @@ bool OCB_Mode::has_keying_material() const {
    return m_cipher->has_keying_material();
 }
 
-void OCB_Mode::key_schedule(const uint8_t key[], size_t length) {
-   m_cipher->set_key(key, length);
+void OCB_Mode::key_schedule(std::span<const uint8_t> key) {
+   m_cipher->set_key(key);
    m_L = std::make_unique<L_computer>(*m_cipher);
 }
 

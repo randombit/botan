@@ -29,8 +29,8 @@ size_t OFB::buffer_size() const {
    return m_buffer.size();  // block size
 }
 
-void OFB::key_schedule(const uint8_t key[], size_t key_len) {
-   m_cipher->set_key(key, key_len);
+void OFB::key_schedule(std::span<const uint8_t> key) {
+   m_cipher->set_key(key);
 
    // Set a default all-zeros IV
    set_iv(nullptr, 0);

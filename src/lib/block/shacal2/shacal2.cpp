@@ -169,7 +169,7 @@ bool SHACAL2::has_keying_material() const {
 /*
 * SHACAL2 Key Schedule
 */
-void SHACAL2::key_schedule(const uint8_t key[], size_t len) {
+void SHACAL2::key_schedule(std::span<const uint8_t> key) {
    const uint32_t RC[64] = {
       0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5, 0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
       0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3, 0x72BE5D74, 0x80DEB1FE, 0x9BDC06A7, 0xC19BF174,
@@ -186,7 +186,7 @@ void SHACAL2::key_schedule(const uint8_t key[], size_t len) {
       clear_mem(m_RK.data(), m_RK.size());
    }
 
-   load_be(m_RK.data(), key, len / 4);
+   load_be(m_RK.data(), key.data(), key.size() / 4);
 
    for(size_t i = 16; i != 64; ++i) {
       const uint32_t sigma0_15 = sigma<7, 18, 3>(m_RK[i - 15]);

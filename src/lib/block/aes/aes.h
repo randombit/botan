@@ -33,7 +33,7 @@ class AES_128 final : public Block_Cipher_Fixed_Params<16, 16> {
       bool has_keying_material() const override;
 
    private:
-      void key_schedule(const uint8_t key[], size_t length) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
 #if defined(BOTAN_HAS_AES_VPERM)
       void vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
@@ -88,7 +88,7 @@ class AES_192 final : public Block_Cipher_Fixed_Params<16, 24> {
       void hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
 #endif
 
-      void key_schedule(const uint8_t key[], size_t length) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
       secure_vector<uint32_t> m_EK, m_DK;
 };
@@ -128,7 +128,7 @@ class AES_256 final : public Block_Cipher_Fixed_Params<16, 32> {
       void hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
 #endif
 
-      void key_schedule(const uint8_t key[], size_t length) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
       secure_vector<uint32_t> m_EK, m_DK;
 };

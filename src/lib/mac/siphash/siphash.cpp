@@ -109,9 +109,9 @@ bool SipHash::has_keying_material() const {
    return !m_V.empty();
 }
 
-void SipHash::key_schedule(const uint8_t key[], size_t /*length*/) {
-   const uint64_t K0 = load_le<uint64_t>(key, 0);
-   const uint64_t K1 = load_le<uint64_t>(key, 1);
+void SipHash::key_schedule(std::span<const uint8_t> key) {
+   const uint64_t K0 = load_le<uint64_t>(key.data(), 0);
+   const uint64_t K1 = load_le<uint64_t>(key.data(), 1);
 
    m_K.resize(2);
    m_K[0] = K0;

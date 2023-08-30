@@ -29,7 +29,7 @@ class Twofish final : public Block_Cipher_Fixed_Params<16, 16, 32, 8> {
       bool has_keying_material() const override;
 
    private:
-      void key_schedule(const uint8_t[], size_t) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
       static const uint32_t MDS0[256];
       static const uint32_t MDS1[256];

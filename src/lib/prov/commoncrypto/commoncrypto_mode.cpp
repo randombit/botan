@@ -40,7 +40,7 @@ class CommonCrypto_Cipher_Mode final : public Cipher_Mode {
       bool has_keying_material() const override { return m_key_set; }
 
    private:
-      void key_schedule(const uint8_t key[], size_t length) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
       void start_msg(const uint8_t nonce[], size_t nonce_len) override;
       size_t process_msg(uint8_t msg[], size_t msg_len) override;
@@ -194,11 +194,11 @@ Key_Length_Specification CommonCrypto_Cipher_Mode::key_spec() const {
    return m_opts.key_spec;
 }
 
-void CommonCrypto_Cipher_Mode::key_schedule(const uint8_t key[], size_t length) {
+void CommonCrypto_Cipher_Mode::key_schedule(std::span<const uint8_t> key) {
    CCCryptorStatus status;
    CCOperation op = m_direction == Cipher_Dir::Encryption ? kCCEncrypt : kCCDecrypt;
    status = CCCryptorCreateWithMode(
-      op, m_opts.mode, m_opts.algo, m_opts.padding, nullptr, key, length, nullptr, 0, 0, 0, &m_cipher);
+      op, m_opts.mode, m_opts.algo, m_opts.padding, nullptr, key.data(), key.size(), nullptr, 0, 0, 0, &m_cipher);
    if(status != kCCSuccess) {
       throw CommonCrypto_Error("CCCryptorCreate", status);
    }

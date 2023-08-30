@@ -8,6 +8,7 @@
 #include <botan/internal/cascade.h>
 
 #include <botan/internal/fmt.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -27,11 +28,11 @@ void Cascade_Cipher::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks)
    m_cipher1->decrypt_n(out, out, c1_blocks);
 }
 
-void Cascade_Cipher::key_schedule(const uint8_t key[], size_t /*length*/) {
-   const uint8_t* key2 = key + m_cipher1->maximum_keylength();
+void Cascade_Cipher::key_schedule(std::span<const uint8_t> key) {
+   BufferSlicer keys(key);
 
-   m_cipher1->set_key(key, m_cipher1->maximum_keylength());
-   m_cipher2->set_key(key2, m_cipher2->maximum_keylength());
+   m_cipher1->set_key(keys.take(m_cipher1->maximum_keylength()));
+   m_cipher2->set_key(keys.take(m_cipher2->maximum_keylength()));
 }
 
 void Cascade_Cipher::clear() {

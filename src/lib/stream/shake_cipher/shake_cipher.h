@@ -36,7 +36,7 @@ class SHAKE_Cipher : public StreamCipher {
       size_t buffer_size() const final { return m_keccak.byte_rate(); }
 
    private:
-      void key_schedule(const uint8_t key[], size_t key_len) final;
+      void key_schedule(std::span<const uint8_t> key) final;
       /**
       * Produce more XOF output
       */

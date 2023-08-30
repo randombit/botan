@@ -332,9 +332,9 @@ bool DES::has_keying_material() const {
 /*
 * DES Key Schedule
 */
-void DES::key_schedule(const uint8_t key[], size_t /*length*/) {
+void DES::key_schedule(std::span<const uint8_t> key) {
    m_round_key.resize(32);
-   des_key_schedule(m_round_key.data(), key);
+   des_key_schedule(m_round_key.data(), key.data());
 }
 
 void DES::clear() {
@@ -442,13 +442,13 @@ bool TripleDES::has_keying_material() const {
 /*
 * TripleDES Key Schedule
 */
-void TripleDES::key_schedule(const uint8_t key[], size_t length) {
+void TripleDES::key_schedule(std::span<const uint8_t> key) {
    m_round_key.resize(3 * 32);
-   des_key_schedule(&m_round_key[0], key);
-   des_key_schedule(&m_round_key[32], key + 8);
+   des_key_schedule(&m_round_key[0], key.first(8).data());
+   des_key_schedule(&m_round_key[32], key.subspan(8, 8).data());
 
-   if(length == 24) {
-      des_key_schedule(&m_round_key[64], key + 16);
+   if(key.size() == 24) {
+      des_key_schedule(&m_round_key[64], key.last(8).data());
    } else {
       copy_mem(&m_round_key[64], &m_round_key[0], 32);
    }

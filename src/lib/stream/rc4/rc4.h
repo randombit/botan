@@ -39,7 +39,7 @@ class RC4 final : public StreamCipher {
       ~RC4() override { clear(); }
 
    private:
-      void key_schedule(const uint8_t[], size_t) override;
+      void key_schedule(std::span<const uint8_t> key) override;
       void cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) override;
       void set_iv_bytes(const uint8_t iv[], size_t iv_len) override;
       void generate();

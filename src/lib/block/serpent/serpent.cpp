@@ -320,17 +320,17 @@ bool Serpent::has_keying_material() const {
 /*
 * Serpent Key Schedule
 */
-void Serpent::key_schedule(const uint8_t key[], size_t length) {
+void Serpent::key_schedule(std::span<const uint8_t> key) {
    using namespace Botan::Serpent_F;
 
    const uint32_t PHI = 0x9E3779B9;
 
    secure_vector<uint32_t> W(140);
-   for(size_t i = 0; i != length / 4; ++i) {
-      W[i] = load_le<uint32_t>(key, i);
+   for(size_t i = 0; i != key.size() / 4; ++i) {
+      W[i] = load_le<uint32_t>(key.data(), i);
    }
 
-   W[length / 4] |= uint32_t(1) << ((length % 4) * 8);
+   W[key.size() / 4] |= uint32_t(1) << ((key.size() % 4) * 8);
 
    for(size_t i = 8; i != 140; ++i) {
       uint32_t wi = W[i - 8] ^ W[i - 5] ^ W[i - 3] ^ W[i - 1] ^ PHI ^ uint32_t(i - 8);
