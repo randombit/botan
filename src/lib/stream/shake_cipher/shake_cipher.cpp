@@ -9,20 +9,14 @@
 #include <botan/internal/shake_cipher.h>
 
 #include <botan/exceptn.h>
-#include <botan/internal/loadstor.h>
-#include <botan/internal/sha3.h>
 
 namespace Botan {
 
-SHAKE_Cipher::SHAKE_Cipher(size_t shake_rate) : m_shake_rate(shake_rate), m_buf_pos(0) {
-   BOTAN_ASSERT_NOMSG(shake_rate >= 72 && shake_rate <= 168);
-}
-
-void SHAKE_Cipher::clear() {
-   zap(m_state);
-   zap(m_buffer);
-   m_buf_pos = 0;
-}
+SHAKE_Cipher::SHAKE_Cipher(size_t keccak_capacity) :
+      m_keccak(keccak_capacity, 0xF, 4),
+      m_has_keying_material(false),
+      m_keystream_buffer(buffer_size()),
+      m_bytes_generated(0) {}
 
 void SHAKE_Cipher::set_iv_bytes(const uint8_t /*iv*/[], size_t length) {
    /*
@@ -34,89 +28,72 @@ void SHAKE_Cipher::set_iv_bytes(const uint8_t /*iv*/[], size_t length) {
    }
 }
 
-size_t SHAKE_Cipher::buffer_size() const {
-   return m_shake_rate;
-}
-
 void SHAKE_Cipher::seek(uint64_t /*offset*/) {
    throw Not_Implemented("SHAKE_Cipher::seek");
+}
+
+void SHAKE_Cipher::clear() {
+   m_keccak.clear();
+   m_has_keying_material = false;
+   zeroise(m_keystream_buffer);
+   m_bytes_generated = 0;
 }
 
 void SHAKE_Cipher::cipher_bytes(const uint8_t in[], uint8_t out[], size_t length) {
    assert_key_material_set();
 
-   while(length >= m_shake_rate - m_buf_pos) {
-      xor_buf(out, in, &m_buffer[m_buf_pos], m_shake_rate - m_buf_pos);
-      length -= (m_shake_rate - m_buf_pos);
-      in += (m_shake_rate - m_buf_pos);
-      out += (m_shake_rate - m_buf_pos);
+   const auto block_size = m_keystream_buffer.size();
 
-      SHA_3::permute(m_state.data());
-      copy_out_le(m_buffer.data(), m_shake_rate, m_state.data());
+   auto cipher_some = [&](size_t bytes) {
+      if(bytes > 0) {
+         BOTAN_ASSERT_NOMSG(bytes <= block_size);
+         BOTAN_ASSERT_NOMSG(bytes <= length);
+         generate_keystream_internal(std::span(m_keystream_buffer).first(bytes));
+         xor_buf(out, m_keystream_buffer.data(), in, bytes);
+         out += bytes;
+         in += bytes;
+         length -= bytes;
+      }
+   };
 
-      m_buf_pos = 0;
+   // Bring us back into alignment with the XOF's underlying blocks
+   if(length > block_size) {
+      const auto bytes_to_alignment = block_size - m_bytes_generated % block_size;
+      cipher_some(bytes_to_alignment);
    }
-   xor_buf(out, in, &m_buffer[m_buf_pos], length);
-   m_buf_pos += length;
+
+   // Consume the XOF's output stream block-wise as long as we can
+   while(length >= block_size) {
+      cipher_some(block_size);
+   }
+
+   // Process remaining data, potentially causing misalignment
+   cipher_some(length);
 }
 
 void SHAKE_Cipher::generate_keystream(uint8_t out[], size_t length) {
    assert_key_material_set();
-
-   if(m_buf_pos > 0) {
-      const size_t take = std::min(length, m_shake_rate - m_buf_pos);
-      copy_mem(out, &m_buffer[m_buf_pos], take);
-      out += take;
-      length -= take;
-      m_buf_pos += take;
-
-      if(m_buf_pos == m_shake_rate) {
-         SHA_3::permute(m_state.data());
-         m_buf_pos = 0;
-      }
-   }
-
-   if(length == 0) {
-      return;
-   }
-
-   BOTAN_ASSERT_NOMSG(m_buf_pos == 0);
-
-   while(length >= m_shake_rate) {
-      copy_out_le(out, m_shake_rate, m_state.data());
-      SHA_3::permute(m_state.data());
-      length -= m_shake_rate;
-      out += m_shake_rate;
-   }
-
-   copy_out_le(m_buffer.data(), m_shake_rate, m_state.data());
-
-   copy_mem(out, &m_buffer[0], length);
-   m_buf_pos += length;
+   generate_keystream_internal({out, length});
 }
 
-bool SHAKE_Cipher::has_keying_material() const {
-   return !m_state.empty();
+void SHAKE_Cipher::generate_keystream_internal(std::span<uint8_t> out) {
+   m_keccak.squeeze(out);
+   m_bytes_generated += out.size();
 }
 
 void SHAKE_Cipher::key_schedule(const uint8_t key[], size_t length) {
-   const size_t SHAKE_BITRATE = m_shake_rate * 8;
-   m_state.resize(25);
-   m_buffer.resize(m_shake_rate);
-   zeroise(m_state);
-
-   const size_t S_pos = SHA_3::absorb(SHAKE_BITRATE, m_state, 0, key, length);
-   SHA_3::finish(SHAKE_BITRATE, m_state, S_pos, 0x1F, 0x80);
-   copy_out_le(m_buffer.data(), m_buffer.size(), m_state.data());
-   m_buf_pos = 0;
+   clear();
+   m_keccak.absorb({key, length});
+   m_keccak.finish();
+   m_has_keying_material = true;
 }
 
 Key_Length_Specification SHAKE_Cipher::key_spec() const {
    return Key_Length_Specification(1, 160);
 }
 
-SHAKE_128_Cipher::SHAKE_128_Cipher() : SHAKE_Cipher((1600 - 256) / 8) {}
+SHAKE_128_Cipher::SHAKE_128_Cipher() : SHAKE_Cipher(256) {}
 
-SHAKE_256_Cipher::SHAKE_256_Cipher() : SHAKE_Cipher((1600 - 512) / 8) {}
+SHAKE_256_Cipher::SHAKE_256_Cipher() : SHAKE_Cipher(512) {}
 
 }  // namespace Botan

@@ -10,6 +10,7 @@
 
 #include <botan/hash.h>
 #include <botan/secmem.h>
+#include <botan/internal/keccak_perm.h>
 #include <string>
 
 namespace Botan {
@@ -25,9 +26,9 @@ class SHA_3 : public HashFunction {
       */
       explicit SHA_3(size_t output_bits);
 
-      size_t hash_block_size() const override { return m_bitrate / 8; }
+      size_t hash_block_size() const override { return m_keccak.byte_rate(); }
 
-      size_t output_length() const override { return m_output_bits / 8; }
+      size_t output_length() const override { return m_output_length; }
 
       std::unique_ptr<HashFunction> new_object() const override;
       std::unique_ptr<HashFunction> copy_state() const override;
@@ -35,56 +36,13 @@ class SHA_3 : public HashFunction {
       void clear() override;
       std::string provider() const override;
 
-      // Static functions for internal usage
-
-      /**
-      * Absorb data into the provided state
-      * @param bitrate the bitrate to absorb into the sponge
-      * @param S the sponge state
-      * @param S_pos where to begin absorbing into S
-      * @param input the input data
-      * @param length size of input in bytes
-      */
-      static size_t absorb(
-         size_t bitrate, secure_vector<uint64_t>& S, size_t S_pos, const uint8_t input[], size_t length);
-
-      /**
-      * Add final padding and permute. The padding is assumed to be
-      * init_pad || 00... || fini_pad
-      *
-      * @param bitrate the bitrate to absorb into the sponge
-      * @param S the sponge state
-      * @param S_pos where to begin absorbing into S
-      * @param init_pad the leading pad bits
-      * @param fini_pad the final pad bits
-      */
-      static void finish(size_t bitrate, secure_vector<uint64_t>& S, size_t S_pos, uint8_t init_pad, uint8_t fini_pad);
-
-      /**
-      * Expand from provided state
-      * @param bitrate sponge parameter
-      * @param S the state
-      * @param output the output buffer
-      * @param output_length the size of output in bytes
-      */
-      static void expand(size_t bitrate, secure_vector<uint64_t>& S, uint8_t output[], size_t output_length);
-
-      /**
-      * The bare Keccak-1600 permutation
-      */
-      static void permute(uint64_t A[25]);
-
    private:
       void add_data(const uint8_t input[], size_t length) override;
       void final_result(uint8_t out[]) override;
 
-#if defined(BOTAN_HAS_SHA3_BMI2)
-      static void permute_bmi2(uint64_t A[25]);
-#endif
-
-      size_t m_output_bits, m_bitrate;
-      secure_vector<uint64_t> m_S;
-      size_t m_S_pos;
+   private:
+      Keccak_Permutation m_keccak;
+      size_t m_output_length;
 };
 
 /**

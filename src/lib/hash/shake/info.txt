@@ -7,5 +7,5 @@ name -> "SHAKE"
 </module_info>
 
 <requires>
-sha3
+keccak_perm
 </requires>
