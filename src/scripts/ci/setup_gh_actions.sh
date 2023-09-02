@@ -47,6 +47,9 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "cross-riscv64" ]; then
         sudo apt-get -qq install qemu-user g++-riscv64-linux-gnu
 
+    elif [ "$TARGET" = "cross-s390x" ]; then
+        sudo apt-get -qq install qemu-user g++-s390x-linux-gnu
+
     elif [ "$TARGET" = "cross-arm32-baremetal" ]; then
         sudo apt-get -qq install gcc-arm-none-eabi libstdc++-arm-none-eabi-newlib
 
