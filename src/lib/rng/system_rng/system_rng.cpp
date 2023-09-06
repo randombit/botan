@@ -27,6 +27,7 @@
    #include <errno.h>
    #include <sys/random.h>
    #include <sys/syscall.h>
+   #include <unistd.h>
 #elif defined(BOTAN_TARGET_OS_HAS_DEV_RANDOM)
    #include <errno.h>
    #include <fcntl.h>
