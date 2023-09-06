@@ -98,25 +98,23 @@ tested GCC, Clang, and Visual Studio.
 FFI Additions
 ----------------
 
-If adding a new function declaration to ``ffi.h``, the same PR must
-also add the same declaration in the Python binding ``botan3.py``, in
-addition the new API functionality must be exposed to Python and a
-test written in Python.
+If adding a new function declaration to ``ffi.h``, the same PR must also add the
+same declaration in the Python binding ``botan3.py``, in addition the new API
+functionality must be exposed to Python and a test written in Python.
 
 Git Usage
 ----------------------------------------
 
-Do *NOT* merge ``master`` into your topic branch, this creates
-needless commits and noise in history. Instead, as needed, rebase your
-branch against master (``git rebase -i master``) and force push the
-branch to update the PR. If the GitHub PR page does not report any
-merge conflicts and nobody asks you to rebase, you don't need to
-rebase.
+Do *NOT* merge ``master`` into your topic branch, this creates needless commits
+and noise in history. Instead, as needed, rebase your branch against master
+(``git rebase -i master``) and force push the branch to update the PR. If the
+GitHub PR page does not report any merge conflicts and nobody asks you to
+rebase, you don't need to rebase.
 
-Try to keep your history clean and use rebase to squash your commits
-as needed. If your diff is less than roughly 100 lines, it should
-probably be a single commit. Only split commits as needed to help with
-review/understanding of the change.
+Try to keep your history clean and use rebase to squash your commits as
+needed. If your diff is less than roughly 100 lines, it should probably be a
+single commit. Only split commits as needed to help with review/understanding of
+the change.
 
 Python
 ----------------------------------------
@@ -191,14 +189,24 @@ The C++11 ``auto`` keyword is very convenient but only use it when the type
 truly is obvious (considering also the potential for unexpected integer
 conversions and the like, such as an apparent uint8_t being promoted to an int).
 
+Unless there is a specific reason otherwise (eg due to calling some C API which
+requires exactly a ``long*`` be provided) integer types should be either
+``(u)intXX_t`` or ``size_t``. If the variable is used for integer values of "no
+particular size", as in the loop ``for(some_type i = 0; i != 100; ++i)`` then
+the type should be ``size_t``. Use one of the specific size integer types only
+when there is a algorithmic/protocol reason to use an integer of that size. For
+example if a parsing a protocol that uses 16-bit integer fields to encode a
+length, naturally one would use ``uint16_t`` there.
+
 If a variable is defined and not modified, declare it ``const``.  Some exception
 for very short-lived variables, but generally speaking being able to read the
 declaration and know it will not be modified is useful.
 
 Use ``override`` annotations whenever overriding a virtual function.  If
-introducing a new type that is not intended for derivation, mark it ``final``.
+introducing a new type that is not intended for further derivation, mark it ``final``.
 
-Avoid explicit ``new`` or ``delete``, use RAII, ``make_unique``, etc.
+Avoid explicit ``new`` or (especially) explicit ``delete``: use RAII,
+``make_unique``, etc.
 
 Use ``m_`` prefix on all member variables.
 
@@ -207,8 +215,8 @@ Use ``m_`` prefix on all member variables.
 ``make fmt`` or by invoking the script
 ``src/scripts/dev_tools/run_clang_format.py``
 
-Prefer using braces on both sides of if/else blocks, even if only using a single
-statement. The current code doesn't always do this.
+Use braces on both sides of if/else blocks, even if only using a single
+statement.
 
 Avoid ``using namespace`` declarations, even inside of single functions.  One
 allowed exception is ``using namespace std::placeholders`` in functions which
@@ -237,7 +245,8 @@ calling convention issues among different platforms; the improvement in
 maintainability is seen as worth any potential performance tradeoff. One risk
 with intrinsics is that the compiler might rewrite your clever const-time SIMD
 into something with a conditional jump, but code intended to be const-time
-should in any case be annotated so it can be checked at runtime with tools.
+should in any case be annotated (using ``CT::poison``) so it can be checked at
+runtime with tools.
 
 Operating System Dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

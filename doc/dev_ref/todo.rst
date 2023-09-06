@@ -77,7 +77,6 @@ TLS
 * Improve/optimize DTLS defragmentation and retransmission
 * Make RSA optional at build time
 * Make finite field DH optional at build time
-* Certificate pinning (using TACK?)
 * Certificate Transparency extensions
 * TLS supplemental authorization data (RFC 4680, RFC 5878)
 * DTLS-SCTP (RFC 6083)
@@ -159,4 +158,3 @@ Documentation
 ----------------------------------------
 
 * Always needs help
-
