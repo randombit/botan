@@ -128,7 +128,7 @@ BigInt random_prime(
       } else {
          for(;;) {
             // This is slightly biased, but for small primes it does not seem to matter
-            uint8_t b[4] = { 0 };
+            uint8_t b[4] = {0};
             rng.randomize(b, 4);
             const size_t idx = load_le<uint32_t>(b, 0) % PRIME_TABLE_SIZE;
             const uint16_t small_prime = PRIMES[idx];
