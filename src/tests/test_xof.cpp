@@ -1,0 +1,136 @@
+/*
+* (C) 2023 Jack Lloyd
+*     2023 Fabian Albert, René Meusel - Rohde & Schwarz Cybersecurity
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
+#include "tests.h"
+
+#if defined(BOTAN_HAS_XOF)
+   #include <botan/xof.h>
+   #include <botan/internal/fmt.h>
+   #include <botan/internal/stl_util.h>
+#endif
+
+namespace Botan_Tests {
+
+#if defined(BOTAN_HAS_XOF)
+
+class XOF_Tests final : public Text_Based_Test {
+   public:
+      XOF_Tests() : Text_Based_Test("xof", "In,Out", "Salt,Key") {}
+
+      Test::Result run_one_test(const std::string& algo, const VarMap& vars) override {
+         const std::vector<uint8_t> in = vars.get_req_bin("In");
+         const std::vector<uint8_t> expected = vars.get_req_bin("Out");
+         const std::vector<uint8_t> salt = vars.get_opt_bin("Salt");
+         const std::vector<uint8_t> key = vars.get_opt_bin("Key");
+
+         Test::Result result(algo);
+
+         const std::vector<std::string> providers = provider_filter(Botan::XOF::providers(algo));
+
+         if(providers.empty()) {
+            result.note_missing("XOF " + algo);
+            return result;
+         }
+
+         for(const auto& provider_ask : providers) {
+            auto xof = Botan::XOF::create(algo, provider_ask);
+
+            if(!xof) {
+               result.test_failure(Botan::fmt("XOF {} supported by {} but not found", algo, provider_ask));
+               continue;
+            }
+
+            const std::string provider(xof->provider());
+            result.test_is_nonempty("provider", provider);
+            result.test_eq(provider, xof->name(), algo);
+
+            // Some XOFs don't accept input at all. We assume that this stays the same
+            // after calling `XOF::clear()`.
+            const auto new_accepts_input = xof->accepts_input();
+
+            result.confirm("advertised block size is > 0", xof->block_size() > 0);
+            result.test_eq("new object may accept input", xof->accepts_input(), new_accepts_input);
+
+            // input and output in bulk
+            xof->start(salt, key);
+            xof->update(in);
+            result.test_eq("object may accept input before first output", xof->accepts_input(), new_accepts_input);
+            result.test_eq("generated output", xof->output_stdvec(expected.size()), expected);
+            result.confirm("object does not accept input after first output", !xof->accepts_input());
+
+            // input again and output bytewise
+            xof->clear();
+            result.test_eq("object might accept input after clear()", xof->accepts_input(), new_accepts_input);
+            xof->start(salt, key);
+            xof->update(in);
+
+            std::vector<uint8_t> singlebyte_out(expected.size());
+            for(uint8_t& chr : singlebyte_out) {
+               chr = xof->output_next_byte();
+            }
+            result.test_eq("generated singlebyte output", singlebyte_out, expected);
+
+            // input and output blocksize-ish wise
+            auto process_as_blocks = [&](const std::string& id, size_t block_size) {
+               auto new_xof = xof->new_object();
+               result.test_eq(Botan::fmt("reconstructed XOF may accept input ({})", id),
+                              new_xof->accepts_input(),
+                              new_accepts_input);
+
+               new_xof->start(salt, key);
+               std::span<const uint8_t> in_span(in);
+               while(!in_span.empty()) {
+                  const auto bytes = std::min(block_size, in_span.size());
+                  new_xof->update(in_span.first(bytes));
+                  in_span = in_span.last(in_span.size() - bytes);
+               }
+               std::vector<uint8_t> blockwise_out(expected.size());
+               std::span<uint8_t> out_span(blockwise_out);
+               while(!out_span.empty()) {
+                  const auto bytes = std::min(block_size, out_span.size());
+                  new_xof->output(out_span.first(bytes));
+                  out_span = out_span.last(out_span.size() - bytes);
+               }
+               result.test_eq(Botan::fmt("generated blockwise output ({})", id), blockwise_out, expected);
+            };
+
+            process_as_blocks("-1", xof->block_size() - 1);
+            process_as_blocks("+0", xof->block_size());
+            process_as_blocks("+1", xof->block_size() + 1);
+
+            // copy state during processing
+            try {
+               xof->clear();
+               xof->start(salt, key);
+               xof->update(std::span(in).first(in.size() / 2));
+               auto xof2 = xof->copy_state();
+               result.test_eq("copied object might still accept input", xof2->accepts_input(), new_accepts_input);
+               xof->update(std::span(in).last(in.size() - in.size() / 2));
+               xof2->update(std::span(in).last(in.size() - in.size() / 2));
+               auto cp_out1 = xof->output_stdvec(expected.size());
+               auto cp_out2_1 = xof2->output_stdvec(expected.size() / 2);
+               auto xof3 = xof2->copy_state();
+               result.confirm("copied object doesn't allow input after reading output", !xof3->accepts_input());
+               auto cp_out2_2a = xof2->output_stdvec(expected.size() - expected.size() / 2);
+               auto cp_out2_2b = xof3->output_stdvec(expected.size() - expected.size() / 2);
+               result.test_eq("output is equal, after state copy", cp_out1, expected);
+               result.test_eq("output is equal, after state copy (A)", Botan::concat(cp_out2_1, cp_out2_2a), expected);
+               result.test_eq("output is equal, after state copy (B)", Botan::concat(cp_out2_1, cp_out2_2b), expected);
+            } catch(const Botan::Not_Implemented&) {
+               // pass...
+            }
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_SERIALIZED_TEST("xof", "extendable_output_functions", XOF_Tests);
+
+#endif
+
+}  // namespace Botan_Tests

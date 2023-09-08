@@ -7,6 +7,11 @@
 */
 
 #include <botan/xof.h>
+#include <botan/internal/scan_name.h>
+
+#if defined(BOTAN_HAS_SHAKE_XOF)
+   #include <botan/internal/shake_xof.h>
+#endif
 
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
@@ -15,20 +20,35 @@ namespace Botan {
 
 //static
 std::unique_ptr<XOF> XOF::create(std::string_view algo_spec, std::string_view provider) {
-   BOTAN_UNUSED(algo_spec, provider);
+   const SCAN_Name req(algo_spec);
+
+   if(!provider.empty() && provider != "base") {
+      return nullptr;  // unknown provider
+   }
+
+#if defined(BOTAN_HAS_SHAKE_XOF)
+   if(req.algo_name() == "SHAKE-128" && req.arg_count() == 0) {
+      return std::make_unique<SHAKE_128_XOF>();
+   }
+   if(req.algo_name() == "SHAKE-256" && req.arg_count() == 0) {
+      return std::make_unique<SHAKE_256_XOF>();
+   }
+#endif
+
    return nullptr;
 }
 
 //static
 std::unique_ptr<XOF> XOF::create_or_throw(std::string_view algo_spec, std::string_view provider) {
-   BOTAN_UNUSED(algo_spec, provider);
-   throw Not_Implemented("No XOFs implemented so far");
+   if(auto xof = XOF::create(algo_spec, provider)) {
+      return xof;
+   }
+   throw Lookup_Error("XOF", algo_spec, provider);
 }
 
 // static
 std::vector<std::string> XOF::providers(std::string_view algo_spec) {
-   BOTAN_UNUSED(algo_spec);
-   return {};
+   return probe_providers_of<XOF>(algo_spec, {"base"});
 }
 
 std::string XOF::provider() const {
