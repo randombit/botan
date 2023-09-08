@@ -11,6 +11,12 @@
    #include <botan/xof.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/stl_util.h>
+
+   #if defined(BOTAN_HAS_CSHAKE_XOF)
+      // This XOF implementation is not exposed via the library's public interface
+      // and is therefore not registered in the XOF::create() factory.
+      #include <botan/internal/cshake_xof.h>
+   #endif
 #endif
 
 namespace Botan_Tests {
@@ -19,7 +25,7 @@ namespace Botan_Tests {
 
 class XOF_Tests final : public Text_Based_Test {
    public:
-      XOF_Tests() : Text_Based_Test("xof", "In,Out", "Salt,Key") {}
+      XOF_Tests() : Text_Based_Test("xof", "In,Out", "Salt,Key,Name") {}
 
       Test::Result run_one_test(const std::string& algo, const VarMap& vars) override {
          const std::vector<uint8_t> in = vars.get_req_bin("In");
@@ -27,9 +33,20 @@ class XOF_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> salt = vars.get_opt_bin("Salt");
          const std::vector<uint8_t> key = vars.get_opt_bin("Key");
 
+         // used exclusively for cSHAKE
+         [[maybe_unused]] const std::vector<uint8_t> name = vars.get_opt_bin("Name");
+
          Test::Result result(algo);
 
-         const std::vector<std::string> providers = provider_filter(Botan::XOF::providers(algo));
+         const auto providers = [&]() -> std::vector<std::string> {
+   #if defined(BOTAN_HAS_CSHAKE_XOF)
+            if(algo == "cSHAKE-128" || algo == "cSHAKE-256") {
+               return {"base"};
+            }
+   #endif
+
+            return provider_filter(Botan::XOF::providers(algo));
+         }();
 
          if(providers.empty()) {
             result.note_missing("XOF " + algo);
@@ -37,7 +54,17 @@ class XOF_Tests final : public Text_Based_Test {
          }
 
          for(const auto& provider_ask : providers) {
-            auto xof = Botan::XOF::create(algo, provider_ask);
+            auto xof = [&]() -> std::unique_ptr<Botan::XOF> {
+   #if defined(BOTAN_HAS_CSHAKE_XOF)
+               if(algo == "cSHAKE-128") {
+                  return std::make_unique<Botan::cSHAKE_128_XOF>(name);
+               }
+               if(algo == "cSHAKE-256") {
+                  return std::make_unique<Botan::cSHAKE_256_XOF>(name);
+               }
+   #endif
+               return Botan::XOF::create(algo, provider_ask);
+            }();
 
             if(!xof) {
                result.test_failure(Botan::fmt("XOF {} supported by {} but not found", algo, provider_ask));
