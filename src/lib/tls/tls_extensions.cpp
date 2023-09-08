@@ -4,6 +4,7 @@
 *     2016 Juraj Somorovsky
 *     2021 Elektrobit Automotive GmbH
 *     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
+*     2023 Mateusz Berezecki
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -11,6 +12,7 @@
 #include <botan/tls_extensions.h>
 
 #include <botan/ber_dec.h>
+#include <botan/der_enc.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_policy.h>
 #include <botan/internal/stl_util.h>
@@ -761,7 +763,19 @@ PSK_Key_Exchange_Modes::PSK_Key_Exchange_Modes(TLS_Data_Reader& reader, uint16_t
 }
 
 std::vector<uint8_t> Certificate_Authorities::serialize(Connection_Side) const {
-   throw Not_Implemented("serializing Certificate_Authorities is NYI");
+   std::vector<uint8_t> out;
+   std::vector<uint8_t> dn_list;
+
+   for(const auto& dn : m_distinguished_names) {
+      std::vector<uint8_t> encoded_dn;
+      auto encoder = DER_Encoder(encoded_dn);
+      dn.encode_into(encoder);
+      append_tls_length_value(dn_list, encoded_dn, 2);
+   }
+
+   append_tls_length_value(out, dn_list, 2);
+
+   return out;
 }
 
 Certificate_Authorities::Certificate_Authorities(TLS_Data_Reader& reader, uint16_t extension_size) {
