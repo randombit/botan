@@ -12,41 +12,59 @@
 
 #include <botan/mac.h>
 
-#include <botan/internal/cshake_xof.h>
-
 namespace Botan {
 
-/**
-* KMAC-256 as specified in NIST SP.800-185 Section 4
-*/
-class KMAC256 final : public MessageAuthenticationCode {
+class cSHAKE_XOF;
+
+class KMAC : public MessageAuthenticationCode {
+   protected:
+      KMAC(std::unique_ptr<cSHAKE_XOF> cshake, size_t output_byte_length);
+
    public:
-      void clear() override;
-      std::string name() const override;
-      std::unique_ptr<MessageAuthenticationCode> new_object() const override;
+      virtual ~KMAC();
 
-      size_t output_length() const override;
+      KMAC(const KMAC&) = delete;
+      KMAC& operator=(const KMAC&) = delete;
 
-      Key_Length_Specification key_spec() const override;
+      void clear() final;
+      size_t output_length() const final;
+      Key_Length_Specification key_spec() const final;
+      bool has_keying_material() const final;
 
-      void start_msg(const uint8_t nonce[], size_t nonce_len) final;
-      explicit KMAC256(size_t output_byte_length);
-
-      KMAC256(const KMAC256&) = delete;
-      KMAC256& operator=(const KMAC256&) = delete;
-
-      bool has_keying_material() const override;
+      std::string provider() const final;
 
    private:
+      void start_msg(const uint8_t nonce[], size_t nonce_len) final;
       void add_data(std::span<const uint8_t>) final;
       void final_result(std::span<uint8_t>) final;
       void key_schedule(std::span<const uint8_t>) final;
 
+   private:
       size_t m_output_bit_length;
       secure_vector<uint8_t> m_key;
       bool m_message_started;
 
-      cSHAKE_256_XOF m_cshake;
+      std::unique_ptr<cSHAKE_XOF> m_cshake;
+};
+
+/**
+* KMAC-128 as specified in NIST SP.800-185 Section 4
+*/
+class KMAC128 final : public KMAC {
+   public:
+      KMAC128(size_t output_byte_length);
+      std::string name() const override;
+      std::unique_ptr<MessageAuthenticationCode> new_object() const override;
+};
+
+/**
+* KMAC-256 as specified in NIST SP.800-185 Section 4
+*/
+class KMAC256 final : public KMAC {
+   public:
+      KMAC256(size_t output_byte_length);
+      std::string name() const override;
+      std::unique_ptr<MessageAuthenticationCode> new_object() const override;
 };
 
 }  // namespace Botan
