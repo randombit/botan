@@ -83,7 +83,7 @@ class BOTAN_PUBLIC_API(2, 0) Buffered_Computation {
       std::vector<uint8_t> final_stdvec() { return final<std::vector<uint8_t>>(); }
 
       void final(std::span<uint8_t> out) {
-         BOTAN_ASSERT_NOMSG(out.size() >= output_length());
+         BOTAN_ARG_CHECK(out.size() >= output_length(), "provided output buffer has insufficient capacity");
          final_result(out);
       }
 
