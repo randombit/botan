@@ -172,12 +172,12 @@ bool Poly1305::has_keying_material() const {
    return m_poly.size() == 8;
 }
 
-void Poly1305::key_schedule(const uint8_t key[], size_t /*length*/) {
+void Poly1305::key_schedule(std::span<const uint8_t> key) {
    m_buf_pos = 0;
    m_buf.resize(16);
    m_poly.resize(8);
 
-   poly1305_init(m_poly, key);
+   poly1305_init(m_poly, key.data());
 }
 
 void Poly1305::add_data(std::span<const uint8_t> input) {

@@ -58,16 +58,16 @@ bool ANSI_X919_MAC::has_keying_material() const {
 /*
 * ANSI X9.19 MAC Key Schedule
 */
-void ANSI_X919_MAC::key_schedule(const uint8_t key[], size_t length) {
+void ANSI_X919_MAC::key_schedule(std::span<const uint8_t> key) {
    m_state.resize(8);
 
-   m_des1->set_key(key, 8);
+   m_des1->set_key(key.first(8));
 
-   if(length == 16) {
-      key += 8;
+   if(key.size() == 16) {
+      key = key.last(8);
    }
 
-   m_des2->set_key(key, 8);
+   m_des2->set_key(key.first(8));
 }
 
 /*

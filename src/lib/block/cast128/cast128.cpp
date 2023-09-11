@@ -337,12 +337,12 @@ bool CAST_128::has_keying_material() const {
 /*
 * CAST-128 Key Schedule
 */
-void CAST_128::key_schedule(const uint8_t key[], size_t length) {
+void CAST_128::key_schedule(std::span<const uint8_t> key) {
    m_MK.resize(48);
    m_RK.resize(48);
 
    secure_vector<uint8_t> key16(16);
-   copy_mem(key16.data(), key, length);
+   copy_mem(key16.data(), key.data(), key.size());
 
    secure_vector<uint32_t> X(4);
    for(size_t i = 0; i != 4; ++i) {

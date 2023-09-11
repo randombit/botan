@@ -198,11 +198,11 @@ bool Noekeon::has_keying_material() const {
 /*
 * Noekeon Key Schedule
 */
-void Noekeon::key_schedule(const uint8_t key[], size_t /*length*/) {
-   uint32_t A0 = load_be<uint32_t>(key, 0);
-   uint32_t A1 = load_be<uint32_t>(key, 1);
-   uint32_t A2 = load_be<uint32_t>(key, 2);
-   uint32_t A3 = load_be<uint32_t>(key, 3);
+void Noekeon::key_schedule(std::span<const uint8_t> key) {
+   uint32_t A0 = load_be<uint32_t>(key.data(), 0);
+   uint32_t A1 = load_be<uint32_t>(key.data(), 1);
+   uint32_t A2 = load_be<uint32_t>(key.data(), 2);
+   uint32_t A3 = load_be<uint32_t>(key.data(), 3);
 
    for(size_t i = 0; i != 16; ++i) {
       A0 ^= RC[i];

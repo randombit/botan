@@ -293,9 +293,9 @@ size_t ChaCha::buffer_size() const {
 /*
 * ChaCha Key Schedule
 */
-void ChaCha::key_schedule(const uint8_t key[], size_t length) {
-   m_key.resize(length / 4);
-   load_le<uint32_t>(m_key.data(), key, m_key.size());
+void ChaCha::key_schedule(std::span<const uint8_t> key) {
+   m_key.resize(key.size() / 4);
+   load_le<uint32_t>(m_key.data(), key.data(), m_key.size());
 
    m_state.resize(16);
 

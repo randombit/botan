@@ -212,18 +212,18 @@ bool BLAKE2b::has_keying_material() const {
    return m_key_size > 0;
 }
 
-void BLAKE2b::key_schedule(const uint8_t key[], size_t length) {
-   BOTAN_ASSERT_NOMSG(length <= m_buffer.size());
+void BLAKE2b::key_schedule(std::span<const uint8_t> key) {
+   BOTAN_ASSERT_NOMSG(key.size() <= m_buffer.size());
 
-   m_key_size = length;
+   m_key_size = key.size();
    m_padded_key_buffer.resize(m_buffer.size());
 
-   if(m_padded_key_buffer.size() > length) {
-      size_t padding = m_padded_key_buffer.size() - length;
-      clear_mem(m_padded_key_buffer.data() + length, padding);
+   if(m_padded_key_buffer.size() > m_key_size) {
+      size_t padding = m_padded_key_buffer.size() - m_key_size;
+      clear_mem(m_padded_key_buffer.data() + m_key_size, padding);
    }
 
-   copy_mem(m_padded_key_buffer.data(), key, length);
+   copy_mem(m_padded_key_buffer.data(), key.data(), key.size());
    state_init();
 }
 

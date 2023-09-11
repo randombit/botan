@@ -31,7 +31,7 @@ class SHACAL2 final : public Block_Cipher_Fixed_Params<32, 16, 64, 4> {
       bool has_keying_material() const override;
 
    private:
-      void key_schedule(const uint8_t[], size_t) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
 #if defined(BOTAN_HAS_SHACAL2_SIMD)
       void simd_encrypt_4(const uint8_t in[], uint8_t out[]) const;

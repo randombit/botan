@@ -105,8 +105,8 @@ bool GHASH::has_keying_material() const {
    return !m_ghash.empty();
 }
 
-void GHASH::key_schedule(const uint8_t key[], size_t length) {
-   m_H.assign(key, key + length);
+void GHASH::key_schedule(std::span<const uint8_t> key) {
+   m_H.assign(key.begin(), key.end());  // TODO: C++23 - std::vector<>::assign_range()
    m_H_ad.resize(GCM_BS);
    m_ad_len = 0;
    m_text_len = 0;

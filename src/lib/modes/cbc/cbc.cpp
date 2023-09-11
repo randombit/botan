@@ -63,8 +63,8 @@ bool CBC_Mode::has_keying_material() const {
    return m_cipher->has_keying_material();
 }
 
-void CBC_Mode::key_schedule(const uint8_t key[], size_t length) {
-   m_cipher->set_key(key, length);
+void CBC_Mode::key_schedule(std::span<const uint8_t> key) {
+   m_cipher->set_key(key);
    m_state.clear();
 }
 

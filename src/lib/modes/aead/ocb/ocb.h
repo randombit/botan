@@ -77,7 +77,7 @@ class BOTAN_TEST_API OCB_Mode : public AEAD_Mode {
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override final;
 
-      void key_schedule(const uint8_t key[], size_t length) override final;
+      void key_schedule(std::span<const uint8_t> key) override final;
 
       const secure_vector<uint8_t>& update_nonce(const uint8_t nonce[], size_t nonce_len);
 

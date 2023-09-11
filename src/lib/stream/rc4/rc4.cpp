@@ -91,7 +91,7 @@ bool RC4::has_keying_material() const {
 /*
 * RC4 Key Schedule
 */
-void RC4::key_schedule(const uint8_t key[], size_t length) {
+void RC4::key_schedule(std::span<const uint8_t> key) {
    m_state.resize(256);
    m_buffer.resize(256);
 
@@ -102,7 +102,7 @@ void RC4::key_schedule(const uint8_t key[], size_t length) {
    }
 
    for(size_t i = 0, state_index = 0; i != 256; ++i) {
-      state_index = (state_index + key[i % length] + m_state[i]) % 256;
+      state_index = (state_index + key[i % key.size()] + m_state[i]) % 256;
       std::swap(m_state[i], m_state[state_index]);
    }
 

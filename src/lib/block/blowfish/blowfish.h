@@ -39,7 +39,7 @@ class BOTAN_TEST_API Blowfish final : public Block_Cipher_Fixed_Params<8, 1, 56>
       bool has_keying_material() const override;
 
    private:
-      void key_schedule(const uint8_t key[], size_t length) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
       void key_expansion(const uint8_t key[], size_t key_length, const uint8_t salt[], size_t salt_length);
 

@@ -91,15 +91,15 @@ bool TLS_CBC_HMAC_AEAD_Mode::has_keying_material() const {
    return mac().has_keying_material() && cbc().has_keying_material();
 }
 
-void TLS_CBC_HMAC_AEAD_Mode::key_schedule(const uint8_t key[], size_t keylen) {
+void TLS_CBC_HMAC_AEAD_Mode::key_schedule(std::span<const uint8_t> key) {
    // Both keys are of fixed length specified by the ciphersuite
 
-   if(keylen != m_cipher_keylen + m_mac_keylen) {
-      throw Invalid_Key_Length(name(), keylen);
+   if(key.size() != m_cipher_keylen + m_mac_keylen) {
+      throw Invalid_Key_Length(name(), key.size());
    }
 
-   mac().set_key(&key[0], m_mac_keylen);
-   cbc().set_key(&key[m_mac_keylen], m_cipher_keylen);
+   mac().set_key(key.first(m_mac_keylen));
+   cbc().set_key(key.subspan(m_mac_keylen, m_cipher_keylen));
 }
 
 void TLS_CBC_HMAC_AEAD_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {

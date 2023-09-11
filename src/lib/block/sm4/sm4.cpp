@@ -282,7 +282,7 @@ bool SM4::has_keying_material() const {
 /*
 * SM4 Key Schedule
 */
-void SM4::key_schedule(const uint8_t key[], size_t /*length*/) {
+void SM4::key_schedule(std::span<const uint8_t> key) {
    // System parameter or family key
    const uint32_t FK[4] = {0xa3b1bac6, 0x56aa3350, 0x677d9197, 0xb27022dc};
 
@@ -293,10 +293,10 @@ void SM4::key_schedule(const uint8_t key[], size_t /*length*/) {
                             0x10171E25, 0x2C333A41, 0x484F565D, 0x646B7279};
 
    secure_vector<uint32_t> K(4);
-   K[0] = load_be<uint32_t>(key, 0) ^ FK[0];
-   K[1] = load_be<uint32_t>(key, 1) ^ FK[1];
-   K[2] = load_be<uint32_t>(key, 2) ^ FK[2];
-   K[3] = load_be<uint32_t>(key, 3) ^ FK[3];
+   K[0] = load_be<uint32_t>(key.data(), 0) ^ FK[0];
+   K[1] = load_be<uint32_t>(key.data(), 1) ^ FK[1];
+   K[2] = load_be<uint32_t>(key.data(), 2) ^ FK[2];
+   K[3] = load_be<uint32_t>(key.data(), 3) ^ FK[3];
 
    m_RK.resize(32);
    for(size_t i = 0; i != 32; ++i) {

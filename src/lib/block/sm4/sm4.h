@@ -31,7 +31,7 @@ class SM4 final : public Block_Cipher_Fixed_Params<16, 16> {
       bool has_keying_material() const override;
 
    private:
-      void key_schedule(const uint8_t[], size_t) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
 #if defined(BOTAN_HAS_SM4_ARMV8)
       void sm4_armv8_encrypt(const uint8_t in[], uint8_t out[], size_t blocks) const;

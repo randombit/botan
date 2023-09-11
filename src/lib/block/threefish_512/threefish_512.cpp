@@ -256,12 +256,12 @@ bool Threefish_512::has_keying_material() const {
    return !m_K.empty();
 }
 
-void Threefish_512::key_schedule(const uint8_t key[], size_t /*length*/) {
+void Threefish_512::key_schedule(std::span<const uint8_t> key) {
    // todo: define key schedule for smaller keys
    m_K.resize(9);
 
    for(size_t i = 0; i != 8; ++i) {
-      m_K[i] = load_le<uint64_t>(key, i);
+      m_K[i] = load_le<uint64_t>(key.data(), i);
    }
 
    m_K[8] = m_K[0] ^ m_K[1] ^ m_K[2] ^ m_K[3] ^ m_K[4] ^ m_K[5] ^ m_K[6] ^ m_K[7] ^ 0x1BD11BDAA9FC1A22;

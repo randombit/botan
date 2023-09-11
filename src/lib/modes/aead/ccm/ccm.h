@@ -68,7 +68,7 @@ class CCM_Mode : public AEAD_Mode {
       void start_msg(const uint8_t nonce[], size_t nonce_len) final;
       size_t process_msg(uint8_t buf[], size_t sz) final;
 
-      void key_schedule(const uint8_t key[], size_t length) final;
+      void key_schedule(std::span<const uint8_t> key) final;
 
       const size_t m_tag_size;
       const size_t m_L;

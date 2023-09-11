@@ -63,7 +63,7 @@ class ChaCha20Poly1305_Mode : public AEAD_Mode {
    private:
       void start_msg(const uint8_t nonce[], size_t nonce_len) override;
 
-      void key_schedule(const uint8_t key[], size_t length) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 };
 
 /**

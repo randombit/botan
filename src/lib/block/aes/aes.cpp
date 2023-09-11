@@ -845,26 +845,26 @@ void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    aes_decrypt_n(in, out, blocks, m_DK);
 }
 
-void AES_128::key_schedule(const uint8_t key[], size_t length) {
+void AES_128::key_schedule(std::span<const uint8_t> key) {
 #if defined(BOTAN_HAS_AES_NI)
    if(CPUID::has_aes_ni()) {
-      return aesni_key_schedule(key, length);
+      return aesni_key_schedule(key.data(), key.size());
    }
 #endif
 
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has_hw_aes()) {
-      return aes_key_schedule(key, length, m_EK, m_DK, CPUID::is_little_endian());
+      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, CPUID::is_little_endian());
    }
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
    if(CPUID::has_vperm()) {
-      return vperm_key_schedule(key, length);
+      return vperm_key_schedule(key.data(), key.size());
    }
 #endif
 
-   aes_key_schedule(key, length, m_EK, m_DK);
+   aes_key_schedule(key.data(), key.size(), m_EK, m_DK);
 }
 
 void AES_128::clear() {
@@ -908,26 +908,26 @@ void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    aes_decrypt_n(in, out, blocks, m_DK);
 }
 
-void AES_192::key_schedule(const uint8_t key[], size_t length) {
+void AES_192::key_schedule(std::span<const uint8_t> key) {
 #if defined(BOTAN_HAS_AES_NI)
    if(CPUID::has_aes_ni()) {
-      return aesni_key_schedule(key, length);
+      return aesni_key_schedule(key.data(), key.size());
    }
 #endif
 
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has_hw_aes()) {
-      return aes_key_schedule(key, length, m_EK, m_DK, CPUID::is_little_endian());
+      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, CPUID::is_little_endian());
    }
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
    if(CPUID::has_vperm()) {
-      return vperm_key_schedule(key, length);
+      return vperm_key_schedule(key.data(), key.size());
    }
 #endif
 
-   aes_key_schedule(key, length, m_EK, m_DK);
+   aes_key_schedule(key.data(), key.size(), m_EK, m_DK);
 }
 
 void AES_192::clear() {
@@ -971,26 +971,26 @@ void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
    aes_decrypt_n(in, out, blocks, m_DK);
 }
 
-void AES_256::key_schedule(const uint8_t key[], size_t length) {
+void AES_256::key_schedule(std::span<const uint8_t> key) {
 #if defined(BOTAN_HAS_AES_NI)
    if(CPUID::has_aes_ni()) {
-      return aesni_key_schedule(key, length);
+      return aesni_key_schedule(key.data(), key.size());
    }
 #endif
 
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has_hw_aes()) {
-      return aes_key_schedule(key, length, m_EK, m_DK, CPUID::is_little_endian());
+      return aes_key_schedule(key.data(), key.size(), m_EK, m_DK, CPUID::is_little_endian());
    }
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
    if(CPUID::has_vperm()) {
-      return vperm_key_schedule(key, length);
+      return vperm_key_schedule(key.data(), key.size());
    }
 #endif
 
-   aes_key_schedule(key, length, m_EK, m_DK);
+   aes_key_schedule(key.data(), key.size(), m_EK, m_DK);
 }
 
 void AES_256::clear() {

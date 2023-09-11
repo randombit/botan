@@ -79,17 +79,17 @@ bool Lion::has_keying_material() const {
 /*
 * Lion Key Schedule
 */
-void Lion::key_schedule(const uint8_t key[], size_t length) {
+void Lion::key_schedule(std::span<const uint8_t> key) {
    clear();
 
-   const size_t half = length / 2;
+   const size_t half = key.size() / 2;
 
    m_key1.resize(left_size());
    m_key2.resize(left_size());
    clear_mem(m_key1.data(), m_key1.size());
    clear_mem(m_key2.data(), m_key2.size());
-   copy_mem(m_key1.data(), key, half);
-   copy_mem(m_key2.data(), key + half, half);
+   copy_mem(m_key1.data(), key.data(), half);
+   copy_mem(m_key2.data(), key.subspan(half, half).data(), half);
 }
 
 /*

@@ -36,7 +36,7 @@ class Poly1305 final : public MessageAuthenticationCode {
    private:
       void add_data(std::span<const uint8_t>) override;
       void final_result(std::span<uint8_t>) override;
-      void key_schedule(const uint8_t[], size_t) override;
+      void key_schedule(std::span<const uint8_t>) override;
 
       secure_vector<uint64_t> m_poly;
       secure_vector<uint8_t> m_buf;

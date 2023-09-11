@@ -67,15 +67,15 @@ bool XTS_Mode::has_keying_material() const {
    return m_cipher->has_keying_material() && m_tweak_cipher->has_keying_material();
 }
 
-void XTS_Mode::key_schedule(const uint8_t key[], size_t length) {
-   const size_t key_half = length / 2;
+void XTS_Mode::key_schedule(std::span<const uint8_t> key) {
+   const size_t key_half = key.size() / 2;
 
-   if(length % 2 == 1 || !m_cipher->valid_keylength(key_half)) {
-      throw Invalid_Key_Length(name(), length);
+   if(key.size() % 2 == 1 || !m_cipher->valid_keylength(key_half)) {
+      throw Invalid_Key_Length(name(), key.size());
    }
 
-   m_cipher->set_key(key, key_half);
-   m_tweak_cipher->set_key(&key[key_half], key_half);
+   m_cipher->set_key(key.first(key_half));
+   m_tweak_cipher->set_key(key.last(key_half));
 }
 
 void XTS_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {

@@ -59,7 +59,7 @@ class CommonCrypto_BlockCipher final : public BlockCipher {
          }
       }
 
-      void key_schedule(const uint8_t key[], size_t key_len) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
       std::string m_cipher_name;
       CommonCryptor_Opts m_opts;
@@ -84,11 +84,11 @@ CommonCrypto_BlockCipher::~CommonCrypto_BlockCipher() {
 /*
 * Set the key
 */
-void CommonCrypto_BlockCipher::key_schedule(const uint8_t key[], size_t length) {
-   secure_vector<uint8_t> full_key(key, key + length);
+void CommonCrypto_BlockCipher::key_schedule(std::span<const uint8_t> key) {
+   secure_vector<uint8_t> full_key(key.begin(), key.end());
 
    clear();
-   commoncrypto_adjust_key_size(key, length, m_opts, full_key);
+   commoncrypto_adjust_key_size(key.data(), key.size(), m_opts, full_key);
 
    CCCryptorStatus status;
    status =

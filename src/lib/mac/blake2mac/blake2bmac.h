@@ -37,7 +37,7 @@ class BLAKE2bMAC final : public MessageAuthenticationCode {
       Key_Length_Specification key_spec() const override { return m_blake.key_spec(); }
 
    private:
-      void key_schedule(const uint8_t key[], size_t length) override { m_blake.set_key(key, length); }
+      void key_schedule(std::span<const uint8_t> key) override { m_blake.set_key(key); }
 
       void add_data(std::span<const uint8_t> input) override {
          assert_key_material_set();

@@ -29,7 +29,7 @@ class CAST_128 final : public Block_Cipher_Fixed_Params<8, 11, 16> {
       bool has_keying_material() const override;
 
    private:
-      void key_schedule(const uint8_t[], size_t) override;
+      void key_schedule(std::span<const uint8_t> key) override;
 
       static void cast_ks(secure_vector<uint32_t>& ks, secure_vector<uint32_t>& user_key);
 

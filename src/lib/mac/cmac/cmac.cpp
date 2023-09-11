@@ -69,9 +69,9 @@ bool CMAC::has_keying_material() const {
 /*
 * CMAC Key Schedule
 */
-void CMAC::key_schedule(const uint8_t key[], size_t length) {
+void CMAC::key_schedule(std::span<const uint8_t> key) {
    clear();
-   m_cipher->set_key(key, length);
+   m_cipher->set_key(key);
    m_cipher->encrypt(m_B);
    poly_double_n(m_B.data(), m_B.size());
    poly_double_n(m_P.data(), m_B.data(), m_P.size());

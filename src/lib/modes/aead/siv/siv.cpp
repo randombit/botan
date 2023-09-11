@@ -69,10 +69,10 @@ bool SIV_Mode::has_keying_material() const {
    return m_ctr->has_keying_material() && m_mac->has_keying_material();
 }
 
-void SIV_Mode::key_schedule(const uint8_t key[], size_t length) {
-   const size_t keylen = length / 2;
-   m_mac->set_key(key, keylen);
-   m_ctr->set_key(key + keylen, keylen);
+void SIV_Mode::key_schedule(std::span<const uint8_t> key) {
+   const size_t keylen = key.size() / 2;
+   m_mac->set_key(key.first(keylen));
+   m_ctr->set_key(key.last(keylen));
    m_ad_macs.clear();
 }
 

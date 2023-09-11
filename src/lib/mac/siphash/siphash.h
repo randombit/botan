@@ -30,7 +30,7 @@ class SipHash final : public MessageAuthenticationCode {
    private:
       void add_data(std::span<const uint8_t>) override;
       void final_result(std::span<uint8_t>) override;
-      void key_schedule(const uint8_t[], size_t) override;
+      void key_schedule(std::span<const uint8_t>) override;
 
       const size_t m_C, m_D;
       secure_vector<uint64_t> m_K;
