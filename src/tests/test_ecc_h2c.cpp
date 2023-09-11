@@ -59,15 +59,14 @@ class ECC_H2C_Tests final : public Text_Based_Test {
 
          const std::string hash = vars.get_req_str("Hash");
          const std::string domain = vars.get_req_str("Domain");
-         const std::string input = vars.get_req_str("Input");
+         const std::vector<uint8_t> input = vars.get_req_bin("Input");
          const BigInt exp_point_x = vars.get_req_bn("PointX");
          const BigInt exp_point_y = vars.get_req_bn("PointY");
          const bool random_oracle = method.find("-RO") != std::string::npos;
 
          Botan::EC_Group group(group_id);
 
-         const auto point = group.hash_to_curve(
-            hash, reinterpret_cast<const uint8_t*>(input.data()), input.size(), domain, random_oracle);
+         const auto point = group.hash_to_curve(hash, input.data(), input.size(), domain, random_oracle);
 
          result.confirm("Generated point is on the curve", point.on_the_curve());
 
