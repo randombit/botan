@@ -3,7 +3,7 @@
 """
 CI build script
 (C) 2017-2022 Jack Lloyd
-    2022 René Meusel - Rohde & Schwarz Cybersecurity
+    2022-2023 René Meusel - Rohde & Schwarz Cybersecurity
 
 
 Botan is released under the Simplified BSD License (see license.txt)
@@ -61,6 +61,31 @@ def known_targets():
         'valgrind',
         'valgrind-full',
     ]
+
+def is_running_in_github_actions():
+    return os.environ.get("GITHUB_ACTIONS", "false") == "true"
+
+class LoggingGroup:
+    """
+    Context Manager that opportunistically uses GitHub Actions workflow commands
+    to group all log output inside the managed context into an expandable group.
+    """
+
+    def __init__(self, group_title):
+        self.group_title = group_title
+
+    def __enter__(self):
+        if is_running_in_github_actions():
+            print("::group::%s" % self.group_title)
+        else:
+            print("Running '%s' ..." % self.group_title)
+
+        sys.stdout.flush()
+        return is_running_in_github_actions()
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        if is_running_in_github_actions():
+            print("::endgroup::")
 
 def build_targets(target, target_os):
     if target in ['shared', 'minimized', 'bsi', 'nist']:
@@ -416,51 +441,50 @@ def run_cmd(cmd, root_dir, build_dir):
     """
     Execute a command, die if it failed
     """
-    print("Running '%s' ..." % (' '.join(cmd)))
-    sys.stdout.flush()
 
-    start = time.time()
+    with LoggingGroup(' '.join(cmd)):
+        start = time.time()
 
-    cmd = [os.path.expandvars(elem) for elem in cmd]
-    sub_env = os.environ.copy()
-    sub_env['LD_LIBRARY_PATH'] = os.path.abspath(build_dir)
-    sub_env['DYLD_LIBRARY_PATH'] = os.path.abspath(build_dir)
-    sub_env['PYTHONPATH'] = os.path.abspath(os.path.join(root_dir, 'src/python'))
-    cwd = None
+        cmd = [os.path.expandvars(elem) for elem in cmd]
+        sub_env = os.environ.copy()
+        sub_env['LD_LIBRARY_PATH'] = os.path.abspath(build_dir)
+        sub_env['DYLD_LIBRARY_PATH'] = os.path.abspath(build_dir)
+        sub_env['PYTHONPATH'] = os.path.abspath(os.path.join(root_dir, 'src/python'))
+        cwd = None
 
-    redirect_stdout_fd = None
-    redirect_stdout_fsname = None
+        redirect_stdout_fd = None
+        redirect_stdout_fsname = None
 
-    if len(cmd) >= 3 and cmd[-2] == '>':
-        redirect_stdout_fsname = cmd[-1]
-        redirect_stdout_fd = open(redirect_stdout_fsname, 'w', encoding='utf8')
-        cmd = cmd[:-2]
-    if len(cmd) > 1 and cmd[0].startswith('indir:'):
-        cwd = cmd[0][6:]
-        cmd = cmd[1:]
-    while len(cmd) > 1 and cmd[0].startswith('env:') and cmd[0].find('=') > 0:
-        env_key, env_val = cmd[0][4:].split('=')
-        sub_env[env_key] = env_val
-        cmd = cmd[1:]
+        if len(cmd) >= 3 and cmd[-2] == '>':
+            redirect_stdout_fsname = cmd[-1]
+            redirect_stdout_fd = open(redirect_stdout_fsname, 'w', encoding='utf8')
+            cmd = cmd[:-2]
+        if len(cmd) > 1 and cmd[0].startswith('indir:'):
+            cwd = cmd[0][6:]
+            cmd = cmd[1:]
+        while len(cmd) > 1 and cmd[0].startswith('env:') and cmd[0].find('=') > 0:
+            env_key, env_val = cmd[0][4:].split('=')
+            sub_env[env_key] = env_val
+            cmd = cmd[1:]
 
-    proc = subprocess.Popen(cmd, cwd=cwd, close_fds=True, env=sub_env, stdout=redirect_stdout_fd)
-    proc.communicate()
+        proc = subprocess.Popen(cmd, cwd=cwd, close_fds=True, env=sub_env, stdout=redirect_stdout_fd)
+        proc.communicate()
 
-    time_taken = int(time.time() - start)
+        time_taken = int(time.time() - start)
 
-    if time_taken > 10:
-        print("Ran for %d seconds" % (time_taken))
+        if time_taken > 10:
+            print("Ran for %d seconds" % (time_taken))
 
-    if proc.returncode != 0:
-        print("Command '%s' failed with error code %d" % (' '.join(cmd), proc.returncode))
+        if proc.returncode != 0:
+            print("Command '%s' failed with error code %d" % (' '.join(cmd), proc.returncode))
 
-        if redirect_stdout_fd is not None:
-            redirect_stdout_fd.close()
-            last_lines = open(redirect_stdout_fsname, encoding='utf8').readlines()[-100:]
-            print("%s", ''.join(last_lines))
+            if redirect_stdout_fd is not None:
+                redirect_stdout_fd.close()
+                last_lines = open(redirect_stdout_fsname, encoding='utf8').readlines()[-100:]
+                print("%s", ''.join(last_lines))
 
-        if cmd[0] not in ['lcov', 'codecov']:
-            sys.exit(proc.returncode)
+            if cmd[0] not in ['lcov', 'codecov']:
+                sys.exit(proc.returncode)
 
 def default_os():
     platform_os = platform.system().lower()

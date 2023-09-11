@@ -14,6 +14,7 @@ import os
 import re
 import multiprocessing
 import time
+import uuid
 from multiprocessing.pool import ThreadPool
 
 quick_checks = [
@@ -159,6 +160,11 @@ def run_clang_tidy(compile_commands_file,
     if options.fixit:
         cmdline.append('-fix')
 
+    if options.export_fixes_dir:
+        os.makedirs(options.export_fixes_dir, exist_ok=True)
+        yml_file = os.path.join(options.export_fixes_dir, "%s.yml" % uuid.uuid4())
+        cmdline.append("--export-fixes=%s" % yml_file)
+
     cmdline.append(source_file)
 
     stdout = run_command(cmdline)
@@ -198,6 +204,7 @@ def main(args = None): # pylint: disable=too-many-return-statements
     parser.add_option('--only-changed-files', action='store_true', default=False)
     parser.add_option('--only-matching', metavar='REGEX', default='.*')
     parser.add_option('--take-file-list-from-stdin', action='store_true', default=False)
+    parser.add_option('--export-fixes-dir', default=None)
 
     (options, args) = parser.parse_args(args)
 
