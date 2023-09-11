@@ -42,14 +42,14 @@ std::string Keccak_1600::provider() const {
    return m_keccak.provider();
 }
 
-void Keccak_1600::add_data(const uint8_t input[], size_t length) {
-   m_keccak.absorb({input, length});
+void Keccak_1600::add_data(std::span<const uint8_t> input) {
+   m_keccak.absorb(input);
 }
 
-void Keccak_1600::final_result(uint8_t output[]) {
+void Keccak_1600::final_result(std::span<uint8_t> output) {
    m_keccak.finish();
-   m_keccak.squeeze({output, m_output_length});
-   m_keccak.clear();
+   m_keccak.squeeze(output);
+   clear();
 }
 
 }  // namespace Botan

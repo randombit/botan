@@ -172,31 +172,30 @@ std::unique_ptr<HashFunction> CRC24::copy_state() const {
 *    T3[j] = (T2[j] >> 8) ^ T0[ T2[j] & 0xFF ]
 *
 */
-void CRC24::add_data(const uint8_t input[], size_t length) {
+void CRC24::add_data(std::span<const uint8_t> input) {
    uint32_t tmp = m_crc;
 
    // Input is word aligned if WA & input == 0
    static const uint8_t WA = sizeof(size_t) - 1;
 
    // Ensure input is word aligned before processing in parallel
-   for(; length && (reinterpret_cast<uintptr_t>(input) & WA); length--) {
-      tmp = process8(tmp, *input++);
+   for(; !input.empty() && (reinterpret_cast<uintptr_t>(input.data()) & WA); input = input.last(input.size() - 1)) {
+      tmp = process8(tmp, input.front());
    }
 
-   while(length >= 16) {
+   while(input.size() >= 16) {
       uint32_t d[4];
-      load_le(d, input, 4);
+      load_le(d, input.data(), 4);
       tmp = process32(tmp, d[0]);
       tmp = process32(tmp, d[1]);
       tmp = process32(tmp, d[2]);
       tmp = process32(tmp, d[3]);
 
-      input += 16;
-      length -= 16;
+      input = input.last(input.size() - 16);
    }
 
-   while(length--) {
-      tmp = process8(tmp, *input++);
+   for(; !input.empty(); input = input.last(input.size() - 1)) {
+      tmp = process8(tmp, input.front());
    }
 
    m_crc = tmp;
@@ -205,7 +204,7 @@ void CRC24::add_data(const uint8_t input[], size_t length) {
 /*
 * Finalize a CRC24 Checksum
 */
-void CRC24::final_result(uint8_t output[]) {
+void CRC24::final_result(std::span<uint8_t> output) {
    output[0] = get_byte<3>(m_crc);
    output[1] = get_byte<2>(m_crc);
    output[2] = get_byte<1>(m_crc);

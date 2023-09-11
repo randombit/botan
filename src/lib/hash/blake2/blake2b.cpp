@@ -13,6 +13,7 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <botan/internal/stl_util.h>
 #include <algorithm>
 
 namespace Botan {
@@ -147,47 +148,47 @@ void BLAKE2b::compress(const uint8_t* input, size_t blocks, uint64_t increment) 
    }
 }
 
-void BLAKE2b::add_data(const uint8_t input[], size_t length) {
-   if(length == 0) {
+void BLAKE2b::add_data(std::span<const uint8_t> input) {
+   if(input.empty()) {
       return;
    }
 
+   BufferSlicer in(input);
+
    if(m_bufpos > 0) {
       if(m_bufpos < BLAKE2B_BLOCKBYTES) {
-         const size_t take = std::min(BLAKE2B_BLOCKBYTES - m_bufpos, length);
-         copy_mem(&m_buffer[m_bufpos], input, take);
-         m_bufpos += take;
-         length -= take;
-         input += take;
+         const auto part = in.take(std::min(BLAKE2B_BLOCKBYTES - m_bufpos, in.remaining()));
+         copy_mem(&m_buffer[m_bufpos], part.data(), part.size());
+         m_bufpos += part.size();
       }
 
-      if(m_bufpos == m_buffer.size() && length > 0) {
+      if(m_bufpos == m_buffer.size() && !in.empty()) {
          compress(m_buffer.data(), 1, BLAKE2B_BLOCKBYTES);
          m_bufpos = 0;
       }
    }
 
-   if(length > BLAKE2B_BLOCKBYTES) {
-      const size_t full_blocks = ((length - 1) / BLAKE2B_BLOCKBYTES);
-      compress(input, full_blocks, BLAKE2B_BLOCKBYTES);
-
-      input += full_blocks * BLAKE2B_BLOCKBYTES;
-      length -= full_blocks * BLAKE2B_BLOCKBYTES;
+   if(in.remaining() > BLAKE2B_BLOCKBYTES) {
+      const size_t full_blocks = ((in.remaining() - 1) / BLAKE2B_BLOCKBYTES);
+      compress(in.take(BLAKE2B_BLOCKBYTES * full_blocks).data(), full_blocks, BLAKE2B_BLOCKBYTES);
    }
 
-   if(length > 0) {
-      copy_mem(&m_buffer[m_bufpos], input, length);
-      m_bufpos += length;
+   if(!in.empty()) {
+      const auto take = in.remaining();
+      copy_mem(&m_buffer[m_bufpos], in.take(take).data(), take);
+      m_bufpos += take;
    }
+
+   BOTAN_ASSERT_NOMSG(in.empty());
 }
 
-void BLAKE2b::final_result(uint8_t output[]) {
+void BLAKE2b::final_result(std::span<uint8_t> output) {
    if(m_bufpos != BLAKE2B_BLOCKBYTES) {
       clear_mem(&m_buffer[m_bufpos], BLAKE2B_BLOCKBYTES - m_bufpos);
    }
    m_F = 0xFFFFFFFFFFFFFFFF;
    compress(m_buffer.data(), 1, m_bufpos);
-   copy_out_vec_le(output, output_length(), m_H);
+   copy_out_vec_le(output.data(), output_length(), m_H);
    state_init();
 }
 

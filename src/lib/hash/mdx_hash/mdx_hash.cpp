@@ -10,6 +10,7 @@
 #include <botan/exceptn.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -46,38 +47,38 @@ void MDx_HashFunction::clear() {
 /*
 * Update the hash
 */
-void MDx_HashFunction::add_data(const uint8_t input[], size_t length) {
+void MDx_HashFunction::add_data(std::span<const uint8_t> input) {
    const size_t block_len = static_cast<size_t>(1) << m_block_bits;
 
-   m_count += length;
+   m_count += input.size();
 
    if(m_position) {
-      buffer_insert(m_buffer, m_position, input, length);
+      buffer_insert(m_buffer, m_position, input.data(), input.size());
 
-      if(m_position + length >= block_len) {
+      if(m_position + input.size() >= block_len) {
          compress_n(m_buffer.data(), 1);
-         input += (block_len - m_position);
-         length -= (block_len - m_position);
+         input = input.last(input.size() - block_len + m_position);
          m_position = 0;
       }
    }
 
    // Just in case the compiler can't figure out block_len is a power of 2
-   const size_t full_blocks = length >> m_block_bits;
-   const size_t remaining = length & (block_len - 1);
+   const size_t full_blocks = input.size() >> m_block_bits;
 
+   BufferSlicer in(input);
    if(full_blocks > 0) {
-      compress_n(input, full_blocks);
+      compress_n(in.take(full_blocks * block_len).data(), full_blocks);
    }
 
-   buffer_insert(m_buffer, m_position, input + full_blocks * block_len, remaining);
-   m_position += remaining;
+   const auto remaining = in.take(in.remaining());
+   buffer_insert(m_buffer, m_position, remaining.data(), remaining.size());
+   m_position += remaining.size();
 }
 
 /*
 * Finalize a hash
 */
-void MDx_HashFunction::final_result(uint8_t output[]) {
+void MDx_HashFunction::final_result(std::span<uint8_t> output) {
    const size_t block_len = static_cast<size_t>(1) << m_block_bits;
 
    clear_mem(&m_buffer[m_position], block_len - m_position);
@@ -100,7 +101,7 @@ void MDx_HashFunction::final_result(uint8_t output[]) {
    }
 
    compress_n(m_buffer.data(), 1);
-   copy_out(output);
+   copy_out(output.data());
    clear();
 }
 

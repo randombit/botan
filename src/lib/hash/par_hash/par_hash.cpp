@@ -6,22 +6,23 @@
 */
 
 #include <botan/internal/par_hash.h>
+
+#include <botan/internal/stl_util.h>
+
 #include <sstream>
 
 namespace Botan {
 
-void Parallel::add_data(const uint8_t input[], size_t length) {
+void Parallel::add_data(std::span<const uint8_t> input) {
    for(auto&& hash : m_hashes) {
-      hash->update(input, length);
+      hash->update(input);
    }
 }
 
-void Parallel::final_result(uint8_t out[]) {
-   size_t offset = 0;
-
+void Parallel::final_result(std::span<uint8_t> output) {
+   BufferStuffer out(output);
    for(auto&& hash : m_hashes) {
-      hash->final(out + offset);
-      offset += hash->output_length();
+      hash->final(out.next(hash->output_length()));
    }
 }
 

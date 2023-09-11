@@ -16,19 +16,19 @@ namespace Botan {
 /*
 * Update a HMAC Calculation
 */
-void HMAC::add_data(const uint8_t input[], size_t length) {
+void HMAC::add_data(std::span<const uint8_t> input) {
    assert_key_material_set();
-   m_hash->update(input, length);
+   m_hash->update(input);
 }
 
 /*
 * Finalize a HMAC Calculation
 */
-void HMAC::final_result(uint8_t mac[]) {
+void HMAC::final_result(std::span<uint8_t> mac) {
    assert_key_material_set();
    m_hash->final(mac);
    m_hash->update(m_okey);
-   m_hash->update(mac, m_hash_output_length);
+   m_hash->update(mac.first(m_hash_output_length));
    m_hash->final(mac);
    m_hash->update(m_ikey);
 }

@@ -30,13 +30,13 @@ std::unique_ptr<HashFunction> SHAKE_128::copy_state() const {
    return std::make_unique<SHAKE_128>(*this);
 }
 
-void SHAKE_128::add_data(const uint8_t input[], size_t length) {
-   m_keccak.absorb({input, length});
+void SHAKE_128::add_data(std::span<const uint8_t> input) {
+   m_keccak.absorb(input);
 }
 
-void SHAKE_128::final_result(uint8_t output[]) {
+void SHAKE_128::final_result(std::span<uint8_t> output) {
    m_keccak.finish();
-   m_keccak.squeeze({output, output_length()});
+   m_keccak.squeeze(output);
    clear();
 }
 
@@ -58,13 +58,13 @@ std::unique_ptr<HashFunction> SHAKE_256::copy_state() const {
    return std::make_unique<SHAKE_256>(*this);
 }
 
-void SHAKE_256::add_data(const uint8_t input[], size_t length) {
-   m_keccak.absorb({input, length});
+void SHAKE_256::add_data(std::span<const uint8_t> input) {
+   m_keccak.absorb(input);
 }
 
-void SHAKE_256::final_result(uint8_t output[]) {
+void SHAKE_256::final_result(std::span<uint8_t> output) {
    m_keccak.finish();
-   m_keccak.squeeze({output, output_length()});
+   m_keccak.squeeze(output);
    clear();
 }
 

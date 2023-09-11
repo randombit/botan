@@ -14,6 +14,7 @@
 #include <botan/internal/donna128.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/mul128.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -179,32 +180,32 @@ void Poly1305::key_schedule(const uint8_t key[], size_t /*length*/) {
    poly1305_init(m_poly, key);
 }
 
-void Poly1305::add_data(const uint8_t input[], size_t length) {
+void Poly1305::add_data(std::span<const uint8_t> input) {
    assert_key_material_set();
 
    if(m_buf_pos) {
-      buffer_insert(m_buf, m_buf_pos, input, length);
+      buffer_insert(m_buf, m_buf_pos, input.data(), input.size());
 
-      if(m_buf_pos + length >= m_buf.size()) {
+      if(m_buf_pos + input.size() >= m_buf.size()) {
          poly1305_blocks(m_poly, m_buf.data(), 1);
-         input += (m_buf.size() - m_buf_pos);
-         length -= (m_buf.size() - m_buf_pos);
+         input = input.last(input.size() - m_buf.size() + m_buf_pos);
          m_buf_pos = 0;
       }
    }
 
-   const size_t full_blocks = length / m_buf.size();
-   const size_t remaining = length % m_buf.size();
+   BufferSlicer in(input);
+   const size_t full_blocks = in.remaining() / m_buf.size();
 
    if(full_blocks) {
-      poly1305_blocks(m_poly, input, full_blocks);
+      poly1305_blocks(m_poly, in.take(full_blocks * m_buf.size()).data(), full_blocks);
    }
 
-   buffer_insert(m_buf, m_buf_pos, input + full_blocks * m_buf.size(), remaining);
-   m_buf_pos += remaining;
+   const auto remaining = in.take(in.remaining());
+   buffer_insert(m_buf, m_buf_pos, remaining.data(), remaining.size());
+   m_buf_pos += remaining.size();
 }
 
-void Poly1305::final_result(uint8_t out[]) {
+void Poly1305::final_result(std::span<uint8_t> out) {
    assert_key_material_set();
 
    if(m_buf_pos != 0) {
@@ -216,7 +217,7 @@ void Poly1305::final_result(uint8_t out[]) {
       poly1305_blocks(m_poly, m_buf.data(), 1, true);
    }
 
-   poly1305_finish(m_poly, out);
+   poly1305_finish(m_poly, out.data());
 
    m_poly.clear();
    m_buf_pos = 0;

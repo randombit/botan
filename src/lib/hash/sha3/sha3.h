@@ -37,8 +37,8 @@ class SHA_3 : public HashFunction {
       std::string provider() const override;
 
    private:
-      void add_data(const uint8_t input[], size_t length) override;
-      void final_result(uint8_t out[]) override;
+      void add_data(std::span<const uint8_t> input) override;
+      void final_result(std::span<uint8_t> out) override;
 
    private:
       Keccak_Permutation m_keccak;

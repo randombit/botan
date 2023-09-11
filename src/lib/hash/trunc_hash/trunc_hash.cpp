@@ -13,25 +13,25 @@
 
 namespace Botan {
 
-void Truncated_Hash::add_data(const uint8_t input[], size_t length) {
-   m_hash->update(input, length);
+void Truncated_Hash::add_data(std::span<const uint8_t> input) {
+   m_hash->update(input);
 }
 
-void Truncated_Hash::final_result(uint8_t out[]) {
+void Truncated_Hash::final_result(std::span<uint8_t> out) {
    BOTAN_ASSERT_NOMSG(m_hash->output_length() * 8 >= m_output_bits);
 
    m_hash->final(m_buffer);
 
    // truncate output to a full number of bytes
    const auto bytes = output_length();
-   std::copy_n(m_buffer.begin(), bytes, out);
+   std::copy_n(m_buffer.begin(), bytes, out.data());
    zeroise(m_buffer);
 
    // mask the unwanted bits in the final byte
    const uint8_t bits_in_last_byte = ((m_output_bits - 1) % 8) + 1;
    const uint8_t bitmask = ~((1 << (8 - bits_in_last_byte)) - 1);
 
-   out[bytes - 1] &= bitmask;
+   out.back() &= bitmask;
 }
 
 size_t Truncated_Hash::output_length() const {

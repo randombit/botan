@@ -11,6 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -50,37 +51,35 @@ void Streebog::clear() {
 /*
 * Update the hash
 */
-void Streebog::add_data(const uint8_t input[], size_t length) {
+void Streebog::add_data(std::span<const uint8_t> input) {
    const size_t block_size = m_buffer.size();
 
    if(m_position) {
-      buffer_insert(m_buffer, m_position, input, length);
+      buffer_insert(m_buffer, m_position, input.data(), input.size());
 
-      if(m_position + length >= block_size) {
+      if(m_position + input.size() >= block_size) {
          compress(m_buffer.data());
          m_count += 512;
-         input += (block_size - m_position);
-         length -= (block_size - m_position);
+         input = input.last(input.size() - block_size + m_position);
          m_position = 0;
       }
    }
 
-   const size_t full_blocks = length / block_size;
-   const size_t remaining = length % block_size;
-
-   for(size_t i = 0; i != full_blocks; ++i) {
-      compress(input + block_size * i);
+   BufferSlicer in(input);
+   while(in.remaining() >= block_size) {
+      compress(in.take(block_size).data());
       m_count += 512;
    }
 
-   buffer_insert(m_buffer, m_position, input + full_blocks * block_size, remaining);
-   m_position += remaining;
+   const auto remaining = in.take(in.remaining());
+   buffer_insert(m_buffer, m_position, remaining.data(), remaining.size());
+   m_position += remaining.size();
 }
 
 /*
 * Finalize a hash
 */
-void Streebog::final_result(uint8_t output[]) {
+void Streebog::final_result(std::span<uint8_t> output) {
    m_buffer[m_position++] = 0x01;
 
    if(m_position != m_buffer.size()) {
@@ -96,7 +95,7 @@ void Streebog::final_result(uint8_t output[]) {
 
    compress_64(m_S.data(), true);
    // FIXME
-   std::memcpy(output, &m_h[8 - output_length() / 8], output_length());
+   std::memcpy(output.data(), &m_h[8 - output_length() / 8], output_length());
    clear();
 }
 

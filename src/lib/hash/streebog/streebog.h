@@ -32,8 +32,8 @@ class Streebog final : public HashFunction {
       explicit Streebog(size_t output_bits);
 
    protected:
-      void add_data(const uint8_t input[], size_t length) override;
-      void final_result(uint8_t out[]) override;
+      void add_data(std::span<const uint8_t> input) override;
+      void final_result(std::span<uint8_t> out) override;
 
       void compress(const uint8_t input[], bool lastblock = false);
 

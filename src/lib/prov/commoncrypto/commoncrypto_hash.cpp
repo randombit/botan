@@ -8,6 +8,7 @@
 #include <botan/internal/commoncrypto.h>
 
 #include <botan/hash.h>
+#include <botan/internal/stl_util.h>
 #include <unordered_map>
 
 #include <CommonCrypto/CommonCrypto.h>
@@ -54,18 +55,19 @@ class CommonCrypto_HashFunction final : public HashFunction {
       CommonCrypto_HashFunction(const digest_config_t& info, const CTX& ctx) : m_ctx(ctx), m_info(info) {}
 
    private:
-      void add_data(const uint8_t input[], size_t length) override {
+      void add_data(std::span<const uint8_t> input) override {
+         BufferSlicer in(input);
+
          /* update len parameter is 32 bit unsigned integer, feed input in parts */
-         while(length > 0) {
-            CC_LONG update_len = (length > 0xFFFFFFFFUL) ? 0xFFFFFFFFUL : static_cast<CC_LONG>(length);
-            m_info.update(&m_ctx, input, update_len);
-            input += update_len;
-            length -= update_len;
+         while(!in.empty()) {
+            CC_LONG update_len = (in.remaining() > 0xFFFFFFFFUL) ? 0xFFFFFFFFUL : static_cast<CC_LONG>(in.remaining());
+            const auto chunk = in.take(update_len);
+            m_info.update(&m_ctx, chunk.data(), static_cast<CC_LONG>(chunk.size()));
          }
       }
 
-      void final_result(uint8_t output[]) override {
-         if(m_info.final(output, &m_ctx) != 1)
+      void final_result(std::span<uint8_t> output) override {
+         if(m_info.final(output.data(), &m_ctx) != 1)
             throw CommonCrypto_Error("CC_" + m_info.name + "_Final");
          clear();
       }

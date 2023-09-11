@@ -10,37 +10,40 @@
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/poly_dbl.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
 /*
 * Update an CMAC Calculation
 */
-void CMAC::add_data(const uint8_t input[], size_t length) {
+void CMAC::add_data(std::span<const uint8_t> input) {
    const size_t bs = output_length();
 
-   buffer_insert(m_buffer, m_position, input, length);
-   if(m_position + length > bs) {
+   buffer_insert(m_buffer, m_position, input.data(), input.size());
+   if(m_position + input.size() > bs) {
       xor_buf(m_state, m_buffer, bs);
       m_cipher->encrypt(m_state);
-      input += (bs - m_position);
-      length -= (bs - m_position);
-      while(length > bs) {
-         xor_buf(m_state, input, bs);
+
+      BufferSlicer in(input);
+      in.skip(bs - m_position);
+      while(in.remaining() > bs) {
+         xor_buf(m_state, in.take(bs), bs);
          m_cipher->encrypt(m_state);
-         input += bs;
-         length -= bs;
       }
-      copy_mem(m_buffer.data(), input, length);
-      m_position = 0;
+
+      const auto remaining = in.take(in.remaining());
+      copy_mem(m_buffer.data(), remaining.data(), remaining.size());
+      m_position = remaining.size();
+   } else {
+      m_position += input.size();
    }
-   m_position += length;
 }
 
 /*
 * Finalize an CMAC Calculation
 */
-void CMAC::final_result(uint8_t mac[]) {
+void CMAC::final_result(std::span<uint8_t> mac) {
    xor_buf(m_state, m_buffer, m_position);
 
    if(m_position == output_length()) {
@@ -52,7 +55,7 @@ void CMAC::final_result(uint8_t mac[]) {
 
    m_cipher->encrypt(m_state);
 
-   copy_mem(mac, m_state.data(), output_length());
+   copy_mem(mac.data(), m_state.data(), output_length());
 
    zeroise(m_state);
    zeroise(m_buffer);

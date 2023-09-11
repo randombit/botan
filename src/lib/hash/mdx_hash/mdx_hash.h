@@ -29,8 +29,8 @@ class MDx_HashFunction : public HashFunction {
       size_t hash_block_size() const final { return m_buffer.size(); }
 
    protected:
-      void add_data(const uint8_t input[], size_t length) final;
-      void final_result(uint8_t output[]) final;
+      void add_data(std::span<const uint8_t> input) final;
+      void final_result(std::span<uint8_t> output) final;
 
       /**
       * Run the hash's compression function over a set of blocks

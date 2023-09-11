@@ -43,13 +43,13 @@ void SHA_3::clear() {
    m_keccak.clear();
 }
 
-void SHA_3::add_data(const uint8_t input[], size_t length) {
-   m_keccak.absorb({input, length});
+void SHA_3::add_data(std::span<const uint8_t> input) {
+   m_keccak.absorb(input);
 }
 
-void SHA_3::final_result(uint8_t output[]) {
+void SHA_3::final_result(std::span<uint8_t> output) {
    m_keccak.finish();
-   m_keccak.squeeze({output, m_output_length});
+   m_keccak.squeeze(output);
    m_keccak.clear();
 }
 
