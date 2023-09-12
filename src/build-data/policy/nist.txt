@@ -89,6 +89,7 @@ cast128
 gost_28147
 idea
 idea_sse2
+kuznyechik
 lion
 noekeon
 noekeon_simd

@@ -10,6 +10,8 @@ Version 3.2.0, Not Yet Released
 
 * The types defined in pubkey.h can now be moved (GH #3655)
 
+* Add the Russian block cipher Kuznyechik (GH #3680)
+
 * Remove an unused variable in BLAKE2b (GH #3624)
 
 * Fix a number of clang-tidy warnings in the headers (GH #3646)
