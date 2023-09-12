@@ -209,9 +209,6 @@ it insecure to any well-resourced attacker. 3DES extends the key length,
 and is still thought to be secure, modulo the limitation of a 64-bit block.
 All are somewhat common in some industries such as finance. Avoid in new code.
 
-Most implementations of DES, including the one currently used in Botan, are
-vulnerable to side channel attacks - another reason to avoid it.
-
 Available if ``BOTAN_HAS_DES`` is defined.
 
 GOST-28147-89
