@@ -22,8 +22,7 @@ std::unique_ptr<HashFunction> Streebog::copy_state() const {
    return std::make_unique<Streebog>(*this);
 }
 
-Streebog::Streebog(size_t output_bits) :
-      m_output_bits(output_bits), m_count(0), m_position(0), m_buffer(64), m_h(8), m_S(8) {
+Streebog::Streebog(size_t output_bits) : m_output_bits(output_bits), m_count(0), m_h(8), m_S(8) {
    if(output_bits != 256 && output_bits != 512) {
       throw Invalid_Argument(fmt("Streebog: Invalid output length {}", output_bits));
    }
@@ -40,8 +39,7 @@ std::string Streebog::name() const {
 */
 void Streebog::clear() {
    m_count = 0;
-   m_position = 0;
-   zeroise(m_buffer);
+   m_buffer.clear();
    zeroise(m_S);
 
    const uint64_t fill = (m_output_bits == 512) ? 0 : 0x0101010101010101;
@@ -52,46 +50,39 @@ void Streebog::clear() {
 * Update the hash
 */
 void Streebog::add_data(std::span<const uint8_t> input) {
-   const size_t block_size = m_buffer.size();
+   BufferSlicer in(input);
 
-   if(m_position) {
-      buffer_insert(m_buffer, m_position, input.data(), input.size());
-
-      if(m_position + input.size() >= block_size) {
-         compress(m_buffer.data());
+   while(!in.empty()) {
+      if(const auto one_block = m_buffer.handle_unaligned_data(in)) {
+         compress(one_block->data());
          m_count += 512;
-         input = input.last(input.size() - block_size + m_position);
-         m_position = 0;
+      }
+
+      if(m_buffer.in_alignment()) {
+         while(const auto aligned_block = m_buffer.next_aligned_block_to_process(in)) {
+            compress(aligned_block->data());
+            m_count += 512;
+         }
       }
    }
-
-   BufferSlicer in(input);
-   while(in.remaining() >= block_size) {
-      compress(in.take(block_size).data());
-      m_count += 512;
-   }
-
-   const auto remaining = in.take(in.remaining());
-   buffer_insert(m_buffer, m_position, remaining.data(), remaining.size());
-   m_position += remaining.size();
 }
 
 /*
 * Finalize a hash
 */
 void Streebog::final_result(std::span<uint8_t> output) {
-   m_buffer[m_position++] = 0x01;
+   const auto pos = m_buffer.elements_in_buffer();
 
-   if(m_position != m_buffer.size()) {
-      clear_mem(&m_buffer[m_position], m_buffer.size() - m_position);
-   }
+   const uint8_t padding = 0x01;
+   m_buffer.append({&padding, 1});
+   m_buffer.fill_up_with_zeros();
 
-   compress(m_buffer.data());
-   m_count += (m_position - 1) * 8;
+   compress(m_buffer.consume().data());
+   m_count += pos * 8;
 
-   zeroise(m_buffer);
-   store_le(m_count, m_buffer.data());
-   compress(m_buffer.data(), true);
+   m_buffer.fill_up_with_zeros();
+   store_le(m_count, m_buffer.directly_modify_first(sizeof(m_count)).data());
+   compress(m_buffer.consume().data(), true);
 
    compress_64(m_S.data(), true);
    // FIXME
