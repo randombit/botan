@@ -93,9 +93,9 @@ class KYBER_Tests final : public Test {
          results.push_back(run_kyber_test("Kyber1024_90s API", Botan::KyberMode::Kyber1024_90s, 256));
    #endif
    #if defined(BOTAN_HAS_KYBER)
-         results.push_back(run_kyber_test("Kyber512 API", Botan::KyberMode::Kyber512, 128));
-         results.push_back(run_kyber_test("Kyber768 API", Botan::KyberMode::Kyber768, 192));
-         results.push_back(run_kyber_test("Kyber1024 API", Botan::KyberMode::Kyber1024, 256));
+         results.push_back(run_kyber_test("Kyber512 API", Botan::KyberMode::Kyber512_R3, 128));
+         results.push_back(run_kyber_test("Kyber768 API", Botan::KyberMode::Kyber768_R3, 192));
+         results.push_back(run_kyber_test("Kyber1024 API", Botan::KyberMode::Kyber1024_R3, 256));
    #endif
 
          return results;
@@ -185,19 +185,19 @@ class Kyber_Encoding_Test : public Text_Based_Test {
    private:
       static Botan::KyberMode name_to_mode(const std::string& algo_name) {
          if(algo_name == "Kyber-512-r3") {
-            return Botan::KyberMode::Kyber512;
+            return Botan::KyberMode::Kyber512_R3;
          }
          if(algo_name == "Kyber-512-90s-r3") {
             return Botan::KyberMode::Kyber512_90s;
          }
          if(algo_name == "Kyber-768-r3") {
-            return Botan::KyberMode::Kyber768;
+            return Botan::KyberMode::Kyber768_R3;
          }
          if(algo_name == "Kyber-768-90s-r3") {
             return Botan::KyberMode::Kyber768_90s;
          }
          if(algo_name == "Kyber-1024-r3") {
-            return Botan::KyberMode::Kyber1024;
+            return Botan::KyberMode::Kyber1024_R3;
          }
          if(algo_name == "Kyber-1024-90s-r3") {
             return Botan::KyberMode::Kyber1024_90s;

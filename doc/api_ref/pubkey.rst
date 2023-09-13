@@ -99,6 +99,15 @@ Kyber
 
 Post-quantum key encapsulation scheme based on lattices.
 
+.. note::
+
+   Currently two modes for Kyber are defined: the round3 specification
+   from the NIST PQC competetition, and the "90s mode" (which uses
+   AES/SHA-2 instead of SHA-3 based primitives). The 90s mode Kyber is
+   deprecated and will be removed in a future release.
+
+   The final NIST specification version of Kyber is not yet implemented.
+
 Ed25519
 ~~~~~~~~~~
 

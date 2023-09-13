@@ -52,6 +52,8 @@ Deprecated Functionality
 This section lists cryptographic functionality which will be removed
 in a future major release.
 
+- Kyber 90s mode is deprecated and will be removed.
+
 - Currently it is possible to create an EC_Group with cofactor > 1.
   None of the builtin groups have composite order, and in the future
   it will be impossible to create composite order EC_Groups.
