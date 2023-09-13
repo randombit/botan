@@ -9,7 +9,9 @@
 #define BOTAN_SKEIN_512_H_
 
 #include <botan/hash.h>
+#include <botan/internal/alignment_buffer.h>
 #include <botan/internal/threefish_512.h>
+
 #include <memory>
 #include <string>
 
@@ -61,8 +63,7 @@ class Skein_512 final : public HashFunction {
 
       std::unique_ptr<Threefish_512> m_threefish;
       secure_vector<uint64_t> m_T;
-      secure_vector<uint8_t> m_buffer;
-      size_t m_buf_pos;
+      AlignmentBuffer<uint8_t, 64, AlignmentBufferFinalBlock::must_be_deferred> m_buffer;
 };
 
 }  // namespace Botan
