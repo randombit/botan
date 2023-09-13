@@ -18,6 +18,11 @@ doesn't seem to be an obvious alternative, contact the developers to
 explain your use case if you want to make sure your code continues to
 work.
 
+Platform Support Deprecations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Support for building for Windows systems prior to Windows 10 is deprecated.
+
 TLS Protocol Deprecations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
