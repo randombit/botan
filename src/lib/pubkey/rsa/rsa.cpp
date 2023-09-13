@@ -445,21 +445,27 @@ class RSA_Private_Operation {
             m_max_d1_bits(m_private->p_bits() + m_blinding_bits),
             m_max_d2_bits(m_private->q_bits() + m_blinding_bits) {}
 
-      secure_vector<uint8_t> raw_op(const uint8_t input[], size_t input_len) {
-         if(input_len > public_modulus_bytes()) {
+      void raw_op(std::span<uint8_t> out, std::span<const uint8_t> input) {
+         if(input.size() > public_modulus_bytes()) {
             throw Decoding_Error("RSA input is too long for this key");
          }
-         const BigInt input_bn(input, input_len);
+         const BigInt input_bn(input.data(), input.size());
          if(input_bn >= m_public->get_n()) {
             throw Decoding_Error("RSA input is too large for this key");
          }
-
          // TODO: This should be a function on blinder
          // BigInt Blinder::run_blinded_function(std::function<BigInt, BigInt> fn, const BigInt& input);
 
          const BigInt recovered = m_blinder.unblind(rsa_private_op(m_blinder.blind(input_bn)));
          BOTAN_ASSERT(input_bn == m_public->public_op(recovered), "RSA consistency check");
-         return BigInt::encode_1363(recovered, m_public->public_modulus_bytes());
+         BOTAN_ASSERT(m_public->public_modulus_bytes() == out.size(), "output size check");
+         BigInt::encode_1363(out, recovered);
+      }
+
+      secure_vector<uint8_t> raw_op(const uint8_t input[], size_t input_len) {
+         secure_vector<uint8_t> out(m_public->public_modulus_bytes());
+         raw_op(out, {input, input_len});
+         return out;
       }
 
    private:
@@ -601,11 +607,7 @@ class RSA_KEM_Decryption_Operation final : public PK_Ops::KEM_Decryption_with_KD
       size_t encapsulated_key_length() const override { return public_modulus_bytes(); }
 
       void raw_kem_decrypt(std::span<uint8_t> out_shared_key, std::span<const uint8_t> encapsulated_key) override {
-         auto shared_key = raw_op(encapsulated_key.data(), encapsulated_key.size());
-
-         // TODO: avoid copy by letting raw_op() work on std::span<>
-         BOTAN_ASSERT_NOMSG(out_shared_key.size() == shared_key.size());
-         std::copy(shared_key.begin(), shared_key.end(), out_shared_key.data());
+         raw_op(out_shared_key, encapsulated_key);
       }
 };
 
