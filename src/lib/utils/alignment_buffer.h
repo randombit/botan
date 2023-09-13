@@ -61,7 +61,7 @@ class AlignmentBuffer {
    public:
       AlignmentBuffer() : m_position(0) {}
 
-      ~AlignmentBuffer() { clear(); }
+      ~AlignmentBuffer() { secure_scrub_memory(m_buffer.data(), m_buffer.size()); }
 
       AlignmentBuffer(const AlignmentBuffer& other) = default;
       AlignmentBuffer(AlignmentBuffer&& other) noexcept = default;
