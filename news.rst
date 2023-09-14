@@ -6,11 +6,42 @@ Version 3.2.0, Not Yet Released
 
 * Add support for TLS PSK (GH #3618)
 
-* Add improved APIs for key encsapsulation (GH #3611 #3652)
+* Add a first class interface for XOFs (GH #3671)
+
+* Add cSHAKE XOF; currently this is not exposed to library users but
+  is only for deriving further cSHAKE derived functions. (GH #3671)
+
+* Add improved APIs for key encsapsulation (GH #3611 #3652 #3653)
 
 * The types defined in pubkey.h can now be moved (GH #3655)
 
 * Add the Russian block cipher Kuznyechik (GH #3680)
+
+* Implement serialization for the Certificate Authority TLS extension
+  (GH #3687)
+
+* Upon deserialization, the ``EC_Group`` type now tracks the encoding
+  which was used to create it. This is necessary to implement policies
+  which prohibit use of explicit curve encodings (which are in any case
+  deprecated). (GH #3665)
+
+* If compiling against an old glibc which does not support the ``getrandom``
+  call, now the raw syscall is used instead. (GH #3688 #3685)
+
+* Various internal functions now use ``std::span`` instead of raw pointers
+  plus length field. NOTE: any implementations of ``BlockCipher``, ``HashFunction``
+  etc that live outside the library will have to be updated. This is not covered
+  by the SemVer guarantee; see ``doc/sem_ver.rst`` (GH #3684 #3681)
+
+* Internal refactoring of SHA-3 to support further SHA-3 derived functionality
+  (GH #3673)
+
+* Add support for testing using TLS-Anvil (GH #3651) and fix a few cases
+  where the TLS implementation sent the incorrect alert type in various
+  error cases which were discovered using TLS-Anvil (GH #3676)
+
+* Add initial (currently somewhat experimental) support for using the ninja
+  build system as an alternative to make. (GH #3677)
 
 * Remove an unused variable in BLAKE2b (GH #3624)
 
