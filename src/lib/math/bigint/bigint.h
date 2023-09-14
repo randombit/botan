@@ -804,6 +804,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
      * @result a secure_vector<uint8_t> containing the encoded BigInt
      */
       static secure_vector<uint8_t> encode_1363(const BigInt& n, size_t bytes);
+      static void encode_1363(std::span<uint8_t> out, const BigInt& n);
 
       static void encode_1363(uint8_t out[], size_t bytes, const BigInt& n);
 

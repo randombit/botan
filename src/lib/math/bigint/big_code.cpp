@@ -112,6 +112,14 @@ secure_vector<uint8_t> BigInt::encode_1363(const BigInt& n, size_t bytes) {
    return output;
 }
 
+void BigInt::encode_1363(std::span<uint8_t> output, const BigInt& n) {
+   if(n.bytes() > output.size()) {
+      throw Encoding_Error("encode_1363: n is too large to encode properly");
+   }
+
+   n.binary_encode(output.data(), output.size());
+}
+
 //static
 void BigInt::encode_1363(uint8_t output[], size_t bytes, const BigInt& n) {
    if(n.bytes() > bytes) {
