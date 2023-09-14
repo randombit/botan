@@ -50,6 +50,9 @@ void MDx_HashFunction::clear() {
 void MDx_HashFunction::add_data(std::span<const uint8_t> input) {
    const size_t block_len = static_cast<size_t>(1) << m_block_bits;
 
+   // TODO: Use AlignmentBuffer<> once MDx_HashFunction is not a base class
+   //       anymore. See: https://github.com/randombit/botan/pull/3550
+
    m_count += input.size();
 
    if(m_position) {
