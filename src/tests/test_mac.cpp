@@ -74,6 +74,12 @@ class Message_Auth_Tests final : public Text_Based_Test {
             mac->update(input);
             result.test_eq(provider, "correct mac (try 2)", mac->final(), expected);
 
+            if(iv.empty()) {
+               mac->set_key(key);
+               mac->update(input);
+               result.test_eq(provider, "correct mac (no start call)", mac->final(), expected);
+            }
+
             if(!mac->fresh_key_required_per_message()) {
                for(size_t i = 0; i != 3; ++i) {
                   mac->start(iv);
