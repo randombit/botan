@@ -18,7 +18,7 @@ class cSHAKE_XOF;
 
 class KMAC : public MessageAuthenticationCode {
    protected:
-      KMAC(std::unique_ptr<cSHAKE_XOF> cshake, size_t output_byte_length);
+      KMAC(std::unique_ptr<cSHAKE_XOF> cshake, size_t output_bit_length);
 
    public:
       virtual ~KMAC();
@@ -41,7 +41,7 @@ class KMAC : public MessageAuthenticationCode {
 
    private:
       size_t m_output_bit_length;
-      secure_vector<uint8_t> m_key;
+      secure_vector<uint8_t> m_encoded_key;
       bool m_message_started;
 
       std::unique_ptr<cSHAKE_XOF> m_cshake;
@@ -52,7 +52,7 @@ class KMAC : public MessageAuthenticationCode {
 */
 class KMAC128 final : public KMAC {
    public:
-      KMAC128(size_t output_byte_length);
+      KMAC128(size_t output_bit_length);
       std::string name() const override;
       std::unique_ptr<MessageAuthenticationCode> new_object() const override;
 };
@@ -62,7 +62,7 @@ class KMAC128 final : public KMAC {
 */
 class KMAC256 final : public KMAC {
    public:
-      KMAC256(size_t output_byte_length);
+      KMAC256(size_t output_bit_length);
       std::string name() const override;
       std::unique_ptr<MessageAuthenticationCode> new_object() const override;
 };
