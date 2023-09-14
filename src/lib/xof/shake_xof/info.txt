@@ -1,0 +1,11 @@
+<defines>
+SHAKE_XOF -> 20230815
+</defines>
+
+<module_info>
+name -> "SHAKE XOF"
+</module_info>
+
+<requires>
+keccak_perm
+</requires>
