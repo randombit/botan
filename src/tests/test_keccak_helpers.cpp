@@ -97,6 +97,50 @@ std::vector<Test::Result> keccak_helpers() {
                result.test_is_eq("right_encode(287.454.020)", right_encode(result, 0x11223344), hex("1122334404"));
             }),
 
+         Botan_Tests::CHECK(
+            "keccak_absorb_padded_strings_encoding() with one byte string (std::vector<>)",
+            [](Test::Result& result) {
+               std::vector<uint8_t> out;
+               const auto padmod = 136 /* SHAKE-256 byte rate */;
+
+               const std::vector<uint8_t> n{'K', 'M', 'A', 'C'};
+               const auto bytes_generated = Botan::keccak_absorb_padded_strings_encoding(out, padmod, n);
+               result.test_eq("padded bytes", bytes_generated, padmod);
+
+               result.test_is_eq(
+                  out,
+                  hex(
+                     "0188"     /* left_encode(perm.byte_rate()) */
+                     "0120"     /* left_encode(n.size() * 8) */
+                     "4B4D4143" /* "KMAC" */
+                     "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"));
+            }),
+
+         Botan_Tests::CHECK(
+            "keccak_absorb_padded_strings_encoding() with two byte strings (std::vector<>)",
+            [](Test::Result& result) {
+               std::vector<uint8_t> out;
+               const auto padmod = 136 /* SHAKE-256 byte rate */;
+
+               const std::vector<uint8_t> n{'K', 'M', 'A', 'C'};
+               const std::string str =
+                  "This is a long salt, that is longer than 128 bytes in order to fill up the first round of the Keccak permutation. That should do it.";
+               const std::vector<uint8_t> s{Botan::cast_char_ptr_to_uint8(str.data()),
+                                            Botan::cast_char_ptr_to_uint8(str.data()) + str.size()};
+               const auto bytes_generated = Botan::keccak_absorb_padded_strings_encoding(out, padmod, n, s);
+               result.test_eq("padded bytes", bytes_generated, padmod * 2);
+
+               result.test_is_eq(
+                  out,
+                  hex(
+                     "0188"     /* left_encode(perm.byte_rate()) */
+                     "0120"     /* left_encode(n.size() * 8) */
+                     "4B4D4143" /* "KMAC" */
+                     "020420"   /* left_encode(s.size() * 8) */
+                     "546869732069732061206c6f6e672073616c742c2074686174206973206c6f6e676572207468616e2031323820627974657320696e206f7264657220746f2066696c6c2075702074686520666972737420726f756e64206f6620746865204b656363616b207065726d75746174696f6e2e20546861742073686f756c6420646f2069742e"
+                     "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"));
+            }),
+
    #if defined(BOTAN_HAS_SHAKE_XOF)
 
          Botan_Tests::CHECK(

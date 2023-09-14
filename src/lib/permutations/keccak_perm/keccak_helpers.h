@@ -69,20 +69,26 @@ constexpr size_t keccak_max_int_encoding_size() {
 template <typename T>
 concept updatable_object = requires(T& a, std::span<const uint8_t> span) { a.update(span); };
 
+template <typename T>
+concept appendable_object = requires(T& a, std::span<const uint8_t> s) { a.insert(a.end(), s.begin(), s.end()); };
+
+template <typename T>
+concept absorbing_object = updatable_object<T> || appendable_object<T>;
+
 /**
  * This is a combination of the functions encode_string() and bytepad() defined
  * in NIST SP.800-185 Section 2.3. Additionally, the result is directly streamed
- * into the provided XOF to avoid unneccessary memory allocation.
+ * into the provided XOF to avoid unneccessary memory allocation or a byte vector.
  *
- * @param xof          the XOF to absorb the @p byte_strings into
+ * @param sink         the XOF or byte vector to absorb the @p byte_strings into
  * @param padding_mod  the modulus value to create a padding for (NIST calls this 'w')
  * @param byte_strings a variable-length list of byte strings to be encoded and
  *                     absorbed into the given @p xof
  * @returns the number of bytes absorbed into the @p xof
  */
-template <updatable_object T, typename... Ts>
+template <absorbing_object T, typename... Ts>
    requires(concepts::constructible_from<std::span<const uint8_t>, Ts> && ...)
-size_t keccak_absorb_padded_strings_encoding(T& xof, size_t padding_mod, Ts... byte_strings) {
+size_t keccak_absorb_padded_strings_encoding(T& sink, size_t padding_mod, Ts... byte_strings) {
    BOTAN_ASSERT_NOMSG(padding_mod > 0);
 
    // used as temporary storage for all integer encodings in this function
@@ -91,7 +97,11 @@ size_t keccak_absorb_padded_strings_encoding(T& xof, size_t padding_mod, Ts... b
    // absorbs byte strings and counts the number of absorbed bytes
    size_t bytes_absorbed = 0;
    auto absorb = [&](std::span<const uint8_t> bytes) {
-      xof.update(bytes);
+      if constexpr(updatable_object<T>) {
+         sink.update(bytes);
+      } else if constexpr(appendable_object<T>) {
+         sink.insert(sink.end(), bytes.begin(), bytes.end());
+      }
       bytes_absorbed += bytes.size();
    };
 
