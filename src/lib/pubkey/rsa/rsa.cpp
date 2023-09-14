@@ -700,9 +700,8 @@ class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KD
          const BigInt r = BigInt::random_integer(rng, 1, get_n());
          const BigInt c = public_op(r);
 
-         // TODO: simplify that once BigInt::encode_1363() has a std::span<> overload
-         BigInt::encode_1363(out_encapsulated_key.data(), out_encapsulated_key.size(), c);
-         BigInt::encode_1363(raw_shared_key.data(), raw_shared_key.size(), r);
+         BigInt::encode_1363(out_encapsulated_key, c);
+         BigInt::encode_1363(raw_shared_key, r);
       }
 };
 
