@@ -161,7 +161,8 @@ class Ed25519_Pure_Verify_Operation final : public PK_Ops::Verification {
 */
 class Ed25519_Hashed_Verify_Operation final : public PK_Ops::Verification {
    public:
-      Ed25519_Hashed_Verify_Operation(const Ed25519_PublicKey& key, std::string_view hash, bool rfc8032) : m_key(key) {
+      Ed25519_Hashed_Verify_Operation(const Ed25519_PublicKey& key, std::string_view hash, bool rfc8032) :
+            m_key(key.get_public_key()) {
          m_hash = HashFunction::create_or_throw(hash);
 
          if(rfc8032) {
@@ -180,17 +181,16 @@ class Ed25519_Hashed_Verify_Operation final : public PK_Ops::Verification {
          std::vector<uint8_t> msg_hash(m_hash->output_length());
          m_hash->final(msg_hash.data());
 
-         const std::vector<uint8_t>& pub_key = m_key.get_public_key();
-         BOTAN_ASSERT_EQUAL(pub_key.size(), 32, "Expected size");
+         BOTAN_ASSERT_EQUAL(m_key.size(), 32, "Expected size");
          return ed25519_verify(
-            msg_hash.data(), msg_hash.size(), sig, pub_key.data(), m_domain_sep.data(), m_domain_sep.size());
+            msg_hash.data(), msg_hash.size(), sig, m_key.data(), m_domain_sep.data(), m_domain_sep.size());
       }
 
       std::string hash_function() const override { return m_hash->name(); }
 
    private:
       std::unique_ptr<HashFunction> m_hash;
-      const Ed25519_PublicKey& m_key;
+      std::vector<uint8_t> m_key;
       std::vector<uint8_t> m_domain_sep;
 };
 
