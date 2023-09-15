@@ -28,6 +28,8 @@ namespace Botan {
  */
 class BOTAN_PUBLIC_API(3, 2) XOF {
    public:
+      XOF() : m_xof_started(false) {}
+
       virtual ~XOF() = default;
 
       /**
@@ -61,7 +63,10 @@ class BOTAN_PUBLIC_API(3, 2) XOF {
       /**
        * Reset the state.
        */
-      virtual void clear() = 0;
+      void clear() {
+         m_xof_started = false;
+         reset();
+      }
 
       /**
        * @return the hash function name
@@ -134,7 +139,14 @@ class BOTAN_PUBLIC_API(3, 2) XOF {
        *
        * @param input  the data that shall be
        */
-      void update(std::span<const uint8_t> input) { add_data(input); }
+      void update(std::span<const uint8_t> input) {
+         if(!m_xof_started) {
+            // If the user didn't start() before the first input, we enforce
+            // it with a default value, here.
+            start();
+         }
+         add_data(input);
+      }
 
       /**
        * @return the next @p bytes output bytes as the specified container type @p T.
@@ -203,6 +215,14 @@ class BOTAN_PUBLIC_API(3, 2) XOF {
        * @param output  the span to be filled entirely with output bytes
        */
       virtual void generate_bytes(std::span<uint8_t> output) = 0;
+
+      /**
+       * Clear the XOF's internal state and allow for new input.
+       */
+      virtual void reset() = 0;
+
+   private:
+      bool m_xof_started;
 };
 
 }  // namespace Botan

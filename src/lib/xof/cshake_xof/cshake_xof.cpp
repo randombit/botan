@@ -29,7 +29,7 @@ cSHAKE_XOF::cSHAKE_XOF(size_t capacity, std::string_view function_name) :
                  std::vector<uint8_t>{cast_char_ptr_to_uint8(function_name.data()),
                                       cast_char_ptr_to_uint8(function_name.data()) + function_name.size()}) {}
 
-void cSHAKE_XOF::clear() {
+void cSHAKE_XOF::reset() {
    m_keccak.clear();
    m_output_generated = false;
 }

@@ -64,6 +64,7 @@ void XOF::start(std::span<const uint8_t> salt, std::span<const uint8_t> key) {
       throw Invalid_Argument(fmt("{} cannot accept a salt length of {}", name(), salt.size()));
    }
 
+   m_xof_started = true;
    start_msg(salt, key);
 }
 

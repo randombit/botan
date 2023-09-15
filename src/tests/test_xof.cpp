@@ -89,6 +89,13 @@ class XOF_Tests final : public Text_Based_Test {
             result.test_eq("generated output", xof->output_stdvec(expected.size()), expected);
             result.confirm("object does not accept input after first output", !xof->accepts_input());
 
+            // if not necessary, invoking start() should be optional
+            if(salt.empty() && key.empty()) {
+               xof->clear();
+               xof->update(in);
+               result.test_eq("generated output (w/o start())", xof->output_stdvec(expected.size()), expected);
+            }
+
             // input again and output bytewise
             xof->clear();
             result.test_eq("object might accept input after clear()", xof->accepts_input(), new_accepts_input);
