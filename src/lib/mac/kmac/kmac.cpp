@@ -15,6 +15,13 @@
 
 namespace Botan {
 
+KMAC::KMAC(std::unique_ptr<cSHAKE_XOF> cshake, size_t output_bit_length) :
+      m_output_bit_length(output_bit_length), m_message_started(false), m_cshake(std::move(cshake)) {
+   BOTAN_ARG_CHECK(m_output_bit_length % 8 == 0, "KMAC output length must be full bytes");
+   BOTAN_ARG_CHECK(m_output_bit_length > 0, "KMAC output length must be at least one byte");
+   BOTAN_ASSERT_NONNULL(m_cshake);
+}
+
 KMAC::~KMAC() = default;
 
 void KMAC::clear() {
@@ -51,13 +58,6 @@ void KMAC::start_msg(const uint8_t nonce[], size_t nonce_len) {
    m_message_started = true;
 }
 
-KMAC::KMAC(std::unique_ptr<cSHAKE_XOF> cshake, size_t output_bit_length) :
-      m_output_bit_length(output_bit_length), m_message_started(false), m_cshake(std::move(cshake)) {
-   BOTAN_ARG_CHECK(m_output_bit_length % 8 == 0, "KMAC output length must be full bytes");
-   BOTAN_ARG_CHECK(m_output_bit_length > 0, "KMAC output length must be at least one byte");
-   BOTAN_ASSERT_NONNULL(m_cshake);
-}
-
 void KMAC::add_data(std::span<const uint8_t> data) {
    assert_key_material_set(!m_encoded_key.empty());
    if(!m_message_started) {
@@ -79,6 +79,8 @@ void KMAC::key_schedule(std::span<const uint8_t> key) {
    clear();
    keccak_absorb_padded_strings_encoding(m_encoded_key, m_cshake->block_size(), key);
 }
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 KMAC128::KMAC128(size_t output_bit_length) : KMAC(std::make_unique<cSHAKE_128_XOF>("KMAC"), output_bit_length) {}
 
