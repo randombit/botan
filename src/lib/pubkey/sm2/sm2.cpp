@@ -112,8 +112,8 @@ class SM2_Signature_Operation final : public PK_Ops::Signature {
 
    private:
       const EC_Group m_group;
-      const BigInt& m_x;
-      const BigInt& m_da_inv;
+      const BigInt m_x;
+      const BigInt m_da_inv;
 
       std::vector<uint8_t> m_za;
       secure_vector<uint8_t> m_digest;
