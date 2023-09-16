@@ -150,6 +150,18 @@ A message authentication code based on a hash function. Very commonly used.
 
 Available if ``BOTAN_HAS_HMAC`` is defined.
 
+KMAC
+~~~~~~~~~~~~
+
+.. versionadded:: 3.2
+
+A SHA-3 derived message authentication code defined by NIST in SP 800-185.
+
+There are two variants, ``KMAC-128`` and ``KMAC-256``. Both take a parameter
+which specifies the output length in bits, for example ``KMAC-128(256)``.
+
+Available if ``BOTAN_HAS_KMAC`` is defined.
+
 Poly1305
 ~~~~~~~~~~~~
 
