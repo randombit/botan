@@ -8,6 +8,8 @@ Version 3.2.0, Not Yet Released
 
 * Add a first class interface for XOFs (GH #3671)
 
+* Add KMAC from NIST SP 800-185 (GH #3689)
+
 * Add cSHAKE XOF; currently this is not exposed to library users but
   is only for deriving further cSHAKE derived functions. (GH #3671)
 
