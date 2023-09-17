@@ -32,8 +32,6 @@ class SHAKE_XOF : public XOF {
    public:
       std::string provider() const final { return m_keccak.provider(); }
 
-      void clear() final;
-
       size_t block_size() const final { return m_keccak.byte_rate(); }
 
       bool accepts_input() const final { return !m_output_generated; }
@@ -41,6 +39,7 @@ class SHAKE_XOF : public XOF {
    private:
       void add_data(std::span<const uint8_t> input) final;
       void generate_bytes(std::span<uint8_t> output) final;
+      void reset() final;
 
    private:
       Keccak_Permutation m_keccak;

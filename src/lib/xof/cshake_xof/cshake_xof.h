@@ -36,8 +36,6 @@ class BOTAN_TEST_API cSHAKE_XOF : public XOF {
    public:
       std::string provider() const final;
 
-      void clear() final;
-
       bool valid_salt_length(size_t salt_length) const final;
 
       size_t block_size() const final;
@@ -55,6 +53,7 @@ class BOTAN_TEST_API cSHAKE_XOF : public XOF {
       void start_msg(std::span<const uint8_t> salt, std::span<const uint8_t> key) final;
       void add_data(std::span<const uint8_t> input) final;
       void generate_bytes(std::span<uint8_t> output) final;
+      void reset() final;
 
    private:
       Keccak_Permutation m_keccak;

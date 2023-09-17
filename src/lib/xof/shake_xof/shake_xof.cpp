@@ -15,7 +15,7 @@ SHAKE_XOF::SHAKE_XOF(size_t capacity) : m_keccak(capacity, 0b1111, 4), m_output_
    BOTAN_ASSERT_NOMSG(capacity == 256 || capacity == 512);
 }
 
-void SHAKE_XOF::clear() {
+void SHAKE_XOF::reset() {
    m_keccak.clear();
    m_output_generated = false;
 }
