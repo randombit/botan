@@ -167,7 +167,7 @@ class SM2_Verification_Operation final : public PK_Ops::Verification {
 
       bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
 
-      std::string hash_function() const override { return m_hash->name(); }
+      std::string hash_function() const override { return m_hash ? m_hash->name() : "Raw"; }
 
    private:
       const EC_Group m_group;
