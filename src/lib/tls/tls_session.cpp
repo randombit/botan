@@ -144,6 +144,10 @@ Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
                return Kex_Algo::DHE_PSK;
             } else if(is_ecdh(group) || is_x25519(group)) {
                return Kex_Algo::ECDHE_PSK;
+            } else if(is_pure_kyber(group)) {
+               return Kex_Algo::KEM_PSK;
+            } else if(is_hybrid(group)) {
+               return Kex_Algo::HYBRID_PSK;
             }
          } else {
             return Kex_Algo::PSK;
@@ -156,6 +160,10 @@ Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
             return Kex_Algo::DH;
          } else if(is_ecdh(group) || is_x25519(group)) {
             return Kex_Algo::ECDH;
+         } else if(is_pure_kyber(group)) {
+            return Kex_Algo::KEM;
+         } else if(is_hybrid(group)) {
+            return Kex_Algo::HYBRID;
          }
       }
 

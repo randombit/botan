@@ -127,6 +127,10 @@ enum class Kex_Algo {
    PSK,
    ECDHE_PSK,
    DHE_PSK,
+   KEM,
+   KEM_PSK,
+   HYBRID,
+   HYBRID_PSK,
 
    // To support TLS 1.3 ciphersuites, which do not determine the kex algo
    UNDEFINED

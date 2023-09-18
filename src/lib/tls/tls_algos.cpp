@@ -39,6 +39,14 @@ std::string kex_method_to_string(Kex_Algo method) {
          return "ECDHE_PSK";
       case Kex_Algo::DHE_PSK:
          return "DHE_PSK";
+      case Kex_Algo::KEM:
+         return "KEM";
+      case Kex_Algo::KEM_PSK:
+         return "KEM_PSK";
+      case Kex_Algo::HYBRID:
+         return "HYBRID";
+      case Kex_Algo::HYBRID_PSK:
+         return "HYBRID_PSK";
       case Kex_Algo::UNDEFINED:
          return "UNDEFINED";
    }
@@ -69,6 +77,22 @@ Kex_Algo kex_method_from_string(std::string_view str) {
 
    if(str == "DHE_PSK") {
       return Kex_Algo::DHE_PSK;
+   }
+
+   if(str == "KEM") {
+      return Kex_Algo::KEM;
+   }
+
+   if(str == "KEM_PSK") {
+      return Kex_Algo::KEM_PSK;
+   }
+
+   if(str == "HYBRID") {
+      return Kex_Algo::HYBRID;
+   }
+
+   if(str == "HYBRID_PSK") {
+      return Kex_Algo::HYBRID_PSK;
    }
 
    if(str == "UNDEFINED") {
