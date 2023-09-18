@@ -1040,6 +1040,12 @@ Currently, Botan supports the following post-quantum secure key exchanges:
   * ``HYBRID_X25519_KYBER_512_R3_CLOUDFLARE`` ("x25519/Kyber-512-r3/cloudflare")
   * ``HYBRID_X25519_KYBER_768_R3_CLOUDFLARE`` ("x25519/Kyber-768-r3/cloudflare")
 
+Client Code Example
+^^^^^^^^^^^^^^^^^^^^
+
+.. literalinclude:: /../src/examples/tls_13_hybrid_key_exchange_client.cpp
+   :language: cpp
+
 TLS Custom Key Exchange Mechanisms
 ----------------------------------------
 
