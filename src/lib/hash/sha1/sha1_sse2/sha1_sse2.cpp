@@ -12,6 +12,7 @@
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/simd_32.h>
+#include <botan/internal/stl_util.h>
 #include <emmintrin.h>
 
 namespace Botan {
@@ -111,8 +112,7 @@ inline void F4(uint32_t A, uint32_t& B, uint32_t C, uint32_t D, uint32_t& E, uin
 * SHA-1 Compression Function using SSE for message expansion
 */
 //static
-BOTAN_FUNC_ISA("sse2")
-void SHA_1::sse2_compress_n(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks) {
+BOTAN_FUNC_ISA("sse2") void SHA_1::sse2_compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
    using namespace SHA1_SSE2_F;
 
    const SIMD_4x32 K00_19 = SIMD_4x32::splat(0x5A827999);
@@ -122,13 +122,17 @@ void SHA_1::sse2_compress_n(secure_vector<uint32_t>& digest, const uint8_t input
 
    uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3], E = digest[4];
 
+   BufferSlicer in(input);
+
    for(size_t i = 0; i != blocks; ++i) {
       uint32_t PT[4];
 
-      SIMD_4x32 W0 = SIMD_4x32::load_be(&input[0]);
-      SIMD_4x32 W1 = SIMD_4x32::load_be(&input[16]);
-      SIMD_4x32 W2 = SIMD_4x32::load_be(&input[32]);
-      SIMD_4x32 W3 = SIMD_4x32::load_be(&input[48]);
+      const auto block = in.take(block_bytes);
+
+      SIMD_4x32 W0 = SIMD_4x32::load_be(&block[0]);
+      SIMD_4x32 W1 = SIMD_4x32::load_be(&block[16]);
+      SIMD_4x32 W2 = SIMD_4x32::load_be(&block[32]);
+      SIMD_4x32 W3 = SIMD_4x32::load_be(&block[48]);
 
       SIMD_4x32 P0 = W0 + K00_19;
       SIMD_4x32 P1 = W1 + K00_19;
@@ -276,8 +280,6 @@ void SHA_1::sse2_compress_n(secure_vector<uint32_t>& digest, const uint8_t input
       C = (digest[2] += C);
       D = (digest[3] += D);
       E = (digest[4] += E);
-
-      input += 64;
    }
 }
 
