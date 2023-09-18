@@ -16,70 +16,96 @@ namespace Botan {
 /**
 * SHA-224
 */
-class SHA_224 final : public MDx_HashFunction {
+class SHA_224 final : public HashFunction {
+   public:
+      using digest_type = secure_vector<uint32_t>;
+
+      static constexpr MD_Endian byte_endianness = MD_Endian::Big;
+      static constexpr MD_Endian bit_endianness = MD_Endian::Big;
+      static constexpr size_t block_bytes = 64;
+      static constexpr size_t output_bytes = 28;
+      static constexpr size_t ctr_bytes = 8;
+
+      static void compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
+      static void init(digest_type& digest);
+
    public:
       std::string name() const override { return "SHA-224"; }
 
-      size_t output_length() const override { return 28; }
+      size_t output_length() const override { return output_bytes; }
 
-      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_224>(); }
+      size_t hash_block_size() const override { return block_bytes; }
+
+      std::unique_ptr<HashFunction> new_object() const override;
 
       std::unique_ptr<HashFunction> copy_state() const override;
 
-      void clear() override;
+      void clear() override { m_md.clear(); }
 
       std::string provider() const override;
 
-      SHA_224() : MDx_HashFunction(64, true, true), m_digest(8) { clear(); }
+   private:
+      void add_data(std::span<const uint8_t> input) override;
+
+      void final_result(std::span<uint8_t> output) override;
 
    private:
-      void compress_n(const uint8_t[], size_t blocks) override;
-      void copy_out(uint8_t[]) override;
-
-      secure_vector<uint32_t> m_digest;
+      MerkleDamgard_Hash<SHA_224> m_md;
 };
 
 /**
 * SHA-256
 */
-class SHA_256 final : public MDx_HashFunction {
+class SHA_256 final : public HashFunction {
+   public:
+      using digest_type = secure_vector<uint32_t>;
+
+      static constexpr MD_Endian byte_endianness = MD_Endian::Big;
+      static constexpr MD_Endian bit_endianness = MD_Endian::Big;
+      static constexpr size_t block_bytes = 64;
+      static constexpr size_t output_bytes = 32;
+      static constexpr size_t ctr_bytes = 8;
+
+      static void compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
+      static void init(digest_type& digest);
+
    public:
       std::string name() const override { return "SHA-256"; }
 
-      size_t output_length() const override { return 32; }
+      size_t output_length() const override { return output_bytes; }
 
-      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_256>(); }
+      size_t hash_block_size() const override { return block_bytes; }
+
+      std::unique_ptr<HashFunction> new_object() const override;
 
       std::unique_ptr<HashFunction> copy_state() const override;
 
-      void clear() override;
+      void clear() override { m_md.clear(); }
 
       std::string provider() const override;
 
-      SHA_256() : MDx_HashFunction(64, true, true), m_digest(8) { clear(); }
+   public:
+      static void compress_digest(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
 
-      /*
-      * Perform a SHA-256 compression. For internal use
-      */
-      static void compress_digest(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks);
-
-   private:
 #if defined(BOTAN_HAS_SHA2_32_ARMV8)
-      static void compress_digest_armv8(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks);
+      static void compress_digest_armv8(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
 #endif
 
 #if defined(BOTAN_HAS_SHA2_32_X86_BMI2)
-      static void compress_digest_x86_bmi2(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks);
+      static void compress_digest_x86_bmi2(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
 #endif
 
 #if defined(BOTAN_HAS_SHA2_32_X86)
-      static void compress_digest_x86(secure_vector<uint32_t>& digest, const uint8_t input[], size_t blocks);
+      static void compress_digest_x86(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
 #endif
 
-      void compress_n(const uint8_t[], size_t blocks) override;
-      void copy_out(uint8_t[]) override;
+   private:
+      void add_data(std::span<const uint8_t> input) override;
 
-      secure_vector<uint32_t> m_digest;
+      void final_result(std::span<uint8_t> output) override;
+
+   private:
+      MerkleDamgard_Hash<SHA_256> m_md;
 };
 
 }  // namespace Botan
