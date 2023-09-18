@@ -9,6 +9,7 @@
 
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -86,7 +87,7 @@ uint64_t whirl(uint64_t x0, uint64_t x1, uint64_t x2, uint64_t x3, uint64_t x4, 
 /*
 * Whirlpool Compression Function
 */
-void Whirlpool::compress_n(const uint8_t in[], size_t blocks) {
+void Whirlpool::compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks) {
    static const uint64_t RC[10] = {0x1823C6E887B8014F,
                                    0x36A6D2F5796F9152,
                                    0x60BC9B8EA30C7B35,
@@ -97,18 +98,21 @@ void Whirlpool::compress_n(const uint8_t in[], size_t blocks) {
                                    0xE427418BA77D95D8,
                                    0xFBEE7C66DD17479E,
                                    0xCA2DBF07AD5A8333};
+   BufferSlicer in(input);
 
    for(size_t i = 0; i != blocks; ++i) {
+      const auto block = in.take(block_bytes);
+
       uint64_t K[11 * 8] = {0};
 
-      K[0] = m_digest[0];
-      K[1] = m_digest[1];
-      K[2] = m_digest[2];
-      K[3] = m_digest[3];
-      K[4] = m_digest[4];
-      K[5] = m_digest[5];
-      K[6] = m_digest[6];
-      K[7] = m_digest[7];
+      K[0] = digest[0];
+      K[1] = digest[1];
+      K[2] = digest[2];
+      K[3] = digest[3];
+      K[4] = digest[4];
+      K[5] = digest[5];
+      K[6] = digest[6];
+      K[7] = digest[7];
 
       // Whirlpool key schedule:
       for(size_t r = 1; r != 11; ++r) {
@@ -132,7 +136,7 @@ void Whirlpool::compress_n(const uint8_t in[], size_t blocks) {
       }
 
       uint64_t M[8] = {0};
-      load_be(M, in, 8);
+      load_be(M, block.data(), 8);
 
       // First round (key masking)
       uint64_t B0 = M[0] ^ K[0];
@@ -164,36 +168,36 @@ void Whirlpool::compress_n(const uint8_t in[], size_t blocks) {
          B7 = T7;
       }
 
-      m_digest[0] ^= B0 ^ M[0];
-      m_digest[1] ^= B1 ^ M[1];
-      m_digest[2] ^= B2 ^ M[2];
-      m_digest[3] ^= B3 ^ M[3];
-      m_digest[4] ^= B4 ^ M[4];
-      m_digest[5] ^= B5 ^ M[5];
-      m_digest[6] ^= B6 ^ M[6];
-      m_digest[7] ^= B7 ^ M[7];
-
-      in += hash_block_size();
+      digest[0] ^= B0 ^ M[0];
+      digest[1] ^= B1 ^ M[1];
+      digest[2] ^= B2 ^ M[2];
+      digest[3] ^= B3 ^ M[3];
+      digest[4] ^= B4 ^ M[4];
+      digest[5] ^= B5 ^ M[5];
+      digest[6] ^= B6 ^ M[6];
+      digest[7] ^= B7 ^ M[7];
    }
 }
 
-/*
-* Copy out the digest
-*/
-void Whirlpool::copy_out(uint8_t output[]) {
-   copy_out_vec_be(output, output_length(), m_digest);
+void Whirlpool::init(digest_type& digest) {
+   digest.resize(8);
+   zeroise(digest);
+}
+
+std::unique_ptr<HashFunction> Whirlpool::new_object() const {
+   return std::make_unique<Whirlpool>();
 }
 
 std::unique_ptr<HashFunction> Whirlpool::copy_state() const {
    return std::make_unique<Whirlpool>(*this);
 }
 
-/*
-* Clear memory of sensitive data
-*/
-void Whirlpool::clear() {
-   MDx_HashFunction::clear();
-   zeroise(m_digest);
+void Whirlpool::add_data(std::span<const uint8_t> input) {
+   m_md.update(input);
+}
+
+void Whirlpool::final_result(std::span<uint8_t> output) {
+   m_md.final(output);
 }
 
 }  // namespace Botan
