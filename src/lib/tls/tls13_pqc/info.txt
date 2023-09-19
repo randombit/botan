@@ -1,5 +1,5 @@
 <defines>
-TLS_13_PQC -> 20210721
+TLS_13_PQC -> 20230919
 </defines>
 
 <module_info>

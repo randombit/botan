@@ -1003,6 +1003,8 @@ The ``TLS::Protocol_Version`` class represents a specific version:
 Post-quantum-secure key exchange
 --------------------------------
 
+.. versionadded:: :: 3.2
+
 Botan allows TLS 1.3 handshakes using both pure post-quantum secure algorithms
 or a hybrid key exchange that combines a classical and a post-quantum secure
 algorithm. For the latter it implements the recent IETF

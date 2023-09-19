@@ -308,12 +308,7 @@ secure_vector<uint8_t> Hybrid_KEM_PrivateKey::private_key_bits() const {
 }
 
 std::unique_ptr<Public_Key> Hybrid_KEM_PrivateKey::public_key() const {
-   std::vector<std::unique_ptr<Public_Key>> pks;
-   pks.reserve(m_private_keys.size());
-   for(const auto& sk : m_private_keys) {
-      pks.push_back(sk->public_key());
-   }
-   return std::make_unique<Hybrid_KEM_PublicKey>(std::move(pks));
+   return std::make_unique<Hybrid_KEM_PublicKey>(extract_public_keys(m_private_keys));
 }
 
 bool Hybrid_KEM_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {

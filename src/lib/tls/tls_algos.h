@@ -151,6 +151,10 @@ constexpr bool is_kem(const Group_Params group) {
    return is_pure_kyber(group) || is_hybrid(group);
 }
 
+constexpr bool is_post_quantum(const Group_Params group) {
+   return is_pure_kyber(group) || is_hybrid(group);
+}
+
 std::string group_param_to_string(Group_Params group);
 Group_Params group_param_from_string(std::string_view group_name);
 std::vector<std::pair<std::string, std::string>> hybrid_group_param_to_algorithm_specs(Group_Params group);

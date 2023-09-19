@@ -19,6 +19,11 @@ namespace Botan_Tests {
 
 namespace {
 
+// The concrete key pairs are not relevant for these test cases. For convenience
+// and performance reasons, kem(), kex_dh(), kex_ecdh(), and sig() generate only
+// a single key pair and return a copy of it with every invocation. Note that
+// the tests assume that those methods always return the same key.
+
 std::unique_ptr<Botan::Private_Key> kem() {
    static auto kem_key = Botan::create_private_key("Kyber", Test::rng(), "Kyber-512-r3");
    return Botan::load_private_key(kem_key->algorithm_identifier(), kem_key->private_key_bits());
