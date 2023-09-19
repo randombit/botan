@@ -115,7 +115,7 @@ std::unique_ptr<Hybrid_KEM_PublicKey> Hybrid_KEM_PublicKey::load_for_group(
 }
 
 Hybrid_KEM_PublicKey::Hybrid_KEM_PublicKey(std::vector<std::unique_ptr<Public_Key>> pks) {
-   BOTAN_ARG_CHECK(!pks.empty(), "List of public keys must not be empty");
+   BOTAN_ARG_CHECK(pks.size() >= 2, "List of public keys must include at least two keys");
    BOTAN_ARG_CHECK(std::all_of(pks.begin(), pks.end(), [](const auto& pk) { return pk != nullptr; }),
                    "List of public keys contains a nullptr");
    BOTAN_ARG_CHECK(std::all_of(pks.begin(),
@@ -280,7 +280,7 @@ std::unique_ptr<Hybrid_KEM_PrivateKey> Hybrid_KEM_PrivateKey::generate_from_grou
 
 Hybrid_KEM_PrivateKey::Hybrid_KEM_PrivateKey(std::vector<std::unique_ptr<Private_Key>> sks) :
       Hybrid_KEM_PublicKey(extract_public_keys(sks)) {
-   BOTAN_ARG_CHECK(!sks.empty(), "List of private keys must not be empty");
+   BOTAN_ARG_CHECK(sks.size() >= 2, "List of private keys must include at least two keys");
    BOTAN_ARG_CHECK(std::all_of(sks.begin(),
                                sks.end(),
                                [](const auto& sk) {

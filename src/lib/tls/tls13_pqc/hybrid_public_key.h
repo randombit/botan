@@ -24,14 +24,18 @@ namespace Botan::TLS {
  * Composes a number of public keys as defined in this IETF draft:
  * https://datatracker.ietf.org/doc/html/draft-ietf-tls-hybrid-design-04
  *
- * To an upstream user, this composite key pair is presented as a KEM.
- * Compositions of at least two (and potentially more) public keys are legal.
- * Each individual key pair must either work as a KEX or as a KEM. Currently,
- * the class can deal with ECC keys and Kyber.
+ * To an upstream user, this composite key pair is presented as a KEM. Each
+ * individual key pair must either work as a KEX or as a KEM. Currently, the
+ * class can deal with ECC keys and Kyber.
+ *
+ * The typical use case provides exactly two keys (one traditional KEX and one
+ * post-quantum secure KEM). However, this class technically allows composing
+ * any number of such keys. Composing more than two keys simply generates a
+ * shared secret based on more algorithms.
  *
  * Note that this class is not generic enough for arbitrary use cases but
- * serializes and parses keys and ciphertexts as described in the above-mentioned
- * IETF draft for a post-quantum TLS 1.3.
+ * serializes and parses keys and ciphertexts as described in the
+ * above-mentioned IETF draft for a post-quantum TLS 1.3.
  */
 class BOTAN_TEST_API Hybrid_KEM_PublicKey : public virtual Public_Key {
    public:

@@ -186,9 +186,13 @@ std::vector<Test::Result> hybrid_kem_keypair() {
                                                [&] { Botan::TLS::Hybrid_KEM_PrivateKey(keys(sig(), kex_dh())); });
                          }),
 
-      Botan_Tests::CHECK("single KEM key", [&](auto& result) { roundtrip_test(result, kem); }),
+      Botan_Tests::CHECK(
+         "single KEM key",
+         [&](auto& result) { result.test_throws("need at least two keys", [&] { roundtrip_test(result, kem); }); }),
       Botan_Tests::CHECK("dual KEM key", [&](auto& result) { roundtrip_test(result, kem, kem); }),
-      Botan_Tests::CHECK("single KEX key", [&](auto& result) { roundtrip_test(result, kex_dh); }),
+      Botan_Tests::CHECK(
+         "single KEX key",
+         [&](auto& result) { result.test_throws("need at least two keys", [&] { roundtrip_test(result, kex_dh); }); }),
       Botan_Tests::CHECK("dual KEX key", [&](auto& result) { roundtrip_test(result, kex_dh, kex_ecdh); }),
       Botan_Tests::CHECK("hybrid KEX/KEM key", [&](auto& result) { roundtrip_test(result, kex_dh, kem); }),
       Botan_Tests::CHECK("hybrid triple key", [&](auto& result) { roundtrip_test(result, kex_dh, kem, kex_ecdh); }),
