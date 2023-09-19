@@ -224,55 +224,29 @@ inline constexpr void load_le(InR&& in, Ts&... outs) {
 }
 
 /**
-* Load two little-endian words
-* @param in a pointer to some bytes
-* @param x0 where the first word will be written
-* @param x1 where the second word will be written
+* Load many big-endian unsigned integers
+* @param in   a pointer to some bytes
+* @param outs a arbitrary-length parameter list of unsigned integers to be loaded
 */
-template <typename T>
-inline constexpr void load_le(const uint8_t in[], T& x0, T& x1) {
-   x0 = load_le<T>(in, 0);
-   x1 = load_le<T>(in, 1);
+template <concepts::unsigned_integral... Ts>
+   requires all_same_v<Ts...>
+inline constexpr void load_be(const uint8_t in[], Ts&... outs) {
+   constexpr auto bytes = (sizeof(outs) + ...);
+   // asserts that *in points to the correct amount of memory
+   load_be(std::span<const uint8_t, bytes>(in, bytes), outs...);
 }
 
 /**
-* Load four little-endian words
-* @param in a pointer to some bytes
-* @param x0 where the first word will be written
-* @param x1 where the second word will be written
-* @param x2 where the third word will be written
-* @param x3 where the fourth word will be written
+* Load many little-endian unsigned integers
+* @param in   a pointer to some bytes
+* @param outs a arbitrary-length parameter list of unsigned integers to be loaded
 */
-template <typename T>
-inline constexpr void load_le(const uint8_t in[], T& x0, T& x1, T& x2, T& x3) {
-   x0 = load_le<T>(in, 0);
-   x1 = load_le<T>(in, 1);
-   x2 = load_le<T>(in, 2);
-   x3 = load_le<T>(in, 3);
-}
-
-/**
-* Load eight little-endian words
-* @param in a pointer to some bytes
-* @param x0 where the first word will be written
-* @param x1 where the second word will be written
-* @param x2 where the third word will be written
-* @param x3 where the fourth word will be written
-* @param x4 where the fifth word will be written
-* @param x5 where the sixth word will be written
-* @param x6 where the seventh word will be written
-* @param x7 where the eighth word will be written
-*/
-template <typename T>
-inline constexpr void load_le(const uint8_t in[], T& x0, T& x1, T& x2, T& x3, T& x4, T& x5, T& x6, T& x7) {
-   x0 = load_le<T>(in, 0);
-   x1 = load_le<T>(in, 1);
-   x2 = load_le<T>(in, 2);
-   x3 = load_le<T>(in, 3);
-   x4 = load_le<T>(in, 4);
-   x5 = load_le<T>(in, 5);
-   x6 = load_le<T>(in, 6);
-   x7 = load_le<T>(in, 7);
+template <concepts::unsigned_integral... Ts>
+   requires all_same_v<Ts...>
+inline constexpr void load_le(const uint8_t in[], Ts&... outs) {
+   constexpr auto bytes = (sizeof(outs) + ...);
+   // asserts that *in points to the correct amount of memory
+   load_le(std::span<const uint8_t, bytes>(in, bytes), outs...);
 }
 
 /**
@@ -297,58 +271,6 @@ inline constexpr void load_le(T out[], const uint8_t in[], size_t count) {
          out[i] = load_le<T>(in, i);
 #endif
    }
-}
-
-/**
-* Load two big-endian words
-* @param in a pointer to some bytes
-* @param x0 where the first word will be written
-* @param x1 where the second word will be written
-*/
-template <typename T>
-inline constexpr void load_be(const uint8_t in[], T& x0, T& x1) {
-   x0 = load_be<T>(in, 0);
-   x1 = load_be<T>(in, 1);
-}
-
-/**
-* Load four big-endian words
-* @param in a pointer to some bytes
-* @param x0 where the first word will be written
-* @param x1 where the second word will be written
-* @param x2 where the third word will be written
-* @param x3 where the fourth word will be written
-*/
-template <typename T>
-inline constexpr void load_be(const uint8_t in[], T& x0, T& x1, T& x2, T& x3) {
-   x0 = load_be<T>(in, 0);
-   x1 = load_be<T>(in, 1);
-   x2 = load_be<T>(in, 2);
-   x3 = load_be<T>(in, 3);
-}
-
-/**
-* Load eight big-endian words
-* @param in a pointer to some bytes
-* @param x0 where the first word will be written
-* @param x1 where the second word will be written
-* @param x2 where the third word will be written
-* @param x3 where the fourth word will be written
-* @param x4 where the fifth word will be written
-* @param x5 where the sixth word will be written
-* @param x6 where the seventh word will be written
-* @param x7 where the eighth word will be written
-*/
-template <typename T>
-inline constexpr void load_be(const uint8_t in[], T& x0, T& x1, T& x2, T& x3, T& x4, T& x5, T& x6, T& x7) {
-   x0 = load_be<T>(in, 0);
-   x1 = load_be<T>(in, 1);
-   x2 = load_be<T>(in, 2);
-   x3 = load_be<T>(in, 3);
-   x4 = load_be<T>(in, 4);
-   x5 = load_be<T>(in, 5);
-   x6 = load_be<T>(in, 6);
-   x7 = load_be<T>(in, 7);
 }
 
 /**
@@ -481,107 +403,29 @@ inline constexpr void store_le(OutR&& out, Ts... ins) {
 }
 
 /**
-* Store two little-endian words
-* @param out the output byte array
-* @param x0 the first word
-* @param x1 the second word
+* Store many big-endian unsigned integers
+* @param ins a pointer to some bytes to be written
+* @param out a arbitrary-length parameter list of unsigned integers to be stored
 */
-template <typename T>
-inline constexpr void store_le(uint8_t out[], T x0, T x1) {
-   store_le(x0, out + (0 * sizeof(T)));
-   store_le(x1, out + (1 * sizeof(T)));
+template <concepts::unsigned_integral... Ts>
+   requires all_same_v<Ts...>
+inline constexpr void store_be(uint8_t out[], Ts... ins) {
+   constexpr auto bytes = (sizeof(ins) + ...);
+   // asserts that *out points to the correct amount of memory
+   store_be(std::span<uint8_t, bytes>(out, bytes), ins...);
 }
 
 /**
-* Store two big-endian words
-* @param out the output byte array
-* @param x0 the first word
-* @param x1 the second word
+* Store many little-endian unsigned integers
+* @param ins a pointer to some bytes to be written
+* @param out a arbitrary-length parameter list of unsigned integers to be stored
 */
-template <typename T>
-inline constexpr void store_be(uint8_t out[], T x0, T x1) {
-   store_be(x0, out + (0 * sizeof(T)));
-   store_be(x1, out + (1 * sizeof(T)));
-}
-
-/**
-* Store four little-endian words
-* @param out the output byte array
-* @param x0 the first word
-* @param x1 the second word
-* @param x2 the third word
-* @param x3 the fourth word
-*/
-template <typename T>
-inline constexpr void store_le(uint8_t out[], T x0, T x1, T x2, T x3) {
-   store_le(x0, out + (0 * sizeof(T)));
-   store_le(x1, out + (1 * sizeof(T)));
-   store_le(x2, out + (2 * sizeof(T)));
-   store_le(x3, out + (3 * sizeof(T)));
-}
-
-/**
-* Store four big-endian words
-* @param out the output byte array
-* @param x0 the first word
-* @param x1 the second word
-* @param x2 the third word
-* @param x3 the fourth word
-*/
-template <typename T>
-inline constexpr void store_be(uint8_t out[], T x0, T x1, T x2, T x3) {
-   store_be(x0, out + (0 * sizeof(T)));
-   store_be(x1, out + (1 * sizeof(T)));
-   store_be(x2, out + (2 * sizeof(T)));
-   store_be(x3, out + (3 * sizeof(T)));
-}
-
-/**
-* Store eight little-endian words
-* @param out the output byte array
-* @param x0 the first word
-* @param x1 the second word
-* @param x2 the third word
-* @param x3 the fourth word
-* @param x4 the fifth word
-* @param x5 the sixth word
-* @param x6 the seventh word
-* @param x7 the eighth word
-*/
-template <typename T>
-inline constexpr void store_le(uint8_t out[], T x0, T x1, T x2, T x3, T x4, T x5, T x6, T x7) {
-   store_le(x0, out + (0 * sizeof(T)));
-   store_le(x1, out + (1 * sizeof(T)));
-   store_le(x2, out + (2 * sizeof(T)));
-   store_le(x3, out + (3 * sizeof(T)));
-   store_le(x4, out + (4 * sizeof(T)));
-   store_le(x5, out + (5 * sizeof(T)));
-   store_le(x6, out + (6 * sizeof(T)));
-   store_le(x7, out + (7 * sizeof(T)));
-}
-
-/**
-* Store eight big-endian words
-* @param out the output byte array
-* @param x0 the first word
-* @param x1 the second word
-* @param x2 the third word
-* @param x3 the fourth word
-* @param x4 the fifth word
-* @param x5 the sixth word
-* @param x6 the seventh word
-* @param x7 the eighth word
-*/
-template <typename T>
-inline constexpr void store_be(uint8_t out[], T x0, T x1, T x2, T x3, T x4, T x5, T x6, T x7) {
-   store_be(x0, out + (0 * sizeof(T)));
-   store_be(x1, out + (1 * sizeof(T)));
-   store_be(x2, out + (2 * sizeof(T)));
-   store_be(x3, out + (3 * sizeof(T)));
-   store_be(x4, out + (4 * sizeof(T)));
-   store_be(x5, out + (5 * sizeof(T)));
-   store_be(x6, out + (6 * sizeof(T)));
-   store_be(x7, out + (7 * sizeof(T)));
+template <concepts::unsigned_integral... Ts>
+   requires all_same_v<Ts...>
+inline constexpr void store_le(uint8_t out[], Ts... ins) {
+   constexpr auto bytes = (sizeof(ins) + ...);
+   // asserts that *out points to the correct amount of memory
+   store_le(std::span<uint8_t, bytes>(out, bytes), ins...);
 }
 
 template <typename T>
