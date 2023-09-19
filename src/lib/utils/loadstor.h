@@ -166,117 +166,27 @@ inline constexpr T load_le(const uint8_t in[], size_t off) {
 }
 
 /**
-* Load a big-endian uint16_t
+* Load a big-endian unsigned integer
 * @param in a pointer to some bytes
 * @param off an offset into the array
-* @return off'th uint16_t of in, as a big-endian value
+* @return off'th unsigned integer of in, as a big-endian value
 */
-template <>
-inline constexpr uint16_t load_be<uint16_t>(const uint8_t in[], size_t off) {
-   in += off * sizeof(uint16_t);
-
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   return typecast_copy<uint16_t>(in);
-#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   return reverse_bytes(typecast_copy<uint16_t>(in));
-#else
-   return make_uint16(in[0], in[1]);
-#endif
+template <concepts::unsigned_integral T>
+inline constexpr T load_be(const uint8_t in[], size_t off) {
+   // asserts that *in points to the correct amount of memory
+   return load_be<T>(std::span<const uint8_t, sizeof(T)>(in + off * sizeof(T), sizeof(T)));
 }
 
 /**
-* Load a little-endian uint16_t
+* Load a little-endian unsigned integer
 * @param in a pointer to some bytes
 * @param off an offset into the array
-* @return off'th uint16_t of in, as a little-endian value
+* @return off'th unsigned integer of in, as a little-endian value
 */
-template <>
-inline constexpr uint16_t load_le<uint16_t>(const uint8_t in[], size_t off) {
-   in += off * sizeof(uint16_t);
-
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   return reverse_bytes(typecast_copy<uint16_t>(in));
-#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   return typecast_copy<uint16_t>(in);
-#else
-   return make_uint16(in[1], in[0]);
-#endif
-}
-
-/**
-* Load a big-endian uint32_t
-* @param in a pointer to some bytes
-* @param off an offset into the array
-* @return off'th uint32_t of in, as a big-endian value
-*/
-template <>
-inline constexpr uint32_t load_be<uint32_t>(const uint8_t in[], size_t off) {
-   in += off * sizeof(uint32_t);
-
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   return typecast_copy<uint32_t>(in);
-#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   return reverse_bytes(typecast_copy<uint32_t>(in));
-#else
-   return make_uint32(in[0], in[1], in[2], in[3]);
-#endif
-}
-
-/**
-* Load a little-endian uint32_t
-* @param in a pointer to some bytes
-* @param off an offset into the array
-* @return off'th uint32_t of in, as a little-endian value
-*/
-template <>
-inline constexpr uint32_t load_le<uint32_t>(const uint8_t in[], size_t off) {
-   in += off * sizeof(uint32_t);
-
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   return reverse_bytes(typecast_copy<uint32_t>(in));
-#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   return typecast_copy<uint32_t>(in);
-#else
-   return make_uint32(in[3], in[2], in[1], in[0]);
-#endif
-}
-
-/**
-* Load a big-endian uint64_t
-* @param in a pointer to some bytes
-* @param off an offset into the array
-* @return off'th uint64_t of in, as a big-endian value
-*/
-template <>
-inline constexpr uint64_t load_be<uint64_t>(const uint8_t in[], size_t off) {
-   in += off * sizeof(uint64_t);
-
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   return typecast_copy<uint64_t>(in);
-#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   return reverse_bytes(typecast_copy<uint64_t>(in));
-#else
-   return make_uint64(in[0], in[1], in[2], in[3], in[4], in[5], in[6], in[7]);
-#endif
-}
-
-/**
-* Load a little-endian uint64_t
-* @param in a pointer to some bytes
-* @param off an offset into the array
-* @return off'th uint64_t of in, as a little-endian value
-*/
-template <>
-inline constexpr uint64_t load_le<uint64_t>(const uint8_t in[], size_t off) {
-   in += off * sizeof(uint64_t);
-
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   return reverse_bytes(typecast_copy<uint64_t>(in));
-#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   return typecast_copy<uint64_t>(in);
-#else
-   return make_uint64(in[7], in[6], in[5], in[4], in[3], in[2], in[1], in[0]);
-#endif
+template <concepts::unsigned_integral T>
+inline constexpr T load_le(const uint8_t in[], size_t off) {
+   // asserts that *in points to the correct amount of memory
+   return load_le<T>(std::span<const uint8_t, sizeof(T)>(in + off * sizeof(T), sizeof(T)));
 }
 
 /**
@@ -517,115 +427,23 @@ inline constexpr void store_le(T in, OutR&& out_range) {
 }
 
 /**
-* Store a big-endian uint16_t
-* @param in the input uint16_t
+* Store a big-endian unsigned integer
+* @param in the input unsigned integer
 * @param out the byte array to write to
 */
-inline constexpr void store_be(uint16_t in, uint8_t out[2]) {
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   typecast_copy(out, in);
-#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   typecast_copy(out, reverse_bytes(in));
-#else
-   out[0] = get_byte<0>(in);
-   out[1] = get_byte<1>(in);
-#endif
+template <concepts::unsigned_integral T>
+inline constexpr void store_be(T in, uint8_t out[sizeof(T)]) {
+   store_be(in, std::span<uint8_t, sizeof(T)>(out, sizeof(T)));
 }
 
 /**
-* Store a little-endian uint16_t
-* @param in the input uint16_t
+* Store a little-endian unsigned integer
+* @param in the input unsigned integer
 * @param out the byte array to write to
 */
-inline constexpr void store_le(uint16_t in, uint8_t out[2]) {
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   typecast_copy(out, reverse_bytes(in));
-#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   typecast_copy(out, in);
-#else
-   out[0] = get_byte<1>(in);
-   out[1] = get_byte<0>(in);
-#endif
-}
-
-/**
-* Store a big-endian uint32_t
-* @param in the input uint32_t
-* @param out the byte array to write to
-*/
-inline constexpr void store_be(uint32_t in, uint8_t out[4]) {
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   typecast_copy(out, in);
-#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   typecast_copy(out, reverse_bytes(in));
-#else
-   out[0] = get_byte<0>(in);
-   out[1] = get_byte<1>(in);
-   out[2] = get_byte<2>(in);
-   out[3] = get_byte<3>(in);
-#endif
-}
-
-/**
-* Store a little-endian uint32_t
-* @param in the input uint32_t
-* @param out the byte array to write to
-*/
-inline constexpr void store_le(uint32_t in, uint8_t out[4]) {
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   typecast_copy(out, reverse_bytes(in));
-#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   typecast_copy(out, in);
-#else
-   out[0] = get_byte<3>(in);
-   out[1] = get_byte<2>(in);
-   out[2] = get_byte<1>(in);
-   out[3] = get_byte<0>(in);
-#endif
-}
-
-/**
-* Store a big-endian uint64_t
-* @param in the input uint64_t
-* @param out the byte array to write to
-*/
-inline constexpr void store_be(uint64_t in, uint8_t out[8]) {
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   typecast_copy(out, in);
-#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   typecast_copy(out, reverse_bytes(in));
-#else
-   out[0] = get_byte<0>(in);
-   out[1] = get_byte<1>(in);
-   out[2] = get_byte<2>(in);
-   out[3] = get_byte<3>(in);
-   out[4] = get_byte<4>(in);
-   out[5] = get_byte<5>(in);
-   out[6] = get_byte<6>(in);
-   out[7] = get_byte<7>(in);
-#endif
-}
-
-/**
-* Store a little-endian uint64_t
-* @param in the input uint64_t
-* @param out the byte array to write to
-*/
-inline constexpr void store_le(uint64_t in, uint8_t out[8]) {
-#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   typecast_copy(out, reverse_bytes(in));
-#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   typecast_copy(out, in);
-#else
-   out[0] = get_byte<7>(in);
-   out[1] = get_byte<6>(in);
-   out[2] = get_byte<5>(in);
-   out[3] = get_byte<4>(in);
-   out[4] = get_byte<3>(in);
-   out[5] = get_byte<2>(in);
-   out[6] = get_byte<1>(in);
-   out[7] = get_byte<0>(in);
-#endif
+template <concepts::unsigned_integral T>
+inline constexpr void store_le(T in, uint8_t out[sizeof(T)]) {
+   store_le(in, std::span<uint8_t, sizeof(T)>(out, sizeof(T)));
 }
 
 /**
