@@ -167,39 +167,98 @@ inline constexpr void copy_mem(OutR&& out, InR&& in)
    }
 }
 
+/**
+ * Copy a range of a trivially copyable type into another range of trivially
+ * copyable type of matching byte length.
+ */
+template <ranges::contiguous_output_range ToR, ranges::contiguous_range FromR>
+inline constexpr void typecast_copy(ToR&& out, FromR&& in)
+   requires std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>> &&
+            std::is_trivially_copyable_v<std::ranges::range_value_t<ToR>>
+{
+   ranges::assert_equal_byte_lengths(out, in);
+   std::memcpy(std::ranges::data(out), std::ranges::data(in), ranges::size_bytes(out));
+}
+
+/**
+ * Copy a range of trivially copyable type into an instance of trivially
+ * copyable type with matching length.
+ */
+template <typename ToT, ranges::contiguous_range FromR>
+inline constexpr void typecast_copy(ToT& out, FromR&& in) noexcept
+   requires std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>> && std::is_trivially_copyable_v<ToT> &&
+            (!std::ranges::range<ToT>)
+{
+   typecast_copy(std::span<ToT, 1>(&out, 1), in);
+}
+
+/**
+ * Copy an instance of trivially copyable type into a range of trivially
+ * copyable type with matching length.
+ */
+template <ranges::contiguous_output_range ToR, typename FromT>
+inline constexpr void typecast_copy(ToR&& out, const FromT& in)
+   requires std::is_trivially_copyable_v<FromT> &&
+            (!std::ranges::range<FromT>) && std::is_trivially_copyable_v<std::ranges::range_value_t<ToR>>
+
+{
+   typecast_copy(out, std::span<const FromT, 1>(&in, 1));
+}
+
+/**
+ * Create a trivial type by bit-casting a range of trivially copyable type with
+ * matching length into it.
+ */
+template <typename ToT, ranges::contiguous_range FromR>
+inline constexpr ToT typecast_copy(FromR&& src) noexcept
+   requires std::is_trivial_v<ToT> && std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>>
+{
+   ToT dst;
+   typecast_copy(dst, src);
+   return dst;
+}
+
+// TODO: deprecate and replace
 template <typename T>
 inline constexpr void typecast_copy(uint8_t out[], T in[], size_t N)
    requires std::is_trivially_copyable<T>::value
 {
-   std::memcpy(out, in, sizeof(T) * N);
+   // asserts that *in and *out point to the correct amount of memory
+   typecast_copy(std::span<uint8_t>(out, sizeof(T) * N), std::span<const T>(in, N));
 }
 
+// TODO: deprecate and replace
 template <typename T>
 inline constexpr void typecast_copy(T out[], const uint8_t in[], size_t N)
    requires std::is_trivial<T>::value
 {
-   std::memcpy(out, in, sizeof(T) * N);
+   // asserts that *in and *out point to the correct amount of memory
+   typecast_copy(std::span<T>(out, N), std::span<const uint8_t>(in, N * sizeof(T)));
 }
 
+// TODO: deprecate and replace
 template <typename T>
-inline constexpr void typecast_copy(uint8_t out[], T in) {
-   typecast_copy(out, &in, 1);
+inline constexpr void typecast_copy(uint8_t out[], const T& in) {
+   // asserts that *out points to the correct amount of memory
+   typecast_copy(std::span<uint8_t, sizeof(T)>(out, sizeof(T)), in);
 }
 
+// TODO: deprecate and replace
 template <typename T>
 inline constexpr void typecast_copy(T& out, const uint8_t in[])
    requires std::is_trivial<typename std::decay<T>::type>::value
 {
-   typecast_copy(&out, in, 1);
+   // asserts that *in points to the correct amount of memory
+   typecast_copy(out, std::span<const uint8_t, sizeof(T)>(in, sizeof(T)));
 }
 
-template <class To, class FromT>
-inline constexpr To typecast_copy(const FromT* src) noexcept
-   requires std::is_trivially_copyable<FromT>::value && std::is_trivial<To>::value
+// TODO: deprecate and replace
+template <typename To>
+inline constexpr To typecast_copy(const uint8_t src[]) noexcept
+   requires std::is_trivial<To>::value
 {
-   To dst;
-   std::memcpy(&dst, src, sizeof(To));
-   return dst;
+   // asserts that *src points to the correct amount of memory
+   return typecast_copy<To>(std::span<const uint8_t, sizeof(To)>(src, sizeof(To)));
 }
 
 #if !defined(BOTAN_IS_BEGIN_BUILT)
