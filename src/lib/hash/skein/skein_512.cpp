@@ -19,9 +19,7 @@ Skein_512::Skein_512(size_t arg_output_bits, std::string_view arg_personalizatio
       m_personalization(arg_personalization),
       m_output_bits(arg_output_bits),
       m_threefish(std::make_unique<Threefish_512>()),
-      m_T(2),
-      m_buffer(64),
-      m_buf_pos(0) {
+      m_T(2) {
    if(m_output_bits == 0 || m_output_bits % 8 != 0 || m_output_bits > 512) {
       throw Invalid_Argument("Bad output bits size for Skein-512");
    }
@@ -46,13 +44,11 @@ std::unique_ptr<HashFunction> Skein_512::copy_state() const {
    copy->m_threefish->m_K = this->m_threefish->m_K;
    copy->m_T = this->m_T;
    copy->m_buffer = this->m_buffer;
-   copy->m_buf_pos = this->m_buf_pos;
    return copy;
 }
 
 void Skein_512::clear() {
-   zeroise(m_buffer);
-   m_buf_pos = 0;
+   m_buffer.clear();
 
    initial_block();
 }
@@ -120,41 +116,28 @@ void Skein_512::ubi_512(const uint8_t msg[], size_t msg_len) {
 }
 
 void Skein_512::add_data(std::span<const uint8_t> input) {
-   if(input.empty()) {
-      return;
-   }
-
-   if(m_buf_pos) {
-      buffer_insert(m_buffer, m_buf_pos, input.data(), input.size());
-      if(m_buf_pos + input.size() > 64) {
-         ubi_512(m_buffer.data(), m_buffer.size());
-
-         input = input.last(input.size() - 64 + m_buf_pos);
-         m_buf_pos = 0;
-      }
-   }
-
-   const size_t full_blocks = (input.size() - 1) / 64;
    BufferSlicer in(input);
 
-   if(full_blocks) {
-      const auto blocks = in.take(64 * full_blocks);
-      ubi_512(blocks.data(), blocks.size());
-   }
+   while(!in.empty()) {
+      if(const auto one_block = m_buffer.handle_unaligned_data(in)) {
+         ubi_512(one_block->data(), one_block->size());
+      }
 
-   const auto remaining = in.take(in.remaining());
-   buffer_insert(m_buffer, m_buf_pos, remaining.data(), remaining.size());
-   m_buf_pos += remaining.size();
+      if(m_buffer.in_alignment()) {
+         const auto [aligned_data, full_blocks] = m_buffer.aligned_data_to_process(in);
+         if(full_blocks > 0) {
+            ubi_512(aligned_data.data(), aligned_data.size());
+         }
+      }
+   }
 }
 
 void Skein_512::final_result(std::span<uint8_t> out) {
    m_T[1] |= (static_cast<uint64_t>(1) << 63);  // final block flag
 
-   for(size_t i = m_buf_pos; i != m_buffer.size(); ++i) {
-      m_buffer[i] = 0;
-   }
-
-   ubi_512(m_buffer.data(), m_buf_pos);
+   const auto pos = m_buffer.elements_in_buffer();
+   m_buffer.fill_up_with_zeros();
+   ubi_512(m_buffer.consume().data(), pos);
 
    const uint8_t counter[8] = {0};
 
@@ -163,7 +146,6 @@ void Skein_512::final_result(std::span<uint8_t> out) {
 
    copy_out_vec_le(out.data(), m_output_bits / 8, m_threefish->m_K);
 
-   m_buf_pos = 0;
    initial_block();
 }
 

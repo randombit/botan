@@ -14,33 +14,26 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
 #include <botan/internal/stl_util.h>
+
 #include <algorithm>
+#include <array>
 
 namespace Botan {
 
 namespace {
 
-enum blake2b_constant { BLAKE2B_BLOCKBYTES = 128, BLAKE2B_IVU64COUNT = 8 };
-
-const uint64_t blake2b_IV[BLAKE2B_IVU64COUNT] = {0x6a09e667f3bcc908,
-                                                 0xbb67ae8584caa73b,
-                                                 0x3c6ef372fe94f82b,
-                                                 0xa54ff53a5f1d36f1,
-                                                 0x510e527fade682d1,
-                                                 0x9b05688c2b3e6c1f,
-                                                 0x1f83d9abfb41bd6b,
-                                                 0x5be0cd19137e2179};
+constexpr std::array<uint64_t, 8> blake2b_IV{0x6a09e667f3bcc908,
+                                             0xbb67ae8584caa73b,
+                                             0x3c6ef372fe94f82b,
+                                             0xa54ff53a5f1d36f1,
+                                             0x510e527fade682d1,
+                                             0x9b05688c2b3e6c1f,
+                                             0x1f83d9abfb41bd6b,
+                                             0x5be0cd19137e2179};
 
 }  // namespace
 
-BLAKE2b::BLAKE2b(size_t output_bits) :
-      m_output_bits(output_bits),
-      m_buffer(BLAKE2B_BLOCKBYTES),
-      m_bufpos(0),
-      m_H(BLAKE2B_IVU64COUNT),
-      m_T(),
-      m_F(),
-      m_key_size(0) {
+BLAKE2b::BLAKE2b(size_t output_bits) : m_output_bits(output_bits), m_H(blake2b_IV.size()), m_T(), m_F(), m_key_size(0) {
    if(output_bits == 0 || output_bits > 512 || output_bits % 8 != 0) {
       throw Invalid_Argument("Bad output bits size for BLAKE2b");
    }
@@ -49,17 +42,14 @@ BLAKE2b::BLAKE2b(size_t output_bits) :
 }
 
 void BLAKE2b::state_init() {
-   copy_mem(m_H.data(), blake2b_IV, BLAKE2B_IVU64COUNT);
+   copy_mem(m_H.data(), blake2b_IV.data(), blake2b_IV.size());
    m_H[0] ^= (0x01010000 | (static_cast<uint8_t>(m_key_size) << 8) | static_cast<uint8_t>(output_length()));
    m_T[0] = m_T[1] = 0;
    m_F = 0;
 
-   if(m_key_size == 0) {
-      m_bufpos = 0;
-   } else {
-      BOTAN_ASSERT_NOMSG(m_padded_key_buffer.size() == m_buffer.size());
-      copy_mem(m_buffer.data(), m_padded_key_buffer.data(), m_padded_key_buffer.size());
-      m_bufpos = m_padded_key_buffer.size();
+   m_buffer.clear();
+   if(m_key_size > 0) {
+      m_buffer.append(m_padded_key_buffer);
    }
 }
 
@@ -149,45 +139,28 @@ void BLAKE2b::compress(const uint8_t* input, size_t blocks, uint64_t increment) 
 }
 
 void BLAKE2b::add_data(std::span<const uint8_t> input) {
-   if(input.empty()) {
-      return;
-   }
-
    BufferSlicer in(input);
 
-   if(m_bufpos > 0) {
-      if(m_bufpos < BLAKE2B_BLOCKBYTES) {
-         const auto part = in.take(std::min(BLAKE2B_BLOCKBYTES - m_bufpos, in.remaining()));
-         copy_mem(&m_buffer[m_bufpos], part.data(), part.size());
-         m_bufpos += part.size();
+   while(!in.empty()) {
+      if(const auto one_block = m_buffer.handle_unaligned_data(in)) {
+         compress(one_block->data(), 1, BLAKE2B_BLOCKBYTES);
       }
 
-      if(m_bufpos == m_buffer.size() && !in.empty()) {
-         compress(m_buffer.data(), 1, BLAKE2B_BLOCKBYTES);
-         m_bufpos = 0;
+      if(m_buffer.in_alignment()) {
+         const auto [aligned_data, full_blocks] = m_buffer.aligned_data_to_process(in);
+         if(full_blocks > 0) {
+            compress(aligned_data.data(), full_blocks, BLAKE2B_BLOCKBYTES);
+         }
       }
    }
-
-   if(in.remaining() > BLAKE2B_BLOCKBYTES) {
-      const size_t full_blocks = ((in.remaining() - 1) / BLAKE2B_BLOCKBYTES);
-      compress(in.take(BLAKE2B_BLOCKBYTES * full_blocks).data(), full_blocks, BLAKE2B_BLOCKBYTES);
-   }
-
-   if(!in.empty()) {
-      const auto take = in.remaining();
-      copy_mem(&m_buffer[m_bufpos], in.take(take).data(), take);
-      m_bufpos += take;
-   }
-
-   BOTAN_ASSERT_NOMSG(in.empty());
 }
 
 void BLAKE2b::final_result(std::span<uint8_t> output) {
-   if(m_bufpos != BLAKE2B_BLOCKBYTES) {
-      clear_mem(&m_buffer[m_bufpos], BLAKE2B_BLOCKBYTES - m_bufpos);
-   }
+   const auto pos = m_buffer.elements_in_buffer();
+   m_buffer.fill_up_with_zeros();
+
    m_F = 0xFFFFFFFFFFFFFFFF;
-   compress(m_buffer.data(), 1, m_bufpos);
+   compress(m_buffer.consume().data(), 1, pos);
    copy_out_vec_le(output.data(), output_length(), m_H);
    state_init();
 }
@@ -229,9 +202,8 @@ void BLAKE2b::key_schedule(std::span<const uint8_t> key) {
 
 void BLAKE2b::clear() {
    zeroise(m_H);
-   zeroise(m_buffer);
+   m_buffer.clear();
    zeroise(m_padded_key_buffer);
-   m_bufpos = 0;
    m_key_size = 0;
    state_init();
 }

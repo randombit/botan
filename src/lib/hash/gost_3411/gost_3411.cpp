@@ -15,9 +15,8 @@ namespace Botan {
 /**
 * GOST 34.11 Constructor
 */
-GOST_34_11::GOST_34_11() : m_cipher(GOST_28147_89_Params("R3411_CryptoPro")), m_buffer(32), m_sum(32), m_hash(32) {
+GOST_34_11::GOST_34_11() : m_cipher(GOST_28147_89_Params("R3411_CryptoPro")), m_sum(32), m_hash(32) {
    m_count = 0;
-   m_position = 0;
 }
 
 void GOST_34_11::clear() {
@@ -25,7 +24,7 @@ void GOST_34_11::clear() {
    zeroise(m_sum);
    zeroise(m_hash);
    m_count = 0;
-   m_position = 0;
+   m_buffer.clear();
 }
 
 std::unique_ptr<HashFunction> GOST_34_11::copy_state() const {
@@ -36,28 +35,22 @@ std::unique_ptr<HashFunction> GOST_34_11::copy_state() const {
 * Hash additional inputs
 */
 void GOST_34_11::add_data(std::span<const uint8_t> input) {
-   m_count += input.size();
+   BufferSlicer in(input);
 
-   if(m_position) {
-      buffer_insert(m_buffer, m_position, input.data(), input.size());
+   while(!in.empty()) {
+      if(const auto one_block = m_buffer.handle_unaligned_data(in)) {
+         compress_n(one_block->data(), 1);
+      }
 
-      if(m_position + input.size() >= hash_block_size()) {
-         compress_n(m_buffer.data(), 1);
-         input = input.last(input.size() - hash_block_size() + m_position);
-         m_position = 0;
+      if(m_buffer.in_alignment()) {
+         const auto [aligned_data, full_blocks] = m_buffer.aligned_data_to_process(in);
+         if(full_blocks > 0) {
+            compress_n(aligned_data.data(), full_blocks);
+         }
       }
    }
 
-   BufferSlicer in(input);
-   const size_t full_blocks = in.remaining() / hash_block_size();
-
-   if(full_blocks) {
-      compress_n(in.take(full_blocks * hash_block_size()).data(), full_blocks);
-   }
-
-   const auto remaining = in.take(in.remaining());
-   buffer_insert(m_buffer, m_position, remaining.data(), remaining.size());
-   m_position += remaining.size();
+   m_count += input.size();
 }
 
 /**
@@ -208,9 +201,9 @@ void GOST_34_11::compress_n(const uint8_t input[], size_t blocks) {
 * Produce the final GOST 34.11 output
 */
 void GOST_34_11::final_result(std::span<uint8_t> out) {
-   if(m_position) {
-      clear_mem(m_buffer.data() + m_position, m_buffer.size() - m_position);
-      compress_n(m_buffer.data(), 1);
+   if(!m_buffer.in_alignment()) {
+      m_buffer.fill_up_with_zeros();
+      compress_n(m_buffer.consume().data(), 1);
    }
 
    secure_vector<uint8_t> length_buf(32);

@@ -10,6 +10,8 @@
 
 #include <botan/hash.h>
 
+#include <botan/internal/alignment_buffer.h>
+
 namespace Botan {
 
 /**
@@ -42,8 +44,7 @@ class Streebog final : public HashFunction {
    private:
       const size_t m_output_bits;
       uint64_t m_count;
-      size_t m_position;
-      secure_vector<uint8_t> m_buffer;
+      AlignmentBuffer<uint8_t, 64> m_buffer;
       secure_vector<uint64_t> m_h;
       secure_vector<uint64_t> m_S;
 };

@@ -9,6 +9,7 @@
 #define BOTAN_GOST_3411_H_
 
 #include <botan/hash.h>
+#include <botan/internal/alignment_buffer.h>
 #include <botan/internal/gost_28147.h>
 
 namespace Botan {
@@ -39,8 +40,8 @@ class GOST_34_11 final : public HashFunction {
       void final_result(std::span<uint8_t>) override;
 
       GOST_28147_89 m_cipher;
-      secure_vector<uint8_t> m_buffer, m_sum, m_hash;
-      size_t m_position;
+      AlignmentBuffer<uint8_t, 32> m_buffer;
+      secure_vector<uint8_t> m_sum, m_hash;
       uint64_t m_count;
 };
 

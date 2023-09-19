@@ -10,12 +10,15 @@
 
 #include <botan/hash.h>
 #include <botan/sym_algo.h>
+#include <botan/internal/alignment_buffer.h>
 #include <memory>
 #include <string>
 
 namespace Botan {
 
 class BLAKE2bMAC;
+
+constexpr size_t BLAKE2B_BLOCKBYTES = 128;
 
 /**
 * BLAKE2B
@@ -57,8 +60,7 @@ class BLAKE2b final : public HashFunction,
 
       const size_t m_output_bits;
 
-      secure_vector<uint8_t> m_buffer;
-      size_t m_bufpos;
+      AlignmentBuffer<uint8_t, BLAKE2B_BLOCKBYTES, AlignmentBufferFinalBlock::must_be_deferred> m_buffer;
 
       secure_vector<uint64_t> m_H;
       uint64_t m_T[2];

@@ -24,6 +24,7 @@ version.h
 </header:public>
 
 <header:internal>
+alignment_buffer.h
 bit_ops.h
 bswap.h
 calendar.h
