@@ -280,6 +280,40 @@ inline constexpr uint64_t load_le<uint64_t>(const uint8_t in[], size_t off) {
 }
 
 /**
+* Load many big-endian unsigned integers
+* @param in   a fixed-length span to some bytes
+* @param outs a arbitrary-length parameter list of unsigned integers to be loaded
+*/
+template <ranges::contiguous_range<uint8_t> InR, concepts::unsigned_integral... Ts>
+   requires all_same_v<Ts...>
+inline constexpr void load_be(InR&& in, Ts&... outs) {
+   ranges::assert_exact_byte_length<(sizeof(Ts) + ...)>(in);
+   auto load_one = [off = 0]<typename T>(auto i, T& o) mutable {
+      o = load_be<T>(i.subspan(off).template first<sizeof(T)>());
+      off += sizeof(T);
+   };
+
+   (load_one(std::span{in}, outs), ...);
+}
+
+/**
+* Load many little-endian unsigned integers
+* @param in   a fixed-length span to some bytes
+* @param outs a arbitrary-length parameter list of unsigned integers to be loaded
+*/
+template <ranges::contiguous_range<uint8_t> InR, concepts::unsigned_integral... Ts>
+   requires all_same_v<Ts...>
+inline constexpr void load_le(InR&& in, Ts&... outs) {
+   ranges::assert_exact_byte_length<(sizeof(Ts) + ...)>(in);
+   auto load_one = [off = 0]<typename T>(auto i, T& o) mutable {
+      o = load_le<T>(i.subspan(off).template first<sizeof(T)>());
+      off += sizeof(T);
+   };
+
+   (load_one(std::span{in}, outs), ...);
+}
+
+/**
 * Load two little-endian words
 * @param in a pointer to some bytes
 * @param x0 where the first word will be written
@@ -592,6 +626,40 @@ inline constexpr void store_le(uint64_t in, uint8_t out[8]) {
    out[6] = get_byte<1>(in);
    out[7] = get_byte<0>(in);
 #endif
+}
+
+/**
+* Store many big-endian unsigned integers
+* @param out a fixed-length span to some bytes
+* @param ins a arbitrary-length parameter list of unsigned integers to be stored
+*/
+template <ranges::contiguous_output_range<uint8_t> OutR, concepts::unsigned_integral... Ts>
+   requires all_same_v<Ts...>
+inline constexpr void store_be(OutR&& out, Ts... ins) {
+   ranges::assert_exact_byte_length<(sizeof(Ts) + ...)>(out);
+   auto store_one = [off = 0]<typename T>(auto o, T i) mutable {
+      store_be<T>(i, o.subspan(off).template first<sizeof(T)>());
+      off += sizeof(T);
+   };
+
+   (store_one(std::span{out}, ins), ...);
+}
+
+/**
+* Store many little-endian unsigned integers
+* @param out a fixed-length span to some bytes
+* @param ins a arbitrary-length parameter list of unsigned integers to be stored
+*/
+template <ranges::contiguous_output_range<uint8_t> OutR, concepts::unsigned_integral... Ts>
+   requires all_same_v<Ts...>
+inline constexpr void store_le(OutR&& out, Ts... ins) {
+   ranges::assert_exact_byte_length<(sizeof(Ts) + ...)>(out);
+   auto store_one = [off = 0]<typename T>(auto o, T i) mutable {
+      store_le<T>(i, o.subspan(off).template first<sizeof(T)>());
+      off += sizeof(T);
+   };
+
+   (store_one(std::span{out}, ins), ...);
 }
 
 /**

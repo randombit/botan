@@ -169,6 +169,36 @@ class Utility_Function_Tests final : public Text_Based_Test {
             result.test_is_eq<uint8_t>(out[7], 0xAB);
          }
 
+         std::array<uint8_t, 8> outarr;
+         uint16_t i0, i1, i2, i3;
+         Botan::store_be(in64, outarr);
+
+         Botan::load_be(outarr, i0, i1, i2, i3);
+         result.test_is_eq<uint16_t>(i0, 0xABCD);
+         result.test_is_eq<uint16_t>(i1, 0xEF01);
+         result.test_is_eq<uint16_t>(i2, 0x2345);
+         result.test_is_eq<uint16_t>(i3, 0x6789);
+
+         Botan::load_le(std::span{outarr}.first<6>(), i0, i1, i2);
+         result.test_is_eq<uint16_t>(i0, 0xCDAB);
+         result.test_is_eq<uint16_t>(i1, 0x01EF);
+         result.test_is_eq<uint16_t>(i2, 0x4523);
+         result.test_is_eq<uint16_t>(i3, 0x6789);  // remains unchanged
+
+         Botan::store_le(in64, outarr);
+
+         Botan::load_le(outarr, i0, i1, i2, i3);
+         result.test_is_eq<uint16_t>(i0, 0x6789);
+         result.test_is_eq<uint16_t>(i1, 0x2345);
+         result.test_is_eq<uint16_t>(i2, 0xEF01);
+         result.test_is_eq<uint16_t>(i3, 0xABCD);
+
+         Botan::load_be(std::span{outarr}.first<6>(), i0, i1, i2);
+         result.test_is_eq<uint16_t>(i0, 0x8967);
+         result.test_is_eq<uint16_t>(i1, 0x4523);
+         result.test_is_eq<uint16_t>(i2, 0x01EF);
+         result.test_is_eq<uint16_t>(i3, 0xABCD);  // remains unchanged
+
          return result;
       }
 };
