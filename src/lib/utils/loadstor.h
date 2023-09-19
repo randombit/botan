@@ -9,6 +9,7 @@
 #ifndef BOTAN_LOAD_STORE_H_
 #define BOTAN_LOAD_STORE_H_
 
+#include <botan/concepts.h>
 #include <botan/mem_ops.h>
 #include <botan/types.h>
 #include <botan/internal/bswap.h>
@@ -80,6 +81,56 @@ inline constexpr uint64_t make_uint64(
    return ((static_cast<uint64_t>(i0) << 56) | (static_cast<uint64_t>(i1) << 48) | (static_cast<uint64_t>(i2) << 40) |
            (static_cast<uint64_t>(i3) << 32) | (static_cast<uint64_t>(i4) << 24) | (static_cast<uint64_t>(i5) << 16) |
            (static_cast<uint64_t>(i6) << 8) | (static_cast<uint64_t>(i7)));
+}
+
+/**
+* Load a big-endian unsigned integer
+* @param in_range a fixed-length span with some bytes
+* @return T loaded from in, as a big-endian value
+*/
+template <concepts::unsigned_integral T, ranges::contiguous_range<uint8_t> InR>
+inline constexpr T load_be(InR&& in_range) {
+   ranges::assert_exact_byte_length<sizeof(T)>(in_range);
+   std::span in{in_range};
+   if constexpr(sizeof(T) == 1) {
+      return static_cast<T>(in[0]);
+   } else {
+#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+      return typecast_copy<T>(in);
+#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
+      return reverse_bytes(typecast_copy<T>(in));
+#else
+      return [&]<size_t... i>(std::index_sequence<i...>) {
+         return ((static_cast<T>(in[i]) << ((sizeof(T) - i - 1) * 8)) | ...);
+      }
+      (std::make_index_sequence<sizeof(T)>());
+#endif
+   }
+}
+
+/**
+* Load a little-endian unsigned integer
+* @param in_range a fixed-length span with some bytes
+* @return T loaded from in, as a little-endian value
+*/
+template <concepts::unsigned_integral T, ranges::contiguous_range<uint8_t> InR>
+inline constexpr T load_le(InR&& in_range) {
+   ranges::assert_exact_byte_length<sizeof(T)>(in_range);
+   std::span in{in_range};
+   if constexpr(sizeof(T) == 1) {
+      return static_cast<T>(in[0]);
+   } else {
+#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+      return reverse_bytes(typecast_copy<T>(in));
+#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
+      return typecast_copy<T>(in);
+#else
+      return [&]<size_t... i>(std::index_sequence<i...>) {
+         return ((static_cast<T>(in[i]) << (i * 8)) | ...);
+      }
+      (std::make_index_sequence<sizeof(T)>());
+#endif
+   }
 }
 
 /**
@@ -377,6 +428,56 @@ inline constexpr void load_be(T out[], const uint8_t in[], size_t count) {
 #else
       for(size_t i = 0; i != count; ++i)
          out[i] = load_be<T>(in, i);
+#endif
+   }
+}
+
+/**
+* Store a big-endian unsigned integer
+* @param in the input unsigned integer
+* @param out_range the fixed-length span to write to
+*/
+template <concepts::unsigned_integral T, ranges::contiguous_output_range<uint8_t> OutR>
+inline constexpr void store_be(T in, OutR&& out_range) {
+   ranges::assert_exact_byte_length<sizeof(T)>(out_range);
+   std::span out{out_range};
+   if constexpr(sizeof(T) == 1) {
+      out[0] = static_cast<uint8_t>(in);
+   } else {
+#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+      typecast_copy(out, in);
+#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
+      typecast_copy(out, reverse_bytes(in));
+#else
+      [&]<size_t... i>(std::index_sequence<i...>) {
+         ((out[i] = get_byte<i>(in)), ...);
+      }
+      (std::make_index_sequence<sizeof(T)>());
+#endif
+   }
+}
+
+/**
+* Store a little-endian unsigned integer
+* @param in the input unsigned integer
+* @param out_range the fixed-length span to write to
+*/
+template <concepts::unsigned_integral T, ranges::contiguous_output_range<uint8_t> OutR>
+inline constexpr void store_le(T in, OutR&& out_range) {
+   ranges::assert_exact_byte_length<sizeof(T)>(out_range);
+   std::span out{out_range};
+   if constexpr(sizeof(T) == 1) {
+      out[0] = static_cast<uint8_t>(in);
+   } else {
+#if defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
+      typecast_copy(out, reverse_bytes(in));
+#elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
+      typecast_copy(out, in);
+#else
+      [&]<size_t... i>(std::index_sequence<i...>) {
+         ((out[i] = get_byte<sizeof(T) - i - 1>(in)), ...);
+      }
+      (std::make_index_sequence<sizeof(T)>());
 #endif
    }
 }
