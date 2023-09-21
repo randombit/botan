@@ -1,14 +1,10 @@
 Transport Layer Security (TLS)
 ========================================
 
-.. versionadded:: 1.11.0
+Botan has client and server implementations of TLS 1.2 and 1.3. Support for
+older versions of the protocol was removed with Botan 3.0.
 
-Botan has client and server implementations of various versions of the
-TLS protocol, including TLS v1.0, TLS v1.1, and TLS v1.2. As of
-version 1.11.13, support for the insecure SSLv3 protocol has been
-removed.
-
-There is also support for DTLS (v1.0 and v1.2), a variant of TLS
+There is also support for DTLS (currently v1.2 only), a variant of TLS
 adapted for operation on datagram transports such as UDP and
 SCTP. DTLS support should be considered as beta quality and further
 testing is invited.
@@ -30,13 +26,18 @@ abstraction. This makes the library completely agnostic to how you
 write your network layer, be it blocking sockets, libevent, asio, a
 message queue, lwIP on RTOS, some carrier pigeons, etc.
 
-Starting in 1.11.31, the application callbacks are encapsulated as the class
-``TLS::Callbacks`` with the following members. The first four (``tls_emit_data``,
-``tls_record_received``, ``tls_alert``, and ``tls_session_established``) are
-mandatory for using TLS, all others are optional and provide additional
-information about the connection.
+Note that we support :ref:`an optional Boost ASIO stream <tls_asio_stream>`
+that is a convenient way to use Botan's TLS implementation as an almost drop-in
+replacement of ASIO's `ssl::stream`. Applications that build their network
+layer on Boost ASIO are advised to use this wrapper of ``TLS::Client`` and
+``TLS::Server``.
 
- .. cpp:function:: void tls_emit_data(const uint8_t data[], size_t data_len)
+Application callbacks are encapsulated as the class ``TLS::Callbacks`` with the
+following members. The first three (``tls_emit_data``, ``tls_record_received``,
+``tls_alert``) are mandatory for using TLS, all others are optional and provide
+additional information about the connection.
+
+ .. cpp:function:: void tls_emit_data(std::span<const uint8_t> data)
 
     Mandatory. The TLS stack requests that all bytes of *data* be queued up to send to the
     counterparty. After this function returns, the buffer containing *data* will
@@ -50,7 +51,7 @@ information about the connection.
     For TLS all writes must occur *in the order requested*.
     For DTLS this ordering is not strictly required, but is still recommended.
 
- .. cpp:function:: void tls_record_received(uint64_t rec_no, const uint8_t data[], size_t data_len)
+ .. cpp:function:: void tls_record_received(uint64_t rec_no, std::span<const uint8_t> data)
 
     Mandatory. Called once for each application_data record which is received, with the
     matching (TLS level) record sequence number.
@@ -87,7 +88,7 @@ information about the connection.
                    const std::vector<std::shared_ptr<const OCSP::Response>>& ocsp_responses, \
                    const std::vector<Certificate_Store*>& trusted_roots, \
                    Usage_Type usage, \
-                   const std::string& hostname, \
+                   std::string_view hostname, \
                    const Policy& policy)
 
      Optional - default implementation should work for many users.
@@ -154,6 +155,19 @@ information about the connection.
      used on the server side, and only if the client requests OCSP
      stapling.
 
+ .. cpp:function:: std::vector<std::vector<uint8_t>> tls_provide_cert_chain_status( \
+                   const std::vector<X509_Certificate>& chain, \
+                   const Certificate_Status_Request& csr)
+
+     Optional. This may be called by TLS 1.3 clients or servers when OCSP
+     stapling was negotiated. In contrast to ``tls_provide_cert_status``,
+     this allows providing OCSP responses for each certificate in the chain.
+
+     Note that the returned list of encoded OCSP responses must be of the same
+     length as the input list of certificates in the chain. By default, this will
+     call ``tls_provide_cert_status`` to obtain an OCSP response for the end-entity
+     only.
+
  .. cpp:function:: std::string tls_peer_network_identity()
 
      Optional. Return a string that identifies the peer in some unique way
@@ -188,13 +202,6 @@ information about the connection.
 
      Optional logging for an debug value. (Not currently used)
 
-Versions from 1.11.0 to 1.11.30 did not have ``TLS::Callbacks`` and instead
-used independent std::functions to pass the various callback functions.
-This interface is currently still included but is deprecated and will be removed
-in a future release. For the documentation for this interface, please check
-the docs for 1.11.30. This version of the manual only documents the new interface
-added in 1.11.31.
-
 TLS Channels
 ----------------------------------------
 
@@ -205,7 +212,7 @@ available:
 .. cpp:class:: TLS::Channel
 
    .. cpp:function:: size_t received_data(const uint8_t buf[], size_t buf_size)
-   .. cpp:function:: size_t received_data(const std::vector<uint8_t>& buf)
+   .. cpp:function:: size_t received_data(std::span<const uint8_t> buf)
 
      This function is used to provide data sent by the counterparty
      (eg data that you read off the socket layer). Depending on the
@@ -219,8 +226,8 @@ available:
      will return 0 instead.
 
    .. cpp:function:: void send(const uint8_t buf[], size_t buf_size)
-   .. cpp:function:: void send(const std::string& str)
-   .. cpp:function:: void send(const std::vector<uint8_t>& vec)
+   .. cpp:function:: void send(std::string_view str)
+   .. cpp:function:: void send(std::span<const uint8_t> vec)
 
      Create one or more new TLS application records containing the
      provided data and send them. This will eventually result in at
@@ -253,6 +260,18 @@ available:
       Returns true if and only if either a close notification or a
       fatal alert message have been either sent or received.
 
+   .. cpp:function:: bool is_closed_for_reading()
+
+      TLS 1.3 supports half-open connections. If the peer notified a
+      connection closure, this will return true. For TLS 1.2 this will
+      always return the same ``is_closed``.
+
+   .. cpp:function:: bool is_closed_for_writing()
+
+      TLS 1.3 supports half-open connections. After calling ``close``
+      on the channel, this will return true. For TLS 1.2 this will
+      always return the same ``is_closed``.
+
    .. cpp:function:: bool timeout_check()
 
       This function does nothing unless the channel represents a DTLS
@@ -267,6 +286,9 @@ available:
       protocol to ignore this request. If a successful renegotiation
       occurs, the *handshake_cb* callback will be called again.
 
+      Note that TLS 1.3 does not support renegotiation. This method will
+      throw when called on a channel that uses TLS 1.3.
+
       If *force_full_renegotiation* is false, then the client will
       attempt to simply renew the current session - this will refresh
       the symmetric keys but will not change the session master
@@ -277,6 +299,14 @@ available:
       it. Otherwise the server will prevent resumption and force the
       creation of a new session.
 
+   .. cpp:function:: void update_traffic_keys(bool request_peer_update = false)
+
+      After a successful handshake, this will update our traffic keys and
+      may send a request to do the same to the peer.
+
+      Note that this is a TLS 1.3 feature and invocations on a channel
+      using TLS 1.2 will throw.
+
    .. cpp:function:: std::vector<X509_Certificate> peer_cert_chain()
 
       Returns the certificate chain of the counterparty. When acting
@@ -284,9 +314,19 @@ available:
       this value will ordinarily be empty, unless the server requested
       a certificate and the client responded with one.
 
+   .. cpp:function:: std::optional<std::string> external_psk_identity() const
+
+      When this connection was established using a user-defined Preshared Key
+      this will return the identity of the PSK used. If no PSK was used in
+      the establishment of the connection this will return std::nullopt.
+
+      Note that TLS 1.3 session resumption is based on PSKs internally.
+      Neverthelees, connections that were established using a session resumption
+      will return std::nullopt here.
+
    .. cpp:function:: SymmetricKey key_material_export( \
-          const std::string& label, \
-          const std::string& context, \
+          std::string_view label, \
+          std::string_view context, \
           size_t length)
 
       Returns an exported key of *length* bytes derived from *label*,
@@ -306,13 +346,13 @@ TLS Clients
 .. cpp:class:: TLS::Client
 
    .. cpp:function:: Client( \
-         Callbacks& callbacks, \
-         Session_Manager& session_manager, \
-         Credentials_Manager& creds, \
-         const Policy& policy, \
-         RandomNumberGenerator& rng, \
-         const Server_Information& server_info = Server_Information(), \
-         const Protocol_Version offer_version = Protocol_Version::latest_tls_version(), \
+         const std::shared_ptr<Callbacks>& callbacks, \
+         const std::shared_ptr<Session_Manager>& session_manager, \
+         const std::shared_ptr<Credentials_Manager>& creds, \
+         const std::shared_ptr<const Policy>& policy, \
+         const std::shared_ptr<RandomNumberGenerator>& rng, \
+         Server_Information server_info = Server_Information(), \
+         Protocol_Version offer_version = Protocol_Version::latest_tls_version(), \
          const std::vector<std::string>& next_protocols = std::vector<std::string>(), \
          size_t reserved_io_buffer_size = 16*1024 \
          )
@@ -385,11 +425,11 @@ TLS Servers
 .. cpp:class:: TLS::Server
 
    .. cpp:function:: Server( \
-         Callbacks& callbacks, \
-         Session_Manager& session_manager, \
-         Credentials_Manager& creds, \
-         const Policy& policy, \
-         RandomNumberGenerator& rng, \
+         const std::shared_ptr<Callbacks>& callbacks, \
+         const std::shared_ptr<Session_Manager>& session_manager, \
+         const std::shared_ptr<Credentials_Manager>& creds, \
+         const std::shared_ptr<const Policy>& policy, \
+         const std::shared_ptr<RandomNumberGenerator>& rng, \
          bool is_datagram = false, \
          size_t reserved_io_buffer_size = 16*1024 \
          )
@@ -428,17 +468,11 @@ the end point retains some information about an established session
 and then reuse that information to bootstrap a new session in way that
 is much cheaper computationally than a full handshake.
 
-Every time your handshake callback is called, a new session has been
-established, and a ``TLS::Session`` is included that provides
-information about that session:
+Every time the handshake callback (``TLS::Callbacks::tls_session_established``)
+is called, a new session has been established, and a ``TLS::Session_Summary`` is
+included that provides information about that session:
 
-.. note::
-
-   The serialization format of Session is not considered stable and is allowed
-   to change even across minor releases. In the event of such a change, old
-   sessions will no longer be able to be resumed.
-
-.. cpp:class:: TLS::Session
+.. cpp:class:: TLS::Session_Summary
 
    .. cpp:function:: Protocol_Version version() const
 
@@ -458,38 +492,25 @@ information about that session:
        the server, it includes the name the client specified in the
        server name indicator extension.
 
+   .. cpp:function:: bool was_resumption() const
+
+       Returns true if the session resulted from a resumption of a previously
+       established session.
+
    .. cpp:function:: std::vector<X509_Certificate> peer_certs() const
 
        Returns the certificate chain of the peer
 
-   .. cpp:function:: bool secure_renegotiation() const
+   .. cpp:function:: std::optional<std::string> external_psk_identity() const
 
-      Returns ``true`` if the connection was negotiated with the
-      correct extensions to prevent the renegotiation attack.
+       If the session was established using a user-provided Preshared Key,
+       its identity will be provided here. If no PSK was used, std::nullopt
+       will be reported.
 
-   .. cpp:function:: std::vector<uint8_t> encrypt(const SymmetricKey& key, \
-                                               RandomNumberGenerator& rng)
+   .. cpp:function:: bool psk_used() const
 
-      Encrypts a session using a symmetric key *key* and returns a raw
-      binary value that can later be passed to ``decrypt``. The key
-      may be of any length. The format is described in
-      :ref:`tls_session_encryption`.
-
-   .. cpp:function:: static Session decrypt(const uint8_t ciphertext[], \
-                                            size_t length, \
-                                            const SymmetricKey& key)
-
-      Decrypts a session that was encrypted previously with ``encrypt`` and
-      ``key``, or throws an exception if decryption fails.
-
-   .. cpp:function:: secure_vector<uint8_t> DER_encode() const
-
-       Returns a serialized version of the session.
-
-       .. warning:: The return value of ``DER_encode`` contains the
-                    master secret for the session, and an attacker who
-                    recovers it could recover plaintext of previous
-                    sessions or impersonate one side to the other.
+       Returns true if the session was established using a user-provided
+       Preshared Key.
 
 .. _tls_session_managers:
 
@@ -500,37 +521,68 @@ You may want sessions stored in a specific format or storage type. To
 do so, implement the ``TLS::Session_Manager`` interface and pass your
 implementation to the ``TLS::Client`` or ``TLS::Server`` constructor.
 
+.. note::
+
+   The serialization format of ``Session`` is not considered stable and is
+   allowed to change even across minor releases. In the event of such a change,
+   old sessions will no longer be able to be resumed.
+
+The interface of the ``TLS::Session_Manager`` was completely redesigned
+with Botan 3.0 to accommodate the new requirements of TLS 1.3. Please also see
+:ref:`the migration guide <tls_session_manager_migration>` for an outline of
+the differences between the Botan 2.x and 3.x API.
+
+In Botan 3.0 the server-side ``TLS::Session_Manager`` gained the competency to
+decide whether to store sessions in a stateful database and just return a
+handle to it. Or to serialize the session into an encrypted ticket and pass it
+back to the client. To distinguish those use cases, Botan 3.0 introduced a
+``TLS::Session_Handle`` class that is used throughout this API.
+
+Below is a brief overview of the most important methods that a custom
+implementation must implement. There are more methods that provide applications
+with full flexibility to handle session objects. More detail can be found in
+the API documentation inline.
+
 .. cpp:class:: TLS::Session_Mananger
 
- .. cpp:function:: void save(const Session& session)
+ .. cpp:function:: void store(const Session& session, const Session_Handle& handle)
 
-     Save a new *session*. It is possible that this sessions session
-     ID will replicate a session ID already stored, in which case the
-     new session information should overwrite the previous information.
+     Attempts to save a new *session*. Typical implementations will use
+     ``TLS::Session::encrypt``, ``TLS::Session::DER_encode`` or
+     ``TLS::Session::PEM_encode`` to obtain an opaque and serialized session
+     object for storage. It is legal to simply drop an incoming session for
+     whatever reason.
 
- .. cpp:function:: void remove_entry(const std::vector<uint8_t>& session_id)
+ .. cpp:function:: size_t remove(const Session_Handle& handle)
 
-      Remove the session identified by *session_id*. Future attempts
-      at resumption should fail for this session.
+      Remove the session identified by *handle*. Future attempts
+      at resumption should fail for this session. Returns the number of sessions
+      actually removed.
 
- .. cpp:function:: bool load_from_session_id(const std::vector<uint8_t>& session_id, \
-                                             Session& session)
+ .. cpp:function:: size_t remove_all()
 
-      Attempt to resume a session identified by *session_id*. If
-      located, *session* is set to the session data previously passed
-      to *save*, and ``true`` is returned. Otherwise *session* is not
-      modified and ``false`` is returned.
+      Empties the session storage. Returns the number of sessions actually
+      removed.
 
- .. cpp:function:: bool load_from_server_info(const Server_Information& server, \
-                                              Session& session)
+ .. cpp:function:: std::optional<Session> retrieve_one(const Session_Handle& handle)
 
-      Attempt to resume a session with a known server.
+      Attempts to retrieve a single session that corresponds to *handle* from
+      storage. Typical implementations will use ``TLS::Session::decrypt`` or the
+      ``TLS::Session`` constructors that deserialize a session from DER or PEM.
+      If no session was found for the given *handle*, return std::nullopt. This
+      method is called in TLS servers to find a specific session for a given
+      handle.
 
- .. cpp:function:: std::chrono::seconds session_lifetime() const
+ .. cpp:function:: std::vector<Session_with_Handle> find_some(const Server_Information& info, size_t max_sessions_hint)
 
-      Returns the expected maximum lifetime of a session when using
-      this session manager. Will return 0 if the lifetime is unknown
-      or has no explicit expiration policy.
+      Try to find some saved sessions using information about the server. TLS
+      1.3 clients may offer more than one session for resumption to the server.
+      It is okay to ignore the *max_sessions_hint* and just return exactly one
+      or no sessions at all.
+
+ .. cpp:function:: recursive_mutex_type& mutex()
+
+      Derived implementations may use this mutex to serialize concurrent requests.
 
 .. _tls_session_manager_inmem:
 
@@ -547,11 +599,9 @@ lock internally.
 .. cpp:class:: TLS::Session_Managers_In_Memory
 
  .. cpp:function:: Session_Manager_In_Memory(RandomNumberGenerator& rng, \
-                                             size_t max_sessions = 1000, \
-                                             std::chrono::seconds session_lifetime = 7200)
+                                             size_t max_sessions = 1000)
 
-    Limits the maximum number of saved sessions to *max_sessions*, and
-    expires all sessions older than *session_lifetime*.
+    Limits the maximum number of saved sessions to *max_sessions*.
 
 Noop Session Mananger
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -580,13 +630,43 @@ the PBKDF information).
 .. cpp:class:: TLS::Session_Manager_SQLite
 
  .. cpp:function:: Session_Manager_SQLite( \
-       const std::string& passphrase, \
-       RandomNumberGenerator& rng, \
-       const std::string& db_filename, \
-       size_t max_sessions = 1000, \
-       std::chrono::seconds session_lifetime = 7200)
+       std::string_view passphrase, \
+       const std::shared_ptr<RandomNumberGenerator>& rng, \
+       std::string_view db_filename, \
+       size_t max_sessions = 1000)
 
    Uses the sqlite3 database named by *db_filename*.
+
+Stateless Session Manager
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This session manager is useful for servers that want to implement stateless
+session resumption. If supported by the client, sessions are always encoded as
+opaque and encrypted session tickets. Sessions are encrypted with a symmetric
+secret obtained via ``TLS::Credentials_Manager::session_ticket_key()``.
+
+ .. cpp:function:: Session_Manager_Stateless( \
+       const std::shared_ptr<Credentials_Manager>& credentials_manager, \
+       const std::shared_ptr<RandomNumberGenerator>& rng)
+
+    Creates a stateless session manager.
+
+
+Hybrid Session Manager
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is a meta-manager that combines a ``TLS::Session_Manager_Stateless`` with
+any (built-in or user-provided) stateful session manager. Typically, such a
+hybrid manager is useful for TLS servers that want to support both stateless
+session tickets and stateful session storage.
+
+ .. cpp:function:: Session_Manager_Hybrid(std::unique_ptr<Session_Manager> stateful_manager, \
+                   const std::shared_ptr<Credentials_Manager>& credentials_manager, \
+                   const std::shared_ptr<RandomNumberGenerator>& rng, \
+                   bool prefer_tickets = true)
+
+    Creates a hybrid session manager that uses *stateful_manager* as its storage
+    backend when session tickets are not supported or desired.
 
 TLS Policies
 ----------------------------------------
@@ -721,6 +801,12 @@ policy settings from a file.
 
      No other values are currently defined.
 
+ .. cpp:function:: std::vector<Group_Param> key_exchange_groups_to_offer() const
+
+     Return a list of groups to opportunistically offer key exchange information
+     for in the initial ClientHello when offering TLS 1.3. This policy has no
+     effect on TLS 1.2 connections.
+
  .. cpp:function:: bool use_ecc_point_compression() const
 
      Prefer ECC point compression.
@@ -827,19 +913,13 @@ policy settings from a file.
 
      Default: 2048 bits
 
- .. cpp:function:: bool allow_tls10() const
-
-      Return true from here to allow TLS v1.0. Since 2.8.0, returns
-      ``false`` by default.
-
- .. cpp:function:: bool allow_tls11() const
-
-      Return true from here to allow TLS v1.1. Since 2.8.0, returns
-      ``false`` by default.
-
  .. cpp:function:: bool allow_tls12() const
 
       Return true from here to allow TLS v1.2. Returns ``true`` by default.
+
+ .. cpp:function:: bool allow_tls13() const
+
+      Return true from here to allow TLS v1.3. Returns ``true`` by default.
 
  .. cpp:function:: size_t minimum_rsa_bits() const
 
@@ -879,7 +959,7 @@ policy settings from a file.
 
      Default: false
 
- .. cpp:function:: u32bit session_ticket_lifetime() const
+ .. cpp:function:: std::chrono::seconds session_ticket_lifetime() const
 
      Return the lifetime of session tickets. Each session includes the
      start time. Sessions resumptions using tickets older than
@@ -887,6 +967,32 @@ policy settings from a file.
      renegotiation.
 
      Default: 86400 seconds (1 day)
+
+ .. cpp:function:: size_t new_session_tickets_upon_handshake_success() const
+
+     Return the number of session tickets a TLS 1.3 server should issue
+     automatically once a successful handshake was made. Alternatively, users
+     may manually call ``TLS::Server::send_new_session_tickets()`` at any time
+     after a successful handshake.
+
+     Default: 1
+
+ .. cpp:function:: std::optional<uint16_t> record_size_limit() const
+
+     Defines the maximum TLS record length this peer is willing to receive or
+     std::nullopt in case of no preference (will use the maximum allowed).
+
+     This is currently implemented for TLS 1.3 only and will not be negotiated
+     if TLS 1.2 is used or allowed.
+
+     Default: no preference (use maximum allowed by the protocol)
+
+ .. cpp:function:: bool tls_13_middlebox_compatibility_mode() const
+
+     Enables middlebox compatibility mode as defined in RFC 8446 Appendix D.4.
+
+     Default: true
+
 
 TLS Ciphersuites
 ----------------------------------------
@@ -1028,6 +1134,8 @@ Client Code Example
 
 .. literalinclude:: /../src/examples/tls_custom_curves_client.cpp
    :language: cpp
+
+.. _tls_asio_stream:
 
 TLS Stream
 ----------------------------------------
