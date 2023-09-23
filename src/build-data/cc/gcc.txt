@@ -11,7 +11,7 @@ warning_flags "-Wall -Wextra -Wpedantic -Wstrict-aliasing -Wcast-align -Wmissing
 
 # Boost headers have 0 as nullptr and non-virtual-dtor issues so we can't werror on them
 # Have to disable maybe-uninitialized due to GCC bugs like https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105937
-werror_flags "-Werror -Wno-error=strict-overflow -Wno-error=zero-as-null-pointer-constant -Wno-error=non-virtual-dtor -Wno-error=maybe-uninitialized"
+werror_flags "-Werror -Wno-error=strict-overflow -Wno-error=zero-as-null-pointer-constant -Wno-error=non-virtual-dtor -Wno-error=maybe-uninitialized -Wno-error=stringop-overread"
 
 maintainer_warning_flags "-Wstrict-overflow=5"
 
