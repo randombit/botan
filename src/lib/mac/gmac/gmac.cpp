@@ -84,15 +84,15 @@ void GMAC::key_schedule(std::span<const uint8_t> key) {
    m_ghash->set_key(m_H);
 }
 
-void GMAC::start_msg(const uint8_t nonce[], size_t nonce_len) {
+void GMAC::start_msg(std::span<const uint8_t> nonce) {
    secure_vector<uint8_t> y0(GCM_BS);
 
-   if(nonce_len == 12) {
-      copy_mem(y0.data(), nonce, nonce_len);
+   if(nonce.size() == 12) {
+      copy_mem(y0.data(), nonce.data(), nonce.size());
       y0[GCM_BS - 1] = 1;
    } else {
-      m_ghash->ghash_update(y0, nonce, nonce_len);
-      m_ghash->add_final_block(y0, 0, nonce_len);
+      m_ghash->ghash_update(y0, nonce.data(), nonce.size());
+      m_ghash->add_final_block(y0, 0, nonce.size());
    }
 
    secure_vector<uint8_t> m_enc_y0(GCM_BS);
