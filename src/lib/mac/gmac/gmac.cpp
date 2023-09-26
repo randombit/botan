@@ -46,13 +46,13 @@ void GMAC::add_data(std::span<const uint8_t> input) {
 
    while(!in.empty()) {
       if(const auto one_block = m_aad_buf.handle_unaligned_data(in)) {
-         m_ghash->update_associated_data(one_block->data(), one_block->size());
+         m_ghash->update_associated_data(one_block.value());
       }
 
       if(m_aad_buf.in_alignment()) {
          const auto [aligned_data, full_blocks] = m_aad_buf.aligned_data_to_process(in);
          if(full_blocks > 0) {
-            m_ghash->update_associated_data(aligned_data.data(), aligned_data.size());
+            m_ghash->update_associated_data(aligned_data);
          }
       }
    }
@@ -77,13 +77,13 @@ void GMAC::start_msg(std::span<const uint8_t> nonce) {
       copy_mem(y0.data(), nonce.data(), nonce.size());
       y0[GCM_BS - 1] = 1;
    } else {
-      m_ghash->ghash_update(y0, nonce.data(), nonce.size());
+      m_ghash->ghash_update(y0, nonce);
       m_ghash->add_final_block(y0, 0, nonce.size());
    }
 
    secure_vector<uint8_t> m_enc_y0(GCM_BS);
    m_cipher->encrypt(y0.data(), m_enc_y0.data());
-   m_ghash->start(m_enc_y0.data(), m_enc_y0.size());
+   m_ghash->start(m_enc_y0);
    m_initialized = true;
 }
 
@@ -97,11 +97,10 @@ void GMAC::final_result(std::span<uint8_t> mac) {
 
    // Process the rest of the aad buffer.
    if(!m_aad_buf.in_alignment()) {
-      const auto final_block = m_aad_buf.consume_partial();
-      m_ghash->update_associated_data(final_block.data(), final_block.size());
+      m_ghash->update_associated_data(m_aad_buf.consume_partial());
    }
 
-   m_ghash->final(mac.data(), output_length());
+   m_ghash->final(mac.first(output_length()));
    m_ghash->set_key(m_H);
    m_aad_buf.clear();
 }
