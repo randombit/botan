@@ -201,6 +201,17 @@ class AlignmentBuffer {
          return m_buffer;
       }
 
+      /**
+       * Explicitly consumes however many bytes are currently stored in the
+       * buffer. After consumption, the buffer is cleared and ready to collect
+       * new data.
+       */
+      [[nodiscard]] std::span<const T> consume_partial() {
+         const auto elements = elements_in_buffer();
+         m_position = 0;
+         return std::span(m_buffer).first(elements);
+      }
+
       constexpr size_t size() const { return m_buffer.size(); }
 
       size_t elements_in_buffer() const { return m_position; }
