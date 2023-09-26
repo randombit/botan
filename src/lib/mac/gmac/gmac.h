@@ -10,6 +10,7 @@
 #define BOTAN_GMAC_H_
 
 #include <botan/mac.h>
+#include <botan/internal/alignment_buffer.h>
 
 namespace Botan {
 
@@ -54,9 +55,8 @@ class GMAC final : public MessageAuthenticationCode {
       static const size_t GCM_BS = 16;
       std::unique_ptr<BlockCipher> m_cipher;
       std::unique_ptr<GHASH> m_ghash;
-      secure_vector<uint8_t> m_aad_buf;
+      AlignmentBuffer<uint8_t, GCM_BS> m_aad_buf;
       secure_vector<uint8_t> m_H;
-      size_t m_aad_buf_pos;
       bool m_initialized;
 };
 
