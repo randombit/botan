@@ -276,7 +276,7 @@ jobs:
     runs-on: ${{ matrix.host_os }}
 
     env:
-      ANDROID_NDK_VERSION: 25
+      ANDROID_NDK_VERSION: 26
 
     steps:
       - uses: actions/checkout@v3

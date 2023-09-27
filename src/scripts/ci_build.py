@@ -291,8 +291,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
             api_lvl = int(os.getenv('ANDROID_API_LEVEL', '0'))
             if api_lvl == 0:
-                # If not set arbitrarily choose API 19 (Android 4.4) for ARMv7 and 28 (Android 9) for AArch64
-                api_lvl = 19 if target == 'cross-android-arm32' else 28
+                # If not set arbitrarily choose API 21 (Android 5.0) for ARMv7 and 31 (Android 12) for AArch64
+                api_lvl = 21 if target == 'cross-android-arm32' else 31
 
             toolchain_dir = os.path.join(ndk, 'toolchains/llvm/prebuilt/linux-x86_64/bin')
             test_cmd = None
