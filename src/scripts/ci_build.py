@@ -17,7 +17,6 @@ import time
 import tempfile
 import optparse # pylint: disable=deprecated-module
 import multiprocessing
-import pathlib
 
 def get_concurrency():
     def_concurrency = 2
@@ -273,21 +272,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 raise Exception("Unknown cross target '%s' for iOS" % (target))
         elif target_os == 'android':
 
-            ndk_version = os.getenv('ANDROID_NDK_VERSION')
-            if ndk_version is None:
-                raise Exception('Android CI build requires ANDROID_NDK_VERSION env variable be set')
-
-            ndk_root = os.getenv('ANDROID_SDK_ROOT')
-            if ndk_root is None:
-                raise Exception('Android CI build requires ANDROID_SDK_ROOT env variable be set')
-
-            ndks = list(pathlib.Path(ndk_root).glob('ndk/%s.*' % ndk_version))
-            if len(ndks) == 0:
-                raise Exception('Android CI build did not find NDK with version %s' % ndk_version)
-            if len(ndks) > 1:
-                raise Exception('Android CI build did find multiple NDKs with version: %s' % ndk_version)
-
-            ndk = ndks[0]
+            ndk = os.getenv('ANDROID_NDK')
+            if ndk is None:
+                raise Exception('Android CI build requires ANDROID_NDK env variable be set')
 
             api_lvl = int(os.getenv('ANDROID_API_LEVEL', '0'))
             if api_lvl == 0:
