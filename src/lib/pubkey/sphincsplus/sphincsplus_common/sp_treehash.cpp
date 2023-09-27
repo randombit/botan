@@ -14,15 +14,6 @@
 
 namespace Botan {
 
-namespace {
-
-void copy_into(std::span<uint8_t> out, std::span<const uint8_t> in) {
-   BOTAN_ASSERT_NOMSG(in.size() == out.size());
-   std::copy(in.begin(), in.end(), out.begin());
-}
-
-}  // namespace
-
 void treehash(StrongSpan<SphincsTreeNode> out_root,
               StrongSpan<SphincsAuthenticationPath> out_auth_path,
               const Sphincs_Parameters& params,
