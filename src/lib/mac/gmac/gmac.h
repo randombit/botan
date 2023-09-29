@@ -48,7 +48,7 @@ class GMAC final : public MessageAuthenticationCode {
    private:
       void add_data(std::span<const uint8_t>) override;
       void final_result(std::span<uint8_t>) override;
-      void start_msg(const uint8_t nonce[], size_t nonce_len) override;
+      void start_msg(std::span<const uint8_t> nonce) override;
       void key_schedule(std::span<const uint8_t> key) override;
 
       static const size_t GCM_BS = 16;
