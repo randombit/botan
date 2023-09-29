@@ -94,6 +94,8 @@ else
 
     if [ "$TARGET" = "shared" ]; then
         brew install boost
+    elif [ "$TARGET" = "emscripten" ]; then
+        brew install emscripten
     fi
 
     sudo xcrun xcode-select --switch '/Applications/Xcode_15.0.app/Contents/Developer'
