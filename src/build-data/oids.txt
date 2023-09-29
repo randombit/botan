@@ -1,5 +1,5 @@
-# Regenerate with ./src/scripts/oids.py oids > src/lib/asn1/oid_maps.cpp
-# AND             ./src/scripts/oids.py dn_ub > src/lib/x509/x509_dn_ub.cpp
+# Regenerate with ./src/scripts/dev_tools/oids.py oids > src/lib/asn1/oid_maps.cpp
+# AND             ./src/scripts/dev_tools/oids.py dn_ub > src/lib/x509/x509_dn_ub.cpp
 # (if you modified something under [dn]
 
 # Public key types
