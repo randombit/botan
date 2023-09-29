@@ -360,7 +360,7 @@ class TPM_Signing_Operation final : public PK_Ops::Signature {
       }
 
    private:
-      const TPM_PrivateKey& m_key;
+      const TPM_PrivateKey m_key;
       std::unique_ptr<HashFunction> m_hash;
       std::vector<uint8_t> m_hash_id;
 };
