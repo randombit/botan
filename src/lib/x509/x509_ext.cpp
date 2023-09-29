@@ -724,10 +724,7 @@ void CRL_ReasonCode::decode_inner(const std::vector<uint8_t>& in) {
 
 std::vector<uint8_t> CRL_Distribution_Points::encode_inner() const {
    std::vector<uint8_t> output;
-   DER_Encoder(output)
-       .start_sequence()
-           .encode_list(m_distribution_points)
-       .end_cons();
+   DER_Encoder(output).start_sequence().encode_list(m_distribution_points).end_cons();
    return output;
 }
 
@@ -749,10 +746,12 @@ void CRL_Distribution_Points::decode_inner(const std::vector<uint8_t>& buf) {
 
 void CRL_Distribution_Points::Distribution_Point::encode_into(DER_Encoder& der) const {
    der.start_sequence()
-          .start_cons(ASN1_Type(0), ASN1_Class::ContextSpecific)
-              .start_cons(ASN1_Type(0), ASN1_Class::ContextSpecific)
-                  .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, m_point.get_first_attribute("URI"))
-   .end_cons().end_cons().end_cons();
+      .start_cons(ASN1_Type(0), ASN1_Class::ContextSpecific)
+      .start_cons(ASN1_Type(0), ASN1_Class::ContextSpecific)
+      .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, m_point.get_first_attribute("URI"))
+      .end_cons()
+      .end_cons()
+      .end_cons();
 }
 
 void CRL_Distribution_Points::Distribution_Point::decode_from(BER_Decoder& ber) {
