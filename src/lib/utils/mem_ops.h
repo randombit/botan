@@ -10,6 +10,7 @@
 
 #include <botan/concepts.h>
 #include <botan/types.h>
+#include <array>
 #include <cstring>
 #include <ranges>
 #include <span>
@@ -342,75 +343,110 @@ size_t buffer_insert(std::vector<T, Alloc>& buf, size_t buf_offset, const std::v
 
 /**
 * XOR arrays. Postcondition out[i] = in[i] ^ out[i] forall i = 0...length
-* @param out the input/output buffer
-* @param in the read-only input buffer
-* @param length the length of the buffers
+* @param out the input/output range
+* @param in the read-only input range
 */
-inline void xor_buf(uint8_t out[], const uint8_t in[], size_t length) {
-   const size_t blocks = length - (length % 32);
+inline constexpr void xor_buf(ranges::contiguous_output_range<uint8_t> auto&& out,
+                              ranges::contiguous_range<uint8_t> auto&& in) {
+   ranges::assert_equal_byte_lengths(out, in);
 
-   for(size_t i = 0; i != blocks; i += 32) {
-      uint64_t x[4];
-      uint64_t y[4];
+   std::span o{out};
+   std::span i{in};
 
-      typecast_copy(x, out + i, 4);
-      typecast_copy(y, in + i, 4);
+   for(; o.size_bytes() >= 32; o = o.subspan(32), i = i.subspan(32)) {
+      auto x = typecast_copy<std::array<uint64_t, 4>>(o.template first<32>());
+      const auto y = typecast_copy<std::array<uint64_t, 4>>(i.template first<32>());
 
       x[0] ^= y[0];
       x[1] ^= y[1];
       x[2] ^= y[2];
       x[3] ^= y[3];
 
-      typecast_copy(out + i, x, 4);
+      typecast_copy(o.template first<32>(), x);
    }
 
-   for(size_t i = blocks; i != length; ++i) {
-      out[i] ^= in[i];
+   for(size_t off = 0; off != o.size_bytes(); ++off) {
+      o[off] ^= i[off];
    }
+}
+
+/**
+* XOR arrays. Postcondition out[i] = in1[i] ^ in2[i] forall i = 0...length
+* @param out the output range
+* @param in1 the first input range
+* @param in2 the second input range
+*/
+inline constexpr void xor_buf(ranges::contiguous_output_range<uint8_t> auto&& out,
+                              ranges::contiguous_range<uint8_t> auto&& in1,
+                              ranges::contiguous_range<uint8_t> auto&& in2) {
+   ranges::assert_equal_byte_lengths(out, in1, in2);
+
+   std::span o{out};
+   std::span i1{in1};
+   std::span i2{in2};
+
+   for(; o.size_bytes() >= 32; o = o.subspan(32), i1 = i1.subspan(32), i2 = i2.subspan(32)) {
+      auto x = typecast_copy<std::array<uint64_t, 4>>(i1.template first<32>());
+      const auto y = typecast_copy<std::array<uint64_t, 4>>(i2.template first<32>());
+
+      x[0] ^= y[0];
+      x[1] ^= y[1];
+      x[2] ^= y[2];
+      x[3] ^= y[3];
+
+      typecast_copy(o.template first<32>(), x);
+   }
+
+   for(size_t off = 0; off != o.size_bytes(); ++off) {
+      o[off] = i1[off] ^ i2[off];
+   }
+}
+
+/**
+* XOR arrays. Postcondition out[i] = in[i] ^ out[i] forall i = 0...length
+* @param out the input/output buffer
+* @param in the read-only input buffer
+* @param length the length of the buffers
+*/
+inline void xor_buf(uint8_t out[], const uint8_t in[], size_t length) {
+   // simply assumes that *out and *in point to "length" allocated bytes at least
+   xor_buf(std::span{out, length}, std::span{in, length});
 }
 
 /**
 * XOR arrays. Postcondition out[i] = in[i] ^ in2[i] forall i = 0...length
 * @param out the output buffer
 * @param in the first input buffer
-* @param in2 the second output buffer
+* @param in2 the second input buffer
 * @param length the length of the three buffers
 */
 inline void xor_buf(uint8_t out[], const uint8_t in[], const uint8_t in2[], size_t length) {
-   const size_t blocks = length - (length % 32);
-
-   for(size_t i = 0; i != blocks; i += 32) {
-      uint64_t x[4];
-      uint64_t y[4];
-
-      typecast_copy(x, in + i, 4);
-      typecast_copy(y, in2 + i, 4);
-
-      x[0] ^= y[0];
-      x[1] ^= y[1];
-      x[2] ^= y[2];
-      x[3] ^= y[3];
-
-      typecast_copy(out + i, x, 4);
-   }
-
-   for(size_t i = blocks; i != length; ++i) {
-      out[i] = in[i] ^ in2[i];
-   }
+   // simply assumes that *out, *in, and *in2 point to "length" allocated bytes at least
+   xor_buf(std::span{out, length}, std::span{in, length}, std::span{in2, length});
 }
 
+// TODO: deprecate and replace, use .subspan()
 inline void xor_buf(std::span<uint8_t> out, std::span<const uint8_t> in, size_t n) {
-   xor_buf(out.data(), in.data(), n);
+   BOTAN_ARG_CHECK(out.size() >= n, "output span is too small");
+   BOTAN_ARG_CHECK(in.size() >= n, "input span is too small");
+   xor_buf(out.first(n), in.first(n));
 }
 
+// TODO: deprecate and replace, use .subspan()
 template <typename Alloc>
 void xor_buf(std::vector<uint8_t, Alloc>& out, const uint8_t* in, size_t n) {
-   xor_buf(out.data(), in, n);
+   BOTAN_ARG_CHECK(out.size() >= n, "output vector is too small");
+   // simply assumes that *in points to "n" allocated bytes at least
+   xor_buf(std::span{out}.first(n), std::span{in, n});
 }
 
+// TODO: deprecate and replace
 template <typename Alloc, typename Alloc2>
 void xor_buf(std::vector<uint8_t, Alloc>& out, const uint8_t* in, const std::vector<uint8_t, Alloc2>& in2, size_t n) {
-   xor_buf(out.data(), in, in2.data(), n);
+   BOTAN_ARG_CHECK(out.size() >= n, "output vector is too small");
+   BOTAN_ARG_CHECK(in2.size() >= n, "input vector is too small");
+   // simply assumes that *in points to "n" allocated bytes at least
+   xor_buf(std::span{out}.first(n), std::span{in, n}, std::span{in2}.first(n));
 }
 
 template <typename Alloc, typename Alloc2>
@@ -419,7 +455,7 @@ std::vector<uint8_t, Alloc>& operator^=(std::vector<uint8_t, Alloc>& out, const 
       out.resize(in.size());
    }
 
-   xor_buf(out.data(), in.data(), in.size());
+   xor_buf(std::span{out}.first(in.size()), in);
    return out;
 }
 
