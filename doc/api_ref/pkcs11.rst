@@ -242,6 +242,12 @@ The :cpp:class:`Session` class represents a PKCS#11 session and is defined in ``
 
 A session is a logical connection between an application and a token.
 
+The session is passed to most other PKCS#11 operations, and must remain alive
+as long as any other PKCS#11 object which the session was passed to is still
+alive, otherwise errors or even an application crash are possible.
+In the future,
+the API may change to using ``shared_ptr`` to remove this problem.
+
 .. cpp:class:: Session
 
    There are two constructors to create a new session and one constructor to

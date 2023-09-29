@@ -53,7 +53,7 @@ namespace {
 
 class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature {
    public:
-      PKCS11_ECDSA_Signature_Operation(const PKCS11_EC_PrivateKey& key, std::string_view hash) :
+      PKCS11_ECDSA_Signature_Operation(const PKCS11_ECDSA_PrivateKey& key, std::string_view hash) :
             PK_Ops::Signature(),
             m_key(key),
             m_order(key.domain().get_order()),
@@ -99,8 +99,8 @@ class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature {
       std::string hash_function() const override { return m_hash; }
 
    private:
-      const PKCS11_EC_PrivateKey& m_key;
-      const BigInt& m_order;
+      const PKCS11_ECDSA_PrivateKey m_key;
+      const BigInt m_order;
       MechanismWrapper m_mechanism;
       const std::string m_hash;
       secure_vector<uint8_t> m_first_message;
@@ -115,7 +115,7 @@ AlgorithmIdentifier PKCS11_ECDSA_Signature_Operation::algorithm_identifier() con
 
 class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification {
    public:
-      PKCS11_ECDSA_Verification_Operation(const PKCS11_EC_PublicKey& key, std::string_view hash) :
+      PKCS11_ECDSA_Verification_Operation(const PKCS11_ECDSA_PublicKey& key, std::string_view hash) :
             PK_Ops::Verification(),
             m_key(key),
             m_order(key.domain().get_order()),
@@ -165,8 +165,8 @@ class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification {
       std::string hash_function() const override { return m_hash; }
 
    private:
-      const PKCS11_EC_PublicKey& m_key;
-      const BigInt& m_order;
+      const PKCS11_ECDSA_PublicKey m_key;
+      const BigInt m_order;
       MechanismWrapper m_mechanism;
       const std::string m_hash;
       secure_vector<uint8_t> m_first_message;

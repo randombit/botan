@@ -249,7 +249,7 @@ class PKCS11_RSA_Signature_Operation final : public PK_Ops::Signature {
       AlgorithmIdentifier algorithm_identifier() const override;
 
    private:
-      const PKCS11_RSA_PrivateKey& m_key;
+      PKCS11_RSA_PrivateKey m_key;
       bool m_initialized = false;
       secure_vector<uint8_t> m_first_message;
       MechanismWrapper m_mechanism;
@@ -370,7 +370,7 @@ class PKCS11_RSA_Verification_Operation final : public PK_Ops::Verification {
       std::string hash_function() const override;
 
    private:
-      const PKCS11_RSA_PublicKey& m_key;
+      const PKCS11_RSA_PublicKey m_key;
       bool m_initialized = false;
       secure_vector<uint8_t> m_first_message;
       MechanismWrapper m_mechanism;
