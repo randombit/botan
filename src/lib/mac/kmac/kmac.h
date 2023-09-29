@@ -34,7 +34,7 @@ class KMAC : public MessageAuthenticationCode {
       std::string provider() const final;
 
    private:
-      void start_msg(const uint8_t nonce[], size_t nonce_len) final;
+      void start_msg(std::span<const uint8_t> nonce) final;
       void add_data(std::span<const uint8_t>) final;
       void final_result(std::span<uint8_t>) final;
       void key_schedule(std::span<const uint8_t>) final;

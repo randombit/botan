@@ -271,12 +271,12 @@ jobs:
             host_os: macos-13
           - target: emscripten
             compiler: emcc
-            host_os: ubuntu-22.04
+            host_os: macos-13
 
     runs-on: ${{ matrix.host_os }}
 
     env:
-      ANDROID_NDK_VERSION: 25
+      ANDROID_NDK: android-ndk-r26
 
     steps:
       - uses: actions/checkout@v3

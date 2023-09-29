@@ -17,19 +17,13 @@
 namespace Botan {
 
 GMAC::GMAC(std::unique_ptr<BlockCipher> cipher) :
-      m_cipher(std::move(cipher)),
-      m_ghash(std::make_unique<GHASH>()),
-      m_aad_buf(GCM_BS),
-      m_H(GCM_BS),
-      m_aad_buf_pos(0),
-      m_initialized(false) {}
+      m_cipher(std::move(cipher)), m_ghash(std::make_unique<GHASH>()), m_H(GCM_BS), m_initialized(false) {}
 
 void GMAC::clear() {
    m_cipher->clear();
    m_ghash->clear();
-   zeroise(m_aad_buf);
+   m_aad_buf.clear();
    zeroise(m_H);
-   m_aad_buf_pos = 0;
    m_initialized = false;
 }
 
@@ -50,25 +44,17 @@ size_t GMAC::output_length() const {
 void GMAC::add_data(std::span<const uint8_t> input) {
    BufferSlicer in(input);
 
-   if(m_aad_buf_pos > 0) {
-      const auto part = in.take(std::min(GCM_BS - m_aad_buf_pos, in.remaining()));
-      copy_mem(&m_aad_buf[m_aad_buf_pos], part.data(), part.size());
-      m_aad_buf_pos += part.size();
-
-      if(m_aad_buf_pos == GCM_BS) {
-         m_ghash->update_associated_data(m_aad_buf.data(), GCM_BS);
-         m_aad_buf_pos = 0;
+   while(!in.empty()) {
+      if(const auto one_block = m_aad_buf.handle_unaligned_data(in)) {
+         m_ghash->update_associated_data(one_block.value());
       }
-   }
 
-   const size_t left_over = in.remaining() % GCM_BS;
-   const size_t full_blocks = in.remaining() - left_over;
-   m_ghash->update_associated_data(in.take(full_blocks).data(), full_blocks);
-
-   if(!in.empty()) {
-      const auto remaining = in.take(in.remaining());
-      copy_mem(&m_aad_buf[m_aad_buf_pos], remaining.data(), remaining.size());
-      m_aad_buf_pos += remaining.size();
+      if(m_aad_buf.in_alignment()) {
+         const auto [aligned_data, full_blocks] = m_aad_buf.aligned_data_to_process(in);
+         if(full_blocks > 0) {
+            m_ghash->update_associated_data(aligned_data);
+         }
+      }
    }
 }
 
@@ -84,20 +70,20 @@ void GMAC::key_schedule(std::span<const uint8_t> key) {
    m_ghash->set_key(m_H);
 }
 
-void GMAC::start_msg(const uint8_t nonce[], size_t nonce_len) {
+void GMAC::start_msg(std::span<const uint8_t> nonce) {
    secure_vector<uint8_t> y0(GCM_BS);
 
-   if(nonce_len == 12) {
-      copy_mem(y0.data(), nonce, nonce_len);
+   if(nonce.size() == 12) {
+      copy_mem(y0.data(), nonce.data(), nonce.size());
       y0[GCM_BS - 1] = 1;
    } else {
-      m_ghash->ghash_update(y0, nonce, nonce_len);
-      m_ghash->add_final_block(y0, 0, nonce_len);
+      m_ghash->ghash_update(y0, nonce);
+      m_ghash->add_final_block(y0, 0, nonce.size());
    }
 
    secure_vector<uint8_t> m_enc_y0(GCM_BS);
    m_cipher->encrypt(y0.data(), m_enc_y0.data());
-   m_ghash->start(m_enc_y0.data(), m_enc_y0.size());
+   m_ghash->start(m_enc_y0);
    m_initialized = true;
 }
 
@@ -109,15 +95,14 @@ void GMAC::final_result(std::span<uint8_t> mac) {
       throw Invalid_State("GMAC was not used with a fresh nonce");
    }
 
-   // process the rest of the aad buffer. Even if it is a partial block only
-   // ghash_update will process it properly.
-   if(m_aad_buf_pos > 0) {
-      m_ghash->update_associated_data(m_aad_buf.data(), m_aad_buf_pos);
+   // Process the rest of the aad buffer.
+   if(!m_aad_buf.in_alignment()) {
+      m_ghash->update_associated_data(m_aad_buf.consume_partial());
    }
 
-   m_ghash->final(mac.data(), output_length());
+   m_ghash->final(mac.first(output_length()));
    m_ghash->set_key(m_H);
-   m_aad_buf_pos = 0;
+   m_aad_buf.clear();
 }
 
 std::unique_ptr<MessageAuthenticationCode> GMAC::new_object() const {

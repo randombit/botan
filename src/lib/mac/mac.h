@@ -62,19 +62,19 @@ class BOTAN_PUBLIC_API(2, 0) MessageAuthenticationCode : public Buffered_Computa
       *
       * @param nonce the message nonce bytes
       */
-      void start(std::span<const uint8_t> nonce) { start_msg(nonce.data(), nonce.size()); }
+      void start(std::span<const uint8_t> nonce) { start_msg(nonce); }
 
       /**
       * Begin processing a message.
       * @param nonce the per message nonce
       * @param nonce_len length of nonce
       */
-      void start(const uint8_t nonce[], size_t nonce_len) { start_msg(nonce, nonce_len); }
+      void start(const uint8_t nonce[], size_t nonce_len) { start_msg({nonce, nonce_len}); }
 
       /**
       * Begin processing a message.
       */
-      void start() { return start_msg(nullptr, 0); }
+      void start() { return start_msg({}); }
 
       /**
       * Verify a MAC.
@@ -82,14 +82,14 @@ class BOTAN_PUBLIC_API(2, 0) MessageAuthenticationCode : public Buffered_Computa
       * @param length the length of param in
       * @return true if the MAC is valid, false otherwise
       */
-      bool verify_mac(const uint8_t in[], size_t length) { return verify_mac_result(in, length); }
+      bool verify_mac(const uint8_t in[], size_t length) { return verify_mac_result({in, length}); }
 
       /**
       * Verify a MAC.
       * @param in the MAC to verify as a byte array
       * @return true if the MAC is valid, false otherwise
       */
-      bool verify_mac(std::span<const uint8_t> in) { return verify_mac_result(in.data(), in.size()); }
+      bool verify_mac(std::span<const uint8_t> in) { return verify_mac_result(in); }
 
       /**
       * @return new object representing the same algorithm as *this
@@ -122,12 +122,12 @@ class BOTAN_PUBLIC_API(2, 0) MessageAuthenticationCode : public Buffered_Computa
       * If the MAC does not support nonces, it should not override the default
       * implementation.
       */
-      virtual void start_msg(const uint8_t nonce[], size_t nonce_len);
+      virtual void start_msg(std::span<const uint8_t> nonce);
 
       /**
       * Verify the MACs final result
       */
-      virtual bool verify_mac_result(const uint8_t in[], size_t length);
+      virtual bool verify_mac_result(std::span<const uint8_t> in);
 };
 
 typedef MessageAuthenticationCode MAC;

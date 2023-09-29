@@ -212,6 +212,28 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_is_eq("in == out", v(data), v(out));
             }),
 
+      CHECK("Consume partially filled Alignment Buffer",
+            [=](auto& result) {
+               Botan::AlignmentBuffer<uint8_t, 32> b;
+
+               result.require("!ready_to_consume()", !b.ready_to_consume());
+               const auto out_empty = b.consume_partial();
+               result.test_eq("consuming nothing resets buffer", b.elements_in_buffer(), 0);
+               result.confirm("consumed empty buffer", out_empty.empty());
+
+               b.append(first_half_data);
+               result.require("!ready_to_consume()", !b.ready_to_consume());
+               const auto out_half = b.consume_partial();
+               result.test_eq("consumed half-data resets buffer", b.elements_in_buffer(), 0);
+               result.test_is_eq("half-in == half-out", v(out_half), v(first_half_data));
+
+               b.append(data);
+               result.require("ready_to_consume()", b.ready_to_consume());
+               const auto out_full = b.consume_partial();
+               result.test_eq("consumed full-data resets buffer", b.elements_in_buffer(), 0);
+               result.test_is_eq("full-in == full-out", v(out_full), v(data));
+            }),
+
       CHECK("Clear Alignment Buffer",
             [=](auto& result) {
                Botan::AlignmentBuffer<uint8_t, 32> b;

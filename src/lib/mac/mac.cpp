@@ -152,24 +152,24 @@ std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create_or_
    throw Lookup_Error("MAC", algo, provider);
 }
 
-void MessageAuthenticationCode::start_msg(const uint8_t nonce[], size_t nonce_len) {
+void MessageAuthenticationCode::start_msg(std::span<const uint8_t> nonce) {
    BOTAN_UNUSED(nonce);
-   if(nonce_len > 0) {
-      throw Invalid_IV_Length(name(), nonce_len);
+   if(!nonce.empty()) {
+      throw Invalid_IV_Length(name(), nonce.size());
    }
 }
 
 /*
 * Default (deterministic) MAC verification operation
 */
-bool MessageAuthenticationCode::verify_mac_result(const uint8_t mac[], size_t length) {
+bool MessageAuthenticationCode::verify_mac_result(std::span<const uint8_t> mac) {
    secure_vector<uint8_t> our_mac = final();
 
-   if(our_mac.size() != length) {
+   if(our_mac.size() != mac.size()) {
       return false;
    }
 
-   return constant_time_compare(our_mac.data(), mac, length);
+   return constant_time_compare(our_mac.data(), mac.data(), mac.size());
 }
 
 }  // namespace Botan

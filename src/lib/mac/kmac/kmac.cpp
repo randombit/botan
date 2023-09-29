@@ -51,9 +51,9 @@ std::string KMAC::provider() const {
    return m_cshake->provider();
 }
 
-void KMAC::start_msg(const uint8_t nonce[], size_t nonce_len) {
+void KMAC::start_msg(std::span<const uint8_t> nonce) {
    assert_key_material_set();
-   m_cshake->start({nonce, nonce_len}, {});
+   m_cshake->start(nonce);
    m_cshake->update(m_encoded_key);
    m_message_started = true;
 }

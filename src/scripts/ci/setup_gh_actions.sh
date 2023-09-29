@@ -50,6 +50,10 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "cross-s390x" ]; then
         sudo apt-get -qq install qemu-user g++-s390x-linux-gnu
 
+    elif [ "$TARGET" = "cross-android-arm32" ] || [ "$TARGET" = "cross-android-arm64" ]; then
+        wget -nv https://dl.google.com/android/repository/"$ANDROID_NDK"-linux.zip
+        unzip -qq "$ANDROID_NDK"-linux.zip
+
     elif [ "$TARGET" = "cross-arm32-baremetal" ]; then
         sudo apt-get -qq install gcc-arm-none-eabi libstdc++-arm-none-eabi-newlib
 
@@ -90,9 +94,11 @@ else
 
     if [ "$TARGET" = "shared" ]; then
         brew install boost
+    elif [ "$TARGET" = "emscripten" ]; then
+        brew install emscripten
     fi
 
-    sudo xcrun xcode-select --switch '/Applications/Xcode_14.3.1.app/Contents/Developer'
+    sudo xcrun xcode-select --switch '/Applications/Xcode_15.0.app/Contents/Developer'
 fi
 
 # find the ccache cache location and store it in the build job's environment

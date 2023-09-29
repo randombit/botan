@@ -31,17 +31,17 @@ std::string GHASH::provider() const {
    return "base";
 }
 
-void GHASH::ghash_multiply(secure_vector<uint8_t>& x, const uint8_t input[], size_t blocks) {
+void GHASH::ghash_multiply(secure_vector<uint8_t>& x, std::span<const uint8_t> input, size_t blocks) {
 #if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
    if(CPUID::has_carryless_multiply()) {
       BOTAN_ASSERT_NOMSG(!m_H_pow.empty());
-      return ghash_multiply_cpu(x.data(), m_H_pow.data(), input, blocks);
+      return ghash_multiply_cpu(x.data(), m_H_pow.data(), input.data(), blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_GHASH_CLMUL_VPERM)
    if(CPUID::has_vperm()) {
-      return ghash_multiply_vperm(x.data(), m_HM.data(), input, blocks);
+      return ghash_multiply_vperm(x.data(), m_HM.data(), input.data(), blocks);
    }
 #endif
 
@@ -52,8 +52,8 @@ void GHASH::ghash_multiply(secure_vector<uint8_t>& x, const uint8_t input[], siz
    uint64_t X[2] = {load_be<uint64_t>(x.data(), 0), load_be<uint64_t>(x.data(), 1)};
 
    for(size_t b = 0; b != blocks; ++b) {
-      X[0] ^= load_be<uint64_t>(input, 2 * b);
-      X[1] ^= load_be<uint64_t>(input, 2 * b + 1);
+      X[0] ^= load_be<uint64_t>(input.data(), 2 * b);
+      X[1] ^= load_be<uint64_t>(input.data(), 2 * b + 1);
 
       uint64_t Z[2] = {0, 0};
 
@@ -78,7 +78,7 @@ void GHASH::ghash_multiply(secure_vector<uint8_t>& x, const uint8_t input[], siz
    CT::unpoison(x.data(), x.size());
 }
 
-void GHASH::ghash_update(secure_vector<uint8_t>& ghash, const uint8_t input[], size_t length) {
+void GHASH::ghash_update(secure_vector<uint8_t>& ghash, std::span<const uint8_t> input) {
    assert_key_material_set(!m_H.empty());
 
    /*
@@ -86,16 +86,16 @@ void GHASH::ghash_update(secure_vector<uint8_t>& ghash, const uint8_t input[], s
    final block and should pad with zeros
    */
 
-   const size_t full_blocks = length / GCM_BS;
-   const size_t final_bytes = length - (full_blocks * GCM_BS);
+   const size_t full_blocks = input.size() / GCM_BS;
+   const size_t final_bytes = input.size() - (full_blocks * GCM_BS);
 
    if(full_blocks > 0) {
-      ghash_multiply(ghash, input, full_blocks);
+      ghash_multiply(ghash, input.first(full_blocks * GCM_BS), full_blocks);
    }
 
    if(final_bytes) {
       uint8_t last_block[GCM_BS] = {0};
-      copy_mem(last_block, input + full_blocks * GCM_BS, final_bytes);
+      copy_mem(last_block, input.subspan(full_blocks * GCM_BS).data(), final_bytes);
       ghash_multiply(ghash, last_block, 1);
       secure_scrub_memory(last_block, final_bytes);
    }
@@ -143,33 +143,33 @@ void GHASH::key_schedule(std::span<const uint8_t> key) {
 #endif
 }
 
-void GHASH::start(const uint8_t nonce[], size_t len) {
-   BOTAN_ARG_CHECK(len == 16, "GHASH requires a 128-bit nonce");
-   m_nonce.assign(nonce, nonce + len);
+void GHASH::start(std::span<const uint8_t> nonce) {
+   BOTAN_ARG_CHECK(nonce.size() == 16, "GHASH requires a 128-bit nonce");
+   m_nonce.assign(nonce.begin(), nonce.end());  // TODO: C++23: assign_range
    m_ghash = m_H_ad;
 }
 
-void GHASH::set_associated_data(const uint8_t input[], size_t length) {
+void GHASH::set_associated_data(std::span<const uint8_t> input) {
    if(m_ghash.empty() == false) {
       throw Invalid_State("Too late to set AD in GHASH");
    }
 
    zeroise(m_H_ad);
 
-   ghash_update(m_H_ad, input, length);
-   m_ad_len = length;
+   ghash_update(m_H_ad, input);
+   m_ad_len = input.size();
 }
 
-void GHASH::update_associated_data(const uint8_t ad[], size_t length) {
+void GHASH::update_associated_data(std::span<const uint8_t> ad) {
    assert_key_material_set();
-   m_ad_len += length;
-   ghash_update(m_ghash, ad, length);
+   m_ad_len += ad.size();
+   ghash_update(m_ghash, ad);
 }
 
-void GHASH::update(const uint8_t input[], size_t length) {
+void GHASH::update(std::span<const uint8_t> input) {
    assert_key_material_set();
-   m_text_len += length;
-   ghash_update(m_ghash, input, length);
+   m_text_len += input.size();
+   ghash_update(m_ghash, input);
 }
 
 void GHASH::add_final_block(secure_vector<uint8_t>& hash, size_t ad_len, size_t text_len) {
@@ -179,16 +179,16 @@ void GHASH::add_final_block(secure_vector<uint8_t>& hash, size_t ad_len, size_t 
    */
    uint8_t final_block[GCM_BS];
    store_be<uint64_t>(final_block, 8 * ad_len, 8 * text_len);
-   ghash_update(hash, final_block, GCM_BS);
+   ghash_update(hash, {final_block, GCM_BS});
 }
 
-void GHASH::final(uint8_t mac[], size_t mac_len) {
-   BOTAN_ARG_CHECK(mac_len > 0 && mac_len <= 16, "GHASH output length");
+void GHASH::final(std::span<uint8_t> mac) {
+   BOTAN_ARG_CHECK(!mac.empty() && mac.size() <= 16, "GHASH output length");
 
    assert_key_material_set();
    add_final_block(m_ghash, m_ad_len, m_text_len);
 
-   for(size_t i = 0; i != mac_len; ++i) {
+   for(size_t i = 0; i != mac.size(); ++i) {
       mac[i] = m_ghash[i] ^ m_nonce[i];
    }
 
@@ -196,11 +196,11 @@ void GHASH::final(uint8_t mac[], size_t mac_len) {
    m_text_len = 0;
 }
 
-void GHASH::nonce_hash(secure_vector<uint8_t>& y0, const uint8_t nonce[], size_t nonce_len) {
+void GHASH::nonce_hash(secure_vector<uint8_t>& y0, std::span<const uint8_t> nonce) {
    BOTAN_ASSERT(m_ghash.empty(), "nonce_hash called during wrong time");
 
-   ghash_update(y0, nonce, nonce_len);
-   add_final_block(y0, 0, nonce_len);
+   ghash_update(y0, nonce);
+   add_final_block(y0, 0, nonce.size());
 }
 
 void GHASH::clear() {
