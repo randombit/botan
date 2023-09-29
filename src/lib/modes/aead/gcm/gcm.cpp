@@ -13,6 +13,8 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/ghash.h>
 
+#include <array>
+
 namespace Botan {
 
 /*
@@ -88,7 +90,7 @@ void GCM_Mode::key_schedule(std::span<const uint8_t> key) {
 
 void GCM_Mode::set_associated_data_n(size_t idx, std::span<const uint8_t> ad) {
    BOTAN_ARG_CHECK(idx == 0, "GCM: cannot handle non-zero index in set_associated_data_n");
-   m_ghash->set_associated_data(ad.data(), ad.size());
+   m_ghash->set_associated_data(ad);
 }
 
 void GCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
@@ -106,7 +108,7 @@ void GCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
       copy_mem(m_y0.data(), nonce, nonce_len);
       m_y0[15] = 1;
    } else {
-      m_ghash->nonce_hash(m_y0, nonce, nonce_len);
+      m_ghash->nonce_hash(m_y0, {nonce, nonce_len});
    }
 
    m_ctr->set_iv(m_y0.data(), m_y0.size());
@@ -114,14 +116,14 @@ void GCM_Mode::start_msg(const uint8_t nonce[], size_t nonce_len) {
    clear_mem(m_y0.data(), m_y0.size());
    m_ctr->encipher(m_y0);
 
-   m_ghash->start(m_y0.data(), m_y0.size());
+   m_ghash->start(m_y0);
    clear_mem(m_y0.data(), m_y0.size());
 }
 
 size_t GCM_Encryption::process_msg(uint8_t buf[], size_t sz) {
    BOTAN_ARG_CHECK(sz % update_granularity() == 0, "Invalid buffer size");
    m_ctr->cipher(buf, buf, sz);
-   m_ghash->update(buf, sz);
+   m_ghash->update({buf, sz});
    return sz;
 }
 
@@ -131,16 +133,16 @@ void GCM_Encryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    uint8_t* buf = buffer.data() + offset;
 
    m_ctr->cipher(buf, buf, sz);
-   m_ghash->update(buf, sz);
+   m_ghash->update({buf, sz});
 
-   uint8_t mac[16] = {0};
-   m_ghash->final(mac, tag_size());
-   buffer += std::make_pair(mac, tag_size());
+   std::array<uint8_t, 16> mac = {0};
+   m_ghash->final(std::span(mac).first(tag_size()));
+   buffer += std::make_pair(mac.data(), tag_size());
 }
 
 size_t GCM_Decryption::process_msg(uint8_t buf[], size_t sz) {
    BOTAN_ARG_CHECK(sz % update_granularity() == 0, "Invalid buffer size");
-   m_ghash->update(buf, sz);
+   m_ghash->update({buf, sz});
    m_ctr->cipher(buf, buf, sz);
    return sz;
 }
@@ -156,16 +158,16 @@ void GCM_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    // handle any final input before the tag
    if(remaining) {
-      m_ghash->update(buf, remaining);
+      m_ghash->update({buf, remaining});
       m_ctr->cipher(buf, buf, remaining);
    }
 
-   uint8_t mac[16] = {0};
-   m_ghash->final(mac, tag_size());
+   std::array<uint8_t, 16> mac = {0};
+   m_ghash->final(std::span(mac).first(tag_size()));
 
    const uint8_t* included_tag = &buffer[remaining + offset];
 
-   if(!constant_time_compare(mac, included_tag, tag_size())) {
+   if(!constant_time_compare(mac.data(), included_tag, tag_size())) {
       throw Invalid_Authentication_Tag("GCM tag check failed");
    }
 

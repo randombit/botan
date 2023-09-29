@@ -17,23 +17,23 @@ namespace Botan {
 */
 class GHASH final : public SymmetricAlgorithm {
    public:
-      void set_associated_data(const uint8_t ad[], size_t ad_len);
+      void set_associated_data(std::span<const uint8_t> ad);
 
-      void nonce_hash(secure_vector<uint8_t>& y0, const uint8_t nonce[], size_t len);
+      void nonce_hash(secure_vector<uint8_t>& y0, std::span<const uint8_t> nonce);
 
-      void start(const uint8_t nonce[], size_t len);
+      void start(std::span<const uint8_t> nonce);
 
       /*
       * Assumes input len is multiple of 16
       */
-      void update(const uint8_t in[], size_t len);
+      void update(std::span<const uint8_t> in);
 
       /*
       * Incremental update of associated data
       */
-      void update_associated_data(const uint8_t ad[], size_t len);
+      void update_associated_data(std::span<const uint8_t> ad);
 
-      void final(uint8_t out[], size_t out_len);
+      void final(std::span<uint8_t> out);
 
       Key_Length_Specification key_spec() const override { return Key_Length_Specification(16); }
 
@@ -47,7 +47,7 @@ class GHASH final : public SymmetricAlgorithm {
 
       std::string provider() const;
 
-      void ghash_update(secure_vector<uint8_t>& x, const uint8_t input[], size_t input_len);
+      void ghash_update(secure_vector<uint8_t>& x, std::span<const uint8_t> input);
 
       void add_final_block(secure_vector<uint8_t>& x, size_t ad_len, size_t pt_len);
 
@@ -64,7 +64,7 @@ class GHASH final : public SymmetricAlgorithm {
 
       void key_schedule(std::span<const uint8_t> key) override;
 
-      void ghash_multiply(secure_vector<uint8_t>& x, const uint8_t input[], size_t blocks);
+      void ghash_multiply(secure_vector<uint8_t>& x, std::span<const uint8_t> input, size_t blocks);
 
       static const size_t GCM_BS = 16;
 
