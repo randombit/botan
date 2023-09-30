@@ -13,6 +13,10 @@
 #include <string>
 #include <vector>
 
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+   #include <thread>
+#endif
+
 namespace Botan::OS {
 
 /*
@@ -147,6 +151,10 @@ void page_allow_access(void* page);
 * Set a ID to a page's range expressed by size bytes
 */
 void page_named(void* page, size_t size);
+
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+void set_thread_name(std::thread& thread, const std::string& name);
+#endif
 
 /**
 * Run a probe instruction to test for support for a CPU instruction.

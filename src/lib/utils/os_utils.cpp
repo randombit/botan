@@ -16,16 +16,13 @@
 #include <chrono>
 #include <cstdlib>
 
-#if defined(BOTAN_TARGET_OS_HAS_THREADS)
-   #include <thread>
-#endif
-
 #if defined(BOTAN_TARGET_OS_HAS_EXPLICIT_BZERO)
    #include <string.h>
 #endif
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    #include <errno.h>
+   #include <pthread.h>
    #include <setjmp.h>
    #include <signal.h>
    #include <stdlib.h>
@@ -70,6 +67,10 @@ extern "C" char** environ;
 
 #if defined(BOTAN_TARGET_OS_HAS_PRCTL)
    #include <sys/prctl.h>
+#endif
+
+#if defined(BOTAN_TARGET_IS_FREEBSD) || defined(BOTAN_TARGET_IS_OPENBSD)
+   #include <pthread_np.h>
 #endif
 
 namespace Botan {
@@ -613,6 +614,25 @@ void OS::page_named(void* page, size_t size) {
    BOTAN_UNUSED(page, size);
 #endif
 }
+
+#if defined(BOTAN_TARGET_OS_HAS_THREADS)
+void OS::set_thread_name(std::thread& thread, const std::string& name) {
+   #if defined(BOTAN_TARGET_OS_IS_LINUX) || defined(BOTAN_TARGET_OS_IS_FREEBSD)
+   static_cast<void>(pthread_setname_np(thread.native_handle(), name.c_str()));
+   #elif defined(BOTAN_TARGET_OS_IS_OPENBSD)
+   static_cast<void>(pthread_set_name_np(thread.native_handle(), name.c_str()));
+   #elif defined(BOTAN_TARGET_OS_IS_NETBSD)
+   static_cast<void>(pthread_set_name_np(thread.native_handle(), "%s", const_cast<char*>(name.c_str())));
+   #elif defined(BOTAN_TARGET_OS_HAS_WIN32) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+   // Using SetThreadDescription from Win10
+   BOTAN_UNUSED(thread, name);
+   #else
+   // TODO other possible oses ?
+   // macOs does not seem to allow to name threads other than the current one.
+   BOTAN_UNUSED(thread, name);
+   #endif
+}
+#endif
 
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1) && !defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
 
