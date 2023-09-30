@@ -11,8 +11,8 @@
 #define BOTAN_DILITHIUM_ASYM_PRIMITIVES_H_
 
 #include <botan/dilithium.h>
-#include <botan/stream_cipher.h>
 
+#include <botan/xof.h>
 #include <botan/internal/shake.h>
 
 #include <memory>
@@ -46,13 +46,11 @@ class Dilithium_Symmetric_Primitives {
 
       // ExpandMatrix always uses the 256 version of the XOF
       secure_vector<uint8_t> ExpandMask(std::span<const uint8_t> seed, uint16_t nonce, size_t out_len) const {
-         return XOF(XofType::k256, seed, nonce)->keystream_bytes(out_len);
+         return XOF(XofType::k256, seed, nonce)->output(out_len);
       }
 
       // Mode dependent function
-      virtual std::unique_ptr<StreamCipher> XOF(XofType type,
-                                                std::span<const uint8_t> seed,
-                                                uint16_t matrix_position) const = 0;
+      virtual std::unique_ptr<Botan::XOF> XOF(XofType type, std::span<const uint8_t> seed, uint16_t nonce) const = 0;
 };
 
 enum DilithiumEta : uint32_t { Eta2 = 2, Eta4 = 4 };
@@ -161,11 +159,11 @@ class DilithiumModeConstants {
          return m_symmetric_primitives->CRH(in, DilithiumModeConstants::CRHBYTES);
       }
 
-      std::unique_ptr<StreamCipher> XOF_128(std::span<const uint8_t> seed, uint16_t nonce) const {
+      std::unique_ptr<Botan::XOF> XOF_128(std::span<const uint8_t> seed, uint16_t nonce) const {
          return this->m_symmetric_primitives->XOF(Dilithium_Symmetric_Primitives::XofType::k128, seed, nonce);
       }
 
-      std::unique_ptr<StreamCipher> XOF_256(std::span<const uint8_t> seed, uint16_t nonce) const {
+      std::unique_ptr<Botan::XOF> XOF_256(std::span<const uint8_t> seed, uint16_t nonce) const {
          return this->m_symmetric_primitives->XOF(Dilithium_Symmetric_Primitives::XofType::k256, seed, nonce);
       }
 

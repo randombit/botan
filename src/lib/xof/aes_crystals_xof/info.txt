@@ -1,0 +1,14 @@
+<defines>
+AES_CRYSTALS_XOF -> 20230816
+</defines>
+
+<module_info>
+name -> "CRYSTALS XOF"
+brief -> "XOF used in Kyber 90s and Dilithium AES"
+type -> "Internal"
+</module_info>
+
+<requires>
+aes
+ctr
+</requires>

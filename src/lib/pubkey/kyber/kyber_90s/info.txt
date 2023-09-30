@@ -8,8 +8,7 @@ name -> "Kyber 90s"
 
 <requires>
 kyber_common
-aes
-ctr
+aes_crystals_xof
 sha2_32
 sha2_64
 </requires>
