@@ -6,7 +6,7 @@ Version 3.2.0, Not Yet Released
 
 * Add support for TLS PSK (GH #3618)
 
-* Add a first class interface for XOFs (GH #3671)
+* Add a first class interface for XOFs (GH #3671 #3672 #3701)
 
 * Add KMAC from NIST SP 800-185 (GH #3689)
 
@@ -22,6 +22,12 @@ Version 3.2.0, Not Yet Released
 * Implement serialization for the Certificate Authority TLS extension
   (GH #3687)
 
+* Add OS support for naming threads; now Botan thread pool threads
+  are identified by name. (GH #3628)
+
+* Updated the TLS documentation to reflect TLS 1.3 support and
+  the removal of TLS 1.0 and 1.1. (GH #3708)
+
 * Upon deserialization, the ``EC_Group`` type now tracks the encoding
   which was used to create it. This is necessary to implement policies
   which prohibit use of explicit curve encodings (which are in any case
@@ -33,7 +39,11 @@ Version 3.2.0, Not Yet Released
 * Various internal functions now use ``std::span`` instead of raw pointers
   plus length field. NOTE: any implementations of ``BlockCipher``, ``HashFunction``
   etc that live outside the library will have to be updated. This is not covered
-  by the SemVer guarantee; see ``doc/sem_ver.rst`` (GH #3684 #3681)
+  by the SemVer guarantee; see ``doc/sem_ver.rst`` (GH #3684 #3681 #3713 #3714
+  #3698 #3696)
+
+* Add helper for buffer alignment, and adopt it within the hash function
+  implementations. (GH #3693)
 
 * Internal refactoring of SHA-3 to support further SHA-3 derived functionality
   (GH #3673)
@@ -50,6 +60,12 @@ Version 3.2.0, Not Yet Released
 * Fix a number of clang-tidy warnings in the headers (GH #3646)
 
 * Add checks for invalid length AD in Argon2 (GH #3626)
+
+* CI now uses Android NDK 26, and earlier NDKs are not supported
+  due to limitations of the C++ library in earlier NDKs (GH #3718)
+
+* Avoid compilation failures when using ``-Werror`` mode with GCC 12
+  due to spurious warnins there. (GH #3711 #3709)
 
 Version 3.1.1, 2023-07-13
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
