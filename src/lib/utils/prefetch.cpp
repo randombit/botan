@@ -12,8 +12,7 @@
 namespace Botan {
 
 uint64_t prefetch_array_raw(size_t bytes, const void* arrayv) noexcept {
-   // Android NDK is garbage and defines the feature macro, but not the variable
-#if defined(__cpp_lib_hardware_interference_size) && !defined(BOTAN_TARGET_OS_IS_ANDROID)
+#if defined(__cpp_lib_hardware_interference_size)
    const size_t cache_line_size = std::hardware_destructive_interference_size;
 #else
    // We arbitrarily use a 64 byte cache line, which is by far the most
