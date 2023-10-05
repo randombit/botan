@@ -423,7 +423,7 @@ void Client_Hello_12::add_tls12_supported_groups_extensions(const Policy& policy
    const std::vector<Group_Params> kex_groups = policy.key_exchange_groups();
    std::vector<Group_Params> compatible_kex_groups;
    std::copy_if(kex_groups.begin(), kex_groups.end(), std::back_inserter(compatible_kex_groups), [](const auto group) {
-      return !is_post_quantum(group);
+      return !group.is_post_quantum();
    });
 
    auto supported_groups = std::make_unique<Supported_Groups>(std::move(compatible_kex_groups));

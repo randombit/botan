@@ -147,7 +147,7 @@ Group_Params Policy::default_dh_group() const {
    * Return the first listed or just default to 2048
    */
    for(auto g : key_exchange_groups()) {
-      if(group_param_is_dh(g)) {
+      if(g.is_dh_named_group()) {
          return g;
       }
    }
@@ -568,9 +568,11 @@ void print_vec(std::ostream& o, const char* key, const std::vector<std::string>&
 void print_vec(std::ostream& o, const char* key, const std::vector<Group_Params>& v) {
    o << key << " = ";
    for(size_t i = 0; i != v.size(); ++i) {
-      o << group_param_to_string(v[i]);
-      if(i != v.size() - 1) {
-         o << ' ';
+      if(auto name = v[i].to_string()) {
+         o << name.value();
+         if(i != v.size() - 1) {
+            o << ' ';
+         }
       }
    }
    o << '\n';

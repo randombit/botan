@@ -50,8 +50,9 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
       m_shared_group = Group_Params::NONE;
 
       /*
-      If the client does not send any DH groups in the supported groups
-      extension, but does offer DH ciphersuites, we select a group arbitrarily
+      If the client does not send any DH groups that we recognize in
+      the supported groups extension, but does offer DH ciphersuites,
+      we select a group arbitrarily
       */
 
       if(dh_groups.empty()) {
@@ -64,7 +65,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
          throw TLS_Exception(Alert::HandshakeFailure, "Could not agree on a DH group with the client");
       }
 
-      BOTAN_ASSERT(group_param_is_dh(m_shared_group.value()), "DH ciphersuite is using a finite field group");
+      BOTAN_ASSERT(m_shared_group.value().is_dh_named_group(), "DH ciphersuite is using a finite field group");
 
       // Note: TLS 1.2 allows defining and using arbitrary DH groups (additional
       //       to the named and standardized ones). This API doesn't allow the
@@ -117,7 +118,7 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
                                                                                     : EC_Point_Format::Uncompressed);
       }
 
-      const uint16_t named_curve_id = static_cast<uint16_t>(m_shared_group.value());
+      const uint16_t named_curve_id = m_shared_group.value().wire_code();
       m_params.push_back(3);  // named curve
       m_params.push_back(get_byte<0>(named_curve_id));
       m_params.push_back(get_byte<1>(named_curve_id));

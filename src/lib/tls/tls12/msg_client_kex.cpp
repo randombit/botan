@@ -105,7 +105,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          const Group_Params curve_id = static_cast<Group_Params>(reader.get_uint16_t());
          const std::vector<uint8_t> peer_public_value = reader.get_range<uint8_t>(1, 1, 255);
 
-         if(!is_ecdh(curve_id) && !is_x25519(curve_id)) {
+         if(!curve_id.is_ecdh_named_curve() && !curve_id.is_x25519()) {
             throw TLS_Exception(Alert::HandshakeFailure,
                                 "Server selected a group that is not compatible with the negotiated ciphersuite");
          }
@@ -133,7 +133,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
             append_tls_length_value(m_pre_master, psk.bits_of(), 2);
          }
 
-         if(is_ecdh(curve_id)) {
+         if(curve_id.is_ecdh_named_curve()) {
             auto ecdh_key = dynamic_cast<ECDH_PublicKey*>(private_key.get());
             if(!ecdh_key) {
                throw TLS_Exception(Alert::InternalError, "Application did not provide a ECDH_PublicKey");

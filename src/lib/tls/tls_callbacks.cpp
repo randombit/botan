@@ -142,13 +142,13 @@ bool TLS::Callbacks::tls_verify_message(const Public_Key& key,
 
 std::unique_ptr<Private_Key> TLS::Callbacks::tls_kem_generate_key(TLS::Group_Params group, RandomNumberGenerator& rng) {
 #if defined(BOTAN_HAS_KYBER)
-   if(is_pure_kyber(group)) {
-      return std::make_unique<Kyber_PrivateKey>(rng, KyberMode(group_param_to_string(group)));
+   if(group.is_pure_kyber()) {
+      return std::make_unique<Kyber_PrivateKey>(rng, KyberMode(group.to_string().value()));
    }
 #endif
 
 #if defined(BOTAN_HAS_TLS_13_PQC)
-   if(is_hybrid(group)) {
+   if(group.is_pqc_hybrid()) {
       return Hybrid_KEM_PrivateKey::generate_from_group(group, rng);
    }
 #endif
@@ -160,18 +160,18 @@ KEM_Encapsulation TLS::Callbacks::tls_kem_encapsulate(TLS::Group_Params group,
                                                       const std::vector<uint8_t>& encoded_public_key,
                                                       RandomNumberGenerator& rng,
                                                       const Policy& policy) {
-   if(is_kem(group)) {
+   if(group.is_kem()) {
       auto kem_pub_key = [&]() -> std::unique_ptr<Public_Key> {
 
 #if defined(BOTAN_HAS_TLS_13_PQC)
-         if(is_hybrid(group)) {
+         if(group.is_pqc_hybrid()) {
             return Hybrid_KEM_PublicKey::load_for_group(group, encoded_public_key);
          }
 #endif
 
 #if defined(BOTAN_HAS_KYBER)
-         if(is_pure_kyber(group)) {
-            return std::make_unique<Kyber_PublicKey>(encoded_public_key, KyberMode(group_param_to_string(group)));
+         if(group.is_pure_kyber()) {
+            return std::make_unique<Kyber_PublicKey>(encoded_public_key, KyberMode(group.to_string().value()));
          }
 #endif
 
@@ -194,7 +194,7 @@ secure_vector<uint8_t> TLS::Callbacks::tls_kem_decapsulate(TLS::Group_Params gro
                                                            const std::vector<uint8_t>& encapsulated_bytes,
                                                            RandomNumberGenerator& rng,
                                                            const Policy& policy) {
-   if(is_kem(group)) {
+   if(group.is_kem()) {
       PK_KEM_Decryptor kemdec(private_key, rng, "Raw");
       return kemdec.decrypt(encapsulated_bytes, 0, {});
    }
@@ -210,7 +210,7 @@ secure_vector<uint8_t> TLS::Callbacks::tls_kem_decapsulate(TLS::Group_Params gro
 namespace {
 
 bool is_dh_group(const std::variant<TLS::Group_Params, DL_Group>& group) {
-   return std::holds_alternative<DL_Group>(group) || is_dh(std::get<TLS::Group_Params>(group));
+   return std::holds_alternative<DL_Group>(group) || std::get<TLS::Group_Params>(group).is_dh_named_group();
 }
 
 DL_Group get_dl_group(const std::variant<TLS::Group_Params, DL_Group>& group) {
@@ -221,7 +221,7 @@ DL_Group get_dl_group(const std::variant<TLS::Group_Params, DL_Group>& group) {
    // groups.
    return std::visit(
       overloaded{[](const DL_Group& dl_group) { return dl_group; },
-                 [&](TLS::Group_Params group_param) { return DL_Group(group_param_to_string(group_param)); }},
+                 [&](TLS::Group_Params group_param) { return DL_Group(group_param.to_string().value()); }},
       group);
 }
 
@@ -237,18 +237,18 @@ std::unique_ptr<PK_Key_Agreement_Key> TLS::Callbacks::tls_generate_ephemeral_key
    BOTAN_ASSERT_NOMSG(std::holds_alternative<TLS::Group_Params>(group));
    const auto group_params = std::get<TLS::Group_Params>(group);
 
-   if(is_ecdh(group_params)) {
-      const EC_Group ec_group(group_param_to_string(group_params));
+   if(group_params.is_ecdh_named_curve()) {
+      const EC_Group ec_group(group_params.to_string().value());
       return std::make_unique<ECDH_PrivateKey>(rng, ec_group);
    }
 
 #if defined(BOTAN_HAS_CURVE_25519)
-   if(is_x25519(group_params)) {
+   if(group_params.is_x25519()) {
       return std::make_unique<X25519_PrivateKey>(rng);
    }
 #endif
 
-   if(is_kem(group_params)) {
+   if(group_params.is_kem()) {
       throw TLS_Exception(Alert::IllegalParameter, "cannot generate an ephemeral KEX key for a KEM");
    }
 
@@ -292,8 +292,8 @@ secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(
    BOTAN_ASSERT_NOMSG(std::holds_alternative<TLS::Group_Params>(group));
    const auto group_params = std::get<TLS::Group_Params>(group);
 
-   if(is_ecdh(group_params)) {
-      const EC_Group ec_group(group_param_to_string(group_params));
+   if(group_params.is_ecdh_named_curve()) {
+      const EC_Group ec_group(group_params.to_string().value());
       ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(public_value));
       policy.check_peer_key_acceptable(peer_key);
 
@@ -301,7 +301,7 @@ secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(
    }
 
 #if defined(BOTAN_HAS_CURVE_25519)
-   if(is_x25519(group_params)) {
+   if(group_params.is_x25519()) {
       if(public_value.size() != 32) {
          throw TLS_Exception(Alert::HandshakeFailure, "Invalid X25519 key size");
       }

@@ -430,7 +430,7 @@ class TLS_Handshake_Test final {
                const std::variant<Botan::TLS::Group_Params, Botan::DL_Group>& group,
                Botan::RandomNumberGenerator& rng) override {
                if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
-                  static_cast<uint16_t>(std::get<Botan::TLS::Group_Params>(group)) == 0xFEE1) {
+                  std::get<Botan::TLS::Group_Params>(group).wire_code() == 0xFEE1) {
                   const Botan::EC_Group ec_group("secp112r1");
                   return std::make_unique<Botan::ECDH_PrivateKey>(rng, ec_group);
                }
@@ -445,7 +445,7 @@ class TLS_Handshake_Test final {
                Botan::RandomNumberGenerator& rng,
                const Botan::TLS::Policy& policy) override {
                if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
-                  static_cast<uint16_t>(std::get<Botan::TLS::Group_Params>(group)) == 0xFEE1) {
+                  std::get<Botan::TLS::Group_Params>(group).wire_code() == 0xFEE1) {
                   const Botan::EC_Group ec_group("secp112r1");
                   Botan::ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(public_value));
                   Botan::PK_Key_Agreement ka(private_key, rng, "Raw");
