@@ -134,7 +134,7 @@ class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
 
    private:
       const EC_Group m_group;
-      const BigInt& m_x;
+      const BigInt m_x;
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
       std::unique_ptr<RFC6979_Nonce_Generator> m_rfc6979;

@@ -154,7 +154,7 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature {
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& rng);
 
       const EC_Group m_group;
-      const BigInt& m_x;
+      const BigInt m_x;
       std::unique_ptr<HashFunction> m_hash;
       std::vector<uint8_t> m_prefix;
       std::vector<BigInt> m_ws;

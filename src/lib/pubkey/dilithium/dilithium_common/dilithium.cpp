@@ -406,7 +406,7 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
          return sig;
       }
 
-      const Dilithium_PrivateKey& m_priv_key;
+      const Dilithium_PrivateKey m_priv_key;
       const Dilithium::PolynomialMatrix m_matrix;
       SHAKE_256 m_shake;
       bool m_randomized;

@@ -137,7 +137,7 @@ class GOST_3410_Signature_Operation final : public PK_Ops::Signature_with_Hash {
 
    private:
       const EC_Group m_group;
-      const BigInt& m_x;
+      const BigInt m_x;
       std::vector<BigInt> m_ws;
 };
 

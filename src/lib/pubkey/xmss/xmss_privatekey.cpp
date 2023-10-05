@@ -189,8 +189,8 @@ class XMSS_PrivateKey_Internal {
       }
 
    private:
-      const XMSS_Parameters& m_xmss_params;
-      const XMSS_WOTS_Parameters& m_wots_params;
+      XMSS_Parameters m_xmss_params;
+      XMSS_WOTS_Parameters m_wots_params;
       WOTS_Derivation_Method m_wots_derivation_method;
 
       XMSS_Hash m_hash;

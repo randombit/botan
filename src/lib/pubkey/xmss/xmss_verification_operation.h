@@ -58,7 +58,7 @@ class XMSS_Verification_Operation final : public virtual PK_Ops::Verification {
        **/
       bool verify(const XMSS_Signature& sig, const secure_vector<uint8_t>& msg, const XMSS_PublicKey& pub_key);
 
-      const XMSS_PublicKey& m_pub_key;
+      const XMSS_PublicKey m_pub_key;
       XMSS_Hash m_hash;
       secure_vector<uint8_t> m_msg_buf;
 };
