@@ -53,6 +53,8 @@ class BOTAN_PUBLIC_API(2, 0) DH_PublicKey : public virtual Public_Key {
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::KeyAgreement); }
 
+      const DL_Group& group() const;
+
    private:
       friend class DH_PrivateKey;
 

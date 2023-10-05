@@ -1,0 +1,20 @@
+<defines>
+TLS_13_PQC -> 20230919
+</defines>
+
+<module_info>
+name -> "TLS 1.3 (PQC)"
+brief -> "Hybrid Key Exchange for TLS 1.3 with Post-Quantum Algorithms"
+</module_info>
+
+<header:public>
+</header:public>
+
+<header:internal>
+hybrid_public_key.h
+kex_to_kem_adapter.h
+</header:internal>
+
+<requires>
+tls13
+</requires>

@@ -1105,6 +1105,55 @@ The ``TLS::Protocol_Version`` class represents a specific version:
       Returns the latest version of the DTLS protocol known to the
       library (currently DTLS v1.2)
 
+
+Post-quantum-secure key exchange
+--------------------------------
+
+.. versionadded:: :: 3.2
+
+Botan allows TLS 1.3 handshakes using both pure post-quantum secure algorithms
+or a hybrid key exchange that combines a classical and a post-quantum secure
+algorithm. For the latter it implements the recent IETF
+`draft-ietf-tls-hybrid-design
+<https://datatracker.ietf.org/doc/draft-ietf-tls-hybrid-design>`_.
+
+Note that post-quantum key exchanges in TLS 1.3 are not conclusively
+standardized. Therefore, the key exchange group identifiers used by various TLS
+1.3 implementations are not consistent. Applications that wish to enable hybrid
+key exchanges must enable the hybrid algorithms in their TLS policy. Override
+`TLS::Policy::key_exchange_groups()` and return a list of the desired exchange
+groups. For text-based policy configurations use the identifiers in parenthesis.
+
+Currently, Botan supports the following post-quantum secure key exchanges:
+
+* used `in Open Quantum Safe <https://github.com/open-quantum-safe/oqs-provider/blob/main/oqs-template/oqs-kem-info.md>`_
+  (PQC algorithm without a classical algorithm)
+
+  * ``KYBER_512_R3`` ("Kyber-512-r3")
+  * ``KYBER_768_R3`` ("Kyber-768-r3")
+  * ``KYBER_1024_R3`` ("Kyber-1024-r3")
+
+* used `in Open Quantum Safe <https://github.com/open-quantum-safe/oqs-provider/blob/main/oqs-template/oqs-kem-info.md>`_
+  (hybrid between Kyber and a classical ECDH algorithm)
+
+  * ``HYBRID_X25519_KYBER_512_R3_OQS`` ("x25519/Kyber-512-r3")
+  * ``HYBRID_X25519_KYBER_768_R3_OQS`` ("x25519/Kyber-768-r3")
+  * ``HYBRID_SECP256R1_KYBER_512_R3_OQS`` ("secp256r1/Kyber-512-r3")
+  * ``HYBRID_SECP384R1_KYBER_768_R3_OQS`` ("secp384r1/Kyber-768-r3")
+  * ``HYBRID_SECP521R1_KYBER_1024_R3_OQS`` ("secp521r1/Kyber-1024-r3")
+
+* used `by Cloudflare <https://blog.cloudflare.com/post-quantum-for-all/>`_
+  (hybrid between Kyber and the classical X25519 algorithm)
+
+  * ``HYBRID_X25519_KYBER_512_R3_CLOUDFLARE`` ("x25519/Kyber-512-r3/cloudflare")
+  * ``HYBRID_X25519_KYBER_768_R3_CLOUDFLARE`` ("x25519/Kyber-768-r3/cloudflare")
+
+Client Code Example
+^^^^^^^^^^^^^^^^^^^^
+
+.. literalinclude:: /../src/examples/tls_13_hybrid_key_exchange_client.cpp
+   :language: cpp
+
 TLS Custom Key Exchange Mechanisms
 ----------------------------------------
 

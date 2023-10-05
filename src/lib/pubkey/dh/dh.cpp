@@ -37,6 +37,10 @@ const BigInt& DH_PublicKey::get_int_field(std::string_view field) const {
    return m_public_key->get_int_field(algo_name(), field);
 }
 
+const DL_Group& DH_PublicKey::group() const {
+   return m_public_key->group();
+}
+
 AlgorithmIdentifier DH_PublicKey::algorithm_identifier() const {
    return AlgorithmIdentifier(object_identifier(), m_public_key->group().DER_encode(DL_Group_Format::ANSI_X9_42));
 }

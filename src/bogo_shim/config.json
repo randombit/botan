@@ -116,7 +116,6 @@
         "ClientHelloPadding": "No support for client hello padding extension",
         "TLSUnique*": "Not supported",
         "*CECPQ2*": "Not implemented",
-        "*Kyber*": "Not implemented",
         "PQExperimentSignal*": "Not implemented",
         "*P-224*": "P-224 not supported in TLS",
         "*V2ClientHello*": "No support for SSLv2 client hellos",
@@ -134,6 +133,10 @@
         "RetainOnlySHA256-*": "BoringSSL specific API test",
         "Renegotiate-Client-UnfinishedWrite": "BoringSSL specific API test",
         "FailEarlyCallback": "BoringSSL specific API test",
+
+        "NotJustKyberKeyShare": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
+        "KyberKeyShareIncludedSecond": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
+        "KyberKeyShareIncludedThird": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
 
         "ShimTicketRewritable": "Botan has a different ticket format",
         "Resume-Server-DeclineCrossVersion*": "Botan has a different ticket format",

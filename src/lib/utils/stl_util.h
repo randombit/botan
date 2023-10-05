@@ -9,6 +9,7 @@
 #ifndef BOTAN_STL_UTIL_H_
 #define BOTAN_STL_UTIL_H_
 
+#include <functional>
 #include <map>
 #include <set>
 #include <span>
@@ -30,6 +31,25 @@ inline T to_byte_vector(std::string_view s) {
 
 inline std::string to_string(std::span<const uint8_t> bytes) {
    return std::string(bytes.begin(), bytes.end());
+}
+
+/**
+ * Reduce the values of @p keys into an accumulator initialized with @p acc using
+ * the reducer function @p reducer.
+ *
+ * The @p reducer is a function taking the accumulator and a single key to return the
+ * new accumulator. Keys are consecutively reduced into the accumulator.
+ *
+ * @return the accumulator containing the reduction of @p keys
+ */
+template <typename RetT, typename KeyT, typename ReducerT>
+RetT reduce(const std::vector<KeyT>& keys, RetT acc, ReducerT reducer)
+   requires std::is_convertible_v<ReducerT, std::function<RetT(RetT, const KeyT&)>>
+{
+   for(const KeyT& key : keys) {
+      acc = reducer(std::move(acc), key);
+   }
+   return acc;
 }
 
 /**
