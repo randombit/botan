@@ -4162,80 +4162,50 @@ const uint64_t C[32][2] = {{0xb87a486c7276a26e, 0x019484dd10bd275d}, {0xb3f490d8
                            {0x45aba4f6433784cc, 0x1dffec46132c75de}, {0x4e257c42d5ada17e, 0x1e80a3e223281c39},
                            {0xf65f342ea7db0310, 0x1f14273f33953b64}, {0x619b141e58d8a75e, 0x20a8ed9c45c16af1}};
 
-inline void LS(uint64_t x1, uint64_t x2, uint64_t& t1, uint64_t& t2) {
-   t1 = T[0][get_byte<7>(x1)][0] ^ T[1][get_byte<6>(x1)][0] ^ T[2][get_byte<5>(x1)][0] ^ T[3][get_byte<4>(x1)][0] ^
-        T[4][get_byte<3>(x1)][0] ^ T[5][get_byte<2>(x1)][0] ^ T[6][get_byte<1>(x1)][0] ^ T[7][get_byte<0>(x1)][0] ^
-        T[8][get_byte<7>(x2)][0] ^ T[9][get_byte<6>(x2)][0] ^ T[10][get_byte<5>(x2)][0] ^ T[11][get_byte<4>(x2)][0] ^
-        T[12][get_byte<3>(x2)][0] ^ T[13][get_byte<2>(x2)][0] ^ T[14][get_byte<1>(x2)][0] ^ T[15][get_byte<0>(x2)][0];
-   t2 = T[0][get_byte<7>(x1)][1] ^ T[1][get_byte<6>(x1)][1] ^ T[2][get_byte<5>(x1)][1] ^ T[3][get_byte<4>(x1)][1] ^
-        T[4][get_byte<3>(x1)][1] ^ T[5][get_byte<2>(x1)][1] ^ T[6][get_byte<1>(x1)][1] ^ T[7][get_byte<0>(x1)][1] ^
-        T[8][get_byte<7>(x2)][1] ^ T[9][get_byte<6>(x2)][1] ^ T[10][get_byte<5>(x2)][1] ^ T[11][get_byte<4>(x2)][1] ^
-        T[12][get_byte<3>(x2)][1] ^ T[13][get_byte<2>(x2)][1] ^ T[14][get_byte<1>(x2)][1] ^ T[15][get_byte<0>(x2)][1];
-}
-
-inline void ILS(uint64_t x1, uint64_t x2, uint64_t& t1, uint64_t& t2) {
-   t1 = IT[0][get_byte<7>(x1)][0] ^ IT[1][get_byte<6>(x1)][0] ^ IT[2][get_byte<5>(x1)][0] ^ IT[3][get_byte<4>(x1)][0] ^
-        IT[4][get_byte<3>(x1)][0] ^ IT[5][get_byte<2>(x1)][0] ^ IT[6][get_byte<1>(x1)][0] ^ IT[7][get_byte<0>(x1)][0] ^
-        IT[8][get_byte<7>(x2)][0] ^ IT[9][get_byte<6>(x2)][0] ^ IT[10][get_byte<5>(x2)][0] ^
-        IT[11][get_byte<4>(x2)][0] ^ IT[12][get_byte<3>(x2)][0] ^ IT[13][get_byte<2>(x2)][0] ^
-        IT[14][get_byte<1>(x2)][0] ^ IT[15][get_byte<0>(x2)][0];
-   t2 = IT[0][get_byte<7>(x1)][1] ^ IT[1][get_byte<6>(x1)][1] ^ IT[2][get_byte<5>(x1)][1] ^ IT[3][get_byte<4>(x1)][1] ^
-        IT[4][get_byte<3>(x1)][1] ^ IT[5][get_byte<2>(x1)][1] ^ IT[6][get_byte<1>(x1)][1] ^ IT[7][get_byte<0>(x1)][1] ^
-        IT[8][get_byte<7>(x2)][1] ^ IT[9][get_byte<6>(x2)][1] ^ IT[10][get_byte<5>(x2)][1] ^
-        IT[11][get_byte<4>(x2)][1] ^ IT[12][get_byte<3>(x2)][1] ^ IT[13][get_byte<2>(x2)][1] ^
-        IT[14][get_byte<1>(x2)][1] ^ IT[15][get_byte<0>(x2)][1];
-}
-
-inline void ILSS(uint64_t x1, uint64_t x2, uint64_t& t1, uint64_t& t2) {
-   t1 = IT[0][S[get_byte<7>(x1)]][0] ^ IT[1][S[get_byte<6>(x1)]][0] ^ IT[2][S[get_byte<5>(x1)]][0] ^
-        IT[3][S[get_byte<4>(x1)]][0] ^ IT[4][S[get_byte<3>(x1)]][0] ^ IT[5][S[get_byte<2>(x1)]][0] ^
-        IT[6][S[get_byte<1>(x1)]][0] ^ IT[7][S[get_byte<0>(x1)]][0] ^ IT[8][S[get_byte<7>(x2)]][0] ^
-        IT[9][S[get_byte<6>(x2)]][0] ^ IT[10][S[get_byte<5>(x2)]][0] ^ IT[11][S[get_byte<4>(x2)]][0] ^
-        IT[12][S[get_byte<3>(x2)]][0] ^ IT[13][S[get_byte<2>(x2)]][0] ^ IT[14][S[get_byte<1>(x2)]][0] ^
-        IT[15][S[get_byte<0>(x2)]][0];
-   t2 = IT[0][S[get_byte<7>(x1)]][1] ^ IT[1][S[get_byte<6>(x1)]][1] ^ IT[2][S[get_byte<5>(x1)]][1] ^
-        IT[3][S[get_byte<4>(x1)]][1] ^ IT[4][S[get_byte<3>(x1)]][1] ^ IT[5][S[get_byte<2>(x1)]][1] ^
-        IT[6][S[get_byte<1>(x1)]][1] ^ IT[7][S[get_byte<0>(x1)]][1] ^ IT[8][S[get_byte<7>(x2)]][1] ^
-        IT[9][S[get_byte<6>(x2)]][1] ^ IT[10][S[get_byte<5>(x2)]][1] ^ IT[11][S[get_byte<4>(x2)]][1] ^
-        IT[12][S[get_byte<3>(x2)]][1] ^ IT[13][S[get_byte<2>(x2)]][1] ^ IT[14][S[get_byte<1>(x2)]][1] ^
-        IT[15][S[get_byte<0>(x2)]][1];
-}
-
-inline void ISI(uint8_t* val) {
-   val[0] = IS[val[0]];
-   val[1] = IS[val[1]];
-   val[2] = IS[val[2]];
-   val[3] = IS[val[3]];
-   val[4] = IS[val[4]];
-   val[5] = IS[val[5]];
-   val[6] = IS[val[6]];
-   val[7] = IS[val[7]];
-}
-
-inline void F(uint64_t k0,
-              uint64_t k1,
-              uint64_t k2,
-              uint64_t k3,
-              uint8_t i,
-              uint64_t& o0,
-              uint64_t& o1,
-              uint64_t& o2,
-              uint64_t& o3) {
-   o2 = k0;
-   o3 = k1;
-   k0 ^= C[i][0];
-   k1 ^= C[i][1];
-   LS(k0, k1, o0, o1);
-   o0 ^= k2;
-   o1 ^= k3;
-}
-
-inline void FK(uint64_t& k0, uint64_t& k1, uint64_t& k2, uint64_t& k3, uint8_t ist) {
-   uint64_t t0, t1, t2, t3;
-   for(uint8_t i = 0; i < 8; i += 2) {
-      F(k0, k1, k2, k3, i + ist, t0, t1, t2, t3);
-      F(t0, t1, t2, t3, i + 1 + ist, k0, k1, k2, k3);
+inline void LS(uint64_t& x1, uint64_t& x2) {
+   uint64_t t1 = 0;
+   uint64_t t2 = 0;
+   for(size_t i = 0; i != 16; ++i) {
+      const uint8_t x = get_byte_var(7 - (i % 8), (i < 8) ? x1 : x2);
+      t1 ^= T[i][x][0];
+      t2 ^= T[i][x][1];
    }
+
+   x1 = t1;
+   x2 = t2;
+}
+
+inline void ILS(uint64_t& x1, uint64_t& x2) {
+   uint64_t t1 = 0;
+   uint64_t t2 = 0;
+   for(size_t i = 0; i != 16; ++i) {
+      const uint8_t x = get_byte_var(7 - (i % 8), (i < 8) ? x1 : x2);
+      t1 ^= IT[i][x][0];
+      t2 ^= IT[i][x][1];
+   }
+   x1 = t1;
+   x2 = t2;
+}
+
+inline void ILSS(uint64_t& x1, uint64_t& x2) {
+   uint64_t t1 = 0;
+   uint64_t t2 = 0;
+   for(size_t i = 0; i != 16; ++i) {
+      const uint8_t x = S[get_byte_var(7 - (i % 8), (i < 8) ? x1 : x2)];
+      t1 ^= IT[i][x][0];
+      t2 ^= IT[i][x][1];
+   }
+   x1 = t1;
+   x2 = t2;
+}
+
+inline uint64_t ISI(uint64_t val) {
+   uint64_t out = 0;
+   for(size_t i = 0; i != 8; ++i) {
+      out <<= 8;
+      out |= IS[get_byte_var(i, val)];
+   }
+   return out;
 }
 
 }  // namespace Kuznyechik_F
@@ -4257,43 +4227,59 @@ bool Kuznyechik::has_keying_material() const {
 }
 
 void Kuznyechik::key_schedule(std::span<const uint8_t> key) {
+   using namespace Kuznyechik_F;
+
    BOTAN_ASSERT_NOMSG(key.size() == 32);
 
-   uint64_t k0, k1, k2, k3;
-   k0 = load_le<uint64_t>(key.data(), 0);
-   k1 = load_le<uint64_t>(key.data(), 1);
-   k2 = load_le<uint64_t>(key.data(), 2);
-   k3 = load_le<uint64_t>(key.data(), 3);
+   uint64_t k0 = load_le<uint64_t>(key.data(), 0);
+   uint64_t k1 = load_le<uint64_t>(key.data(), 1);
+   uint64_t k2 = load_le<uint64_t>(key.data(), 2);
+   uint64_t k3 = load_le<uint64_t>(key.data(), 3);
 
    m_rke[0][0] = k0;
    m_rke[0][1] = k1;
    m_rke[1][0] = k2;
    m_rke[1][1] = k3;
-   Kuznyechik_F::FK(k0, k1, k2, k3, 0);
-   m_rke[2][0] = k0;
-   m_rke[2][1] = k1;
-   m_rke[3][0] = k2;
-   m_rke[3][1] = k3;
-   Kuznyechik_F::FK(k0, k1, k2, k3, 8);
-   m_rke[4][0] = k0;
-   m_rke[4][1] = k1;
-   m_rke[5][0] = k2;
-   m_rke[5][1] = k3;
-   Kuznyechik_F::FK(k0, k1, k2, k3, 16);
-   m_rke[6][0] = k0;
-   m_rke[6][1] = k1;
-   m_rke[7][0] = k2;
-   m_rke[7][1] = k3;
-   Kuznyechik_F::FK(k0, k1, k2, k3, 24);
-   m_rke[8][0] = k0;
-   m_rke[8][1] = k1;
-   m_rke[9][0] = k2;
-   m_rke[9][1] = k3;
 
-   std::memcpy(m_rkd, m_rke, sizeof(m_rke));
-   for(uint8_t i = 1; i < 10; i++) {
-      uint64_t t1 = m_rkd[i][0], t2 = m_rkd[i][1];
-      Kuznyechik_F::ILSS(t1, t2, m_rkd[i][0], m_rkd[i][1]);
+   for(size_t i = 0; i != 4; ++i) {
+      for(size_t r = 0; r < 8; r += 2) {
+         uint64_t t0, t1, t2, t3;
+
+         t0 = k0 ^ C[8 * i + r][0];
+         t1 = k1 ^ C[8 * i + r][1];
+         t2 = k0;
+         t3 = k1;
+         LS(t0, t1);
+         t0 ^= k2;
+         t1 ^= k3;
+
+         k0 = t0 ^ C[8 * i + r + 1][0];
+         k1 = t1 ^ C[8 * i + r + 1][1];
+         k2 = t0;
+         k3 = t1;
+         LS(k0, k1);
+         k0 ^= t2;
+         k1 ^= t3;
+      }
+
+      m_rke[2 * i + 2][0] = k0;
+      m_rke[2 * i + 2][1] = k1;
+      m_rke[2 * i + 3][0] = k2;
+      m_rke[2 * i + 3][1] = k3;
+   }
+
+   for(size_t i = 0; i < 10; i++) {
+      uint64_t t0 = m_rke[i][0];
+      uint64_t t1 = m_rke[i][1];
+
+      if(i > 0) {
+         Kuznyechik_F::ILSS(t0, t1);
+      }
+
+      const size_t dest = 9 - i;
+
+      m_rkd[dest][0] = t0;
+      m_rkd[dest][1] = t1;
    }
 
    m_has_keying_material = true;
@@ -4302,41 +4288,49 @@ void Kuznyechik::key_schedule(std::span<const uint8_t> key) {
 void Kuznyechik::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
    while(blocks) {
-      uint64_t x1, x2;
-      x1 = load_le<uint64_t>(in, 0);
-      x2 = load_le<uint64_t>(in, 1);
-      uint64_t t1, t2;
+      uint64_t x1 = load_le<uint64_t>(in, 0);
+      uint64_t x2 = load_le<uint64_t>(in, 1);
+
       x1 ^= m_rke[0][0];
       x2 ^= m_rke[0][1];
-      Kuznyechik_F::LS(x1, x2, t1, t2);
-      t1 ^= m_rke[1][0];
-      t2 ^= m_rke[1][1];
-      Kuznyechik_F::LS(t1, t2, x1, x2);
+      Kuznyechik_F::LS(x1, x2);
+
+      x1 ^= m_rke[1][0];
+      x2 ^= m_rke[1][1];
+      Kuznyechik_F::LS(x1, x2);
+
       x1 ^= m_rke[2][0];
       x2 ^= m_rke[2][1];
-      Kuznyechik_F::LS(x1, x2, t1, t2);
-      t1 ^= m_rke[3][0];
-      t2 ^= m_rke[3][1];
-      Kuznyechik_F::LS(t1, t2, x1, x2);
+      Kuznyechik_F::LS(x1, x2);
+
+      x1 ^= m_rke[3][0];
+      x2 ^= m_rke[3][1];
+      Kuznyechik_F::LS(x1, x2);
+
       x1 ^= m_rke[4][0];
       x2 ^= m_rke[4][1];
-      Kuznyechik_F::LS(x1, x2, t1, t2);
-      t1 ^= m_rke[5][0];
-      t2 ^= m_rke[5][1];
-      Kuznyechik_F::LS(t1, t2, x1, x2);
+      Kuznyechik_F::LS(x1, x2);
+
+      x1 ^= m_rke[5][0];
+      x2 ^= m_rke[5][1];
+      Kuznyechik_F::LS(x1, x2);
+
       x1 ^= m_rke[6][0];
       x2 ^= m_rke[6][1];
-      Kuznyechik_F::LS(x1, x2, t1, t2);
-      t1 ^= m_rke[7][0];
-      t2 ^= m_rke[7][1];
-      Kuznyechik_F::LS(t1, t2, x1, x2);
+      Kuznyechik_F::LS(x1, x2);
+
+      x1 ^= m_rke[7][0];
+      x2 ^= m_rke[7][1];
+      Kuznyechik_F::LS(x1, x2);
+
       x1 ^= m_rke[8][0];
       x2 ^= m_rke[8][1];
-      Kuznyechik_F::LS(x1, x2, t1, t2);
-      t1 ^= m_rke[9][0];
-      t2 ^= m_rke[9][1];
-      store_le(t1, out);
-      store_le(t2, out + 8);
+      Kuznyechik_F::LS(x1, x2);
+
+      x1 ^= m_rke[9][0];
+      x2 ^= m_rke[9][1];
+
+      store_le(out, x1, x2);
 
       in += 16;
       out += 16;
@@ -4347,44 +4341,52 @@ void Kuznyechik::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) con
 void Kuznyechik::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
    while(blocks) {
-      uint64_t x1, x2;
-      x1 = load_le<uint64_t>(in, 0);
-      x2 = load_le<uint64_t>(in, 1);
-      uint64_t t1, t2;
+      uint64_t x1 = load_le<uint64_t>(in, 0);
+      uint64_t x2 = load_le<uint64_t>(in, 1);
 
-      Kuznyechik_F::ILSS(x1, x2, t1, t2);
-      t1 ^= m_rkd[9][0];
-      t2 ^= m_rkd[9][1];
-      Kuznyechik_F::ILS(t1, t2, x1, x2);
-      x1 ^= m_rkd[8][0];
-      x2 ^= m_rkd[8][1];
-      Kuznyechik_F::ILS(x1, x2, t1, t2);
-      t1 ^= m_rkd[7][0];
-      t2 ^= m_rkd[7][1];
-      Kuznyechik_F::ILS(t1, t2, x1, x2);
-      x1 ^= m_rkd[6][0];
-      x2 ^= m_rkd[6][1];
-      Kuznyechik_F::ILS(x1, x2, t1, t2);
-      t1 ^= m_rkd[5][0];
-      t2 ^= m_rkd[5][1];
-      Kuznyechik_F::ILS(t1, t2, x1, x2);
-      x1 ^= m_rkd[4][0];
-      x2 ^= m_rkd[4][1];
-      Kuznyechik_F::ILS(x1, x2, t1, t2);
-      t1 ^= m_rkd[3][0];
-      t2 ^= m_rkd[3][1];
-      Kuznyechik_F::ILS(t1, t2, x1, x2);
+      Kuznyechik_F::ILSS(x1, x2);
+
+      x1 ^= m_rkd[0][0];
+      x2 ^= m_rkd[0][1];
+      Kuznyechik_F::ILS(x1, x2);
+
+      x1 ^= m_rkd[1][0];
+      x2 ^= m_rkd[1][1];
+      Kuznyechik_F::ILS(x1, x2);
+
       x1 ^= m_rkd[2][0];
       x2 ^= m_rkd[2][1];
-      Kuznyechik_F::ILS(x1, x2, t1, t2);
-      t1 ^= m_rkd[1][0];
-      t2 ^= m_rkd[1][1];
-      Kuznyechik_F::ISI(reinterpret_cast<uint8_t*>(&t1));
-      Kuznyechik_F::ISI(reinterpret_cast<uint8_t*>(&t2));
-      t1 ^= m_rkd[0][0];
-      t2 ^= m_rkd[0][1];
-      store_le(t1, out);
-      store_le(t2, out + 8);
+      Kuznyechik_F::ILS(x1, x2);
+
+      x1 ^= m_rkd[3][0];
+      x2 ^= m_rkd[3][1];
+      Kuznyechik_F::ILS(x1, x2);
+
+      x1 ^= m_rkd[4][0];
+      x2 ^= m_rkd[4][1];
+      Kuznyechik_F::ILS(x1, x2);
+
+      x1 ^= m_rkd[5][0];
+      x2 ^= m_rkd[5][1];
+      Kuznyechik_F::ILS(x1, x2);
+
+      x1 ^= m_rkd[6][0];
+      x2 ^= m_rkd[6][1];
+      Kuznyechik_F::ILS(x1, x2);
+
+      x1 ^= m_rkd[7][0];
+      x2 ^= m_rkd[7][1];
+      Kuznyechik_F::ILS(x1, x2);
+
+      x1 ^= m_rkd[8][0];
+      x2 ^= m_rkd[8][1];
+      x1 = Kuznyechik_F::ISI(x1);
+      x2 = Kuznyechik_F::ISI(x2);
+
+      x1 ^= m_rkd[9][0];
+      x2 ^= m_rkd[9][1];
+
+      store_le(out, x1, x2);
 
       in += 16;
       out += 16;
