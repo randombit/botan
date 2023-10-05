@@ -70,10 +70,10 @@ Sending patches
 
 All contributions should be submitted as pull requests via GitHub
 (https://github.com/randombit/botan). If you are planning a large
-change email the mailing list or open a discussion ticket on github
-before starting out to make sure you are on the right path. And once
-you have something written, free to open a [WIP] PR for early review
-and comment.
+change, open a discussion ticket on github before starting out to make
+sure you are on the right path. And once you have something written,
+even if it is not complete/ready to go, feel free to open a draft PR
+for early review and comment.
 
 If possible please sign your git commits using a PGP key.
 See https://git-scm.com/book/en/v2/Git-Tools-Signing-Your-Work for
@@ -162,7 +162,8 @@ At the top of any new file add a comment with a copyright and a reference to the
 license, for example::
 
   /*
-  * (C) 20xx Copyright Holder
+  * (C) 202x <You>
+  *
   * Botan is released under the Simplified BSD License (see license.txt)
   */
 
@@ -210,10 +211,17 @@ Avoid explicit ``new`` or (especially) explicit ``delete``: use RAII,
 
 Use ``m_`` prefix on all member variables.
 
-``clang-format`` is used for all C++ formatting. The configuration is in
-``.clang-format`` in the root directory. You can rerun the formatter using
-``make fmt`` or by invoking the script
-``src/scripts/dev_tools/run_clang_format.py``
+``clang-format`` is used for all C++ formatting. The configuration is
+in ``.clang-format`` in the root directory. You can rerun the
+formatter using ``make fmt`` or by invoking the script
+``src/scripts/dev_tools/run_clang_format.py``. If the output would be
+truly horrible, it is allowed to disable formatting for a specific
+area using ``// clang-format off`` annotations.
+
+.. note::
+
+   Since the output of clang-format varies from version to version, we
+   currently require using exactly ``clang-format 15``.
 
 Use braces on both sides of if/else blocks, even if only using a single
 statement.
@@ -232,8 +240,7 @@ Compiler Dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 The library should always be as functional as possible when compiled with just
-Standard C++20. However, feel free to use the full language. No accomodations are
-made for compilers that are incomplete or buggy.
+Standard C++20. However, feel free to use the full language.
 
 Use of compiler extensions is fine whenever appropriate; this is typically
 restricted to a single file or an internal header. Compiler extensions used
@@ -288,5 +295,5 @@ operations. These provide major pieces of functionality which seem worth the
 trouble of maintaining an integration with.
 
 At this point the most plausible examples of an appropriate new external
-dependency are all deeper integrations with system level cryptographic systems
-(CommonCrypto, CryptoAPI, /dev/crypto, iOS keychain, TPM 2.0, etc)
+dependency are all deeper integrations with system level cryptographic
+interfaces (CommonCrypto, CryptoAPI, /dev/crypto, iOS keychain, TPM 2.0, etc)
