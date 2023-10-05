@@ -14,8 +14,6 @@
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/stl_util.h>
 
-#include <variant>
-
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
    #include <botan/dh.h>
    #include <botan/dl_group.h>
@@ -34,50 +32,37 @@ namespace Botan::TLS {
 namespace {
 
 /**
- * Up-cast a key agreement public key to its concrete algorithm type
- * to perform low-level operations that are not covered by a generic
- * interface in Public_Key.
- */
-std::variant<std::reference_wrapper<const DH_PublicKey>,
-             std::reference_wrapper<const ECDH_PublicKey>,
-             std::reference_wrapper<const Curve25519_PublicKey>>
-as_kex_public_key(const Public_Key& kex_public_key) {
-   BOTAN_ASSERT_NOMSG(kex_public_key.supports_operation(PublicKeyOperation::KeyAgreement));
-
-   try {
-#if defined(BOTAN_HAS_ECDH)
-      if(kex_public_key.algo_name() == "ECDH") {
-         return dynamic_cast<const ECDH_PublicKey&>(kex_public_key);
-      }
-#endif
-
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-      if(kex_public_key.algo_name() == "DH") {
-         return dynamic_cast<const DH_PublicKey&>(kex_public_key);
-      }
-#endif
-
-#if defined(BOTAN_HAS_CURVE_25519)
-      if(kex_public_key.algo_name() == "Curve25519") {
-         return dynamic_cast<const Curve25519_PublicKey&>(kex_public_key);
-      }
-#endif
-   } catch(const std::bad_cast&) {
-      throw Invalid_Argument(fmt("public key claimed to be '{}' but down-cast failed", kex_public_key.algo_name()));
-   }
-
-   throw Not_Implemented(fmt("Cannot use unknown key agreement public key of type '{}' in the hybrid KEM key",
-                             kex_public_key.algo_name()));
-}
-
-/**
  * This helper converts a key agreement public key into its raw public
  * value. In contrast to the private key (cf. PK_Key_AgreementKey) there
  * is no generic interface class to do this.
+ *
+ * TODO: Have a decent generic API to get the raw public value from any
+ *       Key Agreement public key.
  */
 std::vector<uint8_t> kex_public_value(const Public_Key& kex_public_key) {
-   return std::visit([](const auto& kex_pub_key) { return kex_pub_key.get().public_value(); },
-                     as_kex_public_key(kex_public_key));
+   BOTAN_ASSERT_NOMSG(kex_public_key.supports_operation(PublicKeyOperation::KeyAgreement));
+
+#if defined(BOTAN_HAS_ECDH)
+   if(const auto* ecdh = dynamic_cast<const ECDH_PublicKey*>(&kex_public_key)) {
+      return ecdh->public_value();
+   }
+#endif
+
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
+   if(const auto* dh = dynamic_cast<const DH_PublicKey*>(&kex_public_key)) {
+      return dh->public_value();
+   }
+#endif
+
+#if defined(BOTAN_HAS_CURVE_25519)
+   if(const auto* curve = dynamic_cast<const Curve25519_PublicKey*>(&kex_public_key)) {
+      return curve->public_value();
+   }
+#endif
+
+   throw Not_Implemented(
+      fmt("Cannot get public value from unknown key agreement public key of type '{}' in the hybrid KEM key",
+          kex_public_key.algo_name()));
 }
 
 /**
@@ -91,11 +76,30 @@ std::vector<uint8_t> kex_public_value(const Public_Key& kex_public_key) {
  *       implementation details of the key agreement algorithms.
  */
 size_t kex_shared_key_length(const Public_Key& kex_public_key) {
-   return std::visit(
-      overloaded{[](const ECDH_PublicKey& ecdh_public_key) { return ecdh_public_key.domain().get_p_bytes(); },
-                 [](const DH_PublicKey& dh_public_key) { return dh_public_key.group().p_bytes(); },
-                 [](const Curve25519_PublicKey&) { return size_t(32) /* TODO: magic number */; }},
-      as_kex_public_key(kex_public_key));
+   BOTAN_ASSERT_NOMSG(kex_public_key.supports_operation(PublicKeyOperation::KeyAgreement));
+
+#if defined(BOTAN_HAS_ECDH)
+   if(const auto* ecdh = dynamic_cast<const ECDH_PublicKey*>(&kex_public_key)) {
+      return ecdh->domain().get_p_bytes();
+   }
+#endif
+
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
+   if(const auto* dh = dynamic_cast<const DH_PublicKey*>(&kex_public_key)) {
+      return dh->group().p_bytes();
+   }
+#endif
+
+#if defined(BOTAN_HAS_CURVE_25519)
+   if(const auto* curve = dynamic_cast<const Curve25519_PublicKey*>(&kex_public_key)) {
+      BOTAN_UNUSED(curve);
+      return 32; /* TODO: magic number */
+   }
+#endif
+
+   throw Not_Implemented(
+      fmt("Cannot get shared kex key length from unknown key agreement public key of type '{}' in the hybrid KEM key",
+          kex_public_key.algo_name()));
 }
 
 /**
@@ -114,16 +118,30 @@ size_t kex_shared_key_length(const Public_Key& kex_public_key) {
  */
 std::unique_ptr<PK_Key_Agreement_Key> generate_key_agreement_private_key(const Public_Key& kex_public_key,
                                                                          RandomNumberGenerator& rng) {
-   return std::visit(overloaded{[&](const ECDH_PublicKey& ecdh_public_key) -> std::unique_ptr<PK_Key_Agreement_Key> {
-                                   return std::make_unique<ECDH_PrivateKey>(rng, ecdh_public_key.domain());
-                                },
-                                [&](const DH_PublicKey& dh_public_key) -> std::unique_ptr<PK_Key_Agreement_Key> {
-                                   return std::make_unique<DH_PrivateKey>(rng, dh_public_key.group());
-                                },
-                                [&](const Curve25519_PublicKey&) -> std::unique_ptr<PK_Key_Agreement_Key> {
-                                   return std::make_unique<Curve25519_PrivateKey>(rng);
-                                }},
-                     as_kex_public_key(kex_public_key));
+   BOTAN_ASSERT_NOMSG(kex_public_key.supports_operation(PublicKeyOperation::KeyAgreement));
+
+#if defined(BOTAN_HAS_ECDH)
+   if(const auto* ecdh = dynamic_cast<const ECDH_PublicKey*>(&kex_public_key)) {
+      return std::make_unique<ECDH_PrivateKey>(rng, ecdh->domain());
+   }
+#endif
+
+#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
+   if(const auto* dh = dynamic_cast<const DH_PublicKey*>(&kex_public_key)) {
+      return std::make_unique<DH_PrivateKey>(rng, dh->group());
+   }
+#endif
+
+#if defined(BOTAN_HAS_CURVE_25519)
+   if(const auto* curve = dynamic_cast<const Curve25519_PublicKey*>(&kex_public_key)) {
+      BOTAN_UNUSED(curve);
+      return std::make_unique<Curve25519_PrivateKey>(rng);
+   }
+#endif
+
+   throw Not_Implemented(fmt(
+      "Cannot generate a private key matching an unknown key agreement public key of type '{}' in the hybrid KEM key",
+      kex_public_key.algo_name()));
 }
 
 std::unique_ptr<Public_Key> maybe_get_public_key(const std::unique_ptr<PK_Key_Agreement_Key>& private_key) {
