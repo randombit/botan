@@ -1,73 +1,60 @@
-# [Dilithium]
+[Dilithium]
 
-Algorithm = Dilithium
 AlgoParams = Dilithium-4x4-r3
 SigParams =
 
-# [DSA]
+[DSA]
 
-Algorithm = DSA
 AlgoParams = dsa/jce/1024
 SigParams = SHA-256
 
-# [ECDSA]
+[ECDSA]
 
-Algorithm = ECDSA
 AlgoParams = secp256k1
 SigParams = SHA-256
 
-# [ECGDSA]
+[ECGDSA]
 
-Algorithm = ECGDSA
 AlgoParams = secp256r1
 SigParams = SHA-256
 
-# [ECKCDSA]
+[ECKCDSA]
 
-Algorithm = ECKCDSA
 AlgoParams = secp256r1
 SigParams = SHA-256
 
-# [Ed25519]
+[Ed25519]
 
-Algorithm = Ed25519
 AlgoParams =
 SigParams = Pure
 
-Algorithm = Ed25519
 AlgoParams =
 SigParams = Ed25519ph
 
-# [GOST-34.10]
+[GOST-34.10]
 
-Algorithm = GOST-34.10
 AlgoParams = gost_256A
 SigParams = Raw
 
-# [RSA]
+[RSA]
 
-Algorithm = RSA
 AlgoParams = 2048
 SigParams = PSSR(SHA-256)
 
-# [SM2]
+[SM2]
 
-Algorithm = SM2
 AlgoParams = secp256r1
 SigParams = ALICE123@YAHOO.COM,SM3
 
-Algorithm = SM2
 AlgoParams = secp256r1
 SigParams = ALICE123@YAHOO.COM,Raw
 
-# [SPHINCS+]
+[SPHINCS+]
 
-Algorithm = SPHINCS+
 AlgoParams = SphincsPlus-shake-128s-r3.1
 SigParams =
 
-# [XMSS]
+[XMSS]
 
-Algorithm = XMSS
 AlgoParams = XMSS-SHA2_10_256
 SigParams = SHA2_10_256

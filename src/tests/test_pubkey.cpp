@@ -750,11 +750,10 @@ Test::Result PK_Key_Generation_Stability_Test::run_one_test(const std::string&, 
  */
 class PK_API_Sign_Test : public Text_Based_Test {
    public:
-      PK_API_Sign_Test() : Text_Based_Test("pubkey/api_sign.vec", "Algorithm,AlgoParams,SigParams", "Provider") {}
+      PK_API_Sign_Test() : Text_Based_Test("pubkey/api_sign.vec", "AlgoParams,SigParams", "Provider") {}
 
    protected:
-      Test::Result run_one_test(const std::string&, const VarMap& vars) final {
-         const std::string algorithm = vars.get_req_str("Algorithm");
+      Test::Result run_one_test(const std::string& algorithm, const VarMap& vars) final {
          const std::string algo_params = vars.get_req_str("AlgoParams");
          const std::string sig_params = vars.get_req_str("SigParams");
          const std::string verify_params = vars.get_opt_str("VerifyParams", sig_params);
@@ -770,14 +769,13 @@ class PK_API_Sign_Test : public Text_Based_Test {
          }
          Test::Result result(test_name.str());
 
-         std::unique_ptr<Botan::Private_Key> privkey =
-            Botan::create_private_key(algorithm, Test::rng(), algo_params, provider);
+         auto privkey = Botan::create_private_key(algorithm, Test::rng(), algo_params, provider);
          if(!privkey) {
             result.test_note(Botan::fmt(
                "Skipping Sign/verify API tests for {}({}) with provider {}", algorithm, algo_params, provider));
             return result;
          }
-         std::unique_ptr<Botan::Public_Key> pubkey = Botan::X509::load_key(Botan::X509::BER_encode(*privkey));
+         auto pubkey = Botan::X509::load_key(Botan::X509::BER_encode(*privkey));
          result.confirm("Storing and loading public key works", pubkey != nullptr);
 
          result.confirm("private key claims to support signatures",
@@ -786,15 +784,18 @@ class PK_API_Sign_Test : public Text_Based_Test {
                         pubkey->supports_operation(Botan::PublicKeyOperation::Signature));
          result.test_gt("Public key length must be greater than 0", privkey->key_length(), 0);
 
-         std::unique_ptr<Botan::PK_Signer> signer = std::make_unique<Botan::PK_Signer>(
+         auto signer = std::make_unique<Botan::PK_Signer>(
             *privkey, Test::rng(), sig_params, Botan::Signature_Format::Standard, provider);
-         std::unique_ptr<Botan::PK_Verifier> verifier =
+         auto verifier =
             std::make_unique<Botan::PK_Verifier>(*pubkey, verify_params, Botan::Signature_Format::Standard, provider);
          result.confirm("Creating PK_Signer works", signer != nullptr);
          result.confirm("Creating PK_Signer works", verifier != nullptr);
 
          result.test_is_nonempty("PK_Signer should report some hash", signer->hash_function());
          result.test_is_nonempty("PK_Verifier should report some hash", verifier->hash_function());
+
+         result.test_eq(
+            "PK_Signer and PK_Verifier report the same hash", signer->hash_function(), verifier->hash_function());
 
          pubkey.reset();
          privkey.reset();
