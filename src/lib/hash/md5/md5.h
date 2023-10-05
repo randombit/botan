@@ -15,33 +15,39 @@ namespace Botan {
 /**
 * MD5
 */
-class MD5 final : public MDx_HashFunction {
+class MD5 final : public HashFunction {
+   public:
+      using digest_type = secure_vector<uint32_t>;
+
+      static constexpr MD_Endian byte_endianness = MD_Endian::Little;
+      static constexpr MD_Endian bit_endianness = MD_Endian::Big;
+      static constexpr size_t block_bytes = 64;
+      static constexpr size_t output_bytes = 16;
+      static constexpr size_t ctr_bytes = 8;
+
+      static void compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
+      static void init(digest_type& digest);
+
    public:
       std::string name() const override { return "MD5"; }
 
-      size_t output_length() const override { return 16; }
+      size_t output_length() const override { return output_bytes; }
 
-      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<MD5>(); }
+      size_t hash_block_size() const override { return block_bytes; }
+
+      std::unique_ptr<HashFunction> new_object() const override;
 
       std::unique_ptr<HashFunction> copy_state() const override;
 
-      void clear() override;
-
-      MD5() : MDx_HashFunction(64, false, true), m_M(16), m_digest(4) { clear(); }
+      void clear() override { m_md.clear(); }
 
    private:
-      void compress_n(const uint8_t[], size_t blocks) override;
-      void copy_out(uint8_t[]) override;
+      void add_data(std::span<const uint8_t> input) override;
 
-      /**
-      * The message buffer
-      */
-      secure_vector<uint32_t> m_M;
+      void final_result(std::span<uint8_t> output) override;
 
-      /**
-      * The digest value
-      */
-      secure_vector<uint32_t> m_digest;
+   private:
+      MerkleDamgard_Hash<MD5> m_md;
 };
 
 }  // namespace Botan

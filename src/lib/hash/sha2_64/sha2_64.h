@@ -15,87 +15,128 @@ namespace Botan {
 /**
 * SHA-384
 */
-class SHA_384 final : public MDx_HashFunction {
+class SHA_384 final : public HashFunction {
+   public:
+      using digest_type = secure_vector<uint64_t>;
+
+      static constexpr MD_Endian byte_endianness = MD_Endian::Big;
+      static constexpr MD_Endian bit_endianness = MD_Endian::Big;
+      static constexpr size_t block_bytes = 128;
+      static constexpr size_t output_bytes = 48;
+      static constexpr size_t ctr_bytes = 16;
+
+      static void compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
+      static void init(digest_type& digest);
+
    public:
       std::string name() const override { return "SHA-384"; }
 
-      size_t output_length() const override { return 48; }
+      size_t output_length() const override { return output_bytes; }
 
-      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_384>(); }
+      size_t hash_block_size() const override { return block_bytes; }
+
+      std::unique_ptr<HashFunction> new_object() const override;
 
       std::unique_ptr<HashFunction> copy_state() const override;
+
       std::string provider() const override;
 
-      void clear() override;
-
-      SHA_384() : MDx_HashFunction(128, true, true, 16), m_digest(8) { clear(); }
+      void clear() override { m_md.clear(); }
 
    private:
-      void compress_n(const uint8_t[], size_t blocks) override;
-      void copy_out(uint8_t[]) override;
+      void add_data(std::span<const uint8_t> input) override;
 
-      secure_vector<uint64_t> m_digest;
+      void final_result(std::span<uint8_t> output) override;
+
+   private:
+      MerkleDamgard_Hash<SHA_384> m_md;
 };
 
 /**
 * SHA-512
 */
-class SHA_512 final : public MDx_HashFunction {
+class SHA_512 final : public HashFunction {
+   public:
+      using digest_type = secure_vector<uint64_t>;
+
+      static constexpr MD_Endian byte_endianness = MD_Endian::Big;
+      static constexpr MD_Endian bit_endianness = MD_Endian::Big;
+      static constexpr size_t block_bytes = 128;
+      static constexpr size_t output_bytes = 64;
+      static constexpr size_t ctr_bytes = 16;
+
+      static void compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
+      static void init(digest_type& digest);
+
    public:
       std::string name() const override { return "SHA-512"; }
 
-      size_t output_length() const override { return 64; }
+      size_t output_length() const override { return output_bytes; }
 
-      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_512>(); }
+      size_t hash_block_size() const override { return block_bytes; }
+
+      std::unique_ptr<HashFunction> new_object() const override;
 
       std::unique_ptr<HashFunction> copy_state() const override;
+
       std::string provider() const override;
 
-      void clear() override;
+      void clear() override { m_md.clear(); }
 
-      /*
-      * Perform a SHA-512 compression. For internal use
-      */
-      static void compress_digest(secure_vector<uint64_t>& digest, const uint8_t input[], size_t blocks);
-
-      SHA_512() : MDx_HashFunction(128, true, true, 16), m_digest(8) { clear(); }
-
-   private:
-      void compress_n(const uint8_t[], size_t blocks) override;
-      void copy_out(uint8_t[]) override;
-
-      static const uint64_t K[80];
+   public:
+      static void compress_digest(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
 
 #if defined(BOTAN_HAS_SHA2_64_BMI2)
-      static void compress_digest_bmi2(secure_vector<uint64_t>& digest, const uint8_t input[], size_t blocks);
+      static void compress_digest_bmi2(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
 #endif
 
-      secure_vector<uint64_t> m_digest;
+   private:
+      void add_data(std::span<const uint8_t> input) override;
+
+      void final_result(std::span<uint8_t> output) override;
+
+   private:
+      MerkleDamgard_Hash<SHA_512> m_md;
 };
 
 /**
 * SHA-512/256
 */
-class SHA_512_256 final : public MDx_HashFunction {
+class SHA_512_256 final : public HashFunction {
+   public:
+      using digest_type = secure_vector<uint64_t>;
+
+      static constexpr MD_Endian byte_endianness = MD_Endian::Big;
+      static constexpr MD_Endian bit_endianness = MD_Endian::Big;
+      static constexpr size_t block_bytes = 128;
+      static constexpr size_t output_bytes = 32;
+      static constexpr size_t ctr_bytes = 16;
+
+      static void compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
+      static void init(digest_type& digest);
+
    public:
       std::string name() const override { return "SHA-512-256"; }
 
-      size_t output_length() const override { return 32; }
+      size_t output_length() const override { return output_bytes; }
 
-      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_512_256>(); }
+      size_t hash_block_size() const override { return block_bytes; }
+
+      std::unique_ptr<HashFunction> new_object() const override;
 
       std::unique_ptr<HashFunction> copy_state() const override;
+
       std::string provider() const override;
 
-      void clear() override;
-
-      SHA_512_256() : MDx_HashFunction(128, true, true, 16), m_digest(8) { clear(); }
+      void clear() override { m_md.clear(); }
 
    private:
-      void compress_n(const uint8_t[], size_t blocks) override;
-      void copy_out(uint8_t[]) override;
+      void add_data(std::span<const uint8_t> input) override;
 
-      secure_vector<uint64_t> m_digest;
+      void final_result(std::span<uint8_t> output) override;
+
+   private:
+      MerkleDamgard_Hash<SHA_512_256> m_md;
 };
 
 }  // namespace Botan

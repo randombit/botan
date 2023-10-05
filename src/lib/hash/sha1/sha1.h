@@ -15,49 +15,54 @@ namespace Botan {
 /**
 * NIST's SHA-1
 */
-class SHA_1 final : public MDx_HashFunction {
+class SHA_1 final : public HashFunction {
+   public:
+      using digest_type = secure_vector<uint32_t>;
+
+      static constexpr MD_Endian byte_endianness = MD_Endian::Big;
+      static constexpr MD_Endian bit_endianness = MD_Endian::Big;
+      static constexpr size_t block_bytes = 64;
+      static constexpr size_t output_bytes = 20;
+      static constexpr size_t ctr_bytes = 8;
+
+      static void compress_n(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
+      static void init(digest_type& digest);
+
    public:
       std::string name() const override { return "SHA-1"; }
 
       size_t output_length() const override { return 20; }
 
-      std::unique_ptr<HashFunction> new_object() const override { return std::make_unique<SHA_1>(); }
+      size_t hash_block_size() const override { return block_bytes; }
+
+      std::unique_ptr<HashFunction> new_object() const override;
 
       std::unique_ptr<HashFunction> copy_state() const override;
 
       std::string provider() const override;
 
-      void clear() override;
-
-      SHA_1() : MDx_HashFunction(64, true, true), m_digest(5) { clear(); }
-
-   private:
-      void compress_n(const uint8_t[], size_t blocks) override;
+      void clear() override { m_md.clear(); }
 
 #if defined(BOTAN_HAS_SHA1_ARMV8)
-      static void sha1_armv8_compress_n(secure_vector<uint32_t>& digest, const uint8_t blocks[], size_t block_count);
+      static void sha1_armv8_compress_n(digest_type& digest, std::span<const uint8_t> blocks, size_t block_count);
 #endif
 
 #if defined(BOTAN_HAS_SHA1_SSE2)
-      static void sse2_compress_n(secure_vector<uint32_t>& digest, const uint8_t blocks[], size_t block_count);
+      static void sse2_compress_n(digest_type& digest, std::span<const uint8_t> blocks, size_t block_count);
 #endif
 
 #if defined(BOTAN_HAS_SHA1_X86_SHA_NI)
       // Using x86 SHA instructions in Intel Goldmont and Cannonlake
-      static void sha1_compress_x86(secure_vector<uint32_t>& digest, const uint8_t blocks[], size_t block_count);
+      static void sha1_compress_x86(digest_type& digest, std::span<const uint8_t> blocks, size_t block_count);
 #endif
 
-      void copy_out(uint8_t[]) override;
+   private:
+      void add_data(std::span<const uint8_t> input) override;
 
-      /**
-      * The digest value
-      */
-      secure_vector<uint32_t> m_digest;
+      void final_result(std::span<uint8_t> output) override;
 
-      /**
-      * The message buffer
-      */
-      secure_vector<uint32_t> m_W;
+   private:
+      MerkleDamgard_Hash<SHA_1> m_md;
 };
 
 }  // namespace Botan
