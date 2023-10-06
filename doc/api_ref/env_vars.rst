@@ -13,6 +13,11 @@ library. The variables and their behavior are described here.
   instead all work passed to the thread pool will be executed immediately
   by the calling thread.
 
+  As of version 3.2.0, on MinGW the thread pool is by default disabled, due to a
+  bug which causes deadlock on application shutdown. Enabling the pool can be
+  explicitly requested by setting ``BOTAN_THREAD_POOL_SIZE`` to an integer
+  value.
+
 * ``BOTAN_MLOCK_POOL_SIZE`` controls the total amount of memory, in bytes, which
   will be locked in memory using ``mlock`` or ``VirtualLock`` and managed in a
   memory pool. This should be a multiple of the system page size. If set to

@@ -17,18 +17,26 @@ namespace {
 std::optional<size_t> global_thread_pool_size() {
    std::string var;
    if(OS::read_env_variable(var, "BOTAN_THREAD_POOL_SIZE")) {
-      try {
-         return std::optional<size_t>(std::stoul(var, nullptr));
-      } catch(std::exception&) { /* ignore it */
-      }
-
       if(var == "none") {
          return std::nullopt;
       }
+
+      // Try to convert to an integer if possible:
+      try {
+         return std::optional<size_t>(std::stoul(var, nullptr));
+      } catch(std::exception&) {}
+
+      // If it was neither a number nor a special value, then ignore the env
    }
 
-   // If it was neither a number nor a special value, then ignore it.
+   // On MinGW by default (ie unless requested via env) we disable the global
+   // thread pool due to bugs causing deadlock on application exit.
+   // See https://github.com/randombit/botan/issues/2582 for background.
+#if defined(BOTAN_TARGET_OS_IS_MINGW)
+   return std::nullopt;
+#else
    return std::optional<size_t>(0);
+#endif
 }
 
 }  // namespace
