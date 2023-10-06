@@ -39,11 +39,13 @@ namespace {
 
 class Callbacks : public Botan::TLS::Callbacks {
    public:
-      Callbacks(TLS_Client& client_command) : m_client_command(client_command) {}
+      Callbacks(TLS_Client& client_command) : m_client_command(client_command), m_peer_closed(false) {}
 
       std::ostream& output();
       bool flag_set(const std::string& flag_name) const;
       void send(std::span<const uint8_t> buffer);
+
+      int peer_closed() const { return m_peer_closed; }
 
       void tls_verify_cert_chain(const std::vector<Botan::X509_Certificate>& cert_chain,
                                  const std::vector<std::optional<Botan::OCSP::Response>>& ocsp,
@@ -129,8 +131,14 @@ class Callbacks : public Botan::TLS::Callbacks {
          return Botan::TLS::Callbacks::tls_sign_message(key, rng, padding, format, msg);
       }
 
+      bool tls_peer_closed_connection() override {
+         m_peer_closed = true;
+         return Botan::TLS::Callbacks::tls_peer_closed_connection();
+      }
+
    private:
       TLS_Client& m_client_command;
+      bool m_peer_closed;
 };
 
 }  // namespace
@@ -251,6 +259,7 @@ class TLS_Client final : public Command {
                                    protocols_to_offer);
 
          bool first_active = true;
+         bool we_closed = false;
 
          while(!client.is_closed()) {
             fd_set readfds;
@@ -299,6 +308,7 @@ class TLS_Client final : public Command {
                if(got == 0) {
                   output() << "EOF on stdin\n";
                   client.close();
+                  we_closed = true;
                   break;
                } else if(got == -1) {
                   output() << "Stdin error: " << errno << " " << err_to_string(errno) << "\n";
@@ -314,6 +324,7 @@ class TLS_Client final : public Command {
                   } else if(cmd == 'Q') {
                      output() << "Client initiated close\n";
                      client.close();
+                     we_closed = true;
                   }
                } else {
                   client.send(buf, got);
@@ -324,6 +335,8 @@ class TLS_Client final : public Command {
                output() << "Timeout detected\n";
             }
          }
+
+         set_return_code((we_closed || callbacks->peer_closed()) ? 0 : 1);
 
          ::close(m_sockfd);
       }
