@@ -87,7 +87,8 @@ def test_cli(cmd, cmd_options,
              cmd_input=None,
              expected_stderr=None,
              use_drbg=True,
-             extra_env=None):
+             extra_env=None,
+             timeout=None):
     global TESTS_RUN
 
     TESTS_RUN += 1
@@ -112,18 +113,23 @@ def test_cli(cmd, cmd_options,
     stdout = None
     stderr = None
 
-    if cmd_input is None:
-        proc_env = None
-        if extra_env:
-            proc_env = os.environ
-            for (k,v) in extra_env.items():
-                proc_env[k] = v
+    try:
+        if cmd_input is None:
+            proc_env = None
+            if extra_env:
+                proc_env = os.environ
+                for (k,v) in extra_env.items():
+                    proc_env[k] = v
 
-        proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=proc_env)
+            proc = subprocess.Popen(cmdline, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=proc_env)
+            (stdout, stderr) = proc.communicate(timeout=timeout)
+        else:
+            proc = subprocess.Popen(cmdline, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            (stdout, stderr) = proc.communicate(cmd_input.encode(), timeout=timeout)
+    except subprocess.TimeoutExpired:
+        logging.error("Reached timeout of %d seconds for command %s", timeout, cmdline)
+        proc.kill()
         (stdout, stderr) = proc.communicate()
-    else:
-        proc = subprocess.Popen(cmdline, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        (stdout, stderr) = proc.communicate(cmd_input.encode())
 
     stdout = stdout.decode('ascii').strip()
     stderr = stderr.decode('ascii').strip()
