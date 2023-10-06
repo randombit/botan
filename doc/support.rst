@@ -57,10 +57,10 @@ utilizes OpenBSD specific APIs was likely contributed by someone interested in
 that platform.
 
 In theory any working C++20 compiler is fine but in practice, we only regularly
-test with GCC, Clang, and Visual C++. Several other compilers (such as Intel and
-Sun Studio) are supported by the build system but are not tested by the
-developers and may have build or codegen problems. Patches to improve support
-for these compilers is welcome.
+test with GCC, Clang, and Visual C++. Several other compilers (such as IBM XLC,
+Intel C++, and Sun Studio) are supported by the build system but are not tested
+by the developers and may have build or codegen problems. Patches to improve
+support for these compilers is welcome.
 
 Branch Support Status
 -------------------------

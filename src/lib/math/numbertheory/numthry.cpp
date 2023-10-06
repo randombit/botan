@@ -196,7 +196,7 @@ size_t low_zero_bits(const BigInt& n) {
 
    // if we saw no words with x > 0 then n == 0 and the value we have
    // computed is meaningless. Instead return BigInt::zero() in that case.
-   return seen_nonempty_word.if_set_return(low_zero);
+   return static_cast<size_t>(seen_nonempty_word.if_set_return(low_zero));
 }
 
 namespace {

@@ -16,9 +16,9 @@
    */
 MSVC _MSC_VER
 
-#elif defined(__ibmxl__)
+#elif defined(__open_xl__)
 
-XLC __ibmxl_version__ __ibmxl_release__
+XLC __open_xl_version__ __open_xl_release__
 
 #elif defined(__EMSCRIPTEN__)
 

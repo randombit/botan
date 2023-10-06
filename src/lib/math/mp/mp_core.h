@@ -384,7 +384,7 @@ inline void bigint_shl1(word x[], size_t x_size, size_t x_words, size_t word_shi
    clear_mem(x, word_shift);
 
    const auto carry_mask = CT::Mask<word>::expand(bit_shift);
-   const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
+   const word carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
 
    word carry = 0;
    for(size_t i = word_shift; i != x_size; ++i) {
@@ -403,7 +403,7 @@ inline void bigint_shr1(word x[], size_t x_size, size_t word_shift, size_t bit_s
    clear_mem(x + top, std::min(word_shift, x_size));
 
    const auto carry_mask = CT::Mask<word>::expand(bit_shift);
-   const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
+   const word carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
 
    word carry = 0;
 
@@ -418,7 +418,7 @@ inline void bigint_shl2(word y[], const word x[], size_t x_size, size_t word_shi
    copy_mem(y + word_shift, x, x_size);
 
    const auto carry_mask = CT::Mask<word>::expand(bit_shift);
-   const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
+   const word carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
 
    word carry = 0;
    for(size_t i = word_shift; i != x_size + word_shift + 1; ++i) {
@@ -436,7 +436,7 @@ inline void bigint_shr2(word y[], const word x[], size_t x_size, size_t word_shi
    }
 
    const auto carry_mask = CT::Mask<word>::expand(bit_shift);
-   const size_t carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
+   const word carry_shift = carry_mask.if_set_return(BOTAN_MP_WORD_BITS - bit_shift);
 
    word carry = 0;
    for(size_t i = new_size; i > 0; --i) {

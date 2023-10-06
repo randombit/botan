@@ -1,28 +1,41 @@
 macro_name XLC
 
-binary_name xlC
+# _r suffix unclear
+binary_name ibm-clang++_r
+
+# possibly earlier versions work
+minimum_supported_version 17.1
 
 optimization_flags "-O2"
 
+lang_binary_linker_flags "-bbigtoc"
+
+shared_flags "-fPIC"
 lang_flags "-std=c++20"
 
 visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'
 
+warning_flags "-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wshorten-64-to-32 -Wcomma -Wdocumentation"
+
+werror_flags "-Werror -Wno-error=unused-parameter -Wno-error=unreachable-code -Wno-error=unused-lambda-capture -Wno-error=deprecate-lax-vec-conv-all"
+
 supports_gcc_inline_asm yes
 
 <isa_flags>
-altivec -> "-qaltivec"
+altivec           -> "-maltivec"
+ppc64:vsx         -> "-mvsx"
+ppc64:powercrypto -> "-mcrypto"
+ppc64:power9      -> "-mcpu=power9"
 </isa_flags>
 
 <so_link_commands>
-default -> "{cxx} -qmkshrobj"
+default -> "{cxx} -shared -fPIC -bbigtoc"
 </so_link_commands>
 
 <sanitizers>
 default   -> address
 
-all       -> "-qcheck=all"
-address   -> "-qcheck=bounds:stackclobber:unset"
-undefined -> "-qcheck=nullptr:divzero"
+address   -> "-fsanitize=address"
+undefined -> "-fsanitize=undefined -fno-sanitize-recover=undefined"
 </sanitizers>
