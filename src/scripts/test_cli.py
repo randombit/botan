@@ -1148,6 +1148,7 @@ def cli_tls_online_pqc_hybrid_tests(tmp_dir):
             TestConfig("test.openquantumsafe.org", "x25519/Kyber-512-r3", port=oqsp['x25519_kyber512'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "x25519/Kyber-768-r3", port=oqsp['x25519_kyber768'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "secp256r1/Kyber-512-r3", port=oqsp['p256_kyber512'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "secp256r1/Kyber-768-r3", port=oqsp['p256_kyber768'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "secp384r1/Kyber-768-r3", port=oqsp['p384_kyber768'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "secp521r1/Kyber-1024-r3", port=oqsp['p521_kyber1024'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "Kyber-512-r3", port=oqsp['kyber512'], ca=oqs_test_ca),
