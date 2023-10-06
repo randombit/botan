@@ -46,6 +46,7 @@ disabled_needs_work = [
     'bugprone-lambda-function-name', # should be an easy fix
     'bugprone-unchecked-optional-access', # clang-tidy seems buggy (many false positives)
     'cert-err58-cpp', # many false positives eg __m128i
+    'cppcoreguidelines-avoid-const-or-ref-data-members',
     'cppcoreguidelines-init-variables',
     'cppcoreguidelines-owning-memory',
     'cppcoreguidelines-prefer-member-initializer',
@@ -81,6 +82,7 @@ disabled_not_interested = [
     'bugprone-branch-clone', # doesn't interact well with feature macros
     'bugprone-easily-swappable-parameters',
     'bugprone-implicit-widening-of-multiplication-result',
+    'cppcoreguidelines-avoid-do-while',
     'cppcoreguidelines-non-private-member-variables-in-classes', # pk split keys
     'cppcoreguidelines-pro-bounds-pointer-arithmetic',
     'cppcoreguidelines-pro-bounds-constant-array-index',
