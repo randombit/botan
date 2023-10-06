@@ -179,20 +179,17 @@ Group_Params group_param_from_string(std::string_view group_name) {
    }
 
    if(group_name == "Kyber-512-r3") {
-      return Group_Params::KYBER_512_R3;
+      return Group_Params::KYBER_512_R3_OQS;
    }
    if(group_name == "Kyber-768-r3") {
-      return Group_Params::KYBER_768_R3;
+      return Group_Params::KYBER_768_R3_OQS;
    }
    if(group_name == "Kyber-1024-r3") {
-      return Group_Params::KYBER_1024_R3;
+      return Group_Params::KYBER_1024_R3_OQS;
    }
 
    if(group_name == "x25519/Kyber-512-r3/cloudflare") {
       return Group_Params::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE;
-   }
-   if(group_name == "x25519/Kyber-768-r3/cloudflare") {
-      return Group_Params::HYBRID_X25519_KYBER_768_R3_CLOUDFLARE;
    }
 
    if(group_name == "x25519/Kyber-512-r3") {
@@ -243,17 +240,15 @@ std::string group_param_to_string(Group_Params group) {
       case Group_Params::FFDHE_8192:
          return "ffdhe/ietf/8192";
 
-      case Group_Params::KYBER_512_R3:
+      case Group_Params::KYBER_512_R3_OQS:
          return "Kyber-512-r3";
-      case Group_Params::KYBER_768_R3:
+      case Group_Params::KYBER_768_R3_OQS:
          return "Kyber-768-r3";
-      case Group_Params::KYBER_1024_R3:
+      case Group_Params::KYBER_1024_R3_OQS:
          return "Kyber-1024-r3";
 
       case Group_Params::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE:
          return "x25519/Kyber-512-r3/cloudflare";
-      case Group_Params::HYBRID_X25519_KYBER_768_R3_CLOUDFLARE:
-         return "x25519/Kyber-768-r3/cloudflare";
 
       case Group_Params::HYBRID_X25519_KYBER_512_R3_OQS:
          return "x25519/Kyber-512-r3";

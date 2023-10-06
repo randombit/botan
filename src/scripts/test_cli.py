@@ -1132,7 +1132,7 @@ def cli_tls_online_pqc_hybrid_tests(tmp_dir):
 
     test_cfg = [
         TestConfig("pq.cloudflareresearch.com", "x25519/Kyber-512-r3/cloudflare"),
-        TestConfig("pq.cloudflareresearch.com", "x25519/Kyber-768-r3/cloudflare"),
+        TestConfig("pq.cloudflareresearch.com", "x25519/Kyber-768-r3"),
 
         TestConfig("qsc.eu-de.kms.cloud.ibm.com", "secp256r1/Kyber-512-r3"),
         TestConfig("qsc.eu-de.kms.cloud.ibm.com", "secp384r1/Kyber-768-r3"),
