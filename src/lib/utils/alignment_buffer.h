@@ -77,8 +77,10 @@ class AlignmentBuffer {
        * Fills the currently unused bytes of the buffer with zero bytes
        */
       void fill_up_with_zeros() {
-         clear_mem(&m_buffer[m_position], elements_until_alignment());
-         m_position = m_buffer.size();
+         if(!ready_to_consume()) {
+            clear_mem(&m_buffer[m_position], elements_until_alignment());
+            m_position = m_buffer.size();
+         }
       }
 
       /**
