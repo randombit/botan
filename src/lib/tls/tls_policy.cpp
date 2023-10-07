@@ -565,17 +565,24 @@ void print_vec(std::ostream& o, const char* key, const std::vector<std::string>&
    o << '\n';
 }
 
-void print_vec(std::ostream& o, const char* key, const std::vector<Group_Params>& v) {
-   o << key << " = ";
-   for(size_t i = 0; i != v.size(); ++i) {
-      if(auto name = v[i].to_string()) {
-         o << name.value();
-         if(i != v.size() - 1) {
-            o << ' ';
-         }
+void print_vec(std::ostream& o, const char* key, const std::vector<Group_Params>& params) {
+   // first filter out any groups we don't have a name for:
+   std::vector<std::string> names;
+   for(auto p : params) {
+      if(auto name = p.to_string()) {
+         names.push_back(name.value());
       }
    }
-   o << '\n';
+
+   o << key << " = ";
+
+   for(size_t i = 0; i != names.size(); ++i) {
+      o << names[i];
+      if(i != names.size() - 1) {
+         o << " ";
+      }
+   }
+   o << "\n";
 }
 
 void print_bool(std::ostream& o, const char* key, bool b) {
