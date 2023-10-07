@@ -269,6 +269,17 @@ std::vector<Test::Result> test_alignment_buffer() {
 
                result.test_is_eq("prefix", v(out.first(16)), v(first_half_data));
                result.test_is_eq("zero-padding", v(out.last(16)), std::vector<uint8_t>(16, 0));
+
+               // Regression test for GH #3734
+               // fill_up_with_zeros() must work if called on a full (ready to consume) alignment buffer
+               b.append(data);
+               result.confirm("ready_to_consume()", b.ready_to_consume());
+               result.test_eq("elements_until_alignment()", b.elements_until_alignment(), 0);
+
+               b.fill_up_with_zeros();
+               const auto out_without_padding = b.consume();
+
+               result.test_is_eq("no padding", v(out_without_padding), v(data));
             }),
 
       CHECK("Handle unaligned data in Alignment Buffer (no block-defer)",
