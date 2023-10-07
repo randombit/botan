@@ -745,13 +745,21 @@ void CRL_Distribution_Points::decode_inner(const std::vector<uint8_t>& buf) {
 }
 
 void CRL_Distribution_Points::Distribution_Point::encode_into(DER_Encoder& der) const {
-   der.start_sequence()
-      .start_cons(ASN1_Type(0), ASN1_Class::ContextSpecific)
-      .start_cons(ASN1_Type(0), ASN1_Class::ContextSpecific)
-      .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, m_point.get_first_attribute("URI"))
-      .end_cons()
-      .end_cons()
-      .end_cons();
+   if(!m_point.get_attributes().contains("URI")) {
+      throw Not_Implemented("Empty CRL_Distribution_Point encoding");
+   }
+
+   const auto range = m_point.get_attributes().equal_range("URI");
+
+   for(auto i = range.first; i != range.second; ++i) {
+      der.start_sequence()
+         .start_cons(ASN1_Type(0), ASN1_Class::ContextSpecific)
+         .start_cons(ASN1_Type(0), ASN1_Class::ContextSpecific)
+         .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, i->second)
+         .end_cons()
+         .end_cons()
+         .end_cons();
+   }
 }
 
 void CRL_Distribution_Points::Distribution_Point::decode_from(BER_Decoder& ber) {
