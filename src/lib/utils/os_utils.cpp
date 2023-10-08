@@ -52,6 +52,10 @@
    #define NOMINMAX 1
    #define _WINSOCKAPI_  // stop windows.h including winsock.h
    #include <windows.h>
+   #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+      #include <libloaderapi.h>
+      #include <stringapiset.h>
+   #endif
 #endif
 
 #if defined(BOTAN_TARGET_OS_IS_ANDROID)
@@ -624,8 +628,19 @@ void OS::set_thread_name(std::thread& thread, const std::string& name) {
    #elif defined(BOTAN_TARGET_OS_IS_NETBSD)
    static_cast<void>(pthread_set_name_np(thread.native_handle(), "%s", const_cast<char*>(name.c_str())));
    #elif defined(BOTAN_TARGET_OS_HAS_WIN32) && defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-   // Using SetThreadDescription from Win10
-   BOTAN_UNUSED(thread, name);
+   typedef HRESULT(WINAPI * std_proc)(HANDLE, PCWSTR);
+   HMODULE kern = GetModuleHandleA("KernelBase.dll");
+   std_proc set_thread_name = reinterpret_cast<std_proc>(GetProcAddress(kern, "SetThreadDescription"));
+   if(set_thread_name) {
+      std::wstring w;
+      auto sz = MultiByteToWideChar(CP_UTF8, 0, name.data(), -1, nullptr, 0);
+      if(sz > 0) {
+         w.resize(sz);
+         if(MultiByteToWideChar(CP_UTF8, 0, name.data(), -1, &w[0], sz) > 0) {
+            (void)set_thread_name(thread.native_handle(), w.c_str());
+         }
+      }
+   }
    #else
    // TODO other possible oses ?
    // macOs does not seem to allow to name threads other than the current one.
