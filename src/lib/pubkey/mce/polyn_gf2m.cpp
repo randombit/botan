@@ -175,7 +175,9 @@ int polyn_gf2m::get_degree() const {
    return d;
 }
 
-static gf2m eval_aux(const gf2m* /*restrict*/ coeff, gf2m a, int d, const std::shared_ptr<GF2m_Field>& sp_field) {
+namespace {
+
+gf2m eval_aux(const gf2m* /*restrict*/ coeff, gf2m a, int d, const std::shared_ptr<GF2m_Field>& sp_field) {
    gf2m b;
    b = coeff[d--];
    for(; d >= 0; --d) {
@@ -187,6 +189,8 @@ static gf2m eval_aux(const gf2m* /*restrict*/ coeff, gf2m a, int d, const std::s
    }
    return b;
 }
+
+}  // namespace
 
 gf2m polyn_gf2m::eval(gf2m a) {
    return eval_aux(&this->m_coeff[0], a, this->m_deg, this->m_sp_field);
