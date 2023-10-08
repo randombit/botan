@@ -16,7 +16,17 @@ Version 3.2.0, Not Yet Released
 * Add cSHAKE XOF; currently this is not exposed to library users but
   is only for deriving further cSHAKE derived functions. (GH #3671)
 
-* Add improved APIs for key encsapsulation (GH #3611 #3652 #3653)
+* Add improved APIs for key encapsulation (GH #3611 #3652 #3653)
+
+* As Kyber's 90s mode is not included in the NIST draft specification,
+  and most implementations only support the SHAKE based mechanism,
+  the Kyber 90s mode is now deprecated. (GH #3695)
+
+* Previously ``KyberMode`` enums had elements like ``Kyber512`` to identify the
+  scheme. These have changed to have ``_R3`` suffixes (like ``Kyber512_R3``) to
+  clearly indicate these are not the final version but is instead the version
+  from round3 of the PQC competition. The old names continue on as (deprecated)
+  aliases. (GH #3695)
 
 * Fix bugs in various signature algorithms where if a signature
   operation was used after the key object had been deleted, a use
@@ -26,14 +36,17 @@ Version 3.2.0, Not Yet Released
 
 * Add the Russian block cipher Kuznyechik (GH #3680 #3724)
 
+* The ``TLS::Group_Params`` enum is now a class which emulates the
+  behavior of the enumeration. (GH #3729)
+
 * Implement serialization for the Certificate Authority TLS extension
   (GH #3687)
 
 * Refactored the internal buffering logic of most hash functions
-  (GH #3705 #3693)
+  (GH #3705 #3693 #3736)
 
 * Add OS support for naming threads; now Botan thread pool threads
-  are identified by name. (GH #3628)
+  are identified by name. (GH #3628 #3738)
 
 * Updated the TLS documentation to reflect TLS 1.3 support and
   the removal of TLS 1.0 and 1.1. (GH #3708)
