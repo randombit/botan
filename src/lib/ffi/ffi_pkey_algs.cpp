@@ -790,21 +790,21 @@ int botan_privkey_load_kyber(botan_privkey_t* key, const uint8_t privkey[], size
       case 1632:
          return ffi_guard_thunk(__func__, [=]() -> int {
             const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 1632);
-            auto kyber512 = std::make_unique<Botan::Kyber_PrivateKey>(privkey_vec, Botan::KyberMode::Kyber512);
+            auto kyber512 = std::make_unique<Botan::Kyber_PrivateKey>(privkey_vec, Botan::KyberMode::Kyber512_R3);
             *key = new botan_privkey_struct(std::move(kyber512));
             return BOTAN_FFI_SUCCESS;
          });
       case 2400:
          return ffi_guard_thunk(__func__, [=]() -> int {
             const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 2400);
-            auto kyber768 = std::make_unique<Botan::Kyber_PrivateKey>(privkey_vec, Botan::KyberMode::Kyber768);
+            auto kyber768 = std::make_unique<Botan::Kyber_PrivateKey>(privkey_vec, Botan::KyberMode::Kyber768_R3);
             *key = new botan_privkey_struct(std::move(kyber768));
             return BOTAN_FFI_SUCCESS;
          });
       case 3168:
          return ffi_guard_thunk(__func__, [=]() -> int {
             const Botan::secure_vector<uint8_t> privkey_vec(privkey, privkey + 3168);
-            auto kyber1024 = std::make_unique<Botan::Kyber_PrivateKey>(privkey_vec, Botan::KyberMode::Kyber1024);
+            auto kyber1024 = std::make_unique<Botan::Kyber_PrivateKey>(privkey_vec, Botan::KyberMode::Kyber1024_R3);
             *key = new botan_privkey_struct(std::move(kyber1024));
             return BOTAN_FFI_SUCCESS;
          });
@@ -825,21 +825,21 @@ int botan_pubkey_load_kyber(botan_pubkey_t* key, const uint8_t pubkey[], size_t 
       case 800:
          return ffi_guard_thunk(__func__, [=]() -> int {
             const std::vector<uint8_t> pubkey_vec(pubkey, pubkey + 800);
-            auto kyber512 = std::make_unique<Botan::Kyber_PublicKey>(pubkey_vec, Botan::KyberMode::Kyber512);
+            auto kyber512 = std::make_unique<Botan::Kyber_PublicKey>(pubkey_vec, Botan::KyberMode::Kyber512_R3);
             *key = new botan_pubkey_struct(std::move(kyber512));
             return BOTAN_FFI_SUCCESS;
          });
       case 1184:
          return ffi_guard_thunk(__func__, [=]() -> int {
             const std::vector<uint8_t> pubkey_vec(pubkey, pubkey + 1184);
-            auto kyber768 = std::make_unique<Botan::Kyber_PublicKey>(pubkey_vec, Botan::KyberMode::Kyber768);
+            auto kyber768 = std::make_unique<Botan::Kyber_PublicKey>(pubkey_vec, Botan::KyberMode::Kyber768_R3);
             *key = new botan_pubkey_struct(std::move(kyber768));
             return BOTAN_FFI_SUCCESS;
          });
       case 1568:
          return ffi_guard_thunk(__func__, [=]() -> int {
             const std::vector<uint8_t> pubkey_vec(pubkey, pubkey + 1568);
-            auto kyber1024 = std::make_unique<Botan::Kyber_PublicKey>(pubkey_vec, Botan::KyberMode::Kyber1024);
+            auto kyber1024 = std::make_unique<Botan::Kyber_PublicKey>(pubkey_vec, Botan::KyberMode::Kyber1024_R3);
             *key = new botan_pubkey_struct(std::move(kyber1024));
             return BOTAN_FFI_SUCCESS;
          });

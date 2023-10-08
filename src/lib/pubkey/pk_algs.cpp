@@ -402,7 +402,7 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
    if(alg_name == "Kyber") {
       const auto mode = [&]() -> KyberMode {
          if(params.empty()) {
-            return KyberMode::Kyber1024;
+            return KyberMode::Kyber1024_R3;
          }
          return KyberMode(params);
       }();

@@ -1938,11 +1938,11 @@ class Speed final : public Command {
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
       void bench_kyber(const std::string& provider, std::chrono::milliseconds msec) {
          const Botan::KyberMode::Mode all_modes[] = {
-            Botan::KyberMode::Kyber512,
+            Botan::KyberMode::Kyber512_R3,
             Botan::KyberMode::Kyber512_90s,
-            Botan::KyberMode::Kyber768,
+            Botan::KyberMode::Kyber768_R3,
             Botan::KyberMode::Kyber768_90s,
-            Botan::KyberMode::Kyber1024,
+            Botan::KyberMode::Kyber1024_R3,
             Botan::KyberMode::Kyber1024_90s,
          };
 
