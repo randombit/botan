@@ -217,7 +217,7 @@ std::vector<std::string> Text_Policy::get_list(const std::string& key, const std
 std::vector<Group_Params> Text_Policy::read_group_list(std::string_view group_str) const {
    std::vector<Group_Params> groups;
    for(const auto& group_name : split_on(group_str, ' ')) {
-      Group_Params group_id = group_param_from_string(group_name);
+      Group_Params group_id = Group_Params::from_string(group_name).value_or(Group_Params::NONE);
 
 #if !defined(BOTAN_HAS_CURVE_25519)
       if(group_id == Group_Params::X25519)

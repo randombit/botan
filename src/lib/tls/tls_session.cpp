@@ -140,13 +140,13 @@ Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
       if(psk_used() || was_resumption()) {
          if(const auto keyshare = server_hello.extensions().get<Key_Share>()) {
             const auto group = keyshare->selected_group();
-            if(is_dh(group)) {
+            if(group.is_dh_named_group()) {
                return Kex_Algo::DHE_PSK;
-            } else if(is_ecdh(group) || is_x25519(group)) {
+            } else if(group.is_ecdh_named_curve() || group.is_x25519()) {
                return Kex_Algo::ECDHE_PSK;
-            } else if(is_pure_kyber(group)) {
+            } else if(group.is_pure_kyber()) {
                return Kex_Algo::KEM_PSK;
-            } else if(is_hybrid(group)) {
+            } else if(group.is_pqc_hybrid()) {
                return Kex_Algo::HYBRID_PSK;
             }
          } else {
@@ -156,13 +156,13 @@ Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
          const auto keyshare = server_hello.extensions().get<Key_Share>();
          BOTAN_ASSERT_NONNULL(keyshare);
          const auto group = keyshare->selected_group();
-         if(is_dh(group)) {
+         if(group.is_dh_named_group()) {
             return Kex_Algo::DH;
-         } else if(is_ecdh(group) || is_x25519(group)) {
+         } else if(group.is_ecdh_named_curve() || group.is_x25519()) {
             return Kex_Algo::ECDH;
-         } else if(is_pure_kyber(group)) {
+         } else if(group.is_pure_kyber()) {
             return Kex_Algo::KEM;
-         } else if(is_hybrid(group)) {
+         } else if(group.is_pqc_hybrid()) {
             return Kex_Algo::HYBRID;
          }
       }

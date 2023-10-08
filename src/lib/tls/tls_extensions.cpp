@@ -365,7 +365,7 @@ const std::vector<Group_Params>& Supported_Groups::groups() const {
 std::vector<Group_Params> Supported_Groups::ec_groups() const {
    std::vector<Group_Params> ec;
    for(auto g : m_groups) {
-      if(group_param_is_dh(g) == false) {
+      if(g.is_pure_ecc_group()) {
          ec.push_back(g);
       }
    }
@@ -375,7 +375,7 @@ std::vector<Group_Params> Supported_Groups::ec_groups() const {
 std::vector<Group_Params> Supported_Groups::dh_groups() const {
    std::vector<Group_Params> dh;
    for(auto g : m_groups) {
-      if(group_param_is_dh(g) == true) {
+      if(g.is_dh_named_group()) {
          dh.push_back(g);
       }
    }
@@ -386,7 +386,7 @@ std::vector<uint8_t> Supported_Groups::serialize(Connection_Side /*whoami*/) con
    std::vector<uint8_t> buf(2);
 
    for(auto g : m_groups) {
-      const uint16_t id = static_cast<uint16_t>(g);
+      const uint16_t id = g.wire_code();
 
       if(id > 0) {
          buf.push_back(get_byte<0>(id));

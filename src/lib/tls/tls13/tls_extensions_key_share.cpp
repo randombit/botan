@@ -52,9 +52,9 @@ class Key_Share_Entry {
             throw TLS_Exception(Alert::InternalError, "Application did not provide a suitable ephemeral key pair");
          }
 
-         if(is_kem(group)) {
+         if(group.is_kem()) {
             m_key_exchange = m_private_key->public_key_bits();
-         } else if(is_ecdh(group)) {
+         } else if(group.is_ecdh_named_curve()) {
             auto pkey = dynamic_cast<ECDH_PublicKey*>(m_private_key.get());
             if(!pkey) {
                throw TLS_Exception(Alert::InternalError, "Application did not provide a ECDH_PublicKey");
@@ -85,7 +85,7 @@ class Key_Share_Entry {
          std::vector<uint8_t> result;
          result.reserve(m_key_exchange.size() + 2);
 
-         const uint16_t named_curve_id = static_cast<uint16_t>(m_group);
+         const uint16_t named_curve_id = m_group.wire_code();
          result.push_back(get_byte<0>(named_curve_id));
          result.push_back(get_byte<1>(named_curve_id));
          append_tls_length_value(result, m_key_exchange, 2);
@@ -380,8 +380,8 @@ class Key_Share_HelloRetryRequest {
       Key_Share_HelloRetryRequest& operator=(Key_Share_HelloRetryRequest&&) = default;
 
       std::vector<uint8_t> serialize() const {
-         return {get_byte<0>(static_cast<uint16_t>(m_selected_group)),
-                 get_byte<1>(static_cast<uint16_t>(m_selected_group))};
+         auto code = m_selected_group.wire_code();
+         return {get_byte<0>(code), get_byte<1>(code)};
       }
 
       Named_Group selected_group() const { return m_selected_group; }

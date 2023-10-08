@@ -10,6 +10,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/pk_keys.h>
 #include <botan/types.h>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -78,7 +79,7 @@ Auth_Method BOTAN_TEST_API auth_method_from_string(std::string_view str);
 /*
 * Matches with wire encoding
 */
-enum class Group_Params : uint16_t {
+enum class Group_Params_Code : uint16_t {
    NONE = 0,
 
    SECP256R1 = 23,
@@ -120,48 +121,72 @@ enum class Group_Params : uint16_t {
    HYBRID_SECP521R1_KYBER_1024_R3_OQS = 0x2F3D,
 };
 
-constexpr bool is_x25519(const Group_Params group) {
-   return group == Group_Params::X25519;
-}
+class BOTAN_PUBLIC_API(3, 2) Group_Params final {
+   public:
+      using enum Group_Params_Code;
 
-constexpr bool is_ecdh(const Group_Params group) {
-   return group == Group_Params::SECP256R1 || group == Group_Params::SECP384R1 || group == Group_Params::SECP521R1 ||
-          group == Group_Params::BRAINPOOL256R1 || group == Group_Params::BRAINPOOL384R1 ||
-          group == Group_Params::BRAINPOOL512R1;
-}
+      constexpr Group_Params() : m_code(Group_Params_Code::NONE) {}
 
-constexpr bool is_dh(const Group_Params group) {
-   return group == Group_Params::FFDHE_2048 || group == Group_Params::FFDHE_3072 || group == Group_Params::FFDHE_4096 ||
-          group == Group_Params::FFDHE_6144 || group == Group_Params::FFDHE_8192;
-}
+      constexpr Group_Params(Group_Params_Code code) : m_code(code) {}
 
-constexpr bool is_pure_kyber(const Group_Params group) {
-   return group == Group_Params::KYBER_512_R3_OQS || group == Group_Params::KYBER_768_R3_OQS ||
-          group == Group_Params::KYBER_1024_R3_OQS;
-}
+      constexpr Group_Params(uint16_t code) : m_code(static_cast<Group_Params_Code>(code)) {}
 
-constexpr bool is_hybrid(const Group_Params group) {
-   return group == Group_Params::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE ||
-          group == Group_Params::HYBRID_X25519_KYBER_512_R3_OQS ||
-          group == Group_Params::HYBRID_X25519_KYBER_768_R3_OQS ||
-          group == Group_Params::HYBRID_SECP256R1_KYBER_512_R3_OQS ||
-          group == Group_Params::HYBRID_SECP256R1_KYBER_768_R3_OQS ||
-          group == Group_Params::HYBRID_SECP384R1_KYBER_768_R3_OQS ||
-          group == Group_Params::HYBRID_SECP521R1_KYBER_1024_R3_OQS;
-}
+      /**
+      * @returns std::nullopt if an unknown name
+      */
+      static std::optional<Group_Params> from_string(std::string_view group_name);
 
-constexpr bool is_kem(const Group_Params group) {
-   return is_pure_kyber(group) || is_hybrid(group);
-}
+      constexpr bool operator==(Group_Params_Code code) const { return m_code == code; }
 
-constexpr bool is_post_quantum(const Group_Params group) {
-   return is_pure_kyber(group) || is_hybrid(group);
-}
+      constexpr bool operator==(Group_Params other) const { return m_code == other.m_code; }
 
-std::string group_param_to_string(Group_Params group);
-Group_Params group_param_from_string(std::string_view group_name);
-std::vector<std::pair<std::string, std::string>> hybrid_group_param_to_algorithm_specs(Group_Params group);
-bool group_param_is_dh(Group_Params group);
+      constexpr bool operator<(Group_Params other) const { return m_code < other.m_code; }
+
+      constexpr Group_Params_Code code() const { return m_code; }
+
+      constexpr uint16_t wire_code() const { return static_cast<uint16_t>(m_code); }
+
+      constexpr bool is_x25519() const { return m_code == Group_Params_Code::X25519; }
+
+      constexpr bool is_ecdh_named_curve() const {
+         return m_code == Group_Params_Code::SECP256R1 || m_code == Group_Params_Code::SECP384R1 ||
+                m_code == Group_Params_Code::SECP521R1 || m_code == Group_Params_Code::BRAINPOOL256R1 ||
+                m_code == Group_Params_Code::BRAINPOOL384R1 || m_code == Group_Params_Code::BRAINPOOL512R1;
+      }
+
+      constexpr bool is_dh_named_group() const {
+         return m_code == Group_Params_Code::FFDHE_2048 || m_code == Group_Params_Code::FFDHE_3072 ||
+                m_code == Group_Params_Code::FFDHE_4096 || m_code == Group_Params_Code::FFDHE_6144 ||
+                m_code == Group_Params_Code::FFDHE_8192;
+      }
+
+      constexpr bool is_pure_kyber() const {
+         return m_code == Group_Params_Code::KYBER_512_R3_OQS || m_code == Group_Params_Code::KYBER_768_R3_OQS ||
+                m_code == Group_Params_Code::KYBER_1024_R3_OQS;
+      }
+
+      constexpr bool is_pure_ecc_group() const { return is_x25519() || is_ecdh_named_curve(); }
+
+      constexpr bool is_post_quantum() const { return is_pure_kyber() || is_pqc_hybrid(); }
+
+      constexpr bool is_pqc_hybrid() const {
+         return m_code == Group_Params::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE ||
+                m_code == Group_Params_Code::HYBRID_X25519_KYBER_512_R3_OQS ||
+                m_code == Group_Params_Code::HYBRID_X25519_KYBER_768_R3_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP256R1_KYBER_512_R3_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP256R1_KYBER_768_R3_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP384R1_KYBER_768_R3_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP521R1_KYBER_1024_R3_OQS;
+      }
+
+      constexpr bool is_kem() const { return is_pure_kyber() || is_pqc_hybrid(); }
+
+      // Returns std::nullopt if the param has no known name
+      std::optional<std::string> to_string() const;
+
+   private:
+      Group_Params_Code m_code;
+};
 
 enum class Kex_Algo {
    STATIC_RSA,

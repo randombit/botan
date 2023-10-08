@@ -22,9 +22,9 @@ namespace Botan::TLS {
 namespace {
 
 std::vector<std::pair<std::string, std::string>> algorithm_specs_for_group(Group_Params group) {
-   BOTAN_ARG_CHECK(is_hybrid(group), "Group is not hybrid");
+   BOTAN_ARG_CHECK(group.is_pqc_hybrid(), "Group is not hybrid");
 
-   switch(group) {
+   switch(group.code()) {
       case Group_Params::HYBRID_X25519_KYBER_512_R3_OQS:
       case Group_Params::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE:
          return {{"Curve25519", "Curve25519"}, {"Kyber", "Kyber-512-r3"}};
@@ -46,7 +46,7 @@ std::vector<std::pair<std::string, std::string>> algorithm_specs_for_group(Group
 }
 
 std::vector<AlgorithmIdentifier> algorithm_identifiers_for_group(Group_Params group) {
-   BOTAN_ASSERT_NOMSG(is_hybrid(group));
+   BOTAN_ASSERT_NOMSG(group.is_pqc_hybrid());
 
    const auto specs = algorithm_specs_for_group(group);
    std::vector<AlgorithmIdentifier> result;
@@ -67,13 +67,13 @@ std::vector<AlgorithmIdentifier> algorithm_identifiers_for_group(Group_Params gr
 }
 
 std::vector<size_t> public_value_lengths_for_group(Group_Params group) {
-   BOTAN_ASSERT_NOMSG(is_hybrid(group));
+   BOTAN_ASSERT_NOMSG(group.is_pqc_hybrid());
 
    // This duplicates information of the algorithm internals.
    //
    // TODO: Find a way to expose important algorithm constants globally
    //       in the library, to avoid violating the DRY principle.
-   switch(group) {
+   switch(group.code()) {
       case Group_Params::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE:
       case Group_Params::HYBRID_X25519_KYBER_512_R3_OQS:
          return {32, 800};
