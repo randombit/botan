@@ -12,7 +12,7 @@ Public and private keys are represented by classes ``Public_Key`` and
 ``Private_Key``. Both derive from ``Asymmetric_Key``.
 
 Currently there is an inheritance relationship between ``Private_Key`` and
-``Public_Key``, so that a private key can also be used as the cooresponding
+``Public_Key``, so that a private key can also be used as the corresponding
 public key. It is best to avoid relying on this, as this inheritance will be
 removed in a future major release.
 
@@ -102,7 +102,7 @@ Post-quantum key encapsulation scheme based on lattices.
 .. note::
 
    Currently two modes for Kyber are defined: the round3 specification
-   from the NIST PQC competetition, and the "90s mode" (which uses
+   from the NIST PQC competition, and the "90s mode" (which uses
    AES/SHA-2 instead of SHA-3 based primitives). The 90s mode Kyber is
    deprecated and will be removed in a future release.
 
@@ -457,7 +457,7 @@ loaded key. If the key check fails a respective error is thrown.
 .. literalinclude:: /../src/examples/check_key.cpp
    :language: cpp
 
-Public Key Encryption/Decrpytion
+Public Key Encryption/Decryption
 ----------------------------------
 
 Safe public key encryption requires the use of a padding scheme which hides
@@ -767,7 +767,7 @@ both the message along with their ephemeral public key. Then the recipient uses 
 provided public key along with their private key to complete the key exchange, recover the
 shared secret, and decrypt the message.
 
-Typically the raw output of the key agreement function is not uniformily distributed,
+Typically the raw output of the key agreement function is not uniformly distributed,
 and may not be of an appropriate length to use as a key. To resolve these problems,
 key agreement will use a :ref:`key_derivation_function` on the shared secret to
 produce an output of the desired length.
@@ -824,8 +824,8 @@ Key Encapsulation
 Key encapsulation (KEM) is a variation on public key encryption which is commonly used by
 post-quantum secure schemes. Instead of choosing a random secret and encrypting it, as in
 typical public key encryption, a KEM encryption takes no inputs and produces two values,
-the shared secret and the encapulated key. The decryption operation takes in the
-encapulated key and returns the shared secret.
+the shared secret and the encapsulated key. The decryption operation takes in the
+encapsulated key and returns the shared secret.
 
 .. cpp:class:: PK_KEM_Encryptor
 
@@ -987,7 +987,7 @@ is based on `RFC 8391 "XMSS: eXtended Merkle Signature Scheme"
    XMSS is stateful, meaning the private key must be updated after
    each signature. If the same private key is ever used to generate
    two different signatures, then the scheme becomes insecure. For
-   this reason it can be challening to use XMSS securely.
+   this reason it can be challenging to use XMSS securely.
 
 XMSS uses the Botan interfaces for public key cryptography.
 The following algorithms are implemented:
