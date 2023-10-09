@@ -103,6 +103,13 @@ enum class Group_Params_Code : uint16_t {
    KYBER_768_R3_OQS = 0x023C,
    KYBER_1024_R3_OQS = 0x023D,
 
+   eFRODOKEM_640_SHAKE_OQS = 0x0201,
+   eFRODOKEM_976_SHAKE_OQS = 0x0203,
+   eFRODOKEM_1344_SHAKE_OQS = 0x0205,
+   eFRODOKEM_640_AES_OQS = 0x0200,
+   eFRODOKEM_976_AES_OQS = 0x0202,
+   eFRODOKEM_1344_AES_OQS = 0x0204,
+
    // Cloudflare code points for hybrid PQC
    // https://blog.cloudflare.com/post-quantum-for-all/
    HYBRID_X25519_KYBER_512_R3_CLOUDFLARE = 0xFE30,
@@ -117,8 +124,22 @@ enum class Group_Params_Code : uint16_t {
 
    HYBRID_SECP256R1_KYBER_512_R3_OQS = 0x2F3A,
    HYBRID_SECP256R1_KYBER_768_R3_OQS = 0x639A,
+
    HYBRID_SECP384R1_KYBER_768_R3_OQS = 0x2F3C,
+
    HYBRID_SECP521R1_KYBER_1024_R3_OQS = 0x2F3D,
+
+   HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS = 0x2F81,
+   HYBRID_X25519_eFRODOKEM_640_AES_OQS = 0x2F80,
+
+   HYBRID_SECP256R1_eFRODOKEM_640_SHAKE_OQS = 0x2F01,
+   HYBRID_SECP256R1_eFRODOKEM_640_AES_OQS = 0x2F00,
+
+   HYBRID_SECP384R1_eFRODOKEM_976_SHAKE_OQS = 0x2F03,
+   HYBRID_SECP384R1_eFRODOKEM_976_AES_OQS = 0x2F02,
+
+   HYBRID_SECP521R1_eFRODOKEM_1344_SHAKE_OQS = 0x2F05,
+   HYBRID_SECP521R1_eFRODOKEM_1344_AES_OQS = 0x2F04,
 };
 
 class BOTAN_PUBLIC_API(3, 2) Group_Params final {
@@ -170,21 +191,38 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
                 m_code == Group_Params_Code::KYBER_1024_R3_OQS;
       }
 
-      constexpr bool is_pure_ecc_group() const { return is_x25519() || is_ecdh_named_curve(); }
-
-      constexpr bool is_post_quantum() const { return is_pure_kyber() || is_pqc_hybrid(); }
-
-      constexpr bool is_pqc_hybrid() const {
-         return m_code == Group_Params::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE ||
-                m_code == Group_Params_Code::HYBRID_X25519_KYBER_512_R3_OQS ||
-                m_code == Group_Params_Code::HYBRID_X25519_KYBER_768_R3_OQS ||
-                m_code == Group_Params_Code::HYBRID_SECP256R1_KYBER_512_R3_OQS ||
-                m_code == Group_Params_Code::HYBRID_SECP256R1_KYBER_768_R3_OQS ||
-                m_code == Group_Params_Code::HYBRID_SECP384R1_KYBER_768_R3_OQS ||
-                m_code == Group_Params_Code::HYBRID_SECP521R1_KYBER_1024_R3_OQS;
+      constexpr bool is_pure_frodokem() const {
+         return m_code == Group_Params_Code::eFRODOKEM_640_SHAKE_OQS ||
+                m_code == Group_Params_Code::eFRODOKEM_976_SHAKE_OQS ||
+                m_code == Group_Params_Code::eFRODOKEM_1344_SHAKE_OQS ||
+                m_code == Group_Params_Code::eFRODOKEM_640_AES_OQS ||
+                m_code == Group_Params_Code::eFRODOKEM_976_AES_OQS ||
+                m_code == Group_Params_Code::eFRODOKEM_1344_AES_OQS;
       }
 
-      constexpr bool is_kem() const { return is_pure_kyber() || is_pqc_hybrid(); }
+      constexpr bool is_pure_ecc_group() const { return is_x25519() || is_ecdh_named_curve(); }
+
+      constexpr bool is_post_quantum() const { return is_pure_kyber() || is_pure_frodokem() || is_pqc_hybrid(); }
+
+      constexpr bool is_pqc_hybrid() const {
+         return m_code == Group_Params_Code::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE ||
+                m_code == Group_Params_Code::HYBRID_X25519_KYBER_512_R3_OQS ||
+                m_code == Group_Params_Code::HYBRID_X25519_KYBER_768_R3_OQS ||
+                m_code == Group_Params_Code::HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS ||
+                m_code == Group_Params_Code::HYBRID_X25519_eFRODOKEM_640_AES_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP256R1_KYBER_512_R3_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP256R1_KYBER_768_R3_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP256R1_eFRODOKEM_640_SHAKE_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP256R1_eFRODOKEM_640_AES_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP384R1_KYBER_768_R3_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP384R1_eFRODOKEM_976_SHAKE_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP384R1_eFRODOKEM_976_AES_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP521R1_KYBER_1024_R3_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP521R1_eFRODOKEM_1344_SHAKE_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP521R1_eFRODOKEM_1344_AES_OQS;
+      }
+
+      constexpr bool is_kem() const { return is_pure_kyber() || is_pure_frodokem() || is_pqc_hybrid(); }
 
       // Returns std::nullopt if the param has no known name
       std::optional<std::string> to_string() const;
