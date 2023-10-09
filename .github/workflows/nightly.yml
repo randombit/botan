@@ -56,6 +56,23 @@ jobs:
       - name: Valgrind Checks
         run: python3 ./src/scripts/ci_build.py --cc=gcc --make-tool=make valgrind-full
 
+  hybrid_tls_interop:
+    name: "PQ/T TLS 1.3"
+
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Build Agent
+        uses: ./.github/actions/setup-build-agent
+        with:
+          target: hybrid-tls13-interop-test
+          cache-key: linux-x86_64-hybrid_tls
+
+      - name: Hybrid PQ/T TLS 1.3 Online Interop Checks
+        run: python3 ./src/scripts/ci_build.py --cc=gcc --make-tool=make hybrid-tls13-interop-test
+
   tls_anvil_server_test:
     name: "TLS-Anvil (server)"
 
