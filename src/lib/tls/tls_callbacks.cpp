@@ -30,6 +30,10 @@
    #include <botan/kyber.h>
 #endif
 
+#if defined(BOTAN_HAS_FRODOKEM)
+   #include <botan/frodokem.h>
+#endif
+
 #if defined(BOTAN_HAS_TLS_13_PQC)
    #include <botan/internal/hybrid_public_key.h>
 #endif
@@ -157,6 +161,12 @@ std::unique_ptr<Private_Key> TLS::Callbacks::tls_kem_generate_key(TLS::Group_Par
    }
 #endif
 
+#if defined(BOTAN_HAS_FRODOKEM)
+   if(group.is_pure_frodokem()) {
+      return std::make_unique<FrodoKEM_PrivateKey>(rng, FrodoKEMMode(group.to_string().value()));
+   }
+#endif
+
 #if defined(BOTAN_HAS_TLS_13_PQC)
    if(group.is_pqc_hybrid()) {
       return Hybrid_KEM_PrivateKey::generate_from_group(group, rng);
@@ -182,6 +192,12 @@ KEM_Encapsulation TLS::Callbacks::tls_kem_encapsulate(TLS::Group_Params group,
 #if defined(BOTAN_HAS_KYBER)
          if(group.is_pure_kyber()) {
             return std::make_unique<Kyber_PublicKey>(encoded_public_key, KyberMode(group.to_string().value()));
+         }
+#endif
+
+#if defined(BOTAN_HAS_FRODOKEM)
+         if(group.is_pure_frodokem()) {
+            return std::make_unique<FrodoKEM_PublicKey>(encoded_public_key, FrodoKEMMode(group.to_string().value()));
          }
 #endif
 
