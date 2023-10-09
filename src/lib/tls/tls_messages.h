@@ -109,6 +109,7 @@ class BOTAN_UNSTABLE_API Client_Hello : public Handshake_Message {
 
       std::vector<Group_Params> supported_ecc_curves() const;
 
+      // This returns any groups in the FFDHE range
       std::vector<Group_Params> supported_dh_groups() const;
 
       std::vector<Protocol_Version> supported_versions() const;

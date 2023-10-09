@@ -154,6 +154,11 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
                 m_code == Group_Params_Code::BRAINPOOL384R1 || m_code == Group_Params_Code::BRAINPOOL512R1;
       }
 
+      constexpr bool is_in_ffdhe_range() const {
+         // See RFC 7919
+         return wire_code() >= 256 && wire_code() < 512;
+      }
+
       constexpr bool is_dh_named_group() const {
          return m_code == Group_Params_Code::FFDHE_2048 || m_code == Group_Params_Code::FFDHE_3072 ||
                 m_code == Group_Params_Code::FFDHE_4096 || m_code == Group_Params_Code::FFDHE_6144 ||

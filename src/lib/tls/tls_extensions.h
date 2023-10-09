@@ -243,7 +243,11 @@ class BOTAN_UNSTABLE_API Supported_Groups final : public Extension {
       Extension_Code type() const override { return static_type(); }
 
       const std::vector<Group_Params>& groups() const;
+
+      // Returns the list of groups we recognize as ECDH curves
       std::vector<Group_Params> ec_groups() const;
+
+      // Returns the list of any groups in the FFDHE range
       std::vector<Group_Params> dh_groups() const;
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;

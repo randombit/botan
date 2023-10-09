@@ -375,7 +375,7 @@ std::vector<Group_Params> Supported_Groups::ec_groups() const {
 std::vector<Group_Params> Supported_Groups::dh_groups() const {
    std::vector<Group_Params> dh;
    for(auto g : m_groups) {
-      if(g.is_dh_named_group()) {
+      if(g.is_in_ffdhe_range()) {
          dh.push_back(g);
       }
    }
