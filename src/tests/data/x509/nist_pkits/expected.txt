@@ -1,0 +1,10 @@
+ValidSignaturesTest1:Verified
+InvalidCASignatureTest2:Signature error
+InvalidEESignatureTest3:Signature error
+#ValidDSASignaturesTest4:Verified # uses dsaWithSha1
+#ValidDSAParameterInheritanceTest5:Verified # unable to load public key, even with OpenSSL
+InvalidDSASignatureTest6:Signature error
+InvalidCAnotBeforeDateTest1:Certificate is not yet valid
+Validpre2000UTCnotBeforeDateTest3:Verified
+ValidGeneralizedTimenotBeforeDateTest4:Verified
+InvalidCAnotAfterDateTest5:Certificate has expired

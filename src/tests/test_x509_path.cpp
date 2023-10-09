@@ -261,7 +261,91 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run() {
    return results;
 }
 
-BOTAN_REGISTER_TEST("x509", "x509_path_nist", NIST_Path_Validation_Tests);
+//BOTAN_REGISTER_TEST("x509", "x509_path_nist", NIST_Path_Validation_Tests);
+
+class NIST_PKITS_Path_Validation_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override;
+};
+
+std::vector<Test::Result> NIST_PKITS_Path_Validation_Tests::run() {
+   if(Botan::has_filesystem_impl() == false) {
+      return {Test::Result::Note("NIST PKITS path validation", "Skipping due to missing filesystem access")};
+   }
+
+   std::vector<Test::Result> results;
+
+   const std::string nist_test_dir = Test::data_dir() + "/x509/nist_pkits/tests";  // FIXME remove tests
+
+   std::map<std::string, std::string> expected = read_results(Test::data_file("x509/nist_pkits/expected.txt"));
+
+   const Botan::X509_Certificate root_cert(nist_test_dir + "/TrustAnchorRootCertificate.crt");
+   const Botan::X509_CRL root_crl(nist_test_dir + "/TrustAnchorRootCRL.crl");
+
+   const auto validation_time = Botan::calendar_point(2023, 10, 9, 9, 30, 33).to_std_timepoint();
+
+   for(auto i = expected.begin(); i != expected.end(); ++i) {
+      Test::Result result("NIST PKITS path validation");
+      result.start_timer();
+
+      const std::string test_name = i->first;
+
+      try {
+         const std::string expected_result = i->second;
+
+         const std::string test_dir = Botan::fmt("{}/{}", nist_test_dir, test_name);
+
+         const std::vector<std::string> all_files = Botan::get_files_recursive(test_dir);
+
+         if(all_files.empty()) {
+            result.test_failure("No test files found in " + test_dir);
+            results.push_back(result);
+            continue;
+         }
+
+         Botan::Certificate_Store_In_Memory store;
+
+         store.add_certificate(root_cert);
+         store.add_crl(root_crl);
+
+         std::unique_ptr<Botan::X509_Certificate> end_user;
+
+         for(const auto& file : all_files) {
+            if(file.find("EE.crt") != std::string::npos) {
+               end_user = std::make_unique<Botan::X509_Certificate>(file);
+            } else if(file.find(".crt") != std::string::npos) {
+               store.add_certificate(Botan::X509_Certificate(file));
+            } else if(file.find(".crl") != std::string::npos) {
+               Botan::DataSource_Stream in(file, true);
+               Botan::X509_CRL crl(in);
+               store.add_crl(crl);
+            }
+         }
+
+         if(!end_user) {
+            result.test_failure("Missing EE certificate in " + test_dir);
+            results.push_back(result);
+            continue;
+         }
+
+         Botan::Path_Validation_Restrictions restrictions;
+
+         Botan::Path_Validation_Result validation_result = Botan::x509_path_validate(
+            *end_user, restrictions, store, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
+
+         result.test_eq(test_name + " path validation result", validation_result.result_string(), expected_result);
+      } catch(std::exception& e) {
+         result.test_failure(test_name, e.what());
+      }
+
+      result.end_timer();
+      results.push_back(result);
+   }
+
+   return results;
+}
+
+BOTAN_REGISTER_TEST("x509", "x509_path_nist_pkits", NIST_PKITS_Path_Validation_Tests);
 
 class Extended_Path_Validation_Tests final : public Test {
    public:
