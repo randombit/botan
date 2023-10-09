@@ -60,9 +60,9 @@ The latest release from the Botan2 release series is
 released on 2022-11-16.
 
 The latest release from the Botan3 release series is
-`3.1.1 <https://botan.randombit.net/releases/Botan-3.1.1.tar.xz>`_
-`(sig) <https://botan.randombit.net/releases/Botan-3.1.1.tar.xz.asc>`_,
-released on 2023-07-13.
+`3.2.0 <https://botan.randombit.net/releases/Botan-3.2.0.tar.xz>`_
+`(sig) <https://botan.randombit.net/releases/Botan-3.2.0.tar.xz.asc>`_,
+released on 2023-10-09.
 
 All releases are signed with a `PGP key <https://botan.randombit.net/pgpkey.txt>`_.
 See the `release notes <https://botan.randombit.net/news.html>`_ for
