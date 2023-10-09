@@ -401,6 +401,8 @@ class BOTAN_PUBLIC_API(2, 0) CRL_Distribution_Points final : public Certificate_
             void encode_into(DER_Encoder&) const override;
             void decode_from(BER_Decoder&) override;
 
+            explicit Distribution_Point(const AlternativeName& name = AlternativeName()) : m_point(name) {}
+
             const AlternativeName& point() const { return m_point; }
 
          private:

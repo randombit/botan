@@ -1275,6 +1275,20 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    /* Create the CA object */
    Botan::X509_CA ca(ca_cert, ca_key, hash_fn, sig_padding, Test::rng());
 
+   /* Prepare CDP extension */
+   std::vector<std::string> cdp_urls = {
+      "http://example.com/crl1.pem",
+      "ldap://ldap.example.com/cn=crl1,dc=example,dc=com?certificateRevocationList;binary"};
+
+   std::vector<Botan::Cert_Extension::CRL_Distribution_Points::Distribution_Point> dps;
+
+   for(const auto& uri : cdp_urls) {
+      Botan::AlternativeName cdp_alt_name("", uri);
+      Botan::Cert_Extension::CRL_Distribution_Points::Distribution_Point dp(cdp_alt_name);
+
+      dps.emplace_back(dp);
+   }
+
    auto user_key = make_a_private_key(sig_algo);
 
    Botan::X509_Cert_Options opts("Test User 1/US/Botan Project/Testing");
@@ -1285,6 +1299,7 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    const Botan::OID oid("1.2.3.4.5.6.7.8.9.1");
    const Botan::OID ku_oid = Botan::OID::from_string("X509v3.KeyUsage");
    req_extensions.add(std::make_unique<String_Extension>("AAAAAAAAAAAAAABCDEF"), false);
+   req_extensions.add(std::make_unique<Botan::Cert_Extension::CRL_Distribution_Points>(dps));
    opts.extensions = req_extensions;
    opts.set_padding_scheme(sig_padding);
 
@@ -1310,6 +1325,18 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
          "Custom extension value matches in self-signed certificate", string_ext->value(), "AAAAAAAAAAAAAABCDEF");
    }
 
+   // check if CDPs are present in the self-signed cert
+   auto cert_cdps =
+      self_signed_cert.v3_extensions().get_extension_object_as<Botan::Cert_Extension::CRL_Distribution_Points>();
+
+   if(result.confirm("CRL Distribution Points extension present in self-signed certificate",
+                     !cert_cdps->crl_distribution_urls().empty())) {
+      for(const auto& cdp : cert_cdps->distribution_points()) {
+         result.confirm("CDP URI present in self-signed certificate",
+                        std::ranges::find(cdp_urls, cdp.point().get_first_attribute("URI")) != cdp_urls.end());
+      }
+   }
+
    const Botan::PKCS10_Request user_req = Botan::X509::create_cert_req(opts, *user_key, hash_fn, Test::rng());
 
    /* Create a CA-signed certificate */
@@ -1333,6 +1360,17 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    if(result.confirm("Custom extension present in CA-signed certificate", string_ext != nullptr)) {
       result.test_eq(
          "Custom extension value matches in CA-signed certificate", string_ext->value(), "AAAAAAAAAAAAAABCDEF");
+   }
+
+   // check if CDPs are present in the CA-signed cert
+   cert_cdps = ca_signed_cert.v3_extensions().get_extension_object_as<Botan::Cert_Extension::CRL_Distribution_Points>();
+
+   if(result.confirm("CRL Distribution Points extension present in self-signed certificate",
+                     !cert_cdps->crl_distribution_urls().empty())) {
+      for(const auto& cdp : cert_cdps->distribution_points()) {
+         result.confirm("CDP URI present in self-signed certificate",
+                        std::ranges::find(cdp_urls, cdp.point().get_first_attribute("URI")) != cdp_urls.end());
+      }
    }
 
    return result;

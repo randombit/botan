@@ -723,7 +723,9 @@ void CRL_ReasonCode::decode_inner(const std::vector<uint8_t>& in) {
 }
 
 std::vector<uint8_t> CRL_Distribution_Points::encode_inner() const {
-   throw Not_Implemented("CRL_Distribution_Points encoding");
+   std::vector<uint8_t> output;
+   DER_Encoder(output).start_sequence().encode_list(m_distribution_points).end_cons();
+   return output;
 }
 
 void CRL_Distribution_Points::decode_inner(const std::vector<uint8_t>& buf) {
@@ -742,8 +744,22 @@ void CRL_Distribution_Points::decode_inner(const std::vector<uint8_t>& buf) {
    m_crl_distribution_urls.push_back(ss.str());
 }
 
-void CRL_Distribution_Points::Distribution_Point::encode_into(DER_Encoder& /*to*/) const {
-   throw Not_Implemented("CRL_Distribution_Points encoding");
+void CRL_Distribution_Points::Distribution_Point::encode_into(DER_Encoder& der) const {
+   if(!m_point.get_attributes().contains("URI")) {
+      throw Not_Implemented("Empty CRL_Distribution_Point encoding");
+   }
+
+   const auto range = m_point.get_attributes().equal_range("URI");
+
+   for(auto i = range.first; i != range.second; ++i) {
+      der.start_sequence()
+         .start_cons(ASN1_Type(0), ASN1_Class::ContextSpecific)
+         .start_cons(ASN1_Type(0), ASN1_Class::ContextSpecific)
+         .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, i->second)
+         .end_cons()
+         .end_cons()
+         .end_cons();
+   }
 }
 
 void CRL_Distribution_Points::Distribution_Point::decode_from(BER_Decoder& ber) {
