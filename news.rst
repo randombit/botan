@@ -1,11 +1,11 @@
 Release Notes
 ========================================
 
-Version 3.2.0, Not Yet Released
+Version 3.2.0, 2023-10-09
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add support for (experimental!) post-quantum secure key exchange
-  in TLS 1.3 (GH #3609 #3732 #3733)
+  in TLS 1.3 (GH #3609 #3732 #3733 #3739)
 
 * Add support for TLS PSK (GH #3618)
 
@@ -69,6 +69,9 @@ Version 3.2.0, Not Yet Released
 
 * Add helper for buffer alignment, and adopt it within the hash function
   implementations. (GH #3693)
+
+* Added support for encoding CRL Distribution Points extension in new
+  certificates (GH #3712)
 
 * Internal refactoring of SHA-3 to support further SHA-3 derived functionality
   (GH #3673)
