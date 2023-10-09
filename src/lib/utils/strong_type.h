@@ -137,6 +137,12 @@ class Strong_Adapter<T> : public Strong_Base<T> {
       {
          this->get().resize(size);
       }
+
+      decltype(auto) operator[](size_type i) const noexcept(noexcept(this->get().operator[](i))) {
+         return this->get()[i];
+      }
+
+      decltype(auto) operator[](size_type i) noexcept(noexcept(this->get().operator[](i))) { return this->get()[i]; }
 };
 
 }  // namespace detail
@@ -571,6 +577,8 @@ class StrongSpan {
       decltype(auto) end() noexcept(noexcept(this->m_span.end())) { return this->m_span.end(); }
 
       decltype(auto) end() const noexcept(noexcept(this->m_span.end())) { return this->m_span.end(); }
+
+      decltype(auto) operator[](typename underlying_span::size_type i) const noexcept { return this->m_span[i]; }
 
    private:
       underlying_span m_span;
