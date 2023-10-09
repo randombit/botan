@@ -11,6 +11,12 @@ permissions:
   # implicitly all other scopes not listed become none
 
 on:
+  workflow_dispatch:
+  push:
+    paths:
+      # Run if a pull request changes this workflow to
+      # validate it works properly before merging.
+      - '.github/workflows/nightly.yml'
   schedule:
     # runs every day at 3:23 AM UTC
     - cron:  '23 3 * * *'
