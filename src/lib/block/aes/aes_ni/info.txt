@@ -7,6 +7,10 @@ name -> "AES-NI"
 brief -> "AES using AES-NI and SIMD instructions"
 </module_info>
 
+<requires>
+simd
+</requires>
+
 <isa>
 sse2
 ssse3
