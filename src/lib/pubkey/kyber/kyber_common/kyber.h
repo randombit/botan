@@ -55,9 +55,9 @@ class BOTAN_PUBLIC_API(3, 0) KyberMode {
 
       Mode mode() const { return m_mode; }
 
-      bool is_90s() const { return m_mode == Kyber512_90s || m_mode == Kyber768_90s || m_mode == Kyber1024_90s; }
+      BOTAN_DEPRECATED("Kyber 90s mode is deprecated") bool is_90s() const;
 
-      bool is_modern() const { return !is_90s(); }
+      BOTAN_DEPRECATED("Kyber 90s mode is deprecated") bool is_modern() const;
 
       bool operator==(const KyberMode& other) const { return m_mode == other.m_mode; }
 
