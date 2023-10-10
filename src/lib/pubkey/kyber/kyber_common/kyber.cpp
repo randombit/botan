@@ -102,6 +102,14 @@ std::string KyberMode::to_string() const {
    BOTAN_ASSERT_UNREACHABLE();
 }
 
+bool KyberMode::is_90s() const {
+   return m_mode == Kyber512_90s || m_mode == Kyber768_90s || m_mode == Kyber1024_90s;
+}
+
+bool KyberMode::is_modern() const {
+   return !is_90s();
+}
+
 namespace {
 
 class KyberConstants {

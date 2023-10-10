@@ -13,7 +13,7 @@ PYTHON_EXE     = %{python_exe}
 ABI_FLAGS      = %{cc_sysroot} %{cxx_abi_flags}
 LANG_FLAGS     = %{cc_lang_flags} %{os_feature_macros}
 LANG_EXE_FLAGS = %{cc_lang_binary_linker_flags}
-CXXFLAGS       = %{cc_compile_flags} -DBOTAN_IS_BEING_BUILT
+CXXFLAGS       = %{cc_compile_flags}
 WARN_FLAGS     = %{cc_warning_flags}
 LIB_FLAGS      = %{lib_flags}
 LDFLAGS        = %{ldflags}
@@ -24,9 +24,9 @@ LIB_LINKS_TO        = %{external_link_cmd} %{link_to}
 BUILD_DIR_LINK_PATH = %{build_dir_link_path}
 EXE_LINKS_TO        = %{link_to_botan} $(LIB_LINKS_TO) %{extra_libs}
 
-# Note: Remember to adapt the generation of compile_commands.json, when changing
-#       any of those variables or their associations to compilation units.
-#       See compile_commands.json.in and configure.py (generate_build_info)
+# Note: Remember to adapt the generation of compile_commands.json as well as ninja.in,
+#       when changing any of those variables or their associations to compilation units.
+#       See compile_commands.json.in, ninja.in and configure.py (generate_build_info)
 BUILD_FLAGS    = $(ABI_FLAGS) $(LANG_FLAGS) $(CXXFLAGS) $(WARN_FLAGS)
 
 SCRIPTS_DIR    = %{scripts_dir}
@@ -115,7 +115,7 @@ bogo_shim: %{out_dir}/botan_bogo_shim
 
 # BoGo shim
 %{out_dir}/botan_bogo_shim: %{bogo_shim_src} $(LIBRARIES)
-	$(CXX) $(BUILD_FLAGS) %{include_paths} %{bogo_shim_src} $(BUILD_DIR_LINK_PATH) $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
+	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{include_paths} %{bogo_shim_src} $(BUILD_DIR_LINK_PATH) $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
 
 %{endif}
 
@@ -142,22 +142,22 @@ bogo_shim: %{out_dir}/botan_bogo_shim
 
 %{for lib_build_info}
 %{obj}: %{src}
-	$(CXX) $(LIB_FLAGS) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) $(LIB_FLAGS) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for cli_build_info}
 %{obj}: %{src}
-	$(CXX) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for test_build_info}
 %{obj}: %{src}
-	$(CXX) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for fuzzer_build_info}
 %{obj}: %{src}
-	$(CXX) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
 
 %{exe}: %{obj} $(LIBRARIES)
 	$(EXE_LINK_CMD) $(ABI_FLAGS) %{obj} $(BUILD_DIR_LINK_PATH) $(LANG_EXE_FLAGS) $(LDFLAGS) $(EXE_LINKS_TO) %{fuzzer_lib} %{output_to_exe}$@
