@@ -8,6 +8,7 @@
 #include <botan/internal/rc4.h>
 
 #include <botan/exceptn.h>
+#include <botan/mem_ops.h>
 
 namespace Botan {
 

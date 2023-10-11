@@ -10,6 +10,7 @@
 #define BOTAN_BIGINT_H_
 
 #include <botan/exceptn.h>
+#include <botan/mem_ops.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <iosfwd>

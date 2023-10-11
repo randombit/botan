@@ -207,10 +207,7 @@ class BOTAN_PUBLIC_API(2, 0) StreamCipher : public SymmetricAlgorithm {
       /**
       * Write keystream bytes to a buffer
       */
-      virtual void generate_keystream(uint8_t out[], size_t len) {
-         clear_mem(out, len);
-         cipher1(out, len);
-      }
+      virtual void generate_keystream(uint8_t out[], size_t len);
 
       /**
       * Resync the cipher using the IV

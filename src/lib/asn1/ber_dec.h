@@ -10,6 +10,7 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/data_src.h>
+#include <botan/mem_ops.h>
 
 namespace Botan {
 

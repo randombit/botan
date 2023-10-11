@@ -7,6 +7,7 @@
 #include <botan/sodium.h>
 
 #include <botan/aead.h>
+#include <botan/mem_ops.h>
 
 namespace Botan {
 

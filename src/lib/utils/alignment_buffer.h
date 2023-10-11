@@ -10,6 +10,7 @@
 #define BOTAN_ALIGNMENT_BUFFER_H_
 
 #include <botan/concepts.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/stl_util.h>
 
 #include <array>

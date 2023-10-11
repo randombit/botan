@@ -11,6 +11,7 @@ load_on always
 
 <header:public>
 assert.h
+allocator.h
 compiler.h
 concepts.h
 data_src.h

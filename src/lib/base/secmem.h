@@ -8,8 +8,8 @@
 #ifndef BOTAN_SECURE_MEMORY_BUFFERS_H_
 #define BOTAN_SECURE_MEMORY_BUFFERS_H_
 
-#include <botan/mem_ops.h>  // IWYU pragma: export
-#include <botan/types.h>    // IWYU pragma: export
+#include <botan/allocator.h>
+#include <botan/types.h>  // IWYU pragma: export
 #include <algorithm>
 #include <deque>
 #include <type_traits>
@@ -106,7 +106,7 @@ std::vector<T, Alloc>& operator+=(std::vector<T, Alloc>& out, const std::pair<T*
 */
 template <typename T, typename Alloc>
 void zeroise(std::vector<T, Alloc>& vec) {
-   clear_mem(vec.data(), vec.size());
+   std::fill(vec.begin(), vec.end(), static_cast<T>(0));
 }
 
 /**

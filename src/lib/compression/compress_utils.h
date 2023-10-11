@@ -9,6 +9,8 @@
 #define BOTAN_COMPRESSION_UTILS_H_
 
 #include <botan/compression.h>
+
+#include <botan/mem_ops.h>
 #include <memory>
 #include <unordered_map>
 

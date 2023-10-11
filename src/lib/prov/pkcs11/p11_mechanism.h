@@ -11,6 +11,7 @@
 
 #include <botan/p11.h>
 
+#include <botan/mem_ops.h>
 #include <memory>
 #include <string>
 #include <utility>

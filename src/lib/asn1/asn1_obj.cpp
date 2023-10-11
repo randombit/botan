@@ -9,6 +9,7 @@
 
 #include <botan/data_src.h>
 #include <botan/der_enc.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/stl_util.h>
 #include <sstream>

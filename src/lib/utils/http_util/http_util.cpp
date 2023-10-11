@@ -9,6 +9,7 @@
 #include <botan/internal/http_util.h>
 
 #include <botan/hex.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/os_utils.h>
 #include <botan/internal/parsing.h>
