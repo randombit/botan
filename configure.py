@@ -813,6 +813,8 @@ class InfoObject:
                     self.parent_module = os.path.basename(obj_dir)
                     break
                 (next_dir, _) = os.path.split(obj_dir)
+                if os.path.basename(next_dir) == 'src':
+                    break
         else:
             self.basename = basename.replace('.txt', '')
 
