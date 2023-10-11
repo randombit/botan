@@ -162,17 +162,21 @@ inline constexpr To typecast_copy(const FromT* src) noexcept
    return dst;
 }
 
+#if !defined(BOTAN_IS_BEGIN_BUILT)
 /**
 * Set memory to a fixed value
 * @param ptr a pointer to an array of bytes
 * @param n the number of Ts pointed to by ptr
 * @param val the value to set each byte to
 */
+BOTAN_DEPRECATED("This function is deprecated")
+
 inline constexpr void set_mem(uint8_t* ptr, size_t n, uint8_t val) {
    if(n > 0) {
       std::memset(ptr, val, n);
    }
 }
+#endif
 
 inline const uint8_t* cast_char_ptr_to_uint8(const char* s) {
    return reinterpret_cast<const uint8_t*>(s);

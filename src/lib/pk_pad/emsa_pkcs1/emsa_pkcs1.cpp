@@ -9,34 +9,32 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/hash_id.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
 namespace {
 
-std::vector<uint8_t> emsa3_encoding(const std::vector<uint8_t>& msg,
-                                    size_t output_bits,
-                                    const uint8_t hash_id[],
-                                    size_t hash_id_length) {
-   size_t output_length = output_bits / 8;
-   if(output_length < hash_id_length + msg.size() + 10) {
-      throw Encoding_Error("emsa3_encoding: Output length is too small");
+std::vector<uint8_t> pkcs1v15_sig_encoding(const std::vector<uint8_t>& msg,
+                                           size_t output_bits,
+                                           std::span<const uint8_t> hash_id) {
+   const size_t output_length = output_bits / 8;
+
+   if(output_length < hash_id.size() + msg.size() + 2 + 8) {
+      throw Encoding_Error("pkcs1v15_sig_encoding: Output length is too small");
    }
 
-   std::vector<uint8_t> T(output_length);
-   const size_t P_LENGTH = output_length - msg.size() - hash_id_length - 2;
+   std::vector<uint8_t> padded(output_length);
+   BufferStuffer stuffer(padded);
 
-   T[0] = 0x01;
-   set_mem(&T[1], P_LENGTH, 0xFF);
-   T[P_LENGTH + 1] = 0x00;
+   stuffer.append(0x01);
+   stuffer.append(0xFF, stuffer.remaining_capacity() - (1 + hash_id.size() + msg.size()));
+   stuffer.append(0x00);
+   stuffer.append(hash_id);
+   stuffer.append(msg);
+   BOTAN_ASSERT_NOMSG(stuffer.full());
 
-   if(hash_id_length > 0) {
-      BOTAN_ASSERT_NONNULL(hash_id);
-      buffer_insert(T, P_LENGTH + 2, hash_id, hash_id_length);
-   }
-
-   buffer_insert(T, output_length - msg.size(), msg.data(), msg.size());
-   return T;
+   return padded;
 }
 
 }  // namespace
@@ -56,7 +54,7 @@ std::vector<uint8_t> EMSA_PKCS1v15::encoding_of(const std::vector<uint8_t>& msg,
       throw Encoding_Error("EMSA_PKCS1v15::encoding_of: Bad input length");
    }
 
-   return emsa3_encoding(msg, output_bits, m_hash_id.data(), m_hash_id.size());
+   return pkcs1v15_sig_encoding(msg, output_bits, m_hash_id);
 }
 
 bool EMSA_PKCS1v15::verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>& raw, size_t key_bits) {
@@ -65,7 +63,7 @@ bool EMSA_PKCS1v15::verify(const std::vector<uint8_t>& coded, const std::vector<
    }
 
    try {
-      return (coded == emsa3_encoding(raw, key_bits, m_hash_id.data(), m_hash_id.size()));
+      return coded == pkcs1v15_sig_encoding(raw, key_bits, m_hash_id);
    } catch(...) {
       return false;
    }
@@ -105,7 +103,7 @@ std::vector<uint8_t> EMSA_PKCS1v15_Raw::raw_data() {
 std::vector<uint8_t> EMSA_PKCS1v15_Raw::encoding_of(const std::vector<uint8_t>& msg,
                                                     size_t output_bits,
                                                     RandomNumberGenerator& /*rng*/) {
-   return emsa3_encoding(msg, output_bits, m_hash_id.data(), m_hash_id.size());
+   return pkcs1v15_sig_encoding(msg, output_bits, m_hash_id);
 }
 
 bool EMSA_PKCS1v15_Raw::verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>& raw, size_t key_bits) {
@@ -114,7 +112,7 @@ bool EMSA_PKCS1v15_Raw::verify(const std::vector<uint8_t>& coded, const std::vec
    }
 
    try {
-      return (coded == emsa3_encoding(raw, key_bits, m_hash_id.data(), m_hash_id.size()));
+      return coded == pkcs1v15_sig_encoding(raw, key_bits, m_hash_id);
    } catch(...) {
       return false;
    }

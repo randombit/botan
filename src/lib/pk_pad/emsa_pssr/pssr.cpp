@@ -8,9 +8,12 @@
 #include <botan/internal/pssr.h>
 
 #include <botan/exceptn.h>
+#include <botan/mem_ops.h>
 #include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/mgf1.h>
+#include <botan/internal/stl_util.h>
+#include <array>
 
 namespace Botan {
 
@@ -24,32 +27,38 @@ std::vector<uint8_t> pss_encode(HashFunction& hash,
                                 const std::vector<uint8_t>& salt,
                                 size_t output_bits) {
    const size_t HASH_SIZE = hash.output_length();
-   const size_t SALT_SIZE = salt.size();
 
    if(msg.size() != HASH_SIZE) {
       throw Encoding_Error("Cannot encode PSS string, input length invalid for hash");
    }
-   if(output_bits < 8 * HASH_SIZE + 8 * SALT_SIZE + 9) {
+   if(output_bits < 8 * HASH_SIZE + 8 * salt.size() + 9) {
       throw Encoding_Error("Cannot encode PSS string, output length too small");
    }
 
-   const size_t output_length = (output_bits + 7) / 8;
+   const size_t output_length = ceil_tobytes(output_bits);
+   const uint8_t db0_mask = 0xFF >> (8 * output_length - output_bits);
 
-   for(size_t i = 0; i != 8; ++i) {
-      hash.update(0);
-   }
+   std::array<uint8_t, 8> padding = {0};
+   hash.update(padding);
    hash.update(msg);
    hash.update(salt);
    std::vector<uint8_t> H = hash.final_stdvec();
 
+   const size_t db_len = output_length - HASH_SIZE - 1;
    std::vector<uint8_t> EM(output_length);
 
-   EM[output_length - HASH_SIZE - SALT_SIZE - 2] = 0x01;
-   buffer_insert(EM, output_length - 1 - HASH_SIZE - SALT_SIZE, salt);
-   mgf1_mask(hash, H.data(), HASH_SIZE, EM.data(), output_length - HASH_SIZE - 1);
-   EM[0] &= 0xFF >> (8 * ((output_bits + 7) / 8) - output_bits);
-   buffer_insert(EM, output_length - 1 - HASH_SIZE, H);
-   EM[output_length - 1] = 0xBC;
+   BufferStuffer stuffer(EM);
+   stuffer.append(0x00, stuffer.remaining_capacity() - (1 + salt.size() + H.size() + 1));
+   stuffer.append(0x01);
+   stuffer.append(salt);
+
+   mgf1_mask(hash, H.data(), H.size(), EM.data(), db_len);
+   EM[0] &= db0_mask;
+
+   stuffer.append(H);
+   stuffer.append(0xBC);
+   BOTAN_ASSERT_NOMSG(stuffer.full());
+
    return EM;
 }
 
@@ -59,7 +68,7 @@ bool pss_verify(HashFunction& hash,
                 size_t key_bits,
                 size_t* out_salt_size) {
    const size_t HASH_SIZE = hash.output_length();
-   const size_t KEY_BYTES = (key_bits + 7) / 8;
+   const size_t key_bytes = ceil_tobytes(key_bits);
 
    if(key_bits < 8 * HASH_SIZE + 9) {
       return false;
@@ -69,7 +78,7 @@ bool pss_verify(HashFunction& hash,
       return false;
    }
 
-   if(pss_repr.size() > KEY_BYTES || pss_repr.size() <= 1) {
+   if(pss_repr.size() > key_bytes || pss_repr.size() <= 1) {
       return false;
    }
 
@@ -78,9 +87,11 @@ bool pss_verify(HashFunction& hash,
    }
 
    std::vector<uint8_t> coded = pss_repr;
-   if(coded.size() < KEY_BYTES) {
-      std::vector<uint8_t> temp(KEY_BYTES);
-      buffer_insert(temp, KEY_BYTES - coded.size(), coded);
+   if(coded.size() < key_bytes) {
+      std::vector<uint8_t> temp(key_bytes);
+      BufferStuffer stuffer(temp);
+      stuffer.append(0x00, stuffer.remaining_capacity() - coded.size());
+      stuffer.append(coded);
       coded = temp;
    }
 
@@ -114,9 +125,8 @@ bool pss_verify(HashFunction& hash,
 
    const size_t salt_size = DB_size - salt_offset;
 
-   for(size_t j = 0; j != 8; ++j) {
-      hash.update(0);
-   }
+   std::array<uint8_t, 8> padding = {0};
+   hash.update(padding);
    hash.update(message_hash);
    hash.update(&DB[salt_offset], salt_size);
 
