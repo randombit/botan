@@ -164,6 +164,7 @@ build tidy: tidy
 
 %{for lib_build_info}
 build %{obj}: compile_lib %{src}
+  isa_flags = %{isa_flags}
 %{endfor}
 
 %{for cli_build_info}
