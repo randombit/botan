@@ -184,7 +184,8 @@ void Poly1305::add_data(std::span<const uint8_t> input) {
    assert_key_material_set();
 
    if(m_buf_pos) {
-      buffer_insert(m_buf, m_buf_pos, input.data(), input.size());
+      const size_t initial_fill = std::min(m_buf.size() - m_buf_pos, input.size());
+      copy_mem(m_buf.data() + m_buf_pos, input.data(), initial_fill);
 
       if(m_buf_pos + input.size() >= m_buf.size()) {
          poly1305_blocks(m_poly, m_buf.data(), 1);
@@ -201,7 +202,8 @@ void Poly1305::add_data(std::span<const uint8_t> input) {
    }
 
    const auto remaining = in.take(in.remaining());
-   buffer_insert(m_buf, m_buf_pos, remaining.data(), remaining.size());
+   BOTAN_ASSERT_NOMSG(m_buf_pos + remaining.size() < m_buf.size());
+   copy_mem(m_buf.data() + m_buf_pos, remaining.data(), remaining.size());
    m_buf_pos += remaining.size();
 }
 

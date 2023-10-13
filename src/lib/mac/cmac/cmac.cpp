@@ -20,7 +20,9 @@ namespace Botan {
 void CMAC::add_data(std::span<const uint8_t> input) {
    const size_t bs = output_length();
 
-   buffer_insert(m_buffer, m_position, input.data(), input.size());
+   const size_t initial_fill = std::min(m_buffer.size() - m_position, input.size());
+   copy_mem(m_buffer.data() + m_position, input.data(), initial_fill);
+
    if(m_position + input.size() > bs) {
       xor_buf(m_state, m_buffer, bs);
       m_cipher->encrypt(m_state);

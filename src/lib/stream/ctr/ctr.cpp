@@ -153,7 +153,7 @@ void CTR_BE::set_iv_bytes(const uint8_t iv[], size_t iv_len) {
 
    m_iv.resize(m_block_size);
    zeroise(m_iv);
-   buffer_insert(m_iv, 0, iv, iv_len);
+   copy_mem(&m_iv[0], iv, iv_len);
 
    seek(0);
 }
@@ -211,7 +211,8 @@ void CTR_BE::seek(uint64_t offset) {
    const uint64_t base_counter = m_ctr_blocks * (offset / m_counter.size());
 
    zeroise(m_counter);
-   buffer_insert(m_counter, 0, m_iv);
+   BOTAN_ASSERT_NOMSG(m_counter.size() >= m_iv.size());
+   copy_mem(&m_counter[0], &m_iv[0], m_iv.size());
 
    const size_t BS = m_block_size;
 
@@ -239,7 +240,7 @@ void CTR_BE::seek(uint64_t offset) {
    } else {
       // do everything sequentially:
       for(size_t i = 1; i != m_ctr_blocks; ++i) {
-         buffer_insert(m_counter, i * BS, &m_counter[(i - 1) * BS], BS);
+         copy_mem(&m_counter[i * BS], &m_counter[(i - 1) * BS], BS);
 
          for(size_t j = 0; j != m_ctr_size; ++j) {
             if(++m_counter[i * BS + (BS - 1 - j)]) {
