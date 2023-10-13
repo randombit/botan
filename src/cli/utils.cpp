@@ -54,6 +54,7 @@ class Print_Help final : public Command {
                                                                      {"passhash", "Password Hashing"},
                                                                      {"psk", "PSK Database"},
                                                                      {"pubkey", "Public Key Cryptography"},
+                                                                     {"testing", "Testing"},
                                                                      {"tls", "TLS"},
                                                                      {"tss", "Secret Sharing"},
                                                                      {"x509", "X.509"}};

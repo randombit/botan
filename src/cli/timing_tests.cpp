@@ -18,12 +18,16 @@
 */
 
 #include "cli.h"
+
 #include <botan/hex.h>
+#include <botan/rng.h>
+#include <botan/internal/filesystem.h>
+#include <botan/internal/fmt.h>
+#include <botan/internal/loadstor.h>
+#include <botan/internal/os_utils.h>
+#include <botan/internal/parsing.h>
 #include <fstream>
 #include <sstream>
-
-#include <botan/rng.h>
-#include <botan/internal/os_utils.h>
 
 #if defined(BOTAN_HAS_BIGINT)
    #include <botan/bigint.h>
@@ -41,8 +45,12 @@
    #include <botan/dl_group.h>
 #endif
 
-#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_RAW)
+#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
+   #include <botan/pkcs8.h>
    #include <botan/pubkey.h>
+#endif
+
+#if defined(BOTAN_HAS_RSA)
    #include <botan/rsa.h>
 #endif
 
@@ -410,7 +418,7 @@ class Timing_Test_Command final : public Command {
                "timing_test test_type --test-data-file= --test-data-dir=src/tests/data/timing "
                "--warmup-runs=5000 --measurement-runs=50000") {}
 
-      std::string group() const override { return "misc"; }
+      std::string group() const override { return "testing"; }
 
       std::string description() const override { return "Run various timing side channel tests"; }
 
@@ -482,8 +490,6 @@ class Timing_Test_Command final : public Command {
       }
 };
 
-BOTAN_REGISTER_COMMAND("timing_test", Timing_Test_Command);
-
 std::unique_ptr<Timing_Test> Timing_Test_Command::lookup_timing_test(const std::string& test_type) {
 #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_PKCS1) && defined(BOTAN_HAS_EME_RAW)
    if(test_type == "bleichenbacher") {
@@ -537,5 +543,138 @@ std::unique_ptr<Timing_Test> Timing_Test_Command::lookup_timing_test(const std::
 
    return nullptr;
 }
+
+BOTAN_REGISTER_COMMAND("timing_test", Timing_Test_Command);
+
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_PKCS1)
+
+class MARVIN_Test_Command final : public Command {
+   public:
+      MARVIN_Test_Command() : Command("marvin_test key_file ctext_dir --runs=10 --output-nsec --expect-pt-len=0") {}
+
+      std::string group() const override { return "testing"; }
+
+      std::string description() const override { return "Run a test for MARVIN attack"; }
+
+      void go() override {
+         const std::string key_file = get_arg("key_file");
+         const std::string ctext_dir = get_arg("ctext_dir");
+         const size_t measurement_runs = get_arg_sz("runs");
+         const size_t expect_pt_len = get_arg_sz("expect-pt-len");
+         const bool output_nsec = flag_set("output-nsec");
+
+         Botan::DataSource_Stream key_src(key_file);
+         const auto key = Botan::PKCS8::load_key(key_src);
+
+         if(key->algo_name() != "RSA") {
+            throw CLI_Usage_Error("Unexpected key type for MARVIN test");
+         }
+
+         const size_t modulus_bytes = (key->key_length() + 7) / 8;
+
+         std::vector<std::string> names;
+         std::vector<uint8_t> ciphertext_data;
+
+         for(const auto& filename : Botan::get_files_recursive(ctext_dir)) {
+            const auto contents = this->slurp_file(filename);
+
+            if(contents.size() != modulus_bytes) {
+               throw CLI_Usage_Error(
+                  Botan::fmt("The ciphertext file {} had different size ({}) than the RSA modulus ({})",
+                             filename,
+                             contents.size(),
+                             modulus_bytes));
+            }
+
+            const auto parts = Botan::split_on(filename, '/');
+
+            names.push_back(parts[parts.size() - 1]);
+            ciphertext_data.insert(ciphertext_data.end(), contents.begin(), contents.end());
+         }
+
+         if(names.empty()) {
+            throw CLI_Usage_Error("Empty ciphertext directory for MARVIN test");
+         }
+
+         Botan::PK_Decryptor_EME op(*key, rng(), "PKCS1v15");
+
+         std::vector<size_t> indexes;
+         for(size_t i = 0; i != names.size(); ++i) {
+            indexes.push_back(i);
+         }
+
+         std::vector<std::vector<uint64_t>> measurements(names.size());
+         for(auto& m : measurements) {
+            m.reserve(measurement_runs);
+         }
+
+         for(size_t r = 0; r != measurement_runs; ++r) {
+            shuffle(indexes, rng());
+
+            std::vector<uint8_t> ciphertext(modulus_bytes);
+            for(size_t i = 0; i != indexes.size(); ++i) {
+               const size_t testcase = indexes[i];
+
+               // FIXME should this load be constant time?
+               Botan::copy_mem(&ciphertext[0], &ciphertext_data[testcase * modulus_bytes], modulus_bytes);
+
+               const uint64_t start = Botan::OS::get_system_timestamp_ns();
+
+   #if 0
+               try {
+                  op.decrypt(ciphertext.data(), modulus_bytes);
+               } catch(...) {}
+   #else
+               op.decrypt_or_random(ciphertext.data(), modulus_bytes, expect_pt_len, rng());
+   #endif
+
+               const uint64_t duration = Botan::OS::get_system_timestamp_ns() - start;
+               BOTAN_ASSERT_NOMSG(measurements[testcase].size() == r);
+               measurements[testcase].push_back(duration);
+            }
+         }
+
+         for(size_t t = 0; t != names.size(); ++t) {
+            if(t > 0) {
+               output() << ",";
+            }
+            output() << names[t];
+         }
+         output() << "\n";
+
+         for(size_t r = 0; r != measurement_runs; ++r) {
+            for(size_t t = 0; t != names.size(); ++t) {
+               if(t > 0) {
+                  output() << ",";
+               }
+
+               const uint64_t dur_nsec = measurements[t][r];
+               if(output_nsec) {
+                  output() << dur_nsec;
+               } else {
+                  const double dur_s = static_cast<double>(dur_nsec) / 1000000000.0;
+                  output() << dur_s;
+               }
+            }
+            output() << "\n";
+         }
+      }
+
+      template <typename T>
+      void shuffle(std::vector<T>& vec, Botan::RandomNumberGenerator& rng) {
+         const size_t n = vec.size();
+         for(size_t i = 0; i != n; ++i) {
+            uint8_t jb[sizeof(uint64_t)];
+            rng.randomize(jb, sizeof(jb));
+            uint64_t j8 = Botan::load_le<uint64_t>(jb, 0);
+            size_t j = i + static_cast<size_t>(j8) % (n - i);
+            std::swap(vec[i], vec[j]);
+         }
+      }
+};
+
+BOTAN_REGISTER_COMMAND("marvin_test", MARVIN_Test_Command);
+
+#endif
 
 }  // namespace Botan_CLI

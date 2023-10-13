@@ -872,6 +872,52 @@ def cli_cert_issuance_alternative_algos_tests(tmp_dir):
         os.mkdir(sub_tmp_dir)
         cli_cert_issuance_tests(sub_tmp_dir, algo)
 
+def cli_marvin_tests(tmp_dir):
+    if not check_for_command("marvin_test"):
+        return
+
+    rsa_key = os.path.join(tmp_dir, 'rsa.pem')
+    data_dir = os.path.join(tmp_dir, 'testcases')
+
+    test_cli("keygen", ["--algo=RSA", "--params=1024", "--output=" + rsa_key], "")
+
+    test_inputs = 4
+    runs = 32
+
+    # There is currently no way in CLI to do an RSA encryption with PKCS1 v1.5
+    # so for now just create some random (certainly invalid) ciphertexts
+    os.mkdir(data_dir)
+
+    for i in range(test_inputs):
+        output_file = os.path.join(data_dir, "invalid%d" % i)
+        ctext = bytes([i] * 128)
+
+        with open(output_file, 'bw') as out:
+            out.write(ctext)
+
+    output = test_cli("marvin_test", [rsa_key, data_dir, "--runs=%d" % (runs)])
+
+    first_line = True
+    total_lines = 0
+    for line in output.split('\n'):
+        res = line.split(',')
+
+        if len(res) != test_inputs:
+            logging.error("Unexpected output from MARVIN test: %s", line)
+
+        if not first_line:
+            try:
+                for r in res:
+                    float(r)
+            except ValueError:
+                logging.error("Unexpected output from MARVIN test: %s", line)
+
+        first_line = False
+        total_lines += 1
+
+    if total_lines != runs + 1:
+        logging.error("Unexpected number of lines from MARVIN test")
+
 def cli_timing_test_tests(_tmp_dir):
 
     timing_tests = ["bleichenbacher", "manger",
@@ -1676,6 +1722,7 @@ def main(args=None):
         cli_hmac_tests,
         cli_is_prime_tests,
         cli_key_tests,
+        cli_marvin_tests,
         cli_mod_inverse_tests,
         cli_pbkdf_tune_tests,
         cli_pk_encrypt_tests,
