@@ -164,8 +164,7 @@ void poly1305_finish(secure_vector<uint64_t>& X, uint8_t mac[16]) {
 
 void Poly1305::clear() {
    zap(m_poly);
-   zap(m_buf);
-   m_buf_pos = 0;
+   m_buffer.clear();
 }
 
 bool Poly1305::has_keying_material() const {
@@ -173,8 +172,7 @@ bool Poly1305::has_keying_material() const {
 }
 
 void Poly1305::key_schedule(std::span<const uint8_t> key) {
-   m_buf_pos = 0;
-   m_buf.resize(16);
+   m_buffer.clear();
    m_poly.resize(8);
 
    poly1305_init(m_poly, key.data());
@@ -183,46 +181,36 @@ void Poly1305::key_schedule(std::span<const uint8_t> key) {
 void Poly1305::add_data(std::span<const uint8_t> input) {
    assert_key_material_set();
 
-   if(m_buf_pos) {
-      const size_t initial_fill = std::min(m_buf.size() - m_buf_pos, input.size());
-      copy_mem(m_buf.data() + m_buf_pos, input.data(), initial_fill);
+   BufferSlicer in(input);
 
-      if(m_buf_pos + input.size() >= m_buf.size()) {
-         poly1305_blocks(m_poly, m_buf.data(), 1);
-         input = input.last(input.size() - m_buf.size() + m_buf_pos);
-         m_buf_pos = 0;
+   while(!in.empty()) {
+      if(const auto one_block = m_buffer.handle_unaligned_data(in)) {
+         poly1305_blocks(m_poly, one_block->data(), 1);
+      }
+
+      if(m_buffer.in_alignment()) {
+         const auto [aligned_data, full_blocks] = m_buffer.aligned_data_to_process(in);
+         if(full_blocks > 0) {
+            poly1305_blocks(m_poly, aligned_data.data(), full_blocks);
+         }
       }
    }
-
-   BufferSlicer in(input);
-   const size_t full_blocks = in.remaining() / m_buf.size();
-
-   if(full_blocks) {
-      poly1305_blocks(m_poly, in.take(full_blocks * m_buf.size()).data(), full_blocks);
-   }
-
-   const auto remaining = in.take(in.remaining());
-   BOTAN_ASSERT_NOMSG(m_buf_pos + remaining.size() < m_buf.size());
-   copy_mem(m_buf.data() + m_buf_pos, remaining.data(), remaining.size());
-   m_buf_pos += remaining.size();
 }
 
 void Poly1305::final_result(std::span<uint8_t> out) {
    assert_key_material_set();
 
-   if(m_buf_pos != 0) {
-      m_buf[m_buf_pos] = 1;
-      const size_t len = m_buf.size() - m_buf_pos - 1;
-      if(len > 0) {
-         clear_mem(&m_buf[m_buf_pos + 1], len);
-      }
-      poly1305_blocks(m_poly, m_buf.data(), 1, true);
+   if(!m_buffer.in_alignment()) {
+      const uint8_t final_byte = 0x01;
+      m_buffer.append({&final_byte, 1});
+      m_buffer.fill_up_with_zeros();
+      poly1305_blocks(m_poly, m_buffer.consume().data(), 1, true);
    }
 
    poly1305_finish(m_poly, out.data());
 
    m_poly.clear();
-   m_buf_pos = 0;
+   m_buffer.clear();
 }
 
 }  // namespace Botan
