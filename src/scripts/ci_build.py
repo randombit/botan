@@ -217,7 +217,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         flags += ['--with-debug-info']
 
     if target in ['coverage', 'sanitizer', 'fuzzers']:
-        flags += ['--terminate-on-asserts']
+        flags += ['--unsafe-terminate-on-asserts']
 
     if target in ['valgrind', 'valgrind-full']:
         flags += ['--with-valgrind']
