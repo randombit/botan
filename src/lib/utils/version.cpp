@@ -41,8 +41,15 @@ const char* version_cstr() {
       STR(BOTAN_VERSION_SUFFIX)
 #endif
          " ("
-#if defined(BOTAN_UNSAFE_FUZZER_MODE)
-         "UNSAFE FUZZER MODE BUILD "
+#if defined(BOTAN_UNSAFE_FUZZER_MODE) || defined(BOTAN_TERMINATE_ON_ASSERTS)
+         "UNSAFE "
+   #if defined(BOTAN_UNSAFE_FUZZER_MODE)
+         "FUZZER MODE "
+   #endif
+   #if defined(BOTAN_TERMINATE_ON_ASSERTS)
+         "TERMINATE ON ASSERTS "
+   #endif
+         "BUILD "
 #endif
       BOTAN_VERSION_RELEASE_TYPE
 #if(BOTAN_VERSION_DATESTAMP != 0)

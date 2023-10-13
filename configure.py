@@ -3435,8 +3435,12 @@ botan
                  Version.release_type(),
                  date)
 
+    # Warn about build modes that are not safe for production:
     if options.unsafe_fuzzer_mode:
-        logging.warning("The fuzzer mode flag is labeled unsafe for a reason, this version is for testing only")
+        logging.warning("Unsafe fuzzer mode is NOT SAFE FOR PRODUCTION")
+
+    if options.terminate_on_asserts:
+        logging.warning("Terminating on assertion failures is NOT SAFE FOR PRODUCTION")
 
 def list_os_features(all_os_features, info_os):
     for feat in all_os_features:
