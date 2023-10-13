@@ -75,7 +75,8 @@ void OFB::set_iv_bytes(const uint8_t iv[], size_t iv_len) {
    }
 
    zeroise(m_buffer);
-   buffer_insert(m_buffer, 0, iv, iv_len);
+   BOTAN_ASSERT_NOMSG(m_buffer.size() >= iv_len);
+   copy_mem(&m_buffer[0], iv, iv_len);
 
    m_cipher->encrypt(m_buffer);
    m_buf_pos = 0;

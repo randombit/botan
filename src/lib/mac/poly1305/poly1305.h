@@ -9,6 +9,7 @@
 #define BOTAN_MAC_POLY1305_H_
 
 #include <botan/mac.h>
+#include <botan/internal/alignment_buffer.h>
 #include <memory>
 
 namespace Botan {
@@ -39,8 +40,7 @@ class Poly1305 final : public MessageAuthenticationCode {
       void key_schedule(std::span<const uint8_t>) override;
 
       secure_vector<uint64_t> m_poly;
-      secure_vector<uint8_t> m_buf;
-      size_t m_buf_pos = 0;
+      AlignmentBuffer<uint8_t, 16> m_buffer;
 };
 
 }  // namespace Botan

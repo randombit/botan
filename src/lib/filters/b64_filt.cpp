@@ -68,7 +68,9 @@ void Base64_Encoder::do_output(const uint8_t input[], size_t length) {
 * Convert some data into Base64
 */
 void Base64_Encoder::write(const uint8_t input[], size_t length) {
-   buffer_insert(m_in, m_position, input, length);
+   const size_t initial_fill = std::min(m_in.size() - m_position, length);
+   copy_mem(&m_in[m_position], input, initial_fill);
+
    if(m_position + length >= m_in.size()) {
       encode_and_send(m_in.data(), m_in.size());
       input += (m_in.size() - m_position);
