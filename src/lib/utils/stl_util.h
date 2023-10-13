@@ -9,6 +9,7 @@
 #ifndef BOTAN_STL_UTIL_H_
 #define BOTAN_STL_UTIL_H_
 
+#include <algorithm>
 #include <functional>
 #include <map>
 #include <set>
@@ -216,6 +217,11 @@ class BufferStuffer {
       void append(std::span<const uint8_t> buffer) {
          auto sink = next(buffer.size());
          std::copy(buffer.begin(), buffer.end(), sink.begin());
+      }
+
+      void append(uint8_t b, size_t repeat = 1) {
+         auto sink = next(repeat);
+         std::fill(sink.begin(), sink.end(), b);
       }
 
       bool full() const { return m_buffer.empty(); }

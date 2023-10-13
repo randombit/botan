@@ -9,6 +9,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/hash_id.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -20,7 +21,7 @@ std::vector<uint8_t> emsa2_encoding(const std::vector<uint8_t>& msg,
                                     uint8_t hash_id) {
    const size_t HASH_SIZE = empty_hash.size();
 
-   size_t output_length = (output_bits + 1) / 8;
+   const size_t output_length = (output_bits + 1) / 8;
 
    if(msg.size() != HASH_SIZE) {
       throw Encoding_Error("EMSA_X931::encoding_of: Bad input length");
@@ -32,13 +33,15 @@ std::vector<uint8_t> emsa2_encoding(const std::vector<uint8_t>& msg,
    const bool empty_input = (msg == empty_hash);
 
    std::vector<uint8_t> output(output_length);
+   BufferStuffer stuffer(output);
 
-   output[0] = (empty_input ? 0x4B : 0x6B);
-   output[output_length - 3 - HASH_SIZE] = 0xBA;
-   set_mem(&output[1], output_length - 4 - HASH_SIZE, 0xBB);
-   buffer_insert(output, output_length - (HASH_SIZE + 2), msg.data(), msg.size());
-   output[output_length - 2] = hash_id;
-   output[output_length - 1] = 0xCC;
+   stuffer.append(empty_input ? 0x4B : 0x6B);
+   stuffer.append(0xBB, stuffer.remaining_capacity() - (1 + msg.size() + 2));
+   stuffer.append(0xBA);
+   stuffer.append(msg);
+   stuffer.append(hash_id);
+   stuffer.append(0xCC);
+   BOTAN_ASSERT_NOMSG(stuffer.full());
 
    return output;
 }

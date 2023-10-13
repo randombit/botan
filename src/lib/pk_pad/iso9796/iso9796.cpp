@@ -13,6 +13,7 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/hash_id.h>
 #include <botan/internal/mgf1.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -27,10 +28,8 @@ std::vector<uint8_t> iso9796_encoding(const std::vector<uint8_t>& msg,
    const size_t output_length = (output_bits + 7) / 8;
 
    //set trailer length
-   size_t tLength = 1;
-   if(!implicit) {
-      tLength = 2;
-   }
+   const size_t tLength = (implicit) ? 1 : 2;
+
    const size_t HASH_SIZE = hash->output_length();
 
    if(output_length <= HASH_SIZE + SALT_SIZE + tLength) {
@@ -40,54 +39,55 @@ std::vector<uint8_t> iso9796_encoding(const std::vector<uint8_t>& msg,
    //calculate message capacity
    const size_t capacity = output_length - HASH_SIZE - SALT_SIZE - tLength - 1;
 
-   //msg1 is the recoverable and msg2 the unrecoverable message part.
+   //msg1 is the recoverable and hmsg2 is the hash of the unrecoverable message part.
    std::vector<uint8_t> msg1;
-   std::vector<uint8_t> msg2;
    if(msg.size() > capacity) {
       msg1 = std::vector<uint8_t>(msg.begin(), msg.begin() + capacity);
-      msg2 = std::vector<uint8_t>(msg.begin() + capacity, msg.end());
-      hash->update(msg2);
+      hash->update(std::span(msg).subspan(capacity));
    } else {
       msg1 = msg;
    }
-   msg2 = hash->final_stdvec();
+   const std::vector<uint8_t> hmsg2 = hash->final_stdvec();
 
    //compute H(C||msg1 ||H(msg2)||S)
    const size_t msgLength = msg1.size();
    const auto salt = rng.random_vec<std::vector<uint8_t>>(SALT_SIZE);
    hash->update_be(static_cast<uint64_t>(msgLength) * 8);
    hash->update(msg1);
-   hash->update(msg2);
+   hash->update(hmsg2);
    hash->update(salt);
    const std::vector<uint8_t> H = hash->final_stdvec();
 
    std::vector<uint8_t> EM(output_length);
 
-   //compute message offset.
-   const size_t offset = output_length - HASH_SIZE - SALT_SIZE - tLength - msgLength - 1;
-
-   //insert message border (0x01), msg1 and salt into the output buffer
-   EM[offset] = 0x01;
-   buffer_insert(EM, offset + 1, msg1);
-   buffer_insert(EM, offset + 1 + msgLength, salt);
+   BufferStuffer stuffer(EM);
+   stuffer.append(0x00, stuffer.remaining_capacity() - (HASH_SIZE + SALT_SIZE + tLength + msgLength + 1));
+   stuffer.append(0x01);
+   stuffer.append(msg1);
+   stuffer.append(salt);
 
    //apply mask
    mgf1_mask(*hash, H.data(), HASH_SIZE, EM.data(), output_length - HASH_SIZE - tLength);
-   buffer_insert(EM, output_length - HASH_SIZE - tLength, H);
-   //set implicit/ISO trailer
-   if(!implicit) {
-      uint8_t hash_id = ieee1363_hash_id(hash->name());
+
+   //clear the leftmost bit (confer bouncy castle)
+   EM[0] &= 0x7F;
+
+   stuffer.append(H);
+
+   // set implicit/ISO trailer
+
+   if(implicit) {
+      stuffer.append(0xBC);
+   } else {
+      const uint8_t hash_id = ieee1363_hash_id(hash->name());
       if(!hash_id) {
          throw Encoding_Error("ISO9796-2::encoding_of: no hash identifier for " + hash->name());
       }
-      EM[output_length - 1] = 0xCC;
-      EM[output_length - 2] = hash_id;
-
-   } else {
-      EM[output_length - 1] = 0xBC;
+      stuffer.append(hash_id);
+      stuffer.append(0xCC);
    }
-   //clear the leftmost bit (confer bouncy castle)
-   EM[0] &= 0x7F;
+
+   BOTAN_ASSERT_NOMSG(stuffer.full());
 
    return EM;
 }
@@ -163,20 +163,18 @@ bool iso9796_verification(const std::vector<uint8_t>& const_coded,
    //compute H2(C||msg1||H(msg2)||S*). * indicates a recovered value
    const size_t capacity = (key_bits - 2 + 7) / 8 - HASH_SIZE - SALT_SIZE - tLength - 1;
    std::vector<uint8_t> msg1raw;
-   std::vector<uint8_t> msg2;
    if(raw.size() > capacity) {
       msg1raw = std::vector<uint8_t>(raw.begin(), raw.begin() + capacity);
-      msg2 = std::vector<uint8_t>(raw.begin() + capacity, raw.end());
-      hash->update(msg2);
+      hash->update(std::span(raw).subspan(capacity));
    } else {
       msg1raw = raw;
    }
-   msg2 = hash->final_stdvec();
+   const std::vector<uint8_t> hmsg2 = hash->final_stdvec();
 
    const uint64_t msg1rawLength = msg1raw.size();
    hash->update_be(msg1rawLength * 8);
    hash->update(msg1raw);
-   hash->update(msg2);
+   hash->update(hmsg2);
    hash->update(salt);
    std::vector<uint8_t> H3 = hash->final_stdvec();
 
@@ -184,7 +182,7 @@ bool iso9796_verification(const std::vector<uint8_t>& const_coded,
    const uint64_t msgLength = msg1.size();
    hash->update_be(msgLength * 8);
    hash->update(msg1);
-   hash->update(msg2);
+   hash->update(hmsg2);
    hash->update(salt);
    std::vector<uint8_t> H2 = hash->final_stdvec();
 

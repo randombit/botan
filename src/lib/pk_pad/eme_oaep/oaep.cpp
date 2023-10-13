@@ -11,6 +11,7 @@
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/mgf1.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -28,12 +29,15 @@ secure_vector<uint8_t> OAEP::pad(const uint8_t in[],
    }
 
    secure_vector<uint8_t> out(key_length);
+   BufferStuffer stuffer(out);
 
-   rng.randomize(out.data(), m_Phash.size());
-
-   buffer_insert(out, m_Phash.size(), m_Phash.data(), m_Phash.size());
-   out[out.size() - in_length - 1] = 0x01;
-   buffer_insert(out, out.size() - in_length, in, in_length);
+   // We always use a seed len equal to the underlying hash
+   rng.randomize(stuffer.next(m_Phash.size()));
+   stuffer.append(m_Phash);
+   stuffer.append(0x00, stuffer.remaining_capacity() - (1 + in_length));
+   stuffer.append(0x01);
+   stuffer.append({in, in_length});
+   BOTAN_ASSERT_NOMSG(stuffer.full());
 
    mgf1_mask(*m_mgf1_hash, out.data(), m_Phash.size(), &out[m_Phash.size()], out.size() - m_Phash.size());
 

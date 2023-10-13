@@ -10,6 +10,7 @@
 #include <botan/exceptn.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -27,17 +28,17 @@ secure_vector<uint8_t> EME_PKCS1v15::pad(const uint8_t in[],
    }
 
    secure_vector<uint8_t> out(key_length);
+   BufferStuffer stuffer(out);
 
-   out[0] = 0x02;
-   rng.randomize(out.data() + 1, (key_length - inlen - 2));
+   const size_t padding_bytes = key_length - inlen - 2;
 
-   for(size_t j = 1; j != key_length - inlen - 1; ++j) {
-      if(out[j] == 0) {
-         out[j] = rng.next_nonzero_byte();
-      }
+   stuffer.append(0x02);
+   for(size_t i = 0; i != padding_bytes; ++i) {
+      stuffer.append(rng.next_nonzero_byte());
    }
-
-   buffer_insert(out, key_length - inlen, in, inlen);
+   stuffer.append(0x00);
+   stuffer.append({in, inlen});
+   BOTAN_ASSERT_NOMSG(stuffer.full());
 
    return out;
 }

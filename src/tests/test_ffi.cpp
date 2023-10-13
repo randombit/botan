@@ -314,8 +314,9 @@ class FFI_RNG_Test final : public FFI_Test {
          size_t cb_counter = 0;
 
          auto custom_get_cb = +[](void* context, uint8_t* out, size_t out_len) -> int {
-            Botan::set_mem(out, out_len, 0x12);
-            BOTAN_UNUSED(out, out_len);
+            for(size_t i = 0; i != out_len; ++i) {
+               out[i] = 0x12;
+            }
             (*(static_cast<size_t*>(context)))++;
             return 0;
          };
