@@ -964,10 +964,17 @@ def cli_tls_socket_tests(tmp_dir):
             self.protocol_version = protocol_version
             self.policy = policy
             self.stdout_regex = kwargs.get("stdout_regex")
+            self.expect_error = kwargs.get("expect_error", False)
             self.psk = kwargs.get("psk")
             self.psk_identity = kwargs.get("psk_identity")
 
     configs = [
+        # Regression test: TLS 1.3 server hit an assertion when no certificate
+        #                  chain was found. Here, we provoke this by requiring
+        #                  an RSA-based certificate (server uses ECDSA).
+        TestConfig("No server cert", "1.3", "allow_tls12=false\nallow_tls13=true\nsignature_methods=RSA\n",
+                   stdout_regex='Alert: handshake_failure', expect_error=True),
+
         TestConfig("TLS 1.3", "1.3", "allow_tls12=false\nallow_tls13=true\n"),
         TestConfig("TLS 1.2", "1.2", "allow_tls12=true\nallow_tls13=false\n"),
 
@@ -1031,14 +1038,17 @@ def cli_tls_socket_tests(tmp_dir):
 
         (stdout, stderr) = tls_client.communicate()
 
-        if stderr:
-            logging.error("Got unexpected stderr output (%s) %s", tls_config.name, stderr)
+        if not tls_config.expect_error:
+            if stderr:
+                logging.error("Got unexpected stderr output (%s) %s", tls_config.name, stderr)
 
-        if b'Handshake complete' not in stdout:
-            logging.error('Failed to complete handshake (%s): %s', tls_config.name, stdout)
+            if b'Handshake complete' not in stdout:
+                logging.error('Failed to complete handshake (%s): %s', tls_config.name, stdout)
 
-        if client_msg not in stdout:
-            logging.error("Missing client message from stdout (%s): %s", tls_config.name, stdout)
+            if client_msg not in stdout:
+                logging.error("Missing client message from stdout (%s): %s", tls_config.name, stdout)
+        elif tls_client.returncode == 0:
+            logging.error('Expected an error, but tls_client finished with success')
 
         if tls_config.stdout_regex:
             match = re.search(tls_config.stdout_regex, stdout.decode('utf-8'))
@@ -1046,10 +1056,13 @@ def cli_tls_socket_tests(tmp_dir):
                 logging.error("Client log did not match expected regex (%s): %s", tls_config.name, tls_config.stdout_regex)
                 logging.error("Client said (stdout): %s", stdout)
 
-    (srv_stdout, srv_stderr) = tls_server.communicate(None, 5)
-    if srv_stderr:
-        logging.error("server said (stdout): %s", srv_stdout)
-        logging.error("server said (stderr): %s", srv_stderr)
+    try:
+        (srv_stdout, srv_stderr) = tls_server.communicate(None, 5)
+    except subprocess.TimeoutExpired:
+        tls_server.kill()
+        tls_server.communicate()
+    logging.debug("server said (stdout): %s", srv_stdout)
+    logging.debug("server said (stderr): %s", srv_stderr)
 
 def cli_tls_online_pqc_hybrid_tests(tmp_dir):
     if not run_socket_tests() or not run_online_tests() or not check_for_command("tls_client"):
