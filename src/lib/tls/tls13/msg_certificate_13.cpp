@@ -174,14 +174,20 @@ Certificate_13::Certificate_13(const Client_Hello_13& client_hello,
       m_request_context(), m_side(Connection_Side::Server) {
    BOTAN_ASSERT_NOMSG(client_hello.extensions().has<Signature_Algorithms>());
 
-   setup_entries(
+   auto cert_chain =
       credentials_manager.find_cert_chain(filter_signature_schemes(client_hello.signature_schemes()),
                                           to_algorithm_identifiers(client_hello.certificate_signature_schemes()),
                                           {},
                                           "tls-server",
-                                          client_hello.sni_hostname()),
-      client_hello.extensions().get<Certificate_Status_Request>(),
-      callbacks);
+                                          client_hello.sni_hostname());
+
+   // RFC 8446 4.4.2
+   //    The server's certificate_list MUST always be non-empty.
+   if(cert_chain.empty()) {
+      throw TLS_Exception(Alert::HandshakeFailure, "No sufficient server certificate available");
+   }
+
+   setup_entries(std::move(cert_chain), client_hello.extensions().get<Certificate_Status_Request>(), callbacks);
 }
 
 /**
