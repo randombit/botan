@@ -12,6 +12,7 @@
 #include <botan/mac.h>
 #include <botan/numthry.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -272,21 +273,16 @@ std::vector<uint8_t> ECIES_Encryptor::enc(const uint8_t data[],
    secure_vector<uint8_t> encrypted_data(data, data + length);
    m_cipher->finish(encrypted_data);
 
-   // concat elements
-
-   std::vector<uint8_t> out(m_eph_public_key_bin.size() + encrypted_data.size() + m_mac->output_length());
-   buffer_insert(out, 0, m_eph_public_key_bin);
-   buffer_insert(out, m_eph_public_key_bin.size(), encrypted_data);
-
-   // mac
+   // compute the MAC
    m_mac->set_key(secret_key.begin() + m_params.dem_keylen(), m_params.mac_keylen());
    m_mac->update(encrypted_data);
    if(!m_label.empty()) {
       m_mac->update(m_label);
    }
-   m_mac->final(out.data() + m_eph_public_key_bin.size() + encrypted_data.size());
+   const auto mac = m_mac->final();
 
-   return out;
+   // concat elements
+   return concat(m_eph_public_key_bin, encrypted_data, mac);
 }
 
 ECIES_Decryptor::ECIES_Decryptor(const PK_Key_Agreement_Key& key,

@@ -7,6 +7,7 @@
 */
 
 #include <botan/dlies.h>
+#include <botan/internal/stl_util.h>
 #include <limits>
 
 namespace Botan {
@@ -72,15 +73,10 @@ std::vector<uint8_t> DLIES_Encryptor::enc(const uint8_t in[], size_t length, Ran
 
    // calculate MAC
    m_mac->set_key(secret_keys.data() + cipher_key_len, m_mac_keylen);
-   secure_vector<uint8_t> tag = m_mac->process(ciphertext);
+   const auto tag = m_mac->process(ciphertext);
 
    // out = (ephemeral) public key + ciphertext + tag
-   secure_vector<uint8_t> out(m_own_pub_key.size() + ciphertext.size() + tag.size());
-   buffer_insert(out, 0, m_own_pub_key);
-   buffer_insert(out, 0 + m_own_pub_key.size(), ciphertext);
-   buffer_insert(out, 0 + m_own_pub_key.size() + ciphertext.size(), tag);
-
-   return unlock(out);
+   return concat(m_own_pub_key, ciphertext, tag);
 }
 
 /**
