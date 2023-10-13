@@ -73,8 +73,12 @@ extern "C" char** environ;
    #include <sys/prctl.h>
 #endif
 
-#if defined(BOTAN_TARGET_IS_FREEBSD) || defined(BOTAN_TARGET_IS_OPENBSD)
+#if defined(BOTAN_TARGET_OS_IS_FREEBSD) || defined(BOTAN_TARGET_OS_IS_OPENBSD)
    #include <pthread_np.h>
+#endif
+
+#if defined(BOTAN_TARGET_OS_IS_HAIKU)
+   #include <kernel/OS.h>
 #endif
 
 namespace Botan {
@@ -641,6 +645,9 @@ void OS::set_thread_name(std::thread& thread, const std::string& name) {
          }
       }
    }
+   #elif defined(BOTAN_TARGET_OS_IF_HAIKU)
+   auto thread_id = get_pthread_thread_id(thread.native_handle());
+   static_cast<void>(rename_thread(thread_id, name.c_str()));
    #else
    // TODO other possible oses ?
    // macOs does not seem to allow to name threads other than the current one.
