@@ -513,7 +513,7 @@ def process_command_line(args):
     build_group.add_option('--with-debug-asserts', action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
 
-    build_group.add_option('--terminate-on-asserts', action='store_true', default=False,
+    build_group.add_option('--unsafe-terminate-on-asserts', action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--build-targets', default=None, dest="build_targets", action='append',
@@ -2257,7 +2257,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
 
         'with_valgrind': options.with_valgrind,
         'with_debug_asserts': options.with_debug_asserts,
-        'terminate_on_asserts': options.terminate_on_asserts,
+        'terminate_on_asserts': options.unsafe_terminate_on_asserts,
         'optimize_for_size': options.optimize_for_size,
 
         'mod_list': sorted([m.basename for m in modules]),
@@ -3439,7 +3439,7 @@ botan
     if options.unsafe_fuzzer_mode:
         logging.warning("Unsafe fuzzer mode is NOT SAFE FOR PRODUCTION")
 
-    if options.terminate_on_asserts:
+    if options.unsafe_terminate_on_asserts:
         logging.warning("Terminating on assertion failures is NOT SAFE FOR PRODUCTION")
 
 def list_os_features(all_os_features, info_os):
