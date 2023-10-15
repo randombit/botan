@@ -11,6 +11,7 @@
 #include <botan/cipher_mode.h>
 #include <botan/mac.h>
 #include <botan/numthry.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/stl_util.h>
 
@@ -346,7 +347,7 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
       m_mac->update(m_label);
    }
    const secure_vector<uint8_t> calculated_mac = m_mac->final();
-   valid_mask = ct_compare_u8(mac_data.data(), calculated_mac.data(), mac_data.size());
+   valid_mask = CT::is_equal(mac_data.data(), calculated_mac.data(), mac_data.size()).value();
 
    if(valid_mask) {
       // decrypt data

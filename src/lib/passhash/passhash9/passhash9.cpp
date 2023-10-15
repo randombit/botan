@@ -10,6 +10,7 @@
 #include <botan/base64.h>
 #include <botan/pbkdf2.h>
 #include <botan/rng.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 
 namespace Botan {
@@ -119,8 +120,9 @@ bool check_passhash9(std::string_view pass, std::string_view hash) {
       kdf.derive_key(PASSHASH9_PBKDF_OUTPUT_LEN, pass, &bin[ALGID_BYTES + WORKFACTOR_BYTES], SALT_BYTES, kdf_iterations)
          .bits_of();
 
-   return constant_time_compare(
-      cmp.data(), &bin[ALGID_BYTES + WORKFACTOR_BYTES + SALT_BYTES], PASSHASH9_PBKDF_OUTPUT_LEN);
+   const uint8_t* hashbytes = &bin[ALGID_BYTES + WORKFACTOR_BYTES + SALT_BYTES];
+
+   return CT::is_equal(cmp.data(), hashbytes, PASSHASH9_PBKDF_OUTPUT_LEN).as_bool();
 }
 
 bool is_passhash9_alg_supported(uint8_t alg_id) {

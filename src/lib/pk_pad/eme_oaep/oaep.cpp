@@ -117,7 +117,9 @@ secure_vector<uint8_t> oaep_find_delim(uint8_t& valid_mask,
 
    // If we never saw any non-zero byte, then it's not valid input
    bad_input_m |= waiting_for_delim;
-   bad_input_m |= CT::Mask<uint8_t>::is_zero(ct_compare_u8(&input[hlen], Phash.data(), hlen));
+
+   // If the P hash is wrong, then it's not valid
+   bad_input_m |= CT::is_not_equal(&input[hlen], Phash.data(), hlen);
 
    delim_idx += 1;
 

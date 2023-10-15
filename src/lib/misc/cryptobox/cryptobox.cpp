@@ -14,6 +14,7 @@
 #include <botan/pem.h>
 #include <botan/pwdhash.h>
 #include <botan/rng.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 
 namespace Botan::CryptoBox {
@@ -132,7 +133,7 @@ secure_vector<uint8_t> decrypt_bin(const uint8_t input[], size_t input_len, std:
    }
    secure_vector<uint8_t> computed_mac = hmac->final();
 
-   if(!constant_time_compare(computed_mac.data(), box_mac, MAC_OUTPUT_LEN)) {
+   if(!CT::is_equal(computed_mac.data(), box_mac, MAC_OUTPUT_LEN).as_bool()) {
       throw Decoding_Error("CryptoBox integrity failure");
    }
 

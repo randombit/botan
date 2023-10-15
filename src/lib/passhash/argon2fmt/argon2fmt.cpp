@@ -9,6 +9,7 @@
 #include <botan/base64.h>
 #include <botan/pwdhash.h>
 #include <botan/rng.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 
@@ -139,7 +140,7 @@ bool argon2_check_pwhash(const char* password, size_t password_len, std::string_
 
    pwdhash->derive_key(generated.data(), generated.size(), password, password_len, salt.data(), salt.size());
 
-   return constant_time_compare(generated.data(), hash.data(), generated.size());
+   return CT::is_equal(generated.data(), hash.data(), generated.size()).as_bool();
 }
 
 }  // namespace Botan

@@ -11,6 +11,7 @@
 #include <botan/der_enc.h>
 #include <botan/hash.h>
 #include <botan/kdf.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/pk_ops.h>
 #include <botan/internal/point_mul.h>
@@ -161,7 +162,7 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
             return secure_vector<uint8_t>();
          }
 
-         if(same_mem(recode_ctext.data(), ciphertext, ciphertext_len) == false) {
+         if(CT::is_equal(recode_ctext.data(), ciphertext, ciphertext_len).as_bool() == false) {
             return secure_vector<uint8_t>();
          }
 
@@ -201,7 +202,7 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
          m_hash->update(y2_bytes);
          secure_vector<uint8_t> u = m_hash->final();
 
-         if(constant_time_compare(u.data(), C3.data(), m_hash->output_length()) == false) {
+         if(!CT::is_equal(u.data(), C3.data(), m_hash->output_length()).as_bool()) {
             return secure_vector<uint8_t>();
          }
 

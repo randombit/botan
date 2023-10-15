@@ -8,6 +8,7 @@
 
 #include <botan/internal/ccm.h>
 
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 
@@ -265,7 +266,7 @@ void CCM_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    T ^= S0;
 
-   if(!constant_time_compare(T.data(), buf_end, tag_size())) {
+   if(!CT::is_equal(T.data(), buf_end, tag_size()).as_bool()) {
       throw Invalid_Authentication_Tag("CCM tag check failed");
    }
 

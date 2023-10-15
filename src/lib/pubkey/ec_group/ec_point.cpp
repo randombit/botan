@@ -72,7 +72,7 @@ inline void resize_ws(std::vector<BigInt>& ws_bn, size_t cap_size) {
 
 void EC_Point::add_affine(
    const word x_words[], size_t x_size, const word y_words[], size_t y_size, std::vector<BigInt>& ws_bn) {
-   if((CT::all_zeros(x_words, x_size) & CT::all_zeros(y_words, y_size)).is_set()) {
+   if((CT::all_zeros(x_words, x_size) & CT::all_zeros(y_words, y_size)).as_bool()) {
       return;
    }
 
@@ -154,7 +154,7 @@ void EC_Point::add(const word x_words[],
                    const word z_words[],
                    size_t z_size,
                    std::vector<BigInt>& ws_bn) {
-   if((CT::all_zeros(x_words, x_size) & CT::all_zeros(z_words, z_size)).is_set()) {
+   if((CT::all_zeros(x_words, x_size) & CT::all_zeros(z_words, z_size)).as_bool()) {
       return;
    }
 

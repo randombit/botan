@@ -7,6 +7,7 @@
 */
 
 #include <botan/dlies.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/stl_util.h>
 #include <limits>
 
@@ -156,7 +157,7 @@ secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
    secure_vector<uint8_t> tag(msg + m_pub_key_size + ciphertext_len,
                               msg + m_pub_key_size + ciphertext_len + m_mac->output_length());
 
-   valid_mask = ct_compare_u8(tag.data(), calculated_tag.data(), tag.size());
+   valid_mask = CT::is_equal(tag.data(), calculated_tag.data(), tag.size()).value();
 
    // decrypt
    if(m_cipher) {

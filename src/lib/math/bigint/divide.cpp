@@ -40,7 +40,7 @@ inline bool division_check(word q, word y2, word y1, word x3, word x2, word x1) 
    const word x[3] = {x1, x2, x3};
    const word y[3] = {y1, y2, y3};
 
-   return bigint_ct_is_lt(x, 3, y, 3).is_set();
+   return bigint_ct_is_lt(x, 3, y, 3).as_bool();
 }
 
 }  // namespace
@@ -98,7 +98,7 @@ void ct_divide_word(const BigInt& x, word y, BigInt& q_out, word& r_out) {
       r += x_b;
 
       const auto r_gte_y = CT::Mask<word>::is_gte(r, y) | r_carry;
-      q.conditionally_set_bit(b, r_gte_y.is_set());
+      q.conditionally_set_bit(b, r_gte_y.as_bool());
       r = r_gte_y.select(r - y, r);
    }
 

@@ -10,6 +10,7 @@
 #include <botan/hash.h>
 #include <botan/hex.h>
 #include <botan/rng.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 
 namespace Botan {
@@ -215,7 +216,7 @@ secure_vector<uint8_t> RTSS_Share::reconstruct(const std::vector<RTSS_Share>& sh
             throw Decoding_Error("Different sized RTSS shares detected");
          }
 
-         if(!same_mem(&shares[0].m_contents[0], &shares[i].m_contents[0], RTSS_HEADER_SIZE)) {
+         if(!CT::is_equal(&shares[0].m_contents[0], &shares[i].m_contents[0], RTSS_HEADER_SIZE).as_bool()) {
             throw Decoding_Error("Different RTSS headers detected");
          }
       }
@@ -289,7 +290,7 @@ secure_vector<uint8_t> RTSS_Share::reconstruct(const std::vector<RTSS_Share>& sh
       hash->update(recovered.data(), secret_len);
       secure_vector<uint8_t> hash_check = hash->final();
 
-      if(!constant_time_compare(hash_check.data(), &recovered[secret_len], hash->output_length())) {
+      if(!CT::is_equal(hash_check.data(), &recovered[secret_len], hash->output_length()).as_bool()) {
          throw Decoding_Error("RTSS hash check failed");
       }
 

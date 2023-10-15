@@ -10,6 +10,7 @@
 #include <botan/hex.h>
 #include <botan/mem_ops.h>
 #include <botan/version.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/ffi_util.h>
 #include <botan/internal/os_utils.h>
 #include <cstdio>
@@ -290,7 +291,9 @@ uint32_t botan_version_datestamp() {
 }
 
 int botan_constant_time_compare(const uint8_t* x, const uint8_t* y, size_t len) {
-   return Botan::constant_time_compare(x, y, len) ? 0 : -1;
+   auto same = Botan::CT::is_equal(x, y, len);
+   // Return 0 if same or -1 otherwise
+   return static_cast<int>(same.select(1, 0)) - 1;
 }
 
 int botan_same_mem(const uint8_t* x, const uint8_t* y, size_t len) {

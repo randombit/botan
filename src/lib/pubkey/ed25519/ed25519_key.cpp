@@ -14,6 +14,7 @@
 #include <botan/der_enc.h>
 #include <botan/hash.h>
 #include <botan/rng.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/ed25519_internal.h>
 #include <botan/internal/pk_ops_impl.h>
 
@@ -33,7 +34,7 @@ bool Ed25519_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*
    */
 
    const uint8_t identity_element[32] = {1};
-   if(same_mem(m_public.data(), identity_element, 32)) {
+   if(CT::is_equal(m_public.data(), identity_element, 32).as_bool()) {
       return false;
    }
 
@@ -56,7 +57,7 @@ bool Ed25519_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*
    uint8_t result[32];
    ge_double_scalarmult_vartime(result, modm_m, &point, zero);
 
-   if(!same_mem(result, identity_element, 32)) {
+   if(!CT::is_equal(result, identity_element, 32).as_bool()) {
       return false;
    }
 

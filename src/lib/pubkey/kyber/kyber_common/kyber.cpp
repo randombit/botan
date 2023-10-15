@@ -1157,9 +1157,9 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
 
          // Overwrite pre-k with z on re-encryption failure (constant time)
          secure_vector<uint8_t> lower_g_out_final(lower_g_out.size());
-         const uint8_t reencrypt_success =
-            constant_time_compare(encapsulated_key.data(), cmp.data(), encapsulated_key.size());
          BOTAN_ASSERT_NOMSG(lower_g_out.size() == m_key.m_private->z().size());
+
+         const auto reencrypt_success = CT::is_equal(encapsulated_key.data(), cmp.data(), encapsulated_key.size());
          CT::conditional_copy_mem(reencrypt_success,
                                   lower_g_out_final.data(),
                                   lower_g_out.data(),

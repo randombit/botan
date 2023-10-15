@@ -41,15 +41,15 @@ void Sodium::randombytes_buf_deterministic(void* buf, size_t size, const uint8_t
 }
 
 int Sodium::crypto_verify_16(const uint8_t x[16], const uint8_t y[16]) {
-   return same_mem(x, y, 16);
+   return static_cast<int>(CT::is_equal(x, y, 16).select(1, 0));
 }
 
 int Sodium::crypto_verify_32(const uint8_t x[32], const uint8_t y[32]) {
-   return same_mem(x, y, 32);
+   return static_cast<int>(CT::is_equal(x, y, 32).select(1, 0));
 }
 
 int Sodium::crypto_verify_64(const uint8_t x[64], const uint8_t y[64]) {
-   return same_mem(x, y, 64);
+   return static_cast<int>(CT::is_equal(x, y, 64).select(1, 0));
 }
 
 void Sodium::sodium_memzero(void* ptr, size_t len) {
@@ -57,8 +57,9 @@ void Sodium::sodium_memzero(void* ptr, size_t len) {
 }
 
 int Sodium::sodium_memcmp(const void* x, const void* y, size_t len) {
-   const bool same = constant_time_compare(static_cast<const uint8_t*>(x), static_cast<const uint8_t*>(y), len);
-   return same ? 0 : -1;
+   const auto same = CT::is_equal(static_cast<const uint8_t*>(x), static_cast<const uint8_t*>(y), len);
+   // Return 0 if same or -1 if differing
+   return static_cast<int>(same.select(1, 0)) - 1;
 }
 
 int Sodium::sodium_compare(const uint8_t x[], const uint8_t y[], size_t len) {

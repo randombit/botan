@@ -380,9 +380,9 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish_msg(secure_vector<uint8_t>& buffer, si
 
       const size_t mac_offset = enc_size;
 
-      const bool mac_ok = constant_time_compare(&record_contents[mac_offset], mac_buf.data(), tag_size());
+      const auto mac_ok = CT::is_equal(&record_contents[mac_offset], mac_buf.data(), tag_size());
 
-      if(!mac_ok) {
+      if(!mac_ok.as_bool()) {
          throw TLS_Exception(Alert::BadRecordMac, "Message authentication failure");
       }
 
@@ -441,13 +441,13 @@ void TLS_CBC_HMAC_AEAD_Decryption::finish_msg(secure_vector<uint8_t>& buffer, si
 
       const size_t mac_offset = record_len - (tag_size() + pad_size);
 
-      const bool mac_ok = constant_time_compare(&record_contents[mac_offset], mac_buf.data(), tag_size());
+      const auto mac_ok = CT::is_equal(&record_contents[mac_offset], mac_buf.data(), tag_size());
 
       const auto ok_mask = size_ok_mask & CT::Mask<uint16_t>::expand(mac_ok) & CT::Mask<uint16_t>::expand(pad_size);
 
       CT::unpoison(ok_mask);
 
-      if(ok_mask.is_set()) {
+      if(ok_mask.as_bool()) {
          buffer.insert(buffer.end(), plaintext_block, plaintext_block + plaintext_length);
       } else {
          perform_additional_compressions(record_len, pad_size);

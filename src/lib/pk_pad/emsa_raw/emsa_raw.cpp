@@ -8,6 +8,7 @@
 #include <botan/internal/emsa_raw.h>
 
 #include <botan/exceptn.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -80,7 +81,7 @@ bool EMSA_Raw::verify(const std::vector<uint8_t>& coded, const std::vector<uint8
       }
    }
 
-   if(!constant_time_compare(coded.data(), raw.data() + leading_zeros_expected, coded.size())) {
+   if(!CT::is_equal(coded.data(), raw.data() + leading_zeros_expected, coded.size()).as_bool()) {
       same_modulo_leading_zeros = false;
    }
 

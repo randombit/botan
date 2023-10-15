@@ -10,6 +10,7 @@
 
 #include <botan/block_cipher.h>
 #include <botan/internal/cmac.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/ctr.h>
 #include <botan/internal/poly_dbl.h>
 
@@ -187,7 +188,7 @@ void SIV_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    const secure_vector<uint8_t> T = S2V(buffer.data() + offset, buffer.size() - offset - V.size());
 
-   if(!constant_time_compare(T.data(), V.data(), T.size())) {
+   if(!CT::is_equal(T.data(), V.data(), T.size()).as_bool()) {
       throw Invalid_Authentication_Tag("SIV tag check failed");
    }
 

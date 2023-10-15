@@ -176,7 +176,8 @@ bool check_bcrypt(std::string_view pass, std::string_view hash) {
 
    const std::string compare = make_bcrypt(pass, salt, workfactor, bcrypt_version);
 
-   return same_mem(hash.data(), compare.data(), compare.size());
+   return CT::is_equal(cast_char_ptr_to_uint8(hash.data()), cast_char_ptr_to_uint8(compare.data()), compare.size())
+      .as_bool();
 }
 
 }  // namespace Botan

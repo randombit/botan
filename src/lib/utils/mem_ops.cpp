@@ -68,13 +68,7 @@ void initialize_allocator() {
 }
 
 uint8_t ct_compare_u8(const uint8_t x[], const uint8_t y[], size_t len) {
-   volatile uint8_t difference = 0;
-
-   for(size_t i = 0; i != len; ++i) {
-      difference = difference | (x[i] ^ y[i]);
-   }
-
-   return CT::Mask<uint8_t>::is_zero(difference).value();
+   return CT::is_equal(x, y, len).value();
 }
 
 }  // namespace Botan

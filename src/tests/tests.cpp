@@ -157,12 +157,20 @@ bool Test::Result::test_failure(const std::string& err) {
    return false;
 }
 
+namespace {
+
+bool same_contents(const uint8_t x[], const uint8_t y[], size_t len) {
+   return (len == 0) ? true : std::memcmp(x, y, len) == 0;
+}
+
+}  // namespace
+
 bool Test::Result::test_ne(const std::string& what,
                            const uint8_t produced[],
                            size_t produced_len,
                            const uint8_t expected[],
                            size_t expected_len) {
-   if(produced_len == expected_len && Botan::same_mem(produced, expected, expected_len)) {
+   if(produced_len == expected_len && same_contents(produced, expected, expected_len)) {
       return test_failure(who() + ": " + what + " produced matching");
    }
    return test_success();
@@ -174,7 +182,7 @@ bool Test::Result::test_eq(const char* producer,
                            size_t produced_size,
                            const uint8_t expected[],
                            size_t expected_size) {
-   if(produced_size == expected_size && Botan::same_mem(produced, expected, expected_size)) {
+   if(produced_size == expected_size && same_contents(produced, expected, expected_size)) {
       return test_success();
    }
 

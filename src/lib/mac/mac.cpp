@@ -9,6 +9,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/scan_name.h>
 
 #if defined(BOTAN_HAS_CMAC)
@@ -169,7 +170,7 @@ bool MessageAuthenticationCode::verify_mac_result(std::span<const uint8_t> mac) 
       return false;
    }
 
-   return constant_time_compare(our_mac.data(), mac.data(), mac.size());
+   return CT::is_equal(our_mac.data(), mac.data(), mac.size()).as_bool();
 }
 
 }  // namespace Botan

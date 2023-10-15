@@ -10,6 +10,7 @@
 #include <botan/tls_messages.h>
 
 #include <botan/kdf.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_state.h>
 
@@ -66,8 +67,12 @@ bool Finished_12::verify(const Handshake_State& state, Connection_Side side) con
 #if defined(BOTAN_UNSAFE_FUZZER_MODE)
    return true;
 #else
-   return (m_verification_data.size() == computed_verify.size()) &&
-          constant_time_compare(m_verification_data.data(), computed_verify.data(), computed_verify.size());
+   // first check the size:
+   if(m_verification_data.size() != computed_verify.size()) {
+      return false;
+   }
+
+   return CT::is_equal(m_verification_data.data(), computed_verify.data(), computed_verify.size()).as_bool();
 #endif
 }
 

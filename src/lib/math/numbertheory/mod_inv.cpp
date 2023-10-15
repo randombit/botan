@@ -108,7 +108,7 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod) {
       b_is_1 &= CT::Mask<word>::is_zero(b_w[i]);
    }
 
-   BOTAN_ASSERT(a_is_0.is_set(), "A is zero");
+   BOTAN_ASSERT(a_is_0.as_bool(), "A is zero");
 
    // if b != 1 then gcd(n,mod) > 1 and inverse does not exist
    // in which case zero out the result to indicate this

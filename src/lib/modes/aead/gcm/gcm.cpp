@@ -9,6 +9,7 @@
 #include <botan/internal/gcm.h>
 
 #include <botan/block_cipher.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/ctr.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/ghash.h>
@@ -167,7 +168,7 @@ void GCM_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    const uint8_t* included_tag = &buffer[remaining + offset];
 
-   if(!constant_time_compare(mac.data(), included_tag, tag_size())) {
+   if(!CT::is_equal(mac.data(), included_tag, tag_size()).as_bool()) {
       throw Invalid_Authentication_Tag("GCM tag check failed");
    }
 

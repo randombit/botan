@@ -11,6 +11,7 @@
 #include <botan/ed25519.h>
 
 #include <botan/rng.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/ed25519_internal.h>
 #include <botan/internal/sha2_64.h>
 
@@ -122,7 +123,7 @@ bool ed25519_verify(const uint8_t* m,
 
    ge_double_scalarmult_vartime(rcheck, h, &A, sig + 32);
 
-   return constant_time_compare(rcheck, sig, 32);
+   return CT::is_equal(rcheck, sig, 32).as_bool();
 }
 
 }  // namespace Botan

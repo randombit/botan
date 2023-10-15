@@ -9,6 +9,7 @@
 #include <botan/mac.h>
 #include <botan/secmem.h>
 #include <botan/stream_cipher.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -54,7 +55,7 @@ int Sodium::crypto_secretbox_xsalsa20poly1305_open(
    poly1305->update(ctext + 32, ctext_len - 32);
    secure_vector<uint8_t> computed = poly1305->final();
 
-   if(!constant_time_compare(computed.data(), ctext + 16, 16)) {
+   if(CT::is_not_equal(computed.data(), ctext + 16, 16).as_bool()) {
       return -1;
    }
 
@@ -105,7 +106,7 @@ int Sodium::crypto_secretbox_open_detached(uint8_t ptext[],
    poly1305->update(ctext, ctext_len);
    secure_vector<uint8_t> computed_mac = poly1305->final();
 
-   if(!constant_time_compare(mac, computed_mac.data(), computed_mac.size())) {
+   if(!CT::is_equal(mac, computed_mac.data(), computed_mac.size()).as_bool()) {
       return -1;
    }
 
