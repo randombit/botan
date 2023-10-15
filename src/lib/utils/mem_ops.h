@@ -212,7 +212,10 @@ inline bool same_mem(const T* p1, const T* p2, size_t n) {
    return difference == 0;
 }
 
+#if !defined(BOTAN_IS_BEING_BUILT)
+
 template <typename T, typename Alloc>
+BOTAN_DEPRECATED("The buffer_insert functions are deprecated")
 size_t buffer_insert(std::vector<T, Alloc>& buf, size_t buf_offset, const T input[], size_t input_length) {
    BOTAN_ASSERT_NOMSG(buf_offset <= buf.size());
    const size_t to_copy = std::min(input_length, buf.size() - buf_offset);
@@ -223,6 +226,7 @@ size_t buffer_insert(std::vector<T, Alloc>& buf, size_t buf_offset, const T inpu
 }
 
 template <typename T, typename Alloc, typename Alloc2>
+BOTAN_DEPRECATED("The buffer_insert functions are deprecated")
 size_t buffer_insert(std::vector<T, Alloc>& buf, size_t buf_offset, const std::vector<T, Alloc2>& input) {
    BOTAN_ASSERT_NOMSG(buf_offset <= buf.size());
    const size_t to_copy = std::min(input.size(), buf.size() - buf_offset);
@@ -231,6 +235,8 @@ size_t buffer_insert(std::vector<T, Alloc>& buf, size_t buf_offset, const std::v
    }
    return to_copy;
 }
+
+#endif
 
 /**
 * XOR arrays. Postcondition out[i] = in[i] ^ out[i] forall i = 0...length
