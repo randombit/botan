@@ -32,7 +32,7 @@ Server_Impl_13::Server_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
 }
 
 std::string Server_Impl_13::application_protocol() const {
-   if(m_handshake_state.handshake_finished()) {
+   if(is_handshake_complete()) {
       const auto& eee = m_handshake_state.encrypted_extensions().extensions();
       if(const auto alpn = eee.get<Application_Layer_Protocol_Notification>()) {
          return alpn->single_protocol();
@@ -67,14 +67,13 @@ bool Server_Impl_13::new_session_ticket_supported() const {
    //       regardless of this method indicating no support for tickets.
    //
    // TODO: Implement other PSK KE modes than PSK_DHE_KE
-   return m_handshake_state.handshake_finished() &&
-          m_handshake_state.client_hello().extensions().has<PSK_Key_Exchange_Modes>() &&
+   return is_handshake_complete() && m_handshake_state.client_hello().extensions().has<PSK_Key_Exchange_Modes>() &&
           value_exists(m_handshake_state.client_hello().extensions().get<PSK_Key_Exchange_Modes>()->modes(),
                        PSK_Key_Exchange_Mode::PSK_DHE_KE);
 }
 
 size_t Server_Impl_13::send_new_session_tickets(const size_t tickets) {
-   BOTAN_STATE_CHECK(handshake_finished());
+   BOTAN_STATE_CHECK(is_handshake_complete());
 
    if(tickets == 0) {
       return 0;
@@ -125,7 +124,7 @@ void Server_Impl_13::process_handshake_msg(Handshake_Message_13 message) {
 }
 
 void Server_Impl_13::process_post_handshake_msg(Post_Handshake_Message_13 message) {
-   BOTAN_STATE_CHECK(handshake_finished());
+   BOTAN_STATE_CHECK(is_handshake_complete());
 
    std::visit([&](auto msg) { handle(msg); }, m_handshake_state.received(std::move(message)));
 }
@@ -148,7 +147,7 @@ void Server_Impl_13::process_dummy_change_cipher_spec() {
    // ... no further processing.
 }
 
-bool Server_Impl_13::handshake_finished() const {
+bool Server_Impl_13::is_handshake_complete() const {
    return m_handshake_state.handshake_finished();
 }
 
@@ -440,7 +439,7 @@ void Server_Impl_13::handle(const Certificate_13& certificate_msg) {
    // RFC 8446 4.3.2
    //    certificate_request_context:  [...] This field SHALL be zero length
    //    unless used for the post-handshake authentication exchanges [...].
-   if(!handshake_finished() && !certificate_msg.request_context().empty()) {
+   if(!is_handshake_complete() && !certificate_msg.request_context().empty()) {
       throw TLS_Exception(Alert::DecodeError, "Received a client certificate message with non-empty request context");
    }
 

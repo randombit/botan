@@ -89,6 +89,22 @@ class BOTAN_PUBLIC_API(2, 0) Channel {
       virtual void close() = 0;
 
       /**
+      * Becomes true as soon as the TLS handshake is fully complete and all
+      * security assurances TLS provides can be guaranteed.
+      *
+      * @returns true once the TLS handshake has finished successfully
+      */
+      virtual bool is_handshake_complete() const = 0;
+
+      /**
+      * Check whether the connection is ready to send application data. Note
+      * that a TLS 1.3 server MAY send data _before_ receiving the client's
+      * Finished message. Only _after_ receiving the client's Finished, can the
+      * server be sure about the client's liveness and (optional) identity.
+      *
+      * Consider using is_handshake_complete() if you need to wait until the
+      * handshake if fully complete.
+      *
       * @return true iff the connection is active for sending application data
       */
       virtual bool is_active() const = 0;

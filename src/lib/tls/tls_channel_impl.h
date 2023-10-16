@@ -80,6 +80,11 @@ class Channel_Impl {
       void close() { send_warning_alert(Alert::CloseNotify); }
 
       /**
+      * @return true iff the TLS handshake has finished successfully
+      */
+      virtual bool is_handshake_complete() const = 0;
+
+      /**
       * @return true iff the connection is active for sending application data
       */
       virtual bool is_active() const = 0;

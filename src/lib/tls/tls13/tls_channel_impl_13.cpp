@@ -107,7 +107,7 @@ size_t Channel_Impl_13::from_peer(std::span<const uint8_t> data) {
          if(record.type == Record_Type::Handshake) {
             m_handshake_layer.copy_data(record.fragment);
 
-            if(!handshake_finished()) {
+            if(!is_handshake_complete()) {
                while(auto handshake_msg = m_handshake_layer.next_message(policy(), m_transcript_hash)) {
                   // RFC 8446 5.1
                   //    Handshake messages MUST NOT span key changes.  Implementations
@@ -316,7 +316,7 @@ SymmetricKey Channel_Impl_13::key_material_export(std::string_view label,
 
 void Channel_Impl_13::update_traffic_keys(bool request_peer_update) {
    BOTAN_STATE_CHECK(!is_downgrading());
-   BOTAN_STATE_CHECK(handshake_finished());
+   BOTAN_STATE_CHECK(is_handshake_complete());
    BOTAN_ASSERT_NONNULL(m_cipher_state);
    send_post_handshake_message(Key_Update(request_peer_update));
    m_cipher_state->update_write_keys();
