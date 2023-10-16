@@ -107,24 +107,24 @@ class AEAD_Tests final : public Text_Based_Test {
 
                buf.assign(input.begin(), input.end());
                size_t input_length = buf.size();
-               size_t offset = 0;
                uint8_t* p = buf.data();
                Botan::secure_vector<uint8_t> block(update_granularity);
-               Botan::secure_vector<uint8_t> ciphertext(enc->output_length(buf.size()));
+               Botan::secure_vector<uint8_t> ciphertext;
+               ciphertext.reserve(enc->output_length(buf.size()));
                while(input_length > update_granularity &&
                      ((input_length - update_granularity) >= enc->minimum_final_size())) {
                   block.assign(p, p + update_granularity);
                   enc->update(block);
                   p += update_granularity;
                   input_length -= update_granularity;
-                  buffer_insert(ciphertext, 0 + offset, block);
-                  offset += block.size();
+
+                  ciphertext.insert(ciphertext.end(), block.begin(), block.end());
                }
 
                // encrypt remaining bytes
                block.assign(p, p + input_length);
                enc->finish(block);
-               buffer_insert(ciphertext, 0 + offset, block);
+               ciphertext.insert(ciphertext.end(), block.begin(), block.end());
 
                result.test_eq("encrypt update", ciphertext, expected);
             }
@@ -253,24 +253,23 @@ class AEAD_Tests final : public Text_Based_Test {
 
                buf.assign(input.begin(), input.end());
                size_t input_length = buf.size();
-               size_t offset = 0;
                uint8_t* p = buf.data();
                Botan::secure_vector<uint8_t> block(update_granularity);
-               Botan::secure_vector<uint8_t> plaintext(dec->output_length(buf.size()));
+               Botan::secure_vector<uint8_t> plaintext;
+               plaintext.reserve(dec->output_length(buf.size()));
                while((input_length > update_granularity) &&
                      ((input_length - update_granularity) >= dec->minimum_final_size())) {
                   block.assign(p, p + update_granularity);
                   dec->update(block);
                   p += update_granularity;
                   input_length -= update_granularity;
-                  buffer_insert(plaintext, 0 + offset, block);
-                  offset += block.size();
+                  plaintext.insert(plaintext.end(), block.begin(), block.end());
                }
 
                // decrypt remaining bytes
                block.assign(p, p + input_length);
                dec->finish(block);
-               buffer_insert(plaintext, 0 + offset, block);
+               plaintext.insert(plaintext.end(), block.begin(), block.end());
 
                result.test_eq("decrypt update", plaintext, expected);
             }
