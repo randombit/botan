@@ -229,7 +229,7 @@ class Stream {
             send_pending_encrypted_data(ec);
          }
 
-         while(!native_handle()->is_active() && !ec) {
+         while(!native_handle()->is_handshake_complete() && !ec) {
             boost::asio::const_buffer read_buffer{input_buffer().data(), m_nextLayer.read_some(input_buffer(), ec)};
             if(ec) {
                return;

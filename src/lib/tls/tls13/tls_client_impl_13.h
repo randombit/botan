@@ -68,12 +68,16 @@ class Client_Impl_13 : public Channel_Impl_13 {
        */
       std::optional<std::string> external_psk_identity() const override;
 
+      /**
+       * @return true if the TLS handshake finished successfully
+       */
+      bool is_handshake_complete() const override;
+
    private:
       void process_handshake_msg(Handshake_Message_13 msg) override;
       void process_post_handshake_msg(Post_Handshake_Message_13 msg) override;
       void process_dummy_change_cipher_spec() override;
 
-      bool handshake_finished() const override;
       bool prepend_ccs() override;
 
       using Channel_Impl_13::handle;

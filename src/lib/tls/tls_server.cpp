@@ -65,6 +65,10 @@ size_t Server::from_peer(std::span<const uint8_t> data) {
    return read;
 }
 
+bool Server::is_handshake_complete() const {
+   return m_impl->is_handshake_complete();
+}
+
 bool Server::is_active() const {
    return m_impl->is_active();
 }

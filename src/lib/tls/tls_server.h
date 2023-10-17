@@ -66,6 +66,8 @@ class BOTAN_PUBLIC_API(2, 0) Server final : public Channel {
 
       size_t from_peer(std::span<const uint8_t> data) override;
 
+      bool is_handshake_complete() const override;
+
       bool is_active() const override;
 
       bool is_closed() const override;

@@ -33,6 +33,8 @@ class Server_Impl_13 : public Channel_Impl_13 {
       bool new_session_ticket_supported() const override;
       size_t send_new_session_tickets(size_t tickets) override;
 
+      bool is_handshake_complete() const override;
+
    private:
       void process_handshake_msg(Handshake_Message_13 msg) override;
       void process_post_handshake_msg(Post_Handshake_Message_13 msg) override;
@@ -49,8 +51,6 @@ class Server_Impl_13 : public Channel_Impl_13 {
       void handle_reply_to_client_hello(Hello_Retry_Request hello_retry_request);
 
       void maybe_handle_compatibility_mode();
-
-      bool handshake_finished() const override;
 
       void downgrade();
 

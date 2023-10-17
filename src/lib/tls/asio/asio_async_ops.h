@@ -278,7 +278,7 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
                return;
             }
 
-            if(!m_stream.native_handle()->is_active() && !ec) {
+            if(!m_stream.native_handle()->is_handshake_complete() && !ec) {
                // Read more encrypted TLS data from the network
                m_stream.next_layer().async_read_some(m_stream.input_buffer(), std::move(*this));
                return;

@@ -91,7 +91,7 @@ void Client_Impl_13::process_handshake_msg(Handshake_Message_13 message) {
 }
 
 void Client_Impl_13::process_post_handshake_msg(Post_Handshake_Message_13 message) {
-   BOTAN_STATE_CHECK(handshake_finished());
+   BOTAN_STATE_CHECK(is_handshake_complete());
 
    std::visit([&](auto msg) { handle(msg); }, m_handshake_state.received(std::move(message)));
 }
@@ -114,7 +114,7 @@ void Client_Impl_13::process_dummy_change_cipher_spec() {
    // ... no further processing.
 }
 
-bool Client_Impl_13::handshake_finished() const {
+bool Client_Impl_13::is_handshake_complete() const {
    return m_handshake_state.handshake_finished();
 }
 
@@ -418,7 +418,7 @@ void Client_Impl_13::handle(const Certificate_Request_13& certificate_request_ms
    // RFC 8446 4.3.2
    //    [The 'context' field] SHALL be zero length unless used for the
    //    post-handshake authentication exchanges described in Section 4.6.2.
-   if(!m_handshake_state.handshake_finished() && !certificate_request_msg.context().empty()) {
+   if(!is_handshake_complete() && !certificate_request_msg.context().empty()) {
       throw TLS_Exception(Alert::DecodeError, "Certificate_Request context must be empty in the main handshake");
    }
 
@@ -595,7 +595,7 @@ bool Client_Impl_13::prepend_ccs() {
 }
 
 std::string Client_Impl_13::application_protocol() const {
-   if(m_handshake_state.handshake_finished()) {
+   if(is_handshake_complete()) {
       const auto& eee = m_handshake_state.encrypted_extensions().extensions();
       if(eee.has<Application_Layer_Protocol_Notification>()) {
          return eee.get<Application_Layer_Protocol_Notification>()->single_protocol();

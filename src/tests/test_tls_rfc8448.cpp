@@ -977,6 +977,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                    "tls_ephemeral_key_agreement"});
 
                   result.confirm("client is not yet active", !ctx->client.is_active());
+                  result.confirm("handshake is not yet complete", !ctx->client.is_handshake_complete());
                }),
 
             Botan_Tests::CHECK(
@@ -1002,6 +1003,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                   result.require("certificate exists", !ctx->certs_verified().empty());
                   result.require("correct certificate", ctx->certs_verified().front() == server_certificate());
                   result.require("client is active", ctx->client.is_active());
+                  result.confirm("handshake is complete", ctx->client.is_handshake_complete());
 
                   result.test_eq(
                      "correct handshake finished", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientFinished"));
@@ -1452,6 +1454,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
 
                                   result.confirm("client is ready to send application traffic",
                                                  ctx->client.is_active());
+                                  result.confirm("handshake is complete", ctx->client.is_handshake_complete());
                                }),
 
             Botan_Tests::CHECK(
@@ -1465,6 +1468,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
 
                   result.require("client cannot send application traffic anymore", !ctx->client.is_active());
                   result.require("client is not fully closed yet", !ctx->client.is_closed());
+                  result.confirm("handshake stays completed", ctx->client.is_handshake_complete());
 
                   ctx->client.received_data(vars.get_req_bin("Record_Server_CloseNotify"));
 
@@ -1541,6 +1545,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                                    "tls_ephemeral_key_agreement"});
 
                                   result.confirm("client is not yet active", !ctx->client.is_active());
+                                  result.confirm("handshake is not yet complete", !ctx->client.is_handshake_complete());
                                }),
 
             Botan_Tests::CHECK(
@@ -1560,6 +1565,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                                                    "tls_session_activated"});
                   result.require("PSK negotiated", ctx->psk_identity_negotiated() == vars.get_req_str("PskIdentity"));
                   result.require("client is active", ctx->client.is_active());
+                  result.confirm("handshake is complete", ctx->client.is_handshake_complete());
 
                   result.test_eq(
                      "correct handshake finished", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientFinished"));
@@ -1691,7 +1697,13 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                  concat(vars.get_req_bin("Record_ServerHello"),
                                                         vars.get_req_bin("Record_ServerHandshakeMessages")));
 
+                                  // Note: is_active() defines that we can send application data.
+                                  //       RFC 8446 Section 4.4.4 explicitly allows that for servers
+                                  //       that did not receive the client's Finished message, yet.
+                                  //       However, before receiving and validating this message,
+                                  //       the handshake is not yet finished.
                                   result.confirm("Server can now send application data", ctx->server.is_active());
+                                  result.confirm("handshake is not yet complete", !ctx->server.is_handshake_complete());
                                }),
 
             Botan_Tests::CHECK("Send Client Finished",
@@ -1765,6 +1777,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
 
                                   result.confirm("connection is not yet closed", !ctx->server.is_closed());
                                   result.confirm("connection is still active", ctx->server.is_active());
+                                  result.confirm("handshake is still finished", ctx->server.is_handshake_complete());
                                }),
 
             Botan_Tests::CHECK("Expect Server close_notify",
@@ -1774,6 +1787,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
 
                                   result.confirm("connection is now inactive", !ctx->server.is_active());
                                   result.confirm("connection is now closed", ctx->server.is_closed());
+                                  result.confirm("handshake is still finished", ctx->server.is_handshake_complete());
                                   result.test_eq("Server's close notify",
                                                  ctx->pull_send_buffer(),
                                                  vars.get_req_bin("Record_Server_CloseNotify"));
@@ -1849,7 +1863,13 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                  concat(vars.get_req_bin("Record_ServerHello"),
                                                         vars.get_req_bin("Record_ServerHandshakeMessages")));
 
+                                  // Note: is_active() defines that we can send application data.
+                                  //       RFC 8446 Section 4.4.4 explicitly allows that for servers
+                                  //       that did not receive the client's Finished message, yet.
+                                  //       However, before receiving and validating this message,
+                                  //       the handshake is not yet finished.
                                   result.confirm("Server can now send application data", ctx->server.is_active());
+                                  result.confirm("handshake is not yet complete", !ctx->server.is_handshake_complete());
                                }),
 
             // TODO: The rest of this test vector requires 0-RTT which is not
@@ -1908,6 +1928,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                  ctx->pull_send_buffer(),
                                                  vars.get_req_bin("Record_HelloRetryRequest"));
                                   result.confirm("TLS handshake not yet finished", !ctx->server.is_active());
+                                  result.confirm("handshake is not yet complete", !ctx->server.is_handshake_complete());
                                }),
 
             Botan_Tests::CHECK("Receive updated Client Hello message",
@@ -1960,6 +1981,8 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                  concat(vars.get_req_bin("Record_ServerHello"),
                                                         vars.get_req_bin("Record_ServerHandshakeMessages")));
                                   result.confirm("Server could now send application data", ctx->server.is_active());
+                                  result.confirm("handshake is not yet complete",
+                                                 !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
                                }),
 
             Botan_Tests::CHECK("Receive Client Finished",
@@ -1975,6 +1998,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                                    "tls_session_activated"});
 
                                   result.confirm("TLS handshake finished", ctx->server.is_active());
+                                  result.confirm("handshake is complete", ctx->server.is_handshake_complete());
                                }),
 
             Botan_Tests::CHECK("Receive Client close_notify",
@@ -1987,6 +2011,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
 
                                   result.confirm("connection is not yet closed", !ctx->server.is_closed());
                                   result.confirm("connection is still active", ctx->server.is_active());
+                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
                                }),
 
             Botan_Tests::CHECK("Expect Server close_notify",
@@ -1996,6 +2021,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
 
                                   result.confirm("connection is now inactive", !ctx->server.is_active());
                                   result.confirm("connection is now closed", ctx->server.is_closed());
+                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
                                   result.test_eq("Server's close notify",
                                                  ctx->pull_send_buffer(),
                                                  vars.get_req_bin("Record_Server_CloseNotify"));
@@ -2078,6 +2104,8 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
 
                   result.confirm("Not yet aware of client's cert chain", ctx->server.peer_cert_chain().empty());
                   result.confirm("Server could now send application data", ctx->server.is_active());
+                  result.confirm("handshake is not yet complete",
+                                 !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
                }),
 
             Botan_Tests::CHECK("Receive Client's second flight",
@@ -2106,6 +2134,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                  !cert_chain.empty() && cert_chain.front() == client_certificate());
 
                                   result.confirm("TLS handshake finished", ctx->server.is_active());
+                                  result.confirm("handshake is complete", ctx->server.is_handshake_complete());
                                }),
 
             Botan_Tests::CHECK("Receive Client close_notify",
@@ -2118,6 +2147,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
 
                                   result.confirm("connection is not yet closed", !ctx->server.is_closed());
                                   result.confirm("connection is still active", ctx->server.is_active());
+                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
                                }),
 
             Botan_Tests::CHECK("Expect Server close_notify",
@@ -2127,6 +2157,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
 
                                   result.confirm("connection is now inactive", !ctx->server.is_active());
                                   result.confirm("connection is now closed", ctx->server.is_closed());
+                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
                                   result.test_eq("Server's close notify",
                                                  ctx->pull_send_buffer(),
                                                  vars.get_req_bin("Record_Server_CloseNotify"));
@@ -2204,6 +2235,8 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                         vars.get_req_bin("Record_ServerHandshakeMessages")));
 
                                   result.confirm("Server could now send application data", ctx->server.is_active());
+                                  result.confirm("handshake is not yet complete",
+                                                 !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
                                }),
 
             Botan_Tests::CHECK("Receive Client Finished",
@@ -2218,7 +2251,8 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                                    "tls_session_established",
                                                                    "tls_session_activated"});
 
-                                  result.confirm("TLS handshake finished", ctx->server.is_active());
+                                  result.confirm("TLS handshake fully finished", ctx->server.is_active());
+                                  result.confirm("handshake is complete", ctx->server.is_handshake_complete());
                                }),
 
             Botan_Tests::CHECK("Receive Client close_notify",
@@ -2231,6 +2265,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
 
                                   result.confirm("connection is not yet closed", !ctx->server.is_closed());
                                   result.confirm("connection is still active", ctx->server.is_active());
+                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
                                }),
 
             Botan_Tests::CHECK("Expect Server close_notify",
@@ -2240,6 +2275,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
 
                                   result.confirm("connection is now inactive", !ctx->server.is_active());
                                   result.confirm("connection is now closed", ctx->server.is_closed());
+                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
                                   result.test_eq("Server's close notify",
                                                  ctx->pull_send_buffer(),
                                                  vars.get_req_bin("Record_Server_CloseNotify"));
@@ -2333,6 +2369,8 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
                                                         vars.get_req_bin("Record_ServerHandshakeMessages")));
 
                                   result.confirm("Server can now send application data", ctx->server.is_active());
+                                  result.confirm("handshake is not yet complete",
+                                                 !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
                                }),
 
             Botan_Tests::CHECK("Send Client Finished",
@@ -2378,11 +2416,13 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
 
                                   result.confirm("connection is not yet closed", !ctx->server.is_closed());
                                   result.confirm("connection is still active", ctx->server.is_active());
+                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
 
                                   ctx->server.close();
 
                                   result.confirm("connection is now inactive", !ctx->server.is_active());
                                   result.confirm("connection is now closed", ctx->server.is_closed());
+                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
                                   result.test_eq("Server's close notify",
                                                  ctx->pull_send_buffer(),
                                                  vars.get_req_bin("Record_Server_CloseNotify"));

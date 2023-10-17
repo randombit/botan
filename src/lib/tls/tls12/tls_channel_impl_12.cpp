@@ -237,11 +237,12 @@ void Channel_Impl_12::change_cipher_spec_writer(Connection_Side side) {
    m_write_cipher_states[epoch] = write_state;
 }
 
-bool Channel_Impl_12::is_active() const {
-   if(is_closed()) {
-      return false;
-   }
+bool Channel_Impl_12::is_handshake_complete() const {
    return (active_state() != nullptr);
+}
+
+bool Channel_Impl_12::is_active() const {
+   return !is_closed() && is_handshake_complete();
 }
 
 bool Channel_Impl_12::is_closed() const {
