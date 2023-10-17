@@ -1260,7 +1260,7 @@ def cli_tls_http_server_tests(tmp_dir):
         context.maximum_version = tls_version
 
         conn = HTTPSConnection('localhost', port=server_port, context=context)
-        conn.request("GET", "/")
+        conn.request("GET", "/", headers={"Connection": "close"})
         resp = conn.getresponse()
 
         if resp.status != 200:
@@ -1271,16 +1271,19 @@ def cli_tls_http_server_tests(tmp_dir):
         if body.find('TLS negotiation with Botan 3.') < 0:
             logging.error('Unexpected response body %s', body)
 
-        conn.request("POST", "/logout")
+        conn.request("POST", "/logout", headers={"Connection": "close"})
         resp = conn.getresponse()
 
         if resp.status != 405:
             logging.error('Unexpected response status %d', resp.status)
 
-    rc = tls_server.wait(5)
-
-    if rc != 0:
-        logging.error("Unexpected return code from https_server %d", rc)
+    try:
+        rc = tls_server.wait(5)
+        if rc != 0:
+            logging.error("Unexpected return code from https_server %d", rc)
+    except subprocess.TimeoutExpired:
+        logging.error("server did not terminate as expected")
+        tls_server.kill()
 
 def cli_tls_proxy_tests(tmp_dir):
     if not run_socket_tests() or not check_for_command("tls_proxy"):

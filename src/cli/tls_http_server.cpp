@@ -1,37 +1,47 @@
 /*
-* (C) 2014,2015,2017,2019 Jack Lloyd
+* (C) 2014,2015,2017,2019,2023 Jack Lloyd
 * (C) 2016 Matthias Gierlings
-* (C) 2023 René Meusel, Rohde & Schwarz Cybersecurity
+* (C) 2023 Fabian Albert, René Meusel - Rohde & Schwarz Cybersecurity
+*
+* This implementation is roughly based on this BSL-licensed example
+* by Klemens D. Morgenstern:
+*   www.boost.org/doc/libs/1_83_0/libs/beast/example/http/server/awaitable/http_server_awaitable.cpp
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include "cli.h"
 
-#if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_BOOST_ASIO) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+#if defined(BOTAN_HAS_BOOST_ASIO)
+   #include <botan/boost_compat.h>
+#endif
 
-   #include <atomic>
-   #include <fstream>
+#if defined(BOTAN_FOUND_COMPATIBLE_BOOST_VERSION)
+   #include <boost/asio/awaitable.hpp>
+#endif
+
+// If your boost version is too old, this might not be defined despite
+// your toolchain supporting C++20 co_await.
+#if defined(BOOST_ASIO_HAS_CO_AWAIT) && defined(BOTAN_HAS_TLS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
+
+   #include <ctime>
    #include <iomanip>
-   #include <iostream>
    #include <memory>
    #include <string>
    #include <thread>
-   #include <utility>
    #include <vector>
 
-   #include <botan/internal/os_utils.h>
-   #include <boost/asio.hpp>
-   #include <boost/bind.hpp>
+   #include <boost/asio/co_spawn.hpp>
+   #include <boost/asio/ip/tcp.hpp>
+   #include <boost/asio/use_awaitable.hpp>
+   #include <boost/beast/http.hpp>
 
-   #include <botan/hex.h>
-   #include <botan/pkcs8.h>
-   #include <botan/rng.h>
+   #include <botan/asio_stream.h>
    #include <botan/tls_messages.h>
-   #include <botan/tls_server.h>
    #include <botan/tls_session_manager_memory.h>
    #include <botan/version.h>
-   #include <botan/x509cert.h>
+   #include <botan/internal/fmt.h>
+   #include <botan/internal/os_utils.h>
 
    #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
       #include <botan/tls_session_manager_sqlite.h>
@@ -43,305 +53,51 @@ namespace Botan_CLI {
 
 namespace {
 
-using boost::asio::ip::tcp;
+namespace beast = boost::beast;    // from <boost/beast.hpp>
+namespace http = beast::http;      // from <boost/beast/http.hpp>
+namespace net = boost::asio;       // from <boost/asio.hpp>
+using tcp = boost::asio::ip::tcp;  // from <boost/asio/ip/tcp.hpp>
 
-template <typename T>
-boost::asio::io_context& get_io_service(T& s) {
-   #if BOOST_VERSION >= 107000
-   return static_cast<boost::asio::io_context&>((s).get_executor().context());
+using tcp_stream = typename beast::tcp_stream::rebind_executor<
+   net::use_awaitable_t<>::executor_with_default<net::any_io_executor>>::other;
+
+class Logger final {
+   private:
+      auto timestamp() const {
+         const auto t = std::time(nullptr);
+         struct tm tm;
+
+   #if defined(BOTAN_BUILD_COMPILER_IS_MSVC) || defined(BOTAN_TARGET_OS_IS_MINGW) || \
+      defined(BOTAN_TARGET_OS_IS_CYGWIN) || defined(BOTAN_TARGET_OS_IS_WINDOWS)
+         localtime_s(&tm, &t);
    #else
-   return s.get_io_service();
+         localtime_r(&t, &tm);
    #endif
-}
 
-inline void log_error(const char* msg) {
-   std::cout << msg << std::endl;
-}
-
-inline void log_exception(const char* where, const std::exception& e) {
-   std::cout << where << ' ' << e.what() << std::endl;
-}
-
-class ServerStatus {
-   public:
-      ServerStatus(size_t max_clients) : m_max_clients(max_clients), m_clients_serviced(0) {}
-
-      bool should_exit() const {
-         if(m_max_clients == 0) {
-            return false;
-         }
-
-         return clients_serviced() >= m_max_clients;
+         return std::put_time(&tm, "%c");
       }
 
-      void client_serviced() { m_clients_serviced++; }
+   public:
+      Logger(std::ostream& out, std::ostream& err) : m_out(out), m_err(err) {}
 
-      size_t clients_serviced() const { return m_clients_serviced.load(); }
+      void log(std::string_view out) {
+         std::scoped_lock lk(m_mutex);
+         m_out << Botan::fmt("[{}] {}", timestamp(), out) << "\n";
+      }
+
+      void error(std::string_view err) {
+         std::scoped_lock lk(m_mutex);
+         m_err << Botan::fmt("[{}] {}", timestamp(), err) << "\n";
+      }
 
    private:
-      size_t m_max_clients;
-      std::atomic<size_t> m_clients_serviced;
+      std::mutex m_mutex;
+      std::ostream& m_out;
+      std::ostream& m_err;
 };
 
-/*
-* This is an incomplete and highly buggy HTTP request parser. It is just
-* barely sufficient to handle a GET request sent by a browser.
-*/
-class HTTP_Parser final {
+class TlsHttpCallbacks final : public Botan::TLS::StreamCallbacks {
    public:
-      class Request {
-         public:
-            const std::string& verb() const { return m_verb; }
-
-            const std::string& location() const { return m_location; }
-
-            const std::map<std::string, std::string>& headers() const { return m_headers; }
-
-            Request(const std::string& verb,
-                    const std::string& location,
-                    const std::map<std::string, std::string>& headers) :
-                  m_verb(verb), m_location(location), m_headers(headers) {}
-
-         private:
-            std::string m_verb;
-            std::string m_location;
-            std::map<std::string, std::string> m_headers;
-      };
-
-      class Callbacks {
-         public:
-            virtual void handle_http_request(const Request& request) = 0;
-
-            virtual ~Callbacks() = default;
-
-            Callbacks() = default;
-
-            Callbacks(const Callbacks& other) = delete;
-            Callbacks(Callbacks&& other) = delete;
-            Callbacks& operator=(const Callbacks& other) = delete;
-            Callbacks& operator=(Callbacks&&) = delete;
-      };
-
-      HTTP_Parser(Callbacks& cb) : m_cb(cb) {}
-
-      void consume_input(std::span<const uint8_t> buf) {
-         m_req_buf.append(reinterpret_cast<const char*>(buf.data()), buf.size());
-
-         std::istringstream strm(m_req_buf);
-
-         std::string http_version;
-         std::string verb;
-         std::string location;
-         std::map<std::string, std::string> headers;
-
-         strm >> verb >> location >> http_version;
-
-         if(verb.empty() || location.empty()) {
-            return;
-         }
-
-         while(true) {
-            std::string header_line;
-            std::getline(strm, header_line);
-
-            if(header_line == "\r") {
-               continue;
-            }
-
-            auto delim = header_line.find(": ");
-            if(delim == std::string::npos) {
-               break;
-            }
-
-            const std::string hdr_name = header_line.substr(0, delim);
-            const std::string hdr_val = header_line.substr(delim + 2, std::string::npos);
-
-            headers[hdr_name] = hdr_val;
-
-            if(headers.size() > 1024) {
-               throw Botan::Invalid_Argument("Too many HTTP headers sent in request");
-            }
-         }
-
-         if(!verb.empty() && !location.empty()) {
-            Request req(verb, location, headers);
-            m_cb.handle_http_request(req);
-            m_req_buf.clear();
-         }
-      }
-
-   private:
-      Callbacks& m_cb;
-      std::string m_req_buf;
-};
-
-const size_t READBUF_SIZE = 4096;
-
-class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio_HTTP_Session>,
-                                    public Botan::TLS::Callbacks,
-                                    public HTTP_Parser::Callbacks {
-   public:
-      typedef std::shared_ptr<TLS_Asio_HTTP_Session> pointer;
-
-      static pointer create(boost::asio::io_service& io,
-                            const std::shared_ptr<Botan::TLS::Session_Manager>& session_manager,
-                            const std::shared_ptr<Botan::Credentials_Manager>& credentials,
-                            const std::shared_ptr<Botan::TLS::Policy>& policy) {
-         auto session = std::make_shared<TLS_Asio_HTTP_Session>(io);
-
-         // Defer the setup of the TLS server to make use of
-         // shared_from_this() which wouldn't work in the c'tor.
-         session->setup(session_manager, credentials, policy);
-
-         return session;
-      }
-
-      tcp::socket& client_socket() { return m_client_socket; }
-
-      void start() {
-         m_c2s.resize(READBUF_SIZE);
-         client_read(boost::system::error_code(), 0);  // start read loop
-      }
-
-      void stop() {
-         if(!m_tls) {
-            // Server is already closed
-            return;
-         }
-
-         m_tls->close();
-
-         // Need to explicitly destroy the TLS::Server object to break the
-         // circular ownership of shared_from_this() and the shared_ptr of
-         // this kept inside the TLS::Channel.
-         m_tls.reset();
-      }
-
-      TLS_Asio_HTTP_Session(boost::asio::io_service& io) : m_strand(io), m_client_socket(io), m_rng(cli_make_rng()) {}
-
-   private:
-      void setup(const std::shared_ptr<Botan::TLS::Session_Manager>& session_manager,
-                 const std::shared_ptr<Botan::Credentials_Manager>& credentials,
-                 const std::shared_ptr<Botan::TLS::Policy>& policy) {
-         m_tls = std::make_unique<Botan::TLS::Server>(shared_from_this(), session_manager, credentials, policy, m_rng);
-      }
-
-      void client_read(const boost::system::error_code& error, size_t bytes_transferred) {
-         if(error) {
-            return stop();
-         }
-
-         if(!m_tls) {
-            log_error("Received client data after close");
-            return;
-         }
-
-         try {
-            m_tls->received_data(&m_c2s[0], bytes_transferred);
-         } catch(Botan::Exception& e) {
-            log_exception("TLS connection failed", e);
-            return stop();
-         }
-         if(m_tls->is_closed_for_reading()) {
-            return stop();
-         }
-
-         m_client_socket.async_read_some(boost::asio::buffer(&m_c2s[0], m_c2s.size()),
-                                         m_strand.wrap(boost::bind(&TLS_Asio_HTTP_Session::client_read,
-                                                                   shared_from_this(),
-                                                                   boost::asio::placeholders::error,
-                                                                   boost::asio::placeholders::bytes_transferred)));
-      }
-
-      void handle_client_write_completion(const boost::system::error_code& error) {
-         if(error) {
-            return stop();
-         }
-
-         m_s2c.clear();
-
-         if(m_s2c_pending.empty() && (!m_tls || m_tls->is_closed_for_writing())) {
-            m_client_socket.close();
-         }
-         tls_emit_data({});  // initiate another write if needed
-      }
-
-      std::string tls_server_choose_app_protocol(const std::vector<std::string>& /*client_protos*/) override {
-         return "http/1.1";
-      }
-
-      void tls_record_received(uint64_t /*rec_no*/, std::span<const uint8_t> buf) override {
-         if(!m_http_parser) {
-            m_http_parser = std::make_unique<HTTP_Parser>(*this);
-         }
-
-         m_http_parser->consume_input(buf);
-      }
-
-      std::string summarize_request(const HTTP_Parser::Request& request) {
-         std::ostringstream strm;
-
-         strm << "Client " << client_socket().remote_endpoint().address().to_string() << " requested " << request.verb()
-              << " " << request.location() << "\n";
-
-         if(request.headers().empty() == false) {
-            strm << "Client HTTP headers:\n";
-            for(const auto& kv : request.headers()) {
-               strm << " " << kv.first << ": " << kv.second << "\n";
-            }
-         }
-
-         return strm.str();
-      }
-
-      void handle_http_request(const HTTP_Parser::Request& request) override {
-         if(!m_tls) {
-            log_error("Received client data after close");
-            return;
-         }
-         std::ostringstream response;
-         if(request.verb() == "GET") {
-            if(request.location() == "/" || request.location() == "/status") {
-               const std::string http_summary = summarize_request(request);
-
-               const std::string report = m_connection_summary + m_session_summary + m_chello_summary + http_summary;
-
-               response << "HTTP/1.0 200 OK\r\n";
-               response << "Server: " << Botan::version_string() << "\r\n";
-               response << "Content-Type: text/plain\r\n";
-               response << "Content-Length: " << report.size() << "\r\n";
-               response << "\r\n";
-
-               response << report;
-            } else {
-               response << "HTTP/1.0 404 Not Found\r\n\r\n";
-            }
-         } else {
-            response << "HTTP/1.0 405 Method Not Allowed\r\n\r\n";
-         }
-
-         const std::string response_str = response.str();
-         m_tls->send(response_str);
-         m_tls->close();
-      }
-
-      void tls_emit_data(std::span<const uint8_t> buf) override {
-         if(!buf.empty()) {
-            m_s2c_pending.insert(m_s2c_pending.end(), buf.begin(), buf.end());
-         }
-
-         // no write now active and we still have output pending
-         if(m_s2c.empty() && !m_s2c_pending.empty()) {
-            std::swap(m_s2c_pending, m_s2c);
-
-            boost::asio::async_write(m_client_socket,
-                                     boost::asio::buffer(&m_s2c[0], m_s2c.size()),
-                                     m_strand.wrap(boost::bind(&TLS_Asio_HTTP_Session::handle_client_write_completion,
-                                                               shared_from_this(),
-                                                               boost::asio::placeholders::error)));
-         }
-      }
-
       void tls_session_activated() override {
          std::ostringstream strm;
 
@@ -393,79 +149,142 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
          }
       }
 
-      void tls_alert(Botan::TLS::Alert alert) override {
-         if(!m_tls) {
-            log_error("Received client data after close");
-            return;
-         }
-         if(alert.type() == Botan::TLS::Alert::CloseNotify) {
-            m_tls->close();
-         } else {
-            std::cout << "Alert " << alert.type_string() << std::endl;
-         }
-      }
-
-      boost::asio::io_service::strand m_strand;
-
-      tcp::socket m_client_socket;
-
-      std::shared_ptr<Botan::RandomNumberGenerator> m_rng;
-      std::unique_ptr<Botan::TLS::Server> m_tls;
-      std::string m_chello_summary;
-      std::string m_connection_summary;
-      std::string m_session_summary;
-      std::unique_ptr<HTTP_Parser> m_http_parser;
-
-      std::vector<uint8_t> m_c2s;
-      std::vector<uint8_t> m_s2c;
-      std::vector<uint8_t> m_s2c_pending;
-};
-
-class TLS_Asio_HTTP_Server final {
-   public:
-      typedef TLS_Asio_HTTP_Session session;
-
-      TLS_Asio_HTTP_Server(boost::asio::io_service& io,
-                           unsigned short port,
-                           std::shared_ptr<Botan::Credentials_Manager> creds,
-                           std::shared_ptr<Botan::TLS::Policy> policy,
-                           std::shared_ptr<Botan::TLS::Session_Manager> session_mgr,
-                           size_t max_clients) :
-            m_acceptor(io, tcp::endpoint(tcp::v4(), port)),
-            m_creds(std::move(creds)),
-            m_policy(std::move(policy)),
-            m_session_manager(std::move(session_mgr)),
-            m_status(max_clients) {
-         serve_one_session();
+      std::string summary() const {
+         BOTAN_STATE_CHECK(!m_connection_summary.empty() && !m_session_summary.empty() && !m_chello_summary.empty());
+         return m_connection_summary + m_session_summary + m_chello_summary;
       }
 
    private:
-      void serve_one_session() {
-         auto new_session = session::create(get_io_service(m_acceptor), m_session_manager, m_creds, m_policy);
+      std::string m_chello_summary;
+      std::string m_connection_summary;
+      std::string m_session_summary;
+};
 
-         m_acceptor.async_accept(
-            new_session->client_socket(),
-            boost::bind(&TLS_Asio_HTTP_Server::handle_accept, this, new_session, boost::asio::placeholders::error));
+std::string summarize_request(const Botan::TLS::Stream<tcp_stream>& tls_stream,
+                              const http::request<http::string_body>& req) {
+   std::ostringstream strm;
+
+   const auto& remote = tls_stream.next_layer().socket().remote_endpoint();
+
+   strm << "Client " << remote.address().to_string() << " requested " << req.method_string() << " " << req.target()
+        << "\n";
+
+   if(std::distance(req.begin(), req.end()) > 0) {
+      strm << "Client HTTP headers:\n";
+      for(const auto& header : req) {
+         strm << " " << header.name_string() << ": " << header.value() << "\n";
       }
+   }
 
-      void handle_accept(const session::pointer& new_session, const boost::system::error_code& error) {
-         if(!error) {
-            new_session->start();
-            m_status.client_serviced();
+   return strm.str();
+}
 
-            if(!m_status.should_exit()) {
-               serve_one_session();
-            }
+auto make_final_completion_handler(const std::shared_ptr<Logger>& logger, const std::string& context) {
+   return [=](std::exception_ptr e) {
+      if(e) {
+         try {
+            std::rethrow_exception(std::move(e));
+         } catch(const std::exception& ex) {
+            logger->error(Botan::fmt("{}: {}", context, ex.what()));
          }
       }
+   };
+}
 
-      tcp::acceptor m_acceptor;
+std::shared_ptr<http::response<http::string_body>> handle_response(const http::request<http::string_body>& req,
+                                                                   const std::shared_ptr<TlsHttpCallbacks>& callbacks,
+                                                                   const Botan::TLS::Stream<tcp_stream>& tls_stream,
+                                                                   const std::shared_ptr<Logger>& logger) {
+   logger->log(Botan::fmt("{} {}", req.method_string(), req.target()));
 
-      std::shared_ptr<Botan::Credentials_Manager> m_creds;
-      std::shared_ptr<Botan::TLS::Policy> m_policy;
-      std::shared_ptr<Botan::TLS::Session_Manager> m_session_manager;
-      ServerStatus m_status;
-};
+   auto [status_code, msg] = [&]() -> std::tuple<http::status, std::string> {
+      if(req.method() != http::verb::get) {
+         return {http::status::method_not_allowed, "Unsupported HTTP verb\n"};
+      } else if(req.target() == "/" || req.target() == "/status") {
+         return {http::status::ok, callbacks->summary() + summarize_request(tls_stream, req)};
+      } else {
+         return {http::status::not_found, "Not found\n"};
+      }
+   }();
+
+   auto response = std::make_shared<http::response<http::string_body>>(status_code, req.version());
+   response->body() = msg;
+   response->set(http::field::content_type, "text/plain");
+   response->keep_alive(req.keep_alive());
+   response->prepare_payload();
+
+   return response;
+}
+
+net::awaitable<void> do_session(tcp_stream stream,
+                                std::shared_ptr<Botan::TLS::Context> tls_ctx,
+                                std::shared_ptr<Logger> logger) {
+   // This buffer is required to persist across reads
+   beast::flat_buffer buffer;
+
+   // Set up Botan's TLS stack
+   auto callbacks = std::make_shared<TlsHttpCallbacks>();
+   Botan::TLS::Stream<tcp_stream> tls_stream(std::move(stream), std::move(tls_ctx), callbacks);
+
+   try {
+      // Perform a TLS handshake with the peer
+      co_await tls_stream.async_handshake(Botan::TLS::Connection_Side::Server);
+
+      while(true) {
+         // Set the timeout.
+         tls_stream.next_layer().expires_after(std::chrono::seconds(30));
+
+         // Read a request
+         http::request<http::string_body> req;
+         co_await http::async_read(tls_stream, buffer, req);
+
+         // Handle the request
+         auto response = handle_response(req, callbacks, tls_stream, logger);
+
+         // Send the response
+         co_await http::async_write(tls_stream, *response);
+
+         // Determine if we should close the connection
+         if(!response->keep_alive()) {
+            // This means we should close the connection, usually because
+            // the response indicated the "Connection: close" semantic.
+            break;
+         }
+      }
+   } catch(boost::system::system_error& se) {
+      if(se.code() != http::error::end_of_stream) {
+         throw;
+      }
+   }
+
+   // Shut down the connection gracefully
+   co_await tls_stream.async_shutdown();
+   beast::error_code ec;
+   tls_stream.next_layer().socket().shutdown(tcp::socket::shutdown_send, ec);
+
+   // At this point the connection is closed gracefully
+   // we ignore the error because the client might have
+   // dropped the connection already.
+}
+
+net::awaitable<void> do_listen(tcp::endpoint endpoint,
+                               std::shared_ptr<Botan::TLS::Context> tls_ctx,
+                               size_t max_clients,
+                               std::shared_ptr<Logger> logger) {
+   auto acceptor = net::use_awaitable.as_default_on(tcp::acceptor(co_await net::this_coro::executor));
+   acceptor.open(endpoint.protocol());
+   acceptor.set_option(net::socket_base::reuse_address(true));
+   acceptor.bind(endpoint);
+   acceptor.listen(net::socket_base::max_listen_connections);
+
+   // If max_clients is zero in the beginning, we'll serve forever
+   // otherwise we'll count down and stop eventually.
+   do {
+      boost::asio::co_spawn(acceptor.get_executor(),
+                            do_session(tcp_stream(co_await acceptor.async_accept()), tls_ctx, logger),
+                            make_final_completion_handler(logger, "Session"));
+   } while(max_clients == 0 || --max_clients > 0);
+}
 
 }  // namespace
 
@@ -522,9 +341,17 @@ class TLS_HTTP_Server final : public Command {
             session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng_as_shared()));
          }
 
-         boost::asio::io_service io;
+         auto logger = std::make_shared<Logger>(output(), error_output());
 
-         TLS_Asio_HTTP_Server server(io, listen_port, creds, policy, session_mgr, max_clients);
+         net::io_context io{static_cast<int>(num_threads)};
+         auto address = net::ip::make_address("0.0.0.0");
+         boost::asio::co_spawn(
+            io,
+            do_listen(tcp::endpoint{address, listen_port},
+                      std::make_shared<Botan::TLS::Context>(creds, rng_as_shared(), session_mgr, policy),
+                      max_clients,
+                      logger),
+            make_final_completion_handler(logger, "Acceptor"));
 
          std::vector<std::shared_ptr<std::thread>> threads;
 
