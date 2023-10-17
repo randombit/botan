@@ -135,6 +135,10 @@ class StreamCallbacks : public Callbacks {
  */
 template <class StreamLayer, class ChannelT = Channel>
 class Stream {
+   private:
+      using default_completion_token =
+         boost::asio::default_completion_token_t<boost::beast::executor_type<StreamLayer>>;
+
    public:
       //! \name construction
       //! @{
@@ -342,8 +346,9 @@ class Stream {
        * @param completion_token The completion handler to be called when the handshake operation completes.
        *                         The completion signature of the handler must be: void(boost::system::error_code).
        */
-      template <typename CompletionToken>
-      auto async_handshake(Botan::TLS::Connection_Side side, CompletionToken&& completion_token) {
+      template <typename CompletionToken = default_completion_token>
+      auto async_handshake(Botan::TLS::Connection_Side side,
+                           CompletionToken&& completion_token = default_completion_token{}) {
          return boost::asio::async_initiate<CompletionToken, void(boost::system::error_code)>(
             [this](auto&& completion_handler, TLS::Connection_Side connection_side) {
                using completion_handler_t = std::decay_t<decltype(completion_handler)>;
@@ -442,8 +447,8 @@ class Stream {
        * @param completion_token The completion handler to be called when the shutdown operation completes.
        *                         The completion signature of the handler must be: void(boost::system::error_code).
        */
-      template <typename CompletionToken>
-      auto async_shutdown(CompletionToken&& completion_token) {
+      template <typename CompletionToken = default_completion_token>
+      auto async_shutdown(CompletionToken&& completion_token = default_completion_token{}) {
          return boost::asio::async_initiate<CompletionToken, void(boost::system::error_code)>(
             [this](auto&& completion_handler) {
                using completion_handler_t = std::decay_t<decltype(completion_handler)>;
@@ -569,8 +574,9 @@ class Stream {
        *                         handler will be made as required. The completion signature of the handler must be:
        *                         void(boost::system::error_code, std::size_t).
        */
-      template <typename ConstBufferSequence, typename CompletionToken>
-      auto async_write_some(const ConstBufferSequence& buffers, CompletionToken&& completion_token) {
+      template <typename ConstBufferSequence, typename CompletionToken = default_completion_token>
+      auto async_write_some(const ConstBufferSequence& buffers,
+                            CompletionToken&& completion_token = default_completion_token{}) {
          return boost::asio::async_initiate<CompletionToken, void(boost::system::error_code, std::size_t)>(
             [this](auto&& completion_handler, const auto& bufs) {
                using completion_handler_t = std::decay_t<decltype(completion_handler)>;
@@ -605,8 +611,9 @@ class Stream {
        * @param completion_token The completion handler to be called when the read operation completes. The completion
        *                         signature of the handler must be: void(boost::system::error_code, std::size_t).
        */
-      template <typename MutableBufferSequence, typename CompletionToken>
-      auto async_read_some(const MutableBufferSequence& buffers, CompletionToken&& completion_token) {
+      template <typename MutableBufferSequence, typename CompletionToken = default_completion_token>
+      auto async_read_some(const MutableBufferSequence& buffers,
+                           CompletionToken&& completion_token = default_completion_token{}) {
          return boost::asio::async_initiate<CompletionToken, void(boost::system::error_code, std::size_t)>(
             [this](auto&& completion_handler, const auto& bufs) {
                using completion_handler_t = std::decay_t<decltype(completion_handler)>;
