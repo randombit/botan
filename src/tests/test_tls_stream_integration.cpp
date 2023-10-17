@@ -11,9 +11,8 @@
 
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_TLS_ASIO_STREAM) && defined(BOTAN_TARGET_OS_HAS_THREADS)
 
-   // first version to be compatible with Networking TS (N4656) and boost::beast
    #include <boost/version.hpp>
-   #if BOOST_VERSION >= 106600
+   #if BOOST_VERSION >= 107300
 
       #include <functional>
       #include <memory>

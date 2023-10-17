@@ -14,19 +14,10 @@
    #include <botan/tls_callbacks.h>
    #include <botan/tls_session_manager_noop.h>
 
-   // The boost::beast::test::stream we use is available starting from boost
-   // version 1.68, so we cannot run these tests with a smaller version.
    #include <boost/version.hpp>
-   #if BOOST_VERSION >= 106800
+   #if BOOST_VERSION >= 107300
 
-      // boost::beast::test::stream's include path has been changed in boost version
-      // 1.70.
-      #if BOOST_VERSION < 107000
-         #include <boost/beast/experimental/test/stream.hpp>
-      #else
-         #include <boost/beast/_experimental/test/stream.hpp>
-      #endif
-
+      #include <boost/beast/_experimental/test/stream.hpp>
       #include <boost/bind.hpp>
       #include <utility>
 

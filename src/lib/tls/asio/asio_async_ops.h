@@ -12,7 +12,7 @@
 #include <botan/types.h>
 
 #include <boost/version.hpp>
-#if BOOST_VERSION >= 106600
+#if BOOST_VERSION >= 107300
 
    #include <botan/asio_error.h>
 

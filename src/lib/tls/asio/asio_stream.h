@@ -12,9 +12,10 @@
 
 #include <botan/types.h>
 
-// first version to be compatible with Networking TS (N4656) and boost::beast
 #include <boost/version.hpp>
-#if BOOST_VERSION >= 106600
+
+// First version of boost asio that is prepared to use C++20 concepts
+#if BOOST_VERSION >= 107300
 
    #include <botan/asio_async_ops.h>
    #include <botan/asio_context.h>
@@ -205,24 +206,11 @@ class Stream {
 
       next_layer_type& next_layer() { return m_nextLayer; }
 
-   #if BOOST_VERSION >= 107000
-      /*
-       * From Boost 1.70 onwards Beast types no longer provide public access to the member function `lowest_layer()`.
-       * Instead, the new free-standing functions in Beast need to be used.
-       * See also: https://github.com/boostorg/beast/commit/6a658b5c3a36f8d58334f8b6582c01c3e87768ae
-       */
       using lowest_layer_type = typename boost::beast::lowest_layer_type<StreamLayer>;
 
       lowest_layer_type& lowest_layer() { return boost::beast::get_lowest_layer(m_nextLayer); }
 
       const lowest_layer_type& lowest_layer() const { return boost::beast::get_lowest_layer(m_nextLayer); }
-   #else
-      using lowest_layer_type = typename next_layer_type::lowest_layer_type;
-
-      lowest_layer_type& lowest_layer() { return m_nextLayer.lowest_layer(); }
-
-      const lowest_layer_type& lowest_layer() const { return m_nextLayer.lowest_layer(); }
-   #endif
 
       using executor_type = typename next_layer_type::executor_type;
 
