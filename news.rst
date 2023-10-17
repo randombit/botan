@@ -1,6 +1,29 @@
 Release Notes
 ========================================
 
+Version 3.3.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Various functions defined in ``mem_ops.h`` are now deprecated
+  for public use (GH #3759 #3757 #3755)
+
+* Use ``BufferStuffer`` and ``concat`` helpers in public key code
+  (GH #3756 #3753)
+
+* Fix a TLS 1.3 assertion failure that would trigger if the
+  application callback returned an empty certificate chain. (GH #3754)
+
+* Fix a RFC 7919 conformance bug introduced in 3.2.0, where the TLS
+  server would fail to reject a client hello that advertised (only)
+  FFDHE groups that are not known to us. (GH #3743 #3742 #3729)
+
+* Add a cli utility for testing RSA side channels using the MARVIN
+  toolkit (GH #3749)
+
+* Add support for setting thread names on Haiku OS (GH #3758)
+
+* Fix a build problem using ``ninja`` (GH #3751 #3750)
+
 Version 3.2.0, 2023-10-09
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
