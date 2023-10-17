@@ -16,6 +16,7 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_extensions.h>
 #include <botan/tls_session_manager.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
@@ -37,7 +38,7 @@ const std::vector<uint8_t> HELLO_RETRY_REQUEST_MARKER = {
    0xC2, 0xA2, 0x11, 0x16, 0x7A, 0xBB, 0x8C, 0x5E, 0x07, 0x9E, 0x09, 0xE2, 0xC8, 0xA8, 0x33, 0x9C};
 
 bool random_signals_hello_retry_request(const std::vector<uint8_t>& random) {
-   return constant_time_compare(random.data(), HELLO_RETRY_REQUEST_MARKER.data(), HELLO_RETRY_REQUEST_MARKER.size());
+   return CT::is_equal(random.data(), HELLO_RETRY_REQUEST_MARKER.data(), HELLO_RETRY_REQUEST_MARKER.size()).as_bool();
 }
 
 std::vector<uint8_t> make_server_hello_random(RandomNumberGenerator& rng,

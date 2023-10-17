@@ -77,9 +77,11 @@ inline void unpoison(T& p) {
 * since you never know what a compiler might do.
 */
 template <typename T>
-   requires(std::is_unsigned<T>::value && !std::is_same<bool, T>::value)
 class Mask final {
    public:
+      static_assert(std::is_unsigned<T>::value && !std::is_same<bool, T>::value,
+                    "Only unsigned integer types are supported by CT::Mask");
+
       Mask(const Mask<T>& other) = default;
       Mask<T>& operator=(const Mask<T>& other) = default;
 
@@ -267,7 +269,7 @@ class Mask final {
       /**
       * Return true iff this mask is set
       */
-      bool is_set() const { return unpoisoned_value() != 0; }
+      bool as_bool() const { return unpoisoned_value() != 0; }
 
       /**
       * Return the underlying value of the mask
@@ -281,10 +283,15 @@ class Mask final {
 };
 
 template <typename T>
-inline Mask<T> conditional_copy_mem(T cnd, T* to, const T* from0, const T* from1, size_t elems) {
-   const auto mask = CT::Mask<T>::expand(cnd);
+inline Mask<T> conditional_copy_mem(Mask<T> mask, T* to, const T* from0, const T* from1, size_t elems) {
    mask.select_n(to, from0, from1, elems);
    return mask;
+}
+
+template <typename T>
+inline Mask<T> conditional_copy_mem(T cnd, T* to, const T* from0, const T* from1, size_t elems) {
+   const auto mask = CT::Mask<T>::expand(cnd);
+   return CT::conditional_copy_mem(mask, to, from0, from1, elems);
 }
 
 template <typename T>
@@ -322,6 +329,30 @@ inline CT::Mask<T> all_zeros(const T elem[], size_t len) {
       sum |= elem[i];
    }
    return CT::Mask<T>::is_zero(sum);
+}
+
+/**
+* Compare two arrays of equal size and return a Mask indicating if
+* they are equal or not. The mask is set if they are identical.
+*/
+template <typename T>
+inline CT::Mask<T> is_equal(const T x[], const T y[], size_t len) {
+   volatile T difference = 0;
+
+   for(size_t i = 0; i != len; ++i) {
+      difference = difference | (x[i] ^ y[i]);
+   }
+
+   return CT::Mask<T>::is_zero(difference);
+}
+
+/**
+* Compare two arrays of equal size and return a Mask indicating if
+* they are equal or not. The mask is set if they differ.
+*/
+template <typename T>
+inline CT::Mask<T> is_not_equal(const T x[], const T y[], size_t len) {
+   return ~CT::is_equal(x, y, len);
 }
 
 /**

@@ -52,8 +52,9 @@ class Test_Buf_Comp final : public Botan::Buffered_Computation {
 };
 
 void check(Test::Result& result, std::span<const uint8_t> produced, size_t expected) {
-   const uint8_t* eptr = reinterpret_cast<const uint8_t*>(&expected);
-   result.confirm("result is correct", Botan::same_mem(produced.data(), eptr, sizeof(size_t)));
+   uint8_t expected_bytes[sizeof(size_t)];
+   std::memcpy(expected_bytes, &expected, sizeof(expected));
+   result.test_eq("", "result is correct", produced.data(), produced.size(), expected_bytes, sizeof(expected_bytes));
 }
 
 using TestStdVector = Botan::Strong<std::vector<uint8_t>, struct TestStdVector_>;

@@ -8,6 +8,7 @@
 
 #include <botan/internal/chacha20poly1305.h>
 
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 
 namespace Botan {
@@ -158,7 +159,7 @@ void ChaCha20Poly1305_Decryption::finish_msg(secure_vector<uint8_t>& buffer, siz
    m_ctext_len = 0;
    m_nonce_len = 0;
 
-   if(!constant_time_compare(mac, included_tag, tag_size())) {
+   if(!CT::is_equal(mac, included_tag, tag_size()).as_bool()) {
       throw Invalid_Authentication_Tag("ChaCha20Poly1305 tag check failed");
    }
    buffer.resize(offset + remaining);

@@ -194,6 +194,7 @@ inline char* cast_uint8_ptr_to_char(uint8_t* b) {
    return reinterpret_cast<char*>(b);
 }
 
+#if !defined(BOTAN_IS_BEING_BUILT)
 /**
 * Memory comparison, input insensitive
 * @param p1 a pointer to an array
@@ -202,6 +203,7 @@ inline char* cast_uint8_ptr_to_char(uint8_t* b) {
 * @return true iff p1[i] == p2[i] forall i in [0...n)
 */
 template <typename T>
+BOTAN_DEPRECATED("This function is deprecated")
 inline bool same_mem(const T* p1, const T* p2, size_t n) {
    volatile T difference = 0;
 
@@ -211,6 +213,7 @@ inline bool same_mem(const T* p1, const T* p2, size_t n) {
 
    return difference == 0;
 }
+#endif
 
 #if !defined(BOTAN_IS_BEING_BUILT)
 

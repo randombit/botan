@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_ZFEC) && defined(BOTAN_HAS_SHA2_64)
    #include <botan/hash.h>
+   #include <botan/mem_ops.h>
    #include <botan/zfec.h>
    #include <botan/internal/loadstor.h>
    #include <fstream>
@@ -70,7 +71,7 @@ class FEC_Share final {
          hash.update(bits, len - hash_len);
          auto share_hash = hash.final();
 
-         const bool digest_ok = Botan::same_mem(share_hash.data(), &bits[len - hash_len], hash_len);
+         const bool digest_ok = Botan::constant_time_compare(share_hash.data(), &bits[len - hash_len], hash_len);
 
          if(!digest_ok) {
             throw CLI_Error("FEC share has invalid hash");
@@ -251,7 +252,8 @@ class FEC_Decode final : public Command {
 
          auto decoded_digest = hash->process(decoded.data(), decoded.size() - (hash_len + padding));
 
-         if(!Botan::same_mem(decoded_digest.data(), &decoded[decoded.size() - (hash_len + padding)], hash_len)) {
+         if(!Botan::constant_time_compare(
+               decoded_digest.data(), &decoded[decoded.size() - (hash_len + padding)], hash_len)) {
             throw CLI_Error("Recovered data failed digest check");
          }
 

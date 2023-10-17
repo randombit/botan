@@ -10,6 +10,7 @@
 
 #include <botan/block_cipher.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/poly_dbl.h>
 
 namespace Botan {
@@ -486,7 +487,7 @@ void OCB_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
    // compare mac
    const uint8_t* included_tag = &buf[remaining];
 
-   if(!constant_time_compare(mac.data(), included_tag, tag_size())) {
+   if(!CT::is_equal(mac.data(), included_tag, tag_size()).as_bool()) {
       throw Invalid_Authentication_Tag("OCB tag check failed");
    }
 

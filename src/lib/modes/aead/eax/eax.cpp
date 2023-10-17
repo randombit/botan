@@ -9,6 +9,7 @@
 #include <botan/internal/eax.h>
 
 #include <botan/internal/cmac.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/ctr.h>
 #include <botan/internal/fmt.h>
 
@@ -176,7 +177,7 @@ void EAX_Decryption::finish_msg(secure_vector<uint8_t>& buffer, size_t offset) {
 
    mac ^= m_ad_mac;
 
-   bool accept_mac = constant_time_compare(mac.data(), included_tag, tag_size());
+   const bool accept_mac = CT::is_equal(mac.data(), included_tag, tag_size()).as_bool();
 
    buffer.resize(offset + remaining);
 

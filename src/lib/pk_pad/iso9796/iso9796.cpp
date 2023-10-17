@@ -187,10 +187,10 @@ bool iso9796_verification(const std::vector<uint8_t>& const_coded,
    std::vector<uint8_t> H2 = hash->final_stdvec();
 
    //check if H3 == H2
-   bad_input |= CT::Mask<uint8_t>::is_zero(ct_compare_u8(H3.data(), H2.data(), HASH_SIZE));
+   bad_input |= CT::is_not_equal(H3.data(), H2.data(), HASH_SIZE);
 
    CT::unpoison(bad_input);
-   return (bad_input.is_set() == false);
+   return (bad_input.as_bool() == false);
 }
 
 }  // namespace

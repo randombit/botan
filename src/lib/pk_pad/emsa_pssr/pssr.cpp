@@ -11,6 +11,7 @@
 #include <botan/mem_ops.h>
 #include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/mgf1.h>
 #include <botan/internal/stl_util.h>
 #include <array>
@@ -132,7 +133,7 @@ bool pss_verify(HashFunction& hash,
 
    const std::vector<uint8_t> H2 = hash.final_stdvec();
 
-   const bool ok = constant_time_compare(H, H2.data(), HASH_SIZE);
+   const bool ok = CT::is_equal(H, H2.data(), HASH_SIZE).as_bool();
 
    if(out_salt_size && ok) {
       *out_salt_size = salt_size;

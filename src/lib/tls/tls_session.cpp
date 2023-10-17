@@ -14,6 +14,7 @@
 #include <botan/mac.h>
 #include <botan/pem.h>
 #include <botan/rng.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 
 #include <botan/tls_callbacks.h>
@@ -455,7 +456,7 @@ Session Session::decrypt(std::span<const uint8_t> in, const SymmetricKey& key) {
       hmac->update(TLS_SESSION_CRYPT_KEY_NAME);
       hmac->final(cmp_key_name.data());
 
-      if(same_mem(cmp_key_name.data(), key_name, TLS_SESSION_CRYPT_KEY_NAME_LEN) == false) {
+      if(CT::is_equal(cmp_key_name.data(), key_name, TLS_SESSION_CRYPT_KEY_NAME_LEN).as_bool() == false) {
          throw Decoding_Error("Wrong key name for encrypted session");
       }
 

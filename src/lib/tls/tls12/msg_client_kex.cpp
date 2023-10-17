@@ -122,7 +122,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          //   With X25519 and X448, a receiving party MUST check whether the
          //   computed premaster secret is the all-zero value and abort the
          //   handshake if so, as described in Section 6 of [RFC7748].
-         if(curve_id == Group_Params::X25519 && CT::all_zeros(shared_secret.data(), shared_secret.size()).is_set()) {
+         if(curve_id == Group_Params::X25519 && CT::all_zeros(shared_secret.data(), shared_secret.size()).as_bool()) {
             throw TLS_Exception(Alert::DecryptError, "Bad X25519 key exchange");
          }
 
@@ -281,7 +281,8 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
                //   handshake if so, as described in Section 6 of [RFC7748].
                BOTAN_ASSERT_NOMSG(state.server_kex()->params().size() >= 3);
                Group_Params group = static_cast<Group_Params>(state.server_kex()->params().at(2));
-               if(group == Group_Params::X25519 && CT::all_zeros(shared_secret.data(), shared_secret.size()).is_set()) {
+               if(group == Group_Params::X25519 &&
+                  CT::all_zeros(shared_secret.data(), shared_secret.size()).as_bool()) {
                   throw TLS_Exception(Alert::DecryptError, "Bad X25519 key exchange");
                }
             }

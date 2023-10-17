@@ -54,7 +54,7 @@ class Prime_Sieve final {
             }
          }
 
-         return passes.is_set();
+         return passes.as_bool();
       }
 
    private:

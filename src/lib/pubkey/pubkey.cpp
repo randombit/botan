@@ -380,7 +380,7 @@ std::vector<uint8_t> decode_der_signature(const uint8_t sig[], size_t length, si
 
    const std::vector<uint8_t> reencoded = der_encode_signature(real_sig, sig_parts, sig_part_size);
 
-   if(reencoded.size() != length || same_mem(reencoded.data(), sig, reencoded.size()) == false) {
+   if(reencoded.size() != length || CT::is_equal(reencoded.data(), sig, reencoded.size()).as_bool() == false) {
       throw Decoding_Error("PK_Verifier: signature is not the canonical DER encoding");
    }
    return real_sig;
