@@ -2,6 +2,7 @@
 * TLS ASIO Stream
 * (C) 2018-2021 Jack Lloyd
 *     2018-2021 Hannes Rantzsch, Tim Oesterreich, Rene Meusel
+*     2023      Fabian Albert, René Meusel - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -11,9 +12,10 @@
 
 #include <botan/types.h>
 
-// first version to be compatible with Networking TS (N4656) and boost::beast
 #include <boost/version.hpp>
-#if BOOST_VERSION >= 106600
+
+// First version of boost asio that is prepared to use C++20 concepts
+#if BOOST_VERSION >= 107300
 
    #include <botan/asio_async_ops.h>
    #include <botan/asio_context.h>
@@ -37,6 +39,104 @@
 
 namespace Botan::TLS {
 
+template <class SL, class C>
+class Stream;
+
+/**
+ * @brief Specialization of TLS::Callbacks for the ASIO Stream
+ *
+ * Applications may decide to derive from this for fine-grained customizations
+ * of the TLS::Stream's behaviour. Examples may be OCSP integration, custom
+ * certificate validation or user-defined key exchange mechanisms.
+ *
+ * By default, this class provides all necessary customizations for the ASIO
+ * integration. The methods required for that are `final` and cannot be
+ * overridden.
+ *
+ * Each instance of TLS::Stream must have their own instance of this class. A
+ * future major version of Botan will therefor consume instances of this class
+ * as a std::unique_ptr. The current usage of std::shared_ptr is erratic.
+ */
+class StreamCallbacks : public Callbacks {
+   public:
+      StreamCallbacks() : m_shutdown_received(false) {}
+
+      void tls_emit_data(std::span<const uint8_t> data) final {
+         m_send_buffer.commit(boost::asio::buffer_copy(m_send_buffer.prepare(data.size()),
+                                                       boost::asio::buffer(data.data(), data.size())));
+      }
+
+      void tls_record_received(uint64_t, std::span<const uint8_t> data) final {
+         m_receive_buffer.commit(boost::asio::buffer_copy(m_receive_buffer.prepare(data.size()),
+                                                          boost::asio::const_buffer(data.data(), data.size())));
+      }
+
+      bool tls_peer_closed_connection() final {
+         // Instruct the TLS implementation to reply with our close_notify to obtain
+         // the same behaviour for TLS 1.2 and TLS 1.3.
+         return true;
+      }
+
+      void tls_alert(TLS::Alert alert) final {
+         if(alert.type() == TLS::AlertType::CloseNotify) {
+            m_shutdown_received = true;
+            // Channel::process_alert will automatically write the corresponding close_notify response to the
+            // send_buffer and close the native_handle after this function returns.
+         }
+      }
+
+      void tls_verify_cert_chain(const std::vector<X509_Certificate>& cert_chain,
+                                 const std::vector<std::optional<OCSP::Response>>& ocsp_responses,
+                                 const std::vector<Certificate_Store*>& trusted_roots,
+                                 Usage_Type usage,
+                                 std::string_view hostname,
+                                 const TLS::Policy& policy) override {
+         auto ctx = m_context.lock();
+
+         if(ctx && ctx->has_verify_callback()) {
+            ctx->get_verify_callback()(cert_chain, ocsp_responses, trusted_roots, usage, hostname, policy);
+         } else {
+            Callbacks::tls_verify_cert_chain(cert_chain, ocsp_responses, trusted_roots, usage, hostname, policy);
+         }
+      }
+
+   private:
+      // The members below are meant for the tightly-coupled Stream class only
+      template <class SL, class C>
+      friend class Stream;
+
+      void set_context(std::weak_ptr<Botan::TLS::Context> context) { m_context = std::move(context); }
+
+      void consume_send_buffer() { m_send_buffer.consume(m_send_buffer.size()); }
+
+      boost::beast::flat_buffer& send_buffer() { return m_send_buffer; }
+
+      const boost::beast::flat_buffer& send_buffer() const { return m_send_buffer; }
+
+      boost::beast::flat_buffer& receive_buffer() { return m_receive_buffer; }
+
+      const boost::beast::flat_buffer& receive_buffer() const { return m_receive_buffer; }
+
+      bool shutdown_received() const { return m_shutdown_received; }
+
+   private:
+      bool m_shutdown_received;
+      boost::beast::flat_buffer m_receive_buffer;
+      boost::beast::flat_buffer m_send_buffer;
+
+      std::weak_ptr<TLS::Context> m_context;
+};
+
+namespace detail {
+
+template <typename T>
+concept basic_completion_token = boost::asio::completion_token_for<T, void(boost::system::error_code)>;
+
+template <typename T>
+concept byte_size_completion_token = boost::asio::completion_token_for<T, void(boost::system::error_code, size_t)>;
+
+}  // namespace detail
+
 /**
  * @brief boost::asio compatible SSL/TLS stream
  *
@@ -45,25 +145,45 @@ namespace Botan::TLS {
  */
 template <class StreamLayer, class ChannelT = Channel>
 class Stream {
+   private:
+      using default_completion_token =
+         boost::asio::default_completion_token_t<boost::beast::executor_type<StreamLayer>>;
+
    public:
       //! \name construction
       //! @{
 
       /**
+       * @brief Construct a new Stream with a customizable instance of Callbacks
+       *
+       * @param context The context parameter is used to set up the underlying native handle.
+       * @param callbacks The callbacks parameter may contain an instance of a derived TLS::Callbacks
+       *                  class to allow for fine-grained customization of the TLS stream. Note that
+       *                  applications need to ensure a 1-to-1 relationship between instances of
+       *                  Callbacks and Streams. A future major version of Botan will use a unique_ptr
+       *                  here.
+       *
+       * @param args Arguments to be forwarded to the construction of the next layer.
+       */
+      template <typename... Args>
+      explicit Stream(std::shared_ptr<Context> context, std::shared_ptr<StreamCallbacks> callbacks, Args&&... args) :
+            m_context(std::move(context)),
+            m_nextLayer(std::forward<Args>(args)...),
+            m_core(std::move(callbacks)),
+            m_input_buffer_space(MAX_CIPHERTEXT_SIZE, '\0'),
+            m_input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size()) {
+         m_core->set_context(m_context);
+      }
+
+      /**
        * @brief Construct a new Stream
        *
-       * @param context The context parameter is used to set up the underlying native handle. Using code is
-       *                responsible for lifetime management of the context and must ensure that it is available for the
-       *                lifetime of the stream.
+       * @param context The context parameter is used to set up the underlying native handle.
        * @param args Arguments to be forwarded to the construction of the next layer.
        */
       template <typename... Args>
       explicit Stream(std::shared_ptr<Context> context, Args&&... args) :
-            m_context(context),
-            m_nextLayer(std::forward<Args>(args)...),
-            m_core(std::make_shared<StreamCore>(context)),
-            m_input_buffer_space(MAX_CIPHERTEXT_SIZE, '\0'),
-            m_input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size()) {}
+            Stream(std::move(context), std::make_shared<StreamCallbacks>(), std::forward<Args>(args)...) {}
 
       /**
        * @brief Construct a new Stream
@@ -71,17 +191,16 @@ class Stream {
        * Convenience overload for boost::asio::ssl::stream compatibility.
        *
        * @param arg This argument is forwarded to the construction of the next layer.
-       * @param context The context parameter is used to set up the underlying native handle. Using code is
-       *                responsible for lifetime management of the context and must ensure that is available for the
-       *                lifetime of the stream.
+       * @param context The context parameter is used to set up the underlying native handle.
+       * @param callbacks The (optional) callbacks object that the stream should use. Note that
+       *                  applications need to ensure a 1-to-1 relationship between instances of Callbacks
+       *                  and Streams. A future major version of Botan will use a unique_ptr here.
        */
       template <typename Arg>
-      explicit Stream(Arg&& arg, std::shared_ptr<Context> context) :
-            m_context(context),
-            m_nextLayer(std::forward<Arg>(arg)),
-            m_core(std::make_shared<StreamCore>(context)),
-            m_input_buffer_space(MAX_CIPHERTEXT_SIZE, '\0'),
-            m_input_buffer(m_input_buffer_space.data(), m_input_buffer_space.size()) {}
+      explicit Stream(Arg&& arg,
+                      std::shared_ptr<Context> context,
+                      std::shared_ptr<StreamCallbacks> callbacks = std::make_shared<StreamCallbacks>()) :
+            Stream(std::move(context), std::move(callbacks), std::forward<Arg>(arg)) {}
 
       virtual ~Stream() = default;
 
@@ -101,24 +220,11 @@ class Stream {
 
       next_layer_type& next_layer() { return m_nextLayer; }
 
-   #if BOOST_VERSION >= 107000
-      /*
-       * From Boost 1.70 onwards Beast types no longer provide public access to the member function `lowest_layer()`.
-       * Instead, the new free-standing functions in Beast need to be used.
-       * See also: https://github.com/boostorg/beast/commit/6a658b5c3a36f8d58334f8b6582c01c3e87768ae
-       */
       using lowest_layer_type = typename boost::beast::lowest_layer_type<StreamLayer>;
 
       lowest_layer_type& lowest_layer() { return boost::beast::get_lowest_layer(m_nextLayer); }
 
       const lowest_layer_type& lowest_layer() const { return boost::beast::get_lowest_layer(m_nextLayer); }
-   #else
-      using lowest_layer_type = typename next_layer_type::lowest_layer_type;
-
-      lowest_layer_type& lowest_layer() { return m_nextLayer.lowest_layer(); }
-
-      const lowest_layer_type& lowest_layer() const { return m_nextLayer.lowest_layer(); }
-   #endif
 
       using executor_type = typename next_layer_type::executor_type;
 
@@ -250,13 +356,12 @@ class Stream {
        * @param completion_token The completion handler to be called when the handshake operation completes.
        *                         The completion signature of the handler must be: void(boost::system::error_code).
        */
-      template <typename CompletionToken>
-      auto async_handshake(Botan::TLS::Connection_Side side, CompletionToken&& completion_token) {
+      template <detail::basic_completion_token CompletionToken = default_completion_token>
+      auto async_handshake(Botan::TLS::Connection_Side side,
+                           CompletionToken&& completion_token = default_completion_token{}) {
          return boost::asio::async_initiate<CompletionToken, void(boost::system::error_code)>(
             [this](auto&& completion_handler, TLS::Connection_Side connection_side) {
                using completion_handler_t = std::decay_t<decltype(completion_handler)>;
-
-               BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(completion_handler_t, completion_handler) type_check;
 
                boost::system::error_code ec;
                setup_native_handle(connection_side, ec);
@@ -269,11 +374,11 @@ class Stream {
       }
 
       //! @throws Not_Implemented
-      template <typename ConstBufferSequence, typename BufferedHandshakeHandler>
-      BOOST_ASIO_INITFN_RESULT_TYPE(BufferedHandshakeHandler, void(boost::system::error_code, std::size_t))
-      async_handshake(Connection_Side side, const ConstBufferSequence& buffers, BufferedHandshakeHandler&& handler) {
+      template <typename ConstBufferSequence, detail::basic_completion_token BufferedHandshakeHandler>
+      auto async_handshake(Connection_Side side,
+                           const ConstBufferSequence& buffers,
+                           BufferedHandshakeHandler&& handler) {
          BOTAN_UNUSED(side, buffers, handler);
-         BOOST_ASIO_HANDSHAKE_HANDLER_CHECK(BufferedHandshakeHandler, handler) type_check;
          throw Not_Implemented("buffered async handshake is not implemented");
       }
 
@@ -350,13 +455,11 @@ class Stream {
        * @param completion_token The completion handler to be called when the shutdown operation completes.
        *                         The completion signature of the handler must be: void(boost::system::error_code).
        */
-      template <typename CompletionToken>
-      auto async_shutdown(CompletionToken&& completion_token) {
+      template <detail::basic_completion_token CompletionToken = default_completion_token>
+      auto async_shutdown(CompletionToken&& completion_token = default_completion_token{}) {
          return boost::asio::async_initiate<CompletionToken, void(boost::system::error_code)>(
             [this](auto&& completion_handler) {
                using completion_handler_t = std::decay_t<decltype(completion_handler)>;
-
-               BOOST_ASIO_SHUTDOWN_HANDLER_CHECK(completion_handler_t, completion_handler) type_check;
 
                boost::system::error_code ec;
                try_with_error_code([&] { native_handle()->close(); }, ec);
@@ -477,13 +580,13 @@ class Stream {
        *                         handler will be made as required. The completion signature of the handler must be:
        *                         void(boost::system::error_code, std::size_t).
        */
-      template <typename ConstBufferSequence, typename CompletionToken>
-      auto async_write_some(const ConstBufferSequence& buffers, CompletionToken&& completion_token) {
+      template <typename ConstBufferSequence,
+                detail::byte_size_completion_token CompletionToken = default_completion_token>
+      auto async_write_some(const ConstBufferSequence& buffers,
+                            CompletionToken&& completion_token = default_completion_token{}) {
          return boost::asio::async_initiate<CompletionToken, void(boost::system::error_code, std::size_t)>(
             [this](auto&& completion_handler, const auto& bufs) {
                using completion_handler_t = std::decay_t<decltype(completion_handler)>;
-
-               BOOST_ASIO_WRITE_HANDLER_CHECK(completion_handler_t, completion_handler) type_check;
 
                boost::system::error_code ec;
                tls_encrypt(bufs, ec);
@@ -491,7 +594,7 @@ class Stream {
                if(ec) {
                   // we cannot be sure how many bytes were committed here so clear the send_buffer and let the
                   // AsyncWriteOperation call the handler with the error_code set
-                  consume_send_buffer(m_core->send_buffer.size());
+                  m_core->send_buffer().consume(m_core->send_buffer().size());
                }
 
                detail::AsyncWriteOperation<completion_handler_t, Stream> op{
@@ -513,13 +616,13 @@ class Stream {
        * @param completion_token The completion handler to be called when the read operation completes. The completion
        *                         signature of the handler must be: void(boost::system::error_code, std::size_t).
        */
-      template <typename MutableBufferSequence, typename CompletionToken>
-      auto async_read_some(const MutableBufferSequence& buffers, CompletionToken&& completion_token) {
+      template <typename MutableBufferSequence,
+                detail::byte_size_completion_token CompletionToken = default_completion_token>
+      auto async_read_some(const MutableBufferSequence& buffers,
+                           CompletionToken&& completion_token = default_completion_token{}) {
          return boost::asio::async_initiate<CompletionToken, void(boost::system::error_code, std::size_t)>(
             [this](auto&& completion_handler, const auto& bufs) {
                using completion_handler_t = std::decay_t<decltype(completion_handler)>;
-
-               BOOST_ASIO_READ_HANDLER_CHECK(completion_handler_t, completion_handler) type_check;
 
                detail::AsyncReadOperation<completion_handler_t, Stream, MutableBufferSequence> op{
                   std::forward<completion_handler_t>(completion_handler), *this, bufs};
@@ -534,7 +637,7 @@ class Stream {
       //!
       //! Note that we cannot m_core.is_closed_for_reading() because this wants to
       //! explicitly check that the peer sent close_notify.
-      bool shutdown_received() const { return m_core->shutdown_received; }
+      bool shutdown_received() const { return m_core->shutdown_received(); }
 
    protected:
       template <class H, class S, class M, class A>
@@ -544,93 +647,30 @@ class Stream {
       template <class H, class S, class A>
       friend class detail::AsyncHandshakeOperation;
 
-      /**
-       * @brief Helper class that implements TLS::Callbacks
-       *
-       * This class is provided to the stream's native_handle (TLS::Channel) and implements the callback
-       * functions triggered by the native_handle.
-       */
-      class StreamCore : public TLS::Callbacks {
-         public:
-            StreamCore(std::weak_ptr<Botan::TLS::Context> context) : shutdown_received(false), m_context(context) {}
-
-            ~StreamCore() override = default;
-
-            void tls_emit_data(std::span<const uint8_t> data) override {
-               send_buffer.commit(boost::asio::buffer_copy(send_buffer.prepare(data.size()),
-                                                           boost::asio::buffer(data.data(), data.size())));
-            }
-
-            void tls_record_received(uint64_t, std::span<const uint8_t> data) override {
-               receive_buffer.commit(boost::asio::buffer_copy(receive_buffer.prepare(data.size()),
-                                                              boost::asio::const_buffer(data.data(), data.size())));
-            }
-
-            bool tls_peer_closed_connection() override {
-               // Instruct the TLS implementation to reply with our close_notify to obtain
-               // the same behaviour for TLS 1.2 and TLS 1.3.
-               return true;
-            }
-
-            void tls_alert(TLS::Alert alert) override {
-               if(alert.type() == TLS::AlertType::CloseNotify) {
-                  shutdown_received = true;
-                  // Channel::process_alert will automatically write the corresponding close_notify response to the
-                  // send_buffer and close the native_handle after this function returns.
-               }
-            }
-
-            std::chrono::milliseconds tls_verify_cert_chain_ocsp_timeout() const override {
-               return std::chrono::milliseconds(1000);
-            }
-
-            void tls_verify_cert_chain(const std::vector<X509_Certificate>& cert_chain,
-                                       const std::vector<std::optional<OCSP::Response>>& ocsp_responses,
-                                       const std::vector<Certificate_Store*>& trusted_roots,
-                                       Usage_Type usage,
-                                       std::string_view hostname,
-                                       const TLS::Policy& policy) override {
-               auto ctx = m_context.lock();
-
-               if(ctx && ctx->has_verify_callback()) {
-                  ctx->get_verify_callback()(cert_chain, ocsp_responses, trusted_roots, usage, hostname, policy);
-               } else {
-                  Callbacks::tls_verify_cert_chain(cert_chain, ocsp_responses, trusted_roots, usage, hostname, policy);
-               }
-            }
-
-            bool shutdown_received;
-            boost::beast::flat_buffer receive_buffer;
-            boost::beast::flat_buffer send_buffer;
-
-         private:
-            std::weak_ptr<TLS::Context> m_context;
-      };
-
       const boost::asio::mutable_buffer& input_buffer() { return m_input_buffer; }
 
-      boost::asio::const_buffer send_buffer() const { return m_core->send_buffer.data(); }
+      boost::asio::const_buffer send_buffer() const { return m_core->send_buffer().data(); }
 
       //! @brief Check if decrypted data is available in the receive buffer
-      bool has_received_data() const { return m_core->receive_buffer.size() > 0; }
+      bool has_received_data() const { return m_core->receive_buffer().size() > 0; }
 
       //! @brief Copy decrypted data into the user-provided buffer
       template <typename MutableBufferSequence>
       std::size_t copy_received_data(MutableBufferSequence buffers) {
-         // Note: It would be nice to avoid this buffer copy. This could be achieved by equipping the StreamCore with
+         // Note: It would be nice to avoid this buffer copy. This could be achieved by equipping the CallbacksT with
          // the user's desired target buffer once a read is started, and reading directly into that buffer in tls_record
          // received. However, we need to deal with the case that the receive buffer provided by the caller is smaller
          // than the decrypted record, so this optimization might not be worth the additional complexity.
-         const auto copiedBytes = boost::asio::buffer_copy(buffers, m_core->receive_buffer.data());
-         m_core->receive_buffer.consume(copiedBytes);
+         const auto copiedBytes = boost::asio::buffer_copy(buffers, m_core->receive_buffer().data());
+         m_core->receive_buffer().consume(copiedBytes);
          return copiedBytes;
       }
 
       //! @brief Check if encrypted data is available in the send buffer
-      bool has_data_to_send() const { return m_core->send_buffer.size() > 0; }
+      bool has_data_to_send() const { return m_core->send_buffer().size() > 0; }
 
       //! @brief Mark bytes in the send buffer as consumed, removing them from the buffer
-      void consume_send_buffer(std::size_t bytesConsumed) { m_core->send_buffer.consume(bytesConsumed); }
+      void consume_send_buffer(std::size_t bytesConsumed) { m_core->send_buffer().consume(bytesConsumed); }
 
       /**
        * @brief Create the native handle.
@@ -750,7 +790,7 @@ class Stream {
       std::shared_ptr<Context> m_context;
       StreamLayer m_nextLayer;
 
-      std::shared_ptr<StreamCore> m_core;
+      std::shared_ptr<StreamCallbacks> m_core;
       std::unique_ptr<ChannelT> m_native_handle;
 
       // Buffer space used to read input intended for the core
