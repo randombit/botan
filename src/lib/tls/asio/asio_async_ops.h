@@ -9,10 +9,8 @@
 #ifndef BOTAN_ASIO_ASYNC_OPS_H_
 #define BOTAN_ASIO_ASYNC_OPS_H_
 
-#include <botan/types.h>
-
-#include <boost/version.hpp>
-#if BOOST_VERSION >= 107300
+#include <botan/boost_compat.h>
+#if defined(BOTAN_FOUND_COMPATIBLE_BOOST_VERSION)
 
    #include <botan/asio_error.h>
 
@@ -305,5 +303,5 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
 
    #include <boost/asio/unyield.hpp>
 
-#endif  // BOOST_VERSION
+#endif
 #endif  // BOTAN_ASIO_ASYNC_OPS_H_

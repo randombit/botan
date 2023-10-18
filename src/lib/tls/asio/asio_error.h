@@ -9,10 +9,8 @@
 #ifndef BOTAN_ASIO_ERROR_H_
 #define BOTAN_ASIO_ERROR_H_
 
-#include <botan/types.h>
-
-#include <boost/version.hpp>
-#if BOOST_VERSION >= 107300
+#include <botan/boost_compat.h>
+#if defined(BOTAN_FOUND_COMPATIBLE_BOOST_VERSION)
 
    #include <boost/system/system_error.hpp>
 
@@ -122,5 +120,5 @@ struct is_error_code_enum<Botan::ErrorType> {
 
 }  // namespace boost::system
 
-#endif  // BOOST_VERSION
+#endif
 #endif  // BOTAN_ASIO_ERROR_H_

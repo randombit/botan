@@ -11,8 +11,8 @@
 
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_TLS_ASIO_STREAM) && defined(BOTAN_TARGET_OS_HAS_THREADS)
 
-   #include <boost/version.hpp>
-   #if BOOST_VERSION >= 107300
+   #include <botan/boost_compat.h>
+   #if defined(BOTAN_FOUND_COMPATIBLE_BOOST_VERSION)
 
       #include <functional>
       #include <memory>
@@ -835,5 +835,5 @@ BOTAN_REGISTER_TEST("tls", "tls_stream_integration", Tls_Stream_Integration_Test
 
 }  // namespace Botan_Tests
 
-   #endif  // BOOST_VERSION
-#endif     // BOTAN_HAS_TLS && BOTAN_HAS_BOOST_ASIO
+   #endif
+#endif  // BOTAN_HAS_TLS && BOTAN_HAS_BOOST_ASIO
