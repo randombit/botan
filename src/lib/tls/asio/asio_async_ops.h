@@ -124,7 +124,7 @@ class AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_t
 
       void operator()(boost::system::error_code ec, std::size_t bytes_transferred, bool isContinuation = true) {
          reenter(this) {
-            if(bytes_transferred > 0 && !ec) {
+            if(!ec && bytes_transferred > 0) {
                // We have received encrypted data from the network, now hand it to TLS::Channel for decryption.
                boost::asio::const_buffer read_buffer{m_stream.input_buffer().data(), bytes_transferred};
                m_stream.process_encrypted_data(read_buffer, ec);
@@ -138,13 +138,13 @@ class AsyncReadOperation : public AsyncBase<Handler, typename Stream::executor_t
                ec = StreamError::StreamTruncated;
             }
 
-            if(!m_stream.has_received_data() && !ec && boost::asio::buffer_size(m_buffers) > 0) {
+            if(!ec && !m_stream.has_received_data() && boost::asio::buffer_size(m_buffers) > 0) {
                // The channel did not decrypt a complete record yet, we need more data from the socket.
                m_stream.next_layer().async_read_some(m_stream.input_buffer(), std::move(*this));
                return;
             }
 
-            if(m_stream.has_received_data() && !ec) {
+            if(!ec && m_stream.has_received_data()) {
                // The channel has decrypted a TLS record, now copy it to the output buffers.
                m_decodedBytes = m_stream.copy_received_data(m_buffers);
             }
@@ -202,7 +202,7 @@ class AsyncWriteOperation : public AsyncBase<Handler, typename Stream::executor_
             // Note: bytes_transferred will be zero on first call
             m_stream.consume_send_buffer(bytes_transferred);
 
-            if(m_stream.has_data_to_send() && !ec) {
+            if(!ec && m_stream.has_data_to_send()) {
                m_stream.next_layer().async_write_some(m_stream.send_buffer(), std::move(*this));
                return;
             }
@@ -258,13 +258,13 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
                ec = StreamError::StreamTruncated;
             }
 
-            if(bytesTransferred > 0 && !ec) {
+            if(!ec && bytesTransferred > 0) {
                // Provide encrypted TLS data received from the network to TLS::Channel for decryption
                boost::asio::const_buffer read_buffer{m_stream.input_buffer().data(), bytesTransferred};
                m_stream.process_encrypted_data(read_buffer, ec);
             }
 
-            if(m_stream.has_data_to_send() && !ec) {
+            if(!ec && m_stream.has_data_to_send()) {
                // Write encrypted TLS data provided by the TLS::Channel on the wire
 
                // Note: we construct `AsyncWriteOperation` with 0 as its last parameter (`plainBytesTransferred`). This
@@ -278,7 +278,7 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
                return;
             }
 
-            if(!m_stream.native_handle()->is_handshake_complete() && !ec) {
+            if(!ec && !m_stream.native_handle()->is_handshake_complete()) {
                // Read more encrypted TLS data from the network
                m_stream.next_layer().async_read_some(m_stream.input_buffer(), std::move(*this));
                return;
