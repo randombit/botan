@@ -8,3 +8,4 @@ InvalidCAnotBeforeDateTest1:Certificate is not yet valid
 Validpre2000UTCnotBeforeDateTest3:Verified
 ValidGeneralizedTimenotBeforeDateTest4:Verified
 InvalidCAnotAfterDateTest5:Certificate has expired
+Invalidpre2000UTCEEnotAfterDateTest7:Certificate has expired
