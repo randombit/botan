@@ -47,6 +47,8 @@ enum class PublicKeyOperation {
    KeyAgreement,
 };
 
+class Private_Key;
+
 /**
 * An interface for objects that are keys in public key algorithms
 *
@@ -99,6 +101,12 @@ class BOTAN_PUBLIC_API(3, 0) Asymmetric_Key {
       * of operation.
       */
       virtual bool supports_operation(PublicKeyOperation op) const = 0;
+
+      /**
+       * Generate another (cryptographically independent) key pair using the
+       * same algorithm parameters as this key.
+       */
+      virtual std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const = 0;
 };
 
 /*

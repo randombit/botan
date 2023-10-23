@@ -1247,6 +1247,10 @@ bool Kyber_PublicKey::check_key(RandomNumberGenerator&, bool) const {
    return true;  // ??
 }
 
+std::unique_ptr<Private_Key> Kyber_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   return std::make_unique<Kyber_PrivateKey>(rng, mode());
+}
+
 Kyber_PrivateKey::Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode m) {
    KyberConstants mode(m);
 

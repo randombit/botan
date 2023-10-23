@@ -40,6 +40,10 @@ class ECIES_PrivateKey final : public EC_PrivateKey,
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::KeyAgreement); }
 
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const override {
+         return m_key.generate_another(rng);
+      }
+
       std::unique_ptr<PK_Ops::Key_Agreement> create_key_agreement_op(RandomNumberGenerator& rng,
                                                                      std::string_view params,
                                                                      std::string_view provider) const override;

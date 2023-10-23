@@ -250,6 +250,20 @@ std::vector<uint8_t> KEX_to_KEM_Adapter_PublicKey::public_key_bits() const {
    return kex_public_value(*m_public_key);
 }
 
+std::unique_ptr<Private_Key> KEX_to_KEM_Adapter_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   auto new_kex_key = [&] {
+      auto new_private_key = m_public_key->generate_another(rng);
+      const auto kex_key = dynamic_cast<PK_Key_Agreement_Key*>(new_private_key.get());
+      if(kex_key) [[likely]] {
+         (void)new_private_key.release();
+      }
+      return std::unique_ptr<PK_Key_Agreement_Key>(kex_key);
+   }();
+
+   BOTAN_ASSERT(new_kex_key, "Keys wrapped in this adapter are always key-agreement keys");
+   return std::make_unique<KEX_to_KEM_Adapter_PrivateKey>(std::move(new_kex_key));
+}
+
 bool KEX_to_KEM_Adapter_PublicKey::supports_operation(PublicKeyOperation op) const {
    return op == PublicKeyOperation::KeyEncapsulation;
 }

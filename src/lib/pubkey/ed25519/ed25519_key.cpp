@@ -83,6 +83,10 @@ std::vector<uint8_t> Ed25519_PublicKey::public_key_bits() const {
    return m_public;
 }
 
+std::unique_ptr<Private_Key> Ed25519_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   return std::make_unique<Ed25519_PrivateKey>(rng);
+}
+
 Ed25519_PrivateKey::Ed25519_PrivateKey(const secure_vector<uint8_t>& secret_key) {
    if(secret_key.size() == 64) {
       m_private = secret_key;

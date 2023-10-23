@@ -51,6 +51,13 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_ECDSA_PublicKey final : public PKCS11_EC_Pub
       /// @return the exported ECDSA public key
       ECDSA_PublicKey export_key() const;
 
+      /**
+       * @throws Not_Implemented
+       */
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator&) const final {
+         throw Not_Implemented("Cannot generate a new PKCS#11 ECDSA keypair from this public key");
+      }
+
       std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
                                                                    std::string_view provider) const override;
 };
@@ -88,6 +95,13 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_ECDSA_PrivateKey final : public PKCS11_EC_Pr
             PKCS11_EC_PrivateKey(session, ec_params, props) {}
 
       inline std::string algo_name() const override { return "ECDSA"; }
+
+      /**
+       * @throws Not_Implemented
+       */
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator&) const override {
+         throw Not_Implemented("Cannot generate a new PKCS#11 ECDSA keypair from this private key");
+      }
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::Signature); }
 

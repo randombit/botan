@@ -50,6 +50,8 @@ class BOTAN_PUBLIC_API(2, 0) DSA_PublicKey : public virtual Public_Key {
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
+
       size_t estimated_strength() const override;
       size_t key_length() const override;
 

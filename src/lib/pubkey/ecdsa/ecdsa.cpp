@@ -77,6 +77,10 @@ ECDSA_PublicKey::ECDSA_PublicKey(
    const EC_Group& group, const std::vector<uint8_t>& msg, const BigInt& r, const BigInt& s, uint8_t v) :
       EC_PublicKey(group, recover_ecdsa_public_key(group, msg, r, s, v)) {}
 
+std::unique_ptr<Private_Key> ECDSA_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   return std::make_unique<ECDSA_PrivateKey>(rng, domain());
+}
+
 uint8_t ECDSA_PublicKey::recovery_param(const std::vector<uint8_t>& msg, const BigInt& r, const BigInt& s) const {
    for(uint8_t v = 0; v != 4; ++v) {
       try {

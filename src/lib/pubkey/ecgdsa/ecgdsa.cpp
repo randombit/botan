@@ -132,6 +132,10 @@ bool ECGDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len, 
 
 }  // namespace
 
+std::unique_ptr<Private_Key> ECGDSA_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   return std::make_unique<ECGDSA_PrivateKey>(rng, domain());
+}
+
 std::unique_ptr<PK_Ops::Verification> ECGDSA_PublicKey::create_verification_op(std::string_view params,
                                                                                std::string_view provider) const {
    if(provider == "base" || provider.empty()) {

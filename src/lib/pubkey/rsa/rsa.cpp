@@ -129,6 +129,10 @@ const BigInt& RSA_PublicKey::get_int_field(std::string_view field) const {
    }
 }
 
+std::unique_ptr<Private_Key> RSA_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   return std::make_unique<RSA_PrivateKey>(rng, m_public->public_modulus_bits(), m_public->get_e().to_u32bit());
+}
+
 const BigInt& RSA_PublicKey::get_n() const {
    return m_public->get_n();
 }

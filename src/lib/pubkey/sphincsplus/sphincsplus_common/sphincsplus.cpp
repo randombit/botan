@@ -126,6 +126,10 @@ std::vector<uint8_t> SphincsPlus_PublicKey::public_key_bits() const {
    return m_public->key_bits();
 }
 
+std::unique_ptr<Private_Key> SphincsPlus_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   return std::make_unique<SphincsPlus_PrivateKey>(rng, m_public->parameters());
+}
+
 class SphincsPlus_Verification_Operation final : public PK_Ops::Verification {
    public:
       SphincsPlus_Verification_Operation(std::shared_ptr<SphincsPlus_PublicKeyInternal> pub_key) :

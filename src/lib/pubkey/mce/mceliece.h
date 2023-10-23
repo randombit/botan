@@ -56,6 +56,8 @@ class BOTAN_PUBLIC_API(2, 0) McEliece_PublicKey : public virtual Public_Key {
 
       bool operator!=(const McEliece_PublicKey& other) const { return !(*this == other); }
 
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
+
       bool supports_operation(PublicKeyOperation op) const override {
          return (op == PublicKeyOperation::KeyEncapsulation);
       }

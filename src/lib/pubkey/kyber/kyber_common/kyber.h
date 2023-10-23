@@ -96,6 +96,8 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key {
 
       bool check_key(RandomNumberGenerator&, bool) const override;
 
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
+
       bool supports_operation(PublicKeyOperation op) const override {
          return (op == PublicKeyOperation::KeyEncapsulation);
       }

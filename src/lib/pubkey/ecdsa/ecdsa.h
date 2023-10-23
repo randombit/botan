@@ -58,6 +58,8 @@ class BOTAN_PUBLIC_API(2, 0) ECDSA_PublicKey : public virtual EC_PublicKey {
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::Signature); }
 
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const override;
+
       uint8_t recovery_param(const std::vector<uint8_t>& msg, const BigInt& r, const BigInt& s) const;
 
       std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,

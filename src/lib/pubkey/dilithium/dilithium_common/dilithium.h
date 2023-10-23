@@ -74,6 +74,8 @@ class BOTAN_PUBLIC_API(3, 0) Dilithium_PublicKey : public virtual Public_Key {
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::Signature); }
 
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
+
       Dilithium_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> pk);
 
       Dilithium_PublicKey(std::span<const uint8_t> pk, DilithiumMode mode);

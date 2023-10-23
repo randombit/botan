@@ -137,4 +137,11 @@ std::vector<uint8_t> XMSS_PublicKey::public_key_bits() const {
    return output;
 }
 
+std::unique_ptr<Private_Key> XMSS_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   // Note: Given only an XMSS public key we cannot know which WOTS key
+   //       derivation method was used to build the XMSS tree. Hence, we have to
+   //       use the default here.
+   return std::make_unique<XMSS_PrivateKey>(m_xmss_params.oid(), rng);
+}
+
 }  // namespace Botan

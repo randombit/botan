@@ -30,6 +30,8 @@ class BOTAN_PUBLIC_API(2, 0) Curve25519_PublicKey : public virtual Public_Key {
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::KeyAgreement); }
 
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
+
       /**
       * Create a Curve25519 Public Key.
       * @param alg_id the X.509 algorithm identifier

@@ -54,6 +54,10 @@ std::vector<uint8_t> Curve25519_PublicKey::public_key_bits() const {
    return m_public;
 }
 
+std::unique_ptr<Private_Key> Curve25519_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   return std::make_unique<Curve25519_PrivateKey>(rng);
+};
+
 Curve25519_PrivateKey::Curve25519_PrivateKey(const secure_vector<uint8_t>& secret_key) {
    if(secret_key.size() != 32) {
       throw Decoding_Error("Invalid size for Curve25519 private key");

@@ -43,6 +43,10 @@ const BigInt& ElGamal_PublicKey::get_int_field(std::string_view field) const {
    return m_public_key->get_int_field(algo_name(), field);
 }
 
+std::unique_ptr<Private_Key> ElGamal_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   return std::make_unique<ElGamal_PrivateKey>(rng, m_public_key->group());
+}
+
 bool ElGamal_PublicKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    return m_public_key->check_key(rng, strong);
 }

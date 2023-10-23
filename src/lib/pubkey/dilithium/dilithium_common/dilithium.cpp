@@ -540,6 +540,10 @@ bool Dilithium_PublicKey::check_key(RandomNumberGenerator&, bool) const {
    return true;  // ???
 }
 
+std::unique_ptr<Private_Key> Dilithium_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   return std::make_unique<Dilithium_PrivateKey>(rng, m_public->mode().mode());
+}
+
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_verification_op(std::string_view params,
                                                                                   std::string_view provider) const {
    BOTAN_ARG_CHECK(params.empty() || params == "Pure", "Unexpected parameters for verifying with Dilithium");
