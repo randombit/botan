@@ -104,44 +104,23 @@ size_t kex_shared_key_length(const Public_Key& kex_public_key) {
 
 /**
  * This helper generates an ephemeral key agreement private key given a
- * public key instance of a certain key agreement algorithm. Currently,
- * there is no generic way to generate a new key from an abstract public
- * key object.
- *
- * See also: https://github.com/randombit/botan/discussions/3581 where a
- *           new Public_Key::generate_another_keypair() method is proposed
- *           to fill this gap.
- *
- * TODO: Implement the suggestion above or find a better way to
- *       generically handle the generation of a matching ephemeral key
- *       agreement private key.
+ * public key instance of a certain key agreement algorithm.
  */
 std::unique_ptr<PK_Key_Agreement_Key> generate_key_agreement_private_key(const Public_Key& kex_public_key,
                                                                          RandomNumberGenerator& rng) {
    BOTAN_ASSERT_NOMSG(kex_public_key.supports_operation(PublicKeyOperation::KeyAgreement));
 
-#if defined(BOTAN_HAS_ECDH)
-   if(const auto* ecdh = dynamic_cast<const ECDH_PublicKey*>(&kex_public_key)) {
-      return std::make_unique<ECDH_PrivateKey>(rng, ecdh->domain());
-   }
-#endif
+   auto new_kex_key = [&] {
+      auto new_private_key = kex_public_key.generate_another(rng);
+      const auto kex_key = dynamic_cast<PK_Key_Agreement_Key*>(new_private_key.get());
+      if(kex_key) [[likely]] {
+         (void)new_private_key.release();
+      }
+      return std::unique_ptr<PK_Key_Agreement_Key>(kex_key);
+   }();
 
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-   if(const auto* dh = dynamic_cast<const DH_PublicKey*>(&kex_public_key)) {
-      return std::make_unique<DH_PrivateKey>(rng, dh->group());
-   }
-#endif
-
-#if defined(BOTAN_HAS_CURVE_25519)
-   if(const auto* curve = dynamic_cast<const Curve25519_PublicKey*>(&kex_public_key)) {
-      BOTAN_UNUSED(curve);
-      return std::make_unique<Curve25519_PrivateKey>(rng);
-   }
-#endif
-
-   throw Not_Implemented(fmt(
-      "Cannot generate a private key matching an unknown key agreement public key of type '{}' in the hybrid KEM key",
-      kex_public_key.algo_name()));
+   BOTAN_ASSERT(new_kex_key, "Keys wrapped in this adapter are always key-agreement keys");
+   return new_kex_key;
 }
 
 std::unique_ptr<Public_Key> maybe_get_public_key(const std::unique_ptr<PK_Key_Agreement_Key>& private_key) {
@@ -251,17 +230,7 @@ std::vector<uint8_t> KEX_to_KEM_Adapter_PublicKey::public_key_bits() const {
 }
 
 std::unique_ptr<Private_Key> KEX_to_KEM_Adapter_PublicKey::generate_another(RandomNumberGenerator& rng) const {
-   auto new_kex_key = [&] {
-      auto new_private_key = m_public_key->generate_another(rng);
-      const auto kex_key = dynamic_cast<PK_Key_Agreement_Key*>(new_private_key.get());
-      if(kex_key) [[likely]] {
-         (void)new_private_key.release();
-      }
-      return std::unique_ptr<PK_Key_Agreement_Key>(kex_key);
-   }();
-
-   BOTAN_ASSERT(new_kex_key, "Keys wrapped in this adapter are always key-agreement keys");
-   return std::make_unique<KEX_to_KEM_Adapter_PrivateKey>(std::move(new_kex_key));
+   return std::make_unique<KEX_to_KEM_Adapter_PrivateKey>(generate_key_agreement_private_key(*m_public_key, rng));
 }
 
 bool KEX_to_KEM_Adapter_PublicKey::supports_operation(PublicKeyOperation op) const {
