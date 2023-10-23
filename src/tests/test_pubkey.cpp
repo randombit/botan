@@ -601,6 +601,18 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
          result.test_eq(
             "public_key has same encoding", Botan::X509::PEM_encode(key), Botan::X509::PEM_encode(*public_key));
 
+         // Test generation of another key pair from a given (abstract) asymmetric key
+         auto sk2 = public_key->generate_another(Test::rng());
+         auto pk2 = sk2->public_key();
+
+         result.test_eq("new private key has the same name", sk2->algo_name(), key.algo_name());
+         result.test_eq("new public key has the same name", pk2->algo_name(), public_key->algo_name());
+         result.test_eq(
+            "new private key has the same est. strength", sk2->estimated_strength(), key.estimated_strength());
+         result.test_eq(
+            "new public key has the same est. strength", pk2->estimated_strength(), public_key->estimated_strength());
+         result.test_ne("new private keys are different keys", sk2->private_key_bits(), key.private_key_bits());
+
          // Test PEM public key round trips OK
          try {
             Botan::DataSource_Memory data_src(Botan::X509::PEM_encode(key));
