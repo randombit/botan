@@ -22,13 +22,31 @@ SCRIPTS_DIR    = %{scripts_dir}
 INSTALLED_LIB_DIR = %{libdir}
 
 rule compile_lib
-  command = %{cxx} %{lib_flags} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} ${isa_flags} %{include_paths} %{dash_c} $in %{dash_o}$out
+%{if header_deps_out}
+  depfile = $out.d
+%{endif}
+%{if ninja_header_deps_style}
+  deps = %{ninja_header_deps_style}
+%{endif}
+  command = %{cxx} %{lib_flags} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} ${isa_flags} %{include_paths} %{header_deps_flag} %{header_deps_out|concat: $out.d} %{dash_c} $in %{dash_o}$out
 
 rule compile_exe
-  command = %{cxx} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} ${isa_flags} %{include_paths} %{dash_c} $in %{dash_o}$out
+%{if header_deps_out}
+  depfile = $out.d
+%{endif}
+%{if ninja_header_deps_style}
+  deps = %{ninja_header_deps_style}
+%{endif}
+  command = %{cxx} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} ${isa_flags} %{include_paths} %{header_deps_flag} %{header_deps_out|concat: $out.d} %{dash_c} $in %{dash_o}$out
 
 rule compile_example_exe
-  command = %{cxx} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} ${WARN_FLAGS} ${isa_flags} %{include_paths} %{dash_c} $in %{dash_o}$out
+%{if header_deps_out}
+  depfile = $out.d
+%{endif}
+%{if ninja_header_deps_style}
+  deps = %{ninja_header_deps_style}
+%{endif}
+  command = %{cxx} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} ${WARN_FLAGS} ${isa_flags} %{include_paths} %{header_deps_flag} %{header_deps_out|concat: $out.d} %{dash_c} $in %{dash_o}$out
 
 # The primary target
 build all: phony %{all_targets}

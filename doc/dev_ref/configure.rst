@@ -388,6 +388,11 @@ Variables:
     when generation shared libraries.
   * ``visibility_attribute`` gives the attribute to use in the ``BOTAN_DLL`` macro
     to specify visibility when generation shared libraries.
+  * ``ninja_header_deps_style`` style of include dependency tracking for Ninja,
+    see also https://ninja-build.org/manual.html#ref_headers.
+  * ``header_deps_flag`` flag to write out dependency information in the style
+    required by ``ninja_header_deps_style``.
+  * ``header_deps_out`` flag to specify name of the dependency output file.
   * ``ar_command`` gives the command to build static libraries
   * ``ar_options`` gives the options to pass to ``ar_command``, if not set here
     takes this from the OS specific information.

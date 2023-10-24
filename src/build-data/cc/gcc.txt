@@ -39,6 +39,12 @@ undefined -> "-fsanitize=undefined -fno-sanitize-recover=undefined"
 visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'
 
+# Include dependency tracking for Ninja
+# See: https://ninja-build.org/manual.html#ref_headers
+ninja_header_deps_style 'gcc'
+header_deps_flag '-MD'
+header_deps_out '-MF'
+
 <so_link_commands>
 # The default works for GNU ld and several other Unix linkers
 default       -> "{cxx} -shared -fPIC -Wl,-soname,{soname_abi}"

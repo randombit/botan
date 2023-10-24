@@ -1249,6 +1249,9 @@ class CompilerInfo(InfoObject):
                 'ar_output_to': '',
                 'werror_flags': '',
                 'supports_gcc_inline_asm': 'no',
+                'ninja_header_deps_style': '',
+                'header_deps_flag': '',
+                'header_deps_out': '',
             })
 
         self.add_framework_option = lex.add_framework_option
@@ -1293,6 +1296,9 @@ class CompilerInfo(InfoObject):
         self.warning_flags = lex.warning_flags
         self.werror_flags = lex.werror_flags
         self.minimum_supported_version = lex.minimum_supported_version
+        self.ninja_header_deps_style = lex.ninja_header_deps_style
+        self.header_deps_flag = lex.header_deps_flag
+        self.header_deps_out = lex.header_deps_out
 
     def cross_check(self, os_info, arch_info, all_isas):
 
@@ -2232,6 +2238,9 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'cc_warning_flags': cc.cc_warning_flags(options),
         'output_to_exe': cc.output_to_exe,
         'cc_macro': cc.macro_name,
+        'ninja_header_deps_style': cc.ninja_header_deps_style,
+        'header_deps_flag': cc.header_deps_flag,
+        'header_deps_out': cc.header_deps_out,
 
         'visibility_attribute': cc.gen_visibility_attribute(options),
 
