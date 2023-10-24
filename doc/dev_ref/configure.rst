@@ -77,6 +77,12 @@ to the output unmodified. The template elements are:
    If a variable reference ends with ``|upper``, the value is uppercased before
    being inserted into the template output.
 
+   Using ``|concat:<some string>`` as a suffix, it is possible to conditionally
+   concatenate the variable value with a static string defined in the template.
+   This is useful for compiler switches that require a template-defined
+   parameter value. If the substitution value is not set (i.e. "empty"), also
+   the static concatenation value is omitted.
+
  * Iteration, ``%{for variable} block %{endfor}``. This iterates over a list and
    repeats the block as many times as it is included. Variables within the block
    are expanded. The two template elements ``%{for ...}`` and ``%{endfor}`` must

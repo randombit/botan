@@ -1728,23 +1728,34 @@ def process_template_string(template_text, variables, template_source):
 
         def __init__(self, vals):
             self.vals = vals
-            self.value_pattern = re.compile(r'%{([a-z][a-z_0-9\|]+)}')
+            self.value_pattern = re.compile(r'%{([a-z][a-z_0-9\|]+)(?::([^}]+))?}')
             self.cond_pattern = re.compile('%{(if|unless) ([a-z][a-z_0-9]+)}')
             self.for_pattern = re.compile('(.*)%{for ([a-z][a-z_0-9]+)}')
             self.omitlast_pattern = re.compile('(.*)%{omitlast ([^}]*)}(.*)', re.DOTALL)
             self.join_pattern = re.compile('%{join ([a-z][a-z_0-9]+)}')
 
         def substitute(self, template):
-            def insert_value(match):
-                v = match.group(1)
-                if v in self.vals:
-                    return str(self.vals.get(v))
-                if v.endswith('|upper'):
-                    v = v.replace('|upper', '')
-                    if v in self.vals:
-                        return str(self.vals.get(v)).upper()
+            def get_replacement(k):
+                if k not in self.vals:
+                    raise KeyError(k)
+                return str(self.vals.get(k))
 
-                raise KeyError(v)
+            def insert_value(match):
+                k = match.group(1)
+                if k.endswith('|upper'):
+                    k = k.replace('|upper', '')
+                    v = get_replacement(k).upper()
+                elif k.endswith('|concat'):
+                    k = k.replace('|concat', '')
+                    if not match.group(2):
+                        raise InternalError("|concat must be of the form '%{val|concat:<some static value>}'")
+                    v = get_replacement(k)
+                    if v:
+                        v = f"{v}{match.group(2)}"
+                else:
+                    v = get_replacement(k)
+
+                return v
 
             def insert_join(match):
                 var = match.group(1)
