@@ -275,7 +275,7 @@ std::vector<Test::Result> NIST_PKITS_Path_Validation_Tests::run() {
 
    std::vector<Test::Result> results;
 
-   const std::string nist_test_dir = Test::data_dir() + "/x509/nist_pkits/tests";  // FIXME remove tests
+   const std::string nist_test_dir = Test::data_dir() + "/x509/nist_pkits";  // FIXME remove tests
 
    std::map<std::string, std::string> expected = read_results(Test::data_file("x509/nist_pkits/expected.txt"));
 
