@@ -14,7 +14,7 @@ import subprocess
 class Config:
     """ Hardcoded configurations for this CI script """
     tls_anvil_docker_image = "ghcr.io/tls-attacker/tlsanvil"
-    tls_anvil_version_tag = "v1.2.2"
+    tls_anvil_version_tag = "@sha256:e9abe034e6b1dac7fe204d524db338f379087a16aca71e94dc7b51ac835bb53f" # v1.2.2 + HelloRetry test fix
     key_and_cert_storage_path = "/tmp/"
     test_suite_results_dest = "."
     test_suite_results_dir_name = "TestSuiteResults"
@@ -76,7 +76,7 @@ def build_botan(botan_dir: str, parallel_jobs: int) -> str:
 def server_test(botan_dir_path: str, parallel: int):
     """ Test the Botan TLS server """
     cert_path, key_path = create_cert_and_key(botan_dir_path)
-    docker_img = f"{Config.tls_anvil_docker_image}:{Config.tls_anvil_version_tag}"
+    docker_img = f"{Config.tls_anvil_docker_image}{Config.tls_anvil_version_tag}"
 
     group_output("Pull TLS-Anvil image", subprocess.run)(["docker", "pull", docker_img], check=True)
 
