@@ -270,6 +270,10 @@ bool GOST_3410_Verification_Operation::verify(const uint8_t msg[],
 
 }  // namespace
 
+std::unique_ptr<Private_Key> GOST_3410_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   return std::make_unique<GOST_3410_PrivateKey>(rng, domain());
+}
+
 std::unique_ptr<PK_Ops::Verification> GOST_3410_PublicKey::create_verification_op(std::string_view params,
                                                                                   std::string_view provider) const {
    if(provider == "base" || provider.empty()) {

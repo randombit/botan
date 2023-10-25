@@ -240,6 +240,10 @@ void parse_sm2_param_string(std::string_view params, std::string& userid, std::s
 
 }  // namespace
 
+std::unique_ptr<Private_Key> SM2_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   return std::make_unique<SM2_PrivateKey>(rng, domain());
+}
+
 std::unique_ptr<PK_Ops::Verification> SM2_PublicKey::create_verification_op(std::string_view params,
                                                                             std::string_view provider) const {
    if(provider == "base" || provider.empty()) {

@@ -146,6 +146,8 @@ class DilithiumModeConstants {
 
       OID oid() const { return m_mode.object_identifier(); }
 
+      DilithiumMode mode() const { return m_mode; }
+
       size_t private_key_bytes() const { return m_private_key_bytes; }
 
       size_t nist_security_strength() const { return m_nist_security_strength; }

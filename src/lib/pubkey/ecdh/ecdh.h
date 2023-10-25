@@ -52,6 +52,8 @@ class BOTAN_PUBLIC_API(2, 0) ECDH_PublicKey : public virtual EC_PublicKey {
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::KeyAgreement); }
 
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
+
    protected:
       ECDH_PublicKey() = default;
 };

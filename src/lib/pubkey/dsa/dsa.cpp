@@ -48,6 +48,10 @@ bool DSA_PublicKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    return m_public_key->check_key(rng, strong);
 }
 
+std::unique_ptr<Private_Key> DSA_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   return std::make_unique<DSA_PrivateKey>(rng, m_public_key->group());
+}
+
 DSA_PublicKey::DSA_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
    m_public_key = std::make_shared<DL_PublicKey>(alg_id, key_bits, DL_Group_Format::ANSI_X9_57);
 

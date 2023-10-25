@@ -53,6 +53,10 @@ bool DH_PublicKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    return m_public_key->check_key(rng, strong);
 }
 
+std::unique_ptr<Private_Key> DH_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   return std::make_unique<DH_PrivateKey>(rng, group());
+}
+
 DH_PrivateKey::DH_PrivateKey(RandomNumberGenerator& rng, const DL_Group& group) {
    m_private_key = std::make_shared<DL_PrivateKey>(group, rng);
    m_public_key = m_private_key->public_key();

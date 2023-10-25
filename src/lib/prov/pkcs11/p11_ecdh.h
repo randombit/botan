@@ -43,6 +43,13 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_ECDH_PublicKey : public PKCS11_EC_PublicKey 
 
       inline std::string algo_name() const override { return "ECDH"; }
 
+      /**
+       * @throws Not_Implemented
+       */
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator&) const final {
+         throw Not_Implemented("Cannot generate a new PKCS#11 ECDH keypair from this public key");
+      }
+
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::KeyAgreement); }
 
       /// @return the exported ECDH public key
@@ -96,6 +103,13 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_ECDH_PrivateKey final : public virtual PKCS1
       ECDH_PrivateKey export_key() const;
 
       secure_vector<uint8_t> private_key_bits() const override;
+
+      /**
+       * @throws Not_Implemented
+       */
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator&) const override {
+         throw Not_Implemented("Cannot generate a new PKCS#11 ECDH keypair from this private key");
+      }
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::KeyAgreement); }
 

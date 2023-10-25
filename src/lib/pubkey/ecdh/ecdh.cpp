@@ -53,6 +53,10 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 
 }  // namespace
 
+std::unique_ptr<Private_Key> ECDH_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   return std::make_unique<ECDH_PrivateKey>(rng, domain());
+}
+
 std::unique_ptr<PK_Ops::Key_Agreement> ECDH_PrivateKey::create_key_agreement_op(RandomNumberGenerator& rng,
                                                                                 std::string_view params,
                                                                                 std::string_view provider) const {

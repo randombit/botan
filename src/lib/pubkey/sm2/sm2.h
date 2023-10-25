@@ -40,6 +40,8 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PublicKey : public virtual EC_PublicKey {
 
       size_t message_parts() const override { return 2; }
 
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
+
       bool supports_operation(PublicKeyOperation op) const override {
          return (op == PublicKeyOperation::Signature || op == PublicKeyOperation::Encryption);
       }

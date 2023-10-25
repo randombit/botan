@@ -57,8 +57,8 @@ class BOTAN_TEST_API Hybrid_KEM_PublicKey : public virtual Public_Key {
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
       AlgorithmIdentifier algorithm_identifier() const override;
       std::vector<uint8_t> public_key_bits() const override;
-
       std::vector<uint8_t> public_value() const;
+      std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
 
       bool supports_operation(PublicKeyOperation op) const override;
 

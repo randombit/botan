@@ -202,6 +202,15 @@ std::vector<uint8_t> Hybrid_KEM_PublicKey::public_value() const {
    });
 }
 
+std::unique_ptr<Private_Key> Hybrid_KEM_PublicKey::generate_another(RandomNumberGenerator& rng) const {
+   std::vector<std::unique_ptr<Private_Key>> new_private_keys;
+   std::transform(
+      m_public_keys.begin(), m_public_keys.end(), std::back_inserter(new_private_keys), [&](const auto& public_key) {
+         return public_key->generate_another(rng);
+      });
+   return std::make_unique<Hybrid_KEM_PrivateKey>(std::move(new_private_keys));
+}
+
 bool Hybrid_KEM_PublicKey::supports_operation(PublicKeyOperation op) const {
    return PublicKeyOperation::KeyEncapsulation == op;
 }
