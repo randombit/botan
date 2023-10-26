@@ -9,10 +9,8 @@
 #ifndef BOTAN_ASIO_TLS_CONTEXT_H_
 #define BOTAN_ASIO_TLS_CONTEXT_H_
 
-#include <botan/types.h>
-
-#include <boost/version.hpp>
-#if BOOST_VERSION >= 107300
+#include <botan/boost_compat.h>
+#if defined(BOTAN_FOUND_COMPATIBLE_BOOST_VERSION)
 
    #include <functional>
 
@@ -99,5 +97,5 @@ class Context {
 
 }  // namespace Botan::TLS
 
-#endif  // BOOST_VERSION
+#endif
 #endif  // BOTAN_ASIO_TLS_CONTEXT_H_

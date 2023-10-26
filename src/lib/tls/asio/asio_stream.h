@@ -10,12 +10,10 @@
 #ifndef BOTAN_ASIO_STREAM_H_
 #define BOTAN_ASIO_STREAM_H_
 
-#include <botan/types.h>
-
-#include <boost/version.hpp>
-
-// First version of boost asio that is prepared to use C++20 concepts
-#if BOOST_VERSION >= 107300
+#include <botan/boost_compat.h>
+#if !defined(BOTAN_FOUND_COMPATIBLE_BOOST_VERSION)
+   #error Available boost headers are too old for the boost asio stream.
+#else
 
    #include <botan/asio_async_ops.h>
    #include <botan/asio_context.h>
@@ -800,5 +798,5 @@ class Stream {
 
 }  // namespace Botan::TLS
 
-#endif  // BOOST_VERSION
+#endif
 #endif  // BOTAN_ASIO_STREAM_H_

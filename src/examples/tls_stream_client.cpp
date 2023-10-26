@@ -1,14 +1,17 @@
 #include <iostream>
 
-#include <botan/asio_stream.h>
-#include <botan/auto_rng.h>
-#include <botan/certstor_system.h>
-#include <botan/tls.h>
+#include <botan/boost_compat.h>
+#if defined(BOTAN_FOUND_COMPATIBLE_BOOST_VERSION)
 
-#include <boost/asio.hpp>
-#include <boost/beast.hpp>
-#include <boost/bind.hpp>
-#include <utility>
+   #include <botan/asio_stream.h>
+   #include <botan/auto_rng.h>
+   #include <botan/certstor_system.h>
+   #include <botan/tls.h>
+
+   #include <boost/asio.hpp>
+   #include <boost/beast.hpp>
+   #include <boost/bind.hpp>
+   #include <utility>
 
 namespace http = boost::beast::http;
 namespace ap = boost::asio::placeholders;
@@ -113,3 +116,12 @@ int main() {
 
    return 0;
 }
+
+#else
+
+int main() {
+   std::cout << "Your boost version is too old, sorry.\n";
+   return 1;
+}
+
+#endif

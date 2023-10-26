@@ -10,12 +10,12 @@
 
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_TLS_ASIO_STREAM)
 
-   #include <botan/asio_stream.h>
-   #include <botan/tls_callbacks.h>
-   #include <botan/tls_session_manager_noop.h>
+   #include <botan/boost_compat.h>
+   #if defined(BOTAN_FOUND_COMPATIBLE_BOOST_VERSION)
 
-   #include <boost/version.hpp>
-   #if BOOST_VERSION >= 107300
+      #include <botan/asio_stream.h>
+      #include <botan/tls_callbacks.h>
+      #include <botan/tls_session_manager_noop.h>
 
       #include <boost/beast/_experimental/test/stream.hpp>
       #include <boost/bind.hpp>
@@ -736,5 +736,5 @@ BOTAN_REGISTER_TEST("tls", "tls_asio_stream", Asio_Stream_Tests);
 
 }  // namespace Botan_Tests
 
-   #endif  // BOOST_VERSION
-#endif     // BOTAN_HAS_TLS && BOTAN_HAS_BOOST_ASIO
+   #endif
+#endif  // BOTAN_HAS_TLS && BOTAN_HAS_TLS_ASIO_STREAM
