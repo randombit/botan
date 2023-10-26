@@ -127,20 +127,21 @@ void Certificate_13::setup_entries(std::vector<X509_Certificate> cert_chain,
    }
 
    for(size_t i = 0; i < cert_chain.size(); ++i) {
-      auto exts = Extensions();
-      // This will call the modification callback multiple times. Once for
-      // each certificate in the `cert_chain`. Users that want to add an
-      // extension to a specific Certificate Entry might have a hard time
-      // to distinguish them.
-      // TODO: Callbacks::tls_modify_extensions() might need even more
-      //       context depending on the message whose extensions should be
-      //       manipulatable.
-      callbacks.tls_modify_extensions(exts, m_side, type());
       auto& entry = m_entries.emplace_back();
       entry.certificate = cert_chain[i];
       if(!ocsp_responses[i].empty()) {
          entry.extensions.add(new Certificate_Status_Request(ocsp_responses[i]));
       }
+
+      // This will call the modification callback multiple times. Once for
+      // each certificate in the `cert_chain`. Users that want to add an
+      // extension to a specific Certificate Entry might have a hard time
+      // to distinguish them.
+      //
+      // TODO: Callbacks::tls_modify_extensions() might need even more
+      //       context depending on the message whose extensions should be
+      //       manipulatable.
+      callbacks.tls_modify_extensions(entry.extensions, m_side, type());
    }
 }
 
