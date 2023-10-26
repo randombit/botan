@@ -77,6 +77,12 @@ to the output unmodified. The template elements are:
    If a variable reference ends with ``|upper``, the value is uppercased before
    being inserted into the template output.
 
+   Using ``|concat:<some string>`` as a suffix, it is possible to conditionally
+   concatenate the variable value with a static string defined in the template.
+   This is useful for compiler switches that require a template-defined
+   parameter value. If the substitution value is not set (i.e. "empty"), also
+   the static concatenation value is omitted.
+
  * Iteration, ``%{for variable} block %{endfor}``. This iterates over a list and
    repeats the block as many times as it is included. Variables within the block
    are expanded. The two template elements ``%{for ...}`` and ``%{endfor}`` must
@@ -382,6 +388,11 @@ Variables:
     when generation shared libraries.
   * ``visibility_attribute`` gives the attribute to use in the ``BOTAN_DLL`` macro
     to specify visibility when generation shared libraries.
+  * ``ninja_header_deps_style`` style of include dependency tracking for Ninja,
+    see also https://ninja-build.org/manual.html#ref_headers.
+  * ``header_deps_flag`` flag to write out dependency information in the style
+    required by ``ninja_header_deps_style``.
+  * ``header_deps_out`` flag to specify name of the dependency output file.
   * ``ar_command`` gives the command to build static libraries
   * ``ar_options`` gives the options to pass to ``ar_command``, if not set here
     takes this from the OS specific information.

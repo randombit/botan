@@ -6,7 +6,7 @@
             "detail": "Default ./configure.py invocation for gcc. Run your own if you want.",
             "group": "build",
             "type": "shell",
-            "command": "python3 ./configure.py --cc gcc --compiler-cache=ccache --without-documentation --debug-mode --build-targets=\"static,tests,bogo_shim\"",
+            "command": "python3 ./configure.py --cc gcc --compiler-cache=ccache --build-tool=ninja --without-documentation --debug-mode --build-targets=\"static,tests,bogo_shim\"",
             "presentation": {
                 "reveal": "always",
                 "panel": "shared",
@@ -22,7 +22,7 @@
                 "args": [
                 ]
             },
-            "command": "python ./configure.py --cc msvc --compiler-cache=sccache.exe --without-documentation --debug-mode --build-targets=\"static,tests\"",
+            "command": "python ./configure.py --cc msvc --compiler-cache=sccache.exe --build-tool=ninja --link-method=hardlink --without-documentation --debug-mode --build-targets=\"static,tests\"",
             "presentation": {
                 "reveal": "always",
                 "panel": "shared",

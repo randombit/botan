@@ -39,6 +39,11 @@ werror_flags "/WX"
 visibility_build_flags "/DBOTAN_DLL=__declspec(dllexport)"
 visibility_attribute "__declspec(dllimport)"
 
+# Include dependency tracking for Ninja
+# See: https://ninja-build.org/manual.html#ref_headers
+ninja_header_deps_style 'msvc'
+header_deps_flag '/showIncludes'
+
 ar_command lib
 ar_options "/nologo"
 ar_output_to "/OUT:"

@@ -1249,6 +1249,9 @@ class CompilerInfo(InfoObject):
                 'ar_output_to': '',
                 'werror_flags': '',
                 'supports_gcc_inline_asm': 'no',
+                'ninja_header_deps_style': '',
+                'header_deps_flag': '',
+                'header_deps_out': '',
             })
 
         self.add_framework_option = lex.add_framework_option
@@ -1293,6 +1296,9 @@ class CompilerInfo(InfoObject):
         self.warning_flags = lex.warning_flags
         self.werror_flags = lex.werror_flags
         self.minimum_supported_version = lex.minimum_supported_version
+        self.ninja_header_deps_style = lex.ninja_header_deps_style
+        self.header_deps_flag = lex.header_deps_flag
+        self.header_deps_out = lex.header_deps_out
 
     def cross_check(self, os_info, arch_info, all_isas):
 
@@ -1728,23 +1734,34 @@ def process_template_string(template_text, variables, template_source):
 
         def __init__(self, vals):
             self.vals = vals
-            self.value_pattern = re.compile(r'%{([a-z][a-z_0-9\|]+)}')
+            self.value_pattern = re.compile(r'%{([a-z][a-z_0-9\|]+)(?::([^}]+))?}')
             self.cond_pattern = re.compile('%{(if|unless) ([a-z][a-z_0-9]+)}')
             self.for_pattern = re.compile('(.*)%{for ([a-z][a-z_0-9]+)}')
             self.omitlast_pattern = re.compile('(.*)%{omitlast ([^}]*)}(.*)', re.DOTALL)
             self.join_pattern = re.compile('%{join ([a-z][a-z_0-9]+)}')
 
         def substitute(self, template):
-            def insert_value(match):
-                v = match.group(1)
-                if v in self.vals:
-                    return str(self.vals.get(v))
-                if v.endswith('|upper'):
-                    v = v.replace('|upper', '')
-                    if v in self.vals:
-                        return str(self.vals.get(v)).upper()
+            def get_replacement(k):
+                if k not in self.vals:
+                    raise KeyError(k)
+                return str(self.vals.get(k))
 
-                raise KeyError(v)
+            def insert_value(match):
+                k = match.group(1)
+                if k.endswith('|upper'):
+                    k = k.replace('|upper', '')
+                    v = get_replacement(k).upper()
+                elif k.endswith('|concat'):
+                    k = k.replace('|concat', '')
+                    if not match.group(2):
+                        raise InternalError("|concat must be of the form '%{val|concat:<some static value>}'")
+                    v = get_replacement(k)
+                    if v:
+                        v = f"{v}{match.group(2)}"
+                else:
+                    v = get_replacement(k)
+
+                return v
 
             def insert_join(match):
                 var = match.group(1)
@@ -2221,6 +2238,9 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'cc_warning_flags': cc.cc_warning_flags(options),
         'output_to_exe': cc.output_to_exe,
         'cc_macro': cc.macro_name,
+        'ninja_header_deps_style': cc.ninja_header_deps_style,
+        'header_deps_flag': cc.header_deps_flag,
+        'header_deps_out': cc.header_deps_out,
 
         'visibility_attribute': cc.gen_visibility_attribute(options),
 

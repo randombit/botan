@@ -37,6 +37,12 @@ stack_protector_flags "-fstack-protector"
 visibility_build_flags "-fvisibility=hidden"
 visibility_attribute '__attribute__((visibility("default")))'
 
+# Include dependency tracking for Ninja
+# See: https://ninja-build.org/manual.html#ref_headers
+ninja_header_deps_style 'gcc'
+header_deps_flag '-MD'
+header_deps_out '-MF'
+
 <so_link_commands>
 macos         -> "{cxx} -dynamiclib -fPIC -install_name {libdir}/{soname_abi} -current_version {macos_so_current_ver} -compatibility_version {macos_so_compat_ver}"
 
