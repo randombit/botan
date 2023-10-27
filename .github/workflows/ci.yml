@@ -265,7 +265,7 @@ jobs:
           - target: static
             compiler: gcc
             host_os: windows-2022
-            make_tool: mingw32-make
+            make_tool: make
           - target: cross-ios-arm64
             compiler: clang
             host_os: macos-13
