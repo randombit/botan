@@ -158,6 +158,14 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
    }
 }
 
+bool EC_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
+   if(m_private_key < 1 || m_private_key >= m_domain_params.get_order()) {
+      return false;
+   }
+
+   return EC_PublicKey::check_key(rng, strong);
+}
+
 const BigInt& EC_PublicKey::get_int_field(std::string_view field) const {
    if(field == "public_x") {
       BOTAN_ASSERT_NOMSG(this->public_point().is_affine());

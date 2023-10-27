@@ -26,7 +26,7 @@ std::unique_ptr<Public_Key> ECKCDSA_PrivateKey::public_key() const {
 }
 
 bool ECKCDSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
-   if(!public_point().on_the_curve()) {
+   if(!EC_PrivateKey::check_key(rng, strong)) {
       return false;
    }
 

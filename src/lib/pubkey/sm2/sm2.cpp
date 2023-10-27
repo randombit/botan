@@ -27,7 +27,7 @@ std::unique_ptr<Public_Key> SM2_PrivateKey::public_key() const {
 }
 
 bool SM2_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
-   if(!public_point().on_the_curve()) {
+   if(!EC_PrivateKey::check_key(rng, strong)) {
       return false;
    }
 
