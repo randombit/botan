@@ -1,0 +1,21 @@
+{
+    "version": 5,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 24,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "windows_x86_64",
+            "architecture": "x64"
+        },
+        {
+            "name": "windows_x86",
+            "architecture": "Win32"
+        },
+        {
+            "name": "unix"
+        }
+    ]
+}

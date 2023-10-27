@@ -3345,6 +3345,10 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
     write_template(in_build_dir('build.h'), in_build_data('buildh.in'))
     write_template(in_build_dir('botan.doxy'), in_build_data('botan.doxy.in'))
 
+    robust_makedirs(in_build_dir("cmake"))
+    write_template(in_build_dir('cmake/botan-config.cmake'), in_build_data('botan-config.cmake.in'))
+    write_template(in_build_dir('cmake/botan-config-version.cmake'), in_build_data('botan-config-version.cmake.in'))
+
     if 'botan_pkgconfig' in template_vars:
         write_template(template_vars['botan_pkgconfig'], in_build_data('botan.pc.in'))
 

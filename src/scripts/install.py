@@ -146,6 +146,7 @@ def main(args):
     lib_dir = cfg['libdir']
     target_include_dir = cfg['installed_include_dir']
     pkgconfig_dir = 'pkgconfig'
+    cmake_dir = 'cmake'
 
     prefix = cfg['prefix']
 
@@ -208,6 +209,13 @@ def main(args):
         makedirs(prepend_destdir(pkgconfig_dir))
         copy_file(cfg['botan_pkgconfig'],
                   prepend_destdir(os.path.join(pkgconfig_dir, os.path.basename(cfg['botan_pkgconfig']))))
+
+    cmake_dir = os.path.join(prefix, lib_dir, cmake_dir, 'Botan-%s' % cfg["version"])
+    makedirs(prepend_destdir(cmake_dir))
+    copy_file('build/cmake/botan-config.cmake',
+                  prepend_destdir(os.path.join(cmake_dir, 'botan-config.cmake')))
+    copy_file('build/cmake/botan-config-version.cmake',
+                  prepend_destdir(os.path.join(cmake_dir, 'botan-config-version.cmake')))
 
     if 'ffi' in cfg['mod_list'] and cfg['build_shared_lib'] is True and cfg['install_python_module'] is True:
         for ver in cfg['python_version'].split(','):
