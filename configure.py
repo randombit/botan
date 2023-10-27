@@ -2315,6 +2315,9 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         if osinfo.soname_pattern_patch is not None:
             variables['soname_patch'] = osinfo.soname_pattern_patch.format(**variables)
 
+        if options.os == 'windows':
+            variables['implib_name'] = variables['static_lib_name']
+
         variables['lib_link_cmd'] = variables['lib_link_cmd'].format(**variables)
 
     for var in ['exe_link_cmd']:

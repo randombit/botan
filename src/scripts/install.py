@@ -162,7 +162,7 @@ def main(args):
         copy_file(full_header_path,
                   prepend_destdir(os.path.join(target_include_dir, header)))
 
-    if build_static_lib or target_os == 'windows':
+    if build_static_lib:
         static_lib = cfg['static_lib_name']
         copy_file(os.path.join(out_dir, static_lib),
                   prepend_destdir(os.path.join(lib_dir, os.path.basename(static_lib))))
@@ -171,8 +171,11 @@ def main(args):
         if target_os == "windows":
             libname = cfg['libname']
             soname_base = libname + '.dll'
+            implib = cfg['implib_name']
             copy_executable(os.path.join(out_dir, soname_base),
                             prepend_destdir(os.path.join(bin_dir, soname_base)))
+            copy_file(os.path.join(out_dir, implib),
+                      prepend_destdir(os.path.join(lib_dir, os.path.basename(implib))))
         elif target_os == "mingw":
             shared_lib_name = cfg['shared_lib_name']
             copy_executable(os.path.join(out_dir, shared_lib_name),
