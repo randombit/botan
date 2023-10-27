@@ -483,6 +483,14 @@ def default_os():
         return 'osx'
     return platform_os
 
+def default_cc():
+    platform_os = platform.system().lower()
+    return 'msvc' if platform_os == 'windows' else 'gcc'
+
+def default_make_tool():
+    platform_os = platform.system().lower()
+    return 'nmake' if platform_os == 'windows' else 'make'
+
 def parse_args(args):
     """
     Parse arguments
@@ -493,7 +501,7 @@ def parse_args(args):
                       help='Set the target os (default %default)')
     parser.add_option('--cpu', default=None,
                       help='Specify a target CPU platform')
-    parser.add_option('--cc', default='gcc',
+    parser.add_option('--cc', default=default_cc(),
                       help='Set the target compiler type (default %default)')
     parser.add_option('--cc-bin', default=None,
                       help='Set path to compiler')
@@ -504,7 +512,7 @@ def parse_args(args):
     parser.add_option('--boringssl-dir', metavar='D', default='boringssl',
                       help='Set directory of BoringSSL checkout to use for BoGo tests')
 
-    parser.add_option('--make-tool', metavar='TOOL', default='make',
+    parser.add_option('--make-tool', metavar='TOOL', default=default_make_tool(),
                       help='Specify tool to run to build source (default %default)')
 
     parser.add_option('--extra-cxxflags', metavar='FLAGS', default=[], action='append',
