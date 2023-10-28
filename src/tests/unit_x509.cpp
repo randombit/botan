@@ -591,6 +591,74 @@ Test::Result test_x509_authority_info_access_extension() {
    return result;
 }
 
+Test::Result test_x509_encode_authority_info_access_extension() {
+   Test::Result result("X509 with encoded PKIX.AuthorityInformationAccess extension");
+
+   const std::string sig_algo{"RSA"};
+   const std::string hash_fn{"SHA-256"};
+   const std::string padding_method{"EMSA3(SHA-256)"};
+
+   // CA Issuer information
+   const std::vector<std::string> ca_issuers = {
+      "http://www.d-trust.net/cgi-bin/Bdrive_Test_CA_1-2_2017.crt",
+      "ldap://directory.d-trust.net/CN=Bdrive%20Test%20CA%201-2%202017,O=Bundesdruckerei%20GmbH,C=DE?cACertificate?base?"};
+
+   // OCSP
+   const std::string_view ocsp_uri{"http://staging.ocsp.d-trust.net"};
+
+   // create a CA
+   auto ca_key = make_a_private_key(sig_algo);
+   const auto ca_cert = Botan::X509::create_self_signed_cert(ca_opts(), *ca_key, hash_fn, Test::rng());
+   Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, padding_method, Test::rng());
+
+   // create a certificate with only caIssuer information
+   auto key = make_a_private_key(sig_algo);
+
+   Botan::X509_Cert_Options opts1 = req_opts1(sig_algo);
+   opts1.extensions.add(std::make_unique<Botan::Cert_Extension::Authority_Information_Access>("", ca_issuers));
+
+   Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts1, *key, hash_fn, Test::rng());
+
+   Botan::X509_Certificate cert = ca.sign_request(req, Test::rng(), from_date(-1, 01, 01), from_date(2, 01, 01));
+
+   result.test_eq("number of ca_issuers URIs", cert.ca_issuers().size(), 2);
+   if(result.tests_failed()) {
+      return result;
+   }
+
+   for(const auto& ca_issuer : cert.ca_issuers()) {
+      result.confirm("CA issuer URI present in certificate",
+                     std::ranges::find(ca_issuers, ca_issuer) != ca_issuers.end());
+   }
+
+   result.confirm("no OCSP url available", cert.ocsp_responder().empty());
+
+   // create a certificate with only OCSP URI information
+   Botan::X509_Cert_Options opts2 = req_opts1(sig_algo);
+   opts2.extensions.add(std::make_unique<Botan::Cert_Extension::Authority_Information_Access>(ocsp_uri));
+
+   req = Botan::X509::create_cert_req(opts2, *key, hash_fn, Test::rng());
+
+   cert = ca.sign_request(req, Test::rng(), from_date(-1, 01, 01), from_date(2, 01, 01));
+
+   result.confirm("OCSP URI available", !cert.ocsp_responder().empty());
+   result.confirm("no CA Issuer URI available", cert.ca_issuers().empty());
+   result.test_eq("OCSP responder URI matches", cert.ocsp_responder(), std::string(ocsp_uri));
+
+   // create a certificate with OCSP URI and CA Issuer information
+   Botan::X509_Cert_Options opts3 = req_opts1(sig_algo);
+   opts3.extensions.add(std::make_unique<Botan::Cert_Extension::Authority_Information_Access>(ocsp_uri, ca_issuers));
+
+   req = Botan::X509::create_cert_req(opts3, *key, hash_fn, Test::rng());
+
+   cert = ca.sign_request(req, Test::rng(), from_date(-1, 01, 01), from_date(2, 01, 01));
+
+   result.confirm("OCSP URI available", !cert.ocsp_responder().empty());
+   result.confirm("CA Issuer URI available", !cert.ca_issuers().empty());
+
+   return result;
+}
+
 Test::Result test_parse_rsa_pss_cert() {
    Test::Result result("X509 RSA-PSS certificate");
 
@@ -1563,6 +1631,7 @@ class X509_Cert_Unit_Tests final : public Test {
          results.push_back(test_parse_rsa_pss_cert());
    #endif
 
+         results.push_back(test_x509_encode_authority_info_access_extension());
          results.push_back(test_x509_extension());
          results.push_back(test_x509_dates());
          results.push_back(test_cert_status_strings());

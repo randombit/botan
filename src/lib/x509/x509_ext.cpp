@@ -627,16 +627,29 @@ void Certificate_Policies::validate(const X509_Certificate& /*subject*/,
 }
 
 std::vector<uint8_t> Authority_Information_Access::encode_inner() const {
-   ASN1_String url(m_ocsp_responder, ASN1_Type::Ia5String);
-
    std::vector<uint8_t> output;
-   DER_Encoder(output)
-      .start_sequence()
-      .start_sequence()
-      .encode(OID::from_string("PKIX.OCSP"))
-      .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, url.value())
-      .end_cons()
-      .end_cons();
+   DER_Encoder der(output);
+
+   der.start_sequence();
+   // OCSP
+   if(!m_ocsp_responder.empty()) {
+      ASN1_String url(m_ocsp_responder, ASN1_Type::Ia5String);
+      der.start_sequence()
+         .encode(OID::from_string("PKIX.OCSP"))
+         .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, url.value())
+         .end_cons();
+   }
+
+   // CA Issuers
+   for(const auto& ca_isser : m_ca_issuers) {
+      ASN1_String asn1_ca_issuer(ca_isser, ASN1_Type::Ia5String);
+      der.start_sequence()
+         .encode(OID::from_string("PKIX.CertificateAuthorityIssuers"))
+         .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, asn1_ca_issuer.value())
+         .end_cons();
+   }
+
+   der.end_cons();
    return output;
 }
 

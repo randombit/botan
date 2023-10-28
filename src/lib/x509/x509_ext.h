@@ -324,7 +324,7 @@ class BOTAN_PUBLIC_API(2, 0) Authority_Information_Access final : public Certifi
    private:
       std::string oid_name() const override { return "PKIX.AuthorityInformationAccess"; }
 
-      bool should_encode() const override { return (!m_ocsp_responder.empty()); }
+      bool should_encode() const override { return (!m_ocsp_responder.empty() || !m_ca_issuers.empty()); }
 
       std::vector<uint8_t> encode_inner() const override;
       void decode_inner(const std::vector<uint8_t>&) override;
