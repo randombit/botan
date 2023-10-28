@@ -1,13 +1,21 @@
+#include <botan/certstor_system.h>
 #include <botan/x509cert.h>
 #include <botan/x509path.h>
 
 int main() {
-   // Create a certificate store and add the trusted CA certificate
-   Botan::Certificate_Store_In_Memory store;
-   store.add_certificate(Botan::X509_Certificate("ca.crt"));
+   // Create a certificate store and add a locally trusted CA certificate
+   Botan::Certificate_Store_In_Memory customStore;
+   customStore.add_certificate(Botan::X509_Certificate("ca.crt"));
 
-   // Load the end entity certificate from file
-   Botan::X509_Certificate end_entity("ee.crt");  // The end-entity certificate
+   // Additionally trust all system-specific CA certificates
+   Botan::System_Certificate_Store systemStore;
+   std::vector<Botan::Certificate_Store*> trusted_roots{&customStore, &systemStore};
+
+   // Load the end entity certificate and two untrusted intermediate CAs from file
+   std::vector<Botan::X509_Certificate> end_certs;
+   end_certs.emplace_back(Botan::X509_Certificate("ee.crt"));    // The end-entity certificate, must come first
+   end_certs.emplace_back(Botan::X509_Certificate("int2.crt"));  // intermediate 2
+   end_certs.emplace_back(Botan::X509_Certificate("int1.crt"));  // intermediate 1
 
    // Optional: Set up restrictions, e.g. min. key strength, maximum age of OCSP responses
    Botan::Path_Validation_Restrictions restrictions;
@@ -19,7 +27,7 @@ int main() {
    std::string hostname = "";
 
    Botan::Path_Validation_Result validationResult =
-      Botan::x509_path_validate(end_entity, restrictions, store, hostname, usage);
+      Botan::x509_path_validate(end_certs, restrictions, trusted_roots, hostname, usage);
 
    if(!validationResult.successful_validation()) {
       // call validationResult.result() to get the overall status code
