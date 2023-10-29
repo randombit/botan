@@ -1,0 +1,7 @@
+<defines>
+BLAKE2S -> 20231028
+</defines>
+
+<module_info>
+name -> "BLAKE2s"
+</module_info>

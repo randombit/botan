@@ -94,6 +94,10 @@
    #include <botan/internal/blake2b.h>
 #endif
 
+#if defined(BOTAN_HAS_BLAKE2S)
+   #include <botan/internal/blake2s.h>
+#endif
+
 #if defined(BOTAN_HAS_COMMONCRYPTO)
    #include <botan/internal/commoncrypto.h>
 #endif
@@ -219,6 +223,12 @@ std::unique_ptr<HashFunction> HashFunction::create(std::string_view algo_spec, s
 #if defined(BOTAN_HAS_BLAKE2B)
    if(req.algo_name() == "Blake2b" || req.algo_name() == "BLAKE2b") {
       return std::make_unique<BLAKE2b>(req.arg_as_integer(0, 512));
+   }
+#endif
+
+#if defined(BOTAN_HAS_BLAKE2S)
+   if(req.algo_name() == "Blake2s" || req.algo_name() == "BLAKE2s") {
+      return std::make_unique<BLAKE2s>(req.arg_as_integer(0, 256));
    }
 #endif
 
