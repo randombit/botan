@@ -621,8 +621,7 @@ Test::Result test_x509_encode_authority_info_access_extension() {
 
    Botan::X509_Certificate cert = ca.sign_request(req, Test::rng(), from_date(-1, 01, 01), from_date(2, 01, 01));
 
-   result.test_eq("number of ca_issuers URIs", cert.ca_issuers().size(), 2);
-   if(result.tests_failed()) {
+   if(!result.test_eq("number of ca_issuers URIs", cert.ca_issuers().size(), 2)) {
       return result;
    }
 
