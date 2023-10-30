@@ -471,7 +471,7 @@ implementation of this interface for sqlite3, and a subclass of
     const std::string& passwd, RandomNumberGenerator& rng, const std::string& table_prefix = "")
 
      Create or open an existing certificate store from an sqlite database file.
-     The password in ``passwd`` will be used to encrypt private keys. 
+     The password in ``passwd`` will be used to encrypt private keys.
 
 Path Validation
 ----------------------------------------
@@ -579,6 +579,15 @@ step. The two constructors are:
     bit RSA. The set of trusted hashes is set to all SHA-2 variants,
     and, if `minimum_key_strength` is less than or equal to 80, then
     SHA-1 signatures will also be accepted.
+
+Code Example
+-----------------
+
+For sheer demonstrative purposes, the following code verifies an
+end entity certificate against a trusted Root CA certificate.
+
+.. literalinclude:: /../src/examples/x509_path.cpp
+   :language: cpp
 
 Creating New Certificates
 ---------------------------------
