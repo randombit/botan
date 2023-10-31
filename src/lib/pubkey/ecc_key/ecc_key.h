@@ -125,6 +125,8 @@ class BOTAN_PUBLIC_API(2, 0) EC_PrivateKey : public virtual EC_PublicKey,
 
       secure_vector<uint8_t> raw_private_key_bits() const final;
 
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
+
       /**
       * Get the private key value of this key object.
       * @result the private key value of this key object
