@@ -3186,6 +3186,9 @@ def validate_options(options, info_os, info_cc, available_module_policies):
     if options.os == 'windows' and options.build_static_lib is True and options.build_shared_lib is True:
         raise UserError('On Windows only one of static lib and DLL can be selected')
 
+    if 'examples' in options.build_targets and 'boost' not in options.enabled_modules:
+        raise UserError('Target examples requires --with-boost')
+
     if options.with_documentation is False:
         if options.with_doxygen:
             raise UserError('Using --with-doxygen plus --without-documentation makes no sense')
