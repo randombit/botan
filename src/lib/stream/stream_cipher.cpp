@@ -133,4 +133,9 @@ size_t StreamCipher::default_iv_length() const {
    return 0;
 }
 
+void StreamCipher::generate_keystream(uint8_t out[], size_t len) {
+   clear_mem(out, len);
+   cipher1(out, len);
+}
+
 }  // namespace Botan

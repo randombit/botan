@@ -14,35 +14,18 @@
 #include <type_traits>
 #include <vector>
 
+/*
+The header mem_ops.h previously included the contents of allocator.h
+
+Library code should always include allocator.h to see these
+declarations; however when we are not building the library continue to
+include the header here to avoid breaking application code.
+*/
+#if !defined(BOTAN_IS_BEING_BUILT)
+   #include <botan/allocator.h>
+#endif
+
 namespace Botan {
-
-/**
-* Allocate a memory buffer by some method. This should only be used for
-* primitive types (uint8_t, uint32_t, etc).
-*
-* @param elems the number of elements
-* @param elem_size the size of each element
-* @return pointer to allocated and zeroed memory, or throw std::bad_alloc on failure
-*/
-BOTAN_PUBLIC_API(2, 3) BOTAN_MALLOC_FN void* allocate_memory(size_t elems, size_t elem_size);
-
-/**
-* Free a pointer returned by allocate_memory
-* @param p the pointer returned by allocate_memory
-* @param elems the number of elements, as passed to allocate_memory
-* @param elem_size the size of each element, as passed to allocate_memory
-*/
-BOTAN_PUBLIC_API(2, 3) void deallocate_memory(void* p, size_t elems, size_t elem_size);
-
-/**
-* Ensure the allocator is initialized
-*/
-void BOTAN_UNSTABLE_API initialize_allocator();
-
-class Allocator_Initializer final {
-   public:
-      Allocator_Initializer() { initialize_allocator(); }
-};
 
 /**
 * Scrub memory contents in a way that a compiler should not elide,

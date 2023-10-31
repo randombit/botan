@@ -10,7 +10,7 @@
 #define BOTAN_BASE_CODEC_H_
 
 #include <botan/exceptn.h>
-#include <botan/secmem.h>
+#include <botan/mem_ops.h>
 #include <string>
 #include <vector>
 
@@ -129,8 +129,8 @@ size_t base_decode(Base&& base,
    for(size_t i = 0; i != input_length; ++i) {
       const uint8_t bin = base.lookup_binary_value(input[i]);
 
-      if(base.check_bad_char(bin, input[i], ignore_ws))  // May throw Invalid_Argument
-      {
+      // This call might throw Invalid_Argument
+      if(base.check_bad_char(bin, input[i], ignore_ws)) {
          decode_buf[decode_buf_pos] = bin;
          ++decode_buf_pos;
       }

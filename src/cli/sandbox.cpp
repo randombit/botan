@@ -5,7 +5,7 @@
 */
 
 #include "sandbox.h"
-#include <botan/mem_ops.h>
+#include <botan/allocator.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_PLEDGE)
    #include <unistd.h>

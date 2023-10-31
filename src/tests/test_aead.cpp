@@ -9,6 +9,7 @@
 
 #if defined(BOTAN_HAS_AEAD_MODES)
    #include <botan/aead.h>
+   #include <botan/mem_ops.h>
 #endif
 
 namespace Botan_Tests {

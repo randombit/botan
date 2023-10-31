@@ -6,6 +6,8 @@
 */
 
 #include <botan/pipe.h>
+
+#include <botan/mem_ops.h>
 #include <istream>
 #include <ostream>
 

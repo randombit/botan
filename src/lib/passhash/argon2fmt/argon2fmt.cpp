@@ -7,6 +7,7 @@
 #include <botan/argon2fmt.h>
 
 #include <botan/base64.h>
+#include <botan/mem_ops.h>
 #include <botan/pwdhash.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>

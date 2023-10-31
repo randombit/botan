@@ -8,6 +8,7 @@
 
 #if defined(BOTAN_HAS_THRESHOLD_SECRET_SHARING)
    #include <botan/hex.h>
+   #include <botan/mem_ops.h>
    #include <botan/rng.h>
    #include <botan/tss.h>
    #include <botan/internal/fmt.h>

@@ -10,9 +10,19 @@
 #include <botan/block_cipher.h>
 #include <botan/exceptn.h>
 #include <botan/mac.h>
+#include <botan/mem_ops.h>
 #include <botan/nist_keywrap.h>
 
 namespace Botan {
+
+std::string PSK_Database::get_str(std::string_view name) const {
+   secure_vector<uint8_t> psk = this->get(name);
+   return std::string(cast_uint8_ptr_to_char(psk.data()), psk.size());
+}
+
+void PSK_Database::set_str(std::string_view name, std::string_view psk) {
+   this->set(name, cast_char_ptr_to_uint8(psk.data()), psk.size());
+}
 
 Encrypted_PSK_Database::Encrypted_PSK_Database(const secure_vector<uint8_t>& master_key) {
    m_cipher = BlockCipher::create_or_throw("AES-256");

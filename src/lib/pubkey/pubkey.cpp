@@ -9,6 +9,7 @@
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/der_enc.h>
+#include <botan/mem_ops.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
@@ -214,6 +215,19 @@ size_t PK_Key_Agreement::agreed_value_size() const {
    return m_op->agreed_value_size();
 }
 
+SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
+                                          const uint8_t in[],
+                                          size_t in_len,
+                                          std::string_view params) const {
+   return this->derive_key(key_len, in, in_len, cast_char_ptr_to_uint8(params.data()), params.length());
+}
+
+SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
+                                          const std::span<const uint8_t> in,
+                                          std::string_view params) const {
+   return this->derive_key(key_len, in.data(), in.size(), cast_char_ptr_to_uint8(params.data()), params.length());
+}
+
 SymmetricKey PK_Key_Agreement::derive_key(
    size_t key_len, const uint8_t in[], size_t in_len, const uint8_t salt[], size_t salt_len) const {
    return SymmetricKey(m_op->agree(key_len, in, in_len, salt, salt_len));
@@ -256,6 +270,10 @@ PK_Signer::~PK_Signer() = default;
 
 PK_Signer::PK_Signer(PK_Signer&&) noexcept = default;
 PK_Signer& PK_Signer::operator=(PK_Signer&&) noexcept = default;
+
+void PK_Signer::update(std::string_view in) {
+   this->update(cast_char_ptr_to_uint8(in.data()), in.size());
+}
 
 void PK_Signer::update(const uint8_t in[], size_t length) {
    m_op->update(in, length);
@@ -350,6 +368,10 @@ void PK_Verifier::set_input_format(Signature_Format format) {
 bool PK_Verifier::verify_message(const uint8_t msg[], size_t msg_length, const uint8_t sig[], size_t sig_length) {
    update(msg, msg_length);
    return check_signature(sig, sig_length);
+}
+
+void PK_Verifier::update(std::string_view in) {
+   this->update(cast_char_ptr_to_uint8(in.data()), in.size());
 }
 
 void PK_Verifier::update(const uint8_t in[], size_t length) {

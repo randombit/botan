@@ -55,14 +55,9 @@ class BOTAN_PUBLIC_API(2, 4) PSK_Database {
       /**
       * Get a PSK in the form of a string (eg if the PSK is a password)
       */
-      std::string get_str(std::string_view name) const {
-         secure_vector<uint8_t> psk = get(name);
-         return std::string(cast_uint8_ptr_to_char(psk.data()), psk.size());
-      }
+      std::string get_str(std::string_view name) const;
 
-      void set_str(std::string_view name, std::string_view psk) {
-         set(name, cast_char_ptr_to_uint8(psk.data()), psk.size());
-      }
+      void set_str(std::string_view name, std::string_view psk);
 
       template <typename Alloc>
       void set_vec(std::string_view name, const std::vector<uint8_t, Alloc>& psk) {

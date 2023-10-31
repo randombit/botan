@@ -9,6 +9,7 @@
 #define BOTAN_BUFFERED_COMPUTATION_H_
 
 #include <botan/concepts.h>
+#include <botan/mem_ops.h>
 #include <botan/secmem.h>
 #include <span>
 #include <string_view>

@@ -11,6 +11,7 @@
 #define BOTAN_KECCAK_PERM_H_
 
 #include <botan/secmem.h>
+#include <span>
 #include <string>
 
 namespace Botan {

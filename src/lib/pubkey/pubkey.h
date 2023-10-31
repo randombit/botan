@@ -221,7 +221,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
       * Add a message part.
       * @param in the message part to add
       */
-      void update(std::string_view in) { update(cast_char_ptr_to_uint8(in.data()), in.size()); }
+      void update(std::string_view in);
 
       /**
       * Get the signature of the so far processed message (provided by the
@@ -352,7 +352,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Verifier final {
       * Add a message part of the message corresponding to the
       * signature to be verified.
       */
-      void update(std::string_view in) { update(cast_char_ptr_to_uint8(in.data()), in.size()); }
+      void update(std::string_view in);
 
       /**
       * Check the signature of the buffered message, i.e. the one build
@@ -448,9 +448,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Key_Agreement final {
       * @param in_len the length of in in bytes
       * @param params extra derivation params
       */
-      SymmetricKey derive_key(size_t key_len, const uint8_t in[], size_t in_len, std::string_view params = "") const {
-         return derive_key(key_len, in, in_len, cast_char_ptr_to_uint8(params.data()), params.length());
-      }
+      SymmetricKey derive_key(size_t key_len, const uint8_t in[], size_t in_len, std::string_view params = "") const;
 
       /**
       * Perform Key Agreement Operation
@@ -458,9 +456,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Key_Agreement final {
       * @param in the other parties key
       * @param params extra derivation params
       */
-      SymmetricKey derive_key(size_t key_len, const std::span<const uint8_t> in, std::string_view params = "") const {
-         return derive_key(key_len, in.data(), in.size(), cast_char_ptr_to_uint8(params.data()), params.length());
-      }
+      SymmetricKey derive_key(size_t key_len, const std::span<const uint8_t> in, std::string_view params = "") const;
 
       /**
       * Return the underlying size of the value that is agreed.

@@ -9,6 +9,7 @@
 #include <botan/pipe.h>
 
 #include <botan/filter.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/out_buf.h>
 
 namespace Botan {
