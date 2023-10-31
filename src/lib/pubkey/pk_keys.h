@@ -104,7 +104,9 @@ class BOTAN_PUBLIC_API(3, 0) Asymmetric_Key {
 
       /**
        * Generate another (cryptographically independent) key pair using the
-       * same algorithm parameters as this key.
+       * same algorithm parameters as this key. This is most useful for algorithms
+       * that support PublicKeyOperation::KeyAgreement to generate a fitting ephemeral
+       * key pair. For other key types it might throw Not_Implemented.
        */
       virtual std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const = 0;
 };
