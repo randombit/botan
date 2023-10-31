@@ -73,7 +73,7 @@ extern "C" char** environ;
    #include <sys/prctl.h>
 #endif
 
-#if defined(BOTAN_TARGET_OS_IS_FREEBSD) || defined(BOTAN_TARGET_OS_IS_OPENBSD)
+#if defined(BOTAN_TARGET_OS_IS_FREEBSD) || defined(BOTAN_TARGET_OS_IS_OPENBSD) || defined(BOTAN_TARGET_OS_IS_DRAGONFLY)
    #include <pthread_np.h>
 #endif
 
@@ -625,7 +625,7 @@ void OS::page_named(void* page, size_t size) {
 
 #if defined(BOTAN_TARGET_OS_HAS_THREADS)
 void OS::set_thread_name(std::thread& thread, const std::string& name) {
-   #if defined(BOTAN_TARGET_OS_IS_LINUX) || defined(BOTAN_TARGET_OS_IS_FREEBSD)
+   #if defined(BOTAN_TARGET_OS_IS_LINUX) || defined(BOTAN_TARGET_OS_IS_FREEBSD) || defined(BOTAN_TARGET_OS_IS_DRAGONFLY)
    static_cast<void>(pthread_setname_np(thread.native_handle(), name.c_str()));
    #elif defined(BOTAN_TARGET_OS_IS_OPENBSD)
    static_cast<void>(pthread_set_name_np(thread.native_handle(), name.c_str()));
