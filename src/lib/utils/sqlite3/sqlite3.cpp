@@ -21,7 +21,7 @@ Sqlite3_Database::Sqlite3_Database(std::string_view db_filename, std::optional<i
       sqlite_open_flags.value_or(SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX);
    int rc = ::sqlite3_open_v2(std::string(db_filename).c_str(), &m_db, open_flags, nullptr);
 
-   if(rc) {
+   if(rc) [[unlikely]] {
       const std::string err_msg = ::sqlite3_errmsg(m_db);
       ::sqlite3_close(m_db);
       m_db = nullptr;
@@ -64,9 +64,7 @@ void Sqlite3_Database::create_table(std::string_view table_schema) {
 }
 
 size_t Sqlite3_Database::rows_changed_by_last_statement() {
-   // TODO: Use sqlite3_changes64() introduced in SQLite 3.37
-   //       (released 27th Nov 2021)
-   const auto result = ::sqlite3_changes(m_db);
+   const auto result = ::sqlite3_changes64(m_db);
    BOTAN_ASSERT_NOMSG(result >= 0);
    return static_cast<size_t>(result);
 }
@@ -105,11 +103,7 @@ void Sqlite3_Database::Sqlite3_Statement::bind(int column, std::string_view val)
 }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, size_t val) {
-   // XXX: is this cast doing what we want?
-   if(val != static_cast<size_t>(static_cast<int>(val))) {
-      throw SQL_DB_Error("sqlite3 cannot store " + std::to_string(val) + " without truncation");
-   }
-   int rc = ::sqlite3_bind_int(m_stmt, column, static_cast<int>(val));
+   int rc = ::sqlite3_bind_int64(m_stmt, column, val);
    if(rc != SQLITE_OK) {
       throw SQL_DB_Error("sqlite3_bind_int failed", rc);
    }
