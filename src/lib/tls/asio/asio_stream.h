@@ -10,8 +10,8 @@
 #ifndef BOTAN_ASIO_STREAM_H_
 #define BOTAN_ASIO_STREAM_H_
 
-#include <botan/boost_compat.h>
-#if !defined(BOTAN_FOUND_COMPATIBLE_BOOST_VERSION)
+#include <botan/asio_compat.h>
+#if !defined(BOTAN_FOUND_COMPATIBLE_BOOST_ASIO_VERSION)
    #error Available boost headers are too old for the boost asio stream.
 #else
 

@@ -8,6 +8,7 @@ brief -> "Boost ASIO stream interface as a wrapper around the TLS implementation
 </module_info>
 
 <header:public>
+asio_compat.h
 asio_context.h
 asio_stream.h
 asio_error.h

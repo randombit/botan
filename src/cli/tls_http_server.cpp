@@ -12,11 +12,11 @@
 
 #include "cli.h"
 
-#if defined(BOTAN_HAS_BOOST_ASIO)
-   #include <botan/boost_compat.h>
+#if defined(BOTAN_HAS_TLS_ASIO_STREAM)
+   #include <botan/asio_compat.h>
 #endif
 
-#if defined(BOTAN_FOUND_COMPATIBLE_BOOST_VERSION)
+#if defined(BOTAN_FOUND_COMPATIBLE_BOOST_ASIO_VERSION)
    #include <boost/asio/awaitable.hpp>
 #endif
 

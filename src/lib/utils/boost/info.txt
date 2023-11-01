@@ -8,10 +8,6 @@ name -> "Boost"
 
 load_on vendor
 
-<header:public>
-boost_compat.h
-</header:public>
-
 <libs>
 linux -> rt
 mingw -> ws2_32
