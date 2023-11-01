@@ -126,6 +126,7 @@ decltype(auto) default_session(Botan::TLS::Connection_Side side,
                                  Botan::TLS::Ciphersuite::from_name("AES_128_GCM_SHA256")->ciphersuite_code(),
                                  side,
                                  {},
+                                 nullptr,
                                  server_info,
                                  cbs.tls_current_timestamp());
    #else
@@ -413,6 +414,7 @@ std::vector<Test::Result> test_session_manager_choose_ticket() {
                                       Botan::TLS::Ciphersuite::from_name(suite)->ciphersuite_code(),
                                       Botan::TLS::Connection_Side::Server,
                                       {},
+                                      nullptr,
                                       server_info,
                                       mycbs.tls_current_timestamp());
    };

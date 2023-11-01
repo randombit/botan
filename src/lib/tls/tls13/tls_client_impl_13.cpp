@@ -538,6 +538,7 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
    callbacks().tls_session_established(Session_Summary(m_handshake_state.server_hello(),
                                                        Connection_Side::Server,
                                                        peer_cert_chain(),
+                                                       peer_raw_public_key(),
                                                        external_psk_identity(),
                                                        m_resumed_session.has_value(),
                                                        m_info,
@@ -586,6 +587,7 @@ void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket
                    m_handshake_state.server_hello().ciphersuite(),
                    Connection_Side::Client,
                    peer_cert_chain(),
+                   peer_raw_public_key(),
                    m_info,
                    callbacks().tls_current_timestamp());
 

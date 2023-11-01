@@ -93,6 +93,7 @@ size_t Server_Impl_13::send_new_session_tickets(const size_t tickets) {
                             std::nullopt,  // early data not yet implemented
                             policy().session_ticket_lifetime(),
                             peer_cert_chain(),
+                            peer_raw_public_key(),
                             m_handshake_state.client_hello(),
                             m_handshake_state.server_hello(),
                             callbacks(),
@@ -536,6 +537,7 @@ void Server_Impl_13::handle(const Finished_13& finished_msg) {
       Session_Summary(m_handshake_state.server_hello(),
                       Connection_Side::Server,
                       peer_cert_chain(),
+                      peer_raw_public_key(),
                       m_psk_identity,
                       m_resumed_session.has_value(),
                       Server_Information(m_handshake_state.client_hello().sni_hostname()),

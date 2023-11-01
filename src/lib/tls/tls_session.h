@@ -144,6 +144,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Base {
                    bool extended_master_secret,
                    bool encrypt_then_mac,
                    std::vector<X509_Certificate> peer_certs,
+                   std::shared_ptr<const Public_Key> peer_raw_public_key,
                    Server_Information server_info) :
             m_start_time(start_time),
             m_version(version),
@@ -153,6 +154,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Base {
             m_extended_master_secret(extended_master_secret),
             m_encrypt_then_mac(encrypt_then_mac),
             m_peer_certs(std::move(peer_certs)),
+            m_peer_raw_public_key(std::move(peer_raw_public_key)),
             m_server_info(std::move(server_info)) {}
 
    protected:
@@ -209,7 +211,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Base {
       /**
        * Return the raw public key of the peer (possibly empty)
        */
-      std::shared_ptr<const Public_Key> peer_raw_public_key() const { return nullptr; }
+      std::shared_ptr<const Public_Key> peer_raw_public_key() const { return m_peer_raw_public_key; }
 
       /**
        * Get information about the TLS server
@@ -228,6 +230,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Base {
       bool m_encrypt_then_mac;
 
       std::vector<X509_Certificate> m_peer_certs;
+      std::shared_ptr<const Public_Key> m_peer_raw_public_key;
       Server_Information m_server_info;
 };
 
@@ -298,6 +301,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Summary : public Session_Base {
       Session_Summary(const Server_Hello_13& server_hello,
                       Connection_Side side,
                       std::vector<X509_Certificate> peer_certs,
+                      std::shared_ptr<const Public_Key> peer_raw_public_key,
                       std::optional<std::string> psk_identity,
                       bool session_was_resumed,
                       Server_Information server_info,
@@ -351,6 +355,7 @@ class BOTAN_PUBLIC_API(3, 0) Session final : public Session_Base {
               uint16_t ciphersuite,
               Connection_Side side,
               const std::vector<X509_Certificate>& peer_certs,
+              std::shared_ptr<const Public_Key> peer_raw_public_key,
               const Server_Information& server_info,
               std::chrono::system_clock::time_point current_timestamp);
 
@@ -362,6 +367,7 @@ class BOTAN_PUBLIC_API(3, 0) Session final : public Session_Base {
               const std::optional<uint32_t>& max_early_data_bytes,
               std::chrono::seconds lifetime_hint,
               const std::vector<X509_Certificate>& peer_certs,
+              std::shared_ptr<const Public_Key> peer_raw_public_key,
               const Client_Hello_13& client_hello,
               const Server_Hello_13& server_hello,
               Callbacks& callbacks,
@@ -464,7 +470,8 @@ class BOTAN_PUBLIC_API(3, 0) Session final : public Session_Base {
       //            - compression method (always 0)
       //            - fragment size (always 0)
       //            - SRP identifier (always "")
-      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 20230222 };
+      // 20231031 - Allow storage of peer's raw public key
+      enum { TLS_SESSION_PARAM_STRUCT_VERSION = 20231031 };
 
       secure_vector<uint8_t> m_master_secret;
 
