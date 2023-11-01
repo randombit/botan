@@ -96,7 +96,7 @@ Sqlite3_Database::Sqlite3_Statement::Sqlite3_Statement(sqlite3* db, std::string_
 }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, std::string_view val) {
-   int rc = ::sqlite3_bind_text(m_stmt, column, val.data(), static_cast<int>(val.size()), SQLITE_TRANSIENT);
+   int rc = ::sqlite3_bind_text64(m_stmt, column, val.data(), val.size(), SQLITE_TRANSIENT, SQLITE_UTF8);
    if(rc != SQLITE_OK) {
       throw SQL_DB_Error("sqlite3_bind_text failed", rc);
    }
@@ -115,14 +115,14 @@ void Sqlite3_Database::Sqlite3_Statement::bind(int column, std::chrono::system_c
 }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, const std::vector<uint8_t>& val) {
-   int rc = ::sqlite3_bind_blob(m_stmt, column, val.data(), static_cast<int>(val.size()), SQLITE_TRANSIENT);
+   int rc = ::sqlite3_bind_blob64(m_stmt, column, val.data(), val.size(), SQLITE_TRANSIENT);
    if(rc != SQLITE_OK) {
       throw SQL_DB_Error("sqlite3_bind_text failed", rc);
    }
 }
 
 void Sqlite3_Database::Sqlite3_Statement::bind(int column, const uint8_t* p, size_t len) {
-   int rc = ::sqlite3_bind_blob(m_stmt, column, p, static_cast<int>(len), SQLITE_TRANSIENT);
+   int rc = ::sqlite3_bind_blob64(m_stmt, column, p, len, SQLITE_TRANSIENT);
    if(rc != SQLITE_OK) {
       throw SQL_DB_Error("sqlite3_bind_text failed", rc);
    }
@@ -155,11 +155,9 @@ std::string Sqlite3_Database::Sqlite3_Statement::get_str(int column) {
 size_t Sqlite3_Database::Sqlite3_Statement::get_size_t(int column) {
    BOTAN_ASSERT(::sqlite3_column_type(m_stmt, column) == SQLITE_INTEGER, "Return count is an integer");
 
-   const int sessions_int = ::sqlite3_column_int(m_stmt, column);
+   const size_t sessions_int = ::sqlite3_column_int64(m_stmt, column);
 
-   BOTAN_ASSERT(sessions_int >= 0, "Expected size_t is non-negative");
-
-   return static_cast<size_t>(sessions_int);
+   return sessions_int;
 }
 
 size_t Sqlite3_Database::Sqlite3_Statement::spin() {
