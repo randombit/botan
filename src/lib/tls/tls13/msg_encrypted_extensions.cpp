@@ -44,6 +44,29 @@ Encrypted_Extensions::Encrypted_Extensions(const Client_Hello_13& client_hello, 
                           "Server cannot enforce record size limit without the client supporting it");
    }
 
+   // RFC 7250 4.2
+   //    If the TLS server wants to request a certificate from the client
+   //    (via the certificate_request message), it MUST include the
+   //    client_certificate_type extension in the server hello.
+   //    [...]
+   //    If the server does not send a certificate_request payload [...],
+   //    then the client_certificate_type payload in the server hello MUST be
+   //    omitted.
+   if(auto ch_client_cert_types = exts.get<Client_Certificate_Type>();
+      ch_client_cert_types && policy.request_client_certificate_authentication()) {
+      m_extensions.add(new Client_Certificate_Type(*ch_client_cert_types, policy));
+   }
+
+   // RFC 7250 4.2
+   //    The server_certificate_type extension in the client hello indicates the
+   //    types of certificates the client is able to process when provided by
+   //    the server in a subsequent certificate payload. [...] With the
+   //    server_certificate_type extension in the server hello, the TLS server
+   //    indicates the certificate type carried in the Certificate payload.
+   if(auto ch_server_cert_types = exts.get<Server_Certificate_Type>()) {
+      m_extensions.add(new Server_Certificate_Type(*ch_server_cert_types, policy));
+   }
+
    // RFC 6066 3
    //    A server that receives a client hello containing the "server_name"
    //    extension [...] SHALL include an extension of type "server_name" in the
@@ -93,8 +116,9 @@ Encrypted_Extensions::Encrypted_Extensions(const std::vector<uint8_t>& buf) {
       Extension_Code::UseSrtp,
       // HEARTBEAT
       Extension_Code::ApplicationLayerProtocolNegotiation,
-      // CLIENT_CERTIFICATE_TYPE
-      // SERVER_CERTIFICATE_TYPE
+      // RFC 7250
+      Extension_Code::ClientCertificateType,
+      Extension_Code::ServerCertificateType,
       // EARLY_DATA
 
       // Allowed extensions not listed in RFC 8446 but acceptable as Botan implements them

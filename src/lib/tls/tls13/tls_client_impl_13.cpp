@@ -402,6 +402,22 @@ void Client_Impl_13::handle(const Encrypted_Extensions& encrypted_extensions_msg
       set_record_size_limits(outgoing_limit->limit(), incoming_limit->limit());
    }
 
+   if(exts.has<Server_Certificate_Type>() &&
+      m_handshake_state.client_hello().extensions().has<Server_Certificate_Type>()) {
+      const auto* server_cert_type = exts.get<Server_Certificate_Type>();
+      const auto* our_server_cert_types = m_handshake_state.client_hello().extensions().get<Server_Certificate_Type>();
+      our_server_cert_types->validate_selection(*server_cert_type);
+
+      // RFC 7250 4.2
+      //    With the server_certificate_type extension in the server hello, the
+      //    TLS server indicates the certificate type carried in the Certificate
+      //    payload.
+      //
+      // Note: TLS 1.3 carries this extension in the Encrypted Extensions
+      //       message instead of the Server Hello.
+      set_selected_certificate_type(server_cert_type->selected_certificate_type());
+   }
+
    callbacks().tls_examine_extensions(exts, Connection_Side::Server, Handshake_Type::EncryptedExtensions);
 
    if(m_handshake_state.server_hello().extensions().has<PSK>()) {
@@ -480,7 +496,11 @@ void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedHands
 
    const auto cert_type = [&] {
       const auto& exts = m_handshake_state.encrypted_extensions().extensions();
-      if(auto client_cert_type = exts.get<Client_Certificate_Type>()) {
+      const auto& chexts = m_handshake_state.client_hello().extensions();
+      if(exts.has<Client_Certificate_Type>() && chexts.has<Client_Certificate_Type>()) {
+         const auto* client_cert_type = exts.get<Client_Certificate_Type>();
+         chexts.get<Client_Certificate_Type>()->validate_selection(*client_cert_type);
+
          // RFC 7250 4.2
          //   This client_certificate_type extension in the server hello then
          //   indicates the type of certificates the client is requested to
@@ -610,6 +630,14 @@ std::vector<X509_Certificate> Client_Impl_13::peer_cert_chain() const {
 }
 
 std::shared_ptr<const Public_Key> Client_Impl_13::peer_raw_public_key() const {
+   if(m_handshake_state.has_server_certificate_msg() && m_handshake_state.server_certificate().is_raw_public_key()) {
+      return m_handshake_state.server_certificate().public_key();
+   }
+
+   if(m_resumed_session.has_value()) {
+      return m_resumed_session->session.peer_raw_public_key();
+   }
+
    return nullptr;
 }
 

@@ -43,17 +43,27 @@ std::string Server_Impl_13::application_protocol() const {
 }
 
 std::vector<X509_Certificate> Server_Impl_13::peer_cert_chain() const {
+   if(m_handshake_state.has_client_certificate_msg() &&
+      m_handshake_state.client_certificate().has_certificate_chain()) {
+      return m_handshake_state.client_certificate().cert_chain();
+   }
+
    if(m_resumed_session.has_value()) {
       return m_resumed_session->peer_certs();
-   } else if(m_handshake_state.has_client_certificate_msg() &&
-             m_handshake_state.client_certificate().has_certificate_chain()) {
-      return m_handshake_state.client_certificate().cert_chain();
-   } else {
-      return {};
    }
+
+   return {};
 }
 
 std::shared_ptr<const Public_Key> Server_Impl_13::peer_raw_public_key() const {
+   if(m_handshake_state.has_client_certificate_msg() && m_handshake_state.client_certificate().is_raw_public_key()) {
+      return m_handshake_state.client_certificate().public_key();
+   }
+
+   if(m_resumed_session.has_value()) {
+      return m_resumed_session->peer_raw_public_key();
+   }
+
    return nullptr;
 }
 
@@ -301,7 +311,33 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
          flight.add(m_handshake_state.sending(std::move(certificate_request.value())));
       }
 
-      flight.add(m_handshake_state.sending(Certificate_13(client_hello, credentials_manager(), callbacks(), Certificate_Type::X509)))
+      const auto& enc_exts = m_handshake_state.encrypted_extensions().extensions();
+
+      // RFC 7250 4.2
+      //   This client_certificate_type extension in the server hello then
+      //   indicates the type of certificates the client is requested to provide
+      //   in a subsequent certificate payload.
+      //
+      // Note: TLS 1.3 carries this extension in the Encrypted Extensions
+      //       message instead of the Server Hello.
+      if(auto client_cert_type = enc_exts.get<Client_Certificate_Type>()) {
+         set_selected_certificate_type(client_cert_type->selected_certificate_type());
+      }
+
+      // RFC 8446 4.4.2
+      //    If the corresponding certificate type extension [...]  was not
+      //    negotiated in EncryptedExtensions, or the X.509 certificate type
+      //    was negotiated, then each CertificateEntry contains a DER-encoded
+      //    X.509 certificate.
+      const auto cert_type = [&] {
+         if(auto server_cert_type = enc_exts.get<Server_Certificate_Type>()) {
+            return server_cert_type->selected_certificate_type();
+         } else {
+            return Certificate_Type::X509;
+         }
+      }();
+
+      flight.add(m_handshake_state.sending(Certificate_13(client_hello, credentials_manager(), callbacks(), cert_type)))
          .add(m_handshake_state.sending(Certificate_Verify_13(m_handshake_state.server_certificate(),
                                                               client_hello.signature_schemes(),
                                                               client_hello.sni_hostname(),
