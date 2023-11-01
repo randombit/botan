@@ -87,6 +87,12 @@ std::vector<X509_Certificate> Credentials_Manager::find_cert_chain(
    return cert_chain(key_types, cert_signature_schemes, type, context);
 }
 
+std::shared_ptr<Public_Key> Credentials_Manager::find_raw_public_key(const std::vector<std::string>& /* key_types */,
+                                                                     const std::string& /* type */,
+                                                                     const std::string& /* context */) {
+   return nullptr;
+}
+
 std::vector<X509_Certificate> Credentials_Manager::cert_chain(const std::vector<std::string>& /*unused*/,
                                                               const std::vector<AlgorithmIdentifier>& /*unused*/,
                                                               const std::string& /*unused*/,
@@ -105,7 +111,13 @@ std::vector<X509_Certificate> Credentials_Manager::cert_chain_single_type(
 std::shared_ptr<Private_Key> Credentials_Manager::private_key_for(const X509_Certificate& /*unused*/,
                                                                   const std::string& /*unused*/,
                                                                   const std::string& /*unused*/) {
-   return std::shared_ptr<Private_Key>();
+   return nullptr;
+}
+
+std::shared_ptr<Private_Key> Credentials_Manager::private_key_for(const Public_Key& /* raw_public_key */,
+                                                                  const std::string& /* type */,
+                                                                  const std::string& /* context */) {
+   return nullptr;
 }
 
 secure_vector<uint8_t> Credentials_Manager::session_ticket_key() {

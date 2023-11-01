@@ -196,6 +196,12 @@ class BOTAN_UNSTABLE_API Application_Layer_Protocol_Notification final : public 
       std::vector<std::string> m_protocols;
 };
 
+// As defined in RFC 8446 4.4.2
+enum class Certificate_Type : uint8_t { X509 = 0, RawPublicKey = 2 };
+
+std::string certificate_type_to_string(Certificate_Type type);
+Certificate_Type certificate_type_from_string(const std::string& type_str);
+
 /**
 * Session Ticket Extension (RFC 5077)
 */

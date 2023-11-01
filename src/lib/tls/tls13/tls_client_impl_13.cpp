@@ -586,6 +586,10 @@ std::vector<X509_Certificate> Client_Impl_13::peer_cert_chain() const {
    return {};
 }
 
+std::shared_ptr<const Public_Key> Client_Impl_13::peer_raw_public_key() const {
+   return nullptr;
+}
+
 std::optional<std::string> Client_Impl_13::external_psk_identity() const {
    return m_psk_identity;
 }

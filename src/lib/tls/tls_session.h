@@ -207,6 +207,11 @@ class BOTAN_PUBLIC_API(3, 0) Session_Base {
       const std::vector<X509_Certificate>& peer_certs() const { return m_peer_certs; }
 
       /**
+       * Return the raw public key of the peer (possibly empty)
+       */
+      std::shared_ptr<const Public_Key> peer_raw_public_key() const { return nullptr; }
+
+      /**
        * Get information about the TLS server
        */
       const Server_Information& server_info() const { return m_server_info; }

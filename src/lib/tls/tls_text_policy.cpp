@@ -67,6 +67,16 @@ bool Text_Policy::allow_client_initiated_renegotiation() const {
    return get_bool("allow_client_initiated_renegotiation", Policy::allow_client_initiated_renegotiation());
 }
 
+std::vector<Certificate_Type> Text_Policy::accepted_client_certificate_types() const {
+   const auto cert_types = get_str("accepted_client_certificate_types");
+   return (cert_types.empty()) ? Policy::accepted_client_certificate_types() : read_cert_type_list(cert_types);
+}
+
+std::vector<Certificate_Type> Text_Policy::accepted_server_certificate_types() const {
+   const auto cert_types = get_str("accepted_server_certificate_types");
+   return (cert_types.empty()) ? Policy::accepted_server_certificate_types() : read_cert_type_list(cert_types);
+}
+
 bool Text_Policy::allow_server_initiated_renegotiation() const {
    return get_bool("allow_server_initiated_renegotiation", Policy::allow_server_initiated_renegotiation());
 }
@@ -250,6 +260,15 @@ std::vector<Group_Params> Text_Policy::read_group_list(std::string_view group_st
    }
 
    return groups;
+}
+
+std::vector<Certificate_Type> Text_Policy::read_cert_type_list(const std::string& cert_type_names) const {
+   std::vector<Certificate_Type> cert_types;
+   for(const std::string& cert_type_name : split_on(cert_type_names, ' ')) {
+      cert_types.push_back(certificate_type_from_string(cert_type_name));
+   }
+
+   return cert_types;
 }
 
 size_t Text_Policy::get_len(const std::string& key, size_t def) const {

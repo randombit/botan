@@ -356,6 +356,27 @@ std::vector<uint8_t> Application_Layer_Protocol_Notification::serialize(Connecti
    return buf;
 }
 
+std::string certificate_type_to_string(Certificate_Type type) {
+   switch(type) {
+      case Certificate_Type::X509:
+         return "X509";
+      case Certificate_Type::RawPublicKey:
+         return "RawPublicKey";
+   }
+
+   return "Unknown";
+}
+
+Certificate_Type certificate_type_from_string(const std::string& type_str) {
+   if(type_str == "X509") {
+      return Certificate_Type::X509;
+   } else if(type_str == "RawPublicKey") {
+      return Certificate_Type::RawPublicKey;
+   } else {
+      throw Decoding_Error("Unknown certificate type: " + type_str);
+   }
+}
+
 Supported_Groups::Supported_Groups(const std::vector<Group_Params>& groups) : m_groups(groups) {}
 
 const std::vector<Group_Params>& Supported_Groups::groups() const {

@@ -387,6 +387,14 @@ bool Policy::abort_connection_on_undesired_renegotiation() const {
    return false;
 }
 
+std::vector<Certificate_Type> Policy::accepted_client_certificate_types() const {
+   return {Certificate_Type::X509};
+}
+
+std::vector<Certificate_Type> Policy::accepted_server_certificate_types() const {
+   return {Certificate_Type::X509};
+}
+
 bool Policy::allow_dtls_epoch0_restart() const {
    return false;
 }
@@ -585,6 +593,17 @@ void print_vec(std::ostream& o, const char* key, const std::vector<Group_Params>
    o << "\n";
 }
 
+void print_vec(std::ostream& o, const char* key, const std::vector<Certificate_Type>& types) {
+   o << key << " = ";
+   for(size_t i = 0; i != types.size(); ++i) {
+      o << certificate_type_to_string(types[i]);
+      if(i != types.size() - 1) {
+         o << ' ';
+      }
+   }
+   o << '\n';
+}
+
 void print_bool(std::ostream& o, const char* key, bool b) {
    o << key << " = " << (b ? "true" : "false") << '\n';
 }
@@ -615,6 +634,8 @@ void Policy::print(std::ostream& o) const {
    print_bool(o, "negotiate_encrypt_then_mac", negotiate_encrypt_then_mac());
    print_bool(o, "support_cert_status_message", support_cert_status_message());
    print_bool(o, "tls_13_middlebox_compatibility_mode", tls_13_middlebox_compatibility_mode());
+   print_vec(o, "accepted_client_certificate_types", accepted_client_certificate_types());
+   print_vec(o, "accepted_server_certificate_types", accepted_server_certificate_types());
    print_bool(o, "hash_hello_random", hash_hello_random());
    if(record_size_limit().has_value()) {
       o << "record_size_limit = " << record_size_limit().value() << '\n';
