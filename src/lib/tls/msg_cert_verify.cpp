@@ -148,11 +148,14 @@ Certificate_Verify_13::Certificate_Verify_13(const Certificate_13& certificate_m
       m_side(whoami) {
    BOTAN_ASSERT_NOMSG(!certificate_msg.empty());
 
-   const auto private_key = creds_mgr.private_key_for(
-      certificate_msg.leaf(), m_side == Connection_Side::Client ? "tls-client" : "tls-server", std::string(hostname));
+   const auto op_type = (m_side == Connection_Side::Client) ? "tls-client" : "tls-server";
+   const auto context = std::string(hostname);
 
+   const auto private_key = (certificate_msg.has_certificate_chain())
+                               ? creds_mgr.private_key_for(certificate_msg.leaf(), op_type, context)
+                               : creds_mgr.private_key_for(*certificate_msg.public_key(), op_type, context);
    if(!private_key) {
-      throw TLS_Exception(Alert::InternalError, "Application did not provide a private key for its certificate");
+      throw TLS_Exception(Alert::InternalError, "Application did not provide a private key for its credential");
    }
 
    m_scheme = choose_signature_scheme(*private_key, policy.allowed_signature_schemes(), peer_allowed_schemes);
@@ -177,7 +180,7 @@ Certificate_Verify_13::Certificate_Verify_13(const std::vector<uint8_t>& buf, co
 /*
 * Verify a Certificate Verify message
 */
-bool Certificate_Verify_13::verify(const X509_Certificate& cert,
+bool Certificate_Verify_13::verify(const Public_Key& public_key,
                                    Callbacks& callbacks,
                                    const Transcript_Hash& transcript_hash) const {
    BOTAN_ASSERT_NOMSG(m_scheme.is_available());
@@ -185,13 +188,12 @@ bool Certificate_Verify_13::verify(const X509_Certificate& cert,
    // RFC 8446 4.2.3
    //    The keys found in certificates MUST [...] be of appropriate type for
    //    the signature algorithms they are used with.
-   if(m_scheme.key_algorithm_identifier() != cert.subject_public_key_algo()) {
+   if(m_scheme.key_algorithm_identifier() != public_key.algorithm_identifier()) {
       throw TLS_Exception(Alert::IllegalParameter, "Signature algorithm does not match certificate's public key");
    }
 
-   const auto key = cert.subject_public_key();
    const bool signature_valid = callbacks.tls_verify_message(
-      *key, m_scheme.padding_string(), m_scheme.format().value(), message(m_side, transcript_hash), m_signature);
+      public_key, m_scheme.padding_string(), m_scheme.format().value(), message(m_side, transcript_hash), m_signature);
 
    #if defined(BOTAN_UNSAFE_FUZZER_MODE)
    BOTAN_UNUSED(signature_valid);

@@ -89,7 +89,7 @@ std::optional<Msg_Type> parse_message(TLS::TLS_Data_Reader& reader,
          case Handshake_Type::EncryptedExtensions:
             return Encrypted_Extensions(msg);
          case Handshake_Type::Certificate:
-            return Certificate_13(msg, policy, peer_side);
+            return Certificate_13(msg, policy, peer_side, Certificate_Type::X509);
          case Handshake_Type::CertificateRequest:
             return Certificate_Request_13(msg, peer_side);
          case Handshake_Type::CertificateVerify:

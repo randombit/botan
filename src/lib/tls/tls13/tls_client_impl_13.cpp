@@ -465,7 +465,7 @@ void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
    }
 
    bool sig_valid = certificate_verify_msg.verify(
-      m_handshake_state.server_certificate().leaf(), callbacks(), m_transcript_hash.previous());
+      *m_handshake_state.server_certificate().public_key(), callbacks(), m_transcript_hash.previous());
 
    if(!sig_valid) {
       throw TLS_Exception(Alert::DecryptError, "Server certificate verification failed");
@@ -482,8 +482,8 @@ void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedHands
    //    certificate_request_context:  If this message is in response to a
    //       CertificateRequest, the value of certificate_request_context in
    //       that message.
-   flight.add(
-      m_handshake_state.sending(Certificate_13(cert_request, m_info.hostname(), credentials_manager(), callbacks())));
+   flight.add(m_handshake_state.sending(
+      Certificate_13(cert_request, m_info.hostname(), credentials_manager(), callbacks(), Certificate_Type::X509)));
 
    // RFC 4.4.2
    //    If the server requests client authentication but no suitable certificate
@@ -575,7 +575,8 @@ void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket
 }
 
 std::vector<X509_Certificate> Client_Impl_13::peer_cert_chain() const {
-   if(m_handshake_state.has_server_certificate_chain()) {
+   if(m_handshake_state.has_server_certificate_msg() &&
+      m_handshake_state.server_certificate().has_certificate_chain()) {
       return m_handshake_state.server_certificate().cert_chain();
    }
 

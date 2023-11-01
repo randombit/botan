@@ -45,7 +45,8 @@ std::string Server_Impl_13::application_protocol() const {
 std::vector<X509_Certificate> Server_Impl_13::peer_cert_chain() const {
    if(m_resumed_session.has_value()) {
       return m_resumed_session->peer_certs();
-   } else if(m_handshake_state.has_client_certificate_chain()) {
+   } else if(m_handshake_state.has_client_certificate_msg() &&
+             m_handshake_state.client_certificate().has_certificate_chain()) {
       return m_handshake_state.client_certificate().cert_chain();
    } else {
       return {};
@@ -299,7 +300,7 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
          flight.add(m_handshake_state.sending(std::move(certificate_request.value())));
       }
 
-      flight.add(m_handshake_state.sending(Certificate_13(client_hello, credentials_manager(), callbacks())))
+      flight.add(m_handshake_state.sending(Certificate_13(client_hello, credentials_manager(), callbacks(), Certificate_Type::X509)))
          .add(m_handshake_state.sending(Certificate_Verify_13(m_handshake_state.server_certificate(),
                                                               client_hello.signature_schemes(),
                                                               client_hello.sni_hostname(),
@@ -505,10 +506,10 @@ void Server_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
                              " as a signature scheme");
    }
 
-   BOTAN_ASSERT_NOMSG(m_handshake_state.has_client_certificate_chain() &&
+   BOTAN_ASSERT_NOMSG(m_handshake_state.has_client_certificate_msg() &&
                       !m_handshake_state.client_certificate().empty());
    bool sig_valid = certificate_verify_msg.verify(
-      m_handshake_state.client_certificate().leaf(), callbacks(), m_transcript_hash.previous());
+      *m_handshake_state.client_certificate().public_key(), callbacks(), m_transcript_hash.previous());
 
    // RFC 8446 4.4.3
    //   If the verification fails, the receiver MUST terminate the handshake
