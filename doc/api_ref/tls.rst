@@ -1193,7 +1193,7 @@ TLS Stream
 It can be used as an alternative to Boost.Asio's `ssl::stream <https://www.boost.org/doc/libs/1_66_0/doc/html/boost_asio/reference/ssl__stream.html>`_ with minor adjustments to the using code.
 
 To use the asio stream wrapper, a relatively recent version of boost is required.
-Include ``botan/boost_compat.h`` and check that ``BOTAN_FOUND_COMPATIBLE_BOOST_VERSION``
+Include ``botan/asio_compat.h`` and check that ``BOTAN_FOUND_COMPATIBLE_BOOST_ASIO_VERSION``
 is defined before including ``botan/asio_stream.h`` to be ensure compatibility at
 compile time of your application.
 

@@ -10,8 +10,8 @@
 
 #if defined(BOTAN_HAS_TLS) && defined(BOTAN_HAS_TLS_ASIO_STREAM)
 
-   #include <botan/boost_compat.h>
-   #if defined(BOTAN_FOUND_COMPATIBLE_BOOST_VERSION)
+   #include <botan/asio_compat.h>
+   #if defined(BOTAN_FOUND_COMPATIBLE_BOOST_ASIO_VERSION)
 
       #include <botan/asio_stream.h>
       #include <botan/tls_callbacks.h>

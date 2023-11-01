@@ -9,8 +9,8 @@
 #ifndef BOTAN_ASIO_ERROR_H_
 #define BOTAN_ASIO_ERROR_H_
 
-#include <botan/boost_compat.h>
-#if defined(BOTAN_FOUND_COMPATIBLE_BOOST_VERSION)
+#include <botan/asio_compat.h>
+#if defined(BOTAN_FOUND_COMPATIBLE_BOOST_ASIO_VERSION)
 
    #include <boost/system/system_error.hpp>
 

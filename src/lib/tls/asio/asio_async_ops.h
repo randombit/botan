@@ -9,8 +9,8 @@
 #ifndef BOTAN_ASIO_ASYNC_OPS_H_
 #define BOTAN_ASIO_ASYNC_OPS_H_
 
-#include <botan/boost_compat.h>
-#if defined(BOTAN_FOUND_COMPATIBLE_BOOST_VERSION)
+#include <botan/asio_compat.h>
+#if defined(BOTAN_FOUND_COMPATIBLE_BOOST_ASIO_VERSION)
 
    #include <botan/asio_error.h>
 
