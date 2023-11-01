@@ -55,6 +55,8 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
             } catch(std::exception&) {}
          }
 
+         BOTAN_ARG_CHECK(!cert.certs.empty(), "Provided certificate chain file cannot be loaded");
+
          // TODO: attempt to validate chain ourselves
 
          m_creds.push_back(cert);
