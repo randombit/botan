@@ -93,6 +93,14 @@ class Callbacks : public Botan::TLS::Callbacks {
          return "echo/0.1";
       }
 
+      void tls_verify_raw_public_key(const Botan::Public_Key& raw_public_key,
+                                     Botan::Usage_Type /* usage */,
+                                     std::string_view /* hostname */,
+                                     const Botan::TLS::Policy& /* policy */) override {
+         const auto fingerprint = raw_public_key.fingerprint_public("SHA-256");
+         output() << "received Raw Public Key (" << fingerprint << ")\n";
+      }
+
    private:
       TLS_Server& m_server_command;
       std::string m_line_buf;
@@ -105,11 +113,11 @@ class TLS_Server final : public Command {
    #if defined(BOTAN_SO_SOCKETID)
       TLS_Server() :
             Command(
-               "tls_server cert key --port=443 --psk= --psk-identity= --psk-prf=SHA-256 --type=tcp --policy=default --dump-traces= --max-clients=0 --socket-id=0")
+               "tls_server cert-or-pubkey key --port=443 --psk= --psk-identity= --psk-prf=SHA-256 --type=tcp --policy=default --dump-traces= --max-clients=0 --socket-id=0")
    #else
       TLS_Server() :
             Command(
-               "tls_server cert key --port=443 --psk= --psk-identity= --psk-prf=SHA-256 --type=tcp --policy=default --dump-traces= --max-clients=0")
+               "tls_server cert-or-pubkey key --port=443 --psk= --psk-identity= --psk-prf=SHA-256 --type=tcp --policy=default --dump-traces= --max-clients=0")
    #endif
       {
          init_sockets();
@@ -127,7 +135,7 @@ class TLS_Server final : public Command {
       std::string description() const override { return "Accept TLS/DTLS connections from TLS/DTLS clients"; }
 
       void go() override {
-         const std::string server_crt = get_arg("cert");
+         const std::string server_cred = get_arg("cert-or-pubkey");
          const std::string server_key = get_arg("key");
          const uint16_t port = get_arg_u16("port");
          const size_t max_clients = get_arg_sz("max-clients");
@@ -158,7 +166,7 @@ class TLS_Server final : public Command {
          auto session_manager =
             std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng_as_shared());  // TODO sqlite3
          auto creds =
-            std::make_shared<Basic_Credentials_Manager>(server_crt, server_key, std::move(psk), psk_identity, psk_prf);
+            std::make_shared<Basic_Credentials_Manager>(server_cred, server_key, std::move(psk), psk_identity, psk_prf);
          auto callbacks = std::make_shared<Callbacks>(*this);
 
          output() << "Listening for new connections on " << transport << " port " << port << std::endl;

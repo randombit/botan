@@ -13,6 +13,7 @@
 #include <botan/hex.h>
 #include <botan/pkcs8.h>
 #include <botan/tls_policy.h>
+#include <botan/x509_key.h>
 #include <botan/x509self.h>
 #include <fstream>
 #include <memory>
@@ -42,13 +43,23 @@ inline std::string maybe_hex_encode(std::string_view v) {
 
 class Basic_Credentials_Manager : public Botan::Credentials_Manager {
    protected:
-      void load_credentials(const std::string& crt, const std::string& key) {
-         Certificate_Info cert;
-
+      void load_credentials(const std::string& cred, const std::string& key) {
          Botan::DataSource_Stream key_in(key);
-         cert.key = Botan::PKCS8::load_key(key_in);
+         auto privkey = Botan::PKCS8::load_key(key_in);
 
-         Botan::DataSource_Stream in(crt);
+         // first try to read @p cred as a public key
+         try {
+            auto pubkey = Botan::X509::load_key(cred);
+            m_raw_pubkey = {std::exchange(privkey, {}), std::move(pubkey)};
+            return;
+         } catch(const Botan::Decoding_Error&) {}
+
+         // ... then try again assuming that @p cred contains a certificate chain
+         BOTAN_ASSERT_NONNULL(privkey);
+         Certificate_Info cert;
+         cert.key = std::move(privkey);
+
+         Botan::DataSource_Stream in(cred);
          while(!in.end_of_data()) {
             try {
                cert.certs.push_back(Botan::X509_Certificate(in));
@@ -59,13 +70,13 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
 
          // TODO: attempt to validate chain ourselves
 
-         m_creds.push_back(cert);
+         m_certs.push_back(cert);
       }
 
    public:
       Basic_Credentials_Manager(bool use_system_store,
                                 const std::string& ca_path,
-                                std::optional<std::string> client_crt = std::nullopt,
+                                std::optional<std::string> client_cred = std::nullopt,
                                 std::optional<std::string> client_key = std::nullopt,
                                 std::optional<Botan::secure_vector<uint8_t>> psk = std::nullopt,
                                 std::optional<std::string> psk_identity = std::nullopt,
@@ -81,11 +92,11 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
             m_certstores.push_back(std::make_shared<Botan::Certificate_Store_In_Memory>(ca_path));
          }
 
-         BOTAN_ARG_CHECK(client_crt.has_value() == client_key.has_value(),
+         BOTAN_ARG_CHECK(client_cred.has_value() == client_key.has_value(),
                          "either provide both client certificate and key or neither");
 
-         if(client_crt.has_value() && client_key.has_value()) {
-            load_credentials(client_crt.value(), client_key.value());
+         if(client_cred.has_value() && client_key.has_value()) {
+            load_credentials(client_cred.value(), client_key.value());
          }
 
 #if defined(BOTAN_HAS_CERTSTOR_SYSTEM)
@@ -97,7 +108,7 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
 #endif
       }
 
-      Basic_Credentials_Manager(const std::string& server_crt,
+      Basic_Credentials_Manager(const std::string& server_cred,
                                 const std::string& server_key,
                                 std::optional<Botan::secure_vector<uint8_t>> psk = std::nullopt,
                                 std::optional<std::string> psk_identity = std::nullopt,
@@ -109,7 +120,7 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
             //    the Hash algorithm MUST be set when the PSK is established or
             //    default to SHA-256 if no such algorithm is defined.
             m_psk_prf(psk_prf.value_or("SHA-256")) {
-         load_credentials(server_crt, server_key);
+         load_credentials(server_cred, server_key);
       }
 
       std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(const std::string& type,
@@ -138,14 +149,14 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
 
          if(type == "tls-client") {
             for(const auto& dn : acceptable_cas) {
-               for(const auto& cred : m_creds) {
+               for(const auto& cred : m_certs) {
                   if(dn == cred.certs[0].issuer_dn()) {
                      return cred.certs;
                   }
                }
             }
          } else if(type == "tls-server") {
-            for(const auto& i : m_creds) {
+            for(const auto& i : m_certs) {
                if(std::find(algos.begin(), algos.end(), i.key->algo_name()) == algos.end()) {
                   continue;
                }
@@ -161,16 +172,32 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
          return {};
       }
 
+      std::shared_ptr<Botan::Public_Key> find_raw_public_key(const std::vector<std::string>& algos,
+                                                             const std::string& type,
+                                                             const std::string& hostname) override {
+         BOTAN_UNUSED(type, hostname);
+         return (algos.empty() || value_exists(algos, m_raw_pubkey.public_key->algo_name())) ? m_raw_pubkey.public_key
+                                                                                             : nullptr;
+      }
+
       std::shared_ptr<Botan::Private_Key> private_key_for(const Botan::X509_Certificate& cert,
                                                           const std::string& /*type*/,
                                                           const std::string& /*context*/) override {
-         for(const auto& i : m_creds) {
+         for(const auto& i : m_certs) {
             if(cert == i.certs[0]) {
                return i.key;
             }
          }
 
          return nullptr;
+      }
+
+      std::shared_ptr<Botan::Private_Key> private_key_for(const Botan::Public_Key& raw_public_key,
+                                                          const std::string& /*type*/,
+                                                          const std::string& /*context*/) override {
+         return (m_raw_pubkey.public_key->fingerprint_public() == raw_public_key.fingerprint_public())
+                   ? m_raw_pubkey.private_key
+                   : nullptr;
       }
 
       std::string psk_identity(const std::string& type,
@@ -208,7 +235,14 @@ class Basic_Credentials_Manager : public Botan::Credentials_Manager {
             std::shared_ptr<Botan::Private_Key> key;
       };
 
-      std::vector<Certificate_Info> m_creds;
+      struct RawPublicKey_Info {
+            std::shared_ptr<Botan::Private_Key> private_key;
+            std::shared_ptr<Botan::Public_Key> public_key;
+      };
+
+      std::vector<Certificate_Info> m_certs;
+      RawPublicKey_Info m_raw_pubkey;
+
       std::vector<std::shared_ptr<Botan::Certificate_Store>> m_certstores;
       std::optional<Botan::secure_vector<uint8_t>> m_psk;
       std::optional<std::string> m_psk_identity;
