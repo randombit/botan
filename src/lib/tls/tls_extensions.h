@@ -5,6 +5,7 @@
 * (C) 2016 Matthias Gierlings
 * (C) 2021 Elektrobit Automotive GmbH
 * (C) 2022 René Meusel, Hannes Rantzsch - neXenio GmbH
+* (C) 2023 Fabian Albert, René Meusel - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -61,6 +62,10 @@ enum class Extension_Code : uint16_t {
    ApplicationLayerProtocolNegotiation = 16,
 
    // SignedCertificateTimestamp          = 18,  // NYI
+
+   // RFC 7250 (Raw Public Keys in TLS)
+   ClientCertificateType = 19,
+   ServerCertificateType = 20,
 
    EncryptThenMac = 22,
    ExtendedMasterSecret = 23,
@@ -201,6 +206,74 @@ enum class Certificate_Type : uint8_t { X509 = 0, RawPublicKey = 2 };
 
 std::string certificate_type_to_string(Certificate_Type type);
 Certificate_Type certificate_type_from_string(const std::string& type_str);
+
+/**
+ * RFC 7250
+ * Base class for 'client_certificate_type' and 'server_certificate_type' extensions.
+ */
+class BOTAN_UNSTABLE_API Certificate_Type_Base : public Extension {
+   public:
+      /**
+       * Called by the client to advertise support for a number of cert types.
+       */
+      Certificate_Type_Base(std::vector<Certificate_Type> supported_cert_types);
+
+   protected:
+      /**
+       * Called by the server to select a cert type to be used in the handshake.
+       */
+      Certificate_Type_Base(const Certificate_Type_Base& certificate_type_from_client,
+                            const std::vector<Certificate_Type>& server_preference);
+
+   public:
+      Certificate_Type_Base(TLS_Data_Reader& reader, uint16_t extension_size, Connection_Side from);
+
+      std::vector<uint8_t> serialize(Connection_Side whoami) const override;
+
+      void validate_selection(const Certificate_Type_Base& from_server) const;
+      Certificate_Type selected_certificate_type() const;
+
+      bool empty() const override {
+         // RFC 7250 4.1
+         //    If the client has no remaining certificate types to send in the
+         //    client hello, other than the default X.509 type, it MUST omit the
+         //    entire client[/server]_certificate_type extension [...].
+         return m_from == Connection_Side::Client && m_certificate_types.size() == 1 &&
+                m_certificate_types.front() == Certificate_Type::X509;
+      }
+
+   private:
+      std::vector<Certificate_Type> m_certificate_types;
+      Connection_Side m_from;
+};
+
+class BOTAN_UNSTABLE_API Client_Certificate_Type final : public Certificate_Type_Base {
+   public:
+      using Certificate_Type_Base::Certificate_Type_Base;
+
+      /**
+       * Creates the Server Hello extension from the received client preferences.
+       */
+      Client_Certificate_Type(const Client_Certificate_Type& cct, const Policy& policy);
+
+      static Extension_Code static_type() { return Extension_Code::ClientCertificateType; }
+
+      Extension_Code type() const override { return static_type(); }
+};
+
+class BOTAN_UNSTABLE_API Server_Certificate_Type final : public Certificate_Type_Base {
+   public:
+      using Certificate_Type_Base::Certificate_Type_Base;
+
+      /**
+       * Creates the Server Hello extension from the received client preferences.
+       */
+      Server_Certificate_Type(const Server_Certificate_Type& sct, const Policy& policy);
+
+      static Extension_Code static_type() { return Extension_Code::ServerCertificateType; }
+
+      Extension_Code type() const override { return static_type(); }
+};
 
 /**
 * Session Ticket Extension (RFC 5077)
@@ -851,6 +924,8 @@ class BOTAN_UNSTABLE_API Extensions final {
       bool has(Extension_Code type) const { return get(type) != nullptr; }
 
       size_t size() const { return m_extensions.size(); }
+
+      bool empty() const { return m_extensions.empty(); }
 
       void add(std::unique_ptr<Extension> extn);
 

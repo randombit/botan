@@ -5,6 +5,7 @@
 *     2021 Elektrobit Automotive GmbH
 *     2022 René Meusel, Hannes Rantzsch - neXenio GmbH
 *     2023 Mateusz Berezecki
+*     2023 Fabian Albert, René Meusel - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -58,6 +59,12 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
 
       case Extension_Code::ApplicationLayerProtocolNegotiation:
          return std::make_unique<Application_Layer_Protocol_Notification>(reader, size, from);
+
+      case Extension_Code::ClientCertificateType:
+         return std::make_unique<Client_Certificate_Type>(reader, size, from);
+
+      case Extension_Code::ServerCertificateType:
+         return std::make_unique<Server_Certificate_Type>(reader, size, from);
 
       case Extension_Code::ExtendedMasterSecret:
          return std::make_unique<Extended_Master_Secret>(reader, size);
@@ -375,6 +382,105 @@ Certificate_Type certificate_type_from_string(const std::string& type_str) {
    } else {
       throw Decoding_Error("Unknown certificate type: " + type_str);
    }
+}
+
+Certificate_Type_Base::Certificate_Type_Base(std::vector<Certificate_Type> supported_cert_types) :
+      m_certificate_types(std::move(supported_cert_types)), m_from(Connection_Side::Client) {
+   BOTAN_ARG_CHECK(!m_certificate_types.empty(), "at least one certificate type must be supported");
+}
+
+Client_Certificate_Type::Client_Certificate_Type(const Client_Certificate_Type& cct, const Policy& policy) :
+      Certificate_Type_Base(cct, policy.accepted_client_certificate_types()) {}
+
+Server_Certificate_Type::Server_Certificate_Type(const Server_Certificate_Type& sct, const Policy& policy) :
+      Certificate_Type_Base(sct, policy.accepted_server_certificate_types()) {}
+
+Certificate_Type_Base::Certificate_Type_Base(const Certificate_Type_Base& certificate_type_from_client,
+                                             const std::vector<Certificate_Type>& server_preference) :
+      m_from(Connection_Side::Server) {
+   // RFC 7250 4.2
+   //    The server_certificate_type extension in the client hello indicates the
+   //    types of certificates the client is able to process when provided by
+   //    the server in a subsequent certificate payload. [...] With the
+   //    server_certificate_type extension in the server hello, the TLS server
+   //    indicates the certificate type carried in the Certificate payload.
+   for(const auto server_supported_cert_type : server_preference) {
+      if(value_exists(certificate_type_from_client.m_certificate_types, server_supported_cert_type)) {
+         m_certificate_types.push_back(server_supported_cert_type);
+         return;
+      }
+   }
+
+   // RFC 7250 4.2 (2.)
+   //    The server supports the extension defined in this document, but
+   //    it does not have any certificate type in common with the client.
+   //    Then, the server terminates the session with a fatal alert of
+   //    type "unsupported_certificate".
+   throw TLS_Exception(Alert::UnsupportedCertificate, "Failed to agree on certificate_type");
+}
+
+Certificate_Type_Base::Certificate_Type_Base(TLS_Data_Reader& reader, uint16_t extension_size, Connection_Side from) :
+      m_from(from) {
+   if(extension_size == 0) {
+      throw Decoding_Error("Certificate type extension cannot be empty");
+   }
+
+   if(from == Connection_Side::Client) {
+      const auto type_bytes = reader.get_tls_length_value(1);
+      if(static_cast<size_t>(extension_size) != type_bytes.size() + 1) {
+         throw Decoding_Error("certificate type extension had inconsistent length");
+      }
+      std::transform(
+         type_bytes.begin(), type_bytes.end(), std::back_inserter(m_certificate_types), [](const auto type_byte) {
+            return static_cast<Certificate_Type>(type_byte);
+         });
+   } else {
+      // RFC 7250 4.2
+      //    Note that only a single value is permitted in the
+      //    server_certificate_type extension when carried in the server hello.
+      if(extension_size != 1) {
+         throw Decoding_Error("Server's certificate type extension must be of length 1");
+      }
+      const auto type_byte = reader.get_byte();
+      m_certificate_types.push_back(static_cast<Certificate_Type>(type_byte));
+   }
+}
+
+std::vector<uint8_t> Certificate_Type_Base::serialize(Connection_Side whoami) const {
+   std::vector<uint8_t> result;
+   if(whoami == Connection_Side::Client) {
+      std::vector<uint8_t> type_bytes;
+      std::transform(
+         m_certificate_types.begin(), m_certificate_types.end(), std::back_inserter(type_bytes), [](const auto type) {
+            return static_cast<uint8_t>(type);
+         });
+      append_tls_length_value(result, type_bytes, 1);
+   } else {
+      BOTAN_ASSERT_NOMSG(m_certificate_types.size() == 1);
+      result.push_back(static_cast<uint8_t>(m_certificate_types.front()));
+   }
+   return result;
+}
+
+void Certificate_Type_Base::validate_selection(const Certificate_Type_Base& from_server) const {
+   BOTAN_ASSERT_NOMSG(m_from == Connection_Side::Client);
+   BOTAN_ASSERT_NOMSG(from_server.m_from == Connection_Side::Server);
+
+   // RFC 7250 4.2
+   //    The value conveyed in the [client_]certificate_type extension MUST be
+   //    selected from one of the values provided in the [client_]certificate_type
+   //    extension sent in the client hello.
+   if(!value_exists(m_certificate_types, from_server.selected_certificate_type())) {
+      throw TLS_Exception(Alert::IllegalParameter,
+                          Botan::fmt("Selected certificate type was not offered: {}",
+                                     certificate_type_to_string(from_server.selected_certificate_type())));
+   }
+}
+
+Certificate_Type Certificate_Type_Base::selected_certificate_type() const {
+   BOTAN_ASSERT_NOMSG(m_from == Connection_Side::Server);
+   BOTAN_ASSERT_NOMSG(m_certificate_types.size() == 1);
+   return m_certificate_types.front();
 }
 
 Supported_Groups::Supported_Groups(const std::vector<Group_Params>& groups) : m_groups(groups) {}
