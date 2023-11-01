@@ -57,7 +57,8 @@ Handshake_Type handshake_type_from_byte(uint8_t byte_value) {
 template <typename Msg_Type>
 std::optional<Msg_Type> parse_message(TLS::TLS_Data_Reader& reader,
                                       const Policy& policy,
-                                      const Connection_Side peer_side) {
+                                      const Connection_Side peer_side,
+                                      const Certificate_Type cert_type) {
    // read the message header
    if(reader.remaining_bytes() < HEADER_LENGTH) {
       return std::nullopt;
@@ -89,7 +90,7 @@ std::optional<Msg_Type> parse_message(TLS::TLS_Data_Reader& reader,
          case Handshake_Type::EncryptedExtensions:
             return Encrypted_Extensions(msg);
          case Handshake_Type::Certificate:
-            return Certificate_13(msg, policy, peer_side, Certificate_Type::X509);
+            return Certificate_13(msg, policy, peer_side, cert_type);
          case Handshake_Type::CertificateRequest:
             return Certificate_Request_13(msg, peer_side);
          case Handshake_Type::CertificateVerify:
@@ -119,7 +120,7 @@ std::optional<Handshake_Message_13> Handshake_Layer::next_message(const Policy& 
                                                                   Transcript_Hash_State& transcript_hash) {
    TLS::TLS_Data_Reader reader("handshake message", m_read_buffer);
 
-   auto msg = parse_message<Handshake_Message_13>(reader, policy, m_peer);
+   auto msg = parse_message<Handshake_Message_13>(reader, policy, m_peer, m_certificate_type);
    if(msg.has_value()) {
       BOTAN_ASSERT_NOMSG(m_read_buffer.size() >= reader.read_so_far());
       transcript_hash.update(std::span{m_read_buffer.data(), reader.read_so_far()});
@@ -132,7 +133,7 @@ std::optional<Handshake_Message_13> Handshake_Layer::next_message(const Policy& 
 std::optional<Post_Handshake_Message_13> Handshake_Layer::next_post_handshake_message(const Policy& policy) {
    TLS::TLS_Data_Reader reader("post handshake message", m_read_buffer);
 
-   auto msg = parse_message<Post_Handshake_Message_13>(reader, policy, m_peer);
+   auto msg = parse_message<Post_Handshake_Message_13>(reader, policy, m_peer, m_certificate_type);
    if(msg.has_value()) {
       m_read_buffer.erase(m_read_buffer.cbegin(), m_read_buffer.cbegin() + reader.read_so_far());
    }

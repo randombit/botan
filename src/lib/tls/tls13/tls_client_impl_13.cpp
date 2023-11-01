@@ -478,14 +478,34 @@ void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedHands
    BOTAN_ASSERT_NOMSG(m_handshake_state.has_certificate_request());
    const auto& cert_request = m_handshake_state.certificate_request();
 
-   // RFC 4.4.2
+   const auto cert_type = [&] {
+      const auto& exts = m_handshake_state.encrypted_extensions().extensions();
+      if(auto client_cert_type = exts.get<Client_Certificate_Type>()) {
+         // RFC 7250 4.2
+         //   This client_certificate_type extension in the server hello then
+         //   indicates the type of certificates the client is requested to
+         //   provide in a subsequent certificate payload.
+         //
+         // Note: TLS 1.3 carries this extension in the Encrypted Extensions
+         //       message instead of the Server Hello.
+         return client_cert_type->selected_certificate_type();
+      } else {
+         // RFC 8446 4.4.2
+         //    If the corresponding certificate type extension [...] was not
+         //    negotiated in EncryptedExtensions, [...] then each
+         //    CertificateEntry contains a DER-encoded X.509 certificate.
+         return Certificate_Type::X509;
+      }
+   }();
+
+   // RFC 8446 4.4.2
    //    certificate_request_context:  If this message is in response to a
    //       CertificateRequest, the value of certificate_request_context in
    //       that message.
    flight.add(m_handshake_state.sending(
-      Certificate_13(cert_request, m_info.hostname(), credentials_manager(), callbacks(), Certificate_Type::X509)));
+      Certificate_13(cert_request, m_info.hostname(), credentials_manager(), callbacks(), cert_type)));
 
-   // RFC 4.4.2
+   // RFC 8446 4.4.2
    //    If the server requests client authentication but no suitable certificate
    //    is available, the client MUST send a Certificate message containing no
    //    certificates.
