@@ -94,7 +94,7 @@ void Certificate_13::verify(Callbacks& callbacks,
             ocsp_responses.push_back(callbacks.tls_parse_ocsp_response(
                entry.extensions.get<Certificate_Status_Request>()->get_ocsp_response()));
          } else {
-            ocsp_responses.push_back(std::nullopt);
+            ocsp_responses.emplace_back();
          }
       }
    }
