@@ -9,7 +9,7 @@ int main() {
    std::vector<uint8_t> pt(plaintext.data(), plaintext.data() + plaintext.length());
    const std::vector<uint8_t> key =
       Botan::hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F");
-   auto cipher = Botan::StreamCipher::create("ChaCha(20)");
+   const auto cipher = Botan::StreamCipher::create_or_throw("ChaCha(20)");
 
    // generate fresh nonce (IV)
    Botan::AutoSeeded_RNG rng;
