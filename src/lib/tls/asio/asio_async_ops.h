@@ -252,6 +252,10 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
 
       void operator()(boost::system::error_code ec, std::size_t bytesTransferred, bool isContinuation = true) {
          reenter(this) {
+            if(!ec && m_stashed_ec) {
+               ec = std::exchange(m_stashed_ec, {});
+            }
+
             if(ec == boost::asio::error::eof) {
                ec = StreamError::StreamTruncated;
             }
@@ -260,6 +264,16 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
                // Provide encrypted TLS data received from the network to TLS::Channel for decryption
                boost::asio::const_buffer read_buffer{m_stream.input_buffer().data(), bytesTransferred};
                m_stream.process_encrypted_data(read_buffer, ec);
+
+               // m_stream.process_encrypted_data() might set an error code based
+               // on the data received from the peer but also generate data that
+               // must be sent to the peer (ie. an alert like 'handshake_failure').
+               // In that case, we stash the error code and continue. This will let
+               // the next block write the alert message and the stashed error code
+               // will be re-produced in the next iteration.
+               if(ec && m_stream.has_data_to_send()) {
+                  m_stashed_ec = std::exchange(ec, {});
+               }
             }
 
             if(!ec && m_stream.has_data_to_send()) {
@@ -297,6 +311,7 @@ class AsyncHandshakeOperation : public AsyncBase<Handler, typename Stream::execu
    private:
       Stream& m_stream;
       boost::system::error_code m_ec;
+      boost::system::error_code m_stashed_ec;
 };
 
 }  // namespace Botan::TLS::detail

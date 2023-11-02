@@ -786,6 +786,68 @@ class Test_Conversation_With_Move : public Test_Conversation {
       }
 };
 
+/* In this test we provoke a handshake failure early on in the server and expect
+ * the stream to handle it by providing the configured error code to the client.
+ *
+ * This is a regression test for #3778: Alerts during handshakes resulted in an
+ * immediate closure of the socket without transmitting the Alert message first.
+ */
+class Test_Handshake_Failure : public TestBase,
+                               public net::coroutine,
+                               public std::enable_shared_from_this<Test_Handshake_Failure> {
+   public:
+      Test_Handshake_Failure(net::io_context& ioc,
+                             const std::string& config_name,
+                             const std::shared_ptr<const Botan::TLS::Policy>& client_policy,
+                             const std::shared_ptr<const Botan::TLS::Policy>& server_policy) :
+            TestBase(ioc, client_policy, server_policy, "Test Handshake Failure", config_name) {
+         server()->fail_on_handshake_message(Botan::TLS::Handshake_Type::ClientHello,
+                                             Botan::TLS::Alert::HandshakeFailure);
+      }
+
+      void run(const error_code& ec) {
+         static auto test_case = &Test_Handshake_Failure::run;
+         reenter(*this) {
+            client()->reset_timeout("connect");
+            yield net::async_connect(
+               client()->stream().lowest_layer(), k_endpoints, std::bind(test_case, shared_from_this(), _1));
+            result().expect_success("connect", ec);
+
+            client()->reset_timeout("handshake");
+            yield client()->stream().async_handshake(Botan::TLS::Connection_Side::Client,
+                                                     std::bind(test_case, shared_from_this(), _1));
+            result().expect_ec("handshake", Botan::TLS::Alert::HandshakeFailure, ec);
+
+            client()->close_socket();
+            teardown();
+         }
+      }
+};
+
+class Test_Handshake_Failure_Sync : public Synchronous_Test {
+   public:
+      Test_Handshake_Failure_Sync(net::io_context& ioc,
+                                  const std::string& config_name,
+                                  const std::shared_ptr<const Botan::TLS::Policy>& client_policy,
+                                  const std::shared_ptr<const Botan::TLS::Policy>& server_policy) :
+            Synchronous_Test(ioc, client_policy, server_policy, "Test Handshake Failure Sync", config_name) {
+         server()->fail_on_handshake_message(Botan::TLS::Handshake_Type::ClientHello,
+                                             Botan::TLS::Alert::HandshakeFailure);
+      }
+
+      void run_synchronous_client() override {
+         error_code ec;
+         net::connect(client()->stream().lowest_layer(), k_endpoints, ec);
+         result().expect_success("connect", ec);
+
+         client()->stream().handshake(Botan::TLS::Connection_Side::Client, ec);
+         result().expect_ec("handshake", Botan::TLS ::Alert::HandshakeFailure, ec);
+
+         client()->close_socket();
+         teardown();
+      }
+};
+
 class SystemConfiguration {
    public:
       SystemConfiguration(std::string n, const std::string& cp, const std::string& sp) :
@@ -855,10 +917,12 @@ class Tls_Stream_Integration_Tests final : public Test {
             config.run<Test_Eager_Close>(results);
             config.run<Test_Close_Without_Shutdown>(results);
             config.run<Test_No_Shutdown_Response>(results);
+            config.run<Test_Handshake_Failure>(results);
             config.run<Test_Conversation_Sync>(results);
             config.run<Test_Eager_Close_Sync>(results);
             config.run<Test_Close_Without_Shutdown_Sync>(results);
             config.run<Test_No_Shutdown_Response_Sync>(results);
+            config.run<Test_Handshake_Failure_Sync>(results);
             config.run<Test_Conversation_With_Move>(results);
          }
 
