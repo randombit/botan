@@ -16,7 +16,7 @@ int main() {
    mac->start(nonce);
    mac->update(data);
    Botan::secure_vector<uint8_t> tag = mac->final();
-   std::cout << mac->name() << ": " << Botan::hex_encode(tag) << std::endl;
+   std::cout << mac->name() << ": " << Botan::hex_encode(tag) << '\n';
 
    // Verify created MAC
    mac->start(nonce);

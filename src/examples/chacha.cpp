@@ -20,6 +20,6 @@ int main() {
    cipher->set_iv(iv);
    cipher->encipher(pt);
 
-   std::cout << cipher->name() << " with iv " << Botan::hex_encode(iv) << ": " << Botan::hex_encode(pt) << "\n";
+   std::cout << cipher->name() << " with iv " << Botan::hex_encode(iv) << ": " << Botan::hex_encode(pt) << '\n';
    return 0;
 }

@@ -18,8 +18,8 @@ int main() {
       hash2->update(buf.data(), readcount);
       hash3->update(buf.data(), readcount);
    }
-   std::cout << "SHA-256: " << Botan::hex_encode(hash1->final()) << std::endl;
-   std::cout << "SHA-384: " << Botan::hex_encode(hash2->final()) << std::endl;
-   std::cout << "SHA-3: " << Botan::hex_encode(hash3->final()) << std::endl;
+   std::cout << "SHA-256: " << Botan::hex_encode(hash1->final()) << '\n';
+   std::cout << "SHA-384: " << Botan::hex_encode(hash2->final()) << '\n';
+   std::cout << "SHA-3: " << Botan::hex_encode(hash3->final()) << '\n';
    return 0;
 }

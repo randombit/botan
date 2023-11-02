@@ -9,7 +9,7 @@ int main() {
    auto cipher = Botan::BlockCipher::create("AES-256");
    cipher->set_key(key);
    cipher->encrypt(block);
-   std::cout << std::endl << cipher->name() << "single block encrypt: " << Botan::hex_encode(block);
+   std::cout << '\n' << cipher->name() << "single block encrypt: " << Botan::hex_encode(block);
 
    // clear cipher for 2nd encryption with other key
    cipher->clear();
@@ -17,6 +17,6 @@ int main() {
    cipher->set_key(key);
    cipher->encrypt(block);
 
-   std::cout << std::endl << cipher->name() << "single block encrypt: " << Botan::hex_encode(block);
+   std::cout << '\n' << cipher->name() << "single block encrypt: " << Botan::hex_encode(block);
    return 0;
 }

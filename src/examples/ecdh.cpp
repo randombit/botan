@@ -32,6 +32,6 @@ int main() {
       return 1;
    }
 
-   std::cout << "agreed key: " << std::endl << Botan::hex_encode(sA);
+   std::cout << "agreed key:\n" << Botan::hex_encode(sA);
    return 0;
 }

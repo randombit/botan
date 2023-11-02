@@ -17,12 +17,12 @@ int main() {
    // print firmware version of the slot
    Botan::PKCS11::SlotInfo slot_info = slot.get_slot_info();
    std::cout << std::to_string(slot_info.firmwareVersion.major) << "."
-             << std::to_string(slot_info.firmwareVersion.minor) << std::endl;
+             << std::to_string(slot_info.firmwareVersion.minor) << '\n';
 
    // print firmware version of the token
    Botan::PKCS11::TokenInfo token_info = slot.get_token_info();
    std::cout << std::to_string(token_info.firmwareVersion.major) << "."
-             << std::to_string(token_info.firmwareVersion.minor) << std::endl;
+             << std::to_string(token_info.firmwareVersion.minor) << '\n';
 
    // retrieve all mechanisms supported by the token
    std::vector<Botan::PKCS11::MechanismType> mechanisms = slot.get_mechanism_list();
@@ -31,7 +31,7 @@ int main() {
    Botan::PKCS11::MechanismInfo mech_info = slot.get_mechanism_info(Botan::PKCS11::MechanismType::RsaPkcsOaep);
 
    // maximum RSA key length supported:
-   std::cout << mech_info.ulMaxKeySize << std::endl;
+   std::cout << mech_info.ulMaxKeySize << '\n';
 
    // initialize the token
    Botan::PKCS11::secure_string so_pin(8, '0');
