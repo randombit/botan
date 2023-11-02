@@ -6,6 +6,7 @@ Botan CI check installation script
 This script is used to validate the results of `make install`
 
 (C) 2020 Jack Lloyd, René Meusel, Hannes Rantzsch
+(C) 2023 René Meusel
 
 Botan is released under the Simplified BSD License (see license.txt)
 """
@@ -14,6 +15,7 @@ import os
 import sys
 import json
 import re
+import subprocess
 
 def verify_library(build_config):
     lib_dir = build_config['libdir']
@@ -75,6 +77,34 @@ def verify_includes(build_config):
 
     return True
 
+def verify_cmake_package(build_config):
+    if build_config['os'] not in ['windows', 'linux', 'macos']:
+        return True # skip (e.g. for mingw)
+
+    cmake_build_dir = os.path.join(build_config['abs_root_dir'], build_config['build_dir'], 'cmake_test')
+    cmake_test_dir = os.path.join(build_config['abs_root_dir'], "src", "scripts", "ci", "cmake_tests")
+
+    def cmake_preset():
+        if build_config['os'] == 'windows':
+            return 'windows_x86_64' if build_config['arch'] == 'x86_64' else 'windows_x86'
+        return 'unix'
+
+    def test_target():
+        return 'test' if build_config['os'] != 'windows' else 'RUN_TESTS'
+
+    try:
+        subprocess.run(["cmake", "--preset", cmake_preset(),
+                                 "-B", cmake_build_dir,
+                                 "-S", cmake_test_dir,
+                                 "-DCMAKE_PREFIX_PATH=%s" % build_config['prefix']], check=True)
+        subprocess.run(["cmake", "--build", cmake_build_dir, "--config", "Release"], check=True)
+        subprocess.run(["cmake", "--build", cmake_build_dir, "--config", "Release", "--target", test_target()], check=True)
+    except RuntimeError as e:
+        print("Using the CMake package failed: %s" % str(e))
+        return False
+
+    return True
+
 def main(args=None):
     if args is None:
         args = sys.argv
@@ -96,6 +126,9 @@ def main(args=None):
         return 1
 
     if not verify_library(build_config):
+        return 1
+
+    if not verify_cmake_package(build_config):
         return 1
 
     return 0
