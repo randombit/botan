@@ -49,7 +49,7 @@ class client {
 
       void handle_connect(const boost::system::error_code& error) {
          if(error) {
-            std::cout << "Connect failed: " << error.message() << "\n";
+            std::cout << "Connect failed: " << error.message() << '\n';
             return;
          }
          m_stream.async_handshake(Botan::TLS::Connection_Side::Client,
@@ -58,7 +58,7 @@ class client {
 
       void handle_handshake(const boost::system::error_code& error) {
          if(error) {
-            std::cout << "Handshake failed: " << error.message() << "\n";
+            std::cout << "Handshake failed: " << error.message() << '\n';
             return;
          }
          http::async_write(
@@ -67,7 +67,7 @@ class client {
 
       void handle_write(const boost::system::error_code& error, size_t) {
          if(error) {
-            std::cout << "Write failed: " << error.message() << "\n";
+            std::cout << "Write failed: " << error.message() << '\n';
             return;
          }
          http::async_read(
@@ -77,9 +77,9 @@ class client {
       void handle_read(const boost::system::error_code& error, size_t) {
          if(!error) {
             std::cout << "Reply: ";
-            std::cout << m_response.body() << "\n";
+            std::cout << m_response.body() << '\n';
          } else {
-            std::cout << "Read failed: " << error.message() << "\n";
+            std::cout << "Read failed: " << error.message() << '\n';
          }
       }
 

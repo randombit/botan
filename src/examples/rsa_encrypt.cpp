@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
    Botan::PK_Decryptor_EME dec(*kp, rng, "OAEP(SHA-256)");
    Botan::secure_vector<uint8_t> pt2 = dec.decrypt(ct);
 
-   std::cout << std::endl << "enc: " << Botan::hex_encode(ct) << std::endl << "dec: " << Botan::hex_encode(pt2);
+   std::cout << "\nenc: " << Botan::hex_encode(ct) << "\ndec: " << Botan::hex_encode(pt2);
 
    return 0;
 }

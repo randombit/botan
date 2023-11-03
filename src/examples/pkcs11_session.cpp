@@ -36,7 +36,7 @@ int main() {
 
    // get session info
    Botan::PKCS11::SessionInfo info = session.get_info();
-   std::cout << info.slotID << std::endl;
+   std::cout << info.slotID << '\n';
 
    // login
    Botan::PKCS11::secure_string pin = {'1', '2', '3', '4', '5', '6'};

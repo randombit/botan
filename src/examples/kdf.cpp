@@ -14,5 +14,5 @@ int main() {
    auto derived_key = kdf->derive_key(derived_key_len, input_secret, salt, label);
 
    // OKM = 0x3cb25f25faacd57a90434f64d0362f2a...
-   std::cout << Botan::hex_encode(derived_key) << "\n";
+   std::cout << Botan::hex_encode(derived_key) << '\n';
 }

@@ -78,7 +78,7 @@ int main() {
    const auto ciphertext = encrypt(as<Botan::secure_vector<uint8_t>>(plaintext), privkey->public_key(), rng);
    const auto new_plaintext = decrypt(ciphertext, *privkey, rng);
 
-   std::cout << as<std::string>(new_plaintext) << std::endl;
+   std::cout << as<std::string>(new_plaintext) << '\n';
 
    return 0;
 }

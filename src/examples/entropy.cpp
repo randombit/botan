@@ -108,5 +108,5 @@ int main() {
    es.add_source(std::make_unique<Timer_Entropy_Source>());
    es.add_source(std::make_unique<Hardware_RNG_Entropy_Source>());
    Botan::AutoSeeded_RNG rng(es);
-   std::cout << hex_encode(rng.random_vec(32)) << "\n";
+   std::cout << hex_encode(rng.random_vec(32)) << '\n';
 }

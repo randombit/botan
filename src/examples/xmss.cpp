@@ -29,10 +29,10 @@ int main() {
    // verify the signature for the previously generated message.
    verifier.update(msg.data(), msg.size());
    if(verifier.check_signature(sig.data(), sig.size())) {
-      std::cout << "Success." << std::endl;
+      std::cout << "Success.\n";
       return 0;
    } else {
-      std::cout << "Error." << std::endl;
+      std::cout << "Error.\n";
       return 1;
    }
 }

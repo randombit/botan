@@ -13,8 +13,7 @@ int main() {
    Botan::PKCS11::Info info = module.get_info();
 
    // print library version
-   std::cout << std::to_string(info.libraryVersion.major) << "." << std::to_string(info.libraryVersion.minor)
-             << std::endl;
+   std::cout << std::to_string(info.libraryVersion.major) << "." << std::to_string(info.libraryVersion.minor) << '\n';
 
    return 0;
 }

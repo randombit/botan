@@ -17,11 +17,11 @@ int main() {
    Botan::PK_Signer signer(key, rng, "SHA-256");
    signer.update(message);
    std::vector<uint8_t> signature = signer.signature(rng);
-   std::cout << "Signature:" << std::endl << Botan::hex_encode(signature);
+   std::cout << "Signature:\n" << Botan::hex_encode(signature);
 
    // now verify the signature
    Botan::PK_Verifier verifier(key, "SHA-256");
    verifier.update(message);
-   std::cout << std::endl << "is " << (verifier.check_signature(signature) ? "valid" : "invalid");
+   std::cout << "\nis " << (verifier.check_signature(signature) ? "valid" : "invalid");
    return 0;
 }

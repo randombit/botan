@@ -15,7 +15,7 @@ int main() {
 
    auto pwdhash = pwd_fam->tune(output_hash, pbkdf_runtime, max_pbkdf_mb);
 
-   std::cout << "Using params " << pwdhash->to_string() << "\n";
+   std::cout << "Using params " << pwdhash->to_string() << '\n';
 
    std::array<uint8_t, 32> salt;
    Botan::system_rng().randomize(salt);
@@ -25,7 +25,7 @@ int main() {
    std::array<uint8_t, output_hash> key;
    pwdhash->hash(key, password, salt);
 
-   std::cout << Botan::hex_encode(key) << "\n";
+   std::cout << Botan::hex_encode(key) << '\n';
 
    return 0;
 }
