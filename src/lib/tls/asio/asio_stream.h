@@ -959,6 +959,16 @@ class Stream {
       const boost::asio::mutable_buffer m_input_buffer;
 };
 
+// deduction guides for convenient construction from an existing stream T
+template <typename T>
+Stream(Server_Information, T) -> Stream<T>;
+template <typename T>
+Stream(std::shared_ptr<Context>, T) -> Stream<T>;
+template <typename T>
+Stream(std::shared_ptr<Context>, std::shared_ptr<StreamCallbacks>, T) -> Stream<T>;
+template <typename T>
+Stream(T, std::shared_ptr<Context>, std::shared_ptr<StreamCallbacks>) -> Stream<T>;
+
 }  // namespace Botan::TLS
 
 #endif
