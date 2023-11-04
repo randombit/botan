@@ -214,6 +214,22 @@ class Stream {
                       std::shared_ptr<StreamCallbacks> callbacks = std::make_shared<StreamCallbacks>()) :
             Stream(std::move(context), std::move(callbacks), std::forward<Arg>(arg)) {}
 
+   #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
+      /**
+       * @brief Conveniently construct a new Stream with default settings
+       *
+       * This is typically a good starting point for a basic TLS client. For
+       * much more control and configuration options, consider creating a custom
+       * Context object and pass it to the respective constructor.
+       *
+       * @param server_info  Basic information about the host to connect to (SNI)
+       * @param args  Arguments to be forwarded to the construction of the next layer.
+       */
+      template <typename... Args>
+      explicit Stream(Server_Information server_info, Args&&... args) :
+            Stream(std::make_shared<Context>(std::move(server_info)), std::forward<Args>(args)...) {}
+   #endif
+
       virtual ~Stream() = default;
 
       Stream(Stream&& other) = default;
@@ -945,6 +961,8 @@ class Stream {
 
 // deduction guides for convenient construction from an existing
 // underlying transport stream T
+template <typename T>
+Stream(Server_Information, T) -> Stream<T>;
 template <typename T>
 Stream(std::shared_ptr<Context>, std::shared_ptr<StreamCallbacks>, T) -> Stream<T>;
 template <typename T>
