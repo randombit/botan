@@ -120,10 +120,10 @@ build examples: link_cli %{example_bin} | %{library_targets}
 
 %{if build_bogo_shim}
 
-build bogo_shim: link_cli botan_bogo_shim | %{library_targets}
+build botan_bogo_shim: link_cli bogo_shim_object | %{library_targets}
 
 # BoGo shim
-build %{out_dir}/botan_bogo_shim: compile_exe %{bogo_shim_src}
+build %{out_dir}/bogo_shim_object: compile_exe %{bogo_shim_src}
 
 %{endif}
 
@@ -157,6 +157,8 @@ rule tidy
 build cli: phony %{cli_exe}
 
 build tests: phony %{test_exe}
+
+build bogo_shim: phony botan_bogo_shim
 
 build libs: phony %{library_targets} $
 %{if symlink_shared_lib}
