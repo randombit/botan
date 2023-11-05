@@ -57,7 +57,7 @@ class Stream;
  */
 class StreamCallbacks : public Callbacks {
    public:
-      StreamCallbacks() : m_shutdown_received(false) {}
+      StreamCallbacks() {}
 
       void tls_emit_data(std::span<const uint8_t> data) final {
          m_send_buffer.commit(boost::asio::buffer_copy(m_send_buffer.prepare(data.size()),
@@ -76,10 +76,17 @@ class StreamCallbacks : public Callbacks {
       }
 
       void tls_alert(TLS::Alert alert) final {
-         if(alert.type() == TLS::AlertType::CloseNotify) {
-            m_shutdown_received = true;
-            // Channel::process_alert will automatically write the corresponding close_notify response to the
-            // send_buffer and close the native_handle after this function returns.
+         if(alert.is_fatal() || alert.type() == TLS::AlertType::CloseNotify) {
+            // Channel::process_alert() will automatically handle fatal errors.
+            //
+            // For close_notify it writes the corresponding response to the
+            // send_buffer and closes the native_handle after this function
+            // returns.
+            //
+            // For other alerts it will shutdown the native_handle and
+            // Stream::process_encrypted_data() will hand out the received alert
+            // as an error code.
+            m_alert_from_peer = alert;
          }
       }
 
@@ -115,10 +122,14 @@ class StreamCallbacks : public Callbacks {
 
       const boost::beast::flat_buffer& receive_buffer() const { return m_receive_buffer; }
 
-      bool shutdown_received() const { return m_shutdown_received; }
+      bool shutdown_received() const {
+         return m_alert_from_peer && m_alert_from_peer->type() == AlertType::CloseNotify;
+      }
+
+      std::optional<Alert> alert_from_peer() const { return m_alert_from_peer; }
 
    private:
-      bool m_shutdown_received;
+      std::optional<Alert> m_alert_from_peer;
       boost::beast::flat_buffer m_receive_buffer;
       boost::beast::flat_buffer m_send_buffer;
 
@@ -341,7 +352,15 @@ class Stream {
 
             process_encrypted_data(read_buffer, ec);
 
-            send_pending_encrypted_data(ec);
+            // process_encrypted_data() might set an error code based on the
+            // data received from the peer but also generate data that must be
+            // sent to the peer (ie. an alert like 'handshake_failure'). In that
+            // case, we ignore the error code and send the data regardless.
+            if(has_data_to_send()) {
+               boost::system::error_code send_ec;
+               send_pending_encrypted_data(send_ec);
+               ec = (send_ec) ? send_ec : ec;
+            }
          }
       }
 
@@ -764,11 +783,25 @@ class Stream {
        * @param ec Set to indicate what error occurred, if any.
        */
       void process_encrypted_data(const boost::asio::const_buffer& read_buffer, boost::system::error_code& ec) {
+         BOTAN_ASSERT(!m_core->alert_from_peer(), "peer didn't send an alert before (no data allowed after that)");
+
+         // If the local TLS implementation generates an alert, we are notified
+         // with an exception that is caught in try_with_error_code().
          try_with_error_code(
             [&] {
                native_handle()->received_data({static_cast<const uint8_t*>(read_buffer.data()), read_buffer.size()});
             },
             ec);
+
+         if(!ec) {
+            // When the peer sends an alert, _no exception_ is called in the
+            // local TLS implementation but a callback (on m_core) is invoked to
+            // notify about the peer's alert.
+            const auto alert = m_core->alert_from_peer();
+            if(alert && alert->type() != AlertType::CloseNotify) {
+               ec = alert->type();
+            }
+         }
       }
 
       //! @brief Catch exceptions and set an error_code

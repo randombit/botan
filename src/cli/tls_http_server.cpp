@@ -226,6 +226,8 @@ net::awaitable<void> do_session(tcp_stream stream,
    auto callbacks = std::make_shared<TlsHttpCallbacks>();
    Botan::TLS::Stream<tcp_stream> tls_stream(std::move(stream), std::move(tls_ctx), callbacks);
 
+   std::exception_ptr protocol_exception;
+
    try {
       // Perform a TLS handshake with the peer
       co_await tls_stream.async_handshake(Botan::TLS::Connection_Side::Server);
@@ -253,14 +255,31 @@ net::awaitable<void> do_session(tcp_stream stream,
       }
    } catch(boost::system::system_error& se) {
       if(se.code() != http::error::end_of_stream) {
+         // Something went wrong during the communication, as good citizens we
+         // try to shutdown the connection gracefully, anyway. The protocol
+         // exception is kept for later re-throw.
+         protocol_exception = std::current_exception();
+      }
+   }
+
+   try {
+      // Shut down the connection gracefully. It gives the stream a chance to
+      // flush remaining send buffers and/or close the connection gracefully. If
+      // the communication above failed this may or may not be successful.
+      co_await tls_stream.async_shutdown();
+      tls_stream.next_layer().close();
+   } catch(const std::exception&) {
+      // if the protocol interaction above produced an exception the shutdown
+      // was "best effort" anyway and we swallow the secondary exception that
+      // happened during shutdown.
+      if(!protocol_exception) {
          throw;
       }
    }
 
-   // Shut down the connection gracefully
-   co_await tls_stream.async_shutdown();
-   beast::error_code ec;
-   tls_stream.next_layer().socket().shutdown(tcp::socket::shutdown_send, ec);
+   if(protocol_exception) {
+      std::rethrow_exception(protocol_exception);
+   }
 
    // At this point the connection is closed gracefully
    // we ignore the error because the client might have

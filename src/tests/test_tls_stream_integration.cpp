@@ -22,6 +22,7 @@
 
       #include <botan/asio_stream.h>
       #include <botan/auto_rng.h>
+      #include <botan/tls_messages.h>
       #include <botan/tls_session_manager_noop.h>
 
       #include <boost/asio.hpp>
@@ -57,24 +58,43 @@ class Timeout_Exception : public std::runtime_error {
       using std::runtime_error::runtime_error;
 };
 
-class Peer {
+class PeerCallbacks : public Botan::TLS::StreamCallbacks {
    public:
-      Peer(const std::shared_ptr<const Botan::TLS::Policy>& policy, net::io_context& ioc) :
+      void fail_on_handshake_message(const Botan::TLS::Handshake_Type msg_type, Botan::TLS::AlertType alert) {
+         m_handshake_alerts[msg_type] = alert;
+      }
+
+      void tls_inspect_handshake_msg(const Botan::TLS::Handshake_Message& msg) final {
+         if(m_handshake_alerts.contains(msg.type())) {
+            throw Botan::TLS::TLS_Exception(m_handshake_alerts[msg.type()], "Test was configured to throw");
+         }
+      }
+
+   private:
+      std::map<Botan::TLS::Handshake_Type, Botan::TLS::AlertType> m_handshake_alerts;
+};
+
+class Peer {
+   private:
+      Peer(const std::shared_ptr<const Botan::TLS::Policy>& policy,
+           net::io_context& ioc,
+           std::shared_ptr<Basic_Credentials_Manager> credentials_manager) :
             m_rng(std::make_shared<Botan::AutoSeeded_RNG>()),
-            m_credentials_manager(std::make_shared<Basic_Credentials_Manager>(true, "")),
+            m_credentials_manager(std::move(credentials_manager)),
             m_session_mgr(std::make_shared<Botan::TLS::Session_Manager_Noop>()),
+            m_callbacks(std::make_shared<PeerCallbacks>()),
             m_ctx(std::make_shared<Botan::TLS::Context>(m_credentials_manager, m_rng, m_session_mgr, policy)),
             m_timeout_timer(ioc) {}
+
+   public:
+      Peer(const std::shared_ptr<const Botan::TLS::Policy>& policy, net::io_context& ioc) :
+            Peer(policy, ioc, std::make_shared<Basic_Credentials_Manager>(true, "")) {}
 
       Peer(const std::shared_ptr<const Botan::TLS::Policy>& policy,
            net::io_context& ioc,
            const std::string& server_cert,
            const std::string& server_key) :
-            m_rng(std::make_shared<Botan::AutoSeeded_RNG>()),
-            m_credentials_manager(std::make_shared<Basic_Credentials_Manager>(server_cert, server_key)),
-            m_session_mgr(std::make_shared<Botan::TLS::Session_Manager_Noop>()),
-            m_ctx(std::make_shared<Botan::TLS::Context>(m_credentials_manager, m_rng, m_session_mgr, policy)),
-            m_timeout_timer(ioc) {}
+            Peer(policy, ioc, std::make_shared<Basic_Credentials_Manager>(server_cert, server_key)) {}
 
       Peer(const Peer& other) = delete;
       Peer(Peer&& other) = delete;
@@ -138,10 +158,14 @@ class Peer {
 
       std::shared_ptr<Botan::TLS::Context> ctx() { return m_ctx; }
 
+   protected:
+      std::shared_ptr<PeerCallbacks> callbacks() { return m_callbacks; }
+
    private:
       std::shared_ptr<Botan::AutoSeeded_RNG> m_rng;
       std::shared_ptr<Basic_Credentials_Manager> m_credentials_manager;
       std::shared_ptr<Botan::TLS::Session_Manager_Noop> m_session_mgr;
+      std::shared_ptr<PeerCallbacks> m_callbacks;
       std::shared_ptr<Botan::TLS::Context> m_ctx;
       std::unique_ptr<ssl_stream> m_stream;
       net::system_timer m_timeout_timer;
@@ -163,7 +187,7 @@ class Result_Wrapper {
 
       void expect_ec(const std::string& msg, const error_code& expected, const error_code& ec) {
          if(ec != expected) {
-            m_result.test_failure(msg, "Unexpected error code: " + ec.message());
+            m_result.test_failure(msg, "Unexpected error code: " + ec.message() + " expected: " + expected.message());
          } else {
             m_result.test_success(msg);
          }
@@ -219,6 +243,11 @@ class Server : public Peer,
 
       void move_before_accept() { m_move_before_accept = true; }
 
+      void fail_on_handshake_message(const Botan::TLS::Handshake_Type msg_type, Botan::TLS::AlertType alert) {
+         callbacks()->fail_on_handshake_message(msg_type, alert);
+         m_expected_handshake_failure = alert;
+      }
+
       Result_Wrapper result() { return m_result; }
 
    private:
@@ -231,10 +260,10 @@ class Server : public Peer,
 
          if(m_move_before_accept) {
             // regression test for #2635
-            ssl_stream s(std::move(socket), ctx());
+            ssl_stream s(std::move(socket), ctx(), callbacks());
             create_stream(std::make_unique<ssl_stream>(std::move(s)));
          } else {
-            create_stream(std::make_unique<ssl_stream>(std::move(socket), ctx()));
+            create_stream(std::make_unique<ssl_stream>(std::move(socket), ctx(), callbacks()));
          }
 
          reset_timeout("handshake");
@@ -250,8 +279,13 @@ class Server : public Peer,
       }
 
       void handle_handshake(const error_code& ec) {
-         m_result.expect_success("handshake", ec);
-         handle_write(error_code{});
+         if(!m_expected_handshake_failure) {
+            m_result.expect_success("handshake", ec);
+            handle_write(error_code{});
+         } else {
+            m_result.expect_ec("handshake", m_expected_handshake_failure.value(), ec);
+            cancel_timeout();
+         }
       }
 
       void handle_write(const error_code& ec) {
@@ -307,6 +341,7 @@ class Server : public Peer,
    private:
       tcp::acceptor m_acceptor;
       Result_Wrapper m_result;
+      std::optional<Botan::TLS::AlertType> m_expected_handshake_failure;
       bool m_short_read_expected;
 
       // regression test for #2635
@@ -324,7 +359,7 @@ class Client : public Peer {
    public:
       Client(const std::shared_ptr<const Botan::TLS::Policy>& policy, net::io_context& ioc) : Peer(policy, ioc) {
          ctx()->set_verify_callback(accept_all);
-         create_stream(std::make_unique<ssl_stream>(ioc, ctx()));
+         create_stream(std::make_unique<ssl_stream>(ioc, ctx(), callbacks()));
       }
 
       void close_socket() {
@@ -751,6 +786,68 @@ class Test_Conversation_With_Move : public Test_Conversation {
       }
 };
 
+/* In this test we provoke a handshake failure early on in the server and expect
+ * the stream to handle it by providing the configured error code to the client.
+ *
+ * This is a regression test for #3778: Alerts during handshakes resulted in an
+ * immediate closure of the socket without transmitting the Alert message first.
+ */
+class Test_Handshake_Failure : public TestBase,
+                               public net::coroutine,
+                               public std::enable_shared_from_this<Test_Handshake_Failure> {
+   public:
+      Test_Handshake_Failure(net::io_context& ioc,
+                             const std::string& config_name,
+                             const std::shared_ptr<const Botan::TLS::Policy>& client_policy,
+                             const std::shared_ptr<const Botan::TLS::Policy>& server_policy) :
+            TestBase(ioc, client_policy, server_policy, "Test Handshake Failure", config_name) {
+         server()->fail_on_handshake_message(Botan::TLS::Handshake_Type::ClientHello,
+                                             Botan::TLS::Alert::HandshakeFailure);
+      }
+
+      void run(const error_code& ec) {
+         static auto test_case = &Test_Handshake_Failure::run;
+         reenter(*this) {
+            client()->reset_timeout("connect");
+            yield net::async_connect(
+               client()->stream().lowest_layer(), k_endpoints, std::bind(test_case, shared_from_this(), _1));
+            result().expect_success("connect", ec);
+
+            client()->reset_timeout("handshake");
+            yield client()->stream().async_handshake(Botan::TLS::Connection_Side::Client,
+                                                     std::bind(test_case, shared_from_this(), _1));
+            result().expect_ec("handshake", Botan::TLS::Alert::HandshakeFailure, ec);
+
+            client()->close_socket();
+            teardown();
+         }
+      }
+};
+
+class Test_Handshake_Failure_Sync : public Synchronous_Test {
+   public:
+      Test_Handshake_Failure_Sync(net::io_context& ioc,
+                                  const std::string& config_name,
+                                  const std::shared_ptr<const Botan::TLS::Policy>& client_policy,
+                                  const std::shared_ptr<const Botan::TLS::Policy>& server_policy) :
+            Synchronous_Test(ioc, client_policy, server_policy, "Test Handshake Failure Sync", config_name) {
+         server()->fail_on_handshake_message(Botan::TLS::Handshake_Type::ClientHello,
+                                             Botan::TLS::Alert::HandshakeFailure);
+      }
+
+      void run_synchronous_client() override {
+         error_code ec;
+         net::connect(client()->stream().lowest_layer(), k_endpoints, ec);
+         result().expect_success("connect", ec);
+
+         client()->stream().handshake(Botan::TLS::Connection_Side::Client, ec);
+         result().expect_ec("handshake", Botan::TLS ::Alert::HandshakeFailure, ec);
+
+         client()->close_socket();
+         teardown();
+      }
+};
+
 class SystemConfiguration {
    public:
       SystemConfiguration(std::string n, const std::string& cp, const std::string& sp) :
@@ -820,10 +917,12 @@ class Tls_Stream_Integration_Tests final : public Test {
             config.run<Test_Eager_Close>(results);
             config.run<Test_Close_Without_Shutdown>(results);
             config.run<Test_No_Shutdown_Response>(results);
+            config.run<Test_Handshake_Failure>(results);
             config.run<Test_Conversation_Sync>(results);
             config.run<Test_Eager_Close_Sync>(results);
             config.run<Test_Close_Without_Shutdown_Sync>(results);
             config.run<Test_No_Shutdown_Response_Sync>(results);
+            config.run<Test_Handshake_Failure_Sync>(results);
             config.run<Test_Conversation_With_Move>(results);
          }
 
