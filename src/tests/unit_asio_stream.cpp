@@ -38,7 +38,10 @@ static_assert(sizeof(TEST_DATA) == TEST_DATA_SIZE, "size of TEST_DATA must match
 class MockChannel {
    public:
       MockChannel(std::shared_ptr<Botan::TLS::Callbacks> core) :
-            m_callbacks(std::move(core)), m_bytes_till_complete_record(TEST_DATA_SIZE), m_active(false) {}
+            m_callbacks(std::move(core)),
+            m_bytes_till_complete_record(TEST_DATA_SIZE),
+            m_active(false),
+            m_close_notify_received(false) {}
 
    public:
       std::size_t received_data(std::span<const uint8_t> data) {
@@ -57,10 +60,22 @@ class MockChannel {
 
       bool is_handshake_complete() const { return m_active; }
 
+      bool is_closed_for_reading() const { return m_close_notify_received; }
+
+      bool is_closed_for_writing() const { return m_close_notify_received; }
+
+      void received_close_notify() {
+         m_close_notify_received = true;
+         m_callbacks->tls_alert(Botan::TLS::AlertType::CloseNotify);
+         const auto close_notify_record = Botan::hex_decode("15030300020100");
+         send(close_notify_record);
+      }
+
    private:
       std::shared_ptr<Botan::TLS::Callbacks> m_callbacks;
       std::size_t m_bytes_till_complete_record;  // number of bytes still to read before tls record is completed
       bool m_active;
+      bool m_close_notify_received;
 };
 
 class ThrowingMockChannel : public MockChannel {
@@ -72,6 +87,16 @@ class ThrowingMockChannel : public MockChannel {
       std::size_t received_data(std::span<const uint8_t>) { throw Botan::TLS::Unexpected_Message("test_error"); }
 
       void send(std::span<const uint8_t>) { throw Botan::TLS::Unexpected_Message("test_error"); }
+};
+
+class CancellingMockChannel : public MockChannel {
+   public:
+      CancellingMockChannel(std::shared_ptr<Botan::TLS::Callbacks> core) : MockChannel(std::move(core)) {}
+
+      std::size_t received_data(std::span<const uint8_t>) {
+         received_close_notify();
+         return 0;
+      }
 };
 
 // Unfortunately, boost::beast::test::stream keeps lowest_layer_type private and
@@ -97,6 +122,14 @@ class ThrowingAsioStream : public Botan::TLS::Stream<TestStream, ThrowingMockCha
       template <typename... Args>
       ThrowingAsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) : Stream(context, args...) {
          m_native_handle = std::make_unique<ThrowingMockChannel>(m_core);
+      }
+};
+
+class CancellingAsioStream : public Botan::TLS::Stream<TestStream, CancellingMockChannel> {
+   public:
+      template <typename... Args>
+      CancellingAsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) : Stream(context, args...) {
+         m_native_handle = std::make_unique<CancellingMockChannel>(m_core);
       }
 };
 
@@ -154,6 +187,27 @@ class Asio_Stream_Tests final : public Test {
          Test::Result result("sync TLS handshake error");
          result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
          result.confirm("propagates error code", ec == net::error::no_recovery);
+         results.push_back(result);
+      }
+
+      void test_sync_handshake_cancellation(std::vector<Test::Result>& results) {
+         net::io_context ioc;
+         TestStream remote{ioc};
+
+         auto ctx = get_context();
+         CancellingAsioStream ssl(ctx, ioc, test_data());
+         ssl.next_layer().connect(remote);
+
+         // mimic handshake initialization
+         ssl.native_handle()->send(TEST_DATA);
+
+         error_code ec;
+         ssl.handshake(Botan::TLS::Connection_Side::Client, ec);
+
+         Test::Result result("sync TLS handshake cancellation");
+         result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
+         result.test_eq("does not finish handshake", ssl.native_handle()->is_handshake_complete(), false);
+         result.confirm("cancelled handshake means EOF", ec == net::error::eof);
          results.push_back(result);
       }
 
@@ -218,6 +272,31 @@ class Asio_Stream_Tests final : public Test {
          auto handler = [&](const error_code& ec) {
             result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
             result.confirm("propagates error code", ec == net::error::no_recovery);
+         };
+
+         ssl.async_handshake(Botan::TLS::Connection_Side::Client, handler);
+
+         ioc.run();
+         results.push_back(result);
+      }
+
+      void test_async_handshake_cancellation(std::vector<Test::Result>& results) {
+         net::io_context ioc;
+         TestStream remote{ioc};
+
+         auto ctx = get_context();
+         CancellingAsioStream ssl(ctx, ioc, test_data());
+         ssl.next_layer().connect(remote);
+
+         // mimic handshake initialization
+         ssl.native_handle()->send(TEST_DATA);
+
+         Test::Result result("async TLS handshake cancellation");
+
+         auto handler = [&](const error_code& ec) {
+            result.test_eq("does not activate channel", ssl.native_handle()->is_active(), false);
+            result.test_eq("does not finish handshake", ssl.native_handle()->is_handshake_complete(), false);
+            result.confirm("cancelled handshake means EOF", ec == net::error::eof);
          };
 
          ssl.async_handshake(Botan::TLS::Connection_Side::Client, handler);
@@ -700,10 +779,12 @@ class Asio_Stream_Tests final : public Test {
 
          test_sync_handshake(results);
          test_sync_handshake_error(results);
+         test_sync_handshake_cancellation(results);
          test_sync_handshake_throw(results);
 
          test_async_handshake(results);
          test_async_handshake_error(results);
+         test_async_handshake_cancellation(results);
          test_async_handshake_throw(results);
 
          test_sync_read_some_success(results);
