@@ -160,12 +160,24 @@ known side channels.
 
 Available if ``BOTAN_HAS_AES`` is defined.
 
+Algorithm specification names:
+
+- ``AES-128``
+- ``AES-192``
+- ``AES-256``
+
 ARIA
 ~~~~~~
 
 South Korean cipher used in industry there. No reason to use it otherwise.
 
 Available if ``BOTAN_HAS_ARIA`` is defined.
+
+Algorithm specification names:
+
+- ``ARIA-128``
+- ``ARIA-192``
+- ``ARIA-256``
 
 Blowfish
 ~~~~~~~~~
@@ -175,12 +187,7 @@ bcrypt) for password hashing.
 
 Available if ``BOTAN_HAS_BLOWFISH`` is defined.
 
-CAST-128
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A 64-bit cipher, commonly used in OpenPGP.
-
-Available if ``BOTAN_HAS_CAST128`` is defined.
+Algorithm specification name: ``Blowfish``
 
 Camellia
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -192,6 +199,12 @@ Rarely used outside of Japan.
 
 Available if ``BOTAN_HAS_CAMELLIA`` is defined.
 
+Algorithm specification names:
+
+- ``Camellia-128``
+- ``Camellia-192``
+- ``Camellia-256``
+
 Cascade
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -200,6 +213,20 @@ with independent keys. Useful if you're very paranoid. In practice any single
 good cipher (such as Serpent, SHACAL2, or AES-256) is more than sufficient.
 
 Available if ``BOTAN_HAS_CASCADE`` is defined.
+
+Algorithm specification name:
+``Cascade(<BlockCipher 1>,<BlockCipher 2>)``, e.g. ``Cascade(Serpent,AES-256)``
+
+CAST-128
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A 64-bit cipher, commonly used in OpenPGP.
+
+Available if ``BOTAN_HAS_CAST128`` is defined.
+
+Algorithm specification name:
+
+- ``CAST-128`` (reported name) / ``CAST5``
 
 DES and 3DES
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -210,6 +237,11 @@ and is still thought to be secure, modulo the limitation of a 64-bit block.
 All are somewhat common in some industries such as finance. Avoid in new code.
 
 Available if ``BOTAN_HAS_DES`` is defined.
+
+Algorithm specification names:
+
+- ``DES``
+- ``TripleDES`` (reported name) / ``3DES`` / ``DES-EDE``
 
 GOST-28147-89
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -222,6 +254,11 @@ Available if ``BOTAN_HAS_GOST_28147_89`` is defined.
 .. warning::
    Support for this cipher is deprecated and will be removed in a future major release.
 
+Algorithm specification names:
+
+- ``GOST-28147-89`` / ``GOST-28147-89(R3411_94_TestParam)`` (reported name)
+- ``GOST-28147-89(R3411_CryptoPro)``
+
 IDEA
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -229,6 +266,8 @@ An older but still unbroken 64-bit cipher with a 128-bit key. Somewhat common
 due to its use in PGP. Avoid in new designs.
 
 Available if ``BOTAN_HAS_IDEA`` is defined.
+
+Algorithm specification name: ``IDEA``
 
 Kuznyechik
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -246,6 +285,7 @@ Newer Russian national cipher, also known as GOST R 34.12-2015 or "Grasshopper".
 
 Available if ``BOTAN_HAS_KUZNYECHIK`` is defined.
 
+Algorithm specification name: ``Kuznyechik``
 
 Lion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -256,6 +296,12 @@ protocols where being able to encrypt large or arbitrary length blocks is
 necessary.
 
 Available if ``BOTAN_HAS_LION`` is defined.
+
+Algorithm specification name:
+``Lion(<HashFunction>,<StreamCipher>,<optional block size>)``
+
+- Block size defaults to 1024.
+- Examples: ``Lion(SHA-1,RC4,64)``
 
 Noekeon
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -268,12 +314,26 @@ Available if ``BOTAN_HAS_NOEKEON`` is defined.
 .. warning::
    Noekeon support is deprecated and will be removed in a future major release.
 
+Algorithm specification name: ``Noekeon``
+
 SEED
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A older South Korean cipher, widely used in industry there. No reason to choose it otherwise.
 
 Available if ``BOTAN_HAS_SEED`` is defined.
+
+Algorithm specification name: ``SEED``
+
+Serpent
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+An AES contender. Widely considered the most conservative design. Fairly slow
+unless SIMD instructions are available.
+
+Available if ``BOTAN_HAS_SERPENT`` is defined.
+
+Algorithm specification name: ``Serpent``
 
 SHACAL2
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -284,6 +344,8 @@ Standardized by NESSIE but otherwise obscure.
 
 Available if ``BOTAN_HAS_SHACAL2`` is defined.
 
+Algorithm specification name: ``SHACAL2``
+
 SM4
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -293,13 +355,7 @@ requirements.
 
 Available if ``BOTAN_HAS_SM4`` is defined.
 
-Serpent
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-An AES contender. Widely considered the most conservative design. Fairly slow
-unless SIMD instructions are available.
-
-Available if ``BOTAN_HAS_SERPENT`` is defined.
+Algorithm specification name: ``SM4``
 
 Threefish-512
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -309,6 +365,8 @@ Very fast on 64-bit processors.
 
 Available if ``BOTAN_HAS_THREEFISH_512`` is defined.
 
+Algorithm specification name: ``Threefish-512``
+
 Twofish
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -316,3 +374,5 @@ A 128-bit block cipher that was one of the AES finalists. Has a somewhat complic
 setup and a "kitchen sink" design.
 
 Available if ``BOTAN_HAS_TWOFISH`` is defined.
+
+Algorithm specification name: ``Twofish``

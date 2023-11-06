@@ -97,12 +97,15 @@ compatibility with some other system.
 
 Available if ``BOTAN_HAS_HKDF`` is defined.
 
-KDF2
-~~~~~
+Algorithm specification names:
 
-KDF2 comes from IEEE 1363. It uses a hash function.
+- ``HKDF(<MessageAuthenticationCode|HashFunction>)``, e.g. ``HKDF(HMAC(SHA-256))``
+- ``HKDF-Extract(<MessageAuthenticationCode|HashFunction>)``
+- ``HKDF-Expand(<MessageAuthenticationCode|HashFunction>)``
 
-Available if ``BOTAN_HAS_KDF2`` is defined.
+If a ``HashFunction`` is provided as an argument,
+it will create ``HMAC(HashFunction)`` as the ``MessageAuthenticationCode``.
+I.e. ``HKDF(SHA-256)`` will result in ``HKDF(HMAC(SHA-256))``.
 
 KDF1-18033
 ~~~~~~~~~~~~
@@ -111,6 +114,9 @@ KDF1 from ISO 18033-2. Very similar to (but incompatible with) KDF2.
 
 Available if ``BOTAN_HAS_KDF1_18033`` is defined.
 
+Algorithm specification name:
+``KDF1-18033(<HashFunction>)``, e.g. ``KDF1-18033(SHA-512)``
+
 KDF1
 ~~~~~~
 
@@ -118,6 +124,19 @@ KDF1 from IEEE 1363. It can only produce an output at most the length
 of the hash function used.
 
 Available if ``BOTAN_HAS_KDF1`` is defined.
+
+Algorithm specification name:
+``KDF1(<HashFunction>)``, e.g. ``KDF1(SHA-512)``
+
+KDF2
+~~~~~
+
+KDF2 comes from IEEE 1363. It uses a hash function.
+
+Available if ``BOTAN_HAS_KDF2`` is defined.
+
+Algorithm specification name:
+``KDF2(<HashFunction>)``, e.g. ``KDF2(SHA-512)``
 
 X9.42 PRF
 ~~~~~~~~~~
@@ -130,13 +149,9 @@ Available if ``BOTAN_HAS_X942_PRF`` is defined.
 .. warning::
    X9.42 PRF is deprecated and will be removed in a future major release.
 
-SP800-108
-~~~~~~~~~~
-
-KDFs from NIST SP 800-108. Variants include "SP800-108-Counter",
-"SP800-108-Feedback" and "SP800-108-Pipeline".
-
-Available if ``BOTAN_HAS_SP800_108`` is defined.
+Algorithm specification name:
+``X9.42-PRF(<OID>)``,
+e.g. ``X9.42-PRF(KeyWrap.TripleDES)``, ``X9.42-PRF(1.2.840.113549.1.9.16.3.7)``
 
 SP800-56A
 ~~~~~~~~~~
@@ -145,9 +160,56 @@ KDF from NIST SP 800-56A.
 
 Available if ``BOTAN_HAS_SP800_56A`` is defined.
 
+Algorithm specification names:
+
+- ``SP800-56A(<HashFunction>)``, e.g. ``SP800-56A(SHA-256)``
+- ``SP800-56A(HMAC(<HashFunction>))``, e.g. ``SP800-56A(HMAC(SHA-256))``
+
 SP800-56C
 ~~~~~~~~~~
 
 KDF from NIST SP 800-56C.
 
 Available if ``BOTAN_HAS_SP800_56C`` is defined.
+
+Algorithm specification name:
+``SP800-56C(<MessageAuthenticationCode|HashFunction>)``,
+e.g. ``SP800-56C(HMAC(SHA-256))``
+
+If a ``HashFunction`` is provided as an argument,
+it will create ``HMAC(HashFunction)`` as the ``MessageAuthenticationCode``.
+I.e. ``SP800-56C(SHA-256)`` will result in ``SP800-56C(HMAC(SHA-256))``.
+
+SP800-108
+~~~~~~~~~~
+
+KDFs from NIST SP 800-108. Variants include "SP800-108-Counter",
+"SP800-108-Feedback" and "SP800-108-Pipeline".
+
+Available if ``BOTAN_HAS_SP800_108`` is defined.
+
+Algorithm specification names:
+
+- ``SP800-108-Counter(<MessageAuthenticationCode|HashFunction>)``,
+  e.g. ``SP800-108-Counter(HMAC(SHA-256))``
+- ``SP800-108-Feedback(<MessageAuthenticationCode|HashFunction>)``
+- ``SP800-108-Pipeline(<MessageAuthenticationCode|HashFunction>)``
+
+If a ``HashFunction`` is provided as an argument,
+it will create ``HMAC(HashFunction)`` as the ``MessageAuthenticationCode``.
+I.e. ``SP800-108-Counter(SHA-256)`` will result in ``SP800-108-Counter(HMAC(SHA-256))``.
+
+TLS 1.2 PRF
+~~~~~~~~~~~
+
+Implementation of the Pseudo-Random Function as used in TLS 1.2.
+
+Available if ``BOTAN_HAS_TLS_V12_PRF`` is defined.
+
+Algorithm specification name:
+``TLS-12-PRF(<MessageAuthenticationCode|HashFunction>)``,
+e.g. ``TLS-12-PRF(HMAC(SHA-256))``
+
+If a ``HashFunction`` is provided as an argument,
+it will create ``HMAC(HashFunction)`` as the ``MessageAuthenticationCode``.
+I.e. ``TLS-12-PRF(SHA-256)`` will result in ``TLS-12-PRF(HMAC(SHA-256))``.

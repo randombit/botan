@@ -162,6 +162,8 @@ ANSI X9.23
   The last byte in the padded block defines the padding length, the remaining padding is filled with 0x00.
 OneAndZeros (ISO/IEC 7816-4)
   The first padding byte is set to 0x80, the remaining padding bytes are set to 0x00.
+ESP (RFC 4303)
+  The first padding byte is set to 0x01, the next ones to 0x02, 0x03, ... (monotonically increasing sequence).
 
 Ciphertext stealing (CTS) is also implemented. This scheme allows the
 ciphertext to have the same length as the plaintext, however using CTS
@@ -174,6 +176,21 @@ also less commonly implemented.
    the plaintext of arbitrary messages. Always pair CBC with a MAC such
    as HMAC (or, preferably, use an AEAD such as GCM).
 
+Algorithm specification name:
+``<BlockCipher>/CBC/<optional padding scheme>`` (reported name) /
+``CBC(<BlockCipher>,<optional padding scheme>)``
+
+- Available padding schemes:
+
+  - ``NoPadding``
+  - ``PKCS7`` (default)
+  - ``OneAndZeros``
+  - ``X9.23``
+  - ``ESP``
+  - ``CTS``
+
+- Examples: ``AES-128/CBC/PKCS7``, ``AES-256/CBC``
+
 CFB
 ~~~~~~~~~~~~
 
@@ -182,6 +199,13 @@ Available if ``BOTAN_HAS_MODE_CFB`` is defined.
 CFB uses a block cipher to create a self-synchronizing stream cipher. It is used
 for example in the OpenPGP protocol. There is no reason to prefer it, as it has
 worse performance characteristics than modes such as CTR or CBC.
+
+Algorithm specification name:
+``<BlockCipher>/CFB(<optional feedback bits>)`` (reported name) /
+``CFB(<BlockCipher>,<optional feedback bits>)``
+
+- Feedback bits defaults to the size of the underlying block cipher.
+- Examples: ``AES-192/CFB``, ``AES-128/CFB(8)``
 
 XTS
 ~~~~~~~~~
@@ -192,6 +216,10 @@ XTS is a mode specialized for encrypting disk or database storage
 where ciphertext expansion is not possible. XTS requires all inputs be
 at least one full block (16 bytes for AES), however for any acceptable
 input length, there is no ciphertext expansion.
+
+Algorithm specification name:
+``<BlockCipher>/XTS`` (reported name) / ``XTS(<BlockCipher>)``,
+e.g. ``AES-256/XTS``
 
 .. _aead:
 
@@ -308,6 +336,22 @@ Both ChaCha20Poly1305 and AES with GCM are widely implemented. SIV is somewhat
 more obscure (and is slower than either GCM or ChaCha20Poly1305), but has
 excellent security properties.
 
+CCM
+~~~~~
+
+Available if ``BOTAN_HAS_AEAD_CCM`` is defined.
+
+A composition of CTR mode and CBC-MAC. Requires a 128-bit block cipher. This is
+a NIST standard mode, but that is about all to recommend it. Prefer EAX.
+
+Algorithm specification name:
+``<BlockCipher>/CCM(<optional tag size>,<optional L>)`` (reported name) /
+``CCM(<BlockCipher>,<optional tag size>,<optional L>)``
+
+- Tag size defaults to 16.
+- L defaults to 3.
+- Examples: ``AES-128/CCM``, ``AES-128/CCM(8)``, ``AES-128/CCM(8,2)``
+
 ChaCha20Poly1305
 ~~~~~~~~~~~~~~~~~~
 
@@ -331,6 +375,24 @@ If you are encrypting many messages under a single key and cannot maintain a cou
 the nonce, prefer XChaCha20Poly1305 since a 192 bit nonce is large enough that randomly
 chosen nonces are extremely unlikely to repeat.
 
+Algorithm specification name: ``ChaCha20Poly1305``
+
+EAX
+~~~~~
+
+Available if ``BOTAN_HAS_AEAD_EAX`` is defined.
+
+A secure composition of CTR mode and CMAC. Supports 128-bit, 256-bit and 512-bit
+block ciphers.
+
+Algorithm specification name:
+``<BlockCipher>/EAX(<optional tag size>)`` /
+``EAX(<BlockCipher>,<optional tag size>)``
+
+- Tag size defaults to 16.
+- Reports name as ``<BlockCipher>/EAX``, i.e. without the tag size.
+- Examples: e.g. ``AES-128/EAX``, ``AES-128/EAX(8)``
+
 GCM
 ~~~~~
 
@@ -338,6 +400,13 @@ Available if ``BOTAN_HAS_AEAD_GCM`` is defined.
 
 NIST standard, commonly used. Requires a 128-bit block cipher. Fairly slow,
 unless hardware support for carryless multiplies is available.
+
+Algorithm specification name:
+``<BlockCipher>/GCM(<optional tag size>)`` (reported name) /
+``GCM(<BlockCipher>,<optional tag size>)``
+
+- Tag size defaults to 16.
+- Examples: e.g. ``AES-128/GCM``, ``AES-128/GCM(12)``
 
 OCB
 ~~~~~
@@ -349,13 +418,13 @@ This mode is very fast and easily secured against side channels. Adoption has
 been poor because until 2021 it was patented in the United States. The patent
 was allowed to lapse in early 2021.
 
-EAX
-~~~~~
+Algorithm specification name:
+``<BlockCipher>/OCB(<optional tag size>)`` /
+``OCB(<BlockCipher>,<optional tag size>)``
 
-Available if ``BOTAN_HAS_AEAD_EAX`` is defined.
-
-A secure composition of CTR mode and CMAC. Supports 128-bit, 256-bit and 512-bit
-block ciphers.
+- Tag size defaults to 16.
+- Reports name as ``<BlockCipher>/OCB``, i.e. without the tag size.
+- Examples: e.g. ``AES-128/OCB``, ``AES-128/OCB(12)``
 
 SIV
 ~~~~~~
@@ -368,10 +437,6 @@ same nonce is used to encrypt the same message multiple times, an attacker can
 detect the fact that the message was duplicated (this is simply because if both
 the nonce and the message are reused, SIV will output identical ciphertexts).
 
-CCM
-~~~~~
-
-Available if ``BOTAN_HAS_AEAD_CCM`` is defined.
-
-A composition of CTR mode and CBC-MAC. Requires a 128-bit block cipher. This is
-a NIST standard mode, but that is about all to recommend it. Prefer EAX.
+Algorithm specification name:
+``<BlockCipher>/SIV`` (reported name) / ``SIV(<BlockCipher>)``,
+e.g. ``AES-128/SIV``
