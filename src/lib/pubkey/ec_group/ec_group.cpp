@@ -594,7 +594,11 @@ EC_Point EC_Group::blinded_var_point_multiply(const EC_Point& point,
                                               RandomNumberGenerator& rng,
                                               std::vector<BigInt>& ws) const {
    EC_Point_Var_Point_Precompute mul(point, rng, ws);
-   return mul.mul(k, rng, get_order(), ws);
+   // We pass order*cofactor here to "correctly" handle the case where the
+   // point is on the curve but not in the prime order subgroup. This only
+   // matters for groups with cofactor > 1
+   // See https://github.com/randombit/botan/issues/3800
+   return mul.mul(k, rng, get_order() * get_cofactor(), ws);
 }
 
 EC_Point EC_Group::zero_point() const {
