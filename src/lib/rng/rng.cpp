@@ -60,4 +60,12 @@ void RandomNumberGenerator::reseed_from_rng(RandomNumberGenerator& rng, size_t p
    }
 }
 
+void Null_RNG::fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) {
+   // throw if caller tries to obtain random bytes
+   if(!output.empty()) {
+      abort();
+      throw PRNG_Unseeded("Null_RNG called");
+   }
+}
+
 }  // namespace Botan

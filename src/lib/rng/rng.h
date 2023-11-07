@@ -282,12 +282,7 @@ class BOTAN_PUBLIC_API(2, 0) Null_RNG final : public RandomNumberGenerator {
       std::string name() const override { return "Null_RNG"; }
 
    private:
-      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) override {
-         // throw if caller tries to obtain random bytes
-         if(!output.empty()) {
-            throw PRNG_Unseeded("Null_RNG called");
-         }
-      }
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) override;
 };
 
 }  // namespace Botan
