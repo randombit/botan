@@ -131,6 +131,15 @@ bytes, allowing to encrypt 2\ :sup:`32` blocks of data) for example using
 (The ``-BE`` suffix refers to big-endian convention for the counter.
 Little-endian counter mode is rarely used and not currently implemented.)
 
+Algorithm specification name:
+``CTR-BE(<BlockCipher>,<optional counter size>)`` (reported name) /
+``CTR(<BlockCipher>,<optional counter size>)``
+
+- Counter size (in bytes) defaults to the block size of the underlying cipher
+- If the counter size is the same as the underlying cipher,
+  the name will be reported as ``CTR-BE(<BlockCipher>)``.
+- Examples: ``CTR-BE(AES-128)``, ``CTR-BE(AES-128,8)``
+
 OFB
 ~~~~~
 
@@ -138,6 +147,9 @@ Another stream cipher based on a block cipher. Unlike CTR mode, it does not
 allow parallel execution or seeking within the output stream. Prefer CTR.
 
 Available if ``BOTAN_HAS_OFB`` is defined.
+
+Algorithm specification name:
+``OFB(<BlockCipher>)``, e.g. ``OFB(AES-256)``
 
 ChaCha
 ~~~~~~~~
@@ -152,6 +164,14 @@ known as XChaCha.
 
 Available if ``BOTAN_HAS_CHACHA`` is defined.
 
+Algorithm specification names:
+
+- ``ChaCha20``, alias for ``ChaCha(20)``
+- ``ChaCha(<optional rounds>)``
+
+  - Optional rounds defaults to 20
+  - Examples: ``ChaCha(20)``, ``ChaCha(12)``
+
 Salsa20
 ~~~~~~~~~
 
@@ -162,6 +182,8 @@ Salsa supports an optional IV (which defaults to all zeros). It can be of length
 64 or 192 bits. Using Salsa with a 192 bit nonce is also known as XSalsa.
 
 Available if ``BOTAN_HAS_SALSA20`` is defined.
+
+Algorithm specification name: ``Salsa20``
 
 SHAKE-128
 ~~~~~~~~~~~~
@@ -179,6 +201,11 @@ Available if ``BOTAN_HAS_SHAKE_CIPHER`` is defined.
   SHAKE support (as a stream cipher) is deprecated and will be removed
   in a future major release.
 
+Algorithm specification names:
+
+- ``SHAKE-128`` (reported name) / ``SHAKE-128-XOF``
+- ``SHAKE-256`` (reported name) / ``SHAKE-256-XOF``
+
 RC4
 ~~~~
 
@@ -192,3 +219,13 @@ algorithms like ChaCha20, it is also quite slow.
    required for compatibility with existing systems.
 
 Available if ``BOTAN_HAS_RC4`` is defined.
+
+Algorithm specification names:
+
+- ``RC4`` (reported name) / ``ARC4``
+- ``MARK-4``
+- ``RC4(SKIP)`` (reported name) / ``ARC4(SKIP)``
+
+  - ``RC4(0)`` is an alias for ``RC4``
+  - ``RC4(256)`` is an alias for ``MARK-4``
+  - Examples: ``RC4(3)``

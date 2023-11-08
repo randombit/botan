@@ -167,6 +167,14 @@ function to use. (If in doubt use SHA-256 or SHA-512). It also requires choosing
 an iteration count, which makes brute force attacks more expensive. Use *at
 least* 50000 and preferably much more. Using 250,000 would not be unreasonable.
 
+Algorithm specification name:
+``PBKDF2(<MessageAuthenticationCode|HashFunction>)``,
+e.g. ``PBKDF2(HMAC(SHA-256))``
+
+If a ``HashFunction`` is provided as an argument,
+it will create ``HMAC(HashFunction)`` as the ``MessageAuthenticationCode``.
+I.e. ``PBKDF2(SHA-256)`` will result in ``PBKDF2(HMAC(SHA-256))``.
+
 Scrypt
 ^^^^^^^^^^
 
@@ -190,6 +198,8 @@ to p processors can work in parallel.
 
 As a general recommendation, use ``N`` = 32768, ``r`` = 8, ``p`` = 1
 
+Algorithm specification name: ``Scrypt``
+
 Argon2
 ^^^^^^^^^^
 
@@ -198,6 +208,12 @@ Argon2
 Argon2 is the winner of the PHC (Password Hashing Competition) and
 provides a tunable memory hard PBKDF. There are three minor variants
 of Argon2 - Argon2d, Argon2i, and Argon2id. All three are implemented.
+
+Algorithm specification names:
+
+- ``Argon2d``
+- ``Argon2i``
+- ``Argon2id``
 
 Bcrypt
 ^^^^^^^^^^^^
@@ -212,6 +228,8 @@ tunable.
 
 This function is relatively obscure but is used for example in OpenSSH.
 Prefer Argon2 or Scrypt in new systems.
+
+Algorithm specification name: ``Bcrypt-PBKDF``
 
 OpenPGP S2K
 ^^^^^^^^^^^^
@@ -236,6 +254,9 @@ iteration count (this should be significantly larger than the size of the
 longest passphrase that might reasonably be used; somewhere from 1024 to 65536
 would probably be about right). Using both a reasonably sized salt and a large
 iteration count is highly recommended to prevent password guessing attempts.
+
+Algorithm specification name:
+``OpenPGP-S2K(<HashFunction>)``, e.g. ``OpenPGP-S2K(SHA-384)``
 
 PBKDF
 ---------

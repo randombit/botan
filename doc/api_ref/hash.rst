@@ -107,6 +107,13 @@ to the constructor with the desired length.
 Named like "Blake2b" which selects default 512-bit output, or as
 "Blake2b(256)" to select 256 bits of output.
 
+Algorithm specification name:
+``BLAKE2b(<optional output bits>)`` (reported name) /
+``Blake2b(<optional output bits>)``
+
+- Output bits defaults to 512.
+- Examples: ``BLAKE2b(256)``, ``BLAKE2b(512)``, ``BLAKE2b``
+
 GOST-34.11
 ^^^^^^^^^^^^^^^
 
@@ -122,6 +129,9 @@ it unless you must.
    support for GOST 34.11 hash is deprecated and will be removed in a future
    major release.
 
+Algorithm specification name:
+``GOST-R-34.11-94`` (reported name) / ``GOST-34.11``
+
 Keccak-1600
 ^^^^^^^^^^^^^^^
 
@@ -129,6 +139,12 @@ Available if ``BOTAN_HAS_KECCAK`` is defined.
 
 An older (and incompatible) variant of SHA-3, but sometimes used. Prefer SHA-3 in
 new code.
+
+Algorithm specification name:
+``Keccak-1600(<optional output bits>)``
+
+- Output bits defaults to 512.
+- Examples: ``Keccak-1600(256)``, ``Keccak-1600(512)``, ``Keccak-1600``
 
 MD4
 ^^^^^^^^^
@@ -142,6 +158,8 @@ An old and now broken hash function. Available if ``BOTAN_HAS_MD4`` is defined.
 .. warning::
    Support for MD4 is deprecated and will be removed in a future major release.
 
+Algorithm specification name: ``MD4``
+
 MD5
 ^^^^^^^^^
 
@@ -149,6 +167,8 @@ An old and now broken hash function. Available if ``BOTAN_HAS_MD5`` is defined.
 
 .. warning::
    MD5 collisions can be easily created. MD5 should never be used for signatures.
+
+Algorithm specification name: ``MD5``
 
 RIPEMD-160
 ^^^^^^^^^^^^^^^
@@ -159,6 +179,8 @@ A 160 bit hash function, quite old but still thought to be secure (up to the
 limit of 2**80 computation required for a collision which is possible with any
 160 bit hash function). Somewhat deprecated these days. Prefer SHA-2 or SHA-3
 in new code.
+
+Algorithm specification name: ``RIPEMD-160``
 
 SHA-1
 ^^^^^^^^^^^^^^^
@@ -172,6 +194,8 @@ Widely adopted NSA designed hash function. Use SHA-2 or SHA-3 in new code.
    SHA-1 collisions can now be created by moderately resourced attackers. It
    must never be used for signatures.
 
+Algorithm specification name: ``SHA-1``
+
 SHA-256
 ^^^^^^^^^^^^^^^
 
@@ -181,6 +205,11 @@ Relatively fast 256 bit hash function, thought to be secure.
 
 Also includes the variant SHA-224. There is no real reason to use SHA-224.
 
+Algorithm specification names:
+
+- ``SHA-224``
+- ``SHA-256``
+
 SHA-512
 ^^^^^^^^^^^^^^^
 
@@ -189,6 +218,12 @@ Available if ``BOTAN_HAS_SHA2_64`` is defined.
 SHA-512 is faster than SHA-256 on 64-bit processors. Also includes the
 truncated variants SHA-384 and SHA-512/256, which have the advantage
 of avoiding message extension attacks.
+
+Algorithm specification names:
+
+- ``SHA-384``
+- ``SHA-512``
+- ``SHA-512-256``
 
 SHA-3
 ^^^^^^^^^^^^^^^
@@ -201,6 +236,12 @@ Supports 224, 256, 384 or 512 bit outputs. SHA-3 is faster with
 smaller outputs.  Use as "SHA-3(256)" or "SHA-3(512)". Plain "SHA-3"
 selects default 512 bit output.
 
+Algorithm specification name:
+``SHA-3(<optional output bits>)``
+
+- Output bits defaults to 512.
+- Examples: ``SHA-3(256)``, ``SHA-3(512)``, ``SHA-3``
+
 SHAKE (SHAKE-128, SHAKE-256)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -210,14 +251,10 @@ These are actually XOFs (extensible output functions) based on SHA-3, which can
 output a value of any byte length. For example "SHAKE-128(1024)" will produce
 1024 bits of output. The specified length must be a multiple of 8.
 
-SM3
-^^^^^^^^^^^^^^^
+Algorithm specification names:
 
-Available if ``BOTAN_HAS_SM3`` is defined.
-
-Chinese national hash function, 256 bit output. Widely used in industry there.
-Fast and seemingly secure, but no reason to prefer it over SHA-2 or SHA-3 unless
-required.
+- ``SHAKE-128(<output bits>)``, e.g. ``SHAKE-128(128)``
+- ``SHAKE-256(<output bits>``, e.g. ``SHAKE-256(256)``
 
 Skein-512
 ^^^^^^^^^^^^^^^
@@ -233,6 +270,27 @@ To set a personalization string set the second param to any value,
 typically ASCII strings are used. Examples "Skein-512(256)" or
 "Skein-512(384,personalization_string)".
 
+Algorithm specification name:
+
+- ``Skein-512(<optional output bits>)``
+
+  - Output bits defaults to 512.
+  - Examples: ``Skein-512(256)``, ``Skein-512(512)``, ``Skein-512``
+
+- ``Skein-512(<output bits>,<personalization>)``,
+  e.g. ``Skein-512(512,Test)``
+
+SM3
+^^^^^^^^^^^^^^^
+
+Available if ``BOTAN_HAS_SM3`` is defined.
+
+Chinese national hash function, 256 bit output. Widely used in industry there.
+Fast and seemingly secure, but no reason to prefer it over SHA-2 or SHA-3 unless
+required.
+
+Algorithm specification name: ``SM3``
+
 Streebog (Streebog-256, Streebog-512)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -247,6 +305,11 @@ unless compatibility is needed.
    interacts with its linear layer in a way which may provide a backdoor when
    used in certain ways. Avoid Streebog if at all possible.
 
+Algorithm specification names:
+
+- ``Streebog-256``
+- ``Streebog-512``
+
 Whirlpool
 ^^^^^^^^^^^^^^^
 
@@ -256,10 +319,13 @@ A 512-bit hash function standardized by ISO and NESSIE. Relatively slow, and due
 to the table based implementation it is potentially vulnerable to cache based
 side channels.
 
-Hash Function Combiners
----------------------------
+Algorithm specification name: ``Whirlpool``
 
-These are functions which combine multiple hash functions to create a new hash
+Hash Function Combiners and Modifiers
+-------------------------------------
+
+These are functions which combine multiple hash functions,
+or modify the output of hash functions, to create a new hash
 function. They are typically only used in specialized applications.
 
 Parallel
@@ -275,6 +341,10 @@ Note that due to the "multicollision attack" it turns out that generating a
 collision for multiple parallel hash functions is no harder than generating a
 collision for the strongest hash function.
 
+Algorithm specification name:
+``Parallel(<HashFunction>,<HashFunction>,...)``,
+e.g. ``Parallel(SHA-256,SHA-512)``, ``Parallel(MD5,SHA-1,SHA-256,SHA-512)``
+
 Comp4P
 ^^^^^^^^^^^^^
 
@@ -283,6 +353,22 @@ Available if ``BOTAN_HAS_COMB4P`` is defined.
 This combines two cryptographic hashes in such a way that preimage and collision
 attacks are provably at least as hard as a preimage or collision attack on the
 strongest hash.
+
+Algorithm specification name:
+``Comb4P(<HashFunction>,<HashFunction>)``,
+e.g. ``Comb4P(SHA-1,RIPEMD-160)``
+
+Truncated
+^^^^^^^^^^^^^
+
+Available if ``BOTAN_HAS_TRUNCATED_HASH`` is defined.
+
+Wrapper class to truncate underlying hash function output to a given number of bits.
+The leading bits are retained.
+
+Algorithm specification name:
+``Truncated(<HashFunction>,<output bits>)``,
+e.g. ``Truncated(SHAKE-128(256),42)``
 
 Checksums
 ----------------
@@ -297,6 +383,8 @@ Available if ``BOTAN_HAS_ADLER32`` is defined.
 
 The Adler32 checksum is used in the zlib format. 32 bit output.
 
+Algorithm specification name: ``Adler32``
+
 CRC24
 ^^^^^^^^^^^
 
@@ -304,9 +392,13 @@ Available if ``BOTAN_HAS_CRC24`` is defined.
 
 This is the CRC function used in OpenPGP. 24 bit output.
 
+Algorithm specification name: ``CRC32``
+
 CRC32
 ^^^^^^^^^^^
 
 Available if ``BOTAN_HAS_CRC32`` is defined.
 
 This is the 32-bit CRC used in protocols such as Ethernet, gzip, PNG, etc.
+
+Algorithm specification name: ``CRC32``

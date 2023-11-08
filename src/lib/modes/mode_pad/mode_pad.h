@@ -107,7 +107,7 @@ class BOTAN_TEST_API OneAndZeros_Padding final : public BlockCipherModePaddingMe
 };
 
 /**
-* ESP Padding (RFC 4304)
+* ESP Padding (RFC 4303)
 */
 class BOTAN_TEST_API ESP_Padding final : public BlockCipherModePaddingMethod {
    public:

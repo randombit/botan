@@ -121,6 +121,18 @@ Available MACs
 Currently the following MAC algorithms are available in Botan. In new code,
 default to HMAC with a strong hash like SHA-256 or SHA-384.
 
+Blake2B MAC
+~~~~~~~~~~~~
+
+Available if ``BOTAN_HAS_BLAKE2BMAC`` is defined.
+
+Algorithm specification name:
+``BLAKE2b(<optional output bits>)`` (reported name) /
+``Blake2b(<optional output bits>)``
+
+- Output bits defaults to 512.
+- Examples: ``BLAKE2b(256)``, ``BLAKE2b``
+
 CMAC
 ~~~~~~~~~~~~
 
@@ -128,6 +140,10 @@ A modern CBC-MAC variant that avoids the security problems of plain CBC-MAC.
 Approved by NIST. Also sometimes called OMAC.
 
 Available if ``BOTAN_HAS_CMAC`` is defined.
+
+Algorithm specification name:
+``CMAC(<BlockCipher>)`` (reported name) / ``OMAC(<BlockCipher>)``,
+e.g. ``CMAC(AES-256)``
 
 GMAC
 ~~~~~~~~~~~~
@@ -143,12 +159,18 @@ Available if ``BOTAN_HAS_GMAC`` is defined.
    Due to the nonce requirement, GMAC is exceptionally fragile. Avoid it unless
    absolutely required.
 
+Algorithm specification name:
+``GMAC(<BlockCipher>)``, e.g. ``GMAC(AES-256)``
+
 HMAC
 ~~~~~~~~~~~~
 
 A message authentication code based on a hash function. Very commonly used.
 
 Available if ``BOTAN_HAS_HMAC`` is defined.
+
+Algorithm specification name:
+``HMAC(<HashFunction>)``, e.g. ``HMAC(SHA-512)``
 
 KMAC
 ~~~~~~~~~~~~
@@ -161,6 +183,11 @@ There are two variants, ``KMAC-128`` and ``KMAC-256``. Both take a parameter
 which specifies the output length in bits, for example ``KMAC-128(256)``.
 
 Available if ``BOTAN_HAS_KMAC`` is defined.
+
+Algorithm specification names:
+
+- ``KMAC-128(<output size>)``, e.g. ``KMAC-128(256)``
+- ``KMAC-256(<output size>)``, e.g. ``KMAC-256(256)``
 
 Poly1305
 ~~~~~~~~~~~~
@@ -175,6 +202,8 @@ Available if ``BOTAN_HAS_POLY1305`` is defined.
    Due to the nonce requirement, Poly1305 is exceptionally fragile. Avoid it unless
    absolutely required.
 
+Algorithm specification name: ``Poly1305``
+
 SipHash
 ~~~~~~~~~~~~
 
@@ -183,6 +212,13 @@ A modern and very fast PRF. Produces only a 64-bit output. Defaults to
 input block and 4 rounds for finalization.
 
 Available if ``BOTAN_HAS_SIPHASH`` is defined.
+
+Algorithm specification name:
+``SipHash(<optional C>,<optional D>)``
+
+- C defaults to 2
+- D defaults to 4
+- Examples: ``SipHash(2,4)``, ``SipHash(2)``, ``SipHash``
 
 X9.19-MAC
 ~~~~~~~~~~~~
@@ -193,3 +229,5 @@ Sometimes called the "DES retail MAC", also standardized in ISO 9797-1.
 It is slow and has known attacks. Avoid unless required.
 
 Available if ``BOTAN_HAS_X919_MAC`` is defined.
+
+Algorithm specification name: ``X9.19-MAC``
