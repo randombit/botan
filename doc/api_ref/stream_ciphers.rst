@@ -97,6 +97,8 @@ class :cpp:class:`StreamCipher` (`botan/stream_cipher.h`).
 
      Processes plain/ciphertext *inout* in place. Acts like :cpp:func:`cipher`\ (inout.data(), inout.data(), inout.size()).
 
+.. _stream_ciphers_example:
+
 Code Example
 -----------------
 

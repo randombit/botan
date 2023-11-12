@@ -408,8 +408,9 @@ You can reload a serialized group using
 
 .. cpp:function:: void DL_Group::PEM_decode(DataSource& source)
 
-Code Example
-~~~~~~~~~~~~~~~
+Code Example: DL_Group
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 The example below creates a new 2048 bit ``DL_Group``, prints the generated
 parameters and ANSI_X9_42 encodes the created group for further usage with DH.
 
@@ -571,10 +572,12 @@ Botan implements the following encryption algorithms and padding schemes:
 #. ECIES
 #. SM2
 
-Code Example
+.. _rsa_example:
+
+Code Example: RSA Encryption
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The following Code sample reads a PKCS #8 keypair from the passed location and
+The following code sample reads a PKCS #8 keypair from the passed location and
 subsequently encrypts a fixed plaintext with the included public key, using OAEP
 with SHA-256. For the sake of completeness, the ciphertext is then decrypted using
 the private key.
@@ -715,7 +718,9 @@ Botan implements the following signature algorithms:
 #. SM2
 #. Dilithium
 
-Code Example
+.. _ecdsa_example:
+
+Code Example: ECDSA Signature
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following sample program below demonstrates the generation of a new ECDSA keypair over
@@ -808,7 +813,9 @@ produce an output of the desired length.
 
      The *in* parameter must be the public key associated with the other party.
 
-Code Example
+.. _ecdh_example:
+
+Code Example: ECDH Key Agreement
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The code below performs an unauthenticated ECDH key agreement using the secp521r elliptic
@@ -911,7 +918,9 @@ Botan implements the following KEM schemes:
 #. Kyber
 #. McEliece
 
-Code Example
+.. _kyber_example:
+
+Code Example: Kyber
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The code below demonstrates key encapsulation using the Kyber post-quantum scheme.
@@ -1010,7 +1019,9 @@ width defined by the corresponding parameter set. Choosing `XMSS-SHA2_10_256`
 for instance will use the SHA2-256 hash function to generate a tree of height
 ten.
 
-Code Example
+.. _xmss_example:
+
+Code Example: XMSS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following code snippet shows a minimum example on how to create an XMSS

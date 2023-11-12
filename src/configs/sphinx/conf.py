@@ -59,7 +59,7 @@ source_encoding = 'utf-8-sig'
 master_doc = 'contents'
 
 project = u'botan'
-copyright = u'2000-2022, The Botan Authors'
+copyright = u'2000-2023, The Botan Authors'
 
 version = '%d.%d' % (version_major, version_minor)
 release = '%d.%d.%d%s' % (version_major, version_minor, version_patch, version_suffix)
@@ -188,7 +188,7 @@ htmlhelp_basename = 'botandoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 
-authors = u'Jack Lloyd \\and Daniel Neus \\and Ren\u00e9 Korthaus \\and Juraj Somorovsky \\and Tobias Niemann'
+authors = u'The Botan Authors'
 latex_documents = [
     ('contents', 'botan.tex', u'Botan Reference Guide', authors, 'manual'),
 ]

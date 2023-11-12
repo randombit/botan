@@ -17,8 +17,31 @@ source may not be required on your system.
 Examples
 ----------
 
-Some examples of usage are included in this documentation. However a better
-source for example code is in the implementation of the
+Examples of usage are included in this documentation, some of which
+are listed below:
+
+* :ref:`Block Ciphers <block_cipher_example>`
+* :ref:`Cipher Modes <cipher_modes_example>`
+* :ref:`Hash Functions <hash_example>`
+* :ref:`KDFs <key_derivation_function_example>`
+* :ref:`MACs <mac_example>`
+* :ref:`PBKDFs <pbkdf_example>`
+* :ref:`Key Agreement <ecdh_example>`
+* :ref:`ECDSA <ecdsa_example>`
+* :ref:`Kyber <kyber_example>`
+* :ref:`RSA <rsa_example>`
+* :ref:`XMSS <xmss_example>`
+* :ref:`Stream Ciphers <stream_ciphers_example>`
+* :ref:`TLS Client <tls_client_example>`
+* :ref:`TLS Client (PQC/hybrid) <tls_hybrid_client_example>`
+* :ref:`HTTPS Client <https_client_example>`
+* :ref:`TLS Server <tls_server_example>`
+* :ref:`X.509 <x509_certificates_example>`
+
+You'll find additional examples of usage in the
+`src/examples <https://github.com/randombit/botan/tree/master/src/examples>`_ directory.
+
+An additional source for example code is in the implementation of the
 `command line interface <https://github.com/randombit/botan/tree/master/src/cli>`_,
 which was intentionally written to act as practical examples of usage.
 
