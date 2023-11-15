@@ -69,6 +69,8 @@ two contexts.
    uniform random value from *secret*, *salt*, and *label*, whose
    meaning is described above.
 
+.. _key_derivation_function_example:
+
 Code Example
 ------------
 

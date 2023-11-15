@@ -125,6 +125,8 @@ operations such as authenticated encryption.
 
      Assumes ``block`` is of a multiple of the block size.
 
+.. _block_cipher_example:
+
 Code Example
 -----------------
 

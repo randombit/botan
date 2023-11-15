@@ -93,6 +93,7 @@ The Botan MAC computation is split into five stages.
     ``mac``. Returns ``true``, if the verification is successful and false
     otherwise.
 
+.. _mac_example:
 
 Code Examples
 ------------------------

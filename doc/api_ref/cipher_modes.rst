@@ -124,6 +124,8 @@ All cipher mode implementations are are derived from the base class
     Finalize the message processing with a final block of at least :cpp:func:`minimum_final_size` size.
     The first *offset* bytes of the passed final block will be ignored.
 
+.. _cipher_modes_example:
+
 Code Example
 ---------------------
 

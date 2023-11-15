@@ -409,8 +409,10 @@ TLS Clients
    resized as needed to process inputs). Otherwise some reasonable
    default is used.
 
-Code Example
-^^^^^^^^^^^^
+.. _tls_client_example:
+
+Code Example: TLS Client
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 A minimal example of a TLS client is provided below.
 The full code for a TLS client using BSD sockets is in `src/cli/tls_client.cpp`
 
@@ -450,8 +452,10 @@ server; unlike clients, which know what type of protocol (TLS vs DTLS)
 they are negotiating from the start via the *offer_version*, servers
 would not until they actually received a client hello.
 
-Code Example
-^^^^^^^^^^^^
+.. _tls_server_example:
+
+Code Example: TLS Server
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 A minimal example of a TLS server is provided below.
 The full code for a TLS server using asio is in `src/cli/tls_proxy.cpp`.
 
@@ -1148,8 +1152,10 @@ Currently, Botan supports the following post-quantum secure key exchanges:
   * ``HYBRID_X25519_KYBER_512_R3_CLOUDFLARE`` ("x25519/Kyber-512-r3/cloudflare")
   * ``HYBRID_X25519_KYBER_768_R3_CLOUDFLARE`` ("x25519/Kyber-768-r3/cloudflare")
 
-Client Code Example
-^^^^^^^^^^^^^^^^^^^^
+.. _tls_hybrid_client_example:
+
+Code Example: Hybrid TLS Client
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. literalinclude:: /../src/examples/tls_13_hybrid_key_exchange_client.cpp
    :language: cpp
@@ -1178,8 +1184,8 @@ additional adjustments have to be implemented as shown in the following code exa
 Below is a code example for a TLS client using a custom curve.
 For servers, it works exactly the same.
 
-Client Code Example
-^^^^^^^^^^^^^^^^^^^^
+Code Example: TLS Client using Custom Curve
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. literalinclude:: /../src/examples/tls_custom_curves_client.cpp
    :language: cpp
@@ -1309,7 +1315,9 @@ The asio Stream offers the following interface:
    will cause the stream to override the default implementation of the
    :cpp:func:`tls_verify_cert_chain` callback.
 
-TLS Stream Client Code Example
+.. _https_client_example:
+
+Code Example: HTTPS Client
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The code below illustrates how to build a simple HTTPS client based on the TLS Stream and Boost.Beast. When run, it fetches the content of `https://botan.randombit.net/news.html` and prints it to stdout.

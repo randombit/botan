@@ -580,6 +580,8 @@ step. The two constructors are:
     and, if `minimum_key_strength` is less than or equal to 80, then
     SHA-1 signatures will also be accepted.
 
+.. _x509_certificates_example:
+
 Code Example
 -----------------
 

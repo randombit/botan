@@ -130,6 +130,8 @@ The ``PasswordHashFamily`` creates specific instances of ``PasswordHash``:
 
       All unneeded parameters should be set to 0 or left blank.
 
+.. _pbkdf_example:
+
 Code Example
 ------------
 

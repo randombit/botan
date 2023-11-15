@@ -81,6 +81,8 @@ internal state is reset to begin hashing a new message.
      Return a newly allocated HashFunction object of the same type as this one,
      whose internal state matches the current state of this.
 
+.. _hash_example:
+
 Code Example
 ------------
 
