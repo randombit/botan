@@ -9,6 +9,7 @@
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
+#include "test_pubkey_pqc.h"
 #include "test_rng.h"
 #include "tests.h"
 
@@ -31,99 +32,42 @@ namespace Botan_Tests {
 #if defined(BOTAN_HAS_FRODOKEM)
 
 namespace {
-
-   #if defined(BOTAN_HAS_AES)
-
-Botan::FrodoKEMMode get_mode(std::string_view header) {
-   if(header == "FrodoKEM-640-SHAKE") {
-      return Botan::FrodoKEMMode::FrodoKEM640_SHAKE;
-   } else if(header == "FrodoKEM-976-SHAKE") {
-      return Botan::FrodoKEMMode::FrodoKEM976_SHAKE;
-   } else if(header == "FrodoKEM-1344-SHAKE") {
-      return Botan::FrodoKEMMode::FrodoKEM1344_SHAKE;
-   } else if(header == "eFrodoKEM-640-SHAKE") {
-      return Botan::FrodoKEMMode::eFrodoKEM640_SHAKE;
-   } else if(header == "eFrodoKEM-976-SHAKE") {
-      return Botan::FrodoKEMMode::eFrodoKEM976_SHAKE;
-   } else if(header == "eFrodoKEM-1344-SHAKE") {
-      return Botan::FrodoKEMMode::eFrodoKEM1344_SHAKE;
-   } else if(header == "FrodoKEM-640-AES") {
-      return Botan::FrodoKEMMode::FrodoKEM640_AES;
-   } else if(header == "FrodoKEM-976-AES") {
-      return Botan::FrodoKEMMode::FrodoKEM976_AES;
-   } else if(header == "FrodoKEM-1344-AES") {
-      return Botan::FrodoKEMMode::FrodoKEM1344_AES;
-   } else if(header == "eFrodoKEM-640-AES") {
-      return Botan::FrodoKEMMode::eFrodoKEM640_AES;
-   } else if(header == "eFrodoKEM-976-AES") {
-      return Botan::FrodoKEMMode::eFrodoKEM976_AES;
-   } else if(header == "eFrodoKEM-1344-AES") {
-      return Botan::FrodoKEMMode::eFrodoKEM1344_AES;
-   }
-
-   throw Test_Error(Botan::fmt("Unexpected FrodoKEM mode: {}", header));
-}
-
-decltype(auto) shake256_16(std::span<const uint8_t> data) {
-   // Hash function to compare to the hashed values in the KAT file
-   // We're using SHAKE-256 as a XOF because this is a hard and direct
-   // dependency of the FrodoKEM module and will always be available
-   // when FrodoKEM is enabled in the Botan module configuration.
-   auto xof = Botan::XOF::create_or_throw("SHAKE-256");
-   xof->update(data);
-   return xof->output<std::vector<uint8_t>>(16);
-}
-
-class Frodo_KAT_Tests final : public Text_Based_Test {
+class Frodo_KAT_Tests_Impl {
    public:
-      Frodo_KAT_Tests() : Text_Based_Test("pubkey/frodokem_kat.vec", "Seed,SS,PK,SK,CT") {}
+      using public_key_t = Botan::FrodoKEM_PublicKey;
+      using private_key_t = Botan::FrodoKEM_PrivateKey;
 
-      bool skip_this_test(const std::string& header, const VarMap&) override {
-         return !get_mode(header).is_available();
+      static constexpr const char* algo_name = "FrodoKEM";
+      static constexpr const char* input_file = "pubkey/frodokem_kat.vec";
+
+   public:
+      Frodo_KAT_Tests_Impl(std::string_view algo_spec) : m_mode(algo_spec) {}
+
+      decltype(auto) mode() const { return m_mode; }
+
+      bool available() const { return m_mode.is_available(); }
+
+      auto map_value(std::span<const uint8_t> value) const {
+         auto xof = Botan::XOF::create_or_throw("SHAKE-256");
+         xof->update(value);
+         return xof->output<std::vector<uint8_t>>(16);
       }
 
-      Test::Result run_one_test(const std::string& header, const VarMap& vars) override {
-         Test::Result result(Botan::fmt("FrodoKEM KAT {}", header));
-
-         const auto mode = get_mode(header);
-         const Botan::FrodoKEMConstants consts(mode);
-
-         // Our implementation performs three independent RNG invocations to get
-         // the seeds (s, seed_sk and z). The reference implementation assumes one
-         // concatenated RNG invocation and slices the seeds from a single buffer.
-         // We have to emulate this behaviour with the Fixed_Output_RNG below.
-         CTR_DRBG_AES256 ctr_drbg(vars.get_req_bin("Seed"));
-         Fixed_Output_RNG fixed_generation_rng(ctr_drbg.random_vec<std::vector<uint8_t>>(
-            consts.len_sec_bytes() + consts.len_se_bytes() + consts.len_a_bytes()));
-
-         // Key generation
-         Botan::FrodoKEM_PrivateKey sk(fixed_generation_rng, mode);
-         result.test_is_eq("Generated private key", shake256_16(sk.raw_private_key_bits()), vars.get_req_bin("SK"));
-
-         auto pk = sk.public_key();
-         result.test_is_eq("Generated public key", shake256_16(pk->public_key_bits()), vars.get_req_bin("PK"));
-
-         // Encapsulation
-         Botan::FrodoKEM_PublicKey pk2(pk->public_key_bits(), mode);
-         Fixed_Output_RNG fixed_encapsulation_rng(
-            ctr_drbg.random_vec<std::vector<uint8_t>>(consts.len_sec_bytes() + consts.len_salt_bytes()));
-         auto enc = Botan::PK_KEM_Encryptor(pk2, "Raw");
-         const auto encaped = enc.encrypt(fixed_encapsulation_rng, 0 /* no KDF */);
-         result.test_is_eq("Shared Secret", encaped.shared_key(), Botan::lock(vars.get_req_bin("SS")));
-         result.test_is_eq("Ciphertext", shake256_16(encaped.encapsulated_shared_key()), vars.get_req_bin("CT"));
-
-         // Decapsulation
-         Botan::FrodoKEM_PrivateKey sk2(sk.private_key_bits(), mode);
-         Botan::Null_RNG null_rng;
-         auto dec = Botan::PK_KEM_Decryptor(sk2, null_rng, "Raw");
-         const auto shared_key = dec.decrypt(encaped.encapsulated_shared_key(), 0 /* no KDF */);
-         result.test_is_eq("Decaps. Shared Secret", shared_key, Botan::lock(vars.get_req_bin("SS")));
-
-         return result;
+      auto rng_for_keygen(Botan::RandomNumberGenerator& rng) const {
+         Botan::FrodoKEMConstants consts(m_mode);
+         return Fixed_Output_RNG(rng, consts.len_sec_bytes() + consts.len_se_bytes() + consts.len_a_bytes());
       }
+
+      auto rng_for_encapsulation(Botan::RandomNumberGenerator& rng) const {
+         Botan::FrodoKEMConstants consts(m_mode);
+         return Fixed_Output_RNG(rng, consts.len_sec_bytes() + consts.len_salt_bytes());
+      }
+
+   private:
+      Botan::FrodoKEMMode m_mode;
 };
 
-   #endif
+class Frodo_KAT_Tests : public Botan_Tests::PK_PQC_KEM_KAT_Test<Frodo_KAT_Tests_Impl> {};
 
 std::vector<Test::Result> test_frodo_roundtrips() {
    auto& rng = Test::rng();
@@ -224,10 +168,7 @@ class Frodo_Keygen_Tests final : public PK_Key_Generation_Test {
 
 }  // namespace
 
-   #if defined(BOTAN_HAS_AES)
 BOTAN_REGISTER_TEST("frodokem", "frodo_kat_tests", Frodo_KAT_Tests);
-   #endif
-
 BOTAN_REGISTER_TEST_FN("frodokem", "frodo_roundtrips", test_frodo_roundtrips);
 BOTAN_REGISTER_TEST("frodokem", "frodo_keygen", Frodo_Keygen_Tests);
 
