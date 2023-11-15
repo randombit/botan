@@ -27,6 +27,8 @@ namespace Botan_Tests {
  */
 class Fixed_Output_RNG : public Botan::RandomNumberGenerator {
    public:
+      bool empty() const { return !is_seeded(); }
+
       bool is_seeded() const override { return !m_buf.empty(); }
 
       bool accepts_input() const override { return true; }
@@ -37,7 +39,7 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator {
 
       void clear() noexcept override {}
 
-      explicit Fixed_Output_RNG(const std::vector<uint8_t>& in) { m_buf.insert(m_buf.end(), in.begin(), in.end()); }
+      explicit Fixed_Output_RNG(std::span<const uint8_t> in) { m_buf.insert(m_buf.end(), in.begin(), in.end()); }
 
       explicit Fixed_Output_RNG(const std::string& in_str) {
          std::vector<uint8_t> in = Botan::hex_decode(in_str);
