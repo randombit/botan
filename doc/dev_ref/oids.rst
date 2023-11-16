@@ -15,6 +15,24 @@ Values currently assigned are::
   -- { publicKey 5 } previously used for XMSS draft 6
   gost-3410-with-sha256 OBJECT IDENTIFIER ::= { publicKey 6 1 }
 
+  frodokem-shake  OBJECT IDENTIFIER ::= { publicKey 14 }
+  efrodokem-shake OBJECT IDENTIFIER ::= { publicKey 16 }
+  frodokem-aes    OBJECT IDENTIFIER ::= { publicKey 15 }
+  efrodokem-aes   OBJECT IDENTIFIER ::= { publicKey 17 }
+
+  frodokem-640-shake   OBJECT_IDENTIFIER : { frodokem-shake  1  }
+  frodokem-976-shake   OBJECT_IDENTIFIER : { frodokem-shake  2  }
+  frodokem-1344-shake  OBJECT_IDENTIFIER : { frodokem-shake  3  }
+  frodokem-640-aes     OBJECT_IDENTIFIER : { frodokem-aes    1  }
+  frodokem-976-aes     OBJECT_IDENTIFIER : { frodokem-aes    2  }
+  frodokem-1344-aes    OBJECT_IDENTIFIER : { frodokem-aes    3  }
+  efrodokem-640-shake  OBJECT_IDENTIFIER : { efrodokem-shake 1  }
+  efrodokem-976-shake  OBJECT_IDENTIFIER : { efrodokem-shake 2  }
+  efrodokem-1344-shake OBJECT_IDENTIFIER : { efrodokem-shake 3  }
+  efrodokem-640-aes    OBJECT_IDENTIFIER : { efrodokem-aes   1  }
+  efrodokem-976-aes    OBJECT_IDENTIFIER : { efrodokem-aes   2  }
+  efrodokem-1344-aes   OBJECT_IDENTIFIER : { efrodokem-aes   3  }
+
   kyber       OBJECT IDENTIFIER ::= { publicKey 7 }
   kyber-90s   OBJECT IDENTIFIER ::= { publicKey 11 }
 

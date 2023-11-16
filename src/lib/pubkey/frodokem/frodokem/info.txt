@@ -1,0 +1,12 @@
+<defines>
+FRODOKEM_SHAKE -> 20231114
+</defines>
+
+<module_info>
+name -> "FrodoKEM"
+</module_info>
+
+<requires>
+shake_xof
+frodokem_common
+</requires>

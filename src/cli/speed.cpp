@@ -128,6 +128,10 @@
    #include <botan/sphincsplus.h>
 #endif
 
+#if defined(BOTAN_HAS_FRODOKEM)
+   #include <botan/frodokem.h>
+#endif
+
 #if defined(BOTAN_HAS_ECDSA)
    #include <botan/ecdsa.h>
 #endif
@@ -404,7 +408,8 @@ class Speed final : public Command {
             "Curve25519",
             "McEliece",
             "Kyber",
-            "SPHINCS+"
+            "SPHINCS+",
+            "FrodoKEM"
          };
          // clang-format on
       }
@@ -612,6 +617,11 @@ class Speed final : public Command {
 #if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
             else if(algo == "SPHINCS+") {
                bench_sphincs_plus(provider, msec);
+            }
+#endif
+#if defined(BOTAN_HAS_FRODOKEM)
+            else if(algo == "FrodoKEM") {
+               bench_frodokem(provider, msec);
             }
 #endif
 #if defined(BOTAN_HAS_SCRYPT)
@@ -2033,6 +2043,41 @@ class Speed final : public Command {
             } catch(Botan::Not_Implemented&) {
                continue;
             }
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_FRODOKEM)
+      void bench_frodokem(const std::string& provider, std::chrono::milliseconds msec) {
+         std::vector<Botan::FrodoKEMMode> frodo_modes{
+            Botan::FrodoKEMMode::FrodoKEM640_SHAKE,
+            Botan::FrodoKEMMode::FrodoKEM976_SHAKE,
+            Botan::FrodoKEMMode::FrodoKEM1344_SHAKE,
+            Botan::FrodoKEMMode::eFrodoKEM640_SHAKE,
+            Botan::FrodoKEMMode::eFrodoKEM976_SHAKE,
+            Botan::FrodoKEMMode::eFrodoKEM1344_SHAKE,
+            Botan::FrodoKEMMode::FrodoKEM640_AES,
+            Botan::FrodoKEMMode::FrodoKEM976_AES,
+            Botan::FrodoKEMMode::FrodoKEM1344_AES,
+            Botan::FrodoKEMMode::eFrodoKEM640_AES,
+            Botan::FrodoKEMMode::eFrodoKEM976_AES,
+            Botan::FrodoKEMMode::eFrodoKEM1344_AES,
+         };
+
+         for(auto modet : frodo_modes) {
+            if(!modet.is_available()) {
+               continue;
+            }
+
+            Botan::FrodoKEMMode mode(modet);
+
+            auto keygen_timer = make_timer(mode.to_string(), provider, "keygen");
+
+            auto key = keygen_timer->run([&] { return Botan::FrodoKEM_PrivateKey(rng(), mode); });
+
+            record_result(keygen_timer);
+
+            bench_pk_kem(key, mode.to_string(), provider, "KDF2(SHA-256)", msec);
          }
       }
 #endif
