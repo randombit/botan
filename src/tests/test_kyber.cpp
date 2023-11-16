@@ -7,10 +7,12 @@
  * (C) 2021-2022 Jack Lloyd
  * (C) 2021-2022 Manuel Glaser and Michael Boric, Rohde & Schwarz Cybersecurity
  * (C) 2021-2022 René Meusel and Hannes Rantzsch, neXenio GmbH
+ * (C) 2023      René Meusel, Rohde & Schwarz Cybersecurity
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
+#include "test_pubkey_pqc.h"
 #include "test_rng.h"
 #include "tests.h"
 
@@ -23,6 +25,8 @@
    #include <botan/kyber.h>
    #include <botan/pubkey.h>
    #include <botan/rng.h>
+   #include <botan/internal/fmt.h>
+   #include <botan/internal/stl_util.h>
 #endif
 
 namespace Botan_Tests {
@@ -104,79 +108,52 @@ class KYBER_Tests final : public Test {
 
 BOTAN_REGISTER_TEST("kyber", "kyber_pairwise", KYBER_Tests);
 
-   #if defined(BOTAN_HAS_AES)
-
 namespace {
 
-Test::Result check_kyber_kat(const char* test_name,
-                             const VarMap& vars,
-                             Botan::KyberMode mode,
-                             const std::string& algo_name) {
-   Test::Result result(test_name);
+class Kyber_KAT_Tests_Impl {
+   public:
+      using public_key_t = Botan::Kyber_PublicKey;
+      using private_key_t = Botan::Kyber_PrivateKey;
 
-   // read input from test file
-   const auto pk_in = vars.get_req_bin("PK");
-   const auto sk_in = vars.get_req_bin("SK");
-   const auto ct_in = vars.get_req_bin("CT");
-   const auto ss_in = vars.get_req_bin("SS");
+      static constexpr const char* algo_name = "Kyber";
+      static constexpr const char* input_file = "pubkey/kyber_kat.vec";
 
-   // Kyber test RNG
-   CTR_DRBG_AES256 ctr_drbg(vars.get_req_bin("Seed"));
+   public:
+      Kyber_KAT_Tests_Impl(std::string_view algo_spec) : m_mode(algo_spec) {}
 
-   // Alice
-   Botan::Kyber_PrivateKey priv_key(ctr_drbg, mode);
-   const auto pub_key = priv_key.public_key();
-   result.test_eq("Public Key Output", priv_key.public_key_bits(), pk_in);
-   result.test_eq("Secret Key Output", priv_key.private_key_bits(), sk_in);
+      decltype(auto) mode() const { return m_mode; }
 
-   // Bob
-   auto enc = Botan::PK_KEM_Encryptor(*pub_key, "Raw", "base");
-   const auto kem_result = enc.encrypt(ctr_drbg);
-   result.test_eq("Cipher-Text Output", kem_result.encapsulated_shared_key(), ct_in);
-   result.test_eq("Key B Output", kem_result.shared_key(), ss_in);
+      bool available() const { return m_mode.is_available(); }
 
-   // Alice
-   auto dec = Botan::PK_KEM_Decryptor(priv_key, ctr_drbg, "Raw", "base");
-   const auto key_alice = dec.decrypt(kem_result.encapsulated_shared_key(), 0 /* no KDF */, std::vector<uint8_t>());
-   result.test_eq("Key A Output", key_alice, ss_in);
+      std::vector<uint8_t> map_value(std::span<const uint8_t> value) const {
+         // We use different hash functions for Kyber 90s and Kyber "modern", as
+         // those are consistent with the requirements of the implementations.
+         std::string_view hash_name = m_mode.is_modern() ? "SHAKE-256(128)" : "SHA-256";
 
-   // Algorithm identifiers
-   result.test_eq("algo name", priv_key.algo_name(), algo_name);
-   result.confirm("algo mode", priv_key.mode() == mode);
-   result.test_eq("algo id", priv_key.algorithm_identifier().oid().to_formatted_string(), algo_name);
+         auto hash = Botan::HashFunction::create_or_throw(hash_name);
+         const auto digest = hash->process(value);
+         return {digest.begin(), digest.begin() + 16};
+      }
 
-   return result;
-}
+      auto rng_for_keygen(Botan::RandomNumberGenerator& rng) const {
+         const auto seed = rng.random_vec(32);
+         const auto z = rng.random_vec(32);
+         return Fixed_Output_RNG(Botan::concat(seed, z));
+      }
+
+      auto rng_for_encapsulation(Botan::RandomNumberGenerator& rng) const {
+         return Fixed_Output_RNG(rng.random_vec(32));
+      }
+
+   private:
+      Botan::KyberMode m_mode;
+};
+
+class Kyber_KAT_Tests : public Botan_Tests::PK_PQC_KEM_KAT_Test<Kyber_KAT_Tests_Impl> {};
 
 }  // namespace
 
-      // NOLINTNEXTLINE(*-macro-usage)
-      #define REGISTER_KYBER_KAT_TEST(mode)                                                                    \
-         class KYBER_KAT_##mode final : public Text_Based_Test {                                               \
-            public:                                                                                            \
-               KYBER_KAT_##mode() : Text_Based_Test("pubkey/kyber_" #mode ".vec", "Count,Seed,PK,SK,CT,SS") {} \
-                                                                                                               \
-               Test::Result run_one_test(const std::string& name, const VarMap& vars) override {               \
-                  return check_kyber_kat("Kyber_" #mode, vars, Botan::KyberMode::Kyber##mode, name);           \
-               }                                                                                               \
-         };                                                                                                    \
-         BOTAN_REGISTER_TEST("kyber", "kyber_kat_" #mode, KYBER_KAT_##mode)
-
-      #if defined(BOTAN_HAS_KYBER_90S)
-REGISTER_KYBER_KAT_TEST(512_90s);
-REGISTER_KYBER_KAT_TEST(768_90s);
-REGISTER_KYBER_KAT_TEST(1024_90s);
-      #endif
-
-      #if defined(BOTAN_HAS_KYBER)
-REGISTER_KYBER_KAT_TEST(512);
-REGISTER_KYBER_KAT_TEST(768);
-REGISTER_KYBER_KAT_TEST(1024);
-      #endif
-
-      #undef REGISTER_KYBER_KAT_TEST
-
-   #endif
+BOTAN_REGISTER_TEST("kyber", "kyber_kat", Kyber_KAT_Tests);
 
 class Kyber_Encoding_Test : public Text_Based_Test {
    public:
