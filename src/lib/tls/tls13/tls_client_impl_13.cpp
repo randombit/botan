@@ -402,6 +402,22 @@ void Client_Impl_13::handle(const Encrypted_Extensions& encrypted_extensions_msg
       set_record_size_limits(outgoing_limit->limit(), incoming_limit->limit());
    }
 
+   if(exts.has<Server_Certificate_Type>() &&
+      m_handshake_state.client_hello().extensions().has<Server_Certificate_Type>()) {
+      const auto* server_cert_type = exts.get<Server_Certificate_Type>();
+      const auto* our_server_cert_types = m_handshake_state.client_hello().extensions().get<Server_Certificate_Type>();
+      our_server_cert_types->validate_selection(*server_cert_type);
+
+      // RFC 7250 4.2
+      //    With the server_certificate_type extension in the server hello, the
+      //    TLS server indicates the certificate type carried in the Certificate
+      //    payload.
+      //
+      // Note: TLS 1.3 carries this extension in the Encrypted Extensions
+      //       message instead of the Server Hello.
+      set_selected_certificate_type(server_cert_type->selected_certificate_type());
+   }
+
    callbacks().tls_examine_extensions(exts, Connection_Side::Server, Handshake_Type::EncryptedExtensions);
 
    if(m_handshake_state.server_hello().extensions().has<PSK>()) {
@@ -465,7 +481,7 @@ void Client_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
    }
 
    bool sig_valid = certificate_verify_msg.verify(
-      m_handshake_state.server_certificate().leaf(), callbacks(), m_transcript_hash.previous());
+      *m_handshake_state.server_certificate().public_key(), callbacks(), m_transcript_hash.previous());
 
    if(!sig_valid) {
       throw TLS_Exception(Alert::DecryptError, "Server certificate verification failed");
@@ -478,14 +494,38 @@ void Client_Impl_13::send_client_authentication(Channel_Impl_13::AggregatedHands
    BOTAN_ASSERT_NOMSG(m_handshake_state.has_certificate_request());
    const auto& cert_request = m_handshake_state.certificate_request();
 
-   // RFC 4.4.2
+   const auto cert_type = [&] {
+      const auto& exts = m_handshake_state.encrypted_extensions().extensions();
+      const auto& chexts = m_handshake_state.client_hello().extensions();
+      if(exts.has<Client_Certificate_Type>() && chexts.has<Client_Certificate_Type>()) {
+         const auto* client_cert_type = exts.get<Client_Certificate_Type>();
+         chexts.get<Client_Certificate_Type>()->validate_selection(*client_cert_type);
+
+         // RFC 7250 4.2
+         //   This client_certificate_type extension in the server hello then
+         //   indicates the type of certificates the client is requested to
+         //   provide in a subsequent certificate payload.
+         //
+         // Note: TLS 1.3 carries this extension in the Encrypted Extensions
+         //       message instead of the Server Hello.
+         return client_cert_type->selected_certificate_type();
+      } else {
+         // RFC 8446 4.4.2
+         //    If the corresponding certificate type extension [...] was not
+         //    negotiated in EncryptedExtensions, [...] then each
+         //    CertificateEntry contains a DER-encoded X.509 certificate.
+         return Certificate_Type::X509;
+      }
+   }();
+
+   // RFC 8446 4.4.2
    //    certificate_request_context:  If this message is in response to a
    //       CertificateRequest, the value of certificate_request_context in
    //       that message.
-   flight.add(
-      m_handshake_state.sending(Certificate_13(cert_request, m_info.hostname(), credentials_manager(), callbacks())));
+   flight.add(m_handshake_state.sending(
+      Certificate_13(cert_request, m_info.hostname(), credentials_manager(), callbacks(), cert_type)));
 
-   // RFC 4.4.2
+   // RFC 8446 4.4.2
    //    If the server requests client authentication but no suitable certificate
    //    is available, the client MUST send a Certificate message containing no
    //    certificates.
@@ -518,6 +558,7 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
    callbacks().tls_session_established(Session_Summary(m_handshake_state.server_hello(),
                                                        Connection_Side::Server,
                                                        peer_cert_chain(),
+                                                       peer_raw_public_key(),
                                                        external_psk_identity(),
                                                        m_resumed_session.has_value(),
                                                        m_info,
@@ -566,6 +607,7 @@ void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket
                    m_handshake_state.server_hello().ciphersuite(),
                    Connection_Side::Client,
                    peer_cert_chain(),
+                   peer_raw_public_key(),
                    m_info,
                    callbacks().tls_current_timestamp());
 
@@ -575,7 +617,8 @@ void TLS::Client_Impl_13::handle(const New_Session_Ticket_13& new_session_ticket
 }
 
 std::vector<X509_Certificate> Client_Impl_13::peer_cert_chain() const {
-   if(m_handshake_state.has_server_certificate_chain()) {
+   if(m_handshake_state.has_server_certificate_msg() &&
+      m_handshake_state.server_certificate().has_certificate_chain()) {
       return m_handshake_state.server_certificate().cert_chain();
    }
 
@@ -584,6 +627,18 @@ std::vector<X509_Certificate> Client_Impl_13::peer_cert_chain() const {
    }
 
    return {};
+}
+
+std::shared_ptr<const Public_Key> Client_Impl_13::peer_raw_public_key() const {
+   if(m_handshake_state.has_server_certificate_msg() && m_handshake_state.server_certificate().is_raw_public_key()) {
+      return m_handshake_state.server_certificate().public_key();
+   }
+
+   if(m_resumed_session.has_value()) {
+      return m_resumed_session->session.peer_raw_public_key();
+   }
+
+   return nullptr;
 }
 
 std::optional<std::string> Client_Impl_13::external_psk_identity() const {

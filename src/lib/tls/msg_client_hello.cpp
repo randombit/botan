@@ -796,6 +796,13 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
       m_data->extensions().add(new Application_Layer_Protocol_Notification(next_protocols));
    }
 
+   // RFC 7250 4.1
+   //    In order to indicate the support of raw public keys, clients include
+   //    the client_certificate_type and/or the server_certificate_type
+   //    extensions in an extended client hello message.
+   m_data->extensions().add(new Client_Certificate_Type(policy.accepted_client_certificate_types()));
+   m_data->extensions().add(new Server_Certificate_Type(policy.accepted_server_certificate_types()));
+
    if(policy.allow_tls12()) {
       m_data->extensions().add(new Renegotiation_Extension());
       m_data->extensions().add(new Session_Ticket_Extension());

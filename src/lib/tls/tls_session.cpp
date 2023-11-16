@@ -14,12 +14,11 @@
 #include <botan/mac.h>
 #include <botan/pem.h>
 #include <botan/rng.h>
-#include <botan/internal/ct_utils.h>
-#include <botan/internal/loadstor.h>
-
 #include <botan/tls_callbacks.h>
 #include <botan/tls_messages.h>
-
+#include <botan/x509_key.h>
+#include <botan/internal/ct_utils.h>
+#include <botan/internal/loadstor.h>
 #include <botan/internal/stl_util.h>
 
 #include <utility>
@@ -107,6 +106,7 @@ Session_Summary::Session_Summary(const Session_Base& base,
 Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
                                  Connection_Side side,
                                  std::vector<X509_Certificate> peer_certs,
+                                 std::shared_ptr<const Public_Key> peer_raw_public_key,
                                  std::optional<std::string> psk_identity,
                                  bool session_was_resumed,
                                  Server_Information server_info,
@@ -129,6 +129,7 @@ Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
                    // TLS 1.3 uses AEADs, so technically encrypt-then-MAC is not applicable.
                    false,
                    std::move(peer_certs),
+                   std::move(peer_raw_public_key),
                    std::move(server_info)),
       m_external_psk_identity(std::move(psk_identity)),
       m_was_resumption(session_was_resumed) {
@@ -193,6 +194,7 @@ Session::Session(const secure_vector<uint8_t>& master_secret,
                    extended_master_secret,
                    encrypt_then_mac,
                    certs,
+                   nullptr,  // RFC 7250 (raw public keys) is NYI for TLS 1.2
                    server_info),
       m_master_secret(master_secret),
       m_early_data_allowed(false),
@@ -212,6 +214,7 @@ Session::Session(const secure_vector<uint8_t>& session_psk,
                  uint16_t ciphersuite,
                  Connection_Side side,
                  const std::vector<X509_Certificate>& peer_certs,
+                 std::shared_ptr<const Public_Key> peer_raw_public_key,
                  const Server_Information& server_info,
                  std::chrono::system_clock::time_point current_timestamp) :
       Session_Base(current_timestamp,
@@ -232,6 +235,7 @@ Session::Session(const secure_vector<uint8_t>& session_psk,
                    // TLS 1.3 uses AEADs, so technically encrypt-then-MAC is not applicable.
                    false,
                    peer_certs,
+                   std::move(peer_raw_public_key),
                    server_info),
       m_master_secret(session_psk),
       m_early_data_allowed(max_early_data_bytes.has_value()),
@@ -245,6 +249,7 @@ Session::Session(secure_vector<uint8_t>&& session_psk,
                  const std::optional<uint32_t>& max_early_data_bytes,
                  std::chrono::seconds lifetime_hint,
                  const std::vector<X509_Certificate>& peer_certs,
+                 std::shared_ptr<const Public_Key> peer_raw_public_key,
                  const Client_Hello_13& client_hello,
                  const Server_Hello_13& server_hello,
                  Callbacks& callbacks,
@@ -257,6 +262,7 @@ Session::Session(secure_vector<uint8_t>&& session_psk,
                    true,
                    false,  // see constructor above for rationales
                    peer_certs,
+                   std::move(peer_raw_public_key),
                    Server_Information(client_hello.sni_hostname())),
       m_master_secret(std::move(session_psk)),
       m_early_data_allowed(max_early_data_bytes.has_value()),
@@ -273,6 +279,8 @@ Session::Session(std::string_view pem) : Session(PEM_Code::decode_check_label(pe
 
 Session::Session(std::span<const uint8_t> ber_data) {
    uint8_t side_code = 0;
+
+   std::vector<uint8_t> raw_pubkey_or_empty;
 
    ASN1_String server_hostname;
    ASN1_String server_service;
@@ -298,6 +306,7 @@ Session::Session(std::span<const uint8_t> ber_data) {
       .decode(m_encrypt_then_mac)
       .decode(m_master_secret, ASN1_Type::OctetString)
       .decode_list<X509_Certificate>(m_peer_certs)
+      .decode(raw_pubkey_or_empty, ASN1_Type::OctetString)
       .decode(server_hostname)
       .decode(server_service)
       .decode(server_port)
@@ -325,10 +334,17 @@ Session::Session(std::span<const uint8_t> ber_data) {
    m_server_info =
       Server_Information(server_hostname.value(), server_service.value(), static_cast<uint16_t>(server_port));
 
+   if(!raw_pubkey_or_empty.empty()) {
+      m_peer_raw_public_key = X509::load_key(raw_pubkey_or_empty);
+   }
+
    m_lifetime_hint = std::chrono::seconds(lifetime_hint);
 }
 
 secure_vector<uint8_t> Session::DER_encode() const {
+   const auto raw_pubkey_or_empty =
+      m_peer_raw_public_key ? m_peer_raw_public_key->subject_public_key() : std::vector<uint8_t>{};
+
    return DER_Encoder()
       .start_sequence()
       .encode(static_cast<size_t>(TLS_SESSION_PARAM_STRUCT_VERSION))
@@ -343,6 +359,7 @@ secure_vector<uint8_t> Session::DER_encode() const {
       .start_sequence()
       .encode_list(m_peer_certs)
       .end_cons()
+      .encode(raw_pubkey_or_empty, ASN1_Type::OctetString)
       .encode(ASN1_String(m_server_info.hostname(), ASN1_Type::Utf8String))
       .encode(ASN1_String(m_server_info.service(), ASN1_Type::Utf8String))
       .encode(static_cast<size_t>(m_server_info.port()))

@@ -76,6 +76,23 @@ class BOTAN_PUBLIC_API(2, 0) Credentials_Manager {
          const std::string& context);
 
       /**
+      * Return a raw public key to be used for authentication or nullptr if no
+      * public key was found.
+      *
+      * It is assumed that the caller can get the private key of the leaf with
+      * private_key_for().
+      *
+      * @param key_types  specifies the key types desired ("RSA", "DSA",
+      *                   "ECDSA", etc), or empty if there is no preference by
+      *                   the caller.
+      * @param type       specifies the type of operation occurring
+      * @param context    specifies a context relative to type.
+      */
+      virtual std::shared_ptr<Public_Key> find_raw_public_key(const std::vector<std::string>& key_types,
+                                                              const std::string& type,
+                                                              const std::string& context);
+
+      /**
       * Return a cert chain we can use, ordered from leaf to root,
       * or else an empty vector.
       *
@@ -131,6 +148,18 @@ class BOTAN_PUBLIC_API(2, 0) Credentials_Manager {
       * the key is unavailable.
       */
       virtual std::shared_ptr<Private_Key> private_key_for(const X509_Certificate& cert,
+                                                           const std::string& type,
+                                                           const std::string& context);
+
+      /**
+      * This function should either return nullptr or throw an exception if
+      * the key is unavailable.
+      *
+      * @return private key associated with this raw public key if we should
+      *         use it with this context. @p raw_public_key was returned by
+      *         find_raw_public_key()
+      */
+      virtual std::shared_ptr<Private_Key> private_key_for(const Public_Key& raw_public_key,
                                                            const std::string& type,
                                                            const std::string& context);
 

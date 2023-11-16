@@ -28,6 +28,7 @@ class Server_Impl_13 : public Channel_Impl_13 {
 
       std::string application_protocol() const override;
       std::vector<X509_Certificate> peer_cert_chain() const override;
+      std::shared_ptr<const Public_Key> peer_raw_public_key() const override;
       std::optional<std::string> external_psk_identity() const override;
 
       bool new_session_ticket_supported() const override;

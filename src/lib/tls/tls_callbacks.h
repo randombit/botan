@@ -172,6 +172,37 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
                                          const TLS::Policy& policy);
 
       /**
+       * Optional callback. Default impl always rejects.
+       *
+       * This allows using raw public keys for authentication of peers as
+       * described in RFC 7250 and RFC 8446 4.2.2. Applications that wish
+       * to use raw public keys MUST override this callback to verify the
+       * authenticity of the received public keys.
+       *
+       * Default implementation always rejects the raw public key.
+       *
+       * This function should throw an exception derived from
+       * std::exception with an informative what() result if the
+       * raw public key cannot be verified.
+       *
+       * @param raw_public_key specifies the raw public key to be used
+       *        for peer authentication
+       * @param usage what this cert chain is being used for
+       *        Usage_Type::TLS_SERVER_AUTH for server chains,
+       *        Usage_Type::TLS_CLIENT_AUTH for client chains,
+       * @param hostname when authenticating a server, this is the hostname
+       *        the client requested (eg via SNI). When authenticating a client,
+       *        this is the server name the client is authenticating *to*.
+       *        Empty in other cases or if no hostname was used.
+       * @param policy the TLS policy associated with the session being authenticated
+       *        using the raw public key
+       */
+      virtual void tls_verify_raw_public_key(const Public_Key& raw_public_key,
+                                             Usage_Type usage,
+                                             std::string_view hostname,
+                                             const TLS::Policy& policy);
+
+      /**
        * Called by default `tls_verify_cert_chain` to get the timeout to use for OCSP
        * requests. Return 0 to disable online OCSP checks.
        *

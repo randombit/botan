@@ -43,13 +43,28 @@ std::string Server_Impl_13::application_protocol() const {
 }
 
 std::vector<X509_Certificate> Server_Impl_13::peer_cert_chain() const {
+   if(m_handshake_state.has_client_certificate_msg() &&
+      m_handshake_state.client_certificate().has_certificate_chain()) {
+      return m_handshake_state.client_certificate().cert_chain();
+   }
+
    if(m_resumed_session.has_value()) {
       return m_resumed_session->peer_certs();
-   } else if(m_handshake_state.has_client_certificate_chain()) {
-      return m_handshake_state.client_certificate().cert_chain();
-   } else {
-      return {};
    }
+
+   return {};
+}
+
+std::shared_ptr<const Public_Key> Server_Impl_13::peer_raw_public_key() const {
+   if(m_handshake_state.has_client_certificate_msg() && m_handshake_state.client_certificate().is_raw_public_key()) {
+      return m_handshake_state.client_certificate().public_key();
+   }
+
+   if(m_resumed_session.has_value()) {
+      return m_resumed_session->peer_raw_public_key();
+   }
+
+   return nullptr;
 }
 
 std::optional<std::string> Server_Impl_13::external_psk_identity() const {
@@ -88,6 +103,7 @@ size_t Server_Impl_13::send_new_session_tickets(const size_t tickets) {
                             std::nullopt,  // early data not yet implemented
                             policy().session_ticket_lifetime(),
                             peer_cert_chain(),
+                            peer_raw_public_key(),
                             m_handshake_state.client_hello(),
                             m_handshake_state.server_hello(),
                             callbacks(),
@@ -295,7 +311,33 @@ void Server_Impl_13::handle_reply_to_client_hello(Server_Hello_13 server_hello) 
          flight.add(m_handshake_state.sending(std::move(certificate_request.value())));
       }
 
-      flight.add(m_handshake_state.sending(Certificate_13(client_hello, credentials_manager(), callbacks())))
+      const auto& enc_exts = m_handshake_state.encrypted_extensions().extensions();
+
+      // RFC 7250 4.2
+      //   This client_certificate_type extension in the server hello then
+      //   indicates the type of certificates the client is requested to provide
+      //   in a subsequent certificate payload.
+      //
+      // Note: TLS 1.3 carries this extension in the Encrypted Extensions
+      //       message instead of the Server Hello.
+      if(auto client_cert_type = enc_exts.get<Client_Certificate_Type>()) {
+         set_selected_certificate_type(client_cert_type->selected_certificate_type());
+      }
+
+      // RFC 8446 4.4.2
+      //    If the corresponding certificate type extension [...]  was not
+      //    negotiated in EncryptedExtensions, or the X.509 certificate type
+      //    was negotiated, then each CertificateEntry contains a DER-encoded
+      //    X.509 certificate.
+      const auto cert_type = [&] {
+         if(auto server_cert_type = enc_exts.get<Server_Certificate_Type>()) {
+            return server_cert_type->selected_certificate_type();
+         } else {
+            return Certificate_Type::X509;
+         }
+      }();
+
+      flight.add(m_handshake_state.sending(Certificate_13(client_hello, credentials_manager(), callbacks(), cert_type)))
          .add(m_handshake_state.sending(Certificate_Verify_13(m_handshake_state.server_certificate(),
                                                               client_hello.signature_schemes(),
                                                               client_hello.sni_hostname(),
@@ -501,10 +543,10 @@ void Server_Impl_13::handle(const Certificate_Verify_13& certificate_verify_msg)
                              " as a signature scheme");
    }
 
-   BOTAN_ASSERT_NOMSG(m_handshake_state.has_client_certificate_chain() &&
+   BOTAN_ASSERT_NOMSG(m_handshake_state.has_client_certificate_msg() &&
                       !m_handshake_state.client_certificate().empty());
    bool sig_valid = certificate_verify_msg.verify(
-      m_handshake_state.client_certificate().leaf(), callbacks(), m_transcript_hash.previous());
+      *m_handshake_state.client_certificate().public_key(), callbacks(), m_transcript_hash.previous());
 
    // RFC 8446 4.4.3
    //   If the verification fails, the receiver MUST terminate the handshake
@@ -531,6 +573,7 @@ void Server_Impl_13::handle(const Finished_13& finished_msg) {
       Session_Summary(m_handshake_state.server_hello(),
                       Connection_Side::Server,
                       peer_cert_chain(),
+                      peer_raw_public_key(),
                       m_psk_identity,
                       m_resumed_session.has_value(),
                       Server_Information(m_handshake_state.client_hello().sni_hostname()),

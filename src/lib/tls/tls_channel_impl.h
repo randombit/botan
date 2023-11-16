@@ -110,6 +110,11 @@ class Channel_Impl {
       virtual std::vector<X509_Certificate> peer_cert_chain() const = 0;
 
       /**
+      * @return raw public key of the peer (may be nullptr)
+      */
+      virtual std::shared_ptr<const Public_Key> peer_raw_public_key() const = 0;
+
+      /**
        * @return identity of the PSK used for this connection
        *         or std::nullopt if no PSK was used.
        */

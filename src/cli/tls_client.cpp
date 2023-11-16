@@ -43,6 +43,7 @@ class Callbacks : public Botan::TLS::Callbacks {
 
       std::ostream& output();
       bool flag_set(const std::string& flag_name) const;
+      std::string get_arg(const std::string& arg_name) const;
       void send(std::span<const uint8_t> buffer);
 
       int peer_closed() const { return m_peer_closed; }
@@ -73,6 +74,16 @@ class Callbacks : public Botan::TLS::Callbacks {
                output() << "Valid OCSP response for this server\n";
             }
          }
+      }
+
+      void tls_verify_raw_public_key(const Botan::Public_Key& raw_public_key,
+                                     Botan::Usage_Type /* usage */,
+                                     std::string_view /* hostname */,
+                                     const Botan::TLS::Policy& /* policy */) override {
+         const auto fingerprint = raw_public_key.fingerprint_public("SHA-256");
+         const auto trusted = (fingerprint == get_arg("trusted-pubkey-sha256"));
+         output() << "Raw Public Key (" << fingerprint
+                  << ") validation status: " << (trusted ? "trusted" : "NOT trusted") << "\n";
       }
 
       void tls_session_activated() override { output() << "Handshake complete\n"; }
@@ -148,9 +159,10 @@ class TLS_Client final : public Command {
       TLS_Client() :
             Command(
                "tls_client host --port=443 --print-certs --policy=default "
-               "--skip-system-cert-store --trusted-cas= --tls-version=default "
-               "--session-db= --session-db-pass= --next-protocols= --type=tcp "
-               "--client-cert= --client-cert-key= --psk= --psk-identity= --psk-prf=SHA-256 --debug") {
+               "--skip-system-cert-store --trusted-cas= --trusted-pubkey-sha256= "
+               "--tls-version=default --session-db= --session-db-pass= "
+               "--next-protocols= --type=tcp --client-cert= --client-cert-key= "
+               "--psk= --psk-identity= --psk-prf=SHA-256 --debug") {
          init_sockets();
       }
 
@@ -177,6 +189,7 @@ class TLS_Client final : public Command {
          const std::string next_protos = get_arg("next-protocols");
          const bool use_system_cert_store = flag_set("skip-system-cert-store") == false;
          const std::string trusted_CAs = get_arg("trusted-cas");
+         const std::string trusted_pubkey_sha256 = get_arg("trusted-pubkey-sha256");
          const auto tls_version = get_arg("tls-version");
 
          if(!sessions_db.empty()) {
@@ -343,6 +356,7 @@ class TLS_Client final : public Command {
 
    public:
       using Command::flag_set;
+      using Command::get_arg;
       using Command::output;
 
       void send(std::span<const uint8_t> buf) const {
@@ -419,6 +433,10 @@ std::ostream& Callbacks::output() {
 
 bool Callbacks::flag_set(const std::string& flag_name) const {
    return m_client_command.flag_set(flag_name);
+}
+
+std::string Callbacks::get_arg(const std::string& arg_name) const {
+   return m_client_command.get_arg(arg_name);
 }
 
 void Callbacks::send(std::span<const uint8_t> buffer) {

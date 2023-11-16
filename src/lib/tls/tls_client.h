@@ -81,7 +81,7 @@ class BOTAN_PUBLIC_API(2, 0) Client final : public Channel {
       bool is_closed_for_writing() const override;
 
       std::vector<X509_Certificate> peer_cert_chain() const override;
-
+      std::shared_ptr<const Public_Key> peer_raw_public_key() const override;
       std::optional<std::string> external_psk_identity() const override;
 
       SymmetricKey key_material_export(std::string_view label, std::string_view context, size_t length) const override;

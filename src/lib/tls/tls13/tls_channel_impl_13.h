@@ -284,6 +284,13 @@ class Channel_Impl_13 : public Channel_Impl {
        */
       void set_record_size_limits(uint16_t outgoing_limit, uint16_t incoming_limit);
 
+      /**
+       * Set the expected certificate type needed to parse Certificate
+       * messages in the handshake layer. See RFC 7250 and 8446 4.4.2 for
+       * further details.
+       */
+      void set_selected_certificate_type(Certificate_Type cert_type);
+
    private:
       /* callbacks */
       std::shared_ptr<Callbacks> m_callbacks;
