@@ -1,7 +1,7 @@
 allow_tls10 = false
 allow_tls11 = false
 allow_tls12 = true
-allow_tls13 = false
+allow_tls13 = true
 allow_dtls10 = false
 allow_dtls12 = false
 
@@ -10,12 +10,13 @@ signature_hashes = SHA-512 SHA-384 SHA-256
 macs = AEAD SHA-384 SHA-256
 key_exchange_methods = ECDH DH ECDHE_PSK
 signature_methods = ECDSA RSA DSA
-key_exchange_groups = brainpool512r1 brainpool384r1 brainpool256r1 secp384r1 secp256r1 ffdhe/ietf/4096 ffdhe/ietf/3072 ffdhe/ietf/2048
-minimum_dh_group_size = 2000
-minimum_dsa_group_size = 2000
+key_exchange_groups = brainpool512r1 brainpool384r1 brainpool256r1 secp521r1 secp384r1 secp256r1 ffdhe/ietf/4096 ffdhe/ietf/3072
+minimum_signature_strength = 120
+minimum_dh_group_size = 3000
+minimum_dsa_group_size = 3000
 minimum_ecdh_group_size = 250
 minimum_ecdsa_group_size = 250
-minimum_rsa_bits = 2000
+minimum_rsa_bits = 3000
 
 allow_insecure_renegotiation = false
 allow_server_initiated_renegotiation = true

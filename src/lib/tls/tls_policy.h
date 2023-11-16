@@ -540,12 +540,14 @@ class BOTAN_PUBLIC_API(2, 0) BSI_TR_02102_2 : public Policy {
          return std::vector<Group_Params>({Group_Params::BRAINPOOL512R1,
                                            Group_Params::BRAINPOOL384R1,
                                            Group_Params::BRAINPOOL256R1,
+                                           Group_Params::SECP521R1,
                                            Group_Params::SECP384R1,
                                            Group_Params::SECP256R1,
                                            Group_Params::FFDHE_4096,
-                                           Group_Params::FFDHE_3072,
-                                           Group_Params::FFDHE_2048});
+                                           Group_Params::FFDHE_3072});
       }
+
+      size_t minimum_signature_strength() const override { return 120; }
 
       bool allow_insecure_renegotiation() const override { return false; }
 
@@ -555,9 +557,9 @@ class BOTAN_PUBLIC_API(2, 0) BSI_TR_02102_2 : public Policy {
 
       bool negotiate_encrypt_then_mac() const override { return true; }
 
-      size_t minimum_rsa_bits() const override { return 2000; }
+      size_t minimum_rsa_bits() const override { return 3000; }
 
-      size_t minimum_dh_group_size() const override { return 2000; }
+      size_t minimum_dh_group_size() const override { return 3000; }
 
       size_t minimum_ecdh_group_size() const override { return 250; }
 
@@ -565,7 +567,7 @@ class BOTAN_PUBLIC_API(2, 0) BSI_TR_02102_2 : public Policy {
 
       bool allow_tls12() const override { return true; }
 
-      bool allow_tls13() const override { return false; }
+      bool allow_tls13() const override { return true; }
 
       bool allow_dtls12() const override { return false; }
 };
