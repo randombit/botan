@@ -93,6 +93,13 @@ enum class Group_Params_Code : uint16_t {
 
    X25519 = 29,
 
+   // The original brainpool code points (see above) were deprecated by IETF
+   // and should therefore not be used in TLS 1.3 and above.
+   // RFC 8734 re-introduced them for TLS 1.3, as new code points. -.-
+   BRAINPOOL256R1_TLS13 = 31,
+   BRAINPOOL384R1_TLS13 = 32,
+   BRAINPOOL512R1_TLS13 = 33,
+
    FFDHE_2048 = 256,
    FFDHE_3072 = 257,
    FFDHE_4096 = 258,
@@ -155,7 +162,9 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
       constexpr bool is_ecdh_named_curve() const {
          return m_code == Group_Params_Code::SECP256R1 || m_code == Group_Params_Code::SECP384R1 ||
                 m_code == Group_Params_Code::SECP521R1 || m_code == Group_Params_Code::BRAINPOOL256R1 ||
-                m_code == Group_Params_Code::BRAINPOOL384R1 || m_code == Group_Params_Code::BRAINPOOL512R1;
+                m_code == Group_Params_Code::BRAINPOOL384R1 || m_code == Group_Params_Code::BRAINPOOL512R1 ||
+                m_code == Group_Params_Code::BRAINPOOL256R1_TLS13 ||
+                m_code == Group_Params_Code::BRAINPOOL384R1_TLS13 || m_code == Group_Params_Code::BRAINPOOL512R1_TLS13;
       }
 
       constexpr bool is_in_ffdhe_range() const {

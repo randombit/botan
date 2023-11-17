@@ -154,6 +154,15 @@ std::optional<Group_Params> Group_Params::from_string(std::string_view group_nam
    if(group_name == "brainpool512r1") {
       return Group_Params::BRAINPOOL512R1;
    }
+   if(group_name == "brainpool256r1tls13") {
+      return Group_Params::BRAINPOOL256R1_TLS13;
+   }
+   if(group_name == "brainpool384r1tls13") {
+      return Group_Params::BRAINPOOL384R1_TLS13;
+   }
+   if(group_name == "brainpool512r1tls13") {
+      return Group_Params::BRAINPOOL512R1_TLS13;
+   }
    if(group_name == "x25519") {
       return Group_Params::X25519;
    }
@@ -225,6 +234,12 @@ std::optional<std::string> Group_Params::to_string() const {
          return "brainpool384r1";
       case Group_Params::BRAINPOOL512R1:
          return "brainpool512r1";
+      case Group_Params::BRAINPOOL256R1_TLS13:
+         return "brainpool256r1tls13";
+      case Group_Params::BRAINPOOL384R1_TLS13:
+         return "brainpool384r1tls13";
+      case Group_Params::BRAINPOOL512R1_TLS13:
+         return "brainpool512r1tls13";
       case Group_Params::X25519:
          return "x25519";
 
@@ -270,6 +285,17 @@ std::optional<std::string> Group_Params::to_string() const {
 
 std::optional<std::string> Group_Params::to_algorithm_spec() const {
    switch(m_code) {
+      // Brainpool curves have two sets of code points. See RFCs 7027 and 8734.
+      case Group_Params::BRAINPOOL256R1:
+      case Group_Params::BRAINPOOL256R1_TLS13:
+         return "brainpool256r1";
+      case Group_Params::BRAINPOOL384R1:
+      case Group_Params::BRAINPOOL384R1_TLS13:
+         return "brainpool384r1";
+      case Group_Params::BRAINPOOL512R1:
+      case Group_Params::BRAINPOOL512R1_TLS13:
+         return "brainpool512r1";
+
       default:
          return to_string();
    }
@@ -282,9 +308,11 @@ bool Group_Params::usable_in_version(const Protocol_Version& version) const {
    //
    // Also KEM-based key exchanges are not implemented for TLS 1.2.
    if(version.is_pre_tls_13()) {
-      return !is_post_quantum();
+      return !is_post_quantum() && m_code != Group_Params_Code::BRAINPOOL256R1_TLS13 &&
+             m_code != Group_Params_Code::BRAINPOOL384R1_TLS13 && m_code != Group_Params_Code::BRAINPOOL512R1_TLS13;
    } else {
-      return true;
+      return m_code != Group_Params_Code::BRAINPOOL256R1 && m_code != Group_Params_Code::BRAINPOOL384R1 &&
+             m_code != Group_Params_Code::BRAINPOOL512R1;
    }
 }
 

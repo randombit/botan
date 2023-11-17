@@ -561,8 +561,11 @@ class BOTAN_PUBLIC_API(2, 0) BSI_TR_02102_2 : public Policy {
 
       std::vector<Group_Params> key_exchange_groups() const override {
          return std::vector<Group_Params>({Group_Params::BRAINPOOL512R1,
+                                           Group_Params::BRAINPOOL512R1_TLS13,
                                            Group_Params::BRAINPOOL384R1,
+                                           Group_Params::BRAINPOOL384R1_TLS13,
                                            Group_Params::BRAINPOOL256R1,
+                                           Group_Params::BRAINPOOL256R1_TLS13,
                                            Group_Params::SECP521R1,
                                            Group_Params::SECP384R1,
                                            Group_Params::SECP256R1,
