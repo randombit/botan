@@ -267,4 +267,11 @@ std::optional<std::string> Group_Params::to_string() const {
    }
 }
 
+std::optional<std::string> Group_Params::to_algorithm_spec() const {
+   switch(m_code) {
+      default:
+         return to_string();
+   }
+}
+
 }  // namespace Botan::TLS

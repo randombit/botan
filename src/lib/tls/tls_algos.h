@@ -186,8 +186,13 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
 
       constexpr bool is_kem() const { return is_pure_kyber() || is_pqc_hybrid(); }
 
-      // Returns std::nullopt if the param has no known name
+      // Returns a unique name for the group param, std::nullopt otherwise  if
+      // the param has no known name.
       std::optional<std::string> to_string() const;
+
+      // Returns the string that is typically used to instantiate the algorithm.
+      // This might not be unique across specific code points.
+      std::optional<std::string> to_algorithm_spec() const;
 
    private:
       Group_Params_Code m_code;
