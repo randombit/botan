@@ -27,6 +27,7 @@ version.h
 <header:internal>
 alignment_buffer.h
 bit_ops.h
+bitvector.h
 bswap.h
 calendar.h
 charset.h
