@@ -8,8 +8,11 @@
 #ifndef BOTAN_MEMORY_OPS_H_
 #define BOTAN_MEMORY_OPS_H_
 
+#include <botan/concepts.h>
 #include <botan/types.h>
+#include <array>
 #include <cstring>
+#include <ranges>
 #include <span>
 #include <type_traits>
 #include <vector>
@@ -45,13 +48,37 @@ namespace Botan {
 BOTAN_PUBLIC_API(2, 0) void secure_scrub_memory(void* ptr, size_t n);
 
 /**
+* Scrub memory contents in a way that a compiler should not elide,
+* using some system specific technique. Note that this function might
+* not zero the memory.
+*
+* @param data  the data region to be scrubbed
+*/
+void secure_scrub_memory(ranges::contiguous_output_range auto&& data) {
+   secure_scrub_memory(std::ranges::data(data), ranges::size_bytes(data));
+}
+
+#if !defined(BOTAN_IS_BEGIN_BUILT)
+
+/**
 * Memory comparison, input insensitive
 * @param x a pointer to an array
 * @param y a pointer to another array
 * @param len the number of Ts in x and y
 * @return 0xFF iff x[i] == y[i] forall i in [0...n) or 0x00 otherwise
 */
+BOTAN_DEPRECATED("This function is deprecated, use constant_time_compare()")
 BOTAN_PUBLIC_API(2, 9) uint8_t ct_compare_u8(const uint8_t x[], const uint8_t y[], size_t len);
+
+#endif
+
+/**
+ * Memory comparison, input insensitive
+ * @param x a range of bytes
+ * @param y another range of bytes
+ * @return true iff x and y have equal lengths and x[i] == y[i] forall i in [0...n)
+ */
+BOTAN_PUBLIC_API(3, 3) bool constant_time_compare(std::span<const uint8_t> x, std::span<const uint8_t> y);
 
 /**
 * Memory comparison, input insensitive
@@ -61,7 +88,8 @@ BOTAN_PUBLIC_API(2, 9) uint8_t ct_compare_u8(const uint8_t x[], const uint8_t y[
 * @return true iff x[i] == y[i] forall i in [0...n)
 */
 inline bool constant_time_compare(const uint8_t x[], const uint8_t y[], size_t len) {
-   return ct_compare_u8(x, y, len) == 0xFF;
+   // simply assumes that *x and *y point to len allocated bytes at least
+   return constant_time_compare({x, len}, {y, len});
 }
 
 /**
@@ -94,6 +122,20 @@ inline constexpr void clear_mem(T* ptr, size_t n) {
 }
 
 /**
+* Zero memory before use. This simply calls memset and should not be
+* used in cases where the compiler cannot see the call as a
+* side-effecting operation.
+*
+* @param mem a contiguous range of Ts to zero
+*/
+template <ranges::contiguous_output_range R>
+inline constexpr void clear_mem(R&& mem)
+   requires std::is_trivially_copyable_v<std::ranges::range_value_t<R>>
+{
+   clear_bytes(std::ranges::data(mem), ranges::size_bytes(mem));
+}
+
+/**
 * Copy memory
 * @param out the destination array
 * @param in the source array
@@ -110,39 +152,114 @@ inline constexpr void copy_mem(T* out, const T* in, size_t n)
    }
 }
 
+/**
+* Copy memory
+* @param out the destination array
+* @param in the source array
+*/
+template <ranges::contiguous_output_range OutR, ranges::contiguous_range InR>
+inline constexpr void copy_mem(OutR&& out, InR&& in)
+   requires std::is_same_v<std::ranges::range_value_t<OutR>, std::ranges::range_value_t<InR>> &&
+            std::is_trivially_copyable_v<std::ranges::range_value_t<InR>>
+{
+   ranges::assert_equal_byte_lengths(out, in);
+   if(ranges::size_bytes(out) > 0) {
+      std::memmove(std::ranges::data(out), std::ranges::data(in), ranges::size_bytes(out));
+   }
+}
+
+/**
+ * Copy a range of a trivially copyable type into another range of trivially
+ * copyable type of matching byte length.
+ */
+template <ranges::contiguous_output_range ToR, ranges::contiguous_range FromR>
+inline constexpr void typecast_copy(ToR&& out, FromR&& in)
+   requires std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>> &&
+            std::is_trivially_copyable_v<std::ranges::range_value_t<ToR>>
+{
+   ranges::assert_equal_byte_lengths(out, in);
+   std::memcpy(std::ranges::data(out), std::ranges::data(in), ranges::size_bytes(out));
+}
+
+/**
+ * Copy a range of trivially copyable type into an instance of trivially
+ * copyable type with matching length.
+ */
+template <typename ToT, ranges::contiguous_range FromR>
+inline constexpr void typecast_copy(ToT& out, FromR&& in) noexcept
+   requires std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>> && std::is_trivially_copyable_v<ToT> &&
+            (!std::ranges::range<ToT>)
+{
+   typecast_copy(std::span<ToT, 1>(&out, 1), in);
+}
+
+/**
+ * Copy an instance of trivially copyable type into a range of trivially
+ * copyable type with matching length.
+ */
+template <ranges::contiguous_output_range ToR, typename FromT>
+inline constexpr void typecast_copy(ToR&& out, const FromT& in)
+   requires std::is_trivially_copyable_v<FromT> &&
+            (!std::ranges::range<FromT>) && std::is_trivially_copyable_v<std::ranges::range_value_t<ToR>>
+
+{
+   typecast_copy(out, std::span<const FromT, 1>(&in, 1));
+}
+
+/**
+ * Create a trivial type by bit-casting a range of trivially copyable type with
+ * matching length into it.
+ */
+template <typename ToT, ranges::contiguous_range FromR>
+inline constexpr ToT typecast_copy(FromR&& src) noexcept
+   requires std::is_trivial_v<ToT> && std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>>
+{
+   ToT dst;
+   typecast_copy(dst, src);
+   return dst;
+}
+
+// TODO: deprecate and replace
 template <typename T>
 inline constexpr void typecast_copy(uint8_t out[], T in[], size_t N)
    requires std::is_trivially_copyable<T>::value
 {
-   std::memcpy(out, in, sizeof(T) * N);
+   // asserts that *in and *out point to the correct amount of memory
+   typecast_copy(std::span<uint8_t>(out, sizeof(T) * N), std::span<const T>(in, N));
 }
 
+// TODO: deprecate and replace
 template <typename T>
 inline constexpr void typecast_copy(T out[], const uint8_t in[], size_t N)
    requires std::is_trivial<T>::value
 {
-   std::memcpy(out, in, sizeof(T) * N);
+   // asserts that *in and *out point to the correct amount of memory
+   typecast_copy(std::span<T>(out, N), std::span<const uint8_t>(in, N * sizeof(T)));
 }
 
+// TODO: deprecate and replace
 template <typename T>
-inline constexpr void typecast_copy(uint8_t out[], T in) {
-   typecast_copy(out, &in, 1);
+inline constexpr void typecast_copy(uint8_t out[], const T& in) {
+   // asserts that *out points to the correct amount of memory
+   typecast_copy(std::span<uint8_t, sizeof(T)>(out, sizeof(T)), in);
 }
 
+// TODO: deprecate and replace
 template <typename T>
 inline constexpr void typecast_copy(T& out, const uint8_t in[])
    requires std::is_trivial<typename std::decay<T>::type>::value
 {
-   typecast_copy(&out, in, 1);
+   // asserts that *in points to the correct amount of memory
+   typecast_copy(out, std::span<const uint8_t, sizeof(T)>(in, sizeof(T)));
 }
 
-template <class To, class FromT>
-inline constexpr To typecast_copy(const FromT* src) noexcept
-   requires std::is_trivially_copyable<FromT>::value && std::is_trivial<To>::value
+// TODO: deprecate and replace
+template <typename To>
+inline constexpr To typecast_copy(const uint8_t src[]) noexcept
+   requires std::is_trivial<To>::value
 {
-   To dst;
-   std::memcpy(&dst, src, sizeof(To));
-   return dst;
+   // asserts that *src points to the correct amount of memory
+   return typecast_copy<To>(std::span<const uint8_t, sizeof(To)>(src, sizeof(To)));
 }
 
 #if !defined(BOTAN_IS_BEGIN_BUILT)
@@ -226,75 +343,110 @@ size_t buffer_insert(std::vector<T, Alloc>& buf, size_t buf_offset, const std::v
 
 /**
 * XOR arrays. Postcondition out[i] = in[i] ^ out[i] forall i = 0...length
-* @param out the input/output buffer
-* @param in the read-only input buffer
-* @param length the length of the buffers
+* @param out the input/output range
+* @param in the read-only input range
 */
-inline void xor_buf(uint8_t out[], const uint8_t in[], size_t length) {
-   const size_t blocks = length - (length % 32);
+inline constexpr void xor_buf(ranges::contiguous_output_range<uint8_t> auto&& out,
+                              ranges::contiguous_range<uint8_t> auto&& in) {
+   ranges::assert_equal_byte_lengths(out, in);
 
-   for(size_t i = 0; i != blocks; i += 32) {
-      uint64_t x[4];
-      uint64_t y[4];
+   std::span o{out};
+   std::span i{in};
 
-      typecast_copy(x, out + i, 4);
-      typecast_copy(y, in + i, 4);
+   for(; o.size_bytes() >= 32; o = o.subspan(32), i = i.subspan(32)) {
+      auto x = typecast_copy<std::array<uint64_t, 4>>(o.template first<32>());
+      const auto y = typecast_copy<std::array<uint64_t, 4>>(i.template first<32>());
 
       x[0] ^= y[0];
       x[1] ^= y[1];
       x[2] ^= y[2];
       x[3] ^= y[3];
 
-      typecast_copy(out + i, x, 4);
+      typecast_copy(o.template first<32>(), x);
    }
 
-   for(size_t i = blocks; i != length; ++i) {
-      out[i] ^= in[i];
+   for(size_t off = 0; off != o.size_bytes(); ++off) {
+      o[off] ^= i[off];
    }
+}
+
+/**
+* XOR arrays. Postcondition out[i] = in1[i] ^ in2[i] forall i = 0...length
+* @param out the output range
+* @param in1 the first input range
+* @param in2 the second input range
+*/
+inline constexpr void xor_buf(ranges::contiguous_output_range<uint8_t> auto&& out,
+                              ranges::contiguous_range<uint8_t> auto&& in1,
+                              ranges::contiguous_range<uint8_t> auto&& in2) {
+   ranges::assert_equal_byte_lengths(out, in1, in2);
+
+   std::span o{out};
+   std::span i1{in1};
+   std::span i2{in2};
+
+   for(; o.size_bytes() >= 32; o = o.subspan(32), i1 = i1.subspan(32), i2 = i2.subspan(32)) {
+      auto x = typecast_copy<std::array<uint64_t, 4>>(i1.template first<32>());
+      const auto y = typecast_copy<std::array<uint64_t, 4>>(i2.template first<32>());
+
+      x[0] ^= y[0];
+      x[1] ^= y[1];
+      x[2] ^= y[2];
+      x[3] ^= y[3];
+
+      typecast_copy(o.template first<32>(), x);
+   }
+
+   for(size_t off = 0; off != o.size_bytes(); ++off) {
+      o[off] = i1[off] ^ i2[off];
+   }
+}
+
+/**
+* XOR arrays. Postcondition out[i] = in[i] ^ out[i] forall i = 0...length
+* @param out the input/output buffer
+* @param in the read-only input buffer
+* @param length the length of the buffers
+*/
+inline void xor_buf(uint8_t out[], const uint8_t in[], size_t length) {
+   // simply assumes that *out and *in point to "length" allocated bytes at least
+   xor_buf(std::span{out, length}, std::span{in, length});
 }
 
 /**
 * XOR arrays. Postcondition out[i] = in[i] ^ in2[i] forall i = 0...length
 * @param out the output buffer
 * @param in the first input buffer
-* @param in2 the second output buffer
+* @param in2 the second input buffer
 * @param length the length of the three buffers
 */
 inline void xor_buf(uint8_t out[], const uint8_t in[], const uint8_t in2[], size_t length) {
-   const size_t blocks = length - (length % 32);
-
-   for(size_t i = 0; i != blocks; i += 32) {
-      uint64_t x[4];
-      uint64_t y[4];
-
-      typecast_copy(x, in + i, 4);
-      typecast_copy(y, in2 + i, 4);
-
-      x[0] ^= y[0];
-      x[1] ^= y[1];
-      x[2] ^= y[2];
-      x[3] ^= y[3];
-
-      typecast_copy(out + i, x, 4);
-   }
-
-   for(size_t i = blocks; i != length; ++i) {
-      out[i] = in[i] ^ in2[i];
-   }
+   // simply assumes that *out, *in, and *in2 point to "length" allocated bytes at least
+   xor_buf(std::span{out, length}, std::span{in, length}, std::span{in2, length});
 }
 
+// TODO: deprecate and replace, use .subspan()
 inline void xor_buf(std::span<uint8_t> out, std::span<const uint8_t> in, size_t n) {
-   xor_buf(out.data(), in.data(), n);
+   BOTAN_ARG_CHECK(out.size() >= n, "output span is too small");
+   BOTAN_ARG_CHECK(in.size() >= n, "input span is too small");
+   xor_buf(out.first(n), in.first(n));
 }
 
+// TODO: deprecate and replace, use .subspan()
 template <typename Alloc>
 void xor_buf(std::vector<uint8_t, Alloc>& out, const uint8_t* in, size_t n) {
-   xor_buf(out.data(), in, n);
+   BOTAN_ARG_CHECK(out.size() >= n, "output vector is too small");
+   // simply assumes that *in points to "n" allocated bytes at least
+   xor_buf(std::span{out}.first(n), std::span{in, n});
 }
 
+// TODO: deprecate and replace
 template <typename Alloc, typename Alloc2>
 void xor_buf(std::vector<uint8_t, Alloc>& out, const uint8_t* in, const std::vector<uint8_t, Alloc2>& in2, size_t n) {
-   xor_buf(out.data(), in, in2.data(), n);
+   BOTAN_ARG_CHECK(out.size() >= n, "output vector is too small");
+   BOTAN_ARG_CHECK(in2.size() >= n, "input vector is too small");
+   // simply assumes that *in points to "n" allocated bytes at least
+   xor_buf(std::span{out}.first(n), std::span{in, n}, std::span{in2}.first(n));
 }
 
 template <typename Alloc, typename Alloc2>
@@ -303,7 +455,7 @@ std::vector<uint8_t, Alloc>& operator^=(std::vector<uint8_t, Alloc>& out, const 
       out.resize(in.size());
    }
 
-   xor_buf(out.data(), in.data(), in.size());
+   xor_buf(std::span{out}.first(in.size()), in);
    return out;
 }
 
