@@ -133,6 +133,57 @@ inline constexpr T load_le(InR&& in_range) {
    }
 }
 
+namespace details {
+
+/**
+* Given a statically sized range @p r of size 1, 2, 4, or 8, this finds the
+* corresponding unsigned integer type to hold the value of @p r. Note, that
+* this only maps the type, and does not perform any loading.
+*/
+template <ranges::contiguous_range<uint8_t> InR>
+consteval auto default_load_type(InR&& r) {
+   std::span s{r};
+   static_assert(decltype(s)::extent != std::dynamic_extent,
+                 "Cannot determine the output type based on a dynamically sized bytearray");
+   constexpr size_t e = decltype(s)::extent;
+
+   // clang-format off
+   using type =
+      std::conditional_t<e == 1, uint8_t,
+      std::conditional_t<e == 2, uint16_t,
+      std::conditional_t<e == 4, uint32_t,
+      std::conditional_t<e == 8, uint64_t, void>>>>;
+   // clang-format on
+
+   static_assert(
+      !std::is_void_v<type>,
+      "Cannot determine the output type based on a statically sized bytearray with length other than those: 1, 2, 4, 8");
+
+   return type{};
+}
+
+}  // namespace details
+
+/**
+* Load a little-endian unsigned integer, auto-detect the output type
+* @param in_range a statically-sized range with some bytes
+* @return T loaded from in, as a little-endian value
+*/
+template <ranges::contiguous_range<uint8_t> InR>
+inline constexpr auto load_le(InR&& in_range) {
+   return load_le<decltype(details::default_load_type(in_range)), InR>(std::forward<InR>(in_range));
+}
+
+/**
+* Load a big-endian unsigned integer, auto-detect the output type
+* @param in_range a statically-sized range with some bytes
+* @return T loaded from in, as a big-endian value
+*/
+template <ranges::contiguous_range<uint8_t> InR>
+inline constexpr auto load_be(InR&& in_range) {
+   return load_be<decltype(details::default_load_type(in_range)), InR>(std::forward<InR>(in_range));
+}
+
 /**
 * Load a big-endian word
 * @param in a pointer to some bytes
@@ -195,7 +246,7 @@ inline constexpr T load_le(const uint8_t in[], size_t off) {
 * @param outs a arbitrary-length parameter list of unsigned integers to be loaded
 */
 template <ranges::contiguous_range<uint8_t> InR, concepts::unsigned_integral... Ts>
-   requires all_same_v<Ts...>
+   requires(sizeof...(Ts) > 0) && all_same_v<Ts...>
 inline constexpr void load_be(InR&& in, Ts&... outs) {
    ranges::assert_exact_byte_length<(sizeof(Ts) + ...)>(in);
    auto load_one = [off = 0]<typename T>(auto i, T& o) mutable {
@@ -212,7 +263,7 @@ inline constexpr void load_be(InR&& in, Ts&... outs) {
 * @param outs a arbitrary-length parameter list of unsigned integers to be loaded
 */
 template <ranges::contiguous_range<uint8_t> InR, concepts::unsigned_integral... Ts>
-   requires all_same_v<Ts...>
+   requires(sizeof...(Ts) > 0) && all_same_v<Ts...>
 inline constexpr void load_le(InR&& in, Ts&... outs) {
    ranges::assert_exact_byte_length<(sizeof(Ts) + ...)>(in);
    auto load_one = [off = 0]<typename T>(auto i, T& o) mutable {
@@ -229,7 +280,7 @@ inline constexpr void load_le(InR&& in, Ts&... outs) {
 * @param outs a arbitrary-length parameter list of unsigned integers to be loaded
 */
 template <concepts::unsigned_integral... Ts>
-   requires all_same_v<Ts...>
+   requires(sizeof...(Ts) > 0) && all_same_v<Ts...>
 inline constexpr void load_be(const uint8_t in[], Ts&... outs) {
    constexpr auto bytes = (sizeof(outs) + ...);
    // asserts that *in points to the correct amount of memory
@@ -242,7 +293,7 @@ inline constexpr void load_be(const uint8_t in[], Ts&... outs) {
 * @param outs a arbitrary-length parameter list of unsigned integers to be loaded
 */
 template <concepts::unsigned_integral... Ts>
-   requires all_same_v<Ts...>
+   requires(sizeof...(Ts) > 0) && all_same_v<Ts...>
 inline constexpr void load_le(const uint8_t in[], Ts&... outs) {
    constexpr auto bytes = (sizeof(outs) + ...);
    // asserts that *in points to the correct amount of memory
@@ -374,7 +425,7 @@ inline constexpr void store_le(T in, uint8_t out[sizeof(T)]) {
 * @param ins a arbitrary-length parameter list of unsigned integers to be stored
 */
 template <ranges::contiguous_output_range<uint8_t> OutR, concepts::unsigned_integral... Ts>
-   requires all_same_v<Ts...>
+   requires(sizeof...(Ts) > 0) && all_same_v<Ts...>
 inline constexpr void store_be(OutR&& out, Ts... ins) {
    ranges::assert_exact_byte_length<(sizeof(Ts) + ...)>(out);
    auto store_one = [off = 0]<typename T>(auto o, T i) mutable {
@@ -391,7 +442,7 @@ inline constexpr void store_be(OutR&& out, Ts... ins) {
 * @param ins a arbitrary-length parameter list of unsigned integers to be stored
 */
 template <ranges::contiguous_output_range<uint8_t> OutR, concepts::unsigned_integral... Ts>
-   requires all_same_v<Ts...>
+   requires(sizeof...(Ts) > 0) && all_same_v<Ts...>
 inline constexpr void store_le(OutR&& out, Ts... ins) {
    ranges::assert_exact_byte_length<(sizeof(Ts) + ...)>(out);
    auto store_one = [off = 0]<typename T>(auto o, T i) mutable {
@@ -408,7 +459,7 @@ inline constexpr void store_le(OutR&& out, Ts... ins) {
 * @param out a arbitrary-length parameter list of unsigned integers to be stored
 */
 template <concepts::unsigned_integral... Ts>
-   requires all_same_v<Ts...>
+   requires(sizeof...(Ts) > 0) && all_same_v<Ts...>
 inline constexpr void store_be(uint8_t out[], Ts... ins) {
    constexpr auto bytes = (sizeof(ins) + ...);
    // asserts that *out points to the correct amount of memory
@@ -421,11 +472,35 @@ inline constexpr void store_be(uint8_t out[], Ts... ins) {
 * @param out a arbitrary-length parameter list of unsigned integers to be stored
 */
 template <concepts::unsigned_integral... Ts>
-   requires all_same_v<Ts...>
+   requires(sizeof...(Ts) > 0) && all_same_v<Ts...>
 inline constexpr void store_le(uint8_t out[], Ts... ins) {
    constexpr auto bytes = (sizeof(ins) + ...);
    // asserts that *out points to the correct amount of memory
    store_le(std::span<uint8_t, bytes>(out, bytes), ins...);
+}
+
+/**
+* Store a big-endian unsigned integer
+* @param in the input unsigned integer
+* @return a byte array holding the integer value in big-endian byte order
+*/
+template <concepts::unsigned_integral T>
+inline constexpr auto store_be(T in) {
+   std::array<uint8_t, sizeof(T)> out;
+   store_be(in, out);
+   return out;
+}
+
+/**
+* Store a big-endian unsigned integer
+* @param in the input unsigned integer
+* @return a byte array holding the integer value in big-endian byte order
+*/
+template <concepts::unsigned_integral T>
+inline constexpr auto store_le(T in) {
+   std::array<uint8_t, sizeof(T)> out;
+   store_le(in, out);
+   return out;
 }
 
 template <typename T>

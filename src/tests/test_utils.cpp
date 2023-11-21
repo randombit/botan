@@ -199,6 +199,14 @@ class Utility_Function_Tests final : public Text_Based_Test {
          result.test_is_eq<uint16_t>(i2, 0x01EF);
          result.test_is_eq<uint16_t>(i3, 0xABCD);  // remains unchanged
 
+         result.test_is_eq(in16, Botan::load_be(Botan::store_be(in16)));
+         result.test_is_eq(in32, Botan::load_be(Botan::store_be(in32)));
+         result.test_is_eq(in64, Botan::load_be(Botan::store_be(in64)));
+
+         result.test_is_eq(in16, Botan::load_le(Botan::store_le(in16)));
+         result.test_is_eq(in32, Botan::load_le(Botan::store_le(in32)));
+         result.test_is_eq(in64, Botan::load_le(Botan::store_le(in64)));
+
          return result;
       }
 };
