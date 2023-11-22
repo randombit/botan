@@ -492,9 +492,9 @@ inline constexpr auto store_be(T in) {
 }
 
 /**
-* Store a big-endian unsigned integer
+* Store a little-endian unsigned integer
 * @param in the input unsigned integer
-* @return a byte array holding the integer value in big-endian byte order
+* @return a byte array holding the integer value in little-endian byte order
 */
 template <concepts::unsigned_integral T>
 inline constexpr auto store_le(T in) {
