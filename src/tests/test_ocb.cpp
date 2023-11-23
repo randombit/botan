@@ -13,6 +13,8 @@
    #include <botan/internal/poly_dbl.h>
 #endif
 
+#include <array>
+
 namespace Botan_Tests {
 
 namespace {
@@ -328,6 +330,111 @@ class OCB_Long_KAT_Tests final : public Text_Based_Test {
 BOTAN_REGISTER_TEST("modes", "ocb_long", OCB_Long_KAT_Tests);
 
    #endif
+
+/**
+ * Extremely cheap toy cipher for the OCB regression test for
+ * the issue explained in GitHub #3812.
+ */
+class OCB_Null_Cipher final : public Botan::BlockCipher {
+   public:
+      explicit OCB_Null_Cipher(size_t bs, size_t parallelism) :
+            m_bs(bs), m_parallelism(parallelism), m_has_key(false) {}
+
+      std::string name() const override { return "OCB_Null_Cipher"; }
+
+      size_t block_size() const override { return m_bs; }
+
+      void clear() override {}
+
+      std::unique_ptr<Botan::BlockCipher> new_object() const override {
+         return std::make_unique<OCB_Null_Cipher>(m_bs, m_parallelism);
+      }
+
+      bool has_keying_material() const override { return m_has_key; }
+
+      void key_schedule(std::span<const uint8_t>) override { m_has_key = true; }
+
+      Botan::Key_Length_Specification key_spec() const override { return Botan::Key_Length_Specification(m_bs); }
+
+      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override {
+         if(in != out) {
+            Botan::copy_mem(out, in, blocks * m_bs);
+         }
+      }
+
+      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override {
+         if(in != out) {
+            Botan::copy_mem(out, in, blocks * m_bs);
+         }
+      }
+
+      size_t parallelism() const override { return m_parallelism; }
+
+   private:
+      size_t m_bs;
+      size_t m_parallelism;
+      bool m_has_key;
+};
+
+/**
+ * A regression test for a crash found in OCB in November 2023.
+ * See here for details: https://github.com/randombit/botan/issues/3812
+ */
+Test::Result test_ocb_crash_regression() {
+   Test::Result result("OCB crash regression");
+
+   constexpr size_t cipherparallelism = 4;
+   constexpr size_t blocksize = 16;
+   constexpr size_t tagsize = 8;
+   constexpr size_t chunksize = 32 * 1024;
+   constexpr size_t preamblesize = blocksize * cipherparallelism;
+
+   // 1 MiB plus the preamble should be "just" enough to hit a block_index
+   // that causes m_L to generate for i == 16. We likely hit a re-alloc before.
+   constexpr size_t datasize = 1 * 1024 * 1024 + preamblesize;
+   static_assert((datasize - preamblesize) % chunksize == 0);
+
+   std::vector<uint8_t> data(chunksize);
+   std::array<uint8_t, 8> iv = {0};
+   std::array<uint8_t, 16> key = {0};
+
+   Botan::OCB_Encryption enc(std::make_unique<OCB_Null_Cipher>(blocksize, cipherparallelism), tagsize);
+   enc.set_key(key);
+   enc.start(iv);
+
+   // Bring the cipher mode into a state where it is at risk to re-allocate its
+   // m_L vector just the right way to cause the crash.
+   std::vector<uint8_t> preamble(blocksize * 4);
+   enc.update(preamble, 0);
+
+   // Now run the encryption for a while, hoping to cause a re-allocation at
+   // the right code path to cause the crash.
+   for(size_t bytes = preamble.size(); bytes < datasize; bytes += chunksize) {
+      data.resize(chunksize);
+      enc.update(data, 0);
+   }
+
+   std::vector<uint8_t> tag;
+   enc.finish(tag, 0);
+
+   // Repeat the experiment with the decryption code paths.
+   Botan::OCB_Decryption dec(std::make_unique<OCB_Null_Cipher>(16, cipherparallelism), 8);
+   dec.set_key(key);
+   dec.start(iv);
+
+   dec.update(preamble, 0);
+
+   for(size_t bytes = 0; bytes < datasize; bytes += chunksize) {
+      data.resize(chunksize);
+      dec.update(data, 0);
+   }
+
+   dec.finish(tag, 0);
+
+   return result;
+}
+
+BOTAN_REGISTER_TEST_FN("modes", "ocb_lazy_alloc", test_ocb_crash_regression);
 
 #endif
 
