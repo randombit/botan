@@ -13,6 +13,8 @@
    #include <botan/internal/poly_dbl.h>
 #endif
 
+#include <array>
+
 namespace Botan_Tests {
 
 namespace {
@@ -359,6 +361,95 @@ class OCB_Long_KAT_Tests final : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("modes", "ocb_long", OCB_Long_KAT_Tests);
+
+/**
+ * Extremely cheap toy cipher for the OCB regression test for
+ * the issue explained in GitHub #3812.
+ */
+class OCB_Null_Cipher final : public Botan::BlockCipher
+   {
+   public:
+      explicit OCB_Null_Cipher(size_t bs, size_t parallelism) :
+            m_bs(bs), m_parallelism(parallelism) {}
+
+      std::string name() const override { return "OCB_Null_Cipher"; }
+
+      size_t block_size() const override { return m_bs; }
+
+      void clear() override {}
+
+      Botan::BlockCipher* clone() const override { return new OCB_Null_Cipher(m_bs, m_parallelism); }
+
+      void key_schedule(const uint8_t[], size_t) override {}
+
+      Botan::Key_Length_Specification key_spec() const override { return Botan::Key_Length_Specification(m_bs); }
+
+      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override
+         {
+         if(in != out)
+            {
+            Botan::copy_mem(out, in, blocks * m_bs);
+            }
+         }
+
+      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override
+         {
+         if(in != out)
+            {
+            Botan::copy_mem(out, in, blocks * m_bs); 
+            }
+         }
+
+      size_t parallelism() const override { return m_parallelism; }
+
+   private:
+      size_t m_bs;
+      size_t m_parallelism;
+   };
+
+/**
+ * A regression test for a crash found in OCB in November 2023.
+ * See here for details: https://github.com/randombit/botan/issues/3812
+ */
+Test::Result test_ocb_crash_regression()
+   {
+   Test::Result result("OCB crash regression");
+
+   constexpr size_t cipherparallelism = 12;
+   constexpr size_t blocksize = 16;
+   constexpr size_t tagsize = 8;
+
+   std::array<uint8_t, 8> iv = {0};
+   std::array<uint8_t, 16> key = {0};
+
+   Botan::OCB_Encryption enc(new OCB_Null_Cipher(blocksize, cipherparallelism), tagsize);
+   enc.set_key(key.data(), key.size());
+   enc.start(iv.data(), iv.size());
+
+   // Assumption: L_computer pre-allocates the first 8 buffers and std::vector<>
+   //             has a matching actual capacity of 8.
+   // Assumption: L_computer::compute_offsets() does some loop unrolling if the
+   //             starting block_index is divisible by 4.
+   // Assumption: L_computer::compute_offsets() computes ciph->parallelism() * 4
+   //             blocks at most (48 blocks in our case).
+   //
+   // L_computer::compute_offsets() ran into an access violation when ::get()
+   // had to re-allocate m_L before the last iteration of the unrolled loop.
+   //
+   // We recreate such a situation here:
+   Botan::secure_vector<uint8_t> preamble(blocksize * 240);
+   enc.update(preamble, 0);
+
+   // block_index is now at 240 (which is divisible by 4). When passed another
+   // chunk of 48 blocks, get() would re-allocate m_L after 4 of 12 iterations.
+   // This would have caused the access violation.
+   Botan::secure_vector<uint8_t> killpacket(blocksize * 48);
+   enc.update(killpacket, 0);
+
+   return result;
+   }
+
+BOTAN_REGISTER_TEST_FN("modes", "ocb_lazy_alloc", test_ocb_crash_regression);
 
 #endif
 
