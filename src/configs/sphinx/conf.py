@@ -88,7 +88,7 @@ add_function_parentheses = False
 highlight_language = 'cpp'
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+#pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
@@ -100,10 +100,9 @@ pygments_style = 'sphinx'
 # a list of builtin themes.
 
 try:
-    # On Arch this is python-sphinx_rtd_theme
-    import sphinx_rtd_theme
-    html_theme = "sphinx_rtd_theme"
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+    # On Arch this is python-sphinx-furo
+    import furo
+    html_theme = "furo"
 except ImportError as e:
     html_theme = 'agogo'
     html_theme_path = []
@@ -176,6 +175,14 @@ else:
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'botandoc'
+
+# Add a small edit button to each document to allow visitors to easily
+# propose changes to that document using the repository’s source control system.
+html_theme_options = {
+    'source_repository': 'https://github.com/randombit/botan/',
+    'source_branch': 'master',
+    'source_directory': 'doc/',
+}
 
 # -- Options for LaTeX output --------------------------------------------------
 
