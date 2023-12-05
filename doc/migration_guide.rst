@@ -5,7 +5,7 @@ This is a guide on migrating applications from Botan 2.x to 3.0.
 
 This guide attempts to be, but is not, complete. If you run into a problem while
 converting code that does not seem to be described here, please open an issue on
-Github.
+`GitHub <https://github.com/randombit/botan/issues>`_.
 
 Headers
 --------

@@ -10,6 +10,7 @@ Contents
    building
    sem_ver
    migration_guide
+   openssl_migration_guide
    api_ref/contents
    cli
    deprecated
