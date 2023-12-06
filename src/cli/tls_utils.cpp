@@ -12,7 +12,9 @@
    #include <botan/tls_messages.h>
    #include <botan/tls_policy.h>
    #include <botan/tls_version.h>
+   #include <botan/internal/fmt.h>
    #include <botan/internal/loadstor.h>
+   #include <botan/internal/stl_util.h>
    #include <sstream>
 
    #include "tls_helpers.h"
@@ -57,6 +59,8 @@ class TLS_Ciphersuites final : public Command {
 };
 
 BOTAN_REGISTER_COMMAND("tls_ciphers", TLS_Ciphersuites);
+
+   #if defined(BOTAN_HAS_TLS_13)
 
 class TLS_Client_Hello_Reader final : public Command {
    public:
@@ -106,8 +110,7 @@ class TLS_Client_Hello_Reader final : public Command {
          }
 
          try {
-            // TODO: deal with Client_Hello_13
-            Botan::TLS::Client_Hello_12 hello(input);
+            auto hello = Botan::TLS::Client_Hello_13::parse(input);
 
             output() << format_hello(hello);
          } catch(std::exception& e) {
@@ -116,15 +119,26 @@ class TLS_Client_Hello_Reader final : public Command {
       }
 
    private:
-      static std::string format_hello(const Botan::TLS::Client_Hello_12& hello) {
+      static std::string format_hello(
+         const std::variant<Botan::TLS::Client_Hello_13, Botan::TLS::Client_Hello_12>& hello) {
          std::ostringstream oss;
-         oss << "Version: " << hello.legacy_version().to_string() << "\n"
-             << "Random: " << Botan::hex_encode(hello.random()) << "\n";
 
-         if(!hello.session_id().empty()) {
-            oss << "SessionID: " << Botan::hex_encode(hello.session_id().get()) << "\n";
+         const auto& hello_base =
+            std::visit([](const auto& ch) -> const Botan::TLS::Client_Hello& { return ch; }, hello);
+
+         const auto version = std::visit(Botan::overloaded{
+                                            [](const Botan::TLS::Client_Hello_12&) { return "1.2"; },
+                                            [](const Botan::TLS::Client_Hello_13&) { return "1.3"; },
+                                         },
+                                         hello);
+
+         oss << "Version: " << version << "\n"
+             << "Random: " << Botan::hex_encode(hello_base.random()) << "\n";
+
+         if(!hello_base.session_id().empty()) {
+            oss << "SessionID: " << Botan::hex_encode(hello_base.session_id().get()) << "\n";
          }
-         for(uint16_t csuite_id : hello.ciphersuites()) {
+         for(uint16_t csuite_id : hello_base.ciphersuites()) {
             const auto csuite = Botan::TLS::Ciphersuite::by_id(csuite_id);
             if(csuite && csuite->valid()) {
                oss << "Cipher: " << csuite->to_string() << "\n";
@@ -137,10 +151,10 @@ class TLS_Client_Hello_Reader final : public Command {
 
          oss << "Supported signature schemes: ";
 
-         if(hello.signature_schemes().empty()) {
+         if(hello_base.signature_schemes().empty()) {
             oss << "Did not send signature_algorithms extension\n";
          } else {
-            for(Botan::TLS::Signature_Scheme scheme : hello.signature_schemes()) {
+            for(Botan::TLS::Signature_Scheme scheme : hello_base.signature_schemes()) {
                try {
                   auto s = scheme.to_string();
                   oss << s << " ";
@@ -151,11 +165,35 @@ class TLS_Client_Hello_Reader final : public Command {
             oss << "\n";
          }
 
+         if(auto sg = hello_base.extensions().get<Botan::TLS::Supported_Groups>()) {
+            oss << "Supported Groups: ";
+            for(const auto group : sg->groups()) {
+               oss << group.to_string().value_or(Botan::fmt("Unknown group: {}", group.wire_code())) << " ";
+            }
+            oss << "\n";
+         }
+
          std::map<std::string, bool> hello_flags;
-         hello_flags["ALPN"] = hello.supports_alpn();
-         hello_flags["Encrypt Then Mac"] = hello.supports_encrypt_then_mac();
-         hello_flags["Extended Master Secret"] = hello.supports_extended_master_secret();
-         hello_flags["Session Ticket"] = hello.supports_session_ticket();
+         hello_flags["ALPN"] = hello_base.supports_alpn();
+
+         std::visit(Botan::overloaded{
+                       [&](const Botan::TLS::Client_Hello_12& ch12) {
+                          hello_flags["Encrypt Then Mac"] = ch12.supports_encrypt_then_mac();
+                          hello_flags["Extended Master Secret"] = ch12.supports_extended_master_secret();
+                          hello_flags["Session Ticket"] = ch12.supports_session_ticket();
+                       },
+                       [&](const Botan::TLS::Client_Hello_13& ch13) {
+                          if(auto ks = ch13.extensions().get<Botan::TLS::Key_Share>()) {
+                             oss << "Key Shares: ";
+                             for(const auto group : ks->offered_groups()) {
+                                oss << group.to_string().value_or(Botan::fmt("Unknown group: {}", group.wire_code()))
+                                    << " ";
+                             }
+                             oss << "\n";
+                          }
+                       },
+                    },
+                    hello);
 
          for(auto&& i : hello_flags) {
             oss << "Supports " << i.first << "? " << (i.second ? "yes" : "no") << "\n";
@@ -166,6 +204,8 @@ class TLS_Client_Hello_Reader final : public Command {
 };
 
 BOTAN_REGISTER_COMMAND("tls_client_hello", TLS_Client_Hello_Reader);
+
+   #endif
 
 }  // namespace Botan_CLI
 
