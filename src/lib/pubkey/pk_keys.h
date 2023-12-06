@@ -11,6 +11,8 @@
 #include <botan/asn1_obj.h>
 #include <botan/pk_ops_fwd.h>
 #include <botan/secmem.h>
+
+#include <optional>
 #include <span>
 #include <string>
 #include <string_view>
@@ -287,6 +289,13 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       * key operation requires updating the key storage.
       */
       virtual bool stateful_operation() const { return false; }
+
+      /**
+       * @brief Retrieves the number of remaining operations if this is a stateful private key.
+       *
+       * @returns the number of remaining operations or std::nullopt if not applicable.
+       */
+      virtual std::optional<uint64_t> remaining_operations() const { return std::nullopt; }
 
       // Internal or non-public declarations follow
 

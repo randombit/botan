@@ -803,6 +803,13 @@ class PK_API_Sign_Test : public Text_Based_Test {
          result.confirm("public key claims to support signatures",
                         pubkey->supports_operation(Botan::PublicKeyOperation::Signature));
          result.test_gt("Public key length must be greater than 0", privkey->key_length(), 0);
+         if(privkey->stateful_operation()) {
+            result.confirm("A stateful key reports the number of remaining operations",
+                           privkey->remaining_operations().has_value());
+         } else {
+            result.confirm("A stateless key has an unlimited number of remaining operations",
+                           !privkey->remaining_operations().has_value());
+         }
 
          auto signer = std::make_unique<Botan::PK_Signer>(
             *privkey, Test::rng(), sig_params, Botan::Signature_Format::Standard, provider);
