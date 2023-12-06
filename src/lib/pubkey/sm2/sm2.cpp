@@ -31,6 +31,13 @@ bool SM2_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
       return false;
    }
 
+   // SM2 has an oddity in private key generation when compared to
+   // other EC*DSA style signature algorithms described in ISO14888-3:
+   // the private key x MUST be in ]0, q-1[ instead of ]0, q[.
+   if(m_private_key < 1 || m_private_key >= m_domain_params.get_order() - 1) {
+      return false;
+   }
+
    if(!strong) {
       return true;
    }
