@@ -409,6 +409,10 @@ size_t XMSS_PrivateKey::remaining_signatures() const {
    return m_private->remaining_signatures();
 }
 
+std::optional<uint64_t> XMSS_PrivateKey::remaining_operations() const {
+   return m_private->remaining_signatures();
+}
+
 const secure_vector<uint8_t>& XMSS_PrivateKey::prf_value() const {
    return m_private->prf_value();
 }

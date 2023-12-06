@@ -148,11 +148,11 @@ std::vector<Test::Result> xmss_statefulness() {
    return {CHECK("signing alters state",
                  [&](auto& result) {
                     Botan::XMSS_PrivateKey sk(Botan::XMSS_Parameters::XMSS_SHA2_10_256, Test::rng());
-                    result.require("allows 1024 signatures", sk.remaining_signatures() == 1024);
+                    result.require("allows 1024 signatures", sk.remaining_operations() == 1024);
 
                     sign_something(sk);
 
-                    result.require("allows 1023 signatures", sk.remaining_signatures() == 1023);
+                    result.require("allows 1023 signatures", sk.remaining_operations() == 1023);
                  }),
 
            CHECK("state can become exhausted", [&](auto& result) {
@@ -163,11 +163,11 @@ std::vector<Test::Result> xmss_statefulness() {
                  "19DA96E9C8EE4E28C2078441A76B6BB8BAFD358F67FBCBFC559B55C37C01FFADBB118099759EEB"
                  "A3B07643F73BCB4AAC546E244B57782D6BEABC");
               Botan::XMSS_PrivateKey sk(skbytes);
-              result.require("allow one last signature", sk.remaining_signatures() == 1);
+              result.require("allow one last signature", sk.remaining_operations() == 1);
 
               sign_something(sk);
 
-              result.require("allow no more signatures", sk.remaining_signatures() == 0);
+              result.require("allow no more signatures", sk.remaining_operations() == 0);
               result.test_throws("no more signing", [&] { sign_something(sk); });
            })};
 }
