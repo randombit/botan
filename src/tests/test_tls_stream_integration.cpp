@@ -841,7 +841,7 @@ class Test_Handshake_Failure_Sync : public Synchronous_Test {
          result().expect_success("connect", ec);
 
          client()->stream().handshake(Botan::TLS::Connection_Side::Client, ec);
-         result().expect_ec("handshake", Botan::TLS ::Alert::HandshakeFailure, ec);
+         result().expect_ec("handshake", Botan::TLS::Alert::HandshakeFailure, ec);
 
          client()->close_socket();
          teardown();
