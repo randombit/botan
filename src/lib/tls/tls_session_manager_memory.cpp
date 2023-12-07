@@ -67,9 +67,10 @@ std::vector<Session_with_Handle> Session_Manager_In_Memory::find_some(const Serv
    lock_guard_type<recursive_mutex_type> lk(mutex());
 
    std::vector<Session_with_Handle> found_sessions;
-   std::ranges::copy_if(m_sessions | std::views::values, std::back_inserter(found_sessions), [&](const auto& e) {
-      return e.session.server_info() == info;
-   });
+   std::vector<Session_with_Handle> tmp;
+   std::ranges::transform(m_sessions, std::back_inserter(tmp), [](const auto& e) { return e.second; });
+   std::ranges::copy_if(
+      tmp, std::back_inserter(found_sessions), [&](const auto& e) { return e.session.server_info() == info; });
 
    return found_sessions;
 }
