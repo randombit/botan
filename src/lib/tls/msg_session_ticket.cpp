@@ -125,7 +125,7 @@ std::vector<uint8_t> New_Session_Ticket_13::serialize() const {
    append_tls_length_value(result, m_handle.get(), 2);
 
    // TODO: re-evaluate this construction when reworking message marshalling
-   if(m_extensions.size() == 0) {
+   if(m_extensions.empty()) {
       result.push_back(0x00);
       result.push_back(0x00);
    } else {
