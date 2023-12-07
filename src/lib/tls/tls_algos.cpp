@@ -8,6 +8,7 @@
 
 #include <botan/ec_group.h>
 #include <botan/exceptn.h>
+#include <botan/tls_version.h>
 #include <botan/internal/fmt.h>
 
 namespace Botan::TLS {
@@ -271,6 +272,19 @@ std::optional<std::string> Group_Params::to_algorithm_spec() const {
    switch(m_code) {
       default:
          return to_string();
+   }
+}
+
+bool Group_Params::usable_in_version(const Protocol_Version& version) const {
+   // The wire codes for brainpool differ between TLS 1.2 and 1.3 for
+   // "historical" reasons. When negotiating the respective protocol version,
+   // we should use the appropriate wire code.
+   //
+   // Also KEM-based key exchanges are not implemented for TLS 1.2.
+   if(version.is_pre_tls_13()) {
+      return !is_post_quantum();
+   } else {
+      return true;
    }
 }
 

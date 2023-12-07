@@ -18,6 +18,8 @@
 
 namespace Botan::TLS {
 
+class Protocol_Version;
+
 enum class Cipher_Algo {
    CHACHA20_POLY1305,
 
@@ -145,6 +147,8 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
       constexpr Group_Params_Code code() const { return m_code; }
 
       constexpr uint16_t wire_code() const { return static_cast<uint16_t>(m_code); }
+
+      bool usable_in_version(const Protocol_Version& version) const;
 
       constexpr bool is_x25519() const { return m_code == Group_Params_Code::X25519; }
 

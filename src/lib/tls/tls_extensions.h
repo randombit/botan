@@ -331,7 +331,7 @@ class BOTAN_UNSTABLE_API Supported_Groups final : public Extension {
 
       std::vector<uint8_t> serialize(Connection_Side whoami) const override;
 
-      explicit Supported_Groups(const std::vector<Group_Params>& groups);
+      explicit Supported_Groups(std::vector<Group_Params> groups);
 
       Supported_Groups(TLS_Data_Reader& reader, uint16_t extension_size);
 
@@ -827,7 +827,10 @@ class BOTAN_UNSTABLE_API Key_Share final : public Extension {
       Key_Share(TLS_Data_Reader& reader, uint16_t extension_size, Handshake_Type message_type);
 
       // constructor used for ClientHello msg
-      Key_Share(const Policy& policy, Callbacks& cb, RandomNumberGenerator& rng);
+      Key_Share(const std::vector<Group_Params>& supported_groups,
+                const Policy& policy,
+                Callbacks& cb,
+                RandomNumberGenerator& rng);
 
       // constructor used for HelloRetryRequest msg
       explicit Key_Share(Named_Group selected_group);
