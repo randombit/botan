@@ -24,7 +24,7 @@ int main() {
    Botan::Usage_Type usage = Botan::Usage_Type::UNSPECIFIED;
 
    // Optional: Specify hostname, if not empty, compared against the DNS name in end_certs[0]
-   std::string hostname = "";
+   std::string hostname;
 
    Botan::Path_Validation_Result validationResult =
       Botan::x509_path_validate(end_certs, restrictions, trusted_roots, hostname, usage);
