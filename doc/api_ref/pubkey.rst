@@ -421,7 +421,7 @@ parameters and ANSI_X9_42 encodes the created group for further usage with DH.
 .. _ec_group:
 
 EC_Group
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 An ``EC_Group`` is initialized by passing the name of the
 group to be used to the constructor. These groups have
@@ -563,14 +563,13 @@ The decryption classes are named :cpp:class:`PK_Decryptor`,
 :cpp:class:`ECIES_Decryptor`. They are created in the exact same way, except
 they take the private key, and the processing function is named ``decrypt``.
 
-Botan implements the following encryption algorithms and padding schemes:
+Botan implements the following encryption algorithms:
 
-1. RSA
-    - "PKCS1v15" || "EME-PKCS1-v1_5"
-    - "OAEP" || "EME-OAEP" || "EME1" || "EME1(SHA-1)" || "EME1(SHA-256)"
+1. RSA. Requires a :ref:`padding scheme <eme>` as parameter.
 #. DLIES
 #. ECIES
-#. SM2
+#. SM2. Takes an optional ``HashFunction`` as parameter which defaults to SM3.
+#. ElGamal. Requires a :ref:`padding scheme <eme>` as parameter.
 
 .. _rsa_example:
 
@@ -584,6 +583,55 @@ the private key.
 
 .. literalinclude:: /../src/examples/rsa_encrypt.cpp
    :language: cpp
+
+.. _eme:
+
+Available encryption padding schemes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note::
+
+   Padding schemes in the context of encryption are sometimes also called
+   *Encoding Method for Encryption* (EME).
+
+OAEP
+""""
+
+OAEP (called EME1 in IEEE 1363 and in earlier versions of the library)
+as specified in PKCS#1 v2.0 (RFC 2437) or PKCS#1 v2.1 (RFC 3447).
+
+- Names: ``OAEP`` / ``EME-OAEP`` / ``EME1``
+- Parameters specification:
+
+  - ``(<HashFunction>)``
+  - ``(<HashFunction>,MGF1)``
+  - ``(<HashFunction>,MGF1(<HashFunction>))``
+  - ``(<HashFunction>,MGF1(<HashFunction>),<optional label>)``
+
+- The only Mask generation function available is MGF1
+  which is also the default.
+- By default the same hash function will be used for the label and MGF1.
+- Examples:
+  ``OAEP(SHA-256)``,
+  ``EME-OAEP(SHA-256,MGF1)``,
+  ``OAEP(SHA-256,MGF1(SHA-512))``,
+  ``OAEP(SHA-512,MGF1(SHA-512),TCPA)``
+
+PKCS #1 v1.5 Type 2 (encryption)
+""""""""""""""""""""""""""""""""
+
+PKCS #1 v1.5 Type 2 (encryption) padding.
+
+Names: ``PKCS1v15`` / ``EME-PKCS1-v1_5``
+
+Raw EME
+"""""""
+
+Does not change the input during padding.
+Don't use this unless you know what you are doing.
+Un-padding will strip leading zeros.
+
+Name: ``Raw``
 
 
 Public Key Signature Schemes
@@ -599,7 +647,7 @@ Signature generation is performed using
 
      Constructs a new signer object for the private key *key* using the
      hash/padding specified in *padding*. The key must support signature operations. In
-     the current version of the library, this includes RSA, ECDSA, Dilithium,
+     the current version of the library, this includes e.g. RSA, ECDSA, Dilithium,
      ECKCDSA, ECGDSA, GOST 34.10-2001, and SM2.
 
      .. note::
@@ -708,15 +756,27 @@ Signatures are verified using
 
 Botan implements the following signature algorithms:
 
-1. RSA
-#. DSA
-#. ECDSA
-#. ECGDSA
-#. ECKDSA
-#. GOST 34.10-2001
-#. Ed25519
-#. SM2
-#. Dilithium
+1. RSA. Requires a :ref:`padding scheme <emsa>` as parameter.
+#. DSA. Requires a :ref:`hash function <sig_with_hash>` as parameter.
+#. ECDSA. Requires a :ref:`hash function <sig_with_hash>` as parameter.
+#. ECGDSA. Requires a :ref:`hash function <sig_with_hash>` as parameter.
+#. ECKDSA.
+   Requires a :ref:`hash function <sig_with_hash>` as parameter,
+   not supporting ``Raw``.
+#. GOST 34.10-2001.
+   Requires a :ref:`hash function <sig_with_hash>` as parameter.
+#. Ed25519. See :ref:`Ed25519_variants` for parameters.
+#. SM2.
+   Takes one of the following as parameter:
+
+   - ``<user ID>`` (uses ``SM3``)
+   - ``<user ID>,<HashFunction>``
+
+#. Dilithium.
+   Takes the optional parameter ``Deterministic`` (default) or ``Randomized``.
+#. SPHINCS+.
+   Takes the optional parameter ``Deterministic`` (default) or ``Randomized``.
+#. XMSS. Takes no parameter.
 
 .. _ecdsa_example:
 
@@ -730,6 +790,140 @@ signature is validated.
 .. literalinclude:: /../src/examples/ecdsa.cpp
    :language: cpp
 
+.. _emsa:
+
+Available signature padding schemes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note::
+
+   Padding schemes in the context of signatures are sometimes also called
+   *Encoding methods for signatures with appendix* (EMSA).
+
+PKCS #1 v1.5 Type 1 (signature)
+"""""""""""""""""""""""""""""""
+
+PKCS #1 v1.5 Type 1 (signature) padding or EMSA3 from IEEE 1363.
+
+- Names: ``PKCS1v15`` / ``EMSA_PKCS1`` / ``EMSA-PKCS1-v1_5`` / ``EMSA3``
+- Parameters specification:
+
+  - ``(<HashFunction>)``
+  - ``(Raw,<optional HashFunction>)``
+
+- The raw variant encodes a precomputed hash,
+  optionally with the digest ID of the given hash.
+- Examples:
+  ``PKCS1v15(SHA-256)``,
+  ``PKCS1v15(Raw)``,
+  ``PKCS1v15(Raw,MD5)``,
+
+EMSA-PSS
+""""""""
+
+Probabilistic signature scheme (PSS) (called EMSA4 in IEEE 1363).
+
+- Names: ``PSS`` / ``EMSA-PSS`` / ``PSSR`` / ``PSS-MGF1`` / ``EMSA4``
+- Parameters specification:
+
+  - ``(<HashFunction>)``
+  - ``(<HashFunction>,MGF1,<optional salt size>)``
+
+- Examples:
+  ``PSS(SHA-256)``,
+  ``PSS(SHA-256,MGF1,32)``,
+
+There also exists a raw version,
+which accepts a pre-hashed buffer instead of the message.
+Don't use this unless you know what you are doing.
+
+- Names: ``PSS_Raw`` / ``PSSR_Raw``
+- Parameters specification:
+
+  - ``(<HashFunction>)``
+  - ``(<HashFunction>,MGF1,<optional salt size>)``
+
+ISO-9796-2
+""""""""""
+
+ISO-9796-2 - Digital signature scheme 2 (probabilistic).
+
+- Name: ``ISO_9796_DS2``
+- Parameters specification:
+
+  - ``(<HashFunction>)``
+  - ``(<HashFunction>,<exp|imp>,<optional salt size>)``
+
+- Defaults to the explicit mode.
+- Examples:
+  ``ISO_9796_DS2(RIPEMD-160)``,
+  ``ISO_9796_DS2(RIPEMD-160,imp)``
+
+ISO-9796-2 - Digital signature scheme 3 (deterministic),
+i.e. DS2 without a salt.
+
+- Name: ``ISO_9796_DS3``
+- Parameters specification:
+
+  - ``(<HashFunction>)``
+  - ``(<HashFunction>,<exp|imp>``
+
+- Defaults to the explicit mode.
+- Examples:
+  ``ISO_9796_DS3(RIPEMD-160)``,
+  ``ISO_9796_DS3(RIPEMD-160,imp)``,
+
+X9.31
+"""""
+
+EMSA from X9.31 (EMSA2 in IEEE 1363).
+
+- Names: ``EMSA2`` / ``EMSA_X931`` / ``X9.31``
+- Parameters specification:
+  ``(<HashFunction>)``
+- Example: ``EMSA2(SHA-256)``
+
+Raw EMSA
+""""""""
+
+Sign inputs directly.
+Don't use this unless you know what you are doing.
+
+- Name: ``Raw``
+- Parameters specification:
+  ``(<optional HashFunction>)``
+- Examples:
+  ``Raw``,
+  ``Raw(SHA-256)``
+
+.. _sig_with_hash:
+
+Signature with Hash
+~~~~~~~~~~~~~~~~~~~
+
+For many signature schemes including ECDSA and DSA,
+simply naming a hash function like ``SHA-256`` is all that is required.
+
+Previous versions of Botan required using a hash specifier
+like ``EMSA1(SHA-256)`` when generating or verifying ECDSA/DSA signatures,
+with the specified hash.
+The ``EMSA1`` was a reference to a now obsolete IEEE standard.
+
+Parameters specification:
+
+- ``<HashFunction>``
+- ``EMSA1(<HashFunction>)``
+
+There also exists a raw mode,
+which accepts a pre-hashed buffer instead of the message.
+Don't use this unless you know what you are doing.
+
+Parameters specification:
+
+- ``Raw``
+- ``Raw(<HashFunction>)``
+
+.. _Ed25519_variants:
 
 Ed25519 Variants
 ~~~~~~~~~~~~~~~~~~
@@ -743,14 +937,25 @@ SHA-512 is found. However it means the entire message must be buffered in
 memory, which can be a problem for many applications which might need to sign
 large inputs. To use this variety of Ed25519, use a padding name of "Pure".
 
+This is the default mode if no padding name is given.
+
+Parameter specification:
+``Pure`` / ``Identity``
+
 Ed25519ph (pre-hashed) instead hashes the message with SHA-512 and then signs
 the digest plus a special prefix specified in RFC 8032. To use it, specify
 padding name "Ed25519ph".
+
+Parameter specification:
+``Ed25519ph``
 
 Another variant of pre-hashing is used by GnuPG. There the message is digested
 with any hash function, then the digest is signed. To use it, specify any valid
 hash function. Even if SHA-512 is used, this variant is not compatible with
 Ed25519ph.
+
+Parameter specification:
+``<HashFunction>``
 
 For best interop with other systems, prefer "Ed25519ph".
 
