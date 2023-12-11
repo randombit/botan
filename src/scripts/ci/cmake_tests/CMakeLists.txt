@@ -63,9 +63,12 @@ endif()
 unset(Botan_FOUND)
 
 # test #5: fail if required module is not included
-find_package(Botan ${Botan_VERSION} COMPONENTS tpm QUIET)
+if(NOT BOTAN_DISABLED_MODULE)
+  message(FATAL_ERROR "Set -DBOTAN_DISABLED_MODULE=??? to define an existing but disabled module for testing.")
+endif()
+find_package(Botan ${Botan_VERSION} COMPONENTS ${BOTAN_DISABLED_MODULE} QUIET)
 if(Botan_FOUND)
-  message(FATAL_ERROR "Found Botan with version ${Botan_VERSION}: Found module tpm but expected it to be absent")
+  message(FATAL_ERROR "Found Botan with version ${Botan_VERSION}: Found module ${BOTAN_DISABLED_MODULE} but expected it to be absent")
 endif()
 
 unset(Botan_FOUND)

@@ -1979,7 +1979,7 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
 
     return out
 
-def create_template_vars(source_paths, build_paths, options, modules, cc, arch, osinfo):
+def create_template_vars(source_paths, build_paths, options, modules, disabled_modules, cc, arch, osinfo):
     """
     Create the template variables needed to process the makefile, build.h, etc
     """
@@ -2281,6 +2281,7 @@ def create_template_vars(source_paths, build_paths, options, modules, cc, arch, 
         'optimize_for_size': options.optimize_for_size,
 
         'mod_list': sorted([m.basename for m in modules]),
+        'disabled_mod_list': sorted([m.basename for m in disabled_modules]),
     }
 
     variables['installed_include_dir'] = os.path.join(
@@ -3576,11 +3577,12 @@ def main(argv):
     chooser = ModulesChooser(info_modules, module_policy, arch, osinfo, cc, cc_min_version, options)
     loaded_module_names = chooser.choose()
     using_mods = [info_modules[modname] for modname in loaded_module_names]
+    not_using_mods = [modinfo for modname, modinfo in info_modules.items() if modname not in loaded_module_names]
 
     build_paths = BuildPaths(source_paths, options, using_mods)
     build_paths.public_headers.append(os.path.join(build_paths.build_dir, 'build.h'))
 
-    template_vars = create_template_vars(source_paths, build_paths, options, using_mods, cc, arch, osinfo)
+    template_vars = create_template_vars(source_paths, build_paths, options, using_mods, not_using_mods, cc, arch, osinfo)
 
     # Now we start writing to disk
     do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, source_paths, template_vars, options)
