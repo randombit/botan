@@ -92,11 +92,17 @@ def verify_cmake_package(build_config):
     def test_target():
         return 'test' if build_config['os'] != 'windows' else 'RUN_TESTS'
 
+    disabled_module = build_config['disabled_mod_list'][0] if build_config['disabled_mod_list'] else None
+    if not disabled_module:
+        print("Not a single disabled module in this build to use for testing.") # just for good measure
+        return False
+
     try:
         subprocess.run(["cmake", "--preset", cmake_preset(),
                                  "-B", cmake_build_dir,
                                  "-S", cmake_test_dir,
-                                 "-DCMAKE_PREFIX_PATH=%s" % build_config['prefix']], check=True)
+                                 "-DCMAKE_PREFIX_PATH=%s" % build_config['prefix'],
+                                 "-DBOTAN_DISABLED_MODULE=%s" % disabled_module], check=True)
         subprocess.run(["cmake", "--build", cmake_build_dir, "--config", "Release"], check=True)
         subprocess.run(["cmake", "--build", cmake_build_dir, "--config", "Release", "--target", test_target()], check=True)
     except RuntimeError as e:
