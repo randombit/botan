@@ -1843,8 +1843,8 @@ class Speed final : public Command {
 
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
       void bench_dh(const std::string& provider, std::chrono::milliseconds msec) {
-         for(size_t bits : {1024, 1536, 2048, 3072, 4096, 6144, 8192}) {
-            bench_pk_ka("DH", "DH-" + std::to_string(bits), "modp/ietf/" + std::to_string(bits), provider, msec);
+         for(size_t bits : {2048, 3072, 4096, 6144, 8192}) {
+            bench_pk_ka("DH", "DH-" + std::to_string(bits), "ffdhe/ietf/" + std::to_string(bits), provider, msec);
          }
       }
 #endif
