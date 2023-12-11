@@ -210,12 +210,13 @@ def main(args):
         copy_file(cfg['botan_pkgconfig'],
                   prepend_destdir(os.path.join(pkgconfig_dir, os.path.basename(cfg['botan_pkgconfig']))))
 
-    cmake_dir = os.path.join(prefix, lib_dir, cmake_dir, 'Botan-%s' % cfg["version"])
-    makedirs(prepend_destdir(cmake_dir))
-    copy_file('build/cmake/botan-config.cmake',
-                  prepend_destdir(os.path.join(cmake_dir, 'botan-config.cmake')))
-    copy_file('build/cmake/botan-config-version.cmake',
-                  prepend_destdir(os.path.join(cmake_dir, 'botan-config-version.cmake')))
+    if 'botan_cmake_config' in cfg and 'botan_cmake_version_config' in cfg:
+        cmake_dir = os.path.join(prefix, lib_dir, cmake_dir, 'Botan-%s' % cfg["version"])
+        makedirs(prepend_destdir(cmake_dir))
+        copy_file(cfg['botan_cmake_config'],
+                  prepend_destdir(os.path.join(cmake_dir, os.path.basename(cfg['botan_cmake_config']))))
+        copy_file(cfg['botan_cmake_version_config'],
+                  prepend_destdir(os.path.join(cmake_dir, os.path.basename(cfg['botan_cmake_version_config']))))
 
     if 'ffi' in cfg['mod_list'] and cfg['build_shared_lib'] is True and cfg['install_python_module'] is True:
         for ver in cfg['python_version'].split(','):

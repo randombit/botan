@@ -540,6 +540,21 @@ is less of a problem - only the developer needs to worry about it. As
 long as they can remember where they installed Botan, they just have
 to set the appropriate flags in their Makefile/project file.
 
+CMake
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Starting in Botan 3.3.0 we provide a ``botan-config.cmake`` module to
+discover the installed library binaries and headers. This hooks into
+CMake's ``find_package()`` and comes with common features like version
+detection. Also, library consumers may specify which botan modules they
+require in ``find_package()``.
+
+Examples::
+
+   find_package(Botan 3.3.0)
+   find_package(Botan 3.3.0 COMPONENTS rsa ecdsa tls13)
+   find_package(Botan 3.3.0 OPTIONAL_COMPONENTS tls13_pqc)
+
 Language Wrappers
 ----------------------------------------
 

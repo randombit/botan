@@ -134,7 +134,8 @@ def main(args=None):
     if not verify_library(build_config):
         return 1
 
-    if not verify_cmake_package(build_config):
+    has_cmake = 'botan_cmake_config' in build_config and 'botan_cmake_version_config' in build_config
+    if has_cmake and not verify_cmake_package(build_config):
         return 1
 
     return 0
