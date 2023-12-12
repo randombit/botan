@@ -25,16 +25,16 @@ namespace Botan {
 * <dl>
 * <dt>Abstract Base Classes<dd>
 *        BlockCipher, HashFunction, KDF, MessageAuthenticationCode, RandomNumberGenerator,
-*        StreamCipher, SymmetricAlgorithm, AEAD_Mode, Cipher_Mode
+*        StreamCipher, SymmetricAlgorithm, AEAD_Mode, Cipher_Mode, XOF
 * <dt>Public Key Interface Classes<dd>
-*        PK_Key_Agreement, PK_Signer, PK_Verifier, PK_Encryptor, PK_Decryptor
+*        PK_Key_Agreement, PK_Signer, PK_Verifier, PK_Encryptor, PK_Decryptor, PK_KEM_Encryptor, PK_KEM_Decryptor
 * <dt>Authenticated Encryption Modes<dd>
 *        @ref CCM_Mode "CCM", @ref ChaCha20Poly1305_Mode "ChaCha20Poly1305", @ref EAX_Mode "EAX",
 *        @ref GCM_Mode "GCM", @ref OCB_Mode "OCB", @ref SIV_Mode "SIV"
 * <dt>Block Ciphers<dd>
 *        @ref aria.h "ARIA", @ref aes.h "AES", @ref Blowfish, @ref camellia.h "Camellia", @ref Cascade_Cipher "Cascade",
 *        @ref CAST_128 "CAST-128", @ref CAST_128 DES, @ref TripleDES "3DES",
-*        @ref GOST_28147_89 "GOST 28147-89", IDEA, Lion, Noekeon, SEED, Serpent, SHACAL2, SM4,
+*        @ref GOST_28147_89 "GOST 28147-89", IDEA, Kuznyechik, Lion, Noekeon, SEED, Serpent, SHACAL2, SM4,
 *        @ref Threefish_512 "Threefish", Twofish
 * <dt>Stream Ciphers<dd>
 *        ChaCha, @ref CTR_BE "CTR", OFB, RC4, Salsa20
@@ -45,7 +45,7 @@ namespace Botan {
 * <dt>Non-Cryptographic Checksums<dd>
 *        Adler32, CRC24, CRC32
 * <dt>Message Authentication Codes<dd>
-*        CMAC, HMAC, Poly1305, SipHash, ANSI_X919_MAC
+*        @ref BLAKE2bMAC "BLAKE2b", CMAC, HMAC, KMAC, Poly1305, SipHash, ANSI_X919_MAC
 * <dt>Random Number Generators<dd>
 *        AutoSeeded_RNG, HMAC_DRBG, Processor_RNG, System_RNG
 * <dt>Key Derivation<dd>
@@ -54,21 +54,26 @@ namespace Botan {
 * <dt>Password Hashing<dd>
 *        @ref argon2.h "Argon2", @ref scrypt.h "scrypt", @ref bcrypt.h "bcrypt", @ref passhash9.h "passhash9"
 * <dt>Public Key Cryptosystems<dd>
-*        @ref dlies.h "DLIES", @ref ecies.h "ECIES", @ref elgamal.h "ElGamal"
+*        @ref dlies.h "DLIES", @ref ecies.h "ECIES", @ref elgamal.h "ElGamal",
 *        @ref rsa.h "RSA", @ref mceliece.h "McEliece", @ref sm2.h "SM2"
+* <dt>Key Encapsulation Mechanisms<dd>
+*        @ref kyber.h "Kyber", @ref rsa.h "RSA"
 * <dt>Public Key Signature Schemes<dd>
-*        @ref dsa.h "DSA", @ref ecdsa.h "ECDSA", @ref ecgdsa.h "ECGDSA", @ref eckcdsa.h "ECKCDSA",
-*        @ref gost_3410.h "GOST 34.10-2001", @ref sm2.h "SM2", @ref xmss.h "XMSS"
+*        @ref dsa.h "DSA", @ref dilithium.h "Dilithium", @ref ecdsa.h "ECDSA", @ref ecgdsa.h "ECGDSA",
+*        @ref eckcdsa.h "ECKCDSA", @ref gost_3410.h "GOST 34.10-2001", @ref sm2.h "SM2", @ref sphincsplus.h "SPHINCS+",
+*        @ref xmss.h "XMSS"
 * <dt>Key Agreement<dd>
 *        @ref dh.h "DH", @ref ecdh.h "ECDH"
 * <dt>Compression<dd>
 *        @ref bzip2.h "bzip2", @ref lzma.h "lzma", @ref zlib.h "zlib"
 * <dt>TLS<dd>
 *        TLS::Client, TLS::Server, TLS::Policy, TLS::Protocol_Version, TLS::Callbacks, TLS::Ciphersuite,
-*        TLS::Session, TLS::Session_Manager, Credentials_Manager
+*        TLS::Session, TLS::Session_Summary, TLS::Session_Manager, Credentials_Manager
 * <dt>X.509<dd>
 *        X509_Certificate, X509_CRL, X509_CA, Certificate_Extension, PKCS10_Request, X509_Cert_Options,
 *        Certificate_Store, Certificate_Store_In_SQL, Certificate_Store_In_SQLite
+* <dt>eXtendable Output Functions<dd>
+*        @ref SHAKE_XOF "SHAKE"
 * </dl>
 */
 
