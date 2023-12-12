@@ -6,6 +6,12 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED On)
 set(CMAKE_CXX_EXTENSIONS Off)
 
+if(NOT BOTAN_DISABLED_MODULE)
+  message(FATAL_ERROR "Set -DBOTAN_DISABLED_MODULE=??? to define an existing but disabled module for testing.")
+endif()
+
+message(STATUS "Assuming that Botan module '${BOTAN_DISABLED_MODULE}' is not available in this build.")
+
 # test #1: find any Botan version and link dynamically
 find_package(Botan REQUIRED)
 if(NOT Botan_FOUND)
@@ -63,9 +69,6 @@ endif()
 unset(Botan_FOUND)
 
 # test #5: fail if required module is not included
-if(NOT BOTAN_DISABLED_MODULE)
-  message(FATAL_ERROR "Set -DBOTAN_DISABLED_MODULE=??? to define an existing but disabled module for testing.")
-endif()
 find_package(Botan ${Botan_VERSION} COMPONENTS ${BOTAN_DISABLED_MODULE} QUIET)
 if(Botan_FOUND)
   message(FATAL_ERROR "Found Botan with version ${Botan_VERSION}: Found module ${BOTAN_DISABLED_MODULE} but expected it to be absent")
@@ -74,11 +77,11 @@ endif()
 unset(Botan_FOUND)
 
 # test #6: do not fail if optional module is not included
-find_package(Botan ${Botan_VERSION} OPTIONAL_COMPONENTS tpm REQUIRED)
+find_package(Botan ${Botan_VERSION} OPTIONAL_COMPONENTS ${BOTAN_DISABLED_MODULE} REQUIRED)
 if(NOT Botan_FOUND)
-  message(FATAL_ERROR "Failed to find Botan with version ${Botan_VERSION}, despite missing optional modules: tpm")
+  message(FATAL_ERROR "Failed to find Botan with version ${Botan_VERSION}, despite missing optional modules: ${BOTAN_DISABLED_MODULE}")
 endif()
-if(NOT DEFINED Botan_tpm_FOUND OR ${Botan_tpm_FOUND})
+if(NOT DEFINED Botan_${BOTAN_DISABLED_MODULE}_FOUND OR ${Botan_${BOTAN_DISABLED_MODULE}_FOUND})
   message(FATAL_ERROR "Failed to notify that the optional component was not found")
 endif()
 
