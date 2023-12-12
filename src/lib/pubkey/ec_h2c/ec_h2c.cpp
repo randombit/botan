@@ -141,7 +141,7 @@ EC_Point map_to_curve_sswu(const EC_Group& group, const Modular_Reducer& mod_p, 
    const BigInt c2 = mod_p.multiply(p - 1, inverse_mod(Z, p));
 
    /*
-   * See Appendix F.2 of draft-irtf-cfrg-hash-to-curve
+   * See Appendix F.2 of RFC 9380
    */
 
    const BigInt tv1 = mod_p.multiply(Z, mod_p.square(u));
