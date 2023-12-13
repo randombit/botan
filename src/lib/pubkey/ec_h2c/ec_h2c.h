@@ -28,7 +28,7 @@ void BOTAN_TEST_API expand_message_xmd(std::string_view hash_fn,
 
 /**
 * Hash an input onto an elliptic curve point using the
-* methods from draft-irtf-cfrg-hash-to-curve
+* methods from RFC 9380
 *
 * This method requires that the ECC group have (a*b) != 0
 * which excludes certain groups including secp256k1
