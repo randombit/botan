@@ -103,6 +103,14 @@ try:
     # On Arch this is python-sphinx-furo
     import furo
     html_theme = "furo"
+
+    # Add a small edit button to each document to allow visitors to easily
+    # propose changes to that document using the repository’s source control system.
+    html_theme_options = {
+        'source_repository': 'https://github.com/randombit/botan/',
+        'source_branch': 'master',
+        'source_directory': 'doc/',
+    }
 except ImportError as e:
     html_theme = 'agogo'
     html_theme_path = []
@@ -175,14 +183,6 @@ else:
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'botandoc'
-
-# Add a small edit button to each document to allow visitors to easily
-# propose changes to that document using the repository’s source control system.
-html_theme_options = {
-    'source_repository': 'https://github.com/randombit/botan/',
-    'source_branch': 'master',
-    'source_directory': 'doc/',
-}
 
 # -- Options for LaTeX output --------------------------------------------------
 

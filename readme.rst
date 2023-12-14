@@ -16,9 +16,9 @@ The library is accompanied by a featureful
 See the `documentation <https://botan.randombit.net/handbook>`_ for more
 information about included features.
 
-Development is coordinated on `GitHub <https://github.com/randombit/botan>`_
+Development is coordinated on `GitHub <https://github.com/randombit/botan>`__
 and contributions are welcome. If you need help, please open an issue on
-`GitHub <https://github.com/randombit/botan/issues>`_.
+`GitHub <https://github.com/randombit/botan/issues>`__.
 
 If you think you have found a security issue, see the `security page
 <https://botan.randombit.net/security.html>`_ for contact information.
@@ -56,12 +56,12 @@ Releases
 
 The latest release from the Botan2 release series is
 `2.19.3 <https://botan.randombit.net/releases/Botan-2.19.3.tar.xz>`_
-`(sig) <https://botan.randombit.net/releases/Botan-2.19.3.tar.xz.asc>`_,
+`(sig) <https://botan.randombit.net/releases/Botan-2.19.3.tar.xz.asc>`__,
 released on 2022-11-16.
 
 The latest release from the Botan3 release series is
 `3.2.0 <https://botan.randombit.net/releases/Botan-3.2.0.tar.xz>`_
-`(sig) <https://botan.randombit.net/releases/Botan-3.2.0.tar.xz.asc>`_,
+`(sig) <https://botan.randombit.net/releases/Botan-3.2.0.tar.xz.asc>`__,
 released on 2023-10-09.
 
 All releases are signed with a `PGP key <https://botan.randombit.net/pgpkey.txt>`_.

@@ -17,6 +17,7 @@ build_deps
 build.log
 botan
 botan-test
+botan-website/
 
 core.*
 vgcore.*
