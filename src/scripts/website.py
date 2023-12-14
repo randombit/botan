@@ -76,7 +76,7 @@ def run_sphinx(botan_dir, tmp_dir, output_dir):
     contents_rst.write(toc)
     contents_rst.close()
 
-    sphinx_invoke = ['sphinx-build', '-t', 'website', '-c', sphinx_config, '-b', 'html']
+    sphinx_invoke = ['sphinx-build', '-t', 'website', '-c', sphinx_config, '-b', 'html', '-j', 'auto', '-W']
 
     handbook_dir = os.path.join(botan_dir, 'doc')
 

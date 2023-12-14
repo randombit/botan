@@ -90,7 +90,7 @@ The website content is created by ``src/scripts/website.py``.
 The website is mirrored automatically from a git repository which must be updated::
 
   $ git checkout git@botan.randombit.net:/srv/git/botan-website.git
-  $ ./src/scripts/website.py --output botan-website
+  $ ./src/scripts/website.py --output-dir botan-website
   $ cd botan-website
   $ git add .
   $ git commit -m "Update for 3.8.2"

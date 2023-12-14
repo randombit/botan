@@ -1135,7 +1135,7 @@ The code below demonstrates key encapsulation using the Kyber post-quantum schem
 
 .. _mceliece:
 
-McEliece
+McEliece cryptosystem
 --------------------------
 
 McEliece is a cryptographic scheme based on error correcting codes which is

@@ -214,6 +214,9 @@ jobs:
           - target: bsi
             compiler: gcc
             host_os: ubuntu-22.04
+          - target: docs
+            compiler: gcc
+            host_os: ubuntu-22.04
 
     runs-on: ${{ matrix.host_os }}
 
