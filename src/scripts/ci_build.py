@@ -254,9 +254,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         flags += ['--with-debug-asserts']
 
         if target_cc in ['clang', 'gcc']:
-            flags += ['--enable-sanitizers=address,undefined']
+            flags += ['--enable-sanitizers=address,undefined,iterator']
         else:
-            flags += ['--enable-sanitizers=address']
+            flags += ['--enable-sanitizers=address,iterator']
 
     if target in ['valgrind', 'valgrind-full', 'sanitizer', 'fuzzers']:
         flags += ['--disable-modules=locking_allocator']
