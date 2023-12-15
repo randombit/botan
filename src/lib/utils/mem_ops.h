@@ -142,9 +142,8 @@ inline constexpr void clear_mem(R&& mem)
 * @param n the number of elements of in/out
 */
 template <typename T>
-inline constexpr void copy_mem(T* out, const T* in, size_t n)
    requires std::is_trivial<typename std::decay<T>::type>::value
-{
+inline constexpr void copy_mem(T* out, const T* in, size_t n) {
    BOTAN_ASSERT_IMPLICATION(n > 0, in != nullptr && out != nullptr, "If n > 0 then args are not null");
 
    if(in != nullptr && out != nullptr && n > 0) {
@@ -158,10 +157,9 @@ inline constexpr void copy_mem(T* out, const T* in, size_t n)
 * @param in the source array
 */
 template <ranges::contiguous_output_range OutR, ranges::contiguous_range InR>
-inline constexpr void copy_mem(OutR&& out, InR&& in)
    requires std::is_same_v<std::ranges::range_value_t<OutR>, std::ranges::range_value_t<InR>> &&
             std::is_trivially_copyable_v<std::ranges::range_value_t<InR>>
-{
+inline constexpr void copy_mem(OutR&& out, InR&& in) {
    ranges::assert_equal_byte_lengths(out, in);
    if(ranges::size_bytes(out) > 0) {
       std::memmove(std::ranges::data(out), std::ranges::data(in), ranges::size_bytes(out));
@@ -173,10 +171,9 @@ inline constexpr void copy_mem(OutR&& out, InR&& in)
  * copyable type of matching byte length.
  */
 template <ranges::contiguous_output_range ToR, ranges::contiguous_range FromR>
-inline constexpr void typecast_copy(ToR&& out, FromR&& in)
    requires std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>> &&
             std::is_trivially_copyable_v<std::ranges::range_value_t<ToR>>
-{
+inline constexpr void typecast_copy(ToR&& out, FromR&& in) {
    ranges::assert_equal_byte_lengths(out, in);
    std::memcpy(std::ranges::data(out), std::ranges::data(in), ranges::size_bytes(out));
 }
@@ -186,10 +183,9 @@ inline constexpr void typecast_copy(ToR&& out, FromR&& in)
  * copyable type with matching length.
  */
 template <typename ToT, ranges::contiguous_range FromR>
-inline constexpr void typecast_copy(ToT& out, FromR&& in) noexcept
    requires std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>> && std::is_trivially_copyable_v<ToT> &&
             (!std::ranges::range<ToT>)
-{
+inline constexpr void typecast_copy(ToT& out, FromR&& in) noexcept {
    typecast_copy(std::span<ToT, 1>(&out, 1), in);
 }
 
@@ -198,11 +194,9 @@ inline constexpr void typecast_copy(ToT& out, FromR&& in) noexcept
  * copyable type with matching length.
  */
 template <ranges::contiguous_output_range ToR, typename FromT>
-inline constexpr void typecast_copy(ToR&& out, const FromT& in)
    requires std::is_trivially_copyable_v<FromT> &&
             (!std::ranges::range<FromT>) && std::is_trivially_copyable_v<std::ranges::range_value_t<ToR>>
-
-{
+inline constexpr void typecast_copy(ToR&& out, const FromT& in) {
    typecast_copy(out, std::span<const FromT, 1>(&in, 1));
 }
 
@@ -211,9 +205,8 @@ inline constexpr void typecast_copy(ToR&& out, const FromT& in)
  * matching length into it.
  */
 template <typename ToT, ranges::contiguous_range FromR>
-inline constexpr ToT typecast_copy(FromR&& src) noexcept
    requires std::is_trivial_v<ToT> && std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>>
-{
+inline constexpr ToT typecast_copy(FromR&& src) noexcept {
    ToT dst;
    typecast_copy(dst, src);
    return dst;
@@ -246,18 +239,16 @@ inline constexpr void typecast_copy(uint8_t out[], const T& in) {
 
 // TODO: deprecate and replace
 template <typename T>
-inline constexpr void typecast_copy(T& out, const uint8_t in[])
    requires std::is_trivial<typename std::decay<T>::type>::value
-{
+inline constexpr void typecast_copy(T& out, const uint8_t in[]) {
    // asserts that *in points to the correct amount of memory
    typecast_copy(out, std::span<const uint8_t, sizeof(T)>(in, sizeof(T)));
 }
 
 // TODO: deprecate and replace
 template <typename To>
-inline constexpr To typecast_copy(const uint8_t src[]) noexcept
    requires std::is_trivial<To>::value
-{
+inline constexpr To typecast_copy(const uint8_t src[]) noexcept {
    // asserts that *src points to the correct amount of memory
    return typecast_copy<To>(std::span<const uint8_t, sizeof(To)>(src, sizeof(To)));
 }

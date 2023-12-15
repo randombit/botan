@@ -3425,6 +3425,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
 
     if options.with_doxygen:
         for module_name, info in info_modules.items():
+            dependencies = [dep for dep in info.requires if not dep.endswith('?dyn_load')]
             write_template_with_variables(in_build_module_info(module_name + '.dox'), in_build_data('module_info.in'),
                                           {
                                               'parent': info.parent_module,
@@ -3436,7 +3437,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
                                               'public_headers': info.header_public,
                                               'internal_headers': info.header_internal,
                                               'sources': info.sources(),
-                                              'dependencies': info.requires,
+                                              'dependencies': dependencies,
                                               'os_features': info.os_features,
                                               'cpu_features': info.isa,
                                               'arch_requirements': info.arch,

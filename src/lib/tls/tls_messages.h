@@ -626,6 +626,7 @@ class BOTAN_UNSTABLE_API Certificate_13 final : public Handshake_Message {
       * for each entry.
       *
       * @param requested_extensions Extensions of Client_Hello or Certificate_Request messages
+      * @param cb Callback that will be called for each extension.
       */
       void validate_extensions(const std::set<Extension_Code>& requested_extensions, Callbacks& cb) const;
 
