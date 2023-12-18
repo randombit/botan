@@ -23,6 +23,11 @@
    #include <botan/base58.h>
 #endif
 
+#ifdef _WIN32
+   #include <fcntl.h>
+   #include <io.h>
+#endif
+
 namespace Botan_CLI {
 
 Command::Command(const std::string& cmd_spec) : m_spec(cmd_spec) {
@@ -151,6 +156,16 @@ std::ostream& Command::output() {
    return std::cout;
 }
 
+std::ostream& Command::output_binary() {
+   if(m_output_stream) {
+      return *m_output_stream;
+   }
+#ifdef _WIN32
+   _setmode(_fileno(stdout), _O_BINARY);
+#endif
+   return std::cout;
+}
+
 std::ostream& Command::error_output() {
    if(m_error_output_stream) {
       return *m_error_output_stream;
@@ -176,6 +191,9 @@ void Command::read_file(const std::string& input_file,
                         const std::function<void(uint8_t[], size_t)>& consumer_fn,
                         size_t buf_size) {
    if(input_file == "-") {
+#ifdef _WIN32
+      _setmode(_fileno(stdin), _O_BINARY);
+#endif
       do_read_file(std::cin, consumer_fn, buf_size);
    } else {
       std::ifstream in(input_file, std::ios::binary);

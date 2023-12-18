@@ -108,6 +108,14 @@ class Command {
 
       std::ostream& output();
 
+      /**
+       * @brief Returns a stream to output binary data too.
+       *
+       * Note: If output is set to stdout, it will be globally set to binary mode.
+       * Avoid mixing outputting binary and text data in the same command.
+       */
+      std::ostream& output_binary();
+
       std::ostream& error_output();
 
       bool verbose() const { return flag_set("verbose"); }
@@ -167,9 +175,17 @@ class Command {
                                const std::function<void(uint8_t[], size_t)>& consumer_fn,
                                size_t buf_size = 0);
 
+      /**
+       * @brief Write binary data to the configured output.
+       *
+       * Note: If output is set to stdout, it will be globally set to binary mode.
+       * Avoid mixing outputting binary and text data in the same command.
+       *
+       * @param vec Data to write.
+       */
       template <typename Alloc>
       void write_output(const std::vector<uint8_t, Alloc>& vec) {
-         output().write(reinterpret_cast<const char*>(vec.data()), vec.size());
+         output_binary().write(reinterpret_cast<const char*>(vec.data()), vec.size());
       }
 
       Botan::RandomNumberGenerator& rng();
