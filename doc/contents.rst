@@ -13,6 +13,7 @@ Contents
    openssl_migration_guide
    api_ref/contents
    cli
+   hardware_acceleration
    deprecated
    roadmap
    credits
