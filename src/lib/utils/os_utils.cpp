@@ -418,7 +418,14 @@ bool OS::read_env_variable(std::string& value_out, std::string_view name_view) {
    char val[128] = {0};
    size_t req_size = 0;
    if(getenv_s(&req_size, val, sizeof(val), name.c_str()) == 0) {
-      value_out = std::string(val, req_size);
+      // Microsoft's implementation always writes a terminating \0,
+      // and includes it in the reported length of the environment variable
+      // if a value exists.
+      if(req_size > 0 && val[req_size - 1] == '\0') {
+         value_out = std::string(val);
+      } else {
+         value_out = std::string(val, req_size);
+      }
       return true;
    }
 #else
