@@ -113,7 +113,7 @@ rule link_fuzzer
 
 %{if build_examples}
 
-build examples: link_cli %{example_bin} | %{library_targets}
+build examples: phony | %{example_bin}
 
 %{endif}
 
@@ -203,6 +203,5 @@ build %{exe}: link_fuzzer %{obj} | %{library_targets}
 
 %{for examples_build_info}
 build %{obj}: compile_example_exe %{src}
-
 build %{exe}: link_cli %{obj} | %{library_targets}
 %{endfor}

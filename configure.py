@@ -1930,7 +1930,7 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
                 }
 
             if target_type in ['fuzzer', 'examples']:
-                exe_basename = os.path.basename(obj_file).replace('.' + osinfo.obj_suffix, '')
+                exe_basename = os.path.basename(obj_file).replace('.' + osinfo.obj_suffix, osinfo.program_suffix)
 
                 if target_type == 'fuzzer':
                     info['exe'] = os.path.join(build_paths.fuzzer_output_dir, exe_basename)
