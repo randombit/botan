@@ -86,6 +86,8 @@ size_t BOTAN_PUBLIC_API(3, 0) hex_decode(uint8_t output[], std::string_view inpu
 * Perform hex decoding
 * @param output a contiguous byte buffer of at least input_length/2 bytes
 * @param input some hex input
+* @param ignore_ws ignore whitespace on input; if false, throw an
+*                  exception if whitespace is encountered
 * @return number of bytes written to output
 */
 size_t BOTAN_PUBLIC_API(3, 0) hex_decode(std::span<uint8_t> output, std::string_view input, bool ignore_ws = true);

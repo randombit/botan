@@ -343,7 +343,7 @@ class BOTAN_PUBLIC_API(2, 0) Policy {
        *
        * @note This is currently not implemented for TLS 1.2, hence the limit
        *       won't be negotiated by TLS 1.3 clients that support downgrading
-       *       to TLS 1.2 (i.e. ::allow_tls12() returning true).
+       *       to TLS 1.2 (i.e. #allow_tls12() returning true).
        */
       virtual std::optional<uint16_t> record_size_limit() const;
 

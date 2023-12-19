@@ -112,7 +112,6 @@ VERBATIM_HEADERS       = YES
 # configuration options related to the alphabetical class index
 #---------------------------------------------------------------------------
 ALPHABETICAL_INDEX     = YES
-COLS_IN_ALPHA_INDEX    = 5
 IGNORE_PREFIX          =
 #---------------------------------------------------------------------------
 # configuration options related to the HTML output
@@ -158,13 +157,17 @@ PREDEFINED             = BOTAN_HAS_AES_ARMV8 \
                          BOTAN_HAS_AES_VPERM \
                          BOTAN_HAS_CHACHA_SIMD32 \
                          BOTAN_HAS_CHACHA_AVX2 \
+                         BOTAN_HAS_CHACHA_AVX512 \
                          BOTAN_HAS_IDEA_SSE2 \
+                         BOTAN_HAS_KECCAK_PERM_BMI2 \
                          BOTAN_HAS_NOEKEON_SIMD \
                          BOTAN_HAS_SERPENT_SIMD \
                          BOTAN_HAS_SERPENT_AVX2 \
+                         BOTAN_HAS_SERPENT_AVX512 \
                          BOTAN_HAS_SHA1_SSE2 \
                          BOTAN_HAS_SHA1_ARMV8 \
                          BOTAN_HAS_SHA1_X86_SHA_NI \
+                         BOTAN_HAS_SHA2_32_ARMV8 \
                          BOTAN_HAS_SHA2_32_X86 \
                          BOTAN_HAS_SHA2_32_X86_BMI2 \
                          BOTAN_HAS_SHA2_64_BMI2 \
@@ -186,7 +189,10 @@ PREDEFINED             = BOTAN_HAS_AES_ARMV8 \
                          BOTAN_DEPRECATED_API(msg)= \
                          BOTAN_PUBLIC_API(maj,min)= \
                          BOTAN_HAS_TLS \
+                         BOTAN_HAS_TLS_13 \
                          BOTAN_HAS_BOOST_ASIO \
+                         BOTAN_DIAGNOSTIC_PUSH= \
+                         BOTAN_DIAGNOSTIC_POP= \
                          BOOST_VERSION=106600
 
 

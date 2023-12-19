@@ -108,6 +108,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Manager {
        * @param tickets a list of tickets that were offered by the client
        * @param hash_function the hash algorithm name we are going to use for
        *                      the to-be-negotiated connection
+       * @param callbacks callbacks to be used for session policy decisions
+       * @param policy policy to be used for session policy decisions
        *
        * @return a std::pair of the Session associated to the choosen PSK and
        *         the index of the selected ticket; std::nullopt if no PSK was

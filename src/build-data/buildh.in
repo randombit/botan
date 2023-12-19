@@ -222,6 +222,10 @@
 /** Multiplier on a block cipher's native parallelism */
 #define BOTAN_BLOCK_CIPHER_PAR_MULT 4
 
+/**
+ * @}
+ */
+
 /* Check for a common build problem */
 
 #if defined(BOTAN_TARGET_ARCH_IS_X86_64) && ((defined(_MSC_VER) && !defined(_WIN64)) || \
