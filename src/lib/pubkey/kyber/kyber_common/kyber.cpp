@@ -383,12 +383,21 @@ class Polynomial {
 
          this->csubq();
 
+         auto compress = [](uint32_t t) {
+            // (t << 1) + ((KyberConstants::Q / 2) / KyberConstants::Q) & 1
+            // Note that magic numbers assume that ::Q = 3329
+            t <<= 1;
+            t += 1665;
+            t *= 80635;
+            t >>= 28;
+            t &= 1;
+            return static_cast<uint8_t>(t);
+         };
+
          for(size_t i = 0; i < size() / 8; ++i) {
             result[i] = 0;
             for(size_t j = 0; j < 8; ++j) {
-               const uint16_t t = (((static_cast<uint16_t>(this->m_coeffs[8 * i + j]) << 1) + KyberConstants::Q / 2) /
-                                   KyberConstants::Q);
-               result[i] |= (t & 1) << j;
+               result[i] |= compress(this->m_coeffs[8 * i + j]) << j;
             }
          }
 
