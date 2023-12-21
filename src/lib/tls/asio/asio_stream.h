@@ -848,19 +848,30 @@ class Stream {
        */
       template <typename ConstBufferSequence>
       void tls_encrypt(const ConstBufferSequence& buffers, boost::system::error_code& ec) {
+         // TODO: Once the TLS::Channel can deal with buffer sequences we can
+         //       save this copy. Until then we optimize for the smallest amount
+         //       of TLS records and flatten the boost buffer sequence.
+         std::vector<uint8_t> copy_buffer;
+         auto unpack = [&copy_buffer](const auto& bufs) -> std::span<const uint8_t> {
+            const auto buffers_in_sequence =
+               std::distance(boost::asio::buffer_sequence_begin(bufs), boost::asio::buffer_sequence_end(bufs));
+
+            if(buffers_in_sequence == 0) {
+               return {};
+            } else if(buffers_in_sequence == 1) {
+               const boost::asio::const_buffer buf = *boost::asio::buffer_sequence_begin(bufs);
+               return {static_cast<const uint8_t*>(buf.data()), buf.size()};
+            } else {
+               copy_buffer.resize(boost::asio::buffer_size(bufs));
+               boost::asio::buffer_copy(boost::asio::buffer(copy_buffer), bufs);
+               return copy_buffer;
+            }
+         };
+
          // NOTE: This is not asynchronous: it encrypts the data synchronously.
          // The data encrypted by native_handle()->send() is synchronously stored in the send_buffer of m_core,
          // but is not actually written to the wire, yet.
-         for(auto it = boost::asio::buffer_sequence_begin(buffers);
-             !ec && it != boost::asio::buffer_sequence_end(buffers);
-             it++) {
-            const boost::asio::const_buffer buffer = *it;
-            try_with_error_code(
-               [&] {
-                  native_handle()->send({static_cast<const uint8_t*>(buffer.data()), buffer.size()});
-               },
-               ec);
-         }
+         try_with_error_code([&] { native_handle()->send(unpack(buffers)); }, ec);
       }
 
       /**
