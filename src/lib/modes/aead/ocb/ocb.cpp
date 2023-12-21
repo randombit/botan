@@ -23,6 +23,17 @@ class L_computer final {
          m_L_star.resize(m_BS);
          cipher.encrypt(m_L_star);
          m_L_dollar = poly_double(star());
+
+         // Preallocate the m_L vector to the maximum expected size to avoid
+         // re-allocations during runtime. This had caused a use-after-free in
+         // earlier versions, due to references into this buffer becoming stale
+         // in `compute_offset()`, after calling `get()` in the hot path.
+         //
+         // Note, that the list member won't be pre-allocated, so the expected
+         // memory overhead is negligible.
+         //
+         // See also https://github.com/randombit/botan/issues/3812
+         m_L.reserve(31);
          m_L.push_back(poly_double(dollar()));
 
          while(m_L.size() < 8) {
