@@ -400,22 +400,22 @@ void BigInt::binary_encode(uint8_t output[], size_t len) const {
 /*
 * Set this number to the value in buf
 */
-void BigInt::binary_decode(const uint8_t buf[], size_t length) {
+void BigInt::binary_decode(std::span<const uint8_t> buf) {
    clear();
 
-   const size_t full_words = length / sizeof(word);
-   const size_t extra_bytes = length % sizeof(word);
+   constexpr size_t word_bytes = sizeof(word);
+   const size_t full_words = buf.size() / word_bytes;
+   const size_t extra_bytes = buf.size() % word_bytes;
 
    secure_vector<word> reg((round_up(full_words + (extra_bytes > 0 ? 1 : 0), 8)));
 
-   for(size_t i = 0; i != full_words; ++i) {
-      reg[i] = load_be<word>(buf + length - sizeof(word) * (i + 1), 0);
+   for(size_t i = 0; buf.size() >= word_bytes; ++i) {
+      reg[i] = load_be(buf.last<word_bytes>());
+      buf = buf.subspan(0, buf.size() - word_bytes);
    }
 
-   if(extra_bytes > 0) {
-      for(size_t i = 0; i != extra_bytes; ++i) {
-         reg[full_words] = (reg[full_words] << 8) | buf[i];
-      }
+   for(size_t i = 0; i < buf.size(); ++i) {
+      reg[full_words] = (reg[full_words] << 8) | buf[i];
    }
 
    m_data.swap(reg);

@@ -668,13 +668,13 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param buf byte array buffer containing the integer
        * @param length size of buf
        */
-      void binary_decode(const uint8_t buf[], size_t length);
+      void binary_decode(const uint8_t buf[], size_t length) { binary_decode(std::span{buf, length}); }
 
       /**
        * Read integer value from a byte vector
        * @param buf the vector to load from
        */
-      void binary_decode(std::span<const uint8_t> buf) { binary_decode(buf.data(), buf.size()); }
+      void binary_decode(std::span<const uint8_t> buf);
 
       /**
        * Place the value into out, zero-padding up to size words
