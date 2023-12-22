@@ -110,6 +110,22 @@ bool KyberMode::is_modern() const {
    return !is_90s();
 }
 
+bool KyberMode::is_available() const {
+#if defined(BOTAN_HAS_KYBER)
+   if(is_modern()) {
+      return true;
+   }
+#endif
+
+#if defined(BOTAN_HAS_KYBER_90S)
+   if(is_90s()) {
+      return true;
+   }
+#endif
+
+   return false;
+}
+
 namespace {
 
 class KyberConstants {
@@ -1192,10 +1208,6 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
 
 KyberMode Kyber_PublicKey::mode() const {
    return m_public->mode().mode();
-}
-
-std::string Kyber_PublicKey::algo_name() const {
-   return object_identifier().to_formatted_string();
 }
 
 AlgorithmIdentifier Kyber_PublicKey::algorithm_identifier() const {
