@@ -39,5 +39,5 @@ version. This is unlikely to occur before 2026, at the earliest.
 
 One major change already planned for Botan 4 is that in this release, Public_Key
 will no longer derive from Private_Key. And similarly, specific private keys
-(for example RSA_PrivateKey) will no longer derive from their cooresponding
+(for example RSA_PrivateKey) will no longer derive from their corresponding
 public key type.

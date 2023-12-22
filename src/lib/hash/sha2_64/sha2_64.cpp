@@ -25,6 +25,12 @@ std::string sha512_provider() {
    }
 #endif
 
+#if defined(BOTAN_HAS_SHA2_64_ARMV8)
+   if(CPUID::has_arm_sha2_512()) {
+      return "armv8";
+   }
+#endif
+
    return "base";
 }
 
@@ -38,6 +44,12 @@ void SHA_512::compress_digest(digest_type& digest, std::span<const uint8_t> inpu
 #if defined(BOTAN_HAS_SHA2_64_BMI2)
    if(CPUID::has_bmi2()) {
       return compress_digest_bmi2(digest, input, blocks);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SHA2_64_ARMV8)
+   if(CPUID::has_arm_sha2_512()) {
+      return compress_digest_armv8(digest, input, blocks);
    }
 #endif
 
