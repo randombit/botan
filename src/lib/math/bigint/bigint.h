@@ -94,13 +94,13 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param buf the byte array holding the value
        * @param length size of buf
        */
-      BigInt(const uint8_t buf[], size_t length);
+      BigInt(const uint8_t buf[], size_t length) : BigInt(std::span{buf, length}) {}
 
       /**
        * Create a BigInt from an integer in a byte array
        * @param vec the byte vector holding the value
        */
-      explicit BigInt(std::span<const uint8_t> vec) : BigInt(vec.data(), vec.size()) {}
+      explicit BigInt(std::span<const uint8_t> vec);
 
       /**
        * Create a BigInt from an integer in a byte array
@@ -108,7 +108,14 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param length size of buf
        * @param base is the number base of the integer in buf
        */
-      BigInt(const uint8_t buf[], size_t length, Base base);
+      BigInt(const uint8_t buf[], size_t length, Base base) : BigInt(std::span{buf, length}, base) {}
+
+      /**
+       * Create a BigInt from an integer in a byte array
+       * @param buf the byte array holding the value
+       * @param base is the number base of the integer in buf
+       */
+      BigInt(std::span<const uint8_t> buf, Base base);
 
       /**
        * Create a BigInt from an integer in a byte array

@@ -79,7 +79,8 @@ BigInt::BigInt(std::string_view str) {
       base = Hexadecimal;
    }
 
-   *this = decode(cast_char_ptr_to_uint8(str.data()) + markers, str.length() - markers, base);
+   std::span<const uint8_t> strdata(cast_char_ptr_to_uint8(str.data()), str.length());
+   *this = decode(strdata.subspan(markers), base);
 
    if(negative) {
       set_sign(Negative);
@@ -88,15 +89,15 @@ BigInt::BigInt(std::string_view str) {
    }
 }
 
-BigInt::BigInt(const uint8_t input[], size_t length) {
-   binary_decode(input, length);
+BigInt::BigInt(std::span<const uint8_t> input) {
+   binary_decode(input);
 }
 
 /*
 * Construct a BigInt from an encoded BigInt
 */
-BigInt::BigInt(const uint8_t input[], size_t length, Base base) {
-   *this = decode(input, length, base);
+BigInt::BigInt(std::span<const uint8_t> input, Base base) {
+   *this = decode(input.data(), input.size(), base);
 }
 
 //static
