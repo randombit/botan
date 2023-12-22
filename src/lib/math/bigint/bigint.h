@@ -686,10 +686,16 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       void binary_decode(std::span<const uint8_t> buf);
 
       /**
-       * Place the value into out, zero-padding up to size words
-       * Throw if *this cannot be represented in size words
+       * Place the value into @p out, zero-padding up to @p size words
+       * Throw if *this cannot be represented in @p size words
        */
-      void encode_words(word out[], size_t size) const;
+      void encode_words(word out[], size_t size) const { encode_words(std::span{out, size}); }
+
+      /**
+       * Place the value into @p out, zero-padding to fill the @p out
+       * Throw if *this cannot be represented in the size of @p out.
+       */
+      void encode_words(std::span<word> out) const;
 
       /**
        * If predicate is true assign other to *this

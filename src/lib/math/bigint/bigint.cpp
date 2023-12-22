@@ -184,15 +184,15 @@ bool BigInt::is_less_than(const BigInt& other) const {
    return bigint_ct_is_lt(this->data(), this->sig_words(), other.data(), other.sig_words()).as_bool();
 }
 
-void BigInt::encode_words(word out[], size_t size) const {
+void BigInt::encode_words(std::span<word> out) const {
    const size_t words = sig_words();
 
-   if(words > size) {
+   if(words > out.size()) {
       throw Encoding_Error("BigInt::encode_words value too large to encode");
    }
 
-   clear_mem(out, size);
-   copy_mem(out, data(), words);
+   clear_mem(out);
+   copy_mem(out.first(words), std::span{get_word_vector()}.first(words));
 }
 
 size_t BigInt::Data::calc_sig_words() const {
