@@ -123,8 +123,8 @@ class TLS_Client_Hello_Reader final : public Command {
          const std::variant<Botan::TLS::Client_Hello_13, Botan::TLS::Client_Hello_12>& hello) {
          std::ostringstream oss;
 
-         const auto& hello_base =
-            std::visit([](const auto& ch) -> const Botan::TLS::Client_Hello& { return ch; }, hello);
+         const auto* hello_base =
+            std::visit([](const auto& ch) -> const Botan::TLS::Client_Hello* { return &ch; }, hello);
 
          const auto version = std::visit(Botan::overloaded{
                                             [](const Botan::TLS::Client_Hello_12&) { return "1.2"; },
@@ -133,12 +133,12 @@ class TLS_Client_Hello_Reader final : public Command {
                                          hello);
 
          oss << "Version: " << version << "\n"
-             << "Random: " << Botan::hex_encode(hello_base.random()) << "\n";
+             << "Random: " << Botan::hex_encode(hello_base->random()) << "\n";
 
-         if(!hello_base.session_id().empty()) {
-            oss << "SessionID: " << Botan::hex_encode(hello_base.session_id().get()) << "\n";
+         if(!hello_base->session_id().empty()) {
+            oss << "SessionID: " << Botan::hex_encode(hello_base->session_id().get()) << "\n";
          }
-         for(uint16_t csuite_id : hello_base.ciphersuites()) {
+         for(uint16_t csuite_id : hello_base->ciphersuites()) {
             const auto csuite = Botan::TLS::Ciphersuite::by_id(csuite_id);
             if(csuite && csuite->valid()) {
                oss << "Cipher: " << csuite->to_string() << "\n";
@@ -151,10 +151,10 @@ class TLS_Client_Hello_Reader final : public Command {
 
          oss << "Supported signature schemes: ";
 
-         if(hello_base.signature_schemes().empty()) {
+         if(hello_base->signature_schemes().empty()) {
             oss << "Did not send signature_algorithms extension\n";
          } else {
-            for(Botan::TLS::Signature_Scheme scheme : hello_base.signature_schemes()) {
+            for(Botan::TLS::Signature_Scheme scheme : hello_base->signature_schemes()) {
                try {
                   auto s = scheme.to_string();
                   oss << s << " ";
@@ -165,7 +165,7 @@ class TLS_Client_Hello_Reader final : public Command {
             oss << "\n";
          }
 
-         if(auto sg = hello_base.extensions().get<Botan::TLS::Supported_Groups>()) {
+         if(auto sg = hello_base->extensions().get<Botan::TLS::Supported_Groups>()) {
             oss << "Supported Groups: ";
             for(const auto group : sg->groups()) {
                oss << group.to_string().value_or(Botan::fmt("Unknown group: {}", group.wire_code())) << " ";
@@ -174,7 +174,7 @@ class TLS_Client_Hello_Reader final : public Command {
          }
 
          std::map<std::string, bool> hello_flags;
-         hello_flags["ALPN"] = hello_base.supports_alpn();
+         hello_flags["ALPN"] = hello_base->supports_alpn();
 
          std::visit(Botan::overloaded{
                        [&](const Botan::TLS::Client_Hello_12& ch12) {
