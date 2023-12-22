@@ -23,5 +23,5 @@ default -> "false"
 </so_link_commands>
 
 <binary_link_commands>
-default -> "em++"
+default -> "{cxx}"
 </binary_link_commands>
