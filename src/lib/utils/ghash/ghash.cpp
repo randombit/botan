@@ -13,6 +13,8 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 
+#include <array>
+
 namespace Botan {
 
 std::string GHASH::provider() const {
@@ -177,9 +179,12 @@ void GHASH::add_final_block(secure_vector<uint8_t>& hash, size_t ad_len, size_t 
    * stack buffer is fine here since the text len is public
    * and the length of the AD is probably not sensitive either.
    */
-   uint8_t final_block[GCM_BS];
-   store_be<uint64_t>(final_block, 8 * ad_len, 8 * text_len);
-   ghash_update(hash, {final_block, GCM_BS});
+   std::array<uint8_t, GCM_BS> final_block;
+
+   const uint64_t ad_bits = 8 * ad_len;
+   const uint64_t text_bits = 8 * text_len;
+   store_be(final_block, ad_bits, text_bits);
+   ghash_update(hash, final_block);
 }
 
 void GHASH::final(std::span<uint8_t> mac) {

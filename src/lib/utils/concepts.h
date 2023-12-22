@@ -33,6 +33,14 @@ struct is_strong_type<Strong<Ts...>> : std::true_type {};
 template <typename... Ts>
 constexpr bool is_strong_type_v = is_strong_type<std::remove_const_t<Ts>...>::value;
 
+template <typename T0, typename... Ts>
+struct all_same {
+      static constexpr bool value = (std::is_same_v<T0, Ts> && ...);
+};
+
+template <typename... Ts>
+static constexpr bool all_same_v = all_same<Ts...>::value;
+
 namespace ranges {
 
 /**
@@ -204,6 +212,10 @@ concept contiguous_strong_type = strong_type<T> && contiguous_container<T>;
 // TODO: C++20 - replace with std::integral
 template <typename T>
 concept integral = std::is_integral_v<T>;
+
+// TODO: C++20 - replace with std::unsigned_integral
+template <typename T>
+concept unsigned_integral = std::is_integral_v<T> && std::is_unsigned_v<T>;
 
 }  // namespace concepts
 
