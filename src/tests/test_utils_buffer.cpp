@@ -7,6 +7,7 @@
 
 #include "tests.h"
 
+#include <botan/mem_ops.h>
 #include <botan/internal/alignment_buffer.h>
 #include <botan/internal/stl_util.h>
 
@@ -40,7 +41,7 @@ std::vector<Test::Result> test_buffer_slicer() {
 
       CHECK("Read from BufferSlicer",
             [](auto& result) {
-               const std::vector<uint8_t> buffer{'h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd'};
+               const std::vector<uint8_t> buffer{'h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', ' ', '!'};
                Botan::BufferSlicer s(buffer);
 
                result.test_eq("non-empty slicer has remaining bytes", s.remaining(), buffer.size());
@@ -54,22 +55,31 @@ std::vector<Test::Result> test_buffer_slicer() {
                result.test_is_eq("took hello", hello[3], uint8_t('l'));
                result.test_is_eq("took hello", hello[4], uint8_t('o'));
 
-               result.test_eq("remaining bytes", s.remaining(), 6);
+               result.test_eq("remaining bytes", s.remaining(), 8);
 
                s.skip(1);
-               result.test_eq("remaining bytes", s.remaining(), 5);
+               result.test_eq("remaining bytes", s.remaining(), 7);
 
                const auto wor = s.copy_as_vector(3);
                result.require("has 3 bytes", wor.size() == 3);
                result.test_is_eq("took wor...", wor[0], uint8_t('w'));
                result.test_is_eq("took wor...", wor[1], uint8_t('o'));
                result.test_is_eq("took wor...", wor[2], uint8_t('r'));
-               result.test_eq("remaining bytes", s.remaining(), 2);
+               result.test_eq("remaining bytes", s.remaining(), 4);
 
                std::vector<uint8_t> ld(2);
                s.copy_into(ld);
                result.test_is_eq("took ...ld", ld[0], uint8_t('l'));
                result.test_is_eq("took ...ld", ld[1], uint8_t('d'));
+               result.test_eq("remaining bytes", s.remaining(), 2);
+
+               s.skip(1);
+               result.test_eq("remaining bytes", s.remaining(), 1);
+
+               const auto exclaim = s.take<1>();
+               result.test_is_eq("took ...!", exclaim[0], uint8_t('!'));
+               result.confirm("has static extent", decltype(exclaim)::extent != std::dynamic_extent);
+               result.confirm("static extent is 1", decltype(exclaim)::extent == 1);
 
                result.confirm("empty", s.empty());
                result.test_eq("nothing remaining", s.remaining(), 0);
@@ -118,7 +128,7 @@ std::vector<Test::Result> test_buffer_stuffer() {
 
       CHECK("Fill BufferStuffer",
             [](auto& result) {
-               std::vector<uint8_t> sink(11);
+               std::vector<uint8_t> sink(13);
                Botan::BufferStuffer s(sink);
 
                result.test_eq("has some capacity", s.remaining_capacity(), sink.size());
@@ -139,12 +149,21 @@ std::vector<Test::Result> test_buffer_stuffer() {
                n2.get()[1] = 'w';
                n2.get()[2] = 'o';
 
-               result.test_eq("has 3 bytes remaining", s.remaining_capacity(), 3);
+               result.test_eq("has 5 bytes remaining", s.remaining_capacity(), 5);
 
                std::vector<uint8_t> rld{'r', 'l', 'd'};
                s.append(rld);
 
-               result.test_eq("has 0 bytes remaining", s.remaining_capacity(), 0);
+               result.test_eq("has 2 bytes remaining", s.remaining_capacity(), 2);
+
+               auto n3 = s.next<2>();
+               result.require("got requested bytes", n3.size() == 2);
+               result.require("is static extent", decltype(n3)::extent != std::dynamic_extent);
+               result.require("static extent is 2", decltype(n3)::extent == 2);
+
+               n3[0] = ' ';
+               n3[1] = '!';
+
                result.confirm("is full", s.full());
 
                result.test_throws("cannot next() anything", [&]() { s.next(1); });
@@ -152,6 +171,9 @@ std::vector<Test::Result> test_buffer_stuffer() {
                   std::vector<uint8_t> some_bytes(42);
                   s.append(some_bytes);
                });
+
+               std::string final_string(Botan::cast_uint8_ptr_to_char(sink.data()), sink.size());
+               result.test_eq("final buffer is as expected", final_string, "hello world !");
             }),
    };
 }
