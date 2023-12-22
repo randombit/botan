@@ -372,20 +372,18 @@ BigInt BigInt::abs() const {
    return x;
 }
 
-void BigInt::binary_encode(uint8_t buf[]) const {
-   this->binary_encode(buf, bytes());
-}
-
 /*
 * Encode this number into bytes
 */
-void BigInt::binary_encode(uint8_t output[], size_t len) const {
-   const size_t full_words = len / sizeof(word);
-   const size_t extra_bytes = len % sizeof(word);
+void BigInt::binary_encode(std::span<uint8_t> output) const {
+   constexpr size_t word_bytes = sizeof(word);
+
+   const size_t full_words = output.size() / word_bytes;
+   const size_t extra_bytes = output.size() % word_bytes;
 
    for(size_t i = 0; i != full_words; ++i) {
-      const word w = word_at(i);
-      store_be(w, output + (len - (i + 1) * sizeof(word)));
+      store_be(word_at(i), output.last<word_bytes>());
+      output = output.subspan(0, output.size() - word_bytes);
    }
 
    if(extra_bytes > 0) {

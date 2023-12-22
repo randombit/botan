@@ -649,19 +649,28 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * Store BigInt-value in a given byte array
        * @param buf destination byte array for the integer value
        */
-      void binary_encode(uint8_t buf[]) const;
+      void binary_encode(uint8_t buf[]) const {
+         // assumes that `buf` points to a memory region with enough bytes
+         binary_encode(std::span{buf, bytes()});
+      }
 
       /**
-       * Store BigInt-value in a given byte array. If len is less than
-       * the size of the value, then it will be truncated. If len is
-       * greater than the size of the value, it will be zero-padded.
-       * If len exactly equals this->bytes(), this function behaves identically
-       * to binary_encode.
-       *
+       * Store BigInt-value in a given byte array
        * @param buf destination byte array for the integer value
        * @param len how many bytes to write
        */
-      void binary_encode(uint8_t buf[], size_t len) const;
+      void binary_encode(uint8_t buf[], size_t len) const { binary_encode(std::span{buf, len}); }
+
+      /**
+       * Store BigInt-value in a given byte array. If the buffer length
+       * is less than the size of the value, then it will be truncated.
+       * If it is greater than the size of the value, it will be zero-padded.
+       * If the buffer length exactly equals this->bytes(), this function behaves
+       * identically to binary_encode.
+       *
+       * @param buf destination byte array for the integer value
+       */
+      void binary_encode(std::span<uint8_t> buf) const;
 
       /**
        * Read integer value from a byte array with given size
@@ -739,7 +748,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        */
       static std::vector<uint8_t> encode(const BigInt& n) {
          std::vector<uint8_t> output(n.bytes());
-         n.binary_encode(output.data());
+         n.binary_encode(output);
          return output;
       }
 
@@ -750,7 +759,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        */
       static secure_vector<uint8_t> encode_locked(const BigInt& n) {
          secure_vector<uint8_t> output(n.bytes());
-         n.binary_encode(output.data());
+         n.binary_encode(output);
          return output;
       }
 
