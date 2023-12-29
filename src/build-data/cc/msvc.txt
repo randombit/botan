@@ -16,7 +16,7 @@ add_lib_option "%s.lib"
 
 compile_flags "/nologo /c"
 
-optimization_flags "/O2 /Oi"
+optimization_flags "/O2 /Oi /Zc:throwingNew"
 size_optimization_flags "/O1 /Os"
 
 # for debug info in the object file (required if using sccache):
