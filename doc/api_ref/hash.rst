@@ -116,6 +116,25 @@ Algorithm specification name:
 - Output bits defaults to 512.
 - Examples: ``BLAKE2b(256)``, ``BLAKE2b(512)``, ``BLAKE2b``
 
+BLAKE2s
+^^^^^^^^^
+
+Available if ``BOTAN_HAS_BLAKE2S`` is defined.
+
+A recently designed hash function. Very fast on 32-bit processors. Can output a
+hash of any length between 1 and 32 bytes, this is specified by passing a value
+to the constructor with the desired length.
+
+Named like "Blake2s" which selects default 256-bit output, or as
+"Blake2s(128)" to select 128 bits of output.
+
+Algorithm specification name:
+``BLAKE2s(<optional output bits>)`` (reported name) /
+``Blake2s(<optional output bits>)``
+
+- Output bits defaults to 256.
+- Examples: ``BLAKE2s(128)``, ``BLAKE2s(256)``, ``BLAKE2s``
+
 GOST-34.11
 ^^^^^^^^^^^^^^^
 
