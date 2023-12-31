@@ -10,6 +10,17 @@
 
 #include <botan/build.h>
 
+/*
+NOTE: Avoid using BOTAN_COMPILER_IS_XXX macros anywhere in this file
+
+This macro is set based on what compiler was used to build the
+library, but it is possible that the library is built with one
+compiler and then the application is built using another.
+
+For example using BOTAN_COMPILER_IS_CLANG would trigger (incorrectly)
+when the application is later compiled using GCC.
+*/
+
 /**
 * Used to annotate API exports which are public and supported.
 * These APIs will not be broken/removed unless strictly required for
@@ -156,19 +167,19 @@
 
 #endif
 
-#if defined(BOTAN_BUILD_COMPILER_IS_GCC)
-   #define BOTAN_DIAGNOSTIC_PUSH _Pragma("GCC diagnostic push")
-   #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS \
-      _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
-   #define BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
-   #define BOTAN_DIAGNOSTIC_POP _Pragma("GCC diagnostic pop")
-#elif defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+#if defined(__clang__)
    #define BOTAN_DIAGNOSTIC_PUSH _Pragma("clang diagnostic push")
    #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS \
       _Pragma("clang diagnostic ignored \"-Wdeprecated-declarations\"")
    #define BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
    #define BOTAN_DIAGNOSTIC_POP _Pragma("clang diagnostic pop")
-#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+#elif defined(__GNUG__)
+   #define BOTAN_DIAGNOSTIC_PUSH _Pragma("GCC diagnostic push")
+   #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS \
+      _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
+   #define BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+   #define BOTAN_DIAGNOSTIC_POP _Pragma("GCC diagnostic pop")
+#elif defined(_MSC_VER)
    #define BOTAN_DIAGNOSTIC_PUSH __pragma(warning(push))
    #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS __pragma(warning(disable : 4996))
    #define BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE __pragma(warning(disable : 4250))
