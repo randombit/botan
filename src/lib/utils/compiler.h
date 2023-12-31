@@ -156,19 +156,6 @@
 
 #endif
 
-/*
-* Define BOTAN_PARALLEL_SIMD_FOR
-*/
-#if !defined(BOTAN_PARALLEL_SIMD_FOR)
-
-   #if defined(BOTAN_BUILD_COMPILER_IS_GCC)
-      #define BOTAN_PARALLEL_SIMD_FOR _Pragma("GCC ivdep") for
-   #else
-      #define BOTAN_PARALLEL_SIMD_FOR for
-   #endif
-
-#endif
-
 #if defined(BOTAN_BUILD_COMPILER_IS_GCC)
    #define BOTAN_DIAGNOSTIC_PUSH _Pragma("GCC diagnostic push")
    #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS \

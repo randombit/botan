@@ -196,7 +196,7 @@ void Threefish_512::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 
    const Key_Inserter key(m_K.data(), m_T.data());
 
-   BOTAN_PARALLEL_SIMD_FOR(size_t i = 0; i < blocks; ++i) {
+   for(size_t i = 0; i < blocks; ++i) {
       uint64_t X0, X1, X2, X3, X4, X5, X6, X7;
       load_le(in + BLOCK_SIZE * i, X0, X1, X2, X3, X4, X5, X6, X7);
 
@@ -223,7 +223,7 @@ void Threefish_512::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 
    const Key_Inserter key(m_K.data(), m_T.data());
 
-   BOTAN_PARALLEL_SIMD_FOR(size_t i = 0; i < blocks; ++i) {
+   for(size_t i = 0; i < blocks; ++i) {
       uint64_t X0, X1, X2, X3, X4, X5, X6, X7;
       load_le(in + BLOCK_SIZE * i, X0, X1, X2, X3, X4, X5, X6, X7);
 
