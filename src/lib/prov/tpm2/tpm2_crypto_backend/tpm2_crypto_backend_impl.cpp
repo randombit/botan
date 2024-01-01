@@ -877,12 +877,12 @@ void set_crypto_callbacks(ESYS_CONTEXT* ctx, void* callback_state) {
       .get_ecdh_point = &get_ecdh_point,
       .aes_encrypt    = &aes_encrypt,
       .aes_decrypt    = &aes_decrypt,
-      .init           = &init,
-      .userdata       = callback_state,
 #if defined(BOTAN_TSS2_SUPPORTS_SM4_IN_CRYPTO_CALLBACKS)
       .sm4_encrypt    = &sm4_encrypt,
       .sm4_decrypt    = &sm4_decrypt,
 #endif
+      .init           = &init,
+      .userdata       = callback_state,
    };
    // clang-format on
 
