@@ -11,11 +11,11 @@
 #include <botan/der_enc.h>
 #include <botan/mem_ops.h>
 #include <botan/pk_ops.h>
+#include <botan/pss_params.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
-#include <botan/internal/pss_params.h>
 #include <botan/internal/stl_util.h>
 
 namespace Botan {

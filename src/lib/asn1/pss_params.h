@@ -13,7 +13,7 @@
 
 namespace Botan {
 
-class PSS_Params final : public ASN1_Object {
+class BOTAN_PUBLIC_API(3, 7) PSS_Params final : public ASN1_Object {
    public:
       static PSS_Params from_emsa_name(std::string_view emsa_name);
 
