@@ -1,0 +1,12 @@
+<defines>
+SHA2_64_ARMV8 -> 20231220
+</defines>
+
+<module_info>
+name -> "SHA-512 ARMv8"
+brief -> "SHA-512 using ARMv8 crypto instructions"
+</module_info>
+
+<isa>
+armv8sha512
+</isa>

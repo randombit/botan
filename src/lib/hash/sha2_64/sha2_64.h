@@ -90,6 +90,10 @@ class SHA_512 final : public HashFunction {
       static void compress_digest_bmi2(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
 #endif
 
+#if defined(BOTAN_HAS_SHA2_64_ARMV8)
+      static void compress_digest_armv8(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
+#endif
+
    private:
       void add_data(std::span<const uint8_t> input) override;
 
