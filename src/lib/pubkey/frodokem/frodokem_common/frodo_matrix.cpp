@@ -79,9 +79,9 @@ FrodoMatrix FrodoMatrix::sample(const FrodoKEMConstants& constants,
    load_le<uint16_t>(elements.data(), r.data(), n);
 
    for(size_t i = 0; i < n; ++i) {
-      uint32_t sample = 0;                   // Avoid integral promotion
-      uint16_t prnd = elements.at(i) >> 1;   // Drop the least significant bit
-      uint16_t sign = elements.at(i) & 0x1;  // Pick the least significant bit
+      uint32_t sample = 0;                         // Avoid integral promotion
+      const uint16_t prnd = elements.at(i) >> 1;   // Drop the least significant bit
+      const uint16_t sign = elements.at(i) & 0x1;  // Pick the least significant bit
 
       // No need to compare with the last value.
       for(size_t j = 0; j < constants.cdf_table_len() - 1; ++j) {
@@ -323,10 +323,13 @@ FrodoMatrix FrodoMatrix::mul_bs(const FrodoKEMConstants& constants, const FrodoM
          auto& current = elements.at(i * constants.n_bar() + j);
          current = 0;
          for(size_t k = 0; k < constants.n(); ++k) {
-            current += static_cast<uint16_t>(
-               static_cast<uint32_t /* avoiding integral promotion */>(b.elements_at(i * constants.n() + k)) *
-               s.elements_at(j * constants.n() +
-                             k));  //Since the input is s^T, we multiply the i-th row of b with the j-th row of s^t
+            // Explicitly store the values in 32-bit variables to avoid integral promotion
+            const uint32_t b_ink = b.elements_at(i * constants.n() + k);
+
+            // Since the input is s^T, we multiply the i-th row of b with the j-th row of s^t
+            const uint32_t s_ink = s.elements_at(j * constants.n() + k);
+
+            current += static_cast<uint16_t>(b_ink * s_ink);
          }
       }
    }
@@ -392,20 +395,18 @@ FrodoSerializedMatrix FrodoMatrix::serialize() const {
 
 FrodoPlaintext FrodoMatrix::decode(const FrodoKEMConstants& constants) const {
    const size_t nwords = (constants.n_bar() * constants.n_bar()) / 8;
-   uint16_t temp;
-   uint16_t maskex = static_cast<uint16_t>(1 << constants.b()) - 1;
-   uint16_t maskq = static_cast<uint16_t>(1 << constants.d()) - 1;
-
-   uint64_t templong;
+   const uint16_t maskex = static_cast<uint16_t>(1 << constants.b()) - 1;
+   const uint16_t maskq = static_cast<uint16_t>(1 << constants.d()) - 1;
 
    FrodoPlaintext out(nwords * constants.b());
 
    size_t index = 0;
    for(size_t i = 0; i < nwords; i++) {
-      templong = 0;
+      uint64_t templong = 0;
       for(size_t j = 0; j < 8; j++) {
-         temp = static_cast<uint16_t>(((m_elements.at(index) & maskq) + (1 << (constants.d() - constants.b() - 1))) >>
-                                      (constants.d() - constants.b()));
+         const auto temp =
+            static_cast<uint16_t>(((m_elements.at(index) & maskq) + (1 << (constants.d() - constants.b() - 1))) >>
+                                  (constants.d() - constants.b()));
          templong |= static_cast<uint64_t>(temp & maskex) << (constants.b() * j);
          index++;
       }
@@ -448,7 +449,7 @@ FrodoMatrix FrodoMatrix::unpack(const FrodoKEMConstants& constants,
       uint8_t b = 0;  // bits in out[i] already filled in
       while(b < lsb) {
          const uint8_t nbits = std::min(static_cast<uint8_t>(lsb - b), bits);
-         uint16_t mask = static_cast<uint16_t>(1 << nbits) - 1;
+         const uint16_t mask = static_cast<uint16_t>(1 << nbits) - 1;
          uint8_t t = (w >> (bits - nbits)) & mask;  // the bits to copy from w to out
 
          elements.at(i) = elements.at(i) + static_cast<uint16_t>(t << (lsb - b - nbits));
