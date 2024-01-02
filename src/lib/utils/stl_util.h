@@ -159,6 +159,14 @@ class BufferSlicer final {
          return result;
       }
 
+      template <size_t count>
+      std::span<const uint8_t, count> take() {
+         BOTAN_STATE_CHECK(remaining() >= count);
+         auto result = m_remaining.first<count>();
+         m_remaining = m_remaining.subspan(count);
+         return result;
+      }
+
       template <concepts::contiguous_strong_type T>
       StrongSpan<const T> take(const size_t count) {
          return StrongSpan<const T>(take(count));
@@ -200,6 +208,15 @@ class BufferStuffer {
          BOTAN_STATE_CHECK(m_buffer.size() >= bytes);
 
          auto result = m_buffer.first(bytes);
+         m_buffer = m_buffer.subspan(bytes);
+         return result;
+      }
+
+      template <size_t bytes>
+      std::span<uint8_t, bytes> next() {
+         BOTAN_STATE_CHECK(m_buffer.size() >= bytes);
+
+         auto result = m_buffer.first<bytes>();
          m_buffer = m_buffer.subspan(bytes);
          return result;
       }
