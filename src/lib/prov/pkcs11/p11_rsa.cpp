@@ -274,7 +274,7 @@ std::string hash_function_name_from_pkcs11_rsa_mechanism_type(MechanismType type
 
       case MechanismType::Sha384RsaPkcs:
       case MechanismType::Sha384RsaPkcsPss:
-         return "SHA-348";
+         return "SHA-384";
 
       case MechanismType::Sha512RsaPkcs:
       case MechanismType::Sha512RsaPkcsPss:
