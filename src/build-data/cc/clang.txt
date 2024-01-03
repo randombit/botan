@@ -78,6 +78,7 @@ ppc64:powercrypto -> "-mcrypto"
 ppc64:power9 -> "-mcpu=power9"
 
 arm64:armv8crypto -> "-march=armv8+crypto"
+arm64:armv8sha512 -> "-march=armv8.2-a+sha3"
 
 arm32:neon    -> "-mfpu=neon"
 arm64:neon    -> ""
