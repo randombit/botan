@@ -17,9 +17,6 @@ namespace Botan {
 */
 class Kuznyechik final : public Botan::Block_Cipher_Fixed_Params<16, 32> {
    public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-
       void clear() override;
 
       std::string name() const override { return "Kuznyechik"; }
@@ -31,6 +28,10 @@ class Kuznyechik final : public Botan::Block_Cipher_Fixed_Params<16, 32> {
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+
+   private:
       uint64_t m_rke[10][2];
       uint64_t m_rkd[10][2];
       bool m_has_keying_material;

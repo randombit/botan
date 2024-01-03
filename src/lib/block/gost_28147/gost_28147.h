@@ -57,9 +57,6 @@ class GOST_28147_89_Params final {
 */
 class GOST_28147_89 final : public Block_Cipher_Fixed_Params<8, 32> {
    public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-
       void clear() override;
 
       std::string name() const override;
@@ -82,6 +79,8 @@ class GOST_28147_89 final : public Block_Cipher_Fixed_Params<8, 32> {
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
 
       /*
       * The sbox is not secret, this is just a larger expansion of it

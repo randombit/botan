@@ -246,14 +246,12 @@ inline void des_FP(uint32_t& L, uint32_t& R) {
 /*
 * DES Encryption
 */
-void DES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void DES::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
    while(blocks >= 2) {
-      uint32_t L0 = load_be<uint32_t>(in, 0);
-      uint32_t R0 = load_be<uint32_t>(in, 1);
-      uint32_t L1 = load_be<uint32_t>(in, 2);
-      uint32_t R1 = load_be<uint32_t>(in, 3);
+      uint32_t L0, R0, L1, R1;
+      load_be(in.first<2 * BLOCK_SIZE>(), L0, R0, L1, R1);
 
       des_IP(L0, R0);
       des_IP(L1, R1);
@@ -263,23 +261,24 @@ void DES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
       des_FP(L0, R0);
       des_FP(L1, R1);
 
-      store_be(out, R0, L0, R1, L1);
+      store_be(out.first<2 * BLOCK_SIZE>(), R0, L0, R1, L1);
 
-      in += 2 * BLOCK_SIZE;
-      out += 2 * BLOCK_SIZE;
+      in = in.subspan(2 * BLOCK_SIZE);
+      out = out.subspan(2 * BLOCK_SIZE);
       blocks -= 2;
    }
 
    while(blocks > 0) {
-      uint32_t L0 = load_be<uint32_t>(in, 0);
-      uint32_t R0 = load_be<uint32_t>(in, 1);
+      uint32_t L0, R0;
+
+      load_be(in.first<BLOCK_SIZE>(), L0, R0);
       des_IP(L0, R0);
       des_encrypt(L0, R0, m_round_key.data());
       des_FP(L0, R0);
-      store_be(out, R0, L0);
+      store_be(out.first<BLOCK_SIZE>(), R0, L0);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
       blocks -= 1;
    }
 }
@@ -287,14 +286,12 @@ void DES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
 /*
 * DES Decryption
 */
-void DES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void DES::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
    while(blocks >= 2) {
-      uint32_t L0 = load_be<uint32_t>(in, 0);
-      uint32_t R0 = load_be<uint32_t>(in, 1);
-      uint32_t L1 = load_be<uint32_t>(in, 2);
-      uint32_t R1 = load_be<uint32_t>(in, 3);
+      uint32_t L0, R0, L1, R1;
+      load_be(in.first<2 * BLOCK_SIZE>(), L0, R0, L1, R1);
 
       des_IP(L0, R0);
       des_IP(L1, R1);
@@ -304,23 +301,23 @@ void DES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
       des_FP(L0, R0);
       des_FP(L1, R1);
 
-      store_be(out, R0, L0, R1, L1);
+      store_be(out.first<2 * BLOCK_SIZE>(), R0, L0, R1, L1);
 
-      in += 2 * BLOCK_SIZE;
-      out += 2 * BLOCK_SIZE;
+      in = in.subspan(2 * BLOCK_SIZE);
+      out = out.subspan(2 * BLOCK_SIZE);
       blocks -= 2;
    }
 
    while(blocks > 0) {
-      uint32_t L0 = load_be<uint32_t>(in, 0);
-      uint32_t R0 = load_be<uint32_t>(in, 1);
+      uint32_t L0, R0;
+      load_be(in.first<BLOCK_SIZE>(), L0, R0);
       des_IP(L0, R0);
       des_decrypt(L0, R0, m_round_key.data());
       des_FP(L0, R0);
-      store_be(out, R0, L0);
+      store_be(out.first<BLOCK_SIZE>(), R0, L0);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
       blocks -= 1;
    }
 }
@@ -344,14 +341,12 @@ void DES::clear() {
 /*
 * TripleDES Encryption
 */
-void TripleDES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void TripleDES::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
    while(blocks >= 2) {
-      uint32_t L0 = load_be<uint32_t>(in, 0);
-      uint32_t R0 = load_be<uint32_t>(in, 1);
-      uint32_t L1 = load_be<uint32_t>(in, 2);
-      uint32_t R1 = load_be<uint32_t>(in, 3);
+      uint32_t L0, R0, L1, R1;
+      load_be(in.first<2 * BLOCK_SIZE>(), L0, R0, L1, R1);
 
       des_IP(L0, R0);
       des_IP(L1, R1);
@@ -363,16 +358,16 @@ void TripleDES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
       des_FP(L0, R0);
       des_FP(L1, R1);
 
-      store_be(out, R0, L0, R1, L1);
+      store_be(out.first<2 * BLOCK_SIZE>(), R0, L0, R1, L1);
 
-      in += 2 * BLOCK_SIZE;
-      out += 2 * BLOCK_SIZE;
+      in = in.subspan(2 * BLOCK_SIZE);
+      out = out.subspan(2 * BLOCK_SIZE);
       blocks -= 2;
    }
 
    while(blocks > 0) {
-      uint32_t L0 = load_be<uint32_t>(in, 0);
-      uint32_t R0 = load_be<uint32_t>(in, 1);
+      uint32_t L0, R0;
+      load_be(in.first<BLOCK_SIZE>(), L0, R0);
 
       des_IP(L0, R0);
       des_encrypt(L0, R0, &m_round_key[0]);
@@ -382,8 +377,8 @@ void TripleDES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
 
       store_be(out, R0, L0);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
       blocks -= 1;
    }
 }
@@ -391,14 +386,12 @@ void TripleDES::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
 /*
 * TripleDES Decryption
 */
-void TripleDES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void TripleDES::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
    while(blocks >= 2) {
-      uint32_t L0 = load_be<uint32_t>(in, 0);
-      uint32_t R0 = load_be<uint32_t>(in, 1);
-      uint32_t L1 = load_be<uint32_t>(in, 2);
-      uint32_t R1 = load_be<uint32_t>(in, 3);
+      uint32_t L0, R0, L1, R1;
+      load_be(in.first<2 * BLOCK_SIZE>(), L0, R0, L1, R1);
 
       des_IP(L0, R0);
       des_IP(L1, R1);
@@ -410,16 +403,16 @@ void TripleDES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
       des_FP(L0, R0);
       des_FP(L1, R1);
 
-      store_be(out, R0, L0, R1, L1);
+      store_be(out.first<2 * BLOCK_SIZE>(), R0, L0, R1, L1);
 
-      in += 2 * BLOCK_SIZE;
-      out += 2 * BLOCK_SIZE;
+      in = in.subspan(2 * BLOCK_SIZE);
+      out = out.subspan(2 * BLOCK_SIZE);
       blocks -= 2;
    }
 
    while(blocks > 0) {
-      uint32_t L0 = load_be<uint32_t>(in, 0);
-      uint32_t R0 = load_be<uint32_t>(in, 1);
+      uint32_t L0, R0;
+      load_be(in.first<BLOCK_SIZE>(), L0, R0);
 
       des_IP(L0, R0);
       des_decrypt(L0, R0, &m_round_key[64]);
@@ -429,8 +422,8 @@ void TripleDES::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) cons
 
       store_be(out, R0, L0);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
       blocks -= 1;
    }
 }

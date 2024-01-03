@@ -98,25 +98,23 @@ const uint8_t Noekeon::RC[] = {
 /*
 * Noekeon Encryption
 */
-void Noekeon::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Noekeon::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_NOEKEON_SIMD)
    if(CPUID::has_simd_32()) {
       while(blocks >= 4) {
-         simd_encrypt_4(in, out);
-         in += 4 * BLOCK_SIZE;
-         out += 4 * BLOCK_SIZE;
+         simd_encrypt_4(in.data(), out.data());
+         in = in.subspan(4 * BLOCK_SIZE);
+         out = out.subspan(4 * BLOCK_SIZE);
          blocks -= 4;
       }
    }
 #endif
 
    for(size_t i = 0; i != blocks; ++i) {
-      uint32_t A0 = load_be<uint32_t>(in, 0);
-      uint32_t A1 = load_be<uint32_t>(in, 1);
-      uint32_t A2 = load_be<uint32_t>(in, 2);
-      uint32_t A3 = load_be<uint32_t>(in, 3);
+      uint32_t A0, A1, A2, A3;
+      load_be(in.first<BLOCK_SIZE>(), A0, A1, A2, A3);
 
       for(size_t j = 0; j != 16; ++j) {
          A0 ^= RC[j];
@@ -136,35 +134,33 @@ void Noekeon::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
       A0 ^= RC[16];
       theta(A0, A1, A2, A3, m_EK.data());
 
-      store_be(out, A0, A1, A2, A3);
+      store_be(out.first<BLOCK_SIZE>(), A0, A1, A2, A3);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
    }
 }
 
 /*
 * Noekeon Encryption
 */
-void Noekeon::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Noekeon::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_NOEKEON_SIMD)
    if(CPUID::has_simd_32()) {
       while(blocks >= 4) {
-         simd_decrypt_4(in, out);
-         in += 4 * BLOCK_SIZE;
-         out += 4 * BLOCK_SIZE;
+         simd_decrypt_4(in.data(), out.data());
+         in = in.subspan(4 * BLOCK_SIZE);
+         out = out.subspan(4 * BLOCK_SIZE);
          blocks -= 4;
       }
    }
 #endif
 
    for(size_t i = 0; i != blocks; ++i) {
-      uint32_t A0 = load_be<uint32_t>(in, 0);
-      uint32_t A1 = load_be<uint32_t>(in, 1);
-      uint32_t A2 = load_be<uint32_t>(in, 2);
-      uint32_t A3 = load_be<uint32_t>(in, 3);
+      uint32_t A0, A1, A2, A3;
+      load_be(in.first<BLOCK_SIZE>(), A0, A1, A2, A3);
 
       for(size_t j = 16; j != 0; --j) {
          theta(A0, A1, A2, A3, m_DK.data());
@@ -184,10 +180,10 @@ void Noekeon::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
       theta(A0, A1, A2, A3, m_DK.data());
       A0 ^= RC[0];
 
-      store_be(out, A0, A1, A2, A3);
+      store_be(out.first<BLOCK_SIZE>(), A0, A1, A2, A3);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
    }
 }
 
@@ -199,10 +195,8 @@ bool Noekeon::has_keying_material() const {
 * Noekeon Key Schedule
 */
 void Noekeon::key_schedule(std::span<const uint8_t> key) {
-   uint32_t A0 = load_be<uint32_t>(key.data(), 0);
-   uint32_t A1 = load_be<uint32_t>(key.data(), 1);
-   uint32_t A2 = load_be<uint32_t>(key.data(), 2);
-   uint32_t A3 = load_be<uint32_t>(key.data(), 3);
+   uint32_t A0, A1, A2, A3;
+   load_be(key.first<BLOCK_SIZE>(), A0, A1, A2, A3);
 
    for(size_t i = 0; i != 16; ++i) {
       A0 ^= RC[i];

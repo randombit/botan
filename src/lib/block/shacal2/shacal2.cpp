@@ -41,27 +41,27 @@ inline void SHACAL2_Rev(
 /*
 * SHACAL2 Encryption
 */
-void SHACAL2::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void SHACAL2::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_SHACAL2_X86)
    if(CPUID::has_intel_sha()) {
-      return x86_encrypt_blocks(in, out, blocks);
+      return x86_encrypt_blocks(in.data(), out.data(), blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_SHACAL2_ARMV8)
    if(CPUID::has_arm_sha2()) {
-      return armv8_encrypt_blocks(in, out, blocks);
+      return armv8_encrypt_blocks(in.data(), out.data(), blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_SHACAL2_AVX2)
    if(CPUID::has_avx2()) {
       while(blocks >= 8) {
-         avx2_encrypt_8(in, out);
-         in += 8 * BLOCK_SIZE;
-         out += 8 * BLOCK_SIZE;
+         avx2_encrypt_8(in.data(), out.data());
+         in = in.subspan(8 * BLOCK_SIZE);
+         out = out.subspan(8 * BLOCK_SIZE);
          blocks -= 8;
       }
    }
@@ -70,23 +70,17 @@ void SHACAL2::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #if defined(BOTAN_HAS_SHACAL2_SIMD)
    if(CPUID::has_simd_32()) {
       while(blocks >= 4) {
-         simd_encrypt_4(in, out);
-         in += 4 * BLOCK_SIZE;
-         out += 4 * BLOCK_SIZE;
+         simd_encrypt_4(in.data(), out.data());
+         in = in.subspan(4 * BLOCK_SIZE);
+         out = out.subspan(4 * BLOCK_SIZE);
          blocks -= 4;
       }
    }
 #endif
 
    for(size_t i = 0; i != blocks; ++i) {
-      uint32_t A = load_be<uint32_t>(in, 0);
-      uint32_t B = load_be<uint32_t>(in, 1);
-      uint32_t C = load_be<uint32_t>(in, 2);
-      uint32_t D = load_be<uint32_t>(in, 3);
-      uint32_t E = load_be<uint32_t>(in, 4);
-      uint32_t F = load_be<uint32_t>(in, 5);
-      uint32_t G = load_be<uint32_t>(in, 6);
-      uint32_t H = load_be<uint32_t>(in, 7);
+      uint32_t A, B, C, D, E, F, G, H;
+      load_be(in.first<BLOCK_SIZE>(), A, B, C, D, E, F, G, H);
 
       for(size_t r = 0; r != 64; r += 8) {
          SHACAL2_Fwd(A, B, C, D, E, F, G, H, m_RK[r + 0]);
@@ -99,25 +93,25 @@ void SHACAL2::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
          SHACAL2_Fwd(B, C, D, E, F, G, H, A, m_RK[r + 7]);
       }
 
-      store_be(out, A, B, C, D, E, F, G, H);
+      store_be(out.first<BLOCK_SIZE>(), A, B, C, D, E, F, G, H);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
    }
 }
 
 /*
 * SHACAL2 Encryption
 */
-void SHACAL2::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void SHACAL2::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_SHACAL2_AVX2)
    if(CPUID::has_avx2()) {
       while(blocks >= 8) {
-         avx2_decrypt_8(in, out);
-         in += 8 * BLOCK_SIZE;
-         out += 8 * BLOCK_SIZE;
+         avx2_decrypt_8(in.data(), out.data());
+         in = in.subspan(8 * BLOCK_SIZE);
+         out = out.subspan(8 * BLOCK_SIZE);
          blocks -= 8;
       }
    }
@@ -126,23 +120,17 @@ void SHACAL2::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #if defined(BOTAN_HAS_SHACAL2_SIMD)
    if(CPUID::has_simd_32()) {
       while(blocks >= 4) {
-         simd_decrypt_4(in, out);
-         in += 4 * BLOCK_SIZE;
-         out += 4 * BLOCK_SIZE;
+         simd_decrypt_4(in.data(), out.data());
+         in = in.subspan(4 * BLOCK_SIZE);
+         out = out.subspan(4 * BLOCK_SIZE);
          blocks -= 4;
       }
    }
 #endif
 
    for(size_t i = 0; i != blocks; ++i) {
-      uint32_t A = load_be<uint32_t>(in, 0);
-      uint32_t B = load_be<uint32_t>(in, 1);
-      uint32_t C = load_be<uint32_t>(in, 2);
-      uint32_t D = load_be<uint32_t>(in, 3);
-      uint32_t E = load_be<uint32_t>(in, 4);
-      uint32_t F = load_be<uint32_t>(in, 5);
-      uint32_t G = load_be<uint32_t>(in, 6);
-      uint32_t H = load_be<uint32_t>(in, 7);
+      uint32_t A, B, C, D, E, F, G, H;
+      load_be(in.first<BLOCK_SIZE>(), A, B, C, D, E, F, G, H);
 
       for(size_t r = 0; r != 64; r += 8) {
          SHACAL2_Rev(B, C, D, E, F, G, H, A, m_RK[63 - r]);
@@ -155,10 +143,10 @@ void SHACAL2::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
          SHACAL2_Rev(A, B, C, D, E, F, G, H, m_RK[56 - r]);
       }
 
-      store_be(out, A, B, C, D, E, F, G, H);
+      store_be(out.first<BLOCK_SIZE>(), A, B, C, D, E, F, G, H);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
    }
 }
 

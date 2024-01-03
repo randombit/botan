@@ -17,9 +17,6 @@ namespace Botan {
 */
 class SEED final : public Block_Cipher_Fixed_Params<16, 16> {
    public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-
       void clear() override;
 
       std::string name() const override { return "SEED"; }
@@ -30,6 +27,8 @@ class SEED final : public Block_Cipher_Fixed_Params<16, 16> {
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
 
       secure_vector<uint32_t> m_K;
 };

@@ -163,14 +163,14 @@ inline void ARIA_FE(uint32_t& T0, uint32_t& T1, uint32_t& T2, uint32_t& T3) {
 /*
 * ARIA encryption and decryption
 */
-void transform(const uint8_t in[], uint8_t out[], size_t blocks, const secure_vector<uint32_t>& KS) {
+void transform(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks, const secure_vector<uint32_t>& KS) {
    prefetch_arrays(S1, S2, X1, X2);
 
    const size_t ROUNDS = (KS.size() / 4) - 1;
 
    for(size_t i = 0; i != blocks; ++i) {
       uint32_t t0, t1, t2, t3;
-      load_be(in + 16 * i, t0, t1, t2, t3);
+      load_be(in.subspan(16 * i).first<16>(), t0, t1, t2, t3);
 
       for(size_t r = 0; r < ROUNDS; r += 2) {
          t0 ^= KS[4 * r];
@@ -359,32 +359,32 @@ void key_schedule(secure_vector<uint32_t>& ERK, secure_vector<uint32_t>& DRK, st
 
 }  // namespace
 
-void ARIA_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void ARIA_128::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
    ARIA_F::transform(in, out, blocks, m_ERK);
 }
 
-void ARIA_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void ARIA_192::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
    ARIA_F::transform(in, out, blocks, m_ERK);
 }
 
-void ARIA_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void ARIA_256::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
    ARIA_F::transform(in, out, blocks, m_ERK);
 }
 
-void ARIA_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void ARIA_128::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
    ARIA_F::transform(in, out, blocks, m_DRK);
 }
 
-void ARIA_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void ARIA_192::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
    ARIA_F::transform(in, out, blocks, m_DRK);
 }
 
-void ARIA_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void ARIA_256::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
    ARIA_F::transform(in, out, blocks, m_DRK);
 }

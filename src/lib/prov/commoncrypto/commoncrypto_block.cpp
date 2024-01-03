@@ -37,23 +37,27 @@ class CommonCrypto_BlockCipher final : public BlockCipher {
 
       bool has_keying_material() const override { return m_key_set; }
 
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override {
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override {
          assert_key_material_set();
          size_t total_len = blocks * m_opts.block_size;
+         BOTAN_ASSERT_NOMSG(in.size() >= total_len);
+         BOTAN_ASSERT_NOMSG(out.size() >= total_len);
          size_t out_len = 0;
 
-         CCCryptorStatus status = CCCryptorUpdate(m_encrypt, in, total_len, out, total_len, &out_len);
+         CCCryptorStatus status = CCCryptorUpdate(m_encrypt, in.data(), total_len, out.data(), total_len, &out_len);
          if(status != kCCSuccess) {
             throw CommonCrypto_Error("CCCryptorUpdate encrypt", status);
          }
       }
 
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override {
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override {
          assert_key_material_set();
          size_t total_len = blocks * m_opts.block_size;
+         BOTAN_ASSERT_NOMSG(in.size() >= total_len);
+         BOTAN_ASSERT_NOMSG(out.size() >= total_len);
          size_t out_len = 0;
 
-         CCCryptorStatus status = CCCryptorUpdate(m_decrypt, in, total_len, out, total_len, &out_len);
+         CCCryptorStatus status = CCCryptorUpdate(m_decrypt, in.data(), total_len, out.data(), total_len, &out_len);
          if(status != kCCSuccess) {
             throw CommonCrypto_Error("CCCryptorUpdate decrypt", status);
          }

@@ -17,9 +17,6 @@ namespace Botan {
 */
 class SHACAL2 final : public Block_Cipher_Fixed_Params<32, 16, 64, 4> {
    public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-
       std::string provider() const override;
       void clear() override;
 
@@ -32,6 +29,8 @@ class SHACAL2 final : public Block_Cipher_Fixed_Params<32, 16, 64, 4> {
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
 
 #if defined(BOTAN_HAS_SHACAL2_SIMD)
       void simd_encrypt_4(const uint8_t in[], uint8_t out[]) const;

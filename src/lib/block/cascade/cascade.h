@@ -17,9 +17,6 @@ namespace Botan {
 */
 class Cascade_Cipher final : public BlockCipher {
    public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-
       size_t block_size() const override { return m_block_size; }
 
       Key_Length_Specification key_spec() const override {
@@ -44,6 +41,8 @@ class Cascade_Cipher final : public BlockCipher {
 
    private:
       void key_schedule(std::span<const uint8_t>) override;
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
 
       std::unique_ptr<BlockCipher> m_cipher1, m_cipher2;
       size_t m_block_size;

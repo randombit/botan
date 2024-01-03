@@ -17,9 +17,6 @@ namespace Botan {
 */
 class Noekeon final : public Block_Cipher_Fixed_Params<16, 16> {
    public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-
       std::string provider() const override;
       void clear() override;
 
@@ -42,6 +39,9 @@ class Noekeon final : public Block_Cipher_Fixed_Params<16, 16> {
       static const uint8_t RC[17];
 
       void key_schedule(std::span<const uint8_t> key) override;
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+
       secure_vector<uint32_t> m_EK, m_DK;
 };
 

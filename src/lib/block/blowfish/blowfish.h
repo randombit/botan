@@ -17,9 +17,6 @@ namespace Botan {
 */
 class BOTAN_TEST_API Blowfish final : public Block_Cipher_Fixed_Params<8, 1, 56> {
    public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-
       /**
       * Modified EKSBlowfish key schedule, used for bcrypt password hashing
       */
@@ -40,6 +37,8 @@ class BOTAN_TEST_API Blowfish final : public Block_Cipher_Fixed_Params<8, 1, 56>
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
 
       void key_expansion(const uint8_t key[], size_t key_length, const uint8_t salt[], size_t salt_length);
 

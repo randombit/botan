@@ -7,6 +7,7 @@
 
 #include <botan/internal/seed.h>
 
+#include <botan/assert.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/prefetch.h>
 
@@ -71,16 +72,14 @@ inline uint32_t SEED_G(uint32_t X) {
 /*
 * SEED Encryption
 */
-void SEED::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void SEED::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
    prefetch_arrays(SEED_S0, SEED_S1);
 
    for(size_t i = 0; i != blocks; ++i) {
-      uint32_t B0 = load_be<uint32_t>(in, 0);
-      uint32_t B1 = load_be<uint32_t>(in, 1);
-      uint32_t B2 = load_be<uint32_t>(in, 2);
-      uint32_t B3 = load_be<uint32_t>(in, 3);
+      uint32_t B0, B1, B2, B3;
+      load_be(in.first<BLOCK_SIZE>(), B0, B1, B2, B3);
 
       for(size_t j = 0; j != 16; j += 2) {
          uint32_t T0, T1;
@@ -100,26 +99,24 @@ void SEED::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
          B2 ^= T0 + T1;
       }
 
-      store_be(out, B2, B3, B0, B1);
+      store_be(out.first<BLOCK_SIZE>(), B2, B3, B0, B1);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
    }
 }
 
 /*
 * SEED Decryption
 */
-void SEED::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void SEED::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
    prefetch_arrays(SEED_S0, SEED_S1);
 
    for(size_t i = 0; i != blocks; ++i) {
-      uint32_t B0 = load_be<uint32_t>(in, 0);
-      uint32_t B1 = load_be<uint32_t>(in, 1);
-      uint32_t B2 = load_be<uint32_t>(in, 2);
-      uint32_t B3 = load_be<uint32_t>(in, 3);
+      uint32_t B0, B1, B2, B3;
+      load_be(in.first<BLOCK_SIZE>(), B0, B1, B2, B3);
 
       for(size_t j = 0; j != 16; j += 2) {
          uint32_t T0, T1;
@@ -139,10 +136,10 @@ void SEED::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
          B2 ^= T0 + T1;
       }
 
-      store_be(out, B2, B3, B0, B1);
+      store_be(out.first<BLOCK_SIZE>(), B2, B3, B0, B1);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
    }
 }
 
@@ -171,11 +168,8 @@ void SEED::key_schedule(std::span<const uint8_t> key) {
                             0xDE6E678D,
                             0xBCDCCF1B};
 
-   secure_vector<uint32_t> WK(4);
-
-   for(size_t i = 0; i != 4; ++i) {
-      WK[i] = load_be<uint32_t>(key.data(), i);
-   }
+   auto WK = load_be<secure_vector<uint32_t>>(key.first<BLOCK_SIZE>());
+   BOTAN_DEBUG_ASSERT(WK.size() == 4);
 
    m_K.resize(32);
 

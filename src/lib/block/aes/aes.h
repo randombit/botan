@@ -17,9 +17,6 @@ namespace Botan {
 */
 class AES_128 final : public Block_Cipher_Fixed_Params<16, 16> {
    public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-
       void clear() override;
 
       std::string provider() const override;
@@ -34,6 +31,8 @@ class AES_128 final : public Block_Cipher_Fixed_Params<16, 16> {
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
 
 #if defined(BOTAN_HAS_AES_VPERM)
       void vperm_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
@@ -58,9 +57,6 @@ class AES_128 final : public Block_Cipher_Fixed_Params<16, 16> {
 */
 class AES_192 final : public Block_Cipher_Fixed_Params<16, 24> {
    public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-
       void clear() override;
 
       std::string provider() const override;
@@ -89,6 +85,8 @@ class AES_192 final : public Block_Cipher_Fixed_Params<16, 24> {
 #endif
 
       void key_schedule(std::span<const uint8_t> key) override;
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
 
       secure_vector<uint32_t> m_EK, m_DK;
 };
@@ -98,9 +96,6 @@ class AES_192 final : public Block_Cipher_Fixed_Params<16, 24> {
 */
 class AES_256 final : public Block_Cipher_Fixed_Params<16, 32> {
    public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-
       void clear() override;
 
       std::string provider() const override;
@@ -129,6 +124,8 @@ class AES_256 final : public Block_Cipher_Fixed_Params<16, 32> {
 #endif
 
       void key_schedule(std::span<const uint8_t> key) override;
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
 
       secure_vector<uint32_t> m_EK, m_DK;
 };

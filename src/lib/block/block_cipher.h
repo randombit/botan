@@ -139,7 +139,14 @@ class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
       * @param out the output buffer (same size as in)
       * @param blocks the number of blocks to process
       */
-      virtual void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const = 0;
+      void encrypt_n(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
+         encrypt_blocks(in, out, blocks);
+      }
+
+      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+         const size_t bytes = block_size() * blocks;
+         encrypt_n(std::span(in, bytes), std::span(out, bytes), blocks);
+      }
 
       /**
       * Decrypt one or more blocks
@@ -147,20 +154,31 @@ class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
       * @param out the output buffer (same size as in)
       * @param blocks the number of blocks to process
       */
-      virtual void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const = 0;
-
-      virtual void encrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const {
-         const size_t BS = block_size();
-         xor_buf(data, mask, blocks * BS);
-         encrypt_n(data, data, blocks);
-         xor_buf(data, mask, blocks * BS);
+      void decrypt_n(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
+         decrypt_blocks(in, out, blocks);
       }
 
-      virtual void decrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const {
-         const size_t BS = block_size();
-         xor_buf(data, mask, blocks * BS);
-         decrypt_n(data, data, blocks);
-         xor_buf(data, mask, blocks * BS);
+      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+         const size_t bytes = block_size() * blocks;
+         decrypt_n(std::span(in, bytes), std::span(out, bytes), blocks);
+      }
+
+      void encrypt_n_xex(std::span<uint8_t> data, std::span<const uint8_t> mask, size_t blocks) const {
+         encrypt_blocks_xex(data, mask, blocks);
+      }
+
+      void encrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const {
+         const size_t bytes = block_size() * blocks;
+         encrypt_n_xex(std::span(data, bytes), std::span(mask, bytes), blocks);
+      }
+
+      void decrypt_n_xex(std::span<uint8_t> data, std::span<const uint8_t> mask, size_t blocks) const {
+         decrypt_blocks_xex(data, mask, blocks);
+      }
+
+      void decrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const {
+         const size_t bytes = block_size() * blocks;
+         decrypt_n_xex(std::span(data, bytes), std::span(mask, bytes), blocks);
       }
 
       /**
@@ -171,6 +189,22 @@ class BOTAN_PUBLIC_API(2, 0) BlockCipher : public SymmetricAlgorithm {
       BlockCipher* clone() const { return this->new_object().release(); }
 
       ~BlockCipher() override = default;
+
+   private:
+      virtual void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const = 0;
+      virtual void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const = 0;
+
+      virtual void encrypt_blocks_xex(std::span<uint8_t> data, std::span<const uint8_t> mask, size_t blocks) const {
+         xor_buf(data, mask);
+         encrypt_blocks(data, data, blocks);
+         xor_buf(data, mask);
+      }
+
+      virtual void decrypt_blocks_xex(std::span<uint8_t> data, std::span<const uint8_t> mask, size_t blocks) const {
+         xor_buf(data, mask);
+         decrypt_n(data, data, blocks);
+         xor_buf(data, mask);
+      }
 };
 
 /**
@@ -197,19 +231,6 @@ class Block_Cipher_Fixed_Params : public BaseClass {
       enum { BLOCK_SIZE = BS };
 
       size_t block_size() const final { return BS; }
-
-      // override to take advantage of compile time constant block size
-      void encrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const final {
-         xor_buf(data, mask, blocks * BS);
-         this->encrypt_n(data, data, blocks);
-         xor_buf(data, mask, blocks * BS);
-      }
-
-      void decrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const final {
-         xor_buf(data, mask, blocks * BS);
-         this->decrypt_n(data, data, blocks);
-         xor_buf(data, mask, blocks * BS);
-      }
 
       Key_Length_Specification key_spec() const final { return Key_Length_Specification(KMIN, KMAX, KMOD); }
 };
