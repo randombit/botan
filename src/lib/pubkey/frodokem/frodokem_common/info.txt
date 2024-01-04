@@ -1,0 +1,26 @@
+<defines>
+FRODOKEM -> 20230801
+</defines>
+
+<module_info>
+name -> "FrodoKEM (common)"
+brief -> "Base implementation of FrodoKEM"
+type -> "Internal"
+</module_info>
+
+<requires>
+pubkey
+rng
+shake_xof
+</requires>
+
+<header:public>
+frodokem.h
+frodo_mode.h
+</header:public>
+
+<header:internal>
+frodo_constants.h
+frodo_matrix.h
+frodo_types.h
+</header:internal>

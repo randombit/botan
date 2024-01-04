@@ -97,7 +97,7 @@ Post-quantum secure signature scheme based on lattice problems.
 Kyber
 ~~~~~~~~~~~
 
-Post-quantum key encapsulation scheme based on lattices.
+Post-quantum key encapsulation scheme based on (structured) lattices.
 
 .. note::
 
@@ -130,6 +130,11 @@ A post-quantum secure signature scheme whose security is based (only) on the
 security of a hash function. Unlike XMSS, it is a stateless signature
 scheme, meaning that the private key does not change with each signature. It
 has high security but very long signatures and high runtime.
+
+FrodoKEM
+~~~~~~~~
+
+A post-quantum secure key encapsulation scheme based on (unstructured) lattices.
 
 McEliece
 ~~~~~~~~~~
@@ -1121,6 +1126,7 @@ Botan implements the following KEM schemes:
 
 1. RSA
 #. Kyber
+#. FrodoKEM
 #. McEliece
 
 .. _kyber_example:
