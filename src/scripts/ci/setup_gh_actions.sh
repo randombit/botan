@@ -24,7 +24,19 @@ if type -p "apt-get"; then
         sudo apt-get -qq install clang
 
     elif [ "$TARGET" = "gcc4.8" ]; then
-        sudo apt-get -qq install g++-4.8
+        # GCC 4.8 is not available on Ubuntu 20.04
+        # We install it from older deb packages
+        mkdir gcc4.8
+        pushd gcc4.8
+        wget                                                                                                     \
+            https://mirrors.kernel.org/ubuntu/pool/universe/g/gcc-4.8/g++-4.8_4.8.5-4ubuntu8_amd64.deb           \
+            https://mirrors.kernel.org/ubuntu/pool/universe/g/gcc-4.8/libstdc++-4.8-dev_4.8.5-4ubuntu8_amd64.deb \
+            https://mirrors.kernel.org/ubuntu/pool/universe/g/gcc-4.8/gcc-4.8-base_4.8.5-4ubuntu8_amd64.deb      \
+            https://mirrors.kernel.org/ubuntu/pool/universe/g/gcc-4.8/gcc-4.8_4.8.5-4ubuntu8_amd64.deb           \
+            https://mirrors.kernel.org/ubuntu/pool/universe/g/gcc-4.8/libgcc-4.8-dev_4.8.5-4ubuntu8_amd64.deb    \
+            https://mirrors.kernel.org/ubuntu/pool/universe/g/gcc-4.8/cpp-4.8_4.8.5-4ubuntu8_amd64.deb           \
+            https://mirrors.kernel.org/ubuntu/pool/universe/g/gcc-4.8/libasan0_4.8.5-4ubuntu8_amd64.deb
+        sudo apt-get -qq install ./*.deb
 
     elif [ "$TARGET" = "cross-i386" ]; then
         sudo apt-get -qq install g++-multilib linux-libc-dev libc6-dev-i386
