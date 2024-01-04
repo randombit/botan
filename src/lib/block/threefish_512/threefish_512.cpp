@@ -249,12 +249,11 @@ void Threefish_512::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_
    }
 }
 
-void Threefish_512::set_tweak(const uint8_t tweak[], size_t len) {
-   BOTAN_ARG_CHECK(len == 16, "Threefish-512 requires 128 bit tweak");
+void Threefish_512::set_tweak_value(std::span<const uint8_t> tweak) {
+   BOTAN_ARG_CHECK(tweak.size() == 16, "Threefish-512 requires 128 bit tweak");
 
    m_T.resize(3);
-   m_T[0] = load_le<uint64_t>(tweak, 0);
-   m_T[1] = load_le<uint64_t>(tweak, 1);
+   load_le(tweak, m_T[0], m_T[1]);
    m_T[2] = m_T[0] ^ m_T[1];
 }
 

@@ -219,7 +219,12 @@ class BOTAN_PUBLIC_API(2, 8) Tweakable_Block_Cipher : public BlockCipher {
       * Different algorithms support different tweak length(s). If called with
       * an unsupported length, Invalid_Argument will be thrown.
       */
-      virtual void set_tweak(const uint8_t tweak[], size_t len) = 0;
+      void set_tweak(std::span<const uint8_t> tweak) { set_tweak_value(tweak); }
+
+      void set_tweak(const uint8_t tweak[], size_t len) { set_tweak_value(std::span(tweak, len)); }
+
+   private:
+      virtual void set_tweak_value(std::span<const uint8_t> tweak) = 0;
 };
 
 /**
