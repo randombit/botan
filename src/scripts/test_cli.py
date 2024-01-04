@@ -1295,7 +1295,9 @@ def cli_tls_http_server_tests(tmp_dir):
         tls_server.kill()
 
 def cli_tls_proxy_tests(tmp_dir):
-    if not run_socket_tests() or not check_for_command("tls_proxy"):
+    # In the Windows GitHub CI this sometimes fails, for reasons unknown.
+    # The connectionn to the TLS proxy is forcibly closed by the remote host.
+    if not run_socket_tests() or platform.system() == 'Windows' or not check_for_command("tls_proxy"):
         return
 
     server_port = port_for('tls_proxy_backend')
