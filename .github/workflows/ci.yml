@@ -30,7 +30,7 @@ jobs:
             host_os: ubuntu-20.04
           - target: gcc4.8
             compiler: gcc
-            host_os: ubuntu-18.04
+            host_os: ubuntu-20.04
           - target: shared
             compiler: clang
             host_os: ubuntu-20.04
