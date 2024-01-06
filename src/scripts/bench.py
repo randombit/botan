@@ -5,12 +5,9 @@ Compare Botan with OpenSSL using their respective benchmark utils
 
 (C) 2017,2022 Jack Lloyd
     2023 René Meusel, Rohde & Schwarz Cybersecurity GmbH
-    2023 René Fischer
+    2023,2024 René Fischer
 
 Botan is released under the Simplified BSD License (see license.txt)
-
-TODO
- - Output pretty graphs with matplotlib
 """
 
 import logging
@@ -20,6 +17,12 @@ import optparse # pylint: disable=deprecated-module
 import subprocess
 import re
 import json
+import math
+import platform
+from datetime import datetime
+import shutil
+import numpy as np
+import matplotlib.pyplot as plt
 
 def setup_logging(options):
     if options.verbose:
@@ -276,6 +279,30 @@ class BenchmarkResult:
                 self.algo, k, v['botan'], v['openssl'], winner, ratio)
         return out
 
+    def graphs(self):
+        buf_sizes = self.results.keys()
+        x = np.arange(len(buf_sizes))
+        width = 0.4
+        multiplier = 0
+
+        fig, ax = plt.subplots(layout='constrained')
+
+        for lib in ['Botan', 'OpenSSL']:
+            offset = width * multiplier
+            results = [math.ceil(x[lib.lower()]/(1024*1024)) for x in self.results.values()]
+            rects = ax.bar(x + offset, results, width, label=lib)
+            ax.bar_label(rects, padding=5)
+            multiplier += 1
+
+        ax.set_xlabel('Buffer size (bytes)')
+        ax.set_ylabel('MiB/sec')
+        ax.set_title(self.algo)
+        ax.set_xticks(x + width, buf_sizes)
+        ax.legend(loc='upper left', ncols=2)
+
+        return {self.algo: fig}
+
+
 class SignatureBenchmarkResult:
     def __init__(self, algo, sizes, openssl_results, botan_results):
         self.algo = algo
@@ -314,6 +341,36 @@ class SignatureBenchmarkResult:
 
         return out
 
+    def graphs(self):
+        key_sizes = self.results.keys()
+        x = np.arange(len(key_sizes))
+        width = 0.4
+
+        graphs = {}
+
+        for op in ['sign', 'verify']:
+            fig, ax = plt.subplots(layout='constrained')
+            multiplier = 0
+
+            for lib in ['Botan', 'OpenSSL']:
+                offset = width * multiplier
+                results = [x[lib.lower()][op] for x in self.results.values()]
+                rects = ax.bar(x + offset, results, width, label=lib)
+                ax.bar_label(rects, padding=5)
+                multiplier += 1
+
+            # Add some text for labels, title and custom x-axis tick labels, etc.
+            ax.set_xlabel('Key size (bits)')
+            ax.set_ylabel('Ops/sec')
+            ax.set_title(self.algo + ' ' + op)
+            ax.set_xticks(x + width, key_sizes)
+            ax.legend(loc='upper right', ncols=2)
+
+            graphs.update({self.algo + '_' + op: fig})
+
+        return graphs
+
+
 class KeyAgreementBenchmarkResult:
     def __init__(self, algo, sizes, openssl_results, botan_results):
         self.algo = algo
@@ -346,6 +403,30 @@ class KeyAgreementBenchmarkResult:
             out += "algo %s key_size % 6d botan % 12d key agreements openssl % 12d key agreements adv %s by %.02f\n" % (
                 self.algo, k, v['botan'], v['openssl'], winner, ratio)
         return out
+
+    def graphs(self):
+        key_sizes = self.results.keys()
+        x = np.arange(len(key_sizes))
+        width = 0.4
+        multiplier = 0
+
+        fig, ax = plt.subplots(layout='constrained')
+
+        for lib in ['Botan', 'OpenSSL']:
+            offset = width * multiplier
+            results = [x[lib.lower()] for x in self.results.values()]
+            rects = ax.bar(x + offset, results, width, label=lib)
+            ax.bar_label(rects, padding=5)
+            multiplier += 1
+
+        ax.set_xlabel('Key size (bits)')
+        ax.set_ylabel('Key agreements/sec')
+        ax.set_title(self.algo)
+        ax.set_xticks(x + width, key_sizes)
+        ax.legend(loc='upper right', ncols=2)
+
+        return {self.algo: fig}
+
 
 def bench_algo(openssl, botan, algo):
     openssl_results = run_openssl_bench(openssl, algo)
@@ -380,6 +461,61 @@ def bench_key_agreement_algo(openssl, botan, algo):
     return KeyAgreementBenchmarkResult(algo, sorted(kszs_ossl.intersection(kszs_botan)), openssl_results, botan_results)
 
 
+def gen_html_report(botan_version, openssl_version, cmdline):
+    html = """<!DOCTYPE html>
+    <html>
+    <head>
+    <title>Botan Benchmark HTML Report</title>
+    </head>
+    <body>
+    <h1>Botan Benchmark HTML Report</h1>
+    <h2>Environment</h2>
+    <p><b>Date: </b> {date}</p>
+    <p><b>Operating System:</b> {os_info}</p>
+    <p><b>Botan version:</b> {botan_version}</p>
+    <details>
+        <summary><b>Build Info</b></summary>
+        <p><pre>{build_h}</pre></p>
+    </details>
+    <p><b>OpenSSL version:</b> {openssl_version}</p>
+    <p><b>Invocation:</b>
+    <pre>{cmdline}</pre>
+    </p>
+
+    <h2>Results</h2>"""
+
+    for img in sorted(os.listdir('bench_html/img')):
+        html += '<img src="img/%s">' % img
+
+    html += """
+    </body>
+    </html>
+    """
+
+    os_info = platform.system()
+    os_info += ' ' + platform.release()
+    os_info += ' ('
+    os_info += platform.machine()
+    os_info += ')'
+
+    include_path = re.search(r'-I(.*)', run_command(['botan', 'config', 'cflags']).strip()).group(1)
+    build_h = 'N/A'
+
+    try:
+        with open(os.path.join(include_path, 'botan/build.h'), 'r', encoding='utf-8') as f:
+            build_h = f.read()
+    except Exception as e:
+        logging.warning("Unable to read build.h: %s", e)
+
+    with open('bench_html/index.html', 'w', encoding='utf-8') as f:
+        f.write(html.format(date=datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3],
+                            os_info=os_info,
+                            botan_version=botan_version,
+                            build_h=build_h,
+                            openssl_version=openssl_version,
+                            cmdline=cmdline))
+
+
 def main(args=None):
     if args is None:
         args = sys.argv
@@ -389,6 +525,8 @@ def main(args=None):
 
     parser.add_option('--verbose', action='store_true', default=False, help="be noisy")
     parser.add_option('--quiet', action='store_true', default=False, help="be very quiet")
+
+    parser.add_option('--html-report', action='store_true', default=False, help="create HTML report")
 
     parser.add_option('--openssl-cli', metavar='PATH',
                       default='/usr/bin/openssl',
@@ -416,32 +554,53 @@ def main(args=None):
 
     logging.info("Comparing Botan %s with OpenSSL %s", botan_version, openssl_version)
 
+    if options.html_report:
+        if os.path.exists('bench_html'):
+            shutil.rmtree('bench_html')
+
+        os.mkdir('bench_html')
+        os.mkdir('bench_html/img')
+
+    graphs = {}
+
     if len(args) > 1:
         algos = args[1:]
         for algo in algos:
             if algo in EVP_MAP:
                 result = bench_algo(openssl, botan, algo)
+                graphs.update(result.graphs())
                 print(result.result_string())
             elif algo in SIGNATURE_EVP_MAP:
                 result = bench_signature_algo(openssl, botan, algo)
+                graphs.update(result.graphs())
                 print(result.result_string())
             elif algo in KEY_AGREEMENT_EVP_MAP:
                 result = bench_key_agreement_algo(openssl, botan, algo)
+                graphs.update(result.graphs())
                 print(result.result_string())
             else:
                 logging.error("Unknown algorithm '%s'", algo)
     else:
         for algo in sorted(EVP_MAP):
             result = bench_algo(openssl, botan, algo)
+            graphs.update(result.graphs())
             print(result.result_string())
 
         for algo in sorted(SIGNATURE_EVP_MAP):
             result = bench_signature_algo(openssl, botan, algo)
+            graphs.update(result.graphs())
             print(result.result_string())
 
         for algo in sorted(KEY_AGREEMENT_EVP_MAP):
             result = bench_key_agreement_algo(openssl, botan, algo)
+            graphs.update(result.graphs())
             print(result.result_string())
+
+    if options.html_report:
+        for title, graph in graphs.items():
+            graph.savefig('bench_html/img/' + title.replace('/', '--') + ".png")
+
+        gen_html_report(botan_version, openssl_version, ' '.join(sys.argv))
 
     return 0
 
