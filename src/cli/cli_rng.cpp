@@ -116,7 +116,7 @@ class RNG final : public Command {
             const auto blob = rng->random_vec(req_len);
 
             if(format == "binary" || format == "raw") {
-               output().write(reinterpret_cast<const char*>(blob.data()), blob.size());
+               write_output(blob);
             } else {
                output() << format_blob(format, blob) << "\n";
             }

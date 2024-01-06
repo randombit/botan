@@ -63,7 +63,7 @@ class TSS_Split final : public Command {
 
          for(size_t i = 0; i != shares.size(); ++i) {
             const std::string share_name = Botan::fmt("{}{}.{}", share_prefix, i + 1, share_suffix);
-            std::ofstream out(share_name.c_str());
+            std::ofstream out(share_name.c_str(), std::ios::binary);
             if(!out) {
                throw CLI_Error("Failed to open output file " + share_name);
             }

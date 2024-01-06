@@ -732,7 +732,7 @@ def main(args=None):
                          os.path.join(build_dir, 'fuzzer_corpus'),
                          os.path.join(build_dir, 'build/fuzzer')])
 
-        if target in ['shared', 'coverage', 'sanitizer'] and options.os != 'windows':
+        if target in ['shared', 'coverage', 'sanitizer']:
             botan_exe = os.path.join(build_dir, 'botan-cli.exe' if options.os == 'windows' else 'botan')
 
             args = ['--threads=%d' % (options.build_jobs)]

@@ -177,7 +177,7 @@ class PK_Decrypt final : public Command {
          try {
             aead->finish(data);
 
-            output().write(reinterpret_cast<const char*>(data.data()), data.size());
+            write_output(data);
          } catch(Botan::Integrity_Failure&) {
             error_output() << "Message authentication failure, possible ciphertext tampering\n";
             return set_return_code(1);

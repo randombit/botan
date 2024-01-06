@@ -53,7 +53,7 @@ class Hex_Decode final : public Command {
       void go() override {
          auto hex_dec_f = [&](const uint8_t b[], size_t l) {
             std::vector<uint8_t> bin = Botan::hex_decode(reinterpret_cast<const char*>(b), l);
-            output().write(reinterpret_cast<const char*>(bin.data()), bin.size());
+            write_output(bin);
          };
 
          Command::read_file(get_arg("file"), hex_dec_f, 2);
@@ -106,7 +106,7 @@ class Base58_Decode final : public Command {
             bin = Botan::base58_decode(data);
          }
 
-         output().write(reinterpret_cast<const char*>(bin.data()), bin.size());
+         write_output(bin);
       }
 };
 
@@ -143,7 +143,7 @@ class Base32_Decode final : public Command {
       void go() override {
          auto write_bin = [&](const uint8_t b[], size_t l) {
             Botan::secure_vector<uint8_t> bin = Botan::base32_decode(reinterpret_cast<const char*>(b), l);
-            output().write(reinterpret_cast<const char*>(bin.data()), bin.size());
+            write_output(bin);
          };
 
          Command::read_file(get_arg("file"), write_bin, 1024);
@@ -183,7 +183,7 @@ class Base64_Decode final : public Command {
       void go() override {
          auto write_bin = [&](const uint8_t b[], size_t l) {
             Botan::secure_vector<uint8_t> bin = Botan::base64_decode(reinterpret_cast<const char*>(b), l);
-            output().write(reinterpret_cast<const char*>(bin.data()), bin.size());
+            write_output(bin);
          };
 
          Command::read_file(get_arg("file"), write_bin, 1024);

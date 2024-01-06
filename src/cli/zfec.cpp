@@ -263,7 +263,7 @@ class FEC_Decode final : public Command {
             }
          }
 
-         output().write(reinterpret_cast<const char*>(decoded.data()), decoded.size() - (hash_len + padding));
+         output_binary().write(reinterpret_cast<const char*>(decoded.data()), decoded.size() - (hash_len + padding));
       }
 };
 
