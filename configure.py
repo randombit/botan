@@ -211,8 +211,8 @@ class BuildPaths:
         self.doc_module_info = os.path.join(self.build_dir, 'module_info') if options.with_doxygen else None
 
         self.include_dir = os.path.join(self.build_dir, 'include')
-        self.public_include_basedir = self.include_dir
-        self.internal_include_basedir = self.include_dir
+        self.public_include_basedir = os.path.join(self.include_dir, 'public')
+        self.internal_include_basedir = os.path.join(self.include_dir, 'internal')
         self.external_include_dir = os.path.join(self.include_dir, 'external')
         self.public_include_dir = os.path.join(self.public_include_basedir, 'botan')
         self.internal_include_dir = os.path.join(self.internal_include_basedir, 'botan', 'internal')
