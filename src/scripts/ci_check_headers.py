@@ -25,12 +25,13 @@ def main(args=None):
     with open(os.path.join(args[1]), encoding='utf8') as f:
         build_config = json.load(f)
 
-        include_dir = os.path.join(build_config['build_dir'], 'include', 'botan')
+        public_include_dir = build_config['public_include_path']
+        internal_include_dir = build_config['internal_include_path']
 
         internal_inc = re.compile(r'#include <botan/(internal/.*)>')
 
         for header in build_config['public_headers']:
-            contents = open(os.path.join(include_dir, header), encoding='utf8').read()
+            contents = open(os.path.join(public_include_dir, header), encoding='utf8').read()
 
             match = internal_inc.search(contents)
             if match:
@@ -45,9 +46,9 @@ def main(args=None):
         for header in all_headers:
 
             if header in build_config['public_headers']:
-                path = os.path.join(include_dir, header)
+                path = os.path.join(public_include_dir, header)
             else:
-                path = os.path.join(include_dir, 'internal', header)
+                path = os.path.join(internal_include_dir, header)
 
             contents = open(path, encoding='utf8').read()
 
