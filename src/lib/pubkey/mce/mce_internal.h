@@ -13,7 +13,7 @@
 #define BOTAN_MCELIECE_INTERNAL_H_
 
 #include <botan/mceliece.h>
-#include <botan/internal/pk_ops.h>
+#include <botan/pk_ops.h>
 #include <botan/internal/polyn_gf2m.h>
 
 namespace Botan {

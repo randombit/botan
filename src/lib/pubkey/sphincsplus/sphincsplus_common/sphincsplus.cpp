@@ -6,9 +6,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 **/
 
-#include <botan/rng.h>
 #include <botan/sphincsplus.h>
 
+#include <botan/rng.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/sp_fors.h>
 #include <botan/internal/sp_hash.h>

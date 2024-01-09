@@ -10,8 +10,8 @@
 #include <botan/der_enc.h>
 #include <botan/hash.h>
 #include <botan/hex.h>
+#include <botan/pk_ops.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/pk_ops.h>
 
 namespace Botan {
 

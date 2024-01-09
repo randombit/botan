@@ -10,10 +10,10 @@
 
 #if defined(BOTAN_HAS_ECDSA)
 
+   #include <botan/pk_ops.h>
    #include <botan/rng.h>
    #include <botan/internal/keypair.h>
    #include <botan/internal/p11_mechanism.h>
-   #include <botan/internal/pk_ops.h>
 
 namespace Botan::PKCS11 {
 
