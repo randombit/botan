@@ -28,7 +28,7 @@ rule compile_lib
 %{if ninja_header_deps_style}
   deps = %{ninja_header_deps_style}
 %{endif}
-  command = %{cxx} %{lib_flags} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} ${isa_flags} %{include_paths} %{header_deps_flag} %{header_deps_out|concat: $out.d} %{dash_c} $in %{dash_o}$out
+  command = %{cxx} %{lib_flags} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} ${isa_flags} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{header_deps_flag} %{header_deps_out|concat: $out.d} %{dash_c} $in %{dash_o}$out
 
 rule compile_exe
 %{if header_deps_out}
@@ -37,7 +37,7 @@ rule compile_exe
 %{if ninja_header_deps_style}
   deps = %{ninja_header_deps_style}
 %{endif}
-  command = %{cxx} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} ${isa_flags} %{include_paths} %{header_deps_flag} %{header_deps_out|concat: $out.d} %{dash_c} $in %{dash_o}$out
+  command = %{cxx} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} -DBOTAN_IS_BEING_BUILT ${WARN_FLAGS} ${isa_flags} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{header_deps_flag} %{header_deps_out|concat: $out.d} %{dash_c} $in %{dash_o}$out
 
 rule compile_example_exe
 %{if header_deps_out}
@@ -46,7 +46,7 @@ rule compile_example_exe
 %{if ninja_header_deps_style}
   deps = %{ninja_header_deps_style}
 %{endif}
-  command = %{cxx} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} ${WARN_FLAGS} ${isa_flags} %{include_paths} %{header_deps_flag} %{header_deps_out|concat: $out.d} %{dash_c} $in %{dash_o}$out
+  command = %{cxx} ${ABI_FLAGS} ${LANG_FLAGS} ${CXXFLAGS} ${WARN_FLAGS} ${isa_flags} %{public_include_flags} %{external_include_flags} %{header_deps_flag} %{header_deps_out|concat: $out.d} %{dash_c} $in %{dash_o}$out
 
 # The primary target
 build all: phony %{all_targets}

@@ -277,10 +277,15 @@ class BuildPaths:
             out += [self.example_obj_dir, self.example_output_dir]
         return out
 
-    def format_include_paths(self, cc, external_includes):
-        dash_i = cc.add_include_dir_option
+    def format_public_include_flags(self, cc):
+        return cc.add_include_dir_option + ' ' + normalize_source_path(self.public_include_basedir)
+
+    def format_internal_include_flags(self, cc):
+        return cc.add_include_dir_option + ' ' + normalize_source_path(self.internal_include_basedir)
+
+    def format_external_include_flags(self, cc, external_includes):
         dash_isystem = cc.add_system_include_dir_option
-        output = dash_i + ' ' + normalize_source_path(self.include_dir)
+        output = ''
         if self.external_headers:
             output += ' ' + dash_isystem + ' ' + normalize_source_path(self.external_include_dir)
         for external_include in external_includes:
@@ -2265,11 +2270,13 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'fuzzer_lib': (cc.add_lib_option % options.fuzzer_lib) if options.fuzzer_lib else '',
         'libs_used': [lib.replace('.lib', '') for lib in link_to('libs')],
 
-        'include_paths': build_paths.format_include_paths(cc, options.with_external_includedir),
         'public_include_path': build_paths.public_include_dir,
         'internal_include_path': build_paths.internal_include_dir,
         'external_include_path': build_paths.external_include_dir,
 
+        'public_include_flags': build_paths.format_public_include_flags(cc),
+        'internal_include_flags': build_paths.format_internal_include_flags(cc),
+        'external_include_flags': build_paths.format_external_include_flags(cc, options.with_external_includedir),
         'module_defines': sorted(flatten([m.defines() for m in modules])),
 
         'build_bogo_shim': bool('bogo_shim' in options.build_targets),

@@ -1,35 +1,35 @@
 [
 %{for lib_build_info}
     { "directory": "%{abs_root_dir}",
-      "command": "%{cxx} %{lib_flags} %{cc_sysroot} %{cxx_abi_flags} %{cc_lang_flags} %{os_feature_macros} %{cc_compile_flags} -DBOTAN_IS_BEING_BUILT %{cc_warning_flags} %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}%{obj}",
+      "command": "%{cxx} %{lib_flags} %{cc_sysroot} %{cxx_abi_flags} %{cc_lang_flags} %{os_feature_macros} %{cc_compile_flags} -DBOTAN_IS_BEING_BUILT %{cc_warning_flags} %{isa_flags} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}%{obj}",
       "file": "%{src}"
     },
 %{endfor}
 
 %{for test_build_info}
     { "directory": "%{abs_root_dir}",
-      "command": "%{cxx}  %{cc_sysroot} %{cxx_abi_flags} %{cc_lang_flags} %{os_feature_macros} %{cc_compile_flags} -DBOTAN_IS_BEING_BUILT %{cc_warning_flags} %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}%{obj}",
+      "command": "%{cxx}  %{cc_sysroot} %{cxx_abi_flags} %{cc_lang_flags} %{os_feature_macros} %{cc_compile_flags} -DBOTAN_IS_BEING_BUILT %{cc_warning_flags} %{isa_flags} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}%{obj}",
       "file": "%{src}"
     },
 %{endfor}
 
 %{for examples_build_info}
     { "directory": "%{abs_root_dir}",
-      "command": "%{cxx}  %{cc_sysroot} %{cxx_abi_flags} %{cc_lang_flags} %{os_feature_macros} %{cc_compile_flags} %{cc_warning_flags} %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}%{obj}",
+      "command": "%{cxx}  %{cc_sysroot} %{cxx_abi_flags} %{cc_lang_flags} %{os_feature_macros} %{cc_compile_flags} %{cc_warning_flags} %{isa_flags} %{public_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}%{obj}",
       "file": "%{src}"
     },
 %{endfor}
 
 %{for fuzzer_build_info}
     { "directory": "%{abs_root_dir}",
-      "command": "%{cxx}  %{cc_sysroot} %{cxx_abi_flags} %{cc_lang_flags} %{os_feature_macros} %{cc_compile_flags} -DBOTAN_IS_BEING_BUILT %{cc_warning_flags} %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}%{obj}",
+      "command": "%{cxx}  %{cc_sysroot} %{cxx_abi_flags} %{cc_lang_flags} %{os_feature_macros} %{cc_compile_flags} -DBOTAN_IS_BEING_BUILT %{cc_warning_flags} %{isa_flags} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}%{obj}",
       "file": "%{src}"
     },
 %{endfor}
 
 %{if build_bogo_shim}
     { "directory": "%{abs_root_dir}",
-      "command": "%{cxx}  %{cc_sysroot} %{cxx_abi_flags} %{cc_lang_flags} %{os_feature_macros} %{cc_compile_flags} -DBOTAN_IS_BEING_BUILT %{cc_warning_flags} %{include_paths} %{dash_c} %{bogo_shim_src} %{dash_o}%{out_dir}/botan_bogo_shim",
+      "command": "%{cxx}  %{cc_sysroot} %{cxx_abi_flags} %{cc_lang_flags} %{os_feature_macros} %{cc_compile_flags} -DBOTAN_IS_BEING_BUILT %{cc_warning_flags} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{bogo_shim_src} %{dash_o}%{out_dir}/botan_bogo_shim",
       "file": "%{bogo_shim_src}"
     },
 %{endif}
@@ -37,7 +37,7 @@
 
 %{for cli_build_info}
     { "directory": "%{abs_root_dir}",
-      "command": "%{cxx}  %{cc_sysroot} %{cxx_abi_flags} %{cc_lang_flags} %{os_feature_macros} %{cc_compile_flags} -DBOTAN_IS_BEING_BUILT %{cc_warning_flags} %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}%{obj}",
+      "command": "%{cxx}  %{cc_sysroot} %{cxx_abi_flags} %{cc_lang_flags} %{os_feature_macros} %{cc_compile_flags} -DBOTAN_IS_BEING_BUILT %{cc_warning_flags} %{isa_flags} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}%{obj}",
       "file": "%{src}"
     }%{omitlast ,}
 %{endfor}
