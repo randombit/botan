@@ -154,12 +154,12 @@ def main(args):
         makedirs(prepend_destdir(d))
 
     for header in cfg['public_headers']:
-        full_header_path = os.path.join(build_dir, 'include', 'botan', header)
+        full_header_path = os.path.join(cfg['public_include_path'], header)
         copy_file(full_header_path,
                   prepend_destdir(os.path.join(target_include_dir, header)))
 
     for header in cfg['external_headers']:
-        full_header_path = os.path.join(build_dir, 'include', 'external', header)
+        full_header_path = os.path.join(cfg['external_include_path'], header)
         copy_file(full_header_path,
                   prepend_destdir(os.path.join(target_include_dir, header)))
 

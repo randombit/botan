@@ -210,10 +210,16 @@ class BuildPaths:
         self.doc_output_dir_doxygen = os.path.join(self.doc_output_dir, 'doxygen') if options.with_doxygen else None
         self.doc_module_info = os.path.join(self.build_dir, 'module_info') if options.with_doxygen else None
 
+        # We split the header include paths into 'public', 'internal' and 'external'
+        # to allow for better control over what is exposed to each compilation unit.
+        # For instance, the examples should only see the public headers, while the
+        # test suite should see both public and internal headers.
         self.include_dir = os.path.join(self.build_dir, 'include')
-        self.botan_include_dir = os.path.join(self.include_dir, 'botan')
-        self.internal_include_dir = os.path.join(self.botan_include_dir, 'internal')
+        self.public_include_basedir = os.path.join(self.include_dir, 'public')
+        self.internal_include_basedir = os.path.join(self.include_dir, 'internal')
         self.external_include_dir = os.path.join(self.include_dir, 'external')
+        self.public_include_dir = os.path.join(self.public_include_basedir, 'botan')
+        self.internal_include_dir = os.path.join(self.internal_include_basedir, 'botan', 'internal')
 
         self.internal_headers = sorted(flatten([m.internal_headers() for m in modules]))
         self.external_headers = sorted(flatten([m.external_headers() for m in modules]))
@@ -262,7 +268,7 @@ class BuildPaths:
             self.libobj_dir,
             self.cliobj_dir,
             self.testobj_dir,
-            self.botan_include_dir,
+            self.public_include_dir,
             self.internal_include_dir,
             self.external_include_dir,
             self.handbook_output_dir,
@@ -275,10 +281,15 @@ class BuildPaths:
             out += [self.example_obj_dir, self.example_output_dir]
         return out
 
-    def format_include_paths(self, cc, external_includes):
-        dash_i = cc.add_include_dir_option
+    def format_public_include_flags(self, cc):
+        return cc.add_include_dir_option + ' ' + normalize_source_path(self.public_include_basedir)
+
+    def format_internal_include_flags(self, cc):
+        return cc.add_include_dir_option + ' ' + normalize_source_path(self.internal_include_basedir)
+
+    def format_external_include_flags(self, cc, external_includes):
         dash_isystem = cc.add_system_include_dir_option
-        output = dash_i + ' ' + normalize_source_path(self.include_dir)
+        output = ''
         if self.external_headers:
             output += ' ' + dash_isystem + ' ' + normalize_source_path(self.external_include_dir)
         for external_include in external_includes:
@@ -2202,8 +2213,6 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'handbook_output_dir': build_paths.handbook_output_dir,
         'doc_output_dir_doxygen': build_paths.doc_output_dir_doxygen,
 
-        'compiler_include_dirs': '%s %s' % (normalize_source_path(build_paths.include_dir), normalize_source_path(build_paths.external_include_dir)),
-
         'os': options.os,
         'arch': options.arch,
         'compiler': options.compiler,
@@ -2265,7 +2274,13 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'fuzzer_lib': (cc.add_lib_option % options.fuzzer_lib) if options.fuzzer_lib else '',
         'libs_used': [lib.replace('.lib', '') for lib in link_to('libs')],
 
-        'include_paths': build_paths.format_include_paths(cc, options.with_external_includedir),
+        'public_include_path': build_paths.public_include_dir,
+        'internal_include_path': build_paths.internal_include_dir,
+        'external_include_path': build_paths.external_include_dir,
+
+        'public_include_flags': build_paths.format_public_include_flags(cc),
+        'internal_include_flags': build_paths.format_internal_include_flags(cc),
+        'external_include_flags': build_paths.format_external_include_flags(cc, options.with_external_includedir),
         'module_defines': sorted(flatten([m.defines() for m in modules])),
 
         'build_bogo_shim': bool('bogo_shim' in options.build_targets),
@@ -3375,7 +3390,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
                     raise UserError('Error linking %s into %s: %s' % (header_file, directory, ex)) from ex
 
     link_headers(build_paths.public_headers, 'public',
-                 build_paths.botan_include_dir)
+                 build_paths.public_include_dir)
 
     link_headers(build_paths.internal_headers, 'internal',
                  build_paths.internal_include_dir)

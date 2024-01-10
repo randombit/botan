@@ -115,7 +115,7 @@ bogo_shim: %{out_dir}/botan_bogo_shim
 
 # BoGo shim
 %{out_dir}/botan_bogo_shim: %{bogo_shim_src} $(LIBRARIES)
-	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{include_paths} %{bogo_shim_src} $(BUILD_DIR_LINK_PATH) $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
+	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{bogo_shim_src} $(BUILD_DIR_LINK_PATH) $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
 
 %{endif}
 
@@ -142,22 +142,22 @@ bogo_shim: %{out_dir}/botan_bogo_shim
 
 %{for lib_build_info}
 %{obj}: %{src}
-	$(CXX) $(LIB_FLAGS) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) $(LIB_FLAGS) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{isa_flags} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for cli_build_info}
 %{obj}: %{src}
-	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{isa_flags} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for test_build_info}
 %{obj}: %{src}
-	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{isa_flags} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 %{endfor}
 
 %{for fuzzer_build_info}
 %{obj}: %{src}
-	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{isa_flags} %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 
 %{exe}: %{obj} $(LIBRARIES)
 	$(EXE_LINK_CMD) $(ABI_FLAGS) %{obj} $(BUILD_DIR_LINK_PATH) $(LANG_EXE_FLAGS) $(LDFLAGS) $(EXE_LINKS_TO) %{fuzzer_lib} %{output_to_exe}$@
@@ -165,7 +165,7 @@ bogo_shim: %{out_dir}/botan_bogo_shim
 
 %{for examples_build_info}
 %{obj}: %{src}
-	$(CXX) $(BUILD_FLAGS) %{isa_flags} %{include_paths} %{dash_c} %{src} %{dash_o}$@
+	$(CXX) $(BUILD_FLAGS) %{isa_flags} %{public_include_flags} %{external_include_flags} %{dash_c} %{src} %{dash_o}$@
 
 %{exe}: %{obj} $(LIBRARIES)
 	$(EXE_LINK_CMD) $(ABI_FLAGS) %{obj} $(BUILD_DIR_LINK_PATH) $(LANG_EXE_FLAGS) $(LDFLAGS) $(EXE_LINKS_TO) %{fuzzer_lib} %{output_to_exe}$@
