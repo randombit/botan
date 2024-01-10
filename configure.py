@@ -210,6 +210,10 @@ class BuildPaths:
         self.doc_output_dir_doxygen = os.path.join(self.doc_output_dir, 'doxygen') if options.with_doxygen else None
         self.doc_module_info = os.path.join(self.build_dir, 'module_info') if options.with_doxygen else None
 
+        # We split the header include paths into 'public', 'internal' and 'external'
+        # to allow for better control over what is exposed to each compilation unit.
+        # For instance, the examples should only see the public headers, while the
+        # test suite should see both public and internal headers.
         self.include_dir = os.path.join(self.build_dir, 'include')
         self.public_include_basedir = os.path.join(self.include_dir, 'public')
         self.internal_include_basedir = os.path.join(self.include_dir, 'internal')
