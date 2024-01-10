@@ -16,6 +16,11 @@
 * Unless you're doing something like that, you don't need anything
 * here. Instead use pubkey.h which wraps these types safely and
 * provides a stable application-oriented API.
+*
+* Note: This header was accidentally pulled from the public API between
+*       Botan 3.0.0 and 3.2.0, and then restored in 3.3.0. If you are
+*       maintaining an application which used this header in Botan 2.x,
+*       you should make sure to use Botan 3.3.0 or later when migrating.
 */
 
 #include <botan/pk_keys.h>
