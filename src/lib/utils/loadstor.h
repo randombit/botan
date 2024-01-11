@@ -16,6 +16,43 @@
 #include <botan/internal/bswap.h>
 #include <vector>
 
+/**
+ * @file loadstor.h
+ *
+ * @brief This header contains various helper functions to load and store
+ *        unsigned integers in big- or little-endian byte order.
+ *
+ * Storing integer values in various ways (same for BE and LE):
+ * @code {.cpp}
+ *
+ *   std::array<uint8_t, 8> bytes = store_le(some_uint64);
+ *   std::array<uint8_t, 12> bytes = store_le(some_uint32_1, some_uint32_2, some_uint32_3, ...);
+ *   auto bytes = store_le<std::vector<uint8_t>>(some_uint64);
+ *   auto bytes = store_le<MyContainerStrongType>(some_uint64);
+ *   auto bytes = store_le<std::vector<uint8_t>>(vector_of_ints);
+ *   auto bytes = store_le<secure_vector<uint8_t>>(some_uint32_1, some_uint32_2, some_uint32_3, ...);
+ *   store_le(bytes, some_uint64);
+ *   store_le(concatenated_bytes, some_uint64_1, some_uint64_2, some_uint64_3, ...);
+ *   store_le(concatenated_bytes, vector_of_ints);
+ *   copy_out_le(short_concated_bytes, vector_of_ints); // stores as many bytes as required in the output buffer
+ *
+ * @endcode
+ *
+ * Loading integer values in various ways (same for BE and LE):
+ * @code {.cpp}
+ *
+ *   uint64_t some_uint64 = load_le(bytes_8);
+ *   auto some_int32s = load_le<std::vector<uint32_t>>(concatenated_bytes);
+ *   auto some_int32s = load_le<std::vector<MyIntStrongType>>(concatenated_bytes);
+ *   auto some_int32s = load_le(some_strong_typed_bytes);
+ *   auto strong_int  = load_le<MyStrongTypedInteger>(concatenated_bytes);
+ *   load_le(concatenated_bytes, out_some_uint64);
+ *   load_le(concatenated_bytes, out_some_uint64_1, out_some_uint64_2, out_some_uint64_3, ...);
+ *   load_le(out_vector_of_ints, concatenated_bytes);
+ *
+ * @endcode
+ */
+
 namespace Botan {
 
 /**
@@ -286,7 +323,9 @@ inline constexpr void load_any(OutR&& out, InR&& in) {
  * @return T loaded from in
  */
 template <Endianness endianness, typename OutT, ranges::contiguous_range<uint8_t> InR>
-   requires std::same_as<AutoDetect, OutT>
+   requires(std::same_as<AutoDetect, OutT> ||
+            ((ranges::statically_spanable_range<OutT> ||
+              concepts::resizable_container<OutT>)&&unsigned_integralish<typename OutT::value_type>))
 inline constexpr auto load_any(InR&& in_range) {
    auto out = []([[maybe_unused]] const auto& in) {
       if constexpr(std::same_as<AutoDetect, OutT>) {
@@ -311,13 +350,25 @@ inline constexpr auto load_any(InR&& in_range) {
                !std::same_as<AutoDetect, OutT>,
                "cannot infer return type from a dynamic range at compile time, please specify it explicitly");
          }
+      } else if constexpr(concepts::resizable_container<OutT>) {
+         const size_t in_bytes = std::span{in}.size_bytes();
+         constexpr size_t out_elem_bytes = sizeof(typename OutT::value_type);
+         BOTAN_ARG_CHECK(in_bytes % out_elem_bytes == 0,
+                         "Input range is not word-aligned with the requested output range");
+         return OutT(in_bytes / out_elem_bytes);
       } else {
          return OutT{};
       }
    }(in_range);
 
    using out_type = decltype(out);
-   out = load_any<endianness, out_type>(std::forward<InR>(in_range));
+   if constexpr(unsigned_integralish<out_type>) {
+      out = load_any<endianness, out_type>(std::forward<InR>(in_range));
+   } else {
+      static_assert(ranges::contiguous_range<out_type>);
+      using out_range_type = std::ranges::range_value_t<out_type>;
+      load_any<endianness, out_range_type>(out, std::forward<InR>(in_range));
+   }
    return out;
 }
 
@@ -449,6 +500,33 @@ inline constexpr void store_any(OutR&& out, Ts... ins) {
    (store_one(std::span{out}, ins), ...);
 }
 
+/**
+ * Store a variable number of words given in @p in into @p out.
+ * The byte lengths of @p in and @p out must be consistent.
+ * @param out the output range of bytes
+ * @param in the input range of words
+ */
+template <Endianness endianness,
+          typename InT,
+          ranges::contiguous_output_range<uint8_t> OutR,
+          ranges::spanable_range InR>
+   requires(std::same_as<AutoDetect, InT> || std::same_as<InT, std::ranges::range_value_t<InR>>)
+inline constexpr void store_any(OutR&& out, InR&& in) {
+   ranges::assert_equal_byte_lengths(out, in);
+
+   if constexpr(is_native(endianness)) {
+      typecast_copy(out, in);
+   } else {
+      using element_type = std::ranges::range_value_t<InR>;
+      constexpr size_t bytes_per_element = sizeof(element_type);
+      std::span<uint8_t> out_s(out);
+      for(auto in_elem : in) {
+         store_any<endianness, element_type>(out_s.template first<bytes_per_element>(), in_elem);
+         out_s = out_s.subspan(bytes_per_element);
+      }
+   }
+}
+
 //
 // Type inference overloads
 //
@@ -470,19 +548,53 @@ inline constexpr void store_any(T in, OutR&& out_range) {
 }
 
 /**
- * The caller provided a integer value but did not provide the output
- * container. Let's create one for them, fill it with one of the overloads above
- * and return it. This will always use a std::array.
+ * The caller provided some integer values in a collection but did not provide
+ * the output container. Let's create one for them, fill it with one of the
+ * overloads above and return it. This will default to a std::array if the
+ * caller did not specify the desired output container type.
  *
- * @param in an unsigned integer to be stored
+ * @param in_range a range of words that should be stored
  * @return a container of bytes that contains the stored words
  */
-template <Endianness endianness, typename OutR, unsigned_integralish T>
-   requires(std::same_as<AutoDetect, OutR> || std::same_as<std::array<uint8_t, sizeof(T)>, OutR>)
-inline constexpr auto store_any(T in) {
-   std::array<uint8_t, sizeof(T)> out;
-   store_any<endianness, T>(out, in);
+template <Endianness endianness, typename OutR, ranges::spanable_range InR>
+   requires(std::same_as<AutoDetect, OutR> ||
+            (ranges::statically_spanable_range<OutR> && std::default_initializable<OutR>) ||
+            concepts::resizable_byte_buffer<OutR>)
+inline constexpr auto store_any(InR&& in_range) {
+   auto out = []([[maybe_unused]] const auto& in) {
+      if constexpr(std::same_as<AutoDetect, OutR>) {
+         if constexpr(ranges::statically_spanable_range<InR>) {
+            constexpr size_t bytes = decltype(std::span{in})::extent * sizeof(std::ranges::range_value_t<InR>);
+            return std::array<uint8_t, bytes>();
+         } else {
+            static_assert(
+               !std::same_as<AutoDetect, OutR>,
+               "cannot infer a suitable result container type from the given parameters at compile time, please specify it explicitly");
+         }
+      } else if constexpr(concepts::resizable_byte_buffer<OutR>) {
+         return OutR(std::span{in}.size_bytes());
+      } else {
+         return OutR{};
+      }
+   }(in_range);
+
+   store_any<endianness, std::ranges::range_value_t<InR>>(out, std::forward<InR>(in_range));
    return out;
+}
+
+/**
+ * The caller provided some integer values but did not provide the output
+ * container. Let's create one for them, fill it with one of the overloads above
+ * and return it. This will default to a std::array if the caller did not
+ * specify the desired output container type.
+ *
+ * @param ins some words that should be stored
+ * @return a container of bytes that contains the stored words
+ */
+template <Endianness endianness, typename OutR, unsigned_integralish... Ts>
+   requires all_same_v<Ts...>
+inline constexpr auto store_any(Ts... ins) {
+   return store_any<endianness, OutR>(std::array{ins...});
 }
 
 //

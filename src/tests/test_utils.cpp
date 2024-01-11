@@ -17,6 +17,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/rounding.h>
+#include <botan/internal/stl_util.h>
 #include <ctime>
 #include <functional>
 
@@ -67,6 +68,11 @@ class Utility_Function_Tests final : public Text_Based_Test {
          results.push_back(test_loadstore_fallback());
          return results;
       }
+
+   private:
+      using TestInt64 = Botan::Strong<uint64_t, struct TestInt64_>;
+      using TestInt32 = Botan::Strong<uint32_t, struct TestInt64_>;
+      using TestVectorSink = Botan::Strong<std::vector<uint8_t>, struct TestVectorSink_>;
 
       static Test::Result test_loadstore() {
          Test::Result result("Util load/store");
@@ -199,6 +205,48 @@ class Utility_Function_Tests final : public Text_Based_Test {
          result.test_is_eq<uint16_t>(i2, 0x01EF);
          result.test_is_eq<uint16_t>(i3, 0xABCD);  // remains unchanged
 
+         i0 = 0xAA11;
+         i1 = 0xBB22;
+         i2 = 0xCC33;
+         i3 = 0xDD44;
+         Botan::store_be(outarr, i0, i1, i2, i3);
+         result.test_is_eq(outarr, {0xAA, 0x11, 0xBB, 0x22, 0xCC, 0x33, 0xDD, 0x44});
+         std::vector<uint8_t> outvec(8);
+         Botan::store_be(outvec, i0, i1, i2, i3);
+         result.test_is_eq(outvec, Botan::hex_decode("AA11BB22CC33DD44"));
+
+         Botan::store_le(outarr, i0, i1, i2, i3);
+         result.test_is_eq(outarr, {0x11, 0xAA, 0x22, 0xBB, 0x33, 0xCC, 0x44, 0xDD});
+         Botan::store_le(outvec, i0, i1, i2, i3);
+         result.test_is_eq(outvec, Botan::hex_decode("11AA22BB33CC44DD"));
+
+#if !defined(BOTAN_TERMINATE_ON_ASSERTS)
+         std::vector<uint8_t> sink56bits(7);
+         std::vector<uint8_t> sink72bits(9);
+         result.test_throws("store_le with a buffer that is too small",
+                            [&] { Botan::store_le(sink56bits, i0, i1, i2, i3); });
+         result.test_throws("store_le with a buffer that is too big",
+                            [&] { Botan::store_le(sink72bits, i0, i1, i2, i3); });
+         result.test_throws("store_be with a buffer that is too small",
+                            [&] { Botan::store_be(sink56bits, i0, i1, i2, i3); });
+         result.test_throws("store_be with a buffer that is too big",
+                            [&] { Botan::store_be(sink72bits, i0, i1, i2, i3); });
+#endif
+
+         // can store multiple values straight into a collection
+         auto out64_array_be = Botan::store_be(i0, i1, i2, i3);
+         auto out64_vec_be = Botan::store_be<std::vector<uint8_t>>(i0, i1, i2, i3);
+         auto out64_strong_be = Botan::store_be<TestVectorSink>(i0, i1, i2, i3);
+         result.test_is_eq(out64_array_be, {0xAA, 0x11, 0xBB, 0x22, 0xCC, 0x33, 0xDD, 0x44});
+         result.test_is_eq(out64_vec_be, Botan::hex_decode("AA11BB22CC33DD44"));
+         result.test_is_eq(out64_strong_be, TestVectorSink(Botan::hex_decode("AA11BB22CC33DD44")));
+         auto out64_array_le = Botan::store_le(i0, i1, i2, i3);
+         auto out64_vec_le = Botan::store_le<std::vector<uint8_t>>(i0, i1, i2, i3);
+         auto out64_strong_le = Botan::store_le<TestVectorSink>(i0, i1, i2, i3);
+         result.test_is_eq(out64_array_le, {0x11, 0xAA, 0x22, 0xBB, 0x33, 0xCC, 0x44, 0xDD});
+         result.test_is_eq(out64_vec_le, Botan::hex_decode("11AA22BB33CC44DD"));
+         result.test_is_eq(out64_strong_le, TestVectorSink(Botan::hex_decode("11AA22BB33CC44DD")));
+
          result.test_is_eq(in16, Botan::load_be(Botan::store_be(in16)));
          result.test_is_eq(in32, Botan::load_be(Botan::store_be(in32)));
          result.test_is_eq(in64, Botan::load_be(Botan::store_be(in64)));
@@ -206,6 +254,99 @@ class Utility_Function_Tests final : public Text_Based_Test {
          result.test_is_eq(in16, Botan::load_le(Botan::store_le(in16)));
          result.test_is_eq(in32, Botan::load_le(Botan::store_le(in32)));
          result.test_is_eq(in64, Botan::load_le(Botan::store_le(in64)));
+
+         // Test that the runtime detects incompatible range sizes
+#if !defined(BOTAN_TERMINATE_ON_ASSERTS)
+         std::vector<uint16_t> too_big16(4);
+         std::vector<uint16_t> too_small16(1);
+         result.test_throws("load_le with incompatible buffers",
+                            [&] { Botan::load_le(too_big16, Botan::hex_decode("BAADB00B")); });
+         result.test_throws("load_le with incompatible buffers",
+                            [&] { Botan::load_le(too_small16, Botan::hex_decode("BAADB00B")); });
+         result.test_throws("load_be with incompatible buffers",
+                            [&] { Botan::load_be(too_big16, Botan::hex_decode("BAADB00B")); });
+         result.test_throws("load_be with incompatible buffers",
+                            [&] { Botan::load_be(too_small16, Botan::hex_decode("BAADB00B")); });
+
+         std::vector<uint8_t> too_big8(4);
+         std::vector<uint8_t> too_small8(1);
+         result.test_throws("store_le with incompatible buffers",
+                            [&] { Botan::store_le(too_big8, std::array<uint16_t, 1>{}); });
+         result.test_throws("store_le with incompatible buffers",
+                            [&] { Botan::store_le(too_small8, std::array<uint16_t, 1>{}); });
+         result.test_throws("store_be with incompatible buffers",
+                            [&] { Botan::store_be(too_big8, std::array<uint16_t, 1>{}); });
+         result.test_throws("store_be with incompatible buffers",
+                            [&] { Botan::store_be(too_small8, std::array<uint16_t, 1>{}); });
+#endif
+
+         // Test store of entire ranges
+         std::array<uint16_t, 2> in16_array = {0x0A0B, 0x0C0D};
+         result.test_is_eq(Botan::store_be<std::vector<uint8_t>>(in16_array), Botan::hex_decode("0A0B0C0D"));
+         result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(in16_array), Botan::hex_decode("0B0A0D0C"));
+
+         std::vector<uint16_t> in16_vector = {0x0A0B, 0x0C0D};
+         result.test_is_eq(Botan::store_be<std::vector<uint8_t>>(in16_vector), Botan::hex_decode("0A0B0C0D"));
+         result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(in16_vector), Botan::hex_decode("0B0A0D0C"));
+
+         std::array<uint8_t, 4> out_array;
+         Botan::store_be(out_array, in16_array);
+         result.test_is_eq(out_array, std::array<uint8_t, 4>{0x0A, 0x0B, 0x0C, 0x0D});
+         Botan::store_le(out_array, in16_array);
+         result.test_is_eq(out_array, std::array<uint8_t, 4>{0x0B, 0x0A, 0x0D, 0x0C});
+
+         const auto be_inferred = Botan::store_be(in16_array);
+         result.test_is_eq(be_inferred, std::array<uint8_t, 4>{0x0A, 0x0B, 0x0C, 0x0D});
+         const auto le_inferred = Botan::store_le(in16_array);
+         result.test_is_eq(le_inferred, std::array<uint8_t, 4>{0x0B, 0x0A, 0x0D, 0x0C});
+
+         // Test load of entire ranges
+         const auto in_buffer = Botan::hex_decode("AABBCCDD");
+         auto out16_array_be = Botan::load_be<std::array<uint16_t, 2>>(in_buffer);
+         result.test_is_eq<uint16_t>(out16_array_be[0], 0xAABB);
+         result.test_is_eq<uint16_t>(out16_array_be[1], 0xCCDD);
+         auto out16_vec_be = Botan::load_be<std::vector<uint16_t>>(in_buffer);
+         result.test_eq_sz("be-vector has expected size", out16_vec_be.size(), 2);
+         result.test_is_eq<uint16_t>(out16_vec_be[0], 0xAABB);
+         result.test_is_eq<uint16_t>(out16_vec_be[1], 0xCCDD);
+
+         auto out16_array_le = Botan::load_le<std::array<uint16_t, 2>>(in_buffer);
+         result.test_is_eq<uint16_t>(out16_array_le[0], 0xBBAA);
+         result.test_is_eq<uint16_t>(out16_array_le[1], 0xDDCC);
+         auto out16_vec_le = Botan::load_le<Botan::secure_vector<uint16_t>>(in_buffer);
+         result.test_eq_sz("le-vector has expected size", out16_vec_be.size(), 2);
+         result.test_is_eq<uint16_t>(out16_vec_le[0], 0xBBAA);
+         result.test_is_eq<uint16_t>(out16_vec_le[1], 0xDDCC);
+
+         // Test loading/storing of strong type integers
+         const TestInt64 in64_strong{0xABCDEF0123456789};
+         const TestInt32 in32_strong{0xABCDEF01};
+
+         result.test_is_eq(Botan::store_be<std::vector<uint8_t>>(in64_strong), Botan::hex_decode("ABCDEF0123456789"));
+         result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(in64_strong), Botan::hex_decode("8967452301EFCDAB"));
+         result.test_is_eq(Botan::store_be<std::vector<uint8_t>>(in32_strong), Botan::hex_decode("ABCDEF01"));
+         result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(in32_strong), Botan::hex_decode("01EFCDAB"));
+
+         result.test_is_eq(Botan::load_be<TestInt64>(Botan::hex_decode("ABCDEF0123456789")), in64_strong);
+         result.test_is_eq(Botan::load_le<TestInt64>(Botan::hex_decode("8967452301EFCDAB")), in64_strong);
+         result.test_is_eq(Botan::load_be<TestInt32>(Botan::hex_decode("ABCDEF01")), in32_strong);
+         result.test_is_eq(Botan::load_le<TestInt32>(Botan::hex_decode("01EFCDAB")), in32_strong);
+
+         std::vector<TestInt64> some_in64_strongs{TestInt64{0xABCDEF0123456789}, TestInt64{0x0123456789ABCDEF}};
+         result.test_is_eq(Botan::store_be<std::vector<uint8_t>>(some_in64_strongs),
+                           Botan::hex_decode("ABCDEF01234567890123456789ABCDEF"));
+         result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(some_in64_strongs),
+                           Botan::hex_decode("8967452301EFCDABEFCDAB8967452301"));
+
+         const auto in64_strongs_le =
+            Botan::load_le<std::array<TestInt64, 2>>(Botan::hex_decode("8967452301EFCDABEFCDAB8967452301"));
+         result.test_is_eq(in64_strongs_le[0], TestInt64{0xABCDEF0123456789});
+         result.test_is_eq(in64_strongs_le[1], TestInt64{0x0123456789ABCDEF});
+
+         const auto in64_strongs_be =
+            Botan::load_be<std::vector<TestInt64>>(Botan::hex_decode("ABCDEF01234567890123456789ABCDEF"));
+         result.test_is_eq(in64_strongs_be[0], TestInt64{0xABCDEF0123456789});
+         result.test_is_eq(in64_strongs_be[1], TestInt64{0x0123456789ABCDEF});
 
          return result;
       }
