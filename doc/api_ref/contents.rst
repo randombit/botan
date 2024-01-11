@@ -31,6 +31,7 @@ API Reference
    tss
    ecc
    compression
+   providers
    pkcs11
    tpm
    otp
