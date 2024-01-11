@@ -68,6 +68,17 @@ template <typename T>
 concept spanable_range = std::constructible_from<std::span<const std::ranges::range_value_t<T>>, T>;
 
 /**
+ * Models a range that can be turned into a std::span<> with a static extent.
+ * Typically, this is a std::array or a std::span derived from an array.
+ */
+// clang-format off
+template <typename T>
+concept statically_spanable_range = spanable_range<T> &&
+                                    decltype(std::span{std::declval<T&>()})::extent != std::dynamic_extent;
+
+// clang-format on
+
+/**
  * Find the length in bytes of a given contiguous range @p r.
  */
 inline constexpr size_t size_bytes(spanable_range auto&& r) {
@@ -85,7 +96,7 @@ inline constexpr size_t size_bytes(spanable_range auto&& r) {
 template <size_t expected, spanable_range R>
 inline constexpr void assert_exact_byte_length(R&& r) {
    const std::span s{r};
-   if constexpr(decltype(s)::extent != std::dynamic_extent) {
+   if constexpr(statically_spanable_range<R>) {
       static_assert(s.size_bytes() == expected, "memory region does not have expected byte lengths");
    } else {
       BOTAN_ASSERT(s.size_bytes() == expected, "memory region does not have expected byte lengths");
@@ -107,7 +118,7 @@ inline constexpr void assert_equal_byte_lengths(R0&& r0, Rs&&... rs)
 {
    const std::span s0{r0};
 
-   if constexpr(decltype(s0)::extent != std::dynamic_extent) {
+   if constexpr(statically_spanable_range<R0>) {
       constexpr size_t expected_size = s0.size_bytes();
       (assert_exact_byte_length<expected_size>(rs), ...);
    } else {
@@ -171,6 +182,9 @@ concept strong_type = is_strong_type_v<T>;
 
 template <class T>
 concept contiguous_strong_type = strong_type<T> && contiguous_container<T>;
+
+template <class T>
+concept unsigned_integral_strong_type = strong_type<T> && std::unsigned_integral<typename T::wrapped_type>;
 
 }  // namespace concepts
 
