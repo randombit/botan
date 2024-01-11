@@ -67,7 +67,7 @@ class Utility_Function_Tests final : public Text_Based_Test {
          results.push_back(test_loadstore());
          results.push_back(test_loadstore_fallback());
          results.push_back(test_loadstore_constexpr());
-         return results;
+         return Botan::concat(results, test_copy_out_be_le());
       }
 
    private:
@@ -576,6 +576,74 @@ class Utility_Function_Tests final : public Text_Based_Test {
          result.test_is_eq(cex_load_be64s, {0x0011223344556677, 0x8899AABBCCDDEEFF});
 
          return result;
+      }
+
+      static std::vector<Test::Result> test_copy_out_be_le() {
+         return {
+            Botan_Tests::CHECK("copy_out_be with 16bit input (word aligned)",
+                               [&](auto& result) {
+                                  std::vector<uint8_t> out_vector(4);
+                                  const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
+                                  Botan::copy_out_be(out_vector, in_array);
+                                  result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C0D"));
+                               }),
+
+            Botan_Tests::CHECK("copy_out_be with 16bit input (partial words)",
+                               [&](auto& result) {
+                                  std::vector<uint8_t> out_vector(3);
+                                  const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
+                                  Botan::copy_out_be(out_vector, in_array);
+                                  result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C"));
+                               }),
+
+            Botan_Tests::CHECK("copy_out_le with 16bit input (word aligned)",
+                               [&](auto& result) {
+                                  std::vector<uint8_t> out_vector(4);
+                                  const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
+                                  Botan::copy_out_le(out_vector, in_array);
+                                  result.test_is_eq(out_vector, Botan::hex_decode("0B0A0D0C"));
+                               }),
+
+            Botan_Tests::CHECK("copy_out_le with 16bit input (partial words)",
+                               [&](auto& result) {
+                                  std::vector<uint8_t> out_vector(3);
+                                  const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
+                                  Botan::copy_out_le(out_vector, in_array);
+                                  result.test_is_eq(out_vector, Botan::hex_decode("0B0A0D"));
+                               }),
+
+            Botan_Tests::CHECK("copy_out_be with 64bit input (word aligned)",
+                               [&](auto& result) {
+                                  std::vector<uint8_t> out_vector(16);
+                                  const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
+                                  Botan::copy_out_be(out_vector, in_array);
+                                  result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C0D0E0F10111213141516171819"));
+                               }),
+
+            Botan_Tests::CHECK("copy_out_le with 64bit input (word aligned)",
+                               [&](auto& result) {
+                                  std::vector<uint8_t> out_vector(16);
+                                  const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
+                                  Botan::copy_out_le(out_vector, in_array);
+                                  result.test_is_eq(out_vector, Botan::hex_decode("11100F0E0D0C0B0A1918171615141312"));
+                               }),
+
+            Botan_Tests::CHECK("copy_out_be with 64bit input (partial words)",
+                               [&](auto& result) {
+                                  std::vector<uint8_t> out_vector(15);
+                                  const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
+                                  Botan::copy_out_be(out_vector, in_array);
+                                  result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C0D0E0F101112131415161718"));
+                               }),
+
+            Botan_Tests::CHECK("copy_out_le with 64bit input (partial words)",
+                               [&](auto& result) {
+                                  std::vector<uint8_t> out_vector(15);
+                                  const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
+                                  Botan::copy_out_le(out_vector, in_array);
+                                  result.test_is_eq(out_vector, Botan::hex_decode("11100F0E0D0C0B0A19181716151413"));
+                               }),
+         };
       }
 };
 

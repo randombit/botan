@@ -712,6 +712,57 @@ inline constexpr auto store_be(ParamTs&&... params) {
    return detail::store_any<detail::Endianness::Big, ModifierT>(std::forward<ParamTs>(params)...);
 }
 
+namespace detail {
+
+template <Endianness endianness, unsigned_integralish T>
+size_t copy_out_any_word_aligned_portion(std::span<uint8_t>& out, std::span<const T>& in) {
+   const size_t full_words = out.size() / sizeof(T);
+   const size_t full_word_bytes = full_words * sizeof(T);
+   const size_t remaining_bytes = out.size() - full_word_bytes;
+   BOTAN_ASSERT_NOMSG(in.size_bytes() >= full_word_bytes + remaining_bytes);
+
+   // copy full words
+   store_any<endianness, T>(out.first(full_word_bytes), in.first(full_words));
+   out = out.subspan(full_word_bytes);
+   in = in.subspan(full_words);
+
+   return remaining_bytes;
+}
+
+}  // namespace detail
+
+/**
+ * Partially copy a subset of @p in into @p out using big-endian
+ * byte order.
+ */
+template <ranges::spanable_range InR>
+void copy_out_be(std::span<uint8_t> out, InR&& in) {
+   using T = std::ranges::range_value_t<InR>;
+   std::span<const T> in_s{in};
+   const auto remaining_bytes = detail::copy_out_any_word_aligned_portion<detail::Endianness::Big>(out, in_s);
+
+   // copy remaining bytes as a partial word
+   for(size_t i = 0; i < remaining_bytes; ++i) {
+      out[i] = get_byte_var(i, in_s.front());
+   }
+}
+
+/**
+ * Partially copy a subset of @p in into @p out using little-endian
+ * byte order.
+ */
+template <ranges::spanable_range InR>
+void copy_out_le(std::span<uint8_t> out, InR&& in) {
+   using T = std::ranges::range_value_t<InR>;
+   std::span<const T> in_s{in};
+   const auto remaining_bytes = detail::copy_out_any_word_aligned_portion<detail::Endianness::Little>(out, in_s);
+
+   // copy remaining bytes as a partial word
+   for(size_t i = 0; i < remaining_bytes; ++i) {
+      out[i] = get_byte_var(sizeof(T) - 1 - i, in_s.front());
+   }
+}
+
 template <typename T>
 void copy_out_be(uint8_t out[], size_t out_bytes, const T in[]) {
    while(out_bytes >= sizeof(T)) {
