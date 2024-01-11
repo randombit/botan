@@ -64,7 +64,7 @@ class Utility_Function_Tests final : public Text_Based_Test {
          std::vector<Test::Result> results;
 
          results.push_back(test_loadstore());
-
+         results.push_back(test_loadstore_fallback());
          return results;
       }
 
@@ -206,6 +206,59 @@ class Utility_Function_Tests final : public Text_Based_Test {
          result.test_is_eq(in16, Botan::load_le(Botan::store_le(in16)));
          result.test_is_eq(in32, Botan::load_le(Botan::store_le(in32)));
          result.test_is_eq(in64, Botan::load_le(Botan::store_le(in64)));
+
+         return result;
+      }
+
+      template <std::unsigned_integral T>
+      static T fb_load_be(std::array<const uint8_t, sizeof(T)> in) {
+         return Botan::detail::fallback_load_any<Botan::detail::Endianness::Big, T>(in);
+      }
+
+      template <std::unsigned_integral T>
+      static T fb_load_le(std::array<const uint8_t, sizeof(T)> in) {
+         return Botan::detail::fallback_load_any<Botan::detail::Endianness::Little, T>(in);
+      }
+
+      template <std::unsigned_integral T>
+      static decltype(auto) fb_store_be(const T in) {
+         std::array<uint8_t, sizeof(T)> out;
+         Botan::detail::fallback_store_any<Botan::detail::Endianness::Big, T>(in, out);
+         return out;
+      }
+
+      template <std::unsigned_integral T>
+      static decltype(auto) fb_store_le(const T in) {
+         std::array<uint8_t, sizeof(T)> out;
+         Botan::detail::fallback_store_any<Botan::detail::Endianness::Little, T>(in, out);
+         return out;
+      }
+
+      template <size_t N>
+      using a = std::array<uint8_t, N>;
+
+      static Test::Result test_loadstore_fallback() {
+         // The fallback implementation is only used if we don't know the
+         // endianness of the target at compile time. This makes sure that the
+         // fallback implementation is correct. On all typical platforms it
+         // won't be called in production.
+         Test::Result result("Util load/store fallback");
+
+         result.test_is_eq<uint16_t>("lLE 16", fb_load_le<uint16_t>({1, 2}), 0x0201);
+         result.test_is_eq<uint32_t>("lLE 32", fb_load_le<uint32_t>({1, 2, 3, 4}), 0x04030201);
+         result.test_is_eq<uint64_t>("lLE 64", fb_load_le<uint64_t>({1, 2, 3, 4, 5, 6, 7, 8}), 0x0807060504030201);
+
+         result.test_is_eq<uint16_t>("lBE 16", fb_load_be<uint16_t>({1, 2}), 0x0102);
+         result.test_is_eq<uint32_t>("lBE 32", fb_load_be<uint32_t>({1, 2, 3, 4}), 0x01020304);
+         result.test_is_eq<uint64_t>("lBE 64", fb_load_be<uint64_t>({1, 2, 3, 4, 5, 6, 7, 8}), 0x0102030405060708);
+
+         result.test_is_eq<a<2>>("sLE 16", fb_store_le<uint16_t>(0x0201), {1, 2});
+         result.test_is_eq<a<4>>("sLE 32", fb_store_le<uint32_t>(0x04030201), {1, 2, 3, 4});
+         result.test_is_eq<a<8>>("sLE 64", fb_store_le<uint64_t>(0x0807060504030201), {1, 2, 3, 4, 5, 6, 7, 8});
+
+         result.test_is_eq<a<2>>("sBE 16", fb_store_be<uint16_t>(0x0102), {1, 2});
+         result.test_is_eq<a<4>>("sBE 32", fb_store_be<uint32_t>(0x01020304), {1, 2, 3, 4});
+         result.test_is_eq<a<8>>("sBE 64", fb_store_be<uint64_t>(0x0102030405060708), {1, 2, 3, 4, 5, 6, 7, 8});
 
          return result;
       }
