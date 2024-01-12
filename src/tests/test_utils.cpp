@@ -74,6 +74,16 @@ class Utility_Function_Tests final : public Text_Based_Test {
       using TestInt32 = Botan::Strong<uint32_t, struct TestInt64_>;
       using TestVectorSink = Botan::Strong<std::vector<uint8_t>, struct TestVectorSink_>;
 
+      enum class TestEnum64 : uint64_t {
+         _1 = 0x1234567890ABCDEF,
+         _2 = 0xEFCDAB9078563412,
+      };
+
+      enum class TestEnum32 : uint32_t {
+         _1 = 0x12345678,
+         _2 = 0x78563412,
+      };
+
       static Test::Result test_loadstore() {
          Test::Result result("Util load/store");
 
@@ -347,6 +357,23 @@ class Utility_Function_Tests final : public Text_Based_Test {
             Botan::load_be<std::vector<TestInt64>>(Botan::hex_decode("ABCDEF01234567890123456789ABCDEF"));
          result.test_is_eq(in64_strongs_be[0], TestInt64{0xABCDEF0123456789});
          result.test_is_eq(in64_strongs_be[1], TestInt64{0x0123456789ABCDEF});
+
+         // Test loading/storing of enum types with different endianness
+         const auto in64_enum_le = Botan::load_le<TestEnum64>(Botan::hex_decode("1234567890ABCDEF"));
+         result.test_is_eq(in64_enum_le, TestEnum64::_2);
+         const auto in64_enum_be = Botan::load_be<TestEnum64>(Botan::hex_decode("1234567890ABCDEF"));
+         result.test_is_eq(in64_enum_be, TestEnum64::_1);
+         result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(TestEnum64::_1),
+                           Botan::hex_decode("EFCDAB9078563412"));
+         result.test_is_eq<std::array<uint8_t, 8>>(Botan::store_be(TestEnum64::_2),
+                                                   {0xEF, 0xCD, 0xAB, 0x90, 0x78, 0x56, 0x34, 0x12});
+
+         const auto in32_enum_le = Botan::load_le<TestEnum32>(Botan::hex_decode("78563412"));
+         result.test_is_eq(in32_enum_le, TestEnum32::_1);
+         const auto in32_enum_be = Botan::load_be<TestEnum32>(Botan::hex_decode("78563412"));
+         result.test_is_eq(in32_enum_be, TestEnum32::_2);
+         result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(TestEnum32::_1), Botan::hex_decode("78563412"));
+         result.test_is_eq<std::array<uint8_t, 4>>(Botan::store_be(TestEnum32::_2), {0x78, 0x56, 0x34, 0x12});
 
          return result;
       }

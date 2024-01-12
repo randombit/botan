@@ -169,8 +169,12 @@ constexpr bool native_endianness_is_unknown() {
 #endif
 }
 
+/**
+ * Models a type that can be loaded/stored from/to a byte range.
+ */
 template <typename T>
-concept unsigned_integralish = std::unsigned_integral<T> || concepts::unsigned_integral_strong_type<T>;
+concept unsigned_integralish = std::unsigned_integral<T> || concepts::unsigned_integral_strong_type<T> ||
+                               (std::is_enum_v<T> && std::unsigned_integral<std::underlying_type_t<T>>);
 
 /**
  * Manually load a word from a range in either big or little endian byte order.
@@ -262,7 +266,19 @@ inline constexpr OutT load_any(InR&& in_range) {
  */
 template <Endianness endianness, concepts::unsigned_integral_strong_type OutT, ranges::contiguous_range<uint8_t> InR>
 inline constexpr OutT load_any(InR&& in_range) {
-   return OutT{load_any<endianness, typename OutT::wrapped_type>(std::forward<InR>(in_range))};
+   using underlying_type = typename OutT::wrapped_type;
+   return OutT{load_any<endianness, underlying_type>(std::forward<InR>(in_range))};
+}
+
+/**
+ * Overload for loading into an enum type that uses an unsigned integer as its
+ * underlying type.
+ */
+template <Endianness endianness, typename OutT, ranges::contiguous_range<uint8_t> InR>
+   requires(std::is_enum_v<OutT> && std::unsigned_integral<std::underlying_type_t<OutT>>)
+inline constexpr OutT load_any(InR&& in_range) {
+   using underlying_type = std::underlying_type_t<OutT>;
+   return static_cast<OutT>(load_any<endianness, underlying_type>(std::forward<InR>(in_range)));
 }
 
 /**
@@ -476,7 +492,20 @@ template <Endianness endianness,
           concepts::unsigned_integral_strong_type InT,
           ranges::contiguous_output_range<uint8_t> OutR>
 inline constexpr void store_any(InT in, OutR&& out_range) {
-   store_any<endianness, typename InT::wrapped_type>(in.get(), std::forward<OutR>(out_range));
+   using underlying_type = typename InT::wrapped_type;
+   store_any<endianness, underlying_type>(in.get(), std::forward<OutR>(out_range));
+}
+
+/**
+ * Overload for storing an enum type that uses an unsigned integer as its
+ * underlying type.
+ */
+template <Endianness endianness, typename InT, ranges::contiguous_output_range<uint8_t> OutR>
+   requires(std::is_enum_v<InT> && std::unsigned_integral<std::underlying_type_t<InT>>)
+inline constexpr void store_any(InT in, OutR&& out_range) {
+   using underlying_type = std::underlying_type_t<InT>;
+   // TODO: C++23: use std::to_underlying(in) instead
+   store_any<endianness, underlying_type>(static_cast<underlying_type>(in), std::forward<OutR>(out_range));
 }
 
 /**
