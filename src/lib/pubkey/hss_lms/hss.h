@@ -99,7 +99,7 @@ class BOTAN_TEST_API HSS_LMS_Params final {
       /**
        * @brief Returns the number of layers the HSS tree has.
        */
-      HSS_Level L() const { return HSS_Level(checked_cast_to<uint32_t>(m_lms_lmots_params.size())); }
+      HSS_Level L() const { return checked_cast_to<HSS_Level>(m_lms_lmots_params.size()); }
 
       /**
        * @brief The maximal number of signatures allowed for these HSS parameters

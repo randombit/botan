@@ -64,7 +64,7 @@ std::vector<LMS_Tree_Node_Idx> derive_lms_leaf_indices_from_hss_index(HSS_Sig_Id
       const HSS_LMS_Params::LMS_LMOTS_Params_Pair& layer_params = hss_params.params_at_level(layer);
       size_t layer_h = layer_params.lms_params().h();
       q.at(layer.get()) =
-         LMS_Tree_Node_Idx(checked_cast_to<uint32_t>(hss_idx.get() % checked_cast_to<uint64_t>(1ULL << layer_h)));
+         checked_cast_to<LMS_Tree_Node_Idx>(hss_idx.get() % checked_cast_to<uint64_t>(1ULL << layer_h));
       hss_idx = hss_idx >> layer_h;
    }
    BOTAN_ARG_CHECK(hss_idx == HSS_Sig_Idx(0), "HSS Tree is exhausted");
@@ -347,7 +347,7 @@ size_t HSS_LMS_PublicKeyInternal::size() const {
 }
 
 bool HSS_LMS_PublicKeyInternal::verify_signature(std::span<const uint8_t> msg, const HSS_Signature& sig) const {
-   if(HSS_Level(checked_cast_to<uint32_t>(sig.Nspk())) + 1 != L()) {
+   if(checked_cast_to<HSS_Level>(sig.Nspk()) + 1 != L()) {
       // HSS levels in the public key does not match with the signature's
       return false;
    }
