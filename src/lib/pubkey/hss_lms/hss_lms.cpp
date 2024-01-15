@@ -151,6 +151,7 @@ std::optional<uint64_t> HSS_LMS_PrivateKey::remaining_operations() const {
 }
 
 std::unique_ptr<Private_Key> HSS_LMS_PrivateKey::generate_another(RandomNumberGenerator& rng) const {
+   // Cannot use std::make_unique because the utilized constructor is private.
    return std::unique_ptr<HSS_LMS_PrivateKey>(
       new HSS_LMS_PrivateKey(std::make_shared<HSS_LMS_PrivateKeyInternal>(m_private->hss_params(), rng)));
 }

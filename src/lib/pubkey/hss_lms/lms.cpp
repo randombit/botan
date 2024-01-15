@@ -30,7 +30,7 @@ using LMS_TreeLayerIndex = Strong<uint32_t, struct LMS_TreeLayerIndex_, EnableAr
 class TreeAddress final {
    public:
       explicit TreeAddress(uint32_t total_tree_height) : m_h(total_tree_height), m_r(0) {
-         BOTAN_ARG_CHECK(total_tree_height > 0 && total_tree_height < 32, "Invalid tree hight");
+         BOTAN_ARG_CHECK(total_tree_height > 0 && total_tree_height < 32, "Invalid tree height");
       }
 
       TreeAddress& set_address(LMS_TreeLayerIndex tree_layer, LMS_Tree_Node_Idx tree_index) {

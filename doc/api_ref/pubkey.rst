@@ -1277,7 +1277,7 @@ The syntax of this argument must be the following:
 ``HSS-LMS(<hash>,HW(<h>,<w>),HW(<h>,<w>),...)``
 
 e.g. ``HSS-LMS(SHA-256,HW(5,1),HW(5,1))`` to use SHA-256 in a two-layer HSS instance
-with LMS tree hights 5 and Winternitz parameter 1. This results in a
+with LMS tree height 5 and Winternitz parameter 1. This results in a
 private key that can be used to create up to 2^(5+5)=1024 signatures.
 
 The following parameters are allowed (which are specified in

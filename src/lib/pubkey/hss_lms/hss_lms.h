@@ -58,6 +58,9 @@ class BOTAN_PUBLIC_API(3, 2) HSS_LMS_PublicKey : public virtual Public_Key {
 
       bool supports_operation(PublicKeyOperation op) const override;
 
+      /**
+       * @throws Not_Implemented for LMS public keys.
+       */
       std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const override;
 
    protected:
@@ -94,7 +97,7 @@ BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
  *  HSS_Identifier: 16 bytes long.
  *
  * The HSS/LMS instance to use for creating new keys is defined using an algorithm parameter sting,
- * i.e. to define which hash function (hash), LMS tree hights (h)
+ * i.e. to define which hash function (hash), LMS tree height (h)
  * and OTS Winternitz coefficient widths (w) to use. The syntax is the following:
  *
  * HSS-LMS(<hash>,HW(<h>,<w>),HW(<h>,<w>),...)
