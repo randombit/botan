@@ -21,7 +21,7 @@ if type -p "apt-get"; then
     # Hack to deal with https://github.com/actions/runner-images/issues/8659
     sudo rm -f /etc/apt/sources.list.d/ubuntu-toolchain-r-ubuntu-test-jammy.list
     sudo apt-get update
-    sudo apt-get install -y --allow-downgrades libc6=2.35-0ubuntu3.5 libc6-dev=2.35-0ubuntu3.5 libstdc++6=12.3.0-1ubuntu1~22.04 libgcc-s1=12.3.0-1ubuntu1~22.04
+    sudo apt-get install -y --allow-downgrades libc6=2.35-* libc6-dev=2.35-* libstdc++6=12.3.0-* libgcc-s1=12.3.0-*
 
     # Normal workflow follows
     #sudo apt-get -qq update
