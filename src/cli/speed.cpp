@@ -2133,7 +2133,7 @@ class Speed final : public Command {
                                                     "SHA-256,HW(10,1),HW(10,1)",
                                                     "SHA-256,HW(10,1),HW(10,1),HW(10,1)"};
 
-         for(auto params : hss_lms_instances) {
+         for(const auto& params : hss_lms_instances) {
             auto keygen_timer = make_timer(params, provider, "keygen");
 
             std::unique_ptr<Botan::Private_Key> key(

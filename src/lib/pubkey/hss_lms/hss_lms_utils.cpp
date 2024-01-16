@@ -11,10 +11,14 @@
 #include <botan/internal/stl_util.h>
 
 namespace Botan {
-PseudorandomKeyGeneration::PseudorandomKeyGeneration(std::span<const uint8_t> identifier) {
-   m_input_buffer.resize(identifier.size() + sizeof(uint32_t) + sizeof(uint16_t) + sizeof(uint8_t));
-   BufferStuffer input_stuffer(m_input_buffer);
-   input_stuffer.append(identifier);
+PseudorandomKeyGeneration::PseudorandomKeyGeneration(std::span<const uint8_t> identifier) :
+      m_input_buffer(identifier.size() + sizeof(uint32_t) + sizeof(uint16_t) + sizeof(uint8_t)),
+      m_q(m_input_buffer.data() + identifier.size(), sizeof(uint32_t)),
+      m_i(m_input_buffer.data() + identifier.size() + sizeof(uint32_t), sizeof(uint16_t)),
+      m_j(m_input_buffer.data() + identifier.size() + sizeof(uint32_t) + sizeof(uint16_t), sizeof(uint8_t))
+
+{
+   copy_mem(m_input_buffer.data(), identifier.data(), identifier.size());
 }
 
 void PseudorandomKeyGeneration::gen(std::span<uint8_t> out, HashFunction& hash, std::span<const uint8_t> seed) const {

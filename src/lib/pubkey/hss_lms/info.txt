@@ -3,7 +3,7 @@ HSS_LMS -> 20230925
 </defines>
 
 <module_info>
-name -> "HSS_LMS"
+name -> "HSS-LMS"
 </module_info>
 
 <header:public>

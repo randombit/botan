@@ -124,14 +124,13 @@ inline void treehash(
    BOTAN_ASSERT_NOMSG(out_root.size() == node_size);
    BOTAN_ASSERT(out_auth_path.has_value() == leaf_idx.has_value(),
                 "Both leaf index and auth path buffer is given or neither.");
-   bool is_signing = leaf_idx.has_value();
-   if(is_signing) {
-      BOTAN_ASSERT_NOMSG(out_auth_path.value().size() == node_size * total_tree_height.get());
-   }
+   const bool is_signing = leaf_idx.has_value();
+   BOTAN_ASSERT_NOMSG(!is_signing || out_auth_path.value().size() == node_size * total_tree_height.get());
 
    const TreeNodeIndex max_idx(uint32_t((1 << total_tree_height.get()) - 1));
 
-   std::vector<uint8_t> stack(total_tree_height.get() * node_size);
+   std::vector<TreeNode> last_visited_left_child_at_layer(total_tree_height.get(), TreeNode(node_size));
+
    TreeNode current_node(node_size);  // Current logical node
 
    // Traverse the tree from the left-most leaf, matching siblings and up until
@@ -162,18 +161,14 @@ inline void treehash(
             copy_into(auth_path_location, current_node);
          }
 
-         // At this point we know that we'll need to use the stack. Get a
-         // reference to the correct location.
-         auto stack_location = StrongSpan<TreeNode>(std::span(stack).subspan(h.get() * node_size, node_size));
-
-         // Check if we're at a left child; if so, stop going up the stack
+         // Check if we're at a left child; if so, stop going up the tree
          // Exception: if we've reached the end of the tree, keep on going (so
          // we combine the last 4 nodes into the one root node in two more
          // iterations)
          if((internal_idx & 1) == 0U && idx < max_idx) {
             // We've hit a left child; save the current for when we get the
             // corresponding right child.
-            copy_into(stack_location, current_node);
+            copy_into(last_visited_left_child_at_layer.at(h.get()), current_node);
             break;
          }
 
@@ -184,7 +179,7 @@ inline void treehash(
          internal_idx_offset /= 2;
          tree_address.set_address(h + 1, internal_idx / 2 + internal_idx_offset);
 
-         node_pair_hash(current_node, tree_address, stack_location, current_node);
+         node_pair_hash(current_node, tree_address, last_visited_left_child_at_layer.at(h.get()), current_node);
 
          internal_idx /= 2;
          if(internal_leaf.has_value()) {

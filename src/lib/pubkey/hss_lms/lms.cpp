@@ -63,8 +63,8 @@ auto get_hash_pair_func_for_identifier(const LMS_Params& lms_params, LMS_Identif
       auto lms_address = dynamic_cast<const TreeAddress&>(address);
 
       hash->update(I);
-      hash->update_be(lms_address.r());
-      hash->update_be(D_INTR);
+      hash->update(store_be(lms_address.r()));
+      hash->update(store_be(D_INTR));
       hash->update(left);
       hash->update(right);
       hash->final(out);
@@ -76,8 +76,8 @@ void lms_gen_leaf(StrongSpan<LMS_Tree_Node> out,
                   const TreeAddress& tree_address,
                   HashFunction& hash) {
    hash.update(lmots_pk.identifier());
-   hash.update_be(tree_address.r());
-   hash.update_be(D_LEAF);
+   hash.update(store_be(tree_address.r()));
+   hash.update(store_be(D_LEAF));
    hash.update(lmots_pk.K());
    hash.final(out);
 }

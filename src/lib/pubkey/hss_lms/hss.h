@@ -28,7 +28,7 @@ namespace Botan {
 using HSS_Sig_Idx = Strong<uint64_t, struct HSS_Sig_Idx_, EnableArithmeticWithPlainNumber>;
 
 /**
- * @brief The index of a node within a specific LMS tree layer
+ * @brief The HSS layer in the HSS multi tree starting at 0 from the root
  */
 using HSS_Level = Strong<uint32_t, struct HSS_Level_, EnableArithmeticWithPlainNumber>;
 
@@ -192,16 +192,6 @@ class BOTAN_TEST_API HSS_LMS_PrivateKeyInternal final {
       HSS_LMS_PrivateKeyInternal(HSS_LMS_Params hss_params, LMS_Seed hss_seed, LMS_Identifier identifier);
 
       /**
-       * @brief Returns the seed contained in the private key used for key derivation
-       */
-      const LMS_Seed& seed() const { return m_hss_seed; }
-
-      /**
-       * @brief The identifier of the top level LMS tree
-       */
-      const LMS_Identifier& identifier() const { return m_identifier; }
-
-      /**
        * @brief Get the index of the next signature to generate and
        *        increase the counter by one.
        */
@@ -305,11 +295,6 @@ class BOTAN_TEST_API HSS_LMS_PublicKeyInternal final {
       bool verify_signature(std::span<const uint8_t> msg, const HSS_Signature& sig) const;
 
    private:
-      /**
-       * @brief Returns the number of layers of LMS trees in the HSS tree.
-       */
-      HSS_Level L() const { return m_L; }
-
       HSS_Level m_L;
       LMS_PublicKey m_top_lms_pub_key;
 };
@@ -370,7 +355,7 @@ class BOTAN_TEST_API HSS_Signature final {
       /**
        * @brief Returns the number of signed public keys (Nspk = L-1).
        */
-      uint8_t Nspk() const { return m_Nspk; }
+      HSS_Level Nspk() const { return HSS_Level(static_cast<uint32_t>(m_signed_pub_keys.size())); }
 
       /**
        * @brief Returns the signed LMS key signed by a specific layer.
@@ -378,7 +363,7 @@ class BOTAN_TEST_API HSS_Signature final {
        * @param layer The layer by which the LMS key is signed.
        * @return The LMS key and the signature by its parent layer.
        */
-      const Signed_Pub_Key& signed_pub_key(uint8_t layer) const { return m_signed_pub_keys.at(layer); }
+      const Signed_Pub_Key& signed_pub_key(HSS_Level layer) const { return m_signed_pub_keys.at(layer.get()); }
 
       /**
        * @brief Returns the LMS signature by the bottom layer of the signed message.
@@ -389,10 +374,9 @@ class BOTAN_TEST_API HSS_Signature final {
       /**
        * @brief Private constructor using the individual signature fields.
        */
-      HSS_Signature(uint8_t Nspk, std::vector<Signed_Pub_Key> signed_pub_keys, LMS_Signature sig) :
-            m_Nspk(Nspk), m_signed_pub_keys(std::move(signed_pub_keys)), m_sig(std::move(sig)) {}
+      HSS_Signature(std::vector<Signed_Pub_Key> signed_pub_keys, LMS_Signature sig) :
+            m_signed_pub_keys(std::move(signed_pub_keys)), m_sig(std::move(sig)) {}
 
-      uint8_t m_Nspk;
       std::vector<Signed_Pub_Key> m_signed_pub_keys;
       LMS_Signature m_sig;
 };

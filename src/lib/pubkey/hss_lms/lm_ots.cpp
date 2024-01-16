@@ -36,15 +36,8 @@ class Chain_Generator {
                    std::span<uint8_t> out) {
          BOTAN_ARG_CHECK(start <= end, "Start value is bigger than end value");
 
-         if(start == end) {
-            copy_into(out, in);
-            return;
-         }
+         copy_into(out, in);
          m_gen.set_i(chain_idx);
-
-         // Unroll first iteration of the loop
-         m_gen.set_j(start++);
-         m_gen.gen(out, hash, in);
 
          for(uint8_t j = start; j < end; ++j) {
             m_gen.set_j(j);
@@ -86,8 +79,8 @@ std::vector<uint8_t> gen_Q_with_cksm(const LMOTS_Params& params,
    BufferStuffer qwc_stuffer(Q_with_cksm);
    const auto hash = HashFunction::create_or_throw(params.hash_name());
    hash->update(identifier);
-   hash->update_be(q.get());
-   hash->update_be(D_MESG);
+   hash->update(store_be(q));
+   hash->update(store_be(D_MESG));
    hash->update(C);
    hash->update(msg);
    auto Q_span = qwc_stuffer.next(params.n());
@@ -312,8 +305,8 @@ void LMOTS_Private_Key::derive_random_C(std::span<uint8_t> out, HashFunction& ha
 LMOTS_Public_Key::LMOTS_Public_Key(const LMOTS_Private_Key& lmots_sk) : OTS_Instance(lmots_sk) {
    const auto pk_hash = HashFunction::create_or_throw(lmots_sk.params().hash_name());
    pk_hash->update(lmots_sk.identifier());
-   pk_hash->update_be(lmots_sk.q().get());
-   pk_hash->update_be(D_PBLC);
+   pk_hash->update(store_be(lmots_sk.q()));
+   pk_hash->update(store_be(D_PBLC));
 
    Chain_Generator chain_gen(lmots_sk.identifier(), lmots_sk.q());
    const auto hash = HashFunction::create_or_throw(lmots_sk.params().hash_name());
@@ -339,8 +332,8 @@ LMOTS_K lmots_compute_pubkey_from_sig(const LMOTS_Signature& sig,
    // Prefill the final hash object
    const auto pk_hash = HashFunction::create_or_throw(params.hash_name());
    pk_hash->update(identifier);
-   pk_hash->update_be(q.get());
-   pk_hash->update_be(D_PBLC);
+   pk_hash->update(store_be(q));
+   pk_hash->update(store_be(D_PBLC));
 
    Chain_Generator chain_gen(identifier, q);
    const auto hash = HashFunction::create_or_throw(params.hash_name());

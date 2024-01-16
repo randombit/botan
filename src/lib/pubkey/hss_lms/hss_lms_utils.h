@@ -35,17 +35,17 @@ class PseudorandomKeyGeneration {
       /**
        * @brief Specify the value for the u32str(q) hash input field
        */
-      void set_q(uint32_t q) { store_be(q, std::span(m_input_buffer).last<7>().first<4>().data()); }
+      void set_q(uint32_t q) { store_be(q, m_q.data()); }
 
       /**
        * @brief Specify the value for the u16str(i) hash input field
        */
-      void set_i(uint16_t i) { store_be(i, std::span(m_input_buffer).last<3>().first<2>().data()); }
+      void set_i(uint16_t i) { store_be(i, m_i.data()); }
 
       /**
        * @brief Specify the value for the u8str(j) hash input field
        */
-      void set_j(uint8_t j) { m_input_buffer.back() = j; }
+      void set_j(uint8_t j) { m_j[0] = j; }
 
       /**
        * @brief Create a hash value using the preconfigured prefix and a @p seed
@@ -66,6 +66,10 @@ class PseudorandomKeyGeneration {
    private:
       /// Input buffer containing the prefix: 'identifier || u32str(q) || u16str(i) || u8str(j)'
       std::vector<uint8_t> m_input_buffer;
+
+      std::span<uint8_t, sizeof(uint32_t)> m_q;
+      std::span<uint8_t, sizeof(uint16_t)> m_i;
+      std::span<uint8_t, sizeof(uint8_t)> m_j;
 };
 
 }  // namespace Botan

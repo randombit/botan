@@ -62,12 +62,10 @@ class HSS_LMS_Verification_Operation final : public PK_Ops::Verification {
       }
 
       bool is_valid_signature(const uint8_t* sig, size_t sig_len) override {
-         std::vector<uint8_t> message_to_verify = std::move(m_msg_buffer);
-         m_msg_buffer.clear();
+         std::vector<uint8_t> message_to_verify = std::exchange(m_msg_buffer, {});
          try {
             const auto signature = HSS_Signature::from_bytes_or_throw({sig, sig_len});
-            bool sig_valid = m_public->verify_signature(message_to_verify, signature);
-            return sig_valid;
+            return m_public->verify_signature(message_to_verify, signature);
          } catch(const Decoding_Error&) {
             // Signature could not be decoded
             return false;
@@ -167,8 +165,7 @@ class HSS_LMS_Signature_Operation final : public PK_Ops::Signature {
       }
 
       secure_vector<uint8_t> sign(RandomNumberGenerator&) override {
-         std::vector<uint8_t> message_to_sign = std::move(m_msg_buffer);
-         m_msg_buffer.clear();
+         std::vector<uint8_t> message_to_sign = std::exchange(m_msg_buffer, {});
          return m_private->sign(message_to_sign);
       }
 

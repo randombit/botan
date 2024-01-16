@@ -177,8 +177,8 @@ secure_vector<uint8_t> HSS_LMS_PrivateKeyInternal::to_bytes() const {
       stuffer.append(store_be(params.lms_params().algorithm_type()));
       stuffer.append(store_be(params.lmots_params().algorithm_type()));
    }
-   stuffer.append(seed());
-   stuffer.append(identifier());
+   stuffer.append(m_hss_seed);
+   stuffer.append(m_identifier);
    BOTAN_ASSERT_NOMSG(stuffer.full());
 
    return sk_bytes;
@@ -201,7 +201,7 @@ size_t HSS_LMS_PrivateKeyInternal::size() const {
    size_t sk_size = sizeof(HSS_Level) + sizeof(HSS_Sig_Idx);
    // The concatenated algorithm types for all layers
    sk_size += hss_params().L().get() * (sizeof(LMS_Algorithm_Type) + sizeof(LMOTS_Algorithm_Type));
-   sk_size += seed().size() + identifier().size();
+   sk_size += m_hss_seed.size() + m_identifier.size();
    return sk_size;
 }
 
@@ -266,7 +266,7 @@ secure_vector<uint8_t> HSS_LMS_PrivateKeyInternal::sign(std::span<const uint8_t>
 
 LMS_PrivateKey HSS_LMS_PrivateKeyInternal::hss_derive_root_lms_private_key() const {
    auto& top_params = hss_params().params_at_level(HSS_Level(0));
-   return LMS_PrivateKey(top_params.lms_params(), top_params.lmots_params(), identifier(), seed());
+   return LMS_PrivateKey(top_params.lms_params(), top_params.lmots_params(), m_identifier, m_hss_seed);
 }
 
 LMS_PrivateKey HSS_LMS_PrivateKeyInternal::hss_derive_child_lms_private_key(
@@ -347,7 +347,7 @@ size_t HSS_LMS_PublicKeyInternal::size() const {
 }
 
 bool HSS_LMS_PublicKeyInternal::verify_signature(std::span<const uint8_t> msg, const HSS_Signature& sig) const {
-   if(checked_cast_to<HSS_Level>(sig.Nspk()) + 1 != L()) {
+   if(checked_cast_to<HSS_Level>(sig.Nspk()) + 1 != m_L) {
       // HSS levels in the public key does not match with the signature's
       return false;
    }
@@ -356,7 +356,7 @@ bool HSS_LMS_PublicKeyInternal::verify_signature(std::span<const uint8_t> msg, c
    const auto hash_name = lms_pk->lms_params().hash_name();
 
    // Verify the signature by the above layer over the LMS public keys for layer 1 to Nspk.
-   for(uint8_t layer = 0; layer < sig.Nspk(); ++layer) {
+   for(HSS_Level layer(0); layer < sig.Nspk(); ++layer) {
       const HSS_Signature::Signed_Pub_Key& signed_pub_key = sig.signed_pub_key(layer);
       if(signed_pub_key.public_key().lms_params().hash_name() != hash_name ||
          signed_pub_key.public_key().lmots_params().hash_name() != hash_name) {
@@ -399,7 +399,7 @@ HSS_Signature HSS_Signature::from_bytes_or_throw(std::span<const uint8_t> sig_by
    if(!slicer.empty()) {
       throw Decoding_Error("HSS-LMS signature contains more bytes than expected.");
    }
-   return HSS_Signature(checked_cast_to<uint8_t>(Nspk), std::move(signed_pub_keys), std::move(sig));
+   return HSS_Signature(std::move(signed_pub_keys), std::move(sig));
 }
 
 size_t HSS_Signature::size(const HSS_LMS_Params& params) {
