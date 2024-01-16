@@ -7,6 +7,7 @@
  * (C) 2021-2022 Jack Lloyd
  * (C) 2021-2022 Manuel Glaser and Michael Boric, Rohde & Schwarz Cybersecurity
  * (C) 2021-2022 René Meusel and Hannes Rantzsch, neXenio GmbH
+ * (C) 2024      René Meusel, Rohde & Schwarz Cybersecurity
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */
@@ -15,6 +16,7 @@
 
 #include <botan/assert.h>
 #include <botan/ber_dec.h>
+#include <botan/concepts.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
 #include <botan/pubkey.h>
@@ -287,20 +289,25 @@ class Polynomial {
          }
       }
 
-      template <typename T = std::vector<uint8_t>>
-      T to_bytes() {
+      void to_bytes(std::span<uint8_t> out) {
          this->csubq();
 
-         T r(KyberConstants::kSerializedPolynomialByteLength);
-
+         BufferStuffer bs(out);
          for(size_t i = 0; i < size() / 2; ++i) {
             const uint16_t t0 = m_coeffs[2 * i];
             const uint16_t t1 = m_coeffs[2 * i + 1];
-            r[3 * i + 0] = static_cast<uint8_t>(t0 >> 0);
-            r[3 * i + 1] = static_cast<uint8_t>((t0 >> 8) | (t1 << 4));
-            r[3 * i + 2] = static_cast<uint8_t>(t1 >> 4);
+            auto buf = bs.next<3>();
+            buf[0] = static_cast<uint8_t>(t0 >> 0);
+            buf[1] = static_cast<uint8_t>((t0 >> 8) | (t1 << 4));
+            buf[2] = static_cast<uint8_t>(t1 >> 4);
          }
+         BOTAN_ASSERT_NOMSG(bs.full());
+      }
 
+      template <concepts::resizable_byte_buffer T = std::vector<uint8_t>>
+      T to_bytes() {
+         T r(KyberConstants::kSerializedPolynomialByteLength);
+         to_bytes(r);
          return r;
       }
 
@@ -313,8 +320,9 @@ class Polynomial {
 
          BOTAN_ASSERT(buf.size() == (2 * r.size() / 4), "wrong input buffer size for cbd2");
 
+         BufferSlicer bs(buf);
          for(size_t i = 0; i < r.size() / 8; ++i) {
-            uint32_t t = load_le<uint32_t>(buf.data(), i);
+            uint32_t t = load_le(bs.take<4>());
             uint32_t d = t & 0x55555555;
             d += (t >> 1) & 0x55555555;
 
@@ -324,6 +332,7 @@ class Polynomial {
                r.m_coeffs[8 * i + j] = a - b;
             }
          }
+         BOTAN_ASSERT_NOMSG(bs.empty());
 
          return r;
       }
@@ -340,13 +349,11 @@ class Polynomial {
          BOTAN_ASSERT(buf.size() == (3 * r.size() / 4), "wrong input buffer size for cbd3");
 
          // Note: load_le<> does not support loading a 3-byte value
-         const auto load_le24 = [](const uint8_t in[], const size_t off) {
-            const auto off3 = off * 3;
-            return make_uint32(0, in[off3 + 2], in[off3 + 1], in[off3]);
-         };
+         const auto load_le = [](std::span<const uint8_t, 3> in) { return make_uint32(0, in[2], in[1], in[0]); };
 
+         BufferSlicer bs(buf);
          for(size_t i = 0; i < r.size() / 4; ++i) {
-            uint32_t t = load_le24(buf.data(), i);
+            uint32_t t = load_le(bs.take<3>());
             uint32_t d = t & 0x00249249;
             d += (t >> 1) & 0x00249249;
             d += (t >> 2) & 0x00249249;
@@ -357,6 +364,8 @@ class Polynomial {
                r.m_coeffs[4 * i + j] = a - b;
             }
          }
+         BOTAN_ASSERT_NOMSG(bs.empty());
+
          return r;
       }
 
@@ -606,10 +615,12 @@ class PolynomialVector {
          BOTAN_ASSERT(a.size() == mode.polynomial_vector_byte_length(), "wrong byte length for frombytes");
 
          PolynomialVector r(mode.k());
+         BufferSlicer bs(a);
          for(size_t i = 0; i < mode.k(); ++i) {
-            r.m_vec[i] = Polynomial::from_bytes(a.subspan(0, KyberConstants::kSerializedPolynomialByteLength));
-            a = a.subspan(KyberConstants::kSerializedPolynomialByteLength);
+            r.m_vec[i] = Polynomial::from_bytes(bs.take(KyberConstants::kSerializedPolynomialByteLength));
          }
+         BOTAN_ASSERT_NOMSG(bs.empty());
+
          return r;
       }
 
@@ -650,15 +661,15 @@ class PolynomialVector {
          return r;
       }
 
-      template <typename T = std::vector<uint8_t>>
+      template <concepts::resizable_byte_buffer T = std::vector<uint8_t>>
       T to_bytes() {
-         T r;
+         T r(m_vec.size() * KyberConstants::kSerializedPolynomialByteLength);
 
-         r.reserve(m_vec.size() * KyberConstants::kSerializedPolynomialByteLength);
+         BufferStuffer bs(r);
          for(auto& v : m_vec) {
-            const auto poly = v.to_bytes<T>();
-            r.insert(r.end(), poly.begin(), poly.end());
+            v.to_bytes(bs.next(KyberConstants::kSerializedPolynomialByteLength));
          }
+         BOTAN_ASSERT_NOMSG(bs.full());
 
          return r;
       }
@@ -771,18 +782,26 @@ class Ciphertext {
             throw Decoding_Error("Kyber: unexpected ciphertext length");
          }
 
-         auto pv = buffer.subspan(0, pvb);
-         auto p = buffer.subspan(pvb);
+         BufferSlicer bs(buffer);
+         auto pv = bs.take(pvb);
+         auto p = bs.take(pcb);
+         BOTAN_ASSERT_NOMSG(bs.empty());
 
          return Ciphertext(decompress_polynomial_vector(pv, mode), decompress_polynomial(p, mode), mode);
       }
 
-      secure_vector<uint8_t> to_bytes() {
-         auto ct = compress(m_b, m_mode);
-         const auto p = compress(m_v, m_mode);
-         ct.insert(ct.end(), p.begin(), p.end());
+      void to_bytes(std::span<uint8_t> out) {
+         BufferStuffer bs(out);
+         compress(bs.next(polynomial_vector_compressed_bytes(m_mode)), m_b, m_mode);
+         compress(bs.next(polynomial_compressed_bytes(m_mode)), m_v, m_mode);
+         BOTAN_ASSERT_NOMSG(bs.full());
+      }
 
-         return ct;
+      template <concepts::resizable_byte_buffer T = std::vector<uint8_t>>
+      T to_bytes() {
+         T r(polynomial_vector_compressed_bytes(m_mode) + polynomial_compressed_bytes(m_mode));
+         to_bytes(r);
+         return r;
       }
 
       secure_vector<uint8_t> indcpa_decrypt(const PolynomialVector& polynomials) {
@@ -806,14 +825,12 @@ class Ciphertext {
          return (k == 2 || k == 3) ? 128 : 160;
       }
 
-      static secure_vector<uint8_t> compress(PolynomialVector& pv, const KyberConstants& mode) {
-         secure_vector<uint8_t> r(polynomial_vector_compressed_bytes(mode));
-
+      static void compress(std::span<uint8_t> out, PolynomialVector& pv, const KyberConstants& mode) {
          pv.csubq();
 
+         BufferStuffer bs(out);
          if(mode.k() == 2 || mode.k() == 3) {
             uint16_t t[4];
-            size_t offset = 0;
             for(size_t i = 0; i < mode.k(); ++i) {
                for(size_t j = 0; j < KyberConstants::N / 4; ++j) {
                   for(size_t k = 0; k < 4; ++k) {
@@ -822,17 +839,16 @@ class Ciphertext {
                             0x3ff;
                   }
 
-                  r[0 + offset] = static_cast<uint8_t>(t[0] >> 0);
-                  r[1 + offset] = static_cast<uint8_t>((t[0] >> 8) | (t[1] << 2));
-                  r[2 + offset] = static_cast<uint8_t>((t[1] >> 6) | (t[2] << 4));
-                  r[3 + offset] = static_cast<uint8_t>((t[2] >> 4) | (t[3] << 6));
-                  r[4 + offset] = static_cast<uint8_t>(t[3] >> 2);
-                  offset += 5;
+                  auto r = bs.next<5>();
+                  r[0] = static_cast<uint8_t>(t[0] >> 0);
+                  r[1] = static_cast<uint8_t>((t[0] >> 8) | (t[1] << 2));
+                  r[2] = static_cast<uint8_t>((t[1] >> 6) | (t[2] << 4));
+                  r[3] = static_cast<uint8_t>((t[2] >> 4) | (t[3] << 6));
+                  r[4] = static_cast<uint8_t>(t[3] >> 2);
                }
             }
          } else {
             uint16_t t[8];
-            size_t offset = 0;
             for(size_t i = 0; i < mode.k(); ++i) {
                for(size_t j = 0; j < KyberConstants::N / 8; ++j) {
                   for(size_t k = 0; k < 8; ++k) {
@@ -841,61 +857,58 @@ class Ciphertext {
                             0x7ff;
                   }
 
-                  r[0 + offset] = static_cast<uint8_t>(t[0] >> 0);
-                  r[1 + offset] = static_cast<uint8_t>((t[0] >> 8) | (t[1] << 3));
-                  r[2 + offset] = static_cast<uint8_t>((t[1] >> 5) | (t[2] << 6));
-                  r[3 + offset] = static_cast<uint8_t>(t[2] >> 2);
-                  r[4 + offset] = static_cast<uint8_t>((t[2] >> 10) | (t[3] << 1));
-                  r[5 + offset] = static_cast<uint8_t>((t[3] >> 7) | (t[4] << 4));
-                  r[6 + offset] = static_cast<uint8_t>((t[4] >> 4) | (t[5] << 7));
-                  r[7 + offset] = static_cast<uint8_t>(t[5] >> 1);
-                  r[8 + offset] = static_cast<uint8_t>((t[5] >> 9) | (t[6] << 2));
-                  r[9 + offset] = static_cast<uint8_t>((t[6] >> 6) | (t[7] << 5));
-                  r[10 + offset] = static_cast<uint8_t>(t[7] >> 3);
-                  offset += 11;
+                  auto r = bs.next<11>();
+                  r[0] = static_cast<uint8_t>(t[0] >> 0);
+                  r[1] = static_cast<uint8_t>((t[0] >> 8) | (t[1] << 3));
+                  r[2] = static_cast<uint8_t>((t[1] >> 5) | (t[2] << 6));
+                  r[3] = static_cast<uint8_t>(t[2] >> 2);
+                  r[4] = static_cast<uint8_t>((t[2] >> 10) | (t[3] << 1));
+                  r[5] = static_cast<uint8_t>((t[3] >> 7) | (t[4] << 4));
+                  r[6] = static_cast<uint8_t>((t[4] >> 4) | (t[5] << 7));
+                  r[7] = static_cast<uint8_t>(t[5] >> 1);
+                  r[8] = static_cast<uint8_t>((t[5] >> 9) | (t[6] << 2));
+                  r[9] = static_cast<uint8_t>((t[6] >> 6) | (t[7] << 5));
+                  r[10] = static_cast<uint8_t>(t[7] >> 3);
                }
             }
          }
 
-         return r;
+         BOTAN_ASSERT_NOMSG(bs.full());
       }
 
-      static secure_vector<uint8_t> compress(Polynomial& p, const KyberConstants& mode) {
-         secure_vector<uint8_t> r(polynomial_compressed_bytes(mode));
-
+      static void compress(std::span<uint8_t> out, Polynomial& p, const KyberConstants& mode) {
          p.csubq();
 
+         BufferStuffer bs(out);
          uint8_t t[8];
          if(mode.k() == 2 || mode.k() == 3) {
-            size_t offset = 0;
             for(size_t i = 0; i < p.size() / 8; ++i) {
                for(size_t j = 0; j < 8; ++j) {
                   t[j] = ct_int_div_kyber_q((static_cast<uint16_t>(p[8 * i + j]) << 4) + KyberConstants::Q / 2) & 15;
                }
 
-               r[0 + offset] = t[0] | (t[1] << 4);
-               r[1 + offset] = t[2] | (t[3] << 4);
-               r[2 + offset] = t[4] | (t[5] << 4);
-               r[3 + offset] = t[6] | (t[7] << 4);
-               offset += 4;
+               auto r = bs.next<4>();
+               r[0] = t[0] | (t[1] << 4);
+               r[1] = t[2] | (t[3] << 4);
+               r[2] = t[4] | (t[5] << 4);
+               r[3] = t[6] | (t[7] << 4);
             }
          } else if(mode.k() == 4) {
-            size_t offset = 0;
             for(size_t i = 0; i < p.size() / 8; ++i) {
                for(size_t j = 0; j < 8; ++j) {
                   t[j] = ct_int_div_kyber_q((static_cast<uint32_t>(p[8 * i + j]) << 5) + KyberConstants::Q / 2) & 31;
                }
 
-               r[0 + offset] = (t[0] >> 0) | (t[1] << 5);
-               r[1 + offset] = (t[1] >> 3) | (t[2] << 2) | (t[3] << 7);
-               r[2 + offset] = (t[3] >> 1) | (t[4] << 4);
-               r[3 + offset] = (t[4] >> 4) | (t[5] << 1) | (t[6] << 6);
-               r[4 + offset] = (t[6] >> 2) | (t[7] << 3);
-               offset += 5;
+               auto r = bs.next<5>();
+               r[0] = (t[0] >> 0) | (t[1] << 5);
+               r[1] = (t[1] >> 3) | (t[2] << 2) | (t[3] << 7);
+               r[2] = (t[3] >> 1) | (t[4] << 4);
+               r[3] = (t[4] >> 4) | (t[5] << 1) | (t[6] << 6);
+               r[4] = (t[6] >> 2) | (t[7] << 3);
             }
          }
 
-         return r;
+         BOTAN_ASSERT_NOMSG(bs.full());
       }
 
       static PolynomialVector decompress_polynomial_vector(std::span<const uint8_t> buffer,
@@ -904,12 +917,12 @@ class Ciphertext {
                       "unexpected length of compressed polynomial vector");
 
          PolynomialVector r(mode.k());
-         const uint8_t* a = buffer.data();
-
+         BufferSlicer bs(buffer);
          if(mode.k() == 4) {
             uint16_t t[8];
             for(size_t i = 0; i < mode.k(); ++i) {
                for(size_t j = 0; j < KyberConstants::N / 8; ++j) {
+                  const auto a = bs.take<11>();
                   t[0] = (a[0] >> 0) | (static_cast<uint16_t>(a[1]) << 8);
                   t[1] = (a[1] >> 3) | (static_cast<uint16_t>(a[2]) << 5);
                   t[2] = (a[2] >> 6) | (static_cast<uint16_t>(a[3]) << 2) | (static_cast<uint16_t>(a[4]) << 10);
@@ -918,7 +931,6 @@ class Ciphertext {
                   t[5] = (a[6] >> 7) | (static_cast<uint16_t>(a[7]) << 1) | (static_cast<uint16_t>(a[8]) << 9);
                   t[6] = (a[8] >> 2) | (static_cast<uint16_t>(a[9]) << 6);
                   t[7] = (a[9] >> 5) | (static_cast<uint16_t>(a[10]) << 3);
-                  a += 11;
 
                   for(size_t k = 0; k < 8; ++k) {
                      r[i][8 * j + k] = (static_cast<uint32_t>(t[k] & 0x7FF) * KyberConstants::Q + 1024) >> 11;
@@ -929,11 +941,11 @@ class Ciphertext {
             uint16_t t[4];
             for(size_t i = 0; i < mode.k(); ++i) {
                for(size_t j = 0; j < KyberConstants::N / 4; ++j) {
+                  const auto a = bs.take<5>();
                   t[0] = (a[0] >> 0) | (static_cast<uint16_t>(a[1]) << 8);
                   t[1] = (a[1] >> 2) | (static_cast<uint16_t>(a[2]) << 6);
                   t[2] = (a[2] >> 4) | (static_cast<uint16_t>(a[3]) << 4);
                   t[3] = (a[3] >> 6) | (static_cast<uint16_t>(a[4]) << 2);
-                  a += 5;
 
                   for(size_t k = 0; k < 4; ++k) {
                      r[i][4 * j + k] = (static_cast<uint32_t>(t[k] & 0x3FF) * KyberConstants::Q + 512) >> 10;
@@ -941,6 +953,7 @@ class Ciphertext {
                }
             }
          }
+         BOTAN_ASSERT_NOMSG(bs.empty());
 
          return r;
       }
@@ -949,11 +962,11 @@ class Ciphertext {
          BOTAN_ASSERT(buffer.size() == polynomial_compressed_bytes(mode), "unexpected length of compressed polynomial");
 
          Polynomial r;
-         const uint8_t* a = buffer.data();
-
+         BufferSlicer bs(buffer);
          if(mode.k() == 4) {
             uint8_t t[8];
             for(size_t i = 0; i < KyberConstants::N / 8; ++i) {
+               const auto a = bs.take<5>();
                t[0] = (a[0] >> 0);
                t[1] = (a[0] >> 5) | (a[1] << 3);
                t[2] = (a[1] >> 2);
@@ -962,7 +975,6 @@ class Ciphertext {
                t[5] = (a[3] >> 1);
                t[6] = (a[3] >> 6) | (a[4] << 2);
                t[7] = (a[4] >> 3);
-               a += 5;
 
                for(size_t j = 0; j < 8; ++j) {
                   r[8 * i + j] = (static_cast<uint32_t>(t[j] & 31) * KyberConstants::Q + 16) >> 5;
@@ -970,11 +982,12 @@ class Ciphertext {
             }
          } else {
             for(size_t i = 0; i < KyberConstants::N / 2; ++i) {
-               r[2 * i + 0] = ((static_cast<uint16_t>(a[0] & 15) * KyberConstants::Q) + 8) >> 4;
-               r[2 * i + 1] = ((static_cast<uint16_t>(a[0] >> 4) * KyberConstants::Q) + 8) >> 4;
-               a += 1;
+               const auto a = bs.take_byte();
+               r[2 * i + 0] = ((static_cast<uint16_t>(a & 15) * KyberConstants::Q) + 8) >> 4;
+               r[2 * i + 1] = ((static_cast<uint16_t>(a >> 4) * KyberConstants::Q) + 8) >> 4;
             }
          }
+         BOTAN_ASSERT_NOMSG(bs.empty());
 
          return r;
       }
@@ -1049,7 +1062,7 @@ class Kyber_KEM_Cryptor {
             m_mode(m_public_key->mode()),
             m_at(PolynomialMatrix::generate(m_public_key->seed(), true, m_mode)) {}
 
-      secure_vector<uint8_t> indcpa_enc(std::span<const uint8_t> m, std::span<const uint8_t> coins) {
+      Ciphertext indcpa_enc(std::span<const uint8_t> m, std::span<const uint8_t> coins) {
          auto sp = PolynomialVector::getnoise_eta1(coins, 0, m_mode);
          auto ep = PolynomialVector::getnoise_eta2(coins, m_mode.k(), m_mode);
          auto epp = Polynomial::getnoise_eta2(coins, 2 * m_mode.k(), m_mode);
@@ -1071,33 +1084,29 @@ class Kyber_KEM_Cryptor {
          bp.reduce();
          v.reduce();
 
-         return Ciphertext(std::move(bp), v, m_mode).to_bytes();
+         return Ciphertext(std::move(bp), v, m_mode);
       }
 
       const KyberConstants& mode() const { return m_mode; }
+
+      size_t kyber_key_length_to_encap_key_length(size_t key_length) const {
+         switch(key_length) {
+            case 800:
+               return 768;
+            case 1184:
+               return 1088;
+            case 1568:
+               return 1568;
+            default:
+               throw Internal_Error("Unexpected Kyber key length");
+         }
+      }
 
    private:
       std::shared_ptr<const Kyber_PublicKeyInternal> m_public_key;
       const KyberConstants& m_mode;
       const PolynomialMatrix m_at;
 };
-
-namespace {
-
-size_t kyber_key_length_to_encap_key_length(size_t kl) {
-   switch(kl) {
-      case 800:
-         return 768;
-      case 1184:
-         return 1088;
-      case 1568:
-         return 1568;
-      default:
-         throw Internal_Error("Unexpected Kyber key length");
-   }
-}
-
-}  // namespace
 
 class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
                                   protected Kyber_KEM_Cryptor {
@@ -1132,11 +1141,7 @@ class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
          const auto lower_g_out = std::span(g_out).subspan(0, 32);
          const auto upper_g_out = std::span(g_out).subspan(32, 32);
 
-         const auto encapsulation = indcpa_enc(shared_secret, upper_g_out);
-
-         // TODO: avoid copy by letting Ciphertext write straight into std::span<>
-         BOTAN_ASSERT_NOMSG(encapsulation.size() == out_encapsulated_key.size());
-         std::copy(encapsulation.begin(), encapsulation.end(), out_encapsulated_key.begin());
+         indcpa_enc(shared_secret, upper_g_out).to_bytes(out_encapsulated_key);
 
          KDF->update(lower_g_out.data(), lower_g_out.size());
          KDF->update(H->process(out_encapsulated_key));
@@ -1165,7 +1170,8 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
          auto G = mode().G();
          auto KDF = mode().KDF();
 
-         const auto shared_secret = indcpa_dec(encapsulated_key);
+         auto ct = Ciphertext::from_bytes(encapsulated_key, mode());
+         const auto shared_secret = ct.indcpa_decrypt(m_key.m_private->polynomials());
 
          // Multitarget countermeasure for coins + contributory KEM
          G->update(shared_secret);
@@ -1180,7 +1186,7 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
 
          H->update(encapsulated_key);
 
-         const auto cmp = indcpa_enc(shared_secret, upper_g_out);
+         const auto cmp = indcpa_enc(shared_secret, upper_g_out).to_bytes();
          BOTAN_ASSERT(encapsulated_key.size() == cmp.size(), "output of indcpa_enc has unexpected length");
 
          // Overwrite pre-k with z on re-encryption failure (constant time)
@@ -1197,12 +1203,6 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
          KDF->update(lower_g_out_final);
          KDF->update(H->final());
          KDF->final(out_shared_key);
-      }
-
-   private:
-      secure_vector<uint8_t> indcpa_dec(std::span<const uint8_t> c) {
-         auto ct = Ciphertext::from_bytes(c, mode());
-         return ct.indcpa_decrypt(m_key.m_private->polynomials());
       }
 
    private:
