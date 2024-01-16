@@ -35,25 +35,24 @@ class PseudorandomKeyGeneration {
       /**
        * @brief Specify the value for the u32str(q) hash input field
        */
-      void set_q(uint32_t q) { store_be(q, m_q.data()); }
+      void set_q(uint32_t q) { store_be(m_q, q); }
 
       /**
        * @brief Specify the value for the u16str(i) hash input field
        */
-      void set_i(uint16_t i) { store_be(i, m_i.data()); }
+      void set_i(uint16_t i) { store_be(m_i, i); }
 
       /**
        * @brief Specify the value for the u8str(j) hash input field
        */
-      void set_j(uint8_t j) { m_j[0] = j; }
+      void set_j(uint8_t j) { store_be(m_j, j); }
 
       /**
        * @brief Create a hash value using the preconfigured prefix and a @p seed
        */
       template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
       T gen(HashFunction& hash, std::span<const uint8_t> seed) const {
-         T output;
-         output.resize(hash.output_length());
+         T output(hash.output_length());
          gen(output, hash, seed);
          return output;
       }
