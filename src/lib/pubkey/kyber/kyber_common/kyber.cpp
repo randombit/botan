@@ -15,7 +15,6 @@
 #include <botan/kyber.h>
 
 #include <botan/assert.h>
-#include <botan/ber_dec.h>
 #include <botan/concepts.h>
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
@@ -38,12 +37,9 @@
    #include <botan/internal/kyber_90s.h>
 #endif
 
-#include <algorithm>
 #include <array>
-#include <iterator>
 #include <limits>
 #include <memory>
-#include <optional>
 #include <vector>
 
 namespace Botan {
@@ -580,9 +576,9 @@ class Polynomial {
        */
       static int16_t barrett_reduce(int16_t a) {
          int16_t t;
-         constexpr int16_t v = ((1U << 26) + KyberConstants::Q / 2) / KyberConstants::Q;
+         constexpr int32_t v = ((1U << 26) + KyberConstants::Q / 2) / KyberConstants::Q;
 
-         t = static_cast<int32_t>(v) * a >> 26;
+         t = v * a >> 26;
          t *= KyberConstants::Q;
          return a - t;
       }
@@ -1000,19 +996,17 @@ class Ciphertext {
 
 class Kyber_PublicKeyInternal {
    public:
-      Kyber_PublicKeyInternal(KyberConstants mode, std::span<const uint8_t> polynomials, std::vector<uint8_t> seed) :
-            m_mode(std::move(mode)),
-            m_polynomials(PolynomialVector::from_bytes(polynomials, m_mode)),
-            m_seed(std::move(seed)),
-            m_public_key_bits_raw(concat(m_polynomials.to_bytes<std::vector<uint8_t>>(), m_seed)),
-            m_H_public_key_bits_raw(m_mode.H()->process<std::vector<uint8_t>>(m_public_key_bits_raw)) {}
-
       Kyber_PublicKeyInternal(KyberConstants mode, PolynomialVector polynomials, std::vector<uint8_t> seed) :
             m_mode(std::move(mode)),
             m_polynomials(std::move(polynomials)),
             m_seed(std::move(seed)),
             m_public_key_bits_raw(concat(m_polynomials.to_bytes<std::vector<uint8_t>>(), m_seed)),
             m_H_public_key_bits_raw(m_mode.H()->process<std::vector<uint8_t>>(m_public_key_bits_raw)) {}
+
+      Kyber_PublicKeyInternal(const KyberConstants& mode,
+                              std::span<const uint8_t> polynomials,
+                              std::vector<uint8_t> seed) :
+            Kyber_PublicKeyInternal(mode, PolynomialVector::from_bytes(polynomials, mode), std::move(seed)) {}
 
       const PolynomialVector& polynomials() const { return m_polynomials; }
 
