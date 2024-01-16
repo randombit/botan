@@ -16,6 +16,7 @@ rng
 
 <header:internal>
 kyber_symmetric_primitives.h
+kyber_types.h
 </header:internal>
 
 <header:public>

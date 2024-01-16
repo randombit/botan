@@ -116,7 +116,6 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key {
                                                                                KyberMode m);
 
       const std::vector<uint8_t>& public_key_bits_raw() const;
-      const std::vector<uint8_t>& H_public_key_bits_raw() const;
 
    protected:
       friend class Kyber_KEM_Encryptor;

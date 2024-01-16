@@ -25,6 +25,7 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/kyber_symmetric_primitives.h>
+#include <botan/internal/kyber_types.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/stl_util.h>
@@ -242,18 +243,58 @@ class KyberConstants {
          return polynomial_vector_byte_length() + public_key_byte_length() + kPublicKeyHashLength + kZLength;
       }
 
+      auto H(StrongSpan<const KyberMessage> m) const { return H()->process<KyberMessage>(m); }
+
+      auto H(StrongSpan<const KyberCompressedCiphertext> r) const { return H()->process<KyberHashedCiphertext>(r); }
+
+      auto H(StrongSpan<const KyberSerializedPublicKey> pk) const { return H()->process<KyberHashedPublicKey>(pk); }
+
+      auto G(StrongSpan<const KyberSeedRandomness> seed) const { return G_split<KyberSeedRho, KyberSeedSigma>(seed); }
+
+      auto G(StrongSpan<const KyberMessage> msg, StrongSpan<const KyberHashedPublicKey> pubkey_hash) const {
+         return G_split<KyberSharedSecret, KyberEncryptionRandomness>(msg, pubkey_hash);
+      }
+
+      void KDF(std::span<uint8_t> out,
+               StrongSpan<const KyberSharedSecret> shared_secret,
+               StrongSpan<const KyberHashedCiphertext> hashed_ciphertext) const {
+         auto kdf = KDF();
+         kdf->update(shared_secret);
+         kdf->update(hashed_ciphertext);
+         kdf->final(out);
+      }
+
+      Botan::XOF& XOF(StrongSpan<const KyberSeedRho> seed, std::tuple<uint8_t, uint8_t> matrix_position) const {
+         return m_symmetric_primitives->XOF(seed, matrix_position);
+      }
+
+      auto PRF(KyberSigmaOrEncryptionRandomness seed, const uint8_t nonce, const size_t outlen) const {
+         return std::visit(
+            [&](const auto s) { return KyberSamplingRandomness(m_symmetric_primitives->PRF(s, nonce, outlen)); }, seed);
+      }
+
+   protected:
       std::unique_ptr<HashFunction> G() const { return m_symmetric_primitives->G(); }
 
       std::unique_ptr<HashFunction> H() const { return m_symmetric_primitives->H(); }
 
       std::unique_ptr<HashFunction> KDF() const { return m_symmetric_primitives->KDF(); }
 
-      Botan::XOF& XOF(std::span<const uint8_t> seed, std::tuple<uint8_t, uint8_t> matrix_position) const {
-         return m_symmetric_primitives->XOF(seed, matrix_position);
-      }
+   private:
+      template <concepts::contiguous_strong_type T1,
+                concepts::contiguous_strong_type T2,
+                ranges::contiguous_range... InputTs>
+      auto G_split(InputTs&&... inputs) const -> std::pair<T1, T2> {
+         auto g = G();
+         (g->update(inputs), ...);
+         auto s = g->final();
 
-      secure_vector<uint8_t> PRF(std::span<const uint8_t> seed, const uint8_t nonce, const size_t outlen) const {
-         return m_symmetric_primitives->PRF(seed, nonce, outlen);
+         BufferSlicer bs(s);
+         std::pair<T1, T2> result;
+         result.first = bs.copy<T1>(kSeedLength);
+         result.second = bs.copy<T2>(kSeedLength);
+         BOTAN_ASSERT_NOMSG(bs.empty());
+         return result;
       }
 
    private:
@@ -302,18 +343,11 @@ class Polynomial {
          BOTAN_ASSERT_NOMSG(bs.full());
       }
 
-      template <concepts::resizable_byte_buffer T = std::vector<uint8_t>>
-      T to_bytes() {
-         T r(KyberConstants::kSerializedPolynomialByteLength);
-         to_bytes(r);
-         return r;
-      }
-
       /**
        * Given an array of uniformly random bytes, compute polynomial with coefficients
        * distributed according to a centered binomial distribution with parameter eta=2
        */
-      static Polynomial cbd2(std::span<const uint8_t> buf) {
+      static Polynomial cbd2(StrongSpan<const KyberSamplingRandomness> buf) {
          Polynomial r;
 
          BOTAN_ASSERT(buf.size() == (2 * r.size() / 4), "wrong input buffer size for cbd2");
@@ -341,7 +375,7 @@ class Polynomial {
        *
        * This function is only needed for Kyber-512
        */
-      static Polynomial cbd3(std::span<const uint8_t> buf) {
+      static Polynomial cbd3(StrongSpan<const KyberSamplingRandomness> buf) {
          Polynomial r;
 
          BOTAN_ASSERT(buf.size() == (3 * r.size() / 4), "wrong input buffer size for cbd3");
@@ -371,7 +405,9 @@ class Polynomial {
        * Sample a polynomial deterministically from a seed and a nonce, with output
        * polynomial close to centered binomial distribution with parameter eta=2.
        */
-      static Polynomial getnoise_eta2(std::span<const uint8_t> seed, uint8_t nonce, const KyberConstants& mode) {
+      static Polynomial getnoise_eta2(StrongSpan<const KyberEncryptionRandomness> seed,
+                                      uint8_t nonce,
+                                      const KyberConstants& mode) {
          const auto eta2 = mode.eta2();
          BOTAN_ASSERT(eta2 == 2, "Invalid eta2 value");
 
@@ -383,13 +419,19 @@ class Polynomial {
        * Sample a polynomial deterministically from a seed and a nonce, with output
        * polynomial close to centered binomial distribution with parameter mode.eta1()
        */
-      static Polynomial getnoise_eta1(std::span<const uint8_t> seed, uint8_t nonce, const KyberConstants& mode) {
-         const auto eta1 = mode.eta1();
-         BOTAN_ASSERT(eta1 == 2 || eta1 == 3, "Invalid eta1 value");
+      static Polynomial getnoise_eta1(KyberSigmaOrEncryptionRandomness seed,
+                                      uint8_t nonce,
+                                      const KyberConstants& mode) {
+         return std::visit(
+            [&](const auto s) {
+               const auto eta1 = mode.eta1();
+               BOTAN_ASSERT(eta1 == 2 || eta1 == 3, "Invalid eta1 value");
 
-         const auto outlen = eta1 * KyberConstants::N / 4;
-         return (eta1 == 2) ? Polynomial::cbd2(mode.PRF(seed, nonce, outlen))
-                            : Polynomial::cbd3(mode.PRF(seed, nonce, outlen));
+               const auto outlen = eta1 * KyberConstants::N / 4;
+               return (eta1 == 2) ? Polynomial::cbd2(mode.PRF(s, nonce, outlen))
+                                  : Polynomial::cbd3(mode.PRF(s, nonce, outlen));
+            },
+            seed);
       }
 
       static Polynomial from_bytes(std::span<const uint8_t> a) {
@@ -401,7 +443,7 @@ class Polynomial {
          return r;
       }
 
-      static Polynomial from_message(std::span<const uint8_t> msg) {
+      static Polynomial from_message(StrongSpan<const KyberMessage> msg) {
          BOTAN_ASSERT(msg.size() == KyberConstants::N / 8, "message length must be Kyber_N/8 bytes");
 
          Polynomial r;
@@ -414,9 +456,8 @@ class Polynomial {
          return r;
       }
 
-      template <typename T = secure_vector<uint8_t>>
-      T to_message() {
-         T result(size() / 8);
+      KyberMessage to_message() {
+         KyberMessage result(size() / 8);
 
          this->csubq();
 
@@ -657,16 +698,24 @@ class PolynomialVector {
          return r;
       }
 
-      static PolynomialVector getnoise_eta2(std::span<const uint8_t> seed, uint8_t nonce, const KyberConstants& mode) {
+      static PolynomialVector getnoise_eta2(StrongSpan<const KyberEncryptionRandomness> seed,
+                                            uint8_t nonce,
+                                            const KyberConstants& mode) {
          PolynomialVector r(mode.k());
          r.on_all([&](auto& p) { p = Polynomial::getnoise_eta2(seed, nonce++, mode); });
          return r;
       }
 
-      static PolynomialVector getnoise_eta1(std::span<const uint8_t> seed, uint8_t nonce, const KyberConstants& mode) {
-         PolynomialVector r(mode.k());
-         r.on_all([&](auto& p) { p = Polynomial::getnoise_eta1(seed, nonce++, mode); });
-         return r;
+      static PolynomialVector getnoise_eta1(KyberSigmaOrEncryptionRandomness seed,
+                                            uint8_t nonce,
+                                            const KyberConstants& mode) {
+         return std::visit(
+            [&](const auto s) {
+               PolynomialVector r(mode.k());
+               r.on_all([&](auto& p) { p = Polynomial::getnoise_eta1(s, nonce++, mode); });
+               return r;
+            },
+            seed);
       }
 
       template <concepts::resizable_byte_buffer T = std::vector<uint8_t>>
@@ -724,7 +773,7 @@ class PolynomialMatrix {
    public:
       PolynomialMatrix() = delete;
 
-      static PolynomialMatrix generate(std::span<const uint8_t> seed,
+      static PolynomialMatrix generate(StrongSpan<const KyberSeedRho> seed,
                                        const bool transposed,
                                        const KyberConstants& mode) {
          BOTAN_ASSERT(seed.size() == KyberConstants::kSymBytes, "unexpected seed size");
@@ -768,7 +817,7 @@ class Ciphertext {
       Ciphertext(PolynomialVector b, const Polynomial& v, KyberConstants mode) :
             m_mode(std::move(mode)), m_b(std::move(b)), m_v(v) {}
 
-      static Ciphertext from_bytes(std::span<const uint8_t> buffer, const KyberConstants& mode) {
+      static Ciphertext from_bytes(StrongSpan<const KyberCompressedCiphertext> buffer, const KyberConstants& mode) {
          const size_t pvb = polynomial_vector_compressed_bytes(mode);
          const size_t pcb = polynomial_compressed_bytes(mode);
 
@@ -791,14 +840,13 @@ class Ciphertext {
          BOTAN_ASSERT_NOMSG(bs.full());
       }
 
-      template <concepts::resizable_byte_buffer T = std::vector<uint8_t>>
-      T to_bytes() {
-         T r(polynomial_vector_compressed_bytes(m_mode) + polynomial_compressed_bytes(m_mode));
+      KyberCompressedCiphertext to_bytes() {
+         KyberCompressedCiphertext r(polynomial_vector_compressed_bytes(m_mode) + polynomial_compressed_bytes(m_mode));
          to_bytes(r);
          return r;
       }
 
-      secure_vector<uint8_t> indcpa_decrypt(const PolynomialVector& polynomials) {
+      KyberMessage indcpa_decrypt(const PolynomialVector& polynomials) {
          m_b.ntt();
          auto mp = PolynomialVector::pointwise_acc_montgomery(polynomials, m_b);
          mp.invntt_tomont();
@@ -996,46 +1044,44 @@ class Ciphertext {
 
 class Kyber_PublicKeyInternal {
    public:
-      Kyber_PublicKeyInternal(KyberConstants mode, PolynomialVector polynomials, std::vector<uint8_t> seed) :
+      Kyber_PublicKeyInternal(KyberConstants mode, PolynomialVector polynomials, KyberSeedRho seed) :
             m_mode(std::move(mode)),
             m_polynomials(std::move(polynomials)),
             m_seed(std::move(seed)),
-            m_public_key_bits_raw(concat(m_polynomials.to_bytes<std::vector<uint8_t>>(), m_seed)),
-            m_H_public_key_bits_raw(m_mode.H()->process<std::vector<uint8_t>>(m_public_key_bits_raw)) {}
+            m_public_key_bits_raw(concat(m_polynomials.to_bytes(), m_seed)),
+            m_H_public_key_bits_raw(m_mode.H(m_public_key_bits_raw)) {}
 
-      Kyber_PublicKeyInternal(const KyberConstants& mode,
-                              std::span<const uint8_t> polynomials,
-                              std::vector<uint8_t> seed) :
+      Kyber_PublicKeyInternal(const KyberConstants& mode, std::span<const uint8_t> polynomials, KyberSeedRho seed) :
             Kyber_PublicKeyInternal(mode, PolynomialVector::from_bytes(polynomials, mode), std::move(seed)) {}
 
       const PolynomialVector& polynomials() const { return m_polynomials; }
 
-      const std::vector<uint8_t>& seed() const { return m_seed; }
+      const KyberSeedRho& seed() const { return m_seed; }
 
       const KyberConstants& mode() const { return m_mode; }
 
-      const std::vector<uint8_t>& public_key_bits_raw() const { return m_public_key_bits_raw; }
+      const KyberSerializedPublicKey& public_key_bits_raw() const { return m_public_key_bits_raw; }
 
-      const std::vector<uint8_t>& H_public_key_bits_raw() const { return m_H_public_key_bits_raw; }
+      const KyberHashedPublicKey& H_public_key_bits_raw() const { return m_H_public_key_bits_raw; }
 
       Kyber_PublicKeyInternal() = delete;
 
    private:
       const KyberConstants m_mode;
       PolynomialVector m_polynomials;
-      const std::vector<uint8_t> m_seed;
-      const std::vector<uint8_t> m_public_key_bits_raw;
-      const std::vector<uint8_t> m_H_public_key_bits_raw;
+      const KyberSeedRho m_seed;
+      const KyberSerializedPublicKey m_public_key_bits_raw;
+      const KyberHashedPublicKey m_H_public_key_bits_raw;
 };
 
 class Kyber_PrivateKeyInternal {
    public:
-      Kyber_PrivateKeyInternal(KyberConstants mode, PolynomialVector polynomials, secure_vector<uint8_t> z) :
+      Kyber_PrivateKeyInternal(KyberConstants mode, PolynomialVector polynomials, KyberImplicitRejectionValue z) :
             m_mode(std::move(mode)), m_polynomials(std::move(polynomials)), m_z(std::move(z)) {}
 
       PolynomialVector& polynomials() { return m_polynomials; }
 
-      const secure_vector<uint8_t>& z() const { return m_z; }
+      const KyberImplicitRejectionValue& z() const { return m_z; }
 
       const KyberConstants& mode() const { return m_mode; }
 
@@ -1044,7 +1090,7 @@ class Kyber_PrivateKeyInternal {
    private:
       KyberConstants m_mode;
       PolynomialVector m_polynomials;
-      secure_vector<uint8_t> m_z;
+      KyberImplicitRejectionValue m_z;
 };
 
 class Kyber_KEM_Cryptor {
@@ -1054,10 +1100,10 @@ class Kyber_KEM_Cryptor {
             m_mode(m_public_key->mode()),
             m_at(PolynomialMatrix::generate(m_public_key->seed(), true, m_mode)) {}
 
-      Ciphertext indcpa_enc(std::span<const uint8_t> m, std::span<const uint8_t> coins) {
-         auto sp = PolynomialVector::getnoise_eta1(coins, 0, m_mode);
-         auto ep = PolynomialVector::getnoise_eta2(coins, m_mode.k(), m_mode);
-         auto epp = Polynomial::getnoise_eta2(coins, 2 * m_mode.k(), m_mode);
+      Ciphertext indcpa_enc(StrongSpan<const KyberMessage> m, StrongSpan<const KyberEncryptionRandomness> r) {
+         auto sp = PolynomialVector::getnoise_eta1(r, 0, m_mode);
+         auto ep = PolynomialVector::getnoise_eta2(r, m_mode.k(), m_mode);
+         auto epp = Polynomial::getnoise_eta2(r, 2 * m_mode.k(), m_mode);
 
          auto k = Polynomial::from_message(m);
 
@@ -1115,29 +1161,25 @@ class Kyber_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF,
       void raw_kem_encrypt(std::span<uint8_t> out_encapsulated_key,
                            std::span<uint8_t> out_shared_key,
                            RandomNumberGenerator& rng) override {
-         // naming from kyber spec
-         auto H = mode().H();
-         auto G = mode().G();
-         auto KDF = mode().KDF();
+         // TODO: Remove hash application when implementing ML-KEM. We will also
+         //       be able to remove the H() function overload and the associated
+         //       strong type.
+         const auto mr = rng.random_vec<KyberMessage>(KyberConstants::kSymBytes);
+         const auto m = mode().H(mr);
+         const auto& pubkey_hash = m_key.m_public->H_public_key_bits_raw();
+         const auto [K, r] = mode().G(m, pubkey_hash);
 
-         H->update(rng.random_vec(KyberConstants::kSymBytes));
-         const auto shared_secret = H->final();
+         indcpa_enc(m, r).to_bytes(out_encapsulated_key);
 
-         // Multitarget countermeasure for coins + contributory KEM
-         G->update(shared_secret);
-         G->update(m_key.H_public_key_bits_raw());
-         const auto g_out = G->final();
+         // TODO: This hash is not part of ML-KEM. We will be able to remove
+         //       this and the associated strong type as well as the H()
+         //       function overload.
+         auto c = StrongSpan<const KyberCompressedCiphertext>(out_encapsulated_key);
+         const auto ciphertext_hash = mode().H(c);
 
-         BOTAN_ASSERT_EQUAL(g_out.size(), 64, "Expected output length of Kyber G");
-
-         const auto lower_g_out = std::span(g_out).subspan(0, 32);
-         const auto upper_g_out = std::span(g_out).subspan(32, 32);
-
-         indcpa_enc(shared_secret, upper_g_out).to_bytes(out_encapsulated_key);
-
-         KDF->update(lower_g_out.data(), lower_g_out.size());
-         KDF->update(H->process(out_encapsulated_key));
-         KDF->final(out_shared_key);
+         // TODO: ML-KEM does not perform a KDF here. The entire KDF() function
+         //       can be removed.
+         mode().KDF(out_shared_key, K, ciphertext_hash);
       }
 
    private:
@@ -1157,44 +1199,30 @@ class Kyber_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF,
       }
 
       void raw_kem_decrypt(std::span<uint8_t> out_shared_key, std::span<const uint8_t> encapsulated_key) override {
-         // naming from kyber spec
-         auto H = mode().H();
-         auto G = mode().G();
-         auto KDF = mode().KDF();
+         auto c = StrongSpan<const KyberCompressedCiphertext>(encapsulated_key);
+         auto ct = Ciphertext::from_bytes(c, mode());
+         const auto m = ct.indcpa_decrypt(m_key.m_private->polynomials());
 
-         auto ct = Ciphertext::from_bytes(encapsulated_key, mode());
-         const auto shared_secret = ct.indcpa_decrypt(m_key.m_private->polynomials());
+         const auto& pubkey_hash = m_key.m_public->H_public_key_bits_raw();
+         const auto [K, r] = mode().G(m, pubkey_hash);
 
-         // Multitarget countermeasure for coins + contributory KEM
-         G->update(shared_secret);
-         G->update(m_key.H_public_key_bits_raw());
+         // TODO: this is not part of ML-KEM. We will be able to remove this
+         //       and the associated strong type as well as the H() function
+         //       overload.
+         const auto ciphertext_hash = mode().H(c);
 
-         const auto g_out = G->final();
-
-         BOTAN_ASSERT_EQUAL(g_out.size(), 64, "Expected output length of Kyber G");
-
-         const auto lower_g_out = std::span(g_out).subspan(0, 32);
-         const auto upper_g_out = std::span(g_out).subspan(32, 32);
-
-         H->update(encapsulated_key);
-
-         const auto cmp = indcpa_enc(shared_secret, upper_g_out).to_bytes();
+         const auto cmp = indcpa_enc(m, r).to_bytes();
          BOTAN_ASSERT(encapsulated_key.size() == cmp.size(), "output of indcpa_enc has unexpected length");
 
          // Overwrite pre-k with z on re-encryption failure (constant time)
-         secure_vector<uint8_t> lower_g_out_final(lower_g_out.size());
-         BOTAN_ASSERT_NOMSG(lower_g_out.size() == m_key.m_private->z().size());
-
+         KyberSharedSecret K_final(KyberConstants::kSymBytes);
          const auto reencrypt_success = CT::is_equal(encapsulated_key.data(), cmp.data(), encapsulated_key.size());
-         CT::conditional_copy_mem(reencrypt_success,
-                                  lower_g_out_final.data(),
-                                  lower_g_out.data(),
-                                  m_key.m_private->z().data(),
-                                  lower_g_out_final.size());
+         CT::conditional_copy_mem(
+            reencrypt_success, K_final.data(), K.data(), m_key.m_private->z().data(), K_final.size());
 
-         KDF->update(lower_g_out_final);
-         KDF->update(H->final());
-         KDF->final(out_shared_key);
+         // TODO: ML-KEM does not perform a KDF here. The entire KDF() function
+         //       can be removed.
+         mode().KDF(out_shared_key, K_final, ciphertext_hash);
       }
 
    private:
@@ -1228,7 +1256,7 @@ std::shared_ptr<Kyber_PublicKeyInternal> Kyber_PublicKey::initialize_from_encodi
    BufferSlicer s(pub_key);
 
    auto poly_vec = s.take(mode.polynomial_vector_byte_length());
-   auto seed = s.copy_as_vector(KyberConstants::kSeedLength);
+   auto seed = s.copy<KyberSeedRho>(KyberConstants::kSeedLength);
    BOTAN_ASSERT_NOMSG(s.empty());
 
    return std::make_shared<Kyber_PublicKeyInternal>(std::move(mode), poly_vec, std::move(seed));
@@ -1248,11 +1276,7 @@ std::vector<uint8_t> Kyber_PublicKey::public_key_bits() const {
 }
 
 const std::vector<uint8_t>& Kyber_PublicKey::public_key_bits_raw() const {
-   return m_public->public_key_bits_raw();
-}
-
-const std::vector<uint8_t>& Kyber_PublicKey::H_public_key_bits_raw() const {
-   return m_public->H_public_key_bits_raw();
+   return m_public->public_key_bits_raw().get();
 }
 
 size_t Kyber_PublicKey::key_length() const {
@@ -1270,31 +1294,23 @@ std::unique_ptr<Private_Key> Kyber_PublicKey::generate_another(RandomNumberGener
 Kyber_PrivateKey::Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode m) {
    KyberConstants mode(m);
 
-   auto G = mode.G();
-   auto seed = G->process(rng.random_vec(KyberConstants::kSymBytes));
+   const auto d = rng.random_vec<KyberSeedRandomness>(KyberConstants::kSymBytes);
+   auto [rho, sigma] = mode.G(d);
 
-   const auto middle = G->output_length() / 2;
-
-   BufferSlicer s(seed);
-   auto seed1 = s.copy_as_vector(middle);
-   auto seed2 = s.take(middle);
-   BOTAN_ASSERT_NOMSG(s.empty());
-
-   auto a = PolynomialMatrix::generate(seed1, false, mode);
-   auto skpv = PolynomialVector::getnoise_eta1(seed2, 0, mode);
-   auto e = PolynomialVector::getnoise_eta1(seed2, mode.k(), mode);
+   auto a = PolynomialMatrix::generate(rho, false, mode);
+   auto skpv = PolynomialVector::getnoise_eta1(sigma, 0, mode);
+   auto e = PolynomialVector::getnoise_eta1(sigma, mode.k(), mode);
 
    skpv.ntt();
    e.ntt();
 
-   // matrix-vector multiplication
    auto pkpv = a.pointwise_acc_montgomery(skpv, true);
    pkpv += e;
    pkpv.reduce();
 
-   m_public = std::make_shared<Kyber_PublicKeyInternal>(mode, std::move(pkpv), std::move(seed1));
+   m_public = std::make_shared<Kyber_PublicKeyInternal>(mode, std::move(pkpv), std::move(rho));
    m_private = std::make_shared<Kyber_PrivateKeyInternal>(
-      std::move(mode), std::move(skpv), rng.random_vec(KyberConstants::kZLength));
+      std::move(mode), std::move(skpv), rng.random_vec<KyberImplicitRejectionValue>(KyberConstants::kZLength));
 }
 
 Kyber_PrivateKey::Kyber_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
@@ -1312,7 +1328,7 @@ Kyber_PrivateKey::Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode m) {
    auto skpv = PolynomialVector::from_bytes(s.take(mode.polynomial_vector_byte_length()), mode);
    auto pub_key = s.take(mode.public_key_byte_length());
    s.skip(KyberConstants::kPublicKeyHashLength);
-   auto z = s.copy_as_secure_vector(KyberConstants::kZLength);
+   auto z = s.copy<KyberImplicitRejectionValue>(KyberConstants::kZLength);
 
    BOTAN_ASSERT_NOMSG(s.empty());
 
@@ -1333,7 +1349,7 @@ secure_vector<uint8_t> Kyber_PrivateKey::raw_private_key_bits() const {
 secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const {
    return concat(m_private->polynomials().to_bytes<secure_vector<uint8_t>>(),
                  public_key_bits_raw(),
-                 H_public_key_bits_raw(),
+                 m_public->H_public_key_bits_raw(),
                  m_private->z());
 }
 
