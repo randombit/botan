@@ -270,6 +270,8 @@ class KyberConstants {
 
 class Polynomial {
    public:
+      Polynomial() : m_coeffs({0}) {}
+
       /**
        * Applies conditional subtraction of q to each coefficient of the polynomial.
        */
@@ -611,14 +613,35 @@ class PolynomialVector {
 
       explicit PolynomialVector(const size_t k) : m_vec(k) {}
 
+   private:
+      template <typename FnT, typename... PolynomialVectorTs>
+         requires(sizeof...(PolynomialVectorTs) > 0) &&
+                 all_same_v<PolynomialVector, std::remove_cvref_t<PolynomialVectorTs>...>
+      static void for_all(FnT&& fn, PolynomialVectorTs&&... vecs) {
+         const size_t length = std::get<0>(std::forward_as_tuple(vecs...)).m_vec.size();
+         const bool equal_sizes = ((length == vecs.m_vec.size()) && ...);
+         BOTAN_ASSERT(equal_sizes, "all passed in PolynomialVectors must have the same size");
+
+         for(size_t i = 0; i < length; ++i) {
+            fn(vecs.m_vec[i]...);
+         }
+      }
+
+      template <typename FnT, typename... OtherPolynomialVectorTs>
+         requires all_same_v<PolynomialVector, std::remove_cvref_t<OtherPolynomialVectorTs>...>
+      void on_all(FnT&& fn, OtherPolynomialVectorTs&&... other_vecs) {
+         for_all(fn, *this, std::forward<OtherPolynomialVectorTs>(other_vecs)...);
+      }
+
+   public:
       static PolynomialVector from_bytes(std::span<const uint8_t> a, const KyberConstants& mode) {
          BOTAN_ASSERT(a.size() == mode.polynomial_vector_byte_length(), "wrong byte length for frombytes");
 
          PolynomialVector r(mode.k());
          BufferSlicer bs(a);
-         for(size_t i = 0; i < mode.k(); ++i) {
-            r.m_vec[i] = Polynomial::from_bytes(bs.take(KyberConstants::kSerializedPolynomialByteLength));
-         }
+         r.on_all([&](Polynomial& p) {
+            p = Polynomial::from_bytes(bs.take(KyberConstants::kSerializedPolynomialByteLength));
+         });
          BOTAN_ASSERT_NOMSG(bs.empty());
 
          return r;
@@ -632,32 +655,21 @@ class PolynomialVector {
                       "pointwise_acc_montgomery works on equally sized "
                       "PolynomialVectors only");
 
-         auto r = Polynomial::basemul_montgomery(a.m_vec[0], b.m_vec[0]);
-         for(size_t i = 1; i < a.m_vec.size(); ++i) {
-            r += Polynomial::basemul_montgomery(a.m_vec[i], b.m_vec[i]);
-         }
-
+         Polynomial r;
+         for_all([&](const auto& pa, const auto& pb) { r += Polynomial::basemul_montgomery(pa, pb); }, a, b);
          r.reduce();
          return r;
       }
 
       static PolynomialVector getnoise_eta2(std::span<const uint8_t> seed, uint8_t nonce, const KyberConstants& mode) {
          PolynomialVector r(mode.k());
-
-         for(auto& p : r.m_vec) {
-            p = Polynomial::getnoise_eta2(seed, nonce++, mode);
-         }
-
+         r.on_all([&](auto& p) { p = Polynomial::getnoise_eta2(seed, nonce++, mode); });
          return r;
       }
 
       static PolynomialVector getnoise_eta1(std::span<const uint8_t> seed, uint8_t nonce, const KyberConstants& mode) {
          PolynomialVector r(mode.k());
-
-         for(auto& p : r.m_vec) {
-            p = Polynomial::getnoise_eta1(seed, nonce++, mode);
-         }
-
+         r.on_all([&](auto& p) { p = Polynomial::getnoise_eta1(seed, nonce++, mode); });
          return r;
       }
 
@@ -666,9 +678,7 @@ class PolynomialVector {
          T r(m_vec.size() * KyberConstants::kSerializedPolynomialByteLength);
 
          BufferStuffer bs(r);
-         for(auto& v : m_vec) {
-            v.to_bytes(bs.next(KyberConstants::kSerializedPolynomialByteLength));
-         }
+         on_all([&](auto& p) { p.to_bytes(bs.next(KyberConstants::kSerializedPolynomialByteLength)); });
          BOTAN_ASSERT_NOMSG(bs.full());
 
          return r;
@@ -679,17 +689,11 @@ class PolynomialVector {
        * of the vector of polynomials.
        */
       void csubq() {
-         for(auto& p : m_vec) {
-            p.csubq();
-         }
+         on_all([](auto& p) { p.csubq(); });
       }
 
       PolynomialVector& operator+=(const PolynomialVector& other) {
-         BOTAN_ASSERT(m_vec.size() == other.m_vec.size(), "cannot add polynomial vectors of differing lengths");
-
-         for(size_t i = 0; i < m_vec.size(); ++i) {
-            m_vec[i] += other.m_vec[i];
-         }
+         on_all([&](auto& p, const auto& op) { p += op; }, other);
          return *this;
       }
 
@@ -699,27 +703,21 @@ class PolynomialVector {
        * Applies Barrett reduction to each coefficient of each element of a vector of polynomials.
        */
       void reduce() {
-         for(auto& v : m_vec) {
-            v.reduce();
-         }
+         on_all([](auto& p) { p.reduce(); });
       }
 
       /**
        * Apply inverse NTT to all elements of a vector of polynomials and multiply by Montgomery factor 2^16.
        */
       void invntt_tomont() {
-         for(auto& v : m_vec) {
-            v.invntt_tomont();
-         }
+         on_all([](auto& p) { p.invntt_tomont(); });
       }
 
       /**
        * Apply forward NTT to all elements of a vector of polynomials.
        */
       void ntt() {
-         for(auto& v : m_vec) {
-            v.ntt();
-         }
+         on_all([](auto& p) { p.ntt(); });
       }
 
    private:
