@@ -17,43 +17,44 @@
 
 namespace Botan {
 
+/**
+ * Crystals Kyber (Version 3.01), Algorithm 8 (Kyber.CCAKEM.Enc())
+ */
 void Kyber_KEM_Encryptor::encapsulate(StrongSpan<KyberCompressedCiphertext> out_encapsulated_key,
                                       StrongSpan<KyberSharedSecret> out_shared_key,
                                       RandomNumberGenerator& rng) {
    const auto& sym = m_public_key->mode().symmetric_primitives();
 
    const auto m = sym.H(rng.random_vec<KyberMessage>(KyberConstants::kSymBytes));
-   const auto [K, r] = sym.G(m, m_public_key->H_public_key_bits_raw());
+   const auto [K_bar, r] = sym.G(m, m_public_key->H_public_key_bits_raw());
+   auto c = m_public_key->indcpa_encrypt(m, r);
 
-   auto ciphertext = m_public_key->indcpa_encrypt(m, r);
-   ciphertext.to_bytes(out_encapsulated_key);
-
-   auto c = StrongSpan<const KyberCompressedCiphertext>(out_encapsulated_key);
-   const auto ciphertext_hash = sym.H(c);
-
-   sym.KDF(out_shared_key, K, ciphertext_hash);
+   c.to_bytes(out_encapsulated_key);
+   sym.KDF(out_shared_key, K_bar, sym.H(out_encapsulated_key));
 }
 
+/**
+ * Crystals Kyber (Version 3.01), Algorithm 9 (Kyber.CCAKEM.Dec())
+ */
 void Kyber_KEM_Decryptor::decapsulate(StrongSpan<KyberSharedSecret> out_shared_key,
                                       StrongSpan<const KyberCompressedCiphertext> encapsulated_key) {
    const auto& sym = m_public_key->mode().symmetric_primitives();
 
-   const auto m = m_private_key->indcpa_decrypt(Ciphertext::from_bytes(encapsulated_key, m_private_key->mode()));
+   const auto& h = m_public_key->H_public_key_bits_raw();
+   const auto& z = m_private_key->z();
 
-   const auto& pubkey_hash = m_public_key->H_public_key_bits_raw();
-   const auto [K, r] = sym.G(m, pubkey_hash);
+   const auto m_prime = m_private_key->indcpa_decrypt(Ciphertext::from_bytes(encapsulated_key, m_private_key->mode()));
+   const auto [K_bar_prime, r_prime] = sym.G(m_prime, h);
 
-   const auto ciphertext_hash = sym.H(encapsulated_key);
+   const auto c_prime = m_public_key->indcpa_encrypt(m_prime, r_prime).to_bytes();
 
-   const auto cmp = m_public_key->indcpa_encrypt(m, r).to_bytes();
-   BOTAN_ASSERT(encapsulated_key.size() == cmp.size(), "output of indcpa_enc has unexpected length");
+   KyberSharedSecret K(KyberConstants::kSymBytes);
+   BOTAN_ASSERT_NOMSG(encapsulated_key.size() == c_prime.size());
+   BOTAN_ASSERT_NOMSG(K_bar_prime.size() == K.size());
+   const auto reencrypt_success = CT::is_equal(encapsulated_key.data(), c_prime.data(), encapsulated_key.size());
+   CT::conditional_copy_mem(reencrypt_success, K.data(), K_bar_prime.data(), z.data(), K_bar_prime.size());
 
-   // Overwrite pre-k with z on re-encryption failure (constant time)
-   KyberSharedSecret K_final(KyberConstants::kSymBytes);
-   const auto reencrypt_success = CT::is_equal(encapsulated_key.data(), cmp.data(), encapsulated_key.size());
-   CT::conditional_copy_mem(reencrypt_success, K_final.data(), K.data(), m_private_key->z().data(), K_final.size());
-
-   sym.KDF(out_shared_key, K_final, ciphertext_hash);
+   sym.KDF(out_shared_key, K, sym.H(encapsulated_key));
 }
 
 }  // namespace Botan

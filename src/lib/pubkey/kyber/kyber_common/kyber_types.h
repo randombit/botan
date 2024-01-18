@@ -54,6 +54,7 @@ using KyberHashedPublicKey = Strong<std::vector<uint8_t>, struct KyberHashedPubl
 using KyberCompressedCiphertext = Strong<std::vector<uint8_t>, struct KyberCompressedCiphertext_>;
 
 // Hash of the compressed and serialized ciphertext value
+// TODO: Remove this once Kyber-R3 is removed
 using KyberHashedCiphertext = Strong<std::vector<uint8_t>, struct KyberHashedCiphertext_>;
 
 // Variant value of either a KyberSeedSigma or a KyberEncryptionRandomness

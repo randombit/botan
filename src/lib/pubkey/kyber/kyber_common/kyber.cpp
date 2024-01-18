@@ -193,26 +193,33 @@ std::unique_ptr<Private_Key> Kyber_PublicKey::generate_another(RandomNumberGener
    return std::make_unique<Kyber_PrivateKey>(rng, mode());
 }
 
+/**
+ * NIST FIPS 203 IPD, Algorithms 12 (K-PKE.KeyGen) and 15 (ML-KEM.KeyGen)
+ */
 Kyber_PrivateKey::Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode m) {
    KyberConstants mode(m);
+
+   // Algorithm 12 (K-PKE.KeyGen) ----------------
 
    const auto d = rng.random_vec<KyberSeedRandomness>(KyberConstants::kSymBytes);
    auto [rho, sigma] = mode.symmetric_primitives().G(d);
 
-   auto a = PolynomialMatrix::generate(rho, false, mode);
-   auto skpv = PolynomialVector::getnoise_eta1(sigma, 0, mode);
-   auto e = PolynomialVector::getnoise_eta1(sigma, mode.k(), mode);
+   auto a = PolynomialMatrix::generate(rho, false /* not transposed */, mode);
+   auto s = PolynomialVector::getnoise_eta1(sigma, 0 /* N */, mode);
+   auto e = PolynomialVector::getnoise_eta1(sigma, mode.k() /* N */, mode);
 
-   skpv.ntt();
+   s.ntt();
    e.ntt();
 
-   auto pkpv = a.pointwise_acc_montgomery(skpv, true);
-   pkpv += e;
-   pkpv.reduce();
+   auto t = a.pointwise_acc_montgomery(s, true);
+   t += e;
+   t.reduce();
 
-   m_public = std::make_shared<Kyber_PublicKeyInternal>(mode, std::move(pkpv), std::move(rho));
+   // End Algorithm 12 ---------------------------
+
+   m_public = std::make_shared<Kyber_PublicKeyInternal>(mode, std::move(t), std::move(rho));
    m_private = std::make_shared<Kyber_PrivateKeyInternal>(
-      std::move(mode), std::move(skpv), rng.random_vec<KyberImplicitRejectionValue>(KyberConstants::kZLength));
+      std::move(mode), std::move(s), rng.random_vec<KyberImplicitRejectionValue>(KyberConstants::kZLength));
 }
 
 Kyber_PrivateKey::Kyber_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
@@ -249,7 +256,7 @@ secure_vector<uint8_t> Kyber_PrivateKey::raw_private_key_bits() const {
 }
 
 secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const {
-   return concat(m_private->polynomials().to_bytes<secure_vector<uint8_t>>(),
+   return concat(m_private->s().to_bytes<secure_vector<uint8_t>>(),
                  m_public->public_key_bits_raw(),
                  m_public->H_public_key_bits_raw(),
                  m_private->z());

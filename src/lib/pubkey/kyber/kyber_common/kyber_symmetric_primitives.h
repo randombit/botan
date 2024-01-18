@@ -36,6 +36,7 @@ class Kyber_Symmetric_Primitives {
       // TODO: remove this once Kyber-R3 is removed
       KyberMessage H(StrongSpan<const KyberMessage> m) const { return get_H().process<KyberMessage>(m); }
 
+      // TODO: remove this once Kyber-R3 is removed
       KyberHashedCiphertext H(StrongSpan<const KyberCompressedCiphertext> r) const {
          return get_H().process<KyberHashedCiphertext>(r);
       }
@@ -53,6 +54,7 @@ class Kyber_Symmetric_Primitives {
          return G_split<KyberSharedSecret, KyberEncryptionRandomness>(msg, pubkey_hash);
       }
 
+      // TODO: remove this once Kyber-R3 is removed
       void KDF(StrongSpan<KyberSharedSecret> out,
                StrongSpan<const KyberSharedSecret> shared_secret,
                StrongSpan<const KyberHashedCiphertext> hashed_ciphertext) const {

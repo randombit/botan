@@ -27,9 +27,9 @@ class Kyber_PublicKeyInternal {
 
       Ciphertext indcpa_encrypt(StrongSpan<const KyberMessage> m, StrongSpan<const KyberEncryptionRandomness> r) const;
 
-      const PolynomialVector& polynomials() const { return m_polynomials; }
+      const PolynomialVector& t() const { return m_t; }
 
-      const KyberSeedRho& seed() const { return m_seed; }
+      const KyberSeedRho& rho() const { return m_rho; }
 
       const KyberConstants& mode() const { return m_mode; }
 
@@ -41,22 +41,22 @@ class Kyber_PublicKeyInternal {
 
    private:
       const KyberConstants m_mode;
-      PolynomialVector m_polynomials;
-      const KyberSeedRho m_seed;
+      PolynomialVector m_t;
+      const KyberSeedRho m_rho;
       const KyberSerializedPublicKey m_public_key_bits_raw;
       const KyberHashedPublicKey m_H_public_key_bits_raw;
 };
 
 class Kyber_PrivateKeyInternal {
    public:
-      Kyber_PrivateKeyInternal(KyberConstants mode, PolynomialVector polynomials, KyberImplicitRejectionValue z) :
-            m_mode(std::move(mode)), m_polynomials(std::move(polynomials)), m_z(std::move(z)) {}
+      Kyber_PrivateKeyInternal(KyberConstants mode, PolynomialVector s, KyberImplicitRejectionValue z) :
+            m_mode(std::move(mode)), m_s(std::move(s)), m_z(std::move(z)) {}
 
       KyberMessage indcpa_decrypt(Ciphertext ct) const;
 
-      PolynomialVector& polynomials() { return m_polynomials; }
+      PolynomialVector& s() { return m_s; }
 
-      const PolynomialVector& polynomials() const { return m_polynomials; }
+      const PolynomialVector& s() const { return m_s; }
 
       const KyberImplicitRejectionValue& z() const { return m_z; }
 
@@ -66,7 +66,7 @@ class Kyber_PrivateKeyInternal {
 
    private:
       KyberConstants m_mode;
-      PolynomialVector m_polynomials;
+      PolynomialVector m_s;
       KyberImplicitRejectionValue m_z;
 };
 
