@@ -1,18 +1,17 @@
 <defines>
-KYBER_90S -> 20220107
+KYBER -> 20220107
 </defines>
 
 <module_info>
-name -> "Kyber 90s"
+name -> "Kyber"
 </module_info>
 
 <requires>
-kyber_common
-aes_crystals_xof
-sha2_32
-sha2_64
+sha3
+shake
+shake_xof
 </requires>
 
 <header:internal>
-kyber_90s.h
+kyber_modern.h
 </header:internal>
