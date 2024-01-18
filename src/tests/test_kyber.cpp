@@ -20,7 +20,7 @@
 #include <iterator>
 #include <memory>
 
-#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S) || defined(BOTAN_HAS_ML_KEM_INITIAL_PUBLIC_DRAFT)
    #include "test_pubkey.h"
    #include <botan/hex.h>
    #include <botan/kyber.h>
@@ -34,7 +34,7 @@
 
 namespace Botan_Tests {
 
-#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S) || defined(BOTAN_HAS_ML_KEM_INITIAL_PUBLIC_DRAFT)
 
 class KYBER_Tests final : public Test {
    public:
@@ -108,6 +108,11 @@ class KYBER_Tests final : public Test {
          results.push_back(run_kyber_test("Kyber768 API", Botan::KyberMode::Kyber768_R3, 192, 768));
          results.push_back(run_kyber_test("Kyber1024 API", Botan::KyberMode::Kyber1024_R3, 256, 1024));
    #endif
+   #if defined(BOTAN_HAS_ML_KEM_INITIAL_PUBLIC_DRAFT)
+         results.push_back(run_kyber_test("ML-KEM-512-ipd API", Botan::KyberMode::ML_KEM_512_ipd, 128, 512));
+         results.push_back(run_kyber_test("ML-KEM-768-ipd API", Botan::KyberMode::ML_KEM_768_ipd, 192, 768));
+         results.push_back(run_kyber_test("ML-KEM-1024-ipd API", Botan::KyberMode::ML_KEM_1024_ipd, 256, 1024));
+   #endif
 
          return results;
       }
@@ -117,9 +122,10 @@ BOTAN_REGISTER_TEST("kyber", "kyber_pairwise", KYBER_Tests);
 
 namespace {
 
-class Kyber_KAT_Tests final : public PK_PQC_KEM_KAT_Test {
-   public:
-      Kyber_KAT_Tests() : PK_PQC_KEM_KAT_Test("Kyber", "pubkey/kyber_kat.vec") {}
+class Kyber_KAT_Tests : public PK_PQC_KEM_KAT_Test {
+   protected:
+      Kyber_KAT_Tests(const std::string& algo_name, const std::string& kat_file) :
+            PK_PQC_KEM_KAT_Test(algo_name, kat_file) {}
 
    private:
       Botan::KyberMode get_mode(const std::string& mode) const { return Botan::KyberMode(mode); }
@@ -132,19 +138,24 @@ class Kyber_KAT_Tests final : public PK_PQC_KEM_KAT_Test {
          if(var_type == VarType::SharedSecret) {
             return {value.begin(), value.end()};
          }
-         // We use different hash functions for Kyber 90s and Kyber "modern", as
-         // those are consistent with the requirements of the implementations.
-         std::string_view hash_name = get_mode(mode).is_modern() ? "SHAKE-256(128)" : "SHA-256";
+
+         // We use different hash functions for Kyber 90s, as those are
+         // consistent with the algorithm requirements of the implementations.
+         std::string_view hash_name = get_mode(mode).is_90s() ? "SHA-256" : "SHAKE-256(128)";
 
          auto hash = Botan::HashFunction::create_or_throw(hash_name);
          const auto digest = hash->process(value);
          return {digest.begin(), digest.begin() + 16};
       }
 
-      Fixed_Output_RNG rng_for_keygen(const std::string&, Botan::RandomNumberGenerator& rng) const final {
-         const auto seed = rng.random_vec(32);
-         const auto z = rng.random_vec(32);
-         return Fixed_Output_RNG(Botan::concat(seed, z));
+      Fixed_Output_RNG rng_for_keygen(const std::string& mode, Botan::RandomNumberGenerator& rng) const final {
+         if(get_mode(mode).is_kyber_round3()) {
+            const auto seed = rng.random_vec(32);
+            const auto z = rng.random_vec(32);
+            return Fixed_Output_RNG(Botan::concat(seed, z));
+         } else {
+            return Fixed_Output_RNG(rng.random_vec(64));
+         }
       }
 
       Fixed_Output_RNG rng_for_encapsulation(const std::string&, Botan::RandomNumberGenerator& rng) const final {
@@ -152,9 +163,20 @@ class Kyber_KAT_Tests final : public PK_PQC_KEM_KAT_Test {
       }
 };
 
+class KyberR3_KAT_Tests : public Kyber_KAT_Tests {
+   public:
+      KyberR3_KAT_Tests() : Kyber_KAT_Tests("Kyber", "pubkey/kyber_kat.vec") {}
+};
+
+class ML_KEM_IPD_KAT_Tests : public Kyber_KAT_Tests {
+   public:
+      ML_KEM_IPD_KAT_Tests() : Kyber_KAT_Tests("ML-KEM-ipd", "pubkey/ml_kem_ipd.vec") {}
+};
+
 }  // namespace
 
-BOTAN_REGISTER_TEST("kyber", "kyber_kat", Kyber_KAT_Tests);
+BOTAN_REGISTER_TEST("kyber", "kyber_kat", KyberR3_KAT_Tests);
+BOTAN_REGISTER_TEST("kyber", "ml_kem_ipd_kat", ML_KEM_IPD_KAT_Tests);
 
 class Kyber_Encoding_Test : public Text_Based_Test {
    public:
@@ -188,12 +210,12 @@ class Kyber_Encoding_Test : public Text_Based_Test {
       bool skip_this_test(const std::string& algo_name, const VarMap& /*vars*/) override {
          const auto mode = name_to_mode(algo_name);
    #if defined(BOTAN_HAS_KYBER)
-         if(!mode.is_90s()) {
+         if(mode.is_kyber_round3() && mode.is_modern()) {
             return false;
          }
    #endif
    #if defined(BOTAN_HAS_KYBER_90S)
-         if(mode.is_90s()) {
+         if(mode.is_kyber_round3() && mode.is_90s()) {
             return false;
          }
    #endif

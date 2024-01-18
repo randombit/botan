@@ -21,8 +21,10 @@
 
 #include <span>
 
-#if !defined(BOTAN_HAS_KYBER_90S) && !defined(BOTAN_HAS_KYBER)
-static_assert(false, "botan module 'kyber_common' is useful only when enabling modules 'kyber', 'kyber_90s' or both");
+#if !defined(BOTAN_HAS_KYBER_90S) && !defined(BOTAN_HAS_KYBER) && !defined(BOTAN_HAS_ML_KEM_INITIAL_PUBLIC_DRAFT)
+static_assert(
+   false,
+   "botan module 'kyber_common' is useful only when enabling at least one of those modules: 'kyber', 'kyber_90s', 'ml_kem_ipd'");
 #endif
 
 namespace Botan {
@@ -41,6 +43,13 @@ class BOTAN_PUBLIC_API(3, 0) KyberMode {
          Kyber768 BOTAN_DEPRECATED("Use Kyber768_R3") = Kyber768_R3,
          Kyber1024 BOTAN_DEPRECATED("Use Kyber1024_R3") = Kyber1024_R3,
 
+         // ML-KEM as proposed by NIST in the initial public draft of the standard
+         ML_KEM_512_ipd,
+         // ML-KEM as proposed by NIST in the initial public draft of the standard
+         ML_KEM_768_ipd,
+         // ML-KEM as proposed by NIST in the initial public draft of the standard
+         ML_KEM_1024_ipd,
+
          Kyber512_90s BOTAN_DEPRECATED("Kyber 90s mode is deprecated"),
          Kyber768_90s BOTAN_DEPRECATED("Kyber 90s mode is deprecated"),
          Kyber1024_90s BOTAN_DEPRECATED("Kyber 90s mode is deprecated"),
@@ -58,6 +67,8 @@ class BOTAN_PUBLIC_API(3, 0) KyberMode {
       BOTAN_DEPRECATED("Kyber 90s mode is deprecated") bool is_90s() const;
 
       BOTAN_DEPRECATED("Kyber 90s mode is deprecated") bool is_modern() const;
+
+      bool is_ml_kem_ipd() const;
 
       bool is_kyber_round3() const;
 

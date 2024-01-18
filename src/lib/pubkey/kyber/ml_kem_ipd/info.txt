@@ -1,0 +1,20 @@
+<defines>
+ML_KEM_INITIAL_PUBLIC_DRAFT -> 20240117
+</defines>
+
+<module_info>
+name -> "ML-KEM (IPD)"
+brief -> "Module Lattice KEM (Initial Public Draft)"
+lifecycle -> "Experimental"
+</module_info>
+
+<requires>
+kyber_common
+sha3
+shake
+shake_xof
+</requires>
+
+<header:internal>
+ml_kem_ipd.h
+</header:internal>
