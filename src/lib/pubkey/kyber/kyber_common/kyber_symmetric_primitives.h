@@ -54,6 +54,14 @@ class Kyber_Symmetric_Primitives {
          return G_split<KyberSharedSecret, KyberEncryptionRandomness>(msg, pubkey_hash);
       }
 
+      KyberSharedSecret J(StrongSpan<const KyberImplicitRejectionValue> rejection_value,
+                          StrongSpan<const KyberCompressedCiphertext> ciphertext) const {
+         auto& j = get_J();
+         j.update(rejection_value);
+         j.update(ciphertext);
+         return j.final<KyberSharedSecret>();
+      }
+
       // TODO: remove this once Kyber-R3 is removed
       void KDF(StrongSpan<KyberSharedSecret> out,
                StrongSpan<const KyberSharedSecret> shared_secret,
@@ -100,6 +108,7 @@ class Kyber_Symmetric_Primitives {
    protected:
       virtual HashFunction& get_G() const = 0;
       virtual HashFunction& get_H() const = 0;
+      virtual HashFunction& get_J() const = 0;
       virtual HashFunction& get_KDF() const = 0;
       virtual Botan::XOF& get_PRF(std::span<const uint8_t> seed, uint8_t nonce) const = 0;
       virtual std::unique_ptr<Botan::XOF> get_XOF(std::span<const uint8_t> seed,

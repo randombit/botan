@@ -116,7 +116,7 @@
    #include <botan/mceliece.h>
 #endif
 
-#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S) || defined(BOTAN_HAS_ML_KEM_INITIAL_PUBLIC_DRAFT)
    #include <botan/kyber.h>
 #endif
 
@@ -408,6 +408,7 @@ class Speed final : public Command {
             "Curve25519",
             "McEliece",
             "Kyber",
+            "ML-KEM-ipd",
             "SPHINCS+",
             "FrodoKEM"
          };
@@ -601,7 +602,27 @@ class Speed final : public Command {
 #endif
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
             else if(algo == "Kyber") {
-               bench_kyber(provider, msec);
+               bench_kyber(provider,
+                           msec,
+                           {
+                              Botan::KyberMode::Kyber512_R3,
+                              Botan::KyberMode::Kyber512_90s,
+                              Botan::KyberMode::Kyber768_R3,
+                              Botan::KyberMode::Kyber768_90s,
+                              Botan::KyberMode::Kyber1024_R3,
+                              Botan::KyberMode::Kyber1024_90s,
+                           });
+            }
+#endif
+#if defined(BOTAN_HAS_ML_KEM_INITIAL_PUBLIC_DRAFT)
+            else if(algo == "ML-KEM-ipd") {
+               bench_kyber(provider,
+                           msec,
+                           {
+                              Botan::KyberMode::ML_KEM_512_ipd,
+                              Botan::KyberMode::ML_KEM_768_ipd,
+                              Botan::KyberMode::ML_KEM_1024_ipd,
+                           });
             }
 #endif
 #if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
@@ -1946,27 +1967,28 @@ class Speed final : public Command {
 #endif
 
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
-      void bench_kyber(const std::string& provider, std::chrono::milliseconds msec) {
-         const Botan::KyberMode::Mode all_modes[] = {
-            Botan::KyberMode::Kyber512_R3,
-            Botan::KyberMode::Kyber512_90s,
-            Botan::KyberMode::Kyber768_R3,
-            Botan::KyberMode::Kyber768_90s,
-            Botan::KyberMode::Kyber1024_R3,
-            Botan::KyberMode::Kyber1024_90s,
-         };
-
+      void bench_kyber(const std::string& provider,
+                       std::chrono::milliseconds msec,
+                       const std::vector<Botan::KyberMode::Mode>& all_modes) {
          for(auto modet : all_modes) {
             Botan::KyberMode mode(modet);
 
    #if !defined(BOTAN_HAS_KYBER)
-            if(mode.is_modern())
+            if(mode.is_kyber_r3() && mode.is_modern()) {
                continue;
+            }
    #endif
 
    #if !defined(BOTAN_HAS_KYBER_90S)
-            if(mode.is_90s())
+            if(mode.is_kyber_r3() && mode.is_90s()) {
                continue;
+            }
+   #endif
+
+   #if !defined(BOTAN_HAS_ML_KEM_INITIAL_PUBLIC_DRAFT)
+            if(mode.is_ml_kem_ipd()) {
+               continue;
+            }
    #endif
 
             auto keygen_timer = make_timer(mode.to_string(), provider, "keygen");

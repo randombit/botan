@@ -106,7 +106,16 @@ Post-quantum key encapsulation scheme based on (structured) lattices.
    AES/SHA-2 instead of SHA-3 based primitives). The 90s mode Kyber is
    deprecated and will be removed in a future release.
 
-   The final NIST specification version of Kyber is not yet implemented.
+ML-KEM (Initial Public Draft)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Post-quantum key encapsulation scheme based on (structured) lattices.
+
+.. note::
+
+   ML-KEM is currently a draft (NIST FIPS 203). It is not yet standardized,
+   and neither long-term interoperability nor support is guaranteed.
+
 
 Ed25519
 ~~~~~~~~~~
