@@ -235,8 +235,8 @@ Kyber_PrivateKey::Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode m) {
    BufferSlicer s(sk);
 
    auto skpv = PolynomialVector::from_bytes(s.take(mode.polynomial_vector_byte_length()), mode);
-   auto pub_key = s.take(mode.public_key_byte_length());
-   s.skip(KyberConstants::kPublicKeyHashLength);
+   auto pub_key = s.take<KyberSerializedPublicKey>(mode.public_key_byte_length());
+   auto puk_key_hash = s.take<KyberHashedPublicKey>(KyberConstants::kPublicKeyHashLength);
    auto z = s.copy<KyberImplicitRejectionValue>(KyberConstants::kZLength);
 
    BOTAN_ASSERT_NOMSG(s.empty());
@@ -245,6 +245,10 @@ Kyber_PrivateKey::Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode m) {
    m_private = std::make_shared<Kyber_PrivateKeyInternal>(std::move(mode), std::move(skpv), std::move(z));
 
    BOTAN_ASSERT(m_private && m_public, "reading private key encoding");
+   BOTAN_STATE_CHECK(m_public->H_public_key_bits_raw().size() == puk_key_hash.size() &&
+                     std::equal(m_public->H_public_key_bits_raw().begin(),
+                                m_public->H_public_key_bits_raw().end(),
+                                puk_key_hash.begin()));
 }
 
 std::unique_ptr<Public_Key> Kyber_PrivateKey::public_key() const {
