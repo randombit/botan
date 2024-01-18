@@ -15,29 +15,10 @@
    #include "test_rng.h"
 
    #include <botan/hash.h>
+   #include <botan/pk_algs.h>
    #include <botan/internal/fmt.h>
 
 namespace Botan_Tests {
-
-namespace detail {
-
-template <typename T>
-concept PQC_KEM_KAT_Test_Implementation =
-   std::derived_from<typename T::private_key_t, Botan::Private_Key> &&
-   std::derived_from<typename T::public_key_t, Botan::Public_Key> &&
-   std::convertible_to<decltype(T::input_file), std::string> &&
-   std::convertible_to<decltype(T::algo_name), std::string> &&
-   requires(
-      T impl, Botan::RandomNumberGenerator& rng, std::span<const uint8_t> crypto_artefact, std::string_view algo_spec) {
-      { T(algo_spec) } -> std::same_as<T>;
-      { impl.rng_for_keygen(rng) } -> std::same_as<Botan_Tests::Fixed_Output_RNG>;
-      { impl.rng_for_encapsulation(rng) } -> std::same_as<Botan_Tests::Fixed_Output_RNG>;
-      { impl.map_value(crypto_artefact) } -> std::same_as<std::vector<uint8_t>>;
-      { impl.available() } -> std::convertible_to<bool>;
-      { std::is_constructible_v<typename T::private_key_t, Botan::RandomNumberGenerator&, decltype(impl.mode())> };
-   };
-
-}
 
 /**
  * This is an abstraction over the Known Answer Tests used by the KEM candidates
@@ -49,22 +30,54 @@ concept PQC_KEM_KAT_Test_Implementation =
  *
  * See also: https://csrc.nist.gov/projects/post-quantum-cryptography/post-quantum-cryptography-standardization/example-files
  */
-template <detail::PQC_KEM_KAT_Test_Implementation Delegate>
 class PK_PQC_KEM_KAT_Test : public PK_Test {
-   public:
-      PK_PQC_KEM_KAT_Test() : PK_Test(Delegate::algo_name, Delegate::input_file, "Seed,SS,PK,SK,CT") {}
+   protected:
+      /// Type of a KAT vector entry that can be recomputed using the seed
+      enum class VarType { SharedSecret, PublicKey, PrivateKey, Ciphertext };
+
+      PK_PQC_KEM_KAT_Test(const std::string& algo_name, const std::string& input_file) :
+            PK_Test(algo_name, input_file, "Seed,SS,PK,SK,CT") {}
+
+      // --- Callbacks ---
+
+      /// Map a recomputed value to the expected value from the KAT vector (e.g. apply a hash function if Botan's KAT entry is hashed)
+      virtual std::vector<uint8_t> map_value(const std::string& params,
+                                             std::span<const uint8_t> value,
+                                             VarType value_type) const = 0;
+
+      /// Create an RNG that can be used to generate the keypair. @p rng is the DRBG that is used to expand the seed.
+      virtual Fixed_Output_RNG rng_for_keygen(const std::string& params, Botan::RandomNumberGenerator& rng) const = 0;
+
+      /// Create an RNG that can be used to generate the keypair. @p rng is the DRBG that is used to expand the seed.
+      virtual Fixed_Output_RNG rng_for_encapsulation(const std::string& params,
+                                                     Botan::RandomNumberGenerator& rng) const = 0;
+
+      /// Return true if the algorithm with the specified params should be tested
+      virtual bool is_available(const std::string& params) const = 0;
+
+      /// Callback to test the RNG's state after key generation. If not overridden checks that the RNG is empty.
+      virtual void inspect_rng_after_keygen(const std::string& params,
+                                            const Fixed_Output_RNG& rng_keygen,
+                                            Test::Result& result) const {
+         BOTAN_UNUSED(params);
+         result.confirm("All prepared random bits used for key generation", rng_keygen.empty());
+      }
+
+      /// Callback to test the RNG's state after encapsulation. If not overridden checks that the RNG is empty.
+      virtual void inspect_rng_after_encaps(const std::string& params,
+                                            const Fixed_Output_RNG& rng_encaps,
+                                            Test::Result& result) const {
+         BOTAN_UNUSED(params);
+         result.confirm("All prepared random bits used for encapsulation", rng_encaps.empty());
+      }
 
    private:
-      using Private_Key = typename Delegate::private_key_t;
-      using Public_Key = typename Delegate::public_key_t;
-
-   private:
-      bool skip_this_test(const std::string& header, const VarMap&) override {
+      bool skip_this_test(const std::string& params, const VarMap&) final {
    #if !defined(BOTAN_HAS_AES)
-         BOTAN_UNUSED(header);
+         BOTAN_UNUSED(params);
          return true;
    #else
-         return !Delegate(header).available();
+         return !is_available(params);
    #endif
       }
 
@@ -77,47 +90,54 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
    #endif
       }
 
-      Test::Result run_one_test(const std::string& header, const VarMap& vars) final {
-         Test::Result result(Botan::fmt("PQC KAT for {} with parameters {}", algo_name(), header));
-         auto d = Delegate(header);
+      Test::Result run_one_test(const std::string& params, const VarMap& vars) final {
+         Test::Result result(Botan::fmt("PQC KAT for {} with parameters {}", algo_name(), params));
 
          // All PQC algorithms use this DRBG in their KAT tests to generate
          // their private keys. The amount of data that needs to be pulled from
          // the RNG for keygen and encapsulation is dependent on the algorithm
          // and the implementation.
          auto ctr_drbg = create_drbg(vars.get_req_bin("Seed"));
-         auto rng_keygen = d.rng_for_keygen(*ctr_drbg);
-         auto rng_encaps = d.rng_for_encapsulation(*ctr_drbg);
+         auto rng_keygen = rng_for_keygen(params, *ctr_drbg);
+         auto rng_encaps = rng_for_encapsulation(params, *ctr_drbg);
 
          // Key Generation
-         auto sk = Private_Key(rng_keygen, d.mode());
-         result.test_is_eq("Generated private key", d.map_value(sk.raw_private_key_bits()), vars.get_req_bin("SK"));
-         result.confirm("All prepared random bits used for key generation", rng_keygen.empty());
+         auto sk = Botan::create_private_key(algo_name(), rng_keygen, params);
+         result.test_is_eq("Generated private key",
+                           map_value(params, sk->raw_private_key_bits(), VarType::PrivateKey),
+                           vars.get_req_bin("SK"));
+         inspect_rng_after_keygen(params, rng_keygen, result);
 
          // Algorithm properties
-         result.test_eq("algorithm name", sk.algo_name(), algo_name());
-         result.confirm("supported operation", sk.supports_operation(Botan::PublicKeyOperation::KeyEncapsulation));
-         result.test_gte("Key has reasonable estimated strength (lower)", sk.estimated_strength(), 64);
-         result.test_lt("Key has reasonable estimated strength (upper)", sk.estimated_strength(), 512);
+         result.test_eq("Algorithm name", sk->algo_name(), algo_name());
+         result.confirm("Supported operation KeyEncapsulation",
+                        sk->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation));
+         result.test_gte("Key has reasonable estimated strength (lower)", sk->estimated_strength(), 64);
+         result.test_lt("Key has reasonable estimated strength (upper)", sk->estimated_strength(), 512);
 
          // Extract Public Key
-         auto pk = sk.public_key();
-         result.test_is_eq("Generated public key", d.map_value(pk->public_key_bits()), vars.get_req_bin("PK"));
+         auto pk = sk->public_key();
+         result.test_is_eq("Generated public key",
+                           map_value(params, pk->public_key_bits(), VarType::PublicKey),
+                           vars.get_req_bin("PK"));
 
          // Serialize/Deserialize the Public Key
-         auto pk2 = Public_Key(pk->public_key_bits(), d.mode());
+         auto pk2 = Botan::load_public_key(pk->algorithm_identifier(), pk->public_key_bits());
 
          // Encapsulation
-         auto enc = Botan::PK_KEM_Encryptor(pk2, "Raw");
+         auto enc = Botan::PK_KEM_Encryptor(*pk2, "Raw");
          const auto encaped = enc.encrypt(rng_encaps, 0 /* no KDF */);
-         result.test_is_eq("Shared Secret", encaped.shared_key(), Botan::lock(vars.get_req_bin("SS")));
-         result.test_is_eq("Ciphertext", d.map_value(encaped.encapsulated_shared_key()), vars.get_req_bin("CT"));
-         result.confirm("All prepared random bits used for encapsulation", rng_encaps.empty());
+         result.test_is_eq(
+            "Shared Secret", map_value(params, encaped.shared_key(), VarType::SharedSecret), vars.get_req_bin("SS"));
+         result.test_is_eq("Ciphertext",
+                           map_value(params, encaped.encapsulated_shared_key(), VarType::Ciphertext),
+                           vars.get_req_bin("CT"));
+         inspect_rng_after_encaps(params, rng_keygen, result);
 
          // Decapsulation
-         Private_Key sk2(sk.private_key_bits(), d.mode());
+         auto sk2 = Botan::load_private_key(sk->algorithm_identifier(), sk->private_key_bits());
          Botan::Null_RNG null_rng;
-         auto dec = Botan::PK_KEM_Decryptor(sk2, null_rng, "Raw");
+         auto dec = Botan::PK_KEM_Decryptor(*sk2, null_rng, "Raw");
          const auto shared_key = dec.decrypt(encaped.encapsulated_shared_key(), 0 /* no KDF */);
          result.test_is_eq("Decaps. Shared Secret", shared_key, Botan::lock(vars.get_req_bin("SS")));
 

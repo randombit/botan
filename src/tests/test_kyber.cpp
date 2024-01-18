@@ -110,46 +110,40 @@ BOTAN_REGISTER_TEST("kyber", "kyber_pairwise", KYBER_Tests);
 
 namespace {
 
-class Kyber_KAT_Tests_Impl {
+class Kyber_KAT_Tests final : public PK_PQC_KEM_KAT_Test {
    public:
-      using public_key_t = Botan::Kyber_PublicKey;
-      using private_key_t = Botan::Kyber_PrivateKey;
+      Kyber_KAT_Tests() : PK_PQC_KEM_KAT_Test("Kyber", "pubkey/kyber_kat.vec") {}
 
-      static constexpr const char* algo_name = "Kyber";
-      static constexpr const char* input_file = "pubkey/kyber_kat.vec";
+   private:
+      Botan::KyberMode get_mode(const std::string& mode) const { return Botan::KyberMode(mode); }
 
-   public:
-      Kyber_KAT_Tests_Impl(std::string_view algo_spec) : m_mode(algo_spec) {}
+      bool is_available(const std::string& mode) const final { return get_mode(mode).is_available(); }
 
-      decltype(auto) mode() const { return m_mode; }
-
-      bool available() const { return m_mode.is_available(); }
-
-      std::vector<uint8_t> map_value(std::span<const uint8_t> value) const {
+      std::vector<uint8_t> map_value(const std::string& mode,
+                                     std::span<const uint8_t> value,
+                                     VarType var_type) const final {
+         if(var_type == VarType::SharedSecret) {
+            return {value.begin(), value.end()};
+         }
          // We use different hash functions for Kyber 90s and Kyber "modern", as
          // those are consistent with the requirements of the implementations.
-         std::string_view hash_name = m_mode.is_modern() ? "SHAKE-256(128)" : "SHA-256";
+         std::string_view hash_name = get_mode(mode).is_modern() ? "SHAKE-256(128)" : "SHA-256";
 
          auto hash = Botan::HashFunction::create_or_throw(hash_name);
          const auto digest = hash->process(value);
          return {digest.begin(), digest.begin() + 16};
       }
 
-      auto rng_for_keygen(Botan::RandomNumberGenerator& rng) const {
+      Fixed_Output_RNG rng_for_keygen(const std::string&, Botan::RandomNumberGenerator& rng) const final {
          const auto seed = rng.random_vec(32);
          const auto z = rng.random_vec(32);
          return Fixed_Output_RNG(Botan::concat(seed, z));
       }
 
-      auto rng_for_encapsulation(Botan::RandomNumberGenerator& rng) const {
+      Fixed_Output_RNG rng_for_encapsulation(const std::string&, Botan::RandomNumberGenerator& rng) const final {
          return Fixed_Output_RNG(rng.random_vec(32));
       }
-
-   private:
-      Botan::KyberMode m_mode;
 };
-
-class Kyber_KAT_Tests : public Botan_Tests::PK_PQC_KEM_KAT_Test<Kyber_KAT_Tests_Impl> {};
 
 }  // namespace
 

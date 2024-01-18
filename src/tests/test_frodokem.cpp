@@ -31,42 +31,34 @@ namespace Botan_Tests {
 #if defined(BOTAN_HAS_FRODOKEM)
 
 namespace {
-class Frodo_KAT_Tests_Impl {
+class Frodo_KAT_Tests final : public Botan_Tests::PK_PQC_KEM_KAT_Test {
    public:
-      using public_key_t = Botan::FrodoKEM_PublicKey;
-      using private_key_t = Botan::FrodoKEM_PrivateKey;
+      Frodo_KAT_Tests() : PK_PQC_KEM_KAT_Test("FrodoKEM", "pubkey/frodokem_kat.vec") {}
 
-      static constexpr const char* algo_name = "FrodoKEM";
-      static constexpr const char* input_file = "pubkey/frodokem_kat.vec";
+   private:
+      Botan::FrodoKEMMode get_mode(const std::string& mode) const { return Botan::FrodoKEMMode(mode); }
 
-   public:
-      Frodo_KAT_Tests_Impl(std::string_view algo_spec) : m_mode(algo_spec) {}
+      bool is_available(const std::string& mode) const final { return get_mode(mode).is_available(); }
 
-      decltype(auto) mode() const { return m_mode; }
-
-      bool available() const { return m_mode.is_available(); }
-
-      auto map_value(std::span<const uint8_t> value) const {
+      std::vector<uint8_t> map_value(const std::string&, std::span<const uint8_t> value, VarType var_type) const final {
+         if(var_type == VarType::SharedSecret) {
+            return {value.begin(), value.end()};
+         }
          auto xof = Botan::XOF::create_or_throw("SHAKE-256");
          xof->update(value);
          return xof->output<std::vector<uint8_t>>(16);
       }
 
-      auto rng_for_keygen(Botan::RandomNumberGenerator& rng) const {
-         Botan::FrodoKEMConstants consts(m_mode);
+      Fixed_Output_RNG rng_for_keygen(const std::string& mode, Botan::RandomNumberGenerator& rng) const final {
+         Botan::FrodoKEMConstants consts(get_mode(mode));
          return Fixed_Output_RNG(rng, consts.len_sec_bytes() + consts.len_se_bytes() + consts.len_a_bytes());
       }
 
-      auto rng_for_encapsulation(Botan::RandomNumberGenerator& rng) const {
-         Botan::FrodoKEMConstants consts(m_mode);
+      Fixed_Output_RNG rng_for_encapsulation(const std::string& mode, Botan::RandomNumberGenerator& rng) const final {
+         Botan::FrodoKEMConstants consts(get_mode(mode));
          return Fixed_Output_RNG(rng, consts.len_sec_bytes() + consts.len_salt_bytes());
       }
-
-   private:
-      Botan::FrodoKEMMode m_mode;
 };
-
-class Frodo_KAT_Tests : public Botan_Tests::PK_PQC_KEM_KAT_Test<Frodo_KAT_Tests_Impl> {};
 
 std::vector<Test::Result> test_frodo_roundtrips() {
    auto& rng = Test::rng();
