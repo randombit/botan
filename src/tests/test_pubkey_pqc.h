@@ -103,6 +103,9 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
 
          // Key Generation
          auto sk = Botan::create_private_key(algo_name(), rng_keygen, params);
+         if(!result.test_not_null("Successfully generated private key", sk)) {
+            return result;
+         }
          result.test_is_eq("Generated private key",
                            map_value(params, sk->raw_private_key_bits(), VarType::PrivateKey),
                            vars.get_req_bin("SK"));
@@ -123,6 +126,9 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
 
          // Serialize/Deserialize the Public Key
          auto pk2 = Botan::load_public_key(pk->algorithm_identifier(), pk->public_key_bits());
+         if(!result.test_not_null("Successfully deserialized public key", pk2)) {
+            return result;
+         }
 
          // Encapsulation
          auto enc = Botan::PK_KEM_Encryptor(*pk2, "Raw");
