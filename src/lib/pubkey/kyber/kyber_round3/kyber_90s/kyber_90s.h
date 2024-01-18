@@ -2,6 +2,7 @@
  * Symmetric primitives for Kyber (90s mode)
  * (C) 2022 Jack Lloyd
  * (C) 2022 Hannes Rantzsch, René Meusel, neXenio GmbH
+ * (C) 2024 René Meusel, Rohde & Schwarz Cybersecurity
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */

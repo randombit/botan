@@ -2,6 +2,7 @@
  * Symmetric primitives for Kyber (modern)
  * (C) 2022 Jack Lloyd
  * (C) 2022 Hannes Rantzsch, René Meusel, neXenio GmbH
+ * (C) 2024 René Meusel, Rohde & Schwarz Cybersecurity
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */
@@ -33,15 +34,22 @@ class Kyber_Symmetric_Primitives {
       virtual ~Kyber_Symmetric_Primitives() = default;
 
       // TODO: remove this once Kyber-R3 is removed
-      auto H(StrongSpan<const KyberMessage> m) const { return get_H().process<KyberMessage>(m); }
+      KyberMessage H(StrongSpan<const KyberMessage> m) const { return get_H().process<KyberMessage>(m); }
 
-      auto H(StrongSpan<const KyberCompressedCiphertext> r) const { return get_H().process<KyberHashedCiphertext>(r); }
+      KyberHashedCiphertext H(StrongSpan<const KyberCompressedCiphertext> r) const {
+         return get_H().process<KyberHashedCiphertext>(r);
+      }
 
-      auto H(StrongSpan<const KyberSerializedPublicKey> pk) const { return get_H().process<KyberHashedPublicKey>(pk); }
+      KyberHashedPublicKey H(StrongSpan<const KyberSerializedPublicKey> pk) const {
+         return get_H().process<KyberHashedPublicKey>(pk);
+      }
 
-      auto G(StrongSpan<const KyberSeedRandomness> seed) const { return G_split<KyberSeedRho, KyberSeedSigma>(seed); }
+      std::pair<KyberSeedRho, KyberSeedSigma> G(StrongSpan<const KyberSeedRandomness> seed) const {
+         return G_split<KyberSeedRho, KyberSeedSigma>(seed);
+      }
 
-      auto G(StrongSpan<const KyberMessage> msg, StrongSpan<const KyberHashedPublicKey> pubkey_hash) const {
+      std::pair<KyberSharedSecret, KyberEncryptionRandomness> G(
+         StrongSpan<const KyberMessage> msg, StrongSpan<const KyberHashedPublicKey> pubkey_hash) const {
          return G_split<KyberSharedSecret, KyberEncryptionRandomness>(msg, pubkey_hash);
       }
 
@@ -54,9 +62,11 @@ class Kyber_Symmetric_Primitives {
          kdf.final(out);
       }
 
-      auto PRF(KyberSigmaOrEncryptionRandomness seed, const uint8_t nonce, const size_t outlen) const {
-         return std::visit(
-            [&](const auto s) { return get_PRF(s, nonce).template output<KyberSamplingRandomness>(outlen); }, seed);
+      KyberSamplingRandomness PRF(KyberSigmaOrEncryptionRandomness seed,
+                                  const uint8_t nonce,
+                                  const size_t outlen) const {
+         auto bare_seed_span = std::visit([&](const auto s) { return s.get(); }, seed);
+         return get_PRF(bare_seed_span, nonce).output<KyberSamplingRandomness>(outlen);
       }
 
       std::unique_ptr<Botan::XOF> XOF(StrongSpan<const KyberSeedRho> seed,
@@ -72,7 +82,7 @@ class Kyber_Symmetric_Primitives {
       template <concepts::contiguous_strong_type T1,
                 concepts::contiguous_strong_type T2,
                 ranges::contiguous_range... InputTs>
-      auto G_split(InputTs&&... inputs) const -> std::pair<T1, T2> {
+      std::pair<T1, T2> G_split(InputTs&&... inputs) const {
          auto& g = get_G();
          (g.update(inputs), ...);
          auto s = g.final();

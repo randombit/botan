@@ -163,16 +163,12 @@ class Polynomial {
       static Polynomial getnoise_eta1(KyberSigmaOrEncryptionRandomness seed,
                                       uint8_t nonce,
                                       const KyberConstants& mode) {
-         return std::visit(
-            [&](const auto s) {
-               const auto eta1 = mode.eta1();
-               BOTAN_ASSERT(eta1 == 2 || eta1 == 3, "Invalid eta1 value");
+         const auto eta1 = mode.eta1();
+         BOTAN_ASSERT(eta1 == 2 || eta1 == 3, "Invalid eta1 value");
 
-               const auto outlen = eta1 * KyberConstants::N / 4;
-               return (eta1 == 2) ? Polynomial::cbd2(mode.symmetric_primitives().PRF(s, nonce, outlen))
-                                  : Polynomial::cbd3(mode.symmetric_primitives().PRF(s, nonce, outlen));
-            },
-            seed);
+         const auto outlen = eta1 * KyberConstants::N / 4;
+         return (eta1 == 2) ? Polynomial::cbd2(mode.symmetric_primitives().PRF(seed, nonce, outlen))
+                            : Polynomial::cbd3(mode.symmetric_primitives().PRF(seed, nonce, outlen));
       }
 
       static Polynomial from_bytes(std::span<const uint8_t> a) {
@@ -388,35 +384,16 @@ class PolynomialVector {
 
       explicit PolynomialVector(const size_t k) : m_vec(k) {}
 
-   private:
-      template <typename FnT, typename... PolynomialVectorTs>
-         requires(sizeof...(PolynomialVectorTs) > 0) &&
-                 all_same_v<PolynomialVector, std::remove_cvref_t<PolynomialVectorTs>...>
-      static void for_all(FnT&& fn, PolynomialVectorTs&&... vecs) {
-         const size_t length = std::get<0>(std::forward_as_tuple(vecs...)).m_vec.size();
-         const bool equal_sizes = ((length == vecs.m_vec.size()) && ...);
-         BOTAN_ASSERT(equal_sizes, "all passed in PolynomialVectors must have the same size");
-
-         for(size_t i = 0; i < length; ++i) {
-            fn(vecs.m_vec[i]...);
-         }
-      }
-
-      template <typename FnT, typename... OtherPolynomialVectorTs>
-         requires all_same_v<PolynomialVector, std::remove_cvref_t<OtherPolynomialVectorTs>...>
-      void on_all(FnT&& fn, OtherPolynomialVectorTs&&... other_vecs) {
-         for_all(fn, *this, std::forward<OtherPolynomialVectorTs>(other_vecs)...);
-      }
-
    public:
       static PolynomialVector from_bytes(std::span<const uint8_t> a, const KyberConstants& mode) {
          BOTAN_ASSERT(a.size() == mode.polynomial_vector_byte_length(), "wrong byte length for frombytes");
 
          PolynomialVector r(mode.k());
+
          BufferSlicer bs(a);
-         r.on_all([&](Polynomial& p) {
-            p = Polynomial::from_bytes(bs.take(KyberConstants::kSerializedPolynomialByteLength));
-         });
+         for(size_t i = 0; i < mode.k(); ++i) {
+            r.m_vec[i] = Polynomial::from_bytes(bs.take(KyberConstants::kSerializedPolynomialByteLength));
+         }
          BOTAN_ASSERT_NOMSG(bs.empty());
 
          return r;
@@ -431,7 +408,9 @@ class PolynomialVector {
                       "PolynomialVectors only");
 
          Polynomial r;
-         for_all([&](const auto& pa, const auto& pb) { r += Polynomial::basemul_montgomery(pa, pb); }, a, b);
+         for(size_t i = 0; i < a.m_vec.size(); ++i) {
+            r += Polynomial::basemul_montgomery(a.m_vec[i], b.m_vec[i]);
+         }
          r.reduce();
          return r;
       }
@@ -440,28 +419,30 @@ class PolynomialVector {
                                             uint8_t nonce,
                                             const KyberConstants& mode) {
          PolynomialVector r(mode.k());
-         r.on_all([&](auto& p) { p = Polynomial::getnoise_eta2(seed, nonce++, mode); });
+         for(auto& p : r.m_vec) {
+            p = Polynomial::getnoise_eta2(seed, nonce++, mode);
+         }
          return r;
       }
 
       static PolynomialVector getnoise_eta1(KyberSigmaOrEncryptionRandomness seed,
                                             uint8_t nonce,
                                             const KyberConstants& mode) {
-         return std::visit(
-            [&](const auto s) {
-               PolynomialVector r(mode.k());
-               r.on_all([&](auto& p) { p = Polynomial::getnoise_eta1(s, nonce++, mode); });
-               return r;
-            },
-            seed);
+         PolynomialVector r(mode.k());
+         for(auto& p : r.m_vec) {
+            p = Polynomial::getnoise_eta1(seed, nonce++, mode);
+         }
+         return r;
       }
 
-      template <concepts::resizable_byte_buffer T = std::vector<uint8_t>>
+      template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
       T to_bytes() {
          T r(m_vec.size() * KyberConstants::kSerializedPolynomialByteLength);
 
          BufferStuffer bs(r);
-         on_all([&](auto& p) { p.to_bytes(bs.next(KyberConstants::kSerializedPolynomialByteLength)); });
+         for(auto& v : m_vec) {
+            v.to_bytes(bs.next(KyberConstants::kSerializedPolynomialByteLength));
+         }
          BOTAN_ASSERT_NOMSG(bs.full());
 
          return r;
@@ -472,11 +453,17 @@ class PolynomialVector {
        * of the vector of polynomials.
        */
       void csubq() {
-         on_all([](auto& p) { p.csubq(); });
+         for(auto& p : m_vec) {
+            p.csubq();
+         }
       }
 
       PolynomialVector& operator+=(const PolynomialVector& other) {
-         on_all([&](auto& p, const auto& op) { p += op; }, other);
+         BOTAN_ASSERT(m_vec.size() == other.m_vec.size(), "cannot add polynomial vectors of differing lengths");
+
+         for(size_t i = 0; i < m_vec.size(); ++i) {
+            m_vec[i] += other.m_vec[i];
+         }
          return *this;
       }
 
@@ -486,21 +473,27 @@ class PolynomialVector {
        * Applies Barrett reduction to each coefficient of each element of a vector of polynomials.
        */
       void reduce() {
-         on_all([](auto& p) { p.reduce(); });
+         for(auto& v : m_vec) {
+            v.reduce();
+         }
       }
 
       /**
        * Apply inverse NTT to all elements of a vector of polynomials and multiply by Montgomery factor 2^16.
        */
       void invntt_tomont() {
-         on_all([](auto& p) { p.invntt_tomont(); });
+         for(auto& v : m_vec) {
+            v.invntt_tomont();
+         }
       }
 
       /**
        * Apply forward NTT to all elements of a vector of polynomials.
        */
       void ntt() {
-         on_all([](auto& p) { p.ntt(); });
+         for(auto& v : m_vec) {
+            v.ntt();
+         }
       }
 
    private:
