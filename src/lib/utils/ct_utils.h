@@ -571,6 +571,20 @@ class Mask final {
       }
 
       /**
+     * If this mask is set, swap x and y
+     */
+      template <typename U>
+      void conditional_swap(U& x, U& y) const
+         requires(sizeof(U) <= sizeof(T))
+      {
+         auto cnd = Mask<U>(*this);
+         U t0 = cnd.select(y, x);
+         U t1 = cnd.select(x, y);
+         x = t0;
+         y = t1;
+      }
+
+      /**
       * Return the value of the mask, unpoisoned
       */
       constexpr T unpoisoned_value() const {
@@ -724,11 +738,7 @@ constexpr inline Mask<T> conditional_assign_mem(Choice cnd, T* sink, const T* sr
 template <typename T>
 constexpr inline void conditional_swap(bool cnd, T& x, T& y) {
    const auto swap = CT::Mask<T>::expand(cnd);
-
-   T t0 = swap.select(y, x);
-   T t1 = swap.select(x, y);
-   x = t0;
-   y = t1;
+   swap.conditional_swap(x, y);
 }
 
 template <typename T>

@@ -69,35 +69,22 @@ class Strong_Adapter<T> : public Strong_Base<T> {
 };
 
 template <concepts::container T>
-class Strong_Adapter<T> : public Strong_Base<T> {
+class Container_Strong_Adapter_Base : public Strong_Base<T> {
    public:
       using value_type = typename T::value_type;
       using size_type = typename T::size_type;
       using iterator = typename T::iterator;
       using const_iterator = typename T::const_iterator;
-      using pointer = typename T::pointer;
-      using const_pointer = typename T::const_pointer;
 
    public:
       using Strong_Base<T>::Strong_Base;
 
-      explicit Strong_Adapter(std::span<const value_type> span)
-         requires(concepts::contiguous_container<T>)
-            : Strong_Adapter(T(span.begin(), span.end())) {}
-
-      explicit Strong_Adapter(size_t size)
+      explicit Container_Strong_Adapter_Base(size_t size)
          requires(concepts::resizable_container<T>)
-            : Strong_Adapter(T(size)) {}
+            : Container_Strong_Adapter_Base(T(size)) {}
 
       template <typename InputIt>
-      Strong_Adapter(InputIt begin, InputIt end) : Strong_Adapter(T(begin, end)) {}
-
-      // Disambiguates the usage of string literals, otherwise:
-      // Strong_Adapter(std::span<>) and Strong_Adapter(const char*)
-      // would be ambiguous.
-      explicit Strong_Adapter(const char* str)
-         requires(std::same_as<T, std::string>)
-            : Strong_Adapter(std::string(str)) {}
+      Container_Strong_Adapter_Base(InputIt begin, InputIt end) : Container_Strong_Adapter_Base(T(begin, end)) {}
 
    public:
       decltype(auto) begin() noexcept(noexcept(this->get().begin())) { return this->get().begin(); }
@@ -118,18 +105,6 @@ class Strong_Adapter<T> : public Strong_Base<T> {
 
       size_type size() const noexcept(noexcept(this->get().size())) { return this->get().size(); }
 
-      decltype(auto) data() noexcept(noexcept(this->get().data()))
-         requires(concepts::contiguous_container<T>)
-      {
-         return this->get().data();
-      }
-
-      decltype(auto) data() const noexcept(noexcept(this->get().data()))
-         requires(concepts::contiguous_container<T>)
-      {
-         return this->get().data();
-      }
-
       bool empty() const noexcept(noexcept(this->get().empty()))
          requires(concepts::has_empty<T>)
       {
@@ -148,11 +123,60 @@ class Strong_Adapter<T> : public Strong_Base<T> {
          this->get().reserve(size);
       }
 
-      decltype(auto) operator[](size_type i) const noexcept(noexcept(this->get().operator[](i))) {
-         return this->get()[i];
+      template <typename U>
+      decltype(auto) operator[](U&& i) const noexcept(noexcept(this->get().operator[](i))) {
+         return this->get()[std::forward<U>(i)];
       }
 
-      decltype(auto) operator[](size_type i) noexcept(noexcept(this->get().operator[](i))) { return this->get()[i]; }
+      template <typename U>
+      decltype(auto) operator[](U&& i) noexcept(noexcept(this->get().operator[](i))) {
+         return this->get()[std::forward<U>(i)];
+      }
+
+      template <typename U>
+      decltype(auto) at(U&& i) const noexcept(noexcept(this->get().at(i)))
+         requires(concepts::has_bounds_checked_accessors<T>)
+      {
+         return this->get().at(std::forward<U>(i));
+      }
+
+      template <typename U>
+      decltype(auto) at(U&& i) noexcept(noexcept(this->get().at(i)))
+         requires(concepts::has_bounds_checked_accessors<T>)
+      {
+         return this->get().at(std::forward<U>(i));
+      }
+};
+
+template <concepts::container T>
+class Strong_Adapter<T> : public Container_Strong_Adapter_Base<T> {
+   public:
+      using Container_Strong_Adapter_Base<T>::Container_Strong_Adapter_Base;
+};
+
+template <concepts::contiguous_container T>
+class Strong_Adapter<T> : public Container_Strong_Adapter_Base<T> {
+   public:
+      using pointer = typename T::pointer;
+      using const_pointer = typename T::const_pointer;
+
+   public:
+      using Container_Strong_Adapter_Base<T>::Container_Strong_Adapter_Base;
+
+      explicit Strong_Adapter(std::span<const typename Container_Strong_Adapter_Base<T>::value_type> span) :
+            Strong_Adapter(T(span.begin(), span.end())) {}
+
+      // Disambiguates the usage of string literals, otherwise:
+      // Strong_Adapter(std::span<>) and Strong_Adapter(const char*)
+      // would be ambiguous.
+      explicit Strong_Adapter(const char* str)
+         requires(std::same_as<T, std::string>)
+            : Strong_Adapter(std::string(str)) {}
+
+   public:
+      decltype(auto) data() noexcept(noexcept(this->get().data())) { return this->get().data(); }
+
+      decltype(auto) data() const noexcept(noexcept(this->get().data())) { return this->get().data(); }
 };
 
 }  // namespace detail
