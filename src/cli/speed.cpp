@@ -141,6 +141,10 @@
    #include <botan/frodokem.h>
 #endif
 
+#if defined(BOTAN_HAS_CLASSICMCELIECE)
+   #include <botan/cmce.h>
+#endif
+
 #if defined(BOTAN_HAS_ECDSA)
    #include <botan/ecdsa.h>
 #endif
@@ -660,6 +664,11 @@ class Speed final : public Command {
 #if defined(BOTAN_HAS_FRODOKEM)
             else if(algo == "FrodoKEM") {
                bench_frodokem(provider, msec);
+            }
+#endif
+#if defined(BOTAN_HAS_CLASSICMCELIECE)
+            else if(algo == "ClassicMcEliece") {
+               bench_classic_mceliece(provider, msec);
             }
 #endif
 #if defined(BOTAN_HAS_SCRYPT)
@@ -2286,6 +2295,41 @@ class Speed final : public Command {
             record_result(keygen_timer);
 
             bench_pk_kem(key, mode.to_string(), provider, "KDF2(SHA-256)", msec);
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_CLASSICMCELIECE)
+      void bench_classic_mceliece(const std::string& provider, std::chrono::milliseconds msec) {
+         std::vector<Botan::Classic_McEliece_Parameter_Set> cmce_param_sets{
+            Botan::Classic_McEliece_Parameter_Set::mceliece348864,
+            Botan::Classic_McEliece_Parameter_Set::mceliece348864f,
+            Botan::Classic_McEliece_Parameter_Set::mceliece460896,
+            Botan::Classic_McEliece_Parameter_Set::mceliece460896f,
+            Botan::Classic_McEliece_Parameter_Set::mceliece6688128,
+            Botan::Classic_McEliece_Parameter_Set::mceliece6688128f,
+            Botan::Classic_McEliece_Parameter_Set::mceliece6688128pc,
+            Botan::Classic_McEliece_Parameter_Set::mceliece6688128pcf,
+            Botan::Classic_McEliece_Parameter_Set::mceliece6960119,
+            Botan::Classic_McEliece_Parameter_Set::mceliece6960119f,
+            Botan::Classic_McEliece_Parameter_Set::mceliece6960119pc,
+            Botan::Classic_McEliece_Parameter_Set::mceliece6960119pcf,
+            Botan::Classic_McEliece_Parameter_Set::mceliece8192128,
+            Botan::Classic_McEliece_Parameter_Set::mceliece8192128f,
+            Botan::Classic_McEliece_Parameter_Set::mceliece8192128pc,
+            Botan::Classic_McEliece_Parameter_Set::mceliece8192128pcf,
+         };
+
+         for(auto cmce_set : cmce_param_sets) {
+            auto cmce_set_str = cmce_set.to_string();
+
+            auto keygen_timer = make_timer(cmce_set_str, provider, "keygen");
+
+            auto key = keygen_timer->run([&] { return Botan::Classic_McEliece_PrivateKey(rng(), cmce_set); });
+
+            record_result(keygen_timer);
+
+            bench_pk_kem(key, cmce_set_str, provider, "KDF2(SHA-256)", msec);
          }
       }
 #endif
