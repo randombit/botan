@@ -15,7 +15,7 @@ snail-mail address (S), and Bitcoin address (B).
   N: Fabian Albert
   E: fabian.albert@rohde-schwarz.com
   W: https://www.rohde-schwarz.com/cybersecurity
-  D: SLH-DSA, Ed/X448, HSS/LMS, ML-KEM, ML-DSA, TLS-Anvil tests
+  D: SLH-DSA, Ed/X448, HSS/LMS, ML-KEM, ML-DSA, Classic McEliece, TLS-Anvil tests
   S: Bochum, Germany
 
   N: Alexander Bluhm
@@ -159,7 +159,7 @@ snail-mail address (S), and Bitcoin address (B).
   N: Amos Treiber
   E: amos.treiber@rohde-schwarz.com
   W: https://www.rohde-schwarz.com/cybersecurity
-  D: SLH-DSA, TPM 2.0, FrodoKEM, ML-KEM, ML-DSA
+  D: SLH-DSA, TPM 2.0, FrodoKEM, Classic McEliece, ML-KEM, ML-DSA
   S: Cologne, Germany
 
   N: Daniel Seither
