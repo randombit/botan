@@ -84,6 +84,15 @@ Values currently assigned are::
   SphincsPlus-haraka-256s-r3.1 OBJECT IDENTIFIER ::= { SphincsPlus-haraka 5 }
   SphincsPlus-haraka-256f-r3.1  OBJECT IDENTIFIER ::= { SphincsPlus-haraka 6 }
 
+  mceliece OBJECT IDENTIFIER ::= { publicKey 18 }
+
+  mceliece6688128pc   OBJECT IDENTIFIER ::= { mceliece 1 }
+  mceliece6688128pcf  OBJECT IDENTIFIER ::= { mceliece 2 }
+  mceliece6960119pc   OBJECT IDENTIFIER ::= { mceliece 3 }
+  mceliece6960119pcf  OBJECT IDENTIFIER ::= { mceliece 4 }
+  mceliece8192128pc   OBJECT IDENTIFIER ::= { mceliece 5 }
+  mceliece8192128pcf  OBJECT IDENTIFIER ::= { mceliece 6 }
+
   symmetricKey OBJECT IDENTIFIER ::= { randombit 3 }
 
   ocbModes OBJECT IDENTIFIER ::= { symmetricKey 2 }

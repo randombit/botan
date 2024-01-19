@@ -175,5 +175,11 @@ snail-mail address (S), and Bitcoin address (B).
   N: Fabian Albert
   E: fabian.albert@rohde-schwarz.com
   W: https://www.rohde-schwarz.com/cybersecurity
-  D: SPHINCS+
+  D: SPHINCS+, HSS/LMS, Classic McEliece
   S: Bochum, Germany
+
+  N: Amos Treiber
+  E: amos.treiber@rohde-schwarz.com
+  W: https://www.rohde-schwarz.com/cybersecurity
+  D: SPHINCS+, FrodoKEM, Classic McEliece
+  S: Cologne, Germany
