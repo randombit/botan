@@ -119,6 +119,14 @@ inline constexpr size_t ctz(T n)
 }
 
 template <typename T>
+inline constexpr T floor_log2(T n)
+   requires(std::is_unsigned<T>::value)
+{
+   BOTAN_ARG_CHECK(n != 0, "log2(0) is not defined");
+   return static_cast<T>(high_bit(n) - 1);
+}
+
+template <typename T>
 constexpr uint8_t ceil_log2(T x)
    requires(std::is_integral<T>::value && sizeof(T) < 32)
 {
@@ -207,6 +215,40 @@ inline constexpr T majority(T a, T b, T c) {
    allows us to determine which case we are in.
    */
    return choose(a ^ b, c, b);
+}
+
+/**
+ * Calculates the number of 1-bits in an unsigned integer in constant-time.
+ * This operation is also known as "population count" or hamming weight.
+ *
+ * Modern compilers will recognize this pattern and replace it by a hardware
+ * instruction, if available. This is the SWAR (SIMD within a register)
+ * algorithm. See: https://nimrod.blog/posts/algorithms-behind-popcount/#swar-algorithm
+ *
+ * Note: C++20 provides std::popcount(), but there's no guarantee that this
+ *       is implemented in constant-time.
+ *
+ * @param x an unsigned integer
+ * @returns the number of 1-bits in the provided value
+ */
+template <std::unsigned_integral T>
+inline constexpr uint8_t ct_popcount(T x) {
+   constexpr size_t s = sizeof(T);
+   static_assert(s <= 8, "T is not a suitable unsigned integer value");
+   if constexpr(s == 8) {
+      x = x - ((x >> 1) & 0x5555555555555555);
+      x = (x & 0x3333333333333333) + ((x >> 2) & 0x3333333333333333);
+      x = (x + (x >> 4)) & 0xF0F0F0F0F0F0F0F;
+      return (x * 0x101010101010101) >> 56;
+   } else if constexpr(s == 4) {
+      x = x - ((x >> 1) & 0x55555555);
+      x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
+      x = (x + (x >> 4)) & 0x0F0F0F0F;
+      return (x * 0x01010101) >> 24;
+   } else {
+      // s < 4
+      return ct_popcount(static_cast<uint32_t>(x));
+   }
 }
 
 }  // namespace Botan

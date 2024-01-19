@@ -176,6 +176,19 @@ concept has_empty = requires(T a) {
    { a.empty() } -> std::same_as<bool>;
 };
 
+// clang-format off
+template <typename T>
+concept has_bounds_checked_accessors = container<T> && (
+                                          requires(T a, const T ac, typename T::size_type s) {
+                                             { a.at(s) } -> std::same_as<typename T::value_type&>;
+                                             { ac.at(s) } -> std::same_as<const typename T::value_type&>;
+                                          } ||
+                                          requires(T a, const T ac, typename T::key_type k) {
+                                             { a.at(k) } -> std::same_as<typename T::mapped_type&>;
+                                             { ac.at(k) } -> std::same_as<const typename T::mapped_type&>;
+                                          });
+// clang-format on
+
 template <typename T>
 concept resizable_container = container<T> && requires(T& c, typename T::size_type s) {
    T(s);
