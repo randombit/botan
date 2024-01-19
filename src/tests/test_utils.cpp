@@ -18,6 +18,8 @@
 #include <botan/internal/parsing.h>
 #include <botan/internal/rounding.h>
 #include <botan/internal/stl_util.h>
+
+#include <bit>
 #include <ctime>
 #include <functional>
 
@@ -723,6 +725,7 @@ class BitOps_Tests final : public Test {
          results.push_back(test_power_of_2());
          results.push_back(test_ctz());
          results.push_back(test_sig_bytes());
+         results.push_back(test_popcount());
 
          return results;
       }
@@ -795,6 +798,50 @@ class BitOps_Tests final : public Test {
          test_power_of_2<uint64_t>(result, 0x8001, false);
          test_power_of_2<uint64_t>(result, 0x8000000, true);
          test_power_of_2<uint64_t>(result, 0x100000000000, true);
+
+         return result;
+      }
+
+      template <typename T>
+      auto pc(T val) -> decltype(Botan::ct_popcount(val)) {
+         return Botan::ct_popcount(val);
+      }
+
+      template <typename T>
+      auto random_pc(Test::Result& result) {
+         std::array<uint8_t, sizeof(T)> buf;
+         Test::rng().randomize(buf);
+         auto n = Botan::load_le<T>(buf);
+         result.test_is_eq<size_t>(Botan::fmt("popcount({}) == {}", n, std::popcount(n)), pc(n), std::popcount(n));
+      }
+
+      Test::Result test_popcount() {
+         Test::Result result("popcount");
+
+         result.test_is_eq<uint8_t>("popcount<uint8_t>(0)", pc<uint8_t>(0), 0);
+         result.test_is_eq<uint8_t>("popcount<uint16_t>(0)", pc<uint16_t>(0), 0);
+         result.test_is_eq<uint8_t>("popcount<uint32_t>(0)", pc<uint32_t>(0), 0);
+         result.test_is_eq<uint8_t>("popcount<uint64_t>(0)", pc<uint64_t>(0), 0);
+
+         result.test_is_eq<uint8_t>("popcount<uint8_t>(1)", pc<uint8_t>(1), 1);
+         result.test_is_eq<uint8_t>("popcount<uint16_t>(1)", pc<uint16_t>(1), 1);
+         result.test_is_eq<uint8_t>("popcount<uint32_t>(1)", pc<uint32_t>(1), 1);
+         result.test_is_eq<uint8_t>("popcount<uint64_t>(1)", pc<uint64_t>(1), 1);
+
+         result.test_is_eq<uint8_t>("popcount<uint8_t>(0xAA)", pc<uint8_t>(0xAA), 4);
+         result.test_is_eq<uint8_t>("popcount<uint16_t>(0xAAAA)", pc<uint16_t>(0xAAAA), 8);
+         result.test_is_eq<uint8_t>("popcount<uint32_t>(0xAAAA...)", pc<uint32_t>(0xAAAAAAAA), 16);
+         result.test_is_eq<uint8_t>("popcount<uint64_t>(0xAAAA...)", pc<uint64_t>(0xAAAAAAAAAAAAAAAA), 32);
+
+         result.test_is_eq<uint8_t>("popcount<uint8_t>(0xFF)", pc<uint8_t>(0xFF), 8);
+         result.test_is_eq<uint8_t>("popcount<uint16_t>(0xFFFF)", pc<uint16_t>(0xFFFF), 16);
+         result.test_is_eq<uint8_t>("popcount<uint32_t>(0xFFFF...)", pc<uint32_t>(0xFFFFFFFF), 32);
+         result.test_is_eq<uint8_t>("popcount<uint64_t>(0xFFFF...)", pc<uint64_t>(0xFFFFFFFFFFFFFFFF), 64);
+
+         random_pc<uint8_t>(result);
+         random_pc<uint16_t>(result);
+         random_pc<uint32_t>(result);
+         random_pc<uint64_t>(result);
 
          return result;
       }
