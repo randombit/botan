@@ -7,7 +7,7 @@
  * (C) 2021-2024 Jack Lloyd
  * (C) 2021-2022 Manuel Glaser and Michael Boric, Rohde & Schwarz Cybersecurity
  * (C) 2021-2022 René Meusel and Hannes Rantzsch, neXenio GmbH
- * (C) 2024 René Meusel, Rohde & Schwarz Cybersecurity
+ * (C) 2024 René Meusel and Fabian Albert, Rohde & Schwarz Cybersecurity
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */
@@ -31,17 +31,43 @@ namespace Botan {
 namespace detail {
 
 /**
- * Constant time implementation for computing an unsigned integer division
- * with KyberConstants::Q = 3329.
+ * Helper to implement integer division by a divisor @p d > 1 known at compile
+ * time, that avoids the emission of potential variable time operations by the
+ * compiler. Note that this will work for numerators that must adhere to
+ * n < 2^W. @p W is given as a template parameter.
  *
- * It enforces the optimization of various compilers,
- * replacing the division operation with multiplication and shifts.
- *
- * @returns (a / KyberConstants::Q)
+ * Based on "Hacker's Delight" (Second Edition) by Henry S. Warren, Jr. Chapter
+ * 10-9 "Unsigned Division by Divisors >= 1"
  */
-inline uint16_t ct_int_div_kyber_q(uint32_t a) {
-   const uint64_t tmp = (static_cast<uint64_t>(a) * 989558401UL) >> 32;
-   return static_cast<uint16_t>((tmp + ((a - tmp) >> 1)) >> 11);
+template <uint8_t W, uint16_t d>
+   requires(d >= 2) && (d < (1 << W)) && (W <= 32)
+consteval std::pair<uint8_t, uint32_t> calculate_p_and_m() {
+   constexpr uint8_t p = [] {
+      constexpr auto nc = static_cast<uint32_t>((uint64_t(1) << W) - ((uint64_t(1) << W) % d) - 1);
+      for(uint8_t p_candidate = W; p_candidate <= 2 * W; ++p_candidate) {
+         const uint64_t pp2 = (uint64_t(1) << p_candidate);
+         if(pp2 > nc * (d - 1 - ((pp2 - 1) % d))) {
+            return p_candidate;
+         }
+      }
+
+      BOTAN_ASSERT_UNREACHABLE();
+   }();
+
+   static_assert(p < 64);
+   constexpr uint64_t pp2 = (uint64_t(1) << p);
+   constexpr uint64_t m = (pp2 + d - 1 - ((pp2 - 1) % d)) / d;
+   static_assert(m <= std::numeric_limits<uint32_t>::max());
+   return {p, static_cast<uint32_t>(m)};
+}
+
+template <uint16_t d>
+uint32_t ct_divide_by(uint32_t n) {
+   // Get constants p and m for a division by d for numerators < 2^18.
+   constexpr uint8_t W = 18;
+   BOTAN_DEBUG_ASSERT(n < (1 << W));
+   constexpr auto pm = detail::calculate_p_and_m<W, d>();
+   return static_cast<uint32_t>((static_cast<uint64_t>(n) * pm.second) >> pm.first);
 }
 
 }  // namespace detail
@@ -201,9 +227,9 @@ class Polynomial {
          for(size_t i = 0; i < size() / 8; ++i) {
             result[i] = 0;
             for(size_t j = 0; j < 8; ++j) {
-               const uint16_t t = detail::ct_int_div_kyber_q((static_cast<uint16_t>(this->m_coeffs[8 * i + j]) << 1) +
-                                                             KyberConstants::Q / 2);
-               result[i] |= (t & 1) << j;
+               const auto t = detail::ct_divide_by<KyberConstants::Q>(
+                  (static_cast<uint16_t>(this->m_coeffs[8 * i + j]) << 1) + KyberConstants::Q / 2);
+               result[i] |= static_cast<uint8_t>(t & 1) << j;
             }
          }
 
@@ -641,9 +667,9 @@ class Ciphertext {
          if(mode.k() == 2 || mode.k() == 3) {
             for(size_t i = 0; i < p.size() / 8; ++i) {
                for(size_t j = 0; j < 8; ++j) {
-                  t[j] =
-                     detail::ct_int_div_kyber_q((static_cast<uint16_t>(p[8 * i + j]) << 4) + KyberConstants::Q / 2) &
-                     15;
+                  t[j] = static_cast<uint8_t>(detail::ct_divide_by<KyberConstants::Q>(
+                                                 (static_cast<uint16_t>(p[8 * i + j]) << 4) + KyberConstants::Q / 2) &
+                                              0b1111);
                }
 
                auto r = bs.next<4>();
@@ -655,9 +681,9 @@ class Ciphertext {
          } else if(mode.k() == 4) {
             for(size_t i = 0; i < p.size() / 8; ++i) {
                for(size_t j = 0; j < 8; ++j) {
-                  t[j] =
-                     detail::ct_int_div_kyber_q((static_cast<uint32_t>(p[8 * i + j]) << 5) + KyberConstants::Q / 2) &
-                     31;
+                  t[j] = static_cast<uint8_t>(detail::ct_divide_by<KyberConstants::Q>(
+                                                 (static_cast<uint32_t>(p[8 * i + j]) << 5) + KyberConstants::Q / 2) &
+                                              0b11111);
                }
 
                auto r = bs.next<5>();

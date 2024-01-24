@@ -26,6 +26,8 @@
    #include <botan/pubkey.h>
    #include <botan/rng.h>
    #include <botan/internal/fmt.h>
+   #include <botan/internal/kyber_constants.h>
+   #include <botan/internal/kyber_structures.h>
    #include <botan/internal/stl_util.h>
 #endif
 
@@ -249,6 +251,27 @@ class Kyber_Keygen_Tests final : public PK_Key_Generation_Test {
 };
 
 BOTAN_REGISTER_TEST("kyber", "kyber_keygen", Kyber_Keygen_Tests);
+
+namespace {
+
+std::vector<Test::Result> test_kyber_utilities() {
+   return {
+      Botan_Tests::CHECK("constant-time division helper",
+                         [](Test::Result& result) {
+                            constexpr auto Q = Botan::KyberConstants::Q;
+                            // Check ct_divide_by with all possible inputs that may appear in Kyber.
+                            for(uint32_t i = 0; i < (1 << 18); ++i) {
+                               result.test_is_eq<uint32_t>(
+                                  Botan::fmt("{}/Q", i), Botan::detail::ct_divide_by<Q>(i), i / Q);
+                            }
+                         }),
+   };
+}
+
+}  // namespace
+
+BOTAN_REGISTER_TEST_FN("kyber", "kyber_utils", test_kyber_utilities);
+
 #endif
 
 }  // namespace Botan_Tests
