@@ -58,6 +58,16 @@ std::shared_ptr<tls::Context> prepare_context_for(std::string_view server_info) 
                                          tls::Server_Information(server_info));
 }
 
+http::request<http::string_body> create_GET_request(const std::string& host, const std::string& target) {
+   http::request<http::string_body> req;
+   req.version(11);
+   req.method(http::verb::get);
+   req.target(target);
+   req.set(http::field::host, host);
+   req.set(http::field::user_agent, Botan::version_string());
+   return req;
+}
+
 }  // namespace
 
 static net::awaitable<void> request(std::string host, std::string port, std::string target) {
@@ -65,25 +75,17 @@ static net::awaitable<void> request(std::string host, std::string port, std::str
    auto resolver = net::use_awaitable.as_default_on(tcp::resolver(co_await net::this_coro::executor));
    const auto dns_result = co_await resolver.async_resolve(host, port);
 
-   // Connect to host
-   auto tcp_stream = net::use_awaitable.as_default_on(beast::tcp_stream(co_await net::this_coro::executor));
-   tcp_stream.expires_after(std::chrono::seconds(30));
-   co_await tcp_stream.async_connect(dns_result);
-
-   // Establish a TLS session
-   auto tls_stream = tls::Stream<decltype(tcp_stream)>(std::move(tcp_stream), prepare_context_for(host));
+   // Connect to host and establish a TLS session
+   auto tls_stream =
+      tls::Stream(prepare_context_for(host),
+                  net::use_awaitable.as_default_on(beast::tcp_stream(co_await net::this_coro::executor)));
    tls_stream.next_layer().expires_after(std::chrono::seconds(30));
+   co_await tls_stream.next_layer().async_connect(dns_result);
    co_await tls_stream.async_handshake(tls::Connection_Side::Client);
 
-   // Set up and send HTTP request
-   http::request<http::string_body> req;
-   req.version(11);
-   req.method(http::verb::get);
-   req.target(target);
-   req.set(http::field::host, host);
-   req.set(http::field::user_agent, Botan::version_string());
+   // Send HTTP GET request
    tls_stream.next_layer().expires_after(std::chrono::seconds(30));
-   co_await http::async_write(tls_stream, req);
+   co_await http::async_write(tls_stream, create_GET_request(host, target));
 
    // Receive HTTP response and print result
    beast::flat_buffer b;
