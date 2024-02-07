@@ -135,7 +135,8 @@ int main(int argc, char* argv[]) {
 #else
 
 int main() {
-   std::cout << "Your boost version is too old, sorry.\n";
+   std::cout << "Your boost version is too old, sorry.\n"
+             << "Or did you compile Botan without --with-boost?\n";
    return 1;
 }
 
