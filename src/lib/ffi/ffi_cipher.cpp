@@ -241,6 +241,10 @@ int botan_cipher_get_tag_length(botan_cipher_t cipher, size_t* tl) {
    return BOTAN_FFI_VISIT(cipher, [=](const auto& c) { *tl = c.tag_size(); });
 }
 
+int botan_cipher_is_authenticated(botan_cipher_t cipher) {
+   return BOTAN_FFI_VISIT(cipher, [=](const auto& c) { return c.authenticated() ? 1 : 0; });
+}
+
 int botan_cipher_name(botan_cipher_t cipher, char* name, size_t* name_len) {
    return BOTAN_FFI_VISIT(cipher, [=](const auto& c) { return write_str_output(name, name_len, c.name()); });
 }

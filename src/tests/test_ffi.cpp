@@ -814,6 +814,8 @@ class FFI_CBC_Cipher_Test final : public FFI_Test {
                   TEST_FFI_OK(botan_cipher_output_length, (cipher_decrypt, ciphertext.size(), &ptext_len));
                   std::vector<uint8_t> decrypted(ptext_len);
 
+                  TEST_FFI_RC(0, botan_cipher_is_authenticated, (cipher_encrypt));
+
                   TEST_FFI_OK(botan_cipher_set_key, (cipher_decrypt, symkey.data(), symkey.size()));
                   TEST_FFI_OK(botan_cipher_start, (cipher_decrypt, nonce.data(), nonce.size()));
                   TEST_FFI_OK(botan_cipher_update,
@@ -872,6 +874,8 @@ class FFI_GCM_Test final : public FFI_Test {
 
             TEST_FFI_OK(botan_cipher_get_tag_length, (cipher_encrypt, &tag_len));
             result.test_int_eq(tag_len, 16, "Expected GCM tag length");
+
+            TEST_FFI_RC(1, botan_cipher_is_authenticated, (cipher_encrypt));
 
             TEST_FFI_RC(1, botan_cipher_valid_nonce_length, (cipher_encrypt, 12));
             // GCM accepts any nonce size except zero
@@ -988,6 +992,8 @@ class FFI_EAX_Test final : public FFI_Test {
             TEST_FFI_OK(botan_cipher_get_tag_length, (cipher_encrypt, &tag_len));
             result.test_int_eq(tag_len, 16, "Expected EAX tag length");
 
+            TEST_FFI_RC(1, botan_cipher_is_authenticated, (cipher_encrypt));
+
             TEST_FFI_RC(1, botan_cipher_valid_nonce_length, (cipher_encrypt, 12));
             // EAX accepts any nonce size...
             TEST_FFI_RC(1, botan_cipher_valid_nonce_length, (cipher_encrypt, 0));
@@ -1078,6 +1084,8 @@ class FFI_StreamCipher_Test final : public FFI_Test {
                "9806F66B7970FDFF8617187BB9FFFDFF5AE4DF3EDBD5D35E5B4F09020DB03EAB1E031DDA2FBE03D1792170A0F3009CEE");
 
             std::vector<uint8_t> ct(pt.size());
+
+            TEST_FFI_RC(0, botan_cipher_is_authenticated, (ctr));
 
             size_t input_consumed = 0;
             size_t output_written = 0;
