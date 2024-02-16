@@ -9,12 +9,12 @@
 #ifndef BOTAN_KECCAK_HELPERS_H_
 #define BOTAN_KECCAK_HELPERS_H_
 
+#include <botan/assert.h>
+
 #include <array>
+#include <concepts>
 #include <cstdint>
 #include <span>
-
-#include <botan/assert.h>
-#include <botan/concepts.h>
 
 namespace Botan {
 
@@ -87,7 +87,7 @@ concept absorbing_object = updatable_object<T> || appendable_object<T>;
  * @returns the number of bytes absorbed into the @p xof
  */
 template <absorbing_object T, typename... Ts>
-   requires(concepts::constructible_from<std::span<const uint8_t>, Ts> && ...)
+   requires(std::constructible_from<std::span<const uint8_t>, Ts> && ...)
 size_t keccak_absorb_padded_strings_encoding(T& sink, size_t padding_mod, Ts... byte_strings) {
    BOTAN_ASSERT_NOMSG(padding_mod > 0);
 

@@ -201,7 +201,7 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       * @throws Exception if RNG or memory allocation fails
       */
       template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
-         requires concepts::default_initializable<T>
+         requires std::default_initializable<T>
       T random_vec(size_t bytes) {
          T result;
          random_vec(result, bytes);
