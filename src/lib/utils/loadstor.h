@@ -9,10 +9,10 @@
 #ifndef BOTAN_LOAD_STORE_H_
 #define BOTAN_LOAD_STORE_H_
 
-#include <botan/concepts.h>
 #include <botan/mem_ops.h>
 #include <botan/types.h>
 #include <botan/internal/bswap.h>
+#include <concepts>
 #include <vector>
 
 namespace Botan {
@@ -88,7 +88,7 @@ inline constexpr uint64_t make_uint64(
 * @param in_range a fixed-length span with some bytes
 * @return T loaded from in, as a big-endian value
 */
-template <concepts::unsigned_integral T, ranges::contiguous_range<uint8_t> InR>
+template <std::unsigned_integral T, ranges::contiguous_range<uint8_t> InR>
 inline constexpr T load_be(InR&& in_range) {
    ranges::assert_exact_byte_length<sizeof(T)>(in_range);
    std::span in{in_range};
@@ -113,7 +113,7 @@ inline constexpr T load_be(InR&& in_range) {
 * @param in_range a fixed-length span with some bytes
 * @return T loaded from in, as a little-endian value
 */
-template <concepts::unsigned_integral T, ranges::contiguous_range<uint8_t> InR>
+template <std::unsigned_integral T, ranges::contiguous_range<uint8_t> InR>
 inline constexpr T load_le(InR&& in_range) {
    ranges::assert_exact_byte_length<sizeof(T)>(in_range);
    std::span in{in_range};
@@ -222,7 +222,7 @@ inline constexpr T load_le(const uint8_t in[], size_t off) {
 * @param off an offset into the array
 * @return off'th unsigned integer of in, as a big-endian value
 */
-template <concepts::unsigned_integral T>
+template <std::unsigned_integral T>
 inline constexpr T load_be(const uint8_t in[], size_t off) {
    // asserts that *in points to the correct amount of memory
    return load_be<T>(std::span<const uint8_t, sizeof(T)>(in + off * sizeof(T), sizeof(T)));
@@ -234,7 +234,7 @@ inline constexpr T load_be(const uint8_t in[], size_t off) {
 * @param off an offset into the array
 * @return off'th unsigned integer of in, as a little-endian value
 */
-template <concepts::unsigned_integral T>
+template <std::unsigned_integral T>
 inline constexpr T load_le(const uint8_t in[], size_t off) {
    // asserts that *in points to the correct amount of memory
    return load_le<T>(std::span<const uint8_t, sizeof(T)>(in + off * sizeof(T), sizeof(T)));
@@ -245,7 +245,7 @@ inline constexpr T load_le(const uint8_t in[], size_t off) {
 * @param in   a fixed-length span to some bytes
 * @param outs a arbitrary-length parameter list of unsigned integers to be loaded
 */
-template <ranges::contiguous_range<uint8_t> InR, concepts::unsigned_integral... Ts>
+template <ranges::contiguous_range<uint8_t> InR, std::unsigned_integral... Ts>
    requires(sizeof...(Ts) > 0) && all_same_v<Ts...>
 inline constexpr void load_be(InR&& in, Ts&... outs) {
    ranges::assert_exact_byte_length<(sizeof(Ts) + ...)>(in);
@@ -262,7 +262,7 @@ inline constexpr void load_be(InR&& in, Ts&... outs) {
 * @param in   a fixed-length span to some bytes
 * @param outs a arbitrary-length parameter list of unsigned integers to be loaded
 */
-template <ranges::contiguous_range<uint8_t> InR, concepts::unsigned_integral... Ts>
+template <ranges::contiguous_range<uint8_t> InR, std::unsigned_integral... Ts>
    requires(sizeof...(Ts) > 0) && all_same_v<Ts...>
 inline constexpr void load_le(InR&& in, Ts&... outs) {
    ranges::assert_exact_byte_length<(sizeof(Ts) + ...)>(in);
@@ -279,7 +279,7 @@ inline constexpr void load_le(InR&& in, Ts&... outs) {
 * @param in   a pointer to some bytes
 * @param outs a arbitrary-length parameter list of unsigned integers to be loaded
 */
-template <concepts::unsigned_integral... Ts>
+template <std::unsigned_integral... Ts>
    requires(sizeof...(Ts) > 0) && all_same_v<Ts...>
 inline constexpr void load_be(const uint8_t in[], Ts&... outs) {
    constexpr auto bytes = (sizeof(outs) + ...);
@@ -292,7 +292,7 @@ inline constexpr void load_be(const uint8_t in[], Ts&... outs) {
 * @param in   a pointer to some bytes
 * @param outs a arbitrary-length parameter list of unsigned integers to be loaded
 */
-template <concepts::unsigned_integral... Ts>
+template <std::unsigned_integral... Ts>
    requires(sizeof...(Ts) > 0) && all_same_v<Ts...>
 inline constexpr void load_le(const uint8_t in[], Ts&... outs) {
    constexpr auto bytes = (sizeof(outs) + ...);
@@ -354,7 +354,7 @@ inline constexpr void load_be(T out[], const uint8_t in[], size_t count) {
 * @param in the input unsigned integer
 * @param out_range the fixed-length span to write to
 */
-template <concepts::unsigned_integral T, ranges::contiguous_output_range<uint8_t> OutR>
+template <std::unsigned_integral T, ranges::contiguous_output_range<uint8_t> OutR>
 inline constexpr void store_be(T in, OutR&& out_range) {
    ranges::assert_exact_byte_length<sizeof(T)>(out_range);
    std::span out{out_range};
@@ -379,7 +379,7 @@ inline constexpr void store_be(T in, OutR&& out_range) {
 * @param in the input unsigned integer
 * @param out_range the fixed-length span to write to
 */
-template <concepts::unsigned_integral T, ranges::contiguous_output_range<uint8_t> OutR>
+template <std::unsigned_integral T, ranges::contiguous_output_range<uint8_t> OutR>
 inline constexpr void store_le(T in, OutR&& out_range) {
    ranges::assert_exact_byte_length<sizeof(T)>(out_range);
    std::span out{out_range};
@@ -404,7 +404,7 @@ inline constexpr void store_le(T in, OutR&& out_range) {
 * @param in the input unsigned integer
 * @param out the byte array to write to
 */
-template <concepts::unsigned_integral T>
+template <std::unsigned_integral T>
 inline constexpr void store_be(T in, uint8_t out[sizeof(T)]) {
    store_be(in, std::span<uint8_t, sizeof(T)>(out, sizeof(T)));
 }
@@ -414,7 +414,7 @@ inline constexpr void store_be(T in, uint8_t out[sizeof(T)]) {
 * @param in the input unsigned integer
 * @param out the byte array to write to
 */
-template <concepts::unsigned_integral T>
+template <std::unsigned_integral T>
 inline constexpr void store_le(T in, uint8_t out[sizeof(T)]) {
    store_le(in, std::span<uint8_t, sizeof(T)>(out, sizeof(T)));
 }
@@ -424,7 +424,7 @@ inline constexpr void store_le(T in, uint8_t out[sizeof(T)]) {
 * @param out a fixed-length span to some bytes
 * @param ins a arbitrary-length parameter list of unsigned integers to be stored
 */
-template <ranges::contiguous_output_range<uint8_t> OutR, concepts::unsigned_integral... Ts>
+template <ranges::contiguous_output_range<uint8_t> OutR, std::unsigned_integral... Ts>
    requires(sizeof...(Ts) > 0) && all_same_v<Ts...>
 inline constexpr void store_be(OutR&& out, Ts... ins) {
    ranges::assert_exact_byte_length<(sizeof(Ts) + ...)>(out);
@@ -441,7 +441,7 @@ inline constexpr void store_be(OutR&& out, Ts... ins) {
 * @param out a fixed-length span to some bytes
 * @param ins a arbitrary-length parameter list of unsigned integers to be stored
 */
-template <ranges::contiguous_output_range<uint8_t> OutR, concepts::unsigned_integral... Ts>
+template <ranges::contiguous_output_range<uint8_t> OutR, std::unsigned_integral... Ts>
    requires(sizeof...(Ts) > 0) && all_same_v<Ts...>
 inline constexpr void store_le(OutR&& out, Ts... ins) {
    ranges::assert_exact_byte_length<(sizeof(Ts) + ...)>(out);
@@ -458,7 +458,7 @@ inline constexpr void store_le(OutR&& out, Ts... ins) {
 * @param ins a pointer to some bytes to be written
 * @param out a arbitrary-length parameter list of unsigned integers to be stored
 */
-template <concepts::unsigned_integral... Ts>
+template <std::unsigned_integral... Ts>
    requires(sizeof...(Ts) > 0) && all_same_v<Ts...>
 inline constexpr void store_be(uint8_t out[], Ts... ins) {
    constexpr auto bytes = (sizeof(ins) + ...);
@@ -471,7 +471,7 @@ inline constexpr void store_be(uint8_t out[], Ts... ins) {
 * @param ins a pointer to some bytes to be written
 * @param out a arbitrary-length parameter list of unsigned integers to be stored
 */
-template <concepts::unsigned_integral... Ts>
+template <std::unsigned_integral... Ts>
    requires(sizeof...(Ts) > 0) && all_same_v<Ts...>
 inline constexpr void store_le(uint8_t out[], Ts... ins) {
    constexpr auto bytes = (sizeof(ins) + ...);
@@ -484,7 +484,7 @@ inline constexpr void store_le(uint8_t out[], Ts... ins) {
 * @param in the input unsigned integer
 * @return a byte array holding the integer value in big-endian byte order
 */
-template <concepts::unsigned_integral T>
+template <std::unsigned_integral T>
 inline constexpr auto store_be(T in) {
    std::array<uint8_t, sizeof(T)> out;
    store_be(in, out);
@@ -496,7 +496,7 @@ inline constexpr auto store_be(T in) {
 * @param in the input unsigned integer
 * @return a byte array holding the integer value in little-endian byte order
 */
-template <concepts::unsigned_integral T>
+template <std::unsigned_integral T>
 inline constexpr auto store_le(T in) {
    std::array<uint8_t, sizeof(T)> out;
    store_le(in, out);

@@ -121,41 +121,6 @@ inline constexpr void assert_equal_byte_lengths(R0&& r0, Rs&&... rs)
 
 namespace concepts {
 
-// TODO: C++20 use std::convertible_to<> that was not available in Android NDK
-//       as of this writing. Tested with API Level up to 33.
-template <class FromT, class ToT>
-concept convertible_to = std::is_convertible_v<FromT, ToT> && requires { static_cast<ToT>(std::declval<FromT>()); };
-
-// TODO: C++20 provides concepts like std::equality_comparable or
-//       std::three_way_comparable, but at the time of this writing, some
-//       target platforms did not ship with those (Xcode 14, Android NDK r25,
-//       emscripten)
-
-template <typename T>
-concept equality_comparable = requires(const std::remove_reference_t<T>& a, const std::remove_reference_t<T> b) {
-                                 { a == b } -> convertible_to<bool>;
-                              };
-
-template <typename T>
-concept three_way_comparison_result =
-   convertible_to<T, std::weak_ordering> || convertible_to<T, std::partial_ordering> ||
-   convertible_to<T, std::strong_ordering>;
-
-template <typename T>
-concept three_way_comparable = requires(const std::remove_reference_t<T>& a, const std::remove_reference_t<T> b) {
-                                  { a <=> b } -> three_way_comparison_result;
-                               };
-
-template <class T>
-concept destructible = std::is_nothrow_destructible_v<T>;
-
-template <class T, class... Args>
-concept constructible_from = destructible<T> && std::is_constructible_v<T, Args...>;
-
-template <class T>
-concept default_initializable =
-   constructible_from<T> && requires { T{}; } && requires { ::new(static_cast<void*>(nullptr)) T; };
-
 // TODO: C++20 provides concepts like std::ranges::range or ::sized_range
 //       but at the time of this writing clang had not caught up on all
 //       platforms. E.g. clang 14 on Xcode does not support ranges properly.
@@ -206,16 +171,6 @@ concept strong_type = is_strong_type_v<T>;
 
 template <class T>
 concept contiguous_strong_type = strong_type<T> && contiguous_container<T>;
-
-// std::integral is a concept that is shipped with C++20 but Android NDK is not
-// yet there.
-// TODO: C++20 - replace with std::integral
-template <typename T>
-concept integral = std::is_integral_v<T>;
-
-// TODO: C++20 - replace with std::unsigned_integral
-template <typename T>
-concept unsigned_integral = std::is_integral_v<T> && std::is_unsigned_v<T>;
 
 }  // namespace concepts
 

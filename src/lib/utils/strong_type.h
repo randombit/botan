@@ -58,7 +58,7 @@ class Strong_Adapter : public Strong_Base<T> {
       using Strong_Base<T>::Strong_Base;
 };
 
-template <concepts::integral T>
+template <std::integral T>
 class Strong_Adapter<T> : public Strong_Base<T> {
    public:
       using Strong_Base<T>::Strong_Base;
@@ -174,328 +174,328 @@ operator<<(std::ostream& os, const Strong<T, Tags...>& v) {
 }
 
 template <typename T, typename... Tags>
-   requires(concepts::equality_comparable<T>) bool
+   requires(std::equality_comparable<T>) bool
 operator==(const Strong<T, Tags...>& lhs, const Strong<T, Tags...>& rhs) {
    return lhs.get() == rhs.get();
 }
 
 template <typename T, typename... Tags>
-   requires(concepts::three_way_comparable<T>)
+   requires(std::three_way_comparable<T>)
 auto operator<=>(const Strong<T, Tags...>& lhs, const Strong<T, Tags...>& rhs) {
    return lhs.get() <=> rhs.get();
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
 auto operator<=>(T1 a, Strong<T2, Tags...> b) {
    return a <=> b.get();
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
 auto operator<=>(Strong<T1, Tags...> a, T2 b) {
    return a.get() <=> b;
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
 auto operator==(T1 a, Strong<T2, Tags...> b) {
    return a == b.get();
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
 auto operator==(Strong<T1, Tags...> a, T2 b) {
    return a.get() == b;
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator+(T1 a, Strong<T2, Tags...> b) {
    return Strong<T2, Tags...>(a + b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator+(Strong<T1, Tags...> a, T2 b) {
    return Strong<T1, Tags...>(a.get() + b);
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr decltype(auto) operator+(Strong<T, Tags...> a, Strong<T, Tags...> b) {
    return Strong<T, Tags...>(a.get() + b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator-(T1 a, Strong<T2, Tags...> b) {
    return Strong<T2, Tags...>(a - b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator-(Strong<T1, Tags...> a, T2 b) {
    return Strong<T1, Tags...>(a.get() - b);
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr decltype(auto) operator-(Strong<T, Tags...> a, Strong<T, Tags...> b) {
    return Strong<T, Tags...>(a.get() - b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator*(T1 a, Strong<T2, Tags...> b) {
    return Strong<T2, Tags...>(a * b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator*(Strong<T1, Tags...> a, T2 b) {
    return Strong<T1, Tags...>(a.get() * b);
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr decltype(auto) operator*(Strong<T, Tags...> a, Strong<T, Tags...> b) {
    return Strong<T, Tags...>(a.get() * b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator/(T1 a, Strong<T2, Tags...> b) {
    return Strong<T2, Tags...>(a / b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator/(Strong<T1, Tags...> a, T2 b) {
    return Strong<T1, Tags...>(a.get() / b);
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr decltype(auto) operator/(Strong<T, Tags...> a, Strong<T, Tags...> b) {
    return Strong<T, Tags...>(a.get() / b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator^(T1 a, Strong<T2, Tags...> b) {
    return Strong<T2, Tags...>(a ^ b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator^(Strong<T1, Tags...> a, T2 b) {
    return Strong<T1, Tags...>(a.get() ^ b);
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr decltype(auto) operator^(Strong<T, Tags...> a, Strong<T, Tags...> b) {
    return Strong<T, Tags...>(a.get() ^ b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator&(T1 a, Strong<T2, Tags...> b) {
    return Strong<T2, Tags...>(a & b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator&(Strong<T1, Tags...> a, T2 b) {
    return Strong<T1, Tags...>(a.get() & b);
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr decltype(auto) operator&(Strong<T, Tags...> a, Strong<T, Tags...> b) {
    return Strong<T, Tags...>(a.get() & b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator|(T1 a, Strong<T2, Tags...> b) {
    return Strong<T2, Tags...>(a | b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator|(Strong<T1, Tags...> a, T2 b) {
    return Strong<T1, Tags...>(a.get() | b);
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr decltype(auto) operator|(Strong<T, Tags...> a, Strong<T, Tags...> b) {
    return Strong<T, Tags...>(a.get() | b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator>>(T1 a, Strong<T2, Tags...> b) {
    return Strong<T2, Tags...>(a >> b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator>>(Strong<T1, Tags...> a, T2 b) {
    return Strong<T1, Tags...>(a.get() >> b);
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr decltype(auto) operator>>(Strong<T, Tags...> a, Strong<T, Tags...> b) {
    return Strong<T, Tags...>(a.get() >> b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator<<(T1 a, Strong<T2, Tags...> b) {
    return Strong<T2, Tags...>(a << b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr decltype(auto) operator<<(Strong<T1, Tags...> a, T2 b) {
    return Strong<T1, Tags...>(a.get() << b);
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr decltype(auto) operator<<(Strong<T, Tags...> a, Strong<T, Tags...> b) {
    return Strong<T, Tags...>(a.get() << b.get());
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr auto operator+=(Strong<T1, Tags...>& a, T2 b) {
    a.get() += b;
    return a;
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr auto operator+=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
    a.get() += b.get();
    return a;
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr auto operator-=(Strong<T1, Tags...>& a, T2 b) {
    a.get() -= b;
    return a;
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr auto operator-=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
    a.get() -= b.get();
    return a;
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr auto operator*=(Strong<T1, Tags...>& a, T2 b) {
    a.get() *= b;
    return a;
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr auto operator*=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
    a.get() *= b.get();
    return a;
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr auto operator/=(Strong<T1, Tags...>& a, T2 b) {
    a.get() /= b;
    return a;
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr auto operator/=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
    a.get() /= b.get();
    return a;
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr auto operator^=(Strong<T1, Tags...>& a, T2 b) {
    a.get() ^= b;
    return a;
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr auto operator^=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
    a.get() ^= b.get();
    return a;
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr auto operator&=(Strong<T1, Tags...>& a, T2 b) {
    a.get() &= b;
    return a;
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr auto operator&=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
    a.get() &= b.get();
    return a;
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr auto operator|=(Strong<T1, Tags...>& a, T2 b) {
    a.get() |= b;
    return a;
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr auto operator|=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
    a.get() |= b.get();
    return a;
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr auto operator>>=(Strong<T1, Tags...>& a, T2 b) {
    a.get() >>= b;
    return a;
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr auto operator>>=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
    a.get() >>= b.get();
    return a;
 }
 
-template <concepts::integral T1, concepts::integral T2, typename... Tags>
+template <std::integral T1, std::integral T2, typename... Tags>
    requires(detail::has_capability<EnableArithmeticWithPlainNumber, Tags...>)
 constexpr auto operator<<=(Strong<T1, Tags...>& a, T2 b) {
    a.get() <<= b;
    return a;
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr auto operator<<=(Strong<T, Tags...>& a, Strong<T, Tags...> b) {
    a.get() <<= b.get();
    return a;
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr auto operator++(Strong<T, Tags...>& a, int) {
    auto tmp = a;
    ++a.get();
    return tmp;
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr auto operator++(Strong<T, Tags...>& a) {
    ++a.get();
    return a;
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr auto operator--(Strong<T, Tags...>& a, int) {
    auto tmp = a;
    --a.get();
    return tmp;
 }
 
-template <concepts::integral T, typename... Tags>
+template <std::integral T, typename... Tags>
 constexpr auto operator--(Strong<T, Tags...>& a) {
    --a.get();
    return a;
