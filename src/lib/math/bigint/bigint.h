@@ -703,6 +703,12 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       void ct_cond_add(bool predicate, const BigInt& value);
 
       /**
+       * Shift @p shift bits to the left, runtime is independent of
+       * the value of @p shift.
+       */
+      void ct_shift_left(size_t shift);
+
+      /**
        * If predicate is true flip the sign of *this
        */
       void cond_flip_sign(bool predicate);
