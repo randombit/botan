@@ -26,6 +26,14 @@ algorithm headers (such as ``aes.h``) have been removed. Instead you should
 create objects via the factory methods (in the case of AES,
 ``BlockCipher::create``) which works in both 2.x and 3.0
 
+Errata: ``pk_ops.h``
+^^^^^^^^^^^^^^^^^^^^
+
+Between Botan 3.0 and 3.2 the public header ``pk_ops.h`` was removed
+accidentally. This header is typically required for specialized applications
+that interface with dedicated crypto hardware. If you are migrating such an
+application, please make sure to use Botan 3.3 or newer.
+
 Build Artifacts
 ---------------
 

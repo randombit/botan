@@ -16,7 +16,6 @@
    #include <botan/rng.h>
    #include <botan/internal/blinding.h>
    #include <botan/internal/p11_mechanism.h>
-   #include <botan/internal/pk_ops.h>
    #include <botan/internal/pk_ops_impl.h>
 
 namespace Botan::PKCS11 {

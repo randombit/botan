@@ -16,6 +16,11 @@
 * Unless you're doing something like that, you don't need anything
 * here. Instead use pubkey.h which wraps these types safely and
 * provides a stable application-oriented API.
+*
+* Note: This header was accidentally pulled from the public API between
+*       Botan 3.0.0 and 3.2.0, and then restored in 3.3.0. If you are
+*       maintaining an application which used this header in Botan 2.x,
+*       you should make sure to use Botan 3.3.0 or later when migrating.
 */
 
 #include <botan/pk_keys.h>
@@ -33,7 +38,7 @@ namespace PK_Ops {
 /**
 * Public key encryption interface
 */
-class Encryption {
+class BOTAN_UNSTABLE_API Encryption {
    public:
       virtual secure_vector<uint8_t> encrypt(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& rng) = 0;
 
@@ -47,7 +52,7 @@ class Encryption {
 /**
 * Public key decryption interface
 */
-class Decryption {
+class BOTAN_UNSTABLE_API Decryption {
    public:
       virtual secure_vector<uint8_t> decrypt(uint8_t& valid_mask,
                                              const uint8_t ciphertext[],
@@ -61,7 +66,7 @@ class Decryption {
 /**
 * Public key signature verification interface
 */
-class Verification {
+class BOTAN_UNSTABLE_API Verification {
    public:
       /**
       * Add more data to the message currently being signed
@@ -86,7 +91,7 @@ class Verification {
 /**
 * Public key signature creation interface
 */
-class Signature {
+class BOTAN_UNSTABLE_API Signature {
    public:
       /**
       * Add more data to the message currently being signed
@@ -124,7 +129,7 @@ class Signature {
 /**
 * A generic key agreement operation (eg DH or ECDH)
 */
-class Key_Agreement {
+class BOTAN_UNSTABLE_API Key_Agreement {
    public:
       virtual secure_vector<uint8_t> agree(
          size_t key_len, const uint8_t other_key[], size_t other_key_len, const uint8_t salt[], size_t salt_len) = 0;
@@ -137,7 +142,7 @@ class Key_Agreement {
 /**
 * KEM (key encapsulation)
 */
-class KEM_Encryption {
+class BOTAN_UNSTABLE_API KEM_Encryption {
    public:
       virtual void kem_encrypt(std::span<uint8_t> out_encapsulated_key,
                                std::span<uint8_t> out_shared_key,
@@ -152,7 +157,7 @@ class KEM_Encryption {
       virtual ~KEM_Encryption() = default;
 };
 
-class KEM_Decryption {
+class BOTAN_UNSTABLE_API KEM_Decryption {
    public:
       virtual void kem_decrypt(std::span<uint8_t> out_shared_key,
                                std::span<const uint8_t> encapsulated_key,

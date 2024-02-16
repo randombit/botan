@@ -11,6 +11,7 @@ brief -> "Implementations of public key schemes"
 pk_algs.h
 pk_keys.h
 pk_ops_fwd.h
+pk_ops.h
 pkcs8.h
 pubkey.h
 x509_key.h
@@ -18,7 +19,6 @@ x509_key.h
 
 <header:internal>
 blinding.h
-pk_ops.h
 pk_ops_impl.h
 workfactor.h
 </header:internal>
