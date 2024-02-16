@@ -53,13 +53,11 @@ std::unique_ptr<Cipher_Mode> Cipher_Mode::create(std::string_view algo,
                                                  std::string_view provider) {
 #if defined(BOTAN_HAS_COMMONCRYPTO)
    if(provider.empty() || provider == "commoncrypto") {
-      auto commoncrypto_cipher = make_commoncrypto_cipher_mode(algo, direction);
-
-      if(commoncrypto_cipher)
-         return commoncrypto_cipher;
+      if(auto cm = make_commoncrypto_cipher_mode(algo, direction))
+         return cm;
 
       if(!provider.empty())
-         return std::unique_ptr<Cipher_Mode>();
+         return nullptr;
    }
 #endif
 
