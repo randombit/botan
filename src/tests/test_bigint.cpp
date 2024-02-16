@@ -10,6 +10,7 @@
    #include <botan/bigint.h>
    #include <botan/numthry.h>
    #include <botan/divide.h>
+   #include <botan/reducer.h>
    #include <botan/internal/primality.h>
    #include <botan/reducer.h>
    #include <botan/pow_mod.h>
@@ -563,6 +564,30 @@ class BigInt_Rshift_Test final : public Text_Based_Test
    };
 
 BOTAN_REGISTER_TEST("math", "bn_rshift", BigInt_Rshift_Test);
+
+Test::Result test_const_time_left_shift() {
+   Test::Result result("BigInt const time shift");
+   const size_t bits = Test::run_long_tests() ? 2 * 4096 : 2048;
+
+   Botan::BigInt a = Botan::BigInt(Botan::BigInt::Sign::Positive, bits / sizeof(Botan::word));
+   for(size_t i = 0; i < bits; ++i) {
+      a.set_bit(i);
+   }
+
+   for(size_t i = 0; i < bits; ++i) {
+      auto ct = a;
+      auto chk = a;
+      ct.const_time_poison();
+      ct.ct_shift_left(i);
+      ct.const_time_unpoison();
+      chk <<= i;
+      result.test_eq("ct_shift_left " + std::to_string(i), ct, chk);
+   }
+
+   return result;
+}
+
+BOTAN_REGISTER_TEST_FN("math", "bn_ct_lshift", test_const_time_left_shift);
 
 class BigInt_Powmod_Test final : public Text_Based_Test
    {
