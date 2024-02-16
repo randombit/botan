@@ -4,11 +4,86 @@ Release Notes
 Version 3.3.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Various functions defined in ``mem_ops.h`` are now deprecated
-  for public use (GH #3759 #3757 #3755)
+* Add FrodoKEM post-quantum KEM (GH #3679 #3807 #3892)
 
-* Use ``BufferStuffer`` and ``concat`` helpers in public key code
-  (GH #3756 #3753)
+* Add support for Blake2s (GH #3796)
+
+* Add support for RFC 7250 in TLS 1.3 to allow authenticating peers
+  using raw public keys (GH #3771)
+
+* Update the BSI TLS policy to match the latest TR, particularly
+  enabling support for TLS 1.3 (GH #3809)
+
+* Add AsymmetricKey::generate_another() to generate a new key of the
+  same type and parameters as an existing key (GH #3770 #3786)
+
+* Add Private_Key::remaining_operations() that indicates the number of
+  remaining signatures for stateful hash-based signatures (GH #3821)
+
+* Add implementation of EC_PrivateKey::check_key() (GH #3782 #3804)
+
+* Add hardware acceleration for SHA-512 on ARMv8 (GH #3860 #3864)
+
+* X.509 certificates that contain Authority Information Access (AIA)
+  extensions can now be encoded (GH #3784)
+
+* Various functions defined in ``mem_ops.h`` are now deprecated
+  for public use (GH #3759 #3752 #3757)
+
+* The ASIO TLS stream can now be used with C++20 coroutines (GH #3764)
+
+* New public header asio_compat.h to check compatibility of the ASIO
+  TLS stream with the available boost version (1.73.0+) (GH #3765)
+
+* Flatten input buffer sequences in the ASIO TLS stream to avoid
+  creating unnecessarily small TLS records (GH #3839)
+
+* Hard-rename the potentially harmful build configuration flag
+  --terminate-on-asserts to --unsafe-terminate-on-asserts (GH #3755)
+
+* Use modern SQLite3 APIs with integer width annotations from SQLite3 3.37
+  (GH #3788 #3793)
+
+* Generate and install a CMake package config file (botan-config.cmake)
+  (GH #3722 #3827 #3830 #3825)
+
+* Add TLS::Channel::is_handshake_complete() predicate method (GH #3762)
+
+* Add support for setting thread names on Haiku OS and DragonflyBSD
+  (GH #3758 #3785)
+
+* Use /Zc:throwingNew with MSVC (GH #3858)
+
+* Work around a warning in GCC 13 (GH #3852)
+
+* Add a CLI utility for testing RSA side channels using the MARVIN
+  toolkit (GH #3749)
+
+* CLI utility 'tls_http_server' is now based on Boost Beast
+  (GH #3763 #3791)
+
+* CLI utility 'tls_client_hello' can detect and handle TLS 1.3 messages
+  (GH #3820)
+
+* Add a detailed migration guide for users of OpenSSL 1.1 (GH #3815)
+
+* Various updates to the documentation and code examples
+  (GH #3777 #3805 #3802 #3794 #3815 #3823 #3828 #3842 #3841 #3849 #3745)
+
+* Fixes and improvements to the build experience using ``ninja``
+  (GH #3751 #3750 #3769 #3798 #3848)
+
+* Fix handling of cofactors when performing scalar blinding in EC (GH #3803)
+
+* Fix potential timing side channels in Kyber (GH #3846)
+
+* Fix a potential dangling reference resulting in a crash in the OCB
+  mode of operation (GH #3814)
+
+* Fix validity checks in the construction of the ASIO TLS stream
+  (GH #3766)
+
+* Fix error code handling in ASIO TLS stream (GH #3795 #3801 #3773)
 
 * Fix a TLS 1.3 assertion failure that would trigger if the
   application callback returned an empty certificate chain. (GH #3754)
@@ -17,12 +92,40 @@ Version 3.3.0, Not Yet Released
   server would fail to reject a client hello that advertised (only)
   FFDHE groups that are not known to us. (GH #3743 #3742 #3729)
 
-* Add a cli utility for testing RSA side channels using the MARVIN
-  toolkit (GH #3749)
+* Fix that modifications made in TLS::Callbacks::tls_modify_extensions()
+  for the TLS 1.3 Certificate message were not being applied. (GH #3792)
 
-* Add support for setting thread names on Haiku OS (GH #3758)
+* Fix string mapping of the PKCS#11 mechanism RSA signing mechanism that
+  use SHA-384 (GH #3868)
 
-* Fix a build problem using ``ninja`` (GH #3751 #3750)
+* Fix a build issue on NetBSD (GH #3767)
+
+* Fix the configure.py to avoid recursing out of our source tree (GH #3748)
+
+* Fix various clang-tidy warnings (GH #3822)
+
+* Fix CLI tests on windows and enable them in CI (GH #3845)
+
+* Use ``BufferStuffer`` and ``concat`` helpers in public key code
+  (GH #3756 #3753)
+
+* Add a nightly test to ensure hybrid TLS 1.3 PQ/T compatibility with
+  external implementations (GH #3740)
+
+* Internal memory operation helpers are now memory container agnostic
+  using C++20 ranges (GH #3715 #3707)
+
+* Public and internal headers are now clearly separated in the build
+  directory. That restricts the examples build target to public headers.
+  (GH #3880)
+
+* House keeping for better code formatting with clang-format
+  (GH #3862 #3865)
+
+* Build documentation in CI and fail on warnings or errors (GH #3838)
+
+* Work around a GitHub Actions CI issue (actions/runner-images#8659)
+  (GH #3783 #3833 #3888)
 
 Version 3.2.0, 2023-10-09
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
