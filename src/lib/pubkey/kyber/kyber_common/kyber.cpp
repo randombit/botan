@@ -71,6 +71,20 @@ KyberMode::Mode kyber_mode_from_string(std::string_view str) {
    throw Invalid_Argument(fmt("'{}' is not a valid Kyber mode name", str));
 }
 
+/**
+ * Constant time implementation for computing an unsigned integer division
+ * with KyberConstants::Q = 3329.
+ *
+ * It enforces the optimization of various compilers,
+ * replacing the division operation with multiplication and shifts.
+ *
+ * @returns (a / KyberConstants::Q)
+ */
+uint16_t ct_int_div_kyber_q(uint32_t a) {
+   const uint64_t tmp = (static_cast<uint64_t>(a) * 989558401UL) >> 32;
+   return static_cast<uint16_t>((tmp + ((a - tmp) >> 1)) >> 11);
+}
+
 }  // namespace
 
 KyberMode::KyberMode(Mode mode) : m_mode(mode) {}
@@ -399,21 +413,12 @@ class Polynomial {
 
          this->csubq();
 
-         auto compress = [](uint32_t t) {
-            // (t << 1) + ((KyberConstants::Q / 2) / KyberConstants::Q) & 1
-            // Note that magic numbers assume that ::Q = 3329
-            t <<= 1;
-            t += 1665;
-            t *= 80635;
-            t >>= 28;
-            t &= 1;
-            return static_cast<uint8_t>(t);
-         };
-
          for(size_t i = 0; i < size() / 8; ++i) {
             result[i] = 0;
             for(size_t j = 0; j < 8; ++j) {
-               result[i] |= compress(this->m_coeffs[8 * i + j]) << j;
+               const uint16_t t =
+                  ct_int_div_kyber_q((static_cast<uint16_t>(this->m_coeffs[8 * i + j]) << 1) + KyberConstants::Q / 2);
+               result[i] |= (t & 1) << j;
             }
          }
 
@@ -564,7 +569,7 @@ class Polynomial {
        */
       static int16_t barrett_reduce(int16_t a) {
          int16_t t;
-         const int16_t v = ((1U << 26) + KyberConstants::Q / 2) / KyberConstants::Q;
+         constexpr int16_t v = ((1U << 26) + KyberConstants::Q / 2) / KyberConstants::Q;
 
          t = static_cast<int32_t>(v) * a >> 26;
          t *= KyberConstants::Q;
@@ -865,8 +870,7 @@ class Ciphertext {
             size_t offset = 0;
             for(size_t i = 0; i < p.size() / 8; ++i) {
                for(size_t j = 0; j < 8; ++j) {
-                  t[j] =
-                     (((static_cast<uint16_t>(p[8 * i + j]) << 4) + KyberConstants::Q / 2) / KyberConstants::Q) & 15;
+                  t[j] = ct_int_div_kyber_q((static_cast<uint16_t>(p[8 * i + j]) << 4) + KyberConstants::Q / 2) & 15;
                }
 
                r[0 + offset] = t[0] | (t[1] << 4);
@@ -879,8 +883,7 @@ class Ciphertext {
             size_t offset = 0;
             for(size_t i = 0; i < p.size() / 8; ++i) {
                for(size_t j = 0; j < 8; ++j) {
-                  t[j] =
-                     (((static_cast<uint32_t>(p[8 * i + j]) << 5) + KyberConstants::Q / 2) / KyberConstants::Q) & 31;
+                  t[j] = ct_int_div_kyber_q((static_cast<uint32_t>(p[8 * i + j]) << 5) + KyberConstants::Q / 2) & 31;
                }
 
                r[0 + offset] = (t[0] >> 0) | (t[1] << 5);
