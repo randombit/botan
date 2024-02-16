@@ -3,6 +3,8 @@
 * (C) 1999-2011,2018 Jack Lloyd
 * (C) 2007 Yves Jerschow
 *
+* TODO: C++23: replace this entire implementation with std::byteswap
+*
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
