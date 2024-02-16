@@ -60,7 +60,7 @@ void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 
    const Key_Inserter key_xor(m_round_key.data());
 
-   BOTAN_PARALLEL_SIMD_FOR(size_t i = 0; i < blocks; ++i) {
+   for(size_t i = 0; i < blocks; ++i) {
       uint32_t B0, B1, B2, B3;
       load_le(in + 16 * i, B0, B1, B2, B3);
 
@@ -208,7 +208,7 @@ void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 
    const Key_Inserter key_xor(m_round_key.data());
 
-   BOTAN_PARALLEL_SIMD_FOR(size_t i = 0; i < blocks; ++i) {
+   for(size_t i = 0; i < blocks; ++i) {
       uint32_t B0, B1, B2, B3;
       load_le(in + 16 * i, B0, B1, B2, B3);
 
