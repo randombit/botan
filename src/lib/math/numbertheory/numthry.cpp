@@ -18,21 +18,6 @@
 
 namespace Botan {
 
-namespace {
-
-void sub_abs(BigInt& z, const BigInt& x, const BigInt& y)
-   {
-   const size_t x_sw = x.sig_words();
-   const size_t y_sw = y.sig_words();
-   z.resize(std::max(x_sw, y_sw));
-
-   bigint_sub_abs(z.mutable_data(),
-                  x.data(), x_sw,
-                  y.data(), y_sw);
-   }
-
-}
-
 /*
 * Return the number of 0 bits at the end of n
 */
@@ -61,22 +46,8 @@ size_t low_zero_bits(const BigInt& n)
    return seen_nonempty_word.if_set_return(low_zero);
    }
 
-namespace {
-
-size_t safegcd_loop_bound(size_t f_bits, size_t g_bits)
-   {
-   const size_t d = std::max(f_bits, g_bits);
-
-   if(d < 46)
-      return (49*d + 80) / 17;
-   else
-      return (49*d + 57) / 17;
-   }
-
-}
-
 /*
-* Calculate the GCD
+* Calculate the GCD in constant time
 */
 BigInt gcd(const BigInt& a, const BigInt& b)
    {
@@ -84,58 +55,77 @@ BigInt gcd(const BigInt& a, const BigInt& b)
       return abs(b);
    if(b.is_zero())
       return abs(a);
+
    if(a == 1 || b == 1)
       return 1;
 
-   // See https://gcd.cr.yp.to/safegcd-20190413.pdf fig 1.2
+   const size_t sz = std::max(a.sig_words(), b.sig_words());
+   auto u = BigInt::with_capacity(sz);
+   auto v = BigInt::with_capacity(sz);
+   u += a;
+   v += b;
 
-   BigInt f = a;
-   BigInt g = b;
-   f.const_time_poison();
-   g.const_time_poison();
+   u.const_time_poison();
+   v.const_time_poison();
 
-   f.set_sign(BigInt::Positive);
-   g.set_sign(BigInt::Positive);
+   u.set_sign(BigInt::Positive);
+   v.set_sign(BigInt::Positive);
 
-   const size_t common2s = std::min(low_zero_bits(f), low_zero_bits(g));
-   CT::unpoison(common2s);
+   // In the worst case we have two fully populated big ints. After right
+   // shifting so many times, we'll have reached the result for sure.
+   const size_t loop_cnt = u.bits() + v.bits();
 
-   f >>= common2s;
-   g >>= common2s;
+   using WordMask = CT::Mask<word>;
 
-   f.ct_cond_swap(f.is_even(), g);
+   // This temporary is big enough to hold all intermediate results of the
+   // algorithm. No reallocation will happen during the loop.
+   // Note however, that `ct_cond_assign()` will invalidate the 'sig_words'
+   // cache, which _does not_ shrink the capacity of the underlying buffer.
+   auto tmp = BigInt::with_capacity(sz);
+   size_t factors_of_two = 0;
+   for(size_t i = 0; i != loop_cnt; ++i) {
+      auto both_odd = WordMask::expand(u.is_odd()) & WordMask::expand(v.is_odd());
 
-   int32_t delta = 1;
+      // Subtract the smaller from the larger if both are odd
+      auto u_gt_v = WordMask::expand(bigint_cmp(u.data(), u.size(), v.data(), v.size()) > 0);
+      bigint_sub_abs(tmp.mutable_data(), u.data(), sz, v.data(), sz);
+      u.ct_cond_assign((u_gt_v & both_odd).is_set(), tmp);
+      v.ct_cond_assign((~u_gt_v & both_odd).is_set(), tmp);
 
-   const size_t loop_cnt = safegcd_loop_bound(f.bits(), g.bits());
+      const auto u_is_even = WordMask::expand(u.is_even());
+      const auto v_is_even = WordMask::expand(v.is_even());
+      BOTAN_DEBUG_ASSERT((u_is_even | v_is_even).is_set());
 
-   BigInt newg, t;
-   for(size_t i = 0; i != loop_cnt; ++i)
-      {
-      sub_abs(newg, f, g);
+      // When both are even, we're going to eliminate a factor of 2.
+      // We have to reapply this factor to the final result.
+      factors_of_two += (u_is_even & v_is_even).if_set_return(1);
 
-      const bool need_swap = (g.is_odd() && delta > 0);
+      // remove one factor of 2, if u is even
+      bigint_shr2(tmp.mutable_data(), u.data(), sz, 0, 1);
+      u.ct_cond_assign(u_is_even.is_set(), tmp);
 
-      // if(need_swap) { delta *= -1 } else { delta *= 1 }
-      delta *= CT::Mask<uint8_t>::expand(need_swap).if_not_set_return(2) - 1;
-      f.ct_cond_swap(need_swap, g);
-      g.ct_cond_swap(need_swap, newg);
-
-      delta += 1;
-
-      g.ct_cond_add(g.is_odd(), f);
-      g >>= 1;
-      }
-
-   f <<= common2s;
-
-   f.const_time_unpoison();
-   g.const_time_unpoison();
-
-   BOTAN_ASSERT_NOMSG(g.is_zero());
-
-   return f;
+      // remove one factor of 2, if v is even
+      bigint_shr2(tmp.mutable_data(), v.data(), sz, 0, 1);
+      v.ct_cond_assign(v_is_even.is_set(), tmp);
    }
+
+   // The GCD (without factors of two) is either in u or v, the other one is
+   // zero. The non-zero variable _must_ be odd, because all factors of two were
+   // removed in the loop iterations above.
+   BOTAN_DEBUG_ASSERT(u.is_zero() || v.is_zero());
+   BOTAN_DEBUG_ASSERT(u.is_odd() || v.is_odd());
+
+   // make sure that the GCD (without factors of two) is in u
+   u.ct_cond_assign(u.is_even() /* .is_zero() would not be constant time */, v);
+
+   // re-apply the factors of two
+   u.ct_shift_left(factors_of_two);
+
+   u.const_time_unpoison();
+   v.const_time_unpoison();
+
+   return u;
+}
 
 /*
 * Calculate the LCM
