@@ -71,7 +71,7 @@ if type -p "apt-get"; then
         sudo apt-get -qq install emscripten
 
     elif [ "$TARGET" = "lint" ]; then
-        sudo apt-get -qq install pylint
+        sudo apt-get -qq install pylint python3-matplotlib
 
     elif [ "$TARGET" = "coverage" ] || [ "$TARGET" = "sanitizer" ]; then
         if [ "$TARGET" = "coverage" ]; then
