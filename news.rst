@@ -4,6 +4,13 @@ Release Notes
 Version 3.3.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Fix a potential denial of service caused by accepting arbitrary
+  length primes as potential elliptic curve parameters in ASN.1
+  encodings. With very large inputs the primality verification
+  can become computationally expensive. Now any prime field larger
+  than 1024 bits is rejected immediately. Reported by Bing Shi.
+  (GH #3913)
+
 * Add FrodoKEM post-quantum KEM (GH #3679 #3807 #3892)
 
 * Add support for Blake2s (GH #3796)
@@ -75,7 +82,7 @@ Version 3.3.0, Not Yet Released
 
 * Fix handling of cofactors when performing scalar blinding in EC (GH #3803)
 
-* Fix potential timing side channels in Kyber (GH #3846)
+* Fix potential timing side channels in Kyber (GH #3846 #3874)
 
 * Fix a potential dangling reference resulting in a crash in the OCB
   mode of operation (GH #3814)

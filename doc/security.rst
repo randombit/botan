@@ -15,6 +15,29 @@ mail please use::
 This key can be found in the file ``doc/pgpkey.txt`` or online at
 https://keybase.io/jacklloyd and on most PGP keyservers.
 
+2024
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* 2024-02-20: Kyber side channel
+
+  The Kyber implementation was vulnerable to the KyberSlash1 and
+  KyberSlash2 side channel issues.
+
+  Introduced in 3.0.0, fixed in 3.3.0
+
+* 2024-02-20: DoS due to oversized elliptic curve parameters
+
+  When decoding an ASN.1 encoded elliptic curve, Botan would verify the `p`
+  parameter was actually prime, and at least some minimum size. However it
+  failed to check if the prime was far too large (for example thousands of
+  bits), in which case checking the prime would take a significant amount of
+  computation. Now the maximum size of arbitrary elliptic curves when decoding
+  from ASN.1 is limited.
+
+  Reported by Bing Shi
+
+  Fixed in 3.3.0 and 2.19.4
+
 2022
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
