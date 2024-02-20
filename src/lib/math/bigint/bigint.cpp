@@ -45,6 +45,14 @@ BigInt::BigInt(Sign s, size_t size)
    m_signedness = s;
    }
 
+//static
+BigInt BigInt::with_capacity(size_t size)
+   {
+   BigInt bn;
+   bn.grow_to(size);
+   return bn;
+   }
+
 /*
 * Construct a BigInt from a string
 */
