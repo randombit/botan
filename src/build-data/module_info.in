@@ -20,6 +20,22 @@
  *       the sub-modules listed.
  *
 %{endif}
+%{if deprecated}
+ * @deprecated This module is scheduled for removal in a future release of the
+ *             library. Users should move away from it before updating to a new
+ *             version of the library. Note that deprecated modules may be explicitly
+ *             disabled using `--disable-modules=MODS` or generically using
+ *             `--disable-deprecated-features`.
+%{endif}
+%{if experimental}
+ * @warning This module is marked as 'experimental'. Its functionality and API
+ *          may change in future (minor) releases. Also, its implementation
+ *          quality must be considered 'beta' at best. Applications may still
+ *          enable and use it explicitly via `--enable-modules=MODS` or
+ *          generically using `--enable-experimental-features`. Early feedback
+ *          is very welcome.
+ *
+%{endif}
  *
 %{if dependencies}
  * This module depends on:

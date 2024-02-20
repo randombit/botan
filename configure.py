@@ -3493,6 +3493,8 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
                                               'title': info.name,
                                               'internal': info.is_internal(),
                                               'virtual': info.is_virtual(),
+                                              'deprecated': info.is_deprecated(),
+                                              'experimental': info.is_experimental(),
                                               'brief': info.brief,
                                               'public_headers': info.header_public,
                                               'internal_headers': info.header_internal,
