@@ -240,7 +240,7 @@ word BigInt::operator%=(word mod) {
    } else {
       const size_t sw = sig_words();
       for(size_t i = sw; i > 0; --i) {
-         remainder = bigint_modop(remainder, word_at(i - 1), mod);
+         remainder = bigint_modop_vartime(remainder, word_at(i - 1), mod);
       }
    }
 

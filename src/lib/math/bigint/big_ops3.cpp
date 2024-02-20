@@ -158,7 +158,7 @@ word operator%(const BigInt& n, word mod) {
    } else {
       const size_t sw = n.sig_words();
       for(size_t i = sw; i > 0; --i) {
-         remainder = bigint_modop(remainder, n.word_at(i - 1), mod);
+         remainder = bigint_modop_vartime(remainder, n.word_at(i - 1), mod);
       }
    }
 

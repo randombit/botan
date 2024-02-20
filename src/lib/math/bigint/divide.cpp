@@ -200,7 +200,7 @@ void vartime_divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt&
       const word x_j1 = r.word_at(j - 1);
       const word x_j2 = r.word_at(j - 2);
 
-      word qjt = bigint_divop(x_j0, x_j1, y_t0);
+      word qjt = bigint_divop_vartime(x_j0, x_j1, y_t0);
 
       qjt = CT::Mask<word>::is_equal(x_j0, y_t0).select(MP_WORD_MAX, qjt);
 
