@@ -357,8 +357,12 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(co
          .end_cons()
          .verify_end();
 
-      if(p.bits() < 64 || p.is_negative() || !is_bailie_psw_probable_prime(p)) {
-         throw Decoding_Error("Invalid ECC p parameter");
+      if(p.bits() < 112 || p.bits() > 1024) {
+         throw Decoding_Error("ECC p parameter is invalid size");
+      }
+
+      if(p.is_negative() || !is_bailie_psw_probable_prime(p)) {
+         throw Decoding_Error("ECC p parameter is not a prime");
       }
 
       if(a.is_negative() || a >= p) {
