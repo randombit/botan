@@ -75,6 +75,15 @@ want the resulting binary to depend on. For instance to enable zlib
 support, add ``--with-zlib`` to your invocation of ``configure.py``.
 All available modules can be listed with ``--list-modules``.
 
+Some modules may be marked as 'deprecated' or 'experimental'. Deprecated
+modules are available and built by default, but they will be removed in a
+future release of the library. Use ``--disable-deprecated-features`` to
+disable all of these modules or ``--disable-modules=MODS`` for finer grained
+control. Experimental modules are under active development and not built
+by default. Their API may change in future minor releases. Applications may
+still enable and use such modules using ``--enable-modules=MODS`` or using
+``--enable-experimental-features`` to enable all experimental features.
+
 You can control which algorithms and modules are built using the
 options ``--enable-modules=MODS`` and ``--disable-modules=MODS``, for
 instance ``--enable-modules=zlib`` and ``--disable-modules=xtea,idea``.

@@ -10,6 +10,11 @@ If on upgrading to a new minor version, you encounter a problem where your
 existing code either fails to compile, or the code behaves differently in some
 way that causes trouble, it is probably a bug; please report it on Github.
 
+Note that none of these guarantees apply to "experimental modules" that are not
+built by default. The functionality as well as API of such modules may change or
+even disappear in a minor version without warning. See :ref:`building` for more
+information on enabling or disabling these modules.
+
 Exception
 -----------------------
 

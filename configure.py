@@ -951,9 +951,12 @@ class ModuleInfo(InfoObject):
         self.name = info["name"]
         self.brief = info.get("brief") # possibly None
         self.type = info.get("type") or "Public"
+        self.lifecycle = info.get("lifecycle") or "Stable"
 
         if self.type not in ["Public", "Internal", "Virtual"]:
             raise InternalError("Module '%s' has an unknown type: %s" % (self.basename, self.type))
+        if self.lifecycle not in ["Stable", "Experimental", "Deprecated"]:
+            raise InternalError("Module '%s' has an unknown lifecycle status: %s" % (self.basename, self.lifecycle))
 
     @staticmethod
     def _validate_defines_content(defines):
@@ -1169,6 +1172,15 @@ class ModuleInfo(InfoObject):
 
     def is_virtual(self):
         return self.type == "Virtual"
+
+    def is_stable(self):
+        return self.lifecycle == "Stable"
+
+    def is_experimental(self):
+        return self.lifecycle == "Experimental"
+
+    def is_deprecated(self):
+        return self.lifecycle == "Deprecated"
 
 class ModulePolicyInfo(InfoObject):
     def __init__(self, infofile):
@@ -2411,6 +2423,12 @@ class ModulesChooser:
         elif not module.compatible_compiler(self._ccinfo, self._cc_min_version, self._archinfo.basename):
             self._not_using_because['incompatible compiler'].add(modname)
             return False
+        elif module.is_deprecated() and not self._options.enable_deprecated_features:
+            self._not_using_because['deprecated'].add(modname)
+            return False
+        elif module.is_experimental() and modname not in self._options.enabled_modules and not self._options.enable_experimental_features:
+            self._not_using_because['experimental'].add(modname)
+            return False
         return True
 
     @staticmethod
@@ -2428,6 +2446,8 @@ class ModulesChooser:
     def _display_module_information_to_load(cls, all_modules, modules_to_load):
         sorted_modules_to_load = cls._remove_virtual_modules(all_modules, sorted(modules_to_load))
 
+        deprecated = []
+        experimental = []
         for modname in sorted_modules_to_load:
             if all_modules[modname].comment:
                 logging.info('%s: %s', modname, all_modules[modname].comment)
@@ -2435,6 +2455,18 @@ class ModulesChooser:
                 logging.warning('%s: %s', modname, all_modules[modname].warning)
             if all_modules[modname].load_on == 'vendor':
                 logging.info('Enabling use of external dependency %s', modname)
+            if all_modules[modname].is_deprecated():
+                deprecated.append(modname)
+            if all_modules[modname].is_experimental():
+                experimental.append(modname)
+
+        if deprecated:
+            logging.warning('These modules are deprecated and will be removed in a future release (consider disabling with --disable-deprecated-features): %s',
+                            ' '.join(deprecated))
+
+        if experimental:
+            logging.warning('These modules are experimental and may change or be removed in a future release: %s',
+                            ' '.join(experimental))
 
         if sorted_modules_to_load:
             logging.info('Loading modules: %s', ' '.join(sorted_modules_to_load))
