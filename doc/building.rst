@@ -706,6 +706,30 @@ Specify an OS feature to enable. See ``src/build-data/os`` and
 
 Specify an OS feature to disable.
 
+``--enable-experimental-features``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable all experimental modules and features. Note that these are unstable and
+may change or even be removed in future releases. Also note that individual
+experimental modules can be explicitly enabled using ``--enable-modules=MODS``.
+
+``--disable-experimental-features``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable all experimental modules and features. This is the default.
+
+``--enable-deprecated-features``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable all deprecated modules and features. Note that these are scheduled for
+removal in future releases. This is the default.
+
+``--disable-deprecated-features``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable all deprecated modules and features. Note that individual deprecated
+modules can be explicitly disabled using ``--disable-modules=MODS``.
+
 ``--disable-sse2``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

@@ -385,6 +385,16 @@ def process_command_line(args):
     target_group.add_option('--without-os-features', action='append', metavar='FEAT',
                             help='specify OS features to disable')
 
+    target_group.add_option('--enable-experimental-features', dest='enable_experimental_features',
+                            action='store_true', default=False, help='enable building of experimental features and modules')
+    target_group.add_option('--disable-experimental-features', dest='enable_experimental_features',
+                            action='store_false', help=optparse.SUPPRESS_HELP)
+
+    target_group.add_option('--enable-deprecated-features', dest='enable_deprecated_features',
+                            action='store_true', default=True, help=optparse.SUPPRESS_HELP)
+    target_group.add_option('--disable-deprecated-features', dest='enable_deprecated_features',
+                            action='store_false', help='disable building of deprecated features and modules')
+
     isa_extensions = [
         'SSE2', 'SSSE3', 'SSE4.1', 'SSE4.2', 'AVX2', 'BMI2', 'RDRAND', 'RDSEED',
         'AES-NI', 'SHA-NI',
@@ -2290,6 +2300,9 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'os_name': osinfo.basename,
         'cpu_features': arch.supported_isa_extensions(cc, options),
         'system_cert_bundle': options.system_cert_bundle,
+
+        'enable_experimental_features': options.enable_experimental_features,
+        'disable_deprecated_features': not options.enable_deprecated_features,
 
         'fuzzer_mode': options.unsafe_fuzzer_mode,
         'building_fuzzers': options.build_fuzzers,
