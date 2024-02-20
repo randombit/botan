@@ -445,6 +445,50 @@ Other Improvements
 * Fix bugs in GMAC and SipHash where they would require a fresh key be
   provided for each message. (GH #2908)
 
+Version 2.19.4, 2024-02-20
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix a potential denial of service caused by accepting arbitrary
+  length primes as potential elliptic curve parameters in ASN.1
+  encodings. With very large inputs the primality verification
+  can become computationally expensive. Now any prime field larger
+  than 1024 bits is rejected immediately. Reported by Bing Shi.
+  (GH #3914)
+
+* Switch to using a constant time binary algorithm for computing
+  GCD (GH #3912)
+
+* Fix a bug in SHAKE_Cipher which could cause incorrect output
+  if set_key was called multiple times. (GH #3192)
+
+* Fix a bug in RSA-KEM encryption where the shared secret key
+  was incorrectly not padded to exactly the byte length of the
+  modulus. This would cause an incorrect shared key with ~1/256
+  probability. (GH #3380)
+
+* In RSA decryption and signature verification, reject bytestrings
+  which are longer than the public modulus. Previously, otherwise
+  valid signatures/ciphertexts with additional leading zero bytes
+  would also be accepted. (GH #3380)
+
+* Add support for short nonces in XTS (GH #3384 #3336)
+
+* Fix NIST keywrap which was incorrect when wrapping 64-bit keys
+  (GH #3384 #3340)
+
+* Fix nonce handling bug in EAX (GH #3382 #3335)
+
+* Fix a bug in PKCS11 AttributeContainer where adding an attribute
+  that already existed could cause incorrect references to the
+  existing attributes. (GH #3185)
+
+* Apply patches which allow GCC 4.7 to compile Botan 2.x. Previously
+  at least GCC 4.8 had been required. (GH #3273)
+
+* Fix a build time problem affecting VCpkg (GH #3071)
+
+* Fix a build problem affecting Windows ARM with Visual C++ (GH #3871)
+
 Version 2.19.3, 2022-11-16
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
