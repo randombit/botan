@@ -662,9 +662,9 @@ inline void bigint_mod_sub_n(word t[], const word s[], const word mod[], word ws
 /**
 * Compute ((n1<<bits) + n0) / d
 */
-inline word bigint_divop(word n1, word n0, word d) {
+inline word bigint_divop_vartime(word n1, word n0, word d) {
    if(d == 0) {
-      throw Invalid_Argument("bigint_divop divide by zero");
+      throw Invalid_Argument("bigint_divop_vartime divide by zero");
    }
 
 #if defined(BOTAN_MP_DWORD)
@@ -694,15 +694,15 @@ inline word bigint_divop(word n1, word n0, word d) {
 /**
 * Compute ((n1<<bits) + n0) % d
 */
-inline word bigint_modop(word n1, word n0, word d) {
+inline word bigint_modop_vartime(word n1, word n0, word d) {
    if(d == 0) {
-      throw Invalid_Argument("bigint_modop divide by zero");
+      throw Invalid_Argument("bigint_modop_vartime divide by zero");
    }
 
 #if defined(BOTAN_MP_DWORD)
    return ((static_cast<BOTAN_MP_DWORD>(n1) << BOTAN_MP_WORD_BITS) | n0) % d;
 #else
-   word z = bigint_divop(n1, n0, d);
+   word z = bigint_divop_vartime(n1, n0, d);
    word dummy = 0;
    z = word_madd2(z, d, &dummy);
    return (n0 - z);
