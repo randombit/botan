@@ -56,8 +56,8 @@ Branch         First Release  End of Active Development  End of Life
 ============== ============== ========================== ============
 1.8            2008-12-08     2010-08-31                 2016-02-13
 1.10           2011-06-20     2012-07-10                 2018-12-31
-2.x            2017-01-06     2020-11-05                 2025-01-01 or later
-3.x            2023?          ?                          ?
+2.x            2017-01-06     2020-11-05                 2024-12-31 or later
+3.x            2023-04-11     ?                          2026-12-31 or later
 ============== ============== ========================== ============
 
 "Active development" refers to adding new features and optimizations. At the

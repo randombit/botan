@@ -1,8 +1,18 @@
 Release Notes
 ========================================
 
-Version 2.19.4, Not Yet Released
+Version 2.19.4, 2024-02-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix a potential denial of service caused by accepting arbitrary
+  length primes as potential elliptic curve parameters in ASN.1
+  encodings. With very large inputs the primality verification
+  can become computationally expensive. Now any prime field larger
+  than 1024 bits is rejected immediately. Reported by Bing Shi.
+  (GH #3914)
+
+* Switch to using a constant time binary algorithm for computing
+  GCD (GH #3912)
 
 * Fix a bug in SHAKE_Cipher which could cause incorrect output
   if set_key was called multiple times. (GH #3192)
@@ -32,6 +42,8 @@ Version 2.19.4, Not Yet Released
   at least GCC 4.8 had been required. (GH #3273)
 
 * Fix a build time problem affecting VCpkg (GH #3071)
+
+* Fix a build problem affecting Windows ARM with Visual C++ (GH #3871)
 
 Version 2.19.3, 2022-11-16
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
