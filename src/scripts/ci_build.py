@@ -170,7 +170,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
              '--os=%s' % (target_os),
              '--build-targets=%s' % ','.join(build_targets(target, target_os)),
              '--with-build-dir=%s' % build_dir,
-             '--link-method=symlink']
+             '--link-method=symlink',
+             '--enable-experimental-features']
 
     if ccache is not None:
         flags += ['--no-store-vc-rev', '--compiler-cache=%s' % (ccache)]
