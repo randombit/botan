@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 3.3.0, Not Yet Released
+Version 3.3.0, 2024-02-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fix a potential denial of service caused by accepting arbitrary
