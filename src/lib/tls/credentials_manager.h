@@ -283,6 +283,22 @@ class BOTAN_PUBLIC_API(2, 0) Credentials_Manager {
          const std::optional<std::string>& prf = std::nullopt);
 };
 
+/**
+ * A Credentials_Manager that provides the system's certificate store as trust
+ * store, if available. Otherwise it defaults to "no trusted certificates". It
+ * typically is a good starting point for a basic TLS client implementation.
+ */
+class Default_Credentials_Manager : public Credentials_Manager {
+   public:
+      Default_Credentials_Manager();
+
+      std::vector<Certificate_Store*> trusted_certificate_authorities(const std::string& type,
+                                                                      const std::string& context) override;
+
+   private:
+      std::unique_ptr<Certificate_Store> m_cert_store;
+};
+
 }  // namespace Botan
 
 #endif

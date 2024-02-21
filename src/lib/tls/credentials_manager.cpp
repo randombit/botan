@@ -10,6 +10,10 @@
 #include <botan/pkix_types.h>
 #include <botan/internal/fmt.h>
 
+#if defined(BOTAN_HAS_CERTSTOR_SYSTEM)
+   #include <botan/certstor_system.h>
+#endif
+
 namespace Botan {
 
 std::string Credentials_Manager::psk_identity_hint(const std::string& /*unused*/, const std::string& /*unused*/) {
@@ -131,6 +135,25 @@ secure_vector<uint8_t> Credentials_Manager::dtls_cookie_secret() {
 std::vector<Certificate_Store*> Credentials_Manager::trusted_certificate_authorities(const std::string& /*unused*/,
                                                                                      const std::string& /*unused*/) {
    return std::vector<Certificate_Store*>();
+}
+
+Default_Credentials_Manager::Default_Credentials_Manager() {
+#if defined(BOTAN_HAS_CERTSTOR_SYSTEM)
+   try {
+      m_cert_store = std::make_unique<System_Certificate_Store>();
+   } catch(const Not_Implemented&) {
+      // This platform does not provide an adapter for the system's trust store.
+   }
+#endif
+}
+
+std::vector<Certificate_Store*> Default_Credentials_Manager::trusted_certificate_authorities(
+   const std::string& /* type */, const std::string& /* context */) {
+   if(m_cert_store) {
+      return {m_cert_store.get()};
+   } else {
+      return {};
+   }
 }
 
 }  // namespace Botan

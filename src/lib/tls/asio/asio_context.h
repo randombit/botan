@@ -22,6 +22,11 @@
    #include <botan/tls_server_info.h>
    #include <botan/tls_session_manager.h>
 
+   #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
+      #include <botan/auto_rng.h>
+      #include <botan/tls_session_manager_memory.h>
+   #endif
+
 namespace Botan::TLS {
 
 namespace detail {
@@ -46,6 +51,20 @@ class Context {
        * Callbacks::tls_verify_cert_chain
        */
       using Verify_Callback = detail::fn_signature_helper<decltype(&Callbacks::tls_verify_cert_chain)>::type;
+
+   #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
+      /**
+       * @brief Construct a TLS stream context with typical defaults
+       *
+       * @param server_info  Basic information about the host to connect to (SNI)
+       */
+      Context(Server_Information server_info = Server_Information()) :
+            m_credentials_manager(std::make_shared<Default_Credentials_Manager>()),
+            m_rng(std::make_shared<AutoSeeded_RNG>()),
+            m_session_manager(std::make_shared<Session_Manager_In_Memory>(m_rng)),
+            m_policy(std::make_shared<Default_Policy>()),
+            m_server_info(std::move(server_info)) {}
+   #endif
 
       Context(std::shared_ptr<Credentials_Manager> credentials_manager,
               std::shared_ptr<RandomNumberGenerator> rng,

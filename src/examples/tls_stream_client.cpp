@@ -7,6 +7,7 @@
    #include <botan/auto_rng.h>
    #include <botan/certstor_system.h>
    #include <botan/tls.h>
+   #include <botan/version.h>
 
    #include <boost/asio.hpp>
    #include <boost/beast.hpp>
@@ -35,12 +36,14 @@ class client {
    public:
       client(boost::asio::io_context& io_context,
              boost::asio::ip::tcp::resolver::iterator endpoint_iterator,
+             std::string_view host,
              const http::request<http::string_body>& req) :
             m_request(req),
             m_ctx(std::make_shared<Botan::TLS::Context>(std::make_shared<Credentials_Manager>(),
                                                         std::make_shared<Botan::AutoSeeded_RNG>(),
                                                         std::make_shared<Botan::TLS::Session_Manager_Noop>(),
-                                                        std::make_shared<Botan::TLS::Policy>())),
+                                                        std::make_shared<Botan::TLS::Policy>(),
+                                                        host)),
             m_stream(io_context, m_ctx) {
          boost::asio::async_connect(m_stream.lowest_layer(),
                                     std::move(endpoint_iterator),
@@ -92,21 +95,33 @@ class client {
       Botan::TLS::Stream<boost::asio::ip::tcp::socket> m_stream;
 };
 
-int main() {
+int main(int argc, char* argv[]) {
+   if(argc != 4) {
+      std::cerr << "Usage: tls_stream_client <host> <port> <target>\n"
+                << "Example:\n"
+                << "    tls_stream_client botan.randombit.net 443 /news.html\n";
+      return 1;
+   }
+
+   const auto host = argv[1];
+   const auto port = argv[2];
+   const auto target = argv[3];
+
    try {
       boost::asio::io_context io_context;
 
       boost::asio::ip::tcp::resolver resolver(io_context);
-      boost::asio::ip::tcp::resolver::query query("botan.randombit.net", "443");
+      boost::asio::ip::tcp::resolver::query query(host, port);
       boost::asio::ip::tcp::resolver::iterator iterator = resolver.resolve(query);
 
       http::request<http::string_body> req;
       req.version(11);
       req.method(http::verb::get);
-      req.target("/news.html");
-      req.set(http::field::host, "botan.randombit.net");
+      req.target(target);
+      req.set(http::field::host, host);
+      req.set(http::field::user_agent, Botan::version_string());
 
-      client c(io_context, iterator, req);
+      client c(io_context, iterator, host, req);
 
       io_context.run();
    } catch(std::exception& e) {
