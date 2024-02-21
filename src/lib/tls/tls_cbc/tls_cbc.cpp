@@ -204,7 +204,10 @@ void TLS_CBC_HMAC_AEAD_Encryption::finish(secure_vector<uint8_t>& buffer, size_t
 
    buffer.reserve(offset + msg_size + padding_length + tag_size());
    buffer.resize(offset + msg_size);
-   copy_mem(&buffer[offset], msg().data(), msg_size);
+   if(msg_size > 0)
+      {
+      copy_mem(&buffer[offset], msg().data(), msg_size);
+      }
 
    mac().update(assoc_data());
 
