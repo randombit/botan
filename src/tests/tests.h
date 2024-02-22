@@ -566,6 +566,10 @@ class Test {
 
       const std::optional<CodeLocation>& registration_location() const { return m_registration_location; }
 
+      void set_serialization(bool needs_serialization) { m_needs_serialization = needs_serialization; }
+
+      bool is_serialized() const { return m_needs_serialization; }
+
       /// @p smoke_test are run first in an unfiltered test run
       static void register_test(const std::string& category,
                                 const std::string& name,
@@ -649,6 +653,7 @@ class Test {
 
       std::string m_test_name;                              // The string ID that was used to register this test
       std::optional<CodeLocation> m_registration_location;  /// The source file location where the test was registered
+      bool m_needs_serialization = false;                   /// Whether the test needs serialization
 };
 
 /*
@@ -666,6 +671,7 @@ class TestClassRegistration {
             auto test = std::make_unique<Test_Class>();
             test->set_test_name(name);
             test->set_registration_location(registration_location);
+            test->set_serialization(needs_serialization);
             return test;
          });
       }
@@ -744,6 +750,7 @@ class TestFnRegistration {
             auto test = std::make_unique<FnTest>(fn...);
             test->set_test_name(name);
             test->set_registration_location(std::move(registration_location));
+            test->set_serialization(needs_serialization);
             return test;
          });
       }
