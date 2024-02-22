@@ -635,14 +635,18 @@ class CPUID_Tests final : public Test {
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
          if(Botan::CPUID::has_sse2()) {
-            result.confirm("Output string includes sse2", cpuid_string.find("sse2") != std::string::npos);
+            if(!this->is_serialized()) {
+               result.test_failure("Cannot proceed, test is not serialized");
+            } else {
+               result.confirm("Output string includes sse2", cpuid_string.find("sse2") != std::string::npos);
 
-            Botan::CPUID::clear_cpuid_bit(Botan::CPUID::CPUID_SSE2_BIT);
+               Botan::CPUID::clear_cpuid_bit(Botan::CPUID::CPUID_SSE2_BIT);
 
-            result.test_eq("After clearing cpuid bit, has_sse2 returns false", Botan::CPUID::has_sse2(), false);
+               result.test_eq("After clearing cpuid bit, has_sse2 returns false", Botan::CPUID::has_sse2(), false);
 
-            Botan::CPUID::initialize();  // reset state
-            result.test_eq("After reinitializing, has_sse2 returns true", Botan::CPUID::has_sse2(), true);
+               Botan::CPUID::initialize();  // reset state
+               result.test_eq("After reinitializing, has_sse2 returns true", Botan::CPUID::has_sse2(), true);
+            }
          }
 #endif
 
@@ -650,7 +654,7 @@ class CPUID_Tests final : public Test {
       }
 };
 
-BOTAN_REGISTER_TEST("utils", "cpuid", CPUID_Tests);
+BOTAN_REGISTER_SERIALIZED_TEST("utils", "cpuid", CPUID_Tests);
 
 #if defined(BOTAN_HAS_UUID)
 
