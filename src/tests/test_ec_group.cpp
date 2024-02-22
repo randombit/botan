@@ -103,7 +103,7 @@ std::vector<Test::Result> ECC_Randomized_Tests::run() {
 
       Botan::EC_Group group(group_name);
 
-      const Botan::EC_Point pt = create_random_point(Test::rng(), group);
+      const Botan::EC_Point pt = create_random_point(this->rng(), group);
       const Botan::BigInt& group_order = group.get_order();
 
       std::vector<Botan::BigInt> blind_ws;
@@ -111,17 +111,17 @@ std::vector<Test::Result> ECC_Randomized_Tests::run() {
       try {
          const size_t trials = (Test::run_long_tests() ? 10 : 3);
          for(size_t i = 0; i < trials; ++i) {
-            const Botan::BigInt a = Botan::BigInt::random_integer(Test::rng(), 2, group_order);
-            const Botan::BigInt b = Botan::BigInt::random_integer(Test::rng(), 2, group_order);
+            const Botan::BigInt a = Botan::BigInt::random_integer(this->rng(), 2, group_order);
+            const Botan::BigInt b = Botan::BigInt::random_integer(this->rng(), 2, group_order);
             const Botan::BigInt c = a + b;
 
             const Botan::EC_Point P = pt * a;
             const Botan::EC_Point Q = pt * b;
             const Botan::EC_Point R = pt * c;
 
-            Botan::EC_Point P1 = group.blinded_var_point_multiply(pt, a, Test::rng(), blind_ws);
-            Botan::EC_Point Q1 = group.blinded_var_point_multiply(pt, b, Test::rng(), blind_ws);
-            Botan::EC_Point R1 = group.blinded_var_point_multiply(pt, c, Test::rng(), blind_ws);
+            Botan::EC_Point P1 = group.blinded_var_point_multiply(pt, a, this->rng(), blind_ws);
+            Botan::EC_Point Q1 = group.blinded_var_point_multiply(pt, b, this->rng(), blind_ws);
+            Botan::EC_Point R1 = group.blinded_var_point_multiply(pt, c, this->rng(), blind_ws);
 
             Botan::EC_Point A1 = P + Q;
             Botan::EC_Point A2 = Q + P;
@@ -203,13 +203,15 @@ class NIST_Curve_Reduction_Tests final : public Test {
          Botan::Modular_Reducer p_redc(p);
          Botan::secure_vector<Botan::word> ws;
 
+         auto rng = Test::new_rng("random_redc " + prime_name);
+
          Test::Result result("NIST " + prime_name + " reduction");
          result.start_timer();
 
          const size_t trials = (Test::run_long_tests() ? 128 : 16);
 
          for(size_t i = 0; i <= trials; ++i) {
-            const Botan::BigInt x = test_integer(Test::rng(), 2 * p_bits, p2);
+            const Botan::BigInt x = test_integer(*rng, 2 * p_bits, p2);
 
             // TODO: time and report all three approaches
             const Botan::BigInt v1 = x % p;
@@ -244,7 +246,7 @@ class EC_Group_Tests : public Test {
             const Botan::EC_Group group(oid);
 
             result.confirm("EC_Group is known", !group.get_curve_oid().empty());
-            result.confirm("EC_Group is considered valid", group.verify_group(Test::rng(), true));
+            result.confirm("EC_Group is considered valid", group.verify_group(this->rng(), true));
             result.confirm("EC_Group is not considered explict encoding", !group.used_explicit_encoding());
 
             result.test_eq("EC_Group has correct bit size", group.get_p().bits(), group.get_p_bits());
@@ -291,13 +293,13 @@ class EC_Group_Tests : public Test {
             }
 
             // get a valid point
-            Botan::EC_Point p = group.get_base_point() * Test::rng().next_nonzero_byte();
+            Botan::EC_Point p = group.get_base_point() * this->rng().next_nonzero_byte();
 
             // get a copy
             Botan::EC_Point q = p;
 
-            p.randomize_repr(Test::rng());
-            q.randomize_repr(Test::rng());
+            p.randomize_repr(this->rng());
+            q.randomize_repr(this->rng());
 
             result.test_eq("affine x after copy", p.get_affine_x(), q.get_affine_x());
             result.test_eq("affine y after copy", p.get_affine_y(), q.get_affine_y());
@@ -319,9 +321,9 @@ class EC_Group_Tests : public Test {
       }
 
    private:
-      static void test_ser_der(Test::Result& result, const Botan::EC_Group& group) {
+      void test_ser_der(Test::Result& result, const Botan::EC_Group& group) {
          // generate point
-         const Botan::EC_Point pt = create_random_point(Test::rng(), group);
+         const Botan::EC_Point pt = create_random_point(this->rng(), group);
          const Botan::EC_Point zero = group.zero_point();
 
          for(auto scheme : {Botan::EC_Point_Format::Uncompressed,
@@ -349,10 +351,10 @@ class EC_Group_Tests : public Test {
          result.confirm("point (0,0) is not on the curve", !zero_coords.on_the_curve());
       }
 
-      static void test_point_swap(Test::Result& result, const Botan::EC_Group& group) {
-         Botan::EC_Point a(create_random_point(Test::rng(), group));
-         Botan::EC_Point b(create_random_point(Test::rng(), group));
-         b *= Botan::BigInt(Test::rng(), 20);
+      void test_point_swap(Test::Result& result, const Botan::EC_Group& group) {
+         Botan::EC_Point a(create_random_point(this->rng(), group));
+         Botan::EC_Point b(create_random_point(this->rng(), group));
+         b *= Botan::BigInt(this->rng(), 20);
 
          Botan::EC_Point c(a);
          Botan::EC_Point d(b);
@@ -772,7 +774,7 @@ class ECC_Invalid_Key_Tests final : public Text_Based_Test {
 
          try {
             auto key = Botan::X509::load_key(key_data);
-            result.test_eq("public key fails check", key->check_key(Test::rng(), false), false);
+            result.test_eq("public key fails check", key->check_key(this->rng(), false), false);
          } catch(Botan::Decoding_Error&) {
             result.test_success("Decoding invalid ECC key results in decoding error exception");
          }

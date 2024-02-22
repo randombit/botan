@@ -131,7 +131,7 @@ class Hash_Function_Tests final : public Text_Based_Test {
 
                size_t so_far = 1;
                while(so_far < input.size()) {
-                  size_t take = Test::rng().next_byte() % (input.size() - so_far);
+                  size_t take = this->rng().next_byte() % (input.size() - so_far);
 
                   if(input.size() - so_far == 1) {
                      take = 1;

@@ -78,8 +78,8 @@ class Block_Cipher_Tests final : public Text_Based_Test {
             }
 
             // Test to make sure clear() resets what we need it to
-            cipher->set_key(Test::rng().random_vec(cipher->key_spec().maximum_keylength()));
-            Botan::secure_vector<uint8_t> garbage = Test::rng().random_vec(cipher->block_size());
+            cipher->set_key(this->rng().random_vec(cipher->key_spec().maximum_keylength()));
+            Botan::secure_vector<uint8_t> garbage = this->rng().random_vec(cipher->block_size());
             cipher->encrypt(garbage);
             cipher->clear();
 
@@ -109,7 +109,7 @@ class Block_Cipher_Tests final : public Text_Based_Test {
             auto clone = cipher->new_object();
             result.confirm("Clone has different pointer", cipher.get() != clone.get());
             result.test_eq("Clone has same name", cipher->name(), clone->name());
-            clone->set_key(Test::rng().random_vec(cipher->maximum_keylength()));
+            clone->set_key(this->rng().random_vec(cipher->maximum_keylength()));
 
             // have called set_key on clone: process input values
             std::vector<uint8_t> buf = input;

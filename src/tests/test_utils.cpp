@@ -250,7 +250,7 @@ class CT_Mask_Tests final : public Test {
                   const auto mask = Botan::CT::Mask<uint8_t>::expand(static_cast<uint8_t>(bad_input));
 
                   std::vector<uint8_t> input(input_length);
-                  rng().randomize(input.data(), input.size());
+                  this->rng().randomize(input.data(), input.size());
 
                   auto output = Botan::CT::copy_output(mask, input.data(), input.size(), offset);
 
@@ -660,8 +660,8 @@ class UUID_Tests : public Test {
          Test::Result result("UUID");
 
          const Botan::UUID empty_uuid;
-         const Botan::UUID random_uuid1(Test::rng());
-         const Botan::UUID random_uuid2(Test::rng());
+         const Botan::UUID random_uuid1(this->rng());
+         const Botan::UUID random_uuid2(this->rng());
          const Botan::UUID loaded_uuid(std::vector<uint8_t>(16, 4));
 
          result.test_throws("Cannot load wrong number of bytes", []() { Botan::UUID u(std::vector<uint8_t>(15)); });

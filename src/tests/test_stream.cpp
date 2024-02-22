@@ -133,7 +133,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
             auto clone = cipher->new_object();
             result.confirm("Clone has different pointer", cipher.get() != clone.get());
             result.test_eq("Clone has same name", cipher->name(), clone->name());
-            clone->set_key(Test::rng().random_vec(cipher->maximum_keylength()));
+            clone->set_key(this->rng().random_vec(cipher->maximum_keylength()));
 
             {
                std::vector<uint8_t> buf = input;
@@ -180,7 +180,7 @@ class Stream_Cipher_Tests final : public Text_Based_Test {
                size_t buf_len = buf.size();
 
                while(buf_len > 0) {
-                  size_t next = std::min<size_t>(buf_len, rng().next_byte());
+                  size_t next = std::min<size_t>(buf_len, this->rng().next_byte());
                   cipher->write_keystream(buf_ptr, next);
                   buf_ptr += next;
                   buf_len -= next;

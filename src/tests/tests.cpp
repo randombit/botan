@@ -389,6 +389,19 @@ bool Test::Result::test_rc(const std::string& func, int expected, int rc) {
    return test_success();
 }
 
+void Test::initialize(const std::string& test_name, CodeLocation location) {
+   m_test_name = test_name;
+   m_registration_location = location;
+}
+
+Botan::RandomNumberGenerator& Test::rng() const {
+   if(!m_test_rng) {
+      m_test_rng = Test::new_rng(m_test_name);
+   }
+
+   return *m_test_rng;
+}
+
 std::vector<std::string> Test::possible_providers(const std::string& /*unused*/) {
    return Test::provider_filter({"base"});
 }
@@ -694,16 +707,95 @@ std::vector<uint8_t> Test::read_binary_data_file(const std::string& path) {
 // NOLINTNEXTLINE(*-avoid-non-const-global-variables)
 Test_Options Test::m_opts;
 // NOLINTNEXTLINE(*-avoid-non-const-global-variables)
-std::shared_ptr<Botan::RandomNumberGenerator> Test::m_test_rng;
+std::shared_ptr<Botan::RandomNumberGenerator> Test::m_global_test_rng;
+// NOLINTNEXTLINE(*-avoid-non-const-global-variables)
+std::string Test::m_test_rng_seed;
 
 //static
 void Test::set_test_options(const Test_Options& opts) {
    m_opts = opts;
 }
 
+namespace {
+
+/*
+* This is a fast, simple, deterministic PRNG that's used for running
+* the tests. It is not intended to be cryptographically secure.
+*/
+class Testsuite_RNG final : public Botan::RandomNumberGenerator {
+   public:
+      std::string name() const override { return "Testsuite_RNG"; }
+
+      void clear() override { m_x = 0; }
+
+      bool accepts_input() const override { return true; }
+
+      bool is_seeded() const override { return true; }
+
+      void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override {
+         for(const auto byte : input) {
+            mix(byte);
+         }
+
+         for(auto& byte : output) {
+            byte = mix();
+         }
+      }
+
+      Testsuite_RNG(std::string_view seed, std::string_view test_name) {
+         m_x = 0;
+
+         for(char c : seed) {
+            this->mix(static_cast<uint8_t>(c));
+         }
+         for(char c : test_name) {
+            this->mix(static_cast<uint8_t>(c));
+         }
+      }
+
+   private:
+      uint8_t mix(uint8_t input = 0) {
+         m_x ^= input;
+         m_x *= 0xF2E16957;
+         m_x += 0xE50B590F;
+         return static_cast<uint8_t>(m_x >> 27);
+      }
+
+      uint64_t m_x;
+};
+
+}  // namespace
+
 //static
-void Test::set_test_rng(std::shared_ptr<Botan::RandomNumberGenerator> rng) {
-   m_test_rng = std::move(rng);
+void Test::set_test_rng_seed(std::span<const uint8_t> seed, size_t epoch) {
+   m_test_rng_seed = Botan::fmt("seed={} epoch={}", Botan::hex_encode(seed), epoch);
+   m_global_test_rng = Test::new_rng("global");
+}
+
+//static
+Botan::RandomNumberGenerator& Test::global_rng() {
+   if(!m_global_test_rng) {
+      throw Test_Error("Test requires RNG but no RNG set with Test::set_test_rng");
+   }
+   return *m_global_test_rng;
+}
+
+//static
+std::shared_ptr<Botan::RandomNumberGenerator> Test::global_rng_as_shared() {
+   if(!m_global_test_rng) {
+      throw Test_Error("Test requires RNG but no RNG set with Test::set_test_rng");
+   }
+   return m_global_test_rng;
+}
+
+//static
+std::unique_ptr<Botan::RandomNumberGenerator> Test::new_rng(std::string_view test_name) {
+   return std::make_unique<Testsuite_RNG>(m_test_rng_seed, test_name);
+}
+
+//static
+std::shared_ptr<Botan::RandomNumberGenerator> Test::new_shared_rng(std::string_view test_name) {
+   return std::make_shared<Testsuite_RNG>(m_test_rng_seed, test_name);
 }
 
 //static
@@ -738,25 +830,9 @@ std::vector<std::string> Test::provider_filter(const std::vector<std::string>& i
    return std::vector<std::string>{};
 }
 
-//static
-Botan::RandomNumberGenerator& Test::rng() {
-   if(!m_test_rng) {
-      throw Test_Error("Test requires RNG but no RNG set with Test::set_test_rng");
-   }
-   return *m_test_rng;
-}
-
-//static
-std::shared_ptr<Botan::RandomNumberGenerator> Test::rng_as_shared() {
-   if(!m_test_rng) {
-      throw Test_Error("Test requires RNG but no RNG set with Test::set_test_rng");
-   }
-   return m_test_rng;
-}
-
-std::string Test::random_password() {
-   const size_t len = 1 + Test::rng().next_byte() % 32;
-   return Botan::hex_encode(Test::rng().random_vec(len));
+std::string Test::random_password(Botan::RandomNumberGenerator& rng) {
+   const size_t len = 1 + rng.next_byte() % 32;
+   return Botan::hex_encode(rng.random_vec(len));
 }
 
 std::vector<std::vector<uint8_t>> VarMap::get_req_bin_list(const std::string& key) const {

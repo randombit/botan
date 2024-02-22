@@ -207,8 +207,10 @@ class Test_Tests final : public Test {
 
          const size_t RUNS = 1000;
 
+         auto rng = Test::new_rng(__func__);
+
          for(size_t i = 0; i != 256 * RUNS; ++i) {
-            histogram[rng().next_byte()] += 1;
+            histogram[rng->next_byte()] += 1;
          }
 
          for(size_t i = 0; i != 256; ++i) {

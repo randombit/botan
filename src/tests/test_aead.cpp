@@ -27,7 +27,8 @@ class AEAD_Tests final : public Text_Based_Test {
                                    const std::vector<uint8_t>& input,
                                    const std::vector<uint8_t>& expected,
                                    const std::vector<uint8_t>& ad,
-                                   const std::string& algo) {
+                                   const std::string& algo,
+                                   Botan::RandomNumberGenerator& rng) {
          const bool is_siv = algo.find("/SIV") != std::string::npos;
 
          Test::Result result(algo);
@@ -39,7 +40,7 @@ class AEAD_Tests final : public Text_Based_Test {
          result.confirm("AEAD name is not empty", !enc->name().empty());
          result.confirm("AEAD default nonce size is accepted", enc->valid_nonce_length(enc->default_nonce_length()));
 
-         Botan::secure_vector<uint8_t> garbage = Test::rng().random_vec(enc->update_granularity());
+         Botan::secure_vector<uint8_t> garbage = rng.random_vec(enc->update_granularity());
 
          if(is_siv == false) {
             result.test_throws("Unkeyed object throws for encrypt", [&]() { enc->update(garbage); });
@@ -64,8 +65,8 @@ class AEAD_Tests final : public Text_Based_Test {
             result.test_throws("Cannot process data until nonce is set (enc)", [&]() { enc->finish(garbage); });
          }
 
-         enc->set_associated_data(mutate_vec(ad));
-         enc->start(mutate_vec(nonce));
+         enc->set_associated_data(mutate_vec(ad, rng));
+         enc->start(mutate_vec(nonce, rng));
          enc->update(garbage);
 
          // reset message specific state
@@ -184,7 +185,8 @@ class AEAD_Tests final : public Text_Based_Test {
                                    const std::vector<uint8_t>& input,
                                    const std::vector<uint8_t>& expected,
                                    const std::vector<uint8_t>& ad,
-                                   const std::string& algo) {
+                                   const std::string& algo,
+                                   Botan::RandomNumberGenerator& rng) {
          const bool is_siv = algo.find("/SIV") != std::string::npos;
 
          Test::Result result(algo);
@@ -193,7 +195,7 @@ class AEAD_Tests final : public Text_Based_Test {
 
          result.test_eq("AEAD decrypt output_length is correct", dec->output_length(input.size()), expected.size());
 
-         Botan::secure_vector<uint8_t> garbage = Test::rng().random_vec(dec->update_granularity());
+         Botan::secure_vector<uint8_t> garbage = rng.random_vec(dec->update_granularity());
 
          if(is_siv == false) {
             result.test_throws("Unkeyed object throws for decrypt", [&]() { dec->update(garbage); });
@@ -211,14 +213,14 @@ class AEAD_Tests final : public Text_Based_Test {
          result.test_eq("key is not set", dec->has_keying_material(), false);
          dec->set_key(key);
          result.test_eq("key is set", dec->has_keying_material(), true);
-         dec->set_associated_data(mutate_vec(ad));
+         dec->set_associated_data(mutate_vec(ad, rng));
 
          if(is_siv == false) {
             result.test_throws("Cannot process data until nonce is set (dec)", [&]() { dec->update(garbage); });
             result.test_throws("Cannot process data until nonce is set (dec)", [&]() { dec->finish(garbage); });
          }
 
-         dec->start(mutate_vec(nonce));
+         dec->start(mutate_vec(nonce, rng));
 
          dec->update(garbage);
 
@@ -313,7 +315,7 @@ class AEAD_Tests final : public Text_Based_Test {
          }
 
          // test decryption with modified ciphertext
-         const std::vector<uint8_t> mutated_input = mutate_vec(input, true);
+         const std::vector<uint8_t> mutated_input = mutate_vec(input, rng, true);
          buf.assign(mutated_input.begin(), mutated_input.end());
 
          dec->reset();
@@ -333,7 +335,7 @@ class AEAD_Tests final : public Text_Based_Test {
          // test decryption with modified nonce
          if(!nonce.empty()) {
             buf.assign(input.begin(), input.end());
-            std::vector<uint8_t> bad_nonce = mutate_vec(nonce);
+            std::vector<uint8_t> bad_nonce = mutate_vec(nonce, rng);
 
             dec->reset();
             dec->set_associated_data(ad);
@@ -350,7 +352,7 @@ class AEAD_Tests final : public Text_Based_Test {
          }
 
          // test decryption with modified associated_data
-         const std::vector<uint8_t> bad_ad = mutate_vec(ad, true);
+         const std::vector<uint8_t> bad_ad = mutate_vec(ad, rng, true);
 
          dec->reset();
          dec->set_associated_data(bad_ad);
@@ -426,10 +428,10 @@ class AEAD_Tests final : public Text_Based_Test {
                         enc->ideal_granularity() % enc->update_granularity() == 0);
 
          // test enc
-         result.merge(test_enc(key, nonce, input, expected, ad, algo));
+         result.merge(test_enc(key, nonce, input, expected, ad, algo, this->rng()));
 
          // test dec
-         result.merge(test_dec(key, nonce, expected, input, ad, algo));
+         result.merge(test_dec(key, nonce, expected, input, ad, algo, this->rng()));
 
          return result;
       }

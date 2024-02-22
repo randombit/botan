@@ -65,8 +65,8 @@ class Curve25519_Roundtrip_Test final : public Test {
          for(size_t i = 0; i < 10; ++i) {
             Test::Result result("Curve25519 roundtrip");
 
-            Botan::Curve25519_PrivateKey a_priv_gen(Test::rng());
-            Botan::Curve25519_PrivateKey b_priv_gen(Test::rng());
+            Botan::Curve25519_PrivateKey a_priv_gen(this->rng());
+            Botan::Curve25519_PrivateKey b_priv_gen(this->rng());
 
    #if defined(BOTAN_HAS_PKCS5_PBES2) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_AEAD_GCM) && \
       defined(BOTAN_HAS_SHA2_32)
@@ -75,8 +75,8 @@ class Curve25519_Roundtrip_Test final : public Test {
             const std::string a_pass = "alice pass";
             const std::string b_pass = "bob pass";
             const auto pbe_time = std::chrono::milliseconds(1);
-            const std::string a_priv_pem = Botan::PKCS8::PEM_encode(a_priv_gen, Test::rng(), a_pass, pbe_time);
-            const std::string b_priv_pem = Botan::PKCS8::PEM_encode(b_priv_gen, Test::rng(), b_pass, pbe_time);
+            const std::string a_priv_pem = Botan::PKCS8::PEM_encode(a_priv_gen, this->rng(), a_pass, pbe_time);
+            const std::string b_priv_pem = Botan::PKCS8::PEM_encode(b_priv_gen, this->rng(), b_pass, pbe_time);
 
             // Reload back into memory
             Botan::DataSource_Memory a_priv_ds(a_priv_pem);
@@ -110,8 +110,8 @@ class Curve25519_Roundtrip_Test final : public Test {
             Botan::Curve25519_PublicKey* b_pub_key = dynamic_cast<Botan::Curve25519_PublicKey*>(b_pub.get());
 
             if(a_pub_key && b_pub_key) {
-               Botan::PK_Key_Agreement a_ka(*a_priv, Test::rng(), "Raw");
-               Botan::PK_Key_Agreement b_ka(*b_priv, Test::rng(), "Raw");
+               Botan::PK_Key_Agreement a_ka(*a_priv, this->rng(), "Raw");
+               Botan::PK_Key_Agreement b_ka(*b_priv, this->rng(), "Raw");
 
                Botan::SymmetricKey a_key = a_ka.derive_key(32, b_pub_key->public_value());
                Botan::SymmetricKey b_key = b_ka.derive_key(32, a_pub_key->public_value());

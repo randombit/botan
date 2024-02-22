@@ -25,12 +25,12 @@ namespace {
 // the tests assume that those methods always return the same key.
 
 std::unique_ptr<Botan::Private_Key> kem() {
-   static auto kem_key = Botan::create_private_key("Kyber", Test::rng(), "Kyber-512-r3");
+   static auto kem_key = Botan::create_private_key("Kyber", Test::global_rng(), "Kyber-512-r3");
    return Botan::load_private_key(kem_key->algorithm_identifier(), kem_key->private_key_bits());
 }
 
 std::unique_ptr<Botan::PK_Key_Agreement_Key> kex_dh() {
-   static auto kex_key = Botan::create_private_key("DH", Test::rng(), "ffdhe/ietf/2048");
+   static auto kex_key = Botan::create_private_key("DH", Test::global_rng(), "ffdhe/ietf/2048");
    auto sk = Botan::load_private_key(kex_key->algorithm_identifier(), kex_key->private_key_bits());
    auto kex_sk = dynamic_cast<Botan::PK_Key_Agreement_Key*>(sk.get());
    if(kex_sk) {
@@ -42,7 +42,7 @@ std::unique_ptr<Botan::PK_Key_Agreement_Key> kex_dh() {
 }
 
 std::unique_ptr<Botan::PK_Key_Agreement_Key> kex_ecdh() {
-   static auto kex_key = Botan::create_private_key("ECDH", Test::rng(), "secp256r1");
+   static auto kex_key = Botan::create_private_key("ECDH", Test::global_rng(), "secp256r1");
    auto sk = Botan::load_private_key(kex_key->algorithm_identifier(), kex_key->private_key_bits());
    auto kex_sk = dynamic_cast<Botan::PK_Key_Agreement_Key*>(sk.get());
    if(kex_sk) {
@@ -54,7 +54,7 @@ std::unique_ptr<Botan::PK_Key_Agreement_Key> kex_ecdh() {
 }
 
 std::unique_ptr<Botan::Private_Key> sig() {
-   static auto sig_key = Botan::create_private_key("ECDSA", Test::rng(), "secp256r1");
+   static auto sig_key = Botan::create_private_key("ECDSA", Test::global_rng(), "secp256r1");
    return Botan::load_private_key(sig_key->algorithm_identifier(), sig_key->private_key_bits());
 }
 
@@ -84,7 +84,7 @@ auto pubkeys(KeyTs... keys) {
 template <typename... Ts>
 size_t length_of_hybrid_shared_key(Ts... kex_kem_fn) {
    Botan::overloaded f{[](const Botan::PK_Key_Agreement_Key& kex_key) {
-                          Botan::PK_Key_Agreement ka(kex_key, Test::rng(), "Raw");
+                          Botan::PK_Key_Agreement ka(kex_key, Test::global_rng(), "Raw");
                           return ka.agreed_value_size();
                        },
                        [](const Botan::Private_Key& kem_key) {
@@ -119,7 +119,7 @@ void roundtrip_test(Test::Result& result, Ts... kex_kem_fn) {
    Botan::TLS::Hybrid_KEM_PrivateKey hybrid_key(keys(kex_kem_fn()...));
    Botan::TLS::Hybrid_KEM_PublicKey hybrid_public_key(pubkeys(kex_kem_fn()...));
 
-   auto& rng = Test::rng();
+   auto& rng = Test::global_rng();
 
    Botan::PK_KEM_Encryptor encryptor(hybrid_public_key, "Raw");
    const auto kem_result = encryptor.encrypt(rng);
@@ -209,7 +209,7 @@ void kex_to_kem_roundtrip(Test::Result& result,
    Botan::TLS::KEX_to_KEM_Adapter_PrivateKey kexkem_key(kex_fn());
    Botan::TLS::KEX_to_KEM_Adapter_PublicKey kexkem_public_key(kex_fn());
 
-   auto& rng = Test::rng();
+   auto& rng = Test::global_rng();
 
    Botan::PK_KEM_Encryptor encryptor(kexkem_public_key, "Raw");
    const auto kem_result = encryptor.encrypt(rng);

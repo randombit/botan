@@ -89,7 +89,7 @@ class ECDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
          const BigInt x = vars.get_req_bn("X");
          Botan::EC_Group group(Botan::OID::from_string(group_id));
 
-         return std::make_unique<Botan::ECDSA_PrivateKey>(Test::rng(), group, x);
+         return std::make_unique<Botan::ECDSA_PrivateKey>(this->rng(), group, x);
       }
 
       std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Hash"); }
@@ -98,7 +98,7 @@ class ECDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
       std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const override {
          // probabilistic ecdsa signature generation extracts more random than just the nonce,
          // but the nonce is extracted first
-         return std::make_unique<Fixed_Output_Position_RNG>(nonce, 1);
+         return std::make_unique<Fixed_Output_Position_RNG>(nonce, 1, this->rng());
       }
    #endif
 };
@@ -124,7 +124,7 @@ class ECDSA_KAT_Verification_Tests final : public PK_Signature_Verification_Test
          const BigInt x = vars.get_req_bn("X");
          Botan::EC_Group group(Botan::OID::from_string(group_id));
 
-         Botan::ECDSA_PrivateKey priv_key(Test::rng(), group, x);
+         Botan::ECDSA_PrivateKey priv_key(this->rng(), group, x);
 
          return priv_key.public_key();
       }
@@ -136,8 +136,8 @@ class ECDSA_Sign_Verify_DER_Test final : public PK_Sign_Verify_DER_Test {
    public:
       ECDSA_Sign_Verify_DER_Test() : PK_Sign_Verify_DER_Test("ECDSA", "SHA-512") {}
 
-      std::unique_ptr<Botan::Private_Key> key() const override {
-         return Botan::create_private_key("ECDSA", Test::rng(), "secp256r1");
+      std::unique_ptr<Botan::Private_Key> key() override {
+         return Botan::create_private_key("ECDSA", this->rng(), "secp256r1");
       }
 };
 
@@ -227,7 +227,7 @@ class ECDSA_Invalid_Key_Tests final : public Text_Based_Test {
          }
 
          auto key = std::make_unique<Botan::ECDSA_PublicKey>(group, *public_point);
-         result.test_eq("public key fails check", key->check_key(Test::rng(), false), false);
+         result.test_eq("public key fails check", key->check_key(this->rng(), false), false);
          return result;
       }
 };

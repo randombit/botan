@@ -720,10 +720,14 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run() {
 
                result_type operator()() {
                   size_t s;
-                  Test::rng().randomize(reinterpret_cast<uint8_t*>(&s), sizeof(s));
+                  m_rng.randomize(reinterpret_cast<uint8_t*>(&s), sizeof(s));
                   return s;
                }
-         } rbg;
+
+               random_bit_generator(Botan::RandomNumberGenerator& rng) : m_rng(rng) {}
+
+               Botan::RandomNumberGenerator& m_rng;
+         } rbg(this->rng());
 
          for(size_t r = 0; r < 16; r++) {
             std::shuffle(++(certs.begin()), certs.end(), rbg);

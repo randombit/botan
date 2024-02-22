@@ -69,7 +69,7 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test {
          const Botan::BigInt x("46205663093589612668746163860870963912226379131190812163519349848291472898748");
          auto privkey = std::make_unique<Botan::DH_PrivateKey>(group, x);
 
-         auto kas = std::make_unique<Botan::PK_Key_Agreement>(*privkey, rng(), "Raw");
+         auto kas = std::make_unique<Botan::PK_Key_Agreement>(*privkey, this->rng(), "Raw");
 
          result.test_throws("agreement input too big", "DH agreement - invalid key provided", [&kas]() {
             const BigInt too_big("584580020955360946586837552585233629614212007514394561597561641914945762794672");
@@ -102,7 +102,7 @@ class DH_Invalid_Key_Tests final : public Text_Based_Test {
          Botan::DL_Group group(p, q, g);
 
          auto key = std::make_unique<Botan::DH_PublicKey>(group, pubkey);
-         result.test_eq("public key fails check", key->check_key(Test::rng(), false), false);
+         result.test_eq("public key fails check", key->check_key(this->rng(), false), false);
          return result;
       }
 };

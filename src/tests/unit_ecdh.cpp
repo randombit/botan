@@ -24,13 +24,13 @@ class ECDH_Unit_Tests final : public Test {
       std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
 
-         results.push_back(test_ecdh_normal_derivation());
+         results.push_back(test_ecdh_normal_derivation(this->rng()));
 
          return results;
       }
 
    private:
-      static Test::Result test_ecdh_normal_derivation() {
+      static Test::Result test_ecdh_normal_derivation(Botan::RandomNumberGenerator& rng) {
          Test::Result result("ECDH key exchange");
 
          std::vector<std::string> params = {"secp256r1", "secp384r1", "secp521r1", "brainpool256r1"};
@@ -38,11 +38,11 @@ class ECDH_Unit_Tests final : public Test {
          for(const auto& param : params) {
             try {
                Botan::EC_Group dom_pars(param);
-               Botan::ECDH_PrivateKey private_a(Test::rng(), dom_pars);
-               Botan::ECDH_PrivateKey private_b(Test::rng(), dom_pars);
+               Botan::ECDH_PrivateKey private_a(rng, dom_pars);
+               Botan::ECDH_PrivateKey private_b(rng, dom_pars);
 
-               Botan::PK_Key_Agreement ka(private_a, Test::rng(), "KDF2(SHA-512)");
-               Botan::PK_Key_Agreement kb(private_b, Test::rng(), "KDF2(SHA-512)");
+               Botan::PK_Key_Agreement ka(private_a, rng, "KDF2(SHA-512)");
+               Botan::PK_Key_Agreement kb(private_b, rng, "KDF2(SHA-512)");
 
                Botan::SymmetricKey alice_key = ka.derive_key(32, private_b.public_value());
                Botan::SymmetricKey bob_key = kb.derive_key(32, private_a.public_value());

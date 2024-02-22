@@ -109,16 +109,16 @@ class SRP6_RT_Tests final : public Test {
 
             for(size_t t = 0; t != trials; ++t) {
                std::vector<uint8_t> salt;
-               Test::rng().random_vec(salt, 16);
+               this->rng().random_vec(salt, 16);
 
                const Botan::BigInt verifier =
                   Botan::srp6_generate_verifier(username, password, salt, group_id, hash_id);
 
                Botan::SRP6_Server_Session server;
 
-               const Botan::BigInt B = server.step1(verifier, group_id, hash_id, Test::rng());
+               const Botan::BigInt B = server.step1(verifier, group_id, hash_id, this->rng());
 
-               auto client = srp6_client_agree(username, password, group_id, hash_id, salt, B, Test::rng());
+               auto client = srp6_client_agree(username, password, group_id, hash_id, salt, B, this->rng());
 
                const Botan::SymmetricKey server_K = server.step2(client.first);
 

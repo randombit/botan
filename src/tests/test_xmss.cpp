@@ -138,16 +138,18 @@ class XMSS_Keygen_Reference_Test final : public Text_Based_Test {
 };
 
 std::vector<Test::Result> xmss_statefulness() {
-   auto sign_something = [](auto& sk) {
+   auto rng = Test::new_rng(__func__);
+
+   auto sign_something = [&rng](auto& sk) {
       auto msg = Botan::hex_decode("deadbeef");
 
-      Botan::PK_Signer signer(sk, Test::rng(), "SHA2_10_256");
-      signer.sign_message(msg, Test::rng());
+      Botan::PK_Signer signer(sk, *rng, "SHA2_10_256");
+      signer.sign_message(msg, *rng);
    };
 
    return {CHECK("signing alters state",
                  [&](auto& result) {
-                    Botan::XMSS_PrivateKey sk(Botan::XMSS_Parameters::XMSS_SHA2_10_256, Test::rng());
+                    Botan::XMSS_PrivateKey sk(Botan::XMSS_Parameters::XMSS_SHA2_10_256, *rng);
                     result.require("allows 1024 signatures", sk.remaining_operations() == 1024);
 
                     sign_something(sk);
@@ -265,11 +267,13 @@ std::vector<Test::Result> xmss_legacy_private_key() {
    const auto message = Botan::hex_decode("deadcafe");
    const auto algo_name = "SHA2_10_256";
 
+   auto rng = Test::new_rng(__func__);
+
    return {
       Botan_Tests::CHECK("Use a legacy private key to create a signature",
                          [&](auto& result) {
-                            Botan::PK_Signer signer(legacy_secret_key, Test::rng(), algo_name);
-                            auto signature = signer.sign_message(message, Test::rng());
+                            Botan::PK_Signer signer(legacy_secret_key, *rng, algo_name);
+                            auto signature = signer.sign_message(message, *rng);
 
                             Botan::PK_Verifier verifier(public_key_from_secret_key, algo_name);
                             result.confirm("legacy private key generates signatures that are still verifiable",
@@ -285,8 +289,8 @@ std::vector<Test::Result> xmss_legacy_private_key() {
 
       Botan_Tests::CHECK("Verify a new signature by a legacy private key with a legacy public key",
                          [&](auto& result) {
-                            Botan::PK_Signer signer(legacy_secret_key, Test::rng(), algo_name);
-                            auto signature = signer.sign_message(message, Test::rng());
+                            Botan::PK_Signer signer(legacy_secret_key, *rng, algo_name);
+                            auto signature = signer.sign_message(message, *rng);
 
                             Botan::PK_Verifier verifier(legacy_public_key, algo_name);
                             result.confirm("legacy private key generates signatures that are still verifiable",

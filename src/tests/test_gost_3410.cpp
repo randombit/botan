@@ -68,13 +68,13 @@ class GOST_3410_2001_Signature_Tests final : public PK_Signature_Generation_Test
 
          const BigInt x = vars.get_req_bn("X");
 
-         return std::make_unique<Botan::GOST_3410_PrivateKey>(Test::rng(), group, x);
+         return std::make_unique<Botan::GOST_3410_PrivateKey>(this->rng(), group, x);
       }
 
       std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Hash"); }
 
       std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const override {
-         return std::make_unique<Fixed_Output_Position_RNG>(nonce, 1);
+         return std::make_unique<Fixed_Output_Position_RNG>(nonce, 1, this->rng());
       }
 };
 

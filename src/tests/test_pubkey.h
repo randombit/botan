@@ -101,7 +101,7 @@ class PK_Sign_Verify_DER_Test : public Test {
    protected:
       std::vector<Test::Result> run() final;
 
-      virtual std::unique_ptr<Botan::Private_Key> key() const = 0;
+      virtual std::unique_ptr<Botan::Private_Key> key() = 0;
 
       virtual bool test_random_invalid_sigs() const { return true; }
 
@@ -214,15 +214,11 @@ class PK_Key_Validity_Test : public PK_Test {
       Test::Result run_one_test(const std::string& header, const VarMap& vars) final;
 };
 
-void check_invalid_signatures(Test::Result& result,
-                              Botan::PK_Verifier& verifier,
-                              const std::vector<uint8_t>& message,
-                              const std::vector<uint8_t>& signature);
-
 void check_invalid_ciphertexts(Test::Result& result,
                                Botan::PK_Decryptor& decryptor,
                                const std::vector<uint8_t>& plaintext,
-                               const std::vector<uint8_t>& ciphertext);
+                               const std::vector<uint8_t>& ciphertext,
+                               Botan::RandomNumberGenerator& rng);
 
 }  // namespace Botan_Tests
 

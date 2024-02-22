@@ -90,9 +90,9 @@ class Ed25519_Curdle_Format_Tests final : public Test {
          auto pub_key = Botan::X509::load_key(pub_data);
          result.confirm("Public key loaded", pub_key != nullptr);
 
-         Botan::PK_Signer signer(*priv_key, Test::rng(), "Pure");
+         Botan::PK_Signer signer(*priv_key, this->rng(), "Pure");
          signer.update("message");
-         std::vector<uint8_t> sig = signer.signature(Test::rng());
+         std::vector<uint8_t> sig = signer.signature(this->rng());
 
          Botan::PK_Verifier verifier(*pub_key, "Pure");
          verifier.update("message");

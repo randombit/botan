@@ -142,7 +142,7 @@ class SPHINCS_Plus_Test final : public Text_Based_Test {
             result.confirm("verification of valid signature after deserialization", verify_success_deserialized);
 
             // Verification of invalid signature
-            auto broken_sig = Test::mutate_vec(deserialized_signature);
+            auto broken_sig = Test::mutate_vec(deserialized_signature, this->rng());
             bool verify_fail = deserialized_verifier.verify_message(
                msg_ref.data(), msg_ref.size(), broken_sig.data(), broken_sig.size());
             result.confirm("verification of invalid signature", !verify_fail);

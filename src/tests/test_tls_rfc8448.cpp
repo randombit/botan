@@ -376,9 +376,10 @@ class Test_Credentials : public Botan::Credentials_Manager {
          // fly as a stand-in. Instead of actually using it, the signatures generated
          // by this private key must be hard-coded in `Callbacks::sign_message()`; see
          // `MockSignature_Fn` for more details.
-         m_bogus_alternative_server_private_key.reset(create_private_key("ECDSA", Test::rng(), "secp256r1").release());
+         auto& rng = Test::global_rng();
+         m_bogus_alternative_server_private_key.reset(create_private_key("ECDSA", rng, "secp256r1").release());
 
-         m_client_private_key.reset(create_private_key("RSA", Test::rng(), "1024").release());
+         m_client_private_key.reset(create_private_key("RSA", rng, "1024").release());
       }
 
       std::vector<Botan::X509_Certificate> cert_chain(const std::vector<std::string>& cert_key_types,
@@ -552,7 +553,7 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager {
       }
 
    public:
-      RFC8448_Session_Manager() : Session_Manager(Test::rng_as_shared()) {}
+      RFC8448_Session_Manager() : Session_Manager(Test::global_rng_as_shared()) {}
 
       const std::vector<Session_with_Handle>& all_sessions() const { return m_sessions; }
 
@@ -1209,7 +1210,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
          };
 
          // Fallback RNG is required to for blinding in ECDH with P-256
-         auto& fallback_rng = Test::rng();
+         auto& fallback_rng = this->rng();
          auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>(fallback_rng);
 
          // 32 - client hello random
@@ -2065,7 +2066,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
 
       std::vector<Test::Result> hello_retry_request(const VarMap& vars) override {
          // Fallback RNG is required to for blinding in ECDH with P-256
-         auto& fallback_rng = Test::rng();
+         auto& fallback_rng = this->rng();
          auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>(fallback_rng);
 
          // 32 - for server hello random

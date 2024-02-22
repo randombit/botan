@@ -558,11 +558,11 @@ class Test {
 
       virtual std::vector<std::string> possible_providers(const std::string&);
 
-      void set_test_name(const std::string& name) { m_test_name = name; }
+      void initialize(const std::string& test_name, CodeLocation location);
 
       const std::string& test_name() const { return m_test_name; }
 
-      void set_registration_location(CodeLocation location) { m_registration_location = std::move(location); }
+      Botan::RandomNumberGenerator& rng() const;
 
       const std::optional<CodeLocation>& registration_location() const { return m_registration_location; }
 
@@ -592,10 +592,9 @@ class Test {
 
       template <typename Alloc>
       static std::vector<uint8_t, Alloc> mutate_vec(const std::vector<uint8_t, Alloc>& v,
+                                                    Botan::RandomNumberGenerator& rng,
                                                     bool maybe_resize = false,
                                                     size_t min_offset = 0) {
-         auto& rng = Test::rng();
-
          std::vector<uint8_t, Alloc> r = v;
 
          if(maybe_resize && (r.empty() || rng.next_byte() < 32)) {
@@ -616,7 +615,7 @@ class Test {
 
       static void set_test_options(const Test_Options& opts);
 
-      static void set_test_rng(std::shared_ptr<Botan::RandomNumberGenerator> rng);
+      static void set_test_rng_seed(std::span<const uint8_t> seed, size_t epoch = 0);
 
       static const Test_Options& options() { return m_opts; }
 
@@ -636,19 +635,27 @@ class Test {
       static std::string read_data_file(const std::string& path);
       static std::vector<uint8_t> read_binary_data_file(const std::string& path);
 
-      static Botan::RandomNumberGenerator& rng();
-      static std::shared_ptr<Botan::RandomNumberGenerator> rng_as_shared();
-      static std::string random_password();
+      static std::unique_ptr<Botan::RandomNumberGenerator> new_rng(std::string_view test_name);
+      static std::shared_ptr<Botan::RandomNumberGenerator> new_shared_rng(std::string_view test_name);
+
+      static Botan::RandomNumberGenerator& global_rng();
+      static std::shared_ptr<Botan::RandomNumberGenerator> global_rng_as_shared();
+      static std::string random_password(Botan::RandomNumberGenerator& rng);
       static uint64_t timestamp();  // nanoseconds arbitrary epoch
 
       static std::vector<Test::Result> flatten_result_lists(std::vector<std::vector<Test::Result>> result_lists);
 
    private:
       static Test_Options m_opts;
-      static std::shared_ptr<Botan::RandomNumberGenerator> m_test_rng;
+      static std::shared_ptr<Botan::RandomNumberGenerator> m_global_test_rng;
+      static std::string m_test_rng_seed;
 
-      std::string m_test_name;                              // The string ID that was used to register this test
-      std::optional<CodeLocation> m_registration_location;  /// The source file location where the test was registered
+      /// The string ID that was used to register this test
+      std::string m_test_name;
+      /// The source file location where the test was registered
+      std::optional<CodeLocation> m_registration_location;
+      /// The test-specific RNG state
+      mutable std::unique_ptr<Botan::RandomNumberGenerator> m_test_rng;
 };
 
 /*
@@ -664,8 +671,7 @@ class TestClassRegistration {
                             CodeLocation registration_location) {
          Test::register_test(category, name, smoke_test, needs_serialization, [=] {
             auto test = std::make_unique<Test_Class>();
-            test->set_test_name(name);
-            test->set_registration_location(registration_location);
+            test->initialize(name, registration_location);
             return test;
          });
       }
@@ -742,8 +748,7 @@ class TestFnRegistration {
                          TestFns... fn) {
          Test::register_test(category, name, smoke_test, needs_serialization, [=] {
             auto test = std::make_unique<FnTest>(fn...);
-            test->set_test_name(name);
-            test->set_registration_location(std::move(registration_location));
+            test->initialize(name, registration_location);
             return test;
          });
       }

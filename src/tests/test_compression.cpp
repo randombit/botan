@@ -76,7 +76,7 @@ class Compression_Tests final : public Test {
 
                const Botan::secure_vector<uint8_t> empty;
                const Botan::secure_vector<uint8_t> all_zeros(text_len, 0);
-               const Botan::secure_vector<uint8_t> random_binary = Test::rng().random_vec(text_len);
+               const Botan::secure_vector<uint8_t> random_binary = this->rng().random_vec(text_len);
                const Botan::secure_vector<uint8_t> short_text = {'f', 'o', 'o', '\n'};
 
                const uint8_t* textb = reinterpret_cast<const uint8_t*>(COMPRESSION_TEST_TEXT);

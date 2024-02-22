@@ -67,7 +67,7 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
          result.confirm("signature verifies", verifier.check_signature(signature.data(), signature.size()));
 
          // test validating incorrect wrong signagture
-         auto mutated_signature = Test::mutate_vec(signature);
+         auto mutated_signature = Test::mutate_vec(signature, this->rng());
          result.confirm("invalid signature rejected",
                         !verifier.check_signature(mutated_signature.data(), mutated_signature.size()));
 
@@ -111,10 +111,12 @@ class DilithiumRoundtripTests final : public Test {
       static Test::Result run_roundtrip(const char* test_name, Botan::DilithiumMode mode, bool randomized) {
          Test::Result result(test_name);
 
-         auto sign = [randomized](const auto& private_key, const auto& msg) {
+         auto rng = Test::new_rng(test_name);
+
+         auto sign = [randomized, &rng](const auto& private_key, const auto& msg) {
             const std::string param = (randomized) ? "Randomized" : "Deterministic";
-            auto signer = Botan::PK_Signer(private_key, Test::rng(), param);
-            return signer.sign_message(msg, Test::rng());
+            auto signer = Botan::PK_Signer(private_key, *rng, param);
+            return signer.sign_message(msg, *rng);
          };
 
          auto verify = [](const auto& public_key, const auto& msg, const auto& signature) {
@@ -126,7 +128,7 @@ class DilithiumRoundtripTests final : public Test {
          const std::string msg = "The quick brown fox jumps over the lazy dog.";
          const std::vector<uint8_t> msgvec(msg.data(), msg.data() + msg.size());
 
-         Botan::Dilithium_PrivateKey priv_key(Test::rng(), mode);
+         Botan::Dilithium_PrivateKey priv_key(*rng, mode);
          const Botan::Dilithium_PublicKey& pub_key = priv_key;
 
          const auto sig_before_codec = sign(priv_key, msgvec);

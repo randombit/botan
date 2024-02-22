@@ -40,9 +40,9 @@ class TLS_Policy_Unit_Tests final : public Test {
       std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
 
-         results.push_back(test_peer_key_acceptable_rsa());
-         results.push_back(test_peer_key_acceptable_ecdh());
-         results.push_back(test_peer_key_acceptable_ecdsa());
+         results.push_back(test_peer_key_acceptable_rsa(this->rng()));
+         results.push_back(test_peer_key_acceptable_ecdh(this->rng()));
+         results.push_back(test_peer_key_acceptable_ecdsa(this->rng()));
          results.push_back(test_peer_key_acceptable_dh());
          results.push_back(test_key_exchange_groups_to_offer());
 
@@ -50,10 +50,10 @@ class TLS_Policy_Unit_Tests final : public Test {
       }
 
    private:
-      static Test::Result test_peer_key_acceptable_rsa() {
+      static Test::Result test_peer_key_acceptable_rsa(Botan::RandomNumberGenerator& rng) {
          Test::Result result("TLS Policy RSA key verification");
    #if defined(BOTAN_HAS_RSA)
-         auto rsa_key_1024 = std::make_unique<Botan::RSA_PrivateKey>(Test::rng(), 1024);
+         auto rsa_key_1024 = std::make_unique<Botan::RSA_PrivateKey>(rng, 1024);
          Botan::TLS::Policy policy;
 
          try {
@@ -63,18 +63,18 @@ class TLS_Policy_Unit_Tests final : public Test {
             result.test_success("Correctly rejecting 1024 bit RSA keys");
          }
 
-         auto rsa_key_2048 = std::make_unique<Botan::RSA_PrivateKey>(Test::rng(), 2048);
+         auto rsa_key_2048 = std::make_unique<Botan::RSA_PrivateKey>(rng, 2048);
          policy.check_peer_key_acceptable(*rsa_key_2048);
          result.test_success("Correctly accepting 2048 bit RSA keys");
    #endif
          return result;
       }
 
-      static Test::Result test_peer_key_acceptable_ecdh() {
+      static Test::Result test_peer_key_acceptable_ecdh(Botan::RandomNumberGenerator& rng) {
          Test::Result result("TLS Policy ECDH key verification");
    #if defined(BOTAN_HAS_ECDH)
          Botan::EC_Group group_192("secp192r1");
-         auto ecdh_192 = std::make_unique<Botan::ECDH_PrivateKey>(Test::rng(), group_192);
+         auto ecdh_192 = std::make_unique<Botan::ECDH_PrivateKey>(rng, group_192);
 
          Botan::TLS::Policy policy;
          try {
@@ -85,18 +85,18 @@ class TLS_Policy_Unit_Tests final : public Test {
          }
 
          Botan::EC_Group group_256("secp256r1");
-         auto ecdh_256 = std::make_unique<Botan::ECDH_PrivateKey>(Test::rng(), group_256);
+         auto ecdh_256 = std::make_unique<Botan::ECDH_PrivateKey>(rng, group_256);
          policy.check_peer_key_acceptable(*ecdh_256);
          result.test_success("Correctly accepting 256 bit EC keys");
    #endif
          return result;
       }
 
-      static Test::Result test_peer_key_acceptable_ecdsa() {
+      static Test::Result test_peer_key_acceptable_ecdsa(Botan::RandomNumberGenerator& rng) {
          Test::Result result("TLS Policy ECDSA key verification");
    #if defined(BOTAN_HAS_ECDSA)
          Botan::EC_Group group_192("secp192r1");
-         auto ecdsa_192 = std::make_unique<Botan::ECDSA_PrivateKey>(Test::rng(), group_192);
+         auto ecdsa_192 = std::make_unique<Botan::ECDSA_PrivateKey>(rng, group_192);
 
          Botan::TLS::Policy policy;
          try {
@@ -107,7 +107,7 @@ class TLS_Policy_Unit_Tests final : public Test {
          }
 
          Botan::EC_Group group_256("secp256r1");
-         auto ecdsa_256 = std::make_unique<Botan::ECDSA_PrivateKey>(Test::rng(), group_256);
+         auto ecdsa_256 = std::make_unique<Botan::ECDSA_PrivateKey>(rng, group_256);
          policy.check_peer_key_acceptable(*ecdsa_256);
          result.test_success("Correctly accepting 256 bit EC keys");
    #endif

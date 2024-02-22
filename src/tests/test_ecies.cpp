@@ -44,11 +44,12 @@ void check_encrypt_decrypt(Test::Result& result,
                            const Botan::InitializationVector& iv,
                            const std::string& label,
                            const std::vector<uint8_t>& plaintext,
-                           const std::vector<uint8_t>& ciphertext) {
+                           const std::vector<uint8_t>& ciphertext,
+                           Botan::RandomNumberGenerator& rng) {
    try {
-      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
+      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, rng);
       ecies_enc.set_other_key(other_private_key.public_point());
-      Botan::ECIES_Decryptor ecies_dec(other_private_key, ecies_params, Test::rng());
+      Botan::ECIES_Decryptor ecies_dec(other_private_key, ecies_params, rng);
       if(!iv.bits_of().empty()) {
          ecies_enc.set_initialization_vector(iv);
          ecies_dec.set_initialization_vector(iv);
@@ -58,7 +59,7 @@ void check_encrypt_decrypt(Test::Result& result,
          ecies_dec.set_label(label);
       }
 
-      const std::vector<uint8_t> encrypted = ecies_enc.encrypt(plaintext, Test::rng());
+      const std::vector<uint8_t> encrypted = ecies_enc.encrypt(plaintext, rng);
       if(!ciphertext.empty()) {
          result.test_eq("encrypted data", encrypted, ciphertext);
       }
@@ -79,7 +80,8 @@ void check_encrypt_decrypt(Test::Result& result,
                            const Botan::ECDH_PrivateKey& private_key,
                            const Botan::ECDH_PrivateKey& other_private_key,
                            const Botan::ECIES_System_Params& ecies_params,
-                           size_t iv_length = 0) {
+                           size_t iv_length,
+                           Botan::RandomNumberGenerator& rng) {
    const std::vector<uint8_t> plaintext{1, 2, 3};
    check_encrypt_decrypt(result,
                          private_key,
@@ -88,7 +90,8 @@ void check_encrypt_decrypt(Test::Result& result,
                          Botan::InitializationVector(std::vector<uint8_t>(iv_length, 0)),
                          "",
                          plaintext,
-                         std::vector<uint8_t>());
+                         std::vector<uint8_t>(),
+                         rng);
 }
 
    #if defined(BOTAN_HAS_KDF1_18033) && defined(BOTAN_HAS_SHA1)
@@ -119,12 +122,12 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
          const Botan::EC_Group domain(p, a, b, gx, gy, mu, nu);
 
          // keys of bob
-         const Botan::ECDH_PrivateKey other_private_key(Test::rng(), domain, x);
+         const Botan::ECDH_PrivateKey other_private_key(this->rng(), domain, x);
          const Botan::EC_Point other_public_key_point = domain.point(hx, hy);
          const Botan::ECDH_PublicKey other_public_key(domain, other_public_key_point);
 
          // (ephemeral) keys of alice
-         const Botan::ECDH_PrivateKey eph_private_key(Test::rng(), domain, r);
+         const Botan::ECDH_PrivateKey eph_private_key(this->rng(), domain, r);
          const Botan::EC_Point eph_public_key_point = eph_private_key.public_point();
          const std::vector<uint8_t> eph_public_key_bin = eph_public_key_point.encode(compression_type);
          result.test_eq("encoded (ephemeral) public key", eph_public_key_bin, c0);
@@ -133,7 +136,7 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
          // no cofactor-/oldcofactor-/singlehash-/check-mode and 128 byte secret length
          Botan::ECIES_KA_Params ka_params(
             eph_private_key.domain(), "KDF1-18033(SHA-1)", 128, compression_type, Flags::None);
-         const Botan::ECIES_KA_Operation ka(eph_private_key, ka_params, true, Test::rng());
+         const Botan::ECIES_KA_Operation ka(eph_private_key, ka_params, true, this->rng());
          const Botan::SymmetricKey secret_key = ka.derive_secret(eph_public_key_bin, other_public_key_point);
          result.test_eq("derived secret key", secret_key.bits_of(), k);
 
@@ -171,7 +174,8 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
                                                                 20,
                                                                 comp_type,
                                                                 flags);
-                        check_encrypt_decrypt(result, eph_private_key, other_private_key, ecies_params, 16);
+                        check_encrypt_decrypt(
+                           result, eph_private_key, other_private_key, ecies_params, 16, this->rng());
                      }
                   }
                }
@@ -217,12 +221,13 @@ class ECIES_Tests final : public Text_Based_Test {
 
          const Flags flags = ecies_flags(cofactor_mode, old_cofactor_mode, check_mode, single_hash_mode);
          const Botan::EC_Group domain(curve);
-         const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
-         const Botan::ECDH_PrivateKey other_private_key(Test::rng(), domain, other_private_key_value);
+         const Botan::ECDH_PrivateKey private_key(this->rng(), domain, private_key_value);
+         const Botan::ECDH_PrivateKey other_private_key(this->rng(), domain, other_private_key_value);
 
          const Botan::ECIES_System_Params ecies_params(
             private_key.domain(), kdf, dem, dem_key_len, mac, mac_key_len, compression_type, flags);
-         check_encrypt_decrypt(result, private_key, other_private_key, ecies_params, iv, label, plaintext, ciphertext);
+         check_encrypt_decrypt(
+            result, private_key, other_private_key, ecies_params, iv, label, plaintext, ciphertext, this->rng());
 
          return result;
       }
@@ -235,6 +240,8 @@ BOTAN_REGISTER_TEST("pubkey", "ecies", ECIES_Tests);
 Test::Result test_other_key_not_set() {
    Test::Result result("ECIES other key not set");
 
+   auto rng = Test::new_rng("ecies_other_key_not_set");
+
    const Flags flags = ecies_flags(false, false, false, true);
    const Botan::EC_Group domain("secp521r1");
    const Botan::BigInt private_key_value(
@@ -242,7 +249,7 @@ Test::Result test_other_key_not_set() {
       "5002761777100287880684822948852132235484464537021197213998300006"
       "547176718172344447619746779823");
 
-   const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
+   const Botan::ECDH_PrivateKey private_key(*rng, domain, private_key_value);
    const Botan::ECIES_System_Params ecies_params(private_key.domain(),
                                                  "KDF1-18033(SHA-512)",
                                                  "AES-256/CBC",
@@ -252,16 +259,18 @@ Test::Result test_other_key_not_set() {
                                                  Botan::EC_Point_Format::Compressed,
                                                  flags);
 
-   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
+   Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, *rng);
 
    result.test_throws("encrypt not possible without setting other public key",
-                      [&ecies_enc]() { ecies_enc.encrypt(std::vector<uint8_t>(8), Test::rng()); });
+                      [&ecies_enc, &rng]() { ecies_enc.encrypt(std::vector<uint8_t>(8), *rng); });
 
    return result;
 }
 
 Test::Result test_kdf_not_found() {
    Test::Result result("ECIES kdf not found");
+
+   auto rng = Test::new_rng("ecies_kdf_not_found");
 
    const Flags flags = ecies_flags(false, false, false, true);
    const Botan::EC_Group domain("secp521r1");
@@ -270,7 +279,7 @@ Test::Result test_kdf_not_found() {
       "5002761777100287880684822948852132235484464537021197213998300006"
       "547176718172344447619746779823");
 
-   const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
+   const Botan::ECDH_PrivateKey private_key(*rng, domain, private_key_value);
    const Botan::ECIES_System_Params ecies_params(private_key.domain(),
                                                  "KDF-XYZ(SHA-512)",
                                                  "AES-256/CBC",
@@ -281,8 +290,8 @@ Test::Result test_kdf_not_found() {
                                                  flags);
 
    result.test_throws("kdf not found", [&]() {
-      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
-      ecies_enc.encrypt(std::vector<uint8_t>(8), Test::rng());
+      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, *rng);
+      ecies_enc.encrypt(std::vector<uint8_t>(8), *rng);
    });
 
    return result;
@@ -291,6 +300,8 @@ Test::Result test_kdf_not_found() {
 Test::Result test_mac_not_found() {
    Test::Result result("ECIES mac not found");
 
+   auto rng = Test::new_rng("ecies_mac_not_found");
+
    const Flags flags = ecies_flags(false, false, false, true);
    const Botan::EC_Group domain("secp521r1");
    const Botan::BigInt private_key_value(
@@ -298,7 +309,7 @@ Test::Result test_mac_not_found() {
       "5002761777100287880684822948852132235484464537021197213998300006"
       "547176718172344447619746779823");
 
-   const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
+   const Botan::ECDH_PrivateKey private_key(*rng, domain, private_key_value);
    const Botan::ECIES_System_Params ecies_params(private_key.domain(),
                                                  "KDF1-18033(SHA-512)",
                                                  "AES-256/CBC",
@@ -309,8 +320,8 @@ Test::Result test_mac_not_found() {
                                                  flags);
 
    result.test_throws("mac not found", [&]() {
-      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
-      ecies_enc.encrypt(std::vector<uint8_t>(8), Test::rng());
+      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, *rng);
+      ecies_enc.encrypt(std::vector<uint8_t>(8), *rng);
    });
 
    return result;
@@ -319,6 +330,8 @@ Test::Result test_mac_not_found() {
 Test::Result test_cipher_not_found() {
    Test::Result result("ECIES cipher not found");
 
+   auto rng = Test::new_rng("ecies_cipher_not_found");
+
    const Flags flags = ecies_flags(false, false, false, true);
    const Botan::EC_Group domain("secp521r1");
    const Botan::BigInt private_key_value(
@@ -326,7 +339,7 @@ Test::Result test_cipher_not_found() {
       "5002761777100287880684822948852132235484464537021197213998300006"
       "547176718172344447619746779823");
 
-   const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
+   const Botan::ECDH_PrivateKey private_key(*rng, domain, private_key_value);
    const Botan::ECIES_System_Params ecies_params(private_key.domain(),
                                                  "KDF1-18033(SHA-512)",
                                                  "AES-XYZ-256/CBC",
@@ -337,8 +350,8 @@ Test::Result test_cipher_not_found() {
                                                  flags);
 
    result.test_throws("cipher not found", [&]() {
-      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, Test::rng());
-      ecies_enc.encrypt(std::vector<uint8_t>(8), Test::rng());
+      Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, *rng);
+      ecies_enc.encrypt(std::vector<uint8_t>(8), *rng);
    });
 
    return result;
@@ -346,6 +359,8 @@ Test::Result test_cipher_not_found() {
 
 Test::Result test_system_params_short_ctor() {
    Test::Result result("ECIES short system params ctor");
+
+   auto rng = Test::new_rng("ecies_params_short_ctor");
 
    const Botan::EC_Group domain("secp521r1");
    const Botan::BigInt private_key_value(
@@ -358,8 +373,8 @@ Test::Result test_system_params_short_ctor() {
       "5866095315090327914760325168219669828915074071456176066304457448"
       "25404691681749451640151380153");
 
-   const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
-   const Botan::ECDH_PrivateKey other_private_key(Test::rng(), domain, other_private_key_value);
+   const Botan::ECDH_PrivateKey private_key(*rng, domain, private_key_value);
+   const Botan::ECDH_PrivateKey other_private_key(*rng, domain, other_private_key_value);
 
    const Botan::ECIES_System_Params ecies_params(
       private_key.domain(), "KDF1-18033(SHA-512)", "AES-256/CBC", 32, "HMAC(SHA-512)", 16);
@@ -380,7 +395,7 @@ Test::Result test_system_params_short_ctor() {
       "3F2463D233B22A7A12B679F4C06501F584D4DEFF6D26592A8D873398BD892"
       "B477B3468813C053DA43C4F3D49009F7A12D6EF7");
 
-   check_encrypt_decrypt(result, private_key, other_private_key, ecies_params, iv, label, plaintext, ciphertext);
+   check_encrypt_decrypt(result, private_key, other_private_key, ecies_params, iv, label, plaintext, ciphertext, *rng);
 
    return result;
 }
@@ -399,13 +414,15 @@ Test::Result test_ciphertext_too_short() {
       "5866095315090327914760325168219669828915074071456176066304457448"
       "25404691681749451640151380153");
 
-   const Botan::ECDH_PrivateKey private_key(Test::rng(), domain, private_key_value);
-   const Botan::ECDH_PrivateKey other_private_key(Test::rng(), domain, other_private_key_value);
+   auto rng = Test::new_rng("ecies_ciphertext_too_short");
+
+   const Botan::ECDH_PrivateKey private_key(*rng, domain, private_key_value);
+   const Botan::ECDH_PrivateKey other_private_key(*rng, domain, other_private_key_value);
 
    const Botan::ECIES_System_Params ecies_params(
       private_key.domain(), "KDF1-18033(SHA-512)", "AES-256/CBC", 32, "HMAC(SHA-512)", 16);
 
-   Botan::ECIES_Decryptor ecies_dec(other_private_key, ecies_params, Test::rng());
+   Botan::ECIES_Decryptor ecies_dec(other_private_key, ecies_params, *rng);
 
    result.test_throws("ciphertext too short",
                       [&ecies_dec]() { ecies_dec.decrypt(Botan::hex_decode("0401519EAA0489FF9D51E98E4C22349A")); });

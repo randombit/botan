@@ -106,7 +106,7 @@ class Message_Auth_Tests final : public Text_Based_Test {
             result.test_eq("Clone has same name", mac->name(), clone->name());
             clone->set_key(key);
             clone->start(iv);
-            clone->update(Test::rng().random_vec(32));
+            clone->update(this->rng().random_vec(32));
 
             result.test_eq(provider + " verify mac", mac->verify_mac(expected.data(), expected.size()), true);
 
