@@ -1060,6 +1060,9 @@ std::vector<Test::Result> Text_Based_Test::run() {
          }
 
          m_cpu_flags = parse_cpuid_bits(pragma_tokens);
+         if(!m_cpu_flags.empty() && !this->is_serialized()) {
+            throw Test_Error(Botan::fmt("'{}' used cpuid control but is not serialized", this->test_name()));
+         }
 
          continue;
       } else if(line[0] == '#') {
