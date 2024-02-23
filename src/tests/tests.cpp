@@ -781,14 +781,6 @@ Botan::RandomNumberGenerator& Test::global_rng() {
 }
 
 //static
-std::shared_ptr<Botan::RandomNumberGenerator> Test::global_rng_as_shared() {
-   if(!m_global_test_rng) {
-      throw Test_Error("Test requires RNG but no RNG set with Test::set_test_rng");
-   }
-   return m_global_test_rng;
-}
-
-//static
 std::unique_ptr<Botan::RandomNumberGenerator> Test::new_rng(std::string_view test_name) {
    return std::make_unique<Testsuite_RNG>(m_test_rng_seed, test_name);
 }

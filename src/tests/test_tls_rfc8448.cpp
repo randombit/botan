@@ -376,10 +376,10 @@ class Test_Credentials : public Botan::Credentials_Manager {
          // fly as a stand-in. Instead of actually using it, the signatures generated
          // by this private key must be hard-coded in `Callbacks::sign_message()`; see
          // `MockSignature_Fn` for more details.
-         auto& rng = Test::global_rng();
-         m_bogus_alternative_server_private_key.reset(create_private_key("ECDSA", rng, "secp256r1").release());
+         auto rng = Test::new_rng(__func__);
+         m_bogus_alternative_server_private_key.reset(create_private_key("ECDSA", *rng, "secp256r1").release());
 
-         m_client_private_key.reset(create_private_key("RSA", rng, "1024").release());
+         m_client_private_key.reset(create_private_key("RSA", *rng, "1024").release());
       }
 
       std::vector<Botan::X509_Certificate> cert_chain(const std::vector<std::string>& cert_key_types,
@@ -553,7 +553,7 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager {
       }
 
    public:
-      RFC8448_Session_Manager() : Session_Manager(Test::global_rng_as_shared()) {}
+      RFC8448_Session_Manager() : Session_Manager(std::make_shared<Botan::Null_RNG>()) {}
 
       const std::vector<Session_with_Handle>& all_sessions() const { return m_sessions; }
 
