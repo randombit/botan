@@ -94,17 +94,18 @@ class Fixed_Output_RNG : public Botan::RandomNumberGenerator {
  */
 class Fixed_Output_Position_RNG final : public Fixed_Output_RNG {
    public:
-      bool is_seeded() const override { return Fixed_Output_RNG::is_seeded() || Test::rng().is_seeded(); }
+      // We output either the fixed output, or otherwise random
+      bool is_seeded() const override { return true; }
 
       bool accepts_input() const override { return false; }
 
       std::string name() const override { return "Fixed_Output_Position_RNG"; }
 
-      explicit Fixed_Output_Position_RNG(const std::vector<uint8_t>& in, size_t pos) :
-            Fixed_Output_RNG(in), m_pos(pos) {}
+      Fixed_Output_Position_RNG(const std::vector<uint8_t>& in, size_t pos, Botan::RandomNumberGenerator& rng) :
+            Fixed_Output_RNG(in), m_pos(pos), m_rng(rng) {}
 
-      explicit Fixed_Output_Position_RNG(const std::string& in_str, size_t pos) :
-            Fixed_Output_RNG(in_str), m_pos(pos) {}
+      Fixed_Output_Position_RNG(const std::string& in_str, size_t pos, Botan::RandomNumberGenerator& rng) :
+            Fixed_Output_RNG(in_str), m_pos(pos), m_rng(rng) {}
 
    private:
       void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> input) override {
@@ -119,13 +120,14 @@ class Fixed_Output_Position_RNG final : public Fixed_Output_RNG {
             Fixed_Output_RNG::fill_bytes_with_input(output, input);
          } else {
             // return random
-            Test::rng().random_vec(output);
+            m_rng.random_vec(output);
          }
       }
 
    private:
       size_t m_pos = 0;
       size_t m_requests = 0;
+      Botan::RandomNumberGenerator& m_rng;
 };
 
 class SeedCapturing_RNG final : public Botan::RandomNumberGenerator {

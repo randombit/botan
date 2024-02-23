@@ -58,10 +58,10 @@ Test::Result test_certstor_sqlite3_insert_find_remove_test(const std::vector<Cer
    Test::Result result("Certificate Store SQLITE3 - Insert, Find, Remove");
 
    try {
-      auto& rng = Test::rng();
-      const std::string passwd(reinterpret_cast<const char*>(rng.random_vec(8).data()), 8);
+      auto rng = Test::new_rng(__func__);
+      const std::string passwd(reinterpret_cast<const char*>(rng->random_vec(8).data()), 8);
       // Just create a database in memory for testing (https://sqlite.org/inmemorydb.html)
-      Botan::Certificate_Store_In_SQLite store(":memory:", passwd, rng);
+      Botan::Certificate_Store_In_SQLite store(":memory:", passwd, *rng);
 
       for(const auto& a : certsandkeys) {
          store.insert_key(a.certificate(), a.private_key());
@@ -127,10 +127,10 @@ Test::Result test_certstor_sqlite3_insert_find_remove_test(const std::vector<Cer
 Test::Result test_certstor_sqlite3_crl_test(const std::vector<CertificateAndKey>& certsandkeys) {
    Test::Result result("Certificate Store SQLITE3 - CRL");
    try {
-      auto& rng = Test::rng();
-      const std::string passwd(reinterpret_cast<const char*>(rng.random_vec(8).data()), 8);
+      auto rng = Test::new_rng(__func__);
+      const std::string passwd(reinterpret_cast<const char*>(rng->random_vec(8).data()), 8);
       // Just create a database in memory for testing (https://sqlite.org/inmemorydb.html)
-      Botan::Certificate_Store_In_SQLite store(":memory:", passwd, rng);
+      Botan::Certificate_Store_In_SQLite store(":memory:", passwd, *rng);
 
       for(const auto& a : certsandkeys) {
          store.insert_cert(a.certificate());
@@ -185,10 +185,10 @@ Test::Result test_certstor_sqlite3_crl_test(const std::vector<CertificateAndKey>
 Test::Result test_certstor_sqlite3_all_subjects_test(const std::vector<CertificateAndKey>& certsandkeys) {
    Test::Result result("Certificate Store SQLITE3 - All subjects");
    try {
-      auto& rng = Test::rng();
-      const std::string passwd(reinterpret_cast<const char*>(rng.random_vec(8).data()), 8);
+      auto rng = Test::new_rng(__func__);
+      const std::string passwd(reinterpret_cast<const char*>(rng->random_vec(8).data()), 8);
       // Just create a database in memory for testing (https://sqlite.org/inmemorydb.html)
-      Botan::Certificate_Store_In_SQLite store(":memory:", passwd, rng);
+      Botan::Certificate_Store_In_SQLite store(":memory:", passwd, *rng);
 
       for(const auto& a : certsandkeys) {
          store.insert_cert(a.certificate());
@@ -217,10 +217,10 @@ Test::Result test_certstor_sqlite3_all_subjects_test(const std::vector<Certifica
 Test::Result test_certstor_sqlite3_find_all_certs_test(const std::vector<CertificateAndKey>& certsandkeys) {
    Test::Result result("Certificate Store SQLITE3 - Find all certs");
    try {
-      auto& rng = Test::rng();
-      const std::string passwd(reinterpret_cast<const char*>(rng.random_vec(8).data()), 8);
+      auto rng = Test::new_rng(__func__);
+      const std::string passwd(reinterpret_cast<const char*>(rng->random_vec(8).data()), 8);
       // Just create a database in memory for testing (https://sqlite.org/inmemorydb.html)
-      Botan::Certificate_Store_In_SQLite store(":memory:", passwd, rng);
+      Botan::Certificate_Store_In_SQLite store(":memory:", passwd, *rng);
 
       for(const auto& a : certsandkeys) {
          store.insert_cert(a.certificate());

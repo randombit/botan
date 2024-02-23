@@ -90,7 +90,7 @@ class ZFEC_KAT final : public Text_Based_Test {
          shares_decoded.clear();
 
          while(shares.size() != K) {
-            const size_t idx = rng().next_byte();
+            const size_t idx = this->rng().next_byte();
             shares.erase(idx);
          }
 

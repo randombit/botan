@@ -39,7 +39,8 @@ class DL_Group_Tests final : public Test {
    #if !defined(BOTAN_HAS_SANITIZER_UNDEFINED)
          result.test_throws("Bad generator param", "DL_Group unknown PrimeType", []() {
             auto invalid_type = static_cast<Botan::DL_Group::PrimeType>(9);
-            Botan::DL_Group dl(Test::rng(), invalid_type, 1024);
+            Botan::Null_RNG null_rng;
+            Botan::DL_Group dl(null_rng, invalid_type, 1024);
          });
    #endif
 
@@ -86,7 +87,7 @@ class DL_Generate_Group_Tests final : public Test {
 
          result.start_timer();
 
-         auto& rng = Test::rng();
+         auto& rng = this->rng();
 
          Botan::DL_Group dh1050(rng, Botan::DL_Group::Prime_Subgroup, 1050, 175);
          result.test_eq("DH p size", dh1050.get_p().bits(), 1050);
@@ -192,7 +193,7 @@ class DL_Named_Group_Tests final : public Test {
             }
 
             if(group.p_bits() <= 1536 || Test::run_long_tests()) {
-               result.test_eq(name + " verifies", group.verify_group(Test::rng()), true);
+               result.test_eq(name + " verifies", group.verify_group(this->rng()), true);
             }
          }
          result.end_timer();

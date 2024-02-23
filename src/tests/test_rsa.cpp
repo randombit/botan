@@ -182,7 +182,7 @@ class RSA_Blinding_Tests final : public Test {
          }
 
    #if defined(BOTAN_HAS_EMSA_RAW) || defined(BOTAN_HAS_EME_RAW)
-         Botan::RSA_PrivateKey rsa(Test::rng(), 1024);
+         Botan::RSA_PrivateKey rsa(this->rng(), 1024);
          Botan::Null_RNG null_rng;
    #endif
 
@@ -197,7 +197,7 @@ class RSA_Blinding_Tests final : public Test {
          */
 
          Botan::PK_Signer signer(
-            rsa, Test::rng(), "Raw", Botan::Signature_Format::Standard, "base");  // don't try this at home
+            rsa, this->rng(), "Raw", Botan::Signature_Format::Standard, "base");  // don't try this at home
          Botan::PK_Verifier verifier(rsa, "Raw", Botan::Signature_Format::Standard, "base");
 
          for(size_t i = 1; i <= BOTAN_BLINDING_REINIT_INTERVAL * 6; ++i) {
@@ -223,7 +223,7 @@ class RSA_Blinding_Tests final : public Test {
          * are used as an additional test on the blinders.
          */
 
-         Botan::PK_Encryptor_EME encryptor(rsa, Test::rng(), "Raw", "base");  // don't try this at home
+         Botan::PK_Encryptor_EME encryptor(rsa, this->rng(), "Raw", "base");  // don't try this at home
 
          /*
          Test blinding reinit interval
@@ -234,7 +234,7 @@ class RSA_Blinding_Tests final : public Test {
          */
          const size_t rng_bytes = rsa.get_n().bytes() + (2 * 8 * BOTAN_BLINDING_REINIT_INTERVAL);
 
-         Botan_Tests::Fixed_Output_RNG fixed_rng(Test::rng(), rng_bytes);
+         Botan_Tests::Fixed_Output_RNG fixed_rng(this->rng(), rng_bytes);
          Botan::PK_Decryptor_EME decryptor(rsa, fixed_rng, "Raw", "base");
 
          for(size_t i = 1; i <= BOTAN_BLINDING_REINIT_INTERVAL; ++i) {

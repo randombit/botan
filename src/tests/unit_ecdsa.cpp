@@ -44,7 +44,9 @@ Test::Result test_hash_larger_than_n() {
 
    // n = 0x0100000000000000000001f4c8f927aed3ca752257 (21 bytes)
 
-   Botan::ECDSA_PrivateKey priv_key(Test::rng(), dom_pars);
+   auto rng = Test::new_rng("ecdsa_hash_larger_than_n");
+
+   Botan::ECDSA_PrivateKey priv_key(*rng, dom_pars);
 
    std::vector<uint8_t> message(20);
    std::iota(message.begin(), message.end(), static_cast<uint8_t>(0));
@@ -57,16 +59,16 @@ Test::Result test_hash_larger_than_n() {
       return result;
    }
 
-   Botan::PK_Signer pk_signer_160(priv_key, Test::rng(), "SHA-1");
+   Botan::PK_Signer pk_signer_160(priv_key, *rng, "SHA-1");
    Botan::PK_Verifier pk_verifier_160(priv_key, "SHA-1");
 
    // Verify we can sign and verify with SHA-1
-   std::vector<uint8_t> signature_160 = pk_signer_160.sign_message(message, Test::rng());
+   std::vector<uint8_t> signature_160 = pk_signer_160.sign_message(message, *rng);
    result.test_eq("message verifies", pk_verifier_160.verify_message(message, signature_160), true);
 
    // Verify we can sign and verify with SHA-224
-   Botan::PK_Signer pk_signer(priv_key, Test::rng(), "SHA-224");
-   std::vector<uint8_t> signature = pk_signer.sign_message(message, Test::rng());
+   Botan::PK_Signer pk_signer(priv_key, *rng, "SHA-224");
+   std::vector<uint8_t> signature = pk_signer.sign_message(message, *rng);
    Botan::PK_Verifier pk_verifier(priv_key, "SHA-224");
    result.test_eq("message verifies", pk_verifier.verify_message(message, signature), true);
 
@@ -124,19 +126,22 @@ Test::Result test_decode_ver_link_SHA1() {
 Test::Result test_sign_then_ver() {
    Test::Result result("ECDSA Unit");
 
-   Botan::EC_Group dom_pars("secp160r1");
-   Botan::ECDSA_PrivateKey ecdsa(Test::rng(), dom_pars);
+   auto rng = Test::new_rng("ecdsa_sign_then_verify");
 
-   Botan::PK_Signer signer(ecdsa, Test::rng(), "SHA-256");
+   Botan::EC_Group dom_pars("secp160r1");
+   Botan::ECDSA_PrivateKey ecdsa(*rng, dom_pars);
+
+   Botan::PK_Signer signer(ecdsa, *rng, "SHA-256");
 
    auto msg = Botan::hex_decode("12345678901234567890abcdef12");
-   std::vector<uint8_t> sig = signer.sign_message(msg, Test::rng());
+   std::vector<uint8_t> sig = signer.sign_message(msg, *rng);
 
    Botan::PK_Verifier verifier(ecdsa, "SHA-256");
 
    result.confirm("signature verifies", verifier.verify_message(msg, sig));
 
-   result.confirm("invalid signature rejected", !verifier.verify_message(msg, Test::mutate_vec(sig)));
+   const bool accept = verifier.verify_message(msg, Test::mutate_vec(sig, *rng));
+   result.confirm("invalid signature rejected", !accept);
 
    return result;
 }
@@ -144,16 +149,18 @@ Test::Result test_sign_then_ver() {
 Test::Result test_ec_sign() {
    Test::Result result("ECDSA Unit");
 
+   auto rng = Test::new_rng("ecdsa_sign");
+
    try {
       Botan::EC_Group dom_pars("secp160r1");
-      Botan::ECDSA_PrivateKey priv_key(Test::rng(), dom_pars);
-      Botan::PK_Signer signer(priv_key, Test::rng(), "SHA-224");
+      Botan::ECDSA_PrivateKey priv_key(*rng, dom_pars);
+      Botan::PK_Signer signer(priv_key, *rng, "SHA-224");
       Botan::PK_Verifier verifier(priv_key, "SHA-224");
 
       for(size_t i = 0; i != 256; ++i) {
          signer.update(static_cast<uint8_t>(i));
       }
-      std::vector<uint8_t> sig = signer.signature(Test::rng());
+      std::vector<uint8_t> sig = signer.signature(*rng);
 
       for(size_t i = 0; i != 256; ++i) {
          verifier.update(static_cast<uint8_t>(i));
@@ -191,12 +198,14 @@ Test::Result test_ecdsa_create_save_load() {
    const std::vector<uint8_t> msg = Botan::hex_decode("12345678901234567890abcdef12");
    std::vector<uint8_t> msg_signature;
 
+   auto rng = Test::new_rng("ecdsa_save_and_load");
+
    try {
       Botan::EC_Group dom_pars("secp160r1");
-      Botan::ECDSA_PrivateKey key(Test::rng(), dom_pars);
+      Botan::ECDSA_PrivateKey key(*rng, dom_pars);
 
-      Botan::PK_Signer signer(key, Test::rng(), "SHA-256");
-      msg_signature = signer.sign_message(msg, Test::rng());
+      Botan::PK_Signer signer(key, *rng, "SHA-256");
+      msg_signature = signer.sign_message(msg, *rng);
 
       ecc_private_key_pem = Botan::PKCS8::PEM_encode(key);
    } catch(std::exception& e) {
@@ -221,6 +230,8 @@ Test::Result test_ecdsa_create_save_load() {
 Test::Result test_unusual_curve() {
    Test::Result result("ECDSA Unit");
 
+   auto rng = Test::new_rng("ecdsa_unusual_curve");
+
    //calc a curve which is not in the registry
    const Botan::BigInt p(
       "2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809");
@@ -244,7 +255,7 @@ Test::Result test_unusual_curve() {
       return result;
    }
 
-   Botan::ECDSA_PrivateKey key_odd_curve(Test::rng(), dom_params);
+   Botan::ECDSA_PrivateKey key_odd_curve(*rng, dom_params);
    std::string key_odd_curve_str = Botan::PKCS8::PEM_encode(key_odd_curve);
 
    Botan::DataSource_Memory key_data_src(key_odd_curve_str);
@@ -258,8 +269,10 @@ Test::Result test_unusual_curve() {
 Test::Result test_encoding_options() {
    Test::Result result("ECDSA Unit");
 
+   auto rng = Test::new_rng("ecdsa_encoding_options");
+
    Botan::EC_Group group("secp256r1");
-   Botan::ECDSA_PrivateKey key(Test::rng(), group);
+   Botan::ECDSA_PrivateKey key(*rng, group);
 
    result.confirm("Default encoding is uncompressed", key.point_encoding() == Botan::EC_Point_Format::Uncompressed);
 
@@ -301,6 +314,8 @@ Test::Result test_encoding_options() {
 Test::Result test_read_pkcs8() {
    Test::Result result("ECDSA Unit");
 
+   auto rng = Test::new_rng("ecdsa_read_pkcs8");
+
    const std::vector<uint8_t> msg = Botan::hex_decode("12345678901234567890abcdef12");
 
    try {
@@ -314,10 +329,10 @@ Test::Result test_read_pkcs8() {
 
       result.confirm("EC_Group is marked as explicit encoding", ecdsa_nodp->domain().used_explicit_encoding());
 
-      Botan::PK_Signer signer(*ecdsa_nodp, Test::rng(), "SHA-256");
+      Botan::PK_Signer signer(*ecdsa_nodp, *rng, "SHA-256");
       Botan::PK_Verifier verifier(*ecdsa_nodp, "SHA-256");
 
-      std::vector<uint8_t> signature_nodp = signer.sign_message(msg, Test::rng());
+      std::vector<uint8_t> signature_nodp = signer.sign_message(msg, *rng);
 
       result.confirm("signature valid", verifier.verify_message(msg, signature_nodp));
 
@@ -374,16 +389,18 @@ Test::Result test_ecc_key_with_rfc5915_parameters() {
 Test::Result test_curve_registry() {
    Test::Result result("ECDSA Unit");
 
+   auto rng = Test::new_rng("curve_registry");
+
    for(const std::string& group_name : Botan::EC_Group::known_named_groups()) {
       try {
          Botan::EC_Group group(group_name);
-         Botan::ECDSA_PrivateKey ecdsa(Test::rng(), group);
+         Botan::ECDSA_PrivateKey ecdsa(*rng, group);
 
-         Botan::PK_Signer signer(ecdsa, Test::rng(), "SHA-256");
+         Botan::PK_Signer signer(ecdsa, *rng, "SHA-256");
          Botan::PK_Verifier verifier(ecdsa, "SHA-256");
 
          const std::vector<uint8_t> msg = Botan::hex_decode("12345678901234567890abcdef12");
-         const std::vector<uint8_t> sig = signer.sign_message(msg, Test::rng());
+         const std::vector<uint8_t> sig = signer.sign_message(msg, *rng);
 
          result.confirm("verified signature", verifier.verify_message(msg, sig));
       } catch(Botan::Invalid_Argument& e) {

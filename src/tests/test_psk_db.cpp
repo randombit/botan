@@ -159,7 +159,7 @@ class PSK_DB_Tests final : public Test {
          Test::Result result("PSK_DB SQL");
 
          const Botan::secure_vector<uint8_t> zeros(32);
-         const Botan::secure_vector<uint8_t> not_zeros = Test::rng().random_vec(32);
+         const Botan::secure_vector<uint8_t> not_zeros = this->rng().random_vec(32);
 
          const std::string table_name = "bobby";
          std::shared_ptr<Botan::SQL_Database> sqldb = std::make_shared<Botan::Sqlite3_Database>(":memory:");

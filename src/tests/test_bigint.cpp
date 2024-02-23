@@ -80,36 +80,36 @@ class BigInt_Unit_Tests final : public Test {
       static Test::Result test_random_prime() {
          Test::Result result("BigInt prime generation");
 
-         result.test_throws("Invalid bit size", "random_prime: Can't make a prime of 0 bits", []() {
-            Botan::random_prime(Test::rng(), 0);
-         });
-         result.test_throws("Invalid bit size", "random_prime: Can't make a prime of 1 bits", []() {
-            Botan::random_prime(Test::rng(), 1);
-         });
-         result.test_throws("Invalid arg", "random_prime Invalid value for equiv/modulo", []() {
-            Botan::random_prime(Test::rng(), 2, 1, 0, 2);
+         auto rng = Test::new_rng("random_prime");
+
+         result.test_throws(
+            "Invalid bit size", "random_prime: Can't make a prime of 0 bits", [&]() { Botan::random_prime(*rng, 0); });
+         result.test_throws(
+            "Invalid bit size", "random_prime: Can't make a prime of 1 bits", [&]() { Botan::random_prime(*rng, 1); });
+         result.test_throws("Invalid arg", "random_prime Invalid value for equiv/modulo", [&]() {
+            Botan::random_prime(*rng, 2, 1, 0, 2);
          });
 
-         BigInt p = Botan::random_prime(Test::rng(), 2);
+         BigInt p = Botan::random_prime(*rng, 2);
          result.confirm("Only two 2-bit primes", p == 2 || p == 3);
 
-         p = Botan::random_prime(Test::rng(), 3);
+         p = Botan::random_prime(*rng, 3);
          result.confirm("Only two 3-bit primes", p == 5 || p == 7);
 
-         p = Botan::random_prime(Test::rng(), 4);
+         p = Botan::random_prime(*rng, 4);
          result.confirm("Only two 4-bit primes", p == 11 || p == 13);
 
          for(size_t bits = 5; bits <= 32; ++bits) {
-            p = Botan::random_prime(Test::rng(), bits);
+            p = Botan::random_prime(*rng, bits);
             result.test_eq("Expected bit size", p.bits(), bits);
-            result.test_eq("P is prime", Botan::is_prime(p, Test::rng()), true);
+            result.test_eq("P is prime", Botan::is_prime(p, *rng), true);
          }
 
          const size_t safe_prime_bits = 65;
-         const BigInt safe_prime = Botan::random_safe_prime(Test::rng(), safe_prime_bits);
+         const BigInt safe_prime = Botan::random_safe_prime(*rng, safe_prime_bits);
          result.test_eq("Safe prime size", safe_prime.bits(), safe_prime_bits);
-         result.confirm("P is prime", Botan::is_prime(safe_prime, Test::rng()));
-         result.confirm("(P-1)/2 is prime", Botan::is_prime((safe_prime - 1) / 2, Test::rng()));
+         result.confirm("P is prime", Botan::is_prime(safe_prime, *rng));
+         result.confirm("(P-1)/2 is prime", Botan::is_prime((safe_prime - 1) / 2, *rng));
 
          return result;
       }
@@ -142,7 +142,9 @@ class BigInt_Unit_Tests final : public Test {
 
          const size_t rbits = 1024;
 
-         const Botan::BigInt r(Test::rng(), rbits);
+         auto rng = Test::new_rng("get_substring");
+
+         const Botan::BigInt r(*rng, rbits);
 
          for(size_t wlen = 1; wlen <= 32; ++wlen) {
             for(size_t offset = 0; offset != rbits + 64; ++offset) {
@@ -594,7 +596,7 @@ class BigInt_IsPrime_Test final : public Text_Based_Test {
          const bool is_prime = (header == "Prime");
 
          Test::Result result("BigInt Test " + header);
-         result.test_eq("is_prime", Botan::is_prime(value, Test::rng()), is_prime);
+         result.test_eq("is_prime", Botan::is_prime(value, this->rng()), is_prime);
 
          return result;
       }
@@ -717,7 +719,7 @@ class Lucas_Primality_Test final : public Test {
          for(uint32_t i = 3; i <= lucas_max; i += 2) {
             Botan::Modular_Reducer mod_i(i);
             const bool passes_lucas = Botan::is_lucas_probable_prime(i, mod_i);
-            const bool is_prime = Botan::is_prime(i, Test::rng());
+            const bool is_prime = Botan::is_prime(i, this->rng());
 
             const bool is_lucas_pp = (is_prime == false && passes_lucas == true);
 
@@ -758,7 +760,7 @@ class DSA_ParamGen_Test final : public Text_Based_Test {
 
          try {
             Botan::BigInt gen_P, gen_Q;
-            if(Botan::generate_dsa_primes(Test::rng(), gen_P, gen_Q, p_bits, q_bits, seed, offset)) {
+            if(Botan::generate_dsa_primes(this->rng(), gen_P, gen_Q, p_bits, q_bits, seed, offset)) {
                result.test_eq("P", gen_P, exp_P);
                result.test_eq("Q", gen_Q, exp_Q);
             } else {

@@ -69,13 +69,13 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
                            enc->ideal_granularity() % enc->update_granularity() == 0);
 
             try {
-               test_mode(result, algo, provider_ask, "encryption", *enc, key, nonce, input, expected);
+               test_mode(result, algo, provider_ask, "encryption", *enc, key, nonce, input, expected, this->rng());
             } catch(Botan::Exception& e) {
                result.test_failure("Encryption tests failed", e.what());
             }
 
             try {
-               test_mode(result, algo, provider_ask, "decryption", *dec, key, nonce, expected, input);
+               test_mode(result, algo, provider_ask, "decryption", *dec, key, nonce, expected, input, this->rng());
             } catch(Botan::Exception& e) {
                result.test_failure("Decryption tests failed", e.what());
             }
@@ -93,7 +93,8 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
                             const std::vector<uint8_t>& key,
                             const std::vector<uint8_t>& nonce,
                             const std::vector<uint8_t>& input,
-                            const std::vector<uint8_t>& expected) {
+                            const std::vector<uint8_t>& expected,
+                            Botan::RandomNumberGenerator& rng) {
          const bool is_cbc = (algo.find("/CBC") != std::string::npos);
          const bool is_ctr = (algo.find("CTR") != std::string::npos);
 
@@ -139,19 +140,19 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
          result.test_eq("Large nonce not allowed", mode.valid_nonce_length(large_nonce_size), false);
          result.test_throws("Large nonce causes exception", [&mode]() { mode.start(nullptr, large_nonce_size); });
 
-         Botan::secure_vector<uint8_t> garbage = Test::rng().random_vec(update_granularity);
+         Botan::secure_vector<uint8_t> garbage = rng.random_vec(update_granularity);
 
          // Test to make sure reset() resets what we need it to
          result.test_throws("Cannot process data (update) until key is set", [&]() { mode.update(garbage); });
          result.test_throws("Cannot process data (finish) until key is set", [&]() { mode.finish(garbage); });
 
-         mode.set_key(mutate_vec(key));
+         mode.set_key(mutate_vec(key, rng));
 
          if(is_ctr == false) {
             result.test_throws("Cannot process data until nonce is set", [&]() { mode.update(garbage); });
          }
 
-         mode.start(mutate_vec(nonce));
+         mode.start(mutate_vec(nonce, rng));
          mode.reset();
 
          if(is_ctr == false) {
@@ -159,7 +160,7 @@ class Cipher_Mode_Tests final : public Text_Based_Test {
                                [&]() { mode.update(garbage); });
          }
 
-         mode.start(mutate_vec(nonce));
+         mode.start(mutate_vec(nonce, rng));
          mode.update(garbage);
 
          mode.reset();

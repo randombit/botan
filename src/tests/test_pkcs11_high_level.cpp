@@ -610,9 +610,11 @@ Test::Result test_rsa_privkey_import() {
 
    TestSession test_session(true);
 
+   auto rng = Test::new_rng(__func__);
+
    // create private key
-   RSA_PrivateKey priv_key(Test::rng(), 2048);
-   result.confirm("Key self test OK", priv_key.check_key(Test::rng(), true));
+   RSA_PrivateKey priv_key(*rng, 2048);
+   result.confirm("Key self test OK", priv_key.check_key(*rng, true));
 
    // import to card
    RSA_PrivateKeyImportProperties props(priv_key.get_n(), priv_key.get_d());
@@ -630,7 +632,7 @@ Test::Result test_rsa_privkey_import() {
 
    PKCS11_RSA_PrivateKey pk(test_session.session(), props);
    result.test_success("RSA private key import was successful");
-   result.confirm("PK self test OK", pk.check_key(Test::rng(), true));
+   result.confirm("PK self test OK", pk.check_key(*rng, true));
 
    pk.destroy();
    return result;
@@ -641,8 +643,10 @@ Test::Result test_rsa_privkey_export() {
 
    TestSession test_session(true);
 
+   auto rng = Test::new_rng(__func__);
+
    // create private key
-   RSA_PrivateKey priv_key(Test::rng(), 2048);
+   RSA_PrivateKey priv_key(*rng, 2048);
 
    // import to card
    RSA_PrivateKeyImportProperties props(priv_key.get_n(), priv_key.get_d());
@@ -661,11 +665,11 @@ Test::Result test_rsa_privkey_export() {
    props.set_sensitive(false);
 
    PKCS11_RSA_PrivateKey pk(test_session.session(), props);
-   result.confirm("Check PK11 key", pk.check_key(Test::rng(), true));
+   result.confirm("Check PK11 key", pk.check_key(*rng, true));
 
    RSA_PrivateKey exported = pk.export_key();
    result.test_success("RSA private key export was successful");
-   result.confirm("Check exported key", exported.check_key(Test::rng(), true));
+   result.confirm("Check exported key", exported.check_key(*rng, true));
 
    pk.destroy();
    return result;
@@ -676,8 +680,10 @@ Test::Result test_rsa_pubkey_import() {
 
    TestSession test_session(true);
 
+   auto rng = Test::new_rng(__func__);
+
    // create public key from private key
-   RSA_PrivateKey priv_key(Test::rng(), 2048);
+   RSA_PrivateKey priv_key(*rng, 2048);
 
    // import to card
    RSA_PublicKeyImportProperties props(priv_key.get_n(), priv_key.get_e());
@@ -687,7 +693,7 @@ Test::Result test_rsa_pubkey_import() {
 
    PKCS11_RSA_PublicKey pk(test_session.session(), props);
    result.test_success("RSA public key import was successful");
-   result.confirm("Check PK11 key", pk.check_key(Test::rng(), true));
+   result.confirm("Check PK11 key", pk.check_key(*rng, true));
 
    pk.destroy();
 
@@ -751,13 +757,15 @@ Test::Result test_rsa_encrypt_decrypt() {
    // generate key pair
    PKCS11_RSA_KeyPair keypair = generate_rsa_keypair(test_session);
 
+   auto rng = Test::new_rng(__func__);
+
    auto encrypt_and_decrypt =
-      [&keypair, &result](const std::vector<uint8_t>& plaintext, const std::string& padding, const bool blinding) {
+      [&](const std::vector<uint8_t>& plaintext, const std::string& padding, const bool blinding) {
          std::vector<uint8_t> encrypted;
 
          try {
-            Botan::PK_Encryptor_EME encryptor(keypair.first, Test::rng(), padding);
-            encrypted = encryptor.encrypt(plaintext, Test::rng());
+            Botan::PK_Encryptor_EME encryptor(keypair.first, *rng, padding);
+            encrypted = encryptor.encrypt(plaintext, *rng);
          } catch(Botan::PKCS11::PKCS11_ReturnError& e) {
             result.test_failure("PKCS11 RSA encrypt " + padding, e.what());
          }
@@ -766,7 +774,7 @@ Test::Result test_rsa_encrypt_decrypt() {
 
          try {
             keypair.second.set_use_software_padding(blinding);
-            Botan::PK_Decryptor_EME decryptor(keypair.second, Test::rng(), padding);
+            Botan::PK_Decryptor_EME decryptor(keypair.second, *rng, padding);
             decrypted = decryptor.decrypt(encrypted);
          } catch(Botan::PKCS11::PKCS11_ReturnError& e) {
             std::ostringstream err;
@@ -805,17 +813,19 @@ Test::Result test_rsa_sign_verify() {
    // generate key pair
    PKCS11_RSA_KeyPair keypair = generate_rsa_keypair(test_session);
 
+   auto rng = Test::new_rng(__func__);
+
    std::vector<uint8_t> plaintext(256);
    std::iota(std::begin(plaintext), std::end(plaintext), static_cast<uint8_t>(0));
 
-   auto sign_and_verify = [&keypair, &plaintext, &result](const std::string& emsa, bool multipart) {
-      Botan::PK_Signer signer(keypair.second, Test::rng(), emsa, Botan::Signature_Format::Standard);
+   auto sign_and_verify = [&](const std::string& emsa, bool multipart) {
+      Botan::PK_Signer signer(keypair.second, *rng, emsa, Botan::Signature_Format::Standard);
       std::vector<uint8_t> signature;
       if(multipart) {
          signer.update(plaintext.data(), plaintext.size() / 2);
-         signature = signer.sign_message(plaintext.data() + plaintext.size() / 2, plaintext.size() / 2, Test::rng());
+         signature = signer.sign_message(plaintext.data() + plaintext.size() / 2, plaintext.size() / 2, *rng);
       } else {
-         signature = signer.sign_message(plaintext, Test::rng());
+         signature = signer.sign_message(plaintext, *rng);
       }
 
       Botan::PK_Verifier verifier(keypair.first, emsa, Botan::Signature_Format::Standard);
@@ -882,9 +892,11 @@ Test::Result test_ecdsa_privkey_import() {
 
    TestSession test_session(true);
 
+   auto rng = Test::new_rng(__func__);
+
    // create ecdsa private key
-   ECDSA_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
-   result.confirm("Key self test OK", priv_key.check_key(Test::rng(), true));
+   ECDSA_PrivateKey priv_key(*rng, EC_Group("secp256r1"));
+   result.confirm("Key self test OK", priv_key.check_key(*rng, true));
 
    // import to card
    EC_PrivateKeyImportProperties props(priv_key.DER_domain(), priv_key.private_value());
@@ -899,7 +911,7 @@ Test::Result test_ecdsa_privkey_import() {
    PKCS11_ECDSA_PrivateKey pk(test_session.session(), props);
    result.test_success("ECDSA private key import was successful");
    pk.set_public_point(priv_key.public_point());
-   result.confirm("P11 key self test OK", pk.check_key(Test::rng(), false));
+   result.confirm("P11 key self test OK", pk.check_key(*rng, false));
 
    pk.destroy();
    return result;
@@ -910,10 +922,12 @@ Test::Result test_ecdsa_privkey_export() {
 
    TestSession test_session(true);
 
-   // create private key
-   ECDSA_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
+   auto rng = Test::new_rng(__func__);
 
-   result.confirm("Check ECDSA key", priv_key.check_key(Test::rng(), true));
+   // create private key
+   ECDSA_PrivateKey priv_key(*rng, EC_Group("secp256r1"));
+
+   result.confirm("Check ECDSA key", priv_key.check_key(*rng, true));
    // import to card
    EC_PrivateKeyImportProperties props(priv_key.DER_domain(), priv_key.private_value());
    props.set_token(true);
@@ -927,11 +941,11 @@ Test::Result test_ecdsa_privkey_export() {
 
    PKCS11_ECDSA_PrivateKey pk(test_session.session(), props);
    pk.set_public_point(priv_key.public_point());
-   result.confirm("Check PK11 key", pk.check_key(Test::rng(), false));
+   result.confirm("Check PK11 key", pk.check_key(*rng, false));
 
    ECDSA_PrivateKey exported = pk.export_key();
    result.test_success("ECDSA private key export was successful");
-   result.confirm("Check exported key valid", exported.check_key(Test::rng(), true));
+   result.confirm("Check exported key valid", exported.check_key(*rng, true));
    result.test_eq("Check exported key contents", exported.private_key_bits(), priv_key.private_key_bits());
 
    pk.destroy();
@@ -943,8 +957,10 @@ Test::Result test_ecdsa_pubkey_import() {
 
    TestSession test_session(true);
 
+   auto rng = Test::new_rng(__func__);
+
    // create ecdsa private key
-   ECDSA_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
+   ECDSA_PrivateKey priv_key(*rng, EC_Group("secp256r1"));
 
    const auto enc_point = encode_ec_point_in_octet_str(priv_key.public_point());
 
@@ -970,8 +986,10 @@ Test::Result test_ecdsa_pubkey_export() {
 
    TestSession test_session(true);
 
+   auto rng = Test::new_rng(__func__);
+
    // create public key from private key
-   ECDSA_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
+   ECDSA_PrivateKey priv_key(*rng, EC_Group("secp256r1"));
 
    const auto enc_point = encode_ec_point_in_octet_str(priv_key.public_point());
 
@@ -1066,16 +1084,17 @@ Test::Result test_ecdsa_sign_verify_core(EC_Group_Encoding ec_dompar_enc, const 
    SlotInfo info = slot.get_slot_info();
    std::string manufacturer(reinterpret_cast<char*>(info.manufacturerID));
 
+   auto rng = Test::new_rng(__func__);
+
    for(auto& curve : curves) {
       // generate key pair
       PKCS11_ECDSA_KeyPair keypair = generate_ecdsa_keypair(test_session, curve, ec_dompar_enc);
 
       std::vector<uint8_t> plaintext(20, 0x01);
 
-      auto sign_and_verify = [&keypair, &plaintext, &result](
-                                const std::string& emsa, const Botan::Signature_Format format, bool check_soft) {
-         Botan::PK_Signer signer(keypair.second, Test::rng(), emsa, format);
-         auto signature = signer.sign_message(plaintext, Test::rng());
+      auto sign_and_verify = [&](const std::string& emsa, const Botan::Signature_Format format, bool check_soft) {
+         Botan::PK_Signer signer(keypair.second, *rng, emsa, format);
+         auto signature = signer.sign_message(plaintext, *rng);
 
          Botan::PK_Verifier token_verifier(keypair.first, emsa, format);
          bool ecdsa_ok = token_verifier.verify_message(plaintext, signature);
@@ -1150,8 +1169,10 @@ Test::Result test_ecdh_privkey_import() {
 
    TestSession test_session(true);
 
+   auto rng = Test::new_rng(__func__);
+
    // create ecdh private key
-   ECDH_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
+   ECDH_PrivateKey priv_key(*rng, EC_Group("secp256r1"));
 
    // import to card
    EC_PrivateKeyImportProperties props(priv_key.DER_domain(), priv_key.private_value());
@@ -1175,8 +1196,10 @@ Test::Result test_ecdh_privkey_export() {
 
    TestSession test_session(true);
 
+   auto rng = Test::new_rng(__func__);
+
    // create private key
-   ECDH_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
+   ECDH_PrivateKey priv_key(*rng, EC_Group("secp256r1"));
 
    // import to card
    EC_PrivateKeyImportProperties props(priv_key.DER_domain(), priv_key.private_value());
@@ -1203,8 +1226,10 @@ Test::Result test_ecdh_pubkey_import() {
 
    TestSession test_session(true);
 
+   auto rng = Test::new_rng(__func__);
+
    // create ECDH private key
-   ECDH_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
+   ECDH_PrivateKey priv_key(*rng, EC_Group("secp256r1"));
 
    const auto enc_point = encode_ec_point_in_octet_str(priv_key.public_point());
 
@@ -1230,8 +1255,10 @@ Test::Result test_ecdh_pubkey_export() {
 
    TestSession test_session(true);
 
+   auto rng = Test::new_rng(__func__);
+
    // create public key from private key
-   ECDH_PrivateKey priv_key(Test::rng(), EC_Group("secp256r1"));
+   ECDH_PrivateKey priv_key(*rng, EC_Group("secp256r1"));
 
    const auto enc_point = encode_ec_point_in_octet_str(priv_key.public_point());
 
@@ -1313,9 +1340,11 @@ Test::Result test_ecdh_derive() {
    PKCS11_ECDH_KeyPair keypair = generate_ecdh_keypair(test_session, "Botan test ECDH key1");
    PKCS11_ECDH_KeyPair keypair2 = generate_ecdh_keypair(test_session, "Botan test ECDH key2");
 
+   auto rng = Test::new_rng(__func__);
+
    // SoftHSMv2 only supports CKD_NULL KDF at the moment
-   Botan::PK_Key_Agreement ka(keypair.second, Test::rng(), "Raw");
-   Botan::PK_Key_Agreement kb(keypair2.second, Test::rng(), "Raw");
+   Botan::PK_Key_Agreement ka(keypair.second, *rng, "Raw");
+   Botan::PK_Key_Agreement kb(keypair2.second, *rng, "Raw");
 
    Botan::SymmetricKey alice_key =
       ka.derive_key(32, keypair2.first.public_point().encode(EC_Point_Format::Uncompressed));
@@ -1358,11 +1387,11 @@ Test::Result test_rng_generate_random() {
    Test::Result result("PKCS11 RNG generate random");
    TestSession test_session(true);
 
-   PKCS11_RNG rng(test_session.session());
-   result.confirm("RNG already seeded", rng.is_seeded());
+   PKCS11_RNG p11_rng(test_session.session());
+   result.confirm("RNG already seeded", p11_rng.is_seeded());
 
    std::vector<uint8_t> random(20);
-   rng.randomize(random.data(), random.size());
+   p11_rng.randomize(random.data(), random.size());
    result.test_ne("random data generated", random, std::vector<uint8_t>(20));
 
    return result;
@@ -1372,18 +1401,19 @@ Test::Result test_rng_add_entropy() {
    Test::Result result("PKCS11 RNG add entropy random");
    TestSession test_session(true);
 
-   PKCS11_RNG rng(test_session.session());
+   PKCS11_RNG p11_rng(test_session.session());
 
-   result.confirm("RNG already seeded", rng.is_seeded());
-   rng.clear();
-   result.confirm("RNG ignores call to clear", rng.is_seeded());
+   result.confirm("RNG already seeded", p11_rng.is_seeded());
+   p11_rng.clear();
+   result.confirm("RNG ignores call to clear", p11_rng.is_seeded());
 
    result.test_eq("RNG ignores calls to reseed",
-                  rng.reseed(Botan::Entropy_Sources::global_sources(), 256, std::chrono::milliseconds(300)),
+                  p11_rng.reseed(Botan::Entropy_Sources::global_sources(), 256, std::chrono::milliseconds(300)),
                   0);
 
-   auto random = Test::rng().random_vec(20);
-   rng.add_entropy(random.data(), random.size());
+   auto rng = Test::new_rng(__func__);
+   auto random = rng->random_vec(20);
+   p11_rng.add_entropy(random.data(), random.size());
    result.test_success("entropy added");
 
    return result;

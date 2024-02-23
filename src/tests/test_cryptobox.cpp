@@ -47,7 +47,7 @@ class Cryptobox_KAT final : public Text_Based_Test {
 
          // Now corrupt a bit and ensure it fails
          try {
-            const std::vector<uint8_t> corrupted = Test::mutate_vec(expected);
+            const std::vector<uint8_t> corrupted = Test::mutate_vec(expected, this->rng());
             const std::string corrupted_pem = Botan::PEM_Code::encode(corrupted, "BOTAN CRYPTOBOX MESSAGE");
 
             Botan::CryptoBox::decrypt(corrupted_pem, password);

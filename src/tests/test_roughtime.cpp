@@ -107,10 +107,11 @@ class Roughtime_nonce_from_blind_Tests final : public Text_Based_Test {
 BOTAN_REGISTER_TEST("roughtime", "roughtime_nonce_from_blind", Roughtime_nonce_from_blind_Tests);
 
 class Roughtime final : public Test {
-      static Test::Result test_nonce() {
+   private:
+      static Test::Result test_nonce(Botan::RandomNumberGenerator& rng) {
          Test::Result result("roughtime nonce");
 
-         auto rand64 = Botan::unlock(Test::rng().random_vec(64));
+         auto rand64 = Botan::unlock(rng.random_vec(64));
          Botan::Roughtime::Nonce nonce_v(rand64);
          result.confirm("nonce from vector",
                         nonce_v.get_nonce() == Botan::typecast_copy<std::array<uint8_t, 64>>(rand64.data()));
@@ -126,13 +127,13 @@ class Roughtime final : public Test {
          return result;
       }
 
-      static Test::Result test_chain() {
+      static Test::Result test_chain(Botan::RandomNumberGenerator& rng) {
          Test::Result result("roughtime chain");
 
          Botan::Roughtime::Chain c1;
          result.confirm("default constructed is empty", c1.links().empty() && c1.responses().empty());
 
-         auto rand64 = Botan::unlock(Test::rng().random_vec(64));
+         auto rand64 = Botan::unlock(rng.random_vec(64));
          Botan::Roughtime::Nonce nonce_v(rand64);
          result.confirm(
             "empty chain nonce is blind",
@@ -227,10 +228,10 @@ class Roughtime final : public Test {
          return result;
       }
 
-      static Test::Result test_request_online() {
+      static Test::Result test_request_online(Botan::RandomNumberGenerator& rng) {
          Test::Result result("roughtime request online");
 
-         Botan::Roughtime::Nonce nonce(Test::rng());
+         Botan::Roughtime::Nonce nonce(rng);
          try {
             const auto response_raw =
                Botan::Roughtime::online_request("roughtime.cloudflare.com:2002", nonce, std::chrono::seconds(5));
@@ -248,13 +249,12 @@ class Roughtime final : public Test {
 
    public:
       std::vector<Test::Result> run() override {
-         std::vector<Test::Result> results;
-         results.push_back(test_nonce());
-         results.push_back(test_chain());
-         results.push_back(test_server_information());
+         auto& rng = this->rng();
+
+         std::vector<Test::Result> results{test_nonce(rng), test_chain(rng), test_server_information()};
 
          if(Test::options().run_online_tests()) {
-            results.push_back(test_request_online());
+            results.push_back(test_request_online(rng));
          }
 
          return results;

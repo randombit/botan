@@ -48,7 +48,7 @@ class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
       }
 
       std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const override {
-         return std::make_unique<Fixed_Output_Position_RNG>(nonce, 1);
+         return std::make_unique<Fixed_Output_Position_RNG>(nonce, 1, this->rng());
       }
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override {
@@ -69,7 +69,7 @@ class SM2_Encryption_KAT_Tests final : public PK_Encryption_Decryption_Test {
       bool clear_between_callbacks() const override { return false; }
 
       std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const override {
-         return std::make_unique<Fixed_Output_Position_RNG>(nonce, 1);
+         return std::make_unique<Fixed_Output_Position_RNG>(nonce, 1, this->rng());
       }
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override {

@@ -38,10 +38,12 @@ class KYBER_Tests final : public Test {
       static Test::Result run_kyber_test(const char* test_name, Botan::KyberMode mode, size_t strength) {
          Test::Result result(test_name);
 
+         auto rng = Test::new_rng(test_name);
+
          const std::vector<uint8_t> empty_salt;
 
          // Alice
-         const Botan::Kyber_PrivateKey priv_key(Test::rng(), mode);
+         const Botan::Kyber_PrivateKey priv_key(*rng, mode);
          const auto pub_key = priv_key.public_key();
 
          result.test_eq("estimated strength private", priv_key.estimated_strength(), strength);
@@ -54,11 +56,11 @@ class KYBER_Tests final : public Test {
          // Bob (reading from serialized public key)
          Botan::Kyber_PublicKey alice_pub_key(pub_key_bits, mode);
          auto enc = Botan::PK_KEM_Encryptor(alice_pub_key, "Raw", "base");
-         const auto kem_result = enc.encrypt(Test::rng());
+         const auto kem_result = enc.encrypt(*rng);
 
          // Alice (reading from serialized private key)
          Botan::Kyber_PrivateKey alice_priv_key(priv_key_bits, mode);
-         auto dec = Botan::PK_KEM_Decryptor(alice_priv_key, Test::rng(), "Raw", "base");
+         auto dec = Botan::PK_KEM_Decryptor(alice_priv_key, *rng, "Raw", "base");
          const auto key_alice = dec.decrypt(kem_result.encapsulated_shared_key(), 0 /* no KDF */, empty_salt);
          result.test_eq("shared secrets are equal", key_alice, kem_result.shared_key());
 

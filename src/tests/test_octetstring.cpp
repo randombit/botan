@@ -17,7 +17,9 @@ namespace {
 Test::Result test_from_rng() {
    Test::Result result("OctetString");
 
-   Botan::OctetString os(Test::rng(), 32);
+   auto rng = Test::new_rng("octet_string_from_rng");
+
+   Botan::OctetString os(*rng, 32);
    result.test_eq("length is 32 bytes", os.size(), 32);
 
    return result;
@@ -35,7 +37,8 @@ Test::Result test_from_hex() {
 Test::Result test_from_byte() {
    Test::Result result("OctetString");
 
-   auto rand_bytes = Test::rng().random_vec(8);
+   auto rng = Test::new_rng("octet_string_from_byte");
+   auto rand_bytes = rng->random_vec(8);
    Botan::OctetString os(rand_bytes.data(), rand_bytes.size());
    result.test_eq("length is 8 bytes", os.size(), 8);
 

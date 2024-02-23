@@ -31,7 +31,7 @@ class ECGDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
          const BigInt x = vars.get_req_bn("X");
          Botan::EC_Group group(Botan::OID::from_string(group_id));
 
-         return std::make_unique<Botan::ECGDSA_PrivateKey>(Test::rng(), group, x);
+         return std::make_unique<Botan::ECGDSA_PrivateKey>(this->rng(), group, x);
       }
 
       std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Hash"); }
@@ -39,7 +39,7 @@ class ECGDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
       std::unique_ptr<Botan::RandomNumberGenerator> test_rng(const std::vector<uint8_t>& nonce) const override {
          // ecgdsa signature generation extracts more random than just the nonce,
          // but the nonce is extracted first
-         return std::make_unique<Fixed_Output_Position_RNG>(nonce, 1);
+         return std::make_unique<Fixed_Output_Position_RNG>(nonce, 1, this->rng());
       }
 };
 

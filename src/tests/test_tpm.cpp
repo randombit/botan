@@ -76,7 +76,7 @@ class UUID_Tests final : public Test {
 
          result.test_eq("Uninitialized UUID not valid", empty_uuid.is_valid(), false);
 
-         const Botan::UUID random_uuid(Test::rng());
+         const Botan::UUID random_uuid(this->rng());
          result.test_eq("Random UUID is valid", empty_uuid.is_valid(), false);
 
          const Botan::UUID binary_copy(random_uuid.binary_value());

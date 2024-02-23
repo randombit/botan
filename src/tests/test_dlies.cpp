@@ -74,9 +74,9 @@ class DLIES_KAT_Tests final : public Text_Based_Test {
          Botan::DH_PrivateKey to(domain, x2);
 
          Botan::DLIES_Encryptor encryptor(
-            from, Test::rng(), kdf->new_object(), std::move(enc), cipher_key_len, mac->new_object(), mac_key_len);
+            from, this->rng(), kdf->new_object(), std::move(enc), cipher_key_len, mac->new_object(), mac_key_len);
          Botan::DLIES_Decryptor decryptor(
-            to, Test::rng(), std::move(kdf), std::move(dec), cipher_key_len, std::move(mac), mac_key_len);
+            to, this->rng(), std::move(kdf), std::move(dec), cipher_key_len, std::move(mac), mac_key_len);
 
          if(!iv.empty()) {
             encryptor.set_initialization_vector(iv);
@@ -85,10 +85,10 @@ class DLIES_KAT_Tests final : public Text_Based_Test {
 
          encryptor.set_other_key(to.public_value());
 
-         result.test_eq("encryption", encryptor.encrypt(input, Test::rng()), expected);
+         result.test_eq("encryption", encryptor.encrypt(input, this->rng()), expected);
          result.test_eq("decryption", decryptor.decrypt(expected), input);
 
-         check_invalid_ciphertexts(result, decryptor, input, expected);
+         check_invalid_ciphertexts(result, decryptor, input, expected, this->rng());
 
          return result;
       }
@@ -107,8 +107,10 @@ Test::Result test_xor() {
    std::unique_ptr<Botan::KDF> kdf;
    std::unique_ptr<Botan::MAC> mac;
 
-   Botan::DH_PrivateKey alice(Test::rng(), Botan::DL_Group("modp/ietf/2048"));
-   Botan::DH_PrivateKey bob(Test::rng(), Botan::DL_Group("modp/ietf/2048"));
+   auto rng = Test::new_rng("dlies_xor");
+
+   Botan::DH_PrivateKey alice(*rng, Botan::DL_Group("modp/ietf/2048"));
+   Botan::DH_PrivateKey bob(*rng, Botan::DL_Group("modp/ietf/2048"));
 
    for(const auto& kfunc : kdfs) {
       kdf = Botan::KDF::create(kfunc);
@@ -126,25 +128,25 @@ Test::Result test_xor() {
             continue;
          }
 
-         Botan::DLIES_Encryptor encryptor(alice, Test::rng(), kdf->new_object(), mac->new_object(), mac_key_len);
+         Botan::DLIES_Encryptor encryptor(alice, *rng, kdf->new_object(), mac->new_object(), mac_key_len);
 
          // negative test: other pub key not set
-         Botan::secure_vector<uint8_t> plaintext = Test::rng().random_vec(32);
+         Botan::secure_vector<uint8_t> plaintext = rng->random_vec(32);
 
          result.test_throws("encrypt not possible without setting other public key",
-                            [&encryptor, &plaintext]() { encryptor.encrypt(plaintext, Test::rng()); });
+                            [&encryptor, &plaintext, &rng]() { encryptor.encrypt(plaintext, *rng); });
 
          encryptor.set_other_key(bob.public_value());
-         std::vector<uint8_t> ciphertext = encryptor.encrypt(plaintext, Test::rng());
+         std::vector<uint8_t> ciphertext = encryptor.encrypt(plaintext, *rng);
 
-         Botan::DLIES_Decryptor decryptor(bob, Test::rng(), kdf->new_object(), mac->new_object(), mac_key_len);
+         Botan::DLIES_Decryptor decryptor(bob, *rng, kdf->new_object(), mac->new_object(), mac_key_len);
 
          // negative test: ciphertext too short
          result.test_throws("ciphertext too short", [&decryptor]() { decryptor.decrypt(std::vector<uint8_t>(2)); });
 
          result.test_eq("decryption", decryptor.decrypt(ciphertext), plaintext);
 
-         check_invalid_ciphertexts(result, decryptor, unlock(plaintext), ciphertext);
+         check_invalid_ciphertexts(result, decryptor, unlock(plaintext), ciphertext, *rng);
       }
    }
 

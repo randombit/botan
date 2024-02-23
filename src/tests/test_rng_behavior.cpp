@@ -199,7 +199,7 @@ class Stateful_RNG_Tests : public Test {
          result.test_throws("broken underlying rng but good entropy sources",
                             [&rng_with_broken_rng_and_good_es]() { rng_with_broken_rng_and_good_es->random_vec(16); });
 
-         auto rng_with_good_rng_and_broken_es = make_rng(Test::rng(), broken_entropy_sources);
+         auto rng_with_good_rng_and_broken_es = make_rng(this->rng(), broken_entropy_sources);
 
          result.test_throws("good underlying rng but broken entropy sources",
                             [&rng_with_good_rng_and_broken_es]() { rng_with_good_rng_and_broken_es->random_vec(16); });

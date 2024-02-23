@@ -67,7 +67,7 @@ class McEliece_Keygen_Encrypt_Test final : public Text_Based_Test {
 
          try {
             Botan::PK_KEM_Encryptor kem_enc(mce_priv, "KDF1(SHA-512)");
-            Botan::PK_KEM_Decryptor kem_dec(mce_priv, Test::rng(), "KDF1(SHA-512)");
+            Botan::PK_KEM_Decryptor kem_dec(mce_priv, this->rng(), "KDF1(SHA-512)");
 
             const auto kem_result = kem_enc.encrypt(rng, 64);
 
@@ -144,7 +144,7 @@ class McEliece_Tests final : public Test {
                Test::Result result("McEliece keygen");
                result.start_timer();
 
-               Botan::McEliece_PrivateKey sk1(Test::rng(), param_sets[i].code_length, t);
+               Botan::McEliece_PrivateKey sk1(this->rng(), param_sets[i].code_length, t);
                const Botan::McEliece_PublicKey& pk1 = sk1;
 
                const std::vector<uint8_t> pk_enc = pk1.public_key_bits();
@@ -155,7 +155,7 @@ class McEliece_Tests final : public Test {
 
                result.test_eq("decoded public key equals original", fingerprint(pk1), fingerprint(pk));
                result.test_eq("decoded private key equals original", fingerprint(sk1), fingerprint(sk));
-               result.test_eq("key validation passes", sk.check_key(Test::rng(), false), true);
+               result.test_eq("key validation passes", sk.check_key(this->rng(), false), true);
                result.end_timer();
 
                result.end_timer();
@@ -163,7 +163,7 @@ class McEliece_Tests final : public Test {
                results.push_back(result);
 
       #if defined(BOTAN_HAS_KDF2)
-               results.push_back(test_kem(sk, pk));
+               results.push_back(test_kem(sk, pk, this->rng()));
       #endif
             }
          }
@@ -172,18 +172,20 @@ class McEliece_Tests final : public Test {
       }
 
    private:
-      static Test::Result test_kem(const Botan::McEliece_PrivateKey& sk, const Botan::McEliece_PublicKey& pk) {
+      static Test::Result test_kem(const Botan::McEliece_PrivateKey& sk,
+                                   const Botan::McEliece_PublicKey& pk,
+                                   Botan::RandomNumberGenerator& rng) {
          Test::Result result("McEliece KEM");
          result.start_timer();
 
          Botan::PK_KEM_Encryptor enc_op(pk, "KDF2(SHA-256)");
-         Botan::PK_KEM_Decryptor dec_op(sk, Test::rng(), "KDF2(SHA-256)");
+         Botan::PK_KEM_Decryptor dec_op(sk, rng, "KDF2(SHA-256)");
 
          const size_t trials = (Test::run_long_tests() ? 30 : 10);
          for(size_t i = 0; i < trials; i++) {
-            Botan::secure_vector<uint8_t> salt = Test::rng().random_vec(i);
+            Botan::secure_vector<uint8_t> salt = rng.random_vec(i);
 
-            const auto kem_result = enc_op.encrypt(Test::rng(), 64, salt);
+            const auto kem_result = enc_op.encrypt(rng, 64, salt);
 
             Botan::secure_vector<uint8_t> shared_key2 = dec_op.decrypt(kem_result.encapsulated_shared_key(), 64, salt);
 
