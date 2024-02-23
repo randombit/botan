@@ -558,7 +558,7 @@ class Test {
 
       virtual std::vector<std::string> possible_providers(const std::string&);
 
-      void initialize(const std::string& test_name, CodeLocation location);
+      void initialize(std::string test_name, CodeLocation location);
 
       const std::string& test_name() const { return m_test_name; }
 

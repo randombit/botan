@@ -711,7 +711,8 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run() {
           * the validation function may be relevant, i.e. if issuer DNs are
           * ambiguous.
           */
-         struct random_bit_generator {
+         class random_bit_generator {
+            public:
                using result_type = size_t;
 
                static constexpr result_type min() { return 0; }
@@ -726,6 +727,7 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run() {
 
                random_bit_generator(Botan::RandomNumberGenerator& rng) : m_rng(rng) {}
 
+            private:
                Botan::RandomNumberGenerator& m_rng;
          } rbg(this->rng());
 

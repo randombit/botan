@@ -389,9 +389,9 @@ bool Test::Result::test_rc(const std::string& func, int expected, int rc) {
    return test_success();
 }
 
-void Test::initialize(const std::string& test_name, CodeLocation location) {
-   m_test_name = test_name;
-   m_registration_location = location;
+void Test::initialize(std::string test_name, CodeLocation location) {
+   m_test_name = std::move(test_name);
+   m_registration_location = std::move(location);
 }
 
 Botan::RandomNumberGenerator& Test::rng() const {
