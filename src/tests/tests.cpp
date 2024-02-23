@@ -707,8 +707,6 @@ std::vector<uint8_t> Test::read_binary_data_file(const std::string& path) {
 // NOLINTNEXTLINE(*-avoid-non-const-global-variables)
 Test_Options Test::m_opts;
 // NOLINTNEXTLINE(*-avoid-non-const-global-variables)
-std::shared_ptr<Botan::RandomNumberGenerator> Test::m_global_test_rng;
-// NOLINTNEXTLINE(*-avoid-non-const-global-variables)
 std::string Test::m_test_rng_seed;
 
 //static
@@ -769,15 +767,6 @@ class Testsuite_RNG final : public Botan::RandomNumberGenerator {
 //static
 void Test::set_test_rng_seed(std::span<const uint8_t> seed, size_t epoch) {
    m_test_rng_seed = Botan::fmt("seed={} epoch={}", Botan::hex_encode(seed), epoch);
-   m_global_test_rng = Test::new_rng("global");
-}
-
-//static
-Botan::RandomNumberGenerator& Test::global_rng() {
-   if(!m_global_test_rng) {
-      throw Test_Error("Test requires RNG but no RNG set with Test::set_test_rng");
-   }
-   return *m_global_test_rng;
 }
 
 //static

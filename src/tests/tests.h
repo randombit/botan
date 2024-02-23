@@ -638,7 +638,6 @@ class Test {
       static std::unique_ptr<Botan::RandomNumberGenerator> new_rng(std::string_view test_name);
       static std::shared_ptr<Botan::RandomNumberGenerator> new_shared_rng(std::string_view test_name);
 
-      static Botan::RandomNumberGenerator& global_rng();
       static std::string random_password(Botan::RandomNumberGenerator& rng);
       static uint64_t timestamp();  // nanoseconds arbitrary epoch
 
@@ -646,7 +645,6 @@ class Test {
 
    private:
       static Test_Options m_opts;
-      static std::shared_ptr<Botan::RandomNumberGenerator> m_global_test_rng;
       static std::string m_test_rng_seed;
 
       /// The string ID that was used to register this test
