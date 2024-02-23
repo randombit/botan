@@ -101,7 +101,7 @@ Public Key Cryptography
 * DH and ECDH key agreement
 * Signature schemes ECDSA, DSA, Ed25519, ECGDSA, ECKCDSA, SM2, GOST 34.10
 * Post-quantum signature schemes Dilithium, SPHINCS+, and XMSS
-* Post-quantum key agreement schemes McEliece and Kyber
+* Post-quantum key agreement schemes McEliece, Kyber and FrodoKEM
 * ElGamal encryption
 * Padding schemes OAEP, PSS, PKCS #1 v1.5, X9.31
 
