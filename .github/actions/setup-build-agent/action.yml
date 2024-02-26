@@ -35,12 +35,13 @@ runs:
       run: print("::warning ::No compiler cache available, build times might suffer")
       shell: python
       if: env.COMPILER_CACHE_LOCATION == '' && inputs.cache-key != ''
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       if: env.COMPILER_CACHE_LOCATION != '' && inputs.cache-key != ''
       with:
           path: ${{ env.COMPILER_CACHE_LOCATION }}
           key: ${{ inputs.cache-key }}-${{ github.run_id }}
           restore-keys: ${{ inputs.cache-key }}
+          save-always: true
 
     - name: Setup Visual Studio Environment
       uses: egor-tensin/vs-shell@v2

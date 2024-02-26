@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
@@ -86,7 +86,7 @@ jobs:
 
     steps:
       - name: Fetch Botan Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
@@ -101,7 +101,7 @@ jobs:
           --test-target server
           --parallel $(nproc)
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: tls-anvil-server-test-results
           path: |
