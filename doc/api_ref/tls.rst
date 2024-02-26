@@ -1317,13 +1317,27 @@ The asio Stream offers the following interface:
 
 .. _https_client_example:
 
-Code Example: HTTPS Client
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Code Examples: HTTPS Client using Boost Beast
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The code below illustrates how to build a simple HTTPS client based on the TLS Stream and Boost.Beast. When run, it fetches the content of `https://botan.randombit.net/news.html` and prints it to stdout.
+Starting with Botan 3.3.0 (and assuming a recent version of Boost), one may use
+Botan's TLS using C++20 coroutines. The following example implements a simple
+HTTPS client that may be used to fetch content from web servers:
+
+.. literalinclude:: /../src/examples/tls_stream_coroutine_client.cpp
+   :language: cpp
+
+Of course, the ASIO stream may also be used in a more traditional way, using
+callback handler methods instead of coroutines:
 
 .. literalinclude:: /../src/examples/tls_stream_client.cpp
    :language: cpp
+
+For some websites this might not work and report a "bad_certificate". Botan's
+default TLS policy requires that the server sends a valid CRL or OCSP response.
+Some servers don't do that and thus the certificate is rejected. To disable this
+check, derive the default policy and override `require_cert_revocation_info()`
+accordingly.
 
 .. _tls_session_encryption:
 
