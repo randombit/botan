@@ -46,7 +46,7 @@ jobs:
     runs-on: ${{ matrix.host_os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
@@ -77,7 +77,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
@@ -103,7 +103,7 @@ jobs:
     runs-on: macos-13
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
@@ -118,7 +118,7 @@ jobs:
     name: "Clang Tidy"
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
@@ -177,12 +177,12 @@ jobs:
       COVERALLS_REPO_TOKEN: pbLoTMBxC1DFvbws9WfrzVOvfEdEZTcCS
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: ./source
 
       - name: Fetch BoringSSL fork for BoGo tests
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: randombit/boringssl
           ref: rene/runner-20230705
@@ -221,7 +221,7 @@ jobs:
     runs-on: ${{ matrix.host_os }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           path: ./source
 
@@ -282,7 +282,7 @@ jobs:
       ANDROID_NDK: android-ndk-r26
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
