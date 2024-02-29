@@ -14,6 +14,7 @@
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <iosfwd>
+#include <span>
 
 namespace Botan {
 
@@ -93,14 +94,13 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param buf the byte array holding the value
        * @param length size of buf
        */
-      BigInt(const uint8_t buf[], size_t length);
+      BigInt(const uint8_t buf[], size_t length) : BigInt(std::span{buf, length}) {}
 
       /**
        * Create a BigInt from an integer in a byte array
        * @param vec the byte vector holding the value
        */
-      template <typename Alloc>
-      explicit BigInt(const std::vector<uint8_t, Alloc>& vec) : BigInt(vec.data(), vec.size()) {}
+      explicit BigInt(std::span<const uint8_t> vec);
 
       /**
        * Create a BigInt from an integer in a byte array
@@ -108,7 +108,14 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param length size of buf
        * @param base is the number base of the integer in buf
        */
-      BigInt(const uint8_t buf[], size_t length, Base base);
+      BigInt(const uint8_t buf[], size_t length, Base base) : BigInt(std::span{buf, length}, base) {}
+
+      /**
+       * Create a BigInt from an integer in a byte array
+       * @param buf the byte array holding the value
+       * @param base is the number base of the integer in buf
+       */
+      BigInt(std::span<const uint8_t> buf, Base base);
 
       /**
        * Create a BigInt from an integer in a byte array
@@ -649,41 +656,53 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * Store BigInt-value in a given byte array
        * @param buf destination byte array for the integer value
        */
-      void binary_encode(uint8_t buf[]) const;
+      void binary_encode(uint8_t buf[]) const {
+         // assumes that `buf` points to a memory region with enough bytes
+         binary_encode(std::span{buf, bytes()});
+      }
 
       /**
-       * Store BigInt-value in a given byte array. If len is less than
-       * the size of the value, then it will be truncated. If len is
-       * greater than the size of the value, it will be zero-padded.
-       * If len exactly equals this->bytes(), this function behaves identically
-       * to binary_encode.
-       *
+       * Store BigInt-value in a given byte array
        * @param buf destination byte array for the integer value
        * @param len how many bytes to write
        */
-      void binary_encode(uint8_t buf[], size_t len) const;
+      void binary_encode(uint8_t buf[], size_t len) const { binary_encode(std::span{buf, len}); }
+
+      /**
+       * Store BigInt-value in a given byte array. If the buffer length
+       * is less than the size of the value, then it will be truncated.
+       * If it is greater than the size of the value, it will be zero-padded.
+       * If the buffer length exactly equals this->bytes(), this function behaves
+       * identically to binary_encode.
+       *
+       * @param buf destination byte array for the integer value
+       */
+      void binary_encode(std::span<uint8_t> buf) const;
 
       /**
        * Read integer value from a byte array with given size
        * @param buf byte array buffer containing the integer
        * @param length size of buf
        */
-      void binary_decode(const uint8_t buf[], size_t length);
+      void binary_decode(const uint8_t buf[], size_t length) { binary_decode(std::span{buf, length}); }
 
       /**
        * Read integer value from a byte vector
        * @param buf the vector to load from
        */
-      template <typename Alloc>
-      void binary_decode(const std::vector<uint8_t, Alloc>& buf) {
-         binary_decode(buf.data(), buf.size());
-      }
+      void binary_decode(std::span<const uint8_t> buf);
 
       /**
-       * Place the value into out, zero-padding up to size words
-       * Throw if *this cannot be represented in size words
+       * Place the value into @p out, zero-padding up to @p size words
+       * Throw if *this cannot be represented in @p size words
        */
-      void encode_words(word out[], size_t size) const;
+      void encode_words(word out[], size_t size) const { encode_words(std::span{out, size}); }
+
+      /**
+       * Place the value into @p out, zero-padding to fill the @p out
+       * Throw if *this cannot be represented in the size of @p out.
+       */
+      void encode_words(std::span<word> out) const;
 
       /**
        * If predicate is true assign other to *this
@@ -748,7 +767,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        */
       static std::vector<uint8_t> encode(const BigInt& n) {
          std::vector<uint8_t> output(n.bytes());
-         n.binary_encode(output.data());
+         n.binary_encode(output);
          return output;
       }
 
@@ -759,7 +778,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        */
       static secure_vector<uint8_t> encode_locked(const BigInt& n) {
          secure_vector<uint8_t> output(n.bytes());
-         n.binary_encode(output.data());
+         n.binary_encode(output);
          return output;
       }
 
@@ -776,10 +795,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param buf the binary value to load
        * @result BigInt representing the integer in the byte array
        */
-      template <typename Alloc>
-      static BigInt decode(const std::vector<uint8_t, Alloc>& buf) {
-         return BigInt(buf);
-      }
+      static BigInt decode(std::span<const uint8_t> buf) { return BigInt(buf); }
 
       /**
        * Create a BigInt from an integer in a byte array
@@ -796,8 +812,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param base number-base of the integer in buf
        * @result BigInt representing the integer in the byte array
        */
-      template <typename Alloc>
-      static BigInt decode(const std::vector<uint8_t, Alloc>& buf, Base base) {
+      static BigInt decode(std::span<const uint8_t> buf, Base base) {
          if(base == Binary) {
             return BigInt(buf);
          }

@@ -79,7 +79,8 @@ BigInt::BigInt(std::string_view str) {
       base = Hexadecimal;
    }
 
-   *this = decode(cast_char_ptr_to_uint8(str.data()) + markers, str.length() - markers, base);
+   std::span<const uint8_t> strdata(cast_char_ptr_to_uint8(str.data()), str.length());
+   *this = decode(strdata.subspan(markers), base);
 
    if(negative) {
       set_sign(Negative);
@@ -88,15 +89,15 @@ BigInt::BigInt(std::string_view str) {
    }
 }
 
-BigInt::BigInt(const uint8_t input[], size_t length) {
-   binary_decode(input, length);
+BigInt::BigInt(std::span<const uint8_t> input) {
+   binary_decode(input);
 }
 
 /*
 * Construct a BigInt from an encoded BigInt
 */
-BigInt::BigInt(const uint8_t input[], size_t length, Base base) {
-   *this = decode(input, length, base);
+BigInt::BigInt(std::span<const uint8_t> input, Base base) {
+   *this = decode(input.data(), input.size(), base);
 }
 
 //static
@@ -184,15 +185,15 @@ bool BigInt::is_less_than(const BigInt& other) const {
    return bigint_ct_is_lt(this->data(), this->sig_words(), other.data(), other.sig_words()).as_bool();
 }
 
-void BigInt::encode_words(word out[], size_t size) const {
+void BigInt::encode_words(std::span<word> out) const {
    const size_t words = sig_words();
 
-   if(words > size) {
+   if(words > out.size()) {
       throw Encoding_Error("BigInt::encode_words value too large to encode");
    }
 
-   clear_mem(out, size);
-   copy_mem(out, data(), words);
+   clear_mem(out);
+   copy_mem(out.first(words), std::span{get_word_vector()}.first(words));
 }
 
 size_t BigInt::Data::calc_sig_words() const {
@@ -372,20 +373,18 @@ BigInt BigInt::abs() const {
    return x;
 }
 
-void BigInt::binary_encode(uint8_t buf[]) const {
-   this->binary_encode(buf, bytes());
-}
-
 /*
 * Encode this number into bytes
 */
-void BigInt::binary_encode(uint8_t output[], size_t len) const {
-   const size_t full_words = len / sizeof(word);
-   const size_t extra_bytes = len % sizeof(word);
+void BigInt::binary_encode(std::span<uint8_t> output) const {
+   constexpr size_t word_bytes = sizeof(word);
+
+   const size_t full_words = output.size() / word_bytes;
+   const size_t extra_bytes = output.size() % word_bytes;
 
    for(size_t i = 0; i != full_words; ++i) {
-      const word w = word_at(i);
-      store_be(w, output + (len - (i + 1) * sizeof(word)));
+      store_be(word_at(i), output.last<word_bytes>());
+      output = output.subspan(0, output.size() - word_bytes);
    }
 
    if(extra_bytes > 0) {
@@ -400,22 +399,22 @@ void BigInt::binary_encode(uint8_t output[], size_t len) const {
 /*
 * Set this number to the value in buf
 */
-void BigInt::binary_decode(const uint8_t buf[], size_t length) {
+void BigInt::binary_decode(std::span<const uint8_t> buf) {
    clear();
 
-   const size_t full_words = length / sizeof(word);
-   const size_t extra_bytes = length % sizeof(word);
+   constexpr size_t word_bytes = sizeof(word);
+   const size_t full_words = buf.size() / word_bytes;
+   const size_t extra_bytes = buf.size() % word_bytes;
 
    secure_vector<word> reg((round_up(full_words + (extra_bytes > 0 ? 1 : 0), 8)));
 
-   for(size_t i = 0; i != full_words; ++i) {
-      reg[i] = load_be<word>(buf + length - sizeof(word) * (i + 1), 0);
+   for(size_t i = 0; buf.size() >= word_bytes; ++i) {
+      reg[i] = load_be(buf.last<word_bytes>());
+      buf = buf.subspan(0, buf.size() - word_bytes);
    }
 
-   if(extra_bytes > 0) {
-      for(size_t i = 0; i != extra_bytes; ++i) {
-         reg[full_words] = (reg[full_words] << 8) | buf[i];
-      }
+   for(size_t i = 0; i < buf.size(); ++i) {
+      reg[full_words] = (reg[full_words] << 8) | buf[i];
    }
 
    m_data.swap(reg);
