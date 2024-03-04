@@ -658,6 +658,10 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * If len exactly equals this->bytes(), this function behaves identically
        * to binary_encode.
        *
+       * Zero-padding the binary encoding is useful to ensure that other
+       * applications correctly parse the encoded value as "positive integer",
+       * as a leading 1-bit may be interpreted as a sign bit.
+       *
        * @param buf destination byte array for the integer value
        * @param len how many bytes to write
        */
