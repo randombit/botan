@@ -1,5 +1,6 @@
 /*
 * (C) 2009,2015,2016 Jack Lloyd
+* (C) 2024           Fabian Albert, René Meusel -  Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -562,8 +563,6 @@ Test::Result test_const_time_left_shift() {
    return result;
 }
 
-BOTAN_REGISTER_TEST_FN("math", "bn_ct_lshift", test_const_time_left_shift);
-
 class BigInt_Powmod_Test final : public Text_Based_Test {
    public:
       BigInt_Powmod_Test() : Text_Based_Test("bn/powmod.vec", "Base,Exponent,Modulus,Output") {}
@@ -773,6 +772,57 @@ class DSA_ParamGen_Test final : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_TEST("math", "dsa_param", DSA_ParamGen_Test);
+
+std::vector<Test::Result> test_bigint_serialization() {
+   auto rng = Test::new_rng("test_bigint_serialization");
+
+   return {
+      Botan_Tests::CHECK("BigInt binary serialization",
+                         [](Test::Result& res) {
+                            Botan::BigInt a(0x1234567890ABCDEF);
+                            auto enc = Botan::BigInt::encode(a);
+                            res.test_eq("BigInt::encode()", enc, Botan::hex_decode("1234567890ABCDEF"));
+
+                            std::vector<uint8_t> enc2(a.bytes());
+                            a.binary_encode(enc2.data(), enc2.size());
+                            res.test_eq("BigInt::binary_encode", enc2, Botan::hex_decode("1234567890ABCDEF"));
+                         }),
+
+      Botan_Tests::CHECK("BigInt truncated/padded binary serialization",
+                         [&](Test::Result& res) {
+                            Botan::BigInt a(0xFEDCBA9876543210);
+
+                            std::vector<uint8_t> enc1(a.bytes() - 1);
+                            a.binary_encode(enc1.data(), enc1.size());
+                            res.test_eq("BigInt::binary_encode", enc1, Botan::hex_decode("DCBA9876543210"));
+
+                            std::vector<uint8_t> enc2(a.bytes() - 3);
+                            a.binary_encode(enc2.data(), enc2.size());
+                            res.test_eq("BigInt::binary_encode", enc2, Botan::hex_decode("9876543210"));
+
+                            std::vector<uint8_t> enc3(a.bytes() + 1);
+                            a.binary_encode(enc3.data(), enc3.size());
+                            res.test_eq("BigInt::binary_encode", enc3, Botan::hex_decode("00FEDCBA9876543210"));
+
+                            // make sure that the padding is actually written
+                            std::vector<uint8_t> enc4(a.bytes() + 3);
+                            rng->randomize(enc4);
+                            a.binary_encode(enc4.data(), enc4.size());
+                            res.test_eq("BigInt::binary_encode", enc4, Botan::hex_decode("000000FEDCBA9876543210"));
+
+                            Botan::BigInt b(Botan::hex_decode("FEDCBA9876543210BAADC0FFEE"));
+
+                            std::vector<uint8_t> enc5(b.bytes() + 12);
+                            rng->randomize(enc5);
+                            b.binary_encode(enc5.data(), enc5.size());
+                            res.test_eq("BigInt::binary_encode",
+                                        enc5,
+                                        Botan::hex_decode("000000000000000000000000FEDCBA9876543210BAADC0FFEE"));
+                         }),
+   };
+}
+
+BOTAN_REGISTER_TEST_FN("math", "bignum_auxiliary", test_const_time_left_shift, test_bigint_serialization);
 
 #endif
 
