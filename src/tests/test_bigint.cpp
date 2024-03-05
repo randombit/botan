@@ -783,6 +783,9 @@ std::vector<Test::Result> test_bigint_serialization() {
                             auto enc = Botan::BigInt::encode(a);
                             res.test_eq("BigInt::encode()", enc, Botan::hex_decode("1234567890ABCDEF"));
 
+                            auto enc_locked = Botan::BigInt::encode_locked(a);
+                            res.test_eq(
+                               "BigInt::encode_locked()", enc_locked, Botan::hex_decode_locked("1234567890ABCDEF"));
                             std::vector<uint8_t> enc2(a.bytes());
                             a.binary_encode(enc2.data(), enc2.size());
                             res.test_eq("BigInt::binary_encode", enc2, Botan::hex_decode("1234567890ABCDEF"));
