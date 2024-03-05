@@ -1,0 +1,21 @@
+<defines>
+ED448 -> 20240223
+</defines>
+
+<module_info>
+name -> "Ed448"
+brief -> "Ed448 signature algorithm"
+</module_info>
+
+<requires>
+shake_xof
+</requires>
+
+<header:public>
+ed448.h
+</header:public>
+
+<header:internal>
+ed448_internal.h
+</header:internal>
+
