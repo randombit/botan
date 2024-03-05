@@ -38,7 +38,7 @@
 #elif defined(BOTAN_SIMD_USE_NEON)
    #if defined(BOTAN_TARGET_ARCH_IS_ARM64)
       #define BOTAN_SIMD_ISA "+simd"
-      #define BOTAN_CLMUL_ISA "+crypto"
+      #define BOTAN_CLMUL_ISA "+crypto+aes"
    #else
       #define BOTAN_SIMD_ISA "fpu=neon"
    #endif
