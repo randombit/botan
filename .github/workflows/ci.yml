@@ -97,10 +97,18 @@ jobs:
         include:
           - target: shared
             compiler: clang
+            os: macos-13
           - target: amalgamation
             compiler: clang
+            os: macos-13
+          - target: shared
+            compiler: clang
+            os: macos-14 # uses Apple Silicon
+          - target: amalgamation
+            compiler: clang
+            os: macos-14 # uses Apple Silicon
 
-    runs-on: macos-13
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
@@ -109,7 +117,7 @@ jobs:
         uses: ./.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
-          cache-key: macos-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
+          cache-key: macos-${{ matrix.compiler }}-${{ matrix.os }}-${{ matrix.target }}
 
       - name: Build and Test Botan
         run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}

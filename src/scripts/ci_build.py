@@ -376,10 +376,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 # make sure clang ignores warnings in boost headers
                 flags += ["--extra-cxxflags=--system-header-prefix=boost/"]
 
-            if target_os in ['windows', 'mingw']:
-                # ./configure.py needs boost's location on Windows
-                if 'BOOST_INCLUDEDIR' in os.environ:
-                    flags += ['--with-external-includedir', os.environ.get('BOOST_INCLUDEDIR')]
+            if 'BOOST_INCLUDEDIR' in os.environ:
+                # ./configure.py needs boost's location on some platforms
+                # BOOST_INCLUDEDIR is set by the setup_gh_actions.* script
+                flags += ['--with-external-includedir', os.environ.get('BOOST_INCLUDEDIR')]
 
             if target_os == 'mingw':
                 # apparently mingw needs this legacy socket library version for reasons

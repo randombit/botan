@@ -102,6 +102,11 @@ else
 
     if [ "$TARGET" = "shared" ]; then
         brew install boost
+
+        # On Apple Silicon we need to specify the include directory
+        # so that the build can find the boost headers.
+        boostincdir=$(brew --prefix boost)/include
+        echo "BOOST_INCLUDEDIR=$boostincdir" >> "$GITHUB_ENV"
     elif [ "$TARGET" = "emscripten" ]; then
         brew install emscripten
     fi
