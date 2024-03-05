@@ -62,6 +62,10 @@
    #include <botan/curve25519.h>
 #endif
 
+#if defined(BOTAN_HAS_X448)
+   #include <botan/x448.h>
+#endif
+
 #if defined(BOTAN_HAS_MCELIECE)
    #include <botan/mceliece.h>
 #endif
@@ -107,6 +111,12 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_CURVE_25519)
    if(alg_name == "Curve25519") {
       return std::make_unique<Curve25519_PublicKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_X448)
+   if(alg_name == "X448") {
+      return std::make_unique<X448_PublicKey>(alg_id, key_bits);
    }
 #endif
 
@@ -224,6 +234,12 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_CURVE_25519)
    if(alg_name == "Curve25519") {
       return std::make_unique<Curve25519_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_X448)
+   if(alg_name == "X448") {
+      return std::make_unique<X448_PrivateKey>(alg_id, key_bits);
    }
 #endif
 
@@ -382,6 +398,12 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 #if defined(BOTAN_HAS_CURVE_25519)
    if(alg_name == "Curve25519") {
       return std::make_unique<Curve25519_PrivateKey>(rng);
+   }
+#endif
+
+#if defined(BOTAN_HAS_X448)
+   if(alg_name == "X448") {
+      return std::make_unique<X448_PrivateKey>(rng);
    }
 #endif
 

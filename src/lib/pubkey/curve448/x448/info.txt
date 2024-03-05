@@ -1,0 +1,16 @@
+<defines>
+X448 -> 20240219
+</defines>
+
+<module_info>
+name -> "X448"
+brief -> "X448 key agreement algorithm"
+</module_info>
+
+<header:public>
+x448.h
+</header:public>
+
+<header:internal>
+x448_internal.h
+</header:internal>
