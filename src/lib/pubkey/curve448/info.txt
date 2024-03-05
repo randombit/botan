@@ -1,0 +1,14 @@
+<defines>
+CURVE_448_UTILS -> 20240301
+</defines>
+
+<module_info>
+name -> "Curve_448_Utils"
+brief -> "Utils for x448 and Ed448"
+type -> "Internal"
+</module_info>
+
+<header:internal>
+curve448_gf.h
+curve448_scalar.h
+</header:internal>

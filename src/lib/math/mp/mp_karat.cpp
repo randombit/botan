@@ -299,6 +299,8 @@ void bigint_mul(word z[],
       bigint_comba_mul4(z, x, y);
    } else if(sized_for_comba_mul<6>(x_sw, x_size, y_sw, y_size, z_size)) {
       bigint_comba_mul6(z, x, y);
+   } else if(sized_for_comba_mul<7>(x_sw, x_size, y_sw, y_size, z_size)) {
+      bigint_comba_mul7(z, x, y);
    } else if(sized_for_comba_mul<8>(x_sw, x_size, y_sw, y_size, z_size)) {
       bigint_comba_mul8(z, x, y);
    } else if(sized_for_comba_mul<9>(x_sw, x_size, y_sw, y_size, z_size)) {
@@ -334,6 +336,8 @@ void bigint_sqr(word z[], size_t z_size, const word x[], size_t x_size, size_t x
       bigint_comba_sqr4(z, x);
    } else if(sized_for_comba_sqr<6>(x_sw, x_size, z_size)) {
       bigint_comba_sqr6(z, x);
+   } else if(sized_for_comba_sqr<7>(x_sw, x_size, z_size)) {
+      bigint_comba_sqr7(z, x);
    } else if(sized_for_comba_sqr<8>(x_sw, x_size, z_size)) {
       bigint_comba_sqr8(z, x);
    } else if(sized_for_comba_sqr<9>(x_sw, x_size, z_size)) {

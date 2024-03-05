@@ -80,7 +80,7 @@ def main(args = None):
         args = sys.argv
 
     if len(args) <= 1:
-        sizes = [4, 6, 8, 9, 16, 24]
+        sizes = [4, 7, 6, 8, 9, 16, 24]
     else:
         sizes = map(int, args[1:])
 
