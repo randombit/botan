@@ -250,6 +250,9 @@ jobs:
           - target: cross-arm64
             compiler: gcc
             host_os: ubuntu-22.04
+          - target: cross-arm64-amalgamation
+            compiler: gcc
+            host_os: ubuntu-22.04
           - target: cross-ppc64
             compiler: gcc
             host_os: ubuntu-22.04

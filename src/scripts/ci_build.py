@@ -38,6 +38,7 @@ def known_targets():
         'cross-arm32',
         'cross-arm32-baremetal',
         'cross-arm64',
+        'cross-arm64-amalgamation',
         'cross-i386',
         'cross-ios-arm64',
         'cross-mips64',
@@ -185,7 +186,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target in ['minimized']:
         flags += ['--minimized-build', '--enable-modules=system_rng,sha2_32,sha2_64,aes']
 
-    if target in ['amalgamation']:
+    if target in ['amalgamation', 'cross-arm64-amalgamation']:
         flags += ['--amalgamation']
 
     if target in ['bsi', 'nist']:
@@ -319,7 +320,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 test_prefix = ['qemu-arm', '-L', '/usr/arm-linux-gnueabihf/']
                 # disable a few tests that are exceptionally slow under arm32 qemu
                 disabled_tests += ['dh_invalid', 'dlies', 'xmss_sign']
-            elif target == 'cross-arm64':
+            elif target in ['cross-arm64', 'cross-arm64-amalgamation']:
                 flags += ['--cpu=aarch64']
                 cc_bin = 'aarch64-linux-gnu-g++'
                 test_prefix = ['qemu-aarch64', '-L', '/usr/aarch64-linux-gnu/']

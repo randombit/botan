@@ -45,7 +45,7 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "cross-arm32" ]; then
         sudo apt-get -qq install qemu-user g++-arm-linux-gnueabihf
 
-    elif [ "$TARGET" = "cross-arm64" ]; then
+    elif [ "$TARGET" = "cross-arm64" ] || [ "$TARGET" = "cross-arm64-amalgamation" ]; then
         sudo apt-get -qq install qemu-user g++-aarch64-linux-gnu
 
     elif [ "$TARGET" = "cross-ppc64" ]; then
