@@ -35,6 +35,7 @@ def known_targets():
         'coverage',
         'cross-android-arm32',
         'cross-android-arm64',
+        'cross-android-arm64-amalgamation',
         'cross-arm32',
         'cross-arm32-baremetal',
         'cross-arm64',
@@ -130,7 +131,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
             target_os = 'ios'
         elif target == 'cross-win64':
             target_os = 'mingw'
-        elif target in ['cross-android-arm32', 'cross-android-arm64']:
+        elif target in ['cross-android-arm32', 'cross-android-arm64', 'cross-android-arm64-amalgamation']:
             target_os = 'android'
 
     if target_os == 'windows' and target_cc == 'gcc':
@@ -186,7 +187,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target in ['minimized']:
         flags += ['--minimized-build', '--enable-modules=system_rng,sha2_32,sha2_64,aes']
 
-    if target in ['amalgamation', 'cross-arm64-amalgamation']:
+    if target in ['amalgamation', 'cross-arm64-amalgamation', 'cross-android-arm64-amalgamation']:
         flags += ['--amalgamation']
 
     if target in ['bsi', 'nist']:
@@ -293,7 +294,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 cc_bin = os.path.join(toolchain_dir, 'armv7a-linux-androideabi%d-clang++' % (api_lvl))
                 flags += ['--cpu=armv7',
                           '--ar-command=%s' % (os.path.join(toolchain_dir, 'llvm-ar'))]
-            elif target == 'cross-android-arm64':
+            elif target in ['cross-android-arm64', 'cross-android-arm64-amalgamation']:
                 cc_bin = os.path.join(toolchain_dir, 'aarch64-linux-android%d-clang++' % (api_lvl))
                 flags += ['--cpu=arm64',
                           '--ar-command=%s' % (os.path.join(toolchain_dir, 'llvm-ar'))]
