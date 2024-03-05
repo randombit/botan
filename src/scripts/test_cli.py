@@ -820,20 +820,22 @@ gS3rM6D0oTlF2JjClk/jQuL+Gn+bjufrSnwPnhYrzjNXazFezsu2QGg3v1H1AiEA
     test_cli("ec_group_info", "--pem secp256r1", secp256r1_pem)
 
 def cli_cpuid_tests(_tmp_dir):
+    def read_flags(cli_output):
+        if not cpuid_output.startswith('CPUID flags:'):
+            logging.error('Unexpected cpuid output "%s"', cpuid_output)
+
+        return cli_output[13:].split(' ') if cli_output[13:] != '' else []
+
     cpuid_output = test_cli("cpuid", [])
-
-    if not cpuid_output.startswith('CPUID flags:'):
-        logging.error('Unexpected cpuid output "%s"', cpuid_output)
-
     flag_re = re.compile('[a-z0-9_]+')
-    flags = cpuid_output[13:].split(' ')
+    flags = read_flags(cpuid_output)
     for flag in flags:
         if flag != '' and flag_re.match(flag) is None:
             logging.error('Unexpected CPUID flag name "%s"', flag)
 
         env = {'BOTAN_CLEAR_CPUID': flag}
         cpuid_output = test_cli("cpuid", [], None, None, None, True, env)
-        mod_flags = cpuid_output[13:].split(' ')
+        mod_flags = read_flags(cpuid_output)
 
         for f in mod_flags:
             if f == flag:
