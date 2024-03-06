@@ -22,6 +22,9 @@ XLC __open_xl_version__ __open_xl_release__
 
 #elif defined(__EMSCRIPTEN__)
 
+   #if __has_include(<emscripten/version.h>)
+      #include <emscripten/version.h>
+   #endif
 EMCC __EMSCRIPTEN_major__ __EMSCRIPTEN_minor__
 
 #elif defined(__clang__) && defined(__apple_build_version__)
