@@ -274,7 +274,7 @@ jobs:
             host_os: macos-13
           - target: emscripten
             compiler: emcc
-            host_os: macos-13
+            host_os: macos-14
 
     runs-on: ${{ matrix.host_os }}
 
