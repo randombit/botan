@@ -90,6 +90,7 @@ enum class Group_Params_Code : uint16_t {
    BRAINPOOL512R1 = 28,
 
    X25519 = 29,
+   X448 = 30,
 
    FFDHE_2048 = 256,
    FFDHE_3072 = 257,
@@ -122,6 +123,8 @@ enum class Group_Params_Code : uint16_t {
    HYBRID_X25519_KYBER_512_R3_OQS = 0x2F39,
    HYBRID_X25519_KYBER_768_R3_OQS = 0x6399,
 
+   HYBRID_X448_KYBER_768_R3_OQS = 0x2F90,
+
    HYBRID_SECP256R1_KYBER_512_R3_OQS = 0x2F3A,
    HYBRID_SECP256R1_KYBER_768_R3_OQS = 0x639A,
 
@@ -131,6 +134,9 @@ enum class Group_Params_Code : uint16_t {
 
    HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS = 0x2F81,
    HYBRID_X25519_eFRODOKEM_640_AES_OQS = 0x2F80,
+
+   HYBRID_X448_eFRODOKEM_976_SHAKE_OQS = 0x2F83,
+   HYBRID_X448_eFRODOKEM_976_AES_OQS = 0x2F82,
 
    HYBRID_SECP256R1_eFRODOKEM_640_SHAKE_OQS = 0x2F01,
    HYBRID_SECP256R1_eFRODOKEM_640_AES_OQS = 0x2F00,
@@ -169,6 +175,8 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
 
       constexpr bool is_x25519() const { return m_code == Group_Params_Code::X25519; }
 
+      constexpr bool is_x448() const { return m_code == Group_Params_Code::X448; }
+
       constexpr bool is_ecdh_named_curve() const {
          return m_code == Group_Params_Code::SECP256R1 || m_code == Group_Params_Code::SECP384R1 ||
                 m_code == Group_Params_Code::SECP521R1 || m_code == Group_Params_Code::BRAINPOOL256R1 ||
@@ -200,7 +208,7 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
                 m_code == Group_Params_Code::eFRODOKEM_1344_AES_OQS;
       }
 
-      constexpr bool is_pure_ecc_group() const { return is_x25519() || is_ecdh_named_curve(); }
+      constexpr bool is_pure_ecc_group() const { return is_x25519() || is_x448() || is_ecdh_named_curve(); }
 
       constexpr bool is_post_quantum() const { return is_pure_kyber() || is_pure_frodokem() || is_pqc_hybrid(); }
 
@@ -208,8 +216,11 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
          return m_code == Group_Params_Code::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE ||
                 m_code == Group_Params_Code::HYBRID_X25519_KYBER_512_R3_OQS ||
                 m_code == Group_Params_Code::HYBRID_X25519_KYBER_768_R3_OQS ||
+                m_code == Group_Params_Code::HYBRID_X448_KYBER_768_R3_OQS ||
                 m_code == Group_Params_Code::HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS ||
                 m_code == Group_Params_Code::HYBRID_X25519_eFRODOKEM_640_AES_OQS ||
+                m_code == Group_Params_Code::HYBRID_X448_eFRODOKEM_976_SHAKE_OQS ||
+                m_code == Group_Params_Code::HYBRID_X448_eFRODOKEM_976_AES_OQS ||
                 m_code == Group_Params_Code::HYBRID_SECP256R1_KYBER_512_R3_OQS ||
                 m_code == Group_Params_Code::HYBRID_SECP256R1_KYBER_768_R3_OQS ||
                 m_code == Group_Params_Code::HYBRID_SECP256R1_eFRODOKEM_640_SHAKE_OQS ||

@@ -19,7 +19,6 @@ def script_is_disabled(script_name):
     disabled = {
         'test-SSLv3-padding.py',
         'test-serverhello-random.py', # assumes support for SSLv2 hello
-        'test-x25519.py', # assumes support for X448 (!)
     }
 
     if script_name in disabled:

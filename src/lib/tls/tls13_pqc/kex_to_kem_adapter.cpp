@@ -27,6 +27,10 @@
    #include <botan/curve25519.h>
 #endif
 
+#if defined(BOTAN_HAS_X448)
+   #include <botan/x448.h>
+#endif
+
 namespace Botan::TLS {
 
 namespace {
@@ -56,6 +60,12 @@ std::vector<uint8_t> kex_public_value(const Public_Key& kex_public_key) {
 
 #if defined(BOTAN_HAS_CURVE_25519)
    if(const auto* curve = dynamic_cast<const Curve25519_PublicKey*>(&kex_public_key)) {
+      return curve->public_value();
+   }
+#endif
+
+#if defined(BOTAN_HAS_X448)
+   if(const auto* curve = dynamic_cast<const X448_PublicKey*>(&kex_public_key)) {
       return curve->public_value();
    }
 #endif
@@ -94,6 +104,13 @@ size_t kex_shared_key_length(const Public_Key& kex_public_key) {
    if(const auto* curve = dynamic_cast<const Curve25519_PublicKey*>(&kex_public_key)) {
       BOTAN_UNUSED(curve);
       return 32; /* TODO: magic number */
+   }
+#endif
+
+#if defined(BOTAN_HAS_X448)
+   if(const auto* curve = dynamic_cast<const X448_PublicKey*>(&kex_public_key)) {
+      BOTAN_UNUSED(curve);
+      return 56; /* TODO: magic number */
    }
 #endif
 

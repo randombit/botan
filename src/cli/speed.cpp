@@ -405,7 +405,9 @@ class Speed final : public Command {
             "ECDH",
             "ECDSA",
             "Ed25519",
+            "Ed448",
             "Curve25519",
+            "X448",
             "McEliece",
             "Kyber",
             "SPHINCS+",
@@ -569,6 +571,11 @@ class Speed final : public Command {
                bench_ed25519(provider, msec);
             }
 #endif
+#if defined(BOTAN_HAS_ED448)
+            else if(algo == "Ed448") {
+               bench_ed448(provider, msec);
+            }
+#endif
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
             else if(algo == "DH") {
                bench_dh(provider, msec);
@@ -592,6 +599,11 @@ class Speed final : public Command {
 #if defined(BOTAN_HAS_CURVE_25519)
             else if(algo == "Curve25519") {
                bench_curve25519(provider, msec);
+            }
+#endif
+#if defined(BOTAN_HAS_X448)
+            else if(algo == "X448") {
+               bench_x448(provider, msec);
             }
 #endif
 #if defined(BOTAN_HAS_MCELIECE)
@@ -1851,6 +1863,12 @@ class Speed final : public Command {
       }
 #endif
 
+#if defined(BOTAN_HAS_ED448)
+      void bench_ed448(const std::string& provider, std::chrono::milliseconds msec) {
+         return bench_pk_sig_ecc("Ed448", "Pure", provider, std::vector<std::string>{""}, msec);
+      }
+#endif
+
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
       void bench_dh(const std::string& provider, std::chrono::milliseconds msec) {
          for(size_t bits : {2048, 3072, 4096, 6144, 8192}) {
@@ -1910,6 +1928,12 @@ class Speed final : public Command {
 #if defined(BOTAN_HAS_CURVE_25519)
       void bench_curve25519(const std::string& provider, std::chrono::milliseconds msec) {
          bench_pk_ka("Curve25519", "Curve25519", "", provider, msec);
+      }
+#endif
+
+#if defined(BOTAN_HAS_X448)
+      void bench_x448(const std::string& provider, std::chrono::milliseconds msec) {
+         bench_pk_ka("X448", "X448", "", provider, msec);
       }
 #endif
 

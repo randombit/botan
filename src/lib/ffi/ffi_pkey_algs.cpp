@@ -51,8 +51,16 @@
    #include <botan/curve25519.h>
 #endif
 
+#if defined(BOTAN_HAS_X448)
+   #include <botan/x448.h>
+#endif
+
 #if defined(BOTAN_HAS_ED25519)
    #include <botan/ed25519.h>
+#endif
+
+#if defined(BOTAN_HAS_ED448)
+   #include <botan/ed448.h>
 #endif
 
 #if defined(BOTAN_HAS_MCELIECE)
@@ -504,7 +512,7 @@ int botan_pubkey_load_dh(botan_pubkey_t* key, botan_mp_t p, botan_mp_t g, botan_
 #endif
 }
 
-/* ECDH + x25519 specific operations */
+/* ECDH + x25519/x448 specific operations */
 
 int botan_privkey_create_ecdh(botan_privkey_t* key_obj, botan_rng_t rng_obj, const char* param_str) {
    if(param_str == nullptr) {
@@ -515,6 +523,10 @@ int botan_privkey_create_ecdh(botan_privkey_t* key_obj, botan_rng_t rng_obj, con
 
    if(params == "curve25519") {
       return botan_privkey_create(key_obj, "Curve25519", "", rng_obj);
+   }
+
+   if(params == "x448") {
+      return botan_privkey_create(key_obj, "X448", "", rng_obj);
    }
 
    return botan_privkey_create(key_obj, "ECDH", param_str, rng_obj);
@@ -709,6 +721,70 @@ int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key, uint8_t output[32]) {
 #endif
 }
 
+/* Ed448 specific operations */
+
+int botan_privkey_load_ed448(botan_privkey_t* key, const uint8_t privkey[57]) {
+#if defined(BOTAN_HAS_ED448)
+   *key = nullptr;
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto ed448 = std::make_unique<Botan::Ed448_PrivateKey>(std::span(privkey, 57));
+      *key = new botan_privkey_struct(std::move(ed448));
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(key, privkey);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_pubkey_load_ed448(botan_pubkey_t* key, const uint8_t pubkey[57]) {
+#if defined(BOTAN_HAS_ED448)
+   *key = nullptr;
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto ed448 = std::make_unique<Botan::Ed448_PublicKey>(std::span(pubkey, 57));
+      *key = new botan_pubkey_struct(std::move(ed448));
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(key, pubkey);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_privkey_ed448_get_privkey(botan_privkey_t key, uint8_t output[57]) {
+#if defined(BOTAN_HAS_ED448)
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(auto ed = dynamic_cast<const Botan::Ed448_PrivateKey*>(&k)) {
+         const auto ed_key = ed->raw_private_key_bits();
+         Botan::copy_mem(std::span(output, 57), ed_key);
+         return BOTAN_FFI_SUCCESS;
+      } else {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+   });
+#else
+   BOTAN_UNUSED(key, output);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_pubkey_ed448_get_pubkey(botan_pubkey_t key, uint8_t output[57]) {
+#if defined(BOTAN_HAS_ED448)
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(auto ed = dynamic_cast<const Botan::Ed448_PublicKey*>(&k)) {
+         const auto ed_key = ed->public_key_bits();
+         Botan::copy_mem(std::span(output, 57), ed_key);
+         return BOTAN_FFI_SUCCESS;
+      } else {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+   });
+#else
+   BOTAN_UNUSED(key, output);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 /* X25519 specific operations */
 
 int botan_privkey_load_x25519(botan_privkey_t* key, const uint8_t privkey[32]) {
@@ -768,6 +844,70 @@ int botan_pubkey_x25519_get_pubkey(botan_pubkey_t key, uint8_t output[32]) {
          if(x25519_key.size() != 32)
             return BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE;
          Botan::copy_mem(output, x25519_key.data(), x25519_key.size());
+         return BOTAN_FFI_SUCCESS;
+      } else {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+   });
+#else
+   BOTAN_UNUSED(key, output);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+/* X448 specific operations */
+
+int botan_privkey_load_x448(botan_privkey_t* key, const uint8_t privkey[56]) {
+#if defined(BOTAN_HAS_X448)
+   *key = nullptr;
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto x448 = std::make_unique<Botan::X448_PrivateKey>(std::span(privkey, 56));
+      *key = new botan_privkey_struct(std::move(x448));
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(key, privkey);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_pubkey_load_x448(botan_pubkey_t* key, const uint8_t pubkey[56]) {
+#if defined(BOTAN_HAS_X448)
+   *key = nullptr;
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto x448 = std::make_unique<Botan::X448_PublicKey>(std::span(pubkey, 56));
+      *key = new botan_pubkey_struct(std::move(x448));
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(key, pubkey);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_privkey_x448_get_privkey(botan_privkey_t key, uint8_t output[56]) {
+#if defined(BOTAN_HAS_X448)
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(auto x448 = dynamic_cast<const Botan::X448_PrivateKey*>(&k)) {
+         const auto x448_key = x448->raw_private_key_bits();
+         Botan::copy_mem(std::span(output, 56), x448_key);
+         return BOTAN_FFI_SUCCESS;
+      } else {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+   });
+#else
+   BOTAN_UNUSED(key, output);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_pubkey_x448_get_pubkey(botan_pubkey_t key, uint8_t output[56]) {
+#if defined(BOTAN_HAS_X448)
+   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+      if(auto x448 = dynamic_cast<const Botan::X448_PublicKey*>(&k)) {
+         const std::vector<uint8_t>& x448_key = x448->public_value();
+         Botan::copy_mem(std::span(output, 56), x448_key);
          return BOTAN_FFI_SUCCESS;
       } else {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;

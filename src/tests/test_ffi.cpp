@@ -2620,6 +2620,73 @@ class FFI_Ed25519_Test final : public FFI_Test {
       }
 };
 
+class FFI_Ed448_Test final : public FFI_Test {
+   public:
+      std::string name() const override { return "FFI Ed448"; }
+
+      void ffi_test(Test::Result& result, botan_rng_t rng) override {
+         botan_pubkey_t pub;
+         botan_privkey_t priv;
+
+         // RFC 8032: Testvector Ed448, 1 octet
+         const auto sk = Botan::hex_decode(
+            "c4eab05d357007c632f3dbb48489924d552b08fe0c353a0d4a1f00acda2c463afbea67c5e8d2877c5e3bc397a659949ef8021e954e0a12274e");
+         const auto pk_ref = Botan::hex_decode(
+            "43ba28f430cdff456ae531545f7ecd0ac834a55d9358c0372bfa0c6c6798c0866aea01eb00742802b8438ea4cb82169c235160627b4c3a9480");
+         const auto msg = Botan::hex_decode("03");
+         const auto sig_ref = Botan::hex_decode(
+            "26b8f91727bd62897af15e41eb43c377efb9c610d48f2335cb0bd0087810f4352541b143c4b981b7e18f62de8ccdf633fc1bf037ab7cd779805e0dbcc0aae1cbcee1afb2e027df36bc04dcecbf154336c19f0af7e0a6472905e799f1953d2a0ff3348ab21aa4adafd1d234441cf807c03a00");
+
+         if(!TEST_FFI_INIT(botan_privkey_load_ed448, (&priv, sk.data()))) {
+            return;
+         }
+
+         std::vector<uint8_t> retr_privkey(57);
+         TEST_FFI_OK(botan_privkey_ed448_get_privkey, (priv, retr_privkey.data()));
+         result.test_is_eq("Private key matches", retr_privkey, sk);
+
+         TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
+
+         std::vector<uint8_t> retr_pubkey(57);
+         TEST_FFI_OK(botan_pubkey_ed448_get_pubkey, (pub, retr_pubkey.data()));
+         result.test_is_eq("Public key matches", retr_pubkey, pk_ref);
+
+         TEST_FFI_OK(botan_pubkey_destroy, (pub));
+         TEST_FFI_OK(botan_pubkey_load_ed448, (&pub, pk_ref.data()));
+
+         botan_pk_op_sign_t signer;
+         std::vector<uint8_t> signature;
+
+         if(TEST_FFI_OK(botan_pk_op_sign_create, (&signer, priv, "Pure", 0))) {
+            TEST_FFI_OK(botan_pk_op_sign_update, (signer, msg.data(), msg.size()));
+
+            size_t sig_len;
+            TEST_FFI_OK(botan_pk_op_sign_output_length, (signer, &sig_len));
+
+            signature.resize(sig_len);
+
+            TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &sig_len));
+            signature.resize(sig_len);
+
+            TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
+         }
+
+         result.test_eq("Expected signature", signature, sig_ref);
+
+         botan_pk_op_verify_t verifier;
+
+         if(TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, "Pure", 0))) {
+            TEST_FFI_OK(botan_pk_op_verify_update, (verifier, msg.data(), msg.size()));
+            TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+
+            TEST_FFI_OK(botan_pk_op_verify_destroy, (verifier));
+         }
+
+         TEST_FFI_OK(botan_pubkey_destroy, (pub));
+         TEST_FFI_OK(botan_privkey_destroy, (priv));
+      }
+};
+
 class FFI_X25519_Test final : public FFI_Test {
    public:
       std::string name() const override { return "FFI X25519"; }
@@ -2666,6 +2733,59 @@ class FFI_X25519_Test final : public FFI_Test {
                      (ka, shared_output.data(), &shared_len, a_pub_bits.data(), a_pub_bits.size(), nullptr, 0));
 
          result.test_eq("Shared secret matches expected", shared_secret_bits, shared_output);
+
+         TEST_FFI_OK(botan_pubkey_destroy, (a_pub));
+         TEST_FFI_OK(botan_pubkey_destroy, (b_pub));
+         TEST_FFI_OK(botan_privkey_destroy, (b_priv));
+         TEST_FFI_OK(botan_pk_op_key_agreement_destroy, (ka));
+      }
+};
+
+class FFI_X448_Test final : public FFI_Test {
+   public:
+      std::string name() const override { return "FFI X448"; }
+
+      void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
+         // From RFC 7748 Section 6.2
+         const auto a_pub_ref = Botan::hex_decode(
+            "9b08f7cc31b7e3e67d22d5aea121074a273bd2b83de09c63faa73d2c22c5d9bbc836647241d953d40c5b12da88120d53177f80e532c41fa0");
+         const auto b_priv_ref = Botan::hex_decode(
+            "1c306a7ac2a0e2e0990b294470cba339e6453772b075811d8fad0d1d6927c120bb5ee8972b0d3e21374c9c921b09d1b0366f10b65173992d");
+         const auto b_pub_ref = Botan::hex_decode(
+            "3eb7a829b0cd20f5bcfc0b599b6feccf6da4627107bdb0d4f345b43027d8b972fc3e34fb4232a13ca706dcb57aec3dae07bdc1c67bf33609");
+         const auto shared_secret_ref = Botan::hex_decode(
+            "07fff4181ac6cc95ec1c16a94a0f74d12da232ce40a77552281d282bb60c0b56fd2464c335543936521c24403085d59a449a5037514a879d");
+
+         botan_privkey_t b_priv;
+         if(!TEST_FFI_INIT(botan_privkey_load_x448, (&b_priv, b_priv_ref.data()))) {
+            return;
+         }
+
+         std::vector<uint8_t> privkey_read(56);
+         TEST_FFI_OK(botan_privkey_x448_get_privkey, (b_priv, privkey_read.data()));
+         result.test_eq("X448 private key", privkey_read, b_priv_ref);
+
+         std::vector<uint8_t> pubkey_read(56);
+
+         botan_pubkey_t b_pub;
+         TEST_FFI_OK(botan_privkey_export_pubkey, (&b_pub, b_priv));
+         TEST_FFI_OK(botan_pubkey_x448_get_pubkey, (b_pub, pubkey_read.data()));
+         result.test_eq("X448 public key b", pubkey_read, b_pub_ref);
+
+         botan_pubkey_t a_pub;
+         TEST_FFI_OK(botan_pubkey_load_x448, (&a_pub, a_pub_ref.data()));
+         TEST_FFI_OK(botan_pubkey_x448_get_pubkey, (a_pub, pubkey_read.data()));
+         result.test_eq("X448 public key a", pubkey_read, a_pub_ref);
+
+         botan_pk_op_ka_t ka;
+         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka, b_priv, "Raw", 0));
+
+         std::vector<uint8_t> shared_output(56);
+         size_t shared_len = shared_output.size();
+         TEST_FFI_OK(botan_pk_op_key_agreement,
+                     (ka, shared_output.data(), &shared_len, a_pub_ref.data(), a_pub_ref.size(), nullptr, 0));
+
+         result.test_eq("Shared secret matches expected", shared_secret_ref, shared_output);
 
          TEST_FFI_OK(botan_pubkey_destroy, (a_pub));
          TEST_FFI_OK(botan_pubkey_destroy, (b_pub));
@@ -3035,7 +3155,9 @@ BOTAN_REGISTER_TEST("ffi", "ffi_sm2_enc", FFI_SM2_Enc_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ecdh", FFI_ECDH_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_mceliece", FFI_McEliece_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ed25519", FFI_Ed25519_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_ed448", FFI_Ed448_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_x25519", FFI_X25519_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_x448", FFI_X448_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_kyber512", FFI_Kyber512_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_kyber768", FFI_Kyber768_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_kyber1024", FFI_Kyber1024_Test);

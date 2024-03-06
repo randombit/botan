@@ -523,6 +523,49 @@ ofvkP1EDmpx50fHLawIDAQAB
 
             self.assertEqual(a_pem, new_a.to_pem())
 
+    def test_rfc7748_kex(self):
+        rng = botan.RandomNumberGenerator()
+
+        for alg in ['Curve25519', 'X448']:
+            a_priv = botan.PrivateKey.create(alg, '', rng)
+            b_priv = botan.PrivateKey.create(alg, '', rng)
+
+            a_op = botan.PKKeyAgreement(a_priv, "Raw")
+            b_op = botan.PKKeyAgreement(b_priv, "Raw")
+
+            a_pubv = a_op.public_value()
+            b_pubv = b_op.public_value()
+
+            salt = bytes()
+
+            a_key = a_op.agree(b_pubv, 0, salt)
+            b_key = b_op.agree(a_pubv, 0, salt)
+
+            self.assertEqual(a_key, b_key)
+            self.assertEqual(len(a_key), a_op.underlying_output_length())
+
+    def test_eddsa(self):
+        rng = botan.RandomNumberGenerator()
+        msg = 'test message'
+
+        for alg in ['Ed25519', 'Ed448']:
+            priv = botan.PrivateKey.create(alg, '', rng)
+            pub = priv.get_public_key()
+
+            # Sign message
+            signer = botan.PKSign(priv, '')
+            signer.update(msg)
+            signature = signer.finish(rng)
+
+            # Verify signature
+            verifier = botan.PKVerify(pub, '')
+            verifier.update(msg)
+            self.assertTrue(verifier.check_signature(signature))
+
+            # Verify invalid signature
+            verifier.update('not test message')
+            self.assertFalse(verifier.check_signature(signature))
+
     def test_certs(self):
         cert = botan.X509Cert(filename=test_data("src/tests/data/x509/ecc/CSCA.CSCA.csca-germany.1.crt"))
         pubkey = cert.subject_public_key()

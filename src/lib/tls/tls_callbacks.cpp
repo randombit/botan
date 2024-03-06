@@ -26,6 +26,10 @@
    #include <botan/curve25519.h>
 #endif
 
+#if defined(BOTAN_HAS_X448)
+   #include <botan/x448.h>
+#endif
+
 #if defined(BOTAN_HAS_KYBER)
    #include <botan/kyber.h>
 #endif
@@ -274,6 +278,12 @@ std::unique_ptr<PK_Key_Agreement_Key> TLS::Callbacks::tls_generate_ephemeral_key
    }
 #endif
 
+#if defined(BOTAN_HAS_X448)
+   if(group_params.is_x448()) {
+      return std::make_unique<X448_PrivateKey>(rng);
+   }
+#endif
+
    if(group_params.is_kem()) {
       throw TLS_Exception(Alert::IllegalParameter, "cannot generate an ephemeral KEX key for a KEM");
    }
@@ -333,6 +343,19 @@ secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(
       }
 
       Curve25519_PublicKey peer_key(public_value);
+      policy.check_peer_key_acceptable(peer_key);
+
+      return agree(private_key, peer_key);
+   }
+#endif
+
+#if defined(BOTAN_HAS_X448)
+   if(group_params.is_x448()) {
+      if(public_value.size() != 56) {
+         throw TLS_Exception(Alert::HandshakeFailure, "Invalid X448 key size");
+      }
+
+      X448_PublicKey peer_key(public_value);
       policy.check_peer_key_acceptable(peer_key);
 
       return agree(private_key, peer_key);

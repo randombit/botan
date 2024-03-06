@@ -128,7 +128,9 @@ prf_x942
 
 # pubkey
 curve25519
+x448
 ed25519
+ed448
 ecgdsa
 eckcdsa
 elgamal

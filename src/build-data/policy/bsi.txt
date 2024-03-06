@@ -147,6 +147,7 @@ sp800_56a
 
 # pubkey
 curve25519
+x448
 ec_h2c
 ed25519
 elgamal

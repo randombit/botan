@@ -161,6 +161,9 @@ std::vector<Group_Params> Policy::key_exchange_groups() const {
 #if defined(BOTAN_HAS_CURVE_25519)
       Group_Params::X25519,
 #endif
+#if defined(BOTAN_HAS_X448)
+         Group_Params::X448,
+#endif
 
          Group_Params::SECP256R1, Group_Params::BRAINPOOL256R1, Group_Params::SECP384R1, Group_Params::BRAINPOOL384R1,
          Group_Params::SECP521R1, Group_Params::BRAINPOOL512R1,
@@ -223,7 +226,7 @@ void Policy::check_peer_key_acceptable(const Public_Key& public_key) const {
       expected_keylength = minimum_rsa_bits();
    } else if(algo_name == "DH") {
       expected_keylength = minimum_dh_group_size();
-   } else if(algo_name == "ECDH" || algo_name == "Curve25519") {
+   } else if(algo_name == "ECDH" || algo_name == "Curve25519" || algo_name == "X448") {
       expected_keylength = minimum_ecdh_group_size();
    } else if(algo_name == "ECDSA") {
       expected_keylength = minimum_ecdsa_group_size();

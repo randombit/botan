@@ -26,6 +26,10 @@
    #include <botan/curve25519.h>
 #endif
 
+#if defined(BOTAN_HAS_X448)
+   #include <botan/x448.h>
+#endif
+
 #include <botan/dh.h>
 #include <botan/dl_group.h>
 #include <botan/ecdh.h>
@@ -125,8 +129,9 @@ class Key_Share_Entry {
          //   With X25519 and X448, a receiving party MUST check whether the
          //   computed premaster secret is the all-zero value and abort the
          //   handshake if so, as described in Section 6 of [RFC7748].
-         if(m_group == Named_Group::X25519 && CT::all_zeros(shared_secret.data(), shared_secret.size()).as_bool()) {
-            throw TLS_Exception(Alert::DecryptError, "Bad X25519 key exchange");
+         if((m_group == Named_Group::X25519 || m_group == Named_Group::X448) &&
+            CT::all_zeros(shared_secret.data(), shared_secret.size()).as_bool()) {
+            throw TLS_Exception(Alert::DecryptError, "Bad X25519 or X448 key exchange");
          }
 
          return shared_secret;

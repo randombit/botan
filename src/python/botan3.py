@@ -339,10 +339,18 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_pubkey_load_ed25519, [c_void_p, c_char_p])
     ffi_api(dll.botan_privkey_ed25519_get_privkey, [c_void_p, c_char_p])
     ffi_api(dll.botan_pubkey_ed25519_get_pubkey, [c_void_p, c_char_p])
+    ffi_api(dll.botan_privkey_load_ed448, [c_void_p, c_char_p])
+    ffi_api(dll.botan_pubkey_load_ed448, [c_void_p, c_char_p])
+    ffi_api(dll.botan_privkey_ed448_get_privkey, [c_void_p, c_char_p])
+    ffi_api(dll.botan_pubkey_ed448_get_pubkey, [c_void_p, c_char_p])
     ffi_api(dll.botan_privkey_load_x25519, [c_void_p, c_char_p])
     ffi_api(dll.botan_pubkey_load_x25519, [c_void_p, c_char_p])
     ffi_api(dll.botan_privkey_x25519_get_privkey, [c_void_p, c_char_p])
     ffi_api(dll.botan_pubkey_x25519_get_pubkey, [c_void_p, c_char_p])
+    ffi_api(dll.botan_privkey_load_x448, [c_void_p, c_char_p])
+    ffi_api(dll.botan_pubkey_load_x448, [c_void_p, c_char_p])
+    ffi_api(dll.botan_privkey_x448_get_privkey, [c_void_p, c_char_p])
+    ffi_api(dll.botan_pubkey_x448_get_pubkey, [c_void_p, c_char_p])
     ffi_api(dll.botan_privkey_load_kyber, [c_void_p, c_char_p, c_int])
     ffi_api(dll.botan_pubkey_load_kyber, [c_void_p, c_char_p, c_int])
     ffi_api(dll.botan_privkey_view_kyber_raw_key, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
@@ -1175,6 +1183,9 @@ class PrivateKey:
         elif algo in ['ecdh', 'ECDH']:
             if params == 'curve25519':
                 algo = 'Curve25519'
+                params = ''
+            elif params == 'x448':
+                algo = 'X448'
                 params = ''
             else:
                 algo = 'ECDH'
