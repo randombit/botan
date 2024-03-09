@@ -33,11 +33,11 @@ void treehash(StrongSpan<SphincsTreeNode> out_root,
               const GenerateLeafFunction& gen_leaf,
               Sphincs_Address& tree_address) {
    BOTAN_ASSERT_NOMSG(out_root.size() == params.n());
-   BOTAN_ASSERT_NOMSG(out_auth_path.size() == params.n() * total_tree_height);
+   BOTAN_ASSERT_NOMSG(out_auth_path.size() == params.n() * total_tree_height * uint64_t{1});
 
    const TreeNodeIndex max_idx(uint32_t((1 << total_tree_height) - 1));
 
-   std::vector<uint8_t> stack(total_tree_height * params.n());
+   std::vector<uint8_t> stack(total_tree_height * params.n() * uint64_t{1});
    SphincsTreeNode current_node(params.n());  // Current logical node
 
    /* Traverse the tree from the left-most leaf, matching siblings and up until
@@ -71,13 +71,13 @@ void treehash(StrongSpan<SphincsTreeNode> out_root,
          // it is, write it out. The XOR sum of both nodes (at internal_idx and internal_leaf)
          // is 1 iff they have the same parent node in the FORS tree
          if(internal_leaf.has_value() && (internal_idx ^ internal_leaf.value()) == 0x01U) {
-            auto auth_path_location = out_auth_path.get().subspan(h.get() * params.n(), params.n());
+            auto auth_path_location = out_auth_path.get().subspan(h.get() * params.n() * uint64_t{1}, params.n());
             copy_into(auth_path_location, current_node);
          }
 
          // At this point we know that we'll need to use the stack. Get a
          // reference to the correct location.
-         auto stack_location = std::span(stack).subspan(h.get() * params.n(), params.n());
+         auto stack_location = std::span(stack).subspan(h.get() * params.n() * uint64_t{1}, params.n());
 
          // Check if we're at a left child; if so, stop going up the stack
          // Exception: if we've reached the end of the tree, keep on going (so
@@ -118,7 +118,7 @@ void compute_root(StrongSpan<SphincsTreeNode> out,
                   uint32_t total_tree_height,
                   Sphincs_Address& tree_address) {
    BOTAN_ASSERT_NOMSG(out.size() == params.n());
-   BOTAN_ASSERT_NOMSG(authentication_path.size() == params.n() * total_tree_height);
+   BOTAN_ASSERT_NOMSG(authentication_path.size() == params.n() * total_tree_height * uint64_t{1});
    BOTAN_ASSERT_NOMSG(leaf.size() == params.n());
 
    // Use the `out` parameter as intermediate buffer for left/right nodes

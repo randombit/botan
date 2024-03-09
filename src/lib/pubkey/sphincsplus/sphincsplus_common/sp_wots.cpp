@@ -100,7 +100,7 @@ WotsPublicKey wots_public_key_from_signature(const SphincsTreeNode& hashed_messa
                                              const Sphincs_Parameters& params,
                                              Sphincs_Hash_Functions& hashes) {
    const std::vector<WotsHashIndex> lengths = chain_lengths(hashed_message, params);
-   WotsPublicKey pk_buffer(params.wots_len() * params.n());
+   WotsPublicKey pk_buffer(params.wots_len() * params.n() * uint64_t{1});
    BufferSlicer sig(signature);
    BufferStuffer pk(pk_buffer);
 
