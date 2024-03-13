@@ -704,7 +704,7 @@ inline constexpr auto store_le(ParamTs&&... params) {
 }
 
 /**
- * Store "something" in little endian byte order
+ * Store "something" in big endian byte order
  * See the documentation of this file for more details.
  */
 template <typename ModifierT = detail::AutoDetect, typename... ParamTs>
