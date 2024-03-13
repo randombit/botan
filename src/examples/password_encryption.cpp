@@ -51,12 +51,15 @@ std::unique_ptr<Botan::AEAD_Mode> prepare_aead(std::string_view password,
                                                Botan::Cipher_Dir direction) {
    auto aead = Botan::AEAD_Mode::create_or_throw("AES-256/GCM", direction);
 
+   const size_t key_length = aead->key_spec().maximum_keylength();
+   const size_t nonce_length = aead->default_nonce_length();
+
    // Stretch the password into enough cryptographically strong key material
    // to initialize the AEAD with a key and nonce (aka. initialization vector).
-   const auto keydata_needed = aead->key_spec().minimum_keylength() + aead->default_nonce_length();
-   const auto keydata = derive_key_material(password, salt, keydata_needed);
-   const auto key = std::span{keydata}.first(aead->key_spec().minimum_keylength());
-   const auto nonce = std::span{keydata}.last(aead->default_nonce_length());
+   const auto keydata = derive_key_material(password, salt, key_length + nonce_length);
+   BOTAN_ASSERT_NOMSG(keydata.size() == key_length + nonce_length);
+   const auto key = std::span{keydata}.first(key_length);
+   const auto nonce = std::span{keydata}.last(nonce_length);
 
    aead->set_key(key);
    aead->start(nonce);
