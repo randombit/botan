@@ -132,12 +132,21 @@ The ``PasswordHashFamily`` creates specific instances of ``PasswordHash``:
 
 .. _pbkdf_example:
 
-Code Example
-------------
+Code Examples
+-------------
 
 An example demonstrating using the API to hash a password using Argon2i:
 
 .. literalinclude:: /../src/examples/pwdhash.cpp
+   :language: cpp
+
+Combining a password based key derivation with an authenticated cipher yields an
+application that can encrypt and decrypt data using a password. Note that this
+example does not incorporate any "associated data" into the AEAD. For instance,
+a real application might want to include a version number of their file format
+as associated data. See :ref:`aead` for more information.
+
+.. literalinclude:: /../src/examples/password_encryption.cpp
    :language: cpp
 
 Available Schemes
