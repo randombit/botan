@@ -66,6 +66,7 @@ class Utility_Function_Tests final : public Text_Based_Test {
 
          results.push_back(test_loadstore());
          results.push_back(test_loadstore_fallback());
+         results.push_back(test_loadstore_constexpr());
          return results;
       }
 
@@ -427,6 +428,152 @@ class Utility_Function_Tests final : public Text_Based_Test {
          result.test_is_eq<a<2>>("sBE 16", fb_store_be<uint16_t>(0x0102), {1, 2});
          result.test_is_eq<a<4>>("sBE 32", fb_store_be<uint32_t>(0x01020304), {1, 2, 3, 4});
          result.test_is_eq<a<8>>("sBE 64", fb_store_be<uint64_t>(0x0102030405060708), {1, 2, 3, 4, 5, 6, 7, 8});
+
+         return result;
+      }
+
+      static Test::Result test_loadstore_constexpr() {
+         Test::Result result("Util load/store constexpr");
+
+         constexpr uint16_t in16 = 0x1234;
+         constexpr uint32_t in32 = 0xA0B0C0D0;
+         constexpr uint64_t in64 = 0xABCDEF0123456789;
+
+         // clang-format off
+         constexpr std::array<uint8_t, 16> cex_mem = {
+            0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF,
+         };
+         // clang-format on
+
+         // get_byte<> w/ 16bit
+         constexpr auto cex_byte_16_0 = Botan::get_byte<0>(in16);
+         result.test_is_eq<uint8_t>(cex_byte_16_0, 0x12);
+         constexpr auto cex_byte_16_1 = Botan::get_byte<1>(in16);
+         result.test_is_eq<uint8_t>(cex_byte_16_1, 0x34);
+
+         // get_byte<> w/ 32bit
+         constexpr auto cex_byte_32_0 = Botan::get_byte<0>(in32);
+         result.test_is_eq<uint8_t>(cex_byte_32_0, 0xA0);
+         constexpr auto cex_byte_32_1 = Botan::get_byte<1>(in32);
+         result.test_is_eq<uint8_t>(cex_byte_32_1, 0xB0);
+         constexpr auto cex_byte_32_2 = Botan::get_byte<2>(in32);
+         result.test_is_eq<uint8_t>(cex_byte_32_2, 0xC0);
+         constexpr auto cex_byte_32_3 = Botan::get_byte<3>(in32);
+         result.test_is_eq<uint8_t>(cex_byte_32_3, 0xD0);
+
+         // get_byte<> w/ 64bit
+         constexpr auto cex_byte_64_0 = Botan::get_byte<0>(in64);
+         result.test_is_eq<uint8_t>(cex_byte_64_0, 0xAB);
+         constexpr auto cex_byte_64_1 = Botan::get_byte<1>(in64);
+         result.test_is_eq<uint8_t>(cex_byte_64_1, 0xCD);
+         constexpr auto cex_byte_64_2 = Botan::get_byte<2>(in64);
+         result.test_is_eq<uint8_t>(cex_byte_64_2, 0xEF);
+         constexpr auto cex_byte_64_3 = Botan::get_byte<3>(in64);
+         result.test_is_eq<uint8_t>(cex_byte_64_3, 0x01);
+         constexpr auto cex_byte_64_4 = Botan::get_byte<4>(in64);
+         result.test_is_eq<uint8_t>(cex_byte_64_4, 0x23);
+         constexpr auto cex_byte_64_5 = Botan::get_byte<5>(in64);
+         result.test_is_eq<uint8_t>(cex_byte_64_5, 0x45);
+         constexpr auto cex_byte_64_6 = Botan::get_byte<6>(in64);
+         result.test_is_eq<uint8_t>(cex_byte_64_6, 0x67);
+         constexpr auto cex_byte_64_7 = Botan::get_byte<7>(in64);
+         result.test_is_eq<uint8_t>(cex_byte_64_7, 0x89);
+
+         // make_uintXX()
+         constexpr auto cex_uint16_t = Botan::make_uint16(0x12, 0x34);
+         result.test_is_eq<uint16_t>(cex_uint16_t, in16);
+         constexpr auto cex_uint32_t = Botan::make_uint32(0xA0, 0xB0, 0xC0, 0xD0);
+         result.test_is_eq<uint32_t>(cex_uint32_t, in32);
+         constexpr auto cex_uint64_t = Botan::make_uint64(0xAB, 0xCD, 0xEF, 0x01, 0x23, 0x45, 0x67, 0x89);
+         result.test_is_eq<uint64_t>(cex_uint64_t, in64);
+
+         // store_le/be with a single integer
+         constexpr std::array<uint8_t, 2> cex_store_le16 = Botan::store_le(in16);
+         result.test_is_eq(cex_store_le16, std::array<uint8_t, 2>{0x34, 0x12});
+         constexpr std::array<uint8_t, 4> cex_store_le32 = Botan::store_le(in32);
+         result.test_is_eq(cex_store_le32, std::array<uint8_t, 4>{0xD0, 0xC0, 0xB0, 0xA0});
+         constexpr std::array<uint8_t, 8> cex_store_le64 = Botan::store_le(in64);
+         result.test_is_eq(cex_store_le64, std::array<uint8_t, 8>{0x89, 0x67, 0x45, 0x23, 0x01, 0xEF, 0xCD, 0xAB});
+
+         constexpr std::array<uint8_t, 2> cex_store_be16 = Botan::store_be(in16);
+         result.test_is_eq(cex_store_be16, std::array<uint8_t, 2>{0x12, 0x34});
+         constexpr std::array<uint8_t, 4> cex_store_be32 = Botan::store_be(in32);
+         result.test_is_eq(cex_store_be32, std::array<uint8_t, 4>{0xA0, 0xB0, 0xC0, 0xD0});
+         constexpr std::array<uint8_t, 8> cex_store_be64 = Botan::store_be(in64);
+         result.test_is_eq(cex_store_be64, std::array<uint8_t, 8>{0xAB, 0xCD, 0xEF, 0x01, 0x23, 0x45, 0x67, 0x89});
+
+         // store_le/be with multiple integers, both as a parameter pack and a range (std::array for constexpr)
+         constexpr std::array<uint8_t, 16> cex_store_le16s =
+            Botan::store_le(in16, in16, in16, in16, in16, in16, in16, in16);
+         constexpr std::array<uint8_t, 16> cex_store_le16s2 =
+            Botan::store_le(std::array{in16, in16, in16, in16, in16, in16, in16, in16});
+         result.test_is_eq(
+            cex_store_le16s,
+            {0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12});
+         result.test_is_eq(cex_store_le16s, cex_store_le16s2);
+         constexpr std::array<uint8_t, 16> cex_store_le32s = Botan::store_le(in32, in32, in32, in32);
+         constexpr std::array<uint8_t, 16> cex_store_le32s2 = Botan::store_le(std::array{in32, in32, in32, in32});
+         result.test_is_eq(
+            cex_store_le32s,
+            {0xD0, 0xC0, 0xB0, 0xA0, 0xD0, 0xC0, 0xB0, 0xA0, 0xD0, 0xC0, 0xB0, 0xA0, 0xD0, 0xC0, 0xB0, 0xA0});
+         result.test_is_eq(cex_store_le32s, cex_store_le32s2);
+         constexpr std::array<uint8_t, 16> cex_store_le64s = Botan::store_le(in64, in64);
+         constexpr std::array<uint8_t, 16> cex_store_le64s2 = Botan::store_le(std::array{in64, in64});
+         result.test_is_eq(
+            cex_store_le64s,
+            {0x89, 0x67, 0x45, 0x23, 0x01, 0xEF, 0xCD, 0xAB, 0x89, 0x67, 0x45, 0x23, 0x01, 0xEF, 0xCD, 0xAB});
+         result.test_is_eq(cex_store_le64s, cex_store_le64s2);
+
+         constexpr std::array<uint8_t, 16> cex_store_be16s =
+            Botan::store_be(in16, in16, in16, in16, in16, in16, in16, in16);
+         constexpr std::array<uint8_t, 16> cex_store_be16s2 =
+            Botan::store_be(std::array{in16, in16, in16, in16, in16, in16, in16, in16});
+         result.test_is_eq(
+            cex_store_be16s,
+            {0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34});
+         result.test_is_eq(cex_store_be16s, cex_store_be16s2);
+         constexpr std::array<uint8_t, 16> cex_store_be32s = Botan::store_be(in32, in32, in32, in32);
+         constexpr std::array<uint8_t, 16> cex_store_be32s2 = Botan::store_be(std::array{in32, in32, in32, in32});
+         result.test_is_eq(
+            cex_store_be32s,
+            {0xA0, 0xB0, 0xC0, 0xD0, 0xA0, 0xB0, 0xC0, 0xD0, 0xA0, 0xB0, 0xC0, 0xD0, 0xA0, 0xB0, 0xC0, 0xD0});
+         result.test_is_eq(cex_store_be32s, cex_store_be32s2);
+         constexpr std::array<uint8_t, 16> cex_store_be64s = Botan::store_be(in64, in64);
+         constexpr std::array<uint8_t, 16> cex_store_be64s2 = Botan::store_be(std::array{in64, in64});
+         result.test_is_eq(
+            cex_store_be64s,
+            {0xAB, 0xCD, 0xEF, 0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0x01, 0x23, 0x45, 0x67, 0x89});
+         result.test_is_eq(cex_store_be64s, cex_store_be64s2);
+
+         // load_le/be a single integer
+         constexpr uint16_t cex_load_le16 = Botan::load_le<uint16_t>(cex_store_le16);
+         result.test_is_eq(cex_load_le16, in16);
+         constexpr uint32_t cex_load_le32 = Botan::load_le<uint32_t>(cex_store_le32);
+         result.test_is_eq(cex_load_le32, in32);
+         constexpr uint64_t cex_load_le64 = Botan::load_le<uint64_t>(cex_store_le64);
+         result.test_is_eq(cex_load_le64, in64);
+
+         constexpr uint16_t cex_load_be16 = Botan::load_be<uint16_t>(cex_store_be16);
+         result.test_is_eq(cex_load_be16, in16);
+         constexpr uint32_t cex_load_be32 = Botan::load_be<uint32_t>(cex_store_be32);
+         result.test_is_eq(cex_load_be32, in32);
+         constexpr uint64_t cex_load_be64 = Botan::load_be<uint64_t>(cex_store_be64);
+         result.test_is_eq(cex_load_be64, in64);
+
+         // load_le/be multiple integers into a std::array for constexpr
+         constexpr auto cex_load_le16s = Botan::load_le<std::array<uint16_t, cex_mem.size() / 2>>(cex_mem);
+         result.test_is_eq(cex_load_le16s, {0x1100, 0x3322, 0x5544, 0x7766, 0x9988, 0xBBAA, 0xDDCC, 0xFFEE});
+         constexpr auto cex_load_le32s = Botan::load_le<std::array<uint32_t, cex_mem.size() / 4>>(cex_mem);
+         result.test_is_eq(cex_load_le32s, {0x33221100, 0x77665544, 0xBBAA9988, 0xFFEEDDCC});
+         constexpr auto cex_load_le64s = Botan::load_le<std::array<uint64_t, cex_mem.size() / 8>>(cex_mem);
+         result.test_is_eq(cex_load_le64s, {0x7766554433221100, 0xFFEEDDCCBBAA9988});
+
+         constexpr auto cex_load_be16s = Botan::load_be<std::array<uint16_t, cex_mem.size() / 2>>(cex_mem);
+         result.test_is_eq(cex_load_be16s, {0x0011, 0x2233, 0x4455, 0x6677, 0x8899, 0xAABB, 0xCCDD, 0xEEFF});
+         constexpr auto cex_load_be32s = Botan::load_be<std::array<uint32_t, cex_mem.size() / 4>>(cex_mem);
+         result.test_is_eq(cex_load_be32s, {0x00112233, 0x44556677, 0x8899AABB, 0xCCDDEEFF});
+         constexpr auto cex_load_be64s = Botan::load_be<std::array<uint64_t, cex_mem.size() / 8>>(cex_mem);
+         result.test_is_eq(cex_load_be64s, {0x0011223344556677, 0x8899AABBCCDDEEFF});
 
          return result;
       }

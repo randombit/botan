@@ -249,15 +249,22 @@ inline constexpr OutT load_any(InR&& in_range) {
    ranges::assert_exact_byte_length<sizeof(OutT)>(in_range);
    std::span in{in_range};
 
-   if constexpr(sizeof(OutT) == 1) {
-      return static_cast<OutT>(in[0]);
-   } else if constexpr(is_native(endianness)) {
-      return typecast_copy<OutT>(in);
-   } else if constexpr(is_opposite(endianness)) {
-      return reverse_bytes(typecast_copy<OutT>(in));
-   } else {
-      static_assert(native_endianness_is_unknown<endianness>());
+   // At compile time we cannot use `typecast_copy` as it uses `std::memcpy`
+   // internally to copy ranges on a byte-by-byte basis, which is not allowed
+   // in a `constexpr` context.
+   if(std::is_constant_evaluated()) /* TODO: C++23: if consteval {} */ {
       return fallback_load_any<endianness, OutT>(std::forward<InR>(in_range));
+   } else {
+      if constexpr(sizeof(OutT) == 1) {
+         return static_cast<OutT>(in[0]);
+      } else if constexpr(is_native(endianness)) {
+         return typecast_copy<OutT>(in);
+      } else if constexpr(is_opposite(endianness)) {
+         return reverse_bytes(typecast_copy<OutT>(in));
+      } else {
+         static_assert(native_endianness_is_unknown<endianness>());
+         return fallback_load_any<endianness, OutT>(std::forward<InR>(in_range));
+      }
    }
 }
 
@@ -314,15 +321,27 @@ template <Endianness endianness,
             (std::same_as<AutoDetect, OutT> || std::same_as<OutT, std::ranges::range_value_t<OutR>>))
 inline constexpr void load_any(OutR&& out, InR&& in) {
    ranges::assert_equal_byte_lengths(out, in);
-   if constexpr(is_native(endianness)) {
-      typecast_copy(out, in);
-   } else {
+
+   auto load_elementwise = [&] {
       using element_type = std::ranges::range_value_t<OutR>;
       constexpr size_t bytes_per_element = sizeof(element_type);
       std::span<const uint8_t> in_s(in);
       for(auto& out_elem : out) {
          out_elem = load_any<endianness, element_type>(in_s.template first<bytes_per_element>());
          in_s = in_s.subspan(bytes_per_element);
+      }
+   };
+
+   // At compile time we cannot use `typecast_copy` as it uses `std::memcpy`
+   // internally to copy ranges on a byte-by-byte basis, which is not allowed
+   // in a `constexpr` context.
+   if(std::is_constant_evaluated()) /* TODO: C++23: if consteval {} */ {
+      load_elementwise();
+   } else {
+      if constexpr(is_native(endianness)) {
+         typecast_copy(out, in);
+      } else {
+         load_elementwise();
       }
    }
 }
@@ -473,15 +492,22 @@ inline constexpr void store_any(InT in, OutR&& out_range) {
    ranges::assert_exact_byte_length<sizeof(InT)>(out_range);
    std::span out{out_range};
 
-   if constexpr(sizeof(InT) == 1) {
-      out[0] = static_cast<uint8_t>(in);
-   } else if constexpr(is_native(endianness)) {
-      typecast_copy(out, in);
-   } else if constexpr(is_opposite(endianness)) {
-      typecast_copy(out, reverse_bytes(in));
-   } else {
-      static_assert(native_endianness_is_unknown<endianness>());
+   // At compile time we cannot use `typecast_copy` as it uses `std::memcpy`
+   // internally to copy ranges on a byte-by-byte basis, which is not allowed
+   // in a `constexpr` context.
+   if(std::is_constant_evaluated()) /* TODO: C++23: if consteval {} */ {
       return fallback_store_any<endianness, InT>(in, std::forward<OutR>(out_range));
+   } else {
+      if constexpr(sizeof(InT) == 1) {
+         out[0] = static_cast<uint8_t>(in);
+      } else if constexpr(is_native(endianness)) {
+         typecast_copy(out, in);
+      } else if constexpr(is_opposite(endianness)) {
+         typecast_copy(out, reverse_bytes(in));
+      } else {
+         static_assert(native_endianness_is_unknown<endianness>());
+         return fallback_store_any<endianness, InT>(in, std::forward<OutR>(out_range));
+      }
    }
 }
 
@@ -543,15 +569,26 @@ template <Endianness endianness,
 inline constexpr void store_any(OutR&& out, InR&& in) {
    ranges::assert_equal_byte_lengths(out, in);
 
-   if constexpr(is_native(endianness)) {
-      typecast_copy(out, in);
-   } else {
+   auto store_elementwise = [&] {
       using element_type = std::ranges::range_value_t<InR>;
       constexpr size_t bytes_per_element = sizeof(element_type);
       std::span<uint8_t> out_s(out);
       for(auto in_elem : in) {
          store_any<endianness, element_type>(out_s.template first<bytes_per_element>(), in_elem);
          out_s = out_s.subspan(bytes_per_element);
+      }
+   };
+
+   // At compile time we cannot use `typecast_copy` as it uses `std::memcpy`
+   // internally to copy ranges on a byte-by-byte basis, which is not allowed
+   // in a `constexpr` context.
+   if(std::is_constant_evaluated()) /* TODO: C++23: if consteval {} */ {
+      store_elementwise();
+   } else {
+      if constexpr(is_native(endianness)) {
+         typecast_copy(out, in);
+      } else {
+         store_elementwise();
       }
    }
 }
