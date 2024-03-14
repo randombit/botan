@@ -50,13 +50,16 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
       *        If zero, there is no maximum age
       * @param trusted_ocsp_responders certificate store containing certificates
       *        of trusted OCSP responders (additionally to the CA's responders)
+      * @param ignore_trusted_root_time_range if true, validity checks on the
+      *        time range of the trusted root certificate only produce warnings
       */
       Path_Validation_Restrictions(
          bool require_rev = false,
          size_t minimum_key_strength = 110,
          bool ocsp_all_intermediates = false,
          std::chrono::seconds max_ocsp_age = std::chrono::seconds::zero(),
-         std::unique_ptr<Certificate_Store> trusted_ocsp_responders = std::make_unique<Certificate_Store_In_Memory>());
+         std::unique_ptr<Certificate_Store> trusted_ocsp_responders = std::make_unique<Certificate_Store_In_Memory>(),
+         bool ignore_trusted_root_time_range = false);
 
       /**
       * @param require_rev if true, revocation information is required
@@ -72,6 +75,8 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
       *        If zero, there is no maximum age
       * @param trusted_ocsp_responders certificate store containing certificates
       *        of trusted OCSP responders (additionally to the CA's responders)
+      * @param ignore_trusted_root_time_range if true, validity checks on the
+      *        time range of the trusted root certificate only produce warnings
       */
       Path_Validation_Restrictions(
          bool require_rev,
@@ -79,13 +84,15 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
          bool ocsp_all_intermediates,
          const std::set<std::string>& trusted_hashes,
          std::chrono::seconds max_ocsp_age = std::chrono::seconds::zero(),
-         std::unique_ptr<Certificate_Store> trusted_ocsp_responders = std::make_unique<Certificate_Store_In_Memory>()) :
+         std::unique_ptr<Certificate_Store> trusted_ocsp_responders = std::make_unique<Certificate_Store_In_Memory>(),
+         bool ignore_trusted_root_time_range = false) :
             m_require_revocation_information(require_rev),
             m_ocsp_all_intermediates(ocsp_all_intermediates),
             m_trusted_hashes(trusted_hashes),
             m_minimum_key_strength(minimum_key_strength),
             m_max_ocsp_age(max_ocsp_age),
-            m_trusted_ocsp_responders(std::move(trusted_ocsp_responders)) {}
+            m_trusted_ocsp_responders(std::move(trusted_ocsp_responders)),
+            m_ignore_trusted_root_time_range(ignore_trusted_root_time_range) {}
 
       /**
       * @return whether revocation information is required
@@ -121,6 +128,19 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
        */
       const Certificate_Store* trusted_ocsp_responders() const { return m_trusted_ocsp_responders.get(); }
 
+      /**
+       * RFC 5280 does not disallow trusted anchors signing certificates with wider validity
+       * ranges than theirs. When checking a certificate chain at a specific
+       * point in time, this can lead to situations where a root certificate is expired, but
+       * the lower-chain certificates are not.
+       *
+       * If this flag is set to true, such chains are considered valid (with warning
+       * TRUSTED_CERT_HAS_EXPIRED). Otherwise, the chain is rejected with the error
+       * code CERT_HAS_EXPIRED. The same holds for not yet valid certificates with the
+       * error code CERT_NOT_YET_VALID (or warning TRUSTED_CERT_NOT_YET_VALID).
+       */
+      bool ignore_trusted_root_time_range() const { return m_ignore_trusted_root_time_range; }
+
    private:
       bool m_require_revocation_information;
       bool m_ocsp_all_intermediates;
@@ -128,6 +148,7 @@ class BOTAN_PUBLIC_API(2, 0) Path_Validation_Restrictions final {
       size_t m_minimum_key_strength;
       std::chrono::seconds m_max_ocsp_age;
       std::unique_ptr<Certificate_Store> m_trusted_ocsp_responders;
+      bool m_ignore_trusted_root_time_range;
 };
 
 /**
@@ -331,7 +352,9 @@ Certificate_Status_Code BOTAN_PUBLIC_API(2, 0)
 /**
 * Check the certificate chain, but not any revocation data
 *
-* @param cert_path path built by build_certificate_path with OK result
+* @param cert_path path built by build_certificate_path with OK result.
+* The first element is the end entity certificate, the last element is
+* the trusted root certificate.
 * @param ref_time whatever time you want to perform the validation
 * against (normally current system clock)
 * @param hostname the hostname

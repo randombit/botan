@@ -102,13 +102,24 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
          }
       }
 
+      // Only warn, if trusted root is not in time range if configured this way
+      const bool is_trusted_root_and_time_ignored =
+         restrictions.ignore_trusted_root_time_range() && at_self_signed_root;
       // Check all certs for valid time range
       if(validation_time < subject.not_before()) {
-         status.insert(Certificate_Status_Code::CERT_NOT_YET_VALID);
+         if(is_trusted_root_and_time_ignored) {
+            status.insert(Certificate_Status_Code::TRUSTED_CERT_NOT_YET_VALID);  // only warn
+         } else {
+            status.insert(Certificate_Status_Code::CERT_NOT_YET_VALID);
+         }
       }
 
       if(validation_time > subject.not_after()) {
-         status.insert(Certificate_Status_Code::CERT_HAS_EXPIRED);
+         if(is_trusted_root_and_time_ignored) {
+            status.insert(Certificate_Status_Code::TRUSTED_CERT_HAS_EXPIRED);  // only warn
+         } else {
+            status.insert(Certificate_Status_Code::CERT_HAS_EXPIRED);
+         }
       }
 
       // Check issuer constraints
@@ -945,12 +956,14 @@ Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
                                                            size_t key_strength,
                                                            bool ocsp_intermediates,
                                                            std::chrono::seconds max_ocsp_age,
-                                                           std::unique_ptr<Certificate_Store> trusted_ocsp_responders) :
+                                                           std::unique_ptr<Certificate_Store> trusted_ocsp_responders,
+                                                           bool ignore_trusted_root_time_range) :
       m_require_revocation_information(require_rev),
       m_ocsp_all_intermediates(ocsp_intermediates),
       m_minimum_key_strength(key_strength),
       m_max_ocsp_age(max_ocsp_age),
-      m_trusted_ocsp_responders(std::move(trusted_ocsp_responders)) {
+      m_trusted_ocsp_responders(std::move(trusted_ocsp_responders)),
+      m_ignore_trusted_root_time_range(ignore_trusted_root_time_range) {
    if(key_strength <= 80) {
       m_trusted_hashes.insert("SHA-1");
    }
