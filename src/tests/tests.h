@@ -17,6 +17,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <set>
 #include <sstream>
 #include <string>
