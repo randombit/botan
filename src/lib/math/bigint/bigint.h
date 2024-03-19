@@ -14,6 +14,7 @@
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <iosfwd>
+#include <span>
 
 namespace Botan {
 
@@ -99,8 +100,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * Create a BigInt from an integer in a byte array
        * @param vec the byte vector holding the value
        */
-      template <typename Alloc>
-      explicit BigInt(const std::vector<uint8_t, Alloc>& vec) : BigInt(vec.data(), vec.size()) {}
+      explicit BigInt(std::span<const uint8_t> vec) : BigInt(vec.data(), vec.size()) {}
 
       /**
        * Create a BigInt from an integer in a byte array
@@ -678,10 +678,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * Read integer value from a byte vector
        * @param buf the vector to load from
        */
-      template <typename Alloc>
-      void binary_decode(const std::vector<uint8_t, Alloc>& buf) {
-         binary_decode(buf.data(), buf.size());
-      }
+      void binary_decode(std::span<const uint8_t> buf) { binary_decode(buf.data(), buf.size()); }
 
       /**
        * Place the value into out, zero-padding up to size words
@@ -780,10 +777,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param buf the binary value to load
        * @result BigInt representing the integer in the byte array
        */
-      template <typename Alloc>
-      static BigInt decode(const std::vector<uint8_t, Alloc>& buf) {
-         return BigInt(buf);
-      }
+      static BigInt decode(std::span<const uint8_t> buf) { return BigInt(buf); }
 
       /**
        * Create a BigInt from an integer in a byte array
@@ -800,8 +794,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param base number-base of the integer in buf
        * @result BigInt representing the integer in the byte array
        */
-      template <typename Alloc>
-      static BigInt decode(const std::vector<uint8_t, Alloc>& buf, Base base) {
+      static BigInt decode(std::span<const uint8_t> buf, Base base) {
          if(base == Binary) {
             return BigInt(buf);
          }
