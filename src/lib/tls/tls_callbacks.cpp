@@ -157,7 +157,7 @@ bool TLS::Callbacks::tls_verify_message(const Public_Key& key,
 std::unique_ptr<Private_Key> TLS::Callbacks::tls_kem_generate_key(TLS::Group_Params group, RandomNumberGenerator& rng) {
 #if defined(BOTAN_HAS_KYBER)
    if(group.is_pure_kyber()) {
-      return std::make_unique<Kyber_PrivateKey>(rng, KyberMode(group.to_string().value()));
+      return std::make_unique<Kyber_PrivateKey>(rng, KyberMode(group.to_algorithm_spec().value()));
    }
 #endif
 
@@ -191,7 +191,7 @@ KEM_Encapsulation TLS::Callbacks::tls_kem_encapsulate(TLS::Group_Params group,
 
 #if defined(BOTAN_HAS_KYBER)
          if(group.is_pure_kyber()) {
-            return std::make_unique<Kyber_PublicKey>(encoded_public_key, KyberMode(group.to_string().value()));
+            return std::make_unique<Kyber_PublicKey>(encoded_public_key, KyberMode(group.to_algorithm_spec().value()));
          }
 #endif
 
@@ -247,7 +247,7 @@ DL_Group get_dl_group(const std::variant<TLS::Group_Params, DL_Group>& group) {
    // groups.
    return std::visit(
       overloaded{[](const DL_Group& dl_group) { return dl_group; },
-                 [&](TLS::Group_Params group_param) { return DL_Group(group_param.to_string().value()); }},
+                 [&](TLS::Group_Params group_param) { return DL_Group(group_param.to_algorithm_spec().value()); }},
       group);
 }
 
@@ -264,7 +264,7 @@ std::unique_ptr<PK_Key_Agreement_Key> TLS::Callbacks::tls_generate_ephemeral_key
    const auto group_params = std::get<TLS::Group_Params>(group);
 
    if(group_params.is_ecdh_named_curve()) {
-      const EC_Group ec_group(group_params.to_string().value());
+      const EC_Group ec_group(group_params.to_algorithm_spec().value());
       return std::make_unique<ECDH_PrivateKey>(rng, ec_group);
    }
 
@@ -319,7 +319,7 @@ secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(
    const auto group_params = std::get<TLS::Group_Params>(group);
 
    if(group_params.is_ecdh_named_curve()) {
-      const EC_Group ec_group(group_params.to_string().value());
+      const EC_Group ec_group(group_params.to_algorithm_spec().value());
       ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(public_value));
       policy.check_peer_key_acceptable(peer_key);
 

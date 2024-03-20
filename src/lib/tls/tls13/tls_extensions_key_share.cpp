@@ -226,8 +226,10 @@ class Key_Share_ClientHello {
          }
       }
 
-      Key_Share_ClientHello(const Policy& policy, Callbacks& cb, RandomNumberGenerator& rng) {
-         const auto supported = policy.key_exchange_groups();
+      Key_Share_ClientHello(const std::vector<Group_Params>& supported_groups,
+                            const Policy& policy,
+                            Callbacks& cb,
+                            RandomNumberGenerator& rng) {
          const auto offers = policy.key_exchange_groups_to_offer();
 
          // RFC 8446 P. 48
@@ -241,7 +243,7 @@ class Key_Share_ClientHello {
          //
          // ... hence, we're going through the supported groups and find those that
          //     should be used to offer a key exchange. This will satisfy above spec.
-         for(const auto group : supported) {
+         for(const auto group : supported_groups) {
             if(std::find(offers.begin(), offers.end(), group) == offers.end()) {
                continue;
             }
@@ -424,8 +426,11 @@ Key_Share::Key_Share(TLS_Data_Reader& reader, uint16_t extension_size, Handshake
 }
 
 // ClientHello
-Key_Share::Key_Share(const Policy& policy, Callbacks& cb, RandomNumberGenerator& rng) :
-      m_impl(std::make_unique<Key_Share_Impl>(Key_Share_ClientHello(policy, cb, rng))) {}
+Key_Share::Key_Share(const std::vector<Group_Params>& supported_groups,
+                     const Policy& policy,
+                     Callbacks& cb,
+                     RandomNumberGenerator& rng) :
+      m_impl(std::make_unique<Key_Share_Impl>(Key_Share_ClientHello(supported_groups, policy, cb, rng))) {}
 
 // HelloRetryRequest
 Key_Share::Key_Share(Named_Group selected_group) :

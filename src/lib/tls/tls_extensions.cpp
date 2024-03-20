@@ -483,7 +483,7 @@ Certificate_Type Certificate_Type_Base::selected_certificate_type() const {
    return m_certificate_types.front();
 }
 
-Supported_Groups::Supported_Groups(const std::vector<Group_Params>& groups) : m_groups(groups) {}
+Supported_Groups::Supported_Groups(std::vector<Group_Params> groups) : m_groups(std::move(groups)) {}
 
 const std::vector<Group_Params>& Supported_Groups::groups() const {
    return m_groups;

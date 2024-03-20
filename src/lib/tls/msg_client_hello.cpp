@@ -419,11 +419,13 @@ void Client_Hello_12::add_tls12_supported_groups_extensions(const Policy& policy
    //    A client that offers a group MUST be able and willing to perform a DH
    //    key exchange using that group.
    //
-   // We don't support hybrid key exchange in TLS 1.2
+   // We don't support hybrid key exchange in TLS 1.2, and we should not offer
+   // any groups that are not available in TLS 1.2 (e.g. brainpool curves with)
+   // TLS 1.3 wire codes.
    const std::vector<Group_Params> kex_groups = policy.key_exchange_groups();
    std::vector<Group_Params> compatible_kex_groups;
    std::copy_if(kex_groups.begin(), kex_groups.end(), std::back_inserter(compatible_kex_groups), [](const auto group) {
-      return !group.is_post_quantum();
+      return group.usable_in_version(Protocol_Version::TLS_V12);
    });
 
    auto supported_groups = std::make_unique<Supported_Groups>(std::move(compatible_kex_groups));
@@ -762,9 +764,19 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
       m_data->extensions().add(new Server_Name_Indicator(hostname));
    }
 
-   m_data->extensions().add(new Supported_Groups(policy.key_exchange_groups()));
+   const auto available_groups = policy.key_exchange_groups();
+   std::vector<Group_Params> compatible_kex_groups;
+   std::copy_if(available_groups.begin(),
+                available_groups.end(),
+                std::back_inserter(compatible_kex_groups),
+                [&](const auto group) {
+                   // If we allow the legacy TLS 1.2, we won't filter out any
+                   // groups, in case the server might negotiate TLS 1.2.
+                   return policy.allow_tls12() || group.usable_in_version(Protocol_Version::TLS_V13);
+                });
+   m_data->extensions().add(new Supported_Groups(std::move(compatible_kex_groups)));
 
-   m_data->extensions().add(new Key_Share(policy, cb, rng));
+   m_data->extensions().add(new Key_Share(compatible_kex_groups, policy, cb, rng));
 
    m_data->extensions().add(new Supported_Versions(Protocol_Version::TLS_V13, policy));
 
