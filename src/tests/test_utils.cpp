@@ -650,7 +650,7 @@ class CPUID_Tests final : public Test {
       }
 };
 
-BOTAN_REGISTER_TEST("utils", "cpuid", CPUID_Tests);
+BOTAN_REGISTER_SERIALIZED_TEST("utils", "cpuid", CPUID_Tests);
 
 #if defined(BOTAN_HAS_UUID)
 
