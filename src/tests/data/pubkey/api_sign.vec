@@ -36,6 +36,11 @@ SigParams = Ed25519ph
 AlgoParams = gost_256A
 SigParams = Raw
 
+[HSS-LMS]
+
+AlgoParams = SHA-256,HW(5,8)
+SigParams =
+
 [RSA]
 
 AlgoParams = 2048

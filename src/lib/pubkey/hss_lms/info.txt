@@ -1,0 +1,26 @@
+<defines>
+HSS_LMS -> 20230925
+</defines>
+
+<module_info>
+name -> "HSS-LMS"
+</module_info>
+
+<header:public>
+hss_lms.h
+</header:public>
+
+<header:internal>
+hss_lms_utils.h
+lms.h
+lm_ots.h
+hss.h
+</header:internal>
+
+<requires>
+rng
+sha2_32
+shake
+trunc_hash
+tree_hash
+</requires>

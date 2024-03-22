@@ -19,9 +19,11 @@
 #include <variant>
 #include <vector>
 
+#include <botan/assert.h>
 #include <botan/concepts.h>
 #include <botan/secmem.h>
 #include <botan/strong_type.h>
+#include <botan/internal/loadstor.h>
 
 namespace Botan {
 
@@ -248,6 +250,17 @@ class BufferStuffer {
    private:
       std::span<uint8_t> m_buffer;
 };
+
+/**
+ * @brief Size guarded copy using spans.
+ *
+ * @param out output buffer
+ * @param in input buffer
+ */
+inline void copy_into(std::span<uint8_t> out, std::span<const uint8_t> in) {
+   BOTAN_ASSERT_NOMSG(in.size() == out.size());
+   std::copy(in.begin(), in.end(), out.begin());
+}
 
 /**
  * Concatenate an arbitrary number of buffers.
