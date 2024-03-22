@@ -21,8 +21,10 @@
 
 #include <span>
 
-#if !defined(BOTAN_HAS_KYBER_90S) && !defined(BOTAN_HAS_KYBER)
-static_assert(false, "botan module 'kyber_common' is useful only when enabling modules 'kyber', 'kyber_90s' or both");
+#if !defined(BOTAN_HAS_KYBER_90S) && !defined(BOTAN_HAS_KYBER) && !defined(BOTAN_HAS_ML_KEM_INITIAL_PUBLIC_DRAFT)
+static_assert(
+   false,
+   "botan module 'kyber_common' is useful only when enabling at least one of those modules: 'kyber', 'kyber_90s', 'ml_kem_ipd'");
 #endif
 
 namespace Botan {
@@ -40,6 +42,13 @@ class BOTAN_PUBLIC_API(3, 0) KyberMode {
          Kyber512 BOTAN_DEPRECATED("Use Kyber512_R3") = Kyber512_R3,
          Kyber768 BOTAN_DEPRECATED("Use Kyber768_R3") = Kyber768_R3,
          Kyber1024 BOTAN_DEPRECATED("Use Kyber1024_R3") = Kyber1024_R3,
+
+         // ML-KEM as proposed by NIST in the initial public draft of the standard
+         ML_KEM_512_ipd,
+         // ML-KEM as proposed by NIST in the initial public draft of the standard
+         ML_KEM_768_ipd,
+         // ML-KEM as proposed by NIST in the initial public draft of the standard
+         ML_KEM_1024_ipd,
 
          Kyber512_90s BOTAN_DEPRECATED("Kyber 90s mode is deprecated"),
          Kyber768_90s BOTAN_DEPRECATED("Kyber 90s mode is deprecated"),
@@ -59,7 +68,11 @@ class BOTAN_PUBLIC_API(3, 0) KyberMode {
 
       BOTAN_DEPRECATED("Kyber 90s mode is deprecated") bool is_modern() const;
 
-      BOTAN_DEPRECATED("Kyber 90s mode is deprecated") bool is_available() const;
+      bool is_ml_kem_ipd() const;
+
+      bool is_kyber_round3() const;
+
+      bool is_available() const;
 
       bool operator==(const KyberMode& other) const { return m_mode == other.m_mode; }
 
@@ -84,7 +97,7 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key {
 
       ~Kyber_PublicKey() override = default;
 
-      std::string algo_name() const override { return "Kyber"; }
+      std::string algo_name() const override;
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
@@ -114,9 +127,6 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key {
 
       static std::shared_ptr<Kyber_PublicKeyInternal> initialize_from_encoding(std::span<const uint8_t> pub_key,
                                                                                KyberMode m);
-
-      const std::vector<uint8_t>& public_key_bits_raw() const;
-      const std::vector<uint8_t>& H_public_key_bits_raw() const;
 
    protected:
       friend class Kyber_KEM_Encryptor;

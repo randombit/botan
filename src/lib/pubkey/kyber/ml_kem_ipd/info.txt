@@ -1,9 +1,10 @@
 <defines>
-KYBER -> 20220107
+ML_KEM_INITIAL_PUBLIC_DRAFT -> 20240117
 </defines>
 
 <module_info>
-name -> "Kyber"
+name -> "ML-KEM (IPD)"
+brief -> "Module Lattice KEM (Initial Public Draft)"
 </module_info>
 
 <requires>
@@ -14,5 +15,5 @@ shake_xof
 </requires>
 
 <header:internal>
-kyber_modern.h
+ml_kem_ipd.h
 </header:internal>
