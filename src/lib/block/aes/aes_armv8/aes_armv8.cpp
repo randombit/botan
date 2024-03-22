@@ -17,11 +17,11 @@ namespace Botan {
 
 namespace AES_AARCH64 {
 
-BOTAN_FUNC_ISA_INLINE("+crypto") void enc(uint8x16_t& B, uint8x16_t K) {
+BOTAN_FUNC_ISA_INLINE("+crypto+aes") void enc(uint8x16_t& B, uint8x16_t K) {
    B = vaesmcq_u8(vaeseq_u8(B, K));
 }
 
-BOTAN_FUNC_ISA_INLINE("+crypto")
+BOTAN_FUNC_ISA_INLINE("+crypto+aes")
 void enc4(uint8x16_t& B0, uint8x16_t& B1, uint8x16_t& B2, uint8x16_t& B3, uint8x16_t K) {
    B0 = vaesmcq_u8(vaeseq_u8(B0, K));
    B1 = vaesmcq_u8(vaeseq_u8(B1, K));
@@ -29,11 +29,11 @@ void enc4(uint8x16_t& B0, uint8x16_t& B1, uint8x16_t& B2, uint8x16_t& B3, uint8x
    B3 = vaesmcq_u8(vaeseq_u8(B3, K));
 }
 
-BOTAN_FUNC_ISA_INLINE("+crypto") void enc_last(uint8x16_t& B, uint8x16_t K, uint8x16_t K2) {
+BOTAN_FUNC_ISA_INLINE("+crypto+aes") void enc_last(uint8x16_t& B, uint8x16_t K, uint8x16_t K2) {
    B = veorq_u8(vaeseq_u8(B, K), K2);
 }
 
-BOTAN_FUNC_ISA_INLINE("+crypto")
+BOTAN_FUNC_ISA_INLINE("+crypto+aes")
 void enc4_last(uint8x16_t& B0, uint8x16_t& B1, uint8x16_t& B2, uint8x16_t& B3, uint8x16_t K, uint8x16_t K2) {
    B0 = veorq_u8(vaeseq_u8(B0, K), K2);
    B1 = veorq_u8(vaeseq_u8(B1, K), K2);
@@ -41,11 +41,11 @@ void enc4_last(uint8x16_t& B0, uint8x16_t& B1, uint8x16_t& B2, uint8x16_t& B3, u
    B3 = veorq_u8(vaeseq_u8(B3, K), K2);
 }
 
-BOTAN_FUNC_ISA_INLINE("+crypto") void dec(uint8x16_t& B, uint8x16_t K) {
+BOTAN_FUNC_ISA_INLINE("+crypto+aes") void dec(uint8x16_t& B, uint8x16_t K) {
    B = vaesimcq_u8(vaesdq_u8(B, K));
 }
 
-BOTAN_FUNC_ISA_INLINE("+crypto")
+BOTAN_FUNC_ISA_INLINE("+crypto+aes")
 void dec4(uint8x16_t& B0, uint8x16_t& B1, uint8x16_t& B2, uint8x16_t& B3, uint8x16_t K) {
    B0 = vaesimcq_u8(vaesdq_u8(B0, K));
    B1 = vaesimcq_u8(vaesdq_u8(B1, K));
@@ -53,11 +53,11 @@ void dec4(uint8x16_t& B0, uint8x16_t& B1, uint8x16_t& B2, uint8x16_t& B3, uint8x
    B3 = vaesimcq_u8(vaesdq_u8(B3, K));
 }
 
-BOTAN_FUNC_ISA_INLINE("+crypto") void dec_last(uint8x16_t& B, uint8x16_t K, uint8x16_t K2) {
+BOTAN_FUNC_ISA_INLINE("+crypto+aes") void dec_last(uint8x16_t& B, uint8x16_t K, uint8x16_t K2) {
    B = veorq_u8(vaesdq_u8(B, K), K2);
 }
 
-BOTAN_FUNC_ISA_INLINE("+crypto")
+BOTAN_FUNC_ISA_INLINE("+crypto+aes")
 void dec4_last(uint8x16_t& B0, uint8x16_t& B1, uint8x16_t& B2, uint8x16_t& B3, uint8x16_t K, uint8x16_t K2) {
    B0 = veorq_u8(vaesdq_u8(B0, K), K2);
    B1 = veorq_u8(vaesdq_u8(B1, K), K2);
@@ -70,7 +70,7 @@ void dec4_last(uint8x16_t& B0, uint8x16_t& B1, uint8x16_t& B2, uint8x16_t& B3, u
 /*
 * AES-128 Encryption
 */
-BOTAN_FUNC_ISA("+crypto") void AES_128::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FUNC_ISA("+crypto+aes") void AES_128::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const uint8_t* skey = reinterpret_cast<const uint8_t*>(m_EK.data());
 
    const uint8x16_t K0 = vld1q_u8(skey + 0 * 16);
@@ -133,7 +133,7 @@ BOTAN_FUNC_ISA("+crypto") void AES_128::hw_aes_encrypt_n(const uint8_t in[], uin
 /*
 * AES-128 Decryption
 */
-BOTAN_FUNC_ISA("+crypto") void AES_128::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FUNC_ISA("+crypto+aes") void AES_128::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const uint8_t* skey = reinterpret_cast<const uint8_t*>(m_DK.data());
 
    const uint8x16_t K0 = vld1q_u8(skey + 0 * 16);
@@ -196,7 +196,7 @@ BOTAN_FUNC_ISA("+crypto") void AES_128::hw_aes_decrypt_n(const uint8_t in[], uin
 /*
 * AES-192 Encryption
 */
-BOTAN_FUNC_ISA("+crypto") void AES_192::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FUNC_ISA("+crypto+aes") void AES_192::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const uint8_t* skey = reinterpret_cast<const uint8_t*>(m_EK.data());
 
    const uint8x16_t K0 = vld1q_u8(skey + 0 * 16);
@@ -265,7 +265,7 @@ BOTAN_FUNC_ISA("+crypto") void AES_192::hw_aes_encrypt_n(const uint8_t in[], uin
 /*
 * AES-192 Decryption
 */
-BOTAN_FUNC_ISA("+crypto") void AES_192::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FUNC_ISA("+crypto+aes") void AES_192::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const uint8_t* skey = reinterpret_cast<const uint8_t*>(m_DK.data());
 
    const uint8x16_t K0 = vld1q_u8(skey + 0 * 16);
@@ -334,7 +334,7 @@ BOTAN_FUNC_ISA("+crypto") void AES_192::hw_aes_decrypt_n(const uint8_t in[], uin
 /*
 * AES-256 Encryption
 */
-BOTAN_FUNC_ISA("+crypto") void AES_256::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FUNC_ISA("+crypto+aes") void AES_256::hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const uint8_t* skey = reinterpret_cast<const uint8_t*>(m_EK.data());
 
    const uint8x16_t K0 = vld1q_u8(skey + 0 * 16);
@@ -411,7 +411,7 @@ BOTAN_FUNC_ISA("+crypto") void AES_256::hw_aes_encrypt_n(const uint8_t in[], uin
 /*
 * AES-256 Decryption
 */
-BOTAN_FUNC_ISA("+crypto") void AES_256::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+BOTAN_FUNC_ISA("+crypto+aes") void AES_256::hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    const uint8_t* skey = reinterpret_cast<const uint8_t*>(m_DK.data());
 
    const uint8x16_t K0 = vld1q_u8(skey + 0 * 16);

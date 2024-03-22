@@ -35,9 +35,11 @@ def known_targets():
         'coverage',
         'cross-android-arm32',
         'cross-android-arm64',
+        'cross-android-arm64-amalgamation',
         'cross-arm32',
         'cross-arm32-baremetal',
         'cross-arm64',
+        'cross-arm64-amalgamation',
         'cross-i386',
         'cross-ios-arm64',
         'cross-mips64',
@@ -129,7 +131,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
             target_os = 'ios'
         elif target == 'cross-win64':
             target_os = 'mingw'
-        elif target in ['cross-android-arm32', 'cross-android-arm64']:
+        elif target in ['cross-android-arm32', 'cross-android-arm64', 'cross-android-arm64-amalgamation']:
             target_os = 'android'
 
     if target_os == 'windows' and target_cc == 'gcc':
@@ -185,7 +187,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target in ['minimized']:
         flags += ['--minimized-build', '--enable-modules=system_rng,sha2_32,sha2_64,aes']
 
-    if target in ['amalgamation']:
+    if target in ['amalgamation', 'cross-arm64-amalgamation', 'cross-android-arm64-amalgamation']:
         flags += ['--amalgamation']
 
     if target in ['bsi', 'nist']:
@@ -292,7 +294,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 cc_bin = os.path.join(toolchain_dir, 'armv7a-linux-androideabi%d-clang++' % (api_lvl))
                 flags += ['--cpu=armv7',
                           '--ar-command=%s' % (os.path.join(toolchain_dir, 'llvm-ar'))]
-            elif target == 'cross-android-arm64':
+            elif target in ['cross-android-arm64', 'cross-android-arm64-amalgamation']:
                 cc_bin = os.path.join(toolchain_dir, 'aarch64-linux-android%d-clang++' % (api_lvl))
                 flags += ['--cpu=arm64',
                           '--ar-command=%s' % (os.path.join(toolchain_dir, 'llvm-ar'))]
@@ -319,7 +321,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 test_prefix = ['qemu-arm', '-L', '/usr/arm-linux-gnueabihf/']
                 # disable a few tests that are exceptionally slow under arm32 qemu
                 disabled_tests += ['dh_invalid', 'dlies', 'xmss_sign']
-            elif target == 'cross-arm64':
+            elif target in ['cross-arm64', 'cross-arm64-amalgamation']:
                 flags += ['--cpu=aarch64']
                 cc_bin = 'aarch64-linux-gnu-g++'
                 test_prefix = ['qemu-aarch64', '-L', '/usr/aarch64-linux-gnu/']
@@ -374,10 +376,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 # make sure clang ignores warnings in boost headers
                 flags += ["--extra-cxxflags=--system-header-prefix=boost/"]
 
-            if target_os in ['windows', 'mingw']:
-                # ./configure.py needs boost's location on Windows
-                if 'BOOST_INCLUDEDIR' in os.environ:
-                    flags += ['--with-external-includedir', os.environ.get('BOOST_INCLUDEDIR')]
+            if 'BOOST_INCLUDEDIR' in os.environ:
+                # ./configure.py needs boost's location on some platforms
+                # BOOST_INCLUDEDIR is set by the setup_gh_actions.* script
+                flags += ['--with-external-includedir', os.environ.get('BOOST_INCLUDEDIR')]
 
             if target_os == 'mingw':
                 # apparently mingw needs this legacy socket library version for reasons

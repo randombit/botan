@@ -31,7 +31,8 @@ inline uint32x4_t bqswap_32(uint32x4_t B) {
    return vreinterpretq_u32_u8(vqtbl1q_u8(vreinterpretq_u8_u32(B), vld1q_u8(bswap_tbl)));
 }
 
-inline void SM4_E(uint32x4_t& B0, uint32x4_t& B1, uint32x4_t& B2, uint32x4_t& B3, uint32x4_t K) {
+inline void BOTAN_FUNC_ISA("arch=armv8.2-a+sm4")
+   SM4_E(uint32x4_t& B0, uint32x4_t& B1, uint32x4_t& B2, uint32x4_t& B3, uint32x4_t K) {
    B0 = vsm4eq_u32(B0, K);
    B1 = vsm4eq_u32(B1, K);
    B2 = vsm4eq_u32(B2, K);

@@ -45,7 +45,7 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "cross-arm32" ]; then
         sudo apt-get -qq install qemu-user g++-arm-linux-gnueabihf
 
-    elif [ "$TARGET" = "cross-arm64" ]; then
+    elif [ "$TARGET" = "cross-arm64" ] || [ "$TARGET" = "cross-arm64-amalgamation" ]; then
         sudo apt-get -qq install qemu-user g++-aarch64-linux-gnu
 
     elif [ "$TARGET" = "cross-ppc64" ]; then
@@ -57,7 +57,7 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "cross-s390x" ]; then
         sudo apt-get -qq install qemu-user g++-s390x-linux-gnu
 
-    elif [ "$TARGET" = "cross-android-arm32" ] || [ "$TARGET" = "cross-android-arm64" ]; then
+    elif [ "$TARGET" = "cross-android-arm32" ] || [ "$TARGET" = "cross-android-arm64" ] || [ "$TARGET" = "cross-android-arm64-amalgamation" ]; then
         wget -nv https://dl.google.com/android/repository/"$ANDROID_NDK"-linux.zip
         unzip -qq "$ANDROID_NDK"-linux.zip
 
@@ -102,6 +102,11 @@ else
 
     if [ "$TARGET" = "shared" ]; then
         brew install boost
+
+        # On Apple Silicon we need to specify the include directory
+        # so that the build can find the boost headers.
+        boostincdir=$(brew --prefix boost)/include
+        echo "BOOST_INCLUDEDIR=$boostincdir" >> "$GITHUB_ENV"
     elif [ "$TARGET" = "emscripten" ]; then
         brew install emscripten
     fi
