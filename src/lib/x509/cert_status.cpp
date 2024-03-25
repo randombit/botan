@@ -27,6 +27,10 @@ const char* to_string(Certificate_Status_Code code) {
          return "OCSP URL not available";
       case Certificate_Status_Code::OCSP_SERVER_NOT_AVAILABLE:
          return "OCSP server not available";
+      case Certificate_Status_Code::TRUSTED_CERT_NOT_YET_VALID:
+         return "Trusted certificate is not yet valid";
+      case Certificate_Status_Code::TRUSTED_CERT_HAS_EXPIRED:
+         return "Trusted certificate has expired";
       case Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED:
          return "OCSP issuer is not trustworthy";
 

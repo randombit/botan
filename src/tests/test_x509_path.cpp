@@ -631,6 +631,108 @@ std::vector<Test::Result> Validate_Name_Constraint_NoCheckSelf::run() {
 
 BOTAN_REGISTER_TEST("x509", "x509_name_constraint_no_check_self", Validate_Name_Constraint_NoCheckSelf);
 
+class Root_Cert_Time_Check_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         if(Botan::has_filesystem_impl() == false) {
+            return {Test::Result::Note("Path validation", "Skipping due to missing filesystem access")};
+         }
+
+         const std::string trusted_root_crt = Test::data_file("/x509/misc/root_cert_time_check/root.crt");
+         const std::string leaf_crt = Test::data_file("/x509/misc/root_cert_time_check/leaf.crt");
+
+         const Botan::X509_Certificate trusted_root_cert(trusted_root_crt);
+         const Botan::X509_Certificate leaf_cert(leaf_crt);
+
+         Botan::Certificate_Store_In_Memory trusted;
+         trusted.add_certificate(trusted_root_cert);
+
+         const std::vector<Botan::X509_Certificate> chain = {leaf_cert};
+
+         Test::Result result("Root cert time check");
+
+         auto assert_path_validation_result = [&](std::string_view descr,
+                                                  bool ignore_trusted_root_time_range,
+                                                  uint32_t year,
+                                                  Botan::Certificate_Status_Code exp_status,
+                                                  std::optional<Botan::Certificate_Status_Code> exp_warning =
+                                                     std::nullopt) {
+            const Botan::Path_Validation_Restrictions restrictions(
+               false,
+               110,
+               false,
+               std::chrono::seconds::zero(),
+               std::make_unique<Botan::Certificate_Store_In_Memory>(),
+               ignore_trusted_root_time_range);
+
+            const Botan::Path_Validation_Result validation_result =
+               Botan::x509_path_validate(chain,
+                                         restrictions,
+                                         trusted,
+                                         "",
+                                         Botan::Usage_Type::UNSPECIFIED,
+                                         Botan::calendar_point(year, 1, 1, 1, 0, 0).to_std_timepoint());
+            const std::string descr_str = Botan::fmt(
+               "Root cert validity range {}: {}", ignore_trusted_root_time_range ? "ignored" : "checked", descr);
+
+            result.test_is_eq(descr_str, validation_result.result(), exp_status);
+            const auto warnings = validation_result.warnings();
+            BOTAN_ASSERT_NOMSG(warnings.size() == 2);
+            result.confirm("No warning for leaf cert", warnings.at(0).empty());
+            if(exp_warning) {
+               result.confirm("Warning for root cert",
+                              warnings.at(1).size() == 1 && warnings.at(1).contains(*exp_warning));
+            } else {
+               result.confirm("No warning for root cert", warnings.at(1).empty());
+            }
+         };
+         // (Trusted) root cert validity range: 2022-2028
+         // Leaf cert validity range: 2020-2030
+
+         // Trusted root time range is checked
+         assert_path_validation_result(
+            "Root and leaf certs in validity range", false, 2025, Botan::Certificate_Status_Code::OK);
+         assert_path_validation_result(
+            "Root and leaf certs are expired", false, 2031, Botan::Certificate_Status_Code::CERT_HAS_EXPIRED);
+         assert_path_validation_result(
+            "Root and leaf certs are not yet valid", false, 2019, Botan::Certificate_Status_Code::CERT_NOT_YET_VALID);
+         assert_path_validation_result(
+            "Root cert is expired, leaf cert not", false, 2029, Botan::Certificate_Status_Code::CERT_HAS_EXPIRED);
+         assert_path_validation_result("Root cert is not yet valid, leaf cert is",
+                                       false,
+                                       2021,
+                                       Botan::Certificate_Status_Code::CERT_NOT_YET_VALID);
+
+         // Trusted root time range is ignored
+         assert_path_validation_result(
+            "Root and leaf certs in validity range", true, 2025, Botan::Certificate_Status_Code::OK);
+         assert_path_validation_result("Root and leaf certs are expired",
+                                       true,
+                                       2031,
+                                       Botan::Certificate_Status_Code::CERT_HAS_EXPIRED,
+                                       Botan::Certificate_Status_Code::TRUSTED_CERT_HAS_EXPIRED);
+         assert_path_validation_result("Root and leaf certs are not yet valid",
+                                       true,
+                                       2019,
+                                       Botan::Certificate_Status_Code::CERT_NOT_YET_VALID,
+                                       Botan::Certificate_Status_Code::TRUSTED_CERT_NOT_YET_VALID);
+         assert_path_validation_result("Root cert is expired, leaf cert not",
+                                       true,
+                                       2029,
+                                       Botan::Certificate_Status_Code::OK,
+                                       Botan::Certificate_Status_Code::TRUSTED_CERT_HAS_EXPIRED);
+         assert_path_validation_result("Root cert is not yet valid, leaf cert is",
+                                       true,
+                                       2021,
+                                       Botan::Certificate_Status_Code::OK,
+                                       Botan::Certificate_Status_Code::TRUSTED_CERT_NOT_YET_VALID);
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("x509", "x509_root_cert_time_check", Root_Cert_Time_Check_Test);
+
 class BSI_Path_Validation_Tests final : public Test
 
 {
