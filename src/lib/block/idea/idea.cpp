@@ -57,16 +57,19 @@ uint16_t mul_inv(uint16_t x) {
 /**
 * IDEA is involutional, depending only on the key schedule
 */
-void idea_op(const uint8_t in[], uint8_t out[], size_t blocks, const uint16_t K[52]) {
+void idea_op(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks, const uint16_t K[52]) {
    const size_t BLOCK_SIZE = 8;
 
-   CT::poison(in, blocks * 8);
-   CT::poison(out, blocks * 8);
+   const auto original_in_ptr = in.data();
+   const auto original_out_ptr = out.data();
+
+   CT::poison(original_in_ptr, blocks * 8);
+   CT::poison(original_out_ptr, blocks * 8);
    CT::poison(K, 52);
 
    for(size_t i = 0; i < blocks; ++i) {
       uint16_t X1, X2, X3, X4;
-      load_be(in + BLOCK_SIZE * i, X1, X2, X3, X4);
+      load_be(in.first<BLOCK_SIZE>(), X1, X2, X3, X4);
 
       for(size_t j = 0; j != 8; ++j) {
          X1 = mul(X1, K[6 * j + 0]);
@@ -92,11 +95,14 @@ void idea_op(const uint8_t in[], uint8_t out[], size_t blocks, const uint16_t K[
       X3 += K[49];
       X4 = mul(X4, K[51]);
 
-      store_be(out + BLOCK_SIZE * i, X1, X3, X2, X4);
+      store_be(out.first<BLOCK_SIZE>(), X1, X3, X2, X4);
+
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
    }
 
-   CT::unpoison(in, blocks * 8);
-   CT::unpoison(out, blocks * 8);
+   CT::unpoison(original_in_ptr, blocks * 8);
+   CT::unpoison(original_out_ptr, blocks * 8);
    CT::unpoison(K, 52);
 }
 
@@ -125,15 +131,15 @@ std::string IDEA::provider() const {
 /*
 * IDEA Encryption
 */
-void IDEA::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void IDEA::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_IDEA_SSE2)
    if(CPUID::has_sse2()) {
       while(blocks >= 8) {
-         sse2_idea_op_8(in, out, m_EK.data());
-         in += 8 * BLOCK_SIZE;
-         out += 8 * BLOCK_SIZE;
+         sse2_idea_op_8(in.data(), out.data(), m_EK.data());
+         in = in.subspan(8 * BLOCK_SIZE);
+         out = out.subspan(8 * BLOCK_SIZE);
          blocks -= 8;
       }
    }
@@ -145,15 +151,15 @@ void IDEA::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
 /*
 * IDEA Decryption
 */
-void IDEA::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void IDEA::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_IDEA_SSE2)
    if(CPUID::has_sse2()) {
       while(blocks >= 8) {
-         sse2_idea_op_8(in, out, m_DK.data());
-         in += 8 * BLOCK_SIZE;
-         out += 8 * BLOCK_SIZE;
+         sse2_idea_op_8(in.data(), out.data(), m_DK.data());
+         in = in.subspan(8 * BLOCK_SIZE);
+         out = out.subspan(8 * BLOCK_SIZE);
          blocks -= 8;
       }
    }

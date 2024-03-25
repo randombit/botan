@@ -17,9 +17,6 @@ namespace Botan {
 */
 class Twofish final : public Block_Cipher_Fixed_Params<16, 16, 32, 8> {
    public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-
       void clear() override;
 
       std::string name() const override { return "Twofish"; }
@@ -30,6 +27,8 @@ class Twofish final : public Block_Cipher_Fixed_Params<16, 16, 32, 8> {
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
 
       static const uint32_t MDS0[256];
       static const uint32_t MDS1[256];

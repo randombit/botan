@@ -20,7 +20,7 @@ namespace Botan {
 /*
 * Serpent Encryption
 */
-void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Serpent::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    using namespace Botan::Serpent_F;
 
    assert_key_material_set();
@@ -28,9 +28,9 @@ void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #if defined(BOTAN_HAS_SERPENT_AVX512)
    if(CPUID::has_avx512()) {
       while(blocks >= 16) {
-         avx512_encrypt_16(in, out);
-         in += 16 * BLOCK_SIZE;
-         out += 16 * BLOCK_SIZE;
+         avx512_encrypt_16(in.data(), out.data());
+         in = in.subspan(16 * BLOCK_SIZE);
+         out = out.subspan(16 * BLOCK_SIZE);
          blocks -= 16;
       }
    }
@@ -39,9 +39,9 @@ void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #if defined(BOTAN_HAS_SERPENT_AVX2)
    if(CPUID::has_avx2()) {
       while(blocks >= 8) {
-         avx2_encrypt_8(in, out);
-         in += 8 * BLOCK_SIZE;
-         out += 8 * BLOCK_SIZE;
+         avx2_encrypt_8(in.data(), out.data());
+         in = in.subspan(8 * BLOCK_SIZE);
+         out = out.subspan(8 * BLOCK_SIZE);
          blocks -= 8;
       }
    }
@@ -50,9 +50,9 @@ void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #if defined(BOTAN_HAS_SERPENT_SIMD)
    if(CPUID::has_simd_32()) {
       while(blocks >= 4) {
-         simd_encrypt_4(in, out);
-         in += 4 * BLOCK_SIZE;
-         out += 4 * BLOCK_SIZE;
+         simd_encrypt_4(in.data(), out.data());
+         in = in.subspan(4 * BLOCK_SIZE);
+         out = out.subspan(4 * BLOCK_SIZE);
          blocks -= 4;
       }
    }
@@ -62,7 +62,7 @@ void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 
    for(size_t i = 0; i < blocks; ++i) {
       uint32_t B0, B1, B2, B3;
-      load_le(in + 16 * i, B0, B1, B2, B3);
+      load_le(in.first<BLOCK_SIZE>(), B0, B1, B2, B3);
 
       key_xor(0, B0, B1, B2, B3);
       SBoxE0(B0, B1, B2, B3);
@@ -161,14 +161,17 @@ void Serpent::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
       SBoxE7(B0, B1, B2, B3);
       key_xor(32, B0, B1, B2, B3);
 
-      store_le(out + 16 * i, B0, B1, B2, B3);
+      store_le(out.first<BLOCK_SIZE>(), B0, B1, B2, B3);
+
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
    }
 }
 
 /*
 * Serpent Decryption
 */
-void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Serpent::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    using namespace Botan::Serpent_F;
 
    assert_key_material_set();
@@ -176,9 +179,9 @@ void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #if defined(BOTAN_HAS_SERPENT_AVX512)
    if(CPUID::has_avx512()) {
       while(blocks >= 16) {
-         avx512_decrypt_16(in, out);
-         in += 16 * BLOCK_SIZE;
-         out += 16 * BLOCK_SIZE;
+         avx512_decrypt_16(in.data(), out.data());
+         in = in.subspan(16 * BLOCK_SIZE);
+         out = out.subspan(16 * BLOCK_SIZE);
          blocks -= 16;
       }
    }
@@ -187,9 +190,9 @@ void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #if defined(BOTAN_HAS_SERPENT_AVX2)
    if(CPUID::has_avx2()) {
       while(blocks >= 8) {
-         avx2_decrypt_8(in, out);
-         in += 8 * BLOCK_SIZE;
-         out += 8 * BLOCK_SIZE;
+         avx2_decrypt_8(in.data(), out.data());
+         in = in.subspan(8 * BLOCK_SIZE);
+         out = out.subspan(8 * BLOCK_SIZE);
          blocks -= 8;
       }
    }
@@ -198,9 +201,9 @@ void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 #if defined(BOTAN_HAS_SERPENT_SIMD)
    if(CPUID::has_simd_32()) {
       while(blocks >= 4) {
-         simd_decrypt_4(in, out);
-         in += 4 * BLOCK_SIZE;
-         out += 4 * BLOCK_SIZE;
+         simd_decrypt_4(in.data(), out.data());
+         in = in.subspan(4 * BLOCK_SIZE);
+         out = out.subspan(4 * BLOCK_SIZE);
          blocks -= 4;
       }
    }
@@ -210,7 +213,7 @@ void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
 
    for(size_t i = 0; i < blocks; ++i) {
       uint32_t B0, B1, B2, B3;
-      load_le(in + 16 * i, B0, B1, B2, B3);
+      load_le(in.first<BLOCK_SIZE>(), B0, B1, B2, B3);
 
       key_xor(32, B0, B1, B2, B3);
       SBoxD7(B0, B1, B2, B3);
@@ -309,7 +312,10 @@ void Serpent::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
       SBoxD0(B0, B1, B2, B3);
       key_xor(0, B0, B1, B2, B3);
 
-      store_le(out + 16 * i, B0, B1, B2, B3);
+      store_le(out.first<BLOCK_SIZE>(), B0, B1, B2, B3);
+
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
    }
 }
 
@@ -325,9 +331,12 @@ void Serpent::key_schedule(std::span<const uint8_t> key) {
 
    const uint32_t PHI = 0x9E3779B9;
 
+   // TODO: Once GH #3869 is merged, simply do:
+   //
+   //    auto W = load_le<secure_vector<uint32_t>(key);
    secure_vector<uint32_t> W(140);
    for(size_t i = 0; i != key.size() / 4; ++i) {
-      W[i] = load_le<uint32_t>(key.data(), i);
+      W[i] = load_le(key.subspan(i * 4).first<4>());
    }
 
    W[key.size() / 4] |= uint32_t(1) << ((key.size() % 4) * 8);

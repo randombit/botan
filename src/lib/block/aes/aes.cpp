@@ -501,7 +501,10 @@ void inv_mix_columns(uint32_t B[8]) {
 /*
 * AES Encryption
 */
-void aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks, const secure_vector<uint32_t>& EK) {
+void aes_encrypt_n(std::span<const uint8_t> in,
+                   std::span<uint8_t> out,
+                   size_t blocks,
+                   const secure_vector<uint32_t>& EK) {
    BOTAN_ASSERT(EK.size() == 44 || EK.size() == 52 || EK.size() == 60, "Key was set");
 
    const size_t rounds = (EK.size() - 4) / 4;
@@ -519,7 +522,7 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks, const secur
 
       uint32_t B[8] = {0};
 
-      load_be(B, in, this_loop * 4);
+      load_be(B, in.data(), this_loop * 4);
 
       CT::poison(B, 8);
 
@@ -550,10 +553,10 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks, const secur
 
       CT::unpoison(B, 8);
 
-      copy_out_be(std::span(out, this_loop * 4 * sizeof(uint32_t)), B);
+      copy_out_be(out.first(this_loop * BLOCK_SIZE), B);
 
-      in += this_loop * BLOCK_SIZE;
-      out += this_loop * BLOCK_SIZE;
+      in = in.subspan(this_loop * BLOCK_SIZE);
+      out = out.subspan(this_loop * BLOCK_SIZE);
       blocks -= this_loop;
    }
 }
@@ -561,7 +564,10 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks, const secur
 /*
 * AES Decryption
 */
-void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks, const secure_vector<uint32_t>& DK) {
+void aes_decrypt_n(std::span<const uint8_t> in,
+                   std::span<uint8_t> out,
+                   size_t blocks,
+                   const secure_vector<uint32_t>& DK) {
    BOTAN_ASSERT(DK.size() == 44 || DK.size() == 52 || DK.size() == 60, "Key was set");
 
    const size_t rounds = (DK.size() - 4) / 4;
@@ -581,7 +587,7 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks, const secur
 
       CT::poison(B, 8);
 
-      load_be(B, in, this_loop * 4);
+      load_be(B, in.data(), this_loop * 4);
 
       for(size_t i = 0; i != 8; ++i) {
          B[i] ^= DK[i % 4];
@@ -610,10 +616,10 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks, const secur
 
       CT::unpoison(B, 8);
 
-      copy_out_be(std::span(out, this_loop * 4 * sizeof(uint32_t)), B);
+      copy_out_be(out.first(this_loop * BLOCK_SIZE), B);
 
-      in += this_loop * BLOCK_SIZE;
-      out += this_loop * BLOCK_SIZE;
+      in = in.subspan(this_loop * BLOCK_SIZE);
+      out = out.subspan(this_loop * BLOCK_SIZE);
       blocks -= this_loop;
    }
 }
@@ -809,36 +815,36 @@ bool AES_256::has_keying_material() const {
    return !m_EK.empty();
 }
 
-void AES_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void AES_128::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has_hw_aes()) {
-      return hw_aes_encrypt_n(in, out, blocks);
+      return hw_aes_encrypt_n(in.data(), out.data(), blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
    if(CPUID::has_vperm()) {
-      return vperm_encrypt_n(in, out, blocks);
+      return vperm_encrypt_n(in.data(), out.data(), blocks);
    }
 #endif
 
    aes_encrypt_n(in, out, blocks, m_EK);
 }
 
-void AES_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void AES_128::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has_hw_aes()) {
-      return hw_aes_decrypt_n(in, out, blocks);
+      return hw_aes_decrypt_n(in.data(), out.data(), blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
    if(CPUID::has_vperm()) {
-      return vperm_decrypt_n(in, out, blocks);
+      return vperm_decrypt_n(in.data(), out.data(), blocks);
    }
 #endif
 
@@ -872,36 +878,36 @@ void AES_128::clear() {
    zap(m_DK);
 }
 
-void AES_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void AES_192::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has_hw_aes()) {
-      return hw_aes_encrypt_n(in, out, blocks);
+      return hw_aes_encrypt_n(in.data(), out.data(), blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
    if(CPUID::has_vperm()) {
-      return vperm_encrypt_n(in, out, blocks);
+      return vperm_encrypt_n(in.data(), out.data(), blocks);
    }
 #endif
 
    aes_encrypt_n(in, out, blocks, m_EK);
 }
 
-void AES_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void AES_192::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has_hw_aes()) {
-      return hw_aes_decrypt_n(in, out, blocks);
+      return hw_aes_decrypt_n(in.data(), out.data(), blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
    if(CPUID::has_vperm()) {
-      return vperm_decrypt_n(in, out, blocks);
+      return vperm_decrypt_n(in.data(), out.data(), blocks);
    }
 #endif
 
@@ -935,36 +941,36 @@ void AES_192::clear() {
    zap(m_DK);
 }
 
-void AES_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void AES_256::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has_hw_aes()) {
-      return hw_aes_encrypt_n(in, out, blocks);
+      return hw_aes_encrypt_n(in.data(), out.data(), blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
    if(CPUID::has_vperm()) {
-      return vperm_encrypt_n(in, out, blocks);
+      return vperm_encrypt_n(in.data(), out.data(), blocks);
    }
 #endif
 
    aes_encrypt_n(in, out, blocks, m_EK);
 }
 
-void AES_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void AES_256::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_HW_AES_SUPPORT)
    if(CPUID::has_hw_aes()) {
-      return hw_aes_decrypt_n(in, out, blocks);
+      return hw_aes_decrypt_n(in.data(), out.data(), blocks);
    }
 #endif
 
 #if defined(BOTAN_HAS_AES_VPERM)
    if(CPUID::has_vperm()) {
-      return vperm_decrypt_n(in, out, blocks);
+      return vperm_decrypt_n(in.data(), out.data(), blocks);
    }
 #endif
 

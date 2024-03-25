@@ -43,22 +43,22 @@ class OCB_Wide_Test_Block_Cipher final : public Botan::BlockCipher {
 
       Botan::Key_Length_Specification key_spec() const override { return Botan::Key_Length_Specification(m_bs); }
 
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override {
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override {
          while(blocks) {
-            Botan::copy_mem(out, in, m_bs);
-            Botan::poly_double_n(out, m_bs);
+            Botan::copy_mem(out.first(m_bs), in.first(m_bs));
+            Botan::poly_double_n(out.data(), m_bs);
 
             for(size_t i = 0; i != m_bs; ++i) {
                out[i] ^= m_key[i];
             }
 
             blocks--;
-            in += block_size();
-            out += block_size();
+            in = in.subspan(block_size());
+            out = out.subspan(block_size());
          }
       }
 
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override {
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override {
          while(blocks) {
             for(size_t i = 0; i != m_bs; ++i) {
                out[i] = in[i] ^ m_key[i];
@@ -90,8 +90,8 @@ class OCB_Wide_Test_Block_Cipher final : public Botan::BlockCipher {
             }
 
             blocks--;
-            in += block_size();
-            out += block_size();
+            in = in.subspan(block_size());
+            out = out.subspan(block_size());
          }
       }
 
@@ -356,16 +356,12 @@ class OCB_Null_Cipher final : public Botan::BlockCipher {
 
       Botan::Key_Length_Specification key_spec() const override { return Botan::Key_Length_Specification(m_bs); }
 
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override {
-         if(in != out) {
-            Botan::copy_mem(out, in, blocks * m_bs);
-         }
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t) const override {
+         Botan::copy_mem(out, in);
       }
 
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override {
-         if(in != out) {
-            Botan::copy_mem(out, in, blocks * m_bs);
-         }
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t) const override {
+         Botan::copy_mem(out, in);
       }
 
       size_t parallelism() const override { return m_parallelism; }

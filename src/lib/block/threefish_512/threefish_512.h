@@ -17,9 +17,6 @@ namespace Botan {
 */
 class Threefish_512 final : public Block_Cipher_Fixed_Params<64, 64, 0, 1, Tweakable_Block_Cipher> {
    public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-
       void set_tweak(const uint8_t tweak[], size_t len) override;
 
       void clear() override;
@@ -32,6 +29,8 @@ class Threefish_512 final : public Block_Cipher_Fixed_Params<64, 64, 0, 1, Tweak
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
 
       // Interface for Skein
       friend class Skein_512;

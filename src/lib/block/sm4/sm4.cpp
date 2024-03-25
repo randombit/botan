@@ -158,24 +158,18 @@ BOTAN_FORCE_INLINE void SM4_D(uint32_t& B0,
 /*
 * SM4 Encryption
 */
-void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void SM4::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_SM4_ARMV8)
-   if(CPUID::has_arm_sm4())
-      return sm4_armv8_encrypt(in, out, blocks);
+   if(CPUID::has_arm_sm4()) {
+      return sm4_armv8_encrypt(in.data(), out.data(), blocks);
+   }
 #endif
 
    while(blocks >= 2) {
-      uint32_t B0 = load_be<uint32_t>(in, 0);
-      uint32_t B1 = load_be<uint32_t>(in, 1);
-      uint32_t B2 = load_be<uint32_t>(in, 2);
-      uint32_t B3 = load_be<uint32_t>(in, 3);
-
-      uint32_t C0 = load_be<uint32_t>(in, 4);
-      uint32_t C1 = load_be<uint32_t>(in, 5);
-      uint32_t C2 = load_be<uint32_t>(in, 6);
-      uint32_t C3 = load_be<uint32_t>(in, 7);
+      uint32_t B0, B1, B2, B3, C0, C1, C2, C3;
+      load_be(in.first<2 * BLOCK_SIZE>(), B0, B1, B2, B3, C0, C1, C2, C3);
 
       SM4_E<0>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T_slow);
       SM4_E<1>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
@@ -186,18 +180,16 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
       SM4_E<6>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
       SM4_E<7>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T_slow);
 
-      store_be(out, B3, B2, B1, B0, C3, C2, C1, C0);
+      store_be(out.first<2 * BLOCK_SIZE>(), B3, B2, B1, B0, C3, C2, C1, C0);
 
-      in += 2 * BLOCK_SIZE;
-      out += 2 * BLOCK_SIZE;
+      in = in.subspan(2 * BLOCK_SIZE);
+      out = out.subspan(2 * BLOCK_SIZE);
       blocks -= 2;
    }
 
    for(size_t i = 0; i != blocks; ++i) {
-      uint32_t B0 = load_be<uint32_t>(in, 0);
-      uint32_t B1 = load_be<uint32_t>(in, 1);
-      uint32_t B2 = load_be<uint32_t>(in, 2);
-      uint32_t B3 = load_be<uint32_t>(in, 3);
+      uint32_t B0, B1, B2, B3;
+      load_be(in.first<BLOCK_SIZE>(), B0, B1, B2, B3);
 
       SM4_E<0>(B0, B1, B2, B3, m_RK, SM4_T_slow);
       SM4_E<1>(B0, B1, B2, B3, m_RK, SM4_T);
@@ -208,34 +200,28 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
       SM4_E<6>(B0, B1, B2, B3, m_RK, SM4_T);
       SM4_E<7>(B0, B1, B2, B3, m_RK, SM4_T_slow);
 
-      store_be(out, B3, B2, B1, B0);
+      store_be(out.first<BLOCK_SIZE>(), B3, B2, B1, B0);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
    }
 }
 
 /*
 * SM4 Decryption
 */
-void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void SM4::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_SM4_ARMV8)
-   if(CPUID::has_arm_sm4())
-      return sm4_armv8_decrypt(in, out, blocks);
+   if(CPUID::has_arm_sm4()) {
+      return sm4_armv8_decrypt(in.data(), out.data(), blocks);
+   }
 #endif
 
    while(blocks >= 2) {
-      uint32_t B0 = load_be<uint32_t>(in, 0);
-      uint32_t B1 = load_be<uint32_t>(in, 1);
-      uint32_t B2 = load_be<uint32_t>(in, 2);
-      uint32_t B3 = load_be<uint32_t>(in, 3);
-
-      uint32_t C0 = load_be<uint32_t>(in, 4);
-      uint32_t C1 = load_be<uint32_t>(in, 5);
-      uint32_t C2 = load_be<uint32_t>(in, 6);
-      uint32_t C3 = load_be<uint32_t>(in, 7);
+      uint32_t B0, B1, B2, B3, C0, C1, C2, C3;
+      load_be(in.first<2 * BLOCK_SIZE>(), B0, B1, B2, B3, C0, C1, C2, C3);
 
       SM4_D<7>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T_slow);
       SM4_D<6>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
@@ -246,18 +232,16 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
       SM4_D<1>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T);
       SM4_D<0>(B0, B1, B2, B3, C0, C1, C2, C3, m_RK, SM4_T_slow);
 
-      store_be(out, B3, B2, B1, B0, C3, C2, C1, C0);
+      store_be(out.first<2 * BLOCK_SIZE>(), B3, B2, B1, B0, C3, C2, C1, C0);
 
-      in += 2 * BLOCK_SIZE;
-      out += 2 * BLOCK_SIZE;
+      in = in.subspan(2 * BLOCK_SIZE);
+      out = out.subspan(2 * BLOCK_SIZE);
       blocks -= 2;
    }
 
    for(size_t i = 0; i != blocks; ++i) {
-      uint32_t B0 = load_be<uint32_t>(in, 0);
-      uint32_t B1 = load_be<uint32_t>(in, 1);
-      uint32_t B2 = load_be<uint32_t>(in, 2);
-      uint32_t B3 = load_be<uint32_t>(in, 3);
+      uint32_t B0, B1, B2, B3;
+      load_be(in.first<BLOCK_SIZE>(), B0, B1, B2, B3);
 
       SM4_D<7>(B0, B1, B2, B3, m_RK, SM4_T_slow);
       SM4_D<6>(B0, B1, B2, B3, m_RK, SM4_T);
@@ -268,10 +252,10 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
       SM4_D<1>(B0, B1, B2, B3, m_RK, SM4_T);
       SM4_D<0>(B0, B1, B2, B3, m_RK, SM4_T_slow);
 
-      store_be(out, B3, B2, B1, B0);
+      store_be(out.first<BLOCK_SIZE>(), B3, B2, B1, B0);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
    }
 }
 

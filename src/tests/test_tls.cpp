@@ -153,12 +153,12 @@ class TLS_CBC_Tests final : public Text_Based_Test {
          public:
             explicit Noop_Block_Cipher(size_t bs) : m_bs(bs) {}
 
-            void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override {
-               Botan::copy_mem(out, in, blocks * m_bs);
+            void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t) const override {
+               Botan::copy_mem(out, in);
             }
 
-            void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override {
-               Botan::copy_mem(out, in, blocks * m_bs);
+            void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t) const override {
+               Botan::copy_mem(out, in);
             }
 
             size_t block_size() const override { return m_bs; }

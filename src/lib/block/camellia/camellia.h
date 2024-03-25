@@ -17,9 +17,6 @@ namespace Botan {
 */
 class Camellia_128 final : public Block_Cipher_Fixed_Params<16, 16> {
    public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-
       void clear() override;
 
       std::string name() const override { return "Camellia-128"; }
@@ -30,6 +27,8 @@ class Camellia_128 final : public Block_Cipher_Fixed_Params<16, 16> {
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
 
       secure_vector<uint64_t> m_SK;
 };
@@ -39,9 +38,6 @@ class Camellia_128 final : public Block_Cipher_Fixed_Params<16, 16> {
 */
 class Camellia_192 final : public Block_Cipher_Fixed_Params<16, 24> {
    public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-
       void clear() override;
 
       std::string name() const override { return "Camellia-192"; }
@@ -52,6 +48,8 @@ class Camellia_192 final : public Block_Cipher_Fixed_Params<16, 24> {
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
 
       secure_vector<uint64_t> m_SK;
 };
@@ -61,9 +59,6 @@ class Camellia_192 final : public Block_Cipher_Fixed_Params<16, 24> {
 */
 class Camellia_256 final : public Block_Cipher_Fixed_Params<16, 32> {
    public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-
       void clear() override;
 
       std::string name() const override { return "Camellia-256"; }
@@ -74,6 +69,8 @@ class Camellia_256 final : public Block_Cipher_Fixed_Params<16, 32> {
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
 
       secure_vector<uint64_t> m_SK;
 };

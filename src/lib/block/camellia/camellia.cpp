@@ -137,12 +137,16 @@ inline uint64_t FLINV(uint64_t v, uint64_t K) {
 /*
 * Camellia Encryption
 */
-void encrypt(const uint8_t in[], uint8_t out[], size_t blocks, const secure_vector<uint64_t>& SK, const size_t rounds) {
+void encrypt(std::span<const uint8_t> in,
+             std::span<uint8_t> out,
+             size_t blocks,
+             const secure_vector<uint64_t>& SK,
+             const size_t rounds) {
    prefetch_arrays(SBOX1, SBOX2, SBOX3, SBOX4);
 
    for(size_t i = 0; i < blocks; ++i) {
       uint64_t D1, D2;
-      load_be(in + 16 * i, D1, D2);
+      load_be(in.first<16>(), D1, D2);
 
       const uint64_t* K = SK.data();
 
@@ -168,19 +172,26 @@ void encrypt(const uint8_t in[], uint8_t out[], size_t blocks, const secure_vect
       D2 ^= *K++;
       D1 ^= *K++;
 
-      store_be(out + 16 * i, D2, D1);
+      store_be(out.first<16>(), D2, D1);
+
+      in = in.subspan(16);
+      out = out.subspan(16);
    }
 }
 
 /*
 * Camellia Decryption
 */
-void decrypt(const uint8_t in[], uint8_t out[], size_t blocks, const secure_vector<uint64_t>& SK, const size_t rounds) {
+void decrypt(std::span<const uint8_t> in,
+             std::span<uint8_t> out,
+             size_t blocks,
+             const secure_vector<uint64_t>& SK,
+             const size_t rounds) {
    prefetch_arrays(SBOX1, SBOX2, SBOX3, SBOX4);
 
    for(size_t i = 0; i < blocks; ++i) {
       uint64_t D1, D2;
-      load_be(in + 16 * i, D1, D2);
+      load_be(in.first<16>(), D1, D2);
 
       const uint64_t* K = &SK[SK.size() - 1];
 
@@ -206,7 +217,10 @@ void decrypt(const uint8_t in[], uint8_t out[], size_t blocks, const secure_vect
       D1 ^= *K--;
       D2 ^= *K;
 
-      store_be(out + 16 * i, D2, D1);
+      store_be(out.first<16>(), D2, D1);
+
+      in = in.subspan(16);
+      out = out.subspan(16);
    }
 }
 
@@ -340,32 +354,32 @@ void key_schedule(secure_vector<uint64_t>& SK, std::span<const uint8_t> key) {
 
 }  // namespace
 
-void Camellia_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Camellia_128::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
    Camellia_F::encrypt(in, out, blocks, m_SK, 9);
 }
 
-void Camellia_192::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Camellia_192::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
    Camellia_F::encrypt(in, out, blocks, m_SK, 12);
 }
 
-void Camellia_256::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Camellia_256::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
    Camellia_F::encrypt(in, out, blocks, m_SK, 12);
 }
 
-void Camellia_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Camellia_128::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
    Camellia_F::decrypt(in, out, blocks, m_SK, 9);
 }
 
-void Camellia_192::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Camellia_192::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
    Camellia_F::decrypt(in, out, blocks, m_SK, 12);
 }
 
-void Camellia_256::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Camellia_256::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
    Camellia_F::decrypt(in, out, blocks, m_SK, 12);
 }

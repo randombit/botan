@@ -15,60 +15,68 @@ namespace Botan {
 /*
 * Lion Encryption
 */
-void Lion::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Lion::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
    const size_t LEFT_SIZE = left_size();
    const size_t RIGHT_SIZE = right_size();
 
-   secure_vector<uint8_t> buffer_vec(LEFT_SIZE);
-   uint8_t* buffer = buffer_vec.data();
+   secure_vector<uint8_t> buffer(LEFT_SIZE);
 
    for(size_t i = 0; i != blocks; ++i) {
-      xor_buf(buffer, in, m_key1.data(), LEFT_SIZE);
-      m_cipher->set_key(buffer, LEFT_SIZE);
-      m_cipher->cipher(in + LEFT_SIZE, out + LEFT_SIZE, RIGHT_SIZE);
+      const auto in_left = in.first(LEFT_SIZE);
+      const auto in_right = in.subspan(LEFT_SIZE, RIGHT_SIZE);
+      const auto out_left = out.first(LEFT_SIZE);
+      const auto out_right = out.subspan(LEFT_SIZE, RIGHT_SIZE);
 
-      m_hash->update(out + LEFT_SIZE, RIGHT_SIZE);
+      xor_buf(buffer, in_left, m_key1);
+      m_cipher->set_key(buffer);
+      m_cipher->cipher(in_right, out_right);
+
+      m_hash->update(out_right);
       m_hash->final(buffer);
-      xor_buf(out, in, buffer, LEFT_SIZE);
+      xor_buf(out_left, in_left, buffer);
 
-      xor_buf(buffer, out, m_key2.data(), LEFT_SIZE);
-      m_cipher->set_key(buffer, LEFT_SIZE);
-      m_cipher->cipher1(out + LEFT_SIZE, RIGHT_SIZE);
+      xor_buf(buffer, out_left, m_key2);
+      m_cipher->set_key(buffer);
+      m_cipher->cipher1(out_right);
 
-      in += m_block_size;
-      out += m_block_size;
+      in = in.subspan(m_block_size);
+      out = out.subspan(m_block_size);
    }
 }
 
 /*
 * Lion Decryption
 */
-void Lion::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Lion::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
    const size_t LEFT_SIZE = left_size();
    const size_t RIGHT_SIZE = right_size();
 
-   secure_vector<uint8_t> buffer_vec(LEFT_SIZE);
-   uint8_t* buffer = buffer_vec.data();
+   secure_vector<uint8_t> buffer(LEFT_SIZE);
 
    for(size_t i = 0; i != blocks; ++i) {
-      xor_buf(buffer, in, m_key2.data(), LEFT_SIZE);
-      m_cipher->set_key(buffer, LEFT_SIZE);
-      m_cipher->cipher(in + LEFT_SIZE, out + LEFT_SIZE, RIGHT_SIZE);
+      const auto in_left = in.first(LEFT_SIZE);
+      const auto in_right = in.subspan(LEFT_SIZE, RIGHT_SIZE);
+      const auto out_left = out.first(LEFT_SIZE);
+      const auto out_right = out.subspan(LEFT_SIZE, RIGHT_SIZE);
 
-      m_hash->update(out + LEFT_SIZE, RIGHT_SIZE);
+      xor_buf(buffer, in_left, m_key2);
+      m_cipher->set_key(buffer);
+      m_cipher->cipher(in_right, out_right);
+
+      m_hash->update(out_right);
       m_hash->final(buffer);
-      xor_buf(out, in, buffer, LEFT_SIZE);
+      xor_buf(out_left, in_left, buffer);
 
-      xor_buf(buffer, out, m_key1.data(), LEFT_SIZE);
-      m_cipher->set_key(buffer, LEFT_SIZE);
-      m_cipher->cipher1(out + LEFT_SIZE, RIGHT_SIZE);
+      xor_buf(buffer, out_left, m_key1);
+      m_cipher->set_key(buffer);
+      m_cipher->cipher1(out_right);
 
-      in += m_block_size;
-      out += m_block_size;
+      in = in.subspan(m_block_size);
+      out = out.subspan(m_block_size);
    }
 }
 
@@ -86,10 +94,10 @@ void Lion::key_schedule(std::span<const uint8_t> key) {
 
    m_key1.resize(left_size());
    m_key2.resize(left_size());
-   clear_mem(m_key1.data(), m_key1.size());
-   clear_mem(m_key2.data(), m_key2.size());
-   copy_mem(m_key1.data(), key.data(), half);
-   copy_mem(m_key2.data(), key.subspan(half, half).data(), half);
+   clear_mem(m_key1);
+   clear_mem(m_key2);
+   copy_mem(std::span(m_key1).first(half), key.first(half));
+   copy_mem(std::span(m_key2).first(half), key.subspan(half, half));
 }
 
 /*

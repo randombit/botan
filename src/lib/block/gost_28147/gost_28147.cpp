@@ -89,12 +89,12 @@ void GOST_ROUND2(uint32_t& N1, uint32_t& N2, const std::vector<uint32_t>& S, con
 /*
 * GOST Encryption
 */
-void GOST_28147_89::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void GOST_28147_89::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
    for(size_t i = 0; i != blocks; ++i) {
-      uint32_t N1 = load_le<uint32_t>(in, 0);
-      uint32_t N2 = load_le<uint32_t>(in, 1);
+      uint32_t N1, N2;
+      load_le(in.first<BLOCK_SIZE>(), N1, N2);
 
       for(size_t j = 0; j != 3; ++j) {
          GOST_ROUND2<0, 1>(N1, N2, m_SBOX, m_EK);
@@ -108,22 +108,22 @@ void GOST_28147_89::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
       GOST_ROUND2<3, 2>(N1, N2, m_SBOX, m_EK);
       GOST_ROUND2<1, 0>(N1, N2, m_SBOX, m_EK);
 
-      store_le(out, N2, N1);
+      store_le(out.first<BLOCK_SIZE>(), N2, N1);
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
    }
 }
 
 /*
 * GOST Decryption
 */
-void GOST_28147_89::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void GOST_28147_89::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
    for(size_t i = 0; i != blocks; ++i) {
-      uint32_t N1 = load_le<uint32_t>(in, 0);
-      uint32_t N2 = load_le<uint32_t>(in, 1);
+      uint32_t N1, N2;
+      load_le(in.first<BLOCK_SIZE>(), N1, N2);
 
       GOST_ROUND2<0, 1>(N1, N2, m_SBOX, m_EK);
       GOST_ROUND2<2, 3>(N1, N2, m_SBOX, m_EK);
@@ -137,9 +137,9 @@ void GOST_28147_89::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
          GOST_ROUND2<1, 0>(N1, N2, m_SBOX, m_EK);
       }
 
-      store_le(out, N2, N1);
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
+      store_le(out.first<BLOCK_SIZE>(), N2, N1);
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
    }
 }
 

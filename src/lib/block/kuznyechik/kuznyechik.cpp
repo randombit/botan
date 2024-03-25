@@ -4285,11 +4285,11 @@ void Kuznyechik::key_schedule(std::span<const uint8_t> key) {
    m_has_keying_material = true;
 }
 
-void Kuznyechik::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Kuznyechik::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
    while(blocks) {
-      uint64_t x1 = load_le<uint64_t>(in, 0);
-      uint64_t x2 = load_le<uint64_t>(in, 1);
+      uint64_t x1, x2;
+      load_le(in.first<BLOCK_SIZE>(), x1, x2);
 
       x1 ^= m_rke[0][0];
       x2 ^= m_rke[0][1];
@@ -4330,19 +4330,19 @@ void Kuznyechik::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) con
       x1 ^= m_rke[9][0];
       x2 ^= m_rke[9][1];
 
-      store_le(out, x1, x2);
+      store_le(out.first<BLOCK_SIZE>(), x1, x2);
 
-      in += 16;
-      out += 16;
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
       blocks--;
    }
 }
 
-void Kuznyechik::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Kuznyechik::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
    while(blocks) {
-      uint64_t x1 = load_le<uint64_t>(in, 0);
-      uint64_t x2 = load_le<uint64_t>(in, 1);
+      uint64_t x1, x2;
+      load_le(in.first<BLOCK_SIZE>(), x1, x2);
 
       Kuznyechik_F::ILSS(x1, x2);
 
@@ -4386,10 +4386,10 @@ void Kuznyechik::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) con
       x1 ^= m_rkd[9][0];
       x2 ^= m_rkd[9][1];
 
-      store_le(out, x1, x2);
+      store_le(out.first<BLOCK_SIZE>(), x1, x2);
 
-      in += 16;
-      out += 16;
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
       blocks--;
    }
 }
