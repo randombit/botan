@@ -141,7 +141,7 @@ void BLAKE2s::final_result(std::span<uint8_t> out) {
    compress(true);  // final block flag = 1
 
    // little endian convert and store
-   copy_out_le<uint32_t>(out.data(), m_outlen, m_h);
+   copy_out_le(out.first(output_length()), m_h);
 
    clear();
 };
