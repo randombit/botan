@@ -17,9 +17,6 @@ namespace Botan {
 */
 class SM4 final : public Block_Cipher_Fixed_Params<16, 16> {
    public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-
       void clear() override;
 
       std::string name() const override { return "SM4"; }
@@ -32,6 +29,8 @@ class SM4 final : public Block_Cipher_Fixed_Params<16, 16> {
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
 
 #if defined(BOTAN_HAS_SM4_ARMV8)
       void sm4_armv8_encrypt(const uint8_t in[], uint8_t out[], size_t blocks) const;

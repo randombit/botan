@@ -183,12 +183,12 @@ inline uint32_t F3(uint32_t R, uint32_t MK, uint8_t RK) {
 /*
 * CAST-128 Encryption
 */
-void CAST_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void CAST_128::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
    while(blocks >= 2) {
       uint32_t L0, R0, L1, R1;
-      load_be(in, L0, R0, L1, R1);
+      load_be(in.first<2 * BLOCK_SIZE>(), L0, R0, L1, R1);
 
       L0 ^= F1(R0, m_MK[0], m_RK[0]);
       L1 ^= F1(R1, m_MK[0], m_RK[0]);
@@ -223,16 +223,16 @@ void CAST_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       R0 ^= F1(L0, m_MK[15], m_RK[15]);
       R1 ^= F1(L1, m_MK[15], m_RK[15]);
 
-      store_be(out, R0, L0, R1, L1);
+      store_be(out.first<2 * BLOCK_SIZE>(), R0, L0, R1, L1);
 
       blocks -= 2;
-      out += 2 * BLOCK_SIZE;
-      in += 2 * BLOCK_SIZE;
+      out = out.subspan(2 * BLOCK_SIZE);
+      in = in.subspan(2 * BLOCK_SIZE);
    }
 
    if(blocks) {
       uint32_t L, R;
-      load_be(in, L, R);
+      load_be(in.first<BLOCK_SIZE>(), L, R);
 
       L ^= F1(R, m_MK[0], m_RK[0]);
       R ^= F2(L, m_MK[1], m_RK[1]);
@@ -251,19 +251,19 @@ void CAST_128::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       L ^= F3(R, m_MK[14], m_RK[14]);
       R ^= F1(L, m_MK[15], m_RK[15]);
 
-      store_be(out, R, L);
+      store_be(out.first<BLOCK_SIZE>(), R, L);
    }
 }
 
 /*
 * CAST-128 Decryption
 */
-void CAST_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void CAST_128::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
    while(blocks >= 2) {
       uint32_t L0, R0, L1, R1;
-      load_be(in, L0, R0, L1, R1);
+      load_be(in.first<2 * BLOCK_SIZE>(), L0, R0, L1, R1);
 
       L0 ^= F1(R0, m_MK[15], m_RK[15]);
       L1 ^= F1(R1, m_MK[15], m_RK[15]);
@@ -298,16 +298,16 @@ void CAST_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       R0 ^= F1(L0, m_MK[0], m_RK[0]);
       R1 ^= F1(L1, m_MK[0], m_RK[0]);
 
-      store_be(out, R0, L0, R1, L1);
+      store_be(out.first<2 * BLOCK_SIZE>(), R0, L0, R1, L1);
 
       blocks -= 2;
-      out += 2 * BLOCK_SIZE;
-      in += 2 * BLOCK_SIZE;
+      out = out.subspan(2 * BLOCK_SIZE);
+      in = in.subspan(2 * BLOCK_SIZE);
    }
 
    if(blocks) {
       uint32_t L, R;
-      load_be(in, L, R);
+      load_be(in.first<BLOCK_SIZE>(), L, R);
 
       L ^= F1(R, m_MK[15], m_RK[15]);
       R ^= F3(L, m_MK[14], m_RK[14]);
@@ -326,7 +326,7 @@ void CAST_128::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       L ^= F2(R, m_MK[1], m_RK[1]);
       R ^= F1(L, m_MK[0], m_RK[0]);
 
-      store_be(out, R, L);
+      store_be(out.first<BLOCK_SIZE>(), R, L);
    }
 }
 

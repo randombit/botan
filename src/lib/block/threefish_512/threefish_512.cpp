@@ -189,7 +189,7 @@ void Threefish_512::skein_feedfwd(const secure_vector<uint64_t>& M, const secure
    m_K[8] = m_K[0] ^ m_K[1] ^ m_K[2] ^ m_K[3] ^ m_K[4] ^ m_K[5] ^ m_K[6] ^ m_K[7] ^ 0x1BD11BDAA9FC1A22;
 }
 
-void Threefish_512::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Threefish_512::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    using namespace Threefish_F;
 
    assert_key_material_set();
@@ -198,7 +198,7 @@ void Threefish_512::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 
    for(size_t i = 0; i < blocks; ++i) {
       uint64_t X0, X1, X2, X3, X4, X5, X6, X7;
-      load_le(in + BLOCK_SIZE * i, X0, X1, X2, X3, X4, X5, X6, X7);
+      load_le(in.first<BLOCK_SIZE>(), X0, X1, X2, X3, X4, X5, X6, X7);
 
       key.e_add(0, X0, X1, X2, X3, X4, X5, X6, X7);
 
@@ -212,11 +212,14 @@ void Threefish_512::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
       e8_rounds<15, 16>(X0, X1, X2, X3, X4, X5, X6, X7, key);
       e8_rounds<17, 18>(X0, X1, X2, X3, X4, X5, X6, X7, key);
 
-      store_le(out + BLOCK_SIZE * i, X0, X1, X2, X3, X4, X5, X6, X7);
+      store_le(out.first<BLOCK_SIZE>(), X0, X1, X2, X3, X4, X5, X6, X7);
+
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
    }
 }
 
-void Threefish_512::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Threefish_512::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    using namespace Threefish_F;
 
    assert_key_material_set();
@@ -225,7 +228,7 @@ void Threefish_512::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
 
    for(size_t i = 0; i < blocks; ++i) {
       uint64_t X0, X1, X2, X3, X4, X5, X6, X7;
-      load_le(in + BLOCK_SIZE * i, X0, X1, X2, X3, X4, X5, X6, X7);
+      load_le(in.first<BLOCK_SIZE>(), X0, X1, X2, X3, X4, X5, X6, X7);
 
       key.d_add(18, X0, X1, X2, X3, X4, X5, X6, X7);
 
@@ -239,16 +242,18 @@ void Threefish_512::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) 
       d8_rounds<3, 2>(X0, X1, X2, X3, X4, X5, X6, X7, key);
       d8_rounds<1, 0>(X0, X1, X2, X3, X4, X5, X6, X7, key);
 
-      store_le(out + BLOCK_SIZE * i, X0, X1, X2, X3, X4, X5, X6, X7);
+      store_le(out.first<BLOCK_SIZE>(), X0, X1, X2, X3, X4, X5, X6, X7);
+
+      in = in.subspan(BLOCK_SIZE);
+      out = out.subspan(BLOCK_SIZE);
    }
 }
 
-void Threefish_512::set_tweak(const uint8_t tweak[], size_t len) {
-   BOTAN_ARG_CHECK(len == 16, "Threefish-512 requires 128 bit tweak");
+void Threefish_512::set_tweak_value(std::span<const uint8_t> tweak) {
+   BOTAN_ARG_CHECK(tweak.size() == 16, "Threefish-512 requires 128 bit tweak");
 
    m_T.resize(3);
-   m_T[0] = load_le<uint64_t>(tweak, 0);
-   m_T[1] = load_le<uint64_t>(tweak, 1);
+   load_le(tweak, m_T[0], m_T[1]);
    m_T[2] = m_T[0] ^ m_T[1];
 }
 

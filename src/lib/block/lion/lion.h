@@ -24,9 +24,6 @@ namespace Botan {
 */
 class Lion final : public BlockCipher {
    public:
-      void encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-      void decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const override;
-
       size_t block_size() const override { return m_block_size; }
 
       Key_Length_Specification key_spec() const override {
@@ -47,6 +44,8 @@ class Lion final : public BlockCipher {
 
    private:
       void key_schedule(std::span<const uint8_t> key) override;
+      void encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
+      void decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const override;
 
       size_t left_size() const { return m_hash->output_length(); }
 
