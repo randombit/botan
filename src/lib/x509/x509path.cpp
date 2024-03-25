@@ -972,7 +972,8 @@ Path_Validation_Restrictions::Path_Validation_Restrictions(bool require_rev,
    m_trusted_hashes.insert("SHA-256");
    m_trusted_hashes.insert("SHA-384");
    m_trusted_hashes.insert("SHA-512");
-   m_trusted_hashes.insert("SHAKE-256(512)");
+   m_trusted_hashes.insert("SHAKE-256(512)");  // Dilithium/ML-DSA
+   m_trusted_hashes.insert("SHAKE-256(912)");  // Ed448
 }
 
 namespace {

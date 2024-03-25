@@ -233,6 +233,10 @@ std::vector<Group_Params> Text_Policy::read_group_list(std::string_view group_st
       if(group_id == Group_Params::X25519)
          continue;
 #endif
+#if !defined(BOTAN_HAS_X448)
+      if(group_id == Group_Params::X448)
+         continue;
+#endif
 
       if(group_id == Group_Params::NONE) {
          try {

@@ -99,7 +99,7 @@ Public Key Cryptography
 
 * RSA signatures and encryption
 * DH and ECDH key agreement
-* Signature schemes ECDSA, DSA, Ed25519, ECGDSA, ECKCDSA, SM2, GOST 34.10
+* Signature schemes ECDSA, DSA, Ed25519, Ed448, ECGDSA, ECKCDSA, SM2, GOST 34.10
 * Post-quantum signature schemes Dilithium, SPHINCS+, and XMSS
 * Post-quantum key agreement schemes McEliece, Kyber and FrodoKEM
 * ElGamal encryption

@@ -144,7 +144,7 @@ Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
             const auto group = keyshare->selected_group();
             if(group.is_dh_named_group()) {
                return Kex_Algo::DHE_PSK;
-            } else if(group.is_ecdh_named_curve() || group.is_x25519()) {
+            } else if(group.is_ecdh_named_curve() || group.is_x25519() || group.is_x448()) {
                return Kex_Algo::ECDHE_PSK;
             } else if(group.is_pure_kyber()) {
                return Kex_Algo::KEM_PSK;
@@ -160,7 +160,7 @@ Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
          const auto group = keyshare->selected_group();
          if(group.is_dh_named_group()) {
             return Kex_Algo::DH;
-         } else if(group.is_ecdh_named_curve() || group.is_x25519()) {
+         } else if(group.is_ecdh_named_curve() || group.is_x25519() || group.is_x448()) {
             return Kex_Algo::ECDH;
          } else if(group.is_pure_kyber()) {
             return Kex_Algo::KEM;

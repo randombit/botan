@@ -46,6 +46,10 @@
    #include <botan/ed25519.h>
 #endif
 
+#if defined(BOTAN_HAS_ED448)
+   #include <botan/ed448.h>
+#endif
+
 #if defined(BOTAN_HAS_GOST_34_10_2001)
    #include <botan/gost_3410.h>
 #endif
@@ -60,6 +64,10 @@
 
 #if defined(BOTAN_HAS_CURVE_25519)
    #include <botan/curve25519.h>
+#endif
+
+#if defined(BOTAN_HAS_X448)
+   #include <botan/x448.h>
 #endif
 
 #if defined(BOTAN_HAS_MCELIECE)
@@ -107,6 +115,12 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_CURVE_25519)
    if(alg_name == "Curve25519") {
       return std::make_unique<Curve25519_PublicKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_X448)
+   if(alg_name == "X448") {
+      return std::make_unique<X448_PublicKey>(alg_id, key_bits);
    }
 #endif
 
@@ -176,6 +190,12 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
+#if defined(BOTAN_HAS_ED448)
+   if(alg_name == "Ed448") {
+      return std::make_unique<Ed448_PublicKey>(alg_id, key_bits);
+   }
+#endif
+
 #if defined(BOTAN_HAS_GOST_34_10_2001)
    if(alg_name == "GOST-34.10" || alg_name == "GOST-34.10-2012-256" || alg_name == "GOST-34.10-2012-512") {
       return std::make_unique<GOST_3410_PublicKey>(alg_id, key_bits);
@@ -224,6 +244,12 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_CURVE_25519)
    if(alg_name == "Curve25519") {
       return std::make_unique<Curve25519_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_X448)
+   if(alg_name == "X448") {
+      return std::make_unique<X448_PrivateKey>(alg_id, key_bits);
    }
 #endif
 
@@ -284,6 +310,12 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_ED25519)
    if(alg_name == "Ed25519") {
       return std::make_unique<Ed25519_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_ED448)
+   if(alg_name == "Ed448") {
+      return std::make_unique<Ed448_PrivateKey>(alg_id, key_bits);
    }
 #endif
 
@@ -385,6 +417,12 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
    }
 #endif
 
+#if defined(BOTAN_HAS_X448)
+   if(alg_name == "X448") {
+      return std::make_unique<X448_PrivateKey>(rng);
+   }
+#endif
+
 #if defined(BOTAN_HAS_RSA)
    if(alg_name == "RSA") {
       const size_t modulus_bits = params.empty() ? 3072 : to_u32bit(params);
@@ -471,6 +509,12 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 #if defined(BOTAN_HAS_ED25519)
    if(alg_name == "Ed25519") {
       return std::make_unique<Ed25519_PrivateKey>(rng);
+   }
+#endif
+
+#if defined(BOTAN_HAS_ED448)
+   if(alg_name == "Ed448") {
+      return std::make_unique<Ed448_PrivateKey>(rng);
    }
 #endif
 

@@ -47,7 +47,7 @@ class BOTAN_PUBLIC_API(3, 0) Signature_Scheme {
          RSA_PSS_SHA512 = 0x0806,
 
          EDDSA_25519 = 0x0807,
-         EDDSA_448 = 0x0808,  // not implemented
+         EDDSA_448 = 0x0808,
       };
 
    public:

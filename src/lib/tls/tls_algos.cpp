@@ -156,6 +156,9 @@ std::optional<Group_Params> Group_Params::from_string(std::string_view group_nam
    if(group_name == "x25519") {
       return Group_Params::X25519;
    }
+   if(group_name == "x448") {
+      return Group_Params::X448;
+   }
 
    if(group_name == "ffdhe/ietf/2048") {
       return Group_Params::FFDHE_2048;
@@ -211,11 +214,20 @@ std::optional<Group_Params> Group_Params::from_string(std::string_view group_nam
    if(group_name == "x25519/Kyber-768-r3") {
       return Group_Params::HYBRID_X25519_KYBER_768_R3_OQS;
    }
+   if(group_name == "x448/Kyber-768-r3") {
+      return Group_Params::HYBRID_X448_KYBER_768_R3_OQS;
+   }
    if(group_name == "x25519/eFrodoKEM-640-SHAKE") {
       return Group_Params::HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS;
    }
    if(group_name == "x25519/eFrodoKEM-640-AES") {
       return Group_Params::HYBRID_X25519_eFRODOKEM_640_AES_OQS;
+   }
+   if(group_name == "x448/eFrodoKEM-976-SHAKE") {
+      return Group_Params::HYBRID_X448_eFRODOKEM_976_SHAKE_OQS;
+   }
+   if(group_name == "x448/eFrodoKEM-976-AES") {
+      return Group_Params::HYBRID_X448_eFRODOKEM_976_AES_OQS;
    }
 
    if(group_name == "secp256r1/Kyber-512-r3") {
@@ -270,6 +282,8 @@ std::optional<std::string> Group_Params::to_string() const {
          return "brainpool512r1";
       case Group_Params::X25519:
          return "x25519";
+      case Group_Params::X448:
+         return "x448";
 
       case Group_Params::FFDHE_2048:
          return "ffdhe/ietf/2048";
@@ -306,6 +320,10 @@ std::optional<std::string> Group_Params::to_string() const {
          return "x25519/eFrodoKEM-640-SHAKE";
       case Group_Params::HYBRID_X25519_eFRODOKEM_640_AES_OQS:
          return "x25519/eFrodoKEM-640-AES";
+      case Group_Params::HYBRID_X448_eFRODOKEM_976_SHAKE_OQS:
+         return "x448/eFrodoKEM-976-SHAKE";
+      case Group_Params::HYBRID_X448_eFRODOKEM_976_AES_OQS:
+         return "x448/eFrodoKEM-976-AES";
       case Group_Params::HYBRID_SECP256R1_eFRODOKEM_640_SHAKE_OQS:
          return "secp256r1/eFrodoKEM-640-SHAKE";
       case Group_Params::HYBRID_SECP256R1_eFRODOKEM_640_AES_OQS:
@@ -326,6 +344,8 @@ std::optional<std::string> Group_Params::to_string() const {
          return "x25519/Kyber-512-r3";
       case Group_Params::HYBRID_X25519_KYBER_768_R3_OQS:
          return "x25519/Kyber-768-r3";
+      case Group_Params::HYBRID_X448_KYBER_768_R3_OQS:
+         return "x448/Kyber-768-r3";
 
       case Group_Params::HYBRID_SECP256R1_KYBER_512_R3_OQS:
          return "secp256r1/Kyber-512-r3";

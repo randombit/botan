@@ -344,8 +344,8 @@ Private Key
      Creates a new private key. The parameter type/value depends on
      the algorithm. For "rsa" is is the size of the key in bits.
      For "ecdsa" and "ecdh" it is a group name (for instance
-     "secp256r1"). For "ecdh" there is also a special case for group
-     "curve25519" (which is actually a completely distinct key type
+     "secp256r1"). For "ecdh" there is also a special case for groups
+     "curve25519" and "x448" (which are actually completely distinct key types
      with a non-standard encoding).
 
   .. py:classmethod:: load(val, passphrase="")
@@ -538,7 +538,7 @@ HOTP
 X509Cert
 -----------------------------------------
 
-.. py:class:: X509Cert(filename=None, buf=None) 
+.. py:class:: X509Cert(filename=None, buf=None)
 
    .. py:method:: time_starts()
 
@@ -550,7 +550,7 @@ X509Cert
 
       Return the time the certificate expires, as a string in form
       "YYYYMMDDHHMMSSZ" where Z is a literal character reflecting that this time is
-      relative to UTC.      
+      relative to UTC.
 
    .. py:method:: to_string()
 
@@ -586,7 +586,7 @@ X509Cert
 
       Get a value from the subject DN field.
 
-      ``key`` specifies a value to get, for instance ``"Name"`` or `"Country"`.  
+      ``key`` specifies a value to get, for instance ``"Name"`` or `"Country"`.
 
    .. py:method:: issuer_dn(key, index)
 
@@ -600,7 +600,7 @@ X509Cert
 
    .. py:method:: not_before()
 
-      Return the time the certificate becomes valid, as seconds since epoch.   
+      Return the time the certificate becomes valid, as seconds since epoch.
 
    .. py:method:: not_after()
 
@@ -620,7 +620,7 @@ X509Cert
                   reference_time=0 \
                   crls=None)
 
-      Verify a certificate. Returns 0 if validation was successful, returns a positive error code 
+      Verify a certificate. Returns 0 if validation was successful, returns a positive error code
       if the validation was unsuccesful.
 
       ``intermediates`` is a list of untrusted subauthorities.

@@ -206,6 +206,8 @@ AlgorithmIdentifier Signature_Scheme::key_algorithm_identifier() const noexcept 
 
       case EDDSA_25519:
          return {"Ed25519", AlgorithmIdentifier::USE_EMPTY_PARAM};
+      case EDDSA_448:
+         return {"Ed448", AlgorithmIdentifier::USE_EMPTY_PARAM};
 
       case RSA_PKCS1_SHA1:
       case RSA_PKCS1_SHA256:

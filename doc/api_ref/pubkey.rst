@@ -83,11 +83,11 @@ ECDSA
 
 Fast signature scheme based on elliptic curves.
 
-ECDH, DH, and X25519
-~~~~~~~~~~~~~~~~~~~~~~~
+ECDH, DH, X25519 and X448
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Key agreement schemes. DH uses arithmetic over finite fields and is slower and
-with larger keys. ECDH and X25519 use elliptic curves instead.
+with larger keys. ECDH, X25519 and X448 use elliptic curves instead.
 
 Dilithium
 ~~~~~~~~~~
@@ -108,10 +108,10 @@ Post-quantum key encapsulation scheme based on (structured) lattices.
 
    The final NIST specification version of Kyber is not yet implemented.
 
-Ed25519
-~~~~~~~~~~
+Ed25519 and Ed448
+~~~~~~~~~~~~~~~~~
 
-Signature scheme based on a specific elliptic curve.
+Signature schemes based on a specific elliptic curve.
 
 XMSS
 ~~~~~~~~~
@@ -770,7 +770,7 @@ Botan implements the following signature algorithms:
    not supporting ``Raw``.
 #. GOST 34.10-2001.
    Requires a :ref:`hash function <sig_with_hash>` as parameter.
-#. Ed25519. See :ref:`Ed25519_variants` for parameters.
+#. Ed25519 and Ed448. See :ref:`Ed25519_Ed448_variants` for parameters.
 #. SM2.
    Takes one of the following as parameter:
 
@@ -928,28 +928,28 @@ Parameters specification:
 - ``Raw``
 - ``Raw(<HashFunction>)``
 
-.. _Ed25519_variants:
+.. _Ed25519_Ed448_variants:
 
-Ed25519 Variants
-~~~~~~~~~~~~~~~~~~
+Ed25519 and Ed448 Variants
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Most signature schemes in Botan follow a hash-then-sign paradigm. That is, the
 entire message is digested to a fixed length representative using a collision
-resistant hash function, and then the digest is signed. Ed25519 instead signs
-the message directly. This is beneficial, in that the Ed25519 design should
+resistant hash function, and then the digest is signed. Ed25519 and Ed448 instead sign
+the message directly. This is beneficial, in that the design should
 remain secure even in the (extremely unlikely) event that a collision attack on
 SHA-512 is found. However it means the entire message must be buffered in
 memory, which can be a problem for many applications which might need to sign
-large inputs. To use this variety of Ed25519, use a padding name of "Pure".
+large inputs. To use this variety of Ed25519/Ed448, use a padding name of "Pure".
 
 This is the default mode if no padding name is given.
 
 Parameter specification:
 ``Pure`` / ``Identity``
 
-Ed25519ph (pre-hashed) instead hashes the message with SHA-512 and then signs
-the digest plus a special prefix specified in RFC 8032. To use it, specify
-padding name "Ed25519ph".
+Ed25519ph (or Ed448) (pre-hashed) instead hashes the message with SHA-512 (or SHAKE256(512))
+and then signs the digest plus a special prefix specified in RFC 8032. To use it, specify
+padding name "Ed25519ph" (or "Ed448ph").
 
 Parameter specification:
 ``Ed25519ph``

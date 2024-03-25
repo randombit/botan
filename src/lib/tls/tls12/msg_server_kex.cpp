@@ -23,6 +23,9 @@
 #if defined(BOTAN_HAS_CURVE_25519)
    #include <botan/curve25519.h>
 #endif
+#if defined(BOTAN_HAS_X448)
+   #include <botan/x448.h>
+#endif
 
 namespace Botan::TLS {
 
@@ -103,10 +106,10 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
 
       std::vector<uint8_t> ecdh_public_val;
 
-      if(m_shared_group.value() == Group_Params::X25519) {
+      if(m_shared_group.value() == Group_Params::X25519 || m_shared_group.value() == Group_Params::X448) {
          m_kex_key = state.callbacks().tls_generate_ephemeral_key(m_shared_group.value(), rng);
          if(!m_kex_key) {
-            throw TLS_Exception(Alert::InternalError, "Application did not provide a X25519 key");
+            throw TLS_Exception(Alert::InternalError, "Application did not provide an EC key");
          }
          ecdh_public_val = m_kex_key->public_value();
       } else {

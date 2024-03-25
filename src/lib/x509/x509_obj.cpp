@@ -166,7 +166,7 @@ std::string x509_signature_padding_for(const std::string& algo_name,
             return fmt("{}({})", user_specified_padding, hash_fn);
          }
       }
-   } else if(algo_name == "Ed25519") {
+   } else if(algo_name == "Ed25519" || algo_name == "Ed448") {
       return user_specified_padding.empty() ? "Pure" : std::string(user_specified_padding);
    } else if(algo_name.starts_with("Dilithium-")) {
       return user_specified_padding.empty() ? "Randomized" : std::string(user_specified_padding);

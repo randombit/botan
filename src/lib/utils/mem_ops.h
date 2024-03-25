@@ -205,7 +205,8 @@ inline constexpr void typecast_copy(ToR&& out, const FromT& in) {
  * matching length into it.
  */
 template <typename ToT, ranges::contiguous_range FromR>
-   requires std::is_trivial_v<ToT> && std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>>
+   requires std::is_default_constructible_v<ToT> && std::is_trivially_copyable_v<ToT> &&
+            std::is_trivially_copyable_v<std::ranges::range_value_t<FromR>>
 inline constexpr ToT typecast_copy(FromR&& src) noexcept {
    ToT dst;
    typecast_copy(dst, src);

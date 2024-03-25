@@ -1026,6 +1026,11 @@ def cli_tls_socket_tests(tmp_dir):
             self.psk_identity = kwargs.get("psk_identity")
 
     configs = [
+        # Explicitly testing x448-based key exchange against ourselves, as Bogo test
+        # don't cover that. Better than nothing...
+        TestConfig("x448", "1.2", "allow_tls12=true\nallow_tls13=false\nkey_exchange_groups=x448"),
+        TestConfig("x448", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_groups=x448"),
+
         # Regression test: TLS 1.3 server hit an assertion when no certificate
         #                  chain was found. Here, we provoke this by requiring
         #                  an RSA-based certificate (server uses ECDSA).
@@ -1057,7 +1062,7 @@ def cli_tls_socket_tests(tmp_dir):
 
     with open(tls_server_policy, 'w', encoding='utf8') as f:
         f.write('key_exchange_methods = ECDH DH ECDHE_PSK\n')
-        f.write("key_exchange_groups = x25519 secp256r1 ffdhe/ietf/2048 Kyber-512-r3 x25519/Kyber-512-r3")
+        f.write("key_exchange_groups = x25519 x448 secp256r1 ffdhe/ietf/2048 Kyber-512-r3 x25519/Kyber-512-r3")
 
     tls_server = subprocess.Popen([CLI_PATH, 'tls_server', '--max-clients=%d' % (len(configs)),
                                    '--port=%d' % (server_port), '--policy=%s' % (tls_server_policy),
@@ -1215,9 +1220,11 @@ def cli_tls_online_pqc_hybrid_tests(tmp_dir):
 
     oqsp = get_oqs_ports()
     if oqsp:
+        # src/scripts/test_cli.py --run-online-tests ./botan pqc_hybrid_tests
         test_cfg += [
             TestConfig("test.openquantumsafe.org", "x25519/Kyber-512-r3", port=oqsp['x25519_kyber512'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "x25519/Kyber-768-r3", port=oqsp['x25519_kyber768'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "x448/Kyber-768-r3", port=oqsp['x448_kyber768'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "secp256r1/Kyber-512-r3", port=oqsp['p256_kyber512'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "secp256r1/Kyber-768-r3", port=oqsp['p256_kyber768'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "secp384r1/Kyber-768-r3", port=oqsp['p384_kyber768'], ca=oqs_test_ca),
@@ -1233,6 +1240,8 @@ def cli_tls_online_pqc_hybrid_tests(tmp_dir):
             TestConfig("test.openquantumsafe.org", "eFrodoKEM-1344-AES", port=oqsp['frodo1344aes'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "x25519/eFrodoKEM-640-SHAKE", port=oqsp['x25519_frodo640shake'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "x25519/eFrodoKEM-640-AES", port=oqsp['x25519_frodo640aes'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "x448/eFrodoKEM-976-SHAKE", port=oqsp['x448_frodo976shake'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "x448/eFrodoKEM-976-AES", port=oqsp['x448_frodo976aes'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "secp256r1/eFrodoKEM-640-SHAKE", port=oqsp['p256_frodo640shake'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "secp256r1/eFrodoKEM-640-AES", port=oqsp['p256_frodo640aes'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "secp384r1/eFrodoKEM-976-SHAKE", port=oqsp['p384_frodo976shake'], ca=oqs_test_ca),
@@ -1503,7 +1512,7 @@ def cli_speed_pk_tests(_tmp_dir):
     msec = 1
 
     pk_algos = ["ECDSA", "ECDH", "SM2", "ECKCDSA", "ECGDSA", "GOST-34.10",
-                "DH", "DSA", "ElGamal", "Ed25519", "Curve25519", "McEliece",
+                "DH", "DSA", "ElGamal", "Ed25519", "Ed448", "Curve25519", "X448", "McEliece",
                 "RSA", "RSA_keygen", "XMSS", "ec_h2c", "Kyber", "Dilithium",
                 "SPHINCS+"]
 

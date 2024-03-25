@@ -30,10 +30,16 @@ std::vector<std::pair<std::string, std::string>> algorithm_specs_for_group(Group
          return {{"Curve25519", "Curve25519"}, {"Kyber", "Kyber-512-r3"}};
       case Group_Params::HYBRID_X25519_KYBER_768_R3_OQS:
          return {{"Curve25519", "Curve25519"}, {"Kyber", "Kyber-768-r3"}};
+      case Group_Params::HYBRID_X448_KYBER_768_R3_OQS:
+         return {{"X448", "X448"}, {"Kyber", "Kyber-768-r3"}};
       case Group_Params::HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS:
          return {{"Curve25519", "Curve25519"}, {"FrodoKEM", "eFrodoKEM-640-SHAKE"}};
       case Group_Params::HYBRID_X25519_eFRODOKEM_640_AES_OQS:
          return {{"Curve25519", "Curve25519"}, {"FrodoKEM", "eFrodoKEM-640-AES"}};
+      case Group_Params::HYBRID_X448_eFRODOKEM_976_SHAKE_OQS:
+         return {{"X448", "X448"}, {"FrodoKEM", "eFrodoKEM-976-SHAKE"}};
+      case Group_Params::HYBRID_X448_eFRODOKEM_976_AES_OQS:
+         return {{"X448", "X448"}, {"FrodoKEM", "eFrodoKEM-976-AES"}};
 
       case Group_Params::HYBRID_SECP256R1_KYBER_512_R3_OQS:
          return {{"ECDH", "secp256r1"}, {"Kyber", "Kyber-512-r3"}};
@@ -97,10 +103,16 @@ std::vector<size_t> public_value_lengths_for_group(Group_Params group) {
          return {32, 800};
       case Group_Params::HYBRID_X25519_KYBER_768_R3_OQS:
          return {32, 1184};
+      case Group_Params::HYBRID_X448_KYBER_768_R3_OQS:
+         return {56, 1184};
       case Group_Params::HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS:
          return {32, 9616};
       case Group_Params::HYBRID_X25519_eFRODOKEM_640_AES_OQS:
          return {32, 9616};
+      case Group_Params::HYBRID_X448_eFRODOKEM_976_SHAKE_OQS:
+         return {56, 15632};
+      case Group_Params::HYBRID_X448_eFRODOKEM_976_AES_OQS:
+         return {56, 15632};
 
       case Group_Params::HYBRID_SECP256R1_KYBER_512_R3_OQS:
          return {32, 800};
