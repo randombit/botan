@@ -11,6 +11,7 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rotate.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -517,12 +518,14 @@ void aes_encrypt_n(std::span<const uint8_t> in,
    const size_t BLOCK_SIZE = 16;
    const size_t BITSLICED_BLOCKS = 8 * sizeof(uint32_t) / BLOCK_SIZE;
 
+   BufferTransformer bt(in, out);
+
    while(blocks > 0) {
       const size_t this_loop = std::min(blocks, BITSLICED_BLOCKS);
+      auto [in_blocks, out_blocks] = bt.next(this_loop * BLOCK_SIZE);
 
       uint32_t B[8] = {0};
-
-      load_be(B, in.data(), this_loop * 4);
+      load_be(std::span(B).first(this_loop * 4), in_blocks);
 
       CT::poison(B, 8);
 
@@ -553,12 +556,12 @@ void aes_encrypt_n(std::span<const uint8_t> in,
 
       CT::unpoison(B, 8);
 
-      copy_out_be(out.first(this_loop * BLOCK_SIZE), B);
+      store_be(out_blocks, std::span(B).first(this_loop * 4));
 
-      in = in.subspan(this_loop * BLOCK_SIZE);
-      out = out.subspan(this_loop * BLOCK_SIZE);
       blocks -= this_loop;
    }
+
+   BOTAN_ASSERT_NOMSG(bt.empty());
 }
 
 /*
@@ -580,14 +583,17 @@ void aes_decrypt_n(std::span<const uint8_t> in,
    const size_t BLOCK_SIZE = 16;
    const size_t BITSLICED_BLOCKS = 8 * sizeof(uint32_t) / BLOCK_SIZE;
 
+   BufferTransformer bt(in, out);
+
    while(blocks > 0) {
       const size_t this_loop = std::min(blocks, BITSLICED_BLOCKS);
+      auto [in_block, out_block] = bt.next(this_loop * BLOCK_SIZE);
 
       uint32_t B[8] = {0};
 
       CT::poison(B, 8);
 
-      load_be(B, in.data(), this_loop * 4);
+      load_be(std::span(B).first(this_loop * 4), in_block);
 
       for(size_t i = 0; i != 8; ++i) {
          B[i] ^= DK[i % 4];
@@ -616,12 +622,12 @@ void aes_decrypt_n(std::span<const uint8_t> in,
 
       CT::unpoison(B, 8);
 
-      copy_out_be(out.first(this_loop * BLOCK_SIZE), B);
+      store_be(out_block, std::span(B).first(this_loop * 4));
 
-      in = in.subspan(this_loop * BLOCK_SIZE);
-      out = out.subspan(this_loop * BLOCK_SIZE);
       blocks -= this_loop;
    }
+
+   BOTAN_ASSERT_NOMSG(bt.empty());
 }
 
 inline uint32_t xtime32(uint32_t s) {
