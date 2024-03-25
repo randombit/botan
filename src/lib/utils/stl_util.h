@@ -19,6 +19,7 @@
 #include <variant>
 #include <vector>
 
+#include <botan/assert.h>
 #include <botan/concepts.h>
 #include <botan/secmem.h>
 #include <botan/strong_type.h>
