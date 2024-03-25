@@ -144,7 +144,7 @@ void Skein_512::final_result(std::span<uint8_t> out) {
    reset_tweak(SKEIN_OUTPUT, true);
    ubi_512(counter, sizeof(counter));
 
-   copy_out_vec_le(out.data(), m_output_bits / 8, m_threefish->m_K);
+   copy_out_le(out.first(m_output_bits / 8), m_threefish->m_K);
 
    initial_block();
 }

@@ -550,7 +550,7 @@ void aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks, const secur
 
       CT::unpoison(B, 8);
 
-      copy_out_be(out, this_loop * 4 * sizeof(uint32_t), B);
+      copy_out_be(std::span(out, this_loop * 4 * sizeof(uint32_t)), B);
 
       in += this_loop * BLOCK_SIZE;
       out += this_loop * BLOCK_SIZE;
@@ -610,7 +610,7 @@ void aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks, const secur
 
       CT::unpoison(B, 8);
 
-      copy_out_be(out, this_loop * 4 * sizeof(uint32_t), B);
+      copy_out_be(std::span(out, this_loop * 4 * sizeof(uint32_t)), B);
 
       in += this_loop * BLOCK_SIZE;
       out += this_loop * BLOCK_SIZE;

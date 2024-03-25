@@ -45,8 +45,7 @@ int Sodium::crypto_core_hsalsa20(uint8_t out[], const uint8_t in[], const uint8_
 
    uint32_t out32[8] = {0};
    Salsa20::hsalsa20(out32, in32);
-
-   copy_out_le(out, 32, out32);
+   store_le(std::span<uint8_t, 32>(out, 32), out32);
    return 0;
 }
 

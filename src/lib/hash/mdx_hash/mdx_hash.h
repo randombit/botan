@@ -114,9 +114,9 @@ class MerkleDamgard_Hash final {
          BOTAN_ASSERT_NOMSG(output.size() >= MD::output_bytes);
 
          if constexpr(MD::byte_endianness == MD_Endian::Big) {
-            copy_out_vec_be(output.data(), MD::output_bytes, m_digest);
+            copy_out_be(output.first(MD::output_bytes), m_digest);
          } else {
-            copy_out_vec_le(output.data(), MD::output_bytes, m_digest);
+            copy_out_le(output.first(MD::output_bytes), m_digest);
          }
       }
 

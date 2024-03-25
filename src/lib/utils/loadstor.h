@@ -763,44 +763,6 @@ void copy_out_le(std::span<uint8_t> out, InR&& in) {
    }
 }
 
-template <typename T>
-void copy_out_be(uint8_t out[], size_t out_bytes, const T in[]) {
-   while(out_bytes >= sizeof(T)) {
-      store_be(in[0], out);
-      out += sizeof(T);
-      out_bytes -= sizeof(T);
-      in += 1;
-   }
-
-   for(size_t i = 0; i != out_bytes; ++i) {
-      out[i] = get_byte_var(i % 8, in[0]);
-   }
-}
-
-template <typename T, typename Alloc>
-void copy_out_vec_be(uint8_t out[], size_t out_bytes, const std::vector<T, Alloc>& in) {
-   copy_out_be(out, out_bytes, in.data());
-}
-
-template <typename T>
-void copy_out_le(uint8_t out[], size_t out_bytes, const T in[]) {
-   while(out_bytes >= sizeof(T)) {
-      store_le(in[0], out);
-      out += sizeof(T);
-      out_bytes -= sizeof(T);
-      in += 1;
-   }
-
-   for(size_t i = 0; i != out_bytes; ++i) {
-      out[i] = get_byte_var(sizeof(T) - 1 - (i % 8), in[0]);
-   }
-}
-
-template <typename T, typename Alloc>
-void copy_out_vec_le(uint8_t out[], size_t out_bytes, const std::vector<T, Alloc>& in) {
-   copy_out_le(out, out_bytes, in.data());
-}
-
 }  // namespace Botan
 
 #endif

@@ -161,7 +161,7 @@ void BLAKE2b::final_result(std::span<uint8_t> output) {
 
    m_F = 0xFFFFFFFFFFFFFFFF;
    compress(m_buffer.consume().data(), 1, pos);
-   copy_out_vec_le(output.data(), output_length(), m_H);
+   copy_out_le(output.first(output_length()), m_H);
    state_init();
 }
 

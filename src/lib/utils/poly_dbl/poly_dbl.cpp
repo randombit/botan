@@ -46,7 +46,7 @@ void poly_double(uint8_t out[], const uint8_t in[]) {
 
    W[LIMBS - 1] = (W[LIMBS - 1] << 1) ^ carry;
 
-   copy_out_be(out, LIMBS * 8, W);
+   copy_out_be(std::span(out, LIMBS * 8), W);
 }
 
 template <size_t LIMBS, MinWeightPolynomial P>
@@ -66,7 +66,7 @@ void poly_double_le(uint8_t out[], const uint8_t in[]) {
 
    W[0] = (W[0] << 1) ^ carry;
 
-   copy_out_le(out, LIMBS * 8, W);
+   copy_out_le(std::span(out, LIMBS * 8), W);
 }
 
 }  // namespace
