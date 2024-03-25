@@ -213,6 +213,16 @@ Maps:
      * ``Virtual`` This module does not contain any implementation but acts as
        a container for other sub-modules. It cannot be interacted with by the
        library user and cannot be depended upon directly.
+   * ``lifecycle`` specifies the module's lifecycle (defaults to ``Stable``)
+
+     * ``Stable`` The module is stable and will not change in a way that would
+       break backwards compatibility.
+     * ``Experimental`` The module is experimental and may change in a way that
+       would break backwards compatibility. Not enabled in a default build.
+       Either use ``--enable-modules`` or ``--enable-experimental-features``.
+     * ``Deprecated`` The module is deprecated and will be removed in a future
+       release. It remains to be enabled in a default build. Either use
+       ``--disable-modules`` or ``--disable-deprecated-features``.
 
  * ``libs`` specifies additional libraries which should be linked if this module is
    included. It maps from the OS name to a list of libraries (comma seperated).

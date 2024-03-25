@@ -75,6 +75,15 @@ want the resulting binary to depend on. For instance to enable zlib
 support, add ``--with-zlib`` to your invocation of ``configure.py``.
 All available modules can be listed with ``--list-modules``.
 
+Some modules may be marked as 'deprecated' or 'experimental'. Deprecated
+modules are available and built by default, but they will be removed in a
+future release of the library. Use ``--disable-deprecated-features`` to
+disable all of these modules or ``--disable-modules=MODS`` for finer grained
+control. Experimental modules are under active development and not built
+by default. Their API may change in future minor releases. Applications may
+still enable and use such modules using ``--enable-modules=MODS`` or using
+``--enable-experimental-features`` to enable all experimental features.
+
 You can control which algorithms and modules are built using the
 options ``--enable-modules=MODS`` and ``--disable-modules=MODS``, for
 instance ``--enable-modules=zlib`` and ``--disable-modules=xtea,idea``.
@@ -705,6 +714,30 @@ Specify an OS feature to enable. See ``src/build-data/os`` and
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Specify an OS feature to disable.
+
+``--enable-experimental-features``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable all experimental modules and features. Note that these are unstable and
+may change or even be removed in future releases. Also note that individual
+experimental modules can be explicitly enabled using ``--enable-modules=MODS``.
+
+``--disable-experimental-features``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable all experimental modules and features. This is the default.
+
+``--enable-deprecated-features``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable all deprecated modules and features. Note that these are scheduled for
+removal in future releases. This is the default.
+
+``--disable-deprecated-features``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Disable all deprecated modules and features. Note that individual deprecated
+modules can be explicitly disabled using ``--disable-modules=MODS``.
 
 ``--disable-sse2``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

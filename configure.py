@@ -385,6 +385,16 @@ def process_command_line(args):
     target_group.add_option('--without-os-features', action='append', metavar='FEAT',
                             help='specify OS features to disable')
 
+    target_group.add_option('--enable-experimental-features', dest='enable_experimental_features',
+                            action='store_true', default=False, help='enable building of experimental features and modules')
+    target_group.add_option('--disable-experimental-features', dest='enable_experimental_features',
+                            action='store_false', help=optparse.SUPPRESS_HELP)
+
+    target_group.add_option('--enable-deprecated-features', dest='enable_deprecated_features',
+                            action='store_true', default=True, help=optparse.SUPPRESS_HELP)
+    target_group.add_option('--disable-deprecated-features', dest='enable_deprecated_features',
+                            action='store_false', help='disable building of deprecated features and modules')
+
     isa_extensions = [
         'SSE2', 'SSSE3', 'SSE4.1', 'SSE4.2', 'AVX2', 'BMI2', 'RDRAND', 'RDSEED',
         'AES-NI', 'SHA-NI',
@@ -941,9 +951,12 @@ class ModuleInfo(InfoObject):
         self.name = info["name"]
         self.brief = info.get("brief") # possibly None
         self.type = info.get("type") or "Public"
+        self.lifecycle = info.get("lifecycle") or "Stable"
 
         if self.type not in ["Public", "Internal", "Virtual"]:
             raise InternalError("Module '%s' has an unknown type: %s" % (self.basename, self.type))
+        if self.lifecycle not in ["Stable", "Experimental", "Deprecated"]:
+            raise InternalError("Module '%s' has an unknown lifecycle status: %s" % (self.basename, self.lifecycle))
 
     @staticmethod
     def _validate_defines_content(defines):
@@ -1159,6 +1172,15 @@ class ModuleInfo(InfoObject):
 
     def is_virtual(self):
         return self.type == "Virtual"
+
+    def is_stable(self):
+        return self.lifecycle == "Stable"
+
+    def is_experimental(self):
+        return self.lifecycle == "Experimental"
+
+    def is_deprecated(self):
+        return self.lifecycle == "Deprecated"
 
 class ModulePolicyInfo(InfoObject):
     def __init__(self, infofile):
@@ -2291,6 +2313,9 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'cpu_features': arch.supported_isa_extensions(cc, options),
         'system_cert_bundle': options.system_cert_bundle,
 
+        'enable_experimental_features': options.enable_experimental_features,
+        'disable_deprecated_features': not options.enable_deprecated_features,
+
         'fuzzer_mode': options.unsafe_fuzzer_mode,
         'building_fuzzers': options.build_fuzzers,
         'fuzzer_type': options.build_fuzzers.upper() if options.build_fuzzers else '',
@@ -2398,6 +2423,12 @@ class ModulesChooser:
         elif not module.compatible_compiler(self._ccinfo, self._cc_min_version, self._archinfo.basename):
             self._not_using_because['incompatible compiler'].add(modname)
             return False
+        elif module.is_deprecated() and not self._options.enable_deprecated_features:
+            self._not_using_because['deprecated'].add(modname)
+            return False
+        elif module.is_experimental() and modname not in self._options.enabled_modules and not self._options.enable_experimental_features:
+            self._not_using_because['experimental'].add(modname)
+            return False
         return True
 
     @staticmethod
@@ -2415,6 +2446,8 @@ class ModulesChooser:
     def _display_module_information_to_load(cls, all_modules, modules_to_load):
         sorted_modules_to_load = cls._remove_virtual_modules(all_modules, sorted(modules_to_load))
 
+        deprecated = []
+        experimental = []
         for modname in sorted_modules_to_load:
             if all_modules[modname].comment:
                 logging.info('%s: %s', modname, all_modules[modname].comment)
@@ -2422,6 +2455,18 @@ class ModulesChooser:
                 logging.warning('%s: %s', modname, all_modules[modname].warning)
             if all_modules[modname].load_on == 'vendor':
                 logging.info('Enabling use of external dependency %s', modname)
+            if all_modules[modname].is_deprecated():
+                deprecated.append(modname)
+            if all_modules[modname].is_experimental():
+                experimental.append(modname)
+
+        if deprecated:
+            logging.warning('These modules are deprecated and will be removed in a future release (consider disabling with --disable-deprecated-features): %s',
+                            ' '.join(deprecated))
+
+        if experimental:
+            logging.warning('These modules are experimental and may change or be removed in a future release: %s',
+                            ' '.join(experimental))
 
         if sorted_modules_to_load:
             logging.info('Loading modules: %s', ' '.join(sorted_modules_to_load))
@@ -3448,6 +3493,8 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
                                               'title': info.name,
                                               'internal': info.is_internal(),
                                               'virtual': info.is_virtual(),
+                                              'deprecated': info.is_deprecated(),
+                                              'experimental': info.is_experimental(),
                                               'brief': info.brief,
                                               'public_headers': info.header_public,
                                               'internal_headers': info.header_internal,
