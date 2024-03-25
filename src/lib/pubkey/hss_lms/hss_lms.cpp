@@ -169,7 +169,7 @@ class HSS_LMS_Signature_Operation final : public PK_Ops::Signature {
          return m_private->sign(message_to_sign);
       }
 
-      size_t signature_length() const override { return HSS_Signature::size(m_private->hss_params()); }
+      size_t signature_length() const override { return m_private->signature_size(); }
 
       AlgorithmIdentifier algorithm_identifier() const override { return m_public->algorithm_identifier(); }
 

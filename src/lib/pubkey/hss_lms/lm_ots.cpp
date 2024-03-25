@@ -57,8 +57,11 @@ uint8_t byte(std::span<const uint8_t> S, uint32_t i) {
 
 // RFC 8554 3.1.3
 uint8_t coef(std::span<const uint8_t> S, uint32_t i, const LMOTS_Params& params) {
-   return params.coef_max() &
-          (byte(S, (i * params.w()) / 8) >> (8 - (params.w() * (i % (8 / params.w())) + params.w())));
+   const uint8_t w_bit_mask = params.coef_max();
+   const uint8_t coef_byte = byte(S, (i * params.w()) / 8);
+   const uint8_t shift = 8 - (params.w() * (i % (8 / params.w())) + params.w());
+
+   return w_bit_mask & (coef_byte >> shift);
 }
 
 // RFC 8554 4.4
@@ -77,7 +80,7 @@ std::vector<uint8_t> gen_Q_with_cksm(const LMOTS_Params& params,
                                      const LMS_Message& msg) {
    std::vector<uint8_t> Q_with_cksm(params.n() + sizeof(uint16_t));
    BufferStuffer qwc_stuffer(Q_with_cksm);
-   const auto hash = HashFunction::create_or_throw(params.hash_name());
+   const auto hash = params.hash();
    hash->update(identifier);
    hash->update(store_be(q));
    hash->update(store_be(D_MESG));
@@ -258,7 +261,7 @@ LMOTS_Private_Key::LMOTS_Private_Key(const LMOTS_Params& params,
                                      const LMS_Seed& seed) :
       OTS_Instance(params, identifier, q), m_seed(seed) {
    PseudorandomKeyGeneration gen(identifier);
-   const auto hash = HashFunction::create_or_throw(params.hash_name());
+   const auto hash = params.hash();
 
    gen.set_q(q.get());
    gen.set_j(0xff);
@@ -272,7 +275,7 @@ LMOTS_Private_Key::LMOTS_Private_Key(const LMOTS_Params& params,
 void LMOTS_Private_Key::sign(StrongSpan<LMOTS_Signature_Bytes> out_sig, const LMS_Message& msg) const {
    BOTAN_ARG_CHECK(out_sig.size() == LMOTS_Signature::size(params()), "Invalid output buffer size");
    BufferStuffer sig_stuffer(out_sig);
-   const auto hash = HashFunction::create_or_throw(params().hash_name());
+   const auto hash = params().hash();
    sig_stuffer.append(store_be(params().algorithm_type()));
    const auto C = sig_stuffer.next(params().n());
 
@@ -303,13 +306,13 @@ void LMOTS_Private_Key::derive_random_C(std::span<uint8_t> out, HashFunction& ha
 }
 
 LMOTS_Public_Key::LMOTS_Public_Key(const LMOTS_Private_Key& lmots_sk) : OTS_Instance(lmots_sk) {
-   const auto pk_hash = HashFunction::create_or_throw(lmots_sk.params().hash_name());
+   const auto pk_hash = lmots_sk.params().hash();
    pk_hash->update(lmots_sk.identifier());
    pk_hash->update(store_be(lmots_sk.q()));
    pk_hash->update(store_be(D_PBLC));
 
    Chain_Generator chain_gen(lmots_sk.identifier(), lmots_sk.q());
-   const auto hash = HashFunction::create_or_throw(lmots_sk.params().hash_name());
+   const auto hash = lmots_sk.params().hash();
    LMOTS_Node tmp(lmots_sk.params().n());
    for(uint16_t i = 0; i < lmots_sk.params().p(); ++i) {
       chain_gen.process(*hash, i, 0, lmots_sk.params().coef_max(), lmots_sk.chain_input(i), tmp);
@@ -330,13 +333,13 @@ LMOTS_K lmots_compute_pubkey_from_sig(const LMOTS_Signature& sig,
    const auto Q_with_cksm = gen_Q_with_cksm(params, identifier, q, sig.C(), msg);
 
    // Prefill the final hash object
-   const auto pk_hash = HashFunction::create_or_throw(params.hash_name());
+   const auto pk_hash = params.hash();
    pk_hash->update(identifier);
    pk_hash->update(store_be(q));
    pk_hash->update(store_be(D_PBLC));
 
    Chain_Generator chain_gen(identifier, q);
-   const auto hash = HashFunction::create_or_throw(params.hash_name());
+   const auto hash = params.hash();
    LMOTS_Node tmp(params.n());
    for(uint16_t i = 0; i < params.p(); ++i) {
       const uint8_t a = coef(Q_with_cksm, i, params);

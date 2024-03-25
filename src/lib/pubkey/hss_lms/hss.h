@@ -188,6 +188,11 @@ class BOTAN_TEST_API HSS_LMS_PrivateKeyInternal final {
        */
       LMS_PrivateKey hss_derive_root_lms_private_key() const;
 
+      /**
+       * @brief Returns the size in bytes of a signature created by this key.
+       */
+      size_t signature_size() const { return m_sig_size; };
+
    private:
       HSS_LMS_PrivateKeyInternal(HSS_LMS_Params hss_params, LMS_Seed hss_seed, LMS_Identifier identifier);
 
@@ -221,6 +226,7 @@ class BOTAN_TEST_API HSS_LMS_PrivateKeyInternal final {
       LMS_Seed m_hss_seed;
       LMS_Identifier m_identifier;
       HSS_Sig_Idx m_current_idx;
+      const size_t m_sig_size;
 };
 
 class HSS_Signature;

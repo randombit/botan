@@ -31,7 +31,7 @@ class HSS_LMS_PrivateKeyInternal;
  * To derive seeds for single LMS trees in the HSS-multitree, the method (SECRET_METHOD 2)
  * of the reference implementation (https://github.com/cisco/hash-sigs) is used.
  */
-class BOTAN_PUBLIC_API(3, 2) HSS_LMS_PublicKey : public virtual Public_Key {
+class BOTAN_PUBLIC_API(3, 4) HSS_LMS_PublicKey : public virtual Public_Key {
    public:
       /**
        * @brief Load an existing public key using its bytes.
@@ -112,7 +112,7 @@ BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
  *
  * Note: The selected hash function is also used for seed derivation.
  */
-class BOTAN_PUBLIC_API(3, 2) HSS_LMS_PrivateKey final : public virtual HSS_LMS_PublicKey,
+class BOTAN_PUBLIC_API(3, 4) HSS_LMS_PrivateKey final : public virtual HSS_LMS_PublicKey,
                                                         public virtual Private_Key {
    public:
       /**

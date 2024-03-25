@@ -55,11 +55,10 @@ class TreeAddress final {
 };
 
 auto get_hash_pair_func_for_identifier(const LMS_Params& lms_params, LMS_Identifier identifier) {
-   return [hash = HashFunction::create_or_throw(lms_params.hash_name()), I = std::move(identifier)](
-             StrongSpan<LMS_Tree_Node> out,
-             const TreeAddress& address,
-             StrongSpan<const LMS_Tree_Node> left,
-             StrongSpan<const LMS_Tree_Node> right) {
+   return [hash = lms_params.hash(), I = std::move(identifier)](StrongSpan<LMS_Tree_Node> out,
+                                                                const TreeAddress& address,
+                                                                StrongSpan<const LMS_Tree_Node> left,
+                                                                StrongSpan<const LMS_Tree_Node> right) {
       auto lms_address = dynamic_cast<const TreeAddress&>(address);
 
       hash->update(I);
@@ -83,8 +82,7 @@ void lms_gen_leaf(StrongSpan<LMS_Tree_Node> out,
 }
 
 auto lms_gen_leaf_func(const LMS_PrivateKey& lms_sk) {
-   return [hash = HashFunction::create_or_throw(lms_sk.lms_params().hash_name()), lms_sk](
-             StrongSpan<LMS_Tree_Node> out, const TreeAddress& tree_address) {
+   return [hash = lms_sk.lms_params().hash(), lms_sk](StrongSpan<LMS_Tree_Node> out, const TreeAddress& tree_address) {
       auto lmots_sk = LMOTS_Private_Key(lms_sk.lmots_params(), lms_sk.identifier(), tree_address.q(), lms_sk.seed());
       auto lmots_pk = LMOTS_Public_Key(lmots_sk);
       lms_gen_leaf(out, lmots_pk, tree_address, *hash);
@@ -165,9 +163,6 @@ LMS_Params LMS_Params::create_or_throw(LMS_Algorithm_Type type) {
 }
 
 LMS_Params LMS_Params::create_or_throw(std::string_view hash_name, uint8_t height) {
-   if(height != 5 && height != 10 && height != 15 && height != 20 && height != 25) {
-      throw Decoding_Error("Invalid height");
-   }
    LMS_Algorithm_Type type = [](std::string_view hash, uint8_t h) -> LMS_Algorithm_Type {
       if(hash == "SHA-256") {
          switch(h) {
@@ -278,7 +273,7 @@ LMS_PublicKey LMS_PublicKey::from_bytes_or_throw(BufferSlicer& slicer) {
    // Alg. 6. 2.c.
    auto lms_params = LMS_Params::create_or_throw(lms_type);
    // Alg. 6. 2.d.
-   if(total_remaining_bytes < size(lms_params)) {
+   if(total_remaining_bytes < LMS_PublicKey::size(lms_params)) {
       throw Decoding_Error("Too few bytes while parsing LMS public key.");
    }
    // Alg. 6. 2.b.
@@ -397,7 +392,7 @@ std::optional<LMS_Tree_Node> LMS_PublicKey::lms_compute_root_from_sig(const LMS_
       const LMOTS_Signature& lmots_sig = sig.lmots_sig();
       const LMOTS_Params lmots_params = LMOTS_Params::create_or_throw(lmots_sig.algorithm_type());
       const LMOTS_K Kc = lmots_compute_pubkey_from_sig(lmots_sig, msg, identifier(), sig.q());
-      const auto hash = HashFunction::create_or_throw(lms_params.hash_name());
+      const auto hash = lms_params.hash();
 
       auto hash_pair_func = get_hash_pair_func_for_identifier(lms_params, identifier());
 

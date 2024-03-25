@@ -149,6 +149,11 @@ class BOTAN_TEST_API LMOTS_Params {
        */
       const std::string& hash_name() const { return m_hash_name; }
 
+      /**
+       * @brief Construct a new hash instance for the OTS instance.
+       */
+      std::unique_ptr<HashFunction> hash() const { return HashFunction::create_or_throw(hash_name()); }
+
    private:
       /**
        * @brief Construct a new LM-OTS parameter object.

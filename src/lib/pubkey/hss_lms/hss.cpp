@@ -101,18 +101,18 @@ HSS_LMS_Params::HSS_LMS_Params(std::string_view algo_params) {
 }
 
 HSS_Sig_Idx HSS_LMS_Params::calc_max_sig_count() const {
-   uint32_t total_hight_counter = 0;
+   uint32_t total_height_counter = 0;
    for(HSS_Level level(0); level < L(); level++) {
-      total_hight_counter += params_at_level(level).lms_params().h();
+      total_height_counter += params_at_level(level).lms_params().h();
    }
-   if(total_hight_counter >= sizeof(HSS_Sig_Idx) * 8) {
+   if(total_height_counter >= sizeof(HSS_Sig_Idx) * 8) {
       return HSS_Sig_Idx(std::numeric_limits<HSS_Sig_Idx::wrapped_type>::max());
    }
-   return HSS_Sig_Idx(1) << total_hight_counter;
+   return HSS_Sig_Idx(1) << total_height_counter;
 }
 
 HSS_LMS_PrivateKeyInternal::HSS_LMS_PrivateKeyInternal(const HSS_LMS_Params& hss_params, RandomNumberGenerator& rng) :
-      m_hss_params(hss_params), m_current_idx(0) {
+      m_hss_params(hss_params), m_current_idx(0), m_sig_size(HSS_Signature::size(m_hss_params)) {
    m_hss_seed = rng.random_vec<LMS_Seed>(m_hss_params.params_at_level(HSS_Level(0)).lms_params().m());
    m_identifier = rng.random_vec<LMS_Identifier>(LMS_IDENTIFIER_LEN);
 }
@@ -211,7 +211,8 @@ HSS_LMS_PrivateKeyInternal::HSS_LMS_PrivateKeyInternal(HSS_LMS_Params hss_params
       m_hss_params(std::move(hss_params)),
       m_hss_seed(std::move(hss_seed)),
       m_identifier(std::move(identifier)),
-      m_current_idx(0) {
+      m_current_idx(0),
+      m_sig_size(HSS_Signature::size(m_hss_params)) {
    BOTAN_ARG_CHECK(m_hss_seed.size() == m_hss_params.params_at_level(HSS_Level(0)).lms_params().m(),
                    "Invalid seed size");
    BOTAN_ARG_CHECK(m_identifier.size() == LMS_IDENTIFIER_LEN, "Invalid identifier size");
