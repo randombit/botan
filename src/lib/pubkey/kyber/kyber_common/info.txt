@@ -15,7 +15,12 @@ rng
 </requires>
 
 <header:internal>
+kyber_constants.h
+kyber_encaps_base.h
+kyber_keys.h
+kyber_structures.h
 kyber_symmetric_primitives.h
+kyber_types.h
 </header:internal>
 
 <header:public>

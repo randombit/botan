@@ -1,0 +1,17 @@
+<defines>
+KYBER_ROUND3 -> 20240117
+</defines>
+
+<module_info>
+name -> "Kyber Round 3 Encapsulation"
+brief -> "Kyber key encapsulation as specified in the Round 3 spec"
+type -> "Internal"
+</module_info>
+
+<requires>
+kyber_common
+</requires>
+
+<header:internal>
+kyber_encaps.h
+</header:internal>
