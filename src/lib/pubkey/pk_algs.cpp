@@ -469,8 +469,8 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 #endif
 #if defined(BOTAN_HAS_CLASSICMCELIECE)
    if(alg_name == "ClassicMcEliece") {
-      auto cmce_params_set =
-         params.empty() ? Classic_McEliece_Parameter_Set::mceliece6960119f : cmce_param_set_from_str(params);
+      auto cmce_params_set = params.empty() ? Classic_McEliece_Parameter_Set::mceliece6960119f
+                                            : Classic_McEliece_Parameter_Set::from_string(params);
       return std::make_unique<Classic_McEliece_PrivateKey>(rng, cmce_params_set);
    }
 #endif

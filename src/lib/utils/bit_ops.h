@@ -221,20 +221,20 @@ inline constexpr T majority(T a, T b, T c) {
 template <std::unsigned_integral T>
 inline constexpr uint8_t ct_popcount(T x) {
    constexpr size_t s = sizeof(T);
-   if constexpr(s < 4) {
-      return ct_popcount(static_cast<uint32_t>(x));
+   static_assert(s <= 8, "T is not a suitable unsigned integer value");
+   if constexpr(s == 8) {
+      x = x - ((x >> 1) & 0x5555555555555555);
+      x = (x & 0x3333333333333333) + ((x >> 2) & 0x3333333333333333);
+      x = (x + (x >> 4)) & 0xF0F0F0F0F0F0F0F;
+      return (x * 0x101010101010101) >> 56;
    } else if constexpr(s == 4) {
       x = x - ((x >> 1) & 0x55555555);
       x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
       x = (x + (x >> 4)) & 0x0F0F0F0F;
       return (x * 0x01010101) >> 24;
-   } else if constexpr(s == 8) {
-      x = x - ((x >> 1) & 0x5555555555555555);
-      x = (x & 0x3333333333333333) + ((x >> 2) & 0x3333333333333333);
-      x = (x + (x >> 4)) & 0xF0F0F0F0F0F0F0F;
-      return (x * 0x101010101010101) >> 56;
    } else {
-      static_assert(!std::unsigned_integral<T>, "T is not a suitable unsigned integer value");
+      // s < 4
+      return ct_popcount(static_cast<uint32_t>(x));
    }
 }
 

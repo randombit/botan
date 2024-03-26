@@ -22,7 +22,7 @@ namespace Botan {
 
 Classic_McEliece_PublicKey::Classic_McEliece_PublicKey(const AlgorithmIdentifier& alg_id,
                                                        std::span<const uint8_t> key_bits) :
-      Classic_McEliece_PublicKey(key_bits, cmce_param_set_from_oid(alg_id.oid())) {}
+      Classic_McEliece_PublicKey(key_bits, Classic_McEliece_Parameter_Set::from_oid(alg_id.oid())) {}
 
 Classic_McEliece_PublicKey::Classic_McEliece_PublicKey(std::span<const uint8_t> key_bits,
                                                        Classic_McEliece_Parameter_Set param_set) {
@@ -52,7 +52,8 @@ OID Classic_McEliece_PublicKey::object_identifier() const {
 }
 
 size_t Classic_McEliece_PublicKey::key_length() const {
-   return m_public->matrix().bytes().size();
+   // The key length is the dimension k of the goppa code (i.e. the code has 2^k codewords)
+   return m_public->params().pk_no_cols();
 }
 
 size_t Classic_McEliece_PublicKey::estimated_strength() const {
@@ -99,7 +100,7 @@ Classic_McEliece_PrivateKey::Classic_McEliece_PrivateKey(std::span<const uint8_t
 
 Classic_McEliece_PrivateKey::Classic_McEliece_PrivateKey(const AlgorithmIdentifier& alg_id,
                                                          std::span<const uint8_t> key_bits) :
-      Classic_McEliece_PrivateKey(key_bits, cmce_param_set_from_oid(alg_id.oid())) {}
+      Classic_McEliece_PrivateKey(key_bits, Classic_McEliece_Parameter_Set::from_oid(alg_id.oid())) {}
 
 std::unique_ptr<Public_Key> Classic_McEliece_PrivateKey::public_key() const {
    return std::make_unique<Classic_McEliece_PublicKey>(*this);
@@ -114,39 +115,7 @@ secure_vector<uint8_t> Classic_McEliece_PrivateKey::raw_private_key_bits() const
 }
 
 bool Classic_McEliece_PrivateKey::check_key(RandomNumberGenerator&, bool) const {
-   auto prg = m_private->params().prg(m_private->delta());
-
-   const auto s = prg->output<CmceRejectionSeed>(m_private->params().n() / 8);
-   const auto ordering_bits =
-      prg->output<CmceOrderingBits>((m_private->params().sigma2() * m_private->params().q()) / 8);
-   const auto irreducible_bits =
-      prg->output<CmceIrreducibleBits>((m_private->params().sigma1() * m_private->params().t()) / 8);
-
-   // Recomputing s as hash of delta
-   auto ret =
-      CT::Mask<size_t>::expand(CT::is_equal<uint8_t>(s.data(), m_private->s().data(), m_private->params().n() / 8));
-
-   // Checking weight of c
-   ret &= CT::Mask<size_t>::is_equal(m_private->c().ct_hamming_weight(), 32);
-
-   if(auto g = m_private->params().poly_ring().compute_minimal_polynomial(irreducible_bits)) {
-      for(size_t i = 0; i < g->degree() - 1; ++i) {
-         ret &= CT::Mask<size_t>::expand(GF_Mask::is_equal(g->coef_at(i), m_private->g().coef_at(i)).elem_mask());
-      }
-   } else {
-      ret = CT::Mask<size_t>::cleared();
-   }
-
-   // Check alpha control bits
-   if(auto field_ord_from_seed =
-         Classic_McEliece_Field_Ordering::create_field_ordering(m_private->params(), ordering_bits)) {
-      field_ord_from_seed->permute_with_pivots(m_private->params(), m_private->c());
-      ret &= CT::Mask<size_t>::expand(field_ord_from_seed->ct_is_equal(m_private->field_ordering()));
-   } else {
-      ret = CT::Mask<size_t>::cleared();
-   }
-
-   return ret.as_bool();
+   return m_private->check_key();
 }
 
 std::unique_ptr<PK_Ops::KEM_Decryption> Classic_McEliece_PrivateKey::create_kem_decryption_op(

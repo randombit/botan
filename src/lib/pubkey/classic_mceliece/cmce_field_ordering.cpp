@@ -71,7 +71,7 @@ T min(const T& a, const T& b) {
 
 namespace {
 template <std::unsigned_integral T1, std::unsigned_integral T2>
-std::vector<std::pair<T1, T2>> zip(const secure_vector<T1>& vec_1, const secure_vector<T2>& vec_2) {
+std::vector<std::pair<T1, T2>> zip(std::span<const T1> vec_1, std::span<const T2> vec_2) {
    BOTAN_ARG_CHECK(vec_1.size() == vec_2.size(), "Vectors' dimensions do not match");
    std::vector<std::pair<T1, T2>> vec_zipped;
    vec_zipped.reserve(vec_1.size());
@@ -82,7 +82,7 @@ std::vector<std::pair<T1, T2>> zip(const secure_vector<T1>& vec_1, const secure_
 }
 
 template <std::unsigned_integral T1, std::unsigned_integral T2>
-std::pair<secure_vector<T1>, secure_vector<T2>> unzip(const std::vector<std::pair<T1, T2>>& vec_zipped) {
+std::pair<secure_vector<T1>, secure_vector<T2>> unzip(const std::span<std::pair<T1, T2>>& vec_zipped) {
    std::pair<secure_vector<T1>, secure_vector<T2>> res;
 
    res.first.reserve(vec_zipped.size());
@@ -109,12 +109,12 @@ std::vector<std::pair<uint32_t, uint16_t>> enumerate(std::span<const uint32_t> v
 /**
 * @brief Create permutation pi as in (Section 8.2, Step 3).
 */
-CmcePermutation create_pi(secure_vector<uint32_t>& a) {
+CmcePermutation create_pi(std::span<const uint32_t> a) {
    auto a_pi_zipped = enumerate(a);
    CMCE_CT::bitonic_sort_pair(std::span(a_pi_zipped));
 
    CmcePermutation pi_sorted;
-   std::tie(a, pi_sorted.get()) = unzip(a_pi_zipped);
+   std::tie(a, pi_sorted.get()) = unzip(std::span(a_pi_zipped));
 
    return pi_sorted;
 }
@@ -139,7 +139,7 @@ Classic_McEliece_GF from_pi(CmcePermutationElement pi_elem, CmceGfMod modulus, s
 /**
  * @brief Part of field ordering generation according to ISO 9.2.10
  */
-secure_vector<uint16_t> composeinv(const secure_vector<uint16_t>& c, const secure_vector<uint16_t>& pi) {
+secure_vector<uint16_t> composeinv(std::span<const uint16_t> c, std::span<const uint16_t> pi) {
    auto pi_c_zipped = zip(pi, c);
    CMCE_CT::bitonic_sort_pair(std::span(pi_c_zipped));
    // Extract c from the sorted vector

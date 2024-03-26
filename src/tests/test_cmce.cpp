@@ -284,7 +284,7 @@ class CMCE_Generic_Keygen_Tests final : public PK_Key_Generation_Test {
 
          std::vector<std::string> res;
          std::transform(to_test.begin(), to_test.end(), std::back_inserter(res), [](auto& param_set) {
-            return Botan::cmce_str_from_param_set(param_set);
+            return param_set.to_string();
          });
 
          return res;
@@ -299,7 +299,7 @@ class Classic_McEliece_KAT_Tests final : public Botan_Tests::PK_PQC_KEM_KAT_Test
 
    private:
       Botan::Classic_McEliece_Parameters get_params(const std::string& header) const {
-         return Botan::Classic_McEliece_Parameters::create(Botan::cmce_param_set_from_str(header));
+         return Botan::Classic_McEliece_Parameters::create(Botan::Classic_McEliece_Parameter_Set::from_string(header));
       }
 
       bool is_available(const std::string& alg_name) const final { return !skip_cmce_test(alg_name); }

@@ -126,14 +126,6 @@ class BOTAN_PUBLIC_API(3, 4) Classic_McEliece_PrivateKey final : public virtual 
 
       secure_vector<uint8_t> raw_private_key_bits() const override;
 
-      /**
-       * @brief Checks the private key for consistency with the first component delta, i.e.,
-       * recomputes s as a hash of delta and checks equivalence with sk.s, checks the weight of c,
-       * and checks the control bits. It also recomputes beta based on delta and recomputes g based on beta,
-       * checking that g is equal to the value sk.s
-       *
-       * See NIST Impl. guide 6.3 Double-Checks on Private Keys.
-       */
       bool check_key(RandomNumberGenerator&, bool) const override;
 
       std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(RandomNumberGenerator& rng,
@@ -148,4 +140,4 @@ BOTAN_DIAGNOSTIC_POP
 
 }  // namespace Botan
 
-#endif  // BOTAN_CMCE_GF_H_
+#endif  // BOTAN_CMCE_H_

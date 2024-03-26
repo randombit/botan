@@ -97,6 +97,38 @@ secure_vector<uint8_t> Classic_McEliece_PrivateKeyInternal::serialize() const {
    return concat(m_delta.get(), m_c.get().to_bytes(), m_g.serialize(), control_bits.to_bytes(), m_s);
 }
 
+bool Classic_McEliece_PrivateKeyInternal::check_key() const {
+   auto prg = m_params.prg(m_delta);
+
+   const auto s = prg->output<CmceRejectionSeed>(m_params.n() / 8);
+   const auto ordering_bits = prg->output<CmceOrderingBits>((m_params.sigma2() * m_params.q()) / 8);
+   const auto irreducible_bits = prg->output<CmceIrreducibleBits>((m_params.sigma1() * m_params.t()) / 8);
+
+   // Recomputing s as hash of delta
+   auto ret = CT::Mask<size_t>::expand(CT::is_equal<uint8_t>(s.data(), m_s.data(), m_params.n() / 8));
+
+   // Checking weight of c
+   ret &= CT::Mask<size_t>::is_equal(c().ct_hamming_weight(), 32);
+
+   if(auto g = m_params.poly_ring().compute_minimal_polynomial(irreducible_bits)) {
+      for(size_t i = 0; i < g->degree() - 1; ++i) {
+         ret &= CT::Mask<size_t>::expand(GF_Mask::is_equal(g->coef_at(i), m_g.coef_at(i)).elem_mask());
+      }
+   } else {
+      ret = CT::Mask<size_t>::cleared();
+   }
+
+   // Check alpha control bits
+   if(auto field_ord_from_seed = Classic_McEliece_Field_Ordering::create_field_ordering(m_params, ordering_bits)) {
+      field_ord_from_seed->permute_with_pivots(m_params, c());
+      ret &= CT::Mask<size_t>::expand(field_ord_from_seed->ct_is_equal(field_ordering()));
+   } else {
+      ret = CT::Mask<size_t>::cleared();
+   }
+
+   return ret.as_bool();
+}
+
 std::shared_ptr<Classic_McEliece_PublicKeyInternal> Classic_McEliece_PublicKeyInternal::create_from_private_key(
    const Classic_McEliece_PrivateKeyInternal& sk) {
    auto pk_matrix_and_pivot = Classic_McEliece_Matrix::create_matrix(sk.params(), sk.field_ordering(), sk.g());

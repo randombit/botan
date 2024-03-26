@@ -2137,7 +2137,7 @@ class Speed final : public Command {
          };
 
          for(auto cmce_set : cmce_param_sets) {
-            auto cmce_set_str = Botan::cmce_str_from_param_set(cmce_set);
+            auto cmce_set_str = cmce_set.to_string();
 
             auto keygen_timer = make_timer(cmce_set_str, provider, "keygen");
 

@@ -158,6 +158,16 @@ class BOTAN_TEST_API Classic_McEliece_PrivateKeyInternal {
        */
       const Classic_McEliece_Parameters& params() const { return m_params; }
 
+      /**
+       * @brief Checks the private key for consistency with the first component delta, i.e.,
+       * recomputes s as a hash of delta and checks equivalence with sk.s, checks the weight of c,
+       * and checks the control bits. It also recomputes beta based on delta and recomputes g based on beta,
+       * checking that g is equal to the value sk.s
+       *
+       * See NIST Impl. guide 6.3 Double-Checks on Private Keys.
+       */
+      bool check_key() const;
+
    private:
       Classic_McEliece_Parameters m_params;
       CmceKeyGenSeed m_delta;

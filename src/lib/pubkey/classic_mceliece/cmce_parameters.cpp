@@ -14,7 +14,7 @@ namespace Botan {
 namespace {
 
 CmceGfMod determine_poly_f(Classic_McEliece_Parameter_Set param_set) {
-   switch(param_set) {
+   switch(param_set.code()) {
       case Classic_McEliece_Parameter_Set::mceliece348864:
       case Classic_McEliece_Parameter_Set::mceliece348864f:
          // z^12 + z^3 + 1
@@ -42,7 +42,7 @@ CmceGfMod determine_poly_f(Classic_McEliece_Parameter_Set param_set) {
 Classic_McEliece_Polynomial_Ring determine_poly_ring(Classic_McEliece_Parameter_Set param_set) {
    CmceGfMod poly_f = determine_poly_f(param_set);
 
-   switch(param_set) {
+   switch(param_set.code()) {
       case Classic_McEliece_Parameter_Set::mceliece348864:
       case Classic_McEliece_Parameter_Set::mceliece348864f:
          // y^64 + y^3 + y + z
@@ -95,7 +95,7 @@ Classic_McEliece_Polynomial_Ring determine_poly_ring(Classic_McEliece_Parameter_
 Classic_McEliece_Parameters Classic_McEliece_Parameters::create(Classic_McEliece_Parameter_Set set) {
    auto poly_ring = determine_poly_ring(set);
 
-   switch(set) {
+   switch(set.code()) {
       case Classic_McEliece_Parameter_Set::mceliece348864:
       case Classic_McEliece_Parameter_Set::mceliece348864f:
          return Classic_McEliece_Parameters(set, 12, 3488, std::move(poly_ring));
@@ -126,15 +126,15 @@ Classic_McEliece_Parameters Classic_McEliece_Parameters::create(Classic_McEliece
 }
 
 Classic_McEliece_Parameters Classic_McEliece_Parameters::create(std::string_view name) {
-   return Classic_McEliece_Parameters::create(cmce_param_set_from_str(name));
+   return Classic_McEliece_Parameters::create(Classic_McEliece_Parameter_Set::from_string(name));
 }
 
 Classic_McEliece_Parameters Classic_McEliece_Parameters::create(const OID& oid) {
-   return create(cmce_param_set_from_oid(oid));
+   return create(Classic_McEliece_Parameter_Set::from_oid(oid));
 }
 
 OID Classic_McEliece_Parameters::object_identifier() const {
-   return OID::from_string(cmce_str_from_param_set(m_set));
+   return OID::from_string(m_set.to_string());
 }
 
 Classic_McEliece_Parameters::Classic_McEliece_Parameters(Classic_McEliece_Parameter_Set param_set,
@@ -150,7 +150,7 @@ size_t Classic_McEliece_Parameters::estimated_strength() const {
    // For each instance, the minimal strength against the best attack (with free memory access)
    // is used as the overall security strength estimate. The strength is capped at 256, since the
    // seed is only 256 bits long.
-   switch(m_set) {
+   switch(m_set.code()) {
       case Botan::Classic_McEliece_Parameter_Set::mceliece348864:
       case Botan::Classic_McEliece_Parameter_Set::mceliece348864f:
          return 140;
