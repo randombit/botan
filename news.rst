@@ -1,6 +1,34 @@
 Release Notes
 ========================================
 
+Version 3.4.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add Ed448 signatures and X448 key exchange (GH #3933)
+
+* X.509 certificate verification now can optionally ignore the
+  expiration date of root certificates. (GH #3938)
+
+* Add new build options to disable deprecated features, and to enable
+  experimental features. (GH #3910)
+
+* Refactor test RNG usage to improve reproducibility. (GH #3920)
+
+* Add ``std::span`` interfaces to ``BigInt`` (GH #3866)
+
+* Refactorings and improvements to low level load/store utility
+  functions. (GH #3869)
+
+* Add Mac ARM based CI build (GH #)
+
+* Fix a thread serialization bug that caused sporadic test failures.
+  (GH #3922)
+
+* Update GH Actions to v4 (GH #3923)
+
+* Add examples of password based encryption and HTTPS+ASIO client.
+  (GH #3935 #3910)
+
 Version 3.3.0, 2024-02-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
