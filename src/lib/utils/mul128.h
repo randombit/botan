@@ -9,6 +9,7 @@
 #define BOTAN_UTIL_MUL128_H_
 
 #include <botan/types.h>
+#include <type_traits>
 
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC) && defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
    #include <intrin.h>
@@ -26,33 +27,28 @@ __extension__ typedef unsigned __int128 uint128_t;
 /**
 * Perform a 64x64->128 bit multiplication
 */
-inline void mul64x64_128(uint64_t a, uint64_t b, uint64_t* lo, uint64_t* hi) {
-#if defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
+constexpr inline void mul64x64_128(uint64_t a, uint64_t b, uint64_t* lo, uint64_t* hi) {
+   if(!std::is_constant_evaluated()) {
+#if defined(BOTAN_BUILD_COMPILER_IS_MSVC) && defined(BOTAN_TARGET_ARCH_IS_X86_64)
+      *lo = _umul128(a, b, hi);
+      return;
 
+#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC) && defined(BOTAN_TARGET_ARCH_IS_ARM64)
+      *lo = a * b;
+      *hi = __umulh(a, b);
+      return;
+#endif
+   }
+
+#if defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
    const uint128_t r = static_cast<uint128_t>(a) * b;
    *hi = (r >> 64) & 0xFFFFFFFFFFFFFFFF;
    *lo = (r)&0xFFFFFFFFFFFFFFFF;
-
-#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC) && defined(BOTAN_TARGET_ARCH_IS_X86_64)
-   *lo = _umul128(a, b, hi);
-
-#elif defined(BOTAN_BUILD_COMPILER_IS_MSVC) && defined(BOTAN_TARGET_ARCH_IS_ARM64)
-   *lo = a * b;
-   *hi = __umulh(a, b);
-
-#elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_X86_64)
-   asm("mulq %3" : "=d"(*hi), "=a"(*lo) : "a"(a), "rm"(b) : "cc");
-
-#elif defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_PPC64)
-   asm("mulhdu %0,%1,%2" : "=r"(*hi) : "r"(a), "r"(b) : "cc");
-   *lo = a * b;
-
 #else
 
    /*
    * Do a 64x64->128 multiply using four 32x32->64 multiplies plus
-   * some adds and shifts. Last resort for CPUs like UltraSPARC (with
-   * 64-bit registers/ALU, but no 64x64->128 multiply) or 32-bit CPUs.
+   * some adds and shifts.
    */
    const size_t HWORD_BITS = 32;
    const uint32_t HWORD_MASK = 0xFFFFFFFF;
