@@ -22,7 +22,7 @@ std::vector<uint8_t> GOST_3410_PublicKey::public_key_bits() const {
    const BigInt x = public_point().get_affine_x();
    const BigInt y = public_point().get_affine_y();
 
-   size_t part_size = std::max(x.bytes(), y.bytes());
+   const size_t part_size = domain().get_p_bytes();
 
    std::vector<uint8_t> bits(2 * part_size);
 
