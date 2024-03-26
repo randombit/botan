@@ -19,7 +19,9 @@ Version 3.4.0, Not Yet Released
 * Refactorings and improvements to low level load/store utility
   functions. (GH #3869)
 
-* Add Mac ARM based CI build (GH #)
+* Fix the amalgamation build on ARM64 (GH #3931)
+
+* Add Mac ARM based CI build (GH #3931)
 
 * Fix a thread serialization bug that caused sporadic test failures.
   (GH #3922)
