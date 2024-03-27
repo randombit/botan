@@ -58,7 +58,7 @@ inline word bigint_cnd_add(word cnd, word x[], word x_size, const word y[], size
    }
 
    for(size_t i = y_size; i != x_size; ++i) {
-      z[0] = word_add(x[i], 0, &carry);
+      z[0] = word_add(x[i], static_cast<word>(0), &carry);
       x[i] = mask.select(z[0], x[i]);
    }
 
@@ -98,7 +98,7 @@ inline word bigint_cnd_sub(word cnd, word x[], size_t x_size, const word y[], si
    }
 
    for(size_t i = y_size; i != x_size; ++i) {
-      z[0] = word_sub(x[i], 0, &carry);
+      z[0] = word_sub(x[i], static_cast<word>(0), &carry);
       x[i] = mask.select(z[0], x[i]);
    }
 
@@ -192,7 +192,7 @@ inline void bigint_cnd_abs(word cnd, word x[], size_t size) {
 
    word carry = mask.if_set_return(1);
    for(size_t i = 0; i != size; ++i) {
-      const word z = word_add(~x[i], 0, &carry);
+      const word z = word_add(~x[i], static_cast<word>(0), &carry);
       x[i] = mask.select(z, x[i]);
    }
 }
@@ -216,7 +216,7 @@ inline word bigint_add2_nc(word x[], size_t x_size, const word y[], size_t y_siz
    }
 
    for(size_t i = y_size; i != x_size; ++i) {
-      x[i] = word_add(x[i], 0, &carry);
+      x[i] = word_add(x[i], static_cast<word>(0), &carry);
    }
 
    return carry;
@@ -243,7 +243,7 @@ inline word bigint_add3_nc(word z[], const word x[], size_t x_size, const word y
    }
 
    for(size_t i = y_size; i != x_size; ++i) {
-      z[i] = word_add(x[i], 0, &carry);
+      z[i] = word_add(x[i], static_cast<word>(0), &carry);
    }
 
    return carry;
@@ -286,7 +286,7 @@ inline word bigint_sub2(word x[], size_t x_size, const word y[], size_t y_size) 
    }
 
    for(size_t i = y_size; i != x_size; ++i) {
-      x[i] = word_sub(x[i], 0, &borrow);
+      x[i] = word_sub(x[i], static_cast<word>(0), &borrow);
    }
 
    return borrow;
@@ -334,7 +334,7 @@ inline word bigint_sub3(word z[], const word x[], size_t x_size, const word y[],
    }
 
    for(size_t i = y_size; i != x_size; ++i) {
-      z[i] = word_sub(x[i], 0, &borrow);
+      z[i] = word_sub(x[i], static_cast<word>(0), &borrow);
    }
 
    return borrow;

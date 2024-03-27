@@ -11,6 +11,7 @@
 
 #include <botan/types.h>
 #include <botan/internal/mul128.h>
+#include <type_traits>
 
 namespace Botan {
 
@@ -39,108 +40,117 @@ namespace Botan {
 #endif
 
 /*
+* Concept for allow multi precision word types
+*/
+template <typename T>
+concept WordType = (std::same_as<T, uint32_t> || std::same_as<T, uint64_t>);
+
+template <WordType W>
+struct DwordType {};
+
+template <>
+class DwordType<uint32_t> {
+   public:
+      typedef uint64_t dword;
+};
+
+template <>
+class DwordType<uint64_t> {
+   public:
+      typedef uint128_t dword;
+};
+
+/*
 * Word Multiply/Add
 */
-inline word word_madd2(word a, word b, word* c) {
+template <WordType W>
+inline constexpr auto word_madd2(W a, W b, W* c) -> W {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(R"(
-      mull %[b]
-      addl %[c],%[a]
-      adcl $0,%[carry]
-      )"
-       : [a] "=a"(a), [b] "=rm"(b), [carry] "=&d"(*c)
-       : "0"(a), "1"(b), [c] "g"(*c)
-       : "cc");
+   if(std::same_as<W, uint32_t>() && !std::is_constant_evaluated()) {
+      asm(R"(
+         mull %[b]
+         addl %[c],%[a]
+         adcl $0,%[carry]
+         )"
+          : [a] "=a"(a), [b] "=rm"(b), [carry] "=&d"(*c)
+          : "0"(a), "1"(b), [c] "g"(*c)
+          : "cc");
 
-   return a;
-
-#elif defined(BOTAN_MP_USE_X86_64_ASM)
-   asm(R"(
-      mulq %[b]
-      addq %[c],%[a]
-      adcq $0,%[carry]
-      )"
-       : [a] "=a"(a), [b] "=rm"(b), [carry] "=&d"(*c)
-       : "0"(a), "1"(b), [c] "g"(*c)
-       : "cc");
-
-   return a;
-
-#elif defined(BOTAN_MP_DWORD)
-   const BOTAN_MP_DWORD s = static_cast<BOTAN_MP_DWORD>(a) * b + *c;
-   *c = static_cast<word>(s >> BOTAN_MP_WORD_BITS);
-   return static_cast<word>(s);
-#else
-   static_assert(BOTAN_MP_WORD_BITS == 64, "Unexpected word size");
-
-   word hi = 0, lo = 0;
-
-   mul64x64_128(a, b, &lo, &hi);
-
-   lo += *c;
-   hi += (lo < *c);  // carry?
-
-   *c = hi;
-   return lo;
+      return a;
+   }
 #endif
+
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      asm(R"(
+         mulq %[b]
+         addq %[c],%[a]
+         adcq $0,%[carry]
+         )"
+          : [a] "=a"(a), [b] "=rm"(b), [carry] "=&d"(*c)
+          : "0"(a), "1"(b), [c] "g"(*c)
+          : "cc");
+
+      return a;
+   }
+#endif
+
+   typename DwordType<W>::dword z(a);
+   z *= b;
+   z += *c;
+   *c = static_cast<W>(z >> (sizeof(W) * 8));
+   return static_cast<W>(z);
 }
 
 /*
 * Word Multiply/Add
 */
-inline word word_madd3(word a, word b, word c, word* d) {
+template <WordType W>
+inline constexpr auto word_madd3(W a, W b, W c, W* d) -> W {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(R"(
-      mull %[b]
+   if(std::same_as<W, uint32_t> && !std::is_constant_evaluated()) {
+      asm(R"(
+         mull %[b]
 
-      addl %[c],%[a]
-      adcl $0,%[carry]
+         addl %[c],%[a]
+         adcl $0,%[carry]
 
-      addl %[d],%[a]
-      adcl $0,%[carry]
-      )"
-       : [a] "=a"(a), [b] "=rm"(b), [carry] "=&d"(*d)
-       : "0"(a), "1"(b), [c] "g"(c), [d] "g"(*d)
-       : "cc");
+         addl %[d],%[a]
+         adcl $0,%[carry]
+         )"
+          : [a] "=a"(a), [b] "=rm"(b), [carry] "=&d"(*d)
+          : "0"(a), "1"(b), [c] "g"(c), [d] "g"(*d)
+          : "cc");
 
-   return a;
-
-#elif defined(BOTAN_MP_USE_X86_64_ASM)
-   asm(R"(
-      mulq %[b]
-
-      addq %[c],%[a]
-      adcq $0,%[carry]
-
-      addq %[d],%[a]
-      adcq $0,%[carry]
-      )"
-       : [a] "=a"(a), [b] "=rm"(b), [carry] "=&d"(*d)
-       : "0"(a), "1"(b), [c] "g"(c), [d] "g"(*d)
-       : "cc");
-
-   return a;
-
-#elif defined(BOTAN_MP_DWORD)
-   const BOTAN_MP_DWORD s = static_cast<BOTAN_MP_DWORD>(a) * b + c + *d;
-   *d = static_cast<word>(s >> BOTAN_MP_WORD_BITS);
-   return static_cast<word>(s);
-#else
-   static_assert(BOTAN_MP_WORD_BITS == 64, "Unexpected word size");
-
-   word hi = 0, lo = 0;
-
-   mul64x64_128(a, b, &lo, &hi);
-
-   lo += c;
-   hi += (lo < c);  // carry?
-
-   lo += *d;
-   hi += (lo < *d);  // carry?
-
-   *d = hi;
-   return lo;
+      return a;
+   }
 #endif
+
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      asm(R"(
+         mulq %[b]
+
+         addq %[c],%[a]
+         adcq $0,%[carry]
+
+         addq %[d],%[a]
+         adcq $0,%[carry]
+         )"
+          : [a] "=a"(a), [b] "=rm"(b), [carry] "=&d"(*d)
+          : "0"(a), "1"(b), [c] "g"(c), [d] "g"(*d)
+          : "cc");
+
+      return a;
+   }
+#endif
+
+   typename DwordType<W>::dword z(a);
+   z *= b;
+   z += c;
+   z += *d;
+   *d = static_cast<W>(z >> (sizeof(W) * 8));
+   return static_cast<W>(z);
 }
 
 #if defined(BOTAN_MP_USE_X86_32_ASM)
@@ -234,49 +244,60 @@ inline word word_madd3(word a, word b, word c, word* d) {
 /*
 * Word Addition
 */
-inline word word_add(word x, word y, word* carry) {
+template <WordType W>
+inline constexpr auto word_add(W x, W y, W* carry) -> W {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(ADD_OR_SUBTRACT(ASM("adcl %[y],%[x]"))
-       : [x] "=r"(x), [carry] "=r"(*carry)
-       : "0"(x), [y] "rm"(y), "1"(*carry)
-       : "cc");
-   return x;
+   if(std::same_as<W, uint32_t> && !std::is_constant_evaluated()) {
+      asm(ADD_OR_SUBTRACT(ASM("adcl %[y],%[x]"))
+          : [x] "=r"(x), [carry] "=r"(*carry)
+          : "0"(x), [y] "rm"(y), "1"(*carry)
+          : "cc");
+      return x;
+   }
+#endif
 
-#elif defined(BOTAN_MP_USE_X86_64_ASM)
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      asm(ADD_OR_SUBTRACT(ASM("adcq %[y],%[x]"))
+          : [x] "=r"(x), [carry] "=r"(*carry)
+          : "0"(x), [y] "rm"(y), "1"(*carry)
+          : "cc");
+      return x;
+   }
+#endif
 
-   asm(ADD_OR_SUBTRACT(ASM("adcq %[y],%[x]"))
-       : [x] "=r"(x), [carry] "=r"(*carry)
-       : "0"(x), [y] "rm"(y), "1"(*carry)
-       : "cc");
-   return x;
-
-#else
-   word z = x + y;
-   word c1 = (z < x);
+   W z = x + y;
+   W c1 = (z < x);
    z += *carry;
    *carry = c1 | (z < *carry);
    return z;
-#endif
 }
 
 /*
 * Eight Word Block Addition, Two Argument
 */
-inline word word8_add2(word x[8], const word y[8], word carry) {
+template <WordType W>
+inline constexpr auto word8_add2(W x[8], const W y[8], W carry) -> W {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB2_OP, "adcl"))
-       : [carry] "=r"(carry)
-       : [x] "r"(x), [y] "r"(y), "0"(carry)
-       : "cc", "memory");
+   if(std::same_as<W, uint32_t> && !std::is_constant_evaluated()) {
+      asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB2_OP, "adcl"))
+          : [carry] "=r"(carry)
+          : [x] "r"(x), [y] "r"(y), "0"(carry)
+          : "cc", "memory");
+      return carry;
+   }
+#endif
 
-#elif defined(BOTAN_MP_USE_X86_64_ASM)
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB2_OP, "adcq"))
+          : [carry] "=r"(carry)
+          : [x] "r"(x), [y] "r"(y), "0"(carry)
+          : "cc", "memory");
+      return carry;
+   }
+#endif
 
-   asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB2_OP, "adcq"))
-       : [carry] "=r"(carry)
-       : [x] "r"(x), [y] "r"(y), "0"(carry)
-       : "cc", "memory");
-
-#else
    x[0] = word_add(x[0], y[0], &carry);
    x[1] = word_add(x[1], y[1], &carry);
    x[2] = word_add(x[2], y[2], &carry);
@@ -285,28 +306,34 @@ inline word word8_add2(word x[8], const word y[8], word carry) {
    x[5] = word_add(x[5], y[5], &carry);
    x[6] = word_add(x[6], y[6], &carry);
    x[7] = word_add(x[7], y[7], &carry);
-#endif
-
    return carry;
 }
 
 /*
 * Eight Word Block Addition, Three Argument
 */
-inline word word8_add3(word z[8], const word x[8], const word y[8], word carry) {
+template <WordType W>
+inline constexpr auto word8_add3(W z[8], const W x[8], const W y[8], W carry) -> W {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "adcl"))
-       : [carry] "=r"(carry)
-       : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
-       : "cc", "memory");
+   if(std::same_as<W, uint32_t> && !std::is_constant_evaluated()) {
+      asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "adcl"))
+          : [carry] "=r"(carry)
+          : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
+          : "cc", "memory");
+      return carry;
+   }
+#endif
 
-#elif defined(BOTAN_MP_USE_X86_64_ASM)
-   asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "adcq"))
-       : [carry] "=r"(carry)
-       : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
-       : "cc", "memory");
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "adcq"))
+          : [carry] "=r"(carry)
+          : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
+          : "cc", "memory");
+      return carry;
+   }
+#endif
 
-#else
    z[0] = word_add(x[0], y[0], &carry);
    z[1] = word_add(x[1], y[1], &carry);
    z[2] = word_add(x[2], y[2], &carry);
@@ -315,55 +342,66 @@ inline word word8_add3(word z[8], const word x[8], const word y[8], word carry) 
    z[5] = word_add(x[5], y[5], &carry);
    z[6] = word_add(x[6], y[6], &carry);
    z[7] = word_add(x[7], y[7], &carry);
-#endif
-
    return carry;
 }
 
 /*
 * Word Subtraction
 */
-inline word word_sub(word x, word y, word* carry) {
+template <WordType W>
+inline constexpr auto word_sub(W x, W y, W* carry) -> W {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(ADD_OR_SUBTRACT(ASM("sbbl %[y],%[x]"))
-       : [x] "=r"(x), [carry] "=r"(*carry)
-       : "0"(x), [y] "rm"(y), "1"(*carry)
-       : "cc");
-   return x;
+   if(std::same_as<W, uint32_t> && !std::is_constant_evaluated()) {
+      asm(ADD_OR_SUBTRACT(ASM("sbbl %[y],%[x]"))
+          : [x] "=r"(x), [carry] "=r"(*carry)
+          : "0"(x), [y] "rm"(y), "1"(*carry)
+          : "cc");
+      return x;
+   }
+#endif
 
-#elif defined(BOTAN_MP_USE_X86_64_ASM)
-   asm(ADD_OR_SUBTRACT(ASM("sbbq %[y],%[x]"))
-       : [x] "=r"(x), [carry] "=r"(*carry)
-       : "0"(x), [y] "rm"(y), "1"(*carry)
-       : "cc");
-   return x;
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      asm(ADD_OR_SUBTRACT(ASM("sbbq %[y],%[x]"))
+          : [x] "=r"(x), [carry] "=r"(*carry)
+          : "0"(x), [y] "rm"(y), "1"(*carry)
+          : "cc");
+      return x;
+   }
+#endif
 
-#else
-   word t0 = x - y;
-   word c1 = (t0 > x);
-   word z = t0 - *carry;
+   W t0 = x - y;
+   W c1 = (t0 > x);
+   W z = t0 - *carry;
    *carry = c1 | (z > t0);
    return z;
-#endif
 }
 
 /*
 * Eight Word Block Subtraction, Two Argument
 */
-inline word word8_sub2(word x[8], const word y[8], word carry) {
+template <WordType W>
+inline constexpr auto word8_sub2(W x[8], const W y[8], W carry) -> W {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB2_OP, "sbbl"))
-       : [carry] "=r"(carry)
-       : [x] "r"(x), [y] "r"(y), "0"(carry)
-       : "cc", "memory");
+   if(std::same_as<W, uint32_t> && !std::is_constant_evaluated()) {
+      asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB2_OP, "sbbl"))
+          : [carry] "=r"(carry)
+          : [x] "r"(x), [y] "r"(y), "0"(carry)
+          : "cc", "memory");
+      return carry;
+   }
+#endif
 
-#elif defined(BOTAN_MP_USE_X86_64_ASM)
-   asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB2_OP, "sbbq"))
-       : [carry] "=r"(carry)
-       : [x] "r"(x), [y] "r"(y), "0"(carry)
-       : "cc", "memory");
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB2_OP, "sbbq"))
+          : [carry] "=r"(carry)
+          : [x] "r"(x), [y] "r"(y), "0"(carry)
+          : "cc", "memory");
+      return carry;
+   }
+#endif
 
-#else
    x[0] = word_sub(x[0], y[0], &carry);
    x[1] = word_sub(x[1], y[1], &carry);
    x[2] = word_sub(x[2], y[2], &carry);
@@ -372,28 +410,34 @@ inline word word8_sub2(word x[8], const word y[8], word carry) {
    x[5] = word_sub(x[5], y[5], &carry);
    x[6] = word_sub(x[6], y[6], &carry);
    x[7] = word_sub(x[7], y[7], &carry);
-#endif
-
    return carry;
 }
 
 /*
 * Eight Word Block Subtraction, Two Argument
 */
-inline word word8_sub2_rev(word x[8], const word y[8], word carry) {
+template <WordType W>
+inline constexpr auto word8_sub2_rev(W x[8], const W y[8], W carry) -> W {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "sbbl"))
-       : [carry] "=r"(carry)
-       : [x] "r"(y), [y] "r"(x), [z] "r"(x), "0"(carry)
-       : "cc", "memory");
+   if(std::same_as<W, uint32_t> && !std::is_constant_evaluated()) {
+      asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "sbbl"))
+          : [carry] "=r"(carry)
+          : [x] "r"(y), [y] "r"(x), [z] "r"(x), "0"(carry)
+          : "cc", "memory");
+      return carry;
+   }
+#endif
 
-#elif defined(BOTAN_MP_USE_X86_64_ASM)
-   asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "sbbq"))
-       : [carry] "=r"(carry)
-       : [x] "r"(y), [y] "r"(x), [z] "r"(x), "0"(carry)
-       : "cc", "memory");
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "sbbq"))
+          : [carry] "=r"(carry)
+          : [x] "r"(y), [y] "r"(x), [z] "r"(x), "0"(carry)
+          : "cc", "memory");
+      return carry;
+   }
+#endif
 
-#else
    x[0] = word_sub(y[0], x[0], &carry);
    x[1] = word_sub(y[1], x[1], &carry);
    x[2] = word_sub(y[2], x[2], &carry);
@@ -402,28 +446,34 @@ inline word word8_sub2_rev(word x[8], const word y[8], word carry) {
    x[5] = word_sub(y[5], x[5], &carry);
    x[6] = word_sub(y[6], x[6], &carry);
    x[7] = word_sub(y[7], x[7], &carry);
-#endif
-
    return carry;
 }
 
 /*
 * Eight Word Block Subtraction, Three Argument
 */
-inline word word8_sub3(word z[8], const word x[8], const word y[8], word carry) {
+template <WordType W>
+inline constexpr auto word8_sub3(W z[8], const W x[8], const W y[8], W carry) -> W {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "sbbl"))
-       : [carry] "=r"(carry)
-       : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
-       : "cc", "memory");
+   if(std::same_as<W, uint32_t> && !std::is_constant_evaluated()) {
+      asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "sbbl"))
+          : [carry] "=r"(carry)
+          : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
+          : "cc", "memory");
+      return carry;
+   }
+#endif
 
-#elif defined(BOTAN_MP_USE_X86_64_ASM)
-   asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "sbbq"))
-       : [carry] "=r"(carry)
-       : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
-       : "cc", "memory");
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "sbbq"))
+          : [carry] "=r"(carry)
+          : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
+          : "cc", "memory");
+      return carry;
+   }
+#endif
 
-#else
    z[0] = word_sub(x[0], y[0], &carry);
    z[1] = word_sub(x[1], y[1], &carry);
    z[2] = word_sub(x[2], y[2], &carry);
@@ -432,22 +482,34 @@ inline word word8_sub3(word z[8], const word x[8], const word y[8], word carry) 
    z[5] = word_sub(x[5], y[5], &carry);
    z[6] = word_sub(x[6], y[6], &carry);
    z[7] = word_sub(x[7], y[7], &carry);
-#endif
-
    return carry;
 }
 
 /*
 * Eight Word Block Linear Multiplication
 */
-inline word word8_linmul2(word x[8], word y, word carry) {
+template <WordType W>
+inline constexpr auto word8_linmul2(W x[8], W y, W carry) -> W {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(DO_8_TIMES(LINMUL_OP, "x") : [carry] "=r"(carry) : [x] "r"(x), [y] "rm"(y), "0"(carry) : "cc", "%eax", "%edx");
+   if(std::same_as<W, uint32_t> && !std::is_constant_evaluated()) {
+      asm(DO_8_TIMES(LINMUL_OP, "x")
+          : [carry] "=r"(carry)
+          : [x] "r"(x), [y] "rm"(y), "0"(carry)
+          : "cc", "%eax", "%edx");
+      return carry;
+   }
+#endif
 
-#elif defined(BOTAN_MP_USE_X86_64_ASM)
-   asm(DO_8_TIMES(LINMUL_OP, "x") : [carry] "=r"(carry) : [x] "r"(x), [y] "rm"(y), "0"(carry) : "cc", "%rax", "%rdx");
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      asm(DO_8_TIMES(LINMUL_OP, "x")
+          : [carry] "=r"(carry)
+          : [x] "r"(x), [y] "rm"(y), "0"(carry)
+          : "cc", "%rax", "%rdx");
+      return carry;
+   }
+#endif
 
-#else
    x[0] = word_madd2(x[0], y, &carry);
    x[1] = word_madd2(x[1], y, &carry);
    x[2] = word_madd2(x[2], y, &carry);
@@ -456,28 +518,34 @@ inline word word8_linmul2(word x[8], word y, word carry) {
    x[5] = word_madd2(x[5], y, &carry);
    x[6] = word_madd2(x[6], y, &carry);
    x[7] = word_madd2(x[7], y, &carry);
-#endif
-
    return carry;
 }
 
 /*
 * Eight Word Block Linear Multiplication
 */
-inline word word8_linmul3(word z[8], const word x[8], word y, word carry) {
+template <WordType W>
+inline constexpr auto word8_linmul3(W z[8], const W x[8], W y, W carry) -> W {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(DO_8_TIMES(LINMUL_OP, "z")
-       : [carry] "=r"(carry)
-       : [z] "r"(z), [x] "r"(x), [y] "rm"(y), "0"(carry)
-       : "cc", "%eax", "%edx");
+   if(std::same_as<W, uint32_t> && !std::is_constant_evaluated()) {
+      asm(DO_8_TIMES(LINMUL_OP, "z")
+          : [carry] "=r"(carry)
+          : [z] "r"(z), [x] "r"(x), [y] "rm"(y), "0"(carry)
+          : "cc", "%eax", "%edx");
+      return carry;
+   }
+#endif
 
-#elif defined(BOTAN_MP_USE_X86_64_ASM)
-   asm(DO_8_TIMES(LINMUL_OP, "z")
-       : [carry] "=r"(carry)
-       : [z] "r"(z), [x] "r"(x), [y] "rm"(y), "0"(carry)
-       : "cc", "%rax", "%rdx");
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      asm(DO_8_TIMES(LINMUL_OP, "z")
+          : [carry] "=r"(carry)
+          : [z] "r"(z), [x] "r"(x), [y] "rm"(y), "0"(carry)
+          : "cc", "%rax", "%rdx");
+      return carry;
+   }
+#endif
 
-#else
    z[0] = word_madd2(x[0], y, &carry);
    z[1] = word_madd2(x[1], y, &carry);
    z[2] = word_madd2(x[2], y, &carry);
@@ -486,28 +554,34 @@ inline word word8_linmul3(word z[8], const word x[8], word y, word carry) {
    z[5] = word_madd2(x[5], y, &carry);
    z[6] = word_madd2(x[6], y, &carry);
    z[7] = word_madd2(x[7], y, &carry);
-#endif
-
    return carry;
 }
 
 /*
 * Eight Word Block Multiply/Add
 */
-inline word word8_madd3(word z[8], const word x[8], word y, word carry) {
+template <WordType W>
+inline constexpr auto word8_madd3(W z[8], const W x[8], W y, W carry) -> W {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(DO_8_TIMES(MULADD_OP, "")
-       : [carry] "=r"(carry)
-       : [z] "r"(z), [x] "r"(x), [y] "rm"(y), "0"(carry)
-       : "cc", "%eax", "%edx");
+   if(std::same_as<W, uint32_t> && !std::is_constant_evaluated()) {
+      asm(DO_8_TIMES(MULADD_OP, "")
+          : [carry] "=r"(carry)
+          : [z] "r"(z), [x] "r"(x), [y] "rm"(y), "0"(carry)
+          : "cc", "%eax", "%edx");
+      return carry;
+   }
+#endif
 
-#elif defined(BOTAN_MP_USE_X86_64_ASM)
-   asm(DO_8_TIMES(MULADD_OP, "")
-       : [carry] "=r"(carry)
-       : [z] "r"(z), [x] "r"(x), [y] "rm"(y), "0"(carry)
-       : "cc", "%rax", "%rdx");
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      asm(DO_8_TIMES(MULADD_OP, "")
+          : [carry] "=r"(carry)
+          : [z] "r"(z), [x] "r"(x), [y] "rm"(y), "0"(carry)
+          : "cc", "%rax", "%rdx");
+      return carry;
+   }
+#endif
 
-#else
    z[0] = word_madd3(x[0], y, z[0], &carry);
    z[1] = word_madd3(x[1], y, z[1], &carry);
    z[2] = word_madd3(x[2], y, z[2], &carry);
@@ -516,8 +590,6 @@ inline word word8_madd3(word z[8], const word x[8], word y, word carry) {
    z[5] = word_madd3(x[5], y, z[5], &carry);
    z[6] = word_madd3(x[6], y, z[6], &carry);
    z[7] = word_madd3(x[7], y, z[7], &carry);
-#endif
-
    return carry;
 }
 
@@ -525,133 +597,156 @@ inline word word8_madd3(word z[8], const word x[8], word y, word carry) {
 * Multiply-Add Accumulator
 * (w2,w1,w0) += x * y
 */
-inline void word3_muladd(word* w2, word* w1, word* w0, word x, word y) {
+template <WordType W>
+inline constexpr void word3_muladd(W* w2, W* w1, W* w0, W x, W y) {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   word z0 = 0, z1 = 0;
+   if(std::same_as<W, uint32_t> && !std::is_constant_evaluated()) {
+      W z0 = 0, z1 = 0;
 
-   asm("mull %[y]" : "=a"(z0), "=d"(z1) : "a"(x), [y] "rm"(y) : "cc");
+      asm("mull %[y]" : "=a"(z0), "=d"(z1) : "a"(x), [y] "rm"(y) : "cc");
 
-   asm(R"(
-       addl %[z0],%[w0]
-       adcl %[z1],%[w1]
-       adcl $0,%[w2]
-       )"
-       : [w0] "=r"(*w0), [w1] "=r"(*w1), [w2] "=r"(*w2)
-       : [z0] "r"(z0), [z1] "r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
-       : "cc");
+      asm(R"(
+          addl %[z0],%[w0]
+          adcl %[z1],%[w1]
+          adcl $0,%[w2]
+          )"
+          : [w0] "=r"(*w0), [w1] "=r"(*w1), [w2] "=r"(*w2)
+          : [z0] "r"(z0), [z1] "r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
+          : "cc");
+      return;
+   }
+#endif
 
-#elif defined(BOTAN_MP_USE_X86_64_ASM)
-   word z0 = 0, z1 = 0;
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      W z0 = 0, z1 = 0;
 
-   asm("mulq %[y]" : "=a"(z0), "=d"(z1) : "a"(x), [y] "rm"(y) : "cc");
+      asm("mulq %[y]" : "=a"(z0), "=d"(z1) : "a"(x), [y] "rm"(y) : "cc");
 
-   asm(R"(
-       addq %[z0],%[w0]
-       adcq %[z1],%[w1]
-       adcq $0,%[w2]
-       )"
-       : [w0] "=r"(*w0), [w1] "=r"(*w1), [w2] "=r"(*w2)
-       : [z0] "r"(z0), [z1] "r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
-       : "cc");
+      asm(R"(
+          addq %[z0],%[w0]
+          adcq %[z1],%[w1]
+          adcq $0,%[w2]
+          )"
+          : [w0] "=r"(*w0), [w1] "=r"(*w1), [w2] "=r"(*w2)
+          : [z0] "r"(z0), [z1] "r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
+          : "cc");
+      return;
+   }
+#endif
 
-#else
-   word carry = *w0;
+   W carry = *w0;
    *w0 = word_madd2(x, y, &carry);
    *w1 += carry;
    *w2 += (*w1 < carry);
-#endif
 }
 
 /*
 * 3-word addition
 * (w2,w1,w0) += x
 */
-inline void word3_add(word* w2, word* w1, word* w0, word x) {
+template <WordType W>
+inline constexpr void word3_add(W* w2, W* w1, W* w0, W x) {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   asm(R"(
-      addl %[x],%[w0]
-      adcl $0,%[w1]
-      adcl $0,%[w2]
-      )"
-       : [w0] "=r"(*w0), [w1] "=r"(*w1), [w2] "=r"(*w2)
-       : [x] "r"(x), "0"(*w0), "1"(*w1), "2"(*w2)
-       : "cc");
-
-#elif defined(BOTAN_MP_USE_X86_64_ASM)
-   asm(R"(
-      addq %[x],%[w0]
-      adcq $0,%[w1]
-      adcq $0,%[w2]
-      )"
-       : [w0] "=r"(*w0), [w1] "=r"(*w1), [w2] "=r"(*w2)
-       : [x] "r"(x), "0"(*w0), "1"(*w1), "2"(*w2)
-       : "cc");
-
-#else
-   *w0 += x;
-   word c1 = (*w0 < x);
-   *w1 += c1;
-   word c2 = (*w1 < c1);
-   *w2 += c2;
+   if(std::same_as<W, uint32_t> && !std::is_constant_evaluated()) {
+      asm(R"(
+         addl %[x],%[w0]
+         adcl $0,%[w1]
+         adcl $0,%[w2]
+         )"
+          : [w0] "=r"(*w0), [w1] "=r"(*w1), [w2] "=r"(*w2)
+          : [x] "r"(x), "0"(*w0), "1"(*w1), "2"(*w2)
+          : "cc");
+      return;
+   }
 #endif
+
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      asm(R"(
+         addq %[x],%[w0]
+         adcq $0,%[w1]
+         adcq $0,%[w2]
+         )"
+          : [w0] "=r"(*w0), [w1] "=r"(*w1), [w2] "=r"(*w2)
+          : [x] "r"(x), "0"(*w0), "1"(*w1), "2"(*w2)
+          : "cc");
+      return;
+   }
+#endif
+
+   *w0 += x;
+   W c1 = (*w0 < x);
+   *w1 += c1;
+   W c2 = (*w1 < c1);
+   *w2 += c2;
 }
 
 /*
 * Multiply-Add Accumulator
 * (w2,w1,w0) += 2 * x * y
 */
-inline void word3_muladd_2(word* w2, word* w1, word* w0, word x, word y) {
+template <WordType W>
+inline constexpr void word3_muladd_2(W* w2, W* w1, W* w0, W x, W y) {
 #if defined(BOTAN_MP_USE_X86_32_ASM)
-   word z0 = 0, z1 = 0;
+   if(std::same_as<W, uint32_t> && !std::is_constant_evaluated()) {
+      W z0 = 0, z1 = 0;
 
-   asm("mull %[y]" : "=a"(z0), "=d"(z1) : "a"(x), [y] "rm"(y) : "cc");
+      asm("mull %[y]" : "=a"(z0), "=d"(z1) : "a"(x), [y] "rm"(y) : "cc");
 
-   asm(R"(
-      addl %[z0],%[w0]
-      adcl %[z1],%[w1]
-      adcl $0,%[w2]
+      asm(R"(
+         addl %[z0],%[w0]
+         adcl %[z1],%[w1]
+         adcl $0,%[w2]
 
-      addl %[z0],%[w0]
-      adcl %[z1],%[w1]
-      adcl $0,%[w2]
-      )"
-       : [w0] "=r"(*w0), [w1] "=r"(*w1), [w2] "=r"(*w2)
-       : [z0] "r"(z0), [z1] "r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
-       : "cc");
+         addl %[z0],%[w0]
+         adcl %[z1],%[w1]
+         adcl $0,%[w2]
+         )"
+          : [w0] "=r"(*w0), [w1] "=r"(*w1), [w2] "=r"(*w2)
+          : [z0] "r"(z0), [z1] "r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
+          : "cc");
+      return;
+   }
+#endif
 
-#elif defined(BOTAN_MP_USE_X86_64_ASM)
-   word z0 = 0, z1 = 0;
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      W z0 = 0, z1 = 0;
 
-   asm("mulq %[y]" : "=a"(z0), "=d"(z1) : "a"(x), [y] "rm"(y) : "cc");
+      asm("mulq %[y]" : "=a"(z0), "=d"(z1) : "a"(x), [y] "rm"(y) : "cc");
 
-   asm(R"(
-      addq %[z0],%[w0]
-      adcq %[z1],%[w1]
-      adcq $0,%[w2]
+      asm(R"(
+         addq %[z0],%[w0]
+         adcq %[z1],%[w1]
+         adcq $0,%[w2]
 
-      addq %[z0],%[w0]
-      adcq %[z1],%[w1]
-      adcq $0,%[w2]
-      )"
-       : [w0] "=r"(*w0), [w1] "=r"(*w1), [w2] "=r"(*w2)
-       : [z0] "r"(z0), [z1] "r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
-       : "cc");
+         addq %[z0],%[w0]
+         adcq %[z1],%[w1]
+         adcq $0,%[w2]
+         )"
+          : [w0] "=r"(*w0), [w1] "=r"(*w1), [w2] "=r"(*w2)
+          : [z0] "r"(z0), [z1] "r"(z1), "0"(*w0), "1"(*w1), "2"(*w2)
+          : "cc");
+      return;
+   }
+#endif
 
-#else
-   word carry = 0;
+   W carry = 0;
    x = word_madd2(x, y, &carry);
    y = carry;
 
-   word top = (y >> (BOTAN_MP_WORD_BITS - 1));
+   const size_t top_bit_shift = sizeof(W) * 8 - 1;
+
+   W top = (y >> top_bit_shift);
    y <<= 1;
-   y |= (x >> (BOTAN_MP_WORD_BITS - 1));
+   y |= (x >> top_bit_shift);
    x <<= 1;
 
    carry = 0;
    *w0 = word_add(*w0, x, &carry);
    *w1 = word_add(*w1, y, &carry);
    *w2 = word_add(*w2, top, &carry);
-#endif
 }
 
 #if defined(ASM)
