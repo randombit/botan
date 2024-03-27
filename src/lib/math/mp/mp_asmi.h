@@ -45,21 +45,6 @@ namespace Botan {
 template <typename T>
 concept WordType = (std::same_as<T, uint32_t> || std::same_as<T, uint64_t>);
 
-template <WordType W>
-struct DwordType {};
-
-template <>
-class DwordType<uint32_t> {
-   public:
-      typedef uint64_t dword;
-};
-
-template <>
-class DwordType<uint64_t> {
-   public:
-      typedef uint128_t dword;
-};
-
 /*
 * Word Multiply/Add
 */
@@ -95,11 +80,23 @@ inline constexpr auto word_madd2(W a, W b, W* c) -> W {
    }
 #endif
 
-   typename DwordType<W>::dword z(a);
-   z *= b;
-   z += *c;
-   *c = static_cast<W>(z >> (sizeof(W) * 8));
-   return static_cast<W>(z);
+#if defined(BOTAN_MP_DWORD)
+   const BOTAN_MP_DWORD s = static_cast<BOTAN_MP_DWORD>(a) * b + *c;
+   *c = static_cast<word>(s >> (sizeof(s)*8/2));
+   return static_cast<word>(s);
+#else
+   static_assert(BOTAN_MP_WORD_BITS == 64, "Unexpected word size");
+
+   word hi = 0, lo = 0;
+
+   mul64x64_128(a, b, &lo, &hi);
+
+   lo += *c;
+   hi += (lo < *c);  // carry?
+
+   *c = hi;
+   return lo;
+#endif
 }
 
 /*
@@ -145,12 +142,26 @@ inline constexpr auto word_madd3(W a, W b, W c, W* d) -> W {
    }
 #endif
 
-   typename DwordType<W>::dword z(a);
-   z *= b;
-   z += c;
-   z += *d;
-   *d = static_cast<W>(z >> (sizeof(W) * 8));
-   return static_cast<W>(z);
+#if defined(BOTAN_MP_DWORD)
+   const BOTAN_MP_DWORD s = static_cast<BOTAN_MP_DWORD>(a) * b + c + *d;
+   *d = static_cast<word>(s >> BOTAN_MP_WORD_BITS);
+   return static_cast<word>(s);
+#else
+   static_assert(BOTAN_MP_WORD_BITS == 64, "Unexpected word size");
+
+   W hi = 0, lo = 0;
+
+   mul64x64_128(a, b, &lo, &hi);
+
+   lo += c;
+   hi += (lo < c);  // carry?
+
+   lo += *d;
+   hi += (lo < *d);  // carry?
+
+   *d = hi;
+   return lo;
+#endif
 }
 
 #if defined(BOTAN_MP_USE_X86_32_ASM)
