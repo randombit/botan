@@ -469,7 +469,7 @@ void BigInt::ct_cond_swap(bool predicate, BigInt& other) {
    grow_to(max_words);
    other.grow_to(max_words);
 
-   bigint_cnd_swap(predicate, this->mutable_data(), other.mutable_data(), max_words);
+   bigint_cnd_swap(static_cast<word>(predicate), this->mutable_data(), other.mutable_data(), max_words);
 }
 
 void BigInt::cond_flip_sign(bool predicate) {
