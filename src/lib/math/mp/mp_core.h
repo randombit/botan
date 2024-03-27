@@ -26,7 +26,7 @@ const word MP_WORD_MAX = ~static_cast<word>(0);
 * If cond > 0, swaps x[0:size] with y[0:size]
 * Runs in constant time
 */
-template<WordType W>
+template <WordType W>
 inline constexpr void bigint_cnd_swap(W cnd, W x[], W y[], size_t size) {
    const auto mask = CT::Mask<W>::expand(cnd);
 
@@ -38,7 +38,7 @@ inline constexpr void bigint_cnd_swap(W cnd, W x[], W y[], size_t size) {
    }
 }
 
-template<WordType W>
+template <WordType W>
 inline constexpr W bigint_cnd_add(W cnd, W x[], W x_size, const W y[], size_t y_size) {
    BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
 
@@ -71,7 +71,7 @@ inline constexpr W bigint_cnd_add(W cnd, W x[], W x_size, const W y[], size_t y_
 * If cond > 0 adds x[0:size] and y[0:size] and returns carry
 * Runs in constant time
 */
-template<WordType W>
+template <WordType W>
 inline constexpr W bigint_cnd_add(W cnd, W x[], const W y[], size_t size) {
    return bigint_cnd_add(cnd, x, size, y, size);
 }
@@ -80,7 +80,7 @@ inline constexpr W bigint_cnd_add(W cnd, W x[], const W y[], size_t size) {
 * If cond > 0 subtracts x[0:size] and y[0:size] and returns borrow
 * Runs in constant time
 */
-template<WordType W>
+template <WordType W>
 inline constexpr auto bigint_cnd_sub(W cnd, W x[], size_t x_size, const W y[], size_t y_size) -> W {
    BOTAN_ASSERT(x_size >= y_size, "Expected sizes");
 
@@ -113,7 +113,7 @@ inline constexpr auto bigint_cnd_sub(W cnd, W x[], size_t x_size, const W y[], s
 * If cond > 0 adds x[0:size] and y[0:size] and returns carry
 * Runs in constant time
 */
-template<WordType W>
+template <WordType W>
 inline constexpr auto bigint_cnd_sub(W cnd, W x[], const W y[], size_t size) -> W {
    return bigint_cnd_sub(cnd, x, size, y, size);
 }
@@ -125,7 +125,7 @@ inline constexpr auto bigint_cnd_sub(W cnd, W x[], const W y[], size_t size) -> 
 *
 * Mask must be either 0 or all 1 bits
 */
-template<WordType W>
+template <WordType W>
 inline constexpr void bigint_cnd_add_or_sub(CT::Mask<W> mask, W x[], const W y[], size_t size) {
    const size_t blocks = size - (size % 8);
 
@@ -161,8 +161,8 @@ inline constexpr void bigint_cnd_add_or_sub(CT::Mask<W> mask, W x[], const W y[]
 *
 * Returns the carry or borrow resp
 */
-template<WordType W>
-inline constexpr auto bigint_cnd_addsub(CT::Mask<W> mask, W x[], const W y[], const W z[], size_t size) -> W{
+template <WordType W>
+inline constexpr auto bigint_cnd_addsub(CT::Mask<W> mask, W x[], const W y[], const W z[], size_t size) -> W {
    const size_t blocks = size - (size % 8);
 
    W carry = 0;
@@ -194,7 +194,7 @@ inline constexpr auto bigint_cnd_addsub(CT::Mask<W> mask, W x[], const W y[], co
 * If cond > 0 sets x to ~x + 1
 * Runs in constant time
 */
-template<WordType W>
+template <WordType W>
 inline constexpr void bigint_cnd_abs(W cnd, W x[], size_t size) {
    const auto mask = CT::Mask<W>::expand(cnd);
 
@@ -208,7 +208,7 @@ inline constexpr void bigint_cnd_abs(W cnd, W x[], size_t size) {
 /**
 * Two operand addition with carry out
 */
-template<WordType W>
+template <WordType W>
 inline constexpr auto bigint_add2_nc(W x[], size_t x_size, const W y[], size_t y_size) -> W {
    W carry = 0;
 
@@ -234,7 +234,7 @@ inline constexpr auto bigint_add2_nc(W x[], size_t x_size, const W y[], size_t y
 /**
 * Three operand addition with carry out
 */
-template<WordType W>
+template <WordType W>
 inline constexpr auto bigint_add3_nc(W z[], const W x[], size_t x_size, const W y[], size_t y_size) -> W {
    if(x_size < y_size) {
       return bigint_add3_nc(z, y, y_size, x, x_size);
@@ -266,7 +266,7 @@ inline constexpr auto bigint_add3_nc(W z[], const W x[], size_t x_size, const W 
 * @param y the second operand
 * @param y_size size of y (must be <= x_size)
 */
-template<WordType W>
+template <WordType W>
 inline constexpr void bigint_add2(W x[], size_t x_size, const W y[], size_t y_size) {
    x[x_size] += bigint_add2_nc(x, x_size, y, y_size);
 }
@@ -274,7 +274,7 @@ inline constexpr void bigint_add2(W x[], size_t x_size, const W y[], size_t y_si
 /**
 * Three operand addition
 */
-template<WordType W>
+template <WordType W>
 inline constexpr void bigint_add3(W z[], const W x[], size_t x_size, const W y[], size_t y_size) {
    z[x_size > y_size ? x_size : y_size] += bigint_add3_nc(z, x, x_size, y, y_size);
 }
@@ -282,7 +282,7 @@ inline constexpr void bigint_add3(W z[], const W x[], size_t x_size, const W y[]
 /**
 * Two operand subtraction
 */
-template<WordType W>
+template <WordType W>
 inline constexpr auto bigint_sub2(W x[], size_t x_size, const W y[], size_t y_size) -> W {
    W borrow = 0;
 
@@ -308,7 +308,7 @@ inline constexpr auto bigint_sub2(W x[], size_t x_size, const W y[], size_t y_si
 /**
 * Two operand subtraction, x = y - x; assumes y >= x
 */
-template<WordType W>
+template <WordType W>
 inline constexpr void bigint_sub2_rev(W x[], const W y[], size_t y_size) {
    W borrow = 0;
 
@@ -332,7 +332,7 @@ inline constexpr void bigint_sub2_rev(W x[], const W y[], size_t y_size) {
 *
 * Writes to z[0:x_size] and returns borrow
 */
-template<WordType W>
+template <WordType W>
 inline constexpr auto bigint_sub3(W z[], const W x[], size_t x_size, const W y[], size_t y_size) -> W {
    W borrow = 0;
 
@@ -367,7 +367,7 @@ inline constexpr auto bigint_sub3(W z[], const W x[], size_t x_size, const W y[]
 * @param N length of x and y
 * @param ws array of at least 2*N words
 */
-template<WordType W>
+template <WordType W>
 inline constexpr auto bigint_sub_abs(W z[], const W x[], const W y[], size_t N, W ws[]) -> CT::Mask<W> {
    // Subtract in both direction then conditional copy out the result
 
@@ -395,13 +395,13 @@ inline constexpr auto bigint_sub_abs(W z[], const W x[], const W y[], size_t N, 
 /*
 * Shift Operations
 */
-template<WordType W>
+template <WordType W>
 inline constexpr void bigint_shl1(W x[], size_t x_size, size_t x_words, size_t word_shift, size_t bit_shift) {
    copy_mem(x + word_shift, x, x_words);
    clear_mem(x, word_shift);
 
    const auto carry_mask = CT::Mask<W>::expand(bit_shift);
-   const W carry_shift = carry_mask.if_set_return(sizeof(W)*8 - bit_shift);
+   const W carry_shift = carry_mask.if_set_return(sizeof(W) * 8 - bit_shift);
 
    W carry = 0;
    for(size_t i = word_shift; i != x_size; ++i) {
@@ -411,7 +411,7 @@ inline constexpr void bigint_shl1(W x[], size_t x_size, size_t x_words, size_t w
    }
 }
 
-template<WordType W>
+template <WordType W>
 inline constexpr void bigint_shr1(W x[], size_t x_size, size_t word_shift, size_t bit_shift) {
    const size_t top = x_size >= word_shift ? (x_size - word_shift) : 0;
 
@@ -421,7 +421,7 @@ inline constexpr void bigint_shr1(W x[], size_t x_size, size_t word_shift, size_
    clear_mem(x + top, std::min(word_shift, x_size));
 
    const auto carry_mask = CT::Mask<W>::expand(bit_shift);
-   const W carry_shift = carry_mask.if_set_return(sizeof(W)*8 - bit_shift);
+   const W carry_shift = carry_mask.if_set_return(sizeof(W) * 8 - bit_shift);
 
    W carry = 0;
 
@@ -432,12 +432,12 @@ inline constexpr void bigint_shr1(W x[], size_t x_size, size_t word_shift, size_
    }
 }
 
-template<WordType W>
+template <WordType W>
 inline constexpr void bigint_shl2(W y[], const W x[], size_t x_size, size_t word_shift, size_t bit_shift) {
    copy_mem(y + word_shift, x, x_size);
 
    const auto carry_mask = CT::Mask<W>::expand(bit_shift);
-   const W carry_shift = carry_mask.if_set_return(sizeof(W)*8 - bit_shift);
+   const W carry_shift = carry_mask.if_set_return(sizeof(W) * 8 - bit_shift);
 
    W carry = 0;
    for(size_t i = word_shift; i != x_size + word_shift + 1; ++i) {
@@ -447,7 +447,7 @@ inline constexpr void bigint_shl2(W y[], const W x[], size_t x_size, size_t word
    }
 }
 
-template<WordType W>
+template <WordType W>
 inline constexpr void bigint_shr2(W y[], const W x[], size_t x_size, size_t word_shift, size_t bit_shift) {
    const size_t new_size = x_size < word_shift ? 0 : (x_size - word_shift);
 
@@ -456,7 +456,7 @@ inline constexpr void bigint_shr2(W y[], const W x[], size_t x_size, size_t word
    }
 
    const auto carry_mask = CT::Mask<W>::expand(bit_shift);
-   const W carry_shift = carry_mask.if_set_return(sizeof(W)*8 - bit_shift);
+   const W carry_shift = carry_mask.if_set_return(sizeof(W) * 8 - bit_shift);
 
    W carry = 0;
    for(size_t i = new_size; i > 0; --i) {
@@ -469,7 +469,7 @@ inline constexpr void bigint_shr2(W y[], const W x[], size_t x_size, size_t word
 /*
 * Linear Multiply - returns the carry
 */
-template<WordType W>
+template <WordType W>
 [[nodiscard]] inline constexpr auto bigint_linmul2(W x[], size_t x_size, W y) -> W {
    const size_t blocks = x_size - (x_size % 8);
 
@@ -486,7 +486,7 @@ template<WordType W>
    return carry;
 }
 
-template<WordType W>
+template <WordType W>
 inline constexpr void bigint_linmul3(W z[], const W x[], size_t x_size, W y) {
    const size_t blocks = x_size - (x_size % 8);
 
@@ -509,7 +509,7 @@ inline constexpr void bigint_linmul3(W z[], const W x[], size_t x_size, W y) {
 * Return 0 if x == y
 * Return 1 if x > y
 */
-template<WordType W>
+template <WordType W>
 inline constexpr int32_t bigint_cmp(const W x[], size_t x_size, const W y[], size_t y_size) {
    static_assert(sizeof(W) >= sizeof(uint32_t), "Size assumption");
 
@@ -556,13 +556,9 @@ inline constexpr int32_t bigint_cmp(const W x[], size_t x_size, const W y[], siz
 * Return ~0 if x[0:x_size] < y[0:y_size] or 0 otherwise
 * If lt_or_equal is true, returns ~0 also for x == y
 */
-template<WordType W>
-inline constexpr auto bigint_ct_is_lt(const W x[],
-                                      size_t x_size,
-                                      const W y[],
-                                      size_t y_size,
-                                      bool lt_or_equal = false) -> CT::Mask<W> {
-
+template <WordType W>
+inline constexpr auto bigint_ct_is_lt(const W x[], size_t x_size, const W y[], size_t y_size, bool lt_or_equal = false)
+   -> CT::Mask<W> {
    const size_t common_elems = std::min(x_size, y_size);
 
    auto is_lt = CT::Mask<W>::expand(lt_or_equal);
@@ -593,7 +589,7 @@ inline constexpr auto bigint_ct_is_lt(const W x[],
    return is_lt;
 }
 
-template<WordType W>
+template <WordType W>
 inline constexpr auto bigint_ct_is_eq(const W x[], size_t x_size, const W y[], size_t y_size) -> CT::Mask<W> {
    const size_t common_elems = std::min(x_size, y_size);
 
@@ -630,7 +626,7 @@ inline constexpr auto bigint_ct_is_eq(const W x[], size_t x_size, const W y[], s
 * @param y input param
 * @param y_size length of y
 */
-template<WordType W>
+template <WordType W>
 inline constexpr int32_t bigint_sub_abs(W z[], const W x[], size_t x_size, const W y[], size_t y_size) {
    const int32_t relative_size = bigint_cmp(x, x_size, y, y_size);
 
@@ -660,7 +656,7 @@ inline constexpr int32_t bigint_sub_abs(W z[], const W x[], size_t x_size, const
 * @param mod_sw size of t, s, and mod
 * @param ws workspace of size mod_sw
 */
-template<WordType W>
+template <WordType W>
 inline constexpr void bigint_mod_sub(W t[], const W s[], const W mod[], size_t mod_sw, W ws[]) {
    // is t < s or not?
    const auto is_lt = bigint_ct_is_lt(t, mod_sw, s, mod_sw);
