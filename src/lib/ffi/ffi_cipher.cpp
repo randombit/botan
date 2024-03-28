@@ -8,6 +8,7 @@
 
 #include <botan/aead.h>
 #include <botan/internal/ffi_util.h>
+#include <botan/internal/stl_util.h>
 
 extern "C" {
 
@@ -15,18 +16,25 @@ using namespace Botan_FFI;
 
 struct botan_cipher_struct final : public botan_struct<Botan::Cipher_Mode, 0xB4A2BF9C> {
    public:
-      explicit botan_cipher_struct(std::unique_ptr<Botan::Cipher_Mode> x, size_t update_size) :
-            botan_struct(std::move(x)), m_update_size(update_size) {
-         m_buf.reserve(m_update_size);
+      explicit botan_cipher_struct(std::unique_ptr<Botan::Cipher_Mode> x,
+                                   size_t update_size,
+                                   size_t ideal_update_size) :
+            botan_struct(std::move(x)), m_update_size(update_size), m_ideal_update_size(ideal_update_size) {
+         BOTAN_DEBUG_ASSERT(ideal_update_size >= update_size);
+         BOTAN_DEBUG_ASSERT(ideal_update_size % update_size == 0);
+         m_buf.reserve(m_ideal_update_size);
       }
 
       Botan::secure_vector<uint8_t>& buf() { return m_buf; }
 
       size_t update_size() const { return m_update_size; }
 
+      size_t ideal_update_size() const { return m_ideal_update_size; }
+
    private:
       Botan::secure_vector<uint8_t> m_buf;
       size_t m_update_size;
+      size_t m_ideal_update_size;
 };
 
 namespace {
@@ -71,8 +79,9 @@ int botan_cipher_init(botan_cipher_t* cipher, const char* cipher_name, uint32_t 
       }
 
       const size_t update_size = ffi_choose_update_size(*mode);
+      const size_t ideal_update_size = mode->ideal_granularity();
 
-      *cipher = new botan_cipher_struct(std::move(mode), update_size);
+      *cipher = new botan_cipher_struct(std::move(mode), update_size, ideal_update_size);
       return BOTAN_FFI_SUCCESS;
    });
 }
@@ -132,18 +141,13 @@ int botan_cipher_start(botan_cipher_t cipher_obj, const uint8_t* nonce, size_t n
 
 int botan_cipher_update(botan_cipher_t cipher_obj,
                         uint32_t flags,
-                        uint8_t output_ptr[],
-                        size_t orig_output_size,
+                        uint8_t output[],
+                        size_t output_size,
                         size_t* output_written,
-                        const uint8_t input_ptr[],
-                        size_t orig_input_size,
+                        const uint8_t input[],
+                        size_t input_size,
                         size_t* input_consumed) {
    return ffi_guard_thunk(__func__, [=]() -> int {
-      size_t input_size = orig_input_size;
-      size_t output_size = orig_output_size;
-      const uint8_t* input = input_ptr;
-      uint8_t* output = output_ptr;
-
       using namespace Botan;
       Cipher_Mode& cipher = safe_get(cipher_obj);
       secure_vector<uint8_t>& mbuf = cipher_obj->buf();
@@ -173,39 +177,38 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
       }
 
       if(input_size == 0) {
-         // Currently must take entire buffer in this case
-         *output_written = mbuf.size();
-         if(output_size >= mbuf.size()) {
-            copy_mem(output, mbuf.data(), mbuf.size());
-            mbuf.clear();
-            return BOTAN_FFI_SUCCESS;
-         }
-
          return -1;
       }
 
-      const size_t ud = cipher_obj->update_size();
+      BufferSlicer in({input, input_size});
+      BufferStuffer out({output, output_size});
 
-      mbuf.resize(ud);
-      size_t taken = 0, written = 0;
+      auto blockwise_update = [&](const size_t granularity) {
+         mbuf.resize(granularity);
 
-      while(input_size >= ud && output_size >= ud) {
-         // FIXME we can use process here and avoid the copy
-         copy_mem(mbuf.data(), input, ud);
-         cipher.update(mbuf);
+         while(in.remaining() >= granularity && out.remaining_capacity() >= granularity) {
+            copy_mem(mbuf, in.take(granularity));
+            const auto written_bytes = cipher.process(mbuf);
+            BOTAN_ASSERT_NOMSG(written_bytes <= granularity);
+            copy_mem(out.next(written_bytes), std::span(mbuf).first(written_bytes));
+         }
 
-         input_size -= ud;
-         copy_mem(output, mbuf.data(), ud);
-         input += ud;
-         taken += ud;
+         mbuf.clear();
+      };
 
-         output_size -= ud;
-         output += ud;
-         written += ud;
-      }
+      // First, process as much data as possible in chunks of ideal granularity
+      blockwise_update(cipher_obj->ideal_update_size());
 
-      *output_written = written;
-      *input_consumed = taken;
+      // Then process the remaining bytes in chunks of update_size() or, in one go
+      // if update_size() is equal to 1 --> i.e. likely a stream cipher.
+      const bool is_stream_cipher = (cipher_obj->update_size() == 1);
+      const size_t tail_granularity =
+         is_stream_cipher ? std::min(in.remaining(), out.remaining_capacity()) : cipher_obj->update_size();
+      BOTAN_DEBUG_ASSERT(tail_granularity < cipher_obj->ideal_update_size());
+      blockwise_update(tail_granularity);
+
+      *output_written = output_size - out.remaining_capacity();
+      *input_consumed = input_size - in.remaining();
 
       return BOTAN_FFI_SUCCESS;
    });
