@@ -52,13 +52,13 @@ inline void TF_D(
 /*
 * Twofish Encryption
 */
-void Twofish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Twofish::encrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
    while(blocks >= 2) {
       uint32_t A0, B0, C0, D0;
       uint32_t A1, B1, C1, D1;
-      load_le(in, A0, B0, C0, D0, A1, B1, C1, D1);
+      load_le(in.first<2 * BLOCK_SIZE>(), A0, B0, C0, D0, A1, B1, C1, D1);
 
       A0 ^= m_RK[0];
       A1 ^= m_RK[0];
@@ -86,16 +86,16 @@ void Twofish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
       B0 ^= m_RK[7];
       B1 ^= m_RK[7];
 
-      store_le(out, C0, D0, A0, B0, C1, D1, A1, B1);
+      store_le(out.first<2 * BLOCK_SIZE>(), C0, D0, A0, B0, C1, D1, A1, B1);
 
       blocks -= 2;
-      out += 2 * BLOCK_SIZE;
-      in += 2 * BLOCK_SIZE;
+      out = out.subspan(2 * BLOCK_SIZE);
+      in = in.subspan(2 * BLOCK_SIZE);
    }
 
    if(blocks) {
       uint32_t A, B, C, D;
-      load_le(in, A, B, C, D);
+      load_le(in.first<BLOCK_SIZE>(), A, B, C, D);
 
       A ^= m_RK[0];
       B ^= m_RK[1];
@@ -112,20 +112,20 @@ void Twofish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
       A ^= m_RK[6];
       B ^= m_RK[7];
 
-      store_le(out, C, D, A, B);
+      store_le(out.first<BLOCK_SIZE>(), C, D, A, B);
    }
 }
 
 /*
 * Twofish Decryption
 */
-void Twofish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Twofish::decrypt_blocks(std::span<const uint8_t> in, std::span<uint8_t> out, size_t blocks) const {
    assert_key_material_set();
 
    while(blocks >= 2) {
       uint32_t A0, B0, C0, D0;
       uint32_t A1, B1, C1, D1;
-      load_le(in, A0, B0, C0, D0, A1, B1, C1, D1);
+      load_le(in.first<2 * BLOCK_SIZE>(), A0, B0, C0, D0, A1, B1, C1, D1);
 
       A0 ^= m_RK[4];
       A1 ^= m_RK[4];
@@ -153,16 +153,16 @@ void Twofish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
       B0 ^= m_RK[3];
       B1 ^= m_RK[3];
 
-      store_le(out, C0, D0, A0, B0, C1, D1, A1, B1);
+      store_le(out.first<2 * BLOCK_SIZE>(), C0, D0, A0, B0, C1, D1, A1, B1);
 
       blocks -= 2;
-      out += 2 * BLOCK_SIZE;
-      in += 2 * BLOCK_SIZE;
+      out = out.subspan(2 * BLOCK_SIZE);
+      in = in.subspan(2 * BLOCK_SIZE);
    }
 
    if(blocks) {
       uint32_t A, B, C, D;
-      load_le(in, A, B, C, D);
+      load_le(in.first<BLOCK_SIZE>(), A, B, C, D);
 
       A ^= m_RK[4];
       B ^= m_RK[5];
@@ -179,7 +179,7 @@ void Twofish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const 
       A ^= m_RK[2];
       B ^= m_RK[3];
 
-      store_le(out, C, D, A, B);
+      store_le(out.first<BLOCK_SIZE>(), C, D, A, B);
    }
 }
 
