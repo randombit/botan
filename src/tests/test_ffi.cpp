@@ -26,13 +26,23 @@ namespace {
 #if defined(BOTAN_HAS_FFI)
 
    // NOLINTNEXTLINE(*-macro-usage)
-   #define TEST_FFI_OK(func, args) result.test_rc_ok(#func, func args)
+   #define _TEST_FFI_STR_HELPER(x) #x
    // NOLINTNEXTLINE(*-macro-usage)
-   #define TEST_FFI_INIT(func, args) result.test_rc_init(#func, func args)
+   #define _TEST_FFI_STR(x) _TEST_FFI_STR_HELPER(x)
    // NOLINTNEXTLINE(*-macro-usage)
-   #define TEST_FFI_FAIL(msg, func, args) result.test_rc_fail(#func, msg, func args)
+   #define _TEST_FFI_SOURCE_LOCATION(func, file, line) (func " invoked at " file ":" _TEST_FFI_STR(line))
+
    // NOLINTNEXTLINE(*-macro-usage)
-   #define TEST_FFI_RC(rc, func, args) result.test_rc(#func, rc, func args)
+   #define TEST_FFI_OK(func, args) result.test_rc_ok(_TEST_FFI_SOURCE_LOCATION(#func, __FILE__, __LINE__), func args)
+   // NOLINTNEXTLINE(*-macro-usage)
+   #define TEST_FFI_INIT(func, args) \
+      result.test_rc_init(_TEST_FFI_SOURCE_LOCATION(#func, __FILE__, __LINE__), func args)
+   // NOLINTNEXTLINE(*-macro-usage)
+   #define TEST_FFI_FAIL(msg, func, args) \
+      result.test_rc_fail(_TEST_FFI_SOURCE_LOCATION(#func, __FILE__, __LINE__), msg, func args)
+   // NOLINTNEXTLINE(*-macro-usage)
+   #define TEST_FFI_RC(rc, func, args) \
+      result.test_rc(_TEST_FFI_SOURCE_LOCATION(#func, __FILE__, __LINE__), rc, func args)
 
    // NOLINTNEXTLINE(*-macro-usage)
    #define REQUIRE_FFI_OK(func, args)                           \
