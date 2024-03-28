@@ -82,22 +82,24 @@ inline void fadd_sub(uint64_t x[5], uint64_t y[5]) {
    fdifference_backwards(x, tmp);  // does x - z
 }
 
+const uint64_t MASK_63 = 0x7ffffffffffff;
+
 /* Multiply a number by a scalar: out = in * scalar */
 inline void fscalar_product(uint64_t out[5], const uint64_t in[5], const uint64_t scalar) {
    uint128_t a = uint128_t(in[0]) * scalar;
-   out[0] = a & 0x7ffffffffffff;
+   out[0] = a & MASK_63;
 
    a = uint128_t(in[1]) * scalar + carry_shift(a, 51);
-   out[1] = a & 0x7ffffffffffff;
+   out[1] = a & MASK_63;
 
    a = uint128_t(in[2]) * scalar + carry_shift(a, 51);
-   out[2] = a & 0x7ffffffffffff;
+   out[2] = a & MASK_63;
 
    a = uint128_t(in[3]) * scalar + carry_shift(a, 51);
-   out[3] = a & 0x7ffffffffffff;
+   out[3] = a & MASK_63;
 
    a = uint128_t(in[4]) * scalar + carry_shift(a, 51);
-   out[4] = a & 0x7ffffffffffff;
+   out[4] = a & MASK_63;
 
    out[0] += carry_shift(a, 51) * 19;
 }
@@ -139,23 +141,23 @@ inline void fmul(uint64_t out[5], const uint64_t in[5], const uint64_t in2[5]) {
    t2 += r4 * s3 + r3 * s4;
    t3 += r4 * s4;
 
-   r0 = t0 & 0x7ffffffffffff;
+   r0 = t0 & MASK_63;
    t1 += carry_shift(t0, 51);
-   r1 = t1 & 0x7ffffffffffff;
+   r1 = t1 & MASK_63;
    t2 += carry_shift(t1, 51);
-   r2 = t2 & 0x7ffffffffffff;
+   r2 = t2 & MASK_63;
    t3 += carry_shift(t2, 51);
-   r3 = t3 & 0x7ffffffffffff;
+   r3 = t3 & MASK_63;
    t4 += carry_shift(t3, 51);
-   r4 = t4 & 0x7ffffffffffff;
+   r4 = t4 & MASK_63;
    uint64_t c = carry_shift(t4, 51);
 
    r0 += c * 19;
    c = r0 >> 51;
-   r0 = r0 & 0x7ffffffffffff;
+   r0 = r0 & MASK_63;
    r1 += c;
    c = r1 >> 51;
-   r1 = r1 & 0x7ffffffffffff;
+   r1 = r1 & MASK_63;
    r2 += c;
 
    out[0] = r0;
@@ -185,23 +187,23 @@ inline void fsquare(uint64_t out[5], const uint64_t in[5], size_t count = 1) {
       uint128_t t3 = uint128_t(d0) * r3 + uint128_t(d1) * r2 + uint128_t(r4) * (d419);
       uint128_t t4 = uint128_t(d0) * r4 + uint128_t(d1) * r3 + uint128_t(r2) * (r2);
 
-      r0 = t0 & 0x7ffffffffffff;
+      r0 = t0 & MASK_63;
       t1 += carry_shift(t0, 51);
-      r1 = t1 & 0x7ffffffffffff;
+      r1 = t1 & MASK_63;
       t2 += carry_shift(t1, 51);
-      r2 = t2 & 0x7ffffffffffff;
+      r2 = t2 & MASK_63;
       t3 += carry_shift(t2, 51);
-      r3 = t3 & 0x7ffffffffffff;
+      r3 = t3 & MASK_63;
       t4 += carry_shift(t3, 51);
-      r4 = t4 & 0x7ffffffffffff;
+      r4 = t4 & MASK_63;
       uint64_t c = carry_shift(t4, 51);
 
       r0 += c * 19;
       c = r0 >> 51;
-      r0 = r0 & 0x7ffffffffffff;
+      r0 = r0 & MASK_63;
       r1 += c;
       c = r1 >> 51;
-      r1 = r1 & 0x7ffffffffffff;
+      r1 = r1 & MASK_63;
       r2 += c;
    }
 
@@ -214,11 +216,11 @@ inline void fsquare(uint64_t out[5], const uint64_t in[5], size_t count = 1) {
 
 /* Take a little-endian, 32-byte number and expand it into polynomial form */
 inline void fexpand(uint64_t* out, const uint8_t* in) {
-   out[0] = load_le<uint64_t>(in, 0) & 0x7ffffffffffff;
-   out[1] = (load_le<uint64_t>(in + 6, 0) >> 3) & 0x7ffffffffffff;
-   out[2] = (load_le<uint64_t>(in + 12, 0) >> 6) & 0x7ffffffffffff;
-   out[3] = (load_le<uint64_t>(in + 19, 0) >> 1) & 0x7ffffffffffff;
-   out[4] = (load_le<uint64_t>(in + 24, 0) >> 12) & 0x7ffffffffffff;
+   out[0] = load_le<uint64_t>(in, 0) & MASK_63;
+   out[1] = (load_le<uint64_t>(in + 6, 0) >> 3) & MASK_63;
+   out[2] = (load_le<uint64_t>(in + 12, 0) >> 6) & MASK_63;
+   out[3] = (load_le<uint64_t>(in + 19, 0) >> 1) & MASK_63;
+   out[4] = (load_le<uint64_t>(in + 24, 0) >> 12) & MASK_63;
 }
 
 /* Take a fully reduced polynomial form number and contract it into a
@@ -233,15 +235,15 @@ inline void fcontract(uint8_t* out, const uint64_t input[5]) {
 
    for(size_t i = 0; i != 2; ++i) {
       t1 += t0 >> 51;
-      t0 &= 0x7ffffffffffff;
+      t0 &= MASK_63;
       t2 += t1 >> 51;
-      t1 &= 0x7ffffffffffff;
+      t1 &= MASK_63;
       t3 += t2 >> 51;
-      t2 &= 0x7ffffffffffff;
+      t2 &= MASK_63;
       t4 += t3 >> 51;
-      t3 &= 0x7ffffffffffff;
+      t3 &= MASK_63;
       t0 += (t4 >> 51) * 19;
-      t4 &= 0x7ffffffffffff;
+      t4 &= MASK_63;
    }
 
    /* now t is between 0 and 2^255-1, properly carried. */
@@ -250,15 +252,15 @@ inline void fcontract(uint8_t* out, const uint64_t input[5]) {
    t0 += 19;
 
    t1 += t0 >> 51;
-   t0 &= 0x7ffffffffffff;
+   t0 &= MASK_63;
    t2 += t1 >> 51;
-   t1 &= 0x7ffffffffffff;
+   t1 &= MASK_63;
    t3 += t2 >> 51;
-   t2 &= 0x7ffffffffffff;
+   t2 &= MASK_63;
    t4 += t3 >> 51;
-   t3 &= 0x7ffffffffffff;
+   t3 &= MASK_63;
    t0 += (t4 >> 51) * 19;
-   t4 &= 0x7ffffffffffff;
+   t4 &= MASK_63;
 
    /* now between 19 and 2^255-1 in both cases, and offset by 19. */
 
@@ -271,14 +273,14 @@ inline void fcontract(uint8_t* out, const uint64_t input[5]) {
    /* now between 2^255 and 2^256-20, and offset by 2^255. */
 
    t1 += t0 >> 51;
-   t0 &= 0x7ffffffffffff;
+   t0 &= MASK_63;
    t2 += t1 >> 51;
-   t1 &= 0x7ffffffffffff;
+   t1 &= MASK_63;
    t3 += t2 >> 51;
-   t2 &= 0x7ffffffffffff;
+   t2 &= MASK_63;
    t4 += t3 >> 51;
-   t3 &= 0x7ffffffffffff;
-   t4 &= 0x7ffffffffffff;
+   t3 &= MASK_63;
+   t4 &= MASK_63;
 
    store_le(out,
             combine_lower(t0, 0, t1, 51),
