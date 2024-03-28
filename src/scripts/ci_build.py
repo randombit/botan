@@ -566,7 +566,8 @@ def validate_make_tool(make_tool, build_jobs):
 
     if make_tool in ['make']:
         return make_tool, ['-j%d' % (build_jobs), '-k']
-
+    elif make_tool in ['ninja']:
+        return make_tool, ['-k', '0']
     else:
         return make_tool, []
 
