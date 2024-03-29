@@ -36,12 +36,12 @@ class MP_Unit_Tests final : public Test {
          const Botan::word max = Botan::MP_WORD_MAX;
 
          Botan::word a = 2;
-         Botan::word c = Botan::bigint_cnd_add(0, &a, &max, 1);
+         Botan::word c = Botan::bigint_cnd_add<Botan::word>(0, &a, &max, 1);
 
          result.test_int_eq(a, 2, "No op");
          result.test_int_eq(c, 0, "No op");
 
-         c = Botan::bigint_cnd_add(1, &a, &max, 1);
+         c = Botan::bigint_cnd_add<Botan::word>(1, &a, &max, 1);
 
          result.test_int_eq(a, 1, "Add");
          result.test_int_eq(c, 1, "Carry");
@@ -56,12 +56,12 @@ class MP_Unit_Tests final : public Test {
 
          Botan::word a = 2;
          Botan::word b = 3;
-         Botan::word c = Botan::bigint_cnd_sub(0, &a, &b, 1);
+         Botan::word c = Botan::bigint_cnd_sub<Botan::word>(0, &a, &b, 1);
 
          result.test_int_eq(a, 2, "No op");
          result.test_int_eq(c, 0, "No op");
 
-         c = Botan::bigint_cnd_sub(1, &a, &b, 1);
+         c = Botan::bigint_cnd_sub<Botan::word>(1, &a, &b, 1);
 
          result.test_int_eq(a, Botan::MP_WORD_MAX, "Sub");
          result.test_int_eq(c, 1, "Borrow");
@@ -73,24 +73,24 @@ class MP_Unit_Tests final : public Test {
          Result result("bigint_cnd_abs");
 
          Botan::word x1 = Botan::MP_WORD_MAX;
-         Botan::bigint_cnd_abs(1, &x1, 1);
+         Botan::bigint_cnd_abs<Botan::word>(1, &x1, 1);
          result.test_int_eq(x1, 1, "Abs");
 
          x1 = 0;
-         Botan::bigint_cnd_abs(1, &x1, 1);
+         Botan::bigint_cnd_abs<Botan::word>(1, &x1, 1);
          result.test_int_eq(x1, 0, "Abs");
 
          x1 = 1;
-         Botan::bigint_cnd_abs(1, &x1, 1);
+         Botan::bigint_cnd_abs<Botan::word>(1, &x1, 1);
          result.test_int_eq(x1, Botan::MP_WORD_MAX, "Abs");
 
          x1 = 1;
-         Botan::bigint_cnd_abs(0, &x1, 1);
+         Botan::bigint_cnd_abs<Botan::word>(0, &x1, 1);
          result.test_int_eq(x1, 1, "No change");
 
          Botan::word x2[2] = {Botan::MP_WORD_MAX, Botan::MP_WORD_MAX};
 
-         Botan::bigint_cnd_abs(1, x2, 2);
+         Botan::bigint_cnd_abs<Botan::word>(1, x2, 2);
          result.test_int_eq(x2[0], 1, "Abs");
          result.test_int_eq(x2[1], 0, "Abs");
 
@@ -101,21 +101,21 @@ class MP_Unit_Tests final : public Test {
          Result result("bigint_cnd_swap");
 
          // null with zero length is ok
-         Botan::bigint_cnd_swap(0, nullptr, nullptr, 0);
-         Botan::bigint_cnd_swap(1, nullptr, nullptr, 0);
+         Botan::bigint_cnd_swap<Botan::word>(0, nullptr, nullptr, 0);
+         Botan::bigint_cnd_swap<Botan::word>(1, nullptr, nullptr, 0);
 
          Botan::word x1 = 5, y1 = 9;
 
-         Botan::bigint_cnd_swap(0, &x1, &y1, 1);
+         Botan::bigint_cnd_swap<Botan::word>(0, &x1, &y1, 1);
          result.test_int_eq(x1, 5, "No swap");
-         Botan::bigint_cnd_swap(1, &x1, &y1, 1);
+         Botan::bigint_cnd_swap<Botan::word>(1, &x1, &y1, 1);
          result.test_int_eq(x1, 9, "Swap");
 
          Botan::word x5[5] = {0, 1, 2, 3, 4};
          Botan::word y5[5] = {3, 2, 1, 0, 9};
 
          // Should only modify first four
-         Botan::bigint_cnd_swap(1, x5, y5, 4);
+         Botan::bigint_cnd_swap<Botan::word>(1, x5, y5, 4);
 
          for(size_t i = 0; i != 4; ++i) {
             result.test_int_eq(x5[i], 3 - i, "Swap x5");

@@ -61,7 +61,7 @@ void cnd_rev_sub(bool cnd, BigInt& x, const word y[], size_t y_sw, secure_vector
    const int32_t relative_size = bigint_sub_abs(ws.data(), x.data(), x_sw, y, y_sw);
 
    x.cond_flip_sign((relative_size > 0) && cnd);
-   bigint_cnd_swap(cnd, x.mutable_data(), ws.data(), max_words);
+   bigint_cnd_swap(static_cast<word>(cnd), x.mutable_data(), ws.data(), max_words);
 }
 
 }  // namespace
