@@ -12,7 +12,6 @@
 #include <botan/types.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/mp_core.h>
 #include <botan/internal/shake_xof.h>
 #include <botan/internal/stl_util.h>
 

@@ -148,51 +148,17 @@ void reduce_after_mul(std::span<uint64_t, WORDS_448> out, std::span<const uint64
    reduce_after_add(out, h_1);
 }
 
-constexpr size_t words_per_uint64 = 8 / sizeof(word);
-static_assert(8 % sizeof(word) == 0);  // Greetings to the future
-
 void gf_mul(std::span<uint64_t, WORDS_448> out,
             std::span<const uint64_t, WORDS_448> a,
             std::span<const uint64_t, WORDS_448> b) {
    std::array<uint64_t, 14> ws;
-   if constexpr(std::same_as<uint64_t, word>) {
-      // Reinterpret cast to itself to prevent compiler errors on non 64-bit systems
-      bigint_comba_mul7(reinterpret_cast<word*>(ws.data()),
-                        reinterpret_cast<const word*>(a.data()),
-                        reinterpret_cast<const word*>(b.data()));
-   } else {
-      const auto a_arr = load_le<std::array<word, words_per_uint64 * WORDS_448>>(store_le(a));
-      const auto b_arr = load_le<std::array<word, words_per_uint64 * WORDS_448>>(store_le(b));
-      auto ws_arr = std::array<word, words_per_uint64 * 14>{};
-
-      bigint_mul(ws_arr.data(),
-                 ws_arr.size(),
-                 a_arr.data(),
-                 a_arr.size(),
-                 a_arr.size(),
-                 b_arr.data(),
-                 b_arr.size(),
-                 b_arr.size(),
-                 nullptr,
-                 0);
-
-      load_le(ws, store_le(ws_arr));
-   }
+   comba_mul<7>(ws.data(), a.data(), b.data());
    reduce_after_mul(out, ws);
 }
 
 void gf_square(std::span<uint64_t, WORDS_448> out, std::span<const uint64_t, WORDS_448> a) {
    std::array<uint64_t, 14> ws;
-
-   if constexpr(std::same_as<uint64_t, word>) {
-      // Reinterpret cast to itself to prevent compiler errors on non 64-bit systems
-      bigint_comba_sqr7(reinterpret_cast<word*>(ws.data()), reinterpret_cast<const word*>(a.data()));
-   } else {
-      const auto a_arr = load_le<std::array<word, words_per_uint64 * WORDS_448>>(store_le(a));
-      auto ws_arr = std::array<word, words_per_uint64 * 14>{};
-      bigint_sqr(ws_arr.data(), ws_arr.size(), a_arr.data(), a_arr.size(), a_arr.size(), nullptr, 0);
-      load_le(ws, store_le(ws_arr));
-   }
+   comba_sqr<7>(ws.data(), a.data());
    reduce_after_mul(out, ws);
 }
 
