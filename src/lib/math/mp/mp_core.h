@@ -16,6 +16,7 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/mp_asmi.h>
 #include <algorithm>
+#include <array>
 
 namespace Botan {
 
@@ -749,6 +750,43 @@ inline constexpr auto bigint_modop_vartime(W n1, W n0, W d) -> W {
    W carry = 0;
    z = word_madd2(z, d, &carry);
    return (n0 - z);
+}
+
+template <WordType W, size_t N>
+consteval auto hex_to_words(const char (&s)[N]) {
+   // Char count includes null terminator which we ignore
+   const constexpr size_t C = N - 1;
+
+   const size_t S = (C + sizeof(W) * 2 - 1) / (sizeof(W) * 2);
+
+   auto hex2int = [](char c) -> int8_t {
+      if(c >= '0' && c <= '9') {
+         return static_cast<int8_t>(c - '0');
+      } else if(c >= 'a' && c <= 'f') {
+         return static_cast<int8_t>(c - 'a' + 10);
+      } else if(c >= 'A' && c <= 'F') {
+         return static_cast<int8_t>(c - 'A' + 10);
+      } else {
+         return -1;
+      }
+   };
+
+   std::array<W, S> r = {0};
+
+   for(size_t i = 0; i != C; ++i) {
+      const int8_t c = hex2int(s[i]);
+      if(c >= 0) {
+         W carry = 0;
+         for(size_t j = 0; j != S; ++j) {
+            const W w = r[j];
+            r[j] = (w << 4) | carry;
+            carry = w >> (sizeof(W) * 8 - 4);
+         }
+         r[0] += c;
+      }
+   }
+
+   return r;
 }
 
 /*

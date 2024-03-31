@@ -27,35 +27,9 @@ void redc_p521(BigInt& x, secure_vector<word>& ws) {
    const size_t p_top_bits = 521 % BOTAN_MP_WORD_BITS;
    const size_t p_words = p_full_words + 1;
 
-#if(BOTAN_MP_WORD_BITS == 64)
-   static const word p521_words[p_words] = {0xFFFFFFFFFFFFFFFF,
-                                            0xFFFFFFFFFFFFFFFF,
-                                            0xFFFFFFFFFFFFFFFF,
-                                            0xFFFFFFFFFFFFFFFF,
-                                            0xFFFFFFFFFFFFFFFF,
-                                            0xFFFFFFFFFFFFFFFF,
-                                            0xFFFFFFFFFFFFFFFF,
-                                            0xFFFFFFFFFFFFFFFF,
-                                            0x1FF};
-#else
-   static const word p521_words[p_words] = {0xFFFFFFFF,
-                                            0xFFFFFFFF,
-                                            0xFFFFFFFF,
-                                            0xFFFFFFFF,
-                                            0xFFFFFFFF,
-                                            0xFFFFFFFF,
-                                            0xFFFFFFFF,
-                                            0xFFFFFFFF,
-                                            0xFFFFFFFF,
-                                            0xFFFFFFFF,
-                                            0xFFFFFFFF,
-                                            0xFFFFFFFF,
-                                            0xFFFFFFFF,
-                                            0xFFFFFFFF,
-                                            0xFFFFFFFF,
-                                            0xFFFFFFFF,
-                                            0x1FF};
-#endif
+   static const constinit auto p521_words = hex_to_words<word>(
+      "1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
+      "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
 
    if(ws.size() < p_words + 1) {
       ws.resize(p_words + 1);
@@ -92,7 +66,7 @@ void redc_p521(BigInt& x, secure_vector<word>& ws) {
 
    const auto needs_reduction = is_p521 | bit_522_set;
 
-   bigint_cnd_sub(needs_reduction.value(), x.mutable_data(), p521_words, p_words);
+   bigint_cnd_sub(needs_reduction.value(), x.mutable_data(), p521_words.data(), p_words);
 }
 
 namespace {
@@ -193,16 +167,10 @@ void redc_p192(BigInt& x, secure_vector<word>& ws) {
    /*
    This is a table of (i*P-192) % 2**192 for i in 1...3
    */
-   static const word p192_mults[3][p192_limbs] = {
-#if(BOTAN_MP_WORD_BITS == 64)
-      {0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFE, 0xFFFFFFFFFFFFFFFF},
-      {0xFFFFFFFFFFFFFFFE, 0xFFFFFFFFFFFFFFFD, 0xFFFFFFFFFFFFFFFF},
-      {0xFFFFFFFFFFFFFFFD, 0xFFFFFFFFFFFFFFFC, 0xFFFFFFFFFFFFFFFF},
-#else
-      {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
-      {0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFD, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
-      {0xFFFFFFFD, 0xFFFFFFFF, 0xFFFFFFFC, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
-#endif
+   static const constinit std::array<word, p192_limbs> p192_mults[3] = {
+      hex_to_words<word>("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFFFFFFFFFF"),
+      hex_to_words<word>("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDFFFFFFFFFFFFFFFE"),
+      hex_to_words<word>("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFCFFFFFFFFFFFFFFFD"),
    };
 
    CT::unpoison(S);
@@ -210,9 +178,9 @@ void redc_p192(BigInt& x, secure_vector<word>& ws) {
 
    BOTAN_ASSERT_NOMSG(x.size() >= p192_limbs + 1);
    x.mask_bits(192);
-   word borrow = bigint_sub2(x.mutable_data(), p192_limbs + 1, p192_mults[S], p192_limbs);
+   word borrow = bigint_sub2(x.mutable_data(), p192_limbs + 1, p192_mults[S].data(), p192_limbs);
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
-   bigint_cnd_add(borrow, x.mutable_data(), p192_limbs + 1, p192_mults[0], p192_limbs);
+   bigint_cnd_add(borrow, x.mutable_data(), p192_limbs + 1, p192_mults[0].data(), p192_limbs);
 }
 
 const BigInt& prime_p224() {
@@ -294,17 +262,10 @@ void redc_p224(BigInt& x, secure_vector<word>& ws) {
 
    set_words(xw, 6, R0, 0);
 
-   static const word p224_mults[3][p224_limbs] = {
-#if(BOTAN_MP_WORD_BITS == 64)
-      {0x0000000000000001, 0xFFFFFFFF00000000, 0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF},
-      {0x0000000000000002, 0xFFFFFFFE00000000, 0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF},
-      {0x0000000000000003, 0xFFFFFFFD00000000, 0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF},
-#else
-      {0x00000001, 0x00000000, 0x00000000, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
-      {0x00000002, 0x00000000, 0x00000000, 0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF},
-      {0x00000003, 0x00000000, 0x00000000, 0xFFFFFFFD, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF}
-#endif
-
+   static const constinit std::array<word, p224_limbs> p224_mults[3] = {
+      hex_to_words<word>("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000000000000000000001"),
+      hex_to_words<word>("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE000000000000000000000002"),
+      hex_to_words<word>("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD000000000000000000000003"),
    };
 
    CT::unpoison(S);
@@ -312,9 +273,9 @@ void redc_p224(BigInt& x, secure_vector<word>& ws) {
 
    BOTAN_ASSERT_NOMSG(x.size() >= p224_limbs + 1);
    x.mask_bits(224);
-   word borrow = bigint_sub2(x.mutable_data(), p224_limbs + 1, p224_mults[S], p224_limbs);
+   word borrow = bigint_sub2(x.mutable_data(), p224_limbs + 1, p224_mults[S].data(), p224_limbs);
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
-   bigint_cnd_add(borrow, x.mutable_data(), p224_limbs + 1, p224_mults[0], p224_limbs);
+   bigint_cnd_add(borrow, x.mutable_data(), p224_limbs + 1, p224_mults[0].data(), p224_limbs);
 }
 
 const BigInt& prime_p256() {
@@ -407,32 +368,18 @@ void redc_p256(BigInt& x, secure_vector<word>& ws) {
    /*
    This is a table of (i*P-256) % 2**256 for i in 1...10
    */
-   static const word p256_mults[11][p256_limbs] = {
-#if(BOTAN_MP_WORD_BITS == 64)
-      {0xFFFFFFFFFFFFFFFF, 0x00000000FFFFFFFF, 0x0000000000000000, 0xFFFFFFFF00000001},
-      {0xFFFFFFFFFFFFFFFE, 0x00000001FFFFFFFF, 0x0000000000000000, 0xFFFFFFFE00000002},
-      {0xFFFFFFFFFFFFFFFD, 0x00000002FFFFFFFF, 0x0000000000000000, 0xFFFFFFFD00000003},
-      {0xFFFFFFFFFFFFFFFC, 0x00000003FFFFFFFF, 0x0000000000000000, 0xFFFFFFFC00000004},
-      {0xFFFFFFFFFFFFFFFB, 0x00000004FFFFFFFF, 0x0000000000000000, 0xFFFFFFFB00000005},
-      {0xFFFFFFFFFFFFFFFA, 0x00000005FFFFFFFF, 0x0000000000000000, 0xFFFFFFFA00000006},
-      {0xFFFFFFFFFFFFFFF9, 0x00000006FFFFFFFF, 0x0000000000000000, 0xFFFFFFF900000007},
-      {0xFFFFFFFFFFFFFFF8, 0x00000007FFFFFFFF, 0x0000000000000000, 0xFFFFFFF800000008},
-      {0xFFFFFFFFFFFFFFF7, 0x00000008FFFFFFFF, 0x0000000000000000, 0xFFFFFFF700000009},
-      {0xFFFFFFFFFFFFFFF6, 0x00000009FFFFFFFF, 0x0000000000000000, 0xFFFFFFF60000000A},
-      {0xFFFFFFFFFFFFFFF5, 0x0000000AFFFFFFFF, 0x0000000000000000, 0xFFFFFFF50000000B},
-#else
-      {0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000, 0x00000001, 0xFFFFFFFF},
-      {0xFFFFFFFE, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000001, 0x00000000, 0x00000000, 0x00000002, 0xFFFFFFFE},
-      {0xFFFFFFFD, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000002, 0x00000000, 0x00000000, 0x00000003, 0xFFFFFFFD},
-      {0xFFFFFFFC, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000003, 0x00000000, 0x00000000, 0x00000004, 0xFFFFFFFC},
-      {0xFFFFFFFB, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000004, 0x00000000, 0x00000000, 0x00000005, 0xFFFFFFFB},
-      {0xFFFFFFFA, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000005, 0x00000000, 0x00000000, 0x00000006, 0xFFFFFFFA},
-      {0xFFFFFFF9, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000006, 0x00000000, 0x00000000, 0x00000007, 0xFFFFFFF9},
-      {0xFFFFFFF8, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000007, 0x00000000, 0x00000000, 0x00000008, 0xFFFFFFF8},
-      {0xFFFFFFF7, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000008, 0x00000000, 0x00000000, 0x00000009, 0xFFFFFFF7},
-      {0xFFFFFFF6, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000009, 0x00000000, 0x00000000, 0x0000000A, 0xFFFFFFF6},
-      {0xFFFFFFF5, 0xFFFFFFFF, 0xFFFFFFFF, 0x0000000A, 0x00000000, 0x00000000, 0x0000000B, 0xFFFFFFF5},
-#endif
+   static const constinit std::array<word, p256_limbs> p256_mults[11] = {
+      hex_to_words<word>("FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF"),
+      hex_to_words<word>("FFFFFFFE00000002000000000000000000000001FFFFFFFFFFFFFFFFFFFFFFFE"),
+      hex_to_words<word>("FFFFFFFD00000003000000000000000000000002FFFFFFFFFFFFFFFFFFFFFFFD"),
+      hex_to_words<word>("FFFFFFFC00000004000000000000000000000003FFFFFFFFFFFFFFFFFFFFFFFC"),
+      hex_to_words<word>("FFFFFFFB00000005000000000000000000000004FFFFFFFFFFFFFFFFFFFFFFFB"),
+      hex_to_words<word>("FFFFFFFA00000006000000000000000000000005FFFFFFFFFFFFFFFFFFFFFFFA"),
+      hex_to_words<word>("FFFFFFF900000007000000000000000000000006FFFFFFFFFFFFFFFFFFFFFFF9"),
+      hex_to_words<word>("FFFFFFF800000008000000000000000000000007FFFFFFFFFFFFFFFFFFFFFFF8"),
+      hex_to_words<word>("FFFFFFF700000009000000000000000000000008FFFFFFFFFFFFFFFFFFFFFFF7"),
+      hex_to_words<word>("FFFFFFF60000000A000000000000000000000009FFFFFFFFFFFFFFFFFFFFFFF6"),
+      hex_to_words<word>("FFFFFFF50000000B00000000000000000000000AFFFFFFFFFFFFFFFFFFFFFFF5"),
    };
 
    CT::unpoison(S);
@@ -440,9 +387,9 @@ void redc_p256(BigInt& x, secure_vector<word>& ws) {
 
    BOTAN_ASSERT_NOMSG(x.size() >= p256_limbs + 1);
    x.mask_bits(256);
-   word borrow = bigint_sub2(x.mutable_data(), p256_limbs + 1, p256_mults[S], p256_limbs);
+   word borrow = bigint_sub2(x.mutable_data(), p256_limbs + 1, p256_mults[S].data(), p256_limbs);
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
-   bigint_cnd_add(borrow, x.mutable_data(), p256_limbs + 1, p256_mults[0], p256_limbs);
+   bigint_cnd_add(borrow, x.mutable_data(), p256_limbs + 1, p256_mults[0].data(), p256_limbs);
 }
 
 const BigInt& prime_p384() {
@@ -567,101 +514,17 @@ void redc_p384(BigInt& x, secure_vector<word>& ws) {
    /*
    This is a table of (i*P-384) % 2**384 for i in 1...4
    */
-   static const word p384_mults[5][p384_limbs] = {
-#if(BOTAN_MP_WORD_BITS == 64)
-      {0x00000000FFFFFFFF,
-       0xFFFFFFFF00000000,
-       0xFFFFFFFFFFFFFFFE,
-       0xFFFFFFFFFFFFFFFF,
-       0xFFFFFFFFFFFFFFFF,
-       0xFFFFFFFFFFFFFFFF},
-      {0x00000001FFFFFFFE,
-       0xFFFFFFFE00000000,
-       0xFFFFFFFFFFFFFFFD,
-       0xFFFFFFFFFFFFFFFF,
-       0xFFFFFFFFFFFFFFFF,
-       0xFFFFFFFFFFFFFFFF},
-      {0x00000002FFFFFFFD,
-       0xFFFFFFFD00000000,
-       0xFFFFFFFFFFFFFFFC,
-       0xFFFFFFFFFFFFFFFF,
-       0xFFFFFFFFFFFFFFFF,
-       0xFFFFFFFFFFFFFFFF},
-      {0x00000003FFFFFFFC,
-       0xFFFFFFFC00000000,
-       0xFFFFFFFFFFFFFFFB,
-       0xFFFFFFFFFFFFFFFF,
-       0xFFFFFFFFFFFFFFFF,
-       0xFFFFFFFFFFFFFFFF},
-      {0x00000004FFFFFFFB,
-       0xFFFFFFFB00000000,
-       0xFFFFFFFFFFFFFFFA,
-       0xFFFFFFFFFFFFFFFF,
-       0xFFFFFFFFFFFFFFFF,
-       0xFFFFFFFFFFFFFFFF},
-
-#else
-      {0xFFFFFFFF,
-       0x00000000,
-       0x00000000,
-       0xFFFFFFFF,
-       0xFFFFFFFE,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF},
-      {0xFFFFFFFE,
-       0x00000001,
-       0x00000000,
-       0xFFFFFFFE,
-       0xFFFFFFFD,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF},
-      {0xFFFFFFFD,
-       0x00000002,
-       0x00000000,
-       0xFFFFFFFD,
-       0xFFFFFFFC,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF},
-      {0xFFFFFFFC,
-       0x00000003,
-       0x00000000,
-       0xFFFFFFFC,
-       0xFFFFFFFB,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF},
-      {0xFFFFFFFB,
-       0x00000004,
-       0x00000000,
-       0xFFFFFFFB,
-       0xFFFFFFFA,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF,
-       0xFFFFFFFF},
-#endif
+   static const constinit std::array<word, p384_limbs> p384_mults[5] = {
+      hex_to_words<word>(
+         "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFF"),
+      hex_to_words<word>(
+         "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDFFFFFFFE0000000000000001FFFFFFFE"),
+      hex_to_words<word>(
+         "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFCFFFFFFFD0000000000000002FFFFFFFD"),
+      hex_to_words<word>(
+         "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFBFFFFFFFC0000000000000003FFFFFFFC"),
+      hex_to_words<word>(
+         "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFAFFFFFFFB0000000000000004FFFFFFFB"),
    };
 
    CT::unpoison(S);
@@ -669,9 +532,9 @@ void redc_p384(BigInt& x, secure_vector<word>& ws) {
 
    BOTAN_ASSERT_NOMSG(x.size() >= p384_limbs + 1);
    x.mask_bits(384);
-   word borrow = bigint_sub2(x.mutable_data(), p384_limbs + 1, p384_mults[S], p384_limbs);
+   word borrow = bigint_sub2(x.mutable_data(), p384_limbs + 1, p384_mults[S].data(), p384_limbs);
    BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
-   bigint_cnd_add(borrow, x.mutable_data(), p384_limbs + 1, p384_mults[0], p384_limbs);
+   bigint_cnd_add(borrow, x.mutable_data(), p384_limbs + 1, p384_mults[0].data(), p384_limbs);
 }
 
 }  // namespace Botan
