@@ -258,17 +258,12 @@ word BigInt::operator%=(word mod) {
 * Left Shift Operator
 */
 BigInt& BigInt::operator<<=(size_t shift) {
-   const size_t shift_words = shift / BOTAN_MP_WORD_BITS;
-   const size_t shift_bits = shift % BOTAN_MP_WORD_BITS;
-   const size_t size = sig_words();
-
-   const size_t bits_free = top_bits_free();
-
-   const size_t new_size = size + shift_words + (bits_free < shift_bits);
+   const size_t sw = sig_words();
+   const size_t new_size = sw + (shift + BOTAN_MP_WORD_BITS - 1) / BOTAN_MP_WORD_BITS;
 
    m_data.grow_to(new_size);
 
-   bigint_shl1(m_data.mutable_data(), new_size, size, shift_words, shift_bits);
+   bigint_shl1(m_data.mutable_data(), new_size, sw, shift);
 
    return (*this);
 }
@@ -277,10 +272,7 @@ BigInt& BigInt::operator<<=(size_t shift) {
 * Right Shift Operator
 */
 BigInt& BigInt::operator>>=(size_t shift) {
-   const size_t shift_words = shift / BOTAN_MP_WORD_BITS;
-   const size_t shift_bits = shift % BOTAN_MP_WORD_BITS;
-
-   bigint_shr1(m_data.mutable_data(), m_data.size(), shift_words, shift_bits);
+   bigint_shr1(m_data.mutable_data(), m_data.size(), shift);
 
    if(is_negative() && is_zero()) {
       set_sign(Positive);

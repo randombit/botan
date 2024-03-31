@@ -202,7 +202,7 @@ void vartime_divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt&
 
       word qjt = bigint_divop_vartime(x_j0, x_j1, y_t0);
 
-      qjt = CT::Mask<word>::is_equal(x_j0, y_t0).select(MP_WORD_MAX, qjt);
+      qjt = CT::Mask<word>::is_equal(x_j0, y_t0).select(WordInfo<word>::max, qjt);
 
       // Per HAC 14.23, this operation is required at most twice
       qjt -= division_check(qjt, y_t0, y_t1, x_j0, x_j1, x_j2);

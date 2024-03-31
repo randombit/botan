@@ -172,12 +172,11 @@ word operator%(const BigInt& n, word mod) {
 * Left Shift Operator
 */
 BigInt operator<<(const BigInt& x, size_t shift) {
-   const size_t shift_words = shift / BOTAN_MP_WORD_BITS, shift_bits = shift % BOTAN_MP_WORD_BITS;
-
    const size_t x_sw = x.sig_words();
 
-   BigInt y = BigInt::with_capacity(x_sw + shift_words + (shift_bits ? 1 : 0));
-   bigint_shl2(y.mutable_data(), x.data(), x_sw, shift_words, shift_bits);
+   const size_t new_size = x_sw + (shift + BOTAN_MP_WORD_BITS - 1) / BOTAN_MP_WORD_BITS;
+   BigInt y = BigInt::with_capacity(new_size);
+   bigint_shl2(y.mutable_data(), x.data(), x_sw, shift);
    y.set_sign(x.sign());
    return y;
 }
@@ -187,7 +186,6 @@ BigInt operator<<(const BigInt& x, size_t shift) {
 */
 BigInt operator>>(const BigInt& x, size_t shift) {
    const size_t shift_words = shift / BOTAN_MP_WORD_BITS;
-   const size_t shift_bits = shift % BOTAN_MP_WORD_BITS;
    const size_t x_sw = x.sig_words();
 
    if(shift_words >= x_sw) {
@@ -195,7 +193,7 @@ BigInt operator>>(const BigInt& x, size_t shift) {
    }
 
    BigInt y = BigInt::with_capacity(x_sw - shift_words);
-   bigint_shr2(y.mutable_data(), x.data(), x_sw, shift_words, shift_bits);
+   bigint_shr2(y.mutable_data(), x.data(), x_sw, shift);
 
    if(x.is_negative() && y.is_zero()) {
       y.set_sign(BigInt::Positive);

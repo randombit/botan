@@ -62,7 +62,7 @@ void redc_p521(BigInt& x, secure_vector<word>& ws) {
    }
 
    clear_mem(ws.data(), ws.size());
-   bigint_shr2(ws.data(), x.data(), std::min(x.size(), 2 * p_words), p_full_words, p_top_bits);
+   bigint_shr2(ws.data(), x.data(), std::min(x.size(), 2 * p_words), 521);
 
    x.mask_bits(521);
    x.grow_to(p_words);
@@ -81,11 +81,12 @@ void redc_p521(BigInt& x, secure_vector<word>& ws) {
    */
    const auto bit_522_set = CT::Mask<word>::expand(top_word >> p_top_bits);
 
-   word and_512 = MP_WORD_MAX;
+   const word max = WordInfo<word>::max;
+   word and_512 = max;
    for(size_t i = 0; i != p_full_words; ++i) {
       and_512 &= x.word_at(i);
    }
-   const auto all_512_low_bits_set = CT::Mask<word>::is_equal(and_512, MP_WORD_MAX);
+   const auto all_512_low_bits_set = CT::Mask<word>::is_equal(and_512, max);
    const auto has_p521_top_word = CT::Mask<word>::is_equal(top_word, 0x1FF);
    const auto is_p521 = all_512_low_bits_set & has_p521_top_word;
 
