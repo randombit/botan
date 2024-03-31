@@ -185,13 +185,11 @@ class BitMap final {
    private:
 #if defined(BOTAN_ENABLE_DEBUG_ASSERTS)
       using bitmask_type = uint8_t;
-
-      enum { BITMASK_BITS = 8 };
 #else
       using bitmask_type = word;
-
-      enum { BITMASK_BITS = BOTAN_MP_WORD_BITS };
 #endif
+
+      static const size_t BITMASK_BITS = sizeof(bitmask_type) * 8;
 
       size_t m_len;
       bitmask_type m_main_mask;
