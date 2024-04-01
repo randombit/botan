@@ -34,24 +34,30 @@ template <typename T>
 concept WordType = (std::same_as<T, uint32_t> || std::same_as<T, uint64_t>);
 
 template <WordType W>
-struct DwordType {};
+struct WordInfo {};
 
 template <>
-struct DwordType<uint32_t> {
+struct WordInfo<uint32_t> {
    public:
-      typedef uint64_t type;
-      static const bool is_native = true;
+      static const constexpr size_t bits = 32;
+      static const constexpr uint32_t max = 0xFFFFFFFF;
+
+      typedef uint64_t dword;
+      static const constexpr bool dword_is_native = true;
 };
 
 template <>
-struct DwordType<uint64_t> {
+struct WordInfo<uint64_t> {
    public:
+      static const constexpr size_t bits = 64;
+      static const constexpr uint64_t max = 0xFFFFFFFFFFFFFFFF;
+
 #if defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
-      typedef uint128_t type;
-      static const bool is_native = true;
+      typedef uint128_t dword;
+      static const constexpr bool dword_is_native = true;
 #else
-      typedef donna128 type;
-      static const bool is_native = false;
+      typedef donna128 dword;
+      static const constexpr bool dword_is_native = false;
 #endif
 };
 
@@ -90,7 +96,7 @@ inline constexpr auto word_madd2(W a, W b, W* c) -> W {
    }
 #endif
 
-   typedef typename DwordType<W>::type dword;
+   typedef typename WordInfo<W>::dword dword;
    const dword s = dword(a) * b + *c;
    *c = static_cast<W>(s >> (sizeof(W) * 8));
    return static_cast<W>(s);
@@ -139,7 +145,7 @@ inline constexpr auto word_madd3(W a, W b, W c, W* d) -> W {
    }
 #endif
 
-   typedef typename DwordType<W>::type dword;
+   typedef typename WordInfo<W>::dword dword;
    const dword s = dword(a) * b + c + *d;
    *d = static_cast<W>(s >> (sizeof(W) * 8));
    return static_cast<W>(s);

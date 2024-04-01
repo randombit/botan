@@ -28,11 +28,8 @@ auto div_mod_2_446(std::span<const word, S> x) {
       // Clear the two most significant bits
       r[Scalar448::WORDS - 1] &= ~(word(0b11) << (sizeof(word) * 8 - 2));
 
-      constexpr size_t word_shift = 446 / (sizeof(word) * 8);
-      constexpr size_t bit_shift = 446 % (sizeof(word) * 8);
-
       std::array<word, S - Scalar448::WORDS + 1> q;
-      bigint_shr2(q.data(), x.data(), x.size(), word_shift, bit_shift);
+      bigint_shr2(q.data(), x.data(), x.size(), 446);
 
       return std::make_pair(q, r);
    }

@@ -19,8 +19,6 @@
 
 namespace Botan {
 
-const word MP_WORD_MAX = ~static_cast<word>(0);
-
 /*
 * If cond == 0, does nothing.
 * If cond > 0, swaps x[0:size] with y[0:size]
@@ -396,12 +394,15 @@ inline constexpr auto bigint_sub_abs(W z[], const W x[], const W y[], size_t N, 
 * Shift Operations
 */
 template <WordType W>
-inline constexpr void bigint_shl1(W x[], size_t x_size, size_t x_words, size_t word_shift, size_t bit_shift) {
+inline constexpr void bigint_shl1(W x[], size_t x_size, size_t x_words, size_t shift) {
+   const size_t word_shift = shift / WordInfo<W>::bits;
+   const size_t bit_shift = shift % WordInfo<W>::bits;
+
    copy_mem(x + word_shift, x, x_words);
    clear_mem(x, word_shift);
 
    const auto carry_mask = CT::Mask<W>::expand(bit_shift);
-   const W carry_shift = carry_mask.if_set_return(sizeof(W) * 8 - bit_shift);
+   const W carry_shift = carry_mask.if_set_return(WordInfo<W>::bits - bit_shift);
 
    W carry = 0;
    for(size_t i = word_shift; i != x_size; ++i) {
@@ -412,7 +413,10 @@ inline constexpr void bigint_shl1(W x[], size_t x_size, size_t x_words, size_t w
 }
 
 template <WordType W>
-inline constexpr void bigint_shr1(W x[], size_t x_size, size_t word_shift, size_t bit_shift) {
+inline constexpr void bigint_shr1(W x[], size_t x_size, size_t shift) {
+   const size_t word_shift = shift / WordInfo<W>::bits;
+   const size_t bit_shift = shift % WordInfo<W>::bits;
+
    const size_t top = x_size >= word_shift ? (x_size - word_shift) : 0;
 
    if(top > 0) {
@@ -421,7 +425,7 @@ inline constexpr void bigint_shr1(W x[], size_t x_size, size_t word_shift, size_
    clear_mem(x + top, std::min(word_shift, x_size));
 
    const auto carry_mask = CT::Mask<W>::expand(bit_shift);
-   const W carry_shift = carry_mask.if_set_return(sizeof(W) * 8 - bit_shift);
+   const W carry_shift = carry_mask.if_set_return(WordInfo<W>::bits - bit_shift);
 
    W carry = 0;
 
@@ -433,11 +437,14 @@ inline constexpr void bigint_shr1(W x[], size_t x_size, size_t word_shift, size_
 }
 
 template <WordType W>
-inline constexpr void bigint_shl2(W y[], const W x[], size_t x_size, size_t word_shift, size_t bit_shift) {
+inline constexpr void bigint_shl2(W y[], const W x[], size_t x_size, size_t shift) {
+   const size_t word_shift = shift / WordInfo<W>::bits;
+   const size_t bit_shift = shift % WordInfo<W>::bits;
+
    copy_mem(y + word_shift, x, x_size);
 
    const auto carry_mask = CT::Mask<W>::expand(bit_shift);
-   const W carry_shift = carry_mask.if_set_return(sizeof(W) * 8 - bit_shift);
+   const W carry_shift = carry_mask.if_set_return(WordInfo<W>::bits - bit_shift);
 
    W carry = 0;
    for(size_t i = word_shift; i != x_size + word_shift + 1; ++i) {
@@ -448,7 +455,9 @@ inline constexpr void bigint_shl2(W y[], const W x[], size_t x_size, size_t word
 }
 
 template <WordType W>
-inline constexpr void bigint_shr2(W y[], const W x[], size_t x_size, size_t word_shift, size_t bit_shift) {
+inline constexpr void bigint_shr2(W y[], const W x[], size_t x_size, size_t shift) {
+   const size_t word_shift = shift / WordInfo<W>::bits;
+   const size_t bit_shift = shift % WordInfo<W>::bits;
    const size_t new_size = x_size < word_shift ? 0 : (x_size - word_shift);
 
    if(new_size > 0) {
@@ -456,7 +465,7 @@ inline constexpr void bigint_shr2(W y[], const W x[], size_t x_size, size_t word
    }
 
    const auto carry_mask = CT::Mask<W>::expand(bit_shift);
-   const W carry_shift = carry_mask.if_set_return(sizeof(W) * 8 - bit_shift);
+   const W carry_shift = carry_mask.if_set_return(WordInfo<W>::bits - bit_shift);
 
    W carry = 0;
    for(size_t i = new_size; i > 0; --i) {
@@ -701,22 +710,20 @@ inline constexpr auto bigint_divop_vartime(W n1, W n0, W d) -> W {
       throw Invalid_Argument("bigint_divop_vartime divide by zero");
    }
 
-   constexpr const size_t W_bits = sizeof(W) * 8;
-
-   if constexpr(DwordType<W>::is_native) {
-      typename DwordType<W>::type n = n1;
-      n <<= W_bits;
+   if constexpr(WordInfo<W>::dword_is_native) {
+      typename WordInfo<W>::dword n = n1;
+      n <<= WordInfo<W>::bits;
       n |= n0;
       return static_cast<W>(n / d);
    } else {
       W high = n1 % d;
       W quotient = 0;
 
-      for(size_t i = 0; i != W_bits; ++i) {
-         const W high_top_bit = high >> (W_bits - 1);
+      for(size_t i = 0; i != WordInfo<W>::bits; ++i) {
+         const W high_top_bit = high >> (WordInfo<W>::bits - 1);
 
          high <<= 1;
-         high |= (n0 >> (W_bits - 1 - i)) & 1;
+         high |= (n0 >> (WordInfo<W>::bits - 1 - i)) & 1;
          quotient <<= 1;
 
          if(high_top_bit || high >= d) {

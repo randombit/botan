@@ -433,14 +433,14 @@ void BigInt::ct_cond_add(bool predicate, const BigInt& value) {
 void BigInt::ct_shift_left(size_t shift) {
    auto shl_bit = [](const BigInt& a, BigInt& result) {
       BOTAN_DEBUG_ASSERT(a.size() + 1 == result.size());
-      bigint_shl2(result.mutable_data(), a.data(), a.size(), 0, 1);
+      bigint_shl2(result.mutable_data(), a.data(), a.size(), 1);
       // shl2 may have shifted a bit into the next word, which must be dropped
       clear_mem(result.mutable_data() + result.size() - 1, 1);
    };
 
    auto shl_word = [](const BigInt& a, BigInt& result) {
       // the most significant word is not copied, aka. shifted out
-      bigint_shl2(result.mutable_data(), a.data(), a.size() - 1 /* ignore msw */, 1, 0);
+      bigint_shl2(result.mutable_data(), a.data(), a.size() - 1 /* ignore msw */, BOTAN_MP_WORD_BITS);
       // we left-shifted by a full word, the least significant word must be zero'ed
       clear_mem(result.mutable_data(), 1);
    };

@@ -26,17 +26,17 @@ word monty_inverse(word a) {
    word b = 1;
    word r = 0;
 
-   for(size_t i = 0; i != BOTAN_MP_WORD_BITS; ++i) {
+   for(size_t i = 0; i != WordInfo<word>::bits; ++i) {
       const word bi = b % 2;
       r >>= 1;
-      r += bi << (BOTAN_MP_WORD_BITS - 1);
+      r += bi << (WordInfo<word>::bits - 1);
 
       b -= a * bi;
       b >>= 1;
    }
 
    // Now invert in addition space
-   r = (MP_WORD_MAX - r) + 1;
+   r = (WordInfo<word>::max - r) + 1;
 
    return r;
 }

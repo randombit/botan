@@ -33,7 +33,7 @@ class MP_Unit_Tests final : public Test {
       static Result test_cnd_add() {
          Result result("bigint_cnd_add");
 
-         const Botan::word max = Botan::MP_WORD_MAX;
+         const Botan::word max = ~static_cast<Botan::word>(0);
 
          Botan::word a = 2;
          Botan::word c = Botan::bigint_cnd_add<Botan::word>(0, &a, &max, 1);
@@ -63,7 +63,7 @@ class MP_Unit_Tests final : public Test {
 
          c = Botan::bigint_cnd_sub<Botan::word>(1, &a, &b, 1);
 
-         result.test_int_eq(a, Botan::MP_WORD_MAX, "Sub");
+         result.test_int_eq(a, ~static_cast<Botan::word>(0), "Sub");
          result.test_int_eq(c, 1, "Borrow");
 
          return result;
@@ -72,7 +72,9 @@ class MP_Unit_Tests final : public Test {
       static Result test_cnd_abs() {
          Result result("bigint_cnd_abs");
 
-         Botan::word x1 = Botan::MP_WORD_MAX;
+         const Botan::word max = Botan::WordInfo<Botan::word>::max;
+
+         Botan::word x1 = max;
          Botan::bigint_cnd_abs<Botan::word>(1, &x1, 1);
          result.test_int_eq(x1, 1, "Abs");
 
@@ -82,13 +84,13 @@ class MP_Unit_Tests final : public Test {
 
          x1 = 1;
          Botan::bigint_cnd_abs<Botan::word>(1, &x1, 1);
-         result.test_int_eq(x1, Botan::MP_WORD_MAX, "Abs");
+         result.test_int_eq(x1, max, "Abs");
 
          x1 = 1;
          Botan::bigint_cnd_abs<Botan::word>(0, &x1, 1);
          result.test_int_eq(x1, 1, "No change");
 
-         Botan::word x2[2] = {Botan::MP_WORD_MAX, Botan::MP_WORD_MAX};
+         Botan::word x2[2] = {max, max};
 
          Botan::bigint_cnd_abs<Botan::word>(1, x2, 2);
          result.test_int_eq(x2[0], 1, "Abs");
