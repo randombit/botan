@@ -24,6 +24,7 @@ add_sysroot_option "--sysroot="
 <sanitizers>
 default   -> address,undefined
 
+iterator  -> "-D_LIBCPP_DEBUG=1 -D_GLIBCXX_DEBUG"
 address   -> "-fsanitize=address"
 undefined -> "-fsanitize=undefined -fno-sanitize-recover=undefined"
 coverage  -> "-fsanitize=fuzzer-no-link"
