@@ -78,11 +78,20 @@ KyberMode::Mode kyber_mode_from_string(std::string_view str) {
  * It enforces the optimization of various compilers,
  * replacing the division operation with multiplication and shifts.
  *
+ * This implementation is only valid for integers <= 2**20
+ *
  * @returns (a / KyberConstants::Q)
  */
 uint16_t ct_int_div_kyber_q(uint32_t a) {
-   const uint64_t tmp = (static_cast<uint64_t>(a) * 989558401UL) >> 32;
-   return static_cast<uint16_t>((tmp + ((a - tmp) >> 1)) >> 11);
+   BOTAN_DEBUG_ASSERT(a < (1 << 18));
+
+   /*
+   Constants based on "Hacker's Delight" (Second Edition) by Henry
+   S. Warren, Jr. Chapter 10-9 "Unsigned Division by Divisors >= 1"
+   */
+   const uint64_t m = 161271;
+   const size_t p = 29;
+   return static_cast<uint16_t>((a * m) >> p);
 }
 
 }  // namespace
