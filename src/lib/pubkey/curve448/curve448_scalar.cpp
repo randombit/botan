@@ -7,6 +7,7 @@
  */
 #include <botan/internal/curve448_scalar.h>
 
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/mp_core.h>
 
 namespace Botan {

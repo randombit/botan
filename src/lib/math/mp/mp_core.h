@@ -1,6 +1,6 @@
 /*
 * MPI Algorithms
-* (C) 1999-2010,2018 Jack Lloyd
+* (C) 1999-2010,2018,2024 Jack Lloyd
 *     2006 Luca Piccarreta
 *     2016 Matthias Gierlings
 *
@@ -752,11 +752,49 @@ inline constexpr auto bigint_modop_vartime(W n1, W n0, W d) -> W {
 }
 
 /*
+* Comba Fixed Length Multiplication
+*/
+template <size_t N, WordType W>
+constexpr inline void comba_mul(W z[2 * N], const W x[N], const W y[N]) {
+   W w2 = 0, w1 = 0, w0 = 0;
+
+   for(size_t i = 0; i != 2 * N; ++i) {
+      const size_t start = i + 1 < N ? 0 : i + 1 - N;
+      const size_t end = std::min(N, i + 1);
+
+      for(size_t j = start; j != end; ++j) {
+         word3_muladd(&w2, &w1, &w0, x[j], y[i - j]);
+      }
+      z[i] = w0;
+      w0 = w1;
+      w1 = w2;
+      w2 = 0;
+   }
+}
+
+template <size_t N, WordType W>
+constexpr inline void comba_sqr(W z[2 * N], const W x[N]) {
+   W w2 = 0, w1 = 0, w0 = 0;
+
+   for(size_t i = 0; i != 2 * N; ++i) {
+      const size_t start = i + 1 < N ? 0 : i + 1 - N;
+      const size_t end = std::min(N, i + 1);
+
+      for(size_t j = start; j != end; ++j) {
+         word3_muladd(&w2, &w1, &w0, x[j], x[i - j]);
+      }
+      z[i] = w0;
+      w0 = w1;
+      w1 = w2;
+      w2 = 0;
+   }
+}
+
+/*
 * Comba Multiplication / Squaring
 */
 BOTAN_FUZZER_API void bigint_comba_mul4(word z[8], const word x[4], const word y[4]);
 BOTAN_FUZZER_API void bigint_comba_mul6(word z[12], const word x[6], const word y[6]);
-BOTAN_FUZZER_API void bigint_comba_mul7(word z[14], const word x[7], const word y[7]);
 BOTAN_FUZZER_API void bigint_comba_mul8(word z[16], const word x[8], const word y[8]);
 BOTAN_FUZZER_API void bigint_comba_mul9(word z[18], const word x[9], const word y[9]);
 BOTAN_FUZZER_API void bigint_comba_mul16(word z[32], const word x[16], const word y[16]);
@@ -764,7 +802,6 @@ BOTAN_FUZZER_API void bigint_comba_mul24(word z[48], const word x[24], const wor
 
 BOTAN_FUZZER_API void bigint_comba_sqr4(word out[8], const word in[4]);
 BOTAN_FUZZER_API void bigint_comba_sqr6(word out[12], const word in[6]);
-BOTAN_FUZZER_API void bigint_comba_sqr7(word out[14], const word in[7]);
 BOTAN_FUZZER_API void bigint_comba_sqr8(word out[16], const word in[8]);
 BOTAN_FUZZER_API void bigint_comba_sqr9(word out[18], const word in[9]);
 BOTAN_FUZZER_API void bigint_comba_sqr16(word out[32], const word in[16]);
