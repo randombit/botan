@@ -35,7 +35,7 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod) {
    Software Polynomial Multiplication on ARM Processors using the NEON Engine"
    by Danilo Câmara, Conrado P. L. Gouvêa, Julio López, and Ricardo
    Dahab in LNCS 8182
-      https://conradoplg.cryptoland.net/files/2010/12/mocrysen13.pdf
+      https://inria.hal.science/hal-01506572/document
 
    Thanks to Niels for creating the algorithm, explaining some things
    about it, and the reference to the paper.
