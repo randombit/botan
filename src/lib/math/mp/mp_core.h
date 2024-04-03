@@ -752,6 +752,20 @@ inline constexpr auto bigint_modop_vartime(W n1, W n0, W d) -> W {
    return (n0 - z);
 }
 
+template <size_t S, WordType W, size_t N>
+inline consteval W shift_left(std::array<W, N>& x) {
+   static_assert(S < WordInfo<W>::bits, "Shift too large");
+
+   W carry = 0;
+   for(size_t j = 0; j != N; ++j) {
+      const W w = x[j];
+      x[j] = (w << S) | carry;
+      carry = w >> (WordInfo<W>::bits - S);
+   }
+
+   return carry;
+}
+
 template <WordType W, size_t N>
 consteval auto hex_to_words(const char (&s)[N]) {
    // Char count includes null terminator which we ignore
@@ -776,12 +790,7 @@ consteval auto hex_to_words(const char (&s)[N]) {
    for(size_t i = 0; i != C; ++i) {
       const int8_t c = hex2int(s[i]);
       if(c >= 0) {
-         W carry = 0;
-         for(size_t j = 0; j != S; ++j) {
-            const W w = r[j];
-            r[j] = (w << 4) | carry;
-            carry = w >> (sizeof(W) * 8 - 4);
-         }
+         shift_left<4>(r);
          r[0] += c;
       }
    }
