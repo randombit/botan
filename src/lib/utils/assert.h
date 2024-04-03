@@ -108,10 +108,10 @@ namespace Botan {
 * BOTAN_UNUSED(a); or BOTAN_UNUSED(x, y, z);
 */
 template <typename T>
-void ignore_param(T&&) {}
+constexpr void ignore_param(T&&) {}
 
 template <typename... T>
-void ignore_params(T&&... args) {
+constexpr void ignore_params(T&&... args) {
    (ignore_param(args), ...);
 }
 
