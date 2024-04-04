@@ -176,7 +176,10 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_cipher_valid_nonce_length, [c_void_p, c_size_t])
     ffi_api(dll.botan_cipher_get_tag_length, [c_void_p, POINTER(c_size_t)])
     ffi_api(dll.botan_cipher_get_default_nonce_length, [c_void_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_cipher_is_authenticated, [c_void_p])
+    ffi_api(dll.botan_cipher_requires_entire_message, [c_void_p])
     ffi_api(dll.botan_cipher_get_update_granularity, [c_void_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_cipher_get_ideal_update_granularity, [c_void_p, POINTER(c_size_t)])
     ffi_api(dll.botan_cipher_query_keylen, [c_void_p, POINTER(c_size_t), POINTER(c_size_t)])
     ffi_api(dll.botan_cipher_get_keyspec, [c_void_p, POINTER(c_size_t), POINTER(c_size_t), POINTER(c_size_t)])
     ffi_api(dll.botan_cipher_set_key, [c_void_p, c_char_p, c_size_t])
@@ -853,6 +856,11 @@ class SymmetricCipher:
         _DLL.botan_cipher_get_update_granularity(self.__obj, byref(l))
         return l.value
 
+    def ideal_update_granularity(self):
+        l = c_size_t(0)
+        _DLL.botan_cipher_get_ideal_update_granularity(self.__obj, byref(l))
+        return l.value
+
     def key_length(self):
         kmin = c_size_t(0)
         kmax = c_size_t(0)
@@ -875,7 +883,8 @@ class SymmetricCipher:
         return l.value
 
     def is_authenticated(self):
-        return self.tag_length() > 0
+        rc = _DLL.botan_cipher_is_authenticated(self.__obj)
+        return rc == 1
 
     def valid_nonce_length(self, nonce_len):
         rc = _DLL.botan_cipher_valid_nonce_length(self.__obj, nonce_len)
