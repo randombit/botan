@@ -26,7 +26,7 @@ from time import strptime, mktime, time as system_time
 from binascii import hexlify
 from datetime import datetime
 
-BOTAN_FFI_VERSION = 20230403
+BOTAN_FFI_VERSION = 20240408
 
 #
 # Base exception for all exceptions raised from this module
