@@ -46,11 +46,10 @@ def monty_redc_code(n):
     lines.append("word3_add(&w2, &w1, &w0, z[%d]);" % (2*n-1));
 
     lines.append("ws[%d] = w0;" % (n - 1))
-    lines.append("ws[%d] = w1;" % (n))
+    #lines.append("ws[%d] = w1;" % (n))
 
-    lines.append("word borrow = bigint_sub3(z, ws, %d + 1, p, %d);" % (n, n))
+    lines.append("bigint_monty_maybe_sub<%d>(z, w1, ws, p);" % (n))
 
-    lines.append("CT::conditional_assign_mem(borrow, z, ws, %d);" % (n))
     lines.append("clear_mem(z + %d, %d);" % (n, n))
 
     for line in lines:
