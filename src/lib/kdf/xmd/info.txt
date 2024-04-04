@@ -1,0 +1,11 @@
+<defines>
+XMD -> 20240404
+</defines>
+
+<module_info>
+name -> "XMD"
+</module_info>
+
+<requires>
+hash
+</requires>

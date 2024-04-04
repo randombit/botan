@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
    #include <botan/ec_group.h>
    #include <botan/internal/ec_h2c.h>
+   #include <botan/internal/xmd.h>
 #endif
 
 namespace Botan_Tests {
