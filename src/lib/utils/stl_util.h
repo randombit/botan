@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <functional>
 #include <map>
+#include <optional>
 #include <set>
 #include <span>
 #include <string>
@@ -327,6 +328,38 @@ struct overloaded : Ts... {
 // explicit deduction guide (not needed as of C++20)
 template <class... Ts>
 overloaded(Ts...) -> overloaded<Ts...>;
+
+/**
+ * @brief Helper class to create a RAII-style cleanup callback
+ *
+ * Ensures that the cleanup callback given in the object's constructor is called
+ * when the object is destroyed. Use this to ensure some cleanup code runs when
+ * leaving the current scope.
+ */
+template <std::invocable FunT>
+class scoped_cleanup {
+   public:
+      explicit scoped_cleanup(FunT cleanup) : m_cleanup(std::move(cleanup)) {}
+
+      scoped_cleanup(const scoped_cleanup&) = delete;
+      scoped_cleanup& operator=(const scoped_cleanup&) = delete;
+      scoped_cleanup(scoped_cleanup&&) = delete;
+      scoped_cleanup& operator=(scoped_cleanup&&) = delete;
+
+      ~scoped_cleanup() {
+         if(m_cleanup.has_value()) {
+            m_cleanup.value()();
+         }
+      }
+
+      /**
+       * Disengage the cleanup callback, i.e., prevent it from being called
+       */
+      void disengage() { m_cleanup.reset(); }
+
+   private:
+      std::optional<FunT> m_cleanup;
+};
 
 }  // namespace Botan
 

@@ -1179,6 +1179,73 @@ class Formatter_Tests : public Test {
 
 BOTAN_REGISTER_TEST("utils", "fmt", Formatter_Tests);
 
+class ScopedCleanup_Tests : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         return {
+            Botan_Tests::CHECK("leaving a scope results in cleanup",
+                               [](Test::Result& result) {
+                                  bool ran = false;
+                                  {
+                                     auto clean = Botan::scoped_cleanup([&] { ran = true; });
+                                  }
+                                  result.confirm("cleanup ran", ran);
+                               }),
+
+            Botan_Tests::CHECK("leaving a function, results in cleanup",
+                               [](Test::Result& result) {
+                                  bool ran = false;
+                                  bool fn_called = false;
+                                  auto fn = [&] {
+                                     auto clean = Botan::scoped_cleanup([&] { ran = true; });
+                                     fn_called = true;
+                                  };
+
+                                  result.confirm("cleanup not yet ran", !ran);
+                                  fn();
+                                  result.confirm("fn called", fn_called);
+                                  result.confirm("cleanup ran", ran);
+                               }),
+
+            Botan_Tests::CHECK("stack unwinding results in cleanup",
+                               [](Test::Result& result) {
+                                  bool ran = false;
+                                  bool fn_called = false;
+                                  bool exception_caught = false;
+                                  auto fn = [&] {
+                                     auto clean = Botan::scoped_cleanup([&] { ran = true; });
+                                     fn_called = true;
+                                     throw std::runtime_error("test");
+                                  };
+
+                                  result.confirm("cleanup not yet ran", !ran);
+                                  try {
+                                     fn();
+                                  } catch(const std::exception&) {
+                                     exception_caught = true;
+                                  }
+
+                                  result.confirm("fn called", fn_called);
+                                  result.confirm("cleanup ran", ran);
+                                  result.confirm("exception caught", exception_caught);
+                               }),
+
+            Botan_Tests::CHECK("cleanup isn't called after disengaging",
+                               [](Test::Result& result) {
+                                  bool ran = false;
+                                  {
+                                     auto clean = Botan::scoped_cleanup([&] { ran = true; });
+                                     clean.disengage();
+                                  }
+                                  result.confirm("cleanup not ran", !ran);
+                               }),
+
+         };
+      }
+};
+
+BOTAN_REGISTER_TEST("utils", "scoped_cleanup", ScopedCleanup_Tests);
+
 #endif
 
 }  // namespace
