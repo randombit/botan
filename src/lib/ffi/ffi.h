@@ -621,7 +621,25 @@ BOTAN_FFI_EXPORT(2, 0) int botan_cipher_start(botan_cipher_t cipher, const uint8
 #define BOTAN_CIPHER_UPDATE_FLAG_FINAL (1U << 0)
 
 /**
-* Encrypt some data
+* @brief Encrypt/Decrypt some data and/or finalize the encryption/decryption
+*
+* This encrypts as many bytes from @p input_bytes into @p output_bytes as
+* possible. Unless ``BOTAN_CIPHER_UPDATE_FLAG_FINAL`` is set, this function will
+* consume bytes in multiples of botan_cipher_get_update_granularity().
+* @p input_consumed and @p output_written will be set accordingly and it is the
+* caller's responsibility to adapt their buffers accordingly before calling this
+* function again.
+*
+* Eventually, the caller must set the ``BOTAN_CIPHER_UPDATE_FLAG_FINAL`` flag to
+* indicate that no more input will be provided. This will cause the cipher to
+* consume all given input bytes and produce the final output; or return a
+* ``BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE`` error if the given output buffer
+* was too small. In the latter case, @p output_written will be set to the
+* required buffer size. Calling again with ``BOTAN_CIPHER_UPDATE_FLAG_FINAL``, a
+* big enough buffer and no further input will then produce the final output.
+*
+* Note that some ciphers require the entire message to be provided before any
+* output is produced. @sa botan_cipher_requires_entire_message().
 */
 BOTAN_FFI_EXPORT(2, 0)
 int botan_cipher_update(botan_cipher_t cipher,
