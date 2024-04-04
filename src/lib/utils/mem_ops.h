@@ -161,7 +161,9 @@ template <ranges::contiguous_output_range OutR, ranges::contiguous_range InR>
             std::is_trivially_copyable_v<std::ranges::range_value_t<InR>>
 inline constexpr void copy_mem(OutR&& out, InR&& in) {
    ranges::assert_equal_byte_lengths(out, in);
-   if(ranges::size_bytes(out) > 0) {
+   if(std::is_constant_evaluated()) {
+      std::copy(std::ranges::begin(in), std::ranges::end(in), std::ranges::begin(out));
+   } else if(ranges::size_bytes(out) > 0) {
       std::memmove(std::ranges::data(out), std::ranges::data(in), ranges::size_bytes(out));
    }
 }
