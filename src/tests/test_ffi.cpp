@@ -15,6 +15,7 @@
 #if defined(BOTAN_HAS_FFI)
    #include <botan/ffi.h>
    #include <botan/hex.h>
+   #include <botan/internal/fmt.h>
    #include <botan/internal/loadstor.h>
    #include <set>
 #endif
@@ -1191,6 +1192,218 @@ class FFI_EAX_Test final : public FFI_Test {
             }
 
             TEST_FFI_OK(botan_cipher_destroy, (cipher_encrypt));
+         }
+      }
+};
+
+class FFI_AEAD_Test final : public FFI_Test {
+   public:
+      std::string name() const override { return "FFI AEAD"; }
+
+      void ffi_test(Test::Result& merged_result, botan_rng_t rng) override {
+         botan_cipher_t cipher_encrypt, cipher_decrypt;
+
+         std::array<std::string, 5> aeads = {
+            "AES-128/GCM", "ChaCha20Poly1305", "AES-128/EAX", "AES-256/SIV", "AES-128/CCM"};
+
+         for(const std::string& aead : aeads) {
+            Test::Result result(Botan::fmt("AEAD {}", aead));
+
+            if(!TEST_FFI_INIT(botan_cipher_init, (&cipher_encrypt, aead.c_str(), BOTAN_CIPHER_INIT_FLAG_ENCRYPT))) {
+               continue;
+            }
+
+            if(!botan_cipher_is_authenticated(cipher_encrypt)) {
+               result.test_failure("Cipher " + aead + " claims is not authenticated");
+               botan_cipher_destroy(cipher_encrypt);
+               continue;
+            }
+
+            size_t min_keylen = 0;
+            size_t max_keylen = 0;
+            size_t ideal_granularity = 0;
+            size_t noncelen = 0;
+            size_t taglen = 0;
+            constexpr size_t pt_multiplier = 5;
+            TEST_FFI_OK(botan_cipher_query_keylen, (cipher_encrypt, &min_keylen, &max_keylen));
+            TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_encrypt, &ideal_granularity));
+            TEST_FFI_OK(botan_cipher_get_default_nonce_length, (cipher_encrypt, &noncelen));
+            TEST_FFI_OK(botan_cipher_get_tag_length, (cipher_encrypt, &taglen));
+
+            std::vector<uint8_t> key(max_keylen);
+            TEST_FFI_OK(botan_rng_get, (rng, key.data(), key.size()));
+            TEST_FFI_OK(botan_cipher_set_key, (cipher_encrypt, key.data(), key.size()));
+
+            std::vector<uint8_t> nonce(noncelen);
+            TEST_FFI_OK(botan_rng_get, (rng, nonce.data(), nonce.size()));
+            TEST_FFI_OK(botan_cipher_start, (cipher_encrypt, nonce.data(), nonce.size()));
+
+            std::vector<uint8_t> plaintext(ideal_granularity * pt_multiplier);
+            std::vector<uint8_t> ciphertext(ideal_granularity * pt_multiplier + taglen);
+            TEST_FFI_OK(botan_rng_get, (rng, plaintext.data(), plaintext.size()));
+
+            std::vector<uint8_t> dummy_buffer(256);
+            TEST_FFI_OK(botan_rng_get, (rng, dummy_buffer.data(), dummy_buffer.size()));
+            std::vector<uint8_t> dummy_buffer_reference = dummy_buffer;
+
+            const bool requires_entire_message = botan_cipher_requires_entire_message(cipher_encrypt);
+            result.test_eq(
+               "requires entire message", requires_entire_message, (aead == "AES-256/SIV" || aead == "AES-128/CCM"));
+
+            std::span<const uint8_t> pt_slicer(plaintext);
+            std::span<uint8_t> ct_stuffer(ciphertext);
+
+            // Process data that is explicitly a multiple of the ideal
+            // granularity and therefore should be aligned with the cipher's
+            // internal block size.
+            for(size_t i = 0; i < pt_multiplier; ++i) {
+               size_t output_written = 0;
+               size_t input_consumed = 0;
+
+               auto pt_chunk = pt_slicer.first(ideal_granularity);
+
+               // The existing implementation won't consume any bytes from the
+               // input if there is no space in the output buffer. Even when
+               // the cipher is a mode that won't produce any output until the
+               // entire message is processed. Hence, give it some dummy buffer.
+               auto ct_chunk = (requires_entire_message) ? std::span(dummy_buffer).first(ideal_granularity)
+                                                         : ct_stuffer.first(ideal_granularity);
+
+               TEST_FFI_OK(botan_cipher_update,
+                           (cipher_encrypt,
+                            0 /* don't finalize */,
+                            ct_chunk.data(),
+                            ct_chunk.size(),
+                            &output_written,
+                            pt_chunk.data(),
+                            pt_chunk.size(),
+                            &input_consumed));
+
+               result.test_gt("some input consumed", input_consumed, 0);
+               result.test_lte("at most, all input consumed", input_consumed, pt_chunk.size());
+               pt_slicer = pt_slicer.subspan(input_consumed);
+
+               if(requires_entire_message) {
+                  result.test_eq("no output produced", output_written, 0);
+               } else {
+                  result.test_eq("all bytes produced", output_written, input_consumed);
+                  ct_stuffer = ct_stuffer.subspan(output_written);
+               }
+            }
+
+            // Trying to pull a part of the authentication tag should fail,
+            // as we must consume the entire tag in a single invocation to
+            // botan_cipher_update().
+            size_t final_output_written = 42;
+            size_t final_input_consumed = 1337;
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_INPUT,
+                        botan_cipher_update,
+                        (cipher_encrypt,
+                         BOTAN_CIPHER_UPDATE_FLAG_FINAL,
+                         dummy_buffer.data(),
+                         3, /* not enough to hold any reasonable auth'n tag */
+                         &final_output_written,
+                         pt_slicer.data(),  // remaining bytes (typically 0)
+                         pt_slicer.size(),
+                         &final_input_consumed));
+
+            const size_t expected_final_size = requires_entire_message ? ciphertext.size() : taglen + pt_slicer.size();
+
+            result.test_eq("remaining bytes consumed in bogus final", final_input_consumed, pt_slicer.size());
+            result.test_eq("required buffer size is written in bogus final", final_output_written, expected_final_size);
+
+            auto final_ct_chunk = ct_stuffer.first(expected_final_size);
+
+            TEST_FFI_OK(botan_cipher_update,
+                        (cipher_encrypt,
+                         0 /* explicitly not setting final flag, to fall into the 'input-size == 0' case */,
+                         final_ct_chunk.data(),
+                         final_ct_chunk.size(),
+                         &final_output_written,
+                         nullptr,  // no more input
+                         0,
+                         &final_input_consumed));
+
+            result.test_eq("no bytes consumed in final", final_input_consumed, 0);
+            result.test_eq("final bytes written", final_output_written, expected_final_size);
+            result.test_eq("dummy buffer unchanged", dummy_buffer, dummy_buffer_reference);
+
+            TEST_FFI_OK(botan_cipher_destroy, (cipher_encrypt));
+
+            // ----------------------------------------------------------------
+
+            TEST_FFI_INIT(botan_cipher_init, (&cipher_decrypt, aead.c_str(), BOTAN_CIPHER_INIT_FLAG_DECRYPT));
+            TEST_FFI_OK(botan_cipher_set_key, (cipher_decrypt, key.data(), key.size()));
+            TEST_FFI_OK(botan_cipher_start, (cipher_decrypt, nonce.data(), nonce.size()));
+
+            std::vector<uint8_t> decrypted(plaintext.size());
+
+            std::span<const uint8_t> ct_slicer(ciphertext);
+            std::span<uint8_t> pt_stuffer(decrypted);
+
+            // Process data that is explicitly a multiple of the ideal
+            // granularity and therefore should be aligned with the cipher's
+            // internal block size.
+            for(size_t i = 0; i < pt_multiplier; ++i) {
+               size_t output_written = 42;
+               size_t input_consumed = 1337;
+
+               auto ct_chunk = ct_slicer.first(ideal_granularity);
+
+               // The existing implementation won't consume any bytes from the
+               // input if there is no space in the output buffer. Even when
+               // the cipher is a mode that won't produce any output until the
+               // entire message is processed. Hence, give it some dummy buffer.
+               auto pt_chunk = (requires_entire_message) ? std::span(dummy_buffer).first(ideal_granularity)
+                                                         : pt_stuffer.first(ideal_granularity);
+
+               TEST_FFI_OK(botan_cipher_update,
+                           (cipher_decrypt,
+                            0 /* don't finalize */,
+                            pt_chunk.data(),
+                            pt_chunk.size(),
+                            &output_written,
+                            ct_chunk.data(),
+                            ct_chunk.size(),
+                            &input_consumed));
+
+               result.test_gt("some input consumed", input_consumed, 0);
+               result.test_lte("at most, all input consumed", input_consumed, ct_chunk.size());
+               ct_slicer = ct_slicer.subspan(input_consumed);
+
+               if(requires_entire_message) {
+                  result.test_eq("no output produced", output_written, 0);
+               } else {
+                  result.test_eq("all bytes produced", output_written, input_consumed);
+                  pt_stuffer = pt_stuffer.subspan(output_written);
+               }
+            }
+
+            const size_t expected_final_size_dec = requires_entire_message ? plaintext.size() : pt_stuffer.size();
+            auto pt_chunk = pt_stuffer.first(expected_final_size_dec);
+
+            size_t final_output_written_dec = 42;
+            size_t final_input_consumed_dec = 1337;
+
+            TEST_FFI_OK(botan_cipher_update,
+                        (cipher_decrypt,
+                         BOTAN_CIPHER_UPDATE_FLAG_FINAL,
+                         pt_chunk.data(),
+                         pt_chunk.size(),
+                         &final_output_written_dec,
+                         ct_slicer.data(),  // remaining bytes (typically 0)
+                         ct_slicer.size(),
+                         &final_input_consumed_dec));
+
+            result.test_eq("remaining bytes consumed in final (decrypt)", final_input_consumed_dec, ct_slicer.size());
+            result.test_eq("bytes written in final (decrypt)", final_output_written_dec, expected_final_size_dec);
+            result.test_eq("dummy buffer unchanged", dummy_buffer, dummy_buffer_reference);
+
+            result.test_eq("decrypted plaintext", decrypted, plaintext);
+
+            TEST_FFI_OK(botan_cipher_destroy, (cipher_decrypt));
+
+            merged_result.merge(result, true /* ignore names */);
          }
       }
 };
@@ -3261,6 +3474,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_cbc_cipher", FFI_CBC_Cipher_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_gcm", FFI_GCM_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_chacha", FFI_ChaCha20Poly1305_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_eax", FFI_EAX_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_aead", FFI_AEAD_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_streamcipher", FFI_StreamCipher_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_hashfunction", FFI_HashFunction_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_mac", FFI_MAC_Test);

@@ -190,18 +190,19 @@ int botan_cipher_update(botan_cipher_t cipher_obj,
       size_t taken = 0, written = 0;
 
       while(input_size >= ud && output_size >= ud) {
-         // FIXME we can use process here and avoid the copy
          copy_mem(mbuf.data(), input, ud);
-         cipher.update(mbuf);
+         const size_t bytes_produced = cipher.process(mbuf);
 
          input_size -= ud;
-         copy_mem(output, mbuf.data(), ud);
          input += ud;
          taken += ud;
 
-         output_size -= ud;
-         output += ud;
-         written += ud;
+         if(bytes_produced > 0) {
+            copy_mem(output, mbuf.data(), bytes_produced);
+            output_size -= bytes_produced;
+            output += bytes_produced;
+            written += bytes_produced;
+         }
       }
 
       *output_written = written;
