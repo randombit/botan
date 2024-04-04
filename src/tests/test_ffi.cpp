@@ -973,6 +973,123 @@ class FFI_GCM_Test final : public FFI_Test {
       }
 };
 
+class FFI_ChaCha20Poly1305_Test final : public FFI_Test {
+   public:
+      std::string name() const override { return "FFI ChaCha20Poly1305"; }
+
+      void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
+         botan_cipher_t cipher_encrypt, cipher_decrypt;
+
+         if(TEST_FFI_INIT(botan_cipher_init, (&cipher_encrypt, "ChaCha20Poly1305", BOTAN_CIPHER_INIT_FLAG_ENCRYPT))) {
+            std::array<char, 17> namebuf;
+            size_t name_len = 15;
+            TEST_FFI_FAIL("output buffer too short", botan_cipher_name, (cipher_encrypt, namebuf.data(), &name_len));
+            result.test_eq("name len", name_len, 17);
+
+            name_len = namebuf.size();
+            if(TEST_FFI_OK(botan_cipher_name, (cipher_encrypt, namebuf.data(), &name_len))) {
+               result.test_eq("name len", name_len, 17);
+               result.test_eq("name", std::string(namebuf.data()), "ChaCha20Poly1305");
+            }
+
+            size_t min_keylen = 0;
+            size_t max_keylen = 0;
+            size_t nonce_len = 0;
+            size_t tag_len = 0;
+
+            TEST_FFI_OK(botan_cipher_query_keylen, (cipher_encrypt, &min_keylen, &max_keylen));
+            result.test_int_eq(min_keylen, 32, "Min key length");
+            result.test_int_eq(max_keylen, 32, "Max key length");
+
+            TEST_FFI_OK(botan_cipher_get_default_nonce_length, (cipher_encrypt, &nonce_len));
+            result.test_int_eq(nonce_len, 12, "Expected default ChaCha20Poly1305 nonce length");
+
+            TEST_FFI_OK(botan_cipher_get_tag_length, (cipher_encrypt, &tag_len));
+            result.test_int_eq(tag_len, 16, "Expected Chacha20Poly1305 tag length");
+
+            TEST_FFI_RC(1, botan_cipher_is_authenticated, (cipher_encrypt));
+
+            // From RFC 7539
+            const std::vector<uint8_t> plaintext = Botan::hex_decode(
+               "4C616469657320616E642047656E746C656D656E206F662074686520636C617373206F66202739393A204966204920636F756C64206F6666657220796F75206F6E6C79206F6E652074697020666F7220746865206675747572652C2073756E73637265656E20776F756C642062652069742E");
+            const std::vector<uint8_t> symkey =
+               Botan::hex_decode("808182838485868788898A8B8C8D8E8F909192939495969798999A9B9C9D9E9F");
+            const std::vector<uint8_t> nonce = Botan::hex_decode("070000004041424344454647");
+            const std::vector<uint8_t> exp_ciphertext = Botan::hex_decode(
+               "D31A8D34648E60DB7B86AFBC53EF7EC2A4ADED51296E08FEA9E2B5A736EE62D63DBEA45E8CA9671282FAFB69DA92728B1A71DE0A9E060B2905D6A5B67ECD3B3692DDBD7F2D778B8C9803AEE328091B58FAB324E4FAD675945585808B4831D7BC3FF4DEF08E4B7A9DE576D26586CEC64B61161AE10B594F09E26A7E902ECBD0600691");
+            const std::vector<uint8_t> aad = Botan::hex_decode("50515253C0C1C2C3C4C5C6C7");
+
+            std::vector<uint8_t> ciphertext(tag_len + plaintext.size());
+
+            size_t output_written = 0;
+            size_t input_consumed = 0;
+
+            // Test that after clear or final the object can be reused
+            for(size_t r = 0; r != 2; ++r) {
+               TEST_FFI_OK(botan_cipher_set_key, (cipher_encrypt, symkey.data(), symkey.size()));
+
+               // First use a nonce of the AAD, and ensure reset works
+               TEST_FFI_OK(botan_cipher_start, (cipher_encrypt, aad.data(), aad.size()));
+               TEST_FFI_OK(botan_cipher_reset, (cipher_encrypt));
+
+               TEST_FFI_OK(botan_cipher_start, (cipher_encrypt, nonce.data(), nonce.size()));
+               TEST_FFI_OK(botan_cipher_update,
+                           (cipher_encrypt,
+                            0,
+                            ciphertext.data(),
+                            ciphertext.size(),
+                            &output_written,
+                            plaintext.data(),
+                            plaintext.size(),
+                            &input_consumed));
+               TEST_FFI_OK(botan_cipher_clear, (cipher_encrypt));
+
+               TEST_FFI_OK(botan_cipher_set_key, (cipher_encrypt, symkey.data(), symkey.size()));
+               TEST_FFI_OK(botan_cipher_set_associated_data, (cipher_encrypt, aad.data(), aad.size()));
+               TEST_FFI_OK(botan_cipher_start, (cipher_encrypt, nonce.data(), nonce.size()));
+               TEST_FFI_OK(botan_cipher_update,
+                           (cipher_encrypt,
+                            BOTAN_CIPHER_UPDATE_FLAG_FINAL,
+                            ciphertext.data(),
+                            ciphertext.size(),
+                            &output_written,
+                            plaintext.data(),
+                            plaintext.size(),
+                            &input_consumed));
+
+               ciphertext.resize(output_written);
+               result.test_eq("AES/GCM ciphertext", ciphertext, exp_ciphertext);
+
+               if(TEST_FFI_OK(botan_cipher_init,
+                              (&cipher_decrypt, "ChaCha20Poly1305", BOTAN_CIPHER_INIT_FLAG_DECRYPT))) {
+                  std::vector<uint8_t> decrypted(plaintext.size());
+
+                  TEST_FFI_OK(botan_cipher_set_key, (cipher_decrypt, symkey.data(), symkey.size()));
+                  TEST_FFI_OK(botan_cipher_set_associated_data, (cipher_decrypt, aad.data(), aad.size()));
+                  TEST_FFI_OK(botan_cipher_start, (cipher_decrypt, nonce.data(), nonce.size()));
+                  TEST_FFI_OK(botan_cipher_update,
+                              (cipher_decrypt,
+                               BOTAN_CIPHER_UPDATE_FLAG_FINAL,
+                               decrypted.data(),
+                               decrypted.size(),
+                               &output_written,
+                               ciphertext.data(),
+                               ciphertext.size(),
+                               &input_consumed));
+
+                  result.test_int_eq(input_consumed, ciphertext.size(), "All input consumed");
+                  result.test_int_eq(output_written, decrypted.size(), "Expected output size produced");
+                  result.test_eq("AES/GCM plaintext", decrypted, plaintext);
+
+                  TEST_FFI_OK(botan_cipher_destroy, (cipher_decrypt));
+               }
+            }
+
+            TEST_FFI_OK(botan_cipher_destroy, (cipher_encrypt));
+         }
+      }
+};
+
 class FFI_EAX_Test final : public FFI_Test {
    public:
       std::string name() const override { return "FFI EAX"; }
@@ -3142,6 +3259,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_ecdsa_certificate", FFI_ECDSA_Certificate_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_pkcs_hashid", FFI_PKCS_Hashid_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_cbc_cipher", FFI_CBC_Cipher_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_gcm", FFI_GCM_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_chacha", FFI_ChaCha20Poly1305_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_eax", FFI_EAX_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_streamcipher", FFI_StreamCipher_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_hashfunction", FFI_HashFunction_Test);
