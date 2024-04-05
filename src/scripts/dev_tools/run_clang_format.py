@@ -89,6 +89,24 @@ def filter_files(files, filters):
 
     return files_to_fmt
 
+# Run clang-version -version and return the major version
+def clang_format_version(clang_format):
+    clang_format_version_re = re.compile(r'^(.* )?clang-format version ([0-9]+)\.([0-9]+)\.([0-9]+)')
+
+    (stdout, stderr) = run_command([clang_format, '-version'])
+
+    if stderr != '':
+        print("Error trying to get clang-format version number: '%s'" % (stderr))
+        return None
+
+    version = clang_format_version_re.match(stdout)
+
+    if version is None:
+        print("Cannot interpret clang-format output (%s) as version" % (stdout.strip()))
+        return None
+
+    return int(version.group(2))
+
 def main(args = None):
     if args is None:
         args = sys.argv
@@ -99,31 +117,25 @@ def main(args = None):
     parser.add_option('--src-dir', metavar='DIR', default='src')
     parser.add_option('--check', action='store_true', default=False)
     parser.add_option('--clang-format-binary', metavar='PATH', default='clang-format')
+    parser.add_option('--skip-version-check', action='store_true', default=False)
 
     (options, args) = parser.parse_args(args)
 
-    clang_format_version_re = re.compile(r'^(.* )?clang-format version ([0-9]+)\.([0-9]+)\.([0-9]+)')
-
     clang_format = options.clang_format_binary
 
-    (stdout, stderr) = run_command([clang_format, '-version'])
+    if not options.skip_version_check:
+        version = clang_format_version(clang_format)
 
-    if stderr != '':
-        print("Error trying to get clang-format version number: '%s'" % (stderr))
-        return 1
+        if version is None:
+            print("Failed to get clang-format version, exiting")
+            return 1
 
-    version = clang_format_version_re.match(stdout)
-
-    if version is None:
-        print("Cannot interpret clang-format output (%s) as version" % (stdout.strip()))
-        return 1
-
-    # This check is probably stricter than we really need, and should
-    # be revised as we gain more experience with clang-format
-
-    if int(version.group(2)) != 15:
-        print("This version of the script requires clang-format 15: got '%s'" % (stdout.strip()))
-        return 1
+        # This check is probably stricter than we really need, and should
+        # be revised as we gain more experience with clang-format
+        if version != 15:
+            print("This script requires clang-format 15 but current version is %d" % (version))
+            print("Use --skip-version-check to skip this check, however formatting may be wrong")
+            return 1
 
     jobs = options.jobs
     if jobs == 0:
