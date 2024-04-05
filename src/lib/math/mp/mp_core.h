@@ -847,7 +847,7 @@ inline constexpr auto monty_inverse(W a) -> W {
 }
 
 template <size_t S, WordType W, size_t N>
-inline consteval W shift_left(std::array<W, N>& x) {
+inline constexpr W shift_left(std::array<W, N>& x) {
    static_assert(S < WordInfo<W>::bits, "Shift too large");
 
    W carry = 0;
@@ -865,7 +865,11 @@ consteval auto hex_to_words(const char (&s)[N]) {
    // Char count includes null terminator which we ignore
    const constexpr size_t C = N - 1;
 
-   const size_t S = (C + sizeof(W) * 2 - 1) / (sizeof(W) * 2);
+   // Number of nibbles that a word can hold
+   const constexpr size_t NPW = (WordInfo<W>::bits / 4);
+
+   // Round up to the next number of words that will fit the input
+   const constexpr size_t S = (C + NPW - 1) / NPW;
 
    auto hex2int = [](char c) -> int8_t {
       if(c >= '0' && c <= '9') {
