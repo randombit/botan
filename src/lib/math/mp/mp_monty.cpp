@@ -76,29 +76,29 @@ void bigint_monty_redc_generic(word z[], size_t z_size, const word p[], size_t p
    word3_add(&w2, &w1, &w0, z[2 * p_size - 1]);
 
    ws[p_size - 1] = w0;
-   ws[p_size] = w1;
+   // w1 is the final part, which is not stored in the workspace
 
    /*
    * The result might need to be reduced mod p. To avoid a timing
    * channel, always perform the subtraction. If in the compution
    * of x - p a borrow is required then x was already < p.
    *
-   * x starts at ws[0] and is p_size+1 bytes long.
-   * x - p starts at z[0] and is also p_size+1 bytes log
+   * x starts at ws[0] and is p_size bytes long plus a possible high
+   * digit left over in w1.
    *
-   * If borrow was set then x was already < p and the subtraction
-   * was not needed. In that case overwrite z[0:p_size] with the
-   * original x in ws[0:p_size].
+   * x - p starts at z[0] and is also p_size bytes long
+   *
+   * If borrow was set after the subtraction, then x was already less
+   * than p and the subtraction was not needed. In that case overwrite
+   * z[0:p_size] with the original x in ws[0:p_size].
    *
    * We only copy out p_size in the final step because we know
    * the Montgomery result is < P
    */
 
-   word borrow = bigint_sub3(z, ws, p_size + 1, p, p_size);
+   bigint_monty_maybe_sub(p_size, z, w1, ws, p);
 
-   BOTAN_DEBUG_ASSERT(borrow == 0 || borrow == 1);
-
-   CT::conditional_assign_mem(borrow, z, ws, p_size);
+   // Clear the high words that contain the original input
    clear_mem(z + p_size, z_size - p_size);
 }
 
