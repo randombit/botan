@@ -631,7 +631,7 @@ EC_Point EC_Group::hash_to_curve(std::string_view hash_fn,
       throw Not_Implemented("EC_Group::hash_to_curve not available for this curve type");
    }
 
-   return hash_to_curve_sswu(*this, hash_fn, input, input_len, domain_sep, domain_sep_len, random_oracle);
+   return hash_to_curve_sswu(*this, hash_fn, {input, input_len}, {domain_sep, domain_sep_len}, random_oracle);
 
 #else
    BOTAN_UNUSED(hash_fn, random_oracle, input, input_len, domain_sep, domain_sep_len);

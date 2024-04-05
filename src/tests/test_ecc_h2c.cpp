@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
    #include <botan/ec_group.h>
    #include <botan/internal/ec_h2c.h>
+   #include <botan/internal/xmd.h>
 #endif
 
 namespace Botan_Tests {
@@ -31,13 +32,7 @@ class ECC_H2C_XMD_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> expected = vars.get_req_bin("Output");
 
          std::vector<uint8_t> output(expected.size());
-         Botan::expand_message_xmd(hash,
-                                   output.data(),
-                                   output.size(),
-                                   reinterpret_cast<const uint8_t*>(input.data()),
-                                   input.size(),
-                                   reinterpret_cast<const uint8_t*>(domain.data()),
-                                   domain.size());
+         Botan::expand_message_xmd(hash, output, input, domain);
 
          result.test_eq("XMD output", output, expected);
          return result;

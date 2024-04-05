@@ -1,0 +1,13 @@
+<defines>
+XMD -> 20240404
+</defines>
+
+<module_info>
+name -> "XMD"
+brief -> "XMD KDF from RFC 9380"
+type -> "Internal"
+</module_info>
+
+<requires>
+hash
+</requires>

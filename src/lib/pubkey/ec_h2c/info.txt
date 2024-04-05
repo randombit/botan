@@ -8,7 +8,7 @@ name -> "EC Hash to Curve"
 
 <requires>
 ec_group
-hash
+xmd
 </requires>
 
 <header:internal>

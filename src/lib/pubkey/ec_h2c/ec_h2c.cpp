@@ -7,74 +7,11 @@
 #include <botan/internal/ec_h2c.h>
 
 #include <botan/ec_group.h>
-#include <botan/hash.h>
 #include <botan/numthry.h>
 #include <botan/reducer.h>
-#include <botan/internal/fmt.h>
+#include <botan/internal/xmd.h>
 
 namespace Botan {
-
-void expand_message_xmd(std::string_view hash_fn,
-                        uint8_t output[],
-                        size_t output_len,
-                        const uint8_t input[],
-                        size_t input_len,
-                        const uint8_t domain_sep[],
-                        size_t domain_sep_len) {
-   if(domain_sep_len > 0xFF) {
-      throw Invalid_Argument("expand_message_xmd domain seperator too long");
-   }
-
-   auto hash = HashFunction::create_or_throw(hash_fn);
-   const size_t block_size = hash->hash_block_size();
-   if(block_size == 0) {
-      throw Invalid_Argument(fmt("expand_message_xmd cannot be used with {}", hash_fn));
-   }
-
-   const size_t hash_output_size = hash->output_length();
-   if(output_len > 255 * hash_output_size || output_len > 0xFFFF) {
-      throw Invalid_Argument("expand_message_xmd requested output length too long");
-   }
-
-   // Compute b_0 = H(msg_prime) = H(Z_pad || msg || l_i_b_str || 0x00 || DST_prime)
-
-   hash->update(std::vector<uint8_t>(block_size));
-   hash->update(input, input_len);
-   hash->update_be(static_cast<uint16_t>(output_len));
-   hash->update(0x00);
-   hash->update(domain_sep, domain_sep_len);
-   hash->update(static_cast<uint8_t>(domain_sep_len));
-
-   const secure_vector<uint8_t> b_0 = hash->final();
-
-   // Compute b_1 = H(b_0 || 0x01 || DST_prime)
-
-   hash->update(b_0);
-   hash->update(0x01);
-   hash->update(domain_sep, domain_sep_len);
-   hash->update(static_cast<uint8_t>(domain_sep_len));
-
-   secure_vector<uint8_t> b_i = hash->final();
-
-   uint8_t cnt = 2;
-   while(output_len > 0) {
-      const size_t produced = std::min(output_len, hash_output_size);
-
-      copy_mem(output, b_i.data(), produced);
-      output += produced;
-      output_len -= produced;
-
-      // Now compute the next b_i
-
-      b_i ^= b_0;
-      hash->update(b_i);
-      hash->update(cnt);
-      hash->update(domain_sep, domain_sep_len);
-      hash->update(static_cast<uint8_t>(domain_sep_len));
-      hash->final(b_i.data());
-      cnt += 1;
-   }
-}
 
 namespace {
 
@@ -82,10 +19,8 @@ std::vector<BigInt> hash_to_field(const EC_Group& group,
                                   const Modular_Reducer& mod_p,
                                   std::string_view hash_fn,
                                   uint8_t count,
-                                  const uint8_t input[],
-                                  size_t input_len,
-                                  const uint8_t domain_sep[],
-                                  size_t domain_sep_len) {
+                                  std::span<const uint8_t> input,
+                                  std::span<const uint8_t> domain_sep) {
    const size_t k = (group.get_order_bits() + 1) / 2;
    const size_t L = (group.get_p_bits() + k + 7) / 8;
 
@@ -93,7 +28,7 @@ std::vector<BigInt> hash_to_field(const EC_Group& group,
    results.reserve(count);
 
    secure_vector<uint8_t> output(L * count);
-   expand_message_xmd(hash_fn, output.data(), output.size(), input, input_len, domain_sep, domain_sep_len);
+   expand_message_xmd(hash_fn, output, input, domain_sep);
 
    for(size_t i = 0; i != count; ++i) {
       BigInt v(&output[i * L], L);
@@ -183,16 +118,14 @@ EC_Point map_to_curve_sswu(const EC_Group& group, const Modular_Reducer& mod_p, 
 
 EC_Point hash_to_curve_sswu(const EC_Group& group,
                             std::string_view hash_fn,
-                            const uint8_t input[],
-                            size_t input_len,
-                            const uint8_t domain_sep[],
-                            size_t domain_sep_len,
+                            std::span<const uint8_t> input,
+                            std::span<const uint8_t> domain_sep,
                             bool random_oracle) {
    const Modular_Reducer mod_p(group.get_p());
 
    const uint8_t count = (random_oracle ? 2 : 1);
 
-   const auto u = hash_to_field(group, mod_p, hash_fn, count, input, input_len, domain_sep, domain_sep_len);
+   const auto u = hash_to_field(group, mod_p, hash_fn, count, input, domain_sep);
 
    EC_Point pt = map_to_curve_sswu(group, mod_p, u[0]);
 
