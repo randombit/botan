@@ -13,34 +13,6 @@
 
 namespace Botan {
 
-word monty_inverse(word a) {
-   if(a % 2 == 0) {
-      throw Invalid_Argument("monty_inverse only valid for odd integers");
-   }
-
-   /*
-   * From "A New Algorithm for Inversion mod p^k" by Çetin Kaya Koç
-   * https://eprint.iacr.org/2017/411.pdf sections 5 and 7.
-   */
-
-   word b = 1;
-   word r = 0;
-
-   for(size_t i = 0; i != WordInfo<word>::bits; ++i) {
-      const word bi = b % 2;
-      r >>= 1;
-      r += bi << (WordInfo<word>::bits - 1);
-
-      b -= a * bi;
-      b >>= 1;
-   }
-
-   // Now invert in addition space
-   r = (WordInfo<word>::max - r) + 1;
-
-   return r;
-}
-
 Montgomery_Params::Montgomery_Params(const BigInt& p, const Modular_Reducer& mod_p) {
    if(p.is_even() || p < 3) {
       throw Invalid_Argument("Montgomery_Params invalid modulus");
