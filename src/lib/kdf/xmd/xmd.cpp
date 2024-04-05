@@ -73,7 +73,7 @@ void expand_message_xmd(std::string_view hash_fn,
       hash->update(cnt);
       hash->update(domain_sep);
       hash->update(domain_sep_len);
-      hash->final(b_i.data());
+      hash->final(b_i);
       cnt += 1;
    }
 }
