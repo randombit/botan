@@ -32,13 +32,7 @@ class ECC_H2C_XMD_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> expected = vars.get_req_bin("Output");
 
          std::vector<uint8_t> output(expected.size());
-         Botan::expand_message_xmd(hash,
-                                   output.data(),
-                                   output.size(),
-                                   reinterpret_cast<const uint8_t*>(input.data()),
-                                   input.size(),
-                                   reinterpret_cast<const uint8_t*>(domain.data()),
-                                   domain.size());
+         Botan::expand_message_xmd(hash, output, input, domain);
 
          result.test_eq("XMD output", output, expected);
          return result;

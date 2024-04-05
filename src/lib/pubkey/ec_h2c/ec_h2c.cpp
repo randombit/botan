@@ -19,10 +19,8 @@ std::vector<BigInt> hash_to_field(const EC_Group& group,
                                   const Modular_Reducer& mod_p,
                                   std::string_view hash_fn,
                                   uint8_t count,
-                                  const uint8_t input[],
-                                  size_t input_len,
-                                  const uint8_t domain_sep[],
-                                  size_t domain_sep_len) {
+                                  std::span<const uint8_t> input,
+                                  std::span<const uint8_t> domain_sep) {
    const size_t k = (group.get_order_bits() + 1) / 2;
    const size_t L = (group.get_p_bits() + k + 7) / 8;
 
@@ -30,7 +28,7 @@ std::vector<BigInt> hash_to_field(const EC_Group& group,
    results.reserve(count);
 
    secure_vector<uint8_t> output(L * count);
-   expand_message_xmd(hash_fn, output.data(), output.size(), input, input_len, domain_sep, domain_sep_len);
+   expand_message_xmd(hash_fn, output, input, domain_sep);
 
    for(size_t i = 0; i != count; ++i) {
       BigInt v(&output[i * L], L);
@@ -120,16 +118,14 @@ EC_Point map_to_curve_sswu(const EC_Group& group, const Modular_Reducer& mod_p, 
 
 EC_Point hash_to_curve_sswu(const EC_Group& group,
                             std::string_view hash_fn,
-                            const uint8_t input[],
-                            size_t input_len,
-                            const uint8_t domain_sep[],
-                            size_t domain_sep_len,
+                            std::span<const uint8_t> input,
+                            std::span<const uint8_t> domain_sep,
                             bool random_oracle) {
    const Modular_Reducer mod_p(group.get_p());
 
    const uint8_t count = (random_oracle ? 2 : 1);
 
-   const auto u = hash_to_field(group, mod_p, hash_fn, count, input, input_len, domain_sep, domain_sep_len);
+   const auto u = hash_to_field(group, mod_p, hash_fn, count, input, domain_sep);
 
    EC_Point pt = map_to_curve_sswu(group, mod_p, u[0]);
 
