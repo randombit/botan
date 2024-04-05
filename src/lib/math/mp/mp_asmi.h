@@ -39,6 +39,7 @@ struct WordInfo {};
 template <>
 struct WordInfo<uint32_t> {
    public:
+      static const constexpr size_t bytes = 4;
       static const constexpr size_t bits = 32;
       static const constexpr uint32_t max = 0xFFFFFFFF;
 
@@ -49,6 +50,7 @@ struct WordInfo<uint32_t> {
 template <>
 struct WordInfo<uint64_t> {
    public:
+      static const constexpr size_t bytes = 8;
       static const constexpr size_t bits = 64;
       static const constexpr uint64_t max = 0xFFFFFFFFFFFFFFFF;
 
@@ -98,7 +100,7 @@ inline constexpr auto word_madd2(W a, W b, W* c) -> W {
 
    typedef typename WordInfo<W>::dword dword;
    const dword s = dword(a) * b + *c;
-   *c = static_cast<W>(s >> (sizeof(W) * 8));
+   *c = static_cast<W>(s >> WordInfo<W>::bits);
    return static_cast<W>(s);
 }
 
@@ -147,7 +149,7 @@ inline constexpr auto word_madd3(W a, W b, W c, W* d) -> W {
 
    typedef typename WordInfo<W>::dword dword;
    const dword s = dword(a) * b + c + *d;
-   *d = static_cast<W>(s >> (sizeof(W) * 8));
+   *d = static_cast<W>(s >> WordInfo<W>::bits);
    return static_cast<W>(s);
 }
 
@@ -734,7 +736,7 @@ inline constexpr void word3_muladd_2(W* w2, W* w1, W* w0, W x, W y) {
    x = word_madd2(x, y, &carry);
    y = carry;
 
-   const size_t top_bit_shift = sizeof(W) * 8 - 1;
+   const size_t top_bit_shift = WordInfo<W>::bits - 1;
 
    W top = (y >> top_bit_shift);
    y <<= 1;
