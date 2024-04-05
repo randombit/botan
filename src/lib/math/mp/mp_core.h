@@ -752,6 +752,42 @@ inline constexpr auto bigint_modop_vartime(W n1, W n0, W d) -> W {
    return (n0 - z);
 }
 
+/*
+* Compute an integer x such that (a*x) == -1 (mod 2^n)
+*
+* Throws an exception if input is even, since in that case no inverse
+* exists. If input is odd, then input and 2^n are relatively prime and
+* the inverse exists.
+*/
+template <WordType W>
+inline constexpr auto monty_inverse(W a) -> W {
+   if(a % 2 == 0) {
+      throw Invalid_Argument("monty_inverse only valid for odd integers");
+   }
+
+   /*
+   * From "A New Algorithm for Inversion mod p^k" by Çetin Kaya Koç
+   * https://eprint.iacr.org/2017/411.pdf sections 5 and 7.
+   */
+
+   W b = 1;
+   W r = 0;
+
+   for(size_t i = 0; i != WordInfo<W>::bits; ++i) {
+      const W bi = b % 2;
+      r >>= 1;
+      r += bi << (WordInfo<W>::bits - 1);
+
+      b -= a * bi;
+      b >>= 1;
+   }
+
+   // Now invert in addition space
+   r = (WordInfo<W>::max - r) + 1;
+
+   return r;
+}
+
 template <size_t S, WordType W, size_t N>
 inline consteval W shift_left(std::array<W, N>& x) {
    static_assert(S < WordInfo<W>::bits, "Shift too large");

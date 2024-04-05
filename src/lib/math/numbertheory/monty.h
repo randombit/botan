@@ -15,13 +15,6 @@ class Modular_Reducer;
 
 class Montgomery_Params;
 
-/*
-* Compute -input^-1 mod 2^MP_WORD_BITS. Throws an exception if input
-* is even. If input is odd, then input and 2^n are relatively prime
-* and an inverse exists.
-*/
-word monty_inverse(word input);
-
 /**
 * The Montgomery representation of an integer
 */
