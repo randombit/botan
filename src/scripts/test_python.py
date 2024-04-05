@@ -216,10 +216,24 @@ class BotanPythonTests(unittest.TestCase):
 
             if mode == 'AES-128/CTR-BE':
                 self.assertEqual(enc.algo_name(), 'CTR-BE(AES-128)')
+                self.assertFalse(enc.is_authenticated())
+                self.assertEqual(enc.update_granularity(), 1)
+                self.assertGreater(enc.ideal_update_granularity(), 1)
             elif mode == 'Serpent/GCM':
                 self.assertEqual(enc.algo_name(), 'Serpent/GCM(16)')
-            else:
-                self.assertEqual(enc.algo_name(), mode)
+                self.assertTrue(enc.is_authenticated())
+                self.assertEqual(enc.update_granularity(), 16)
+                self.assertGreater(enc.ideal_update_granularity(), 16)
+            elif mode == 'ChaCha20Poly1305':
+                self.assertEqual(enc.algo_name(), 'ChaCha20Poly1305')
+                self.assertTrue(enc.is_authenticated())
+                self.assertEqual(enc.update_granularity(), 1)
+                self.assertGreater(enc.ideal_update_granularity(), 1)
+            elif mode == 'AES-128/CBC/PKCS7':
+                self.assertEqual(enc.algo_name(), 'AES-128/CBC/PKCS7')
+                self.assertFalse(enc.is_authenticated())
+                self.assertEqual(enc.update_granularity(), 16)
+                self.assertGreater(enc.ideal_update_granularity(), 16)
 
             (kmin, kmax) = enc.key_length()
 

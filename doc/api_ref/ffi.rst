@@ -544,6 +544,8 @@ Symmetric Ciphers
 
 .. cpp:function:: int botan_cipher_is_authenticated(botan_cipher_t cipher)
 
+.. cpp:function:: int botan_cipher_requires_entire_message(botan_cipher_t cipher)
+
 .. cpp:function:: int botan_cipher_get_tag_length(botan_cipher_t cipher, size_t* tag_len)
 
    Write the tag length of the cipher to ``tag_len``. This will be zero for non-authenticated

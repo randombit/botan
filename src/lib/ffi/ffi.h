@@ -558,6 +558,13 @@ BOTAN_FFI_EXPORT(2, 0) int botan_cipher_get_tag_length(botan_cipher_t cipher, si
 BOTAN_FFI_EXPORT(3, 3) int botan_cipher_is_authenticated(botan_cipher_t cipher);
 
 /**
+ * Returns 1 iff the cipher requires the entire message before any
+ * encryption or decryption can be performed. No output data will be produced
+ * in botan_cipher_update() until the final flag is set.
+ */
+BOTAN_FFI_EXPORT(3, 4) int botan_cipher_requires_entire_message(botan_cipher_t cipher);
+
+/**
 * Get the default nonce length of this cipher
 */
 BOTAN_FFI_EXPORT(2, 0) int botan_cipher_get_default_nonce_length(botan_cipher_t cipher, size_t* nl);
