@@ -212,7 +212,10 @@ class BotanPythonTests(unittest.TestCase):
 
     def test_cipher(self):
         for mode in ['AES-128/CTR-BE', 'Serpent/GCM', 'ChaCha20Poly1305', 'AES-128/CBC/PKCS7']:
-            enc = botan.SymmetricCipher(mode, encrypt=True)
+            try:
+                enc = botan.SymmetricCipher(mode, encrypt=True)
+            except botan.BotanException as e:
+                raise RuntimeError("Failed to create encrypting cipher for " + mode) from e
 
             if mode == 'AES-128/CTR-BE':
                 self.assertEqual(enc.algo_name(), 'CTR-BE(AES-128)')
@@ -252,7 +255,10 @@ class BotanPythonTests(unittest.TestCase):
 
             ct = enc.finish(pt)
 
-            dec = botan.SymmetricCipher(mode, encrypt=False)
+            try:
+                dec = botan.SymmetricCipher(mode, encrypt=False)
+            except botan.BotanException as e:
+                raise RuntimeError("Failed to create decrypting cipher for " + mode) from e
             dec.set_key(key)
             dec.start(iv)
             decrypted = dec.finish(ct)
