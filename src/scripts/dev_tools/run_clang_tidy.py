@@ -46,6 +46,7 @@ disabled_needs_work = [
     'bugprone-lambda-function-name', # should be an easy fix
     'bugprone-unchecked-optional-access', # clang-tidy seems buggy (many false positives)
     'cert-err58-cpp', # many false positives eg __m128i
+    'clang-diagnostic-gnu-folding-constant', # bug in clang < 17
     'cppcoreguidelines-avoid-const-or-ref-data-members',
     'cppcoreguidelines-init-variables',
     'cppcoreguidelines-owning-memory',

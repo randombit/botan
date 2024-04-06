@@ -7,7 +7,7 @@ lang_binary_linker_flags "-s ALLOW_MEMORY_GROWTH=1 -s WASM=1 -s NO_DISABLE_EXCEP
 
 warning_flags "-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wshorten-64-to-32"
 
-werror_flags "-Werror -Wno-error=unused-parameter -Wno-error=unreachable-code -Wno-error=unused-lambda-capture"
+werror_flags "-Werror -Wno-error=unused-parameter -Wno-error=unreachable-code -Wno-error=unused-lambda-capture -Wno-error=gnu-folding-constant"
 
 maintainer_warning_flags "-Wunreachable-code -Wdocumentation -Qunused-arguments"
 
