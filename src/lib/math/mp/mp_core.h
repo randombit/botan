@@ -845,10 +845,24 @@ inline constexpr W shift_left(std::array<W, N>& x) {
    static_assert(S < WordInfo<W>::bits, "Shift too large");
 
    W carry = 0;
-   for(size_t j = 0; j != N; ++j) {
-      const W w = x[j];
-      x[j] = (w << S) | carry;
+   for(size_t i = 0; i != N; ++i) {
+      const W w = x[i];
+      x[i] = (w << S) | carry;
       carry = w >> (WordInfo<W>::bits - S);
+   }
+
+   return carry;
+}
+
+template <size_t S, WordType W, size_t N>
+inline consteval W shift_right(std::array<W, N>& x) {
+   static_assert(S < WordInfo<W>::bits, "Shift too large");
+
+   W carry = 0;
+   for(size_t i = 0; i != N; ++i) {
+      const W w = x[N - 1 - i];
+      x[N - 1 - i] = (w >> S) | carry;
+      carry = w << (WordInfo<W>::bits - S);
    }
 
    return carry;
