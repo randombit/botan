@@ -48,7 +48,7 @@ std::vector<uint8_t> hash_to_curve(PrimeOrderCurveId curve,
                                    bool random_oracle,
                                    std::span<const uint8_t> input,
                                    std::span<const uint8_t> domain_sep) {
-   switch(curve) {
+   switch(curve.code()) {
       case PrimeOrderCurveId::P256:
          return hash_to_curve_sswu<P256>(hash, random_oracle, input, domain_sep);
       case PrimeOrderCurveId::P384:
