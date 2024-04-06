@@ -868,8 +868,9 @@ inline consteval W shift_right(std::array<W, N>& x) {
    return carry;
 }
 
+// Should be consteval but need to avoid a bug in clang 14
 template <WordType W, size_t N>
-consteval auto hex_to_words(const char (&s)[N]) {
+constexpr auto hex_to_words(const char (&s)[N]) {
    // Char count includes null terminator which we ignore
    const constexpr size_t C = N - 1;
 
