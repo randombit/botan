@@ -173,6 +173,8 @@ template <WordType W, size_t N, size_t L>
 inline constexpr auto bytes_to_words(const uint8_t bytes[L]) {
    static_assert(L <= WordInfo<W>::bytes * N);
 
+   // TODO: This could be optimized quite a bit which is relevant
+   // since it executes at runtime
    std::array<W, N> r = {};
    for(size_t i = 0; i != L; ++i) {
       shift_left<8>(r);

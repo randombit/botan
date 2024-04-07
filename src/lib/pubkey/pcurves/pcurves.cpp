@@ -61,4 +61,17 @@ std::vector<uint8_t> hash_to_curve(PrimeOrderCurveId curve,
    }
 }
 
+std::vector<uint8_t> mul_by_g(PrimeOrderCurveId curve, std::span<const uint8_t> scalar_bytes) {
+   switch(curve.code()) {
+      case PrimeOrderCurveId::P256:
+         if(auto scalar = P256::Scalar::deserialize(scalar_bytes)) {
+            return P256::MulByG(*scalar).to_affine().serialize_to_vec();
+         } else {
+            throw Invalid_Argument("Invalid scalar");
+         }
+      default:
+         throw Not_Implemented("Point mul not implemented for this curve");
+   }
+}
+
 }  // namespace Botan::PCurve

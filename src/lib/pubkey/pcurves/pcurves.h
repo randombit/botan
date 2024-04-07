@@ -59,6 +59,8 @@ std::vector<uint8_t> hash_to_curve(PrimeOrderCurveId curve,
                                    std::span<const uint8_t> input,
                                    std::span<const uint8_t> domain_sep);
 
+std::vector<uint8_t> BOTAN_TEST_API mul_by_g(PrimeOrderCurveId curve, std::span<const uint8_t> scalar);
+
 }  // namespace Botan::PCurve
 
 #endif

@@ -14,6 +14,10 @@
    #include <botan/ec_group.h>
 #endif
 
+#if defined(BOTAN_HAS_PCURVES)
+   #include <botan/internal/pcurves.h>
+#endif
+
 namespace Botan_Tests {
 
 namespace {
@@ -48,6 +52,17 @@ class ECC_Basepoint_Mul_Tests final : public Text_Based_Test {
          result.test_eq("p3 affine X", p3.get_affine_x(), X);
          result.test_eq("p3 affine Y", p3.get_affine_y(), Y);
 
+   #if defined(BOTAN_HAS_PCURVES)
+         if(group_id == "secp256r1") {
+            const auto mbits = BigInt::encode_1363(m, group.get_order_bytes());
+
+            const auto pbits = Botan::PCurve::mul_by_g(Botan::PCurve::PrimeOrderCurveId::P256, mbits);
+
+            const Botan::EC_Point pc = group.OS2ECP(pbits);
+            result.test_eq("pcurves affine X", pc.get_affine_x(), X);
+            result.test_eq("pcurves affine Y", pc.get_affine_y(), Y);
+         }
+   #endif
          return result;
       }
 };

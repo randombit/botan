@@ -230,8 +230,15 @@ class MontgomeryInteger {
       }
 
       // Returns nullopt if the input is an encoding greater than or equal P
-      constexpr static std::optional<Self> deserialize(std::span<const uint8_t, Self::BYTES> bytes) {
-         const auto words = bytes_to_words<W, N, BYTES>(bytes);
+      constexpr static std::optional<Self> deserialize(std::span<const uint8_t> bytes) {
+         // We could allow either short inputs or longer zero padded
+         // inputs here, however it seems best to avoid non-canonical
+         // representations unless required
+         if(bytes.size() != Self::BYTES) {
+            return {};
+         }
+
+         const auto words = bytes_to_words<W, N, BYTES>(&bytes[0]);
 
          if(!bigint_ct_is_lt(words.data(), N, Self::P.data(), N).as_bool()) {
             return {};
@@ -335,6 +342,11 @@ class AffineCurvePoint {
 
       constexpr Self negate() const { return Self(m_x, m_y.negate()); }
 
+      std::vector<uint8_t> serialize_to_vec() const {
+         const auto b = this->serialize();
+         return std::vector(b.begin(), b.end());
+      }
+
       constexpr std::array<uint8_t, Self::BYTES> serialize() const {
          std::array<uint8_t, Self::BYTES> r = {};
          BufferStuffer pack(r);
@@ -430,8 +442,54 @@ class ProjectiveCurvePoint {
       }
 
       constexpr static Self add_mixed(const Self& a, const AffinePoint& b) {
-         // TODO use proper mixed addition formula
-         return Self::add(a, Self::from_affine(b));
+         // TODO avoid these early returns by masking instead
+         if(a.is_identity()) {
+            return Self::from_affine(b);
+         }
+
+         if(b.is_identity()) {
+            return a;
+         }
+
+         /*
+         https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
+
+         TODO rename these vars
+
+         TODO reduce vars
+
+         TODO use a complete addition formula??? (YES)
+         https://eprint.iacr.org/2015/1060.pdf
+         */
+
+         const auto Z1Z1 = a.z().square();
+         const auto U2 = b.x() * Z1Z1;
+         const auto S2 = b.y() * a.z() * Z1Z1;
+         const auto H = U2 - a.x();
+         const auto r = S2 - a.y();
+
+         if(H.is_zero()) {
+            if(r.is_zero()) {
+               return a.dbl();
+            } else {
+               return Self::identity();
+            }
+         }
+
+         const auto HH = H.square();
+         const auto HHH = H * HH;
+         const auto V = a.x() * HH;
+         const auto t2 = r.square();
+         const auto t3 = V + V;
+         const auto t4 = t2 - HHH;
+         const auto X3 = t4 - t3;
+         const auto t5 = V - X3;
+         const auto t6 = a.y() * HHH;
+         const auto t7 = r * t5;
+         const auto Y3 = t7 - t6;
+         const auto Z3 = a.z() * H;
+
+         return Self(X3, Y3, Z3);
       }
 
       constexpr static Self add(const Self& a, const Self& b) {
@@ -450,8 +508,6 @@ class ProjectiveCurvePoint {
          TODO rename these vars
 
          TODO reduce vars
-
-         TODO take advantage of A = 0 and A = -3
 
          TODO use a complete addition formula??? (YES)
          https://eprint.iacr.org/2015/1060.pdf
@@ -631,7 +687,7 @@ class PrecomputedMulTable {
          m_table = ProjectivePoint::to_affine_batch(table);
       }
 
-      constexpr AffinePoint operator()(const Scalar& s) const {
+      constexpr ProjectivePoint operator()(const Scalar& s) const {
          const auto bits = s.serialize();
 
          auto accum = ProjectivePoint::identity();
@@ -642,7 +698,7 @@ class PrecomputedMulTable {
             accum.conditional_add(b_set, m_table[i]);
          }
 
-         return accum.to_affine();
+         return accum;
       }
 
    private:
@@ -681,6 +737,13 @@ class EllipticCurve {
       static const constexpr AffinePoint G = AffinePoint(Gx, Gy);
 
       typedef PrecomputedMulTable<AffinePoint, ProjectivePoint, Scalar> MulTable;
+
+      static const MulTable& MulByGTable() {
+         static const auto MulG = MulTable(G);
+         return MulG;
+      }
+
+      static const ProjectivePoint MulByG(const Scalar& scalar) { return MulByGTable()(scalar); }
 
       // (-B / A), will be zero if A == 0 or B == 0 or Z == 0
       static const FieldElement& SSWU_C1() {
@@ -745,8 +808,7 @@ inline std::vector<uint8_t> hash_to_curve_sswu(std::string_view hash,
       pt += map_to_curve_sswu<C>(u);
    }
 
-   const auto pt_bytes = pt.to_affine().serialize();
-   return std::vector<uint8_t>(pt_bytes.begin(), pt_bytes.end());
+   return pt.to_affine().serialize_to_vec();
 }
 
 }  // namespace Botan
