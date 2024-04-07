@@ -54,6 +54,14 @@ in a future major release.
 
 - Kyber 90s mode is deprecated and will be removed.
 
+- Elliptic curve points can be encoded in several different ways.  The
+  most common are "compressed" and "uncompressed"; both are widely
+  used in various systems. Botan additional supports a "hybrid"
+  encoding format which is effectively uncompressed but with an
+  additional indicator of the parity of the y coordinate. This
+  format is quite obscure and seemingly rarely implemented. Support
+  for this encoding will be removed in a future release.
+
 - Currently it is possible to create an EC_Group with cofactor > 1.
   None of the builtin groups have composite order, and in the future
   it will be impossible to create composite order EC_Groups.

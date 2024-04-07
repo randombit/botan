@@ -19,11 +19,12 @@ namespace Botan {
 enum class EC_Point_Format {
    Uncompressed = 0,
    Compressed = 1,
-   Hybrid = 2,
 
    UNCOMPRESSED BOTAN_DEPRECATED("Use EC_Point_Format::Uncompressed") = Uncompressed,
    COMPRESSED BOTAN_DEPRECATED("Use EC_Point_Format::Compressed") = Compressed,
-   HYBRID BOTAN_DEPRECATED("Use EC_Point_Format::Hybrid") = Hybrid,
+
+   Hybrid BOTAN_DEPRECATED("Hybrid point encoding is deprecated") = 2,
+   HYBRID BOTAN_DEPRECATED("Hybrid point encoding is deprecated") = 2
 };
 
 /**
