@@ -519,9 +519,21 @@ class Test_Registry {
          return nullptr;
       }
 
-      std::set<std::string> registered_tests() const { return Botan::map_keys_as_set(m_tests); }
+      std::set<std::string> registered_tests() const {
+         std::set<std::string> s;
+         for(auto&& i : m_tests) {
+            s.insert(i.first);
+         }
+         return s;
+      }
 
-      std::set<std::string> registered_test_categories() const { return Botan::map_keys_as_set(m_categories); }
+      std::set<std::string> registered_test_categories() const {
+         std::set<std::string> s;
+         for(auto&& i : m_categories) {
+            s.insert(i.first);
+         }
+         return s;
+      }
 
       std::vector<std::string> filter_registered_tests(const std::vector<std::string>& requested,
                                                        const std::set<std::string>& to_be_skipped) {

@@ -56,7 +56,8 @@ void AlternativeName::add_othername(const OID& oid, std::string_view value, ASN1
    if(value.empty()) {
       return;
    }
-   multimap_insert(m_othernames, oid, ASN1_String(value, type));
+   ASN1_String str(value, type);
+   m_othernames.insert(std::make_pair(oid, str));
 }
 
 /*
@@ -70,7 +71,9 @@ std::multimap<std::string, std::string> AlternativeName::contents() const {
    }
 
    for(const auto& othername : m_othernames) {
-      multimap_insert(names, othername.first.to_formatted_string(), othername.second.value());
+      std::string typ = othername.first.to_formatted_string();
+      std::string value = othername.second.value();
+      names.insert(std::make_pair(typ, value));
    }
 
    return names;
