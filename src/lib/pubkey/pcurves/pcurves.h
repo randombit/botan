@@ -24,7 +24,7 @@ namespace Botan::PCurve {
 /// Identifier for a named prime order curve
 class PrimeOrderCurveId {
    public:
-      enum class Id {
+      enum class Id : uint8_t {
          /// secp256r1 aka P-256
          secp256r1,
          /// secp384r1 aka P-384

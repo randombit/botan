@@ -46,6 +46,8 @@ std::string PrimeOrderCurveId::to_string() const {
       case PrimeOrderCurveId::secp256k1:
          return "secp256k1";
    }
+
+   return "unknown";
 }
 
 }  // namespace Botan::PCurve
