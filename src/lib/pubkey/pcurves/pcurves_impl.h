@@ -16,17 +16,12 @@
 
 namespace Botan {
 
-template <StringLiteral PS>
+template <WordType W, size_t N, std::array<W, N> P>
 class MontgomeryInteger {
    private:
-      typedef word W;
-
-      static const constexpr auto P = hex_to_words<W>(PS.value);
-      static const constexpr size_t N = P.size();
-
+      static_assert(N > 0 && (P[0] & 1) == 1, "Invalid Montgomery modulus");
       // One can dream
       //static_assert(is_prime(P), "Montgomery Modulus must be a prime");
-      static_assert(N > 0 && (P[0] & 1) == 1, "Invalid Montgomery modulus");
 
       static const constinit W P_dash = monty_inverse(P[0]);
 
@@ -44,7 +39,7 @@ class MontgomeryInteger {
 
       static const constexpr W P_MOD_4 = P[0] % 4;
 
-      typedef MontgomeryInteger<PS> Self;
+      typedef MontgomeryInteger<W, N, P> Self;
 
       // Default value is zero
       constexpr MontgomeryInteger() : m_val({}) {}
@@ -74,7 +69,7 @@ class MontgomeryInteger {
       constexpr bool is_one() const { return (*this == Self::one()); }
 
       constexpr bool is_even() const {
-         auto v = bigint_monty_redc(m_val, Self::P, Self::P_dash);
+         auto v = bigint_monty_redc(m_val, P, P_dash);
          return (v[0] & 0x01) == 0;
       }
 
@@ -83,14 +78,14 @@ class MontgomeryInteger {
          W carry = bigint_add3_nc(t.data(), a.data(), N, b.data(), N);
 
          std::array<W, N> r;
-         bigint_monty_maybe_sub<N>(r.data(), carry, t.data(), Self::P.data());
+         bigint_monty_maybe_sub<N>(r.data(), carry, t.data(), P.data());
          return Self(r);
       }
 
       constexpr Self& operator+=(const Self& other) {
          std::array<W, N> t;
          W carry = bigint_add3_nc(t.data(), this->data(), N, other.data(), N);
-         bigint_monty_maybe_sub<N>(m_val.data(), carry, t.data(), Self::P.data());
+         bigint_monty_maybe_sub<N>(m_val.data(), carry, t.data(), P.data());
          return (*this);
       }
 
@@ -119,7 +114,7 @@ class MontgomeryInteger {
       friend constexpr Self operator*(const Self& a, const Self& b) {
          std::array<W, 2 * N> z;
          comba_mul<N>(z.data(), a.data(), b.data());
-         return Self(bigint_monty_redc(z, Self::P, Self::P_dash));
+         return Self(bigint_monty_redc(z, P, P_dash));
       }
 
       constexpr Self& operator-=(const Self& other) {
@@ -149,7 +144,7 @@ class MontgomeryInteger {
       constexpr Self square() const {
          std::array<W, 2 * N> z;
          comba_sqr<N>(z.data(), this->data());
-         return bigint_monty_redc(z, Self::P, Self::P_dash);
+         return bigint_monty_redc(z, P, P_dash);
       }
 
       // Negation modulo p
@@ -157,7 +152,7 @@ class MontgomeryInteger {
          auto x_is_zero = CT::all_zeros(this->data(), N);
 
          std::array<W, N> r;
-         bigint_sub3(r.data(), Self::P.data(), N, this->data(), N);
+         bigint_sub3(r.data(), P.data(), N, this->data(), N);
          x_is_zero.if_set_zero_out(r.data(), N);
          return Self(r);
       }
@@ -199,6 +194,7 @@ class MontgomeryInteger {
       }
 
       constexpr bool is_square() const {
+         static_assert(Self::P_MOD_4 == 3);
          auto z = pow_vartime(Self::P_MINUS_1_OVER_2);
          const bool is_one = z.is_one();
          const bool is_zero = z.is_zero();
@@ -214,15 +210,15 @@ class MontgomeryInteger {
       }
 
       constexpr std::array<uint8_t, Self::BYTES> serialize() const {
-         auto v = bigint_monty_redc(m_val, Self::P, Self::P_dash);
+         auto v = bigint_monty_redc(m_val, P, P_dash);
          std::reverse(v.begin(), v.end());
          auto bytes = store_be(v);
 
-         if constexpr(Self::BYTES == Self::N * WordInfo<W>::bytes) {
+         if constexpr(Self::BYTES == N * WordInfo<W>::bytes) {
             return bytes;
          } else {
             // Remove leading zero bytes
-            const size_t extra = Self::N * WordInfo<W>::bytes - Self::BYTES;
+            const size_t extra = N * WordInfo<W>::bytes - Self::BYTES;
             std::array<uint8_t, Self::BYTES> out;
             copy_mem(out.data(), &bytes[extra], Self::BYTES);
             return out;
@@ -240,7 +236,7 @@ class MontgomeryInteger {
 
          const auto words = bytes_to_words<W, N, BYTES>(&bytes[0]);
 
-         if(!bigint_ct_is_lt(words.data(), N, Self::P.data(), N).as_bool()) {
+         if(!bigint_ct_is_lt(words.data(), N, P.data(), N).as_bool()) {
             return {};
          }
 
@@ -712,11 +708,19 @@ template <StringLiteral PS,
           StringLiteral GXS,
           StringLiteral GYS,
           int8_t Z = 0,
-          template <StringLiteral> typename FieldType = MontgomeryInteger>
+          template <WordType W, size_t N, std::array<W, N> P> typename FieldType = MontgomeryInteger>
 class EllipticCurve {
    public:
-      typedef MontgomeryInteger<NS> Scalar;
-      typedef FieldType<PS> FieldElement;
+      typedef word W;
+
+      static const constexpr auto PW = hex_to_words<W>(PS.value);
+      static const constexpr auto NW = hex_to_words<W>(NS.value);
+
+      // Simplifying assumption
+      static_assert(PW.size() == NW.size());
+
+      typedef MontgomeryInteger<W, NW.size(), NW> Scalar;
+      typedef FieldType<W, PW.size(), PW> FieldElement;
 
       static const constinit size_t OrderBits = Scalar::BITS;
       static const constinit size_t PrimeFieldBits = FieldElement::BITS;
