@@ -565,7 +565,7 @@ Symmetric Ciphers
    Return the minimum update granularity, ie the size of a buffer that must be
    passed to :cpp:func:`botan_cipher_update`
 
-.. cpp:function:: int botan_cipher_get_ideal_granularity(botan_cipher_t cipher, size_t* ug)
+.. cpp:function:: int botan_cipher_get_ideal_update_granularity(botan_cipher_t cipher, size_t* ug)
 
    Return the ideal update granularity, ie the size of a buffer that must be
    passed to :cpp:func:`botan_cipher_update` that maximizes performance.
