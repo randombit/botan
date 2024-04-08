@@ -58,9 +58,9 @@ class ECC_Basepoint_Mul_Tests final : public Text_Based_Test {
 
             const auto pbits = Botan::PCurve::mul_by_g(*id, mbits);
 
-            const Botan::EC_Point pc = group.OS2ECP(pbits);
-            result.test_eq("pcurves affine X", pc.get_affine_x(), X);
-            result.test_eq("pcurves affine Y", pc.get_affine_y(), Y);
+            const auto exp_pbits = p1.encode(Botan::EC_Point_Format::Uncompressed);
+
+            result.test_eq("pcurves point", pbits, exp_pbits);
          }
    #endif
          return result;
