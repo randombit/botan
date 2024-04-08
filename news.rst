@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 3.4.0, Not Yet Released
+Version 3.4.0, 2024-04-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add Ed448 signatures and X448 key exchange (GH #3933)

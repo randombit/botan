@@ -56,14 +56,14 @@ If you think you have found a security issue, see the `security page
 Releases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The latest release from the Botan3 release series is
+`3.4.0 <https://botan.randombit.net/releases/Botan-3.4.0.tar.xz>`_
+`(sig) <https://botan.randombit.net/releases/Botan-3.4.0.tar.xz.asc>`__,
+released on 2024-04-08.
+
 The latest release from the Botan2 release series is
 `2.19.4 <https://botan.randombit.net/releases/Botan-2.19.4.tar.xz>`_
 `(sig) <https://botan.randombit.net/releases/Botan-2.19.4.tar.xz.asc>`__,
-released on 2024-02-20.
-
-The latest release from the Botan3 release series is
-`3.3.0 <https://botan.randombit.net/releases/Botan-3.3.0.tar.xz>`_
-`(sig) <https://botan.randombit.net/releases/Botan-3.3.0.tar.xz.asc>`__,
 released on 2024-02-20.
 
 All releases are signed with a `PGP key <https://botan.randombit.net/pgpkey.txt>`_.
