@@ -66,6 +66,11 @@ in a future major release.
   None of the builtin groups have composite order, and in the future
   it will be impossible to create composite order EC_Groups.
 
+- Currently it is possible to create an application specific EC_Group
+  with parameters of effectively arbitrary size. In a future release
+  the maximum allowed bitlength of application provided groups will be
+  at most 521 bits.
+
 - Prior to 2.8.0, SM2 algorithms were implemented as two distinct key
   types, one used for encryption and the other for signatures. In 2.8,
   the two types were merged. However it is still possible to refer to
