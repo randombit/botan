@@ -285,13 +285,13 @@ class MontgomeryInteger {
          }
       }
 
-      template <size_t N>
-      static consteval Self constant(StringLiteral<N> S) {
+      template <size_t L>
+      static consteval Self constant(StringLiteral<L> S) {
          return Self::constant(S.value);
       }
 
-      template <size_t N>
-      static consteval Self constant(const char (&s)[N]) {
+      template <size_t L>
+      static consteval Self constant(const char (&s)[L]) {
          const auto v = hex_to_words<W>(s);
          return Self(v) * R2;
       }
