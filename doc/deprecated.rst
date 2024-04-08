@@ -56,7 +56,7 @@ in a future major release.
 
 - Elliptic curve points can be encoded in several different ways.  The
   most common are "compressed" and "uncompressed"; both are widely
-  used in various systems. Botan additional supports a "hybrid"
+  used in various systems. Botan additionally supports a "hybrid"
   encoding format which is effectively uncompressed but with an
   additional indicator of the parity of the y coordinate. This
   format is quite obscure and seemingly rarely implemented. Support
