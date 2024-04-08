@@ -18,6 +18,8 @@ std::optional<PrimeOrderCurveId> PrimeOrderCurveId::from_string(std::string_view
       return PCurve::PrimeOrderCurveId::secp384r1;
    } else if(name == "secp521r1") {
       return PCurve::PrimeOrderCurveId::secp521r1;
+   } else if(name == "secp256k1") {
+      return PCurve::PrimeOrderCurveId::secp256k1;
    } else {
       return {};
    }
@@ -41,8 +43,8 @@ std::string PrimeOrderCurveId::to_string() const {
          return "secp384r1";
       case PrimeOrderCurveId::secp521r1:
          return "secp521r1";
-      default:
-         return "unknown";
+      case PrimeOrderCurveId::secp256k1:
+         return "secp256k1";
    }
 }
 

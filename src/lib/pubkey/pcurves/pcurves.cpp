@@ -41,6 +41,15 @@ typedef EllipticCurve<
    -4>
    P521;
 
+typedef EllipticCurve<
+   "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F",
+   "0",
+   "7",
+   "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141",
+   "0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798",
+   "0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8">
+   secp256k1;
+
 // clang-format on
 
 std::vector<uint8_t> hash_to_curve(PrimeOrderCurveId curve,
@@ -78,6 +87,12 @@ std::vector<uint8_t> mul_by_g(PrimeOrderCurveId curve, std::span<const uint8_t> 
       case PrimeOrderCurveId::secp521r1:
          if(auto scalar = P521::Scalar::deserialize(scalar_bytes)) {
             return P521::MulByG(*scalar).to_affine().serialize_to_vec();
+         } else {
+            throw Invalid_Argument("Invalid scalar");
+         }
+      case PrimeOrderCurveId::secp256k1:
+         if(auto scalar = secp256k1::Scalar::deserialize(scalar_bytes)) {
+            return secp256k1::MulByG(*scalar).to_affine().serialize_to_vec();
          } else {
             throw Invalid_Argument("Invalid scalar");
          }

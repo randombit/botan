@@ -31,6 +31,8 @@ class PrimeOrderCurveId {
          secp384r1,
          /// secp521r1 aka P-521
          secp521r1,
+         /// secp256k1
+         secp256k1,
       };
 
       using enum Id;
