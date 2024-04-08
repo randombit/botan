@@ -42,8 +42,12 @@ Ed448_PublicKey::Ed448_PublicKey(std::span<const uint8_t> key_bits) {
    copy_mem(m_public, key_bits.first<ED448_LEN>());
 }
 
-std::vector<uint8_t> Ed448_PublicKey::public_key_bits() const {
+std::vector<uint8_t> Ed448_PublicKey::raw_public_key_bits() const {
    return {m_public.begin(), m_public.end()};
+}
+
+std::vector<uint8_t> Ed448_PublicKey::public_key_bits() const {
+   return raw_public_key_bits();
 }
 
 std::unique_ptr<Private_Key> Ed448_PublicKey::generate_another(RandomNumberGenerator& rng) const {

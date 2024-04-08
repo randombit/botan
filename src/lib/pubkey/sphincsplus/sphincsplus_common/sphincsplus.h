@@ -46,6 +46,7 @@ class BOTAN_PUBLIC_API(3, 1) SphincsPlus_PublicKey : public virtual Public_Key {
       AlgorithmIdentifier algorithm_identifier() const override;
       OID object_identifier() const override;
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
+      std::vector<uint8_t> raw_public_key_bits() const override;
       std::vector<uint8_t> public_key_bits() const override;
 
       std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;

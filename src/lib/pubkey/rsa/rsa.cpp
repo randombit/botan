@@ -178,6 +178,10 @@ AlgorithmIdentifier RSA_PublicKey::algorithm_identifier() const {
    return AlgorithmIdentifier(object_identifier(), AlgorithmIdentifier::USE_NULL_PARAM);
 }
 
+std::vector<uint8_t> RSA_PublicKey::raw_public_key_bits() const {
+   throw Not_Implemented("an RSA public key does not provide a raw binary representation.");
+}
+
 std::vector<uint8_t> RSA_PublicKey::public_key_bits() const {
    std::vector<uint8_t> output;
    DER_Encoder der(output);

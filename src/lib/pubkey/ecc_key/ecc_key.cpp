@@ -54,8 +54,12 @@ AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const {
    return AlgorithmIdentifier(object_identifier(), DER_domain());
 }
 
-std::vector<uint8_t> EC_PublicKey::public_key_bits() const {
+std::vector<uint8_t> EC_PublicKey::raw_public_key_bits() const {
    return public_point().encode(point_encoding());
+}
+
+std::vector<uint8_t> EC_PublicKey::public_key_bits() const {
+   return raw_public_key_bits();
 }
 
 void EC_PublicKey::set_point_encoding(EC_Point_Format enc) {

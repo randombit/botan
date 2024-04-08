@@ -53,13 +53,17 @@ X25519_PublicKey::X25519_PublicKey(std::span<const uint8_t> pub) {
    size_check(m_public.size(), "public key");
 }
 
-std::vector<uint8_t> X25519_PublicKey::public_key_bits() const {
+std::vector<uint8_t> X25519_PublicKey::raw_public_key_bits() const {
    return m_public;
+}
+
+std::vector<uint8_t> X25519_PublicKey::public_key_bits() const {
+   return raw_public_key_bits();
 }
 
 std::unique_ptr<Private_Key> X25519_PublicKey::generate_another(RandomNumberGenerator& rng) const {
    return std::make_unique<X25519_PrivateKey>(rng);
-};
+}
 
 X25519_PrivateKey::X25519_PrivateKey(const secure_vector<uint8_t>& secret_key) {
    if(secret_key.size() != 32) {

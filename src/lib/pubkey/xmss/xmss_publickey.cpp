@@ -119,14 +119,18 @@ std::unique_ptr<PK_Ops::Verification> XMSS_PublicKey::create_x509_verification_o
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::vector<uint8_t> XMSS_PublicKey::raw_public_key() const {
+std::vector<uint8_t> XMSS_PublicKey::raw_public_key_bits() const {
    return concat<std::vector<uint8_t>>(store_be(static_cast<uint32_t>(m_xmss_params.oid())), m_root, m_public_seed);
 }
 
 std::vector<uint8_t> XMSS_PublicKey::public_key_bits() const {
    std::vector<uint8_t> output;
-   DER_Encoder(output).encode(raw_public_key(), ASN1_Type::OctetString);
+   DER_Encoder(output).encode(raw_public_key_bits(), ASN1_Type::OctetString);
    return output;
+}
+
+std::vector<uint8_t> XMSS_PublicKey::raw_public_key() const {
+   return raw_public_key_bits();
 }
 
 std::unique_ptr<Private_Key> XMSS_PublicKey::generate_another(RandomNumberGenerator& rng) const {

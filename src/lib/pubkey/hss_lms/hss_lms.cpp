@@ -48,8 +48,14 @@ bool HSS_LMS_PublicKey::check_key(RandomNumberGenerator&, bool) const {
    return true;
 }
 
-std::vector<uint8_t> HSS_LMS_PublicKey::public_key_bits() const {
+std::vector<uint8_t> HSS_LMS_PublicKey::raw_public_key_bits() const {
    return m_public->to_bytes();
+}
+
+std::vector<uint8_t> HSS_LMS_PublicKey::public_key_bits() const {
+   // The raw encoding of HSS/LMS public keys always contains the necessary
+   // algorithm information.
+   return raw_public_key_bits();
 }
 
 class HSS_LMS_Verification_Operation final : public PK_Ops::Verification {

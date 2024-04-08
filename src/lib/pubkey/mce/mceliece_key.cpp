@@ -77,6 +77,10 @@ AlgorithmIdentifier McEliece_PublicKey::algorithm_identifier() const {
    return AlgorithmIdentifier(object_identifier(), AlgorithmIdentifier::USE_EMPTY_PARAM);
 }
 
+std::vector<uint8_t> McEliece_PublicKey::raw_public_key_bits() const {
+   return m_public_matrix;
+}
+
 std::vector<uint8_t> McEliece_PublicKey::public_key_bits() const {
    std::vector<uint8_t> output;
    DER_Encoder(output)

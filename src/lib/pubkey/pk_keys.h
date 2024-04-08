@@ -146,6 +146,17 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       virtual AlgorithmIdentifier algorithm_identifier() const = 0;
 
       /**
+      * @return binary public key bits, with no additional encoding
+      *
+      * For key agreements this is an alias for PK_Key_Agreement_Key::public_value.
+      *
+      * Note: some algorithms (for example RSA) do not have an obvious encoding
+      * for this value due to having many different values, and thus throw
+      * Not_Implemented when invoking this method.
+      */
+      virtual std::vector<uint8_t> raw_public_key_bits() const = 0;
+
+      /**
       * @return BER encoded public key bits
       */
       virtual std::vector<uint8_t> public_key_bits() const = 0;

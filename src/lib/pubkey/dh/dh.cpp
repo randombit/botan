@@ -45,6 +45,10 @@ AlgorithmIdentifier DH_PublicKey::algorithm_identifier() const {
    return AlgorithmIdentifier(object_identifier(), m_public_key->group().DER_encode(DL_Group_Format::ANSI_X9_42));
 }
 
+std::vector<uint8_t> DH_PublicKey::raw_public_key_bits() const {
+   return public_value();
+}
+
 std::vector<uint8_t> DH_PublicKey::public_key_bits() const {
    return m_public_key->DER_encode();
 }

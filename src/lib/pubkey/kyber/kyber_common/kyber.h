@@ -96,6 +96,8 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key {
 
       size_t estimated_strength() const override;
 
+      std::vector<uint8_t> raw_public_key_bits() const override;
+
       std::vector<uint8_t> public_key_bits() const override;
 
       bool check_key(RandomNumberGenerator&, bool) const override;

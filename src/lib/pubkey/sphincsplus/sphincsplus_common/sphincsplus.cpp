@@ -122,8 +122,14 @@ bool SphincsPlus_PublicKey::check_key(RandomNumberGenerator&, bool) const {
    return true;
 }
 
-std::vector<uint8_t> SphincsPlus_PublicKey::public_key_bits() const {
+std::vector<uint8_t> SphincsPlus_PublicKey::raw_public_key_bits() const {
    return m_public->key_bits();
+}
+
+std::vector<uint8_t> SphincsPlus_PublicKey::public_key_bits() const {
+   // Currently, there isn't a finalized definition of an ASN.1 structure for
+   // SPHINCS+ aka SLH-DSA public keys. Therefore, we return the raw public key bits.
+   return raw_public_key_bits();
 }
 
 std::unique_ptr<Private_Key> SphincsPlus_PublicKey::generate_another(RandomNumberGenerator& rng) const {

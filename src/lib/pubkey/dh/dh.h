@@ -38,6 +38,9 @@ class BOTAN_PUBLIC_API(2, 0) DH_PublicKey : public virtual Public_Key {
       DH_PublicKey(const DL_Group& group, const BigInt& y);
 
       AlgorithmIdentifier algorithm_identifier() const override;
+
+      std::vector<uint8_t> raw_public_key_bits() const override;
+
       std::vector<uint8_t> public_key_bits() const override;
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
