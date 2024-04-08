@@ -25,12 +25,12 @@ namespace Botan::PCurve {
 class PrimeOrderCurveId {
    public:
       enum class Id {
-         /// P-256 aka secp256r1
-         P256,
-         /// P-384 aka secp384r1
-         P384,
-         /// P-521 aka secp521r1
-         P521,
+         /// secp256r1 aka P-256
+         secp256r1,
+         /// secp384r1 aka P-384
+         secp384r1,
+         /// secp521r1 aka P-521
+         secp521r1,
       };
 
       using enum Id;
@@ -40,6 +40,7 @@ class PrimeOrderCurveId {
       PrimeOrderCurveId(Id id) : m_id(id) {}
 
       /// Map a string to a curve identifier
+      BOTAN_TEST_API
       static std::optional<PrimeOrderCurveId> from_string(std::string_view name);
 
       /// Map an OID to a curve identifier

@@ -13,11 +13,11 @@ namespace Botan::PCurve {
 //static
 std::optional<PrimeOrderCurveId> PrimeOrderCurveId::from_string(std::string_view name) {
    if(name == "secp256r1") {
-      return PCurve::PrimeOrderCurveId::P256;
+      return PCurve::PrimeOrderCurveId::secp256r1;
    } else if(name == "secp384r1") {
-      return PCurve::PrimeOrderCurveId::P384;
+      return PCurve::PrimeOrderCurveId::secp384r1;
    } else if(name == "secp521r1") {
-      return PCurve::PrimeOrderCurveId::P521;
+      return PCurve::PrimeOrderCurveId::secp521r1;
    } else {
       return {};
    }
@@ -35,11 +35,11 @@ std::optional<PrimeOrderCurveId> PrimeOrderCurveId::from_oid(const OID& oid) {
 
 std::string PrimeOrderCurveId::to_string() const {
    switch(this->code()) {
-      case PrimeOrderCurveId::P256:
+      case PrimeOrderCurveId::secp256r1:
          return "secp256r1";
-      case PrimeOrderCurveId::P384:
+      case PrimeOrderCurveId::secp384r1:
          return "secp384r1";
-      case PrimeOrderCurveId::P521:
+      case PrimeOrderCurveId::secp521r1:
          return "secp521r1";
       default:
          return "unknown";

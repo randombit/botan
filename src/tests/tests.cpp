@@ -321,7 +321,7 @@ bool Test::Result::test_ne(const std::string& what, size_t produced, size_t expe
 
 #if defined(BOTAN_HAS_BIGINT)
 bool Test::Result::test_eq(const std::string& what, const BigInt& produced, const BigInt& expected) {
-   return test_is_eq(what, produced, expected);
+   return test_is_eq(what, produced.to_hex_string(), expected.to_hex_string());
 }
 
 bool Test::Result::test_ne(const std::string& what, const BigInt& produced, const BigInt& expected) {

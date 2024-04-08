@@ -49,11 +49,11 @@ std::vector<uint8_t> hash_to_curve(PrimeOrderCurveId curve,
                                    std::span<const uint8_t> input,
                                    std::span<const uint8_t> domain_sep) {
    switch(curve.code()) {
-      case PrimeOrderCurveId::P256:
+      case PrimeOrderCurveId::secp256r1:
          return hash_to_curve_sswu<P256>(hash, random_oracle, input, domain_sep);
-      case PrimeOrderCurveId::P384:
+      case PrimeOrderCurveId::secp384r1:
          return hash_to_curve_sswu<P384>(hash, random_oracle, input, domain_sep);
-      case PrimeOrderCurveId::P521:
+      case PrimeOrderCurveId::secp521r1:
          return hash_to_curve_sswu<P521>(hash, random_oracle, input, domain_sep);
 
       default:
@@ -63,9 +63,21 @@ std::vector<uint8_t> hash_to_curve(PrimeOrderCurveId curve,
 
 std::vector<uint8_t> mul_by_g(PrimeOrderCurveId curve, std::span<const uint8_t> scalar_bytes) {
    switch(curve.code()) {
-      case PrimeOrderCurveId::P256:
+      case PrimeOrderCurveId::secp256r1:
          if(auto scalar = P256::Scalar::deserialize(scalar_bytes)) {
             return P256::MulByG(*scalar).to_affine().serialize_to_vec();
+         } else {
+            throw Invalid_Argument("Invalid scalar");
+         }
+      case PrimeOrderCurveId::secp384r1:
+         if(auto scalar = P384::Scalar::deserialize(scalar_bytes)) {
+            return P384::MulByG(*scalar).to_affine().serialize_to_vec();
+         } else {
+            throw Invalid_Argument("Invalid scalar");
+         }
+      case PrimeOrderCurveId::secp521r1:
+         if(auto scalar = P521::Scalar::deserialize(scalar_bytes)) {
+            return P521::MulByG(*scalar).to_affine().serialize_to_vec();
          } else {
             throw Invalid_Argument("Invalid scalar");
          }

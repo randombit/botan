@@ -689,7 +689,7 @@ class PrecomputedMulTable {
          auto accum = ProjectivePoint::identity();
 
          for(size_t i = 0; i != Scalar::BITS; ++i) {
-            const size_t b = Scalar::BITS - i - 1;
+            const size_t b = 8*Scalar::BYTES - i - 1;
             const bool b_set = (bits[b / 8] >> (7 - b % 8)) & 1;
             accum.conditional_add(b_set, m_table[i]);
          }
