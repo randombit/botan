@@ -40,40 +40,23 @@ def comba_sqr_indexes(N):
 def comba_multiply_code(N):
     indexes = comba_indexes(N)
 
-    w2 = 'w2'
-    w1 = 'w1'
-    w0 = 'w0'
-
     for (i,idx) in zip(range(0, len(indexes)), indexes):
         for pair in idx:
-            print("   word3_muladd(&%s, &%s, &%s, x[%d], y[%d]);" % (w2, w1, w0, pair[0], pair[1]))
+            print("   accum.mul(x[%d], y[%d]);" % (pair[0], pair[1]))
 
-        if i < 2*N-2:
-            print("   z[%d] = %s;\n   %s = 0;\n" % (i, w0, w0))
-        else:
-            print("   z[%d] = %s;" % (i, w0))
-        (w0,w1,w2) = (w1,w2,w0)
+        print("   z[%d] = accum.extract();" % (i))
 
 def comba_square_code(N):
     indexes = comba_sqr_indexes(N)
 
-    w2 = 'w2'
-    w1 = 'w1'
-    w0 = 'w0'
-
     for (rnd,idx) in zip(range(0, len(indexes)), indexes):
         for (i,pair) in zip(range(0, len(idx)), idx):
             if pair[0] == pair[1]:
-                print("   word3_muladd(&%s, &%s, &%s, x[%d], x[%d]);" % (w2, w1, w0, pair[0], pair[1]))
+                print("   accum.mul(x[%d], x[%d]);" % (pair[0], pair[1]))
             elif i % 2 == 0:
-                print("   word3_muladd_2(&%s, &%s, &%s, x[%d], x[%d]);" % (w2, w1, w0, pair[0], pair[1]))
+                print("   accum.mul_x2(x[%d], x[%d]);" % (pair[0], pair[1]))
 
-        if rnd < 2*N-2:
-            print("   z[%d] = %s;\n   %s = 0;\n" % (rnd, w0, w0))
-        else:
-            print("   z[%d] = %s;" % (rnd, w0))
-
-        (w0,w1,w2) = (w1,w2,w0)
+        print("   z[%d] = accum.extract();" % (rnd))
 
 def main(args = None):
     if args is None:
@@ -100,7 +83,7 @@ namespace Botan {
     for n in sizes:
         print("/*\n* Comba %dx%d Squaring\n*/" % (n, n))
         print("void bigint_comba_sqr%d(word z[%d], const word x[%d]) {" % (n, 2*n, n))
-        print("   word w2 = 0, w1 = 0, w0 = 0;\n")
+        print("   word3<word> accum;\n")
 
         comba_square_code(n)
 
@@ -108,7 +91,7 @@ namespace Botan {
 
         print("/*\n* Comba %dx%d Multiplication\n*/" % (n, n))
         print("void bigint_comba_mul%d(word z[%d], const word x[%d], const word y[%d]) {" % (n, 2*n, n, n))
-        print("   word w2 = 0, w1 = 0, w0 = 0;\n")
+        print("   word3<word> accum;\n")
 
         comba_multiply_code(n)
 
