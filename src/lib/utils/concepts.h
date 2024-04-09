@@ -33,9 +33,9 @@ struct is_strong_type<Strong<Ts...>> : std::true_type {};
 template <typename... Ts>
 constexpr bool is_strong_type_v = is_strong_type<std::remove_const_t<Ts>...>::value;
 
-template <typename T0, typename... Ts>
+template <typename T0 = void, typename... Ts>
 struct all_same {
-      static constexpr bool value = (std::is_same_v<T0, Ts> && ...);
+      static constexpr bool value = (std::is_same_v<T0, Ts> && ... && true);
 };
 
 template <typename... Ts>
