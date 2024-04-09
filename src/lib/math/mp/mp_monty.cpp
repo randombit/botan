@@ -31,52 +31,35 @@ namespace Botan {
 void bigint_monty_redc_generic(word z[], size_t z_size, const word p[], size_t p_size, word p_dash, word ws[]) {
    BOTAN_ARG_CHECK(z_size >= 2 * p_size && p_size > 0, "Invalid sizes for bigint_monty_redc_generic");
 
-   word w2 = 0, w1 = 0, w0 = 0;
+   word3<word> accum;
 
-   w0 = z[0];
+   accum.add(z[0]);
 
-   ws[0] = w0 * p_dash;
-
-   word3_muladd(&w2, &w1, &w0, ws[0], p[0]);
-
-   w0 = w1;
-   w1 = w2;
-   w2 = 0;
+   ws[0] = accum.monty_step(p[0], p_dash);
 
    for(size_t i = 1; i != p_size; ++i) {
       for(size_t j = 0; j < i; ++j) {
-         word3_muladd(&w2, &w1, &w0, ws[j], p[i - j]);
+         accum.mul(ws[j], p[i - j]);
       }
 
-      word3_add(&w2, &w1, &w0, z[i]);
-
-      ws[i] = w0 * p_dash;
-
-      word3_muladd(&w2, &w1, &w0, ws[i], p[0]);
-
-      w0 = w1;
-      w1 = w2;
-      w2 = 0;
+      accum.add(z[i]);
+      ws[i] = accum.monty_step(p[0], p_dash);
    }
 
    for(size_t i = 0; i != p_size - 1; ++i) {
       for(size_t j = i + 1; j != p_size; ++j) {
-         word3_muladd(&w2, &w1, &w0, ws[j], p[p_size + i - j]);
+         accum.mul(ws[j], p[p_size + i - j]);
       }
 
-      word3_add(&w2, &w1, &w0, z[p_size + i]);
-
-      ws[i] = w0;
-
-      w0 = w1;
-      w1 = w2;
-      w2 = 0;
+      accum.add(z[p_size + i]);
+      ws[i] = accum.extract();
    }
 
-   word3_add(&w2, &w1, &w0, z[2 * p_size - 1]);
+   accum.add(z[2 * p_size - 1]);
 
-   ws[p_size - 1] = w0;
+   ws[p_size - 1] = accum.extract();
    // w1 is the final part, which is not stored in the workspace
+   const word w1 = accum.extract();
 
    /*
    * The result might need to be reduced mod p. To avoid a timing
