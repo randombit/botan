@@ -67,13 +67,12 @@ jobs:
         include:
           - compiler: gcc
             target: shared
-            gcc: 11
           - compiler: gcc
             target: amalgamation
-            gcc: 12
+            env:
+              CXX: g++-12
           - compiler: gcc
             target: static
-            gcc: 12
           - compiler: clang
             target: shared
 
