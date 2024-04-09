@@ -214,9 +214,9 @@ Response http_sync(const http_exch_fn& http_transact,
       resp_body.insert(resp_body.end(), buf.data(), &buf[got]);
    }
 
-   const std::string header_size = search_map(headers, std::string("Content-Length"));
-
-   if(!header_size.empty()) {
+   auto cl_hdr = headers.find("Content-Length");
+   if(cl_hdr != headers.end()) {
+      const std::string header_size = cl_hdr->second;
       if(resp_body.size() != to_u32bit(header_size)) {
          throw HTTP_Error(fmt("Content-Length disagreement, header says {} got {}", header_size, resp_body.size()));
       }

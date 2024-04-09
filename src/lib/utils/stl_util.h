@@ -11,9 +11,7 @@
 
 #include <algorithm>
 #include <functional>
-#include <map>
 #include <optional>
-#include <set>
 #include <span>
 #include <string>
 #include <tuple>
@@ -52,63 +50,6 @@ RetT reduce(const std::vector<KeyT>& keys, RetT acc, ReducerT reducer)
       acc = reducer(std::move(acc), key);
    }
    return acc;
-}
-
-/**
-* Return the keys of a map as a std::set
-*/
-template <typename K, typename V>
-std::set<K> map_keys_as_set(const std::map<K, V>& kv) {
-   std::set<K> s;
-   for(auto&& i : kv) {
-      s.insert(i.first);
-   }
-   return s;
-}
-
-/**
-* Return the keys of a multimap as a std::set
-*/
-template <typename K, typename V>
-std::set<K> map_keys_as_set(const std::multimap<K, V>& kv) {
-   std::set<K> s;
-   for(auto&& i : kv) {
-      s.insert(i.first);
-   }
-   return s;
-}
-
-/*
-* Searching through a std::map
-* @param mapping the map to search
-* @param key is what to look for
-* @param null_result is the value to return if key is not in mapping
-* @return mapping[key] or null_result
-*/
-template <typename K, typename V>
-inline V search_map(const std::map<K, V>& mapping, const K& key, const V& null_result = V()) {
-   auto i = mapping.find(key);
-   if(i == mapping.end()) {
-      return null_result;
-   }
-   return i->second;
-}
-
-template <typename K, typename V, typename R>
-inline R search_map(const std::map<K, V>& mapping, const K& key, const R& null_result, const R& found_result) {
-   auto i = mapping.find(key);
-   if(i == mapping.end()) {
-      return null_result;
-   }
-   return found_result;
-}
-
-/*
-* Insert a key/value pair into a multimap
-*/
-template <typename K, typename V>
-void multimap_insert(std::multimap<K, V>& multimap, const K& key, const V& value) {
-   multimap.insert(std::make_pair(key, value));
 }
 
 /**

@@ -66,12 +66,19 @@ class Print_Help final : public Command {
          oss << "Available commands:\n\n";
 
          for(const auto& commands : grouped_commands) {
-            std::string desc = commands.first;
-            if(desc.empty()) {
+            const std::string group = commands.first;
+            if(group.empty()) {
+               // ???
                continue;
             }
 
-            oss << Botan::search_map(groups_description, desc, desc) << ":\n";
+            auto descr = groups_description.find(group);
+            if(descr != groups_description.end()) {
+               oss << descr->second;
+            } else {
+               oss << group;
+            }
+            oss << ":\n";
             for(const auto& cmd : commands.second) {
                oss << "   " << std::setw(16) << std::left << cmd->cmd_name() << "   " << cmd->description() << "\n";
             }
