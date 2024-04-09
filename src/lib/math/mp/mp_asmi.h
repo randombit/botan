@@ -749,9 +749,18 @@ inline constexpr void word3_muladd_2(W* w2, W* w1, W* w0, W x, W y) {
    *w2 = word_add(*w2, top, &carry);
 }
 
-#if defined(__BITINT_MAXWIDTH__) && (__BITINT_MAXWIDTH__ >= 3 * 64)
+/**
+* Helper for 3-word accumulators
+*
+* A number of algorithms especially Comba multiplication and
+* Montgomery reduction can take advantage of wide accumulators, which
+* consume inputs via addition with outputs extracted from the low
+* bits.
+*/
 template <WordType W>
 class word3 {
+#if defined(__BITINT_MAXWIDTH__) && (__BITINT_MAXWIDTH__ >= 3 * 64)
+
    public:
       constexpr word3() { m_w = 0; }
 
@@ -778,12 +787,8 @@ class word3 {
    private:
       __extension__ typedef unsigned _BitInt(WordInfo<W>::bits * 3) W3;
       W3 m_w;
-};
-
 #else
 
-template <WordType W>
-class word3 {
    public:
       constexpr word3() {
          m_w2 = 0;
@@ -816,9 +821,8 @@ class word3 {
 
    private:
       W m_w0, m_w1, m_w2;
-};
-
 #endif
+};
 
 #if defined(ASM)
    #undef ASM
