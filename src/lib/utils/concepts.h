@@ -41,6 +41,18 @@ struct all_same {
 template <typename... Ts>
 static constexpr bool all_same_v = all_same<Ts...>::value;
 
+namespace detail {
+
+/**
+ * Helper type to indicate that a certain type should be automatically
+ * detected based on the context.
+ */
+struct AutoDetect {
+      constexpr AutoDetect() = delete;
+};
+
+}  // namespace detail
+
 namespace ranges {
 
 /**
@@ -169,6 +181,9 @@ concept resizable_container = container<T> && requires(T& c, typename T::size_ty
                                                  T(s);
                                                  c.resize(s);
                                               };
+
+template <typename T>
+concept reservable_container = container<T> && requires(T& c, typename T::size_type s) { c.reserve(s); };
 
 template <typename T>
 concept resizable_byte_buffer =

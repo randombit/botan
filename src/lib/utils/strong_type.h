@@ -138,6 +138,12 @@ class Strong_Adapter<T> : public Strong_Base<T> {
          this->get().resize(size);
       }
 
+      void reserve(size_type size) noexcept(noexcept(this->get().reserve(size)))
+         requires(concepts::reservable_container<T>)
+      {
+         this->get().reserve(size);
+      }
+
       decltype(auto) operator[](size_type i) const noexcept(noexcept(this->get().operator[](i))) {
          return this->get()[i];
       }
@@ -166,6 +172,19 @@ class Strong : public detail::Strong_Adapter<T> {
    private:
       using Tag = TagTypeT;
 };
+
+/**
+ * Opportunistically unpacks a strong type to its underlying type. If the
+ * provided type is not a strong type, it is returned as is.
+ */
+template <typename T>
+constexpr decltype(auto) unpack(T& t) {
+   if constexpr(concepts::strong_type<std::remove_cvref_t<T>>) {
+      return t.get();
+   } else {
+      return t;
+   }
+}
 
 template <typename T, typename... Tags>
    requires(concepts::streamable<T>) decltype(auto)
