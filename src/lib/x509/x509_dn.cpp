@@ -113,7 +113,7 @@ std::multimap<OID, std::string> X509_DN::get_attributes() const {
    std::multimap<OID, std::string> retval;
 
    for(auto& i : m_rdn) {
-      retval.insert(std::make_pair(i.first, i.second.value()));
+      retval.emplace(i.first, i.second.value());
    }
    return retval;
 }
@@ -125,7 +125,7 @@ std::multimap<std::string, std::string> X509_DN::contents() const {
    std::multimap<std::string, std::string> retval;
 
    for(auto& i : m_rdn) {
-      retval.insert(std::make_pair(i.first.to_formatted_string(), i.second.value()));
+      retval.emplace(i.first.to_formatted_string(), i.second.value());
    }
    return retval;
 }
