@@ -43,13 +43,7 @@ class BOTAN_PUBLIC_API(2, 0) Curve25519_PublicKey : public virtual Public_Key {
       * Create a Curve25519 Public Key.
       * @param pub 32-byte raw public key
       */
-      explicit Curve25519_PublicKey(const std::vector<uint8_t>& pub) : m_public(pub) {}
-
-      /**
-      * Create a Curve25519 Public Key.
-      * @param pub 32-byte raw public key
-      */
-      explicit Curve25519_PublicKey(const secure_vector<uint8_t>& pub) : m_public(pub.begin(), pub.end()) {}
+      explicit Curve25519_PublicKey(std::span<const uint8_t> pub);
 
    protected:
       Curve25519_PublicKey() = default;

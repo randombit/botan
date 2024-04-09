@@ -24,7 +24,7 @@ namespace {
 
 void size_check(size_t size, const char* thing) {
    if(size != 32) {
-      throw Decoding_Error(fmt("Invalid size {} for Curve2551 {}", size, thing));
+      throw Decoding_Error(fmt("Invalid size {} for Curve25519 {}", size, thing));
    }
 }
 
@@ -44,8 +44,11 @@ bool Curve25519_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*stro
    return true;  // no tests possible?
 }
 
-Curve25519_PublicKey::Curve25519_PublicKey(const AlgorithmIdentifier& /*unused*/, std::span<const uint8_t> key_bits) {
-   m_public.assign(key_bits.begin(), key_bits.end());
+Curve25519_PublicKey::Curve25519_PublicKey(const AlgorithmIdentifier& /*unused*/, std::span<const uint8_t> key_bits) :
+      Curve25519_PublicKey(key_bits) {}
+
+Curve25519_PublicKey::Curve25519_PublicKey(std::span<const uint8_t> pub) {
+   m_public.assign(pub.begin(), pub.end());
 
    size_check(m_public.size(), "public key");
 }
