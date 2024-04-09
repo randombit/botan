@@ -14,6 +14,8 @@
    #include "test_rng.h"
    #include <botan/hash.h>
    #include <botan/xmss.h>
+   #include <botan/internal/loadstor.h>
+   #include <botan/internal/stl_util.h>
 #endif
 
 namespace Botan_Tests {
@@ -83,6 +85,18 @@ class XMSS_Keygen_Tests final : public PK_Key_Generation_Test {
       std::vector<std::string> keygen_params() const override { return {"XMSS-SHA2_10_256", "XMSS-SHA2_10_192"}; }
 
       std::string algo_name() const override { return "XMSS"; }
+
+      std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view /* keygen_params */,
+                                                             std::string_view /* provider */,
+                                                             std::span<const uint8_t> raw_pk) const override {
+         Botan::BufferSlicer s(raw_pk);
+         const auto oid = Botan::XMSS_Parameters::xmss_algorithm_t(Botan::load_be(s.take<4>()));
+         const auto p = Botan::XMSS_Parameters(oid);
+         auto root = s.copy_as_secure_vector(p.element_size());
+         auto public_seed = s.copy_as_secure_vector(p.element_size());
+
+         return std::make_unique<Botan::XMSS_PublicKey>(oid, std::move(root), std::move(public_seed));
+      }
 };
 
 /**

@@ -148,6 +148,14 @@ class ECDSA_Keygen_Tests final : public PK_Key_Generation_Test {
       }
 
       std::string algo_name() const override { return "ECDSA"; }
+
+      std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view keygen_params,
+                                                             std::string_view /* provider */,
+                                                             std::span<const uint8_t> raw_pk) const override {
+         const auto group = Botan::EC_Group(keygen_params);
+         const auto public_point = group.OS2ECP(raw_pk);
+         return std::make_unique<Botan::ECDSA_PublicKey>(group, public_point);
+      }
 };
 
 class ECDSA_Keygen_Stability_Tests final : public PK_Key_Generation_Stability_Test {

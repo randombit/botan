@@ -18,6 +18,7 @@
    #include <botan/pubkey.h>
    #include <botan/x509_key.h>
    #include <botan/internal/fmt.h>
+   #include <botan/internal/stl_util.h>
 
    #if defined(BOTAN_HAS_HMAC_DRBG)
       #include <botan/hmac_drbg.h>
@@ -645,6 +646,33 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
          } catch(const Botan::Not_Implemented&) {
             result.confirm("KEX algorithms are required to implement 'generate_another'",
                            !public_key->supports_operation(Botan::PublicKeyOperation::KeyAgreement));
+         }
+
+         // Test that the raw public key can be encoded. This is not supported
+         // by all algorithms; we expect Not_Implemented for these.
+         const std::vector<std::string> algos_that_dont_have_a_raw_encoding = {"RSA"};
+         try {
+            auto raw = public_key->raw_public_key_bits();
+            result.test_ne("raw_public_key_bits is not empty", raw.size(), 0);
+
+            if(public_key->supports_operation(Botan::PublicKeyOperation::KeyAgreement)) {
+               // For KEX algorithms, raw_public_key_bits must be equal to the canonical
+               // public value obtained by PK_Key_Agreement_Key::public_value().
+               const auto* ka_key = dynamic_cast<const Botan::PK_Key_Agreement_Key*>(&key);
+               result.require("is a key agreement private key", ka_key != nullptr);
+               result.test_eq("public_key_bits has same encoding", raw, ka_key->public_value());
+            }
+
+            if(auto raw_pk = public_key_from_raw(param, prov, raw)) {
+               result.test_eq("public_key has same type", raw_pk->algo_name(), public_key->algo_name());
+               result.test_eq("public_key has same encoding", raw_pk->public_key_bits(), public_key->public_key_bits());
+            }
+         } catch(const Botan::Not_Implemented&) {
+            if(!Botan::value_exists(algos_that_dont_have_a_raw_encoding, public_key->algo_name())) {
+               result.test_failure("raw_public_key_bits not implemented for " + public_key->algo_name());
+            } else {
+               result.test_note("raw_public_key_bits threw Not_Implemented as expected for " + public_key->algo_name());
+            }
          }
 
          // Test PEM public key round trips OK
