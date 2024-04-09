@@ -12,41 +12,28 @@ def monty_redc_code(n):
 
     lines = []
 
-    lines.append("word w2 = 0, w1 = 0, w0 = 0;")
-    lines.append("w0 = z[0];")
-    lines.append("ws[0] = w0 * p_dash;")
-
-    lines.append("word3_muladd(&w2, &w1, &w0, ws[0], p[0]);")
-    lines.append("w0 = w1;")
-    lines.append("w1 = w2;")
-    lines.append("w2 = 0;")
+    lines.append("word3<word> accum;")
+    lines.append("accum.add(z[0]);")
+    lines.append("ws[0] = accum.monty_step(p[0], p_dash);")
 
     for i in range(1, n):
         for j in range(0, i):
-            lines.append("word3_muladd(&w2, &w1, &w0, ws[%d], p[%d]);" % (j, i-j))
+            lines.append("accum.mul(ws[%d], p[%d]);" % (j, i-j))
 
-        lines.append("word3_add(&w2, &w1, &w0, z[%d]);" % (i))
-        lines.append("ws[%d] = w0 * p_dash;" % (i))
-
-        lines.append("word3_muladd(&w2, &w1, &w0, ws[%d], p[0]);" % (i))
-        lines.append("w0 = w1;")
-        lines.append("w1 = w2;")
-        lines.append("w2 = 0;")
+        lines.append("accum.add(z[%d]);" % (i))
+        lines.append("ws[%d] = accum.monty_step(p[0], p_dash);" % (i))
 
     for i in range(0, n - 1):
         for j in range(i + 1, n):
-            lines.append("word3_muladd(&w2, &w1, &w0, ws[%d], p[%d]);" % (j, n + i-j))
+            lines.append("accum.mul(ws[%d], p[%d]);" % (j, n + i-j))
 
-        lines.append("word3_add(&w2, &w1, &w0, z[%d]);" % (n+i))
-        lines.append("ws[%d] = w0;" % (i))
-        lines.append("w0 = w1;")
-        lines.append("w1 = w2;")
-        lines.append("w2 = 0;")
+        lines.append("accum.add(z[%d]);" % (n+i))
+        lines.append("ws[%d] = accum.extract();" % (i))
 
-    lines.append("word3_add(&w2, &w1, &w0, z[%d]);" % (2*n-1));
+    lines.append("accum.add(z[%d]);" % (2*n-1));
 
-    lines.append("ws[%d] = w0;" % (n - 1))
-    #lines.append("ws[%d] = w1;" % (n))
+    lines.append("ws[%d] = accum.extract();" % (n - 1))
+    lines.append("word w1 = accum.extract();")
 
     lines.append("bigint_monty_maybe_sub<%d>(z, w1, ws, p);" % (n))
 

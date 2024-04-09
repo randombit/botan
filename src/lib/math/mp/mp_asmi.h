@@ -516,6 +516,81 @@ inline constexpr void word3_muladd_2(W* w2, W* w1, W* w0, W x, W y) {
    *w2 = word_add(*w2, top, &carry);
 }
 
+/**
+* Helper for 3-word accumulators
+*
+* A number of algorithms especially Comba multiplication and
+* Montgomery reduction can take advantage of wide accumulators, which
+* consume inputs via addition with outputs extracted from the low
+* bits.
+*/
+template <WordType W>
+class word3 {
+#if defined(__BITINT_MAXWIDTH__) && (__BITINT_MAXWIDTH__ >= 3 * 64)
+
+   public:
+      constexpr word3() { m_w = 0; }
+
+      inline constexpr void mul(W x, W y) { m_w += static_cast<W3>(x) * y; }
+
+      inline constexpr void mul_x2(W x, W y) { m_w += static_cast<W3>(x) * y * 2; }
+
+      inline constexpr void add(W x) { m_w += x; }
+
+      inline constexpr W extract() {
+         W r = static_cast<W>(m_w);
+         m_w >>= WordInfo<W>::bits;
+         return r;
+      }
+
+      inline constexpr W monty_step(W p0, W p_dash) {
+         W w0 = static_cast<W>(m_w);
+         W r = w0 * p_dash;
+         mul(r, p0);
+         m_w >>= WordInfo<W>::bits;
+         return r;
+      }
+
+   private:
+      __extension__ typedef unsigned _BitInt(WordInfo<W>::bits * 3) W3;
+      W3 m_w;
+#else
+
+   public:
+      constexpr word3() {
+         m_w2 = 0;
+         m_w1 = 0;
+         m_w0 = 0;
+      }
+
+      inline constexpr void mul(W x, W y) { word3_muladd(&m_w2, &m_w1, &m_w0, x, y); }
+
+      inline constexpr void mul_x2(W x, W y) { word3_muladd_2(&m_w2, &m_w1, &m_w0, x, y); }
+
+      inline constexpr void add(W x) { word3_add(&m_w2, &m_w1, &m_w0, x); }
+
+      inline constexpr W extract() {
+         W r = m_w0;
+         m_w0 = m_w1;
+         m_w1 = m_w2;
+         m_w2 = 0;
+         return r;
+      }
+
+      inline constexpr W monty_step(W p0, W p_dash) {
+         W r = m_w0 * p_dash;
+         mul(r, p0);
+         m_w0 = m_w1;
+         m_w1 = m_w2;
+         m_w2 = 0;
+         return r;
+      }
+
+   private:
+      W m_w0, m_w1, m_w2;
+#endif
+};
+
 #if defined(ASM)
    #undef ASM
    #undef DO_8_TIMES
