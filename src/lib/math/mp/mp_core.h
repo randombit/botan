@@ -137,10 +137,7 @@ inline constexpr void bigint_cnd_add_or_sub(CT::Mask<W> mask, W x[], const W y[]
    for(size_t i = 0; i != blocks; i += 8) {
       carry = word8_add3(t0, x + i, y + i, carry);
       borrow = word8_sub3(t1, x + i, y + i, borrow);
-
-      for(size_t j = 0; j != 8; ++j) {
-         x[i + j] = mask.select(t0[j], t1[j]);
-      }
+      mask.select_n(x + i, t0, t1, 8);
    }
 
    for(size_t i = blocks; i != size; ++i) {
@@ -173,10 +170,7 @@ inline constexpr auto bigint_cnd_addsub(CT::Mask<W> mask, W x[], const W y[], co
    for(size_t i = 0; i != blocks; i += 8) {
       carry = word8_add3(t0, x + i, y + i, carry);
       borrow = word8_sub3(t1, x + i, z + i, borrow);
-
-      for(size_t j = 0; j != 8; ++j) {
-         x[i + j] = mask.select(t0[j], t1[j]);
-      }
+      mask.select_n(x + i, t0, t1, 8);
    }
 
    for(size_t i = blocks; i != size; ++i) {
