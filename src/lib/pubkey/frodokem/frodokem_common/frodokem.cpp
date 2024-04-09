@@ -48,9 +48,7 @@ class FrodoKEM_PublicKeyInternal {
 
       const FrodoPublicKeyHash& hash() const { return m_hash; }
 
-      std::vector<uint8_t> serialize() const {
-         return concat_as<std::vector<uint8_t>>(seed_a(), b().pack(m_constants));
-      }
+      std::vector<uint8_t> serialize() const { return concat<std::vector<uint8_t>>(seed_a(), b().pack(m_constants)); }
 
    private:
       FrodoKEMConstants m_constants;
@@ -277,7 +275,7 @@ size_t FrodoKEM_PublicKey::estimated_strength() const {
 }
 
 std::vector<uint8_t> FrodoKEM_PublicKey::public_key_bits() const {
-   return concat_as<std::vector<uint8_t>>(m_public->seed_a(), m_public->b().pack(m_public->constants()));
+   return concat<std::vector<uint8_t>>(m_public->seed_a(), m_public->b().pack(m_public->constants()));
 }
 
 bool FrodoKEM_PublicKey::check_key(RandomNumberGenerator&, bool) const {
@@ -361,11 +359,11 @@ secure_vector<uint8_t> FrodoKEM_PrivateKey::private_key_bits() const {
 }
 
 secure_vector<uint8_t> FrodoKEM_PrivateKey::raw_private_key_bits() const {
-   return concat_as<secure_vector<uint8_t>>(m_private->s(),
-                                            m_public->seed_a(),
-                                            m_public->b().pack(m_public->constants()),
-                                            m_private->s_trans().serialize(),
-                                            m_public->hash());
+   return concat<secure_vector<uint8_t>>(m_private->s(),
+                                         m_public->seed_a(),
+                                         m_public->b().pack(m_public->constants()),
+                                         m_private->s_trans().serialize(),
+                                         m_public->hash());
 }
 
 std::unique_ptr<PK_Ops::KEM_Decryption> FrodoKEM_PrivateKey::create_kem_decryption_op(RandomNumberGenerator& rng,

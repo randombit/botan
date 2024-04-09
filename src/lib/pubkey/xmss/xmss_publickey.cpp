@@ -120,15 +120,7 @@ std::unique_ptr<PK_Ops::Verification> XMSS_PublicKey::create_x509_verification_o
 }
 
 std::vector<uint8_t> XMSS_PublicKey::raw_public_key() const {
-   std::vector<uint8_t> result{static_cast<uint8_t>(m_xmss_params.oid() >> 24),
-                               static_cast<uint8_t>(m_xmss_params.oid() >> 16),
-                               static_cast<uint8_t>(m_xmss_params.oid() >> 8),
-                               static_cast<uint8_t>(m_xmss_params.oid())};
-
-   std::copy(m_root.begin(), m_root.end(), std::back_inserter(result));
-   std::copy(m_public_seed.begin(), m_public_seed.end(), std::back_inserter(result));
-
-   return result;
+   return concat<std::vector<uint8_t>>(store_be(static_cast<uint32_t>(m_xmss_params.oid())), m_root, m_public_seed);
 }
 
 std::vector<uint8_t> XMSS_PublicKey::public_key_bits() const {

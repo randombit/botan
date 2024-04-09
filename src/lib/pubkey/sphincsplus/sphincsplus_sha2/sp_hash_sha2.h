@@ -51,7 +51,7 @@ class Sphincs_Hash_Functions_Sha2 : public Sphincs_Hash_Functions {
          m_sha_x_full->update(message);
 
          auto r_pk_buffer = m_sha_x_full->final();
-         std::vector<uint8_t> mgf1_input = concat_as<std::vector<uint8_t>>(r, m_pub_seed, r_pk_buffer);
+         std::vector<uint8_t> mgf1_input = concat<std::vector<uint8_t>>(r, m_pub_seed, r_pk_buffer);
 
          std::vector<uint8_t> digest(m_sphincs_params.h_msg_digest_bytes());
          mgf1_mask(*m_sha_x_full, mgf1_input.data(), mgf1_input.size(), digest.data(), digest.size());

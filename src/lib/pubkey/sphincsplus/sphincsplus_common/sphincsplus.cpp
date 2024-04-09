@@ -46,7 +46,7 @@ class SphincsPlus_PublicKeyInternal final {
          BOTAN_ASSERT_NOMSG(s.empty());
       }
 
-      std::vector<uint8_t> key_bits() const { return concat_as<std::vector<uint8_t>>(m_public_seed, m_sphincs_root); }
+      std::vector<uint8_t> key_bits() const { return concat<std::vector<uint8_t>>(m_public_seed, m_sphincs_root); }
 
       const SphincsPublicSeed& seed() const { return m_public_seed; }
 
@@ -81,7 +81,7 @@ class SphincsPlus_PrivateKeyInternal final {
 
       const SphincsSecretPRF& prf() const { return m_prf; }
 
-      secure_vector<uint8_t> key_bits() const { return concat_as<secure_vector<uint8_t>>(m_secret_seed, m_prf); }
+      secure_vector<uint8_t> key_bits() const { return concat<secure_vector<uint8_t>>(m_secret_seed, m_prf); }
 
    private:
       SphincsSecretSeed m_secret_seed;
