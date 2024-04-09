@@ -392,8 +392,7 @@ EC_Point BOTAN_PUBLIC_API(2, 0) OS2ECP(const uint8_t data[], size_t data_len, co
 std::pair<BigInt, BigInt> BOTAN_UNSTABLE_API
 OS2ECP(const uint8_t data[], size_t data_len, const BigInt& curve_p, const BigInt& curve_a, const BigInt& curve_b);
 
-template <typename Alloc>
-EC_Point OS2ECP(const std::vector<uint8_t, Alloc>& data, const CurveGFp& curve) {
+inline EC_Point OS2ECP(std::span<const uint8_t> data, const CurveGFp& curve) {
    return OS2ECP(data.data(), data.size(), curve);
 }
 
