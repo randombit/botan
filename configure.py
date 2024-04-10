@@ -424,7 +424,7 @@ def process_command_line(args):
                            help='enable specific sanitizers')
 
     build_group.add_option('--with-stack-protector', dest='with_stack_protector',
-                           action='store_false', default=None, help=optparse.SUPPRESS_HELP)
+                           action='store_true', default=None, help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--without-stack-protector', dest='with_stack_protector',
                            action='store_false', help='disable stack smashing protections')
