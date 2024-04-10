@@ -17,7 +17,7 @@ namespace Botan {
 template <std::unsigned_integral T>
 constexpr inline std::optional<T> checked_add(T a, T b) {
    const T r = a + b;
-   if(r - a != b) {
+   if(r < a || r < b) {
       return {};
    }
    return r;
