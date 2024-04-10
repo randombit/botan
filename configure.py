@@ -318,25 +318,29 @@ def process_command_line(args):
     available before logging is setup.
     """
 
-    def define_option_pair(group, verb, nverb, what, default, with_help=None, without_help=None):
+    def define_option_pair(group, verb, nverb, what, default, msg=optparse.SUPPRESS_HELP):
         dest = '%s_%s' % (verb, what.replace('-', '_'))
+
+        # always show the help for the option that switches away from the default
+        with_help = msg if not default else optparse.SUPPRESS_HELP
+        without_help = msg if default else optparse.SUPPRESS_HELP
 
         group.add_option('--%s-%s' % (verb, what),
                          dest=dest,
                          action='store_true',
                          default=default,
-                         help=with_help or optparse.SUPPRESS_HELP)
+                         help=with_help)
 
         group.add_option('--%s-%s' % (nverb, what),
                          dest=dest,
                          action='store_false',
-                         help=without_help or optparse.SUPPRESS_HELP)
+                         help=without_help)
 
-    def add_with_without_pair(group, what, default, with_help=None, without_help=None):
-        define_option_pair(group, 'with', 'without', what, default, with_help, without_help)
+    def add_with_without_pair(group, what, default, msg=optparse.SUPPRESS_HELP):
+        define_option_pair(group, 'with', 'without', what, default, msg)
 
-    def add_enable_disable_pair(group, what, default, with_help=None, without_help=None):
-        define_option_pair(group, 'enable', 'disable', what, default, with_help, without_help)
+    def add_enable_disable_pair(group, what, default, msg=optparse.SUPPRESS_HELP):
+        define_option_pair(group, 'enable', 'disable', what, default, msg)
 
     parser = optparse.OptionParser(
         formatter=optparse.IndentedHelpFormatter(max_help_position=50),
@@ -399,8 +403,7 @@ def process_command_line(args):
     target_group.add_option('--without-os-features', action='append', metavar='FEAT',
                             help='specify OS features to disable')
 
-    add_with_without_pair(target_group, 'compilation-database', True, None,
-                          'disable compile_commands.json')
+    add_with_without_pair(target_group, 'compilation-database', True, 'disable compile_commands.json')
 
     isa_extensions = [
         'SSE2', 'SSSE3', 'SSE4.1', 'SSE4.2', 'AVX2', 'BMI2', 'RDRAND', 'RDSEED',
@@ -428,8 +431,7 @@ def process_command_line(args):
     build_group.add_option('--enable-sanitizers', metavar='SAN', default='',
                            help='enable specific sanitizers')
 
-    add_with_without_pair(build_group, 'stack-protector', True,
-                          None, 'disable stack smashing protections')
+    add_with_without_pair(build_group, 'stack-protector', True, 'disable stack smashing protections')
 
     add_with_without_pair(build_group, 'coverage-info', False, 'add coverage info')
 
@@ -544,8 +546,7 @@ def process_command_line(args):
 
     docs_group = optparse.OptionGroup(parser, 'Documentation Options')
 
-    add_with_without_pair(docs_group, 'documentation', True,
-                          None, 'skip building/installing documentation')
+    add_with_without_pair(docs_group, 'documentation', True, 'skip building/installing documentation')
 
     add_with_without_pair(docs_group, 'sphinx', None, 'run Sphinx to generate docs')
 
@@ -576,7 +577,7 @@ def process_command_line(args):
                             'enable building of experimental features and modules')
 
     add_enable_disable_pair(mods_group, 'deprecated-features', True,
-                            None, 'disable building of deprecated features and modules')
+                            'disable building of deprecated features and modules')
 
     # Should be derived from info.txt but this runs too early
     third_party = ['boost', 'bzip2', 'lzma', 'commoncrypto', 'sqlite3', 'zlib', 'tpm']
