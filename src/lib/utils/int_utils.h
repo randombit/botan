@@ -9,6 +9,7 @@
 
 #include <botan/concepts.h>
 #include <botan/types.h>
+#include <limits>
 #include <optional>
 
 namespace Botan {
@@ -46,13 +47,12 @@ constexpr inline std::optional<T> checked_mul(T a, T b) {
    return r;
 }
 
-template <std::unsigned_integral T, std::unsigned_integral RT>
-std::optional<RT> checked_cast(T input) {
-   const RT cast = static_cast<RT>(input);
-   if(static_cast<T>(cast) != input) {
+template <std::unsigned_integral ReturnT>
+constexpr inline std::optional<ReturnT> checked_cast(std::unsigned_integral auto input) {
+   if(std::numeric_limits<ReturnT>::max() < input) {
       return {};
    }
-   return cast;
+   return static_cast<ReturnT>(input);
 }
 
 }  // namespace Botan
