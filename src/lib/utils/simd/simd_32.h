@@ -15,7 +15,6 @@
    #define BOTAN_SIMD_USE_SSE2
 
 #elif defined(BOTAN_TARGET_SUPPORTS_ALTIVEC)
-   #include <botan/internal/bswap.h>
    #include <botan/internal/loadstor.h>
    #include <altivec.h>
    #undef vector
