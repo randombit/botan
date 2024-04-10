@@ -9,7 +9,6 @@
 
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
-#include <botan/internal/rounding.h>
 
 namespace Botan {
 
@@ -46,8 +45,10 @@ void Buffered_Filter::write(const uint8_t input[], size_t input_size) {
       input += to_copy;
       input_size -= to_copy;
 
-      size_t total_to_consume =
-         round_down(std::min(m_buffer_pos, m_buffer_pos + input_size - m_final_minimum), m_main_block_mod);
+      const size_t available = std::min(m_buffer_pos, m_buffer_pos + input_size - m_final_minimum);
+
+      // Size down to available block size
+      const size_t total_to_consume = available - (available % m_main_block_mod);
 
       buffered_block(m_buffer.data(), total_to_consume);
 

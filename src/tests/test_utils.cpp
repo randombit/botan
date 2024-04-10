@@ -33,44 +33,54 @@ namespace Botan_Tests {
 
 namespace {
 
-class Utility_Function_Tests final : public Text_Based_Test {
+class Utility_Function_Tests final : public Test {
    public:
-      Utility_Function_Tests() : Text_Based_Test("util.vec", "In1,In2,Out") {}
-
-      Test::Result run_one_test(const std::string& algo, const VarMap& vars) override {
-         Test::Result result("Util " + algo);
-
-         if(algo == "round_up") {
-            const size_t x = vars.get_req_sz("In1");
-            const size_t to = vars.get_req_sz("In2");
-
-            result.test_eq(algo, Botan::round_up(x, to), vars.get_req_sz("Out"));
-
-            try {
-               Botan::round_up(x, 0);
-               result.test_failure("round_up did not reject invalid input");
-            } catch(std::exception&) {}
-         } else if(algo == "round_down") {
-            const size_t x = vars.get_req_sz("In1");
-            const size_t to = vars.get_req_sz("In2");
-
-            result.test_eq(algo, Botan::round_down<size_t>(x, to), vars.get_req_sz("Out"));
-            result.test_eq(algo, Botan::round_down<size_t>(x, 0), x);
-         }
-
-         return result;
-      }
-
-      std::vector<Test::Result> run_final_tests() override {
+      std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
 
+         results.push_back(test_round_up());
          results.push_back(test_loadstore());
          results.push_back(test_loadstore_fallback());
          results.push_back(test_loadstore_constexpr());
          return Botan::concat(results, test_copy_out_be_le());
+         return results;
       }
 
    private:
+      Test::Result test_round_up() {
+         Test::Result result("Util round_up");
+
+         // clang-format off
+         const std::vector<size_t> inputs = {
+            0, 1, 2, 3, 4, 9, 10, 32, 99, 100, 101, 255, 256, 1000, 10000,
+            65535, 65536, 65537,
+         };
+
+         const std::vector<size_t> alignments = {
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 16, 32, 50, 64, 100, 512, 521,
+            1000, 1023, 1024, 1025, 10000, 65535, 65536
+         };
+         // clang-format on
+
+         for(size_t i : inputs) {
+            for(size_t m : alignments) {
+               try {
+                  const size_t z = Botan::round_up(i, m);
+
+                  result.confirm("z % m == 0", z % m == 0);
+                  result.confirm("z >= i", z >= i);
+                  result.confirm("z <= i + m", z <= i + m);
+               } catch(Botan::Exception& e) {
+                  result.test_failure(Botan::fmt("round_up({},{})", i, m), e.what());
+               }
+            }
+         }
+
+         result.test_throws("Integer overflow is detected", []() { Botan::round_up(static_cast<size_t>(-1), 1024); });
+
+         return result;
+      }
+
       using TestInt64 = Botan::Strong<uint64_t, struct TestInt64_>;
       using TestInt32 = Botan::Strong<uint32_t, struct TestInt64_>;
       using TestVectorSink = Botan::Strong<std::vector<uint8_t>, struct TestVectorSink_>;
