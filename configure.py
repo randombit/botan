@@ -318,6 +318,26 @@ def process_command_line(args):
     available before logging is setup.
     """
 
+    def define_option_pair(group, verb, nverb, what, default, with_help=None, without_help=None):
+        dest = '%s_%s' % (verb, what.replace('-', '_'))
+
+        group.add_option('--%s-%s' % (verb, what),
+                         dest=dest,
+                         action='store_true',
+                         default=default,
+                         help=with_help or optparse.SUPPRESS_HELP)
+
+        group.add_option('--%s-%s' % (nverb, what),
+                         dest=dest,
+                         action='store_false',
+                         help=without_help or optparse.SUPPRESS_HELP)
+
+    def add_with_without_pair(group, what, default, with_help=None, without_help=None):
+        define_option_pair(group, 'with', 'without', what, default, with_help, without_help)
+
+    def add_enable_disable_pair(group, what, default, with_help=None, without_help=None):
+        define_option_pair(group, 'enable', 'disable', what, default, with_help, without_help)
+
     parser = optparse.OptionParser(
         formatter=optparse.IndentedHelpFormatter(max_help_position=50),
         version=Version.as_string())
@@ -371,12 +391,6 @@ def process_command_line(args):
     target_group.add_option('--compiler-cache',
                             help='specify a compiler cache to use')
 
-    target_group.add_option('--with-compilation-database', dest='with_compilation_database',
-                            action='store_true', default=True, help=optparse.SUPPRESS_HELP)
-
-    target_group.add_option('--without-compilation-database', dest='with_compilation_database',
-                            action='store_false', help='disable generation of compile_commands.json')
-
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
                             help='override byte order guess')
 
@@ -385,15 +399,8 @@ def process_command_line(args):
     target_group.add_option('--without-os-features', action='append', metavar='FEAT',
                             help='specify OS features to disable')
 
-    target_group.add_option('--enable-experimental-features', dest='enable_experimental_features',
-                            action='store_true', default=False, help='enable building of experimental features and modules')
-    target_group.add_option('--disable-experimental-features', dest='enable_experimental_features',
-                            action='store_false', help=optparse.SUPPRESS_HELP)
-
-    target_group.add_option('--enable-deprecated-features', dest='enable_deprecated_features',
-                            action='store_true', default=True, help=optparse.SUPPRESS_HELP)
-    target_group.add_option('--disable-deprecated-features', dest='enable_deprecated_features',
-                            action='store_false', help='disable building of deprecated features and modules')
+    add_with_without_pair(target_group, 'compilation-database', True, None,
+                          'disable compile_commands.json')
 
     isa_extensions = [
         'SSE2', 'SSSE3', 'SSE4.1', 'SSE4.2', 'AVX2', 'BMI2', 'RDRAND', 'RDSEED',
@@ -414,26 +421,17 @@ def process_command_line(args):
     build_group.add_option('--system-cert-bundle', metavar='PATH', default=None,
                            help='set path to trusted CA bundle')
 
-    build_group.add_option('--with-debug-info', action='store_true', default=False, dest='with_debug_info',
-                           help='include debug symbols')
+    add_with_without_pair(build_group, 'debug-info', False, 'include debug symbols')
 
-    build_group.add_option('--with-sanitizers', action='store_true', default=False, dest='with_sanitizers',
-                           help='enable ASan/UBSan checks')
+    add_with_without_pair(build_group, 'sanitizers', False, 'enable ASan/UBSan checks')
 
     build_group.add_option('--enable-sanitizers', metavar='SAN', default='',
                            help='enable specific sanitizers')
 
-    build_group.add_option('--with-stack-protector', dest='with_stack_protector',
-                           action='store_true', default=None, help=optparse.SUPPRESS_HELP)
+    add_with_without_pair(build_group, 'stack-protector', True,
+                          None, 'disable stack smashing protections')
 
-    build_group.add_option('--without-stack-protector', dest='with_stack_protector',
-                           action='store_false', help='disable stack smashing protections')
-
-    build_group.add_option('--with-coverage', action='store_true', default=False, dest='with_coverage',
-                           help='add coverage info and disable opts')
-
-    build_group.add_option('--with-coverage-info', action='store_true', default=False, dest='with_coverage_info',
-                           help='add coverage info')
+    add_with_without_pair(build_group, 'coverage-info', False, 'add coverage info')
 
     build_group.add_option('--enable-shared-library', dest='build_shared_lib',
                            action='store_true', default=None,
@@ -518,11 +516,10 @@ def process_command_line(args):
                            default=True, action='store_false',
                            help=optparse.SUPPRESS_HELP)
 
-    build_group.add_option('--with-valgrind', help='use valgrind API',
-                           dest='with_valgrind', action='store_true', default=False)
+    add_with_without_pair(build_group, 'valgrind', False, 'use valgrind API')
 
     build_group.add_option('--unsafe-fuzzer-mode', action='store_true', default=False,
-                           help='Disable essential checks for testing')
+                           help=optparse.SUPPRESS_HELP)
 
     build_group.add_option('--build-fuzzers', dest='build_fuzzers',
                            metavar='TYPE', default=None,
@@ -531,8 +528,7 @@ def process_command_line(args):
     build_group.add_option('--with-fuzzer-lib', metavar='LIB', default=None, dest='fuzzer_lib',
                            help='additionally link in LIB')
 
-    build_group.add_option('--with-debug-asserts', action='store_true', default=False,
-                           help=optparse.SUPPRESS_HELP)
+    add_with_without_pair(build_group, 'debug-asserts', default=False)
 
     build_group.add_option('--unsafe-terminate-on-asserts', action='store_true', default=False,
                            help=optparse.SUPPRESS_HELP)
@@ -543,48 +539,21 @@ def process_command_line(args):
     build_group.add_option('--build-tool', default='make',
                            help="specify the build tool (make, ninja)")
 
-    build_group.add_option('--with-pkg-config', action='store_true', default=None,
-                           help=optparse.SUPPRESS_HELP)
-    build_group.add_option('--without-pkg-config', dest='with_pkg_config', action='store_false',
-                           help=optparse.SUPPRESS_HELP)
-
-    build_group.add_option('--with-cmake-config', action='store_true', default=True,
-                           help=optparse.SUPPRESS_HELP)
-    build_group.add_option('--without-cmake-config', dest='with_cmake_config', action='store_false',
-                           help=optparse.SUPPRESS_HELP)
+    add_with_without_pair(build_group, 'pkg-config', default=None)
+    add_with_without_pair(build_group, 'cmake-config', default=True)
 
     docs_group = optparse.OptionGroup(parser, 'Documentation Options')
 
-    docs_group.add_option('--with-documentation', action='store_true',
-                          help=optparse.SUPPRESS_HELP)
+    add_with_without_pair(docs_group, 'documentation', True,
+                          None, 'skip building/installing documentation')
 
-    docs_group.add_option('--without-documentation', action='store_false',
-                          default=True, dest='with_documentation',
-                          help='Skip building/installing documentation')
+    add_with_without_pair(docs_group, 'sphinx', None, 'run Sphinx to generate docs')
 
-    docs_group.add_option('--with-sphinx', action='store_true',
-                          default=None, help='Use Sphinx')
+    add_with_without_pair(docs_group, 'pdf', False, 'run Sphinx to generate PDF doc')
 
-    docs_group.add_option('--without-sphinx', action='store_false',
-                          dest='with_sphinx', help=optparse.SUPPRESS_HELP)
+    add_with_without_pair(docs_group, 'rst2man', None, 'run rst2man to generate man page')
 
-    docs_group.add_option('--with-pdf', action='store_true',
-                          default=False, help='Use Sphinx to generate PDF doc')
-
-    docs_group.add_option('--without-pdf', action='store_false',
-                          dest='with_pdf', help=optparse.SUPPRESS_HELP)
-
-    docs_group.add_option('--with-rst2man', action='store_true',
-                          default=None, help='Use rst2man to generate man page')
-
-    docs_group.add_option('--without-rst2man', action='store_false',
-                          dest='with_rst2man', help=optparse.SUPPRESS_HELP)
-
-    docs_group.add_option('--with-doxygen', action='store_true',
-                          default=False, help='Use Doxygen')
-
-    docs_group.add_option('--without-doxygen', action='store_false',
-                          dest='with_doxygen', help=optparse.SUPPRESS_HELP)
+    add_with_without_pair(docs_group, 'doxygen', False, 'run Doxygen')
 
     mods_group = optparse.OptionGroup(parser, 'Module selection')
 
@@ -602,6 +571,12 @@ def process_command_line(args):
                           help=optparse.SUPPRESS_HELP)
     mods_group.add_option('--minimized-build', action='store_true', dest='no_autoload',
                           help='minimize build')
+
+    add_enable_disable_pair(mods_group, 'experimental-features', False,
+                            'enable building of experimental features and modules')
+
+    add_enable_disable_pair(mods_group, 'deprecated-features', True,
+                            None, 'disable building of deprecated features and modules')
 
     # Should be derived from info.txt but this runs too early
     third_party = ['boost', 'bzip2', 'lzma', 'commoncrypto', 'sqlite3', 'zlib', 'tpm']
@@ -689,10 +664,6 @@ def process_command_line(args):
     if options.debug_mode:
         options.no_optimizations = True
         options.with_debug_info = True
-
-    if options.with_coverage:
-        options.with_coverage_info = True
-        options.no_optimizations = True
 
     def parse_multiple_enable(modules):
         if modules is None:
@@ -2221,7 +2192,7 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'build_fuzzers': options.build_fuzzers,
         'build_examples': 'examples' in options.build_targets,
 
-        'build_coverage' : options.with_coverage_info or options.with_coverage,
+        'build_coverage' : options.with_coverage_info,
 
         'symlink_shared_lib': options.build_shared_lib and osinfo.shared_lib_uses_symlinks,
 

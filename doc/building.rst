@@ -836,15 +836,10 @@ Enable specific sanitizers. See ``src/build-data/cc`` for more information.
 
 Disable stack smashing protections. **not recommended**
 
-``--with-coverage``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Add coverage info and disable optimizations
-
 ``--with-coverage-info``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Add coverage info, but leave optimizations alone
+Add coverage info
 
 ``--disable-shared-library``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
