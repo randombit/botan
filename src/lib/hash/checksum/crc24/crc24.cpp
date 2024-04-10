@@ -8,7 +8,6 @@
 
 #include <botan/internal/crc24.h>
 
-#include <botan/internal/bswap.h>
 #include <botan/internal/loadstor.h>
 
 namespace Botan {
