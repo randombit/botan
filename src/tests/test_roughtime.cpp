@@ -185,7 +185,7 @@ class Roughtime final : public Test {
 
          const auto servers = Botan::Roughtime::servers_from_str(
             "Chainpoint-Roughtime ed25519 bbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE= udp roughtime.chainpoint.org:2002\n"
-            "Cloudflare-Roughtime ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= udp roughtime.cloudflare.com:2002\n"
+            "Cloudflare-Roughtime ed25519 0GD7c3yP8xEc4Zl2zeuN2SlLvDVVocjsPSL8/Rl/7zg= udp roughtime.cloudflare.com:2003\n"
             "Google-Sandbox-Roughtime ed25519 etPaaIxcBMY1oUeGpwvPMCJMwlRVNxv51KK/tktoJTQ= udp roughtime.sandbox.google.com:2002\n"
             "int08h-Roughtime ed25519 AW5uAoTSTDfG5NfY1bTh08GUnOqlRb+HVhbJ3ODJvsE= udp roughtime.int08h.com:2002\n"
             "ticktock ed25519 cj8GsiNlRkqiDElAeNMSBBMwrAl15hYPgX50+GWX/lA= udp ticktock.mixmin.net:5333\n");
@@ -234,7 +234,7 @@ class Roughtime final : public Test {
          Botan::Roughtime::Nonce nonce(rng);
          try {
             const auto response_raw =
-               Botan::Roughtime::online_request("roughtime.cloudflare.com:2002", nonce, std::chrono::seconds(5));
+               Botan::Roughtime::online_request("roughtime.cloudflare.com:2003", nonce, std::chrono::seconds(5));
             const auto now = std::chrono::system_clock::now();
             const auto response = Botan::Roughtime::Response::from_bits(response_raw, nonce);
             std::chrono::milliseconds local_clock_max_error(1000);
