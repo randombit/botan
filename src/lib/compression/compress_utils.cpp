@@ -10,7 +10,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/safeint.h>
+#include <botan/internal/int_utils.h>
 #include <cstdlib>
 
 namespace Botan {
@@ -19,7 +19,9 @@ Compression_Error::Compression_Error(const char* func_name, ErrorType type, int 
       Exception(fmt("Compression API {} failed with return code {}", func_name, rc)), m_type(type), m_rc(rc) {}
 
 void* Compression_Alloc_Info::do_malloc(size_t n, size_t size) {
-   if(!BOTAN_CHECKED_MUL(n, size).has_value()) [[unlikely]] {
+   // Precheck for integer overflow in the multiplication
+   // before passing to calloc, which may or may not check.
+   if(!checked_mul(n, size)) {
       return nullptr;
    }
 

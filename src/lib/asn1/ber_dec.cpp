@@ -8,8 +8,8 @@
 #include <botan/ber_dec.h>
 
 #include <botan/bigint.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/safeint.h>
 #include <memory>
 
 namespace Botan {
@@ -128,18 +128,20 @@ size_t find_eoc(DataSource* ber, size_t allow_indef) {
    while(true) {
       ASN1_Type type_tag;
       ASN1_Class class_tag;
-      size_t tag_size = decode_tag(&source, type_tag, class_tag);
+      const size_t tag_size = decode_tag(&source, type_tag, class_tag);
       if(type_tag == ASN1_Type::NoObject) {
          break;
       }
 
       size_t length_size = 0;
-      size_t item_size = decode_length(&source, length_size, allow_indef);
+      const size_t item_size = decode_length(&source, length_size, allow_indef);
       source.discard_next(item_size);
 
-      length = BOTAN_CHECKED_ADD(length, item_size);
-      length = BOTAN_CHECKED_ADD(length, tag_size);
-      length = BOTAN_CHECKED_ADD(length, length_size);
+      if(auto new_len = checked_add(length, item_size, tag_size, length_size)) {
+         length = new_len.value();
+      } else {
+         throw Decoding_Error("Integer overflow while decoding DER");
+      }
 
       if(type_tag == ASN1_Type::Eoc && class_tag == ASN1_Class::Universal) {
          break;
