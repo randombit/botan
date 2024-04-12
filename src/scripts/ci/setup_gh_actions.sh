@@ -98,7 +98,7 @@ if type -p "apt-get"; then
 else
     export HOMEBREW_NO_AUTO_UPDATE=1
     export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
-    brew install ccache
+    brew install ccache gdb
 
     if [ "$TARGET" = "shared" ]; then
         brew install boost
