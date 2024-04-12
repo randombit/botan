@@ -155,8 +155,8 @@ inline void argon2(uint8_t output[],
                    size_t p,
                    size_t M,
                    size_t t) {
-   auto y_to_argon2 = [](uint8_t yv) {
-      switch(yv) {
+   auto pwdhash_fam = PasswordHashFamily::create_or_throw([y] {
+      switch(y) {
          case 0:
             return "Argon2d";
          case 1:
@@ -166,9 +166,7 @@ inline void argon2(uint8_t output[],
          default:
             throw Not_Implemented("Unknown Argon2 family type");
       }
-   };
-
-   auto pwdhash_fam = PasswordHashFamily::create_or_throw(y_to_argon2(y));
+   }());
    auto pwdhash = pwdhash_fam->from_params(M, t, p);
    pwdhash->derive_key(output, output_len, password, password_len, salt, salt_len, ad, ad_len, key, key_len);
 }
