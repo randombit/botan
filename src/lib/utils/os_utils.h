@@ -85,6 +85,14 @@ uint64_t BOTAN_TEST_API get_high_resolution_clock();
 uint64_t BOTAN_TEST_API get_system_timestamp_ns();
 
 /**
+* Format a time
+*
+* Converts the time_t to a local time representation,
+* then invokes std::put_time with the specified format.
+*/
+std::string BOTAN_TEST_API format_time(time_t time, const std::string& format);
+
+/**
 * @return maximum amount of memory (in bytes) Botan could/should
 * hyptothetically allocate for the memory poool. Reads environment
 * variable "BOTAN_MLOCK_POOL_SIZE", set to "0" to disable pool.
