@@ -111,7 +111,11 @@ else
         brew install emscripten
     fi
 
-    sudo xcrun xcode-select --switch '/Applications/Xcode_15.0.app/Contents/Developer'
+    if [ -d '/Applications/Xcode_15.3.app/Contents/Developer' ]; then
+        sudo xcrun xcode-select --switch '/Applications/Xcode_15.3.app/Contents/Developer'
+    else
+        sudo xcrun xcode-select --switch '/Applications/Xcode_15.2.app/Contents/Developer'
+    fi
 fi
 
 # find the ccache cache location and store it in the build job's environment
