@@ -17,7 +17,7 @@
 
 namespace Botan {
 
-#if defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_X86_64)
+#if defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_ARCH_IS_X86_64) && 0
    #define BOTAN_MP_USE_X86_64_ASM
 #endif
 
