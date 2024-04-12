@@ -30,7 +30,7 @@ pbes2
 
 ed25519
 ed448
-curve25519
+x25519
 x448
 ecdh
 ecdsa

@@ -62,8 +62,8 @@
    #include <botan/ecdh.h>
 #endif
 
-#if defined(BOTAN_HAS_CURVE_25519)
-   #include <botan/curve25519.h>
+#if defined(BOTAN_HAS_X25519)
+   #include <botan/x25519.h>
 #endif
 
 #if defined(BOTAN_HAS_X448)
@@ -112,9 +112,9 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
-#if defined(BOTAN_HAS_CURVE_25519)
-   if(alg_name == "Curve25519") {
-      return std::make_unique<Curve25519_PublicKey>(alg_id, key_bits);
+#if defined(BOTAN_HAS_X25519)
+   if(alg_name == "X25519" || alg_name == "Curve25519") {
+      return std::make_unique<X25519_PublicKey>(alg_id, key_bits);
    }
 #endif
 
@@ -241,9 +241,9 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
-#if defined(BOTAN_HAS_CURVE_25519)
-   if(alg_name == "Curve25519") {
-      return std::make_unique<Curve25519_PrivateKey>(alg_id, key_bits);
+#if defined(BOTAN_HAS_X25519)
+   if(alg_name == "X25519" || alg_name == "Curve25519") {
+      return std::make_unique<X25519_PrivateKey>(alg_id, key_bits);
    }
 #endif
 
@@ -411,9 +411,9 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
    * Default paramaters are chosen for work factor > 2**128 where possible
    */
 
-#if defined(BOTAN_HAS_CURVE_25519)
-   if(alg_name == "Curve25519") {
-      return std::make_unique<Curve25519_PrivateKey>(rng);
+#if defined(BOTAN_HAS_X25519)
+   if(alg_name == "X25519" || alg_name == "Curve25519") {
+      return std::make_unique<X25519_PrivateKey>(rng);
    }
 #endif
 

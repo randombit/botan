@@ -20,8 +20,8 @@
 #include <botan/dl_group.h>
 #include <botan/ecdh.h>
 
-#if defined(BOTAN_HAS_CURVE_25519)
-   #include <botan/curve25519.h>
+#if defined(BOTAN_HAS_X25519)
+   #include <botan/x25519.h>
 #endif
 #if defined(BOTAN_HAS_X448)
    #include <botan/x448.h>

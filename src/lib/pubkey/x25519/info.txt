@@ -1,12 +1,13 @@
 <defines>
 CURVE_25519 -> 20170621
-X25519 -> 20180910
+X25519 -> 20240412
 </defines>
 
 <module_info>
-name -> "Curve25519"
+name -> "X25519"
 </module_info>
 
 <header:public>
+x25519.h
 curve25519.h
 </header:public>

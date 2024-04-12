@@ -146,7 +146,7 @@ prf_x942
 sp800_56a
 
 # pubkey
-curve25519
+x25519
 x448
 ec_h2c
 ed25519

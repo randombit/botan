@@ -19,7 +19,7 @@ namespace Botan {
 class BOTAN_PUBLIC_API(3, 4) X448_PublicKey : public virtual Public_Key {
    public:
       /**
-      * Create a Curve25519 Public Key.
+      * Create a X448 Public Key.
       * @param alg_id the X.509 algorithm identifier
       * @param key_bits DER encoded public key bits
       */

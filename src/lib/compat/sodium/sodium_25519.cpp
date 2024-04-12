@@ -6,8 +6,8 @@
 
 #include <botan/sodium.h>
 
-#include <botan/curve25519.h>
 #include <botan/ed25519.h>
+#include <botan/x25519.h>
 
 namespace Botan {
 

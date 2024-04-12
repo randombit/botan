@@ -23,8 +23,8 @@
    #include <botan/ecdh.h>
 #endif
 
-#if defined(BOTAN_HAS_CURVE_25519)
-   #include <botan/curve25519.h>
+#if defined(BOTAN_HAS_X25519)
+   #include <botan/x25519.h>
 #endif
 
 #if defined(BOTAN_HAS_X448)
@@ -58,8 +58,8 @@ std::vector<uint8_t> kex_public_value(const Public_Key& kex_public_key) {
    }
 #endif
 
-#if defined(BOTAN_HAS_CURVE_25519)
-   if(const auto* curve = dynamic_cast<const Curve25519_PublicKey*>(&kex_public_key)) {
+#if defined(BOTAN_HAS_X25519)
+   if(const auto* curve = dynamic_cast<const X25519_PublicKey*>(&kex_public_key)) {
       return curve->public_value();
    }
 #endif
@@ -100,8 +100,8 @@ size_t kex_shared_key_length(const Public_Key& kex_public_key) {
    }
 #endif
 
-#if defined(BOTAN_HAS_CURVE_25519)
-   if(const auto* curve = dynamic_cast<const Curve25519_PublicKey*>(&kex_public_key)) {
+#if defined(BOTAN_HAS_X25519)
+   if(const auto* curve = dynamic_cast<const X25519_PublicKey*>(&kex_public_key)) {
       BOTAN_UNUSED(curve);
       return 32; /* TODO: magic number */
    }

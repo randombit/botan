@@ -1013,7 +1013,7 @@ class TLS_Unit_Tests final : public Test {
                               "AEAD",
                               {{"groups", "brainpool256r1"}});
 
-   #if defined(BOTAN_HAS_CURVE_25519)
+   #if defined(BOTAN_HAS_X25519)
          test_modern_versions(
             "AES-128/GCM x25519", results, client_ses, server_ses, creds, rng, "ECDH", "AES-128/GCM", "AEAD", {{
                "groups",

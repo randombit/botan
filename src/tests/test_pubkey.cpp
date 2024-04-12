@@ -600,6 +600,23 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
             result.confirm("Key passes self tests", key.check_key(this->rng(), true));
          } catch(Botan::Lookup_Error&) {}
 
+         const std::string name = key.algo_name();
+         result.confirm("Key has a non-empty name", !name.empty());
+
+         if(auto oid = Botan::OID::from_name(name)) {
+            result.test_success("Keys name maps to an OID");
+
+            result.test_eq("Keys name OID is the same as the object oid",
+                           oid.value().to_string(),
+                           key.object_identifier().to_string());
+         } else {
+            const bool exception = name == "Kyber" || name == "FrodoKEM" || name == "SPHINCS+";
+
+            if(!exception) {
+               result.test_failure("Keys name " + name + " does not map to an OID");
+            }
+         }
+
          result.test_gte("Key has reasonable estimated strength (lower)", key.estimated_strength(), 64);
          result.test_lt("Key has reasonable estimated strength (upper)", key.estimated_strength(), 512);
 

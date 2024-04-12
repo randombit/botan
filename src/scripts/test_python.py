@@ -546,7 +546,7 @@ ofvkP1EDmpx50fHLawIDAQAB
     def test_rfc7748_kex(self):
         rng = botan.RandomNumberGenerator()
 
-        for alg in ['Curve25519', 'X448']:
+        for alg in ['X25519', 'X448']:
             a_priv = botan.PrivateKey.create(alg, '', rng)
             b_priv = botan.PrivateKey.create(alg, '', rng)
 

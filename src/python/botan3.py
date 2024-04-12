@@ -1190,8 +1190,8 @@ class PrivateKey:
         elif algo == 'ecdsa':
             algo = 'ECDSA'
         elif algo in ['ecdh', 'ECDH']:
-            if params == 'curve25519':
-                algo = 'Curve25519'
+            if params in ['x25519', 'curve25519']:
+                algo = 'X25519'
                 params = ''
             elif params == 'x448':
                 algo = 'X448'
