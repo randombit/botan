@@ -3003,7 +3003,29 @@ def python_platform_identifier():
         return 'cygwin'
     return system_from_python
 
-# This is for otions that have --with-XYZ and --without-XYZ. If user does not
+def run_compiler(options, ccinfo, default_return, flags=None):
+    if flags is None:
+        flags = []
+
+    cc_bin = options.compiler_binary or ccinfo.binary_name
+
+    cmd = cc_bin.split(' ') + flags
+
+    try:
+        logging.debug("Running '%s'", ' '.join(cmd))
+        stdout, _ = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True).communicate()
+        cc_output = stdout
+    except OSError as ex:
+        logging.warning('Could not execute %s: %s', cmd, ex)
+        return default_return
+
+    return cc_output
+
+# This is for options that have --with-XYZ and --without-XYZ. If user does not
 # set any of those, we choose a default here.
 # Mutates `options`
 def set_defaults_for_unset_options(options, info_arch, info_cc, info_os):
@@ -3032,6 +3054,9 @@ def set_defaults_for_unset_options(options, info_arch, info_cc, info_os):
         if options.compiler is None:
             logging.error("Could not figure out what compiler type '%s' is, use --cc to set",
                           options.compiler_binary)
+
+        if options.compiler == 'clang' and run_compiler(options, info_cc['clang'], '?', ['--version']).startswith('Apple clang'):
+            options.compiler = 'xcode'
 
     if options.compiler is None and options.os in info_os:
         options.compiler = info_os[options.os].default_compiler
@@ -3259,21 +3284,7 @@ def run_compiler_preproc(options, ccinfo, source_file, default_return, extra_fla
     if extra_flags is None:
         extra_flags = []
 
-    cc_bin = options.compiler_binary or ccinfo.binary_name
-
-    cmd = cc_bin.split(' ') + ccinfo.preproc_flags.split(' ') + extra_flags + [source_file]
-
-    try:
-        logging.debug("Running '%s'", ' '.join(cmd))
-        stdout, _ = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True).communicate()
-        cc_output = stdout
-    except OSError as ex:
-        logging.warning('Could not execute %s: %s', cmd, ex)
-        return default_return
+    cc_output = run_compiler(options, ccinfo, default_return, ccinfo.preproc_flags.split(' ') + extra_flags + [source_file])
 
     def cleanup_output(output):
         return ('\n'.join([l for l in output.splitlines() if l.startswith('#') is False])).strip()
@@ -3285,6 +3296,7 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
         'msvc': r'^ *MSVC ([0-9]{2})([0-9]{2})$',
         'gcc': r'^ *GCC ([0-9]+) ([0-9]+)$',
         'clang': r'^ *CLANG ([0-9]+) ([0-9]+)$',
+        'xcode': r'^ *XCODE ([0-9]+) ([0-9]+)$',
         'xlc': r'^ *XLC ([0-9]+) ([0-9]+)$',
         'emcc': r'^ *EMCC ([0-9]+) ([0-9]+)$',
     }

@@ -1,5 +1,5 @@
 
-default_compiler clang
+default_compiler xcode
 
 uses_pkg_config no
 
