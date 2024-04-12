@@ -6,17 +6,46 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_ECDSA)
-   #include <botan/ecdsa.h>
+#if defined(BOTAN_HAS_BIGINT)
+   #include <botan/bigint.h>
 #endif
 
 #if defined(BOTAN_HAS_ECC_GROUP)
    #include <botan/ec_group.h>
 #endif
 
+#if defined(BOTAN_HAS_PCURVES)
+   #include <botan/internal/pcurves.h>
+#endif
+
 namespace Botan_Tests {
 
 namespace {
+
+#if defined(BOTAN_HAS_PCURVES)
+
+class ECC_Basepoint_Pcurve_Mul_Tests final : public Text_Based_Test {
+   public:
+      ECC_Basepoint_Pcurve_Mul_Tests() : Text_Based_Test("pubkey/ecc_base_point_mul.vec", "k,P") {}
+
+      Test::Result run_one_test(const std::string& group_id, const VarMap& vars) override {
+         Test::Result result("ECC base point multiply with pcurve " + group_id);
+
+         const auto k_bytes = vars.get_req_bin("k");
+         const auto P_bytes = vars.get_req_bin("P");
+
+         if(auto id = Botan::PCurve::PrimeOrderCurveId::from_string(group_id)) {
+            const auto pt = Botan::PCurve::mul_by_g(id.value(), k_bytes);
+            result.test_eq("pcurves point", pt, P_bytes);
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "ecc_basemul_pcurve", ECC_Basepoint_Pcurve_Mul_Tests);
+
+#endif
 
 #if defined(BOTAN_HAS_ECC_GROUP)
 
