@@ -891,39 +891,6 @@ consteval auto hex_to_words(const char (&s)[N]) {
 }
 
 /*
-* Comba Fixed Length Multiplication
-*/
-template <size_t N, WordType W>
-constexpr inline void comba_mul(W z[2 * N], const W x[N], const W y[N]) {
-   word3<W> accum;
-
-   for(size_t i = 0; i != 2 * N; ++i) {
-      const size_t start = i + 1 < N ? 0 : i + 1 - N;
-      const size_t end = std::min(N, i + 1);
-
-      for(size_t j = start; j != end; ++j) {
-         accum.mul(x[j], y[i - j]);
-      }
-      z[i] = accum.extract();
-   }
-}
-
-template <size_t N, WordType W>
-constexpr inline void comba_sqr(W z[2 * N], const W x[N]) {
-   word3<W> accum;
-
-   for(size_t i = 0; i != 2 * N; ++i) {
-      const size_t start = i + 1 < N ? 0 : i + 1 - N;
-      const size_t end = std::min(N, i + 1);
-
-      for(size_t j = start; j != end; ++j) {
-         accum.mul(x[j], x[i - j]);
-      }
-      z[i] = accum.extract();
-   }
-}
-
-/*
 * Comba Multiplication / Squaring
 */
 BOTAN_FUZZER_API void bigint_comba_mul4(word z[8], const word x[4], const word y[4]);
@@ -939,6 +906,75 @@ BOTAN_FUZZER_API void bigint_comba_sqr8(word out[16], const word in[8]);
 BOTAN_FUZZER_API void bigint_comba_sqr9(word out[18], const word in[9]);
 BOTAN_FUZZER_API void bigint_comba_sqr16(word out[32], const word in[16]);
 BOTAN_FUZZER_API void bigint_comba_sqr24(word out[48], const word in[24]);
+
+/*
+* Comba Fixed Length Multiplication
+*/
+template <size_t N, WordType W>
+constexpr inline void comba_mul(W z[2 * N], const W x[N], const W y[N]) {
+   if(!std::is_constant_evaluated()) {
+      if constexpr(std::same_as<W, word> && N == 4) {
+         return bigint_comba_mul4(z, x, y);
+      }
+      if constexpr(std::same_as<W, word> && N == 6) {
+         return bigint_comba_mul6(z, x, y);
+      }
+      if constexpr(std::same_as<W, word> && N == 8) {
+         return bigint_comba_mul8(z, x, y);
+      }
+      if constexpr(std::same_as<W, word> && N == 9) {
+         return bigint_comba_mul9(z, x, y);
+      }
+      if constexpr(std::same_as<W, word> && N == 16) {
+         return bigint_comba_mul16(z, x, y);
+      }
+   }
+
+   word3<W> accum;
+
+   for(size_t i = 0; i != 2 * N; ++i) {
+      const size_t start = i + 1 < N ? 0 : i + 1 - N;
+      const size_t end = std::min(N, i + 1);
+
+      for(size_t j = start; j != end; ++j) {
+         accum.mul(x[j], y[i - j]);
+      }
+      z[i] = accum.extract();
+   }
+}
+
+template <size_t N, WordType W>
+constexpr inline void comba_sqr(W z[2 * N], const W x[N]) {
+   if(!std::is_constant_evaluated()) {
+      if constexpr(std::same_as<W, word> && N == 4) {
+         return bigint_comba_sqr4(z, x);
+      }
+      if constexpr(std::same_as<W, word> && N == 6) {
+         return bigint_comba_sqr6(z, x);
+      }
+      if constexpr(std::same_as<W, word> && N == 8) {
+         return bigint_comba_sqr8(z, x);
+      }
+      if constexpr(std::same_as<W, word> && N == 9) {
+         return bigint_comba_sqr9(z, x);
+      }
+      if constexpr(std::same_as<W, word> && N == 16) {
+         return bigint_comba_sqr16(z, x);
+      }
+   }
+
+   word3<W> accum;
+
+   for(size_t i = 0; i != 2 * N; ++i) {
+      const size_t start = i + 1 < N ? 0 : i + 1 - N;
+      const size_t end = std::min(N, i + 1);
+
+      for(size_t j = start; j != end; ++j) {
+         accum.mul(x[j], x[i - j]);
+      }
+      z[i] = accum.extract();
+   }
+}
 
 /*
 * Montgomery reduction
