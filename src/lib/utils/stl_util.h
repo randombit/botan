@@ -302,6 +302,17 @@ class scoped_cleanup {
       std::optional<FunT> m_cleanup;
 };
 
+/**
+ * @brief Helper class to pass literal strings to C++ templates
+ */
+template <size_t N>
+class StringLiteral {
+   public:
+      constexpr StringLiteral(const char (&str)[N]) { std::copy_n(str, N, value); }
+
+      char value[N];
+};
+
 }  // namespace Botan
 
 #endif
