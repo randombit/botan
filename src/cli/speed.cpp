@@ -108,6 +108,10 @@
    #include <botan/ec_group.h>
 #endif
 
+#if defined(BOTAN_HAS_PCURVES)
+   #include <botan/internal/pcurves.h>
+#endif
+
 #if defined(BOTAN_HAS_DL_GROUP)
    #include <botan/dl_group.h>
 #endif
@@ -1123,6 +1127,7 @@ class Speed final : public Command {
             auto mult_timer = make_timer(group_name + " Montgomery ladder");
             auto blinded_mult_timer = make_timer(group_name + " blinded comb");
             auto blinded_var_mult_timer = make_timer(group_name + " blinded window");
+            auto pcurves_timer = make_timer(group_name + " pcurve base");
 
             const Botan::EC_Point& base_point = ec_group.get_base_point();
 
@@ -1142,11 +1147,19 @@ class Speed final : public Command {
 
                BOTAN_ASSERT_EQUAL(r1, r2, "Same point computed by Montgomery and comb");
                BOTAN_ASSERT_EQUAL(r1, r3, "Same point computed by Montgomery and window");
+
+   #if defined(BOTAN_HAS_PCURVES)
+               if(auto id = Botan::PCurve::PrimeOrderCurveId::from_string(group_name)) {
+                  const auto scalar_bytes = Botan::BigInt::encode_1363(scalar, ec_group.get_order_bytes());
+                  pcurves_timer->run([&]() { return Botan::PCurve::mul_by_g(id.value(), scalar_bytes); });
+               }
+   #endif
             }
 
             record_result(mult_timer);
             record_result(blinded_mult_timer);
             record_result(blinded_var_mult_timer);
+            record_result(pcurves_timer);
          }
       }
 
