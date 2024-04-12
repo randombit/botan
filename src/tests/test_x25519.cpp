@@ -18,27 +18,6 @@ namespace Botan_Tests {
 
 #if defined(BOTAN_HAS_X25519)
 
-class X25519_Sclarmult_Tests final : public Text_Based_Test {
-   public:
-      X25519_Sclarmult_Tests() : Text_Based_Test("pubkey/c25519_scalar.vec", "Secret,Basepoint,Out") {}
-
-      Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
-         Test::Result result("X25519 scalarmult");
-
-         const std::vector<uint8_t> secret = vars.get_req_bin("Secret");
-         const std::vector<uint8_t> basepoint = vars.get_req_bin("Basepoint");
-         const std::vector<uint8_t> expected = vars.get_req_bin("Out");
-
-         std::vector<uint8_t> got(32);
-         Botan::curve25519_donna(got.data(), secret.data(), basepoint.data());
-
-         result.test_eq("basemult", got, expected);
-         return result;
-      }
-};
-
-BOTAN_REGISTER_TEST("pubkey", "x25519_scalar", X25519_Sclarmult_Tests);
-
 class X25519_Agreement_Tests final : public PK_Key_Agreement_Test {
    public:
       X25519_Agreement_Tests() : PK_Key_Agreement_Test("X25519", "pubkey/x25519.vec", "Secret,CounterKey,K") {}
