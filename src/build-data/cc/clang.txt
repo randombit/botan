@@ -14,7 +14,7 @@ maintainer_warning_flags "-Wunreachable-code -Qunused-arguments"
 
 supports_gcc_inline_asm yes
 
-optimization_flags "-O3"
+optimization_flags "-O2"
 sanitizer_optimization_flags "-O1 -fno-optimize-sibling-calls -fno-omit-frame-pointer"
 size_optimization_flags "-Os"
 
