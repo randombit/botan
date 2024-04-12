@@ -217,10 +217,10 @@ template <WordType W>
 inline constexpr auto word8_add3(W z[8], const W x[8], const W y[8], W carry) -> W {
 #if defined(BOTAN_MP_USE_X86_64_ASM)
    if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
-      asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "adcq"))
-          : [carry] "=r"(carry)
-          : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
-          : "cc", "memory");
+      asm volatile(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "adcq"))
+                   : [carry] "=r"(carry)
+                   : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
+                   : "cc", "memory");
       return carry;
    }
 #endif
@@ -317,10 +317,10 @@ template <WordType W>
 inline constexpr auto word8_sub3(W z[8], const W x[8], const W y[8], W carry) -> W {
 #if defined(BOTAN_MP_USE_X86_64_ASM)
    if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
-      asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "sbbq"))
-          : [carry] "=r"(carry)
-          : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
-          : "cc", "memory");
+      asm volatile(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "sbbq"))
+                   : [carry] "=r"(carry)
+                   : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
+                   : "cc", "memory");
       return carry;
    }
 #endif
