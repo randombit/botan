@@ -1,0 +1,29 @@
+name: CIFuzz
+
+permissions:
+  contents: read
+  # implicitly all other scopes not listed become none
+
+on: [pull_request]
+jobs:
+  Fuzzing:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Build Fuzzers
+      id: build
+      uses: google/oss-fuzz/infra/cifuzz/actions/build_fuzzers@master
+      with:
+        oss-fuzz-project-name: 'botan'
+        dry-run: false
+    - name: Run Fuzzers
+      uses: google/oss-fuzz/infra/cifuzz/actions/run_fuzzers@master
+      with:
+        oss-fuzz-project-name: 'botan'
+        fuzz-seconds: 180
+        dry-run: false
+    - name: Upload Crash
+      uses: actions/upload-artifact@v4
+      if: failure() && steps.build.outcome == 'success'
+      with:
+        name: artifacts
+        path: ./out/artifacts
