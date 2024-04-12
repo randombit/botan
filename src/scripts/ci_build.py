@@ -261,8 +261,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         else:
             flags += ['--enable-sanitizers=address']
 
-    if target in ['valgrind', 'valgrind-full', 'sanitizer', 'fuzzers']:
-        flags += ['--disable-modules=locking_allocator']
+    flags += ['--disable-modules=locking_allocator,tls,xmss,x509']
 
     if target == 'emscripten':
         flags += ['--cpu=wasm']
