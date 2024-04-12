@@ -22,31 +22,30 @@ namespace {
 
 class ECC_Basepoint_Mul_Tests final : public Text_Based_Test {
    public:
-      ECC_Basepoint_Mul_Tests() : Text_Based_Test("pubkey/ecc_base_point_mul.vec", "m,X,Y") {}
+      ECC_Basepoint_Mul_Tests() : Text_Based_Test("pubkey/ecc_base_point_mul.vec", "k,P") {}
 
       Test::Result run_one_test(const std::string& group_id, const VarMap& vars) override {
          Test::Result result("ECC base point multiply " + group_id);
 
-         const Botan::BigInt m = vars.get_req_bn("m");
-         const Botan::BigInt X = vars.get_req_bn("X");
-         const Botan::BigInt Y = vars.get_req_bn("Y");
+         const auto k_bytes = vars.get_req_bin("k");
+         const auto P_bytes = vars.get_req_bin("P");
 
          Botan::EC_Group group(Botan::OID::from_string(group_id));
 
+         const Botan::BigInt k(k_bytes);
+         const auto pt = group.OS2ECP(P_bytes);
+
          const Botan::EC_Point& base_point = group.get_base_point();
 
-         const Botan::EC_Point p1 = base_point * m;
-         result.test_eq("p1 affine X", p1.get_affine_x(), X);
-         result.test_eq("p1 affine Y", p1.get_affine_y(), Y);
+         const Botan::EC_Point p1 = base_point * k;
+         result.test_eq("mul with *", p1, pt);
 
          std::vector<Botan::BigInt> ws;
-         const Botan::EC_Point p2 = group.blinded_base_point_multiply(m, this->rng(), ws);
-         result.test_eq("p2 affine X", p2.get_affine_x(), X);
-         result.test_eq("p2 affine Y", p2.get_affine_y(), Y);
+         const Botan::EC_Point p2 = group.blinded_base_point_multiply(k, this->rng(), ws);
+         result.test_eq("blinded_base_point_multiply", p2, pt);
 
-         const Botan::EC_Point p3 = group.blinded_var_point_multiply(base_point, m, this->rng(), ws);
-         result.test_eq("p3 affine X", p3.get_affine_x(), X);
-         result.test_eq("p3 affine Y", p3.get_affine_y(), Y);
+         const Botan::EC_Point p3 = group.blinded_var_point_multiply(base_point, k, this->rng(), ws);
+         result.test_eq("blinded_var_point_multiply", p3, pt);
 
          return result;
       }
