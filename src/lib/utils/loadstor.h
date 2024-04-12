@@ -128,10 +128,6 @@ enum class Endianness : bool {
    Little,
 };
 
-struct AutoDetect {
-      constexpr AutoDetect() = delete;
-};
-
 /**
  * @warning This function may return false if the native endianness is unknown
  * @returns true iff the native endianness matches the given endianness

@@ -27,10 +27,10 @@ std::vector<uint8_t> dom4(uint8_t x, std::span<const uint8_t> y) {
    //            is an octet string of at most 255 octets. "SigEd448"
    //            is in ASCII (8 octets).
    BOTAN_ARG_CHECK(y.size() < 256, "y is too long");
-   return concat_as<std::vector<uint8_t>>(std::array<uint8_t, 8>{'S', 'i', 'g', 'E', 'd', '4', '4', '8'},
-                                          store_le(x),
-                                          store_le(static_cast<uint8_t>(y.size())),
-                                          y);
+   return concat<std::vector<uint8_t>>(std::array<uint8_t, 8>{'S', 'i', 'g', 'E', 'd', '4', '4', '8'},
+                                       store_le(x),
+                                       store_le(static_cast<uint8_t>(y.size())),
+                                       y);
 }
 
 template <ranges::spanable_range... Ts>

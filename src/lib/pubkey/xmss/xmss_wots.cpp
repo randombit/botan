@@ -137,7 +137,7 @@ XMSS_WOTS_PrivateKey::XMSS_WOTS_PrivateKey(XMSS_WOTS_Parameters params,
    m_key_data.resize(m_params.len());
    for(size_t i = 0; i < m_params.len(); ++i) {
       adrs.set_chain_address(static_cast<uint32_t>(i));
-      const auto data = concat_as<std::vector<uint8_t>>(public_seed, adrs.bytes());
+      const auto data = concat<std::vector<uint8_t>>(public_seed, adrs.bytes());
       hash.prf_keygen(m_key_data[i], private_seed, data);
    }
 }

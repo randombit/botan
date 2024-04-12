@@ -135,7 +135,7 @@ class XMSS_PrivateKey_Internal {
          std::vector<uint8_t> wots_derivation_method;
          wots_derivation_method.push_back(static_cast<uint8_t>(m_wots_derivation_method));
 
-         return concat_as<secure_vector<uint8_t>>(
+         return concat<secure_vector<uint8_t>>(
             raw_public_key, unused_index, m_prf, m_private_seed, wots_derivation_method);
       }
 

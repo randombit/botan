@@ -159,7 +159,7 @@ class Dilithium_PublicKeyInternal {
       Dilithium_PublicKeyInternal& operator=(const Dilithium_PublicKeyInternal& other) = delete;
       Dilithium_PublicKeyInternal& operator=(Dilithium_PublicKeyInternal&& other) = delete;
 
-      std::vector<uint8_t> raw_pk() const { return concat_as<std::vector<uint8_t>>(m_rho, m_t1.polyvec_pack_t1()); }
+      std::vector<uint8_t> raw_pk() const { return concat<std::vector<uint8_t>>(m_rho, m_t1.polyvec_pack_t1()); }
 
       const std::vector<uint8_t>& raw_pk_shake256() const {
          BOTAN_STATE_CHECK(m_raw_pk_shake256.size() == DilithiumModeConstants::SEEDBYTES);
@@ -222,7 +222,7 @@ class Dilithium_PrivateKeyInternal {
       }
 
       secure_vector<uint8_t> raw_sk() const {
-         return concat_as<secure_vector<uint8_t>>(
+         return concat<secure_vector<uint8_t>>(
             m_rho, m_key, m_tr, m_s1.polyvec_pack_eta(m_mode), m_s2.polyvec_pack_eta(m_mode), m_t0.polyvec_pack_t0());
       }
 

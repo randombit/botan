@@ -1,12 +1,13 @@
 /*
  * (C) 2023 Jack Lloyd
- * (C) 2023 René Meusel, Rohde & Schwarz Cybersecurity
+ * (C) 2023-2024 René Meusel, Rohde & Schwarz Cybersecurity
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */
 
 #include "tests.h"
 
+#include <botan/concepts.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/alignment_buffer.h>
 #include <botan/internal/stl_util.h>
@@ -102,7 +103,7 @@ std::vector<Test::Result> test_buffer_slicer() {
                StrongBuffer vec4(s.remaining());
                s.copy_into(vec4);
 
-               const auto reproduce = Botan::concat_as<std::vector<uint8_t>>(span1, span2, vec1, vec2, vec3, vec4);
+               const auto reproduce = Botan::concat<std::vector<uint8_t>>(span1, span2, vec1, vec2, vec3, vec4);
                result.test_eq("sliced into various types", reproduce, secure_buffer);
             }),
    };
@@ -435,7 +436,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_eq("not enough data for alignment processing", r1, 0);
                result.test_eq("(short) unaligned data is not consumed", half_block.remaining(), 16);
 
-               const auto more_than_one_block = Botan::concat_as<std::vector<uint8_t>>(data, first_half_data);
+               const auto more_than_one_block = Botan::concat<std::vector<uint8_t>>(data, first_half_data);
                Botan::BufferSlicer one_and_a_half_block(more_than_one_block);
                const auto [s2, r2] = b.aligned_data_to_process(one_and_a_half_block);
                result.test_eq("data of one block for processing", s2.size(), 32);
@@ -443,7 +444,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_is_eq(v(s2), v(data));
                result.test_eq("(middle) unaligned data is not consumed", one_and_a_half_block.remaining(), 16);
 
-               const auto two_blocks_data = Botan::concat_as<std::vector<uint8_t>>(data, data);
+               const auto two_blocks_data = Botan::concat<std::vector<uint8_t>>(data, data);
                Botan::BufferSlicer two_blocks(two_blocks_data);
                const auto [s3, r3] = b.aligned_data_to_process(two_blocks);
                result.test_eq("data of two block for processing", s3.size(), 64);
@@ -462,7 +463,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.confirm("not enough data for alignment processing", !s1.has_value());
                result.test_eq("(short) unaligned data is not consumed", half_block.remaining(), 16);
 
-               const auto more_than_one_block = Botan::concat_as<std::vector<uint8_t>>(data, first_half_data);
+               const auto more_than_one_block = Botan::concat<std::vector<uint8_t>>(data, first_half_data);
                Botan::BufferSlicer one_and_a_half_block(more_than_one_block);
                const auto s2 = b.next_aligned_block_to_process(one_and_a_half_block);
                result.require("one block for processing", s2.has_value());
@@ -470,7 +471,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_is_eq(v(s2.value()), v(data));
                result.test_eq("(middle) unaligned data is not consumed", one_and_a_half_block.remaining(), 16);
 
-               const auto two_blocks_data = Botan::concat_as<std::vector<uint8_t>>(data, data);
+               const auto two_blocks_data = Botan::concat<std::vector<uint8_t>>(data, data);
                Botan::BufferSlicer two_blocks(two_blocks_data);
                const auto s3_1 = b.next_aligned_block_to_process(two_blocks);
                result.require("first block for processing", s3_1.has_value());
@@ -496,7 +497,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_eq("not enough data for alignment processing", r1, 0);
                result.test_eq("(short) unaligned data is not consumed", half_block.remaining(), 16);
 
-               const auto more_than_one_block = Botan::concat_as<std::vector<uint8_t>>(data, first_half_data);
+               const auto more_than_one_block = Botan::concat<std::vector<uint8_t>>(data, first_half_data);
                Botan::BufferSlicer one_and_a_half_block(more_than_one_block);
                const auto [s2, r2] = b.aligned_data_to_process(one_and_a_half_block);
                result.test_eq("data of one block for processing", s2.size(), 32);
@@ -504,7 +505,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_is_eq(v(s2), v(data));
                result.test_eq("(middle) unaligned data is not consumed", one_and_a_half_block.remaining(), 16);
 
-               const auto two_blocks_data = Botan::concat_as<std::vector<uint8_t>>(data, data);
+               const auto two_blocks_data = Botan::concat<std::vector<uint8_t>>(data, data);
                Botan::BufferSlicer two_blocks(two_blocks_data);
                const auto [s3, r3] = b.aligned_data_to_process(two_blocks);
                result.test_eq("data of first block for processing", s3.size(), 32);
@@ -523,7 +524,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.confirm("not enough data for alignment processing", !s1.has_value());
                result.test_eq("(short) unaligned data is not consumed", half_block.remaining(), 16);
 
-               const auto more_than_one_block = Botan::concat_as<std::vector<uint8_t>>(data, first_half_data);
+               const auto more_than_one_block = Botan::concat<std::vector<uint8_t>>(data, first_half_data);
                Botan::BufferSlicer one_and_a_half_block(more_than_one_block);
                const auto s2 = b.next_aligned_block_to_process(one_and_a_half_block);
                result.require("one block for processing", s2.has_value());
@@ -531,7 +532,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_is_eq(v(s2.value()), v(data));
                result.test_eq("(middle) unaligned data is not consumed", one_and_a_half_block.remaining(), 16);
 
-               const auto two_blocks_data = Botan::concat_as<std::vector<uint8_t>>(data, data);
+               const auto two_blocks_data = Botan::concat<std::vector<uint8_t>>(data, data);
                Botan::BufferSlicer two_blocks(two_blocks_data);
                const auto s3_1 = b.next_aligned_block_to_process(two_blocks);
                result.require("first block for processing", s3_1.has_value());
@@ -546,7 +547,125 @@ std::vector<Test::Result> test_alignment_buffer() {
    };
 }
 
-BOTAN_REGISTER_TEST_FN("utils", "buffer_utilities", test_buffer_slicer, test_buffer_stuffer, test_alignment_buffer);
+std::vector<Test::Result> test_concat() {
+   return {
+      Botan_Tests::CHECK("empty concat",
+                         [](Test::Result& result) {
+                            // only define a dynamic output type, but no input to be concat'ed
+                            const auto empty1 = Botan::concat<std::vector<uint8_t>>();
+                            result.confirm("empty concat 1", empty1.empty());
+
+                            // pass an empty input buffer to be concat'ed
+                            const auto empty2 = Botan::concat(std::vector<uint8_t>());
+                            result.confirm("empty concat 2", empty2.empty());
+
+                            // pass multiple empty input buffers to be concat'ed
+                            const auto empty3 = Botan::concat(std::vector<uint8_t>(), Botan::secure_vector<uint8_t>());
+                            result.confirm("empty concat 3", empty3.empty());
+
+                            // pass multiple empty input buffers to be concat'ed without auto-detection of the output buffer
+                            const auto empty4 = Botan::concat<std::array<uint8_t, 0>>(
+                               std::vector<uint8_t>(), std::array<uint8_t, 0>(), Botan::secure_vector<uint8_t>());
+                            result.confirm("empty concat 4", empty4.empty());
+                         }),
+
+      Botan_Tests::CHECK(
+         "auto-detected output type",
+         [](Test::Result& result) {
+            // define a static output type without any input parameters
+            const auto t0 = Botan::concat<std::array<uint8_t, 0>>();
+            result.confirm("type 0", std::is_same_v<std::array<uint8_t, 0>, std::remove_cvref_t<decltype(t0)>>);
+
+            // define a dynamic output type without any input parameters
+            const auto t1 = Botan::concat<std::vector<uint8_t>>();
+            result.confirm("type 1", std::is_same_v<std::vector<uint8_t>, std::remove_cvref_t<decltype(t1)>>);
+
+            // pass a single dynamic input buffer and auto-detect result type
+            const auto t2 = Botan::concat(std::vector<uint8_t>());
+            result.confirm("type 2", std::is_same_v<std::vector<uint8_t>, std::remove_cvref_t<decltype(t2)>>);
+
+            // pass multiple dynamic input buffers and auto-detect result type
+            const auto t3 = Botan::concat(Botan::secure_vector<uint8_t>(), std::vector<uint8_t>());
+            result.confirm("type 3", std::is_same_v<Botan::secure_vector<uint8_t>, std::remove_cvref_t<decltype(t3)>>);
+
+            // pass a mixture of dynamic and static input buffers and auto-detect result type
+            const auto t4 =
+               Botan::concat(std::vector<uint8_t>(), std::array<uint8_t, 0>(), Botan::secure_vector<uint8_t>());
+            result.confirm("type 4", std::is_same_v<std::vector<uint8_t>, std::remove_cvref_t<decltype(t4)>>);
+
+            // pass only static input buffers and auto-detect result type
+            const std::array<uint8_t, 5> some_buffer{};
+            const auto t5 = Botan::concat(std::array<uint8_t, 1>(), std::array<uint8_t, 3>(), std::span{some_buffer});
+            result.confirm("type 5", std::is_same_v<std::array<uint8_t, 9>, std::remove_cvref_t<decltype(t5)>>);
+         }),
+
+      Botan_Tests::CHECK(
+         "concatenate",
+         [](Test::Result& result) {
+            constexpr std::array<uint8_t, 5> a1 = {1, 2, 3, 4, 5};
+            const std::vector<uint8_t> v1{6, 7, 8, 9, 10};
+
+            // concatenate a single buffer
+            const auto concat0 = Botan::concat<Botan::secure_vector<uint8_t>>(v1);
+            result.test_is_eq("concat 0", concat0, {6, 7, 8, 9, 10});
+
+            // concatenate into an dynamically allocated output buffer
+            const auto concat1 = Botan::concat<std::vector<uint8_t>>(a1, v1);
+            result.test_is_eq("concat 1", concat1, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+
+            // concatenate into a statically sized output buffer
+            const auto concat2 = Botan::concat<std::array<uint8_t, 10>>(v1, a1);
+            result.test_is_eq("concat 2", concat2, {6, 7, 8, 9, 10, 1, 2, 3, 4, 5});
+
+            // concatenate into a statically sized output buffer, that is auto-detected
+            const auto concat3 = Botan::concat(a1, std::span<const uint8_t, 5>(v1));
+            result.test_is_eq("concat 3", concat3, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+            result.confirm("correct type 3",
+                           std::is_same_v<std::array<uint8_t, 10>, std::remove_cvref_t<decltype(concat3)>>);
+
+            // concatenate into a statically sized output buffer, that is auto-detected, at compile time
+            constexpr auto concat4 = Botan::concat(a1, a1);
+            result.test_is_eq("concat 4", concat4, {1, 2, 3, 4, 5, 1, 2, 3, 4, 5});
+            result.confirm("correct type 4",
+                           std::is_same_v<std::array<uint8_t, 10>, std::remove_cvref_t<decltype(concat4)>>);
+         }),
+
+      Botan_Tests::CHECK("dynamic length-check",
+                         [](Test::Result& result) {
+                            std::vector<uint8_t> v1{1, 2, 3, 4, 5};
+                            std::vector<uint8_t> v2{6, 7, 8, 9, 10};
+
+                            result.test_throws("concatenate into a statically sized type with insufficient space",
+                                               [&]() { Botan::concat<std::array<uint8_t, 4>>(v1, v2); });
+                            result.test_throws("concatenate into a statically sized type with too much space",
+                                               [&]() { Botan::concat<std::array<uint8_t, 20>>(v1, v2); });
+                         }),
+
+      Botan_Tests::CHECK("concatenate strong types",
+                         [](Test::Result& result) {
+                            using StrongV = Botan::Strong<std::vector<uint8_t>, struct StrongV_>;
+                            using StrongA = Botan::Strong<std::array<uint8_t, 4>, struct StrongA_>;
+
+                            StrongV v1(std::vector<uint8_t>{1, 2, 3, 4, 5});
+                            StrongA a2;
+                            a2[0] = 6;
+                            a2[1] = 7;
+                            a2[2] = 8;
+                            a2[3] = 9;
+
+                            // concat strong types into a verbatim type
+                            auto concat1 = Botan::concat<std::vector<uint8_t>>(v1, a2);
+                            result.test_is_eq("concat 1", concat1, {1, 2, 3, 4, 5, 6, 7, 8, 9});
+
+                            // concat strong types into a dynamically allocated strong type
+                            auto concat2 = Botan::concat<StrongV>(a2, v1);
+                            result.test_is_eq("concat 2", concat2.get(), {6, 7, 8, 9, 1, 2, 3, 4, 5});
+                         }),
+   };
+}
+
+BOTAN_REGISTER_TEST_FN(
+   "utils", "buffer_utilities", test_buffer_slicer, test_buffer_stuffer, test_alignment_buffer, test_concat);
 
 }  // namespace
 
