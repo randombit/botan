@@ -739,7 +739,8 @@ def main(args=None):
         if target in ['shared', 'coverage', 'sanitizer']:
             botan_exe = os.path.join(build_dir, 'botan-cli.exe' if options.os == 'windows' else 'botan')
 
-            args = ['--threads=%d' % (options.build_jobs)]
+            #args = ['--threads=%d' % (options.build_jobs)]
+            args = ['--threads=1']
             if target in ['coverage']:
                 args.append('--run-slow-tests')
             if root_dir != '.':
