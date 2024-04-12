@@ -65,7 +65,7 @@ class Roughtime final : public Command {
       <name> <key type> <base 64 encoded public key> <protocol> <host:port>
 
    Example servers:
-      Cloudflare-Roughtime ed25519 gD63hSj3ScS+wuOeGrubXlq35N1c5Lby/S+T7MNTjxo= udp roughtime.cloudflare.com:2002
+      Cloudflare-Roughtime ed25519 0GD7c3yP8xEc4Zl2zeuN2SlLvDVVocjsPSL8/Rl/7zg= udp roughtime.cloudflare.com:2003
       Google-Sandbox-Roughtime ed25519 etPaaIxcBMY1oUeGpwvPMCJMwlRVNxv51KK/tktoJTQ= udp roughtime.sandbox.google.com:2002
 
 --chain-file=<filename>
