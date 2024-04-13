@@ -16,6 +16,8 @@ dev_random
 clock_gettime
 ccrandom
 
+sysctlbyname
+
 commoncrypto
 apple_keychain
 
