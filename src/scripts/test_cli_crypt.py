@@ -208,7 +208,7 @@ def main(args=None):
             result.get()
     else:
         for test in kats:
-            test_cipher_kat(test)
+            test_cipher_kat(cli_binary, test)
 
     end_time = time.time()
 
