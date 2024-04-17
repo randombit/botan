@@ -206,7 +206,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
 BOTAN_REGISTER_TEST("tls", "tls_messages", TLS_Message_Parsing_Test);
 
    #if defined(BOTAN_HAS_TLS_13)
-      #if defined(BOTAN_HAS_CURVE_25519)
+      #if defined(BOTAN_HAS_X25519)
 class TLS_Key_Share_CH_Generation_Test final : public Text_Based_Test {
    public:
       TLS_Key_Share_CH_Generation_Test() :

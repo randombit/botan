@@ -406,7 +406,7 @@ class Speed final : public Command {
             "ECDSA",
             "Ed25519",
             "Ed448",
-            "Curve25519",
+            "X25519",
             "X448",
             "McEliece",
             "Kyber",
@@ -596,9 +596,9 @@ class Speed final : public Command {
                bench_ecdh(ecc_groups, provider, msec);
             }
 #endif
-#if defined(BOTAN_HAS_CURVE_25519)
-            else if(algo == "Curve25519") {
-               bench_curve25519(provider, msec);
+#if defined(BOTAN_HAS_X25519)
+            else if(algo == "X25519") {
+               bench_x25519(provider, msec);
             }
 #endif
 #if defined(BOTAN_HAS_X448)
@@ -1925,9 +1925,9 @@ class Speed final : public Command {
       }
 #endif
 
-#if defined(BOTAN_HAS_CURVE_25519)
-      void bench_curve25519(const std::string& provider, std::chrono::milliseconds msec) {
-         bench_pk_ka("Curve25519", "Curve25519", "", provider, msec);
+#if defined(BOTAN_HAS_X25519)
+      void bench_x25519(const std::string& provider, std::chrono::milliseconds msec) {
+         bench_pk_ka("X25519", "X25519", "", provider, msec);
       }
 #endif
 

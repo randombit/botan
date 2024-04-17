@@ -22,8 +22,8 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/stl_util.h>
 
-#if defined(BOTAN_HAS_CURVE_25519)
-   #include <botan/curve25519.h>
+#if defined(BOTAN_HAS_X25519)
+   #include <botan/x25519.h>
 #endif
 
 #if defined(BOTAN_HAS_X448)
@@ -272,7 +272,7 @@ std::unique_ptr<PK_Key_Agreement_Key> TLS::Callbacks::tls_generate_ephemeral_key
       return std::make_unique<ECDH_PrivateKey>(rng, ec_group);
    }
 
-#if defined(BOTAN_HAS_CURVE_25519)
+#if defined(BOTAN_HAS_X25519)
    if(group_params.is_x25519()) {
       return std::make_unique<X25519_PrivateKey>(rng);
    }
@@ -336,13 +336,13 @@ secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(
       return agree(private_key, peer_key);
    }
 
-#if defined(BOTAN_HAS_CURVE_25519)
+#if defined(BOTAN_HAS_X25519)
    if(group_params.is_x25519()) {
       if(public_value.size() != 32) {
          throw TLS_Exception(Alert::HandshakeFailure, "Invalid X25519 key size");
       }
 
-      Curve25519_PublicKey peer_key(public_value);
+      X25519_PublicKey peer_key(public_value);
       policy.check_peer_key_acceptable(peer_key);
 
       return agree(private_key, peer_key);

@@ -1,5 +1,5 @@
 /*
-* Based on curve25519-donna-c64.c from github.com/agl/curve25519-donna
+* Based on curve25519-donna-c64.c from https://github.com/agl/curve25519-donna
 * revision 80ad9b9930c9baef5829dd2a235b6b7646d32a8e
 *
 * Further changes
@@ -32,7 +32,7 @@
 * from the sample implementation.
 */
 
-#include <botan/curve25519.h>
+#include <botan/x25519.h>
 
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/donna128.h>

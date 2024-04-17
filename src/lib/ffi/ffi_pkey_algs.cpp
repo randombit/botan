@@ -47,8 +47,8 @@
    #include <botan/ecdh.h>
 #endif
 
-#if defined(BOTAN_HAS_CURVE_25519)
-   #include <botan/curve25519.h>
+#if defined(BOTAN_HAS_X25519)
+   #include <botan/x25519.h>
 #endif
 
 #if defined(BOTAN_HAS_X448)
@@ -521,8 +521,8 @@ int botan_privkey_create_ecdh(botan_privkey_t* key_obj, botan_rng_t rng_obj, con
 
    const std::string params(param_str);
 
-   if(params == "curve25519") {
-      return botan_privkey_create(key_obj, "Curve25519", "", rng_obj);
+   if(params == "x25519" || params == "curve25519") {
+      return botan_privkey_create(key_obj, "X25519", "", rng_obj);
    }
 
    if(params == "x448") {

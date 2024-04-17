@@ -13,9 +13,9 @@
 
 // Since RFC 8448 uses a specific set of cipher suites we can only run this
 // test if all of them are enabled.
-#if defined(BOTAN_HAS_TLS_13) && defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305) && defined(BOTAN_HAS_AEAD_GCM) && \
-   defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_CURVE_25519) && defined(BOTAN_HAS_SHA2_32) &&                 \
-   defined(BOTAN_HAS_SHA2_64) && defined(BOTAN_HAS_ECDSA)
+#if defined(BOTAN_HAS_TLS_13) && defined(BOTAN_HAS_AEAD_CHACHA20_POLY1305) && defined(BOTAN_HAS_AEAD_GCM) &&          \
+   defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_X25519) && defined(BOTAN_HAS_SHA2_32) && defined(BOTAN_HAS_SHA2_64) && \
+   defined(BOTAN_HAS_ECDSA)
    #define BOTAN_CAN_RUN_TEST_TLS_RFC8448
 #endif
 
