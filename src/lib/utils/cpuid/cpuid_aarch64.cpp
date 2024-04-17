@@ -11,25 +11,16 @@
 
    #include <botan/internal/os_utils.h>
 
-   #if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
+   #if defined(BOTAN_TARGET_OS_HAS_SYSCTLBYNAME)
       #include <sys/sysctl.h>
       #include <sys/types.h>
    #endif
 
+#endif
+
 namespace Botan {
 
-   #if defined(BOTAN_TARGET_OS_IS_MACOS)
-namespace {
-
-bool sysctlbyname_has_feature(const char* feature_name) {
-   unsigned int feature;
-   size_t size = sizeof(feature);
-   ::sysctlbyname(feature_name, &feature, &size, nullptr, 0);
-   return (feature == 1);
-}
-
-}  // namespace
-   #endif
+#if defined(BOTAN_TARGET_ARCH_IS_ARM64)
 
 uint32_t CPUID::CPUID_Data::detect_cpu_features() {
    uint32_t detected_features = 0;
@@ -89,12 +80,17 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
    detected_features |= CPUID::CPUID_ARM_SHA1_BIT;
    detected_features |= CPUID::CPUID_ARM_SHA2_BIT;
 
-      #if defined(BOTAN_TARGET_OS_IS_MACOS)
+   auto sysctlbyname_has_feature = [](const char* feature_name) -> bool {
+      unsigned int feature;
+      size_t size = sizeof(feature);
+      ::sysctlbyname(feature_name, &feature, &size, nullptr, 0);
+      return (feature == 1);
+   };
+
    if(sysctlbyname_has_feature("hw.optional.armv8_2_sha3"))
       detected_features |= CPUID::CPUID_ARM_SHA3_BIT;
    if(sysctlbyname_has_feature("hw.optional.armv8_2_sha512"))
       detected_features |= CPUID::CPUID_ARM_SHA2_512_BIT;
-      #endif
 
    #elif defined(BOTAN_USE_GCC_INLINE_ASM)
 
@@ -154,6 +150,6 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
    return detected_features;
 }
 
-}  // namespace Botan
-
 #endif
+
+}  // namespace Botan
