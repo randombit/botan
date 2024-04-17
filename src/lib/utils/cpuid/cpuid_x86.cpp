@@ -16,10 +16,6 @@
 
    #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
       #include <intrin.h>
-   #elif defined(BOTAN_BUILD_COMPILER_IS_INTEL)
-      #include <ia32intrin.h>
-   #elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
-      #include <cpuid.h>
    #endif
 
 #endif
@@ -31,39 +27,35 @@ namespace Botan {
 namespace {
 
 void invoke_cpuid(uint32_t type, uint32_t out[4]) {
-   #if defined(BOTAN_BUILD_COMPILER_IS_MSVC) || defined(BOTAN_BUILD_COMPILER_IS_INTEL)
+   clear_mem(out, 4);
+
+   #if defined(BOTAN_USE_GCC_INLINE_ASM)
+   asm volatile("cpuid\n\t" : "=a"(out[0]), "=b"(out[1]), "=c"(out[2]), "=d"(out[3]) : "0"(type));
+
+   #elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
    __cpuid((int*)out, type);
-
-   #elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
-   __get_cpuid(type, out, out + 1, out + 2, out + 3);
-
-   #elif defined(BOTAN_USE_GCC_INLINE_ASM)
-   asm("cpuid\n\t" : "=a"(out[0]), "=b"(out[1]), "=c"(out[2]), "=d"(out[3]) : "0"(type));
 
    #else
       #warning "No way of calling x86 cpuid instruction for this compiler"
+   #endif
+}
+
+void invoke_cpuid_sublevel(uint32_t type, uint32_t level, uint32_t out[4]) {
    clear_mem(out, 4);
+
+   #if defined(BOTAN_USE_GCC_INLINE_ASM)
+   asm volatile("cpuid\n\t" : "=a"(out[0]), "=b"(out[1]), "=c"(out[2]), "=d"(out[3]) : "0"(type), "2"(level));
+
+   #elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+   __cpuidex((int*)out, type, level);
+
+   #else
+      #warning "No way of calling x86 cpuid instruction for this compiler"
    #endif
 }
 
 BOTAN_FUNC_ISA("xsave") uint64_t xgetbv() {
    return _xgetbv(0);
-}
-
-void invoke_cpuid_sublevel(uint32_t type, uint32_t level, uint32_t out[4]) {
-   #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-   __cpuidex((int*)out, type, level);
-
-   #elif defined(BOTAN_BUILD_COMPILER_IS_GCC) || defined(BOTAN_BUILD_COMPILER_IS_CLANG)
-   __cpuid_count(type, level, out[0], out[1], out[2], out[3]);
-
-   #elif defined(BOTAN_USE_GCC_INLINE_ASM)
-   asm("cpuid\n\t" : "=a"(out[0]), "=b"(out[1]), "=c"(out[2]), "=d"(out[3]) : "0"(type), "2"(level));
-
-   #else
-      #warning "No way of calling x86 cpuid instruction for this compiler"
-   clear_mem(out, 4);
-   #endif
 }
 
 }  // namespace

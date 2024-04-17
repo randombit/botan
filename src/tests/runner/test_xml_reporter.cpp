@@ -23,8 +23,9 @@ namespace Botan_Tests {
 namespace {
 
 std::string full_compiler_version_string() {
-   #if defined(BOTAN_BUILD_COMPILER_IS_CLANG) || defined(BOTAN_BUILD_COMPILER_IS_GCC)
+   #if defined(__VERSION__)
    return __VERSION__;
+
    #elif defined(BOTAN_BUILD_COMPILER_IS_MSVC)
    // See https://learn.microsoft.com/en-us/cpp/preprocessor/predefined-macros
    //    If the version number of the Microsoft C/C++ compiler is 15.00.20706.01,
@@ -46,7 +47,9 @@ std::string full_compiler_version_string() {
 }
 
 std::string full_compiler_name_string() {
-   #if defined(BOTAN_BUILD_COMPILER_IS_CLANG)
+   #if defined(BOTAN_BUILD_COMPILER_IS_XCODE)
+   return "xcode";
+   #elif defined(BOTAN_BUILD_COMPILER_IS_CLANG)
    return "clang";
    #elif defined(BOTAN_BUILD_COMPILER_IS_GCC)
    return "gcc";

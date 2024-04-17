@@ -30,37 +30,11 @@ EMCC __EMSCRIPTEN_major__ __EMSCRIPTEN_minor__
 #elif defined(__clang__) && defined(__apple_build_version__)
 
 /*
-Apple's Clang is a long-term fork of Clang and the version of XCode
-has no correspondence with a specific LLVM Clang version.
-
-This is a rough map from the XCode Clang to the upstream Clang
-versions. It is not correct, but is sufficient for our purposes.
-
-Wikipedia has a mapping table from Apple Clang version to underlying
-LLVM version: https://en.wikipedia.org/wiki/Xcode
-
-We omit any mapping logic for versions before XCode 13.3 since it
-is known that at least 13.3 is required. For such versions we emit
-`CLANG 0 0` which will cause the minimum version detection to kick
-in and stop the build.
-
 Bizarrely, XCode uses the patch level to indicate the minor number,
 and __clang_minor__ is always set to 0.
 */
 
-   #define XCODE_VER (__clang_major__ * 100 + __clang_patchlevel__)
-
-   #if XCODE_VER < 1303
-CLANG 0 0
-   #elif XCODE_VER < 1400
-CLANG 13 0
-   #elif XCODE_VER < 1403
-CLANG 14 0
-   #elif XCODE_VER == 1403
-CLANG 15 0
-   #else
-CLANG 16 0
-   #endif
+XCODE __clang_major__ __clang_patchlevel__
 
 #elif defined(__clang__)
 

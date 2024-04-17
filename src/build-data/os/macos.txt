@@ -1,5 +1,5 @@
 
-default_compiler clang
+default_compiler xcode
 
 soname_pattern_base  "lib{libname}.dylib"
 soname_pattern_abi   "lib{libname}.{abi_rev}.dylib"

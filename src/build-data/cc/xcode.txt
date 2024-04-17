@@ -1,0 +1,78 @@
+macro_name XCODE
+
+binary_name clang++
+
+minimum_supported_version 15.0
+
+lang_flags "-std=c++20 -D_REENTRANT"
+
+warning_flags "-Wall -Wextra -Wpedantic -Wshadow -Wstrict-aliasing -Wstrict-overflow=5 -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wshorten-64-to-32 -Wcomma -Wdocumentation"
+
+werror_flags "-Werror -Wno-error=unused-parameter -Wno-error=unreachable-code -Wno-error=unused-lambda-capture"
+
+maintainer_warning_flags "-Wunreachable-code -Qunused-arguments"
+
+supports_gcc_inline_asm yes
+
+optimization_flags "-O3"
+sanitizer_optimization_flags "-O1 -fno-optimize-sibling-calls -fno-omit-frame-pointer"
+size_optimization_flags "-Os"
+
+add_system_include_dir_option "-isystem"
+add_sysroot_option "--sysroot="
+
+<sanitizers>
+default   -> address,undefined
+
+address   -> "-fsanitize=address"
+undefined -> "-fsanitize=undefined -fno-sanitize-recover=undefined"
+coverage  -> "-fsanitize=fuzzer-no-link"
+memory    -> "-fsanitize=memory"
+</sanitizers>
+
+shared_flags "-fPIC"
+coverage_flags "--coverage"
+stack_protector_flags "-fstack-protector"
+
+visibility_build_flags "-fvisibility=hidden"
+visibility_attribute '__attribute__((visibility("default")))'
+
+# Include dependency tracking for Ninja
+# See: https://ninja-build.org/manual.html#ref_headers
+ninja_header_deps_style 'gcc'
+header_deps_flag '-MD'
+header_deps_out '-MF'
+
+<so_link_commands>
+default       -> "{cxx} -dynamiclib -fPIC -install_name {libdir}/{soname_abi} -current_version {macos_so_current_ver} -compatibility_version {macos_so_compat_ver}"
+</so_link_commands>
+
+<binary_link_commands>
+default       -> "{linker}"
+</binary_link_commands>
+
+<isa_flags>
+sse2   -> "-msse2"
+ssse3  -> "-mssse3"
+sse41  -> "-msse4.1"
+sse42  -> "-msse4.2"
+avx2   -> "-mavx2"
+avx512  -> "-mavx512f -mavx512bw -mavx512dq -mavx512vbmi -mavx512vbmi2 -mavx512bitalg -mavx512vl -mavx512ifma"
+
+bmi2   -> "-mbmi -mbmi2"
+aesni  -> "-maes -mpclmul"
+rdrand -> "-mrdrnd"
+rdseed -> "-mrdseed"
+sha    -> "-msha"
+
+arm64:armv8crypto -> "-march=armv8+crypto"
+arm64:armv8sha512 -> "-march=armv8.2-a+sha3"
+
+arm64:neon    -> ""
+</isa_flags>
+
+<mach_abi_linking>
+all -> "-pthread -stdlib=libc++"
+
+x86_64  -> "-m64"
+</mach_abi_linking>

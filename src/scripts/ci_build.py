@@ -256,7 +256,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target in ['fuzzers', 'sanitizer']:
         flags += ['--with-debug-asserts']
 
-        if target_cc in ['clang', 'gcc']:
+        if target_cc in ['clang', 'gcc', 'xcode']:
             flags += ['--enable-sanitizers=address,undefined']
         else:
             flags += ['--enable-sanitizers=address']
@@ -373,7 +373,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
         if add_boost_support(target, target_os):
             flags += ['--with-boost']
-            if target_cc == 'clang':
+            if target_cc in ['clang', 'xcode']:
                 # make sure clang ignores warnings in boost headers
                 flags += ["--extra-cxxflags=--system-header-prefix=boost/"]
 
@@ -601,6 +601,8 @@ def main(args=None):
         if options.cc == 'gcc':
             options.cc_bin = 'g++'
         elif options.cc == 'clang':
+            options.cc_bin = 'clang++'
+        elif options.cc == 'xcode':
             options.cc_bin = 'clang++'
         elif options.cc == 'msvc':
             options.cc_bin = 'cl'
