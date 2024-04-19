@@ -166,7 +166,7 @@ Scalar448 Scalar448::operator+(const Scalar448& other) const {
 
 Scalar448 Scalar448::operator*(const Scalar448& other) const {
    std::array<word, WORDS_REDUCE_SZ> product = {0};
-   std::array<word, WORDS_REDUCE_SZ> ws;
+   std::array<word, WORDS_REDUCE_SZ> ws = {0};
    bigint_mul(product.data(),
               product.size(),
               m_scalar_words.data(),
