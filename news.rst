@@ -1,6 +1,38 @@
 Release Notes
 ========================================
 
+Version 3.5.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Kyber internals refactoring (GH #3887)
+
+* Generate Kuznyechik tables at compile time instead of hard coding them.
+  (GH #4017)
+
+* Enable using ``sysctlbyname`` on iOS (GH #4018)
+
+* Previously Curve25519 was used to refer to key exchange over the Montgomery
+  curve modulo 2**255-19. This is now called X25519 in all cases. Typedefs and a
+  deprecated header are retained for compatability with older versions. (GH
+  #4012)
+
+* Various low level multi precision integer refactorings and improvements.
+  (GH #4007 #4008 #3989 #3987)
+
+* Improve the utilities for checked (overflow safe) addition and multiplication.
+  (GH #3999)
+
+* Fix a bug in ``configure.py`` that caused `--with-stack-protector`` to not
+  work. (GH #3996)
+
+* The build system now distinguishes between LLVM Clang and XCode's Clang
+  fork. For the latter, use compiler target "xcode". (GH #4010)
+
+* Upgrade XCode CI to use 15.2 on x86-64 and 15.3 on aarch64. (GH #4005)
+
+* Fix Roughtime to not reference a deprecated Cloudflare server. (GH #4002 #3937)
+
+
 Version 3.4.0, 2024-04-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
