@@ -1321,23 +1321,36 @@ Code Examples: HTTPS Client using Boost Beast
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Starting with Botan 3.3.0 (and assuming a recent version of Boost), one may use
-Botan's TLS using C++20 coroutines. The following example implements a simple
-HTTPS client that may be used to fetch content from web servers:
+Botan's TLS using C++20 coroutines. The following example implements a minimal
+HTTPS client using Botan's default settings to fetch content from web servers.
+
+To establish trust in the server's certificate, Botan attempts to use the
+system's trust store (supported on macOS, Linux and Windows). If that does not
+work, you might get an error indicating that the certificate is not trusted. In
+that case, you can provide a custom trust store by subclassing the
+:cpp:class:`Credentials_Manager` and passing it to the :cpp:class:`TLS::Stream`
+as shown in :ref:`this example <asio_client_example>`.
+
+Note that Botan's default TLS policy requires servers to provide a valid CRL or
+OCSP response for their certificate. To disable this, derive the default policy
+class :cpp:class:`TLS::Policy`, override
+:cpp:func:`require_cert_revocation_info()` accordingly and pass an object of
+your policy via the :cpp:class:`TLS::Context` to the :cpp:class:`TLS::Stream`.
 
 .. literalinclude:: /../src/examples/tls_stream_coroutine_client.cpp
    :language: cpp
 
-Of course, the ASIO stream may also be used in a more traditional way, using
-callback handler methods instead of coroutines:
+.. _asio_client_example:
+
+Aside of the modern coroutines-based approach, the ASIO stream may also be used
+in a more traditional way, using callback handler methods instead of coroutines.
+
+Also, this example shows how to use a custom :cpp:class:`Credentials_Manager`
+and pass it to the :cpp:class:`TLS::Stream` via a :cpp:class:`TLS::Context`
+object.
 
 .. literalinclude:: /../src/examples/tls_stream_client.cpp
    :language: cpp
-
-For some websites this might not work and report a "bad_certificate". Botan's
-default TLS policy requires that the server sends a valid CRL or OCSP response.
-Some servers don't do that and thus the certificate is rejected. To disable this
-check, derive the default policy and override `require_cert_revocation_info()`
-accordingly.
 
 .. _tls_session_encryption:
 
