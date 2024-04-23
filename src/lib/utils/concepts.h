@@ -199,7 +199,14 @@ template <class T>
 concept contiguous_strong_type = strong_type<T> && contiguous_container<T>;
 
 template <class T>
+concept integral_strong_type = strong_type<T> && std::integral<typename T::wrapped_type>;
+
+template <class T>
 concept unsigned_integral_strong_type = strong_type<T> && std::unsigned_integral<typename T::wrapped_type>;
+
+template <typename T, typename Capability>
+concept strong_type_with_capability = T::template
+has_capability<Capability>();
 
 }  // namespace concepts
 

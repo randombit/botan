@@ -169,6 +169,11 @@ class Strong : public detail::Strong_Adapter<T> {
    public:
       using detail::Strong_Adapter<T>::Strong_Adapter;
 
+      template <typename CapabilityT>
+      constexpr static bool has_capability() {
+         return (std::is_same_v<CapabilityT, Capabilities> || ...);
+      }
+
    private:
       using Tag = TagTypeT;
 };
@@ -602,6 +607,15 @@ class StrongSpan {
    private:
       underlying_span m_span;
 };
+
+template <typename>
+struct is_strong_span : std::false_type {};
+
+template <typename T>
+struct is_strong_span<StrongSpan<T>> : std::true_type {};
+
+template <typename T>
+constexpr bool is_strong_span_v = is_strong_span<T>::value;
 
 }  // namespace Botan
 

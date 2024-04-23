@@ -117,12 +117,12 @@ class Utility_Function_Tests final : public Test {
          const uint32_t is_16_bits = 0x8123;
          const uint32_t is_8_bits = 0x89;
 
-         result.confirm("checked_cast checks", !Botan::checked_cast<uint16_t>(large).has_value());
-         result.confirm("checked_cast checks", !Botan::checked_cast<uint8_t>(large).has_value());
+         result.test_throws("checked_cast checks", [&] { Botan::checked_cast_to<uint16_t>(large); });
+         result.test_throws("checked_cast checks", [&] { Botan::checked_cast_to<uint8_t>(large); });
 
-         result.test_int_eq("checked_cast converts", Botan::checked_cast<uint32_t>(large).value(), large);
-         result.test_int_eq("checked_cast converts", Botan::checked_cast<uint16_t>(is_16_bits).value(), 0x8123);
-         result.test_int_eq("checked_cast converts", Botan::checked_cast<uint8_t>(is_8_bits).value(), 0x89);
+         result.test_int_eq("checked_cast converts", Botan::checked_cast_to<uint32_t>(large), large);
+         result.test_int_eq("checked_cast converts", Botan::checked_cast_to<uint16_t>(is_16_bits), 0x8123);
+         result.test_int_eq("checked_cast converts", Botan::checked_cast_to<uint8_t>(is_8_bits), 0x89);
 
          return result;
       }
