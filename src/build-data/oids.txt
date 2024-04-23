@@ -1,5 +1,5 @@
-# Regenerate with ./src/scripts/dev_tools/oids.py oids > src/lib/asn1/oid_maps.cpp
-# AND             ./src/scripts/dev_tools/oids.py dn_ub > src/lib/x509/x509_dn_ub.cpp
+# Regenerate with ./src/scripts/dev_tools/gen_oids.py oids > src/lib/asn1/oid_maps.cpp
+# AND             ./src/scripts/dev_tools/gen_oids.py dn_ub > src/lib/x509/x509_dn_ub.cpp
 # (if you modified something under [dn]
 
 # Public key types
@@ -46,6 +46,14 @@
 1.3.6.1.4.1.25258.1.10.1 = Dilithium-4x4-AES-r3
 1.3.6.1.4.1.25258.1.10.2 = Dilithium-6x5-AES-r3
 1.3.6.1.4.1.25258.1.10.3 = Dilithium-8x7-AES-r3
+
+# HSS-LMS
+# draft-gazdag-x509-hash-sigs-01
+1.2.840.113549.1.9.16.3.17 = HSS-LMS
+
+# HSS-LMS private key (since the format of an HSS-LMS private key is not specified,
+#  we define an OID for the one we use)
+1.3.6.1.4.1.25258.1.13 = HSS-LMS-Private-Key
 
 # SPHINCS+ OIDs are currently in Botan's private arc
 1.3.6.1.4.1.25258.1.12.1.1 = SphincsPlus-shake-128s-r3.1

@@ -124,6 +124,10 @@
    #include <botan/dilithium.h>
 #endif
 
+#if defined(BOTAN_HAS_HSS_LMS)
+   #include <botan/hss_lms.h>
+#endif
+
 #if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
    #include <botan/sphincsplus.h>
 #endif
@@ -411,7 +415,8 @@ class Speed final : public Command {
             "McEliece",
             "Kyber",
             "SPHINCS+",
-            "FrodoKEM"
+            "FrodoKEM",
+            "HSS-LMS",
          };
          // clang-format on
       }
@@ -624,6 +629,11 @@ class Speed final : public Command {
 #if defined(BOTAN_HAS_XMSS_RFC8391)
             else if(algo == "XMSS") {
                bench_xmss(provider, msec);
+            }
+#endif
+#if defined(BOTAN_HAS_HSS_LMS)
+            else if(algo == "HSS-LMS") {
+               bench_hss_lms(provider, msec);
             }
 #endif
 #if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
@@ -2125,6 +2135,33 @@ class Speed final : public Command {
 
             std::unique_ptr<Botan::Private_Key> key(
                keygen_timer->run([&] { return Botan::create_private_key("XMSS", rng(), params); }));
+
+            record_result(keygen_timer);
+            if(bench_pk_sig(*key, params, provider, "", msec) == 1) {
+               break;
+            }
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_HSS_LMS)
+      void bench_hss_lms(const std::string& provider, std::chrono::milliseconds msec) {
+         // At first we compare instances with multiple hash functions. LMS trees with
+         // height 10 are suitable, since they can be used for enough signatures and are
+         // fast enough for speed testing.
+         // Afterward, setups with multiple HSS layers are tested
+         std::vector<std::string> hss_lms_instances{"SHA-256,HW(10,1)",
+                                                    "SHAKE-256(256),HW(10,1)",
+                                                    "SHAKE-256(192),HW(10,1)",
+                                                    "Truncated(SHA-256,192),HW(10,1)",
+                                                    "SHA-256,HW(10,1),HW(10,1)",
+                                                    "SHA-256,HW(10,1),HW(10,1),HW(10,1)"};
+
+         for(const auto& params : hss_lms_instances) {
+            auto keygen_timer = make_timer(params, provider, "keygen");
+
+            std::unique_ptr<Botan::Private_Key> key(
+               keygen_timer->run([&] { return Botan::create_private_key("HSS-LMS", rng(), params); }));
 
             record_result(keygen_timer);
             if(bench_pk_sig(*key, params, provider, "", msec) == 1) {

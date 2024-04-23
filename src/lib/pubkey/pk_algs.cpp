@@ -82,6 +82,10 @@
    #include <botan/kyber.h>
 #endif
 
+#if defined(BOTAN_HAS_HSS_LMS)
+   #include <botan/hss_lms.h>
+#endif
+
 #if defined(BOTAN_HAS_XMSS_RFC8391)
    #include <botan/xmss.h>
 #endif
@@ -220,6 +224,12 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
+#if defined(BOTAN_HAS_HSS_LMS)
+   if(alg_name == "HSS-LMS") {
+      return std::make_unique<HSS_LMS_PublicKey>(key_bits);
+   }
+#endif
+
 #if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
    if(alg_name == "SPHINCS+" || alg_name.starts_with("SphincsPlus-")) {
       return std::make_unique<SphincsPlus_PublicKey>(alg_id, key_bits);
@@ -346,6 +356,12 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
    if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-")) {
       return std::make_unique<Dilithium_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_HSS_LMS)
+   if(alg_name == "HSS-LMS-Private-Key") {
+      return std::make_unique<HSS_LMS_PrivateKey>(key_bits);
    }
 #endif
 
@@ -482,6 +498,12 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
       }();
 
       return std::make_unique<Dilithium_PrivateKey>(rng, mode);
+   }
+#endif
+
+#if defined(BOTAN_HAS_HSS_LMS)
+   if(alg_name == "HSS-LMS") {
+      return std::make_unique<HSS_LMS_PrivateKey>(rng, params);
    }
 #endif
 
