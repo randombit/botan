@@ -14,15 +14,6 @@
 
 namespace Botan {
 
-namespace {
-
-void copy_into(std::span<uint8_t> out, std::span<const uint8_t> in) {
-   BOTAN_ASSERT_NOMSG(in.size() == out.size());
-   std::copy(in.begin(), in.end(), out.begin());
-}
-
-}  // namespace
-
 void treehash(StrongSpan<SphincsTreeNode> out_root,
               StrongSpan<SphincsAuthenticationPath> out_auth_path,
               const Sphincs_Parameters& params,
@@ -63,7 +54,7 @@ void treehash(StrongSpan<SphincsTreeNode> out_root,
       for(TreeLayerIndex h(0); true; ++h) {
          // Check if we hit the top of the tree
          if(h.get() == total_tree_height) {
-            copy_into(out_root, current_node);
+            copy_mem(out_root, current_node);
             return;
          }
 
@@ -72,7 +63,7 @@ void treehash(StrongSpan<SphincsTreeNode> out_root,
          // is 1 iff they have the same parent node in the FORS tree
          if(internal_leaf.has_value() && (internal_idx ^ internal_leaf.value()) == 0x01U) {
             auto auth_path_location = out_auth_path.get().subspan(h.get() * params.n(), params.n());
-            copy_into(auth_path_location, current_node);
+            copy_mem(auth_path_location, current_node);
          }
 
          // At this point we know that we'll need to use the stack. Get a
@@ -86,7 +77,7 @@ void treehash(StrongSpan<SphincsTreeNode> out_root,
          if((internal_idx & 1) == 0U && idx < max_idx) {
             // We've hit a left child; save the current for when we get the
             // corresponding right child.
-            copy_into(stack_location, current_node);
+            copy_mem(stack_location, current_node);
             break;
          }
 
@@ -123,7 +114,7 @@ void compute_root(StrongSpan<SphincsTreeNode> out,
 
    // Use the `out` parameter as intermediate buffer for left/right nodes
    // while traversing the tree.
-   copy_into(out, leaf);
+   copy_mem(out, leaf);
 
    // Views into either `auth_path` or `out` depending on the tree location.
    StrongSpan<const SphincsTreeNode> left;
