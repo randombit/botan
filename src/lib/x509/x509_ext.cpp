@@ -758,10 +758,10 @@ void CRL_Distribution_Points::decode_inner(const std::vector<uint8_t>& buf) {
 }
 
 void CRL_Distribution_Points::Distribution_Point::encode_into(DER_Encoder& der) const {
-   const auto uris = m_point.get_attribute("URI");
+   const auto uris = m_point.uris();
 
    if(uris.empty()) {
-      throw Not_Implemented("Empty CRL_Distribution_Point encoding");
+      throw Not_Implemented("Empty CRL_Distribution_Point encoding not implemented");
    }
 
    for(const auto& uri : uris) {

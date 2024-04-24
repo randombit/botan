@@ -510,38 +510,44 @@ const AlternativeName& X509_Certificate::issuer_alt_name() const {
    return data().m_issuer_alt_name;
 }
 
+namespace {
+
+std::vector<std::string> get_cert_user_info(std::string_view req, const X509_DN& dn, const AlternativeName& alt_name) {
+   auto set_to_vector = [](const std::set<std::string>& s) {
+      std::vector<std::string> v(s.size());
+      std::copy(s.begin(), s.end(), v.begin());
+      return v;
+   };
+
+   if(dn.has_field(req)) {
+      return dn.get_attribute(req);
+   } else if(req == "RFC822" || req == "Email") {
+      return set_to_vector(alt_name.email());
+   } else if(req == "DNS") {
+      return set_to_vector(alt_name.dns());
+   } else if(req == "URI") {
+      return set_to_vector(alt_name.uris());
+   } else if(req == "IP") {
+      return set_to_vector(alt_name.ip_address());
+   } else {
+      return {};
+   }
+}
+
+}  // namespace
+
 /*
 * Return information about the subject
 */
 std::vector<std::string> X509_Certificate::subject_info(std::string_view req) const {
-   if(req == "Email") {
-      return this->subject_info("RFC822");
-   }
-
-   if(subject_dn().has_field(req)) {
-      return subject_dn().get_attribute(req);
-   }
-
-   if(subject_alt_name().has_field(req)) {
-      return subject_alt_name().get_attribute(req);
-   }
-
-   return {};
+   return get_cert_user_info(req, subject_dn(), subject_alt_name());
 }
 
 /*
 * Return information about the issuer
 */
 std::vector<std::string> X509_Certificate::issuer_info(std::string_view req) const {
-   if(issuer_dn().has_field(req)) {
-      return issuer_dn().get_attribute(req);
-   }
-
-   if(issuer_alt_name().has_field(req)) {
-      return issuer_alt_name().get_attribute(req);
-   }
-
-   return {};
+   return get_cert_user_info(req, issuer_dn(), issuer_alt_name());
 }
 
 /*

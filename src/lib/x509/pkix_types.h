@@ -118,32 +118,83 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       void encode_into(DER_Encoder&) const override;
       void decode_from(BER_Decoder&) override;
 
-      std::multimap<std::string, std::string> contents() const;
+      // Create an empty name
+      AlternativeName() {}
 
-      bool has_field(std::string_view attr) const;
-      std::vector<std::string> get_attribute(std::string_view attr) const;
+      // Add a URI to this AlternativeName
+      void add_uri(std::string_view uri);
 
-      std::string get_first_attribute(std::string_view attr) const;
+      // Add a URI to this AlternativeName
+      void add_email(std::string_view addr);
 
-      void add_attribute(std::string_view type, std::string_view value);
-      void add_othername(const OID& oid, std::string_view value, ASN1_Type type);
+      void add_dns(std::string_view dns);
 
-      const std::multimap<std::string, std::string, std::less<>>& get_attributes() const { return m_alt_info; }
+      // Add an "OtherName" identified by object identifier
+      void add_other_name(const OID& oid, const ASN1_String& value);
 
-      const std::multimap<OID, ASN1_String>& get_othernames() const { return m_othernames; }
+      void add_dn(const X509_DN& dn);
 
-      X509_DN dn() const;
+      void add_ip_address(std::string_view ip_str);
 
+      // Read the set of URIs included in this alternative name
+      const std::set<std::string>& uris() const { return m_uri; }
+
+      // Read the set of email addresses included in this alternative name
+      const std::set<std::string>& email() const { return m_email; }
+
+      // Read the set of DNS names included in this alternative name
+      const std::set<std::string>& dns() const { return m_dns; }
+
+      const std::set<std::string>& ip_address() const { return m_ip_addr; }
+
+      const std::set<std::pair<OID, ASN1_String>>& other_names() const { return m_othernames; }
+
+      const std::set<X509_DN>& directory_names() const { return m_dn_names; }
+
+      // Return true if this has any names set
       bool has_items() const;
 
-      AlternativeName(std::string_view email_addr = "",
+      // Old, now deprecated interface follows:
+      BOTAN_DEPRECATED("Use AlternativeName::{uris, email, dns, othernames, directory_names}")
+      std::multimap<std::string, std::string> contents() const;
+
+      BOTAN_DEPRECATED("Use AlternativeName::{uris, email, dns, othernames, directory_names}.empty()")
+      bool has_field(std::string_view attr) const;
+
+      BOTAN_DEPRECATED("Use AlternativeName::{uris, email, dns, othernames, directory_names}")
+      std::vector<std::string> get_attribute(std::string_view attr) const;
+
+      BOTAN_DEPRECATED("Use AlternativeName::{uris, email, dns, othernames, directory_names}")
+      std::multimap<std::string, std::string, std::less<>> get_attributes() const;
+
+      BOTAN_DEPRECATED("Use AlternativeName::{uris, email, dns, othernames, directory_names}")
+      std::string get_first_attribute(std::string_view attr) const;
+
+      BOTAN_DEPRECATED("Use AlternativeName::add_{uri, dns, email, ...}")
+      void add_attribute(std::string_view type, std::string_view value);
+
+      BOTAN_DEPRECATED("Use AlternativeName::add_other_name")
+      void add_othername(const OID& oid, std::string_view value, ASN1_Type type);
+
+      BOTAN_DEPRECATED("Use AlternativeName::othernames")
+      std::multimap<OID, ASN1_String> get_othernames() const;
+
+      BOTAN_DEPRECATED("Use AlternativeName::directory_names")
+      X509_DN dn() const;
+
+      BOTAN_DEPRECATED("Use plain constructor plus add_{uri,dns,email,ip}")
+      AlternativeName(std::string_view email_addr,
                       std::string_view uri = "",
                       std::string_view dns = "",
                       std::string_view ip_address = "");
 
    private:
-      std::multimap<std::string, std::string, std::less<>> m_alt_info;
-      std::multimap<OID, ASN1_String> m_othernames;
+      std::set<std::string> m_dns;
+      std::set<std::string> m_uri;
+      std::set<std::string> m_email;
+      std::set<std::string> m_ip_addr;
+      std::set<X509_DN> m_dn_names;
+      std::set<std::pair<OID, ASN1_String>> m_othernames;
 };
 
 /**

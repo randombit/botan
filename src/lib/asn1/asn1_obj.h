@@ -425,6 +425,8 @@ class BOTAN_PUBLIC_API(2, 0) ASN1_String final : public ASN1_Object {
 
       bool operator==(const ASN1_String& other) const { return value() == other.value(); }
 
+      friend bool operator<(const ASN1_String& a, const ASN1_String& b) { return a.value() < b.value(); }
+
       explicit ASN1_String(std::string_view utf8 = "");
       ASN1_String(std::string_view utf8, ASN1_Type tag);
 

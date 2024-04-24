@@ -829,14 +829,11 @@ Test::Result test_pkcs10_ext(const Botan::Private_Key& key,
 
    opts.extensions.add(std::make_unique<Botan::Cert_Extension::Subject_Alternative_Name>(alt_name));
 
-   Botan::PKCS10_Request req = Botan::X509::create_cert_req(opts, key, hash_fn, rng);
+   const auto req = Botan::X509::create_cert_req(opts, key, hash_fn, rng);
 
-   std::vector<std::string> alt_dns_names = req.subject_alt_name().get_attribute("DNS");
+   const auto alt_dns_names = req.subject_alt_name().get_attribute("DNS");
 
    result.test_eq("Expected number of DNS names", alt_dns_names.size(), 4);
-
-   // The order is not guaranteed so sort before comparing
-   std::sort(alt_dns_names.begin(), alt_dns_names.end());
 
    if(alt_dns_names.size() == 4) {
       result.test_eq("Expected DNS name 1", alt_dns_names.at(0), "bonus.example.org");
@@ -1362,7 +1359,8 @@ Test::Result test_x509_extensions(const Botan::Private_Key& ca_key,
    std::vector<Botan::Cert_Extension::CRL_Distribution_Points::Distribution_Point> dps;
 
    for(const auto& uri : cdp_urls) {
-      Botan::AlternativeName cdp_alt_name("", uri);
+      Botan::AlternativeName cdp_alt_name;
+      cdp_alt_name.add_uri(uri);
       Botan::Cert_Extension::CRL_Distribution_Points::Distribution_Point dp(cdp_alt_name);
 
       dps.emplace_back(dp);
