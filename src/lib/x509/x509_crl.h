@@ -135,9 +135,17 @@ class BOTAN_PUBLIC_API(2, 0) X509_CRL final : public X509_Object {
       const X509_Time& next_update() const;
 
       /**
-      * Get the CRL's distribution point
+      * Get the CRL's issuing distribution point
       */
+      BOTAN_DEPRECATED("Use issuing_distribution_points")
       std::string crl_issuing_distribution_point() const;
+
+      /**
+      * Get the CRL's issuing distribution points
+      *
+      * See https://www.rfc-editor.org/rfc/rfc5280#section-5.2.5
+      */
+      std::vector<std::string> issuing_distribution_points() const;
 
       /**
       * Create an uninitialized CRL object. Any attempts to access
