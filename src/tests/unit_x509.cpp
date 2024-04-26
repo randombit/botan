@@ -818,12 +818,14 @@ Test::Result test_pkcs10_ext(const Botan::Private_Key& key,
 
    Botan::X509_Cert_Options opts;
 
+   opts.dns = "main.example.org";
+   opts.more_dns.push_back("more1.example.org");
+   opts.more_dns.push_back("more2.example.org");
+
    opts.padding_scheme = sig_padding;
 
    Botan::AlternativeName alt_name;
-   alt_name.add_attribute("DNS", "example.org");
-   alt_name.add_attribute("DNS", "example.com");
-   alt_name.add_attribute("DNS", "example.net");
+   alt_name.add_attribute("DNS", "bonus.example.org");
 
    opts.extensions.add(std::make_unique<Botan::Cert_Extension::Subject_Alternative_Name>(alt_name));
 
@@ -831,14 +833,17 @@ Test::Result test_pkcs10_ext(const Botan::Private_Key& key,
 
    std::vector<std::string> alt_dns_names = req.subject_alt_name().get_attribute("DNS");
 
-   result.test_eq("Expected number of DNS names", alt_dns_names.size(), 3);
+   result.test_eq("Expected number of DNS names", alt_dns_names.size(), 4);
 
    // The order is not guaranteed so sort before comparing
    std::sort(alt_dns_names.begin(), alt_dns_names.end());
 
-   result.test_eq("Expected DNS name 1", alt_dns_names.at(0), "example.com");
-   result.test_eq("Expected DNS name 2", alt_dns_names.at(1), "example.net");
-   result.test_eq("Expected DNS name 3", alt_dns_names.at(2), "example.org");
+   if(alt_dns_names.size() == 4) {
+      result.test_eq("Expected DNS name 1", alt_dns_names.at(0), "bonus.example.org");
+      result.test_eq("Expected DNS name 2", alt_dns_names.at(1), "main.example.org");
+      result.test_eq("Expected DNS name 3", alt_dns_names.at(2), "more1.example.org");
+      result.test_eq("Expected DNS name 3", alt_dns_names.at(3), "more2.example.org");
+   }
 
    return result;
 }

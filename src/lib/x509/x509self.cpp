@@ -21,25 +21,48 @@ namespace {
 /*
 * Load information from the X509_Cert_Options
 */
-void load_info(const X509_Cert_Options& opts, X509_DN& subject_dn, AlternativeName& subject_alt) {
+X509_DN load_dn_info(const X509_Cert_Options& opts) {
+   X509_DN subject_dn;
+
    subject_dn.add_attribute("X520.CommonName", opts.common_name);
    subject_dn.add_attribute("X520.Country", opts.country);
    subject_dn.add_attribute("X520.State", opts.state);
    subject_dn.add_attribute("X520.Locality", opts.locality);
    subject_dn.add_attribute("X520.Organization", opts.organization);
    subject_dn.add_attribute("X520.OrganizationalUnit", opts.org_unit);
+   subject_dn.add_attribute("X520.SerialNumber", opts.serial_number);
+
    for(const auto& extra_ou : opts.more_org_units) {
       subject_dn.add_attribute("X520.OrganizationalUnit", extra_ou);
    }
 
-   subject_dn.add_attribute("X520.SerialNumber", opts.serial_number);
-   subject_alt = AlternativeName(opts.email, opts.uri, opts.dns, opts.ip);
+   return subject_dn;
+}
+
+auto create_alt_name_ext(const X509_Cert_Options& opts, Extensions& extensions) {
+   AlternativeName subject_alt;
+
+   /*
+   If the extension was already created in opts.extension we need to
+   merge the values provied in opts with the values set in the extension.
+   */
+   if(auto ext = extensions.get_extension_object_as<Cert_Extension::Subject_Alternative_Name>()) {
+      subject_alt = ext->get_alt_name();
+   }
+
+   subject_alt.add_attribute("DNS", opts.dns);
+   subject_alt.add_attribute("URI", opts.uri);
+   subject_alt.add_attribute("RFC822", opts.email);
+   subject_alt.add_attribute("IP", opts.ip);
    subject_alt.add_othername(OID::from_string("PKIX.XMPPAddr"), opts.xmpp, ASN1_Type::Utf8String);
 
    for(const auto& dns : opts.more_dns) {
       subject_alt.add_attribute("DNS", dns);
    }
+
+   return std::make_unique<Cert_Extension::Subject_Alternative_Name>(subject_alt);
 }
+
 }  // namespace
 
 namespace X509 {
@@ -56,9 +79,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    const AlgorithmIdentifier sig_algo = signer->algorithm_identifier();
    BOTAN_ASSERT_NOMSG(sig_algo.oid().has_value());
 
-   X509_DN subject_dn;
-   AlternativeName subject_alt;
-   load_info(opts, subject_dn, subject_alt);
+   const auto subject_dn = load_dn_info(opts);
 
    Extensions extensions = opts.extensions;
 
@@ -79,7 +100,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    extensions.add_new(std::make_unique<Cert_Extension::Authority_Key_ID>(skid->get_key_id()));
    extensions.add_new(std::move(skid));
 
-   extensions.add_new(std::make_unique<Cert_Extension::Subject_Alternative_Name>(subject_alt));
+   extensions.replace(create_alt_name_ext(opts, extensions));
 
    extensions.add_new(std::make_unique<Cert_Extension::Extended_Key_Usage>(opts.ex_constraints));
 
@@ -93,9 +114,7 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
                                const Private_Key& key,
                                std::string_view hash_fn,
                                RandomNumberGenerator& rng) {
-   X509_DN subject_dn;
-   AlternativeName subject_alt;
-   load_info(opts, subject_dn, subject_alt);
+   const auto subject_dn = load_dn_info(opts);
 
    const auto constraints = opts.is_CA ? Key_Constraints::ca_constraints() : opts.constraints;
 
@@ -111,8 +130,9 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
       extensions.add_new(std::make_unique<Cert_Extension::Key_Usage>(constraints));
    }
 
-   extensions.add_new(std::make_unique<Cert_Extension::Extended_Key_Usage>(opts.ex_constraints));
-   extensions.add_new(std::make_unique<Cert_Extension::Subject_Alternative_Name>(subject_alt));
+   extensions.replace(create_alt_name_ext(opts, extensions));
+
+   create_alt_name_ext(opts, extensions);
 
    return PKCS10_Request::create(key, subject_dn, extensions, hash_fn, rng, opts.padding_scheme, opts.challenge);
 }
