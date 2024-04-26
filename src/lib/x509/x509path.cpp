@@ -369,9 +369,11 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
             status.insert(Certificate_Status_Code::CERT_IS_REVOKED);
          }
 
-         std::string dp = subject.crl_distribution_point();
+         const auto dp = subject.crl_distribution_points();
          if(!dp.empty()) {
-            if(dp != crls[i]->crl_issuing_distribution_point()) {
+            const auto crl_idp = crls[i]->crl_issuing_distribution_point();
+
+            if(std::find(dp.begin(), dp.end(), crl_idp) == dp.end()) {
                status.insert(Certificate_Status_Code::NO_MATCHING_CRLDP);
             }
          }

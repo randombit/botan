@@ -490,6 +490,10 @@ std::vector<std::string> X509_Certificate::ca_issuers() const {
    return data().m_ca_issuers;
 }
 
+std::vector<std::string> X509_Certificate::crl_distribution_points() const {
+   return data().m_crl_distribution_points;
+}
+
 std::string X509_Certificate::crl_distribution_point() const {
    // just returns the first (arbitrarily)
    if(!data().m_crl_distribution_points.empty()) {
@@ -728,8 +732,8 @@ std::string X509_Certificate::to_string() const {
       }
    }
 
-   if(!crl_distribution_point().empty()) {
-      out << "CRL " << crl_distribution_point() << "\n";
+   for(const auto& cdp : crl_distribution_points()) {
+      out << "CRL " << cdp << "\n";
    }
 
    out << "Signature algorithm: " << this->signature_algorithm().oid().to_formatted_string() << "\n";

@@ -334,7 +334,13 @@ class BOTAN_PUBLIC_API(2, 0) X509_Certificate : public X509_Object {
       /**
       * Return the CRL distribution point, or empty if not set
       */
+      BOTAN_DEPRECATED("Use crl_distribution_points")
       std::string crl_distribution_point() const;
+
+      /**
+      * Return the CRL distribution points, or empty if not set
+      */
+      std::vector<std::string> crl_distribution_points() const;
 
       /**
       * @return a free-form string describing the certificate

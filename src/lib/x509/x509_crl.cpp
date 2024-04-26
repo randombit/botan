@@ -25,7 +25,7 @@ struct CRL_Data {
       // cached values from extensions
       size_t m_crl_number = 0;
       std::vector<uint8_t> m_auth_key_id;
-      std::string m_issuing_distribution_point;
+      std::vector<std::string> m_idp_urls;
 };
 
 std::string X509_CRL::PEM_label() const {
@@ -162,12 +162,7 @@ std::unique_ptr<CRL_Data> decode_crl_body(const std::vector<uint8_t>& body, cons
       data->m_auth_key_id = ext->get_key_id();
    }
    if(auto ext = data->m_extensions.get_extension_object_as<Cert_Extension::CRL_Issuing_Distribution_Point>()) {
-      std::stringstream ss;
-
-      for(const auto& pair : ext->get_point().contents()) {
-         ss << pair.first << ": " << pair.second << " ";
-      }
-      data->m_issuing_distribution_point = ss.str();
+      data->m_idp_urls = ext->get_point().get_attribute("URL");
    }
 
    return data;
@@ -236,6 +231,17 @@ const X509_Time& X509_CRL::next_update() const {
 * Return the CRL's distribution point
 */
 std::string X509_CRL::crl_issuing_distribution_point() const {
-   return data().m_issuing_distribution_point;
+   if(!data().m_idp_urls.empty()) {
+      return data().m_idp_urls[0];
+   }
+   return "";
 }
+
+/*
+* Return the CRL's issuing distribution point
+*/
+std::vector<std::string> X509_CRL::issuing_distribution_points() const {
+   return data().m_idp_urls;
+}
+
 }  // namespace Botan

@@ -758,17 +758,17 @@ void CRL_Distribution_Points::decode_inner(const std::vector<uint8_t>& buf) {
 }
 
 void CRL_Distribution_Points::Distribution_Point::encode_into(DER_Encoder& der) const {
-   if(!m_point.get_attributes().contains("URI")) {
+   const auto uris = m_point.get_attribute("URI");
+
+   if(uris.empty()) {
       throw Not_Implemented("Empty CRL_Distribution_Point encoding");
    }
 
-   const auto range = m_point.get_attributes().equal_range("URI");
-
-   for(auto i = range.first; i != range.second; ++i) {
+   for(const auto& uri : uris) {
       der.start_sequence()
          .start_cons(ASN1_Type(0), ASN1_Class::ContextSpecific)
          .start_cons(ASN1_Type(0), ASN1_Class::ContextSpecific)
-         .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, i->second)
+         .add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, uri)
          .end_cons()
          .end_cons()
          .end_cons();
