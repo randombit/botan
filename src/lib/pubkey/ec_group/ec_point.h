@@ -32,6 +32,10 @@ enum class EC_Point_Format {
 */
 class BOTAN_PUBLIC_API(2, 0) EC_Point final {
    public:
+      friend class EC_Point_Var_Point_Precompute;
+      friend class EC_Point_Multi_Point_Precompute;
+      friend class EC_Point_Base_Point_Precompute;
+
       typedef EC_Point_Format Compression_Type;
       using enum EC_Point_Format;
 
@@ -72,6 +76,19 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
          }
          return (*this);
       }
+
+      /**
+      * Point multiplication operator
+      *
+      * Simple unblinded Montgomery ladder
+      *
+      * Warning: prefer the functions on EC_Group such as
+      * blinded_var_point_multiply
+      *
+      * @param scalar the scalar value
+      * @return *this multiplied by the scalar value
+      */
+      EC_Point mul(const BigInt& scalar) const;
 
       /**
       * Construct a point from its affine coordinates
@@ -121,45 +138,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       }
 
       /**
-      * get affine x coordinate
-      * @result affine x coordinate
-      */
-      BigInt get_affine_x() const;
-
-      /**
-      * get affine y coordinate
-      * @result affine y coordinate
-      */
-      BigInt get_affine_y() const;
-
-      /**
-      * Return the internal x coordinate
-      *
-      * Note this may be in Montgomery form
-      */
-      const BigInt& get_x() const { return m_coord_x; }
-
-      /**
-      * Return the internal y coordinate
-      *
-      * Note this may be in Montgomery form
-      */
-      const BigInt& get_y() const { return m_coord_y; }
-
-      /**
-      * Return the internal z coordinate
-      *
-      * Note this may be in Montgomery form
-      */
-      const BigInt& get_z() const { return m_coord_z; }
-
-      void swap_coords(BigInt& new_x, BigInt& new_y, BigInt& new_z) {
-         m_coord_x.swap(new_x);
-         m_coord_y.swap(new_y);
-         m_coord_z.swap(new_z);
-      }
-
-      /**
       * Force this point to affine coordinates
       */
       void force_affine();
@@ -185,12 +163,36 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       bool on_the_curve() const;
 
       /**
-      * swaps the states of *this and other, does not throw!
-      * @param other the object to swap values with
+      * Return the fixed length big endian encoding of x coordinate
       */
-      void swap(EC_Point& other);
+      secure_vector<uint8_t> x_bytes() const;
 
-      friend void swap(EC_Point& x, EC_Point& y) { x.swap(y); }
+      /**
+      * Return the fixed length big endian encoding of y coordinate
+      */
+      secure_vector<uint8_t> y_bytes() const;
+
+      /**
+      * Return the fixed length concatenation of the x and y coordinates
+      */
+      secure_vector<uint8_t> xy_bytes() const;
+
+      /**
+      * get affine x coordinate
+      * @result affine x coordinate
+      */
+      BigInt get_affine_x() const;
+
+      /**
+      * get affine y coordinate
+      * @result affine y coordinate
+      */
+      BigInt get_affine_y() const;
+
+      /**
+      * Return the zero (aka infinite) point associated with this curve
+      */
+      EC_Point zero() const { return EC_Point(m_curve); }
 
       /**
       * Randomize the point representation
@@ -199,15 +201,59 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       void randomize_repr(RandomNumberGenerator& rng);
 
       /**
+      * Equality operator
+      */
+      bool operator==(const EC_Point& other) const;
+
+      bool operator!=(const EC_Point& other) const { return !(*this == other); }
+
+      /**
+      * swaps the states of *this and other, does not throw!
+      * @param other the object to swap values with
+      */
+      void swap(EC_Point& other);
+
+#if defined(BOTAN_DISABLE_DEPRECATED_FEATURES)
+
+   private:
+#endif
+
+      /**
+      * Return the internal x coordinate
+      *
+      * Note this may be in Montgomery form
+      */
+      BOTAN_DEPRECATED("Use affine coordinates only") const BigInt& get_x() const { return m_coord_x; }
+
+      /**
+      * Return the internal y coordinate
+      *
+      * Note this may be in Montgomery form
+      */
+      BOTAN_DEPRECATED("Use affine coordinates only") const BigInt& get_y() const { return m_coord_y; }
+
+      /**
+      * Return the internal z coordinate
+      *
+      * Note this may be in Montgomery form
+      */
+      BOTAN_DEPRECATED("Use affine coordinates only") const BigInt& get_z() const { return m_coord_z; }
+
+      BOTAN_DEPRECATED("Deprecated no replacement")
+
+      void swap_coords(BigInt& new_x, BigInt& new_y, BigInt& new_z) {
+         m_coord_x.swap(new_x);
+         m_coord_y.swap(new_y);
+         m_coord_z.swap(new_z);
+      }
+
+      friend void swap(EC_Point& x, EC_Point& y) { x.swap(y); }
+
+      /**
       * Randomize the point representation
       * The actual value (get_affine_x, get_affine_y) does not change
       */
       void randomize_repr(RandomNumberGenerator& rng, secure_vector<word>& ws);
-
-      /**
-      * Equality operator
-      */
-      bool operator==(const EC_Point& other) const;
 
       /**
       * Point addition
@@ -313,11 +359,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       }
 
       /**
-      * Return the zero (aka infinite) point associated with this curve
-      */
-      EC_Point zero() const { return EC_Point(m_curve); }
-
-      /**
       * Return base curve of this point
       * @result the curve over GF(p) of this point
       *
@@ -331,14 +372,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
 };
 
 /**
-* Point multiplication operator
-* @param scalar the scalar value
-* @param point the point value
-* @return scalar*point on the curve
-*/
-BOTAN_PUBLIC_API(2, 0) EC_Point operator*(const BigInt& scalar, const EC_Point& point);
-
-/**
 * ECC point multiexponentiation - not constant time!
 * @param p1 a point
 * @param z1 a scalar
@@ -348,11 +381,6 @@ BOTAN_PUBLIC_API(2, 0) EC_Point operator*(const BigInt& scalar, const EC_Point& 
 */
 BOTAN_PUBLIC_API(2, 0)
 EC_Point multi_exponentiate(const EC_Point& p1, const BigInt& z1, const EC_Point& p2, const BigInt& z2);
-
-// relational operators
-inline bool operator!=(const EC_Point& lhs, const EC_Point& rhs) {
-   return !(rhs == lhs);
-}
 
 // arithmetic operators
 inline EC_Point operator-(const EC_Point& lhs) {
@@ -370,13 +398,18 @@ inline EC_Point operator-(const EC_Point& lhs, const EC_Point& rhs) {
 }
 
 inline EC_Point operator*(const EC_Point& point, const BigInt& scalar) {
-   return scalar * point;
+   return point.mul(scalar);
+}
+
+inline EC_Point operator*(const BigInt& scalar, const EC_Point& point) {
+   return point.mul(scalar);
 }
 
 /**
 * Perform point decoding
 * Use EC_Group::OS2ECP instead
 */
+BOTAN_DEPRECATED("Use EC_Group::OS2ECP")
 EC_Point BOTAN_PUBLIC_API(2, 0) OS2ECP(const uint8_t data[], size_t data_len, const CurveGFp& curve);
 
 /**
@@ -389,14 +422,12 @@ EC_Point BOTAN_PUBLIC_API(2, 0) OS2ECP(const uint8_t data[], size_t data_len, co
 * @param curve_a the curve equation a parameter
 * @param curve_b the curve equation b parameter
 */
+BOTAN_DEPRECATED("Use EC_Group::OS2ECP")
 std::pair<BigInt, BigInt> BOTAN_UNSTABLE_API
-OS2ECP(const uint8_t data[], size_t data_len, const BigInt& curve_p, const BigInt& curve_a, const BigInt& curve_b);
+   OS2ECP(const uint8_t data[], size_t data_len, const BigInt& curve_p, const BigInt& curve_a, const BigInt& curve_b);
 
-inline EC_Point OS2ECP(std::span<const uint8_t> data, const CurveGFp& curve) {
-   return OS2ECP(data.data(), data.size(), curve);
-}
-
-class EC_Point_Var_Point_Precompute;
+BOTAN_DEPRECATED("Use EC_Group::OS2ECP")
+EC_Point BOTAN_UNSTABLE_API OS2ECP(std::span<const uint8_t> data, const CurveGFp& curve);
 
 // The name used for this type in older versions
 typedef EC_Point PointGFp;

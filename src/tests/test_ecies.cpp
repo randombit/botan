@@ -220,6 +220,8 @@ class ECIES_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> ciphertext = vars.get_req_bin("Ciphertext");
 
          const Flags flags = ecies_flags(cofactor_mode, old_cofactor_mode, check_mode, single_hash_mode);
+
+         // This test uses a mix of named curves plus PEM, so we use the deprecated constructor atm
          const Botan::EC_Group domain(curve);
          const Botan::ECDH_PrivateKey private_key(this->rng(), domain, private_key_value);
          const Botan::ECDH_PrivateKey other_private_key(this->rng(), domain, other_private_key_value);
@@ -243,7 +245,8 @@ Test::Result test_other_key_not_set() {
    auto rng = Test::new_rng("ecies_other_key_not_set");
 
    const Flags flags = ecies_flags(false, false, false, true);
-   const Botan::EC_Group domain("secp521r1");
+   const auto domain = Botan::EC_Group::from_name("secp521r1");
+
    const Botan::BigInt private_key_value(
       "405029866705438137604064977397053031159826489755682166267763407"
       "5002761777100287880684822948852132235484464537021197213998300006"
@@ -273,7 +276,8 @@ Test::Result test_kdf_not_found() {
    auto rng = Test::new_rng("ecies_kdf_not_found");
 
    const Flags flags = ecies_flags(false, false, false, true);
-   const Botan::EC_Group domain("secp521r1");
+   const auto domain = Botan::EC_Group::from_name("secp521r1");
+
    const Botan::BigInt private_key_value(
       "405029866705438137604064977397053031159826489755682166267763407"
       "5002761777100287880684822948852132235484464537021197213998300006"
@@ -303,7 +307,8 @@ Test::Result test_mac_not_found() {
    auto rng = Test::new_rng("ecies_mac_not_found");
 
    const Flags flags = ecies_flags(false, false, false, true);
-   const Botan::EC_Group domain("secp521r1");
+   const auto domain = Botan::EC_Group::from_name("secp521r1");
+
    const Botan::BigInt private_key_value(
       "405029866705438137604064977397053031159826489755682166267763407"
       "5002761777100287880684822948852132235484464537021197213998300006"
@@ -333,7 +338,8 @@ Test::Result test_cipher_not_found() {
    auto rng = Test::new_rng("ecies_cipher_not_found");
 
    const Flags flags = ecies_flags(false, false, false, true);
-   const Botan::EC_Group domain("secp521r1");
+   const auto domain = Botan::EC_Group::from_name("secp521r1");
+
    const Botan::BigInt private_key_value(
       "405029866705438137604064977397053031159826489755682166267763407"
       "5002761777100287880684822948852132235484464537021197213998300006"
@@ -362,7 +368,7 @@ Test::Result test_system_params_short_ctor() {
 
    auto rng = Test::new_rng("ecies_params_short_ctor");
 
-   const Botan::EC_Group domain("secp521r1");
+   const auto domain = Botan::EC_Group::from_name("secp521r1");
    const Botan::BigInt private_key_value(
       "405029866705438137604064977397053031159826489755682166267763407"
       "5002761777100287880684822948852132235484464537021197213998300006"
@@ -403,7 +409,7 @@ Test::Result test_system_params_short_ctor() {
 Test::Result test_ciphertext_too_short() {
    Test::Result result("ECIES ciphertext too short");
 
-   const Botan::EC_Group domain("secp521r1");
+   const auto domain = Botan::EC_Group::from_name("secp521r1");
    const Botan::BigInt private_key_value(
       "405029866705438137604064977397053031159826489755682166267763407"
       "5002761777100287880684822948852132235484464537021197213998300006"

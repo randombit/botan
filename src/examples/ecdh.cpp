@@ -10,7 +10,7 @@ int main() {
    Botan::AutoSeeded_RNG rng;
 
    // ec domain and KDF
-   Botan::EC_Group domain("secp521r1");
+   const auto domain = Botan::EC_Group::from_name("secp521r1");
    const std::string kdf = "KDF2(SHA-256)";
 
    // the two parties generate ECDH keys

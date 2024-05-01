@@ -107,7 +107,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_ECDSA_PrivateKey final : public PKCS11_EC_Pr
 
       size_t message_parts() const override { return 2; }
 
-      size_t message_part_size() const override { return domain().get_order().bytes(); }
+      size_t message_part_size() const override { return domain().get_order_bytes(); }
 
       /// @return the exported ECDSA private key
       ECDSA_PrivateKey export_key() const;

@@ -260,7 +260,9 @@ class ECDSA_Timing_Test final : public Timing_Test {
 };
 
 ECDSA_Timing_Test::ECDSA_Timing_Test(const std::string& ecgroup) :
-      m_group(ecgroup), m_privkey(timing_test_rng(), m_group), m_x(m_privkey.private_value()) {
+      m_group(Botan::EC_Group::from_name(ecgroup)),
+      m_privkey(timing_test_rng(), m_group),
+      m_x(m_privkey.private_value()) {
    m_b = m_group.random_scalar(timing_test_rng());
    m_b_inv = m_group.inverse_mod_order(m_b);
 }
@@ -296,7 +298,7 @@ ticks ECDSA_Timing_Test::measure_critical_function(const std::vector<uint8_t>& i
 
 class ECC_Mul_Timing_Test final : public Timing_Test {
    public:
-      explicit ECC_Mul_Timing_Test(const std::string& ecgroup) : m_group(ecgroup) {}
+      explicit ECC_Mul_Timing_Test(const std::string& ecgroup) : m_group(Botan::EC_Group::from_name(ecgroup)) {}
 
       ticks measure_critical_function(const std::vector<uint8_t>& input) override;
 

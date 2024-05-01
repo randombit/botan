@@ -360,14 +360,12 @@ EC_Point& EC_Point::operator*=(const BigInt& scalar) {
    return *this;
 }
 
-EC_Point operator*(const BigInt& scalar, const EC_Point& point) {
-   BOTAN_DEBUG_ASSERT(point.on_the_curve());
-
+EC_Point EC_Point::mul(const BigInt& scalar) const {
    const size_t scalar_bits = scalar.bits();
 
    std::vector<BigInt> ws(EC_Point::WORKSPACE_SIZE);
 
-   EC_Point R[2] = {point.zero(), point};
+   EC_Point R[2] = {this->zero(), *this};
 
    for(size_t i = scalar_bits; i > 0; i--) {
       const size_t b = scalar.get_bit(i - 1);
@@ -464,6 +462,28 @@ void EC_Point::force_affine() {
 
 bool EC_Point::is_affine() const {
    return m_curve.is_one(m_coord_z);
+}
+
+secure_vector<uint8_t> EC_Point::x_bytes() const {
+   const size_t p_bytes = m_curve.get_p_bytes();
+   secure_vector<uint8_t> b(p_bytes);
+   BigInt::encode_1363(b.data(), b.size(), this->get_affine_x());
+   return b;
+}
+
+secure_vector<uint8_t> EC_Point::y_bytes() const {
+   const size_t p_bytes = m_curve.get_p_bytes();
+   secure_vector<uint8_t> b(p_bytes);
+   BigInt::encode_1363(b.data(), b.size(), this->get_affine_y());
+   return b;
+}
+
+secure_vector<uint8_t> EC_Point::xy_bytes() const {
+   const size_t p_bytes = m_curve.get_p_bytes();
+   secure_vector<uint8_t> b(2 * p_bytes);
+   BigInt::encode_1363(&b[0], p_bytes, this->get_affine_x());
+   BigInt::encode_1363(&b[p_bytes], p_bytes, this->get_affine_y());
+   return b;
 }
 
 BigInt EC_Point::get_affine_x() const {
@@ -680,6 +700,10 @@ std::pair<BigInt, BigInt> OS2ECP(
    }
 
    return std::make_pair(x, y);
+}
+
+EC_Point OS2ECP(std::span<const uint8_t> data, const CurveGFp& curve) {
+   return OS2ECP(data.data(), data.size(), curve);
 }
 
 }  // namespace Botan

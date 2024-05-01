@@ -22,11 +22,19 @@ class BOTAN_UNSTABLE_API CurveGFp_Repr {
    public:
       virtual ~CurveGFp_Repr() = default;
 
+      friend class CurveGFp;
+
+   protected:
       virtual const BigInt& get_p() const = 0;
       virtual const BigInt& get_a() const = 0;
       virtual const BigInt& get_b() const = 0;
 
-      virtual size_t get_p_words() const = 0;
+      size_t get_p_words() const {
+         const size_t W_bits = sizeof(word) * 8;
+         return (get_p_bits() + W_bits - 1) / W_bits;
+      }
+
+      virtual size_t get_p_bits() const = 0;
 
       virtual size_t get_ws_size() const = 0;
 
@@ -85,6 +93,29 @@ class BOTAN_UNSTABLE_API CurveGFp_Repr {
 class BOTAN_UNSTABLE_API CurveGFp final {
    public:
       /**
+      * @return curve coefficient a
+      */
+      const BigInt& get_a() const { return m_repr->get_a(); }
+
+      /**
+      * @return curve coefficient b
+      */
+      const BigInt& get_b() const { return m_repr->get_b(); }
+
+      /**
+      * Get prime modulus of the field of the curve
+      * @return prime modulus of the field of the curve
+      */
+      const BigInt& get_p() const { return m_repr->get_p(); }
+
+   private:
+      friend class EC_Point;
+      friend class EC_Group;
+      friend class EC_Group_Data;
+      friend class EC_Point_Base_Point_Precompute;
+      friend class EC_Point_Var_Point_Precompute;
+
+      /**
       * Create an uninitialized CurveGFp
       */
       CurveGFp() = default;
@@ -101,23 +132,11 @@ class BOTAN_UNSTABLE_API CurveGFp final {
 
       CurveGFp& operator=(const CurveGFp&) = default;
 
-      /**
-      * @return curve coefficient a
-      */
-      const BigInt& get_a() const { return m_repr->get_a(); }
-
-      /**
-      * @return curve coefficient b
-      */
-      const BigInt& get_b() const { return m_repr->get_b(); }
-
-      /**
-      * Get prime modulus of the field of the curve
-      * @return prime modulus of the field of the curve
-      */
-      const BigInt& get_p() const { return m_repr->get_p(); }
-
       size_t get_p_words() const { return m_repr->get_p_words(); }
+
+      size_t get_p_bits() const { return m_repr->get_p_bits(); }
+
+      size_t get_p_bytes() const { return (get_p_bits() + 7) / 8; }
 
       size_t get_ws_size() const { return m_repr->get_ws_size(); }
 
@@ -194,15 +213,13 @@ class BOTAN_UNSTABLE_API CurveGFp final {
          return (get_p() == other.get_p()) && (get_a() == other.get_a()) && (get_b() == other.get_b());
       }
 
+      inline bool operator!=(const CurveGFp& other) const { return !((*this) == other); }
+
    private:
       static std::shared_ptr<CurveGFp_Repr> choose_repr(const BigInt& p, const BigInt& a, const BigInt& b);
 
       std::shared_ptr<CurveGFp_Repr> m_repr;
 };
-
-inline bool operator!=(const CurveGFp& lhs, const CurveGFp& rhs) {
-   return !(lhs == rhs);
-}
 
 }  // namespace Botan
 

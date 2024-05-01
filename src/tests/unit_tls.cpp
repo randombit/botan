@@ -183,7 +183,7 @@ class Credentials_Manager_Test final : public Botan::Credentials_Manager {
 std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenerator& rng,
                                                        bool with_client_certs = false) {
    // rsa and ecdsa are required for the tls module
-   const Botan::EC_Group ecdsa_params("secp256r1");
+   const auto ecdsa_params = Botan::EC_Group::from_name("secp256r1");
    const size_t rsa_params = 1024;
 
    auto rsa_ca_key = std::make_unique<Botan::RSA_PrivateKey>(rng, rsa_params);
@@ -431,7 +431,7 @@ class TLS_Handshake_Test final {
                Botan::RandomNumberGenerator& rng) override {
                if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
                   std::get<Botan::TLS::Group_Params>(group).wire_code() == 0xFEE1) {
-                  const Botan::EC_Group ec_group("secp112r1");
+                  const auto ec_group = Botan::EC_Group::from_name("secp112r1");
                   return std::make_unique<Botan::ECDH_PrivateKey>(rng, ec_group);
                }
 
@@ -446,7 +446,7 @@ class TLS_Handshake_Test final {
                const Botan::TLS::Policy& policy) override {
                if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
                   std::get<Botan::TLS::Group_Params>(group).wire_code() == 0xFEE1) {
-                  const Botan::EC_Group ec_group("secp112r1");
+                  const auto ec_group = Botan::EC_Group::from_name("secp112r1");
                   Botan::ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(public_value));
                   Botan::PK_Key_Agreement ka(private_key, rng, "Raw");
                   return ka.derive_key(0, peer_key.public_value()).bits_of();

@@ -40,7 +40,7 @@ namespace {
 Test::Result test_hash_larger_than_n() {
    Test::Result result("ECDSA Unit");
 
-   Botan::EC_Group dom_pars("secp160r1");
+   const auto dom_pars = Botan::EC_Group::from_name("secp160r1");
 
    // n = 0x0100000000000000000001f4c8f927aed3ca752257 (21 bytes)
 
@@ -128,7 +128,7 @@ Test::Result test_sign_then_ver() {
 
    auto rng = Test::new_rng("ecdsa_sign_then_verify");
 
-   Botan::EC_Group dom_pars("secp160r1");
+   const auto dom_pars = Botan::EC_Group::from_name("secp160r1");
    Botan::ECDSA_PrivateKey ecdsa(*rng, dom_pars);
 
    Botan::PK_Signer signer(ecdsa, *rng, "SHA-256");
@@ -152,7 +152,7 @@ Test::Result test_ec_sign() {
    auto rng = Test::new_rng("ecdsa_sign");
 
    try {
-      Botan::EC_Group dom_pars("secp160r1");
+      const auto dom_pars = Botan::EC_Group::from_name("secp160r1");
       Botan::ECDSA_PrivateKey priv_key(*rng, dom_pars);
       Botan::PK_Signer signer(priv_key, *rng, "SHA-224");
       Botan::PK_Verifier verifier(priv_key, "SHA-224");
@@ -201,7 +201,7 @@ Test::Result test_ecdsa_create_save_load() {
    auto rng = Test::new_rng("ecdsa_save_and_load");
 
    try {
-      Botan::EC_Group dom_pars("secp160r1");
+      const auto dom_pars = Botan::EC_Group::from_name("secp160r1");
       Botan::ECDSA_PrivateKey key(*rng, dom_pars);
 
       Botan::PK_Signer signer(key, *rng, "SHA-256");
@@ -271,7 +271,7 @@ Test::Result test_encoding_options() {
 
    auto rng = Test::new_rng("ecdsa_encoding_options");
 
-   Botan::EC_Group group("secp256r1");
+   const auto group = Botan::EC_Group::from_name("secp256r1");
    Botan::ECDSA_PrivateKey key(*rng, group);
 
    result.confirm("Default encoding is uncompressed", key.point_encoding() == Botan::EC_Point_Format::Uncompressed);
@@ -393,7 +393,7 @@ Test::Result test_curve_registry() {
 
    for(const std::string& group_name : Botan::EC_Group::known_named_groups()) {
       try {
-         Botan::EC_Group group(group_name);
+         const auto group = Botan::EC_Group::from_name(group_name);
          Botan::ECDSA_PrivateKey ecdsa(*rng, group);
 
          Botan::PK_Signer signer(ecdsa, *rng, "SHA-256");

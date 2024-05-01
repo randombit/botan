@@ -75,7 +75,7 @@ class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
          if(S.on_the_curve() == false) {
             throw Internal_Error("ECDH agreed value was not on the curve");
          }
-         return BigInt::encode_1363(S.get_affine_x(), group.get_p_bytes());
+         return S.x_bytes();
       }
 
    private:
@@ -159,7 +159,7 @@ SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_p
    // Note: the argument `m_params.secret_length()` passed for `key_len` will only be used by providers because
    // "Raw" is passed to the `PK_Key_Agreement` if the implementation of botan is used.
    const SymmetricKey peh =
-      m_ka.derive_key(m_params.domain().get_order().bytes(), other_public_key_bin.data(), other_public_key_bin.size());
+      m_ka.derive_key(m_params.domain().get_order_bytes(), other_public_key_bin.data(), other_public_key_bin.size());
    derivation_input.insert(derivation_input.end(), peh.begin(), peh.end());
 
    // ISO 18033: encryption step g / decryption step i

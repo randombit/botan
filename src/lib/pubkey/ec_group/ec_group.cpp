@@ -403,11 +403,33 @@ EC_Group::EC_Group(const EC_Group&) = default;
 
 EC_Group& EC_Group::operator=(const EC_Group&) = default;
 
-EC_Group::EC_Group(const OID& domain_oid) {
-   this->m_data = ec_group_data().lookup(domain_oid);
-   if(!this->m_data) {
-      throw Invalid_Argument("Unknown EC_Group " + domain_oid.to_string());
+// Internal constructor
+EC_Group::EC_Group(std::shared_ptr<EC_Group_Data>&& data) : m_data(std::move(data)) {}
+
+//static
+EC_Group EC_Group::from_OID(const OID& oid) {
+   auto data = ec_group_data().lookup(oid);
+
+   if(!data) {
+      throw Invalid_Argument(fmt("No EC_Group associated with OID '{}'", oid.to_string()));
    }
+
+   return EC_Group(std::move(data));
+}
+
+//static
+EC_Group EC_Group::from_name(std::string_view name) {
+   std::shared_ptr<EC_Group_Data> data;
+
+   if(auto oid = OID::from_name(name)) {
+      data = ec_group_data().lookup(oid.value());
+   }
+
+   if(!data) {
+      throw Invalid_Argument(fmt("Unknown EC_Group '{}'", name));
+   }
+
+   return EC_Group(std::move(data));
 }
 
 EC_Group::EC_Group(std::string_view str) {
@@ -439,7 +461,7 @@ EC_Group::EC_Group(std::string_view str) {
 }
 
 //static
-EC_Group EC_Group::EC_Group_from_PEM(std::string_view pem) {
+EC_Group EC_Group::from_PEM(std::string_view pem) {
    const auto ber = PEM_Code::decode_check_label(pem, "EC PARAMETERS");
    return EC_Group(ber.data(), ber.size());
 }
@@ -531,6 +553,10 @@ BigInt EC_Group::mod_order(const BigInt& k) const {
 
 BigInt EC_Group::square_mod_order(const BigInt& x) const {
    return data().square_mod_order(x);
+}
+
+BigInt EC_Group::cube_mod_order(const BigInt& x) const {
+   return multiply_mod_order(x, square_mod_order(x));
 }
 
 BigInt EC_Group::multiply_mod_order(const BigInt& x, const BigInt& y) const {

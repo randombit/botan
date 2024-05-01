@@ -19,17 +19,11 @@
 namespace Botan {
 
 std::vector<uint8_t> GOST_3410_PublicKey::public_key_bits() const {
-   const BigInt x = public_point().get_affine_x();
-   const BigInt y = public_point().get_affine_y();
+   auto bits = public_point().xy_bytes();
 
-   const size_t part_size = domain().get_p_bytes();
+   const size_t part_size = bits.size() / 2;
 
-   std::vector<uint8_t> bits(2 * part_size);
-
-   x.binary_encode(&bits[part_size - x.bytes()]);
-   y.binary_encode(&bits[2 * part_size - y.bytes()]);
-
-   // Keys are stored in little endian format (WTF)
+   // GOST keys are stored in little endian format (WTF)
    for(size_t i = 0; i != part_size / 2; ++i) {
       std::swap(bits[i], bits[part_size - 1 - i]);
       std::swap(bits[part_size + i], bits[2 * part_size - 1 - i]);
@@ -67,7 +61,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id, std:
    // The parameters also includes hash and cipher OIDs
    BER_Decoder(alg_id.parameters()).start_sequence().decode(ecc_param_id);
 
-   m_domain_params = EC_Group(ecc_param_id);
+   m_domain_params = EC_Group::from_OID(ecc_param_id);
 
    const size_t p_bits = m_domain_params.get_p_bits();
    if(p_bits != 256 && p_bits != 512) {

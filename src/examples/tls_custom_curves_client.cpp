@@ -1,3 +1,5 @@
+#define BOTAN_NO_DEPRECATED_WARNINGS
+
 #include <botan/auto_rng.h>
 #include <botan/certstor.h>
 #include <botan/ecdh.h>
@@ -34,7 +36,7 @@ class Callbacks : public Botan::TLS::Callbacks {
          if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
             std::get<Botan::TLS::Group_Params>(group) == Botan::TLS::Group_Params(0xFE00)) {
             // generate a private key of my custom curve
-            const Botan::EC_Group ec_group("numsp256d1");
+            const auto ec_group = Botan::EC_Group::from_name("numsp256d1");
             return std::make_unique<Botan::ECDH_PrivateKey>(rng, ec_group);
          } else {
             // no custom curve used: up-call the default implementation
@@ -51,7 +53,7 @@ class Callbacks : public Botan::TLS::Callbacks {
          if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
             std::get<Botan::TLS::Group_Params>(group) == Botan::TLS::Group_Params(0xFE00)) {
             // perform a key agreement on my custom curve
-            const Botan::EC_Group ec_group("numsp256d1");
+            const auto ec_group = Botan::EC_Group::from_name("numsp256d1");
             Botan::ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(public_value));
             Botan::PK_Key_Agreement ka(private_key, rng, "Raw");
             return ka.derive_key(0, peer_key.public_value()).bits_of();

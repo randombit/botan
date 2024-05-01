@@ -176,13 +176,7 @@ bool EC_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
 }
 
 const BigInt& EC_PublicKey::get_int_field(std::string_view field) const {
-   if(field == "public_x") {
-      BOTAN_ASSERT_NOMSG(this->public_point().is_affine());
-      return this->public_point().get_x();
-   } else if(field == "public_y") {
-      BOTAN_ASSERT_NOMSG(this->public_point().is_affine());
-      return this->public_point().get_y();
-   } else if(field == "base_x") {
+   if(field == "base_x") {
       return this->domain().get_g_x();
    } else if(field == "base_y") {
       return this->domain().get_g_y();

@@ -75,8 +75,7 @@ std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
    hash.update(BigInt::encode_1363(domain.get_b(), p_bytes));
    hash.update(BigInt::encode_1363(domain.get_g_x(), p_bytes));
    hash.update(BigInt::encode_1363(domain.get_g_y(), p_bytes));
-   hash.update(BigInt::encode_1363(pubkey.get_affine_x(), p_bytes));
-   hash.update(BigInt::encode_1363(pubkey.get_affine_y(), p_bytes));
+   hash.update(pubkey.xy_bytes());
 
    std::vector<uint8_t> za(hash.output_length());
    hash.final(za.data());
@@ -144,7 +143,7 @@ secure_vector<uint8_t> SM2_Signature_Operation::sign(RandomNumberGenerator& rng)
    const BigInt r = m_group.mod_order(m_group.blinded_base_point_multiply_x(k, rng, m_ws) + e);
    const BigInt s = m_group.multiply_mod_order(m_da_inv, m_group.mod_order(k - r * m_x));
 
-   return BigInt::encode_fixed_length_int_pair(r, s, m_group.get_order().bytes());
+   return BigInt::encode_fixed_length_int_pair(r, s, m_group.get_order_bytes());
 }
 
 /**
@@ -195,7 +194,7 @@ bool SM2_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t 
       m_digest.clear();
    }
 
-   if(sig_len != m_group.get_order().bytes() * 2) {
+   if(sig_len != m_group.get_order_bytes() * 2) {
       return false;
    }
 

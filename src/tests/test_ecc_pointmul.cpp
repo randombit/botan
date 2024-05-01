@@ -30,7 +30,7 @@ class ECC_Basepoint_Mul_Tests final : public Text_Based_Test {
          const auto k_bytes = vars.get_req_bin("k");
          const auto P_bytes = vars.get_req_bin("P");
 
-         Botan::EC_Group group(Botan::OID::from_string(group_id));
+         const auto group = Botan::EC_Group::from_name(group_id);
 
          const Botan::BigInt k(k_bytes);
          const auto pt = group.OS2ECP(P_bytes);
@@ -66,7 +66,7 @@ class ECC_Varpoint_Mul_Tests final : public Text_Based_Test {
          const Botan::BigInt kX = vars.get_req_bn("kX");
          const Botan::BigInt kY = vars.get_req_bn("kY");
 
-         Botan::EC_Group group(Botan::OID::from_string(group_id));
+         const auto group = Botan::EC_Group::from_name(group_id);
 
          const Botan::EC_Point pt = group.point(X, Y);
 

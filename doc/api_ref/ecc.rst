@@ -39,6 +39,16 @@ during common operations.
           Initialize an elliptic curve group from the relevant parameters. This
           is used for example to create custom (application-specific) curves.
 
+          .. warning::
+
+             Currently a cofactor > 1 is accepted. In the future only prime order
+             subgroups will be allowed.
+
+          .. warning::
+
+             Currently primes of any size may be provided. In the
+             future the prime will be allowed to be at most 521 bits.
+
       .. cpp:function:: EC_Group(const std::vector<uint8_t>& ber_encoding)
 
          Initialize an ``EC_Group`` by decoding a DER encoded parameter block.
@@ -51,14 +61,6 @@ during common operations.
 
          Return the PEM encoding of this group (base64 of DER encoding plus
          header/trailer).
-
-      .. cpp:function:: bool a_is_minus_3() const
-
-         Return true if the ``a`` parameter is congruent to -3 mod p.
-
-      .. cpp:function:: bool a_is_zero() const
-
-         Return true if the ``a`` parameter is congruent to 0 mod p.
 
       .. cpp:function:: size_t get_p_bits() const
 
@@ -107,6 +109,11 @@ during common operations.
       .. cpp:function:: const BigInt& get_cofactor() const
 
          Return the cofactor of the curve. In most cases this will be 1.
+
+         .. warning::
+
+            In a future release all support for elliptic curves group with
+            a cofactor > 1 will be removed.
 
       .. cpp:function:: BigInt mod_order(const BigInt& x) const
 
@@ -246,39 +253,3 @@ during common operations.
    .. cpp:function:: bool operator==(const EC_Point& other) const
 
       Point equality. This compares the affine representations.
-
-   .. cpp:function:: void add(const EC_Point& other, std::vector<BigInt>& workspace)
-
-      Point addition, taking a workspace.
-
-   .. cpp:function:: void add_affine(const EC_Point& other, std::vector<BigInt>& workspace)
-
-      Mixed (Jacobian+affine) addition, taking a workspace.
-
-      .. warning::
-
-         This function assumes that ``other`` is affine, if this is
-         not correct the result will be invalid.
-
-   .. cpp:function:: void mult2(std::vector<BigInt>& workspace)
-
-      Point doubling.
-
-   .. cpp:function:: void mult2i(size_t i, std::vector<BigInt>& workspace)
-
-      Repeated point doubling.
-
-   .. cpp:function:: EC_Point plus(const EC_Point& other, std::vector<BigInt>& workspace) const
-
-      Point addition, returning the result.
-
-   .. cpp:function:: EC_Point double_of(std::vector<BigInt>& workspace) const
-
-      Point doubling, returning the result.
-
-   .. cpp:function:: EC_Point zero() const
-
-      Return the point at infinity
-
-
-

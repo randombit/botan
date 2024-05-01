@@ -41,7 +41,7 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
          if(S.on_the_curve() == false) {
             throw Internal_Error("ECDH agreed value was not on the curve");
          }
-         return BigInt::encode_1363(S.get_affine_x(), m_group.get_p_bytes());
+         return S.x_bytes();
       }
 
    private:

@@ -72,13 +72,13 @@ std::unique_ptr<HashFunction> eckcdsa_signature_hash(const AlgorithmIdentifier& 
    return HashFunction::create_or_throw(oid_info[1]);
 }
 
-std::vector<uint8_t> eckcdsa_prefix(const PointGFp& point, size_t order_bytes, size_t hash_block_size) {
-   const BigInt public_x = point.get_affine_x();
-   const BigInt public_y = point.get_affine_y();
+std::vector<uint8_t> eckcdsa_prefix(const EC_Point& point, size_t hash_block_size) {
+   const auto public_x = point.x_bytes();
+   const auto public_y = point.y_bytes();
 
-   std::vector<uint8_t> prefix(2 * order_bytes);
-   BigInt::encode_1363(&prefix[0], order_bytes, public_x);
-   BigInt::encode_1363(&prefix[order_bytes], order_bytes, public_y);
+   std::vector<uint8_t> prefix(public_x.size() + public_y.size());
+   copy_mem(&prefix[0], public_x.data(), public_x.size());
+   copy_mem(&prefix[public_x.size()], public_y.data(), public_y.size());
 
    // Either truncate or zero-extend to match the hash block size
    prefix.resize(hash_block_size);
@@ -126,7 +126,7 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature {
             m_x(eckcdsa.private_value()),
             m_hash(eckcdsa_signature_hash(padding)),
             m_prefix_used(false) {
-         m_prefix = eckcdsa_prefix(eckcdsa.public_point(), m_group.get_order_bytes(), m_hash->hash_block_size());
+         m_prefix = eckcdsa_prefix(eckcdsa.public_point(), m_hash->hash_block_size());
       }
 
       void update(const uint8_t msg[], size_t msg_len) override {
@@ -173,15 +173,12 @@ secure_vector<uint8_t> ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[]
    const BigInt k = m_group.random_scalar(rng);
    const BigInt k_times_P_x = m_group.blinded_base_point_multiply_x(k, rng, m_ws);
 
-   secure_vector<uint8_t> to_be_hashed(k_times_P_x.bytes());
-   k_times_P_x.binary_encode(to_be_hashed.data());
-
    auto hash = m_hash->new_object();
-   hash->update(to_be_hashed);
+   hash->update(BigInt::encode_1363(k_times_P_x, m_group.get_order_bytes()));
    secure_vector<uint8_t> c = hash->final();
    truncate_hash_if_needed(c, m_group.get_order_bytes());
 
-   const BigInt r(c.data(), c.size());
+   const auto r = c;
 
    BOTAN_ASSERT_NOMSG(msg_len == c.size());
    xor_buf(c, msg, c.size());
@@ -193,7 +190,7 @@ secure_vector<uint8_t> ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[]
       throw Internal_Error("During ECKCDSA signature generation created zero s");
    }
 
-   secure_vector<uint8_t> output = BigInt::encode_1363(r, c.size());
+   secure_vector<uint8_t> output = r;
    output += BigInt::encode_1363(s, m_group.get_order_bytes());
    return output;
 }
@@ -208,7 +205,7 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification {
             m_gy_mul(m_group.get_base_point(), eckcdsa.public_point()),
             m_hash(eckcdsa_signature_hash(padding)),
             m_prefix_used(false) {
-         m_prefix = eckcdsa_prefix(eckcdsa.public_point(), m_group.get_order_bytes(), m_hash->hash_block_size());
+         m_prefix = eckcdsa_prefix(eckcdsa.public_point(), m_hash->hash_block_size());
       }
 
       ECKCDSA_Verification_Operation(const ECKCDSA_PublicKey& eckcdsa, const AlgorithmIdentifier& alg_id) :
@@ -216,7 +213,7 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification {
             m_gy_mul(m_group.get_base_point(), eckcdsa.public_point()),
             m_hash(eckcdsa_signature_hash(alg_id)),
             m_prefix_used(false) {
-         m_prefix = eckcdsa_prefix(eckcdsa.public_point(), m_group.get_order_bytes(), m_hash->hash_block_size());
+         m_prefix = eckcdsa_prefix(eckcdsa.public_point(), m_hash->hash_block_size());
       }
 
       void update(const uint8_t msg[], size_t msg_len) override;
@@ -279,9 +276,7 @@ bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
       return false;
    }
 
-   const BigInt q_x = q.get_affine_x();
-   secure_vector<uint8_t> c(q_x.bytes());
-   q_x.binary_encode(c.data());
+   const auto c = q.x_bytes();
    auto c_hash = m_hash->new_object();
    c_hash->update(c.data(), c.size());
    secure_vector<uint8_t> v = c_hash->final();
