@@ -316,6 +316,11 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
          BOTAN_ASSERT_IMPLICATION(epoch0_restart, allow_epoch0_restart, "Allowed state");
 
          const bool initial_record = epoch0_restart || (!pending_state() && !active_state());
+         bool initial_handshake_message = false;
+         if(record.type() == Record_Type::Handshake && !m_record_buf.empty()) {
+            Handshake_Type type = static_cast<Handshake_Type>(m_record_buf[0]);
+            initial_handshake_message = (type == Handshake_Type::ClientHello);
+         }
 
          if(record.type() != Record_Type::Alert) {
             if(initial_record) {
@@ -324,11 +329,12 @@ size_t Channel_Impl_12::from_peer(std::span<const uint8_t> data) {
                   throw TLS_Exception(Alert::ProtocolVersion, "Received unexpected record version in initial record");
                }
             } else if(auto pending = pending_state()) {
-               if(pending->server_hello() != nullptr && record.version() != pending->version()) {
+               if(pending->server_hello() != nullptr && !initial_handshake_message &&
+                  record.version() != pending->version()) {
                   throw TLS_Exception(Alert::ProtocolVersion, "Received unexpected record version");
                }
             } else if(auto active = active_state()) {
-               if(record.version() != active->version()) {
+               if(record.version() != active->version() && !initial_handshake_message) {
                   throw TLS_Exception(Alert::ProtocolVersion, "Received unexpected record version");
                }
             }
