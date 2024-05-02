@@ -34,7 +34,7 @@ class Callbacks : public Botan::TLS::Callbacks {
          if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
             std::get<Botan::TLS::Group_Params>(group) == Botan::TLS::Group_Params(0xFE00)) {
             // generate a private key of my custom curve
-            const Botan::EC_Group ec_group("testcurve1102");
+            const Botan::EC_Group ec_group("numsp256d1");
             return std::make_unique<Botan::ECDH_PrivateKey>(rng, ec_group);
          } else {
             // no custom curve used: up-call the default implementation
@@ -51,7 +51,7 @@ class Callbacks : public Botan::TLS::Callbacks {
          if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
             std::get<Botan::TLS::Group_Params>(group) == Botan::TLS::Group_Params(0xFE00)) {
             // perform a key agreement on my custom curve
-            const Botan::EC_Group ec_group("testcurve1102");
+            const Botan::EC_Group ec_group("numsp256d1");
             Botan::ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(public_value));
             Botan::PK_Key_Agreement ka(private_key, rng, "Raw");
             return ka.derive_key(0, peer_key.public_value()).bits_of();
@@ -97,27 +97,31 @@ int main() {
    // prepare custom curve
 
    // prepare curve parameters
-   const Botan::BigInt p("0x92309a3e88b94312f36891a2055725bb35ab51af96b3a651d39321b7bbb8c51575a76768c9b6b323");
-   const Botan::BigInt a("0x4f30b8e311f6b2dce62078d70b35dacb96aa84b758ab5a8dff0c9f7a2a1ff466c19988aa0acdde69");
-   const Botan::BigInt b("0x9045A513CFFF9AE1F1CC84039D852D240344A1D5C9DB203C844089F855C387823EB6FCDDF49C909C");
 
-   const Botan::BigInt x("0x9120f3779a31296cefcb5a5a08831f1a6d438ad5a3f2ce60585ac19c74eebdc65cadb96bb92622c7");
-   const Botan::BigInt y("0x836db8251c152dfee071b72c6b06c5387d82f1b5c30c5a5b65ee9429aa2687e8426d5d61276a4ede");
-   const Botan::BigInt order("0x248c268fa22e50c4bcda24688155c96ecd6ad46be5c82d7a6be6e7068cb5d1ca72b2e07e8b90d853");
+   // In this case we will use numsp256d1 from https://datatracker.ietf.org/doc/html/draft-black-numscurves-02
 
-   const Botan::BigInt cofactor(4);
+   const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF43");
+   const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF40");
+   const Botan::BigInt b("0x25581");
+   const Botan::BigInt n("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE43C8275EA265C6020AB20294751A825");
+   const Botan::BigInt cofactor(1);
 
-   const Botan::OID oid("1.2.3.1");
+   const Botan::BigInt g_x("0x01");
+   const Botan::BigInt g_y("0x696F1853C1E466D7FC82C96CCEEEDD6BD02C2F9375894EC10BF46306C2B56C77");
+
+   // You should assign your own OID
+   const Botan::OID oid("1.3.6.1.4.1.25258.0.0.0");
 
    // create EC_Group object to register the curve
-   Botan::EC_Group testcurve1102(p, a, b, x, y, order, cofactor, oid);
+   Botan::EC_Group numsp256d1(p, a, b, g_x, g_y, n, cofactor, oid);
 
-   if(!testcurve1102.verify_group(*rng)) {
+   if(!numsp256d1.verify_group(*rng)) {
+      return 1;
       // Warning: if verify_group returns false the curve parameters are insecure
    }
 
    // register name to specified oid
-   Botan::OID::register_oid(oid, "testcurve1102");
+   Botan::OID::register_oid(oid, "numsp256d1");
 
    // prepare all the parameters
    auto callbacks = std::make_shared<Callbacks>();
