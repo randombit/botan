@@ -2,7 +2,7 @@
 * ECDSA implemenation
 * (C) 2007 Manuel Hartl, FlexSecure GmbH
 *     2007 Falko Strenzke, FlexSecure GmbH
-*     2008-2010,2015,2016,2018 Jack Lloyd
+*     2008-2010,2015,2016,2018,2024 Jack Lloyd
 *     2016 René Korthaus
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -10,10 +10,8 @@
 
 #include <botan/ecdsa.h>
 
-#include <botan/reducer.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/internal/point_mul.h>
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
    #include <botan/internal/rfc6979.h>
@@ -25,7 +23,7 @@ namespace {
 
 EC_Point recover_ecdsa_public_key(
    const EC_Group& group, const std::vector<uint8_t>& msg, const BigInt& r, const BigInt& s, uint8_t v) {
-   if(group.get_cofactor() != 1) {
+   if(group.has_cofactor()) {
       throw Invalid_Argument("ECDSA public key recovery only supported for prime order groups");
    }
 
@@ -44,9 +42,6 @@ EC_Point recover_ecdsa_public_key(
    const size_t p_bytes = group.get_p_bytes();
 
    try {
-      const BigInt e = BigInt::from_bytes_with_max_bits(msg.data(), msg.size(), group.get_order_bits());
-      const BigInt r_inv = group.inverse_mod_order(r);
-
       BigInt x = r + add_order * group_order;
 
       std::vector<uint8_t> X(p_bytes + 1);
@@ -54,16 +49,18 @@ EC_Point recover_ecdsa_public_key(
       X[0] = 0x02 | y_odd;
       x.serialize_to(std::span{X}.subspan(1));
 
-      const EC_Point R = group.OS2ECP(X);
+      if(auto R = EC_AffinePoint::deserialize(group, X)) {
+         // Compute r_inv * (-eG + s*R)
+         const auto ne = EC_Scalar::from_bytes_with_trunc(group, msg).negate();
+         const auto ss = EC_Scalar::from_bigint(group, s);
 
-      if((R * group_order).is_zero() == false) {
-         throw Decoding_Error("Unable to recover ECDSA public key");
+         const auto r_inv = EC_Scalar::from_bigint(group, r).invert();
+
+         EC_Group::Mul2Table GR_mul(R.value());
+         if(auto egsr = GR_mul.mul2_vartime(ne * r_inv, ss * r_inv)) {
+            return egsr->to_legacy_point();
+         }
       }
-
-      // Compute r_inv * (s*R - eG)
-      EC_Point_Multi_Point_Precompute RG_mul(R, group.get_base_point());
-      const BigInt ne = group.mod_order(group_order - e);
-      return r_inv * RG_mul.multi_exp(s, ne);
    } catch(...) {
       // continue on and throw
    }
@@ -121,13 +118,15 @@ namespace {
 class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    public:
       ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa, std::string_view padding, RandomNumberGenerator& rng) :
-            PK_Ops::Signature_with_Hash(padding), m_group(ecdsa.domain()), m_x(ecdsa.private_value()) {
+            PK_Ops::Signature_with_Hash(padding),
+            m_group(ecdsa.domain()),
+            m_x(EC_Scalar::from_bigint(m_group, ecdsa.private_value())),
+            m_b(EC_Scalar::random(m_group, rng)),
+            m_b_inv(m_b.invert()) {
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-         m_rfc6979 = std::make_unique<RFC6979_Nonce_Generator>(this->rfc6979_hash_function(), m_group.get_order(), m_x);
+         m_rfc6979 = std::make_unique<RFC6979_Nonce_Generator>(
+            this->rfc6979_hash_function(), m_group.get_order(), ecdsa.private_value());
 #endif
-
-         m_b = m_group.random_scalar(rng);
-         m_b_inv = m_group.inverse_mod_order(m_b);
       }
 
       size_t signature_length() const override { return 2 * m_group.get_order_bytes(); }
@@ -138,7 +137,7 @@ class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
 
    private:
       const EC_Group m_group;
-      const BigInt m_x;
+      const EC_Scalar m_x;
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
       std::unique_ptr<RFC6979_Nonce_Generator> m_rfc6979;
@@ -146,7 +145,8 @@ class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
 
       std::vector<BigInt> m_ws;
 
-      BigInt m_b, m_b_inv;
+      EC_Scalar m_b;
+      EC_Scalar m_b_inv;
 };
 
 AlgorithmIdentifier ECDSA_Signature_Operation::algorithm_identifier() const {
@@ -158,35 +158,34 @@ AlgorithmIdentifier ECDSA_Signature_Operation::algorithm_identifier() const {
 secure_vector<uint8_t> ECDSA_Signature_Operation::raw_sign(const uint8_t msg[],
                                                            size_t msg_len,
                                                            RandomNumberGenerator& rng) {
-   BigInt m = m_group.mod_order(BigInt::from_bytes_with_max_bits(msg, msg_len, m_group.get_order_bits()));
+   const auto m = EC_Scalar::from_bytes_with_trunc(m_group, std::span{msg, msg_len});
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
-   const BigInt k = m_rfc6979->nonce_for(m);
+   const auto k = m_rfc6979->nonce_for(m_group, m);
 #else
-   const BigInt k = m_group.random_scalar(rng);
+   const auto k = EC_Scalar::random(m_group, rng);
 #endif
 
-   const BigInt r = m_group.mod_order(m_group.blinded_base_point_multiply_x(k, rng, m_ws));
+   const auto r = EC_Scalar::gk_x_mod_order(k, rng, m_ws);
 
-   const BigInt k_inv = m_group.inverse_mod_order(k);
+   const auto k_inv = k.invert();
 
    /*
    * Blind the input message and compute x*r+m as (x*r*b + m*b)/b
    */
-   m_b = m_group.square_mod_order(m_b);
-   m_b_inv = m_group.square_mod_order(m_b_inv);
+   m_b.square_self();
+   m_b_inv.square_self();
 
-   m = m_group.multiply_mod_order(m_b, m_group.mod_order(m));
-   const BigInt xr_m = m_group.mod_order(m_group.multiply_mod_order(m_x, m_b, r) + m);
+   const auto xr_m = ((m_x * m_b) * r) + (m * m_b);
 
-   const BigInt s = m_group.multiply_mod_order(k_inv, xr_m, m_b_inv);
+   const auto s = (k_inv * xr_m) * m_b_inv;
 
    // With overwhelming probability, a bug rather than actual zero r/s
    if(r.is_zero() || s.is_zero()) {
       throw Internal_Error("During ECDSA signature generated zero r/s");
    }
 
-   return BigInt::encode_fixed_length_int_pair(r, s, m_group.get_order_bytes());
+   return EC_Scalar::serialize_pair<secure_vector<uint8_t>>(r, s);
 }
 
 /**
@@ -195,53 +194,36 @@ secure_vector<uint8_t> ECDSA_Signature_Operation::raw_sign(const uint8_t msg[],
 class ECDSA_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
       ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, std::string_view padding) :
-            PK_Ops::Verification_with_Hash(padding),
-            m_group(ecdsa.domain()),
-            m_gy_mul(m_group.get_base_point(), ecdsa.public_point()) {}
+            PK_Ops::Verification_with_Hash(padding), m_group(ecdsa.domain()), m_gy_mul(m_group, ecdsa.public_point()) {}
 
       ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(alg_id, "ECDSA", true),
             m_group(ecdsa.domain()),
-            m_gy_mul(m_group.get_base_point(), ecdsa.public_point()) {}
+            m_gy_mul(m_group, ecdsa.public_point()) {}
 
       bool verify(const uint8_t msg[], size_t msg_len, const uint8_t sig[], size_t sig_len) override;
 
    private:
       const EC_Group m_group;
-      const EC_Point_Multi_Point_Precompute m_gy_mul;
+      const EC_Group::Mul2Table m_gy_mul;
 };
 
 bool ECDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len, const uint8_t sig[], size_t sig_len) {
-   if(sig_len != m_group.get_order_bytes() * 2) {
-      return false;
+   if(auto rs = EC_Scalar::deserialize_pair(m_group, std::span{sig, sig_len})) {
+      const auto& [r, s] = rs.value();
+
+      if(r.is_nonzero() && s.is_nonzero()) {
+         const auto m = EC_Scalar::from_bytes_with_trunc(m_group, std::span{msg, msg_len});
+
+         const auto w = s.invert();
+
+         if(const auto v = m_gy_mul.mul2_vartime_x_mod_order(w, m, r)) {
+            return (v == r);
+         }
+      }
    }
 
-   const BigInt e = BigInt::from_bytes_with_max_bits(msg, msg_len, m_group.get_order_bits());
-
-   const BigInt r(sig, sig_len / 2);
-   const BigInt s(sig + sig_len / 2, sig_len / 2);
-
-   // Cannot be negative here since we just decoded from binary
-   if(r.is_zero() || s.is_zero()) {
-      return false;
-   }
-
-   if(r >= m_group.get_order() || s >= m_group.get_order()) {
-      return false;
-   }
-
-   const BigInt w = m_group.inverse_mod_order(s);
-
-   const BigInt u1 = m_group.multiply_mod_order(m_group.mod_order(e), w);
-   const BigInt u2 = m_group.multiply_mod_order(r, w);
-   const EC_Point R = m_gy_mul.multi_exp(u1, u2);
-
-   if(R.is_zero()) {
-      return false;
-   }
-
-   const BigInt v = m_group.mod_order(R.get_affine_x());
-   return (v == r);
+   return false;
 }
 
 }  // namespace
