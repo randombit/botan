@@ -158,7 +158,7 @@ AlgorithmIdentifier ECDSA_Signature_Operation::algorithm_identifier() const {
 secure_vector<uint8_t> ECDSA_Signature_Operation::raw_sign(const uint8_t msg[],
                                                            size_t msg_len,
                                                            RandomNumberGenerator& rng) {
-   BigInt m = BigInt::from_bytes_with_max_bits(msg, msg_len, m_group.get_order_bits());
+   BigInt m = m_group.mod_order(BigInt::from_bytes_with_max_bits(msg, msg_len, m_group.get_order_bits()));
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
    const BigInt k = m_rfc6979->nonce_for(m);

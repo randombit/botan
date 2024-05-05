@@ -95,6 +95,7 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
    if(x == 0) {
       m_private_key = ec_group.random_scalar(rng);
    } else {
+      BOTAN_ARG_CHECK(x > 0 && x < ec_group.get_order(), "ECC private key out of range");
       m_private_key = x;
    }
 
@@ -142,6 +143,10 @@ EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
       .decode_optional(key_parameters, ASN1_Type(0), ASN1_Class::ExplicitContextSpecific)
       .decode_optional_string(public_key_bits, ASN1_Type::BitString, 1, ASN1_Class::ExplicitContextSpecific)
       .end_cons();
+
+   if(m_private_key < 1 || m_private_key >= m_domain_params.get_order()) {
+      throw Decoding_Error("Invalid EC private key");
+   }
 
    if(public_key_bits.empty()) {
       if(with_modular_inverse) {
