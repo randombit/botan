@@ -16,10 +16,13 @@ pem
 
 <header:internal>
 point_mul.h
+ec_inner_data.h
 </header:internal>
 
 <header:public>
 curve_gfp.h
 ec_group.h
 ec_point.h
+ec_apoint.h
+ec_scalar.h
 </header:public>

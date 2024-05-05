@@ -2,7 +2,7 @@
 * ECC Domain Parameters
 *
 * (C) 2007 Falko Strenzke, FlexSecure GmbH
-* (C) 2008,2018 Jack Lloyd
+* (C) 2008,2018,2024 Jack Lloyd
 * (C) 2018 Tobias Niemann
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -16,131 +16,13 @@
 #include <botan/pem.h>
 #include <botan/reducer.h>
 #include <botan/rng.h>
+#include <botan/internal/ec_inner_data.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/point_mul.h>
 #include <botan/internal/primality.h>
 #include <vector>
 
-#if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
-   #include <botan/internal/ec_h2c.h>
-#endif
-
 namespace Botan {
-
-class EC_Group_Data final {
-   public:
-      EC_Group_Data(const BigInt& p,
-                    const BigInt& a,
-                    const BigInt& b,
-                    const BigInt& g_x,
-                    const BigInt& g_y,
-                    const BigInt& order,
-                    const BigInt& cofactor,
-                    const OID& oid,
-                    EC_Group_Source source) :
-            m_curve(p, a, b),
-            m_base_point(m_curve, g_x, g_y),
-            m_g_x(g_x),
-            m_g_y(g_y),
-            m_order(order),
-            m_cofactor(cofactor),
-            m_mod_order(order),
-            m_base_mult(m_base_point, m_mod_order),
-            m_oid(oid),
-            m_p_bits(p.bits()),
-            m_order_bits(order.bits()),
-            m_a_is_minus_3(a == p - 3),
-            m_a_is_zero(a.is_zero()),
-            m_source(source) {}
-
-      bool params_match(const BigInt& p,
-                        const BigInt& a,
-                        const BigInt& b,
-                        const BigInt& g_x,
-                        const BigInt& g_y,
-                        const BigInt& order,
-                        const BigInt& cofactor) const {
-         return (this->p() == p && this->a() == a && this->b() == b && this->order() == order &&
-                 this->cofactor() == cofactor && this->g_x() == g_x && this->g_y() == g_y);
-      }
-
-      bool params_match(const EC_Group_Data& other) const {
-         return params_match(
-            other.p(), other.a(), other.b(), other.g_x(), other.g_y(), other.order(), other.cofactor());
-      }
-
-      void set_oid(const OID& oid) {
-         BOTAN_STATE_CHECK(m_oid.empty());
-         m_oid = oid;
-      }
-
-      const OID& oid() const { return m_oid; }
-
-      const BigInt& p() const { return m_curve.get_p(); }
-
-      const BigInt& a() const { return m_curve.get_a(); }
-
-      const BigInt& b() const { return m_curve.get_b(); }
-
-      const BigInt& order() const { return m_order; }
-
-      const BigInt& cofactor() const { return m_cofactor; }
-
-      const BigInt& g_x() const { return m_g_x; }
-
-      const BigInt& g_y() const { return m_g_y; }
-
-      size_t p_bits() const { return m_p_bits; }
-
-      size_t p_bytes() const { return (m_p_bits + 7) / 8; }
-
-      size_t order_bits() const { return m_order_bits; }
-
-      size_t order_bytes() const { return (m_order_bits + 7) / 8; }
-
-      const CurveGFp& curve() const { return m_curve; }
-
-      const EC_Point& base_point() const { return m_base_point; }
-
-      bool a_is_minus_3() const { return m_a_is_minus_3; }
-
-      bool a_is_zero() const { return m_a_is_zero; }
-
-      BigInt mod_order(const BigInt& x) const { return m_mod_order.reduce(x); }
-
-      BigInt square_mod_order(const BigInt& x) const { return m_mod_order.square(x); }
-
-      BigInt multiply_mod_order(const BigInt& x, const BigInt& y) const { return m_mod_order.multiply(x, y); }
-
-      BigInt multiply_mod_order(const BigInt& x, const BigInt& y, const BigInt& z) const {
-         return m_mod_order.multiply(m_mod_order.multiply(x, y), z);
-      }
-
-      BigInt inverse_mod_order(const BigInt& x) const { return inverse_mod(x, m_order); }
-
-      EC_Point blinded_base_point_multiply(const BigInt& k, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const {
-         return m_base_mult.mul(k, rng, m_order, ws);
-      }
-
-      EC_Group_Source source() const { return m_source; }
-
-   private:
-      CurveGFp m_curve;
-      EC_Point m_base_point;
-
-      BigInt m_g_x;
-      BigInt m_g_y;
-      BigInt m_order;
-      BigInt m_cofactor;
-      Modular_Reducer m_mod_order;
-      EC_Point_Base_Point_Precompute m_base_mult;
-      OID m_oid;
-      size_t m_p_bits;
-      size_t m_order_bits;
-      bool m_a_is_minus_3;
-      bool m_a_is_zero;
-      EC_Group_Source m_source;
-};
 
 class EC_Group_Data_Map final {
    public:
@@ -564,7 +446,7 @@ const BigInt& EC_Group::get_b() const {
    return data().b();
 }
 
-const EC_Point& EC_Group::get_base_point() const {
+const EC_Point& EC_Group::generator() const {
    return data().base_point();
 }
 
@@ -582,6 +464,10 @@ const BigInt& EC_Group::get_g_y() const {
 
 const BigInt& EC_Group::get_cofactor() const {
    return data().cofactor();
+}
+
+bool EC_Group::has_cofactor() const {
+   return data().has_cofactor();
 }
 
 BigInt EC_Group::mod_order(const BigInt& k) const {
@@ -691,19 +577,13 @@ EC_Point EC_Group::hash_to_curve(std::string_view hash_fn,
                                  const uint8_t domain_sep[],
                                  size_t domain_sep_len,
                                  bool random_oracle) const {
-#if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
-
-   // Only have SSWU currently
-   if(get_a().is_zero() || get_b().is_zero() || get_p() % 4 == 1) {
-      throw Not_Implemented("EC_Group::hash_to_curve not available for this curve type");
+   if(random_oracle) {
+      return EC_AffinePoint::hash_to_curve_ro(*this, hash_fn, {input, input_len}, {domain_sep, domain_sep_len})
+         .to_legacy_point();
+   } else {
+      return EC_AffinePoint::hash_to_curve_nu(*this, hash_fn, {input, input_len}, {domain_sep, domain_sep_len})
+         .to_legacy_point();
    }
-
-   return hash_to_curve_sswu(*this, hash_fn, {input, input_len}, {domain_sep, domain_sep_len}, random_oracle);
-
-#else
-   BOTAN_UNUSED(hash_fn, random_oracle, input, input_len, domain_sep, domain_sep_len);
-   throw Not_Implemented("EC_Group::hash_to_curve functionality not available in this configuration");
-#endif
 }
 
 std::vector<uint8_t> EC_Group::DER_encode(EC_Group_Encoding form) const {
@@ -777,7 +657,7 @@ bool EC_Group::verify_public_element(const EC_Point& point) const {
       return false;
    }
 
-   if(get_cofactor() > 1) {
+   if(has_cofactor()) {
       if((point * get_cofactor()).is_zero()) {
          return false;
       }
@@ -854,6 +734,65 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
    }
 
    return true;
+}
+
+class EC_Mul2Table_Data final {
+   public:
+      EC_Mul2Table_Data(std::shared_ptr<EC_Group_Data> group, const EC_Point& g, const EC_Point& h) :
+            m_group(std::move(group)), m_tbl(g, h) {}
+
+      EC_Mul2Table_Data(const EC_AffinePoint& h) :
+            m_group(h.m_group), m_tbl(h.m_group->base_point(), h.to_legacy_point()) {}
+
+      std::optional<EC_AffinePoint> mul2_vartime(const EC_Scalar& x, const EC_Scalar& y) const {
+         auto pt = m_tbl.multi_exp(x.m_scalar->value(), y.m_scalar->value());
+
+         if(pt.is_zero()) {
+            return std::nullopt;
+         }
+         return EC_AffinePoint(m_group, std::move(pt));
+      }
+
+      std::optional<EC_Scalar> mul2_vartime_x_mod_order(const EC_Scalar& x, const EC_Scalar& y) const {
+         auto pt = m_tbl.multi_exp(x.m_scalar->value(), y.m_scalar->value());
+
+         if(pt.is_zero()) {
+            return std::nullopt;
+         }
+         auto v = std::make_unique<EC_Scalar_Data>(m_group->mod_order(pt.get_affine_x()));
+         return EC_Scalar(m_group, std::move(v));
+      }
+
+      std::optional<EC_Scalar> mul2_vartime_x_mod_order(const EC_Scalar& c,
+                                                        const EC_Scalar& x,
+                                                        const EC_Scalar& y) const {
+         return this->mul2_vartime_x_mod_order(c * x, c * y);
+      }
+
+   private:
+      std::shared_ptr<EC_Group_Data> m_group;
+      EC_Point_Multi_Point_Precompute m_tbl;
+};
+
+EC_Group::Mul2Table::Mul2Table(const EC_Group& group, const EC_Point& h) :
+      m_tbl(std::make_unique<EC_Mul2Table_Data>(group.m_data, group.generator(), h)) {}
+
+EC_Group::Mul2Table::Mul2Table(const EC_AffinePoint& h) : m_tbl(std::make_unique<EC_Mul2Table_Data>(h)) {}
+
+EC_Group::Mul2Table::~Mul2Table() = default;
+
+std::optional<EC_AffinePoint> EC_Group::Mul2Table::mul2_vartime(const EC_Scalar& x, const EC_Scalar& y) const {
+   return m_tbl->mul2_vartime(x, y);
+}
+
+std::optional<EC_Scalar> EC_Group::Mul2Table::mul2_vartime_x_mod_order(const EC_Scalar& x, const EC_Scalar& y) const {
+   return m_tbl->mul2_vartime_x_mod_order(x, y);
+}
+
+std::optional<EC_Scalar> EC_Group::Mul2Table::mul2_vartime_x_mod_order(const EC_Scalar& c,
+                                                                       const EC_Scalar& x,
+                                                                       const EC_Scalar& y) const {
+   return m_tbl->mul2_vartime_x_mod_order(c, x, y);
 }
 
 }  // namespace Botan
