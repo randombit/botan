@@ -782,7 +782,7 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
    }
 
    // check the Hasse bound (roughly)
-   if((p - order).abs().bits() > (p.bits() / 2) + 1) {
+   if((p - get_cofactor() * order).abs().bits() > (p.bits() / 2) + 1) {
       return false;
    }
 
