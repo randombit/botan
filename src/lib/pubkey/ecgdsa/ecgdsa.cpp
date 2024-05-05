@@ -1,17 +1,15 @@
 /*
 * ECGDSA (BSI-TR-03111, version 2.0)
 * (C) 2016 René Korthaus
-* (C) 2018 Jack Lloyd
+* (C) 2018,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/ecgdsa.h>
 
-#include <botan/reducer.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/internal/point_mul.h>
 
 namespace Botan {
 
@@ -39,7 +37,9 @@ namespace {
 class ECGDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    public:
       ECGDSA_Signature_Operation(const ECGDSA_PrivateKey& ecgdsa, std::string_view emsa) :
-            PK_Ops::Signature_with_Hash(emsa), m_group(ecgdsa.domain()), m_x(ecgdsa.private_value()) {}
+            PK_Ops::Signature_with_Hash(emsa),
+            m_group(ecgdsa.domain()),
+            m_x(EC_Scalar::from_bigint(m_group, ecgdsa.private_value())) {}
 
       secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& rng) override;
 
@@ -49,7 +49,7 @@ class ECGDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
 
    private:
       const EC_Group m_group;
-      const BigInt m_x;
+      const EC_Scalar m_x;
       std::vector<BigInt> m_ws;
 };
 
@@ -62,22 +62,20 @@ AlgorithmIdentifier ECGDSA_Signature_Operation::algorithm_identifier() const {
 secure_vector<uint8_t> ECGDSA_Signature_Operation::raw_sign(const uint8_t msg[],
                                                             size_t msg_len,
                                                             RandomNumberGenerator& rng) {
-   const BigInt m = BigInt::from_bytes_with_max_bits(msg, msg_len, m_group.get_order_bits());
+   const auto m = EC_Scalar::from_bytes_with_trunc(m_group, std::span{msg, msg_len});
 
-   const BigInt k = m_group.random_scalar(rng);
+   const auto k = EC_Scalar::random(m_group, rng);
 
-   const BigInt r = m_group.mod_order(m_group.blinded_base_point_multiply_x(k, rng, m_ws));
+   const auto r = EC_Scalar::gk_x_mod_order(k, rng, m_ws);
 
-   const BigInt kr = m_group.multiply_mod_order(k, r);
-
-   const BigInt s = m_group.multiply_mod_order(m_x, kr - m);
+   const auto s = m_x * ((k * r) - m);
 
    // With overwhelming probability, a bug rather than actual zero r/s
    if(r.is_zero() || s.is_zero()) {
       throw Internal_Error("During ECGDSA signature generated zero r/s");
    }
 
-   return BigInt::encode_fixed_length_int_pair(r, s, m_group.get_order_bytes());
+   return EC_Scalar::serialize_pair<secure_vector<uint8_t>>(r, s);
 }
 
 /**
@@ -88,46 +86,36 @@ class ECGDSA_Verification_Operation final : public PK_Ops::Verification_with_Has
       ECGDSA_Verification_Operation(const ECGDSA_PublicKey& ecgdsa, std::string_view padding) :
             PK_Ops::Verification_with_Hash(padding),
             m_group(ecgdsa.domain()),
-            m_gy_mul(m_group.get_base_point(), ecgdsa.public_point()) {}
+            m_gy_mul(m_group, ecgdsa.public_point()) {}
 
       ECGDSA_Verification_Operation(const ECGDSA_PublicKey& ecgdsa, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(alg_id, "ECGDSA"),
             m_group(ecgdsa.domain()),
-            m_gy_mul(m_group.get_base_point(), ecgdsa.public_point()) {}
+            m_gy_mul(m_group, ecgdsa.public_point()) {}
 
       bool verify(const uint8_t msg[], size_t msg_len, const uint8_t sig[], size_t sig_len) override;
 
    private:
       const EC_Group m_group;
-      const EC_Point_Multi_Point_Precompute m_gy_mul;
+      const EC_Group::Mul2Table m_gy_mul;
 };
 
 bool ECGDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len, const uint8_t sig[], size_t sig_len) {
-   if(sig_len != m_group.get_order_bytes() * 2) {
-      return false;
+   if(auto rs = EC_Scalar::deserialize_pair(m_group, std::span{sig, sig_len})) {
+      const auto& [r, s] = rs.value();
+
+      if(r.is_nonzero() && s.is_nonzero()) {
+         const auto m = EC_Scalar::from_bytes_with_trunc(m_group, std::span{msg, msg_len});
+
+         const auto w = r.invert();
+
+         if(const auto v = m_gy_mul.mul2_vartime_x_mod_order(w, m, s)) {
+            return (v == r);
+         }
+      }
    }
 
-   const BigInt e = BigInt::from_bytes_with_max_bits(msg, msg_len, m_group.get_order_bits());
-
-   const BigInt r(sig, sig_len / 2);
-   const BigInt s(sig + sig_len / 2, sig_len / 2);
-
-   if(r <= 0 || r >= m_group.get_order() || s <= 0 || s >= m_group.get_order()) {
-      return false;
-   }
-
-   const BigInt w = m_group.inverse_mod_order(r);
-
-   const BigInt u1 = m_group.multiply_mod_order(e, w);
-   const BigInt u2 = m_group.multiply_mod_order(s, w);
-   const EC_Point R = m_gy_mul.multi_exp(u1, u2);
-
-   if(R.is_zero()) {
-      return false;
-   }
-
-   const BigInt v = m_group.mod_order(R.get_affine_x());
-   return (v == r);
+   return false;
 }
 
 }  // namespace
