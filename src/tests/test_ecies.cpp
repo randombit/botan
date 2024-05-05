@@ -98,7 +98,9 @@ void check_encrypt_decrypt(Test::Result& result,
 
 class ECIES_ISO_Tests final : public Text_Based_Test {
    public:
-      ECIES_ISO_Tests() : Text_Based_Test("pubkey/ecies-18033.vec", "format,p,a,b,mu,nu,gx,gy,hx,hy,x,r,C0,K") {}
+      ECIES_ISO_Tests() : Text_Based_Test("pubkey/ecies-18033.vec", "format,p,a,b,Order,Gx,Gy,Oid,hx,hy,x,r,C0,K") {}
+
+      bool clear_between_callbacks() const override { return false; }
 
       Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
          Test::Result result("ECIES-ISO");
@@ -108,10 +110,10 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
          const Botan::BigInt p = vars.get_req_bn("p");
          const Botan::BigInt a = vars.get_req_bn("a");
          const Botan::BigInt b = vars.get_req_bn("b");
-         const Botan::BigInt mu = vars.get_req_bn("mu");          // order
-         const Botan::BigInt nu = vars.get_req_bn("nu");          // cofactor
-         const Botan::BigInt gx = vars.get_req_bn("gx");          // base point x
-         const Botan::BigInt gy = vars.get_req_bn("gy");          // base point y
+         const Botan::BigInt order = vars.get_req_bn("Order");  // order
+         const Botan::BigInt gx = vars.get_req_bn("Gx");        // base point x
+         const Botan::BigInt gy = vars.get_req_bn("Gy");        // base point y
+         const Botan::OID oid(vars.get_req_str("Oid"));
          const Botan::BigInt hx = vars.get_req_bn("hx");          // x of public point of bob
          const Botan::BigInt hy = vars.get_req_bn("hy");          // y of public point of bob
          const Botan::BigInt x = vars.get_req_bn("x");            // private key of bob
@@ -119,7 +121,7 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> c0 = vars.get_req_bin("C0");  // expected encoded (ephemeral) public key
          const std::vector<uint8_t> k = vars.get_req_bin("K");    // expected derived secret
 
-         const Botan::EC_Group domain(p, a, b, gx, gy, mu, nu);
+         const Botan::EC_Group domain(oid, p, a, b, gx, gy, order);
 
          // keys of bob
          const Botan::ECDH_PrivateKey other_private_key(this->rng(), domain, x);

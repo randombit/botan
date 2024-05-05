@@ -357,7 +357,7 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(co
          .end_cons()
          .verify_end();
 
-      if(p.bits() < 112 || p.bits() > 1024) {
+      if(p.bits() < 112 || p.bits() > 521) {
          throw Decoding_Error("ECC p parameter is invalid size");
       }
 
@@ -474,6 +474,32 @@ EC_Group::EC_Group(const BigInt& p,
                    const BigInt& order,
                    const BigInt& cofactor,
                    const OID& oid) {
+   m_data =
+      ec_group_data().lookup_or_create(p, a, b, base_x, base_y, order, cofactor, oid, EC_Group_Source::ExternalSource);
+}
+
+EC_Group::EC_Group(const OID& oid,
+                   const BigInt& p,
+                   const BigInt& a,
+                   const BigInt& b,
+                   const BigInt& base_x,
+                   const BigInt& base_y,
+                   const BigInt& order) {
+   BOTAN_ARG_CHECK(oid.has_value(), "An OID is required for creating an EC_Group");
+   BOTAN_ARG_CHECK(p.bits() <= 521, "EC_Group p too large");
+   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(p), "EC_Group p is not prime");
+   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(order), "EC_Group order is not prime");
+   BOTAN_ARG_CHECK(a >= 0 && a < p, "EC_Group a is invalid");
+   BOTAN_ARG_CHECK(b > 0 && b < p, "EC_Group b is invalid");
+   BOTAN_ARG_CHECK(base_x >= 0 && base_x < p, "EC_Group base_x is invalid");
+   BOTAN_ARG_CHECK(base_y >= 0 && base_y < p, "EC_Group base_y is invalid");
+
+   // This catches someone "ignoring" a cofactor and just trying to
+   // provide the subgroup order
+   BOTAN_ARG_CHECK((p - order).abs().bits() <= (p.bits() / 2) + 1, "Hasse bound invalid");
+
+   BigInt cofactor(1);
+
    m_data =
       ec_group_data().lookup_or_create(p, a, b, base_x, base_y, order, cofactor, oid, EC_Group_Source::ExternalSource);
 }

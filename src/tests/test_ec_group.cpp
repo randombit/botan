@@ -243,12 +243,14 @@ class EC_Group_Tests : public Test {
 
             const auto group = Botan::EC_Group::from_name(group_name);
 
-            result.confirm("EC_Group is known", !group.get_curve_oid().empty());
+            result.confirm("EC_Group is known", group.get_curve_oid().has_value());
             result.confirm("EC_Group is considered valid", group.verify_group(this->rng(), true));
             result.confirm("EC_Group is not considered explict encoding", !group.used_explicit_encoding());
 
             result.test_eq("EC_Group has correct bit size", group.get_p().bits(), group.get_p_bits());
             result.test_eq("EC_Group has byte size", group.get_p().bytes(), group.get_p_bytes());
+
+            result.test_eq("EC_Group has cofactor == 1", group.get_cofactor(), 1);
 
             const Botan::OID from_order = Botan::EC_Group::EC_group_identity_from_order(group.get_order());
 
@@ -257,13 +259,13 @@ class EC_Group_Tests : public Test {
 
             result.confirm("Same group is same", group == Botan::EC_Group::from_name(group_name));
 
-            const Botan::EC_Group copy(group.get_p(),
+            const Botan::EC_Group copy(group.get_curve_oid(),
+                                       group.get_p(),
                                        group.get_a(),
                                        group.get_b(),
                                        group.get_g_x(),
                                        group.get_g_y(),
-                                       group.get_order(),
-                                       group.get_cofactor());
+                                       group.get_order());
 
             result.confirm("Same group is same even with copy", group == copy);
 
@@ -595,6 +597,7 @@ Test::Result test_enc_dec_uncompressed_112() {
    const Botan::BigInt order("0x36DF0AAFD8B8D7597CA10520D04B");
    const Botan::BigInt cofactor("4");  // !
 
+   // This uses the deprecated constructor due to making use of cofactor > 1
    const Botan::EC_Group group(p, a, b, g_x, g_y, order, cofactor);
 
    const std::string G_secp_uncomp = "044BA30AB5E892B4E1649DD0928643ADCD46F5882E3747DEF36E956E97";
@@ -642,7 +645,7 @@ Test::Result test_ecc_registration() {
    const Botan::OID oid("1.3.132.0.6");
 
    // Creating this object implicitly registers the curve for future use ...
-   Botan::EC_Group reg_group(p, a, b, g_x, g_y, order, 1, oid);
+   Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
 
    auto group = Botan::EC_Group::from_OID(oid);
 
@@ -667,6 +670,8 @@ Test::Result test_ec_group_from_params() {
 
    const Botan::OID oid("1.3.132.0.8");
 
+   // This uses the deprecated constructor to verify we dedup even without an OID
+   // This whole test can be removed once explicit curve support is removed
    Botan::EC_Group reg_group(p, a, b, g_x, g_y, order, 1);
    result.confirm("Group has correct OID", reg_group.get_curve_oid() == oid);
 
@@ -690,7 +695,7 @@ Test::Result test_ec_group_bad_registration() {
    const Botan::OID oid("1.3.132.0.8");
 
    try {
-      Botan::EC_Group reg_group(p, a, b, g_x, g_y, order, 1, oid);
+      Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
       result.test_failure("Should have failed");
    } catch(Botan::Invalid_Argument&) {
       result.test_success("Got expected exception");
@@ -715,7 +720,7 @@ Test::Result test_ec_group_duplicate_orders() {
 
    const Botan::OID oid("1.3.6.1.4.1.25258.100.0");  // some other random OID
 
-   Botan::EC_Group reg_group(p, a, b, g_x, g_y, order, 1, oid);
+   Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
    result.test_success("Registration success");
    result.confirm("Group has correct OID", reg_group.get_curve_oid() == oid);
 

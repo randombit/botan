@@ -48,7 +48,8 @@ class EC_Group_Data_Map;
 class BOTAN_PUBLIC_API(2, 0) EC_Group final {
    public:
       /**
-      * Construct Domain paramers from specified parameters
+      * Construct elliptic curve from the specified parameters
+      *
       * @param p the elliptic curve p
       * @param a the elliptic curve a param
       * @param b the elliptic curve b param
@@ -66,7 +67,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * Warning: Support for explicitly encoded curve parameters is deprecated.
       * An OID must be assigned.
       */
-      BOTAN_DEPRECATED("Explicit curves are deprecated. See Doxygen comment for related info")
+      BOTAN_DEPRECATED("Use alternate constructor")
       EC_Group(const BigInt& p,
                const BigInt& a,
                const BigInt& b,
@@ -75,6 +76,37 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
                const BigInt& order,
                const BigInt& cofactor,
                const OID& oid = OID());
+
+      /**
+      * Construct elliptic curve from the specified parameters
+      *
+      * Unlike the deprecated constructor, this constructor requires:
+      *  - That p is at most 521 bits
+      *  - That an object identifier is provided
+      *  - That the cofactor is 1 (this is implicit due to not having
+      *    cofactor argument)
+      *  - That the curve is at least plausibly valid (for example
+      *    it checks that p is prime). It does not fully verify
+      *    the group since certain things cannot be checked until
+      *    the EC_Group object is constructed.
+      *
+      * WARNING use only elliptic curve parameters that you trust
+      *
+      * @param oid an object identifier used to identify this curve
+      * @param p the elliptic curve prime (at most 521 bits)
+      * @param a the elliptic curve a param
+      * @param b the elliptic curve b param
+      * @param base_x the x coordinate of the group generator
+      * @param base_y the y coordinate of the group generator
+      * @param order the order of the group
+      */
+      EC_Group(const OID& oid,
+               const BigInt& p,
+               const BigInt& a,
+               const BigInt& b,
+               const BigInt& base_x,
+               const BigInt& base_y,
+               const BigInt& order);
 
       /**
       * Decode a BER encoded ECC domain parameter set

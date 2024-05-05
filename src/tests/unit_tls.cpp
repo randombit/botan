@@ -1091,7 +1091,7 @@ class TLS_Unit_Tests final : public Test {
          Botan::OID::register_oid(oid, "secp112r1");
 
          // Creating this object implicitly registers the curve for future use ...
-         Botan::EC_Group reg_secp112r1(p, a, b, g_x, g_y, order, 1, oid);
+         Botan::EC_Group reg_secp112r1(oid, p, a, b, g_x, g_y, order);
 
          test_modern_versions("AES-256/GCM secp112r1",
                               results,
