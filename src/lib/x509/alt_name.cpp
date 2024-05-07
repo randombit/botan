@@ -103,8 +103,7 @@ void AlternativeName::encode_into(DER_Encoder& der) const {
    }
 
    for(const auto& name : m_dn_names) {
-      // THIS IS WRONG!!
-      der.encode(name);
+      der.add_object(ASN1_Type(4), ASN1_Class::ExplicitContextSpecific, name.DER_encode());
    }
 
    for(const auto& name : m_uri) {
