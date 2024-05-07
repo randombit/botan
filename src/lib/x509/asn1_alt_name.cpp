@@ -92,10 +92,6 @@ std::multimap<std::string, std::string> AlternativeName::contents() const {
       names.emplace("IP", nm);
    }
 
-   for(const auto& nm : this->ip_address()) {
-      names.emplace("IP", nm);
-   }
-
    for(const auto& nm : this->directory_names()) {
       names.emplace("DN", nm.to_string());
    }
@@ -132,11 +128,7 @@ std::string AlternativeName::get_first_attribute(std::string_view type) const {
 }
 
 std::vector<std::string> AlternativeName::get_attribute(std::string_view attr) const {
-   auto set_to_vector = [](const std::set<std::string>& s) {
-      std::vector<std::string> v(s.size());
-      std::copy(s.begin(), s.end(), v.begin());
-      return v;
-   };
+   auto set_to_vector = [](const std::set<std::string>& s) -> std::vector<std::string> { return {s.begin(), s.end()}; };
 
    if(attr == "DNS") {
       return set_to_vector(this->dns());

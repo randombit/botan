@@ -118,37 +118,45 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       void encode_into(DER_Encoder&) const override;
       void decode_from(BER_Decoder&) override;
 
-      // Create an empty name
+      /// Create an empty name
       AlternativeName() {}
 
-      // Add a URI to this AlternativeName
+      /// Add a URI to this AlternativeName
       void add_uri(std::string_view uri);
 
-      // Add a URI to this AlternativeName
+      /// Add a URI to this AlternativeName
       void add_email(std::string_view addr);
 
+      /// Add a DNS name to this AlternativeName
       void add_dns(std::string_view dns);
 
-      // Add an "OtherName" identified by object identifier
+      /// Add an "OtherName" identified by object identifier to this AlternativeName
       void add_other_name(const OID& oid, const ASN1_String& value);
 
+      /// Add a directory name to this AlternativeName
       void add_dn(const X509_DN& dn);
 
+      /// Add an IP address to this alternative name
+      ///
+      /// Note: currently only IPv4 is accepted
       void add_ip_address(std::string_view ip_str);
 
-      // Read the set of URIs included in this alternative name
+      /// Return the set of URIs included in this alternative name
       const std::set<std::string>& uris() const { return m_uri; }
 
-      // Read the set of email addresses included in this alternative name
+      /// Return the set of email addresses included in this alternative name
       const std::set<std::string>& email() const { return m_email; }
 
-      // Read the set of DNS names included in this alternative name
+      /// Return the set of DNS names included in this alternative name
       const std::set<std::string>& dns() const { return m_dns; }
 
+      /// Return the set of IPv4 addresses included in this alternative name
       const std::set<std::string>& ip_address() const { return m_ip_addr; }
 
+      /// Return the set of "other names" included in this alternative name
       const std::set<std::pair<OID, ASN1_String>>& other_names() const { return m_othernames; }
 
+      /// Return the set of directory names included in this alternative name
       const std::set<X509_DN>& directory_names() const { return m_dn_names; }
 
       // Return true if this has any names set

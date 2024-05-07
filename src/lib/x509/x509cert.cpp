@@ -513,11 +513,7 @@ const AlternativeName& X509_Certificate::issuer_alt_name() const {
 namespace {
 
 std::vector<std::string> get_cert_user_info(std::string_view req, const X509_DN& dn, const AlternativeName& alt_name) {
-   auto set_to_vector = [](const std::set<std::string>& s) {
-      std::vector<std::string> v(s.size());
-      std::copy(s.begin(), s.end(), v.begin());
-      return v;
-   };
+   auto set_to_vector = [](const std::set<std::string>& s) -> std::vector<std::string> { return {s.begin(), s.end()}; };
 
    if(dn.has_field(req)) {
       return dn.get_attribute(req);
