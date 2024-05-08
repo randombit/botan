@@ -827,6 +827,11 @@ Test::Result test_pkcs10_ext(const Botan::Private_Key& key,
    Botan::AlternativeName alt_name;
    alt_name.add_attribute("DNS", "bonus.example.org");
 
+   Botan::X509_DN alt_dn;
+   alt_dn.add_attribute("X520.CommonName", "alt_cn");
+   alt_dn.add_attribute("X520.Organization", "testing");
+   alt_name.add_dn(alt_dn);
+
    opts.extensions.add(std::make_unique<Botan::Cert_Extension::Subject_Alternative_Name>(alt_name));
 
    const auto req = Botan::X509::create_cert_req(opts, key, hash_fn, rng);
@@ -841,6 +846,9 @@ Test::Result test_pkcs10_ext(const Botan::Private_Key& key,
       result.test_eq("Expected DNS name 3", alt_dns_names.at(2), "more1.example.org");
       result.test_eq("Expected DNS name 3", alt_dns_names.at(3), "more2.example.org");
    }
+
+   result.test_eq("Expected number of alt DNs", req.subject_alt_name().directory_names().size(), 1);
+   result.confirm("Alt DN is correct", *req.subject_alt_name().directory_names().begin() == alt_dn);
 
    return result;
 }
