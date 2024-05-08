@@ -48,6 +48,68 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
 
    CertificatePathStatusCodes cert_status(cert_path.size());
 
+   // Before anything else verify the entire chain of signatures
+   for(size_t i = 0; i != cert_path.size(); ++i) {
+      std::set<Certificate_Status_Code>& status = cert_status.at(i);
+
+      const bool at_self_signed_root = (i == cert_path.size() - 1);
+
+      const X509_Certificate& subject = cert_path[i];
+      const X509_Certificate& issuer = cert_path[at_self_signed_root ? (i) : (i + 1)];
+
+      // Check the signature algorithm is known
+      if(!subject.signature_algorithm().oid().registered_oid()) {
+         status.insert(Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN);
+      } else {
+         std::unique_ptr<Public_Key> issuer_key;
+         try {
+            issuer_key = issuer.subject_public_key();
+         } catch(...) {
+            status.insert(Certificate_Status_Code::CERT_PUBKEY_INVALID);
+         }
+
+         if(issuer_key) {
+            if(issuer_key->estimated_strength() < restrictions.minimum_key_strength()) {
+               status.insert(Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK);
+            }
+
+            const auto sig_status = subject.verify_signature(*issuer_key);
+
+            if(sig_status.first != Certificate_Status_Code::VERIFIED) {
+               status.insert(sig_status.first);
+            } else {
+               // Signature is valid, check if hash used was acceptable
+               const std::string hash_used_for_signature = sig_status.second;
+               BOTAN_ASSERT_NOMSG(!hash_used_for_signature.empty());
+               const auto& trusted_hashes = restrictions.trusted_hashes();
+
+               // Ignore untrusted hashes on self-signed roots
+               if(!trusted_hashes.empty() && !at_self_signed_root) {
+                  if(!trusted_hashes.contains(hash_used_for_signature)) {
+                     status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   // If any of the signatures were invalid, return immediately; we know the
+   // chain is invalid and signature failure is always considered the most
+   // critical result. This does mean other problems in the certificate (eg
+   // expired) will not be reported, but we'd have to assume any such data is
+   // anyway arbitrary considering we couldn't verify the signature chain
+
+   for(size_t i = 0; i != cert_path.size(); ++i) {
+      for(auto status : cert_status.at(i)) {
+         // This ignores errors relating to the key or hash being weak since
+         // these are somewhat advisory
+         if(static_cast<uint32_t>(status) >= 5000) {
+            return cert_status;
+         }
+      }
+   }
+
    if(!hostname.empty() && !cert_path[0].matches_dns_name(hostname)) {
       cert_status[0].insert(Certificate_Status_Code::CERT_NAME_NOMATCH);
    }
@@ -83,6 +145,7 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
          status.insert(Certificate_Status_Code::CHAIN_LACKS_TRUST_ROOT);
       }
 
+      // This should never happen; it indicates a bug in path building
       if(subject.issuer_dn() != issuer.subject_dn()) {
          status.insert(Certificate_Status_Code::CHAIN_NAME_MISMATCH);
       }
@@ -125,39 +188,6 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
       // Check issuer constraints
       if(!issuer.is_CA_cert() && !self_signed_ee_cert) {
          status.insert(Certificate_Status_Code::CA_CERT_NOT_FOR_CERT_ISSUER);
-      }
-
-      auto issuer_key = issuer.subject_public_key();
-
-      // Check the signature algorithm is known
-      if(!subject.signature_algorithm().oid().registered_oid()) {
-         status.insert(Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN);
-      } else {
-         // only perform the following checks if the signature algorithm is known
-         if(!issuer_key) {
-            status.insert(Certificate_Status_Code::CERT_PUBKEY_INVALID);
-         } else {
-            const auto sig_status = subject.verify_signature(*issuer_key);
-
-            if(sig_status.first == Certificate_Status_Code::VERIFIED) {
-               const std::string hash_used_for_signature = sig_status.second;
-               BOTAN_ASSERT_NOMSG(!hash_used_for_signature.empty());
-               const auto& trusted_hashes = restrictions.trusted_hashes();
-
-               // Ignore untrusted hashes on self-signed roots
-               if(!trusted_hashes.empty() && !at_self_signed_root) {
-                  if(!trusted_hashes.contains(hash_used_for_signature)) {
-                     status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
-                  }
-               }
-            } else {
-               status.insert(sig_status.first);
-            }
-
-            if(issuer_key->estimated_strength() < restrictions.minimum_key_strength()) {
-               status.insert(Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK);
-            }
-         }
       }
 
       // Check cert extensions
