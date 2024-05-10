@@ -8,8 +8,10 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -43,26 +45,15 @@ void AlternativeName::add_ipv4_address(uint32_t ip) {
    m_ipv4_addr.insert(ip);
 }
 
+size_t AlternativeName::count() const {
+   const auto sum = checked_add(
+      m_dns.size(), m_uri.size(), m_email.size(), m_ipv4_addr.size(), m_dn_names.size(), m_othernames.size());
+
+   return BOTAN_ASSERT_IS_SOME(sum);
+}
+
 bool AlternativeName::has_items() const {
-   if(!this->dns().empty()) {
-      return true;
-   }
-   if(!this->uris().empty()) {
-      return true;
-   }
-   if(!this->email().empty()) {
-      return true;
-   }
-   if(!this->ipv4_address().empty()) {
-      return true;
-   }
-   if(!this->directory_names().empty()) {
-      return true;
-   }
-   if(!this->other_names().empty()) {
-      return true;
-   }
-   return false;
+   return this->count() > 0;
 }
 
 void AlternativeName::encode_into(DER_Encoder& der) const {

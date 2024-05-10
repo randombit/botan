@@ -158,7 +158,13 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       /// Return the set of directory names included in this alternative name
       const std::set<X509_DN>& directory_names() const { return m_dn_names; }
 
-      // Return true if this has any names set
+      /// Return the total number of names in this AlternativeName
+      ///
+      /// This only counts names which were parsed, ignoring names which
+      /// were of some unknown type
+      size_t count() const;
+
+      /// Return true if this has any names set
       bool has_items() const;
 
       // Old, now deprecated interface follows:
