@@ -102,10 +102,10 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
 
       ~EC_Group();
 
-      EC_Group(const EC_Group&) = default;
+      EC_Group(const EC_Group&);
       EC_Group(EC_Group&&) = default;
 
-      EC_Group& operator=(const EC_Group&) = default;
+      EC_Group& operator=(const EC_Group&);
       EC_Group& operator=(EC_Group&&) = default;
 
       /**

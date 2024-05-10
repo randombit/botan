@@ -217,6 +217,7 @@ std::vector<uint8_t> current_nonce(const uint64_t seq_no, const secure_vector<ui
    //        client_write_iv or server_write_iv (depending on the role).
    std::vector<uint8_t> nonce(NONCE_LENGTH);
    store_be(seq_no, nonce.data() + (NONCE_LENGTH - sizeof(seq_no)));
+   BOTAN_ASSERT_EQUAL(iv.size(), NONCE_LENGTH, "Invalid TLS 1.3 nonce length");
    xor_buf(nonce, iv.data(), iv.size());
    return nonce;
 }

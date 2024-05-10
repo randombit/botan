@@ -10,8 +10,10 @@ lang_flags "-std=c++20 -D_REENTRANT"
 warning_flags "-Wall -Wextra -Wpedantic -Wstrict-aliasing -Wcast-align -Wmissing-declarations -Wpointer-arith -Wcast-qual -Wzero-as-null-pointer-constant -Wnon-virtual-dtor -Wold-style-cast -Wsuggest-override -Wshadow -Wextra-semi"
 
 # Boost headers have 0 as nullptr and non-virtual-dtor issues so we can't werror on them
-# Have to disable maybe-uninitialized due to GCC bugs like https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105937
-werror_flags "-Werror -Wno-error=strict-overflow -Wno-error=zero-as-null-pointer-constant -Wno-error=non-virtual-dtor -Wno-error=maybe-uninitialized -Wno-error=stringop-overread"
+# -Wmaybe-uninitialized is buggy https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105937
+# -Wstringop-overread is buggy https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111499
+# -Wfree-nonheap-object is buggy https://gcc.gnu.org/bugzilla/show_bug.cgi?id=115016
+werror_flags "-Werror -Wno-error=strict-overflow -Wno-error=zero-as-null-pointer-constant -Wno-error=non-virtual-dtor -Wno-error=maybe-uninitialized -Wno-error=stringop-overread -Wno-error=free-nonheap-object"
 
 maintainer_warning_flags "-Wstrict-overflow=5"
 
