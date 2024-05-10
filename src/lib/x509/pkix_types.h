@@ -18,6 +18,7 @@
 #include <set>
 #include <string>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 namespace Botan {
@@ -243,17 +244,9 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
          UnknownType,
       };
 
-      /**
-      * Creates an empty GeneralName.
-      */
       GeneralName() = default;
 
-      /**
-      * Creates a new GeneralName for its string format.
-      * @param str type and name, colon-separated, e.g., "DNS:google.com"
-      */
-      GeneralName(const std::string& str);
-
+      // Encoding is not implemented
       void encode_into(DER_Encoder&) const override;
 
       void decode_from(BER_Decoder&) override;
@@ -261,12 +254,12 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
       /**
       * @return Type of the name. Can be DN, DNS, IP, RFC822 or URI.
       */
-      const std::string& type() const { return m_type; }
+      std::string type() const;
 
       /**
       * @return The name as string. Format depends on type.
       */
-      const std::string& name() const { return m_name; }
+      std::string name() const;
 
       /**
       * Checks whether a given certificate (partially) matches this name.
@@ -276,12 +269,21 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
       MatchResult matches(const X509_Certificate& cert) const;
 
    private:
-      std::string m_type;
-      std::string m_name;
+      enum class NameType : uint8_t {
+         Empty = 0,
+         RFC822 = 1,
+         DNS = 2,
+         URI = 3,
+         DN = 4,
+         IP = 5,
+      };
 
-      bool matches_dns(const std::string&) const;
-      bool matches_dn(const std::string&) const;
-      bool matches_ip(const std::string&) const;
+      NameType m_type;
+      std::variant<std::string, std::string, std::string, X509_DN, std::pair<uint32_t, uint32_t>> m_names;
+
+      static bool matches_dns(const std::string& name, const std::string& constraint);
+
+      static bool matches_dn(const X509_DN& name, const X509_DN& constraint);
 };
 
 std::ostream& operator<<(std::ostream& os, const GeneralName& gn);
@@ -299,20 +301,6 @@ class BOTAN_PUBLIC_API(2, 0) GeneralSubtree final : public ASN1_Object {
       * Creates an empty name constraint.
       */
       GeneralSubtree() : m_base(), m_minimum(0), m_maximum(std::numeric_limits<std::size_t>::max()) {}
-
-      /***
-      * Creates a new name constraint.
-      * @param base name
-      * @param min minimum path length
-      * @param max maximum path length
-      */
-      GeneralSubtree(const GeneralName& base, size_t min, size_t max) : m_base(base), m_minimum(min), m_maximum(max) {}
-
-      /**
-      * Creates a new name constraint for its string format.
-      * @param str name constraint
-      */
-      GeneralSubtree(const std::string& str);
 
       void encode_into(DER_Encoder&) const override;
 
