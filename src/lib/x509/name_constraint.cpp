@@ -191,12 +191,19 @@ bool GeneralName::matches_dns(const std::string& name, const std::string& constr
       // The constraint is longer than the issued name: not possibly a match
       return false;
    } else {
-      // constraint.size() < name.size()
-      // constr is suffix of constraint
-      const std::string constr = constraint.front() == '.' ? constraint : "." + constraint;
-      BOTAN_ASSERT_NOMSG(name.size() >= constr.size());
-      const std::string substr = name.substr(name.size() - constr.size(), constr.size());
-      return substr == constr;
+      BOTAN_ASSERT_NOMSG(name.size() > constraint.size());
+
+      if(constraint.empty()) {
+         return true;
+      }
+
+      std::string_view substr = std::string_view(name).substr(name.size() - constraint.size(), constraint.size());
+
+      if(constraint.front() == '.') {
+         return substr == constraint;
+      } else {
+         return substr[0] == '.' && substr.substr(1) == constraint;
+      }
    }
 }
 
