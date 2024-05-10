@@ -374,6 +374,20 @@ class scoped_cleanup {
       std::optional<FunT> m_cleanup;
 };
 
+/**
+* Define BOTAN_ASSERT_IS_SOME
+*/
+template <typename T>
+T assert_is_some(std::optional<T> v, const char* expr, const char* func, const char* file, int line) {
+   if(v) {
+      return *v;
+   } else {
+      Botan::assertion_failure(expr, "optional had value", func, file, line);
+   }
+}
+
+#define BOTAN_ASSERT_IS_SOME(v) assert_is_some(v, #v, __func__, __FILE__, __LINE__)
+
 }  // namespace Botan
 
 #endif
