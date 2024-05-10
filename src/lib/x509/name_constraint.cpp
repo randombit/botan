@@ -22,8 +22,8 @@ class DER_Encoder;
 
 std::string GeneralName::type() const {
    switch(m_type) {
-      case NameType::Empty:
-         throw Encoding_Error("Could not convert empty NameType to string");
+      case NameType::Unknown:
+         throw Encoding_Error("Could not convert unknown NameType to string");
       case NameType::RFC822:
          return "RFC822";
       case NameType::DNS:
@@ -32,7 +32,7 @@ std::string GeneralName::type() const {
          return "URI";
       case NameType::DN:
          return "DN";
-      case NameType::IP:
+      case NameType::IPv4:
          return "IP";
    }
 
@@ -80,7 +80,6 @@ void GeneralName::decode_from(BER_Decoder& ber) {
       X509_DN dn;
       BER_Decoder dec(obj);
       dn.decode_from(dec);
-
       m_type = NameType::DN;
       m_names.emplace<3>(dn);
    } else if(obj.is_a(7, ASN1_Class::ContextSpecific)) {
@@ -88,15 +87,15 @@ void GeneralName::decode_from(BER_Decoder& ber) {
          const uint32_t net = load_be<uint32_t>(obj.bits(), 0);
          const uint32_t mask = load_be<uint32_t>(obj.bits(), 1);
 
-         m_type = NameType::IP;
+         m_type = NameType::IPv4;
          m_names.emplace<4>(std::make_pair(net, mask));
       } else if(obj.length() == 32) {
-         throw Decoding_Error("Unsupported IPv6 name constraint");
+         throw Not_Implemented("Unsupported IPv6 name constraint");
       } else {
          throw Decoding_Error("Invalid IP name constraint size " + std::to_string(obj.length()));
       }
    } else {
-      throw Decoding_Error("Found unknown GeneralName type");
+      m_type = NameType::Unknown;
    }
 }
 
@@ -156,7 +155,7 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
       for(const auto& alt_dn : alt_name.directory_names()) {
          score.add(matches_dn(alt_dn, constraint));
       }
-   } else if(m_type == NameType::IP) {
+   } else if(m_type == NameType::IPv4) {
       auto [net, mask] = std::get<4>(m_names);
 
       for(uint32_t ipv4 : alt_name.ipv4_address()) {
@@ -233,4 +232,45 @@ std::ostream& operator<<(std::ostream& os, const GeneralSubtree& gs) {
    os << gs.minimum() << "," << gs.maximum() << "," << gs.base();
    return os;
 }
+
+bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unknown) const {
+   if(permitted().empty()) {
+      return true;
+   }
+
+   bool permitted = false;
+
+   for(const auto& c : m_permitted_subtrees) {
+      const auto m = c.base().matches(cert);
+
+      if(m == GeneralName::MatchResult::All) {
+         permitted = true;
+      } else if(m == GeneralName::MatchResult::UnknownType && reject_unknown) {
+         return false;
+      }
+   }
+
+   return permitted;
+}
+
+bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unknown) const {
+   if(excluded().empty()) {
+      return false;
+   }
+
+   for(const auto& c : m_excluded_subtrees) {
+      const auto m = c.base().matches(cert);
+
+      if(m == GeneralName::MatchResult::All || m == GeneralName::MatchResult::Some) {
+         return true;
+      }
+
+      if(m == GeneralName::MatchResult::UnknownType && reject_unknown) {
+         return true;
+      }
+   }
+
+   return false;
+}
+
 }  // namespace Botan

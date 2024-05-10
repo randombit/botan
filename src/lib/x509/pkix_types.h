@@ -270,12 +270,12 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
 
    private:
       enum class NameType : uint8_t {
-         Empty = 0,
+         Unknown = 0,
          RFC822 = 1,
          DNS = 2,
          URI = 3,
          DN = 4,
-         IP = 5,
+         IPv4 = 5,
       };
 
       NameType m_type;
@@ -359,6 +359,12 @@ class BOTAN_PUBLIC_API(2, 0) NameConstraints final {
       * @return excluded names
       */
       const std::vector<GeneralSubtree>& excluded() const { return m_excluded_subtrees; }
+
+      // Return true if this certificate is known to be permitted
+      bool is_permitted(const X509_Certificate& cert, bool reject_unknown) const;
+
+      // Return true if this certificate is known to be excluded
+      bool is_excluded(const X509_Certificate& cert, bool reject_unknown) const;
 
    private:
       std::vector<GeneralSubtree> m_permitted_subtrees;

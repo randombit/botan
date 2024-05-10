@@ -522,40 +522,16 @@ void Name_Constraints::validate(const X509_Certificate& subject,
 
       // Check that all subordinate certs pass the name constraint
       for(size_t j = 0; j < pos; ++j) {
-         bool permitted = m_name_constraints.permitted().empty();
-         bool failed = false;
+         const auto& cert = cert_path.at(j);
 
-         for(const auto& c : m_name_constraints.permitted()) {
-            switch(c.base().matches(cert_path.at(j))) {
-               case GeneralName::MatchResult::NotFound:
-               case GeneralName::MatchResult::All:
-                  permitted = true;
-                  break;
-               case GeneralName::MatchResult::UnknownType:
-                  failed = issuer_name_constraint_critical;
-                  permitted = true;
-                  break;
-               default:
-                  break;
-            }
-         }
-
-         for(const auto& c : m_name_constraints.excluded()) {
-            switch(c.base().matches(cert_path.at(j))) {
-               case GeneralName::MatchResult::All:
-               case GeneralName::MatchResult::Some:
-                  failed = true;
-                  break;
-               case GeneralName::MatchResult::UnknownType:
-                  failed = issuer_name_constraint_critical;
-                  break;
-               default:
-                  break;
-            }
-         }
-
-         if(failed || !permitted) {
+         if(!m_name_constraints.is_permitted(cert, issuer_name_constraint_critical)) {
             cert_status.at(j).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
+            continue;
+         }
+
+         if(m_name_constraints.is_excluded(cert, issuer_name_constraint_critical)) {
+            cert_status.at(j).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
+            continue;
          }
       }
    }
