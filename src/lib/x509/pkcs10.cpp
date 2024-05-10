@@ -150,7 +150,7 @@ std::unique_ptr<PKCS10_Data> decode_pkcs10(const std::vector<uint8_t>& body) {
    }
 
    for(const auto& email : pkcs9_email) {
-      data->m_alt_name.add_attribute("RFC882", email);
+      data->m_alt_name.add_email(email);
    }
 
    return data;

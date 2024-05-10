@@ -50,14 +50,16 @@ auto create_alt_name_ext(const X509_Cert_Options& opts, Extensions& extensions) 
       subject_alt = ext->get_alt_name();
    }
 
-   subject_alt.add_attribute("DNS", opts.dns);
-   subject_alt.add_attribute("URI", opts.uri);
-   subject_alt.add_attribute("RFC822", opts.email);
-   subject_alt.add_attribute("IP", opts.ip);
-   subject_alt.add_othername(OID::from_string("PKIX.XMPPAddr"), opts.xmpp, ASN1_Type::Utf8String);
+   subject_alt.add_dns(opts.dns);
+   for(const auto& nm : opts.more_dns) {
+      subject_alt.add_dns(nm);
+   }
+   subject_alt.add_uri(opts.uri);
+   subject_alt.add_email(opts.email);
+   subject_alt.add_ip_address(opts.ip);
 
-   for(const auto& dns : opts.more_dns) {
-      subject_alt.add_attribute("DNS", dns);
+   if(!opts.xmpp.empty()) {
+      subject_alt.add_other_name(OID::from_string("PKIX.XMPPAddr"), ASN1_String(opts.xmpp, ASN1_Type::Utf8String));
    }
 
    return std::make_unique<Cert_Extension::Subject_Alternative_Name>(subject_alt);

@@ -91,7 +91,7 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
       nam.push_back(dn.to_string());
 
       const auto alt_dn = alt_name.dn();
-      if(alt_dn.empty() == false) {
+      if(!alt_dn.empty()) {
          nam.push_back(alt_dn.to_string());
       }
    } else if(type() == "IP") {
