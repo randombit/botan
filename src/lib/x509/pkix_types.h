@@ -262,6 +262,14 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
       std::string name() const;
 
       /**
+      * @return true if this name is a type we don't understand
+      *
+      * Note this returns true also for the case of URIs and email, which we can
+      * parse but do not currently implement matching for.
+      */
+      bool is_unknown_type() const;
+
+      /**
       * Checks whether a given certificate (partially) matches this name.
       * @param cert certificate to be matched
       * @return the match result
@@ -347,8 +355,7 @@ class BOTAN_PUBLIC_API(2, 0) NameConstraints final {
       * @param excluded_subtrees names for which the certificate is not permitted
       */
       NameConstraints(std::vector<GeneralSubtree>&& permitted_subtrees,
-                      std::vector<GeneralSubtree>&& excluded_subtrees) :
-            m_permitted_subtrees(permitted_subtrees), m_excluded_subtrees(excluded_subtrees) {}
+                      std::vector<GeneralSubtree>&& excluded_subtrees);
 
       /**
       * @return permitted names
@@ -369,6 +376,8 @@ class BOTAN_PUBLIC_API(2, 0) NameConstraints final {
    private:
       std::vector<GeneralSubtree> m_permitted_subtrees;
       std::vector<GeneralSubtree> m_excluded_subtrees;
+      bool m_permitted_contains_unknown;
+      bool m_excluded_contains_unknown;
 };
 
 /**

@@ -90,13 +90,25 @@ void GeneralName::decode_from(BER_Decoder& ber) {
          m_type = NameType::IPv4;
          m_names.emplace<4>(std::make_pair(net, mask));
       } else if(obj.length() == 32) {
-         throw Not_Implemented("Unsupported IPv6 name constraint");
+         // IPv6 name constraints are not implemented
+         m_type = NameType::Unknown;
       } else {
          throw Decoding_Error("Invalid IP name constraint size " + std::to_string(obj.length()));
       }
    } else {
       m_type = NameType::Unknown;
    }
+}
+
+bool GeneralName::is_unknown_type() const {
+   if(m_type == NameType::Unknown) {
+      return true;
+   }
+
+   // We don't currently implement matching for URIs or emails, so we
+   // need to reject any cert with a critical email or URI name
+   // constraint.
+   return (m_type == NameType::URI || m_type == NameType::RFC822);
 }
 
 GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) const {
@@ -233,27 +245,47 @@ std::ostream& operator<<(std::ostream& os, const GeneralSubtree& gs) {
    return os;
 }
 
+NameConstraints::NameConstraints(std::vector<GeneralSubtree>&& permitted_subtrees,
+                                 std::vector<GeneralSubtree>&& excluded_subtrees) :
+      m_permitted_subtrees(permitted_subtrees), m_excluded_subtrees(excluded_subtrees) {
+   auto contains_unknown = [](const std::vector<GeneralSubtree>& tree) -> bool {
+      for(const auto& c : tree) {
+         if(c.base().is_unknown_type()) {
+            return true;
+         }
+      }
+      return false;
+   };
+
+   m_permitted_contains_unknown = contains_unknown(m_permitted_subtrees);
+   m_excluded_contains_unknown = contains_unknown(m_excluded_subtrees);
+}
+
 bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unknown) const {
+   if(reject_unknown && m_permitted_contains_unknown) {
+      return false;
+   }
+
    if(permitted().empty()) {
       return true;
    }
-
-   bool permitted = false;
 
    for(const auto& c : m_permitted_subtrees) {
       const auto m = c.base().matches(cert);
 
       if(m == GeneralName::MatchResult::All) {
-         permitted = true;
-      } else if(m == GeneralName::MatchResult::UnknownType && reject_unknown) {
-         return false;
+         return true;
       }
    }
 
-   return permitted;
+   return false;
 }
 
 bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unknown) const {
+   if(reject_unknown && m_excluded_contains_unknown) {
+      return true;
+   }
+
    if(excluded().empty()) {
       return false;
    }
@@ -262,10 +294,6 @@ bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unkn
       const auto m = c.base().matches(cert);
 
       if(m == GeneralName::MatchResult::All || m == GeneralName::MatchResult::Some) {
-         return true;
-      }
-
-      if(m == GeneralName::MatchResult::UnknownType && reject_unknown) {
          return true;
       }
    }
