@@ -27,7 +27,7 @@ void AlternativeName::add_email(std::string_view addr) {
 
 void AlternativeName::add_dns(std::string_view dns) {
    if(!dns.empty()) {
-      m_dns.insert(std::string(dns));
+      m_dns.insert(tolower_string(dns));
    }
 }
 

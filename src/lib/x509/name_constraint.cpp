@@ -173,9 +173,9 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
 
 //static
 bool GeneralName::matches_dns(const std::string& name, const std::string& constraint) {
-   // constraint is assumed already tolower
+   // both constraint and name are assumed already tolower
    if(name.size() == constraint.size()) {
-      return tolower_string(name) == constraint;
+      return name == constraint;
    } else if(constraint.size() > name.size()) {
       // The constraint is longer than the issued name: not possibly a match
       return false;
@@ -185,7 +185,7 @@ bool GeneralName::matches_dns(const std::string& name, const std::string& constr
       const std::string constr = constraint.front() == '.' ? constraint : "." + constraint;
       BOTAN_ASSERT_NOMSG(name.size() >= constr.size());
       const std::string substr = name.substr(name.size() - constr.size(), constr.size());
-      return tolower_string(substr) == constr;
+      return substr == constr;
    }
 }
 
