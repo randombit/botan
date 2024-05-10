@@ -39,10 +39,8 @@ void AlternativeName::add_dn(const X509_DN& dn) {
    m_dn_names.insert(dn);
 }
 
-void AlternativeName::add_ip_address(std::string_view ip) {
-   if(!ip.empty()) {
-      m_ip_addr.insert(std::string(ip));
-   }
+void AlternativeName::add_ipv4_address(uint32_t ip) {
+   m_ipv4_addr.insert(ip);
 }
 
 bool AlternativeName::has_items() const {
@@ -55,7 +53,7 @@ bool AlternativeName::has_items() const {
    if(!this->email().empty()) {
       return true;
    }
-   if(!this->ip_address().empty()) {
+   if(!this->ipv4_address().empty()) {
       return true;
    }
    if(!this->directory_names().empty()) {
@@ -111,8 +109,8 @@ void AlternativeName::encode_into(DER_Encoder& der) const {
       der.add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, str.value());
    }
 
-   for(const auto& ip : m_ip_addr) {
-      auto ip_buf = store_be(string_to_ipv4(ip));
+   for(uint32_t ip : m_ipv4_addr) {
+      auto ip_buf = store_be(ip);
       der.add_object(ASN1_Type(7), ASN1_Class::ContextSpecific, ip_buf.data(), 4);
    }
 
@@ -161,7 +159,7 @@ void AlternativeName::decode_from(BER_Decoder& source) {
       } else if(obj.is_a(7, ASN1_Class::ContextSpecific)) {
          if(obj.length() == 4) {
             const uint32_t ip = load_be<uint32_t>(obj.bits(), 0);
-            this->add_ip_address(ipv4_to_string(ip));
+            this->add_ipv4_address(ip);
          }
       }
    }

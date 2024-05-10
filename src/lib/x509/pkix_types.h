@@ -137,9 +137,7 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       void add_dn(const X509_DN& dn);
 
       /// Add an IP address to this alternative name
-      ///
-      /// Note: currently only IPv4 is accepted
-      void add_ip_address(std::string_view ip_str);
+      void add_ipv4_address(uint32_t ipv4);
 
       /// Return the set of URIs included in this alternative name
       const std::set<std::string>& uris() const { return m_uri; }
@@ -151,7 +149,7 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       const std::set<std::string>& dns() const { return m_dns; }
 
       /// Return the set of IPv4 addresses included in this alternative name
-      const std::set<std::string>& ip_address() const { return m_ip_addr; }
+      const std::set<uint32_t>& ipv4_address() const { return m_ipv4_addr; }
 
       /// Return the set of "other names" included in this alternative name
       const std::set<std::pair<OID, ASN1_String>>& other_names() const { return m_othernames; }
@@ -188,7 +186,7 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
 
       BOTAN_DEPRECATED("Use AlternativeName::directory_names") X509_DN dn() const;
 
-      BOTAN_DEPRECATED("Use plain constructor plus add_{uri,dns,email,ip}")
+      BOTAN_DEPRECATED("Use plain constructor plus add_{uri,dns,email,ipv4_address}")
       AlternativeName(std::string_view email_addr,
                       std::string_view uri = "",
                       std::string_view dns = "",
@@ -198,7 +196,7 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       std::set<std::string> m_dns;
       std::set<std::string> m_uri;
       std::set<std::string> m_email;
-      std::set<std::string> m_ip_addr;
+      std::set<uint32_t> m_ipv4_addr;
       std::set<X509_DN> m_dn_names;
       std::set<std::pair<OID, ASN1_String>> m_othernames;
 };
