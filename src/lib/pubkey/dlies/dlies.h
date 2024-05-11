@@ -15,6 +15,8 @@
 #include <botan/mac.h>
 #include <botan/pubkey.h>
 
+BOTAN_DEPRECATED_HEADER("dlies.h")
+
 namespace Botan {
 
 /**

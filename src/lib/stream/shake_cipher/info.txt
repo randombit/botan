@@ -5,6 +5,7 @@ SHAKE_CIPHER -> 20161018
 <module_info>
 name -> "SHAKE-based XOFs"
 brief -> "SHAKE-128 and SHAKE-256 XOF presented as stream ciphers"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>

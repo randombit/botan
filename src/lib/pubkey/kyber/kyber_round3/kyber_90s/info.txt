@@ -4,6 +4,7 @@ KYBER_90S -> 20220107
 
 <module_info>
 name -> "Kyber 90s"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>

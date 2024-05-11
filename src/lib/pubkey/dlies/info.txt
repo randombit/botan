@@ -4,6 +4,7 @@ DLIES -> 20160713
 
 <module_info>
 name -> "DLIES"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>

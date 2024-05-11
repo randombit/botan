@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-//BOTAN_FUTURE_INTERNAL_HEADER(uuid.h)
+BOTAN_DEPRECATED_HEADER("uuid.h")
 
 namespace Botan {
 

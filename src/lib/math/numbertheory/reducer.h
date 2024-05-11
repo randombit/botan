@@ -10,6 +10,8 @@
 
 #include <botan/numthry.h>
 
+BOTAN_FUTURE_INTERNAL_HEADER(reducer.h)
+
 namespace Botan {
 
 /**
