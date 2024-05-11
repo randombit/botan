@@ -4,4 +4,5 @@ STREEBOG -> 20170623
 
 <module_info>
 name -> "Streebog"
+lifecycle -> "Deprecated"
 </module_info>

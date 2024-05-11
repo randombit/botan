@@ -4,6 +4,7 @@ LION -> 20131128
 
 <module_info>
 name -> "Lion"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>

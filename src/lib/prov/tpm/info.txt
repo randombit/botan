@@ -5,6 +5,7 @@ TPM -> 20151126
 <module_info>
 name -> "TPM"
 brief -> "Wrappers and Utilites to interact with TPMs"
+lifecycle -> "Deprecated"
 </module_info>
 
 load_on vendor

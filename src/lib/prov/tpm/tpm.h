@@ -16,6 +16,8 @@
 #include <botan/uuid.h>
 #include <functional>
 
+BOTAN_DEPRECATED_HEADER("tpm.h")
+
 //TODO remove this
 #include <tss/tspi.h>
 
@@ -46,6 +48,7 @@ class BOTAN_PUBLIC_API(2, 0) TPM_Context final {
       */
       typedef std::function<std::string(std::string)> pin_cb;
 
+      BOTAN_DEPRECATED("TPM support is deprecated see #3877")
       TPM_Context(pin_cb cb, const char* srk_password);
 
       ~TPM_Context();

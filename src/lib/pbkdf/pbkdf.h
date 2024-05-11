@@ -37,6 +37,7 @@ class BOTAN_PUBLIC_API(2, 0) PBKDF {
       * @param provider provider implementation to choose
       * @return a null pointer if the algo/provider combination cannot be found
       */
+      BOTAN_DEPRECATED("Use PasswordHashFamily + PasswordHash")
       static std::unique_ptr<PBKDF> create(std::string_view algo_spec, std::string_view provider = "");
 
       /**
@@ -44,6 +45,7 @@ class BOTAN_PUBLIC_API(2, 0) PBKDF {
       * algo/provider combination cannot be found. If provider is
       * empty then best available is chosen.
       */
+      BOTAN_DEPRECATED("Use PasswordHashFamily + PasswordHash")
       static std::unique_ptr<PBKDF> create_or_throw(std::string_view algo_spec, std::string_view provider = "");
 
       /**

@@ -4,4 +4,5 @@ NOEKEON -> 20131128
 
 <module_info>
 name -> "Noekeon"
+lifecycle -> "Deprecated"
 </module_info>

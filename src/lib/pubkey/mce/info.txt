@@ -4,6 +4,7 @@ MCELIECE -> 20150922
 
 <module_info>
 name -> "McEliece"
+lifecycle -> "Deprecated"
 </module_info>
 
 <header:public>

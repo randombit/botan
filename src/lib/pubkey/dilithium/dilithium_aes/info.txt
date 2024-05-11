@@ -4,6 +4,7 @@ DILITHIUM_AES -> 20221018
 
 <module_info>
 name -> "Dilithium (AES)"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>

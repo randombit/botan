@@ -14,6 +14,8 @@
 
 #include <botan/pk_keys.h>
 
+BOTAN_DEPRECATED_HEADER("mceliece.h")
+
 namespace Botan {
 
 typedef uint16_t gf2m;

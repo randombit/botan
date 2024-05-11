@@ -4,6 +4,7 @@ MD4 -> 20131128
 
 <module_info>
 name -> "MD4"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>

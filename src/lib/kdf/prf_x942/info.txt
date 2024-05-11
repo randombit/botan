@@ -4,6 +4,7 @@ X942_PRF -> 20131128
 
 <module_info>
 name -> "PRF X9.42"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>

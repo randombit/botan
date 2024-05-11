@@ -4,4 +4,5 @@ GOST_28147_89 -> 20131128
 
 <module_info>
 name -> "GOST 28147-89"
+lifecycle -> "Deprecated"
 </module_info>

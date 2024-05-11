@@ -5,6 +5,7 @@ GOST_34_10_2012 -> 20190801
 
 <module_info>
 name -> "GOST 34.10-2001"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>
