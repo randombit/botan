@@ -83,7 +83,6 @@ class BOTAN_PUBLIC_API(2, 8) Scrypt_Family final : public PasswordHashFamily {
 * Scrypt uses approximately (p + N + 1) * 128 * r bytes of memory
 */
 BOTAN_DEPRECATED("Use PasswordHashFamily+PasswordHash")
-
 inline void scrypt(uint8_t output[],
                    size_t output_len,
                    const char* password,
@@ -116,7 +115,6 @@ inline void scrypt(uint8_t output[],
 * Scrypt uses approximately (p + N + 1) * 128 * r bytes of memory
 */
 BOTAN_DEPRECATED("Use PasswordHashFamily+PasswordHash")
-
 inline void scrypt(uint8_t output[],
                    size_t output_len,
                    std::string_view password,

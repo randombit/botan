@@ -116,7 +116,6 @@ class BOTAN_PUBLIC_API(2, 0) PKCS5_PBKDF2 final : public PBKDF {
       * @param mac_fn the MAC object to use as PRF
       */
       BOTAN_DEPRECATED("Use version taking unique_ptr")
-
       explicit PKCS5_PBKDF2(MessageAuthenticationCode* mac_fn) : m_mac(mac_fn) {}
 
       /**
@@ -124,7 +123,6 @@ class BOTAN_PUBLIC_API(2, 0) PKCS5_PBKDF2 final : public PBKDF {
       * @param mac_fn the MAC object to use as PRF
       */
       BOTAN_DEPRECATED("Use PasswordHashFamily + PasswordHash")
-
       explicit PKCS5_PBKDF2(std::unique_ptr<MessageAuthenticationCode> mac_fn) : m_mac(std::move(mac_fn)) {}
 
    private:

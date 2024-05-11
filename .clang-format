@@ -31,7 +31,11 @@ IncludeCategories:
     Priority:        1
     CaseSensitive:   false
 
-AttributeMacros: ['BOTAN_FUNC_ISA', 'BOTAN_FUNC_ISA_INLINE', 'BOTAN_FORCE_INLINE']
+AttributeMacros: ['BOTAN_FUNC_ISA',
+                  'BOTAN_FUNC_ISA_INLINE',
+                  'BOTAN_FORCE_INLINE',
+                  'BOTAN_DEPRECATED',
+                  'BOTAN_DEPRECATED_API']
 
 BinPackArguments: false
 BreakStringLiterals: false

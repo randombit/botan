@@ -82,9 +82,9 @@ class BOTAN_PUBLIC_API(2, 2) Ed25519_PrivateKey final : public Ed25519_PublicKey
       */
       explicit Ed25519_PrivateKey(const secure_vector<uint8_t>& secret_key);
 
-      BOTAN_DEPRECATED("Use raw_private_key_bits")
-
-      const secure_vector<uint8_t>& get_private_key() const { return m_private; }
+      BOTAN_DEPRECATED("Use raw_private_key_bits") const secure_vector<uint8_t>& get_private_key() const {
+         return m_private;
+      }
 
       secure_vector<uint8_t> raw_private_key_bits() const override { return m_private; }
 

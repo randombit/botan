@@ -266,8 +266,7 @@ class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
       * message is processed.
       * @param filt the new filter to insert
       */
-      BOTAN_DEPRECATED("Runtime modification of Pipe deprecated")
-      void prepend(Filter* filt);
+      BOTAN_DEPRECATED("Runtime modification of Pipe deprecated") void prepend(Filter* filt);
 
       /**
       * Insert a new filter at the back of the pipe
@@ -276,20 +275,17 @@ class BOTAN_PUBLIC_API(2, 0) Pipe final : public DataSource {
       * message is processed.
       * @param filt the new filter to insert
       */
-      BOTAN_DEPRECATED("Runtime modification of Pipe deprecated")
-      void append(Filter* filt);
+      BOTAN_DEPRECATED("Runtime modification of Pipe deprecated") void append(Filter* filt);
 
       /**
       * Remove the first filter at the front of the pipe.
       */
-      BOTAN_DEPRECATED("Runtime modification of Pipe deprecated")
-      void pop();
+      BOTAN_DEPRECATED("Runtime modification of Pipe deprecated") void pop();
 
       /**
       * Reset this pipe to an empty pipe.
       */
-      BOTAN_DEPRECATED("Runtime modification of Pipe deprecated")
-      void reset();
+      BOTAN_DEPRECATED("Runtime modification of Pipe deprecated") void reset();
 
       /**
       * Append a new filter onto the filter sequence. This may only be

@@ -121,9 +121,7 @@ class BOTAN_PUBLIC_API(2, 0) AEAD_Mode : public Cipher_Mode {
       *
       * @param ad the associated data
       */
-      BOTAN_DEPRECATED("Please use set_associated_data")
-
-      void set_ad(std::span<const uint8_t> ad) { set_associated_data(ad); }
+      BOTAN_DEPRECATED("Use set_associated_data") void set_ad(std::span<const uint8_t> ad) { set_associated_data(ad); }
 
       /**
       * @return default AEAD nonce size (a commonly supported value among AEAD
@@ -139,9 +137,7 @@ class BOTAN_PUBLIC_API(2, 0) AEAD_Mode : public Cipher_Mode {
 * @param name AEAD name
 * @param direction Cipher_Dir::Encryption or Cipher_Dir::Decryption
 */
-BOTAN_DEPRECATED("Use AEAD_Mode::create")
-
-inline AEAD_Mode* get_aead(std::string_view name, Cipher_Dir direction) {
+BOTAN_DEPRECATED("Use AEAD_Mode::create") inline AEAD_Mode* get_aead(std::string_view name, Cipher_Dir direction) {
    return AEAD_Mode::create(name, direction, "").release();
 }
 

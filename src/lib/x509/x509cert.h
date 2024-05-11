@@ -55,8 +55,7 @@ class BOTAN_PUBLIC_API(2, 0) X509_Certificate : public X509_Object {
       *
       * @return subject public key of this certificate
       */
-      BOTAN_DEPRECATED("Use subject_public_key")
-      std::unique_ptr<Public_Key> load_subject_public_key() const;
+      BOTAN_DEPRECATED("Use subject_public_key") std::unique_ptr<Public_Key> load_subject_public_key() const;
 
       /**
       * Get the public key associated with this certificate. This includes the
@@ -334,8 +333,7 @@ class BOTAN_PUBLIC_API(2, 0) X509_Certificate : public X509_Object {
       /**
       * Return the CRL distribution point, or empty if not set
       */
-      BOTAN_DEPRECATED("Use crl_distribution_points")
-      std::string crl_distribution_point() const;
+      BOTAN_DEPRECATED("Use crl_distribution_points") std::string crl_distribution_point() const;
 
       /**
       * Return the CRL distribution points, or empty if not set

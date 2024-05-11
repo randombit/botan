@@ -81,9 +81,7 @@ class BOTAN_PUBLIC_API(2, 0) X25519_PrivateKey final : public X25519_PublicKey,
 
       secure_vector<uint8_t> raw_private_key_bits() const override { return m_private; }
 
-      BOTAN_DEPRECATED("Use raw_private_key_bits")
-
-      const secure_vector<uint8_t>& get_x() const { return m_private; }
+      BOTAN_DEPRECATED("Use raw_private_key_bits") const secure_vector<uint8_t>& get_x() const { return m_private; }
 
       secure_vector<uint8_t> private_key_bits() const override;
 
