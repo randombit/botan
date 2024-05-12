@@ -33,7 +33,7 @@ void BigInt::randomize(RandomNumberGenerator& rng, size_t bitsize, bool set_high
          array[0] |= 0x80 >> ((bitsize % 8) ? (8 - bitsize % 8) : 0);
       }
 
-      binary_decode(array);
+      assign_from_bytes(array);
    }
 }
 

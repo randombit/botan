@@ -88,8 +88,14 @@ BigInt::BigInt(std::string_view str) {
    }
 }
 
-BigInt::BigInt(const uint8_t input[], size_t length) {
-   binary_decode(input, length);
+BigInt BigInt::from_string(std::string_view str) {
+   return BigInt(str);
+}
+
+BigInt BigInt::from_bytes(std::span<const uint8_t> input) {
+   BigInt r;
+   r.assign_from_bytes(input);
+   return r;
 }
 
 /*
@@ -103,8 +109,7 @@ BigInt::BigInt(const uint8_t input[], size_t length, Base base) {
 BigInt BigInt::from_bytes_with_max_bits(const uint8_t input[], size_t length, size_t max_bits) {
    const size_t input_bits = 8 * length;
 
-   BigInt bn;
-   bn.binary_decode(input, length);
+   auto bn = BigInt::from_bytes(std::span{input, length});
 
    if(input_bits > max_bits) {
       const size_t bits_to_shift = input_bits - max_bits;
@@ -372,8 +377,13 @@ BigInt BigInt::abs() const {
    return x;
 }
 
-void BigInt::binary_encode(uint8_t buf[]) const {
-   this->binary_encode(buf, bytes());
+/*
+* Encode this number into bytes
+*/
+void BigInt::serialize_to(std::span<uint8_t> output) const {
+   BOTAN_ARG_CHECK(this->bytes() <= output.size(), "Insufficient output space");
+
+   this->binary_encode(output.data(), output.size());
 }
 
 /*
@@ -400,21 +410,22 @@ void BigInt::binary_encode(uint8_t output[], size_t len) const {
 /*
 * Set this number to the value in buf
 */
-void BigInt::binary_decode(const uint8_t buf[], size_t length) {
+void BigInt::assign_from_bytes(std::span<const uint8_t> bytes) {
    clear();
 
+   const size_t length = bytes.size();
    const size_t full_words = length / sizeof(word);
    const size_t extra_bytes = length % sizeof(word);
 
    secure_vector<word> reg((round_up(full_words + (extra_bytes > 0 ? 1 : 0), 8)));
 
    for(size_t i = 0; i != full_words; ++i) {
-      reg[i] = load_be<word>(buf + length - sizeof(word) * (i + 1), 0);
+      reg[i] = load_be<word>(&bytes[length - sizeof(word) * (i + 1)], 0);
    }
 
    if(extra_bytes > 0) {
       for(size_t i = 0; i != extra_bytes; ++i) {
-         reg[full_words] = (reg[full_words] << 8) | buf[i];
+         reg[full_words] = (reg[full_words] << 8) | bytes[i];
       }
    }
 

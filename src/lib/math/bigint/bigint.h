@@ -52,7 +52,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
        * Create a 1-value BigInt
        */
-      static BigInt one() { return BigInt::from_word(1); }
+      static BigInt one() { return BigInt::from_u64(1); }
 
       /**
        * Create BigInt from an unsigned 64 bit integer
@@ -64,13 +64,14 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * Create BigInt from a word (limb)
        * @param n initial value of this BigInt
        */
+      //BOTAN_DEPRECATED("Use BigInt::from_u64 instead")
       static BigInt from_word(word n);
 
       /**
        * Create BigInt from a signed 32 bit integer
        * @param n initial value of this BigInt
        */
-      static BigInt from_s32(int32_t n);
+      BOTAN_DEPRECATED("Use BigInt::from_u64 plus negation if required instead") static BigInt from_s32(int32_t n);
 
       /**
        * Create BigInt from an unsigned 64 bit integer
@@ -93,7 +94,21 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        *
        * @param str the string to parse for an integer value
        */
+      //BOTAN_DEPRECATED("Use BigInt::from_string")
       explicit BigInt(std::string_view str);
+
+      /**
+       * Create BigInt from a string.
+       *
+       * If the string starts with 0x the rest of the string will be
+       * interpreted as hexadecimal digits. Otherwise, it will be
+       * interpreted as a decimal number.
+       *
+       * A prefix of "-" will result in a negative integer
+       *
+       * @param str the string to parse for an integer value
+       */
+      static BigInt from_string(std::string_view str);
 
       /**
        * Create a BigInt from an integer in a byte array
@@ -114,8 +129,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param length size of buf
        * @param base is the number base of the integer in buf
        */
-      BOTAN_DEPRECATED("For hex/decimal use string constructor")
-      BigInt(const uint8_t buf[], size_t length, Base base);
+      BOTAN_DEPRECATED("For hex/decimal use from_string") BigInt(const uint8_t buf[], size_t length, Base base);
 
       /**
        * Create a BigInt from an integer in a byte array
@@ -145,8 +159,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * Create BigInt of specified size, all zeros
        * @param n size of the internal register in words
        */
-      BOTAN_DEPRECATED("Deprecated no replacement")
-      static BigInt with_capacity(size_t n);
+      BOTAN_DEPRECATED("Deprecated no replacement") static BigInt with_capacity(size_t n);
 
       /**
        * Move constructor
@@ -182,8 +195,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
 
       friend void swap(BigInt& x, BigInt& y) { x.swap(y); }
 
-      BOTAN_DEPRECATED("Deprecated no replacement")
-      void swap_reg(secure_vector<word>& reg) {
+      BOTAN_DEPRECATED("Deprecated no replacement") void swap_reg(secure_vector<word>& reg) {
          m_data.swap(reg);
          // sign left unchanged
       }
@@ -294,13 +306,13 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        */
       bool operator!() const { return (!is_nonzero()); }
 
-      BOTAN_DEPRECATED("Just use operator+/operator-")
+      //BOTAN_DEPRECATED("Just use operator+/operator-")
       static BigInt add2(const BigInt& x, const word y[], size_t y_words, Sign y_sign);
 
-      BOTAN_DEPRECATED("Just use operator+/operator-")
+      //BOTAN_DEPRECATED("Just use operator+/operator-")
       BigInt& add(const word y[], size_t y_words, Sign sign);
 
-      BOTAN_DEPRECATED("Just use operator+/operator-")
+      //BOTAN_DEPRECATED("Just use operator+/operator-")
       BigInt& sub(const word y[], size_t y_words, Sign sign) {
          return add(y, y_words, sign == Positive ? Negative : Positive);
       }
@@ -310,15 +322,13 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param y the BigInt to multiply with this
        * @param ws a temp workspace
        */
-      BOTAN_DEPRECATED("Just use operator*")
-      BigInt& mul(const BigInt& y, secure_vector<word>& ws);
+      BOTAN_DEPRECATED("Just use operator*") BigInt& mul(const BigInt& y, secure_vector<word>& ws);
 
       /**
        * Square value of *this
        * @param ws a temp workspace
        */
-      BOTAN_DEPRECATED("Deprecated no replacement")
-      BigInt& square(secure_vector<word>& ws);
+      BOTAN_DEPRECATED("Deprecated no replacement") BigInt& square(secure_vector<word>& ws);
 
       /**
        * Set *this to y - *this
@@ -367,8 +377,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * mod and performs repeated subtractions. It should not be used if
        * *this is much larger than mod, instead use modulo operator.
        */
-      BOTAN_DEPRECATED("Deprecated no replacement")
-      size_t reduce_below(const BigInt& mod, secure_vector<word>& ws);
+      BOTAN_DEPRECATED("Deprecated no replacement") size_t reduce_below(const BigInt& mod, secure_vector<word>& ws);
 
       /**
        * Return *this % mod
@@ -493,8 +502,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @result the integer extracted from the register starting at
        * offset with specified length
        */
-      BOTAN_DEPRECATED("Deprecated no replacement")
-      uint32_t get_substring(size_t offset, size_t length) const;
+      BOTAN_DEPRECATED("Deprecated no replacement") uint32_t get_substring(size_t offset, size_t length) const;
 
       /**
        * Convert this value into a uint32_t, if it is in the range
@@ -538,11 +546,11 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        */
       word word_at(size_t n) const { return m_data.get_word_at(n); }
 
-      BOTAN_DEPRECATED("Deprecated no replacement")
-      void set_word_at(size_t i, word w) { m_data.set_word_at(i, w); }
+      BOTAN_DEPRECATED("Deprecated no replacement") void set_word_at(size_t i, word w) { m_data.set_word_at(i, w); }
 
-      BOTAN_DEPRECATED("Deprecated no replacement")
-      void set_words(const word w[], size_t len) { m_data.set_words(w, len); }
+      BOTAN_DEPRECATED("Deprecated no replacement") void set_words(const word w[], size_t len) {
+         m_data.set_words(w, len);
+      }
 
       /**
        * Tests if the sign of the integer is negative
@@ -565,7 +573,6 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
        * @result the opposite sign of the represented integer value
        */
-      BOTAN_DEPRECATED("Deprecated no replacement")
       Sign reverse_sign() const {
          if(sign() == Positive) {
             return Negative;
@@ -624,44 +631,42 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * of this integer. Returns BOTAN_MP_WORD_BITS only iff *this is
        * zero. Ignores sign.
        */
-      BOTAN_DEPRECATED("Deprecated no replacement")
-      size_t top_bits_free() const;
+      BOTAN_DEPRECATED("Deprecated no replacement") size_t top_bits_free() const;
 
       /**
        * Return a mutable pointer to the register
        * @result a pointer to the start of the internal register
        */
-      BOTAN_DEPRECATED("Deprecated no replacement")
-      word* mutable_data() { return m_data.mutable_data(); }
+      BOTAN_DEPRECATED("Deprecated no replacement") word* mutable_data() { return m_data.mutable_data(); }
 
       /**
        * Return a const pointer to the register
        * @result a pointer to the start of the internal register
        */
-      BOTAN_DEPRECATED("Deprecated no replacement")
+      //BOTAN_DEPRECATED("Deprecated no replacement")
       const word* data() const { return m_data.const_data(); }
 
       /**
        * Don't use this function in application code
        */
-      BOTAN_DEPRECATED("Deprecated no replacement")
-      secure_vector<word>& get_word_vector() { return m_data.mutable_vector(); }
+      BOTAN_DEPRECATED("Deprecated no replacement") secure_vector<word>& get_word_vector() {
+         return m_data.mutable_vector();
+      }
 
       /**
        * Don't use this function in application code
        */
-      BOTAN_DEPRECATED("Deprecated no replacement")
-      const secure_vector<word>& get_word_vector() const { return m_data.const_vector(); }
+      BOTAN_DEPRECATED("Deprecated no replacement") const secure_vector<word>& get_word_vector() const {
+         return m_data.const_vector();
+      }
 
       /**
        * Increase internal register buffer to at least n words
        * @param n new size of register
        */
-      BOTAN_DEPRECATED("Deprecated no replacement")
-      void grow_to(size_t n) const { m_data.grow_to(n); }
+      BOTAN_DEPRECATED("Deprecated no replacement") void grow_to(size_t n) const { m_data.grow_to(n); }
 
-      BOTAN_DEPRECATED("Deprecated no replacement")
-      void resize(size_t s) { m_data.resize(s); }
+      BOTAN_DEPRECATED("Deprecated no replacement") void resize(size_t s) { m_data.resize(s); }
 
       /**
        * Fill BigInt with a random number with size of bitsize
@@ -677,10 +682,57 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       void randomize(RandomNumberGenerator& rng, size_t bitsize, bool set_high_bit = true);
 
       /**
+       * Serialize the absolute value of this BigInt as a big endian
+       * encoding.
+       *
+       * If out is smaller than the total bytes of the BigInt then
+       * an exception is thrown.
+       *
+       * If out is larger than the total bytes of the BigInt then the
+       * necessary number of zeros are prefixed to produce the desired
+       * output length
+       *
+       * Zero-padding the binary encoding is useful to ensure that other
+       * applications correctly parse the encoded value as "positive integer",
+       * as a leading 1-bit may be interpreted as a sign bit. It also is
+       * necessary when using a fixed size encoding for the integers.
+       *
+       * @param out destination byte span for the integer value
+       */
+      void serialize_to(std::span<uint8_t> out) const;
+
+      /**
+       * Serialize the value of this BigInt as a big endian encoding,
+       * always returning the specified number of bytes.
+       *
+       * Throws if the BigInt is too large to encode in the length
+       * specified.
+       */
+      template <typename T = std::vector<uint8_t>>
+      T serialize(size_t len) const {
+         // TODO this supports std::vector and secure_vector
+         // it would be nice if this also could work with std::array as in
+         //   bn.serialize_to<std::array<uint8_t, 32>>(32);
+         T out(len);
+         this->serialize_to(out);
+         return out;
+      }
+
+      /**
+       * Serialize the value of this BigInt as a big endian encoding.
+       */
+      template <typename T = std::vector<uint8_t>>
+      T serialize() const {
+         return serialize<T>(this->bytes());
+      }
+
+      /**
        * Store BigInt-value in a given byte array
        * @param buf destination byte array for the integer value
        */
-      void binary_encode(uint8_t buf[]) const;
+      BOTAN_DEPRECATED("Use BigInt::serialize_to") void binary_encode(uint8_t buf[]) const {
+         this->serialize_to(std::span{buf, this->bytes()});
+      }
 
       /**
        * Store BigInt-value in a given byte array. If len is less than
@@ -696,27 +748,36 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param buf destination byte array for the integer value
        * @param len how many bytes to write
        */
-      void binary_encode(uint8_t buf[], size_t len) const;
+      BOTAN_DEPRECATED("Use BigInt::serialize_to") void binary_encode(uint8_t buf[], size_t len) const;
+
+      /**
+       * Read integer value from a byte vector (big endian)
+       * @param bytes the span of bytes to load
+       */
+      void assign_from_bytes(std::span<const uint8_t> bytes);
 
       /**
        * Read integer value from a byte array with given size
        * @param buf byte array buffer containing the integer
        * @param length size of buf
        */
-      void binary_decode(const uint8_t buf[], size_t length);
+      BOTAN_DEPRECATED("Use BigInt::assign_from_bytes") void binary_decode(const uint8_t buf[], size_t length) {
+         this->assign_from_bytes(std::span{buf, length});
+      }
 
       /**
        * Read integer value from a byte vector
        * @param buf the vector to load from
        */
-      void binary_decode(std::span<const uint8_t> buf) { binary_decode(buf.data(), buf.size()); }
+      BOTAN_DEPRECATED("Use BigInt::assign_from_bytes") void binary_decode(std::span<const uint8_t> buf) {
+         this->assign_from_bytes(buf);
+      }
 
       /**
        * Place the value into out, zero-padding up to size words
        * Throw if *this cannot be represented in size words
        */
-      BOTAN_DEPRECATED("Deprecated no replacement")
-      void encode_words(word out[], size_t size) const;
+      BOTAN_DEPRECATED("Deprecated no replacement") void encode_words(word out[], size_t size) const;
 
       /**
        * If predicate is true assign other to *this
@@ -779,10 +840,8 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param n the BigInt to use as integer source
        * @result secure_vector of bytes containing the bytes of the integer
        */
-      static std::vector<uint8_t> encode(const BigInt& n) {
-         std::vector<uint8_t> output(n.bytes());
-         n.binary_encode(output.data());
-         return output;
+      BOTAN_DEPRECATED("Use BigInt::serialize") static std::vector<uint8_t> encode(const BigInt& n) {
+         return n.serialize<std::vector<uint8_t>>(n.bytes());
       }
 
       /**
@@ -790,11 +849,16 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param n the BigInt to use as integer source
        * @result secure_vector of bytes containing the bytes of the integer
        */
-      static secure_vector<uint8_t> encode_locked(const BigInt& n) {
-         secure_vector<uint8_t> output(n.bytes());
-         n.binary_encode(output.data());
-         return output;
+      BOTAN_DEPRECATED("Use BigInt::serialize") static secure_vector<uint8_t> encode_locked(const BigInt& n) {
+         return n.serialize<secure_vector<uint8_t>>(n.bytes());
       }
+
+      /**
+       * Create a BigInt from an integer in a byte array
+       * @param bytes the binary value to load
+       * @result BigInt representing the integer in the byte array
+       */
+      static BigInt from_bytes(std::span<const uint8_t> bytes);
 
       /**
        * Create a BigInt from an integer in a byte array
@@ -802,14 +866,18 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param length size of buf
        * @result BigInt representing the integer in the byte array
        */
-      static BigInt decode(const uint8_t buf[], size_t length) { return BigInt(buf, length); }
+      BOTAN_DEPRECATED("Use BigInt::from_bytes") static BigInt decode(const uint8_t buf[], size_t length) {
+         return BigInt::from_bytes(std::span{buf, length});
+      }
 
       /**
        * Create a BigInt from an integer in a byte array
        * @param buf the binary value to load
        * @result BigInt representing the integer in the byte array
        */
-      static BigInt decode(std::span<const uint8_t> buf) { return BigInt(buf); }
+      BOTAN_DEPRECATED("Use BigInt::from_bytes") static BigInt decode(std::span<const uint8_t> buf) {
+         return BigInt::from_bytes(buf);
+      }
 
       /**
        * Create a BigInt from an integer in a byte array
@@ -818,7 +886,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param base number-base of the integer in buf
        * @result BigInt representing the integer in the byte array
        */
-      BOTAN_DEPRECATED("For decimal/hex use string constructor")
+      BOTAN_DEPRECATED("For decimal/hex use from_string")
       static BigInt decode(const uint8_t buf[], size_t length, Base base);
 
       /**
@@ -835,10 +903,19 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param bytes the length of the resulting secure_vector<uint8_t>
        * @result a secure_vector<uint8_t> containing the encoded BigInt
        */
-      static secure_vector<uint8_t> encode_1363(const BigInt& n, size_t bytes);
-      static void encode_1363(std::span<uint8_t> out, const BigInt& n);
+      BOTAN_DEPRECATED("Use BigInt::serialize")
+      static secure_vector<uint8_t> encode_1363(const BigInt& n, size_t bytes) {
+         return n.serialize<secure_vector<uint8_t>>(bytes);
+      }
 
-      static void encode_1363(uint8_t out[], size_t bytes, const BigInt& n);
+      BOTAN_DEPRECATED("Use BigInt::serialize_to") static void encode_1363(std::span<uint8_t> out, const BigInt& n) {
+         n.serialize_to(out);
+      }
+
+      BOTAN_DEPRECATED("Use BigInt::serialize_to")
+      static void encode_1363(uint8_t out[], size_t bytes, const BigInt& n) {
+         n.serialize_to(std::span{out, bytes});
+      }
 
       /**
        * Encode two BigInt to a byte array according to IEEE 1363
