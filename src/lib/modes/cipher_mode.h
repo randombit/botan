@@ -241,7 +241,6 @@ class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
 * @param provider provider implementation to choose
 */
 BOTAN_DEPRECATED("Use Cipher_Mode::create")
-
 inline Cipher_Mode* get_cipher_mode(std::string_view algo_spec, Cipher_Dir direction, std::string_view provider = "") {
    return Cipher_Mode::create(algo_spec, direction, provider).release();
 }

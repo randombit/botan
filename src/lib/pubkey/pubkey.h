@@ -599,7 +599,6 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
       * @param provider the provider to use
       */
       BOTAN_DEPRECATED("Use constructor that does not take RNG")
-
       PK_KEM_Encryptor(const Public_Key& key,
                        RandomNumberGenerator& rng,
                        std::string_view kem_param = "",
@@ -695,7 +694,6 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
                    std::span<const uint8_t> salt = {});
 
       BOTAN_DEPRECATED("use overload with salt as std::span<>")
-
       void encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                    secure_vector<uint8_t>& out_shared_key,
                    size_t desired_shared_key_len,
@@ -706,7 +704,6 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
       }
 
       BOTAN_DEPRECATED("use overload where rng comes after the out-paramters")
-
       void encrypt(secure_vector<uint8_t>& out_encapsulated_key,
                    secure_vector<uint8_t>& out_shared_key,
                    size_t desired_shared_key_len,

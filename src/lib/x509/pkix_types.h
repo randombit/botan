@@ -184,11 +184,9 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       BOTAN_DEPRECATED("Use AlternativeName::add_other_name")
       void add_othername(const OID& oid, std::string_view value, ASN1_Type type);
 
-      BOTAN_DEPRECATED("Use AlternativeName::othernames")
-      std::multimap<OID, ASN1_String> get_othernames() const;
+      BOTAN_DEPRECATED("Use AlternativeName::othernames") std::multimap<OID, ASN1_String> get_othernames() const;
 
-      BOTAN_DEPRECATED("Use AlternativeName::directory_names")
-      X509_DN dn() const;
+      BOTAN_DEPRECATED("Use AlternativeName::directory_names") X509_DN dn() const;
 
       BOTAN_DEPRECATED("Use plain constructor plus add_{uri,dns,email,ip}")
       AlternativeName(std::string_view email_addr,

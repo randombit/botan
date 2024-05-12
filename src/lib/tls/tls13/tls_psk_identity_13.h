@@ -69,8 +69,7 @@ class BOTAN_PUBLIC_API(3, 1) PskIdentity {
  * re-name it to the more generic term "PskIdentity" to better reflect its dual
  * use case for resumption and externally provided PSKs.
  */
-BOTAN_DEPRECATED("Use PskIdentity")
-typedef PskIdentity Ticket;
+BOTAN_DEPRECATED("Use PskIdentity") typedef PskIdentity Ticket;
 
 }  // namespace Botan::TLS
 

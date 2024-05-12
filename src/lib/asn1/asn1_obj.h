@@ -458,13 +458,11 @@ class BOTAN_PUBLIC_API(2, 0) AlgorithmIdentifier final : public ASN1_Object {
 
       const std::vector<uint8_t>& parameters() const { return m_parameters; }
 
-      BOTAN_DEPRECATED("Use AlgorithmIdentifier::oid")
+      BOTAN_DEPRECATED("Use AlgorithmIdentifier::oid") const OID& get_oid() const { return m_oid; }
 
-      const OID& get_oid() const { return m_oid; }
-
-      BOTAN_DEPRECATED("Use AlgorithmIdentifier::parameters")
-
-      const std::vector<uint8_t>& get_parameters() const { return m_parameters; }
+      BOTAN_DEPRECATED("Use AlgorithmIdentifier::parameters") const std::vector<uint8_t>& get_parameters() const {
+         return m_parameters;
+      }
 
       bool parameters_are_null() const;
 

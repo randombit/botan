@@ -263,9 +263,7 @@ inline constexpr To typecast_copy(const uint8_t src[]) noexcept {
 * @param n the number of Ts pointed to by ptr
 * @param val the value to set each byte to
 */
-BOTAN_DEPRECATED("This function is deprecated")
-
-inline constexpr void set_mem(uint8_t* ptr, size_t n, uint8_t val) {
+BOTAN_DEPRECATED("This function is deprecated") inline constexpr void set_mem(uint8_t* ptr, size_t n, uint8_t val) {
    if(n > 0) {
       std::memset(ptr, val, n);
    }

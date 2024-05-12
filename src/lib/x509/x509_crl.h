@@ -137,8 +137,7 @@ class BOTAN_PUBLIC_API(2, 0) X509_CRL final : public X509_Object {
       /**
       * Get the CRL's issuing distribution point
       */
-      BOTAN_DEPRECATED("Use issuing_distribution_points")
-      std::string crl_issuing_distribution_point() const;
+      BOTAN_DEPRECATED("Use issuing_distribution_points") std::string crl_issuing_distribution_point() const;
 
       /**
       * Get the CRL's issuing distribution points

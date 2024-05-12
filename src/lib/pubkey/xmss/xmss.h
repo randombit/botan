@@ -221,14 +221,12 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
        *
        * @return Index of the last unused leaf.
        **/
-      BOTAN_DEPRECATED("Use remaining_operations()")
-      size_t unused_leaf_index() const;
+      BOTAN_DEPRECATED("Use remaining_operations()") size_t unused_leaf_index() const;
 
       /**
        * Retrieves the number of remaining signatures for this private key.
        */
-      BOTAN_DEPRECATED("Use remaining_operations()")
-      size_t remaining_signatures() const;
+      BOTAN_DEPRECATED("Use remaining_operations()") size_t remaining_signatures() const;
 
       std::optional<uint64_t> remaining_operations() const override;
 

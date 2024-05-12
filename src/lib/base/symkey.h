@@ -64,8 +64,7 @@ class BOTAN_PUBLIC_API(2, 0) OctetString final {
       * some very old or weird system which requires DES and also which do not
       * automatically ignore the parity bits.
       */
-      BOTAN_DEPRECATED("Why would you need to do this")
-      void set_odd_parity();
+      BOTAN_DEPRECATED("Why would you need to do this") void set_odd_parity();
 
       /**
       * Create a new OctetString
