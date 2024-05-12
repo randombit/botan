@@ -41,7 +41,7 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
 2022
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* 2022-11-16: Failure to correctly check OCSP responder embedded certificate
+* 2022-11-16 (CVE-2022-43705): Failure to correctly check OCSP responder embedded certificate
 
   OCSP responses for some end entity are either signed by the issuing CA certificate of
   the PKI, or an OCSP responder certificate that the PKI authorized to sign responses in
@@ -60,7 +60,7 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
   could exploit this to impersonate a legitimate TLS server using a compromised
   certificate of that host and get around the revocation check using OCSP stapling.
 
-  Introduced in 1.11.34, fixed in 2.19.3
+  Introduced in 1.11.34, fixed in 2.19.3 and 3.0.0
 
 2020
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
