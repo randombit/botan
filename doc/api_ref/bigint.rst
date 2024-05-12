@@ -13,16 +13,17 @@ declarations in ``botan/bigint.h`` and ``botan/numthry.h``.
 
       Create a BigInt with value zero
 
-   .. cpp:function:: BigInt(uint64_t n)
+   .. cpp:function:: BigInt::from_u64(uint64_t n)
 
       Create a BigInt with value *n*
 
-   .. cpp:function:: BigInt(const std::string& str)
+   .. cpp:function:: BigInt(std::string_view str)
 
       Create a BigInt from a string. By default decimal is expected. With an 0x
-      prefix instead it is treated as hexadecimal.
+      prefix instead it is treated as hexadecimal. A ``-`` prefix to indicate
+      negative numbers is also accepted.
 
-   .. cpp:function:: BigInt(const uint8_t buf[], size_t length)
+   .. cpp:function:: BigInt(std::span<const uint8_t> buf)
 
       Create a BigInt from a binary array (big-endian encoding).
 
@@ -199,18 +200,15 @@ declarations in ``botan/bigint.h`` and ``botan/numthry.h``.
 
       Return absolute value of ``*this``
 
-   .. cpp:function:: void binary_encode(uint8_t buf[]) const
+   .. cpp:function:: void serialize_to(std::span<uint8_t> buf)
 
       Encode this BigInt as a big-endian integer. The sign is ignored.
 
-   .. cpp:function:: void binary_encode(uint8_t buf[], size_t len) const
+      There must be sufficient space to encode the entire integer in ``buf``.
+      If ``buf`` is larger than required, sufficient zero bytes will be
+      prefixed.
 
-      Encode this BigInt as a big-endian integer. The sign is ignored.
-      If ``len`` is less than ``bytes()`` then only the low ``len``
-      bytes are output. If ``len`` is greater than ``bytes()`` then
-      the output is padded with leading zeros.
-
-   .. cpp:function:: void binary_decode(uint8_t buf[])
+   .. cpp:function:: void assign_from_bytes(std::span<const uint8_t> buf)
 
       Decode this BigInt as a big-endian integer.
 
