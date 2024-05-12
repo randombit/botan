@@ -141,7 +141,7 @@ int32_t BigInt::cmp_word(word other) const {
       return 1;  // must be larger since other is just one word ...
    }
 
-   return bigint_cmp(this->data(), sw, &other, 1);
+   return bigint_cmp(this->_data(), sw, &other, 1);
 }
 
 /*
@@ -158,11 +158,11 @@ int32_t BigInt::cmp(const BigInt& other, bool check_signs) const {
       }
 
       if(other.is_negative() && this->is_negative()) {
-         return (-bigint_cmp(this->data(), this->size(), other.data(), other.size()));
+         return (-bigint_cmp(this->_data(), this->size(), other._data(), other.size()));
       }
    }
 
-   return bigint_cmp(this->data(), this->size(), other.data(), other.size());
+   return bigint_cmp(this->_data(), this->size(), other._data(), other.size());
 }
 
 bool BigInt::is_equal(const BigInt& other) const {
@@ -170,7 +170,7 @@ bool BigInt::is_equal(const BigInt& other) const {
       return false;
    }
 
-   return bigint_ct_is_eq(this->data(), this->sig_words(), other.data(), other.sig_words()).as_bool();
+   return bigint_ct_is_eq(this->_data(), this->sig_words(), other._data(), other.sig_words()).as_bool();
 }
 
 bool BigInt::is_less_than(const BigInt& other) const {
@@ -183,10 +183,10 @@ bool BigInt::is_less_than(const BigInt& other) const {
    }
 
    if(other.is_negative() && this->is_negative()) {
-      return bigint_ct_is_lt(other.data(), other.sig_words(), this->data(), this->sig_words()).as_bool();
+      return bigint_ct_is_lt(other._data(), other.sig_words(), this->_data(), this->sig_words()).as_bool();
    }
 
-   return bigint_ct_is_lt(this->data(), this->sig_words(), other.data(), other.sig_words()).as_bool();
+   return bigint_ct_is_lt(this->_data(), this->sig_words(), other._data(), other.sig_words()).as_bool();
 }
 
 void BigInt::encode_words(word out[], size_t size) const {
@@ -197,7 +197,7 @@ void BigInt::encode_words(word out[], size_t size) const {
    }
 
    clear_mem(out, size);
-   copy_mem(out, data(), words);
+   copy_mem(out, _data(), words);
 }
 
 size_t BigInt::Data::calc_sig_words() const {
@@ -334,7 +334,7 @@ size_t BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws) {
    size_t reductions = 0;
 
    for(;;) {
-      word borrow = bigint_sub3(ws.data(), data(), p_words + 1, p.data(), p_words);
+      word borrow = bigint_sub3(ws.data(), _data(), p_words + 1, p._data(), p_words);
       if(borrow) {
          break;
       }
@@ -362,9 +362,9 @@ void BigInt::ct_reduce_below(const BigInt& mod, secure_vector<word>& ws, size_t 
    clear_mem(ws.data(), sz);
 
    for(size_t i = 0; i != bound; ++i) {
-      word borrow = bigint_sub3(ws.data(), data(), sz, mod.data(), mod_words);
+      word borrow = bigint_sub3(ws.data(), _data(), sz, mod._data(), mod_words);
 
-      CT::Mask<word>::is_zero(borrow).select_n(mutable_data(), ws.data(), data(), sz);
+      CT::Mask<word>::is_zero(borrow).select_n(mutable_data(), ws.data(), _data(), sz);
    }
 }
 
@@ -438,20 +438,20 @@ void BigInt::ct_cond_add(bool predicate, const BigInt& value) {
    }
    this->grow_to(1 + value.sig_words());
 
-   bigint_cnd_add(static_cast<word>(predicate), this->mutable_data(), this->size(), value.data(), value.sig_words());
+   bigint_cnd_add(static_cast<word>(predicate), this->mutable_data(), this->size(), value._data(), value.sig_words());
 }
 
 void BigInt::ct_shift_left(size_t shift) {
    auto shl_bit = [](const BigInt& a, BigInt& result) {
       BOTAN_DEBUG_ASSERT(a.size() + 1 == result.size());
-      bigint_shl2(result.mutable_data(), a.data(), a.size(), 1);
+      bigint_shl2(result.mutable_data(), a._data(), a.size(), 1);
       // shl2 may have shifted a bit into the next word, which must be dropped
       clear_mem(result.mutable_data() + result.size() - 1, 1);
    };
 
    auto shl_word = [](const BigInt& a, BigInt& result) {
       // the most significant word is not copied, aka. shifted out
-      bigint_shl2(result.mutable_data(), a.data(), a.size() - 1 /* ignore msw */, BOTAN_MP_WORD_BITS);
+      bigint_shl2(result.mutable_data(), a._data(), a.size() - 1 /* ignore msw */, BOTAN_MP_WORD_BITS);
       // we left-shifted by a full word, the least significant word must be zero'ed
       clear_mem(result.mutable_data(), 1);
    };

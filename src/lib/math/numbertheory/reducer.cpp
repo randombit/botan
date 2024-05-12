@@ -58,7 +58,7 @@ void cnd_rev_sub(bool cnd, BigInt& x, const word y[], size_t y_sw, secure_vector
    clear_mem(ws.data(), ws.size());
    x.grow_to(max_words);
 
-   const int32_t relative_size = bigint_sub_abs(ws.data(), x.data(), x_sw, y, y_sw);
+   const int32_t relative_size = bigint_sub_abs(ws.data(), x._data(), x_sw, y, y_sw);
 
    x.cond_flip_sign((relative_size > 0) && cnd);
    bigint_cnd_swap(static_cast<word>(cnd), x.mutable_data(), ws.data(), max_words);
@@ -93,7 +93,7 @@ void Modular_Reducer::reduce(BigInt& t1, const BigInt& x, secure_vector<word>& w
    t1.mul(m_modulus, ws);
    t1.mask_bits(BOTAN_MP_WORD_BITS * (m_mod_words + 1));
 
-   t1.rev_sub(x.data(), std::min(x_sw, m_mod_words + 1), ws);
+   t1.rev_sub(x._data(), std::min(x_sw, m_mod_words + 1), ws);
 
    /*
    * If t1 < 0 then we must add b^(k+1) where b = 2^w. To avoid a
@@ -113,7 +113,7 @@ void Modular_Reducer::reduce(BigInt& t1, const BigInt& x, secure_vector<word>& w
    // Per HAC this step requires at most 2 subtractions
    t1.ct_reduce_below(m_modulus, ws, 2);
 
-   cnd_rev_sub(t1.is_nonzero() && x.is_negative(), t1, m_modulus.data(), m_modulus.size(), ws);
+   cnd_rev_sub(t1.is_nonzero() && x.is_negative(), t1, m_modulus._data(), m_modulus.size(), ws);
 }
 
 }  // namespace Botan

@@ -204,7 +204,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * += operator
        * @param y the BigInt to add to this
        */
-      BigInt& operator+=(const BigInt& y) { return add(y.data(), y.sig_words(), y.sign()); }
+      BigInt& operator+=(const BigInt& y) { return add(y._data(), y.sig_words(), y.sign()); }
 
       /**
        * += operator
@@ -216,7 +216,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * -= operator
        * @param y the BigInt to subtract from this
        */
-      BigInt& operator-=(const BigInt& y) { return sub(y.data(), y.sig_words(), y.sign()); }
+      BigInt& operator-=(const BigInt& y) { return sub(y._data(), y.sig_words(), y.sign()); }
 
       /**
        * -= operator
@@ -643,8 +643,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * Return a const pointer to the register
        * @result a pointer to the start of the internal register
        */
-      //BOTAN_DEPRECATED("Deprecated no replacement")
-      const word* data() const { return m_data.const_data(); }
+      BOTAN_DEPRECATED("Deprecated no replacement") const word* data() const { return m_data.const_data(); }
 
       /**
        * Don't use this function in application code
@@ -927,6 +926,16 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       BOTAN_DEPRECATED("Deprecated no replacement")
       static secure_vector<uint8_t> encode_fixed_length_int_pair(const BigInt& n1, const BigInt& n2, size_t bytes);
 
+      /**
+       * Return a const pointer to the register
+       *
+       * WARNING this is an implementation detail which is not for
+       * public use and not covered by SemVer.
+       *
+       * @result a pointer to the start of the internal register
+       */
+      const word* _data() const { return m_data.const_data(); }
+
    private:
       class Data {
          public:
@@ -1055,7 +1064,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
 * Arithmetic Operators
 */
 inline BigInt operator+(const BigInt& x, const BigInt& y) {
-   return BigInt::add2(x, y.data(), y.sig_words(), y.sign());
+   return BigInt::add2(x, y._data(), y.sig_words(), y.sign());
 }
 
 inline BigInt operator+(const BigInt& x, word y) {
@@ -1067,7 +1076,7 @@ inline BigInt operator+(word x, const BigInt& y) {
 }
 
 inline BigInt operator-(const BigInt& x, const BigInt& y) {
-   return BigInt::add2(x, y.data(), y.sig_words(), y.reverse_sign());
+   return BigInt::add2(x, y._data(), y.sig_words(), y.reverse_sign());
 }
 
 inline BigInt operator-(const BigInt& x, word y) {

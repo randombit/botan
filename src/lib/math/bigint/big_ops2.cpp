@@ -21,7 +21,7 @@ BigInt& BigInt::add(const word y[], size_t y_words, Sign y_sign) {
    if(sign() == y_sign) {
       bigint_add2(mutable_data(), size() - 1, y, y_words);
    } else {
-      const int32_t relative_size = bigint_cmp(data(), x_sw, y, y_words);
+      const int32_t relative_size = bigint_cmp(_data(), x_sw, y, y_words);
 
       if(relative_size >= 0) {
          // *this >= y
@@ -71,15 +71,15 @@ BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>&
       ws.resize(3 * mod_sw);
    }
 
-   word borrow = bigint_sub3(&ws[0], mod.data(), mod_sw, s.data(), mod_sw);
+   word borrow = bigint_sub3(&ws[0], mod._data(), mod_sw, s._data(), mod_sw);
    BOTAN_DEBUG_ASSERT(borrow == 0);
    BOTAN_UNUSED(borrow);
 
    // Compute t - ws
-   borrow = bigint_sub3(&ws[mod_sw], this->data(), mod_sw, &ws[0], mod_sw);
+   borrow = bigint_sub3(&ws[mod_sw], this->_data(), mod_sw, &ws[0], mod_sw);
 
    // Compute t + s
-   bigint_add3_nc(&ws[mod_sw * 2], this->data(), mod_sw, s.data(), mod_sw);
+   bigint_add3_nc(&ws[mod_sw * 2], this->_data(), mod_sw, s._data(), mod_sw);
 
    CT::conditional_copy_mem(borrow, &ws[0], &ws[mod_sw * 2], &ws[mod_sw], mod_sw);
    set_words(&ws[0], mod_sw);
@@ -106,11 +106,11 @@ BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>&
    }
 
    if(mod_sw == 4) {
-      bigint_mod_sub_n<4>(mutable_data(), s.data(), mod.data(), ws.data());
+      bigint_mod_sub_n<4>(mutable_data(), s._data(), mod._data(), ws.data());
    } else if(mod_sw == 6) {
-      bigint_mod_sub_n<6>(mutable_data(), s.data(), mod.data(), ws.data());
+      bigint_mod_sub_n<6>(mutable_data(), s._data(), mod._data(), ws.data());
    } else {
-      bigint_mod_sub(mutable_data(), s.data(), mod.data(), mod_sw, ws.data());
+      bigint_mod_sub(mutable_data(), s._data(), mod._data(), mod_sw, ws.data());
    }
 
    return (*this);
@@ -137,7 +137,7 @@ BigInt& BigInt::rev_sub(const word y[], size_t y_sw, secure_vector<word>& ws) {
    ws.resize(std::max(x_sw, y_sw));
    clear_mem(ws.data(), ws.size());
 
-   const int32_t relative_size = bigint_sub_abs(ws.data(), data(), x_sw, y, y_sw);
+   const int32_t relative_size = bigint_sub_abs(ws.data(), _data(), x_sw, y, y_sw);
 
    this->cond_flip_sign(relative_size > 0);
    this->swap_reg(ws);
@@ -163,7 +163,7 @@ BigInt& BigInt::mul(const BigInt& y, secure_vector<word>& ws) {
       set_sign(Positive);
    } else if(x_sw == 1 && y_sw) {
       grow_to(y_sw + 1);
-      bigint_linmul3(mutable_data(), y.data(), y_sw, word_at(0));
+      bigint_linmul3(mutable_data(), y._data(), y_sw, word_at(0));
    } else if(y_sw == 1 && x_sw) {
       word carry = bigint_linmul2(mutable_data(), x_sw, y.word_at(0));
       set_word_at(x_sw, carry);
@@ -172,7 +172,7 @@ BigInt& BigInt::mul(const BigInt& y, secure_vector<word>& ws) {
       ws.resize(new_size);
       secure_vector<word> z_reg(new_size);
 
-      bigint_mul(z_reg.data(), z_reg.size(), data(), size(), x_sw, y.data(), y.size(), y_sw, ws.data(), ws.size());
+      bigint_mul(z_reg.data(), z_reg.size(), _data(), size(), x_sw, y._data(), y.size(), y_sw, ws.data(), ws.size());
 
       this->swap_reg(z_reg);
    }
@@ -186,7 +186,7 @@ BigInt& BigInt::square(secure_vector<word>& ws) {
    secure_vector<word> z(2 * sw);
    ws.resize(z.size());
 
-   bigint_sqr(z.data(), z.size(), data(), size(), sw, ws.data(), ws.size());
+   bigint_sqr(z.data(), z.size(), _data(), size(), sw, ws.data(), ws.size());
 
    swap_reg(z);
    set_sign(BigInt::Positive);

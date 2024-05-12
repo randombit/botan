@@ -265,11 +265,11 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
 
          const size_t p_words = m_curve.get_p_words();
 
-         add(other.m_coord_x.data(),
+         add(other.m_coord_x._data(),
              std::min(p_words, other.m_coord_x.size()),
-             other.m_coord_y.data(),
+             other.m_coord_y._data(),
              std::min(p_words, other.m_coord_y.size()),
-             other.m_coord_z.data(),
+             other.m_coord_z._data(),
              std::min(p_words, other.m_coord_z.size()),
              workspace);
       }
@@ -303,9 +303,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
          BOTAN_DEBUG_ASSERT(other.is_affine());
 
          const size_t p_words = m_curve.get_p_words();
-         add_affine(other.m_coord_x.data(),
+         add_affine(other.m_coord_x._data(),
                     std::min(p_words, other.m_coord_x.size()),
-                    other.m_coord_y.data(),
+                    other.m_coord_y._data(),
                     std::min(p_words, other.m_coord_y.size()),
                     workspace);
       }

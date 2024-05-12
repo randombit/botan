@@ -36,13 +36,13 @@ void redc_p521(BigInt& x, secure_vector<word>& ws) {
    }
 
    clear_mem(ws.data(), ws.size());
-   bigint_shr2(ws.data(), x.data(), std::min(x.size(), 2 * p_words), 521);
+   bigint_shr2(ws.data(), x._data(), std::min(x.size(), 2 * p_words), 521);
 
    x.mask_bits(521);
    x.grow_to(p_words);
 
    // Word-level carry will be zero
-   word carry = bigint_add3_nc(x.mutable_data(), x.data(), p_words, ws.data(), p_words);
+   word carry = bigint_add3_nc(x.mutable_data(), x._data(), p_words, ws.data(), p_words);
    BOTAN_ASSERT_EQUAL(carry, 0, "Final carry in P-521 reduction");
 
    const word top_word = x.word_at(p_full_words);

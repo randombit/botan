@@ -63,7 +63,7 @@ BigInt Montgomery_Params::redc(const BigInt& x, secure_vector<word>& ws) const {
    BigInt z = x;
    z.grow_to(2 * m_p_words);
 
-   bigint_monty_redc(z.mutable_data(), m_p.data(), m_p_words, m_p_dash, ws.data(), ws.size());
+   bigint_monty_redc(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
 
    return z;
 }
@@ -81,16 +81,16 @@ BigInt Montgomery_Params::mul(const BigInt& x, const BigInt& y, secure_vector<wo
    BigInt z = BigInt::with_capacity(output_size);
    bigint_mul(z.mutable_data(),
               z.size(),
-              x.data(),
+              x._data(),
               x.size(),
               std::min(m_p_words, x.size()),
-              y.data(),
+              y._data(),
               y.size(),
               std::min(m_p_words, y.size()),
               ws.data(),
               ws.size());
 
-   bigint_monty_redc(z.mutable_data(), m_p.data(), m_p_words, m_p_dash, ws.data(), ws.size());
+   bigint_monty_redc(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
 
    return z;
 }
@@ -106,7 +106,7 @@ BigInt Montgomery_Params::mul(const BigInt& x, const secure_vector<word>& y, sec
 
    bigint_mul(z.mutable_data(),
               z.size(),
-              x.data(),
+              x._data(),
               x.size(),
               std::min(m_p_words, x.size()),
               y.data(),
@@ -115,7 +115,7 @@ BigInt Montgomery_Params::mul(const BigInt& x, const secure_vector<word>& y, sec
               ws.data(),
               ws.size());
 
-   bigint_monty_redc(z.mutable_data(), m_p.data(), m_p_words, m_p_dash, ws.data(), ws.size());
+   bigint_monty_redc(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
 
    return z;
 }
@@ -134,7 +134,7 @@ void Montgomery_Params::mul_by(BigInt& x, const secure_vector<word>& y, secure_v
 
    bigint_mul(z_data,
               output_size,
-              x.data(),
+              x._data(),
               x.size(),
               std::min(m_p_words, x.size()),
               y.data(),
@@ -143,7 +143,7 @@ void Montgomery_Params::mul_by(BigInt& x, const secure_vector<word>& y, secure_v
               ws_data,
               output_size);
 
-   bigint_monty_redc(z_data, m_p.data(), m_p_words, m_p_dash, ws_data, output_size);
+   bigint_monty_redc(z_data, m_p._data(), m_p_words, m_p_dash, ws_data, output_size);
 
    if(x.size() < output_size) {
       x.grow_to(output_size);
@@ -165,16 +165,16 @@ void Montgomery_Params::mul_by(BigInt& x, const BigInt& y, secure_vector<word>& 
 
    bigint_mul(z_data,
               output_size,
-              x.data(),
+              x._data(),
               x.size(),
               std::min(m_p_words, x.size()),
-              y.data(),
+              y._data(),
               y.size(),
               std::min(m_p_words, y.size()),
               ws_data,
               output_size);
 
-   bigint_monty_redc(z_data, m_p.data(), m_p_words, m_p_dash, ws_data, output_size);
+   bigint_monty_redc(z_data, m_p._data(), m_p_words, m_p_dash, ws_data, output_size);
 
    if(x.size() < output_size) {
       x.grow_to(output_size);
@@ -193,9 +193,9 @@ BigInt Montgomery_Params::sqr(const BigInt& x, secure_vector<word>& ws) const {
 
    BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
 
-   bigint_sqr(z.mutable_data(), z.size(), x.data(), x.size(), std::min(m_p_words, x.size()), ws.data(), ws.size());
+   bigint_sqr(z.mutable_data(), z.size(), x._data(), x.size(), std::min(m_p_words, x.size()), ws.data(), ws.size());
 
-   bigint_monty_redc(z.mutable_data(), m_p.data(), m_p_words, m_p_dash, ws.data(), ws.size());
+   bigint_monty_redc(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
 
    return z;
 }
@@ -212,9 +212,9 @@ void Montgomery_Params::square_this(BigInt& x, secure_vector<word>& ws) const {
 
    BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
 
-   bigint_sqr(z_data, output_size, x.data(), x.size(), std::min(m_p_words, x.size()), ws_data, output_size);
+   bigint_sqr(z_data, output_size, x._data(), x.size(), std::min(m_p_words, x.size()), ws_data, output_size);
 
-   bigint_monty_redc(z_data, m_p.data(), m_p_words, m_p_dash, ws_data, output_size);
+   bigint_monty_redc(z_data, m_p._data(), m_p_words, m_p_dash, ws_data, output_size);
 
    if(x.size() < output_size) {
       x.grow_to(output_size);

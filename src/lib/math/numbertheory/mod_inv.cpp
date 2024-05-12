@@ -54,14 +54,14 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod) {
 
    CT::poison(tmp_mem.data(), tmp_mem.size());
 
-   copy_mem(a_w, n.data(), std::min(n.size(), mod_words));
-   copy_mem(b_w, mod.data(), std::min(mod.size(), mod_words));
+   copy_mem(a_w, n._data(), std::min(n.size(), mod_words));
+   copy_mem(b_w, mod._data(), std::min(mod.size(), mod_words));
    u_w[0] = 1;
    // v_w = 0
 
    // compute (mod + 1) / 2 which [because mod is odd] is equal to
    // (mod / 2) + 1
-   copy_mem(mp1o2, mod.data(), std::min(mod.size(), mod_words));
+   copy_mem(mp1o2, mod._data(), std::min(mod.size(), mod_words));
    bigint_shr1(mp1o2, mod_words, 1);
    word carry = bigint_add2_nc(mp1o2, mod_words, u_w, 1);
    BOTAN_ASSERT_NOMSG(carry == 0);
@@ -87,7 +87,7 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod) {
       word borrow = bigint_cnd_sub(odd_a, u_w, v_w, mod_words);
 
       // if(borrow) u += p
-      bigint_cnd_add(borrow, u_w, mod.data(), mod_words);
+      bigint_cnd_add(borrow, u_w, mod._data(), mod_words);
 
       const word odd_u = u_w[0] & 1;
 
