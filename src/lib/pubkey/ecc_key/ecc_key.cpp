@@ -117,14 +117,14 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
 }
 
 secure_vector<uint8_t> EC_PrivateKey::raw_private_key_bits() const {
-   return BigInt::encode_locked(m_private_key);
+   return m_private_key.serialize<secure_vector<uint8_t>>();
 }
 
 secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const {
    return DER_Encoder()
       .start_sequence()
       .encode(static_cast<size_t>(1))
-      .encode(BigInt::encode_1363(m_private_key, m_private_key.bytes()), ASN1_Type::OctetString)
+      .encode(raw_private_key_bits(), ASN1_Type::OctetString)
       .start_explicit_context_specific(1)
       .encode(m_public_key.encode(EC_Point_Format::Uncompressed), ASN1_Type::BitString)
       .end_cons()

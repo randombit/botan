@@ -28,7 +28,7 @@ class BOTAN_PUBLIC_API(2, 0) RSA_PublicKeyGenerationProperties final : public Pu
 
       /// @param pub_exponent public exponent e
       inline void set_pub_exponent(const BigInt& pub_exponent = BigInt::from_word(0x10001)) {
-         add_binary(AttributeType::PublicExponent, BigInt::encode(pub_exponent));
+         add_binary(AttributeType::PublicExponent, pub_exponent.serialize());
       }
 
       ~RSA_PublicKeyGenerationProperties() override = default;
@@ -100,25 +100,23 @@ class BOTAN_PUBLIC_API(2, 0) RSA_PrivateKeyImportProperties final : public Priva
 
       /// @param pub_exponent public exponent e
       inline void set_pub_exponent(const BigInt& pub_exponent) {
-         add_binary(AttributeType::PublicExponent, BigInt::encode(pub_exponent));
+         add_binary(AttributeType::PublicExponent, pub_exponent.serialize());
       }
 
       /// @param prime1 prime p
-      inline void set_prime_1(const BigInt& prime1) { add_binary(AttributeType::Prime1, BigInt::encode(prime1)); }
+      inline void set_prime_1(const BigInt& prime1) { add_binary(AttributeType::Prime1, prime1.serialize()); }
 
       /// @param prime2 prime q
-      inline void set_prime_2(const BigInt& prime2) { add_binary(AttributeType::Prime2, BigInt::encode(prime2)); }
+      inline void set_prime_2(const BigInt& prime2) { add_binary(AttributeType::Prime2, prime2.serialize()); }
 
       /// @param exp1 private exponent d modulo p-1
-      inline void set_exponent_1(const BigInt& exp1) { add_binary(AttributeType::Exponent1, BigInt::encode(exp1)); }
+      inline void set_exponent_1(const BigInt& exp1) { add_binary(AttributeType::Exponent1, exp1.serialize()); }
 
       /// @param exp2 private exponent d modulo q-1
-      inline void set_exponent_2(const BigInt& exp2) { add_binary(AttributeType::Exponent2, BigInt::encode(exp2)); }
+      inline void set_exponent_2(const BigInt& exp2) { add_binary(AttributeType::Exponent2, exp2.serialize()); }
 
       /// @param coeff CRT coefficient q^-1 mod p
-      inline void set_coefficient(const BigInt& coeff) {
-         add_binary(AttributeType::Coefficient, BigInt::encode(coeff));
-      }
+      inline void set_coefficient(const BigInt& coeff) { add_binary(AttributeType::Coefficient, coeff.serialize()); }
 
       /// @return the modulus
       inline const BigInt& modulus() const { return m_modulus; }

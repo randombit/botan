@@ -116,7 +116,7 @@ class Ed448_Utils_Test final : public Test {
             "0x3fffffffffffffffffffffffffffffffffffffffffffffffffffffff7cca23e9c44edb49aed63690216cc2728dc58f552378c292ab5844f3");
          const auto res = t_int % L;
          std::array<uint8_t, 56> res_bytes = {0};
-         res.binary_encode(res_bytes.data(), res_bytes.size());
+         res.serialize_to(res_bytes);
          std::reverse(res_bytes.begin(), res_bytes.end());
          return res_bytes;
       }

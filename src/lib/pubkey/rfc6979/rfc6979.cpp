@@ -21,19 +21,19 @@ RFC6979_Nonce_Generator::RFC6979_Nonce_Generator(std::string_view hash, const Bi
       m_rng_out(m_rlen) {
    m_hmac_drbg = std::make_unique<HMAC_DRBG>(MessageAuthenticationCode::create_or_throw(fmt("HMAC({})", hash)));
 
-   BigInt::encode_1363(m_rng_in.data(), m_rlen, x);
+   x.serialize_to(std::span{m_rng_in}.subspan(0, m_rlen));
 }
 
 RFC6979_Nonce_Generator::~RFC6979_Nonce_Generator() = default;
 
 const BigInt& RFC6979_Nonce_Generator::nonce_for(const BigInt& m) {
-   BigInt::encode_1363(&m_rng_in[m_rlen], m_rlen, m);
+   m.serialize_to(std::span{m_rng_in}.subspan(m_rlen));
    m_hmac_drbg->clear();
    m_hmac_drbg->initialize_with(m_rng_in.data(), m_rng_in.size());
 
    do {
       m_hmac_drbg->randomize(m_rng_out.data(), m_rng_out.size());
-      m_k.binary_decode(m_rng_out.data(), m_rng_out.size());
+      m_k.assign_from_bytes(m_rng_out);
       m_k >>= (8 * m_rlen - m_qlen);
    } while(m_k == 0 || m_k >= m_order);
 

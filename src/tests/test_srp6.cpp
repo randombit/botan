@@ -63,12 +63,12 @@ class SRP6_KAT_Tests final : public Text_Based_Test {
 
          Botan::SRP6_Server_Session server;
 
-         const size_t b_bits = Botan::BigInt(b).bits();
+         const size_t b_bits = Botan::BigInt::from_bytes(b).bits();
          Fixed_Output_RNG b_rng(b);
          const Botan::BigInt B = server.step1(v, group, hash, b_bits, b_rng);
          result.test_eq("SRP B", B, exp_B);
 
-         const size_t a_bits = Botan::BigInt(a).bits();
+         const size_t a_bits = Botan::BigInt::from_bytes(a).bits();
          Fixed_Output_RNG a_rng(a);
          const auto srp_resp = Botan::srp6_client_agree(username, password, group, hash, salt, B, a_bits, a_rng);
          result.test_eq("SRP A", srp_resp.first, exp_A);

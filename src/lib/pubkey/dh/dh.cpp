@@ -134,7 +134,7 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 };
 
 secure_vector<uint8_t> DH_KA_Operation::raw_agree(const uint8_t w[], size_t w_len) {
-   BigInt v = BigInt::decode(w, w_len);
+   BigInt v = BigInt::from_bytes(std::span{w, w_len});
 
    if(v <= 1 || v >= group().get_p()) {
       throw Invalid_Argument("DH agreement - invalid key provided");
@@ -144,7 +144,7 @@ secure_vector<uint8_t> DH_KA_Operation::raw_agree(const uint8_t w[], size_t w_le
    v = powermod_x_p(v);
    v = m_blinder.unblind(v);
 
-   return BigInt::encode_1363(v, group().p_bytes());
+   return v.serialize<secure_vector<uint8_t>>(group().p_bytes());
 }
 
 }  // namespace

@@ -46,7 +46,7 @@ void decode_optional_list(BER_Decoder& ber, ASN1_Type tag, std::vector<X509_Cert
 }  // namespace
 
 Request::Request(const X509_Certificate& issuer_cert, const X509_Certificate& subject_cert) :
-      m_issuer(issuer_cert), m_certid(m_issuer, BigInt::decode(subject_cert.serial_number())) {
+      m_issuer(issuer_cert), m_certid(m_issuer, BigInt::from_bytes(subject_cert.serial_number())) {
    if(subject_cert.issuer_dn() != issuer_cert.subject_dn()) {
       throw Invalid_Argument("Invalid cert pair to OCSP::Request (mismatched issuer,subject args?)");
    }
@@ -283,7 +283,7 @@ Response online_check(const X509_Certificate& issuer,
       throw Invalid_Argument("Invalid cert pair to OCSP::online_check (mismatched issuer,subject args?)");
    }
 
-   return online_check(issuer, BigInt::decode(subject.serial_number()), subject.ocsp_responder(), timeout);
+   return online_check(issuer, BigInt::from_bytes(subject.serial_number()), subject.ocsp_responder(), timeout);
 }
 
 #endif

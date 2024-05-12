@@ -487,7 +487,7 @@ CertificatePathStatusCodes PKIX::check_ocsp_online(const std::vector<X509_Certif
          }));
       } else {
          ocsp_response_futures.emplace_back(std::async(std::launch::async, [&]() -> std::optional<OCSP::Response> {
-            OCSP::Request req(issuer, BigInt::decode(subject.serial_number()));
+            OCSP::Request req(issuer, BigInt::from_bytes(subject.serial_number()));
 
             HTTP::Response http;
             try {

@@ -65,7 +65,7 @@ FPE_FE1::FPE_FE1(const BigInt& n, size_t rounds, bool compat_mode, std::string_v
 
    m_mac = MessageAuthenticationCode::create_or_throw(mac_algo);
 
-   m_n_bytes = BigInt::encode(n);
+   m_n_bytes = n.serialize();
 
    if(m_n_bytes.size() > MAX_N_BYTES) {
       throw Invalid_Argument("N is too large for FPE encryption");
@@ -112,7 +112,7 @@ BigInt FPE_FE1::F(const BigInt& R,
                   size_t round,
                   const secure_vector<uint8_t>& tweak_mac,
                   secure_vector<uint8_t>& tmp) const {
-   tmp = BigInt::encode_locked(R);
+   tmp = R.serialize<secure_vector<uint8_t>>();
 
    m_mac->update(tweak_mac);
    m_mac->update_be(static_cast<uint32_t>(round));
@@ -121,7 +121,7 @@ BigInt FPE_FE1::F(const BigInt& R,
    m_mac->update(tmp.data(), tmp.size());
 
    tmp = m_mac->final();
-   return BigInt(tmp.data(), tmp.size());
+   return BigInt::from_bytes(tmp);
 }
 
 secure_vector<uint8_t> FPE_FE1::compute_tweak_mac(const uint8_t tweak[], size_t tweak_len) const {

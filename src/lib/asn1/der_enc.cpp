@@ -296,8 +296,8 @@ DER_Encoder& DER_Encoder::encode(const BigInt& n, ASN1_Type type_tag, ASN1_Class
    }
 
    const size_t extra_zero = (n.bits() % 8 == 0) ? 1 : 0;
-   secure_vector<uint8_t> contents(extra_zero + n.bytes());
-   n.binary_encode(&contents[extra_zero]);
+
+   auto contents = n.serialize(n.bytes() + extra_zero);
    if(n < 0) {
       for(unsigned char& content : contents) {
          content = ~content;

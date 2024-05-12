@@ -600,17 +600,17 @@ std::vector<uint8_t> EC_Point::encode(EC_Point_Format format) const {
    if(format == EC_Point_Format::Uncompressed) {
       result.resize(1 + 2 * p_bytes);
       result[0] = 0x04;
-      BigInt::encode_1363(&result[1], p_bytes, x);
-      BigInt::encode_1363(&result[1 + p_bytes], p_bytes, y);
+      x.serialize_to(std::span{result}.subspan(1, p_bytes));
+      y.serialize_to(std::span{result}.subspan(1 + p_bytes, p_bytes));
    } else if(format == EC_Point_Format::Compressed) {
       result.resize(1 + p_bytes);
       result[0] = 0x02 | static_cast<uint8_t>(y.get_bit(0));
-      BigInt::encode_1363(&result[1], p_bytes, x);
+      x.serialize_to(std::span{result}.subspan(1, p_bytes));
    } else if(format == EC_Point_Format::Hybrid) {
       result.resize(1 + 2 * p_bytes);
       result[0] = 0x06 | static_cast<uint8_t>(y.get_bit(0));
-      BigInt::encode_1363(&result[1], p_bytes, x);
-      BigInt::encode_1363(&result[1 + p_bytes], p_bytes, y);
+      x.serialize_to(std::span{result}.subspan(1, p_bytes));
+      y.serialize_to(std::span{result}.subspan(1 + p_bytes, p_bytes));
    } else {
       throw Invalid_Argument("EC2OSP illegal point encoding");
    }

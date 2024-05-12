@@ -100,7 +100,7 @@ class OCSP_Tests final : public Test {
          const Botan::OCSP::Request req1(issuer, end_entity);
          result.test_eq("Encoded OCSP request", req1.base64_encode(), expected_request);
 
-         const Botan::OCSP::Request req2(issuer, BigInt::decode(end_entity.serial_number()));
+         const Botan::OCSP::Request req2(issuer, BigInt::from_bytes(end_entity.serial_number()));
          result.test_eq("Encoded OCSP request", req2.base64_encode(), expected_request);
 
          return result;

@@ -88,8 +88,8 @@ Server_Key_Exchange::Server_Key_Exchange(Handshake_IO& io,
          throw TLS_Exception(Alert::InternalError, "Application did not provide a Diffie-Hellman key");
       }
 
-      append_tls_length_value(m_params, BigInt::encode(dh->get_int_field("p")), 2);
-      append_tls_length_value(m_params, BigInt::encode(dh->get_int_field("g")), 2);
+      append_tls_length_value(m_params, dh->get_int_field("p").serialize(), 2);
+      append_tls_length_value(m_params, dh->get_int_field("g").serialize(), 2);
       append_tls_length_value(m_params, dh->public_value(), 2);
    } else if(kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK) {
       const std::vector<Group_Params> ec_groups = state.client_hello()->supported_ecc_curves();

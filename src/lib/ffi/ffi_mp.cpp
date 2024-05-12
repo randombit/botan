@@ -77,7 +77,7 @@ int botan_mp_flip_sign(botan_mp_t mp) {
 }
 
 int botan_mp_from_bin(botan_mp_t mp, const uint8_t bin[], size_t bin_len) {
-   return BOTAN_FFI_VISIT(mp, [=](auto& bn) { bn.binary_decode(bin, bin_len); });
+   return BOTAN_FFI_VISIT(mp, [=](auto& bn) { bn.assign_from_bytes({bin, bin_len}); });
 }
 
 int botan_mp_to_hex(const botan_mp_t mp, char* out) {
@@ -99,7 +99,7 @@ int botan_mp_to_str(const botan_mp_t mp, uint8_t digit_base, char* out, size_t* 
 }
 
 int botan_mp_to_bin(const botan_mp_t mp, uint8_t vec[]) {
-   return BOTAN_FFI_VISIT(mp, [=](const auto& bn) { bn.binary_encode(vec); });
+   return BOTAN_FFI_VISIT(mp, [=](const auto& bn) { bn.serialize_to(std::span{vec, bn.bytes()}); });
 }
 
 int botan_mp_to_uint32(const botan_mp_t mp, uint32_t* val) {

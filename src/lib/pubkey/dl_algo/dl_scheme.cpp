@@ -44,9 +44,7 @@ DL_PublicKey::DL_PublicKey(const AlgorithmIdentifier& alg_id,
       m_group(alg_id.parameters(), format), m_public_key(decode_single_bigint(key_bits)) {}
 
 std::vector<uint8_t> DL_PublicKey::public_key_as_bytes() const {
-   std::vector<uint8_t> bits(m_group.p_bytes());
-   BigInt::encode_1363(bits.data(), bits.size(), m_public_key);
-   return bits;
+   return m_public_key.serialize(m_group.p_bytes());
 }
 
 std::vector<uint8_t> DL_PublicKey::DER_encode() const {
@@ -89,7 +87,7 @@ secure_vector<uint8_t> DL_PrivateKey::DER_encode() const {
 }
 
 secure_vector<uint8_t> DL_PrivateKey::raw_private_key_bits() const {
-   return BigInt::encode_locked(m_private_key);
+   return m_private_key.serialize<secure_vector<uint8_t>>();
 }
 
 bool DL_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {

@@ -276,9 +276,7 @@ bool Montgomery_Int::operator==(const Montgomery_Int& other) const {
 }
 
 std::vector<uint8_t> Montgomery_Int::serialize() const {
-   std::vector<uint8_t> v(size());
-   BigInt::encode_1363(v.data(), v.size(), value());
-   return v;
+   return value().serialize();
 }
 
 size_t Montgomery_Int::size() const {

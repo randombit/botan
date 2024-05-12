@@ -58,7 +58,7 @@ EC_PrivateKeyImportProperties::EC_PrivateKeyImportProperties(const std::vector<u
                                                              const BigInt& value) :
       PrivateKeyProperties(KeyType::Ec), m_ec_params(ec_params), m_value(value) {
    add_binary(AttributeType::EcParams, m_ec_params);
-   add_binary(AttributeType::Value, BigInt::encode(m_value));
+   add_binary(AttributeType::Value, m_value.serialize());
 }
 
 PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session, ObjectHandle handle) :

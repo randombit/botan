@@ -22,8 +22,8 @@ namespace Botan::PKCS11 {
 
 RSA_PublicKeyImportProperties::RSA_PublicKeyImportProperties(const BigInt& modulus, const BigInt& pub_exponent) :
       PublicKeyProperties(KeyType::Rsa), m_modulus(modulus), m_pub_exponent(pub_exponent) {
-   add_binary(AttributeType::Modulus, BigInt::encode(m_modulus));
-   add_binary(AttributeType::PublicExponent, BigInt::encode(m_pub_exponent));
+   add_binary(AttributeType::Modulus, m_modulus.serialize());
+   add_binary(AttributeType::PublicExponent, m_pub_exponent.serialize());
 }
 
 RSA_PublicKeyGenerationProperties::RSA_PublicKeyGenerationProperties(Ulong bits) : PublicKeyProperties(KeyType::Rsa) {
@@ -32,26 +32,26 @@ RSA_PublicKeyGenerationProperties::RSA_PublicKeyGenerationProperties(Ulong bits)
 
 PKCS11_RSA_PublicKey::PKCS11_RSA_PublicKey(Session& session, ObjectHandle handle) :
       Object(session, handle),
-      RSA_PublicKey(BigInt::decode(get_attribute_value(AttributeType::Modulus)),
-                    BigInt::decode(get_attribute_value(AttributeType::PublicExponent))) {}
+      RSA_PublicKey(BigInt::from_bytes(get_attribute_value(AttributeType::Modulus)),
+                    BigInt::from_bytes(get_attribute_value(AttributeType::PublicExponent))) {}
 
 PKCS11_RSA_PublicKey::PKCS11_RSA_PublicKey(Session& session, const RSA_PublicKeyImportProperties& pubkey_props) :
       Object(session, pubkey_props), RSA_PublicKey(pubkey_props.modulus(), pubkey_props.pub_exponent()) {}
 
 RSA_PrivateKeyImportProperties::RSA_PrivateKeyImportProperties(const BigInt& modulus, const BigInt& priv_exponent) :
       PrivateKeyProperties(KeyType::Rsa), m_modulus(modulus), m_priv_exponent(priv_exponent) {
-   add_binary(AttributeType::Modulus, BigInt::encode(m_modulus));
-   add_binary(AttributeType::PrivateExponent, BigInt::encode(m_priv_exponent));
+   add_binary(AttributeType::Modulus, m_modulus.serialize());
+   add_binary(AttributeType::PrivateExponent, m_priv_exponent.serialize());
 }
 
 PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session, ObjectHandle handle) :
       Object(session, handle),
-      RSA_PublicKey(BigInt::decode(get_attribute_value(AttributeType::Modulus)),
-                    BigInt::decode(get_attribute_value(AttributeType::PublicExponent))) {}
+      RSA_PublicKey(BigInt::from_bytes(get_attribute_value(AttributeType::Modulus)),
+                    BigInt::from_bytes(get_attribute_value(AttributeType::PublicExponent))) {}
 
 PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session, const RSA_PrivateKeyImportProperties& priv_key_props) :
       Object(session, priv_key_props),
-      RSA_PublicKey(priv_key_props.modulus(), BigInt::decode(get_attribute_value(AttributeType::PublicExponent))) {}
+      RSA_PublicKey(priv_key_props.modulus(), BigInt::from_bytes(get_attribute_value(AttributeType::PublicExponent))) {}
 
 PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session,
                                              uint32_t bits,
@@ -76,8 +76,8 @@ PKCS11_RSA_PrivateKey::PKCS11_RSA_PrivateKey(Session& session,
 
    this->reset_handle(priv_key_handle);
 
-   BigInt n = BigInt::decode(get_attribute_value(AttributeType::Modulus));
-   BigInt e = BigInt::decode(get_attribute_value(AttributeType::PublicExponent));
+   BigInt n = BigInt::from_bytes(get_attribute_value(AttributeType::Modulus));
+   BigInt e = BigInt::from_bytes(get_attribute_value(AttributeType::PublicExponent));
    RSA_PublicKey::init(std::move(n), std::move(e));
 }
 
@@ -88,12 +88,16 @@ RSA_PrivateKey PKCS11_RSA_PrivateKey::export_key() const {
    auto d = get_attribute_value(AttributeType::PrivateExponent);
    auto n = get_attribute_value(AttributeType::Modulus);
 
-   return RSA_PrivateKey(BigInt::decode(p), BigInt::decode(q), BigInt::decode(e), BigInt::decode(d), BigInt::decode(n));
+   return RSA_PrivateKey(BigInt::from_bytes(p),
+                         BigInt::from_bytes(q),
+                         BigInt::from_bytes(e),
+                         BigInt::from_bytes(d),
+                         BigInt::from_bytes(n));
 }
 
 std::unique_ptr<Public_Key> PKCS11_RSA_PrivateKey::public_key() const {
-   return std::make_unique<RSA_PublicKey>(BigInt::decode(get_attribute_value(AttributeType::Modulus)),
-                                          BigInt::decode(get_attribute_value(AttributeType::PublicExponent)));
+   return std::make_unique<RSA_PublicKey>(BigInt::from_bytes(get_attribute_value(AttributeType::Modulus)),
+                                          BigInt::from_bytes(get_attribute_value(AttributeType::PublicExponent)));
 }
 
 secure_vector<uint8_t> PKCS11_RSA_PrivateKey::private_key_bits() const {
@@ -132,9 +136,9 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
          const bool use_blinding = !m_mechanism.padding_size();
 
          if(use_blinding) {
-            const BigInt blinded = m_blinder.blind(BigInt::decode(encrypted_data));
+            const BigInt blinded = m_blinder.blind(BigInt::from_bytes(encrypted_data));
             // SoftHSM at least requires raw RSA inputs be == the modulus size
-            encrypted_data = unlock(BigInt::encode_1363(blinded, modulus_bytes));
+            encrypted_data = blinded.serialize(modulus_bytes);
          }
 
          secure_vector<uint8_t> decrypted_data;
@@ -142,8 +146,9 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
 
          // Unblind for RSA/RAW decryption
          if(use_blinding) {
-            const BigInt unblinded = m_blinder.unblind(BigInt::decode(decrypted_data));
-            decrypted_data = BigInt::encode_1363(unblinded, modulus_bytes);
+            const BigInt unblinded = m_blinder.unblind(BigInt::from_bytes(decrypted_data));
+            decrypted_data.resize(modulus_bytes);
+            unblinded.serialize_to(decrypted_data);
          }
 
          valid_mask = 0xFF;

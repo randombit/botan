@@ -387,7 +387,7 @@ BER_Decoder& BER_Decoder::decode_null() {
 BER_Decoder& BER_Decoder::decode_octet_string_bigint(BigInt& out) {
    secure_vector<uint8_t> out_vec;
    decode(out_vec, ASN1_Type::OctetString);
-   out = BigInt::decode(out_vec.data(), out_vec.size());
+   out = BigInt::from_bytes(out_vec);
    return (*this);
 }
 
@@ -474,10 +474,10 @@ BER_Decoder& BER_Decoder::decode(BigInt& out, ASN1_Type type_tag, ASN1_Class cla
          for(size_t i = 0; i != obj.length(); ++i) {
             vec[i] = ~vec[i];
          }
-         out = BigInt(vec.data(), vec.size());
+         out.assign_from_bytes(vec);
          out.flip_sign();
       } else {
-         out = BigInt(obj.bits(), obj.length());
+         out.assign_from_bytes(obj.data());
       }
    }
 

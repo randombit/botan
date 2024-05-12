@@ -230,13 +230,14 @@ bool DSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len, con
 
    BigInt r(sig, q_bytes);
    BigInt s(sig + q_bytes, q_bytes);
+
+   if(r == 0 || r >= q || s == 0 || s >= q) {
+      return false;
+   }
+
    BigInt i = BigInt::from_bytes_with_max_bits(msg, msg_len, group.q_bits());
    if(i >= q) {
       i -= q;
-   }
-
-   if(r <= 0 || r >= q || s <= 0 || s >= q) {
-      return false;
    }
 
    s = inverse_mod(s, q);

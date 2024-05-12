@@ -29,7 +29,7 @@ CertID::CertID(const X509_Certificate& issuer, const BigInt& subject_serial) {
 
 bool CertID::is_id_for(const X509_Certificate& issuer, const X509_Certificate& subject) const {
    try {
-      if(BigInt::decode(subject.serial_number()) != m_subject_serial) {
+      if(BigInt::from_bytes(subject.serial_number()) != m_subject_serial) {
          return false;
       }
 
