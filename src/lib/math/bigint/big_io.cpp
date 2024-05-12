@@ -22,15 +22,11 @@ std::ostream& operator<<(std::ostream& stream, const BigInt& n) {
 
    const size_t base = (stream_flags & std::ios::hex) ? 16 : 10;
 
-   std::string enc;
-
    if(base == 10) {
-      enc = n.to_dec_string();
+      stream << n.to_dec_string();
    } else {
-      enc = n.to_hex_string();
+      stream << n.to_hex_string();
    }
-
-   stream.write(enc.data(), enc.size());
 
    if(!stream.good()) {
       throw Stream_IO_Error("BigInt output operator has failed");
