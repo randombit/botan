@@ -145,6 +145,13 @@ secure_vector<uint8_t> BigInt::encode_fixed_length_int_pair(const BigInt& n1, co
    return output;
 }
 
+BigInt BigInt::decode(std::span<const uint8_t> buf, Base base) {
+   if(base == Binary) {
+      return BigInt(buf);
+   }
+   return BigInt::decode(buf.data(), buf.size(), base);
+}
+
 /*
 * Decode a BigInt
 */

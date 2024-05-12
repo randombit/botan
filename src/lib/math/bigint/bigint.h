@@ -28,7 +28,11 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
        * Base enumerator for encoding and decoding
        */
-      enum Base { Decimal = 10, Hexadecimal = 16, Binary = 256 };
+      enum BOTAN_DEPRECATED("All functions using this enum are deprecated") Base {
+         Decimal = 10,
+         Hexadecimal = 16,
+         Binary = 256
+      };
 
       /**
        * Sign symbol definitions for positive and negative numbers
@@ -71,6 +75,8 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
        * Create BigInt from an unsigned 64 bit integer
        * @param n initial value of this BigInt
+       *
+       * Prefer BigInt::from_u64
        */
       BigInt(uint64_t n);
 
@@ -94,13 +100,13 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param buf the byte array holding the value
        * @param length size of buf
        */
-      BigInt(const uint8_t buf[], size_t length);
+      BigInt(const uint8_t buf[], size_t length) { assign_from_bytes(std::span{buf, length}); }
 
       /**
        * Create a BigInt from an integer in a byte array
-       * @param vec the byte vector holding the value
+       * @param bytes the byte vector holding the value
        */
-      explicit BigInt(std::span<const uint8_t> vec) : BigInt(vec.data(), vec.size()) {}
+      explicit BigInt(std::span<const uint8_t> bytes) { assign_from_bytes(bytes); }
 
       /**
        * Create a BigInt from an integer in a byte array
@@ -108,6 +114,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param length size of buf
        * @param base is the number base of the integer in buf
        */
+      BOTAN_DEPRECATED("For hex/decimal use string constructor")
       BigInt(const uint8_t buf[], size_t length, Base base);
 
       /**
@@ -138,6 +145,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * Create BigInt of specified size, all zeros
        * @param n size of the internal register in words
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       static BigInt with_capacity(size_t n);
 
       /**
@@ -174,6 +182,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
 
       friend void swap(BigInt& x, BigInt& y) { x.swap(y); }
 
+      BOTAN_DEPRECATED("Deprecated no replacement")
       void swap_reg(secure_vector<word>& reg) {
          m_data.swap(reg);
          // sign left unchanged
@@ -285,10 +294,13 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        */
       bool operator!() const { return (!is_nonzero()); }
 
+      BOTAN_DEPRECATED("Just use operator+/operator-")
       static BigInt add2(const BigInt& x, const word y[], size_t y_words, Sign y_sign);
 
+      BOTAN_DEPRECATED("Just use operator+/operator-")
       BigInt& add(const word y[], size_t y_words, Sign sign);
 
+      BOTAN_DEPRECATED("Just use operator+/operator-")
       BigInt& sub(const word y[], size_t y_words, Sign sign) {
          return add(y, y_words, sign == Positive ? Negative : Positive);
       }
@@ -298,12 +310,14 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param y the BigInt to multiply with this
        * @param ws a temp workspace
        */
+      BOTAN_DEPRECATED("Just use operator*")
       BigInt& mul(const BigInt& y, secure_vector<word>& ws);
 
       /**
        * Square value of *this
        * @param ws a temp workspace
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       BigInt& square(secure_vector<word>& ws);
 
       /**
@@ -312,6 +326,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param y_words length of y in words
        * @param ws a temp workspace
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       BigInt& rev_sub(const word y[], size_t y_words, secure_vector<word>& ws);
 
       /**
@@ -321,6 +336,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param mod the positive modulus
        * @param ws a temp workspace
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       BigInt& mod_add(const BigInt& y, const BigInt& mod, secure_vector<word>& ws);
 
       /**
@@ -330,6 +346,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param mod the positive modulus
        * @param ws a temp workspace
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       BigInt& mod_sub(const BigInt& y, const BigInt& mod, secure_vector<word>& ws);
 
       /**
@@ -340,6 +357,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param mod the positive modulus
        * @param ws a temp workspace
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       BigInt& mod_mul(uint8_t y, const BigInt& mod, secure_vector<word>& ws);
 
       /**
@@ -349,6 +367,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * mod and performs repeated subtractions. It should not be used if
        * *this is much larger than mod, instead use modulo operator.
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       size_t reduce_below(const BigInt& mod, secure_vector<word>& ws);
 
       /**
@@ -361,6 +380,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * Performs exactly bound subtractions, so if *this is >= bound*mod then the
        * result will not be fully reduced. If bound is zero, nothing happens.
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       void ct_reduce_below(const BigInt& mod, secure_vector<word>& ws, size_t bound);
 
       /**
@@ -473,6 +493,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @result the integer extracted from the register starting at
        * offset with specified length
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       uint32_t get_substring(size_t offset, size_t length) const;
 
       /**
@@ -517,8 +538,10 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        */
       word word_at(size_t n) const { return m_data.get_word_at(n); }
 
+      BOTAN_DEPRECATED("Deprecated no replacement")
       void set_word_at(size_t i, word w) { m_data.set_word_at(i, w); }
 
+      BOTAN_DEPRECATED("Deprecated no replacement")
       void set_words(const word w[], size_t len) { m_data.set_words(w, len); }
 
       /**
@@ -542,6 +565,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
        * @result the opposite sign of the represented integer value
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       Sign reverse_sign() const {
          if(sign() == Positive) {
             return Negative;
@@ -600,36 +624,43 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * of this integer. Returns BOTAN_MP_WORD_BITS only iff *this is
        * zero. Ignores sign.
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       size_t top_bits_free() const;
 
       /**
        * Return a mutable pointer to the register
        * @result a pointer to the start of the internal register
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       word* mutable_data() { return m_data.mutable_data(); }
 
       /**
        * Return a const pointer to the register
        * @result a pointer to the start of the internal register
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       const word* data() const { return m_data.const_data(); }
 
       /**
        * Don't use this function in application code
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       secure_vector<word>& get_word_vector() { return m_data.mutable_vector(); }
 
       /**
        * Don't use this function in application code
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       const secure_vector<word>& get_word_vector() const { return m_data.const_vector(); }
 
       /**
        * Increase internal register buffer to at least n words
        * @param n new size of register
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       void grow_to(size_t n) const { m_data.grow_to(n); }
 
+      BOTAN_DEPRECATED("Deprecated no replacement")
       void resize(size_t s) { m_data.resize(s); }
 
       /**
@@ -684,6 +715,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * Place the value into out, zero-padding up to size words
        * Throw if *this cannot be represented in size words
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       void encode_words(word out[], size_t size) const;
 
       /**
@@ -786,6 +818,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param base number-base of the integer in buf
        * @result BigInt representing the integer in the byte array
        */
+      BOTAN_DEPRECATED("For decimal/hex use string constructor")
       static BigInt decode(const uint8_t buf[], size_t length, Base base);
 
       /**
@@ -794,12 +827,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param base number-base of the integer in buf
        * @result BigInt representing the integer in the byte array
        */
-      static BigInt decode(std::span<const uint8_t> buf, Base base) {
-         if(base == Binary) {
-            return BigInt(buf);
-         }
-         return BigInt::decode(buf.data(), buf.size(), base);
-      }
+      BOTAN_DEPRECATED("For decimal/hex use from_string") static BigInt decode(std::span<const uint8_t> buf, Base base);
 
       /**
        * Encode a BigInt to a byte array according to IEEE 1363
@@ -819,6 +847,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param bytes the length of the encoding of each single BigInt
        * @result a secure_vector<uint8_t> containing the concatenation of the two encoded BigInt
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       static secure_vector<uint8_t> encode_fixed_length_int_pair(const BigInt& n1, const BigInt& n2, size_t bytes);
 
    private:
@@ -1037,7 +1066,8 @@ inline bool operator>(const BigInt& a, word b) {
  * I/O Operators
  */
 BOTAN_PUBLIC_API(2, 0) std::ostream& operator<<(std::ostream&, const BigInt&);
-BOTAN_PUBLIC_API(2, 0) std::istream& operator>>(std::istream&, BigInt&);
+
+BOTAN_DEPRECATED("Use BigInt::from_string") BOTAN_PUBLIC_API(2, 0) std::istream& operator>>(std::istream&, BigInt&);
 
 }  // namespace Botan
 
