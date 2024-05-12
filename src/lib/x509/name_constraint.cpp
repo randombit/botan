@@ -231,24 +231,24 @@ std::ostream& operator<<(std::ostream& os, const GeneralName& gn) {
 }
 
 void GeneralSubtree::encode_into(DER_Encoder& /*to*/) const {
-   throw Not_Implemented("General Subtree encoding");
+   throw Not_Implemented("GeneralSubtree encoding");
 }
 
 void GeneralSubtree::decode_from(BER_Decoder& ber) {
+   size_t minimum;
+
    ber.start_sequence()
       .decode(m_base)
-      .decode_optional(m_minimum, ASN1_Type(0), ASN1_Class::ContextSpecific, size_t(0))
+      .decode_optional(minimum, ASN1_Type(0), ASN1_Class::ContextSpecific, size_t(0))
       .end_cons();
 
-   if(m_minimum != 0) {
+   if(minimum != 0) {
       throw Decoding_Error("GeneralSubtree minimum must be 0");
    }
-
-   m_maximum = std::numeric_limits<std::size_t>::max();
 }
 
 std::ostream& operator<<(std::ostream& os, const GeneralSubtree& gs) {
-   os << gs.minimum() << "," << gs.maximum() << "," << gs.base();
+   os << gs.base();
    return os;
 }
 

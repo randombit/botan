@@ -307,14 +307,14 @@ std::ostream& operator<<(std::ostream& os, const GeneralName& gn);
 *
 * The Name Constraint extension adds a minimum and maximum path
 * length to a GeneralName to form a constraint. The length limits
-* are currently unused.
+* are not used in PKIX.
 */
 class BOTAN_PUBLIC_API(2, 0) GeneralSubtree final : public ASN1_Object {
    public:
       /**
       * Creates an empty name constraint.
       */
-      GeneralSubtree() : m_base(), m_minimum(0), m_maximum(std::numeric_limits<std::size_t>::max()) {}
+      GeneralSubtree() : m_base() {}
 
       void encode_into(DER_Encoder&) const override;
 
@@ -325,23 +325,11 @@ class BOTAN_PUBLIC_API(2, 0) GeneralSubtree final : public ASN1_Object {
       */
       const GeneralName& base() const { return m_base; }
 
-      /**
-      * @return minimum path length
-      */
-      size_t minimum() const { return m_minimum; }
-
-      /**
-      * @return maximum path length
-      */
-      size_t maximum() const { return m_maximum; }
-
    private:
       GeneralName m_base;
-      size_t m_minimum;
-      size_t m_maximum;
 };
 
-std::ostream& operator<<(std::ostream& os, const GeneralSubtree& gs);
+BOTAN_DEPRECATED("Deprecated no replacement") std::ostream& operator<<(std::ostream& os, const GeneralSubtree& gs);
 
 /**
 * @brief Name Constraints
