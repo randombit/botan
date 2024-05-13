@@ -109,4 +109,28 @@ void poly_double_n_le(uint8_t out[], const uint8_t in[], size_t n) {
    }
 }
 
+void xts_update_tweak_block(uint8_t tweak[], size_t BS, size_t blocks_in_tweak) {
+   if(BS == 16) {
+      constexpr size_t LIMBS = 2;
+
+      uint64_t W[LIMBS];
+      load_le(W, &tweak[0], LIMBS);
+
+      const uint64_t POLY = static_cast<uint64_t>(MinWeightPolynomial::P128);
+
+      for(size_t i = 1; i < blocks_in_tweak; ++i) {
+         const uint64_t carry = POLY * (W[1] >> 63);
+         W[1] = (W[1] << 1) ^ (W[0] >> 63);
+         W[0] = (W[0] << 1) ^ carry;
+         copy_out_le(std::span(&tweak[i * BS], 2 * 8), W);
+      }
+   } else {
+      for(size_t i = 1; i < blocks_in_tweak; ++i) {
+         const uint8_t* prev = &tweak[(i - 1) * BS];
+         uint8_t* cur = &tweak[i * BS];
+         poly_double_n_le(cur, prev, BS);
+      }
+   }
+}
+
 }  // namespace Botan
