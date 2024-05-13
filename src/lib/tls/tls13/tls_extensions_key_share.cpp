@@ -87,7 +87,7 @@ class Key_Share_Entry {
 
       std::vector<uint8_t> serialize() const {
          std::vector<uint8_t> result;
-         result.reserve(m_key_exchange.size() + 2);
+         result.reserve(m_key_exchange.size() + 4);
 
          const uint16_t named_curve_id = m_group.wire_code();
          result.push_back(get_byte<0>(named_curve_id));

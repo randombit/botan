@@ -399,6 +399,10 @@ EC_Group::EC_Group() = default;
 
 EC_Group::~EC_Group() = default;
 
+EC_Group::EC_Group(const EC_Group&) = default;
+
+EC_Group& EC_Group::operator=(const EC_Group&) = default;
+
 EC_Group::EC_Group(const OID& domain_oid) {
    this->m_data = ec_group_data().lookup(domain_oid);
    if(!this->m_data) {
