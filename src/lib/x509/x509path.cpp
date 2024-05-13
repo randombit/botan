@@ -51,6 +51,70 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
    if(!cert_path[0]->allowed_usage(usage))
       cert_status[0].insert(Certificate_Status_Code::INVALID_USAGE);
 
+   for(size_t i = 0; i != cert_path.size(); ++i)
+      {
+      std::set<Certificate_Status_Code>& status = cert_status.at(i);
+
+      const bool at_self_signed_root = (i == cert_path.size() - 1);
+
+      const std::shared_ptr<const X509_Certificate>& subject = cert_path[i];
+
+      const std::shared_ptr<const X509_Certificate>& issuer = cert_path[at_self_signed_root ? (i) : (i + 1)];
+
+      std::unique_ptr<Public_Key> issuer_key(issuer->subject_public_key());
+
+      // Check the signature algorithm is known
+      if(OIDS::oid2str_or_empty(subject->signature_algorithm().get_oid()).empty())
+         {
+         status.insert(Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN);
+         }
+      else
+         {
+         // only perform the following checks if the signature algorithm is known
+         if(!issuer_key)
+            {
+            status.insert(Certificate_Status_Code::CERT_PUBKEY_INVALID);
+            }
+         else
+            {
+            const Certificate_Status_Code sig_status = subject->verify_signature(*issuer_key);
+
+            if(sig_status != Certificate_Status_Code::VERIFIED)
+               status.insert(sig_status);
+
+            if(issuer_key->estimated_strength() < min_signature_algo_strength)
+               status.insert(Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK);
+            }
+
+         // Ignore untrusted hashes on self-signed roots
+         if(trusted_hashes.size() > 0 && !at_self_signed_root)
+            {
+            if(trusted_hashes.count(subject->hash_used_for_signature()) == 0)
+               status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
+            }
+         }
+      }
+
+
+   // If any of the signatures were invalid, return immediately; we know the
+   // chain is invalid and signature failure is always considered the most
+   // critical result. This does mean other problems in the certificate (eg
+   // expired) will not be reported, but we'd have to assume any such data is
+   // anyway arbitrary considering we couldn't verify the signature chain
+
+   for(size_t i = 0; i != cert_path.size(); ++i)
+      {
+      for(auto status : cert_status.at(i))
+         {
+         // This ignores errors relating to the key or hash being weak since
+         // these are somewhat advisory
+         if(static_cast<uint32_t>(status) >= 5000)
+            {
+            return cert_status;
+            }
+         }
+      }
+
    if(cert_path[0]->is_CA_cert() == false &&
       cert_path[0]->has_constraints(KEY_CERT_SIGN))
       {
@@ -113,39 +177,6 @@ PKIX::check_chain(const std::vector<std::shared_ptr<const X509_Certificate>>& ce
       // Check issuer constraints
       if(!issuer->is_CA_cert() && !self_signed_ee_cert)
          status.insert(Certificate_Status_Code::CA_CERT_NOT_FOR_CERT_ISSUER);
-
-      std::unique_ptr<Public_Key> issuer_key(issuer->subject_public_key());
-
-      // Check the signature algorithm is known
-      if(OIDS::oid2str_or_empty(subject->signature_algorithm().get_oid()).empty())
-         {
-         status.insert(Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN);
-         }
-      else
-         {
-         // only perform the following checks if the signature algorithm is known
-         if(!issuer_key)
-            {
-            status.insert(Certificate_Status_Code::CERT_PUBKEY_INVALID);
-            }
-         else
-            {
-            const Certificate_Status_Code sig_status = subject->verify_signature(*issuer_key);
-
-            if(sig_status != Certificate_Status_Code::VERIFIED)
-               status.insert(sig_status);
-
-            if(issuer_key->estimated_strength() < min_signature_algo_strength)
-               status.insert(Certificate_Status_Code::SIGNATURE_METHOD_TOO_WEAK);
-            }
-
-         // Ignore untrusted hashes on self-signed roots
-         if(trusted_hashes.size() > 0 && !at_self_signed_root)
-            {
-            if(trusted_hashes.count(subject->hash_used_for_signature()) == 0)
-               status.insert(Certificate_Status_Code::UNTRUSTED_HASH);
-            }
-         }
 
       // Check cert extensions
 
