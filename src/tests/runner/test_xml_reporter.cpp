@@ -12,11 +12,11 @@
    #include <botan/build.h>
    #include <botan/version.h>
    #include <botan/internal/loadstor.h>
+   #include <botan/internal/os_utils.h>
 
    #include <iomanip>
    #include <numeric>
    #include <sstream>
-   #include <time.h>
 
 namespace Botan_Tests {
 
@@ -60,24 +60,10 @@ std::string full_compiler_name_string() {
    #endif
 }
 
-std::tm* localtime(const time_t* timer, std::tm* buffer) {
-   #if defined(BOTAN_BUILD_COMPILER_IS_MSVC) || defined(BOTAN_TARGET_OS_IS_MINGW) || \
-      defined(BOTAN_TARGET_OS_IS_CYGWIN) || defined(BOTAN_TARGET_OS_IS_WINDOWS)
-   localtime_s(buffer, timer);
-   #else
-   localtime_r(timer, buffer);
-   #endif
-   return buffer;
-}
-
 /// formats a given time point in ISO 8601 format (with time zone)
 std::string format(const std::chrono::system_clock::time_point& tp) {
    auto seconds_since_epoch = std::chrono::system_clock::to_time_t(tp);
-
-   std::ostringstream out;
-   std::tm buffer{};
-   out << std::put_time(localtime(&seconds_since_epoch, &buffer), "%FT%T%z");
-   return out.str();
+   return Botan::OS::format_time(seconds_since_epoch, "%FT%T%z");
 }
 
 std::string format(const std::chrono::nanoseconds& dur) {
