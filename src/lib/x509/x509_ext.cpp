@@ -477,35 +477,30 @@ std::vector<uint8_t> Name_Constraints::encode_inner() const {
 * Decode the extension
 */
 void Name_Constraints::decode_inner(const std::vector<uint8_t>& in) {
-   std::vector<GeneralSubtree> permit, exclude;
    BER_Decoder ber(in);
-   BER_Decoder ext = ber.start_sequence();
-   BER_Object per = ext.get_next_object();
+   BER_Decoder inner = ber.start_sequence();
 
-   ext.push_back(per);
-   if(per.is_a(0, ASN1_Class::Constructed | ASN1_Class::ContextSpecific)) {
-      ext.decode_list(permit, ASN1_Type(0), ASN1_Class::Constructed | ASN1_Class::ContextSpecific);
-      if(permit.empty()) {
-         throw Encoding_Error("Empty Name Contraint list");
+   std::vector<GeneralSubtree> permitted;
+   if(inner.decode_optional_list(permitted, ASN1_Type(0), ASN1_Class::ExplicitContextSpecific)) {
+      if(permitted.empty()) {
+         throw Decoding_Error("Empty NameConstraint permitted list");
       }
    }
 
-   BER_Object exc = ext.get_next_object();
-   ext.push_back(exc);
-   if(per.is_a(1, ASN1_Class::Constructed | ASN1_Class::ContextSpecific)) {
-      ext.decode_list(exclude, ASN1_Type(1), ASN1_Class::Constructed | ASN1_Class::ContextSpecific);
-      if(exclude.empty()) {
-         throw Encoding_Error("Empty Name Contraint list");
+   std::vector<GeneralSubtree> excluded;
+   if(inner.decode_optional_list(excluded, ASN1_Type(1), ASN1_Class::ExplicitContextSpecific)) {
+      if(excluded.empty()) {
+         throw Decoding_Error("Empty NameConstraint excluded list");
       }
    }
 
-   ext.end_cons();
+   inner.end_cons();
 
-   if(permit.empty() && exclude.empty()) {
-      throw Encoding_Error("Empty Name Contraint extension");
+   if(permitted.empty() && excluded.empty()) {
+      throw Decoding_Error("Empty NameConstraint extension");
    }
 
-   m_name_constraints = NameConstraints(std::move(permit), std::move(exclude));
+   m_name_constraints = NameConstraints(std::move(permitted), std::move(excluded));
 }
 
 void Name_Constraints::validate(const X509_Certificate& subject,

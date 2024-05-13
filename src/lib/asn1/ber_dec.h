@@ -72,6 +72,16 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
       }
 
       /**
+      * Peek at the next object without removing it from the stream
+      *
+      * If an object has been pushed, then it returns that object.
+      * Otherwise it reads the next object and pushes it. Thus, a you
+      * call peek_next_object followed by push_back without a
+      * subsequent read, it will fail.
+      */
+      const BER_Object& peek_next_object();
+
+      /**
       * Push an object back onto the stream. Throws if another
       * object was previously pushed and has not been subsequently
       * read out.
@@ -254,6 +264,11 @@ class BOTAN_PUBLIC_API(2, 0) BER_Decoder final {
                                ASN1_Class class_tag = ASN1_Class::Universal);
 
       template <typename T>
+      bool decode_optional_list(std::vector<T>& out,
+                                ASN1_Type type_tag = ASN1_Type::Sequence,
+                                ASN1_Class class_tag = ASN1_Class::Universal);
+
+      template <typename T>
       BER_Decoder& decode_and_check(const T& expected, std::string_view error_msg) {
          T actual;
          decode(actual);
@@ -373,6 +388,19 @@ BER_Decoder& BER_Decoder::decode_list(std::vector<T>& vec, ASN1_Type type_tag, A
    list.end_cons();
 
    return (*this);
+}
+
+/*
+* Decode an optional list of homogenously typed values
+*/
+template <typename T>
+bool BER_Decoder::decode_optional_list(std::vector<T>& vec, ASN1_Type type_tag, ASN1_Class class_tag) {
+   if(peek_next_object().is_a(type_tag, class_tag)) {
+      decode_list(vec, type_tag, class_tag);
+      return true;
+   }
+
+   return false;
 }
 
 }  // namespace Botan

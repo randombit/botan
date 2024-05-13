@@ -227,6 +227,14 @@ BER_Decoder& BER_Decoder::discard_remaining() {
    return (*this);
 }
 
+const BER_Object& BER_Decoder::peek_next_object() {
+   if(!m_pushed.is_set()) {
+      m_pushed = get_next_object();
+   }
+
+   return m_pushed;
+}
+
 /*
 * Return the BER encoding of the next object
 */
