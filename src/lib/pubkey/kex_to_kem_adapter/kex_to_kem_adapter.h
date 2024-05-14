@@ -15,7 +15,7 @@
 
 #include <memory>
 
-namespace Botan::TLS {
+namespace Botan {
 
 /**
  * Adapter to use a key agreement key pair (e.g. ECDH) as a key encapsulation
@@ -71,6 +71,8 @@ class BOTAN_TEST_API KEX_to_KEM_Adapter_PrivateKey final : public KEX_to_KEM_Ada
 
       secure_vector<uint8_t> private_key_bits() const override;
 
+      secure_vector<uint8_t> raw_private_key_bits() const override;
+
       std::unique_ptr<Public_Key> public_key() const override;
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
@@ -84,6 +86,6 @@ class BOTAN_TEST_API KEX_to_KEM_Adapter_PrivateKey final : public KEX_to_KEM_Ada
 
 BOTAN_DIAGNOSTIC_POP
 
-}  // namespace Botan::TLS
+}  // namespace Botan
 
 #endif

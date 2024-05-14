@@ -161,14 +161,16 @@ std::vector<Test::Result> hybrid_kem_keypair() {
    return {
       Botan_Tests::CHECK("public handles empty list",
                          [](auto& result) {
-                            result.test_throws("hybrid KEM key does not accept an empty list of keys",
-                                               [] { Botan::TLS::Hybrid_KEM_PublicKey({}); });
+                            result.test_throws("hybrid KEM key does not accept an empty list of keys", [] {
+                               Botan::TLS::Hybrid_KEM_PublicKey(std::vector<std::unique_ptr<Botan::Public_Key>>(0));
+                            });
                          }),
 
       Botan_Tests::CHECK("private handles empty list",
                          [](auto& result) {
-                            result.test_throws("hybrid KEM key does not accept an empty list of keys",
-                                               [] { Botan::TLS::Hybrid_KEM_PrivateKey({}); });
+                            result.test_throws("hybrid KEM key does not accept an empty list of keys", [] {
+                               Botan::TLS::Hybrid_KEM_PrivateKey(std::vector<std::unique_ptr<Botan::Private_Key>>(0));
+                            });
                          }),
 
       Botan_Tests::CHECK("public key handles nullptr",
@@ -216,8 +218,8 @@ std::vector<Test::Result> hybrid_kem_keypair() {
 
 void kex_to_kem_roundtrip(Test::Result& result,
                           const std::function<std::unique_ptr<Botan::PK_Key_Agreement_Key>()>& kex_fn) {
-   Botan::TLS::KEX_to_KEM_Adapter_PrivateKey kexkem_key(kex_fn());
-   Botan::TLS::KEX_to_KEM_Adapter_PublicKey kexkem_public_key(kex_fn());
+   Botan::KEX_to_KEM_Adapter_PrivateKey kexkem_key(kex_fn());
+   Botan::KEX_to_KEM_Adapter_PublicKey kexkem_public_key(kex_fn());
 
    auto& rng = global_test_rng();
 
@@ -248,15 +250,15 @@ std::vector<Test::Result> kex_to_kem_adapter() {
       Botan_Tests::CHECK("handles nullptr",
                          [](auto& result) {
                             result.test_throws("private KEM adapter handles nullptr",
-                                               [] { Botan::TLS::KEX_to_KEM_Adapter_PrivateKey(nullptr); });
+                                               [] { Botan::KEX_to_KEM_Adapter_PrivateKey(nullptr); });
                             result.test_throws("public KEM adapter handles nullptr",
-                                               [] { Botan::TLS::KEX_to_KEM_Adapter_PublicKey(nullptr); });
+                                               [] { Botan::KEX_to_KEM_Adapter_PublicKey(nullptr); });
                          }),
 
       Botan_Tests::CHECK("handles non-KEX keys",
                          [](auto& result) {
                             result.test_throws("public KEM adapter does not work with KEM keys",
-                                               [] { Botan::TLS::KEX_to_KEM_Adapter_PublicKey{kem()}; });
+                                               [] { Botan::KEX_to_KEM_Adapter_PublicKey{kem()}; });
                          }),
 
       Botan_Tests::CHECK("Diffie-Hellman roundtrip", [](auto& result) { kex_to_kem_roundtrip(result, kex_dh); }),
