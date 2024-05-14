@@ -9,6 +9,7 @@
 #include <botan/pkix_types.h>
 
 #include <botan/internal/fmt.h>
+#include <botan/internal/parsing.h>
 #include <sstream>
 
 namespace Botan {
@@ -30,7 +31,7 @@ AlternativeName::AlternativeName(std::string_view email_addr,
       add_uri(uri);
    }
    if(!ip.empty()) {
-      add_ip_address(ip);
+      add_ipv4_address(string_to_ipv4(ip));
    }
 }
 
@@ -54,7 +55,7 @@ void AlternativeName::add_attribute(std::string_view type, std::string_view valu
       ss >> dn;
       this->add_dn(dn);
    } else if(type == "IP") {
-      this->add_ip_address(value);
+      this->add_ipv4_address(string_to_ipv4(value));
    } else {
       throw Not_Implemented(fmt("Unknown AlternativeName name type {}", type));
    }
@@ -88,8 +89,8 @@ std::multimap<std::string, std::string> AlternativeName::contents() const {
       names.emplace("URI", nm);
    }
 
-   for(const auto& nm : this->ip_address()) {
-      names.emplace("IP", nm);
+   for(uint32_t ipv4 : this->ipv4_address()) {
+      names.emplace("IP", ipv4_to_string(ipv4));
    }
 
    for(const auto& nm : this->directory_names()) {
@@ -145,7 +146,11 @@ std::vector<std::string> AlternativeName::get_attribute(std::string_view attr) c
 
       return ret;
    } else if(attr == "IP") {
-      return set_to_vector(this->ip_address());
+      std::vector<std::string> ip_str;
+      for(uint32_t ipv4 : this->ipv4_address()) {
+         ip_str.push_back(ipv4_to_string(ipv4));
+      }
+      return ip_str;
    } else {
       return {};
    }

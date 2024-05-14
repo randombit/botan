@@ -477,35 +477,30 @@ std::vector<uint8_t> Name_Constraints::encode_inner() const {
 * Decode the extension
 */
 void Name_Constraints::decode_inner(const std::vector<uint8_t>& in) {
-   std::vector<GeneralSubtree> permit, exclude;
    BER_Decoder ber(in);
-   BER_Decoder ext = ber.start_sequence();
-   BER_Object per = ext.get_next_object();
+   BER_Decoder inner = ber.start_sequence();
 
-   ext.push_back(per);
-   if(per.is_a(0, ASN1_Class::Constructed | ASN1_Class::ContextSpecific)) {
-      ext.decode_list(permit, ASN1_Type(0), ASN1_Class::Constructed | ASN1_Class::ContextSpecific);
-      if(permit.empty()) {
-         throw Encoding_Error("Empty Name Contraint list");
+   std::vector<GeneralSubtree> permitted;
+   if(inner.decode_optional_list(permitted, ASN1_Type(0), ASN1_Class::ExplicitContextSpecific)) {
+      if(permitted.empty()) {
+         throw Decoding_Error("Empty NameConstraint permitted list");
       }
    }
 
-   BER_Object exc = ext.get_next_object();
-   ext.push_back(exc);
-   if(per.is_a(1, ASN1_Class::Constructed | ASN1_Class::ContextSpecific)) {
-      ext.decode_list(exclude, ASN1_Type(1), ASN1_Class::Constructed | ASN1_Class::ContextSpecific);
-      if(exclude.empty()) {
-         throw Encoding_Error("Empty Name Contraint list");
+   std::vector<GeneralSubtree> excluded;
+   if(inner.decode_optional_list(excluded, ASN1_Type(1), ASN1_Class::ExplicitContextSpecific)) {
+      if(excluded.empty()) {
+         throw Decoding_Error("Empty NameConstraint excluded list");
       }
    }
 
-   ext.end_cons();
+   inner.end_cons();
 
-   if(permit.empty() && exclude.empty()) {
-      throw Encoding_Error("Empty Name Contraint extension");
+   if(permitted.empty() && excluded.empty()) {
+      throw Decoding_Error("Empty NameConstraint extension");
    }
 
-   m_name_constraints = NameConstraints(std::move(permit), std::move(exclude));
+   m_name_constraints = NameConstraints(std::move(permitted), std::move(excluded));
 }
 
 void Name_Constraints::validate(const X509_Certificate& subject,
@@ -522,40 +517,16 @@ void Name_Constraints::validate(const X509_Certificate& subject,
 
       // Check that all subordinate certs pass the name constraint
       for(size_t j = 0; j < pos; ++j) {
-         bool permitted = m_name_constraints.permitted().empty();
-         bool failed = false;
+         const auto& cert = cert_path.at(j);
 
-         for(const auto& c : m_name_constraints.permitted()) {
-            switch(c.base().matches(cert_path.at(j))) {
-               case GeneralName::MatchResult::NotFound:
-               case GeneralName::MatchResult::All:
-                  permitted = true;
-                  break;
-               case GeneralName::MatchResult::UnknownType:
-                  failed = issuer_name_constraint_critical;
-                  permitted = true;
-                  break;
-               default:
-                  break;
-            }
-         }
-
-         for(const auto& c : m_name_constraints.excluded()) {
-            switch(c.base().matches(cert_path.at(j))) {
-               case GeneralName::MatchResult::All:
-               case GeneralName::MatchResult::Some:
-                  failed = true;
-                  break;
-               case GeneralName::MatchResult::UnknownType:
-                  failed = issuer_name_constraint_critical;
-                  break;
-               default:
-                  break;
-            }
-         }
-
-         if(failed || !permitted) {
+         if(!m_name_constraints.is_permitted(cert, issuer_name_constraint_critical)) {
             cert_status.at(j).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
+            continue;
+         }
+
+         if(m_name_constraints.is_excluded(cert, issuer_name_constraint_critical)) {
+            cert_status.at(j).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
+            continue;
          }
       }
    }

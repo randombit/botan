@@ -524,7 +524,11 @@ std::vector<std::string> get_cert_user_info(std::string_view req, const X509_DN&
    } else if(req == "URI") {
       return set_to_vector(alt_name.uris());
    } else if(req == "IP") {
-      return set_to_vector(alt_name.ip_address());
+      std::vector<std::string> ip_str;
+      for(uint32_t ipv4 : alt_name.ipv4_address()) {
+         ip_str.push_back(ipv4_to_string(ipv4));
+      }
+      return ip_str;
    } else {
       return {};
    }

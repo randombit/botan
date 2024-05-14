@@ -8,8 +8,10 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -27,7 +29,7 @@ void AlternativeName::add_email(std::string_view addr) {
 
 void AlternativeName::add_dns(std::string_view dns) {
    if(!dns.empty()) {
-      m_dns.insert(std::string(dns));
+      m_dns.insert(tolower_string(dns));
    }
 }
 
@@ -39,32 +41,19 @@ void AlternativeName::add_dn(const X509_DN& dn) {
    m_dn_names.insert(dn);
 }
 
-void AlternativeName::add_ip_address(std::string_view ip) {
-   if(!ip.empty()) {
-      m_ip_addr.insert(std::string(ip));
-   }
+void AlternativeName::add_ipv4_address(uint32_t ip) {
+   m_ipv4_addr.insert(ip);
+}
+
+size_t AlternativeName::count() const {
+   const auto sum = checked_add(
+      m_dns.size(), m_uri.size(), m_email.size(), m_ipv4_addr.size(), m_dn_names.size(), m_othernames.size());
+
+   return BOTAN_ASSERT_IS_SOME(sum);
 }
 
 bool AlternativeName::has_items() const {
-   if(!this->dns().empty()) {
-      return true;
-   }
-   if(!this->uris().empty()) {
-      return true;
-   }
-   if(!this->email().empty()) {
-      return true;
-   }
-   if(!this->ip_address().empty()) {
-      return true;
-   }
-   if(!this->directory_names().empty()) {
-      return true;
-   }
-   if(!this->other_names().empty()) {
-      return true;
-   }
-   return false;
+   return this->count() > 0;
 }
 
 void AlternativeName::encode_into(DER_Encoder& der) const {
@@ -111,8 +100,8 @@ void AlternativeName::encode_into(DER_Encoder& der) const {
       der.add_object(ASN1_Type(6), ASN1_Class::ContextSpecific, str.value());
    }
 
-   for(const auto& ip : m_ip_addr) {
-      auto ip_buf = store_be(string_to_ipv4(ip));
+   for(uint32_t ip : m_ipv4_addr) {
+      auto ip_buf = store_be(ip);
       der.add_object(ASN1_Type(7), ASN1_Class::ContextSpecific, ip_buf.data(), 4);
    }
 
@@ -161,7 +150,7 @@ void AlternativeName::decode_from(BER_Decoder& source) {
       } else if(obj.is_a(7, ASN1_Class::ContextSpecific)) {
          if(obj.length() == 4) {
             const uint32_t ip = load_be<uint32_t>(obj.bits(), 0);
-            this->add_ip_address(ipv4_to_string(ip));
+            this->add_ipv4_address(ip);
          }
       }
    }

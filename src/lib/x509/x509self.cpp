@@ -13,6 +13,7 @@
 #include <botan/x509_ca.h>
 #include <botan/x509_ext.h>
 #include <botan/x509_key.h>
+#include <botan/internal/parsing.h>
 
 namespace Botan {
 
@@ -56,7 +57,9 @@ auto create_alt_name_ext(const X509_Cert_Options& opts, Extensions& extensions) 
    }
    subject_alt.add_uri(opts.uri);
    subject_alt.add_email(opts.email);
-   subject_alt.add_ip_address(opts.ip);
+   if(!opts.ip.empty()) {
+      subject_alt.add_ipv4_address(string_to_ipv4(opts.ip));
+   }
 
    if(!opts.xmpp.empty()) {
       subject_alt.add_other_name(OID::from_string("PKIX.XMPPAddr"), ASN1_String(opts.xmpp, ASN1_Type::Utf8String));

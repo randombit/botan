@@ -18,6 +18,7 @@
 #include <set>
 #include <string>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 namespace Botan {
@@ -137,9 +138,7 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       void add_dn(const X509_DN& dn);
 
       /// Add an IP address to this alternative name
-      ///
-      /// Note: currently only IPv4 is accepted
-      void add_ip_address(std::string_view ip_str);
+      void add_ipv4_address(uint32_t ipv4);
 
       /// Return the set of URIs included in this alternative name
       const std::set<std::string>& uris() const { return m_uri; }
@@ -151,7 +150,7 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       const std::set<std::string>& dns() const { return m_dns; }
 
       /// Return the set of IPv4 addresses included in this alternative name
-      const std::set<std::string>& ip_address() const { return m_ip_addr; }
+      const std::set<uint32_t>& ipv4_address() const { return m_ipv4_addr; }
 
       /// Return the set of "other names" included in this alternative name
       const std::set<std::pair<OID, ASN1_String>>& other_names() const { return m_othernames; }
@@ -159,7 +158,13 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       /// Return the set of directory names included in this alternative name
       const std::set<X509_DN>& directory_names() const { return m_dn_names; }
 
-      // Return true if this has any names set
+      /// Return the total number of names in this AlternativeName
+      ///
+      /// This only counts names which were parsed, ignoring names which
+      /// were of some unknown type
+      size_t count() const;
+
+      /// Return true if this has any names set
       bool has_items() const;
 
       // Old, now deprecated interface follows:
@@ -188,7 +193,7 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
 
       BOTAN_DEPRECATED("Use AlternativeName::directory_names") X509_DN dn() const;
 
-      BOTAN_DEPRECATED("Use plain constructor plus add_{uri,dns,email,ip}")
+      BOTAN_DEPRECATED("Use plain constructor plus add_{uri,dns,email,ipv4_address}")
       AlternativeName(std::string_view email_addr,
                       std::string_view uri = "",
                       std::string_view dns = "",
@@ -198,7 +203,7 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       std::set<std::string> m_dns;
       std::set<std::string> m_uri;
       std::set<std::string> m_email;
-      std::set<std::string> m_ip_addr;
+      std::set<uint32_t> m_ipv4_addr;
       std::set<X509_DN> m_dn_names;
       std::set<std::pair<OID, ASN1_String>> m_othernames;
 };
@@ -245,17 +250,9 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
          UnknownType,
       };
 
-      /**
-      * Creates an empty GeneralName.
-      */
       GeneralName() = default;
 
-      /**
-      * Creates a new GeneralName for its string format.
-      * @param str type and name, colon-separated, e.g., "DNS:google.com"
-      */
-      GeneralName(const std::string& str);
-
+      // Encoding is not implemented
       void encode_into(DER_Encoder&) const override;
 
       void decode_from(BER_Decoder&) override;
@@ -263,12 +260,20 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
       /**
       * @return Type of the name. Can be DN, DNS, IP, RFC822 or URI.
       */
-      const std::string& type() const { return m_type; }
+      std::string type() const;
 
       /**
       * @return The name as string. Format depends on type.
       */
-      const std::string& name() const { return m_name; }
+      std::string name() const;
+
+      /**
+      * @return true if this name is a type we don't understand
+      *
+      * Note this returns true also for the case of URIs and email, which we can
+      * parse but do not currently implement matching for.
+      */
+      bool is_unknown_type() const;
 
       /**
       * Checks whether a given certificate (partially) matches this name.
@@ -278,12 +283,27 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
       MatchResult matches(const X509_Certificate& cert) const;
 
    private:
-      std::string m_type;
-      std::string m_name;
+      enum class NameType : uint8_t {
+         Unknown = 0,
+         RFC822 = 1,
+         DNS = 2,
+         URI = 3,
+         DN = 4,
+         IPv4 = 5,
+      };
 
-      bool matches_dns(const std::string&) const;
-      bool matches_dn(const std::string&) const;
-      bool matches_ip(const std::string&) const;
+      static constexpr size_t RFC822_IDX = 0;
+      static constexpr size_t DNS_IDX = 1;
+      static constexpr size_t URI_IDX = 2;
+      static constexpr size_t DN_IDX = 3;
+      static constexpr size_t IPV4_IDX = 4;
+
+      NameType m_type;
+      std::variant<std::string, std::string, std::string, X509_DN, std::pair<uint32_t, uint32_t>> m_names;
+
+      static bool matches_dns(const std::string& name, const std::string& constraint);
+
+      static bool matches_dn(const X509_DN& name, const X509_DN& constraint);
 };
 
 std::ostream& operator<<(std::ostream& os, const GeneralName& gn);
@@ -293,28 +313,14 @@ std::ostream& operator<<(std::ostream& os, const GeneralName& gn);
 *
 * The Name Constraint extension adds a minimum and maximum path
 * length to a GeneralName to form a constraint. The length limits
-* are currently unused.
+* are not used in PKIX.
 */
 class BOTAN_PUBLIC_API(2, 0) GeneralSubtree final : public ASN1_Object {
    public:
       /**
       * Creates an empty name constraint.
       */
-      GeneralSubtree() : m_base(), m_minimum(0), m_maximum(std::numeric_limits<std::size_t>::max()) {}
-
-      /***
-      * Creates a new name constraint.
-      * @param base name
-      * @param min minimum path length
-      * @param max maximum path length
-      */
-      GeneralSubtree(const GeneralName& base, size_t min, size_t max) : m_base(base), m_minimum(min), m_maximum(max) {}
-
-      /**
-      * Creates a new name constraint for its string format.
-      * @param str name constraint
-      */
-      GeneralSubtree(const std::string& str);
+      GeneralSubtree() : m_base() {}
 
       void encode_into(DER_Encoder&) const override;
 
@@ -325,23 +331,11 @@ class BOTAN_PUBLIC_API(2, 0) GeneralSubtree final : public ASN1_Object {
       */
       const GeneralName& base() const { return m_base; }
 
-      /**
-      * @return minimum path length
-      */
-      size_t minimum() const { return m_minimum; }
-
-      /**
-      * @return maximum path length
-      */
-      size_t maximum() const { return m_maximum; }
-
    private:
       GeneralName m_base;
-      size_t m_minimum;
-      size_t m_maximum;
 };
 
-std::ostream& operator<<(std::ostream& os, const GeneralSubtree& gs);
+BOTAN_DEPRECATED("Deprecated no replacement") std::ostream& operator<<(std::ostream& os, const GeneralSubtree& gs);
 
 /**
 * @brief Name Constraints
@@ -361,8 +355,7 @@ class BOTAN_PUBLIC_API(2, 0) NameConstraints final {
       * @param excluded_subtrees names for which the certificate is not permitted
       */
       NameConstraints(std::vector<GeneralSubtree>&& permitted_subtrees,
-                      std::vector<GeneralSubtree>&& excluded_subtrees) :
-            m_permitted_subtrees(permitted_subtrees), m_excluded_subtrees(excluded_subtrees) {}
+                      std::vector<GeneralSubtree>&& excluded_subtrees);
 
       /**
       * @return permitted names
@@ -374,9 +367,17 @@ class BOTAN_PUBLIC_API(2, 0) NameConstraints final {
       */
       const std::vector<GeneralSubtree>& excluded() const { return m_excluded_subtrees; }
 
+      // Return true if this certificate is known to be permitted
+      bool is_permitted(const X509_Certificate& cert, bool reject_unknown) const;
+
+      // Return true if this certificate is known to be excluded
+      bool is_excluded(const X509_Certificate& cert, bool reject_unknown) const;
+
    private:
       std::vector<GeneralSubtree> m_permitted_subtrees;
       std::vector<GeneralSubtree> m_excluded_subtrees;
+      bool m_permitted_contains_unknown;
+      bool m_excluded_contains_unknown;
 };
 
 /**
