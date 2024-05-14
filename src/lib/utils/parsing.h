@@ -11,6 +11,7 @@
 #include <botan/types.h>
 #include <istream>
 #include <map>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -59,14 +60,14 @@ uint16_t to_uint16(std::string_view str);
 * @param ip_str the string representation
 * @return integer IPv4 address
 */
-uint32_t string_to_ipv4(std::string_view ip_str);
+std::optional<uint32_t> BOTAN_TEST_API string_to_ipv4(std::string_view ip_str);
 
 /**
 * Convert an IPv4 address to a string
 * @param ip_addr the IPv4 address to convert
 * @return string representation of the IPv4 address
 */
-std::string ipv4_to_string(uint32_t ip_addr);
+std::string BOTAN_TEST_API ipv4_to_string(uint32_t ip_addr);
 
 std::map<std::string, std::string> read_cfg(std::istream& is);
 

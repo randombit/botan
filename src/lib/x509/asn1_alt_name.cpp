@@ -31,7 +31,11 @@ AlternativeName::AlternativeName(std::string_view email_addr,
       add_uri(uri);
    }
    if(!ip.empty()) {
-      add_ipv4_address(string_to_ipv4(ip));
+      if(auto ipv4 = string_to_ipv4(ip)) {
+         add_ipv4_address(*ipv4);
+      } else {
+         throw Invalid_Argument(fmt("Invalid IPv4 address '{}'", ip));
+      }
    }
 }
 
@@ -55,7 +59,11 @@ void AlternativeName::add_attribute(std::string_view type, std::string_view valu
       ss >> dn;
       this->add_dn(dn);
    } else if(type == "IP") {
-      this->add_ipv4_address(string_to_ipv4(value));
+      if(auto ipv4 = string_to_ipv4(value)) {
+         add_ipv4_address(*ipv4);
+      } else {
+         throw Invalid_Argument(fmt("Invalid IPv4 address '{}'", value));
+      }
    } else {
       throw Not_Implemented(fmt("Unknown AlternativeName name type {}", type));
    }
