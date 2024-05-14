@@ -42,16 +42,16 @@ std::string GeneralName::type() const {
 std::string GeneralName::name() const {
    const size_t index = m_names.index();
 
-   if(index == 0) {
-      return std::get<0>(m_names);
-   } else if(index == 1) {
-      return std::get<1>(m_names);
-   } else if(index == 2) {
-      return std::get<2>(m_names);
-   } else if(index == 3) {
-      return std::get<3>(m_names).to_string();
-   } else if(index == 4) {
-      auto [net, mask] = std::get<4>(m_names);
+   if(index == RFC822_IDX) {
+      return std::get<RFC822_IDX>(m_names);
+   } else if(index == DNS_IDX) {
+      return std::get<DNS_IDX>(m_names);
+   } else if(index == URI_IDX) {
+      return std::get<URI_IDX>(m_names);
+   } else if(index == DN_IDX) {
+      return std::get<DN_IDX>(m_names).to_string();
+   } else if(index == IPV4_IDX) {
+      auto [net, mask] = std::get<IPV4_IDX>(m_names);
       return fmt("{}/{}", ipv4_to_string(net), ipv4_to_string(mask));
    } else {
       BOTAN_ASSERT_UNREACHABLE();
@@ -67,28 +67,28 @@ void GeneralName::decode_from(BER_Decoder& ber) {
 
    if(obj.is_a(1, ASN1_Class::ContextSpecific)) {
       m_type = NameType::RFC822;
-      m_names.emplace<0>(ASN1::to_string(obj));
+      m_names.emplace<RFC822_IDX>(ASN1::to_string(obj));
    } else if(obj.is_a(2, ASN1_Class::ContextSpecific)) {
       m_type = NameType::DNS;
       // Store it in case insensitive form so we don't have to do it
       // again while matching
-      m_names.emplace<1>(tolower_string(ASN1::to_string(obj)));
+      m_names.emplace<DNS_IDX>(tolower_string(ASN1::to_string(obj)));
    } else if(obj.is_a(6, ASN1_Class::ContextSpecific)) {
       m_type = NameType::URI;
-      m_names.emplace<2>(ASN1::to_string(obj));
+      m_names.emplace<URI_IDX>(ASN1::to_string(obj));
    } else if(obj.is_a(4, ASN1_Class::ContextSpecific | ASN1_Class::Constructed)) {
       X509_DN dn;
       BER_Decoder dec(obj);
       dn.decode_from(dec);
       m_type = NameType::DN;
-      m_names.emplace<3>(dn);
+      m_names.emplace<DN_IDX>(dn);
    } else if(obj.is_a(7, ASN1_Class::ContextSpecific)) {
       if(obj.length() == 8) {
          const uint32_t net = load_be<uint32_t>(obj.bits(), 0);
          const uint32_t mask = load_be<uint32_t>(obj.bits(), 1);
 
          m_type = NameType::IPv4;
-         m_names.emplace<4>(std::make_pair(net, mask));
+         m_names.emplace<IPV4_IDX>(std::make_pair(net, mask));
       } else if(obj.length() == 32) {
          // IPv6 name constraints are not implemented
          m_type = NameType::Unknown;

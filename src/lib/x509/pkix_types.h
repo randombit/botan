@@ -292,6 +292,12 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
          IPv4 = 5,
       };
 
+      static constexpr size_t RFC822_IDX = 0;
+      static constexpr size_t DNS_IDX = 1;
+      static constexpr size_t URI_IDX = 2;
+      static constexpr size_t DN_IDX = 3;
+      static constexpr size_t IPV4_IDX = 4;
+
       NameType m_type;
       std::variant<std::string, std::string, std::string, X509_DN, std::pair<uint32_t, uint32_t>> m_names;
 
