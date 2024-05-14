@@ -3,7 +3,7 @@
  * key in the KEM encapsulation.
  *
  * (C) 2023 Jack Lloyd
- *     2023 Fabian Albert, René Meusel - Rohde & Schwarz Cybersecurity
+ *     2023,2024 Fabian Albert, René Meusel - Rohde & Schwarz Cybersecurity
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */
@@ -31,7 +31,7 @@
    #include <botan/x448.h>
 #endif
 
-namespace Botan::TLS {
+namespace Botan {
 
 namespace {
 
@@ -103,7 +103,7 @@ std::unique_ptr<PK_Key_Agreement_Key> generate_key_agreement_private_key(const P
    return new_kex_key;
 }
 
-std::unique_ptr<Public_Key> maybe_get_public_key(const std::unique_ptr<PK_Key_Agreement_Key>& private_key) {
+std::unique_ptr<Public_Key> maybe_get_public_key(const std::unique_ptr<Private_Key>& private_key) {
    BOTAN_ARG_CHECK(private_key != nullptr, "Private key is a nullptr");
    return private_key->public_key();
 }
@@ -210,7 +210,7 @@ std::vector<uint8_t> KEX_to_KEM_Adapter_PublicKey::raw_public_key_bits() const {
 }
 
 std::vector<uint8_t> KEX_to_KEM_Adapter_PublicKey::public_key_bits() const {
-   throw Not_Implemented("The KEX-to-KEM adapter does not support ASN.1-based public key serialization");
+   return m_public_key->public_key_bits();
 }
 
 std::unique_ptr<Private_Key> KEX_to_KEM_Adapter_PublicKey::generate_another(RandomNumberGenerator& rng) const {
@@ -221,13 +221,19 @@ bool KEX_to_KEM_Adapter_PublicKey::supports_operation(PublicKeyOperation op) con
    return op == PublicKeyOperation::KeyEncapsulation;
 }
 
-KEX_to_KEM_Adapter_PrivateKey::KEX_to_KEM_Adapter_PrivateKey(std::unique_ptr<PK_Key_Agreement_Key> private_key) :
-      KEX_to_KEM_Adapter_PublicKey(maybe_get_public_key(private_key)), m_private_key(std::move(private_key)) {
-   BOTAN_ARG_CHECK(m_private_key->supports_operation(PublicKeyOperation::KeyAgreement), "Private key is no KEX key");
-}
+KEX_to_KEM_Adapter_PrivateKey::KEX_to_KEM_Adapter_PrivateKey(std::unique_ptr<Private_Key> private_key) :
+      KEX_to_KEM_Adapter_PublicKey(maybe_get_public_key(private_key)), m_private_key([&]() {
+         auto sk = dynamic_cast<PK_Key_Agreement_Key*>(private_key.release());
+         BOTAN_ARG_CHECK(sk != nullptr, "Private Key must implement the PK_Key_Agreement_Key interface");
+         return std::unique_ptr<PK_Key_Agreement_Key>(sk);
+      }()) {}
 
 secure_vector<uint8_t> KEX_to_KEM_Adapter_PrivateKey::private_key_bits() const {
    return m_private_key->private_key_bits();
+}
+
+secure_vector<uint8_t> KEX_to_KEM_Adapter_PrivateKey::raw_private_key_bits() const {
+   return m_private_key->raw_private_key_bits();
 }
 
 std::unique_ptr<Public_Key> KEX_to_KEM_Adapter_PrivateKey::public_key() const {
@@ -248,4 +254,4 @@ std::unique_ptr<PK_Ops::KEM_Decryption> KEX_to_KEM_Adapter_PrivateKey::create_ke
    return std::make_unique<KEX_to_KEM_Decryption_Operation>(*m_private_key, rng, kdf, provider);
 }
 
-}  // namespace Botan::TLS
+}  // namespace Botan
