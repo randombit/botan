@@ -99,7 +99,7 @@ void TLS::Callbacks::tls_verify_cert_chain(const std::vector<X509_Certificate>& 
    Path_Validation_Result result = x509_path_validate(cert_chain,
                                                       restrictions,
                                                       trusted_roots,
-                                                      (usage == Usage_Type::TLS_SERVER_AUTH ? hostname : ""),
+                                                      hostname,
                                                       usage,
                                                       tls_current_timestamp(),
                                                       tls_verify_cert_chain_ocsp_timeout(),
