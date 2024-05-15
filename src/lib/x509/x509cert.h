@@ -355,6 +355,9 @@ class BOTAN_PUBLIC_API(2, 0) X509_Certificate : public X509_Object {
       * Check if a certain DNS name matches up with the information in
       * the cert
       * @param name DNS name to match
+      *
+      * Note: this will also accept a dotted quad input, in which case
+      * the SAN for IPv4 addresses will be checked.
       */
       bool matches_dns_name(std::string_view name) const;
 
