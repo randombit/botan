@@ -100,9 +100,7 @@ void XTS_Mode::update_tweak(size_t which) {
 
    const size_t blocks_in_tweak = tweak_blocks();
 
-   for(size_t i = 1; i < blocks_in_tweak; ++i) {
-      poly_double_n_le(&m_tweak[i * BS], &m_tweak[(i - 1) * BS], BS);
-   }
+   xts_update_tweak_block(m_tweak.data(), BS, blocks_in_tweak);
 }
 
 size_t XTS_Encryption::output_length(size_t input_length) const {

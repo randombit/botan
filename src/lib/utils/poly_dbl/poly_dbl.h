@@ -32,6 +32,11 @@ inline void poly_double_n(uint8_t buf[], size_t n) {
 */
 void BOTAN_TEST_API poly_double_n_le(uint8_t out[], const uint8_t in[], size_t n);
 
+/*
+* Tweak block update step for XTS
+*/
+void xts_update_tweak_block(uint8_t tweak[], size_t BS, size_t n);
+
 }  // namespace Botan
 
 #endif
