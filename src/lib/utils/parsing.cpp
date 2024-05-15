@@ -153,24 +153,68 @@ std::string string_join(const std::vector<std::string>& strs, char delim) {
 /*
 * Convert a decimal-dotted string to binary IP
 */
-uint32_t string_to_ipv4(std::string_view str) {
-   const auto parts = split_on(str, '.');
-
-   if(parts.size() != 4) {
-      throw Decoding_Error(fmt("Invalid IPv4 string '{}'", str));
+std::optional<uint32_t> string_to_ipv4(std::string_view str) {
+   // At least 3 dots + 4 1-digit integers
+   // At most 3 dots + 4 3-digit integers
+   if(str.size() < 3 + 4 * 1 || str.size() > 3 + 4 * 3) {
+      return {};
    }
 
+   // the final result
    uint32_t ip = 0;
+   // the number of '.' seen so far
+   size_t dots = 0;
+   // accumulates one quad (range 0-255)
+   uint32_t accum = 0;
+   // # of digits pushed to accum since last dot
+   size_t cur_digits = 0;
 
-   for(auto part = parts.begin(); part != parts.end(); ++part) {
-      uint32_t octet = to_u32bit(*part);
+   for(char c : str) {
+      if(c == '.') {
+         // . without preceding digit is invalid
+         if(cur_digits == 0) {
+            return {};
+         }
+         dots += 1;
+         // too many dots
+         if(dots > 3) {
+            return {};
+         }
 
-      if(octet > 255) {
-         throw Decoding_Error(fmt("Invalid IPv4 string '{}'", str));
+         cur_digits = 0;
+         ip = (ip << 8) | accum;
+         accum = 0;
+      } else if(c >= '0' && c <= '9') {
+         const auto d = static_cast<uint8_t>(c - '0');
+
+         // prohibit leading zero in quad (used for octal)
+         if(cur_digits > 0 && accum == 0) {
+            return {};
+         }
+         accum = (accum * 10) + d;
+
+         if(accum > 255) {
+            return {};
+         }
+
+         cur_digits++;
+         BOTAN_ASSERT_NOMSG(cur_digits <= 3);
+      } else {
+         return {};
       }
-
-      ip = (ip << 8) | (octet & 0xFF);
    }
+
+   // no trailing digits?
+   if(cur_digits == 0) {
+      return {};
+   }
+
+   // insufficient # of dots
+   if(dots != 3) {
+      return {};
+   }
+
+   ip = (ip << 8) | accum;
 
    return ip;
 }
@@ -179,9 +223,10 @@ uint32_t string_to_ipv4(std::string_view str) {
 * Convert an IP address to decimal-dotted string
 */
 std::string ipv4_to_string(uint32_t ip) {
-   std::string str;
    uint8_t bits[4];
    store_be(ip, bits);
+
+   std::string str;
 
    for(size_t i = 0; i != 4; ++i) {
       if(i > 0) {

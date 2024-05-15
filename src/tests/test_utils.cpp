@@ -1076,6 +1076,31 @@ class Hostname_Tests final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("utils", "hostname", Hostname_Tests);
 
+class IPv4_Parsing_Tests final : public Text_Based_Test {
+   public:
+      IPv4_Parsing_Tests() : Text_Based_Test("utils/ipv4.vec", "IPv4") {}
+
+      Test::Result run_one_test(const std::string& status, const VarMap& vars) override {
+         Test::Result result("IPv4 parsing");
+
+         const std::string input = vars.get_req_str("IPv4");
+         const bool valid = (status == "Valid");
+
+         auto ipv4 = Botan::string_to_ipv4(input);
+
+         result.test_eq("string_to_ipv4 accepts only valid", valid, ipv4.has_value());
+
+         if(ipv4) {
+            const std::string rt = Botan::ipv4_to_string(ipv4.value());
+            result.test_eq("ipv4_to_string and string_to_ipv4 round trip", input, rt);
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("utils", "ipv4_parse", IPv4_Parsing_Tests);
+
 class ReadKV_Tests final : public Text_Based_Test {
    public:
       ReadKV_Tests() : Text_Based_Test("utils/read_kv.vec", "Input,Expected") {}
