@@ -16,11 +16,45 @@ Version 3.5.0, Not Yet Released
   deprecated header are retained for compatability with older versions. (GH
   #4012)
 
+* Optimize XTS mode (GH #4047)
+
+* Optimize name constraint processing (GH #4047)
+
+* Refactor and optimize AlternativeName. This includes a new API.
+  The old API is retained but deprecated. (GH #4034)
+
+* During X.509 certificate verification, first verify the entire sequence
+  of signatures, then do other validation. (GH #4045)
+
+* In DTLS fix a bug affecting retransmission of client hellos. (GH #4037)
+
+* Fix a bug in RFC 6979 mode ECDSA. This only caused problems when
+  testing with certain curves and does not have any security or interop
+  implications. (GH #4040)
+
+* Previously elliptic curve private keys could be of any size, with the
+  effective key reduced modulo the group order. Now during decoding the
+  private key must be in the specified bound. (GH #4040)
+
+* Elliptic curve groups now verify that the prime and group order are
+  related in the manner expected. (GH #4039 #4041)
+
+* Fix a bug when creating a PKCS10 request or X.509 self signed certificate
+  when SubjectAlternativeName was included in the provided extensions. If
+  this occured, any other values (eg opts.dns) would be ignored. (GH #4032)
+
 * Various low level multi precision integer refactorings and improvements.
   (GH #4007 #4008 #3989 #3987)
 
 * Improve the utilities for checked (overflow safe) addition and multiplication.
   (GH #3999)
+
+* Optimize parsing of IPv4 dotted quad strings (GH #4058)
+
+* A system for marking modules as deprecated was introduced in 3.4.0, but it did
+  not mark any modules as deprecated. This has now been applied to various
+  modules, which will then be disabled if ``--disable-deprecated-features``
+  option is used at build time. (GH #4050)
 
 * Fix a bug in ``configure.py`` that caused `--with-stack-protector`` to not
   work. (GH #3996)
@@ -28,10 +62,11 @@ Version 3.5.0, Not Yet Released
 * The build system now distinguishes between LLVM Clang and XCode's Clang
   fork. For the latter, use compiler target "xcode". (GH #4010)
 
-* Upgrade XCode CI to use 15.2 on x86-64 and 15.3 on aarch64. (GH #4005)
+* Upgrade CI to use XCode 15.2 on x86-64 and XCode 15.3 on aarch64. (GH #4005)
+
+* Fixes for GCC 14 (GH #4046)
 
 * Fix Roughtime to not reference a deprecated Cloudflare server. (GH #4002 #3937)
-
 
 Version 3.4.0, 2024-04-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
