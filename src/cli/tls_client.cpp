@@ -16,6 +16,7 @@
    #include <botan/ocsp.h>
    #include <botan/tls_callbacks.h>
    #include <botan/tls_client.h>
+   #include <botan/tls_exceptn.h>
    #include <botan/tls_policy.h>
    #include <botan/tls_session_manager_memory.h>
    #include <botan/x509path.h>
@@ -73,6 +74,9 @@ class Callbacks : public Botan::TLS::Callbacks {
             if(!status.empty() && status[0].contains(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD)) {
                output() << "Valid OCSP response for this server\n";
             }
+         } else {
+            throw Botan::TLS::TLS_Exception(Botan::TLS::Alert::BadCertificate,
+                                            "Certificate validation failure: " + result.result_string());
          }
       }
 
@@ -231,13 +235,6 @@ class TLS_Client final : public Command {
             }
          }
 
-         struct sockaddr_storage addrbuf;
-         std::string hostname;
-         if(!host.empty() && inet_pton(AF_INET, host.c_str(), &addrbuf) != 1 &&
-            inet_pton(AF_INET6, host.c_str(), &addrbuf) != 1) {
-            hostname = host;
-         }
-
          m_sockfd = connect_to_host(host, port, use_tcp);
 
          const auto client_crt_path = get_arg_maybe("client-cert");
@@ -267,7 +264,7 @@ class TLS_Client final : public Command {
                                    creds,
                                    policy,
                                    rng_as_shared(),
-                                   Botan::TLS::Server_Information(hostname, port),
+                                   Botan::TLS::Server_Information(host, port),
                                    version,
                                    protocols_to_offer);
 

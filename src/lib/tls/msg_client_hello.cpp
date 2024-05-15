@@ -18,6 +18,7 @@
 #include <botan/tls_exceptn.h>
 #include <botan/tls_version.h>
 
+#include <botan/internal/parsing.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
@@ -448,6 +449,28 @@ Client_Hello_12::Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data) : 
    }
 }
 
+namespace {
+
+// Avoid sending an IPv4/IPv6 address in SNI as this is prohibitied
+bool hostname_acceptable_for_sni(std::string_view hostname) {
+   if(hostname.empty()) {
+      return false;
+   }
+
+   if(string_to_ipv4(hostname).has_value()) {
+      return false;
+   }
+
+   // IPv6? Anyway ':' is not valid in DNS
+   if(hostname.find(':') != std::string_view::npos) {
+      return false;
+   }
+
+   return true;
+}
+
+}  // namespace
+
 // Note: This delegates to the Client_Hello_12 constructor to take advantage
 //       of the sanity checks there.
 Client_Hello_12::Client_Hello_12(const std::vector<uint8_t>& buf) :
@@ -491,7 +514,7 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
 
    m_data->extensions().add(new Supported_Versions(m_data->legacy_version(), policy));
 
-   if(!client_settings.hostname().empty()) {
+   if(hostname_acceptable_for_sni(client_settings.hostname())) {
       m_data->extensions().add(new Server_Name_Indicator(client_settings.hostname()));
    }
 
@@ -572,7 +595,11 @@ Client_Hello_12::Client_Hello_12(Handshake_IO& io,
 
    m_data->extensions().add(new Renegotiation_Extension(reneg_info));
 
-   m_data->extensions().add(new Server_Name_Indicator(session.session.server_info().hostname()));
+   const std::string hostname = session.session.server_info().hostname();
+
+   if(hostname_acceptable_for_sni(hostname)) {
+      m_data->extensions().add(new Server_Name_Indicator(hostname));
+   }
 
    if(policy.support_cert_status_message()) {
       m_data->extensions().add(new Certificate_Status_Request({}, {}));
@@ -758,7 +785,7 @@ Client_Hello_13::Client_Hello_13(const Policy& policy,
       m_data->m_session_id = Session_ID(make_hello_random(rng, cb, policy));
    }
 
-   if(!hostname.empty()) {
+   if(hostname_acceptable_for_sni(hostname)) {
       m_data->extensions().add(new Server_Name_Indicator(hostname));
    }
 
