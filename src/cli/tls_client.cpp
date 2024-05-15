@@ -64,19 +64,25 @@ class Callbacks : public Botan::TLS::Callbacks {
 
          auto ocsp_timeout = std::chrono::milliseconds(1000);
 
-         Botan::Path_Validation_Result result = Botan::x509_path_validate(
-            cert_chain, restrictions, trusted_roots, hostname, usage, tls_current_timestamp(), ocsp_timeout, ocsp);
+         const std::string checked_name = flag_set("skip-hostname-check") ? "" : std::string(hostname);
 
-         output() << "Certificate validation status: " << result.result_string() << "\n";
+         Botan::Path_Validation_Result result = Botan::x509_path_validate(
+            cert_chain, restrictions, trusted_roots, checked_name, usage, tls_current_timestamp(), ocsp_timeout, ocsp);
+
          if(result.successful_validation()) {
+            output() << "Certificate validation status: " << result.result_string() << "\n";
             auto status = result.all_statuses();
 
             if(!status.empty() && status[0].contains(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD)) {
                output() << "Valid OCSP response for this server\n";
             }
          } else {
-            throw Botan::TLS::TLS_Exception(Botan::TLS::Alert::BadCertificate,
-                                            "Certificate validation failure: " + result.result_string());
+            if(flag_set("ignore-cert-error")) {
+               output() << "Certificate validation status: " << result.result_string() << "\n";
+            } else {
+               throw Botan::TLS::TLS_Exception(Botan::TLS::Alert::BadCertificate,
+                                               "Certificate validation failure: " + result.result_string());
+            }
          }
       }
 
@@ -164,6 +170,7 @@ class TLS_Client final : public Command {
             Command(
                "tls_client host --port=443 --print-certs --policy=default "
                "--skip-system-cert-store --trusted-cas= --trusted-pubkey-sha256= "
+               "--skip-hostname-check --ignore-cert-error "
                "--tls-version=default --session-db= --session-db-pass= "
                "--next-protocols= --type=tcp --client-cert= --client-cert-key= "
                "--psk= --psk-identity= --psk-prf=SHA-256 --debug") {
