@@ -1,6 +1,6 @@
 /*
 * (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
-*     2023 Jack Lloyd
+*     2023,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,6 +9,8 @@
 
 #if defined(BOTAN_HAS_ASN1)
    #include <botan/asn1_obj.h>
+   #include <botan/ber_dec.h>
+   #include <botan/der_enc.h>
    #include <botan/oids.h>
 #endif
 
@@ -134,6 +136,43 @@ class OID_Tests final : public Test {
 };
 
 BOTAN_REGISTER_TEST("asn1", "oid", OID_Tests);
+
+class OID_Encoding_Tests : public Text_Based_Test {
+   public:
+      OID_Encoding_Tests() : Text_Based_Test("asn1_oid.vec", "OID,DER") {}
+
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override {
+         const auto oid_str = vars.get_req_str("OID");
+         const auto expected_der = vars.get_req_bin("DER");
+
+         Test::Result result("OID DER encode/decode");
+
+         const Botan::OID oid(oid_str);
+
+         try {
+            std::vector<uint8_t> der;
+            Botan::DER_Encoder enc(der);
+            enc.encode(oid);
+            result.test_eq("Encoding correct", der, expected_der);
+         } catch(std::exception& e) {
+            result.test_failure("Encoding OID failed", e.what());
+         }
+
+         try {
+            Botan::BER_Decoder dec(expected_der);
+            Botan::OID dec_oid;
+            dec.decode(dec_oid);
+            dec.verify_end();
+            result.test_eq("Decoding OID correct", dec_oid.to_string(), oid_str);
+         } catch(std::exception& e) {
+            result.test_failure("Decoding OID failed", e.what());
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("asn1", "oid_enc", OID_Encoding_Tests);
 
 #endif
 

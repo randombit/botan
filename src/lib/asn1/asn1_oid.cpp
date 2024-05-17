@@ -1,6 +1,6 @@
 /*
 * ASN.1 OID
-* (C) 1999-2007 Jack Lloyd
+* (C) 1999-2007,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -11,14 +11,26 @@
 #include <botan/der_enc.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/oid_map.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/stl_util.h>
 #include <algorithm>
+#include <span>
 #include <sstream>
 
 namespace Botan {
 
 namespace {
+
+void oid_valid_check(std::span<const uint32_t> oid) {
+   BOTAN_ARG_CHECK(oid.size() >= 2, "OID too short to be valid");
+   BOTAN_ARG_CHECK(oid[0] <= 2, "OID root out of range");
+   BOTAN_ARG_CHECK(oid[1] <= 39 || oid[0] == 2, "OID second arc too large");
+   // This last is a limitation of using 32 bit integers when decoding
+   // not a limitation of ASN.1 object identifiers in general
+   BOTAN_ARG_CHECK(oid[1] <= 0xFFFFFFAF, "OID second arc too large");
+}
 
 // returns empty on invalid
 std::vector<uint32_t> parse_oid_str(std::string_view oid) {
@@ -43,8 +55,8 @@ std::vector<uint32_t> parse_oid_str(std::string_view oid) {
       }
 
       return oid_elems;
-   } catch(Invalid_Argument&)  // thrown by to_u32bit
-   {
+   } catch(Invalid_Argument&) {
+      // thrown by to_u32bit
       return std::vector<uint32_t>();
    }
 }
@@ -81,13 +93,20 @@ OID OID::from_string(std::string_view str) {
       return o;
    }
 
-   std::vector<uint32_t> raw = parse_oid_str(str);
-
-   if(!raw.empty()) {
-      return OID(std::move(raw));
-   }
+   // Try to parse as a dotted decimal
+   try {
+      return OID(str);
+   } catch(...) {}
 
    throw Lookup_Error(fmt("No OID associated with name '{}'", str));
+}
+
+OID::OID(std::initializer_list<uint32_t> init) : m_id(init) {
+   oid_valid_check(m_id);
+}
+
+OID::OID(std::vector<uint32_t>&& init) : m_id(init) {
+   oid_valid_check(m_id);
 }
 
 /*
@@ -96,9 +115,7 @@ OID OID::from_string(std::string_view str) {
 OID::OID(std::string_view oid_str) {
    if(!oid_str.empty()) {
       m_id = parse_oid_str(oid_str);
-      if(m_id.size() < 2 || m_id[0] > 2 || (m_id[0] < 2 && m_id[1] > 39)) {
-         throw Decoding_Error(fmt("Invalid OID '{}'", oid_str));
-      }
+      oid_valid_check(m_id);
    }
 }
 
@@ -107,7 +124,15 @@ OID::OID(std::string_view oid_str) {
 */
 std::string OID::to_string() const {
    std::ostringstream out;
-   out << (*this);
+
+   for(size_t i = 0; i != m_id.size(); ++i) {
+      // avoid locale issues with integer formatting
+      out << std::to_string(m_id[i]);
+      if(i != m_id.size() - 1) {
+         out << ".";
+      }
+   }
+
    return out.str();
 }
 
@@ -137,20 +162,6 @@ bool operator<(const OID& a, const OID& b) {
    return std::lexicographical_compare(oid1.begin(), oid1.end(), oid2.begin(), oid2.end());
 }
 
-std::ostream& operator<<(std::ostream& out, const OID& oid) {
-   const auto& val = oid.get_components();
-
-   for(size_t i = 0; i != val.size(); ++i) {
-      // avoid locale issues with integer formatting
-      out << std::to_string(val[i]);
-      if(i != val.size() - 1) {
-         out << ".";
-      }
-   }
-
-   return out;
-}
-
 /*
 * DER encode an OBJECT IDENTIFIER
 */
@@ -159,28 +170,33 @@ void OID::encode_into(DER_Encoder& der) const {
       throw Invalid_Argument("OID::encode_into: OID is invalid");
    }
 
+   auto append = [](std::vector<uint8_t>& encoding, uint32_t z) {
+      if(z <= 0x7F) {
+         encoding.push_back(static_cast<uint8_t>(z));
+      } else {
+         size_t z7 = (high_bit(z) + 7 - 1) / 7;
+
+         for(size_t j = 0; j != z7; ++j) {
+            uint8_t zp = static_cast<uint8_t>(z >> (7 * (z7 - j - 1)) & 0x7F);
+
+            if(j != z7 - 1) {
+               zp |= 0x80;
+            }
+
+            encoding.push_back(zp);
+         }
+      }
+   };
+
    std::vector<uint8_t> encoding;
 
-   if(m_id[0] > 2 || m_id[1] >= 40) {
-      throw Encoding_Error("Invalid OID prefix, cannot encode");
-   }
+   // We know 40 * root can't overflow because root is between 0 and 2
+   auto first = BOTAN_ASSERT_IS_SOME(checked_add(40 * m_id[0], m_id[1]));
 
-   encoding.push_back(static_cast<uint8_t>(40 * m_id[0] + m_id[1]));
+   append(encoding, first);
 
    for(size_t i = 2; i != m_id.size(); ++i) {
-      if(m_id[i] == 0) {
-         encoding.push_back(0);
-      } else {
-         size_t blocks = high_bit(m_id[i]) + 6;
-         blocks = (blocks - (blocks % 7)) / 7;
-
-         BOTAN_ASSERT(blocks > 0, "Math works");
-
-         for(size_t j = 0; j != blocks - 1; ++j) {
-            encoding.push_back(0x80 | ((m_id[i] >> 7 * (blocks - j - 1)) & 0x7F));
-         }
-         encoding.push_back(m_id[i] & 0x7F);
-      }
+      append(encoding, m_id[i]);
    }
    der.add_object(ASN1_Type::ObjectId, ASN1_Class::Universal, encoding);
 }
@@ -194,35 +210,67 @@ void OID::decode_from(BER_Decoder& decoder) {
       throw BER_Bad_Tag("Error decoding OID, unknown tag", obj.tagging());
    }
 
-   const size_t length = obj.length();
-   const uint8_t* bits = obj.bits();
-
-   if(length < 2 && !(length == 1 && bits[0] == 0)) {
+   if(obj.length() == 0) {
       throw BER_Decoding_Error("OID encoding is too short");
    }
 
-   m_id.clear();
-   m_id.push_back(bits[0] / 40);
-   m_id.push_back(bits[0] % 40);
+   auto consume = [](std::span<const uint8_t> data) -> std::pair<std::span<const uint8_t>, uint32_t> {
+      BOTAN_ASSERT_NOMSG(!data.empty());
 
-   size_t i = 0;
-   while(i != length - 1) {
-      uint32_t component = 0;
-      while(i != length - 1) {
-         ++i;
+      uint32_t b = data.front();
 
-         if(component >> (32 - 7)) {
-            throw Decoding_Error("OID component overflow");
+      if(b <= 0x7F) {
+         return std::make_pair(data.subspan(1), b);
+      } else {
+         b &= 0x7F;
+         data = data.subspan(1);
+         while(!data.empty()) {
+            const auto next = data.front();
+            data = data.subspan(1);
+            const bool more = (next & 0x80);
+
+            if(b >> (32 - 7)) {
+               throw Decoding_Error("OID component overflow");
+            }
+            b <<= 7;
+            b |= (next & 0x7F);
+
+            if(!more) {
+               return std::make_pair(data, b);
+            }
          }
-
-         component = (component << 7) + (bits[i] & 0x7F);
-
-         if(!(bits[i] & 0x80)) {
-            break;
-         }
+         throw Decoding_Error("Truncated OID value");
       }
-      m_id.push_back(component);
+   };
+
+   std::span<const uint8_t> span(obj.bits(), obj.length());
+   std::vector<uint32_t> parts;
+   while(!span.empty()) {
+      auto [subspan, comp] = consume(span);
+      span = subspan;
+
+      if(parts.empty()) {
+         // divide into root and second arc
+
+         const uint32_t root_arc = [](uint32_t b0) -> uint32_t {
+            if(b0 < 40) {
+               return 0;
+            } else if(b0 < 80) {
+               return 1;
+            } else {
+               return 2;
+            }
+         }(comp);
+
+         parts.push_back(root_arc);
+         BOTAN_ASSERT_NOMSG(comp >= 40 * root_arc);
+         parts.push_back(comp - 40 * root_arc);
+      } else {
+         parts.push_back(comp);
+      }
    }
+
+   m_id = parts;
 }
 
 }  // namespace Botan
