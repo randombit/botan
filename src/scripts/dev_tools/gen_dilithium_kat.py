@@ -106,18 +106,20 @@ def main(args = None):
         args = sys.argv
 
     randomized = True
+    is_ipd = True
 
     type = 'Randomized' if randomized else 'Deterministic'
+    name = 'ml-dsa-ipd' if is_ipd else 'dilithium'
 
     for file in args[1:]:
         mode = map_mode(open(file).readline().strip()[2:])
 
         reader = KatReader(open(file))
 
-        output = open('src/tests/data/pubkey/dilithium_%s_%s.vec' % (mode, type), 'w')
+        output = open('src/tests/data/pubkey/%s_%s_%s.vec' % (name, mode, type), 'w')
 
         print("# See src/scripts/dilithium_kat_compress.py\n", file=output)
-        print("[Dilithium_%s]" % (mode), file=output)
+        print("[%s_%s]" % (name.upper() if is_ipd else name.capitalize(), mode), file=output)
 
         for kat in reader.read_kats():
             kat = compress_kat(kat)
