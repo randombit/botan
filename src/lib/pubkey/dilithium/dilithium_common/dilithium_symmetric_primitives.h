@@ -51,6 +51,12 @@ class Dilithium_Symmetric_Primitives {
 
       // Mode dependent function
       virtual std::unique_ptr<Botan::XOF> XOF(XofType type, std::span<const uint8_t> seed, uint16_t nonce) const = 0;
+
+      // Use Dilithium as standard, only overwritten for ML-DSA-IPD
+      virtual secure_vector<uint8_t> calc_rhoprime(RandomNumberGenerator& rng,
+                                                   const secure_vector<uint8_t>& key,
+                                                   const std::vector<uint8_t>& mu,
+                                                   bool randomized) const;
 };
 
 enum DilithiumEta : uint32_t { Eta2 = 2, Eta4 = 4 };
@@ -59,6 +65,7 @@ enum DilithiumEta : uint32_t { Eta2 = 2, Eta4 = 4 };
 class DilithiumModeConstants {
    public:
       static constexpr int32_t SEEDBYTES = 32;
+      static constexpr int32_t RNDBYTES = 32;  // Only used for ML-DSA, not for Dilithium r3
       static constexpr int32_t CRHBYTES = 64;
       static constexpr int32_t N = 256;
       static constexpr int32_t Q = 8380417;
@@ -144,6 +151,10 @@ class DilithiumModeConstants {
 
       size_t crypto_bytes() const { return m_crypto_bytes; }
 
+      size_t trbytes() const { return m_trbytes; }
+
+      size_t ctildebytes() const { return m_ctildebytes; }
+
       OID oid() const { return m_mode.object_identifier(); }
 
       DilithiumMode mode() const { return m_mode; }
@@ -174,6 +185,13 @@ class DilithiumModeConstants {
             seed, nonce, poly_uniform_gamma1_nblocks() * stream256_blockbytes());
       }
 
+      secure_vector<uint8_t> calc_rhoprime(RandomNumberGenerator& rng,
+                                           const secure_vector<uint8_t>& key,
+                                           const std::vector<uint8_t>& mu,
+                                           bool randomized) const {
+         return this->m_symmetric_primitives->calc_rhoprime(rng, key, mu, randomized);
+      }
+
    private:
       DilithiumMode m_mode;
 
@@ -200,6 +218,8 @@ class DilithiumModeConstants {
       int32_t m_private_key_bytes;
       int32_t m_public_key_bytes;
       int32_t m_crypto_bytes;
+      int32_t m_trbytes;
+      int32_t m_ctildebytes;
 
       // Mode dependent primitives
       std::unique_ptr<Dilithium_Symmetric_Primitives> m_symmetric_primitives;

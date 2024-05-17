@@ -1,0 +1,16 @@
+<defines>
+ML_DSA_INITIAL_PUBLIC_DRAFT -> 20240517
+</defines>
+
+<module_info>
+name -> "Module Lattice DSA (Initial Public Draft)"
+</module_info>
+
+<requires>
+dilithium_common
+shake_xof
+</requires>
+
+<header:internal>
+ml_dsa_ipd.h
+</header:internal>
