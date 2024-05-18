@@ -223,6 +223,12 @@ void OID::decode_from(BER_Decoder& decoder) {
          return std::make_pair(data.subspan(1), b);
       } else {
          b &= 0x7F;
+         // Even BER requires that the OID have minimal length, ie that
+         // the first byte of a multibyte encoding cannot be zero
+         // See X.690 section 8.19.2
+         if(b == 0) {
+            throw Decoding_Error("Leading zero byte in multibyte OID encoding");
+         }
          data = data.subspan(1);
          while(!data.empty()) {
             const auto next = data.front();
