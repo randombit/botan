@@ -37,9 +37,9 @@ For Botan 3, the tier-2 supported platforms are
 
 .. note::
 
-   As of June 2023, it is known that at least XCode 13.3 is required, since
+   As of May 2024, it is known that at least XCode 15.0 is required, since
    earlier versions did not support certain C++20 language features that the
-   library uses. XCode 15.0 or higher is recommended.
+   library uses.
 
 .. note::
 
