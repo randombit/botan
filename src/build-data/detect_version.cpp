@@ -30,11 +30,19 @@ EMCC __EMSCRIPTEN_major__ __EMSCRIPTEN_minor__
 #elif defined(__clang__) && defined(__apple_build_version__)
 
 /*
-Bizarrely, XCode uses the patch level to indicate the minor number,
-and __clang_minor__ is always set to 0.
+* Even __apple_build_version__ doesn't always get updated to reflect
+* the XCode version, eg XCode 15.4 and XCode 15.3 both define
+* __apple_build_version__ to 15000309
 */
 
-XCODE __clang_major__ __clang_patchlevel__
+   #if __apple_build_version__ >= 15000300
+XCODE 15 3
+   #elif __apple_build_version__ >= 15000000
+XCODE 15 0
+   #else
+/* Some older version that we don't support */
+XCODE 0 0
+   #endif
 
 #elif defined(__clang__)
 
