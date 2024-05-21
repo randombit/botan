@@ -174,6 +174,31 @@ class OID_Encoding_Tests : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("asn1", "oid_enc", OID_Encoding_Tests);
 
+class OID_Invalid_Encoding_Tests : public Text_Based_Test {
+   public:
+      OID_Invalid_Encoding_Tests() : Text_Based_Test("asn1_oid_invalid.vec", "DER") {}
+
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override {
+         const auto test_der = vars.get_req_bin("DER");
+
+         Test::Result result("OID DER decode invalid");
+
+         try {
+            Botan::BER_Decoder dec(test_der);
+            Botan::OID oid;
+            dec.decode(oid);
+            dec.verify_end();
+            result.test_failure("Accepted invalid OID encoding", oid.to_string());
+         } catch(Botan::Decoding_Error&) {
+            result.test_success("Rejected invalid OID with Decoding_Error");
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("asn1", "oid_dec_invalid", OID_Invalid_Encoding_Tests);
+
 #endif
 
 }  // namespace
