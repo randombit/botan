@@ -25,8 +25,7 @@ namespace TLS {
 /**
 * SSL/TLS Client 1.3 implementation
 */
-class Client_Impl_13 : public Channel_Impl_13,
-                       public Secrets_Callback {
+class Client_Impl_13 : public Channel_Impl_13 {
    public:
       /**
       * Set up a new TLS client session
@@ -80,16 +79,12 @@ class Client_Impl_13 : public Channel_Impl_13,
        */
       bool is_handshake_complete() const override;
 
-      /*
-       * Allows access to a connection's secret data
-       */
-      void tls_log_secret(std::string_view label, const std::span<const uint8_t>& secret) const override;
-
    private:
       void process_handshake_msg(Handshake_Message_13 msg) override;
       void process_post_handshake_msg(Post_Handshake_Message_13 msg) override;
       void process_dummy_change_cipher_spec() override;
 
+      void maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const override;
       bool prepend_ccs() override;
 
       using Channel_Impl_13::handle;

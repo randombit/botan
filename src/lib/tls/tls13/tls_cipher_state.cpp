@@ -101,6 +101,7 @@
 #include <botan/internal/hkdf.h>
 #include <botan/internal/hmac.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/tls_channel_impl_13.h>
 
 namespace Botan::TLS {
 
@@ -120,10 +121,10 @@ std::unique_ptr<Cipher_State> Cipher_State::init_with_server_hello(const Connect
                                                                    secure_vector<uint8_t>&& shared_secret,
                                                                    const Ciphersuite& cipher,
                                                                    const Transcript_Hash& transcript_hash,
-                                                                   const Secrets_Callback& callbacks) {
+                                                                   const Secret_Logger& loggger) {
    auto cs = std::unique_ptr<Cipher_State>(new Cipher_State(side, cipher.prf_algo()));
    cs->advance_without_psk();
-   cs->advance_with_server_hello(cipher, std::move(shared_secret), transcript_hash, callbacks);
+   cs->advance_with_server_hello(cipher, std::move(shared_secret), transcript_hash, loggger);
    return cs;
 }
 
@@ -136,8 +137,7 @@ std::unique_ptr<Cipher_State> Cipher_State::init_with_psk(const Connection_Side 
    return cs;
 }
 
-void Cipher_State::advance_with_client_hello(const Transcript_Hash& transcript_hash,
-                                             const Secrets_Callback& callbacks) {
+void Cipher_State::advance_with_client_hello(const Transcript_Hash& transcript_hash, const Secret_Logger& loggger) {
    BOTAN_ASSERT_NOMSG(m_state == State::PskBinder);
 
    zap(m_binder_key);
@@ -155,7 +155,7 @@ void Cipher_State::advance_with_client_hello(const Transcript_Hash& transcript_h
    //    the label "EARLY_EXPORTER_MASTER_SECRET"
    //    to identify the secret
    //    that is using for early exporters
-   callbacks.tls_log_secret("EARLY_EXPORTER_MASTER_SECRET", m_exporter_master_secret);
+   loggger.maybe_log_secret("EARLY_EXPORTER_MASTER_SECRET", m_exporter_master_secret);
 
    m_salt = derive_secret(m_early_secret, "derived", empty_hash());
    zap(m_early_secret);
@@ -163,8 +163,7 @@ void Cipher_State::advance_with_client_hello(const Transcript_Hash& transcript_h
    m_state = State::EarlyTraffic;
 }
 
-void Cipher_State::advance_with_server_finished(const Transcript_Hash& transcript_hash,
-                                                const Secrets_Callback& callbacks) {
+void Cipher_State::advance_with_server_finished(const Transcript_Hash& transcript_hash, const Secret_Logger& loggger) {
    BOTAN_ASSERT_NOMSG(m_state == State::HandshakeTraffic);
 
    const auto master_secret = hkdf_extract(secure_vector<uint8_t>(m_hash->output_length(), 0x00));
@@ -178,8 +177,8 @@ void Cipher_State::advance_with_server_finished(const Transcript_Hash& transcrip
    //    and "SERVER_TRAFFIC_SECRET_0"
    //    to identify the secrets are using to protect
    //    the connection.
-   callbacks.tls_log_secret("CLIENT_TRAFFIC_SECRET_0", client_application_traffic_secret);
-   callbacks.tls_log_secret("SERVER_TRAFFIC_SECRET_0", server_application_traffic_secret);
+   loggger.maybe_log_secret("CLIENT_TRAFFIC_SECRET_0", client_application_traffic_secret);
+   loggger.maybe_log_secret("SERVER_TRAFFIC_SECRET_0", server_application_traffic_secret);
 
    // Note: the secrets for processing client's application data
    //       are not derived before the client's Finished message
@@ -201,7 +200,7 @@ void Cipher_State::advance_with_server_finished(const Transcript_Hash& transcrip
    //    the label "EXPORTER_SECRET"
    //    to identify the secret
    //    that is used in generating exporters(rfc8446 Section 7.5).
-   callbacks.tls_log_secret("EXPORTER_SECRET", m_exporter_master_secret);
+   loggger.maybe_log_secret("EXPORTER_SECRET", m_exporter_master_secret);
 
    m_state = State::ServerApplicationTraffic;
 }
@@ -487,7 +486,7 @@ void Cipher_State::advance_with_psk(PSK_Type type, secure_vector<uint8_t>&& psk)
 void Cipher_State::advance_with_server_hello(const Ciphersuite& cipher,
                                              secure_vector<uint8_t>&& shared_secret,
                                              const Transcript_Hash& transcript_hash,
-                                             const Secrets_Callback& callbacks) {
+                                             const Secret_Logger& loggger) {
    BOTAN_ASSERT_NOMSG(m_state == State::EarlyTraffic);
    BOTAN_ASSERT_NOMSG(!m_encrypt);
    BOTAN_ASSERT_NOMSG(!m_decrypt);
@@ -507,8 +506,8 @@ void Cipher_State::advance_with_server_hello(const Ciphersuite& cipher,
    //    and "SERVER_HANDSHAKE_TRAFFIC_SECRET"
    //    to identify the secrets
    //    are using to protect handshake messages.
-   callbacks.tls_log_secret("CLIENT_HANDSHAKE_TRAFFIC_SECRET", client_handshake_traffic_secret);
-   callbacks.tls_log_secret("SERVER_HANDSHAKE_TRAFFIC_SECRET", server_handshake_traffic_secret);
+   loggger.maybe_log_secret("CLIENT_HANDSHAKE_TRAFFIC_SECRET", client_handshake_traffic_secret);
+   loggger.maybe_log_secret("SERVER_HANDSHAKE_TRAFFIC_SECRET", server_handshake_traffic_secret);
 
    if(m_connection_side == Connection_Side::Server) {
       derive_read_traffic_key(client_handshake_traffic_secret, true);

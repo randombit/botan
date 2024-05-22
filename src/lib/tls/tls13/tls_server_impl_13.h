@@ -19,8 +19,7 @@ namespace Botan::TLS {
 /**
 * SSL/TLS Server 1.3 implementation
 */
-class Server_Impl_13 : public Channel_Impl_13,
-                       public Secrets_Callback {
+class Server_Impl_13 : public Channel_Impl_13 {
    public:
       explicit Server_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
                               const std::shared_ptr<Session_Manager>& session_manager,
@@ -38,8 +37,6 @@ class Server_Impl_13 : public Channel_Impl_13,
 
       bool is_handshake_complete() const override;
 
-      void tls_log_secret(std::string_view label, const std::span<const uint8_t>& secret) const override;
-
    private:
       void process_handshake_msg(Handshake_Message_13 msg) override;
       void process_post_handshake_msg(Post_Handshake_Message_13 msg) override;
@@ -56,6 +53,7 @@ class Server_Impl_13 : public Channel_Impl_13,
       void handle_reply_to_client_hello(Hello_Retry_Request hello_retry_request);
 
       void maybe_handle_compatibility_mode();
+      void maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const override;
 
       void downgrade();
 

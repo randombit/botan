@@ -18,10 +18,35 @@
 
 namespace Botan::TLS {
 
+class Cipher_State;
+
+/**
+ * Encapsulates the callbacks in the state machine described in RFC 8446 7.1,
+ * that will make the realisation the SSLKEYLOGFILE for connection debugging
+ * specified in ietf.org/archive/id/draft-thomson-tls-keylogfile-00.html
+ *
+ * The class is split from the rest of the Channel_Impl_13 for mockability.
+ */
+class Secret_Logger {
+   public:
+      virtual ~Secret_Logger() = default;
+
+      friend class Cipher_State;
+
+   protected:
+      /**
+       * Used exclusively in the Cipher_State to pass secret data to
+       * a user-provided Callbacks::tls_ssl_key_log_data() iff
+       * Policy::allow_ssl_key_log_file() returns true.
+       */
+      virtual void maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const = 0;
+};
+
 /**
 * Generic interface for TLS 1.3 endpoint
 */
-class Channel_Impl_13 : public Channel_Impl {
+class Channel_Impl_13 : public Channel_Impl,
+                        protected Secret_Logger {
    protected:
       /**
        * Helper class to coalesce handshake messages into a single TLS record

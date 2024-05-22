@@ -16,6 +16,7 @@
    #include <botan/internal/tls_cipher_state.h>
    #include <botan/internal/tls_reader.h>
 
+   #include <botan/internal/tls_channel_impl_13.h>
    #include <botan/internal/tls_record_layer_13.h>
 
    #include <array>
@@ -50,6 +51,11 @@ TLS::Record_Layer record_layer_server(const bool skip_client_hello = false) {
    return rl;
 }
 
+class Mocked_Secret_Logger : public Botan::TLS::Secret_Logger {
+   public:
+      void maybe_log_secret(std::string_view, std::span<const uint8_t>) const override {}
+};
+
 std::unique_ptr<TLS::Cipher_State> rfc8448_rtt1_handshake_traffic(
    Botan::TLS::Connection_Side side = Botan::TLS::Connection_Side::Client) {
    const auto transcript_hash = Botan::hex_decode(
@@ -59,8 +65,8 @@ std::unique_ptr<TLS::Cipher_State> rfc8448_rtt1_handshake_traffic(
       "8b d4 05 4f b5 5b 9d 63 fd fb ac f9 f0 4b 9f 0d"
       "35 e6 d6 3f 53 75 63 ef d4 62 72 90 0f 89 49 2d");
    auto cipher = TLS::Ciphersuite::from_name("AES_128_GCM_SHA256").value();
-   Botan::TLS::Secrets_Callback sc;
-   return TLS::Cipher_State::init_with_server_hello(side, std::move(shared_secret), cipher, transcript_hash, sc);
+   Mocked_Secret_Logger logger;
+   return TLS::Cipher_State::init_with_server_hello(side, std::move(shared_secret), cipher, transcript_hash, logger);
 }
 
 std::vector<Test::Result> read_full_records() {
@@ -656,9 +662,9 @@ std::vector<Test::Result> read_encrypted_records() {
 
             auto cs = rfc8448_rtt1_handshake_traffic();
             // advance with arbitrary hashes that were used to produce the input data
-            Botan::TLS::Secrets_Callback sc;
+            Mocked_Secret_Logger logger;
             cs->advance_with_server_finished(
-               Botan::hex_decode("e1935a480babfc4403b2517f0ad414bed0ca51fa671e2061804afa78fd71d55c"), sc);
+               Botan::hex_decode("e1935a480babfc4403b2517f0ad414bed0ca51fa671e2061804afa78fd71d55c"), logger);
             cs->advance_with_client_finished(
                Botan::hex_decode("305e4a0a7cee581b282c571b251b20138a1a6a21918937a6bb95b1e9ba1b5cac"));
 

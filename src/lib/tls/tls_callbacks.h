@@ -576,8 +576,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
        * @param secret         the actual secret value
        */
       virtual void tls_ssl_key_log_data(std::string_view label,
-                                        const std::span<const uint8_t>& client_random,
-                                        const std::span<const uint8_t>& secret) const {
+                                        std::span<const uint8_t> client_random,
+                                        std::span<const uint8_t> secret) const {
          BOTAN_UNUSED(label, client_random, secret);
       }
 };
