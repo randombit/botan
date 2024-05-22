@@ -51,6 +51,10 @@ size_t decode_tag(DataSource* ber, ASN1_Type& type_tag, ASN1_Class& class_tag) {
       if(tag_buf & 0xFF000000) {
          throw BER_Decoding_Error("Long-form tag overflowed 32 bits");
       }
+      // This is required even by BER (see X.690 section 8.1.2.4.2 sentence c)
+      if(tag_bytes == 0 && b == 0x80) {
+         throw BER_Decoding_Error("Long form tag with leading zero");
+      }
       ++tag_bytes;
       tag_buf = (tag_buf << 7) | (b & 0x7F);
       if((b & 0x80) == 0) {
