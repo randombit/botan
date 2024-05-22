@@ -151,10 +151,9 @@ void Cipher_State::advance_with_client_hello(const Transcript_Hash& transcript_h
    m_exporter_master_secret = derive_secret(m_early_secret, "e exp master", transcript_hash);
 
    // draft-thomson-tls-keylogfile-00 Section 3.1
-   //    An implementation of TLS 1.3 use
-   //    the label "EARLY_EXPORTER_MASTER_SECRET"
-   //    to identify the secret
-   //    that is using for early exporters
+   //    An implementation of TLS 1.3 use the label
+   //    "EARLY_EXPORTER_MASTER_SECRET" to identify the secret that is using for
+   //    early exporters
    loggger.maybe_log_secret("EARLY_EXPORTER_MASTER_SECRET", m_exporter_master_secret);
 
    m_salt = derive_secret(m_early_secret, "derived", empty_hash());
@@ -172,11 +171,9 @@ void Cipher_State::advance_with_server_finished(const Transcript_Hash& transcrip
    auto server_application_traffic_secret = derive_secret(master_secret, "s ap traffic", transcript_hash);
 
    // draft-thomson-tls-keylogfile-00 Section 3.1
-   //    An implementation of TLS 1.3 use
-   //    the label "CLIENT_TRAFFIC_SECRET_0"
-   //    and "SERVER_TRAFFIC_SECRET_0"
-   //    to identify the secrets are using to protect
-   //    the connection.
+   //    An implementation of TLS 1.3 use the label "CLIENT_TRAFFIC_SECRET_0"
+   //    and "SERVER_TRAFFIC_SECRET_0" to identify the secrets are using to
+   //    protect the connection.
    loggger.maybe_log_secret("CLIENT_TRAFFIC_SECRET_0", client_application_traffic_secret);
    loggger.maybe_log_secret("SERVER_TRAFFIC_SECRET_0", server_application_traffic_secret);
 
@@ -196,10 +193,9 @@ void Cipher_State::advance_with_server_finished(const Transcript_Hash& transcrip
    m_exporter_master_secret = derive_secret(master_secret, "exp master", transcript_hash);
 
    // draft-thomson-tls-keylogfile-00 Section 3.1
-   //    An implementation of TLS 1.3 use
-   //    the label "EXPORTER_SECRET"
-   //    to identify the secret
-   //    that is used in generating exporters(rfc8446 Section 7.5).
+   //    An implementation of TLS 1.3 use the label "EXPORTER_SECRET" to
+   //    identify the secret that is used in generating exporters(rfc8446
+   //    Section 7.5).
    loggger.maybe_log_secret("EXPORTER_SECRET", m_exporter_master_secret);
 
    m_state = State::ServerApplicationTraffic;
@@ -501,11 +497,9 @@ void Cipher_State::advance_with_server_hello(const Ciphersuite& cipher,
    const auto server_handshake_traffic_secret = derive_secret(handshake_secret, "s hs traffic", transcript_hash);
 
    // draft-thomson-tls-keylogfile-00 Section 3.1
-   //    An implementation of TLS 1.3 use
-   //    the label "CLIENT_HANDSHAKE_TRAFFIC_SECRET"
-   //    and "SERVER_HANDSHAKE_TRAFFIC_SECRET"
-   //    to identify the secrets
-   //    are using to protect handshake messages.
+   //    An implementation of TLS 1.3 use the label
+   //    "CLIENT_HANDSHAKE_TRAFFIC_SECRET" and "SERVER_HANDSHAKE_TRAFFIC_SECRET"
+   //    to identify the secrets are using to protect handshake messages.
    loggger.maybe_log_secret("CLIENT_HANDSHAKE_TRAFFIC_SECRET", client_handshake_traffic_secret);
    loggger.maybe_log_secret("SERVER_HANDSHAKE_TRAFFIC_SECRET", server_handshake_traffic_secret);
 
