@@ -207,10 +207,10 @@ class Polynomial {
       *              SHAKE256(seed).
       *
       * Arguments:   - Polynomial &c: pointer to output polynomial
-      *              - const uint8_t mu[]: byte array containing seed of length SEEDBYTES
+      *              - const uint8_t mu[]: byte array containing seed of length CTILDEBYTES
       *           - const DilithiumModeConstants& mode: reference to dilihtium mode values
       **************************************************/
-      static Polynomial poly_challenge(const uint8_t* seed, const DilithiumModeConstants& mode) {
+      static Polynomial poly_challenge(const uint8_t* seed, const DilithiumModeConstants& mode_constants) {
          Polynomial c;
 
          SHAKE_256 shake256_hasher(DilithiumModeConstants::SHAKE256_RATE * 8);
@@ -226,7 +226,7 @@ class Polynomial {
          for(size_t i = 0; i < DilithiumModeConstants::N; ++i) {
             c.m_coeffs[i] = 0;
          }
-         for(size_t i = DilithiumModeConstants::N - mode.tau(); i < DilithiumModeConstants::N; ++i) {
+         for(size_t i = DilithiumModeConstants::N - mode_constants.tau(); i < DilithiumModeConstants::N; ++i) {
             size_t b;
             do {
                b = buf[pos++];
@@ -1070,36 +1070,38 @@ class PolynomialVector {
          }
       }
 
-      static bool unpack_sig(std::array<uint8_t, DilithiumModeConstants::SEEDBYTES>& c,
+      static bool unpack_sig(std::vector<uint8_t>& c,
                              PolynomialVector& z,
                              PolynomialVector& h,
                              const std::vector<uint8_t>& sig,
-                             const DilithiumModeConstants& mode) {
-         //const auto& mode = m_pub_key.m_public->mode();
-         BOTAN_ASSERT(sig.size() == mode.crypto_bytes(), "invalid signature size");
+                             const DilithiumModeConstants& mode_constants) {
+         BOTAN_ASSERT(sig.size() == mode_constants.crypto_bytes(), "invalid signature size");
+         BOTAN_ASSERT(c.size() == mode_constants.ctildebytes(), "invalid size of c");
          size_t position = 0;
 
          std::copy(sig.begin(), sig.begin() + c.size(), c.begin());
 
-         position += DilithiumModeConstants::SEEDBYTES;
+         position += mode_constants.ctildebytes();
 
-         for(size_t i = 0; i < mode.l(); ++i) {
-            Polynomial::polyz_unpack(z.m_vec[i], sig.data() + position + i * mode.polyz_packedbytes(), mode);
+         for(size_t i = 0; i < mode_constants.l(); ++i) {
+            Polynomial::polyz_unpack(
+               z.m_vec[i], sig.data() + position + i * mode_constants.polyz_packedbytes(), mode_constants);
          }
-         position += mode.l() * mode.polyz_packedbytes();
+         position += mode_constants.l() * mode_constants.polyz_packedbytes();
 
          /* Decode h */
          size_t k = 0;
-         for(size_t i = 0; i < mode.k(); ++i) {
+         for(size_t i = 0; i < mode_constants.k(); ++i) {
             for(size_t j = 0; j < DilithiumModeConstants::N; ++j) {
                h.m_vec[i].m_coeffs[j] = 0;
             }
 
-            if(sig[position + mode.omega() + i] < k || sig[position + mode.omega() + i] > mode.omega()) {
+            if(sig[position + mode_constants.omega() + i] < k ||
+               sig[position + mode_constants.omega() + i] > mode_constants.omega()) {
                return true;
             }
 
-            for(size_t j = k; j < sig[position + mode.omega() + i]; ++j) {
+            for(size_t j = k; j < sig[position + mode_constants.omega() + i]; ++j) {
                /* Coefficients are ordered for strong unforgeability */
                if(j > k && sig[position + j] <= sig[position + j - 1]) {
                   return true;
@@ -1107,11 +1109,11 @@ class PolynomialVector {
                h.m_vec[i].m_coeffs[sig[position + j]] = 1;
             }
 
-            k = sig[position + mode.omega() + i];
+            k = sig[position + mode_constants.omega() + i];
          }
 
          /* Extra indices are zero for strong unforgeability */
-         for(size_t j = k; j < mode.omega(); ++j) {
+         for(size_t j = k; j < mode_constants.omega(); ++j) {
             if(sig[position + j]) {
                return true;
             }

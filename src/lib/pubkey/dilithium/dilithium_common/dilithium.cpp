@@ -79,7 +79,15 @@ DilithiumMode::Mode dilithium_mode_from_string(std::string_view str) {
    if(str == "Dilithium-8x7-AES-r3") {
       return DilithiumMode::Dilithium8x7_AES;
    }
-
+   if(str == "ML-DSA-4x4-IPD") {
+      return DilithiumMode::ML_DSA4x4_IPD;
+   }
+   if(str == "ML-DSA-6x5-IPD") {
+      return DilithiumMode::ML_DSA6x5_IPD;
+   }
+   if(str == "ML-DSA-8x7-IPD") {
+      return DilithiumMode::ML_DSA8x7_IPD;
+   }
    throw Invalid_Argument(fmt("'{}' is not a valid Dilithium mode name", str));
 }
 
@@ -107,6 +115,12 @@ std::string DilithiumMode::to_string() const {
          return "Dilithium-8x7-r3";
       case DilithiumMode::Dilithium8x7_AES:
          return "Dilithium-8x7-AES-r3";
+      case DilithiumMode::ML_DSA4x4_IPD:
+         return "ML-DSA-4x4-IPD";
+      case DilithiumMode::ML_DSA6x5_IPD:
+         return "ML-DSA-6x5-IPD";
+      case DilithiumMode::ML_DSA8x7_IPD:
+         return "ML-DSA-8x7-IPD";
    }
 
    BOTAN_ASSERT_UNREACHABLE();
@@ -114,30 +128,31 @@ std::string DilithiumMode::to_string() const {
 
 class Dilithium_PublicKeyInternal {
    public:
-      Dilithium_PublicKeyInternal(DilithiumModeConstants mode) : m_mode(std::move(mode)) {}
+      Dilithium_PublicKeyInternal(DilithiumModeConstants mode_constants) :
+            m_mode_constants(std::move(mode_constants)) {}
 
-      Dilithium_PublicKeyInternal(DilithiumModeConstants mode, std::span<const uint8_t> raw_pk) :
-            m_mode(std::move(mode)) {
-         BOTAN_ASSERT_NOMSG(raw_pk.size() == m_mode.public_key_bytes());
+      Dilithium_PublicKeyInternal(DilithiumModeConstants mode_constants, std::span<const uint8_t> raw_pk) :
+            m_mode_constants(std::move(mode_constants)) {
+         BOTAN_ASSERT_NOMSG(raw_pk.size() == m_mode_constants.public_key_bytes());
 
          BufferSlicer s(raw_pk);
          m_rho = s.copy_as_vector(DilithiumModeConstants::SEEDBYTES);
-         m_t1 = Dilithium::PolynomialVector::unpack_t1(s.take(DilithiumModeConstants::POLYT1_PACKEDBYTES * m_mode.k()),
-                                                       m_mode);
+         m_t1 = Dilithium::PolynomialVector::unpack_t1(
+            s.take(DilithiumModeConstants::POLYT1_PACKEDBYTES * m_mode_constants.k()), m_mode_constants);
 
          BOTAN_ASSERT_NOMSG(s.remaining() == 0);
-         BOTAN_STATE_CHECK(m_t1.m_vec.size() == m_mode.k());
+         BOTAN_STATE_CHECK(m_t1.m_vec.size() == m_mode_constants.k());
 
          m_raw_pk_shake256 = compute_raw_pk_shake256();
       }
 
-      Dilithium_PublicKeyInternal(DilithiumModeConstants mode,
+      Dilithium_PublicKeyInternal(DilithiumModeConstants mode_constants,
                                   std::vector<uint8_t> rho,
                                   const Dilithium::PolynomialVector& s1,
                                   const Dilithium::PolynomialVector& s2) :
-            m_mode(std::move(mode)),
+            m_mode_constants(std::move(mode_constants)),
             m_rho(std::move(rho)),
-            m_t1([&] { return calculate_t0_and_t1(m_mode, m_rho, s1, s2).second; }()) {
+            m_t1([&] { return calculate_t0_and_t1(m_mode_constants, m_rho, s1, s2).second; }()) {
          BOTAN_ASSERT_NOMSG(!m_rho.empty());
          BOTAN_ASSERT_NOMSG(!m_t1.m_vec.empty());
          m_raw_pk_shake256 = compute_raw_pk_shake256();
@@ -146,7 +161,7 @@ class Dilithium_PublicKeyInternal {
       Dilithium_PublicKeyInternal(DilithiumModeConstants mode,
                                   std::vector<uint8_t> rho,
                                   Dilithium::PolynomialVector t1) :
-            m_mode(std::move(mode)), m_rho(std::move(rho)), m_t1(std::move(t1)) {
+            m_mode_constants(std::move(mode)), m_rho(std::move(rho)), m_t1(std::move(t1)) {
          BOTAN_ASSERT_NOMSG(!m_rho.empty());
          BOTAN_ASSERT_NOMSG(!m_t1.m_vec.empty());
          m_raw_pk_shake256 = compute_raw_pk_shake256();
@@ -162,7 +177,7 @@ class Dilithium_PublicKeyInternal {
       std::vector<uint8_t> raw_pk() const { return concat<std::vector<uint8_t>>(m_rho, m_t1.polyvec_pack_t1()); }
 
       const std::vector<uint8_t>& raw_pk_shake256() const {
-         BOTAN_STATE_CHECK(m_raw_pk_shake256.size() == DilithiumModeConstants::SEEDBYTES);
+         BOTAN_STATE_CHECK(m_raw_pk_shake256.size() == m_mode_constants.trbytes());
          return m_raw_pk_shake256;
       }
 
@@ -170,17 +185,17 @@ class Dilithium_PublicKeyInternal {
 
       const std::vector<uint8_t>& rho() const { return m_rho; }
 
-      const DilithiumModeConstants& mode() const { return m_mode; }
+      const DilithiumModeConstants& mode_constants() const { return m_mode_constants; }
 
    private:
       std::vector<uint8_t> compute_raw_pk_shake256() const {
-         SHAKE_256 shake(DilithiumModeConstants::SEEDBYTES * 8);
+         SHAKE_256 shake(m_mode_constants.trbytes() * 8);
          shake.update(m_rho);
          shake.update(m_t1.polyvec_pack_t1());
          return shake.final_stdvec();
       }
 
-      const DilithiumModeConstants m_mode;
+      const DilithiumModeConstants m_mode_constants;
       std::vector<uint8_t> m_raw_pk_shake256;
       std::vector<uint8_t> m_rho;
       Dilithium::PolynomialVector m_t1;
@@ -188,16 +203,17 @@ class Dilithium_PublicKeyInternal {
 
 class Dilithium_PrivateKeyInternal {
    public:
-      Dilithium_PrivateKeyInternal(DilithiumModeConstants mode) : m_mode(std::move(mode)) {}
+      Dilithium_PrivateKeyInternal(DilithiumModeConstants mode_constants) :
+            m_mode_constants(std::move(mode_constants)) {}
 
-      Dilithium_PrivateKeyInternal(DilithiumModeConstants mode,
+      Dilithium_PrivateKeyInternal(DilithiumModeConstants mode_constants,
                                    std::vector<uint8_t> rho,
                                    secure_vector<uint8_t> tr,
                                    secure_vector<uint8_t> key,
                                    Dilithium::PolynomialVector s1,
                                    Dilithium::PolynomialVector s2,
                                    Dilithium::PolynomialVector t0) :
-            m_mode(std::move(mode)),
+            m_mode_constants(std::move(mode_constants)),
             m_rho(std::move(rho)),
             m_tr(std::move(tr)),
             m_key(std::move(key)),
@@ -205,28 +221,38 @@ class Dilithium_PrivateKeyInternal {
             m_s1(std::move(s1)),
             m_s2(std::move(s2)) {}
 
-      Dilithium_PrivateKeyInternal(DilithiumModeConstants mode, std::span<const uint8_t> sk) :
-            Dilithium_PrivateKeyInternal(std::move(mode)) {
-         BOTAN_ASSERT_NOMSG(sk.size() == m_mode.private_key_bytes());
+      Dilithium_PrivateKeyInternal(DilithiumModeConstants mode_constants, std::span<const uint8_t> sk) :
+            Dilithium_PrivateKeyInternal(std::move(mode_constants)) {
+         BOTAN_ASSERT_NOMSG(sk.size() == m_mode_constants.private_key_bytes());
 
          BufferSlicer s(sk);
          m_rho = s.copy_as_vector(DilithiumModeConstants::SEEDBYTES);
          m_key = s.copy_as_secure_vector(DilithiumModeConstants::SEEDBYTES);
-         m_tr = s.copy_as_secure_vector(DilithiumModeConstants::SEEDBYTES);
+         m_tr = s.copy_as_secure_vector(m_mode_constants.trbytes());
          m_s1 = Dilithium::PolynomialVector::unpack_eta(
-            s.take(m_mode.l() * m_mode.polyeta_packedbytes()), m_mode.l(), m_mode);
+            s.take(m_mode_constants.l() * m_mode_constants.polyeta_packedbytes()),
+            m_mode_constants.l(),
+            m_mode_constants);
          m_s2 = Dilithium::PolynomialVector::unpack_eta(
-            s.take(m_mode.k() * m_mode.polyeta_packedbytes()), m_mode.k(), m_mode);
-         m_t0 = Dilithium::PolynomialVector::unpack_t0(s.take(m_mode.k() * DilithiumModeConstants::POLYT0_PACKEDBYTES),
-                                                       m_mode);
+            s.take(m_mode_constants.k() * m_mode_constants.polyeta_packedbytes()),
+            m_mode_constants.k(),
+            m_mode_constants);
+         m_t0 = Dilithium::PolynomialVector::unpack_t0(
+            s.take(m_mode_constants.k() * DilithiumModeConstants::POLYT0_PACKEDBYTES), m_mode_constants);
+
+         BOTAN_ASSERT_NOMSG(s.empty());
       }
 
       secure_vector<uint8_t> raw_sk() const {
-         return concat<secure_vector<uint8_t>>(
-            m_rho, m_key, m_tr, m_s1.polyvec_pack_eta(m_mode), m_s2.polyvec_pack_eta(m_mode), m_t0.polyvec_pack_t0());
+         return concat<secure_vector<uint8_t>>(m_rho,
+                                               m_key,
+                                               m_tr,
+                                               m_s1.polyvec_pack_eta(m_mode_constants),
+                                               m_s2.polyvec_pack_eta(m_mode_constants),
+                                               m_t0.polyvec_pack_t0());
       }
 
-      const DilithiumModeConstants& mode() const { return m_mode; }
+      const DilithiumModeConstants& mode_constants() const { return m_mode_constants; }
 
       const std::vector<uint8_t>& rho() const { return m_rho; }
 
@@ -241,7 +267,7 @@ class Dilithium_PrivateKeyInternal {
       const Dilithium::PolynomialVector& t0() const { return m_t0; }
 
    private:
-      const DilithiumModeConstants m_mode;
+      const DilithiumModeConstants m_mode_constants;
       std::vector<uint8_t> m_rho;
       secure_vector<uint8_t> m_tr, m_key;
       Dilithium::PolynomialVector m_t0, m_s1, m_s2;
@@ -251,8 +277,8 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
    public:
       Dilithium_Signature_Operation(const Dilithium_PrivateKey& priv_key_dilithium, bool randomized) :
             m_priv_key(priv_key_dilithium),
-            m_matrix(
-               Dilithium::PolynomialMatrix::generate_matrix(m_priv_key.m_private->rho(), m_priv_key.m_private->mode())),
+            m_matrix(Dilithium::PolynomialMatrix::generate_matrix(m_priv_key.m_private->rho(),
+                                                                  m_priv_key.m_private->mode_constants())),
             m_shake(DilithiumModeConstants::CRHBYTES * 8),
             m_randomized(randomized) {
          m_shake.update(m_priv_key.m_private->tr());
@@ -266,10 +292,9 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
          // Get set up for the next message (if any)
          m_shake.update(m_priv_key.m_private->tr());
 
-         const auto& mode = m_priv_key.m_private->mode();
+         const auto& mode_constants = m_priv_key.m_private->mode_constants();
 
-         const auto rhoprime = (m_randomized) ? rng.random_vec(DilithiumModeConstants::CRHBYTES)
-                                              : mode.CRH(concat(m_priv_key.m_private->get_key(), mu));
+         const auto rhoprime = mode_constants.calc_rhoprime(rng, m_priv_key.m_private->get_key(), mu, m_randomized);
 
          /* Transform vectors */
          auto s1 = m_priv_key.m_private->s1();
@@ -285,16 +310,16 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
          //       but to avoid an integer overflow, we use uint32_t as the loop variable.
          for(uint32_t nonce = 0; nonce <= std::numeric_limits<uint16_t>::max(); ++nonce) {
             /* Sample intermediate vector y */
-            Dilithium::PolynomialVector y(mode.l());
+            Dilithium::PolynomialVector y(mode_constants.l());
 
-            y.polyvecl_uniform_gamma1(rhoprime, static_cast<uint16_t>(nonce), mode);
+            y.polyvecl_uniform_gamma1(rhoprime, static_cast<uint16_t>(nonce), mode_constants);
 
             auto z = y;
             z.ntt();
 
             /* Matrix-vector multiplication */
             auto w1 = Dilithium::PolynomialVector::generate_polyvec_matrix_pointwise_montgomery(
-               m_matrix.get_matrix(), z, mode);
+               m_matrix.get_matrix(), z, mode_constants);
 
             w1.reduce();
             w1.invntt_tomont();
@@ -302,16 +327,16 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
             /* Decompose w and call the random oracle */
             w1.cadd_q();
 
-            auto w1_w0 = w1.polyvec_decompose(mode);
+            auto w1_w0 = w1.polyvec_decompose(mode_constants);
 
-            auto packed_w1 = std::get<0>(w1_w0).polyvec_pack_w1(mode);
+            auto packed_w1 = std::get<0>(w1_w0).polyvec_pack_w1(mode_constants);
 
-            SHAKE_256 shake256_variable(DilithiumModeConstants::SEEDBYTES * 8);
+            SHAKE_256 shake256_variable(mode_constants.ctildebytes() * 8);
             shake256_variable.update(mu.data(), DilithiumModeConstants::CRHBYTES);
             shake256_variable.update(packed_w1.data(), packed_w1.size());
             auto sm = shake256_variable.final();
 
-            auto cp = Dilithium::Polynomial::poly_challenge(sm.data(), mode);
+            auto cp = Dilithium::Polynomial::poly_challenge(sm.data(), mode_constants);
             cp.ntt();
 
             /* Compute z, reject if it reveals secret */
@@ -321,19 +346,19 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
             z.add_polyvec(y);
 
             z.reduce();
-            if(z.polyvec_chknorm(mode.gamma1() - mode.beta())) {
+            if(z.polyvec_chknorm(mode_constants.gamma1() - mode_constants.beta())) {
                continue;
             }
 
             /* Check that subtracting cs2 does not change high bits of w and low bits
             * do not reveal secret information */
-            Dilithium::PolynomialVector h(mode.k());
+            Dilithium::PolynomialVector h(mode_constants.k());
             s2.polyvec_pointwise_poly_montgomery(h, cp);
             h.invntt_tomont();
             std::get<1>(w1_w0) -= h;
             std::get<1>(w1_w0).reduce();
 
-            if(std::get<1>(w1_w0).polyvec_chknorm(mode.gamma2() - mode.beta())) {
+            if(std::get<1>(w1_w0).polyvec_chknorm(mode_constants.gamma2() - mode_constants.beta())) {
                continue;
             }
 
@@ -341,16 +366,16 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
             t0.polyvec_pointwise_poly_montgomery(h, cp);
             h.invntt_tomont();
             h.reduce();
-            if(h.polyvec_chknorm(mode.gamma2())) {
+            if(h.polyvec_chknorm(mode_constants.gamma2())) {
                continue;
             }
 
             std::get<1>(w1_w0).add_polyvec(h);
             std::get<1>(w1_w0).cadd_q();
 
-            auto n =
-               Dilithium::PolynomialVector::generate_hint_polyvec(h, std::get<1>(w1_w0), std::get<0>(w1_w0), mode);
-            if(n > mode.omega()) {
+            auto n = Dilithium::PolynomialVector::generate_hint_polyvec(
+               h, std::get<1>(w1_w0), std::get<0>(w1_w0), mode_constants);
+            if(n > mode_constants.omega()) {
                continue;
             }
 
@@ -362,7 +387,7 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
       }
 
       size_t signature_length() const override {
-         const auto& dilithium_math = m_priv_key.m_private->mode();
+         const auto& dilithium_math = m_priv_key.m_private->mode_constants();
          return dilithium_math.crypto_bytes();
       }
 
@@ -375,33 +400,33 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
       secure_vector<uint8_t> pack_sig(const secure_vector<uint8_t>& c,
                                       const Dilithium::PolynomialVector& z,
                                       const Dilithium::PolynomialVector& h) {
-         BOTAN_ASSERT_NOMSG(c.size() == DilithiumModeConstants::SEEDBYTES);
+         const auto& mode_constants = m_priv_key.m_private->mode_constants();
+         BOTAN_ASSERT_NOMSG(c.size() == mode_constants.ctildebytes());
          size_t position = 0;
-         const auto& mode = m_priv_key.m_private->mode();
-         secure_vector<uint8_t> sig(mode.crypto_bytes());
+         secure_vector<uint8_t> sig(mode_constants.crypto_bytes());
 
          std::copy(c.begin(), c.end(), sig.begin());
-         position += DilithiumModeConstants::SEEDBYTES;
+         position += mode_constants.ctildebytes();
 
-         for(size_t i = 0; i < mode.l(); ++i) {
-            z.m_vec[i].polyz_pack(&sig[position + i * mode.polyz_packedbytes()], mode);
+         for(size_t i = 0; i < mode_constants.l(); ++i) {
+            z.m_vec[i].polyz_pack(&sig[position + i * mode_constants.polyz_packedbytes()], mode_constants);
          }
-         position += mode.l() * mode.polyz_packedbytes();
+         position += mode_constants.l() * mode_constants.polyz_packedbytes();
 
          /* Encode h */
-         for(size_t i = 0; i < mode.omega() + mode.k(); ++i) {
+         for(size_t i = 0; i < mode_constants.omega() + mode_constants.k(); ++i) {
             sig[i + position] = 0;
          }
 
          size_t k = 0;
-         for(size_t i = 0; i < mode.k(); ++i) {
+         for(size_t i = 0; i < mode_constants.k(); ++i) {
             for(size_t j = 0; j < DilithiumModeConstants::N; ++j) {
                if(h.m_vec[i].m_coeffs[j] != 0) {
                   sig[position + k] = static_cast<uint8_t>(j);
                   k++;
                }
             }
-            sig[position + mode.omega() + i] = static_cast<uint8_t>(k);
+            sig[position + mode_constants.omega() + i] = static_cast<uint8_t>(k);
          }
          return sig;
       }
@@ -420,7 +445,7 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
    public:
       Dilithium_Verification_Operation(const Dilithium_PublicKey& pub_dilithium) :
             m_pub_key(pub_dilithium.m_public),
-            m_matrix(Dilithium::PolynomialMatrix::generate_matrix(m_pub_key->rho(), m_pub_key->mode())),
+            m_matrix(Dilithium::PolynomialMatrix::generate_matrix(m_pub_key->rho(), m_pub_key->mode_constants())),
             m_pk_hash(m_pub_key->raw_pk_shake256()),
             m_shake(DilithiumModeConstants::CRHBYTES * 8) {
          m_shake.update(m_pk_hash);
@@ -444,26 +469,26 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
          // Reset the SHAKE context for the next message
          m_shake.update(m_pk_hash);
 
-         const auto& mode = m_pub_key->mode();
+         const auto& mode_constants = m_pub_key->mode_constants();
 
-         if(sig_len != mode.crypto_bytes()) {
+         if(sig_len != mode_constants.crypto_bytes()) {
             return false;
          }
 
-         Dilithium::PolynomialVector z(mode.l());
-         Dilithium::PolynomialVector h(mode.k());
+         Dilithium::PolynomialVector z(mode_constants.l());
+         Dilithium::PolynomialVector h(mode_constants.k());
          std::vector<uint8_t> signature(sig, sig + sig_len);
-         std::array<uint8_t, DilithiumModeConstants::SEEDBYTES> c;
-         if(Dilithium::PolynomialVector::unpack_sig(c, z, h, signature, mode)) {
+         std::vector<uint8_t> c(mode_constants.ctildebytes());
+         if(Dilithium::PolynomialVector::unpack_sig(c, z, h, signature, mode_constants)) {
             return false;
          }
 
-         if(z.polyvec_chknorm(mode.gamma1() - mode.beta())) {
+         if(z.polyvec_chknorm(mode_constants.gamma1() - mode_constants.beta())) {
             return false;
          }
 
          /* Matrix-vector multiplication; compute Az - c2^dt1 */
-         auto cp = Dilithium::Polynomial::poly_challenge(c.data(), mode);
+         auto cp = Dilithium::Polynomial::poly_challenge(c.data(), mode_constants);
          cp.ntt();
 
          Dilithium::PolynomialVector t1 = m_pub_key->t1();
@@ -473,17 +498,17 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
 
          z.ntt();
 
-         auto w1 =
-            Dilithium::PolynomialVector::generate_polyvec_matrix_pointwise_montgomery(m_matrix.get_matrix(), z, mode);
+         auto w1 = Dilithium::PolynomialVector::generate_polyvec_matrix_pointwise_montgomery(
+            m_matrix.get_matrix(), z, mode_constants);
          w1 -= t1;
          w1.reduce();
          w1.invntt_tomont();
          w1.cadd_q();
-         w1.polyvec_use_hint(w1, h, mode);
-         auto packed_w1 = w1.polyvec_pack_w1(mode);
+         w1.polyvec_use_hint(w1, h, mode_constants);
+         auto packed_w1 = w1.polyvec_pack_w1(mode_constants);
 
          /* Call random oracle and verify challenge */
-         SHAKE_256 shake256_variable(DilithiumModeConstants::SEEDBYTES * 8);
+         SHAKE_256 shake256_variable(mode_constants.ctildebytes() * 8);
          shake256_variable.update(mu.data(), mu.size());
          shake256_variable.update(packed_w1.data(), packed_w1.size());
          auto c2 = shake256_variable.final();
@@ -505,11 +530,11 @@ Dilithium_PublicKey::Dilithium_PublicKey(const AlgorithmIdentifier& alg_id, std:
       Dilithium_PublicKey(pk, DilithiumMode(alg_id.oid())) {}
 
 Dilithium_PublicKey::Dilithium_PublicKey(std::span<const uint8_t> pk, DilithiumMode m) {
-   DilithiumModeConstants mode(m);
-   BOTAN_ARG_CHECK(pk.empty() || pk.size() == mode.public_key_bytes(),
+   DilithiumModeConstants mode_constants(m);
+   BOTAN_ARG_CHECK(pk.empty() || pk.size() == mode_constants.public_key_bytes(),
                    "dilithium public key does not have the correct byte count");
 
-   m_public = std::make_shared<Dilithium_PublicKeyInternal>(std::move(mode), pk);
+   m_public = std::make_shared<Dilithium_PublicKeyInternal>(std::move(mode_constants), pk);
 }
 
 std::string Dilithium_PublicKey::algo_name() const {
@@ -521,15 +546,15 @@ AlgorithmIdentifier Dilithium_PublicKey::algorithm_identifier() const {
 }
 
 OID Dilithium_PublicKey::object_identifier() const {
-   return m_public->mode().oid();
+   return m_public->mode_constants().oid();
 }
 
 size_t Dilithium_PublicKey::key_length() const {
-   return m_public->mode().public_key_bytes();
+   return m_public->mode_constants().public_key_bytes();
 }
 
 size_t Dilithium_PublicKey::estimated_strength() const {
-   return m_public->mode().nist_security_strength();
+   return m_public->mode_constants().nist_security_strength();
 }
 
 std::vector<uint8_t> Dilithium_PublicKey::public_key_bits() const {
@@ -541,7 +566,7 @@ bool Dilithium_PublicKey::check_key(RandomNumberGenerator&, bool) const {
 }
 
 std::unique_ptr<Private_Key> Dilithium_PublicKey::generate_another(RandomNumberGenerator& rng) const {
-   return std::make_unique<Dilithium_PrivateKey>(rng, m_public->mode().mode());
+   return std::make_unique<Dilithium_PrivateKey>(rng, m_public->mode_constants().mode());
 }
 
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_verification_op(std::string_view params,
@@ -565,11 +590,11 @@ std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_x509_verificat
 }
 
 Dilithium_PrivateKey::Dilithium_PrivateKey(RandomNumberGenerator& rng, DilithiumMode m) {
-   DilithiumModeConstants mode(m);
+   DilithiumModeConstants mode_constants(m);
 
    secure_vector<uint8_t> seedbuf = rng.random_vec(DilithiumModeConstants::SEEDBYTES);
 
-   auto seed = mode.H(seedbuf, 2 * DilithiumModeConstants::SEEDBYTES + DilithiumModeConstants::CRHBYTES);
+   auto seed = mode_constants.H(seedbuf, 2 * DilithiumModeConstants::SEEDBYTES + DilithiumModeConstants::CRHBYTES);
 
    // seed is a concatenation of rho || rhoprime || key
    std::vector<uint8_t> rho(seed.begin(), seed.begin() + DilithiumModeConstants::SEEDBYTES);
@@ -583,32 +608,38 @@ Dilithium_PrivateKey::Dilithium_PrivateKey(RandomNumberGenerator& rng, Dilithium
    BOTAN_ASSERT_NOMSG(key.size() == DilithiumModeConstants::SEEDBYTES);
 
    /* Sample short vectors s1 and s2 */
-   Dilithium::PolynomialVector s1(mode.l());
-   Dilithium::PolynomialVector::fill_polyvec_uniform_eta(s1, rhoprime, 0, mode);
+   Dilithium::PolynomialVector s1(mode_constants.l());
+   Dilithium::PolynomialVector::fill_polyvec_uniform_eta(s1, rhoprime, 0, mode_constants);
 
-   Dilithium::PolynomialVector s2(mode.k());
-   Dilithium::PolynomialVector::fill_polyvec_uniform_eta(s2, rhoprime, mode.l(), mode);
+   Dilithium::PolynomialVector s2(mode_constants.k());
+   Dilithium::PolynomialVector::fill_polyvec_uniform_eta(s2, rhoprime, mode_constants.l(), mode_constants);
 
-   auto [t0, t1] = calculate_t0_and_t1(mode, rho, s1, s2);
+   auto [t0, t1] = calculate_t0_and_t1(mode_constants, rho, s1, s2);
 
-   m_public = std::make_shared<Dilithium_PublicKeyInternal>(mode, rho, std::move(t1));
+   m_public = std::make_shared<Dilithium_PublicKeyInternal>(mode_constants, rho, std::move(t1));
 
    /* Compute H(rho, t1) == H(pk) and write secret key */
-   auto tr = mode.H(m_public->raw_pk(), DilithiumModeConstants::SEEDBYTES);
+   auto tr = mode_constants.H(m_public->raw_pk(), mode_constants.trbytes());
 
-   m_private = std::make_shared<Dilithium_PrivateKeyInternal>(
-      std::move(mode), std::move(rho), std::move(tr), std::move(key), std::move(s1), std::move(s2), std::move(t0));
+   m_private = std::make_shared<Dilithium_PrivateKeyInternal>(std::move(mode_constants),
+                                                              std::move(rho),
+                                                              std::move(tr),
+                                                              std::move(key),
+                                                              std::move(s1),
+                                                              std::move(s2),
+                                                              std::move(t0));
 }
 
 Dilithium_PrivateKey::Dilithium_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> sk) :
       Dilithium_PrivateKey(sk, DilithiumMode(alg_id.oid())) {}
 
 Dilithium_PrivateKey::Dilithium_PrivateKey(std::span<const uint8_t> sk, DilithiumMode m) {
-   DilithiumModeConstants mode(m);
-   BOTAN_ARG_CHECK(sk.size() == mode.private_key_bytes(), "dilithium private key does not have the correct byte count");
-   m_private = std::make_shared<Dilithium_PrivateKeyInternal>(std::move(mode), sk);
+   DilithiumModeConstants mode_constants(m);
+   BOTAN_ARG_CHECK(sk.size() == mode_constants.private_key_bytes(),
+                   "dilithium private key does not have the correct byte count");
+   m_private = std::make_shared<Dilithium_PrivateKeyInternal>(std::move(mode_constants), sk);
    m_public = std::make_shared<Dilithium_PublicKeyInternal>(
-      m_private->mode(), m_private->rho(), m_private->s1(), m_private->s2());
+      m_private->mode_constants(), m_private->rho(), m_private->s1(), m_private->s2());
 }
 
 secure_vector<uint8_t> Dilithium_PrivateKey::raw_private_key_bits() const {

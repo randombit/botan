@@ -90,7 +90,7 @@
    #include <botan/sm2.h>
 #endif
 
-#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
+#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES) || defined(BOTAN_HAS_ML_DSA_INITIAL_PUBLIC_DRAFT)
    #include <botan/dilithium.h>
 #endif
 
@@ -214,8 +214,8 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
-#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
-   if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-")) {
+#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES) || defined(BOTAN_HAS_ML_DSA_INITIAL_PUBLIC_DRAFT)
+   if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-") || alg_name.starts_with("ML-DSA")) {
       return std::make_unique<Dilithium_PublicKey>(alg_id, key_bits);
    }
 #endif
@@ -343,8 +343,8 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
-#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
-   if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-")) {
+#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES) || defined(BOTAN_HAS_ML_DSA_INITIAL_PUBLIC_DRAFT)
+   if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-") || alg_name.starts_with("ML-DSA")) {
       return std::make_unique<Dilithium_PrivateKey>(alg_id, key_bits);
    }
 #endif
@@ -472,8 +472,8 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
    }
 #endif
 
-#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
-   if(alg_name == "Dilithium" || alg_name == "Dilithium-") {
+#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES) || defined(BOTAN_HAS_ML_DSA_INITIAL_PUBLIC_DRAFT)
+   if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-") || alg_name.starts_with("ML-DSA")) {
       const auto mode = [&]() -> DilithiumMode {
          if(params.empty()) {
             return DilithiumMode::Dilithium6x5;

@@ -1,5 +1,5 @@
 /*
-* Asymmetric primitives for dilithium
+* Symmetric primitives for dilithium
 * (C) 2022 Jack Lloyd
 * (C) 2022 Manuel Glaser, Michael Boric, René Meusel - Rohde & Schwarz Cybersecurity
 *
@@ -12,7 +12,6 @@
 #include <botan/internal/dilithium_symmetric_primitives.h>
 
 #include <botan/internal/loadstor.h>
-#include <botan/internal/shake.h>
 #include <botan/internal/shake_xof.h>
 
 #include <array>
@@ -35,12 +34,9 @@ class Dilithium_Common_Symmetric_Primitives : public Dilithium_Symmetric_Primiti
             BOTAN_ASSERT_UNREACHABLE();
          }();
 
-         std::array<uint8_t, sizeof(nonce)> nonce_buffer;
-         store_le(nonce, nonce_buffer.data());
-
          auto xof = Botan::XOF::create_or_throw(xof_type);
          xof->update(seed);
-         xof->update(nonce_buffer);
+         xof->update(store_le(nonce));
          return xof;
       }
 };

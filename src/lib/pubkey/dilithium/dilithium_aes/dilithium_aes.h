@@ -1,5 +1,5 @@
 /*
-* Asymmetric primitives for dilithium AES
+* Symmetric primitives for dilithium AES
 * (C) 2022 Jack Lloyd
 * (C) 2022 Manuel Glaser, Michael Boric, René Meusel - Rohde & Schwarz Cybersecurity
 *

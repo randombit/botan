@@ -20,7 +20,17 @@ namespace Botan {
 
 class BOTAN_PUBLIC_API(3, 0) DilithiumMode {
    public:
-      enum Mode { Dilithium4x4 = 1, Dilithium4x4_AES, Dilithium6x5, Dilithium6x5_AES, Dilithium8x7, Dilithium8x7_AES };
+      enum Mode {
+         Dilithium4x4 = 1,
+         Dilithium4x4_AES,
+         Dilithium6x5,
+         Dilithium6x5_AES,
+         Dilithium8x7,
+         Dilithium8x7_AES,
+         ML_DSA4x4_IPD,
+         ML_DSA6x5_IPD,
+         ML_DSA8x7_IPD
+      };
 
    public:
       DilithiumMode(Mode mode) : m_mode(mode) {}
@@ -36,6 +46,8 @@ class BOTAN_PUBLIC_API(3, 0) DilithiumMode {
       }
 
       bool is_modern() const { return !is_aes(); }
+
+      bool is_ipd() const { return m_mode == ML_DSA4x4_IPD || m_mode == ML_DSA6x5_IPD || m_mode == ML_DSA8x7_IPD; }
 
       Mode mode() const { return m_mode; }
 

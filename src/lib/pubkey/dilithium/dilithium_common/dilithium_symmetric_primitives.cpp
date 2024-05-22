@@ -9,6 +9,8 @@
 
 #include <botan/internal/dilithium_symmetric_primitives.h>
 
+#include <botan/rng.h>
+
 #if defined(BOTAN_HAS_DILITHIUM)
    #include <botan/internal/dilithium_modern.h>
 #endif
@@ -17,11 +19,17 @@
    #include <botan/internal/dilithium_aes.h>
 #endif
 
+#if defined(BOTAN_HAS_ML_DSA_INITIAL_PUBLIC_DRAFT)
+   #include <botan/internal/ml_dsa_ipd.h>
+#endif
+
+#include <botan/internal/stl_util.h>
+
 namespace Botan {
 
 std::unique_ptr<Dilithium_Symmetric_Primitives> Dilithium_Symmetric_Primitives::create(DilithiumMode mode) {
 #if BOTAN_HAS_DILITHIUM
-   if(mode.is_modern()) {
+   if(mode.is_modern() && !mode.is_ipd()) {
       return std::make_unique<Dilithium_Common_Symmetric_Primitives>();
    }
 #endif
@@ -32,7 +40,21 @@ std::unique_ptr<Dilithium_Symmetric_Primitives> Dilithium_Symmetric_Primitives::
    }
 #endif
 
+#if BOTAN_HAS_ML_DSA_INITIAL_PUBLIC_DRAFT
+   if(mode.is_ipd()) {
+      return std::make_unique<ML_DSA_IPD_Common_Symmetric_Primitives>();
+   }
+#endif
+
    throw Not_Implemented("requested Dilithium mode is not enabled in this build");
+}
+
+secure_vector<uint8_t> Dilithium_Symmetric_Primitives::calc_rhoprime(RandomNumberGenerator& rng,
+                                                                     const secure_vector<uint8_t>& key,
+                                                                     const std::vector<uint8_t>& mu,
+                                                                     bool randomized) const {
+   return (randomized) ? rng.random_vec(DilithiumModeConstants::CRHBYTES)
+                       : CRH(concat(key, mu), DilithiumModeConstants::CRHBYTES);
 }
 
 DilithiumModeConstants::DilithiumModeConstants(DilithiumMode mode) :
@@ -45,9 +67,17 @@ DilithiumModeConstants::DilithiumModeConstants(DilithiumMode mode) :
       m_stream256_blockbytes = AES256CTR_BLOCKBYTES;
    }
 
+   if(mode.is_ipd()) {
+      m_trbytes = 64;
+   } else {
+      m_trbytes = 32;
+      m_ctildebytes = 32;
+   }
+
    switch(m_mode.mode()) {
       case Botan::DilithiumMode::Dilithium4x4:
       case Botan::DilithiumMode::Dilithium4x4_AES:
+      case Botan::DilithiumMode::ML_DSA4x4_IPD:
          m_k = 4;
          m_l = 4;
          m_eta = DilithiumEta::Eta2;
@@ -61,9 +91,13 @@ DilithiumModeConstants::DilithiumModeConstants(DilithiumMode mode) :
          m_polyw1_packedbytes = 192;
          m_polyeta_packedbytes = 96;
          m_poly_uniform_eta_nblocks = ((136 + m_stream128_blockbytes - 1) / m_stream128_blockbytes);
+         if(mode.is_ipd()) {
+            m_ctildebytes = 32;
+         }
          break;
       case Botan::DilithiumMode::Dilithium6x5:
       case Botan::DilithiumMode::Dilithium6x5_AES:
+      case Botan::DilithiumMode::ML_DSA6x5_IPD:
          m_k = 6;
          m_l = 5;
          m_eta = DilithiumEta::Eta4;
@@ -77,9 +111,13 @@ DilithiumModeConstants::DilithiumModeConstants(DilithiumMode mode) :
          m_polyw1_packedbytes = 128;
          m_polyeta_packedbytes = 128;
          m_poly_uniform_eta_nblocks = ((227 + m_stream128_blockbytes - 1) / m_stream128_blockbytes);
+         if(mode.is_ipd()) {
+            m_ctildebytes = 48;
+         }
          break;
       case Botan::DilithiumMode::Dilithium8x7:
       case Botan::DilithiumMode::Dilithium8x7_AES:
+      case Botan::DilithiumMode::ML_DSA8x7_IPD:
          m_k = 8;
          m_l = 7;
          m_eta = DilithiumEta::Eta2;
@@ -93,6 +131,9 @@ DilithiumModeConstants::DilithiumModeConstants(DilithiumMode mode) :
          m_polyw1_packedbytes = 128;
          m_polyeta_packedbytes = 96;
          m_poly_uniform_eta_nblocks = ((136 + m_stream128_blockbytes - 1) / m_stream128_blockbytes);
+         if(mode.is_ipd()) {
+            m_ctildebytes = 64;
+         }
          break;
    }
 
@@ -107,8 +148,8 @@ DilithiumModeConstants::DilithiumModeConstants(DilithiumMode mode) :
    m_polyvech_packedbytes = m_omega + m_k;
    m_poly_uniform_nblocks = ((768 + m_stream128_blockbytes - 1) / m_stream128_blockbytes);
    m_public_key_bytes = DilithiumModeConstants::SEEDBYTES + m_k * DilithiumModeConstants::POLYT1_PACKEDBYTES;
-   m_crypto_bytes = DilithiumModeConstants::SEEDBYTES + m_l * m_polyz_packedbytes + m_polyvech_packedbytes;
-   m_private_key_bytes = (3 * DilithiumModeConstants::SEEDBYTES + m_l * m_polyeta_packedbytes +
+   m_crypto_bytes = m_ctildebytes + m_l * m_polyz_packedbytes + m_polyvech_packedbytes;
+   m_private_key_bytes = (2 * DilithiumModeConstants::SEEDBYTES + m_trbytes + m_l * m_polyeta_packedbytes +
                           m_k * m_polyeta_packedbytes + m_k * DilithiumModeConstants::POLYT0_PACKEDBYTES);
 }
 
