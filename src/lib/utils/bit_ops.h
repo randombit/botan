@@ -138,6 +138,19 @@ constexpr uint8_t ceil_log2(T x)
 }
 
 /**
+ * Ceil of an unsigned integer division. @p b must not be zero.
+ *
+ * @param a divident
+ * @param b divisor
+ *
+ * @returns ceil(a/b)
+ */
+template <std::unsigned_integral T>
+inline constexpr T ceil_division(T a, T b) {
+   return (a + b - 1) / b;
+}
+
+/**
  * Return the number of bytes necessary to contain @p bits bits.
  */
 template <typename T>
