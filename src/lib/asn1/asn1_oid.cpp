@@ -105,7 +105,7 @@ OID::OID(std::initializer_list<uint32_t> init) : m_id(init) {
    oid_valid_check(m_id);
 }
 
-OID::OID(std::vector<uint32_t>&& init) : m_id(init) {
+OID::OID(std::vector<uint32_t>&& init) : m_id(std::move(init)) {
    oid_valid_check(m_id);
 }
 
@@ -214,46 +214,48 @@ void OID::decode_from(BER_Decoder& decoder) {
       throw BER_Decoding_Error("OID encoding is too short");
    }
 
-   auto consume = [](std::span<const uint8_t> data) -> std::pair<std::span<const uint8_t>, uint32_t> {
+   auto consume = [](BufferSlicer& data) -> uint32_t {
       BOTAN_ASSERT_NOMSG(!data.empty());
+      uint32_t b = data.take_byte();
 
-      uint32_t b = data.front();
-
-      if(b <= 0x7F) {
-         return std::make_pair(data.subspan(1), b);
-      } else {
+      if(b > 0x7F) {
          b &= 0x7F;
+
          // Even BER requires that the OID have minimal length, ie that
          // the first byte of a multibyte encoding cannot be zero
          // See X.690 section 8.19.2
          if(b == 0) {
             throw Decoding_Error("Leading zero byte in multibyte OID encoding");
          }
-         data = data.subspan(1);
-         while(!data.empty()) {
-            const auto next = data.front();
-            data = data.subspan(1);
-            const bool more = (next & 0x80);
 
-            if(b >> (32 - 7)) {
+         while(true) {
+            if(data.empty()) {
+               throw Decoding_Error("Truncated OID value");
+            }
+
+            const uint8_t next = data.take_byte();
+            const bool more = (next & 0x80);
+            const uint8_t value = next & 0x7F;
+
+            if((b >> (32 - 7)) != 0) {
                throw Decoding_Error("OID component overflow");
             }
-            b <<= 7;
-            b |= (next & 0x7F);
+
+            b = (b << 7) | value;
 
             if(!more) {
-               return std::make_pair(data, b);
+               break;
             }
          }
-         throw Decoding_Error("Truncated OID value");
       }
+
+      return b;
    };
 
-   std::span<const uint8_t> span(obj.bits(), obj.length());
+   BufferSlicer data(obj.data());
    std::vector<uint32_t> parts;
-   while(!span.empty()) {
-      auto [subspan, comp] = consume(span);
-      span = subspan;
+   while(!data.empty()) {
+      const uint32_t comp = consume(data);
 
       if(parts.empty()) {
          // divide into root and second arc
