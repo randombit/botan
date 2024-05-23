@@ -12,6 +12,7 @@
 #include <chrono>
 #include <iosfwd>
 #include <optional>
+#include <span>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -151,6 +152,8 @@ class BOTAN_PUBLIC_API(2, 0) BER_Object final {
 
       size_t length() const { return m_value.size(); }
 
+      std::span<const uint8_t> data() const { return std::span{m_value}; }
+
       void assert_is_a(ASN1_Type type_tag, ASN1_Class class_tag, std::string_view descr = "object") const;
 
       bool is_a(ASN1_Type type_tag, ASN1_Class class_tag) const;
@@ -219,23 +222,21 @@ class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
 
       /**
       * Construct an OID from a string.
-      * @param str a string in the form "a.b.c" etc., where a,b,c are numbers
+      * @param str a string in the form "a.b.c" etc., where a,b,c are integers
+      *
+      * Note: it is currently required that each integer fit into 32 bits
       */
       explicit OID(std::string_view str);
 
       /**
       * Initialize an OID from a sequence of integer values
       */
-      explicit OID(std::initializer_list<uint32_t> init) : m_id(init) {
-         BOTAN_ARG_CHECK(m_id.size() > 2 && m_id[0] <= 2 && (m_id[0] != 2 || m_id[1] <= 39), "Invalid OID");
-      }
+      explicit OID(std::initializer_list<uint32_t> init);
 
       /**
       * Initialize an OID from a vector of integer values
       */
-      explicit OID(std::vector<uint32_t>&& init) : m_id(init) {
-         BOTAN_ARG_CHECK(m_id.size() > 2 && m_id[0] <= 2 && (m_id[0] != 2 || m_id[1] <= 39), "Invalid OID");
-      }
+      BOTAN_DEPRECATED("Use another contructor") explicit OID(std::vector<uint32_t>&& init);
 
       /**
       * Construct an OID from a string.
@@ -268,15 +269,7 @@ class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
       * Find out whether this OID has a value
       * @return true is this OID has a value
       */
-      bool has_value() const { return (m_id.empty() == false); }
-
-      /**
-      * Get this OID as list (vector) of its components.
-      * @return vector representing this OID
-      */
-      const std::vector<uint32_t>& get_components() const { return m_id; }
-
-      const std::vector<uint32_t>& get_id() const { return get_components(); }
+      bool has_value() const { return !empty(); }
 
       /**
       * Get this OID as a dotted-decimal string
@@ -308,14 +301,28 @@ class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
       */
       bool operator==(const OID& other) const { return m_id == other.m_id; }
 
-   private:
-      std::unordered_map<std::string, std::string> load_oid2str_map();
-      std::unordered_map<std::string, OID> load_str2oid_map();
+      /**
+      * Get this OID as list (vector) of its components.
+      * @return vector representing this OID
+      */
+      BOTAN_DEPRECATED("Do not access the integer values, use eg to_string")
+      const std::vector<uint32_t>& get_components() const {
+         return m_id;
+      }
 
+      BOTAN_DEPRECATED("Do not access the integer values, use eg to_string")
+      const std::vector<uint32_t>& get_id() const {
+         return m_id;
+      }
+
+   private:
       std::vector<uint32_t> m_id;
 };
 
-std::ostream& operator<<(std::ostream& out, const OID& oid);
+inline std::ostream& operator<<(std::ostream& out, const OID& oid) {
+   out << oid.to_string();
+   return out;
+}
 
 /**
 * Compare two OIDs.

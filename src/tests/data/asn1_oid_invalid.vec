@@ -1,0 +1,34 @@
+
+# Wrong tag
+DER = 050100
+
+# Empty OID
+DER = 0600
+
+# Leading zero byte in multibyte encoding
+DER = 0603500180
+
+# Truncated
+DER = 060350018101
+
+# Multibyte encoding that doesn't end with high bit cleared
+DER = 060450018181
+
+# 2.1.4294967296 - this is valid, we just can't decode it due to 32 bit limbs
+DER = 0606519080808000
+
+# 2.4294967216 - this is valid, we just can't decode it due to 32 bit limbs
+DER = 06059080808000
+
+# From https://misc.daniel-marschall.de/asn.1/oid_facts.html
+
+DER = 060000
+DER = 068000
+DER = 06FF00
+DER = 080100
+DER = 06070180808080807F
+DER = 06028001
+DER = 0602807F
+
+# BUG: we accept constructed encoding of an OID, but should not
+#DER = 06800000

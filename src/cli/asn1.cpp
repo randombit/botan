@@ -102,7 +102,7 @@ class OID_Info final : public Command {
             }
 
             return;
-         } catch(Botan::Decoding_Error&) {}
+         } catch(Botan::Exception&) {}
 
          // This throws if the string is not known
          Botan::OID oid = Botan::OID::from_string(oid_str);
