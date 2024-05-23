@@ -322,12 +322,13 @@ void Client_Impl_13::handle(const Server_Hello_13& sh) {
       // TODO: When implementing early data, `advance_with_client_hello` must
       //       happen _before_ encrypting any early application data.
       //       Same when we want to support early key export.
-      m_cipher_state->advance_with_client_hello(m_transcript_hash.previous());
-      m_cipher_state->advance_with_server_hello(cipher.value(), std::move(shared_secret), m_transcript_hash.current());
+      m_cipher_state->advance_with_client_hello(m_transcript_hash.previous(), *this);
+      m_cipher_state->advance_with_server_hello(
+         cipher.value(), std::move(shared_secret), m_transcript_hash.current(), *this);
    } else {
       m_resumed_session.reset();  // might have been set if we attempted a resumption
       m_cipher_state = Cipher_State::init_with_server_hello(
-         m_side, std::move(shared_secret), cipher.value(), m_transcript_hash.current());
+         m_side, std::move(shared_secret), cipher.value(), m_transcript_hash.current(), *this);
    }
 
    callbacks().tls_examine_extensions(sh.extensions(), Connection_Side::Server, Handshake_Type::ServerHello);
@@ -566,7 +567,7 @@ void Client_Impl_13::handle(const Finished_13& finished_msg) {
 
    // Derives the secrets for receiving application data but defers
    // the derivation of sending application data.
-   m_cipher_state->advance_with_server_finished(m_transcript_hash.current());
+   m_cipher_state->advance_with_server_finished(m_transcript_hash.current(), *this);
 
    auto flight = aggregate_handshake_messages();
 
@@ -647,6 +648,12 @@ std::optional<std::string> Client_Impl_13::external_psk_identity() const {
 
 bool Client_Impl_13::prepend_ccs() {
    return std::exchange(m_should_send_ccs, false);  // test-and-set
+}
+
+void Client_Impl_13::maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const {
+   if(policy().allow_ssl_key_log_file()) {
+      callbacks().tls_ssl_key_log_data(label, m_handshake_state.client_hello().random(), secret);
+   }
 }
 
 std::string Client_Impl_13::application_protocol() const {

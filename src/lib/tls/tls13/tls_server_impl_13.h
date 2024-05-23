@@ -10,6 +10,7 @@
 #define BOTAN_TLS_SERVER_IMPL_13_H_
 
 #include <botan/internal/tls_channel_impl_13.h>
+#include <botan/internal/tls_cipher_state.h>
 #include <botan/internal/tls_handshake_state_13.h>
 #include <botan/internal/tls_handshake_transitions.h>
 
@@ -52,6 +53,7 @@ class Server_Impl_13 : public Channel_Impl_13 {
       void handle_reply_to_client_hello(Hello_Retry_Request hello_retry_request);
 
       void maybe_handle_compatibility_mode();
+      void maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const override;
 
       void downgrade();
 

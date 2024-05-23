@@ -27,6 +27,7 @@ class HKDF_Expand;
 namespace Botan::TLS {
 
 class Ciphersuite;
+class Secret_Logger;
 
 /**
  * This class implements the key schedule for TLS 1.3 as described in RFC 8446 7.1.
@@ -82,25 +83,27 @@ class BOTAN_TEST_API Cipher_State {
       static std::unique_ptr<Cipher_State> init_with_server_hello(Connection_Side side,
                                                                   secure_vector<uint8_t>&& shared_secret,
                                                                   const Ciphersuite& cipher,
-                                                                  const Transcript_Hash& transcript_hash);
+                                                                  const Transcript_Hash& transcript_hash,
+                                                                  const Secret_Logger& channel);
 
       /**
        * Transition internal secrets/keys for transporting early application data.
        * Note that this state transition is legal only for handshakes using PSK.
        */
-      void advance_with_client_hello(const Transcript_Hash& transcript_hash);
+      void advance_with_client_hello(const Transcript_Hash& transcript_hash, const Secret_Logger& channel);
 
       /**
        * Transition internal secrets/keys for transporting handshake data.
        */
       void advance_with_server_hello(const Ciphersuite& cipher,
                                      secure_vector<uint8_t>&& shared_secret,
-                                     const Transcript_Hash& transcript_hash);
+                                     const Transcript_Hash& transcript_hash,
+                                     const Secret_Logger& channel);
 
       /**
        * Transition internal secrets/keys for transporting application data.
        */
-      void advance_with_server_finished(const Transcript_Hash& transcript_hash);
+      void advance_with_server_finished(const Transcript_Hash& transcript_hash, const Secret_Logger& channel);
 
       /**
        * Transition to the final internal state allowing to create resumptions.
@@ -234,7 +237,7 @@ class BOTAN_TEST_API Cipher_State {
        * Note that this must not be called before the connection is ready for
        * application traffic.
        */
-      void update_read_keys();
+      void update_read_keys(const Secret_Logger& channel);
 
       /**
        * Updates the key material used for encrypting data
@@ -243,7 +246,7 @@ class BOTAN_TEST_API Cipher_State {
        * Note that this must not be called before the connection is ready for
        * application traffic.
        */
-      void update_write_keys();
+      void update_write_keys(const Secret_Logger& channel);
 
       /**
        * Remove handshake/traffic secrets for decrypting data from peer
@@ -324,6 +327,9 @@ class BOTAN_TEST_API Cipher_State {
 
       uint64_t m_write_seq_no;
       uint64_t m_read_seq_no;
+
+      uint32_t m_write_key_update_count;
+      uint32_t m_read_key_update_count;
 
       uint16_t m_ticket_nonce;
 

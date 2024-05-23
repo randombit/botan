@@ -12,6 +12,7 @@
 
 #include <botan/tls_server_info.h>
 #include <botan/internal/tls_channel_impl_13.h>
+#include <botan/internal/tls_cipher_state.h>
 #include <botan/internal/tls_handshake_state_13.h>
 #include <botan/internal/tls_handshake_transitions.h>
 
@@ -83,6 +84,7 @@ class Client_Impl_13 : public Channel_Impl_13 {
       void process_post_handshake_msg(Post_Handshake_Message_13 msg) override;
       void process_dummy_change_cipher_spec() override;
 
+      void maybe_log_secret(std::string_view label, std::span<const uint8_t> secret) const override;
       bool prepend_ccs() override;
 
       using Channel_Impl_13::handle;
