@@ -169,11 +169,11 @@ snail-mail address (S), and Bitcoin address (B).
   N: Philippe Lieser
   E: philippe.lieser@rohde-schwarz.com
   W: https://www.rohde-schwarz.com/cybersecurity
-  D: CI, BSI module policy, various minor contributions
+  D: CI, BSI module policy, HSS/LMS, various minor contributions
   S: Saarland, Germany
 
   N: Fabian Albert
   E: fabian.albert@rohde-schwarz.com
   W: https://www.rohde-schwarz.com/cybersecurity
-  D: SPHINCS+
+  D: SPHINCS+, HSS/LMS
   S: Bochum, Germany
