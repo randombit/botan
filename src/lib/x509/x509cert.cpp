@@ -603,16 +603,21 @@ bool X509_Certificate::matches_dns_name(std::string_view name) const {
       return false;
    }
 
-   auto issued_names = subject_info("DNS");
+   if(auto req_ipv4 = string_to_ipv4(name)) {
+      const auto& ipv4_names = subject_alt_name().ipv4_address();
+      return ipv4_names.contains(req_ipv4.value());
+   } else {
+      auto issued_names = subject_info("DNS");
 
-   // Fall back to CN only if no DNS names are set (RFC 6125 sec 6.4.4)
-   if(issued_names.empty()) {
-      issued_names = subject_info("Name");
-   }
+      // Fall back to CN only if no DNS names are set (RFC 6125 sec 6.4.4)
+      if(issued_names.empty()) {
+         issued_names = subject_info("Name");
+      }
 
-   for(const auto& issued_name : issued_names) {
-      if(host_wildcard_match(issued_name, name)) {
-         return true;
+      for(const auto& issued_name : issued_names) {
+         if(host_wildcard_match(issued_name, name)) {
+            return true;
+         }
       }
    }
 
