@@ -1296,7 +1296,7 @@ class FFI_AEAD_Test final : public FFI_Test {
             // botan_cipher_update().
             size_t final_output_written = 42;
             size_t final_input_consumed = 1337;
-            TEST_FFI_RC(BOTAN_FFI_ERROR_INVALID_INPUT,
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
                         botan_cipher_update,
                         (cipher_encrypt,
                          BOTAN_CIPHER_UPDATE_FLAG_FINAL,
@@ -1316,7 +1316,7 @@ class FFI_AEAD_Test final : public FFI_Test {
 
             TEST_FFI_OK(botan_cipher_update,
                         (cipher_encrypt,
-                         0 /* explicitly not setting final flag, to fall into the 'input-size == 0' case */,
+                         BOTAN_CIPHER_UPDATE_FLAG_FINAL,
                          final_ct_chunk.data(),
                          final_ct_chunk.size(),
                          &final_output_written,
