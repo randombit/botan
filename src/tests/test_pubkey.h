@@ -188,6 +188,15 @@ class PK_Key_Generation_Test : public Test {
 
       virtual std::string algo_name() const = 0;
 
+      /**
+       * Algorithm-specific decoding of raw key bits returned from
+       * `Public_Key::raw_public_key_bits()`. If an algorithm does not support reading
+       * the raw key bits, this method should return nullptr.
+       */
+      virtual std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view keygen_params,
+                                                                     std::string_view provider,
+                                                                     std::span<const uint8_t> raw_key_bits) const = 0;
+
       std::vector<std::string> possible_providers(const std::string& params) override;
 };
 

@@ -176,8 +176,14 @@ Kyber_PublicKey::Kyber_PublicKey(std::span<const uint8_t> pub_key, KyberMode m) 
 Kyber_PublicKey::Kyber_PublicKey(const Kyber_PublicKey& other) :
       m_public(std::make_shared<Kyber_PublicKeyInternal>(*other.m_public)) {}
 
-std::vector<uint8_t> Kyber_PublicKey::public_key_bits() const {
+std::vector<uint8_t> Kyber_PublicKey::raw_public_key_bits() const {
    return m_public->public_key_bits_raw().get();
+}
+
+std::vector<uint8_t> Kyber_PublicKey::public_key_bits() const {
+   // Currently, there isn't a finalized definition of an ASN.1 structure for
+   // Kyber aka ML-KEM public keys. Therefore, we return the raw public key bits.
+   return raw_public_key_bits();
 }
 
 size_t Kyber_PublicKey::key_length() const {

@@ -105,6 +105,10 @@ size_t PKCS11_EC_PrivateKey::key_length() const {
    return m_domain_params.get_order().bits();
 }
 
+std::vector<uint8_t> PKCS11_EC_PrivateKey::raw_public_key_bits() const {
+   return public_point().encode(EC_Point_Format::Compressed);
+}
+
 std::vector<uint8_t> PKCS11_EC_PrivateKey::public_key_bits() const {
    return public_point().encode(EC_Point_Format::Compressed);
 }

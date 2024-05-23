@@ -36,46 +36,6 @@ namespace Botan::TLS {
 namespace {
 
 /**
- * This helper converts a key agreement public key into its raw public
- * value. In contrast to the private key (cf. PK_Key_AgreementKey) there
- * is no generic interface class to do this.
- *
- * TODO: Have a decent generic API to get the raw public value from any
- *       Key Agreement public key.
- */
-std::vector<uint8_t> kex_public_value(const Public_Key& kex_public_key) {
-   BOTAN_ASSERT_NOMSG(kex_public_key.supports_operation(PublicKeyOperation::KeyAgreement));
-
-#if defined(BOTAN_HAS_ECDH)
-   if(const auto* ecdh = dynamic_cast<const ECDH_PublicKey*>(&kex_public_key)) {
-      return ecdh->public_value();
-   }
-#endif
-
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-   if(const auto* dh = dynamic_cast<const DH_PublicKey*>(&kex_public_key)) {
-      return dh->public_value();
-   }
-#endif
-
-#if defined(BOTAN_HAS_X25519)
-   if(const auto* curve = dynamic_cast<const X25519_PublicKey*>(&kex_public_key)) {
-      return curve->public_value();
-   }
-#endif
-
-#if defined(BOTAN_HAS_X448)
-   if(const auto* curve = dynamic_cast<const X448_PublicKey*>(&kex_public_key)) {
-      return curve->public_value();
-   }
-#endif
-
-   throw Not_Implemented(
-      fmt("Cannot get public value from unknown key agreement public key of type '{}' in the hybrid KEM key",
-          kex_public_key.algo_name()));
-}
-
-/**
  * This helper determines the length of the agreed-upon value depending
  * on the key agreement public key's algorithm type. It would be better
  * to get this value via PK_Key_Agreement::agreed_value_size(), but
@@ -152,14 +112,21 @@ class KEX_to_KEM_Adapter_Encryption_Operation final : public PK_Ops::KEM_Encrypt
 
       size_t raw_kem_shared_key_length() const override { return kex_shared_key_length(m_public_key); }
 
-      size_t encapsulated_key_length() const override { return kex_public_value(m_public_key).size(); }
+      size_t encapsulated_key_length() const override {
+         // Serializing the public value into a short-lived heap-allocated
+         // vector is not ideal.
+         //
+         // TODO: Find a way to get the public value length without copying
+         //       the public value into a vector. See GH #3706 (point 5).
+         return m_public_key.raw_public_key_bits().size();
+      }
 
       void raw_kem_encrypt(std::span<uint8_t> out_encapsulated_key,
                            std::span<uint8_t> raw_shared_key,
                            Botan::RandomNumberGenerator& rng) override {
          const auto sk = generate_key_agreement_private_key(m_public_key, rng);
          const auto shared_key = PK_Key_Agreement(*sk, rng, "Raw", m_provider)
-                                    .derive_key(0 /* no KDF */, kex_public_value(m_public_key))
+                                    .derive_key(0 /* no KDF */, m_public_key.raw_public_key_bits())
                                     .bits_of();
 
          const auto public_value = sk->public_value();
@@ -235,15 +202,12 @@ AlgorithmIdentifier KEX_to_KEM_Adapter_PublicKey::algorithm_identifier() const {
    return m_public_key->algorithm_identifier();
 }
 
+std::vector<uint8_t> KEX_to_KEM_Adapter_PublicKey::raw_public_key_bits() const {
+   return m_public_key->raw_public_key_bits();
+}
+
 std::vector<uint8_t> KEX_to_KEM_Adapter_PublicKey::public_key_bits() const {
-   // Technically, this is not fully correct. This method is supposed to return
-   // a BER-encoded public key. Though, for other (modern) KEMs -- like Kyber --
-   // it returns the raw encoding of the public key.
-   //
-   // TODO: Provide something like Public_Key::raw_public_key_bits() to
-   //       reflect that difference. Also: Bare key agreement keys could return
-   //       their raw public value there.
-   return kex_public_value(*m_public_key);
+   throw Not_Implemented("The KEX-to-KEM adapter does not support ASN.1-based public key serialization");
 }
 
 std::unique_ptr<Private_Key> KEX_to_KEM_Adapter_PublicKey::generate_another(RandomNumberGenerator& rng) const {

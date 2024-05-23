@@ -41,6 +41,10 @@ bool X448_PublicKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) 
    return true;  // no tests possible?
 }
 
+std::vector<uint8_t> X448_PublicKey::raw_public_key_bits() const {
+   return public_value();
+}
+
 std::vector<uint8_t> X448_PublicKey::public_key_bits() const {
    return public_value();
 }

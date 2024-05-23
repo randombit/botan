@@ -42,6 +42,7 @@ class BOTAN_PUBLIC_API(2, 0) McEliece_PublicKey : public virtual Public_Key {
       size_t key_length() const override;
       size_t estimated_strength() const override;
 
+      std::vector<uint8_t> raw_public_key_bits() const override;
       std::vector<uint8_t> public_key_bits() const override;
 
       bool check_key(RandomNumberGenerator&, bool) const override { return true; }

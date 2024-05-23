@@ -60,6 +60,15 @@ class Hybrid_PublicKey : public virtual Botan::Public_Key {
 
       /**
        * In an actual implementation, this may return a serialized
+       * representation of the public keys. For instance, a mere concatenation
+       * of the two public keys.
+       */
+      std::vector<uint8_t> raw_public_key_bits() const override {
+         throw Botan::Not_Implemented("Raw key serialization is not supported");
+      }
+
+      /**
+       * In an actual implementation, this may return a serialized
        * representation of the public keys. For instance, using some ASN.1
        * encoding to combine the two public keys.
        */
@@ -161,7 +170,7 @@ class Hybrid_Encryption_Operation : public Botan::PK_Ops::KEM_Encryption {
        * key (ephemeral key pair) and the length of the KEM's encapsulated key.
        */
       size_t encapsulated_key_length() const override {
-         return m_hybrid_pk.kex_public_key().public_key_bits().size() + m_kem_encryptor.encapsulated_key_length();
+         return m_hybrid_pk.kex_public_key().raw_public_key_bits().size() + m_kem_encryptor.encapsulated_key_length();
       }
 
       /**
@@ -212,8 +221,8 @@ class Hybrid_Encryption_Operation : public Botan::PK_Ops::KEM_Encryption {
          // TODO: kex.derive_key() should allow a std::span<>-based out param,
          //       which would save a copy in this case. (See GH #3318)
          const auto kex_shared_key =
-            kex.derive_key(0 /* no KDF */, m_hybrid_pk.kex_public_key().public_key_bits()).bits_of();
-         const auto kex_encapsed_key = ephemeral_keypair->public_key_bits();
+            kex.derive_key(0 /* no KDF */, m_hybrid_pk.kex_public_key().raw_public_key_bits()).bits_of();
+         const auto kex_encapsed_key = ephemeral_keypair->raw_public_key_bits();
 
          // 3. KEX: Encapsulate a shared secret using the KEM's public key,
          //         yielding a shared secret and its encapsulation.
@@ -266,7 +275,7 @@ class Hybrid_Decryption_Operation : public Botan::PK_Ops::KEM_Decryption {
        * key (ephemeral key pair) and the length of the KEM's encapsulated key.
        */
       size_t encapsulated_key_length() const override {
-         return m_hybrid_sk.kex_public_key().public_key_bits().size() + m_kem_decryptor.encapsulated_key_length();
+         return m_hybrid_sk.kex_public_key().raw_public_key_bits().size() + m_kem_decryptor.encapsulated_key_length();
       }
 
       /**
@@ -298,7 +307,7 @@ class Hybrid_Decryption_Operation : public Botan::PK_Ops::KEM_Decryption {
 
          // 1. Hybrid: Extract the ephemeral public key and the encapsulation.
          const auto kex_encapsed_key =
-            encapsulated_key.subspan(0, m_hybrid_sk.kex_public_key().public_key_bits().size());
+            encapsulated_key.subspan(0, m_hybrid_sk.kex_public_key().raw_public_key_bits().size());
          const auto kem_encapsed_key = encapsulated_key.subspan(kex_encapsed_key.size());
 
          // 2. KEX: Agree on a shared secret using the KEX's private key and the

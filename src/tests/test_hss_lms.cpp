@@ -110,6 +110,12 @@ class HSS_LMS_Key_Generation_Test final : public PK_Key_Generation_Test {
       std::vector<std::string> keygen_params() const final { return {"SHA-256,HW(10,4),HW(5,8)"}; }
 
       std::string algo_name() const final { return "HSS-LMS"; }
+
+      std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view /* keygen_params */,
+                                                             std::string_view /* provider */,
+                                                             std::span<const uint8_t> raw_pk) const override {
+         return std::make_unique<Botan::HSS_LMS_PublicKey>(raw_pk);
+      }
 };
 
 /**

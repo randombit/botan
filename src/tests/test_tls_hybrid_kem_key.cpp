@@ -150,8 +150,9 @@ void roundtrip_test(Test::Result& result, Ts... kex_kem_fn) {
       "expected shared secret has expected length", decryptor.shared_key_length(0), expected_shared_secret_length);
    result.test_eq("shared secret has expected length", decaps_shared_secret.size(), expected_shared_secret_length);
 
-   result.test_eq(
-      "public key bits is the sum of its parts", hybrid_public_key.public_value().size(), expected_public_key_length);
+   result.test_eq("public key bits is the sum of its parts",
+                  hybrid_public_key.raw_public_key_bits().size(),
+                  expected_public_key_length);
 }
 
 std::vector<Test::Result> hybrid_kem_keypair() {

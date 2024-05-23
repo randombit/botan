@@ -290,6 +290,10 @@ std::vector<uint8_t> TPM_PrivateKey::public_key_bits() const {
    return bits;
 }
 
+std::vector<uint8_t> TPM_PrivateKey::raw_public_key_bits() const {
+   throw TPM_Error("Raw public key export not supported for RSA TPM keys");
+}
+
 secure_vector<uint8_t> TPM_PrivateKey::private_key_bits() const {
    throw TPM_Error("Private key export not supported for TPM keys");
 }

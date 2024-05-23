@@ -35,6 +35,10 @@ AlgorithmIdentifier ElGamal_PublicKey::algorithm_identifier() const {
    return AlgorithmIdentifier(object_identifier(), m_public_key->group().DER_encode(DL_Group_Format::ANSI_X9_42));
 }
 
+std::vector<uint8_t> ElGamal_PublicKey::raw_public_key_bits() const {
+   return m_public_key->public_key_as_bytes();
+}
+
 std::vector<uint8_t> ElGamal_PublicKey::public_key_bits() const {
    return m_public_key->DER_encode();
 }

@@ -107,6 +107,12 @@ class Ed25519_Keygen_Tests final : public PK_Key_Generation_Test {
       std::vector<std::string> keygen_params() const override { return {""}; }
 
       std::string algo_name() const override { return "Ed25519"; }
+
+      std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view /* keygen_params */,
+                                                             std::string_view /* provider */,
+                                                             std::span<const uint8_t> raw_pk) const override {
+         return std::make_unique<Botan::Ed25519_PublicKey>(raw_pk);
+      }
 };
 
 BOTAN_REGISTER_TEST("pubkey", "ed25519_key_valid", Ed25519_Key_Validity_Tests);

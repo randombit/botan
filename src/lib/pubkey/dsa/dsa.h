@@ -46,6 +46,8 @@ class BOTAN_PUBLIC_API(2, 0) DSA_PublicKey : public virtual Public_Key {
       size_t message_part_size() const override;
 
       AlgorithmIdentifier algorithm_identifier() const override;
+
+      std::vector<uint8_t> raw_public_key_bits() const override;
       std::vector<uint8_t> public_key_bits() const override;
 
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;

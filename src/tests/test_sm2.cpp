@@ -86,6 +86,14 @@ class SM2_Keygen_Tests final : public PK_Key_Generation_Test {
       std::vector<std::string> keygen_params() const override { return {"secp256r1", "sm2p256v1"}; }
 
       std::string algo_name() const override { return "SM2"; }
+
+      std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view keygen_params,
+                                                             std::string_view /* provider */,
+                                                             std::span<const uint8_t> raw_pk) const override {
+         const auto group = Botan::EC_Group(keygen_params);
+         const auto public_point = group.OS2ECP(raw_pk);
+         return std::make_unique<Botan::SM2_PublicKey>(group, public_point);
+      }
 };
 
 BOTAN_REGISTER_TEST("pubkey", "sm2_keygen", SM2_Keygen_Tests);

@@ -48,6 +48,7 @@ class BOTAN_PUBLIC_API(3, 5) HSS_LMS_PublicKey : public virtual Public_Key {
       AlgorithmIdentifier algorithm_identifier() const override;
       OID object_identifier() const override;
       bool check_key(RandomNumberGenerator& rng, bool strong) const override;
+      std::vector<uint8_t> raw_public_key_bits() const override;
       std::vector<uint8_t> public_key_bits() const override;
 
       std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,

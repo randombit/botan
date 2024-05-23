@@ -175,6 +175,8 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_EC_PrivateKey : public virtual Private_Key,
 
       // Private_Key methods
 
+      std::vector<uint8_t> raw_public_key_bits() const override;
+
       std::vector<uint8_t> public_key_bits() const override;
 
       std::size_t key_length() const override;

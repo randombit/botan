@@ -532,8 +532,14 @@ size_t Dilithium_PublicKey::estimated_strength() const {
    return m_public->mode().nist_security_strength();
 }
 
-std::vector<uint8_t> Dilithium_PublicKey::public_key_bits() const {
+std::vector<uint8_t> Dilithium_PublicKey::raw_public_key_bits() const {
    return m_public->raw_pk();
+}
+
+std::vector<uint8_t> Dilithium_PublicKey::public_key_bits() const {
+   // Currently, there isn't a finalized definition of an ASN.1 structure for
+   // Dilithium aka ML-DSA public keys. Therefore, we return the raw public key bits.
+   return raw_public_key_bits();
 }
 
 bool Dilithium_PublicKey::check_key(RandomNumberGenerator&, bool) const {

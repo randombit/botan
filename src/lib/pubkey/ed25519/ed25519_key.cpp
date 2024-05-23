@@ -79,8 +79,12 @@ Ed25519_PublicKey::Ed25519_PublicKey(const AlgorithmIdentifier& /*unused*/, std:
    }
 }
 
-std::vector<uint8_t> Ed25519_PublicKey::public_key_bits() const {
+std::vector<uint8_t> Ed25519_PublicKey::raw_public_key_bits() const {
    return m_public;
+}
+
+std::vector<uint8_t> Ed25519_PublicKey::public_key_bits() const {
+   return raw_public_key_bits();
 }
 
 std::unique_ptr<Private_Key> Ed25519_PublicKey::generate_another(RandomNumberGenerator& rng) const {

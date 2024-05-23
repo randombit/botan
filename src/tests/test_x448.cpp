@@ -22,6 +22,12 @@ class X448_Keygen_Tests final : public PK_Key_Generation_Test {
       std::vector<std::string> keygen_params() const override { return {""}; }
 
       std::string algo_name() const override { return "X448"; }
+
+      std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view /* keygen_params */,
+                                                             std::string_view /* provider */,
+                                                             std::span<const uint8_t> raw_pk) const override {
+         return std::make_unique<Botan::X448_PublicKey>(raw_pk);
+      }
 };
 
 class X448_Agreement_Tests final : public PK_Key_Agreement_Test {

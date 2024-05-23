@@ -154,6 +154,8 @@ class BOTAN_PUBLIC_API(2, 0) TPM_PrivateKey final : public Private_Key {
 
       std::vector<uint8_t> public_key_bits() const override;
 
+      std::vector<uint8_t> raw_public_key_bits() const override;
+
       secure_vector<uint8_t> private_key_bits() const override;
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;

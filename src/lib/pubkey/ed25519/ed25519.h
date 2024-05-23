@@ -27,6 +27,8 @@ class BOTAN_PUBLIC_API(2, 2) Ed25519_PublicKey : public virtual Public_Key {
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
+      std::vector<uint8_t> raw_public_key_bits() const override;
+
       std::vector<uint8_t> public_key_bits() const override;
 
       std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;

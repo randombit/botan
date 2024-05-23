@@ -221,15 +221,10 @@ AlgorithmIdentifier Hybrid_KEM_PublicKey::algorithm_identifier() const {
 }
 
 std::vector<uint8_t> Hybrid_KEM_PublicKey::public_key_bits() const {
-   // Technically, that's not really correct. The docstring for public_key_bits()
-   // states that it should return a BER-encoding of the public key.
-   //
-   // TODO: Perhaps add something like Public_Key::raw_public_key_bits() to
-   //       better reflect what we need here.
-   return public_value();
+   return raw_public_key_bits();
 }
 
-std::vector<uint8_t> Hybrid_KEM_PublicKey::public_value() const {
+std::vector<uint8_t> Hybrid_KEM_PublicKey::raw_public_key_bits() const {
    // draft-ietf-tls-hybrid-design-06 3.2
    //   The values are directly concatenated, without any additional encoding
    //   or length fields; this assumes that the representation and length of
@@ -238,15 +233,7 @@ std::vector<uint8_t> Hybrid_KEM_PublicKey::public_value() const {
    //   other unambiguous encoding must be used to ensure that the composition
    //   of the two values is injective.
    return reduce(m_public_keys, std::vector<uint8_t>(), [](auto pkb, const auto& key) {
-      // Technically, this is not correct! `public_key_bits()` is meant to
-      // return a BER-encoded public key. For (e.g.) Kyber, that contract is
-      // broken: It returns the raw encoding as used in the reference
-      // implementation.
-      //
-      // TODO: Provide something like Public_Key::raw_public_key_bits() to
-      //       reflect that difference. Also: Key agreement keys could return
-      //       their raw public value there.
-      return concat(pkb, key->public_key_bits());
+      return concat(pkb, key->raw_public_key_bits());
    });
 }
 

@@ -112,6 +112,12 @@ class Diffie_Hellman_Keygen_Tests final : public PK_Key_Generation_Test {
       std::vector<std::string> keygen_params() const override { return {"modp/ietf/1024"}; }
 
       std::string algo_name() const override { return "DH"; }
+
+      std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view keygen_params,
+                                                             std::string_view /*provider*/,
+                                                             std::span<const uint8_t> raw_key_bits) const override {
+         return std::make_unique<Botan::DH_PublicKey>(Botan::DL_Group(keygen_params), Botan::BigInt(raw_key_bits));
+      }
 };
 
 BOTAN_REGISTER_TEST("pubkey", "dh_kat", Diffie_Hellman_KAT_Tests);

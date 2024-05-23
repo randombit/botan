@@ -155,6 +155,12 @@ class Frodo_Keygen_Tests final : public PK_Key_Generation_Test {
       }
 
       std::string algo_name() const override { return "FrodoKEM"; }
+
+      std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view keygen_params,
+                                                             std::string_view /* provider */,
+                                                             std::span<const uint8_t> raw_pk) const override {
+         return std::make_unique<Botan::FrodoKEM_PublicKey>(raw_pk, Botan::FrodoKEMMode(keygen_params));
+      }
 };
 
 }  // namespace

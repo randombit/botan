@@ -274,8 +274,14 @@ size_t FrodoKEM_PublicKey::estimated_strength() const {
    return m_public->constants().estimated_strength();
 }
 
-std::vector<uint8_t> FrodoKEM_PublicKey::public_key_bits() const {
+std::vector<uint8_t> FrodoKEM_PublicKey::raw_public_key_bits() const {
    return concat<std::vector<uint8_t>>(m_public->seed_a(), m_public->b().pack(m_public->constants()));
+}
+
+std::vector<uint8_t> FrodoKEM_PublicKey::public_key_bits() const {
+   // Currently, there isn't a finalized definition of an ASN.1 structure for
+   // FrodoKEM public keys. Therefore, we return the raw public key bits.
+   return raw_public_key_bits();
 }
 
 bool FrodoKEM_PublicKey::check_key(RandomNumberGenerator&, bool) const {

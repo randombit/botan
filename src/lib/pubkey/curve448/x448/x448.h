@@ -43,6 +43,8 @@ class BOTAN_PUBLIC_API(3, 4) X448_PublicKey : public virtual Public_Key {
 
       std::vector<uint8_t> public_value() const { return {m_public.begin(), m_public.end()}; }
 
+      std::vector<uint8_t> raw_public_key_bits() const override;
+
       std::vector<uint8_t> public_key_bits() const override;
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::KeyAgreement); }

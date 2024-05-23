@@ -82,6 +82,15 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PublicKey : public virtual Public_Key {
       size_t key_length() const override { return m_xmss_params.estimated_strength(); }
 
       /**
+       * Generates a byte sequence representing the XMSS
+       * public key, as defined in [1] (p. 23, "XMSS Public Key")
+       *
+       * @return 4-byte OID, followed by n-byte root node, followed by
+       *         public seed.
+       **/
+      std::vector<uint8_t> raw_public_key_bits() const override;
+
+      /**
        * Returns the encoded public key as defined in RFC
        * draft-vangeest-x509-hash-sigs-03.
        *
@@ -89,14 +98,7 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PublicKey : public virtual Public_Key {
        **/
       std::vector<uint8_t> public_key_bits() const override;
 
-      /**
-       * Generates a byte sequence representing the XMSS
-       * public key, as defined in [1] (p. 23, "XMSS Public Key")
-       *
-       * @return 4-byte OID, followed by n-byte root node, followed by
-       *         public seed.
-       **/
-      std::vector<uint8_t> raw_public_key() const;
+      BOTAN_DEPRECATED("Use raw_public_key_bits()") std::vector<uint8_t> raw_public_key() const;
 
       std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
 

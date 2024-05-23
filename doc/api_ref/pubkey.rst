@@ -59,6 +59,27 @@ removed in a future major release.
 
    .. cpp:function:: std::vector<uint8_t> public_key_bits() const = 0;
 
+      Returns a binary representation of the public key. Typically this is a
+      BER encoded structure that includes metadata like the algorithm and
+      parameter set used to generate the key.
+
+      Note that pre-standard post-quantum algorithms of the NIST competition
+      (e.g. Kyber, Dilithium, FrodoKEM, etc) do not have a standardized BER
+      encoding, yet. For the time being, the raw public key bits are returned
+      for these algorithms. That might change as the standards evolve.
+
+   .. cpp:function:: std::vector<uint8_t> raw_public_key_bits() const = 0;
+
+      Returns a binary representation of the public key's canonical structure.
+      Typically, this does not include any metadata like an algorithm identifier
+      or parameter set. Note that some schemes (e.g. RSA) do not know such "raw"
+      canonical structure and therefore throw `Not_Implemented`.
+      For key agreement algorithms, this is the canonical public value of the
+      scheme.
+
+      Decoding the resulting raw bytes typically requires knowledge of the
+      algorithm and parameters used to generate the key.
+
    .. cpp:function:: std::vector<uint8_t> subject_public_key() const;
 
       Return the X.509 SubjectPublicKeyInfo encoding of this key
