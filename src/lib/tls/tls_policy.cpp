@@ -14,11 +14,17 @@
 #include <botan/tls_algos.h>
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_exceptn.h>
+#include <botan/internal/os_utils.h>
 #include <botan/internal/stl_util.h>
 #include <optional>
 #include <sstream>
 
 namespace Botan::TLS {
+
+bool Policy::allow_ssl_key_log_file() const {
+   std::string data;
+   return Botan::OS::read_env_variable(data, "SSLKEYLOGFILE");
+}
 
 std::vector<Signature_Scheme> Policy::allowed_signature_schemes() const {
    std::vector<Signature_Scheme> schemes;

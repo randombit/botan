@@ -12,6 +12,7 @@
 
 #include <botan/tls_server_info.h>
 #include <botan/internal/tls_channel_impl_13.h>
+#include <botan/internal/tls_cipher_state.h>
 #include <botan/internal/tls_handshake_state_13.h>
 #include <botan/internal/tls_handshake_transitions.h>
 
@@ -24,7 +25,8 @@ namespace TLS {
 /**
 * SSL/TLS Client 1.3 implementation
 */
-class Client_Impl_13 : public Channel_Impl_13 {
+class Client_Impl_13 : public Channel_Impl_13,
+                       public Secrets_Callback {
    public:
       /**
       * Set up a new TLS client session
@@ -77,6 +79,11 @@ class Client_Impl_13 : public Channel_Impl_13 {
        * @return true if the TLS handshake finished successfully
        */
       bool is_handshake_complete() const override;
+
+      /*
+       * Allows access to a connection's secret data
+       */
+      void tls_log_secret(std::string_view label, const std::span<const uint8_t>& secret) const override;
 
    private:
       void process_handshake_msg(Handshake_Message_13 msg) override;

@@ -10,6 +10,7 @@
 #define BOTAN_TLS_SERVER_IMPL_13_H_
 
 #include <botan/internal/tls_channel_impl_13.h>
+#include <botan/internal/tls_cipher_state.h>
 #include <botan/internal/tls_handshake_state_13.h>
 #include <botan/internal/tls_handshake_transitions.h>
 
@@ -18,7 +19,8 @@ namespace Botan::TLS {
 /**
 * SSL/TLS Server 1.3 implementation
 */
-class Server_Impl_13 : public Channel_Impl_13 {
+class Server_Impl_13 : public Channel_Impl_13,
+                       public Secrets_Callback {
    public:
       explicit Server_Impl_13(const std::shared_ptr<Callbacks>& callbacks,
                               const std::shared_ptr<Session_Manager>& session_manager,
@@ -35,6 +37,8 @@ class Server_Impl_13 : public Channel_Impl_13 {
       size_t send_new_session_tickets(size_t tickets) override;
 
       bool is_handshake_complete() const override;
+
+      void tls_log_secret(std::string_view label, const std::span<const uint8_t>& secret) const override;
 
    private:
       void process_handshake_msg(Handshake_Message_13 msg) override;

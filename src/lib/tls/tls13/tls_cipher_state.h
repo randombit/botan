@@ -9,6 +9,8 @@
 #ifndef BOTAN_TLS_CIPHER_STATE_H_
 #define BOTAN_TLS_CIPHER_STATE_H_
 
+#include <functional>
+
 #include <botan/secmem.h>
 #include <botan/tls_magic.h>
 #include <botan/tls_messages.h>
@@ -27,6 +29,31 @@ class HKDF_Expand;
 namespace Botan::TLS {
 
 class Ciphersuite;
+
+/*
+ * Encapsulates the callbacks in the state machine described in RFC 8446 7.1,
+ * that will make the realisation the SSLKEYLOGFILE for connection debugging
+ * specified in ietf.org/archive/id/draft-thomson-tls-keylogfile-00.html
+ */
+class Secrets_Callback {
+   public:
+      Secrets_Callback() {}
+
+      virtual ~Secrets_Callback() {}
+
+      /**
+      * Allows access to a connection's secret data
+      * 
+      * Default implementation simply ignores the inputs.
+      *
+      * @param label  Identifies the reported secret type
+      *               See draft-thomson-tls-keylogfile-00 Section 3.1
+      * @param secret         the actual secret value
+      */
+      virtual void tls_log_secret(std::string_view label, const std::span<const uint8_t>& secret) const {
+         BOTAN_UNUSED(label, secret);
+      }
+};
 
 /**
  * This class implements the key schedule for TLS 1.3 as described in RFC 8446 7.1.
@@ -82,25 +109,27 @@ class BOTAN_TEST_API Cipher_State {
       static std::unique_ptr<Cipher_State> init_with_server_hello(Connection_Side side,
                                                                   secure_vector<uint8_t>&& shared_secret,
                                                                   const Ciphersuite& cipher,
-                                                                  const Transcript_Hash& transcript_hash);
+                                                                  const Transcript_Hash& transcript_hash,
+                                                                  const Secrets_Callback& callbacks);
 
       /**
        * Transition internal secrets/keys for transporting early application data.
        * Note that this state transition is legal only for handshakes using PSK.
        */
-      void advance_with_client_hello(const Transcript_Hash& transcript_hash);
+      void advance_with_client_hello(const Transcript_Hash& transcript_hash, const Secrets_Callback& callbacks);
 
       /**
        * Transition internal secrets/keys for transporting handshake data.
        */
       void advance_with_server_hello(const Ciphersuite& cipher,
                                      secure_vector<uint8_t>&& shared_secret,
-                                     const Transcript_Hash& transcript_hash);
+                                     const Transcript_Hash& transcript_hash,
+                                     const Secrets_Callback& callbacks);
 
       /**
        * Transition internal secrets/keys for transporting application data.
        */
-      void advance_with_server_finished(const Transcript_Hash& transcript_hash);
+      void advance_with_server_finished(const Transcript_Hash& transcript_hash, const Secrets_Callback& callbacks);
 
       /**
        * Transition to the final internal state allowing to create resumptions.

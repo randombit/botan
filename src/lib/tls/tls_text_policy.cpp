@@ -15,6 +15,10 @@
 
 namespace Botan::TLS {
 
+bool Text_Policy::allow_ssl_key_log_file() const {
+   return get_bool("allow_ssl_key_log_file", Policy::allow_ssl_key_log_file());
+}
+
 std::vector<std::string> Text_Policy::allowed_ciphers() const {
    return get_list("ciphers", Policy::allowed_ciphers());
 }

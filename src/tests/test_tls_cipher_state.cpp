@@ -256,10 +256,11 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
    auto cipher = Ciphersuite::from_name("AES_128_GCM_SHA256").value();
 
    // initialize Cipher_State with client_hello...server_hello
+   Secrets_Callback sc;
    auto cs_client = Cipher_State::init_with_server_hello(
-      Connection_Side::Client, secure_vector<uint8_t>(shared_secret), cipher, th_server_hello);
+      Connection_Side::Client, secure_vector<uint8_t>(shared_secret), cipher, th_server_hello, sc);
    auto cs_server = Cipher_State::init_with_server_hello(
-      Connection_Side::Server, secure_vector<uint8_t>(shared_secret), cipher, th_server_hello);
+      Connection_Side::Server, secure_vector<uint8_t>(shared_secret), cipher, th_server_hello, sc);
 
    auto CHECK_both = make_CHECK_both(cs_client.get(), cs_server.get());
 
@@ -311,7 +312,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
                      // advance Cipher_State with client_hello...server_Finished
                      // (allows receiving of application data, but does not yet allow such sending)
                      result.test_no_throw("state advancement is legal",
-                                          [&] { cs->advance_with_server_finished(th_server_finished); });
+                                          [&] { cs->advance_with_server_finished(th_server_finished, sc); });
 
                      if(side == Connection_Side::Client) {
                         result.confirm("can read application data", cs->can_decrypt_application_traffic());
@@ -577,7 +578,8 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
 
        CHECK_both("calculate the early traffic secrets",
                   [&](Cipher_State* cs, Connection_Side side, Test::Result& result) {
-                     cs->advance_with_client_hello(th_client_hello);
+                     Secrets_Callback sc;
+                     cs->advance_with_client_hello(th_client_hello, sc);
                      result.require("early key export is possible", cs->can_export_keys());
                      result.test_eq("early key export produces expected result",
                                     cs->export_key(early_export_label, early_export_context, 16),
@@ -600,7 +602,8 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
 
        CHECK_both("handshake traffic after PSK",
                   [&](Cipher_State* cs, Connection_Side side, Test::Result& result) {
-                     cs->advance_with_server_hello(cipher, secure_vector<uint8_t>(shared_secret), th_server_hello);
+                     Secrets_Callback sc;
+                     cs->advance_with_server_hello(cipher, secure_vector<uint8_t>(shared_secret), th_server_hello, sc);
 
                      // decrypt encrypted extensions from server
                      encrypted_extensions.xxcrypt(result, cs, side);
@@ -630,7 +633,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
                      // advance Cipher_State with client_hello...server_Finished
                      // (allows receiving of application data, but no such sending)
                      result.test_no_throw("state advancement is legal",
-                                          [&] { cs->advance_with_server_finished(th_server_finished); });
+                                          [&] { cs->advance_with_server_finished(th_server_finished, sc); });
 
                      if(side == Connection_Side::Client) {
                         result.confirm("can read application data", cs->can_decrypt_application_traffic());

@@ -59,7 +59,8 @@ std::unique_ptr<TLS::Cipher_State> rfc8448_rtt1_handshake_traffic(
       "8b d4 05 4f b5 5b 9d 63 fd fb ac f9 f0 4b 9f 0d"
       "35 e6 d6 3f 53 75 63 ef d4 62 72 90 0f 89 49 2d");
    auto cipher = TLS::Ciphersuite::from_name("AES_128_GCM_SHA256").value();
-   return TLS::Cipher_State::init_with_server_hello(side, std::move(shared_secret), cipher, transcript_hash);
+   Botan::TLS::Secrets_Callback sc;
+   return TLS::Cipher_State::init_with_server_hello(side, std::move(shared_secret), cipher, transcript_hash, sc);
 }
 
 std::vector<Test::Result> read_full_records() {
@@ -655,8 +656,9 @@ std::vector<Test::Result> read_encrypted_records() {
 
             auto cs = rfc8448_rtt1_handshake_traffic();
             // advance with arbitrary hashes that were used to produce the input data
+            Botan::TLS::Secrets_Callback sc;
             cs->advance_with_server_finished(
-               Botan::hex_decode("e1935a480babfc4403b2517f0ad414bed0ca51fa671e2061804afa78fd71d55c"));
+               Botan::hex_decode("e1935a480babfc4403b2517f0ad414bed0ca51fa671e2061804afa78fd71d55c"), sc);
             cs->advance_with_client_finished(
                Botan::hex_decode("305e4a0a7cee581b282c571b251b20138a1a6a21918937a6bb95b1e9ba1b5cac"));
 

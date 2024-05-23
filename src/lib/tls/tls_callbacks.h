@@ -560,6 +560,26 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
       virtual void tls_log_debug_bin(const char* descr, const uint8_t val[], size_t val_len) {
          BOTAN_UNUSED(descr, val, val_len);
       }
+
+      /**
+       * Optional callback: Allows access to a connection's secret data
+       *
+       * Useful to implement the SSLKEYLOGFILE for connection debugging as
+       * specified in ietf.org/archive/id/draft-thomson-tls-keylogfile-00.html
+       *
+       * Default implementation simply ignores the inputs.
+       *
+       * @param label  Identifies the reported secret type
+       *               See draft-thomson-tls-keylogfile-00 Section 3.1 and 3.2
+       * @param client_random  random value from ClientHello message acting as
+       *                       an identifier of the TLS sessions
+       * @param secret         the actual secret value
+       */
+      virtual void tls_ssl_key_log_data(std::string_view label,
+                                        const std::span<const uint8_t>& client_random,
+                                        const std::span<const uint8_t>& secret) const {
+         BOTAN_UNUSED(label, client_random, secret);
+      }
 };
 
 }  // namespace TLS

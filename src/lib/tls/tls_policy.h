@@ -32,6 +32,11 @@ namespace TLS {
 class BOTAN_PUBLIC_API(2, 0) Policy {
    public:
       /**
+      * Allow ssl key log file
+      */
+      virtual bool allow_ssl_key_log_file() const;
+
+      /**
       * Returns a list of ciphers we are willing to negotiate, in
       * order of preference.
       */
@@ -629,6 +634,8 @@ class BOTAN_PUBLIC_API(2, 0) Strict_Policy : public Policy {
 
 class BOTAN_PUBLIC_API(2, 0) Text_Policy : public Policy {
    public:
+      bool allow_ssl_key_log_file() const override;
+
       std::vector<std::string> allowed_ciphers() const override;
 
       std::vector<std::string> allowed_signature_hashes() const override;
