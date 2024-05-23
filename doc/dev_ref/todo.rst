@@ -46,9 +46,7 @@ Public Key Crypto, Math
 * Identity based encryption
 * Paillier homomorphic cryptosystem
 * New PAKEs (pending CFRG bakeoff results)
-* New post quantum schemes (pending NIST contest results)
 * SPHINX password store (https://eprint.iacr.org/2018/695)
-* X448 and Ed448
 
 Utility Functions
 ------------------
@@ -67,8 +65,7 @@ External Providers, Hardware Support
 * Add support for iOS keychain access
 * POWER8 SHA-2 extensions (GH #1486 + #1487)
 * Add support for VPSUM on big-endian PPC64 (GH #2252)
-* Better TPM support: NVRAM, PCR measurements, sealing
-* Add support for TPM 2.0 hardware
+* TPM 2.0 support
 
 TLS
 ----------------------------------------
@@ -118,7 +115,6 @@ New C APIs
 * Certificate signing
 * CRLs
 * Expose TLS
-* Expose NIST key wrap with padding
 * Expose secret sharing
 * Expose deterministic PRNG
 * base32
@@ -148,7 +144,6 @@ CLI
 * `encrypt` / `decrypt` tools providing password based file encryption
 * Add ECM factoring
 * Clone of `minisign` signature utility
-* Implementation of `tlsdate`
 * Password store utility
 * TOTP calculator
 * Clone of magic wormhole
