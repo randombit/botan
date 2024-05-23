@@ -60,8 +60,8 @@ namespace Botan {
 *        @ref frodokem.h "FrodoKEM", @ref kyber.h "Kyber", @ref rsa.h "RSA"
 * <dt>Public Key Signature Schemes<dd>
 *        @ref dsa.h "DSA", @ref dilithium.h "Dilithium", @ref ecdsa.h "ECDSA", @ref ecgdsa.h "ECGDSA",
-*        @ref eckcdsa.h "ECKCDSA", @ref gost_3410.h "GOST 34.10-2001", @ref sm2.h "SM2", @ref sphincsplus.h "SPHINCS+",
-*        @ref xmss.h "XMSS"
+*        @ref eckcdsa.h "ECKCDSA", @ref gost_3410.h "GOST 34.10-2001", @ref hss_lms.h "HSS/LMS", @ref sm2.h "SM2",
+         @ref sphincsplus.h "SPHINCS+", @ref xmss.h "XMSS"
 * <dt>Key Agreement<dd>
 *        @ref dh.h "DH", @ref ecdh.h "ECDH"
 * <dt>Compression<dd>
