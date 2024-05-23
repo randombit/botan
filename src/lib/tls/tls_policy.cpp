@@ -22,8 +22,7 @@
 namespace Botan::TLS {
 
 bool Policy::allow_ssl_key_log_file() const {
-   std::string data;
-   return Botan::OS::read_env_variable(data, "SSLKEYLOGFILE");
+   return false;
 }
 
 std::vector<Signature_Scheme> Policy::allowed_signature_schemes() const {

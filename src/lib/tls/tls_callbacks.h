@@ -566,6 +566,8 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
        *
        * Useful to implement the SSLKEYLOGFILE for connection debugging as
        * specified in ietf.org/archive/id/draft-thomson-tls-keylogfile-00.html
+       * 
+       * Invoked if Policy::allow_ssl_key_log_file returns true.
        *
        * Default implementation simply ignores the inputs.
        *

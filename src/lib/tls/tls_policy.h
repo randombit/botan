@@ -33,6 +33,8 @@ class BOTAN_PUBLIC_API(2, 0) Policy {
    public:
       /**
       * Allow ssl key log file
+      * @note If function returns true, then Callbacks::tls_ssl_key_log_data
+      *       will be invoked containing secret information for logging purposes
       */
       virtual bool allow_ssl_key_log_file() const;
 

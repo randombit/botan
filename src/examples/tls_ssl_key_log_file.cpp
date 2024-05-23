@@ -118,8 +118,8 @@ class BotanTLSCallbacksProxy : public Botan::TLS::Callbacks {
       void tls_alert(Botan::TLS::Alert alert) override { BOTAN_UNUSED(alert); }
 
       void tls_ssl_key_log_data(std::string_view label,
-                                const std::span<const uint8_t>& client_random,
-                                const std::span<const uint8_t>& secret) const override {
+                                std::span<const uint8_t> client_random,
+                                std::span<const uint8_t> secret) const override {
          parent.tls_ssl_key_log_data(label, client_random, secret);
       }
 
@@ -182,8 +182,8 @@ class DtlsConnection : public Botan::TLS::Callbacks {
       }
 
       void tls_ssl_key_log_data(std::string_view label,
-                                const std::span<const uint8_t>& client_random,
-                                const std::span<const uint8_t>& secret) const override {
+                                std::span<const uint8_t> client_random,
+                                std::span<const uint8_t> secret) const override {
          std::ofstream stream;
          stream.open("test.skl", std::ofstream::out | std::ofstream::app);
          stream << label << " " << Botan::hex_encode(client_random.data(), client_random.size()) << " "
