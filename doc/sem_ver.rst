@@ -54,3 +54,12 @@ Such modules are not built by default. Any functionality exposed by
 such modules may change or vanish at any time without warning. See
 :ref:`building` for more information on enabling or disabling these
 modules.
+
+Exception #4: Any function starting with ``_``
+-----------------------------------------------
+
+For various technical reasons, some functions are available for public
+use but are really only intended for use by the library itself.
+
+The developers denote such functions by starting them with an underscore
+(``_``). Any such function may change or disappear at any time.
