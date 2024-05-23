@@ -144,6 +144,16 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
       "a1 1a f9 f0 55 31 f8 56 ad 47 11 6b 45 a9 50 32"
       "82 04 b4 f4 4b fb 6b 3a 4b 4f 1f 3f cb 63 16 43");
 
+   // application traffic secret (1) for the client (not in RFC 8448)
+   const auto updated_client_traffic_secret = Botan::hex_decode(
+      "fc df cc 72 72 5a ae e4 8b f6 4e 4f d8 b7 49 cd"
+      "bd ba b3 9d 90 da 0b 26 e2 24 5c a6 ea 16 72 07");
+
+   // application traffic secret (1) for the server (not in RFC 8448)
+   const auto updated_server_traffic_secret = Botan::hex_decode(
+      "51 92 1b 8a a3 00 19 76 eb 40 1d 0a 43 19 a8 51"
+      "64 16 a6 c5 60 01 a3 57 e5 d1 62 03 1e 84 f9 16");
+
    // encrypted with server_handshake_traffic_secret
    const auto encrypted_extensions =
       RFC8448_TestData("encrypted_extensions",
@@ -463,9 +473,26 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
                   }),
 
        CHECK_both("key update",
-                  [&](Cipher_State* cs, Journaling_Secret_Logger*, Connection_Side, Test::Result& result) {
-                     cs->update_read_keys();
-                     cs->update_write_keys();
+                  [&](Cipher_State* cs, Journaling_Secret_Logger* sl, Connection_Side side, Test::Result& result) {
+                     const auto read_label =
+                        side == Connection_Side::Client ? "SERVER_TRAFFIC_SECRET_1" : "CLIENT_TRAFFIC_SECRET_1";
+                     const auto write_label =
+                        side == Connection_Side::Client ? "CLIENT_TRAFFIC_SECRET_1" : "SERVER_TRAFFIC_SECRET_1";
+
+                     cs->update_read_keys(*sl);
+                     result.test_eq("read secret update is here", sl->secrets.size(), 6);
+                     result.require("has new read traffic secret", sl->secrets.contains(read_label));
+
+                     cs->update_write_keys(*sl);
+                     result.test_eq("write secret update is here", sl->secrets.size(), 7);
+                     result.require("has new write traffic secret", sl->secrets.contains(write_label));
+
+                     result.test_eq("client traffic secret (1)",
+                                    sl->secrets.at("CLIENT_TRAFFIC_SECRET_1"),
+                                    updated_client_traffic_secret);
+                     result.test_eq("server traffic secret (1)",
+                                    sl->secrets.at("SERVER_TRAFFIC_SECRET_1"),
+                                    updated_server_traffic_secret);
 
                      result.confirm("can encrypt application traffic", cs->can_encrypt_application_traffic());
                   }),

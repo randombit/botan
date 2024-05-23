@@ -98,6 +98,7 @@
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_magic.h>
 
+#include <botan/internal/fmt.h>
 #include <botan/internal/hkdf.h>
 #include <botan/internal/hmac.h>
 #include <botan/internal/loadstor.h>
@@ -444,6 +445,8 @@ Cipher_State::Cipher_State(Connection_Side whoami, std::string_view hash_functio
       m_salt(m_hash->output_length(), 0x00),
       m_write_seq_no(0),
       m_read_seq_no(0),
+      m_write_key_update_count(0),
+      m_read_key_update_count(0),
       m_ticket_nonce(0) {}
 
 Cipher_State::~Cipher_State() = default;
@@ -593,19 +596,29 @@ std::vector<uint8_t> Cipher_State::empty_hash() const {
    return m_hash->final_stdvec();
 }
 
-void Cipher_State::update_read_keys() {
+void Cipher_State::update_read_keys(const Secret_Logger& logger) {
    BOTAN_ASSERT_NOMSG(m_state == State::ServerApplicationTraffic || m_state == State::Completed);
 
    m_read_application_traffic_secret =
       hkdf_expand_label(m_read_application_traffic_secret, "traffic upd", {}, m_hash->output_length());
 
+   const auto secret_label = fmt("{}_TRAFFIC_SECRET_{}",
+                                 m_connection_side == Connection_Side::Server ? "CLIENT" : "SERVER",
+                                 ++m_read_key_update_count);
+   logger.maybe_log_secret(secret_label, m_read_application_traffic_secret);
+
    derive_read_traffic_key(m_read_application_traffic_secret);
 }
 
-void Cipher_State::update_write_keys() {
+void Cipher_State::update_write_keys(const Secret_Logger& logger) {
    BOTAN_ASSERT_NOMSG(m_state == State::ServerApplicationTraffic || m_state == State::Completed);
    m_write_application_traffic_secret =
       hkdf_expand_label(m_write_application_traffic_secret, "traffic upd", {}, m_hash->output_length());
+
+   const auto secret_label = fmt("{}_TRAFFIC_SECRET_{}",
+                                 m_connection_side == Connection_Side::Server ? "SERVER" : "CLIENT",
+                                 ++m_write_key_update_count);
+   logger.maybe_log_secret(secret_label, m_write_application_traffic_secret);
 
    derive_write_traffic_key(m_write_application_traffic_secret);
 }

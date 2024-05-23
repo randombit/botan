@@ -237,7 +237,7 @@ class BOTAN_TEST_API Cipher_State {
        * Note that this must not be called before the connection is ready for
        * application traffic.
        */
-      void update_read_keys();
+      void update_read_keys(const Secret_Logger& channel);
 
       /**
        * Updates the key material used for encrypting data
@@ -246,7 +246,7 @@ class BOTAN_TEST_API Cipher_State {
        * Note that this must not be called before the connection is ready for
        * application traffic.
        */
-      void update_write_keys();
+      void update_write_keys(const Secret_Logger& channel);
 
       /**
        * Remove handshake/traffic secrets for decrypting data from peer
@@ -327,6 +327,9 @@ class BOTAN_TEST_API Cipher_State {
 
       uint64_t m_write_seq_no;
       uint64_t m_read_seq_no;
+
+      uint32_t m_write_key_update_count;
+      uint32_t m_read_key_update_count;
 
       uint16_t m_ticket_nonce;
 

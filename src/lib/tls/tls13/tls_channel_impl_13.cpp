@@ -198,7 +198,7 @@ void Channel_Impl_13::handle(const Key_Update& key_update) {
       throw Unexpected_Message("Unexpected additional post-handshake message data found in record");
    }
 
-   m_cipher_state->update_read_keys();
+   m_cipher_state->update_read_keys(*this);
 
    // TODO: introduce some kind of rate limit of key updates, otherwise we
    //       might be forced into an endless loop of key updates.
@@ -319,7 +319,7 @@ void Channel_Impl_13::update_traffic_keys(bool request_peer_update) {
    BOTAN_STATE_CHECK(is_handshake_complete());
    BOTAN_ASSERT_NONNULL(m_cipher_state);
    send_post_handshake_message(Key_Update(request_peer_update));
-   m_cipher_state->update_write_keys();
+   m_cipher_state->update_write_keys(*this);
 }
 
 void Channel_Impl_13::send_record(Record_Type record_type, const std::vector<uint8_t>& record) {

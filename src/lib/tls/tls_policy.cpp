@@ -622,6 +622,7 @@ void Policy::print(std::ostream& o) const {
    print_bool(o, "allow_tls12", allow_tls12());
    print_bool(o, "allow_tls13", allow_tls13());
    print_bool(o, "allow_dtls12", allow_dtls12());
+   print_bool(o, "allow_ssl_key_log_file", allow_ssl_key_log_file());
    print_vec(o, "ciphers", allowed_ciphers());
    print_vec(o, "macs", allowed_macs());
    print_vec(o, "signature_hashes", allowed_signature_hashes());
