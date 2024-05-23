@@ -4,6 +4,10 @@ Release Notes
 Version 3.5.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add support for LMS hash based signatures (GH #3716 #4059)
+
+* Add support for SSLKEYLOGFILE logging (GH #4043)
+
 * Kyber internals refactoring (GH #3887)
 
 * Generate Kuznyechik tables at compile time instead of hard coding them.
@@ -15,6 +19,12 @@ Version 3.5.0, Not Yet Released
   curve modulo 2**255-19. This is now called X25519 in all cases. Typedefs and a
   deprecated header are retained for compatability with older versions. (GH
   #4012)
+
+* Fix several bugs related to encoding and decoding ASN.1 object identifiers
+  when the second arc is larger than 40. (GH #4063 #4023)
+
+* Avoid sending IP addresses in the Server Name Indicator TLS extension, if
+  an IP address is used to initialize the TLS_Server_Info struct. (GH #4059)
 
 * Optimize XTS mode (GH #4047)
 
