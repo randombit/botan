@@ -1130,37 +1130,6 @@ def cli_tls_online_pqc_hybrid_tests(tmp_dir):
     if not run_socket_tests() or not run_online_tests() or not check_for_command("tls_client"):
         return
 
-    oqs_test_ca = '\n'.join([
-        "-----BEGIN CERTIFICATE-----"
-        "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"
-        "-----END CERTIFICATE-----"])
-
     class TestConfig:
         def __init__(self, host, kex_algo, port=443, ca=None):
             self.host = host
@@ -1194,16 +1163,25 @@ def cli_tls_online_pqc_hybrid_tests(tmp_dir):
             cmd_options += [self.host]
             return test_cli("tls_client", cmd_options, cmd_input="", timeout=5)
 
-    def get_oqs_ports():
+    def get_oqs_resource(resource):
         try:
             conn = HTTPSConnection("test.openquantumsafe.org")
-            conn.request("GET", "/assignments.json")
+            conn.request("GET", resource)
             resp = conn.getresponse()
             if resp.status != 200:
                 return None
-            return json.loads(resp.read().decode("utf-8"))['ecdsap256']
+            return resp.read().decode("utf-8")
         except Exception:
             return None
+
+    def get_oqs_ports():
+        try:
+            return json.loads(get_oqs_resource("/assignments.json"))['ecdsap256']
+        except Exception:
+            return None
+
+    def get_oqs_rootca():
+        return get_oqs_resource("/CA.crt")
 
     test_cfg = [
         TestConfig("pq.cloudflareresearch.com", "x25519/Kyber-512-r3/cloudflare"),
@@ -1219,7 +1197,8 @@ def cli_tls_online_pqc_hybrid_tests(tmp_dir):
     ]
 
     oqsp = get_oqs_ports()
-    if oqsp:
+    oqs_test_ca = get_oqs_rootca()
+    if oqsp and oqs_test_ca:
         # src/scripts/test_cli.py --run-online-tests ./botan pqc_hybrid_tests
         test_cfg += [
             TestConfig("test.openquantumsafe.org", "x25519/Kyber-512-r3", port=oqsp['x25519_kyber512'], ca=oqs_test_ca),
