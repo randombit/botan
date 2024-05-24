@@ -65,6 +65,7 @@ struct X509_Certificate_Data {
       bool m_self_signed = false;
       bool m_is_ca_certificate = false;
       bool m_serial_negative = false;
+      bool m_subject_alt_name_exists = false;
 };
 
 std::string X509_Certificate::PEM_label() const {
@@ -235,6 +236,12 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Subject_Alternative_Name>()) {
       data->m_subject_alt_name = ext->get_alt_name();
    }
+
+   // This will be set even if SAN parsing failed entirely eg due to a decoding error
+   // or if the SAN is empty. This is used to guard against using the CN for domain
+   // name checking.
+   const auto san_oid = OID::from_string("X509v3.SubjectAlternativeName");
+   data->m_subject_alt_name_exists = data->m_v3_extensions.extension_set(san_oid);
 
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Certificate_Policies>()) {
       data->m_cert_policies = ext->get_policy_oids();
@@ -636,8 +643,8 @@ bool X509_Certificate::matches_dns_name(std::string_view name) const {
    } else {
       auto issued_names = subject_info("DNS");
 
-      // Fall back to CN only if no DNS names are set (RFC 6125 sec 6.4.4)
-      if(subject_alt_name().count() == 0) {
+      // Fall back to CN only if no SAN is included
+      if(!data().m_subject_alt_name_exists) {
          issued_names = subject_info("Name");
       }
 

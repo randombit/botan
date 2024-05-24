@@ -58,7 +58,7 @@ tests_that_succeed_unexpectedly = {
     'rfc5280::nc::invalid-dnsname-leading-period': 'Common extension',
 
     'rfc5280::nc::nc-forbids-othername': 'Needs investigation',
-    'rfc5280::san::malformed': 'Needs investigation',
+    #'rfc5280::san::malformed': 'Needs investigation',
     'webpki::san::wildcard-embedded-ulabel-san': 'Needs investigation',
     'webpki::malformed-aia': 'Needs investigation',
 
