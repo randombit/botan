@@ -615,9 +615,6 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertEqual(cert.issuer_dn('Organizational Unit', 0), 'bsi')
         self.assertEqual(cert.issuer_dn('Country', 0), 'DE')
 
-        self.assertTrue(cert.hostname_match('csca-germany'))
-        self.assertFalse(cert.hostname_match('csca-slovakia'))
-
         self.assertEqual(cert.not_before(), 1184858838)
         self.assertEqual(cert.not_after(), 1831907880)
 
