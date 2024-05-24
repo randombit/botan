@@ -27,7 +27,7 @@ int main() {
    // create private key in software
    Botan::AutoSeeded_RNG rng;
 
-   Botan::ECDSA_PrivateKey priv_key_sw(rng, Botan::EC_Group("secp256r1"));
+   Botan::ECDSA_PrivateKey priv_key_sw(rng, Botan::EC_Group::from_name("secp256r1"));
    priv_key_sw.set_parameter_encoding(Botan::EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
    // set the private key import properties
@@ -78,13 +78,13 @@ int main() {
 
    Botan::PKCS11::PKCS11_ECDSA_PrivateKey pk(
       session,
-      Botan::EC_Group("secp256r1").DER_encode(Botan::EC_Group_Encoding::EC_DOMPAR_ENC_OID),
+      Botan::EC_Group::from_name("secp256r1").DER_encode(Botan::EC_Group_Encoding::EC_DOMPAR_ENC_OID),
       priv_generate_props);
 
    /************ generate PKCS#11 ECDSA key pair *************/
 
    Botan::PKCS11::EC_PublicKeyGenerationProperties pub_generate_props(
-      Botan::EC_Group("secp256r1").DER_encode(Botan::EC_Group_Encoding::EC_DOMPAR_ENC_OID));
+      Botan::EC_Group::from_name("secp256r1").DER_encode(Botan::EC_Group_Encoding::EC_DOMPAR_ENC_OID));
 
    pub_generate_props.set_label("BOTAN_TEST_ECDSA_PUB_KEY");
    pub_generate_props.set_token(true);

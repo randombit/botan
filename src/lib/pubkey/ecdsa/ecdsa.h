@@ -54,7 +54,7 @@ class BOTAN_PUBLIC_API(2, 0) ECDSA_PublicKey : public virtual EC_PublicKey {
 
       size_t message_parts() const override { return 2; }
 
-      size_t message_part_size() const override { return domain().get_order().bytes(); }
+      size_t message_part_size() const override { return domain().get_order_bytes(); }
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::Signature); }
 

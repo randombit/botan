@@ -59,7 +59,7 @@ class ECC_H2C_Tests final : public Text_Based_Test {
          const BigInt exp_point_y = vars.get_req_bn("PointY");
          const bool random_oracle = method.find("-RO") != std::string::npos;
 
-         Botan::EC_Group group(group_id);
+         const auto group = Botan::EC_Group::from_name(group_id);
 
          const auto point = group.hash_to_curve(hash, input.data(), input.size(), domain, random_oracle);
 

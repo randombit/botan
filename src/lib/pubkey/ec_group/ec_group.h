@@ -48,7 +48,8 @@ class EC_Group_Data_Map;
 class BOTAN_PUBLIC_API(2, 0) EC_Group final {
    public:
       /**
-      * Construct Domain paramers from specified parameters
+      * Construct elliptic curve from the specified parameters
+      *
       * @param p the elliptic curve p
       * @param a the elliptic curve a param
       * @param b the elliptic curve b param
@@ -57,7 +58,16 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @param order the order of the base point
       * @param cofactor the cofactor
       * @param oid an optional OID used to identify this curve
+      *
+      * @warning support for cofactors > 1 is deprecated and will be removed
+      *
+      * @warning support for prime fields > 521 bits is deprecated and
+      * will be removed.
+      *
+      * @warning Support for explicitly encoded curve parameters is deprecated.
+      * An OID must be assigned.
       */
+      BOTAN_DEPRECATED("Use alternate constructor")
       EC_Group(const BigInt& p,
                const BigInt& a,
                const BigInt& b,
@@ -68,32 +78,79 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
                const OID& oid = OID());
 
       /**
+      * Construct elliptic curve from the specified parameters
+      *
+      * Unlike the deprecated constructor, this constructor requires:
+      *  - That p is at most 521 bits
+      *  - That an object identifier is provided
+      *  - That the cofactor is 1 (this is implicit due to not having
+      *    cofactor argument)
+      *  - That the curve is at least plausibly valid (for example
+      *    it checks that p is prime). It does not fully verify
+      *    the group since certain things cannot be checked until
+      *    the EC_Group object is constructed.
+      *
+      * @warning use only elliptic curve parameters that you trust
+      *
+      * @param oid an object identifier used to identify this curve
+      * @param p the elliptic curve prime (at most 521 bits)
+      * @param a the elliptic curve a param
+      * @param b the elliptic curve b param
+      * @param base_x the x coordinate of the group generator
+      * @param base_y the y coordinate of the group generator
+      * @param order the order of the group
+      */
+      EC_Group(const OID& oid,
+               const BigInt& p,
+               const BigInt& a,
+               const BigInt& b,
+               const BigInt& base_x,
+               const BigInt& base_y,
+               const BigInt& order);
+
+      /**
       * Decode a BER encoded ECC domain parameter set
       * @param ber the bytes of the BER encoding
-      * @param ber_len the length of ber
       */
-      explicit EC_Group(const uint8_t ber[], size_t ber_len);
+      explicit EC_Group(std::span<const uint8_t> ber);
 
-      template <typename Alloc>
-      EC_Group(const std::vector<uint8_t, Alloc>& ber) : EC_Group(ber.data(), ber.size()) {}
+      BOTAN_DEPRECATED("Use EC_Group(std::span)")
+      EC_Group(const uint8_t ber[], size_t ber_len) : EC_Group(std::span{ber, ber_len}) {}
 
       /**
       * Create an EC domain by OID (or throw if unknown)
       * @param oid the OID of the EC domain to create
       */
-      explicit EC_Group(const OID& oid);
+      BOTAN_DEPRECATED("Use EC_Group::from_OID") explicit EC_Group(const OID& oid) { *this = EC_Group::from_OID(oid); }
 
       /**
       * Create an EC domain from PEM encoding (as from PEM_encode), or
       * from an OID name (eg "secp256r1", or "1.2.840.10045.3.1.7")
       * @param pem_or_oid PEM-encoded data, or an OID
-
+      *
       * @warning Support for PEM in this function is deprecated. Use
-      * EC_Group_from_PEM
+      * EC_Group::from_PEM or EC_Group::from_OID or EC_Group::from_name
       */
-      explicit EC_Group(std::string_view pem_or_oid);
+      BOTAN_DEPRECATED("Use EC_Group::from_{name,OID,PEM}") explicit EC_Group(std::string_view pem_or_oid);
 
-      static EC_Group EC_Group_from_PEM(std::string_view pem);
+      /**
+      * Initialize an EC group from the PEM/ASN.1 encoding
+      */
+      static EC_Group from_PEM(std::string_view pem);
+
+      /**
+      * Initialize an EC group from a group named by an object identifier
+      */
+      static EC_Group from_OID(const OID& oid);
+
+      /**
+      * Initialize an EC group from a group common name (eg "secp256r1")
+      */
+      static EC_Group from_name(std::string_view name);
+
+      BOTAN_DEPRECATED("Use EC_Group::from_PEM") static EC_Group EC_Group_from_PEM(std::string_view pem) {
+         return EC_Group::from_PEM(pem);
+      }
 
       /**
       * Create an uninitialized EC_Group
@@ -122,16 +179,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       std::string PEM_encode() const;
 
       /**
-      * Return if a == -3 mod p
-      */
-      bool a_is_minus_3() const;
-
-      /**
-      * Return if a == 0 mod p
-      */
-      bool a_is_zero() const;
-
-      /**
       * Return the size of p in bits (same as get_p().bits())
       */
       size_t get_p_bits() const;
@@ -147,9 +194,23 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       size_t get_order_bits() const;
 
       /**
-      * Return the size of p in bytes (same as get_order().bytes())
+      * Return the size of the group order in bytes (same as get_order().bytes())
       */
       size_t get_order_bytes() const;
+
+      /**
+      * Check if y is a plausible point on the curve
+      *
+      * In particular, checks that it is a point on the curve, not infinity,
+      * and that it has order matching the group.
+      */
+      bool verify_public_element(const EC_Point& y) const;
+
+      /**
+      * Return the OID of these domain parameters
+      * @result the OID
+      */
+      const OID& get_curve_oid() const;
 
       /**
       * Return the prime modulus of the field
@@ -193,55 +254,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @result the cofactor
       */
       const BigInt& get_cofactor() const;
-
-      /*
-      * Reduce x modulo the order
-      */
-      BigInt mod_order(const BigInt& x) const;
-
-      /*
-      * Return inverse of x modulo the order
-      */
-      BigInt inverse_mod_order(const BigInt& x) const;
-
-      /*
-      * Reduce (x*x) modulo the order
-      */
-      BigInt square_mod_order(const BigInt& x) const;
-
-      /*
-      * Reduce (x*y) modulo the order
-      */
-      BigInt multiply_mod_order(const BigInt& x, const BigInt& y) const;
-
-      /*
-      * Reduce (x*y*z) modulo the order
-      */
-      BigInt multiply_mod_order(const BigInt& x, const BigInt& y, const BigInt& z) const;
-
-      /*
-      * Return x^3 modulo the order
-      */
-      inline BigInt cube_mod_order(const BigInt& x) const { return multiply_mod_order(x, square_mod_order(x)); }
-
-      /**
-      * Check if y is a plausible point on the curve
-      *
-      * In particular, checks that it is a point on the curve, not infinity,
-      * and that it has order matching the group.
-      */
-      bool verify_public_element(const EC_Point& y) const;
-
-      /**
-      * Return the OID of these domain parameters
-      * @result the OID
-      */
-      const OID& get_curve_oid() const;
-
-      /**
-      * Return a point on this curve with the affine values x, y
-      */
-      EC_Point point(const BigInt& x, const BigInt& y) const;
 
       /**
       * Multi exponentiate. Not constant time.
@@ -326,12 +338,10 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
                              bool random_oracle = true) const;
 
       /**
-      * Return the zero (or infinite) point on this curve
+      * OS2ECP (Octet String To Elliptic Curve Point)
+      *
+      * Deserialize an encoded point. Verifies that the point is on the curve.
       */
-      EC_Point zero_point() const;
-
-      size_t point_size(EC_Point_Format format) const;
-
       EC_Point OS2ECP(const uint8_t bits[], size_t len) const;
 
       EC_Point OS2ECP(std::span<const uint8_t> encoded_point) const {
@@ -363,6 +373,61 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       */
       static const std::set<std::string>& known_named_groups();
 
+      // Everything below here will be removed in a future release:
+
+      /**
+      * Return if a == -3 mod p
+      */
+      BOTAN_DEPRECATED("Deprecated no replacement") bool a_is_minus_3() const;
+
+      /**
+      * Return if a == 0 mod p
+      */
+      BOTAN_DEPRECATED("Deprecated no replacement") bool a_is_zero() const;
+
+      /*
+      * Reduce x modulo the order
+      */
+      BOTAN_DEPRECATED("Deprecated no replacement") BigInt mod_order(const BigInt& x) const;
+
+      /*
+      * Return inverse of x modulo the order
+      */
+      BOTAN_DEPRECATED("Deprecated no replacement") BigInt inverse_mod_order(const BigInt& x) const;
+
+      /*
+      * Reduce (x*x) modulo the order
+      */
+      BOTAN_DEPRECATED("Deprecated no replacement") BigInt square_mod_order(const BigInt& x) const;
+
+      /*
+      * Reduce (x*y) modulo the order
+      */
+      BOTAN_DEPRECATED("Deprecated no replacement") BigInt multiply_mod_order(const BigInt& x, const BigInt& y) const;
+
+      /*
+      * Reduce (x*y*z) modulo the order
+      */
+      BOTAN_DEPRECATED("Deprecated no replacement")
+      BigInt multiply_mod_order(const BigInt& x, const BigInt& y, const BigInt& z) const;
+
+      /*
+      * Return x^3 modulo the order
+      */
+      BOTAN_DEPRECATED("Deprecated no replacement") BigInt cube_mod_order(const BigInt& x) const;
+
+      /**
+      * Return a point on this curve with the affine values x, y
+      */
+      BOTAN_DEPRECATED("Deprecated - use OS2ECP") EC_Point point(const BigInt& x, const BigInt& y) const;
+
+      /**
+      * Return the zero (or infinite) point on this curve
+      */
+      BOTAN_DEPRECATED("Deprecated no replacement") EC_Point zero_point() const;
+
+      BOTAN_DEPRECATED("Just serialize the point and check") size_t point_size(EC_Point_Format format) const;
+
       /*
       * For internal use only
       */
@@ -381,8 +446,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
    private:
       static EC_Group_Data_Map& ec_group_data();
 
-      static std::pair<std::shared_ptr<EC_Group_Data>, bool> BER_decode_EC_group(const uint8_t bits[],
-                                                                                 size_t len,
+      EC_Group(std::shared_ptr<EC_Group_Data>&& data);
+
+      static std::pair<std::shared_ptr<EC_Group_Data>, bool> BER_decode_EC_group(std::span<const uint8_t> ber,
                                                                                  EC_Group_Source source);
 
       static std::shared_ptr<EC_Group_Data> load_EC_group_info(const char* p,

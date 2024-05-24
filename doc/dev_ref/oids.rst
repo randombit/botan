@@ -110,3 +110,14 @@ Values currently assigned are::
   camellia-192-siv OBJECT IDENTIFIER ::= { sivModes 7 }
   camellia-256-siv OBJECT IDENTIFIER ::= { sivModes 8 }
   sm4-128-siv      OBJECT IDENTIFIER ::= { sivModes 9 }
+
+  ellipticCurve OBJECT IDENTIFIER ::= { randombit 4 }
+
+  numsp256d1     OBJECT IDENTIFIER ::= { ellipticCurve 1 }
+  numsp384d1     OBJECT IDENTIFIER ::= { ellipticCurve 2 }
+  numsp512d1     OBJECT IDENTIFIER ::= { ellipticCurve 3 }
+
+  -- These are just for testing purposes internally in the library
+  -- and are not included in oids.txt
+  sm2test     OBJECT IDENTIFIER ::= { ellipticCurve 5459250 }
+  iso18003    OBJECT IDENTIFIER ::= { ellipticCurve 18003 }

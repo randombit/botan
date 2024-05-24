@@ -1,6 +1,21 @@
 # ISO/IEC 18033-2 2006
 # ECIES-KEM test vectors for ECModp-Group
 
+p  = 0xfffffffffffffffffffffffffffffffeffffffffffffffff
+a  = 0xfffffffffffffffffffffffffffffffefffffffffffffffc
+b  = 0x64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1
+Order = 0xffffffffffffffffffffffff99def836146bc9b1b4d22831
+Gx = 0x188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012
+Gy = 0x07192b95ffc8da78631011ed6b24cdd573f977a11e794811
+Oid = 1.3.6.1.4.1.25258.4.18033
+
+# Public Key
+hx = 0x1cbc74a41b4e84a1509f935e2328a0bb06104d8dbb8d2130
+hy = 0x7b2ab1f10d76fde1ea046a4ad5fb903734190151bb30cec2
+
+# Private Key
+x  = 0xb67048c28d2d26a73f713d5ebb994ac92588464e7fe7d3f3
+
 # ----------------------------------------------------------------------------------------------------
 
 # C.2.2
@@ -12,21 +27,6 @@
 # SingleHashMode=0
 
 format = uncompressed
-
-p  = 0xfffffffffffffffffffffffffffffffeffffffffffffffff
-a  = 0xfffffffffffffffffffffffffffffffefffffffffffffffc
-b  = 0x64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1
-mu = 0xffffffffffffffffffffffff99def836146bc9b1b4d22831
-nu = 0x01
-gx = 0x188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012
-gy = 0x07192b95ffc8da78631011ed6b24cdd573f977a11e794811
-
-# Public Key
-hx = 0x1cbc74a41b4e84a1509f935e2328a0bb06104d8dbb8d2130
-hy = 0x7b2ab1f10d76fde1ea046a4ad5fb903734190151bb30cec2
-
-# Private Key
-x  = 0xb67048c28d2d26a73f713d5ebb994ac92588464e7fe7d3f3
 
 # Encoding format = uncompressed_fmt
 r  = 0x083d4ac64f1960a9836a84f91ca211a185814fa43a2c8f21
@@ -44,21 +44,6 @@ K  = 9a709adeb6c7590ccfc7d594670dd2d74fcdda3f8622f2dbcf0f0c02966d5d9002db578c989
 # SingleHashMode=0
 
 format = compressed
-
-p = 0xfffffffffffffffffffffffffffffffeffffffffffffffff
-a = 0xfffffffffffffffffffffffffffffffefffffffffffffffc
-b = 0x64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1
-mu = 0xffffffffffffffffffffffff99def836146bc9b1b4d22831
-nu = 0x01
-gx = 0x188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012
-gy = 0x07192b95ffc8da78631011ed6b24cdd573f977a11e794811
-
-# Public Key
-hx = 0x1cbc74a41b4e84a1509f935e2328a0bb06104d8dbb8d2130
-hy = 0x7b2ab1f10d76fde1ea046a4ad5fb903734190151bb30cec2
-
-# Private Key
-x  = 0xb67048c28d2d26a73f713d5ebb994ac92588464e7fe7d3f3
 
 # Encoding format = compressed_fmt
 r  = 0x083d4ac64f1960a9836a84f91ca211a185814fa43a2c8f21

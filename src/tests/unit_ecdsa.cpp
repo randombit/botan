@@ -40,7 +40,7 @@ namespace {
 Test::Result test_hash_larger_than_n() {
    Test::Result result("ECDSA Unit");
 
-   Botan::EC_Group dom_pars("secp160r1");
+   const auto dom_pars = Botan::EC_Group::from_name("secp160r1");
 
    // n = 0x0100000000000000000001f4c8f927aed3ca752257 (21 bytes)
 
@@ -128,7 +128,7 @@ Test::Result test_sign_then_ver() {
 
    auto rng = Test::new_rng("ecdsa_sign_then_verify");
 
-   Botan::EC_Group dom_pars("secp160r1");
+   const auto dom_pars = Botan::EC_Group::from_name("secp160r1");
    Botan::ECDSA_PrivateKey ecdsa(*rng, dom_pars);
 
    Botan::PK_Signer signer(ecdsa, *rng, "SHA-256");
@@ -152,7 +152,7 @@ Test::Result test_ec_sign() {
    auto rng = Test::new_rng("ecdsa_sign");
 
    try {
-      Botan::EC_Group dom_pars("secp160r1");
+      const auto dom_pars = Botan::EC_Group::from_name("secp160r1");
       Botan::ECDSA_PrivateKey priv_key(*rng, dom_pars);
       Botan::PK_Signer signer(priv_key, *rng, "SHA-224");
       Botan::PK_Verifier verifier(priv_key, "SHA-224");
@@ -201,7 +201,7 @@ Test::Result test_ecdsa_create_save_load() {
    auto rng = Test::new_rng("ecdsa_save_and_load");
 
    try {
-      Botan::EC_Group dom_pars("secp160r1");
+      const auto dom_pars = Botan::EC_Group::from_name("secp160r1");
       Botan::ECDSA_PrivateKey key(*rng, dom_pars);
 
       Botan::PK_Signer signer(key, *rng, "SHA-256");
@@ -227,51 +227,12 @@ Test::Result test_ecdsa_create_save_load() {
    return result;
 }
 
-Test::Result test_unusual_curve() {
-   Test::Result result("ECDSA Unit");
-
-   auto rng = Test::new_rng("ecdsa_unusual_curve");
-
-   //calc a curve which is not in the registry
-   const Botan::BigInt p(
-      "2117607112719756483104013348936480976596328609518055062007450442679169492999007105354629105748524349829824407773719892437896937279095106809");
-   const Botan::BigInt a(
-      "0x0a377dede6b523333d36c78e9b0eaa3bf48ce93041f6d4fc34014d08f6833807498deedd4290101c5866e8dfb589485d13357b9e78c2d7fbe9fe");
-   const Botan::BigInt b(
-      "0x0a9acf8c8ba617777e248509bcb4717d4db346202bf9e352cd5633731dd92a51b72a4dc3b3d17c823fcc8fbda4da08f25dea89046087342595a7");
-   const Botan::BigInt order_g("0x0e1a16196e6000000000bc7f1618d867b15bb86474418f");
-   const Botan::BigInt cofactor = Botan::BigInt::one();
-
-   const BigInt Gx(
-      "1503931002566715881584977704503341991763310127581173321974500299341775226206001860606586625324214456299149080935147329869147994265934715820");
-   const BigInt Gy(
-      "1774988776970033741491814582357926984496972046739476148938345272681378523636129776486407268230155403536112014267092770854858769258781598199");
-
-   Botan::EC_Group dom_params(p, a, b, Gx, Gy, order_g, cofactor);
-
-   Botan::EC_Point p_G = dom_params.point(Gx, Gy);
-
-   if(!result.confirm("G is on curve", p_G.on_the_curve())) {
-      return result;
-   }
-
-   Botan::ECDSA_PrivateKey key_odd_curve(*rng, dom_params);
-   std::string key_odd_curve_str = Botan::PKCS8::PEM_encode(key_odd_curve);
-
-   Botan::DataSource_Memory key_data_src(key_odd_curve_str);
-   auto loaded_key = Botan::PKCS8::load_key(key_data_src);
-
-   result.confirm("reloaded key", loaded_key != nullptr);
-
-   return result;
-}
-
 Test::Result test_encoding_options() {
    Test::Result result("ECDSA Unit");
 
    auto rng = Test::new_rng("ecdsa_encoding_options");
 
-   Botan::EC_Group group("secp256r1");
+   const auto group = Botan::EC_Group::from_name("secp256r1");
    Botan::ECDSA_PrivateKey key(*rng, group);
 
    result.confirm("Default encoding is uncompressed", key.point_encoding() == Botan::EC_Point_Format::Uncompressed);
@@ -284,7 +245,7 @@ Test::Result test_encoding_options() {
 
    const std::vector<uint8_t> enc_compressed = key.public_key_bits();
 
-   result.test_lt("Comprssed points are smaller", enc_compressed.size(), enc_uncompressed.size());
+   result.test_lt("Compressed points are smaller", enc_compressed.size(), enc_uncompressed.size());
 
    size_t size_diff = enc_uncompressed.size() - enc_compressed.size();
 
@@ -393,7 +354,7 @@ Test::Result test_curve_registry() {
 
    for(const std::string& group_name : Botan::EC_Group::known_named_groups()) {
       try {
-         Botan::EC_Group group(group_name);
+         const auto group = Botan::EC_Group::from_name(group_name);
          Botan::ECDSA_PrivateKey ecdsa(*rng, group);
 
          Botan::PK_Signer signer(ecdsa, *rng, "SHA-256");
@@ -433,7 +394,6 @@ class ECDSA_Unit_Tests final : public Test {
          results.push_back(test_sign_then_ver());
          results.push_back(test_ec_sign());
          results.push_back(test_ecdsa_create_save_load());
-         results.push_back(test_unusual_curve());
          results.push_back(test_curve_registry());
          results.push_back(test_encoding_options());
          return results;

@@ -21,7 +21,12 @@ namespace {
 class CurveGFp_Montgomery final : public CurveGFp_Repr {
    public:
       CurveGFp_Montgomery(const BigInt& p, const BigInt& a, const BigInt& b) :
-            m_p(p), m_a(a), m_b(b), m_p_words(m_p.sig_words()), m_p_dash(monty_inverse(m_p.word_at(0))) {
+            m_p(p),
+            m_a(a),
+            m_b(b),
+            m_p_bits(m_p.bits()),
+            m_p_words(m_p.sig_words()),
+            m_p_dash(monty_inverse(m_p.word_at(0))) {
          Modular_Reducer mod_p(m_p);
 
          m_r.set_bit(m_p_words * BOTAN_MP_WORD_BITS);
@@ -54,7 +59,7 @@ class CurveGFp_Montgomery final : public CurveGFp_Repr {
 
       bool is_one(const BigInt& x) const override { return x == m_r; }
 
-      size_t get_p_words() const override { return m_p_words; }
+      size_t get_p_bits() const override { return m_p_bits; }
 
       size_t get_ws_size() const override { return 2 * m_p_words; }
 
@@ -73,6 +78,7 @@ class CurveGFp_Montgomery final : public CurveGFp_Repr {
       BigInt m_p;
       BigInt m_a, m_b;
       BigInt m_a_r, m_b_r;
+      size_t m_p_bits;   // cache of m_p.bits()
       size_t m_p_words;  // cache of m_p.sig_words()
 
       // Montgomery parameters
@@ -154,7 +160,11 @@ void CurveGFp_Montgomery::curve_sqr_words(BigInt& z, const word x[], size_t x_si
 class CurveGFp_NIST : public CurveGFp_Repr {
    public:
       CurveGFp_NIST(size_t p_bits, const BigInt& a, const BigInt& b) :
-            m_1(1), m_a(a), m_b(b), m_p_words((p_bits + BOTAN_MP_WORD_BITS - 1) / BOTAN_MP_WORD_BITS) {
+            m_1(1),
+            m_a(a),
+            m_b(b),
+            m_p_bits(p_bits),
+            m_p_words((p_bits + BOTAN_MP_WORD_BITS - 1) / BOTAN_MP_WORD_BITS) {
          // All Solinas prime curves are assumed a == -3
       }
 
@@ -168,7 +178,7 @@ class CurveGFp_NIST : public CurveGFp_Repr {
 
       const BigInt& get_1_rep() const override { return m_1; }
 
-      size_t get_p_words() const override { return m_p_words; }
+      size_t get_p_bits() const override { return m_p_bits; }
 
       size_t get_ws_size() const override { return 2 * m_p_words; }
 
@@ -205,6 +215,7 @@ class CurveGFp_NIST : public CurveGFp_Repr {
       // Curve parameters
       BigInt m_1;
       BigInt m_a, m_b;
+      size_t m_p_bits;   // cache of m_p.bits()
       size_t m_p_words;  // cache of m_p.sig_words()
 };
 
@@ -562,19 +573,19 @@ BigInt CurveGFp_P521::invert_element(const BigInt& x, secure_vector<word>& ws) c
 }  // namespace
 
 std::shared_ptr<CurveGFp_Repr> CurveGFp::choose_repr(const BigInt& p, const BigInt& a, const BigInt& b) {
-   if(p == prime_p192()) {
+   if(p == prime_p192() && p == a + 3) {
       return std::make_shared<CurveGFp_P192>(a, b);
    }
-   if(p == prime_p224()) {
+   if(p == prime_p224() && p == a + 3) {
       return std::make_shared<CurveGFp_P224>(a, b);
    }
-   if(p == prime_p256()) {
+   if(p == prime_p256() && p == a + 3) {
       return std::make_shared<CurveGFp_P256>(a, b);
    }
-   if(p == prime_p384()) {
+   if(p == prime_p384() && p == a + 3) {
       return std::make_shared<CurveGFp_P384>(a, b);
    }
-   if(p == prime_p521()) {
+   if(p == prime_p521() && p == a + 3) {
       return std::make_shared<CurveGFp_P521>(a, b);
    }
 

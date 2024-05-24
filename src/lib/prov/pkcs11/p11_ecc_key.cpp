@@ -102,7 +102,7 @@ PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session,
 }
 
 size_t PKCS11_EC_PrivateKey::key_length() const {
-   return m_domain_params.get_order().bits();
+   return m_domain_params.get_order_bits();
 }
 
 std::vector<uint8_t> PKCS11_EC_PrivateKey::raw_public_key_bits() const {

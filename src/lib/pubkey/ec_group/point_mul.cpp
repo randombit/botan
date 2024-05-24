@@ -27,17 +27,12 @@ EC_Point multi_exponentiate(const EC_Point& x, const BigInt& z1, const EC_Point&
 }
 
 EC_Point_Base_Point_Precompute::EC_Point_Base_Point_Precompute(const EC_Point& base, const Modular_Reducer& mod_order) :
-      m_base_point(base), m_mod_order(mod_order), m_p_words(base.get_curve().get_p().sig_words()) {
+      m_base_point(base), m_mod_order(mod_order), m_p_words(base.get_curve().get_p_words()) {
    std::vector<BigInt> ws(EC_Point::WORKSPACE_SIZE);
 
-   const size_t p_bits = base.get_curve().get_p().bits();
+   const size_t order_bits = mod_order.get_modulus().bits();
 
-   /*
-   * Some of the curves (eg secp160k1) have an order slightly larger than
-   * the size of the prime modulus. In all cases they are at most 1 bit
-   * longer. The +1 compensates for this.
-   */
-   const size_t T_bits = round_up(p_bits + blinding_size(mod_order.get_modulus()) + 1, WINDOW_BITS) / WINDOW_BITS;
+   const size_t T_bits = round_up(order_bits + blinding_size(mod_order.get_modulus()), WINDOW_BITS) / WINDOW_BITS;
 
    std::vector<EC_Point> T(WINDOW_SIZE * T_bits);
 
@@ -166,7 +161,7 @@ EC_Point EC_Point_Base_Point_Precompute::mul(const BigInt& k,
 EC_Point_Var_Point_Precompute::EC_Point_Var_Point_Precompute(const EC_Point& point,
                                                              RandomNumberGenerator& rng,
                                                              std::vector<BigInt>& ws) :
-      m_curve(point.get_curve()), m_p_words(m_curve.get_p().sig_words()), m_window_bits(4) {
+      m_curve(point.get_curve()), m_p_words(m_curve.get_p_words()), m_window_bits(4) {
    if(ws.size() < EC_Point::WORKSPACE_SIZE) {
       ws.resize(EC_Point::WORKSPACE_SIZE);
    }
@@ -182,32 +177,9 @@ EC_Point_Var_Point_Precompute::EC_Point_Var_Point_Precompute(const EC_Point& poi
 
    // Hack to handle Blinded_Point_Multiply
    if(rng.is_seeded()) {
-      BigInt& mask = ws[0];
-      BigInt& mask2 = ws[1];
-      BigInt& mask3 = ws[2];
-      BigInt& new_x = ws[3];
-      BigInt& new_y = ws[4];
-      BigInt& new_z = ws[5];
-      secure_vector<word>& tmp = ws[6].get_word_vector();
-
-      const CurveGFp& curve = U[0].get_curve();
-
-      const size_t p_bits = curve.get_p().bits();
-
       // Skipping zero point since it can't be randomized
       for(size_t i = 1; i != U.size(); ++i) {
-         mask.randomize(rng, p_bits - 1, false);
-         // Easy way of ensuring mask != 0
-         mask.set_bit(0);
-
-         curve.sqr(mask2, mask, tmp);
-         curve.mul(mask3, mask, mask2, tmp);
-
-         curve.mul(new_x, U[i].get_x(), mask2, tmp);
-         curve.mul(new_y, U[i].get_y(), mask3, tmp);
-         curve.mul(new_z, U[i].get_z(), mask, tmp);
-
-         U[i].swap_coords(new_x, new_y, new_z);
+         U[i].randomize_repr(rng);
       }
    }
 

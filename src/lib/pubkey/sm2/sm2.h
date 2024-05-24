@@ -46,7 +46,7 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PublicKey : public virtual EC_PublicKey {
          return (op == PublicKeyOperation::Signature || op == PublicKeyOperation::Encryption);
       }
 
-      size_t message_part_size() const override { return domain().get_order().bytes(); }
+      size_t message_part_size() const override { return domain().get_order_bytes(); }
 
       std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
                                                                    std::string_view provider) const override;

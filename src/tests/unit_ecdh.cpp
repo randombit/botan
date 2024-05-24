@@ -33,11 +33,11 @@ class ECDH_Unit_Tests final : public Test {
       static Test::Result test_ecdh_normal_derivation(Botan::RandomNumberGenerator& rng) {
          Test::Result result("ECDH key exchange");
 
-         std::vector<std::string> params = {"secp256r1", "secp384r1", "secp521r1", "brainpool256r1"};
+         const auto params = {"secp256r1", "secp384r1", "secp521r1", "brainpool256r1"};
 
          for(const auto& param : params) {
             try {
-               Botan::EC_Group dom_pars(param);
+               const auto dom_pars = Botan::EC_Group::from_name(param);
                Botan::ECDH_PrivateKey private_a(rng, dom_pars);
                Botan::ECDH_PrivateKey private_b(rng, dom_pars);
 

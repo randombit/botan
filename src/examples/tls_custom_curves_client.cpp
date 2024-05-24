@@ -34,7 +34,7 @@ class Callbacks : public Botan::TLS::Callbacks {
          if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
             std::get<Botan::TLS::Group_Params>(group) == Botan::TLS::Group_Params(0xFE00)) {
             // generate a private key of my custom curve
-            const Botan::EC_Group ec_group("numsp256d1");
+            const auto ec_group = Botan::EC_Group::from_name("numsp256d1");
             return std::make_unique<Botan::ECDH_PrivateKey>(rng, ec_group);
          } else {
             // no custom curve used: up-call the default implementation
@@ -51,7 +51,7 @@ class Callbacks : public Botan::TLS::Callbacks {
          if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
             std::get<Botan::TLS::Group_Params>(group) == Botan::TLS::Group_Params(0xFE00)) {
             // perform a key agreement on my custom curve
-            const Botan::EC_Group ec_group("numsp256d1");
+            const auto ec_group = Botan::EC_Group::from_name("numsp256d1");
             Botan::ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(public_value));
             Botan::PK_Key_Agreement ka(private_key, rng, "Raw");
             return ka.derive_key(0, peer_key.public_value()).bits_of();
@@ -104,16 +104,16 @@ int main() {
    const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF40");
    const Botan::BigInt b("0x25581");
    const Botan::BigInt n("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE43C8275EA265C6020AB20294751A825");
-   const Botan::BigInt cofactor(1);
 
    const Botan::BigInt g_x("0x01");
    const Botan::BigInt g_y("0x696F1853C1E466D7FC82C96CCEEEDD6BD02C2F9375894EC10BF46306C2B56C77");
 
-   // You should assign your own OID
-   const Botan::OID oid("1.3.6.1.4.1.25258.0.0.0");
+   // This is an OID reserved in Botan's private arc for numsp256d1
+   // If you use some other curve you should create your own OID
+   const Botan::OID oid("1.3.6.1.4.1.25258.4.1");
 
    // create EC_Group object to register the curve
-   Botan::EC_Group numsp256d1(p, a, b, g_x, g_y, n, cofactor, oid);
+   Botan::EC_Group numsp256d1(oid, p, a, b, g_x, g_y, n);
 
    if(!numsp256d1.verify_group(*rng)) {
       return 1;

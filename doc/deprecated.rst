@@ -81,6 +81,15 @@ elliptic curve points.
   "brainpool192r1", "brainpool224r1", "brainpool320r1", "x962_p192v2",
   "x962_p192v3", "x962_p239v1", "x962_p239v2", "x962_p239v3"
 
+- Currently `EC_Point` offers a wide variety of functionality almost
+  all of which was intended only for internal implementation. In a
+  future release, the only operations available for EC_Points will be
+  to extract the byte encoding of their affine x and y coordinates.
+
+- Currently it is possible to create an EC_Group with cofactor > 1.
+  None of the builtin groups have composite order, and in the future
+  it will be impossible to create composite order EC_Groups.
+
 Deprecated Modules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

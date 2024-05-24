@@ -28,7 +28,7 @@ int main() {
    Botan::AutoSeeded_RNG rng;
 
    // create private key in software
-   Botan::ECDH_PrivateKey priv_key_sw(rng, Botan::EC_Group("secp256r1"));
+   Botan::ECDH_PrivateKey priv_key_sw(rng, Botan::EC_Group::from_name("secp256r1"));
    priv_key_sw.set_parameter_encoding(Botan::EC_Group_Encoding::EC_DOMPAR_ENC_OID);
 
    // set import properties
@@ -81,13 +81,13 @@ int main() {
 
    Botan::PKCS11::PKCS11_ECDH_PrivateKey priv_key2(
       session,
-      Botan::EC_Group("secp256r1").DER_encode(Botan::EC_Group_Encoding::EC_DOMPAR_ENC_OID),
+      Botan::EC_Group::from_name("secp256r1").DER_encode(Botan::EC_Group_Encoding::EC_DOMPAR_ENC_OID),
       priv_generate_props);
 
    /************ generate ECDH key pair *************/
 
    Botan::PKCS11::EC_PublicKeyGenerationProperties pub_generate_props(
-      Botan::EC_Group("secp256r1").DER_encode(Botan::EC_Group_Encoding::EC_DOMPAR_ENC_OID));
+      Botan::EC_Group::from_name("secp256r1").DER_encode(Botan::EC_Group_Encoding::EC_DOMPAR_ENC_OID));
 
    pub_generate_props.set_label(label + "_PUB_KEY");
    pub_generate_props.set_token(true);

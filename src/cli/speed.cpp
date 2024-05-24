@@ -722,8 +722,6 @@ class Speed final : public Command {
 #if defined(BOTAN_HAS_ECC_GROUP)
             else if(algo == "ecc_mult") {
                bench_ecc_mult(ecc_groups, msec);
-            } else if(algo == "ecc_ops") {
-               bench_ecc_ops(ecc_groups, msec);
             } else if(algo == "ecc_init") {
                bench_ecc_init(ecc_groups, msec);
             } else if(algo == "os2ecp") {
@@ -1084,42 +1082,13 @@ class Speed final : public Command {
       }
 
 #if defined(BOTAN_HAS_ECC_GROUP)
-      void bench_ecc_ops(const std::vector<std::string>& groups, const std::chrono::milliseconds runtime) {
-         for(const std::string& group_name : groups) {
-            const Botan::EC_Group ec_group(group_name);
-
-            auto add_timer = make_timer(group_name + " add");
-            auto addf_timer = make_timer(group_name + " addf");
-            auto dbl_timer = make_timer(group_name + " dbl");
-
-            const Botan::EC_Point& base_point = ec_group.get_base_point();
-
-            // create a non-affine point
-            const auto random_k = Botan::BigInt::from_u64(0x4E6F537465707E);
-            Botan::EC_Point non_affine_pt = ec_group.get_base_point() * random_k;
-            Botan::EC_Point pt = ec_group.get_base_point();
-
-            std::vector<Botan::BigInt> ws(Botan::EC_Point::WORKSPACE_SIZE);
-
-            while(add_timer->under(runtime) && addf_timer->under(runtime) && dbl_timer->under(runtime)) {
-               dbl_timer->run([&]() { pt.mult2(ws); });
-               add_timer->run([&]() { pt.add(non_affine_pt, ws); });
-               addf_timer->run([&]() { pt.add_affine(base_point, ws); });
-            }
-
-            record_result(dbl_timer);
-            record_result(add_timer);
-            record_result(addf_timer);
-         }
-      }
-
       void bench_ecc_init(const std::vector<std::string>& groups, const std::chrono::milliseconds runtime) {
          for(std::string group_name : groups) {
             auto timer = make_timer(group_name + " initialization");
 
             while(timer->under(runtime)) {
                Botan::EC_Group::clear_registered_curve_data();
-               timer->run([&]() { Botan::EC_Group group(group_name); });
+               timer->run([&]() { Botan::EC_Group::from_name(group_name); });
             }
 
             record_result(timer);
@@ -1128,7 +1097,7 @@ class Speed final : public Command {
 
       void bench_ecc_mult(const std::vector<std::string>& groups, const std::chrono::milliseconds runtime) {
          for(const std::string& group_name : groups) {
-            const Botan::EC_Group ec_group(group_name);
+            const auto ec_group = Botan::EC_Group::from_name(group_name);
 
             auto mult_timer = make_timer(group_name + " Montgomery ladder");
             auto blinded_mult_timer = make_timer(group_name + " blinded comb");
@@ -1165,7 +1134,7 @@ class Speed final : public Command {
             auto uncmp_timer = make_timer("OS2ECP uncompressed " + group_name);
             auto cmp_timer = make_timer("OS2ECP compressed " + group_name);
 
-            const Botan::EC_Group ec_group(group_name);
+            const auto ec_group = Botan::EC_Group::from_name(group_name);
 
             while(uncmp_timer->under(runtime) && cmp_timer->under(runtime)) {
                const Botan::BigInt k(rng(), 256);
@@ -1190,7 +1159,7 @@ class Speed final : public Command {
             auto h2c_ro_timer = make_timer(group_name + "-RO", "", "hash to curve");
             auto h2c_nu_timer = make_timer(group_name + "-NU", "", "hash to curve");
 
-            const Botan::EC_Group group(group_name);
+            const auto group = Botan::EC_Group::from_name(group_name);
 
             while(h2c_ro_timer->under(runtime)) {
                std::vector<uint8_t> input(32);
@@ -1803,7 +1772,7 @@ class Speed final : public Command {
                                 const std::string& /*unused*/,
                                 std::chrono::milliseconds msec) {
          for(const std::string& group_name : groups) {
-            Botan::EC_Group group(group_name);
+            const auto group = Botan::EC_Group::from_name(group_name);
             auto recovery_timer = make_timer("ECDSA recovery " + group_name);
 
             while(recovery_timer->under(msec)) {

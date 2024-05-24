@@ -9,7 +9,8 @@
 int main() {
    Botan::AutoSeeded_RNG rng;
    // Generate ECDSA keypair
-   Botan::ECDSA_PrivateKey key(rng, Botan::EC_Group("secp521r1"));
+   const auto group = Botan::EC_Group::from_name("secp521r1");
+   Botan::ECDSA_PrivateKey key(rng, group);
 
    const std::string message("This is a tasty burger!");
 

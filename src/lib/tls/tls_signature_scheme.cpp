@@ -198,11 +198,11 @@ AlgorithmIdentifier Signature_Scheme::key_algorithm_identifier() const noexcept 
    switch(m_code) {
       // case ECDSA_SHA1:  not defined
       case ECDSA_SHA256:
-         return {"ECDSA", EC_Group("secp256r1").DER_encode(EC_Group_Encoding::NamedCurve)};
+         return {"ECDSA", EC_Group::from_name("secp256r1").DER_encode(EC_Group_Encoding::NamedCurve)};
       case ECDSA_SHA384:
-         return {"ECDSA", EC_Group("secp384r1").DER_encode(EC_Group_Encoding::NamedCurve)};
+         return {"ECDSA", EC_Group::from_name("secp384r1").DER_encode(EC_Group_Encoding::NamedCurve)};
       case ECDSA_SHA512:
-         return {"ECDSA", EC_Group("secp521r1").DER_encode(EC_Group_Encoding::NamedCurve)};
+         return {"ECDSA", EC_Group::from_name("secp521r1").DER_encode(EC_Group_Encoding::NamedCurve)};
 
       case EDDSA_25519:
          return {"Ed25519", AlgorithmIdentifier::USE_EMPTY_PARAM};

@@ -362,7 +362,7 @@ class EC_Group_Info final : public Command {
       }
 
       void go() override {
-         Botan::EC_Group ec_group(get_arg("name"));
+         const auto ec_group = Botan::EC_Group::from_name(get_arg("name"));
 
          if(flag_set("pem")) {
             output() << ec_group.PEM_encode();

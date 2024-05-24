@@ -88,7 +88,7 @@ int privkey_load_ec(std::unique_ptr<ECPrivateKey_t>& key, const Botan::BigInt& s
    }
 
    Botan::Null_RNG null_rng;
-   Botan::EC_Group grp(curve_name);
+   const auto grp = Botan::EC_Group::from_name(curve_name);
    key.reset(new ECPrivateKey_t(null_rng, grp, scalar));
    return BOTAN_FFI_SUCCESS;
 }
@@ -102,7 +102,7 @@ int pubkey_load_ec(std::unique_ptr<ECPublicKey_t>& key,
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
-   Botan::EC_Group grp(curve_name);
+   const auto grp = Botan::EC_Group::from_name(curve_name);
    Botan::EC_Point uncompressed_point = grp.point(public_x, public_y);
    key.reset(new ECPublicKey_t(grp, uncompressed_point));
    return BOTAN_FFI_SUCCESS;

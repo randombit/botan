@@ -322,15 +322,14 @@ std::shared_ptr<EC_Group_Data> EC_Group::load_EC_group_info(const char* p_str,
 }
 
 //static
-std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(const uint8_t bits[],
-                                                                              size_t len,
+std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(std::span<const uint8_t> bits,
                                                                               EC_Group_Source source) {
-   BER_Decoder ber(bits, len);
+   BER_Decoder ber(bits);
    BER_Object obj = ber.get_next_object();
 
    if(obj.type() == ASN1_Type::ObjectId) {
       OID dom_par_oid;
-      BER_Decoder(bits, len).decode(dom_par_oid);
+      BER_Decoder(bits).decode(dom_par_oid);
       return std::make_pair(ec_group_data().lookup(dom_par_oid), false);
    }
 
@@ -339,7 +338,7 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(co
       std::vector<uint8_t> base_pt;
       std::vector<uint8_t> seed;
 
-      BER_Decoder(bits, len)
+      BER_Decoder(bits)
          .start_sequence()
          .decode_and_check<size_t>(1, "Unknown ECC param version code")
          .start_sequence()
@@ -357,7 +356,7 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(co
          .end_cons()
          .verify_end();
 
-      if(p.bits() < 112 || p.bits() > 1024) {
+      if(p.bits() < 112 || p.bits() > 521) {
          throw Decoding_Error("ECC p parameter is invalid size");
       }
 
@@ -403,11 +402,33 @@ EC_Group::EC_Group(const EC_Group&) = default;
 
 EC_Group& EC_Group::operator=(const EC_Group&) = default;
 
-EC_Group::EC_Group(const OID& domain_oid) {
-   this->m_data = ec_group_data().lookup(domain_oid);
-   if(!this->m_data) {
-      throw Invalid_Argument("Unknown EC_Group " + domain_oid.to_string());
+// Internal constructor
+EC_Group::EC_Group(std::shared_ptr<EC_Group_Data>&& data) : m_data(std::move(data)) {}
+
+//static
+EC_Group EC_Group::from_OID(const OID& oid) {
+   auto data = ec_group_data().lookup(oid);
+
+   if(!data) {
+      throw Invalid_Argument(fmt("No EC_Group associated with OID '{}'", oid.to_string()));
    }
+
+   return EC_Group(std::move(data));
+}
+
+//static
+EC_Group EC_Group::from_name(std::string_view name) {
+   std::shared_ptr<EC_Group_Data> data;
+
+   if(auto oid = OID::from_name(name)) {
+      data = ec_group_data().lookup(oid.value());
+   }
+
+   if(!data) {
+      throw Invalid_Argument(fmt("Unknown EC_Group '{}'", name));
+   }
+
+   return EC_Group(std::move(data));
 }
 
 EC_Group::EC_Group(std::string_view str) {
@@ -425,9 +446,9 @@ EC_Group::EC_Group(std::string_view str) {
    if(m_data == nullptr) {
       if(str.size() > 30 && str.substr(0, 29) == "-----BEGIN EC PARAMETERS-----") {
          // OK try it as PEM ...
-         secure_vector<uint8_t> ber = PEM_Code::decode_check_label(str, "EC PARAMETERS");
+         const auto ber = PEM_Code::decode_check_label(str, "EC PARAMETERS");
 
-         auto data = BER_decode_EC_group(ber.data(), ber.size(), EC_Group_Source::ExternalSource);
+         auto data = BER_decode_EC_group(ber, EC_Group_Source::ExternalSource);
          this->m_data = data.first;
          this->m_explicit_encoding = data.second;
       }
@@ -439,9 +460,9 @@ EC_Group::EC_Group(std::string_view str) {
 }
 
 //static
-EC_Group EC_Group::EC_Group_from_PEM(std::string_view pem) {
+EC_Group EC_Group::from_PEM(std::string_view pem) {
    const auto ber = PEM_Code::decode_check_label(pem, "EC PARAMETERS");
-   return EC_Group(ber.data(), ber.size());
+   return EC_Group(ber);
 }
 
 EC_Group::EC_Group(const BigInt& p,
@@ -456,8 +477,35 @@ EC_Group::EC_Group(const BigInt& p,
       ec_group_data().lookup_or_create(p, a, b, base_x, base_y, order, cofactor, oid, EC_Group_Source::ExternalSource);
 }
 
-EC_Group::EC_Group(const uint8_t ber[], size_t ber_len) {
-   auto data = BER_decode_EC_group(ber, ber_len, EC_Group_Source::ExternalSource);
+EC_Group::EC_Group(const OID& oid,
+                   const BigInt& p,
+                   const BigInt& a,
+                   const BigInt& b,
+                   const BigInt& base_x,
+                   const BigInt& base_y,
+                   const BigInt& order) {
+   BOTAN_ARG_CHECK(oid.has_value(), "An OID is required for creating an EC_Group");
+   BOTAN_ARG_CHECK(p.bits() >= 112, "EC_Group p too small");
+   BOTAN_ARG_CHECK(p.bits() <= 521, "EC_Group p too large");
+   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(p), "EC_Group p is not prime");
+   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(order), "EC_Group order is not prime");
+   BOTAN_ARG_CHECK(a >= 0 && a < p, "EC_Group a is invalid");
+   BOTAN_ARG_CHECK(b > 0 && b < p, "EC_Group b is invalid");
+   BOTAN_ARG_CHECK(base_x >= 0 && base_x < p, "EC_Group base_x is invalid");
+   BOTAN_ARG_CHECK(base_y >= 0 && base_y < p, "EC_Group base_y is invalid");
+
+   // This catches someone "ignoring" a cofactor and just trying to
+   // provide the subgroup order
+   BOTAN_ARG_CHECK((p - order).abs().bits() <= (p.bits() / 2) + 1, "Hasse bound invalid");
+
+   BigInt cofactor(1);
+
+   m_data =
+      ec_group_data().lookup_or_create(p, a, b, base_x, base_y, order, cofactor, oid, EC_Group_Source::ExternalSource);
+}
+
+EC_Group::EC_Group(std::span<const uint8_t> ber) {
+   auto data = BER_decode_EC_group(ber, EC_Group_Source::ExternalSource);
    m_data = data.first;
    m_explicit_encoding = data.second;
 }
@@ -531,6 +579,10 @@ BigInt EC_Group::mod_order(const BigInt& k) const {
 
 BigInt EC_Group::square_mod_order(const BigInt& x) const {
    return data().square_mod_order(x);
+}
+
+BigInt EC_Group::cube_mod_order(const BigInt& x) const {
+   return multiply_mod_order(x, square_mod_order(x));
 }
 
 BigInt EC_Group::multiply_mod_order(const BigInt& x, const BigInt& y) const {
