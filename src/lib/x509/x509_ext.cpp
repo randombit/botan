@@ -342,27 +342,27 @@ void Key_Usage::decode_inner(const std::vector<uint8_t>& in) {
 
    obj.assert_is_a(ASN1_Type::BitString, ASN1_Class::Universal, "usage constraint");
 
-   if(obj.length() != 2 && obj.length() != 3) {
-      throw BER_Decoding_Error("Bad size for BITSTRING in usage constraint");
+   if(obj.length() == 2 || obj.length() == 3) {
+      uint16_t usage = 0;
+
+      const uint8_t* bits = obj.bits();
+
+      if(bits[0] >= 8) {
+         throw BER_Decoding_Error("Invalid unused bits in usage constraint");
+      }
+
+      const uint8_t mask = static_cast<uint8_t>(0xFF << bits[0]);
+
+      if(obj.length() == 2) {
+         usage = make_uint16(bits[1] & mask, 0);
+      } else if(obj.length() == 3) {
+         usage = make_uint16(bits[1], bits[2] & mask);
+      }
+
+      m_constraints = Key_Constraints(usage);
+   } else {
+      m_constraints = Key_Constraints(0);
    }
-
-   uint16_t usage = 0;
-
-   const uint8_t* bits = obj.bits();
-
-   if(bits[0] >= 8) {
-      throw BER_Decoding_Error("Invalid unused bits in usage constraint");
-   }
-
-   const uint8_t mask = static_cast<uint8_t>(0xFF << bits[0]);
-
-   if(obj.length() == 2) {
-      usage = make_uint16(bits[1] & mask, 0);
-   } else if(obj.length() == 3) {
-      usage = make_uint16(bits[1], bits[2] & mask);
-   }
-
-   m_constraints = Key_Constraints(usage);
 }
 
 /*
