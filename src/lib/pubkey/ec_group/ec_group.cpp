@@ -486,6 +486,7 @@ EC_Group::EC_Group(const OID& oid,
                    const BigInt& base_y,
                    const BigInt& order) {
    BOTAN_ARG_CHECK(oid.has_value(), "An OID is required for creating an EC_Group");
+   BOTAN_ARG_CHECK(p.bits() >= 112, "EC_Group p too small");
    BOTAN_ARG_CHECK(p.bits() <= 521, "EC_Group p too large");
    BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(p), "EC_Group p is not prime");
    BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(order), "EC_Group order is not prime");

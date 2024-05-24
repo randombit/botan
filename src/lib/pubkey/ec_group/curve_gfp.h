@@ -213,7 +213,7 @@ class BOTAN_UNSTABLE_API CurveGFp final {
          return (get_p() == other.get_p()) && (get_a() == other.get_a()) && (get_b() == other.get_b());
       }
 
-      inline bool operator!=(const CurveGFp& other) const { return !((*this) == other); }
+      inline bool operator!=(const CurveGFp& other) const = default;
 
    private:
       static std::shared_ptr<CurveGFp_Repr> choose_repr(const BigInt& p, const BigInt& a, const BigInt& b);

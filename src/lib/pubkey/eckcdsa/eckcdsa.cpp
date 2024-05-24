@@ -190,9 +190,7 @@ secure_vector<uint8_t> ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[]
       throw Internal_Error("During ECKCDSA signature generation created zero s");
    }
 
-   secure_vector<uint8_t> output = r;
-   output += BigInt::encode_1363(s, m_group.get_order_bytes());
-   return output;
+   return concat(r, BigInt::encode_1363(s, m_group.get_order_bytes()));
 }
 
 /**

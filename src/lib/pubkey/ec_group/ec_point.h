@@ -205,7 +205,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       */
       bool operator==(const EC_Point& other) const;
 
-      bool operator!=(const EC_Point& other) const { return !(*this == other); }
+      bool operator!=(const EC_Point& other) const = default;
 
       /**
       * swaps the states of *this and other, does not throw!

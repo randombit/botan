@@ -59,12 +59,12 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @param cofactor the cofactor
       * @param oid an optional OID used to identify this curve
       *
-      * Warning: support for cofactors > 1 is deprecated and will be removed
+      * @warning support for cofactors > 1 is deprecated and will be removed
       *
-      * Warning: support for prime fields > 521 bits is deprecated and
+      * @warning support for prime fields > 521 bits is deprecated and
       * will be removed.
       *
-      * Warning: Support for explicitly encoded curve parameters is deprecated.
+      * @warning Support for explicitly encoded curve parameters is deprecated.
       * An OID must be assigned.
       */
       BOTAN_DEPRECATED("Use alternate constructor")
@@ -90,7 +90,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       *    the group since certain things cannot be checked until
       *    the EC_Group object is constructed.
       *
-      * WARNING use only elliptic curve parameters that you trust
+      * @warning use only elliptic curve parameters that you trust
       *
       * @param oid an object identifier used to identify this curve
       * @param p the elliptic curve prime (at most 521 bits)
@@ -341,7 +341,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       /**
       * OS2ECP (Octet String To Elliptic Curve Point)
       *
-      * Deserialize a encoded point. Verifies that the point is on the curve.
+      * Deserialize an encoded point. Verifies that the point is on the curve.
       */
       EC_Point OS2ECP(const uint8_t bits[], size_t len) const;
 
