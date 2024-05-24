@@ -24,8 +24,8 @@
    #include <sys/socket.h>
 #endif
 
-#define SERVER_PORT 5060
-#define CLIENT_PORT 5070
+constexpr static uint32_t SERVER_PORT = 5060;
+constexpr static uint32_t CLIENT_PORT = 5070;
 
 class Client_Credential : public Botan::Credentials_Manager {
    public:
@@ -193,9 +193,9 @@ class DtlsConnection : public Botan::TLS::Callbacks {
 
       void received_data(std::span<const uint8_t> data) { dtls_channel->received_data(data); }
 
-      void set_activated_callback(std::function<void()> callback) { activated_callback = callback; }
+      void set_activated_callback(std::function<void()> callback) { activated_callback = std::move(callback); }
 
-      void close() {
+      void close() const {
          if(fd) {
 #if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
             shutdown(fd, SHUT_RDWR);
@@ -205,23 +205,26 @@ class DtlsConnection : public Botan::TLS::Callbacks {
       }
 };
 
-static void server_proc(std::function<void(std::shared_ptr<DtlsConnection> conn)> conn_callback) {
+static void server_proc(const std::function<void(std::shared_ptr<DtlsConnection> conn)>& conn_callback) {
    std::cout << "Start Server" << std::endl;
 
    int fd = 0;
 #if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
    fd = socket(AF_INET, SOCK_DGRAM, 0);
-   if(fd == -1)
+   if(fd == -1) {
       return;
+   }
    int true_opt = 1;
-   if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, static_cast<void*>(&true_opt), sizeof(true_opt)) == -1)
+   if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, static_cast<void*>(&true_opt), sizeof(true_opt)) == -1) {
       return;
+   }
    sockaddr_in addr;
    addr.sin_family = AF_INET;
    addr.sin_port = htons(SERVER_PORT);
    inet_aton("127.0.0.1", &addr.sin_addr);
-   if(bind(fd, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in)) == -1)
+   if(bind(fd, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in)) == -1) {
       return;
+   }
    sockaddr_in fromaddr;
    fromaddr.sin_family = AF_INET;
    socklen_t len = sizeof(sockaddr_in);
@@ -248,23 +251,26 @@ static void server_proc(std::function<void(std::shared_ptr<DtlsConnection> conn)
    std::cout << "Server closed" << std::endl;
 }
 
-static void client_proc(std::function<void(std::shared_ptr<DtlsConnection> conn)> conn_callback) {
+static void client_proc(const std::function<void(std::shared_ptr<DtlsConnection> conn)>& conn_callback) {
    std::cout << "Start Client" << std::endl;
 
    int fd = 0;
 #if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
    fd = socket(AF_INET, SOCK_DGRAM, 0);
-   if(fd == -1)
+   if(fd == -1) {
       return;
+   }
    int true_opt = 1;
-   if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, static_cast<void*>(&true_opt), sizeof(true_opt)) == -1)
+   if(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, static_cast<void*>(&true_opt), sizeof(true_opt)) == -1) {
       return;
+   }
    sockaddr_in addr;
    addr.sin_family = AF_INET;
    addr.sin_port = htons(CLIENT_PORT);
    inet_aton("127.0.0.1", &addr.sin_addr);
-   if(bind(fd, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in)) == -1)
+   if(bind(fd, reinterpret_cast<sockaddr*>(&addr), sizeof(sockaddr_in)) == -1) {
       return;
+   }
    sockaddr_in fromaddr;
    fromaddr.sin_family = AF_INET;
    socklen_t len = sizeof(sockaddr_in);
