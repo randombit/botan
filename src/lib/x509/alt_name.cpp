@@ -151,6 +151,8 @@ void AlternativeName::decode_from(BER_Decoder& source) {
          if(obj.length() == 4) {
             const uint32_t ip = load_be<uint32_t>(obj.bits(), 0);
             this->add_ipv4_address(ip);
+         } else if(obj.length() != 16) {
+            throw Decoding_Error("Invalid IP constraint neither IPv4 or IPv6");
          }
       }
    }
