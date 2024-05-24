@@ -18,6 +18,7 @@
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/point_mul.h>
 #include <botan/internal/scan_name.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -73,12 +74,7 @@ std::unique_ptr<HashFunction> eckcdsa_signature_hash(const AlgorithmIdentifier& 
 }
 
 std::vector<uint8_t> eckcdsa_prefix(const EC_Point& point, size_t hash_block_size) {
-   const auto public_x = point.x_bytes();
-   const auto public_y = point.y_bytes();
-
-   std::vector<uint8_t> prefix(public_x.size() + public_y.size());
-   copy_mem(&prefix[0], public_x.data(), public_x.size());
-   copy_mem(&prefix[public_x.size()], public_y.data(), public_y.size());
+   auto prefix = concat<std::vector<uint8_t>>(point.x_bytes(), point.y_bytes());
 
    // Either truncate or zero-extend to match the hash block size
    prefix.resize(hash_block_size);

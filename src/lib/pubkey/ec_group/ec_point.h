@@ -145,7 +145,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       /**
       * Force all points on the list to affine coordinates
       */
-      static void force_all_affine(std::vector<EC_Point>& points, secure_vector<word>& ws);
+      static void force_all_affine(std::span<EC_Point> points, secure_vector<word>& ws);
 
       bool is_affine() const;
 

@@ -111,12 +111,11 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       /**
       * Decode a BER encoded ECC domain parameter set
       * @param ber the bytes of the BER encoding
-      * @param ber_len the length of ber
       */
-      explicit EC_Group(const uint8_t ber[], size_t ber_len);
+      explicit EC_Group(std::span<const uint8_t> ber);
 
-      template <typename Alloc>
-      EC_Group(const std::vector<uint8_t, Alloc>& ber) : EC_Group(ber.data(), ber.size()) {}
+      BOTAN_DEPRECATED("Use EC_Group(std::span)")
+      EC_Group(const uint8_t ber[], size_t ber_len) : EC_Group(std::span{ber, ber_len}) {}
 
       /**
       * Create an EC domain by OID (or throw if unknown)
@@ -449,8 +448,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
 
       EC_Group(std::shared_ptr<EC_Group_Data>&& data);
 
-      static std::pair<std::shared_ptr<EC_Group_Data>, bool> BER_decode_EC_group(const uint8_t bits[],
-                                                                                 size_t len,
+      static std::pair<std::shared_ptr<EC_Group_Data>, bool> BER_decode_EC_group(std::span<const uint8_t> ber,
                                                                                  EC_Group_Source source);
 
       static std::shared_ptr<EC_Group_Data> load_EC_group_info(const char* p,

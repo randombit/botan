@@ -14,6 +14,7 @@
 #include <botan/ec_point.h>
 #include <botan/numthry.h>
 #include <botan/secmem.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/workfactor.h>
 
 namespace Botan {
@@ -176,7 +177,9 @@ bool EC_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
 }
 
 const BigInt& EC_PublicKey::get_int_field(std::string_view field) const {
-   if(field == "base_x") {
+   if(field == "public_x" || field == "public_y") {
+      throw Not_Implemented(fmt("EC_PublicKey::get_int_field no longer implements getter for {}", field));
+   } else if(field == "base_x") {
       return this->domain().get_g_x();
    } else if(field == "base_y") {
       return this->domain().get_g_y();

@@ -383,7 +383,7 @@ EC_Point EC_Point::mul(const BigInt& scalar) const {
 }
 
 //static
-void EC_Point::force_all_affine(std::vector<EC_Point>& points, secure_vector<word>& ws) {
+void EC_Point::force_all_affine(std::span<EC_Point> points, secure_vector<word>& ws) {
    if(points.size() <= 1) {
       for(auto& point : points) {
          point.force_affine();

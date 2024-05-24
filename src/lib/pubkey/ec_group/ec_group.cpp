@@ -322,15 +322,14 @@ std::shared_ptr<EC_Group_Data> EC_Group::load_EC_group_info(const char* p_str,
 }
 
 //static
-std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(const uint8_t bits[],
-                                                                              size_t len,
+std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(std::span<const uint8_t> bits,
                                                                               EC_Group_Source source) {
-   BER_Decoder ber(bits, len);
+   BER_Decoder ber(bits);
    BER_Object obj = ber.get_next_object();
 
    if(obj.type() == ASN1_Type::ObjectId) {
       OID dom_par_oid;
-      BER_Decoder(bits, len).decode(dom_par_oid);
+      BER_Decoder(bits).decode(dom_par_oid);
       return std::make_pair(ec_group_data().lookup(dom_par_oid), false);
    }
 
@@ -339,7 +338,7 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(co
       std::vector<uint8_t> base_pt;
       std::vector<uint8_t> seed;
 
-      BER_Decoder(bits, len)
+      BER_Decoder(bits)
          .start_sequence()
          .decode_and_check<size_t>(1, "Unknown ECC param version code")
          .start_sequence()
@@ -447,9 +446,9 @@ EC_Group::EC_Group(std::string_view str) {
    if(m_data == nullptr) {
       if(str.size() > 30 && str.substr(0, 29) == "-----BEGIN EC PARAMETERS-----") {
          // OK try it as PEM ...
-         secure_vector<uint8_t> ber = PEM_Code::decode_check_label(str, "EC PARAMETERS");
+         const auto ber = PEM_Code::decode_check_label(str, "EC PARAMETERS");
 
-         auto data = BER_decode_EC_group(ber.data(), ber.size(), EC_Group_Source::ExternalSource);
+         auto data = BER_decode_EC_group(ber, EC_Group_Source::ExternalSource);
          this->m_data = data.first;
          this->m_explicit_encoding = data.second;
       }
@@ -463,7 +462,7 @@ EC_Group::EC_Group(std::string_view str) {
 //static
 EC_Group EC_Group::from_PEM(std::string_view pem) {
    const auto ber = PEM_Code::decode_check_label(pem, "EC PARAMETERS");
-   return EC_Group(ber.data(), ber.size());
+   return EC_Group(ber);
 }
 
 EC_Group::EC_Group(const BigInt& p,
@@ -505,8 +504,8 @@ EC_Group::EC_Group(const OID& oid,
       ec_group_data().lookup_or_create(p, a, b, base_x, base_y, order, cofactor, oid, EC_Group_Source::ExternalSource);
 }
 
-EC_Group::EC_Group(const uint8_t ber[], size_t ber_len) {
-   auto data = BER_decode_EC_group(ber, ber_len, EC_Group_Source::ExternalSource);
+EC_Group::EC_Group(std::span<const uint8_t> ber) {
+   auto data = BER_decode_EC_group(ber, EC_Group_Source::ExternalSource);
    m_data = data.first;
    m_explicit_encoding = data.second;
 }
