@@ -179,6 +179,10 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
       data->m_name_constraints = ext->get_name_constraints();
    }
 
+   if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Extended_Key_Usage>()) {
+      data->m_extended_key_usage = ext->object_identifiers();
+   }
+
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Basic_Constraints>()) {
       if(ext->get_is_ca() == true) {
          /*
@@ -188,7 +192,36 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
          * removing this entirely, or alternately adding a warning level
          * validation failure for it.
          */
-         if(data->m_key_constraints.empty() || data->m_key_constraints.includes(Key_Constraints::KeyCertSign)) {
+         const bool allowed_by_ku =
+            data->m_key_constraints.includes(Key_Constraints::KeyCertSign) || data->m_key_constraints.empty();
+
+         /*
+         * If the extended key usages are set then we must restrict the
+         * usage in accordance with it as well.
+         *
+         * RFC 5280 does not define any extended key usages compatible
+         * with certificate signing, but some CAs seem to use serverAuth
+         * or clientAuth here.
+         */
+         const bool allowed_by_ext_ku = [](const std::vector<OID>& ext_ku) -> bool {
+            if(ext_ku.empty()) {
+               return true;
+            }
+
+            const auto server_auth = OID::from_name("PKIX.ServerAuth");
+            const auto client_auth = OID::from_name("PKIX.ClientAuth");
+            const auto ocsp_sign = OID::from_name("PKIX.OCSPSigning");
+
+            for(const auto& oid: ext_ku) {
+               if(oid == server_auth || oid == client_auth || oid == ocsp_sign) {
+                  return true;
+               }
+            }
+
+            return false;
+         }(data->m_extended_key_usage);
+
+         if(allowed_by_ku && allowed_by_ext_ku) {
             data->m_is_ca_certificate = true;
             data->m_path_len_constraint = ext->get_path_limit();
          }
@@ -201,10 +234,6 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
 
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Subject_Alternative_Name>()) {
       data->m_subject_alt_name = ext->get_alt_name();
-   }
-
-   if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Extended_Key_Usage>()) {
-      data->m_extended_key_usage = ext->object_identifiers();
    }
 
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Certificate_Policies>()) {
@@ -251,8 +280,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
 
    const std::vector<uint8_t> full_encoding = obj.BER_encode();
 
-   auto sha1 = HashFunction::create("SHA-1");
-   if(sha1) {
+   if(auto sha1 = HashFunction::create("SHA-1")) {
       sha1->update(data->m_subject_public_key_bitstring);
       data->m_subject_public_key_bitstring_sha1 = sha1->final_stdvec();
       // otherwise left as empty, and we will throw if subject_public_key_bitstring_sha1 is called
@@ -260,8 +288,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
       data->m_fingerprint_sha1 = create_hex_fingerprint(full_encoding, "SHA-1");
    }
 
-   auto sha256 = HashFunction::create("SHA-256");
-   if(sha256) {
+   if(auto sha256 = HashFunction::create("SHA-256")) {
       sha256->update(data->m_issuer_dn_bits);
       data->m_issuer_dn_bits_sha256 = sha256->final_stdvec();
 
@@ -610,7 +637,7 @@ bool X509_Certificate::matches_dns_name(std::string_view name) const {
       auto issued_names = subject_info("DNS");
 
       // Fall back to CN only if no DNS names are set (RFC 6125 sec 6.4.4)
-      if(issued_names.empty()) {
+      if(subject_alt_name().count() == 0) {
          issued_names = subject_info("Name");
       }
 
