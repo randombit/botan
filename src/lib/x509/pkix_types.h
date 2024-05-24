@@ -239,6 +239,9 @@ class BOTAN_PUBLIC_API(2, 0) Attribute final : public ASN1_Object {
 * Handles parsing GeneralName types in their BER and canonical string
 * encoding. Allows matching GeneralNames against each other using
 * the rules laid out in the RFC 5280, sec. 4.2.1.10 (Name Contraints).
+*
+* This entire class is deprecated and will be removed in a future
+* major release
 */
 class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
    public:
@@ -250,7 +253,16 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
          UnknownType,
       };
 
-      GeneralName() = default;
+      enum class NameType : uint8_t {
+         Unknown = 0,
+         RFC822 = 1,
+         DNS = 2,
+         URI = 3,
+         DN = 4,
+         IPv4 = 5,
+      };
+
+      BOTAN_DEPRECATED("Deprecated use NameConstraints") GeneralName() = default;
 
       // Encoding is not implemented
       void encode_into(DER_Encoder&) const override;
@@ -258,14 +270,19 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
       void decode_from(BER_Decoder&) override;
 
       /**
+      * @return Type of the name expressed in this restriction
+      */
+      NameType type_code() const { return m_type; }
+
+      /**
       * @return Type of the name. Can be DN, DNS, IP, RFC822 or URI.
       */
-      std::string type() const;
+      BOTAN_DEPRECATED("Deprecated use type_code") std::string type() const;
 
       /**
       * @return The name as string. Format depends on type.
       */
-      std::string name() const;
+      BOTAN_DEPRECATED("Deprecated no replacement") std::string name() const;
 
       /**
       * @return true if this name is a type we don't understand
@@ -280,18 +297,13 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
       * @param cert certificate to be matched
       * @return the match result
       */
-      MatchResult matches(const X509_Certificate& cert) const;
+      BOTAN_DEPRECATED("Deprecated use NameConstraints type") MatchResult matches(const X509_Certificate& cert) const;
+
+      bool matches_dns(const std::string& dns_name) const;
+      bool matches_ipv4(uint32_t ip) const;
+      bool matches_dn(const X509_DN& dn) const;
 
    private:
-      enum class NameType : uint8_t {
-         Unknown = 0,
-         RFC822 = 1,
-         DNS = 2,
-         URI = 3,
-         DN = 4,
-         IPv4 = 5,
-      };
-
       static constexpr size_t RFC822_IDX = 0;
       static constexpr size_t DNS_IDX = 1;
       static constexpr size_t URI_IDX = 2;
@@ -299,14 +311,14 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
       static constexpr size_t IPV4_IDX = 4;
 
       NameType m_type;
-      std::variant<std::string, std::string, std::string, X509_DN, std::pair<uint32_t, uint32_t>> m_names;
+      std::variant<std::string, std::string, std::string, X509_DN, std::pair<uint32_t, uint32_t>> m_name;
 
-      static bool matches_dns(const std::string& name, const std::string& constraint);
+      static bool matches_dns(std::string_view name, std::string_view constraint);
 
       static bool matches_dn(const X509_DN& name, const X509_DN& constraint);
 };
 
-std::ostream& operator<<(std::ostream& os, const GeneralName& gn);
+BOTAN_DEPRECATED("Deprecated no replacement") std::ostream& operator<<(std::ostream& os, const GeneralName& gn);
 
 /**
 * @brief A single Name Constraint
@@ -314,13 +326,16 @@ std::ostream& operator<<(std::ostream& os, const GeneralName& gn);
 * The Name Constraint extension adds a minimum and maximum path
 * length to a GeneralName to form a constraint. The length limits
 * are not used in PKIX.
+*
+* This entire class is deprecated and will be removed in a future
+* major release
 */
 class BOTAN_PUBLIC_API(2, 0) GeneralSubtree final : public ASN1_Object {
    public:
       /**
       * Creates an empty name constraint.
       */
-      GeneralSubtree() : m_base() {}
+      BOTAN_DEPRECATED("Deprecated use NameConstraints") GeneralSubtree();
 
       void encode_into(DER_Encoder&) const override;
 
@@ -360,22 +375,36 @@ class BOTAN_PUBLIC_API(2, 0) NameConstraints final {
       /**
       * @return permitted names
       */
-      const std::vector<GeneralSubtree>& permitted() const { return m_permitted_subtrees; }
+      BOTAN_DEPRECATED("Deprecated no replacement") const std::vector<GeneralSubtree>& permitted() const {
+         return m_permitted_subtrees;
+      }
 
       /**
       * @return excluded names
       */
-      const std::vector<GeneralSubtree>& excluded() const { return m_excluded_subtrees; }
+      BOTAN_DEPRECATED("Deprecated no replacement") const std::vector<GeneralSubtree>& excluded() const {
+         return m_excluded_subtrees;
+      }
 
-      // Return true if this certificate is known to be permitted
+      /**
+      * Return true if all of the names in the certificate are permitted
+      */
       bool is_permitted(const X509_Certificate& cert, bool reject_unknown) const;
 
-      // Return true if this certificate is known to be excluded
+      /**
+      * Return true if any of the names in the certificate are excluded
+      */
       bool is_excluded(const X509_Certificate& cert, bool reject_unknown) const;
 
    private:
+      bool is_permitted_dn(const X509_DN& dn) const;
+      bool is_permitted_dns_name(const std::string& name) const;
+      bool is_permitted_ipv4(uint32_t ipv4) const;
+
       std::vector<GeneralSubtree> m_permitted_subtrees;
       std::vector<GeneralSubtree> m_excluded_subtrees;
+
+      std::set<GeneralName::NameType> m_permitted_names;
       bool m_permitted_contains_unknown;
       bool m_excluded_contains_unknown;
 };

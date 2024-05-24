@@ -212,7 +212,7 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
             const auto client_auth = OID::from_name("PKIX.ClientAuth");
             const auto ocsp_sign = OID::from_name("PKIX.OCSPSigning");
 
-            for(const auto& oid: ext_ku) {
+            for(const auto& oid : ext_ku) {
                if(oid == server_auth || oid == client_auth || oid == ocsp_sign) {
                   return true;
                }

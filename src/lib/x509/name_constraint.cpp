@@ -40,18 +40,18 @@ std::string GeneralName::type() const {
 }
 
 std::string GeneralName::name() const {
-   const size_t index = m_names.index();
+   const size_t index = m_name.index();
 
    if(index == RFC822_IDX) {
-      return std::get<RFC822_IDX>(m_names);
+      return std::get<RFC822_IDX>(m_name);
    } else if(index == DNS_IDX) {
-      return std::get<DNS_IDX>(m_names);
+      return std::get<DNS_IDX>(m_name);
    } else if(index == URI_IDX) {
-      return std::get<URI_IDX>(m_names);
+      return std::get<URI_IDX>(m_name);
    } else if(index == DN_IDX) {
-      return std::get<DN_IDX>(m_names).to_string();
+      return std::get<DN_IDX>(m_name).to_string();
    } else if(index == IPV4_IDX) {
-      auto [net, mask] = std::get<IPV4_IDX>(m_names);
+      auto [net, mask] = std::get<IPV4_IDX>(m_name);
       return fmt("{}/{}", ipv4_to_string(net), ipv4_to_string(mask));
    } else {
       BOTAN_ASSERT_UNREACHABLE();
@@ -67,28 +67,28 @@ void GeneralName::decode_from(BER_Decoder& ber) {
 
    if(obj.is_a(1, ASN1_Class::ContextSpecific)) {
       m_type = NameType::RFC822;
-      m_names.emplace<RFC822_IDX>(ASN1::to_string(obj));
+      m_name.emplace<RFC822_IDX>(ASN1::to_string(obj));
    } else if(obj.is_a(2, ASN1_Class::ContextSpecific)) {
       m_type = NameType::DNS;
       // Store it in case insensitive form so we don't have to do it
       // again while matching
-      m_names.emplace<DNS_IDX>(tolower_string(ASN1::to_string(obj)));
+      m_name.emplace<DNS_IDX>(tolower_string(ASN1::to_string(obj)));
    } else if(obj.is_a(6, ASN1_Class::ContextSpecific)) {
       m_type = NameType::URI;
-      m_names.emplace<URI_IDX>(ASN1::to_string(obj));
+      m_name.emplace<URI_IDX>(ASN1::to_string(obj));
    } else if(obj.is_a(4, ASN1_Class::ContextSpecific | ASN1_Class::Constructed)) {
       X509_DN dn;
       BER_Decoder dec(obj);
       dn.decode_from(dec);
       m_type = NameType::DN;
-      m_names.emplace<DN_IDX>(dn);
+      m_name.emplace<DN_IDX>(dn);
    } else if(obj.is_a(7, ASN1_Class::ContextSpecific)) {
       if(obj.length() == 8) {
          const uint32_t net = load_be<uint32_t>(obj.bits(), 0);
          const uint32_t mask = load_be<uint32_t>(obj.bits(), 1);
 
          m_type = NameType::IPv4;
-         m_names.emplace<IPV4_IDX>(std::make_pair(net, mask));
+         m_name.emplace<IPV4_IDX>(std::make_pair(net, mask));
       } else if(obj.length() == 32) {
          // IPv6 name constraints are not implemented
          m_type = NameType::Unknown;
@@ -109,6 +109,30 @@ bool GeneralName::is_unknown_type() const {
    // need to reject any cert with a critical email or URI name
    // constraint.
    return (m_type == NameType::URI || m_type == NameType::RFC822);
+}
+
+bool GeneralName::matches_dns(const std::string& dns_name) const {
+   if(m_type == NameType::DNS) {
+      const auto& constraint = std::get<DNS_IDX>(m_name);
+      return matches_dns(dns_name, constraint);
+   }
+   return false;
+}
+
+bool GeneralName::matches_ipv4(uint32_t ip) const {
+   if(m_type == NameType::IPv4) {
+      auto [net, mask] = std::get<IPV4_IDX>(m_name);
+      return (ip & mask) == net;
+   }
+   return false;
+}
+
+bool GeneralName::matches_dn(const X509_DN& dn) const {
+   if(m_type == NameType::DN) {
+      const X509_DN& constraint = std::get<DN_IDX>(m_name);
+      return matches_dn(dn, constraint);
+   }
+   return false;
 }
 
 GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) const {
@@ -146,7 +170,7 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
    MatchScore score;
 
    if(m_type == NameType::DNS) {
-      const auto& constraint = std::get<1>(m_names);
+      const auto& constraint = std::get<DNS_IDX>(m_name);
 
       const auto& alt_names = alt_name.dns();
 
@@ -154,25 +178,37 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
          score.add(matches_dns(dns, constraint));
       }
 
-      if(alt_names.empty()) {
+      if(alt_name.count() == 0) {
          // Check CN instead...
          for(const std::string& cn : dn.get_attribute("CN")) {
-            score.add(matches_dns(cn, constraint));
+            if(!string_to_ipv4(cn).has_value()) {
+               score.add(matches_dns(cn, constraint));
+            }
          }
       }
    } else if(m_type == NameType::DN) {
-      const X509_DN& constraint = std::get<3>(m_names);
+      const X509_DN& constraint = std::get<DN_IDX>(m_name);
       score.add(matches_dn(dn, constraint));
 
       for(const auto& alt_dn : alt_name.directory_names()) {
          score.add(matches_dn(alt_dn, constraint));
       }
    } else if(m_type == NameType::IPv4) {
-      auto [net, mask] = std::get<4>(m_names);
+      auto [net, mask] = std::get<IPV4_IDX>(m_name);
 
-      for(uint32_t ipv4 : alt_name.ipv4_address()) {
-         bool match = (ipv4 & mask) == net;
-         score.add(match);
+      if(alt_name.count() == 0) {
+         // Check CN instead...
+         for(const std::string& cn : dn.get_attribute("CN")) {
+            if(auto ipv4 = string_to_ipv4(cn)) {
+               bool match = (ipv4.value() & mask) == net;
+               score.add(match);
+            }
+         }
+      } else {
+         for(uint32_t ipv4 : alt_name.ipv4_address()) {
+            bool match = (ipv4 & mask) == net;
+            score.add(match);
+         }
       }
    } else {
       // URI and email name constraint matching not implemented
@@ -183,7 +219,7 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
 }
 
 //static
-bool GeneralName::matches_dns(const std::string& name, const std::string& constraint) {
+bool GeneralName::matches_dns(std::string_view name, std::string_view constraint) {
    // both constraint and name are assumed already tolower
    if(name.size() == constraint.size()) {
       return name == constraint;
@@ -197,12 +233,14 @@ bool GeneralName::matches_dns(const std::string& name, const std::string& constr
          return true;
       }
 
-      std::string_view substr = std::string_view(name).substr(name.size() - constraint.size(), constraint.size());
+      std::string_view substr = name.substr(name.size() - constraint.size(), constraint.size());
 
       if(constraint.front() == '.') {
          return substr == constraint;
+      } else if(substr[0] == '.') {
+         return substr.substr(1) == constraint;
       } else {
-         return substr[0] == '.' && substr.substr(1) == constraint;
+         return substr == constraint && name[name.size() - constraint.size() - 1] == '.';
       }
    }
 }
@@ -229,6 +267,8 @@ std::ostream& operator<<(std::ostream& os, const GeneralName& gn) {
    os << gn.type() << ":" << gn.name();
    return os;
 }
+
+GeneralSubtree::GeneralSubtree() : m_base() {}
 
 void GeneralSubtree::encode_into(DER_Encoder& /*to*/) const {
    throw Not_Implemented("GeneralSubtree encoding");
@@ -266,26 +306,122 @@ NameConstraints::NameConstraints(std::vector<GeneralSubtree>&& permitted_subtree
 
    m_permitted_contains_unknown = contains_unknown(m_permitted_subtrees);
    m_excluded_contains_unknown = contains_unknown(m_excluded_subtrees);
+
+   for(const auto& c : m_permitted_subtrees) {
+      m_permitted_names.insert(c.base().type_code());
+   }
+}
+
+bool NameConstraints::is_permitted_dn(const X509_DN& dn) const {
+   // If no restrictions, then immediate accept
+   if(!m_permitted_names.contains(GeneralName::NameType::DN)) {
+      return true;
+   }
+
+   for(const auto& c : m_permitted_subtrees) {
+      if(c.base().matches_dn(dn)) {
+         return true;
+      }
+   }
+
+   // There is at least one permitted name and we didn't match
+   return false;
+}
+
+bool NameConstraints::is_permitted_dns_name(const std::string& name) const {
+   if(name.empty() || name.starts_with(".")) {
+      return false;
+   }
+
+   // If no restrictions, then immediate accept
+   if(!m_permitted_names.contains(GeneralName::NameType::DNS)) {
+      return true;
+   }
+
+   for(const auto& c : m_permitted_subtrees) {
+      if(c.base().matches_dns(name)) {
+         return true;
+      }
+   }
+
+   // There is at least one permitted name and we didn't match
+   return false;
+}
+
+bool NameConstraints::is_permitted_ipv4(uint32_t ipv4) const {
+   // If no restrictions, then immediate accept
+   if(!m_permitted_names.contains(GeneralName::NameType::IPv4)) {
+      return true;
+   }
+
+   for(const auto& c : m_permitted_subtrees) {
+      if(c.base().matches_ipv4(ipv4)) {
+         return true;
+      }
+   }
+
+   // There is at least one permitted name and we didn't match
+   return false;
 }
 
 bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unknown) const {
-   if(reject_unknown && m_permitted_contains_unknown) {
-      return false;
+   if(reject_unknown) {
+      if(m_permitted_names.contains(GeneralName::NameType::Unknown)) {
+         return false;
+      }
+      if(m_permitted_names.contains(GeneralName::NameType::URI)) {
+         return false;
+      }
+      if(m_permitted_names.contains(GeneralName::NameType::RFC822)) {
+         return false;
+      }
    }
 
    if(permitted().empty()) {
       return true;
    }
 
-   for(const auto& c : m_permitted_subtrees) {
-      const auto m = c.base().matches(cert);
+   if(!is_permitted_dn(cert.subject_dn())) {
+      return false;
+   }
 
-      if(m == GeneralName::MatchResult::All) {
-         return true;
+   const auto& alt_name = cert.subject_alt_name();
+   for(const auto& alt_dn : alt_name.directory_names()) {
+      if(!is_permitted_dn(alt_dn)) {
+         return false;
       }
    }
 
-   return false;
+   for(const auto& alt_dns : alt_name.dns()) {
+      if(!is_permitted_dns_name(alt_dns)) {
+         return false;
+      }
+   }
+
+   for(const auto& alt_ipv4 : alt_name.ipv4_address()) {
+      if(!is_permitted_ipv4(alt_ipv4)) {
+         return false;
+      }
+   }
+
+   if(alt_name.count() == 0) {
+      for(const auto& cn : cert.subject_info("Name")) {
+         if(cn.find(".") != std::string::npos) {
+            if(auto ipv4 = string_to_ipv4(cn)) {
+               if(!is_permitted_ipv4(ipv4.value())) {
+                  return false;
+               }
+            } else {
+               if(!is_permitted_dns_name(cn)) {
+                  return false;
+               }
+            }
+         }
+      }
+   }
+
+   // We didn't encounter a name that doesn't have a matching constraint
+   return true;
 }
 
 bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unknown) const {
