@@ -31,7 +31,7 @@ class Kyber_KEM_Encryptor_Base : public PK_Ops::KEM_Encryption_with_KDF {
       }
 
    protected:
-      Kyber_KEM_Encryptor_Base(std::string_view kdf) : PK_Ops::KEM_Encryption_with_KDF(kdf) {}
+      Kyber_KEM_Encryptor_Base(const Any_Map& params) : PK_Ops::KEM_Encryption_with_KDF(params) {}
 
       virtual void encapsulate(StrongSpan<KyberCompressedCiphertext> out_encapsulated_key,
                                StrongSpan<KyberSharedSecret> out_shared_key,

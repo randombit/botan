@@ -146,11 +146,23 @@ class BOTAN_UNSTABLE_API KEM_Encryption {
    public:
       virtual void kem_encrypt(std::span<uint8_t> out_encapsulated_key,
                                std::span<uint8_t> out_shared_key,
+                               RandomNumberGenerator& rng) = 0;
+
+      virtual void kem_encrypt(std::span<uint8_t> out_encapsulated_key,
+                               std::span<uint8_t> out_shared_key,
                                RandomNumberGenerator& rng,
                                size_t desired_shared_key_len,
-                               std::span<const uint8_t> salt) = 0;
+                               std::span<const uint8_t> salt) {
+         BOTAN_UNUSED(desired_shared_key_len, salt);
+         kem_encrypt(out_encapsulated_key, out_shared_key, rng);
+      }
 
-      virtual size_t shared_key_length(size_t desired_shared_key_len) const = 0;
+      virtual size_t shared_key_length() const = 0;
+
+      BOTAN_DEPRECATED("Use version without desired_shared_key_len")
+      virtual size_t shared_key_length(size_t /*desired_shared_key_len*/) const {
+         return shared_key_length();
+      }
 
       virtual size_t encapsulated_key_length() const = 0;
 

@@ -19,8 +19,8 @@ namespace Botan {
 
 class Kyber_KEM_Encryptor final : public Kyber_KEM_Encryptor_Base {
    public:
-      Kyber_KEM_Encryptor(std::shared_ptr<const Kyber_PublicKeyInternal> key, std::string_view kdf) :
-            Kyber_KEM_Encryptor_Base(kdf), m_public_key(std::move(key)) {}
+      Kyber_KEM_Encryptor(std::shared_ptr<const Kyber_PublicKeyInternal> key, const Any_Map& params) :
+            Kyber_KEM_Encryptor_Base(params), m_public_key(std::move(key)) {}
 
    protected:
       void encapsulate(StrongSpan<KyberCompressedCiphertext> out_encapsulated_key,

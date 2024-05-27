@@ -166,6 +166,16 @@ size_t PK_Ops::KEM_Encryption_with_KDF::shared_key_length(size_t desired_shared_
    }
 }
 
+size_t PK_Ops::KEM_Encryption_with_KDF::shared_key_length() const {
+   return shared_key_length(m_desired_shared_key_len);
+}
+
+void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(std::span<uint8_t> out_encapsulated_key,
+                                                  std::span<uint8_t> out_shared_key,
+                                                  RandomNumberGenerator& rng) {
+   kem_encrypt(out_encapsulated_key, out_shared_key, rng, m_desired_shared_key_len, m_salt);
+}
+
 void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(std::span<uint8_t> out_encapsulated_key,
                                                   std::span<uint8_t> out_shared_key,
                                                   RandomNumberGenerator& rng,
@@ -187,7 +197,11 @@ void PK_Ops::KEM_Encryption_with_KDF::kem_encrypt(std::span<uint8_t> out_encapsu
    }
 }
 
-PK_Ops::KEM_Encryption_with_KDF::KEM_Encryption_with_KDF(std::string_view kdf) {
+PK_Ops::KEM_Encryption_with_KDF::KEM_Encryption_with_KDF(const Any_Map& params) {
+   const std::string kdf = params.get_or("kdf", std::string("Raw"));
+   m_desired_shared_key_len = params.get_or("desired_shared_key_len", 32);
+   m_salt = params.get_or("salt", std::vector<uint8_t>(0));
+
    if(kdf != "Raw") {
       m_kdf = KDF::create_or_throw(kdf);
    }

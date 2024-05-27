@@ -272,8 +272,8 @@ secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const {
                  m_private->z());
 }
 
-std::unique_ptr<PK_Ops::KEM_Encryption> Kyber_PublicKey::create_kem_encryption_op(std::string_view params,
-                                                                                  std::string_view provider) const {
+std::unique_ptr<PK_Ops::KEM_Encryption> Kyber_PublicKey::create_kem_encryption_op(const Any_Map& params) const {
+   auto provider = params.get_or("provider", std::string(""));
    if(provider.empty() || provider == "base") {
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
       if(mode().is_kyber_round3()) {

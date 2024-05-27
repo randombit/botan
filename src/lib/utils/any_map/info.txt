@@ -1,0 +1,14 @@
+<defines>
+ANY_MAP -> 20240524
+</defines>
+
+<module_info>
+name -> "Any Map"
+brief -> "Map: string -> anything"
+type -> "Internal"
+</module_info>
+
+<header:public>
+any_map.h
+</header:public>
+

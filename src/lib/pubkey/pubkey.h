@@ -8,6 +8,7 @@
 #ifndef BOTAN_PUBKEY_H_
 #define BOTAN_PUBKEY_H_
 
+#include <botan/any_map.h>
 #include <botan/asn1_obj.h>
 #include <botan/pk_keys.h>
 #include <botan/pk_ops_fwd.h>
@@ -583,13 +584,16 @@ class KEM_Encapsulation final {
 */
 class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
    public:
+      PK_KEM_Encryptor(const Public_Key& key, const Any_Map& params = {});
+
       /**
       * Construct an instance.
       * @param key the key to encrypt to
       * @param kem_param additional KEM parameters
       * @param provider the provider to use
       */
-      PK_KEM_Encryptor(const Public_Key& key, std::string_view kem_param = "", std::string_view provider = "");
+      BOTAN_DEPRECATED("Use constructor with Any_Map parameters")
+      PK_KEM_Encryptor(const Public_Key& key, std::string_view kem_param, std::string_view provider = "");
 
       /**
       * Construct an instance.
@@ -615,6 +619,8 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
       PK_KEM_Encryptor(PK_KEM_Encryptor&&) noexcept;
       PK_KEM_Encryptor& operator=(PK_KEM_Encryptor&&) noexcept;
 
+      size_t shared_key_length() const;
+
       /**
       * Return the length of the shared key returned by this KEM
       *
@@ -629,12 +635,17 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
       *
       * @param desired_shared_key_len is the requested length
       */
+      BOTAN_DEPRECATED("Pass desired_shared_key_len in constructor map if required")
       size_t shared_key_length(size_t desired_shared_key_len) const;
 
       /**
       * Return the length in bytes of encapsulated keys returned by this KEM
       */
       size_t encapsulated_key_length() const;
+
+      void encrypt(std::span<uint8_t> out_encapsulated_key,
+                   std::span<uint8_t> out_shared_key,
+                   RandomNumberGenerator& rng);
 
       /**
       * Generate a shared key for data encryption.
@@ -690,7 +701,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_KEM_Encryptor final {
       void encrypt(std::span<uint8_t> out_encapsulated_key,
                    std::span<uint8_t> out_shared_key,
                    RandomNumberGenerator& rng,
-                   size_t desired_shared_key_len = 32,
+                   size_t desired_shared_key_len,
                    std::span<const uint8_t> salt = {});
 
       BOTAN_DEPRECATED("use overload with salt as std::span<>")

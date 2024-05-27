@@ -24,6 +24,7 @@ workfactor.h
 </header:internal>
 
 <requires>
+any_map
 asn1
 bigint
 kdf

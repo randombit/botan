@@ -62,8 +62,7 @@ class BOTAN_TEST_API Hybrid_KEM_PublicKey : public virtual Public_Key {
 
       bool supports_operation(PublicKeyOperation op) const override;
 
-      std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(
-         std::string_view kdf, std::string_view provider = "base") const override;
+      std::unique_ptr<PK_Ops::KEM_Encryption> create_kem_encryption_op(const Any_Map& params) const override;
 
       const auto& public_keys() const { return m_public_keys; }
 

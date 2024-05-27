@@ -254,13 +254,13 @@ namespace {
 
 class Hybrid_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KDF {
    public:
-      Hybrid_KEM_Encryption_Operation(const Hybrid_KEM_PublicKey& key,
-                                      std::string_view kdf,
-                                      std::string_view provider) :
-            PK_Ops::KEM_Encryption_with_KDF(kdf), m_raw_kem_shared_key_length(0), m_encapsulated_key_length(0) {
+      Hybrid_KEM_Encryption_Operation(const Hybrid_KEM_PublicKey& key, const Any_Map& params) :
+            PK_Ops::KEM_Encryption_with_KDF(params), m_raw_kem_shared_key_length(0), m_encapsulated_key_length(0) {
+         auto provider = params.get_or("provider", std::string(""));
          m_kem_encryptors.reserve(key.public_keys().size());
+         const Any_Map sub_kem_params(std::make_pair(std::string("provider"), provider));
          for(const auto& k : key.public_keys()) {
-            const auto& newenc = m_kem_encryptors.emplace_back(*k, "Raw", provider);
+            const auto& newenc = m_kem_encryptors.emplace_back(*k, sub_kem_params);
             m_raw_kem_shared_key_length += newenc.shared_key_length(0 /* no KDF */);
             m_encapsulated_key_length += newenc.encapsulated_key_length();
          }
@@ -295,8 +295,8 @@ class Hybrid_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with
 }  // namespace
 
 std::unique_ptr<Botan::PK_Ops::KEM_Encryption> Hybrid_KEM_PublicKey::create_kem_encryption_op(
-   std::string_view kdf, std::string_view provider) const {
-   return std::make_unique<Hybrid_KEM_Encryption_Operation>(*this, kdf, provider);
+   const Any_Map& params) const {
+   return std::make_unique<Hybrid_KEM_Encryption_Operation>(*this, params);
 }
 
 namespace {

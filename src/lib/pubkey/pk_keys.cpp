@@ -93,9 +93,16 @@ std::unique_ptr<PK_Ops::Encryption> Public_Key::create_encryption_op(RandomNumbe
    throw Lookup_Error(fmt("{} does not support encryption", algo_name()));
 }
 
-std::unique_ptr<PK_Ops::KEM_Encryption> Public_Key::create_kem_encryption_op(std::string_view /*params*/,
-                                                                             std::string_view /*provider*/) const {
+std::unique_ptr<PK_Ops::KEM_Encryption> Public_Key::create_kem_encryption_op(const Any_Map& /*params*/) const {
    throw Lookup_Error(fmt("{} does not support KEM encryption", algo_name()));
+}
+
+std::unique_ptr<PK_Ops::KEM_Encryption> Public_Key::create_kem_encryption_op(std::string_view params,
+                                                                             std::string_view provider) const {
+   Any_Map params_map;
+   params_map.set("kdf", std::string(params));
+   params_map.set("provider", std::string(provider));
+   return create_kem_encryption_op(params_map);
 }
 
 std::unique_ptr<PK_Ops::Verification> Public_Key::create_verification_op(std::string_view /*params*/,

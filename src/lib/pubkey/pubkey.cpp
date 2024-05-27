@@ -133,6 +133,13 @@ secure_vector<uint8_t> PK_Decryptor_EME::do_decrypt(uint8_t& valid_mask, const u
    return m_op->decrypt(valid_mask, in, in_len);
 }
 
+PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, const Any_Map& params) {
+   m_op = key.create_kem_encryption_op(params);
+   if(!m_op) {
+      throw Invalid_Argument(fmt("Key type {} does not support KEM encryption", key.algo_name()));
+   }
+}
+
 PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, std::string_view param, std::string_view provider) {
    m_op = key.create_kem_encryption_op(param, provider);
    if(!m_op) {
@@ -145,12 +152,22 @@ PK_KEM_Encryptor::~PK_KEM_Encryptor() = default;
 PK_KEM_Encryptor::PK_KEM_Encryptor(PK_KEM_Encryptor&&) noexcept = default;
 PK_KEM_Encryptor& PK_KEM_Encryptor::operator=(PK_KEM_Encryptor&&) noexcept = default;
 
+size_t PK_KEM_Encryptor::shared_key_length() const {
+   return m_op->shared_key_length();
+}
+
 size_t PK_KEM_Encryptor::shared_key_length(size_t desired_shared_key_len) const {
    return m_op->shared_key_length(desired_shared_key_len);
 }
 
 size_t PK_KEM_Encryptor::encapsulated_key_length() const {
    return m_op->encapsulated_key_length();
+}
+
+void PK_KEM_Encryptor::encrypt(std::span<uint8_t> out_encapsulated_key,
+                               std::span<uint8_t> out_shared_key,
+                               RandomNumberGenerator& rng) {
+   m_op->kem_encrypt(out_encapsulated_key, out_shared_key, rng);
 }
 
 void PK_KEM_Encryptor::encrypt(std::span<uint8_t> out_encapsulated_key,

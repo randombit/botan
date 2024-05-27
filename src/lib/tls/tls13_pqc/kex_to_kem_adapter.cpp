@@ -107,8 +107,10 @@ std::unique_ptr<Public_Key> maybe_get_public_key(const std::unique_ptr<PK_Key_Ag
 
 class KEX_to_KEM_Adapter_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KDF {
    public:
-      KEX_to_KEM_Adapter_Encryption_Operation(const Public_Key& key, std::string_view kdf, std::string_view provider) :
-            PK_Ops::KEM_Encryption_with_KDF(kdf), m_provider(provider), m_public_key(key) {}
+      KEX_to_KEM_Adapter_Encryption_Operation(const Public_Key& key, const Any_Map& params) :
+            PK_Ops::KEM_Encryption_with_KDF(params),
+            m_provider(params.get_or("provider", std::string(""))),
+            m_public_key(key) {}
 
       size_t raw_kem_shared_key_length() const override { return kex_shared_key_length(m_public_key); }
 
@@ -236,8 +238,8 @@ bool KEX_to_KEM_Adapter_PrivateKey::check_key(RandomNumberGenerator& rng, bool s
 }
 
 std::unique_ptr<PK_Ops::KEM_Encryption> KEX_to_KEM_Adapter_PublicKey::create_kem_encryption_op(
-   std::string_view kdf, std::string_view provider) const {
-   return std::make_unique<KEX_to_KEM_Adapter_Encryption_Operation>(*m_public_key, kdf, provider);
+   const Any_Map& params) const {
+   return std::make_unique<KEX_to_KEM_Adapter_Encryption_Operation>(*m_public_key, params);
 }
 
 std::unique_ptr<PK_Ops::KEM_Decryption> KEX_to_KEM_Adapter_PrivateKey::create_kem_decryption_op(

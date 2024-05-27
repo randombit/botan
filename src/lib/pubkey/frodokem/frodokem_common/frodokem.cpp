@@ -77,8 +77,8 @@ class FrodoKEM_PrivateKeyInternal {
 
 class Frodo_KEM_Encryptor final : public PK_Ops::KEM_Encryption_with_KDF {
    public:
-      Frodo_KEM_Encryptor(std::shared_ptr<FrodoKEM_PublicKeyInternal> key, std::string_view kdf) :
-            KEM_Encryption_with_KDF(kdf), m_public_key(std::move(key)) {}
+      Frodo_KEM_Encryptor(std::shared_ptr<FrodoKEM_PublicKeyInternal> key, const Any_Map& params) :
+            KEM_Encryption_with_KDF(params), m_public_key(std::move(key)) {}
 
       size_t raw_kem_shared_key_length() const override { return m_public_key->constants().len_sec_bytes(); }
 
@@ -292,8 +292,8 @@ std::unique_ptr<Private_Key> FrodoKEM_PublicKey::generate_another(RandomNumberGe
    return std::make_unique<FrodoKEM_PrivateKey>(rng, m_public->constants().mode());
 }
 
-std::unique_ptr<PK_Ops::KEM_Encryption> FrodoKEM_PublicKey::create_kem_encryption_op(std::string_view params,
-                                                                                     std::string_view provider) const {
+std::unique_ptr<PK_Ops::KEM_Encryption> FrodoKEM_PublicKey::create_kem_encryption_op(const Any_Map& params) const {
+   auto provider = params.get_or("provider", std::string(""));
    if(provider.empty() || provider == "base") {
       return std::make_unique<Frodo_KEM_Encryptor>(m_public, params);
    }

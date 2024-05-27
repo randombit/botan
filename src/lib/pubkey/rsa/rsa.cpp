@@ -694,8 +694,8 @@ class RSA_Verify_Operation final : public PK_Ops::Verification,
 class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KDF,
                                            private RSA_Public_Operation {
    public:
-      RSA_KEM_Encryption_Operation(const RSA_PublicKey& key, std::string_view kdf) :
-            PK_Ops::KEM_Encryption_with_KDF(kdf), RSA_Public_Operation(key) {}
+      RSA_KEM_Encryption_Operation(const RSA_PublicKey& key, const Any_Map& kdf_params) :
+            PK_Ops::KEM_Encryption_with_KDF(kdf_params), RSA_Public_Operation(key) {}
 
    private:
       size_t raw_kem_shared_key_length() const override { return public_modulus_bytes(); }
@@ -724,12 +724,12 @@ std::unique_ptr<PK_Ops::Encryption> RSA_PublicKey::create_encryption_op(RandomNu
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::KEM_Encryption> RSA_PublicKey::create_kem_encryption_op(std::string_view params,
-                                                                                std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<RSA_KEM_Encryption_Operation>(*this, params);
+std::unique_ptr<PK_Ops::KEM_Encryption> RSA_PublicKey::create_kem_encryption_op(const Any_Map& params) const {
+   auto provider = params.get_or("provider", std::string(""));
+   if(provider != "base" && !provider.empty()) {
+      throw Provider_Not_Found(algo_name(), provider);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   return std::make_unique<RSA_KEM_Encryption_Operation>(*this, params);
 }
 
 std::unique_ptr<PK_Ops::Verification> RSA_PublicKey::create_verification_op(std::string_view params,
