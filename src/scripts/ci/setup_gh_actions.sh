@@ -30,7 +30,7 @@ if type -p "apt-get"; then
     if [ "$TARGET" = "valgrind" ] || [ "$TARGET" = "valgrind-full" ]; then
         sudo apt-get -qq install valgrind
 
-    elif [ "$TARGET" = "shared" ] || [ "$TARGET" = "examples" ] || [ "$TARGET" = "tlsanvil" ] ; then
+    elif [ "$TARGET" = "shared" ] || [ "$TARGET" = "examples" ] || [ "$TARGET" = "tlsanvil" ] || [ "$TARGET" = "clang-tidy" ] ; then
         sudo apt-get -qq install libboost-dev
 
     elif [ "$TARGET" = "clang" ]; then
