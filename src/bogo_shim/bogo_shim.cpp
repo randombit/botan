@@ -788,6 +788,7 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[]) {
       "select-next-proto",
       "srtp-profiles",
       "test-name",
+      "trust-cert",
       "use-client-ca-list",
       //"send-channel-id",
       "write-settings",
@@ -970,7 +971,7 @@ class Shim_Policy final : public Botan::TLS::Policy {
 
       //size_t minimum_signature_strength() const override;
 
-      //bool require_cert_revocation_info() const override;
+      bool require_cert_revocation_info() const override { return false; }
 
       std::vector<Botan::TLS::Group_Params> key_exchange_groups() const override {
          if(m_args.option_used("curves")) {
@@ -1263,6 +1264,15 @@ class Shim_Credentials final : public Botan::Credentials_Manager {
                } catch(...) {}
             }
          }
+
+         if(m_args.option_used("trust-cert") && !m_args.get_string_opt("trust-cert").empty()) {
+            Botan::DataSource_Stream cert_stream(m_args.get_string_opt("trust-cert"));
+            try {
+               m_trust_roots.add_certificate(Botan::X509_Certificate(cert_stream));
+            } catch(const std::exception& ex) {
+               throw Shim_Exception("Failed to load trusted root certificate: " + std::string(ex.what()));
+            }
+         }
       }
 
       std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(const std::string& type,
@@ -1279,7 +1289,7 @@ class Shim_Credentials final : public Botan::Credentials_Manager {
             throw Shim_Exception("Unexpected host name in trusted CA request: " + context);
          }
 
-         return Botan::Credentials_Manager::trusted_certificate_authorities(type, context);
+         return {&m_trust_roots};
       }
 
       std::string psk_identity(const std::string& /*type*/,
@@ -1365,6 +1375,7 @@ class Shim_Credentials final : public Botan::Credentials_Manager {
       std::optional<std::string> m_psk_identity;
       std::shared_ptr<Botan::Private_Key> m_key;
       std::vector<Botan::X509_Certificate> m_cert_chain;
+      Botan::Certificate_Store_In_Memory m_trust_roots;
 };
 
 class Shim_Callbacks final : public Botan::TLS::Callbacks {
@@ -1473,12 +1484,12 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
          return Botan::TLS::Callbacks::tls_verify_message(key, padding, format, msg, sig);
       }
 
-      void tls_verify_cert_chain(const std::vector<Botan::X509_Certificate>& /*cert_chain*/,
-                                 const std::vector<std::optional<Botan::OCSP::Response>>& /*ocsp_responses*/,
-                                 const std::vector<Botan::Certificate_Store*>& /*trusted_roots*/,
-                                 Botan::Usage_Type /*usage*/,
-                                 std::string_view /*hostname*/,
-                                 const Botan::TLS::Policy& /*policy*/) override {
+      void tls_verify_cert_chain(const std::vector<Botan::X509_Certificate>& cert_chain,
+                                 const std::vector<std::optional<Botan::OCSP::Response>>& ocsp_responses,
+                                 const std::vector<Botan::Certificate_Store*>& trusted_roots,
+                                 Botan::Usage_Type usage,
+                                 std::string_view /* hostname */,
+                                 const Botan::TLS::Policy& policy) override {
          if(m_args.flag_set("enable-ocsp-stapling") && m_args.flag_set("use-ocsp-callback") &&
             m_args.flag_set("fail-ocsp-callback")) {
             throw Botan::TLS::TLS_Exception(Botan::TLS::Alert::BadCertificateStatusResponse,
@@ -1493,6 +1504,20 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
 
             throw Botan::TLS::TLS_Exception(alert, "Test requires rejecting cert");
          }
+
+         if(!cert_chain.empty() && cert_chain.front().is_self_signed()) {
+            for(const auto roots : trusted_roots) {
+               if(roots->certificate_known(cert_chain.front())) {
+                  shim_log("Trusting self-signed certificate");
+                  return;
+               }
+            }
+         }
+
+         shim_log("Establishing trust from a certificate chain");
+
+         Botan::TLS::Callbacks::tls_verify_cert_chain(
+            cert_chain, ocsp_responses, trusted_roots, usage, "" /* hostname */, policy);
       }
 
       std::optional<Botan::OCSP::Response> tls_parse_ocsp_response(const std::vector<uint8_t>& raw_response) override {
