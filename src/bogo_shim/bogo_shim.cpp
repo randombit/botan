@@ -1532,6 +1532,29 @@ class Shim_Callbacks final : public Botan::TLS::Callbacks {
          return std::nullopt;
       }
 
+      void tls_modify_extensions(Botan::TLS::Extensions& exts,
+                                 Botan::TLS::Connection_Side /* side */,
+                                 Botan::TLS::Handshake_Type msg_type) override {
+         if(msg_type == Botan::TLS::Handshake_Type::CertificateRequest) {
+            if(m_args.option_used("use-client-ca-list")) {
+               // The CertificateAuthorities extension is filled with the CA
+               // list provided by the credentials manager. The same list is
+               // used to later verify the client certificate chain.
+               //
+               // Hence, we have to use this low-level callback to fulfill the
+               // BoGo requirement of sending specific configurations of the CA
+               // list in the CertificateRequest message.
+               if(m_args.get_string_opt("use-client-ca-list") == "<EMPTY>" ||
+                  m_args.get_string_opt("use-client-ca-list") == "<NULL>") {
+                  exts.remove_extension(Botan::TLS::Extension_Code::CertificateAuthorities);
+               } else {
+                  // TODO: -use-client-ca-list might also provide the encoded
+                  //       list of DNs. We could render this here, if needed.
+               }
+            }
+         }
+      }
+
       std::string tls_server_choose_app_protocol(const std::vector<std::string>& client_protos) override {
          if(client_protos.empty()) {
             return "";  // shouldn't happen?
