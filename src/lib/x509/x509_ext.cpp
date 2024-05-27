@@ -504,7 +504,7 @@ void Name_Constraints::decode_inner(const std::vector<uint8_t>& in) {
 }
 
 void Name_Constraints::validate(const X509_Certificate& subject,
-                                const X509_Certificate& issuer,
+                                const X509_Certificate& /*issuer*/,
                                 const std::vector<X509_Certificate>& cert_path,
                                 std::vector<std::set<Certificate_Status_Code>>& cert_status,
                                 size_t pos) {
@@ -513,7 +513,7 @@ void Name_Constraints::validate(const X509_Certificate& subject,
          cert_status.at(pos).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
       }
 
-      const bool issuer_name_constraint_critical = issuer.is_critical("X509v3.NameConstraints");
+      const bool issuer_name_constraint_critical = subject.is_critical("X509v3.NameConstraints");
 
       // Check that all subordinate certs pass the name constraint
       for(size_t j = 0; j < pos; ++j) {

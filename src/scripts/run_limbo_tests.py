@@ -57,8 +57,7 @@ tests_that_succeed_unexpectedly = {
     'webpki::explicit-curve': 'Deprecated but not gone yet',
     'rfc5280::nc::invalid-dnsname-leading-period': 'Common extension',
 
-    'rfc5280::nc::nc-forbids-othername': 'Needs investigation',
-    #'rfc5280::san::malformed': 'Needs investigation',
+    'rfc5280::nc::nc-forbids-othername': 'Othername is a NULL which we drop',
     'webpki::san::wildcard-embedded-ulabel-san': 'Needs investigation',
     'webpki::malformed-aia': 'Needs investigation',
 
@@ -106,7 +105,7 @@ tests_that_succeed_unexpectedly = {
 tests_that_fail_unexpectedly = {
     'rfc5280::nc::permitted-ipv6-match': 'IPv6 name constraints not implemented',
 
-    'rfc5280::nc::permitted-dn-match': 'Needs investigation',
+    'rfc5280::nc::permitted-dn-match': 'https://github.com/C2SP/x509-limbo/issues/282',
 
     'cve::cve-2024-0567': 'Possible path building bug',
     'rfc5280::root-and-intermediate-swapped': 'Possible path building bug',
@@ -128,7 +127,8 @@ def report_failure(test_id, modified_result, type):
 def dump_x509(who, cert):
     print("%s certificate\n" % (who))
 
-    proc = subprocess.run(['openssl', 'x509', '-text', '-noout'],
+    dump_cmd = ['openssl', 'x509', '-text', '-noout']
+    proc = subprocess.run(dump_cmd,
                           input=bytes(cert, 'utf8'),
                           capture_output=True)
 

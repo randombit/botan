@@ -114,7 +114,7 @@ void AlternativeName::decode_from(BER_Decoder& source) {
    while(names.more_items()) {
       BER_Object obj = names.get_next_object();
 
-      if(obj.is_a(0, ASN1_Class::ContextSpecific)) {
+      if(obj.is_a(0, ASN1_Class::ExplicitContextSpecific)) {
          BER_Decoder othername(obj);
 
          OID oid;

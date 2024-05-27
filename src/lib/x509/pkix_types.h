@@ -153,7 +153,10 @@ class BOTAN_PUBLIC_API(2, 0) AlternativeName final : public ASN1_Object {
       const std::set<uint32_t>& ipv4_address() const { return m_ipv4_addr; }
 
       /// Return the set of "other names" included in this alternative name
-      const std::set<std::pair<OID, ASN1_String>>& other_names() const { return m_othernames; }
+      BOTAN_DEPRECATED("Support for other names is deprecated")
+      const std::set<std::pair<OID, ASN1_String>>& other_names() const {
+         return m_othernames;
+      }
 
       /// Return the set of directory names included in this alternative name
       const std::set<X509_DN>& directory_names() const { return m_dn_names; }
@@ -260,6 +263,7 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
          URI = 3,
          DN = 4,
          IPv4 = 5,
+         Other = 6,
       };
 
       BOTAN_DEPRECATED("Deprecated use NameConstraints") GeneralName() = default;
@@ -283,14 +287,6 @@ class BOTAN_PUBLIC_API(2, 0) GeneralName final : public ASN1_Object {
       * @return The name as string. Format depends on type.
       */
       BOTAN_DEPRECATED("Deprecated no replacement") std::string name() const;
-
-      /**
-      * @return true if this name is a type we don't understand
-      *
-      * Note this returns true also for the case of URIs and email, which we can
-      * parse but do not currently implement matching for.
-      */
-      bool is_unknown_type() const;
 
       /**
       * Checks whether a given certificate (partially) matches this name.
@@ -397,16 +393,11 @@ class BOTAN_PUBLIC_API(2, 0) NameConstraints final {
       bool is_excluded(const X509_Certificate& cert, bool reject_unknown) const;
 
    private:
-      bool is_permitted_dn(const X509_DN& dn) const;
-      bool is_permitted_dns_name(const std::string& name) const;
-      bool is_permitted_ipv4(uint32_t ipv4) const;
-
       std::vector<GeneralSubtree> m_permitted_subtrees;
       std::vector<GeneralSubtree> m_excluded_subtrees;
 
-      std::set<GeneralName::NameType> m_permitted_names;
-      bool m_permitted_contains_unknown;
-      bool m_excluded_contains_unknown;
+      std::set<GeneralName::NameType> m_permitted_name_types;
+      std::set<GeneralName::NameType> m_excluded_name_types;
 };
 
 /**
