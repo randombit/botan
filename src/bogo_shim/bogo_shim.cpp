@@ -720,6 +720,8 @@ std::unique_ptr<Shim_Arguments> parse_options(char* argv[]) {
       "is-handshaker-supported",
       //"jdk11-workaround",
       "key-update",
+      "no-check-client-certificate-type",
+      "no-check-ecdsa-curve",
       "no-op-extra-handshake",
       "no-rsa-pss-rsae-certs",
       "no-ticket",
