@@ -238,7 +238,7 @@ static void server_proc(const std::function<void(std::shared_ptr<DtlsConnection>
 
 #if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
    static uint8_t data[8192];
-   int recvlen = 0;
+   ssize_t recvlen = 0;
    while((recvlen = recvfrom(fd, data, sizeof(data), 0, reinterpret_cast<sockaddr*>(&fromaddr), &len)) > 0) {
       connection->received_data(std::span(data, recvlen));
    }
@@ -283,7 +283,7 @@ static void client_proc(const std::function<void(std::shared_ptr<DtlsConnection>
    conn_callback(connection);
 #if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
    static uint8_t data[8192];
-   int recvlen = 0;
+   ssize_t recvlen = 0;
    while((recvlen = recvfrom(fd, data, sizeof(data), 0, reinterpret_cast<sockaddr*>(&fromaddr), &len)) > 0) {
       connection->received_data(std::span(data, recvlen));
    }
