@@ -467,7 +467,7 @@ class RSA_Private_Operation {
          const BigInt recovered = m_blinder.unblind(rsa_private_op(m_blinder.blind(input_bn)));
          BOTAN_ASSERT(input_bn == m_public->public_op(recovered), "RSA consistency check");
          BOTAN_ASSERT(m_public->public_modulus_bytes() == out.size(), "output size check");
-         BigInt::encode_1363(out, recovered);
+         recovered.serialize_to(out);
       }
 
       secure_vector<uint8_t> raw_op(const uint8_t input[], size_t input_len) {
@@ -659,7 +659,7 @@ class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_EME,
                                          size_t input_len,
                                          RandomNumberGenerator& /*rng*/) override {
          BigInt input_bn(input, input_len);
-         return BigInt::encode_1363(public_op(input_bn), public_modulus_bytes());
+         return public_op(input_bn).serialize<secure_vector<uint8_t>>(public_modulus_bytes());
       }
 };
 
@@ -685,7 +685,7 @@ class RSA_Verify_Operation final : public PK_Ops::Verification,
             throw Decoding_Error("RSA signature too large to be valid for this key");
          }
          BigInt input_bn(input, input_len);
-         return BigInt::encode(public_op(input_bn));
+         return public_op(input_bn).serialize();
       }
 
       std::unique_ptr<EMSA> m_emsa;
@@ -708,8 +708,8 @@ class RSA_KEM_Encryption_Operation final : public PK_Ops::KEM_Encryption_with_KD
          const BigInt r = BigInt::random_integer(rng, 1, get_n());
          const BigInt c = public_op(r);
 
-         BigInt::encode_1363(out_encapsulated_key, c);
-         BigInt::encode_1363(raw_shared_key, r);
+         c.serialize_to(out_encapsulated_key);
+         r.serialize_to(raw_shared_key);
       }
 };
 

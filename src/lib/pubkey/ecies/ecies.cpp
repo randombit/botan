@@ -75,6 +75,7 @@ class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
          if(S.on_the_curve() == false) {
             throw Internal_Error("ECDH agreed value was not on the curve");
          }
+
          return S.x_bytes();
       }
 

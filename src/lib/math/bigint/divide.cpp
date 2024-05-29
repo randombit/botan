@@ -66,7 +66,7 @@ void ct_divide(const BigInt& x, const BigInt& y, BigInt& q_out, BigInt& r_out) {
       r *= 2;
       r.conditionally_set_bit(0, x_b);
 
-      const bool r_gte_y = bigint_sub3(t.mutable_data(), r.data(), r.size(), y.data(), y_words) == 0;
+      const bool r_gte_y = bigint_sub3(t.mutable_data(), r._data(), r.size(), y._data(), y_words) == 0;
 
       q.conditionally_set_bit(b, r_gte_y);
       r.ct_cond_swap(r_gte_y, t);
@@ -133,7 +133,7 @@ BigInt ct_modulo(const BigInt& x, const BigInt& y) {
       r *= 2;
       r.conditionally_set_bit(0, x_b);
 
-      const bool r_gte_y = bigint_sub3(t.mutable_data(), r.data(), r.size(), y.data(), y_words) == 0;
+      const bool r_gte_y = bigint_sub3(t.mutable_data(), r._data(), r.size(), y._data(), y_words) == 0;
 
       r.ct_cond_swap(r_gte_y, t);
    }

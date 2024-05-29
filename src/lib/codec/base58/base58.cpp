@@ -158,9 +158,7 @@ std::vector<uint8_t> base58_decode(const char input[], size_t input_length) {
       v += idx;
    }
 
-   std::vector<uint8_t> output(v.bytes() + leading_zeros);
-   v.binary_encode(output.data() + leading_zeros);
-   return output;
+   return v.serialize(v.bytes() + leading_zeros);
 }
 
 std::vector<uint8_t> base58_check_decode(const char input[], size_t input_length) {

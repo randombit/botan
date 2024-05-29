@@ -9,6 +9,7 @@
 
 #include <botan/hex.h>
 #include <botan/internal/divide.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -87,7 +88,7 @@ std::string BigInt::to_hex_string() const {
    std::vector<uint8_t> bits(std::max<size_t>(1, this_bytes));
 
    if(this_bytes > 0) {
-      this->binary_encode(bits.data());
+      this->serialize_to(bits);
    }
 
    std::string hrep;
@@ -97,36 +98,6 @@ std::string BigInt::to_hex_string() const {
    hrep += "0x";
    hrep += hex_encode(bits);
    return hrep;
-}
-
-/*
-* Encode a BigInt, with leading 0s if needed
-*/
-secure_vector<uint8_t> BigInt::encode_1363(const BigInt& n, size_t bytes) {
-   if(n.bytes() > bytes) {
-      throw Encoding_Error("encode_1363: n is too large to encode properly");
-   }
-
-   secure_vector<uint8_t> output(bytes);
-   n.binary_encode(output.data(), output.size());
-   return output;
-}
-
-void BigInt::encode_1363(std::span<uint8_t> output, const BigInt& n) {
-   if(n.bytes() > output.size()) {
-      throw Encoding_Error("encode_1363: n is too large to encode properly");
-   }
-
-   n.binary_encode(output.data(), output.size());
-}
-
-//static
-void BigInt::encode_1363(uint8_t output[], size_t bytes, const BigInt& n) {
-   if(n.bytes() > bytes) {
-      throw Encoding_Error("encode_1363: n is too large to encode properly");
-   }
-
-   n.binary_encode(output, bytes);
 }
 
 /*
@@ -140,19 +111,27 @@ secure_vector<uint8_t> BigInt::encode_fixed_length_int_pair(const BigInt& n1, co
       throw Encoding_Error("encode_fixed_length_int_pair: values too large to encode properly");
    }
    secure_vector<uint8_t> output(2 * bytes);
-   n1.binary_encode(output.data(), bytes);
-   n2.binary_encode(output.data() + bytes, bytes);
+   BufferStuffer stuffer(output);
+   n1.serialize_to(stuffer.next(bytes));
+   n2.serialize_to(stuffer.next(bytes));
    return output;
+}
+
+BigInt BigInt::decode(std::span<const uint8_t> buf, Base base) {
+   if(base == Binary) {
+      return BigInt::from_bytes(buf);
+   }
+   return BigInt::decode(buf.data(), buf.size(), base);
 }
 
 /*
 * Decode a BigInt
 */
 BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base) {
-   BigInt r;
    if(base == Binary) {
-      r.binary_decode(buf, length);
+      return BigInt::from_bytes(std::span{buf, length});
    } else if(base == Hexadecimal) {
+      BigInt r;
       secure_vector<uint8_t> binary;
 
       if(length % 2) {
@@ -161,13 +140,17 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base) {
 
          binary = hex_decode_locked(buf0_with_leading_0, 2);
 
-         binary += hex_decode_locked(cast_uint8_ptr_to_char(&buf[1]), length - 1, false);
+         if(length > 1) {
+            binary += hex_decode_locked(cast_uint8_ptr_to_char(&buf[1]), length - 1, false);
+         }
       } else {
          binary = hex_decode_locked(cast_uint8_ptr_to_char(buf), length, false);
       }
 
-      r.binary_decode(binary.data(), binary.size());
+      r.assign_from_bytes(binary);
+      return r;
    } else if(base == Decimal) {
+      BigInt r;
       // This could be made faster using the same trick as to_dec_string
       for(size_t i = 0; i != length; ++i) {
          const char c = buf[i];
@@ -182,10 +165,10 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base) {
          r *= 10;
          r += x;
       }
+      return r;
    } else {
       throw Invalid_Argument("Unknown BigInt decoding method");
    }
-   return r;
 }
 
 }  // namespace Botan

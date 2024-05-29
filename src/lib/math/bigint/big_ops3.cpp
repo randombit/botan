@@ -22,10 +22,10 @@ BigInt BigInt::add2(const BigInt& x, const word y[], size_t y_words, BigInt::Sig
    BigInt z = BigInt::with_capacity(std::max(x_sw, y_words) + 1);
 
    if(x.sign() == y_sign) {
-      bigint_add3(z.mutable_data(), x.data(), x_sw, y, y_words);
+      bigint_add3(z.mutable_data(), x._data(), x_sw, y, y_words);
       z.set_sign(x.sign());
    } else {
-      const int32_t relative_size = bigint_sub_abs(z.mutable_data(), x.data(), x_sw, y, y_words);
+      const int32_t relative_size = bigint_sub_abs(z.mutable_data(), x._data(), x_sw, y, y_words);
 
       //z.sign_fixup(relative_size, y_sign);
       if(relative_size < 0) {
@@ -50,18 +50,18 @@ BigInt operator*(const BigInt& x, const BigInt& y) {
    BigInt z = BigInt::with_capacity(x.size() + y.size());
 
    if(x_sw == 1 && y_sw) {
-      bigint_linmul3(z.mutable_data(), y.data(), y_sw, x.word_at(0));
+      bigint_linmul3(z.mutable_data(), y._data(), y_sw, x.word_at(0));
    } else if(y_sw == 1 && x_sw) {
-      bigint_linmul3(z.mutable_data(), x.data(), x_sw, y.word_at(0));
+      bigint_linmul3(z.mutable_data(), x._data(), x_sw, y.word_at(0));
    } else if(x_sw && y_sw) {
       secure_vector<word> workspace(z.size());
 
       bigint_mul(z.mutable_data(),
                  z.size(),
-                 x.data(),
+                 x._data(),
                  x.size(),
                  x_sw,
-                 y.data(),
+                 y._data(),
                  y.size(),
                  y_sw,
                  workspace.data(),
@@ -82,7 +82,7 @@ BigInt operator*(const BigInt& x, word y) {
    BigInt z = BigInt::with_capacity(x_sw + 1);
 
    if(x_sw && y) {
-      bigint_linmul3(z.mutable_data(), x.data(), x_sw, y);
+      bigint_linmul3(z.mutable_data(), x._data(), x_sw, y);
       z.set_sign(x.sign());
    }
 
@@ -176,7 +176,7 @@ BigInt operator<<(const BigInt& x, size_t shift) {
 
    const size_t new_size = x_sw + (shift + BOTAN_MP_WORD_BITS - 1) / BOTAN_MP_WORD_BITS;
    BigInt y = BigInt::with_capacity(new_size);
-   bigint_shl2(y.mutable_data(), x.data(), x_sw, shift);
+   bigint_shl2(y.mutable_data(), x._data(), x_sw, shift);
    y.set_sign(x.sign());
    return y;
 }
@@ -193,7 +193,7 @@ BigInt operator>>(const BigInt& x, size_t shift) {
    }
 
    BigInt y = BigInt::with_capacity(x_sw - shift_words);
-   bigint_shr2(y.mutable_data(), x.data(), x_sw, shift);
+   bigint_shr2(y.mutable_data(), x._data(), x_sw, shift);
 
    if(x.is_negative() && y.is_zero()) {
       y.set_sign(BigInt::Positive);

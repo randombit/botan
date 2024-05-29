@@ -68,8 +68,7 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption {
          m_hash->update(x2_bytes);
          m_hash->update(msg, msg_len);
          m_hash->update(y2_bytes);
-         std::vector<uint8_t> C3(m_hash->output_length());
-         m_hash->final(C3.data());
+         const auto C3 = m_hash->final<std::vector<uint8_t>>();
 
          return DER_Encoder()
             .start_sequence()

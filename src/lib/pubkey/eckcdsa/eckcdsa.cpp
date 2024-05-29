@@ -170,7 +170,7 @@ secure_vector<uint8_t> ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[]
    const BigInt k_times_P_x = m_group.blinded_base_point_multiply_x(k, rng, m_ws);
 
    auto hash = m_hash->new_object();
-   hash->update(BigInt::encode_1363(k_times_P_x, m_group.get_order_bytes()));
+   hash->update(k_times_P_x.serialize(m_group.get_order_bytes()));
    secure_vector<uint8_t> c = hash->final();
    truncate_hash_if_needed(c, m_group.get_order_bytes());
 
@@ -178,15 +178,14 @@ secure_vector<uint8_t> ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[]
 
    BOTAN_ASSERT_NOMSG(msg_len == c.size());
    xor_buf(c, msg, c.size());
-   BigInt w(c.data(), c.size());
-   w = m_group.mod_order(w);
+   const BigInt w = m_group.mod_order(BigInt::from_bytes(c));
 
    const BigInt s = m_group.multiply_mod_order(m_x, k - w);
    if(s.is_zero()) {
       throw Internal_Error("During ECKCDSA signature generation created zero s");
    }
 
-   return concat(r, BigInt::encode_1363(s, m_group.get_order_bytes()));
+   return concat(r, s.serialize(m_group.get_order_bytes()));
 }
 
 /**
@@ -262,17 +261,16 @@ bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len,
 
    secure_vector<uint8_t> r_xor_e(r);
    xor_buf(r_xor_e, msg, r.size());
-   BigInt w(r_xor_e.data(), r_xor_e.size());
-   w = m_group.mod_order(w);
+
+   const BigInt w = m_group.mod_order(BigInt::from_bytes(r_xor_e));
 
    const EC_Point q = m_gy_mul.multi_exp(w, s);
    if(q.is_zero()) {
       return false;
    }
 
-   const auto c = q.x_bytes();
    auto c_hash = m_hash->new_object();
-   c_hash->update(c.data(), c.size());
+   c_hash->update(q.x_bytes());
    secure_vector<uint8_t> v = c_hash->final();
    truncate_hash_if_needed(v, m_group.get_order_bytes());
 

@@ -131,13 +131,12 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
 
    public_key.assert_is_a(ASN1_Type::Sequence, ASN1_Class::Constructed, "X.509 certificate public key");
 
-   // crude method to save the serial's sign; will get lost during decoding, otherwise
-   data->m_serial_negative = serial_bn.is_negative();
-
    // for general sanity convert wire version (0 based) to standards version (v1 .. v3)
    data->m_version += 1;
 
-   data->m_serial = BigInt::encode(serial_bn);
+   data->m_serial = serial_bn.serialize();
+   // crude method to save the serial's sign; will get lost during decoding, otherwise
+   data->m_serial_negative = serial_bn.is_negative();
    data->m_subject_dn_bits = ASN1::put_in_sequence(data->m_subject_dn.get_bits());
    data->m_issuer_dn_bits = ASN1::put_in_sequence(data->m_issuer_dn.get_bits());
 

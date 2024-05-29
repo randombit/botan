@@ -25,7 +25,7 @@ ECDH_PrivateKey PKCS11_ECDH_PrivateKey::export_key() const {
    auto priv_key = get_attribute_value(AttributeType::Value);
 
    Null_RNG rng;
-   return ECDH_PrivateKey(rng, domain(), BigInt::decode(priv_key));
+   return ECDH_PrivateKey(rng, domain(), BigInt::from_bytes(priv_key));
 }
 
 std::unique_ptr<Public_Key> PKCS11_ECDH_PrivateKey::public_key() const {

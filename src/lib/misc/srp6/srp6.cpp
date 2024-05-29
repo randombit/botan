@@ -16,11 +16,11 @@ namespace Botan {
 
 namespace {
 
-BigInt hash_seq(HashFunction& hash_fn, size_t pad_to, const BigInt& in1, const BigInt& in2) {
-   hash_fn.update(BigInt::encode_1363(in1, pad_to));
-   hash_fn.update(BigInt::encode_1363(in2, pad_to));
+BigInt hash_seq(HashFunction& hash_fn, size_t p_bytes, const BigInt& in1, const BigInt& in2) {
+   hash_fn.update(in1.serialize(p_bytes));
+   hash_fn.update(in2.serialize(p_bytes));
 
-   return BigInt::decode(hash_fn.final());
+   return BigInt::from_bytes(hash_fn.final());
 }
 
 BigInt compute_x(HashFunction& hash_fn,
@@ -38,7 +38,7 @@ BigInt compute_x(HashFunction& hash_fn,
 
    secure_vector<uint8_t> outer_h = hash_fn.final();
 
-   return BigInt::decode(outer_h);
+   return BigInt::from_bytes(outer_h);
 }
 
 }  // namespace
@@ -120,7 +120,7 @@ std::pair<BigInt, SymmetricKey> srp6_client_agree(std::string_view identifier,
 
    const BigInt S = group.power_b_p(B_k_g_x_p, a_ux, max_aux_bits);
 
-   const SymmetricKey Sk(BigInt::encode_1363(S, p_bytes));
+   const SymmetricKey Sk(S.serialize<secure_vector<uint8_t>>(p_bytes));
 
    return std::make_pair(A, Sk);
 }
@@ -196,7 +196,7 @@ SymmetricKey SRP6_Server_Session::step2(const BigInt& A) {
    const BigInt vup = m_group.power_b_p(m_v, u, m_group.p_bits());
    const BigInt S = m_group.power_b_p(m_group.multiply_mod_p(A, vup), m_b, m_group.p_bits());
 
-   return SymmetricKey(BigInt::encode_1363(S, m_group.p_bytes()));
+   return SymmetricKey(S.serialize<secure_vector<uint8_t>>(m_group.p_bytes()));
 }
 
 }  // namespace Botan

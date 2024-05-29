@@ -64,7 +64,7 @@ bool operator!=(const CRL_Entry& a1, const CRL_Entry& a2) {
 */
 void CRL_Entry::encode_into(DER_Encoder& der) const {
    der.start_sequence()
-      .encode(BigInt::decode(serial_number()))
+      .encode(BigInt::from_bytes(serial_number()))
       .encode(expire_time())
       .start_sequence()
       .encode(extensions())
@@ -83,7 +83,7 @@ void CRL_Entry::decode_from(BER_Decoder& source) {
    BER_Decoder entry = source.start_sequence();
 
    entry.decode(serial_number_bn).decode(data->m_time);
-   data->m_serial = BigInt::encode(serial_number_bn);
+   data->m_serial = serial_number_bn.serialize();
 
    if(entry.more_items()) {
       entry.decode(data->m_extensions);

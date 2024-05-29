@@ -38,7 +38,7 @@ ECDSA_PrivateKey PKCS11_ECDSA_PrivateKey::export_key() const {
    auto priv_key = get_attribute_value(AttributeType::Value);
 
    Null_RNG rng;
-   return ECDSA_PrivateKey(rng, domain(), BigInt::decode(priv_key));
+   return ECDSA_PrivateKey(rng, domain(), BigInt::from_bytes(priv_key));
 }
 
 secure_vector<uint8_t> PKCS11_ECDSA_PrivateKey::private_key_bits() const {

@@ -71,16 +71,13 @@ std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
 
    const size_t p_bytes = domain.get_p_bytes();
 
-   hash.update(BigInt::encode_1363(domain.get_a(), p_bytes));
-   hash.update(BigInt::encode_1363(domain.get_b(), p_bytes));
-   hash.update(BigInt::encode_1363(domain.get_g_x(), p_bytes));
-   hash.update(BigInt::encode_1363(domain.get_g_y(), p_bytes));
+   hash.update(domain.get_a().serialize(p_bytes));
+   hash.update(domain.get_b().serialize(p_bytes));
+   hash.update(domain.get_g_x().serialize(p_bytes));
+   hash.update(domain.get_g_y().serialize(p_bytes));
    hash.update(pubkey.xy_bytes());
 
-   std::vector<uint8_t> za(hash.output_length());
-   hash.final(za.data());
-
-   return za;
+   return hash.final<std::vector<uint8_t>>();
 }
 
 namespace {
@@ -130,11 +127,11 @@ class SM2_Signature_Operation final : public PK_Ops::Signature {
 secure_vector<uint8_t> SM2_Signature_Operation::sign(RandomNumberGenerator& rng) {
    BigInt e;
    if(m_hash) {
-      e = BigInt::decode(m_hash->final());
+      e = BigInt::from_bytes(m_hash->final());
       // prepend ZA for next signature if any
       m_hash->update(m_za);
    } else {
-      e = BigInt::decode(m_digest);
+      e = BigInt::from_bytes(m_digest);
       m_digest.clear();
    }
 
@@ -186,11 +183,11 @@ class SM2_Verification_Operation final : public PK_Ops::Verification {
 bool SM2_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t sig_len) {
    BigInt e;
    if(m_hash) {
-      e = BigInt::decode(m_hash->final());
+      e = BigInt::from_bytes(m_hash->final());
       // prepend ZA for next signature if any
       m_hash->update(m_za);
    } else {
-      e = BigInt::decode(m_digest);
+      e = BigInt::from_bytes(m_digest);
       m_digest.clear();
    }
 

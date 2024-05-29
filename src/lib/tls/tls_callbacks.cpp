@@ -307,7 +307,7 @@ secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(
       // a standardized DH group identifier.
       const auto dl_group = get_dl_group(group);
 
-      auto Y = BigInt::decode(public_value);
+      auto Y = BigInt::from_bytes(public_value);
 
       /*
        * A basic check for key validity. As we do not know q here we

@@ -256,7 +256,7 @@ std::vector<std::string> TPM_PrivateKey::registered_keys(TPM_Context& ctx) {
 
 BigInt TPM_PrivateKey::get_n() const {
    if(m_n == 0) {
-      m_n = BigInt::decode(
+      m_n = BigInt::from_bytes(
          get_obj_attr(m_ctx.handle(), m_key, TSS_TSPATTRIB_RSAKEY_INFO, TSS_TSPATTRIB_KEYINFO_RSA_MODULUS));
    }
 
@@ -265,7 +265,7 @@ BigInt TPM_PrivateKey::get_n() const {
 
 BigInt TPM_PrivateKey::get_e() const {
    if(m_e == 0) {
-      m_e = BigInt::decode(
+      m_e = BigInt::from_bytes(
          get_obj_attr(m_ctx.handle(), m_key, TSS_TSPATTRIB_RSAKEY_INFO, TSS_TSPATTRIB_KEYINFO_RSA_EXPONENT));
    }
 

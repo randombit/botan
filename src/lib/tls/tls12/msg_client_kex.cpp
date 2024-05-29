@@ -70,8 +70,8 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
       }
 
       if(kex_algo == Kex_Algo::DH) {
-         const auto modulus = BigInt::decode(reader.get_range<uint8_t>(2, 1, 65535));
-         const auto generator = BigInt::decode(reader.get_range<uint8_t>(2, 1, 65535));
+         const auto modulus = BigInt::from_bytes(reader.get_range<uint8_t>(2, 1, 65535));
+         const auto generator = BigInt::from_bytes(reader.get_range<uint8_t>(2, 1, 65535));
          const std::vector<uint8_t> peer_public_value = reader.get_range<uint8_t>(2, 1, 65535);
 
          if(reader.remaining_bytes()) {

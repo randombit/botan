@@ -16,6 +16,7 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/pss_params.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -281,14 +282,16 @@ void PK_Signer::update(const uint8_t in[], size_t length) {
 
 namespace {
 
-std::vector<uint8_t> der_encode_signature(const std::vector<uint8_t>& sig, size_t parts, size_t part_size) {
+std::vector<uint8_t> der_encode_signature(std::span<const uint8_t> sig, size_t parts, size_t part_size) {
    if(sig.size() % parts != 0 || sig.size() != parts * part_size) {
       throw Encoding_Error("Unexpected size for DER signature");
    }
 
-   std::vector<BigInt> sig_parts(parts);
-   for(size_t i = 0; i != sig_parts.size(); ++i) {
-      sig_parts[i].binary_decode(&sig[part_size * i], part_size);
+   BufferSlicer bs_sig(sig);
+   std::vector<BigInt> sig_parts;
+   sig_parts.reserve(parts);
+   for(size_t i = 0; i != parts; ++i) {
+      sig_parts.emplace_back(BigInt::from_bytes(bs_sig.take(part_size)));
    }
 
    std::vector<uint8_t> output;
@@ -392,7 +395,7 @@ std::vector<uint8_t> decode_der_signature(const uint8_t sig[], size_t length, si
    while(ber_sig.more_items()) {
       BigInt sig_part;
       ber_sig.decode(sig_part);
-      real_sig += BigInt::encode_1363(sig_part, sig_part_size);
+      real_sig += sig_part.serialize(sig_part_size);
       ++count;
    }
 

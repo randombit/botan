@@ -17,6 +17,7 @@
    #include <botan/internal/mp_core.h>
    #include <botan/internal/parsing.h>
    #include <botan/internal/primality.h>
+   #include <botan/internal/stl_util.h>
 #endif
 
 namespace Botan_Tests {
@@ -118,20 +119,19 @@ class BigInt_Unit_Tests final : public Test {
       static Test::Result test_encode() {
          Test::Result result("BigInt encoding functions");
 
-         const BigInt n1(0xffff);
-         const BigInt n2(1023);
+         const auto n1 = Botan::BigInt::from_u64(0xffff);
+         const auto n2 = Botan::BigInt::from_u64(1023);
 
-         Botan::secure_vector<uint8_t> encoded_n1 = BigInt::encode_1363(n1, 256);
-         Botan::secure_vector<uint8_t> encoded_n2 = BigInt::encode_1363(n2, 256);
-         Botan::secure_vector<uint8_t> expected = encoded_n1;
-         expected += encoded_n2;
+         const auto encoded_n1 = n1.serialize(256);
+         const auto encoded_n2 = n2.serialize(256);
+         const auto expected = Botan::concat(encoded_n1, encoded_n2);
 
-         Botan::secure_vector<uint8_t> encoded_n1_n2 = BigInt::encode_fixed_length_int_pair(n1, n2, 256);
+         const auto encoded_n1_n2 = BigInt::encode_fixed_length_int_pair(n1, n2, 256);
          result.test_eq("encode_fixed_length_int_pair", encoded_n1_n2, expected);
 
          for(size_t i = 0; i < 256 - n1.bytes(); ++i) {
             if(encoded_n1[i] != 0) {
-               result.test_failure("encode_1363", "no zero byte");
+               result.test_failure("BigInt::serialize", "no zero byte");
             }
          }
 
@@ -780,15 +780,13 @@ std::vector<Test::Result> test_bigint_serialization() {
       Botan_Tests::CHECK("BigInt binary serialization",
                          [](Test::Result& res) {
                             Botan::BigInt a(0x1234567890ABCDEF);
-                            auto enc = Botan::BigInt::encode(a);
-                            res.test_eq("BigInt::encode()", enc, Botan::hex_decode("1234567890ABCDEF"));
+                            auto enc = a.serialize();
+                            res.test_eq("BigInt::serialize", enc, Botan::hex_decode("1234567890ABCDEF"));
 
-                            auto enc_locked = Botan::BigInt::encode_locked(a);
-                            res.test_eq(
-                               "BigInt::encode_locked()", enc_locked, Botan::hex_decode_locked("1234567890ABCDEF"));
-                            std::vector<uint8_t> enc2(a.bytes());
-                            a.binary_encode(enc2.data(), enc2.size());
-                            res.test_eq("BigInt::binary_encode", enc2, Botan::hex_decode("1234567890ABCDEF"));
+                            auto enc10 = a.serialize(10);
+                            res.test_eq("BigInt::serialize", enc10, Botan::hex_decode("00001234567890ABCDEF"));
+
+                            res.test_throws("BigInt::serialize rejects short output", [&]() { a.serialize(7); });
                          }),
 
       Botan_Tests::CHECK("BigInt truncated/padded binary serialization",

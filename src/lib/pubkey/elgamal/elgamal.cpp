@@ -193,7 +193,7 @@ secure_vector<uint8_t> ElGamal_Decryption_Operation::raw_decrypt(const uint8_t m
 
    const BigInt r = group.multiply_mod_p(group.inverse_mod_p(powermod_x_p(a)), b);
 
-   return BigInt::encode_1363(m_blinder.unblind(r), p_bytes);
+   return m_blinder.unblind(r).serialize<secure_vector<uint8_t>>(p_bytes);
 }
 
 }  // namespace

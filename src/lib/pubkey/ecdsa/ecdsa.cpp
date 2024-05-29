@@ -52,7 +52,7 @@ EC_Point recover_ecdsa_public_key(
       std::vector<uint8_t> X(p_bytes + 1);
 
       X[0] = 0x02 | y_odd;
-      BigInt::encode_1363(&X[1], p_bytes, x);
+      x.serialize_to(std::span{X}.subspan(1));
 
       const EC_Point R = group.OS2ECP(X);
 

@@ -112,7 +112,7 @@ void CurveGFp_Montgomery::from_curve_rep(BigInt& z, secure_vector<word>& ws) con
       z.grow_to(output_size);
    }
 
-   bigint_monty_redc(z.mutable_data(), m_p.data(), m_p_words, m_p_dash, ws.data(), ws.size());
+   bigint_monty_redc(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
 }
 
 void CurveGFp_Montgomery::curve_mul_words(
@@ -133,13 +133,13 @@ void CurveGFp_Montgomery::curve_mul_words(
               x_w,
               x_size,
               std::min(m_p_words, x_size),
-              y.data(),
+              y._data(),
               y.size(),
               std::min(m_p_words, y.size()),
               ws.data(),
               ws.size());
 
-   bigint_monty_redc(z.mutable_data(), m_p.data(), m_p_words, m_p_dash, ws.data(), ws.size());
+   bigint_monty_redc(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
 }
 
 void CurveGFp_Montgomery::curve_sqr_words(BigInt& z, const word x[], size_t x_size, secure_vector<word>& ws) const {
@@ -154,7 +154,7 @@ void CurveGFp_Montgomery::curve_sqr_words(BigInt& z, const word x[], size_t x_si
 
    bigint_sqr(z.mutable_data(), z.size(), x, x_size, std::min(m_p_words, x_size), ws.data(), ws.size());
 
-   bigint_monty_redc(z.mutable_data(), m_p.data(), m_p_words, m_p_dash, ws.data(), ws.size());
+   bigint_monty_redc(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
 }
 
 class CurveGFp_NIST : public CurveGFp_Repr {
@@ -242,7 +242,7 @@ void CurveGFp_NIST::curve_mul_words(
               x_w,
               x_size,
               std::min(m_p_words, x_size),
-              y.data(),
+              y._data(),
               y.size(),
               std::min(m_p_words, y.size()),
               ws.data(),
