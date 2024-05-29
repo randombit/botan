@@ -235,7 +235,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 'dh_invalid', 'dh_kat', 'dh_keygen', 'dl_group_gen', 'dlies',
                 'dsa_kat_verify', 'dsa_param', 'ecc_basemul', 'ecdsa_verify_wycheproof',
                 'ed25519_sign', 'elgamal_decrypt', 'elgamal_encrypt', 'elgamal_keygen',
-                'ffi_dsa', 'ffi_elgamal', 'hash_nist_mc', 'mce_keygen',
+                'frodo_kat_tests', 'ffi_dsa', 'ffi_elgamal', 'hash_nist_mc', 'mce_keygen',
                 'passhash9', 'pbkdf', 'pwdhash', 'rsa_encrypt', 'rsa_pss', 'rsa_pss_raw',
                 'scrypt', 'srp6_kat', 'srp6_rt', 'unit_tls', 'x509_path_bsi',
                 'x509_path_rsa_pss', 'xmss_keygen', 'xmss_keygen_reference',
@@ -321,7 +321,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 cc_bin = 'arm-linux-gnueabihf-g++'
                 test_prefix = ['qemu-arm', '-L', '/usr/arm-linux-gnueabihf/']
                 # disable a few tests that are exceptionally slow under arm32 qemu
-                disabled_tests += ['dh_invalid', 'dlies', 'xmss_sign']
+                disabled_tests += ['dh_invalid', 'dlies', 'frodo_kat_tests', 'xmss_sign']
             elif target in ['cross-arm64', 'cross-arm64-amalgamation']:
                 flags += ['--cpu=aarch64']
                 cc_bin = 'aarch64-linux-gnu-g++'
