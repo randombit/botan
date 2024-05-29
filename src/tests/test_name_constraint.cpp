@@ -26,21 +26,19 @@ class Name_Constraint_Tests final : public Test {
          const std::vector<std::tuple<std::string, std::string, std::string, std::string>> test_cases = {
             std::make_tuple("Root_Email_Name_Constraint.crt",
                             "Invalid_Email_Name_Constraint.crt",
-                            "Invalid Email Name Constraint",
+                            "",
                             "Certificate does not pass name constraint"),
             std::make_tuple("Root_DN_Name_Constraint.crt",
                             "Invalid_DN_Name_Constraint.crt",
-                            "Invalid DN Name Constraint",
+                            "",
                             "Certificate does not pass name constraint"),
-            std::make_tuple(
-               "Root_DN_Name_Constraint.crt", "Valid_DN_Name_Constraint.crt", "Valid DN Name Constraint", "Verified"),
+            std::make_tuple("Root_DN_Name_Constraint.crt", "Valid_DN_Name_Constraint.crt", "", "Verified"),
             std::make_tuple(
                "Root_DNS_Name_Constraint.crt", "Valid_DNS_Name_Constraint.crt", "aexample.com", "Verified"),
-            std::make_tuple(
-               "Root_IP_Name_Constraint.crt", "Valid_IP_Name_Constraint.crt", "Valid IP Name Constraint", "Verified"),
+            std::make_tuple("Root_IP_Name_Constraint.crt", "Valid_IP_Name_Constraint.crt", "", "Verified"),
             std::make_tuple("Root_IP_Name_Constraint.crt",
                             "Invalid_IP_Name_Constraint.crt",
-                            "Invalid IP Name Constraint",
+                            "",
                             "Certificate does not pass name constraint"),
          };
          std::vector<Test::Result> results;

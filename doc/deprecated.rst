@@ -137,6 +137,8 @@ Other Deprecated Functionality
 This section lists other functionality which will be removed in a future major
 release, or where a backwards incompatible change is expected.
 
+- Support for OtherNames in X.509 certificates is deprecated
+
 - The ``PBKDF`` class is deprecated in favor of ``PasswordHash`` and
   ``PasswordHashFamily``.
 

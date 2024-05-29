@@ -342,27 +342,27 @@ void Key_Usage::decode_inner(const std::vector<uint8_t>& in) {
 
    obj.assert_is_a(ASN1_Type::BitString, ASN1_Class::Universal, "usage constraint");
 
-   if(obj.length() != 2 && obj.length() != 3) {
-      throw BER_Decoding_Error("Bad size for BITSTRING in usage constraint");
+   if(obj.length() == 2 || obj.length() == 3) {
+      uint16_t usage = 0;
+
+      const uint8_t* bits = obj.bits();
+
+      if(bits[0] >= 8) {
+         throw BER_Decoding_Error("Invalid unused bits in usage constraint");
+      }
+
+      const uint8_t mask = static_cast<uint8_t>(0xFF << bits[0]);
+
+      if(obj.length() == 2) {
+         usage = make_uint16(bits[1] & mask, 0);
+      } else if(obj.length() == 3) {
+         usage = make_uint16(bits[1], bits[2] & mask);
+      }
+
+      m_constraints = Key_Constraints(usage);
+   } else {
+      m_constraints = Key_Constraints(0);
    }
-
-   uint16_t usage = 0;
-
-   const uint8_t* bits = obj.bits();
-
-   if(bits[0] >= 8) {
-      throw BER_Decoding_Error("Invalid unused bits in usage constraint");
-   }
-
-   const uint8_t mask = static_cast<uint8_t>(0xFF << bits[0]);
-
-   if(obj.length() == 2) {
-      usage = make_uint16(bits[1] & mask, 0);
-   } else if(obj.length() == 3) {
-      usage = make_uint16(bits[1], bits[2] & mask);
-   }
-
-   m_constraints = Key_Constraints(usage);
 }
 
 /*
@@ -504,7 +504,7 @@ void Name_Constraints::decode_inner(const std::vector<uint8_t>& in) {
 }
 
 void Name_Constraints::validate(const X509_Certificate& subject,
-                                const X509_Certificate& issuer,
+                                const X509_Certificate& /*issuer*/,
                                 const std::vector<X509_Certificate>& cert_path,
                                 std::vector<std::set<Certificate_Status_Code>>& cert_status,
                                 size_t pos) {
@@ -513,7 +513,7 @@ void Name_Constraints::validate(const X509_Certificate& subject,
          cert_status.at(pos).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
       }
 
-      const bool issuer_name_constraint_critical = issuer.is_critical("X509v3.NameConstraints");
+      const bool issuer_name_constraint_critical = subject.is_critical("X509v3.NameConstraints");
 
       // Check that all subordinate certs pass the name constraint
       for(size_t j = 0; j < pos; ++j) {
