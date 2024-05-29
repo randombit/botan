@@ -12,6 +12,7 @@
 
    #include <botan/hss_lms.h>
    #include <botan/pk_algs.h>
+   #include <botan/internal/fmt.h>
    #include <botan/internal/hss.h>
    #include <botan/internal/loadstor.h>
 
@@ -119,9 +120,36 @@ class HSS_LMS_Key_Generation_Test final : public PK_Key_Generation_Test {
 };
 
 /**
- * @brief Test that for too short HSS-LMS signatures, private keys, and public keys a DecodeError occurs.
+ * @brief Test that for manipulated signatures and too short signatures, private keys, and public keys a DecodeError occurs.
  */
-class HSS_LMS_Too_Short_Test final : public Test {
+class HSS_LMS_Negative_Tests final : public Test {
+      Test::Result test_flipped_signature_bits() {
+         Test::Result result("HSS-LMS - flipped signature bits");
+
+         auto sk = Botan::create_private_key("HSS-LMS", Test::rng(), "Truncated(SHA-256,192),HW(5,8)");
+
+         Botan::PK_Signer signer(*sk, Test::rng(), "");
+         Botan::PK_Verifier verifier(*sk, "");
+
+         std::vector<uint8_t> mes = {0xde, 0xad, 0xbe, 0xef};
+
+         signer.update(mes);
+         auto valid_sig = signer.signature(Test::rng());
+         verifier.update(mes);
+         result.confirm("Entire signature is valid", verifier.check_signature(valid_sig.data(), valid_sig.size()));
+         for(size_t idx = 0; idx < valid_sig.size(); ++idx) {
+            auto bad_sig = valid_sig;
+            bad_sig.at(idx) ^= 0x80;
+            result.test_no_throw(Botan::fmt("Verification does not throw (byte idx {})", idx), [&]() {
+               verifier.update(mes);
+               bool valid = verifier.check_signature(bad_sig);
+               result.confirm(Botan::fmt("Manipulated signature is invalid (byte idx {})", idx), !valid);
+            });
+         }
+
+         return result;
+      }
+
       Test::Result test_too_short_signature() {
          Test::Result result("HSS-LMS");
 
@@ -190,7 +218,10 @@ class HSS_LMS_Too_Short_Test final : public Test {
       }
 
       std::vector<Test::Result> run() final {
-         return {test_too_short_signature(), test_too_short_private_key(), test_too_short_public_key()};
+         return {test_flipped_signature_bits(),
+                 test_too_short_signature(),
+                 test_too_short_private_key(),
+                 test_too_short_public_key()};
       }
 };
 
@@ -298,7 +329,7 @@ BOTAN_REGISTER_TEST("pubkey", "hss_lms_sign", HSS_LMS_Signature_Generation_Test)
 BOTAN_REGISTER_TEST("pubkey", "hss_lms_verify", HSS_LMS_Signature_Verify_Tests);
 BOTAN_REGISTER_TEST("pubkey", "hss_lms_verify_invalid", HSS_LMS_Signature_Verify_Invalid_Tests);
 BOTAN_REGISTER_TEST("pubkey", "hss_lms_keygen", HSS_LMS_Key_Generation_Test);
-BOTAN_REGISTER_TEST("pubkey", "hss_lms_short", HSS_LMS_Too_Short_Test);
+BOTAN_REGISTER_TEST("pubkey", "hss_lms_negative", HSS_LMS_Negative_Tests);
 BOTAN_REGISTER_TEST("pubkey", "hss_lms_state", HSS_LMS_Statefulness_Test);
 BOTAN_REGISTER_TEST("pubkey", "hss_lms_api", HSS_LMS_Missing_API_Test);
 
