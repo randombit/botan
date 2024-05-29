@@ -154,10 +154,9 @@ LMS_Params LMS_Params::create_or_throw(LMS_Algorithm_Type type) {
             return {"SHAKE-256(192)", 20};
          case LMS_Algorithm_Type::SHAKE_M24_H25:
             return {"SHAKE-256(192)", 25};
-         case LMS_Algorithm_Type::RESERVED:
+         default:
             throw Decoding_Error("Unsupported LMS algorithm type");
       }
-      BOTAN_ASSERT_UNREACHABLE();
    }(type);
 
    return LMS_Params(type, hash_name, height);
