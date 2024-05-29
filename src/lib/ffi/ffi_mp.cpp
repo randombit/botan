@@ -77,7 +77,7 @@ int botan_mp_flip_sign(botan_mp_t mp) {
 }
 
 int botan_mp_from_bin(botan_mp_t mp, const uint8_t bin[], size_t bin_len) {
-   return BOTAN_FFI_VISIT(mp, [=](auto& bn) { bn.assign_from_bytes({bin, bin_len}); });
+   return BOTAN_FFI_VISIT(mp, [=](auto& bn) { bn._assign_from_bytes({bin, bin_len}); });
 }
 
 int botan_mp_to_hex(const botan_mp_t mp, char* out) {

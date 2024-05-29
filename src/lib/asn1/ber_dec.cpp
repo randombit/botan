@@ -474,10 +474,10 @@ BER_Decoder& BER_Decoder::decode(BigInt& out, ASN1_Type type_tag, ASN1_Class cla
          for(size_t i = 0; i != obj.length(); ++i) {
             vec[i] = ~vec[i];
          }
-         out.assign_from_bytes(vec);
+         out._assign_from_bytes(vec);
          out.flip_sign();
       } else {
-         out.assign_from_bytes(obj.data());
+         out._assign_from_bytes(obj.data());
       }
    }
 

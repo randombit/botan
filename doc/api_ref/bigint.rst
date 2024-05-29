@@ -208,17 +208,13 @@ declarations in ``botan/bigint.h`` and ``botan/numthry.h``.
       If ``buf`` is larger than required, sufficient zero bytes will be
       prefixed.
 
-   .. cpp:function:: void assign_from_bytes(std::span<const uint8_t> buf)
-
-      Decode this BigInt as a big-endian integer.
-
    .. cpp:function:: std::string to_dec_string() const
 
       Encode the integer as a decimal string.
 
    .. cpp:function:: std::string to_hex_string() const
 
-      Encode the integer as a hexadecimal string.
+      Encode the integer as a hexadecimal string, with "0x" prefix
 
 Number Theory
 ----------------------------------------

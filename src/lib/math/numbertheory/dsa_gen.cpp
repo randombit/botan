@@ -92,7 +92,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
 
    Seed seed(seed_c);
 
-   q.assign_from_bytes(hash->process(seed.value()));
+   q._assign_from_bytes(hash->process(seed.value()));
    q.set_bit(qbits - 1);
    q.set_bit(0);
 
@@ -115,7 +115,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
       }
 
       if(j >= offset) {
-         X.assign_from_bytes(std::span{V}.subspan(HASH_SIZE - 1 - b / 8));
+         X._assign_from_bytes(std::span{V}.subspan(HASH_SIZE - 1 - b / 8));
          X.set_bit(pbits - 1);
 
          p = X - (mod_2q.reduce(X) - 1);

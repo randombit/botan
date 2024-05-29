@@ -750,17 +750,11 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       BOTAN_DEPRECATED("Use BigInt::serialize_to") void binary_encode(uint8_t buf[], size_t len) const;
 
       /**
-       * Read integer value from a byte vector (big endian)
-       * @param bytes the span of bytes to load
-       */
-      void assign_from_bytes(std::span<const uint8_t> bytes);
-
-      /**
        * Read integer value from a byte array with given size
        * @param buf byte array buffer containing the integer
        * @param length size of buf
        */
-      BOTAN_DEPRECATED("Use BigInt::assign_from_bytes") void binary_decode(const uint8_t buf[], size_t length) {
+      BOTAN_DEPRECATED("Use BigInt::from_bytes") void binary_decode(const uint8_t buf[], size_t length) {
          this->assign_from_bytes(std::span{buf, length});
       }
 
@@ -768,7 +762,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * Read integer value from a byte vector
        * @param buf the vector to load from
        */
-      BOTAN_DEPRECATED("Use BigInt::assign_from_bytes") void binary_decode(std::span<const uint8_t> buf) {
+      BOTAN_DEPRECATED("Use BigInt::from_bytes") void binary_decode(std::span<const uint8_t> buf) {
          this->assign_from_bytes(buf);
       }
 
@@ -929,14 +923,31 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
        * Return a const pointer to the register
        *
-       * WARNING this is an implementation detail which is not for
+       * @warning this is an implementation detail which is not for
        * public use and not covered by SemVer.
        *
        * @result a pointer to the start of the internal register
        */
       const word* _data() const { return m_data.const_data(); }
 
+      /**
+       * Read integer value from a byte vector (big endian)
+       *
+       * @warning this is an implementation detail which is not for
+       * public use and not covered by SemVer. In applications use
+       * BigInt::from_bytes
+       *
+       * @param bytes the span of bytes to load
+       */
+      void _assign_from_bytes(std::span<const uint8_t> bytes) { assign_from_bytes(bytes); }
+
    private:
+      /**
+       * Read integer value from a byte vector (big endian)
+       * @param bytes the span of bytes to load
+       */
+      void assign_from_bytes(std::span<const uint8_t> bytes);
+
       class Data {
          public:
             word* mutable_data() {

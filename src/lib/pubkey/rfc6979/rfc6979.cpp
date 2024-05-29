@@ -33,7 +33,7 @@ const BigInt& RFC6979_Nonce_Generator::nonce_for(const BigInt& m) {
 
    do {
       m_hmac_drbg->randomize(m_rng_out.data(), m_rng_out.size());
-      m_k.assign_from_bytes(m_rng_out);
+      m_k._assign_from_bytes(m_rng_out);
       m_k >>= (8 * m_rlen - m_qlen);
    } while(m_k == 0 || m_k >= m_order);
 
