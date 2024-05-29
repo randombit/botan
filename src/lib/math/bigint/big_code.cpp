@@ -9,6 +9,7 @@
 
 #include <botan/hex.h>
 #include <botan/internal/divide.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -110,8 +111,9 @@ secure_vector<uint8_t> BigInt::encode_fixed_length_int_pair(const BigInt& n1, co
       throw Encoding_Error("encode_fixed_length_int_pair: values too large to encode properly");
    }
    secure_vector<uint8_t> output(2 * bytes);
-   n1.serialize_to(std::span{output}.subspan(0, bytes));
-   n2.serialize_to(std::span{output}.subspan(bytes, bytes));
+   BufferStuffer stuffer(output);
+   n1.serialize_to(stuffer.next(bytes));
+   n2.serialize_to(stuffer.next(bytes));
    return output;
 }
 
@@ -138,7 +140,9 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base) {
 
          binary = hex_decode_locked(buf0_with_leading_0, 2);
 
-         binary += hex_decode_locked(cast_uint8_ptr_to_char(&buf[1]), length - 1, false);
+         if(length > 1) {
+            binary += hex_decode_locked(cast_uint8_ptr_to_char(&buf[1]), length - 1, false);
+         }
       } else {
          binary = hex_decode_locked(cast_uint8_ptr_to_char(buf), length, false);
       }

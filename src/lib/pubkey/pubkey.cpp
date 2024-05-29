@@ -16,6 +16,7 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/pss_params.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -286,9 +287,11 @@ std::vector<uint8_t> der_encode_signature(std::span<const uint8_t> sig, size_t p
       throw Encoding_Error("Unexpected size for DER signature");
    }
 
+   BufferSlicer bs_sig(sig);
    std::vector<BigInt> sig_parts;
+   sig_parts.reserve(parts);
    for(size_t i = 0; i != parts; ++i) {
-      sig_parts.push_back(BigInt::from_bytes(sig.subspan(part_size * i, part_size)));
+      sig_parts.emplace_back(BigInt::from_bytes(bs_sig.take(part_size)));
    }
 
    std::vector<uint8_t> output;

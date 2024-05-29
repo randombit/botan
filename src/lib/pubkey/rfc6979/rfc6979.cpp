@@ -21,7 +21,7 @@ RFC6979_Nonce_Generator::RFC6979_Nonce_Generator(std::string_view hash, const Bi
       m_rng_out(m_rlen) {
    m_hmac_drbg = std::make_unique<HMAC_DRBG>(MessageAuthenticationCode::create_or_throw(fmt("HMAC({})", hash)));
 
-   x.serialize_to(std::span{m_rng_in}.subspan(0, m_rlen));
+   x.serialize_to(std::span{m_rng_in}.first(m_rlen));
 }
 
 RFC6979_Nonce_Generator::~RFC6979_Nonce_Generator() = default;

@@ -12,6 +12,7 @@
 #include <botan/numthry.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -595,22 +596,22 @@ std::vector<uint8_t> EC_Point::encode(EC_Point_Format format) const {
    const BigInt x = get_affine_x();
    const BigInt y = get_affine_y();
 
-   std::vector<uint8_t> result;
+   const size_t parts = (format == EC_Point_Format::Compressed) ? 1 : 2;
+
+   std::vector<uint8_t> result(1 + parts * p_bytes);
+   BufferStuffer stuffer(result);
 
    if(format == EC_Point_Format::Uncompressed) {
-      result.resize(1 + 2 * p_bytes);
-      result[0] = 0x04;
-      x.serialize_to(std::span{result}.subspan(1, p_bytes));
-      y.serialize_to(std::span{result}.subspan(1 + p_bytes, p_bytes));
+      stuffer.append(0x04);
+      x.serialize_to(stuffer.next(p_bytes));
+      y.serialize_to(stuffer.next(p_bytes));
    } else if(format == EC_Point_Format::Compressed) {
-      result.resize(1 + p_bytes);
-      result[0] = 0x02 | static_cast<uint8_t>(y.get_bit(0));
-      x.serialize_to(std::span{result}.subspan(1, p_bytes));
+      stuffer.append(0x02 | static_cast<uint8_t>(y.get_bit(0)));
+      x.serialize_to(stuffer.next(p_bytes));
    } else if(format == EC_Point_Format::Hybrid) {
-      result.resize(1 + 2 * p_bytes);
-      result[0] = 0x06 | static_cast<uint8_t>(y.get_bit(0));
-      x.serialize_to(std::span{result}.subspan(1, p_bytes));
-      y.serialize_to(std::span{result}.subspan(1 + p_bytes, p_bytes));
+      stuffer.append(0x06 | static_cast<uint8_t>(y.get_bit(0)));
+      x.serialize_to(stuffer.next(p_bytes));
+      y.serialize_to(stuffer.next(p_bytes));
    } else {
       throw Invalid_Argument("EC2OSP illegal point encoding");
    }
