@@ -15,7 +15,13 @@
         "EncryptedExtensionsWithKeyShare-TLS13": "expects 'unsupported extension' but RFC requires 'illegal parameter'",
         "ClientSkipCertificateVerify-TLS13": "would require ambiguous error mapping",
         "Resume-Client-Mismatch-TLS13-TLS12-TLS": "server requests a downgrade to TLS 1.2, echoing the random session ID during a TLS 1.3 resumption. => error mapping conflict",
-        "ServerAuth-NoFallback-TLS13": "would require ambiguous error mapping"
+        "ServerAuth-NoFallback-TLS13": "would require ambiguous error mapping",
+
+        "TLS-TLS13-PSK_WITH_AES_128_CBC_SHA-server": "expects a different error for better coverage of Boring SSL's code base",
+        "TLS-TLS13-PSK_WITH_AES_256_CBC_SHA-server": "expects a different error for better coverage of Boring SSL's code base",
+        "TLS-TLS13-ECDHE_PSK_WITH_AES_128_CBC_SHA-server": "expects a different error for better coverage of Boring SSL's code base",
+        "TLS-TLS13-ECDHE_PSK_WITH_AES_256_CBC_SHA-server": "expects a different error for better coverage of Boring SSL's code base",
+        "TLS-TLS13-ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256-server": "expects a different error for better coverage of Boring SSL's code base"
     },
 
     "DisabledTests": {
@@ -80,6 +86,8 @@
         "CertCompression*-TLS13": "No support for 1.3 cert compression extension",
 
         "SupportedVersionSelection-TLS12": "We just ignore the version extension in this case",
+        "NoCommonSignatureAlgorithms-TLS12-Fallback": "Fallback behaviour not implemented by shim",
+        "CheckClientCertificateTypes": "Client certificate type check is a library-user responsibility",
 
         "Downgrade-*-Client-Ignore": "Not possible to ignore downgrade indicator",
 
@@ -93,7 +101,7 @@
 
         "*QUIC*": "No QUIC",
         "ALPS*": "No ALPS",
-        "ExtraClientEncryptedExtension-TLS-TLS13": "No ALPS",
+        "ExtraClientEncryptedExtension-*": "No ALPS",
 
         "*NPN*": "No support for NPN",
         "ALPNServer-Preferred-*": "No support for NPN",
@@ -146,6 +154,7 @@
         "TLS*-NoTicket-NoAccept": "BoGo expects that if ticket is issued stateful resumption is impossible",
 
         "CheckLeafCurve": "Botan doesn't care what curve an ECDSA cert uses",
+        "CheckECDSACurve-TLS12": "Botan doesn't care what curve an ECDSA cert uses",
 
         "CertificateVerificationDoesNotFailOnResume*": "Botan doesn't support reverify on resume",
         "CertificateVerificationFailsOnResume*": "Botan doesn't support reverify on resume",
@@ -183,6 +192,7 @@
 
         "DTLS-StrayRetransmitFinished-ClientFull": "Needs investigation",
         "DTLS-StrayRetransmitFinished-ServerResume": "Needs investigation",
+        "DTLS-Replay-NonMonotonic": "Needs investigation, started failing after https://github.com/google/boringssl/commit/f94f3ed3965ea033001fb9ae006084eee408b861",
 
         "SRTP-Server-IgnoreMKI-*": "Non-empty MKI is rejected (bug)",
 
@@ -199,6 +209,7 @@
         "AllExtensions-Client-Permute-DTLS-TLS12" : "Requires new shim flags that are NYI (as of March 2022)",
         "EarlyData-WriteAfterEncryptedExtensions" : "Requires new shim flags that are NYI (as of March 2022)",
         "EarlyData-WriteAfterServerHello" : "Requires new shim flags that are NYI (as of March 2022)",
+        "TLS-HintMismatch-Certificate-*" : "Requires new shim flags that are NYI (as of May 2024)",
         "TLS-HintMismatch-CipherMismatch1" : "Requires new shim flags that are NYI (as of March 2023)",
         "TLS-HintMismatch-CipherMismatch2" : "Requires new shim flags that are NYI (as of March 2023)",
         "TLS-HintMismatch-ECDHE-Group" : "Requires new shim flags that are NYI (as of March 2023)",
@@ -215,7 +226,8 @@
         "TLS-HintMismatch-CertificateCompression-ShimOnly" : "Requires new shim flags that are NYI (as of March 2022)",
         "TLS-HintMismatch-CertificateCompression-AlgorithmMismatch" : "Requires new shim flags that are NYI (as of March 2022)",
         "TLS-HintMismatch-CertificateCompression-InputMismatch" : "Requires new shim flags that are NYI (as of March 2022)",
-        "TLS-HintMismatch-Version1" : "Requires new shim flags that are NYI (as of March 2022)"
+        "TLS-HintMismatch-Version1" : "Requires new shim flags that are NYI (as of March 2022)",
 
+        "CertificateSelection-*" : "Certificate selection is a library-user responsibility"
   }
 }
