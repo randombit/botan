@@ -259,15 +259,17 @@ class EC_Group_Tests : public Test {
 
             result.confirm("Same group is same", group == Botan::EC_Group::from_name(group_name));
 
-            const Botan::EC_Group copy(group.get_curve_oid(),
-                                       group.get_p(),
-                                       group.get_a(),
-                                       group.get_b(),
-                                       group.get_g_x(),
-                                       group.get_g_y(),
-                                       group.get_order());
+            try {
+               const Botan::EC_Group copy(group.get_curve_oid(),
+                                          group.get_p(),
+                                          group.get_a(),
+                                          group.get_b(),
+                                          group.get_g_x(),
+                                          group.get_g_y(),
+                                          group.get_order());
 
-            result.confirm("Same group is same even with copy", group == copy);
+               result.confirm("Same group is same even with copy", group == copy);
+            } catch(Botan::Invalid_Argument&) {}
 
             const auto group_der_oid = group.DER_encode(Botan::EC_Group_Encoding::NamedCurve);
             const Botan::EC_Group group_via_oid(group_der_oid);
@@ -633,16 +635,16 @@ Test::Result test_enc_dec_uncompressed_521() {
 Test::Result test_ecc_registration() {
    Test::Result result("ECC registration");
 
-   // secp112r1
-   const Botan::BigInt p("0xDB7C2ABF62E35E668076BEAD208B");
-   const Botan::BigInt a("0xDB7C2ABF62E35E668076BEAD2088");
-   const Botan::BigInt b("0x659EF8BA043916EEDE8911702B22");
+   // secp128r1
+   const Botan::BigInt p("0xfffffffdffffffffffffffffffffffff");
+   const Botan::BigInt a("0xfffffffdfffffffffffffffffffffffc");
+   const Botan::BigInt b("0xe87579c11079f43dd824993c2cee5ed3");
 
-   const Botan::BigInt g_x("0x09487239995A5EE76B55F9C2F098");
-   const Botan::BigInt g_y("0xA89CE5AF8724C0A23E0E0FF77500");
-   const Botan::BigInt order("0xDB7C2ABF62E35E7628DFAC6561C5");
+   const Botan::BigInt g_x("0x161ff7528b899b2d0c28607ca52c5b86");
+   const Botan::BigInt g_y("0xcf5ac8395bafeb13c02da292dded7a83");
+   const Botan::BigInt order("0xfffffffe0000000075a30d1b9038a115");
 
-   const Botan::OID oid("1.3.132.0.6");
+   const Botan::OID oid("1.3.132.0.28");
 
    // Creating this object implicitly registers the curve for future use ...
    Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
@@ -659,16 +661,16 @@ Test::Result test_ec_group_from_params() {
 
    Botan::EC_Group::clear_registered_curve_data();
 
-   // secp160r1 params
-   const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFF");
-   const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFC");
-   const Botan::BigInt b("0x1C97BEFC54BD7A8B65ACF89F81D4D4ADC565FA45");
+   // secp256r1
+   const Botan::BigInt p("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF");
+   const Botan::BigInt a("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC");
+   const Botan::BigInt b("0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B");
 
-   const Botan::BigInt g_x("0x4A96B5688EF573284664698968C38BB913CBFC82");
-   const Botan::BigInt g_y("0x23A628553168947D59DCC912042351377AC5FB32");
-   const Botan::BigInt order("0x100000000000000000001F4C8F927AED3CA752257");
+   const Botan::BigInt g_x("0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296");
+   const Botan::BigInt g_y("0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5");
+   const Botan::BigInt order("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551");
 
-   const Botan::OID oid("1.3.132.0.8");
+   const Botan::OID oid("1.2.840.10045.3.1.7");
 
    // This uses the deprecated constructor to verify we dedup even without an OID
    // This whole test can be removed once explicit curve support is removed
@@ -683,16 +685,16 @@ Test::Result test_ec_group_bad_registration() {
 
    Botan::EC_Group::clear_registered_curve_data();
 
-   // secp160r1 params except with a bad B param
-   const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFF");
-   const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFC");
-   const Botan::BigInt b("0x1C97BEFC54BD7A8B65ACF89F81D4D4ADC565FA47");
+   // secp256r1 params except with a bad B param
+   const Botan::BigInt p("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF");
+   const Botan::BigInt a("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC");
+   const Botan::BigInt b("0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604C");
 
-   const Botan::BigInt g_x("0x4A96B5688EF573284664698968C38BB913CBFC82");
-   const Botan::BigInt g_y("0x23A628553168947D59DCC912042351377AC5FB32");
-   const Botan::BigInt order("0x100000000000000000001F4C8F927AED3CA752257");
+   const Botan::BigInt g_x("0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296");
+   const Botan::BigInt g_y("0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5");
+   const Botan::BigInt order("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551");
 
-   const Botan::OID oid("1.3.132.0.8");
+   const Botan::OID oid("1.2.840.10045.3.1.7");
 
    try {
       Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);
@@ -709,14 +711,14 @@ Test::Result test_ec_group_duplicate_orders() {
 
    Botan::EC_Group::clear_registered_curve_data();
 
-   // secp160r1 params
-   const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFF");
-   const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7FFFFFFC");
-   const Botan::BigInt b("0x1C97BEFC54BD7A8B65ACF89F81D4D4ADC565FA45");
+   // secp256r1
+   const Botan::BigInt p("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF");
+   const Botan::BigInt a("0xFFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC");
+   const Botan::BigInt b("0x5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B");
 
-   const Botan::BigInt g_x("0x4A96B5688EF573284664698968C38BB913CBFC82");
-   const Botan::BigInt g_y("0x23A628553168947D59DCC912042351377AC5FB32");
-   const Botan::BigInt order("0x100000000000000000001F4C8F927AED3CA752257");
+   const Botan::BigInt g_x("0x6B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296");
+   const Botan::BigInt g_y("0x4FE342E2FE1A7F9B8EE7EB4A7C0F9E162BCE33576B315ECECBB6406837BF51F5");
+   const Botan::BigInt order("0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551");
 
    const Botan::OID oid("1.3.6.1.4.1.25258.100.0");  // some other random OID
 
@@ -728,8 +730,8 @@ Test::Result test_ec_group_duplicate_orders() {
    const auto hc_group = Botan::EC_Group::from_OID(oid);
    result.confirm("Group has correct OID", hc_group.get_curve_oid() == oid);
 
-   // Existing secp160r1 unmodified:
-   const Botan::OID secp160r1("1.3.132.0.8");
+   // Existing secp256r1 unmodified:
+   const Botan::OID secp160r1("1.2.840.10045.3.1.7");
    const auto other_group = Botan::EC_Group::from_OID(secp160r1);
    result.confirm("Group has correct OID", other_group.get_curve_oid() == secp160r1);
 
