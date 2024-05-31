@@ -485,14 +485,25 @@ EC_Group::EC_Group(const OID& oid,
                    const BigInt& base_y,
                    const BigInt& order) {
    BOTAN_ARG_CHECK(oid.has_value(), "An OID is required for creating an EC_Group");
-   BOTAN_ARG_CHECK(p.bits() >= 112, "EC_Group p too small");
+   BOTAN_ARG_CHECK(p.bits() >= 128, "EC_Group p too small");
    BOTAN_ARG_CHECK(p.bits() <= 521, "EC_Group p too large");
-   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(p), "EC_Group p is not prime");
-   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(order), "EC_Group order is not prime");
+
+   if(p.bits() == 521) {
+      BOTAN_ARG_CHECK(p == BigInt::power_of_2(521) - 1, "EC_Group with p of 521 bits must be 2**521-1");
+   } else {
+      BOTAN_ARG_CHECK(p.bits() % 32 == 0, "EC_Group p must be a multiple of 32 bits");
+   }
+
+   BOTAN_ARG_CHECK(p % 4 == 3, "EC_Group p must be congruent to 3 modulo 4");
+
    BOTAN_ARG_CHECK(a >= 0 && a < p, "EC_Group a is invalid");
    BOTAN_ARG_CHECK(b > 0 && b < p, "EC_Group b is invalid");
    BOTAN_ARG_CHECK(base_x >= 0 && base_x < p, "EC_Group base_x is invalid");
    BOTAN_ARG_CHECK(base_y >= 0 && base_y < p, "EC_Group base_y is invalid");
+   BOTAN_ARG_CHECK(p.bits() == order.bits(), "EC_Group p and order must have the same number of bits");
+
+   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(p), "EC_Group p is not prime");
+   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(order), "EC_Group order is not prime");
 
    // This catches someone "ignoring" a cofactor and just trying to
    // provide the subgroup order
