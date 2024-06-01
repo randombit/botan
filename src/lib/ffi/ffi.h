@@ -628,7 +628,8 @@ BOTAN_FFI_EXPORT(2, 0) int botan_cipher_start(botan_cipher_t cipher, const uint8
 * consume bytes in multiples of botan_cipher_get_update_granularity().
 * @p input_consumed and @p output_written will be set accordingly and it is the
 * caller's responsibility to adapt their buffers accordingly before calling this
-* function again.
+* function again. Note that, unless ``BOTAN_CIPHER_UPDATE_FLAG_FINAL`` is set,
+* the cipher will at most generate @p input_size output bytes.
 *
 * Eventually, the caller must set the ``BOTAN_CIPHER_UPDATE_FLAG_FINAL`` flag to
 * indicate that no more input will be provided. This will cause the cipher to
