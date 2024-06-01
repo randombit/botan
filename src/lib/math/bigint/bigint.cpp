@@ -420,13 +420,15 @@ void BigInt::assign_from_bytes(std::span<const uint8_t> bytes) {
    secure_vector<word> reg((round_up(full_words + (extra_bytes > 0 ? 1 : 0), 8)));
 
    for(size_t i = 0; i != full_words; ++i) {
-      reg[i] = load_be<word>(&bytes[length - sizeof(word) * (i + 1)], 0);
+      reg[i] = load_be<word>(bytes.last<sizeof(word)>());
+      bytes = bytes.first(bytes.size() - sizeof(word));
    }
 
-   if(extra_bytes > 0) {
-      for(size_t i = 0; i != extra_bytes; ++i) {
-         reg[full_words] = (reg[full_words] << 8) | bytes[i];
-      }
+   if(!bytes.empty()) {
+      BOTAN_ASSERT_NOMSG(extra_bytes == bytes.size());
+      std::array<uint8_t, sizeof(word)> last_partial_word = {0};
+      copy_mem(std::span{last_partial_word}.last(extra_bytes), bytes);
+      reg[full_words] = load_be<word>(last_partial_word);
    }
 
    m_data.swap(reg);
