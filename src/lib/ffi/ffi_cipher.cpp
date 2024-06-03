@@ -7,9 +7,11 @@
 #include <botan/ffi.h>
 
 #include <botan/aead.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/ffi_util.h>
 #include <botan/internal/stl_util.h>
-#include <botan/internal/bit_ops.h>
+
+#include <limits>
 
 extern "C" {
 
@@ -40,12 +42,12 @@ struct botan_cipher_struct final : public botan_struct<Botan::Cipher_Mode, 0xB4A
 namespace {
 
 /**
- * Select an update size so that the following constraints are fulfilled:
+ * Select an update size so that the following constraints are satisfies:
  *
- *   - greater than or equal to the update granularity
- *   - greater than the minimum final size
- *   - ideal update granularity is a multiple of update granularity
- *   - (optional) update granularity is a power of 2
+ *   - greater than or equal to the mode's update granularity
+ *   - greater than the mode's minimum final size
+ *   - the mode's ideal update granularity is a multiple of this size
+ *   - (optional) a power of 2
  *
  * Note that this is necessary mostly for backward-compatibility with previous
  * versions of the FFI (prior to Botan 3.5.0). For Botan 4.0.0 we should just
@@ -73,7 +75,8 @@ size_t ffi_choose_update_size(Botan::Cipher_Mode& mode) {
 
    // Otherwise, try to use the next power of two greater than the minimum
    // final size, if the ideal granularity is a multiple of that.
-   const size_t b1 = (1 << Botan::ceil_log2(minimum_final_size));
+   BOTAN_ASSERT_NOMSG(minimum_final_size <= std::numeric_limits<uint16_t>::max());
+   const size_t b1 = size_t(1) << Botan::ceil_log2(static_cast<uint16_t>(minimum_final_size));
    if(ideal_update_granularity % b1 == 0) {
       return b1;
    }
