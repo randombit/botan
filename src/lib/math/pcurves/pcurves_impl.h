@@ -1149,20 +1149,23 @@ class PrecomputedBaseMulTable final {
          std::vector<ProjectivePoint> table;
          table.reserve(TableSize);
 
-         auto accum = ProjectivePoint::from_affine(p);
-
          for(size_t i = 0; i != TableSize; i += WindowElements) {
-            table.push_back(accum);
-
-            for(size_t j = 1; j != WindowElements; ++j) {
-               if(j % 2 == 1) {
-                  table.push_back(table[i + j / 2].dbl());
-               } else {
-                  table.push_back(table[i + j - 1] + table[i]);
-               }
+            // Initialize the first element of the current window
+            // either from p or the previously pre-computed window.
+            if(i == 0) {
+               table.emplace_back(ProjectivePoint::from_affine(p));
+            } else {
+               table.emplace_back((table.end() - (WindowElements / 2) - 1)->dbl());
             }
 
-            accum = table[i + (WindowElements / 2)].dbl();
+            // Starts at j = 1, as the first element was initialized above
+            for(size_t j = 1; j != WindowElements; ++j) {
+               if(j % 2 == 1) {
+                  table.emplace_back(table[i + j / 2].dbl());
+               } else {
+                  table.emplace_back(table[i + j - 1] + table[i]);
+               }
+            }
          }
 
          m_table = ProjectivePoint::to_affine_batch(table);
@@ -1171,18 +1174,20 @@ class PrecomputedBaseMulTable final {
       ProjectivePoint mul(const Scalar& s, RandomNumberGenerator& rng) const {
          const BlindedScalar bits(s, rng);
 
+         // TODO: C++23 - use std::mdspan to access m_table
+         auto table = std::span{m_table};
+
          auto accum = [&]() {
-            const size_t w_i = bits.get_window(0);
-            const auto tbl_i = std::span{m_table.begin(), WindowElements};
-            auto pt = ProjectivePoint::from_affine(AffinePoint::ct_select(tbl_i, w_i));
-            pt.ct_poison();
+            const size_t w_0 = bits.get_window(0);
+            const auto tbl_0 = table.first(WindowElements);
+            auto pt = ProjectivePoint::from_affine(AffinePoint::ct_select(tbl_0, w_0));
             pt.randomize_rep(rng);
             return pt;
          }();
 
          for(size_t i = 1; i != Windows; ++i) {
             const size_t w_i = bits.get_window(WindowBits * i);
-            const auto tbl_i = std::span{m_table.begin() + WindowElements * i, WindowElements};
+            const auto tbl_i = table.subspan(WindowElements * i, WindowElements);
 
             /*
             None of these additions can be doublings, because in each iteration, the
@@ -1310,6 +1315,19 @@ class WindowedMulTable final {
 * The W = 1 case is simple; we precompute an extra point GH = G + H,
 * and then examine 1 bit in each of x and y. If one or the other bits
 * are set then add G or H resp. If both bits are set, add GH.
+*
+* The example below is a precomputed table for W = 2. The flattened table
+* begins at (x_i,y_i) = (1,0), i.e. the identity element is omitted.
+* The indices in each cell refer to the cell's location in m_table.
+*
+*  x->           0          1          2         3
+*       0  |/ (ident) |0  x     |1  2x      |2  3x     |
+*       1  |3    y    |4  x+y   |5  2x+y    |6  3x+y   |
+*  y =  2  |7    2y   |8  x+2y  |9  2(x+y)  |10 3x+2y  |
+*       3  |11   3y   |12 x+3y  |13 2x+3y   |14 3x+3y  |
+*
+* @warning Typically, this is used for ECDSA signature verification.
+*          This DOES NOT make an effort to be side-channel free!
 */
 template <typename C, size_t W>
 class WindowedMul2Table final {
@@ -1334,34 +1352,51 @@ class WindowedMul2Table final {
          std::vector<ProjectivePoint> table;
          table.reserve(TableSize);
 
-         for(size_t i = 0; i != TableSize; ++i) {
-            const size_t t_i = (i + 1);
-            const size_t x_i = t_i % WindowSize;
-            const size_t y_i = (t_i >> WindowBits) % WindowSize;
+         auto next_combined_element = [&](size_t x_i, size_t y_i) -> ProjectivePoint {
+            // Optimization: use doubling where possible
+            //               (e.g. for indices 1,7,9 in the example above)
+            if(x_i % 2 == 0 && y_i % 2 == 0) {
+               return at(table, x_i / 2, y_i / 2).dbl();
+            }
 
-            auto next_tbl_e = [&]() {
-               if(x_i % 2 == 0 && y_i % 2 == 0) {
-                  return table[(t_i / 2) - 1].dbl();
-               } else if(x_i > 0 && y_i > 0) {
-                  return table[x_i - 1] + table[(y_i << WindowBits) - 1];
-               } else if(x_i > 0 && y_i == 0) {
-                  if(x_i == 1) {
-                     return ProjectivePoint::from_affine(x);
-                  } else {
-                     return table[x_i - 1 - 1] + x;
-                  }
-               } else if(x_i == 0 && y_i > 0) {
-                  if(y_i == 1) {
-                     return ProjectivePoint::from_affine(y);
-                  } else {
-                     return table[((y_i - 1) << WindowBits) - 1] + y;
-                  }
-               } else {
-                  BOTAN_ASSERT_UNREACHABLE();
-               }
-            };
+            // Calculate linear combinations of x and y
+            if(x_i > 0 && y_i > 0) {
+               return at(table, x_i, 0) + at(table, 0, y_i);
+            }
 
-            table.push_back(next_tbl_e());
+            // Calculate first row: x, 2x, 3x, ...
+            if(x_i > 1 && y_i == 0) {
+               return at(table, x_i - 1, 0) + x;
+            }
+
+            // Calculate first column: y, 2y, 3y, ...
+            if(x_i == 0 && y_i > 1) {
+               return at(table, 0, y_i - 1) + y;
+            }
+
+            BOTAN_ASSERT_UNREACHABLE();
+         };
+
+         auto next_element = [&](size_t x_i, size_t y_i) -> ProjectivePoint {
+            // Init case for the first row
+            if(x_i == 1 && y_i == 0) [[unlikely]] {
+               return ProjectivePoint::from_affine(x);
+            }
+
+            // Init case for the first column
+            if(x_i == 0 && y_i == 1) [[unlikely]] {
+               return ProjectivePoint::from_affine(y);
+            }
+
+            return next_combined_element(x_i, y_i);
+         };
+
+         for(size_t y_i = 0; y_i != WindowSize; ++y_i) {
+            // Identity element is omitted: x_i starts at 1 in the first row
+            const size_t x_0 = (y_i == 0) ? 1 : 0;
+            for(size_t x_i = x_0; x_i != WindowSize; ++x_i) {
+               table.emplace_back(next_element(x_i, y_i));
+            }
          }
 
          m_table = ProjectivePoint::to_affine_batch(table);
@@ -1392,14 +1427,20 @@ class WindowedMul2Table final {
             const size_t w_1 = bits1.get_window((Windows - i - 1) * WindowBits);
             const size_t w_2 = bits2.get_window((Windows - i - 1) * WindowBits);
 
-            const size_t window = w_1 + (w_2 << WindowBits);
-
-            if(window > 0) {
-               accum += m_table[window - 1];
+            if(w_1 + w_2 > 0) {
+               accum += at(m_table, w_1, w_2);
             }
          }
 
          return accum;
+      }
+
+   private:
+      template <typename T>
+      const T& at(const std::vector<T>& table, size_t x_i, size_t y_i) const {
+         size_t idx = x_i + (y_i << WindowBits) - 1;  // Identity element is omitted
+         BOTAN_DEBUG_ASSERT(idx < table.size());
+         return table[idx];
       }
 
    private:
