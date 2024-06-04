@@ -355,8 +355,8 @@ inline constexpr void load_any(OutR&& out, InR&& in) {
  */
 template <Endianness endianness, typename OutT, ranges::contiguous_range<uint8_t> InR>
    requires(std::same_as<AutoDetect, OutT> ||
-            ((ranges::statically_spanable_range<OutT> ||
-              concepts::resizable_container<OutT>)&&unsigned_integralish<typename OutT::value_type>))
+            ((ranges::statically_spanable_range<OutT> || concepts::resizable_container<OutT>) &&
+             unsigned_integralish<typename OutT::value_type>))
 inline constexpr auto load_any(InR&& in_range) {
    auto out = []([[maybe_unused]] const auto& in) {
       if constexpr(std::same_as<AutoDetect, OutT>) {

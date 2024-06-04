@@ -25,7 +25,7 @@ void poly1305_init(secure_vector<uint64_t>& X, const uint8_t key[32]) {
    const uint64_t t0 = load_le<uint64_t>(key, 0);
    const uint64_t t1 = load_le<uint64_t>(key, 1);
 
-   X[0] = (t0)&0xffc0fffffff;
+   X[0] = (t0) & 0xffc0fffffff;
    X[1] = ((t0 >> 44) | (t1 << 20)) & 0xfffffc0ffff;
    X[2] = ((t1 >> 24)) & 0x00ffffffc0f;
 

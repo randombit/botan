@@ -51,10 +51,10 @@ concept strong_span = is_strong_span_v<T>;
  */
 template <typename T, typename TreeLayerIndex, typename TreeNodeIndex>
 concept tree_address = requires(T a, TreeLayerIndex tree_layer, TreeNodeIndex tree_index) {
-                          requires tree_layer_index<TreeLayerIndex>;
-                          requires tree_node_index<TreeNodeIndex>;
-                          { a.set_address(tree_layer, tree_index) };
-                       };
+   requires tree_layer_index<TreeLayerIndex>;
+   requires tree_node_index<TreeNodeIndex>;
+   { a.set_address(tree_layer, tree_index) };
+};
 
 template <typename T, typename NodeIdx, typename LayerIdx, typename Address, typename NodeSS>
 concept tree_hash_node_pair = concepts::tree_node_index<NodeIdx> && concepts::tree_layer_index<LayerIdx> &&

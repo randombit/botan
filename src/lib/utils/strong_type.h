@@ -192,14 +192,14 @@ constexpr decltype(auto) unpack(T& t) {
 }
 
 template <typename T, typename... Tags>
-   requires(concepts::streamable<T>) decltype(auto)
-operator<<(std::ostream& os, const Strong<T, Tags...>& v) {
+   requires(concepts::streamable<T>)
+decltype(auto) operator<<(std::ostream& os, const Strong<T, Tags...>& v) {
    return os << v.get();
 }
 
 template <typename T, typename... Tags>
-   requires(std::equality_comparable<T>) bool
-operator==(const Strong<T, Tags...>& lhs, const Strong<T, Tags...>& rhs) {
+   requires(std::equality_comparable<T>)
+bool operator==(const Strong<T, Tags...>& lhs, const Strong<T, Tags...>& rhs) {
    return lhs.get() == rhs.get();
 }
 

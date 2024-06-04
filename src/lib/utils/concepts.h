@@ -158,29 +158,29 @@ concept container_pointer =
 
 template <typename T>
 concept container = requires(T a) {
-                       { a.begin() } -> container_iterator<T>;
-                       { a.end() } -> container_iterator<T>;
-                       { a.cbegin() } -> container_iterator<T>;
-                       { a.cend() } -> container_iterator<T>;
-                       { a.size() } -> std::same_as<typename T::size_type>;
-                       typename T::value_type;
-                    };
+   { a.begin() } -> container_iterator<T>;
+   { a.end() } -> container_iterator<T>;
+   { a.cbegin() } -> container_iterator<T>;
+   { a.cend() } -> container_iterator<T>;
+   { a.size() } -> std::same_as<typename T::size_type>;
+   typename T::value_type;
+};
 
 template <typename T>
 concept contiguous_container = container<T> && requires(T a) {
-                                                  { a.data() } -> container_pointer<T>;
-                                               };
+   { a.data() } -> container_pointer<T>;
+};
 
 template <typename T>
 concept has_empty = requires(T a) {
-                       { a.empty() } -> std::same_as<bool>;
-                    };
+   { a.empty() } -> std::same_as<bool>;
+};
 
 template <typename T>
 concept resizable_container = container<T> && requires(T& c, typename T::size_type s) {
-                                                 T(s);
-                                                 c.resize(s);
-                                              };
+   T(s);
+   c.resize(s);
+};
 
 template <typename T>
 concept reservable_container = container<T> && requires(T& c, typename T::size_type s) { c.reserve(s); };
@@ -205,8 +205,7 @@ template <class T>
 concept unsigned_integral_strong_type = strong_type<T> && std::unsigned_integral<typename T::wrapped_type>;
 
 template <typename T, typename Capability>
-concept strong_type_with_capability = T::template
-has_capability<Capability>();
+concept strong_type_with_capability = T::template has_capability<Capability>();
 
 }  // namespace concepts
 

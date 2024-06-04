@@ -308,7 +308,7 @@ class XMSS_Address final {
          m_data[offset * 8] = ((value >> 24) & 0xFF);
          m_data[offset * 8 + 1] = ((value >> 16) & 0xFF);
          m_data[offset * 8 + 2] = ((value >> 8) & 0xFF);
-         m_data[offset * 8 + 3] = ((value)&0xFF);
+         m_data[offset * 8 + 3] = ((value) & 0xFF);
       }
 
       inline uint32_t get_lo32(size_t offset) const {
@@ -320,7 +320,7 @@ class XMSS_Address final {
          m_data[offset * 8 + 4] = ((value >> 24) & 0xFF);
          m_data[offset * 8 + 5] = ((value >> 16) & 0xFF);
          m_data[offset * 8 + 6] = ((value >> 8) & 0xFF);
-         m_data[offset * 8 + 7] = ((value)&0xFF);
+         m_data[offset * 8 + 7] = ((value) & 0xFF);
       }
 };
 

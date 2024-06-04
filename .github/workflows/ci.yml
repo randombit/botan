@@ -177,7 +177,7 @@ jobs:
             host_os: ubuntu-24.04
           - target: format
             compiler: gcc
-            host_os: ubuntu-22.04
+            host_os: ubuntu-24.04
 
     runs-on: ${{ matrix.host_os }}
 
