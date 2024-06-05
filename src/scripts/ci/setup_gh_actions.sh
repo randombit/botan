@@ -18,17 +18,20 @@ SCRIPT_LOCATION=$(cd "$(dirname "$0")"; pwd)
 
 if type -p "apt-get"; then
 
-    # Hack to deal with https://github.com/actions/runner-images/issues/8659
-    sudo rm -f /etc/apt/sources.list.d/ubuntu-toolchain-r-ubuntu-test-jammy.list
-    sudo apt-get update
-    sudo apt-get install -y --allow-downgrades libc6=2.35-* libc6-dev=2.35-* libstdc++6=12.3.0-* libgcc-s1=12.3.0-*
+    if [ "$(lsb_release -sr)" = "22.04" ]; then
+        # Hack to deal with https://github.com/actions/runner-images/issues/8659
+        sudo rm -f /etc/apt/sources.list.d/ubuntu-toolchain-r-ubuntu-test-jammy.list
+        sudo apt-get update
+        sudo apt-get install -y --allow-downgrades libc6=2.35-* libc6-dev=2.35-* libstdc++6=12.3.0-* libgcc-s1=12.3.0-*
+    fi
 
     # Normal workflow follows
     #sudo apt-get -qq update
-    sudo apt-get -qq install ccache
+    sudo apt-get -qq install ccache libbz2-dev liblzma-dev libsqlite3-dev
 
     if [ "$TARGET" = "valgrind" ] || [ "$TARGET" = "valgrind-full" ]; then
-        sudo apt-get -qq install valgrind
+        # (l)ist mode (avoiding https://github.com/actions/runner-images/issues/9996)
+        sudo NEEDRESTART_MODE=l apt-get -qq install valgrind
 
     elif [ "$TARGET" = "shared" ] || [ "$TARGET" = "examples" ] || [ "$TARGET" = "tlsanvil" ] || [ "$TARGET" = "clang-tidy" ] ; then
         sudo apt-get -qq install libboost-dev
@@ -37,7 +40,7 @@ if type -p "apt-get"; then
         sudo apt-get -qq install clang
 
     elif [ "$TARGET" = "cross-i386" ]; then
-        sudo apt-get -qq install g++-multilib linux-libc-dev libc6-dev-i386
+        sudo NEEDRESTART_MODE=l apt-get -qq install g++-multilib linux-libc-dev libc6-dev-i386
 
     elif [ "$TARGET" = "cross-win64" ]; then
         sudo apt-get -qq install wine-development g++-mingw-w64-x86-64
