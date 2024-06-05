@@ -340,7 +340,7 @@ inline bool operator!=(const OID& a, const OID& b) {
 * @param b the second OID
 * @return true if a is lexicographically smaller than b
 */
-bool BOTAN_PUBLIC_API(2, 0) operator<(const OID& a, const OID& b);
+BOTAN_PUBLIC_API(2, 0) bool operator<(const OID& a, const OID& b);
 
 /**
 * Time (GeneralizedTime/UniversalTime)
@@ -399,12 +399,12 @@ class BOTAN_PUBLIC_API(2, 0) ASN1_Time final : public ASN1_Object {
 /*
 * Comparison Operations
 */
-bool BOTAN_PUBLIC_API(2, 0) operator==(const ASN1_Time&, const ASN1_Time&);
-bool BOTAN_PUBLIC_API(2, 0) operator!=(const ASN1_Time&, const ASN1_Time&);
-bool BOTAN_PUBLIC_API(2, 0) operator<=(const ASN1_Time&, const ASN1_Time&);
-bool BOTAN_PUBLIC_API(2, 0) operator>=(const ASN1_Time&, const ASN1_Time&);
-bool BOTAN_PUBLIC_API(2, 0) operator<(const ASN1_Time&, const ASN1_Time&);
-bool BOTAN_PUBLIC_API(2, 0) operator>(const ASN1_Time&, const ASN1_Time&);
+BOTAN_PUBLIC_API(2, 0) bool operator==(const ASN1_Time&, const ASN1_Time&);
+BOTAN_PUBLIC_API(2, 0) bool operator!=(const ASN1_Time&, const ASN1_Time&);
+BOTAN_PUBLIC_API(2, 0) bool operator<=(const ASN1_Time&, const ASN1_Time&);
+BOTAN_PUBLIC_API(2, 0) bool operator>=(const ASN1_Time&, const ASN1_Time&);
+BOTAN_PUBLIC_API(2, 0) bool operator<(const ASN1_Time&, const ASN1_Time&);
+BOTAN_PUBLIC_API(2, 0) bool operator>(const ASN1_Time&, const ASN1_Time&);
 
 typedef ASN1_Time X509_Time;
 
@@ -487,8 +487,8 @@ class BOTAN_PUBLIC_API(2, 0) AlgorithmIdentifier final : public ASN1_Object {
 /*
 * Comparison Operations
 */
-bool BOTAN_PUBLIC_API(2, 0) operator==(const AlgorithmIdentifier&, const AlgorithmIdentifier&);
-bool BOTAN_PUBLIC_API(2, 0) operator!=(const AlgorithmIdentifier&, const AlgorithmIdentifier&);
+BOTAN_PUBLIC_API(2, 0) bool operator==(const AlgorithmIdentifier&, const AlgorithmIdentifier&);
+BOTAN_PUBLIC_API(2, 0) bool operator!=(const AlgorithmIdentifier&, const AlgorithmIdentifier&);
 
 }  // namespace Botan
 

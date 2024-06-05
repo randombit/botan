@@ -132,9 +132,11 @@ def main(args = None):
 
         # This check is probably stricter than we really need, and should
         # be revised as we gain more experience with clang-format
-        if version != 15:
-            print("This script requires clang-format 15 but current version is %d" % (version))
-            print("Use --skip-version-check to skip this check, however formatting may be wrong")
+        req_version = 17
+
+        if version != req_version:
+            print("This script requires clang-format %d but current version is %d" % (req_version, version))
+            print("Use --skip-version-check to carry on, however formatting may be incorrect")
             return 1
 
     jobs = options.jobs

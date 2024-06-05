@@ -99,14 +99,14 @@ class BOTAN_PUBLIC_API(2, 0) X509_DN final : public ASN1_Object {
       std::vector<uint8_t> m_dn_bits;
 };
 
-bool BOTAN_PUBLIC_API(2, 0) operator==(const X509_DN& dn1, const X509_DN& dn2);
-bool BOTAN_PUBLIC_API(2, 0) operator!=(const X509_DN& dn1, const X509_DN& dn2);
+BOTAN_PUBLIC_API(2, 0) bool operator==(const X509_DN& dn1, const X509_DN& dn2);
+BOTAN_PUBLIC_API(2, 0) bool operator!=(const X509_DN& dn1, const X509_DN& dn2);
 
 /*
 The ordering here is arbitrary and may change from release to release.
 It is intended for allowing DNs as keys in std::map and similiar containers
 */
-bool BOTAN_PUBLIC_API(2, 0) operator<(const X509_DN& dn1, const X509_DN& dn2);
+BOTAN_PUBLIC_API(2, 0) bool operator<(const X509_DN& dn1, const X509_DN& dn2);
 
 BOTAN_PUBLIC_API(2, 0) std::ostream& operator<<(std::ostream& out, const X509_DN& dn);
 BOTAN_PUBLIC_API(2, 0) std::istream& operator>>(std::istream& in, X509_DN& dn);

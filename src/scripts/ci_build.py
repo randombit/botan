@@ -671,7 +671,7 @@ def main(args=None):
     elif target == 'format':
         cmds.append([py_interp,
                      os.path.join(root_dir, 'src/scripts/dev_tools/run_clang_format.py'),
-                     '--clang-format=clang-format-15',
+                     '--clang-format=clang-format-17',
                      '--src-dir=%s' % (os.path.join(root_dir, 'src')),
                      '--check'])
     else:
