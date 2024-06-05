@@ -45,6 +45,7 @@ disabled_needs_work = [
     '*-member-init', # should definitely fix this one
     'bugprone-lambda-function-name', # should be an easy fix
     'bugprone-unchecked-optional-access', # clang-tidy seems buggy (many false positives)
+    'bugprone-empty-catch',
     'cert-err58-cpp', # many false positives eg __m128i
     'cppcoreguidelines-avoid-const-or-ref-data-members',
     'cppcoreguidelines-init-variables',
@@ -53,6 +54,7 @@ disabled_needs_work = [
     'cppcoreguidelines-slicing', # private->public key slicing
     'hicpp-explicit-conversions',
     'misc-const-correctness', # pretty noisy
+    'misc-include-cleaner',
     'misc-redundant-expression', # BigInt seems to confuse clang-tidy
     'misc-misplaced-const',
     'misc-confusable-identifiers',
