@@ -286,11 +286,22 @@ net::awaitable<void> do_listen(tcp::endpoint endpoint,
 
    // If max_clients is zero in the beginning, we'll serve forever
    // otherwise we'll count down and stop eventually.
-   do {
+
+   const bool run_forever = (max_clients == 0);
+
+   auto done = [&] {
+      if(run_forever) {
+         return false;
+      } else {
+         return max_clients-- == 0;
+      }
+   };
+
+   while(!done()) {
       boost::asio::co_spawn(acceptor.get_executor(),
                             do_session(tcp_stream(co_await acceptor.async_accept()), tls_ctx, logger),
                             make_final_completion_handler(logger, "Session"));
-   } while(max_clients == 0 || --max_clients > 0);
+   }
 }
 
 }  // namespace
@@ -337,15 +348,15 @@ class TLS_HTTP_Server final : public Command {
          if(!sessions_db.empty()) {
    #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
             const std::string sessions_passphrase = get_passphrase_arg("Session DB passphrase", "session-db-pass");
-            session_mgr.reset(
-               new Botan::TLS::Session_Manager_SQLite(sessions_passphrase, rng_as_shared(), sessions_db));
+            session_mgr =
+               std::make_shared<Botan::TLS::Session_Manager_SQLite>(sessions_passphrase, rng_as_shared(), sessions_db);
    #else
             throw CLI_Error_Unsupported("Sqlite3 support not available");
    #endif
          }
 
          if(!session_mgr) {
-            session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng_as_shared()));
+            session_mgr = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng_as_shared());
          }
 
          auto logger = std::make_shared<Logger>(output(), error_output());

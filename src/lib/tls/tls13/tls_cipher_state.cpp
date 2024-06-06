@@ -550,7 +550,7 @@ void Cipher_State::derive_read_traffic_key(const secure_vector<uint8_t>& traffic
    }
 }
 
-secure_vector<uint8_t> Cipher_State::hkdf_extract(secure_vector<uint8_t>&& ikm) const {
+secure_vector<uint8_t> Cipher_State::hkdf_extract(std::span<const uint8_t> ikm) const {
    return m_extract->derive_key(m_hash->output_length(), ikm, m_salt, std::vector<uint8_t>());
 }
 

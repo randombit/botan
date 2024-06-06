@@ -296,7 +296,10 @@ class TLS_Handshake_Test final {
    private:
       class Test_Extension : public Botan::TLS::Extension {
          public:
-            static Botan::TLS::Extension_Code static_type() { return static_cast<Botan::TLS::Extension_Code>(666); }
+            static Botan::TLS::Extension_Code static_type() {
+               // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+               return static_cast<Botan::TLS::Extension_Code>(666);
+            }
 
             Botan::TLS::Extension_Code type() const override { return static_type(); }
 
@@ -379,7 +382,9 @@ class TLS_Handshake_Test final {
             void tls_examine_extensions(const Botan::TLS::Extensions& extn,
                                         Botan::TLS::Connection_Side which_side,
                                         Botan::TLS::Handshake_Type /*unused*/) override {
-               Botan::TLS::Extension* test_extn = extn.get(static_cast<Botan::TLS::Extension_Code>(666));
+               // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+               const auto extn_id = static_cast<Botan::TLS::Extension_Code>(666);
+               Botan::TLS::Extension* test_extn = extn.get(extn_id);
 
                if(test_extn == nullptr) {
                   m_results.test_failure("Did not receive test extension from peer");
@@ -874,13 +879,17 @@ class TLS_Unit_Tests final : public Test {
          std::shared_ptr<Botan::TLS::Session_Manager> server_ses;
 
    #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
-         client_ses.reset(new Botan::TLS::Session_Manager_SQLite("client pass", rng, ":memory:", 5));
-         server_ses.reset(new Botan::TLS::Session_Manager_SQLite("server pass", rng, ":memory:", 10));
-
-   #else
-         client_ses = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
-         server_ses = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         client_ses = std::make_shared<Botan::TLS::Session_Manager_SQLite>("client pass", rng, ":memory:", 5);
+         server_ses = std::make_shared<Botan::TLS::Session_Manager_SQLite>("server pass", rng, ":memory:", 5);
    #endif
+
+         if(!client_ses) {
+            client_ses = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         }
+
+         if(!server_ses) {
+            server_ses = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         }
 
          auto creds = create_creds(*rng);
 
@@ -1014,11 +1023,16 @@ class TLS_Unit_Tests final : public Test {
                               {{"groups", "brainpool256r1"}});
 
    #if defined(BOTAN_HAS_X25519)
-         test_modern_versions(
-            "AES-128/GCM x25519", results, client_ses, server_ses, creds, rng, "ECDH", "AES-128/GCM", "AEAD", {{
-               "groups",
-               "x25519"
-            }});
+         test_modern_versions("AES-128/GCM x25519",
+                              results,
+                              client_ses,
+                              server_ses,
+                              creds,
+                              rng,
+                              "ECDH",
+                              "AES-128/GCM",
+                              "AEAD",
+                              {{"groups", "x25519"}});
    #endif
 
          test_modern_versions("AES-128/GCM FFDHE-2048",
@@ -1047,8 +1061,8 @@ class TLS_Unit_Tests final : public Test {
                               true);
 
    #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
-         client_ses.reset(new Botan::TLS::Session_Manager_In_Memory(rng));
-         server_ses.reset(new Botan::TLS::Session_Manager_In_Memory(rng));
+         client_ses = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
+         server_ses = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng);
    #endif
 
    #if defined(BOTAN_HAS_AEAD_OCB)

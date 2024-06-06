@@ -255,7 +255,6 @@ class TLS_Extension_Parsing_Test final : public Text_Based_Test {
          const std::vector<uint8_t> protocol = vars.get_opt_bin("Protocol");
          const std::vector<uint8_t> ciphersuite = vars.get_opt_bin("Ciphersuite");
          const std::string exception = vars.get_req_str("Exception");
-         const std::string expected_name = vars.get_opt_str("Name", "");
          const bool is_positive_test = exception.empty();
 
          Test::Result result(extension + " parsing");

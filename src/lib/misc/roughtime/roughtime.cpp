@@ -42,15 +42,19 @@ T from_little_endian(const uint8_t* t) {
    return impl_from_little_endian<T>(t, sizeof(T) - 1);
 }
 
-template <typename T, std::enable_if_t<is_array<T>::value>* = nullptr>
-T copy(const uint8_t* t) {
-   return typecast_copy<T>(t);  //arrays are endianess indepedent, so we do a memcpy
+template <typename T>
+T copy(const uint8_t* t)
+   requires(is_array<T>::value)
+{
+   return typecast_copy<T>(t);  //arrays are endianess independent, so we do a memcpy
 }
 
-template <typename T, std::enable_if_t<!is_array<T>::value>* = nullptr>
-T copy(const uint8_t* t) {
-   return from_little_endian<T>(
-      t);  //other types are arithmetic, so we account that roughtime serializes as little endian
+template <typename T>
+T copy(const uint8_t* t)
+   requires(!is_array<T>::value)
+{
+   //other types are arithmetic, so we account that roughtime serializes as little endian
+   return from_little_endian<T>(t);
 }
 
 template <typename T>

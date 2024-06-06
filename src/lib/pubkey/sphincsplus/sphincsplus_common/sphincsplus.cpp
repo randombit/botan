@@ -243,7 +243,7 @@ SphincsPlus_PrivateKey::SphincsPlus_PrivateKey(std::span<const uint8_t> private_
    const auto private_portion_bytes = params.private_key_bytes() - params.public_key_bytes();
    BOTAN_ASSERT_NOMSG(private_key.size() >= private_portion_bytes);
 
-   m_private.reset(new SphincsPlus_PrivateKeyInternal(params, private_key.first(private_portion_bytes)));
+   m_private = std::make_shared<SphincsPlus_PrivateKeyInternal>(params, private_key.first(private_portion_bytes));
 }
 
 SphincsPlus_PrivateKey::SphincsPlus_PrivateKey(RandomNumberGenerator& rng,

@@ -1029,7 +1029,7 @@ Path_Validation_Result::Path_Validation_Result(CertificatePathStatusCodes status
                                                std::vector<X509_Certificate>&& cert_chain) :
       m_all_status(std::move(status)),
       m_warnings(find_warnings(m_all_status)),
-      m_cert_path(cert_chain),
+      m_cert_path(std::move(cert_chain)),
       m_overall(PKIX::overall_status(m_all_status)) {}
 
 const X509_Certificate& Path_Validation_Result::trust_root() const {

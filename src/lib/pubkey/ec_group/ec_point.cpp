@@ -564,8 +564,8 @@ bool EC_Point::on_the_curve() const {
    return true;
 }
 
-// swaps the states of *this and other, does not throw!
-void EC_Point::swap(EC_Point& other) {
+// swaps the states of *this and other
+void EC_Point::swap(EC_Point& other) noexcept {
    m_curve.swap(other.m_curve);
    m_coord_x.swap(other.m_coord_x);
    m_coord_y.swap(other.m_coord_y);

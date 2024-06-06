@@ -20,7 +20,7 @@ namespace {
 * by Gadiel Seroussi, HP Labs Tech Report HPL-98-135
 * http://www.hpl.hp.com/techreports/98/HPL-98-135.pdf
 */
-enum class MinWeightPolynomial : uint64_t {
+enum class MinWeightPolynomial : uint32_t {
    P64 = 0x1B,
    P128 = 0x87,
    P192 = 0x87,

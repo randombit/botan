@@ -622,13 +622,7 @@ class MARVIN_Test_Command final : public Command {
 
                const uint64_t start = Botan::OS::get_system_timestamp_ns();
 
-   #if 0
-               try {
-                  op.decrypt(ciphertext.data(), modulus_bytes);
-               } catch(...) {}
-   #else
                op.decrypt_or_random(ciphertext.data(), modulus_bytes, expect_pt_len, rng());
-   #endif
 
                const uint64_t duration = Botan::OS::get_system_timestamp_ns() - start;
                BOTAN_ASSERT_NOMSG(measurements[testcase].size() == r);

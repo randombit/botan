@@ -91,8 +91,6 @@ std::unique_ptr<Certificate_Extension> extension_from_oid(const OID& oid) {
 std::unique_ptr<Certificate_Extension> Extensions::create_extn_obj(const OID& oid,
                                                                    bool critical,
                                                                    const std::vector<uint8_t>& body) {
-   const std::string oid_str = oid.to_string();
-
    auto extn = extension_from_oid(oid);
 
    if(!extn) {

@@ -256,10 +256,12 @@ enum class Flag : CK_FLAGS {
 };
 
 inline Flag operator|(Flag a, Flag b) {
+   // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
    return static_cast<Flag>(static_cast<CK_FLAGS>(a) | static_cast<CK_FLAGS>(b));
 }
 
 enum class MGF : CK_RSA_PKCS_MGF_TYPE {
+   MgfUnused = 0,
    Mgf1Sha1 = CKG_MGF1_SHA1,
    Mgf1Sha256 = CKG_MGF1_SHA256,
    Mgf1Sha384 = CKG_MGF1_SHA384,

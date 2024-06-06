@@ -24,8 +24,10 @@
    #include <sys/socket.h>
 #endif
 
-constexpr static uint32_t SERVER_PORT = 5060;
-constexpr static uint32_t CLIENT_PORT = 5070;
+namespace {
+
+constexpr uint32_t SERVER_PORT = 5060;
+constexpr uint32_t CLIENT_PORT = 5070;
 
 class Client_Credential : public Botan::Credentials_Manager {
    public:
@@ -205,7 +207,7 @@ class DtlsConnection : public Botan::TLS::Callbacks {
       }
 };
 
-static void server_proc(const std::function<void(std::shared_ptr<DtlsConnection> conn)>& conn_callback) {
+void server_proc(const std::function<void(std::shared_ptr<DtlsConnection> conn)>& conn_callback) {
    std::cout << "Start Server" << std::endl;
 
    int fd = 0;
@@ -251,7 +253,7 @@ static void server_proc(const std::function<void(std::shared_ptr<DtlsConnection>
    std::cout << "Server closed" << std::endl;
 }
 
-static void client_proc(const std::function<void(std::shared_ptr<DtlsConnection> conn)>& conn_callback) {
+void client_proc(const std::function<void(std::shared_ptr<DtlsConnection> conn)>& conn_callback) {
    std::cout << "Start Client" << std::endl;
 
    int fd = 0;
@@ -295,6 +297,8 @@ static void client_proc(const std::function<void(std::shared_ptr<DtlsConnection>
 
    std::cout << "Client closed" << std::endl;
 }
+
+}  // namespace
 
 int main() {
    std::mutex m;

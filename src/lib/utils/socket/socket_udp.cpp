@@ -118,6 +118,8 @@ class Asio_SocketUDP final : public OS::SocketUDP {
       void check_timeout() {
          if(m_udp.is_open() && m_timer.expires_at() < std::chrono::system_clock::now()) {
             boost::system::error_code err;
+
+            // NOLINTNEXTLINE(bugprone-unused-return-value,cert-err33-c)
             m_udp.close(err);
          }
 

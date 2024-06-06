@@ -31,8 +31,8 @@ namespace Botan {
 class RSA_Public_Data final {
    public:
       RSA_Public_Data(BigInt&& n, BigInt&& e) :
-            m_n(n),
-            m_e(e),
+            m_n(std::move(n)),
+            m_e(std::move(e)),
             m_monty_n(std::make_shared<Montgomery_Params>(m_n)),
             m_public_modulus_bits(m_n.bits()),
             m_public_modulus_bytes(m_n.bytes()) {}
@@ -62,12 +62,12 @@ class RSA_Public_Data final {
 class RSA_Private_Data final {
    public:
       RSA_Private_Data(BigInt&& d, BigInt&& p, BigInt&& q, BigInt&& d1, BigInt&& d2, BigInt&& c) :
-            m_d(d),
-            m_p(p),
-            m_q(q),
-            m_d1(d1),
-            m_d2(d2),
-            m_c(c),
+            m_d(std::move(d)),
+            m_p(std::move(p)),
+            m_q(std::move(q)),
+            m_d1(std::move(d1)),
+            m_d2(std::move(d2)),
+            m_c(std::move(c)),
             m_mod_p(m_p),
             m_mod_q(m_q),
             m_monty_p(std::make_shared<Montgomery_Params>(m_p, m_mod_p)),

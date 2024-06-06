@@ -154,8 +154,6 @@ class Cert_Info final : public Command {
       std::string description() const override { return "Parse X.509 certificate and display data fields"; }
 
       void go() override {
-         const std::string arg_file = get_arg("file");
-
          std::vector<uint8_t> data = slurp_file(get_arg("file"));
 
          Botan::DataSource_Memory in(data);

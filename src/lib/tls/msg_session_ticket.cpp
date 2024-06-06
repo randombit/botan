@@ -113,7 +113,7 @@ std::optional<uint32_t> New_Session_Ticket_13::early_data_byte_limit() const {
 
    const EarlyDataIndication* ext = m_extensions.get<EarlyDataIndication>();
    BOTAN_ASSERT_NOMSG(ext->max_early_data_size().has_value());
-   return ext->max_early_data_size().value();
+   return ext->max_early_data_size();
 }
 
 std::vector<uint8_t> New_Session_Ticket_13::serialize() const {

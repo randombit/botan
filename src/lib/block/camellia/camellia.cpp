@@ -239,7 +239,16 @@ void key_schedule(secure_vector<uint64_t>& SK, std::span<const uint8_t> key) {
    const uint64_t KL_L = load_be<uint64_t>(key.data(), 1);
 
    const uint64_t KR_H = (key.size() >= 24) ? load_be<uint64_t>(key.data(), 2) : 0;
-   const uint64_t KR_L = (key.size() == 32) ? load_be<uint64_t>(key.data(), 3) : ((key.size() == 24) ? ~KR_H : 0);
+
+   const uint64_t KR_L = [&]() -> uint64_t {
+      if(key.size() == 32) {
+         return load_be<uint64_t>(key.data(), 3);
+      } else if(key.size() == 24) {
+         return ~KR_H;
+      } else {
+         return 0;
+      }
+   }();
 
    uint64_t D1 = KL_H ^ KR_H;
    uint64_t D2 = KL_L ^ KR_L;

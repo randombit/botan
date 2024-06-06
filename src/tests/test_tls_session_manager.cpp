@@ -1141,12 +1141,12 @@ std::vector<Test::Result> tls_session_manager_expiry() {
                       plcy.set_session_limit(1);
                       result.test_is_eq("find one",
                                         mgr->find(server_info, cbs, plcy).size(),
-                                        size_t(plcy.maximum_session_tickets_per_client_hello()));
+                                        plcy.maximum_session_tickets_per_client_hello());
 
                       plcy.set_session_limit(3);
                       result.test_is_eq("find three",
                                         mgr->find(server_info, cbs, plcy).size(),
-                                        size_t(plcy.maximum_session_tickets_per_client_hello()));
+                                        plcy.maximum_session_tickets_per_client_hello());
 
                       plcy.set_session_limit(10);
                       result.test_is_eq("find all five", mgr->find(server_info, cbs, plcy).size(), size_t(5));

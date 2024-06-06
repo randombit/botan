@@ -103,6 +103,7 @@ class CancellingMockChannel : public MockChannel {
 // only friends boost::asio::ssl::stream. We need to make our own.
 class TestStream : public boost::beast::test::stream {
    public:
+      // NOLINTNEXTLINE(modernize-type-traits)
       using boost::beast::test::stream::stream;
       using lowest_layer_type = boost::beast::test::stream;
 };
@@ -112,7 +113,8 @@ using FailCount = boost::beast::test::fail_count;
 class AsioStream : public Botan::TLS::Stream<TestStream, MockChannel> {
    public:
       template <typename... Args>
-      AsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) : Stream(context, args...) {
+      AsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) :
+            Stream(context, std::forward<Args>(args)...) {
          m_native_handle = std::make_unique<MockChannel>(m_core);
       }
 };
@@ -120,7 +122,8 @@ class AsioStream : public Botan::TLS::Stream<TestStream, MockChannel> {
 class ThrowingAsioStream : public Botan::TLS::Stream<TestStream, ThrowingMockChannel> {
    public:
       template <typename... Args>
-      ThrowingAsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) : Stream(context, args...) {
+      ThrowingAsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) :
+            Stream(context, std::forward<Args>(args)...) {
          m_native_handle = std::make_unique<ThrowingMockChannel>(m_core);
       }
 };
@@ -128,7 +131,8 @@ class ThrowingAsioStream : public Botan::TLS::Stream<TestStream, ThrowingMockCha
 class CancellingAsioStream : public Botan::TLS::Stream<TestStream, CancellingMockChannel> {
    public:
       template <typename... Args>
-      CancellingAsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) : Stream(context, args...) {
+      CancellingAsioStream(std::shared_ptr<Botan::TLS::Context> context, Args&&... args) :
+            Stream(context, std::forward<Args>(args)...) {
          m_native_handle = std::make_unique<CancellingMockChannel>(m_core);
       }
 };

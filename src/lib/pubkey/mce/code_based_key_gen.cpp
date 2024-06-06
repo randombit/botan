@@ -221,18 +221,21 @@ McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator& rng, size_t ext
    // as binary vectors of length ext_deg * t (this will
    // speed up the syndrome computation)
    //
-   std::vector<uint32_t> H(bit_size_to_32bit_size(codimension) * code_length);
+   const size_t co32 = bit_size_to_32bit_size(codimension);
+   std::vector<uint32_t> H(co32 * code_length);
    uint32_t* sk = H.data();
    for(size_t i = 0; i < code_length; ++i) {
       for(size_t l = 0; l < t; ++l) {
          const size_t k = (l * ext_deg) / 32;
-         const uint8_t j = (l * ext_deg) % 32;
+         const size_t j = (l * ext_deg) % 32;
          sk[k] ^= static_cast<uint32_t>(F[i].get_coef(l)) << j;
          if(j + ext_deg > 32) {
-            sk[k + 1] ^= F[i].get_coef(l) >> (32 - j);
+            if(j > 0) {
+               sk[k + 1] ^= F[i].get_coef(l) >> (32 - j);
+            }
          }
       }
-      sk += bit_size_to_32bit_size(codimension);
+      sk += co32;
    }
 
    // We need the support L for decoding (decryption). In fact the

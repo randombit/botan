@@ -60,10 +60,8 @@ auto get_hash_pair_func_for_identifier(const LMS_Params& lms_params, LMS_Identif
                                                                 const TreeAddress& address,
                                                                 StrongSpan<const LMS_Tree_Node> left,
                                                                 StrongSpan<const LMS_Tree_Node> right) {
-      auto lms_address = dynamic_cast<const TreeAddress&>(address);
-
       hash->update(I);
-      hash->update(store_be(lms_address.r()));
+      hash->update(store_be(address.r()));
       hash->update(store_be(D_INTR));
       hash->update(left);
       hash->update(right);

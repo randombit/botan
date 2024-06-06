@@ -1033,8 +1033,6 @@ class Charset_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> in = vars.get_req_bin("In");
          const std::vector<uint8_t> expected = vars.get_req_bin("Out");
 
-         const std::string in_str(in.begin(), in.end());
-
          std::string converted;
 
          if(type == "UCS2-UTF8") {

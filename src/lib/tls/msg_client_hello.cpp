@@ -35,10 +35,6 @@
 
 namespace Botan::TLS {
 
-enum {
-   TLS_EMPTY_RENEGOTIATION_INFO_SCSV = 0x00FF,
-};
-
 std::vector<uint8_t> make_hello_random(RandomNumberGenerator& rng, Callbacks& cb, const Policy& policy) {
    auto buf = rng.random_vec<std::vector<uint8_t>>(32);
 
@@ -437,6 +433,8 @@ void Client_Hello_12::add_tls12_supported_groups_extensions(const Policy& policy
 }
 
 Client_Hello_12::Client_Hello_12(std::unique_ptr<Client_Hello_Internal> data) : Client_Hello(std::move(data)) {
+   const uint16_t TLS_EMPTY_RENEGOTIATION_INFO_SCSV = 0x00FF;
+
    if(offered_suite(static_cast<uint16_t>(TLS_EMPTY_RENEGOTIATION_INFO_SCSV))) {
       if(Renegotiation_Extension* reneg = m_data->extensions().get<Renegotiation_Extension>()) {
          if(!reneg->renegotiation_info().empty()) {

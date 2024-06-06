@@ -200,14 +200,13 @@ class TLS_Client final : public Command {
          const std::string next_protos = get_arg("next-protocols");
          const bool use_system_cert_store = flag_set("skip-system-cert-store") == false;
          const std::string trusted_CAs = get_arg("trusted-cas");
-         const std::string trusted_pubkey_sha256 = get_arg("trusted-pubkey-sha256");
          const auto tls_version = get_arg("tls-version");
 
          if(!sessions_db.empty()) {
    #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
             const std::string sessions_passphrase = get_passphrase_arg("Session DB passphrase", "session-db-pass");
-            session_mgr.reset(
-               new Botan::TLS::Session_Manager_SQLite(sessions_passphrase, rng_as_shared(), sessions_db));
+            session_mgr =
+               std::make_shared<Botan::TLS::Session_Manager_SQLite>(sessions_passphrase, rng_as_shared(), sessions_db);
    #else
             error_output() << "Ignoring session DB file, sqlite not enabled\n";
    #endif
@@ -400,7 +399,7 @@ class TLS_Client final : public Command {
                continue;
             }
 
-            if(::connect(fd, rp->ai_addr, static_cast<socklen_t>(rp->ai_addrlen)) != 0) {
+            if(::connect(fd, rp->ai_addr, rp->ai_addrlen) != 0) {
                ::close(fd);
                continue;
             }

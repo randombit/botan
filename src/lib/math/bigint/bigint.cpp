@@ -69,7 +69,7 @@ BigInt::BigInt(std::string_view str) {
    size_t markers = 0;
    bool negative = false;
 
-   if(str.length() > 0 && str[0] == '-') {
+   if(!str.empty() && str[0] == '-') {
       markers += 1;
       negative = true;
    }

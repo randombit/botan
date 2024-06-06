@@ -144,7 +144,7 @@ void BLAKE2s::final_result(std::span<uint8_t> out) {
    copy_out_le(out.first(output_length()), m_h);
 
    clear();
-};
+}
 
 std::unique_ptr<HashFunction> BLAKE2s::copy_state() const {
    std::unique_ptr<BLAKE2s> h = std::make_unique<BLAKE2s>(m_outlen << 3);

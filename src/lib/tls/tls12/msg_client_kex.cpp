@@ -244,7 +244,7 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
 
          psk = creds.psk("tls-server", state.client_hello()->sni_hostname(), m_psk_identity.value());
 
-         if(psk.length() == 0) {
+         if(psk.empty()) {
             if(policy.hide_unknown_users()) {
                psk = SymmetricKey(rng, 16);
             } else {

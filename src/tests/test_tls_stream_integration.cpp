@@ -44,7 +44,7 @@ using Result = Botan_Tests::Test::Result;
 const auto k_timeout = std::chrono::seconds(30);
 const auto k_endpoints = std::vector<tcp::endpoint>{tcp::endpoint{net::ip::make_address("127.0.0.1"), 8082}};
 
-enum { max_msg_length = 512 };
+constexpr size_t MAX_MSG_LENGTH = 512;
 
 std::string server_cert() {
    return Botan_Tests::Test::data_dir() + "/x509/certstor/cert1.crt";
@@ -104,7 +104,7 @@ class Peer {
       // NOLINTNEXTLINE(*-exception-escape)
       virtual ~Peer() { cancel_timeout(); }
 
-      net::mutable_buffer buffer() { return net::buffer(m_data, max_msg_length); }
+      net::mutable_buffer buffer() { return net::buffer(m_data, MAX_MSG_LENGTH); }
 
       net::mutable_buffer buffer(size_t size) { return net::buffer(m_data, size); }
 
@@ -121,14 +121,14 @@ class Peer {
             return 0;
          }
 
-         return max_msg_length - bytes_transferred;
+         return MAX_MSG_LENGTH - bytes_transferred;
       }
 
       void on_timeout(std::function<void(const std::string&)> cb) { m_on_timeout = std::move(cb); }
 
       void reset_timeout(const std::string& message) {
          m_timeout_timer.expires_after(k_timeout);
-         m_timeout_timer.async_wait([=, this](const error_code& ec) {
+         m_timeout_timer.async_wait([&](const error_code& ec) {
             if(ec != net::error::operation_aborted)  // timer cancelled
             {
                if(m_on_timeout) {
@@ -171,7 +171,7 @@ class Peer {
       net::system_timer m_timeout_timer;
       std::function<void(const std::string&)> m_on_timeout;
 
-      char m_data[max_msg_length];
+      char m_data[MAX_MSG_LENGTH];
 };
 
 class Result_Wrapper {
@@ -228,9 +228,16 @@ class Server : public Peer,
          error_code ec;
          const auto& endpoint = k_endpoints.back();
 
+         // NOLINTNEXTLINE(bugprone-unused-return-value,cert-err33-c)
          m_acceptor.open(endpoint.protocol(), ec);
+
+         // NOLINTNEXTLINE(bugprone-unused-return-value,cert-err33-c)
          m_acceptor.set_option(net::socket_base::reuse_address(true), ec);
+
+         // NOLINTNEXTLINE(bugprone-unused-return-value,cert-err33-c)
          m_acceptor.bind(endpoint, ec);
+
+         // NOLINTNEXTLINE(bugprone-unused-return-value,cert-err33-c)
          m_acceptor.listen(net::socket_base::max_listen_connections, ec);
 
          m_result.expect_success("listen", ec);
@@ -384,9 +391,9 @@ class TestBase {
             m_server(std::make_shared<Server>(server_policy, ioc, m_name)),
             m_result(m_name) {
          m_client->on_timeout(
-            [=, this](const std::string& msg) { m_result.test_failure("timeout in client during: " + msg); });
+            [&](const std::string& msg) { m_result.test_failure("timeout in client during: " + msg); });
          m_server->on_timeout(
-            [=, this](const std::string& msg) { m_result.test_failure("timeout in server during: " + msg); });
+            [&](const std::string& msg) { m_result.test_failure("timeout in server during: " + msg); });
 
          m_server->listen();
       }

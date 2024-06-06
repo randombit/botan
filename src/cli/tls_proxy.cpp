@@ -98,7 +98,7 @@ class ServerStatus {
 class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_session>,
                                 public Botan::TLS::Callbacks {
    public:
-      enum { readbuf_size = 17 * 1024 };
+      static constexpr size_t readbuf_size = 17 * 1024;
 
       typedef std::shared_ptr<tls_proxy_session> pointer;
 
@@ -433,12 +433,12 @@ class TLS_Proxy final : public Command {
          const std::string sessions_db = get_arg("session-db");
 
          if(!sessions_db.empty()) {
-            session_mgr.reset(
-               new Botan::TLS::Session_Manager_SQLite(sessions_passphrase, rng_as_shared(), sessions_db));
+            session_mgr =
+               std::make_shared<Botan::TLS::Session_Manager_SQLite>(sessions_passphrase, rng_as_shared(), sessions_db);
          }
    #endif
          if(!session_mgr) {
-            session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng_as_shared()));
+            session_mgr = std::make_shared<Botan::TLS::Session_Manager_In_Memory>(rng_as_shared());
          }
 
          tls_proxy_server server(io, listen_port, server_endpoint_iterator, creds, policy, session_mgr, max_clients);
