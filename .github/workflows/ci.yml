@@ -167,7 +167,7 @@ jobs:
             compiler: gcc
             host_os: ubuntu-24.04
           - target: valgrind
-            compiler: gcc
+            compiler: clang
             host_os: ubuntu-22.04
           - target: fuzzers
             compiler: gcc

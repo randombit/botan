@@ -43,7 +43,7 @@ namespace Botan::CT {
 * doesn't require a custom patched valgrind.
 */
 template <typename T>
-inline void poison(const T* p, size_t n) {
+constexpr inline void poison(const T* p, size_t n) {
 #if defined(BOTAN_HAS_VALGRIND)
    if(!std::is_constant_evaluated()) {
       VALGRIND_MAKE_MEM_UNDEFINED(p, n * sizeof(T));
@@ -73,6 +73,38 @@ constexpr inline void unpoison(T& p) {
 #endif
 
    BOTAN_UNUSED(p);
+}
+
+/**
+* This function returns its argument, but (if called in a non-constexpr context)
+* attempts to prevent the compiler from reasoning about the value or the possible
+* range of values. Such optimizations have a way of breaking constant time code.
+*/
+template <typename T>
+constexpr inline T value_barrier(T x) {
+   if(!std::is_constant_evaluated()) {
+      /*
+      * For compilers without inline asm, is there something else we can do?
+      *
+      * For instance we could potentially launder the value through a
+      * `volatile T` or `volatile T*`. This would require some experimentation.
+      *
+      * GCC has an attribute noipa which disables interprocedural analysis, which
+      * might be useful here. However Clang does not currently support this attribute.
+      *
+      * We may want a "stronger" statement such as
+      *     asm volatile("" : "+r,m"(x) : : "memory);
+      * (see https://theunixzoo.co.uk/blog/2021-10-14-preventing-optimisations.html)
+      * however the current approach seems sufficient with current compilers,
+      * and is minimally damaging with regards to degrading code generation.
+      */
+#if defined(BOTAN_USE_GCC_INLINE_ASM)
+      asm("" : "+r"(x) : /* no input */);
+#endif
+      return x;
+   } else {
+      return x;
+   }
 }
 
 /**
@@ -112,7 +144,7 @@ class Mask final {
       /**
       * Return a Mask<T> which is set if v is != 0
       */
-      static constexpr Mask<T> expand(T v) { return ~Mask<T>::is_zero(v); }
+      static constexpr Mask<T> expand(T v) { return ~Mask<T>::is_zero(value_barrier<T>(v)); }
 
       /**
       * Return a Mask<T> which is set if m is set
@@ -126,17 +158,23 @@ class Mask final {
       /**
       * Return a Mask<T> which is set if v is == 0 or cleared otherwise
       */
-      static constexpr Mask<T> is_zero(T x) { return Mask<T>(ct_is_zero<T>(x)); }
+      static constexpr Mask<T> is_zero(T x) { return Mask<T>(ct_is_zero<T>(value_barrier<T>(x))); }
 
       /**
       * Return a Mask<T> which is set if x == y
       */
-      static constexpr Mask<T> is_equal(T x, T y) { return Mask<T>::is_zero(static_cast<T>(x ^ y)); }
+      static constexpr Mask<T> is_equal(T x, T y) {
+         const T diff = value_barrier(x) ^ value_barrier(y);
+         return Mask<T>::is_zero(diff);
+      }
 
       /**
       * Return a Mask<T> which is set if x < y
       */
-      static constexpr Mask<T> is_lt(T x, T y) { return Mask<T>(expand_top_bit<T>(x ^ ((x ^ y) | ((x - y) ^ x)))); }
+      static constexpr Mask<T> is_lt(T x, T y) {
+         T u = x ^ ((x ^ y) | ((x - y) ^ x));
+         return Mask<T>(expand_top_bit<T>(value_barrier<T>(u)));
+      }
 
       /**
       * Return a Mask<T> which is set if x > y
@@ -158,7 +196,7 @@ class Mask final {
 
          const T v_lt_l = v ^ ((v ^ l) | ((v - l) ^ v));
          const T v_gt_u = u ^ ((u ^ v) | ((u - v) ^ u));
-         const T either = v_lt_l | v_gt_u;
+         const T either = value_barrier(v_lt_l) | value_barrier(v_gt_u);
          return ~Mask<T>(expand_top_bit(either));
       }
 
@@ -167,7 +205,7 @@ class Mask final {
 
          for(auto a : accepted) {
             const T diff = a ^ v;
-            const T eq_zero = ~diff & (diff - 1);
+            const T eq_zero = value_barrier<T>(~diff & (diff - 1));
             accept |= eq_zero;
          }
 
@@ -221,12 +259,12 @@ class Mask final {
       /**
       * Return x if the mask is set, or otherwise zero
       */
-      constexpr T if_set_return(T x) const { return m_mask & x; }
+      constexpr T if_set_return(T x) const { return value() & x; }
 
       /**
       * Return x if the mask is cleared, or otherwise zero
       */
-      constexpr T if_not_set_return(T x) const { return ~m_mask & x; }
+      constexpr T if_not_set_return(T x) const { return ~value() & x; }
 
       /**
       * If this mask is set, return x, otherwise return y
@@ -280,7 +318,7 @@ class Mask final {
       /**
       * Return the underlying value of the mask
       */
-      constexpr T value() const { return m_mask; }
+      constexpr T value() const { return value_barrier<T>(m_mask); }
 
    private:
       constexpr Mask(T m) : m_mask(m) {}

@@ -60,7 +60,7 @@ jobs:
           cache-key: linux-x86_64-valgrind-full
 
       - name: Valgrind Checks
-        run: python3 ./src/scripts/ci_build.py --cc=gcc --make-tool=make valgrind-full
+        run: python3 ./src/scripts/ci_build.py --cc=clang --make-tool=make valgrind-full
 
   hybrid_tls_interop:
     name: "PQ/T TLS 1.3"
