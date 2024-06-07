@@ -857,7 +857,17 @@ std::vector<uint8_t> VarMap::get_req_bin(const std::string& key) const {
    }
 
    try {
-      return Botan::hex_decode(i->second);
+      if(i->second.starts_with("0x")) {
+         if(i->second.size() % 2 == 0) {
+            return Botan::hex_decode(i->second.substr(2));
+         } else {
+            std::string z = i->second;
+            std::swap(z[0], z[1]);  // swap 0x to x0 then remove x
+            return Botan::hex_decode(z.substr(1));
+         }
+      } else {
+         return Botan::hex_decode(i->second);
+      }
    } catch(std::exception& e) {
       std::ostringstream oss;
       oss << "Bad input '" << i->second << "'"

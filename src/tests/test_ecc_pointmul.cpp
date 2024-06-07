@@ -6,8 +6,8 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_ECDSA)
-   #include <botan/ecdsa.h>
+#if defined(BOTAN_HAS_BIGINT)
+   #include <botan/bigint.h>
 #endif
 
 #if defined(BOTAN_HAS_ECC_GROUP)
