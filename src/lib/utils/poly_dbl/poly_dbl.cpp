@@ -7,6 +7,7 @@
 #include <botan/internal/poly_dbl.h>
 
 #include <botan/exceptn.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
 
 namespace Botan {
@@ -29,14 +30,22 @@ enum class MinWeightPolynomial : uint32_t {
    P1024 = 0x80043,
 };
 
+/**
+* If the top bit of c is set, returns the carry (the polynomial)
+*
+* Otherwise returns zero.
+*/
+template <MinWeightPolynomial P>
+inline uint64_t return_carry(uint64_t c) {
+   return CT::Mask<uint64_t>::expand(c >> 63).if_set_return(static_cast<uint64_t>(P));
+}
+
 template <size_t LIMBS, MinWeightPolynomial P>
 void poly_double(uint8_t out[], const uint8_t in[]) {
    uint64_t W[LIMBS];
    load_be(W, in, LIMBS);
 
-   const uint64_t POLY = static_cast<uint64_t>(P);
-
-   const uint64_t carry = POLY * (W[0] >> 63);
+   const uint64_t carry = return_carry<P>(W[0]);
 
    if constexpr(LIMBS > 0) {
       for(size_t i = 0; i != LIMBS - 1; ++i) {
@@ -54,9 +63,7 @@ void poly_double_le(uint8_t out[], const uint8_t in[]) {
    uint64_t W[LIMBS];
    load_le(W, in, LIMBS);
 
-   const uint64_t POLY = static_cast<uint64_t>(P);
-
-   const uint64_t carry = POLY * (W[LIMBS - 1] >> 63);
+   const uint64_t carry = return_carry<P>(W[LIMBS - 1]);
 
    if constexpr(LIMBS > 0) {
       for(size_t i = 0; i != LIMBS - 1; ++i) {
@@ -116,10 +123,8 @@ void xts_update_tweak_block(uint8_t tweak[], size_t BS, size_t blocks_in_tweak) 
       uint64_t W[LIMBS];
       load_le(W, &tweak[0], LIMBS);
 
-      const uint64_t POLY = static_cast<uint64_t>(MinWeightPolynomial::P128);
-
       for(size_t i = 1; i < blocks_in_tweak; ++i) {
-         const uint64_t carry = POLY * (W[1] >> 63);
+         const uint64_t carry = return_carry<MinWeightPolynomial::P128>(W[1]);
          W[1] = (W[1] << 1) ^ (W[0] >> 63);
          W[0] = (W[0] << 1) ^ carry;
          copy_out_le(std::span(&tweak[i * BS], 2 * 8), W);
