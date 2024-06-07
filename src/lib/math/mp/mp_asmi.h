@@ -36,6 +36,7 @@ struct WordInfo<uint32_t> {
       static const constexpr size_t bytes = 4;
       static const constexpr size_t bits = 32;
       static const constexpr uint32_t max = 0xFFFFFFFF;
+      static const constexpr uint32_t top_bit = 0x80000000;
 
       typedef uint64_t dword;
       static const constexpr bool dword_is_native = true;
@@ -47,6 +48,7 @@ struct WordInfo<uint64_t> {
       static const constexpr size_t bytes = 8;
       static const constexpr size_t bits = 64;
       static const constexpr uint64_t max = 0xFFFFFFFFFFFFFFFF;
+      static const constexpr uint64_t top_bit = 0x8000000000000000;
 
 #if defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
       typedef uint128_t dword;
@@ -116,6 +118,12 @@ inline constexpr auto word_madd3(W a, W b, W c, W* d) -> W {
 #if defined(BOTAN_MP_USE_X86_64_ASM)
 
    #define ASM(x) x "\n\t"
+
+   #define DO_4_TIMES(MACRO, ARG) \
+      MACRO(ARG, 0)               \
+      MACRO(ARG, 1)               \
+      MACRO(ARG, 2)               \
+      MACRO(ARG, 3)
 
    #define DO_8_TIMES(MACRO, ARG) \
       MACRO(ARG, 0)               \
@@ -217,10 +225,10 @@ template <WordType W>
 inline constexpr auto word8_add3(W z[8], const W x[8], const W y[8], W carry) -> W {
 #if defined(BOTAN_MP_USE_X86_64_ASM)
    if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
-      asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "adcq"))
-          : [carry] "=r"(carry)
-          : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
-          : "cc", "memory");
+      asm volatile(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "adcq"))
+                   : [carry] "=r"(carry)
+                   : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
+                   : "cc", "memory");
       return carry;
    }
 #endif
@@ -233,6 +241,25 @@ inline constexpr auto word8_add3(W z[8], const W x[8], const W y[8], W carry) ->
    z[5] = word_add(x[5], y[5], &carry);
    z[6] = word_add(x[6], y[6], &carry);
    z[7] = word_add(x[7], y[7], &carry);
+   return carry;
+}
+
+template <WordType W>
+inline constexpr auto word4_add3(W z[4], const W x[4], const W y[4], W carry) -> W {
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      asm volatile(ADD_OR_SUBTRACT(DO_4_TIMES(ADDSUB3_OP, "adcq"))
+                   : [carry] "=r"(carry)
+                   : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
+                   : "cc", "memory");
+      return carry;
+   }
+#endif
+
+   z[0] = word_add(x[0], y[0], &carry);
+   z[1] = word_add(x[1], y[1], &carry);
+   z[2] = word_add(x[2], y[2], &carry);
+   z[3] = word_add(x[3], y[3], &carry);
    return carry;
 }
 
@@ -317,10 +344,10 @@ template <WordType W>
 inline constexpr auto word8_sub3(W z[8], const W x[8], const W y[8], W carry) -> W {
 #if defined(BOTAN_MP_USE_X86_64_ASM)
    if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
-      asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "sbbq"))
-          : [carry] "=r"(carry)
-          : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
-          : "cc", "memory");
+      asm volatile(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB3_OP, "sbbq"))
+                   : [carry] "=r"(carry)
+                   : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
+                   : "cc", "memory");
       return carry;
    }
 #endif
@@ -333,6 +360,25 @@ inline constexpr auto word8_sub3(W z[8], const W x[8], const W y[8], W carry) ->
    z[5] = word_sub(x[5], y[5], &carry);
    z[6] = word_sub(x[6], y[6], &carry);
    z[7] = word_sub(x[7], y[7], &carry);
+   return carry;
+}
+
+template <WordType W>
+inline constexpr auto word4_sub3(W z[4], const W x[4], const W y[4], W carry) -> W {
+#if defined(BOTAN_MP_USE_X86_64_ASM)
+   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
+      asm volatile(ADD_OR_SUBTRACT(DO_4_TIMES(ADDSUB3_OP, "sbbq"))
+                   : [carry] "=r"(carry)
+                   : [x] "r"(x), [y] "r"(y), [z] "r"(z), "0"(carry)
+                   : "cc", "memory");
+      return carry;
+   }
+#endif
+
+   z[0] = word_sub(x[0], y[0], &carry);
+   z[1] = word_sub(x[1], y[1], &carry);
+   z[2] = word_sub(x[2], y[2], &carry);
+   z[3] = word_sub(x[3], y[3], &carry);
    return carry;
 }
 
@@ -544,10 +590,17 @@ class word3 {
       }
 
       inline constexpr W monty_step(W p0, W p_dash) {
-         W w0 = static_cast<W>(m_w);
-         W r = w0 * p_dash;
+         const W w0 = static_cast<W>(m_w);
+         const W r = w0 * p_dash;
          mul(r, p0);
          m_w >>= WordInfo<W>::bits;
+         return r;
+      }
+
+      inline constexpr W monty_step_pdash1() {
+         const W r = static_cast<W>(m_w);
+         m_w >>= WordInfo<W>::bits;
+         m_w += static_cast<W3>(r);
          return r;
       }
 
@@ -586,6 +639,15 @@ class word3 {
          return r;
       }
 
+      inline constexpr W monty_step_pdash1() {
+         // If p_dash == 1 then p[0] = -1 and everything simplifies
+         const W r = m_w0;
+         m_w0 += m_w1;
+         m_w1 = m_w2 + (m_w0 < m_w1);
+         m_w2 = 0;
+         return r;
+      }
+
    private:
       W m_w0, m_w1, m_w2;
 #endif
@@ -593,6 +655,7 @@ class word3 {
 
 #if defined(ASM)
    #undef ASM
+   #undef DO_4_TIMES
    #undef DO_8_TIMES
    #undef ADD_OR_SUBTRACT
    #undef ADDSUB2_OP
