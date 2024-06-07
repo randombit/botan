@@ -8,6 +8,7 @@ name -> "EC Hash to Curve"
 
 <requires>
 ec_group
+pcurves
 xmd
 </requires>
 
