@@ -275,7 +275,7 @@ class BOTAN_TEST_API Cipher_State {
       /**
        * HKDF-Extract from RFC 8446 7.1
        */
-      secure_vector<uint8_t> hkdf_extract(secure_vector<uint8_t>&& ikm) const;
+      secure_vector<uint8_t> hkdf_extract(std::span<const uint8_t> ikm) const;
 
       /**
        * HKDF-Expand-Label from RFC 8446 7.1

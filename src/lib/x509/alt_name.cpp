@@ -102,6 +102,7 @@ void AlternativeName::encode_into(DER_Encoder& der) const {
 
    for(uint32_t ip : m_ipv4_addr) {
       auto ip_buf = store_be(ip);
+      // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
       der.add_object(ASN1_Type(7), ASN1_Class::ContextSpecific, ip_buf.data(), 4);
    }
 

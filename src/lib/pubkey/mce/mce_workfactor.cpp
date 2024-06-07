@@ -11,6 +11,7 @@
 
 #include <botan/internal/bit_ops.h>
 #include <cmath>
+#include <numbers>
 
 namespace Botan {
 
@@ -35,7 +36,7 @@ double log_binomial(size_t n, size_t k) {
       x -= std::log(k - i);
    }
 
-   return x / std::log(2);
+   return x / std::numbers::ln2;
 }
 
 double nb_iter(size_t n, size_t k, size_t w, size_t p, size_t l) {
@@ -47,7 +48,7 @@ double nb_iter(size_t n, size_t k, size_t w, size_t p, size_t l) {
 
 double cout_iter(size_t n, size_t k, size_t p, size_t l) {
    double x = binomial(k / 2, p);
-   const size_t i = static_cast<size_t>(std::log(x) / std::log(2));
+   const size_t i = static_cast<size_t>(std::log(x) / std::numbers::ln2);
    double res = 2 * p * (n - k - l) * std::ldexp(x * x, -static_cast<int>(l));
 
    // x <- binomial(k/2,p)*2*(2*l+log[2](binomial(k/2,p)))
@@ -58,7 +59,7 @@ double cout_iter(size_t n, size_t k, size_t p, size_t l) {
    // 2*p*(n-k-l)*binomial(k/2,p)^2/2^l
    res += x + k * ((n - k) / 2.0);
 
-   return std::log(res) / std::log(2);  // convert to bits
+   return std::log(res) / std::numbers::ln2;  // convert to bits
 }
 
 double cout_total(size_t n, size_t k, size_t w, size_t p, size_t l) {

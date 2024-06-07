@@ -9,7 +9,7 @@
 namespace {
 
 template <typename OutT = std::vector<uint8_t>, typename... Ts>
-OutT concat(Ts&&... buffers) {
+OutT concat(const Ts&... buffers) {
    OutT out;
    out.reserve((buffers.size() + ... + 0));
    (out.insert(out.end(), buffers.begin(), buffers.end()), ...);

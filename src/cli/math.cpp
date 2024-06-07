@@ -96,9 +96,11 @@ class Factor final : public Command {
          std::vector<Botan::BigInt> factors = factorize(n, rng());
          std::sort(factors.begin(), factors.end());
 
-         output() << n << ": ";
-         std::copy(factors.begin(), factors.end(), std::ostream_iterator<Botan::BigInt>(output(), " "));
-         output() << std::endl;
+         output() << n << ":";
+         for(const auto& factor : factors) {
+            output() << " " << factor;
+         }
+         output() << "\n";
       }
 
    private:

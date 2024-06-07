@@ -141,7 +141,6 @@ class Filter_Tests final : public Test {
          std::ifstream outfile_read(tmp_name);
          std::stringstream ss;
          ss << outfile_read.rdbuf();
-         std::string foo = ss.str();
 
          result.test_eq("output string", ss.str(), "efgh");
 

@@ -91,6 +91,9 @@ std::unique_ptr<PK_Key_Agreement_Key> generate_key_agreement_private_key(const P
       auto new_private_key = kex_public_key.generate_another(rng);
       const auto kex_key = dynamic_cast<PK_Key_Agreement_Key*>(new_private_key.get());
       if(kex_key) [[likely]] {
+         // Intentionally leak new_private_key since we hold an alias of it in kex_key,
+         // which is captured in a unique_ptr below
+         // NOLINTNEXTLINE(*-unused-return-value)
          (void)new_private_key.release();
       }
       return std::unique_ptr<PK_Key_Agreement_Key>(kex_key);

@@ -6,8 +6,8 @@
 */
 
 #include <botan/internal/workfactor.h>
-#include <algorithm>
 #include <cmath>
+#include <numbers>
 
 namespace Botan {
 
@@ -19,8 +19,7 @@ namespace {
 
 size_t nfs_workfactor(size_t bits, double log2_k) {
    // approximates natural logarithm of an integer of given bitsize
-   const double log2_e = 1.44269504088896340736;
-   const double log_p = bits / log2_e;
+   const double log_p = bits / std::numbers::log2e;
 
    const double log_log_p = std::log(log_p);
 
@@ -28,7 +27,7 @@ size_t nfs_workfactor(size_t bits, double log2_k) {
    const double est = 1.92 * std::pow(log_p * log_log_p * log_log_p, 1.0 / 3.0);
 
    // return log2 of the workfactor
-   return static_cast<size_t>(log2_k + log2_e * est);
+   return static_cast<size_t>(log2_k + std::numbers::log2e * est);
 }
 
 }  // namespace

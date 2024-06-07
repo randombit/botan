@@ -68,9 +68,7 @@ http::request<http::string_body> create_GET_request(const std::string& host, con
    return req;
 }
 
-}  // namespace
-
-static net::awaitable<void> request(std::string host, std::string port, std::string target) {
+net::awaitable<void> request(std::string host, std::string port, std::string target) {
    // Lookup host address
    auto resolver = net::use_awaitable.as_default_on(tcp::resolver(co_await net::this_coro::executor));
    const auto dns_result = co_await resolver.async_resolve(host, port);
@@ -98,6 +96,8 @@ static net::awaitable<void> request(std::string host, std::string port, std::str
    tls_stream.next_layer().close();
 }
 
+}  // namespace
+
 int main(int argc, char* argv[]) {
    if(argc != 4) {
       std::cerr << "Usage: tls_stream_coroutine_client <host> <port> <target>\n"
@@ -110,21 +110,26 @@ int main(int argc, char* argv[]) {
    const auto port = argv[2];
    const auto target = argv[3];
 
-   net::io_context ioc;
-
    int return_code = 0;
-   net::co_spawn(ioc, request(host, port, target), [&](std::exception_ptr eptr) {
-      if(eptr) {
-         try {
-            std::rethrow_exception(eptr);
-         } catch(std::exception& ex) {
-            std::cerr << "Error: " << ex.what() << "\n";
-            return_code = 1;
-         }
-      }
-   });
 
-   ioc.run();
+   try {
+      net::io_context ioc;
+
+      net::co_spawn(ioc, request(host, port, target), [&](const std::exception_ptr& eptr) {
+         if(eptr) {
+            try {
+               std::rethrow_exception(eptr);
+            } catch(std::exception& ex) {
+               std::cerr << "Error: " << ex.what() << "\n";
+               return_code = 1;
+            }
+         }
+      });
+
+      ioc.run();
+   } catch(std::exception& e) {
+      std::cerr << e.what() << "\n";
+   }
 
    return return_code;
 }

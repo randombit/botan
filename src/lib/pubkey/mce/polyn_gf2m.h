@@ -69,7 +69,7 @@ class polyn_gf2m {
          return *this;
       }
 
-      void swap(polyn_gf2m& other);
+      void swap(polyn_gf2m& other) noexcept;
 
       secure_vector<uint8_t> encode() const;
 

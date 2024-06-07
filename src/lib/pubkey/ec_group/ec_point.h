@@ -208,10 +208,10 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       bool operator!=(const EC_Point& other) const = default;
 
       /**
-      * swaps the states of *this and other, does not throw!
+      * swaps the states of *this and other
       * @param other the object to swap values with
       */
-      void swap(EC_Point& other);
+      void swap(EC_Point& other) noexcept;
 
 #if defined(BOTAN_DISABLE_DEPRECATED_FEATURES)
 

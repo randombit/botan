@@ -20,25 +20,25 @@ namespace {
 
 class Base64 final {
    public:
-      static inline std::string name() noexcept { return "base64"; }
+      static std::string name() noexcept { return "base64"; }
 
-      static inline size_t encoding_bytes_in() noexcept { return m_encoding_bytes_in; }
+      static size_t encoding_bytes_in() noexcept { return m_encoding_bytes_in; }
 
-      static inline size_t encoding_bytes_out() noexcept { return m_encoding_bytes_out; }
+      static size_t encoding_bytes_out() noexcept { return m_encoding_bytes_out; }
 
-      static inline size_t decoding_bytes_in() noexcept { return m_encoding_bytes_out; }
+      static size_t decoding_bytes_in() noexcept { return m_encoding_bytes_out; }
 
-      static inline size_t decoding_bytes_out() noexcept { return m_encoding_bytes_in; }
+      static size_t decoding_bytes_out() noexcept { return m_encoding_bytes_in; }
 
-      static inline size_t bits_consumed() noexcept { return m_encoding_bits; }
+      static size_t bits_consumed() noexcept { return m_encoding_bits; }
 
-      static inline size_t remaining_bits_before_padding() noexcept { return m_remaining_bits_before_padding; }
+      static size_t remaining_bits_before_padding() noexcept { return m_remaining_bits_before_padding; }
 
-      static inline size_t encode_max_output(size_t input_length) {
+      static size_t encode_max_output(size_t input_length) {
          return (round_up(input_length, m_encoding_bytes_in) / m_encoding_bytes_in) * m_encoding_bytes_out;
       }
 
-      static inline size_t decode_max_output(size_t input_length) {
+      static size_t decode_max_output(size_t input_length) {
          return (round_up(input_length, m_encoding_bytes_out) * m_encoding_bytes_in) / m_encoding_bytes_out;
       }
 
@@ -54,7 +54,7 @@ class Base64 final {
          out_ptr[2] = (decode_buf[2] << 6) | decode_buf[3];
       }
 
-      static inline size_t bytes_to_remove(size_t final_truncate) { return final_truncate; }
+      static size_t bytes_to_remove(size_t final_truncate) { return final_truncate; }
 
    private:
       static const size_t m_encoding_bits = 6;

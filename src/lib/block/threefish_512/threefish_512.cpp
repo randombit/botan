@@ -53,15 +53,15 @@ class Key_Inserter {
    public:
       Key_Inserter(const uint64_t* K, const uint64_t* T) : m_K(K), m_T(T) {}
 
-      inline void e_add(size_t R,
-                        uint64_t& X0,
-                        uint64_t& X1,
-                        uint64_t& X2,
-                        uint64_t& X3,
-                        uint64_t& X4,
-                        uint64_t& X5,
-                        uint64_t& X6,
-                        uint64_t& X7) const {
+      void e_add(size_t R,
+                 uint64_t& X0,
+                 uint64_t& X1,
+                 uint64_t& X2,
+                 uint64_t& X3,
+                 uint64_t& X4,
+                 uint64_t& X5,
+                 uint64_t& X6,
+                 uint64_t& X7) const {
          X0 += m_K[(R) % 9];
          X1 += m_K[(R + 1) % 9];
          X2 += m_K[(R + 2) % 9];
@@ -72,15 +72,15 @@ class Key_Inserter {
          X7 += m_K[(R + 7) % 9] + R;
       }
 
-      inline void d_add(size_t R,
-                        uint64_t& X0,
-                        uint64_t& X1,
-                        uint64_t& X2,
-                        uint64_t& X3,
-                        uint64_t& X4,
-                        uint64_t& X5,
-                        uint64_t& X6,
-                        uint64_t& X7) const {
+      void d_add(size_t R,
+                 uint64_t& X0,
+                 uint64_t& X1,
+                 uint64_t& X2,
+                 uint64_t& X3,
+                 uint64_t& X4,
+                 uint64_t& X5,
+                 uint64_t& X6,
+                 uint64_t& X7) const {
          X0 -= m_K[(R) % 9];
          X1 -= m_K[(R + 1) % 9];
          X2 -= m_K[(R + 2) % 9];

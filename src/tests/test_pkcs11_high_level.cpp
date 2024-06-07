@@ -99,9 +99,9 @@ class TestSession {
          }
       }
 
-      inline Session& session() const { return *m_session; }
+      Session& session() const { return *m_session; }
 
-      inline Slot& slot() const { return *m_slot; }
+      Slot& slot() const { return *m_slot; }
 
    private:
       std::unique_ptr<Module> m_module = nullptr;

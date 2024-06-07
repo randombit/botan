@@ -95,7 +95,7 @@ class Pwdhash_Tests : public Test {
 
                std::unique_ptr<Botan::PasswordHash> pwhash;
 
-               if(pwdhash_fam->name() == "Scrypt" || pwdhash_fam->name().find("Argon2") == 0) {
+               if(pwdhash_fam->name() == "Scrypt" || pwdhash_fam->name().starts_with("Argon2")) {
                   pwhash = pwdhash_fam->from_params(
                      tuned_pwhash->memory_param(), tuned_pwhash->iterations(), tuned_pwhash->parallelism());
                } else {

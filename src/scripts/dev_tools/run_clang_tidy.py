@@ -60,6 +60,7 @@ disabled_needs_work = [
     'misc-confusable-identifiers',
     'modernize-avoid-bind',
     'modernize-pass-by-value',
+    'performance-avoid-endl',
     'readability-convert-member-functions-to-static',
     'readability-implicit-bool-conversion',
     'readability-inconsistent-declaration-parameter-name', # should fix this, blocked by https://github.com/llvm/llvm-project/issues/60845
@@ -103,6 +104,7 @@ disabled_not_interested = [
     'modernize-use-nodiscard',
     'modernize-use-using', # fine not great
     'portability-simd-intrinsics',
+    'readability-avoid-return-with-void-value',
     'readability-container-data-pointer',
     'readability-function-cognitive-complexity',
     'readability-identifier-length', # lol, lmao

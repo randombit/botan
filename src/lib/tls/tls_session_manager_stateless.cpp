@@ -70,7 +70,7 @@ bool Session_Manager_Stateless::emits_session_tickets() {
 std::optional<SymmetricKey> Session_Manager_Stateless::get_ticket_key() noexcept {
    try {
       auto key = m_credentials_manager->psk("tls-server", "session-ticket", "");
-      if(key.length() == 0) {
+      if(key.empty()) {
          return std::nullopt;
       }
       return key;

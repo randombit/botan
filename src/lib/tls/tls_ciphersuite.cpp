@@ -164,6 +164,9 @@ bool Ciphersuite::is_usable() const {
          if(mode == "OCB(12)" || mode == "OCB")
             return false;
 #endif
+
+         // Potentially unused if all AEADs are available
+         BOTAN_UNUSED(mode);
       }
    } else {
       // Old non-AEAD schemes

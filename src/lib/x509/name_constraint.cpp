@@ -287,7 +287,7 @@ std::ostream& operator<<(std::ostream& os, const GeneralSubtree& gs) {
 
 NameConstraints::NameConstraints(std::vector<GeneralSubtree>&& permitted_subtrees,
                                  std::vector<GeneralSubtree>&& excluded_subtrees) :
-      m_permitted_subtrees(permitted_subtrees), m_excluded_subtrees(excluded_subtrees) {
+      m_permitted_subtrees(std::move(permitted_subtrees)), m_excluded_subtrees(std::move(excluded_subtrees)) {
    for(const auto& c : m_permitted_subtrees) {
       m_permitted_name_types.insert(c.base().type_code());
    }

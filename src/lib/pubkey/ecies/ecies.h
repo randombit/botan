@@ -43,6 +43,7 @@ enum class ECIES_Flags : uint32_t {
 };
 
 inline ECIES_Flags operator|(ECIES_Flags a, ECIES_Flags b) {
+   // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
    return static_cast<ECIES_Flags>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
 }
 

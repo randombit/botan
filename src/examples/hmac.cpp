@@ -4,7 +4,9 @@
 
 #include <assert.h>
 
-static std::string compute_mac(const std::string& msg, const Botan::secure_vector<uint8_t>& key) {
+namespace {
+
+std::string compute_mac(const std::string& msg, const Botan::secure_vector<uint8_t>& key) {
    auto hmac = Botan::MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
 
    hmac->set_key(key);
@@ -12,6 +14,8 @@ static std::string compute_mac(const std::string& msg, const Botan::secure_vecto
 
    return Botan::hex_encode(hmac->final());
 }
+
+}  // namespace
 
 int main() {
    Botan::AutoSeeded_RNG rng;

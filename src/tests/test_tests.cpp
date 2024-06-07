@@ -30,7 +30,8 @@ class Test_Tests final : public Test {
          // Test a few success corner cases first
          const std::string testcase_name = "Failing Test";
 
-         result.test_throws("throws pi", []() { throw 3.14159; });  // NOLINT(hicpp-exception-baseclass)
+         // NOLINTNEXTLINE(hicpp-exception-baseclass)
+         result.test_throws("throws pi(-ish)", []() { throw 22.0 / 7; });
 
          // Test expected failure cases
          {

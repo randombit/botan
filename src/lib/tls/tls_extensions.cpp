@@ -102,7 +102,7 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
 #endif
    }
 
-   return std::make_unique<Unknown_Extension>(static_cast<Extension_Code>(code), reader, size);
+   return std::make_unique<Unknown_Extension>(code, reader, size);
 }
 
 }  // namespace

@@ -80,28 +80,28 @@ class RAII_LowLevel {
          return slots;
       }
 
-      inline SessionHandle open_session(Flags session_flags) {
+      SessionHandle open_session(Flags session_flags) {
          std::vector<SlotId> slots = get_slots(true);
          m_low_level->C_OpenSession(slots.at(0), session_flags, nullptr, nullptr, &m_session_handle);
          m_is_session_open = true;
          return m_session_handle;
       }
 
-      inline SessionHandle open_rw_session_with_user_login() {
+      SessionHandle open_rw_session_with_user_login() {
          Flags session_flags = PKCS11::flags(Flag::SerialSession | Flag::RwSession);
          SessionHandle handle = open_session(session_flags);
          login(UserType::User, PIN());
          return handle;
       }
 
-      inline SessionHandle get_session_handle() const {
+      SessionHandle get_session_handle() const {
          if(!m_is_session_open) {
             throw Test_Error("no open session");
          }
          return m_session_handle;
       }
 
-      inline void close_session() {
+      void close_session() {
          if(!m_is_session_open) {
             throw Test_Error("no open session");
          }
@@ -110,7 +110,7 @@ class RAII_LowLevel {
          m_is_session_open = false;
       }
 
-      inline void login(UserType user_type, const secure_vector<uint8_t>& pin) {
+      void login(UserType user_type, const secure_vector<uint8_t>& pin) {
          if(!m_is_session_open) {
             throw Test_Error("no open session");
          }
@@ -123,7 +123,7 @@ class RAII_LowLevel {
          m_is_logged_in = true;
       }
 
-      inline void logout() {
+      void logout() {
          if(!m_is_logged_in) {
             throw Test_Error("Not logged in");
          }
@@ -472,7 +472,7 @@ Test::Result test_c_close_all_sessions() {
    // test ReturnValue variant
    open_two_sessions();
 
-   ReturnValue rv = static_cast<ReturnValue>(-1);
+   ReturnValue rv = ReturnValue::OK;
    success = p11_low_level.get()->C_CloseAllSessions(slot_vec.at(0), &rv);
    result.test_eq("C_CloseAllSessions", success, true);
    result.test_rc_ok("C_CloseAllSessions", static_cast<uint32_t>(rv));

@@ -90,7 +90,10 @@ std::unique_ptr<Botan::Private_Key> server_raw_public_key_pair() {
 */
 class Padding final : public Botan::TLS::Extension {
    public:
-      static Botan::TLS::Extension_Code static_type() { return Botan::TLS::Extension_Code(21); }
+      static Botan::TLS::Extension_Code static_type() {
+         // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+         return Botan::TLS::Extension_Code(21);
+      }
 
       Botan::TLS::Extension_Code type() const override { return static_type(); }
 
@@ -387,9 +390,13 @@ class Test_Credentials : public Botan::Credentials_Manager {
                                                       const std::string& type,
                                                       const std::string& context) override {
          BOTAN_UNUSED(cert_key_types, cert_signature_schemes, context);
-         return {(type == "tls-client")
-                    ? client_certificate()
-                    : ((m_alternative_server_certificate) ? alternative_server_certificate() : server_certificate())};
+         if(type == "tls-client") {
+            return {client_certificate()};
+         } else if(m_alternative_server_certificate) {
+            return {alternative_server_certificate()};
+         } else {
+            return {server_certificate()};
+         }
       }
 
       std::shared_ptr<Public_Key> find_raw_public_key(const std::vector<std::string>& key_types,

@@ -840,7 +840,7 @@ std::vector<Test::Result> BSI_Path_Validation_Tests::run() {
                certs, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
             // We expect to be warned
-            if(expected_result.find("Warning: ") == 0) {
+            if(expected_result.starts_with("Warning: ")) {
                std::string stripped = expected_result.substr(std::string("Warning: ").size());
                bool found_warning = false;
                for(const auto& warning_set : validation_result.warnings()) {

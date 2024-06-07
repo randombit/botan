@@ -260,6 +260,7 @@ Test::Result test_encoding_options() {
    result.test_eq("Hybrid point same size as uncompressed", enc_uncompressed.size(), enc_hybrid.size());
 
    #if !defined(BOTAN_HAS_SANITIZER_UNDEFINED)
+   // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
    auto invalid_format = static_cast<Botan::EC_Point_Format>(99);
 
    result.test_throws("Invalid point format throws", "Invalid point encoding for EC_PublicKey", [&] {

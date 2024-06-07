@@ -633,7 +633,7 @@ void Shim_Arguments::parse_args(char* argv[]) {
    while(argv[i] != nullptr) {
       const std::string param(argv[i]);
 
-      if(param.find('-') == 0) {
+      if(param.starts_with("-")) {
          const std::string flag_name = param.substr(1, std::string::npos);
 
          if(m_flags.contains(flag_name)) {
@@ -1811,7 +1811,7 @@ int main(int /*argc*/, char* argv[]) {
                shim_log("Offering " + offer_version.to_string());
 
                std::string host_name = args->get_string_opt_or_else("host-name", hostname);
-               if(args->test_name().find("UnsolicitedServerNameAck") == 0) {
+               if(args->test_name().starts_with("UnsolicitedServerNameAck")) {
                   host_name = "";  // avoid sending SNI for this test
                }
 

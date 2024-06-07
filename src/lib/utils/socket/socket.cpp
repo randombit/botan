@@ -118,6 +118,8 @@ class Asio_Socket final : public OS::Socket {
       void check_timeout() {
          if(m_tcp.is_open() && m_timer.expires_at() < std::chrono::system_clock::now()) {
             boost::system::error_code err;
+
+            // NOLINTNEXTLINE(bugprone-unused-return-value,cert-err33-c)
             m_tcp.close(err);
          }
 

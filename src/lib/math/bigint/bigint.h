@@ -1162,6 +1162,7 @@ inline bool operator>(const BigInt& a, word b) {
 /*
  * I/O Operators
  */
+BOTAN_DEPRECATED("Use BigInt::to_{hex,dec}_string")
 BOTAN_PUBLIC_API(2, 0) std::ostream& operator<<(std::ostream&, const BigInt&);
 
 BOTAN_DEPRECATED("Use BigInt::from_string") BOTAN_PUBLIC_API(2, 0) std::istream& operator>>(std::istream&, BigInt&);

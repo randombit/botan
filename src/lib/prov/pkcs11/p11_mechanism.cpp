@@ -49,7 +49,7 @@ class MechanismData {
 class RSA_SignMechanism final : public MechanismData {
    public:
       explicit RSA_SignMechanism(MechanismType typ) :
-            MechanismData(typ), m_hash(static_cast<MechanismType>(0)), m_mgf(static_cast<MGF>(0)), m_salt_size(0) {
+            MechanismData(typ), m_hash(static_cast<MechanismType>(0)), m_mgf(MGF::MgfUnused), m_salt_size(0) {
          auto pss_option = PssOptions.find(type());
          if(pss_option != PssOptions.end()) {
             m_hash = std::get<1>(pss_option->second);
@@ -127,7 +127,7 @@ struct RSA_CryptMechanism final : public MechanismData {
             MechanismData(typ), m_hash(hash), m_mgf(mgf), m_padding_size(padding_size) {}
 
       RSA_CryptMechanism(MechanismType typ, size_t padding_size) :
-            RSA_CryptMechanism(typ, padding_size, static_cast<MechanismType>(0), static_cast<MGF>(0)) {}
+            RSA_CryptMechanism(typ, padding_size, static_cast<MechanismType>(0), MGF::MgfUnused) {}
 
       MechanismType hash() const { return m_hash; }
 

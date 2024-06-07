@@ -662,7 +662,7 @@ secure_vector<uint8_t> polyn_gf2m::encode() const {
    return result;
 }
 
-void polyn_gf2m::swap(polyn_gf2m& other) {
+void polyn_gf2m::swap(polyn_gf2m& other) noexcept {
    std::swap(this->m_deg, other.m_deg);
    std::swap(this->m_sp_field, other.m_sp_field);
    std::swap(this->m_coeff, other.m_coeff);

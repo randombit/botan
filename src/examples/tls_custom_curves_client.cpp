@@ -86,6 +86,8 @@ class Client_Policy : public Botan::TLS::Strict_Policy {
    public:
       std::vector<Botan::TLS::Group_Params> key_exchange_groups() const override {
          // modified strict policy to allow our custom curves
+
+         // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
          return {static_cast<Botan::TLS::Group_Params>(0xFE00)};
       }
 };

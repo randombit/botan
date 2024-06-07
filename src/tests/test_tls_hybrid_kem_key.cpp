@@ -41,6 +41,7 @@ std::unique_ptr<Botan::PK_Key_Agreement_Key> kex_dh() {
    auto sk = Botan::load_private_key(kex_key->algorithm_identifier(), kex_key->private_key_bits());
    auto kex_sk = dynamic_cast<Botan::PK_Key_Agreement_Key*>(sk.get());
    if(kex_sk) {
+      // NOLINTNEXTLINE(bugprone-unused-return-value)
       (void)sk.release();
       return std::unique_ptr<Botan::PK_Key_Agreement_Key>(kex_sk);
    } else {
@@ -53,6 +54,7 @@ std::unique_ptr<Botan::PK_Key_Agreement_Key> kex_ecdh() {
    auto sk = Botan::load_private_key(kex_key->algorithm_identifier(), kex_key->private_key_bits());
    auto kex_sk = dynamic_cast<Botan::PK_Key_Agreement_Key*>(sk.get());
    if(kex_sk) {
+      // NOLINTNEXTLINE(bugprone-unused-return-value)
       (void)sk.release();
       return std::unique_ptr<Botan::PK_Key_Agreement_Key>(kex_sk);
    } else {

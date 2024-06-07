@@ -75,10 +75,8 @@ Test::Result test_add_and_lookup() {
 
    const std::string name = "botan-test-oid2";
    const std::string name2 = "botan-test-oid2.2";
-   const std::string name3 = "botan-test-oid2.3";
    const Botan::OID oid("1.3.6.1.4.1.25258.1001.1");
    const Botan::OID oid2("1.3.6.1.4.1.25258.1001.2");
-   const Botan::OID oid3("1.3.6.1.4.1.25258.1001.3");
 
    result.test_eq("named OID not found", Botan::OID::from_name(name).has_value(), false);
 

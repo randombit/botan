@@ -20,25 +20,25 @@ namespace {
 
 class Base32 final {
    public:
-      static inline std::string name() noexcept { return "base32"; }
+      static std::string name() noexcept { return "base32"; }
 
-      static inline size_t encoding_bytes_in() noexcept { return m_encoding_bytes_in; }
+      static size_t encoding_bytes_in() noexcept { return m_encoding_bytes_in; }
 
-      static inline size_t encoding_bytes_out() noexcept { return m_encoding_bytes_out; }
+      static size_t encoding_bytes_out() noexcept { return m_encoding_bytes_out; }
 
-      static inline size_t decoding_bytes_in() noexcept { return m_encoding_bytes_out; }
+      static size_t decoding_bytes_in() noexcept { return m_encoding_bytes_out; }
 
-      static inline size_t decoding_bytes_out() noexcept { return m_encoding_bytes_in; }
+      static size_t decoding_bytes_out() noexcept { return m_encoding_bytes_in; }
 
-      static inline size_t bits_consumed() noexcept { return m_encoding_bits; }
+      static size_t bits_consumed() noexcept { return m_encoding_bits; }
 
-      static inline size_t remaining_bits_before_padding() noexcept { return m_remaining_bits_before_padding; }
+      static size_t remaining_bits_before_padding() noexcept { return m_remaining_bits_before_padding; }
 
-      static inline size_t encode_max_output(size_t input_length) {
+      static size_t encode_max_output(size_t input_length) {
          return (round_up(input_length, m_encoding_bytes_in) / m_encoding_bytes_in) * m_encoding_bytes_out;
       }
 
-      static inline size_t decode_max_output(size_t input_length) {
+      static size_t decode_max_output(size_t input_length) {
          return (round_up(input_length, m_encoding_bytes_out) * m_encoding_bytes_in) / m_encoding_bytes_out;
       }
 
@@ -56,9 +56,7 @@ class Base32 final {
          out_ptr[4] = (decode_buf[6] << 5) | decode_buf[7];
       }
 
-      static inline size_t bytes_to_remove(size_t final_truncate) {
-         return final_truncate ? (final_truncate / 2) + 1 : 0;
-      }
+      static size_t bytes_to_remove(size_t final_truncate) { return final_truncate ? (final_truncate / 2) + 1 : 0; }
 
    private:
       static const size_t m_encoding_bits = 5;

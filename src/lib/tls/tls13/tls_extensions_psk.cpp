@@ -45,6 +45,7 @@ class Client_PSK {
                        session_to_resume.session.extract_master_secret(),
                        Cipher_State::PSK_Type::Resumption) {}
 
+      // NOLINTNEXTLINE(*-rvalue-reference-param-not-moved)
       Client_PSK(ExternalPSK&& psk) :
             Client_PSK(PskIdentity(PresharedKeyID(psk.identity())),
                        psk.prf_algo(),

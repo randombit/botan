@@ -25,7 +25,7 @@ jobs:
   clang_tidy:
     name: "clang-tidy"
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
@@ -36,8 +36,8 @@ jobs:
           target: clang-tidy
           cache-key: linux-x86_64-clang-tidy
 
-      - name: Install Boost
-        run: sudo apt-get -qq install libboost-dev
+      - name: Install dependencies
+        run: sudo apt-get -qq install libboost-dev libbz2-dev liblzma-dev libsqlite3-dev
 
       - name: Configure Build
         run: python3 ./configure.py --cc=clang --build-targets=shared,cli,tests,examples,bogo_shim --build-fuzzers=test --with-boost --with-sqlite --with-zlib --with-lzma --with-bzip2

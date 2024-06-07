@@ -322,11 +322,10 @@ void Channel_Impl_13::update_traffic_keys(bool request_peer_update) {
    m_cipher_state->update_write_keys(*this);
 }
 
-void Channel_Impl_13::send_record(Record_Type record_type, const std::vector<uint8_t>& record) {
+void Channel_Impl_13::send_record(Record_Type type, const std::vector<uint8_t>& record) {
    BOTAN_STATE_CHECK(!is_downgrading());
    BOTAN_STATE_CHECK(m_can_write);
 
-   const auto type = static_cast<Record_Type>(record_type);
    auto to_write = m_record_layer.prepare_records(type, record, m_cipher_state.get());
 
    // After the initial handshake message is sent, the record layer must
@@ -340,7 +339,7 @@ void Channel_Impl_13::send_record(Record_Type record_type, const std::vector<uin
 
    // The dummy CCS must not be prepended if the following record is
    // an unprotected Alert record.
-   if(prepend_ccs() && (m_cipher_state || record_type != Record_Type::Alert)) {
+   if(prepend_ccs() && (m_cipher_state || type != Record_Type::Alert)) {
       std::array<uint8_t, 1> ccs_content = {0x01};
       const auto ccs = m_record_layer.prepare_records(Record_Type::ChangeCipherSpec, ccs_content, m_cipher_state.get());
       to_write = concat(ccs, to_write);

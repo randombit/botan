@@ -240,6 +240,7 @@ const secure_vector<uint8_t>& OCB_Mode::update_nonce(const uint8_t nonce[], size
 
    BOTAN_ASSERT(BS == 16 || BS == 24 || BS == 32 || BS == 64, "OCB block size is supported");
 
+   // NOLINTNEXTLINE(readability-avoid-nested-conditional-operator)
    const size_t MASKLEN = (BS == 16 ? 6 : ((BS == 24) ? 7 : 8));
 
    const uint8_t BOTTOM_MASK = static_cast<uint8_t>((static_cast<uint16_t>(1) << MASKLEN) - 1);
