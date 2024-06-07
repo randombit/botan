@@ -43,7 +43,7 @@ class BOTAN_TEST_API HSS_LMS_Params final {
       /**
        * @brief Represents a pair of LMS and LMOTS parameters associated with one LMS tree layer.
        */
-      class LMS_LMOTS_Params_Pair {
+      class LMS_LMOTS_Params_Pair final {
          public:
             /**
              * @brief The LMS parameters.
@@ -123,7 +123,7 @@ class BOTAN_TEST_API HSS_LMS_Params final {
  * Note that the format is not specified in the RFC 8554,
  * and is Botan specific.
  */
-class BOTAN_TEST_API HSS_LMS_PrivateKeyInternal final {
+class HSS_LMS_PrivateKeyInternal final {
    public:
       /**
        * @brief Create an internal HSS-LMS private key.
@@ -242,7 +242,7 @@ class HSS_Signature;
  * Format according to RFC 8554:
  * u32str(L) || pub[0]
  */
-class BOTAN_TEST_API HSS_LMS_PublicKeyInternal final {
+class HSS_LMS_PublicKeyInternal final {
    public:
       /**
        * @brief Create the public HSS-LMS key from its private key.
@@ -326,7 +326,7 @@ class BOTAN_TEST_API HSS_Signature final {
        * signed_pub_key[i] = sig[i] || pub[i+1],
        * for i between 0 and Nspk-1, inclusive.
        */
-      class Signed_Pub_Key {
+      class Signed_Pub_Key final {
          public:
             /**
              * @brief Constructor for a new sig-pubkey-pair

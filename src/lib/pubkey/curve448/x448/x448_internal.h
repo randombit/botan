@@ -29,7 +29,7 @@ using ScalarX448 = Strong<std::array<uint8_t, X448_LEN>, struct ScalarX448_>;
  * @param k scalar
  * @return encoded point
  */
-BOTAN_TEST_API Point448 x448_basepoint(const ScalarX448& k);
+Point448 x448_basepoint(const ScalarX448& k);
 
 /**
  * @brief Multiply a scalar @p k with a point @p u
@@ -38,16 +38,16 @@ BOTAN_TEST_API Point448 x448_basepoint(const ScalarX448& k);
  * @param u point on curve
  * @return k * u
  */
-BOTAN_TEST_API Point448 x448(const ScalarX448& k, const Point448& u);
+Point448 x448(const ScalarX448& k, const Point448& u);
 
 /// Encode a point to a 56 byte vector. RFC 7748 Section 5 (encodeUCoordinate)
-BOTAN_TEST_API secure_vector<uint8_t> encode_point(const Point448& p);
+secure_vector<uint8_t> encode_point(const Point448& p);
 
 /// Decode a point from a byte array. RFC 7748 Section 5 (decodeUCoordinate)
-BOTAN_TEST_API Point448 decode_point(std::span<const uint8_t> p_bytes);
+Point448 decode_point(std::span<const uint8_t> p_bytes);
 
 /// Decode a scalar from a byte array. RFC 7748 Section 5 (decodeScalar448)
-BOTAN_TEST_API ScalarX448 decode_scalar(std::span<const uint8_t> scalar_bytes);
+ScalarX448 decode_scalar(std::span<const uint8_t> scalar_bytes);
 
 }  // namespace Botan
 
