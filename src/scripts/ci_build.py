@@ -185,6 +185,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     for flag in extra_cxxflags:
         flags += ['--extra-cxxflags=%s' % (flag)]
 
+    if target_os == 'windows':
+        # Workaround for https://github.com/actions/runner-images/issues/10004
+        flags += ['--extra-cxxflags=/D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR']
+
     if target in ['minimized']:
         flags += ['--minimized-build', '--enable-modules=system_rng,sha2_32,sha2_64,aes']
 
