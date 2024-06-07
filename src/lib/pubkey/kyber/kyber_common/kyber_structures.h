@@ -18,6 +18,7 @@
 #include <botan/exceptn.h>
 #include <botan/xof.h>
 
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/kyber_constants.h>
 #include <botan/internal/kyber_symmetric_primitives.h>
 #include <botan/internal/kyber_types.h>
@@ -195,8 +196,8 @@ class Polynomial {
          Polynomial r;
          for(size_t i = 0; i < r.size() / 8; ++i) {
             for(size_t j = 0; j < 8; ++j) {
-               const auto mask = -static_cast<int16_t>((msg[i] >> j) & 1);
-               r.m_coeffs[8 * i + j] = mask & ((KyberConstants::Q + 1) / 2);
+               const auto mask = CT::Mask<uint16_t>::is_zero((msg[i] >> j) & 1);
+               r.m_coeffs[8 * i + j] = mask.if_not_set_return((KyberConstants::Q + 1) / 2);
             }
          }
          return r;
