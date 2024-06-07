@@ -431,7 +431,7 @@ class TLS_Handshake_Test final {
                Botan::RandomNumberGenerator& rng) override {
                if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
                   std::get<Botan::TLS::Group_Params>(group).wire_code() == 0xFEE1) {
-                  const auto ec_group = Botan::EC_Group::from_name("secp112r1");
+                  const auto ec_group = Botan::EC_Group::from_name("numsp256d1");
                   return std::make_unique<Botan::ECDH_PrivateKey>(rng, ec_group);
                }
 
@@ -446,7 +446,7 @@ class TLS_Handshake_Test final {
                const Botan::TLS::Policy& policy) override {
                if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
                   std::get<Botan::TLS::Group_Params>(group).wire_code() == 0xFEE1) {
-                  const auto ec_group = Botan::EC_Group::from_name("secp112r1");
+                  const auto ec_group = Botan::EC_Group::from_name("numsp256d1");
                   Botan::ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(public_value));
                   Botan::PK_Key_Agreement ka(private_key, rng, "Raw");
                   return ka.derive_key(0, peer_key.public_value()).bits_of();
@@ -1077,23 +1077,24 @@ class TLS_Unit_Tests final : public Test {
          // Test with a custom curve
 
          /*
-         * First register a curve, in this case secp112r1
+         * First register a curve, in this case numsp256d1
          */
-         const Botan::BigInt p("0xDB7C2ABF62E35E668076BEAD208B");
-         const Botan::BigInt a("0xDB7C2ABF62E35E668076BEAD2088");
-         const Botan::BigInt b("0x659EF8BA043916EEDE8911702B22");
+         const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF43");
+         const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF40");
+         const Botan::BigInt b("0x25581");
+         const Botan::BigInt order("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE43C8275EA265C6020AB20294751A825");
 
-         const Botan::BigInt g_x("0x09487239995A5EE76B55F9C2F098");
-         const Botan::BigInt g_y("0xA89CE5AF8724C0A23E0E0FF77500");
-         const Botan::BigInt order("0xDB7C2ABF62E35E7628DFAC6561C5");
+         const Botan::BigInt g_x("0x01");
+         const Botan::BigInt g_y("0x696F1853C1E466D7FC82C96CCEEEDD6BD02C2F9375894EC10BF46306C2B56C77");
 
-         const Botan::OID oid("1.3.132.0.6");
-         Botan::OID::register_oid(oid, "secp112r1");
+         const Botan::OID oid("1.3.6.1.4.1.25258.4.1");
+
+         Botan::OID::register_oid(oid, "numsp256d1");
 
          // Creating this object implicitly registers the curve for future use ...
-         Botan::EC_Group reg_secp112r1(oid, p, a, b, g_x, g_y, order);
+         Botan::EC_Group reg_numsp256d1(oid, p, a, b, g_x, g_y, order);
 
-         test_modern_versions("AES-256/GCM secp112r1",
+         test_modern_versions("AES-256/GCM numsp256d1",
                               results,
                               client_ses,
                               server_ses,

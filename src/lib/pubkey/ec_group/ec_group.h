@@ -59,6 +59,8 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @param cofactor the cofactor
       * @param oid an optional OID used to identify this curve
       *
+      * @warning This constructor is deprecated and will be removed in Botan 4
+      *
       * @warning support for cofactors > 1 is deprecated and will be removed
       *
       * @warning support for prime fields > 521 bits is deprecated and
@@ -80,15 +82,19 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       /**
       * Construct elliptic curve from the specified parameters
       *
-      * Unlike the deprecated constructor, this constructor requires:
-      *  - That p is at most 521 bits
-      *  - That an object identifier is provided
-      *  - That the cofactor is 1 (this is implicit due to not having
-      *    cofactor argument)
-      *  - That the curve is at least plausibly valid (for example
-      *    it checks that p is prime). It does not fully verify
-      *    the group since certain things cannot be checked until
-      *    the EC_Group object is constructed.
+      * Unlike the deprecated constructor, this constructor imposes
+      * additional restrictions on the parameters, namely:
+      *
+      *  - The prime must be at least 128 bits and at most 512 bits, and
+      *    a multiple of 32 bits.
+      *  - As an extension of the above restriction, the prime can
+      *    also be exactly the 521-bit Mersenne prime (2**521-1)
+      *  - The prime must be congruent to 3 modulo 4
+      *  - The group order must have the same bit length as the prime
+      *    (It is allowed for the order to be larger than p, but they
+      *    must have the same bit length)
+      *  - An object identifier must be provided
+      *  - There must be no cofactor
       *
       * @warning use only elliptic curve parameters that you trust
       *

@@ -17,15 +17,34 @@ during common operations.
 
 .. cpp:class:: EC_Group
 
-      .. cpp:function:: EC_Group(const OID& oid)
+      .. cpp:function:: EC_Group::from_OID(const OID& oid)
 
          Initialize an ``EC_Group`` using an OID referencing the curve
          parameters.
 
-      .. cpp:function:: EC_Group(const std::string& name)
+      .. cpp:function:: EC_Group::from_name(std::string_view name)
 
-         Initialize an ``EC_Group`` using a name or OID (for example
-         "secp256r1", or "1.2.840.10045.3.1.7")
+         Initialize an ``EC_Group`` using a name (such as "secp256r1")
+
+      .. cpp:function:: EC_Group(const OID& oid, \
+               const BigInt& p, \
+               const BigInt& a, \
+               const BigInt& b, \
+               const BigInt& base_x, \
+               const BigInt& base_y, \
+               const BigInt& order)
+
+          Create an application specific elliptic curve.
+
+          This constructor imposes the following restrictions:
+
+          * The prime must be between 128 and 512 bits, and a multiple of 32 bits.
+          * As a special extension regarding the above restriction, the prime may
+            alternately be 521 bits, in which case it must be exactly 2**521-1
+          * The prime must be congruent to 3 modulo 4
+          * The group order must have identical bitlength to the prime
+          * No cofactor is allowed
+          * An object identifier must be specified
 
       .. cpp:function:: EC_Group(const BigInt& p, \
                const BigInt& a, \
@@ -36,18 +55,19 @@ during common operations.
                const BigInt& cofactor, \
                const OID& oid = OID())
 
-          Initialize an elliptic curve group from the relevant parameters. This
-          is used for example to create custom (application-specific) curves.
+          This is a deprecated alternative interface for creating application
+          specific elliptic curves.
+
+          This does not impose the same restrictions regarding use of
+          arbitrary sized groups, use of a cofactor, etc, and the
+          object identifier is optional.
 
           .. warning::
 
-             Currently a cofactor > 1 is accepted. In the future only prime order
-             subgroups will be allowed.
-
-          .. warning::
-
-             Currently primes of any size may be provided. In the
-             future the prime will be allowed to be at most 521 bits.
+             If you are using this constructor, and cannot use the
+             non-deprecated constructor due to the restrictions it places on the
+             curve parameters, be aware that this constructor will be dropped
+             in Botan 4. Please open an issue on Github describing your usecase.
 
       .. cpp:function:: EC_Group(const std::vector<uint8_t>& ber_encoding)
 

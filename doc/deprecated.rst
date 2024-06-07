@@ -62,10 +62,15 @@ elliptic curve points.
   the builtin groups have composite order, and in the future it will be
   impossible to create composite order ``EC_Group``.
 
-- Currently it is possible to create an application specific ``EC_Group``
-  with parameters of effectively arbitrary size. In a future release
-  the maximum allowed bitlength of application provided groups will be
-  at most 521 bits.
+- Currently it is possible to create an application specific
+  ``EC_Group`` with parameters of effectively arbitrary size. In a
+  future release the parameters of application provided elliptic curve
+  will be limited in the following ways.
+
+  a) The bitlength must be between 128 and 512 bits, and a multiple of 32
+  b) As an extension of (a) you can also use the 521 bit Mersenne prime
+  c) The prime must be congruent to 3 modulo 4
+  d) The bitlength of the prime and the bitlength of the order must be equal
 
 - Elliptic curve points can be encoded in several different ways.  The
   most common are "compressed" and "uncompressed"; both are widely
@@ -79,7 +84,8 @@ elliptic curve points.
   used elliptic curves. These are deprecated. These include "secp160k1",
   "secp160r1", "secp160r2", "secp192k1", "secp224k1", "brainpool160r1",
   "brainpool192r1", "brainpool224r1", "brainpool320r1", "x962_p192v2",
-  "x962_p192v3", "x962_p239v1", "x962_p239v2", "x962_p239v3"
+  "x962_p192v3", "x962_p239v1", "x962_p239v2", "x962_p239v3",
+  "gost_256A", "gost_512A"
 
 - Currently `EC_Point` offers a wide variety of functionality almost
   all of which was intended only for internal implementation. In a
