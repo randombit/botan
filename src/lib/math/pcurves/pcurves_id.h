@@ -53,6 +53,7 @@ class BOTAN_TEST_API PrimeOrderCurveId final {
       /// disabled at build time.
       static std::vector<PrimeOrderCurveId> all();
 
+      /// Convert the ID to it's commonly used name (inverse of from_string)
       std::string to_string() const;
 
       PrimeOrderCurveId(Code id) : m_code(id) {}

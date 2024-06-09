@@ -205,7 +205,7 @@ class Pcurve_Point_Tests final : public Test {
             auto curve = Botan::PCurve::PrimeOrderCurve::from_id(id);
 
             if(!curve) {
-               result.test_failure("ID exists but curve does not");
+               result.test_note("Skipping test due to missing pcurve " + id.to_string());
                continue;
             }
 

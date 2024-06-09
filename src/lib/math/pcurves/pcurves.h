@@ -22,10 +22,6 @@ namespace Botan {
 
 class RandomNumberGenerator;
 
-#if defined(BOTAN_HAS_ASN1)
-class OID;
-#endif
-
 }  // namespace Botan
 
 namespace Botan::PCurve {
