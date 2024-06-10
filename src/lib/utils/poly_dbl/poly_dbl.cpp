@@ -37,7 +37,7 @@ enum class MinWeightPolynomial : uint32_t {
 */
 template <MinWeightPolynomial P>
 inline uint64_t return_carry(uint64_t c) {
-   return CT::Mask<uint64_t>::expand(c >> 63).if_set_return(static_cast<uint64_t>(P));
+   return CT::Mask<uint64_t>::expand_top_bit(c).if_set_return(static_cast<uint64_t>(P));
 }
 
 template <size_t LIMBS, MinWeightPolynomial P>

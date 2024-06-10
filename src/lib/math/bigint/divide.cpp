@@ -92,7 +92,7 @@ void ct_divide_word(const BigInt& x, word y, BigInt& q_out, word& r_out) {
       const size_t b = x_bits - 1 - i;
       const bool x_b = x.get_bit(b);
 
-      const auto r_carry = CT::Mask<word>::expand(r >> (BOTAN_MP_WORD_BITS - 1));
+      const auto r_carry = CT::Mask<word>::expand_top_bit(r);
 
       r *= 2;
       r += x_b;
