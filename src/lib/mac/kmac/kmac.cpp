@@ -38,9 +38,11 @@ Key_Length_Specification KMAC::key_spec() const {
    // KMAC supports key lengths from zero up to 2²⁰⁴⁰ (2^(2040)) bits:
    // https://nvlpubs.nist.gov/nistpubs/specialpublications/nist.sp.800-185.pdf#page=28
    //
-   // However, we restrict the key length to 64 bytes in order to avoid allocation of overly
-   // large memory stretches when client code works with the maximal key length.
-   return Key_Length_Specification(0, 64);
+   // However, we restrict the key length to 192 bytes in order to avoid allocation of overly
+   // large memory stretches when client code works with the maximal key length. We chose a
+   // boundary that contains the length of the default_salt of the one-step KDM with KMAC128
+   // of 164 bytes. (see NIST SP 800-56C Rev. 2, Section 4.1, Implementation-Dependent Parameters 3.).
+   return Key_Length_Specification(0, 192);
 }
 
 bool KMAC::has_keying_material() const {
