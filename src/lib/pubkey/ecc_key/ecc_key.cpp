@@ -117,7 +117,7 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
 }
 
 secure_vector<uint8_t> EC_PrivateKey::raw_private_key_bits() const {
-   return m_private_key.serialize<secure_vector<uint8_t>>();
+   return m_private_key.serialize<secure_vector<uint8_t>>(domain().get_order_bytes());
 }
 
 secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const {
