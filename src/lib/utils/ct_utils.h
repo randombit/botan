@@ -147,6 +147,11 @@ class Mask final {
       static constexpr Mask<T> expand(T v) { return ~Mask<T>::is_zero(value_barrier<T>(v)); }
 
       /**
+      * Return a Mask<T> which is set if the top bit of v is set
+      */
+      static constexpr Mask<T> expand_top_bit(T v) { return Mask<T>(Botan::expand_top_bit<T>(value_barrier<T>(v))); }
+
+      /**
       * Return a Mask<T> which is set if m is set
       */
       template <typename U>
@@ -173,7 +178,7 @@ class Mask final {
       */
       static constexpr Mask<T> is_lt(T x, T y) {
          T u = x ^ ((x ^ y) | ((x - y) ^ x));
-         return Mask<T>(expand_top_bit<T>(value_barrier<T>(u)));
+         return Mask<T>::expand_top_bit(u);
       }
 
       /**
@@ -197,7 +202,7 @@ class Mask final {
          const T v_lt_l = v ^ ((v ^ l) | ((v - l) ^ v));
          const T v_gt_u = u ^ ((u ^ v) | ((u - v) ^ u));
          const T either = value_barrier(v_lt_l) | value_barrier(v_gt_u);
-         return ~Mask<T>(expand_top_bit(either));
+         return ~Mask<T>::expand_top_bit(either);
       }
 
       static constexpr Mask<T> is_any_of(T v, std::initializer_list<T> accepted) {
@@ -209,7 +214,7 @@ class Mask final {
             accept |= eq_zero;
          }
 
-         return Mask<T>(expand_top_bit(accept));
+         return Mask<T>::expand_top_bit(accept);
       }
 
       /**
