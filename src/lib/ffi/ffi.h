@@ -260,6 +260,32 @@ BOTAN_FFI_EXPORT(2, 3) int botan_base64_decode(const char* base64_str, size_t in
 typedef struct botan_rng_struct* botan_rng_t;
 
 /**
+* TPM2 context
+*/
+typedef struct botan_tpm2_ctx_struct* botan_tpm2_ctx_t;
+
+/**
+* Initialize a TPM2 context
+* @param ctx_out output TPM2 context
+* @return 0 on success
+*/
+BOTAN_FFI_EXPORT(3, 6) int botan_tpm2_ctx_init(botan_tpm2_ctx_t* ctx_out);
+
+/**
+* Frees all resouces of a TPM2 context
+* @param ctx TPM2 context
+* @return 0 on success
+*/
+BOTAN_FFI_EXPORT(3, 6) int botan_tpm2_ctx_destroy(botan_tpm2_ctx_t ctx);
+
+/**
+* Initialize a random number generator object via TPM2
+* @param rng_out rng object to create
+* @param ctx TPM2 context
+*/
+BOTAN_FFI_EXPORT(3, 6) int botan_tpm2_rng_init(botan_rng_t* rng_out, botan_tpm2_ctx_t ctx);
+
+/**
 * Initialize a random number generator object
 * @param rng rng object
 * @param rng_type type of the rng, possible values:

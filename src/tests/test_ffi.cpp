@@ -277,6 +277,9 @@ class FFI_RNG_Test final : public FFI_Test {
          botan_rng_t hwrng_rng = nullptr;
          botan_rng_t null_rng;
          botan_rng_t custom_rng;
+         botan_rng_t tpm2_rng = nullptr;
+
+         botan_tpm2_ctx_t tpm2_ctx;
 
          TEST_FFI_FAIL("invalid rng type", botan_rng_init, (&rng, "invalid_type"));
 
@@ -363,10 +366,25 @@ class FFI_RNG_Test final : public FFI_Test {
             result.test_eq("custom_destroy_cb called", cb_counter, 5);
          }
 
+         if(TEST_FFI_INIT(botan_tpm2_ctx_init, (&tpm2_ctx))) {
+            if(TEST_FFI_INIT(botan_tpm2_rng_init, (&tpm2_rng, tpm2_ctx))) {
+               Botan::clear_mem(outbuf.data(), outbuf.size());
+
+               TEST_FFI_OK(botan_rng_get, (tpm2_rng, outbuf.data(), outbuf.size()));
+               TEST_FFI_OK(botan_rng_reseed, (tpm2_rng, 256));
+
+               TEST_FFI_OK(botan_rng_reseed_from_rng, (tpm2_rng, system_rng, 256));
+
+               uint8_t not_really_entropy[32] = {0};
+               TEST_FFI_OK(botan_rng_add_entropy, (tpm2_rng, not_really_entropy, 32));
+            }
+         }
+
          TEST_FFI_OK(botan_rng_destroy, (rng));
          TEST_FFI_OK(botan_rng_destroy, (null_rng));
          TEST_FFI_OK(botan_rng_destroy, (system_rng));
          TEST_FFI_OK(botan_rng_destroy, (hwrng_rng));
+         TEST_FFI_OK(botan_rng_destroy, (tpm2_rng));
       }
 };
 
