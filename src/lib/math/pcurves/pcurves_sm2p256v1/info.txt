@@ -1,0 +1,9 @@
+<defines>
+PCURVES_SM2P256V1 -> 20240608
+</defines>
+
+<module_info>
+name -> "PCurve sm2p256v1"
+brief -> "sm2p256v1"
+type -> "Internal"
+</module_info>

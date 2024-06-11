@@ -228,7 +228,14 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
     if target in ['valgrind', 'valgrind-full']:
         flags += ['--with-valgrind']
-        test_prefix = ['valgrind', '--error-exitcode=9', '-v', '--leak-check=full', '--show-reachable=yes']
+
+        test_prefix = ['valgrind',
+                       '-v',
+                       '--error-exitcode=9',
+                       '--leak-check=full',
+                       '--show-reachable=yes',
+                       '--track-origins=yes']
+
         # valgrind is single threaded anyway
         test_cmd += ['--test-threads=1']
 

@@ -1,0 +1,9 @@
+<defines>
+PCURVES_FRP256V1 -> 20240608
+</defines>
+
+<module_info>
+name -> "PCurve frp256v1"
+brief -> "frp256v1"
+type -> "Internal"
+</module_info>

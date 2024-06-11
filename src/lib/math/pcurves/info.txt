@@ -1,0 +1,24 @@
+<defines>
+PCURVES -> 20240404
+</defines>
+
+<module_info>
+name -> "Prime Order Curves"
+brief -> "Generalized elliptic curve arithmetic"
+type -> "Internal"
+</module_info>
+
+<requires>
+mp
+rng
+xmd
+</requires>
+
+<header:internal>
+pcurves.h
+pcurves_id.h
+pcurves_impl.h
+pcurves_util.h
+pcurves_wrap.h
+pcurves_instance.h
+</header:internal>
