@@ -28,6 +28,7 @@ address   -> "-fsanitize=address"
 undefined -> "-fsanitize=undefined -fno-sanitize-recover=undefined"
 coverage  -> "-fsanitize=fuzzer-no-link"
 memory    -> "-fsanitize=memory"
+fuzzer    -> "-fsanitize=fuzzer"
 </sanitizers>
 
 shared_flags "-fPIC"
