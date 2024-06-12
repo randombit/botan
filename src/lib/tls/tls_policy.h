@@ -75,21 +75,36 @@ class BOTAN_PUBLIC_API(2, 0) Policy {
       */
       virtual std::vector<Signature_Scheme> acceptable_signature_schemes() const;
 
+      /**
+      * Return a list of schemes we are willing to accept for signatures in
+      * certificates.
+      *
+      * By default, the same restrictions as in acceptable_signature_schemes()
+      * apply.
+      *
+      * @return std::nullopt if the same restrictions as defined in
+      *         acceptable_signature_schemes() should apply
+      */
       virtual std::optional<std::vector<Signature_Scheme>> acceptable_certificate_signature_schemes() const;
 
       /**
       * The minimum signature strength we will accept
-      * Returning 80 allows RSA 1024 and SHA-1. Values larger than 80 disable SHA-1 support.
-      * Returning 110 allows RSA 2048.
-      * Return 128 to force ECC (P-256) or large (~3000 bit) RSA keys.
+      *
+      * Returning 80 allows RSA 1024 and SHA-1. Values larger than 80 disable
+      * SHA-1 support. Returning 110 allows RSA 2048. Return 128 to force ECC
+      * (P-256) or large (~3000 bit) RSA keys.
+      *
       * Default is 110
       */
       virtual size_t minimum_signature_strength() const;
 
       /**
-      * Return if cert revocation info (CRL/OCSP) is required
-      * If true, validation will fail unless a valid CRL or OCSP response
-      * was examined.
+      * Return if certificate revocation info (CRL/OCSP) is required
+      *
+      * If true, certificates won't be trusted unless a valid CRL or OCSP
+      * response was examined.
+      *
+      * Default: true
       */
       virtual bool require_cert_revocation_info() const;
 
@@ -97,18 +112,29 @@ class BOTAN_PUBLIC_API(2, 0) Policy {
       bool allowed_signature_hash(std::string_view hash) const;
 
       /**
-      * Return list of ECC curves and FFDHE groups we are willing to
-      * use in order of preference.
+      * Return a list of ECC curve and DH group TLS identifiers we are willing
+      * to use, in order of preference. The default ordering puts the best
+      * performing ECC first.
+      *
+      * Default: Group_Params::X25519, Group_Params::SECP256R1,
+      *          Group_Params::BRAINPOOL256R1, Group_Params::SECP384R1,
+      *          Group_Params::BRAINPOOL384R1, Group_Params::SECP521R1,
+      *          Group_Params::BRAINPOOL512R1, Group_Params::FFDHE_2048,
+      *          Group_Params::FFDHE_3072, Group_Params::FFDHE_4096,
+      *          Group_Params::FFDHE_6144, Group_Params::FFDHE_8192
+      *
+      * No other values are currently defined.
       */
       virtual std::vector<Group_Params> key_exchange_groups() const;
 
       /**
       * Return a list of groups to provide prepared key share offers in the
       * initial client hello for. Groups in this list must be reflected in
-      * key_exchange_groups() and in the same order. By default this returns
-      * the most preferred group from key_exchange_groups().
+      * key_exchange_groups() and in the same order.
       * If an empty list is returned, no prepared key share offers are sent
       * and the decision of the group to use is left to the server.
+      *
+      * Default: the most preferred group from key_exchange_groups().
       *
       * @note Has an effect on TLS 1.3 clients, only.
       */
@@ -117,11 +143,16 @@ class BOTAN_PUBLIC_API(2, 0) Policy {
       /**
       * Request that ECC curve points are sent compressed
       *
-      * @note Has no effect for TLS 1.3 connections.
-      *       RFC 8446 4.2.8.2
-      *          Versions of TLS prior to 1.3 permitted point format
-      *          negotiation; TLS 1.3 removes this feature in favor of a single
-      *          point format for each curve.
+      * Signals that we prefer ECC points to be compressed when transmitted to
+      * us. The other party may not support ECC point compression and therefore
+      * may still send points uncompressed.
+      *
+      * Note that the certificate used during authentication must also follow
+      * the other party's preference.
+      *
+      * @note Support for EC point compression is deprecated and will be removed
+      *       in a future major release. TLS 1.3 does not support point compression
+      *       at all (see RFC 8446 4.2.8.2)
       */
       virtual bool use_ecc_point_compression() const;
 
@@ -139,11 +170,13 @@ class BOTAN_PUBLIC_API(2, 0) Policy {
                                                      const std::vector<Group_Params>& offered_by_peer) const;
 
       /**
-      * Allow renegotiation even if the counterparty doesn't
-      * support the secure renegotiation extension.
+      * Allow renegotiation even if the counterparty doesn't support the secure
+      * renegotiation extension.
       *
-      * @warning Changing this to true exposes you to injected
-      *          plaintext attacks. Read RFC 5746 for background.
+      * Default: false
+      *
+      * @warning Changing this to true exposes you to injected plaintext
+      *          attacks. Read RFC 5746 for background.
       *
       * @note Has no effect for TLS 1.3 connections.
       */
@@ -154,18 +187,34 @@ class BOTAN_PUBLIC_API(2, 0) Policy {
       * field are the current time in seconds. However this allows
       * client fingerprinting attacks. Set to false to disable, in
       * which case random bytes will be used instead.
+      *
+      * Default: true
       */
       virtual bool include_time_in_hello_random() const;
 
       /**
-      * Consulted by server side. If true, allows clients to initiate a new handshake
+      * Consulted by server side. If true, allows clients to initiate a new
+      * handshake
+      *
+      * If this function returns true, a server will accept a client-initiated
+      * renegotiation attempt. Otherwise it will send the client a non-fatal
+      * TLS::AlertType::NoRenegotiation alert.
+      *
+      * Default: false
       *
       * @note Has no effect for TLS 1.3 connections.
       */
       virtual bool allow_client_initiated_renegotiation() const;
 
       /**
-      * Consulted by client side. If true, allows servers to initiate a new handshake
+      * Consulted by client side. If true, allows servers to initiate a new
+      * handshake
+      *
+      * If this function returns true, a client will accept a server-initiated
+      * renegotiation attempt. Otherwise it will send the server a non-fatal
+      * TLS::AlertType::NoRenegotiation alert.
+      *
+      * Default: false
       *
       * @note Has no effect for TLS 1.3 connections.
       */
@@ -175,10 +224,21 @@ class BOTAN_PUBLIC_API(2, 0) Policy {
       * If true, a request to renegotiate will close the connection with
       * a fatal alert. Otherwise, a warning alert is sent.
       *
+      * @sa allow_client_initiated_renegotiation
+      * @sa allow_server_initiated_renegotiation
+      *
+      * Default: false
+      *
       * @note Has no effect for TLS 1.3 connections.
       */
       virtual bool abort_connection_on_undesired_renegotiation() const;
 
+      /**
+       * Only resume sessions when their original protocol version matches
+       * the current version exactly.
+       *
+       * Default: true
+       */
       virtual bool only_resume_with_exact_version() const;
 
       /**
@@ -197,13 +257,25 @@ class BOTAN_PUBLIC_API(2, 0) Policy {
       virtual bool allow_dtls12() const;
 
       /**
+      * For ephemeral Diffie-Hellman key exchange, the server sends a group
+      * parameter. Return the 2 Byte TLS group identifier specifying the group
+      * parameter a server should use.
+      *
+      * Default: 2048 bit IETF IPsec group ("modp/ietf/2048")
+      *
       * @note Has no effect for TLS 1.3 connections.
       */
       virtual Group_Params default_dh_group() const;
 
       /**
       * Return the minimum DH group size we're willing to use
-      * Default is currently 1024 (insecure), should be 2048
+      *
+      * Return the minimum size in bits for a Diffie-Hellman group that a client
+      * will accept. Due to the design of the protocol the client has only two
+      * options - accept the group, or reject it with a fatal alert then attempt
+      * to reconnect after disabling ephemeral Diffie-Hellman.
+      *
+      * Default: 2048 bits
       */
       virtual size_t minimum_dh_group_size() const;
 
@@ -211,6 +283,8 @@ class BOTAN_PUBLIC_API(2, 0) Policy {
       * For ECDSA authenticated ciphersuites, the smallest key size the
       * client will accept.
       * This policy is currently only enforced on the server by the client.
+      *
+      * Default: 256
       */
       virtual size_t minimum_ecdsa_group_size() const;
 
@@ -238,21 +312,28 @@ class BOTAN_PUBLIC_API(2, 0) Policy {
       virtual size_t minimum_rsa_bits() const;
 
       /**
-      * Throw an exception if you don't like the peer's key.
-      * Default impl checks the key size against minimum_rsa_bits, minimum_ecdsa_group_size,
-      * or minimum_ecdh_group_size depending on the key's type.
-      * Override if you'd like to perform some other kind of test on
-      * (or logging of) the peer's keys.
+      * Allows the policy to examine peer public keys. Throw an exception if the
+      * key should be rejected. Default implementation checks against policy
+      * values minimum_dh_group_size(), minimum_rsa_bits(),
+      * minimum_ecdsa_group_size(), and minimum_ecdh_group_size().
+      *
+      * Override if you'd like to perform some other kind of test on (or logging
+      * of) the peer's keys.
       */
       virtual void check_peer_key_acceptable(const Public_Key& public_key) const;
 
       /**
-      * If this function returns false, unknown PSK identifiers
-      * will be rejected with an unknown_psk_identifier alert as soon
-      * as the non-existence is identified. Otherwise, a false
-      * identifier value will be used and the protocol allowed to
-      * proceed, causing the handshake to eventually fail without
-      * revealing that the username does not exist on this system.
+      * The PSK suites work using an identifier along with a shared secret. If
+      * this function returns true, when an identifier that the server does not
+      * recognize is provided by a client, a random shared secret will be
+      * generated in such a way that a client should not be able to tell the
+      * difference between the identifier not being known and the secret being
+      * wrong. This can help protect against some username probing attacks. If
+      * it returns false, the server will instead send an
+      * TLS::AlertType::UnknownPSKIdentity alert when an unknown identifier is
+      * used.
+      *
+      * Default: false
       */
       virtual bool hide_unknown_users() const;
 
@@ -264,6 +345,8 @@ class BOTAN_PUBLIC_API(2, 0) Policy {
       *       exactly one ticket per handshake. RFC 8446 allows for
       *       an arbitrary amount, though.
       *
+      * Default: 1
+      *
       * @note Has an effect on TLS 1.3 connections, only.
       */
       virtual size_t maximum_session_tickets_per_client_hello() const;
@@ -274,6 +357,8 @@ class BOTAN_PUBLIC_API(2, 0) Policy {
       * For TLS 1.3 session tickets the lifetime must not be longer than
       * seven days. Expired session tickets cannot be used to resume a
       * session.
+      *
+      * Default: 1 day
       */
       virtual std::chrono::seconds session_ticket_lifetime() const;
 
@@ -283,6 +368,8 @@ class BOTAN_PUBLIC_API(2, 0) Policy {
        * observers to correlate connections (RFC 8446 Appendix C.4). This
        * has no effect on TLS 1.2 resumptions based on session IDs as those
        * are negotiated in the clear anyway.
+       *
+       * Default: false
        */
       virtual bool reuse_session_tickets() const;
 
@@ -326,6 +413,8 @@ class BOTAN_PUBLIC_API(2, 0) Policy {
       virtual bool acceptable_ciphersuite(const Ciphersuite& suite) const;
 
       /**
+      * Default: true
+      *
       * @return true if servers should choose the ciphersuite matching
       *         their highest preference, rather than the clients.
       *         Has no effect on client side.
@@ -443,6 +532,8 @@ class BOTAN_PUBLIC_API(2, 0) Policy {
       *    [This makes] the TLS 1.3 handshake resemble TLS 1.2 session resumption,
       *    which improves the chance of successfully connecting through middleboxes.
       *
+      * Default: true
+      *
       * @note Has an effect on TLS 1.3 connections, only.
       */
       virtual bool tls_13_middlebox_compatibility_mode() const;
@@ -453,6 +544,8 @@ class BOTAN_PUBLIC_API(2, 0) Policy {
        *
        * There's not normally a reason to disable this, except when deterministic output
        * is required for testing.
+       *
+       * Default: true
        */
       virtual bool hash_hello_random() const;
 

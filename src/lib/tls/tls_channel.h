@@ -181,10 +181,14 @@ class BOTAN_PUBLIC_API(2, 0) Channel {
       virtual bool secure_renegotiation_supported() const = 0;
 
       /**
-      * Perform a handshake timeout check. This does nothing unless
-      * this is a DTLS channel with a pending handshake state, in
-      * which case we check for timeout and potentially retransmit
-      * handshake packets.
+      * Perform a handshake timeout check.
+      *
+      * This function does nothing unless the channel represents a DTLS
+      * connection and a handshake is actively in progress. In this case it will
+      * check the current timeout state and potentially initiate retransmission
+      * of handshake packets.
+      *
+      * @returns true if a timeout condition occurred
       */
       virtual bool timeout_check() = 0;
 

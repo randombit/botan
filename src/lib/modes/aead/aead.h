@@ -46,13 +46,13 @@ class BOTAN_PUBLIC_API(2, 0) AEAD_Mode : public Cipher_Mode {
                                                         std::string_view provider = "");
 
       /**
-      * Set associated data that is not included in the ciphertext but
-      * that should be authenticated. Must be called after set_key and
-      * before start.
+      * Set associated data that is not included in the ciphertext but that
+      * should be authenticated. Must be called after set_key() and before
+      * start().
       *
-      * Unless reset by another call, the associated data is kept
-      * between messages. Thus, if the AD does not change, calling
-      * once (after set_key) is the optimum.
+      * Unless reset by another call, the associated data is kept between
+      * messages. Thus, if the AD does not change, calling once (after
+      * set_key()) is the optimum.
       *
       * @param ad the associated data
       */
@@ -62,12 +62,12 @@ class BOTAN_PUBLIC_API(2, 0) AEAD_Mode : public Cipher_Mode {
 
       /**
       * Set associated data that is not included in the ciphertext but
-      * that should be authenticated. Must be called after set_key and
-      * before start.
+      * that should be authenticated. Must be called after set_key() and
+      * before start().
       *
       * Unless reset by another call, the associated data is kept
       * between messages. Thus, if the AD does not change, calling
-      * once (after set_key) is the optimum.
+      * once (after set_key()) is the optimum.
       *
       * Some AEADs (namely SIV) support multiple AD inputs. For
       * all other modes only nominal AD input 0 is supported; all
@@ -99,8 +99,8 @@ class BOTAN_PUBLIC_API(2, 0) AEAD_Mode : public Cipher_Mode {
 
       /**
       * Set associated data that is not included in the ciphertext but
-      * that should be authenticated. Must be called after set_key and
-      * before start.
+      * that should be authenticated. Must be called after set_key() and
+      * before start().
       *
       * See @ref set_associated_data().
       *
@@ -114,8 +114,8 @@ class BOTAN_PUBLIC_API(2, 0) AEAD_Mode : public Cipher_Mode {
 
       /**
       * Set associated data that is not included in the ciphertext but
-      * that should be authenticated. Must be called after set_key and
-      * before start.
+      * that should be authenticated. Must be called after set_key() and
+      * before start().
       *
       * See @ref set_associated_data().
       *

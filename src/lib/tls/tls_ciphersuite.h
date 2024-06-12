@@ -50,6 +50,8 @@ class BOTAN_PUBLIC_API(2, 0) Ciphersuite final {
 
       /**
       * Formats the ciphersuite back to an RFC-style ciphersuite string
+      *
+      * e.g "RSA_WITH_RC4_128_SHA" or "ECDHE_RSA_WITH_AES_128_GCM_SHA256"
       * @return RFC ciphersuite string identifier
       */
       std::string to_string() const { return (!m_iana_id) ? "unknown cipher suite" : m_iana_id; }

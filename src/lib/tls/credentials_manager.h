@@ -93,46 +93,55 @@ class BOTAN_PUBLIC_API(2, 0) Credentials_Manager {
                                                               const std::string& context);
 
       /**
-      * Return a cert chain we can use, ordered from leaf to root,
-      * or else an empty vector.
+      * Return a certificate chain we can use to identify ourselves, ordered
+      * from leaf to root, or else an empty vector.
       *
       * This virtual function is deprecated, and will be removed in a
-      * future release. Use (and override) find_cert_chain instead.
+      * future release. Use (and override) find_cert_chain() instead.
       *
-      * It is assumed that the caller can get the private key of the
-      * leaf with private_key_for
+      * It is assumed that the caller can get the private key of the leaf with
+      * private_key_for()
       *
-      * @param cert_key_types specifies the key types desired ("RSA",
-      *                       "DSA", "ECDSA", etc), or empty if there
-      *                       is no preference by the caller.
-      * @param cert_signature_schemes specifies the signature types desired
-      *                               as signatures in the certificate(s) itself,
+      * @param cert_key_types specifies the key types desired ("RSA", "DSA",
+      *                       "ECDSA", etc), or empty if there is no preference
+      *                       by the caller.
+      * @param cert_signature_schemes specifies the signature types desired as
+      *                               signatures in the certificate(s) itself,
       *                               or empty for no preference by the caller.
-      *
       * @param type specifies the type of operation occurring
-      *
       * @param context specifies a context relative to type.
       */
+      BOTAN_DEPRECATED("Do not define or use this function; use find_cert_chain")
       virtual std::vector<X509_Certificate> cert_chain(const std::vector<std::string>& cert_key_types,
                                                        const std::vector<AlgorithmIdentifier>& cert_signature_schemes,
                                                        const std::string& type,
                                                        const std::string& context);
 
       /**
-      * Return a cert chain we can use, ordered from leaf to root,
-      * or else an empty vector.
+      * Return a certificate chain we can use to identify ourselves, ordered
+      * from leaf to root, or else an empty vector. Override this if we have one
+      * certificate of type @p cert_key_type and we would like to use a
+      * certificate in this type and context.
       *
-      * It is assumed that the caller can get the private key of the
-      * leaf with private_key_for
+      * For servers @p type will be "tls-server" and the @p context will be the
+      * server name that the client requested via SNI (or empty, if the client
+      * did not send SNI).
       *
-      * @param cert_key_type specifies the type of key requested
-      *                      ("RSA", "DSA", "ECDSA", etc)
-      * @param cert_signature_schemes specifies the signature types desired
-      *                               as signatures in the certificate(s) itself,
+      * @warning To avoid cross-protocol attacks it is recommended that if a
+      *          server receives an SNI request for a name it does not expect,
+      *          it should close the connection with an alert. This can be done
+      *          by throwing an exception from the implementation of this
+      *          function.
+      *
+      * It is assumed that the caller can get the private key of the leaf with
+      * private_key_for()
+      *
+      * @param cert_key_type specifies the type of key requested ("RSA", "DSA",
+      *                      "ECDSA", etc)
+      * @param cert_signature_schemes specifies the signature types desired as
+      *                               signatures in the certificate(s) itself,
       *                               or empty for no preference by the caller.
-      *
       * @param type specifies the type of operation occurring
-      *
       * @param context specifies a context relative to type.
       */
       std::vector<X509_Certificate> cert_chain_single_type(
@@ -142,10 +151,15 @@ class BOTAN_PUBLIC_API(2, 0) Credentials_Manager {
          const std::string& context);
 
       /**
-      * @return private key associated with this certificate if we should
-      *         use it with this context. cert was returned by cert_chain
-      * This function should either return null or throw an exception if
-      * the key is unavailable.
+      * Return a `shared_ptr` to the private key for this certificate. The
+      * @p cert will be the leaf cert of a chain returned previously by
+      * find_cert_chain() or cert_chain_single_type().
+      *
+      * This function should either return nullptr or throw an exception if
+      * the matching private key is unavailable.
+      *
+      * @return private key associated with this certificate if we should use it
+      *         in this context.
       */
       virtual std::shared_ptr<Private_Key> private_key_for(const X509_Certificate& cert,
                                                            const std::string& type,
@@ -184,6 +198,9 @@ class BOTAN_PUBLIC_API(2, 0) Credentials_Manager {
       virtual secure_vector<uint8_t> dtls_cookie_secret();
 
       /**
+      * Returns an identity hint which may be provided to the client. This can
+      * help a client understand what PSK to use.
+      *
       * @param type specifies the type of operation occurring
       * @param context specifies a context relative to type.
       * @return the PSK identity hint for this type/context
@@ -191,6 +208,10 @@ class BOTAN_PUBLIC_API(2, 0) Credentials_Manager {
       virtual std::string psk_identity_hint(const std::string& type, const std::string& context);
 
       /**
+      * Returns the identity we would like to use given this @p type and
+      * @p context and the optional @p identity_hint. Not all servers or
+      * protocols will provide a hint.
+      *
       * @param type specifies the type of operation occurring
       * @param context specifies a context relative to type.
       * @param identity_hint was passed by the server (but may be empty)

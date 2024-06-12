@@ -53,6 +53,8 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       /**
       * Construct elliptic curve from the specified parameters
       *
+      * This is used for example to create custom (application-specific) curves.
+      *
       * @param p the elliptic curve p
       * @param a the elliptic curve a param
       * @param b the elliptic curve b param
@@ -84,6 +86,8 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
 
       /**
       * Construct elliptic curve from the specified parameters
+      *
+      * This is used for example to create custom (application-specific) curves.
       *
       * Unlike the deprecated constructor, this constructor imposes
       * additional restrictions on the parameters, namely:
@@ -133,7 +137,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       BOTAN_DEPRECATED("Use EC_Group::from_OID") explicit EC_Group(const OID& oid) { *this = EC_Group::from_OID(oid); }
 
       /**
-      * Create an EC domain from PEM encoding (as from PEM_encode), or
+      * Create an EC domain from PEM encoding (as from PEM_encode()), or
       * from an OID name (eg "secp256r1", or "1.2.840.10045.3.1.7")
       * @param pem_or_oid PEM-encoded data, or an OID
       *

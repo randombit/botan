@@ -84,6 +84,15 @@ class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
    public:
       /**
       * Begin processing a message with a fresh nonce.
+      *
+      * @warning Typically one must not reuse the same nonce for more than one
+      *          message under the same key. For most cipher modes this would
+      *          mean total loss of security and/or authenticity guarantees.
+      *
+      * @note If reliably generating unique nonces is difficult in your
+      *       environment, use SIV which retains security even if nonces
+      *       are repeated.
+      *
       * @param nonce the per message nonce
       */
       void start(std::span<const uint8_t> nonce) { start_msg(nonce.data(), nonce.size()); }
@@ -125,7 +134,14 @@ class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
       size_t process(uint8_t msg[], size_t msg_len) { return this->process_msg(msg, msg_len); }
 
       /**
-      * Process some data. Input must be in size update_granularity() uint8_t blocks.
+      * Process some data. Input must be in size update_granularity() uint8_t
+      * blocks. The @p buffer is an in/out parameter and may be resized. In
+      * particular, some modes require that all input be consumed before any
+      * output is produced; with these modes, @p buffer will be returned empty.
+      *
+      * The first @p offset bytes of @p buffer will be ignored (this allows in
+      * place processing of a buffer that contains an initial plaintext header).
+      *
       * @param buffer in/out parameter which will possibly be resized
       * @param offset an offset into blocks to begin processing
       */
@@ -137,7 +153,25 @@ class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
       }
 
       /**
-      * Complete processing of a message.
+      * Complete procession of a message with a final input of @p buffer, which
+      * is treated the same as with update(). If you have the entire message in
+      * hand, calling finish() without ever calling update() is both efficient
+      * and convenient.
+      *
+      * When using an AEAD_Mode, if the supplied authentication tag does not
+      * validate, this will throw an instance of Invalid_Authentication_Tag.
+      *
+      * If this occurs, all plaintext previously output via calls to update must
+      * be destroyed and not used in any way that an attacker could observe the
+      * effects of. This could be anything from echoing the plaintext back
+      * (perhaps in an error message), or by making an external RPC whose
+      * destination or contents depend on the plaintext. The only thing you can
+      * do is buffer it, and in the event of an invalid tag, erase the
+      * previously decrypted content from memory.
+      *
+      * One simple way to assure this could never happen is to never call
+      * update, and instead always marshal the entire message into a single
+      * buffer and call finish on it when decrypting.
       *
       * @param final_block in/out parameter which must be at least
       *        minimum_final_size() bytes, and will be set to any final output
@@ -172,6 +206,10 @@ class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
       virtual size_t output_length(size_t input_length) const = 0;
 
       /**
+      * The :cpp:class:`Cipher_Mode` interface requires message processing in
+      * multiples of the block size. This returns size of required blocks to
+      * update. If the mode implementation does not require buffering it will
+      * return 1.
       * @return size of required blocks to update
       */
       virtual size_t update_granularity() const = 0;
@@ -180,7 +218,7 @@ class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
       * Return an ideal granularity. This will be a multiple of the result of
       * update_granularity but may be larger. If so it indicates that better
       * performance may be achieved by providing buffers that are at least that
-      * size.
+      * size (due to SIMD execution, etc).
       */
       virtual size_t ideal_granularity() const = 0;
 
@@ -217,8 +255,11 @@ class BOTAN_PUBLIC_API(2, 0) Cipher_Mode : public SymmetricAlgorithm {
       virtual void reset() = 0;
 
       /**
+      * Return the length in bytes of the authentication tag this algorithm
+      * generates. If the mode is not authenticated, this will return 0.
+      *
       * @return true iff this mode provides authentication as well as
-      * confidentiality.
+      *         confidentiality.
       */
       bool authenticated() const { return this->tag_size() > 0; }
 

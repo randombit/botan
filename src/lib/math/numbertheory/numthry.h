@@ -102,6 +102,11 @@ size_t BOTAN_PUBLIC_API(2, 0) low_zero_bits(const BigInt& x);
 
 /**
 * Check for primality
+*
+* This uses probabilistic algorithms - there is some non-zero (but very low)
+* probability that this function will return true even if *n* is actually
+* composite.
+*
 * @param n a positive integer to test for primality
 * @param rng a random number generator
 * @param prob chance of false positive is bounded by 1/2**prob

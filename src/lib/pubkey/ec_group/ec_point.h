@@ -139,11 +139,18 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
 
       /**
       * Force this point to affine coordinates
+      *
+      * Convert the point to its equivalent affine coordinates. Throws if this
+      * is the point at infinity.
       */
       void force_affine();
 
       /**
       * Force all points on the list to affine coordinates
+      *
+      * Force several points to be affine at once. Uses Montgomery's trick to
+      * reduce number of inversions required, so this is much faster than
+      * calling ``force_affine`` on each point in sequence.
       */
       static void force_all_affine(std::span<EC_Point> points, secure_vector<word>& ws);
 
@@ -295,6 +302,10 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
 
       /**
       * Point addition - mixed J+A
+      *
+      * @warning This function assumes that @p other is affine, if this is not
+      *          correct the result will be invalid.
+      *
       * @param other affine point to add - assumed to be affine!
       * @param workspace temp space, at least WORKSPACE_SIZE elements
       */

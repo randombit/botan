@@ -18,7 +18,7 @@ namespace Botan {
 */
 
 /**
-* Get a human-readable string identifying the version of Botan.
+* Get a human-readable single-line string identifying the version of Botan.
 * No particular format should be assumed.
 * @return version string
 */
@@ -71,15 +71,34 @@ BOTAN_PUBLIC_API(2, 0) uint32_t version_minor();
 BOTAN_PUBLIC_API(2, 0) uint32_t version_patch();
 
 /**
-* Usable for checking that the DLL version loaded at runtime exactly
-* matches the compile-time version. Call using BOTAN_VERSION_* macro
-* values. Returns the empty string if an exact match, otherwise an
-* appropriate message. Added with 1.11.26.
+* Usable for checking that the DLL version loaded at runtime exactly matches the
+* compile-time version. Call using BOTAN_VERSION_* macro values, like so:
+*
+* ```
+* Botan::runtime_version_check(BOTAN_VERSION_MAJOR, BOTAN_VERSION_MINOR, BOTAN_VERSION_PATCH);
+* ```
+*
+* It will return an empty string if the versions match, or otherwise an error
+* message indicating the discrepancy. This only is useful in dynamic libraries,
+* where it is possible to compile and run against different versions.
 */
 BOTAN_PUBLIC_API(2, 0) std::string runtime_version_check(uint32_t major, uint32_t minor, uint32_t patch);
 
 /*
 * Macros for compile-time version checks
+*
+* Return a value that can be used to compare versions. The current
+* (compile-time) version is available as the macro BOTAN_VERSION_CODE. For
+* instance, to choose one code path for version 3.1.0 and later, and another
+* code path for older releases:
+*
+* ```
+* #if BOTAN_VERSION_CODE >= BOTAN_VERSION_CODE_FOR(3,1,0)
+*    // 3.1+ code path
+* #else
+*    // code path for older versions
+* #endif
+* ```
 */
 #define BOTAN_VERSION_CODE_FOR(a, b, c) ((a << 16) | (b << 8) | (c))
 
