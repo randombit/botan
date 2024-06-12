@@ -379,6 +379,8 @@ class FFI_RNG_Test final : public FFI_Test {
                uint8_t not_really_entropy[32] = {0};
                TEST_FFI_OK(botan_rng_add_entropy, (tpm2_rng, not_really_entropy, 32));
             }
+
+            TEST_FFI_OK(botan_tpm2_ctx_destroy, (tpm2_ctx));
          }
 
          TEST_FFI_OK(botan_rng_destroy, (rng));
