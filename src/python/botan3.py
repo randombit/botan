@@ -645,7 +645,7 @@ class RandomNumberGenerator:
     def __init__(self, rng_type='system', ctx=None):
         self.__obj = c_void_p(0)
         if rng_type == 'tpm2':
-            if not isinstance(ctx, TPM2_Context):
+            if not isinstance(ctx, TPM2Context):
                 raise BotanException("Cannot instantiate a TPM2-based RNG without a TPM2 context")
             _DLL.botan_tpm2_rng_init(byref(self.__obj), ctx.handle_())
         else:
