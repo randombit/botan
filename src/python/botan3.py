@@ -2153,7 +2153,7 @@ def zfec_decode(k, n, indexes, inputs):
 #
 # TPM2
 #
-class TPM2_Context:
+class TPM2Context:
     def __init__(self, tcti_nameconf: str = None) -> None:
         tcti = c_char_p(0 if not tcti_nameconf else tcti_nameconf.encode("utf-8"))
 
