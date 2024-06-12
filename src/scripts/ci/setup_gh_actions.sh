@@ -82,7 +82,7 @@ if type -p "apt-get"; then
             curl -L https://coveralls.io/coveralls-linux.tar.gz | tar -xz -C /usr/local/bin
         fi
 
-        sudo apt-get -qq install softhsm2 libtspi-dev libboost-dev
+        sudo apt-get -qq install softhsm2 libtspi-dev libboost-dev tpm2-tools libtss2-dev swtpm
 
         echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
@@ -91,6 +91,11 @@ if type -p "apt-get"; then
 
         softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
         echo "PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so" >> "$GITHUB_ENV"
+
+        tpm2_state="/tmp/swtpm2"
+        mkdir $tpm2_state
+        swtpm socket --tpmstate dir=$tpm2_state --tpm2 --ctrl type=tcp,port=2322 --server type=tcp,port=2321 --flags not-need-init --daemon
+        tpm2_startup --tcti swtpm --clear
 
     elif [ "$TARGET" = "docs" ]; then
         sudo apt-get -qq install doxygen python3-docutils python3-sphinx
