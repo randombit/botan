@@ -52,7 +52,7 @@ int botan_tpm2_ctx_init(botan_tpm2_ctx_t* ctx_out, const char* tcti_nameconf) {
       return BOTAN_FFI_SUCCESS;
    });
 #else
-   BOTAN_UNUSED(ctx_out);
+   BOTAN_UNUSED(ctx_out, tcti_nameconf);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
