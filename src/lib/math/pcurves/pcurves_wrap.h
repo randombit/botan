@@ -105,7 +105,9 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
 
       ProjectivePoint point_negate(const ProjectivePoint& pt) const override { return stash(from_stash(pt).negate()); }
 
-      bool affine_point_is_identity(const AffinePoint& pt) const override { return from_stash(pt).is_identity(); }
+      bool affine_point_is_identity(const AffinePoint& pt) const override {
+         return from_stash(pt).is_identity().as_bool();
+      }
 
       void serialize_point(std::span<uint8_t> bytes, const AffinePoint& pt) const override {
          BOTAN_ARG_CHECK(bytes.size() == C::AffinePoint::BYTES, "Invalid length for serialize_point");
@@ -177,9 +179,11 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
 
       Scalar scalar_negate(const Scalar& s) const override { return stash(from_stash(s).negate()); }
 
-      bool scalar_is_zero(const Scalar& s) const override { return from_stash(s).is_zero(); }
+      bool scalar_is_zero(const Scalar& s) const override { return from_stash(s).is_zero().as_bool(); }
 
-      bool scalar_equal(const Scalar& a, const Scalar& b) const override { return from_stash(a) == from_stash(b); }
+      bool scalar_equal(const Scalar& a, const Scalar& b) const override {
+         return (from_stash(a) == from_stash(b)).as_bool();
+      }
 
       Scalar scalar_zero() const override { return stash(C::Scalar::zero()); }
 
