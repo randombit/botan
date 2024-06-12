@@ -1,5 +1,5 @@
 /*
-* (C) 2015,2018 Jack Lloyd
+* (C) 2015,2018,2024 Jack Lloyd
 * (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
 * (C) 2017 René Korthaus, Rohde & Schwarz Cybersecurity
 *
@@ -742,7 +742,7 @@ BOTAN_REGISTER_SMOKE_TEST("utils", "util", Utility_Function_Tests);
 class CT_Mask_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         Test::Result result("CT utils");
+         Test::Result result("CT::Mask");
 
          result.test_eq_sz("CT::is_zero8", Botan::CT::Mask<uint8_t>::is_zero(0).value(), 0xFF);
          result.test_eq_sz("CT::is_zero8", Botan::CT::Mask<uint8_t>::is_zero(1).value(), 0x00);
@@ -803,7 +803,36 @@ class CT_Mask_Tests final : public Test {
       }
 };
 
-BOTAN_REGISTER_TEST("utils", "ct_utils", CT_Mask_Tests);
+BOTAN_REGISTER_TEST("utils", "ct_mask", CT_Mask_Tests);
+
+class CT_Choice_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("CT::Choice");
+
+         test_choice_from_int<uint8_t>("uint8_t", result);
+         test_choice_from_int<uint16_t>("uint16_t", result);
+         test_choice_from_int<uint32_t>("uint32_t", result);
+         test_choice_from_int<uint64_t>("uint64_t", result);
+
+         return {result};
+      }
+
+   private:
+      template <std::unsigned_integral T>
+      void test_choice_from_int(const char* type_name, Result& result) {
+         const auto tname = Botan::fmt("CT::Choice::from_int<{}>", type_name);
+         constexpr size_t tbits = sizeof(T) * 8;
+
+         result.test_eq(tname, Botan::CT::Choice::from_int<T>(0).as_bool(), false);
+         for(size_t b = 0; b != tbits; ++b) {
+            const auto choice = Botan::CT::Choice::from_int<T>(static_cast<T>(1) << b);
+            result.test_eq(tname, choice.as_bool(), true);
+         }
+      }
+};
+
+BOTAN_REGISTER_TEST("utils", "ct_choice", CT_Choice_Tests);
 
 class BitOps_Tests final : public Test {
    public:
