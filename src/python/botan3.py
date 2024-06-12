@@ -6,6 +6,7 @@ https://botan.randombit.net
 
 (C) 2015,2017,2018,2019,2023 Jack Lloyd
 (C) 2015 Uri  Blumenthal (extensions and patches)
+(C) 2024 Amos Treiber, René Meusel - Rohde & Schwarz Cybersecurity
 
 Botan is released under the Simplified BSD License (see license.txt)
 
@@ -502,6 +503,11 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_zfec_decode,
             [c_size_t, c_size_t, POINTER(c_size_t), POINTER(c_char_p), c_size_t, POINTER(c_char_p)])
 
+    # TPM2
+    ffi_api(dll.botan_tpm2_ctx_init, [c_void_p], [-40])
+    ffi_api(dll.botan_tpm2_ctx_destroy, [c_void_p], [-40])
+    ffi_api(dll.botan_tpm2_rng_init, [c_void_p, c_void_p])
+
     return dll
 
 #
@@ -636,9 +642,14 @@ def const_time_compare(x, y):
 #
 class RandomNumberGenerator:
     # Can also use type "system"
-    def __init__(self, rng_type='system'):
+    def __init__(self, rng_type='system', ctx=None):
         self.__obj = c_void_p(0)
-        _DLL.botan_rng_init(byref(self.__obj), _ctype_str(rng_type))
+        if rng_type == 'tpm2':
+            if not isinstance(ctx, TPM2_Context):
+                raise BotanException("Cannot instantiate a TPM2-based RNG without a TPM2 context")
+            _DLL.botan_tpm2_rng_init(byref(self.__obj), ctx.handle_())
+        else:
+            _DLL.botan_rng_init(byref(self.__obj), _ctype_str(rng_type))
 
     def __del__(self):
         _DLL.botan_rng_destroy(self.__obj)
@@ -2138,3 +2149,19 @@ def zfec_decode(k, n, indexes, inputs):
         c_size_t(k), c_size_t(n), c_indexes, c_inputs, c_size_t(share_size), c_outputs
     )
     return [output.raw for output in outputs]
+
+#
+# TPM2
+#
+class TPM2_Context:
+    def __init__(self) -> None:
+        self.__obj = c_void_p(0)
+        rc = _DLL.botan_tpm2_ctx_init(byref(self.__obj))
+        if rc == -40: # 'Not Implemented'
+            raise BotanException("TPM2 is not implemented in this build configuration", rc)
+
+    def __del__(self) -> None:
+        _DLL.botan_tpm2_ctx_destroy(self.__obj)
+
+    def handle_(self):
+        return self.__obj

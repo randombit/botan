@@ -19,6 +19,7 @@ extern "C" {
 
 using namespace Botan_FFI;
 
+#if defined(BOTAN_HAS_TPM2)
 /**
  * This wrapper is required since BOTAN_FFI_DECLARE_STRUCT internally produces a unique pointer,
  * but the TPM2_Context is meant to be used as a shared pointer.
@@ -27,7 +28,6 @@ struct botan_tpm2_ctx_wrapper {
       std::shared_ptr<Botan::TPM2_Context> ctx;
 };
 
-#if defined(BOTAN_HAS_TPM2)
 BOTAN_FFI_DECLARE_STRUCT(botan_tpm2_ctx_struct, botan_tpm2_ctx_wrapper, 0xD2B95E15);
 #endif
 
@@ -43,7 +43,7 @@ int botan_tpm2_ctx_init(botan_tpm2_ctx_t* ctx_out) {
       return BOTAN_FFI_SUCCESS;
    });
 #else
-   BOTAN_UNUSED(rng, ctx);
+   BOTAN_UNUSED(ctx_out);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 
 #endif
@@ -58,7 +58,7 @@ int botan_tpm2_ctx_destroy(botan_tpm2_ctx_t ctx) {
 #if defined(BOTAN_HAS_TPM2)
    return BOTAN_FFI_CHECKED_DELETE(ctx);
 #else
-   BOTAN_UNUSED(rng, ctx);
+   BOTAN_UNUSED(ctx);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 
 #endif
@@ -75,7 +75,7 @@ int botan_tpm2_rng_init(botan_rng_t* rng_out, botan_tpm2_ctx_t ctx) {
       return BOTAN_FFI_SUCCESS;
    });
 #else
-   BOTAN_UNUSED(rng, ctx);
+   BOTAN_UNUSED(rng_out, ctx);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 
 #endif

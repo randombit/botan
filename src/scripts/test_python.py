@@ -176,6 +176,25 @@ class BotanPythonTests(unittest.TestCase):
 
         user_rng.add_entropy('seed material...')
 
+    def test_tpm2_rng(self):
+        try:
+            tpm2_ctx = botan.TPM2_Context()
+        except botan.BotanException as ex:
+            if ex.error_code() == -40: # Not Implemented
+                self.skipTest("No TPM2 support in this build")
+            else:
+                raise ex
+
+        tpm2_rng = botan.RandomNumberGenerator("tpm2", tpm2_ctx)
+
+        output1 = tpm2_rng.get(32)
+        output2 = tpm2_rng.get(32)
+
+        self.assertEqual(len(output1), 32)
+        self.assertEqual(len(output2), 32)
+        self.assertNotEqual(output1, output2)
+        tpm2_rng.add_entropy('xkcd #221: 4 - chosen by fair dice roll')
+
     def test_hash(self):
 
         try:
