@@ -267,9 +267,10 @@ typedef struct botan_tpm2_ctx_struct* botan_tpm2_ctx_t;
 /**
 * Initialize a TPM2 context
 * @param ctx_out output TPM2 context
+* @param tcti_nameconf TCTI config (may be nullpointer)
 * @return 0 on success
 */
-BOTAN_FFI_EXPORT(3, 6) int botan_tpm2_ctx_init(botan_tpm2_ctx_t* ctx_out);
+BOTAN_FFI_EXPORT(3, 6) int botan_tpm2_ctx_init(botan_tpm2_ctx_t* ctx_out, const char* tcti_nameconf);
 
 /**
 * Frees all resouces of a TPM2 context

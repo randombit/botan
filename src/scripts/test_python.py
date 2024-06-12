@@ -178,7 +178,8 @@ class BotanPythonTests(unittest.TestCase):
 
     def test_tpm2_rng(self):
         try:
-            tpm2_ctx = botan.TPM2_Context()
+            use_tpm2_emulator = "swtpm"
+            tpm2_ctx = botan.TPM2_Context(use_tpm2_emulator)
         except botan.BotanException as ex:
             if ex.error_code() == -40: # Not Implemented
                 self.skipTest("No TPM2 support in this build")

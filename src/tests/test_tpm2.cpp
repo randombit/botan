@@ -32,7 +32,8 @@ bool not_zero_64(std::span<const uint8_t> in) {
 }
 
 std::vector<Test::Result> test_tpm2_rng() {
-   auto ctx = Botan::TPM2_Context::create();
+   std::string use_tpm2_emulator = "swtpm";
+   auto ctx = Botan::TPM2_Context::create(std::move(use_tpm2_emulator));
 
    auto rng = Botan::TPM2_RNG(ctx);
 

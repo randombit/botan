@@ -10,7 +10,7 @@ brief -> "Wrappers and Utilites to interact with TPM2"
 load_on vendor
 
 <libs>
-all -> tss2-esys,tss2-rc
+all -> tss2-esys,tss2-rc,tss2-tctildr
 </libs>
 
 <requires>

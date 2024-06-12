@@ -504,7 +504,7 @@ def _set_prototypes(dll):
             [c_size_t, c_size_t, POINTER(c_size_t), POINTER(c_char_p), c_size_t, POINTER(c_char_p)])
 
     # TPM2
-    ffi_api(dll.botan_tpm2_ctx_init, [c_void_p], [-40])
+    ffi_api(dll.botan_tpm2_ctx_init, [c_void_p, c_char_p], [-40])
     ffi_api(dll.botan_tpm2_ctx_destroy, [c_void_p], [-40])
     ffi_api(dll.botan_tpm2_rng_init, [c_void_p, c_void_p])
 
@@ -2154,9 +2154,11 @@ def zfec_decode(k, n, indexes, inputs):
 # TPM2
 #
 class TPM2_Context:
-    def __init__(self) -> None:
+    def __init__(self, tcti_nameconf: str = None) -> None:
+        tcti = c_char_p(0 if not tcti_nameconf else tcti_nameconf.encode("utf-8"))
+
         self.__obj = c_void_p(0)
-        rc = _DLL.botan_tpm2_ctx_init(byref(self.__obj))
+        rc = _DLL.botan_tpm2_ctx_init(byref(self.__obj), tcti)
         if rc == -40: # 'Not Implemented'
             raise BotanException("TPM2 is not implemented in this build configuration", rc)
 

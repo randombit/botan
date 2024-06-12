@@ -12,12 +12,13 @@
 #include <botan/exceptn.h>
 
 #include <memory>
-#include <tss2/tss2_rc.h>
+#include <optional>
 
-struct ESYS_CONTEXT;
+#include <tss2/tss2_esys.h>
+#include <tss2/tss2_rc.h>
+#include <tss2/tss2_tctildr.h>
 
 namespace Botan {
-
 class BOTAN_PUBLIC_API(3, 6) TPM2_Error final : public Exception {
    public:
       TPM2_Error(std::string_view location, TSS2_RC rc);
@@ -40,7 +41,11 @@ inline void check_tss2_rc(std::string_view location, TSS2_RC rc) {
 
 class BOTAN_PUBLIC_API(3, 6) TPM2_Context final {
    public:
-      static std::shared_ptr<TPM2_Context> create();
+      /**
+       * @param tcti_nameconf  if set this is passed to Tss2_TctiLdr_Initialize verbatim
+       *                       otherwise a nullptr is passed.
+       */
+      static std::shared_ptr<TPM2_Context> create(std::optional<std::string> tcti_nameconf = {});
 
       TPM2_Context(const TPM2_Context&) = delete;
       TPM2_Context(TPM2_Context&& ctx) noexcept;
@@ -52,9 +57,10 @@ class BOTAN_PUBLIC_API(3, 6) TPM2_Context final {
       ESYS_CONTEXT* get() { return m_ctx; }
 
    private:
-      TPM2_Context();
+      TPM2_Context(const char* tcti_nameconf);
 
    private:
+      TSS2_TCTI_CONTEXT* m_tcti_ctx;
       ESYS_CONTEXT* m_ctx;
 };
 

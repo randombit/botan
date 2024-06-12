@@ -366,7 +366,8 @@ class FFI_RNG_Test final : public FFI_Test {
             result.test_eq("custom_destroy_cb called", cb_counter, 5);
          }
 
-         if(TEST_FFI_INIT(botan_tpm2_ctx_init, (&tpm2_ctx))) {
+         const auto use_tpm2_emulator = "swtpm";
+         if(TEST_FFI_INIT(botan_tpm2_ctx_init, (&tpm2_ctx, use_tpm2_emulator))) {
             if(TEST_FFI_INIT(botan_tpm2_rng_init, (&tpm2_rng, tpm2_ctx))) {
                Botan::clear_mem(outbuf.data(), outbuf.size());
 
