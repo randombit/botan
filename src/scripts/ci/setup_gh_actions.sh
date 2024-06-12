@@ -16,6 +16,13 @@ ARCH="$2"
 
 SCRIPT_LOCATION=$(cd "$(dirname "$0")"; pwd)
 
+start_swtpm() {
+    tpm2_state="/tmp/swtpm2"
+    mkdir $tpm2_state
+    swtpm socket --tpmstate dir=$tpm2_state --tpm2 --ctrl type=tcp,port=2322 --server type=tcp,port=2321 --flags not-need-init --daemon
+    tpm2_startup --tcti swtpm --clear
+}
+
 if type -p "apt-get"; then
 
     if [ "$(lsb_release -sr)" = "22.04" ]; then
@@ -33,7 +40,11 @@ if type -p "apt-get"; then
         # (l)ist mode (avoiding https://github.com/actions/runner-images/issues/9996)
         sudo NEEDRESTART_MODE=l apt-get -qq install valgrind
 
-    elif [ "$TARGET" = "shared" ] || [ "$TARGET" = "examples" ] || [ "$TARGET" = "tlsanvil" ] || [ "$TARGET" = "clang-tidy" ] ; then
+    elif [ "$TARGET" = "shared" ]; then
+        sudo apt-get -qq install libboost-dev tpm2-tools libtss2-dev swtpm
+        start_swtpm
+
+    elif [ "$TARGET" = "examples" ] || [ "$TARGET" = "tlsanvil" ] || [ "$TARGET" = "clang-tidy" ] ; then
         sudo apt-get -qq install libboost-dev
 
     elif [ "$TARGET" = "clang" ]; then
@@ -92,10 +103,7 @@ if type -p "apt-get"; then
         softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
         echo "PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so" >> "$GITHUB_ENV"
 
-        tpm2_state="/tmp/swtpm2"
-        mkdir $tpm2_state
-        swtpm socket --tpmstate dir=$tpm2_state --tpm2 --ctrl type=tcp,port=2322 --server type=tcp,port=2321 --flags not-need-init --daemon
-        tpm2_startup --tcti swtpm --clear
+        start_swtpm
 
     elif [ "$TARGET" = "docs" ]; then
         sudo apt-get -qq install doxygen python3-docutils python3-sphinx

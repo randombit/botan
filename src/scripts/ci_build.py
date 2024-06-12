@@ -393,9 +393,11 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
         if target_os == 'linux':
             flags += ['--with-lzma']
+            if target in ['coverage', 'sanitizer', 'shared']:
+                flags += ['--with-tpm2']
 
         if target in ['coverage']:
-            flags += ['--with-tpm', '--with-tpm2']
+            flags += ['--with-tpm']
             test_cmd += ['--run-online-tests']
             if pkcs11_lib and os.access(pkcs11_lib, os.R_OK):
                 test_cmd += ['--pkcs11-lib=%s' % (pkcs11_lib)]
