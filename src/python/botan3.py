@@ -2155,10 +2155,8 @@ def zfec_decode(k, n, indexes, inputs):
 #
 class TPM2Context:
     def __init__(self, tcti_nameconf: str = None) -> None:
-        tcti = c_char_p(0 if not tcti_nameconf else tcti_nameconf.encode("utf-8"))
-
         self.__obj = c_void_p(0)
-        rc = _DLL.botan_tpm2_ctx_init(byref(self.__obj), tcti)
+        rc = _DLL.botan_tpm2_ctx_init(byref(self.__obj), _ctype_str(tcti_nameconf))
         if rc == -40: # 'Not Implemented'
             raise BotanException("TPM2 is not implemented in this build configuration", rc)
 

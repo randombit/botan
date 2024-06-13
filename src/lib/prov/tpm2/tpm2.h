@@ -27,6 +27,11 @@ class BOTAN_PUBLIC_API(3, 6) TPM2_Error final : public Exception {
 
       TSS2_RC code() const { return m_rc; }
 
+      int error_code() const noexcept override {
+         // RC is uint32 but the maximum value is within int32 range as per tss2_common.h
+         return static_cast<int>(m_rc);
+      }
+
       std::string error_message() const;
 
    private:

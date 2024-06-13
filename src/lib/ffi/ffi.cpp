@@ -67,12 +67,14 @@ int ffi_map_error_type(Botan::ErrorType err) {
       case Botan::ErrorType::IoError:
       case Botan::ErrorType::Pkcs11Error:
       case Botan::ErrorType::CommonCryptoError:
-      case Botan::ErrorType::TPMError:
       case Botan::ErrorType::ZlibError:
       case Botan::ErrorType::Bzip2Error:
       case Botan::ErrorType::LzmaError:
       case Botan::ErrorType::DatabaseError:
          return BOTAN_FFI_ERROR_SYSTEM_ERROR;
+
+      case Botan::ErrorType::TPMError:
+         return BOTAN_FFI_ERROR_TPM_ERROR;
 
       case Botan::ErrorType::NotImplemented:
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
