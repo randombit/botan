@@ -1,5 +1,5 @@
 /*
-* KDF defined in NIST SP 800-56c
+* Two-Step KDF defined in NIST SP 800-56Cr2 (Section 5)
 * (C) 2016 Kai Michaelis
 *
 * Botan is released under the Simplified BSD License (see license.txt)
@@ -14,16 +14,16 @@
 namespace Botan {
 
 /**
- * NIST SP 800-56C KDF
+ * NIST SP 800-56C Two-Step KDF (Section 5)
  */
-class SP800_56C final : public KDF {
+class SP800_56C_Two_Step final : public KDF {
    public:
       std::string name() const override;
 
       std::unique_ptr<KDF> new_object() const override;
 
       /**
-      * Derive a key using the SP800-56C KDF.
+      * Derive a key using the SP800-56C Two-Step KDF.
       *
       * The implementation hard codes the context value for the
       * expansion step to the empty string.
@@ -50,7 +50,7 @@ class SP800_56C final : public KDF {
       * @param mac MAC algorithm used for randomness extraction
       * @param exp KDF used for key expansion
       */
-      SP800_56C(std::unique_ptr<MessageAuthenticationCode> mac, std::unique_ptr<KDF> exp) :
+      SP800_56C_Two_Step(std::unique_ptr<MessageAuthenticationCode> mac, std::unique_ptr<KDF> exp) :
             m_prf(std::move(mac)), m_exp(std::move(exp)) {}
 
    private:

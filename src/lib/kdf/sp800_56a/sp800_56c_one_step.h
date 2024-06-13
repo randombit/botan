@@ -21,7 +21,7 @@ namespace Botan {
  * NIST SP 800-56Cr2 One-Step KDF using hash function
  * @warning This KDF ignores the provided salt value
  */
-class SP800_56A_Hash final : public KDF {
+class SP800_56C_One_Step_Hash final : public KDF {
    public:
       std::string name() const override;
 
@@ -56,7 +56,7 @@ class SP800_56A_Hash final : public KDF {
       /**
       * @param hash the hash function to use as the auxiliary function
       */
-      explicit SP800_56A_Hash(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {}
+      explicit SP800_56C_One_Step_Hash(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {}
 
    private:
       std::unique_ptr<HashFunction> m_hash;
@@ -65,7 +65,7 @@ class SP800_56A_Hash final : public KDF {
 /**
  * NIST SP800-56Cr2 One-Step KDF using HMAC
  */
-class SP800_56A_HMAC final : public KDF {
+class SP800_56C_One_Step_HMAC final : public KDF {
    public:
       std::string name() const override;
 
@@ -100,7 +100,7 @@ class SP800_56A_HMAC final : public KDF {
       /**
       * @param mac the HMAC to use as the auxiliary function
       */
-      explicit SP800_56A_HMAC(std::unique_ptr<MessageAuthenticationCode> mac);
+      explicit SP800_56C_One_Step_HMAC(std::unique_ptr<MessageAuthenticationCode> mac);
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_mac;
@@ -109,7 +109,7 @@ class SP800_56A_HMAC final : public KDF {
 /**
  * NIST SP800-56Cr2 One-Step KDF using KMAC (Abstract class)
  */
-class SP800_56A_KMAC_Abstract : public KDF {
+class SP800_56A_One_Step_KMAC_Abstract : public KDF {
    public:
       /**
       * Derive a key using the SP800-56A KDF.
@@ -144,11 +144,11 @@ class SP800_56A_KMAC_Abstract : public KDF {
 /**
  * NIST SP800-56Cr2 One-Step KDF using KMAC-128
  */
-class SP800_56A_KMAC128 final : public SP800_56A_KMAC_Abstract {
+class SP800_56C_One_Step_KMAC128 final : public SP800_56A_One_Step_KMAC_Abstract {
    public:
       std::string name() const override { return "SP800-56A(KMAC-128)"; }
 
-      std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_56A_KMAC128>(); }
+      std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_56C_One_Step_KMAC128>(); }
 
    protected:
       std::unique_ptr<MessageAuthenticationCode> create_kmac_instance(size_t output_byte_len) const override;
@@ -157,11 +157,11 @@ class SP800_56A_KMAC128 final : public SP800_56A_KMAC_Abstract {
 /**
  * NIST SP800-56Cr2 One-Step KDF using KMAC-256
  */
-class SP800_56A_KMAC256 final : public SP800_56A_KMAC_Abstract {
+class SP800_56C_One_Step_KMAC256 final : public SP800_56A_One_Step_KMAC_Abstract {
    public:
       std::string name() const override { return "SP800-56A(KMAC-256)"; }
 
-      std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_56A_KMAC256>(); }
+      std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_56C_One_Step_KMAC256>(); }
 
    protected:
       std::unique_ptr<MessageAuthenticationCode> create_kmac_instance(size_t output_byte_len) const override;

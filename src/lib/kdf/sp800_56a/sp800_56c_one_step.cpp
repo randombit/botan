@@ -8,7 +8,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/sp800_56a.h>
+#include <botan/internal/sp800_56c_one_step.h>
 
 #include <botan/exceptn.h>
 #include <botan/internal/bit_ops.h>
@@ -77,14 +77,14 @@ void kdm_internal(std::span<uint8_t> output_buffer,
 
 }  // namespace
 
-void SP800_56A_Hash::kdf(uint8_t key[],
-                         size_t key_len,
-                         const uint8_t secret[],
-                         size_t secret_len,
-                         const uint8_t salt[],
-                         size_t salt_len,
-                         const uint8_t label[],
-                         size_t label_len) const {
+void SP800_56C_One_Step_Hash::kdf(uint8_t key[],
+                                  size_t key_len,
+                                  const uint8_t secret[],
+                                  size_t secret_len,
+                                  const uint8_t salt[],
+                                  size_t salt_len,
+                                  const uint8_t label[],
+                                  size_t label_len) const {
    BOTAN_UNUSED(salt);
    BOTAN_ARG_CHECK(salt_len == 0, "SP800_56A_Hash does not support a non-empty salt");
 
@@ -95,29 +95,30 @@ void SP800_56A_Hash::kdf(uint8_t key[],
    });
 }
 
-std::string SP800_56A_Hash::name() const {
+std::string SP800_56C_One_Step_Hash::name() const {
    return fmt("SP800-56A({})", m_hash->name());
 }
 
-std::unique_ptr<KDF> SP800_56A_Hash::new_object() const {
-   return std::make_unique<SP800_56A_Hash>(m_hash->new_object());
+std::unique_ptr<KDF> SP800_56C_One_Step_Hash::new_object() const {
+   return std::make_unique<SP800_56C_One_Step_Hash>(m_hash->new_object());
 }
 
-SP800_56A_HMAC::SP800_56A_HMAC(std::unique_ptr<MessageAuthenticationCode> mac) : m_mac(std::move(mac)) {
+SP800_56C_One_Step_HMAC::SP800_56C_One_Step_HMAC(std::unique_ptr<MessageAuthenticationCode> mac) :
+      m_mac(std::move(mac)) {
    // TODO: we need a MessageAuthenticationCode::is_hmac
    if(!m_mac->name().starts_with("HMAC(")) {
       throw Algorithm_Not_Found("Only HMAC can be used with SP800_56A_HMAC");
    }
 }
 
-void SP800_56A_HMAC::kdf(uint8_t key[],
-                         size_t key_len,
-                         const uint8_t secret[],
-                         size_t secret_len,
-                         const uint8_t salt[],
-                         size_t salt_len,
-                         const uint8_t label[],
-                         size_t label_len) const {
+void SP800_56C_One_Step_HMAC::kdf(uint8_t key[],
+                                  size_t key_len,
+                                  const uint8_t secret[],
+                                  size_t secret_len,
+                                  const uint8_t salt[],
+                                  size_t salt_len,
+                                  const uint8_t label[],
+                                  size_t label_len) const {
    kdm_internal({key, key_len}, {secret, secret_len}, {label, label_len}, *m_mac, [&](Buffered_Computation* kdf) {
       MessageAuthenticationCode* kdf_mac = dynamic_cast<MessageAuthenticationCode*>(kdf);
       BOTAN_ASSERT_NONNULL(kdf_mac);
@@ -134,23 +135,23 @@ void SP800_56A_HMAC::kdf(uint8_t key[],
    });
 }
 
-std::string SP800_56A_HMAC::name() const {
+std::string SP800_56C_One_Step_HMAC::name() const {
    return fmt("SP800-56A({})", m_mac->name());
 }
 
-std::unique_ptr<KDF> SP800_56A_HMAC::new_object() const {
-   return std::make_unique<SP800_56A_HMAC>(m_mac->new_object());
+std::unique_ptr<KDF> SP800_56C_One_Step_HMAC::new_object() const {
+   return std::make_unique<SP800_56C_One_Step_HMAC>(m_mac->new_object());
 }
 
 // Option 3 - KMAC
-void SP800_56A_KMAC_Abstract::kdf(uint8_t key[],
-                                  size_t key_len,
-                                  const uint8_t secret[],
-                                  size_t secret_len,
-                                  const uint8_t salt[],
-                                  size_t salt_len,
-                                  const uint8_t label[],
-                                  size_t label_len) const {
+void SP800_56A_One_Step_KMAC_Abstract::kdf(uint8_t key[],
+                                           size_t key_len,
+                                           const uint8_t secret[],
+                                           size_t secret_len,
+                                           const uint8_t salt[],
+                                           size_t salt_len,
+                                           const uint8_t label[],
+                                           size_t label_len) const {
    auto mac = create_kmac_instance(key_len);
    kdm_internal({key, key_len}, {secret, secret_len}, {label, label_len}, *mac, [&](Buffered_Computation* kdf) {
       MessageAuthenticationCode* kdf_mac = dynamic_cast<MessageAuthenticationCode*>(kdf);
@@ -178,11 +179,13 @@ void SP800_56A_KMAC_Abstract::kdf(uint8_t key[],
    });
 }
 
-std::unique_ptr<MessageAuthenticationCode> SP800_56A_KMAC128::create_kmac_instance(size_t output_byte_len) const {
+std::unique_ptr<MessageAuthenticationCode> SP800_56C_One_Step_KMAC128::create_kmac_instance(
+   size_t output_byte_len) const {
    return std::make_unique<KMAC128>(output_byte_len * 8);
 }
 
-std::unique_ptr<MessageAuthenticationCode> SP800_56A_KMAC256::create_kmac_instance(size_t output_byte_len) const {
+std::unique_ptr<MessageAuthenticationCode> SP800_56C_One_Step_KMAC256::create_kmac_instance(
+   size_t output_byte_len) const {
    return std::make_unique<KMAC256>(output_byte_len * 8);
 }
 

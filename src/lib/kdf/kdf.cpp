@@ -42,11 +42,11 @@
 #endif
 
 #if defined(BOTAN_HAS_SP800_56A)
-   #include <botan/internal/sp800_56a.h>
+   #include <botan/internal/sp800_56c_one_step.h>
 #endif
 
 #if defined(BOTAN_HAS_SP800_56C)
-   #include <botan/internal/sp800_56c.h>
+   #include <botan/internal/sp800_56c_two_step.h>
 #endif
 
 namespace Botan {
@@ -160,16 +160,16 @@ std::unique_ptr<KDF> KDF::create(std::string_view algo_spec, std::string_view pr
 #if defined(BOTAN_HAS_SP800_56A)
    if(req.algo_name() == "SP800-56A" && req.arg_count() == 1) {
       if(auto hash = HashFunction::create(req.arg(0))) {
-         return std::make_unique<SP800_56A_Hash>(std::move(hash));
+         return std::make_unique<SP800_56C_One_Step_Hash>(std::move(hash));
       }
       if(req.arg(0) == "KMAC-128") {
-         return std::make_unique<SP800_56A_KMAC128>();
+         return std::make_unique<SP800_56C_One_Step_KMAC128>();
       }
       if(req.arg(0) == "KMAC-256") {
-         return std::make_unique<SP800_56A_KMAC256>();
+         return std::make_unique<SP800_56C_One_Step_KMAC256>();
       }
       if(auto mac = MessageAuthenticationCode::create(req.arg(0))) {
-         return std::make_unique<SP800_56A_HMAC>(std::move(mac));
+         return std::make_unique<SP800_56C_One_Step_HMAC>(std::move(mac));
       }
    }
 #endif
@@ -179,11 +179,11 @@ std::unique_ptr<KDF> KDF::create(std::string_view algo_spec, std::string_view pr
       std::unique_ptr<KDF> exp(kdf_create_mac_or_hash<SP800_108_Feedback>(req.arg(0)));
       if(exp) {
          if(auto mac = MessageAuthenticationCode::create(req.arg(0))) {
-            return std::make_unique<SP800_56C>(std::move(mac), std::move(exp));
+            return std::make_unique<SP800_56C_Two_Step>(std::move(mac), std::move(exp));
          }
 
          if(auto mac = MessageAuthenticationCode::create(fmt("HMAC({})", req.arg(0)))) {
-            return std::make_unique<SP800_56C>(std::move(mac), std::move(exp));
+            return std::make_unique<SP800_56C_Two_Step>(std::move(mac), std::move(exp));
          }
       }
    }
