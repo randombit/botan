@@ -162,6 +162,12 @@ std::unique_ptr<KDF> KDF::create(std::string_view algo_spec, std::string_view pr
       if(auto hash = HashFunction::create(req.arg(0))) {
          return std::make_unique<SP800_56A_Hash>(std::move(hash));
       }
+      if(req.arg(0) == "KMAC-128") {
+         return std::make_unique<SP800_56A_KMAC128>();
+      }
+      if(req.arg(0) == "KMAC-256") {
+         return std::make_unique<SP800_56A_KMAC256>();
+      }
       if(auto mac = MessageAuthenticationCode::create(req.arg(0))) {
          return std::make_unique<SP800_56A_HMAC>(std::move(mac));
       }

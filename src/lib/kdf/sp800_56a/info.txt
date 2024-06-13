@@ -8,4 +8,5 @@ name -> "NIST SP800-56A"
 
 <requires>
 hmac
+kmac
 </requires>

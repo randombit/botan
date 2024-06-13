@@ -1,7 +1,9 @@
 /*
-* KDF defined in NIST SP 800-56a (Approved Alternative 1)
+* KDF defined in NIST SP 800-56a revision 2 (Single-step key-derivation function)
+* or in NIST SP 800-56C revision 2 (Section 4 - One-Step KDM)
 *
 * (C) 2017 Ribose Inc. Written by Krzysztof Kwiatkowski.
+* (C) 2024 Fabian Albert - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,43 +11,68 @@
 #include <botan/internal/sp800_56a.h>
 
 #include <botan/exceptn.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/kmac.h>
+
+#include <functional>
 
 namespace Botan {
 
 namespace {
+/**
+ * @brief One-Step Key Derivation as defined in SP800-56Cr2 Section 4
+ */
+void kdm_internal(std::span<uint8_t> output_buffer,
+                  std::span<const uint8_t> z,
+                  std::span<const uint8_t> fixed_info,
+                  Buffered_Computation& h,
+                  const std::function<void(Buffered_Computation*)>& reset_h_callback) {
+   size_t l = output_buffer.size() * 8;
+   // 1. If L > 0, then set reps = ceil(L / H_outputBits); otherwise,
+   //    output an error indicator and exit this process without
+   //    performing the remaining actions (i.e., omit steps 2 through 8).
+   BOTAN_ARG_CHECK(l > 0, "Zero KDM output length");
+   size_t reps = ceil_division(l, h.output_length() * 8);
 
-template <class AuxiliaryFunction_t>
-void SP800_56A_kdf(AuxiliaryFunction_t& auxfunc,
-                   uint8_t key[],
-                   size_t key_len,
-                   const uint8_t secret[],
-                   size_t secret_len,
-                   const uint8_t label[],
-                   size_t label_len) {
-   const uint64_t kRepsUpperBound = (1ULL << 32);
+   // 2. If reps > (2^32 − 1), then output an error indicator and exit this
+   //    process without performing the remaining actions
+   //    (i.e., omit steps 3 through 8).
+   BOTAN_ARG_CHECK(reps <= 0xFFFFFFFF, "Too large KDM output length");
 
-   const size_t digest_len = auxfunc.output_length();
+   // 3. Initialize a big-endian 4-byte unsigned integer counter as
+   //    0x00000000, corresponding to a 32-bit binary representation of
+   //    the number zero.
+   uint32_t counter = 0;
 
-   const size_t reps = key_len / digest_len + ((key_len % digest_len) ? 1 : 0);
+   // 4. If counter || Z || FixedInfo is more than max_H_inputBits bits
+   //    long, then output an error indicator and exit this process
+   //    without performing any of the remaining actions (i.e., omit
+   //    steps 5 through 8). => SHA3 and KMAC are unlimited
 
-   if(reps >= kRepsUpperBound) {
-      // See SP-800-56A, point 5.8.1
-      throw Invalid_Argument("SP800-56A KDF requested output too large");
-   }
-
-   uint32_t counter = 1;
+   // 5. Initialize Result(0) as an empty bit string
+   //    (i.e., the null string).
    secure_vector<uint8_t> result;
-   for(size_t i = 0; i < reps; i++) {
-      auxfunc.update_be(counter++);
-      auxfunc.update(secret, secret_len);
-      auxfunc.update(label, label_len);
-      auxfunc.final(result);
 
-      const size_t offset = digest_len * i;
-      const size_t len = std::min(result.size(), key_len - offset);
-      copy_mem(&key[offset], result.data(), len);
+   // 6. For i = 1 to reps, do the following:
+   for(size_t i = 1; i <= reps; i++) {
+      // 6.1. Increment counter by 1.
+      counter++;
+      // Reset the hash/MAC object. For MAC, also set the key (salt) and IV.
+      reset_h_callback(&h);
+
+      // 6.2 Compute K(i) = H(counter || Z || FixedInfo).
+      h.update_be(counter);
+      h.update(z);
+      h.update(fixed_info);
+      auto k_i = h.final();
+
+      // 6.3. Set Result(i) = Result(i−1) || K(i).
+      result.insert(result.end(), k_i.begin(), k_i.end());
    }
+
+   // 7. Set DerivedKeyingMaterial equal to the leftmost L bits of Result(reps).
+   copy_mem(output_buffer, std::span(result).subspan(0, output_buffer.size()));
 }
 
 }  // namespace
@@ -59,12 +86,13 @@ void SP800_56A_Hash::kdf(uint8_t key[],
                          const uint8_t label[],
                          size_t label_len) const {
    BOTAN_UNUSED(salt);
+   BOTAN_ARG_CHECK(salt_len == 0, "SP800_56A_Hash does not support a non-empty salt");
 
-   if(salt_len > 0) {
-      throw Invalid_Argument("SP800_56A_Hash does not support a non-empty salt");
-   }
-
-   SP800_56A_kdf(*m_hash, key, key_len, secret, secret_len, label, label_len);
+   kdm_internal({key, key_len}, {secret, secret_len}, {label, label_len}, *m_hash, [](Buffered_Computation* kdf) {
+      HashFunction* hash = dynamic_cast<HashFunction*>(kdf);
+      BOTAN_ASSERT_NONNULL(hash);
+      hash->clear();
+   });
 }
 
 std::string SP800_56A_Hash::name() const {
@@ -78,7 +106,7 @@ std::unique_ptr<KDF> SP800_56A_Hash::new_object() const {
 SP800_56A_HMAC::SP800_56A_HMAC(std::unique_ptr<MessageAuthenticationCode> mac) : m_mac(std::move(mac)) {
    // TODO: we need a MessageAuthenticationCode::is_hmac
    if(!m_mac->name().starts_with("HMAC(")) {
-      throw Algorithm_Not_Found("Only HMAC can be used with KDF SP800-56A");
+      throw Algorithm_Not_Found("Only HMAC can be used with SP800_56A_HMAC");
    }
 }
 
@@ -90,15 +118,20 @@ void SP800_56A_HMAC::kdf(uint8_t key[],
                          size_t salt_len,
                          const uint8_t label[],
                          size_t label_len) const {
-   /*
-   * SP 800-56A specifies if the salt is empty then a block of zeros
-   * equal to the hash's underlying block size are used. However this
-   * is equivalent to setting a zero-length key, so the same call
-   * works for either case.
-   */
-   m_mac->set_key(salt, salt_len);
+   kdm_internal({key, key_len}, {secret, secret_len}, {label, label_len}, *m_mac, [&](Buffered_Computation* kdf) {
+      MessageAuthenticationCode* kdf_mac = dynamic_cast<MessageAuthenticationCode*>(kdf);
+      BOTAN_ASSERT_NONNULL(kdf_mac);
+      kdf_mac->clear();
+      // 4.1 Option 2 and 3 - An implementation dependent byte string, salt,
+      //     whose (non-null) value may be optionally provided in
+      //     OtherInput, serves as the HMAC#/KMAC# key ..
 
-   SP800_56A_kdf(*m_mac, key, key_len, secret, secret_len, label, label_len);
+      // SP 800-56A specifies if the salt is empty then a block of zeros
+      // equal to the hash's underlying block size are used. However this
+      // is equivalent to setting a zero-length key, so the same call
+      // works for either case.
+      kdf_mac->set_key(std::span{salt, salt_len});
+   });
 }
 
 std::string SP800_56A_HMAC::name() const {
@@ -107,6 +140,50 @@ std::string SP800_56A_HMAC::name() const {
 
 std::unique_ptr<KDF> SP800_56A_HMAC::new_object() const {
    return std::make_unique<SP800_56A_HMAC>(m_mac->new_object());
+}
+
+// Option 3 - KMAC
+void SP800_56A_KMAC_Abstract::kdf(uint8_t key[],
+                                  size_t key_len,
+                                  const uint8_t secret[],
+                                  size_t secret_len,
+                                  const uint8_t salt[],
+                                  size_t salt_len,
+                                  const uint8_t label[],
+                                  size_t label_len) const {
+   auto mac = create_kmac_instance(key_len);
+   kdm_internal({key, key_len}, {secret, secret_len}, {label, label_len}, *mac, [&](Buffered_Computation* kdf) {
+      MessageAuthenticationCode* kdf_mac = dynamic_cast<MessageAuthenticationCode*>(kdf);
+      BOTAN_ASSERT_NONNULL(kdf_mac);
+      kdf_mac->clear();
+      // 4.1 Option 2 and 3 - An implementation dependent byte string, salt,
+      //     whose (non-null) value may be optionally provided in
+      //     OtherInput, serves as the HMAC#/KMAC# key ..
+
+      // SP 800-56A specifies if the salt is empty then a block of zeros
+      // equal to the hash's underlying block size are used. However this
+      // is equivalent to setting a zero-length key, so the same call
+      // works for either case.
+      kdf_mac->set_key(std::span{salt, salt_len});
+
+      // 4.1 Option 2 and 3 - An implementation dependent byte string, salt,
+      //     whose (non-null) value may be optionally provided in
+      //     OtherInput, serves as the HMAC#/KMAC# key ...
+      kdf_mac->set_key(std::span{salt, salt_len});
+
+      // 4.1 Option 3 - The "customization string" S shall be the byte string
+      //     01001011 || 01000100 || 01000110, which represents the sequence
+      //     of characters 'K', 'D', and 'F' in 8-bit ASCII.
+      kdf_mac->start(std::array<uint8_t, 3>{'K', 'D', 'F'});
+   });
+}
+
+std::unique_ptr<MessageAuthenticationCode> SP800_56A_KMAC128::create_kmac_instance(size_t output_byte_len) const {
+   return std::make_unique<KMAC128>(output_byte_len * 8);
+}
+
+std::unique_ptr<MessageAuthenticationCode> SP800_56A_KMAC256::create_kmac_instance(size_t output_byte_len) const {
+   return std::make_unique<KMAC256>(output_byte_len * 8);
 }
 
 }  // namespace Botan
