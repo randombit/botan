@@ -9,6 +9,7 @@
 #include <botan/aead.h>
 #include <botan/internal/ffi_util.h>
 #include <botan/internal/stl_util.h>
+#include <botan/internal/bit_ops.h>
 
 extern "C" {
 
@@ -38,31 +39,53 @@ struct botan_cipher_struct final : public botan_struct<Botan::Cipher_Mode, 0xB4A
 
 namespace {
 
+/**
+ * Select an update size so that the following constraints are fulfilled:
+ *
+ *   - greater than or equal to the update granularity
+ *   - greater than the minimum final size
+ *   - ideal update granularity is a multiple of update granularity
+ *   - (optional) update granularity is a power of 2
+ *
+ * Note that this is necessary mostly for backward-compatibility with previous
+ * versions of the FFI (prior to Botan 3.5.0). For Botan 4.0.0 we should just
+ * directly return the update granularity of the cipher mode and instruct users
+ * to switch to botan_cipher_get_ideal_update_granularity() instead. See also
+ * the discussion in GitHub Issue #4090.
+ */
 size_t ffi_choose_update_size(Botan::Cipher_Mode& mode) {
    const size_t update_granularity = mode.update_granularity();
+   const size_t ideal_update_granularity = mode.ideal_granularity();
    const size_t minimum_final_size = mode.minimum_final_size();
 
-   /*
-   * Return the minimum possible granularity given the FFI API constraints that
-   * we require the returned size be > minimum final size.
-   *
-   * If the minimum final size is zero, or the update_granularity is
-   * already greater, just use that.
-   *
-   * Otherwise scale the update_granularity to a sufficient size
-   * to be greater than the minimum.
-   */
+   // If the minimum final size is zero, or the update_granularity is
+   // already greater, just use that.
    if(minimum_final_size == 0 || update_granularity > minimum_final_size) {
       BOTAN_ASSERT_NOMSG(update_granularity > 0);
       return update_granularity;
    }
 
-   size_t buf_size = std::max(update_granularity, minimum_final_size + 1);
-   if(buf_size % update_granularity != 0) {
-      buf_size += update_granularity - (buf_size % update_granularity);
+   // If the ideal granularity is a multiple of the minimum final size, we
+   // might be able to use that if it stays within the ideal granularity.
+   if(ideal_update_granularity % minimum_final_size == 0 && minimum_final_size * 2 <= ideal_update_granularity) {
+      return minimum_final_size * 2;
    }
 
-   return buf_size;
+   // Otherwise, try to use the next power of two greater than the minimum
+   // final size, if the ideal granularity is a multiple of that.
+   const size_t b1 = (1 << Botan::ceil_log2(minimum_final_size));
+   if(ideal_update_granularity % b1 == 0) {
+      return b1;
+   }
+
+   // Last resort: Find the next integer greater than the minimum final size
+   //              for which the ideal granularity is a multiple of.
+   //              Most sensible cipher modes should never reach this point.
+   BOTAN_ASSERT_NOMSG(minimum_final_size < ideal_update_granularity);
+   size_t b2 = minimum_final_size + 1;
+   for(; b2 < ideal_update_granularity && ideal_update_granularity % b2 != 0; ++b2) {}
+
+   return b2;
 }
 
 }  // namespace
