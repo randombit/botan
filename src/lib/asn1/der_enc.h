@@ -157,6 +157,13 @@ class BOTAN_PUBLIC_API(2, 0) DER_Encoder final {
          return (*this);
       }
 
+      DER_Encoder& encode_if(bool pred, size_t num) {
+         if(pred) {
+            encode(num);
+         }
+         return (*this);
+      }
+
       DER_Encoder& add_object(ASN1_Type type_tag, ASN1_Class class_tag, const uint8_t rep[], size_t length);
 
       DER_Encoder& add_object(ASN1_Type type_tag, ASN1_Class class_tag, const std::vector<uint8_t>& rep) {

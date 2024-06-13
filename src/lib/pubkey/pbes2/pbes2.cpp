@@ -100,8 +100,10 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
                                   size_t* msec_in_iterations_out,
                                   size_t iterations_if_msec_null,
                                   size_t key_length,
+                                  bool include_key_length_in_struct,
                                   AlgorithmIdentifier& kdf_algo) {
-   const secure_vector<uint8_t> salt = rng.random_vec(12);
+   const size_t salt_len = 16;
+   const secure_vector<uint8_t> salt = rng.random_vec(salt_len);
 
    if(digest == "Scrypt") {
       auto pwhash_fam = PasswordHashFamily::create_or_throw("Scrypt");
@@ -133,7 +135,7 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
          .encode(N)
          .encode(r)
          .encode(p)
-         .encode(key_length)
+         .encode_if(include_key_length_in_struct, key_length)
          .end_cons();
 
       kdf_algo = AlgorithmIdentifier(OID::from_string("Scrypt"), scrypt_params);
@@ -171,7 +173,7 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
          .start_sequence()
          .encode(salt, ASN1_Type::OctetString)
          .encode(iterations)
-         .encode(key_length)
+         .encode_if(include_key_length_in_struct, key_length)
          .encode_if(prf != "HMAC(SHA-1)", AlgorithmIdentifier(prf, AlgorithmIdentifier::USE_NULL_PARAM))
          .end_cons();
 
@@ -204,8 +206,16 @@ std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbes2_encrypt_shared(std::s
 
    AlgorithmIdentifier kdf_algo;
 
-   const secure_vector<uint8_t> derived_key =
-      derive_key(passphrase, prf, rng, msec_in_iterations_out, iterations_if_msec_null, key_length, kdf_algo);
+   const bool include_key_length_in_struct = enc->key_spec().minimum_keylength() != enc->key_spec().maximum_keylength();
+
+   const auto derived_key = derive_key(passphrase,
+                                       prf,
+                                       rng,
+                                       msec_in_iterations_out,
+                                       iterations_if_msec_null,
+                                       key_length,
+                                       include_key_length_in_struct,
+                                       kdf_algo);
 
    enc->set_key(derived_key);
    enc->start(iv);

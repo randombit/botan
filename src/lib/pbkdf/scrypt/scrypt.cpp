@@ -51,11 +51,9 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
    * Compute stime(8192,1,1) as baseline and extrapolate
    */
 
-   // We include a bit of slop here (the + 512) to handle the fact that scrypt's
-   // memory consumption is modified by all three parameters, and otherwise we
-   // stop before hitting the desired target.
+   // This is zero if max_memory_usage_mb == 0 (unbounded)
+   const size_t max_memory_usage = max_memory_usage_mb * 1024 * 1024;
 
-   const size_t max_memory_usage = max_memory_usage_mb * 1024 * 1024 + 512;
    // Starting parameters
    size_t N = 8 * 1024;
    size_t r = 1;
@@ -83,9 +81,12 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
 
    uint64_t est_nsec = measured_time;
 
-   // First move increase r by 8x if possible
+   // In below code we invoke scrypt_memory_usage with p == 0 as p contributes
+   // (very slightly) to memory consumption, but N is the driving factor.
+   // Including p leads to using an N half as large as what the user would expect.
 
-   if(max_memory_usage == 0 || scrypt_memory_usage(N, r * 8, p) <= max_memory_usage) {
+   // First increase r by 8x if possible
+   if(max_memory_usage == 0 || scrypt_memory_usage(N, r * 8, 0) <= max_memory_usage) {
       if(target_nsec / est_nsec >= 5) {
          r *= 8;
          est_nsec *= 5;
@@ -93,8 +94,7 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
    }
 
    // Now double N as many times as we can
-
-   while(max_memory_usage == 0 || scrypt_memory_usage(N * 2, r, p) <= max_memory_usage) {
+   while(max_memory_usage == 0 || scrypt_memory_usage(N * 2, r, 0) <= max_memory_usage) {
       if(target_nsec / est_nsec >= 2) {
          N *= 2;
          est_nsec *= 2;
@@ -104,8 +104,7 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
    }
 
    // If we have extra runtime budget, increment p
-
-   if(target_nsec / est_nsec > 2) {
+   if(target_nsec / est_nsec >= 2) {
       p *= std::min<size_t>(1024, static_cast<size_t>(target_nsec / est_nsec));
    }
 
