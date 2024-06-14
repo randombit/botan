@@ -24,8 +24,7 @@ std::string TPM2_Error::error_message() const {
    return Tss2_RC_Decode(m_rc);
 }
 
-class TPM2_Context::Impl {
-   public:
+struct TPM2_Context::Impl {
       TSS2_TCTI_CONTEXT* m_tcti_ctx;
       ESYS_CONTEXT* m_ctx;
 };
@@ -45,26 +44,6 @@ std::shared_ptr<TPM2_Context> TPM2_Context::create(std::optional<std::string> tc
 TPM2_Context::TPM2_Context(const char* tcti_nameconf) : m_impl(std::make_unique<Impl>()) {
    check_tss2_rc("TCTI Initialization", Tss2_TctiLdr_Initialize(tcti_nameconf, &m_impl->m_tcti_ctx));
    check_tss2_rc("TPM2 Initialization", Esys_Initialize(&m_impl->m_ctx, m_impl->m_tcti_ctx, nullptr /* ABI version */));
-}
-
-TPM2_Context::TPM2_Context(TPM2_Context&& ctx) noexcept {
-   m_impl->m_ctx = ctx.m_impl->m_ctx;
-   m_impl->m_tcti_ctx = ctx.m_impl->m_tcti_ctx;
-
-   ctx.m_impl->m_ctx = nullptr;
-   ctx.m_impl->m_tcti_ctx = nullptr;
-}
-
-TPM2_Context& TPM2_Context::operator=(TPM2_Context&& ctx) noexcept {
-   if(this != &ctx) {
-      m_impl->m_ctx = ctx.m_impl->m_ctx;
-      m_impl->m_tcti_ctx = ctx.m_impl->m_tcti_ctx;
-
-      ctx.m_impl->m_ctx = nullptr;
-      ctx.m_impl->m_tcti_ctx = nullptr;
-   }
-
-   return *this;
 }
 
 void* TPM2_Context::get() {

@@ -11,6 +11,7 @@
 
 #include <botan/exceptn.h>
 
+#include <memory>
 #include <optional>
 
 namespace Botan {
@@ -42,20 +43,20 @@ class BOTAN_PUBLIC_API(3, 6) TPM2_Context final {
       static std::shared_ptr<TPM2_Context> create(std::optional<std::string> tcti_nameconf = {});
 
       TPM2_Context(const TPM2_Context&) = delete;
-      TPM2_Context(TPM2_Context&& ctx) noexcept;
+      TPM2_Context(TPM2_Context&& ctx) noexcept = default;
       ~TPM2_Context();
 
       TPM2_Context& operator=(const TPM2_Context&) = delete;
-      TPM2_Context& operator=(TPM2_Context&& ctx) noexcept;
+      TPM2_Context& operator=(TPM2_Context&& ctx) noexcept = default;
 
-      // Return an ESYS_CONTEXT* for use in other TPM2 functions.
+      /// @return an ESYS_CONTEXT* for use in other TPM2 functions.
       void* get();
 
    private:
       TPM2_Context(const char* tcti_nameconf);
 
    private:
-      class Impl;  // PImpl to avoid TPM2-TSS includes in this header
+      struct Impl;  // PImpl to avoid TPM2-TSS includes in this header
       std::unique_ptr<Impl> m_impl;
 };
 
