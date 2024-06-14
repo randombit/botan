@@ -11,21 +11,16 @@
 
 #include <botan/exceptn.h>
 
-#include <memory>
 #include <optional>
-
-#include <tss2/tss2_esys.h>
-#include <tss2/tss2_rc.h>
-#include <tss2/tss2_tctildr.h>
 
 namespace Botan {
 class BOTAN_PUBLIC_API(3, 6) TPM2_Error final : public Exception {
    public:
-      TPM2_Error(std::string_view location, TSS2_RC rc);
+      TPM2_Error(std::string_view location, uint32_t rc);
 
       ErrorType error_type() const noexcept override { return ErrorType::TPMError; }
 
-      TSS2_RC code() const { return m_rc; }
+      uint32_t code() const { return m_rc; }
 
       int error_code() const noexcept override {
          // RC is uint32 but the maximum value is within int32 range as per tss2_common.h
@@ -35,14 +30,8 @@ class BOTAN_PUBLIC_API(3, 6) TPM2_Error final : public Exception {
       std::string error_message() const;
 
    private:
-      TSS2_RC m_rc;
+      uint32_t m_rc;
 };
-
-inline void check_tss2_rc(std::string_view location, TSS2_RC rc) {
-   if(rc != TSS2_RC_SUCCESS) {
-      throw TPM2_Error(location, rc);
-   }
-}
 
 class BOTAN_PUBLIC_API(3, 6) TPM2_Context final {
    public:
@@ -59,14 +48,15 @@ class BOTAN_PUBLIC_API(3, 6) TPM2_Context final {
       TPM2_Context& operator=(const TPM2_Context&) = delete;
       TPM2_Context& operator=(TPM2_Context&& ctx) noexcept;
 
-      ESYS_CONTEXT* get() { return m_ctx; }
+      // Return an ESYS_CONTEXT* for use in other TPM2 functions.
+      void* get();
 
    private:
       TPM2_Context(const char* tcti_nameconf);
 
    private:
-      TSS2_TCTI_CONTEXT* m_tcti_ctx;
-      ESYS_CONTEXT* m_ctx;
+      class Impl;  // PImpl to avoid TPM2-TSS includes in this header
+      std::unique_ptr<Impl> m_impl;
 };
 
 }  // namespace Botan
