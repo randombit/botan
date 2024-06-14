@@ -4,9 +4,33 @@ Release Notes
 Version 3.5.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add a new much faster elliptic curve implementation. In this release,
+  this implementation is only used for hash2curve. (GH #3979)
+
 * Add support for LMS hash based signatures (GH #3716 #4059)
 
 * Add support for SSLKEYLOGFILE logging (GH #4043)
+
+* Optimize processing in FFI ``botan_cipher_update`` (GH #3951)
+
+* Add ``Public_Key::raw_public_key_bits`` (GH #)
+
+* Optimize XTS mode (GH #4047)
+
+* Optimize name constraint processing (GH #4047)
+
+* The build system now distinguishes between LLVM Clang and XCode's Clang
+  fork. For the latter, use compiler target "xcode". (GH #4010)
+
+* Fix a bug in ``scrypt`` autotune where, if it was called with a
+  nominal maximum memory limit of zero (meant to indicate no limit)
+  would only ever return parameters using 1 MB.
+
+* Constant time programming improvements including ``CT::value_barrier``
+  and ``CT::Choice`` (GH #4115 #4096 #4108)
+
+* Refactor and optimize AlternativeName. This includes a new API.
+  The old API is retained but deprecated. (GH #4034)
 
 * Kyber internals refactoring (GH #3887)
 
@@ -26,17 +50,12 @@ Version 3.5.0, Not Yet Released
 * Avoid sending IP addresses in the Server Name Indicator TLS extension, if
   an IP address is used to initialize the TLS_Server_Info struct. (GH #4059)
 
-* Optimize XTS mode (GH #4047)
-
-* Optimize name constraint processing (GH #4047)
-
-* Refactor and optimize AlternativeName. This includes a new API.
-  The old API is retained but deprecated. (GH #4034)
-
 * During X.509 certificate verification, first verify the entire sequence
   of signatures, then do other validation. (GH #4045)
 
 * In DTLS fix a bug affecting retransmission of client hellos. (GH #4037)
+
+* Fix a number of bugs related to name constraint processing. (GH #4074)
 
 * Fix a bug in RFC 6979 mode ECDSA. This only caused problems when
   testing with certain curves and does not have any security or interop
@@ -49,12 +68,26 @@ Version 3.5.0, Not Yet Released
 * Elliptic curve groups now verify that the prime and group order are
   related in the manner expected. (GH #4039 #4041)
 
+* Add a script to run the Limbo X.509 path validation test suite.
+
+* Update the BoGo TLS test suite (GH #4078)
+
+* Deprecate various low level BigInt and elliptic curve interfaces (GH #4038 #4056)
+
+* In 3.3.0, support for application specific curves in EC_Group with
+  parameters larger than 521 bits was deprecated. This release expands
+  that deprecation to further restrict future use of application
+  specific curves (see deprecated.rst for details). Add a new EC_Group
+  constructor which enforces these restrictions. (GH #4038)
+
 * Fix a bug when creating a PKCS10 request or X.509 self signed certificate
   when SubjectAlternativeName was included in the provided extensions. If
   this occured, any other values (eg opts.dns) would be ignored. (GH #4032)
 
 * Various low level multi precision integer refactorings and improvements.
   (GH #4007 #4008 #3989 #3987)
+
+* Increase the maximum supported key length of KMAC to 192 bytes (GH #4109)
 
 * Improve the utilities for checked (overflow safe) addition and multiplication.
   (GH #3999)
@@ -69,10 +102,11 @@ Version 3.5.0, Not Yet Released
 * Fix a bug in ``configure.py`` that caused `--with-stack-protector`` to not
   work. (GH #3996)
 
-* The build system now distinguishes between LLVM Clang and XCode's Clang
-  fork. For the latter, use compiler target "xcode". (GH #4010)
-
 * Upgrade CI to use XCode 15.2 on x86-64 and XCode 15.3 on aarch64. (GH #4005)
+
+* Update most CI builds to run on Ubuntu 24.04 (GH #4098)
+
+* Various ``clang-tidy`` fixes (GH #4070 #4075)
 
 * Fixes for GCC 14 (GH #4046)
 

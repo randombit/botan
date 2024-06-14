@@ -51,7 +51,7 @@ Elliptic Curve Deprecations
 
 A number of features relating to elliptic curves are deprecated.  As a typical
 user you would probably not notice these; their removal would not affect for
-example using ECDSA signatures or TLS, but only applications doing usual things
+example using ECDSA signatures or TLS, but only applications doing unusual things
 such as custom elliptic curve parameters, or creating your own protocol using
 elliptic curve points.
 
@@ -91,10 +91,6 @@ elliptic curve points.
   all of which was intended only for internal implementation. In a
   future release, the only operations available for EC_Points will be
   to extract the byte encoding of their affine x and y coordinates.
-
-- Currently it is possible to create an EC_Group with cofactor > 1.
-  None of the builtin groups have composite order, and in the future
-  it will be impossible to create composite order EC_Groups.
 
 Deprecated Modules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
