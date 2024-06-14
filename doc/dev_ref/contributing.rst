@@ -221,7 +221,7 @@ area using ``// clang-format off`` annotations.
 .. note::
 
    Since the output of clang-format varies from version to version, we
-   currently require using exactly ``clang-format 15``.
+   currently require using exactly ``clang-format 17``.
 
 Use braces on both sides of if/else blocks, even if only using a single
 statement.
