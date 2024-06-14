@@ -10,6 +10,7 @@
     "clangd.arguments": [
         "--header-insertion=never"
     ],
+    "clang-format.executable": "clang-format-17",
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
     "python.linting.pylintArgs": [
