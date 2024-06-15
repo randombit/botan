@@ -44,6 +44,7 @@ class Utility_Function_Tests final : public Test {
          results.push_back(test_checked_cast());
          results.push_back(test_round_up());
          results.push_back(test_loadstore());
+         results.push_back(test_loadstore_ambiguity());
          results.push_back(test_loadstore_fallback());
          results.push_back(test_loadstore_constexpr());
          return Botan::concat(results, test_copy_out_be_le());
@@ -495,6 +496,36 @@ class Utility_Function_Tests final : public Test {
 
       template <size_t N>
       using a = std::array<uint8_t, N>;
+
+      static Test::Result test_loadstore_ambiguity() {
+         // This is a regression test for a (probable) compiler bug in Xcode 15
+         // where it would fail to compile the load/store functions for size_t
+         //
+         // It seems that this platform defines uint64_t as "unsigned long long"
+         // and size_t as "unsigned long". Both are 64-bits but the compiler
+         // was unable to disambiguate the two in reverse_bytes in bswap.h
+
+         const uint32_t in32 = 0x01234567;
+         const uint64_t in64 = 0x0123456789ABCDEF;
+         const size_t inszt = 0x87654321;
+
+         Test::Result result("Util load/store ambiguity");
+         const auto out_be_32 = Botan::store_be(in32);
+         const auto out_le_32 = Botan::store_le(in32);
+         const auto out_be_64 = Botan::store_be(in64);
+         const auto out_le_64 = Botan::store_le(in64);
+         const auto out_be_szt = Botan::store_be(inszt);
+         const auto out_le_szt = Botan::store_le(inszt);
+
+         result.test_is_eq<uint32_t>("be 32", Botan::load_be<uint32_t>(out_be_32), in32);
+         result.test_is_eq<uint32_t>("le 32", Botan::load_le<uint32_t>(out_le_32), in32);
+         result.test_is_eq<uint64_t>("be 64", Botan::load_be<uint64_t>(out_be_64), in64);
+         result.test_is_eq<uint64_t>("le 64", Botan::load_le<uint64_t>(out_le_64), in64);
+         result.test_is_eq<size_t>("be szt", Botan::load_be<size_t>(out_be_szt), inszt);
+         result.test_is_eq<size_t>("le szt", Botan::load_le<size_t>(out_le_szt), inszt);
+
+         return result;
+      }
 
       static Test::Result test_loadstore_fallback() {
          // The fallback implementation is only used if we don't know the
