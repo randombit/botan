@@ -188,6 +188,25 @@ A set of signature schemes based on elliptic curves. All are national standards
 in their respective countries (Germany, South Korea, China, and Russia, resp),
 and are completely obscure and unused outside of that context.
 
+KEM Combiner
+------------
+
+A KEM Combiner is a key encapsulation mechanism (KEM) that combines multiple
+KEMs into a single KEM. The resulting KEM is secure if at least one combined
+KEM is secure. Usually, the KEM Combiner combines a classical KEM with a
+post-quantum secure KEM. Note that every key exchange algorithm can also be
+described as a KEM.
+
+X-Wing KEM Combiner
+~~~~~~~~~~~~~~~~~~~
+
+This combiner is based on
+`draft-connolly-cfrg-xwing-kem-02 <https://datatracker.ietf.org/doc/draft-connolly-cfrg-xwing-kem/>`_.
+X-Wing combines X25519 and ML-KEM-768 into a single KEM. It provides IND-CCA
+security as long as at least one of the combined algorithms is secure. X-Wing
+is easy to use since it doesn't require any specific configurations, but it
+cannot be used with other algorithm combinations.
+
 .. _creating_new_private_keys:
 
 Creating New Private Keys

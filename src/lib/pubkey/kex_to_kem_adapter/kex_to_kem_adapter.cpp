@@ -31,7 +31,7 @@
    #include <botan/x448.h>
 #endif
 
-namespace Botan::TLS {
+namespace Botan {
 
 namespace {
 
@@ -230,6 +230,10 @@ secure_vector<uint8_t> KEX_to_KEM_Adapter_PrivateKey::private_key_bits() const {
    return m_private_key->private_key_bits();
 }
 
+secure_vector<uint8_t> KEX_to_KEM_Adapter_PrivateKey::raw_private_key_bits() const {
+   return m_private_key->raw_private_key_bits();
+}
+
 std::unique_ptr<Public_Key> KEX_to_KEM_Adapter_PrivateKey::public_key() const {
    return std::make_unique<KEX_to_KEM_Adapter_PublicKey>(m_private_key->public_key());
 }
@@ -248,4 +252,4 @@ std::unique_ptr<PK_Ops::KEM_Decryption> KEX_to_KEM_Adapter_PrivateKey::create_ke
    return std::make_unique<KEX_to_KEM_Decryption_Operation>(*m_private_key, rng, kdf, provider);
 }
 
-}  // namespace Botan::TLS
+}  // namespace Botan

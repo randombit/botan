@@ -1,0 +1,20 @@
+<defines>
+X_WING -> 20240503
+</defines>
+
+<module_info>
+name -> "X-Wing"
+lifecycle -> "Experimental"
+</module_info>
+
+<header:public>
+x_wing.h
+</header:public>
+
+<requires>
+kex_to_kem_adapter
+hybrid_kem
+sha3
+x25519
+kyber
+</requires>
