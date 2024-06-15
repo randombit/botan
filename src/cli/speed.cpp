@@ -1210,24 +1210,25 @@ class Speed final : public Command {
       void bench_pcurves(const std::vector<std::string>& groups, const std::chrono::milliseconds runtime) {
          for(const auto& group_name : groups) {
             if(auto curve = Botan::PCurve::PrimeOrderCurve::from_name(group_name)) {
-               auto pcurves_base_timer = make_timer(group_name + " pcurve base mul");
-               auto pcurves_var_timer = make_timer(group_name + " pcurve var mul");
-               auto pcurves_mul2_timer = make_timer(group_name + " pcurve mul2");
+               auto base_timer = make_timer(group_name + " pcurve base mul");
+               auto var_timer = make_timer(group_name + " pcurve var mul");
+               auto mul2_timer = make_timer(group_name + " pcurve mul2");
 
                auto scalar_invert = make_timer(group_name + " pcurve scalar invert");
                auto to_affine = make_timer(group_name + " pcurve proj->affine");
 
                const auto scalar = curve->random_scalar(rng());
 
-               pcurves_base_timer->run_until_elapsed(runtime,
-                                                     [&]() { return curve->mul_by_g(scalar, rng()).to_affine(); });
+               base_timer->run_until_elapsed(runtime, [&]() { return curve->mul_by_g(scalar, rng()).to_affine(); });
 
                auto g = curve->generator();
                auto h = curve->mul(g, curve->random_scalar(rng()), rng()).to_affine();
 
+               var_timer->run_until_elapsed(runtime, [&]() { return curve->mul(h, scalar, rng()).to_affine(); });
+
                auto gh_tab = curve->mul2_setup(g, h);
                const auto scalar2 = curve->random_scalar(rng());
-               pcurves_mul2_timer->run_until_elapsed(
+               mul2_timer->run_until_elapsed(
                   runtime, [&]() { return curve->mul2_vartime(*gh_tab, scalar, scalar2).to_affine(); });
 
                auto pt = curve->mul(g, curve->random_scalar(rng()), rng());
@@ -1235,9 +1236,9 @@ class Speed final : public Command {
 
                scalar_invert->run_until_elapsed(runtime, [&]() { scalar.invert(); });
 
-               record_result(pcurves_base_timer);
-               record_result(pcurves_var_timer);
-               record_result(pcurves_mul2_timer);
+               record_result(base_timer);
+               record_result(var_timer);
+               record_result(mul2_timer);
                record_result(to_affine);
                record_result(scalar_invert);
             }
