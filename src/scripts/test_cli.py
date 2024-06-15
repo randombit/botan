@@ -1378,6 +1378,14 @@ def cli_tls_proxy_tests(tmp_dir):
     rc = tls_proxy.wait(5)
 
     if rc != 0:
+        # Trying to debug https://github.com/randombit/botan/issues/4112
+        stdout = tls_proxy.stdout.read().decode('utf8')
+        if stdout != '':
+            logging.info('Stdout: %s', stdout)
+        stderr = tls_proxy.stderr.read().decode('utf8')
+        if stdout != '':
+            logging.info('Stderr: %s', stderr)
+
         logging.error('Unexpected return code from tls_proxy %d', rc)
 
 def cli_trust_root_tests(tmp_dir):
