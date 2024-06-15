@@ -225,7 +225,10 @@ void TLS_CBC_HMAC_AEAD_Encryption::finish(secure_vector<uint8_t>& buffer, size_t
       }
    else
       {
-      mac().update(&buffer[offset], msg_size);
+      if(msg_size > 0)
+         {
+         mac().update(&buffer[offset], msg_size);
+         }
       buffer.resize(buffer.size() + tag_size());
       mac().final(&buffer[buffer.size() - tag_size()]);
       cbc_encrypt_record(buffer, offset, padding_length);
