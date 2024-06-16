@@ -17,15 +17,16 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
    public:
       class PrecomputedMul2TableC final : public PrimeOrderCurve::PrecomputedMul2Table {
          public:
-            static constexpr size_t WindowBits = 4;
+            static constexpr size_t WindowBits = 5;
 
-            const WindowedMul2Table<C, WindowBits>& table() const { return m_table; }
+            const auto& table() const { return m_table; }
 
             explicit PrecomputedMul2TableC(const typename C::AffinePoint& x, const typename C::AffinePoint& y) :
                   m_table(x, y) {}
 
          private:
-            WindowedMul2Table<C, WindowBits> m_table;
+            //WindowedMul2Table<C, WindowBits> m_table;
+            NafVartimeMul2Table<C, WindowBits> m_table;
       };
 
       static_assert(C::OrderBits <= PrimeOrderCurve::MaximumBitLength);
