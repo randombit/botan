@@ -231,9 +231,7 @@ class BOTAN_TEST_API PrimeOrderCurve {
             /**
             * Convert a point from affine to projective form
             */
-            static ProjectivePoint from_projective(const AffinePoint& pt) {
-               return pt._curve()->point_to_projective(pt);
-            }
+            static ProjectivePoint from_affine(const AffinePoint& pt) { return pt._curve()->point_to_projective(pt); }
 
             /**
             * Convert a point from projective to affine form
