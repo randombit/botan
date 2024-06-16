@@ -14,6 +14,7 @@
 #include <botan/hash.h>
 #include <botan/x509cert.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <algorithm>
 #include <set>
@@ -80,7 +81,26 @@ std::unique_ptr<Certificate_Extension> extension_from_oid(const OID& oid) {
       return std::make_unique<Cert_Extension::Authority_Information_Access>();
    }
 
+   if(oid == Cert_Extension::TNAuthList::static_oid()) {
+      return std::make_unique<Cert_Extension::TNAuthList>();
+   }
+
    return nullptr;  // unknown
+}
+
+bool is_valid_telephone_number(const ASN1_String& tn) {
+   //TelephoneNumber ::= IA5String (SIZE (1..15)) (FROM ("0123456789#*"))
+   static std::string valid_tn_chars("0123456789#*");
+
+   if(tn.empty() || (tn.size() > 15)) {
+      return false;
+   }
+
+   if(tn.value().find_first_not_of(valid_tn_chars) != std::string::npos) {
+      return false;
+   }
+
+   return true;
 }
 
 }  // namespace
@@ -762,6 +782,70 @@ std::vector<uint8_t> CRL_Issuing_Distribution_Point::encode_inner() const {
 
 void CRL_Issuing_Distribution_Point::decode_inner(const std::vector<uint8_t>& buf) {
    BER_Decoder(buf).decode(m_distribution_point).verify_end();
+}
+
+void TNAuthList::Entry::encode_into(DER_Encoder&) const {
+   throw Not_Implemented("TNAuthList extension entry serialization is not supported");
+}
+
+void TNAuthList::Entry::decode_from(class BER_Decoder& ber) {
+   BER_Object obj = ber.get_next_object();
+
+   m_type = static_cast<Type>(obj.type_tag());
+
+   switch(m_type) {
+      case ServiceProviderCode: {
+         ASN1_String spc_string;
+         BER_Decoder(obj).decode(spc_string);
+         m_data = std::move(spc_string);
+      } break;
+      case TelephoneNumberRange: {
+         m_data = RangeContainer();
+         auto& range_items = std::get<RangeContainer>(m_data);
+         BER_Decoder list = BER_Decoder(obj).start_sequence();
+         while(list.more_items()) {
+            TelephoneNumberRangeData entry;
+
+            list.decode(entry.start);
+            if(!is_valid_telephone_number(entry.start)) {
+               throw Decoding_Error(fmt("Invalid TelephoneNumberRange start {}", entry.start.value()));
+            }
+
+            list.decode(entry.count);
+            if(entry.count < 2) {
+               throw Decoding_Error(fmt("Invalid TelephoneNumberRange count {}", entry.count));
+            }
+
+            range_items.emplace_back(std::move(entry));
+         }
+         list.end_cons();
+
+         if(range_items.empty()) {
+            throw Decoding_Error("TelephoneNumberRange is empty");
+         }
+      } break;
+      case TelephoneNumber: {
+         ASN1_String one_string;
+         BER_Decoder(obj).decode(one_string);
+         if(!is_valid_telephone_number(one_string)) {
+            throw Decoding_Error(fmt("Invalid TelephoneNumber {}", one_string.value()));
+         }
+         m_data = std::move(one_string);
+      } break;
+      default:
+         throw Decoding_Error(fmt("Unexpected TNEntry type {}", m_type));
+   };
+}
+
+std::vector<uint8_t> TNAuthList::encode_inner() const {
+   throw Not_Implemented("TNAuthList extension serialization is not supported");
+}
+
+void TNAuthList::decode_inner(const std::vector<uint8_t>& in) {
+   BER_Decoder(in).decode_list(m_tn_entries).verify_end();
+   if(m_tn_entries.empty()) {
+      throw Decoding_Error("TNAuthorizationList is empty");
+   }
 }
 
 void OCSP_NoCheck::decode_inner(const std::vector<uint8_t>& buf) {

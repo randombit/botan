@@ -501,6 +501,74 @@ class OCSP_NoCheck final : public Certificate_Extension {
 };
 
 /**
+* TNAuthList extension
+*
+* RFC8226 Secure Telephone Identity Credentials
+*   https://www.rfc-editor.org/rfc/rfc8226#section-9
+*/
+class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
+   public:
+      class Entry final : public ASN1_Object {
+         public:
+            /* TNEntry choice values
+             * see: https://datatracker.ietf.org/doc/html/rfc8226#section-9 */
+            enum Type { ServiceProviderCode = 0, TelephoneNumberRange = 1, TelephoneNumber = 2 };
+
+            struct TelephoneNumberRangeData {
+                  ASN1_String start;  //TelephoneNumber (IA5String)
+                  size_t count;       //2..MAX
+            };
+
+            using RangeContainer = std::vector<TelephoneNumberRangeData>;
+            using DataContainer = std::variant<ASN1_String, RangeContainer>;
+
+            void encode_into(DER_Encoder&) const override;
+            void decode_from(class BER_Decoder& from) override;
+
+            Type type() const { return m_type; }
+
+            const std::string& service_provider_code() const {
+               BOTAN_STATE_CHECK(type() == Type::ServiceProviderCode);
+               return std::get<ASN1_String>(m_data).value();
+            }
+
+            const RangeContainer& telephone_number_range() const {
+               BOTAN_STATE_CHECK(type() == Type::TelephoneNumberRange);
+               return std::get<RangeContainer>(m_data);
+            }
+
+            const std::string& telephone_number() const {
+               BOTAN_STATE_CHECK(type() == Type::TelephoneNumber);
+               return std::get<ASN1_String>(m_data).value();
+            }
+
+         private:
+            Type m_type;
+            DataContainer m_data;
+      };
+
+      TNAuthList() = default;
+
+      std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<TNAuthList>(*this); }
+
+      static OID static_oid() { return OID("1.3.6.1.5.5.7.1.26"); }
+
+      OID oid_of() const override { return static_oid(); }
+
+      const std::vector<Entry>& entries() const { return m_tn_entries; }
+
+   private:
+      std::string oid_name() const override { return "PKIX.TNAuthList"; }
+
+      bool should_encode() const override { return true; }
+
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
+
+      std::vector<Entry> m_tn_entries;
+};
+
+/**
 * An unknown X.509 extension
 * Will add a failure to the path validation result, if critical
 */
