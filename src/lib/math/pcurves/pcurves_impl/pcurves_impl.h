@@ -1940,6 +1940,259 @@ class WindowedMul2Table final {
       std::vector<AffinePoint> m_table;
 };
 
+template <typename C, size_t W>
+class NafEncodedScalar final {
+   public:
+      static_assert(W >= 2 && W <= 5);
+
+      NafEncodedScalar(const typename C::Scalar& scalar) {
+         if(scalar.is_zero().as_bool()) {
+            // leaving m_naf empty
+            return;
+         }
+
+         constexpr uint8_t MASK = (1 << W) - 1;
+
+         auto k = scalar.to_words();
+
+         using WordType = std::remove_reference<decltype(k[0])>::type;
+
+         // variable time is ok here
+         auto is_non_zero = [](std::span<const WordType> v) -> bool {
+            for(auto w: v) {
+               if(w > 0) {
+                  return true;
+               }
+            }
+            return false;
+         };
+
+         while(is_non_zero(k)) {
+            int8_t ki = 0;
+            if(k[0] & 1) {
+               ki = mods(static_cast<int8_t>(k[0] & MASK));
+
+               // k -= ki
+
+               if(ki > 0) {
+                  const auto kiw = static_cast<WordType>(ki);
+                  bigint_sub2(k.data(), k.size(), &kiw, 1);
+               } else {
+                  const auto kiw = static_cast<WordType>(-ki);
+                  bigint_add2_nc(k.data(), k.size(), &kiw, 1);
+               }
+            }
+
+            shift_right<1>(k);
+
+            m_naf.push_back(ki);
+         }
+
+         std::reverse(m_naf.begin(), m_naf.end());
+      }
+
+      size_t size() const { return m_naf.size(); }
+
+      inline int8_t get_naf(size_t max, size_t idx) const {
+         /*
+         NAF is variable length, depending on the scalar value. For 2-ary mul we
+         have to zero-prefix the shorter NAF encoding
+         */
+         if(m_naf.size() == max) {
+            return m_naf[idx];
+         } else {
+            BOTAN_DEBUG_ASSERT(max > m_naf.size());
+            const size_t prefix = max - m_naf.size();
+            return (idx >= prefix) ? m_naf[idx - prefix] : 0;
+         }
+
+      }
+
+   private:
+      static constexpr int8_t mods(int8_t k0) {
+         if(k0 >= (1 << (W - 1))) {
+            return k0 - (1 << W);
+         } else {
+            return k0;
+         }
+      }
+
+      std::vector<int8_t> m_naf;
+};
+
+/**
+* Effect 2-ary multiplication ie x*G + y*H
+*
+* This is done using wNAF encoding of x and y. This is simpler than
+* joint sparse form and almost as efficient. Also the wNAF encoding
+* can be reused for a single point*scalar multiplication later on,
+* should a variable time multiplication prove useful.
+*
+* +----+-------------+
+* | W  | Table size  |
+* | -- | ----------- |
+* | 2  |     8       |
+* | 3  |    24       |
+* | 4  |    80       |
+* | 5  |   288       |
+* +----+-------------+
+*/
+template <typename C, size_t W>
+class NafVartimeMul2Table final {
+   public:
+      static_assert(W >= 2 && W <= 5);
+
+      typedef typename C::Scalar Scalar;
+      typedef typename C::AffinePoint AffinePoint;
+      typedef typename C::ProjectivePoint ProjectivePoint;
+
+      static constexpr size_t SCALE = (1 << (W-1)) + 1;
+
+      // One element is omitted as the linear combination of (0,0)
+      // which we don't need since we skip dual zeros entirely.
+      static constexpr size_t TableSize = (SCALE * SCALE) - 1;
+
+      NafVartimeMul2Table(const AffinePoint& g, const AffinePoint& h) {
+         std::vector<ProjectivePoint> table;
+
+         const auto gp = ProjectivePoint::from_affine(g);
+         const auto hp = ProjectivePoint::from_affine(h);
+
+         const auto g2 = gp.dbl();
+         const auto h2 = hp.dbl();
+
+         auto map_i8 = [](size_t i) -> int8_t {
+            if(i == 0) {
+               return 0;
+            } else if(i % 2 == 1) {
+               return static_cast<int8_t>(i);
+            } else {
+               return -static_cast<int8_t>(i - 1);
+            }
+         };
+
+         for(size_t i = 1; i != (SCALE * SCALE); ++i) {
+            size_t x_i = i / SCALE;
+            size_t y_i = i % SCALE;
+            int8_t i8 = map_i8(x_i);
+            int8_t j8 = map_i8(y_i);
+
+            const size_t idx = map_to_table_idx(i8, j8);
+            BOTAN_ASSERT_NOMSG(idx == i - 1);
+
+            // If we want (x,y) where (-x,-y) already exists, use it
+            if(const size_t nidx = map_to_table_idx(-i8, -j8); nidx < idx) {
+               table.push_back(table[nidx].negate());
+               continue;
+            }
+
+            // If we want (x,y) where (x-2,y) already exists, use it
+            if(const size_t pidx = map_to_table_idx(i8 - 2, j8); pidx < idx) {
+               table.push_back(table[pidx] + g2);
+               continue;
+            }
+
+            // If we want (x,y) where (x+2,y) already exists, use it
+            if(const size_t pidx = map_to_table_idx(i8 + 2, j8); pidx < idx) {
+               table.push_back(table[pidx] + g2.negate());
+               continue;
+            }
+
+            // If we want (x,y) where (x,y-2) already exists, use it
+            if(const size_t pidx = map_to_table_idx(i8, j8 - 2); pidx < idx) {
+               table.push_back(table[pidx] + h2);
+               continue;
+            }
+
+            // If we want (x,y) where (x,y+2) already exists, use it
+            if(const size_t pidx = map_to_table_idx(i8, j8 + 2); pidx < idx) {
+               table.push_back(table[pidx] + h2.negate());
+               continue;
+            }
+
+            /*
+            * At this point we should have already computed everything based on
+            * an already existing table entry, with the exception of simple
+            * linear combinations of g/h - g, h, or g+h
+            */
+            BOTAN_ASSERT_NOMSG(i8 == 0 || i8 == 1);
+            BOTAN_ASSERT_NOMSG(j8 == 0 || j8 == 1);
+            BOTAN_ASSERT_NOMSG(i8 != 0 || j8 != 0);
+
+            if(i8 == 1 && j8 == 0) {
+               table.push_back(gp);
+            } else if(i8 == 0 && j8 == 1) {
+               table.push_back(hp);
+            } else if(i8 == 1 && j8 == 1) {
+               table.push_back(gp + hp);
+            } else {
+               BOTAN_ASSERT_UNREACHABLE();
+            }
+         }
+
+         m_table = to_affine_batch<C>(table);
+      }
+
+      /**
+      * Variable time 2-ary multiplication
+      *
+      * A common use of 2-ary multiplication is when verifying the commitments
+      * of an elliptic curve signature. Since in this case the inputs are all
+      * public, there is no problem with variable time computation.
+      */
+      ProjectivePoint mul2_vartime(const Scalar& s1, const Scalar& s2) const {
+         const NafEncodedScalar<C, W> naf1(s1);
+         const NafEncodedScalar<C, W> naf2(s2);
+
+         auto accum = ProjectivePoint::identity();
+
+         const size_t naf_size = std::max(naf1.size(), naf2.size());
+
+         /*
+         This variable keeps track of the number of doubles which need
+         to be applied to the accumulator. Just before performing an
+         addition we apply all of the doublings at once, since this
+         can take advantage of the fast iterated doubling algorithm.
+         */
+         size_t dbls_owed = 0;
+
+         for(size_t i = 0; i != naf_size; ++i) {
+            if(i > 0) {
+               dbls_owed += 1;
+            }
+
+            const int8_t n_1 = naf1.get_naf(naf_size, i);
+            const int8_t n_2 = naf2.get_naf(naf_size, i);
+
+            if(n_1 != 0 || n_2 != 0) {
+               if(dbls_owed > 0) {
+                  accum = accum.dbl_n(dbls_owed);
+                  dbls_owed = 0;
+               }
+
+               const size_t idx = map_to_table_idx(n_1, n_2);
+               BOTAN_DEBUG_ASSERT(idx < m_table.size());
+               accum += m_table[idx];
+            }
+         }
+
+         if(dbls_owed > 0) {
+            accum = accum.dbl_n(dbls_owed);
+         }
+
+         return accum;
+      }
+
+   private:
+      static constexpr size_t map_to_table_idx(int8_t n_1, int8_t n_2) {
+         const size_t i = (n_1 >= 0) ? static_cast<size_t>(n_1) : static_cast<size_t>(-n_1) + 1;
+         const size_t j = (n_2 >= 0) ? static_cast<size_t>(n_2) : static_cast<size_t>(-n_2) + 1;
+         return (SCALE*i + j) - 1;
+      }
+
+      std::vector<AffinePoint> m_table;
+};
+
 /**
 * SSWU constant C2 - (B / (Z * A))
 *
