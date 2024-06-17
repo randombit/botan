@@ -4,13 +4,12 @@ KEX_TO_KEM_ADAPTER -> 20240504
 
 <module_info>
 name -> "KEX to KEM adapter"
-type -> "Internal"
 </module_info>
 
 
-<header:internal>
+<header:public>
 kex_to_kem_adapter.h
-</header:internal>
+</header:public>
 
 <requires>
 

@@ -21,7 +21,7 @@ namespace Botan {
  * Adapter to use a key agreement key pair (e.g. ECDH) as a key encapsulation
  * mechanism.
  */
-class BOTAN_TEST_API KEX_to_KEM_Adapter_PublicKey : public virtual Public_Key {
+class BOTAN_PUBLIC_API(3, 5) KEX_to_KEM_Adapter_PublicKey : public virtual Public_Key {
    public:
       KEX_to_KEM_Adapter_PublicKey(std::unique_ptr<Public_Key> public_key);
 
@@ -49,7 +49,8 @@ BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 /**
  * Adapter to use a key agreement key pair (e.g. ECDH) as a key encapsulation
  * mechanism. This works by generating an ephemeral key pair during the
- * encapsulation.
+ * encapsulation. The following Botan key types are supported:
+ * ECDH, DH, X25519 and X448.
  *
  * The abstract interface of a key exchange mechanism (KEX) is mapped like so:
  *
@@ -64,10 +65,10 @@ BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
  *  * KEM-decapsulate(PrivateKey, EncapsulatedSharedSecret) -> SharedSecret
  *       => KEX-agree(PrivateKey, EncapsulatedSharedSecret)
  */
-class BOTAN_TEST_API KEX_to_KEM_Adapter_PrivateKey final : public KEX_to_KEM_Adapter_PublicKey,
-                                                           public virtual Private_Key {
+class BOTAN_PUBLIC_API(3, 5) KEX_to_KEM_Adapter_PrivateKey final : public KEX_to_KEM_Adapter_PublicKey,
+                                                                   public virtual Private_Key {
    public:
-      KEX_to_KEM_Adapter_PrivateKey(std::unique_ptr<PK_Key_Agreement_Key> private_key);
+      KEX_to_KEM_Adapter_PrivateKey(std::unique_ptr<Private_Key> private_key);
 
       secure_vector<uint8_t> private_key_bits() const override;
 

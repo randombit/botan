@@ -10,9 +10,9 @@
 #if defined(BOTAN_HAS_TLS_13_PQC) && defined(BOTAN_HAS_KYBER) && defined(BOTAN_HAS_DIFFIE_HELLMAN) && \
    defined(BOTAN_HAS_ECDSA)
 
+   #include <botan/kex_to_kem_adapter.h>
    #include <botan/pk_algs.h>
    #include <botan/internal/hybrid_public_key.h>
-   #include <botan/internal/kex_to_kem_adapter.h>
    #include <botan/internal/stl_util.h>
 
 namespace Botan_Tests {
