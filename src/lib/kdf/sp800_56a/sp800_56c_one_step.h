@@ -19,7 +19,7 @@ namespace Botan {
 
 /**
  * NIST SP 800-56Cr2 One-Step KDF using hash function
- * @warning This KDF ignores the provided salt value
+ * @warning The salt for this KDF must be empty.
  */
 class SP800_56C_One_Step_Hash final : public KDF {
    public:
@@ -30,19 +30,17 @@ class SP800_56C_One_Step_Hash final : public KDF {
       /**
       * Derive a key using the SP800-56Cr2 One-Step KDF.
       *
-      * The implementation hard codes the context value for the
-      * expansion step to the empty string.
-      *
-      * @param key derived keying material K_M
+      * @param key DerivedKeyingMaterial output buffer
       * @param key_len the desired output length in bytes
       * @param secret shared secret Z
       * @param secret_len size of Z in bytes
-      * @param salt ignored
-      * @param salt_len ignored
-      * @param label label for the expansion step
+      * @param salt the salt. Ignored.
+      * @param salt_len size of salt in bytes. Must be 0.
+      * @param label FixedInfo
       * @param label_len size of label in bytes
       *
-      * @throws Invalid_Argument key_len > 2^32
+      * @throws Invalid_Argument if key_len > (2^32 - 1) * Hash output bits.
+      *         Or thrown if salt is non-empty
       */
       void kdf(uint8_t key[],
                size_t key_len,
@@ -72,21 +70,18 @@ class SP800_56C_One_Step_HMAC final : public KDF {
       std::unique_ptr<KDF> new_object() const override;
 
       /**
-      * Derive a key using the SP800-56A KDF.
+      * Derive a key using the SP800-56Cr2 One-Step KDF.
       *
-      * The implementation hard codes the context value for the
-      * expansion step to the empty string.
-      *
-      * @param key derived keying material K_M
+      * @param key DerivedKeyingMaterial output buffer
       * @param key_len the desired output length in bytes
       * @param secret shared secret Z
       * @param secret_len size of Z in bytes
-      * @param salt ignored
-      * @param salt_len ignored
-      * @param label label for the expansion step
+      * @param salt the salt. If empty the default_salt is used.
+      * @param salt_len size of salt in bytes
+      * @param label FixedInfo
       * @param label_len size of label in bytes
       *
-      * @throws Invalid_Argument key_len > 2^32 or MAC is not a HMAC
+      * @throws Invalid_Argument if key_len > (2^32 - 1) * HMAC output bits
       */
       void kdf(uint8_t key[],
                size_t key_len,
@@ -112,21 +107,18 @@ class SP800_56C_One_Step_HMAC final : public KDF {
 class SP800_56A_One_Step_KMAC_Abstract : public KDF {
    public:
       /**
-      * Derive a key using the SP800-56A KDF.
+      * Derive a key using the SP800-56Cr2 One-Step KDF.
       *
-      * The implementation hard codes the context value for the
-      * expansion step to the empty string.
-      *
-      * @param key derived keying material K_M
+      * @param key DerivedKeyingMaterial output buffer
       * @param key_len the desired output length in bytes
       * @param secret shared secret Z
       * @param secret_len size of Z in bytes
-      * @param salt ignored
-      * @param salt_len ignored
-      * @param label label for the expansion step
+      * @param salt the salt. If empty the default_salt is used.
+      * @param salt_len size of salt in bytes
+      * @param label FixedInfo
       * @param label_len size of label in bytes
       *
-      * @throws Invalid_Argument key_len > 2^32 or MAC is not a HMAC
+      * @throws Invalid_Argument if key_len > (2^32 - 1) * KMAC output bits
       */
       void kdf(uint8_t key[],
                size_t key_len,
@@ -139,6 +131,9 @@ class SP800_56A_One_Step_KMAC_Abstract : public KDF {
 
    protected:
       virtual std::unique_ptr<MessageAuthenticationCode> create_kmac_instance(size_t output_byte_len) const = 0;
+
+      /// See SP800-56C Section 4.1 - Implementation-Dependent Parameters 3.
+      virtual size_t default_salt_length() const = 0;
 };
 
 /**
@@ -150,8 +145,10 @@ class SP800_56C_One_Step_KMAC128 final : public SP800_56A_One_Step_KMAC_Abstract
 
       std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_56C_One_Step_KMAC128>(); }
 
-   protected:
+   private:
       std::unique_ptr<MessageAuthenticationCode> create_kmac_instance(size_t output_byte_len) const override;
+
+      size_t default_salt_length() const override { return 164; }
 };
 
 /**
@@ -163,8 +160,10 @@ class SP800_56C_One_Step_KMAC256 final : public SP800_56A_One_Step_KMAC_Abstract
 
       std::unique_ptr<KDF> new_object() const override { return std::make_unique<SP800_56C_One_Step_KMAC256>(); }
 
-   protected:
+   private:
       std::unique_ptr<MessageAuthenticationCode> create_kmac_instance(size_t output_byte_len) const override;
+
+      size_t default_salt_length() const override { return 132; }
 };
 
 }  // namespace Botan
