@@ -33,8 +33,7 @@ class Curve final : public EllipticCurve<Params> {};
 }  // namespace
 
 std::shared_ptr<const PrimeOrderCurve> PCurveInstance::brainpool512r1() {
-   static auto g_brainpool512r1 = std::make_shared<const PrimeOrderCurveImpl<brainpool512r1::Curve>>();
-   return g_brainpool512r1;
+   return PrimeOrderCurveImpl<brainpool512r1::Curve>::instance();
 }
 
 }  // namespace Botan::PCurve

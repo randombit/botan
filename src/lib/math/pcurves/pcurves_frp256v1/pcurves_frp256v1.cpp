@@ -33,8 +33,7 @@ class Curve final : public EllipticCurve<Params> {};
 }  // namespace
 
 std::shared_ptr<const PrimeOrderCurve> PCurveInstance::frp256v1() {
-   static auto g_frp256v1 = std::make_shared<const PrimeOrderCurveImpl<frp256v1::Curve>>();
-   return g_frp256v1;
+   return PrimeOrderCurveImpl<frp256v1::Curve>::instance();
 }
 
 }  // namespace Botan::PCurve
