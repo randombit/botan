@@ -18,16 +18,13 @@ namespace Botan {
 
 Hybrid_PublicKey::Hybrid_PublicKey(std::vector<std::unique_ptr<Public_Key>> pks) : m_pks(std::move(pks)) {
    BOTAN_ARG_CHECK(m_pks.size() >= 2, "List of public keys must include at least two keys");
-   BOTAN_ARG_CHECK(std::all_of(m_pks.begin(), m_pks.end(), [](const auto& pk) { return pk != nullptr; }),
-                   "List of public keys contains a nullptr");
-   BOTAN_ARG_CHECK(
-      std::all_of(m_pks.begin(),
-                  m_pks.end(),
-                  [](const auto& pk) { return pk->supports_operation(PublicKeyOperation::KeyEncapsulation); }),
-      "Some provided public key is not compatible with this hybrid wrapper");
-   m_key_length = reduce(m_pks, size_t(0), [](size_t kl, const auto& key) { return std::max(kl, key->key_length()); });
-   m_estimated_strength =
-      reduce(m_pks, size_t(0), [](size_t es, const auto& key) { return std::max(es, key->estimated_strength()); });
+   for(const auto& pk : m_pks) {
+      BOTAN_ARG_CHECK(pk != nullptr, "List of public keys contains a nullptr");
+      BOTAN_ARG_CHECK(pk->supports_operation(PublicKeyOperation::KeyEncapsulation),
+                      fmt("Public key type '{}' does not support key encapsulation", pk->algo_name()).c_str());
+      m_key_length = std::max(m_key_length, pk->key_length());
+      m_estimated_strength = std::max(m_estimated_strength, pk->estimated_strength());
+   }
 }
 
 bool Hybrid_PublicKey::check_key(RandomNumberGenerator& rng, bool strong) const {
@@ -47,23 +44,21 @@ bool Hybrid_PublicKey::supports_operation(PublicKeyOperation op) const {
 std::vector<std::unique_ptr<Private_Key>> Hybrid_PublicKey::generate_other_sks_from_pks(
    RandomNumberGenerator& rng) const {
    std::vector<std::unique_ptr<Private_Key>> new_private_keys;
-   std::transform(
-      public_keys().begin(), public_keys().end(), std::back_inserter(new_private_keys), [&](const auto& public_key) {
-         return public_key->generate_another(rng);
-      });
+   new_private_keys.reserve(public_keys().size());
+   for(const auto& pk : public_keys()) {
+      new_private_keys.push_back(pk->generate_another(rng));
+   }
    return new_private_keys;
 }
 
 Hybrid_PrivateKey::Hybrid_PrivateKey(std::vector<std::unique_ptr<Private_Key>> private_keys) :
       m_sks(std::move(private_keys)) {
    BOTAN_ARG_CHECK(m_sks.size() >= 2, "List of secret keys must include at least two keys");
-   BOTAN_ARG_CHECK(std::all_of(m_sks.begin(), m_sks.end(), [](const auto& sk) { return sk != nullptr; }),
-                   "List of secret keys contains a nullptr");
-   BOTAN_ARG_CHECK(
-      std::all_of(m_sks.begin(),
-                  m_sks.end(),
-                  [](const auto& sk) { return sk->supports_operation(PublicKeyOperation::KeyEncapsulation); }),
-      "Some provided secret key is not compatible with this hybrid wrapper");
+   for(const auto& sk : m_sks) {
+      BOTAN_ARG_CHECK(sk != nullptr, "List of secret keys contains a nullptr");
+      BOTAN_ARG_CHECK(sk->supports_operation(PublicKeyOperation::KeyEncapsulation),
+                      "Some provided secret key is not compatible with this hybrid wrapper");
+   }
 }
 
 secure_vector<uint8_t> Hybrid_PrivateKey::private_key_bits() const {
@@ -78,9 +73,9 @@ std::vector<std::unique_ptr<Public_Key>> Hybrid_PrivateKey::extract_public_keys(
    const std::vector<std::unique_ptr<Private_Key>>& private_keys) {
    std::vector<std::unique_ptr<Public_Key>> public_keys;
    public_keys.reserve(private_keys.size());
-   for(const auto& private_key : private_keys) {
-      BOTAN_ARG_CHECK(private_key != nullptr, "List of private keys contains a nullptr");
-      public_keys.push_back(private_key->public_key());
+   for(const auto& sk : private_keys) {
+      BOTAN_ARG_CHECK(sk != nullptr, "List of private keys contains a nullptr");
+      public_keys.push_back(sk->public_key());
    }
    return public_keys;
 }
