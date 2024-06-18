@@ -9,6 +9,8 @@
 #include <iostream>
 #include <numeric>
 
+namespace {
+
 // TS 103 744 - V1.1.1, Section 7.2, Context formatting function (f)
 std::vector<uint8_t> f_context_func(std::string_view hash_function, const std::vector<std::span<const uint8_t>>& val) {
    auto hash = Botan::HashFunction::create_or_throw(hash_function);
@@ -168,6 +170,8 @@ bool my_protocol() {
 
    return key_material_a == key_material_b;
 }
+
+}  // namespace
 
 int main() {
    if(!test_kdf()) {
