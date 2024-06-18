@@ -77,8 +77,7 @@ class Curve final : public EllipticCurve<Params, P521Rep> {};
 }  // namespace
 
 std::shared_ptr<const PrimeOrderCurve> PCurveInstance::secp521r1() {
-   static auto g_secp521r1 = std::make_shared<const PrimeOrderCurveImpl<secp521r1::Curve>>();
-   return g_secp521r1;
+   return PrimeOrderCurveImpl<secp521r1::Curve>::instance();
 }
 
 }  // namespace Botan::PCurve
