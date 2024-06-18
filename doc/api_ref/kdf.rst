@@ -158,7 +158,7 @@ e.g. ``X9.42-PRF(KeyWrap.TripleDES)``, ``X9.42-PRF(1.2.840.113549.1.9.16.3.7)``
 SP800-56A
 ~~~~~~~~~~
 
-KDF from NIST SP 800-56A.
+KDF from NIST SP 800-56Ar2 or One-Step KDF of SP 800-56Cr2.
 
 Available if ``BOTAN_HAS_SP800_56A`` is defined.
 
@@ -166,11 +166,12 @@ Algorithm specification names:
 
 - ``SP800-56A(<HashFunction>)``, e.g. ``SP800-56A(SHA-256)``
 - ``SP800-56A(HMAC(<HashFunction>))``, e.g. ``SP800-56A(HMAC(SHA-256))``
+- ``SP800-56A(KMAC-128)`` or ``SP800-56A(KMAC-256)``
 
 SP800-56C
 ~~~~~~~~~~
 
-KDF from NIST SP 800-56C.
+Two-Step KDF from NIST SP 800-56Cr2.
 
 Available if ``BOTAN_HAS_SP800_56C`` is defined.
 
