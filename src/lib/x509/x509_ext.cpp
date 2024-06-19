@@ -791,49 +791,48 @@ void TNAuthList::Entry::encode_into(DER_Encoder&) const {
 void TNAuthList::Entry::decode_from(class BER_Decoder& ber) {
    BER_Object obj = ber.get_next_object();
 
-   m_type = static_cast<Type>(obj.type_tag());
+   const uint32_t type_tag = static_cast<Type>(obj.type_tag());
 
-   switch(m_type) {
-      case ServiceProviderCode: {
-         ASN1_String spc_string;
-         BER_Decoder(obj).decode(spc_string);
-         m_data = std::move(spc_string);
-      } break;
-      case TelephoneNumberRange: {
-         m_data = RangeContainer();
-         auto& range_items = std::get<RangeContainer>(m_data);
-         BER_Decoder list = BER_Decoder(obj).start_sequence();
-         while(list.more_items()) {
-            TelephoneNumberRangeData entry;
+   if(type_tag == ServiceProviderCode) {
+      m_type = ServiceProviderCode;
+      ASN1_String spc_string;
+      BER_Decoder(obj).decode(spc_string);
+      m_data = std::move(spc_string);
+   } else if(type_tag == TelephoneNumberRange) {
+      m_type = TelephoneNumberRange;
+      m_data = RangeContainer();
+      auto& range_items = std::get<RangeContainer>(m_data);
+      BER_Decoder list = BER_Decoder(obj).start_sequence();
+      while(list.more_items()) {
+         TelephoneNumberRangeData entry;
 
-            list.decode(entry.start);
-            if(!is_valid_telephone_number(entry.start)) {
-               throw Decoding_Error(fmt("Invalid TelephoneNumberRange start {}", entry.start.value()));
-            }
-
-            list.decode(entry.count);
-            if(entry.count < 2) {
-               throw Decoding_Error(fmt("Invalid TelephoneNumberRange count {}", entry.count));
-            }
-
-            range_items.emplace_back(std::move(entry));
+         list.decode(entry.start);
+         if(!is_valid_telephone_number(entry.start)) {
+            throw Decoding_Error(fmt("Invalid TelephoneNumberRange start {}", entry.start.value()));
          }
-         list.end_cons();
 
-         if(range_items.empty()) {
-            throw Decoding_Error("TelephoneNumberRange is empty");
+         list.decode(entry.count);
+         if(entry.count < 2) {
+            throw Decoding_Error(fmt("Invalid TelephoneNumberRange count {}", entry.count));
          }
-      } break;
-      case TelephoneNumber: {
-         ASN1_String one_string;
-         BER_Decoder(obj).decode(one_string);
-         if(!is_valid_telephone_number(one_string)) {
-            throw Decoding_Error(fmt("Invalid TelephoneNumber {}", one_string.value()));
-         }
-         m_data = std::move(one_string);
-      } break;
-      default:
-         throw Decoding_Error(fmt("Unexpected TNEntry type {}", m_type));
+
+         range_items.emplace_back(std::move(entry));
+      }
+      list.end_cons();
+
+      if(range_items.empty()) {
+         throw Decoding_Error("TelephoneNumberRange is empty");
+      }
+   } else if(type_tag == TelephoneNumber) {
+      m_type = TelephoneNumber;
+      ASN1_String one_string;
+      BER_Decoder(obj).decode(one_string);
+      if(!is_valid_telephone_number(one_string)) {
+         throw Decoding_Error(fmt("Invalid TelephoneNumber {}", one_string.value()));
+      }
+      m_data = std::move(one_string);
+   } else {
+      throw Decoding_Error(fmt("Unexpected TNEntry type code {}", type_tag));
    };
 }
 
