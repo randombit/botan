@@ -1212,32 +1212,47 @@ class Speed final : public Command {
             if(auto curve = Botan::PCurve::PrimeOrderCurve::from_name(group_name)) {
                auto base_timer = make_timer(group_name + " pcurve base mul");
                auto var_timer = make_timer(group_name + " pcurve var mul");
+               auto mul2_setup_timer = make_timer(group_name + " pcurve mul2 setup");
                auto mul2_timer = make_timer(group_name + " pcurve mul2");
 
                auto scalar_invert = make_timer(group_name + " pcurve scalar invert");
                auto to_affine = make_timer(group_name + " pcurve proj->affine");
 
-               const auto scalar = curve->random_scalar(rng());
-
-               base_timer->run_until_elapsed(runtime, [&]() { return curve->mul_by_g(scalar, rng()).to_affine(); });
-
                auto g = curve->generator();
                auto h = curve->mul(g, curve->random_scalar(rng()), rng()).to_affine();
-
-               var_timer->run_until_elapsed(runtime, [&]() { return curve->mul(h, scalar, rng()).to_affine(); });
-
                auto gh_tab = curve->mul2_setup(g, h);
-               const auto scalar2 = curve->random_scalar(rng());
-               mul2_timer->run_until_elapsed(
-                  runtime, [&]() { return curve->mul2_vartime(*gh_tab, scalar, scalar2).to_affine(); });
+
+               while(base_timer->under(runtime)) {
+                  const auto scalar = curve->random_scalar(rng());
+                  base_timer->run([&]() { return curve->mul_by_g(scalar, rng()).to_affine(); });
+               }
+
+               while(var_timer->under(runtime)) {
+                  const auto scalar = curve->random_scalar(rng());
+                  var_timer->run([&]() { return curve->mul(h, scalar, rng()).to_affine(); });
+               }
+
+               while(mul2_setup_timer->under(runtime)) {
+                  mul2_setup_timer->run([&]() { return curve->mul2_setup(g, h); });
+               }
+
+               while(mul2_timer->under(runtime)) {
+                  const auto scalar = curve->random_scalar(rng());
+                  const auto scalar2 = curve->random_scalar(rng());
+                  mul2_timer->run([&]() { return curve->mul2_vartime(*gh_tab, scalar, scalar2).to_affine(); });
+               }
 
                auto pt = curve->mul(g, curve->random_scalar(rng()), rng());
                to_affine->run_until_elapsed(runtime, [&]() { pt.to_affine(); });
 
-               scalar_invert->run_until_elapsed(runtime, [&]() { scalar.invert(); });
+               while(scalar_invert->under(runtime)) {
+                  const auto scalar = curve->random_scalar(rng());
+                  scalar_invert->run([&]() { scalar.invert(); });
+               }
 
                record_result(base_timer);
                record_result(var_timer);
+               record_result(mul2_setup_timer);
                record_result(mul2_timer);
                record_result(to_affine);
                record_result(scalar_invert);
