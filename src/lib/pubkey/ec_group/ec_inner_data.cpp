@@ -6,6 +6,12 @@
 
 #include <botan/internal/ec_inner_data.h>
 
+#include <botan/internal/ec_inner_bn.h>
+
+#if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
+   #include <botan/internal/ec_h2c.h>
+#endif
+
 namespace Botan {
 
 EC_Group_Data::EC_Group_Data(const BigInt& p,
@@ -51,76 +57,41 @@ bool EC_Group_Data::params_match(const EC_Group_Data& other) const {
 
 std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_from_bytes_with_trunc(std::span<const uint8_t> bytes) const {
    auto bn = BigInt::from_bytes_with_max_bits(bytes.data(), bytes.size(), m_order_bits);
-   return std::make_unique<EC_Scalar_Data>(mod_order(bn));
+   return std::make_unique<EC_Scalar_Data_BN>(shared_from_this(), mod_order(bn));
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_from_bytes_mod_order(std::span<const uint8_t> bytes) const {
    BOTAN_ARG_CHECK(bytes.size() <= 2 * order_bytes(), "Input too large");
-   return std::make_unique<EC_Scalar_Data>(mod_order(BigInt(bytes)));
+   return std::make_unique<EC_Scalar_Data_BN>(shared_from_this(), mod_order(BigInt(bytes)));
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_random(RandomNumberGenerator& rng) const {
-   return std::make_unique<EC_Scalar_Data>(BigInt::random_integer(rng, BigInt::one(), m_order));
-}
-
-bool EC_Group_Data::scalar_is_zero(const EC_Scalar_Data& s) const {
-   return s.value().is_zero();
-}
-
-bool EC_Group_Data::scalar_is_eq(const EC_Scalar_Data& x, const EC_Scalar_Data& y) const {
-   return x.value() == y.value();
+   return std::make_unique<EC_Scalar_Data_BN>(shared_from_this(), BigInt::random_integer(rng, BigInt::one(), m_order));
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_zero() const {
-   return std::make_unique<EC_Scalar_Data>(BigInt::zero());
+   return std::make_unique<EC_Scalar_Data_BN>(shared_from_this(), BigInt::zero());
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_one() const {
-   return std::make_unique<EC_Scalar_Data>(BigInt::one());
-}
-
-std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_invert(const EC_Scalar_Data& s) const {
-   return std::make_unique<EC_Scalar_Data>(inverse_mod_order(s.value()));
-}
-
-void EC_Group_Data::scalar_assign(EC_Scalar_Data& x, const EC_Scalar_Data& y) const {
-   x.set_value(y.value());
-}
-
-void EC_Group_Data::scalar_square_self(EC_Scalar_Data& s) const {
-   s.set_value(square_mod_order(s.value()));
-}
-
-std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_negate(const EC_Scalar_Data& s) const {
-   return std::make_unique<EC_Scalar_Data>(mod_order(-s.value()));
-}
-
-std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_add(const EC_Scalar_Data& a, const EC_Scalar_Data& b) const {
-   return std::make_unique<EC_Scalar_Data>(mod_order(a.value() + b.value()));
-}
-
-std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_sub(const EC_Scalar_Data& a, const EC_Scalar_Data& b) const {
-   return std::make_unique<EC_Scalar_Data>(mod_order(a.value() - b.value()));
-}
-
-std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_mul(const EC_Scalar_Data& a, const EC_Scalar_Data& b) const {
-   return std::make_unique<EC_Scalar_Data>(multiply_mod_order(a.value(), b.value()));
+   return std::make_unique<EC_Scalar_Data_BN>(shared_from_this(), BigInt::one());
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_from_bigint(const BigInt& bn) const {
    // Assumed to have been already checked as in range
-   return std::make_unique<EC_Scalar_Data>(bn);
+   return std::make_unique<EC_Scalar_Data_BN>(shared_from_this(), bn);
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Group_Data::gk_x_mod_order(const EC_Scalar_Data& scalar,
                                                               RandomNumberGenerator& rng,
                                                               std::vector<BigInt>& ws) const {
-   const auto pt = m_base_mult.mul(scalar.value(), rng, m_order, ws);
+   const auto& bn = EC_Scalar_Data_BN::checked_ref(scalar);
+   const auto pt = m_base_mult.mul(bn.value(), rng, m_order, ws);
 
    if(pt.is_zero()) {
       return scalar_zero();
    } else {
-      return std::make_unique<EC_Scalar_Data>(mod_order(pt.get_affine_x()));
+      return std::make_unique<EC_Scalar_Data_BN>(shared_from_this(), mod_order(pt.get_affine_x()));
    }
 }
 
@@ -135,12 +106,54 @@ std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_deserialize(std::span<cons
       return nullptr;
    }
 
-   return std::make_unique<EC_Scalar_Data>(std::move(r));
+   return std::make_unique<EC_Scalar_Data_BN>(shared_from_this(), std::move(r));
 }
 
-void EC_Group_Data::scalar_serialize_to(const EC_Scalar_Data& s, std::span<uint8_t> bytes) const {
-   BOTAN_ARG_CHECK(bytes.size() == m_order_bytes, "Invalid output length");
-   s.value().serialize_to(bytes);
+std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_deserialize(std::span<const uint8_t> bytes) const {
+   try {
+      auto pt = Botan::OS2ECP(bytes.data(), bytes.size(), curve());
+      return std::make_unique<EC_AffinePoint_Data_BN>(shared_from_this(), std::move(pt));
+   } catch(...) {
+      return nullptr;
+   }
+}
+
+std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_hash_to_curve_ro(std::string_view hash_fn,
+                                                                           std::span<const uint8_t> input,
+                                                                           std::span<const uint8_t> domain_sep) const {
+#if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
+   auto pt = hash_to_curve_sswu(*this, hash_fn, input, domain_sep, true);
+   return std::make_unique<EC_AffinePoint_Data_BN>(shared_from_this(), std::move(pt));
+#else
+   BOTAN_UNUSED(hash_fn, input, domain_sep);
+   throw Not_Implemented("Hashing to curve not available in this build");
+#endif
+}
+
+std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_hash_to_curve_nu(std::string_view hash_fn,
+                                                                           std::span<const uint8_t> input,
+                                                                           std::span<const uint8_t> domain_sep) const {
+#if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
+   auto pt = hash_to_curve_sswu(*this, hash_fn, input, domain_sep, false);
+   return std::make_unique<EC_AffinePoint_Data_BN>(shared_from_this(), std::move(pt));
+#else
+   BOTAN_UNUSED(hash_fn, input, domain_sep);
+   throw Not_Implemented("Hashing to curve not available in this build");
+#endif
+}
+
+std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_g_mul(const EC_Scalar_Data& scalar,
+                                                                RandomNumberGenerator& rng,
+                                                                std::vector<BigInt>& ws) const {
+   const auto& group = scalar.group();
+   const auto& bn = EC_Scalar_Data_BN::checked_ref(scalar);
+   auto pt = group->blinded_base_point_multiply(bn.value(), rng, ws);
+   return std::make_unique<EC_AffinePoint_Data_BN>(shared_from_this(), std::move(pt));
+}
+
+std::unique_ptr<EC_Mul2Table_Data> EC_Group_Data::make_mul2_table(const EC_AffinePoint_Data& h) const {
+   EC_AffinePoint_Data_BN g(shared_from_this(), this->base_point());
+   return std::make_unique<EC_Mul2Table_Data_BN>(g, h);
 }
 
 }  // namespace Botan

@@ -24,7 +24,7 @@ class EC_Scalar;
 class EC_Point;
 
 class EC_Group_Data;
-class EC_Point_Data;
+class EC_AffinePoint_Data;
 
 class BOTAN_UNSTABLE_API EC_AffinePoint final {
    public:
@@ -60,7 +60,7 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
       /// Return the number of bytes of a field element
       ///
       /// A point consists of two field elements, plus possibly a header
-      size_t field_element_bytes() const { return m_fe_bytes; }
+      size_t field_element_bytes() const;
 
       /// Write the fixed length encoding of affine x coordinate
       ///
@@ -130,21 +130,37 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
       EC_AffinePoint(const EC_AffinePoint& other);
       EC_AffinePoint(EC_AffinePoint&& other) noexcept;
 
-      EC_AffinePoint(const EC_Group& group, const EC_Point& pt);
-      EC_AffinePoint(const std::shared_ptr<EC_Group_Data>, EC_Point&& pt);
+      EC_AffinePoint& operator=(const EC_AffinePoint& other);
+      EC_AffinePoint& operator=(EC_AffinePoint&& other) noexcept;
 
+      EC_AffinePoint(const EC_Group& group, std::span<const uint8_t> bytes);
+
+      /**
+      * Deprecated conversion
+      */
+      EC_AffinePoint(const EC_Group& group, const EC_Point& pt);
+
+      /**
+      * Deprecated conversion
+      */
       EC_Point to_legacy_point() const;
 
       ~EC_AffinePoint();
 
+      const EC_AffinePoint_Data& _inner() const { return inner(); }
+
+      static EC_AffinePoint _from_inner(std::unique_ptr<EC_AffinePoint_Data> inner);
+
+      const std::shared_ptr<const EC_Group_Data>& _group() const;
+
    private:
-      friend class EC_Mul2Table_Data;
+      friend class EC_Mul2Table;
 
-      EC_AffinePoint(std::shared_ptr<EC_Group_Data> group, std::unique_ptr<EC_Point_Data> point);
+      EC_AffinePoint(std::unique_ptr<EC_AffinePoint_Data> point);
 
-      std::shared_ptr<EC_Group_Data> m_group;
-      std::unique_ptr<EC_Point_Data> m_point;
-      const size_t m_fe_bytes;
+      const EC_AffinePoint_Data& inner() const { return *m_point; }
+
+      std::unique_ptr<EC_AffinePoint_Data> m_point;
 };
 
 }  // namespace Botan

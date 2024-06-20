@@ -14,77 +14,91 @@
 #include <botan/reducer.h>
 #include <botan/internal/point_mul.h>
 #include <botan/internal/stl_util.h>
+#include <memory>
 #include <span>
 
 namespace Botan {
 
-class EC_Scalar_Data final {
+class EC_Group_Data;
+
+class EC_Scalar_Data {
    public:
-      EC_Scalar_Data(BigInt v) : m_v(std::move(v)) {}
+      virtual ~EC_Scalar_Data() = default;
 
-      std::unique_ptr<EC_Scalar_Data> clone() const { return std::make_unique<EC_Scalar_Data>(m_v); }
+      virtual const std::shared_ptr<const EC_Group_Data>& group() const = 0;
 
-      const BigInt& value() const { return m_v; }
+      virtual size_t bytes() const = 0;
 
-      void set_value(const BigInt& v) { m_v = v; }
+      virtual std::unique_ptr<EC_Scalar_Data> clone() const = 0;
 
-   private:
-      BigInt m_v;
+      virtual bool is_zero() const = 0;
+
+      virtual bool is_eq(const EC_Scalar_Data& y) const = 0;
+
+      virtual void assign(const EC_Scalar_Data& y) = 0;
+
+      virtual void square_self() = 0;
+
+      virtual std::unique_ptr<EC_Scalar_Data> negate() const = 0;
+
+      virtual std::unique_ptr<EC_Scalar_Data> invert() const = 0;
+
+      virtual std::unique_ptr<EC_Scalar_Data> add(const EC_Scalar_Data& other) const = 0;
+
+      virtual std::unique_ptr<EC_Scalar_Data> sub(const EC_Scalar_Data& other) const = 0;
+
+      virtual std::unique_ptr<EC_Scalar_Data> mul(const EC_Scalar_Data& other) const = 0;
+
+      virtual void serialize_to(std::span<uint8_t> bytes) const = 0;
 };
 
-class EC_Point_Data final {
+class EC_AffinePoint_Data {
    public:
-      EC_Point_Data(EC_Point pt) : m_pt(std::move(pt)) {
-         m_pt.force_affine();
-         m_xy = m_pt.xy_bytes();
-      }
+      virtual ~EC_AffinePoint_Data() = default;
 
-      const EC_Point& value() const { return m_pt; }
+      virtual const std::shared_ptr<const EC_Group_Data>& group() const = 0;
 
-      size_t field_element_bytes() const { return m_xy.size() / 2; }
+      virtual std::unique_ptr<EC_AffinePoint_Data> clone() const = 0;
 
-      void serialize_x_to(std::span<uint8_t> bytes) const {
-         const size_t fe_bytes = field_element_bytes();
-         BOTAN_ARG_CHECK(bytes.size() == fe_bytes, "Invalid output size");
-         copy_mem(bytes, std::span{m_xy}.first(fe_bytes));
-      }
+      // Return size of a field element
+      virtual size_t field_element_bytes() const = 0;
 
-      void serialize_y_to(std::span<uint8_t> bytes) const {
-         const size_t fe_bytes = field_element_bytes();
-         BOTAN_ARG_CHECK(bytes.size() == fe_bytes, "Invalid output size");
-         copy_mem(bytes, std::span{m_xy}.last(fe_bytes));
-      }
+      // Writes 1 field element worth of data to bytes
+      virtual void serialize_x_to(std::span<uint8_t> bytes) const = 0;
 
-      void serialize_xy_to(std::span<uint8_t> bytes) const {
-         const size_t fe_bytes = field_element_bytes();
-         BOTAN_ARG_CHECK(bytes.size() == 2 * fe_bytes, "Invalid output size");
-         copy_mem(bytes, m_xy);
-      }
+      // Writes 1 field element worth of data to bytes
+      virtual void serialize_y_to(std::span<uint8_t> bytes) const = 0;
 
-      void serialize_compressed_to(std::span<uint8_t> bytes) const {
-         const size_t fe_bytes = field_element_bytes();
-         BOTAN_ARG_CHECK(bytes.size() == 1 + fe_bytes, "Invalid output size");
-         const bool y_is_odd = (m_xy[m_xy.size() - 1] & 0x01) == 0x01;
+      // Writes 2 field elements worth of data to bytes
+      virtual void serialize_xy_to(std::span<uint8_t> bytes) const = 0;
 
-         BufferStuffer stuffer(bytes);
-         stuffer.append(y_is_odd ? 0x03 : 0x02);
-         serialize_x_to(stuffer.next(fe_bytes));
-      }
+      // Writes 1 byte + 1 field element worth of data to bytes
+      virtual void serialize_compressed_to(std::span<uint8_t> bytes) const = 0;
 
-      void serialize_uncompressed_to(std::span<uint8_t> bytes) const {
-         const size_t fe_bytes = field_element_bytes();
-         BOTAN_ARG_CHECK(bytes.size() == 1 + 2 * fe_bytes, "Invalid output size");
-         BufferStuffer stuffer(bytes);
-         stuffer.append(0x04);
-         stuffer.append(m_xy);
-      }
+      // Writes 1 byte + 2 field elements worth of data to bytes
+      virtual void serialize_uncompressed_to(std::span<uint8_t> bytes) const = 0;
 
-   private:
-      EC_Point m_pt;
-      secure_vector<uint8_t> m_xy;
+      virtual std::unique_ptr<EC_AffinePoint_Data> mul(const EC_Scalar_Data& scalar,
+                                                       RandomNumberGenerator& rng,
+                                                       std::vector<BigInt>& ws) const = 0;
+
+      virtual EC_Point to_legacy_point() const = 0;
 };
 
-class EC_Group_Data final {
+class EC_Mul2Table_Data {
+   public:
+      virtual ~EC_Mul2Table_Data() = default;
+
+      // Returns nullptr if g*x + h*y was point at infinity
+      virtual std::unique_ptr<EC_AffinePoint_Data> mul2_vartime(const EC_Scalar_Data& x,
+                                                                const EC_Scalar_Data& y) const = 0;
+
+      // Returns nullptr if g*x + h*y was point at infinity
+      virtual std::unique_ptr<EC_Scalar_Data> mul2_vartime_x_mod_order(const EC_Scalar_Data& x,
+                                                                       const EC_Scalar_Data& y) const = 0;
+};
+
+class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
    public:
       EC_Group_Data(const BigInt& p,
                     const BigInt& a,
@@ -167,31 +181,13 @@ class EC_Group_Data final {
 
       std::unique_ptr<EC_Scalar_Data> scalar_from_bytes_mod_order(std::span<const uint8_t> bytes) const;
 
+      std::unique_ptr<EC_Scalar_Data> scalar_from_bigint(const BigInt& bn) const;
+
       std::unique_ptr<EC_Scalar_Data> scalar_random(RandomNumberGenerator& rng) const;
-
-      bool scalar_is_zero(const EC_Scalar_Data& s) const;
-
-      bool scalar_is_eq(const EC_Scalar_Data& x, const EC_Scalar_Data& y) const;
 
       std::unique_ptr<EC_Scalar_Data> scalar_zero() const;
 
       std::unique_ptr<EC_Scalar_Data> scalar_one() const;
-
-      std::unique_ptr<EC_Scalar_Data> scalar_invert(const EC_Scalar_Data& s) const;
-
-      void scalar_assign(EC_Scalar_Data& x, const EC_Scalar_Data& y) const;
-
-      void scalar_square_self(EC_Scalar_Data& s) const;
-
-      std::unique_ptr<EC_Scalar_Data> scalar_negate(const EC_Scalar_Data& s) const;
-
-      std::unique_ptr<EC_Scalar_Data> scalar_add(const EC_Scalar_Data& a, const EC_Scalar_Data& b) const;
-
-      std::unique_ptr<EC_Scalar_Data> scalar_sub(const EC_Scalar_Data& a, const EC_Scalar_Data& b) const;
-
-      std::unique_ptr<EC_Scalar_Data> scalar_mul(const EC_Scalar_Data& a, const EC_Scalar_Data& b) const;
-
-      std::unique_ptr<EC_Scalar_Data> scalar_from_bigint(const BigInt& bn) const;
 
       std::unique_ptr<EC_Scalar_Data> gk_x_mod_order(const EC_Scalar_Data& scalar,
                                                      RandomNumberGenerator& rng,
@@ -199,7 +195,21 @@ class EC_Group_Data final {
 
       std::unique_ptr<EC_Scalar_Data> scalar_deserialize(std::span<const uint8_t> bytes);
 
-      void scalar_serialize_to(const EC_Scalar_Data& s, std::span<uint8_t> bytes) const;
+      std::unique_ptr<EC_AffinePoint_Data> point_deserialize(std::span<const uint8_t> bytes) const;
+
+      std::unique_ptr<EC_AffinePoint_Data> point_hash_to_curve_ro(std::string_view hash_fn,
+                                                                  std::span<const uint8_t> input,
+                                                                  std::span<const uint8_t> domain_sep) const;
+
+      std::unique_ptr<EC_AffinePoint_Data> point_hash_to_curve_nu(std::string_view hash_fn,
+                                                                  std::span<const uint8_t> input,
+                                                                  std::span<const uint8_t> domain_sep) const;
+
+      std::unique_ptr<EC_AffinePoint_Data> point_g_mul(const EC_Scalar_Data& scalar,
+                                                       RandomNumberGenerator& rng,
+                                                       std::vector<BigInt>& ws) const;
+
+      std::unique_ptr<EC_Mul2Table_Data> make_mul2_table(const EC_AffinePoint_Data& pt) const;
 
    private:
       CurveGFp m_curve;

@@ -15,6 +15,7 @@
 namespace Botan {
 
 class EC_Group;
+class EC_Group_Data;
 
 /**
 * Hash an input onto an elliptic curve point using the
@@ -28,6 +29,19 @@ EC_Point hash_to_curve_sswu(const EC_Group& group,
                             std::span<const uint8_t> input,
                             std::span<const uint8_t> domain_sep,
                             bool random_oracle);
+
+/**
+* Hash an input onto an elliptic curve point using the
+* methods from RFC 9380
+*
+* This method requires that the ECC group have (a*b) != 0
+* which excludes certain groups including secp256k1
+*/
+std::vector<uint8_t> hash_to_curve_sswu(const EC_Group_Data& group_data,
+                                        std::string_view hash_fn,
+                                        std::span<const uint8_t> input,
+                                        std::span<const uint8_t> domain_sep,
+                                        bool random_oracle);
 
 }  // namespace Botan
 

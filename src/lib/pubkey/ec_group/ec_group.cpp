@@ -736,63 +736,35 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
    return true;
 }
 
-class EC_Mul2Table_Data final {
-   public:
-      EC_Mul2Table_Data(std::shared_ptr<EC_Group_Data> group, const EC_Point& g, const EC_Point& h) :
-            m_group(std::move(group)), m_tbl(g, h) {}
-
-      EC_Mul2Table_Data(const EC_AffinePoint& h) :
-            m_group(h.m_group), m_tbl(h.m_group->base_point(), h.to_legacy_point()) {}
-
-      std::optional<EC_AffinePoint> mul2_vartime(const EC_Scalar& x, const EC_Scalar& y) const {
-         auto pt = m_tbl.multi_exp(x.m_scalar->value(), y.m_scalar->value());
-
-         if(pt.is_zero()) {
-            return std::nullopt;
-         }
-         return EC_AffinePoint(m_group, std::move(pt));
-      }
-
-      std::optional<EC_Scalar> mul2_vartime_x_mod_order(const EC_Scalar& x, const EC_Scalar& y) const {
-         auto pt = m_tbl.multi_exp(x.m_scalar->value(), y.m_scalar->value());
-
-         if(pt.is_zero()) {
-            return std::nullopt;
-         }
-         auto v = std::make_unique<EC_Scalar_Data>(m_group->mod_order(pt.get_affine_x()));
-         return EC_Scalar(m_group, std::move(v));
-      }
-
-      std::optional<EC_Scalar> mul2_vartime_x_mod_order(const EC_Scalar& c,
-                                                        const EC_Scalar& x,
-                                                        const EC_Scalar& y) const {
-         return this->mul2_vartime_x_mod_order(c * x, c * y);
-      }
-
-   private:
-      std::shared_ptr<EC_Group_Data> m_group;
-      EC_Point_Multi_Point_Precompute m_tbl;
-};
-
 EC_Group::Mul2Table::Mul2Table(const EC_Group& group, const EC_Point& h) :
-      m_tbl(std::make_unique<EC_Mul2Table_Data>(group.m_data, group.generator(), h)) {}
+      EC_Group::Mul2Table(EC_AffinePoint(group, h)) {}
 
-EC_Group::Mul2Table::Mul2Table(const EC_AffinePoint& h) : m_tbl(std::make_unique<EC_Mul2Table_Data>(h)) {}
+EC_Group::Mul2Table::Mul2Table(const EC_AffinePoint& h) : m_tbl(h._group()->make_mul2_table(h._inner())) {}
 
 EC_Group::Mul2Table::~Mul2Table() = default;
 
 std::optional<EC_AffinePoint> EC_Group::Mul2Table::mul2_vartime(const EC_Scalar& x, const EC_Scalar& y) const {
-   return m_tbl->mul2_vartime(x, y);
+   auto pt = m_tbl->mul2_vartime(x._inner(), y._inner());
+   if(pt) {
+      return EC_AffinePoint::_from_inner(std::move(pt));
+   } else {
+      return {};
+   }
 }
 
 std::optional<EC_Scalar> EC_Group::Mul2Table::mul2_vartime_x_mod_order(const EC_Scalar& x, const EC_Scalar& y) const {
-   return m_tbl->mul2_vartime_x_mod_order(x, y);
+   auto s = m_tbl->mul2_vartime_x_mod_order(x._inner(), y._inner());
+   if(s) {
+      return EC_Scalar::_from_inner(std::move(s));
+   } else {
+      return {};
+   }
 }
 
 std::optional<EC_Scalar> EC_Group::Mul2Table::mul2_vartime_x_mod_order(const EC_Scalar& c,
                                                                        const EC_Scalar& x,
                                                                        const EC_Scalar& y) const {
-   return m_tbl->mul2_vartime_x_mod_order(c, x, y);
+   return this->mul2_vartime_x_mod_order(c * x, c * y);
 }
 
 }  // namespace Botan

@@ -89,7 +89,10 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       */
       static EC_Scalar gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws);
 
-      size_t bytes() const { return m_scalar_bytes; }
+      /**
+      * Return the byte size of this scalar
+      */
+      size_t bytes() const;
 
       /**
       * Write the fixed length serialization to bytes
@@ -188,28 +191,23 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       EC_Scalar(const EC_Scalar& other);
       EC_Scalar(EC_Scalar&& other) noexcept;
 
-      EC_Scalar& operator=(const EC_Scalar& x) {
-         this->assign(x);
-         return (*this);
-      }
+      EC_Scalar& operator=(const EC_Scalar& other);
+      EC_Scalar& operator=(EC_Scalar&& other) noexcept;
 
       ~EC_Scalar();
 
+      const EC_Scalar_Data& _inner() const { return inner(); }
+
+      static EC_Scalar _from_inner(std::unique_ptr<EC_Scalar_Data> inner);
+
    private:
       friend class EC_AffinePoint;
-      friend class EC_Mul2Table_Data;
 
-      EC_Scalar(std::shared_ptr<EC_Group_Data> group, std::unique_ptr<EC_Scalar_Data> scalar);
-
-      EC_Scalar(const EC_Group& group, std::unique_ptr<EC_Scalar_Data> scalar);
+      EC_Scalar(std::unique_ptr<EC_Scalar_Data> scalar);
 
       const EC_Scalar_Data& inner() const { return *m_scalar; }
 
-      const std::shared_ptr<EC_Group_Data>& group() const { return m_group; }
-
-      std::shared_ptr<EC_Group_Data> m_group;
       std::unique_ptr<EC_Scalar_Data> m_scalar;
-      const size_t m_scalar_bytes;
 };
 
 }  // namespace Botan

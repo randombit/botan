@@ -219,10 +219,15 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       class Mul2Table final {
          public:
             /**
-
+            * Internal transition function
+            *
+            * @warning this will be removed in 3.6.0, NOT COVERED BY SEMVER
             */
             Mul2Table(const EC_Group& group, const EC_Point& h);
 
+            /**
+            * Create a table for computing g*x + h*y
+            */
             Mul2Table(const EC_AffinePoint& h);
 
             /**
@@ -254,7 +259,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
             *
             * Returns nullopt if g*x*c + h*y*c was the point at infinity
             *
-            * @warning this function is variable time with respect to x and y
+            * @warning this function is variable time with respect to c, x and y
             */
             std::optional<EC_Scalar> mul2_vartime_x_mod_order(const EC_Scalar& c,
                                                               const EC_Scalar& x,
@@ -521,7 +526,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       /*
       * For internal use only
       */
-      std::shared_ptr<EC_Group_Data> _data() const { return m_data; }
+      const std::shared_ptr<EC_Group_Data>& _data() const { return m_data; }
 
    private:
       static EC_Group_Data_Map& ec_group_data();
