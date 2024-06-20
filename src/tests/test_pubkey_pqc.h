@@ -142,6 +142,10 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
 
          // Decapsulation
          auto sk2 = Botan::load_private_key(sk->algorithm_identifier(), sk->private_key_bits());
+         if(!result.test_not_null("Successfully deserialized private key", sk2)) {
+            return result;
+         }
+
          Botan::Null_RNG null_rng;
          auto dec = Botan::PK_KEM_Decryptor(*sk2, null_rng, "Raw");
          const auto shared_key = dec.decrypt(encaped.encapsulated_shared_key(), 0 /* no KDF */);
