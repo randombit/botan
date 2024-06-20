@@ -22,7 +22,7 @@ namespace Botan {
 * @param align_to the alignment boundary
 * @return n rounded up to a multiple of align_to
 */
-inline size_t round_up(size_t n, size_t align_to) {
+constexpr inline size_t round_up(size_t n, size_t align_to) {
    // Arguably returning n in this case would also be sensible
    BOTAN_ARG_CHECK(align_to != 0, "align_to must not be 0");
 
