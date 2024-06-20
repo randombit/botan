@@ -16,6 +16,7 @@
 #include "test_rng.h"
 #include "tests.h"
 
+#include <cmath>
 #include <iterator>
 #include <memory>
 
@@ -26,6 +27,8 @@
    #include <botan/pubkey.h>
    #include <botan/rng.h>
    #include <botan/internal/fmt.h>
+   #include <botan/internal/kyber_constants.h>
+   #include <botan/internal/kyber_helpers.h>
    #include <botan/internal/stl_util.h>
 #endif
 
@@ -257,6 +260,102 @@ class Kyber_Keygen_Tests final : public PK_Key_Generation_Test {
 };
 
 BOTAN_REGISTER_TEST("kyber", "kyber_keygen", Kyber_Keygen_Tests);
+
+namespace {
+
+template <size_t d>
+void test_compress(Test::Result& res) {
+   using namespace Botan;
+   constexpr auto q = KyberConstants::Q;
+
+   res.start_timer();
+
+   for(uint16_t x = 0; x < q; ++x) {
+      const uint32_t c = Kyber_Algos::compress<d>(x);
+      const auto twotothed = (uint32_t(1) << d);
+      const auto expected = (static_cast<double>(twotothed) / q) * x;
+      const auto e = static_cast<uint32_t>(std::round(expected)) % twotothed;
+
+      if(c != e) {
+         res.test_failure(fmt("compress<{}>({}) = {}; expected {}", d, x, c, e));
+         return;
+      }
+   }
+
+   res.end_timer();
+   res.test_success();
+}
+
+template <size_t d>
+void test_decompress(Test::Result& result) {
+   using namespace Botan;
+   constexpr auto q = KyberConstants::Q;
+
+   result.start_timer();
+
+   const auto twotothed = (uint32_t(1) << d);
+   using from_t = std::conditional_t<d <= 8, uint8_t, uint16_t>;
+
+   for(from_t y = 0; y < twotothed; ++y) {
+      const uint32_t c = Kyber_Algos::decompress<d>(y);
+      const auto expected = (static_cast<double>(q) / twotothed) * y;
+      const auto e = static_cast<uint32_t>(std::round(expected)) % q;
+
+      if(c != e) {
+         result.test_failure(fmt("decompress<{}>({}) = {}; expected {}", d, static_cast<uint16_t>(y), c, e));
+         return;
+      }
+   }
+
+   result.end_timer();
+   result.test_success();
+}
+
+template <size_t d>
+void test_compress_roundtrip(Test::Result& result) {
+   using namespace Botan;
+   constexpr auto q = KyberConstants::Q;
+
+   result.start_timer();
+
+   for(uint16_t x = 0; x < q && x < (1 << d); ++x) {
+      const uint16_t c = Kyber_Algos::compress<d>(Kyber_Algos::decompress<d>(x));
+      if(x != c) {
+         result.test_failure(fmt("compress<{}>(decompress<{}>({})) != {}", d, d, x, c));
+         return;
+      }
+   }
+
+   result.end_timer();
+   result.test_success();
+}
+
+std::vector<Test::Result> test_kyber_helpers() {
+   return {
+      Botan_Tests::CHECK("compress<1>", [](Test::Result& res) { test_compress<1>(res); }),
+      Botan_Tests::CHECK("compress<4>", [](Test::Result& res) { test_compress<4>(res); }),
+      Botan_Tests::CHECK("compress<5>", [](Test::Result& res) { test_compress<5>(res); }),
+      Botan_Tests::CHECK("compress<10>", [](Test::Result& res) { test_compress<10>(res); }),
+      Botan_Tests::CHECK("compress<11>", [](Test::Result& res) { test_compress<11>(res); }),
+
+      Botan_Tests::CHECK("decompress<1>", [](Test::Result& res) { test_decompress<1>(res); }),
+      Botan_Tests::CHECK("decompress<4>", [](Test::Result& res) { test_decompress<4>(res); }),
+      Botan_Tests::CHECK("decompress<5>", [](Test::Result& res) { test_decompress<5>(res); }),
+      Botan_Tests::CHECK("decompress<10>", [](Test::Result& res) { test_decompress<10>(res); }),
+      Botan_Tests::CHECK("decompress<11>", [](Test::Result& res) { test_decompress<11>(res); }),
+
+      Botan_Tests::CHECK("compress<1>(decompress())", [](Test::Result& res) { test_compress_roundtrip<1>(res); }),
+      Botan_Tests::CHECK("compress<4>(decompress())", [](Test::Result& res) { test_compress_roundtrip<4>(res); }),
+      Botan_Tests::CHECK("compress<5>(decompress())", [](Test::Result& res) { test_compress_roundtrip<5>(res); }),
+      Botan_Tests::CHECK("compress<10>(decompress())>", [](Test::Result& res) { test_compress_roundtrip<10>(res); }),
+      Botan_Tests::CHECK("compress<11>(decompress())>", [](Test::Result& res) { test_compress_roundtrip<11>(res); }),
+   };
+}
+
+}  // namespace
+
+BOTAN_REGISTER_TEST_FN("kyber", "kyber_helpers", test_kyber_helpers);
+
 #endif
 
 }  // namespace Botan_Tests

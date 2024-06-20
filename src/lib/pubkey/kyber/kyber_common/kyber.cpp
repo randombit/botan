@@ -20,6 +20,7 @@
 #include <botan/secmem.h>
 
 #include <botan/internal/fmt.h>
+#include <botan/internal/kyber_algos.h>
 #include <botan/internal/kyber_constants.h>
 #include <botan/internal/kyber_keys.h>
 #include <botan/internal/kyber_symmetric_primitives.h>
@@ -38,8 +39,6 @@
    #include <botan/internal/kyber_encaps.h>
 #endif
 
-#include <array>
-#include <limits>
 #include <memory>
 #include <vector>
 
@@ -154,14 +153,14 @@ std::shared_ptr<Kyber_PublicKeyInternal> Kyber_PublicKey::initialize_from_encodi
                                                                                    KyberMode m) {
    KyberConstants mode(m);
 
-   if(pub_key.size() != mode.public_key_byte_length()) {
+   if(pub_key.size() != mode.public_key_bytes()) {
       throw Invalid_Argument("kyber public key does not have the correct byte count");
    }
 
    BufferSlicer s(pub_key);
 
-   auto poly_vec = s.take(mode.polynomial_vector_byte_length());
-   auto seed = s.copy<KyberSeedRho>(KyberConstants::kSeedLength);
+   auto poly_vec = s.take(mode.polynomial_vector_bytes());
+   auto seed = s.copy<KyberSeedRho>(KyberConstants::SEED_BYTES);
    BOTAN_ASSERT_NOMSG(s.empty());
 
    return std::make_shared<Kyber_PublicKeyInternal>(std::move(mode), poly_vec, std::move(seed));
@@ -188,7 +187,7 @@ std::vector<uint8_t> Kyber_PublicKey::public_key_bits() const {
 
 size_t Kyber_PublicKey::key_length() const {
    // TODO: this should report 512, 768, 1024
-   return m_public->mode().public_key_byte_length();
+   return m_public->mode().public_key_bytes();
 }
 
 bool Kyber_PublicKey::check_key(RandomNumberGenerator&, bool) const {
@@ -207,17 +206,15 @@ Kyber_PrivateKey::Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode m) {
 
    // Algorithm 12 (K-PKE.KeyGen) ----------------
 
-   const auto d = rng.random_vec<KyberSeedRandomness>(KyberConstants::kSymBytes);
+   const auto d = rng.random_vec<KyberSeedRandomness>(KyberConstants::SEED_BYTES);
    auto [rho, sigma] = mode.symmetric_primitives().G(d);
+   Kyber_Algos::PolynomialSampler ps(sigma, mode);
 
-   auto a = PolynomialMatrix::generate(rho, false /* not transposed */, mode);
-   auto s = PolynomialVector::getnoise_eta1(sigma, 0 /* N */, mode);
-   auto e = PolynomialVector::getnoise_eta1(sigma, mode.k() /* N */, mode);
+   auto A = Kyber_Algos::sample_matrix(rho, false /* not transposed */, mode);
+   auto s = ntt(ps.sample_polynomial_vector_cbd_eta1());
+   const auto e = ntt(ps.sample_polynomial_vector_cbd_eta1());
 
-   s.ntt();
-   e.ntt();
-
-   auto t = a.pointwise_acc_montgomery(s, true);
+   auto t = montgomery(A * s);
    t += e;
    t.reduce();
 
@@ -225,7 +222,7 @@ Kyber_PrivateKey::Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode m) {
 
    m_public = std::make_shared<Kyber_PublicKeyInternal>(mode, std::move(t), std::move(rho));
    m_private = std::make_shared<Kyber_PrivateKeyInternal>(
-      std::move(mode), std::move(s), rng.random_vec<KyberImplicitRejectionValue>(KyberConstants::kZLength));
+      std::move(mode), std::move(s), rng.random_vec<KyberImplicitRejectionValue>(KyberConstants::SEED_BYTES));
 }
 
 Kyber_PrivateKey::Kyber_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
@@ -234,16 +231,16 @@ Kyber_PrivateKey::Kyber_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<
 Kyber_PrivateKey::Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode m) {
    KyberConstants mode(m);
 
-   if(mode.private_key_byte_length() != sk.size()) {
+   if(mode.private_key_bytes() != sk.size()) {
       throw Invalid_Argument("kyber private key does not have the correct byte count");
    }
 
    BufferSlicer s(sk);
 
-   auto skpv = PolynomialVector::from_bytes(s.take(mode.polynomial_vector_byte_length()), mode);
-   auto pub_key = s.take<KyberSerializedPublicKey>(mode.public_key_byte_length());
-   auto puk_key_hash = s.take<KyberHashedPublicKey>(KyberConstants::kPublicKeyHashLength);
-   auto z = s.copy<KyberImplicitRejectionValue>(KyberConstants::kZLength);
+   auto skpv = Kyber_Algos::decode_polynomial_vector(s.take(mode.polynomial_vector_bytes()), mode);
+   auto pub_key = s.take<KyberSerializedPublicKey>(mode.public_key_bytes());
+   auto puk_key_hash = s.take<KyberHashedPublicKey>(KyberConstants::PUBLIC_KEY_HASH_BYTES);
+   auto z = s.copy<KyberImplicitRejectionValue>(KyberConstants::SEED_BYTES);
 
    BOTAN_ASSERT_NOMSG(s.empty());
 
@@ -266,10 +263,11 @@ secure_vector<uint8_t> Kyber_PrivateKey::raw_private_key_bits() const {
 }
 
 secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const {
-   return concat(m_private->s().to_bytes<secure_vector<uint8_t>>(),
-                 m_public->public_key_bits_raw(),
-                 m_public->H_public_key_bits_raw(),
-                 m_private->z());
+   return concat(
+      Kyber_Algos::encode_polynomial_vector<secure_vector<uint8_t>>(m_private->s().reduce(), m_private->mode()),
+      m_public->public_key_bits_raw(),
+      m_public->H_public_key_bits_raw(),
+      m_private->z());
 }
 
 std::unique_ptr<PK_Ops::KEM_Encryption> Kyber_PublicKey::create_kem_encryption_op(std::string_view params,

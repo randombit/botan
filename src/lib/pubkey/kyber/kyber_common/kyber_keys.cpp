@@ -16,55 +16,47 @@
 
 namespace Botan {
 
-Kyber_PublicKeyInternal::Kyber_PublicKeyInternal(KyberConstants mode, PolynomialVector t, KyberSeedRho rho) :
+Kyber_PublicKeyInternal::Kyber_PublicKeyInternal(KyberConstants mode, KyberPolyVecNTT t, KyberSeedRho rho) :
       m_mode(std::move(mode)),
       m_t(std::move(t)),
       m_rho(std::move(rho)),
-      m_public_key_bits_raw(concat(m_t.to_bytes(), m_rho)),
+      m_public_key_bits_raw(concat(Kyber_Algos::encode_polynomial_vector<std::vector<uint8_t>>(m_t, m_mode), m_rho)),
       m_H_public_key_bits_raw(m_mode.symmetric_primitives().H(m_public_key_bits_raw)) {}
 
 /**
  * NIST FIPS 203 IPD, Algorithm 13 (K-PKE.Encrypt)
  */
-Ciphertext Kyber_PublicKeyInternal::indcpa_encrypt(StrongSpan<const KyberMessage> m,
-                                                   StrongSpan<const KyberEncryptionRandomness> r) const {
-   auto at = PolynomialMatrix::generate(m_rho, true /* transposed */, m_mode);
+void Kyber_PublicKeyInternal::indcpa_encrypt(StrongSpan<KyberCompressedCiphertext> out_ct,
+                                             StrongSpan<const KyberMessage> m,
+                                             StrongSpan<const KyberEncryptionRandomness> r,
+                                             const KyberPolyMat& At) const {
+   Kyber_Algos::PolynomialSampler ps(r, m_mode);
 
-   auto rv = PolynomialVector::getnoise_eta1(r, 0, m_mode);
-   auto e1 = PolynomialVector::getnoise_eta2(r, m_mode.k(), m_mode);
-   auto e2 = Polynomial::getnoise_eta2(r, 2 * m_mode.k(), m_mode);
+   const auto rv = ntt(ps.sample_polynomial_vector_cbd_eta1());
+   const auto e1 = ps.sample_polynomial_vector_cbd_eta2();
+   const auto e2 = ps.sample_polynomial_cbd_eta2();
 
-   rv.ntt();
-
-   auto u = at.pointwise_acc_montgomery(rv);
-   u.invntt_tomont();
+   auto u = inverse_ntt(At * rv);
    u += e1;
    u.reduce();
 
-   auto mu = Polynomial::from_message(m);
-   auto v = PolynomialVector::pointwise_acc_montgomery(m_t, rv);
-   v.invntt_tomont();
+   const auto mu = Kyber_Algos::polynomial_from_message(m);
+   auto v = inverse_ntt(m_t * rv);
    v += e2;
    v += mu;
    v.reduce();
 
-   return Ciphertext(std::move(u), v, m_mode);
+   Kyber_Algos::compress_ciphertext(out_ct, u, v, m_mode);
 }
 
 /**
  * NIST FIPS 203 IPD, Algorithm 14 (K-PKE.Decrypt)
  */
-KyberMessage Kyber_PrivateKeyInternal::indcpa_decrypt(Ciphertext ct) const {
-   auto& u = ct.b();
-   const auto& v = ct.v();
-
-   u.ntt();
-   auto w = PolynomialVector::pointwise_acc_montgomery(m_s, u);
-   w.invntt_tomont();
-
-   w -= v;
-   w.reduce();
-   return w.to_message();
+KyberMessage Kyber_PrivateKeyInternal::indcpa_decrypt(StrongSpan<const KyberCompressedCiphertext> ct) const {
+   auto [u, v] = Kyber_Algos::decompress_ciphertext(ct, m_mode);
+   v -= inverse_ntt(m_s * ntt(std::move(u)));
+   v.reduce();
+   return Kyber_Algos::polynomial_to_message(v);
 }
 
 }  // namespace Botan
