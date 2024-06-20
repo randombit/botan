@@ -22,8 +22,11 @@ namespace Botan {
 
 class Dilithium_AES_Symmetric_Primitives : public Dilithium_Symmetric_Primitives {
    public:
+      Dilithium_AES_Symmetric_Primitives(size_t collision_strength_in_bytes) :
+            Dilithium_Symmetric_Primitives(collision_strength_in_bytes) {}
+
       // AES mode always uses AES-256, regardless of the XofType
-      std::unique_ptr<Botan::XOF> XOF(XofType /* type */, std::span<const uint8_t> seed, uint16_t nonce) const final {
+      Botan::XOF& XOF(XofType /* type */, std::span<const uint8_t> seed, uint16_t nonce) const final {
          // Algorithm Spec V. 3.1 Section 5.3
          //    In the AES variant, the first 32 bytes of rhoprime are used as
          //    the key and i is extended to a 12 byte nonce for AES-256 in
@@ -36,10 +39,13 @@ class Dilithium_AES_Symmetric_Primitives : public Dilithium_Symmetric_Primitives
          const std::array<uint8_t, 12> iv{get_byte<1>(nonce), get_byte<0>(nonce), 0};
          const auto key = seed.first(32);
 
-         auto xof = std::make_unique<AES_256_CTR_XOF>();
-         xof->start(iv, key);
-         return xof;
+         m_aes_xof.clear();
+         m_aes_xof.start(iv, key);
+         return m_aes_xof;
       }
+
+   private:
+      mutable AES_256_CTR_XOF m_aes_xof;
 };
 
 }  // namespace Botan
