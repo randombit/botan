@@ -9,6 +9,7 @@ type -> "Internal"
 </module_info>
 
 <requires>
+pqcrystals
 pubkey
 hash
 rng
@@ -16,10 +17,12 @@ xof
 </requires>
 
 <header:internal>
+kyber_algos.h
 kyber_constants.h
 kyber_encaps_base.h
+kyber_helpers.h
 kyber_keys.h
-kyber_structures.h
+kyber_polynomial.h
 kyber_symmetric_primitives.h
 kyber_types.h
 </header:internal>

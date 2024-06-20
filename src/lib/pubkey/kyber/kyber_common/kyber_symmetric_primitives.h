@@ -18,10 +18,8 @@
 #include <botan/internal/kyber_types.h>
 #include <botan/internal/stl_util.h>
 
-#include <memory>
 #include <span>
 #include <tuple>
-#include <vector>
 
 namespace Botan {
 
@@ -71,8 +69,7 @@ class Kyber_Symmetric_Primitives {
          return get_PRF(bare_seed_span, nonce).output<KyberSamplingRandomness>(outlen);
       }
 
-      std::unique_ptr<Botan::XOF> XOF(StrongSpan<const KyberSeedRho> seed,
-                                      std::tuple<uint8_t, uint8_t> matrix_position) const {
+      Botan::XOF& XOF(StrongSpan<const KyberSeedRho> seed, std::tuple<uint8_t, uint8_t> matrix_position) const {
          // TODO: once we remove Kyber 90s, we should make `get_XOF()` return a
          //       reference instead of a unique pointer (for consistency), and
          //       call `get_XOF().copy_state()` here. The AES-CTR XOF doesn't
@@ -91,8 +88,8 @@ class Kyber_Symmetric_Primitives {
 
          BufferSlicer bs(s);
          std::pair<T1, T2> result;
-         result.first = bs.copy<T1>(KyberConstants::kSeedLength);
-         result.second = bs.copy<T2>(KyberConstants::kSeedLength);
+         result.first = bs.copy<T1>(KyberConstants::SEED_BYTES);
+         result.second = bs.copy<T2>(KyberConstants::SEED_BYTES);
          BOTAN_ASSERT_NOMSG(bs.empty());
          return result;
       }
@@ -102,8 +99,8 @@ class Kyber_Symmetric_Primitives {
       virtual HashFunction& get_H() const = 0;
       virtual HashFunction& get_KDF() const = 0;
       virtual Botan::XOF& get_PRF(std::span<const uint8_t> seed, uint8_t nonce) const = 0;
-      virtual std::unique_ptr<Botan::XOF> get_XOF(std::span<const uint8_t> seed,
-                                                  std::tuple<uint8_t, uint8_t> matrix_position) const = 0;
+      virtual Botan::XOF& get_XOF(std::span<const uint8_t> seed,
+                                  std::tuple<uint8_t, uint8_t> matrix_position) const = 0;
 };
 
 }  // namespace Botan
