@@ -7,7 +7,7 @@
  * (C) 2021-2022 Jack Lloyd
  * (C) 2021-2022 Manuel Glaser and Michael Boric, Rohde & Schwarz Cybersecurity
  * (C) 2021-2022 René Meusel and Hannes Rantzsch, neXenio GmbH
- * (C) 2024      René Meusel, Rohde & Schwarz Cybersecurity
+ * (C) 2024      René Meusel, Fabian Albert, Rohde & Schwarz Cybersecurity
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */
