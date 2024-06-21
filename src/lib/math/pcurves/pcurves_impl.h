@@ -188,7 +188,7 @@ class IntMod final {
       }
 
       constexpr Self pow_vartime(const std::array<W, N>& exp) const {
-         constexpr size_t WindowBits = 5;
+         constexpr size_t WindowBits = (Self::BITS <= 256) ? 4 : 5;
          constexpr size_t WindowElements = (1 << WindowBits) - 1;
 
          constexpr size_t Windows = (Self::BITS + WindowBits - 1) / WindowBits;
