@@ -19,6 +19,7 @@ pem
 <header:internal>
 point_mul.h
 ec_inner_bn.h
+ec_inner_pc.h
 ec_inner_data.h
 </header:internal>
 
