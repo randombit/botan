@@ -290,9 +290,12 @@ class Pcurve_Point_Tests final : public Test {
                const auto mul2_table = curve->mul2_setup(pt1, pt2);
 
                const auto ref = (curve->mul(pt1, s1, rng) + curve->mul(pt2, s2, rng)).to_affine();
-               const auto mul2t = curve->mul2_vartime(*mul2_table, s1, s2).to_affine();
 
-               result.test_eq("ref == mul2t", ref.serialize(), mul2t.serialize());
+               if(auto mul2pt = curve->mul2_vartime(*mul2_table, s1, s2)) {
+                  result.test_eq("ref == mul2t", ref.serialize(), mul2pt->to_affine().serialize());
+               } else {
+                  result.confirm("ref is identity", ref.is_identity());
+               }
             }
 
             // Test cases where the two points have a linear relation
@@ -314,9 +317,12 @@ class Pcurve_Point_Tests final : public Test {
                const auto mul2_table = curve->mul2_setup(pt1, pt2);
 
                const auto ref = (curve->mul(pt1, s1, rng) + curve->mul(pt2, s2, rng)).to_affine();
-               const auto mul2t = curve->mul2_vartime(*mul2_table, s1, s2).to_affine();
 
-               result.test_eq("ref == mul2t", ref.serialize(), mul2t.serialize());
+               if(auto mul2pt = curve->mul2_vartime(*mul2_table, s1, s2)) {
+                  result.test_eq("ref == mul2t", ref.serialize(), mul2pt->to_affine().serialize());
+               } else {
+                  result.confirm("ref is identity", ref.is_identity());
+               }
             }
 
             result.end_timer();
