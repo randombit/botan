@@ -11,12 +11,14 @@ brief -> "Wrapper for elliptic curve groups"
 <requires>
 asn1
 numbertheory
+pcurves
 pem
 </requires>
 
 <header:internal>
 point_mul.h
 ec_inner_bn.h
+ec_inner_pc.h
 ec_inner_data.h
 </header:internal>
 
