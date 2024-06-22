@@ -110,6 +110,7 @@ void HMAC_DRBG::clear_state() {
    if(m_V.empty()) {
       const size_t output_length = m_mac->output_length();
       m_V.resize(output_length);
+      m_T.resize(output_length);
    }
 
    for(size_t i = 0; i != m_V.size(); ++i) {
@@ -150,12 +151,13 @@ void HMAC_DRBG::generate_output(std::span<uint8_t> output, std::span<const uint8
 * See NIST SP800-90A section 10.1.2.2
 */
 void HMAC_DRBG::update(std::span<const uint8_t> input) {
-   secure_vector<uint8_t> T(m_V.size());
    m_mac->update(m_V);
    m_mac->update(0x00);
-   m_mac->update(input);
-   m_mac->final(T);
-   m_mac->set_key(T);
+   if(!input.empty()) {
+      m_mac->update(input);
+   }
+   m_mac->final(m_T);
+   m_mac->set_key(m_T);
 
    m_mac->update(m_V);
    m_mac->final(m_V);
@@ -164,8 +166,8 @@ void HMAC_DRBG::update(std::span<const uint8_t> input) {
       m_mac->update(m_V);
       m_mac->update(0x01);
       m_mac->update(input);
-      m_mac->final(T);
-      m_mac->set_key(T);
+      m_mac->final(m_T);
+      m_mac->set_key(m_T);
 
       m_mac->update(m_V);
       m_mac->final(m_V);

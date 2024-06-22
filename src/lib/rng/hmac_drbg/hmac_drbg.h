@@ -138,6 +138,7 @@ class BOTAN_PUBLIC_API(2, 0) HMAC_DRBG final : public Stateful_RNG {
 
       std::unique_ptr<MessageAuthenticationCode> m_mac;
       secure_vector<uint8_t> m_V;
+      secure_vector<uint8_t> m_T;
       const size_t m_max_number_of_bytes_per_request;
       const size_t m_security_level;
 };
