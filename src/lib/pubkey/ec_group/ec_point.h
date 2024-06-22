@@ -97,7 +97,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       * @param x affine x coordinate
       * @param y affine y coordinate
       */
-      EC_Point(const CurveGFp& curve, const BigInt& x, const BigInt& y);
+      EC_Point(const CurveGFp& curve, BigInt x, BigInt y);
 
       /**
       * EC2OSP - elliptic curve to octet string primitive

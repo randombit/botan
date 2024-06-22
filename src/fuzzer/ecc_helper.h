@@ -57,6 +57,10 @@ inline void check_ecc_math(const Botan::EC_Group& group, const uint8_t in[], siz
    const Botan::BigInt b = group.mod_order(Botan::BigInt::decode(in + hlen, len - hlen));
    const Botan::BigInt c = group.mod_order(a + b);
 
+   if(a.is_zero() || b.is_zero() || c.is_zero()) {
+      return;
+   }
+
    const Botan::EC_Point P1 = base_point * a;
    const Botan::EC_Point Q1 = base_point * b;
    const Botan::EC_Point R1 = base_point * c;
