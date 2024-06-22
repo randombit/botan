@@ -198,19 +198,6 @@ class Block_Cipher_Fixed_Params : public BaseClass {
 
       size_t block_size() const final { return BS; }
 
-      // override to take advantage of compile time constant block size
-      void encrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const final {
-         xor_buf(data, mask, blocks * BS);
-         this->encrypt_n(data, data, blocks);
-         xor_buf(data, mask, blocks * BS);
-      }
-
-      void decrypt_n_xex(uint8_t data[], const uint8_t mask[], size_t blocks) const final {
-         xor_buf(data, mask, blocks * BS);
-         this->decrypt_n(data, data, blocks);
-         xor_buf(data, mask, blocks * BS);
-      }
-
       Key_Length_Specification key_spec() const final { return Key_Length_Specification(KMIN, KMAX, KMOD); }
 };
 
