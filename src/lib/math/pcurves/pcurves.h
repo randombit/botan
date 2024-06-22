@@ -317,17 +317,21 @@ class BOTAN_TEST_API PrimeOrderCurve {
       /// Perform 2-ary multiplication (variable time)
       ///
       /// Compute s1*pt1 + s2*pt2 in variable time
-      virtual ProjectivePoint mul2_vartime(const PrecomputedMul2Table& table,
-                                           const Scalar& s1,
-                                           const Scalar& s2) const = 0;
+      ///
+      /// Returns nullopt if the produced point is the point at infinity
+      virtual std::optional<ProjectivePoint> mul2_vartime(const PrecomputedMul2Table& table,
+                                                          const Scalar& s1,
+                                                          const Scalar& s2) const = 0;
 
       /// Perform 2-ary multiplication (variable time), reducing x modulo order
       ///
       /// Compute s1*pt1 + s2*pt2 in variable time, then extract the x coordinate
       /// of the result, and reduce x modulo the group order
-      virtual Scalar mul2_vartime_x_mod_order(const PrecomputedMul2Table& table,
-                                              const Scalar& s1,
-                                              const Scalar& s2) const = 0;
+      ///
+      /// Returns nullopt if the produced point is the point at infinity
+      virtual std::optional<Scalar> mul2_vartime_x_mod_order(const PrecomputedMul2Table& table,
+                                                             const Scalar& s1,
+                                                             const Scalar& s2) const = 0;
 
       /// Return the standard generator
       virtual AffinePoint generator() const = 0;
@@ -351,6 +355,12 @@ class BOTAN_TEST_API PrimeOrderCurve {
       /// ECDSA and other signature schemes use a specific rule for converting a hash
       /// output into a scalar.
       virtual Scalar scalar_from_bits_with_trunc(std::span<const uint8_t> bytes) const = 0;
+
+      /// Reduce an integer modulo the group order
+      ///
+      /// The input can be at most twice the bit length of the order; if larger than this
+      /// nullopt is returned
+      virtual std::optional<Scalar> scalar_from_wide_bytes(std::span<const uint8_t> bytes) const = 0;
 
       virtual AffinePoint point_to_affine(const ProjectivePoint& pt) const = 0;
 

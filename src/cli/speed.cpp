@@ -1239,7 +1239,13 @@ class Speed final : public Command {
                while(mul2_timer->under(runtime)) {
                   const auto scalar = curve->random_scalar(rng());
                   const auto scalar2 = curve->random_scalar(rng());
-                  mul2_timer->run([&]() { return curve->mul2_vartime(*gh_tab, scalar, scalar2).to_affine(); });
+                  mul2_timer->run([&]() -> std::optional<Botan::PCurve::PrimeOrderCurve::AffinePoint> {
+                     if(auto pt = curve->mul2_vartime(*gh_tab, scalar, scalar2)) {
+                        return pt->to_affine();
+                     } else {
+                        return {};
+                     }
+                  });
                }
 
                auto pt = curve->mul(g, curve->random_scalar(rng()), rng());

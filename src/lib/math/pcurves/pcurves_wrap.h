@@ -51,23 +51,32 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          return std::make_unique<PrecomputedMul2TableC>(from_stash(x), from_stash(y));
       }
 
-      ProjectivePoint mul2_vartime(const PrecomputedMul2Table& tableb,
-                                   const Scalar& s1,
-                                   const Scalar& s2) const override {
+      std::optional<ProjectivePoint> mul2_vartime(const PrecomputedMul2Table& tableb,
+                                                  const Scalar& s1,
+                                                  const Scalar& s2) const override {
          try {
             const auto& table = dynamic_cast<const PrecomputedMul2TableC&>(tableb);
-            return stash(table.table().mul2_vartime(from_stash(s1), from_stash(s2)));
+            auto pt = table.table().mul2_vartime(from_stash(s1), from_stash(s2));
+            if(pt.is_identity().as_bool()) {
+               return {};
+            } else {
+               return stash(pt);
+            }
          } catch(std::bad_cast&) {
             throw Invalid_Argument("Curve mismatch");
          }
       }
 
-      Scalar mul2_vartime_x_mod_order(const PrecomputedMul2Table& tableb,
-                                      const Scalar& s1,
-                                      const Scalar& s2) const override {
+      std::optional<Scalar> mul2_vartime_x_mod_order(const PrecomputedMul2Table& tableb,
+                                                     const Scalar& s1,
+                                                     const Scalar& s2) const override {
          try {
             const auto& table = dynamic_cast<const PrecomputedMul2TableC&>(tableb);
             const auto pt = table.table().mul2_vartime(from_stash(s1), from_stash(s2));
+            // Variable time here, so the early return is fine
+            if(pt.is_identity().as_bool()) {
+               return {};
+            }
             std::array<uint8_t, C::FieldElement::BYTES> x_bytes;
             pt.to_affine().x().serialize_to(std::span{x_bytes});
             return stash(C::Scalar::from_wide_bytes(std::span<const uint8_t, C::FieldElement::BYTES>{x_bytes}));
@@ -132,14 +141,24 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
 
       std::optional<Scalar> deserialize_scalar(std::span<const uint8_t> bytes) const override {
          if(auto scalar = C::Scalar::deserialize(bytes)) {
-            return stash(*scalar);
-         } else {
-            return {};
+            if(!scalar->is_zero().as_bool()) {
+               return stash(*scalar);
+            }
          }
+
+         return {};
       }
 
       Scalar scalar_from_bits_with_trunc(std::span<const uint8_t> bytes) const override {
          return stash(C::Scalar::from_bits_with_trunc(bytes));
+      }
+
+      std::optional<Scalar> scalar_from_wide_bytes(std::span<const uint8_t> bytes) const override {
+         if(auto s = C::Scalar::from_wide_bytes_varlen(bytes)) {
+            return stash(*s);
+         } else {
+            return {};
+         }
       }
 
       std::optional<AffinePoint> deserialize_point(std::span<const uint8_t> bytes) const override {

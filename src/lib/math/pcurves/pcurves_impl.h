@@ -120,7 +120,7 @@ class IntMod final {
 
       constexpr CT::Choice is_even() const {
          auto v = Rep::from_rep(m_val);
-         return CT::Choice::from_int(v[0] & 0x01);
+         return CT::Choice::from_int(0x01 ^ (v[0] & 0x01));
       }
 
       friend constexpr Self operator+(const Self& a, const Self& b) {
@@ -356,6 +356,16 @@ class IntMod final {
          return Self(Rep::wide_to_rep(bytes_to_words<W, 2 * N, 2 * BYTES>(std::span{padded_bytes})));
       }
 
+      // Reduces large input modulo the order
+      static constexpr std::optional<Self> from_wide_bytes_varlen(std::span<const uint8_t> bytes) {
+         if(8 * bytes.size() > 2 * Self::BITS) {
+            return {};
+         }
+         std::array<uint8_t, 2 * BYTES> padded_bytes = {};
+         copy_mem(std::span{padded_bytes}.last(bytes.size()), bytes);
+         return Self(Rep::wide_to_rep(bytes_to_words<W, 2 * N, 2 * BYTES>(std::span{padded_bytes})));
+      }
+
       static Self random(RandomNumberGenerator& rng) {
          constexpr size_t MAX_ATTEMPTS = 1000;
 
@@ -492,8 +502,7 @@ class AffineCurvePoint {
             const CT::Choice y_is_even = CT::Mask<uint8_t>::is_equal(bytes[0], 0x02).as_choice();
 
             if(auto x = FieldElement::deserialize(bytes.subspan(1, FieldElement::BYTES))) {
-               const auto y2 = x3_ax_b(*x);
-               auto y = y2.sqrt();
+               auto y = x3_ax_b(*x).sqrt();
                y.conditional_assign(y_is_even && !y.is_even(), y.negate());
                return Self(*x, y);
             }
