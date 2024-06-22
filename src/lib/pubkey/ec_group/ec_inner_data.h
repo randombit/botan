@@ -19,6 +19,12 @@
 
 namespace Botan {
 
+namespace PCurve {
+
+class PrimeOrderCurve;
+
+}
+
 class EC_Group_Data;
 
 class EC_Scalar_Data {
@@ -191,7 +197,7 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
                                                      RandomNumberGenerator& rng,
                                                      std::vector<BigInt>& ws) const;
 
-      std::unique_ptr<EC_Scalar_Data> scalar_deserialize(std::span<const uint8_t> bytes);
+      std::unique_ptr<EC_Scalar_Data> scalar_deserialize(std::span<const uint8_t> bytes) const;
 
       std::unique_ptr<EC_AffinePoint_Data> point_deserialize(std::span<const uint8_t> bytes) const;
 
@@ -209,7 +215,15 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
 
       std::unique_ptr<EC_Mul2Table_Data> make_mul2_table(const EC_AffinePoint_Data& pt) const;
 
+      const PCurve::PrimeOrderCurve& pcurve() const {
+         BOTAN_ASSERT_NONNULL(m_pcurve);
+         return *m_pcurve;
+      }
+
    private:
+      // Possibly nullptr (if pcurves not available or not a standard curve)
+      std::shared_ptr<const PCurve::PrimeOrderCurve> m_pcurve;
+
       CurveGFp m_curve;
       EC_Point m_base_point;
 

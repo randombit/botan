@@ -1228,8 +1228,14 @@ class Speed final : public Command {
 
                auto gh_tab = curve->mul2_setup(g, h);
                const auto scalar2 = curve->random_scalar(rng());
-               mul2_timer->run_until_elapsed(
-                  runtime, [&]() { return curve->mul2_vartime(*gh_tab, scalar, scalar2).to_affine(); });
+               mul2_timer->run_until_elapsed(runtime,
+                                             [&]() -> std::optional<Botan::PCurve::PrimeOrderCurve::AffinePoint> {
+                                                if(auto pt = curve->mul2_vartime(*gh_tab, scalar, scalar2)) {
+                                                   return pt->to_affine();
+                                                } else {
+                                                   return {};
+                                                }
+                                             });
 
                auto pt = curve->mul(g, curve->random_scalar(rng()), rng());
                to_affine->run_until_elapsed(runtime, [&]() { pt.to_affine(); });
