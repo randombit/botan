@@ -282,13 +282,18 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
       }
 
       void tls_session_activated() override {
-         auto onConnect = [this](boost::system::error_code ec, const tcp::resolver::iterator& /*endpoint*/) {
+         auto onConnect = [self = weak_from_this()](boost::system::error_code ec,
+                                                    const tcp::resolver::iterator& /*endpoint*/) {
             if(ec) {
                log_error("Server connection", ec);
                return;
             }
-            server_read(boost::system::error_code(), 0);  // start read loop
-            proxy_write_to_server({});
+            if(self.expired()) {
+               log_error("Server connection established, but client session already closed");
+               return;
+            }
+            self.lock()->server_read(boost::system::error_code(), 0);  // start read loop
+            self.lock()->proxy_write_to_server({});
          };
          async_connect(m_server_socket, m_server_endpoints, onConnect);
       }
