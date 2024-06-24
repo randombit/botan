@@ -1334,8 +1334,9 @@ def cli_tls_proxy_tests(tmp_dir):
 
     def run_http_server():
         class Handler(BaseHTTPRequestHandler):
-            def log_message(self, _fmt, *_args): # pylint: disable=arguments-differ
-                pass  # muzzle log output
+            # Debug output for GH #4112
+            # def log_message(self, _fmt, *_args): # pylint: disable=arguments-differ
+            #     pass  # muzzle log output
 
             def do_GET(self): # pylint: disable=invalid-name
                 self.send_response(200)
