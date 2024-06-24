@@ -175,15 +175,25 @@ inline constexpr auto word_madd3(W a, W b, W c, W* d) -> W {
 */
 template <WordType W>
 inline constexpr auto word_add(W x, W y, W* carry) -> W {
-#if defined(BOTAN_MP_USE_X86_64_ASM)
-   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
-      asm(ADD_OR_SUBTRACT(ASM("adcq %[y],%[x]"))
-          : [x] "=r"(x), [carry] "=r"(*carry)
-          : "0"(x), [y] "rm"(y), "1"(*carry)
-          : "cc");
-      return x;
-   }
+   if(!std::is_constant_evaluated()) {
+#if BOTAN_COMPILER_HAS_BUILTIN(__builtin_addc)
+      if constexpr(std::same_as<W, unsigned int>) {
+         return __builtin_addc(x, y, *carry & 1, carry);
+      } else if constexpr(std::same_as<W, unsigned long>) {
+         return __builtin_addcl(x, y, *carry & 1, carry);
+      } else if constexpr(std::same_as<W, unsigned long long>) {
+         return __builtin_addcll(x, y, *carry & 1, carry);
+      }
+#elif defined(BOTAN_MP_USE_X86_64_ASM)
+      if(std::same_as<W, uint64_t>) {
+         asm(ADD_OR_SUBTRACT(ASM("adcq %[y],%[x]"))
+             : [x] "=r"(x), [carry] "=r"(*carry)
+             : "0"(x), [y] "rm"(y), "1"(*carry)
+             : "cc");
+         return x;
+      }
 #endif
+   }
 
    W z = x + y;
    W c1 = (z < x);
@@ -268,15 +278,25 @@ inline constexpr auto word4_add3(W z[4], const W x[4], const W y[4], W carry) ->
 */
 template <WordType W>
 inline constexpr auto word_sub(W x, W y, W* carry) -> W {
-#if defined(BOTAN_MP_USE_X86_64_ASM)
-   if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
-      asm(ADD_OR_SUBTRACT(ASM("sbbq %[y],%[x]"))
-          : [x] "=r"(x), [carry] "=r"(*carry)
-          : "0"(x), [y] "rm"(y), "1"(*carry)
-          : "cc");
-      return x;
-   }
+   if(!std::is_constant_evaluated()) {
+#if BOTAN_COMPILER_HAS_BUILTIN(__builtin_subc)
+      if constexpr(std::same_as<W, unsigned int>) {
+         return __builtin_subc(x, y, *carry & 1, carry);
+      } else if constexpr(std::same_as<W, unsigned long>) {
+         return __builtin_subcl(x, y, *carry & 1, carry);
+      } else if constexpr(std::same_as<W, unsigned long long>) {
+         return __builtin_subcll(x, y, *carry & 1, carry);
+      }
+#elif defined(BOTAN_MP_USE_X86_64_ASM)
+      if(std::same_as<W, uint64_t>) {
+         asm(ADD_OR_SUBTRACT(ASM("sbbq %[y],%[x]"))
+             : [x] "=r"(x), [carry] "=r"(*carry)
+             : "0"(x), [y] "rm"(y), "1"(*carry)
+             : "cc");
+         return x;
+      }
 #endif
+   }
 
    W t0 = x - y;
    W c1 = (t0 > x);
