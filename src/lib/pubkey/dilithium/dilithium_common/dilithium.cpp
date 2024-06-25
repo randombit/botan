@@ -278,6 +278,7 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
       Dilithium_Verification_Operation(std::shared_ptr<Dilithium_PublicKeyInternal> pubkey) :
             m_pub_key(std::move(pubkey)),
             m_A(Dilithium_Algos::expand_A(m_pub_key->rho(), m_pub_key->mode())),
+            m_t1_ntt_shifted(ntt(m_pub_key->t1() << DilithiumConstants::D)),
             m_h(m_pub_key->mode().symmetric_primitives().get_message_hash(m_pub_key->tr())) {}
 
       void update(const uint8_t msg[], size_t msg_len) override { m_h.update({msg, msg_len}); }
@@ -315,7 +316,7 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
 
          const auto c_hat = ntt(Dilithium_Algos::sample_in_ball(c1, mode));
          auto w_approx = m_A * ntt(std::move(z));
-         w_approx -= c_hat * ntt(m_pub_key->t1() << DilithiumConstants::D);
+         w_approx -= c_hat * m_t1_ntt_shifted;
          w_approx.reduce();
          auto w1 = inverse_ntt(std::move(w_approx));
          w1.conditional_add_q();
@@ -332,6 +333,7 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
    private:
       std::shared_ptr<Dilithium_PublicKeyInternal> m_pub_key;
       DilithiumPolyMatNTT m_A;
+      DilithiumPolyVecNTT m_t1_ntt_shifted;
       DilithiumMessageHash m_h;
 };
 
