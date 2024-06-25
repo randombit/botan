@@ -1,6 +1,4 @@
 /*
- * Crystals Kyber key encapsulation mechanism
- *
  * Strong Type definitions used throughout the Dilithium implementation
  *
  * (C) 2024 Jack Lloyd

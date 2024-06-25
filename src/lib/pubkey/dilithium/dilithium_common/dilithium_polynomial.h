@@ -33,7 +33,7 @@ class DilithiumPolyTraits final : public CRYSTALS::Trait_Base<DilithiumConstants
 
       static constexpr T barrett_reduce_coefficient(T a) {
          // 2**22 is roughly Q/2 and 2**23 is roughly Q
-         T t = (a + (1 << 22)) >> 23;
+         const T t = (a + (1 << 22)) >> 23;
          a = a - t * Q;
          return a;
       }

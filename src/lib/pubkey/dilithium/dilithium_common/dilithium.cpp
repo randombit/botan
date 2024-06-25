@@ -219,15 +219,14 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
             StrongSpan<const DilithiumCommitmentHash> c1(
                std::span<const uint8_t>(ch).first(DilithiumConstants::COMMITMENT_HASH_C1_BYTES));
             const auto c = ntt(dilithium_sample_in_ball(c1, m_mode));
-
-            auto cs1 = inverse_ntt(c * m_s1);
+            const auto cs1 = inverse_ntt(c * m_s1);
             auto z = y + cs1;
             z.reduce();
             if(!dilithium_infinity_norm_within_bound(z, to_underlying(m_mode.gamma1()) - m_mode.beta())) {
                continue;
             }
 
-            auto cs2 = inverse_ntt(c * m_s2);
+            const auto cs2 = inverse_ntt(c * m_s2);
             w0 -= cs2;
             w0.reduce();
             if(!dilithium_infinity_norm_within_bound(w0, to_underlying(m_mode.gamma2()) - m_mode.beta())) {
@@ -243,7 +242,7 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
             w0 += ct0;
             w0.conditional_add_q();
 
-            auto hint = dilithium_make_hint(w0, w1, m_mode);
+            const auto hint = dilithium_make_hint(w0, w1, m_mode);
             if(hint.hamming_weight() > m_mode.omega()) {
                continue;
             }

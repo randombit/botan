@@ -40,7 +40,7 @@ concept crystals_constants =
  * into the derived class (CRTP @p DerivedT).
  *
  * Polynomial parameters are passed as spans of coefficients for maximum
- * flexibility. Certain
+ * flexibility.
  *
  * It is assumed that this is subclassed with the actual implementation
  * with establishing a CRTP back-reference.
