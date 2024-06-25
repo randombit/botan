@@ -1,8 +1,9 @@
 /**
- * Asymmetric primitives for dilithium
-* (C) 2022-2023 Jack Lloyd
-* (C) 2022-2023 Michael Boric, René Meusel - Rohde & Schwarz Cybersecurity
-* (C) 2022      Manuel Glaser - Rohde & Schwarz Cybersecurity
+ * Symmetric primitives for dilithium
+ *
+ * (C) 2022-2023 Jack Lloyd
+ * (C) 2022-2023 Michael Boric, René Meusel - Rohde & Schwarz Cybersecurity
+ * (C) 2022      Manuel Glaser - Rohde & Schwarz Cybersecurity
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */

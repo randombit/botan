@@ -1,5 +1,6 @@
 /*
-* Asymmetric primitives for dilithium
+* Symmetric primitives for dilithium
+*
 * (C) 2022-2023 Jack Lloyd
 * (C) 2022-2023 Michael Boric, René Meusel - Rohde & Schwarz Cybersecurity
 * (C) 2022      Manuel Glaser - Rohde & Schwarz Cybersecurity
@@ -87,7 +88,6 @@ class Dilithium_Symmetric_Primitives {
 
       std::tuple<DilithiumSeedRho, DilithiumSeedRhoPrime, DilithiumSigningSeedK> H(
          StrongSpan<const DilithiumSeedRandomness> seed) const {
-         scoped_cleanup clean([this]() { m_xof.clear(); });
          m_xof.update(seed);
 
          // Note: The order of invocations in an initializer list is not
@@ -96,6 +96,8 @@ class Dilithium_Symmetric_Primitives {
          auto rho = m_xof.output<DilithiumSeedRho>(DilithiumConstants::SEED_RHO_BYTES);
          auto rhoprime = m_xof.output<DilithiumSeedRhoPrime>(DilithiumConstants::SEED_RHOPRIME_BYTES);
          auto k = m_xof.output<DilithiumSigningSeedK>(DilithiumConstants::SEED_SIGNING_KEY_BYTES);
+         m_xof.clear();
+
          return {std::move(rho), std::move(rhoprime), std::move(k)};
       }
 

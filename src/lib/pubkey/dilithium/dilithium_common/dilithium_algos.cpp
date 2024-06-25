@@ -43,12 +43,16 @@ constexpr auto is_negative_mask(T x) {
 
 template <DilithiumConstants::T b>
 constexpr std::make_unsigned_t<DilithiumConstants::T> map_range(DilithiumConstants::T c) {
+   // NIST FIPS 204 IPD, Algorithm 11 (BitPack)
+   //   c is in range [-a, b] and must be mapped to [0, a + b] as follows:
    BOTAN_DEBUG_ASSERT(b - c >= 0);
    return b - c;
 }
 
 template <DilithiumConstants::T b>
 constexpr DilithiumConstants::T unmap_range(std::make_unsigned_t<DilithiumConstants::T> c) {
+   // NIST FIPS 204 IPD, Algorithm 13 (BitUnpack)
+   //   c is in range [0, a + b] and must be mapped to [-a, b] as follows:
    return static_cast<DilithiumConstants::T>(b - c);
 }
 
@@ -731,21 +735,21 @@ void dilithium_use_hint(DilithiumPolyVec& vec, const DilithiumPolyVec& hints, co
    BOTAN_DEBUG_ASSERT(hints.ct_validate_value_range(0, 1));
    BOTAN_DEBUG_ASSERT(vec.ct_validate_value_range(0, DilithiumConstants::Q - 1));
 
-   auto use_hint = [gamma2 = mode.gamma2(), decompose = dilithium_decompose_fn(mode)](bool hint, int32_t c) -> int32_t {
-      auto [a1, a0] = decompose(c);
+   auto use_hint = [gamma2 = mode.gamma2(), decompose = dilithium_decompose_fn(mode)](bool hint, int32_t r) -> int32_t {
+      auto [r1, r0] = decompose(r);
 
       if(!hint) {
-         return a1;
+         return r1;
       }
 
       switch(gamma2) {
          case Gamma2::Qminus1DevidedBy32:
-            BOTAN_DEBUG_ASSERT(a1 > -16 && a1 < 16);
-            return (a0 > 0) ? (a1 + 1) & 15 : (a1 - 1) & 15;
+            BOTAN_DEBUG_ASSERT(r1 > -16 && r1 < 16);
+            return (r0 > 0) ? (r1 + 1) & 15 : (r1 - 1) & 15;
          case Gamma2::Qminus1DevidedBy88:
-            BOTAN_DEBUG_ASSERT(a1 > -44 && a1 < 44);
+            BOTAN_DEBUG_ASSERT(r1 > -44 && r1 < 44);
             // NOLINTNEXTLINE(*-avoid-nested-conditional-operator)
-            return (a0 > 0) ? ((a1 == 43) ? 0 : a1 + 1) : ((a1 == 0) ? 43 : a1 - 1);
+            return (r0 > 0) ? ((r1 == 43) ? 0 : r1 + 1) : ((r1 == 0) ? 43 : r1 - 1);
       }
 
       BOTAN_ASSERT_UNREACHABLE();

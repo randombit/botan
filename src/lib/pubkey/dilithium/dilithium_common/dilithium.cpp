@@ -176,13 +176,12 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
    public:
       Dilithium_Signature_Operation(std::shared_ptr<Dilithium_PrivateKeyInternal> sk, bool randomized) :
             m_priv_key(std::move(sk)),
-            m_mode(m_priv_key->mode()),
             m_randomized(randomized),
-            m_h(m_mode.symmetric_primitives().get_message_hash(m_priv_key->tr())),
+            m_h(m_priv_key->mode().symmetric_primitives().get_message_hash(m_priv_key->tr())),
             m_s1(ntt(m_priv_key->s1().clone())),
             m_s2(ntt(m_priv_key->s2().clone())),
             m_t0(ntt(m_priv_key->t0().clone())),
-            m_A(dilithium_expand_A(m_priv_key->rho(), m_mode)) {}
+            m_A(dilithium_expand_A(m_priv_key->rho(), m_priv_key->mode())) {}
 
       void update(const uint8_t msg[], size_t msg_len) override { m_h.update({msg, msg_len}); }
 
@@ -196,7 +195,8 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
        */
       secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override {
          const auto mu = m_h.final();
-         const auto& sympri = m_mode.symmetric_primitives();
+         const auto& mode = m_priv_key->mode();
+         const auto& sympri = mode.symmetric_primitives();
 
          // TODO: ML-DSA generates rhoprime differently, namely
          //       rhoprime = H(K, rnd, mu) with rnd being 32 random bytes or 32 zero bytes
@@ -206,48 +206,48 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
 
          // Note: nonce (as requested by `polyvecl_uniform_gamma1`) is actually just uint16_t
          //       but to avoid an integer overflow, we use uint32_t as the loop variable.
-         for(uint32_t nonce = 0; nonce <= std::numeric_limits<uint16_t>::max(); nonce += m_mode.l()) {
-            const auto y = dilithium_expand_mask(rhoprime, static_cast<uint16_t>(nonce), m_mode);
+         for(uint32_t nonce = 0; nonce <= std::numeric_limits<uint16_t>::max(); nonce += mode.l()) {
+            const auto y = dilithium_expand_mask(rhoprime, static_cast<uint16_t>(nonce), mode);
 
             auto w_ntt = m_A * ntt(y.clone());
             w_ntt.reduce();
             auto w = inverse_ntt(std::move(w_ntt));
             w.conditional_add_q();
 
-            auto [w1, w0] = dilithium_decompose(w, m_mode);
-            const auto ch = sympri.H(mu, dilithium_encode_commitment(w1, m_mode));
+            auto [w1, w0] = dilithium_decompose(w, mode);
+            const auto ch = sympri.H(mu, dilithium_encode_commitment(w1, mode));
             StrongSpan<const DilithiumCommitmentHash> c1(
                std::span<const uint8_t>(ch).first(DilithiumConstants::COMMITMENT_HASH_C1_BYTES));
-            const auto c = ntt(dilithium_sample_in_ball(c1, m_mode));
+            const auto c = ntt(dilithium_sample_in_ball(c1, mode));
             const auto cs1 = inverse_ntt(c * m_s1);
             auto z = y + cs1;
             z.reduce();
-            if(!dilithium_infinity_norm_within_bound(z, to_underlying(m_mode.gamma1()) - m_mode.beta())) {
+            if(!dilithium_infinity_norm_within_bound(z, to_underlying(mode.gamma1()) - mode.beta())) {
                continue;
             }
 
             const auto cs2 = inverse_ntt(c * m_s2);
             w0 -= cs2;
             w0.reduce();
-            if(!dilithium_infinity_norm_within_bound(w0, to_underlying(m_mode.gamma2()) - m_mode.beta())) {
+            if(!dilithium_infinity_norm_within_bound(w0, to_underlying(mode.gamma2()) - mode.beta())) {
                continue;
             }
 
             auto ct0 = inverse_ntt(c * m_t0);
             ct0.reduce();
-            if(!dilithium_infinity_norm_within_bound(ct0, m_mode.gamma2())) {
+            if(!dilithium_infinity_norm_within_bound(ct0, mode.gamma2())) {
                continue;
             }
 
             w0 += ct0;
             w0.conditional_add_q();
 
-            const auto hint = dilithium_make_hint(w0, w1, m_mode);
-            if(hint.hamming_weight() > m_mode.omega()) {
+            const auto hint = dilithium_make_hint(w0, w1, mode);
+            if(hint.hamming_weight() > mode.omega()) {
                continue;
             }
 
-            return dilithium_encode_signature(ch, z, hint, m_mode).get();
+            return dilithium_encode_signature(ch, z, hint, mode).get();
          }
 
          throw Internal_Error("Dilithium signature loop did not terminate");
@@ -264,7 +264,6 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
 
    private:
       std::shared_ptr<Dilithium_PrivateKeyInternal> m_priv_key;
-      const DilithiumConstants& m_mode;
       bool m_randomized;
       DilithiumMessageHash m_h;
 
@@ -278,9 +277,8 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
    public:
       Dilithium_Verification_Operation(std::shared_ptr<Dilithium_PublicKeyInternal> pubkey) :
             m_pub_key(std::move(pubkey)),
-            m_mode(m_pub_key->mode()),
-            m_A(dilithium_expand_A(m_pub_key->rho(), m_mode)),
-            m_h(m_mode.symmetric_primitives().get_message_hash(m_pub_key->tr())) {}
+            m_A(dilithium_expand_A(m_pub_key->rho(), m_pub_key->mode())),
+            m_h(m_pub_key->mode().symmetric_primitives().get_message_hash(m_pub_key->tr())) {}
 
       void update(const uint8_t msg[], size_t msg_len) override { m_h.update({msg, msg_len}); }
 
@@ -292,16 +290,17 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
        * a 'verification operation' may be used to verify multiple signatures.
        */
       bool is_valid_signature(const uint8_t* sig, size_t sig_len) override {
-         const auto& sympri = m_mode.symmetric_primitives();
+         const auto& mode = m_pub_key->mode();
+         const auto& sympri = mode.symmetric_primitives();
          StrongSpan<const DilithiumSerializedSignature> sig_bytes({sig, sig_len});
 
-         if(sig_bytes.size() != m_mode.signature_bytes()) {
+         if(sig_bytes.size() != mode.signature_bytes()) {
             return false;
          }
 
          const auto mu = m_h.final();
 
-         auto signature = dilithium_decode_signature(sig_bytes, m_mode);
+         auto signature = dilithium_decode_signature(sig_bytes, mode);
          if(!signature.has_value()) {
             return false;
          }
@@ -309,20 +308,20 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
          StrongSpan<const DilithiumCommitmentHash> c1(
             std::span<uint8_t>(ch).first(DilithiumConstants::COMMITMENT_HASH_C1_BYTES));
 
-         if(h.hamming_weight() > m_mode.omega() ||
-            !dilithium_infinity_norm_within_bound(z, to_underlying(m_mode.gamma1()) - m_mode.beta())) {
+         if(h.hamming_weight() > mode.omega() ||
+            !dilithium_infinity_norm_within_bound(z, to_underlying(mode.gamma1()) - mode.beta())) {
             return false;
          }
 
-         const auto c_hat = ntt(dilithium_sample_in_ball(c1, m_mode));
+         const auto c_hat = ntt(dilithium_sample_in_ball(c1, mode));
          auto w_approx = m_A * ntt(std::move(z));
          w_approx -= c_hat * ntt(m_pub_key->t1() << DilithiumConstants::D);
          w_approx.reduce();
          auto w1 = inverse_ntt(std::move(w_approx));
          w1.conditional_add_q();
-         dilithium_use_hint(w1, h, m_mode);
+         dilithium_use_hint(w1, h, mode);
 
-         const auto chprime = sympri.H(mu, dilithium_encode_commitment(w1, m_mode));
+         const auto chprime = sympri.H(mu, dilithium_encode_commitment(w1, mode));
 
          BOTAN_ASSERT_NOMSG(ch.size() == chprime.size());
          return std::equal(ch.begin(), ch.end(), chprime.begin());
@@ -332,7 +331,6 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
 
    private:
       std::shared_ptr<Dilithium_PublicKeyInternal> m_pub_key;
-      const DilithiumConstants& m_mode;
       DilithiumPolyMatNTT m_A;
       DilithiumMessageHash m_h;
 };

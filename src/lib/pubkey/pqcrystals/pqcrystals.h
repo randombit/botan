@@ -529,10 +529,10 @@ void montgomery(Polynomial<Trait, D>& p) {
 }
 
 template <crystals_trait Trait>
-void pointwise_multiply(Polynomial<Trait, Domain::NTT>& out,
-                        const PolynomialVector<Trait, Domain::NTT>& a,
-                        const PolynomialVector<Trait, Domain::NTT>& b) {
-   BOTAN_ASSERT(a.size() == b.size(), "Pointwise vector multiplication requires equally sized PolynomialVectors");
+void dot_product(Polynomial<Trait, Domain::NTT>& out,
+                 const PolynomialVector<Trait, Domain::NTT>& a,
+                 const PolynomialVector<Trait, Domain::NTT>& b) {
+   BOTAN_ASSERT(a.size() == b.size(), "Dot product requires equally sized PolynomialVectors");
    for(size_t i = 0; i < a.size(); ++i) {
       out += a[i] * b[i];
    }
@@ -622,7 +622,7 @@ template <crystals_trait Trait>
 Polynomial<Trait, Domain::NTT> operator*(const PolynomialVector<Trait, Domain::NTT>& a,
                                          const PolynomialVector<Trait, Domain::NTT>& b) {
    Polynomial<Trait, Domain::NTT> result;
-   detail::pointwise_multiply(result, a, b);
+   detail::dot_product(result, a, b);
    return result;
 }
 
