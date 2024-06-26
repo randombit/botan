@@ -9,6 +9,7 @@
 
 #include <botan/internal/fmt.h>
 #include <botan/internal/stl_util.h>
+#include <numeric>
 
 namespace Botan {
 
@@ -52,34 +53,10 @@ std::unique_ptr<BlockCipher> Cascade_Cipher::new_object() const {
    return std::make_unique<Cascade_Cipher>(m_cipher1->new_object(), m_cipher2->new_object());
 }
 
-namespace {
-
-size_t euclids_algorithm(size_t a, size_t b) {
-   while(b != 0) {
-      size_t t = b;
-      b = a % b;
-      a = t;
-   }
-
-   return a;
-}
-
-size_t block_size_for_cascade(size_t bs, size_t bs2) {
-   if(bs == bs2) {
-      return bs;
-   }
-
-   const size_t gcd = euclids_algorithm(bs, bs2);
-
-   return (bs * bs2) / gcd;
-}
-
-}  // namespace
-
 Cascade_Cipher::Cascade_Cipher(std::unique_ptr<BlockCipher> cipher1, std::unique_ptr<BlockCipher> cipher2) :
       m_cipher1(std::move(cipher1)),
       m_cipher2(std::move(cipher2)),
-      m_block_size(block_size_for_cascade(m_cipher1->block_size(), m_cipher2->block_size())) {
+      m_block_size(std::lcm(m_cipher1->block_size(), m_cipher2->block_size())) {
    BOTAN_ASSERT(m_block_size % m_cipher1->block_size() == 0 && m_block_size % m_cipher2->block_size() == 0,
                 "Combined block size is a multiple of each ciphers block");
 }
