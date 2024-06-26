@@ -9,10 +9,6 @@
 #if defined(BOTAN_FOUND_COMPATIBLE_BOOST_ASIO_VERSION) && BOOST_VERSION >= 108100
 
    #include <botan/asio_stream.h>
-   #include <botan/auto_rng.h>
-   #include <botan/certstor_system.h>
-   #include <botan/credentials_manager.h>
-   #include <botan/tls_session_manager_memory.h>
    #include <botan/version.h>
 
    #include <boost/asio/awaitable.hpp>
@@ -31,33 +27,6 @@ using tcp = boost::asio::ip::tcp;
 
 namespace {
 
-/**
- * A simple credentials manager that uses the system's trust store
- * to verify certificates.
- */
-class System_Credentials_Manager : public Botan::Credentials_Manager {
-   public:
-      std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(const std::string&,
-                                                                             const std::string&) override {
-         return {&m_cert_store};
-      }
-
-   private:
-      Botan::System_Certificate_Store m_cert_store;
-};
-
-/**
- * Helper function to set up a Botan TLS Context for the ASIO wrapper.
- */
-std::shared_ptr<tls::Context> prepare_context_for(std::string_view server_info) {
-   auto rng = std::make_shared<Botan::AutoSeeded_RNG>();
-   return std::make_shared<tls::Context>(std::make_shared<System_Credentials_Manager>(),
-                                         rng,
-                                         std::make_shared<tls::Session_Manager_In_Memory>(rng),
-                                         std::make_shared<tls::Policy>(),
-                                         tls::Server_Information(server_info));
-}
-
 http::request<http::string_body> create_GET_request(const std::string& host, const std::string& target) {
    http::request<http::string_body> req;
    req.version(11);
@@ -75,7 +44,7 @@ net::awaitable<void> request(std::string host, std::string port, std::string tar
 
    // Connect to host and establish a TLS session
    auto tls_stream =
-      tls::Stream(prepare_context_for(host),
+      tls::Stream(tls::Server_Information(host),
                   net::use_awaitable.as_default_on(beast::tcp_stream(co_await net::this_coro::executor)));
    tls_stream.next_layer().expires_after(std::chrono::seconds(30));
    co_await tls_stream.next_layer().async_connect(dns_result);
