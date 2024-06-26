@@ -93,8 +93,7 @@ void bcrypt_round(Blowfish& blowfish,
    const size_t BCRYPT_PBKDF_WORKFACTOR = 6;
    const size_t BCRYPT_PBKDF_ROUNDS = 64;
 
-   blowfish.salted_set_key(
-      pass_hash.data(), pass_hash.size(), salt_hash.data(), salt_hash.size(), BCRYPT_PBKDF_WORKFACTOR, true);
+   blowfish.salted_set_key(pass_hash, salt_hash, BCRYPT_PBKDF_WORKFACTOR, true);
 
    copy_mem(tmp.data(), BCRYPT_PBKDF_MAGIC, BCRYPT_PBKDF_OUTPUT);
    for(size_t i = 0; i != BCRYPT_PBKDF_ROUNDS; ++i) {
