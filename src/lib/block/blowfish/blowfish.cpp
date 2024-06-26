@@ -7,6 +7,7 @@
 
 #include <botan/internal/blowfish.h>
 
+#include <botan/internal/buffer_transformer.h>
 #include <botan/internal/loadstor.h>
 
 namespace Botan {
@@ -153,10 +154,15 @@ inline uint32_t BFF(uint32_t X, const secure_vector<uint32_t>& S) {
 /*
 * Blowfish Encryption
 */
-void Blowfish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Blowfish::encrypt_n(const uint8_t inb[], uint8_t outb[], size_t blocks) const {
    assert_key_material_set();
+   std::span ins(inb, blocks * BLOCK_SIZE);
+   std::span outs(outb, blocks * BLOCK_SIZE);
 
-   while(blocks >= 4) {
+   constexpr size_t b4 = 4 * BLOCK_SIZE;
+   constexpr size_t b1 = 1 * BLOCK_SIZE;
+
+   auto encrypt4 = [this](std::span<const uint8_t, b4> in, std::span<uint8_t, b4> out) {
       uint32_t L0, R0, L1, R1, L2, R2, L3, R3;
       load_be(in, L0, R0, L1, R1, L2, R2, L3, R3);
 
@@ -190,13 +196,9 @@ void Blowfish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       R3 ^= m_P[17];
 
       store_be(out, R0, L0, R1, L1, R2, L2, R3, L3);
+   };
 
-      in += 4 * BLOCK_SIZE;
-      out += 4 * BLOCK_SIZE;
-      blocks -= 4;
-   }
-
-   while(blocks) {
+   auto encrypt1 = [this](std::span<const uint8_t, b1> in, std::span<uint8_t, b1> out) {
       uint32_t L, R;
       load_be(in, L, R);
 
@@ -212,20 +214,23 @@ void Blowfish::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       R ^= m_P[17];
 
       store_be(out, R, L);
+   };
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
-      blocks--;
-   }
+   BufferTransformer(ins, outs).process_blocks_of<b4, b1>(overloaded{encrypt4, encrypt1});
 }
 
 /*
 * Blowfish Decryption
 */
-void Blowfish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
+void Blowfish::decrypt_n(const uint8_t inb[], uint8_t outb[], size_t blocks) const {
    assert_key_material_set();
+   std::span ins(inb, blocks * BLOCK_SIZE);
+   std::span outs(outb, blocks * BLOCK_SIZE);
 
-   while(blocks >= 4) {
+   constexpr size_t b4 = 4 * BLOCK_SIZE;
+   constexpr size_t b1 = 1 * BLOCK_SIZE;
+
+   auto decrypt4 = [this](std::span<const uint8_t, b4> in, std::span<uint8_t, b4> out) {
       uint32_t L0, R0, L1, R1, L2, R2, L3, R3;
       load_be(in, L0, R0, L1, R1, L2, R2, L3, R3);
 
@@ -260,13 +265,9 @@ void Blowfish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       R3 ^= m_P[0];
 
       store_be(out, R0, L0, R1, L1, R2, L2, R3, L3);
+   };
 
-      in += 4 * BLOCK_SIZE;
-      out += 4 * BLOCK_SIZE;
-      blocks -= 4;
-   }
-
-   while(blocks) {
+   auto decrypt1 = [this](std::span<const uint8_t, b1> in, std::span<uint8_t, b1> out) {
       uint32_t L, R;
       load_be(in, L, R);
 
@@ -282,11 +283,9 @@ void Blowfish::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const
       R ^= m_P[0];
 
       store_be(out, R, L);
+   };
 
-      in += BLOCK_SIZE;
-      out += BLOCK_SIZE;
-      blocks--;
-   }
+   BufferTransformer(ins, outs).process_blocks_of<b4, b1>(overloaded{decrypt4, decrypt1});
 }
 
 bool Blowfish::has_keying_material() const {
