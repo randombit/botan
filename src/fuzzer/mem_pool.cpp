@@ -71,7 +71,7 @@ std::vector<RawPage> allocate_raw_pages(size_t count, size_t page_size) {
 
 }  // namespace
 
-void fuzz(const uint8_t in[], size_t in_len) {
+void fuzz(std::span<const uint8_t> in) {
    const size_t page_count = 4;
    const size_t page_size = 4096;
 
@@ -87,15 +87,17 @@ void fuzz(const uint8_t in[], size_t in_len) {
    Botan::Memory_Pool pool(mem_pages, page_size);
    std::map<uint8_t*, size_t> ptrs;
 
+   size_t in_len = in.size();
+   auto x = in.data();
    while(in_len > 0) {
       const uint8_t op = in[0] % 2;
       size_t idx = (in[0] >> 1);
-      in += 1;
+      x += 1;
       in_len -= 1;
 
       if(in_len > 0 && idx < 4) {
-         idx = idx * 256 + in[0];
-         in += 1;
+         idx = idx * 256 + x[0];
+         x += 1;
          in_len -= 1;
       }
 

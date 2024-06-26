@@ -194,8 +194,8 @@ class Fuzzer_TLS_Server_Callbacks : public Botan::TLS::Callbacks {
 
 }  // namespace
 
-void fuzz(const uint8_t in[], size_t len) {
-   if(len <= 1) {
+void fuzz(std::span<const uint8_t> in) {
+   if(in.size() <= 1) {
       return;
    }
 
@@ -210,6 +210,6 @@ void fuzz(const uint8_t in[], size_t len) {
    Botan::TLS::Server server(callbacks, session_manager, creds, policy, fuzzer_rng_as_shared(), is_datagram);
 
    try {
-      server.received_data(in + 1, len - 1);
+      server.received_data(in.subspan(1, in.size() - 1));
    } catch(std::exception& e) {}
 }

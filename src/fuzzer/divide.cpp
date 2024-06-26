@@ -7,16 +7,16 @@
 
 #include <botan/internal/divide.h>
 
-void fuzz(const uint8_t in[], size_t len) {
-   if(len > 2 * 4096 / 8) {
+void fuzz(std::span<const uint8_t> in) {
+   if(in.size() > 2 * 4096 / 8) {
       return;
    }
 
    // Save on allocations by making these static
    static Botan::BigInt x, y, q, r, ct_q, ct_r, z;
 
-   x = Botan::BigInt::decode(in, len / 2);
-   y = Botan::BigInt::decode(in + len / 2, len - (len / 2));
+   x = Botan::BigInt::from_bytes(in.subspan(0, in.size() / 2));
+   y = Botan::BigInt::from_bytes(in.subspan(in.size() / 2, in.size() - in.size() / 2));
 
    if(y == 0) {
       return;

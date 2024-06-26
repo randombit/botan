@@ -12,12 +12,11 @@
 namespace {
 
 Botan::secure_vector<uint8_t> ref_oaep_unpad(uint8_t& valid_mask,
-                                             const uint8_t in[],
-                                             size_t len,
+                                             std::span<const uint8_t> in,
                                              const Botan::secure_vector<uint8_t>& Phash) {
    const size_t hlen = Phash.size();
 
-   if(len < 2 * hlen + 1) {
+   if(in.size() < 2 * hlen + 1) {
       return Botan::secure_vector<uint8_t>();
    }
 
@@ -27,14 +26,14 @@ Botan::secure_vector<uint8_t> ref_oaep_unpad(uint8_t& valid_mask,
       }
    }
 
-   for(size_t i = 2 * hlen; i != len; ++i) {
+   for(size_t i = 2 * hlen; i != in.size(); ++i) {
       if(in[i] != 0x00 && in[i] != 0x01) {
          return Botan::secure_vector<uint8_t>();
       }
 
       if(in[i] == 0x01) {
          valid_mask = 0xFF;
-         return Botan::secure_vector<uint8_t>(in + i + 1, in + len);
+         return Botan::secure_vector<uint8_t>(in.begin() + i + 1, in.end());
       }
    }
 
@@ -52,15 +51,15 @@ inline bool all_zeros(const Botan::secure_vector<uint8_t>& v) {
 
 }  // namespace
 
-void fuzz(const uint8_t in[], size_t len) {
+void fuzz(std::span<const uint8_t> in) {
    static const Botan::secure_vector<uint8_t> Phash = {1, 2, 3, 4};
 
    uint8_t lib_valid_mask = 0;
-   const Botan::secure_vector<uint8_t> lib_output = Botan::oaep_find_delim(lib_valid_mask, in, len, Phash);
+   const Botan::secure_vector<uint8_t> lib_output = Botan::oaep_find_delim(lib_valid_mask, in.data(), in.size(), Phash);
    FUZZER_ASSERT_TRUE(lib_valid_mask == 0 || lib_valid_mask == 0xFF);
 
    uint8_t ref_valid_mask = 0;
-   const Botan::secure_vector<uint8_t> ref_output = ref_oaep_unpad(ref_valid_mask, in, len, Phash);
+   const Botan::secure_vector<uint8_t> ref_output = ref_oaep_unpad(ref_valid_mask, in, Phash);
    FUZZER_ASSERT_TRUE(ref_valid_mask == 0 || ref_valid_mask == 0xFF);
 
    if(ref_valid_mask == 0xFF && lib_valid_mask == 0x00) {

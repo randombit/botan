@@ -10,8 +10,8 @@
 #include <botan/x509cert.h>
 #include <botan/x509path.h>
 
-void fuzz(const uint8_t in[], size_t len) {
-   Botan::DataSource_Memory input(in, len);
+void fuzz(std::span<const uint8_t> in) {
+   Botan::DataSource_Memory input(in);
 
    try {
       Botan::X509_Certificate subject(input);
