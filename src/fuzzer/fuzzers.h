@@ -16,7 +16,7 @@
 
 static const size_t max_fuzzer_input_size = 8192;
 
-extern void fuzz(const uint8_t in[], size_t len);
+extern void fuzz(std::span<const uint8_t> in);
 
 extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv);
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t in[], size_t len);
@@ -33,7 +33,7 @@ extern "C" int LLVMFuzzerInitialize(int*, char***) {
 // Called by main() in libFuzzer or in main for AFL below
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t in[], size_t len) {
    if(len <= max_fuzzer_input_size) {
-      fuzz(in, len);
+      fuzz(std::span<const uint8_t>(in, len));
    }
    return 0;
 }

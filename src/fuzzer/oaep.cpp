@@ -11,10 +11,10 @@
 
 namespace {
 
-Botan::CT::Option<size_t> ref_oaep_unpad(const uint8_t in[], size_t len, const std::vector<uint8_t>& Phash) {
+Botan::CT::Option<size_t> ref_oaep_unpad(std::span<const uint8_t> in, const std::vector<uint8_t>& Phash) {
    const size_t hlen = Phash.size();
 
-   if(len < 2 * hlen + 1) {
+   if(in.size() < 2 * hlen + 1) {
       return Botan::CT::Option<size_t>();
    }
 
@@ -24,7 +24,7 @@ Botan::CT::Option<size_t> ref_oaep_unpad(const uint8_t in[], size_t len, const s
       }
    }
 
-   for(size_t i = 2 * hlen; i != len; ++i) {
+   for(size_t i = 2 * hlen; i != in.size(); ++i) {
       if(in[i] != 0x00 && in[i] != 0x01) {
          return Botan::CT::Option<size_t>();
       }
@@ -39,12 +39,12 @@ Botan::CT::Option<size_t> ref_oaep_unpad(const uint8_t in[], size_t len, const s
 
 }  // namespace
 
-void fuzz(const uint8_t in[], size_t len) {
+void fuzz(std::span<const uint8_t> in) {
    static const std::vector<uint8_t> Phash = {1, 2, 3, 4};
 
-   auto lib_idx = Botan::oaep_find_delim(std::span{in, len}, std::span{Phash});
+   auto lib_idx = Botan::oaep_find_delim(in, std::span{Phash});
 
-   auto ref_idx = ref_oaep_unpad(in, len, Phash);
+   auto ref_idx = ref_oaep_unpad(in, Phash);
 
    if(lib_idx.has_value().as_bool() && ref_idx.has_value().as_bool()) {
       FUZZER_ASSERT_EQUAL(lib_idx.value(), ref_idx.value());

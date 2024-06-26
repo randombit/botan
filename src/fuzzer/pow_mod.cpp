@@ -34,33 +34,33 @@ Botan::BigInt simple_power_mod(Botan::BigInt x, Botan::BigInt n, const Botan::Bi
 
 }  // namespace
 
-void fuzz(const uint8_t in[], size_t len) {
+void fuzz(std::span<const uint8_t> in) {
    static const size_t max_bits = 2048;
 
-   if(len % 3 != 0) {
+   if(in.size() % 3 != 0) {
       return;
    }
 
-   const size_t part_size = len / 3;
+   const size_t part_size = in.size() / 3;
 
    if(part_size * 8 > max_bits) {
       return;
    }
 
-   const Botan::BigInt g = Botan::BigInt::decode(in, part_size);
-   const Botan::BigInt x = Botan::BigInt::decode(in + part_size, part_size);
-   const Botan::BigInt p = Botan::BigInt::decode(in + 2 * part_size, part_size);
+   const Botan::BigInt g = Botan::BigInt::from_bytes(in.subspan(0, part_size));
+   const Botan::BigInt x = Botan::BigInt::from_bytes(in.subspan(part_size, part_size));
+   const Botan::BigInt p = Botan::BigInt::from_bytes(in.subspan(2 * part_size, part_size));
 
    try {
       const Botan::BigInt ref = simple_power_mod(g, x, p);
       const Botan::BigInt z = Botan::power_mod(g, x, p);
 
       if(ref != z) {
-         FUZZER_WRITE_AND_CRASH("G = " << g << "\n"
-                                       << "X = " << x << "\n"
-                                       << "P = " << p << "\n"
-                                       << "Z = " << z << "\n"
-                                       << "R = " << ref << "\n");
+         FUZZER_WRITE_AND_CRASH("G = " << g.to_hex_string() << "\n"
+                                       << "X = " << x.to_hex_string() << "\n"
+                                       << "P = " << p.to_hex_string() << "\n"
+                                       << "Z = " << z.to_hex_string() << "\n"
+                                       << "R = " << ref.to_hex_string() << "\n");
       }
    } catch(Botan::Exception& e) {}
 }

@@ -25,7 +25,7 @@ class ASN1_Parser final : public Botan::ASN1_Formatter {
       std::string format_bn(const Botan::BigInt&) const override { return ""; }
 };
 
-void fuzz(const uint8_t in[], size_t len) {
+void fuzz(std::span<const uint8_t> in) {
    try {
       /*
       * Here we use an uninitialized ofstream so the fuzzer doesn't spend time
@@ -33,6 +33,6 @@ void fuzz(const uint8_t in[], size_t len) {
       */
       std::ofstream out;
       ASN1_Parser printer;
-      printer.print_to_stream(out, in, len);
+      printer.print_to_stream(out, in.data(), in.size());
    } catch(Botan::Exception& e) {}
 }
