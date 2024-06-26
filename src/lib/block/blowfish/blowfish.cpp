@@ -1,6 +1,7 @@
 /*
 * Blowfish
 * (C) 1999-2011,2018 Jack Lloyd
+* (C) 2024 René Meusel - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -16,12 +17,12 @@ namespace {
 
 // clang-format off
 
-const uint32_t P_INIT[18] = {
+constexpr std::array<uint32_t, 18> P_INIT = {
    0x243F6A88, 0x85A308D3, 0x13198A2E, 0x03707344, 0xA4093822, 0x299F31D0, 0x082EFA98, 0xEC4E6C89, 0x452821E6,
    0x38D01377, 0xBE5466CF, 0x34E90C6C, 0xC0AC29B7, 0xC97C50DD, 0x3F84D5B5, 0xB5470917, 0x9216D5D9, 0x8979FB1B
 };
 
-const uint32_t S_INIT[1024] = {
+constexpr std::array<uint32_t, 1024> S_INIT = {
    0xD1310BA6, 0x98DFB5AC, 0x2FFD72DB, 0xD01ADFB7, 0xB8E1AFED, 0x6A267E96, 0xBA7C9045, 0xF12C7F99, 0x24A19947,
    0xB3916CF7, 0x0801F2E2, 0x858EFC16, 0x636920D8, 0x71574E69, 0xA458FEA3, 0xF4933D7E, 0x0D95748F, 0x728EB658,
    0x718BCD58, 0x82154AEE, 0x7B54A41D, 0xC25A59B5, 0x9C30D539, 0x2AF26013, 0xC5D1B023, 0x286085F0, 0xCA417918,
@@ -216,7 +217,7 @@ void Blowfish::encrypt_n(const uint8_t inb[], uint8_t outb[], size_t blocks) con
       store_be(out, R, L);
    };
 
-   BufferTransformer(ins, outs).process_blocks_of<b4, b1>(overloaded{encrypt4, encrypt1});
+   BufferTransformer(ins, outs).process_blocks_of<b4, b1>(overloaded{std::move(encrypt4), std::move(encrypt1)});
 }
 
 /*
@@ -285,7 +286,7 @@ void Blowfish::decrypt_n(const uint8_t inb[], uint8_t outb[], size_t blocks) con
       store_be(out, R, L);
    };
 
-   BufferTransformer(ins, outs).process_blocks_of<b4, b1>(overloaded{decrypt4, decrypt1});
+   BufferTransformer(ins, outs).process_blocks_of<b4, b1>(overloaded{std::move(decrypt4), std::move(decrypt1)});
 }
 
 bool Blowfish::has_keying_material() const {
@@ -295,59 +296,53 @@ bool Blowfish::has_keying_material() const {
 /*
 * Blowfish Key Schedule
 */
-void Blowfish::key_schedule(std::span<const uint8_t> key) {
-   m_P.resize(18);
-   copy_mem(m_P.data(), P_INIT, 18);
-
-   m_S.resize(1024);
-   copy_mem(m_S.data(), S_INIT, 1024);
-
-   key_expansion(key.data(), key.size(), nullptr, 0);
+void Blowfish::key_schedule(std::span<const uint8_t> key, std::span<const uint8_t> salt) {
+   m_P.assign(P_INIT.begin(), P_INIT.end());
+   m_S.assign(S_INIT.begin(), S_INIT.end());
+   key_expansion(key, salt);
 }
 
-void Blowfish::key_expansion(const uint8_t key[], size_t length, const uint8_t salt[], size_t salt_length) {
-   BOTAN_ASSERT_NOMSG(salt_length % 4 == 0);
+void Blowfish::key_expansion(std::span<const uint8_t> key, std::span<const uint8_t> salt) {
+   BOTAN_ASSERT_NOMSG(salt.size() % 4 == 0);
 
+   const size_t length = key.size();
    for(size_t i = 0, j = 0; i != 18; ++i, j += 4) {
       m_P[i] ^= make_uint32(key[(j) % length], key[(j + 1) % length], key[(j + 2) % length], key[(j + 3) % length]);
    }
 
-   const size_t P_salt_offset = (salt_length > 0) ? 18 % (salt_length / 4) : 0;
+   const size_t P_salt_offset = (!salt.empty()) ? 18 % (salt.size() / 4) : 0;
 
    uint32_t L = 0, R = 0;
-   generate_sbox(m_P, L, R, salt, salt_length, 0);
-   generate_sbox(m_S, L, R, salt, salt_length, P_salt_offset);
+   generate_sbox(m_P, L, R, salt, 0);
+   generate_sbox(m_S, L, R, salt, P_salt_offset);
 }
 
 /*
 * Modified key schedule used for bcrypt password hashing
 */
-void Blowfish::salted_set_key(
-   const uint8_t key[], size_t length, const uint8_t salt[], size_t salt_length, size_t workfactor, bool salt_first) {
-   BOTAN_ARG_CHECK(salt_length > 0 && salt_length % 4 == 0, "Invalid salt length for Blowfish salted key schedule");
+void Blowfish::salted_set_key(std::span<const uint8_t> key,
+                              std::span<const uint8_t> salt,
+                              size_t workfactor,
+                              bool salt_first) {
+   BOTAN_ARG_CHECK(!salt.empty() && salt.size() % 4 == 0, "Invalid salt length for Blowfish salted key schedule");
 
-   if(length > 72) {
+   if(key.size() > 72) {
       // Truncate longer passwords to the 72 char bcrypt limit
-      length = 72;
+      key = key.first(72);
    }
 
-   m_P.resize(18);
-   copy_mem(m_P.data(), P_INIT, 18);
-
-   m_S.resize(1024);
-   copy_mem(m_S.data(), S_INIT, 1024);
-   key_expansion(key, length, salt, salt_length);
+   key_schedule(key, salt);
 
    if(workfactor > 0) {
       const size_t rounds = static_cast<size_t>(1) << workfactor;
 
       for(size_t r = 0; r != rounds; ++r) {
          if(salt_first) {
-            key_expansion(salt, salt_length, nullptr, 0);
-            key_expansion(key, length, nullptr, 0);
+            key_expansion(salt, {});
+            key_expansion(key, {});
          } else {
-            key_expansion(key, length, nullptr, 0);
-            key_expansion(salt, salt_length, nullptr, 0);
+            key_expansion(key, {});
+            key_expansion(salt, {});
          }
       }
    }
@@ -356,16 +351,19 @@ void Blowfish::salted_set_key(
 /*
 * Generate one of the Sboxes
 */
-void Blowfish::generate_sbox(secure_vector<uint32_t>& box,
-                             uint32_t& L,
-                             uint32_t& R,
-                             const uint8_t salt[],
-                             size_t salt_length,
-                             size_t salt_off) const {
+void Blowfish::generate_sbox(
+   std::span<uint32_t> box, uint32_t& L, uint32_t& R, std::span<const uint8_t> salt, size_t salt_off) const {
+   auto salt_words = [salt, salt_off](size_t off) -> std::pair<uint32_t, uint32_t> {
+      const auto offset = (off + salt_off) * 4;
+      return {load_be(salt.subspan((offset + 0) % salt.size()).first<4>()),
+              load_be(salt.subspan((offset + 4) % salt.size()).first<4>())};
+   };
+
    for(size_t i = 0; i != box.size(); i += 2) {
-      if(salt_length > 0) {
-         L ^= load_be<uint32_t>(salt, (i + salt_off) % (salt_length / 4));
-         R ^= load_be<uint32_t>(salt, (i + salt_off + 1) % (salt_length / 4));
+      if(!salt.empty()) {
+         auto [S_L, S_R] = salt_words(i);
+         L ^= S_L;
+         R ^= S_R;
       }
 
       for(size_t r = 0; r != 16; r += 2) {
