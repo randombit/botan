@@ -477,45 +477,45 @@ std::vector<Test::Result> test_bitvector_global_modifiers_and_predicates() {
                          [&](auto& result) {
                             Botan::bitvector bv(99);
 
-                            result.confirm("default construction yields all-zero", bv.none());
-                            result.confirm("default construction yields all-zero 2", !bv.any());
-                            result.confirm("default construction yields all-zero 3", !bv.all());
-                            result.confirm("default construction yields all-zero 4", bv.ct_none());
-                            result.confirm("default construction yields all-zero 5", !bv.ct_any());
-                            result.confirm("default construction yields all-zero 6", !bv.ct_all());
+                            result.confirm("default construction yields all-zero", bv.none_vartime());
+                            result.confirm("default construction yields all-zero 2", !bv.any_vartime());
+                            result.confirm("default construction yields all-zero 3", !bv.all_vartime());
+                            result.confirm("default construction yields all-zero 4", bv.none());
+                            result.confirm("default construction yields all-zero 5", !bv.any());
+                            result.confirm("default construction yields all-zero 6", !bv.all());
 
                             bv.set(42);
-                            result.confirm("setting a bit means there's a bit set", !bv.none());
-                            result.confirm("setting a bit means there's a bit set 2", bv.any());
-                            result.confirm("setting a bit means there's not all bits set", !bv.all());
-                            result.confirm("setting a bit means there's a bit set 3", !bv.ct_none());
-                            result.confirm("setting a bit means there's a bit set 4", bv.ct_any());
-                            result.confirm("setting a bit means there's not all bits set 2", !bv.ct_all());
+                            result.confirm("setting a bit means there's a bit set", !bv.none_vartime());
+                            result.confirm("setting a bit means there's a bit set 2", bv.any_vartime());
+                            result.confirm("setting a bit means there's not all bits set", !bv.all_vartime());
+                            result.confirm("setting a bit means there's a bit set 3", !bv.none());
+                            result.confirm("setting a bit means there's a bit set 4", bv.any());
+                            result.confirm("setting a bit means there's not all bits set 2", !bv.all());
 
                             bv.set();
-                            result.confirm("setting all bits means there's a bit set", !bv.none());
-                            result.confirm("setting all bits means there's a bit set 2", bv.any());
-                            result.confirm("setting all bits means all bits are set", bv.all());
-                            result.confirm("setting all bits means there's a bit set 3", !bv.ct_none());
-                            result.confirm("setting all bits means there's a bit set 4", bv.ct_any());
-                            result.confirm("setting all bits means all bits are set 2", bv.ct_all());
+                            result.confirm("setting all bits means there's a bit set", !bv.none_vartime());
+                            result.confirm("setting all bits means there's a bit set 2", bv.any_vartime());
+                            result.confirm("setting all bits means all bits are set", bv.all_vartime());
+                            result.confirm("setting all bits means there's a bit set 3", !bv.none());
+                            result.confirm("setting all bits means there's a bit set 4", bv.any());
+                            result.confirm("setting all bits means all bits are set 2", bv.all());
 
                             bv.unset(97);
-                            result.confirm("a single 0 at the end means that there's a bit set", !bv.none());
-                            result.confirm("a single 0 at the end means that there are bits set", bv.any());
-                            result.confirm("a single 0 at the end means that there are not all bits set", !bv.all());
-                            result.confirm("a single 0 at the end means that there's a bit set 2", !bv.ct_none());
-                            result.confirm("a single 0 at the end means that there are bits set 2", bv.ct_any());
-                            result.confirm("a single 0 at the end means that there are not all bits set 2",
-                                           !bv.ct_all());
+                            result.confirm("a single 0 at the end means that there's a bit set", !bv.none_vartime());
+                            result.confirm("a single 0 at the end means that there are bits set", bv.any_vartime());
+                            result.confirm("a single 0 at the end means that there are not all bits set",
+                                           !bv.all_vartime());
+                            result.confirm("a single 0 at the end means that there's a bit set 2", !bv.none());
+                            result.confirm("a single 0 at the end means that there are bits set 2", bv.any());
+                            result.confirm("a single 0 at the end means that there are not all bits set 2", !bv.all());
 
                             bv.unset();
-                            result.confirm("unsetting all bits means there's no bit set", bv.none());
-                            result.confirm("unsetting all bits means there's no bit set 2", !bv.any());
-                            result.confirm("unsetting all bits means there's not all bits set", !bv.all());
-                            result.confirm("unsetting all bits means there's no bit set 3", bv.ct_none());
-                            result.confirm("unsetting all bits means there's no bit set 4", !bv.ct_any());
-                            result.confirm("unsetting all bits means there's not all bits set 2", !bv.ct_all());
+                            result.confirm("unsetting all bits means there's no bit set", bv.none_vartime());
+                            result.confirm("unsetting all bits means there's no bit set 2", !bv.any_vartime());
+                            result.confirm("unsetting all bits means there's not all bits set", !bv.all_vartime());
+                            result.confirm("unsetting all bits means there's no bit set 3", bv.none());
+                            result.confirm("unsetting all bits means there's no bit set 4", !bv.any());
+                            result.confirm("unsetting all bits means there's not all bits set 2", !bv.all());
                          }),
 
       Botan_Tests::CHECK("hamming weight oddness",
@@ -523,8 +523,8 @@ std::vector<Test::Result> test_bitvector_global_modifiers_and_predicates() {
                             const auto evn = Botan::hex_decode("FE3410CB0278E4D26602");
                             const auto odd = Botan::hex_decode("BB2418C2B4F288921203");
 
-                            result.confirm("odd hamming", Botan::bitvector(odd).ct_has_odd_hamming_weight());
-                            result.confirm("even hamming", !Botan::bitvector(evn).ct_has_odd_hamming_weight());
+                            result.confirm("odd hamming", Botan::bitvector(odd).has_odd_hamming_weight().as_bool());
+                            result.confirm("even hamming", !Botan::bitvector(evn).has_odd_hamming_weight().as_bool());
                          }),
 
       Botan_Tests::CHECK("hamming weight",
@@ -539,24 +539,24 @@ std::vector<Test::Result> test_bitvector_global_modifiers_and_predicates() {
 
                             // the last three bits of this bitvector are set, then there's a gap
                             auto bv = Botan::bitvector(Botan::hex_decode("FE3410CB0278E4D26602E0"));
-                            result.test_eq("hamming weight", bv.ct_hamming_weight(), size_t(37));
-                            result.test_eq("hamming weight", bv.ct_hamming_weight(), naive_count(bv));
+                            result.test_eq("hamming weight", bv.hamming_weight(), size_t(37));
+                            result.test_eq("hamming weight", bv.hamming_weight(), naive_count(bv));
 
                             bv.pop_back();
-                            result.test_eq("hamming weight", bv.ct_hamming_weight(), size_t(36));
-                            result.test_eq("hamming weight", bv.ct_hamming_weight(), naive_count(bv));
+                            result.test_eq("hamming weight", bv.hamming_weight(), size_t(36));
+                            result.test_eq("hamming weight", bv.hamming_weight(), naive_count(bv));
 
                             bv.pop_back();
-                            result.test_eq("hamming weight", bv.ct_hamming_weight(), size_t(35));
-                            result.test_eq("hamming weight", bv.ct_hamming_weight(), naive_count(bv));
+                            result.test_eq("hamming weight", bv.hamming_weight(), size_t(35));
+                            result.test_eq("hamming weight", bv.hamming_weight(), naive_count(bv));
 
                             bv.pop_back();
-                            result.test_eq("hamming weight", bv.ct_hamming_weight(), size_t(34));
-                            result.test_eq("hamming weight", bv.ct_hamming_weight(), naive_count(bv));
+                            result.test_eq("hamming weight", bv.hamming_weight(), size_t(34));
+                            result.test_eq("hamming weight", bv.hamming_weight(), naive_count(bv));
 
                             bv.pop_back();
-                            result.test_eq("hamming weight", bv.ct_hamming_weight(), size_t(34));
-                            result.test_eq("hamming weight", bv.ct_hamming_weight(), naive_count(bv));
+                            result.test_eq("hamming weight", bv.hamming_weight(), size_t(34));
+                            result.test_eq("hamming weight", bv.hamming_weight(), naive_count(bv));
                          }),
    };
 }
@@ -588,14 +588,14 @@ std::vector<Test::Result> test_bitvector_binary_operators() {
                             Botan::bitvector rhs(20);
                             rhs.set(1).set(4).set(16).set(17).set(18);
 
-                            result.test_eq("Not equal bitvectors", lhs.equals(rhs), false);
-                            result.test_eq("Not equal bitvectors 2", lhs.ct_equals(rhs), false);
+                            result.test_eq("Not equal bitvectors", lhs.equals_vartime(rhs), false);
+                            result.test_eq("Not equal bitvectors 2", lhs.equals(rhs), false);
 
                             lhs.unset().set(13);
                             rhs.unset().set(13);
 
-                            result.test_eq("equal bitvectors", lhs.equals(rhs), true);
-                            result.test_eq("equal bitvectors 2", lhs.ct_equals(rhs), true);
+                            result.test_eq("equal bitvectors", lhs.equals_vartime(rhs), true);
+                            result.test_eq("equal bitvectors 2", lhs.equals(rhs), true);
                          }),
 
       Botan_Tests::CHECK("bitwise OR",
@@ -780,37 +780,40 @@ std::vector<Test::Result> test_bitvector_serialization() {
 }
 
 std::vector<Test::Result> test_bitvector_constant_time_operations() {
+   constexpr Botan::CT::Choice yes = Botan::CT::Choice::yes();
+   constexpr Botan::CT::Choice no = Botan::CT::Choice::no();
+
    return {
       Botan_Tests::CHECK("conditional XOR, block aligned",
-                         [](auto& result) {
+                         [&](auto& result) {
                             Botan::bitvector bv1(Botan::hex_decode("BAADF00DCAFEBEEF"));
                             Botan::secure_bitvector bv2(Botan::hex_decode("CAFEBEEFC001B33F"));
                             const auto initial_bv1 = bv1;
                             const auto xor_result = bv1 ^ bv2;
 
-                            bv1.ct_conditional_xor(false, bv2);
+                            bv1.ct_conditional_xor(no, bv2);
                             result.confirm("no change after false condition", bv1 == initial_bv1);
 
-                            bv1.ct_conditional_xor(true, bv2);
+                            bv1.ct_conditional_xor(yes, bv2);
                             result.confirm("XORed if condition was true", bv1 == xor_result);
                          }),
 
       Botan_Tests::CHECK("conditional XOR, byte aligned",
-                         [](auto& result) {
+                         [&](auto& result) {
                             Botan::bitvector bv1(Botan::hex_decode("BAADF00DCAFEBEEF42"));
                             Botan::secure_bitvector bv2(Botan::hex_decode("CAFEBEEFC001B33F13"));
                             const auto initial_bv1 = bv1;
                             const auto xor_result = bv1 ^ bv2;
 
-                            bv1.ct_conditional_xor(false, bv2);
+                            bv1.ct_conditional_xor(no, bv2);
                             result.confirm("no change after false condition", bv1 == initial_bv1);
 
-                            bv1.ct_conditional_xor(true, bv2);
+                            bv1.ct_conditional_xor(yes, bv2);
                             result.confirm("XORed if condition was true", bv1 == xor_result);
                          }),
 
       Botan_Tests::CHECK("conditional XOR, no alignment",
-                         [](auto& result) {
+                         [&](auto& result) {
                             Botan::bitvector bv1(Botan::hex_decode("BAADF00DCAFEBEEF42"));
                             bv1.push_back(true);
                             bv1.push_back(false);
@@ -821,10 +824,10 @@ std::vector<Test::Result> test_bitvector_constant_time_operations() {
                             const auto initial_bv1 = bv1;
                             const auto xor_result = bv1 ^ bv2;
 
-                            bv1.ct_conditional_xor(false, bv2);
+                            bv1.ct_conditional_xor(no, bv2);
                             result.confirm("no change after false condition", bv1 == initial_bv1);
 
-                            bv1.ct_conditional_xor(true, bv2);
+                            bv1.ct_conditional_xor(yes, bv2);
                             result.confirm("XORed if condition was true", bv1 == xor_result);
                          }),
    };
@@ -848,12 +851,13 @@ Test::Result test_bitvector_conditional_xor_workload() {
    const size_t total_iter = matrix_rows * (3 * matrix_rows - 1) / 2;
    const auto start = Test::timestamp();
    for(size_t i = 0; i < total_iter; ++i) {
-      bitvec_vec.at(i % matrix_rows)
-         .ct_conditional_xor(rng->next_byte() % 2, bitvec_vec.at(rng->next_byte() % matrix_rows));
+      const auto choice = Botan::CT::Choice::from_int(static_cast<uint8_t>(rng->next_byte() % 2));
+      bitvec_vec.at(i % matrix_rows).ct_conditional_xor(choice, bitvec_vec.at(rng->next_byte() % matrix_rows));
    }
    res.set_ns_consumed(Test::timestamp() - start);
 
-   res.confirm("Prevent compiler from optimizing away", bitvec_vec.at(0).any() || bitvec_vec.at(0).none());
+   res.confirm("Prevent compiler from optimizing away",
+               bitvec_vec.at(0).any_vartime() || bitvec_vec.at(0).none_vartime());
    return res;
 }
 
@@ -880,7 +884,7 @@ std::vector<Test::Result> test_bitvector_iterators() {
                                ref = true;
                             }
 
-                            result.confirm("all bits are set", bv.all());
+                            result.confirm("all bits are set", bv.all_vartime());
                          }),
 
       Botan_Tests::CHECK("Iterators: bare usage",
@@ -997,11 +1001,11 @@ Test::Result test_bitvector_strongtype_adapter() {
 
    result.confirm("bv1 front is set", bv1.front());
    result.confirm("bv1 back is set", bv1.back());
-   result.confirm("bv1 has some one bits", bv1.any());
-   result.confirm("bv1 is not all zero", !bv1.none());
-   result.confirm("bv1 is not all one", !bv1.all());
+   result.confirm("bv1 has some one bits", bv1.any_vartime());
+   result.confirm("bv1 is not all zero", !bv1.none_vartime());
+   result.confirm("bv1 is not all one", !bv1.all_vartime());
 
-   result.test_eq("hamming weight of bv1", bv1.ct_has_odd_hamming_weight(), true);
+   result.confirm("hamming weight of bv1", bv1.has_odd_hamming_weight().as_bool());
 
    for(size_t i = 0; auto bit : bv1) {
       const bool expected = (i == 0 || i == 1 || i == 2 || i == 4 || i == 10);
