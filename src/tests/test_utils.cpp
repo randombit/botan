@@ -841,6 +841,9 @@ class CT_Choice_Tests final : public Test {
       std::vector<Test::Result> run() override {
          Test::Result result("CT::Choice");
 
+         result.test_eq("CT::Choice::yes", Botan::CT::Choice::yes().as_bool(), true);
+         result.test_eq("CT::Choice::no", Botan::CT::Choice::no().as_bool(), false);
+
          test_choice_from_int<uint8_t>("uint8_t", result);
          test_choice_from_int<uint16_t>("uint16_t", result);
          test_choice_from_int<uint32_t>("uint32_t", result);

@@ -119,7 +119,8 @@ class Choice final {
       /**
       * If v == 0 return an unset (false) Choice, otherwise a set Choice
       */
-      template <std::unsigned_integral T>
+      template <typename T>
+         requires std::unsigned_integral<T> && (!std::same_as<bool, T>)
       constexpr static Choice from_int(T v) {
          // Mask of T that is either |0| or |1|
          const T v_is_0 = ct_is_zero<T>(value_barrier<T>(v));
@@ -133,6 +134,10 @@ class Choice final {
          // so even just the low bit is sufficient.
          return Choice(ct_is_zero<uint32_t>(static_cast<uint32_t>(v_is_0)));
       }
+
+      constexpr static Choice yes() { return Choice(static_cast<uint32_t>(-1)); }
+
+      constexpr static Choice no() { return Choice(0); }
 
       constexpr Choice operator!() const { return Choice(~value()); }
 
