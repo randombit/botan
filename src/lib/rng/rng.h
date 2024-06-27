@@ -209,6 +209,16 @@ class BOTAN_PUBLIC_API(2, 0) RandomNumberGenerator {
       }
 
       /**
+       * Create a std::array of @p bytes random bytes
+       */
+      template <size_t bytes>
+      std::array<uint8_t, bytes> random_array() {
+         std::array<uint8_t, bytes> result;
+         random_vec(result);
+         return result;
+      }
+
+      /**
       * Return a random byte
       * @return random byte
       * @throws PRNG_Unseeded if the RNG fails because it has not enough entropy
