@@ -91,7 +91,7 @@ std::optional<CmceColumnSelection> move_columns(CmceMatrix& mat, const Classic_M
          row_acc |= sub_mat.at(next_row);
       }
 
-      if(row_acc.ct_none()) {
+      if(row_acc.none()) {
          // If the current row and all subsequent rows are zero
          // we cannot create a semi-systematic matrix
          return std::nullopt;
@@ -105,7 +105,7 @@ std::optional<CmceColumnSelection> move_columns(CmceMatrix& mat, const Classic_M
       // Add subsequent rows to the current row, until the pivot
       // bit is set.
       for(size_t next_row = row_idx + 1; next_row < Classic_McEliece_Parameters::mu(); ++next_row) {
-         sub_mat.at(row_idx).ct_conditional_xor(!sub_mat.at(row_idx).at(pivot_indices.at(row_idx)),
+         sub_mat.at(row_idx).ct_conditional_xor(!sub_mat.at(row_idx).at(pivot_indices.at(row_idx)).as_choice(),
                                                 sub_mat.at(next_row));
       }
 
@@ -116,7 +116,7 @@ std::optional<CmceColumnSelection> move_columns(CmceMatrix& mat, const Classic_M
       //       above the current one. However, here we only need to identify
       //       the columns to swap. Therefore, we can ignore the upper rows.
       for(size_t next_row = row_idx + 1; next_row < Classic_McEliece_Parameters::mu(); ++next_row) {
-         sub_mat.at(next_row).ct_conditional_xor(sub_mat.at(next_row).at(pivot_indices.at(row_idx)),
+         sub_mat.at(next_row).ct_conditional_xor(sub_mat.at(next_row).at(pivot_indices.at(row_idx)).as_choice(),
                                                  sub_mat.at(row_idx));
       }
    }
@@ -168,7 +168,7 @@ std::optional<CmceColumnSelection> apply_gauss(const Classic_McEliece_Parameters
       // This achieves that the respective bit at the diagonal becomes 1
       // (if mat is systematic)
       for(size_t next_row = diag_pos + 1; next_row < params.pk_no_rows(); ++next_row) {
-         mat[diag_pos].get().ct_conditional_xor(!mat[diag_pos].at(diag_pos), mat[next_row].get());
+         mat[diag_pos].get().ct_conditional_xor(!mat[diag_pos].at(diag_pos).as_choice(), mat[next_row].get());
       }
 
       // If the current bit on the diagonal is not set at this point
@@ -182,7 +182,7 @@ std::optional<CmceColumnSelection> apply_gauss(const Classic_McEliece_Parameters
       // is still one
       for(size_t row = 0; row < params.pk_no_rows(); ++row) {
          if(row != diag_pos) {
-            mat[row].get().ct_conditional_xor(mat[row].at(diag_pos), mat[diag_pos].get());
+            mat[row].get().ct_conditional_xor(mat[row].at(diag_pos).as_choice(), mat[diag_pos].get());
          }
       }
    }
@@ -250,7 +250,7 @@ CmceCodeWord Classic_McEliece_Matrix::mul(const Classic_McEliece_Parameters& par
       auto pk_current_bytes = pk_slicer.take(params.pk_row_size_bytes());
       auto row = secure_bitvector(pk_current_bytes, params.n() - params.pk_no_rows());
       row &= e_T;
-      s[i] ^= row.ct_has_odd_hamming_weight();
+      s[i] ^= row.has_odd_hamming_weight().as_bool();
    }
 
    BOTAN_ASSERT_NOMSG(pk_slicer.empty());

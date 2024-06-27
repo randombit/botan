@@ -108,7 +108,7 @@ std::pair<CT::Mask<uint8_t>, CmceErrorVector> Classic_McEliece_Decryptor::decode
    for(const auto& image : images) {
       e.push_back(GF_Mask::is_zero(image).as_bool());
    }
-   decode_success &= CT::Mask<uint8_t>(CT::Mask<size_t>::is_equal(e.ct_hamming_weight(), m_key->params().t()));
+   decode_success &= CT::Mask<uint8_t>(CT::Mask<size_t>::is_equal(e.hamming_weight(), m_key->params().t()));
 
    // Check the error vector by checking H'C = H'e <=> H'(C + e) = 0; see guide for implementors Sec. 6.3
    const auto syndrome_from_e = compute_goppa_syndrome(m_key->params(), m_key->g(), m_key->field_ordering(), e.get());

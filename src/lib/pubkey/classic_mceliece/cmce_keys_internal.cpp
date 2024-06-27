@@ -108,7 +108,7 @@ bool Classic_McEliece_PrivateKeyInternal::check_key() const {
    auto ret = CT::Mask<size_t>::expand(CT::is_equal<uint8_t>(s.data(), m_s.data(), m_params.n() / 8));
 
    // Checking weight of c
-   ret &= CT::Mask<size_t>::is_equal(c().ct_hamming_weight(), 32);
+   ret &= CT::Mask<size_t>::is_equal(c().hamming_weight(), 32);
 
    if(auto g = m_params.poly_ring().compute_minimal_polynomial(irreducible_bits)) {
       for(size_t i = 0; i < g->degree() - 1; ++i) {
@@ -136,7 +136,7 @@ std::shared_ptr<Classic_McEliece_PublicKeyInternal> Classic_McEliece_PublicKeyIn
       throw Decoding_Error("Cannot create public key from private key. Private key is invalid.");
    }
    auto& [pk_matrix, pivot] = pk_matrix_and_pivot.value();
-   if(!pivot.subvector(0, pivot.size() / 2).ct_all() || !pivot.subvector(pivot.size() / 2).ct_none()) {
+   if(!pivot.subvector(0, pivot.size() / 2).all() || !pivot.subvector(pivot.size() / 2).none()) {
       // There should not be a pivot other than 0xff ff ff ff 00 00 00 00. Otherwise
       // the gauss algorithm failed effectively.
       throw Decoding_Error("Cannot create public key from private key. Private key is invalid.");
