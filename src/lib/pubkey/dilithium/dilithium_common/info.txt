@@ -19,4 +19,5 @@ dilithium_symmetric_primitives.h
 
 <requires>
 shake
+xof
 </requires>

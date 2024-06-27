@@ -43,19 +43,6 @@ tls_reader.h
 </header:internal>
 
 <requires>
-aead
-aes
-asn1
-dh
-ecdh
-ecdsa
-eme_pkcs1
-emsa_pkcs1
-gcm
-hmac
 rng
-rsa
-sha2_32
-sha2_64
-x509
+tls12
 </requires>

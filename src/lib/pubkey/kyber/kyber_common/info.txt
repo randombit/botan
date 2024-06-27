@@ -12,6 +12,7 @@ type -> "Internal"
 pubkey
 hash
 rng
+xof
 </requires>
 
 <header:internal>
