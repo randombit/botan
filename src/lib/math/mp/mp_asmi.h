@@ -195,10 +195,11 @@ inline constexpr auto word_add(W x, W y, W* carry) -> W {
 #endif
    }
 
+   const W cb = *carry & 1;
    W z = x + y;
    W c1 = (z < x);
-   z += *carry & 1;
-   *carry = c1 | (z < *carry);
+   z += cb;
+   *carry = c1 | (z < cb);
    return z;
 }
 
@@ -298,9 +299,10 @@ inline constexpr auto word_sub(W x, W y, W* carry) -> W {
 #endif
    }
 
+   const W cb = *carry & 1;
    W t0 = x - y;
    W c1 = (t0 > x);
-   W z = t0 - (*carry & 1);
+   W z = t0 - cb;
    *carry = c1 | (z > t0);
    return z;
 }
