@@ -43,6 +43,9 @@ class KyberPolyTraits final : public CRYSTALS::Trait_Base<KyberConstants, KyberP
    public:
       /**
        * NIST FIPS 203 IPD, Algorithm 8 (NTT)
+       *
+       * Produces the result of the NTT transformation without any montgomery
+       * factors in the coefficients.
        */
       constexpr static void ntt(std::span<T, N> p) {
          for(size_t len = N / 2, k = 0; len >= 2; len /= 2) {
@@ -61,6 +64,14 @@ class KyberPolyTraits final : public CRYSTALS::Trait_Base<KyberConstants, KyberP
 
       /**
        * NIST FIPS 203 IPD, Algorithm 9 (NTT^-1)
+       *
+       * The output is effectively multiplied by the montgomery parameter 2^16
+       * mod q so that the input factors 2^(-16) mod q are eliminated. Note
+       * that factors 2^(-16) mod q are introduced by multiplication and
+       * reduction of values not in montgomery domain.
+       *
+       * Produces the result of the inverse NTT transformation with a montgomery
+       * factor of (2^16 mod q) added (!). See above.
        */
       static constexpr void inverse_ntt(std::span<T, N> p) {
          for(size_t len = 2, k = 127; len <= N / 2; len *= 2) {

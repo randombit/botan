@@ -210,15 +210,11 @@ Kyber_PrivateKey::Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode m) {
    auto [rho, sigma] = mode.symmetric_primitives().G(d);
    KyberPolynomialSampler ps(sigma, mode);
 
-   // TODO: Remove the need for the montgomery transformation
-   //
-   // -> When calculating A*s below, A is not in montgomery form, but s is. The
-   //    operation uses fqmul internally, which performs a montgomery reduction.
-   auto A = montgomery(kyber_sample_matrix(rho, false /* not transposed */, mode));
+   auto A = kyber_sample_matrix(rho, false /* not transposed */, mode);
    auto s = ntt(ps.sample_polynomial_vector_cbd_eta1());
    const auto e = ntt(ps.sample_polynomial_vector_cbd_eta1());
 
-   auto t = A * s;
+   auto t = montgomery(A * s);
    t += e;
    t.reduce();
 

@@ -39,7 +39,7 @@ using next_longer_int_t =
 
 template <std::integral T>
    requires(size_t(sizeof(T)) <= 4)
-constexpr T montgomery_R(T q) {
+consteval T montgomery_R(T q) {
    using T_unsigned = std::make_unsigned_t<T>;
    using T2 = next_longer_uint_t<T_unsigned>;
    return (T2(1) << (sizeof(T) * 8)) % q;
@@ -47,7 +47,7 @@ constexpr T montgomery_R(T q) {
 
 template <std::integral T>
    requires(size_t(sizeof(T)) <= 4)
-constexpr T montgomery_R2(T q) {
+consteval T montgomery_R2(T q) {
    using T2 = next_longer_int_t<T>;
    return (static_cast<T2>(montgomery_R(q)) * static_cast<T2>(montgomery_R(q))) % q;
 }
@@ -64,7 +64,7 @@ struct eea_result {
  * and b and the Bézout coefficients, u and v.
  */
 template <std::integral T>
-constexpr eea_result<T> extended_euclidean_algorithm(T a, T b) {
+consteval eea_result<T> extended_euclidean_algorithm(T a, T b) {
    if(a > b) {
       std::swap(a, b);
    }
@@ -89,13 +89,8 @@ constexpr eea_result<T> extended_euclidean_algorithm(T a, T b) {
  */
 template <std::integral T, std::integral T2 = next_longer_int_t<T>>
    requires(sizeof(T) <= 4)
-constexpr T modular_inverse(T q, T2 m = T2(1) << sizeof(T) * 8) {
+consteval T modular_inverse(T q, T2 m = T2(1) << sizeof(T) * 8) {
    return static_cast<T>(extended_euclidean_algorithm<T2>(q, m).u);
-}
-
-template <std::unsigned_integral T>
-constexpr T lcm(T a, T b) {
-   return a / extended_euclidean_algorithm(a, b).gcd * b;
 }
 
 constexpr auto bitlen(size_t x) {

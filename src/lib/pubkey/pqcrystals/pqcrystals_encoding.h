@@ -12,15 +12,17 @@
 #define BOTAN_PQ_CRYSTALS_ENCODING_H_
 
 #include <limits>
+#include <numeric>
 #include <span>
-
-#include <botan/xof.h>
 
 #include <botan/internal/loadstor.h>
 #include <botan/internal/pqcrystals.h>
 #include <botan/internal/pqcrystals_helpers.h>
 #include <botan/internal/stl_util.h>
 
+#if defined(BOTAN_HAS_XOF)
+   #include <botan/xof.h>
+#endif
 namespace Botan::CRYSTALS {
 
 namespace detail {
@@ -29,9 +31,11 @@ constexpr auto as_byte_source(BufferSlicer& slicer) {
    return [&](std::span<uint8_t> out) { slicer.copy_into(out); };
 }
 
+#if defined(BOTAN_HAS_XOF)
 constexpr auto as_byte_source(Botan::XOF& xof) {
    return [&](std::span<uint8_t> out) { xof.output(out); };
 }
+#endif
 
 }  // namespace detail
 
@@ -71,7 +75,7 @@ struct BitPackingTrait final {
       constexpr static size_t bits_per_pack = [] {
          // Ensure that the bit-packing is byte-aligned and scale it
          // to utilize the collector's bit-width as much as possible.
-         size_t smallest_aligned_pack = lcm(bits_per_coeff, size_t(8));
+         size_t smallest_aligned_pack = std::lcm(bits_per_coeff, size_t(8));
          return (smallest_aligned_pack < bits_in_collector)
                    ? (bits_in_collector / smallest_aligned_pack) * smallest_aligned_pack
                    : smallest_aligned_pack;

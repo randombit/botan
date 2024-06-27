@@ -588,16 +588,6 @@ PolynomialVector<Trait, D> montgomery(PolynomialVector<Trait, D> polyvec) {
 }
 
 template <crystals_trait Trait>
-PolynomialMatrix<Trait> montgomery(PolynomialMatrix<Trait> m) {
-   for(auto& polyvec : m) {
-      for(auto& poly : polyvec) {
-         detail::montgomery(poly);
-      }
-   }
-   return m;
-}
-
-template <crystals_trait Trait>
 PolynomialVector<Trait, Domain::Normal> operator+(const PolynomialVector<Trait, Domain::Normal>& a,
                                                   const PolynomialVector<Trait, Domain::Normal>& b) {
    BOTAN_DEBUG_ASSERT(a.size() == b.size());

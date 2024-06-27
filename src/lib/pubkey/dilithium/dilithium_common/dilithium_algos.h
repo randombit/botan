@@ -17,8 +17,10 @@
 namespace Botan {
 
 DilithiumPolyMatNTT dilithium_expand_A(StrongSpan<const DilithiumSeedRho> rho, const DilithiumConstants& mode);
+
 std::pair<DilithiumPolyVec, DilithiumPolyVec> dilithium_expand_s(StrongSpan<const DilithiumSeedRhoPrime> rhoprime,
                                                                  const DilithiumConstants& mode);
+
 DilithiumPolyVec dilithium_expand_mask(StrongSpan<const DilithiumSeedRhoPrime> rhoprime,
                                        uint16_t nonce,
                                        const DilithiumConstants& mode);

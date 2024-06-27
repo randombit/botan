@@ -24,16 +24,23 @@
 namespace Botan {
 
 void kyber_encode_polynomial_vector(std::span<uint8_t> out, const KyberPolyVecNTT& p);
+
 KyberPolyVecNTT kyber_decode_polynomial_vector(std::span<const uint8_t> a, const KyberConstants& mode);
+
 KyberPoly kyber_polynomial_from_message(StrongSpan<const KyberMessage> msg);
+
 KyberMessage kyber_polynomial_to_message(const KyberPoly& p);
+
 void kyber_compress_ciphertext(StrongSpan<KyberCompressedCiphertext> out,
                                const KyberPolyVec& u,
                                const KyberPoly& v,
                                const KyberConstants& m_mode);
+
 std::pair<KyberPolyVec, KyberPoly> kyber_decompress_ciphertext(StrongSpan<const KyberCompressedCiphertext> ct,
                                                                const KyberConstants& mode);
+
 KyberPolyMat kyber_sample_matrix(StrongSpan<const KyberSeedRho> seed, bool transposed, const KyberConstants& mode);
+
 void kyber_sample_polynomial_from_cbd(KyberPoly& poly,
                                       KyberConstants::KyberEta eta,
                                       const KyberSamplingRandomness& randomness);
