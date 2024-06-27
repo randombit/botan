@@ -296,6 +296,10 @@ class bitvector_base final {
                return static_cast<T>(is_set());
             }
 
+            constexpr CT::Choice as_choice() const noexcept {
+               return CT::Choice::from_int(static_cast<BlockT>(m_block & m_mask));
+            }
+
          protected:
             BlockT& m_block;  // NOLINT(*-non-private-member-variables-in-classes)
             BlockT m_mask;    // NOLINT(*-non-private-member-variables-in-classes)
@@ -404,9 +408,9 @@ class bitvector_base final {
       size_type size() const { return m_bits; }
 
       /**
-       * @returns true iff the number of 1-bits in this is odd, false otherwise
+       * @returns true iff the number of 1-bits in this is odd, false otherwise (constant time)
        */
-      bool ct_has_odd_hamming_weight() const {
+      CT::Choice has_odd_hamming_weight() const {
          uint64_t acc = 0;
          full_range_operation([&](std::unsigned_integral auto block) { acc ^= block; }, *this);
 
@@ -414,16 +418,14 @@ class bitvector_base final {
             acc ^= acc >> i;
          }
 
-         acc &= one;
-
-         return acc == 1;
+         return CT::Choice::from_int(acc & one);
       }
 
       /**
        * Counts the number of 1-bits in the bitvector in constant time.
        * @returns the "population count" (or hamming weight) of the bitvector
        */
-      size_type ct_hamming_weight() const {
+      size_type hamming_weight() const {
          size_type acc = 0;
          full_range_operation([&](std::unsigned_integral auto block) { acc += ct_popcount(block); }, *this);
          return acc;
@@ -441,7 +443,7 @@ class bitvector_base final {
        * @returns true if @p other contains the same bit pattern as this
        */
       template <bitvectorish OtherT>
-      bool equals(const OtherT& other) const noexcept {
+      bool equals_vartime(const OtherT& other) const noexcept {
          return size() == other.size() &&
                 full_range_operation([]<std::unsigned_integral BlockT>(BlockT lhs, BlockT rhs) { return lhs == rhs; },
                                      *this,
@@ -452,8 +454,8 @@ class bitvector_base final {
        * @returns true if @p other contains the same bit pattern as this
        */
       template <bitvectorish OtherT>
-      bool ct_equals(const OtherT& other) const noexcept {
-         return (*this ^ other).ct_none();
+      bool equals(const OtherT& other) const noexcept {
+         return (*this ^ other).none();
       }
 
       /// @name Serialization
@@ -523,6 +525,7 @@ class bitvector_base final {
 
       /**
        * Renders this bitvector into a sequence of "0"s and "1"s.
+       * This is meant for debugging purposes and is not efficient.
        */
       std::string to_string() const {
          std::stringstream ss;
@@ -652,29 +655,29 @@ class bitvector_base final {
       /**
        * @returns true iff no bit is set
        */
-      bool none() const {
+      bool none_vartime() const {
          return full_range_operation([](std::unsigned_integral auto block) { return block == 0; }, *this);
       }
 
       /**
        * @returns true iff no bit is set in constant time
        */
-      bool ct_none() const { return ct_hamming_weight() == 0; }
+      bool none() const { return hamming_weight() == 0; }
 
       /**
        * @returns true iff at least one bit is set
        */
-      bool any() const { return !none(); }
+      bool any_vartime() const { return !none_vartime(); }
 
       /**
        * @returns true iff at least one bit is set in constant time
        */
-      bool ct_any() const { return !ct_none(); }
+      bool any() const { return !none(); }
 
       /**
        * @returns true iff all bits are set
        */
-      bool all() const {
+      bool all_vartime() const {
          return full_range_operation(
             []<std::unsigned_integral BlockT>(BlockT block, BlockT mask) { return block == mask; }, *this);
       }
@@ -682,7 +685,7 @@ class bitvector_base final {
       /**
        * @returns true iff all bits are set in constant time
        */
-      bool ct_all() const { return ct_hamming_weight() == m_bits; }
+      bool all() const { return hamming_weight() == m_bits; }
 
       auto operator[](size_type pos) { return ref(pos); }
 
@@ -780,21 +783,21 @@ class bitvector_base final {
        * omitting runtime dependence on any of the parameters.
        */
       template <bitvectorish OtherT>
-      void ct_conditional_xor(bool condition, const OtherT& other) {
+      void ct_conditional_xor(CT::Choice condition, const OtherT& other) {
          BOTAN_ASSERT_NOMSG(m_bits == other.m_bits);
          BOTAN_ASSERT_NOMSG(m_blocks.size() == other.m_blocks.size());
 
          auto maybe_xor = overloaded{
-            [m = CT::Mask<uint64_t>::expand(condition)](uint64_t lhs, uint64_t rhs) -> uint64_t {
+            [m = CT::Mask<uint64_t>::from_choice(condition)](uint64_t lhs, uint64_t rhs) -> uint64_t {
                return lhs ^ m.if_set_return(rhs);
             },
-            [m = CT::Mask<uint32_t>::expand(condition)](uint32_t lhs, uint32_t rhs) -> uint32_t {
+            [m = CT::Mask<uint32_t>::from_choice(condition)](uint32_t lhs, uint32_t rhs) -> uint32_t {
                return lhs ^ m.if_set_return(rhs);
             },
-            [m = CT::Mask<uint16_t>::expand(condition)](uint16_t lhs, uint16_t rhs) -> uint16_t {
+            [m = CT::Mask<uint16_t>::from_choice(condition)](uint16_t lhs, uint16_t rhs) -> uint16_t {
                return lhs ^ m.if_set_return(rhs);
             },
-            [m = CT::Mask<uint8_t>::expand(condition)](uint8_t lhs, uint8_t rhs) -> uint8_t {
+            [m = CT::Mask<uint8_t>::from_choice(condition)](uint8_t lhs, uint8_t rhs) -> uint8_t {
                return lhs ^ m.if_set_return(rhs);
             },
          };
@@ -983,8 +986,13 @@ class bitvector_base final {
             template <std::unsigned_integral BlockT>
                requires(is_byte_aligned())
             size_t is_memory_aligned_to() const {
-               void* ptr = const_cast<void*>(static_cast<const void*>(m_source.as_byte_span().data() + read_bytepos()));
-               const auto ptr_before = ptr;
+               const void* cptr = m_source.as_byte_span().data() + read_bytepos();
+               const void* ptr_before = cptr;
+
+               // std::align takes `ptr` as a reference (!), i.e. `void*&` and
+               // uses it as an out-param. Though, `cptr` is const because this
+               // method is const-qualified, hence the const_cast<>.
+               void* ptr = const_cast<void*>(cptr);
                size_t size = sizeof(BlockT);
                return ptr_before != nullptr && std::align(alignof(BlockT), size, ptr, size) == ptr_before;
             }
@@ -1236,12 +1244,12 @@ auto operator^(const T1& lhs, const T2& rhs) {
 
 template <bitvectorish T1, bitvectorish T2>
 bool operator==(const T1& lhs, const T2& rhs) {
-   return lhs.equals(rhs);
+   return lhs.equals_vartime(rhs);
 }
 
 template <bitvectorish T1, bitvectorish T2>
 bool operator!=(const T1& lhs, const T2& rhs) {
-   return lhs.equals(rhs);
+   return lhs.equals_vartime(rhs);
 }
 
 namespace detail {
@@ -1292,15 +1300,15 @@ class Strong_Adapter<T> : public Container_Strong_Adapter_Base<T> {
 
       auto back() { return this->get().back(); }
 
-      auto any() const { return this->get().any(); }
+      auto any_vartime() const { return this->get().any_vartime(); }
 
-      auto all() const { return this->get().all(); }
+      auto all_vartime() const { return this->get().all_vartime(); }
 
-      auto none() const { return this->get().none(); }
+      auto none_vartime() const { return this->get().none_vartime(); }
 
-      auto ct_has_odd_hamming_weight() const { return this->get().ct_has_odd_hamming_weight(); }
+      auto has_odd_hamming_weight() const { return this->get().has_odd_hamming_weight(); }
 
-      auto ct_hamming_weight() const { return this->get().ct_hamming_weight(); }
+      auto hamming_weight() const { return this->get().hamming_weight(); }
 
       auto from_bytes(std::span<const uint8_t> bytes, std::optional<size_type> bits = std::nullopt) {
          return this->get().from_bytes(bytes, bits);
