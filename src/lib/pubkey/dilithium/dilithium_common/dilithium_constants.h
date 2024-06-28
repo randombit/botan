@@ -142,6 +142,9 @@ class DilithiumConstants final {
 
       DilithiumMode mode() const { return m_mode; }
 
+      /// @returns one of {44, 65, 87}
+      size_t canonical_parameter_set_identifier() const { return k() * 10 + l(); }
+
       Dilithium_Symmetric_Primitives& symmetric_primitives() const { return *m_symmetric_primitives; }
 
    private:

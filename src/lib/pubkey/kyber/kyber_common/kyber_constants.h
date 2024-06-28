@@ -65,6 +65,9 @@ class KyberConstants final {
 
       KyberMode mode() const { return m_mode; }
 
+      /// @returns one of {512, 768, 1024}
+      size_t canonical_parameter_set_identifier() const { return k() * N; }
+
       /// \name Foundational constants
       /// @{
 

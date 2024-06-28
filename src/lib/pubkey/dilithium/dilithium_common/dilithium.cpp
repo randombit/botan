@@ -361,7 +361,7 @@ OID Dilithium_PublicKey::object_identifier() const {
 }
 
 size_t Dilithium_PublicKey::key_length() const {
-   return m_public->mode().public_key_bytes();
+   return m_public->mode().canonical_parameter_set_identifier();
 }
 
 size_t Dilithium_PublicKey::estimated_strength() const {

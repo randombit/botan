@@ -186,8 +186,7 @@ std::vector<uint8_t> Kyber_PublicKey::public_key_bits() const {
 }
 
 size_t Kyber_PublicKey::key_length() const {
-   // TODO: this should report 512, 768, 1024
-   return m_public->mode().public_key_bytes();
+   return m_public->mode().canonical_parameter_set_identifier();
 }
 
 bool Kyber_PublicKey::check_key(RandomNumberGenerator&, bool) const {

@@ -38,7 +38,7 @@ namespace Botan_Tests {
 
 class KYBER_Tests final : public Test {
    public:
-      static Test::Result run_kyber_test(const char* test_name, Botan::KyberMode mode, size_t strength) {
+      static Test::Result run_kyber_test(const char* test_name, Botan::KyberMode mode, size_t strength, size_t psid) {
          Test::Result result(test_name);
 
          auto rng = Test::new_rng(test_name);
@@ -51,6 +51,8 @@ class KYBER_Tests final : public Test {
 
          result.test_eq("estimated strength private", priv_key.estimated_strength(), strength);
          result.test_eq("estimated strength public", pub_key->estimated_strength(), strength);
+         result.test_eq("canonical parameter set identifier", priv_key.key_length(), psid);
+         result.test_eq("canonical parameter set identifier", pub_key->key_length(), psid);
 
          // Serialize
          const auto priv_key_bits = priv_key.private_key_bits();
@@ -97,14 +99,14 @@ class KYBER_Tests final : public Test {
          std::vector<Test::Result> results;
 
    #if defined(BOTAN_HAS_KYBER_90S)
-         results.push_back(run_kyber_test("Kyber512_90s API", Botan::KyberMode::Kyber512_90s, 128));
-         results.push_back(run_kyber_test("Kyber768_90s API", Botan::KyberMode::Kyber768_90s, 192));
-         results.push_back(run_kyber_test("Kyber1024_90s API", Botan::KyberMode::Kyber1024_90s, 256));
+         results.push_back(run_kyber_test("Kyber512_90s API", Botan::KyberMode::Kyber512_90s, 128, 512));
+         results.push_back(run_kyber_test("Kyber768_90s API", Botan::KyberMode::Kyber768_90s, 192, 768));
+         results.push_back(run_kyber_test("Kyber1024_90s API", Botan::KyberMode::Kyber1024_90s, 256, 1024));
    #endif
    #if defined(BOTAN_HAS_KYBER)
-         results.push_back(run_kyber_test("Kyber512 API", Botan::KyberMode::Kyber512_R3, 128));
-         results.push_back(run_kyber_test("Kyber768 API", Botan::KyberMode::Kyber768_R3, 192));
-         results.push_back(run_kyber_test("Kyber1024 API", Botan::KyberMode::Kyber1024_R3, 256));
+         results.push_back(run_kyber_test("Kyber512 API", Botan::KyberMode::Kyber512_R3, 128, 512));
+         results.push_back(run_kyber_test("Kyber768 API", Botan::KyberMode::Kyber768_R3, 192, 768));
+         results.push_back(run_kyber_test("Kyber1024 API", Botan::KyberMode::Kyber1024_R3, 256, 1024));
    #endif
 
          return results;

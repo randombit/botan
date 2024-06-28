@@ -108,7 +108,8 @@ REGISTER_DILITHIUM_KAT_TEST(8x7_AES, Randomized);
 
 class DilithiumRoundtripTests final : public Test {
    public:
-      static Test::Result run_roundtrip(const char* test_name, Botan::DilithiumMode mode, bool randomized) {
+      static Test::Result run_roundtrip(
+         const char* test_name, Botan::DilithiumMode mode, bool randomized, size_t strength, size_t psid) {
          Test::Result result(test_name);
 
          auto rng = Test::new_rng(test_name);
@@ -130,6 +131,11 @@ class DilithiumRoundtripTests final : public Test {
 
          Botan::Dilithium_PrivateKey priv_key(*rng, mode);
          const Botan::Dilithium_PublicKey& pub_key = priv_key;
+
+         result.test_eq("key strength", priv_key.estimated_strength(), strength);
+         result.test_eq("key length", priv_key.key_length(), psid);
+         result.test_eq("key strength", pub_key.estimated_strength(), strength);
+         result.test_eq("key length", pub_key.key_length(), psid);
 
          const auto sig_before_codec = sign(priv_key, msgvec);
 
@@ -180,27 +186,25 @@ class DilithiumRoundtripTests final : public Test {
       }
 
       std::vector<Test::Result> run() override {
-         std::vector<Test::Result> results;
-
+         return {
    #if defined(BOTAN_HAS_DILITHIUM)
-         results.push_back(run_roundtrip("Dilithium_4x4_Common", Botan::DilithiumMode::Dilithium4x4, false));
-         results.push_back(run_roundtrip("Dilithium_6x5_Common", Botan::DilithiumMode::Dilithium6x5, false));
-         results.push_back(run_roundtrip("Dilithium_8x7_Common", Botan::DilithiumMode::Dilithium8x7, false));
-         results.push_back(run_roundtrip("Dilithium_4x4_Common_Randomized", Botan::DilithiumMode::Dilithium4x4, true));
-         results.push_back(run_roundtrip("Dilithium_6x5_Common_Randomized", Botan::DilithiumMode::Dilithium6x5, true));
-         results.push_back(run_roundtrip("Dilithium_8x7_Common_Randomized", Botan::DilithiumMode::Dilithium8x7, true));
+            run_roundtrip("Dilithium_4x4_Common", Botan::DilithiumMode::Dilithium4x4, false, 128, 44),
+               run_roundtrip("Dilithium_6x5_Common", Botan::DilithiumMode::Dilithium6x5, false, 192, 65),
+               run_roundtrip("Dilithium_8x7_Common", Botan::DilithiumMode::Dilithium8x7, false, 256, 87),
+               run_roundtrip("Dilithium_4x4_Common_Randomized", Botan::DilithiumMode::Dilithium4x4, true, 128, 44),
+               run_roundtrip("Dilithium_6x5_Common_Randomized", Botan::DilithiumMode::Dilithium6x5, true, 192, 65),
+               run_roundtrip("Dilithium_8x7_Common_Randomized", Botan::DilithiumMode::Dilithium8x7, true, 256, 87),
    #endif
 
    #if defined(BOTAN_HAS_DILITHIUM_AES)
-         results.push_back(run_roundtrip("Dilithium_4x4_AES", Botan::DilithiumMode::Dilithium4x4_AES, false));
-         results.push_back(run_roundtrip("Dilithium_6x5_AES", Botan::DilithiumMode::Dilithium6x5_AES, false));
-         results.push_back(run_roundtrip("Dilithium_8x7_AES", Botan::DilithiumMode::Dilithium8x7_AES, false));
-         results.push_back(run_roundtrip("Dilithium_4x4_AES_Randomized", Botan::DilithiumMode::Dilithium4x4_AES, true));
-         results.push_back(run_roundtrip("Dilithium_6x5_AES_Randomized", Botan::DilithiumMode::Dilithium6x5_AES, true));
-         results.push_back(run_roundtrip("Dilithium_8x7_AES_Randomized", Botan::DilithiumMode::Dilithium8x7_AES, true));
+               run_roundtrip("Dilithium_4x4_AES", Botan::DilithiumMode::Dilithium4x4_AES, false, 128, 44),
+               run_roundtrip("Dilithium_6x5_AES", Botan::DilithiumMode::Dilithium6x5_AES, false, 192, 65),
+               run_roundtrip("Dilithium_8x7_AES", Botan::DilithiumMode::Dilithium8x7_AES, false, 256, 87),
+               run_roundtrip("Dilithium_4x4_AES_Randomized", Botan::DilithiumMode::Dilithium4x4_AES, true, 128, 44),
+               run_roundtrip("Dilithium_6x5_AES_Randomized", Botan::DilithiumMode::Dilithium6x5_AES, true, 192, 65),
+               run_roundtrip("Dilithium_8x7_AES_Randomized", Botan::DilithiumMode::Dilithium8x7_AES, true, 256, 87),
    #endif
-
-         return results;
+         };
       }
 };
 
