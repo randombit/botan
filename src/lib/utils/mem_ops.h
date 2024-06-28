@@ -342,8 +342,8 @@ inline constexpr void xor_buf(ranges::contiguous_output_range<uint8_t> auto&& ou
                               ranges::contiguous_range<uint8_t> auto&& in) {
    ranges::assert_equal_byte_lengths(out, in);
 
-   std::span o{out};
-   std::span i{in};
+   std::span<uint8_t> o(out);
+   std::span<const uint8_t> i(in);
 
    for(; o.size_bytes() >= 32; o = o.subspan(32), i = i.subspan(32)) {
       auto x = typecast_copy<std::array<uint64_t, 4>>(o.template first<32>());
