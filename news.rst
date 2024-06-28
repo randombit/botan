@@ -162,12 +162,11 @@ Version 3.4.0, 2024-04-08
 Version 3.3.0, 2024-02-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Fix a potential denial of service caused by accepting arbitrary
-  length primes as potential elliptic curve parameters in ASN.1
-  encodings. With very large inputs the primality verification
+* CVE-2024-34703 Fix a potential denial of service caused by accepting
+  arbitrary length primes as potential elliptic curve parameters in
+  ASN.1 encodings. With very large inputs the primality verification
   can become computationally expensive. Now any prime field larger
-  than 1024 bits is rejected immediately. Reported by Bing Shi.
-  (GH #3913)
+  than 1024 bits is rejected immediately. Reported by Bing Shi. (GH #3913)
 
 * Add FrodoKEM post-quantum KEM (GH #3679 #3807 #3892)
 
@@ -606,12 +605,11 @@ Other Improvements
 Version 2.19.4, 2024-02-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Fix a potential denial of service caused by accepting arbitrary
-  length primes as potential elliptic curve parameters in ASN.1
-  encodings. With very large inputs the primality verification
+* CVE-2024-34703 Fix a potential denial of service caused by accepting
+  arbitrary length primes as potential elliptic curve parameters in
+  ASN.1 encodings. With very large inputs the primality verification
   can become computationally expensive. Now any prime field larger
-  than 1024 bits is rejected immediately. Reported by Bing Shi.
-  (GH #3914)
+  than 1024 bits is rejected immediately. Reported by Bing Shi. (GH #3914)
 
 * Switch to using a constant time binary algorithm for computing
   GCD (GH #3912)

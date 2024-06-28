@@ -25,7 +25,7 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
 
   Introduced in 3.0.0, fixed in 3.3.0
 
-* 2024-02-20: DoS due to oversized elliptic curve parameters
+* 2024-02-20 (CVE-2024-34703): DoS due to oversized elliptic curve parameters
 
   When decoding an ASN.1 encoded elliptic curve, Botan would verify the `p`
   parameter was actually prime, and at least some minimum size. However it
