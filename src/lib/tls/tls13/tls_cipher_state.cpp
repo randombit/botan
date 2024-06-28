@@ -228,7 +228,7 @@ void Cipher_State::advance_with_client_finished(const Transcript_Hash& transcrip
 
 namespace {
 
-std::vector<uint8_t> current_nonce(const uint64_t seq_no, const secure_vector<uint8_t>& iv) {
+auto current_nonce(const uint64_t seq_no, std::span<const uint8_t> iv) {
    // RFC 8446 5.3
    //    The per-record nonce for the AEAD construction is formed as follows:
    //
@@ -237,10 +237,9 @@ std::vector<uint8_t> current_nonce(const uint64_t seq_no, const secure_vector<ui
    //
    //    2.  The padded sequence number is XORed with either the static
    //        client_write_iv or server_write_iv (depending on the role).
-   std::vector<uint8_t> nonce(NONCE_LENGTH);
-   store_be(seq_no, nonce.data() + (NONCE_LENGTH - sizeof(seq_no)));
-   BOTAN_ASSERT_EQUAL(iv.size(), NONCE_LENGTH, "Invalid TLS 1.3 nonce length");
-   xor_buf(nonce, iv.data(), iv.size());
+   std::array<uint8_t, NONCE_LENGTH> nonce{};
+   store_be(std::span{nonce}.last<sizeof(seq_no)>(), seq_no);
+   xor_buf(nonce, iv);
    return nonce;
 }
 
