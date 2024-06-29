@@ -22,6 +22,46 @@ on:
     - cron:  '23 3 * * *'
 
 jobs:
+  x-compile:
+    name: "Cross"
+    strategy:
+      fail-fast: false
+
+      matrix:
+        include:
+          - target: cross-riscv64
+            compiler: gcc
+            host_os: ubuntu-24.04
+          - target: cross-s390x
+            compiler: gcc
+            host_os: ubuntu-24.04
+          - target: cross-android-arm64-amalgamation
+            compiler: clang
+            host_os: ubuntu-24.04
+          - target: cross-arm64-amalgamation
+            compiler: gcc
+            host_os: ubuntu-24.04
+          - target: emscripten
+            compiler: emcc
+            host_os: macos-14
+
+    runs-on: ${{ matrix.host_os }}
+
+    env:
+      ANDROID_NDK: android-ndk-r26
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Build Agent
+        uses: ./.github/actions/setup-build-agent
+        with:
+          target: ${{ matrix.target }}
+          cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-xcompile-${{ matrix.target }}
+
+      - name: Build and Test Botan
+        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
+
   clang_tidy:
     name: "clang-tidy"
 
