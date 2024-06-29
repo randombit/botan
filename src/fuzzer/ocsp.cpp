@@ -8,8 +8,8 @@
 
 #include <botan/ocsp.h>
 
-void fuzz(const uint8_t in[], size_t len) {
+void fuzz(std::span<const uint8_t> in) {
    try {
-      Botan::OCSP::Response response(in, len);
+      Botan::OCSP::Response response(in.data(), in.size());
    } catch(Botan::Exception& e) {}
 }

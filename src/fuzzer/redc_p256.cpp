@@ -9,8 +9,8 @@
 #include <botan/reducer.h>
 #include <botan/internal/curve_nistp.h>
 
-void fuzz(const uint8_t in[], size_t len) {
-   if(len > 2 * 256 / 8) {
+void fuzz(std::span<const uint8_t> in) {
+   if(in.size() > 2 * 256 / 8) {
       return;
    }
 
@@ -18,7 +18,7 @@ void fuzz(const uint8_t in[], size_t len) {
    static const Botan::BigInt prime_2 = prime * prime;
    static Botan::Modular_Reducer prime_redc(prime);
 
-   Botan::BigInt input = Botan::BigInt::decode(in, len);
+   Botan::BigInt input = Botan::BigInt::from_bytes(in);
 
    if(input < prime_2) {
       const Botan::BigInt ref = prime_redc.reduce(input);

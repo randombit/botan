@@ -6,18 +6,19 @@
 
 #include "mp_fuzzers.h"
 
-void fuzz(const uint8_t in[], size_t in_len) {
-   const size_t words = (in_len + sizeof(word) - 1) / sizeof(word);
+void fuzz(std::span<const uint8_t> in) {
+   const size_t words = (in.size() + sizeof(word) - 1) / sizeof(word);
 
-   if(in_len == 0 || words > 2 * 16) {
+   if(in.empty() || words > 2 * 16) {
       return;
    }
+   size_t in_len = in.size();
 
    word x[24] = {0};
    word y[24] = {0};
 
-   std::memcpy(x, in, in_len / 2);
-   std::memcpy(y, in + in_len / 2, in_len - (in_len / 2));
+   std::memcpy(x, in.data(), in_len / 2);
+   std::memcpy(y, in.data() + in_len / 2, in_len - (in_len / 2));
 
    const size_t x_words = ((in_len / 2) + sizeof(word) - 1) / sizeof(word);
    const size_t y_words = ((in_len - (in_len / 2)) + sizeof(word) - 1) / sizeof(word);

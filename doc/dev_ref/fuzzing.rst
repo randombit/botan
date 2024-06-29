@@ -9,40 +9,47 @@ the library.
 Fuzzing with libFuzzer
 ------------------------
 
-To fuzz with libFuzzer (https://llvm.org/docs/LibFuzzer.html), you'll first
-need to compile libFuzzer::
+As of Clang Version 6.0 libFuzzer is automatically included in the compiler. Therefore you don't need to install any new software.
+You can build the fuzzers by running ::
 
-  $ svn co https://llvm.org/svn/llvm-project/compiler-rt/trunk/lib/fuzzer libFuzzer
-  $ cd libFuzzer && clang -c -g -O2 -std=c++11 *.cpp
-  $ ar cr libFuzzer.a libFuzzer/*.o
-
-Then build the fuzzers::
-
-  $ ./configure.py --cc=clang --build-fuzzer=libfuzzer --unsafe-fuzzer-mode \
-        --with-debug-info --enable-sanitizers=coverage,address,undefined
+  $ ./configure.py --cc=clang --build-fuzzer=libfuzzer --enable-sanitizers=fuzzer
   $ make fuzzers
 
-Enabling 'coverage' sanitizer flags is required for libFuzzer to work.
-Address sanitizer and undefined sanitizer are optional.
+The option `--enable-sanitizers=fuzzer` compiles the library for coverage-guided fuzzing.
+You can add additional sanitizers like `address`, `undefined` and `memory` or with/without
+additional information during building by either adding `--unsafe-fuzzer-mode` or `--with-debug-info`.
+The `coverage` sanitizer is not compatible with this configuration.
 
+If you want to link additional libraries you can use the `--with-fuzzer-lib` option
+while configuring the build with configure.py.
 The fuzzer binaries will be in `build/fuzzer`. Simply pick one and run it, optionally
-also passing a directory containing corpus inputs.
+also passing a directory containing corpus inputs. Running
 
-Using `libfuzzer` build mode implicitly assumes the fuzzers need to
-link with `libFuzzer`; if another library is needed (for example in
-OSS-Fuzz, which uses `libFuzzingEngine`), use the flag
-`--with-fuzzer-lib` to specify the desired name.
+  $ make fuzzer_corpus
 
-Fuzzing with AFL
+downloads a specific corpus from https://github.com/randombit/crypto-corpus.git. Together
+with
+
+  $ ./src/scripts/test_fuzzers.py fuzzer_corpus build/fuzzer
+
+you can test the Fuzzers.
+
+Fuzzing with AFL++
 --------------------
 
-To fuzz with AFL (http://lcamtuf.coredump.cx/afl/)::
+Please make sure that you have installed AFL++ according to https://aflplus.plus/building/.
+The version of Clang should match the version of `afl-clang-fast++`/ `afl-clang-fast`.
+You can fuzz with AFL++ in LLVM mode (https://github.com/AFLplusplus/AFLplusplus/blob/stable/instrumentation/README.llvm.md) by running ::
 
-  $ ./configure.py --with-sanitizers --build-fuzzer=afl --unsafe-fuzzer-mode --cc-bin=afl-g++
+  $ ./configure.py --cc=clang --with-sanitizers --build-fuzzer=afl --unsafe-fuzzer-mode --cc-bin=afl-clang-fast++
   $ make fuzzers
 
-For AFL sanitizers are optional. You can also use `afl-clang-fast++`
-or `afl-clang++`, be sure to set `--cc=clang` also.
+For AFL++ in GCC mode make sure that you have `afl-g++-fast` installed.
+Otherwise follow https://github.com/AFLplusplus/AFLplusplus/blob/stable/instrumentation/README.gcc_plugin.md to build and install it.
+You can configure the build by running ::
+
+  $ ./configure.py --cc=gcc --with-sanitizers --build-fuzzer=afl --unsafe-fuzzer-mode --cc-bin=afl-g++-fast
+  $ make fuzzers
 
 The fuzzer binaries will be in `build/fuzzer`. To run them you need to
 run under `afl-fuzz`::
@@ -73,7 +80,7 @@ Input Corpus
 AFL requires an input corpus, and libFuzzer can certainly make good
 use of it.
 
-Some crypto corpus repositories include
+Some other crypto corpus repositories include
 
 * https://github.com/randombit/crypto-corpus
 * https://github.com/mozilla/nss-fuzzing-corpus
@@ -86,6 +93,6 @@ Adding new fuzzers
 New fuzzers are created by adding a source file to `src/fuzzers` which
 have the signature:
 
-``void fuzz(const uint8_t in[], size_t len)``
+``void fuzz(std::span<const uint8_t> in)``
 
 After adding your fuzzer, rerun ``./configure.py`` and build.

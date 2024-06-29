@@ -10,33 +10,33 @@
 
 namespace {
 
-void check_os2ecp(const Botan::EC_Group& group, const uint8_t in[], size_t len) {
+void check_os2ecp(const Botan::EC_Group& group, std::span<const uint8_t> in) {
    try {
-      Botan::EC_Point point = group.OS2ECP(in, len);
+      Botan::EC_Point point = group.OS2ECP(in);
    } catch(Botan::Exception& e) {}
 }
 
 }  // namespace
 
-void fuzz(const uint8_t in[], size_t len) {
-   if(len >= 256) {
+void fuzz(std::span<const uint8_t> in) {
+   if(in.size() >= 256) {
       return;
    }
 
-   static Botan::EC_Group p192("secp192r1");
-   static Botan::EC_Group p224("secp224r1");
-   static Botan::EC_Group p256("secp256r1");
-   static Botan::EC_Group p384("secp384r1");
-   static Botan::EC_Group p521("secp521r1");
-   static Botan::EC_Group bp256("brainpool256r1");
-   static Botan::EC_Group bp512("brainpool512r1");
+   static Botan::EC_Group p192 = Botan::EC_Group::from_name("secp192r1");
+   static Botan::EC_Group p224 = Botan::EC_Group::from_name("secp224r1");
+   static Botan::EC_Group p256 = Botan::EC_Group::from_name("secp256r1");
+   static Botan::EC_Group p384 = Botan::EC_Group::from_name("secp384r1");
+   static Botan::EC_Group p521 = Botan::EC_Group::from_name("secp521r1");
+   static Botan::EC_Group bp256 = Botan::EC_Group::from_name("brainpool256r1");
+   static Botan::EC_Group bp512 = Botan::EC_Group::from_name("brainpool512r1");
 
-   check_os2ecp(p192, in, len);
-   check_os2ecp(p224, in, len);
-   check_os2ecp(p256, in, len);
-   check_os2ecp(p384, in, len);
-   check_os2ecp(p521, in, len);
-   check_os2ecp(p521, in, len);
-   check_os2ecp(bp256, in, len);
-   check_os2ecp(bp512, in, len);
+   check_os2ecp(p192, in);
+   check_os2ecp(p224, in);
+   check_os2ecp(p256, in);
+   check_os2ecp(p384, in);
+   check_os2ecp(p521, in);
+   check_os2ecp(p521, in);
+   check_os2ecp(bp256, in);
+   check_os2ecp(bp512, in);
 }
