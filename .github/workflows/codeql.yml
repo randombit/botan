@@ -39,7 +39,7 @@ jobs:
           config-file: ./src/configs/codeql.yml
 
       - name: Build Library
-        run: ./src/scripts/ci_build.py codeql
+        run: ./src/scripts/ci_build.py --compiler-cache=none codeql
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
