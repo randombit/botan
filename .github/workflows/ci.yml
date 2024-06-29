@@ -178,6 +178,9 @@ jobs:
           - target: format
             compiler: gcc
             host_os: ubuntu-24.04
+          - target: limbo
+            compiler: gcc
+            host_os: ubuntu-24.04
 
     runs-on: ${{ matrix.host_os }}
 
