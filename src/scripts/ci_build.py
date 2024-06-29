@@ -163,15 +163,17 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         test_cmd += ['--report-properties=%s' %
                      ','.join(['%s:%s' % (sanitize_kv(k), sanitize_kv(v)) for k, v in report_props.items()])]
 
-    install_prefix = tempfile.mkdtemp(prefix='botan-install-')
 
-    flags = ['--prefix=%s' % (install_prefix),
-             '--cc=%s' % (target_cc),
+    flags = ['--cc=%s' % (target_cc),
              '--os=%s' % (target_os),
              '--build-targets=%s' % ','.join(build_targets(target, target_os)),
              '--with-build-dir=%s' % build_dir,
              '--link-method=symlink',
              '--enable-experimental-features']
+
+    if target in ['shared', 'static']:
+        install_prefix = tempfile.mkdtemp(prefix='botan-install-')
+        flags += ['--prefix=%s' % (install_prefix)]
 
     if ccache is not None:
         flags += ['--no-store-vc-rev', '--compiler-cache=%s' % (ccache)]
@@ -774,7 +776,7 @@ def main(args=None):
         if target in ['shared', 'coverage'] and not (options.os == 'windows' and options.cpu == 'x86'):
             cmds.append([py_interp, '-b'] + python_tests)
 
-        if target in ['shared', 'static', 'bsi', 'nist']:
+        if target in ['shared', 'static']:
             cmds.append(make_cmd + ['install'])
             build_config = os.path.join(build_dir, 'build', 'build_config.json')
             cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/ci_check_install.py'), build_config])
