@@ -17,7 +17,7 @@ New Ciphers/Hashes/MACs
 * Skein-MAC
 * FFX format preserving encryption (NIST 800-38G)
 * Adiantum (https://eprint.iacr.org/2018/720)
-* HPKE (draft-irtf-cfrg-hpke)
+* HPKE (RFC 9180)
 * Blake3
 
 Improved Ciphers Implementations
@@ -40,9 +40,7 @@ Public Key Crypto, Math
 ----------------------------------------
 
 * Short vector optimization for BigInt
-* Abstract representation of ECC point elements to allow specific
-  implementations of the field arithmetic depending upon the curve.
-* Curves for pairings (BLS12-381)
+* BLS12-381 pairing, BLS signatures
 * Identity based encryption
 * Paillier homomorphic cryptosystem
 * New PAKEs (pending CFRG bakeoff results)
@@ -57,15 +55,14 @@ Utility Functions
 External Providers, Hardware Support
 ----------------------------------------
 
-* Add support for ARMv8.4-A SHA-3, SM3 and RNG
-* Aarch64 inline asm for BigInt
+* Add support for ARMv8.4-A SHA-3, SM3 and RNG instructions
+* Aarch64 inline asm for mp
 * /dev/crypto provider (ciphers, hashes)
 * Windows CryptoNG provider (ciphers, hashes)
 * Extend Apple CommonCrypto provider (HMAC, CMAC, RSA, ECDSA, ECDH)
 * Add support for iOS keychain access
 * POWER8 SHA-2 extensions (GH #1486 + #1487)
 * Add support for VPSUM on big-endian PPC64 (GH #2252)
-* TPM 2.0 support
 
 TLS
 ----------------------------------------
@@ -90,7 +87,7 @@ New Protocols / Formats
 ----------------------------------------
 
 * Noise protocol
-* ACME protocol
+* ACME protocol (needs a story for JSON)
 * Cryptographic Message Syntax (RFC 5652)
 * Fernet symmetric encryption (https://cryptography.io/en/latest/fernet/)
 * RNCryptor format (https://github.com/RNCryptor/RNCryptor)
@@ -129,8 +126,6 @@ Build/Test
   so it can run as a standalone item (copied to a device, etc)
 * Run iOS binary under simulator in CI
 * Run Android binary under simulator in CI
-* Run the TPM tests against an emulator
-  (https://github.com/PeterHuewe/tpm-emulator)
 * Add support for vxWorks
 
 CLI
