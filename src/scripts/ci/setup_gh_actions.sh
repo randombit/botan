@@ -76,6 +76,10 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "lint" ]; then
         sudo apt-get -qq install pylint python3-matplotlib
 
+    elif [ "$TARGET" = "limbo" ]; then
+        sudo apt-get -qq install python3-dateutil
+        wget https://raw.githubusercontent.com/C2SP/x509-limbo/bd88042508ccfde351b2fee293aebda8971fbebb/limbo.json -O "${SCRIPT_LOCATION}/../../../limbo.json"
+
     elif [ "$TARGET" = "coverage" ] || [ "$TARGET" = "sanitizer" ]; then
         if [ "$TARGET" = "coverage" ]; then
             sudo apt-get -qq install lcov python3-coverage

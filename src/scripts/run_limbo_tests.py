@@ -105,8 +105,6 @@ tests_that_succeed_unexpectedly = {
 tests_that_fail_unexpectedly = {
     'rfc5280::nc::permitted-ipv6-match': 'IPv6 name constraints not implemented',
 
-    'rfc5280::nc::permitted-dn-match': 'https://github.com/C2SP/x509-limbo/issues/282',
-
     'cve::cve-2024-0567': 'Possible path building bug',
     'rfc5280::root-and-intermediate-swapped': 'Possible path building bug',
     'rfc5280::nc::permitted-self-issued': 'Possible path building bug',
@@ -167,7 +165,8 @@ def main(args = None):
         run_only = re.compile(options.run_only)
 
     limbo_file = args[1]
-    limbo_json = json.loads(open(limbo_file).read())
+    limbo_contents = open(limbo_file).read()
+    limbo_json = json.loads(limbo_contents)
 
     if limbo_json['version'] != 1:
         print("Unexpected version in %s" % (limbo_file))

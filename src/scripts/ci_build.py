@@ -55,6 +55,7 @@ def known_targets():
         'fuzzers',
         'hybrid-tls13-interop-test',
         'lint',
+        'limbo',
         'minimized',
         'nist',
         'sanitizer',
@@ -104,6 +105,8 @@ def build_targets(target, target_os):
 
     if target not in ['examples']:
         yield 'cli'
+
+    if target not in ['examples', 'limbo']:
         yield 'tests'
 
     if target in ['coverage']:
@@ -201,14 +204,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         # tls is optional for bsi/nist but add it so verify tests work with these minimized configs
         flags += ['--module-policy=%s' % (target), '--enable-modules=tls12']
 
-    if target == 'docs':
+    if target in ['docs']:
         flags += ['--with-doxygen', '--with-sphinx', '--with-rst2man']
-        test_cmd = None
 
-    if target == 'codeql':
-        test_cmd = None
-
-    if target == 'hybrid-tls13-interop-test':
+    if target in ['docs', 'codeql', 'hybrid-tls13-interop-test', 'limbo']:
         test_cmd = None
 
     if target == 'cross-win64':
@@ -745,6 +744,10 @@ def main(args=None):
                          '-num-workers', str(4*get_concurrency()),
                          '-shim-path', os.path.abspath(os.path.join(build_dir, 'botan_bogo_shim')),
                          '-shim-config', os.path.abspath(os.path.join(root_dir, 'src', 'bogo_shim', 'config.json'))])
+
+        if target in ['limbo']:
+            cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/run_limbo_tests.py'),
+                         os.path.join(root_dir, 'limbo.json')])
 
         if target in ['coverage', 'fuzzers']:
             cmds.append([py_interp, os.path.join(root_dir, 'src/scripts/test_fuzzers.py'),
