@@ -74,7 +74,7 @@ class BOTAN_PUBLIC_API(3, 1) Sphincs_Parameters final {
       /**
        * @returns SPHINCS+ security parameter in bytes
        */
-      uint32_t n() const { return m_n; }
+      size_t n() const { return m_n; }
 
       /**
        * @returns Height of the SPHINCS+ hypertree
