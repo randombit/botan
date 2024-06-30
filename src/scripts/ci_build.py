@@ -542,7 +542,7 @@ def parse_args(args):
                       help='Set number of jobs to run in parallel (default %default)')
 
     parser.add_option('--compiler-cache', default=None, metavar='CC',
-                      help='Set a compiler cache to use (ccache, sccache)')
+                      help='Set a compiler cache to use (ccache, sccache, none)')
 
     parser.add_option('--pkcs11-lib', default=os.getenv('PKCS11_LIB'), metavar='LIB',
                       help='Set PKCS11 lib to use for testing')
@@ -632,6 +632,9 @@ def main(args=None):
             options.compiler_cache = 'ccache'
         if options.compiler_cache:
             print("Found '%s' installed, will use it..." % (options.compiler_cache))
+
+    if options.compiler_cache == 'none':
+        options.compiler_cache = None
 
     if options.compiler_cache not in [None, 'ccache', 'sccache']:
         raise Exception("Don't know about %s as a compiler cache" % (options.compiler_cache))
