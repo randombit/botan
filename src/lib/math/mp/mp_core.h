@@ -384,7 +384,7 @@ inline constexpr void bigint_monty_maybe_sub(size_t N, W z[], W x0, const W x[],
       z[i] = word_sub(x[i], p[i], &borrow);
    }
 
-   word_sub(x0, static_cast<W>(0), &borrow);
+   borrow = (x0 - borrow) > x0;
 
    CT::conditional_assign_mem(borrow, z, x, N);
 }
@@ -418,7 +418,7 @@ inline constexpr void bigint_monty_maybe_sub(W z[N], W x0, const W x[N], const W
       }
    }
 
-   word_sub(x0, static_cast<W>(0), &borrow);
+   borrow = (x0 - borrow) > x0;
 
    CT::conditional_assign_mem(borrow, z, x, N);
 }
@@ -1093,6 +1093,57 @@ void bigint_mul(word z[],
                 size_t ws_size);
 
 void bigint_sqr(word z[], size_t z_size, const word x[], size_t x_size, size_t x_sw, word workspace[], size_t ws_size);
+
+/**
+* Return 2**B - C
+*/
+template <WordType W, size_t N, W C>
+consteval std::array<W, N> crandall_p() {
+   static_assert(C % 2 == 1);
+   std::array<W, N> P;
+   for(size_t i = 0; i != N; ++i) {
+      P[i] = WordInfo<W>::max;
+   }
+   P[0] = WordInfo<W>::max - (C - 1);
+   return P;
+}
+
+/**
+* Reduce z modulo p = 2**B - C where C is small
+*
+* z is assumed to be at most (p-1)**2
+*
+* For details on the algorithm see
+* - Handbook of Applied Cryptography, Algorithm 14.47
+* - Guide to Elliptic Curve Cryptography, Algorithm 2.54 and Note 2.55
+*
+*/
+template <WordType W, size_t N, W C>
+constexpr std::array<W, N> redc_crandall(std::span<const W, 2 * N> z) {
+   static_assert(N >= 2);
+
+   std::array<W, N> hi = {};
+
+   // hi = hi * c + lo
+
+   W carry = 0;
+   for(size_t i = 0; i != N; ++i) {
+      hi[i] = word_madd3(z[i + N], C, z[i], &carry);
+   }
+
+   // hi += carry * C
+   word carry_c[2] = {0};
+   carry_c[0] = word_madd2(carry, C, &carry_c[1]);
+
+   carry = bigint_add2_nc(hi.data(), N, carry_c, 2);
+
+   constexpr auto P = crandall_p<W, N, C>();
+
+   std::array<W, N> r = {};
+   bigint_monty_maybe_sub<N, W>(r.data(), carry, hi.data(), P.data());
+
+   return r;
+}
 
 }  // namespace Botan
 

@@ -12,7 +12,6 @@ namespace Botan::PCurve {
 
 namespace {
 
-// clang-format off
 namespace secp521r1 {
 
 template <typename Params>
@@ -22,11 +21,7 @@ class P521Rep final {
       static constexpr size_t N = Params::N;
       typedef typename Params::W W;
 
-      constexpr static std::array<W, N> one() {
-         std::array<W, N> one = {};
-         one[0] = 1;
-         return one;
-      }
+      constexpr static std::array<W, N> one() { return std::array<W, N>{1}; }
 
       constexpr static std::array<W, N> redc(const std::array<W, 2 * N>& z) {
          constexpr W TOP_MASK = static_cast<W>(0x1FF);
@@ -58,6 +53,7 @@ class P521Rep final {
       constexpr static std::array<W, N> from_rep(const std::array<W, N>& z) { return z; }
 };
 
+// clang-format off
 class Params final : public EllipticCurveParameters<
    "1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
    "1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC",
@@ -68,11 +64,11 @@ class Params final : public EllipticCurveParameters<
    -4> {
 };
 
+// clang-format on
+
 class Curve final : public EllipticCurve<Params, P521Rep> {};
 
-}
-
-// clang-format on
+}  // namespace secp521r1
 
 }  // namespace
 

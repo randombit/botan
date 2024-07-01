@@ -12,9 +12,33 @@ namespace Botan::PCurve {
 
 namespace {
 
-// clang-format off
 namespace secp256k1 {
 
+template <typename Params>
+class Secp256k1Rep final {
+   public:
+      static constexpr auto P = Params::P;
+      static constexpr size_t N = Params::N;
+      typedef typename Params::W W;
+
+      static_assert(WordInfo<W>::bits >= 33);
+
+      static constexpr W C = 0x1000003d1;
+
+      constexpr static std::array<W, N> one() { return std::array<W, N>{1}; }
+
+      constexpr static std::array<W, N> redc(const std::array<W, 2 * N>& z) {
+         return redc_crandall<W, N, C>(std::span{z});
+      }
+
+      constexpr static std::array<W, N> to_rep(const std::array<W, N>& x) { return x; }
+
+      constexpr static std::array<W, N> wide_to_rep(const std::array<W, 2 * N>& x) { return redc(x); }
+
+      constexpr static std::array<W, N> from_rep(const std::array<W, N>& z) { return z; }
+};
+
+// clang-format off
 class Params final : public EllipticCurveParameters<
    "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F",
    "0",
@@ -24,11 +48,15 @@ class Params final : public EllipticCurveParameters<
    "483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8"> {
 };
 
-class Curve final : public EllipticCurve<Params> {};
-
-}
-
 // clang-format on
+
+#if BOTAN_MP_WORD_BITS == 64
+class Curve final : public EllipticCurve<Params, Secp256k1Rep> {};
+#else
+class Curve final : public EllipticCurve<Params> {};
+#endif
+
+}  // namespace secp256k1
 
 }  // namespace
 
