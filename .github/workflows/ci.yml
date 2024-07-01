@@ -270,6 +270,9 @@ jobs:
           - target: cross-riscv64
             compiler: gcc
             host_os: ubuntu-24.04
+          - target: cross-mips64
+            compiler: gcc
+            host_os: ubuntu-24.04
           - target: cross-s390x
             compiler: gcc
             host_os: ubuntu-24.04

@@ -57,6 +57,9 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "cross-riscv64" ]; then
         sudo apt-get -qq install qemu-user g++-riscv64-linux-gnu
 
+    elif [ "$TARGET" = "cross-mips64" ]; then
+        sudo apt-get -qq install qemu-user g++-mips64-linux-gnuabi64
+
     elif [ "$TARGET" = "cross-s390x" ]; then
         sudo apt-get -qq install qemu-user g++-s390x-linux-gnu
 

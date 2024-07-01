@@ -733,9 +733,8 @@ class Filter_Tests final : public Test {
 
          result.test_eq("Message count after end_msg", pipe.message_count(), 2 + filter_count);
          for(size_t i = 0; i != filter_count; ++i) {
-            result.test_eq("Output " + std::to_string(i),
-                           pipe.read_all(2 + i),
-                           "327AD8055223F5926693D8BEA40F7B35BDEEB535647DFB93F464E40EA01939A9");
+            result.test_eq(
+               "Output", pipe.read_all(2 + i), "327AD8055223F5926693D8BEA40F7B35BDEEB535647DFB93F464E40EA01939A9");
          }
    #endif
          return result;
