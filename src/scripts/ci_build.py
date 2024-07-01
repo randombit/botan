@@ -363,7 +363,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 flags += ['--cpu=mips64', '--with-endian=big']
                 cc_bin = 'mips64-linux-gnuabi64-g++'
                 test_prefix = ['qemu-mips64', '-L', '/usr/mips64-linux-gnuabi64/']
-                test_cmd.remove('simd_32') # no SIMD on MIPS
             elif target in ['cross-arm32-baremetal']:
                 flags += ['--cpu=arm32', '--disable-neon', '--without-stack-protector', '--ldflags=-specs=nosys.specs']
                 cc_bin = 'arm-none-eabi-c++'
