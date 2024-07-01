@@ -177,6 +177,10 @@ The following enum values are defined in the FFI header:
    calling :cpp:func:`botan_hash_destroy` on a ``botan_rng_t`` object will cause
    this error.
 
+.. cpp:enumerator:: BOTAN_FFI_TPM_ERROR = -78
+
+   An error occured when performing TPM2 interactions.
+
 .. cpp:enumerator:: BOTAN_FFI_ERROR_UNKNOWN_ERROR = -100
 
    Something bad happened, but we are not sure why or how.

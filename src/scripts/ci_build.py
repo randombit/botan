@@ -404,6 +404,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
         if target_os == 'linux':
             flags += ['--with-lzma']
+            if target in ['coverage', 'sanitizer', 'shared']:
+                flags += ['--with-tpm2']
 
         if target in ['coverage']:
             flags += ['--with-tpm']
