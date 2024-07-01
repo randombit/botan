@@ -27,7 +27,7 @@ Version 3.5.0, Not Yet Released
   would only ever return parameters using 1 MB.
 
 * Constant time programming improvements including ``CT::value_barrier``
-  and ``CT::Choice`` (GH #4115 #4096 #4108)
+  and ``CT::Choice`` (GH #4154 #4115 #4096 #4108)
 
 * Refactor and optimize AlternativeName. This includes a new API.
   The old API is retained but deprecated. (GH #4034)
@@ -57,6 +57,11 @@ Version 3.5.0, Not Yet Released
 
 * Fix a number of bugs related to name constraint processing. (GH #4074)
 
+* Add support for parsing TNAuthList (secure telephony identity credentials
+  extension) from RFC 8226. (GH #4116)
+
+* Add One-Step KDF from SP 800-56C (GH #4121)
+
 * Fix a bug in RFC 6979 mode ECDSA. This only caused problems when
   testing with certain curves and does not have any security or interop
   implications. (GH #4040)
@@ -85,7 +90,7 @@ Version 3.5.0, Not Yet Released
   this occured, any other values (eg opts.dns) would be ignored. (GH #4032)
 
 * Various low level multi precision integer refactorings and improvements.
-  (GH #4007 #4008 #3989 #3987)
+  (GH #4156 #4149 #4007 #4008 #3989 #3987)
 
 * Increase the maximum supported key length of KMAC to 192 bytes (GH #4109)
 
