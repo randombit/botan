@@ -13,7 +13,7 @@ Version 3.5.0, Not Yet Released
 
 * Optimize processing in FFI ``botan_cipher_update`` (GH #3951)
 
-* Add ``Public_Key::raw_public_key_bits`` (GH #)
+* Add ``Public_Key::raw_public_key_bits`` (GH #3985)
 
 * Optimize XTS mode (GH #4047)
 
