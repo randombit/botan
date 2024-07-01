@@ -158,13 +158,16 @@ EC_Point EC_Point_Base_Point_Precompute::mul(const BigInt& k,
    return R;
 }
 
-EC_Point_Var_Point_Precompute::EC_Point_Var_Point_Precompute(const EC_Point& point,
+EC_Point_Var_Point_Precompute::EC_Point_Var_Point_Precompute(const EC_Point& ipoint,
                                                              RandomNumberGenerator& rng,
                                                              std::vector<BigInt>& ws) :
-      m_curve(point.get_curve()), m_p_words(m_curve.get_p_words()), m_window_bits(4) {
+      m_curve(ipoint.get_curve()), m_p_words(m_curve.get_p_words()), m_window_bits(4) {
    if(ws.size() < EC_Point::WORKSPACE_SIZE) {
       ws.resize(EC_Point::WORKSPACE_SIZE);
    }
+
+   auto point = ipoint;
+   point.randomize_repr(rng);
 
    std::vector<EC_Point> U(static_cast<size_t>(1) << m_window_bits);
    U[0] = point.zero();
@@ -259,7 +262,7 @@ EC_Point EC_Point_Var_Point_Precompute::mul(const BigInt& k,
       windows--;
    }
 
-   BOTAN_DEBUG_ASSERT(R.on_the_curve());
+   BOTAN_ASSERT_NOMSG(R.on_the_curve());
 
    return R;
 }

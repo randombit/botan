@@ -47,6 +47,14 @@ class ECC_Basepoint_Mul_Tests final : public Text_Based_Test {
          const Botan::EC_Point p3 = group.blinded_var_point_multiply(base_point, k, this->rng(), ws);
          result.test_eq("blinded_var_point_multiply", p3, pt);
 
+         const auto scalar = Botan::EC_Scalar::from_bigint(group, k);
+         const auto apg = Botan::EC_AffinePoint::g_mul(scalar, this->rng(), ws);
+         result.test_eq("AffinePoint::g_mul", apg.serialize_uncompressed(), P_bytes);
+
+         const auto ag = Botan::EC_AffinePoint(group, base_point);
+         const auto ap = ag.mul(scalar, this->rng(), ws);
+         result.test_eq("AffinePoint::mul", ap.to_legacy_point(), pt);
+
          return result;
       }
 };

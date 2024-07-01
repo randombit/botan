@@ -66,17 +66,9 @@ class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override {
          const EC_Group& group = m_key.domain();
-
-         EC_Point input_point = group.OS2ECP(w, w_len);
-         input_point.randomize_repr(m_rng);
-
-         const EC_Point S = group.blinded_var_point_multiply(input_point, m_key.private_value(), m_rng, m_ws);
-
-         if(S.on_the_curve() == false) {
-            throw Internal_Error("ECDH agreed value was not on the curve");
-         }
-
-         return S.x_bytes();
+         const EC_AffinePoint input_point(group, group.OS2ECP(w, w_len));
+         const auto x = EC_Scalar::from_bigint(group, m_key.private_value());
+         return input_point.mul(x, m_rng, m_ws).x_bytes();
       }
 
    private:

@@ -2,7 +2,7 @@
 * GOST 34.10-2012
 * (C) 2007 Falko Strenzke, FlexSecure GmbH
 *          Manuel Hartl, FlexSecure GmbH
-* (C) 2008-2010,2015,2018 Jack Lloyd
+* (C) 2008-2010,2015,2018,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -11,10 +11,8 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
-#include <botan/reducer.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/internal/point_mul.h>
 
 namespace Botan {
 
@@ -72,7 +70,7 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id, std:
    BER_Decoder(key_bits).decode(bits, ASN1_Type::OctetString);
 
    if(bits.size() != 2 * (p_bits / 8)) {
-      throw Decoding_Error("GOST-34.10-2020 invalid encoding of public key");
+      throw Decoding_Error("GOST-34.10-2012 invalid encoding of public key");
    }
 
    const size_t part_size = bits.size() / 2;
@@ -105,14 +103,15 @@ std::unique_ptr<Public_Key> GOST_3410_PrivateKey::public_key() const {
 
 namespace {
 
-BigInt decode_le(const uint8_t msg[], size_t msg_len) {
-   secure_vector<uint8_t> msg_le(msg, msg + msg_len);
+EC_Scalar gost_msg_to_scalar(const EC_Group& group, std::span<const uint8_t> msg) {
+   std::vector<uint8_t> rev_bytes(msg.rbegin(), msg.rend());
 
-   for(size_t i = 0; i != msg_le.size() / 2; ++i) {
-      std::swap(msg_le[i], msg_le[msg_le.size() - 1 - i]);
+   auto ie = EC_Scalar::from_bytes_mod_order(group, rev_bytes);
+   if(ie.is_zero()) {
+      return EC_Scalar::one(group);
+   } else {
+      return ie;
    }
-
-   return BigInt(msg_le.data(), msg_le.size());
 }
 
 /**
@@ -121,7 +120,9 @@ BigInt decode_le(const uint8_t msg[], size_t msg_len) {
 class GOST_3410_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    public:
       GOST_3410_Signature_Operation(const GOST_3410_PrivateKey& gost_3410, std::string_view emsa) :
-            PK_Ops::Signature_with_Hash(emsa), m_group(gost_3410.domain()), m_x(gost_3410.private_value()) {}
+            PK_Ops::Signature_with_Hash(emsa),
+            m_group(gost_3410.domain()),
+            m_x(EC_Scalar::from_bigint(m_group, gost_3410.private_value())) {}
 
       size_t signature_length() const override { return 2 * m_group.get_order_bytes(); }
 
@@ -131,7 +132,7 @@ class GOST_3410_Signature_Operation final : public PK_Ops::Signature_with_Hash {
 
    private:
       const EC_Group m_group;
-      const BigInt m_x;
+      const EC_Scalar m_x;
       std::vector<BigInt> m_ws;
 };
 
@@ -161,24 +162,17 @@ AlgorithmIdentifier GOST_3410_Signature_Operation::algorithm_identifier() const 
 secure_vector<uint8_t> GOST_3410_Signature_Operation::raw_sign(const uint8_t msg[],
                                                                size_t msg_len,
                                                                RandomNumberGenerator& rng) {
-   const BigInt k = m_group.random_scalar(rng);
+   const auto e = gost_msg_to_scalar(m_group, std::span{msg, msg_len});
 
-   BigInt e = decode_le(msg, msg_len);
+   const auto k = EC_Scalar::random(m_group, rng);
+   const auto r = EC_Scalar::gk_x_mod_order(k, rng, m_ws);
+   const auto s = (r * m_x) + (k * e);
 
-   e = m_group.mod_order(e);
-   if(e.is_zero()) {
-      e = BigInt::one();
-   }
-
-   const BigInt r = m_group.mod_order(m_group.blinded_base_point_multiply_x(k, rng, m_ws));
-
-   const BigInt s = m_group.mod_order(m_group.multiply_mod_order(r, m_x) + m_group.multiply_mod_order(k, e));
-
-   if(r == 0 || s == 0) {
+   if(r.is_zero() || s.is_zero()) {
       throw Internal_Error("GOST 34.10 signature generation failed, r/s equal to zero");
    }
 
-   return BigInt::encode_fixed_length_int_pair(s, r, m_group.get_order_bytes());
+   return EC_Scalar::serialize_pair<secure_vector<uint8_t>>(s, r);
 }
 
 std::string gost_hash_from_algid(const AlgorithmIdentifier& alg_id) {
@@ -209,57 +203,39 @@ std::string gost_hash_from_algid(const AlgorithmIdentifier& alg_id) {
 class GOST_3410_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
       GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, std::string_view padding) :
-            PK_Ops::Verification_with_Hash(padding),
-            m_group(gost.domain()),
-            m_gy_mul(m_group.get_base_point(), gost.public_point()) {}
+            PK_Ops::Verification_with_Hash(padding), m_group(gost.domain()), m_gy_mul(m_group, gost.public_point()) {}
 
       GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(gost_hash_from_algid(alg_id)),
             m_group(gost.domain()),
-            m_gy_mul(m_group.get_base_point(), gost.public_point()) {}
+            m_gy_mul(m_group, gost.public_point()) {}
 
       bool verify(const uint8_t msg[], size_t msg_len, const uint8_t sig[], size_t sig_len) override;
 
    private:
       const EC_Group m_group;
-      const EC_Point_Multi_Point_Precompute m_gy_mul;
+      const EC_Group::Mul2Table m_gy_mul;
 };
 
 bool GOST_3410_Verification_Operation::verify(const uint8_t msg[],
                                               size_t msg_len,
                                               const uint8_t sig[],
                                               size_t sig_len) {
-   if(sig_len != m_group.get_order_bytes() * 2) {
-      return false;
+   if(auto sr = EC_Scalar::deserialize_pair(m_group, std::span{sig, sig_len})) {
+      const auto& [s, r] = sr.value();
+
+      if(r.is_nonzero() && s.is_nonzero()) {
+         const auto e = gost_msg_to_scalar(m_group, std::span{msg, msg_len});
+
+         const auto v = e.invert();
+
+         if(const auto w = m_gy_mul.mul2_vartime_x_mod_order(v, s, r.negate())) {
+            return (w == r);
+         }
+      }
    }
 
-   const BigInt s(sig, sig_len / 2);
-   const BigInt r(sig + sig_len / 2, sig_len / 2);
-
-   const BigInt& order = m_group.get_order();
-
-   if(r <= 0 || r >= order || s <= 0 || s >= order) {
-      return false;
-   }
-
-   BigInt e = decode_le(msg, msg_len);
-   e = m_group.mod_order(e);
-   if(e.is_zero()) {
-      e = BigInt::one();
-   }
-
-   const BigInt v = m_group.inverse_mod_order(e);
-
-   const BigInt z1 = m_group.multiply_mod_order(s, v);
-   const BigInt z2 = m_group.multiply_mod_order(-r, v);
-
-   const EC_Point R = m_gy_mul.multi_exp(z1, z2);
-
-   if(R.is_zero()) {
-      return false;
-   }
-
-   return (R.get_affine_x() == r);
+   return false;
 }
 
 }  // namespace
