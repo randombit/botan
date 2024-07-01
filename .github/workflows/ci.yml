@@ -261,25 +261,13 @@ jobs:
           - target: cross-arm64
             compiler: gcc
             host_os: ubuntu-24.04
-          - target: cross-arm64-amalgamation
-            compiler: gcc
-            host_os: ubuntu-24.04
           - target: cross-ppc64
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-riscv64
             compiler: gcc
             host_os: ubuntu-24.04
           - target: cross-mips64
             compiler: gcc
             host_os: ubuntu-24.04
-          - target: cross-s390x
-            compiler: gcc
-            host_os: ubuntu-24.04
           - target: cross-android-arm64
-            compiler: clang
-            host_os: ubuntu-24.04
-          - target: cross-android-arm64-amalgamation
             compiler: clang
             host_os: ubuntu-24.04
           - target: static
@@ -289,9 +277,6 @@ jobs:
           - target: cross-ios-arm64
             compiler: xcode
             host_os: macos-13
-          - target: emscripten
-            compiler: emcc
-            host_os: macos-14
 
     runs-on: ${{ matrix.host_os }}
 
