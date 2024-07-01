@@ -1,0 +1,16 @@
+<defines>
+KEX_TO_KEM_ADAPTER -> 20240504
+</defines>
+
+<module_info>
+name -> "KEX to KEM adapter"
+</module_info>
+
+
+<header:public>
+kex_to_kem_adapter.h
+</header:public>
+
+<requires>
+
+</requires>

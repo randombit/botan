@@ -82,6 +82,10 @@
    #include <botan/kyber.h>
 #endif
 
+#if defined(BOTAN_HAS_OUNSWORTH)
+   #include <botan/ounsworth.h>
+#endif
+
 #if defined(BOTAN_HAS_HSS_LMS)
    #include <botan/hss_lms.h>
 #endif
@@ -143,6 +147,12 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
    if(alg_name == "Kyber" || alg_name.starts_with("Kyber-")) {
       return std::make_unique<Kyber_PublicKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_OUNSWORTH)
+   if(alg_name == "OunsworthKEMCombiner") {
+      return std::make_unique<Ounsworth_PublicKey>(alg_id, key_bits);
    }
 #endif
 
@@ -296,6 +306,12 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
    if(alg_name == "Kyber" || alg_name.starts_with("Kyber-")) {
       return std::make_unique<Kyber_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_OUNSWORTH)
+   if(alg_name.starts_with("OunsworthKEMCombiner")) {
+      return std::make_unique<Ounsworth_PrivateKey>(alg_id, key_bits);
    }
 #endif
 
@@ -485,6 +501,13 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
       }();
 
       return std::make_unique<Kyber_PrivateKey>(rng, mode);
+   }
+#endif
+
+#if defined(BOTAN_HAS_OUNSWORTH)
+   if(alg_name == "OunsworthKEMCombiner") {
+      const auto mode = Ounsworth::Mode(params);
+      return std::make_unique<Ounsworth_PrivateKey>(rng, mode);
    }
 #endif
 
