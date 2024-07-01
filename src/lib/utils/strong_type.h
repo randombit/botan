@@ -183,17 +183,82 @@ class Strong : public detail::Strong_Adapter<T> {
 };
 
 /**
- * Opportunistically unpacks a strong type to its underlying type. If the
- * provided type is not a strong type, it is returned as is.
+ * @brief Generically unwraps a strong type to its underlying type.
+ *
+ * If the provided type is not a strong type, it is returned as is.
+ *
+ * @note This is meant as a helper for generic code that needs to deal with both
+ *       wrapped strong types and bare objects. Use the ordinary `get()` method
+ *       if you know that you are dealing with a strong type.
+ *
+ * @param t  value to be unwrapped
+ * @return   the unwrapped value
  */
 template <typename T>
-constexpr decltype(auto) unpack(T& t) {
-   if constexpr(concepts::strong_type<std::remove_cvref_t<T>>) {
-      return t.get();
+[[nodiscard]] constexpr decltype(auto) unwrap_strong_type(T&& t) {
+   if constexpr(!concepts::strong_type<std::remove_cvref_t<T>>) {
+      // If the parameter type isn't a strong type, return it as is.
+      return std::forward<T>(t);
    } else {
-      return t;
+      return std::forward<T>(t).get();
    }
 }
+
+/**
+ * @brief Wraps a value into a caller-defined (strong) type.
+ *
+ * If the provided object @p t is already of type @p T, it is returned as is.
+ *
+ * @note This is meant as a helper for generic code that needs to deal with both
+ *       wrapped strong types and bare objects. Use the ordinary constructor if
+ *       you know that you are dealing with a bare value type.
+ *
+ * @param t  value to be wrapped
+ * @return   the wrapped value
+ */
+template <typename T, typename ParamT>
+   requires std::constructible_from<T, ParamT> ||
+            (concepts::strong_type<T> && std::constructible_from<typename T::wrapped_type, ParamT>)
+[[nodiscard]] constexpr decltype(auto) wrap_strong_type(ParamT&& t) {
+   if constexpr(std::same_as<std::remove_cvref_t<ParamT>, T>) {
+      // Noop, if the parameter type already is the desired return type.
+      return std::forward<ParamT>(t);
+   } else if constexpr(std::constructible_from<T, ParamT>) {
+      // Implicit conversion from the parameter type to the return type.
+      return T{std::forward<ParamT>(t)};
+   } else {
+      // Explicitly calling the wrapped type's constructor to support
+      // implicit conversions on types that mark their constructors as explicit.
+      static_assert(concepts::strong_type<T> && std::constructible_from<typename T::wrapped_type, ParamT>);
+      return T{typename T::wrapped_type{std::forward<ParamT>(t)}};
+   }
+}
+
+namespace detail {
+
+template <typename T>
+struct wrapped_type_helper {
+      using type = T;
+};
+
+template <concepts::strong_type T>
+struct wrapped_type_helper<T> {
+      using type = typename T::wrapped_type;
+};
+
+}  // namespace detail
+
+/**
+ * @brief Extracts the wrapped type from a strong type.
+ *
+ * If the provided type is not a strong type, it is returned as is.
+ *
+ * @note This is meant as a helper for generic code that needs to deal with both
+ *       wrapped strong types and bare objects. Use the ordinary `::wrapped_type`
+ *       declaration if you know that you are dealing with a strong type.
+ */
+template <typename T>
+using strong_type_wrapped_type = typename detail::wrapped_type_helper<std::remove_cvref_t<T>>::type;
 
 template <typename T, typename... Tags>
    requires(concepts::streamable<T>)
