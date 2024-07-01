@@ -28,8 +28,8 @@ class VecDocument:
         last_group_name = ""
         current_testcase = {}
 
-        PATTERN_GROUPHEADER = "^\[(.+)\]$"
-        PATTERN_KEYVALUE = "^\s*([a-zA-Z]+)\s*=(.*)$"
+        PATTERN_GROUPHEADER = r"^\[(.+)\]$"
+        PATTERN_KEYVALUE = r"^\s*([a-zA-Z]+)\s*=(.*)$"
 
         with open(filepath, 'r') as f:
             # Append one empty line to simplify parsing
