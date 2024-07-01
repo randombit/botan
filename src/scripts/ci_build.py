@@ -210,6 +210,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target in ['docs', 'codeql', 'hybrid-tls13-interop-test', 'limbo']:
         test_cmd = None
 
+    if target in ['codeql']:
+        flags += ['--no-optimizations']
+
     if target == 'cross-win64':
         # this test compiles under MinGW but fails when run under Wine
         disabled_tests.append('certstor_system')
