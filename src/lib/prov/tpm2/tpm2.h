@@ -50,7 +50,7 @@ class BOTAN_PUBLIC_API(3, 6) TPM2_Context final {
       TPM2_Context& operator=(TPM2_Context&& ctx) noexcept = default;
 
       /// @return an ESYS_CONTEXT* for use in other TPM2 functions.
-      void* get();
+      void* inner_context_object();
 
    private:
       TPM2_Context(const char* tcti_nameconf);

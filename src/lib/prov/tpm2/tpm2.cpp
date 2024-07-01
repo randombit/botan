@@ -46,7 +46,7 @@ TPM2_Context::TPM2_Context(const char* tcti_nameconf) : m_impl(std::make_unique<
    check_tss2_rc("TPM2 Initialization", Esys_Initialize(&m_impl->m_ctx, m_impl->m_tcti_ctx, nullptr /* ABI version */));
 }
 
-void* TPM2_Context::get() {
+void* TPM2_Context::inner_context_object() {
    return m_impl->m_ctx;
 }
 
