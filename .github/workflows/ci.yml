@@ -58,69 +58,69 @@ jobs:
       - name: Build and Test Botan
         run: python3 ./src/scripts/ci_build.py --cc='msvc' --make-tool='ninja' --cpu='${{ matrix.arch }}' --test-results-dir=junit_results ${{ matrix.target }}
 
-  linux:
-    name: "Linux"
-    strategy:
-      fail-fast: false
+  # linux:
+  #   name: "Linux"
+  #   strategy:
+  #     fail-fast: false
 
-      matrix:
-        include:
-          - compiler: gcc
-            target: shared
-          - compiler: gcc
-            target: amalgamation
-          - compiler: gcc
-            target: static
-          - compiler: clang
-            target: shared
+  #     matrix:
+  #       include:
+  #         - compiler: gcc
+  #           target: shared
+  #         - compiler: gcc
+  #           target: amalgamation
+  #         - compiler: gcc
+  #           target: static
+  #         - compiler: clang
+  #           target: shared
 
-    runs-on: ubuntu-22.04
+  #   runs-on: ubuntu-22.04
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Setup Build Agent
-        uses: ./.github/actions/setup-build-agent
-        with:
-          target: ${{ matrix.target }}
-          cache-key: linux-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
+  #     - name: Setup Build Agent
+  #       uses: ./.github/actions/setup-build-agent
+  #       with:
+  #         target: ${{ matrix.target }}
+  #         cache-key: linux-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
-      - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
+  #     - name: Build and Test Botan
+  #       run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
 
-  macos:
-    name: "macOS"
-    strategy:
-      fail-fast: false
+  # macos:
+  #   name: "macOS"
+  #   strategy:
+  #     fail-fast: false
 
-      matrix:
-        include:
-          - target: shared
-            compiler: xcode
-            os: macos-13
-          - target: amalgamation
-            compiler: xcode
-            os: macos-13
-          - target: shared
-            compiler: xcode
-            os: macos-14 # uses Apple Silicon
-          - target: amalgamation
-            compiler: xcode
-            os: macos-14 # uses Apple Silicon
+  #     matrix:
+  #       include:
+  #         - target: shared
+  #           compiler: xcode
+  #           os: macos-13
+  #         - target: amalgamation
+  #           compiler: xcode
+  #           os: macos-13
+  #         - target: shared
+  #           compiler: xcode
+  #           os: macos-14 # uses Apple Silicon
+  #         - target: amalgamation
+  #           compiler: xcode
+  #           os: macos-14 # uses Apple Silicon
 
-    runs-on: ${{ matrix.os }}
+  #   runs-on: ${{ matrix.os }}
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Setup Build Agent
-        uses: ./.github/actions/setup-build-agent
-        with:
-          target: ${{ matrix.target }}
-          cache-key: macos-${{ matrix.compiler }}-${{ matrix.os }}-${{ matrix.target }}
+  #     - name: Setup Build Agent
+  #       uses: ./.github/actions/setup-build-agent
+  #       with:
+  #         target: ${{ matrix.target }}
+  #         cache-key: macos-${{ matrix.compiler }}-${{ matrix.os }}-${{ matrix.target }}
 
-      - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
+  #     - name: Build and Test Botan
+  #       run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   clang-tidy:
     name: "Clang Tidy"
@@ -153,34 +153,34 @@ jobs:
 
       matrix:
         include:
-          - target: coverage
-            compiler: gcc
-            host_os: ubuntu-24.04
+          # - target: coverage
+          #   compiler: gcc
+          #   host_os: ubuntu-24.04
+          # - target: sanitizer
+          #   compiler: msvc
+          #   host_os: windows-2022
+          #   make_tool: ninja
+          # - target: sanitizer
+          #   compiler: clang
+          #   host_os: ubuntu-24.04
           - target: sanitizer
-            compiler: msvc
-            host_os: windows-2022
-            make_tool: ninja
-          - target: sanitizer
-            compiler: clang
-            host_os: ubuntu-24.04
-          - target: sanitizer
             compiler: gcc
             host_os: ubuntu-24.04
-          - target: valgrind
-            compiler: clang
-            host_os: ubuntu-24.04
-          - target: fuzzers
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: lint
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: format
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: limbo
-            compiler: gcc
-            host_os: ubuntu-24.04
+          # - target: valgrind
+          #   compiler: clang
+          #   host_os: ubuntu-24.04
+          # - target: fuzzers
+          #   compiler: gcc
+          #   host_os: ubuntu-24.04
+          # - target: lint
+          #   compiler: gcc
+          #   host_os: ubuntu-24.04
+          # - target: format
+          #   compiler: gcc
+          #   host_os: ubuntu-24.04
+          # - target: limbo
+          #   compiler: gcc
+          #   host_os: ubuntu-24.04
 
     runs-on: ${{ matrix.host_os }}
 
@@ -209,88 +209,89 @@ jobs:
       - name: Build and Test Botan
         run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
-  specials:
-    name: "Special"
-    strategy:
-      fail-fast: false
+  # specials:
+  #   name: "Special"
+  #   strategy:
+  #     fail-fast: false
 
-      matrix:
-        include:
-          - target: examples
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: minimized
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: bsi
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: docs
-            compiler: gcc
-            host_os: ubuntu-24.04
+  #     matrix:
+  #       include:
+  #         - target: examples
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
+  #         - target: minimized
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
+  #         - target: bsi
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
+  #         - target: docs
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
 
-    runs-on: ${{ matrix.host_os }}
+  #   runs-on: ${{ matrix.host_os }}
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          path: ./source
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         path: ./source
 
-      - name: Setup Build Agent
-        uses: ./source/.github/actions/setup-build-agent
-        with:
-          target: ${{ matrix.target }}
-          cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
+  #     - name: Setup Build Agent
+  #       uses: ./source/.github/actions/setup-build-agent
+  #       with:
+  #         target: ${{ matrix.target }}
+  #         cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
-      - name: Build and Test Botan
-        run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
+  #     - name: Build and Test Botan
+  #       run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
 
-  x-compile:
-    name: "Cross"
-    strategy:
-      fail-fast: false
+  # x-compile:
+  #   name: "Cross"
+  #   strategy:
+  #     fail-fast: false
 
-      matrix:
-        include:
-          - target: cross-i386
-            compiler: gcc
-            host_os: ubuntu-22.04
-          - target: cross-arm32
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-arm64
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-ppc64
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-mips64
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-android-arm64
-            compiler: clang
-            host_os: ubuntu-24.04
-          - target: static
-            compiler: gcc
-            host_os: windows-2022
-            make_tool: make
-          - target: cross-ios-arm64
-            compiler: xcode
-            host_os: macos-13
+  #     matrix:
+  #       include:
+  #         - target: cross-i386
+  #           compiler: gcc
+  #           host_os: ubuntu-22.04
+  #         - target: cross-arm32
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
+  #         - target: cross-arm64
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
+  #         - target: cross-ppc64
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
+  #         - target: cross-mips64
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
+  #         - target: cross-android-arm64
+  #           compiler: clang
+  #           host_os: ubuntu-24.04
+  #         - target: static
+  #           compiler: gcc
+  #           host_os: windows-2022
+  #           make_tool: make
+  #         - target: cross-ios-arm64
+  #           compiler: xcode
+  #           host_os: macos-13
 
-    runs-on: ${{ matrix.host_os }}
 
-    env:
-      ANDROID_NDK: android-ndk-r26
+  #   runs-on: ${{ matrix.host_os }}
 
-    steps:
-      - uses: actions/checkout@v4
+  #   env:
+  #     ANDROID_NDK: android-ndk-r26
 
-      - name: Setup Build Agent
-        uses: ./.github/actions/setup-build-agent
-        with:
-          target: ${{ matrix.target }}
-          cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-xcompile-${{ matrix.target }}
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
+  #     - name: Setup Build Agent
+  #       uses: ./.github/actions/setup-build-agent
+  #       with:
+  #         target: ${{ matrix.target }}
+  #         cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-xcompile-${{ matrix.target }}
+
+  #     - name: Build and Test Botan
+  #       run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}

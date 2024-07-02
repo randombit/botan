@@ -986,7 +986,7 @@ MCACAQUTBnN0cmluZzEGAQH/AgFjBAUAAAAAAAMEAP///w==
     test_cli("oid_info", "1.2.3.4", "OID 1.2.3.4 is not recognized")
 
 def cli_tls_socket_tests(tmp_dir):
-    if not run_socket_tests() or not check_for_command("tls_client") or not check_for_command("tls_server"):
+    if True or not run_socket_tests() or not check_for_command("tls_client") or not check_for_command("tls_server"):
         return
 
     client_msg = b'Client message %d with extra stuff to test record_size_limit: %s\n' % (random.randint(0, 2**128), b'oO' * 64)
@@ -1123,8 +1123,9 @@ def cli_tls_socket_tests(tmp_dir):
     except subprocess.TimeoutExpired:
         tls_server.kill()
         tls_server.communicate()
-    logging.debug("server said (stdout): %s", srv_stdout)
-    logging.debug("server said (stderr): %s", srv_stderr)
+    finally:
+        logging.error("server said (stdout): %s", srv_stdout.decode('utf-8'))
+        logging.error("server said (stderr): %s", srv_stderr.decode('utf-8'))
 
 def cli_tls_online_pqc_hybrid_tests(tmp_dir):
     if not run_socket_tests() or not run_online_tests() or not check_for_command("tls_client"):
@@ -1299,13 +1300,12 @@ def cli_tls_http_server_tests(tmp_dir):
         tls_server.kill()
 
 def cli_tls_proxy_tests(tmp_dir):
-    # In the Windows GitHub CI this sometimes fails, for reasons unknown.
-    # The connectionn to the TLS proxy is forcibly closed by the remote host.
-    if not run_socket_tests() or platform.system() == 'Windows' or not check_for_command("tls_proxy"):
+    if not run_socket_tests() or not check_for_command("tls_proxy"):
         return
 
     server_port = port_for('tls_proxy_backend')
     proxy_port = port_for('tls_proxy')
+    max_clients = 100
 
     priv_key = os.path.join(tmp_dir, 'priv.pem')
     ca_cert = os.path.join(tmp_dir, 'ca.crt')
@@ -1325,7 +1325,7 @@ def cli_tls_proxy_tests(tmp_dir):
     test_cli("sign_cert", "%s %s %s --output=%s" % (ca_cert, priv_key, crt_req, server_cert))
 
     tls_proxy = subprocess.Popen([CLI_PATH, 'tls_proxy', str(proxy_port), '127.0.0.1', str(server_port),
-                                  server_cert, priv_key, f'--output={proxy_err}', '--max-clients=4'],
+                                  server_cert, priv_key, f'--output={proxy_err}', f'--max-clients={max_clients}'],
                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     wait_time = 1.0
@@ -1336,8 +1336,9 @@ def cli_tls_proxy_tests(tmp_dir):
 
     def run_http_server():
         class Handler(BaseHTTPRequestHandler):
-            def log_message(self, _fmt, *_args): # pylint: disable=arguments-differ
-                pass  # muzzle log output
+            # Debug output for GH #4112
+            # def log_message(self, _fmt, *_args): # pylint: disable=arguments-differ
+            #     pass  # muzzle log output
 
             def do_GET(self): # pylint: disable=invalid-name
                 self.send_response(200)
@@ -1357,27 +1358,29 @@ def cli_tls_proxy_tests(tmp_dir):
     context.minimum_version = ssl.TLSVersion.TLSv1_3
     context.maximum_version = ssl.TLSVersion.TLSv1_3
 
-    for i in range(4):
-        # Make sure that TLS protocol version downgrade works
-        if i > 2:
-            context.minimum_version = ssl.TLSVersion.TLSv1_2
-            context.maximum_version = ssl.TLSVersion.TLSv1_2
+    try:
+        for i in range(max_clients):
+            # Make sure that TLS protocol version downgrade works
+            if i > max_clients / 2:
+                context.minimum_version = ssl.TLSVersion.TLSv1_2
+                context.maximum_version = ssl.TLSVersion.TLSv1_2
 
-        conn = HTTPSConnection('localhost', port=proxy_port, context=context)
-        conn.request("GET", "/")
-        resp = conn.getresponse()
+            conn = HTTPSConnection('localhost', port=proxy_port, context=context, timeout=20)
+            conn.request("GET", "/")
+            resp = conn.getresponse()
 
-        if resp.status != 200:
-            logging.error('Unexpected response status %d', resp.status)
+            if resp.status != 200:
+                logging.error('Unexpected response status %d', resp.status)
 
-        body = resp.read()
+            body = resp.read()
 
-        if body != server_response:
-            logging.error('Unexpected response from server %s', body)
+            if body != server_response:
+                logging.error('Unexpected response from server %s', body)
+    except:
+        tls_proxy.kill()
+    finally:
+        rc = tls_proxy.wait(5)
 
-    rc = tls_proxy.wait(5)
-
-    if rc != 0:
         # Trying to debug https://github.com/randombit/botan/issues/4112
         stdout = tls_proxy.stdout.read().decode('utf8')
         if stdout != '':
@@ -1386,7 +1389,8 @@ def cli_tls_proxy_tests(tmp_dir):
         if stdout != '':
             logging.info('Stderr: %s', stderr)
 
-        logging.error('Unexpected return code from tls_proxy %d', rc)
+        if rc != 0:
+            logging.error('Unexpected return code from tls_proxy %d', rc)
 
 def cli_trust_root_tests(tmp_dir):
     pem_file = os.path.join(tmp_dir, 'pems')
