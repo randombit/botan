@@ -45,9 +45,9 @@ inline auto create_aes_row_generator(const FrodoKEMConstants& constants, StrongS
          for(size_t ii = 4; ii < out_coefs.size(); ++ii) {
             out_coefs[ii] = 0;
          }
-
-         aes.encrypt(out_coefs);
       }
+
+      aes.encrypt(out);
    };
 }
 
