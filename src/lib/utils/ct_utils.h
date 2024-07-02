@@ -16,8 +16,8 @@
 
 #include <botan/secmem.h>
 #include <botan/internal/bit_ops.h>
+#include <optional>
 #include <type_traits>
-#include <vector>
 
 #if defined(BOTAN_HAS_VALGRIND)
    #include <valgrind/memcheck.h>
@@ -172,6 +172,12 @@ class Choice final {
 
       uint32_t m_value;
 };
+
+/**
+* A concept for a type which is conditionally assignable
+*/
+template <typename T>
+concept ct_conditional_assignable = requires(T lhs, const T& rhs, Choice c) { lhs.conditional_assign(c, rhs); };
 
 /**
 * A Mask type used for constant-time operations. A Mask<T> always has value
@@ -420,6 +426,87 @@ class Mask final {
       constexpr Mask(T m) : m_mask(m) {}
 
       T m_mask;
+};
+
+/**
+* A CT::Option<T> is either a valid T, or not
+*
+* To maintain constant time behavior a value must always be stored.
+* A CT::Choice tracks if the value is valid or not. It is not possible
+* to access the inner value if the Choice is unset.
+*/
+template <typename T>
+class Option {
+   public:
+      /// Construct an Option which contains the specified value, and is set or not
+      constexpr Option(T v, Choice valid) : m_has_value(valid), m_value(std::move(v)) {}
+
+      /// Construct a set option with the provided value
+      constexpr Option(T v) : Option(std::move(v), Choice::yes()) {}
+
+      /// Construct an unset option with a default inner value
+      constexpr Option()
+         requires std::default_initializable<T>
+            : Option(T(), Choice::no()) {}
+
+      /// Return true if this Option contains a value
+      constexpr Choice has_value() const { return m_has_value; }
+
+      /**
+      * Apply a function to the inner value and return a new Option
+      * which contains that value. This is constant time only if @p f is.
+      *
+      * @note The function will always be called, even if the Option is None. It
+      *       must be prepared to handle any possible state of T.
+      */
+      template <std::invocable<const T&> F>
+      constexpr auto transform(F f) const -> Option<std::remove_cvref_t<std::invoke_result_t<F, const T&>>> {
+         return {f(m_value), m_has_value};
+      }
+
+      /// Either returns the value or throws an exception
+      constexpr const T& value() const {
+         BOTAN_STATE_CHECK(m_has_value.as_bool());
+         return m_value;
+      }
+
+      /// Returns either the inner value or the alternative, in constant time
+      ///
+      /// This variant is used for types which explicitly define a function
+      /// conditional_assign which takes a CT::Choice as the conditional.
+      constexpr T value_or(T other) const
+         requires ct_conditional_assignable<T>
+      {
+         other.conditional_assign(m_has_value, m_value);
+         return other;
+      }
+
+      /// Returns either the inner value or the alternative, in constant time
+      ///
+      /// This variant is used for integer types where CT::Mask can perform
+      /// a constant time selection
+      constexpr T value_or(T other) const
+         requires std::unsigned_integral<T>
+      {
+         auto mask = CT::Mask<T>::from_choice(m_has_value);
+         return mask.select(m_value, other);
+      }
+
+      /// Convert this Option into a std::optional
+      ///
+      /// This is not constant time, leaking if the Option had a
+      /// value or not
+      constexpr std::optional<T> as_optional_vartime() const {
+         if(m_has_value.as_bool()) {
+            return {m_value};
+         } else {
+            return {};
+         }
+      }
+
+   private:
+      Choice m_has_value;
+      T m_value;
 };
 
 template <typename T>

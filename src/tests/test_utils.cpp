@@ -12,7 +12,6 @@
 #include <botan/internal/calendar.h>
 #include <botan/internal/charset.h>
 #include <botan/internal/cpuid.h>
-#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
@@ -769,104 +768,6 @@ class Utility_Function_Tests final : public Test {
 };
 
 BOTAN_REGISTER_SMOKE_TEST("utils", "util", Utility_Function_Tests);
-
-class CT_Mask_Tests final : public Test {
-   public:
-      std::vector<Test::Result> run() override {
-         Test::Result result("CT::Mask");
-
-         result.test_eq_sz("CT::is_zero8", Botan::CT::Mask<uint8_t>::is_zero(0).value(), 0xFF);
-         result.test_eq_sz("CT::is_zero8", Botan::CT::Mask<uint8_t>::is_zero(1).value(), 0x00);
-         result.test_eq_sz("CT::is_zero8", Botan::CT::Mask<uint8_t>::is_zero(0xFF).value(), 0x00);
-
-         result.test_eq_sz("CT::is_zero16", Botan::CT::Mask<uint16_t>::is_zero(0).value(), 0xFFFF);
-         result.test_eq_sz("CT::is_zero16", Botan::CT::Mask<uint16_t>::is_zero(1).value(), 0x0000);
-         result.test_eq_sz("CT::is_zero16", Botan::CT::Mask<uint16_t>::is_zero(0xFF).value(), 0x0000);
-
-         result.test_eq_sz("CT::is_zero32", Botan::CT::Mask<uint32_t>::is_zero(0).value(), 0xFFFFFFFF);
-         result.test_eq_sz("CT::is_zero32", Botan::CT::Mask<uint32_t>::is_zero(1).value(), 0x00000000);
-         result.test_eq_sz("CT::is_zero32", Botan::CT::Mask<uint32_t>::is_zero(0xFF).value(), 0x00000000);
-
-         result.test_eq_sz("CT::is_less8", Botan::CT::Mask<uint8_t>::is_lt(0, 1).value(), 0xFF);
-         result.test_eq_sz("CT::is_less8", Botan::CT::Mask<uint8_t>::is_lt(1, 0).value(), 0x00);
-         result.test_eq_sz("CT::is_less8", Botan::CT::Mask<uint8_t>::is_lt(0xFF, 5).value(), 0x00);
-
-         result.test_eq_sz("CT::is_less16", Botan::CT::Mask<uint16_t>::is_lt(0, 1).value(), 0xFFFF);
-         result.test_eq_sz("CT::is_less16", Botan::CT::Mask<uint16_t>::is_lt(1, 0).value(), 0x0000);
-         result.test_eq_sz("CT::is_less16", Botan::CT::Mask<uint16_t>::is_lt(0xFFFF, 5).value(), 0x0000);
-
-         result.test_eq_sz("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(0, 1).value(), 0xFFFFFFFF);
-         result.test_eq_sz("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(1, 0).value(), 0x00000000);
-         result.test_eq_sz("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(0xFFFF5, 5).value(), 0x00000000);
-         result.test_eq_sz("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(0xFFFFFFFF, 5).value(), 0x00000000);
-         result.test_eq_sz("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(5, 0xFFFFFFFF).value(), 0xFFFFFFFF);
-
-         for(auto bad_input : {0, 1}) {
-            for(size_t input_length : {0, 1, 2, 32}) {
-               for(size_t offset = 0; offset != input_length + 1; ++offset) {
-                  const auto mask = Botan::CT::Mask<uint8_t>::expand(static_cast<uint8_t>(bad_input));
-
-                  std::vector<uint8_t> input(input_length);
-                  this->rng().randomize(input.data(), input.size());
-
-                  auto output = Botan::CT::copy_output(mask, input.data(), input.size(), offset);
-
-                  result.test_eq_sz("CT::copy_output capacity", output.capacity(), input.size());
-
-                  if(bad_input) {
-                     result.confirm("If bad input, no output", output.empty());
-                  } else {
-                     if(offset >= input_length) {
-                        result.confirm("If offset is too large, output is empty", output.empty());
-                     } else {
-                        result.test_eq_sz("CT::copy_output length", output.size(), input.size() - offset);
-
-                        for(size_t i = 0; i != output.size(); ++i) {
-                           result.test_eq_sz("CT::copy_output offset", output[i], input[i + offset]);
-                        }
-                     }
-                  }
-               }
-            }
-         }
-
-         return {result};
-      }
-};
-
-BOTAN_REGISTER_TEST("utils", "ct_mask", CT_Mask_Tests);
-
-class CT_Choice_Tests final : public Test {
-   public:
-      std::vector<Test::Result> run() override {
-         Test::Result result("CT::Choice");
-
-         result.test_eq("CT::Choice::yes", Botan::CT::Choice::yes().as_bool(), true);
-         result.test_eq("CT::Choice::no", Botan::CT::Choice::no().as_bool(), false);
-
-         test_choice_from_int<uint8_t>("uint8_t", result);
-         test_choice_from_int<uint16_t>("uint16_t", result);
-         test_choice_from_int<uint32_t>("uint32_t", result);
-         test_choice_from_int<uint64_t>("uint64_t", result);
-
-         return {result};
-      }
-
-   private:
-      template <std::unsigned_integral T>
-      void test_choice_from_int(const char* type_name, Result& result) {
-         const auto tname = Botan::fmt("CT::Choice::from_int<{}>", type_name);
-         constexpr size_t tbits = sizeof(T) * 8;
-
-         result.test_eq(tname, Botan::CT::Choice::from_int<T>(0).as_bool(), false);
-         for(size_t b = 0; b != tbits; ++b) {
-            const auto choice = Botan::CT::Choice::from_int<T>(static_cast<T>(1) << b);
-            result.test_eq(tname, choice.as_bool(), true);
-         }
-      }
-};
-
-BOTAN_REGISTER_TEST("utils", "ct_choice", CT_Choice_Tests);
 
 class BitOps_Tests final : public Test {
    public:
