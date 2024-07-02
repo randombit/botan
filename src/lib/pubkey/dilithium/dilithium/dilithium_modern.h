@@ -12,7 +12,6 @@
 #include <botan/internal/dilithium_symmetric_primitives.h>
 
 #include <botan/internal/loadstor.h>
-#include <botan/internal/shake.h>
 #include <botan/internal/shake_xof.h>
 
 #include <array>
@@ -23,26 +22,30 @@ namespace Botan {
 
 class Dilithium_Common_Symmetric_Primitives : public Dilithium_Symmetric_Primitives {
    public:
-      std::unique_ptr<Botan::XOF> XOF(XofType type, std::span<const uint8_t> seed, uint16_t nonce) const override {
-         const auto xof_type = [&] {
+      Dilithium_Common_Symmetric_Primitives(size_t collision_strength_in_bytes) :
+            Dilithium_Symmetric_Primitives(collision_strength_in_bytes) {}
+
+      Botan::XOF& XOF(XofType type, std::span<const uint8_t> seed, uint16_t nonce) const override {
+         auto& xof = [&]() -> Botan::XOF& {
             switch(type) {
                case XofType::k128:
-                  return "SHAKE-128";
+                  return m_xof_128;
                case XofType::k256:
-                  return "SHAKE-256";
+                  return m_xof_256;
             }
 
             BOTAN_ASSERT_UNREACHABLE();
          }();
 
-         std::array<uint8_t, sizeof(nonce)> nonce_buffer;
-         store_le(nonce, nonce_buffer.data());
-
-         auto xof = Botan::XOF::create_or_throw(xof_type);
-         xof->update(seed);
-         xof->update(nonce_buffer);
+         xof.clear();
+         xof.update(seed);
+         xof.update(store_le(nonce));
          return xof;
       }
+
+   private:
+      mutable SHAKE_256_XOF m_xof_256;
+      mutable SHAKE_128_XOF m_xof_128;
 };
 
 }  // namespace Botan

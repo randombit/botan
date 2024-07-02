@@ -159,6 +159,16 @@ class BOTAN_PUBLIC_API(3, 2) XOF {
       }
 
       /**
+       * @return the next @p count output bytes as a std::array<>.
+       */
+      template <size_t count>
+      std::array<uint8_t, count> output() {
+         std::array<uint8_t, count> out;
+         generate_bytes(out);
+         return out;
+      }
+
+      /**
        * Convenience overload to generate a std::vector<uint8_t>. Same as calling
        * `XOF::output<std::vector<uint8_t>>()`.
        *

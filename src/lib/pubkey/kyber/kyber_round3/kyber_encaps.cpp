@@ -11,7 +11,6 @@
 
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/kyber_constants.h>
-#include <botan/internal/kyber_structures.h>
 #include <botan/internal/kyber_symmetric_primitives.h>
 #include <botan/internal/kyber_types.h>
 
@@ -25,11 +24,10 @@ void Kyber_KEM_Encryptor::encapsulate(StrongSpan<KyberCompressedCiphertext> out_
                                       RandomNumberGenerator& rng) {
    const auto& sym = m_public_key->mode().symmetric_primitives();
 
-   const auto m = sym.H(rng.random_vec<KyberMessage>(KyberConstants::kSymBytes));
+   const auto m = sym.H(rng.random_vec<KyberMessage>(KyberConstants::SEED_BYTES));
    const auto [K_bar, r] = sym.G(m, m_public_key->H_public_key_bits_raw());
-   auto c = m_public_key->indcpa_encrypt(m, r);
+   m_public_key->indcpa_encrypt(out_encapsulated_key, m, r, precomputed_matrix_At());
 
-   c.to_bytes(out_encapsulated_key);
    sym.KDF(out_shared_key, K_bar, sym.H(out_encapsulated_key));
 }
 
@@ -43,12 +41,12 @@ void Kyber_KEM_Decryptor::decapsulate(StrongSpan<KyberSharedSecret> out_shared_k
    const auto& h = m_public_key->H_public_key_bits_raw();
    const auto& z = m_private_key->z();
 
-   const auto m_prime = m_private_key->indcpa_decrypt(Ciphertext::from_bytes(encapsulated_key, m_private_key->mode()));
+   const auto m_prime = m_private_key->indcpa_decrypt(encapsulated_key);
    const auto [K_bar_prime, r_prime] = sym.G(m_prime, h);
 
-   const auto c_prime = m_public_key->indcpa_encrypt(m_prime, r_prime).to_bytes();
+   const auto c_prime = m_public_key->indcpa_encrypt(m_prime, r_prime, precomputed_matrix_At());
 
-   KyberSharedSecret K(KyberConstants::kSymBytes);
+   KyberSharedSecret K(KyberConstants::SEED_BYTES);
    BOTAN_ASSERT_NOMSG(encapsulated_key.size() == c_prime.size());
    BOTAN_ASSERT_NOMSG(K_bar_prime.size() == K.size());
    const auto reencrypt_success = CT::is_equal(encapsulated_key.data(), c_prime.data(), encapsulated_key.size());

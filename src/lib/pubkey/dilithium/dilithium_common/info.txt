@@ -13,11 +13,16 @@ dilithium.h
 </header:public>
 
 <header:internal>
-dilithium_polynomials.h
+dilithium_algos.h
+dilithium_constants.h
+dilithium_polynomial.h
 dilithium_symmetric_primitives.h
+dilithium_types.h
 </header:internal>
 
 <requires>
-shake
-xof
+pqcrystals
+pubkey
+rng
+shake_xof
 </requires>

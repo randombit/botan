@@ -1,0 +1,18 @@
+<defines>
+PQCRYSTALS -> 20240228
+</defines>
+
+<module_info>
+name -> "CRYSTALS"
+brief -> "Base utilities for CRYSTALS-Kyber/ML-KEM and CRYSTALS-Dilithium/ML-DSA. CRYptographic SuiTe for Algebraic LatticeS"
+type -> "Internal"
+</module_info>
+
+<requires>
+</requires>
+
+<header:internal>
+pqcrystals.h
+pqcrystals_encoding.h
+pqcrystals_helpers.h
+</header:internal>
