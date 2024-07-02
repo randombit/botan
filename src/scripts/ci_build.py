@@ -445,7 +445,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         else:
             run_test_command = test_prefix + test_cmd
 
-    return flags, run_test_command, make_prefix
+    return flags, None, make_prefix
 
 def run_cmd(cmd, root_dir, build_dir):
     """
