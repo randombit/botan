@@ -1123,8 +1123,9 @@ def cli_tls_socket_tests(tmp_dir):
     except subprocess.TimeoutExpired:
         tls_server.kill()
         tls_server.communicate()
-    logging.debug("server said (stdout): %s", srv_stdout)
-    logging.debug("server said (stderr): %s", srv_stderr)
+    finally:
+        logging.error("server said (stdout): %s", srv_stdout.decode('utf-8'))
+        logging.error("server said (stderr): %s", srv_stderr.decode('utf-8'))
 
 def cli_tls_online_pqc_hybrid_tests(tmp_dir):
     if not run_socket_tests() or not run_online_tests() or not check_for_command("tls_client"):
@@ -1304,7 +1305,7 @@ def cli_tls_proxy_tests(tmp_dir):
 
     server_port = port_for('tls_proxy_backend')
     proxy_port = port_for('tls_proxy')
-    max_clients = 4
+    max_clients = 100
 
     priv_key = os.path.join(tmp_dir, 'priv.pem')
     ca_cert = os.path.join(tmp_dir, 'ca.crt')
