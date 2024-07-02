@@ -792,6 +792,18 @@ class FFI_CBC_Cipher_Test final : public FFI_Test {
                result.test_eq("Expected size of padded message", ctext_len, plaintext.size() + 15);
                std::vector<uint8_t> ciphertext(ctext_len);
 
+               size_t update_granularity = 0;
+               size_t ideal_granularity = 0;
+               size_t taglen = 0;
+
+               TEST_FFI_OK(botan_cipher_get_update_granularity, (cipher_encrypt, &update_granularity));
+               TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_encrypt, &ideal_granularity));
+               TEST_FFI_OK(botan_cipher_get_tag_length, (cipher_encrypt, &taglen));
+
+               result.test_eq(
+                  "ideal granularity is a multiple of update granularity", ideal_granularity % update_granularity, 0);
+               result.test_eq("not an AEAD, hence no tag", taglen, 0);
+
                TEST_FFI_OK(botan_cipher_set_key, (cipher_encrypt, symkey.data(), symkey.size()));
                TEST_FFI_OK(botan_cipher_start, (cipher_encrypt, nonce.data(), nonce.size()));
                TEST_FFI_OK(botan_cipher_update,
@@ -826,6 +838,15 @@ class FFI_CBC_Cipher_Test final : public FFI_Test {
                   std::vector<uint8_t> decrypted(ptext_len);
 
                   TEST_FFI_RC(0, botan_cipher_is_authenticated, (cipher_encrypt));
+
+                  TEST_FFI_OK(botan_cipher_get_update_granularity, (cipher_decrypt, &update_granularity));
+                  TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_decrypt, &ideal_granularity));
+                  TEST_FFI_OK(botan_cipher_get_tag_length, (cipher_decrypt, &taglen));
+
+                  result.test_eq("ideal granularity is a multiple of update granularity (decrypt)",
+                                 ideal_granularity % update_granularity,
+                                 0);
+                  result.test_eq("not an AEAD, hence no tag (decrypt)", taglen, 0);
 
                   TEST_FFI_OK(botan_cipher_set_key, (cipher_decrypt, symkey.data(), symkey.size()));
                   TEST_FFI_OK(botan_cipher_start, (cipher_decrypt, nonce.data(), nonce.size()));
@@ -875,6 +896,14 @@ class FFI_GCM_Test final : public FFI_Test {
             size_t max_keylen = 0;
             size_t nonce_len = 0;
             size_t tag_len = 0;
+            size_t update_granularity = 0;
+            size_t ideal_granularity = 0;
+
+            TEST_FFI_OK(botan_cipher_get_update_granularity, (cipher_encrypt, &update_granularity));
+            TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_encrypt, &ideal_granularity));
+
+            result.test_eq(
+               "ideal granularity is a multiple of update granularity", ideal_granularity % update_granularity, 0);
 
             TEST_FFI_OK(botan_cipher_query_keylen, (cipher_encrypt, &min_keylen, &max_keylen));
             result.test_int_eq(min_keylen, 16, "Min key length");
@@ -948,6 +977,13 @@ class FFI_GCM_Test final : public FFI_Test {
                if(TEST_FFI_OK(botan_cipher_init, (&cipher_decrypt, "AES-128/GCM", BOTAN_CIPHER_INIT_FLAG_DECRYPT))) {
                   std::vector<uint8_t> decrypted(plaintext.size());
 
+                  TEST_FFI_OK(botan_cipher_get_update_granularity, (cipher_decrypt, &update_granularity));
+                  TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_decrypt, &ideal_granularity));
+
+                  result.test_eq("ideal granularity is a multiple of update granularity (decrypt)",
+                                 ideal_granularity % update_granularity,
+                                 0);
+
                   TEST_FFI_OK(botan_cipher_set_key, (cipher_decrypt, symkey.data(), symkey.size()));
                   TEST_FFI_OK(botan_cipher_set_associated_data, (cipher_decrypt, aad.data(), aad.size()));
                   TEST_FFI_OK(botan_cipher_start, (cipher_decrypt, nonce.data(), nonce.size()));
@@ -997,6 +1033,14 @@ class FFI_ChaCha20Poly1305_Test final : public FFI_Test {
             size_t max_keylen = 0;
             size_t nonce_len = 0;
             size_t tag_len = 0;
+            size_t update_granularity = 0;
+            size_t ideal_granularity = 0;
+
+            TEST_FFI_OK(botan_cipher_get_update_granularity, (cipher_encrypt, &update_granularity));
+            TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_encrypt, &ideal_granularity));
+
+            result.test_eq(
+               "ideal granularity is a multiple of update granularity", ideal_granularity % update_granularity, 0);
 
             TEST_FFI_OK(botan_cipher_query_keylen, (cipher_encrypt, &min_keylen, &max_keylen));
             result.test_int_eq(min_keylen, 32, "Min key length");
@@ -1065,6 +1109,13 @@ class FFI_ChaCha20Poly1305_Test final : public FFI_Test {
                               (&cipher_decrypt, "ChaCha20Poly1305", BOTAN_CIPHER_INIT_FLAG_DECRYPT))) {
                   std::vector<uint8_t> decrypted(plaintext.size());
 
+                  TEST_FFI_OK(botan_cipher_get_update_granularity, (cipher_decrypt, &update_granularity));
+                  TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_decrypt, &ideal_granularity));
+
+                  result.test_eq("ideal granularity is a multiple of update granularity (decrypt)",
+                                 ideal_granularity % update_granularity,
+                                 0);
+
                   TEST_FFI_OK(botan_cipher_set_key, (cipher_decrypt, symkey.data(), symkey.size()));
                   TEST_FFI_OK(botan_cipher_set_associated_data, (cipher_decrypt, aad.data(), aad.size()));
                   TEST_FFI_OK(botan_cipher_start, (cipher_decrypt, nonce.data(), nonce.size()));
@@ -1104,6 +1155,14 @@ class FFI_EAX_Test final : public FFI_Test {
             size_t mod_keylen = 0;
             size_t nonce_len = 0;
             size_t tag_len = 0;
+            size_t update_granularity = 0;
+            size_t ideal_granularity = 0;
+
+            TEST_FFI_OK(botan_cipher_get_update_granularity, (cipher_encrypt, &update_granularity));
+            TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_encrypt, &ideal_granularity));
+
+            result.test_eq(
+               "ideal granularity is a multiple of update granularity", ideal_granularity % update_granularity, 0);
 
             TEST_FFI_OK(botan_cipher_query_keylen, (cipher_encrypt, &min_keylen, &max_keylen));
             result.test_int_eq(min_keylen, 16, "Min key length");
@@ -1171,6 +1230,13 @@ class FFI_EAX_Test final : public FFI_Test {
                if(TEST_FFI_OK(botan_cipher_init, (&cipher_decrypt, "AES-128/EAX", BOTAN_CIPHER_INIT_FLAG_DECRYPT))) {
                   std::vector<uint8_t> decrypted(plaintext.size());
 
+                  TEST_FFI_OK(botan_cipher_get_update_granularity, (cipher_decrypt, &update_granularity));
+                  TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_decrypt, &ideal_granularity));
+
+                  result.test_eq("ideal granularity is a multiple of update granularity (decrypt)",
+                                 ideal_granularity % update_granularity,
+                                 0);
+
                   TEST_FFI_OK(botan_cipher_set_key, (cipher_decrypt, symkey.data(), symkey.size()));
                   TEST_FFI_OK(botan_cipher_start, (cipher_decrypt, nonce.data(), nonce.size()));
                   TEST_FFI_OK(botan_cipher_update,
@@ -1221,14 +1287,19 @@ class FFI_AEAD_Test final : public FFI_Test {
 
             size_t min_keylen = 0;
             size_t max_keylen = 0;
+            size_t update_granularity = 0;
             size_t ideal_granularity = 0;
             size_t noncelen = 0;
             size_t taglen = 0;
             constexpr size_t pt_multiplier = 5;
             TEST_FFI_OK(botan_cipher_query_keylen, (cipher_encrypt, &min_keylen, &max_keylen));
+            TEST_FFI_OK(botan_cipher_get_update_granularity, (cipher_encrypt, &update_granularity));
             TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_encrypt, &ideal_granularity));
             TEST_FFI_OK(botan_cipher_get_default_nonce_length, (cipher_encrypt, &noncelen));
             TEST_FFI_OK(botan_cipher_get_tag_length, (cipher_encrypt, &taglen));
+
+            result.test_eq(
+               "ideal granularity is a multiple of update granularity", ideal_granularity % update_granularity, 0);
 
             std::vector<uint8_t> key(max_keylen);
             TEST_FFI_OK(botan_rng_get, (rng, key.data(), key.size()));
@@ -1333,6 +1404,14 @@ class FFI_AEAD_Test final : public FFI_Test {
             // ----------------------------------------------------------------
 
             TEST_FFI_INIT(botan_cipher_init, (&cipher_decrypt, aead.c_str(), BOTAN_CIPHER_INIT_FLAG_DECRYPT));
+
+            TEST_FFI_OK(botan_cipher_get_update_granularity, (cipher_decrypt, &update_granularity));
+            TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (cipher_decrypt, &ideal_granularity));
+
+            result.test_eq("ideal granularity is a multiple of update granularity (decrypt)",
+                           ideal_granularity % update_granularity,
+                           0);
+
             TEST_FFI_OK(botan_cipher_set_key, (cipher_decrypt, key.data(), key.size()));
             TEST_FFI_OK(botan_cipher_start, (cipher_decrypt, nonce.data(), nonce.size()));
 
@@ -1424,6 +1503,15 @@ class FFI_StreamCipher_Test final : public FFI_Test {
                "9806F66B7970FDFF8617187BB9FFFDFF5AE4DF3EDBD5D35E5B4F09020DB03EAB1E031DDA2FBE03D1792170A0F3009CEE");
 
             std::vector<uint8_t> ct(pt.size());
+
+            size_t update_granularity = 0;
+            size_t ideal_granularity = 0;
+
+            TEST_FFI_OK(botan_cipher_get_update_granularity, (ctr, &update_granularity));
+            TEST_FFI_OK(botan_cipher_get_ideal_update_granularity, (ctr, &ideal_granularity));
+
+            result.test_eq(
+               "ideal granularity is a multiple of update granularity", ideal_granularity % update_granularity, 0);
 
             TEST_FFI_RC(0, botan_cipher_is_authenticated, (ctr));
 

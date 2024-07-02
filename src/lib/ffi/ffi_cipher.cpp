@@ -36,37 +36,6 @@ struct botan_cipher_struct final : public botan_struct<Botan::Cipher_Mode, 0xB4A
       size_t m_ideal_update_size;
 };
 
-namespace {
-
-size_t ffi_choose_update_size(Botan::Cipher_Mode& mode) {
-   const size_t update_granularity = mode.update_granularity();
-   const size_t minimum_final_size = mode.minimum_final_size();
-
-   /*
-   * Return the minimum possible granularity given the FFI API constraints that
-   * we require the returned size be > minimum final size.
-   *
-   * If the minimum final size is zero, or the update_granularity is
-   * already greater, just use that.
-   *
-   * Otherwise scale the update_granularity to a sufficient size
-   * to be greater than the minimum.
-   */
-   if(minimum_final_size == 0 || update_granularity > minimum_final_size) {
-      BOTAN_ASSERT_NOMSG(update_granularity > 0);
-      return update_granularity;
-   }
-
-   size_t buf_size = std::max(update_granularity, minimum_final_size + 1);
-   if(buf_size % update_granularity != 0) {
-      buf_size += update_granularity - (buf_size % update_granularity);
-   }
-
-   return buf_size;
-}
-
-}  // namespace
-
 int botan_cipher_init(botan_cipher_t* cipher, const char* cipher_name, uint32_t flags) {
    return ffi_guard_thunk(__func__, [=]() -> int {
       const bool encrypt_p = ((flags & BOTAN_CIPHER_INIT_FLAG_MASK_DIRECTION) == BOTAN_CIPHER_INIT_FLAG_ENCRYPT);
@@ -77,9 +46,8 @@ int botan_cipher_init(botan_cipher_t* cipher, const char* cipher_name, uint32_t 
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
       }
 
-      const size_t update_size = ffi_choose_update_size(*mode);
+      const size_t update_size = mode->update_granularity();
       const size_t ideal_update_size = std::max(mode->ideal_granularity(), update_size);
-
       *cipher = new botan_cipher_struct(std::move(mode), update_size, ideal_update_size);
       return BOTAN_FFI_SUCCESS;
    });
