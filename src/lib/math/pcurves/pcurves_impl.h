@@ -73,7 +73,6 @@ class IntMod final {
 
       static constexpr auto P_MINUS_2 = p_minus<2>(P);
       static constexpr auto P_PLUS_1_OVER_4 = p_plus_1_over_4(P);
-      static constexpr auto P_MINUS_1_OVER_2 = p_minus_1_over_2(P);
 
    public:
       static constexpr size_t BITS = count_bits(P);
@@ -242,22 +241,13 @@ class IntMod final {
       *
       * Current impl assumes p == 3 (mod 4)
       */
-      constexpr Self sqrt() const
+      constexpr std::pair<Self, CT::Choice> sqrt() const
          requires(Self::P_MOD_4 == 3)
       {
          auto z = pow_vartime(Self::P_PLUS_1_OVER_4);
          const CT::Choice correct = (z.square() == *this);
          z.conditional_assign(!correct, Self::zero());
-         return z;
-      }
-
-      constexpr CT::Choice is_square() const
-         requires(Self::P_MOD_4 == 3)
-      {
-         auto z = pow_vartime(Self::P_MINUS_1_OVER_2);
-         const CT::Choice is_one = z.is_one();
-         const CT::Choice is_zero = z.is_zero();
-         return (is_one || is_zero);
+         return {z, correct};
       }
 
       constexpr CT::Choice operator==(const Self& other) const {
@@ -502,9 +492,12 @@ class AffineCurvePoint {
             const CT::Choice y_is_even = CT::Mask<uint8_t>::is_equal(bytes[0], 0x02).as_choice();
 
             if(auto x = FieldElement::deserialize(bytes.subspan(1, FieldElement::BYTES))) {
-               auto y = x3_ax_b(*x).sqrt();
-               y.conditional_assign(y_is_even && !y.is_even(), y.negate());
-               return Self(*x, y);
+               auto [y, is_square] = x3_ax_b(*x).sqrt();
+
+               if(is_square.as_bool()) {
+                  y.conditional_assign(y_is_even != y.is_even(), y.negate());
+                  return Self(*x, y);
+               }
             }
 
             return {};
@@ -1386,13 +1379,15 @@ inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::
    const auto x2 = C::SSWU_Z * u.square() * x1;
    const auto gx2 = C::AffinePoint::x3_ax_b(x2);
 
-   const auto gx1_is_square = gx1.is_square();
+   // Will be zero if gx1 is not a square
+   const auto [gx1_sqrt, gx1_is_square] = gx1.sqrt();
 
    auto x = x2;
-   auto y = gx2.sqrt();
+   // By design one of gx1 and gx2 must be a quadratic residue
+   auto y = gx2.sqrt().first;
 
    x.conditional_assign(gx1_is_square, x1);
-   y.conditional_assign(gx1_is_square, gx1.sqrt());
+   y.conditional_assign(gx1_is_square, gx1_sqrt);
 
    const auto flip_y = y.is_even() != u.is_even();
    y.conditional_assign(flip_y, y.negate());
