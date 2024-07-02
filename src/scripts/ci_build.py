@@ -769,7 +769,7 @@ def main(args=None):
                 args.append('--run-slow-tests')
             if root_dir != '.':
                 args.append('--test-data-dir=%s' % root_dir)
-            test_scripts = ['test_cli.py', 'test_cli_crypt.py']
+            test_scripts = ['test_cli.py', 'test_cli.py', 'test_cli.py', 'test_cli.py', 'test_cli.py', 'test_cli_crypt.py']
             for script in test_scripts:
                 test_data_arg = []
                 cmds.append([py_interp, os.path.join(root_dir, 'src/scripts', script)] +
