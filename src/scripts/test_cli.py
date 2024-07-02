@@ -1304,6 +1304,7 @@ def cli_tls_proxy_tests(tmp_dir):
 
     server_port = port_for('tls_proxy_backend')
     proxy_port = port_for('tls_proxy')
+    max_clients = 4
 
     priv_key = os.path.join(tmp_dir, 'priv.pem')
     ca_cert = os.path.join(tmp_dir, 'ca.crt')
@@ -1323,7 +1324,7 @@ def cli_tls_proxy_tests(tmp_dir):
     test_cli("sign_cert", "%s %s %s --output=%s" % (ca_cert, priv_key, crt_req, server_cert))
 
     tls_proxy = subprocess.Popen([CLI_PATH, 'tls_proxy', str(proxy_port), '127.0.0.1', str(server_port),
-                                  server_cert, priv_key, f'--output={proxy_err}', '--max-clients=4'],
+                                  server_cert, priv_key, f'--output={proxy_err}', f'--max-clients={max_clients}'],
                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     wait_time = 1.0
@@ -1356,36 +1357,39 @@ def cli_tls_proxy_tests(tmp_dir):
     context.minimum_version = ssl.TLSVersion.TLSv1_3
     context.maximum_version = ssl.TLSVersion.TLSv1_3
 
-    for i in range(4):
-        # Make sure that TLS protocol version downgrade works
-        if i > 2:
-            context.minimum_version = ssl.TLSVersion.TLSv1_2
-            context.maximum_version = ssl.TLSVersion.TLSv1_2
+    try:
+        for i in range(max_clients):
+            # Make sure that TLS protocol version downgrade works
+            if i > max_clients / 2:
+                context.minimum_version = ssl.TLSVersion.TLSv1_2
+                context.maximum_version = ssl.TLSVersion.TLSv1_2
 
-        conn = HTTPSConnection('localhost', port=proxy_port, context=context)
-        conn.request("GET", "/")
-        resp = conn.getresponse()
+            conn = HTTPSConnection('localhost', port=proxy_port, context=context)
+            conn.request("GET", "/")
+            resp = conn.getresponse()
 
-        if resp.status != 200:
-            logging.error('Unexpected response status %d', resp.status)
+            if resp.status != 200:
+                logging.error('Unexpected response status %d', resp.status)
 
-        body = resp.read()
+            body = resp.read()
 
-        if body != server_response:
-            logging.error('Unexpected response from server %s', body)
+            if body != server_response:
+                logging.error('Unexpected response from server %s', body)
+    except:
+        tls_proxy.kill()
+    finally:
+        rc = tls_proxy.wait(5)
 
-    rc = tls_proxy.wait(5)
+        # Trying to debug https://github.com/randombit/botan/issues/4112
+        stdout = tls_proxy.stdout.read().decode('utf8')
+        if stdout != '':
+            logging.info('Stdout: %s', stdout)
+        stderr = tls_proxy.stderr.read().decode('utf8')
+        if stdout != '':
+            logging.info('Stderr: %s', stderr)
 
-    # Trying to debug https://github.com/randombit/botan/issues/4112
-    stdout = tls_proxy.stdout.read().decode('utf8')
-    if stdout != '':
-        logging.info('Stdout: %s', stdout)
-    stderr = tls_proxy.stderr.read().decode('utf8')
-    if stdout != '':
-        logging.info('Stderr: %s', stderr)
-
-    if rc != 0:
-        logging.error('Unexpected return code from tls_proxy %d', rc)
+        if rc != 0:
+            logging.error('Unexpected return code from tls_proxy %d', rc)
 
 def cli_trust_root_tests(tmp_dir):
     pem_file = os.path.join(tmp_dir, 'pems')
