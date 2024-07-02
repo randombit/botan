@@ -19,6 +19,7 @@ pcurves.h
 pcurves_id.h
 pcurves_impl.h
 pcurves_util.h
+pcurves_solinas.h
 pcurves_wrap.h
 pcurves_instance.h
 </header:internal>
