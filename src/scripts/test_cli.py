@@ -1365,7 +1365,7 @@ def cli_tls_proxy_tests(tmp_dir):
                 context.minimum_version = ssl.TLSVersion.TLSv1_2
                 context.maximum_version = ssl.TLSVersion.TLSv1_2
 
-            conn = HTTPSConnection('localhost', port=proxy_port, context=context)
+            conn = HTTPSConnection('localhost', port=proxy_port, context=context, timeout=20)
             conn.request("GET", "/")
             resp = conn.getresponse()
 
