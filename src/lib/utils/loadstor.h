@@ -12,9 +12,9 @@
 
 #include <botan/concepts.h>
 #include <botan/mem_ops.h>
+#include <botan/strong_type.h>
 #include <botan/types.h>
 #include <botan/internal/bswap.h>
-#include <vector>
 
 /**
  * @file loadstor.h
@@ -169,8 +169,41 @@ constexpr bool native_endianness_is_unknown() {
  * Models a type that can be loaded/stored from/to a byte range.
  */
 template <typename T>
-concept unsigned_integralish = std::unsigned_integral<T> || concepts::unsigned_integral_strong_type<T> ||
+concept unsigned_integralish = std::unsigned_integral<strong_type_wrapped_type<T>> ||
                                (std::is_enum_v<T> && std::unsigned_integral<std::underlying_type_t<T>>);
+
+template <typename T>
+struct wrapped_type_helper_with_enum {
+      using type = strong_type_wrapped_type<T>;
+};
+
+template <typename T>
+   requires std::is_enum_v<T>
+struct wrapped_type_helper_with_enum<T> {
+      using type = std::underlying_type_t<T>;
+};
+
+template <unsigned_integralish T>
+using wrapped_type = typename wrapped_type_helper_with_enum<T>::type;
+
+template <unsigned_integralish InT>
+constexpr auto unwrap_strong_type_or_enum(InT t) {
+   if constexpr(std::is_enum_v<InT>) {
+      // TODO: C++23: use std::to_underlying(in) instead
+      return static_cast<std::underlying_type_t<InT>>(t);
+   } else {
+      return Botan::unwrap_strong_type(t);
+   }
+}
+
+template <unsigned_integralish OutT, std::unsigned_integral T>
+constexpr auto wrap_strong_type_or_enum(T t) {
+   if constexpr(std::is_enum_v<OutT>) {
+      return static_cast<OutT>(t);
+   } else {
+      return Botan::wrap_strong_type<OutT>(t);
+   }
+}
 
 /**
  * Manually load a word from a range in either big or little endian byte order.
@@ -240,48 +273,31 @@ inline constexpr void fallback_store_any(InT in, OutR&& out_range) {
  * @param in_range a fixed-length byte range
  * @return T loaded from @p in_range, as a big-endian value
  */
-template <Endianness endianness, std::unsigned_integral OutT, ranges::contiguous_range<uint8_t> InR>
-inline constexpr OutT load_any(InR&& in_range) {
+template <Endianness endianness, unsigned_integralish WrappedOutT, ranges::contiguous_range<uint8_t> InR>
+inline constexpr WrappedOutT load_any(InR&& in_range) {
+   using OutT = detail::wrapped_type<WrappedOutT>;
    ranges::assert_exact_byte_length<sizeof(OutT)>(in_range);
-   std::span in{in_range};
 
-   // At compile time we cannot use `typecast_copy` as it uses `std::memcpy`
-   // internally to copy ranges on a byte-by-byte basis, which is not allowed
-   // in a `constexpr` context.
-   if(std::is_constant_evaluated()) /* TODO: C++23: if consteval {} */ {
-      return fallback_load_any<endianness, OutT>(std::forward<InR>(in_range));
-   } else {
-      if constexpr(sizeof(OutT) == 1) {
-         return static_cast<OutT>(in[0]);
-      } else if constexpr(is_native(endianness)) {
-         return typecast_copy<OutT>(in);
-      } else if constexpr(is_opposite(endianness)) {
-         return reverse_bytes(typecast_copy<OutT>(in));
-      } else {
-         static_assert(native_endianness_is_unknown<endianness>());
+   return detail::wrap_strong_type_or_enum<WrappedOutT>([&]() -> OutT {
+      // At compile time we cannot use `typecast_copy` as it uses `std::memcpy`
+      // internally to copy ranges on a byte-by-byte basis, which is not allowed
+      // in a `constexpr` context.
+      if(std::is_constant_evaluated()) /* TODO: C++23: if consteval {} */ {
          return fallback_load_any<endianness, OutT>(std::forward<InR>(in_range));
+      } else {
+         std::span in{in_range};
+         if constexpr(sizeof(OutT) == 1) {
+            return static_cast<OutT>(in[0]);
+         } else if constexpr(is_native(endianness)) {
+            return typecast_copy<OutT>(in);
+         } else if constexpr(is_opposite(endianness)) {
+            return reverse_bytes(typecast_copy<OutT>(in));
+         } else {
+            static_assert(native_endianness_is_unknown<endianness>());
+            return fallback_load_any<endianness, OutT>(std::forward<InR>(in_range));
+         }
       }
-   }
-}
-
-/**
- * Overload for loading into a strong type holding an unsigned integer
- */
-template <Endianness endianness, concepts::unsigned_integral_strong_type OutT, ranges::contiguous_range<uint8_t> InR>
-inline constexpr OutT load_any(InR&& in_range) {
-   using underlying_type = typename OutT::wrapped_type;
-   return OutT{load_any<endianness, underlying_type>(std::forward<InR>(in_range))};
-}
-
-/**
- * Overload for loading into an enum type that uses an unsigned integer as its
- * underlying type.
- */
-template <Endianness endianness, typename OutT, ranges::contiguous_range<uint8_t> InR>
-   requires(std::is_enum_v<OutT> && std::unsigned_integral<std::underlying_type_t<OutT>>)
-inline constexpr OutT load_any(InR&& in_range) {
-   using underlying_type = std::underlying_type_t<OutT>;
-   return static_cast<OutT>(load_any<endianness, underlying_type>(std::forward<InR>(in_range)));
+   }());
 }
 
 /**
@@ -480,12 +496,14 @@ namespace detail {
  * as those of load_any(). See the documentation of this function for more
  * details.
  *
- * @param in an unsigned integral to be stored
- * @param out_range a byte range to store the word into
+ * @param wrapped_in an unsigned integral to be stored
+ * @param out_range  a byte range to store the word into
  */
-template <Endianness endianness, std::unsigned_integral InT, ranges::contiguous_output_range<uint8_t> OutR>
-inline constexpr void store_any(InT in, OutR&& out_range) {
-   ranges::assert_exact_byte_length<sizeof(InT)>(out_range);
+template <Endianness endianness, unsigned_integralish WrappedInT, ranges::contiguous_output_range<uint8_t> OutR>
+inline constexpr void store_any(WrappedInT wrapped_in, OutR&& out_range) {
+   const auto in = detail::unwrap_strong_type_or_enum(wrapped_in);
+   using InT = decltype(in);
+   ranges::assert_exact_byte_length<sizeof(in)>(out_range);
    std::span out{out_range};
 
    // At compile time we cannot use `typecast_copy` as it uses `std::memcpy`
@@ -505,29 +523,6 @@ inline constexpr void store_any(InT in, OutR&& out_range) {
          return fallback_store_any<endianness, InT>(in, std::forward<OutR>(out_range));
       }
    }
-}
-
-/**
- * Overload for loading into a strong type holding an unsigned integer
- */
-template <Endianness endianness,
-          concepts::unsigned_integral_strong_type InT,
-          ranges::contiguous_output_range<uint8_t> OutR>
-inline constexpr void store_any(InT in, OutR&& out_range) {
-   using underlying_type = typename InT::wrapped_type;
-   store_any<endianness, underlying_type>(in.get(), std::forward<OutR>(out_range));
-}
-
-/**
- * Overload for storing an enum type that uses an unsigned integer as its
- * underlying type.
- */
-template <Endianness endianness, typename InT, ranges::contiguous_output_range<uint8_t> OutR>
-   requires(std::is_enum_v<InT> && std::unsigned_integral<std::underlying_type_t<InT>>)
-inline constexpr void store_any(InT in, OutR&& out_range) {
-   using underlying_type = std::underlying_type_t<InT>;
-   // TODO: C++23: use std::to_underlying(in) instead
-   store_any<endianness, underlying_type>(static_cast<underlying_type>(in), std::forward<OutR>(out_range));
 }
 
 /**
