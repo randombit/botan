@@ -288,12 +288,14 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
                log_error("Server connection", ec);
                return;
             }
-            if(self.expired()) {
+
+            if(auto ptr = self.lock()) {
+               ptr->server_read(boost::system::error_code(), 0);  // start read loop
+               ptr->proxy_write_to_server({});
+            } else {
                log_error("Server connection established, but client session already closed");
                return;
             }
-            self.lock()->server_read(boost::system::error_code(), 0);  // start read loop
-            self.lock()->proxy_write_to_server({});
          };
          async_connect(m_server_socket, m_server_endpoints, onConnect);
       }
