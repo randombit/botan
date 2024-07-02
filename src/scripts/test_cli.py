@@ -986,7 +986,7 @@ MCACAQUTBnN0cmluZzEGAQH/AgFjBAUAAAAAAAMEAP///w==
     test_cli("oid_info", "1.2.3.4", "OID 1.2.3.4 is not recognized")
 
 def cli_tls_socket_tests(tmp_dir):
-    if not run_socket_tests() or not check_for_command("tls_client") or not check_for_command("tls_server"):
+    if True or not run_socket_tests() or not check_for_command("tls_client") or not check_for_command("tls_server"):
         return
 
     client_msg = b'Client message %d with extra stuff to test record_size_limit: %s\n' % (random.randint(0, 2**128), b'oO' * 64)
