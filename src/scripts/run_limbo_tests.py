@@ -50,10 +50,6 @@ tests_that_succeed_unexpectedly = {
     'webpki::san::wildcard-embedded-leftmost-san': 'CABF rule not RFC 5280',
     'webpki::ca-as-leaf': 'Not applicable outside of webpki',
 
-    'pathological::nc-dos-1': 'Todo',
-    'pathological::nc-dos-2': 'Todo',
-    'pathological::nc-dos-3': 'Todo',
-
     'webpki::explicit-curve': 'Deprecated but not gone yet',
     'rfc5280::nc::invalid-dnsname-leading-period': 'Common extension',
 

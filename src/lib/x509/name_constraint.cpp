@@ -11,6 +11,7 @@
 #include <botan/ber_dec.h>
 #include <botan/x509cert.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
 #include <functional>
@@ -296,12 +297,37 @@ NameConstraints::NameConstraints(std::vector<GeneralSubtree>&& permitted_subtree
    }
 }
 
+namespace {
+
+bool exceeds_limit(size_t dn_count, size_t alt_count, size_t constraint_count) {
+   /**
+   * OpenSSL uses a similar limit, but applies it to the total number of
+   * constraints, while we apply it to permitted and excluded independently.
+   */
+   constexpr size_t MAX_NC_CHECKS = (1 << 20);
+
+   if(auto names = checked_add(dn_count, alt_count)) {
+      if(auto product = checked_mul(*names, constraint_count)) {
+         if(*product < MAX_NC_CHECKS) {
+            return false;
+         }
+      }
+   }
+   return true;
+}
+
+}  // namespace
+
 bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unknown) const {
    if(permitted().empty()) {
       return true;
    }
 
    const auto& alt_name = cert.subject_alt_name();
+
+   if(exceeds_limit(cert.subject_dn().count(), alt_name.count(), permitted().size())) {
+      return false;
+   }
 
    if(reject_unknown) {
       if(m_permitted_name_types.contains(GeneralName::NameType::Other) && !alt_name.other_names().empty()) {
@@ -415,6 +441,10 @@ bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unkn
    }
 
    const auto& alt_name = cert.subject_alt_name();
+
+   if(exceeds_limit(cert.subject_dn().count(), alt_name.count(), excluded().size())) {
+      return true;
+   }
 
    if(reject_unknown) {
       // This is one is overly broad: we should just reject if there is a name constraint
