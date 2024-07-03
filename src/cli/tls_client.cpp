@@ -399,12 +399,10 @@ class TLS_Client final : public Command {
             fd = ::socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
 
             if(fd == invalid_socket()) {
-               std::cerr << "invalid socket" << std::endl;
                continue;
             }
 
             if(::connect(fd, rp->ai_addr, rp->ai_addrlen) != 0) {
-               std::cerr << "failed to connect, errno: " << errno << " - " << strerror(errno) << std::endl;
                ::close(fd);
                continue;
             }
