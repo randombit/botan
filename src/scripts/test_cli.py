@@ -6,6 +6,7 @@
 Botan is released under the Simplified BSD License (see license.txt)
 """
 
+import asyncio
 import base64
 import binascii
 import json
@@ -22,9 +23,9 @@ import ssl
 import subprocess
 import sys
 import tempfile
-import traceback
 import threading
 import time
+import traceback
 from multiprocessing.pool import ThreadPool
 from http.client import HTTPSConnection
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -32,6 +33,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 # pylint: disable=global-statement,unused-argument
 
 CLI_PATH = None
+ASYNC_TIMEOUT = 10 # seconds
 TEST_DATA_DIR = '.'
 ONLINE_TESTS = False
 TESTS_RUN = 0
@@ -986,34 +988,13 @@ MCACAQUTBnN0cmluZzEGAQH/AgFjBAUAAAAAAAMEAP///w==
     test_cli("oid_info", "1.2.3.4", "OID 1.2.3.4 is not recognized")
 
 def cli_tls_socket_tests(tmp_dir):
-    if True or not run_socket_tests() or not check_for_command("tls_client") or not check_for_command("tls_server"):
+    if not run_socket_tests() or not check_for_command("tls_client") or not check_for_command("tls_server"):
         return
 
     client_msg = b'Client message %d with extra stuff to test record_size_limit: %s\n' % (random.randint(0, 2**128), b'oO' * 64)
-    server_port = port_for('tls_server')
 
     psk = "FEEDFACECAFEBEEF"
     psk_identity = "test-psk"
-
-    priv_key = os.path.join(tmp_dir, 'priv.pem')
-    ca_cert = os.path.join(tmp_dir, 'ca.crt')
-    crt_req = os.path.join(tmp_dir, 'crt.req')
-    server_cert = os.path.join(tmp_dir, 'server.crt')
-    tls_client_policy = os.path.join(tmp_dir, 'test_client_policy.txt')
-    tls_server_policy = os.path.join(tmp_dir, 'test_server_policy.txt')
-
-    test_cli("keygen", ["--algo=ECDSA", "--params=secp256r1", "--output=" + priv_key], "")
-
-    test_cli("gen_self_signed",
-             [priv_key, "CA", "--ca", "--country=VT",
-              "--dns=ca.example", "--hash=SHA-384", "--output="+ca_cert],
-             "")
-
-    test_cli("cert_verify", ca_cert, "Certificate did not validate - Cannot establish trust")
-
-    test_cli("gen_pkcs10", "%s localhost --output=%s" % (priv_key, crt_req))
-
-    test_cli("sign_cert", "%s %s %s --output=%s" % (ca_cert, priv_key, crt_req, server_cert))
 
     class TestConfig:
         def __init__(self, name, protocol_version, policy, **kwargs):
@@ -1060,72 +1041,172 @@ def cli_tls_socket_tests(tmp_dir):
         TestConfig("Hybrid PQ/T", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_groups=x25519/Kyber-512-r3"),
     ]
 
-    with open(tls_server_policy, 'w', encoding='utf8') as f:
-        f.write('key_exchange_methods = ECDH DH ECDHE_PSK\n')
-        f.write("key_exchange_groups = x25519 x448 secp256r1 ffdhe/ietf/2048 Kyber-512-r3 x25519/Kyber-512-r3")
+    class TestServer:
+        def __init__(self, tmp_dir, port, psk, psk_identity, clients=0):
+            self.port = port
+            self.psk = psk
+            self.psk_identity = psk_identity
+            self.clients = clients
+            self._incomplete_stdout = b""
+            self._all_clear = False
+            self._create_infrastructure(tmp_dir)
 
-    tls_server = subprocess.Popen([CLI_PATH, 'tls_server', '--max-clients=%d' % (len(configs)),
-                                   '--port=%d' % (server_port), '--policy=%s' % (tls_server_policy),
-                                   '--psk=%s' % (psk), '--psk-identity=%s' % (psk_identity),
-                                   server_cert, priv_key],
-                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        def all_clear(self):
+            self._all_clear = True
 
-    wait_time = 1.0
+        def _create_infrastructure(self, tmp_dir):
+            self.priv_key = os.path.join(tmp_dir, 'priv.pem')
+            self.ca_cert = os.path.join(tmp_dir, 'ca.crt')
+            self.crt_req = os.path.join(tmp_dir, 'crt.req')
+            self.cert = os.path.join(tmp_dir, 'server.crt')
+            self.policy = os.path.join(tmp_dir, 'test_server_policy.txt')
 
-    time.sleep(wait_time)
+            test_cli("keygen", ["--algo=ECDSA", "--params=secp256r1", f"--output={self.priv_key}"], "")
+            test_cli("gen_self_signed", [self.priv_key, "CA", "--ca", "--country=VT", "--dns=ca.example", "--hash=SHA-384", f"--output={self.ca_cert}"], "")
+            test_cli("cert_verify", self.ca_cert, "Certificate did not validate - Cannot establish trust")
+            test_cli("gen_pkcs10", [f"{self.priv_key}", "localhost", f"--output={self.crt_req}"])
+            test_cli("sign_cert", [self.ca_cert, self.priv_key, self.crt_req, f"--output={self.cert}"])
 
-    for tls_config in configs:
-        with open(tls_client_policy, 'w', encoding='utf8') as f:
-            f.write(tls_config.policy)
+            with open(self.policy, 'w', encoding='utf8') as f:
+                f.write('key_exchange_methods = ECDH DH ECDHE_PSK\n')
+                f.write("key_exchange_groups = x25519 x448 secp256r1 ffdhe/ietf/2048 Kyber-512-r3 x25519/Kyber-512-r3")
 
-        tls_client_cmd = [CLI_PATH, 'tls_client', 'localhost',
-                          '--port=%d' % (server_port), '--trusted-cas=%s' % (ca_cert),
-                          '--tls-version=%s' % (tls_config.protocol_version), '--policy=%s' % tls_client_policy]
-        if tls_config.psk and tls_config.psk_identity:
-            tls_client_cmd += ['--psk=%s' % tls_config.psk, '--psk-identity=%s' % tls_config.psk_identity]
+        async def _finalize(self):
+            try:
+                await asyncio.wait_for(self._srv.wait(), timeout=ASYNC_TIMEOUT)
+            except asyncio.TimeoutExpired:
+                logging.error("Server did not terminate in time, will kill it...")
+                self._srv.kill()
+            finally:
+                (srv_stdout, srv_stderr) = await self._srv.communicate()
+                logging.debug(f"server finished with return code: {self._srv.returncode}")
+                logging.debug(f"server said (stdout): {(self._incomplete_stdout + srv_stdout).decode('utf-8')}")
+                if self._all_clear:
+                    logging.debug(f"server said (stderr): {srv_stderr.decode('utf-8')}")
+                else:
+                    logging.error(f"server said (stderr): {srv_stderr.decode('utf-8')}")
 
-        tls_client = subprocess.Popen(tls_client_cmd,
-                                      stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        async def __aenter__(self):
+            server_cmd = [CLI_PATH, "tls_server", f"--max-clients={self.clients}",
+                          f"--port={self.port}", f"--policy={self.policy}",
+                          f"--psk={self.psk}", f"--psk-identity={self.psk_identity}",
+                          self.cert, self.priv_key]
+            logging.debug(f"Executing: '{' '.join(server_cmd)}'")
+            self._srv = await asyncio.create_subprocess_exec(*server_cmd, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-        time.sleep(wait_time)
+            # wait for the server to report for duty
+            try:
+                self._incomplete_stdout += await asyncio.wait_for(self._srv.stdout.readuntil(b'Listening for new connections'), timeout=ASYNC_TIMEOUT)
+            except asyncio.IncompleteReadError as e:
+                logging.error(f"Server failed to start")
+                self._incomplete_stdout += e.partial
+                await self._finalize()
+                raise
 
-        try:
-            tls_client.stdin.write(client_msg)
-            tls_client.stdin.flush()
-        except BrokenPipeError:
-            pass # On handshake failure, the stdin pipe of is already closed here
-                # and error reporting below would not be reached.
+            return self
 
-        time.sleep(wait_time)
+        async def __aexit__(self, *args):
+            await self._finalize()
 
-        (stdout, stderr) = tls_client.communicate()
+    class TestClient:
+        def __init__(self, tmp_dir, server_port, ca):
+            self.tmp_dir = tmp_dir
+            self.port = server_port
+            self.ca = ca
+            self.policy = os.path.join(tmp_dir, 'test_client_policy.txt')
+            self._incomplete_stdout = b""
 
-        if not tls_config.expect_error:
-            if stderr:
-                logging.error("Got unexpected stderr output (%s) %s", tls_config.name, stderr)
+        @property
+        def returncode(self):
+            return self._clt.returncode
 
-            if b'Handshake complete' not in stdout:
-                logging.error('Failed to complete handshake (%s): %s', tls_config.name, stdout)
+        async def __aenter__(self):
+            return self
 
-            if client_msg not in stdout:
-                logging.error("Missing client message from stdout (%s): %s", tls_config.name, stdout)
-        elif tls_client.returncode == 0:
-            logging.error('Expected an error, but tls_client finished with success')
+        async def __aexit__(self, *args):
+            await self._finalize()
 
-        if tls_config.stdout_regex:
-            match = re.search(tls_config.stdout_regex, stdout.decode('utf-8'))
-            if not match:
-                logging.error("Client log did not match expected regex (%s): %s", tls_config.name, tls_config.stdout_regex)
-                logging.error("Client said (stdout): %s", stdout)
+        async def run(self, config, msg):
+            with open(self.policy, 'w', encoding='utf8') as f:
+                f.write(config.policy)
 
-    try:
-        (srv_stdout, srv_stderr) = tls_server.communicate(None, 5)
-    except subprocess.TimeoutExpired:
-        tls_server.kill()
-        tls_server.communicate()
-    finally:
-        logging.error("server said (stdout): %s", srv_stdout.decode('utf-8'))
-        logging.error("server said (stderr): %s", srv_stderr.decode('utf-8'))
+            client_cmd = [CLI_PATH, "tls_client", 'localhost', f'--port={self.port}', f'--trusted-cas={self.ca}',
+                          f'--tls-version={config.protocol_version}', f'--policy={self.policy}']
+            if config.psk:
+                client_cmd += [f'--psk={config.psk}', f'--psk-identity={config.psk_identity}']
+
+            logging.debug(f"Executing: '{' '.join(client_cmd)}'")
+            self._clt = await asyncio.create_subprocess_exec(*client_cmd, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            await self._wait_for_successful_handshake(config.expect_error)
+            if not config.expect_error:
+                await self._perform_message_ping_pong(msg)
+            return await self._read_to_eof()
+
+        async def _wait_for_successful_handshake(self, may_fail):
+            try:
+                self._incomplete_stdout += await asyncio.wait_for(self._clt.stdout.readuntil(b'Handshake complete'), timeout=ASYNC_TIMEOUT)
+            except asyncio.IncompleteReadError as e:
+                self._incomplete_stdout += e.partial
+                if may_fail:
+                    logging.debug(f"Client failed to complete handshake as expected")
+                    return
+                logging.error(f"Client failed to complete handshake")
+                raise
+
+        async def _perform_message_ping_pong(self, msg):
+            self._clt.stdin.write(msg)
+            await self._clt.stdin.drain()
+
+            try:
+                self._incomplete_stdout += await asyncio.wait_for(self._clt.stdout.readuntil(msg), timeout=ASYNC_TIMEOUT)
+            except asyncio.IncompleteReadError as e:
+                logging.error(f"Client failed to read message")
+                self._incomplete_stdout += e.partial
+                raise
+
+        async def _read_to_eof(self):
+            self._clt.stdin.close()
+            self._incomplete_stdout += await asyncio.wait_for(self._clt.stdout.read(), timeout=ASYNC_TIMEOUT)
+            return (self._incomplete_stdout).decode('utf-8')
+
+        async def _finalize(self):
+            try:
+                await asyncio.wait_for(self._clt.wait(), timeout=ASYNC_TIMEOUT)
+            except asyncio.TimeoutExpired:
+                logging.error("Client did not terminate in time, will kill it...")
+                self._clt.kill()
+            finally:
+                (stdout, stderr) = await self._clt.communicate()
+                logging.debug(f"client finished with return code: {self._clt.returncode}")
+                logging.debug(f"client said (stdout): {(self._incomplete_stdout + stdout).decode('utf-8')}")
+                if stderr:
+                    logging.error(f"client said (stderr): {stderr.decode('utf-8')}")
+
+    async def run_test():
+        async with TestServer(tmp_dir, port_for('tls_server'), psk, psk_identity, len(configs)) as server:
+            errors = 0;
+            for tls_config in configs:
+                async with TestClient(tmp_dir, server.port, server.ca_cert) as client:
+                    stdout = await client.run(tls_config, client_msg)
+
+                    if not tls_config.expect_error:
+                        if client.returncode != 0:
+                            errors += 1
+                            logging.error(f'Client failed with error ({tls_config.name}): {client.returncode}')
+                    elif client.returncode == 0:
+                        errors += 1
+                        logging.error(f'Expected an error, but tls_client finished with success ({tls_config.name})')
+
+                    if tls_config.stdout_regex:
+                        match = re.search(tls_config.stdout_regex, stdout)
+                        if not match:
+                            errors += 1
+                            logging.error(f"Client log did not match expected regex ({tls_config}): {tls_config.stdout_regex}")
+
+            if not errors:
+                server.all_clear()
+
+    asyncio.run(run_test())
 
 def cli_tls_online_pqc_hybrid_tests(tmp_dir):
     if not run_socket_tests() or not run_online_tests() or not check_for_command("tls_client"):
