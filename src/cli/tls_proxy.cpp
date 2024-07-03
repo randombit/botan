@@ -51,6 +51,10 @@ boost::asio::io_context& get_io_service(T& s) {
    #endif
 }
 
+void log_info(const std::string& msg) {
+   std::cout << msg << std::endl;
+}
+
 void log_exception(const char* where, const std::exception& e) {
    std::cout << where << ' ' << e.what() << std::endl;
 }
@@ -350,11 +354,8 @@ class tls_proxy_server final {
             m_policy(std::move(policy)),
             m_session_manager(std::move(session_mgr)),
             m_status(max_clients) {
-         session::pointer new_session = make_session();
-
-         m_acceptor.async_accept(
-            new_session->client_socket(),
-            boost::bind(&tls_proxy_server::handle_accept, this, new_session, boost::asio::placeholders::error));
+         log_info("Listening for new connections on port " + std::to_string(port));
+         serve_one_session();
       }
 
    private:
