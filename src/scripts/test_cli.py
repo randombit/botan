@@ -33,7 +33,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 # pylint: disable=global-statement,unused-argument
 
 CLI_PATH = None
-ASYNC_TIMEOUT = 10 # seconds
+ASYNC_TIMEOUT = 2 # seconds
 TEST_DATA_DIR = '.'
 ONLINE_TESTS = False
 TESTS_RUN = 0
@@ -87,6 +87,78 @@ def port_for(service):
     else:
         logging.warning("Unknown service '%s', update port_for function", service)
         return base_port + random.randint(30, 100)
+
+
+# A asyncio wrapper around a long-running process with some helpers to
+# interact with the it. Typically, users will derive from this and
+# implement an asynchronous resource manager based on this.
+class AsyncTestProcess:
+    def __init__(self, name):
+        self._name = name
+        self._proc = None
+        self._stdout = b''
+        self._all_clear = False
+
+    def all_clear(self):
+        self._all_clear = True
+
+    @property
+    def returncode(self):
+        return self._proc.returncode if self._proc else None
+
+    @property
+    def stdout(self):
+        return self._stdout.decode('utf-8')
+
+    async def _launch(self, cmd, start_sentinel = None):
+        logging.debug(f"Executing: '{' '.join(cmd)}'")
+
+        try:
+            self._proc = await asyncio.create_subprocess_exec(*cmd, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            if start_sentinel:
+                await self._read_stdout_until(start_sentinel)
+        except:
+            await self._finalize()
+            raise
+
+    async def _write_to_stdin(self, data):
+        self._proc.stdin.write(data)
+        await self._proc.stdin.drain()
+
+    async def _read_stdout_until(self, needle):
+        try:
+            self._stdout += await asyncio.wait_for(self._proc.stdout.readuntil(needle), timeout=ASYNC_TIMEOUT)
+        except asyncio.IncompleteReadError as e:
+            logging.error(f"{self._name} did not report back as expected")
+            self._stdout += e.partial
+            raise
+        except asyncio.TimeoutError as e:
+            logging.error(f"{self._name} ran into a timeout before reporting back")
+            raise
+
+    async def _close_stdin_and_read_stdout_to_eof(self):
+        self._proc.stdin.close()
+        try:
+            self._stdout += await asyncio.wait_for(self._proc.stdout.read(), timeout=ASYNC_TIMEOUT)
+        except asyncio.TimeoutError:
+            logging.error(f"{self._name} did not close their stdout as expected")
+            raise
+
+    async def _finalize(self):
+        try:
+            await asyncio.wait_for(self._proc.wait(), timeout=ASYNC_TIMEOUT)
+        except asyncio.TimeoutError:
+            logging.error(f"{self._name} did not terminate in time, will kill it...")
+            self._proc.kill()
+        finally:
+            (final_stdout, final_stderr) = await self._proc.communicate()
+            self._stdout += final_stdout
+            logging.debug(f"{self._name} finished with return code: {self._proc.returncode}")
+            logging.debug(f"{self._name} said (stdout): {self._stdout.decode('utf-8')}")
+            if final_stderr:
+                logging.log(logging.ERROR if not self._all_clear else logging.DEBUG,
+                            f"{self._name} said (stderr): {final_stderr.decode('utf-8')}")
+
 
 def test_cli(cmd, cmd_options,
              expected_output=None,
@@ -1039,71 +1111,6 @@ def cli_tls_socket_tests(tmp_dir):
         TestConfig("Hybrid PQ/T", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_groups=x25519/Kyber-512-r3"),
     ]
 
-    class AsyncTestProcess:
-        def __init__(self, name):
-            self._name = name
-            self._proc = None
-            self._stdout = b''
-            self._all_clear = False
-
-        def all_clear(self):
-            self._all_clear = True
-
-        @property
-        def returncode(self):
-            return self._proc.returncode if self._proc else None
-
-        @property
-        def stdout(self):
-            return self._stdout.decode('utf-8')
-
-        async def _launch(self, cmd, start_sentinel = None):
-            logging.debug(f"Executing: '{' '.join(cmd)}'")
-
-            try:
-                self._proc = await asyncio.create_subprocess_exec(*cmd, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-                if start_sentinel:
-                    await self._read_stdout_until(start_sentinel)
-            except:
-                await self._finalize()
-                raise
-
-        async def _write_to_stdin(self, data):
-            self._proc.stdin.write(data)
-            await self._proc.stdin.drain()
-
-        async def _read_stdout_until(self, needle):
-            try:
-                self._stdout += await asyncio.wait_for(self._proc.stdout.readuntil(needle), timeout=ASYNC_TIMEOUT)
-            except asyncio.IncompleteReadError as e:
-                logging.debug(f"{self._name} did not report back as expected")
-                self._stdout += e.partial
-                raise
-
-        async def _close_stdin_and_read_stdout_to_eof(self):
-            self._proc.stdin.close()
-            try:
-                self._stdout += await asyncio.wait_for(self._proc.stdout.read(), timeout=ASYNC_TIMEOUT)
-            except asyncio.TimeoutError:
-                logging.error(f"{self._name} did not close their stdout as expected")
-                raise
-
-        async def _finalize(self):
-            try:
-                await asyncio.wait_for(self._proc.wait(), timeout=ASYNC_TIMEOUT)
-            except asyncio.TimeoutExpired:
-                logging.error(f"{self._name} did not terminate in time, will kill it...")
-                self._proc.kill()
-            finally:
-                (final_stdout, final_stderr) = await self._proc.communicate()
-                self._stdout += final_stdout
-                logging.debug(f"{self._name} finished with return code: {self._proc.returncode}")
-                logging.debug(f"{self._name} said (stdout): {self._stdout.decode('utf-8')}")
-                if final_stderr:
-                    logging.log(logging.ERROR if not self._all_clear else logging.DEBUG,
-                                f"{self._name} said (stderr): {final_stderr.decode('utf-8')}")
-
-
     class TestServer(AsyncTestProcess):
         def __init__(self, tmp_dir, port, psk, psk_identity, clients=0):
             super().__init__("Server")
@@ -1393,32 +1400,7 @@ def cli_tls_proxy_tests(tmp_dir):
 
     server_port = port_for('tls_proxy_backend')
     proxy_port = port_for('tls_proxy')
-    max_clients = 100
-
-    priv_key = os.path.join(tmp_dir, 'priv.pem')
-    ca_cert = os.path.join(tmp_dir, 'ca.crt')
-    crt_req = os.path.join(tmp_dir, 'crt.req')
-    server_cert = os.path.join(tmp_dir, 'server.crt')
-    proxy_err = os.path.join(tmp_dir, 'proxy.err')
-
-    test_cli("keygen", ["--algo=ECDSA", "--params=secp384r1", "--output=" + priv_key], "")
-
-    test_cli("gen_self_signed",
-             [priv_key, "CA", "--ca", "--country=VT",
-              "--dns=ca.example", "--hash=SHA-384", "--output="+ca_cert],
-             "")
-
-    test_cli("gen_pkcs10", "%s localhost --output=%s" % (priv_key, crt_req))
-
-    test_cli("sign_cert", "%s %s %s --output=%s" % (ca_cert, priv_key, crt_req, server_cert))
-
-    tls_proxy = subprocess.Popen([CLI_PATH, 'tls_proxy', str(proxy_port), '127.0.0.1', str(server_port),
-                                  server_cert, priv_key, f'--output={proxy_err}', f'--max-clients={max_clients}'],
-                                 stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    wait_time = 1.0
-
-    time.sleep(wait_time)
+    max_clients = 500
 
     server_response = binascii.hexlify(os.urandom(32))
 
@@ -1436,49 +1418,63 @@ def cli_tls_proxy_tests(tmp_dir):
         httpd = HTTPServer(('', server_port), Handler)
         httpd.serve_forever()
 
-    http_thread = threading.Thread(target=run_http_server)
-    http_thread.daemon = True
-    http_thread.start()
+    class Proxy(AsyncTestProcess):
+        def __init__(self, tmp_dir, server_port, proxy_port, clients=0):
+            super().__init__("Proxy")
+            self.server_port = server_port
+            self.proxy_port = proxy_port
+            self.clients = clients
 
-    time.sleep(wait_time)
+            self.priv_key = os.path.join(tmp_dir, 'priv.pem')
+            self.ca_cert = os.path.join(tmp_dir, 'ca.crt')
+            self.crt_req = os.path.join(tmp_dir, 'crt.req')
+            self.cert = os.path.join(tmp_dir, 'server.crt')
 
-    context = ssl.create_default_context(cafile=ca_cert)
-    context.minimum_version = ssl.TLSVersion.TLSv1_3
-    context.maximum_version = ssl.TLSVersion.TLSv1_3
+            test_cli("keygen", ["--algo=ECDSA", "--params=secp384r1", f"--output={self.priv_key}"], "")
+            test_cli("gen_self_signed", [self.priv_key, "CA", "--ca", "--country=VT", "--dns=ca.example", "--hash=SHA-384", f"--output={self.ca_cert}"], "")
+            test_cli("gen_pkcs10", [self.priv_key, "localhost",  f"--output={self.crt_req}"])
+            test_cli("sign_cert", [self.ca_cert, self.priv_key, self.crt_req, f"--output={self.cert}"])
 
-    try:
-        for i in range(max_clients):
-            # Make sure that TLS protocol version downgrade works
-            if i > max_clients / 2:
-                context.minimum_version = ssl.TLSVersion.TLSv1_2
-                context.maximum_version = ssl.TLSVersion.TLSv1_2
+        async def __aenter__(self):
+            proxy_cmd = [CLI_PATH, 'tls_proxy', str(proxy_port), '127.0.0.1', str(server_port),
+                         self.cert, self.priv_key, f'--max-clients={self.clients}']
 
-            conn = HTTPSConnection('localhost', port=proxy_port, context=context, timeout=20)
-            conn.request("GET", "/")
-            resp = conn.getresponse()
+            await self._launch(proxy_cmd, b'Listening for new connections')
 
-            if resp.status != 200:
-                logging.error('Unexpected response status %d', resp.status)
+            return self
 
-            body = resp.read()
+        async def __aexit__(self, *_):
+            await self._finalize()
 
-            if body != server_response:
-                logging.error('Unexpected response from server %s', body)
-    except:
-        tls_proxy.kill()
-    finally:
-        rc = tls_proxy.wait(5)
+    async def run_test():
+        http_thread = threading.Thread(target=run_http_server)
+        http_thread.daemon = True
+        http_thread.start()
 
-        # Trying to debug https://github.com/randombit/botan/issues/4112
-        stdout = tls_proxy.stdout.read().decode('utf8')
-        if stdout != '':
-            logging.info('Stdout: %s', stdout)
-        stderr = tls_proxy.stderr.read().decode('utf8')
-        if stdout != '':
-            logging.info('Stderr: %s', stderr)
+        async with Proxy(tmp_dir, server_port, proxy_port, max_clients) as tls_proxy:
+            context = ssl.create_default_context(cafile=tls_proxy.ca_cert)
+            context.minimum_version = ssl.TLSVersion.TLSv1_3
+            context.maximum_version = ssl.TLSVersion.TLSv1_3
 
-        if rc != 0:
-            logging.error('Unexpected return code from tls_proxy %d', rc)
+            for i in range(max_clients):
+                # Make sure that TLS protocol version downgrade works
+                if i > max_clients / 2:
+                    context.minimum_version = ssl.TLSVersion.TLSv1_2
+                    context.maximum_version = ssl.TLSVersion.TLSv1_2
+
+                conn = HTTPSConnection('localhost', port=proxy_port, context=context, timeout=20)
+                conn.request("GET", "/")
+                resp = conn.getresponse()
+
+                if resp.status != 200:
+                    logging.error('Unexpected response status %d', resp.status)
+
+                body = resp.read()
+
+                if body != server_response:
+                    logging.error('Unexpected response from server %s', body)
+
+    asyncio.run(run_test())
 
 def cli_trust_root_tests(tmp_dir):
     pem_file = os.path.join(tmp_dir, 'pems')
