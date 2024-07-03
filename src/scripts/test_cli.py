@@ -991,8 +991,6 @@ def cli_tls_socket_tests(tmp_dir):
     if not run_socket_tests() or not check_for_command("tls_client") or not check_for_command("tls_server"):
         return
 
-    client_msg = b'Client message %d with extra stuff to test record_size_limit: %s\n' % (random.randint(0, 2**128), b'oO' * 64)
-
     psk = "FEEDFACECAFEBEEF"
     psk_identity = "test-psk"
 
@@ -1041,20 +1039,79 @@ def cli_tls_socket_tests(tmp_dir):
         TestConfig("Hybrid PQ/T", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_groups=x25519/Kyber-512-r3"),
     ]
 
-    class TestServer:
-        def __init__(self, tmp_dir, port, psk, psk_identity, clients=0):
-            self.port = port
-            self.psk = psk
-            self.psk_identity = psk_identity
-            self.clients = clients
-            self._incomplete_stdout = b""
+    class AsyncTestProcess:
+        def __init__(self, name):
+            self._name = name
+            self._proc = None
+            self._stdout = b''
             self._all_clear = False
-            self._create_infrastructure(tmp_dir)
 
         def all_clear(self):
             self._all_clear = True
 
-        def _create_infrastructure(self, tmp_dir):
+        @property
+        def returncode(self):
+            return self._proc.returncode if self._proc else None
+
+        @property
+        def stdout(self):
+            return self._stdout.decode('utf-8')
+
+        async def _launch(self, cmd, start_sentinel = None):
+            logging.debug(f"Executing: '{' '.join(cmd)}'")
+
+            try:
+                self._proc = await asyncio.create_subprocess_exec(*cmd, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+                if start_sentinel:
+                    await self._read_stdout_until(start_sentinel)
+            except:
+                await self._finalize()
+                raise
+
+        async def _write_to_stdin(self, data):
+            self._proc.stdin.write(data)
+            await self._proc.stdin.drain()
+
+        async def _read_stdout_until(self, needle):
+            try:
+                self._stdout += await asyncio.wait_for(self._proc.stdout.readuntil(needle), timeout=ASYNC_TIMEOUT)
+            except asyncio.IncompleteReadError as e:
+                logging.debug(f"{self._name} did not report back as expected")
+                self._stdout += e.partial
+                raise
+
+        async def _close_stdin_and_read_stdout_to_eof(self):
+            self._proc.stdin.close()
+            try:
+                self._stdout += await asyncio.wait_for(self._proc.stdout.read(), timeout=ASYNC_TIMEOUT)
+            except asyncio.TimeoutError:
+                logging.error(f"{self._name} did not close their stdout as expected")
+                raise
+
+        async def _finalize(self):
+            try:
+                await asyncio.wait_for(self._proc.wait(), timeout=ASYNC_TIMEOUT)
+            except asyncio.TimeoutExpired:
+                logging.error(f"{self._name} did not terminate in time, will kill it...")
+                self._proc.kill()
+            finally:
+                (final_stdout, final_stderr) = await self._proc.communicate()
+                self._stdout += final_stdout
+                logging.debug(f"{self._name} finished with return code: {self._proc.returncode}")
+                logging.debug(f"{self._name} said (stdout): {self._stdout.decode('utf-8')}")
+                if final_stderr:
+                    logging.log(logging.ERROR if not self._all_clear else logging.DEBUG,
+                                f"{self._name} said (stderr): {final_stderr.decode('utf-8')}")
+
+
+    class TestServer(AsyncTestProcess):
+        def __init__(self, tmp_dir, port, psk, psk_identity, clients=0):
+            super().__init__("Server")
+            self.port = port
+            self.psk = psk
+            self.psk_identity = psk_identity
+            self.clients = clients
+
             self.priv_key = os.path.join(tmp_dir, 'priv.pem')
             self.ca_cert = os.path.join(tmp_dir, 'ca.crt')
             self.crt_req = os.path.join(tmp_dir, 'crt.req')
@@ -1071,137 +1128,87 @@ def cli_tls_socket_tests(tmp_dir):
                 f.write('key_exchange_methods = ECDH DH ECDHE_PSK\n')
                 f.write("key_exchange_groups = x25519 x448 secp256r1 ffdhe/ietf/2048 Kyber-512-r3 x25519/Kyber-512-r3")
 
-        async def _finalize(self):
-            try:
-                await asyncio.wait_for(self._srv.wait(), timeout=ASYNC_TIMEOUT)
-            except asyncio.TimeoutExpired:
-                logging.error("Server did not terminate in time, will kill it...")
-                self._srv.kill()
-            finally:
-                (srv_stdout, srv_stderr) = await self._srv.communicate()
-                logging.debug(f"server finished with return code: {self._srv.returncode}")
-                logging.debug(f"server said (stdout): {(self._incomplete_stdout + srv_stdout).decode('utf-8')}")
-                if self._all_clear:
-                    logging.debug(f"server said (stderr): {srv_stderr.decode('utf-8')}")
-                else:
-                    logging.error(f"server said (stderr): {srv_stderr.decode('utf-8')}")
-
         async def __aenter__(self):
             server_cmd = [CLI_PATH, "tls_server", f"--max-clients={self.clients}",
                           f"--port={self.port}", f"--policy={self.policy}",
                           f"--psk={self.psk}", f"--psk-identity={self.psk_identity}",
                           self.cert, self.priv_key]
-            logging.debug(f"Executing: '{' '.join(server_cmd)}'")
-            self._srv = await asyncio.create_subprocess_exec(*server_cmd, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-            # wait for the server to report for duty
-            try:
-                self._incomplete_stdout += await asyncio.wait_for(self._srv.stdout.readuntil(b'Listening for new connections'), timeout=ASYNC_TIMEOUT)
-            except asyncio.IncompleteReadError as e:
-                logging.error(f"Server failed to start")
-                self._incomplete_stdout += e.partial
-                await self._finalize()
-                raise
+            await self._launch(server_cmd, b'Listening for new connections')
 
             return self
 
-        async def __aexit__(self, *args):
+        async def __aexit__(self, *_):
             await self._finalize()
 
-    class TestClient:
-        def __init__(self, tmp_dir, server_port, ca):
+    class TestClient(AsyncTestProcess):
+        client_message = b'Client message %d with extra stuff to test record_size_limit: %s\n' % (random.randint(0, 2**128), b'oO' * 64)
+
+        def __init__(self, tmp_dir, server_port, ca, config):
+            super().__init__("Client")
             self.tmp_dir = tmp_dir
             self.port = server_port
             self.ca = ca
             self.policy = os.path.join(tmp_dir, 'test_client_policy.txt')
-            self._incomplete_stdout = b""
+            self.config = config
 
-        @property
-        def returncode(self):
-            return self._clt.returncode
+            with open(self.policy, 'w', encoding='utf8') as f:
+                f.write(self.config.policy)
+
+        async def perform_message_ping_pong(self):
+            # write the test message
+            await self._write_to_stdin(TestClient.client_message)
+
+            # expect the server to echo the test message, but don't
+            # close our stdin pipe to the client, yet
+            await self._read_stdout_until(TestClient.client_message)
+
+            # close the client and expect to read stdout until EOF
+            await self._close_stdin_and_read_stdout_to_eof()
+
+            if self.returncode != 0:
+                raise Exception(f'Client failed with error ({self.config.name}): {self.returncode}')
+            self._check_stdout_regex()
+
+        async def expect_handshake_error(self):
+            await self._close_stdin_and_read_stdout_to_eof()
+            if self.returncode == 0:
+                raise Exception(f"Expected an error, but tls_client finished with success ({self.config.name})")
+            self._check_stdout_regex()
+
+        def _check_stdout_regex(self):
+            if self.config.stdout_regex:
+                match = re.search(self.config.stdout_regex, self.stdout)
+                if not match:
+                    raise Exception(f"Client log did not match expected regex ({self.config.name}): {self.config.stdout_regex}")
 
         async def __aenter__(self):
+            client_cmd = [CLI_PATH, "tls_client", 'localhost', f'--port={self.port}', f'--trusted-cas={self.ca}',
+                          f'--tls-version={self.config.protocol_version}', f'--policy={self.policy}']
+            if self.config.psk:
+                client_cmd += [f'--psk={self.config.psk}', f'--psk-identity={self.config.psk_identity}']
+
+            await self._launch(client_cmd, b'Handshake complete' if not self.config.expect_error else None)
+
             return self
 
-        async def __aexit__(self, *args):
+        async def __aexit__(self, *_):
             await self._finalize()
-
-        async def run(self, config, msg):
-            with open(self.policy, 'w', encoding='utf8') as f:
-                f.write(config.policy)
-
-            client_cmd = [CLI_PATH, "tls_client", 'localhost', f'--port={self.port}', f'--trusted-cas={self.ca}',
-                          f'--tls-version={config.protocol_version}', f'--policy={self.policy}']
-            if config.psk:
-                client_cmd += [f'--psk={config.psk}', f'--psk-identity={config.psk_identity}']
-
-            logging.debug(f"Executing: '{' '.join(client_cmd)}'")
-            self._clt = await asyncio.create_subprocess_exec(*client_cmd, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-            await self._wait_for_successful_handshake(config.expect_error)
-            if not config.expect_error:
-                await self._perform_message_ping_pong(msg)
-            return await self._read_to_eof()
-
-        async def _wait_for_successful_handshake(self, may_fail):
-            try:
-                self._incomplete_stdout += await asyncio.wait_for(self._clt.stdout.readuntil(b'Handshake complete'), timeout=ASYNC_TIMEOUT)
-            except asyncio.IncompleteReadError as e:
-                self._incomplete_stdout += e.partial
-                if may_fail:
-                    logging.debug(f"Client failed to complete handshake as expected")
-                    return
-                logging.error(f"Client failed to complete handshake")
-                raise
-
-        async def _perform_message_ping_pong(self, msg):
-            self._clt.stdin.write(msg)
-            await self._clt.stdin.drain()
-
-            try:
-                self._incomplete_stdout += await asyncio.wait_for(self._clt.stdout.readuntil(msg), timeout=ASYNC_TIMEOUT)
-            except asyncio.IncompleteReadError as e:
-                logging.error(f"Client failed to read message")
-                self._incomplete_stdout += e.partial
-                raise
-
-        async def _read_to_eof(self):
-            self._clt.stdin.close()
-            self._incomplete_stdout += await asyncio.wait_for(self._clt.stdout.read(), timeout=ASYNC_TIMEOUT)
-            return (self._incomplete_stdout).decode('utf-8')
-
-        async def _finalize(self):
-            try:
-                await asyncio.wait_for(self._clt.wait(), timeout=ASYNC_TIMEOUT)
-            except asyncio.TimeoutExpired:
-                logging.error("Client did not terminate in time, will kill it...")
-                self._clt.kill()
-            finally:
-                (stdout, stderr) = await self._clt.communicate()
-                logging.debug(f"client finished with return code: {self._clt.returncode}")
-                logging.debug(f"client said (stdout): {(self._incomplete_stdout + stdout).decode('utf-8')}")
-                if stderr:
-                    logging.error(f"client said (stderr): {stderr.decode('utf-8')}")
 
     async def run_test():
         async with TestServer(tmp_dir, port_for('tls_server'), psk, psk_identity, len(configs)) as server:
             errors = 0;
             for tls_config in configs:
-                async with TestClient(tmp_dir, server.port, server.ca_cert) as client:
-                    stdout = await client.run(tls_config, client_msg)
-
-                    if not tls_config.expect_error:
-                        if client.returncode != 0:
-                            errors += 1
-                            logging.error(f'Client failed with error ({tls_config.name}): {client.returncode}')
-                    elif client.returncode == 0:
-                        errors += 1
-                        logging.error(f'Expected an error, but tls_client finished with success ({tls_config.name})')
-
-                    if tls_config.stdout_regex:
-                        match = re.search(tls_config.stdout_regex, stdout)
-                        if not match:
-                            errors += 1
-                            logging.error(f"Client log did not match expected regex ({tls_config}): {tls_config.stdout_regex}")
+                logging.debug(f"Running test for {tls_config.name}")
+                async with TestClient(tmp_dir, server.port, server.ca_cert, tls_config) as client:
+                    try:
+                        if tls_config.expect_error:
+                            await client.expect_handshake_error()
+                        else:
+                            await client.perform_message_ping_pong()
+                        client.all_clear()
+                    except Exception as e:
+                        logging.error(f"Test failed for {tls_config.name}: {e}")
 
             if not errors:
                 server.all_clear()
