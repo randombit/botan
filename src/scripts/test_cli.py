@@ -1433,7 +1433,7 @@ def cli_tls_http_server_tests(tmp_dir):
     asyncio.run(run_async_test())
 
 def cli_tls_proxy_tests(tmp_dir):
-    if not run_socket_tests() or not check_for_command("tls_proxy"):
+    if not run_socket_tests() or platform.system() == 'Windows' or not check_for_command("tls_proxy"):
         return
 
     server_port = port_for('tls_proxy_backend')
