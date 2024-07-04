@@ -25,11 +25,7 @@ inline auto create_shake_row_generator(const FrodoKEMConstants& constants, Stron
 
    return [xof = SHAKE_128_XOF(), a = FrodoSeedA(seed_a)](std::span<uint8_t> out, uint16_t i) mutable {
       xof.clear();
-      // TODO: update that once #3707 is merged
-      //       potentially add a new method: std::array<uint8_t, XX> as_le(uintXX_t)
-      std::array<uint8_t, 2> le;
-      store_le(i, le.data());
-      xof.update(le);
+      xof.update(store_le(i));
       xof.update(a);
       xof.output(out);
    };
