@@ -11,10 +11,6 @@
         "--header-insertion=never"
     ],
     "clang-format.executable": "clang-format-17",
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true,
-    "python.linting.pylintArgs": [
-        "--rcfile=src/configs/pylint.rc"
-    ],
-    "python.linting.lintOnSave": true,
+    "pylint.args": [
+        "--rcfile=src/configs/pylint.rc"],
 }
