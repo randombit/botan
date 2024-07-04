@@ -125,6 +125,7 @@ class Callbacks : public Botan::TLS::Callbacks {
                output() << certs[i].PEM_encode();
             }
          }
+         output() << std::flush;
       }
 
       void tls_emit_data(std::span<const uint8_t> buf) override {
@@ -141,6 +142,7 @@ class Callbacks : public Botan::TLS::Callbacks {
          for(const auto c : buf) {
             output() << c;
          }
+         output() << std::flush;
       }
 
       std::vector<uint8_t> tls_sign_message(const Botan::Private_Key& key,

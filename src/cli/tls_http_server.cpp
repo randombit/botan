@@ -78,6 +78,12 @@ class Logger final {
          m_err << Botan::fmt("[{}] {}", timestamp(), err) << "\n";
       }
 
+      void flush() {
+         std::scoped_lock lk(m_mutex);
+         m_out.flush();
+         m_err.flush();
+      }
+
    private:
       std::mutex m_mutex;
       std::ostream& m_out;
@@ -288,6 +294,9 @@ net::awaitable<void> do_listen(tcp::endpoint endpoint,
    // otherwise we'll count down and stop eventually.
 
    const bool run_forever = (max_clients == 0);
+
+   logger->log(Botan::fmt("Listening for new connections on {}:{}", endpoint.address().to_string(), endpoint.port()));
+   logger->flush();
 
    auto done = [&] {
       if(run_forever) {

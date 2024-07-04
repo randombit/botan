@@ -169,8 +169,6 @@ class TLS_Server final : public Command {
             std::make_shared<Basic_Credentials_Manager>(server_cred, server_key, std::move(psk), psk_identity, psk_prf);
          auto callbacks = std::make_shared<Callbacks>(*this);
 
-         output() << "Listening for new connections on " << transport << " port " << port << std::endl;
-
          if(!m_sandbox.init()) {
             error_output() << "Failed sandboxing\n";
             return;
@@ -178,6 +176,8 @@ class TLS_Server final : public Command {
 
          socket_type server_fd = make_server_socket(port);
          size_t clients_served = 0;
+
+         output() << "Listening for new connections on " << transport << " port " << port << std::endl;
 
          while(true) {
             if(max_clients > 0 && clients_served >= max_clients) {
