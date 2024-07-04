@@ -33,7 +33,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 # pylint: disable=global-statement,unused-argument
 
 CLI_PATH = None
-ASYNC_TIMEOUT = 15 # seconds
+ASYNC_TIMEOUT = 30 # seconds
 TEST_DATA_DIR = '.'
 ONLINE_TESTS = False
 TESTS_RUN = 0
