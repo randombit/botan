@@ -136,12 +136,18 @@ class AsyncTestProcess:
             logging.error(f"{self._name} ran into a timeout before reporting back")
             raise
 
-    async def _close_stdin_and_read_stdout_to_eof(self):
+    async def _close_stdin_read_stdout_to_eof_and_wait_for_termination(self):
         self._proc.stdin.close()
         try:
             self._stdout += await asyncio.wait_for(self._proc.stdout.read(), timeout=ASYNC_TIMEOUT)
         except asyncio.TimeoutError:
             logging.error(f"{self._name} did not close their stdout as expected")
+            raise
+
+        try:
+            return await asyncio.wait_for(self._proc.wait(), timeout=ASYNC_TIMEOUT)
+        except asyncio.TimeoutError:
+            logging.error(f"{self._name} did not terminate in time")
             raise
 
     async def _finalize(self):
@@ -1171,15 +1177,15 @@ def cli_tls_socket_tests(tmp_dir):
             await self._read_stdout_until(TestClient.client_message)
 
             # close the client and expect to read stdout until EOF
-            await self._close_stdin_and_read_stdout_to_eof()
+            retcode = await self._close_stdin_read_stdout_to_eof_and_wait_for_termination()
 
-            if self.returncode != 0:
-                raise Exception(f'Client failed with error ({self.config.name}): {self.returncode}')
+            if retcode != 0:
+                raise Exception(f'Client failed with error ({self.config.name}): {retcode}')
             self._check_stdout_regex()
 
         async def expect_handshake_error(self):
-            await self._close_stdin_and_read_stdout_to_eof()
-            if self.returncode == 0:
+            retcode = await self._close_stdin_read_stdout_to_eof_and_wait_for_termination()
+            if retcode == 0:
                 raise Exception(f"Expected an error, but tls_client finished with success ({self.config.name})")
             self._check_stdout_regex()
 
@@ -1206,7 +1212,7 @@ def cli_tls_socket_tests(tmp_dir):
         async with TestServer(tmp_dir, port_for('tls_server'), psk, psk_identity, len(configs)) as server:
             errors = 0;
             for tls_config in configs:
-                logging.debug(f"Running test for {tls_config.name}")
+                logging.debug(f"Running test for {tls_config.name} in TLS {tls_config.protocol_version} mode")
                 async with TestClient(tmp_dir, server.port, server.ca_cert, tls_config) as client:
                     try:
                         if tls_config.expect_error:
