@@ -660,6 +660,9 @@ def main(args=None):
         pylint_rc = '--rcfile=%s' % (os.path.join(root_dir, 'src/configs/pylint.rc'))
         pylint_flags = [pylint_rc, '--reports=no']
 
+        if is_running_in_github_actions():
+            pylint_flags += ["--msg-template='::warning file={path},line={line},endLine={end_line}::Pylint ({category}): {msg_id} {msg} ({symbol})'"]
+
         py_scripts = [
             'configure.py',
             'src/python/botan3.py',
@@ -684,8 +687,10 @@ def main(args=None):
             'src/editors/vscode/scripts/common.py',
             'src/editors/vscode/scripts/test.py']
 
-        full_paths = [os.path.join(root_dir, s) for s in py_scripts]
-        cmds.append([py_interp, '-m', 'pylint'] + pylint_flags + full_paths)
+        # This has to run in the repository root to generate the correct
+        # relative paths in the output. Otherwise GitHub Actions will not
+        # be able to annotate the correct files.
+        cmds.append(["indir:%s" % root_dir, py_interp, '-m', 'pylint'] + pylint_flags + py_scripts)
 
     elif target == 'format':
         cmds.append([py_interp,
