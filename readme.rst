@@ -82,9 +82,8 @@ Transport Layer Security (TLS) Protocol
 * Supported extensions include session tickets, SNI, ALPN, OCSP stapling,
   encrypt-then-mac CBC, and extended master secret.
 * Supports authentication using certificates or preshared keys (PSK)
-* Supports record encryption with ChaCha20Poly1305, AES/OCB, AES/GCM, AES/CCM,
-  Camellia/GCM as well as legacy CBC ciphersuites.
-* Key exchange using ECDH, FFDHE, or RSA
+* Supports record encryption with modern AEAD modes as well as legacy CBC ciphersuites.
+* TLS 1.3 supports post-quantum key exchange with Kyber and FrodoKEM
 
 Public Key Infrastructure
 ----------------------------------------
@@ -103,7 +102,7 @@ Public Key Cryptography
 * DH and ECDH key agreement
 * Signature schemes ECDSA, DSA, Ed25519, Ed448, ECGDSA, ECKCDSA, SM2, GOST 34.10
 * Post-quantum signature schemes Dilithium, HSS/LMS, SPHINCS+, XMSS
-* Post-quantum key agreement schemes McEliece, Kyber and FrodoKEM
+* Post-quantum key agreement schemes McEliece, Kyber, and FrodoKEM
 * ElGamal encryption
 * Padding schemes OAEP, PSS, PKCS #1 v1.5, X9.31
 
@@ -115,10 +114,10 @@ Ciphers, hashes, MACs, and checksums
 * Block ciphers AES, ARIA, Blowfish, Camellia, CAST-128, DES/3DES, IDEA,
   Lion, SEED, Serpent, SHACAL2, SM4, Threefish-512, Twofish
 * Stream ciphers (X)ChaCha20, (X)Salsa20, SHAKE-128, RC4
-* Hash functions SHA-1, SHA-2, SHA-3, MD5, RIPEMD-160, BLAKE2b,
+* Hash functions SHA-1, SHA-2, SHA-3, MD5, RIPEMD-160, BLAKE2b/BLAKE2s,
   Skein-512, SM3, Streebog, Whirlpool
 * Password hashing schemes PBKDF2, Argon2, Scrypt, bcrypt
-* Authentication codes HMAC, CMAC, Poly1305, SipHash, GMAC, X9.19 DES-MAC
+* Authentication codes HMAC, CMAC, Poly1305, KMAC, SipHash, GMAC, X9.19 DES-MAC
 * Non-cryptographic checksums Adler32, CRC24, CRC32
 
 Other Useful Things
@@ -134,5 +133,8 @@ Other Useful Things
 * HOTP and TOTP algorithms
 * Format preserving encryption scheme FE1
 * Threshold secret sharing
+* Roughtime client
+* Zfec compatible forward error correction encoding
+* Encoding schemes including hex, base32, base64 and base58
 * NIST key wrapping
 * Boost.Asio compatible TLS client stream
