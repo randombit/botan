@@ -257,6 +257,10 @@ void AlternativeName::decode_from(BER_Decoder& source)
             const uint32_t ip = load_be<uint32_t>(obj.bits(), 0);
             add_attribute("IP", ipv4_to_string(ip));
             }
+         else if(obj.length() != 16)
+            {
+            throw Decoding_Error("Invalid length for IP address SAN");
+            }
          }
 
       }

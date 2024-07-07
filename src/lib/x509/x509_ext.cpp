@@ -602,27 +602,27 @@ void Name_Constraints::decode_inner(const std::vector<uint8_t>& in)
    {
    std::vector<GeneralSubtree> permit, exclude;
    BER_Decoder ber(in);
-   BER_Decoder ext = ber.start_cons(SEQUENCE);
-   BER_Object per = ext.get_next_object();
+   BER_Decoder inner = ber.start_cons(SEQUENCE);
+   BER_Object per = inner.get_next_object();
 
-   ext.push_back(per);
+   inner.push_back(per);
    if(per.is_a(0, ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC)))
       {
-      ext.decode_list(permit,ASN1_Tag(0),ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
+      inner.decode_list(permit,ASN1_Tag(0),ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
       if(permit.empty())
          throw Encoding_Error("Empty Name Contraint list");
       }
 
-   BER_Object exc = ext.get_next_object();
-   ext.push_back(exc);
-   if(per.is_a(1, ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC)))
+   BER_Object exc = inner.get_next_object();
+   inner.push_back(exc);
+   if(exc.is_a(1, ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC)))
       {
-      ext.decode_list(exclude,ASN1_Tag(1),ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
+      inner.decode_list(exclude,ASN1_Tag(1),ASN1_Tag(CONSTRUCTED | CONTEXT_SPECIFIC));
       if(exclude.empty())
          throw Encoding_Error("Empty Name Contraint list");
       }
 
-   ext.end_cons();
+   inner.end_cons();
 
    if(permit.empty() && exclude.empty())
       throw Encoding_Error("Empty Name Contraint extension");
@@ -651,11 +651,17 @@ void Name_Constraints::contents_to(Data_Store& subject, Data_Store&) const
       }
    }
 
-void Name_Constraints::validate(const X509_Certificate& subject, const X509_Certificate& issuer,
+void Name_Constraints::validate(const X509_Certificate& subject, const X509_Certificate& /*issuer*/,
       const std::vector<std::shared_ptr<const X509_Certificate>>& cert_path,
       std::vector<std::set<Certificate_Status_Code>>& cert_status,
       size_t pos)
    {
+   // This is much smaller limit than in Botan3 because here name constraint checks
+   // are much more expensive due to optimizations which would be difficult to
+   // backport here.
+   const size_t MAX_NC_COMPARES = (1 << 12);
+   const size_t total_constraints = m_name_constraints.permitted().size() + m_name_constraints.excluded().size();
+
    if(!m_name_constraints.permitted().empty() || !m_name_constraints.excluded().empty())
       {
       if(!subject.is_CA_cert())
@@ -664,54 +670,34 @@ void Name_Constraints::validate(const X509_Certificate& subject, const X509_Cert
          }
 
       const bool issuer_name_constraint_critical =
-         issuer.is_critical("X509v3.NameConstraints");
+         subject.is_critical("X509v3.NameConstraints");
 
       // Check that all subordinate certs pass the name constraint
       for(size_t j = 0; j < pos; ++j)
          {
-         bool permitted = m_name_constraints.permitted().empty();
-         bool failed = false;
+         const auto& cert = cert_path.at(j);
 
-         for(auto c: m_name_constraints.permitted())
-            {
-            switch(c.base().matches(*cert_path.at(j)))
-               {
-               case GeneralName::MatchResult::NotFound:
-               case GeneralName::MatchResult::All:
-                  permitted = true;
-                  break;
-               case GeneralName::MatchResult::UnknownType:
-                  failed = issuer_name_constraint_critical;
-                  permitted = true;
-                  break;
-               default:
-                  break;
-               }
-            }
+         const size_t total_names =
+            cert->subject_dn().dn_info().size() +
+            cert->subject_alt_name().get_attributes().size();
 
-         for(auto c: m_name_constraints.excluded())
-            {
-            switch(c.base().matches(*cert_path.at(j)))
-               {
-               case GeneralName::MatchResult::All:
-               case GeneralName::MatchResult::Some:
-                  failed = true;
-                  break;
-               case GeneralName::MatchResult::UnknownType:
-                  failed = issuer_name_constraint_critical;
-                  break;
-               default:
-                  break;
-               }
-            }
-
-         if(failed || !permitted)
-            {
+         if(total_names * total_constraints >= MAX_NC_COMPARES) {
             cert_status.at(j).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
-            }
+            continue;
+         }
+
+         if(!m_name_constraints.is_permitted(*cert, issuer_name_constraint_critical)) {
+            cert_status.at(j).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
+            continue;
+         }
+
+         if(m_name_constraints.is_excluded(*cert, issuer_name_constraint_critical)) {
+            cert_status.at(j).insert(Certificate_Status_Code::NAME_CONSTRAINT_ERROR);
+            continue;
          }
       }
    }
+}
 
 namespace {
 
