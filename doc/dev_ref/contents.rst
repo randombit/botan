@@ -16,5 +16,6 @@ contributions to the library
    todo
    os
    oids
+   next_major
    reading_list
    mistakes
