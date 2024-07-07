@@ -18,7 +18,7 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
 2024
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* 2024-02-20: DoS due to oversized elliptic curve parameters
+* 2024-02-20 (CVE-2024-34703): DoS due to oversized elliptic curve parameters
 
   When decoding an ASN.1 encoded elliptic curve, Botan would verify the `p`
   parameter was actually prime, and at least some minimum size. However it
@@ -34,7 +34,7 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
 2022
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* 2022-11-16: Failure to correctly check OCSP responder embedded certificate
+* 2022-11-16 (CVE-2022-43705): Failure to correctly check OCSP responder embedded certificate
 
   OCSP responses for some end entity are either signed by the issuing CA certificate of
   the PKI, or an OCSP responder certificate that the PKI authorized to sign responses in

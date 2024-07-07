@@ -48,7 +48,7 @@ Branch Support Status
 -------------------------
 
 Following table provides the support status for Botan branches as of
-February 2023. Any branch not listed here is no longer supported.
+July 2024. Any branch not listed here is no longer supported.
 Dates in the future are approximate.
 
 ============== ============== ========================== ============

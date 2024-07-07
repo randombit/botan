@@ -1,10 +1,26 @@
 Release Notes
 ========================================
 
+Version 2.19.5, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* A reminder that Botan2 reaches end of life at the end of 2024
+
+* Fix a crash in OCB (GH #3812 #3924)
+
+* During certificate verification, first verify the entire chain of
+  certificates, then perform other validation. (GH #4052 #4045)
+
+* Fix a test failure in compression with certain versions of zlib (GH #4135 #3896)
+
+* Fix some iterator debugging errors in TLS CBC decryption. (GH #4125 #4130)
+
+* Avoid a miscompilation in ARIA when using XCode 14 (GH #3465 #3492 #4053)
+
 Version 2.19.4, 2024-02-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Fix a potential denial of service caused by accepting arbitrary
+* CVE-2024-34703 Fix a potential denial of service caused by accepting arbitrary
   length primes as potential elliptic curve parameters in ASN.1
   encodings. With very large inputs the primality verification
   can become computationally expensive. Now any prime field larger
