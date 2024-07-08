@@ -18,6 +18,28 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
 2024
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* 2024-07-08 (CVE-2024-34702): Denial of Service Due to Excessive Name Constraints
+
+  Checking name constraints in X.509 certificates is quadratic in the number of
+  names and name constraints. An attacker who presented a certificate chain
+  which contained a very large number of names in the SubjectAlternativeName,
+  signed by a CA certificate which contained a large number of name constraints,
+  could cause a denial of service.
+
+  Introduced in 2.0.0, fixed in 2.19.5 and 3.5.0
+
+  Found and reported by Bing Shi.
+
+* 2024-07-08 (CVE-2024-39312): Authorization Error due to Name Constraint Decoding Bug
+
+  A bug in the parsing of name constraint extensions in X.509 certificates meant
+  that if the extension included both permitted subtrees and excluded subtrees,
+  only the permitted subtree would be checked. If a certificate included a name
+  which was permitted by the permitted subtree but also excluded by excluded
+  subtree, it would be accepted.
+
+  Introduced in 2.0.0, fixed in 2.19.5 and 3.5.0
+
 * 2024-02-20 (CVE-2024-34703): DoS due to oversized elliptic curve parameters
 
   When decoding an ASN.1 encoded elliptic curve, Botan would verify the `p`

@@ -1,10 +1,16 @@
 Release Notes
 ========================================
 
-Version 2.19.5, Not Yet Released
+Version 2.19.5, 2024-07-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * A reminder that Botan2 reaches end of life at the end of 2024
+
+* CVE-2024-34702: Fix a DoS caused by excessive name constraints. (GH #4187)
+
+* CVE-2024-39312: Fix a name constraint processing error, where if
+  permitted and excluded rules both applied to a certificate, only the
+  permitted rules would be checked. (GH #4187)
 
 * Fix a crash in OCB (GH #3812 #3924)
 
