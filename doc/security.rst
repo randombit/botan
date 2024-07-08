@@ -26,6 +26,8 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
   signed by a CA certificate which contained a large number of name constraints,
   could cause a denial of service.
 
+  Introduced in 2.0.0, fixed in 2.19.5 and 3.5.0
+
   Found and reported by Bing Shi.
 
 * 2024-07-08 (CVE-2024-39312): Authorization Error due to Name Constraint Decoding Bug
@@ -35,6 +37,8 @@ https://keybase.io/jacklloyd and on most PGP keyservers.
   only the permitted subtree would be checked. If a certificate included a name
   which was permitted by the permitted subtree but also excluded by excluded
   subtree, it would be accepted.
+
+  Introduced in 2.0.0, fixed in 2.19.5 and 3.5.0
 
 * 2024-02-20: Kyber side channel
 
