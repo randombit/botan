@@ -1,8 +1,14 @@
 Release Notes
 ========================================
 
-Version 3.5.0, Not Yet Released
+Version 3.5.0, 2024-07-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* CVE-2024-34702: Fix a DoS caused by excessive name constraints. (GH #4186)
+
+* CVE-2024-39312: Fix a name constraint processing error, where if
+  permitted and excluded rules both applied to a certificate, only the
+  permitted rules would be checked.
 
 * Add a new much faster elliptic curve implementation. In this release,
   this implementation is only used for hash2curve. (GH #3979)
