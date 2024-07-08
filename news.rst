@@ -47,7 +47,7 @@ Version 3.5.0, 2024-07-08
 
 * Previously Curve25519 was used to refer to key exchange over the Montgomery
   curve modulo 2**255-19. This is now called X25519 in all cases. Typedefs and a
-  deprecated header are retained for compatability with older versions. (GH
+  deprecated header are retained for compatibility with older versions. (GH
   #4012)
 
 * Fix several bugs related to encoding and decoding ASN.1 object identifiers
@@ -93,7 +93,7 @@ Version 3.5.0, 2024-07-08
 
 * Fix a bug when creating a PKCS10 request or X.509 self signed certificate
   when SubjectAlternativeName was included in the provided extensions. If
-  this occured, any other values (eg opts.dns) would be ignored. (GH #4032)
+  this occurred, any other values (eg opts.dns) would be ignored. (GH #4032)
 
 * Various low level multi precision integer refactorings and improvements.
   (GH #4156 #4149 #4007 #4008 #3989 #3987)
@@ -110,7 +110,7 @@ Version 3.5.0, 2024-07-08
   modules, which will then be disabled if ``--disable-deprecated-features``
   option is used at build time. (GH #4050)
 
-* Fix a bug in ``configure.py`` that caused `--with-stack-protector`` to not
+* Fix a bug in ``configure.py`` that caused ``--with-stack-protector`` to not
   work. (GH #3996)
 
 * Upgrade CI to use XCode 15.2 on x86-64 and XCode 15.3 on aarch64. (GH #4005)
