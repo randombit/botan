@@ -38,43 +38,43 @@ std::vector<Test::Result> test_tpm2_rng() {
    auto rng = Botan::TPM2_RNG(ctx);
 
    return {
-      Botan_Tests::CHECK("Basic functionalities",
-                         [&](Test::Result& result) {
-                            result.confirm("Accepts input", rng.accepts_input());
-                            result.confirm("Is seeded", rng.is_seeded());
-                            result.test_eq("Right name", rng.name(), "TPM2_RNG");
+      CHECK("Basic functionalities",
+            [&](Test::Result& result) {
+               result.confirm("Accepts input", rng.accepts_input());
+               result.confirm("Is seeded", rng.is_seeded());
+               result.test_eq("Right name", rng.name(), "TPM2_RNG");
 
-                            result.test_no_throw("Clear", [&] { rng.clear(); });
-                         }),
-      Botan_Tests::CHECK("Random number generation",
-                         [&](Test::Result& result) {
-                            std::array<uint8_t, 8> buf1 = {};
-                            rng.randomize(buf1);
-                            result.confirm("Is at least not 0 (8)", not_zero_64(buf1));
+               result.test_no_throw("Clear", [&] { rng.clear(); });
+            }),
+      CHECK("Random number generation",
+            [&](Test::Result& result) {
+               std::array<uint8_t, 8> buf1 = {};
+               rng.randomize(buf1);
+               result.confirm("Is at least not 0 (8)", not_zero_64(buf1));
 
-                            std::array<uint8_t, 15> buf2 = {};
-                            rng.randomize(buf2);
-                            result.confirm("Is at least not 0 (15)", not_zero_64(buf2));
+               std::array<uint8_t, 15> buf2 = {};
+               rng.randomize(buf2);
+               result.confirm("Is at least not 0 (15)", not_zero_64(buf2));
 
-                            std::array<uint8_t, 256> buf3 = {};
-                            rng.randomize(buf3);
-                            result.confirm("Is at least not 0 (256)", not_zero_64(buf3));
-                         }),
+               std::array<uint8_t, 256> buf3 = {};
+               rng.randomize(buf3);
+               result.confirm("Is at least not 0 (256)", not_zero_64(buf3));
+            }),
 
-      Botan_Tests::CHECK("Randomize with inputs",
-                         [&](Test::Result& result) {
-                            std::array<uint8_t, 9> buf1 = {};
-                            rng.randomize_with_input(buf1, std::array<uint8_t, 30>{});
-                            result.confirm("Randomized with inputs is at least not 0 (9)", not_zero_64(buf1));
+      CHECK("Randomize with inputs",
+            [&](Test::Result& result) {
+               std::array<uint8_t, 9> buf1 = {};
+               rng.randomize_with_input(buf1, std::array<uint8_t, 30>{});
+               result.confirm("Randomized with inputs is at least not 0 (9)", not_zero_64(buf1));
 
-                            std::array<uint8_t, 66> buf2 = {};
-                            rng.randomize_with_input(buf2, std::array<uint8_t, 64>{});
-                            result.confirm("Randomized with inputs is at least not 0 (66)", not_zero_64(buf2));
+               std::array<uint8_t, 66> buf2 = {};
+               rng.randomize_with_input(buf2, std::array<uint8_t, 64>{});
+               result.confirm("Randomized with inputs is at least not 0 (66)", not_zero_64(buf2));
 
-                            std::array<uint8_t, 256> buf3 = {};
-                            rng.randomize_with_input(buf3, std::array<uint8_t, 196>{});
-                            result.confirm("Randomized with inputs is at least not 0 (256)", not_zero_64(buf3));
-                         }),
+               std::array<uint8_t, 256> buf3 = {};
+               rng.randomize_with_input(buf3, std::array<uint8_t, 196>{});
+               result.confirm("Randomized with inputs is at least not 0 (256)", not_zero_64(buf3));
+            }),
    };
 }
 }  // namespace
