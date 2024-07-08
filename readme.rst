@@ -64,7 +64,8 @@ released on 2024-07-08.
 The latest release from the Botan2 release series is
 `2.19.5 <https://botan.randombit.net/releases/Botan-2.19.5.tar.xz>`_
 `(sig) <https://botan.randombit.net/releases/Botan-2.19.5.tar.xz.asc>`__,
-released on 2024-07-08.
+released on 2024-07-08. Be aware that Botan2 is currently scheduled to
+reach end of life at the end of 2024.
 
 All releases are signed with a `PGP key <https://botan.randombit.net/pgpkey.txt>`_.
 See the `release notes <https://botan.randombit.net/news.html>`_ for
