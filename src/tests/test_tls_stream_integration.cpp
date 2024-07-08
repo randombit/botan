@@ -30,7 +30,13 @@
       #include <boost/exception/exception.hpp>
 
       #include "../cli/tls_helpers.h"  // for Basic_Credentials_Manager
+      #define BOTAN_TEST_TLS_STREAM_INTEGRATION
+   #endif
+#endif
 
+namespace Botan_Tests {
+
+#if defined(BOTAN_TEST_TLS_STREAM_INTEGRATION)
 namespace {
 
 namespace net = boost::asio;
@@ -39,7 +45,6 @@ using tcp = net::ip::tcp;
 using error_code = boost::system::error_code;
 using ssl_stream = Botan::TLS::Stream<net::ip::tcp::socket>;
 using namespace std::placeholders;
-using Result = Botan_Tests::Test::Result;
 
 const auto k_timeout = std::chrono::seconds(30);
 const auto k_endpoints = std::vector<tcp::endpoint>{tcp::endpoint{net::ip::make_address("127.0.0.1"), 8082}};
@@ -47,11 +52,11 @@ const auto k_endpoints = std::vector<tcp::endpoint>{tcp::endpoint{net::ip::make_
 constexpr size_t MAX_MSG_LENGTH = 512;
 
 std::string server_cert() {
-   return Botan_Tests::Test::data_dir() + "/x509/certstor/cert1.crt";
+   return Test::data_dir() + "/x509/certstor/cert1.crt";
 }
 
 std::string server_key() {
-   return Botan_Tests::Test::data_dir() + "/x509/certstor/key01.pem";
+   return Test::data_dir() + "/x509/certstor/key01.pem";
 }
 
 class Timeout_Exception : public std::runtime_error {
@@ -178,7 +183,7 @@ class Result_Wrapper {
    public:
       Result_Wrapper(std::string name) : m_result(std::move(name)) {}
 
-      Result& result() { return m_result; }
+      Test::Result& result() { return m_result; }
 
       void expect_success(const std::string& msg, const error_code& ec) {
          error_code success;
@@ -198,7 +203,7 @@ class Result_Wrapper {
       void test_failure(const std::string& msg) { m_result.test_failure(msg); }
 
    private:
-      Result m_result;
+      Test::Result m_result;
 };
 
 // Control messages
@@ -409,7 +414,7 @@ class TestBase {
 
       void fail(const std::string& msg) { m_result.test_failure(msg); }
 
-      void extend_results(std::vector<Result>& results) {
+      void extend_results(std::vector<Test::Result>& results) {
          results.push_back(m_result.result());
          results.push_back(m_server->result().result());
       }
@@ -863,7 +868,7 @@ class SystemConfiguration {
             m_server_policy(std::make_shared<Botan::TLS::Text_Policy>(sp)) {}
 
       template <typename TestT>
-      void run(std::vector<Result>& results) {
+      void run(std::vector<Test::Result>& results) {
          net::io_context ioc;
 
          auto t = std::make_shared<TestT>(ioc, m_name, m_server_policy, m_client_policy);
@@ -896,7 +901,7 @@ class SystemConfiguration {
 std::vector<SystemConfiguration> get_configurations() {
    return {
       SystemConfiguration("TLS 1.2 only", "allow_tls12=true\nallow_tls13=false", "allow_tls12=true\nallow_tls13=false"),
-      #if defined(BOTAN_HAS_TLS_13)
+   #if defined(BOTAN_HAS_TLS_13)
          SystemConfiguration(
             "TLS 1.3 only", "allow_tls12=false\nallow_tls13=true", "allow_tls12=false\nallow_tls13=true"),
          SystemConfiguration("TLS 1.x server, TLS 1.2 client",
@@ -905,13 +910,9 @@ std::vector<SystemConfiguration> get_configurations() {
          SystemConfiguration("TLS 1.2 server, TLS 1.x client",
                              "allow_tls12=true\nallow_tls13=true",
                              "allow_tls12=true\nallow_tls13=false"),
-      #endif
+   #endif
    };
 }
-
-}  // namespace
-
-namespace Botan_Tests {
 
 class Tls_Stream_Integration_Tests final : public Test {
    public:
@@ -939,7 +940,8 @@ class Tls_Stream_Integration_Tests final : public Test {
 
 BOTAN_REGISTER_TEST("tls", "tls_stream_integration", Tls_Stream_Integration_Tests);
 
-}  // namespace Botan_Tests
+}  // namespace
 
-   #endif
-#endif  // BOTAN_HAS_TLS && BOTAN_HAS_BOOST_ASIO
+#endif
+
+}  // namespace Botan_Tests

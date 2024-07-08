@@ -701,69 +701,69 @@ class Utility_Function_Tests final : public Test {
 
       static std::vector<Test::Result> test_copy_out_be_le() {
          return {
-            Botan_Tests::CHECK("copy_out_be with 16bit input (word aligned)",
-                               [&](auto& result) {
-                                  std::vector<uint8_t> out_vector(4);
-                                  const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
-                                  Botan::copy_out_be(out_vector, in_array);
-                                  result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C0D"));
-                               }),
+            CHECK("copy_out_be with 16bit input (word aligned)",
+                  [&](auto& result) {
+                     std::vector<uint8_t> out_vector(4);
+                     const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
+                     Botan::copy_out_be(out_vector, in_array);
+                     result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C0D"));
+                  }),
 
-            Botan_Tests::CHECK("copy_out_be with 16bit input (partial words)",
-                               [&](auto& result) {
-                                  std::vector<uint8_t> out_vector(3);
-                                  const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
-                                  Botan::copy_out_be(out_vector, in_array);
-                                  result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C"));
-                               }),
+            CHECK("copy_out_be with 16bit input (partial words)",
+                  [&](auto& result) {
+                     std::vector<uint8_t> out_vector(3);
+                     const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
+                     Botan::copy_out_be(out_vector, in_array);
+                     result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C"));
+                  }),
 
-            Botan_Tests::CHECK("copy_out_le with 16bit input (word aligned)",
-                               [&](auto& result) {
-                                  std::vector<uint8_t> out_vector(4);
-                                  const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
-                                  Botan::copy_out_le(out_vector, in_array);
-                                  result.test_is_eq(out_vector, Botan::hex_decode("0B0A0D0C"));
-                               }),
+            CHECK("copy_out_le with 16bit input (word aligned)",
+                  [&](auto& result) {
+                     std::vector<uint8_t> out_vector(4);
+                     const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
+                     Botan::copy_out_le(out_vector, in_array);
+                     result.test_is_eq(out_vector, Botan::hex_decode("0B0A0D0C"));
+                  }),
 
-            Botan_Tests::CHECK("copy_out_le with 16bit input (partial words)",
-                               [&](auto& result) {
-                                  std::vector<uint8_t> out_vector(3);
-                                  const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
-                                  Botan::copy_out_le(out_vector, in_array);
-                                  result.test_is_eq(out_vector, Botan::hex_decode("0B0A0D"));
-                               }),
+            CHECK("copy_out_le with 16bit input (partial words)",
+                  [&](auto& result) {
+                     std::vector<uint8_t> out_vector(3);
+                     const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
+                     Botan::copy_out_le(out_vector, in_array);
+                     result.test_is_eq(out_vector, Botan::hex_decode("0B0A0D"));
+                  }),
 
-            Botan_Tests::CHECK("copy_out_be with 64bit input (word aligned)",
-                               [&](auto& result) {
-                                  std::vector<uint8_t> out_vector(16);
-                                  const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
-                                  Botan::copy_out_be(out_vector, in_array);
-                                  result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C0D0E0F10111213141516171819"));
-                               }),
+            CHECK("copy_out_be with 64bit input (word aligned)",
+                  [&](auto& result) {
+                     std::vector<uint8_t> out_vector(16);
+                     const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
+                     Botan::copy_out_be(out_vector, in_array);
+                     result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C0D0E0F10111213141516171819"));
+                  }),
 
-            Botan_Tests::CHECK("copy_out_le with 64bit input (word aligned)",
-                               [&](auto& result) {
-                                  std::vector<uint8_t> out_vector(16);
-                                  const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
-                                  Botan::copy_out_le(out_vector, in_array);
-                                  result.test_is_eq(out_vector, Botan::hex_decode("11100F0E0D0C0B0A1918171615141312"));
-                               }),
+            CHECK("copy_out_le with 64bit input (word aligned)",
+                  [&](auto& result) {
+                     std::vector<uint8_t> out_vector(16);
+                     const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
+                     Botan::copy_out_le(out_vector, in_array);
+                     result.test_is_eq(out_vector, Botan::hex_decode("11100F0E0D0C0B0A1918171615141312"));
+                  }),
 
-            Botan_Tests::CHECK("copy_out_be with 64bit input (partial words)",
-                               [&](auto& result) {
-                                  std::vector<uint8_t> out_vector(15);
-                                  const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
-                                  Botan::copy_out_be(out_vector, in_array);
-                                  result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C0D0E0F101112131415161718"));
-                               }),
+            CHECK("copy_out_be with 64bit input (partial words)",
+                  [&](auto& result) {
+                     std::vector<uint8_t> out_vector(15);
+                     const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
+                     Botan::copy_out_be(out_vector, in_array);
+                     result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C0D0E0F101112131415161718"));
+                  }),
 
-            Botan_Tests::CHECK("copy_out_le with 64bit input (partial words)",
-                               [&](auto& result) {
-                                  std::vector<uint8_t> out_vector(15);
-                                  const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
-                                  Botan::copy_out_le(out_vector, in_array);
-                                  result.test_is_eq(out_vector, Botan::hex_decode("11100F0E0D0C0B0A19181716151413"));
-                               }),
+            CHECK("copy_out_le with 64bit input (partial words)",
+                  [&](auto& result) {
+                     std::vector<uint8_t> out_vector(15);
+                     const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
+                     Botan::copy_out_le(out_vector, in_array);
+                     result.test_is_eq(out_vector, Botan::hex_decode("11100F0E0D0C0B0A19181716151413"));
+                  }),
          };
       }
 };
@@ -1359,62 +1359,62 @@ class ScopedCleanup_Tests : public Test {
    public:
       std::vector<Test::Result> run() override {
          return {
-            Botan_Tests::CHECK("leaving a scope results in cleanup",
-                               [](Test::Result& result) {
-                                  bool ran = false;
-                                  {
-                                     auto clean = Botan::scoped_cleanup([&] { ran = true; });
-                                  }
-                                  result.confirm("cleanup ran", ran);
-                               }),
+            CHECK("leaving a scope results in cleanup",
+                  [](Test::Result& result) {
+                     bool ran = false;
+                     {
+                        auto clean = Botan::scoped_cleanup([&] { ran = true; });
+                     }
+                     result.confirm("cleanup ran", ran);
+                  }),
 
-            Botan_Tests::CHECK("leaving a function, results in cleanup",
-                               [](Test::Result& result) {
-                                  bool ran = false;
-                                  bool fn_called = false;
-                                  auto fn = [&] {
-                                     auto clean = Botan::scoped_cleanup([&] { ran = true; });
-                                     fn_called = true;
-                                  };
+            CHECK("leaving a function, results in cleanup",
+                  [](Test::Result& result) {
+                     bool ran = false;
+                     bool fn_called = false;
+                     auto fn = [&] {
+                        auto clean = Botan::scoped_cleanup([&] { ran = true; });
+                        fn_called = true;
+                     };
 
-                                  result.confirm("cleanup not yet ran", !ran);
-                                  fn();
-                                  result.confirm("fn called", fn_called);
-                                  result.confirm("cleanup ran", ran);
-                               }),
+                     result.confirm("cleanup not yet ran", !ran);
+                     fn();
+                     result.confirm("fn called", fn_called);
+                     result.confirm("cleanup ran", ran);
+                  }),
 
-            Botan_Tests::CHECK("stack unwinding results in cleanup",
-                               [](Test::Result& result) {
-                                  bool ran = false;
-                                  bool fn_called = false;
-                                  bool exception_caught = false;
-                                  auto fn = [&] {
-                                     auto clean = Botan::scoped_cleanup([&] { ran = true; });
-                                     fn_called = true;
-                                     throw std::runtime_error("test");
-                                  };
+            CHECK("stack unwinding results in cleanup",
+                  [](Test::Result& result) {
+                     bool ran = false;
+                     bool fn_called = false;
+                     bool exception_caught = false;
+                     auto fn = [&] {
+                        auto clean = Botan::scoped_cleanup([&] { ran = true; });
+                        fn_called = true;
+                        throw std::runtime_error("test");
+                     };
 
-                                  result.confirm("cleanup not yet ran", !ran);
-                                  try {
-                                     fn();
-                                  } catch(const std::exception&) {
-                                     exception_caught = true;
-                                  }
+                     result.confirm("cleanup not yet ran", !ran);
+                     try {
+                        fn();
+                     } catch(const std::exception&) {
+                        exception_caught = true;
+                     }
 
-                                  result.confirm("fn called", fn_called);
-                                  result.confirm("cleanup ran", ran);
-                                  result.confirm("exception caught", exception_caught);
-                               }),
+                     result.confirm("fn called", fn_called);
+                     result.confirm("cleanup ran", ran);
+                     result.confirm("exception caught", exception_caught);
+                  }),
 
-            Botan_Tests::CHECK("cleanup isn't called after disengaging",
-                               [](Test::Result& result) {
-                                  bool ran = false;
-                                  {
-                                     auto clean = Botan::scoped_cleanup([&] { ran = true; });
-                                     clean.disengage();
-                                  }
-                                  result.confirm("cleanup not ran", !ran);
-                               }),
+            CHECK("cleanup isn't called after disengaging",
+                  [](Test::Result& result) {
+                     bool ran = false;
+                     {
+                        auto clean = Botan::scoped_cleanup([&] { ran = true; });
+                        clean.disengage();
+                     }
+                     result.confirm("cleanup not ran", !ran);
+                  }),
 
          };
       }

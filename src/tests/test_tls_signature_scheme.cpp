@@ -23,7 +23,7 @@ std::vector<Test::Result> test_signature_scheme() {
    auto not_unknown = [](const std::string& s) { return s.find("Unknown") == std::string::npos; };
 
    for(const auto& s : Botan::TLS::Signature_Scheme::all_available_schemes()) {
-      results.push_back(Botan_Tests::CHECK(s.to_string().c_str(), [&](auto& result) {
+      results.push_back(CHECK(s.to_string().c_str(), [&](auto& result) {
          result.confirm("is_set handles all cases", s.is_set());
          result.confirm("is_available handles all cases", s.is_available());
 
@@ -39,7 +39,7 @@ std::vector<Test::Result> test_signature_scheme() {
    }
 
    Botan::TLS::Signature_Scheme bogus(0x1337);
-   results.push_back(Botan_Tests::CHECK("bogus scheme", [&](auto& result) {
+   results.push_back(CHECK("bogus scheme", [&](auto& result) {
       result.confirm("is_set still works", bogus.is_set());
       result.confirm("is not available", !bogus.is_available());
 

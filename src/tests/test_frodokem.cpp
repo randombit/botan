@@ -31,7 +31,7 @@ namespace Botan_Tests {
 #if defined(BOTAN_HAS_FRODOKEM)
 
 namespace {
-class Frodo_KAT_Tests final : public Botan_Tests::PK_PQC_KEM_KAT_Test {
+class Frodo_KAT_Tests final : public PK_PQC_KEM_KAT_Test {
    public:
       Frodo_KAT_Tests() : PK_PQC_KEM_KAT_Test("FrodoKEM", "pubkey/frodokem_kat.vec") {}
 

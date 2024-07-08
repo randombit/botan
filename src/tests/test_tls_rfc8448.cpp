@@ -44,7 +44,7 @@ namespace Botan_Tests {
 
 namespace {
 
-void add_entropy(Botan_Tests::Fixed_Output_RNG& rng, const std::vector<uint8_t>& bin) {
+void add_entropy(Fixed_Output_RNG& rng, const std::vector<uint8_t>& bin) {
    rng.add_entropy(bin.data(), bin.size());
 }
 
@@ -574,12 +574,12 @@ class RFC8448_Session_Manager : public Botan::TLS::Session_Manager {
          // return the associated handle stored with it
 
          if(m_sessions.size() != 1) {
-            throw Botan_Tests::Test_Error("No mocked session handle available; Test bug?");
+            throw Test_Error("No mocked session handle available; Test bug?");
          }
 
          const auto& [mocked_session, handle] = m_sessions.front();
          if(mocked_session.master_secret() != session.master_secret()) {
-            throw Botan_Tests::Test_Error("Generated session object does not match the expected mock");
+            throw Test_Error("Generated session object does not match the expected mock");
          }
 
          return handle;
@@ -975,7 +975,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
       std::string side() const override { return "Client"; }
 
       std::vector<Test::Result> simple_1_rtt(const VarMap& vars) override {
-         auto rng = std::make_shared<Botan_Tests::Fixed_Output_RNG>("");
+         auto rng = std::make_shared<Fixed_Output_RNG>("");
 
          // 32 - for client hello random
          // 32 - for KeyShare (eph. x25519 key pair)
@@ -998,147 +998,143 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
          std::unique_ptr<Client_Context> ctx;
 
          return {
-            Botan_Tests::CHECK(
-               "Client Hello",
-               [&](Test::Result& result) {
-                  ctx = std::make_unique<Client_Context>(rng,
-                                                         std::make_shared<RFC8448_Text_Policy>("rfc8448_1rtt"),
-                                                         vars.get_req_u64("CurrentTimestamp"),
-                                                         add_extensions_and_sort);
+            CHECK("Client Hello",
+                  [&](Test::Result& result) {
+                     ctx = std::make_unique<Client_Context>(rng,
+                                                            std::make_shared<RFC8448_Text_Policy>("rfc8448_1rtt"),
+                                                            vars.get_req_u64("CurrentTimestamp"),
+                                                            add_extensions_and_sort);
 
-                  result.confirm("client not closed", !ctx->client.is_closed());
-                  ctx->check_callback_invocations(result,
-                                                  "client hello prepared",
-                                                  {
-                                                     "tls_emit_data",
-                                                     "tls_inspect_handshake_msg_client_hello",
-                                                     "tls_modify_extensions_client_hello",
-                                                     "tls_generate_ephemeral_key",
-                                                     "tls_current_timestamp",
-                                                  });
+                     result.confirm("client not closed", !ctx->client.is_closed());
+                     ctx->check_callback_invocations(result,
+                                                     "client hello prepared",
+                                                     {
+                                                        "tls_emit_data",
+                                                        "tls_inspect_handshake_msg_client_hello",
+                                                        "tls_modify_extensions_client_hello",
+                                                        "tls_generate_ephemeral_key",
+                                                        "tls_current_timestamp",
+                                                     });
 
-                  result.test_eq("TLS client hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
-               }),
+                     result.test_eq(
+                        "TLS client hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
+                  }),
 
-            Botan_Tests::CHECK(
-               "Server Hello",
-               [&](Test::Result& result) {
-                  result.require("ctx is available", ctx != nullptr);
-                  const auto server_hello = vars.get_req_bin("Record_ServerHello");
-                  // splitting the input data to test partial reads
-                  const std::vector<uint8_t> server_hello_a(server_hello.begin(), server_hello.begin() + 20);
-                  const std::vector<uint8_t> server_hello_b(server_hello.begin() + 20, server_hello.end());
+            CHECK("Server Hello",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     const auto server_hello = vars.get_req_bin("Record_ServerHello");
+                     // splitting the input data to test partial reads
+                     const std::vector<uint8_t> server_hello_a(server_hello.begin(), server_hello.begin() + 20);
+                     const std::vector<uint8_t> server_hello_b(server_hello.begin() + 20, server_hello.end());
 
-                  ctx->client.received_data(server_hello_a);
-                  ctx->check_callback_invocations(result, "server hello partially received", {});
+                     ctx->client.received_data(server_hello_a);
+                     ctx->check_callback_invocations(result, "server hello partially received", {});
 
-                  ctx->client.received_data(server_hello_b);
-                  ctx->check_callback_invocations(result,
-                                                  "server hello received",
-                                                  {"tls_inspect_handshake_msg_server_hello",
-                                                   "tls_examine_extensions_server_hello",
-                                                   "tls_ephemeral_key_agreement"});
+                     ctx->client.received_data(server_hello_b);
+                     ctx->check_callback_invocations(result,
+                                                     "server hello received",
+                                                     {"tls_inspect_handshake_msg_server_hello",
+                                                      "tls_examine_extensions_server_hello",
+                                                      "tls_ephemeral_key_agreement"});
 
-                  result.confirm("client is not yet active", !ctx->client.is_active());
-                  result.confirm("handshake is not yet complete", !ctx->client.is_handshake_complete());
-               }),
+                     result.confirm("client is not yet active", !ctx->client.is_active());
+                     result.confirm("handshake is not yet complete", !ctx->client.is_handshake_complete());
+                  }),
 
-            Botan_Tests::CHECK(
-               "Server HS messages .. Client Finished",
-               [&](Test::Result& result) {
-                  result.require("ctx is available", ctx != nullptr);
-                  ctx->client.received_data(vars.get_req_bin("Record_ServerHandshakeMessages"));
+            CHECK("Server HS messages .. Client Finished",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->client.received_data(vars.get_req_bin("Record_ServerHandshakeMessages"));
 
-                  ctx->check_callback_invocations(result,
-                                                  "encrypted handshake messages received",
-                                                  {"tls_inspect_handshake_msg_encrypted_extensions",
-                                                   "tls_inspect_handshake_msg_certificate",
-                                                   "tls_inspect_handshake_msg_certificate_verify",
-                                                   "tls_inspect_handshake_msg_finished",
-                                                   "tls_examine_extensions_encrypted_extensions",
-                                                   "tls_examine_extensions_certificate",
-                                                   "tls_emit_data",
-                                                   "tls_current_timestamp",
-                                                   "tls_session_established",
-                                                   "tls_session_activated",
-                                                   "tls_verify_cert_chain",
-                                                   "tls_verify_message"});
-                  result.require("certificate exists", !ctx->certs_verified().empty());
-                  result.require("correct certificate", ctx->certs_verified().front() == server_certificate());
-                  result.require("client is active", ctx->client.is_active());
-                  result.confirm("handshake is complete", ctx->client.is_handshake_complete());
+                     ctx->check_callback_invocations(result,
+                                                     "encrypted handshake messages received",
+                                                     {"tls_inspect_handshake_msg_encrypted_extensions",
+                                                      "tls_inspect_handshake_msg_certificate",
+                                                      "tls_inspect_handshake_msg_certificate_verify",
+                                                      "tls_inspect_handshake_msg_finished",
+                                                      "tls_examine_extensions_encrypted_extensions",
+                                                      "tls_examine_extensions_certificate",
+                                                      "tls_emit_data",
+                                                      "tls_current_timestamp",
+                                                      "tls_session_established",
+                                                      "tls_session_activated",
+                                                      "tls_verify_cert_chain",
+                                                      "tls_verify_message"});
+                     result.require("certificate exists", !ctx->certs_verified().empty());
+                     result.require("correct certificate", ctx->certs_verified().front() == server_certificate());
+                     result.require("client is active", ctx->client.is_active());
+                     result.confirm("handshake is complete", ctx->client.is_handshake_complete());
 
-                  result.test_eq(
-                     "correct handshake finished", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientFinished"));
-               }),
+                     result.test_eq("correct handshake finished",
+                                    ctx->pull_send_buffer(),
+                                    vars.get_req_bin("Record_ClientFinished"));
+                  }),
 
-            Botan_Tests::CHECK("Post-Handshake: NewSessionTicket",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  result.require("no sessions so far", ctx->stored_sessions().empty());
-                                  ctx->client.received_data(vars.get_req_bin("Record_NewSessionTicket"));
+            CHECK("Post-Handshake: NewSessionTicket",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     result.require("no sessions so far", ctx->stored_sessions().empty());
+                     ctx->client.received_data(vars.get_req_bin("Record_NewSessionTicket"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "new session ticket received",
-                                                                  {"tls_examine_extensions_new_session_ticket",
-                                                                   "tls_should_persist_resumption_information",
-                                                                   "tls_current_timestamp"});
-                                  if(result.test_eq("session was stored", ctx->stored_sessions().size(), 1)) {
-                                     const auto& [stored_session, stored_handle] = ctx->stored_sessions().front();
-                                     result.require("session handle contains a ticket",
-                                                    stored_handle.ticket().has_value());
-                                     result.test_is_eq("session was serialized as expected",
-                                                       Botan::unlock(stored_session.DER_encode()),
-                                                       vars.get_req_bin("Client_SessionData"));
-                                  }
-                               }),
+                     ctx->check_callback_invocations(result,
+                                                     "new session ticket received",
+                                                     {"tls_examine_extensions_new_session_ticket",
+                                                      "tls_should_persist_resumption_information",
+                                                      "tls_current_timestamp"});
+                     if(result.test_eq("session was stored", ctx->stored_sessions().size(), 1)) {
+                        const auto& [stored_session, stored_handle] = ctx->stored_sessions().front();
+                        result.require("session handle contains a ticket", stored_handle.ticket().has_value());
+                        result.test_is_eq("session was serialized as expected",
+                                          Botan::unlock(stored_session.DER_encode()),
+                                          vars.get_req_bin("Client_SessionData"));
+                     }
+                  }),
 
-            Botan_Tests::CHECK("Send Application Data",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->send(vars.get_req_bin("Client_AppData"));
+            CHECK("Send Application Data",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->send(vars.get_req_bin("Client_AppData"));
 
-                                  ctx->check_callback_invocations(result, "application data sent", {"tls_emit_data"});
+                     ctx->check_callback_invocations(result, "application data sent", {"tls_emit_data"});
 
-                                  result.test_eq("correct client application data",
-                                                 ctx->pull_send_buffer(),
-                                                 vars.get_req_bin("Record_Client_AppData"));
-                               }),
+                     result.test_eq("correct client application data",
+                                    ctx->pull_send_buffer(),
+                                    vars.get_req_bin("Record_Client_AppData"));
+                  }),
 
-            Botan_Tests::CHECK(
-               "Receive Application Data",
-               [&](Test::Result& result) {
-                  result.require("ctx is available", ctx != nullptr);
-                  ctx->client.received_data(vars.get_req_bin("Record_Server_AppData"));
+            CHECK("Receive Application Data",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->client.received_data(vars.get_req_bin("Record_Server_AppData"));
 
-                  ctx->check_callback_invocations(result, "application data sent", {"tls_record_received"});
+                     ctx->check_callback_invocations(result, "application data sent", {"tls_record_received"});
 
-                  const auto rcvd = ctx->pull_receive_buffer();
-                  result.test_eq("decrypted application traffic", rcvd, vars.get_req_bin("Server_AppData"));
-                  result.test_is_eq("sequence number", ctx->last_received_seq_no(), uint64_t(1));
-               }),
+                     const auto rcvd = ctx->pull_receive_buffer();
+                     result.test_eq("decrypted application traffic", rcvd, vars.get_req_bin("Server_AppData"));
+                     result.test_is_eq("sequence number", ctx->last_received_seq_no(), uint64_t(1));
+                  }),
 
-            Botan_Tests::CHECK("Close Connection",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->client.close();
+            CHECK("Close Connection",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->client.close();
 
-                                  result.test_eq("close payload",
-                                                 ctx->pull_send_buffer(),
-                                                 vars.get_req_bin("Record_Client_CloseNotify"));
-                                  ctx->check_callback_invocations(result, "CLOSE_NOTIFY sent", {"tls_emit_data"});
+                     result.test_eq(
+                        "close payload", ctx->pull_send_buffer(), vars.get_req_bin("Record_Client_CloseNotify"));
+                     ctx->check_callback_invocations(result, "CLOSE_NOTIFY sent", {"tls_emit_data"});
 
-                                  ctx->client.received_data(vars.get_req_bin("Record_Server_CloseNotify"));
-                                  ctx->check_callback_invocations(
-                                     result, "CLOSE_NOTIFY received", {"tls_alert", "tls_peer_closed_connection"});
+                     ctx->client.received_data(vars.get_req_bin("Record_Server_CloseNotify"));
+                     ctx->check_callback_invocations(
+                        result, "CLOSE_NOTIFY received", {"tls_alert", "tls_peer_closed_connection"});
 
-                                  result.confirm("connection is closed", ctx->client.is_closed());
-                               }),
+                     result.confirm("connection is closed", ctx->client.is_closed());
+                  }),
          };
       }
 
       std::vector<Test::Result> resumed_handshake_with_0_rtt(const VarMap& vars) override {
-         auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>("");
+         auto rng = std::make_unique<Fixed_Output_RNG>("");
 
          // 32 - for client hello random
          // 32 - for KeyShare (eph. x25519 key pair)
@@ -1164,30 +1160,30 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
          std::unique_ptr<Client_Context> ctx;
 
          return {
-            Botan_Tests::CHECK(
-               "Client Hello",
-               [&](Test::Result& result) {
-                  ctx = std::make_unique<Client_Context>(
-                     std::move(rng),
-                     std::make_shared<RFC8448_Text_Policy>("rfc8448_1rtt"),
-                     vars.get_req_u64("CurrentTimestamp"),
-                     add_extensions_and_sort,
-                     std::pair{Botan::TLS::Session(vars.get_req_bin("Client_SessionData")),
-                               Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))});
+            CHECK("Client Hello",
+                  [&](Test::Result& result) {
+                     ctx = std::make_unique<Client_Context>(
+                        std::move(rng),
+                        std::make_shared<RFC8448_Text_Policy>("rfc8448_1rtt"),
+                        vars.get_req_u64("CurrentTimestamp"),
+                        add_extensions_and_sort,
+                        std::pair{Botan::TLS::Session(vars.get_req_bin("Client_SessionData")),
+                                  Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))});
 
-                  result.confirm("client not closed", !ctx->client.is_closed());
-                  ctx->check_callback_invocations(result,
-                                                  "client hello prepared",
-                                                  {
-                                                     "tls_emit_data",
-                                                     "tls_inspect_handshake_msg_client_hello",
-                                                     "tls_modify_extensions_client_hello",
-                                                     "tls_current_timestamp",
-                                                     "tls_generate_ephemeral_key",
-                                                  });
+                     result.confirm("client not closed", !ctx->client.is_closed());
+                     ctx->check_callback_invocations(result,
+                                                     "client hello prepared",
+                                                     {
+                                                        "tls_emit_data",
+                                                        "tls_inspect_handshake_msg_client_hello",
+                                                        "tls_modify_extensions_client_hello",
+                                                        "tls_current_timestamp",
+                                                        "tls_generate_ephemeral_key",
+                                                     });
 
-                  result.test_eq("TLS client hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
-               })
+                     result.test_eq(
+                        "TLS client hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
+                  })
 
             // TODO: The rest of this test vector requires 0-RTT which is not
             //       yet implemented. For now we can only test the client's
@@ -1218,7 +1214,7 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
 
          // Fallback RNG is required to for blinding in ECDH with P-256
          auto& fallback_rng = this->rng();
-         auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>(fallback_rng);
+         auto rng = std::make_unique<Fixed_Output_RNG>(fallback_rng);
 
          // 32 - client hello random
          // 32 - eph. x25519 key pair
@@ -1228,108 +1224,106 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
          std::unique_ptr<Client_Context> ctx;
 
          return {
-            Botan_Tests::CHECK(
-               "Client Hello",
-               [&](Test::Result& result) {
-                  ctx = std::make_unique<Client_Context>(std::move(rng),
-                                                         std::make_shared<RFC8448_Text_Policy>("rfc8448_hrr_client"),
-                                                         vars.get_req_u64("CurrentTimestamp"),
-                                                         add_extensions_and_sort);
-                  result.confirm("client not closed", !ctx->client.is_closed());
+            CHECK("Client Hello",
+                  [&](Test::Result& result) {
+                     ctx = std::make_unique<Client_Context>(std::move(rng),
+                                                            std::make_shared<RFC8448_Text_Policy>("rfc8448_hrr_client"),
+                                                            vars.get_req_u64("CurrentTimestamp"),
+                                                            add_extensions_and_sort);
+                     result.confirm("client not closed", !ctx->client.is_closed());
 
-                  ctx->check_callback_invocations(result,
-                                                  "client hello prepared",
-                                                  {
-                                                     "tls_emit_data",
-                                                     "tls_inspect_handshake_msg_client_hello",
-                                                     "tls_modify_extensions_client_hello",
-                                                     "tls_generate_ephemeral_key",
-                                                     "tls_current_timestamp",
-                                                  });
+                     ctx->check_callback_invocations(result,
+                                                     "client hello prepared",
+                                                     {
+                                                        "tls_emit_data",
+                                                        "tls_inspect_handshake_msg_client_hello",
+                                                        "tls_modify_extensions_client_hello",
+                                                        "tls_generate_ephemeral_key",
+                                                        "tls_current_timestamp",
+                                                     });
 
-                  result.test_eq(
-                     "TLS client hello (1)", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
-               }),
+                     result.test_eq(
+                        "TLS client hello (1)", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
+                  }),
 
-            Botan_Tests::CHECK("Hello Retry Request .. second Client Hello",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->client.received_data(vars.get_req_bin("Record_HelloRetryRequest"));
+            CHECK("Hello Retry Request .. second Client Hello",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->client.received_data(vars.get_req_bin("Record_HelloRetryRequest"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "hello retry request received",
-                                                                  {
-                                                                     "tls_emit_data",
-                                                                     "tls_inspect_handshake_msg_hello_retry_request",
-                                                                     "tls_examine_extensions_hello_retry_request",
-                                                                     "tls_inspect_handshake_msg_client_hello",
-                                                                     "tls_modify_extensions_client_hello",
-                                                                     "tls_generate_ephemeral_key",
-                                                                  });
+                     ctx->check_callback_invocations(result,
+                                                     "hello retry request received",
+                                                     {
+                                                        "tls_emit_data",
+                                                        "tls_inspect_handshake_msg_hello_retry_request",
+                                                        "tls_examine_extensions_hello_retry_request",
+                                                        "tls_inspect_handshake_msg_client_hello",
+                                                        "tls_modify_extensions_client_hello",
+                                                        "tls_generate_ephemeral_key",
+                                                     });
 
-                                  result.test_eq("TLS client hello (2)",
-                                                 ctx->pull_send_buffer(),
-                                                 vars.get_req_bin("Record_ClientHello_2"));
-                               }),
+                     result.test_eq(
+                        "TLS client hello (2)", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_2"));
+                  }),
 
-            Botan_Tests::CHECK("Server Hello",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->client.received_data(vars.get_req_bin("Record_ServerHello"));
+            CHECK("Server Hello",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->client.received_data(vars.get_req_bin("Record_ServerHello"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "server hello received",
-                                                                  {
-                                                                     "tls_inspect_handshake_msg_server_hello",
-                                                                     "tls_examine_extensions_server_hello",
-                                                                     "tls_ephemeral_key_agreement",
-                                                                  });
-                               }),
+                     ctx->check_callback_invocations(result,
+                                                     "server hello received",
+                                                     {
+                                                        "tls_inspect_handshake_msg_server_hello",
+                                                        "tls_examine_extensions_server_hello",
+                                                        "tls_ephemeral_key_agreement",
+                                                     });
+                  }),
 
-            Botan_Tests::CHECK(
-               "Server HS Messages .. Client Finished",
-               [&](Test::Result& result) {
-                  result.require("ctx is available", ctx != nullptr);
-                  ctx->client.received_data(vars.get_req_bin("Record_ServerHandshakeMessages"));
+            CHECK("Server HS Messages .. Client Finished",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->client.received_data(vars.get_req_bin("Record_ServerHandshakeMessages"));
 
-                  ctx->check_callback_invocations(result,
-                                                  "encrypted handshake messages received",
-                                                  {"tls_inspect_handshake_msg_encrypted_extensions",
-                                                   "tls_inspect_handshake_msg_certificate",
-                                                   "tls_inspect_handshake_msg_certificate_verify",
-                                                   "tls_inspect_handshake_msg_finished",
-                                                   "tls_examine_extensions_encrypted_extensions",
-                                                   "tls_examine_extensions_certificate",
-                                                   "tls_emit_data",
-                                                   "tls_current_timestamp",
-                                                   "tls_session_established",
-                                                   "tls_session_activated",
-                                                   "tls_verify_cert_chain",
-                                                   "tls_verify_message"});
+                     ctx->check_callback_invocations(result,
+                                                     "encrypted handshake messages received",
+                                                     {"tls_inspect_handshake_msg_encrypted_extensions",
+                                                      "tls_inspect_handshake_msg_certificate",
+                                                      "tls_inspect_handshake_msg_certificate_verify",
+                                                      "tls_inspect_handshake_msg_finished",
+                                                      "tls_examine_extensions_encrypted_extensions",
+                                                      "tls_examine_extensions_certificate",
+                                                      "tls_emit_data",
+                                                      "tls_current_timestamp",
+                                                      "tls_session_established",
+                                                      "tls_session_activated",
+                                                      "tls_verify_cert_chain",
+                                                      "tls_verify_message"});
 
-                  result.test_eq("client finished", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientFinished"));
-               }),
+                     result.test_eq(
+                        "client finished", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientFinished"));
+                  }),
 
-            Botan_Tests::CHECK(
-               "Close Connection",
-               [&](Test::Result& result) {
-                  result.require("ctx is available", ctx != nullptr);
-                  ctx->client.close();
-                  ctx->check_callback_invocations(result, "encrypted handshake messages received", {"tls_emit_data"});
-                  result.test_eq(
-                     "client close notify", ctx->pull_send_buffer(), vars.get_req_bin("Record_Client_CloseNotify"));
+            CHECK("Close Connection",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->client.close();
+                     ctx->check_callback_invocations(
+                        result, "encrypted handshake messages received", {"tls_emit_data"});
+                     result.test_eq(
+                        "client close notify", ctx->pull_send_buffer(), vars.get_req_bin("Record_Client_CloseNotify"));
 
-                  ctx->client.received_data(vars.get_req_bin("Record_Server_CloseNotify"));
-                  ctx->check_callback_invocations(
-                     result, "encrypted handshake messages received", {"tls_alert", "tls_peer_closed_connection"});
+                     ctx->client.received_data(vars.get_req_bin("Record_Server_CloseNotify"));
+                     ctx->check_callback_invocations(
+                        result, "encrypted handshake messages received", {"tls_alert", "tls_peer_closed_connection"});
 
-                  result.confirm("connection is closed", ctx->client.is_closed());
-               }),
+                     result.confirm("connection is closed", ctx->client.is_closed());
+                  }),
          };
       }
 
       std::vector<Test::Result> client_authentication(const VarMap& vars) override {
-         auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>("");
+         auto rng = std::make_unique<Fixed_Output_RNG>("");
 
          // 32 - for client hello random
          // 32 - for eph. x25519 key pair
@@ -1347,102 +1341,99 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
          std::unique_ptr<Client_Context> ctx;
 
          return {
-            Botan_Tests::CHECK(
-               "Client Hello",
-               [&](Test::Result& result) {
-                  ctx = std::make_unique<Client_Context>(std::move(rng),
-                                                         std::make_shared<RFC8448_Text_Policy>("rfc8448_1rtt"),
-                                                         vars.get_req_u64("CurrentTimestamp"),
-                                                         add_extensions_and_sort,
-                                                         std::nullopt,
-                                                         std::nullopt,
-                                                         make_mock_signatures(vars));
+            CHECK("Client Hello",
+                  [&](Test::Result& result) {
+                     ctx = std::make_unique<Client_Context>(std::move(rng),
+                                                            std::make_shared<RFC8448_Text_Policy>("rfc8448_1rtt"),
+                                                            vars.get_req_u64("CurrentTimestamp"),
+                                                            add_extensions_and_sort,
+                                                            std::nullopt,
+                                                            std::nullopt,
+                                                            make_mock_signatures(vars));
 
-                  ctx->check_callback_invocations(result,
-                                                  "initial callbacks",
-                                                  {
-                                                     "tls_emit_data",
-                                                     "tls_inspect_handshake_msg_client_hello",
-                                                     "tls_modify_extensions_client_hello",
-                                                     "tls_generate_ephemeral_key",
-                                                     "tls_current_timestamp",
-                                                  });
+                     ctx->check_callback_invocations(result,
+                                                     "initial callbacks",
+                                                     {
+                                                        "tls_emit_data",
+                                                        "tls_inspect_handshake_msg_client_hello",
+                                                        "tls_modify_extensions_client_hello",
+                                                        "tls_generate_ephemeral_key",
+                                                        "tls_current_timestamp",
+                                                     });
 
-                  result.test_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
-               }),
+                     result.test_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
+                  }),
 
-            Botan_Tests::CHECK("Server Hello",
-                               [&](auto& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->client.received_data(vars.get_req_bin("Record_ServerHello"));
+            CHECK("Server Hello",
+                  [&](auto& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->client.received_data(vars.get_req_bin("Record_ServerHello"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "callbacks after server hello",
-                                                                  {
-                                                                     "tls_examine_extensions_server_hello",
-                                                                     "tls_inspect_handshake_msg_server_hello",
-                                                                     "tls_ephemeral_key_agreement",
-                                                                  });
-                               }),
+                     ctx->check_callback_invocations(result,
+                                                     "callbacks after server hello",
+                                                     {
+                                                        "tls_examine_extensions_server_hello",
+                                                        "tls_inspect_handshake_msg_server_hello",
+                                                        "tls_ephemeral_key_agreement",
+                                                     });
+                  }),
 
-            Botan_Tests::CHECK("other handshake messages and client auth",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->client.received_data(vars.get_req_bin("Record_ServerHandshakeMessages"));
+            CHECK("other handshake messages and client auth",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->client.received_data(vars.get_req_bin("Record_ServerHandshakeMessages"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "signing callbacks invoked",
-                                                                  {
-                                                                     "tls_sign_message",
-                                                                     "tls_emit_data",
-                                                                     "tls_examine_extensions_encrypted_extensions",
-                                                                     "tls_examine_extensions_certificate",
-                                                                     "tls_examine_extensions_certificate_request",
-                                                                     "tls_modify_extensions_certificate",
-                                                                     "tls_inspect_handshake_msg_certificate",
-                                                                     "tls_inspect_handshake_msg_certificate_request",
-                                                                     "tls_inspect_handshake_msg_certificate_verify",
-                                                                     "tls_inspect_handshake_msg_encrypted_extensions",
-                                                                     "tls_inspect_handshake_msg_finished",
-                                                                     "tls_current_timestamp",
-                                                                     "tls_session_established",
-                                                                     "tls_session_activated",
-                                                                     "tls_verify_cert_chain",
-                                                                     "tls_verify_message",
-                                                                  });
+                     ctx->check_callback_invocations(result,
+                                                     "signing callbacks invoked",
+                                                     {
+                                                        "tls_sign_message",
+                                                        "tls_emit_data",
+                                                        "tls_examine_extensions_encrypted_extensions",
+                                                        "tls_examine_extensions_certificate",
+                                                        "tls_examine_extensions_certificate_request",
+                                                        "tls_modify_extensions_certificate",
+                                                        "tls_inspect_handshake_msg_certificate",
+                                                        "tls_inspect_handshake_msg_certificate_request",
+                                                        "tls_inspect_handshake_msg_certificate_verify",
+                                                        "tls_inspect_handshake_msg_encrypted_extensions",
+                                                        "tls_inspect_handshake_msg_finished",
+                                                        "tls_current_timestamp",
+                                                        "tls_session_established",
+                                                        "tls_session_activated",
+                                                        "tls_verify_cert_chain",
+                                                        "tls_verify_message",
+                                                     });
 
-                                  // ClientFinished contains the entire coalesced client authentication flight
-                                  // Messages: Certificate, CertificateVerify, Finished
-                                  result.test_eq("Client Auth and Finished",
-                                                 ctx->pull_send_buffer(),
-                                                 vars.get_req_bin("Record_ClientFinished"));
-                               }),
+                     // ClientFinished contains the entire coalesced client authentication flight
+                     // Messages: Certificate, CertificateVerify, Finished
+                     result.test_eq(
+                        "Client Auth and Finished", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientFinished"));
+                  }),
 
-            Botan_Tests::CHECK(
-               "Close Connection",
-               [&](Test::Result& result) {
-                  result.require("ctx is available", ctx != nullptr);
-                  ctx->client.close();
-                  result.test_eq(
-                     "Client close_notify", ctx->pull_send_buffer(), vars.get_req_bin("Record_Client_CloseNotify"));
+            CHECK("Close Connection",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->client.close();
+                     result.test_eq(
+                        "Client close_notify", ctx->pull_send_buffer(), vars.get_req_bin("Record_Client_CloseNotify"));
 
-                  ctx->check_callback_invocations(result,
-                                                  "after sending close notify",
-                                                  {
-                                                     "tls_emit_data",
-                                                  });
+                     ctx->check_callback_invocations(result,
+                                                     "after sending close notify",
+                                                     {
+                                                        "tls_emit_data",
+                                                     });
 
-                  ctx->client.received_data(vars.get_req_bin("Record_Server_CloseNotify"));
-                  result.confirm("connection closed", ctx->client.is_closed());
+                     ctx->client.received_data(vars.get_req_bin("Record_Server_CloseNotify"));
+                     result.confirm("connection closed", ctx->client.is_closed());
 
-                  ctx->check_callback_invocations(
-                     result, "after receiving close notify", {"tls_alert", "tls_peer_closed_connection"});
-               }),
+                     ctx->check_callback_invocations(
+                        result, "after receiving close notify", {"tls_alert", "tls_peer_closed_connection"});
+                  }),
          };
       }
 
       std::vector<Test::Result> middlebox_compatibility(const VarMap& vars) override {
-         auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>("");
+         auto rng = std::make_unique<Fixed_Output_RNG>("");
 
          // 32 - client hello random
          // 32 - legacy session ID
@@ -1461,87 +1452,85 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
          std::unique_ptr<Client_Context> ctx;
 
          return {
-            Botan_Tests::CHECK(
-               "Client Hello",
-               [&](Test::Result& result) {
-                  ctx = std::make_unique<Client_Context>(std::move(rng),
+            CHECK("Client Hello",
+                  [&](Test::Result& result) {
+                     ctx =
+                        std::make_unique<Client_Context>(std::move(rng),
                                                          std::make_shared<RFC8448_Text_Policy>("rfc8448_compat_client"),
                                                          vars.get_req_u64("CurrentTimestamp"),
                                                          add_extensions_and_sort);
 
-                  result.test_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
+                     result.test_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
 
-                  ctx->check_callback_invocations(result,
-                                                  "client hello prepared",
-                                                  {
-                                                     "tls_emit_data",
-                                                     "tls_inspect_handshake_msg_client_hello",
-                                                     "tls_modify_extensions_client_hello",
-                                                     "tls_generate_ephemeral_key",
-                                                     "tls_current_timestamp",
-                                                  });
-               }),
+                     ctx->check_callback_invocations(result,
+                                                     "client hello prepared",
+                                                     {
+                                                        "tls_emit_data",
+                                                        "tls_inspect_handshake_msg_client_hello",
+                                                        "tls_modify_extensions_client_hello",
+                                                        "tls_generate_ephemeral_key",
+                                                        "tls_current_timestamp",
+                                                     });
+                  }),
 
-            Botan_Tests::CHECK("Server Hello + other handshake messages",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->client.received_data(Botan::concat(
-                                     vars.get_req_bin("Record_ServerHello"),
-                                     // ServerHandshakeMessages contains the expected ChangeCipherSpec record
-                                     vars.get_req_bin("Record_ServerHandshakeMessages")));
+            CHECK("Server Hello + other handshake messages",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->client.received_data(
+                        Botan::concat(vars.get_req_bin("Record_ServerHello"),
+                                      // ServerHandshakeMessages contains the expected ChangeCipherSpec record
+                                      vars.get_req_bin("Record_ServerHandshakeMessages")));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "callbacks after server's first flight",
-                                                                  {
-                                                                     "tls_inspect_handshake_msg_server_hello",
-                                                                     "tls_inspect_handshake_msg_encrypted_extensions",
-                                                                     "tls_inspect_handshake_msg_certificate",
-                                                                     "tls_inspect_handshake_msg_certificate_verify",
-                                                                     "tls_inspect_handshake_msg_finished",
-                                                                     "tls_examine_extensions_server_hello",
-                                                                     "tls_examine_extensions_encrypted_extensions",
-                                                                     "tls_examine_extensions_certificate",
-                                                                     "tls_emit_data",
-                                                                     "tls_current_timestamp",
-                                                                     "tls_session_established",
-                                                                     "tls_session_activated",
-                                                                     "tls_verify_cert_chain",
-                                                                     "tls_verify_message",
-                                                                     "tls_ephemeral_key_agreement",
-                                                                  });
+                     ctx->check_callback_invocations(result,
+                                                     "callbacks after server's first flight",
+                                                     {
+                                                        "tls_inspect_handshake_msg_server_hello",
+                                                        "tls_inspect_handshake_msg_encrypted_extensions",
+                                                        "tls_inspect_handshake_msg_certificate",
+                                                        "tls_inspect_handshake_msg_certificate_verify",
+                                                        "tls_inspect_handshake_msg_finished",
+                                                        "tls_examine_extensions_server_hello",
+                                                        "tls_examine_extensions_encrypted_extensions",
+                                                        "tls_examine_extensions_certificate",
+                                                        "tls_emit_data",
+                                                        "tls_current_timestamp",
+                                                        "tls_session_established",
+                                                        "tls_session_activated",
+                                                        "tls_verify_cert_chain",
+                                                        "tls_verify_message",
+                                                        "tls_ephemeral_key_agreement",
+                                                     });
 
-                                  result.test_eq("CCS + Client Finished",
-                                                 ctx->pull_send_buffer(),
-                                                 // ClientFinished contains the expected ChangeCipherSpec record
-                                                 vars.get_req_bin("Record_ClientFinished"));
+                     result.test_eq("CCS + Client Finished",
+                                    ctx->pull_send_buffer(),
+                                    // ClientFinished contains the expected ChangeCipherSpec record
+                                    vars.get_req_bin("Record_ClientFinished"));
 
-                                  result.confirm("client is ready to send application traffic",
-                                                 ctx->client.is_active());
-                                  result.confirm("handshake is complete", ctx->client.is_handshake_complete());
-                               }),
+                     result.confirm("client is ready to send application traffic", ctx->client.is_active());
+                     result.confirm("handshake is complete", ctx->client.is_handshake_complete());
+                  }),
 
-            Botan_Tests::CHECK(
-               "Close connection",
-               [&](Test::Result& result) {
-                  result.require("ctx is available", ctx != nullptr);
-                  ctx->client.close();
+            CHECK("Close connection",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->client.close();
 
-                  result.test_eq(
-                     "Client close_notify", ctx->pull_send_buffer(), vars.get_req_bin("Record_Client_CloseNotify"));
+                     result.test_eq(
+                        "Client close_notify", ctx->pull_send_buffer(), vars.get_req_bin("Record_Client_CloseNotify"));
 
-                  result.require("client cannot send application traffic anymore", !ctx->client.is_active());
-                  result.require("client is not fully closed yet", !ctx->client.is_closed());
-                  result.confirm("handshake stays completed", ctx->client.is_handshake_complete());
+                     result.require("client cannot send application traffic anymore", !ctx->client.is_active());
+                     result.require("client is not fully closed yet", !ctx->client.is_closed());
+                     result.confirm("handshake stays completed", ctx->client.is_handshake_complete());
 
-                  ctx->client.received_data(vars.get_req_bin("Record_Server_CloseNotify"));
+                     ctx->client.received_data(vars.get_req_bin("Record_Server_CloseNotify"));
 
-                  result.confirm("client connection was terminated", ctx->client.is_closed());
-               }),
+                     result.confirm("client connection was terminated", ctx->client.is_closed());
+                  }),
          };
       }
 
       std::vector<Test::Result> externally_provided_psk_with_ephemeral_key(const VarMap& vars) override {
-         auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>("");
+         auto rng = std::make_unique<Fixed_Output_RNG>("");
 
          // 32 - for client hello random
          // 32 - for KeyShare (eph. x25519 key pair)
@@ -1569,49 +1558,49 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
          std::unique_ptr<Client_Context> ctx;
 
          return {
-            Botan_Tests::CHECK(
-               "Client Hello",
-               [&](Test::Result& result) {
-                  ctx = std::make_unique<Client_Context>(
-                     std::move(rng),
-                     std::make_shared<RFC8448_Text_Policy>("rfc8448_psk_dhe", false /* no rfc8448 */),
-                     vars.get_req_u64("CurrentTimestamp"),
-                     sort_our_extensions,
-                     std::nullopt,
-                     ExternalPSK(vars.get_req_str("PskIdentity"),
-                                 vars.get_req_str("PskPRF"),
-                                 lock(vars.get_req_bin("PskSecret"))));
+            CHECK("Client Hello",
+                  [&](Test::Result& result) {
+                     ctx = std::make_unique<Client_Context>(
+                        std::move(rng),
+                        std::make_shared<RFC8448_Text_Policy>("rfc8448_psk_dhe", false /* no rfc8448 */),
+                        vars.get_req_u64("CurrentTimestamp"),
+                        sort_our_extensions,
+                        std::nullopt,
+                        ExternalPSK(vars.get_req_str("PskIdentity"),
+                                    vars.get_req_str("PskPRF"),
+                                    lock(vars.get_req_bin("PskSecret"))));
 
-                  result.confirm("client not closed", !ctx->client.is_closed());
-                  ctx->check_callback_invocations(result,
-                                                  "client hello prepared",
-                                                  {
-                                                     "tls_emit_data",
-                                                     "tls_inspect_handshake_msg_client_hello",
-                                                     "tls_modify_extensions_client_hello",
-                                                     "tls_current_timestamp",
-                                                     "tls_generate_ephemeral_key",
-                                                  });
+                     result.confirm("client not closed", !ctx->client.is_closed());
+                     ctx->check_callback_invocations(result,
+                                                     "client hello prepared",
+                                                     {
+                                                        "tls_emit_data",
+                                                        "tls_inspect_handshake_msg_client_hello",
+                                                        "tls_modify_extensions_client_hello",
+                                                        "tls_current_timestamp",
+                                                        "tls_generate_ephemeral_key",
+                                                     });
 
-                  result.test_eq("TLS client hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
-               }),
+                     result.test_eq(
+                        "TLS client hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
+                  }),
 
-            Botan_Tests::CHECK("Server Hello",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  const auto server_hello = vars.get_req_bin("Record_ServerHello");
-                                  ctx->client.received_data(server_hello);
-                                  ctx->check_callback_invocations(result,
-                                                                  "server hello received",
-                                                                  {"tls_inspect_handshake_msg_server_hello",
-                                                                   "tls_examine_extensions_server_hello",
-                                                                   "tls_ephemeral_key_agreement"});
+            CHECK("Server Hello",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     const auto server_hello = vars.get_req_bin("Record_ServerHello");
+                     ctx->client.received_data(server_hello);
+                     ctx->check_callback_invocations(result,
+                                                     "server hello received",
+                                                     {"tls_inspect_handshake_msg_server_hello",
+                                                      "tls_examine_extensions_server_hello",
+                                                      "tls_ephemeral_key_agreement"});
 
-                                  result.confirm("client is not yet active", !ctx->client.is_active());
-                                  result.confirm("handshake is not yet complete", !ctx->client.is_handshake_complete());
-                               }),
+                     result.confirm("client is not yet active", !ctx->client.is_active());
+                     result.confirm("handshake is not yet complete", !ctx->client.is_handshake_complete());
+                  }),
 
-            Botan_Tests::CHECK(
+            CHECK(
                "Server HS messages .. Client Finished",
                [&](Test::Result& result) {
                   result.require("ctx is available", ctx != nullptr);
@@ -1634,52 +1623,50 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
                      "correct handshake finished", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientFinished"));
                }),
 
-            Botan_Tests::CHECK("Send Application Data",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->send(vars.get_req_bin("Client_AppData"));
+            CHECK("Send Application Data",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->send(vars.get_req_bin("Client_AppData"));
 
-                                  ctx->check_callback_invocations(result, "application data sent", {"tls_emit_data"});
+                     ctx->check_callback_invocations(result, "application data sent", {"tls_emit_data"});
 
-                                  result.test_eq("correct client application data",
-                                                 ctx->pull_send_buffer(),
-                                                 vars.get_req_bin("Record_Client_AppData"));
-                               }),
+                     result.test_eq("correct client application data",
+                                    ctx->pull_send_buffer(),
+                                    vars.get_req_bin("Record_Client_AppData"));
+                  }),
 
-            Botan_Tests::CHECK(
-               "Receive Application Data",
-               [&](Test::Result& result) {
-                  result.require("ctx is available", ctx != nullptr);
-                  ctx->client.received_data(vars.get_req_bin("Record_Server_AppData"));
+            CHECK("Receive Application Data",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->client.received_data(vars.get_req_bin("Record_Server_AppData"));
 
-                  ctx->check_callback_invocations(result, "application data sent", {"tls_record_received"});
+                     ctx->check_callback_invocations(result, "application data sent", {"tls_record_received"});
 
-                  const auto rcvd = ctx->pull_receive_buffer();
-                  result.test_eq("decrypted application traffic", rcvd, vars.get_req_bin("Server_AppData"));
-                  result.test_is_eq("sequence number", ctx->last_received_seq_no(), uint64_t(0));
-               }),
+                     const auto rcvd = ctx->pull_receive_buffer();
+                     result.test_eq("decrypted application traffic", rcvd, vars.get_req_bin("Server_AppData"));
+                     result.test_is_eq("sequence number", ctx->last_received_seq_no(), uint64_t(0));
+                  }),
 
-            Botan_Tests::CHECK("Close Connection",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->client.close();
+            CHECK("Close Connection",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->client.close();
 
-                                  result.test_eq("close payload",
-                                                 ctx->pull_send_buffer(),
-                                                 vars.get_req_bin("Record_Client_CloseNotify"));
-                                  ctx->check_callback_invocations(result, "CLOSE_NOTIFY sent", {"tls_emit_data"});
+                     result.test_eq(
+                        "close payload", ctx->pull_send_buffer(), vars.get_req_bin("Record_Client_CloseNotify"));
+                     ctx->check_callback_invocations(result, "CLOSE_NOTIFY sent", {"tls_emit_data"});
 
-                                  ctx->client.received_data(vars.get_req_bin("Record_Server_CloseNotify"));
-                                  ctx->check_callback_invocations(
-                                     result, "CLOSE_NOTIFY received", {"tls_alert", "tls_peer_closed_connection"});
+                     ctx->client.received_data(vars.get_req_bin("Record_Server_CloseNotify"));
+                     ctx->check_callback_invocations(
+                        result, "CLOSE_NOTIFY received", {"tls_alert", "tls_peer_closed_connection"});
 
-                                  result.confirm("connection is closed", ctx->client.is_closed());
-                               }),
+                     result.confirm("connection is closed", ctx->client.is_closed());
+                  }),
          };
       }
 
       std::vector<Test::Result> raw_public_key_with_client_authentication(const VarMap& vars) override {
-         auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>("");
+         auto rng = std::make_unique<Fixed_Output_RNG>("");
 
          // 32 - for client hello random
          // 32 - for KeyShare (eph. x25519 key pair)
@@ -1709,102 +1696,99 @@ class Test_TLS_RFC8448_Client : public Test_TLS_RFC8448 {
          std::unique_ptr<Client_Context> ctx;
 
          return {
-            Botan_Tests::CHECK(
-               "Client Hello",
-               [&](Test::Result& result) {
-                  ctx = std::make_unique<Client_Context>(std::move(rng),
-                                                         std::make_shared<RFC8448_Text_Policy>("rfc8448_rawpubkey"),
-                                                         vars.get_req_u64("CurrentTimestamp"),
-                                                         sort_our_extensions,
-                                                         std::nullopt,
-                                                         std::nullopt,
-                                                         make_mock_signatures(vars));
+            CHECK("Client Hello",
+                  [&](Test::Result& result) {
+                     ctx = std::make_unique<Client_Context>(std::move(rng),
+                                                            std::make_shared<RFC8448_Text_Policy>("rfc8448_rawpubkey"),
+                                                            vars.get_req_u64("CurrentTimestamp"),
+                                                            sort_our_extensions,
+                                                            std::nullopt,
+                                                            std::nullopt,
+                                                            make_mock_signatures(vars));
 
-                  ctx->check_callback_invocations(result,
-                                                  "initial callbacks",
-                                                  {
-                                                     "tls_emit_data",
-                                                     "tls_inspect_handshake_msg_client_hello",
-                                                     "tls_modify_extensions_client_hello",
-                                                     "tls_generate_ephemeral_key",
-                                                     "tls_current_timestamp",
-                                                  });
+                     ctx->check_callback_invocations(result,
+                                                     "initial callbacks",
+                                                     {
+                                                        "tls_emit_data",
+                                                        "tls_inspect_handshake_msg_client_hello",
+                                                        "tls_modify_extensions_client_hello",
+                                                        "tls_generate_ephemeral_key",
+                                                        "tls_current_timestamp",
+                                                     });
 
-                  result.test_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
-               }),
+                     result.test_eq("Client Hello", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientHello_1"));
+                  }),
 
-            Botan_Tests::CHECK("Server Hello",
-                               [&](auto& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->client.received_data(vars.get_req_bin("Record_ServerHello"));
+            CHECK("Server Hello",
+                  [&](auto& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->client.received_data(vars.get_req_bin("Record_ServerHello"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "callbacks after server hello",
-                                                                  {
-                                                                     "tls_examine_extensions_server_hello",
-                                                                     "tls_inspect_handshake_msg_server_hello",
-                                                                     "tls_ephemeral_key_agreement",
-                                                                  });
-                               }),
+                     ctx->check_callback_invocations(result,
+                                                     "callbacks after server hello",
+                                                     {
+                                                        "tls_examine_extensions_server_hello",
+                                                        "tls_inspect_handshake_msg_server_hello",
+                                                        "tls_ephemeral_key_agreement",
+                                                     });
+                  }),
 
-            Botan_Tests::CHECK("other handshake messages and client auth",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->client.received_data(vars.get_req_bin("Record_ServerHandshakeMessages"));
+            CHECK("other handshake messages and client auth",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->client.received_data(vars.get_req_bin("Record_ServerHandshakeMessages"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "signing callbacks invoked",
-                                                                  {
-                                                                     "tls_sign_message",
-                                                                     "tls_emit_data",
-                                                                     "tls_examine_extensions_encrypted_extensions",
-                                                                     "tls_examine_extensions_certificate",
-                                                                     "tls_examine_extensions_certificate_request",
-                                                                     "tls_modify_extensions_certificate",
-                                                                     "tls_inspect_handshake_msg_certificate",
-                                                                     "tls_inspect_handshake_msg_certificate_request",
-                                                                     "tls_inspect_handshake_msg_certificate_verify",
-                                                                     "tls_inspect_handshake_msg_encrypted_extensions",
-                                                                     "tls_inspect_handshake_msg_finished",
-                                                                     "tls_current_timestamp",
-                                                                     "tls_session_established",
-                                                                     "tls_session_activated",
-                                                                     "tls_verify_raw_public_key",
-                                                                     "tls_verify_message",
-                                                                  });
+                     ctx->check_callback_invocations(result,
+                                                     "signing callbacks invoked",
+                                                     {
+                                                        "tls_sign_message",
+                                                        "tls_emit_data",
+                                                        "tls_examine_extensions_encrypted_extensions",
+                                                        "tls_examine_extensions_certificate",
+                                                        "tls_examine_extensions_certificate_request",
+                                                        "tls_modify_extensions_certificate",
+                                                        "tls_inspect_handshake_msg_certificate",
+                                                        "tls_inspect_handshake_msg_certificate_request",
+                                                        "tls_inspect_handshake_msg_certificate_verify",
+                                                        "tls_inspect_handshake_msg_encrypted_extensions",
+                                                        "tls_inspect_handshake_msg_finished",
+                                                        "tls_current_timestamp",
+                                                        "tls_session_established",
+                                                        "tls_session_activated",
+                                                        "tls_verify_raw_public_key",
+                                                        "tls_verify_message",
+                                                     });
 
-                                  const auto raw_pk = ctx->client.peer_raw_public_key();
-                                  result.confirm("Received server's raw public key",
-                                                 raw_pk && raw_pk->fingerprint_public() ==
-                                                              server_raw_public_key_pair()->fingerprint_public());
+                     const auto raw_pk = ctx->client.peer_raw_public_key();
+                     result.confirm(
+                        "Received server's raw public key",
+                        raw_pk && raw_pk->fingerprint_public() == server_raw_public_key_pair()->fingerprint_public());
 
-                                  // ClientFinished contains the entire coalesced client authentication flight
-                                  // Messages: Certificate, CertificateVerify, Finished
-                                  result.test_eq("Client Auth and Finished",
-                                                 ctx->pull_send_buffer(),
-                                                 vars.get_req_bin("Record_ClientFinished"));
-                               }),
+                     // ClientFinished contains the entire coalesced client authentication flight
+                     // Messages: Certificate, CertificateVerify, Finished
+                     result.test_eq(
+                        "Client Auth and Finished", ctx->pull_send_buffer(), vars.get_req_bin("Record_ClientFinished"));
+                  }),
 
-            Botan_Tests::CHECK(
-               "Close Connection",
-               [&](Test::Result& result) {
-                  result.require("ctx is available", ctx != nullptr);
-                  ctx->client.close();
-                  result.test_eq(
-                     "Client close_notify", ctx->pull_send_buffer(), vars.get_req_bin("Record_Client_CloseNotify"));
+            CHECK("Close Connection",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->client.close();
+                     result.test_eq(
+                        "Client close_notify", ctx->pull_send_buffer(), vars.get_req_bin("Record_Client_CloseNotify"));
 
-                  ctx->check_callback_invocations(result,
-                                                  "after sending close notify",
-                                                  {
-                                                     "tls_emit_data",
-                                                  });
+                     ctx->check_callback_invocations(result,
+                                                     "after sending close notify",
+                                                     {
+                                                        "tls_emit_data",
+                                                     });
 
-                  ctx->client.received_data(vars.get_req_bin("Record_Server_CloseNotify"));
-                  result.confirm("connection closed", ctx->client.is_closed());
+                     ctx->client.received_data(vars.get_req_bin("Record_Server_CloseNotify"));
+                     result.confirm("connection closed", ctx->client.is_closed());
 
-                  ctx->check_callback_invocations(
-                     result, "after receiving close notify", {"tls_alert", "tls_peer_closed_connection"});
-               }),
+                     ctx->check_callback_invocations(
+                        result, "after receiving close notify", {"tls_alert", "tls_peer_closed_connection"});
+                  }),
          };
       }
 };
@@ -1814,7 +1798,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
       std::string side() const override { return "Server"; }
 
       std::vector<Test::Result> simple_1_rtt(const VarMap& vars) override {
-         auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>("");
+         auto rng = std::make_unique<Fixed_Output_RNG>("");
 
          // 32 - for server hello random
          // 32 - for KeyShare (eph. x25519 key pair)  --  I guess?
@@ -1824,172 +1808,169 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
          std::unique_ptr<Server_Context> ctx;
 
          return {
-            Botan_Tests::CHECK("Send Client Hello",
-                               [&](Test::Result& result) {
-                                  auto add_early_data_and_sort = [&](Botan::TLS::Extensions& exts,
-                                                                     Botan::TLS::Connection_Side side,
-                                                                     Botan::TLS::Handshake_Type type) {
-                                     if(type == Handshake_Type::NewSessionTicket) {
-                                        exts.add(new EarlyDataIndication(1024));
-                                     }
-                                     sort_rfc8448_extensions(exts, side, type);
-                                  };
+            CHECK("Send Client Hello",
+                  [&](Test::Result& result) {
+                     auto add_early_data_and_sort = [&](Botan::TLS::Extensions& exts,
+                                                        Botan::TLS::Connection_Side side,
+                                                        Botan::TLS::Handshake_Type type) {
+                        if(type == Handshake_Type::NewSessionTicket) {
+                           exts.add(new EarlyDataIndication(1024));
+                        }
+                        sort_rfc8448_extensions(exts, side, type);
+                     };
 
-                                  ctx = std::make_unique<Server_Context>(
-                                     std::move(rng),
-                                     std::make_shared<RFC8448_Text_Policy>("rfc8448_1rtt"),
-                                     vars.get_req_u64("CurrentTimestamp"),
-                                     add_early_data_and_sort,
-                                     make_mock_signatures(vars),
-                                     false,
-                                     std::pair{Botan::TLS::Session(vars.get_req_bin("Client_SessionData")),
-                                               Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))});
-                                  result.confirm("server not closed", !ctx->server.is_closed());
+                     ctx = std::make_unique<Server_Context>(
+                        std::move(rng),
+                        std::make_shared<RFC8448_Text_Policy>("rfc8448_1rtt"),
+                        vars.get_req_u64("CurrentTimestamp"),
+                        add_early_data_and_sort,
+                        make_mock_signatures(vars),
+                        false,
+                        std::pair{Botan::TLS::Session(vars.get_req_bin("Client_SessionData")),
+                                  Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))});
+                     result.confirm("server not closed", !ctx->server.is_closed());
 
-                                  ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
+                     ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "client hello received",
-                                                                  {"tls_emit_data",
-                                                                   "tls_examine_extensions_client_hello",
-                                                                   "tls_modify_extensions_server_hello",
-                                                                   "tls_modify_extensions_encrypted_extensions",
-                                                                   "tls_modify_extensions_certificate",
-                                                                   "tls_sign_message",
-                                                                   "tls_generate_ephemeral_key",
-                                                                   "tls_ephemeral_key_agreement",
-                                                                   "tls_inspect_handshake_msg_client_hello",
-                                                                   "tls_inspect_handshake_msg_server_hello",
-                                                                   "tls_inspect_handshake_msg_encrypted_extensions",
-                                                                   "tls_inspect_handshake_msg_certificate",
-                                                                   "tls_inspect_handshake_msg_certificate_verify",
-                                                                   "tls_inspect_handshake_msg_finished"});
-                               }),
+                     ctx->check_callback_invocations(result,
+                                                     "client hello received",
+                                                     {"tls_emit_data",
+                                                      "tls_examine_extensions_client_hello",
+                                                      "tls_modify_extensions_server_hello",
+                                                      "tls_modify_extensions_encrypted_extensions",
+                                                      "tls_modify_extensions_certificate",
+                                                      "tls_sign_message",
+                                                      "tls_generate_ephemeral_key",
+                                                      "tls_ephemeral_key_agreement",
+                                                      "tls_inspect_handshake_msg_client_hello",
+                                                      "tls_inspect_handshake_msg_server_hello",
+                                                      "tls_inspect_handshake_msg_encrypted_extensions",
+                                                      "tls_inspect_handshake_msg_certificate",
+                                                      "tls_inspect_handshake_msg_certificate_verify",
+                                                      "tls_inspect_handshake_msg_finished"});
+                  }),
 
-            Botan_Tests::CHECK("Verify generated messages in server's first flight",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  const auto& msgs = ctx->observed_handshake_messages();
+            CHECK("Verify generated messages in server's first flight",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     const auto& msgs = ctx->observed_handshake_messages();
 
-                                  result.test_eq("Server Hello",
-                                                 msgs.at("server_hello")[0],
-                                                 strip_message_header(vars.get_opt_bin("Message_ServerHello")));
-                                  result.test_eq("Encrypted Extensions",
-                                                 msgs.at("encrypted_extensions")[0],
-                                                 strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
-                                  result.test_eq("Certificate",
-                                                 msgs.at("certificate")[0],
-                                                 strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
-                                  result.test_eq(
-                                     "CertificateVerify",
-                                     msgs.at("certificate_verify")[0],
-                                     strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
+                     result.test_eq("Server Hello",
+                                    msgs.at("server_hello")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_ServerHello")));
+                     result.test_eq("Encrypted Extensions",
+                                    msgs.at("encrypted_extensions")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
+                     result.test_eq("Certificate",
+                                    msgs.at("certificate")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
+                     result.test_eq("CertificateVerify",
+                                    msgs.at("certificate_verify")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
 
-                                  result.test_eq("Server's entire first flight",
-                                                 ctx->pull_send_buffer(),
-                                                 concat(vars.get_req_bin("Record_ServerHello"),
-                                                        vars.get_req_bin("Record_ServerHandshakeMessages")));
+                     result.test_eq("Server's entire first flight",
+                                    ctx->pull_send_buffer(),
+                                    concat(vars.get_req_bin("Record_ServerHello"),
+                                           vars.get_req_bin("Record_ServerHandshakeMessages")));
 
-                                  // Note: is_active() defines that we can send application data.
-                                  //       RFC 8446 Section 4.4.4 explicitly allows that for servers
-                                  //       that did not receive the client's Finished message, yet.
-                                  //       However, before receiving and validating this message,
-                                  //       the handshake is not yet finished.
-                                  result.confirm("Server can now send application data", ctx->server.is_active());
-                                  result.confirm("handshake is not yet complete", !ctx->server.is_handshake_complete());
-                               }),
+                     // Note: is_active() defines that we can send application data.
+                     //       RFC 8446 Section 4.4.4 explicitly allows that for servers
+                     //       that did not receive the client's Finished message, yet.
+                     //       However, before receiving and validating this message,
+                     //       the handshake is not yet finished.
+                     result.confirm("Server can now send application data", ctx->server.is_active());
+                     result.confirm("handshake is not yet complete", !ctx->server.is_handshake_complete());
+                  }),
 
-            Botan_Tests::CHECK("Send Client Finished",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->server.received_data(vars.get_req_bin("Record_ClientFinished"));
+            CHECK("Send Client Finished",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.received_data(vars.get_req_bin("Record_ClientFinished"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "client finished received",
-                                                                  {"tls_inspect_handshake_msg_finished",
-                                                                   "tls_current_timestamp",
-                                                                   "tls_session_established",
-                                                                   "tls_session_activated"});
-                               }),
+                     ctx->check_callback_invocations(result,
+                                                     "client finished received",
+                                                     {"tls_inspect_handshake_msg_finished",
+                                                      "tls_current_timestamp",
+                                                      "tls_session_established",
+                                                      "tls_session_activated"});
+                  }),
 
-            Botan_Tests::CHECK("Send Session Ticket",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  const auto new_tickets = ctx->server.send_new_session_tickets(1);
+            CHECK("Send Session Ticket",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     const auto new_tickets = ctx->server.send_new_session_tickets(1);
 
-                                  result.test_eq("session ticket was sent", new_tickets, 1);
+                     result.test_eq("session ticket was sent", new_tickets, 1);
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "issued new session ticket",
-                                                                  {"tls_inspect_handshake_msg_new_session_ticket",
-                                                                   "tls_current_timestamp",
-                                                                   "tls_emit_data",
-                                                                   "tls_modify_extensions_new_session_ticket",
-                                                                   "tls_should_persist_resumption_information"});
-                               }),
+                     ctx->check_callback_invocations(result,
+                                                     "issued new session ticket",
+                                                     {"tls_inspect_handshake_msg_new_session_ticket",
+                                                      "tls_current_timestamp",
+                                                      "tls_emit_data",
+                                                      "tls_modify_extensions_new_session_ticket",
+                                                      "tls_should_persist_resumption_information"});
+                  }),
 
-            Botan_Tests::CHECK("Verify generated new session ticket message",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  result.test_eq("New Session Ticket",
-                                                 ctx->pull_send_buffer(),
-                                                 vars.get_req_bin("Record_NewSessionTicket"));
-                               }),
+            CHECK("Verify generated new session ticket message",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     result.test_eq(
+                        "New Session Ticket", ctx->pull_send_buffer(), vars.get_req_bin("Record_NewSessionTicket"));
+                  }),
 
-            Botan_Tests::CHECK(
-               "Receive Application Data",
-               [&](Test::Result& result) {
-                  result.require("ctx is available", ctx != nullptr);
-                  ctx->server.received_data(vars.get_req_bin("Record_Client_AppData"));
-                  ctx->check_callback_invocations(result, "application data received", {"tls_record_received"});
+            CHECK("Receive Application Data",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.received_data(vars.get_req_bin("Record_Client_AppData"));
+                     ctx->check_callback_invocations(result, "application data received", {"tls_record_received"});
 
-                  const auto rcvd = ctx->pull_receive_buffer();
-                  result.test_eq("decrypted application traffic", rcvd, vars.get_req_bin("Client_AppData"));
-                  result.test_is_eq("sequence number", ctx->last_received_seq_no(), uint64_t(0));
-               }),
+                     const auto rcvd = ctx->pull_receive_buffer();
+                     result.test_eq("decrypted application traffic", rcvd, vars.get_req_bin("Client_AppData"));
+                     result.test_is_eq("sequence number", ctx->last_received_seq_no(), uint64_t(0));
+                  }),
 
-            Botan_Tests::CHECK("Send Application Data",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->send(vars.get_req_bin("Server_AppData"));
+            CHECK("Send Application Data",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->send(vars.get_req_bin("Server_AppData"));
 
-                                  ctx->check_callback_invocations(result, "application data sent", {"tls_emit_data"});
+                     ctx->check_callback_invocations(result, "application data sent", {"tls_emit_data"});
 
-                                  result.test_eq("correct server application data",
-                                                 ctx->pull_send_buffer(),
-                                                 vars.get_req_bin("Record_Server_AppData"));
-                               }),
+                     result.test_eq("correct server application data",
+                                    ctx->pull_send_buffer(),
+                                    vars.get_req_bin("Record_Server_AppData"));
+                  }),
 
-            Botan_Tests::CHECK("Receive Client's close_notify",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
+            CHECK("Receive Client's close_notify",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
 
-                                  ctx->check_callback_invocations(
-                                     result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
+                     ctx->check_callback_invocations(
+                        result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
 
-                                  result.confirm("connection is not yet closed", !ctx->server.is_closed());
-                                  result.confirm("connection is still active", ctx->server.is_active());
-                                  result.confirm("handshake is still finished", ctx->server.is_handshake_complete());
-                               }),
+                     result.confirm("connection is not yet closed", !ctx->server.is_closed());
+                     result.confirm("connection is still active", ctx->server.is_active());
+                     result.confirm("handshake is still finished", ctx->server.is_handshake_complete());
+                  }),
 
-            Botan_Tests::CHECK("Expect Server close_notify",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->server.close();
+            CHECK("Expect Server close_notify",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.close();
 
-                                  result.confirm("connection is now inactive", !ctx->server.is_active());
-                                  result.confirm("connection is now closed", ctx->server.is_closed());
-                                  result.confirm("handshake is still finished", ctx->server.is_handshake_complete());
-                                  result.test_eq("Server's close notify",
-                                                 ctx->pull_send_buffer(),
-                                                 vars.get_req_bin("Record_Server_CloseNotify"));
-                               }),
+                     result.confirm("connection is now inactive", !ctx->server.is_active());
+                     result.confirm("connection is now closed", ctx->server.is_closed());
+                     result.confirm("handshake is still finished", ctx->server.is_handshake_complete());
+                     result.test_eq("Server's close notify",
+                                    ctx->pull_send_buffer(),
+                                    vars.get_req_bin("Record_Server_CloseNotify"));
+                  }),
          };
       }
 
       std::vector<Test::Result> resumed_handshake_with_0_rtt(const VarMap& vars) override {
-         auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>();
+         auto rng = std::make_unique<Fixed_Output_RNG>();
 
          // 32 - for server hello random
          // 32 - for KeyShare (eph. x25519 key pair)
@@ -1998,72 +1979,72 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
          std::unique_ptr<Server_Context> ctx;
 
          return {
-            Botan_Tests::CHECK("Receive Client Hello",
-                               [&](Test::Result& result) {
-                                  auto add_cookie_and_sort = [&](Botan::TLS::Extensions& exts,
-                                                                 Botan::TLS::Connection_Side side,
-                                                                 Botan::TLS::Handshake_Type type) {
-                                     if(type == Handshake_Type::EncryptedExtensions) {
-                                        exts.add(new EarlyDataIndication());
-                                     }
-                                     sort_rfc8448_extensions(exts, side, type);
-                                  };
+            CHECK("Receive Client Hello",
+                  [&](Test::Result& result) {
+                     auto add_cookie_and_sort = [&](Botan::TLS::Extensions& exts,
+                                                    Botan::TLS::Connection_Side side,
+                                                    Botan::TLS::Handshake_Type type) {
+                        if(type == Handshake_Type::EncryptedExtensions) {
+                           exts.add(new EarlyDataIndication());
+                        }
+                        sort_rfc8448_extensions(exts, side, type);
+                     };
 
-                                  ctx = std::make_unique<Server_Context>(
-                                     std::move(rng),
-                                     std::make_shared<RFC8448_Text_Policy>("rfc8448_1rtt"),
-                                     vars.get_req_u64("CurrentTimestamp"),
-                                     add_cookie_and_sort,
-                                     make_mock_signatures(vars),
-                                     false,
-                                     std::pair{Botan::TLS::Session(vars.get_req_bin("Client_SessionData")),
-                                               Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))});
-                                  result.confirm("server not closed", !ctx->server.is_closed());
+                     ctx = std::make_unique<Server_Context>(
+                        std::move(rng),
+                        std::make_shared<RFC8448_Text_Policy>("rfc8448_1rtt"),
+                        vars.get_req_u64("CurrentTimestamp"),
+                        add_cookie_and_sort,
+                        make_mock_signatures(vars),
+                        false,
+                        std::pair{Botan::TLS::Session(vars.get_req_bin("Client_SessionData")),
+                                  Botan::TLS::Session_Ticket(vars.get_req_bin("SessionTicket"))});
+                     result.confirm("server not closed", !ctx->server.is_closed());
 
-                                  ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
+                     ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "client hello received",
-                                                                  {
-                                                                     "tls_emit_data",
-                                                                     "tls_current_timestamp",
-                                                                     "tls_generate_ephemeral_key",
-                                                                     "tls_ephemeral_key_agreement",
-                                                                     "tls_examine_extensions_client_hello",
-                                                                     "tls_modify_extensions_server_hello",
-                                                                     "tls_modify_extensions_encrypted_extensions",
-                                                                     "tls_inspect_handshake_msg_client_hello",
-                                                                     "tls_inspect_handshake_msg_server_hello",
-                                                                     "tls_inspect_handshake_msg_encrypted_extensions",
-                                                                     "tls_inspect_handshake_msg_finished",
-                                                                  });
-                               }),
+                     ctx->check_callback_invocations(result,
+                                                     "client hello received",
+                                                     {
+                                                        "tls_emit_data",
+                                                        "tls_current_timestamp",
+                                                        "tls_generate_ephemeral_key",
+                                                        "tls_ephemeral_key_agreement",
+                                                        "tls_examine_extensions_client_hello",
+                                                        "tls_modify_extensions_server_hello",
+                                                        "tls_modify_extensions_encrypted_extensions",
+                                                        "tls_inspect_handshake_msg_client_hello",
+                                                        "tls_inspect_handshake_msg_server_hello",
+                                                        "tls_inspect_handshake_msg_encrypted_extensions",
+                                                        "tls_inspect_handshake_msg_finished",
+                                                     });
+                  }),
 
-            Botan_Tests::CHECK("Verify generated messages in server's first flight",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  const auto& msgs = ctx->observed_handshake_messages();
+            CHECK("Verify generated messages in server's first flight",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     const auto& msgs = ctx->observed_handshake_messages();
 
-                                  result.test_eq("Server Hello",
-                                                 msgs.at("server_hello")[0],
-                                                 strip_message_header(vars.get_opt_bin("Message_ServerHello")));
-                                  result.test_eq("Encrypted Extensions",
-                                                 msgs.at("encrypted_extensions")[0],
-                                                 strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
+                     result.test_eq("Server Hello",
+                                    msgs.at("server_hello")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_ServerHello")));
+                     result.test_eq("Encrypted Extensions",
+                                    msgs.at("encrypted_extensions")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
 
-                                  result.test_eq("Server's entire first flight",
-                                                 ctx->pull_send_buffer(),
-                                                 concat(vars.get_req_bin("Record_ServerHello"),
-                                                        vars.get_req_bin("Record_ServerHandshakeMessages")));
+                     result.test_eq("Server's entire first flight",
+                                    ctx->pull_send_buffer(),
+                                    concat(vars.get_req_bin("Record_ServerHello"),
+                                           vars.get_req_bin("Record_ServerHandshakeMessages")));
 
-                                  // Note: is_active() defines that we can send application data.
-                                  //       RFC 8446 Section 4.4.4 explicitly allows that for servers
-                                  //       that did not receive the client's Finished message, yet.
-                                  //       However, before receiving and validating this message,
-                                  //       the handshake is not yet finished.
-                                  result.confirm("Server can now send application data", ctx->server.is_active());
-                                  result.confirm("handshake is not yet complete", !ctx->server.is_handshake_complete());
-                               }),
+                     // Note: is_active() defines that we can send application data.
+                     //       RFC 8446 Section 4.4.4 explicitly allows that for servers
+                     //       that did not receive the client's Finished message, yet.
+                     //       However, before receiving and validating this message,
+                     //       the handshake is not yet finished.
+                     result.confirm("Server can now send application data", ctx->server.is_active());
+                     result.confirm("handshake is not yet complete", !ctx->server.is_handshake_complete());
+                  }),
 
             // TODO: The rest of this test vector requires 0-RTT which is not
             //       yet implemented. For now we can only test the server's
@@ -2074,7 +2055,7 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
       std::vector<Test::Result> hello_retry_request(const VarMap& vars) override {
          // Fallback RNG is required to for blinding in ECDH with P-256
          auto& fallback_rng = this->rng();
-         auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>(fallback_rng);
+         auto rng = std::make_unique<Fixed_Output_RNG>(fallback_rng);
 
          // 32 - for server hello random
          // 32 - for KeyShare (eph. P-256 key pair)
@@ -2083,148 +2064,146 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
          std::unique_ptr<Server_Context> ctx;
 
          return {
-            Botan_Tests::CHECK("Receive Client Hello",
-                               [&](Test::Result& result) {
-                                  auto add_cookie_and_sort = [&](Botan::TLS::Extensions& exts,
-                                                                 Botan::TLS::Connection_Side side,
-                                                                 Botan::TLS::Handshake_Type type) {
-                                     if(type == Handshake_Type::HelloRetryRequest) {
-                                        // This cookie needs to be mocked into the HRR since RFC 8448 contains it.
-                                        exts.add(new Cookie(vars.get_opt_bin("HelloRetryRequest_Cookie")));
-                                     }
-                                     sort_rfc8448_extensions(exts, side, type);
-                                  };
+            CHECK("Receive Client Hello",
+                  [&](Test::Result& result) {
+                     auto add_cookie_and_sort = [&](Botan::TLS::Extensions& exts,
+                                                    Botan::TLS::Connection_Side side,
+                                                    Botan::TLS::Handshake_Type type) {
+                        if(type == Handshake_Type::HelloRetryRequest) {
+                           // This cookie needs to be mocked into the HRR since RFC 8448 contains it.
+                           exts.add(new Cookie(vars.get_opt_bin("HelloRetryRequest_Cookie")));
+                        }
+                        sort_rfc8448_extensions(exts, side, type);
+                     };
 
-                                  ctx = std::make_unique<Server_Context>(
-                                     std::move(rng),
-                                     std::make_shared<RFC8448_Text_Policy>("rfc8448_hrr_server"),
-                                     vars.get_req_u64("CurrentTimestamp"),
-                                     add_cookie_and_sort,
-                                     make_mock_signatures(vars));
-                                  result.confirm("server not closed", !ctx->server.is_closed());
+                     ctx = std::make_unique<Server_Context>(std::move(rng),
+                                                            std::make_shared<RFC8448_Text_Policy>("rfc8448_hrr_server"),
+                                                            vars.get_req_u64("CurrentTimestamp"),
+                                                            add_cookie_and_sort,
+                                                            make_mock_signatures(vars));
+                     result.confirm("server not closed", !ctx->server.is_closed());
 
-                                  ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
+                     ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "client hello received",
-                                                                  {"tls_emit_data",
-                                                                   "tls_examine_extensions_client_hello",
-                                                                   "tls_modify_extensions_hello_retry_request",
-                                                                   "tls_inspect_handshake_msg_client_hello",
-                                                                   "tls_inspect_handshake_msg_hello_retry_request"});
-                               }),
+                     ctx->check_callback_invocations(result,
+                                                     "client hello received",
+                                                     {"tls_emit_data",
+                                                      "tls_examine_extensions_client_hello",
+                                                      "tls_modify_extensions_hello_retry_request",
+                                                      "tls_inspect_handshake_msg_client_hello",
+                                                      "tls_inspect_handshake_msg_hello_retry_request"});
+                  }),
 
-            Botan_Tests::CHECK("Verify generated Hello Retry Request message",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  result.test_eq("Server's Hello Retry Request record",
-                                                 ctx->pull_send_buffer(),
-                                                 vars.get_req_bin("Record_HelloRetryRequest"));
-                                  result.confirm("TLS handshake not yet finished", !ctx->server.is_active());
-                                  result.confirm("handshake is not yet complete", !ctx->server.is_handshake_complete());
-                               }),
+            CHECK("Verify generated Hello Retry Request message",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     result.test_eq("Server's Hello Retry Request record",
+                                    ctx->pull_send_buffer(),
+                                    vars.get_req_bin("Record_HelloRetryRequest"));
+                     result.confirm("TLS handshake not yet finished", !ctx->server.is_active());
+                     result.confirm("handshake is not yet complete", !ctx->server.is_handshake_complete());
+                  }),
 
-            Botan_Tests::CHECK("Receive updated Client Hello message",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->server.received_data(vars.get_req_bin("Record_ClientHello_2"));
+            CHECK("Receive updated Client Hello message",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.received_data(vars.get_req_bin("Record_ClientHello_2"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "updated client hello received",
-                                                                  {"tls_emit_data",
-                                                                   "tls_examine_extensions_client_hello",
-                                                                   "tls_modify_extensions_server_hello",
-                                                                   "tls_modify_extensions_encrypted_extensions",
-                                                                   "tls_modify_extensions_certificate",
-                                                                   "tls_sign_message",
-                                                                   "tls_generate_ephemeral_key",
-                                                                   "tls_ephemeral_key_agreement",
-                                                                   "tls_inspect_handshake_msg_client_hello",
-                                                                   "tls_inspect_handshake_msg_server_hello",
-                                                                   "tls_inspect_handshake_msg_encrypted_extensions",
-                                                                   "tls_inspect_handshake_msg_certificate",
-                                                                   "tls_inspect_handshake_msg_certificate_verify",
-                                                                   "tls_inspect_handshake_msg_finished"});
-                               }),
+                     ctx->check_callback_invocations(result,
+                                                     "updated client hello received",
+                                                     {"tls_emit_data",
+                                                      "tls_examine_extensions_client_hello",
+                                                      "tls_modify_extensions_server_hello",
+                                                      "tls_modify_extensions_encrypted_extensions",
+                                                      "tls_modify_extensions_certificate",
+                                                      "tls_sign_message",
+                                                      "tls_generate_ephemeral_key",
+                                                      "tls_ephemeral_key_agreement",
+                                                      "tls_inspect_handshake_msg_client_hello",
+                                                      "tls_inspect_handshake_msg_server_hello",
+                                                      "tls_inspect_handshake_msg_encrypted_extensions",
+                                                      "tls_inspect_handshake_msg_certificate",
+                                                      "tls_inspect_handshake_msg_certificate_verify",
+                                                      "tls_inspect_handshake_msg_finished"});
+                  }),
 
-            Botan_Tests::CHECK("Verify generated messages in server's second flight",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  const auto& msgs = ctx->observed_handshake_messages();
+            CHECK("Verify generated messages in server's second flight",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     const auto& msgs = ctx->observed_handshake_messages();
 
-                                  result.test_eq("Server Hello",
-                                                 msgs.at("server_hello")[0],
-                                                 strip_message_header(vars.get_opt_bin("Message_ServerHello")));
-                                  result.test_eq("Encrypted Extensions",
-                                                 msgs.at("encrypted_extensions")[0],
-                                                 strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
-                                  result.test_eq("Certificate",
-                                                 msgs.at("certificate")[0],
-                                                 strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
-                                  result.test_eq(
-                                     "CertificateVerify",
-                                     msgs.at("certificate_verify")[0],
-                                     strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
-                                  result.test_eq("Finished",
-                                                 msgs.at("finished")[0],
-                                                 strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
+                     result.test_eq("Server Hello",
+                                    msgs.at("server_hello")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_ServerHello")));
+                     result.test_eq("Encrypted Extensions",
+                                    msgs.at("encrypted_extensions")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
+                     result.test_eq("Certificate",
+                                    msgs.at("certificate")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
+                     result.test_eq("CertificateVerify",
+                                    msgs.at("certificate_verify")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
+                     result.test_eq("Finished",
+                                    msgs.at("finished")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
 
-                                  result.test_eq("Server's entire second flight",
-                                                 ctx->pull_send_buffer(),
-                                                 concat(vars.get_req_bin("Record_ServerHello"),
-                                                        vars.get_req_bin("Record_ServerHandshakeMessages")));
-                                  result.confirm("Server could now send application data", ctx->server.is_active());
-                                  result.confirm("handshake is not yet complete",
-                                                 !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
-                               }),
+                     result.test_eq("Server's entire second flight",
+                                    ctx->pull_send_buffer(),
+                                    concat(vars.get_req_bin("Record_ServerHello"),
+                                           vars.get_req_bin("Record_ServerHandshakeMessages")));
+                     result.confirm("Server could now send application data", ctx->server.is_active());
+                     result.confirm("handshake is not yet complete",
+                                    !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
+                  }),
 
-            Botan_Tests::CHECK("Receive Client Finished",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->server.received_data(vars.get_req_bin("Record_ClientFinished"));
+            CHECK("Receive Client Finished",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.received_data(vars.get_req_bin("Record_ClientFinished"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "client finished received",
-                                                                  {"tls_inspect_handshake_msg_finished",
-                                                                   "tls_current_timestamp",
-                                                                   "tls_session_established",
-                                                                   "tls_session_activated"});
+                     ctx->check_callback_invocations(result,
+                                                     "client finished received",
+                                                     {"tls_inspect_handshake_msg_finished",
+                                                      "tls_current_timestamp",
+                                                      "tls_session_established",
+                                                      "tls_session_activated"});
 
-                                  result.confirm("TLS handshake finished", ctx->server.is_active());
-                                  result.confirm("handshake is complete", ctx->server.is_handshake_complete());
-                               }),
+                     result.confirm("TLS handshake finished", ctx->server.is_active());
+                     result.confirm("handshake is complete", ctx->server.is_handshake_complete());
+                  }),
 
-            Botan_Tests::CHECK("Receive Client close_notify",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
+            CHECK("Receive Client close_notify",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
 
-                                  ctx->check_callback_invocations(
-                                     result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
+                     ctx->check_callback_invocations(
+                        result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
 
-                                  result.confirm("connection is not yet closed", !ctx->server.is_closed());
-                                  result.confirm("connection is still active", ctx->server.is_active());
-                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
-                               }),
+                     result.confirm("connection is not yet closed", !ctx->server.is_closed());
+                     result.confirm("connection is still active", ctx->server.is_active());
+                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                  }),
 
-            Botan_Tests::CHECK("Expect Server close_notify",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->server.close();
+            CHECK("Expect Server close_notify",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.close();
 
-                                  result.confirm("connection is now inactive", !ctx->server.is_active());
-                                  result.confirm("connection is now closed", ctx->server.is_closed());
-                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
-                                  result.test_eq("Server's close notify",
-                                                 ctx->pull_send_buffer(),
-                                                 vars.get_req_bin("Record_Server_CloseNotify"));
-                               }),
+                     result.confirm("connection is now inactive", !ctx->server.is_active());
+                     result.confirm("connection is now closed", ctx->server.is_closed());
+                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                     result.test_eq("Server's close notify",
+                                    ctx->pull_send_buffer(),
+                                    vars.get_req_bin("Record_Server_CloseNotify"));
+                  }),
 
          };
       }
 
       std::vector<Test::Result> client_authentication(const VarMap& vars) override {
-         auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>("");
+         auto rng = std::make_unique<Fixed_Output_RNG>("");
 
          // 32 - for server hello random
          // 32 - for KeyShare (eph. x25519 pair)
@@ -2233,135 +2212,134 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
          std::unique_ptr<Server_Context> ctx;
 
          return {
-            Botan_Tests::CHECK("Receive Client Hello",
-                               [&](Test::Result& result) {
-                                  ctx = std::make_unique<Server_Context>(
-                                     std::move(rng),
-                                     std::make_shared<RFC8448_Text_Policy>("rfc8448_client_auth_server"),
-                                     vars.get_req_u64("CurrentTimestamp"),
-                                     sort_rfc8448_extensions,
-                                     make_mock_signatures(vars),
-                                     true /* use alternative certificate */);
-                                  result.confirm("server not closed", !ctx->server.is_closed());
+            CHECK("Receive Client Hello",
+                  [&](Test::Result& result) {
+                     ctx = std::make_unique<Server_Context>(
+                        std::move(rng),
+                        std::make_shared<RFC8448_Text_Policy>("rfc8448_client_auth_server"),
+                        vars.get_req_u64("CurrentTimestamp"),
+                        sort_rfc8448_extensions,
+                        make_mock_signatures(vars),
+                        true /* use alternative certificate */);
+                     result.confirm("server not closed", !ctx->server.is_closed());
 
-                                  ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
+                     ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "client hello received",
-                                                                  {"tls_emit_data",
-                                                                   "tls_examine_extensions_client_hello",
-                                                                   "tls_modify_extensions_server_hello",
-                                                                   "tls_modify_extensions_encrypted_extensions",
-                                                                   "tls_modify_extensions_certificate_request",
-                                                                   "tls_modify_extensions_certificate",
-                                                                   "tls_sign_message",
-                                                                   "tls_generate_ephemeral_key",
-                                                                   "tls_ephemeral_key_agreement",
-                                                                   "tls_inspect_handshake_msg_client_hello",
-                                                                   "tls_inspect_handshake_msg_server_hello",
-                                                                   "tls_inspect_handshake_msg_encrypted_extensions",
-                                                                   "tls_inspect_handshake_msg_certificate_request",
-                                                                   "tls_inspect_handshake_msg_certificate",
-                                                                   "tls_inspect_handshake_msg_certificate_verify",
-                                                                   "tls_inspect_handshake_msg_finished"});
-                               }),
+                     ctx->check_callback_invocations(result,
+                                                     "client hello received",
+                                                     {"tls_emit_data",
+                                                      "tls_examine_extensions_client_hello",
+                                                      "tls_modify_extensions_server_hello",
+                                                      "tls_modify_extensions_encrypted_extensions",
+                                                      "tls_modify_extensions_certificate_request",
+                                                      "tls_modify_extensions_certificate",
+                                                      "tls_sign_message",
+                                                      "tls_generate_ephemeral_key",
+                                                      "tls_ephemeral_key_agreement",
+                                                      "tls_inspect_handshake_msg_client_hello",
+                                                      "tls_inspect_handshake_msg_server_hello",
+                                                      "tls_inspect_handshake_msg_encrypted_extensions",
+                                                      "tls_inspect_handshake_msg_certificate_request",
+                                                      "tls_inspect_handshake_msg_certificate",
+                                                      "tls_inspect_handshake_msg_certificate_verify",
+                                                      "tls_inspect_handshake_msg_finished"});
+                  }),
 
-            Botan_Tests::CHECK(
-               "Verify server's generated handshake messages",
-               [&](Test::Result& result) {
-                  result.require("ctx is available", ctx != nullptr);
-                  const auto& msgs = ctx->observed_handshake_messages();
+            CHECK("Verify server's generated handshake messages",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     const auto& msgs = ctx->observed_handshake_messages();
 
-                  result.test_eq("Server Hello",
-                                 msgs.at("server_hello")[0],
-                                 strip_message_header(vars.get_opt_bin("Message_ServerHello")));
-                  result.test_eq("Encrypted Extensions",
-                                 msgs.at("encrypted_extensions")[0],
-                                 strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
-                  result.test_eq("Certificate Request",
-                                 msgs.at("certificate_request")[0],
-                                 strip_message_header(vars.get_opt_bin("Message_CertificateRequest")));
-                  result.test_eq("Certificate",
-                                 msgs.at("certificate")[0],
-                                 strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
-                  result.test_eq("CertificateVerify",
-                                 msgs.at("certificate_verify")[0],
-                                 strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
-                  result.test_eq("Finished",
-                                 msgs.at("finished")[0],
-                                 strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
+                     result.test_eq("Server Hello",
+                                    msgs.at("server_hello")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_ServerHello")));
+                     result.test_eq("Encrypted Extensions",
+                                    msgs.at("encrypted_extensions")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
+                     result.test_eq("Certificate Request",
+                                    msgs.at("certificate_request")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_CertificateRequest")));
+                     result.test_eq("Certificate",
+                                    msgs.at("certificate")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
+                     result.test_eq("CertificateVerify",
+                                    msgs.at("certificate_verify")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
+                     result.test_eq("Finished",
+                                    msgs.at("finished")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
 
-                  result.test_eq("Server's entire first flight",
-                                 ctx->pull_send_buffer(),
-                                 concat(vars.get_req_bin("Record_ServerHello"),
-                                        vars.get_req_bin("Record_ServerHandshakeMessages")));
+                     result.test_eq("Server's entire first flight",
+                                    ctx->pull_send_buffer(),
+                                    concat(vars.get_req_bin("Record_ServerHello"),
+                                           vars.get_req_bin("Record_ServerHandshakeMessages")));
 
-                  result.confirm("Not yet aware of client's cert chain", ctx->server.peer_cert_chain().empty());
-                  result.confirm("Server could now send application data", ctx->server.is_active());
-                  result.confirm("handshake is not yet complete",
-                                 !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
-               }),
+                     result.confirm("Not yet aware of client's cert chain", ctx->server.peer_cert_chain().empty());
+                     result.confirm("Server could now send application data", ctx->server.is_active());
+                     result.confirm("handshake is not yet complete",
+                                    !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
+                  }),
 
-            Botan_Tests::CHECK("Receive Client's second flight",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  // This encrypted message contains the following messages:
-                                  // * client's Certificate message
-                                  // * client's Certificate_Verify message
-                                  // * client's Finished message
-                                  ctx->server.received_data(vars.get_req_bin("Record_ClientFinished"));
+            CHECK("Receive Client's second flight",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     // This encrypted message contains the following messages:
+                     // * client's Certificate message
+                     // * client's Certificate_Verify message
+                     // * client's Finished message
+                     ctx->server.received_data(vars.get_req_bin("Record_ClientFinished"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "client finished received",
-                                                                  {"tls_inspect_handshake_msg_certificate",
-                                                                   "tls_inspect_handshake_msg_certificate_verify",
-                                                                   "tls_inspect_handshake_msg_finished",
-                                                                   "tls_examine_extensions_certificate",
-                                                                   "tls_verify_cert_chain",
-                                                                   "tls_verify_message",
-                                                                   "tls_current_timestamp",
-                                                                   "tls_session_established",
-                                                                   "tls_session_activated"});
+                     ctx->check_callback_invocations(result,
+                                                     "client finished received",
+                                                     {"tls_inspect_handshake_msg_certificate",
+                                                      "tls_inspect_handshake_msg_certificate_verify",
+                                                      "tls_inspect_handshake_msg_finished",
+                                                      "tls_examine_extensions_certificate",
+                                                      "tls_verify_cert_chain",
+                                                      "tls_verify_message",
+                                                      "tls_current_timestamp",
+                                                      "tls_session_established",
+                                                      "tls_session_activated"});
 
-                                  const auto cert_chain = ctx->server.peer_cert_chain();
-                                  result.confirm("Received client's cert chain",
-                                                 !cert_chain.empty() && cert_chain.front() == client_certificate());
+                     const auto cert_chain = ctx->server.peer_cert_chain();
+                     result.confirm("Received client's cert chain",
+                                    !cert_chain.empty() && cert_chain.front() == client_certificate());
 
-                                  result.confirm("TLS handshake finished", ctx->server.is_active());
-                                  result.confirm("handshake is complete", ctx->server.is_handshake_complete());
-                               }),
+                     result.confirm("TLS handshake finished", ctx->server.is_active());
+                     result.confirm("handshake is complete", ctx->server.is_handshake_complete());
+                  }),
 
-            Botan_Tests::CHECK("Receive Client close_notify",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
+            CHECK("Receive Client close_notify",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
 
-                                  ctx->check_callback_invocations(
-                                     result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
+                     ctx->check_callback_invocations(
+                        result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
 
-                                  result.confirm("connection is not yet closed", !ctx->server.is_closed());
-                                  result.confirm("connection is still active", ctx->server.is_active());
-                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
-                               }),
+                     result.confirm("connection is not yet closed", !ctx->server.is_closed());
+                     result.confirm("connection is still active", ctx->server.is_active());
+                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                  }),
 
-            Botan_Tests::CHECK("Expect Server close_notify",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->server.close();
+            CHECK("Expect Server close_notify",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.close();
 
-                                  result.confirm("connection is now inactive", !ctx->server.is_active());
-                                  result.confirm("connection is now closed", ctx->server.is_closed());
-                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
-                                  result.test_eq("Server's close notify",
-                                                 ctx->pull_send_buffer(),
-                                                 vars.get_req_bin("Record_Server_CloseNotify"));
-                               }),
+                     result.confirm("connection is now inactive", !ctx->server.is_active());
+                     result.confirm("connection is now closed", ctx->server.is_closed());
+                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                     result.test_eq("Server's close notify",
+                                    ctx->pull_send_buffer(),
+                                    vars.get_req_bin("Record_Server_CloseNotify"));
+                  }),
 
          };
       }
 
       std::vector<Test::Result> middlebox_compatibility(const VarMap& vars) override {
-         auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>("");
+         auto rng = std::make_unique<Fixed_Output_RNG>("");
 
          // 32 - for server hello random
          // 32 - for KeyShare (eph. x25519 pair)
@@ -2370,116 +2348,115 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
          std::unique_ptr<Server_Context> ctx;
 
          return {
-            Botan_Tests::CHECK("Receive Client Hello",
-                               [&](Test::Result& result) {
-                                  ctx = std::make_unique<Server_Context>(
-                                     std::move(rng),
-                                     std::make_shared<RFC8448_Text_Policy>("rfc8448_compat_server"),
-                                     vars.get_req_u64("CurrentTimestamp"),
-                                     sort_rfc8448_extensions,
-                                     make_mock_signatures(vars));
-                                  result.confirm("server not closed", !ctx->server.is_closed());
+            CHECK("Receive Client Hello",
+                  [&](Test::Result& result) {
+                     ctx =
+                        std::make_unique<Server_Context>(std::move(rng),
+                                                         std::make_shared<RFC8448_Text_Policy>("rfc8448_compat_server"),
+                                                         vars.get_req_u64("CurrentTimestamp"),
+                                                         sort_rfc8448_extensions,
+                                                         make_mock_signatures(vars));
+                     result.confirm("server not closed", !ctx->server.is_closed());
 
-                                  ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
+                     ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "client hello received",
-                                                                  {"tls_emit_data",
-                                                                   "tls_examine_extensions_client_hello",
-                                                                   "tls_modify_extensions_server_hello",
-                                                                   "tls_modify_extensions_encrypted_extensions",
-                                                                   "tls_modify_extensions_certificate",
-                                                                   "tls_sign_message",
-                                                                   "tls_generate_ephemeral_key",
-                                                                   "tls_ephemeral_key_agreement",
-                                                                   "tls_inspect_handshake_msg_client_hello",
-                                                                   "tls_inspect_handshake_msg_server_hello",
-                                                                   "tls_inspect_handshake_msg_encrypted_extensions",
-                                                                   "tls_inspect_handshake_msg_certificate",
-                                                                   "tls_inspect_handshake_msg_certificate_verify",
-                                                                   "tls_inspect_handshake_msg_finished"});
-                               }),
+                     ctx->check_callback_invocations(result,
+                                                     "client hello received",
+                                                     {"tls_emit_data",
+                                                      "tls_examine_extensions_client_hello",
+                                                      "tls_modify_extensions_server_hello",
+                                                      "tls_modify_extensions_encrypted_extensions",
+                                                      "tls_modify_extensions_certificate",
+                                                      "tls_sign_message",
+                                                      "tls_generate_ephemeral_key",
+                                                      "tls_ephemeral_key_agreement",
+                                                      "tls_inspect_handshake_msg_client_hello",
+                                                      "tls_inspect_handshake_msg_server_hello",
+                                                      "tls_inspect_handshake_msg_encrypted_extensions",
+                                                      "tls_inspect_handshake_msg_certificate",
+                                                      "tls_inspect_handshake_msg_certificate_verify",
+                                                      "tls_inspect_handshake_msg_finished"});
+                  }),
 
-            Botan_Tests::CHECK("Verify server's generated handshake messages",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  const auto& msgs = ctx->observed_handshake_messages();
+            CHECK("Verify server's generated handshake messages",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     const auto& msgs = ctx->observed_handshake_messages();
 
-                                  result.test_eq("Server Hello",
-                                                 msgs.at("server_hello")[0],
-                                                 strip_message_header(vars.get_opt_bin("Message_ServerHello")));
-                                  result.test_eq("Encrypted Extensions",
-                                                 msgs.at("encrypted_extensions")[0],
-                                                 strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
-                                  result.test_eq("Certificate",
-                                                 msgs.at("certificate")[0],
-                                                 strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
-                                  result.test_eq(
-                                     "CertificateVerify",
-                                     msgs.at("certificate_verify")[0],
-                                     strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
-                                  result.test_eq("Finished",
-                                                 msgs.at("finished")[0],
-                                                 strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
+                     result.test_eq("Server Hello",
+                                    msgs.at("server_hello")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_ServerHello")));
+                     result.test_eq("Encrypted Extensions",
+                                    msgs.at("encrypted_extensions")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
+                     result.test_eq("Certificate",
+                                    msgs.at("certificate")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
+                     result.test_eq("CertificateVerify",
+                                    msgs.at("certificate_verify")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
+                     result.test_eq("Finished",
+                                    msgs.at("finished")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
 
-                                  // Those records contain the required Change Cipher Spec message the server must produce for compatibility mode compliance
-                                  result.test_eq("Server's entire first flight",
-                                                 ctx->pull_send_buffer(),
-                                                 concat(vars.get_req_bin("Record_ServerHello"),
-                                                        vars.get_req_bin("Record_ServerHandshakeMessages")));
+                     // Those records contain the required Change Cipher Spec message the server must produce for compatibility mode compliance
+                     result.test_eq("Server's entire first flight",
+                                    ctx->pull_send_buffer(),
+                                    concat(vars.get_req_bin("Record_ServerHello"),
+                                           vars.get_req_bin("Record_ServerHandshakeMessages")));
 
-                                  result.confirm("Server could now send application data", ctx->server.is_active());
-                                  result.confirm("handshake is not yet complete",
-                                                 !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
-                               }),
+                     result.confirm("Server could now send application data", ctx->server.is_active());
+                     result.confirm("handshake is not yet complete",
+                                    !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
+                  }),
 
-            Botan_Tests::CHECK("Receive Client Finished",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->server.received_data(vars.get_req_bin("Record_ClientFinished"));
+            CHECK("Receive Client Finished",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.received_data(vars.get_req_bin("Record_ClientFinished"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "client finished received",
-                                                                  {"tls_inspect_handshake_msg_finished",
-                                                                   "tls_current_timestamp",
-                                                                   "tls_session_established",
-                                                                   "tls_session_activated"});
+                     ctx->check_callback_invocations(result,
+                                                     "client finished received",
+                                                     {"tls_inspect_handshake_msg_finished",
+                                                      "tls_current_timestamp",
+                                                      "tls_session_established",
+                                                      "tls_session_activated"});
 
-                                  result.confirm("TLS handshake fully finished", ctx->server.is_active());
-                                  result.confirm("handshake is complete", ctx->server.is_handshake_complete());
-                               }),
+                     result.confirm("TLS handshake fully finished", ctx->server.is_active());
+                     result.confirm("handshake is complete", ctx->server.is_handshake_complete());
+                  }),
 
-            Botan_Tests::CHECK("Receive Client close_notify",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
+            CHECK("Receive Client close_notify",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
 
-                                  ctx->check_callback_invocations(
-                                     result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
+                     ctx->check_callback_invocations(
+                        result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
 
-                                  result.confirm("connection is not yet closed", !ctx->server.is_closed());
-                                  result.confirm("connection is still active", ctx->server.is_active());
-                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
-                               }),
+                     result.confirm("connection is not yet closed", !ctx->server.is_closed());
+                     result.confirm("connection is still active", ctx->server.is_active());
+                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                  }),
 
-            Botan_Tests::CHECK("Expect Server close_notify",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->server.close();
+            CHECK("Expect Server close_notify",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.close();
 
-                                  result.confirm("connection is now inactive", !ctx->server.is_active());
-                                  result.confirm("connection is now closed", ctx->server.is_closed());
-                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
-                                  result.test_eq("Server's close notify",
-                                                 ctx->pull_send_buffer(),
-                                                 vars.get_req_bin("Record_Server_CloseNotify"));
-                               }),
+                     result.confirm("connection is now inactive", !ctx->server.is_active());
+                     result.confirm("connection is now closed", ctx->server.is_closed());
+                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                     result.test_eq("Server's close notify",
+                                    ctx->pull_send_buffer(),
+                                    vars.get_req_bin("Record_Server_CloseNotify"));
+                  }),
 
          };
       }
 
       std::vector<Test::Result> externally_provided_psk_with_ephemeral_key(const VarMap& vars) override {
-         auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>("");
+         auto rng = std::make_unique<Fixed_Output_RNG>("");
 
          // 32 - for server hello random
          // 32 - for KeyShare (eph. x25519 key pair)
@@ -2488,144 +2465,143 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
          std::unique_ptr<Server_Context> ctx;
 
          return {
-            Botan_Tests::CHECK("Send Client Hello",
-                               [&](Test::Result& result) {
-                                  auto sort_our_extensions = [&](Botan::TLS::Extensions& exts,
-                                                                 Botan::TLS::Connection_Side /* side */,
-                                                                 Botan::TLS::Handshake_Type type) {
-                                     // This is the order of extensions when we first introduced the PSK
-                                     // implementation and generated the transcript. To stay compatible
-                                     // with the now hard-coded transcript, we pin the extension order.
-                                     if(type == Botan::TLS::Handshake_Type::EncryptedExtensions) {
-                                        sort_extensions(exts,
-                                                        {
-                                                           Botan::TLS::Extension_Code::SupportedGroups,
-                                                           Botan::TLS::Extension_Code::RecordSizeLimit,
-                                                           Botan::TLS::Extension_Code::ServerNameIndication,
-                                                        });
-                                     } else if(type == Botan::TLS::Handshake_Type::ServerHello) {
-                                        sort_extensions(exts,
-                                                        {
-                                                           Botan::TLS::Extension_Code::SupportedVersions,
-                                                           Botan::TLS::Extension_Code::KeyShare,
-                                                           Botan::TLS::Extension_Code::PresharedKey,
-                                                        });
-                                     }
-                                  };
+            CHECK("Send Client Hello",
+                  [&](Test::Result& result) {
+                     auto sort_our_extensions = [&](Botan::TLS::Extensions& exts,
+                                                    Botan::TLS::Connection_Side /* side */,
+                                                    Botan::TLS::Handshake_Type type) {
+                        // This is the order of extensions when we first introduced the PSK
+                        // implementation and generated the transcript. To stay compatible
+                        // with the now hard-coded transcript, we pin the extension order.
+                        if(type == Botan::TLS::Handshake_Type::EncryptedExtensions) {
+                           sort_extensions(exts,
+                                           {
+                                              Botan::TLS::Extension_Code::SupportedGroups,
+                                              Botan::TLS::Extension_Code::RecordSizeLimit,
+                                              Botan::TLS::Extension_Code::ServerNameIndication,
+                                           });
+                        } else if(type == Botan::TLS::Handshake_Type::ServerHello) {
+                           sort_extensions(exts,
+                                           {
+                                              Botan::TLS::Extension_Code::SupportedVersions,
+                                              Botan::TLS::Extension_Code::KeyShare,
+                                              Botan::TLS::Extension_Code::PresharedKey,
+                                           });
+                        }
+                     };
 
-                                  ctx = std::make_unique<Server_Context>(
-                                     std::move(rng),
-                                     std::make_shared<RFC8448_Text_Policy>("rfc8448_psk_dhe", false /* no rfc8448 */),
-                                     vars.get_req_u64("CurrentTimestamp"),
-                                     sort_our_extensions,
-                                     make_mock_signatures(vars),
-                                     false,
-                                     std::nullopt,
-                                     ExternalPSK(vars.get_req_str("PskIdentity"),
-                                                 vars.get_req_str("PskPRF"),
-                                                 lock(vars.get_req_bin("PskSecret"))));
-                                  result.confirm("server not closed", !ctx->server.is_closed());
+                     ctx = std::make_unique<Server_Context>(
+                        std::move(rng),
+                        std::make_shared<RFC8448_Text_Policy>("rfc8448_psk_dhe", false /* no rfc8448 */),
+                        vars.get_req_u64("CurrentTimestamp"),
+                        sort_our_extensions,
+                        make_mock_signatures(vars),
+                        false,
+                        std::nullopt,
+                        ExternalPSK(vars.get_req_str("PskIdentity"),
+                                    vars.get_req_str("PskPRF"),
+                                    lock(vars.get_req_bin("PskSecret"))));
+                     result.confirm("server not closed", !ctx->server.is_closed());
 
-                                  ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
+                     ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "client hello received",
-                                                                  {"tls_emit_data",
-                                                                   "tls_examine_extensions_client_hello",
-                                                                   "tls_modify_extensions_server_hello",
-                                                                   "tls_modify_extensions_encrypted_extensions",
-                                                                   "tls_generate_ephemeral_key",
-                                                                   "tls_ephemeral_key_agreement",
-                                                                   "tls_inspect_handshake_msg_client_hello",
-                                                                   "tls_inspect_handshake_msg_server_hello",
-                                                                   "tls_inspect_handshake_msg_encrypted_extensions",
-                                                                   "tls_inspect_handshake_msg_finished"});
-                               }),
+                     ctx->check_callback_invocations(result,
+                                                     "client hello received",
+                                                     {"tls_emit_data",
+                                                      "tls_examine_extensions_client_hello",
+                                                      "tls_modify_extensions_server_hello",
+                                                      "tls_modify_extensions_encrypted_extensions",
+                                                      "tls_generate_ephemeral_key",
+                                                      "tls_ephemeral_key_agreement",
+                                                      "tls_inspect_handshake_msg_client_hello",
+                                                      "tls_inspect_handshake_msg_server_hello",
+                                                      "tls_inspect_handshake_msg_encrypted_extensions",
+                                                      "tls_inspect_handshake_msg_finished"});
+                  }),
 
-            Botan_Tests::CHECK("Verify generated messages in server's first flight",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  const auto& msgs = ctx->observed_handshake_messages();
+            CHECK("Verify generated messages in server's first flight",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     const auto& msgs = ctx->observed_handshake_messages();
 
-                                  result.test_eq("Server Hello",
-                                                 msgs.at("server_hello")[0],
-                                                 strip_message_header(vars.get_opt_bin("Message_ServerHello")));
-                                  result.test_eq("Encrypted Extensions",
-                                                 msgs.at("encrypted_extensions")[0],
-                                                 strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
-                                  result.test_eq("Server Finished",
-                                                 msgs.at("finished")[0],
-                                                 strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
+                     result.test_eq("Server Hello",
+                                    msgs.at("server_hello")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_ServerHello")));
+                     result.test_eq("Encrypted Extensions",
+                                    msgs.at("encrypted_extensions")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
+                     result.test_eq("Server Finished",
+                                    msgs.at("finished")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
 
-                                  result.test_eq("Server's entire first flight",
-                                                 ctx->pull_send_buffer(),
-                                                 concat(vars.get_req_bin("Record_ServerHello"),
-                                                        vars.get_req_bin("Record_ServerHandshakeMessages")));
+                     result.test_eq("Server's entire first flight",
+                                    ctx->pull_send_buffer(),
+                                    concat(vars.get_req_bin("Record_ServerHello"),
+                                           vars.get_req_bin("Record_ServerHandshakeMessages")));
 
-                                  result.confirm("Server can now send application data", ctx->server.is_active());
-                                  result.confirm("handshake is not yet complete",
-                                                 !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
-                               }),
+                     result.confirm("Server can now send application data", ctx->server.is_active());
+                     result.confirm("handshake is not yet complete",
+                                    !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
+                  }),
 
-            Botan_Tests::CHECK("Send Client Finished",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->server.received_data(vars.get_req_bin("Record_ClientFinished"));
-                                  result.require("PSK negotiated",
-                                                 ctx->psk_identity_negotiated() == vars.get_req_str("PskIdentity"));
+            CHECK("Send Client Finished",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.received_data(vars.get_req_bin("Record_ClientFinished"));
+                     result.require("PSK negotiated",
+                                    ctx->psk_identity_negotiated() == vars.get_req_str("PskIdentity"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "client finished received",
-                                                                  {"tls_inspect_handshake_msg_finished",
-                                                                   "tls_current_timestamp",
-                                                                   "tls_session_established",
-                                                                   "tls_session_activated"});
-                               }),
+                     ctx->check_callback_invocations(result,
+                                                     "client finished received",
+                                                     {"tls_inspect_handshake_msg_finished",
+                                                      "tls_current_timestamp",
+                                                      "tls_session_established",
+                                                      "tls_session_activated"});
+                  }),
 
-            Botan_Tests::CHECK(
-               "Exchange Application Data",
-               [&](Test::Result& result) {
-                  result.require("ctx is available", ctx != nullptr);
-                  ctx->server.received_data(vars.get_req_bin("Record_Client_AppData"));
-                  ctx->check_callback_invocations(result, "application data received", {"tls_record_received"});
+            CHECK("Exchange Application Data",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.received_data(vars.get_req_bin("Record_Client_AppData"));
+                     ctx->check_callback_invocations(result, "application data received", {"tls_record_received"});
 
-                  const auto rcvd = ctx->pull_receive_buffer();
-                  result.test_eq("decrypted application traffic", rcvd, vars.get_req_bin("Client_AppData"));
-                  result.test_is_eq("sequence number", ctx->last_received_seq_no(), uint64_t(0));
+                     const auto rcvd = ctx->pull_receive_buffer();
+                     result.test_eq("decrypted application traffic", rcvd, vars.get_req_bin("Client_AppData"));
+                     result.test_is_eq("sequence number", ctx->last_received_seq_no(), uint64_t(0));
 
-                  ctx->send(vars.get_req_bin("Server_AppData"));
-                  ctx->check_callback_invocations(result, "application data sent", {"tls_emit_data"});
-                  result.test_eq("correct server application data",
-                                 ctx->pull_send_buffer(),
-                                 vars.get_req_bin("Record_Server_AppData"));
-               }),
+                     ctx->send(vars.get_req_bin("Server_AppData"));
+                     ctx->check_callback_invocations(result, "application data sent", {"tls_emit_data"});
+                     result.test_eq("correct server application data",
+                                    ctx->pull_send_buffer(),
+                                    vars.get_req_bin("Record_Server_AppData"));
+                  }),
 
-            Botan_Tests::CHECK("Terminate Connection",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
+            CHECK("Terminate Connection",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
 
-                                  ctx->check_callback_invocations(
-                                     result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
+                     ctx->check_callback_invocations(
+                        result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
 
-                                  result.confirm("connection is not yet closed", !ctx->server.is_closed());
-                                  result.confirm("connection is still active", ctx->server.is_active());
-                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                     result.confirm("connection is not yet closed", !ctx->server.is_closed());
+                     result.confirm("connection is still active", ctx->server.is_active());
+                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
 
-                                  ctx->server.close();
+                     ctx->server.close();
 
-                                  result.confirm("connection is now inactive", !ctx->server.is_active());
-                                  result.confirm("connection is now closed", ctx->server.is_closed());
-                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
-                                  result.test_eq("Server's close notify",
-                                                 ctx->pull_send_buffer(),
-                                                 vars.get_req_bin("Record_Server_CloseNotify"));
-                               }),
+                     result.confirm("connection is now inactive", !ctx->server.is_active());
+                     result.confirm("connection is now closed", ctx->server.is_closed());
+                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                     result.test_eq("Server's close notify",
+                                    ctx->pull_send_buffer(),
+                                    vars.get_req_bin("Record_Server_CloseNotify"));
+                  }),
          };
       }
 
       std::vector<Test::Result> raw_public_key_with_client_authentication(const VarMap& vars) override {
-         auto rng = std::make_unique<Botan_Tests::Fixed_Output_RNG>("");
+         auto rng = std::make_unique<Fixed_Output_RNG>("");
 
          // 32 - for server hello random
          // 32 - for KeyShare (eph. x25519 key pair)
@@ -2658,129 +2634,127 @@ class Test_TLS_RFC8448_Server : public Test_TLS_RFC8448 {
          std::unique_ptr<Server_Context> ctx;
 
          return {
-            Botan_Tests::CHECK("Receive Client Hello",
-                               [&](Test::Result& result) {
-                                  ctx = std::make_unique<Server_Context>(
-                                     std::move(rng),
-                                     std::make_shared<RFC8448_Text_Policy>("rfc8448_rawpubkey"),
-                                     vars.get_req_u64("CurrentTimestamp"),
-                                     sort_our_extensions,
-                                     make_mock_signatures(vars));
-                                  result.confirm("server not closed", !ctx->server.is_closed());
+            CHECK("Receive Client Hello",
+                  [&](Test::Result& result) {
+                     ctx = std::make_unique<Server_Context>(std::move(rng),
+                                                            std::make_shared<RFC8448_Text_Policy>("rfc8448_rawpubkey"),
+                                                            vars.get_req_u64("CurrentTimestamp"),
+                                                            sort_our_extensions,
+                                                            make_mock_signatures(vars));
+                     result.confirm("server not closed", !ctx->server.is_closed());
 
-                                  ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
+                     ctx->server.received_data(vars.get_req_bin("Record_ClientHello_1"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "client hello received",
-                                                                  {"tls_emit_data",
-                                                                   "tls_examine_extensions_client_hello",
-                                                                   "tls_modify_extensions_server_hello",
-                                                                   "tls_modify_extensions_encrypted_extensions",
-                                                                   "tls_modify_extensions_certificate_request",
-                                                                   "tls_modify_extensions_certificate",
-                                                                   "tls_sign_message",
-                                                                   "tls_generate_ephemeral_key",
-                                                                   "tls_ephemeral_key_agreement",
-                                                                   "tls_inspect_handshake_msg_client_hello",
-                                                                   "tls_inspect_handshake_msg_server_hello",
-                                                                   "tls_inspect_handshake_msg_encrypted_extensions",
-                                                                   "tls_inspect_handshake_msg_certificate_request",
-                                                                   "tls_inspect_handshake_msg_certificate",
-                                                                   "tls_inspect_handshake_msg_certificate_verify",
-                                                                   "tls_inspect_handshake_msg_finished"});
-                               }),
+                     ctx->check_callback_invocations(result,
+                                                     "client hello received",
+                                                     {"tls_emit_data",
+                                                      "tls_examine_extensions_client_hello",
+                                                      "tls_modify_extensions_server_hello",
+                                                      "tls_modify_extensions_encrypted_extensions",
+                                                      "tls_modify_extensions_certificate_request",
+                                                      "tls_modify_extensions_certificate",
+                                                      "tls_sign_message",
+                                                      "tls_generate_ephemeral_key",
+                                                      "tls_ephemeral_key_agreement",
+                                                      "tls_inspect_handshake_msg_client_hello",
+                                                      "tls_inspect_handshake_msg_server_hello",
+                                                      "tls_inspect_handshake_msg_encrypted_extensions",
+                                                      "tls_inspect_handshake_msg_certificate_request",
+                                                      "tls_inspect_handshake_msg_certificate",
+                                                      "tls_inspect_handshake_msg_certificate_verify",
+                                                      "tls_inspect_handshake_msg_finished"});
+                  }),
 
-            Botan_Tests::CHECK(
-               "Verify server's generated handshake messages",
-               [&](Test::Result& result) {
-                  result.require("ctx is available", ctx != nullptr);
-                  const auto& msgs = ctx->observed_handshake_messages();
+            CHECK("Verify server's generated handshake messages",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     const auto& msgs = ctx->observed_handshake_messages();
 
-                  result.test_eq("Server Hello",
-                                 msgs.at("server_hello")[0],
-                                 strip_message_header(vars.get_opt_bin("Message_ServerHello")));
-                  result.test_eq("Encrypted Extensions",
-                                 msgs.at("encrypted_extensions")[0],
-                                 strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
-                  result.test_eq("Certificate Request",
-                                 msgs.at("certificate_request")[0],
-                                 strip_message_header(vars.get_opt_bin("Message_CertificateRequest")));
-                  result.test_eq("Certificate",
-                                 msgs.at("certificate")[0],
-                                 strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
-                  result.test_eq("CertificateVerify",
-                                 msgs.at("certificate_verify")[0],
-                                 strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
-                  result.test_eq("Finished",
-                                 msgs.at("finished")[0],
-                                 strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
+                     result.test_eq("Server Hello",
+                                    msgs.at("server_hello")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_ServerHello")));
+                     result.test_eq("Encrypted Extensions",
+                                    msgs.at("encrypted_extensions")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_EncryptedExtensions")));
+                     result.test_eq("Certificate Request",
+                                    msgs.at("certificate_request")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_CertificateRequest")));
+                     result.test_eq("Certificate",
+                                    msgs.at("certificate")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_Server_Certificate")));
+                     result.test_eq("CertificateVerify",
+                                    msgs.at("certificate_verify")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_Server_CertificateVerify")));
+                     result.test_eq("Finished",
+                                    msgs.at("finished")[0],
+                                    strip_message_header(vars.get_opt_bin("Message_Server_Finished")));
 
-                  result.test_eq("Server's entire first flight",
-                                 ctx->pull_send_buffer(),
-                                 concat(vars.get_req_bin("Record_ServerHello"),
-                                        vars.get_req_bin("Record_ServerHandshakeMessages")));
+                     result.test_eq("Server's entire first flight",
+                                    ctx->pull_send_buffer(),
+                                    concat(vars.get_req_bin("Record_ServerHello"),
+                                           vars.get_req_bin("Record_ServerHandshakeMessages")));
 
-                  result.confirm("Not yet aware of client's cert chain", ctx->server.peer_cert_chain().empty());
-                  result.confirm("Server could now send application data", ctx->server.is_active());
-                  result.confirm("handshake is not yet complete",
-                                 !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
-               }),
+                     result.confirm("Not yet aware of client's cert chain", ctx->server.peer_cert_chain().empty());
+                     result.confirm("Server could now send application data", ctx->server.is_active());
+                     result.confirm("handshake is not yet complete",
+                                    !ctx->server.is_handshake_complete());  // See RFC 8446 4.4.4
+                  }),
 
-            Botan_Tests::CHECK("Receive Client's second flight",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  // This encrypted message contains the following messages:
-                                  // * client's Certificate message
-                                  // * client's Certificate_Verify message
-                                  // * client's Finished message
-                                  ctx->server.received_data(vars.get_req_bin("Record_ClientFinished"));
+            CHECK("Receive Client's second flight",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     // This encrypted message contains the following messages:
+                     // * client's Certificate message
+                     // * client's Certificate_Verify message
+                     // * client's Finished message
+                     ctx->server.received_data(vars.get_req_bin("Record_ClientFinished"));
 
-                                  ctx->check_callback_invocations(result,
-                                                                  "client finished received",
-                                                                  {"tls_inspect_handshake_msg_certificate",
-                                                                   "tls_inspect_handshake_msg_certificate_verify",
-                                                                   "tls_inspect_handshake_msg_finished",
-                                                                   "tls_examine_extensions_certificate",
-                                                                   "tls_verify_raw_public_key",
-                                                                   "tls_verify_message",
-                                                                   "tls_current_timestamp",
-                                                                   "tls_session_established",
-                                                                   "tls_session_activated"});
+                     ctx->check_callback_invocations(result,
+                                                     "client finished received",
+                                                     {"tls_inspect_handshake_msg_certificate",
+                                                      "tls_inspect_handshake_msg_certificate_verify",
+                                                      "tls_inspect_handshake_msg_finished",
+                                                      "tls_examine_extensions_certificate",
+                                                      "tls_verify_raw_public_key",
+                                                      "tls_verify_message",
+                                                      "tls_current_timestamp",
+                                                      "tls_session_established",
+                                                      "tls_session_activated"});
 
-                                  const auto raw_pk = ctx->server.peer_raw_public_key();
-                                  result.confirm("Received client's raw public key",
-                                                 raw_pk && raw_pk->fingerprint_public() ==
-                                                              client_raw_public_key_pair()->fingerprint_public());
+                     const auto raw_pk = ctx->server.peer_raw_public_key();
+                     result.confirm(
+                        "Received client's raw public key",
+                        raw_pk && raw_pk->fingerprint_public() == client_raw_public_key_pair()->fingerprint_public());
 
-                                  result.confirm("TLS handshake finished", ctx->server.is_active());
-                                  result.confirm("handshake is complete", ctx->server.is_handshake_complete());
-                               }),
+                     result.confirm("TLS handshake finished", ctx->server.is_active());
+                     result.confirm("handshake is complete", ctx->server.is_handshake_complete());
+                  }),
 
-            Botan_Tests::CHECK("Receive Client close_notify",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
+            CHECK("Receive Client close_notify",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.received_data(vars.get_req_bin("Record_Client_CloseNotify"));
 
-                                  ctx->check_callback_invocations(
-                                     result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
+                     ctx->check_callback_invocations(
+                        result, "client finished received", {"tls_alert", "tls_peer_closed_connection"});
 
-                                  result.confirm("connection is not yet closed", !ctx->server.is_closed());
-                                  result.confirm("connection is still active", ctx->server.is_active());
-                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
-                               }),
+                     result.confirm("connection is not yet closed", !ctx->server.is_closed());
+                     result.confirm("connection is still active", ctx->server.is_active());
+                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                  }),
 
-            Botan_Tests::CHECK("Expect Server close_notify",
-                               [&](Test::Result& result) {
-                                  result.require("ctx is available", ctx != nullptr);
-                                  ctx->server.close();
+            CHECK("Expect Server close_notify",
+                  [&](Test::Result& result) {
+                     result.require("ctx is available", ctx != nullptr);
+                     ctx->server.close();
 
-                                  result.confirm("connection is now inactive", !ctx->server.is_active());
-                                  result.confirm("connection is now closed", ctx->server.is_closed());
-                                  result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
-                                  result.test_eq("Server's close notify",
-                                                 ctx->pull_send_buffer(),
-                                                 vars.get_req_bin("Record_Server_CloseNotify"));
-                               }),
+                     result.confirm("connection is now inactive", !ctx->server.is_active());
+                     result.confirm("connection is now closed", ctx->server.is_closed());
+                     result.confirm("handshake is still complete", ctx->server.is_handshake_complete());
+                     result.test_eq("Server's close notify",
+                                    ctx->pull_send_buffer(),
+                                    vars.get_req_bin("Record_Server_CloseNotify"));
+                  }),
          };
       }
 };

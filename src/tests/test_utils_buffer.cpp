@@ -549,27 +549,27 @@ std::vector<Test::Result> test_alignment_buffer() {
 
 std::vector<Test::Result> test_concat() {
    return {
-      Botan_Tests::CHECK("empty concat",
-                         [](Test::Result& result) {
-                            // only define a dynamic output type, but no input to be concat'ed
-                            const auto empty1 = Botan::concat<std::vector<uint8_t>>();
-                            result.confirm("empty concat 1", empty1.empty());
+      CHECK("empty concat",
+            [](Test::Result& result) {
+               // only define a dynamic output type, but no input to be concat'ed
+               const auto empty1 = Botan::concat<std::vector<uint8_t>>();
+               result.confirm("empty concat 1", empty1.empty());
 
-                            // pass an empty input buffer to be concat'ed
-                            const auto empty2 = Botan::concat(std::vector<uint8_t>());
-                            result.confirm("empty concat 2", empty2.empty());
+               // pass an empty input buffer to be concat'ed
+               const auto empty2 = Botan::concat(std::vector<uint8_t>());
+               result.confirm("empty concat 2", empty2.empty());
 
-                            // pass multiple empty input buffers to be concat'ed
-                            const auto empty3 = Botan::concat(std::vector<uint8_t>(), Botan::secure_vector<uint8_t>());
-                            result.confirm("empty concat 3", empty3.empty());
+               // pass multiple empty input buffers to be concat'ed
+               const auto empty3 = Botan::concat(std::vector<uint8_t>(), Botan::secure_vector<uint8_t>());
+               result.confirm("empty concat 3", empty3.empty());
 
-                            // pass multiple empty input buffers to be concat'ed without auto-detection of the output buffer
-                            const auto empty4 = Botan::concat<std::array<uint8_t, 0>>(
-                               std::vector<uint8_t>(), std::array<uint8_t, 0>(), Botan::secure_vector<uint8_t>());
-                            result.confirm("empty concat 4", empty4.empty());
-                         }),
+               // pass multiple empty input buffers to be concat'ed without auto-detection of the output buffer
+               const auto empty4 = Botan::concat<std::array<uint8_t, 0>>(
+                  std::vector<uint8_t>(), std::array<uint8_t, 0>(), Botan::secure_vector<uint8_t>());
+               result.confirm("empty concat 4", empty4.empty());
+            }),
 
-      Botan_Tests::CHECK(
+      CHECK(
          "auto-detected output type",
          [](Test::Result& result) {
             // define a static output type without any input parameters
@@ -599,68 +599,67 @@ std::vector<Test::Result> test_concat() {
             result.confirm("type 5", std::is_same_v<std::array<uint8_t, 9>, std::remove_cvref_t<decltype(t5)>>);
          }),
 
-      Botan_Tests::CHECK(
-         "concatenate",
-         [](Test::Result& result) {
-            constexpr std::array<uint8_t, 5> a1 = {1, 2, 3, 4, 5};
-            const std::vector<uint8_t> v1{6, 7, 8, 9, 10};
+      CHECK("concatenate",
+            [](Test::Result& result) {
+               constexpr std::array<uint8_t, 5> a1 = {1, 2, 3, 4, 5};
+               const std::vector<uint8_t> v1{6, 7, 8, 9, 10};
 
-            // concatenate a single buffer
-            const auto concat0 = Botan::concat<Botan::secure_vector<uint8_t>>(v1);
-            result.test_is_eq("concat 0", concat0, {6, 7, 8, 9, 10});
+               // concatenate a single buffer
+               const auto concat0 = Botan::concat<Botan::secure_vector<uint8_t>>(v1);
+               result.test_is_eq("concat 0", concat0, {6, 7, 8, 9, 10});
 
-            // concatenate into an dynamically allocated output buffer
-            const auto concat1 = Botan::concat<std::vector<uint8_t>>(a1, v1);
-            result.test_is_eq("concat 1", concat1, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+               // concatenate into an dynamically allocated output buffer
+               const auto concat1 = Botan::concat<std::vector<uint8_t>>(a1, v1);
+               result.test_is_eq("concat 1", concat1, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
 
-            // concatenate into a statically sized output buffer
-            const auto concat2 = Botan::concat<std::array<uint8_t, 10>>(v1, a1);
-            result.test_is_eq("concat 2", concat2, {6, 7, 8, 9, 10, 1, 2, 3, 4, 5});
+               // concatenate into a statically sized output buffer
+               const auto concat2 = Botan::concat<std::array<uint8_t, 10>>(v1, a1);
+               result.test_is_eq("concat 2", concat2, {6, 7, 8, 9, 10, 1, 2, 3, 4, 5});
 
-            // concatenate into a statically sized output buffer, that is auto-detected
-            const auto concat3 = Botan::concat(a1, std::span<const uint8_t, 5>(v1));
-            result.test_is_eq("concat 3", concat3, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
-            result.confirm("correct type 3",
-                           std::is_same_v<std::array<uint8_t, 10>, std::remove_cvref_t<decltype(concat3)>>);
+               // concatenate into a statically sized output buffer, that is auto-detected
+               const auto concat3 = Botan::concat(a1, std::span<const uint8_t, 5>(v1));
+               result.test_is_eq("concat 3", concat3, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+               result.confirm("correct type 3",
+                              std::is_same_v<std::array<uint8_t, 10>, std::remove_cvref_t<decltype(concat3)>>);
 
-            // concatenate into a statically sized output buffer, that is auto-detected, at compile time
-            constexpr auto concat4 = Botan::concat(a1, a1);
-            result.test_is_eq("concat 4", concat4, {1, 2, 3, 4, 5, 1, 2, 3, 4, 5});
-            result.confirm("correct type 4",
-                           std::is_same_v<std::array<uint8_t, 10>, std::remove_cvref_t<decltype(concat4)>>);
-         }),
+               // concatenate into a statically sized output buffer, that is auto-detected, at compile time
+               constexpr auto concat4 = Botan::concat(a1, a1);
+               result.test_is_eq("concat 4", concat4, {1, 2, 3, 4, 5, 1, 2, 3, 4, 5});
+               result.confirm("correct type 4",
+                              std::is_same_v<std::array<uint8_t, 10>, std::remove_cvref_t<decltype(concat4)>>);
+            }),
 
-      Botan_Tests::CHECK("dynamic length-check",
-                         [](Test::Result& result) {
-                            std::vector<uint8_t> v1{1, 2, 3, 4, 5};
-                            std::vector<uint8_t> v2{6, 7, 8, 9, 10};
+      CHECK("dynamic length-check",
+            [](Test::Result& result) {
+               std::vector<uint8_t> v1{1, 2, 3, 4, 5};
+               std::vector<uint8_t> v2{6, 7, 8, 9, 10};
 
-                            result.test_throws("concatenate into a statically sized type with insufficient space",
-                                               [&]() { Botan::concat<std::array<uint8_t, 4>>(v1, v2); });
-                            result.test_throws("concatenate into a statically sized type with too much space",
-                                               [&]() { Botan::concat<std::array<uint8_t, 20>>(v1, v2); });
-                         }),
+               result.test_throws("concatenate into a statically sized type with insufficient space",
+                                  [&]() { Botan::concat<std::array<uint8_t, 4>>(v1, v2); });
+               result.test_throws("concatenate into a statically sized type with too much space",
+                                  [&]() { Botan::concat<std::array<uint8_t, 20>>(v1, v2); });
+            }),
 
-      Botan_Tests::CHECK("concatenate strong types",
-                         [](Test::Result& result) {
-                            using StrongV = Botan::Strong<std::vector<uint8_t>, struct StrongV_>;
-                            using StrongA = Botan::Strong<std::array<uint8_t, 4>, struct StrongA_>;
+      CHECK("concatenate strong types",
+            [](Test::Result& result) {
+               using StrongV = Botan::Strong<std::vector<uint8_t>, struct StrongV_>;
+               using StrongA = Botan::Strong<std::array<uint8_t, 4>, struct StrongA_>;
 
-                            StrongV v1(std::vector<uint8_t>{1, 2, 3, 4, 5});
-                            StrongA a2;
-                            a2[0] = 6;
-                            a2[1] = 7;
-                            a2[2] = 8;
-                            a2[3] = 9;
+               StrongV v1(std::vector<uint8_t>{1, 2, 3, 4, 5});
+               StrongA a2;
+               a2[0] = 6;
+               a2[1] = 7;
+               a2[2] = 8;
+               a2[3] = 9;
 
-                            // concat strong types into a verbatim type
-                            auto concat1 = Botan::concat<std::vector<uint8_t>>(v1, a2);
-                            result.test_is_eq("concat 1", concat1, {1, 2, 3, 4, 5, 6, 7, 8, 9});
+               // concat strong types into a verbatim type
+               auto concat1 = Botan::concat<std::vector<uint8_t>>(v1, a2);
+               result.test_is_eq("concat 1", concat1, {1, 2, 3, 4, 5, 6, 7, 8, 9});
 
-                            // concat strong types into a dynamically allocated strong type
-                            auto concat2 = Botan::concat<StrongV>(a2, v1);
-                            result.test_is_eq("concat 2", concat2.get(), {6, 7, 8, 9, 1, 2, 3, 4, 5});
-                         }),
+               // concat strong types into a dynamically allocated strong type
+               auto concat2 = Botan::concat<StrongV>(a2, v1);
+               result.test_is_eq("concat 2", concat2.get(), {6, 7, 8, 9, 1, 2, 3, 4, 5});
+            }),
    };
 }
 

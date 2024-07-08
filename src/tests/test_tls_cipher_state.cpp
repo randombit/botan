@@ -15,9 +15,10 @@
    #include <botan/internal/tls_channel_impl_13.h>
    #include <botan/internal/tls_cipher_state.h>
 
+namespace Botan_Tests {
+
 namespace {
 
-using Test = Botan_Tests::Test;
 using namespace Botan;
 using namespace Botan::TLS;
 
@@ -37,10 +38,10 @@ decltype(auto) make_CHECK_both(Cipher_State* cs_client,
                                Journaling_Secret_Logger* sl_server) {
    using namespace std::placeholders;
    return [=](const std::string& name, auto lambda) -> std::vector<Test::Result> {
-      return {Botan_Tests::CHECK(std::string(name + " (client)").c_str(),
-                                 std::bind(lambda, cs_client, sl_client, Connection_Side::Client, _1)),
-              Botan_Tests::CHECK(std::string(name + " (server)").c_str(),
-                                 std::bind(lambda, cs_server, sl_server, Connection_Side::Server, _1))};
+      return {CHECK(std::string(name + " (client)").c_str(),
+                    std::bind(lambda, cs_client, sl_client, Connection_Side::Client, _1)),
+              CHECK(std::string(name + " (server)").c_str(),
+                    std::bind(lambda, cs_server, sl_server, Connection_Side::Server, _1))};
    };
 }
 
@@ -835,13 +836,12 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
                   })});
 }
 
-}  // namespace
-
-namespace Botan_Tests {
 BOTAN_REGISTER_TEST_FN("tls",
                        "tls_cipher_state",
                        test_secret_derivation_rfc8448_rtt1,
                        test_secret_derivation_rfc8448_rtt0);
-}
+}  // namespace
+
+}  // namespace Botan_Tests
 
 #endif
