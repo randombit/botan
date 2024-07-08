@@ -17,6 +17,7 @@
 #include <botan/oids.h>
 #include <botan/hash.h>
 #include <botan/hex.h>
+#include <botan/internal/stl_util.h>
 #include <algorithm>
 #include <sstream>
 
@@ -788,16 +789,35 @@ bool X509_Certificate::matches_dns_name(const std::string& name) const
    if(name.empty())
       return false;
 
-   std::vector<std::string> issued_names = subject_info("DNS");
+   bool is_ipv4 = false;
 
-   // Fall back to CN only if no DNS names are set (RFC 6125 sec 6.4.4)
-   if(issued_names.empty())
+   try {
+      string_to_ipv4(name);
+      is_ipv4 = true;
+      }
+   catch(...) {}
+
+   std::vector<std::string> issued_names;
+
+   if(subject_alt_name().has_items()) {
+      issued_names = subject_alt_name().get_attribute(is_ipv4 ? "IP" : "DNS");
+   } else if(is_ipv4 == false) {
+      // Use CN only if no SAN is included
       issued_names = subject_info("Name");
+   }
 
    for(size_t i = 0; i != issued_names.size(); ++i)
       {
-      if(host_wildcard_match(issued_names[i], name))
-         return true;
+      if(is_ipv4)
+         {
+         if(issued_names[i] == name)
+            return true;
+         }
+      else
+         {
+         if(host_wildcard_match(issued_names[i], name))
+            return true;
+         }
       }
 
    return false;

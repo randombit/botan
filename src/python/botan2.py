@@ -1285,6 +1285,7 @@ def _load_buf_or_file(filename, buf, file_fn, buf_fn):
 #
 class X509Cert(object): # pylint: disable=invalid-name
     def __init__(self, filename=None, buf=None):
+        self.__obj = c_void_p(0)
         self.__obj = _load_buf_or_file(filename, buf, _DLL.botan_x509_cert_load_file, _DLL.botan_x509_cert_load)
 
     def __del__(self):
@@ -1464,6 +1465,7 @@ class X509Cert(object): # pylint: disable=invalid-name
 #
 class X509CRL(object):
     def __init__(self, filename=None, buf=None):
+        self.__obj = c_void_p(0)
         self.__obj = _load_buf_or_file(filename, buf, _DLL.botan_x509_crl_load_file, _DLL.botan_x509_crl_load)
 
     def __del__(self):

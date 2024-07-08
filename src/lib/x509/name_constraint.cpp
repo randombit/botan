@@ -163,31 +163,48 @@ GeneralName::MatchResult GeneralName::matches(const X509_Certificate& cert) cons
 
 bool GeneralName::matches_dns(const std::string& nam) const
    {
-   if(nam.size() == name().size())
+   const std::string constraint = tolower_string(name());
+   const std::string issued = tolower_string(nam);
+
+   if(nam.size() == constraint.size())
       {
-      return tolower_string(nam) == tolower_string(name());
+      return issued == constraint;
       }
-   else if(name().size() > nam.size())
+   else if(constraint.size() > nam.size())
       {
       // The constraint is longer than the issued name: not possibly a match
       return false;
       }
-   else // name.size() < nam.size()
+   else
       {
-      // constr is suffix of nam
-      const std::string constr = name().front() == '.' ? name() : "." + name();
-      const std::string substr = nam.substr(nam.size() - constr.size(), constr.size());
-      return tolower_string(constr) == tolower_string(substr);
+      if(constraint.empty()) {
+         return true;
+      }
+
+      std::string substr = issued.substr(nam.size() - constraint.size(), constraint.size());
+
+      if(constraint.front() == '.') {
+         return substr == constraint;
+      } else if(substr[0] == '.') {
+         return substr.substr(1) == constraint;
+      } else {
+         return substr == constraint && issued[issued.size() - constraint.size() - 1] == '.';
       }
    }
+}
 
 bool GeneralName::matches_dn(const std::string& nam) const
    {
    std::stringstream ss(nam);
-   std::stringstream tt(name());
-   X509_DN nam_dn, my_dn;
-
+   X509_DN nam_dn;
    ss >> nam_dn;
+   return matches_dn_obj(nam_dn);
+   }
+
+bool GeneralName::matches_dn_obj(const X509_DN& nam_dn) const
+   {
+   std::stringstream tt(name());
+   X509_DN my_dn;
    tt >> my_dn;
 
    auto attr = nam_dn.get_attributes();
@@ -270,4 +287,278 @@ std::ostream& operator<<(std::ostream& os, const GeneralSubtree& gs)
    os << gs.minimum() << "," << gs.maximum() << "," << gs.base();
    return os;
    }
+
+NameConstraints::NameConstraints(std::vector<GeneralSubtree>&& permitted_subtrees,
+                                 std::vector<GeneralSubtree>&& excluded_subtrees) :
+   m_permitted_subtrees(permitted_subtrees), m_excluded_subtrees(excluded_subtrees)
+   {
+   for(const auto& c : m_permitted_subtrees)
+      {
+      m_permitted_name_types.insert(c.base().type());
+      }
+   for(const auto& c : m_excluded_subtrees)
+      {
+      m_excluded_name_types.insert(c.base().type());
+      }
+   }
+
+namespace {
+
+bool looks_like_ipv4(const std::string& s)
+   {
+   try
+     {
+     // ignores return value
+     string_to_ipv4(s);
+     return true;
+     }
+   catch(...)
+      {
+      return false;
+      }
+   }
+
 }
+
+bool NameConstraints::is_permitted(const X509_Certificate& cert, bool reject_unknown) const {
+   if(permitted().empty()) {
+      return true;
+   }
+
+   const auto& alt_name = cert.subject_alt_name();
+
+   if(reject_unknown) {
+      if(m_permitted_name_types.find("URI") != m_permitted_name_types.end() && !alt_name.get_attribute("URI").empty()) {
+         return false;
+      }
+      if(m_permitted_name_types.find("RFC822") != m_permitted_name_types.end() && !alt_name.get_attribute("RFC822").empty()) {
+         return false;
+      }
+   }
+
+   auto is_permitted_dn = [&](const X509_DN& dn) {
+      // If no restrictions, then immediate accept
+      if(m_permitted_name_types.find("DN") == m_permitted_name_types.end()) {
+         return true;
+      }
+
+      if(dn.empty()) {
+         return true;
+      }
+
+      for(const auto& c : m_permitted_subtrees) {
+         if(c.base().type() == "DN" && c.base().matches_dn_obj(dn)) {
+            return true;
+         }
+      }
+
+      // There is at least one permitted name and we didn't match
+      return false;
+   };
+
+   auto is_permitted_dns_name = [&](const std::string& name) {
+      if(name.empty() || name[0] == '.') {
+         return false;
+      }
+
+      // If no restrictions, then immediate accept
+      if(m_permitted_name_types.find("DNS") == m_permitted_name_types.end()) {
+         return true;
+      }
+
+      for(const auto& c : m_permitted_subtrees) {
+         if(c.base().type() == "DNS" && c.base().matches_dns(name)) {
+            return true;
+         }
+      }
+
+      // There is at least one permitted name and we didn't match
+      return false;
+   };
+
+   auto is_permitted_ipv4 = [&](const std::string& ipv4) {
+      // If no restrictions, then immediate accept
+      if(m_permitted_name_types.find("IP") == m_permitted_name_types.end()) {
+         return true;
+      }
+
+      for(const auto& c : m_permitted_subtrees) {
+         if(c.base().type() == "IP" && c.base().matches_ip(ipv4)) {
+            return true;
+         }
+      }
+
+      // There is at least one permitted name and we didn't match
+      return false;
+   };
+
+   if(!is_permitted_dn(cert.subject_dn())) {
+      return false;
+   }
+
+   if(!is_permitted_dn(alt_name.dn()))
+      {
+      return false;
+      }
+
+   for(const auto& alt_dns : alt_name.get_attribute("DNS")) {
+      if(!is_permitted_dns_name(alt_dns)) {
+         return false;
+      }
+   }
+
+   for(const auto& alt_ipv4 : alt_name.get_attribute("IP")) {
+      if(!is_permitted_ipv4(alt_ipv4)) {
+         return false;
+      }
+   }
+
+   if(!alt_name.has_items())
+      {
+      for(const auto& cn : cert.subject_info("Name"))
+         {
+         if(cn.find(".") != std::string::npos)
+            {
+            if(looks_like_ipv4(cn))
+               {
+               if(!is_permitted_ipv4(cn))
+                  {
+                  return false;
+                  }
+               }
+            else
+               {
+               if(!is_permitted_dns_name(cn))
+                  {
+                  return false;
+                  }
+               }
+            }
+         }
+      }
+
+   // We didn't encounter a name that doesn't have a matching constraint
+   return true;
+}
+
+bool NameConstraints::is_excluded(const X509_Certificate& cert, bool reject_unknown) const {
+   if(excluded().empty()) {
+      return false;
+   }
+
+   const auto& alt_name = cert.subject_alt_name();
+
+   if(reject_unknown) {
+      if(m_excluded_name_types.find("URI") != m_excluded_name_types.end() && !alt_name.get_attribute("URI").empty()) {
+         return false;
+      }
+      if(m_excluded_name_types.find("RFC822") != m_excluded_name_types.end() && !alt_name.get_attribute("RFC822").empty()) {
+         return false;
+      }
+   }
+
+   auto is_excluded_dn = [&](const X509_DN& dn) {
+      // If no restrictions, then immediate accept
+      if(m_excluded_name_types.find("DN") == m_excluded_name_types.end()) {
+         return false;
+      }
+
+      if(dn.empty()) {
+         return false;
+      }
+
+      for(const auto& c : m_excluded_subtrees) {
+         if(c.base().type() == "DN" && c.base().matches_dn_obj(dn)) {
+            return true;
+         }
+      }
+
+      // There is at least one excluded name and we didn't match
+      return false;
+   };
+
+   auto is_excluded_dns_name = [&](const std::string& name) {
+      if(name.empty() || name[0] == '.') {
+         return true;
+      }
+
+      // If no restrictions, then immediate accept
+      if(m_excluded_name_types.find("DNS") == m_excluded_name_types.end()) {
+         return false;
+      }
+
+      for(const auto& c : m_excluded_subtrees) {
+         if(c.base().type() == "DNS" && c.base().matches_dns(name)) {
+            return true;
+         }
+      }
+
+      // There is at least one excluded name and we didn't match
+      return false;
+   };
+
+   auto is_excluded_ipv4 = [&](const std::string& ipv4) {
+      // If no restrictions, then immediate accept
+      if(m_excluded_name_types.find("IP") == m_excluded_name_types.end()) {
+         return false;
+      }
+
+      for(const auto& c : m_excluded_subtrees) {
+         if(c.base().type() == "IP" && c.base().matches_ip(ipv4)) {
+            return true;
+         }
+      }
+
+      // There is at least one excluded name and we didn't match
+      return false;
+   };
+
+   if(is_excluded_dn(cert.subject_dn())) {
+      return true;
+   }
+
+   if(is_excluded_dn(alt_name.dn())) {
+      return true;
+   }
+
+   for(const auto& alt_dns : alt_name.get_attribute("DNS")) {
+      if(is_excluded_dns_name(alt_dns)) {
+         return true;
+      }
+   }
+
+   for(const auto& alt_ipv4 : alt_name.get_attribute("IP")) {
+      if(is_excluded_ipv4(alt_ipv4)) {
+         return true;
+      }
+   }
+
+   if(!alt_name.has_items())
+      {
+      for(const auto& cn : cert.subject_info("Name"))
+         {
+         if(cn.find(".") != std::string::npos)
+            {
+            if(looks_like_ipv4(cn))
+               {
+               if(is_excluded_ipv4(cn))
+                  {
+                  return true;
+                  }
+               }
+            else
+               {
+               if(is_excluded_dns_name(cn))
+                  {
+                  return true;
+                  }
+               }
+            }
+         }
+      }
+
+   // We didn't encounter a name that matched any prohibited name
+   return false;
+}
+
+}  // namespace Botan
