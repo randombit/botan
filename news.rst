@@ -613,6 +613,28 @@ Other Improvements
 * Fix bugs in GMAC and SipHash where they would require a fresh key be
   provided for each message. (GH #2908)
 
+Version 2.19.5, 2024-07-08
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* A reminder that Botan2 reaches end of life at the end of 2024
+
+* CVE-2024-34702: Fix a DoS caused by excessive name constraints. (GH #4187)
+
+* CVE-2024-39312: Fix a name constraint processing error, where if
+  permitted and excluded rules both applied to a certificate, only the
+  permitted rules would be checked. (GH #4187)
+
+* Fix a crash in OCB (GH #3812 #3924)
+
+* During certificate verification, first verify the entire chain of
+  certificates, then perform other validation. (GH #4052 #4045)
+
+* Fix a test failure in compression with certain versions of zlib (GH #4135 #3896)
+
+* Fix some iterator debugging errors in TLS CBC decryption. (GH #4125 #4130)
+
+* Avoid a miscompilation in ARIA when using XCode 14 (GH #3465 #3492 #4053)
+
 Version 2.19.4, 2024-02-20
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
