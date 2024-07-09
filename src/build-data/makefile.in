@@ -36,12 +36,9 @@ INSTALLED_LIB_DIR = %{libdir}
 all: %{all_targets}
 
 # Executable targets
-CLI           = %{cli_exe}
-TEST          = %{test_exe}
+
 LIBRARIES     = %{library_targets}
 
-cli: $(CLI)
-tests: $(TEST)
 libs: $(LIBRARIES)
 docs: %{doc_stamp_file}
 
@@ -63,26 +60,32 @@ distclean:
 install: %{install_targets}
 	"$(PYTHON_EXE)" "$(SCRIPTS_DIR)/install.py" --build-dir="%{build_dir}"
 
-check: tests
-	"$(PYTHON_EXE)" "$(SCRIPTS_DIR)/check.py" --build-dir="%{build_dir}"
-
 fmt:
 	"$(PYTHON_EXE)" "$(SCRIPTS_DIR)/dev_tools/run_clang_format.py"
 
 tidy:
 	"$(PYTHON_EXE)" "$(SCRIPTS_DIR)/dev_tools/run_clang_tidy.py" --only-changed-files
 
-# Object Files
-LIBOBJS = %{join lib_objs}
+%{if build_cli}
+
+CLI = %{cli_exe}
+cli: $(CLI)
 
 CLIOBJS = %{join cli_objs}
 
-TESTOBJS = %{join test_objs}
-
-# Executable targets
-
 $(CLI): $(LIBRARIES) $(CLIOBJS)
 	$(EXE_LINK_CMD) $(ABI_FLAGS) $(CLIOBJS) $(BUILD_DIR_LINK_PATH) $(LANG_EXE_FLAGS) $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
+
+%{endif}
+
+%{if build_tests}
+
+TEST = %{test_exe}
+tests: $(TEST)
+check: tests
+	"$(PYTHON_EXE)" "$(SCRIPTS_DIR)/check.py" --build-dir="%{build_dir}"
+
+TESTOBJS = %{join test_objs}
 
 $(TEST): $(LIBRARIES) $(TESTOBJS)
 	$(EXE_LINK_CMD) $(ABI_FLAGS) $(TESTOBJS) $(BUILD_DIR_LINK_PATH) $(LANG_EXE_FLAGS) $(LDFLAGS) %{test_exe_extra_ldflags} $(EXE_LINKS_TO) %{output_to_exe}$@
@@ -120,6 +123,8 @@ bogo_shim: %{out_dir}/botan_bogo_shim
 %{endif}
 
 # Library targets
+
+LIBOBJS = %{join lib_objs}
 
 %{if build_static_lib}
 

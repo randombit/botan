@@ -2192,6 +2192,8 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
 
         'build_fuzzers': options.build_fuzzers,
         'build_examples': 'examples' in options.build_targets,
+        'build_cli': 'cli' in options.build_targets,
+        'build_tests': 'tests' in options.build_targets,
 
         'build_coverage' : options.with_coverage_info,
 
