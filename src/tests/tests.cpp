@@ -565,7 +565,7 @@ class Test_Registry {
                      insert_if_not_exists_and_not_skipped(elems.first->second);
                   }
                } else {
-                  throw Botan_Tests::Test_Error("Unknown test suite or category: " + r);
+                  throw Test_Error("Unknown test suite or category: " + r);
                }
             }
          }

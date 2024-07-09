@@ -56,48 +56,46 @@ decltype(auto) shake32(std::vector<uint8_t> data) {
 
 std::vector<Test::Result> keccak_helpers() {
    return {
-      Botan_Tests::CHECK("keccak_int_encoding_size()",
-                         [](Test::Result& result) {
-                            result.test_eq("keccak_int_encoding_size(0)", encode_size(0), 2);
-                            result.test_eq("keccak_int_encoding_size(255)", encode_size(0xFF), 2);
-                            result.test_eq("keccak_int_encoding_size(256)", encode_size(0xFF + 1), 3);
-                            result.test_eq("keccak_int_encoding_size(65.535)", encode_size(0xFFFF), 3);
-                            result.test_eq("keccak_int_encoding_size(65.536)", encode_size(0xFFFF + 1), 4);
-                            result.test_eq("keccak_int_encoding_size(16.777.215)", encode_size(0xFFFFFF), 4);
-                            result.test_eq("keccak_int_encoding_size(16.777.216)", encode_size(0xFFFFFF + 1), 5);
-                         }),
-
-         Botan_Tests::CHECK(
-            "keccak_int_left_encode()",
+      CHECK("keccak_int_encoding_size()",
             [](Test::Result& result) {
-               result.test_is_eq("left_encode(0)", left_encode(result, 0), hex("0100"));
-               result.test_is_eq("left_encode(1)", left_encode(result, 1), hex("0101"));
-               result.test_is_eq("left_encode(255)", left_encode(result, 255), hex("01FF"));
-               result.test_is_eq("left_encode(256)", left_encode(result, 0xFF + 1), hex("020100"));
-               result.test_is_eq("left_encode(65.535)", left_encode(result, 0xFFFF), hex("02FFFF"));
-               result.test_is_eq("left_encode(65.536)", left_encode(result, 0xFFFF + 1), hex("03010000"));
-               result.test_is_eq("left_encode(16.777.215)", left_encode(result, 0xFFFFFF), hex("03FFFFFF"));
-               result.test_is_eq("left_encode(16.777.215)", left_encode(result, 0xFFFFFF), hex("03FFFFFF"));
-               result.test_is_eq("left_encode(16.777.216)", left_encode(result, 0xFFFFFF + 1), hex("0401000000"));
-               result.test_is_eq("left_encode(287.454.020)", left_encode(result, 0x11223344), hex("0411223344"));
+               result.test_eq("keccak_int_encoding_size(0)", encode_size(0), 2);
+               result.test_eq("keccak_int_encoding_size(255)", encode_size(0xFF), 2);
+               result.test_eq("keccak_int_encoding_size(256)", encode_size(0xFF + 1), 3);
+               result.test_eq("keccak_int_encoding_size(65.535)", encode_size(0xFFFF), 3);
+               result.test_eq("keccak_int_encoding_size(65.536)", encode_size(0xFFFF + 1), 4);
+               result.test_eq("keccak_int_encoding_size(16.777.215)", encode_size(0xFFFFFF), 4);
+               result.test_eq("keccak_int_encoding_size(16.777.216)", encode_size(0xFFFFFF + 1), 5);
             }),
 
-         Botan_Tests::CHECK(
-            "keccak_int_right_encode()",
-            [](Test::Result& result) {
-               result.test_is_eq("right_encode(0)", right_encode(result, 0), hex("0001"));
-               result.test_is_eq("right_encode(1)", right_encode(result, 1), hex("0101"));
-               result.test_is_eq("right_encode(255)", right_encode(result, 255), hex("FF01"));
-               result.test_is_eq("right_encode(256)", right_encode(result, 0xFF + 1), hex("010002"));
-               result.test_is_eq("right_encode(65.535)", right_encode(result, 0xFFFF), hex("FFFF02"));
-               result.test_is_eq("right_encode(65.536)", right_encode(result, 0xFFFF + 1), hex("01000003"));
-               result.test_is_eq("right_encode(16.777.215)", right_encode(result, 0xFFFFFF), hex("FFFFFF03"));
-               result.test_is_eq("right_encode(16.777.215)", right_encode(result, 0xFFFFFF), hex("FFFFFF03"));
-               result.test_is_eq("right_encode(16.777.216)", right_encode(result, 0xFFFFFF + 1), hex("0100000004"));
-               result.test_is_eq("right_encode(287.454.020)", right_encode(result, 0x11223344), hex("1122334404"));
-            }),
+         CHECK("keccak_int_left_encode()",
+               [](Test::Result& result) {
+                  result.test_is_eq("left_encode(0)", left_encode(result, 0), hex("0100"));
+                  result.test_is_eq("left_encode(1)", left_encode(result, 1), hex("0101"));
+                  result.test_is_eq("left_encode(255)", left_encode(result, 255), hex("01FF"));
+                  result.test_is_eq("left_encode(256)", left_encode(result, 0xFF + 1), hex("020100"));
+                  result.test_is_eq("left_encode(65.535)", left_encode(result, 0xFFFF), hex("02FFFF"));
+                  result.test_is_eq("left_encode(65.536)", left_encode(result, 0xFFFF + 1), hex("03010000"));
+                  result.test_is_eq("left_encode(16.777.215)", left_encode(result, 0xFFFFFF), hex("03FFFFFF"));
+                  result.test_is_eq("left_encode(16.777.215)", left_encode(result, 0xFFFFFF), hex("03FFFFFF"));
+                  result.test_is_eq("left_encode(16.777.216)", left_encode(result, 0xFFFFFF + 1), hex("0401000000"));
+                  result.test_is_eq("left_encode(287.454.020)", left_encode(result, 0x11223344), hex("0411223344"));
+               }),
 
-         Botan_Tests::CHECK(
+         CHECK("keccak_int_right_encode()",
+               [](Test::Result& result) {
+                  result.test_is_eq("right_encode(0)", right_encode(result, 0), hex("0001"));
+                  result.test_is_eq("right_encode(1)", right_encode(result, 1), hex("0101"));
+                  result.test_is_eq("right_encode(255)", right_encode(result, 255), hex("FF01"));
+                  result.test_is_eq("right_encode(256)", right_encode(result, 0xFF + 1), hex("010002"));
+                  result.test_is_eq("right_encode(65.535)", right_encode(result, 0xFFFF), hex("FFFF02"));
+                  result.test_is_eq("right_encode(65.536)", right_encode(result, 0xFFFF + 1), hex("01000003"));
+                  result.test_is_eq("right_encode(16.777.215)", right_encode(result, 0xFFFFFF), hex("FFFFFF03"));
+                  result.test_is_eq("right_encode(16.777.215)", right_encode(result, 0xFFFFFF), hex("FFFFFF03"));
+                  result.test_is_eq("right_encode(16.777.216)", right_encode(result, 0xFFFFFF + 1), hex("0100000004"));
+                  result.test_is_eq("right_encode(287.454.020)", right_encode(result, 0x11223344), hex("1122334404"));
+               }),
+
+         CHECK(
             "keccak_absorb_padded_strings_encoding() with one byte string (std::vector<>)",
             [](Test::Result& result) {
                std::vector<uint8_t> out;
@@ -116,7 +114,7 @@ std::vector<Test::Result> keccak_helpers() {
                      "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"));
             }),
 
-         Botan_Tests::CHECK(
+         CHECK(
             "keccak_absorb_padded_strings_encoding() with two byte strings (std::vector<>)",
             [](Test::Result& result) {
                std::vector<uint8_t> out;
@@ -143,7 +141,7 @@ std::vector<Test::Result> keccak_helpers() {
 
    #if defined(BOTAN_HAS_SHAKE_XOF)
 
-         Botan_Tests::CHECK(
+         CHECK(
             "keccak_absorb_padded_strings_encoding() with one byte string",
             [](Test::Result& result) {
                std::vector<uint8_t> out(32);
@@ -163,7 +161,7 @@ std::vector<Test::Result> keccak_helpers() {
                      "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")));
             }),
 
-         Botan_Tests::CHECK("keccak_absorb_padded_strings_encoding() with two byte strings", [](Test::Result& result) {
+         CHECK("keccak_absorb_padded_strings_encoding() with two byte strings", [](Test::Result& result) {
             std::vector<uint8_t> out(32);
             const auto xof = Botan::XOF::create_or_throw("SHAKE-256");
             const auto padmod = xof->block_size();

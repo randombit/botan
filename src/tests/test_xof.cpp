@@ -182,23 +182,22 @@ class XOF_Tests final : public Text_Based_Test {
       std::vector<Test::Result> run_final_tests() override {
          return {
    #if defined(BOTAN_HAS_CSHAKE_XOF)
-            Botan_Tests::CHECK(
-               "cSHAKE without a name",
-               [](Test::Result& result) {
-                  std::vector<std::unique_ptr<Botan::XOF>> cshakes;
-                  cshakes.push_back(std::make_unique<Botan::cSHAKE_128_XOF>(""));
-                  cshakes.push_back(std::make_unique<Botan::cSHAKE_256_XOF>(""));
+            CHECK("cSHAKE without a name",
+                  [](Test::Result& result) {
+                     std::vector<std::unique_ptr<Botan::XOF>> cshakes;
+                     cshakes.push_back(std::make_unique<Botan::cSHAKE_128_XOF>(""));
+                     cshakes.push_back(std::make_unique<Botan::cSHAKE_256_XOF>(""));
 
-                  for(auto& cshake : cshakes) {
-                     result.confirm("cSHAKE without a name rejects empty salt", !cshake->valid_salt_length(0));
-                     result.confirm("cSHAKE without a name requests at least one byte of salt",
-                                    cshake->valid_salt_length(1));
-                     result.test_throws("cSHAKE without a name throws without salt", [&]() { cshake->start({}); });
-                  }
-               }),
+                     for(auto& cshake : cshakes) {
+                        result.confirm("cSHAKE without a name rejects empty salt", !cshake->valid_salt_length(0));
+                        result.confirm("cSHAKE without a name requests at least one byte of salt",
+                                       cshake->valid_salt_length(1));
+                        result.test_throws("cSHAKE without a name throws without salt", [&]() { cshake->start({}); });
+                     }
+                  }),
    #endif
    #if defined(BOTAN_HAS_AES_CRYSTALS_XOF)
-               Botan_Tests::CHECK("AES-256/CTR XOF failure modes", [](Test::Result& result) {
+               CHECK("AES-256/CTR XOF failure modes", [](Test::Result& result) {
                   Botan::AES_256_CTR_XOF aes_xof;
                   result.test_throws("AES-256/CTR XOF throws for empty key", [&]() { aes_xof.start({}, {}); });
                   result.test_throws("AES-256/CTR XOF throws for too long key",

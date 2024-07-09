@@ -553,26 +553,26 @@ std::vector<Test::Result> hmac_drbg_multiple_requests() {
       return rng;
    };
 
-   return {Botan_Tests::CHECK("bulk and split output without input",
-                              [&](auto& result) {
-                                 auto rng1 = make_seeded_rng(2);
-                                 auto rng2 = make_seeded_rng(2);
+   return {CHECK("bulk and split output without input",
+                 [&](auto& result) {
+                    auto rng1 = make_seeded_rng(2);
+                    auto rng2 = make_seeded_rng(2);
 
-                                 result.confirm("RNG 1 is seeded and ready to go", rng1->is_seeded());
-                                 result.confirm("RNG 2 is seeded and ready to go", rng2->is_seeded());
+                    result.confirm("RNG 1 is seeded and ready to go", rng1->is_seeded());
+                    result.confirm("RNG 2 is seeded and ready to go", rng2->is_seeded());
 
-                                 auto bulk = rng1->random_vec<std::vector<uint8_t>>(2 * rng_max_output);
+                    auto bulk = rng1->random_vec<std::vector<uint8_t>>(2 * rng_max_output);
 
-                                 auto split1 = rng2->random_vec<std::vector<uint8_t>>(rng_max_output);
-                                 auto split2 = rng2->random_vec<std::vector<uint8_t>>(rng_max_output);
-                                 split1.insert(split1.end(), split2.begin(), split2.end());
+                    auto split1 = rng2->random_vec<std::vector<uint8_t>>(rng_max_output);
+                    auto split2 = rng2->random_vec<std::vector<uint8_t>>(rng_max_output);
+                    split1.insert(split1.end(), split2.begin(), split2.end());
 
-                                 result.test_eq("Output is equal, regardless bulk request", bulk, split1);
+                    result.test_eq("Output is equal, regardless bulk request", bulk, split1);
 
-                                 return result;
-                              }),
+                    return result;
+                 }),
 
-           Botan_Tests::CHECK("bulk and split output with input", [&](auto& result) {
+           CHECK("bulk and split output with input", [&](auto& result) {
               auto rng1 = make_seeded_rng(3);
               auto rng2 = make_seeded_rng(3);
 

@@ -227,7 +227,7 @@ class TLS_Key_Share_CH_Generation_Test final : public Text_Based_Test {
                                         "\n"
                                         "key_exchange_groups_to_offer = " +
                                         offered_groups);
-         Botan_Tests::Fixed_Output_RNG rng;
+         Fixed_Output_RNG rng;
          rng.add_entropy(rng_data.data(), rng_data.size());
 
          Botan::TLS::Key_Share share(policy, cb, rng);
