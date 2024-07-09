@@ -55,6 +55,14 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       static EC_Scalar from_bytes_mod_order(const EC_Group& group, std::span<const uint8_t> bytes);
 
       /**
+      * Convert a bytestring to an EC_Scalar
+      *
+      * This is similar to deserialize but instead of returning nullopt if the input
+      * is invalid, it will throw an exception.
+      */
+      EC_Scalar(const EC_Group& group, std::span<const uint8_t> bytes);
+
+      /**
       * Deserialize a pair of scalars
       *
       * Returns nullopt if the length is not 2*bytes(), or if either scalar is
@@ -179,6 +187,11 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       * Test for equality
       */
       bool is_eq(const EC_Scalar& x) const;
+
+      /**
+      * Convert *this to a BigInt
+      */
+      BigInt to_bigint() const;
 
       friend EC_Scalar operator+(const EC_Scalar& x, const EC_Scalar& y) { return x.add(y); }
 

@@ -66,9 +66,8 @@ class ECIES_ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override {
          const EC_Group& group = m_key.domain();
-         const auto x = EC_Scalar::from_bigint(group, m_key.private_value());
          if(auto input_point = EC_AffinePoint::deserialize(group, {w, w_len})) {
-            return input_point->mul(x, m_rng, m_ws).x_bytes();
+            return input_point->mul(m_key._private_key(), m_rng, m_ws).x_bytes();
          } else {
             throw Decoding_Error("ECIES - Invalid elliptic curve point");
          }
