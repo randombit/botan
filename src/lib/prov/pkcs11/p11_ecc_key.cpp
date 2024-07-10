@@ -41,7 +41,7 @@ PKCS11_EC_PublicKey::PKCS11_EC_PublicKey(Session& session, ObjectHandle handle) 
    secure_vector<uint8_t> ec_parameters = get_attribute_value(AttributeType::EcParams);
    m_domain_params = EC_Group(unlock(ec_parameters));
    m_public_key = decode_public_point(get_attribute_value(AttributeType::EcPoint), m_domain_params);
-   m_domain_encoding = EC_Group_Encoding::Explicit;
+   m_domain_encoding = EC_Group_Encoding::NamedCurve;
 }
 
 PKCS11_EC_PublicKey::PKCS11_EC_PublicKey(Session& session, const EC_PublicKeyImportProperties& props) :
@@ -51,7 +51,7 @@ PKCS11_EC_PublicKey::PKCS11_EC_PublicKey(Session& session, const EC_PublicKeyImp
    secure_vector<uint8_t> ec_point;
    BER_Decoder(props.ec_point()).decode(ec_point, ASN1_Type::OctetString);
    m_public_key = m_domain_params.OS2ECP(ec_point);
-   m_domain_encoding = EC_Group_Encoding::Explicit;
+   m_domain_encoding = EC_Group_Encoding::NamedCurve;
 }
 
 EC_PrivateKeyImportProperties::EC_PrivateKeyImportProperties(const std::vector<uint8_t>& ec_params,
@@ -122,7 +122,7 @@ bool PKCS11_EC_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*stro
 }
 
 AlgorithmIdentifier PKCS11_EC_PrivateKey::algorithm_identifier() const {
-   return AlgorithmIdentifier(object_identifier(), domain().DER_encode(EC_Group_Encoding::Explicit));
+   return AlgorithmIdentifier(object_identifier(), domain().DER_encode());
 }
 }  // namespace Botan::PKCS11
 

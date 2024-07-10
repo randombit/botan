@@ -58,7 +58,11 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
       /**
       * Set the domain parameter encoding to be used when encoding this key.
       * @param enc the encoding to use
+      *
+      * This function is deprecated; in a future major release only namedCurve
+      * encoding of domain parameters will be allowed.
       */
+      BOTAN_DEPRECATED("Support for explicit point encoding is deprecated")
       void set_parameter_encoding(EC_Group_Encoding enc);
 
       /**
@@ -71,7 +75,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
       * Return the DER encoding of this keys domain in whatever format
       * is preset for this particular key
       */
-      std::vector<uint8_t> DER_domain() const { return domain().DER_encode(domain_format()); }
+      std::vector<uint8_t> DER_domain() const;
 
       /**
       * Get the domain parameter encoding to be used when encoding this key.

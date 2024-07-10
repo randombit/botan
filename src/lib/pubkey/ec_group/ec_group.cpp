@@ -586,6 +586,20 @@ EC_Point EC_Group::hash_to_curve(std::string_view hash_fn,
    }
 }
 
+std::vector<uint8_t> EC_Group::DER_encode() const {
+   std::vector<uint8_t> output;
+
+   DER_Encoder der(output);
+   const OID oid = get_curve_oid();
+   // TODO(Botan4) this can be removed because an OID will always be defined
+   if(oid.empty()) {
+      throw Encoding_Error("Cannot encode EC_Group as OID because OID not set");
+   }
+   der.encode(oid);
+
+   return output;
+}
+
 std::vector<uint8_t> EC_Group::DER_encode(EC_Group_Encoding form) const {
    std::vector<uint8_t> output;
 
