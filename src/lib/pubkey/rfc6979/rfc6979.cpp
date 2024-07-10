@@ -26,24 +26,54 @@ RFC6979_Nonce_Generator::RFC6979_Nonce_Generator(std::string_view hash, const Bi
 
 RFC6979_Nonce_Generator::~RFC6979_Nonce_Generator() = default;
 
-const BigInt& RFC6979_Nonce_Generator::nonce_for(const BigInt& m) {
-   m.serialize_to(std::span{m_rng_in}.subspan(m_rlen));
-   m_hmac_drbg->clear();
-   m_hmac_drbg->initialize_with(m_rng_in.data(), m_rng_in.size());
+BigInt RFC6979_Nonce_Generator::nonce_for(const BigInt& m) {
+   m.serialize_to(std::span{m_rng_in}.last(m_rlen));
+
+   m_hmac_drbg->initialize_with(m_rng_in);
+
+   const size_t shift = 8 * m_rlen - m_qlen;
+   BOTAN_ASSERT_NOMSG(shift < 8);
+
+   BigInt k;
 
    do {
-      m_hmac_drbg->randomize(m_rng_out.data(), m_rng_out.size());
-      m_k._assign_from_bytes(m_rng_out);
-      m_k >>= (8 * m_rlen - m_qlen);
-   } while(m_k == 0 || m_k >= m_order);
+      m_hmac_drbg->randomize(m_rng_out);
+      k._assign_from_bytes(m_rng_out);
 
-   return m_k;
-}
+      if(shift > 0) {
+         k >>= shift;
+      }
+   } while(k == 0 || k >= m_order);
 
-BigInt generate_rfc6979_nonce(const BigInt& x, const BigInt& q, const BigInt& h, std::string_view hash) {
-   RFC6979_Nonce_Generator gen(hash, q, x);
-   BigInt k = gen.nonce_for(h);
    return k;
 }
+
+#if defined(BOTAN_HAS_ECC_GROUP)
+EC_Scalar RFC6979_Nonce_Generator::nonce_for(const EC_Group& group, const EC_Scalar& m) {
+   m.serialize_to(std::span{m_rng_in}.last(m_rlen));
+
+   m_hmac_drbg->initialize_with(m_rng_in);
+
+   const size_t shift = 8 * m_rlen - m_qlen;
+   BOTAN_ASSERT_NOMSG(shift < 8);
+
+   for(;;) {
+      m_hmac_drbg->randomize(m_rng_out);
+
+      if(shift > 0) {
+         uint8_t carry = 0;
+         for(uint8_t& b : m_rng_out) {
+            const uint8_t w = b;
+            b = (w >> shift) | carry;
+            carry = w << (8 - shift);
+         }
+      }
+
+      if(auto k = EC_Scalar::deserialize(group, m_rng_out)) {
+         return *k;
+      }
+   }
+}
+#endif
 
 }  // namespace Botan

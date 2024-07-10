@@ -14,7 +14,6 @@
 #include <botan/pk_ops.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/point_mul.h>
 
 namespace Botan {
 
@@ -22,14 +21,10 @@ namespace {
 
 class SM2_Encryption_Operation final : public PK_Ops::Encryption {
    public:
-      SM2_Encryption_Operation(const SM2_Encryption_PublicKey& key,
-                               RandomNumberGenerator& rng,
-                               std::string_view kdf_hash) :
-            m_group(key.domain()), m_ws(EC_Point::WORKSPACE_SIZE), m_mul_public_point(key.public_point(), rng, m_ws) {
+      SM2_Encryption_Operation(const SM2_Encryption_PublicKey& key, std::string_view kdf_hash) :
+            m_group(key.domain()), m_peer(m_group, key.public_point()), m_ws(EC_Point::WORKSPACE_SIZE) {
          m_hash = HashFunction::create_or_throw(kdf_hash);
-
-         const std::string kdf_name = fmt("KDF2({})", kdf_hash);
-         m_kdf = KDF::create_or_throw(kdf_name);
+         m_kdf = KDF::create_or_throw(fmt("KDF2({})", kdf_hash));
       }
 
       size_t max_input_bits() const override {
@@ -45,13 +40,11 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption {
       }
 
       secure_vector<uint8_t> encrypt(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& rng) override {
-         const BigInt k = m_group.random_scalar(rng);
+         const auto k = EC_Scalar::random(m_group, rng);
 
-         const EC_Point C1 = m_group.blinded_base_point_multiply(k, rng, m_ws);
-         const BigInt x1 = C1.get_affine_x();
-         const BigInt y1 = C1.get_affine_y();
+         const EC_AffinePoint C1 = EC_AffinePoint::g_mul(k, rng, m_ws);
 
-         const EC_Point kPB = m_mul_public_point.mul(k, rng, m_group.get_order(), m_ws);
+         const EC_AffinePoint kPB = m_peer.mul(k, rng, m_ws);
 
          const auto x2_bytes = kPB.x_bytes();
          const auto y2_bytes = kPB.y_bytes();
@@ -72,8 +65,8 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption {
 
          return DER_Encoder()
             .start_sequence()
-            .encode(x1)
-            .encode(y1)
+            .encode(BigInt(C1.x_bytes()))
+            .encode(BigInt(C1.y_bytes()))
             .encode(C3, ASN1_Type::OctetString)
             .encode(masked_msg, ASN1_Type::OctetString)
             .end_cons()
@@ -82,10 +75,10 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption {
 
    private:
       const EC_Group m_group;
+      const EC_AffinePoint m_peer;
       std::unique_ptr<HashFunction> m_hash;
       std::unique_ptr<KDF> m_kdf;
       std::vector<BigInt> m_ws;
-      EC_Point_Var_Point_Precompute m_mul_public_point;
 };
 
 class SM2_Decryption_Operation final : public PK_Ops::Decryption {
@@ -93,7 +86,7 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
       SM2_Decryption_Operation(const SM2_Encryption_PrivateKey& key,
                                RandomNumberGenerator& rng,
                                std::string_view kdf_hash) :
-            m_key(key), m_rng(rng) {
+            m_group(key.domain()), m_x(EC_Scalar::from_bigint(m_group, key.private_value())), m_rng(rng) {
          m_hash = HashFunction::create_or_throw(kdf_hash);
 
          const std::string kdf_name = fmt("KDF2({})", kdf_hash);
@@ -105,7 +98,7 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
          * This ignores the DER encoding and so overestimates the
          * plaintext length by 12 bytes or so
          */
-         const size_t elem_size = m_key.domain().get_order_bytes();
+         const size_t elem_size = m_group.get_order_bytes();
 
          if(ptext_len < 2 * elem_size + m_hash->output_length()) {
             return 0;
@@ -115,9 +108,8 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
       }
 
       secure_vector<uint8_t> decrypt(uint8_t& valid_mask, const uint8_t ciphertext[], size_t ciphertext_len) override {
-         const EC_Group& group = m_key.domain();
-         const BigInt& cofactor = group.get_cofactor();
-         const size_t p_bytes = group.get_p_bytes();
+         const BigInt& cofactor = m_group.get_cofactor();
+         const size_t p_bytes = m_group.get_p_bytes();
 
          valid_mask = 0x00;
 
@@ -155,8 +147,7 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
             return secure_vector<uint8_t>();
          }
 
-         EC_Point C1 = group.point(x1, y1);
-         C1.randomize_repr(m_rng);
+         EC_Point C1 = m_group.point(x1, y1);
 
          // Here C1 is publically invalid, so no problem with early return:
          if(!C1.on_the_curve()) {
@@ -167,24 +158,18 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
             return secure_vector<uint8_t>();
          }
 
-         const EC_Point dbC1 = group.blinded_var_point_multiply(C1, m_key.private_value(), m_rng, m_ws);
-
+         const auto dbC1 = EC_AffinePoint(m_group, C1).mul(m_x, m_rng, m_ws);
          const auto x2_bytes = dbC1.x_bytes();
          const auto y2_bytes = dbC1.y_bytes();
 
-         secure_vector<uint8_t> kdf_input;
-         kdf_input += x2_bytes;
-         kdf_input += y2_bytes;
-
-         const secure_vector<uint8_t> kdf_output =
-            m_kdf->derive_key(masked_msg.size(), kdf_input.data(), kdf_input.size());
+         const auto kdf_output = m_kdf->derive_key(masked_msg.size(), dbC1.xy_bytes());
 
          xor_buf(masked_msg.data(), kdf_output.data(), kdf_output.size());
 
          m_hash->update(x2_bytes);
          m_hash->update(masked_msg);
          m_hash->update(y2_bytes);
-         secure_vector<uint8_t> u = m_hash->final();
+         const auto u = m_hash->final();
 
          if(!CT::is_equal(u.data(), C3.data(), m_hash->output_length()).as_bool()) {
             return secure_vector<uint8_t>();
@@ -195,7 +180,8 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
       }
 
    private:
-      const SM2_Encryption_PrivateKey& m_key;
+      const EC_Group m_group;
+      const EC_Scalar m_x;
       RandomNumberGenerator& m_rng;
       std::vector<BigInt> m_ws;
       std::unique_ptr<HashFunction> m_hash;
@@ -207,11 +193,13 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
 std::unique_ptr<PK_Ops::Encryption> SM2_PublicKey::create_encryption_op(RandomNumberGenerator& rng,
                                                                         std::string_view params,
                                                                         std::string_view provider) const {
+   BOTAN_UNUSED(rng);
+
    if(provider == "base" || provider.empty()) {
       if(params.empty()) {
-         return std::make_unique<SM2_Encryption_Operation>(*this, rng, "SM3");
+         return std::make_unique<SM2_Encryption_Operation>(*this, "SM3");
       } else {
-         return std::make_unique<SM2_Encryption_Operation>(*this, rng, params);
+         return std::make_unique<SM2_Encryption_Operation>(*this, params);
       }
    }
 

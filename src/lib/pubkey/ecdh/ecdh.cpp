@@ -26,28 +26,44 @@ namespace {
 class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
    public:
       ECDH_KA_Operation(const ECDH_PrivateKey& key, std::string_view kdf, RandomNumberGenerator& rng) :
-            PK_Ops::Key_Agreement_with_KDF(kdf), m_group(key.domain()), m_rng(rng) {
-         m_l_times_priv = m_group.inverse_mod_order(m_group.get_cofactor()) * key.private_value();
-      }
+            PK_Ops::Key_Agreement_with_KDF(kdf),
+            m_group(key.domain()),
+            m_l_times_priv(mul_cofactor_inv(m_group, key.private_value())),
+            m_rng(rng) {}
 
       size_t agreed_value_size() const override { return m_group.get_p_bytes(); }
 
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override {
-         EC_Point input_point = m_group.get_cofactor() * m_group.OS2ECP(w, w_len);
-         input_point.randomize_repr(m_rng);
-
-         const EC_Point S = m_group.blinded_var_point_multiply(input_point, m_l_times_priv, m_rng, m_ws);
-
-         if(S.on_the_curve() == false) {
-            throw Internal_Error("ECDH agreed value was not on the curve");
+         if(m_group.has_cofactor()) {
+            EC_AffinePoint input_point(m_group, m_group.get_cofactor() * m_group.OS2ECP(w, w_len));
+            return input_point.mul(m_l_times_priv, m_rng, m_ws).x_bytes();
+         } else {
+            if(auto input_point = EC_AffinePoint::deserialize(m_group, {w, w_len})) {
+               return input_point->mul(m_l_times_priv, m_rng, m_ws).x_bytes();
+            } else {
+               throw Decoding_Error("ECDH - Invalid elliptic curve point");
+            }
          }
-
-         return S.x_bytes();
       }
 
    private:
+      static EC_Scalar mul_cofactor_inv(const EC_Group& group, const BigInt& bn) {
+         // We implement BSI TR-03111 ECKAEG which only matters in the (rare/deprecated)
+         // case of a curve with cofactor.
+
+         auto private_key = EC_Scalar::from_bigint(group, bn);
+
+         if(group.has_cofactor()) {
+            // We could precompute this but cofactors are rare
+            auto l = group.inverse_mod_order(group.get_cofactor());
+            return private_key * EC_Scalar::from_bigint(group, l);
+         } else {
+            return private_key;
+         }
+      }
+
       const EC_Group m_group;
-      BigInt m_l_times_priv;
+      const EC_Scalar m_l_times_priv;
       RandomNumberGenerator& m_rng;
       std::vector<BigInt> m_ws;
 };

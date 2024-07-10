@@ -1,7 +1,7 @@
 /*
 * SM2 Signatures
 * (C) 2017,2018 Ribose Inc
-* (C) 2018 Jack Lloyd
+* (C) 2018,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -14,7 +14,6 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/internal/point_mul.h>
 
 namespace Botan {
 
@@ -88,7 +87,9 @@ namespace {
 class SM2_Signature_Operation final : public PK_Ops::Signature {
    public:
       SM2_Signature_Operation(const SM2_PrivateKey& sm2, std::string_view ident, std::string_view hash) :
-            m_group(sm2.domain()), m_x(sm2.private_value()), m_da_inv(sm2.get_da_inv()) {
+            m_group(sm2.domain()),
+            m_x(EC_Scalar::from_bigint(m_group, sm2.private_value())),
+            m_da_inv(EC_Scalar::from_bigint(m_group, sm2.get_da_inv())) {
          if(hash == "Raw") {
             // m_hash is null, m_za is empty
          } else {
@@ -115,8 +116,8 @@ class SM2_Signature_Operation final : public PK_Ops::Signature {
 
    private:
       const EC_Group m_group;
-      const BigInt m_x;
-      const BigInt m_da_inv;
+      const EC_Scalar m_x;
+      const EC_Scalar m_da_inv;
 
       std::vector<uint8_t> m_za;
       secure_vector<uint8_t> m_digest;
@@ -125,22 +126,25 @@ class SM2_Signature_Operation final : public PK_Ops::Signature {
 };
 
 secure_vector<uint8_t> SM2_Signature_Operation::sign(RandomNumberGenerator& rng) {
-   BigInt e;
-   if(m_hash) {
-      e = BigInt::from_bytes(m_hash->final());
-      // prepend ZA for next signature if any
-      m_hash->update(m_za);
-   } else {
-      e = BigInt::from_bytes(m_digest);
-      m_digest.clear();
-   }
+   const auto e = [&]() {
+      if(m_hash) {
+         auto ie = EC_Scalar::from_bytes_mod_order(m_group, m_hash->final());
+         // prepend ZA for next signature if any
+         m_hash->update(m_za);
+         return ie;
+      } else {
+         auto ie = EC_Scalar::from_bytes_mod_order(m_group, m_digest);
+         m_digest.clear();
+         return ie;
+      }
+   }();
 
-   const BigInt k = m_group.random_scalar(rng);
+   const auto k = EC_Scalar::random(m_group, rng);
 
-   const BigInt r = m_group.mod_order(m_group.blinded_base_point_multiply_x(k, rng, m_ws) + e);
-   const BigInt s = m_group.multiply_mod_order(m_da_inv, m_group.mod_order(k - r * m_x));
+   const auto r = EC_Scalar::gk_x_mod_order(k, rng, m_ws) + e;
+   const auto s = (k - r * m_x) * m_da_inv;
 
-   return BigInt::encode_fixed_length_int_pair(r, s, m_group.get_order_bytes());
+   return EC_Scalar::serialize_pair<secure_vector<uint8_t>>(r, s);
 }
 
 /**
@@ -149,7 +153,7 @@ secure_vector<uint8_t> SM2_Signature_Operation::sign(RandomNumberGenerator& rng)
 class SM2_Verification_Operation final : public PK_Ops::Verification {
    public:
       SM2_Verification_Operation(const SM2_PublicKey& sm2, std::string_view ident, std::string_view hash) :
-            m_group(sm2.domain()), m_gy_mul(m_group.get_base_point(), sm2.public_point()) {
+            m_group(sm2.domain()), m_gy_mul(m_group, sm2.public_point()) {
          if(hash == "Raw") {
             // m_hash is null, m_za is empty
          } else {
@@ -174,48 +178,39 @@ class SM2_Verification_Operation final : public PK_Ops::Verification {
 
    private:
       const EC_Group m_group;
-      const EC_Point_Multi_Point_Precompute m_gy_mul;
+      const EC_Group::Mul2Table m_gy_mul;
       secure_vector<uint8_t> m_digest;
       std::vector<uint8_t> m_za;
       std::unique_ptr<HashFunction> m_hash;
 };
 
 bool SM2_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t sig_len) {
-   BigInt e;
-   if(m_hash) {
-      e = BigInt::from_bytes(m_hash->final());
-      // prepend ZA for next signature if any
-      m_hash->update(m_za);
-   } else {
-      e = BigInt::from_bytes(m_digest);
-      m_digest.clear();
+   const auto e = [&]() {
+      if(m_hash) {
+         auto ie = EC_Scalar::from_bytes_mod_order(m_group, m_hash->final());
+         // prepend ZA for next signature if any
+         m_hash->update(m_za);
+         return ie;
+      } else {
+         auto ie = EC_Scalar::from_bytes_mod_order(m_group, m_digest);
+         m_digest.clear();
+         return ie;
+      }
+   }();
+
+   if(auto rs = EC_Scalar::deserialize_pair(m_group, std::span{sig, sig_len})) {
+      const auto& [r, s] = rs.value();
+
+      if(r.is_nonzero() && s.is_nonzero()) {
+         const auto t = r + s;
+         if(t.is_nonzero()) {
+            if(const auto v = m_gy_mul.mul2_vartime_x_mod_order(s, t)) {
+               return (v.value() + e) == r;
+            }
+         }
+      }
    }
-
-   if(sig_len != m_group.get_order_bytes() * 2) {
-      return false;
-   }
-
-   const BigInt r(sig, sig_len / 2);
-   const BigInt s(sig + sig_len / 2, sig_len / 2);
-
-   if(r <= 0 || r >= m_group.get_order() || s <= 0 || s >= m_group.get_order()) {
-      return false;
-   }
-
-   const BigInt t = m_group.mod_order(r + s);
-
-   if(t == 0) {
-      return false;
-   }
-
-   const EC_Point R = m_gy_mul.multi_exp(s, t);
-
-   // ???
-   if(R.is_zero()) {
-      return false;
-   }
-
-   return (m_group.mod_order(R.get_affine_x() + e) == r);
+   return false;
 }
 
 void parse_sm2_param_string(std::string_view params, std::string& userid, std::string& hash) {
