@@ -47,9 +47,13 @@ class Strong_Base {
 
       constexpr explicit Strong_Base(T v) : m_value(std::move(v)) {}
 
-      T& get() { return m_value; }
+      constexpr T& get() & { return m_value; }
 
-      const T& get() const { return m_value; }
+      constexpr const T& get() const& { return m_value; }
+
+      constexpr T&& get() && { return std::move(m_value); }
+
+      constexpr const T&& get() const&& { return std::move(m_value); }
 };
 
 template <typename T>
