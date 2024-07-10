@@ -200,6 +200,7 @@ template <typename T>
       // If the parameter type isn't a strong type, return it as is.
       return std::forward<T>(t);
    } else {
+      // Unwrap the strong type and return the underlying value.
       return std::forward<T>(t).get();
    }
 }
