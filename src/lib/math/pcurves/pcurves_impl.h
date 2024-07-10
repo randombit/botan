@@ -120,7 +120,7 @@ class IntMod final {
 
       constexpr CT::Choice is_even() const {
          auto v = Rep::from_rep(m_val);
-         return CT::Choice::from_int(0x01 ^ (v[0] & 0x01));
+         return !CT::Choice::from_int(v[0] & 0x01);
       }
 
       friend constexpr Self operator+(const Self& a, const Self& b) {
