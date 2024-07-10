@@ -394,9 +394,204 @@ Test::Result test_strong_span() {
    return result;
 }
 
+std::vector<Test::Result> test_wrapping_unwrapping() {
+   using Strong_String = Botan::Strong<std::string, struct Strong_String_>;
+   using Strong_Unique = Botan::Strong<std::unique_ptr<std::string>, struct Strong_Unique_>;
+
+   using namespace std::string_literals;
+
+   return {
+      CHECK("generically wrapping an object into a strong type",
+            [&](Test::Result& result) {
+               const std::string expl("explicit creation"s);
+               std::string rval("rvalue-ref creation"s);
+               auto stt_copy = Botan::wrap_strong_type<Strong_String>(expl);
+               auto stt_implicit = Botan::wrap_strong_type<Strong_String>("implicit conversion from const char*");
+               auto stt_rvalue_ref = Botan::wrap_strong_type<Strong_String>(std::move(rval));
+               auto stt_rvalue = Botan::wrap_strong_type<Strong_String>("rvalue creation from std::string (literal)"s);
+
+               result.test_eq("stt_copy", stt_copy.get(), "explicit creation");
+               result.test_eq("stt_implicit", stt_implicit.get(), "implicit conversion from const char*");
+               result.test_eq("stt_rvalue_ref", stt_rvalue_ref.get(), "rvalue-ref creation");
+               result.test_eq("stt_rvalue", stt_rvalue.get(), "rvalue creation from std::string (literal)");
+
+               // unique_ptr does not support copy construction and prohibits
+               // implicit conversion from a raw pointer of its wrapped type.
+               auto rval_ptr = std::make_unique<std::string>("rvalue creation from ptr");
+               auto stt_implicit_ptr =
+                  Botan::wrap_strong_type<Strong_Unique>(new std::string("implicit creation from ptr"));
+               auto stt_rvalue_ptr = Botan::wrap_strong_type<Strong_Unique>(std::move(rval_ptr));
+
+               result.test_eq("stt_implicit_ptr", *stt_implicit_ptr.get(), "implicit creation from ptr");
+               result.test_eq("stt_rvalue_ptr", *stt_rvalue_ptr.get(), "rvalue creation from ptr");
+            }),
+
+      CHECK("generically wrapping a strong type from itself",
+            [&](Test::Result& result) {
+               const Strong_String stt("wrapped");
+               Strong_String stt_rval("wrapped and moved");
+
+               auto stt_copy = Botan::wrap_strong_type<Strong_String>(stt);
+               auto stt_move = Botan::wrap_strong_type<Strong_String>(std::move(stt_rval));
+               auto stt_inplace = Botan::wrap_strong_type<Strong_String>(Strong_String("inplace"));
+
+               result.test_eq("stt_copy", stt_copy.get(), "wrapped");
+               result.test_eq("stt_move", stt_move.get(), "wrapped and moved");
+               result.test_eq("stt_inplace", stt_inplace.get(), "inplace");
+
+               Strong_Unique stt_ptr(std::make_unique<std::string>("wrapped ptr"));
+
+               auto stt_ptr_move = Botan::wrap_strong_type<Strong_Unique>(std::move(stt_ptr));
+
+               result.test_eq("stt_ptr_move", *stt_ptr_move.get(), "wrapped ptr");
+            }),
+
+      CHECK("unwrapping a strong type wisely chooses return reference type",
+            [&](Test::Result& result) {
+               Strong_String stt("wrapped");
+               const Strong_String stt_const("const wrapped");
+
+               using lvalue_ref = decltype(Botan::unwrap_strong_type(stt));
+               result.confirm("unpack() on non-const is an lvalue reference", std::is_lvalue_reference_v<lvalue_ref>);
+               result.confirm("unpack() on non-const is a non-const lvalue reference",
+                              !std::is_const_v<std::remove_reference_t<lvalue_ref>>);
+               result.confirm(
+                  "wrapped_type on non-const lvalue strong type",
+                  std::same_as<Botan::strong_type_wrapped_type<decltype(stt)>, std::remove_cvref_t<lvalue_ref>>);
+
+               using const_lvalue_ref = decltype(Botan::unwrap_strong_type(stt_const));
+               result.confirm("unpack() on const is an lvalue reference", std::is_lvalue_reference_v<const_lvalue_ref>);
+               result.confirm("unpack() on const is a const lvalue reference",
+                              std::is_const_v<std::remove_reference_t<const_lvalue_ref>>);
+               result.confirm(
+                  "wrapped_type on const lvalue strong type",
+                  std::same_as<Botan::strong_type_wrapped_type<decltype(stt_const)>, std::remove_cvref_t<lvalue_ref>>);
+
+               using lvalue = decltype(Botan::unwrap_strong_type(std::move(stt)));
+               result.confirm("unpack() on rvalue reference is an rvalue reference",
+                              std::is_rvalue_reference_v<lvalue>);
+               result.confirm("unpack() on rvalue is a non-const rvalue reference",
+                              !std::is_const_v<std::remove_reference_t<lvalue>>);
+               result.confirm(
+                  "wrapped_type on rvalue reference strong type",
+                  std::same_as<Botan::strong_type_wrapped_type<decltype(std::move(stt))>, std::remove_cvref_t<lvalue>>);
+
+               using lvalue2 = decltype(Botan::unwrap_strong_type(Strong_String("wrapped rvalue")));
+               result.confirm("unpack() on rvalue is an rvalue reference", std::is_rvalue_reference_v<lvalue2>);
+               result.confirm("unpack() on rvalue is a non-const rvalue reference",
+                              !std::is_const_v<std::remove_reference_t<lvalue2>>);
+               result.confirm("wrapped_type on rvalue strong type",
+                              std::same_as<Botan::strong_type_wrapped_type<decltype(Strong_String("wrapped rvalue"))>,
+                                           std::remove_cvref_t<lvalue2>>);
+            }),
+
+      CHECK(
+         "unwrapping a non-strong type does not alter return reference type",
+         [](Test::Result& result) {
+            std::string stt("wrapped");
+            const std::string stt_const("const wrapped");
+
+            using lvalue_ref = decltype(Botan::unwrap_strong_type(stt));
+            result.confirm("unpack() on non-const is an lvalue reference", std::is_lvalue_reference_v<lvalue_ref>);
+            result.confirm("unpack() on non-const is a non-const lvalue reference",
+                           !std::is_const_v<std::remove_reference_t<lvalue_ref>>);
+            result.confirm(
+               "wrapped_type on lvalue non-strong type",
+               std::same_as<Botan::strong_type_wrapped_type<decltype(stt)>, std::remove_cvref_t<lvalue_ref>>);
+
+            using const_lvalue_ref = decltype(Botan::unwrap_strong_type(stt_const));
+            result.confirm("unpack() on const is an lvalue reference", std::is_lvalue_reference_v<const_lvalue_ref>);
+            result.confirm("unpack() on const is a const lvalue reference",
+                           std::is_const_v<std::remove_reference_t<const_lvalue_ref>>);
+            result.confirm("wrapped_type on const lvalue non-strong type",
+                           std::same_as<Botan::strong_type_wrapped_type<decltype(stt_const)>,
+                                        std::remove_cvref_t<const_lvalue_ref>>);
+
+            using lvalue = decltype(Botan::unwrap_strong_type(std::move(stt)));
+            result.confirm("unpack() on rvalue reference is an rvalue reference", std::is_rvalue_reference_v<lvalue>);
+            result.confirm("unpack() on rvalue is a non-const rvalue reference",
+                           !std::is_const_v<std::remove_reference_t<lvalue>>);
+            result.confirm(
+               "wrapped_type on rvalue reference non-strong type",
+               std::same_as<Botan::strong_type_wrapped_type<decltype(std::move(stt))>, std::remove_cvref_t<lvalue>>);
+
+            using lvalue2 = decltype(Botan::unwrap_strong_type(std::string("rvalue")));
+            result.confirm("unpack() on rvalue reference is an rvalue reference", std::is_rvalue_reference_v<lvalue2>);
+            result.confirm("unpack() on rvalue is a non-const rvalue reference",
+                           !std::is_const_v<std::remove_reference_t<lvalue2>>);
+            result.confirm("wrapped_type on rvalue non-strong type",
+                           std::same_as<Botan::strong_type_wrapped_type<decltype(std::string("rvalue"))>,
+                                        std::remove_cvref_t<lvalue2>>);
+         }),
+
+      CHECK("generically unwrapping an object from a strong type",
+            [&](Test::Result& result) {
+               Strong_String stt("wrapped lvalue");
+               Strong_String stt_move("wrapped lvalue to be moved");
+               const Strong_String const_stt("wrapped const lvalue");
+
+               auto& unwrapped_stt = Botan::unwrap_strong_type(stt);
+               auto& unwrapped_const_stt = Botan::unwrap_strong_type(const_stt);
+               auto unwrapped_rvalue = Botan::unwrap_strong_type(std::move(stt_move));
+               auto unwrapped_rvalue2 = Botan::unwrap_strong_type(Strong_String("wrapped rvalue"));
+
+               result.test_eq("unwrapped_stt", unwrapped_stt, "wrapped lvalue");
+               result.test_eq("unwrapped_const_stt", unwrapped_const_stt, "wrapped const lvalue");
+               result.test_eq("unwrapped_rvalue", unwrapped_rvalue, "wrapped lvalue to be moved");
+               result.test_eq("unwrapped_rvalue2", unwrapped_rvalue2, "wrapped rvalue");
+
+               Strong_Unique stt_ptr(std::make_unique<std::string>("wrapped ptr"));
+               Strong_Unique stt_ptr_move(std::make_unique<std::string>("wrapped ptr to be moved"));
+
+               auto& unwrapped_ptr = Botan::unwrap_strong_type(stt_ptr);
+               auto unwrapped_ptr_move = Botan::unwrap_strong_type(std::move(stt_ptr_move));
+               auto unwrapped_ptr_rvalue =
+                  Botan::unwrap_strong_type(std::make_unique<std::string>("wrapped ptr rvalue"));
+
+               result.test_eq("unwrapped_ptr", *unwrapped_ptr, "wrapped ptr");
+               result.test_eq("unwrapped_ptr_move", *unwrapped_ptr_move, "wrapped ptr to be moved");
+               result.test_eq("unwrapped_ptr_rvalue", *unwrapped_ptr_rvalue, "wrapped ptr rvalue");
+            }),
+
+      CHECK("generically unwrapping an object that isn't a strong type",
+            [&](Test::Result& result) {
+               std::string stt("wrapped lvalue");
+               std::string stt_move("wrapped lvalue to be moved");
+               const std::string const_stt("wrapped const lvalue");
+
+               auto& unwrapped_stt = Botan::unwrap_strong_type(stt);
+               auto& unwrapped_const_stt = Botan::unwrap_strong_type(const_stt);
+               auto unwrapped_rvalue = Botan::unwrap_strong_type(std::move(stt_move));
+               auto unwrapped_rvalue2 = Botan::unwrap_strong_type(std::string("wrapped rvalue"));
+
+               result.test_eq("unwrapped_stt", unwrapped_stt, "wrapped lvalue");
+               result.test_eq("unwrapped_const_stt", unwrapped_const_stt, "wrapped const lvalue");
+               result.test_eq("unwrapped_rvalue", unwrapped_rvalue, "wrapped lvalue to be moved");
+               result.test_eq("unwrapped_rvalue2", unwrapped_rvalue2, "wrapped rvalue");
+
+               std::unique_ptr<std::string> stt_ptr(std::make_unique<std::string>("wrapped ptr"));
+               std::unique_ptr<std::string> stt_ptr_move(std::make_unique<std::string>("wrapped ptr to be moved"));
+
+               auto& unwrapped_ptr = Botan::unwrap_strong_type(stt_ptr);
+               auto unwrapped_ptr_move = Botan::unwrap_strong_type(std::move(stt_ptr_move));
+               auto unwrapped_ptr_rvalue =
+                  Botan::unwrap_strong_type(std::make_unique<std::string>("wrapped ptr rvalue"));
+
+               result.test_eq("unwrapped_ptr", *unwrapped_ptr, "wrapped ptr");
+               result.test_eq("unwrapped_ptr_move", *unwrapped_ptr_move, "wrapped ptr to be moved");
+               result.test_eq("unwrapped_ptr_rvalue", *unwrapped_ptr_rvalue, "wrapped ptr rvalue");
+            }),
+   };
+}
+
 }  // namespace
 
-BOTAN_REGISTER_TEST_FN(
-   "utils", "strong_type", test_strong_type, test_container_strong_type, test_integer_strong_type, test_strong_span);
+BOTAN_REGISTER_TEST_FN("utils",
+                       "strong_type",
+                       test_strong_type,
+                       test_container_strong_type,
+                       test_integer_strong_type,
+                       test_strong_span,
+                       test_wrapping_unwrapping);
 
 }  // namespace Botan_Tests
