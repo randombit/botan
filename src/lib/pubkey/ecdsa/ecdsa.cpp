@@ -41,9 +41,13 @@ EC_Point recover_ecdsa_public_key(
    const uint8_t add_order = v >> 1;
    const size_t p_bytes = group.get_p_bytes();
 
-   try {
-      BigInt x = r + add_order * group_order;
+   BigInt x = r;
 
+   if(add_order) {
+      x += group_order;
+   }
+
+   if(x.bytes() <= p_bytes) {
       std::vector<uint8_t> X(p_bytes + 1);
 
       X[0] = 0x02 | y_odd;
@@ -61,8 +65,6 @@ EC_Point recover_ecdsa_public_key(
             return egsr->to_legacy_point();
          }
       }
-   } catch(...) {
-      // continue on and throw
    }
 
    throw Decoding_Error("Failed to recover ECDSA public key from signature/msg pair");
