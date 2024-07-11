@@ -38,13 +38,6 @@ class BOTAN_TEST_API Thread_Pool final {
       */
       Thread_Pool(std::optional<size_t> pool_size);
 
-      /**
-      * Initialize a thread pool with some number of threads
-      * @param pool_size number of threads in the pool, if 0
-      *        then some default value is chosen.
-      */
-      Thread_Pool(size_t pool_size = 0) : Thread_Pool(std::optional<size_t>(pool_size)) {}
-
       ~Thread_Pool() { shutdown(); }
 
       void shutdown();
