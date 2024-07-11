@@ -115,6 +115,8 @@ def build_targets(target, target_os):
         yield 'bogo_shim'
     if target in ['examples']:
         yield 'examples'
+    if target in ['valgrind', 'valgrind-full']:
+        yield 'ct_selftest'
 
 def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                     root_dir, build_dir, test_results_dir, pkcs11_lib, use_gdb,
@@ -127,7 +129,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
     if target_os not in ['linux', 'osx', 'windows', 'freebsd']:
         print('Error unknown OS %s' % (target_os))
-        return (None, None, None)
+        return (None, None, None, None)
 
     if is_cross_target:
         if target_os == 'osx':
@@ -148,6 +150,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
     make_prefix = []
     test_prefix = []
+    pretest_cmd = []
     test_cmd = [os.path.join(build_dir, 'botan-test'),
                 '--data-dir=%s' % os.path.join(root_dir, 'src', 'tests', 'data'),
                 '--run-memory-intensive-tests']
@@ -239,6 +242,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                        '--leak-check=full',
                        '--show-reachable=yes',
                        '--track-origins=yes']
+
+        pretest_cmd = ['python3', os.path.join(root_dir, 'src', 'ct_selftest', 'ct_selftest.py'), os.path.join(build_dir, 'botan_ct_selftest')]
 
         # valgrind is single threaded anyway
         test_cmd += ['--test-threads=1']
@@ -427,6 +432,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
     flags += ['--cc-bin=%s' % (cc_bin)]
 
+    if not pretest_cmd:
+        pretest_cmd = None
+
     if test_cmd is None:
         run_test_command = None
     else:
@@ -446,7 +454,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         else:
             run_test_command = test_prefix + test_cmd
 
-    return flags, run_test_command, make_prefix
+    return flags, pretest_cmd, run_test_command, make_prefix
 
 def run_cmd(cmd, root_dir, build_dir):
     """
@@ -686,7 +694,8 @@ def main(args=None):
             'src/scripts/dev_tools/run_clang_tidy.py',
             'src/editors/vscode/scripts/bogo.py',
             'src/editors/vscode/scripts/common.py',
-            'src/editors/vscode/scripts/test.py']
+            'src/editors/vscode/scripts/test.py',
+            'src/ct_selftest/ct_selftest.py']
 
         # This has to run in the repository root to generate the correct
         # relative paths in the output. Otherwise GitHub Actions will not
@@ -703,7 +712,7 @@ def main(args=None):
         if options.test_results_dir:
             os.makedirs(options.test_results_dir)
 
-        config_flags, run_test_command, make_prefix = determine_flags(
+        config_flags, pretest_cmd, run_test_command, make_prefix = determine_flags(
             target, options.os, options.cpu, options.cc, options.cc_bin,
             options.compiler_cache, root_dir, build_dir, options.test_results_dir,
             options.pkcs11_lib, options.use_gdb, options.disable_werror,
@@ -735,6 +744,9 @@ def main(args=None):
             if target in ['examples']:
                 make_targets += ['examples']
 
+            if target in ['valgrind', 'valgrind-full']:
+                make_targets += ['ct_selftest']
+
             if target in ['coverage', 'sanitizer'] and options.os not in ['windows']:
                 make_targets += ['bogo_shim']
 
@@ -742,6 +754,9 @@ def main(args=None):
 
             if options.compiler_cache is not None:
                 cmds.append([options.compiler_cache, '--show-stats'])
+
+        if pretest_cmd is not None:
+            cmds.append(pretest_cmd)
 
         if run_test_command is not None:
             cmds.append(run_test_command)
