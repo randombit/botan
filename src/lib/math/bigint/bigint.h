@@ -804,7 +804,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
 
       BOTAN_DEPRECATED("replaced by internal API") void const_time_unpoison() const { _const_time_unpoison(); }
 
-#if defined(BOTAN_HAS_VALGRIND)
+#if defined(BOTAN_CT_POISON_ENABLED)
       void _const_time_poison() const;
       void _const_time_unpoison() const;
 #else

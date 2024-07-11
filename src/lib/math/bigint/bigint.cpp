@@ -519,7 +519,7 @@ void BigInt::ct_cond_assign(bool predicate, const BigInt& other) {
    cond_flip_sign(predicate && different_sign);
 }
 
-#if defined(BOTAN_HAS_VALGRIND)
+#if defined(BOTAN_CT_POISON_ENABLED)
 void BigInt::_const_time_poison() const {
    CT::poison(m_data.const_data(), m_data.size());
 }
