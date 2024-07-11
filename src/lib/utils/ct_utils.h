@@ -14,9 +14,13 @@
 #ifndef BOTAN_CT_UTILS_H_
 #define BOTAN_CT_UTILS_H_
 
+#include <botan/concepts.h>
 #include <botan/secmem.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/stl_util.h>
+
 #include <optional>
+#include <span>
 #include <type_traits>
 
 #if defined(BOTAN_HAS_VALGRIND)
@@ -24,6 +28,9 @@
 #endif
 
 namespace Botan::CT {
+
+/// @name Constant Time Check Annotation Helpers
+/// @{
 
 /**
 * Use valgrind to mark the contents of memory as being undefined.
@@ -64,16 +71,120 @@ constexpr inline void unpoison(const T* p, size_t n) {
    BOTAN_UNUSED(p, n);
 }
 
-template <typename T>
-constexpr inline void unpoison(T& p) {
-#if defined(BOTAN_HAS_VALGRIND)
-   if(!std::is_constant_evaluated()) {
-      VALGRIND_MAKE_MEM_DEFINED(&p, sizeof(T));
-   }
-#endif
+/// @}
 
-   BOTAN_UNUSED(p);
+/// @name Constant Time Check Annotation Convenience overloads
+/// @{
+
+/**
+ * Poison a single integral object
+ */
+template <std::integral T>
+constexpr void poison(T& p) {
+   poison(&p, 1);
 }
+
+template <std::integral T>
+constexpr void unpoison(T& p) {
+   unpoison(&p, 1);
+}
+
+/**
+ * Poison a contiguous buffer of trivial objects (e.g. integers and such)
+ */
+template <ranges::spanable_range R>
+   requires std::is_trivially_copyable_v<std::ranges::range_value_t<R>>
+constexpr void poison(R&& r) {
+   std::span s{r};
+   poison(s.data(), s.size());
+}
+
+template <ranges::spanable_range R>
+   requires std::is_trivially_copyable_v<std::ranges::range_value_t<R>>
+constexpr void unpoison(R&& r) {
+   std::span s{r};
+   unpoison(s.data(), s.size());
+}
+
+/**
+ * Poison a class type that provides a public `_const_time_poison()` method
+ * For instance: BigInt, CT::Mask<>, FrodoMatrix, ...
+ */
+template <typename T>
+   requires requires(const T& x) { x._const_time_poison(); }
+constexpr void poison(const T& x) {
+   x._const_time_poison();
+}
+
+template <typename T>
+   requires requires(const T& x) { x._const_time_unpoison(); }
+constexpr void unpoison(const T& x) {
+   x._const_time_unpoison();
+}
+
+/// @}
+
+/// @name Higher-level Constant Time Check Annotation Helpers
+/// @{
+
+template <typename T>
+concept poisonable = requires(const T& v) { ::Botan::CT::poison(v); };
+template <typename T>
+concept unpoisonable = requires(const T& v) { ::Botan::CT::unpoison(v); };
+
+/**
+ * Poison a range of objects by calling `poison` on each element.
+ */
+template <std::ranges::range R>
+   requires poisonable<std::ranges::range_value_t<R>>
+constexpr void poison_range(R&& r) {
+   for(const auto& v : r) {
+      poison(v);
+   }
+}
+
+template <std::ranges::range R>
+   requires unpoisonable<std::ranges::range_value_t<R>>
+constexpr void unpoison_range(R&& r) {
+   for(const auto& v : r) {
+      unpoison(v);
+   }
+}
+
+/**
+ * Poisons an arbitrary number of values in a single call.
+ * Mostly syntactic sugar to save clutter (i.e. lines-of-code).
+ */
+template <poisonable... Ts>
+   requires(sizeof...(Ts) > 0)
+constexpr void poison_all(Ts&&... ts) {
+   (poison(ts), ...);
+}
+
+template <unpoisonable... Ts>
+   requires(sizeof...(Ts) > 0)
+constexpr void unpoison_all(Ts&&... ts) {
+   (unpoison(ts), ...);
+}
+
+/**
+ * Poisons an arbitrary number of poisonable values, and unpoisons them when the
+ * returned object runs out-of-scope
+ *
+ * Use this when you want to poison a value that remains valid longer than the
+ * scope you are currently in. For instance, a private key structure that is a
+ * member of a Signature_Operation object, that may be used for multiple
+ * signatures.
+ */
+template <typename... Ts>
+   requires(sizeof...(Ts) > 0) && (poisonable<Ts> && ...) && (unpoisonable<Ts> && ...)
+[[nodiscard]] constexpr auto scoped_poison(const Ts&... xs) {
+   auto scope = scoped_cleanup([&] { unpoison_all(xs...); });
+   poison_all(xs...);
+   return scope;
+}
+
+/// @}
 
 /**
 * This function returns its argument, but (if called in a non-constexpr context)
@@ -421,6 +532,10 @@ class Mask final {
       * Return the underlying value of the mask
       */
       constexpr T value() const { return value_barrier<T>(m_mask); }
+
+      constexpr void _const_time_poison() const { CT::poison(m_mask); }
+
+      constexpr void _const_time_unpoison() const { CT::unpoison(m_mask); }
 
    private:
       constexpr Mask(T m) : m_mask(m) {}
