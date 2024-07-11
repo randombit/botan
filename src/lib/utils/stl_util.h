@@ -357,8 +357,8 @@ class scoped_cleanup {
 
       scoped_cleanup(const scoped_cleanup&) = delete;
       scoped_cleanup& operator=(const scoped_cleanup&) = delete;
-      scoped_cleanup(scoped_cleanup&&) = delete;
-      scoped_cleanup& operator=(scoped_cleanup&&) = delete;
+      scoped_cleanup(scoped_cleanup&&) = default;
+      scoped_cleanup& operator=(scoped_cleanup&&) = default;
 
       ~scoped_cleanup() {
          if(m_cleanup.has_value()) {
