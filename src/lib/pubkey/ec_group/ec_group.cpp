@@ -587,25 +587,19 @@ EC_Point EC_Group::hash_to_curve(std::string_view hash_fn,
 }
 
 std::vector<uint8_t> EC_Group::DER_encode() const {
-   std::vector<uint8_t> output;
-
-   DER_Encoder der(output);
-   const OID oid = get_curve_oid();
+   const auto& der_named_curve = data().der_named_curve();
    // TODO(Botan4) this can be removed because an OID will always be defined
-   if(oid.empty()) {
+   if(der_named_curve.empty()) {
       throw Encoding_Error("Cannot encode EC_Group as OID because OID not set");
    }
-   der.encode(oid);
 
-   return output;
+   return der_named_curve;
 }
 
 std::vector<uint8_t> EC_Group::DER_encode(EC_Group_Encoding form) const {
-   std::vector<uint8_t> output;
-
-   DER_Encoder der(output);
-
    if(form == EC_Group_Encoding::Explicit) {
+      std::vector<uint8_t> output;
+      DER_Encoder der(output);
       const size_t ecpVers1 = 1;
       const OID curve_type("1.2.840.10045.1.1");  // prime field
 
@@ -625,19 +619,14 @@ std::vector<uint8_t> EC_Group::DER_encode(EC_Group_Encoding form) const {
          .encode(get_order())
          .encode(get_cofactor())
          .end_cons();
+      return output;
    } else if(form == EC_Group_Encoding::NamedCurve) {
-      const OID oid = get_curve_oid();
-      if(oid.empty()) {
-         throw Encoding_Error("Cannot encode EC_Group as OID because OID not set");
-      }
-      der.encode(oid);
+      return this->DER_encode();
    } else if(form == EC_Group_Encoding::ImplicitCA) {
-      der.encode_null();
+      return {0x00, 0x05};
    } else {
       throw Internal_Error("EC_Group::DER_encode: Unknown encoding");
    }
-
-   return output;
 }
 
 std::string EC_Group::PEM_encode() const {

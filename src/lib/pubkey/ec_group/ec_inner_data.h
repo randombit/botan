@@ -120,12 +120,11 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
 
       bool params_match(const EC_Group_Data& other) const;
 
-      void set_oid(const OID& oid) {
-         BOTAN_STATE_CHECK(m_oid.empty());
-         m_oid = oid;
-      }
+      void set_oid(const OID& oid);
 
       const OID& oid() const { return m_oid; }
+
+      const std::vector<uint8_t>& der_named_curve() const { return m_der_named_curve; }
 
       const BigInt& p() const { return m_curve.get_p(); }
 
@@ -222,6 +221,7 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       Modular_Reducer m_mod_order;
       EC_Point_Base_Point_Precompute m_base_mult;
       OID m_oid;
+      std::vector<uint8_t> m_der_named_curve;
       size_t m_p_bits;
       size_t m_order_bits;
       size_t m_order_bytes;

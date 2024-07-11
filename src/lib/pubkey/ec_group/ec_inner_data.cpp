@@ -6,6 +6,7 @@
 
 #include <botan/internal/ec_inner_data.h>
 
+#include <botan/der_enc.h>
 #include <botan/internal/ec_inner_bn.h>
 
 #if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
@@ -38,7 +39,12 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
       m_a_is_minus_3(a == p - 3),
       m_a_is_zero(a.is_zero()),
       m_has_cofactor(m_cofactor != 1),
-      m_source(source) {}
+      m_source(source) {
+   if(!m_oid.empty()) {
+      DER_Encoder der(m_der_named_curve);
+      der.encode(m_oid);
+   }
+}
 
 bool EC_Group_Data::params_match(const BigInt& p,
                                  const BigInt& a,
@@ -53,6 +59,15 @@ bool EC_Group_Data::params_match(const BigInt& p,
 
 bool EC_Group_Data::params_match(const EC_Group_Data& other) const {
    return params_match(other.p(), other.a(), other.b(), other.g_x(), other.g_y(), other.order(), other.cofactor());
+}
+
+void EC_Group_Data::set_oid(const OID& oid) {
+   BOTAN_ARG_CHECK(!oid.empty(), "OID should be set");
+   BOTAN_STATE_CHECK(m_oid.empty() && m_der_named_curve.empty());
+   m_oid = oid;
+
+   DER_Encoder der(m_der_named_curve);
+   der.encode(m_oid);
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_from_bytes_with_trunc(std::span<const uint8_t> bytes) const {
