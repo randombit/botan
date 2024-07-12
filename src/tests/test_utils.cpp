@@ -1232,6 +1232,8 @@ class UUID_Tests : public Test {
 
 BOTAN_REGISTER_TEST("utils", "uuid", UUID_Tests);
 
+#endif
+
 class Formatter_Tests : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -1322,8 +1324,6 @@ class ScopedCleanup_Tests : public Test {
 };
 
 BOTAN_REGISTER_TEST("utils", "scoped_cleanup", ScopedCleanup_Tests);
-
-#endif
 
 }  // namespace
 
