@@ -271,7 +271,7 @@ class EC_Group_Tests : public Test {
                result.confirm("Same group is same even with copy", group == copy);
             } catch(Botan::Invalid_Argument&) {}
 
-            const auto group_der_oid = group.DER_encode(Botan::EC_Group_Encoding::NamedCurve);
+            const auto group_der_oid = group.DER_encode();
             const Botan::EC_Group group_via_oid(group_der_oid);
             result.confirm("EC_Group via OID is not considered explict encoding",
                            !group_via_oid.used_explicit_encoding());

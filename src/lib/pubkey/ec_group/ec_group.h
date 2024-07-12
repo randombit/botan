@@ -177,9 +177,16 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       /**
       * Create the DER encoding of this domain
       * @param form of encoding to use
-      * @returns bytes encododed as DER
+      * @returns the group information encoded as DER
       */
+      BOTAN_DEPRECATED("Use the variant that does not take EC_Group_Encoding")
       std::vector<uint8_t> DER_encode(EC_Group_Encoding form) const;
+
+      /**
+      * Create the DER encoding of this domain, using namedCurve format
+      * @returns the group information encoded as DER
+      */
+      std::vector<uint8_t> DER_encode() const;
 
       /**
       * Return the PEM encoding (always in explicit form)

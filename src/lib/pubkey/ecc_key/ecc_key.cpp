@@ -63,6 +63,10 @@ std::vector<uint8_t> EC_PublicKey::public_key_bits() const {
    return raw_public_key_bits();
 }
 
+std::vector<uint8_t> EC_PublicKey::DER_domain() const {
+   return domain().DER_encode(domain_format());
+}
+
 void EC_PublicKey::set_point_encoding(EC_Point_Format enc) {
    if(enc != EC_Point_Format::Compressed && enc != EC_Point_Format::Uncompressed && enc != EC_Point_Format::Hybrid) {
       throw Invalid_Argument("Invalid point encoding for EC_PublicKey");
