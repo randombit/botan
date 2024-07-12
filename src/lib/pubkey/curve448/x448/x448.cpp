@@ -66,15 +66,13 @@ X448_PrivateKey::X448_PrivateKey(const AlgorithmIdentifier& /*alg_id*/, std::spa
 
 X448_PrivateKey::X448_PrivateKey(std::span<const uint8_t> secret_key) {
    BOTAN_ARG_CHECK(secret_key.size() == X448_LEN, "Invalid size for X448 private key");
-   m_private = {secret_key.begin(), secret_key.end()};
+   m_private.assign(secret_key.begin(), secret_key.end());
+   auto scope = CT::scoped_poison(m_private);
    x448_basepoint_from_data(m_public, std::span(m_private).first<X448_LEN>());
+   CT::unpoison(m_public);
 }
 
-X448_PrivateKey::X448_PrivateKey(RandomNumberGenerator& rng) {
-   m_private.resize(X448_LEN);
-   rng.randomize(m_private);
-   x448_basepoint_from_data(m_public, std::span(m_private).first<X448_LEN>());
-}
+X448_PrivateKey::X448_PrivateKey(RandomNumberGenerator& rng) : X448_PrivateKey(rng.random_vec(X448_LEN)) {}
 
 std::unique_ptr<Public_Key> X448_PrivateKey::public_key() const {
    return std::make_unique<X448_PublicKey>(public_value());
@@ -87,6 +85,7 @@ secure_vector<uint8_t> X448_PrivateKey::private_key_bits() const {
 bool X448_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
    std::array<uint8_t, X448_LEN> public_point;
    BOTAN_ASSERT_NOMSG(m_private.size() == X448_LEN);
+   auto scope = CT::scoped_poison(m_private);
    x448_basepoint_from_data(public_point, std::span(m_private).first<X448_LEN>());
    return CT::is_equal(public_point.data(), m_public.data(), m_public.size()).as_bool();
 }
@@ -106,13 +105,18 @@ class X448_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
       size_t agreed_value_size() const override { return X448_LEN; }
 
       secure_vector<uint8_t> raw_agree(const uint8_t w_data[], size_t w_len) override {
+         auto scope = CT::scoped_poison(m_sk);
+
          std::span<const uint8_t> w(w_data, w_len);
          BOTAN_ARG_CHECK(w.size() == X448_LEN, "Invalid size for X448 private key");
          BOTAN_ASSERT_NOMSG(m_sk.size() == X448_LEN);
          const auto k = decode_scalar(m_sk);
          const auto u = decode_point(w);
 
-         return encode_point(x448(k, u));
+         auto shared_secret = encode_point(x448(k, u));
+         CT::unpoison(shared_secret);
+
+         return shared_secret;
       }
 
    private:
