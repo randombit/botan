@@ -12,6 +12,7 @@
 #include <botan/der_enc.h>
 #include <botan/hash.h>
 #include <botan/rng.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/ed448_internal.h>
 #include <botan/internal/pk_ops_impl.h>
 
@@ -65,18 +66,16 @@ Ed448_PrivateKey::Ed448_PrivateKey(const AlgorithmIdentifier& /*unused*/, std::s
    m_public = create_pk_from_sk(std::span(m_private).first<ED448_LEN>());
 }
 
-Ed448_PrivateKey::Ed448_PrivateKey(RandomNumberGenerator& rng) {
-   m_private.resize(ED448_LEN);
-   rng.randomize(m_private);
-   m_public = create_pk_from_sk(std::span(m_private).first<ED448_LEN>());
-}
+Ed448_PrivateKey::Ed448_PrivateKey(RandomNumberGenerator& rng) : Ed448_PrivateKey(rng.random_vec(ED448_LEN)) {}
 
 Ed448_PrivateKey::Ed448_PrivateKey(std::span<const uint8_t> key_bits) {
    if(key_bits.size() != ED448_LEN) {
       throw Decoding_Error("Invalid size for Ed448 private key");
    }
-   m_private = {key_bits.begin(), key_bits.end()};
+   m_private.assign(key_bits.begin(), key_bits.end());
+   auto scope = CT::scoped_poison(m_private);
    m_public = create_pk_from_sk(std::span(m_private).first<ED448_LEN>());
+   CT::unpoison(m_public);
 }
 
 std::unique_ptr<Public_Key> Ed448_PrivateKey::public_key() const {
@@ -178,7 +177,7 @@ class Ed448_Sign_Operation final : public PK_Ops::Signature {
          copy_mem(m_pk, std::span(pk_bits).first<ED448_LEN>());
          const auto sk_bits = key.raw_private_key_bits();
          BOTAN_ASSERT_NOMSG(sk_bits.size() == ED448_LEN);
-         m_sk = {sk_bits.begin(), sk_bits.end()};
+         m_sk.assign(sk_bits.begin(), sk_bits.end());
          if(m_prehash_function) {
             m_message = std::make_unique<Prehashed_Ed448_Message>(*m_prehash_function);
          } else {
@@ -190,8 +189,10 @@ class Ed448_Sign_Operation final : public PK_Ops::Signature {
 
       secure_vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
          BOTAN_ASSERT_NOMSG(m_sk.size() == ED448_LEN);
+         auto scope = CT::scoped_poison(m_sk);
          const auto sig = sign_message(
             std::span(m_sk).first<ED448_LEN>(), m_pk, m_prehash_function.has_value(), {}, m_message->get_and_clear());
+         CT::unpoison(sig);
          return {sig.begin(), sig.end()};
       }
 

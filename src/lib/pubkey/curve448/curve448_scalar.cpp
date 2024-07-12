@@ -72,6 +72,7 @@ std::array<word, Scalar448::WORDS> add(std::span<const word, Scalar448::WORDS> x
    std::array<word, Scalar448::WORDS> res;
    copy_mem(res, x);
    const word carry = bigint_add2_nc(res.data(), res.size(), y.data(), y.size());
+   CT::unpoison(carry);
    BOTAN_ASSERT(carry == 0, "Result fits in output");
    return res;
 }
