@@ -357,8 +357,16 @@ class scoped_cleanup {
 
       scoped_cleanup(const scoped_cleanup&) = delete;
       scoped_cleanup& operator=(const scoped_cleanup&) = delete;
-      scoped_cleanup(scoped_cleanup&&) = default;
-      scoped_cleanup& operator=(scoped_cleanup&&) = default;
+
+      scoped_cleanup(scoped_cleanup&& other) : m_cleanup(std::move(other.m_cleanup)) { other.disengage(); }
+
+      scoped_cleanup& operator=(scoped_cleanup&& other) {
+         if(this != &other) {
+            m_cleanup = std::move(other.m_cleanup);
+            other.disengage();
+         }
+         return *this;
+      }
 
       ~scoped_cleanup() {
          if(m_cleanup.has_value()) {
