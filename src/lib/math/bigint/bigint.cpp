@@ -520,11 +520,11 @@ void BigInt::ct_cond_assign(bool predicate, const BigInt& other) {
 }
 
 #if defined(BOTAN_HAS_VALGRIND)
-void BigInt::const_time_poison() const {
+void BigInt::_const_time_poison() const {
    CT::poison(m_data.const_data(), m_data.size());
 }
 
-void BigInt::const_time_unpoison() const {
+void BigInt::_const_time_unpoison() const {
    CT::unpoison(m_data.const_data(), m_data.size());
 }
 #endif

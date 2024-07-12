@@ -166,7 +166,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        */
       BigInt(BigInt&& other) { this->swap(other); }
 
-      ~BigInt() { const_time_unpoison(); }
+      ~BigInt() { _const_time_unpoison(); }
 
       /**
        * Move assignment
@@ -800,13 +800,17 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        */
       void cond_flip_sign(bool predicate);
 
-#if defined(BOTAN_HAS_VALGRIND)
-      void const_time_poison() const;
-      void const_time_unpoison() const;
-#else
-      void const_time_poison() const {}
+      BOTAN_DEPRECATED("replaced by internal API") void const_time_poison() const { _const_time_poison(); }
 
-      void const_time_unpoison() const {}
+      BOTAN_DEPRECATED("replaced by internal API") void const_time_unpoison() const { _const_time_unpoison(); }
+
+#if defined(BOTAN_HAS_VALGRIND)
+      void _const_time_poison() const;
+      void _const_time_unpoison() const;
+#else
+      constexpr void _const_time_poison() const {}
+
+      constexpr void _const_time_unpoison() const {}
 #endif
 
       /**
