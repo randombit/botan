@@ -127,6 +127,10 @@ class FrodoMatrix {
 
       void reduce(const FrodoKEMConstants& constants);
 
+      constexpr void _const_time_poison() const { CT::poison(m_elements); }
+
+      constexpr void _const_time_unpoison() const { CT::unpoison(m_elements); }
+
    private:
       FrodoMatrix(const Dimensions& dimensions, secure_vector<uint16_t> elements) :
             m_dim1(std::get<0>(dimensions)), m_dim2(std::get<1>(dimensions)), m_elements(std::move(elements)) {}
