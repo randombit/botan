@@ -60,7 +60,7 @@ Montgomery_Exponentation_State::Montgomery_Exponentation_State(const std::shared
    for(size_t i = 0; i != window_size; ++i) {
       m_g[i].fix_size();
       if(const_time) {
-         m_g[i].const_time_poison();
+         m_g[i]._const_time_poison();
       }
    }
 }
@@ -114,7 +114,7 @@ BigInt Montgomery_Exponentation_State::exponentiation(const BigInt& scalar, size
       x.mul_by(e_bits, ws);
    }
 
-   x.const_time_unpoison();
+   x._const_time_unpoison();
    return x.value();
 }
 
@@ -138,7 +138,7 @@ BigInt Montgomery_Exponentation_State::exponentiation_vartime(const BigInt& scal
       }
    }
 
-   x.const_time_unpoison();
+   x._const_time_unpoison();
    return x.value();
 }
 

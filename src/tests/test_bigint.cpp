@@ -553,9 +553,9 @@ Test::Result test_const_time_left_shift() {
    for(size_t i = 0; i < bits; ++i) {
       auto ct = a;
       auto chk = a;
-      ct.const_time_poison();
+      ct._const_time_poison();
       ct.ct_shift_left(i);
-      ct.const_time_unpoison();
+      ct._const_time_unpoison();
       chk <<= i;
       result.test_eq(Botan::fmt("ct << {}", i), ct, chk);
    }
