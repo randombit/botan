@@ -204,8 +204,7 @@ BigInt gcd(const BigInt& a, const BigInt& b) {
    u += a;
    v += b;
 
-   u._const_time_poison();
-   v._const_time_poison();
+   CT::poison_all(u, v);
 
    u.set_sign(BigInt::Positive);
    v.set_sign(BigInt::Positive);
@@ -260,8 +259,7 @@ BigInt gcd(const BigInt& a, const BigInt& b) {
    // re-apply the factors of two
    u.ct_shift_left(factors_of_two);
 
-   u._const_time_unpoison();
-   v._const_time_unpoison();
+   CT::unpoison_all(u, v);
 
    return u;
 }

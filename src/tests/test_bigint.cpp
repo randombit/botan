@@ -12,6 +12,7 @@
    #include <botan/bigint.h>
    #include <botan/numthry.h>
    #include <botan/reducer.h>
+   #include <botan/internal/ct_utils.h>
    #include <botan/internal/divide.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/mp_core.h>
@@ -553,9 +554,9 @@ Test::Result test_const_time_left_shift() {
    for(size_t i = 0; i < bits; ++i) {
       auto ct = a;
       auto chk = a;
-      ct._const_time_poison();
+      Botan::CT::poison(ct);
       ct.ct_shift_left(i);
-      ct._const_time_unpoison();
+      Botan::CT::unpoison(ct);
       chk <<= i;
       result.test_eq(Botan::fmt("ct << {}", i), ct, chk);
    }

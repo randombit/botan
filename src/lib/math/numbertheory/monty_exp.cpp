@@ -59,9 +59,10 @@ Montgomery_Exponentation_State::Montgomery_Exponentation_State(const std::shared
    // Resize each element to exactly p words
    for(size_t i = 0; i != window_size; ++i) {
       m_g[i].fix_size();
-      if(const_time) {
-         m_g[i]._const_time_poison();
-      }
+   }
+
+   if(const_time) {
+      CT::poison_range(m_g);
    }
 }
 
@@ -114,7 +115,7 @@ BigInt Montgomery_Exponentation_State::exponentiation(const BigInt& scalar, size
       x.mul_by(e_bits, ws);
    }
 
-   x._const_time_unpoison();
+   CT::unpoison(x);
    return x.value();
 }
 
@@ -138,7 +139,7 @@ BigInt Montgomery_Exponentation_State::exponentiation_vartime(const BigInt& scal
       }
    }
 
-   x._const_time_unpoison();
+   CT::unpoison(x);
    return x.value();
 }
 

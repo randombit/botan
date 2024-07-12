@@ -9,6 +9,8 @@
 
 #include <botan/bigint.h>
 
+#include <botan/internal/ct_utils.h>
+
 namespace Botan {
 
 class Modular_Reducer;
@@ -112,9 +114,9 @@ class BOTAN_TEST_API Montgomery_Int final {
 
       Montgomery_Int& mul_by_8(secure_vector<word>& ws);
 
-      void _const_time_poison() const { m_v._const_time_poison(); }
+      void _const_time_poison() const { CT::poison(m_v); }
 
-      void _const_time_unpoison() const { return m_v._const_time_unpoison(); }
+      void _const_time_unpoison() const { CT::unpoison(m_v); }
 
    private:
       std::shared_ptr<const Montgomery_Params> m_params;

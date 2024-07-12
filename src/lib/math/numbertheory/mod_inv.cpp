@@ -169,7 +169,8 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k) {
    }
 
    X.mask_bits(k);
-   X._const_time_unpoison();
+
+   CT::unpoison(X);
    return X;
 }
 
