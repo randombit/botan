@@ -330,13 +330,11 @@ void process_blocks(secure_vector<uint64_t>& B, size_t t, size_t memory, size_t 
    const size_t segments = lanes / SYNC_POINTS;
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
-   auto& thread_pool = Thread_Pool::global_instance();
-#endif
+   if(threads > 1) {
+      auto& thread_pool = Thread_Pool::global_instance();
 
-   for(size_t n = 0; n != t; ++n) {
-      for(size_t slice = 0; slice != SYNC_POINTS; ++slice) {
-#if defined(BOTAN_HAS_THREAD_UTILS)
-         if(threads > 1) {
+      for(size_t n = 0; n != t; ++n) {
+         for(size_t slice = 0; slice != SYNC_POINTS; ++slice) {
             std::vector<std::future<void>> fut_results;
             fut_results.reserve(threads);
 
@@ -348,11 +346,15 @@ void process_blocks(secure_vector<uint64_t>& B, size_t t, size_t memory, size_t 
             for(auto& fut : fut_results) {
                fut.get();
             }
-
-            continue;
          }
+      }
+
+      return;
+   }
 #endif
 
+   for(size_t n = 0; n != t; ++n) {
+      for(size_t slice = 0; slice != SYNC_POINTS; ++slice) {
          for(size_t lane = 0; lane != threads; ++lane) {
             process_block(B, n, slice, lane, lanes, segments, threads, mode, memory, t);
          }

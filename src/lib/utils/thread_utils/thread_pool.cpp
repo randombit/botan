@@ -29,12 +29,21 @@ std::optional<size_t> global_thread_pool_size() {
       // If it was neither a number nor a special value, then ignore the env
    }
 
-   // On MinGW by default (ie unless requested via env) we disable the global
-   // thread pool due to bugs causing deadlock on application exit.
-   // See https://github.com/randombit/botan/issues/2582 for background.
+   /*
+   * On a few platforms, disable the thread pool by default; it is only
+   * used if a size is set explicitly in the environment.
+   */
+
 #if defined(BOTAN_TARGET_OS_IS_MINGW)
+   // MinGW seems to have bugs causing deadlock on application exit.
+   // See https://github.com/randombit/botan/issues/2582 for background.
+   return std::nullopt;
+#elif defined(BOTAN_TARGET_OS_IS_EMSCRIPTEN)
+   // Emscripten's threads are reportedly problematic
+   // See https://github.com/randombit/botan/issues/4195
    return std::nullopt;
 #else
+   // Some(0) means choose based on CPU count
    return std::optional<size_t>(0);
 #endif
 }
