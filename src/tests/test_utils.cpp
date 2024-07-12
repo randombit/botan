@@ -779,6 +779,7 @@ class BitOps_Tests final : public Test {
          results.push_back(test_ctz());
          results.push_back(test_sig_bytes());
          results.push_back(test_popcount());
+         results.push_back(test_reverse_bits());
 
          return results;
       }
@@ -895,6 +896,34 @@ class BitOps_Tests final : public Test {
          random_pc<uint16_t>(result);
          random_pc<uint32_t>(result);
          random_pc<uint64_t>(result);
+
+         return result;
+      }
+
+      Test::Result test_reverse_bits() {
+         Test::Result result("reverse_bits");
+
+         result.test_is_eq<uint8_t>("rev(0u8)", Botan::ct_reverse_bits<uint8_t>(0b00000000), 0b00000000);
+         result.test_is_eq<uint8_t>("rev(1u8)", Botan::ct_reverse_bits<uint8_t>(0b01010101), 0b10101010);
+         result.test_is_eq<uint8_t>("rev(2u8)", Botan::ct_reverse_bits<uint8_t>(0b01001011), 0b11010010);
+
+         result.test_is_eq<uint16_t>(
+            "rev(0u16)", Botan::ct_reverse_bits<uint16_t>(0b0000000000000000), 0b0000000000000000);
+         result.test_is_eq<uint16_t>(
+            "rev(1u16)", Botan::ct_reverse_bits<uint16_t>(0b0101010101010101), 0b1010101010101010);
+         result.test_is_eq<uint16_t>(
+            "rev(2u16)", Botan::ct_reverse_bits<uint16_t>(0b0100101101011010), 0b0101101011010010);
+
+         result.test_is_eq<uint32_t>("rev(0u32)", Botan::ct_reverse_bits<uint32_t>(0xFFFFFFFF), 0xFFFFFFFF);
+         result.test_is_eq<uint32_t>("rev(1u32)", Botan::ct_reverse_bits<uint32_t>(0x55555555), 0xAAAAAAAA);
+         result.test_is_eq<uint32_t>("rev(2u32)", Botan::ct_reverse_bits<uint32_t>(0x4B6A2C1D), 0xB83456D2);
+
+         result.test_is_eq<uint64_t>(
+            "rev(0u64)", Botan::ct_reverse_bits<uint64_t>(0xF0E0D0C005040302), 0x40C020A0030B070F);
+         result.test_is_eq<uint64_t>(
+            "rev(1u64)", Botan::ct_reverse_bits<uint64_t>(0x5555555555555555), 0xAAAAAAAAAAAAAAAA);
+         result.test_is_eq<uint64_t>(
+            "rev(2u64)", Botan::ct_reverse_bits<uint64_t>(0x4B6A2C1D5E7F8A90), 0x951FE7AB83456D2);
 
          return result;
       }

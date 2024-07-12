@@ -14,6 +14,8 @@
 
 #include <botan/types.h>
 
+#include <botan/internal/bswap.h>
+
 namespace Botan {
 
 /**
@@ -215,6 +217,29 @@ inline constexpr T majority(T a, T b, T c) {
    allows us to determine which case we are in.
    */
    return choose(a ^ b, c, b);
+}
+
+/**
+ * @returns the reversed bits in @p b.
+ */
+template <std::unsigned_integral T>
+constexpr T ct_reverse_bits(T b) {
+   auto extend = [](uint8_t m) -> T {
+      T mask = 0;
+      for(size_t i = 0; i < sizeof(T); ++i) {
+         mask |= T(m) << i * 8;
+      }
+      return mask;
+   };
+
+   // First reverse bits in each byte...
+   // From: https://stackoverflow.com/a/2602885
+   b = (b & extend(0xF0)) >> 4 | (b & extend(0x0F)) << 4;
+   b = (b & extend(0xCC)) >> 2 | (b & extend(0x33)) << 2;
+   b = (b & extend(0xAA)) >> 1 | (b & extend(0x55)) << 1;
+
+   // ... then swap the bytes
+   return reverse_bytes(b);
 }
 
 /**
