@@ -176,6 +176,14 @@ class IntMod final {
          return Self(Rep::redc(z));
       }
 
+      void square_n(size_t n) {
+         std::array<W, 2 * N> z;
+         for(size_t i = 0; i != n; ++i) {
+            comba_sqr<N>(z.data(), this->data());
+            m_val = Rep::redc(z);
+         }
+      }
+
       // Negation modulo p
       constexpr Self negate() const {
          auto x_is_zero = CT::all_zeros(this->data(), N);
@@ -213,9 +221,7 @@ class IntMod final {
          }
 
          for(size_t i = 1; i != Windows; ++i) {
-            for(size_t j = 0; j != WindowBits; ++j) {
-               r = r.square();
-            }
+            r.square_n(WindowBits);
 
             const size_t w = read_window_bits<WindowBits>(std::span{exp}, (Windows - i - 1) * WindowBits);
 
@@ -1381,7 +1387,7 @@ inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::
    x1.conditional_assign(tv1.is_zero(), C::SSWU_C2());
    const auto gx1 = C::AffinePoint::x3_ax_b(x1);
 
-   const auto x2 = C::SSWU_Z * u.square() * x1;
+   const auto x2 = z_u2 * x1;
    const auto gx2 = C::AffinePoint::x3_ax_b(x2);
 
    // Will be zero if gx1 is not a square

@@ -66,7 +66,49 @@ class Params final : public EllipticCurveParameters<
 
 // clang-format on
 
-class Curve final : public EllipticCurve<Params, P521Rep> {};
+class Curve final : public EllipticCurve<Params, P521Rep> {
+   public:
+      // Return the square of the inverse of x
+      static FieldElement fe_invert2(const FieldElement& x) {
+         // Addition chain from https://eprint.iacr.org/2014/852.pdf page 6
+
+         FieldElement r = x.square();
+         r *= x;
+         r = r.square();
+         r *= x;
+         FieldElement rl = r;
+         r.square_n(3);
+         r *= rl;
+         r.square_n(1);
+         r *= x;
+         const auto a7 = r;
+         r.square_n(1);
+         r *= x;
+         rl = r;
+         r.square_n(8);
+         r *= rl;
+         rl = r;
+         r.square_n(16);
+         r *= rl;
+         rl = r;
+         r.square_n(32);
+         r *= rl;
+         rl = r;
+         r.square_n(64);
+         r *= rl;
+         rl = r;
+         r.square_n(128);
+         r *= rl;
+         rl = r;
+         r.square_n(256);
+         r *= rl;
+         r.square_n(7);
+         r *= a7;
+         r.square_n(2);
+
+         return r;
+      }
+};
 
 }  // namespace secp521r1
 
