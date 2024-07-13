@@ -388,9 +388,9 @@ class IntMod final {
          return (x >= 0) ? s : s.negate();
       }
 
-      constexpr void ct_poison() const { CT::poison(m_val.data(), m_val.size()); }
+      constexpr void _const_time_poison() const { CT::poison(m_val); }
 
-      constexpr void ct_unpoison() const { CT::unpoison(m_val.data(), m_val.size()); }
+      constexpr void _const_time_unpoison() const { CT::unpoison(m_val); }
 
    private:
       constexpr const std::array<W, N>& value() const { return m_val; }
@@ -515,15 +515,9 @@ class AffineCurvePoint {
          m_y.conditional_assign(cond, pt.y());
       }
 
-      constexpr void ct_poison() const {
-         x().ct_poison();
-         y().ct_poison();
-      }
+      constexpr void _const_time_poison() const { CT::poison_all(m_x, m_y); }
 
-      constexpr void ct_unpoison() const {
-         x().ct_unpoison();
-         y().ct_unpoison();
-      }
+      constexpr void _const_time_unpoison() const { CT::unpoison_all(m_x, m_y); }
 
    private:
       FieldElement m_x;
@@ -831,17 +825,9 @@ class ProjectiveCurvePoint {
 
       constexpr const FieldElement& z() const { return m_z; }
 
-      constexpr void ct_poison() const {
-         x().ct_poison();
-         y().ct_poison();
-         z().ct_poison();
-      }
+      constexpr void _const_time_poison() const { CT::poison_all(m_x, m_y, m_z); }
 
-      constexpr void ct_unpoison() const {
-         x().ct_unpoison();
-         y().ct_unpoison();
-         z().ct_unpoison();
-      }
+      constexpr void _const_time_unpoison() const { CT::unpoison_all(m_x, m_y, m_z); }
 
    private:
       FieldElement m_x;
@@ -1113,7 +1099,7 @@ class PrecomputedBaseMulTable final {
             const size_t w_0 = bits.get_window(0);
             const auto tbl_0 = table.first(WindowElements);
             auto pt = ProjectivePoint::from_affine(AffinePoint::ct_select(tbl_0, w_0));
-            pt.ct_poison();
+            CT::poison(pt);
             pt.randomize_rep(rng);
             return pt;
          }();
@@ -1134,7 +1120,7 @@ class PrecomputedBaseMulTable final {
             }
          }
 
-         accum.ct_unpoison();
+         CT::unpoison(accum);
          return accum;
       }
 
@@ -1190,7 +1176,7 @@ class WindowedMulTable final {
             // Guaranteed because we set the high bit of the randomizer
             BOTAN_DEBUG_ASSERT(w_0 != 0);
             auto pt = ProjectivePoint::from_affine(AffinePoint::ct_select(m_table, w_0));
-            pt.ct_poison();
+            CT::poison(pt);
             pt.randomize_rep(rng);
             return pt;
          }();
@@ -1231,7 +1217,7 @@ class WindowedMulTable final {
             }
          }
 
-         accum.ct_unpoison();
+         CT::unpoison(accum);
          return accum;
       }
 
@@ -1368,7 +1354,7 @@ class WindowedMul2Table final {
 
 template <typename C>
 inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::AffinePoint {
-   u.ct_poison();
+   CT::poison(u);
    const auto z_u2 = C::SSWU_Z * u.square();  // z * u^2
    const auto z2_u4 = z_u2.square();
    const auto tv1 = (z2_u4 + z_u2).invert();
@@ -1394,7 +1380,7 @@ inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::
 
    auto pt = typename C::AffinePoint(x, y);
 
-   pt.ct_unpoison();
+   CT::unpoison(pt);
    return pt;
 }
 
