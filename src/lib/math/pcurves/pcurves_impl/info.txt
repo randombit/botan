@@ -1,0 +1,22 @@
+<defines>
+PCURVES_IMPL -> 20240714
+</defines>
+
+<module_info>
+name -> "Prime Order Curves Implementation Helpers"
+brief -> "Generalized elliptic curve arithmetic"
+type -> "Internal"
+</module_info>
+
+<requires>
+mp
+rng
+xmd
+</requires>
+
+<header:internal>
+pcurves_impl.h
+pcurves_solinas.h
+pcurves_util.h
+pcurves_wrap.h
+</header:internal>

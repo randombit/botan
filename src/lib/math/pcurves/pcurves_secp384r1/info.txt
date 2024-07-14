@@ -7,3 +7,7 @@ name -> "PCurve secp384r1"
 brief -> "secp384r1"
 type -> "Internal"
 </module_info>
+
+<requires>
+pcurves_impl
+</requires>
