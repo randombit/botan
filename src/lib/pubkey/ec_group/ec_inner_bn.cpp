@@ -163,18 +163,20 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Mul2Table_Data_BN::mul2_vartime(const EC
    return std::make_unique<EC_AffinePoint_Data_BN>(m_group, std::move(pt));
 }
 
-std::unique_ptr<EC_Scalar_Data> EC_Mul2Table_Data_BN::mul2_vartime_x_mod_order(const EC_Scalar_Data& x,
-                                                                               const EC_Scalar_Data& y) const {
-   BOTAN_ARG_CHECK(x.group() == m_group && y.group() == m_group, "Curve mismatch");
+bool EC_Mul2Table_Data_BN::mul2_vartime_x_mod_order_eq(const EC_Scalar_Data& v,
+                                                       const EC_Scalar_Data& x,
+                                                       const EC_Scalar_Data& y) const {
+   BOTAN_ARG_CHECK(x.group() == m_group && y.group() == m_group && v.group() == m_group, "Curve mismatch");
 
+   const auto& bn_v = EC_Scalar_Data_BN::checked_ref(v);
    const auto& bn_x = EC_Scalar_Data_BN::checked_ref(x);
    const auto& bn_y = EC_Scalar_Data_BN::checked_ref(y);
    auto pt = m_tbl.multi_exp(bn_x.value(), bn_y.value());
 
    if(pt.is_zero()) {
-      return nullptr;
+      return false;
    }
-   return std::make_unique<EC_Scalar_Data_BN>(m_group, m_group->mod_order(pt.get_affine_x()));
+   return m_group->mod_order(pt.get_affine_x()) == bn_v.value();
 }
 
 }  // namespace Botan

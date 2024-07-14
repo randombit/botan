@@ -204,9 +204,8 @@ bool SM2_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t 
       if(r.is_nonzero() && s.is_nonzero()) {
          const auto t = r + s;
          if(t.is_nonzero()) {
-            if(const auto v = m_gy_mul.mul2_vartime_x_mod_order(s, t)) {
-               return (v.value() + e) == r;
-            }
+            // Check if r - e = x_coord(g*s + y*t) % n
+            return m_gy_mul.mul2_vartime_x_mod_order_eq(r - e, s, t);
          }
       }
    }

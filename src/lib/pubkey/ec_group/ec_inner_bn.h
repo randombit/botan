@@ -92,8 +92,9 @@ class EC_Mul2Table_Data_BN final : public EC_Mul2Table_Data {
       std::unique_ptr<EC_AffinePoint_Data> mul2_vartime(const EC_Scalar_Data& x,
                                                         const EC_Scalar_Data& y) const override;
 
-      std::unique_ptr<EC_Scalar_Data> mul2_vartime_x_mod_order(const EC_Scalar_Data& x,
-                                                               const EC_Scalar_Data& y) const override;
+      bool mul2_vartime_x_mod_order_eq(const EC_Scalar_Data& v,
+                                       const EC_Scalar_Data& x,
+                                       const EC_Scalar_Data& y) const override;
 
    private:
       std::shared_ptr<const EC_Group_Data> m_group;

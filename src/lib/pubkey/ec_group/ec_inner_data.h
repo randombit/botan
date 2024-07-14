@@ -93,9 +93,12 @@ class EC_Mul2Table_Data {
       virtual std::unique_ptr<EC_AffinePoint_Data> mul2_vartime(const EC_Scalar_Data& x,
                                                                 const EC_Scalar_Data& y) const = 0;
 
-      // Returns nullptr if g*x + h*y was point at infinity
-      virtual std::unique_ptr<EC_Scalar_Data> mul2_vartime_x_mod_order(const EC_Scalar_Data& x,
-                                                                       const EC_Scalar_Data& y) const = 0;
+      // Check if v == (g*x + h*y).x % n
+      //
+      // Returns false if g*x + h*y was point at infinity
+      virtual bool mul2_vartime_x_mod_order_eq(const EC_Scalar_Data& v,
+                                               const EC_Scalar_Data& x,
+                                               const EC_Scalar_Data& y) const = 0;
 };
 
 class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {

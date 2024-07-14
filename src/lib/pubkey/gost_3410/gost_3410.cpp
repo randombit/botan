@@ -229,9 +229,8 @@ bool GOST_3410_Verification_Operation::verify(const uint8_t msg[],
 
          const auto v = e.invert();
 
-         if(const auto w = m_gy_mul.mul2_vartime_x_mod_order(v, s, r.negate())) {
-            return (w == r);
-         }
+         // Check if r == x_coord(g*v*s - y*v*r) % n
+         return m_gy_mul.mul2_vartime_x_mod_order_eq(r, v, s, r.negate());
       }
    }
 

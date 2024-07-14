@@ -761,19 +761,17 @@ std::optional<EC_AffinePoint> EC_Group::Mul2Table::mul2_vartime(const EC_Scalar&
    }
 }
 
-std::optional<EC_Scalar> EC_Group::Mul2Table::mul2_vartime_x_mod_order(const EC_Scalar& x, const EC_Scalar& y) const {
-   auto s = m_tbl->mul2_vartime_x_mod_order(x._inner(), y._inner());
-   if(s) {
-      return EC_Scalar::_from_inner(std::move(s));
-   } else {
-      return {};
-   }
+bool EC_Group::Mul2Table::mul2_vartime_x_mod_order_eq(const EC_Scalar& v,
+                                                      const EC_Scalar& x,
+                                                      const EC_Scalar& y) const {
+   return m_tbl->mul2_vartime_x_mod_order_eq(v._inner(), x._inner(), y._inner());
 }
 
-std::optional<EC_Scalar> EC_Group::Mul2Table::mul2_vartime_x_mod_order(const EC_Scalar& c,
-                                                                       const EC_Scalar& x,
-                                                                       const EC_Scalar& y) const {
-   return this->mul2_vartime_x_mod_order(c * x, c * y);
+bool EC_Group::Mul2Table::mul2_vartime_x_mod_order_eq(const EC_Scalar& v,
+                                                      const EC_Scalar& c,
+                                                      const EC_Scalar& x,
+                                                      const EC_Scalar& y) const {
+   return this->mul2_vartime_x_mod_order_eq(v, c * x, c * y);
 }
 
 }  // namespace Botan
