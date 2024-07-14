@@ -1,6 +1,26 @@
 Release Notes
 ========================================
 
+Version 3.6.0, Not Yet Released
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Add new ``EC_Scalar`` and ``EC_AffinePoint`` types (GH #4042)
+
+* Further improvements to elliptic curve performance
+  (GH #4147 #4191 #4113 #4171 #4205 #4210)
+
+* Constant time programming improvements including ``CT::Option``
+  (GH #4175 #4197 #4198 #4204 #4207)
+
+* Internal "strong types" improvments (GH #4170)
+
+* Cache the DER encoding of the namedGroup (OID) format of an elliptic
+  curve (GH #4193)
+
+* In Argon2, avoid instantiating a thread pool when ``p == 1`` (GH #4195 #4199)
+
+* Disable the thread pool by default on Emscripten target (GH #4195 #4199)
+
 Version 3.5.0, 2024-07-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -24,6 +44,8 @@ Version 3.5.0, 2024-07-08
 * Optimize XTS mode (GH #4047)
 
 * Optimize name constraint processing (GH #4047)
+
+* Optimize FrodoKEM-AES (GH #4176 #4174 #4173)
 
 * The build system now distinguishes between LLVM Clang and XCode's Clang
   fork. For the latter, use compiler target "xcode". (GH #4010)
