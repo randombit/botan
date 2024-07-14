@@ -210,9 +210,15 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
    BER_Object obj = ber.get_next_object();
 
    if(obj.type() == ASN1_Type::ObjectId) {
-      OID dom_par_oid;
-      BER_Decoder(bits).decode(dom_par_oid);
-      return std::make_pair(ec_group_data().lookup(dom_par_oid), false);
+      OID oid;
+      BER_Decoder(bits).decode(oid);
+
+      auto data = ec_group_data().lookup(oid);
+      if(!data) {
+         throw Decoding_Error(fmt("Unknown namedCurve OID '{}'", oid.to_string()));
+      }
+
+      return std::make_pair(data, false);
    }
 
    if(obj.type() == ASN1_Type::Sequence) {

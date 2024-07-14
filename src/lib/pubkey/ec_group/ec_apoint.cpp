@@ -65,8 +65,11 @@ EC_AffinePoint EC_AffinePoint::hash_to_curve_nu(const EC_Group& group,
 EC_AffinePoint::~EC_AffinePoint() = default;
 
 std::optional<EC_AffinePoint> EC_AffinePoint::deserialize(const EC_Group& group, std::span<const uint8_t> bytes) {
-   auto pt = group._data()->point_deserialize(bytes);
-   return EC_AffinePoint(std::move(pt));
+   if(auto pt = group._data()->point_deserialize(bytes)) {
+      return EC_AffinePoint(std::move(pt));
+   } else {
+      return {};
+   }
 }
 
 EC_AffinePoint EC_AffinePoint::g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws) {
