@@ -114,6 +114,7 @@ class BOTAN_UNSTABLE_API CurveGFp final {
       friend class EC_Group_Data;
       friend class EC_Point_Base_Point_Precompute;
       friend class EC_Point_Var_Point_Precompute;
+      friend class EC_Mul2Table_Data_BN;
 
       /**
       * Create an uninitialized CurveGFp

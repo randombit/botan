@@ -139,6 +139,8 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
 
       const BigInt& cofactor() const { return m_cofactor; }
 
+      bool order_is_less_than_p() const { return m_order_is_less_than_p; }
+
       bool has_cofactor() const { return m_has_cofactor; }
 
       const BigInt& g_x() const { return m_g_x; }
@@ -231,6 +233,7 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       bool m_a_is_minus_3;
       bool m_a_is_zero;
       bool m_has_cofactor;
+      bool m_order_is_less_than_p;
       EC_Group_Source m_source;
 };
 

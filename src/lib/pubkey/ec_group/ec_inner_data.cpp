@@ -39,6 +39,7 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
       m_a_is_minus_3(a == p - 3),
       m_a_is_zero(a.is_zero()),
       m_has_cofactor(m_cofactor != 1),
+      m_order_is_less_than_p(m_order < p),
       m_source(source) {
    if(!m_oid.empty()) {
       DER_Encoder der(m_der_named_curve);

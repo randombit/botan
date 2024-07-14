@@ -171,12 +171,63 @@ bool EC_Mul2Table_Data_BN::mul2_vartime_x_mod_order_eq(const EC_Scalar_Data& v,
    const auto& bn_v = EC_Scalar_Data_BN::checked_ref(v);
    const auto& bn_x = EC_Scalar_Data_BN::checked_ref(x);
    const auto& bn_y = EC_Scalar_Data_BN::checked_ref(y);
-   auto pt = m_tbl.multi_exp(bn_x.value(), bn_y.value());
+   const auto pt = m_tbl.multi_exp(bn_x.value(), bn_y.value());
 
    if(pt.is_zero()) {
       return false;
    }
-   return m_group->mod_order(pt.get_affine_x()) == bn_v.value();
+
+   /*
+   * Note we're working with the projective coordinate directly here!
+   * Nominally we're doing this:
+   *
+   * return m_group->mod_order(pt.get_affine_x()) == bn_v.value();
+   *
+   * However by instead projecting r to an identical z as the x
+   * coordinate, we can compare without having to perform an
+   * expensive inversion in the field.
+   *
+   * That is, given (x*z2) and r, instead of checking if
+   *    (x*z2)*z2^-1 == r,
+   * we check if
+   *    (x*z2) == (r*z2)
+   */
+   auto& curve = m_group->curve();
+
+   secure_vector<word> ws;
+   BigInt vr = bn_v.value();
+   curve.to_rep(vr, ws);
+   BigInt z2, v_z2;
+   curve.sqr(z2, pt.get_z(), ws);
+   curve.mul(v_z2, vr, z2, ws);
+
+   /*
+   * Since (typically) the group order is slightly less than the size
+   * of the field elements, its possible the signer had to reduce the
+   * r component. If they did not reduce r, then this value is correct.
+   *
+   * Due to the Hasse bound, this case occurs almost always; the
+   * probability that a reduction was actually required is
+   * approximately 1 in 2^(n/2) where n is the bit length of the curve.
+   */
+   if(pt.get_x() == v_z2) {
+      return true;
+   }
+
+   if(m_group->order_is_less_than_p()) {
+      vr = bn_v.value() + m_group->order();
+      if(vr < m_group->p()) {
+         curve.to_rep(vr, ws);
+         curve.mul(v_z2, vr, z2, ws);
+
+         if(pt.get_x() == v_z2) {
+            return true;
+         }
+      }
+   }
+
+   // Reject:
+   return false;
 }
 
 }  // namespace Botan
