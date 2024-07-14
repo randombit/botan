@@ -809,6 +809,10 @@ class ProjectiveCurvePoint {
       }
 
       void randomize_rep(RandomNumberGenerator& rng) {
+         if(!rng.is_seeded()) {
+            return;
+         }
+
          auto r = FieldElement::random(rng);
 
          auto r2 = r.square();
@@ -952,7 +956,22 @@ class BlindedScalarBits final {
             constexpr size_t n_words = C::NW.size();
 
             uint8_t maskb[mask_bytes] = {0};
-            rng.randomize(maskb, mask_bytes);
+            if(rng.is_seeded()) {
+               rng.randomize(maskb, mask_bytes);
+            } else {
+               // If we don't have an RNG we don't have many good options. We
+               // could just omit the blinding entirely, but this changes the
+               // size of the blinded scalar, which we're expecting otherwise is
+               // knowable at compile time. So generate a mask by XORing the
+               // bytes of the scalar together. At worst, it's equivalent to
+               // omitting the blinding entirely.
+
+               std::array<uint8_t, C::Scalar::BYTES> sbytes;
+               scalar.serialize_to(sbytes);
+               for(size_t i = 0; i != sbytes.size(); ++i) {
+                  maskb[i % mask_bytes] ^= sbytes[i];
+               }
+            }
 
             W mask[n_words] = {0};
             load_le(mask, maskb, mask_words);
