@@ -136,11 +136,54 @@ class Params final : public EllipticCurveParameters<
    -12> {
 };
 
-class Curve final : public EllipticCurve<Params, Secp384r1Rep> {};
-
-}
-
 // clang-format on
+
+class Curve final : public EllipticCurve<Params, Secp384r1Rep> {
+   public:
+      // Return the square of the inverse of x
+      static FieldElement fe_invert2(const FieldElement& x) {
+         // From https://briansmith.org/ecc-inversion-addition-chains-01
+
+         FieldElement r = x.square();
+         r *= x;
+         const auto x2 = r;
+         r = r.square();
+         r *= x;
+         const auto x3 = r;
+         r.square_n(3);
+         r *= x3;
+         auto rl = r;
+         r.square_n(6);
+         r *= rl;
+         r.square_n(3);
+         r *= x3;
+         const auto x15 = r;
+         r.square_n(15);
+         r *= x15;
+         const auto x30 = r;
+         r.square_n(30);
+         r *= x30;
+         rl = r;
+         r.square_n(60);
+         r *= rl;
+         rl = r;
+         r.square_n(120);
+         r *= rl;
+         r.square_n(15);
+         r *= x15;
+         r.square_n(31);
+         r *= x30;
+         r.square_n(2);
+         r *= x2;
+         r.square_n(94);
+         r *= x30;
+         r.square_n(2);
+
+         return r;
+      }
+};
+
+}  // namespace secp384r1
 
 }  // namespace
 

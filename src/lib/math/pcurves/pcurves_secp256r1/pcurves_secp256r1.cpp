@@ -130,10 +130,50 @@ class Params final : public EllipticCurveParameters<
 #if BOTAN_MP_WORD_BITS == 32
 // Secp256r1Rep works for 64 bit also, but is at best marginally faster at least
 // on compilers/CPUs tested so far
-class Curve final : public EllipticCurve<Params, Secp256r1Rep> {};
+typedef EllipticCurve<Params, Secp256r1Rep> Secp256r1Base;
 #else
-class Curve final : public EllipticCurve<Params> {};
+typedef EllipticCurve<Params> Secp256r1Base;
 #endif
+
+class Curve final : public Secp256r1Base {
+   public:
+      // Return the square of the inverse of x
+      static FieldElement fe_invert2(const FieldElement& x) {
+         FieldElement r = x.square();
+         r *= x;
+
+         const auto p2 = r;
+         r.square_n(2);
+         r *= p2;
+         const auto p4 = r;
+         r.square_n(4);
+         r *= p4;
+         const auto p8 = r;
+         r.square_n(8);
+         r *= p8;
+         const auto p16 = r;
+         r.square_n(16);
+         r *= p16;
+         const auto p32 = r;
+         r.square_n(32);
+         r *= x;
+         r.square_n(128);
+         r *= p32;
+         r.square_n(32);
+         r *= p32;
+         r.square_n(16);
+         r *= p16;
+         r.square_n(8);
+         r *= p8;
+         r.square_n(4);
+         r *= p4;
+         r.square_n(2);
+         r *= p2;
+         r.square_n(2);
+
+         return r;
+      }
+};
 
 }  // namespace secp256r1
 
