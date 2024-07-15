@@ -911,6 +911,8 @@ class EllipticCurve {
       static constexpr bool ValidForSswuHash =
          (Params::Z != 0 && A.is_nonzero().as_bool() && B.is_nonzero().as_bool() && FieldElement::P_MOD_4 == 3);
 
+      static constexpr bool OrderIsLessThanField = bigint_cmp(NW.data(), NW.size(), PW.data(), PW.size()) == -1;
+
       // (-B / A), will be zero if A == 0 or B == 0 or Z == 0
       static const FieldElement& SSWU_C1()
          requires ValidForSswuHash

@@ -325,13 +325,14 @@ class BOTAN_TEST_API PrimeOrderCurve {
 
       /// Perform 2-ary multiplication (variable time), reducing x modulo order
       ///
-      /// Compute s1*pt1 + s2*pt2 in variable time, then extract the x coordinate
-      /// of the result, and reduce x modulo the group order
-      ///
-      /// Returns nullopt if the produced point is the point at infinity
-      virtual std::optional<Scalar> mul2_vartime_x_mod_order(const PrecomputedMul2Table& table,
-                                                             const Scalar& s1,
-                                                             const Scalar& s2) const = 0;
+      /// Compute s1*pt1 + s2*pt2 in variable time, then extract the x
+      /// coordinate of the result, and reduce x modulo the group order. Compare
+      /// that value with v. If equal, returns true. Otherwise returns false,
+      /// including if the produced point is the point at infinity
+      virtual bool mul2_vartime_x_mod_order_eq(const PrecomputedMul2Table& table,
+                                               const Scalar& v,
+                                               const Scalar& s1,
+                                               const Scalar& s2) const = 0;
 
       /// Return the standard generator
       virtual AffinePoint generator() const = 0;
