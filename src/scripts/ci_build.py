@@ -255,7 +255,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 'pcurves_points', 'pwdhash', 'rsa_encrypt', 'rsa_pss', 'rsa_pss_raw', 'scrypt',
                 'sphincsplus', 'sphincsplus_fors', 'sphincsplus_keygen', 'srp6_kat',
                 'srp6_rt', 'unit_tls', 'x509_path_bsi', 'x509_path_rsa_pss',
-                'xmss_keygen', 'xmss_keygen_reference', 'xmss_sign', 'xmss_verify', 'xmss_verify_invalid'
+                'xmss_keygen', 'xmss_keygen_reference', 'xmss_sign', 'xmss_unit_tests',
+                'xmss_verify', 'xmss_verify_invalid',
             ]
 
             disabled_tests += slow_tests
