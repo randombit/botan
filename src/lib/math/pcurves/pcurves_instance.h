@@ -21,6 +21,8 @@ class PCurveInstance final {
       * provided in pcurves_instance.cpp that returns a nullptr
       */
 
+      static std::shared_ptr<const PrimeOrderCurve> secp192r1();
+
       static std::shared_ptr<const PrimeOrderCurve> secp256r1();
 
       static std::shared_ptr<const PrimeOrderCurve> secp384r1();

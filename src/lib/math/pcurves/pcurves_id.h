@@ -27,6 +27,8 @@ namespace Botan::PCurve {
 class BOTAN_TEST_API PrimeOrderCurveId final {
    public:
       enum class Code : uint8_t {
+         /// secp192r1 aka P-192
+         secp192r1,
          /// secp256r1 aka P-256
          secp256r1,
          /// secp384r1 aka P-384
