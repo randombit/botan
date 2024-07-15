@@ -18,6 +18,11 @@ concept curve_supports_fe_invert2 = requires(const typename C::FieldElement& fe)
 };
 
 template <typename C>
+concept curve_supports_scalar_invert = requires(const typename C::Scalar& s) {
+   { C::scalar_invert(s) } -> std::same_as<typename C::Scalar>;
+};
+
+template <typename C>
 class PrimeOrderCurveImpl final : public PrimeOrderCurve {
    public:
       class PrecomputedMul2TableC final : public PrimeOrderCurve::PrecomputedMul2Table {
@@ -280,7 +285,14 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
 
       Scalar scalar_square(const Scalar& s) const override { return stash(from_stash(s).square()); }
 
-      Scalar scalar_invert(const Scalar& s) const override { return stash(from_stash(s).invert()); }
+      Scalar scalar_invert(const Scalar& ss) const override {
+         auto s = from_stash(ss);
+         if constexpr(curve_supports_scalar_invert<C>) {
+            return stash(C::scalar_invert(s));
+         } else {
+            return stash(s.invert());
+         }
+      }
 
       Scalar scalar_negate(const Scalar& s) const override { return stash(from_stash(s).negate()); }
 
