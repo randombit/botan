@@ -109,9 +109,8 @@ bool ECGDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len, 
 
          const auto w = r.invert();
 
-         if(const auto v = m_gy_mul.mul2_vartime_x_mod_order(w, m, s)) {
-            return (v == r);
-         }
+         // Check if r == x_coord(g*w*m + y*w*s) % n
+         return m_gy_mul.mul2_vartime_x_mod_order_eq(r, w, m, s);
       }
    }
 

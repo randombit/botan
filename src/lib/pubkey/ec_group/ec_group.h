@@ -249,28 +249,29 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
             std::optional<EC_AffinePoint> mul2_vartime(const EC_Scalar& x, const EC_Scalar& y) const;
 
             /**
-            * Return the x coordinate of g*x + h*y, reduced modulo the order
+            * Check if v equals the x coordinate of g*x + h*y reduced modulo the order
             *
             * Where g is the group generator and h is the value passed to the constructor
             *
-            * Returns nullopt if g*x + h*y was the point at infinity
+            * Returns false if unequal, including if g*x + h*y was the point at infinity
             *
             * @warning this function is variable time with respect to x and y
             */
-            std::optional<EC_Scalar> mul2_vartime_x_mod_order(const EC_Scalar& x, const EC_Scalar& y) const;
+            bool mul2_vartime_x_mod_order_eq(const EC_Scalar& v, const EC_Scalar& x, const EC_Scalar& y) const;
 
             /**
-            * Return the x coordinate of g*x*c + h*y*c, reduced modulo the order
+            * Check if v equals the x coordinate of g*x*c + h*y*c reduced modulo the order
             *
             * Where g is the group generator and h is the value passed to the constructor
             *
-            * Returns nullopt if g*x*c + h*y*c was the point at infinity
+            * Returns false if unequal, including if g*x*c + h*y*c was the point at infinity
             *
-            * @warning this function is variable time with respect to c, x and y
+            * @warning this function is variable time with respect to x and y
             */
-            std::optional<EC_Scalar> mul2_vartime_x_mod_order(const EC_Scalar& c,
-                                                              const EC_Scalar& x,
-                                                              const EC_Scalar& y) const;
+            bool mul2_vartime_x_mod_order_eq(const EC_Scalar& v,
+                                             const EC_Scalar& c,
+                                             const EC_Scalar& x,
+                                             const EC_Scalar& y) const;
 
             ~Mul2Table();
 
