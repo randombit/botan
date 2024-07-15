@@ -142,13 +142,11 @@ class Pcurve_Ecdsa_Sign_Tests final : public Text_Based_Test {
          const auto z = curve.scalar_from_bits_with_trunc(msg);
 
          const auto s_inv = curve.scalar_invert(s);
-         const auto u_1 = curve.scalar_mul(z, s_inv);
-         const auto u_2 = curve.scalar_mul(r, s_inv);
-
+         auto u1 = z * s_inv;
+         auto u2 = r * s_inv;
          const auto table = curve.mul2_setup(curve.generator(), pk);
-         const auto x = curve.mul2_vartime_x_mod_order(*table, u_1, u_2);
 
-         return x == r;
+         return curve.mul2_vartime_x_mod_order_eq(*table, r, u1, u2);
       }
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) override {

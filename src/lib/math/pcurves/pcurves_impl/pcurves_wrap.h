@@ -94,19 +94,78 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          }
       }
 
-      std::optional<Scalar> mul2_vartime_x_mod_order(const PrecomputedMul2Table& tableb,
-                                                     const Scalar& s1,
-                                                     const Scalar& s2) const override {
+      bool mul2_vartime_x_mod_order_eq(const PrecomputedMul2Table& tableb,
+                                       const Scalar& v,
+                                       const Scalar& s1,
+                                       const Scalar& s2) const override {
          try {
             const auto& table = dynamic_cast<const PrecomputedMul2TableC&>(tableb);
             const auto pt = table.table().mul2_vartime(from_stash(s1), from_stash(s2));
             // Variable time here, so the early return is fine
             if(pt.is_identity().as_bool()) {
-               return {};
+               return false;
             }
-            std::array<uint8_t, C::FieldElement::BYTES> x_bytes;
-            curve_point_to_affine_x(pt).serialize_to(std::span{x_bytes});
-            return stash(C::Scalar::from_wide_bytes(std::span<const uint8_t, C::FieldElement::BYTES>{x_bytes}));
+
+            /*
+            * Avoid the inversion by instead projecting v.
+            *
+            * Given (x*z2) and v we want to know if x % n == v
+            *
+            * Inverting z2 to extract x is expensive. Instead compute (v*z2) and
+            * compare it with (x*z2).
+            *
+            * With overwhelming probability, this conversion is correct. The
+            * only time it is not is in the extremely unlikely case where the
+            * signer actually reduced the x coordinate modulo the group order.
+            * That is handled seperately in a second step.
+            */
+            const auto z2 = pt.z().square();
+
+            std::array<uint8_t, C::Scalar::BYTES> v_bytes;
+            from_stash(v).serialize_to(v_bytes);
+
+            if(const auto fe_v = C::FieldElement::deserialize(v_bytes)) {
+               if((*fe_v * z2 == pt.x()).as_bool()) {
+                  return true;
+               }
+
+               /*
+               * Possibly (if cryptographically unlikely) the signer
+               * reduced the value modulo the group order.
+               *
+               * If so we must check v + n similarly as before. However here
+               * we must be careful to not overflow since otherwise that
+               * would lead to us accepting an incorrect signature.
+               *
+               * If the order is > p then the reduction modulo p would not have
+               * had any effect and we don't need to consider the possibility
+               */
+               if constexpr(C::OrderIsLessThanField) {
+                  /*
+                  * We have to be careful to avoid overflow since this would
+                  * lead to a forgery
+                  *
+                  * v < (p)-n => v + n < p
+                  *
+                  * The values n and neg_n could be precomputed but they are
+                  * fast to compute and this codepath will ~never be taken
+                  * unless when verifying an invalid signature. In any case
+                  * it is many times cheaper than performing the modular inversion
+                  * which this approach avoids.
+                  */
+
+                  // Create the group order as a field element, safe because n < p
+                  const auto n = C::FieldElement::from_words(C::NW);
+                  const auto neg_n = n.negate().to_words();
+
+                  const auto vw = fe_v->to_words();
+                  if(bigint_ct_is_lt(vw.data(), vw.size(), neg_n.data(), neg_n.size()).as_bool()) {
+                     return (((*fe_v + n) * z2) == pt.x()).as_bool();
+                  }
+               }
+            }
+
+            return false;
          } catch(std::bad_cast&) {
             throw Invalid_Argument("Curve mismatch");
          }

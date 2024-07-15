@@ -1327,9 +1327,7 @@ class Speed final : public Command {
                      auto u1 = e * w;
                      auto u2 = *r * w;
 
-                     auto v = curve->mul2_vartime_x_mod_order(*gy_tab, u1, u2);
-
-                     return (r == v);
+                     return curve->mul2_vartime_x_mod_order_eq(*gy_tab, *r, u1, u2);
                   }
 
                   return false;
