@@ -10,7 +10,7 @@ LANG_EXE_FLAGS = %{cc_lang_binary_linker_flags}
 CXXFLAGS       = %{cc_compile_flags}
 WARN_FLAGS     = %{cc_warning_flags}
 
-LDFLAGS        = %{ldflags}
+LDFLAGS        = %{ldflags} %{cc_compile_flags}
 
 EXE_LINK_CMD   = %{exe_link_cmd}
 
