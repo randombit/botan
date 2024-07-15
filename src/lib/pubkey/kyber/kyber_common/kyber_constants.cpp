@@ -11,6 +11,8 @@
 
 #include <botan/internal/kyber_constants.h>
 
+#include <botan/internal/pqcrystals_helpers.h>
+
 #if defined(BOTAN_HAS_KYBER)
    #include <botan/internal/kyber_modern.h>
 #endif
@@ -25,23 +27,29 @@ KyberConstants::KyberConstants(KyberMode mode) : m_mode(mode) {
    switch(mode.mode()) {
       case KyberMode::Kyber512_R3:
       case KyberMode::Kyber512_90s:
-         m_nist_strength = 128;
+         m_nist_strength = KyberStrength::_128;
          m_k = 2;
-         m_eta1 = 3;
+         m_eta1 = KyberEta::_3;
+         m_du = KyberDu::_10;
+         m_dv = KyberDv::_4;
          break;
 
       case KyberMode::Kyber768_R3:
       case KyberMode::Kyber768_90s:
-         m_nist_strength = 192;
+         m_nist_strength = KyberStrength::_192;
          m_k = 3;
-         m_eta1 = 2;
+         m_eta1 = KyberEta::_2;
+         m_du = KyberDu::_10;
+         m_dv = KyberDv::_4;
          break;
 
       case KyberMode::Kyber1024_R3:
       case KyberMode::Kyber1024_90s:
-         m_nist_strength = 256;
+         m_nist_strength = KyberStrength::_256;
          m_k = 4;
-         m_eta1 = 2;
+         m_eta1 = KyberEta::_2;
+         m_du = KyberDu::_11;
+         m_dv = KyberDv::_5;
          break;
 
       default:
@@ -59,6 +67,11 @@ KyberConstants::KyberConstants(KyberMode mode) : m_mode(mode) {
       m_symmetric_primitives = std::make_unique<Kyber_Modern_Symmetric_Primitives>();
    }
 #endif
+
+   static_assert(N % 8 == 0);
+   m_polynomial_vector_bytes = (bitlen(Q) * (N / 8)) * k();
+   m_polynomial_vector_compressed_bytes = d_u() * k() * (N / 8);
+   m_polynomial_compressed_bytes = d_v() * (N / 8);
 
    if(!m_symmetric_primitives) {
       throw Not_Implemented("requested Kyber mode is not enabled in this build");

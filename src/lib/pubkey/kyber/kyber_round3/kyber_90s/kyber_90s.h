@@ -41,18 +41,17 @@ class Kyber_90s_Symmetric_Primitives : public Kyber_Symmetric_Primitives {
          return *m_aes256_xof;
       }
 
-      std::unique_ptr<Botan::XOF> get_XOF(std::span<const uint8_t> seed,
-                                          std::tuple<uint8_t, uint8_t> mpos) const override {
-         auto xof = m_aes256_xof->new_object();
+      Botan::XOF& get_XOF(std::span<const uint8_t> seed, std::tuple<uint8_t, uint8_t> mpos) const override {
+         m_aes256_xof->clear();
          const std::array<uint8_t, 12> iv{std::get<0>(mpos), std::get<1>(mpos), 0};
-         xof->start(iv, seed);
-         return xof;
+         m_aes256_xof->start(iv, seed);
+         return *m_aes256_xof;
       }
 
    private:
       std::unique_ptr<HashFunction> m_sha512;
       std::unique_ptr<HashFunction> m_sha256;
-      std::unique_ptr<AES_256_CTR_XOF> m_aes256_xof;
+      mutable std::unique_ptr<AES_256_CTR_XOF> m_aes256_xof;
 };
 
 }  // namespace Botan

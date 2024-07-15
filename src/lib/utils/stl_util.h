@@ -408,6 +408,13 @@ class StringLiteral {
       char value[N];
 };
 
+// TODO: C++23: replace with std::to_underlying
+template <typename T>
+   requires std::is_enum_v<T>
+auto to_underlying(T e) noexcept {
+   return static_cast<std::underlying_type_t<T>>(e);
+}
+
 }  // namespace Botan
 
 #endif

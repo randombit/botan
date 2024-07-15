@@ -43,12 +43,11 @@ class Kyber_Modern_Symmetric_Primitives : public Kyber_Symmetric_Primitives {
          return *m_shake256;
       }
 
-      std::unique_ptr<Botan::XOF> get_XOF(std::span<const uint8_t> seed,
-                                          std::tuple<uint8_t, uint8_t> matrix_position) const override {
-         auto xof = m_shake128->new_object();
-         xof->update(seed);
-         xof->update(store_be(make_uint16(std::get<0>(matrix_position), std::get<1>(matrix_position))));
-         return xof;
+      Botan::XOF& get_XOF(std::span<const uint8_t> seed, std::tuple<uint8_t, uint8_t> matrix_position) const override {
+         m_shake128->clear();
+         m_shake128->update(seed);
+         m_shake128->update(store_be(make_uint16(std::get<0>(matrix_position), std::get<1>(matrix_position))));
+         return *m_shake128;
       }
 
    private:

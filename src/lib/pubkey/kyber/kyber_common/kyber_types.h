@@ -14,11 +14,20 @@
 
 #include <botan/secmem.h>
 #include <botan/strong_type.h>
+#include <botan/internal/kyber_polynomial.h>
+#include <botan/internal/pqcrystals.h>
 
 #include <variant>
 #include <vector>
 
 namespace Botan {
+
+using KyberPolyNTT = Botan::CRYSTALS::Polynomial<KyberPolyTraits, Botan::CRYSTALS::Domain::NTT>;
+using KyberPolyVecNTT = Botan::CRYSTALS::PolynomialVector<KyberPolyTraits, Botan::CRYSTALS::Domain::NTT>;
+using KyberPolyMat = Botan::CRYSTALS::PolynomialMatrix<KyberPolyTraits>;
+
+using KyberPoly = Botan::CRYSTALS::Polynomial<KyberPolyTraits, Botan::CRYSTALS::Domain::Normal>;
+using KyberPolyVec = Botan::CRYSTALS::PolynomialVector<KyberPolyTraits, Botan::CRYSTALS::Domain::Normal>;
 
 /// Principal seed used to generate Kyber key pairs
 using KyberSeedRandomness = Strong<secure_vector<uint8_t>, struct KyberSeedRandomness_>;
