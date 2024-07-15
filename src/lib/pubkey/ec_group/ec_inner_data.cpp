@@ -141,7 +141,7 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_hash_to_curve_ro(std::
                                                                            std::span<const uint8_t> input,
                                                                            std::span<const uint8_t> domain_sep) const {
    if(m_pcurve) {
-      auto pt = m_pcurve->hash_to_curve(hash_fn, input, domain_sep, true).to_affine();
+      auto pt = m_pcurve->hash_to_curve_ro(hash_fn, input, domain_sep).to_affine();
       return std::make_unique<EC_AffinePoint_Data_BN>(shared_from_this(), pt.serialize());
    } else {
       throw Not_Implemented("Hash to curve is not implemented for this curve");
@@ -152,7 +152,7 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_hash_to_curve_nu(std::
                                                                            std::span<const uint8_t> input,
                                                                            std::span<const uint8_t> domain_sep) const {
    if(m_pcurve) {
-      auto pt = m_pcurve->hash_to_curve(hash_fn, input, domain_sep, false).to_affine();
+      auto pt = m_pcurve->hash_to_curve_nu(hash_fn, input, domain_sep);
       return std::make_unique<EC_AffinePoint_Data_BN>(shared_from_this(), pt.serialize());
    } else {
       throw Not_Implemented("Hash to curve is not implemented for this curve");
