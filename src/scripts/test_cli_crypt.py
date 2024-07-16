@@ -199,13 +199,13 @@ def main(args=None):
     start_time = time.time()
 
     if threads > 1:
-        pool = ThreadPool(processes=threads)
-        results = []
-        for test in kats:
-            results.append(pool.apply_async(test_cipher_kat, (cli_binary, test)))
+        with ThreadPool(processes=threads) as pool:
+            results = []
+            for test in kats:
+                results.append(pool.apply_async(test_cipher_kat, (cli_binary, test)))
 
-        for result in results:
-            result.get()
+            for result in results:
+                result.get()
     else:
         for test in kats:
             test_cipher_kat(cli_binary, test)

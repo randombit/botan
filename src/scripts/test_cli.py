@@ -1921,13 +1921,13 @@ def main(args=None):
     start_time = time.time()
 
     if threads > 1:
-        pool = ThreadPool(processes=threads)
-        results = []
-        for test in tests_to_run:
-            results.append(pool.apply_async(run_test, test))
+        with ThreadPool(processes=threads) as pool:
+            results = []
+            for test in tests_to_run:
+                results.append(pool.apply_async(run_test, test))
 
-        for result in results:
-            result.get()
+            for result in results:
+                result.get()
     else:
         for test in tests_to_run:
             run_test(test[0], test[1])
