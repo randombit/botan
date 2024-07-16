@@ -47,9 +47,9 @@ class SolinasAccum {
 
       static constexpr size_t N32 = N * (WordInfo<W>::bits / 32);
 
-      SolinasAccum(std::array<W, N>& r) : m_r(r), m_S(0), m_idx(0) {}
+      constexpr SolinasAccum(std::array<W, N>& r) : m_r(r), m_S(0), m_idx(0) {}
 
-      void accum(int64_t v) {
+      constexpr void accum(int64_t v) {
          BOTAN_DEBUG_ASSERT(m_idx < N32);
 
          m_S += v;
@@ -65,7 +65,7 @@ class SolinasAccum {
          m_idx += 1;
       }
 
-      W final_carry(int64_t C) {
+      constexpr W final_carry(int64_t C) {
          BOTAN_DEBUG_ASSERT(m_idx == N32);
          m_S += C;
          BOTAN_DEBUG_ASSERT(m_S >= 0);

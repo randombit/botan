@@ -182,6 +182,15 @@ inline consteval std::array<W, N> p_minus_1_over_2(const std::array<W, N>& p) {
 }
 
 template <WordType W, size_t N>
+inline consteval std::array<W, N> p_div_2_plus_1(const std::array<W, N>& p) {
+   const W one = 1;
+   std::array<W, N> r = p;
+   shift_right<1>(r);
+   bigint_add2_nc(r.data(), N, &one, 1);
+   return r;
+}
+
+template <WordType W, size_t N>
 inline consteval size_t count_bits(const std::array<W, N>& p) {
    auto get_bit = [&](size_t i) {
       const size_t w = i / WordInfo<W>::bits;

@@ -75,7 +75,7 @@ namespace {
 * Treating this MPI as a sequence of 32-bit words in big-endian
 * order, return word i. The array is assumed to be large enough.
 */
-inline uint32_t get_uint32(const word xw[], size_t i) {
+constexpr uint32_t get_uint32(const word xw[], size_t i) {
 #if(BOTAN_MP_WORD_BITS == 32)
    return xw[i];
 #else

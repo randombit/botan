@@ -176,7 +176,7 @@ class IntMod final {
          return Self(Rep::redc(z));
       }
 
-      void square_n(size_t n) {
+      constexpr void square_n(size_t n) {
          std::array<W, 2 * N> z;
          for(size_t i = 0; i != n; ++i) {
             comba_sqr<N>(z.data(), this->data());
@@ -698,14 +698,52 @@ class ProjectiveCurvePoint {
       }
 
       constexpr Self dbl_n(size_t n) const {
-         // TODO it is possible to optimize this by carrying over values from
-         // the previous iteration into the next
+         if constexpr(Self::A_is_minus_3) {
+            /*
+            Repeated doubling using an adaptation of Algorithm 3.23 in
+            "Guide To Elliptic Curve Cryptography"
+            Hankerson, Menezes, Vanstone
 
-         Self pt = (*this);
-         for(size_t i = 0; i != n; ++i) {
-            pt = pt.dbl();
+            For A == -3
+            Cost: 2S + 1*2 + n*(4S + 4M + 2*2 + 1*3 + 4A)
+            Naive doubling
+            Cost: n*(4S + 4M + 2*2 + 1*3 + 5A + 1*4 + 1*8)
+
+            TODO adapt this for A == 0 and/or generic A cases
+            */
+
+            // The inverse of 2 modulo P is (P/2)+1; this avoids a constexpr time
+            // general inversion, which some compilers can't handle
+            constexpr auto INV_2 = FieldElement::from_words(p_div_2_plus_1(Params::PW));
+
+            auto nx = x();
+            auto ny = y();
+            auto nz = z();
+            ny = ny.mul2();
+            auto w = nz.square().square();
+
+            while(n > 0) {
+               const auto ny2 = ny.square();
+               const auto ny4 = ny2.square();
+               const auto t1 = (nx.square() - w).mul3();
+               const auto t2 = nx * ny2;
+               nx = t1.square() - t2.mul2();
+               nz *= ny;
+               ny = t1 * (t2 - nx).mul2() - ny4;
+               n--;
+               if(n > 0) {
+                  w *= ny4;
+               }
+            }
+            ny *= INV_2;
+            return Self(nx, ny, nz);
+         } else {
+            Self pt = (*this);
+            for(size_t i = 0; i != n; ++i) {
+               pt = pt.dbl();
+            }
+            return pt;
          }
-         return pt;
       }
 
       constexpr Self dbl() const {
@@ -718,7 +756,7 @@ class ProjectiveCurvePoint {
             if a == -3 then
             3*x^2 + a*z^4 == 3*x^2 - 3*z^4 == 3*(x^2-z^4) == 3*(x-z^2)*(x+z^2)
 
-            Cost: 2M + 2A + 1*3
+            Cost: 1M + 1S + 2A + 1*3
             */
             const auto z2 = z().square();
             m = (x() - z2).mul3() * (x() + z2);
@@ -731,7 +769,6 @@ class ProjectiveCurvePoint {
             const auto z2 = z().square();
             m = x().square().mul3() + A * z2.square();
          }
-
          const auto y2 = y().square();
          const auto s = x().mul4() * y2;
          const auto nx = m.square() - s.mul2();

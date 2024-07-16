@@ -44,7 +44,7 @@ class Pcurve_Basemul_Tests final : public Text_Based_Test {
                result.test_eq("mul correct", pt4, P_bytes);
 
                auto pt5 = curve->mul(g, scalar.value(), null_rng).to_affine().serialize();
-               result.test_eq("mul correct", pt5, P_bytes);
+               result.test_eq("mul correct (Null_RNG)", pt5, P_bytes);
             } else {
                result.test_failure("Curve rejected scalar input");
             }
