@@ -278,9 +278,17 @@ std::vector<Test::Result> test_bitvector_subvector() {
    };
 
    auto check_bitpattern = [](auto& result, auto& bitvector, size_t offset) {
-      for(size_t i = 0; i < bitvector.size(); ++i) {
-         const bool expected = ((i + offset) % 3);
-         result.confirm(Botan::fmt("{} is as expected", i), bitvector[i], expected);
+      using bv_t = std::remove_cvref_t<decltype(bitvector)>;
+      if constexpr(std::unsigned_integral<bv_t>) {
+         for(size_t i = 0; i < sizeof(bv_t) * 8; ++i) {
+            const bool expected = ((i + offset) % 3);
+            result.confirm(Botan::fmt("{} is as expected", i), (bitvector & (bv_t(1) << i)) != 0, expected);
+         }
+      } else {
+         for(size_t i = 0; i < bitvector.size(); ++i) {
+            const bool expected = ((i + offset) % 3);
+            result.confirm(Botan::fmt("{} is as expected", i), bitvector[i], expected);
+         }
       }
    };
 
@@ -393,6 +401,63 @@ std::vector<Test::Result> test_bitvector_subvector() {
                             auto bv8 = bv1.subvector(33);  // copy until the end
                             result.test_eq("size is as expected", bv8.size(), size_t(67));
                             check_bitpattern(result, bv8, 33);
+                         }),
+
+      Botan_Tests::CHECK("byte-aligned unsigned integer subvector",
+                         [&](auto& result) {
+                            Botan::bitvector bv1(100);
+                            make_bitpattern(bv1);
+
+                            const auto u8_0 = bv1.subvector<uint8_t>(0);
+                            const auto u8_32 = bv1.subvector<uint8_t>(32);
+                            check_bitpattern(result, u8_0, 0);
+                            check_bitpattern(result, u8_32, 32);
+
+                            const auto u16_0 = bv1.subvector<uint16_t>(0);
+                            const auto u16_56 = bv1.subvector<uint16_t>(56);
+                            check_bitpattern(result, u16_0, 0);
+                            check_bitpattern(result, u16_56, 56);
+
+                            const auto u32_0 = bv1.subvector<uint32_t>(0);
+                            const auto u32_48 = bv1.subvector<uint32_t>(48);
+                            check_bitpattern(result, u32_0, 0);
+                            check_bitpattern(result, u32_48, 48);
+
+                            const auto u64_0 = bv1.subvector<uint64_t>(0);
+                            const auto u64_32 = bv1.subvector<uint64_t>(32);
+                            check_bitpattern(result, u64_0, 0);
+                            check_bitpattern(result, u64_32, 32);
+
+                            result.test_throws("out of range (uint8_t)", [&] { bv1.subvector<uint8_t>(93); });
+                            result.test_throws("out of range (uint16_t)", [&] { bv1.subvector<uint16_t>(85); });
+                            result.test_throws("out of range (uint32_t)", [&] { bv1.subvector<uint32_t>(69); });
+                            result.test_throws("out of range (uint64_t)", [&] { bv1.subvector<uint64_t>(37); });
+                         }),
+
+      Botan_Tests::CHECK("unaligned unsigned integer subvector",
+                         [&](Test::Result& result) {
+                            Botan::bitvector bv1(100);
+                            make_bitpattern(bv1);
+
+                            const auto u8_3 = bv1.subvector<uint8_t>(3);
+                            const auto u8_92 = bv1.subvector<uint8_t>(92);
+                            check_bitpattern(result, u8_3, 3);
+                            check_bitpattern(result, u8_92, 92);
+
+                            const auto u16_7 = bv1.subvector<uint16_t>(7);
+                            const auto u16_84 = bv1.subvector<uint16_t>(84);
+                            check_bitpattern(result, u16_7, 7);
+                            check_bitpattern(result, u16_84, 84);
+
+                            const auto u32_11 = bv1.subvector<uint32_t>(11);
+                            const auto u32_68 = bv1.subvector<uint32_t>(68);
+                            check_bitpattern(result, u32_11, 11);
+                            check_bitpattern(result, u32_68, 68);
+
+                            const auto u64_21 = bv1.subvector<uint64_t>(21);
+                            const auto u64_36 = bv1.subvector<uint64_t>(36);
+                            check_bitpattern(result, u64_21, 21);
+                            check_bitpattern(result, u64_36, 36);
                          }),
    };
 }
@@ -981,14 +1046,15 @@ std::vector<Test::Result> test_bitvector_iterators() {
 
 using TestBitvector = Botan::Strong<Botan::bitvector, struct TestBitvector_>;
 using TestSecureBitvector = Botan::Strong<Botan::secure_bitvector, struct TestBitvector_>;
+using TestUInt32 = Botan::Strong<uint32_t, struct TestUInt32_>;
 
 Test::Result test_bitvector_strongtype_adapter() {
    Test::Result result("Bitvector in strong type");
 
-   TestBitvector bv1(10);
+   TestBitvector bv1(33);
 
    result.confirm("bv1 is not empty", !bv1.empty());
-   result.test_eq("bv1 has size 10", bv1.size(), size_t(10));
+   result.test_eq("bv1 has size 33", bv1.size(), size_t(33));
 
    bv1[0] = true;
    bv1.at(1) = true;
@@ -1008,7 +1074,7 @@ Test::Result test_bitvector_strongtype_adapter() {
    result.confirm("hamming weight of bv1", bv1.has_odd_hamming_weight().as_bool());
 
    for(size_t i = 0; auto bit : bv1) {
-      const bool expected = (i == 0 || i == 1 || i == 2 || i == 4 || i == 10);
+      const bool expected = (i == 0 || i == 1 || i == 2 || i == 4 || i == 33);
       result.confirm(Botan::fmt("bv1 bit {} is set", i), bit == expected);
       ++i;
    }
@@ -1016,7 +1082,7 @@ Test::Result test_bitvector_strongtype_adapter() {
    bv1.flip();
 
    for(size_t i = 0; auto bit : bv1) {
-      const bool expected = (i == 0 || i == 1 || i == 2 || i == 4 || i == 10);
+      const bool expected = (i == 0 || i == 1 || i == 2 || i == 4 || i == 33);
       result.confirm(Botan::fmt("bv1 bit {} is set", i), bit != expected);
       ++i;
    }
@@ -1028,6 +1094,10 @@ Test::Result test_bitvector_strongtype_adapter() {
 
    auto bv4 = bv2.subvector<TestSecureBitvector>(0, 5);
    result.confirm("bv4 is a TestSecureBitvector", std::same_as<TestSecureBitvector, decltype(bv4)>);
+
+   auto bv5 = bv2.subvector<TestUInt32>(1);
+   result.confirm("bv5 is a TestUInt32", std::same_as<TestUInt32, decltype(bv5)>);
+   result.test_is_eq<TestUInt32::wrapped_type>("bv5 has expected value", bv5.get(), 0xFFFFFFF4);
 
    const auto str = bv4.to_string();
    result.test_eq("bv4 to_string", str, "00010");
