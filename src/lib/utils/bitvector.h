@@ -731,6 +731,40 @@ class bitvector_base final {
          return newvector;
       }
 
+      /**
+       * Extracts a subvector of bits as an unsigned integral type @p OutT
+       * starting from bit @p pos and copying exactly sizeof(OutT)*8 bits.
+       *
+       * Hint: The bits are in big-endian order, i.e. the least significant bit
+       *       is the 0th bit and the most significant bit it the n-th. Hence,
+       *       addressing the bits with bitwise operations is done like so:
+       *       bool bit = (out_int >> pos) & 1;
+       */
+      template <typename OutT>
+         requires(std::unsigned_integral<strong_type_wrapped_type<OutT>> &&
+                  !std::same_as<bool, strong_type_wrapped_type<OutT>>)
+      OutT subvector(size_type pos) const {
+         using result_t = strong_type_wrapped_type<OutT>;
+         constexpr size_t bits = sizeof(result_t) * 8;
+         BOTAN_ARG_CHECK(pos + bits <= size(), "Not enough bits to copy");
+         result_t out = 0;
+
+         if(pos % 8 == 0) {
+            out = load_le<result_t>(std::span{m_blocks}.subspan(block_index(pos)).template first<sizeof(result_t)>());
+         } else {
+            BitRangeOperator<const bitvector_base<AllocatorT>, BitRangeAlignment::no_alignment> op(*this, pos, bits);
+            range_operation(
+               [&](auto integer) {
+                  if constexpr(std::same_as<result_t, decltype(integer)>) {
+                     out = integer;
+                  }
+               },
+               op);
+         }
+
+         return wrap_strong_type<OutT>(out);
+      }
+
       /// @}
 
       /// @name Operators
@@ -1283,9 +1317,16 @@ class Strong_Adapter<T> : public Container_Strong_Adapter_Base<T> {
          return this->get().template as<OutT>();
       }
 
-      template <typename OutT = T>
+      template <bitvectorish OutT = T>
       auto subvector(size_type pos, std::optional<size_type> length = std::nullopt) const {
          return this->get().template subvector<OutT>(pos, length);
+      }
+
+      template <typename OutT>
+         requires(std::unsigned_integral<strong_type_wrapped_type<OutT>> &&
+                  !std::same_as<bool, strong_type_wrapped_type<OutT>>)
+      auto subvector(size_type pos) const {
+         return this->get().template subvector<OutT>(pos);
       }
 
       auto push_back(bool b) { return this->get().push_back(b); }
