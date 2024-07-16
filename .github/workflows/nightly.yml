@@ -29,6 +29,27 @@ jobs:
 
       matrix:
         include:
+          - target: cross-alpha
+            compiler: gcc
+            host_os: ubuntu-24.04
+          - target: cross-hppa64
+            compiler: gcc
+            host_os: ubuntu-24.04
+          - target: cross-m68k
+            compiler: gcc
+            host_os: ubuntu-24.04
+          - target: cross-mips
+            compiler: gcc
+            host_os: ubuntu-24.04
+          - target: cross-ppc32
+            compiler: gcc
+            host_os: ubuntu-24.04
+          - target: cross-sh4
+            compiler: gcc
+            host_os: ubuntu-24.04
+          - target: cross-sparc64
+            compiler: gcc
+            host_os: ubuntu-24.04
           - target: cross-riscv64
             compiler: gcc
             host_os: ubuntu-24.04

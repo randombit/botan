@@ -51,11 +51,35 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "cross-arm64" ] || [ "$TARGET" = "cross-arm64-amalgamation" ]; then
         sudo apt-get -qq install qemu-user g++-aarch64-linux-gnu
 
+    elif [ "$TARGET" = "cross-ppc32" ]; then
+        sudo apt-get -qq install qemu-user g++-powerpc-linux-gnu
+
     elif [ "$TARGET" = "cross-ppc64" ]; then
         sudo apt-get -qq install qemu-user g++-powerpc64le-linux-gnu
 
+    elif [ "$TARGET" = "cross-sh4" ]; then
+        sudo apt-get -qq install qemu-user g++-sh4-linux-gnu
+
+    elif [ "$TARGET" = "cross-sparc64" ]; then
+        sudo apt-get -qq install qemu-user g++-sparc64-linux-gnu
+
+    elif [ "$TARGET" = "cross-m68k" ]; then
+        sudo apt-get -qq install qemu-user g++-m68k-linux-gnu
+
     elif [ "$TARGET" = "cross-riscv64" ]; then
         sudo apt-get -qq install qemu-user g++-riscv64-linux-gnu
+
+    elif [ "$TARGET" = "cross-alpha" ]; then
+        sudo apt-get -qq install qemu-user g++-alpha-linux-gnu
+
+    elif [ "$TARGET" = "cross-arc" ]; then
+        sudo apt-get -qq install qemu-user g++-arc-linux-gnu
+
+    elif [ "$TARGET" = "cross-hppa64" ]; then
+        sudo apt-get -qq install qemu-user g++-hppa-linux-gnu
+
+    elif [ "$TARGET" = "cross-mips" ]; then
+        sudo apt-get -qq install qemu-user g++-mips-linux-gnu
 
     elif [ "$TARGET" = "cross-mips64" ]; then
         sudo apt-get -qq install qemu-user g++-mips64-linux-gnuabi64
