@@ -66,7 +66,6 @@ class SolinasAccum {
       }
 
       constexpr W final_carry(int64_t C) {
-         BOTAN_DEBUG_ASSERT(m_idx == N32);
          m_S += C;
          BOTAN_DEBUG_ASSERT(m_S >= 0);
          return static_cast<W>(m_S);
