@@ -45,7 +45,7 @@ template <typename T>
 constexpr static bool is_bitvector_v = is_bitvector<T>::value;
 
 template <typename T>
-concept bitvectorish = is_bitvector_v<T> || (is_strong_type_v<T> && is_bitvector_v<typename T::wrapped_type>);
+concept bitvectorish = is_bitvector_v<strong_type_wrapped_type<T>>;
 
 namespace detail {
 
@@ -113,24 +113,6 @@ concept predicate_blockwise_processing_callback =
     std::same_as<bool, blockwise_processing_callback_return_type<FnT, uint32_t, ParamTs...>>) ||
    (blockwise_processing_callback_with_mask<FnT, ParamTs...> &&
     std::same_as<bool, blockwise_processing_callback_return_type<FnT, uint32_t, ParamTs..., first_t<ParamTs...>>>);
-
-template <bitvectorish T>
-auto& unwrap(T& bv) {
-   if constexpr(is_bitvector_v<T>) {
-      return bv;
-   } else {
-      return bv.get();
-   }
-}
-
-template <bitvectorish T>
-const auto& unwrap(const T& bv) {
-   if constexpr(is_bitvector_v<T>) {
-      return bv;
-   } else {
-      return bv.get();
-   }
-}
 
 template <typename T>
 class bitvector_iterator {
@@ -447,7 +429,7 @@ class bitvector_base final {
          return size() == other.size() &&
                 full_range_operation([]<std::unsigned_integral BlockT>(BlockT lhs, BlockT rhs) { return lhs == rhs; },
                                      *this,
-                                     detail::unwrap(other));
+                                     unwrap_strong_type(other));
       }
 
       /**
@@ -709,9 +691,7 @@ class bitvector_base final {
          OutT newvector(bitlen);
 
          // Handle bitvectors that are wrapped in strong types
-         auto& newvector_unwrapped = detail::unwrap(newvector);
-         using unwrapped_type = std::remove_cvref_t<decltype(newvector_unwrapped)>;
-         static_assert(is_bitvector_v<unwrapped_type>);
+         auto& newvector_unwrapped = unwrap_strong_type(newvector);
 
          if(bitlen > 0) {
             if(pos % 8 == 0) {
@@ -721,7 +701,8 @@ class bitvector_base final {
             } else {
                BitRangeOperator<const bitvector_base<AllocatorT>, BitRangeAlignment::no_alignment> from_op(
                   *this, pos, bitlen);
-               BitRangeOperator<unwrapped_type> to_op(detail::unwrap(newvector_unwrapped), 0, bitlen);
+               BitRangeOperator<strong_type_wrapped_type<OutT>> to_op(
+                  unwrap_strong_type(newvector_unwrapped), 0, bitlen);
                range_operation([](auto /* to */, auto from) { return from; }, to_op, from_op);
             }
 
@@ -754,7 +735,7 @@ class bitvector_base final {
          } else {
             BitRangeOperator<const bitvector_base<AllocatorT>, BitRangeAlignment::no_alignment> op(*this, pos, bits);
             range_operation(
-               [&](auto integer) {
+               [&](std::unsigned_integral auto integer) {
                   if constexpr(std::same_as<result_t, decltype(integer)>) {
                      out = integer;
                   }
@@ -781,7 +762,7 @@ class bitvector_base final {
       auto& operator|=(const OtherT& other) {
          full_range_operation([]<std::unsigned_integral BlockT>(BlockT lhs, BlockT rhs) -> BlockT { return lhs | rhs; },
                               *this,
-                              detail::unwrap(other));
+                              unwrap_strong_type(other));
          return *this;
       }
 
@@ -789,7 +770,7 @@ class bitvector_base final {
       auto& operator&=(const OtherT& other) {
          full_range_operation([]<std::unsigned_integral BlockT>(BlockT lhs, BlockT rhs) -> BlockT { return lhs & rhs; },
                               *this,
-                              detail::unwrap(other));
+                              unwrap_strong_type(other));
          return *this;
       }
 
@@ -797,7 +778,7 @@ class bitvector_base final {
       auto& operator^=(const OtherT& other) {
          full_range_operation([]<std::unsigned_integral BlockT>(BlockT lhs, BlockT rhs) -> BlockT { return lhs ^ rhs; },
                               *this,
-                              detail::unwrap(other));
+                              unwrap_strong_type(other));
          return *this;
       }
 
@@ -836,7 +817,7 @@ class bitvector_base final {
             },
          };
 
-         full_range_operation(maybe_xor, *this, detail::unwrap(other));
+         full_range_operation(maybe_xor, *this, unwrap_strong_type(other));
       }
 
       /// @}
@@ -1240,11 +1221,9 @@ namespace detail {
  * prefer it. Otherwise, the allocator of @p lhs will be used as a default.
  */
 template <bitvectorish T1, bitvectorish T2>
-constexpr auto copy_lhs_allocator_aware(const T1& lhs, const T2& rhs) {
-   const auto& lhs_unwrapped = detail::unwrap(lhs);
-   const auto& rhs_unwrapped = detail::unwrap(rhs);
-   constexpr bool needs_secure_allocator = std::remove_cvref_t<decltype(lhs_unwrapped)>::uses_secure_allocator ||
-                                           std::remove_cvref_t<decltype(rhs_unwrapped)>::uses_secure_allocator;
+constexpr auto copy_lhs_allocator_aware(const T1& lhs, const T2&) {
+   constexpr bool needs_secure_allocator =
+      strong_type_wrapped_type<T1>::uses_secure_allocator || strong_type_wrapped_type<T2>::uses_secure_allocator;
 
    if constexpr(needs_secure_allocator) {
       return lhs.template as<secure_bitvector>();
