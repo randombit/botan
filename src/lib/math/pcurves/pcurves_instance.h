@@ -23,6 +23,8 @@ class PCurveInstance final {
 
       static std::shared_ptr<const PrimeOrderCurve> secp192r1();
 
+      static std::shared_ptr<const PrimeOrderCurve> secp224r1();
+
       static std::shared_ptr<const PrimeOrderCurve> secp256r1();
 
       static std::shared_ptr<const PrimeOrderCurve> secp384r1();

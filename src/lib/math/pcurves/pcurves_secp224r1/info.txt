@@ -1,0 +1,13 @@
+<defines>
+PCURVES_SECP224R1 -> 20240716
+</defines>
+
+<module_info>
+name -> "PCurve secp224r1"
+brief -> "secp224r1"
+type -> "Internal"
+</module_info>
+
+<requires>
+pcurves_impl
+</requires>
