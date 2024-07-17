@@ -704,19 +704,25 @@ std::pair<DilithiumPolyVec, DilithiumPolyVec> decompose(const DilithiumPolyVec& 
 DilithiumPolyVec make_hint(const DilithiumPolyVec& z, const DilithiumPolyVec& r, const DilithiumConstants& mode) {
    BOTAN_DEBUG_ASSERT(z.size() == r.size());
 
-   auto make_hint = [gamma2 = int32_t(mode.gamma2()), q_gamma2 = DilithiumConstants::Q - int32_t(mode.gamma2())](
-                       int32_t c0, int32_t c1) -> bool {
-      if(c0 <= gamma2 || c0 > q_gamma2 || (c0 == q_gamma2 && c1 == 0)) {
-         return false;
-      }
-      return true;
+   auto make_hint = [gamma2 = uint32_t(mode.gamma2()),
+                     q_gamma2 = static_cast<uint32_t>(DilithiumConstants::Q) - uint32_t(mode.gamma2())](
+                       int32_t c0, int32_t c1) -> CT::Choice {
+      BOTAN_DEBUG_ASSERT(c0 >= 0);
+      BOTAN_DEBUG_ASSERT(c1 >= 0);
+
+      const uint32_t pc0 = static_cast<uint32_t>(c0);
+      const uint32_t pc1 = static_cast<uint32_t>(c1);
+
+      return (CT::Mask<uint32_t>::is_gt(pc0, gamma2) & CT::Mask<uint32_t>::is_lte(pc0, q_gamma2) &
+              ~(CT::Mask<uint32_t>::is_equal(pc0, q_gamma2) & CT::Mask<uint32_t>::is_zero(pc1)))
+         .as_choice();
    };
 
    DilithiumPolyVec hint(r.size());
 
    for(size_t i = 0; i < r.size(); ++i) {
       for(size_t j = 0; j < r[i].size(); ++j) {
-         hint[i][j] = make_hint(z[i][j], r[i][j]);
+         hint[i][j] = make_hint(z[i][j], r[i][j]).as_bool();
       }
    }
 
