@@ -108,13 +108,7 @@ class Params final : public EllipticCurveParameters<
 
 // clang-format on
 
-#if BOTAN_MP_WORD_BITS == 32
-// Secp192r1Rep works for 64 bit also, but is at best marginally faster at least
-// on compilers/CPUs tested so far
 class Curve final : public EllipticCurve<Params, Secp192r1Rep> {};
-#else
-class Curve final : public EllipticCurve<Params> {};
-#endif
 
 }  // namespace secp192r1
 

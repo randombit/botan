@@ -127,15 +127,7 @@ class Params final : public EllipticCurveParameters<
 
 // clang-format on
 
-#if BOTAN_MP_WORD_BITS == 32
-// Secp256r1Rep works for 64 bit also, but is at best marginally faster at least
-// on compilers/CPUs tested so far
-typedef EllipticCurve<Params, Secp256r1Rep> Secp256r1Base;
-#else
-typedef EllipticCurve<Params> Secp256r1Base;
-#endif
-
-class Curve final : public Secp256r1Base {
+class Curve final : public EllipticCurve<Params, Secp256r1Rep> {
    public:
       // Return the square of the inverse of x
       static FieldElement fe_invert2(const FieldElement& x) {
