@@ -13,7 +13,7 @@ warning_flags "-Wall -Wextra -Wpedantic -Wstrict-aliasing -Wcast-align -Wmissing
 # -Wmaybe-uninitialized is buggy https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105937
 # -Wstringop-overread is buggy https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111499
 # -Wfree-nonheap-object is buggy https://gcc.gnu.org/bugzilla/show_bug.cgi?id=115016
-werror_flags "-Werror -Wno-error=strict-overflow -Wno-error=zero-as-null-pointer-constant -Wno-error=non-virtual-dtor -Wno-error=maybe-uninitialized -Wno-error=stringop-overread -Wno-error=stringop-overflow -Wno-error=free-nonheap-object"
+werror_flags "-Werror -Wno-error=strict-overflow -Wno-error=zero-as-null-pointer-constant -Wno-error=non-virtual-dtor -Wno-error=maybe-uninitialized -Wno-error=stringop-overread -Wno-error=stringop-overflow -Wno-error=free-nonheap-object -Wno-error=restrict"
 
 maintainer_warning_flags "-Wstrict-overflow=5"
 

@@ -138,6 +138,7 @@ constexpr bool is_native(Endianness endianness) {
 #elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
    return endianness == Endianness::Little;
 #else
+   BOTAN_UNUSED(endianness);
    return false;
 #endif
 }
@@ -152,6 +153,7 @@ constexpr bool is_opposite(Endianness endianness) {
 #elif defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
    return endianness == Endianness::Big;
 #else
+   BOTAN_UNUSED(endianness);
    return false;
 #endif
 }
