@@ -325,6 +325,10 @@ class Polynomial {
          return *this;
       }
 
+      void _const_time_poison() const { CT::poison(m_coeffs); }
+
+      void _const_time_unpoison() const { CT::unpoison(m_coeffs); }
+
       /**
        * Adds two polynomials element-wise. Does not perform a reduction after the addition.
        * Therefore this operation might cause an integer overflow.
@@ -478,6 +482,10 @@ class PolynomialVector {
       decltype(auto) end() { return m_vec.end(); }
 
       decltype(auto) end() const { return m_vec.end(); }
+
+      void _const_time_poison() const { CT::poison_range(m_vec); }
+
+      void _const_time_unpoison() const { CT::unpoison_range(m_vec); }
 };
 
 template <crystals_trait Trait>
@@ -517,6 +525,10 @@ class PolynomialMatrix {
       decltype(auto) end() { return m_mat.end(); }
 
       decltype(auto) end() const { return m_mat.end(); }
+
+      void _const_time_poison() const { CT::poison_range(m_mat); }
+
+      void _const_time_unpoison() const { CT::unpoison_range(m_mat); }
 };
 
 namespace detail {
