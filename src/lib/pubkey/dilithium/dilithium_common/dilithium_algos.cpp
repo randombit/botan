@@ -527,6 +527,9 @@ void sample_uniform_eta(StrongSpan<const DilithiumSeedRhoPrime> rhoprime,
    auto coeff_from_halfbyte = [eta = mode.eta()](uint8_t b) -> std::optional<int32_t> {
       BOTAN_DEBUG_ASSERT(b < 16);
 
+      // We are going to perform rejection sampling on the XOF outputs.
+      CT::unpoison(b);
+
       if(eta == Eta::_2 && b < 15) {
          b = b - (205 * b >> 10) * 5;
          return 2 - b;
@@ -567,6 +570,9 @@ void sample_uniform_eta(StrongSpan<const DilithiumSeedRhoPrime> rhoprime,
    for(auto& coeff : p) {
       coeff = next_coeff(xof);
    }
+
+   // Rejection sampling is done. Secret polynomial can be repoisoned.
+   CT::poison(p);
 
    BOTAN_DEBUG_ASSERT(p.ct_validate_value_range(-static_cast<int32_t>(mode.eta()), mode.eta()));
 }
@@ -767,7 +773,9 @@ bool infinity_norm_within_bound(const DilithiumPolyVec& vec, size_t bound) {
    for(const auto& p : vec) {
       for(auto c : p) {
          const auto abs_c = c - is_negative_mask(c).if_set_return(2 * c);
-         if(abs_c >= bound) {
+         const bool is_within_bound = abs_c < bound;
+         CT::unpoison(is_within_bound);
+         if(!is_within_bound) {
             return false;
          }
       }

@@ -145,7 +145,10 @@ class Dilithium_PrivateKeyInternal {
 
    public:
       DilithiumSerializedPrivateKey raw_sk() const {
-         return Dilithium_Algos::encode_private_key(m_rho, m_tr, m_signing_seed, m_s1, m_s2, m_t0, m_mode);
+         auto scope = CT::scoped_poison(*this);
+         auto result = Dilithium_Algos::encode_private_key(m_rho, m_tr, m_signing_seed, m_s1, m_s2, m_t0, m_mode);
+         CT::unpoison(result);
+         return result;
       }
 
       const DilithiumConstants& mode() const { return m_mode; }
@@ -161,6 +164,13 @@ class Dilithium_PrivateKeyInternal {
       const DilithiumPolyVec& s2() const { return m_s2; }
 
       const DilithiumPolyVec& t0() const { return m_t0; }
+
+      void _const_time_poison() const {
+         // Note: m_rho and m_tr is public knowledge
+         CT::poison_all(m_signing_seed, m_s1, m_s2, m_t0);
+      }
+
+      void _const_time_unpoison() const { CT::unpoison_all(m_rho, m_signing_seed, m_tr, m_s1, m_s2, m_t0); }
 
    private:
       const DilithiumConstants m_mode;
@@ -194,6 +204,8 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
        * operation' may be used to sign multiple messages.
        */
       secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override {
+         auto scope = CT::scoped_poison(*m_priv_key);
+
          const auto mu = m_h.final();
          const auto& mode = m_priv_key->mode();
          const auto& sympri = mode.symmetric_primitives();
@@ -203,6 +215,7 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
          const auto rhoprime = (m_randomized)
                                   ? rng.random_vec<DilithiumSeedRhoPrime>(DilithiumConstants::SEED_RHOPRIME_BYTES)
                                   : sympri.H(m_priv_key->signing_seed(), mu);
+         CT::poison(rhoprime);
 
          // Note: nonce (as requested by `polyvecl_uniform_gamma1`) is actually just uint16_t
          //       but to avoid an integer overflow, we use uint32_t as the loop variable.
@@ -216,6 +229,8 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
 
             auto [w1, w0] = Dilithium_Algos::decompose(w, mode);
             const auto ch = sympri.H(mu, Dilithium_Algos::encode_commitment(w1, mode));
+            CT::unpoison(ch);  // part of the signature
+
             StrongSpan<const DilithiumCommitmentHash> c1(
                std::span<const uint8_t>(ch).first(DilithiumConstants::COMMITMENT_HASH_C1_BYTES));
             const auto c = ntt(Dilithium_Algos::sample_in_ball(c1, mode));
@@ -225,6 +240,7 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
             if(!Dilithium_Algos::infinity_norm_within_bound(z, to_underlying(mode.gamma1()) - mode.beta())) {
                continue;
             }
+            CT::unpoison(z);  // part of the signature
 
             const auto cs2 = inverse_ntt(c * m_s2);
             w0 -= cs2;
@@ -243,9 +259,12 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
             w0.conditional_add_q();
 
             const auto hint = Dilithium_Algos::make_hint(w0, w1, mode);
-            if(hint.hamming_weight() > mode.omega()) {
+            const auto hamming_weight = hint.hamming_weight();
+            CT::unpoison(hamming_weight);
+            if(hamming_weight > mode.omega()) {
                continue;
             }
+            CT::unpoison(hint);  // part of the signature
 
             return Dilithium_Algos::encode_signature(ch, z, hint, mode).get();
          }
@@ -434,12 +453,16 @@ Dilithium_PrivateKey::Dilithium_PrivateKey(RandomNumberGenerator& rng, Dilithium
    const auto& sympriv = mode.symmetric_primitives();
 
    const auto xi = rng.random_vec<DilithiumSeedRandomness>(DilithiumConstants::SEED_RANDOMNESS_BYTES);
+   CT::poison(xi);
+
    auto [rho, rhoprime, key] = sympriv.H(xi);
+   CT::unpoison(rho);  // rho is public (seed for the public matrix A)
 
    const auto A = Dilithium_Algos::expand_A(rho, mode);
    auto [s1, s2] = Dilithium_Algos::expand_s(rhoprime, mode);
    auto [t1, t0] = Dilithium_Algos::compute_t1_and_t0(A, s1, s2);
 
+   CT::unpoison_all(t1, key, s1, s2, t0);
    m_public = std::make_shared<Dilithium_PublicKeyInternal>(mode, rho, std::move(t1));
    m_private = std::make_shared<Dilithium_PrivateKeyInternal>(
       std::move(mode), std::move(rho), std::move(key), m_public->tr(), std::move(s1), std::move(s2), std::move(t0));
@@ -449,6 +472,8 @@ Dilithium_PrivateKey::Dilithium_PrivateKey(const AlgorithmIdentifier& alg_id, st
       Dilithium_PrivateKey(sk, DilithiumMode(alg_id.oid())) {}
 
 Dilithium_PrivateKey::Dilithium_PrivateKey(std::span<const uint8_t> sk, DilithiumMode m) {
+   auto scope = CT::scoped_poison(sk);
+
    DilithiumConstants mode(m);
    BOTAN_ARG_CHECK(sk.size() == mode.private_key_bytes(), "dilithium private key does not have the correct byte count");
    m_private =
@@ -456,9 +481,16 @@ Dilithium_PrivateKey::Dilithium_PrivateKey(std::span<const uint8_t> sk, Dilithiu
 
    // Currently, Botan's Private_Key class inherits from Public_Key, forcing us
    // to derive the public key from the private key here.
+
+   // rho is public (used in rejection sampling of matrix A)
+   CT::unpoison(m_private->rho());
+
    const auto A = Dilithium_Algos::expand_A(m_private->rho(), m_private->mode());
    auto [t1, _] = Dilithium_Algos::compute_t1_and_t0(A, m_private->s1(), m_private->s2());
+   CT::unpoison(t1);
+
    m_public = std::make_shared<Dilithium_PublicKeyInternal>(m_private->mode(), m_private->rho(), std::move(t1));
+   CT::unpoison(*m_private);
 
    if(m_public->tr() != m_private->tr()) {
       throw Decoding_Error("Calculated dilithium public key hash does not match the one stored in the private key");
