@@ -71,6 +71,22 @@ constexpr inline void unpoison(const T* p, size_t n) {
    BOTAN_UNUSED(p, n);
 }
 
+/**
+ * Checks whether CT::poison() and CT::unpoison() actually have an effect.
+ *
+ * If the build is not instrumented and/or not run using an analysis tool like
+ * valgrind, the functions are no-ops and the return value is false.
+ *
+ * @returns true if CT::poison() and CT::unpoison() are effective
+ */
+inline bool poison_has_effect() {
+#if defined(BOTAN_HAS_VALGRIND)
+   return RUNNING_ON_VALGRIND;
+#else
+   return false;
+#endif
+}
+
 /// @}
 
 /// @name Constant Time Check Annotation Convenience overloads

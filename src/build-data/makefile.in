@@ -119,6 +119,15 @@ bogo_shim: %{out_dir}/botan_bogo_shim
 
 %{endif}
 
+%{if build_ct_selftest}
+
+ct_selftest: %{out_dir}/botan_ct_selftest
+
+%{out_dir}/botan_ct_selftest: %{ct_selftest_src} $(LIBRARIES)
+	$(CXX) $(BUILD_FLAGS) -DBOTAN_IS_BEING_BUILT %{public_include_flags} %{internal_include_flags} %{external_include_flags} %{ct_selftest_src} $(BUILD_DIR_LINK_PATH) $(LDFLAGS) $(EXE_LINKS_TO) %{output_to_exe}$@
+
+%{endif}
+
 # Library targets
 
 %{if build_static_lib}

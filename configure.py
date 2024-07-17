@@ -309,7 +309,7 @@ class BuildPaths:
             return (self.example_sources, self.example_obj_dir)
         raise InternalError("Unknown src info type '%s'" % (typ))
 
-ACCEPTABLE_BUILD_TARGETS = ["static", "shared", "cli", "tests", "bogo_shim", "examples"]
+ACCEPTABLE_BUILD_TARGETS = ["static", "shared", "cli", "tests", "bogo_shim", "examples", "ct_selftest"]
 
 def process_command_line(args):
     """
@@ -2078,6 +2078,8 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
             yield 'bogo_shim'
         if 'examples' in options.build_targets:
             yield 'examples'
+        if 'ct_selftest' in options.build_targets:
+            yield 'ct_selftest'
 
     def install_targets(options):
         yield 'libs'
@@ -2279,6 +2281,9 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
 
         'build_bogo_shim': bool('bogo_shim' in options.build_targets),
         'bogo_shim_src': os.path.join(source_paths.src_dir, 'bogo_shim', 'bogo_shim.cpp'),
+
+        'build_ct_selftest': bool('ct_selftest' in options.build_targets),
+        'ct_selftest_src': os.path.join(source_paths.src_dir, 'ct_selftest', 'ct_selftest.cpp'),
 
         'os_features': osinfo.enabled_features(options),
         'os_name': osinfo.basename,

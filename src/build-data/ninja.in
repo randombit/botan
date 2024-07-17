@@ -127,6 +127,14 @@ build %{out_dir}/bogo_shim_object: compile_exe %{bogo_shim_src}
 
 %{endif}
 
+%{if build_ct_selftest}
+
+build botan_ct_selftest: link_cli ct_selftest_object | %{library_targets}
+
+build %{out_dir}/ct_selftest_object: compile_exe %{ct_selftest_src}
+
+%{endif}
+
 # Misc targets
 
 rule build_docs
@@ -159,6 +167,8 @@ build cli: phony %{cli_exe}
 build tests: phony %{test_exe}
 
 build bogo_shim: phony botan_bogo_shim
+
+build ct_selftest: phony botan_ct_selftest
 
 build libs: phony %{library_targets} $
 %{if symlink_shared_lib}

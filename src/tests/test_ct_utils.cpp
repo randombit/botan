@@ -177,4 +177,80 @@ class CT_Option_Tests final : public Test {
 
 BOTAN_REGISTER_TEST("ct_utils", "ct_option", CT_Option_Tests);
 
+namespace {
+
+template <typename T = void>
+struct Poisonable {
+      mutable bool poisoned = false;  // NOLINT(misc-non-private-member-variables-in-classes)
+
+      void _const_time_poison() const { poisoned = true; }
+
+      void _const_time_unpoison() const { poisoned = false; }
+};
+
+std::vector<Test::Result> test_higher_level_ct_poison() {
+   return {
+      CHECK("custom poisonable object",
+            [](Test::Result& result) {
+               Poisonable p;
+               result.confirm("not poisoned", p.poisoned == false);
+               Botan::CT::poison(p);
+               result.confirm("poisoned", p.poisoned == true);
+               Botan::CT::unpoison(p);
+               result.confirm("unpoisoned", p.poisoned == false);
+            }),
+
+      CHECK("poison multiple objects",
+            [](Test::Result& result) {
+               // template is useless, but p1, p2, and p3 are different types and we
+               // want to make sure that poison_all/unpoison_all can deal with that.
+               Poisonable<int> p1;
+               Poisonable<double> p2;
+               Poisonable<std::string> p3;
+
+               result.confirm("all not poisoned", !p1.poisoned && !p2.poisoned && !p3.poisoned);
+               Botan::CT::poison_all(p1, p2, p3);
+               result.confirm("all poisoned", p1.poisoned && p2.poisoned && p3.poisoned);
+               Botan::CT::unpoison_all(p1, p2, p3);
+               result.confirm("all unpoisoned", !p1.poisoned && !p2.poisoned && !p3.poisoned);
+            }),
+
+      CHECK("scoped poison",
+            [](Test::Result& result) {
+               // template is useless, but p1, p2, and p3 are different types and we
+               // want to make sure that poison_all/unpoison_all can deal with that.
+               Poisonable<int> p1;
+               Poisonable<double> p2;
+               Poisonable<std::string> p3;
+
+               result.confirm("not poisoned", !p1.poisoned && !p2.poisoned, !p3.poisoned);
+
+               {
+                  auto scope = Botan::CT::scoped_poison(p1, p2, p3);
+                  result.confirm("poisoned", p1.poisoned && p2.poisoned && p3.poisoned);
+               }
+
+               result.confirm("unpoisoned", !p1.poisoned && !p2.poisoned && !p3.poisoned);
+            }),
+
+      CHECK("poison a range of poisonable objects",
+            [](Test::Result& result) {
+               auto is_poisoned = [](const auto& p) { return p.poisoned; };
+
+               std::vector<Poisonable<>> v(10);
+               result.confirm("none poisoned", std::none_of(v.begin(), v.end(), is_poisoned));
+
+               Botan::CT::poison_range(v);
+               result.confirm("all poisoned", std::all_of(v.begin(), v.end(), is_poisoned));
+
+               Botan::CT::unpoison_range(v);
+               result.confirm("all unpoisoned", std::none_of(v.begin(), v.end(), is_poisoned));
+            }),
+   };
+}
+
+}  // namespace
+
+BOTAN_REGISTER_TEST_FN("ct_utils", "ct_poison", test_higher_level_ct_poison);
+
 }  // namespace Botan_Tests
