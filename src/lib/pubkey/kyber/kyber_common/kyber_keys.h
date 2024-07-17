@@ -12,6 +12,7 @@
 #ifndef BOTAN_KYBER_INTERNAL_KEYS_H_
 #define BOTAN_KYBER_INTERNAL_KEYS_H_
 
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/kyber_algos.h>
 #include <botan/internal/kyber_constants.h>
 #include <botan/internal/kyber_types.h>
@@ -81,6 +82,10 @@ class Kyber_PrivateKeyInternal {
       const KyberConstants& mode() const { return m_mode; }
 
       Kyber_PrivateKeyInternal() = delete;
+
+      void _const_time_poison() const { CT::poison_all(m_s, m_z); }
+
+      void _const_time_unpoison() const { CT::unpoison_all(m_s, m_z); }
 
    private:
       KyberConstants m_mode;

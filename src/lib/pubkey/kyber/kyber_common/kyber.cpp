@@ -19,6 +19,7 @@
 #include <botan/rng.h>
 #include <botan/secmem.h>
 
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/kyber_algos.h>
 #include <botan/internal/kyber_constants.h>
@@ -206,8 +207,12 @@ Kyber_PrivateKey::Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode m) {
    // Algorithm 12 (K-PKE.KeyGen) ----------------
 
    const auto d = rng.random_vec<KyberSeedRandomness>(KyberConstants::SEED_BYTES);
+   CT::poison(d);
+
    auto [rho, sigma] = mode.symmetric_primitives().G(d);
    Kyber_Algos::PolynomialSampler ps(sigma, mode);
+
+   CT::unpoison(rho);  // rho is public (seed for the public matrix A)
 
    auto A = Kyber_Algos::sample_matrix(rho, false /* not transposed */, mode);
    auto s = ntt(ps.sample_polynomial_vector_cbd_eta1());
@@ -219,6 +224,8 @@ Kyber_PrivateKey::Kyber_PrivateKey(RandomNumberGenerator& rng, KyberMode m) {
 
    // End Algorithm 12 ---------------------------
 
+   CT::unpoison_all(t, s);
+
    m_public = std::make_shared<Kyber_PublicKeyInternal>(mode, std::move(t), std::move(rho));
    m_private = std::make_shared<Kyber_PrivateKeyInternal>(
       std::move(mode), std::move(s), rng.random_vec<KyberImplicitRejectionValue>(KyberConstants::SEED_BYTES));
@@ -229,6 +236,8 @@ Kyber_PrivateKey::Kyber_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<
 
 Kyber_PrivateKey::Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode m) {
    KyberConstants mode(m);
+
+   auto scope = CT::scoped_poison(sk);
 
    if(mode.private_key_bytes() != sk.size()) {
       throw Invalid_Argument("kyber private key does not have the correct byte count");
@@ -242,6 +251,8 @@ Kyber_PrivateKey::Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode m) {
    auto z = s.copy<KyberImplicitRejectionValue>(KyberConstants::SEED_BYTES);
 
    BOTAN_ASSERT_NOMSG(s.empty());
+
+   CT::unpoison_all(pub_key, puk_key_hash, skpv, z);
 
    m_public = initialize_from_encoding(pub_key, m);
    m_private = std::make_shared<Kyber_PrivateKeyInternal>(std::move(mode), std::move(skpv), std::move(z));
@@ -262,11 +273,14 @@ secure_vector<uint8_t> Kyber_PrivateKey::raw_private_key_bits() const {
 }
 
 secure_vector<uint8_t> Kyber_PrivateKey::private_key_bits() const {
-   return concat(
-      Kyber_Algos::encode_polynomial_vector<secure_vector<uint8_t>>(m_private->s().reduce(), m_private->mode()),
-      m_public->public_key_bits_raw(),
-      m_public->H_public_key_bits_raw(),
-      m_private->z());
+   auto scope = CT::scoped_poison(*m_private);
+   auto result =
+      concat(Kyber_Algos::encode_polynomial_vector<secure_vector<uint8_t>>(m_private->s().reduce(), m_private->mode()),
+             m_public->public_key_bits_raw(),
+             m_public->H_public_key_bits_raw(),
+             m_private->z());
+   CT::unpoison(result);
+   return result;
 }
 
 std::unique_ptr<PK_Ops::KEM_Encryption> Kyber_PublicKey::create_kem_encryption_op(std::string_view params,
