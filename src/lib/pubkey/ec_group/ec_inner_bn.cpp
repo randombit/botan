@@ -178,8 +178,15 @@ bool EC_Mul2Table_Data_BN::mul2_vartime_x_mod_order_eq(const EC_Scalar_Data& v,
    }
 
    /*
+   * The trick used below doesn't work for curves with cofactors
+   */
+   if(m_group->has_cofactor()) {
+      return m_group->mod_order(pt.get_affine_x()) == bn_v.value();
+   }
+
+   /*
    * Note we're working with the projective coordinate directly here!
-   * Nominally we're doing this:
+   * Nominally we're comparing v with the affine x coordinate.
    *
    * return m_group->mod_order(pt.get_affine_x()) == bn_v.value();
    *
