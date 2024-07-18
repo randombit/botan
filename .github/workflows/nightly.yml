@@ -62,9 +62,10 @@ jobs:
           - target: cross-arm64-amalgamation
             compiler: gcc
             host_os: ubuntu-24.04
-          - target: emscripten
-            compiler: emcc
-            host_os: macos-14
+# Disabled due to https://github.com/emscripten-core/emscripten/issues/22249
+#          - target: emscripten
+#            compiler: emcc
+#            host_os: macos-14
 
     runs-on: ${{ matrix.host_os }}
 
