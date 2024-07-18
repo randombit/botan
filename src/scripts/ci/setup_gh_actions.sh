@@ -140,7 +140,11 @@ else
         boostincdir=$(brew --prefix boost)/include
         echo "BOOST_INCLUDEDIR=$boostincdir" >> "$GITHUB_ENV"
     elif [ "$TARGET" = "emscripten" ]; then
-        brew install emscripten
+        # Workaround: emscripten 3.1.63 is broken, install an older one...
+        brew tap-new botan/local-emscripten
+        brew tap --force homebrew/core
+        brew extract --version=3.1.61 emscripten botan/local-emscripten
+        brew install emscripten@3.1.61
     fi
 
     if [ -d '/Applications/Xcode_15.3.app/Contents/Developer' ]; then
