@@ -105,16 +105,16 @@ BOTAN_DIAGNOSTIC_POP
 * The types above are just wrappers for curve25519_donna, plus defining
 * encodings for public and private keys.
 */
-BOTAN_DEPRECATED_API("Use X25519_PrivateKey or Sodium::crypto_scalarmult_curve25519")
-void curve25519_donna(uint8_t mypublic[32], const uint8_t secret[32], const uint8_t basepoint[32]);
+BOTAN_DEPRECATED("Use X25519_PrivateKey or Sodium::crypto_scalarmult_curve25519")
+void curve25519_donna(uint8_t mypublic[32], const uint8_t secret[32], const uint8_t basepoint[32]) BOTAN_PUBLIC_API(2,0);
 
 /**
 * Exponentiate by the x25519 base point
 * @param mypublic output value
 * @param secret random scalar
 */
-BOTAN_DEPRECATED_API("Use X25519_PrivateKey or Sodium::crypto_scalarmult_curve25519_base")
-void curve25519_basepoint(uint8_t mypublic[32], const uint8_t secret[32]);
+BOTAN_DEPRECATED("Use X25519_PrivateKey or Sodium::crypto_scalarmult_curve25519_base")
+void curve25519_basepoint(uint8_t mypublic[32], const uint8_t secret[32]) BOTAN_PUBLIC_API(2,0);
 
 }  // namespace Botan
 

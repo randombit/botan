@@ -31,12 +31,6 @@ when the application is later compiled using GCC.
 #define BOTAN_PUBLIC_API(maj, min) BOTAN_DLL
 
 /**
-* Used to annotate API exports which are public, but are now deprecated
-* and which will be removed in a future major release.
-*/
-#define BOTAN_DEPRECATED_API(msg) BOTAN_DLL BOTAN_DEPRECATED(msg)
-
-/**
 * Used to annotate API exports which are public and can be used by
 * applications if needed, but which are intentionally not documented,
 * and which may change incompatibly in a future major version.
