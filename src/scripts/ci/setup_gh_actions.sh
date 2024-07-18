@@ -115,8 +115,6 @@ else
         # so that the build can find the boost headers.
         boostincdir=$(brew --prefix boost)/include
         echo "BOOST_INCLUDEDIR=$boostincdir" >> "$GITHUB_ENV"
-    elif [ "$TARGET" = "emscripten" ]; then
-        brew install emscripten
     fi
 
     if [ -d '/Applications/Xcode_15.3.app/Contents/Developer' ]; then

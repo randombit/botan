@@ -43,7 +43,7 @@ jobs:
             host_os: ubuntu-24.04
           - target: emscripten
             compiler: emcc
-            host_os: macos-14
+            host_os: ubuntu-24.04
 
     runs-on: ${{ matrix.host_os }}
 
