@@ -527,6 +527,9 @@ void sample_uniform_eta(StrongSpan<const DilithiumSeedRhoPrime> rhoprime,
    auto coeff_from_halfbyte = [eta = mode.eta()](uint8_t b) -> std::optional<int32_t> {
       BOTAN_DEBUG_ASSERT(b < 16);
 
+      // We are going to perform rejection sampling on the XOF outputs.
+      CT::unpoison(b);
+
       if(eta == Eta::_2 && b < 15) {
          b = b - (205 * b >> 10) * 5;
          return 2 - b;
@@ -567,6 +570,9 @@ void sample_uniform_eta(StrongSpan<const DilithiumSeedRhoPrime> rhoprime,
    for(auto& coeff : p) {
       coeff = next_coeff(xof);
    }
+
+   // Rejection sampling is done. Secret polynomial can be repoisoned.
+   CT::poison(p);
 
    BOTAN_DEBUG_ASSERT(p.ct_validate_value_range(-static_cast<int32_t>(mode.eta()), mode.eta()));
 }
@@ -698,19 +704,25 @@ std::pair<DilithiumPolyVec, DilithiumPolyVec> decompose(const DilithiumPolyVec& 
 DilithiumPolyVec make_hint(const DilithiumPolyVec& z, const DilithiumPolyVec& r, const DilithiumConstants& mode) {
    BOTAN_DEBUG_ASSERT(z.size() == r.size());
 
-   auto make_hint = [gamma2 = int32_t(mode.gamma2()), q_gamma2 = DilithiumConstants::Q - int32_t(mode.gamma2())](
-                       int32_t c0, int32_t c1) -> bool {
-      if(c0 <= gamma2 || c0 > q_gamma2 || (c0 == q_gamma2 && c1 == 0)) {
-         return false;
-      }
-      return true;
+   auto make_hint = [gamma2 = uint32_t(mode.gamma2()),
+                     q_gamma2 = static_cast<uint32_t>(DilithiumConstants::Q) - uint32_t(mode.gamma2())](
+                       int32_t c0, int32_t c1) -> CT::Choice {
+      BOTAN_DEBUG_ASSERT(c0 >= 0);
+      BOTAN_DEBUG_ASSERT(c1 >= 0);
+
+      const uint32_t pc0 = static_cast<uint32_t>(c0);
+      const uint32_t pc1 = static_cast<uint32_t>(c1);
+
+      return (CT::Mask<uint32_t>::is_gt(pc0, gamma2) & CT::Mask<uint32_t>::is_lte(pc0, q_gamma2) &
+              ~(CT::Mask<uint32_t>::is_equal(pc0, q_gamma2) & CT::Mask<uint32_t>::is_zero(pc1)))
+         .as_choice();
    };
 
    DilithiumPolyVec hint(r.size());
 
    for(size_t i = 0; i < r.size(); ++i) {
       for(size_t j = 0; j < r[i].size(); ++j) {
-         hint[i][j] = make_hint(z[i][j], r[i][j]);
+         hint[i][j] = make_hint(z[i][j], r[i][j]).as_bool();
       }
    }
 
@@ -767,7 +779,9 @@ bool infinity_norm_within_bound(const DilithiumPolyVec& vec, size_t bound) {
    for(const auto& p : vec) {
       for(auto c : p) {
          const auto abs_c = c - is_negative_mask(c).if_set_return(2 * c);
-         if(abs_c >= bound) {
+         const bool is_within_bound = abs_c < bound;
+         CT::unpoison(is_within_bound);
+         if(!is_within_bound) {
             return false;
          }
       }
