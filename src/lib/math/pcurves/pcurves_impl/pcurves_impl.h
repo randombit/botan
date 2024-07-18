@@ -133,6 +133,23 @@ class IntMod final {
 
       friend constexpr Self operator-(const Self& a, const Self& b) { return a + b.negate(); }
 
+      /// Return (*this) divided by 2
+      Self div2() const {
+         // The inverse of 2 modulo P is (P/2)+1; this avoids a constexpr time
+         // general inversion, which some compilers can't handle
+         constexpr auto INV_2 = p_div_2_plus_1(Rep::P);
+
+         // We could multiply by INV_2 but there is a better way ...
+
+         std::array<W, N> t = value();
+         W borrow = shift_right<1>(t);
+
+         // If value was odd, add (P/2)+1
+         bigint_cnd_add(borrow, t.data(), N, INV_2.data(), N);
+
+         return Self(t);
+      }
+
       /// Return (*this) multiplied by 2
       Self mul2() const {
          std::array<W, N> t = value();
@@ -712,10 +729,6 @@ class ProjectiveCurvePoint {
             TODO adapt this for A == 0 and/or generic A cases
             */
 
-            // The inverse of 2 modulo P is (P/2)+1; this avoids a constexpr time
-            // general inversion, which some compilers can't handle
-            constexpr auto INV_2 = FieldElement::from_words(p_div_2_plus_1(Params::PW));
-
             auto nx = x();
             auto ny = y();
             auto nz = z();
@@ -735,7 +748,7 @@ class ProjectiveCurvePoint {
                   w *= ny4;
                }
             }
-            ny *= INV_2;
+            ny = ny.div2();
             return Self(nx, ny, nz);
          } else {
             Self pt = (*this);
