@@ -2053,18 +2053,6 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
 
     program_suffix = options.program_suffix or osinfo.program_suffix
 
-    def join_with_build_dir(path):
-        # jom (and mingw32-make) seem to string-compare Makefile targets and
-        # requirements. For them, `./botan.lib` is NOT equal to `botan.lib` or
-        # `C:\botan\botan-test.exe` is NOT equal to `C:\botan/botan-test.exe`
-        #
-        # `normalize_source_path` will "fix" the path slashes but remove
-        # a redundant `./` for the "trivial" relative path.
-        normalized = normalize_source_path(os.path.join(build_paths.out_dir, path))
-        if build_paths.out_dir == '.':
-            normalized = './%s' % normalized
-        return normalized
-
     def all_targets(options):
         yield 'libs'
         if options.with_documentation:
@@ -2151,9 +2139,9 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'python_dir': source_paths.python_dir,
 
         'cli_exe_name': osinfo.cli_exe_name + program_suffix,
-        'cli_exe': join_with_build_dir(osinfo.cli_exe_name + program_suffix),
+        'cli_exe': normalize_source_path(os.path.join(build_paths.out_dir, osinfo.cli_exe_name + program_suffix)),
         'build_cli_exe': bool('cli' in options.build_targets),
-        'test_exe': join_with_build_dir('botan-test' + program_suffix),
+        'test_exe': normalize_source_path(os.path.join(build_paths.out_dir, 'botan-test' + program_suffix)),
 
         'lib_prefix': osinfo.lib_prefix,
         'static_suffix': osinfo.static_suffix,
@@ -2356,7 +2344,7 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
     if options.build_shared_lib:
         lib_targets.append('shared_lib_name')
 
-    variables['library_targets'] = ' '.join([join_with_build_dir(variables[t]) for t in lib_targets])
+    variables['library_targets'] = ' '.join(normalize_source_paths([os.path.join(build_paths.out_dir, variables[t]) for t in lib_targets]))
 
     if options.os == 'llvm' or options.compiler == 'msvc':
         # llvm-link and msvc require just naming the file directly
