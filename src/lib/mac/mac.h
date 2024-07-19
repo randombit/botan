@@ -53,7 +53,7 @@ class BOTAN_PUBLIC_API(2, 0) MessageAuthenticationCode : public Buffered_Computa
       * Prepare for processing a message under the specified nonce
       *
       * Most MACs neither require nor support a nonce; for these algorithms
-      * calling `start_msg` is optional and calling it with anything other than
+      * calling start() is optional and calling it with anything other than
       * an empty string is an error. One MAC which *requires* a per-message
       * nonce be specified is GMAC.
       *

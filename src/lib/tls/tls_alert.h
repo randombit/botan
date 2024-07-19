@@ -77,22 +77,30 @@ class BOTAN_PUBLIC_API(2, 0) Alert final {
       bool is_valid() const { return (m_type_code != AlertType::None); }
 
       /**
-      * @return if this alert is fatal or not
+      * Return true if this alert is fatal. A fatal alert causes the connection
+      * to be immediately disconnected. Otherwise, the alert is a warning and
+      * the connection remains valid.
       *
       * Note:
       *    RFC 8446 6.
       *       In TLS 1.3, the severity is implicit in the type of alert being sent,
       *       and the "level" field can safely be ignored.
       *    Everything is considered fatal except for UserCanceled and CloseNotify (RFC 8446 6.1)
+      *
+      * @return if this alert is fatal or not
       */
       bool is_fatal() const { return m_fatal; }
 
       /**
+      * Returns the type of the alert as an enum
+      *
       * @return type of alert
       */
       Type type() const { return m_type_code; }
 
       /**
+      * Returns the type of the alert as a string
+      *
       * @return type of alert
       */
       std::string type_string() const;

@@ -59,17 +59,20 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash {
       virtual size_t total_memory_usage() const { return 0; }
 
       /**
-      * Returns true if this password hash supports supplying a key
+      * @returns true if this password hash supports supplying a key
       */
       virtual bool supports_keyed_operation() const { return false; }
 
       /**
-      * Returns true if this password hash supports supplying associated data
+      * @returns true if this password hash supports supplying associated data
       */
       virtual bool supports_associated_data() const { return false; }
 
       /**
       * Hash a password into a bitstring
+      *
+      * Derive a key from the specified @p password and  @p salt, placing it into
+      * @p out.
       *
       * @param out a span where the derived key will be placed
       * @param password the password to derive the key from
@@ -84,6 +87,11 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHash {
 
       /**
       * Hash a password into a bitstring
+      *
+      * Derive a key from the specified @p password, @p salt, @p
+      * associated_data, and secret @p key, placing it into @p out. The
+      * @p associated_data and @p key are both allowed to be empty. Currently
+      * non-empty AD/key is only supported with Argon2.
       *
       * @param out a span where the derived key will be placed
       * @param password the password to derive the key from
@@ -196,14 +204,28 @@ class BOTAN_PUBLIC_API(2, 8) PasswordHashFamily {
 
       /**
       * Return a new parameter set tuned for this machine
+      *
+      * Return a password hash instance tuned to run for approximately @p msec
+      * milliseconds when producing an output of length @p output_length.
+      * (Accuracy may vary, use the command line utility ``botan pbkdf_tune`` to
+      * check.)
+      *
+      * The parameters will be selected to use at most @p max_memory_usage_mb
+      * megabytes of memory, or if left as zero any size is allowed.
+      *
+      * This function works by runing a short tuning loop to estimate the
+      * performance of the algorithm, then scaling the parameters appropriately
+      * to hit the target size. The length of time the tuning loop runs can be
+      * controlled using the @p tuning_msec parameter.
+      *
       * @param output_length how long the output length will be
       * @param msec the desired execution time in milliseconds
       *
-      * @param max_memory_usage_mb some password hash functions can use a tunable
-      * amount of memory, in this case max_memory_usage limits the amount of RAM
-      * the returned parameters will require, in mebibytes (2**20 bytes). It may
-      * require some small amount above the request. Set to zero to place no
-      * limit at all.
+      * @param max_memory_usage_mb some password hash functions can use a
+      * tunable amount of memory, in this case max_memory_usage limits the
+      * amount of RAM the returned parameters will require, in mebibytes (2**20
+      * bytes). It may require some small amount above the request. Set to zero
+      * to place no limit at all.
       * @param tuning_msec how long to run the tuning loop
       */
       virtual std::unique_ptr<PasswordHash> tune(

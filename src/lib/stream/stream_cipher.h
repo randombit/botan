@@ -49,6 +49,10 @@ class BOTAN_PUBLIC_API(2, 0) StreamCipher : public SymmetricAlgorithm {
 
       /**
       * Encrypt or decrypt a message
+      *
+      * Processes all bytes plain/ciphertext from @p in and writes the result to
+      * @p out.
+      *
       * @param in the plaintext
       * @param out the byte array to hold the output, i.e. the ciphertext
       * @param len the length of both in and out in bytes
@@ -88,6 +92,8 @@ class BOTAN_PUBLIC_API(2, 0) StreamCipher : public SymmetricAlgorithm {
 
       /**
       * Get @p bytes from the keystream
+      *
+      * The bytes are written into a continous byte buffer of your choosing.
       *
       * @param bytes The number of bytes to be produced
       */
@@ -151,6 +157,14 @@ class BOTAN_PUBLIC_API(2, 0) StreamCipher : public SymmetricAlgorithm {
 
       /**
       * Resync the cipher using the IV
+      *
+      * Load @p IV into the stream cipher state. This should happen after the
+      * key is set (set_key()) and before any operation (encrypt(), decrypt() or
+      * seek()) is called.
+      *
+      * If the cipher does not support IVs, then a call with an empty IV will be
+      * accepted and any other length will cause an Invalid_IV_Length exception.
+      *
       * @param iv the initialization vector
       * @param iv_len the length of the IV in bytes
       */
@@ -159,12 +173,15 @@ class BOTAN_PUBLIC_API(2, 0) StreamCipher : public SymmetricAlgorithm {
       /**
       * Resync the cipher using the IV
       * @param iv the initialization vector
+      * @throws Invalid_IV_Length if an incompatible IV was passed.
       */
       void set_iv(std::span<const uint8_t> iv) { set_iv_bytes(iv.data(), iv.size()); }
 
       /**
       * Return the default (preferred) nonce length
-      * If this function returns 0, then this cipher does not support nonces
+      *
+      * If this function returns zero, then this cipher does not support nonces;
+      * in this case any call to set_iv with a (non-empty) value will fail.
       *
       * Default implementation returns 0
       */
@@ -188,6 +205,15 @@ class BOTAN_PUBLIC_API(2, 0) StreamCipher : public SymmetricAlgorithm {
 
       /**
       * Set the offset and the state used later to generate the keystream
+      *
+      * Sets the state of the stream cipher and keystream according to the
+      * passed @p offset, exactly as if @p offset bytes had first been
+      * encrypted. The key and (if required) the IV have to be set before this
+      * can be called.
+      *
+      * @note Not all ciphers support seeking; such objects will throw
+      *       Not_Implemented in this case.
+      *
       * @param offset the offset where we begin to generate the keystream
       */
       virtual void seek(uint64_t offset) = 0;

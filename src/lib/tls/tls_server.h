@@ -28,8 +28,24 @@ class BOTAN_PUBLIC_API(2, 0) Server final : public Channel {
       /**
       * Server initialization
       *
-      * @param callbacks contains a set of callback function references
-      *        required by the TLS server.
+      * The first 5 arguments as well as the final argument
+      * @p reserved_io_buffer_size, are treated similarly to the TLS::Client().
+      *
+      * If a client sends the ALPN extension, the
+      * TLS::Callbacks::tls_server_choose_app_protocol() will be called and the
+      * result sent back to the client. If the empty string is returned, the
+      * server will not send an ALPN response. The function can also throw an
+      * exception to abort the handshake entirely, the ALPN specification says
+      * that if this occurs the alert should be of type
+      * TLS::AlertType::NoApplicationProtocol.
+      *
+      * The optional argument @p is_datagram specifies if this is a TLS or DTLS
+      * server; unlike clients, which know what type of protocol (TLS vs DTLS)
+      * they are negotiating from the start via the @p offer_version, servers
+      * would not until they actually received a client hello.
+      *
+      * @param callbacks contains a set of callback function references required
+      *        by the TLS server.
       *
       * @param session_manager manages session state
       *
@@ -42,9 +58,9 @@ class BOTAN_PUBLIC_API(2, 0) Server final : public Channel {
       * @param is_datagram set to true if this server should expect DTLS
       *        connections. Otherwise TLS connections are expected.
       *
-      * @param reserved_io_buffer_size This many bytes of memory will
-      *        be preallocated for the read and write buffers. Smaller
-      *        values just mean reallocations and copies are more likely.
+      * @param reserved_io_buffer_size This many bytes of memory will be
+      *        preallocated for the read and write buffers. Smaller values just
+      *        mean reallocations and copies are more likely.
       */
       Server(const std::shared_ptr<Callbacks>& callbacks,
              const std::shared_ptr<Session_Manager>& session_manager,

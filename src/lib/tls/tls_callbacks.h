@@ -46,49 +46,97 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
       virtual ~Callbacks() = default;
 
       /**
-       * Mandatory callback: output function
-       * The channel will call this with data which needs to be sent to the peer
-       * (eg, over a socket or some other form of IPC). The array will be overwritten
-       * when the function returns so a copy must be made if the data cannot be
-       * sent immediately.
+       * @name Mandatory
        *
-       * @param data a contiguous data buffer to send
+       * Those callbacks must be implemented by all applications that use TLS.
+       * @{
        */
+
+      /**
+      * Mandatory callback: output function
+      *
+      * The channel will call this with data which needs to be sent to the peer
+      * (eg, over a socket or some other form of IPC). The array will be overwritten
+      * when the function returns so a copy must be made if the data cannot be
+      * sent immediately.
+      *
+      * As an example you could use the syscall ``send`` to perform a blocking
+      * write on a socket, or append the data to a queue managed by your
+      * application and initiate an asynchronous write.
+      *
+      * For TLS all writes must occur *in the order requested*. For DTLS this
+      * ordering is not strictly required, but is still recommended.
+      *
+      * @param data a contiguous data buffer to send
+      */
       virtual void tls_emit_data(std::span<const uint8_t> data) = 0;
 
       /**
-       * Mandatory callback: process application data
-       * Called when application data record is received from the peer.
-       * Again the array is overwritten immediately after the function returns.
-       *
-       * @param seq_no the underlying TLS/DTLS record sequence number
-       *
-       * @param data a contiguous data buffer containing the received record
-       */
+      * Mandatory callback: process application data
+      *
+      * Called when application data record is received from the peer. The
+      * array is overwritten immediately after the function returns.
+      *
+      * Currently empty records are ignored and do not instigate a callback,
+      * but this may change in a future release.
+      *
+      * For TLS the record number will always increase. For DTLS, it is
+      * possible to receive records with the @p seq_no field out of order, or
+      * with gaps, corresponding to reordered or lost datagrams.
+      *
+      * @param seq_no the underlying TLS/DTLS record sequence number
+      *
+      * @param data a contiguous data buffer containing the received record
+      */
       virtual void tls_record_received(uint64_t seq_no, std::span<const uint8_t> data) = 0;
 
       /**
-       * Mandatory callback: alert received
-       * Called when an alert is received from the peer
-       * If fatal, the connection is closing. If not fatal, the connection may
-       * still be closing (depending on the error and the peer).
-       *
-       * @param alert the source of the alert
-       */
+      * Mandatory callback: alert received
+      *
+      * Called when an alert is received from the peer. If fatal, the
+      * connection is closing. If not fatal, the connection may still be
+      * closing (depending on the error and the peer).
+      *
+      * Note that alerts received before the handshake is complete are not
+      * authenticated and could have been inserted by a MITM attacker.
+      */
       virtual void tls_alert(Alert alert) = 0;
 
+      /// @}
+      // End of mandatory callbacks
+
       /**
-       * Optional callback: session established
-       * Called when a session is established. Throw an exception to abort
-       * the connection.
-       *
-       * @param session the session descriptor
-       */
+      * @name Informational
+      *
+      * Override these to obtain deeper insights into the TLS connection.
+      * Throwing from any of these callbacks will result in the termination of
+      * the TLS connection.
+      * @{
+      */
+
+      /**
+      * Optional callback: session established
+      *
+      * Called whenever a negotiation completes. This can happen more than once
+      * on TLS 1.2 connections, if renegotiation occurs. The @p session
+      * parameter provides information about the session which was just
+      * established.
+      *
+      * If this function wishes to cancel the handshake, it can throw an
+      * exception which will send a close message to the counterparty and reset
+      * the connection state.
+      *
+      * @param session the session descriptor
+      */
       virtual void tls_session_established(const Session_Summary& session) { BOTAN_UNUSED(session); }
 
       /**
        * Optional callback: session activated
-       * Called when a session is active and can be written to
+       *
+       * By default does nothing. This is called when the session is activated,
+       * that is once it is possible to send or receive data on the channel.  In
+       * particular it is possible for an implementation of this function to
+       * perform an initial write on the channel.
        */
       virtual void tls_session_activated() {}
 

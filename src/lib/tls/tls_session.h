@@ -215,6 +215,11 @@ class BOTAN_PUBLIC_API(3, 0) Session_Base {
 
       /**
        * Get information about the TLS server
+       *
+       * Returns information that identifies the server side of the connection.
+       * This is useful for the client in that it identifies what was originally
+       * passed to the constructor. For the server, it includes the name the
+       * client specified in the server name indicator extension.
        */
       const Server_Information& server_info() const { return m_server_info; }
 
