@@ -145,8 +145,8 @@ def main(args):
     bin_dir = cfg['bindir']
     lib_dir = cfg['libdir']
     target_include_dir = cfg['installed_include_dir']
-    pkgconfig_dir = 'pkgconfig'
-    cmake_dir = 'cmake'
+    pkgconfig_dir = os.path.join(lib_dir, 'pkgconfig')
+    cmake_dir = os.path.join(lib_dir, 'cmake', 'Botan-%s' % cfg["version"])
 
     prefix = cfg['prefix']
 
@@ -205,13 +205,11 @@ def main(args):
         copy_executable(cfg['cli_exe'], prepend_destdir(os.path.join(bin_dir, cfg['cli_exe_name'])))
 
     if 'botan_pkgconfig' in cfg:
-        pkgconfig_dir = os.path.join(prefix, lib_dir, pkgconfig_dir)
         makedirs(prepend_destdir(pkgconfig_dir))
         copy_file(cfg['botan_pkgconfig'],
                   prepend_destdir(os.path.join(pkgconfig_dir, os.path.basename(cfg['botan_pkgconfig']))))
 
     if 'botan_cmake_config' in cfg and 'botan_cmake_version_config' in cfg:
-        cmake_dir = os.path.join(prefix, lib_dir, cmake_dir, 'Botan-%s' % cfg["version"])
         makedirs(prepend_destdir(cmake_dir))
         copy_file(cfg['botan_cmake_config'],
                   prepend_destdir(os.path.join(cmake_dir, os.path.basename(cfg['botan_cmake_config']))))
