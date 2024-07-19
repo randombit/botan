@@ -113,7 +113,110 @@ class Params final : public EllipticCurveParameters<
 
 // clang-format on
 
-class Curve final : public EllipticCurve<Params, Secp224r1Rep> {};
+class Curve final : public EllipticCurve<Params, Secp224r1Rep> {
+   public:
+      // Return the square of the inverse of x
+      static FieldElement fe_invert2(const FieldElement& x) {
+         auto z = x.square();
+         z *= x;
+         z = z.square();
+         z *= x;
+         auto t0 = z;
+         t0.square_n(3);
+         t0 *= z;
+         auto t1 = t0;
+         t1.square_n(6);
+         t0 *= t1;
+         t0.square_n(3);
+         z *= t0;
+         t0 = z.square();
+         t0 *= x;
+         t1 = t0;
+         t1.square_n(16);
+         t0 *= t1;
+         t1 = t0;
+         t1.square_n(15);
+         z *= t1;
+         t1 = z;
+         t1.square_n(47);
+         z *= t1;
+         z = z.square();
+         z *= x;
+         t1 = z;
+         t1.square_n(32);
+         t0 *= t1;
+         t0.square_n(96);
+         z *= t0;
+         return z.square();
+      }
+
+      static Scalar scalar_invert(const Scalar& x) {
+         // Generated using https://github.com/mmcloughlin/addchain
+         auto t6 = x.square();
+         auto z = t6.square();
+         auto t3 = x * z;
+         auto t2 = t3 * t6;
+         auto t8 = t2 * z;
+         auto t7 = t8 * z;
+         auto t5 = t7 * z;
+         auto t0 = t5 * t6;
+         auto t1 = t0 * t6;
+         auto t4 = t1 * z;
+         z = t4 * t6;
+         t6 *= z;
+         auto t10 = t6.square();
+         auto t9 = t10 * x;
+         t10.square_n(5);
+         t9 *= t10;
+         t10.square_n(5);
+         t9 *= t10;
+         t10 = t9;
+         t10.square_n(16);
+         t10 *= t9;
+         auto t11 = t10;
+         t11.square_n(32);
+         t11 *= t10;
+         t11.square_n(32);
+         t10 *= t11;
+         t10.square_n(16);
+         t9 *= t10;
+         t9.square_n(7);
+         t8 *= t9;
+         t8.square_n(4);
+         t8 *= t3;
+         t8.square_n(8);
+         t8 *= t1;
+         t8.square_n(10);
+         t8 *= t1;
+         t8.square_n(7);
+         t7 *= t8;
+         t7.square_n(11);
+         t6 *= t7;
+         t6.square_n(9);
+         t5 *= t6;
+         t5.square_n(5);
+         t4 *= t5;
+         t4.square_n(3);
+         t4 *= t3;
+         t4.square_n(5);
+         t4 *= t3;
+         t4.square_n(5);
+         t3 *= t4;
+         t3.square_n(8);
+         t3 *= t0;
+         t3.square_n(4);
+         t2 *= t3;
+         t2.square_n(8);
+         t1 *= t2;
+         t1.square_n(9);
+         t0 *= t1;
+         t0.square_n(8);
+         z *= t0;
+         z = z.square();
+         z *= x;
+         return z;
+      }
+};
 
 }  // namespace secp224r1
 
