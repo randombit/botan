@@ -1,6 +1,6 @@
 /*
 * OAEP
-* (C) 1999-2010,2015,2018 Jack Lloyd
+* (C) 1999-2010,2015,2018,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -18,38 +18,45 @@ namespace Botan {
 /*
 * OAEP Pad Operation
 */
-secure_vector<uint8_t> OAEP::pad(const uint8_t in[],
-                                 size_t in_length,
-                                 size_t key_length,
-                                 RandomNumberGenerator& rng) const {
+size_t OAEP::pad(std::span<uint8_t> output,
+                 std::span<const uint8_t> input,
+                 size_t key_length,
+                 RandomNumberGenerator& rng) const {
    key_length /= 8;
 
-   if(in_length > maximum_input_size(key_length * 8)) {
+   if(input.size() > maximum_input_size(key_length * 8)) {
       throw Invalid_Argument("OAEP: Input is too large");
    }
 
-   secure_vector<uint8_t> out(key_length);
-   BufferStuffer stuffer(out);
+   const size_t output_size = key_length;
+
+   output = output.first(output_size);  // remainder ignored
+
+   BufferStuffer stuffer(output);
 
    // We always use a seed len equal to the underlying hash
    rng.randomize(stuffer.next(m_Phash.size()));
    stuffer.append(m_Phash);
-   stuffer.append(0x00, stuffer.remaining_capacity() - (1 + in_length));
+   stuffer.append(0x00, stuffer.remaining_capacity() - (1 + input.size()));
    stuffer.append(0x01);
-   stuffer.append({in, in_length});
+   stuffer.append(input);
    BOTAN_ASSERT_NOMSG(stuffer.full());
 
-   mgf1_mask(*m_mgf1_hash, out.data(), m_Phash.size(), &out[m_Phash.size()], out.size() - m_Phash.size());
+   const size_t hlen = m_Phash.size();
 
-   mgf1_mask(*m_mgf1_hash, &out[m_Phash.size()], out.size() - m_Phash.size(), out.data(), m_Phash.size());
+   mgf1_mask(*m_mgf1_hash, output.first(hlen), output.subspan(hlen));
 
-   return out;
+   mgf1_mask(*m_mgf1_hash, output.subspan(hlen), output.first(hlen));
+
+   return key_length;
 }
 
 /*
 * OAEP Unpad Operation
 */
-secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask, const uint8_t in[], size_t in_length) const {
+CT::Option<size_t> OAEP::unpad(std::span<uint8_t> output, std::span<const uint8_t> input) const {
+   BOTAN_ASSERT_NOMSG(output.size() >= input.size());
+
    /*
    Must be careful about error messages here; if an attacker can
    distinguish them, it is easy to use the differences as an oracle to
@@ -70,41 +77,41 @@ secure_vector<uint8_t> OAEP::unpad(uint8_t& valid_mask, const uint8_t in[], size
    Therefore, the first byte should always be zero.
    */
 
-   const auto leading_0 = CT::Mask<uint8_t>::is_zero(in[0]);
+   if(input.empty()) {
+      return {};
+   }
 
-   secure_vector<uint8_t> input(in + 1, in + in_length);
+   auto scope = CT::scoped_poison(input);
+
+   const auto has_leading_0 = CT::Mask<uint8_t>::is_zero(input[0]).as_choice();
+
+   secure_vector<uint8_t> decoded(input.begin() + 1, input.end());
+   auto buf = std::span{decoded};
 
    const size_t hlen = m_Phash.size();
 
-   mgf1_mask(*m_mgf1_hash, &input[hlen], input.size() - hlen, input.data(), hlen);
+   mgf1_mask(*m_mgf1_hash, buf.subspan(hlen), buf.first(hlen));
 
-   mgf1_mask(*m_mgf1_hash, input.data(), hlen, &input[hlen], input.size() - hlen);
+   mgf1_mask(*m_mgf1_hash, buf.first(hlen), buf.subspan(hlen));
 
-   auto unpadded = oaep_find_delim(valid_mask, input.data(), input.size(), m_Phash);
-   valid_mask &= leading_0.unpoisoned_value();
-   return unpadded;
+   auto delim = oaep_find_delim(buf, m_Phash);
+
+   return CT::copy_output(delim.has_value() && has_leading_0, output, buf, delim.value_or(0));
 }
 
-secure_vector<uint8_t> oaep_find_delim(uint8_t& valid_mask,
-                                       const uint8_t input[],
-                                       size_t input_len,
-                                       const secure_vector<uint8_t>& Phash) {
-   const size_t hlen = Phash.size();
-
+CT::Option<size_t> oaep_find_delim(std::span<const uint8_t> input, std::span<const uint8_t> phash) {
    // Too short to be valid, reject immediately
-   if(input_len < 1 + 2 * hlen) {
-      return secure_vector<uint8_t>();
+   if(input.size() < 1 + 2 * phash.size()) {
+      return {};
    }
 
-   CT::poison(input, input_len);
-
-   size_t delim_idx = 2 * hlen;
+   size_t delim_idx = 2 * phash.size();
    CT::Mask<uint8_t> waiting_for_delim = CT::Mask<uint8_t>::set();
    CT::Mask<uint8_t> bad_input_m = CT::Mask<uint8_t>::cleared();
 
-   for(size_t i = delim_idx; i < input_len; ++i) {
-      const auto zero_m = CT::Mask<uint8_t>::is_zero(input[i]);
-      const auto one_m = CT::Mask<uint8_t>::is_equal(input[i], 1);
+   for(uint8_t ib : input.subspan(2 * phash.size())) {
+      const auto zero_m = CT::Mask<uint8_t>::is_zero(ib);
+      const auto one_m = CT::Mask<uint8_t>::is_equal(ib, 1);
 
       const auto add_m = waiting_for_delim & zero_m;
 
@@ -119,16 +126,13 @@ secure_vector<uint8_t> oaep_find_delim(uint8_t& valid_mask,
    bad_input_m |= waiting_for_delim;
 
    // If the P hash is wrong, then it's not valid
-   bad_input_m |= CT::is_not_equal(&input[hlen], Phash.data(), hlen);
+   bad_input_m |= CT::is_not_equal(&input[phash.size()], phash.data(), phash.size());
 
    delim_idx += 1;
 
-   valid_mask = (~bad_input_m).unpoisoned_value();
-   auto output = CT::copy_output(bad_input_m, input, input_len, delim_idx);
+   const auto accept = !(bad_input_m.as_choice());
 
-   CT::unpoison(input, input_len);
-
-   return output;
+   return CT::Option(delim_idx, accept);
 }
 
 /*

@@ -35,8 +35,9 @@ secure_vector<uint8_t> PK_Ops::Encryption_with_EME::encrypt(const uint8_t msg[],
                                                             size_t msg_len,
                                                             RandomNumberGenerator& rng) {
    const size_t max_raw = max_ptext_input_bits();
-   const auto encoded = m_eme->encode(msg, msg_len, max_raw, rng);
-   return raw_encrypt(encoded.data(), encoded.size(), rng);
+   secure_vector<uint8_t> eme_output((max_raw + 7) / 8);
+   size_t written = m_eme->pad(eme_output, std::span{msg, msg_len}, max_raw, rng);
+   return raw_encrypt(eme_output.data(), written, rng);
 }
 
 PK_Ops::Decryption_with_EME::Decryption_with_EME(std::string_view eme) : m_eme(EME::create(eme)) {}
@@ -45,7 +46,24 @@ secure_vector<uint8_t> PK_Ops::Decryption_with_EME::decrypt(uint8_t& valid_mask,
                                                             const uint8_t ciphertext[],
                                                             size_t ciphertext_len) {
    const secure_vector<uint8_t> raw = raw_decrypt(ciphertext, ciphertext_len);
-   return m_eme->unpad(valid_mask, raw.data(), raw.size());
+
+   secure_vector<uint8_t> ctext(raw.size());
+   auto len = m_eme->unpad(ctext, raw);
+
+   valid_mask = CT::Mask<uint8_t>::from_choice(len.has_value()).if_set_return(0xFF);
+
+   /*
+   This is potentially not const time, depending on how std::vector is
+   implemented. But since we are always reducing length, it should
+   just amount to setting the member var holding the length. Resizing
+   downwards is guaranteed to not change the capacity, and since we
+   set ctext to the maximum possible size (equal to the raw input) we
+   know that this is always, if anything, resizing smaller than the
+   capacity, so no reallocation occurs.
+   */
+
+   ctext.resize(len.value_or(0));
+   return ctext;
 }
 
 PK_Ops::Key_Agreement_with_KDF::Key_Agreement_with_KDF(std::string_view kdf) {

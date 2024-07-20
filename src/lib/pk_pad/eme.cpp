@@ -64,23 +64,6 @@ std::unique_ptr<EME> EME::create(std::string_view algo_spec) {
    throw Algorithm_Not_Found(algo_spec);
 }
 
-/*
-* Encode a message
-*/
-secure_vector<uint8_t> EME::encode(const uint8_t msg[],
-                                   size_t msg_len,
-                                   size_t key_bits,
-                                   RandomNumberGenerator& rng) const {
-   return pad(msg, msg_len, key_bits, rng);
-}
-
-/*
-* Encode a message
-*/
-secure_vector<uint8_t> EME::encode(const secure_vector<uint8_t>& msg,
-                                   size_t key_bits,
-                                   RandomNumberGenerator& rng) const {
-   return pad(msg.data(), msg.size(), key_bits, rng);
-}
+EME::~EME() = default;
 
 }  // namespace Botan

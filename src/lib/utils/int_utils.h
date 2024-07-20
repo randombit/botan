@@ -24,6 +24,14 @@ constexpr inline std::optional<T> checked_add(T a, T b) {
    return r;
 }
 
+template <std::unsigned_integral T>
+constexpr std::optional<T> checked_sub(T a, T b) {
+   if(b > a) {
+      return {};
+   }
+   return a - b;
+}
+
 template <std::unsigned_integral T, std::unsigned_integral... Ts>
    requires all_same_v<T, Ts...>
 constexpr inline std::optional<T> checked_add(T a, T b, Ts... rest) {
