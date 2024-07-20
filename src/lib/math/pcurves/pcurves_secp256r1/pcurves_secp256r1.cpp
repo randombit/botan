@@ -165,6 +165,80 @@ class Curve final : public EllipticCurve<Params, Secp256r1Rep> {
 
          return r;
       }
+
+      static Scalar scalar_invert(const Scalar& x) {
+         auto t1 = x.square();
+         auto t5 = t1.square();
+         auto t2 = t5 * x;
+         auto t10 = t2 * x;
+         auto t3 = t2 * t5;
+         auto z = t10 * t3;
+         auto t9 = t3.square();
+         auto t4 = t10 * z;
+         auto t0 = t10 * t9;
+         auto t13 = t0 * t1;
+         auto t8 = t13 * t4;
+         t4 = t3 * t8;
+         auto t7 = t2 * t4;
+         t2 = t1 * t7;
+         auto t6 = t7 * t9;
+         t3 = t6 * t9;
+         t1 *= t3;
+         auto t12 = t3 * t9;
+         t5 *= t12;
+         auto t11 = t10 * t5;
+         t0 *= t11;
+         t9 *= t0;
+         t10 *= t9;
+         t4 *= t10;
+         t13 *= t4;
+         auto t14 = t13;
+         t14.square_n(8);
+         t13 *= t14;
+         t14 = t13;
+         t14.square_n(16);
+         t14 *= t13;
+         t14.square_n(48);
+         t14 *= t13;
+         t14.square_n(16);
+         t14 *= t13;
+         t14.square_n(16);
+         t14 *= t13;
+         t14.square_n(16);
+         t13 *= t14;
+         t13.square_n(6);
+         t13 *= t8;
+         t13.square_n(9);
+         t12 *= t13;
+         t12.square_n(8);
+         t11 *= t12;
+         t11.square_n(9);
+         t10 *= t11;
+         t10.square_n(8);
+         t9 *= t10;
+         t9.square_n(9);
+         t8 *= t9;
+         t8.square_n(8);
+         t7 *= t8;
+         t7.square_n(11);
+         t6 *= t7;
+         t6.square_n(9);
+         t5 *= t6;
+         t5.square_n(10);
+         t4 *= t5;
+         t4.square_n(8);
+         t3 *= t4;
+         t3.square_n(7);
+         t2 *= t3;
+         t2.square_n(10);
+         t1 *= t2;
+         t1.square_n(10);
+         t0 *= t1;
+         t0.square_n(6);
+         z *= t0;
+
+         return z;
+      }
 };
 
 }  // namespace secp256r1
