@@ -66,16 +66,16 @@ wots_keysig_t XMSS_Signature_Operation::build_auth_path(XMSS_PrivateKey& priv_ke
    return auth_path;
 }
 
-void XMSS_Signature_Operation::update(const uint8_t msg[], size_t msg_len) {
+void XMSS_Signature_Operation::update(std::span<const uint8_t> input) {
    initialize();
-   m_hash.h_msg_update({msg, msg_len});
+   m_hash.h_msg_update(input);
 }
 
-secure_vector<uint8_t> XMSS_Signature_Operation::sign(RandomNumberGenerator& /*rng*/) {
+std::vector<uint8_t> XMSS_Signature_Operation::sign(RandomNumberGenerator& /*rng*/) {
    initialize();
-   secure_vector<uint8_t> signature(sign(m_hash.h_msg_final(), m_priv_key).bytes());
+   auto sig = sign(m_hash.h_msg_final(), m_priv_key).bytes();
    m_is_initialized = false;
-   return signature;
+   return sig;
 }
 
 void XMSS_Signature_Operation::initialize() {

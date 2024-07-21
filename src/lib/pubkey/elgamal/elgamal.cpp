@@ -111,17 +111,16 @@ class ElGamal_Encryption_Operation final : public PK_Ops::Encryption_with_EME {
 
       size_t max_ptext_input_bits() const override { return m_key->group().p_bits() - 1; }
 
-      secure_vector<uint8_t> raw_encrypt(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& rng) override;
+      std::vector<uint8_t> raw_encrypt(std::span<const uint8_t> ptext, RandomNumberGenerator& rng) override;
 
    private:
       std::shared_ptr<const DL_PublicKey> m_key;
       std::shared_ptr<const Montgomery_Exponentation_State> m_monty_y_p;
 };
 
-secure_vector<uint8_t> ElGamal_Encryption_Operation::raw_encrypt(const uint8_t msg[],
-                                                                 size_t msg_len,
-                                                                 RandomNumberGenerator& rng) {
-   BigInt m(msg, msg_len);
+std::vector<uint8_t> ElGamal_Encryption_Operation::raw_encrypt(std::span<const uint8_t> ptext,
+                                                               RandomNumberGenerator& rng) {
+   BigInt m(ptext);
 
    const auto& group = m_key->group();
 
@@ -143,7 +142,7 @@ secure_vector<uint8_t> ElGamal_Encryption_Operation::raw_encrypt(const uint8_t m
    const BigInt a = group.power_g_p(k, k_bits);
    const BigInt b = group.multiply_mod_p(m, monty_execute(*m_monty_y_p, k, k_bits));
 
-   return BigInt::encode_fixed_length_int_pair(a, b, group.p_bytes());
+   return unlock(BigInt::encode_fixed_length_int_pair(a, b, group.p_bytes()));
 }
 
 /**
@@ -164,7 +163,7 @@ class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_EME {
 
       size_t plaintext_length(size_t /*ctext_len*/) const override { return m_key->group().p_bytes(); }
 
-      secure_vector<uint8_t> raw_decrypt(const uint8_t msg[], size_t msg_len) override;
+      secure_vector<uint8_t> raw_decrypt(std::span<const uint8_t> ctext) override;
 
    private:
       BigInt powermod_x_p(const BigInt& v) const { return m_key->group().power_b_p(v, m_key->private_key()); }
@@ -173,17 +172,17 @@ class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_EME {
       Blinder m_blinder;
 };
 
-secure_vector<uint8_t> ElGamal_Decryption_Operation::raw_decrypt(const uint8_t msg[], size_t msg_len) {
+secure_vector<uint8_t> ElGamal_Decryption_Operation::raw_decrypt(std::span<const uint8_t> ctext) {
    const auto& group = m_key->group();
 
    const size_t p_bytes = group.p_bytes();
 
-   if(msg_len != 2 * p_bytes) {
+   if(ctext.size() != 2 * p_bytes) {
       throw Invalid_Argument("ElGamal decryption: Invalid message");
    }
 
-   BigInt a(msg, p_bytes);
-   const BigInt b(msg + p_bytes, p_bytes);
+   BigInt a(ctext.first(p_bytes));
+   const BigInt b(ctext.last(p_bytes));
 
    if(a >= group.get_p() || b >= group.get_p()) {
       throw Invalid_Argument("ElGamal decryption: Invalid message");

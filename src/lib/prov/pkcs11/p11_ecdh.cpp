@@ -47,20 +47,18 @@ class PKCS11_ECDH_KA_Operation final : public PK_Ops::Key_Agreement {
       /// The encoding in V2.20 was not specified and resulted in different implementations choosing different encodings.
       /// Applications relying only on a V2.20 encoding (e.g. the DER variant) other than the one specified now (raw) may not work with all V2.30 compliant tokens.
       secure_vector<uint8_t> agree(size_t key_len,
-                                   const uint8_t other_key[],
-                                   size_t other_key_len,
-                                   const uint8_t salt[],
-                                   size_t salt_len) override {
+                                   std::span<const uint8_t> other_key,
+                                   std::span<const uint8_t> salt) override {
          std::vector<uint8_t> der_encoded_other_key;
          if(m_key.point_encoding() == PublicPointEncoding::Der) {
-            DER_Encoder(der_encoded_other_key).encode(other_key, other_key_len, ASN1_Type::OctetString);
+            DER_Encoder(der_encoded_other_key).encode(other_key.data(), other_key.size(), ASN1_Type::OctetString);
             m_mechanism.set_ecdh_other_key(der_encoded_other_key.data(), der_encoded_other_key.size());
          } else {
-            m_mechanism.set_ecdh_other_key(other_key, other_key_len);
+            m_mechanism.set_ecdh_other_key(other_key.data(), other_key.size());
          }
 
-         if(salt != nullptr && salt_len > 0) {
-            m_mechanism.set_ecdh_salt(salt, salt_len);
+         if(!salt.empty()) {
+            m_mechanism.set_ecdh_salt(salt.data(), salt.size());
          }
 
          ObjectHandle secret_handle = 0;

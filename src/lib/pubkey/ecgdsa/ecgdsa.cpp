@@ -41,7 +41,7 @@ class ECGDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
             m_group(ecgdsa.domain()),
             m_x(EC_Scalar::from_bigint(m_group, ecgdsa.private_value())) {}
 
-      secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& rng) override;
+      std::vector<uint8_t> raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng) override;
 
       size_t signature_length() const override { return 2 * m_group.get_order_bytes(); }
 
@@ -59,10 +59,8 @@ AlgorithmIdentifier ECGDSA_Signature_Operation::algorithm_identifier() const {
    return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
 }
 
-secure_vector<uint8_t> ECGDSA_Signature_Operation::raw_sign(const uint8_t msg[],
-                                                            size_t msg_len,
-                                                            RandomNumberGenerator& rng) {
-   const auto m = EC_Scalar::from_bytes_with_trunc(m_group, std::span{msg, msg_len});
+std::vector<uint8_t> ECGDSA_Signature_Operation::raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng) {
+   const auto m = EC_Scalar::from_bytes_with_trunc(m_group, msg);
 
    const auto k = EC_Scalar::random(m_group, rng);
 
@@ -75,7 +73,7 @@ secure_vector<uint8_t> ECGDSA_Signature_Operation::raw_sign(const uint8_t msg[],
       throw Internal_Error("During ECGDSA signature generated zero r/s");
    }
 
-   return EC_Scalar::serialize_pair<secure_vector<uint8_t>>(r, s);
+   return EC_Scalar::serialize_pair(r, s);
 }
 
 /**
@@ -93,19 +91,19 @@ class ECGDSA_Verification_Operation final : public PK_Ops::Verification_with_Has
             m_group(ecgdsa.domain()),
             m_gy_mul(m_group, ecgdsa.public_point()) {}
 
-      bool verify(const uint8_t msg[], size_t msg_len, const uint8_t sig[], size_t sig_len) override;
+      bool verify(std::span<const uint8_t> msg, std::span<const uint8_t> sig) override;
 
    private:
       const EC_Group m_group;
       const EC_Group::Mul2Table m_gy_mul;
 };
 
-bool ECGDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len, const uint8_t sig[], size_t sig_len) {
-   if(auto rs = EC_Scalar::deserialize_pair(m_group, std::span{sig, sig_len})) {
+bool ECGDSA_Verification_Operation::verify(std::span<const uint8_t> msg, std::span<const uint8_t> sig) {
+   if(auto rs = EC_Scalar::deserialize_pair(m_group, sig)) {
       const auto& [r, s] = rs.value();
 
       if(r.is_nonzero() && s.is_nonzero()) {
-         const auto m = EC_Scalar::from_bytes_with_trunc(m_group, std::span{msg, msg_len});
+         const auto m = EC_Scalar::from_bytes_with_trunc(m_group, msg);
 
          const auto w = r.invert();
 

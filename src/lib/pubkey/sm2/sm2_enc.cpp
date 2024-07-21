@@ -39,7 +39,7 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption {
          return der_overhead + 2 * elem_size + m_hash->output_length() + ptext_len;
       }
 
-      secure_vector<uint8_t> encrypt(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& rng) override {
+      std::vector<uint8_t> encrypt(std::span<const uint8_t> msg, RandomNumberGenerator& rng) override {
          const auto k = EC_Scalar::random(m_group, rng);
 
          const EC_AffinePoint C1 = EC_AffinePoint::g_mul(k, rng, m_ws);
@@ -53,24 +53,26 @@ class SM2_Encryption_Operation final : public PK_Ops::Encryption {
          kdf_input += x2_bytes;
          kdf_input += y2_bytes;
 
-         const secure_vector<uint8_t> kdf_output = m_kdf->derive_key(msg_len, kdf_input.data(), kdf_input.size());
+         const auto kdf_output = m_kdf->derive_key(msg.size(), kdf_input);
 
-         std::vector<uint8_t> masked_msg(msg_len);
-         xor_buf(masked_msg.data(), msg, kdf_output.data(), msg_len);
+         std::vector<uint8_t> masked_msg(msg.size());
+         xor_buf(masked_msg, msg, kdf_output);
 
          m_hash->update(x2_bytes);
-         m_hash->update(msg, msg_len);
+         m_hash->update(msg);
          m_hash->update(y2_bytes);
          const auto C3 = m_hash->final<std::vector<uint8_t>>();
 
-         return DER_Encoder()
+         std::vector<uint8_t> ctext;
+         DER_Encoder(ctext)
             .start_sequence()
             .encode(BigInt(C1.x_bytes()))
             .encode(BigInt(C1.y_bytes()))
             .encode(C3, ASN1_Type::OctetString)
             .encode(masked_msg, ASN1_Type::OctetString)
-            .end_cons()
-            .get_contents();
+            .end_cons();
+
+         return ctext;
       }
 
    private:
@@ -107,21 +109,21 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
          return ptext_len - (2 * elem_size + m_hash->output_length());
       }
 
-      secure_vector<uint8_t> decrypt(uint8_t& valid_mask, const uint8_t ciphertext[], size_t ciphertext_len) override {
+      secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) override {
          const BigInt& cofactor = m_group.get_cofactor();
          const size_t p_bytes = m_group.get_p_bytes();
 
          valid_mask = 0x00;
 
          // Too short to be valid - no timing problem from early return
-         if(ciphertext_len < 1 + p_bytes * 2 + m_hash->output_length()) {
+         if(ctext.size() < 1 + p_bytes * 2 + m_hash->output_length()) {
             return secure_vector<uint8_t>();
          }
 
          BigInt x1, y1;
          secure_vector<uint8_t> C3, masked_msg;
 
-         BER_Decoder(ciphertext, ciphertext_len)
+         BER_Decoder(ctext)
             .start_sequence()
             .decode(x1)
             .decode(y1)
@@ -139,11 +141,11 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
             .encode(masked_msg, ASN1_Type::OctetString)
             .end_cons();
 
-         if(recode_ctext.size() != ciphertext_len) {
+         if(recode_ctext.size() != ctext.size()) {
             return secure_vector<uint8_t>();
          }
 
-         if(CT::is_equal(recode_ctext.data(), ciphertext, ciphertext_len).as_bool() == false) {
+         if(CT::is_equal(recode_ctext.data(), ctext.data(), ctext.size()).as_bool() == false) {
             return secure_vector<uint8_t>();
          }
 

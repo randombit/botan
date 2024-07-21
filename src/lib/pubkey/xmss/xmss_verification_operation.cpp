@@ -76,13 +76,13 @@ bool XMSS_Verification_Operation::verify(const XMSS_Signature& sig,
 // impossible.
 // Possible solution: Change PK_Ops::Verification interface to take the
 // signature as constructor argument, make sign a parameterless member call.
-void XMSS_Verification_Operation::update(const uint8_t msg[], size_t msg_len) {
-   std::copy(msg, msg + msg_len, std::back_inserter(m_msg_buf));
+void XMSS_Verification_Operation::update(std::span<const uint8_t> input) {
+   m_msg_buf.insert(m_msg_buf.end(), input.begin(), input.end());
 }
 
-bool XMSS_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t sig_len) {
+bool XMSS_Verification_Operation::is_valid_signature(std::span<const uint8_t> sig) {
    try {
-      XMSS_Signature signature(m_pub_key.xmss_parameters().oid(), secure_vector<uint8_t>(sig, sig + sig_len));
+      XMSS_Signature signature(m_pub_key.xmss_parameters().oid(), sig);
       bool result = verify(signature, m_msg_buf, m_pub_key);
       m_msg_buf.clear();
       return result;

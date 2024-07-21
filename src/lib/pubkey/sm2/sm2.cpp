@@ -102,15 +102,15 @@ class SM2_Signature_Operation final : public PK_Ops::Signature {
 
       size_t signature_length() const override { return 2 * m_group.get_order_bytes(); }
 
-      void update(const uint8_t msg[], size_t msg_len) override {
+      void update(std::span<const uint8_t> input) override {
          if(m_hash) {
-            m_hash->update(msg, msg_len);
+            m_hash->update(input);
          } else {
-            m_digest.insert(m_digest.end(), msg, msg + msg_len);
+            m_digest.insert(m_digest.end(), input.begin(), input.end());
          }
       }
 
-      secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override;
+      std::vector<uint8_t> sign(RandomNumberGenerator& rng) override;
 
       std::string hash_function() const override { return m_hash ? m_hash->name() : "Raw"; }
 
@@ -125,7 +125,7 @@ class SM2_Signature_Operation final : public PK_Ops::Signature {
       std::vector<BigInt> m_ws;
 };
 
-secure_vector<uint8_t> SM2_Signature_Operation::sign(RandomNumberGenerator& rng) {
+std::vector<uint8_t> SM2_Signature_Operation::sign(RandomNumberGenerator& rng) {
    const auto e = [&]() {
       if(m_hash) {
          auto ie = EC_Scalar::from_bytes_mod_order(m_group, m_hash->final());
@@ -144,7 +144,7 @@ secure_vector<uint8_t> SM2_Signature_Operation::sign(RandomNumberGenerator& rng)
    const auto r = EC_Scalar::gk_x_mod_order(k, rng, m_ws) + e;
    const auto s = (k - r * m_x) * m_da_inv;
 
-   return EC_Scalar::serialize_pair<secure_vector<uint8_t>>(r, s);
+   return EC_Scalar::serialize_pair(r, s);
 }
 
 /**
@@ -164,15 +164,15 @@ class SM2_Verification_Operation final : public PK_Ops::Verification {
          }
       }
 
-      void update(const uint8_t msg[], size_t msg_len) override {
+      void update(std::span<const uint8_t> input) override {
          if(m_hash) {
-            m_hash->update(msg, msg_len);
+            m_hash->update(input);
          } else {
-            m_digest.insert(m_digest.end(), msg, msg + msg_len);
+            m_digest.insert(m_digest.end(), input.begin(), input.end());
          }
       }
 
-      bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
+      bool is_valid_signature(std::span<const uint8_t> sig) override;
 
       std::string hash_function() const override { return m_hash ? m_hash->name() : "Raw"; }
 
@@ -184,7 +184,7 @@ class SM2_Verification_Operation final : public PK_Ops::Verification {
       std::unique_ptr<HashFunction> m_hash;
 };
 
-bool SM2_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t sig_len) {
+bool SM2_Verification_Operation::is_valid_signature(std::span<const uint8_t> sig) {
    const auto e = [&]() {
       if(m_hash) {
          auto ie = EC_Scalar::from_bytes_mod_order(m_group, m_hash->final());
@@ -198,7 +198,7 @@ bool SM2_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t 
       }
    }();
 
-   if(auto rs = EC_Scalar::deserialize_pair(m_group, std::span{sig, sig_len})) {
+   if(auto rs = EC_Scalar::deserialize_pair(m_group, sig)) {
       const auto& [r, s] = rs.value();
 
       if(r.is_nonzero() && s.is_nonzero()) {

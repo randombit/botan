@@ -146,12 +146,12 @@ class Ed448_Verify_Operation final : public PK_Ops::Verification {
          }
       }
 
-      void update(const uint8_t msg[], size_t msg_len) override { m_message->update({msg, msg_len}); }
+      void update(std::span<const uint8_t> input) override { m_message->update(input); }
 
-      bool is_valid_signature(const uint8_t sig[], size_t sig_len) override {
+      bool is_valid_signature(std::span<const uint8_t> sig) override {
          const auto msg = m_message->get_and_clear();
          try {
-            return verify_signature(m_pk, m_prehash_function.has_value(), {}, {sig, sig_len}, msg);
+            return verify_signature(m_pk, m_prehash_function.has_value(), {}, sig, msg);
          } catch(Decoding_Error&) {
             return false;
          }
@@ -185,9 +185,9 @@ class Ed448_Sign_Operation final : public PK_Ops::Signature {
          }
       }
 
-      void update(const uint8_t msg[], size_t msg_len) override { m_message->update({msg, msg_len}); }
+      void update(std::span<const uint8_t> input) override { m_message->update(input); }
 
-      secure_vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
+      std::vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
          BOTAN_ASSERT_NOMSG(m_sk.size() == ED448_LEN);
          auto scope = CT::scoped_poison(m_sk);
          const auto sig = sign_message(

@@ -31,24 +31,20 @@ size_t PK_Ops::Encryption_with_EME::max_input_bits() const {
    return 8 * m_eme->maximum_input_size(max_ptext_input_bits());
 }
 
-secure_vector<uint8_t> PK_Ops::Encryption_with_EME::encrypt(const uint8_t msg[],
-                                                            size_t msg_len,
-                                                            RandomNumberGenerator& rng) {
+std::vector<uint8_t> PK_Ops::Encryption_with_EME::encrypt(std::span<const uint8_t> msg, RandomNumberGenerator& rng) {
    const size_t max_raw = max_ptext_input_bits();
    secure_vector<uint8_t> eme_output((max_raw + 7) / 8);
-   size_t written = m_eme->pad(eme_output, std::span{msg, msg_len}, max_raw, rng);
-   return raw_encrypt(eme_output.data(), written, rng);
+   size_t written = m_eme->pad(eme_output, msg, max_raw, rng);
+   return raw_encrypt(std::span{eme_output}.first(written), rng);
 }
 
 PK_Ops::Decryption_with_EME::Decryption_with_EME(std::string_view eme) : m_eme(EME::create(eme)) {}
 
-secure_vector<uint8_t> PK_Ops::Decryption_with_EME::decrypt(uint8_t& valid_mask,
-                                                            const uint8_t ciphertext[],
-                                                            size_t ciphertext_len) {
-   const secure_vector<uint8_t> raw = raw_decrypt(ciphertext, ciphertext_len);
+secure_vector<uint8_t> PK_Ops::Decryption_with_EME::decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) {
+   const secure_vector<uint8_t> raw = raw_decrypt(ctext);
 
-   secure_vector<uint8_t> ctext(raw.size());
-   auto len = m_eme->unpad(ctext, raw);
+   secure_vector<uint8_t> ptext(raw.size());
+   auto len = m_eme->unpad(ptext, raw);
 
    valid_mask = CT::Mask<uint8_t>::from_choice(len.has_value()).if_set_return(0xFF);
 
@@ -62,8 +58,8 @@ secure_vector<uint8_t> PK_Ops::Decryption_with_EME::decrypt(uint8_t& valid_mask,
    capacity, so no reallocation occurs.
    */
 
-   ctext.resize(len.value_or(0));
-   return ctext;
+   ptext.resize(len.value_or(0));
+   return ptext;
 }
 
 PK_Ops::Key_Agreement_with_KDF::Key_Agreement_with_KDF(std::string_view kdf) {
@@ -72,15 +68,16 @@ PK_Ops::Key_Agreement_with_KDF::Key_Agreement_with_KDF(std::string_view kdf) {
    }
 }
 
-secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(
-   size_t key_len, const uint8_t w[], size_t w_len, const uint8_t salt[], size_t salt_len) {
-   if(salt_len > 0 && m_kdf == nullptr) {
+secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
+                                                             std::span<const uint8_t> other_key,
+                                                             std::span<const uint8_t> salt) {
+   if(!salt.empty() && m_kdf == nullptr) {
       throw Invalid_Argument("PK_Key_Agreement::derive_key requires a KDF to use a salt");
    }
 
-   secure_vector<uint8_t> z = raw_agree(w, w_len);
+   secure_vector<uint8_t> z = raw_agree(other_key.data(), other_key.size());
    if(m_kdf) {
-      return m_kdf->derive_key(key_len, z, salt, salt_len);
+      return m_kdf->derive_key(key_len, z, salt.data(), salt.size());
    }
    return z;
 }
@@ -132,13 +129,13 @@ std::string PK_Ops::Signature_with_Hash::rfc6979_hash_function() const {
 }
 #endif
 
-void PK_Ops::Signature_with_Hash::update(const uint8_t msg[], size_t msg_len) {
-   m_hash->update(msg, msg_len);
+void PK_Ops::Signature_with_Hash::update(std::span<const uint8_t> msg) {
+   m_hash->update(msg);
 }
 
-secure_vector<uint8_t> PK_Ops::Signature_with_Hash::sign(RandomNumberGenerator& rng) {
-   const secure_vector<uint8_t> msg = m_hash->final();
-   return raw_sign(msg.data(), msg.size(), rng);
+std::vector<uint8_t> PK_Ops::Signature_with_Hash::sign(RandomNumberGenerator& rng) {
+   const std::vector<uint8_t> msg = m_hash->final_stdvec();
+   return raw_sign(msg, rng);
 }
 
 PK_Ops::Verification_with_Hash::Verification_with_Hash(std::string_view padding) :
@@ -167,13 +164,13 @@ PK_Ops::Verification_with_Hash::Verification_with_Hash(const AlgorithmIdentifier
    m_hash = HashFunction::create_or_throw(oid_info[1]);
 }
 
-void PK_Ops::Verification_with_Hash::update(const uint8_t msg[], size_t msg_len) {
-   m_hash->update(msg, msg_len);
+void PK_Ops::Verification_with_Hash::update(std::span<const uint8_t> msg) {
+   m_hash->update(msg);
 }
 
-bool PK_Ops::Verification_with_Hash::is_valid_signature(const uint8_t sig[], size_t sig_len) {
-   const secure_vector<uint8_t> msg = m_hash->final();
-   return verify(msg.data(), msg.size(), sig, sig_len);
+bool PK_Ops::Verification_with_Hash::is_valid_signature(std::span<const uint8_t> sig) {
+   const std::vector<uint8_t> msg = m_hash->final_stdvec();
+   return verify(msg, sig);
 }
 
 size_t PK_Ops::KEM_Encryption_with_KDF::shared_key_length(size_t desired_shared_key_len) const {

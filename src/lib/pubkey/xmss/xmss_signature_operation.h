@@ -35,9 +35,9 @@ class XMSS_Signature_Operation final : public virtual PK_Ops::Signature {
        *
        * @return serialized XMSS signature.
        **/
-      secure_vector<uint8_t> sign(RandomNumberGenerator&) override;
+      std::vector<uint8_t> sign(RandomNumberGenerator&) override;
 
-      void update(const uint8_t msg[], size_t msg_len) override;
+      void update(std::span<const uint8_t> input) override;
 
       size_t signature_length() const override;
 

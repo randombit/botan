@@ -321,7 +321,7 @@ class TPM_Signing_Operation final : public PK_Ops::Signature {
 
       size_t signature_length() const override { return m_key.get_n().bytes(); }
 
-      void update(const uint8_t msg[], size_t msg_len) override { m_hash->update(msg, msg_len); }
+      void update(std::span<const uint8_t> msg) override { m_hash->update(msg); }
 
       AlgorithmIdentifier algorithm_identifier() const override {
          const std::string full_name = "RSA/EMSA3(" + m_hash->name() + ")";
@@ -329,7 +329,7 @@ class TPM_Signing_Operation final : public PK_Ops::Signature {
          return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
       }
 
-      secure_vector<uint8_t> sign(RandomNumberGenerator&) override {
+      std::vector<uint8_t> sign(RandomNumberGenerator&) override {
          /*
          * v1.2 TPMs will only sign with PKCS #1 v1.5 padding. SHA-1 is built
          * in, all other hash inputs (TSS_HASH_OTHER) are treated as the
@@ -352,7 +352,7 @@ class TPM_Signing_Operation final : public PK_Ops::Signature {
          BYTE* sig_bytes = nullptr;
          UINT32 sig_len = 0;
          TSPI_CHECK_SUCCESS(::Tspi_Hash_Sign(tpm_hash, m_key.handle(), &sig_len, &sig_bytes));
-         secure_vector<uint8_t> sig(sig_bytes, sig_bytes + sig_len);
+         std::vector<uint8_t> sig(sig_bytes, sig_bytes + sig_len);
 
          // TODO: RAII for Context_FreeMemory
          TSPI_CHECK_SUCCESS(::Tspi_Context_FreeMemory(ctx, sig_bytes));

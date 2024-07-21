@@ -145,15 +145,15 @@ class Ed25519_Pure_Verify_Operation final : public PK_Ops::Verification {
    public:
       explicit Ed25519_Pure_Verify_Operation(const Ed25519_PublicKey& key) : m_key(key.get_public_key()) {}
 
-      void update(const uint8_t msg[], size_t msg_len) override { m_msg.insert(m_msg.end(), msg, msg + msg_len); }
+      void update(std::span<const uint8_t> msg) override { m_msg.insert(m_msg.end(), msg.begin(), msg.end()); }
 
-      bool is_valid_signature(const uint8_t sig[], size_t sig_len) override {
-         if(sig_len != 64) {
+      bool is_valid_signature(std::span<const uint8_t> sig) override {
+         if(sig.size() != 64) {
             return false;
          }
 
          BOTAN_ASSERT_EQUAL(m_key.size(), 32, "Expected size");
-         const bool ok = ed25519_verify(m_msg.data(), m_msg.size(), sig, m_key.data(), nullptr, 0);
+         const bool ok = ed25519_verify(m_msg.data(), m_msg.size(), sig.data(), m_key.data(), nullptr, 0);
          m_msg.clear();
          return ok;
       }
@@ -181,10 +181,10 @@ class Ed25519_Hashed_Verify_Operation final : public PK_Ops::Verification {
          }
       }
 
-      void update(const uint8_t msg[], size_t msg_len) override { m_hash->update(msg, msg_len); }
+      void update(std::span<const uint8_t> msg) override { m_hash->update(msg); }
 
-      bool is_valid_signature(const uint8_t sig[], size_t sig_len) override {
-         if(sig_len != 64) {
+      bool is_valid_signature(std::span<const uint8_t> sig) override {
+         if(sig.size() != 64) {
             return false;
          }
          std::vector<uint8_t> msg_hash(m_hash->output_length());
@@ -192,7 +192,7 @@ class Ed25519_Hashed_Verify_Operation final : public PK_Ops::Verification {
 
          BOTAN_ASSERT_EQUAL(m_key.size(), 32, "Expected size");
          return ed25519_verify(
-            msg_hash.data(), msg_hash.size(), sig, m_key.data(), m_domain_sep.data(), m_domain_sep.size());
+            msg_hash.data(), msg_hash.size(), sig.data(), m_key.data(), m_domain_sep.data(), m_domain_sep.size());
       }
 
       std::string hash_function() const override { return m_hash->name(); }
@@ -210,10 +210,10 @@ class Ed25519_Pure_Sign_Operation final : public PK_Ops::Signature {
    public:
       explicit Ed25519_Pure_Sign_Operation(const Ed25519_PrivateKey& key) : m_key(key.raw_private_key_bits()) {}
 
-      void update(const uint8_t msg[], size_t msg_len) override { m_msg.insert(m_msg.end(), msg, msg + msg_len); }
+      void update(std::span<const uint8_t> msg) override { m_msg.insert(m_msg.end(), msg.begin(), msg.end()); }
 
-      secure_vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
-         secure_vector<uint8_t> sig(64);
+      std::vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
+         std::vector<uint8_t> sig(64);
          ed25519_sign(sig.data(), m_msg.data(), m_msg.size(), m_key.data(), nullptr, 0);
          m_msg.clear();
          return sig;
@@ -252,10 +252,10 @@ class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature {
 
       size_t signature_length() const override { return 64; }
 
-      void update(const uint8_t msg[], size_t msg_len) override { m_hash->update(msg, msg_len); }
+      void update(std::span<const uint8_t> msg) override { m_hash->update(msg); }
 
-      secure_vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
-         secure_vector<uint8_t> sig(64);
+      std::vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
+         std::vector<uint8_t> sig(64);
          std::vector<uint8_t> msg_hash(m_hash->output_length());
          m_hash->final(msg_hash.data());
          ed25519_sign(

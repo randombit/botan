@@ -103,7 +103,7 @@ std::vector<uint8_t> eckcdsa_prefix(const EC_Point& point, size_t hash_block_siz
  * @param[in,out] digest The hash output to potentially truncate.
  * @param[in] group_order_bytes Size of the group order.
  */
-void truncate_hash_if_needed(secure_vector<uint8_t>& digest, size_t group_order_bytes) {
+void truncate_hash_if_needed(std::vector<uint8_t>& digest, size_t group_order_bytes) {
    if(digest.size() > group_order_bytes) {
       const size_t bytes_to_truncate = digest.size() - group_order_bytes;
       digest.erase(digest.begin(), digest.begin() + bytes_to_truncate);
@@ -123,19 +123,19 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature {
          m_prefix = eckcdsa_prefix(eckcdsa.public_point(), m_hash->hash_block_size());
       }
 
-      void update(const uint8_t msg[], size_t msg_len) override {
+      void update(std::span<const uint8_t> input) override {
          if(!m_prefix_used) {
-            m_hash->update(m_prefix.data(), m_prefix.size());
+            m_hash->update(m_prefix);
             m_prefix_used = true;
          }
-         m_hash->update(msg, msg_len);
+         m_hash->update(input);
       }
 
-      secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override {
+      std::vector<uint8_t> sign(RandomNumberGenerator& rng) override {
          m_prefix_used = false;
-         secure_vector<uint8_t> digest = m_hash->final();
+         std::vector<uint8_t> digest = m_hash->final_stdvec();
          truncate_hash_if_needed(digest, m_group.get_order_bytes());
-         return raw_sign(digest.data(), digest.size(), rng);
+         return raw_sign(digest, rng);
       }
 
       size_t signature_length() const override { return 2 * m_group.get_order_bytes(); }
@@ -145,7 +145,7 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature {
       std::string hash_function() const override { return m_hash->name(); }
 
    private:
-      secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& rng);
+      std::vector<uint8_t> raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng);
 
       const EC_Group m_group;
       const EC_Scalar m_x;
@@ -161,19 +161,16 @@ AlgorithmIdentifier ECKCDSA_Signature_Operation::algorithm_identifier() const {
    return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
 }
 
-secure_vector<uint8_t> ECKCDSA_Signature_Operation::raw_sign(const uint8_t msg[],
-                                                             size_t msg_len,
-                                                             RandomNumberGenerator& rng) {
+std::vector<uint8_t> ECKCDSA_Signature_Operation::raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng) {
    const auto k = EC_Scalar::random(m_group, rng);
 
    m_hash->update(EC_AffinePoint::g_mul(k, rng, m_ws).x_bytes());
-   secure_vector<uint8_t> c = m_hash->final();
+   auto c = m_hash->final_stdvec();
    truncate_hash_if_needed(c, m_group.get_order_bytes());
 
    const auto r = c;
 
-   BOTAN_ASSERT_NOMSG(msg_len == c.size());
-   xor_buf(c, msg, c.size());
+   xor_buf(c, msg);
    const auto w = EC_Scalar::from_bytes_mod_order(m_group, c);
 
    const auto s = m_x * (k - w);
@@ -205,14 +202,14 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification {
          m_prefix = eckcdsa_prefix(eckcdsa.public_point(), m_hash->hash_block_size());
       }
 
-      void update(const uint8_t msg[], size_t msg_len) override;
+      void update(std::span<const uint8_t> msg) override;
 
-      bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
+      bool is_valid_signature(std::span<const uint8_t> sig) override;
 
       std::string hash_function() const override { return m_hash->name(); }
 
    private:
-      bool verify(const uint8_t msg[], size_t msg_len, const uint8_t sig[], size_t sig_len);
+      bool verify(std::span<const uint8_t> msg, std::span<const uint8_t> sig);
 
       const EC_Group m_group;
       const EC_Group::Mul2Table m_gy_mul;
@@ -221,44 +218,41 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification {
       bool m_prefix_used;
 };
 
-void ECKCDSA_Verification_Operation::update(const uint8_t msg[], size_t msg_len) {
+void ECKCDSA_Verification_Operation::update(std::span<const uint8_t> msg) {
    if(!m_prefix_used) {
       m_prefix_used = true;
       m_hash->update(m_prefix.data(), m_prefix.size());
    }
-   m_hash->update(msg, msg_len);
+   m_hash->update(msg);
 }
 
-bool ECKCDSA_Verification_Operation::is_valid_signature(const uint8_t sig[], size_t sig_len) {
+bool ECKCDSA_Verification_Operation::is_valid_signature(std::span<const uint8_t> sig) {
    m_prefix_used = false;
-   secure_vector<uint8_t> digest = m_hash->final();
+   std::vector<uint8_t> digest = m_hash->final_stdvec();
    truncate_hash_if_needed(digest, m_group.get_order_bytes());
-   return verify(digest.data(), digest.size(), sig, sig_len);
+   return verify(digest, sig);
 }
 
-bool ECKCDSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len, const uint8_t sig[], size_t sig_len) {
-   //calculate size of r
-
+bool ECKCDSA_Verification_Operation::verify(std::span<const uint8_t> msg, std::span<const uint8_t> sig) {
    const size_t order_bytes = m_group.get_order_bytes();
 
-   const size_t size_r = std::min(msg_len, order_bytes);
-   if(sig_len != size_r + order_bytes) {
+   const size_t size_r = std::min(msg.size(), order_bytes);
+   if(sig.size() != size_r + order_bytes) {
       return false;
    }
 
-   secure_vector<uint8_t> r(sig, sig + size_r);
+   auto r = sig.first(size_r);
 
-   if(auto s = EC_Scalar::deserialize(m_group, std::span{sig, sig_len}.last(order_bytes))) {
-      secure_vector<uint8_t> r_xor_e(r);
-      xor_buf(r_xor_e, msg, r.size());
+   if(auto s = EC_Scalar::deserialize(m_group, sig.last(order_bytes))) {
+      std::vector<uint8_t> r_xor_e(r.size());
+      xor_buf(r_xor_e, r, msg.first(size_r));
 
       const auto w = EC_Scalar::from_bytes_mod_order(m_group, r_xor_e);
 
       if(auto q = m_gy_mul.mul2_vartime(w, s.value())) {
-         secure_vector<uint8_t> v = m_hash->process(q->x_bytes());
+         std::vector<uint8_t> v = m_hash->process<std::vector<uint8_t>>(q->x_bytes());
          truncate_hash_if_needed(v, m_group.get_order_bytes());
-
-         return (v == r);
+         return constant_time_compare(v, r);
       }
    }
 

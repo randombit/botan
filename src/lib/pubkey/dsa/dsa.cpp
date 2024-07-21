@@ -135,7 +135,7 @@ class DSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
 
       size_t signature_length() const override { return 2 * m_key->group().q_bytes(); }
 
-      secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& rng) override;
+      std::vector<uint8_t> raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng) override;
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
@@ -150,13 +150,11 @@ AlgorithmIdentifier DSA_Signature_Operation::algorithm_identifier() const {
    return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
 }
 
-secure_vector<uint8_t> DSA_Signature_Operation::raw_sign(const uint8_t msg[],
-                                                         size_t msg_len,
-                                                         RandomNumberGenerator& rng) {
+std::vector<uint8_t> DSA_Signature_Operation::raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng) {
    const DL_Group& group = m_key->group();
    const BigInt& q = group.get_q();
 
-   BigInt m = BigInt::from_bytes_with_max_bits(msg, msg_len, group.q_bits());
+   BigInt m = BigInt::from_bytes_with_max_bits(msg.data(), msg.size(), group.q_bits());
 
    if(m >= q) {
       m -= q;
@@ -198,7 +196,7 @@ secure_vector<uint8_t> DSA_Signature_Operation::raw_sign(const uint8_t msg[],
       throw Internal_Error("Computed zero r/s during DSA signature");
    }
 
-   return BigInt::encode_fixed_length_int_pair(r, s, q.bytes());
+   return unlock(BigInt::encode_fixed_length_int_pair(r, s, q.bytes()));
 }
 
 /**
@@ -212,30 +210,30 @@ class DSA_Verification_Operation final : public PK_Ops::Verification_with_Hash {
       DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(alg_id, "DSA"), m_key(key) {}
 
-      bool verify(const uint8_t msg[], size_t msg_len, const uint8_t sig[], size_t sig_len) override;
+      bool verify(std::span<const uint8_t> input, std::span<const uint8_t> sig) override;
 
    private:
       std::shared_ptr<const DL_PublicKey> m_key;
 };
 
-bool DSA_Verification_Operation::verify(const uint8_t msg[], size_t msg_len, const uint8_t sig[], size_t sig_len) {
+bool DSA_Verification_Operation::verify(std::span<const uint8_t> input, std::span<const uint8_t> sig) {
    const auto group = m_key->group();
 
    const BigInt& q = group.get_q();
    const size_t q_bytes = q.bytes();
 
-   if(sig_len != 2 * q_bytes) {
+   if(sig.size() != 2 * q_bytes) {
       return false;
    }
 
-   BigInt r(sig, q_bytes);
-   BigInt s(sig + q_bytes, q_bytes);
+   BigInt r(sig.first(q_bytes));
+   BigInt s(sig.last(q_bytes));
 
    if(r == 0 || r >= q || s == 0 || s >= q) {
       return false;
    }
 
-   BigInt i = BigInt::from_bytes_with_max_bits(msg, msg_len, group.q_bits());
+   BigInt i = BigInt::from_bytes_with_max_bits(input.data(), input.size(), group.q_bits());
    if(i >= q) {
       i -= q;
    }

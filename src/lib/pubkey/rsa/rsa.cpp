@@ -470,12 +470,6 @@ class RSA_Private_Operation {
          recovered.serialize_to(out);
       }
 
-      secure_vector<uint8_t> raw_op(const uint8_t input[], size_t input_len) {
-         secure_vector<uint8_t> out(m_public->public_modulus_bytes());
-         raw_op(out, {input, input_len});
-         return out;
-      }
-
    private:
       BigInt rsa_private_op(const BigInt& m) const {
          /*
@@ -552,13 +546,16 @@ class RSA_Private_Operation {
 class RSA_Signature_Operation final : public PK_Ops::Signature,
                                       private RSA_Private_Operation {
    public:
-      void update(const uint8_t msg[], size_t msg_len) override { m_emsa->update(msg, msg_len); }
+      void update(std::span<const uint8_t> msg) override { m_emsa->update(msg.data(), msg.size()); }
 
-      secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override {
+      std::vector<uint8_t> sign(RandomNumberGenerator& rng) override {
          const size_t max_input_bits = public_modulus_bits() - 1;
          const auto msg = m_emsa->raw_data();
          const auto padded = m_emsa->encoding_of(msg, max_input_bits, rng);
-         return raw_op(padded.data(), padded.size());
+
+         std::vector<uint8_t> out(public_modulus_bytes());
+         raw_op(out, padded);
+         return out;
       }
 
       size_t signature_length() const override { return public_modulus_bytes(); }
@@ -599,8 +596,10 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_EME,
 
       size_t plaintext_length(size_t /*ctext_len*/) const override { return public_modulus_bytes(); }
 
-      secure_vector<uint8_t> raw_decrypt(const uint8_t input[], size_t input_len) override {
-         return raw_op(input, input_len);
+      secure_vector<uint8_t> raw_decrypt(std::span<const uint8_t> input) override {
+         secure_vector<uint8_t> out(public_modulus_bytes());
+         raw_op(out, input);
+         return out;
       }
 };
 
@@ -655,22 +654,20 @@ class RSA_Encryption_Operation final : public PK_Ops::Encryption_with_EME,
 
       size_t max_ptext_input_bits() const override { return public_modulus_bits() - 1; }
 
-      secure_vector<uint8_t> raw_encrypt(const uint8_t input[],
-                                         size_t input_len,
-                                         RandomNumberGenerator& /*rng*/) override {
-         BigInt input_bn(input, input_len);
-         return public_op(input_bn).serialize<secure_vector<uint8_t>>(public_modulus_bytes());
+      std::vector<uint8_t> raw_encrypt(std::span<const uint8_t> input, RandomNumberGenerator& /*rng*/) override {
+         BigInt input_bn(input);
+         return public_op(input_bn).serialize(public_modulus_bytes());
       }
 };
 
 class RSA_Verify_Operation final : public PK_Ops::Verification,
                                    private RSA_Public_Operation {
    public:
-      void update(const uint8_t msg[], size_t msg_len) override { m_emsa->update(msg, msg_len); }
+      void update(std::span<const uint8_t> msg) override { m_emsa->update(msg.data(), msg.size()); }
 
-      bool is_valid_signature(const uint8_t sig[], size_t sig_len) override {
+      bool is_valid_signature(std::span<const uint8_t> sig) override {
          const auto msg = m_emsa->raw_data();
-         const auto message_repr = recover_message_repr(sig, sig_len);
+         const auto message_repr = recover_message_repr(sig.data(), sig.size());
          return m_emsa->verify(message_repr, msg, public_modulus_bits() - 1);
       }
 

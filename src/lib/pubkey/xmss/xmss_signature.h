@@ -37,7 +37,7 @@ class XMSS_Signature final {
        * @param raw_sig An XMSS signature serialized using
        *                XMSS_Signature::bytes().
        **/
-      XMSS_Signature(XMSS_Parameters::xmss_algorithm_t oid, const secure_vector<uint8_t>& raw_sig);
+      XMSS_Signature(XMSS_Parameters::xmss_algorithm_t oid, std::span<const uint8_t> raw_sig);
 
       /**
        * Creates an XMSS Signature from a leaf index used for signature
@@ -79,7 +79,7 @@ class XMSS_Signature final {
        * @return serialized signature, a sequence of
        *         4+(len + h + 1)n bytes.
        **/
-      secure_vector<uint8_t> bytes() const;
+      std::vector<uint8_t> bytes() const;
 
    private:
       size_t m_leaf_idx;
