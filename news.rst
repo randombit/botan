@@ -7,15 +7,27 @@ Version 3.6.0, Not Yet Released
 * Add new ``EC_Scalar`` and ``EC_AffinePoint`` types (GH #4042)
 
 * Further improvements to elliptic curve performance
-  (GH #4147 #4191 #4113 #4171 #4205 #4210)
+  (GH #4113 #4147 #4190 #4191 #4113 #4171 #4205 #4207 #4209 #4210
+  #4211 #4212 #4213 #4215 #4221 #4225 #4226 #4235 #4237 #4240)
 
 * Constant time programming improvements including ``CT::Option``
   (GH #4175 #4197 #4198 #4204 #4207)
 
 * Internal "strong types" improvments (GH #4170)
 
-* Cache the DER encoding of the namedGroup (OID) format of an elliptic
-  curve (GH #4193)
+* Apply const-time checking annotations to Dilithium and Kyber (GH #4223),
+  X448/Ed448 (GH #4204), FrodoKEM (GH #4198)
+
+* Refactor internals of Dilithium and Kyber to share common elements (GH #4024)
+
+* Add a test suite for validating the const-time annotations (GH #4182)
+
+* Cache the DER encoding of the OID format of an elliptic curve (GH #4193)
+
+* Fix a bug where CMake and pkg-config files might be installed to the
+  wrong path (GH #4236 #4231)
+
+* Update some documentation comments (GH #4185)
 
 * In Argon2, avoid instantiating a thread pool when ``p == 1`` (GH #4195 #4199)
 
