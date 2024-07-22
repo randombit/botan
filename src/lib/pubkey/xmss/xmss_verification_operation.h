@@ -22,9 +22,9 @@ class XMSS_Verification_Operation final : public virtual PK_Ops::Verification {
    public:
       XMSS_Verification_Operation(const XMSS_PublicKey& public_key);
 
-      bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
+      bool is_valid_signature(std::span<const uint8_t> sign) override;
 
-      void update(const uint8_t msg[], size_t msg_len) override;
+      void update(std::span<const uint8_t> input) override;
 
       std::string hash_function() const override { return m_hash.hash_function(); }
 

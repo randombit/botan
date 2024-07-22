@@ -145,24 +145,22 @@ class SphincsPlus_Verification_Operation final : public PK_Ops::Verification {
       /**
        * Add more data to the message currently being signed
        * @param msg the message
-       * @param msg_len the length of msg in bytes
        */
-      void update(const uint8_t msg[], size_t msg_len) override {
-         m_msg_buffer.insert(m_msg_buffer.end(), msg, msg + msg_len);
+      void update(std::span<const uint8_t> msg) override {
+         m_msg_buffer.insert(m_msg_buffer.end(), msg.begin(), msg.end());
       }
 
       /*
       * Perform a verification operation
-      * @param rng a random number generator
       */
-      bool is_valid_signature(const uint8_t* sig, size_t sig_len) override {
+      bool is_valid_signature(std::span<const uint8_t> sig) override {
          const auto& p = m_public->parameters();
-         if(sig_len != p.sphincs_signature_bytes()) {
+         if(sig.size() != p.sphincs_signature_bytes()) {
             m_msg_buffer.clear();
             return false;
          }
 
-         BufferSlicer s({sig, sig_len});
+         BufferSlicer s(sig);
          // Compute leaf and tree index from R
          const auto msg_random_s = s.take<SphincsMessageRandomness>(p.n());
          auto [mhash, tree_idx, leaf_idx] = m_hashes->H_msg(msg_random_s, m_public->root(), m_msg_buffer);
@@ -288,14 +286,14 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
             m_hashes(Botan::Sphincs_Hash_Functions::create(m_public->parameters(), m_public->seed())),
             m_randomized(randomized) {}
 
-      void update(const uint8_t msg[], size_t msg_len) override {
-         m_msg_buffer.insert(m_msg_buffer.end(), msg, msg + msg_len);
+      void update(std::span<const uint8_t> msg) override {
+         m_msg_buffer.insert(m_msg_buffer.end(), msg.begin(), msg.end());
       }
 
-      secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override {
+      std::vector<uint8_t> sign(RandomNumberGenerator& rng) override {
          const auto& p = m_public->parameters();
 
-         secure_vector<uint8_t> sphincs_sig_buffer(p.sphincs_signature_bytes());
+         std::vector<uint8_t> sphincs_sig_buffer(p.sphincs_signature_bytes());
          BufferStuffer sphincs_sig(sphincs_sig_buffer);
 
          // Compute and append the digest randomization value (R of spec).

@@ -19,7 +19,7 @@ class Encryption_with_EME : public Encryption {
    public:
       size_t max_input_bits() const override;
 
-      secure_vector<uint8_t> encrypt(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& rng) override;
+      std::vector<uint8_t> encrypt(std::span<const uint8_t> ptext, RandomNumberGenerator& rng) override;
 
       ~Encryption_with_EME() override = default;
 
@@ -29,13 +29,13 @@ class Encryption_with_EME : public Encryption {
    private:
       virtual size_t max_ptext_input_bits() const = 0;
 
-      virtual secure_vector<uint8_t> raw_encrypt(const uint8_t msg[], size_t len, RandomNumberGenerator& rng) = 0;
+      virtual std::vector<uint8_t> raw_encrypt(std::span<const uint8_t> msg, RandomNumberGenerator& rng) = 0;
       std::unique_ptr<EME> m_eme;
 };
 
 class Decryption_with_EME : public Decryption {
    public:
-      secure_vector<uint8_t> decrypt(uint8_t& valid_mask, const uint8_t msg[], size_t msg_len) override;
+      secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) override;
 
       ~Decryption_with_EME() override = default;
 
@@ -43,7 +43,7 @@ class Decryption_with_EME : public Decryption {
       explicit Decryption_with_EME(std::string_view eme);
 
    private:
-      virtual secure_vector<uint8_t> raw_decrypt(const uint8_t msg[], size_t len) = 0;
+      virtual secure_vector<uint8_t> raw_decrypt(std::span<const uint8_t> ctext) = 0;
       std::unique_ptr<EME> m_eme;
 };
 
@@ -51,8 +51,8 @@ class Verification_with_Hash : public Verification {
    public:
       ~Verification_with_Hash() override = default;
 
-      void update(const uint8_t msg[], size_t msg_len) override;
-      bool is_valid_signature(const uint8_t sig[], size_t sig_len) override;
+      void update(std::span<const uint8_t> input) override;
+      bool is_valid_signature(std::span<const uint8_t> sig) override;
 
       std::string hash_function() const final { return m_hash->name(); }
 
@@ -71,7 +71,7 @@ class Verification_with_Hash : public Verification {
       * @param sig_len the length of sig in bytes
       * @returns if signature is a valid one for message
       */
-      virtual bool verify(const uint8_t msg[], size_t msg_len, const uint8_t sig[], size_t sig_len) = 0;
+      virtual bool verify(std::span<const uint8_t> input, std::span<const uint8_t> sig) = 0;
 
    private:
       std::unique_ptr<HashFunction> m_hash;
@@ -79,9 +79,9 @@ class Verification_with_Hash : public Verification {
 
 class Signature_with_Hash : public Signature {
    public:
-      void update(const uint8_t msg[], size_t msg_len) override;
+      void update(std::span<const uint8_t> input) override;
 
-      secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override;
+      std::vector<uint8_t> sign(RandomNumberGenerator& rng) override;
 
       ~Signature_with_Hash() override = default;
 
@@ -95,7 +95,7 @@ class Signature_with_Hash : public Signature {
 #endif
 
    private:
-      virtual secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& rng) = 0;
+      virtual std::vector<uint8_t> raw_sign(std::span<const uint8_t> input, RandomNumberGenerator& rng) = 0;
 
       std::unique_ptr<HashFunction> m_hash;
 };
@@ -103,10 +103,8 @@ class Signature_with_Hash : public Signature {
 class Key_Agreement_with_KDF : public Key_Agreement {
    public:
       secure_vector<uint8_t> agree(size_t key_len,
-                                   const uint8_t other_key[],
-                                   size_t other_key_len,
-                                   const uint8_t salt[],
-                                   size_t salt_len) override;
+                                   std::span<const uint8_t> other_key,
+                                   std::span<const uint8_t> salt) override;
 
       ~Key_Agreement_with_KDF() override = default;
 

@@ -60,12 +60,12 @@ class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature {
             m_mechanism(MechanismWrapper::create_ecdsa_mechanism(hash)),
             m_hash(hash) {}
 
-      void update(const uint8_t msg[], size_t msg_len) override {
+      void update(std::span<const uint8_t> input) override {
          if(!m_initialized) {
             // first call to update: initialize and cache message because we can not determine yet whether a single- or multiple-part operation will be performed
             m_key.module()->C_SignInit(m_key.session().handle(), m_mechanism.data(), m_key.handle());
             m_initialized = true;
-            m_first_message = secure_vector<uint8_t>(msg, msg + msg_len);
+            m_first_message.assign(input.begin(), input.end());
             return;
          }
 
@@ -75,11 +75,11 @@ class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature {
             m_first_message.clear();
          }
 
-         m_key.module()->C_SignUpdate(m_key.session().handle(), msg, static_cast<Ulong>(msg_len));
+         m_key.module()->C_SignUpdate(m_key.session().handle(), input.data(), static_cast<Ulong>(input.size()));
       }
 
-      secure_vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
-         secure_vector<uint8_t> signature;
+      std::vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
+         std::vector<uint8_t> signature;
          if(!m_first_message.empty()) {
             // single call to update: perform single-part operation
             m_key.module()->C_Sign(m_key.session().handle(), m_first_message, signature);
@@ -121,12 +121,12 @@ class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification {
             m_mechanism(MechanismWrapper::create_ecdsa_mechanism(hash)),
             m_hash(hash) {}
 
-      void update(const uint8_t msg[], size_t msg_len) override {
+      void update(std::span<const uint8_t> input) override {
          if(!m_initialized) {
             // first call to update: initialize and cache message because we can not determine yet whether a single- or multiple-part operation will be performed
             m_key.module()->C_VerifyInit(m_key.session().handle(), m_mechanism.data(), m_key.handle());
             m_initialized = true;
-            m_first_message = secure_vector<uint8_t>(msg, msg + msg_len);
+            m_first_message.assign(input.begin(), input.end());
             return;
          }
 
@@ -136,23 +136,24 @@ class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification {
             m_first_message.clear();
          }
 
-         m_key.module()->C_VerifyUpdate(m_key.session().handle(), msg, static_cast<Ulong>(msg_len));
+         m_key.module()->C_VerifyUpdate(m_key.session().handle(), input.data(), static_cast<Ulong>(input.size()));
       }
 
-      bool is_valid_signature(const uint8_t sig[], size_t sig_len) override {
+      bool is_valid_signature(std::span<const uint8_t> sig) override {
          ReturnValue return_value = ReturnValue::SignatureInvalid;
          if(!m_first_message.empty()) {
             // single call to update: perform single-part operation
             m_key.module()->C_Verify(m_key.session().handle(),
                                      m_first_message.data(),
                                      static_cast<Ulong>(m_first_message.size()),
-                                     sig,
-                                     static_cast<Ulong>(sig_len),
+                                     sig.data(),
+                                     static_cast<Ulong>(sig.size()),
                                      &return_value);
             m_first_message.clear();
          } else {
             // multiple calls to update (or none): finish multiple-part operation
-            m_key.module()->C_VerifyFinal(m_key.session().handle(), sig, static_cast<Ulong>(sig_len), &return_value);
+            m_key.module()->C_VerifyFinal(
+               m_key.session().handle(), sig.data(), static_cast<Ulong>(sig.size()), &return_value);
          }
          m_initialized = false;
          if(return_value != ReturnValue::OK && return_value != ReturnValue::SignatureInvalid) {

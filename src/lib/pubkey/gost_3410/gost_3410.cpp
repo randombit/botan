@@ -128,7 +128,7 @@ class GOST_3410_Signature_Operation final : public PK_Ops::Signature_with_Hash {
 
       AlgorithmIdentifier algorithm_identifier() const override;
 
-      secure_vector<uint8_t> raw_sign(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& rng) override;
+      std::vector<uint8_t> raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng) override;
 
    private:
       const EC_Group m_group;
@@ -159,10 +159,8 @@ AlgorithmIdentifier GOST_3410_Signature_Operation::algorithm_identifier() const 
    return AlgorithmIdentifier(oid_name, AlgorithmIdentifier::USE_EMPTY_PARAM);
 }
 
-secure_vector<uint8_t> GOST_3410_Signature_Operation::raw_sign(const uint8_t msg[],
-                                                               size_t msg_len,
-                                                               RandomNumberGenerator& rng) {
-   const auto e = gost_msg_to_scalar(m_group, std::span{msg, msg_len});
+std::vector<uint8_t> GOST_3410_Signature_Operation::raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng) {
+   const auto e = gost_msg_to_scalar(m_group, msg);
 
    const auto k = EC_Scalar::random(m_group, rng);
    const auto r = EC_Scalar::gk_x_mod_order(k, rng, m_ws);
@@ -172,7 +170,7 @@ secure_vector<uint8_t> GOST_3410_Signature_Operation::raw_sign(const uint8_t msg
       throw Internal_Error("GOST 34.10 signature generation failed, r/s equal to zero");
    }
 
-   return EC_Scalar::serialize_pair<secure_vector<uint8_t>>(s, r);
+   return EC_Scalar::serialize_pair(s, r);
 }
 
 std::string gost_hash_from_algid(const AlgorithmIdentifier& alg_id) {
@@ -210,22 +208,19 @@ class GOST_3410_Verification_Operation final : public PK_Ops::Verification_with_
             m_group(gost.domain()),
             m_gy_mul(m_group, gost.public_point()) {}
 
-      bool verify(const uint8_t msg[], size_t msg_len, const uint8_t sig[], size_t sig_len) override;
+      bool verify(std::span<const uint8_t> msg, std::span<const uint8_t> sig) override;
 
    private:
       const EC_Group m_group;
       const EC_Group::Mul2Table m_gy_mul;
 };
 
-bool GOST_3410_Verification_Operation::verify(const uint8_t msg[],
-                                              size_t msg_len,
-                                              const uint8_t sig[],
-                                              size_t sig_len) {
-   if(auto sr = EC_Scalar::deserialize_pair(m_group, std::span{sig, sig_len})) {
+bool GOST_3410_Verification_Operation::verify(std::span<const uint8_t> msg, std::span<const uint8_t> sig) {
+   if(auto sr = EC_Scalar::deserialize_pair(m_group, sig)) {
       const auto& [s, r] = sr.value();
 
       if(r.is_nonzero() && s.is_nonzero()) {
-         const auto e = gost_msg_to_scalar(m_group, std::span{msg, msg_len});
+         const auto e = gost_msg_to_scalar(m_group, msg);
 
          const auto v = e.invert();
 

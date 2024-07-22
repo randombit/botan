@@ -218,8 +218,8 @@ HSS_LMS_PrivateKeyInternal::HSS_LMS_PrivateKeyInternal(HSS_LMS_Params hss_params
    BOTAN_ARG_CHECK(m_identifier.size() == LMS_IDENTIFIER_LEN, "Invalid identifier size");
 }
 
-secure_vector<uint8_t> HSS_LMS_PrivateKeyInternal::sign(std::span<const uint8_t> msg) {
-   secure_vector<uint8_t> sig(HSS_Signature::size(hss_params()));
+std::vector<uint8_t> HSS_LMS_PrivateKeyInternal::sign(std::span<const uint8_t> msg) {
+   std::vector<uint8_t> sig(HSS_Signature::size(hss_params()));
    BufferStuffer sig_stuffer(sig);
    sig_stuffer.append(store_be(hss_params().L() - 1));
 

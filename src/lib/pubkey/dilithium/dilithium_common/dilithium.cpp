@@ -193,7 +193,7 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
             m_t0(ntt(m_priv_key->t0().clone())),
             m_A(Dilithium_Algos::expand_A(m_priv_key->rho(), m_priv_key->mode())) {}
 
-      void update(const uint8_t msg[], size_t msg_len) override { m_h.update({msg, msg_len}); }
+      void update(std::span<const uint8_t> input) override { m_h.update(input); }
 
       /**
        * NIST FIPS 204 IPD, Algorithm 2 (ML-DSA.Sign)
@@ -203,7 +203,7 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
        * s2 and t0 are done in the constructor of this class, as a 'signature
        * operation' may be used to sign multiple messages.
        */
-      secure_vector<uint8_t> sign(RandomNumberGenerator& rng) override {
+      std::vector<uint8_t> sign(RandomNumberGenerator& rng) override {
          auto scope = CT::scoped_poison(*m_priv_key);
 
          const auto mu = m_h.final();
@@ -300,7 +300,7 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
             m_t1_ntt_shifted(ntt(m_pub_key->t1() << DilithiumConstants::D)),
             m_h(m_pub_key->mode().symmetric_primitives().get_message_hash(m_pub_key->tr())) {}
 
-      void update(const uint8_t msg[], size_t msg_len) override { m_h.update({msg, msg_len}); }
+      void update(std::span<const uint8_t> input) override { m_h.update(input); }
 
       /**
        * NIST FIPS 204 IPD, Algorithm 3 (ML-DSA.Verify)
@@ -309,10 +309,10 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
        * matrix A is expanded from 'rho' in the constructor of this class, as
        * a 'verification operation' may be used to verify multiple signatures.
        */
-      bool is_valid_signature(const uint8_t* sig, size_t sig_len) override {
+      bool is_valid_signature(std::span<const uint8_t> sig) override {
          const auto& mode = m_pub_key->mode();
          const auto& sympri = mode.symmetric_primitives();
-         StrongSpan<const DilithiumSerializedSignature> sig_bytes({sig, sig_len});
+         StrongSpan<const DilithiumSerializedSignature> sig_bytes(sig);
 
          if(sig_bytes.size() != mode.signature_bytes()) {
             return false;

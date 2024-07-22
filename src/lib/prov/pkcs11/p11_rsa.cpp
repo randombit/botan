@@ -124,11 +124,11 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
 
       size_t plaintext_length(size_t /*ctext_len*/) const override { return m_key.get_n().bytes(); }
 
-      secure_vector<uint8_t> decrypt(uint8_t& valid_mask, const uint8_t ciphertext[], size_t ciphertext_len) override {
+      secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) override {
          valid_mask = 0;
          m_key.module()->C_DecryptInit(m_key.session().handle(), m_mechanism.data(), m_key.handle());
 
-         std::vector<uint8_t> encrypted_data(ciphertext, ciphertext + ciphertext_len);
+         std::vector<uint8_t> encrypted_data(ctext.begin(), ctext.end());
 
          const size_t modulus_bytes = (m_key.get_n().bits() + 7) / 8;
 
@@ -173,8 +173,8 @@ class PKCS11_RSA_Decryption_Operation_Software_EME final : public PK_Ops::Decryp
 
       size_t plaintext_length(size_t ctext_len) const override { return m_raw_decryptor.plaintext_length(ctext_len); }
 
-      secure_vector<uint8_t> raw_decrypt(const uint8_t input[], size_t input_len) override {
-         return m_raw_decryptor.decrypt(input, input_len);
+      secure_vector<uint8_t> raw_decrypt(std::span<const uint8_t> input) override {
+         return m_raw_decryptor.decrypt(input);
       }
 
    private:
@@ -194,13 +194,13 @@ class PKCS11_RSA_Encryption_Operation final : public PK_Ops::Encryption {
 
       size_t max_input_bits() const override { return m_bits; }
 
-      secure_vector<uint8_t> encrypt(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& /*rng*/) override {
+      std::vector<uint8_t> encrypt(std::span<const uint8_t> input, RandomNumberGenerator& /*rng*/) override {
          m_key.module()->C_EncryptInit(m_key.session().handle(), m_mechanism.data(), m_key.handle());
 
-         secure_vector<uint8_t> encrytped_data;
+         std::vector<uint8_t> encrypted_data;
          m_key.module()->C_Encrypt(
-            m_key.session().handle(), secure_vector<uint8_t>(msg, msg + msg_len), encrytped_data);
-         return encrytped_data;
+            m_key.session().handle(), secure_vector<uint8_t>(input.begin(), input.end()), encrypted_data);
+         return encrypted_data;
       }
 
    private:
@@ -216,12 +216,12 @@ class PKCS11_RSA_Signature_Operation final : public PK_Ops::Signature {
 
       size_t signature_length() const override { return m_key.get_n().bytes(); }
 
-      void update(const uint8_t msg[], size_t msg_len) override {
+      void update(std::span<const uint8_t> input) override {
          if(!m_initialized) {
             // first call to update: initialize and cache message because we can not determine yet whether a single- or multiple-part operation will be performed
             m_key.module()->C_SignInit(m_key.session().handle(), m_mechanism.data(), m_key.handle());
             m_initialized = true;
-            m_first_message = secure_vector<uint8_t>(msg, msg + msg_len);
+            m_first_message.assign(input.begin(), input.end());
             return;
          }
 
@@ -231,11 +231,11 @@ class PKCS11_RSA_Signature_Operation final : public PK_Ops::Signature {
             m_first_message.clear();
          }
 
-         m_key.module()->C_SignUpdate(m_key.session().handle(), msg, static_cast<Ulong>(msg_len));
+         m_key.module()->C_SignUpdate(m_key.session().handle(), input.data(), static_cast<Ulong>(input.size()));
       }
 
-      secure_vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
-         secure_vector<uint8_t> signature;
+      std::vector<uint8_t> sign(RandomNumberGenerator& /*rng*/) override {
+         std::vector<uint8_t> signature;
          if(!m_first_message.empty()) {
             // single call to update: perform single-part operation
             m_key.module()->C_Sign(m_key.session().handle(), m_first_message, signature);
@@ -331,12 +331,12 @@ class PKCS11_RSA_Verification_Operation final : public PK_Ops::Verification {
       PKCS11_RSA_Verification_Operation(const PKCS11_RSA_PublicKey& key, std::string_view padding) :
             m_key(key), m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(padding)) {}
 
-      void update(const uint8_t msg[], size_t msg_len) override {
+      void update(std::span<const uint8_t> input) override {
          if(!m_initialized) {
             // first call to update: initialize and cache message because we can not determine yet whether a single- or multiple-part operation will be performed
             m_key.module()->C_VerifyInit(m_key.session().handle(), m_mechanism.data(), m_key.handle());
             m_initialized = true;
-            m_first_message = secure_vector<uint8_t>(msg, msg + msg_len);
+            m_first_message.assign(input.begin(), input.end());
             return;
          }
 
@@ -346,23 +346,24 @@ class PKCS11_RSA_Verification_Operation final : public PK_Ops::Verification {
             m_first_message.clear();
          }
 
-         m_key.module()->C_VerifyUpdate(m_key.session().handle(), msg, static_cast<Ulong>(msg_len));
+         m_key.module()->C_VerifyUpdate(m_key.session().handle(), input.data(), static_cast<Ulong>(input.size()));
       }
 
-      bool is_valid_signature(const uint8_t sig[], size_t sig_len) override {
+      bool is_valid_signature(std::span<const uint8_t> sig) override {
          ReturnValue return_value = ReturnValue::SignatureInvalid;
          if(!m_first_message.empty()) {
             // single call to update: perform single-part operation
             m_key.module()->C_Verify(m_key.session().handle(),
                                      m_first_message.data(),
                                      static_cast<Ulong>(m_first_message.size()),
-                                     sig,
-                                     static_cast<Ulong>(sig_len),
+                                     sig.data(),
+                                     static_cast<Ulong>(sig.size()),
                                      &return_value);
             m_first_message.clear();
          } else {
             // multiple calls to update (or none): finish multiple-part operation
-            m_key.module()->C_VerifyFinal(m_key.session().handle(), sig, static_cast<Ulong>(sig_len), &return_value);
+            m_key.module()->C_VerifyFinal(
+               m_key.session().handle(), sig.data(), static_cast<Ulong>(sig.size()), &return_value);
          }
          m_initialized = false;
          if(return_value != ReturnValue::OK && return_value != ReturnValue::SignatureInvalid) {

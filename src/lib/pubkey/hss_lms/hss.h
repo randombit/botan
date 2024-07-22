@@ -176,7 +176,7 @@ class BOTAN_TEST_API HSS_LMS_PrivateKeyInternal final {
        *
        * @param msg The message to sign.
        */
-      secure_vector<uint8_t> sign(std::span<const uint8_t> msg);
+      std::vector<uint8_t> sign(std::span<const uint8_t> msg);
 
       /**
        * @brief Create the HSS root LMS tree's LMS_PrivateKey using the HSS-LMS private key.

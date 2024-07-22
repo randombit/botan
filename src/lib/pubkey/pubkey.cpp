@@ -104,7 +104,7 @@ size_t PK_Encryptor_EME::ciphertext_length(size_t ptext_len) const {
 }
 
 std::vector<uint8_t> PK_Encryptor_EME::enc(const uint8_t in[], size_t length, RandomNumberGenerator& rng) const {
-   return unlock(m_op->encrypt(in, length, rng));
+   return m_op->encrypt(std::span{in, length}, rng);
 }
 
 size_t PK_Encryptor_EME::maximum_input_size() const {
@@ -131,7 +131,7 @@ size_t PK_Decryptor_EME::plaintext_length(size_t ctext_len) const {
 }
 
 secure_vector<uint8_t> PK_Decryptor_EME::do_decrypt(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const {
-   return m_op->decrypt(valid_mask, in, in_len);
+   return m_op->decrypt(valid_mask, {in, in_len});
 }
 
 PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, std::string_view param, std::string_view provider) {
@@ -231,7 +231,7 @@ SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
 
 SymmetricKey PK_Key_Agreement::derive_key(
    size_t key_len, const uint8_t in[], size_t in_len, const uint8_t salt[], size_t salt_len) const {
-   return SymmetricKey(m_op->agree(key_len, in, in_len, salt, salt_len));
+   return SymmetricKey(m_op->agree(key_len, {in, in_len}, {salt, salt_len}));
 }
 
 namespace {
@@ -277,7 +277,7 @@ void PK_Signer::update(std::string_view in) {
 }
 
 void PK_Signer::update(const uint8_t in[], size_t length) {
-   m_op->update(in, length);
+   m_op->update({in, length});
 }
 
 namespace {
@@ -314,7 +314,7 @@ size_t PK_Signer::signature_length() const {
 }
 
 std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng) {
-   std::vector<uint8_t> sig = unlock(m_op->sign(rng));
+   std::vector<uint8_t> sig = m_op->sign(rng);
 
    if(m_sig_format == Signature_Format::Standard) {
       return sig;
@@ -378,7 +378,7 @@ void PK_Verifier::update(std::string_view in) {
 }
 
 void PK_Verifier::update(const uint8_t in[], size_t length) {
-   m_op->update(in, length);
+   m_op->update({in, length});
 }
 
 namespace {
@@ -416,7 +416,7 @@ std::vector<uint8_t> decode_der_signature(const uint8_t sig[], size_t length, si
 bool PK_Verifier::check_signature(const uint8_t sig[], size_t length) {
    try {
       if(m_sig_format == Signature_Format::Standard) {
-         return m_op->is_valid_signature(sig, length);
+         return m_op->is_valid_signature({sig, length});
       } else if(m_sig_format == Signature_Format::DerSequence) {
          bool decoding_success = false;
          std::vector<uint8_t> real_sig;
@@ -426,7 +426,7 @@ bool PK_Verifier::check_signature(const uint8_t sig[], size_t length) {
             decoding_success = true;
          } catch(Decoding_Error&) {}
 
-         bool accept = m_op->is_valid_signature(real_sig.data(), real_sig.size());
+         bool accept = m_op->is_valid_signature(real_sig);
 
          return accept && decoding_success;
       } else {

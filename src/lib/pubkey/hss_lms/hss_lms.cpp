@@ -63,14 +63,14 @@ class HSS_LMS_Verification_Operation final : public PK_Ops::Verification {
       HSS_LMS_Verification_Operation(std::shared_ptr<HSS_LMS_PublicKeyInternal> pub_key) :
             m_public(std::move(pub_key)) {}
 
-      void update(const uint8_t msg[], size_t msg_len) override {
-         m_msg_buffer.insert(m_msg_buffer.end(), msg, msg + msg_len);
+      void update(std::span<const uint8_t> msg) override {
+         m_msg_buffer.insert(m_msg_buffer.end(), msg.begin(), msg.end());
       }
 
-      bool is_valid_signature(const uint8_t* sig, size_t sig_len) override {
+      bool is_valid_signature(std::span<const uint8_t> sig) override {
          std::vector<uint8_t> message_to_verify = std::exchange(m_msg_buffer, {});
          try {
-            const auto signature = HSS_Signature::from_bytes_or_throw({sig, sig_len});
+            const auto signature = HSS_Signature::from_bytes_or_throw(sig);
             return m_public->verify_signature(message_to_verify, signature);
          } catch(const Decoding_Error&) {
             // Signature could not be decoded
@@ -166,11 +166,11 @@ class HSS_LMS_Signature_Operation final : public PK_Ops::Signature {
                                   std::shared_ptr<HSS_LMS_PublicKeyInternal> public_key) :
             m_private(std::move(private_key)), m_public(std::move(public_key)) {}
 
-      void update(const uint8_t msg[], size_t msg_len) override {
-         m_msg_buffer.insert(m_msg_buffer.end(), msg, msg + msg_len);
+      void update(std::span<const uint8_t> msg) override {
+         m_msg_buffer.insert(m_msg_buffer.end(), msg.begin(), msg.end());
       }
 
-      secure_vector<uint8_t> sign(RandomNumberGenerator&) override {
+      std::vector<uint8_t> sign(RandomNumberGenerator&) override {
          std::vector<uint8_t> message_to_sign = std::exchange(m_msg_buffer, {});
          return m_private->sign(message_to_sign);
       }

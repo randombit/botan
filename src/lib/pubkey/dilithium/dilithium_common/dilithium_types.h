@@ -49,7 +49,7 @@ using DilithiumHashedPublicKey = Strong<std::vector<uint8_t>, struct DilithiumHa
 using DilithiumMessageRepresentative = Strong<std::vector<uint8_t>, struct DilithiumMessageRepresentative_>;
 
 /// Serialized signature data
-using DilithiumSerializedSignature = Strong<secure_vector<uint8_t>, struct DilithiumSerializedSignature_>;
+using DilithiumSerializedSignature = Strong<std::vector<uint8_t>, struct DilithiumSerializedSignature_>;
 
 /// Serialized representation of a commitment w1
 using DilithiumSerializedCommitment = Strong<std::vector<uint8_t>, struct DilithiumSerializedCommitment_>;

@@ -25,6 +25,7 @@
 
 #include <botan/pk_keys.h>
 #include <botan/secmem.h>
+#include <span>
 
 namespace Botan {
 
@@ -33,17 +34,29 @@ class EME;
 class KDF;
 class EMSA;
 
-namespace PK_Ops {
+}  // namespace Botan
+
+namespace Botan::PK_Ops {
 
 /**
 * Public key encryption interface
 */
 class BOTAN_UNSTABLE_API Encryption {
    public:
-      virtual secure_vector<uint8_t> encrypt(const uint8_t msg[], size_t msg_len, RandomNumberGenerator& rng) = 0;
+      /**
+      * Encrypt a message returning the ciphertext
+      */
+      virtual std::vector<uint8_t> encrypt(std::span<const uint8_t> msg, RandomNumberGenerator& rng) = 0;
 
+      /**
+      * Return the maximum input size for this key
+      */
       virtual size_t max_input_bits() const = 0;
 
+      /**
+      * Given the plaintext length, return an upper bound of the ciphertext
+      * length for this key and padding.
+      */
       virtual size_t ciphertext_length(size_t ptext_len) const = 0;
 
       virtual ~Encryption() = default;
@@ -54,9 +67,7 @@ class BOTAN_UNSTABLE_API Encryption {
 */
 class BOTAN_UNSTABLE_API Decryption {
    public:
-      virtual secure_vector<uint8_t> decrypt(uint8_t& valid_mask,
-                                             const uint8_t ciphertext[],
-                                             size_t ciphertext_len) = 0;
+      virtual secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) = 0;
 
       virtual size_t plaintext_length(size_t ctext_len) const = 0;
 
@@ -70,15 +81,15 @@ class BOTAN_UNSTABLE_API Verification {
    public:
       /**
       * Add more data to the message currently being signed
-      * @param msg the message
-      * @param msg_len the length of msg in bytes
+      * @param input the input to be hashed/verified
       */
-      virtual void update(const uint8_t msg[], size_t msg_len) = 0;
+      virtual void update(std::span<const uint8_t> input) = 0;
 
       /**
       * Perform a verification operation
+      * @param sig the signature to be checked with respect to the input
       */
-      virtual bool is_valid_signature(const uint8_t sig[], size_t sig_len) = 0;
+      virtual bool is_valid_signature(std::span<const uint8_t> sig) = 0;
 
       /**
       * Return the hash function being used by this signer
@@ -95,16 +106,15 @@ class BOTAN_UNSTABLE_API Signature {
    public:
       /**
       * Add more data to the message currently being signed
-      * @param msg the message
-      * @param msg_len the length of msg in bytes
+      * @param input the input to be hashed/signed
       */
-      virtual void update(const uint8_t msg[], size_t msg_len) = 0;
+      virtual void update(std::span<const uint8_t> input) = 0;
 
       /**
       * Perform a signature operation
       * @param rng a random number generator
       */
-      virtual secure_vector<uint8_t> sign(RandomNumberGenerator& rng) = 0;
+      virtual std::vector<uint8_t> sign(RandomNumberGenerator& rng) = 0;
 
       /**
       * Return an upper bound on the length of the output signature
@@ -131,8 +141,9 @@ class BOTAN_UNSTABLE_API Signature {
 */
 class BOTAN_UNSTABLE_API Key_Agreement {
    public:
-      virtual secure_vector<uint8_t> agree(
-         size_t key_len, const uint8_t other_key[], size_t other_key_len, const uint8_t salt[], size_t salt_len) = 0;
+      virtual secure_vector<uint8_t> agree(size_t key_len,
+                                           std::span<const uint8_t> other_key,
+                                           std::span<const uint8_t> salt) = 0;
 
       virtual size_t agreed_value_size() const = 0;
 
@@ -171,8 +182,6 @@ class BOTAN_UNSTABLE_API KEM_Decryption {
       virtual ~KEM_Decryption() = default;
 };
 
-}  // namespace PK_Ops
-
-}  // namespace Botan
+}  // namespace Botan::PK_Ops
 
 #endif
