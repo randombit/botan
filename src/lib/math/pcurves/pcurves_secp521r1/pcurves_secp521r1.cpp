@@ -26,22 +26,34 @@ class P521Rep final {
       constexpr static std::array<W, N> redc(const std::array<W, 2 * N>& z) {
          constexpr W TOP_MASK = static_cast<W>(0x1FF);
 
-         std::array<W, N> hi = {};
-         copy_mem(hi, std::span{z}.template subspan<N - 1, N>());
-         shift_right<9>(hi);
+         /*
+         * Extract the high part of z (z >> 521)
+         */
+         std::array<W, N> t;
 
-         std::array<W, N> lo = {};
-         copy_mem(lo, std::span{z}.template first<N>());
-         lo[N - 1] &= TOP_MASK;
+         for(size_t i = 0; i != N; ++i) {
+            t[i] = z[(N - 1) + i] >> 9;
+         }
 
-         // s = hi + lo
-         std::array<W, N> s = {};
-         // Will never carry out
-         W carry = bigint_add<W, N>(s, lo, hi);
+         for(size_t i = 0; i != N - 1; ++i) {
+            t[i] |= z[(N - 1) + i + 1] << (WordInfo<W>::bits - 9);
+         }
+
+         // Now t += z & (2**521-1)
+         W carry = word8_add2(t.data(), z.data(), static_cast<W>(0));
+
+         if constexpr(WordInfo<W>::bits == 32) {
+            constexpr size_t HN = N / 2;
+            carry = word8_add2(t.data() + HN, z.data() + HN, carry);
+         }
+
+         // Now add the (partial) top words; this can't carry out
+         // since both inputs are at most 2**9-1
+         t[N - 1] += (z[N - 1] & TOP_MASK) + carry;
 
          // But might be greater than modulus:
-         std::array<W, N> r = {};
-         bigint_monty_maybe_sub<N>(r.data(), carry, s.data(), P.data());
+         std::array<W, N> r;
+         bigint_monty_maybe_sub<N>(r.data(), static_cast<W>(0), t.data(), P.data());
 
          return r;
       }
