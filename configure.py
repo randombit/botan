@@ -297,11 +297,14 @@ class BuildPaths:
             self.fuzzer_output_dir = None
             self.fuzzobj_dir = None
 
+        self.miscobj_dir = os.path.join(self.build_dir, 'obj', 'misc')
+
     def build_dirs(self):
         out = [
             self.libobj_dir,
             self.cliobj_dir,
             self.testobj_dir,
+            self.miscobj_dir,
             self.public_include_dir,
             self.internal_include_dir,
             self.external_include_dir,
@@ -2271,6 +2274,7 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'cliobj_dir': build_paths.cliobj_dir,
         'testobj_dir': build_paths.testobj_dir,
         'fuzzobj_dir': build_paths.fuzzobj_dir,
+        'miscobj_dir': build_paths.miscobj_dir,
 
         'fuzzer_output_dir': build_paths.fuzzer_output_dir if build_paths.fuzzer_output_dir else '',
         'doc_output_dir': build_paths.doc_output_dir,

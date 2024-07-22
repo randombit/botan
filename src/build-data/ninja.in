@@ -136,20 +136,20 @@ build examples: phony | %{example_bin}
 
 %{if build_bogo_shim}
 
-build botan_bogo_shim: link_cli bogo_shim_object | libs
+build %{out_dir}/botan_bogo_shim: link_cli bogo_shim_object | libs
   cli_name = bogo
 
 # BoGo shim
-build %{out_dir}/bogo_shim_object: compile_exe %{bogo_shim_src}
+build %{miscobj_dir}/bogo_shim.o: compile_exe %{bogo_shim_src}
 
 %{endif}
 
 %{if build_ct_selftest}
 
-build botan_ct_selftest: link_cli ct_selftest_object | libs
+build %{out_dir}/botan_ct_selftest: link_cli ct_selftest_object | libs
   cli_name = ct_selftest
 
-build %{out_dir}/ct_selftest_object: compile_exe %{ct_selftest_src}
+build %{miscobj_dir}/ct_selftest.o: compile_exe %{ct_selftest_src}
 
 %{endif}
 
@@ -184,9 +184,9 @@ build cli: phony %{cli_exe}
 
 build tests: phony %{test_exe}
 
-build bogo_shim: phony botan_bogo_shim
+build bogo_shim: phony %{out_dir}/botan_bogo_shim
 
-build ct_selftest: phony botan_ct_selftest
+build ct_selftest: phony %{out_dir}/botan_ct_selftest
 
 build libs: phony %{library_targets} $
 %{if symlink_shared_lib}
