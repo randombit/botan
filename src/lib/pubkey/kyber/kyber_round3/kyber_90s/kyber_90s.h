@@ -32,6 +32,8 @@ class Kyber_90s_Symmetric_Primitives : public Kyber_Symmetric_Primitives {
 
       HashFunction& get_H() const override { return *m_sha256; }
 
+      HashFunction& get_J() const override { throw Invalid_State("Kyber-R3 does not support J()"); }
+
       HashFunction& get_KDF() const override { return *m_sha256; }
 
       Botan::XOF& get_PRF(std::span<const uint8_t> seed, const uint8_t nonce) const override {

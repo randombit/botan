@@ -21,12 +21,17 @@
    #include <botan/internal/kyber_90s.h>
 #endif
 
+#if defined(BOTAN_HAS_ML_KEM_INITIAL_PUBLIC_DRAFT)
+   #include <botan/internal/ml_kem_ipd.h>
+#endif
+
 namespace Botan {
 
 KyberConstants::KyberConstants(KyberMode mode) : m_mode(mode) {
    switch(mode.mode()) {
       case KyberMode::Kyber512_R3:
       case KyberMode::Kyber512_90s:
+      case KyberMode::ML_KEM_512_ipd:
          m_nist_strength = KyberStrength::_128;
          m_k = 2;
          m_eta1 = KyberEta::_3;
@@ -36,6 +41,7 @@ KyberConstants::KyberConstants(KyberMode mode) : m_mode(mode) {
 
       case KyberMode::Kyber768_R3:
       case KyberMode::Kyber768_90s:
+      case KyberMode::ML_KEM_768_ipd:
          m_nist_strength = KyberStrength::_192;
          m_k = 3;
          m_eta1 = KyberEta::_2;
@@ -45,6 +51,7 @@ KyberConstants::KyberConstants(KyberMode mode) : m_mode(mode) {
 
       case KyberMode::Kyber1024_R3:
       case KyberMode::Kyber1024_90s:
+      case KyberMode::ML_KEM_1024_ipd:
          m_nist_strength = KyberStrength::_256;
          m_k = 4;
          m_eta1 = KyberEta::_2;
@@ -65,6 +72,12 @@ KyberConstants::KyberConstants(KyberMode mode) : m_mode(mode) {
 #ifdef BOTAN_HAS_KYBER
    if(mode.is_kyber_round3() && mode.is_modern()) {
       m_symmetric_primitives = std::make_unique<Kyber_Modern_Symmetric_Primitives>();
+   }
+#endif
+
+#ifdef BOTAN_HAS_ML_KEM_INITIAL_PUBLIC_DRAFT
+   if(mode.is_ml_kem_ipd()) {
+      m_symmetric_primitives = std::make_unique<ML_KEM_IPD_Symmetric_Primitives>();
    }
 #endif
 

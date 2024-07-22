@@ -40,6 +40,10 @@
    #include <botan/internal/kyber_encaps.h>
 #endif
 
+#if defined(BOTAN_HAS_ML_KEM_INITIAL_PUBLIC_DRAFT)
+   #include <botan/internal/ml_kem_ipd.h>
+#endif
+
 #include <memory>
 #include <vector>
 
@@ -65,6 +69,15 @@ KyberMode::Mode kyber_mode_from_string(std::string_view str) {
    }
    if(str == "Kyber-1024-r3") {
       return KyberMode::Kyber1024_R3;
+   }
+   if(str == "ML-KEM-512-ipd") {
+      return KyberMode::ML_KEM_512_ipd;
+   }
+   if(str == "ML-KEM-768-ipd") {
+      return KyberMode::ML_KEM_768_ipd;
+   }
+   if(str == "ML-KEM-1024-ipd") {
+      return KyberMode::ML_KEM_1024_ipd;
    }
 
    throw Invalid_Argument(fmt("'{}' is not a valid Kyber mode name", str));
@@ -96,6 +109,12 @@ std::string KyberMode::to_string() const {
          return "Kyber-768-r3";
       case Kyber1024_R3:
          return "Kyber-1024-r3";
+      case ML_KEM_512_ipd:
+         return "ML-KEM-512-ipd";
+      case ML_KEM_768_ipd:
+         return "ML-KEM-768-ipd";
+      case ML_KEM_1024_ipd:
+         return "ML-KEM-1024-ipd";
    }
 
    BOTAN_ASSERT_UNREACHABLE();
@@ -107,6 +126,11 @@ bool KyberMode::is_90s() const {
 
 bool KyberMode::is_modern() const {
    return !is_90s();
+}
+
+bool KyberMode::is_ml_kem_ipd() const {
+   return m_mode == KyberMode::ML_KEM_512_ipd || m_mode == KyberMode::ML_KEM_768_ipd ||
+          m_mode == KyberMode::ML_KEM_1024_ipd;
 }
 
 bool KyberMode::is_kyber_round3() const {
@@ -127,6 +151,12 @@ bool KyberMode::is_available() const {
    }
 #endif
 
+#if defined(BOTAN_HAS_ML_KEM_INITIAL_PUBLIC_DRAFT)
+   if(is_ml_kem_ipd()) {
+      return true;
+   }
+#endif
+
    return false;
 }
 
@@ -135,7 +165,7 @@ KyberMode Kyber_PublicKey::mode() const {
 }
 
 std::string Kyber_PublicKey::algo_name() const {
-   return "Kyber";
+   return mode().is_ml_kem_ipd() ? "ML-KEM-ipd" : "Kyber";
 }
 
 AlgorithmIdentifier Kyber_PublicKey::algorithm_identifier() const {
@@ -292,6 +322,12 @@ std::unique_ptr<PK_Ops::KEM_Encryption> Kyber_PublicKey::create_kem_encryption_o
       }
 #endif
 
+#if defined(BOTAN_HAS_ML_KEM_INITIAL_PUBLIC_DRAFT)
+      if(mode().is_ml_kem_ipd()) {
+         return std::make_unique<ML_KEM_IPD_Encryptor>(m_public, params);
+      }
+#endif
+
       BOTAN_ASSERT_UNREACHABLE();
    }
    throw Provider_Not_Found(algo_name(), provider);
@@ -305,6 +341,12 @@ std::unique_ptr<PK_Ops::KEM_Decryption> Kyber_PrivateKey::create_kem_decryption_
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
       if(mode().is_kyber_round3()) {
          return std::make_unique<Kyber_KEM_Decryptor>(m_private, m_public, params);
+      }
+#endif
+
+#if defined(BOTAN_HAS_ML_KEM_INITIAL_PUBLIC_DRAFT)
+      if(mode().is_ml_kem_ipd()) {
+         return std::make_unique<ML_KEM_IPD_Decryptor>(m_private, m_public, params);
       }
 #endif
 
