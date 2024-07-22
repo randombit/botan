@@ -7,7 +7,6 @@
 #include "tests.h"
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
-#include <functional>
 
 namespace Botan_Tests {
 
@@ -43,26 +42,27 @@ class CT_Mask_Tests final : public Test {
          result.test_eq_sz("CT::is_less32", Botan::CT::Mask<uint32_t>::is_lt(5, 0xFFFFFFFF).value(), 0xFFFFFFFF);
 
          for(auto bad_input : {0, 1}) {
-            for(size_t input_length : {0, 1, 2, 32}) {
-               for(size_t offset = 0; offset != input_length + 1; ++offset) {
-                  const auto mask = Botan::CT::Mask<uint8_t>::expand(static_cast<uint8_t>(bad_input));
+            for(size_t input_length = 0; input_length != 64; ++input_length) {
+               for(size_t offset = 0; offset != input_length + 5; ++offset) {
+                  const auto accept = !Botan::CT::Choice::from_int(static_cast<uint32_t>(bad_input));
 
                   std::vector<uint8_t> input(input_length);
                   this->rng().randomize(input.data(), input.size());
 
-                  auto output = Botan::CT::copy_output(mask, input.data(), input.size(), offset);
+                  std::vector<uint8_t> output(input_length);
 
-                  result.test_eq_sz("CT::copy_output capacity", output.capacity(), input.size());
+                  auto written = Botan::CT::copy_output(accept, output, input, offset);
 
                   if(bad_input) {
-                     result.confirm("If bad input, no output", output.empty());
+                     result.confirm("If bad input, no output", !written.has_value().as_bool());
                   } else {
-                     if(offset >= input_length) {
-                        result.confirm("If offset is too large, output is empty", output.empty());
+                     if(offset > input_length) {
+                        result.confirm("If offset is too large, no output", !written.has_value().as_bool());
                      } else {
-                        result.test_eq_sz("CT::copy_output length", output.size(), input.size() - offset);
+                        const size_t bytes = written.value();
+                        result.test_eq_sz("CT::copy_output length", bytes, input.size() - offset);
 
-                        for(size_t i = 0; i != output.size(); ++i) {
+                        for(size_t i = 0; i != bytes; ++i) {
                            result.test_eq_sz("CT::copy_output offset", output[i], input[i + offset]);
                         }
                      }

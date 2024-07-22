@@ -1,6 +1,6 @@
 /*
 * PKCS #1 v1.5 Type 2 (encryption) padding
-* (C) 1999-2007,2015,2016 Jack Lloyd
+* (C) 1999-2007,2015,2016,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -11,6 +11,7 @@
 #include <botan/mem_ops.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/stl_util.h>
 
 namespace Botan {
@@ -18,58 +19,61 @@ namespace Botan {
 /*
 * PKCS1 Pad Operation
 */
-secure_vector<uint8_t> EME_PKCS1v15::pad(const uint8_t in[],
-                                         size_t inlen,
-                                         size_t key_length,
-                                         RandomNumberGenerator& rng) const {
+size_t EME_PKCS1v15::pad(std::span<uint8_t> output,
+                         std::span<const uint8_t> input,
+                         size_t key_length,
+                         RandomNumberGenerator& rng) const {
    key_length /= 8;
 
-   if(inlen > maximum_input_size(key_length * 8)) {
+   if(input.size() > maximum_input_size(key_length * 8)) {
       throw Invalid_Argument("PKCS1: Input is too large");
    }
 
-   secure_vector<uint8_t> out(key_length);
-   BufferStuffer stuffer(out);
+   BufferStuffer stuffer(output);
 
-   const size_t padding_bytes = key_length - inlen - 2;
+   const size_t padding_bytes = [&]() {
+      auto d = checked_sub(key_length, input.size() + 2);
+      BOTAN_ASSERT_NOMSG(d.has_value());
+      return *d;
+   }();
 
    stuffer.append(0x02);
    for(size_t i = 0; i != padding_bytes; ++i) {
       stuffer.append(rng.next_nonzero_byte());
    }
    stuffer.append(0x00);
-   stuffer.append({in, inlen});
-   BOTAN_ASSERT_NOMSG(stuffer.full());
+   stuffer.append(input);
 
-   return out;
+   return output.size() - stuffer.remaining_capacity();
 }
 
 /*
 * PKCS1 Unpad Operation
 */
-secure_vector<uint8_t> EME_PKCS1v15::unpad(uint8_t& valid_mask, const uint8_t in[], size_t inlen) const {
+CT::Option<size_t> EME_PKCS1v15::unpad(std::span<uint8_t> output, std::span<const uint8_t> input) const {
+   BOTAN_ASSERT_NOMSG(output.size() >= input.size());
+
    /*
    * RSA decryption pads the ciphertext up to the modulus size, so this only
    * occurs with very (!) small keys, or when fuzzing.
    *
    * 11 bytes == 00,02 + 8 bytes mandatory padding + 00
    */
-   if(inlen < 11) {
-      valid_mask = false;
-      return secure_vector<uint8_t>();
+   if(input.size() < 11) {
+      return {};
    }
 
-   CT::poison(in, inlen);
+   auto scope = CT::scoped_poison(input);
 
    CT::Mask<uint8_t> bad_input_m = CT::Mask<uint8_t>::cleared();
    CT::Mask<uint8_t> seen_zero_m = CT::Mask<uint8_t>::cleared();
    size_t delim_idx = 2;  // initial 0002
 
-   bad_input_m |= ~CT::Mask<uint8_t>::is_equal(in[0], 0);
-   bad_input_m |= ~CT::Mask<uint8_t>::is_equal(in[1], 2);
+   bad_input_m |= ~CT::Mask<uint8_t>::is_equal(input[0], 0);
+   bad_input_m |= ~CT::Mask<uint8_t>::is_equal(input[1], 2);
 
-   for(size_t i = 2; i < inlen; ++i) {
-      const auto is_zero_m = CT::Mask<uint8_t>::is_zero(in[i]);
+   for(size_t i = 2; i < input.size(); ++i) {
+      const auto is_zero_m = CT::Mask<uint8_t>::is_zero(input[i]);
       delim_idx += seen_zero_m.if_not_set_return(1);
       seen_zero_m |= is_zero_m;
    }
@@ -83,12 +87,9 @@ secure_vector<uint8_t> EME_PKCS1v15::unpad(uint8_t& valid_mask, const uint8_t in
    */
    bad_input_m |= CT::Mask<uint8_t>(CT::Mask<size_t>::is_lt(delim_idx, 11));
 
-   valid_mask = (~bad_input_m).unpoisoned_value();
-   auto output = CT::copy_output(bad_input_m, in, inlen, delim_idx);
+   const CT::Choice accept = !(bad_input_m.as_choice());
 
-   CT::unpoison(in, inlen);
-
-   return output;
+   return CT::copy_output(accept, output, input, delim_idx);
 }
 
 /*

@@ -7,18 +7,14 @@
 #include "tests.h"
 
 #if defined(BOTAN_HAS_PK_PADDING)
+   #include <botan/internal/eme.h>
    #include <botan/internal/emsa.h>
+   #include <botan/internal/fmt.h>
 #endif
-
-#if defined(BOTAN_HAS_EME_PKCS1)
-   #include <botan/internal/eme_pkcs.h>
-#endif
-
-#include <botan/internal/fmt.h>
 
 namespace Botan_Tests {
 
-#if defined(BOTAN_HAS_EME_PKCS1)
+#if defined(BOTAN_HAS_PK_PADDING)
 
 class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test {
    public:
@@ -29,7 +25,10 @@ class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test {
 
          Test::Result result("PKCSv15 Decoding");
 
-         Botan::EME_PKCS1v15 pkcs;
+         auto pkcs = Botan::EME::create("PKCS1v15");
+         if(!pkcs) {
+            return result;
+         }
 
          const std::vector<uint8_t> ciphertext = vars.get_req_bin("RawCiphertext");
          const std::vector<uint8_t> plaintext = vars.get_opt_bin("Plaintext");
@@ -38,13 +37,13 @@ class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test {
             result.test_eq("Plaintext value should be empty for invalid EME inputs", plaintext.size(), 0);
          }
 
-         uint8_t valid_mask = 0;
-         Botan::secure_vector<uint8_t> decoded = pkcs.unpad(valid_mask, ciphertext.data(), ciphertext.size());
+         std::vector<uint8_t> decoded(ciphertext.size());
+         auto len = pkcs->unpad(decoded, ciphertext);
 
-         result.confirm("EME valid_mask has expected value", valid_mask == 0x00 || valid_mask == 0xFF);
-         result.test_eq("EME decoding valid/invalid matches", valid_mask == 0xFF, is_valid);
+         result.test_eq("EME decoding valid/invalid matches", len.has_value().as_bool(), is_valid);
 
-         if(valid_mask == 0xFF) {
+         if(len.has_value().as_bool()) {
+            decoded.resize(len.value_or(0));
             result.test_eq("EME decoded plaintext correct", decoded, plaintext);
          } else {
             bool all_zeros = true;

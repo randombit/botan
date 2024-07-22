@@ -1,6 +1,6 @@
 /*
 * OAEP
-* (C) 1999-2007,2018 Jack Lloyd
+* (C) 1999-2007,2018,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,8 +8,10 @@
 #ifndef BOTAN_OAEP_H_
 #define BOTAN_OAEP_H_
 
-#include <botan/hash.h>
 #include <botan/internal/eme.h>
+
+#include <botan/hash.h>
+#include <botan/internal/ct_utils.h>
 
 namespace Botan {
 
@@ -35,21 +37,18 @@ class OAEP final : public EME {
       OAEP(std::unique_ptr<HashFunction> hash, std::unique_ptr<HashFunction> mgf1_hash, std::string_view P = "");
 
    private:
-      secure_vector<uint8_t> pad(const uint8_t in[],
-                                 size_t in_length,
-                                 size_t key_length,
-                                 RandomNumberGenerator& rng) const override;
+      size_t pad(std::span<uint8_t> output,
+                 std::span<const uint8_t> input,
+                 size_t key_length,
+                 RandomNumberGenerator& rng) const override;
 
-      secure_vector<uint8_t> unpad(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const override;
+      CT::Option<size_t> unpad(std::span<uint8_t> output, std::span<const uint8_t> input) const override;
 
       secure_vector<uint8_t> m_Phash;
       std::unique_ptr<HashFunction> m_mgf1_hash;
 };
 
-secure_vector<uint8_t> BOTAN_TEST_API oaep_find_delim(uint8_t& valid_mask,
-                                                      const uint8_t input[],
-                                                      size_t input_len,
-                                                      const secure_vector<uint8_t>& Phash);
+BOTAN_FUZZER_API CT::Option<size_t> oaep_find_delim(std::span<const uint8_t> input, std::span<const uint8_t> phash);
 
 }  // namespace Botan
 

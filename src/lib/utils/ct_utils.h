@@ -635,6 +635,9 @@ class Option {
          }
       }
 
+      /// Return a new CT::Option that is set if @p also is set as well
+      constexpr CT::Option<T> operator&&(CT::Choice also) { return CT::Option<T>(m_value, m_has_value && also); }
+
    private:
       Choice m_has_value;
       T m_value;
@@ -731,28 +734,33 @@ constexpr inline CT::Mask<T> is_not_equal(const T x[], const T y[], size_t len) 
 }
 
 /**
-* If bad_input is unset, return input[offset:input_length] copied to new
-* buffer. If bad_input is set, return an empty vector. In all cases, the capacity
-* of the vector is equal to input_length
+* Constant time conditional copy out with offset
 *
-* This function attempts to avoid leaking the following:
-*  - if bad_input was set or not
+* If accept is set and offset <= input_length, sets output[0..] to
+* input[offset:input_length] and returns input_length - offset. The
+* remaining bytes of output are zeroized.
+*
+* Otherwise, output is zeroized, and returns an empty Ct::Option
+*
+* The input and output spans may not overlap, and output must be at
+* least as large as input.
+*
+* This function attempts to avoid leaking the following to side channels
+*  - if accept was set or not
 *  - the value of offset
-*  - the values in input[]
+*  - the value of input
 *
-* This function leaks the value of input_length
+* This function leaks the length of the input
 */
 BOTAN_TEST_API
-secure_vector<uint8_t> copy_output(CT::Mask<uint8_t> bad_input,
-                                   const uint8_t input[],
-                                   size_t input_length,
-                                   size_t offset);
+CT::Option<size_t> copy_output(CT::Choice accept,
+                               std::span<uint8_t> output,
+                               std::span<const uint8_t> input,
+                               size_t offset);
 
-secure_vector<uint8_t> strip_leading_zeros(const uint8_t in[], size_t length);
+size_t count_leading_zero_bytes(std::span<const uint8_t> input);
 
-inline secure_vector<uint8_t> strip_leading_zeros(const secure_vector<uint8_t>& in) {
-   return strip_leading_zeros(in.data(), in.size());
-}
+secure_vector<uint8_t> strip_leading_zeros(std::span<const uint8_t> input);
 
 }  // namespace Botan::CT
 

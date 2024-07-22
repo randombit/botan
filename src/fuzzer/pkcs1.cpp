@@ -37,21 +37,16 @@ std::vector<uint8_t> simple_pkcs1_unpad(const uint8_t in[], size_t len) {
 void fuzz(const uint8_t in[], size_t len) {
    static Botan::EME_PKCS1v15 pkcs1;
 
-   Botan::secure_vector<uint8_t> lib_result;
+   std::vector<uint8_t> lib_result;
    std::vector<uint8_t> ref_result;
    bool lib_rejected = false, ref_rejected = false;
 
    try {
-      uint8_t valid_mask = 0;
-      Botan::secure_vector<uint8_t> decoded = (static_cast<Botan::EME*>(&pkcs1))->unpad(valid_mask, in, len);
+      lib_result.resize(len);
+      auto written = (static_cast<Botan::EME*>(&pkcs1))->unpad(lib_result, std::span{in, len});
+      lib_rejected = !written.has_value().as_bool();
 
-      if(valid_mask == 0) {
-         lib_rejected = true;
-      } else if(valid_mask == 0xFF) {
-         lib_rejected = false;
-      } else {
-         FUZZER_WRITE_AND_CRASH("Invalid valid_mask from unpad");
-      }
+      lib_result.resize(written.value_or(0));
    } catch(Botan::Decoding_Error&) {
       lib_rejected = true;
    }
