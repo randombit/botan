@@ -79,40 +79,29 @@ void MD4::compress_n(digest_type& digest, std::span<const uint8_t> input, size_t
 
    BufferSlicer in(input);
 
+   std::array<uint32_t, 16> M;
+
    for(size_t i = 0; i != blocks; ++i) {
-      const auto block = in.take(block_bytes).data();
+      load_le(M, in.take<block_bytes>());
 
-      uint32_t M00 = load_le<uint32_t>(block, 0);
-      uint32_t M01 = load_le<uint32_t>(block, 1);
-      uint32_t M02 = load_le<uint32_t>(block, 2);
-      uint32_t M03 = load_le<uint32_t>(block, 3);
-      uint32_t M04 = load_le<uint32_t>(block, 4);
-      uint32_t M05 = load_le<uint32_t>(block, 5);
-      uint32_t M06 = load_le<uint32_t>(block, 6);
-      uint32_t M07 = load_le<uint32_t>(block, 7);
-      uint32_t M08 = load_le<uint32_t>(block, 8);
-      uint32_t M09 = load_le<uint32_t>(block, 9);
-      uint32_t M10 = load_le<uint32_t>(block, 10);
-      uint32_t M11 = load_le<uint32_t>(block, 11);
-      uint32_t M12 = load_le<uint32_t>(block, 12);
-      uint32_t M13 = load_le<uint32_t>(block, 13);
-      uint32_t M14 = load_le<uint32_t>(block, 14);
-      uint32_t M15 = load_le<uint32_t>(block, 15);
+      // clang-format off
 
-      FF4(A, B, C, D, M00, M01, M02, M03);
-      FF4(A, B, C, D, M04, M05, M06, M07);
-      FF4(A, B, C, D, M08, M09, M10, M11);
-      FF4(A, B, C, D, M12, M13, M14, M15);
+      FF4(A, B, C, D, M[ 0], M[ 1], M[ 2], M[ 3]);
+      FF4(A, B, C, D, M[ 4], M[ 5], M[ 6], M[ 7]);
+      FF4(A, B, C, D, M[ 8], M[ 9], M[10], M[11]);
+      FF4(A, B, C, D, M[12], M[13], M[14], M[15]);
 
-      GG4(A, B, C, D, M00, M04, M08, M12);
-      GG4(A, B, C, D, M01, M05, M09, M13);
-      GG4(A, B, C, D, M02, M06, M10, M14);
-      GG4(A, B, C, D, M03, M07, M11, M15);
+      GG4(A, B, C, D, M[ 0], M[ 4], M[ 8], M[12]);
+      GG4(A, B, C, D, M[ 1], M[ 5], M[ 9], M[13]);
+      GG4(A, B, C, D, M[ 2], M[ 6], M[10], M[14]);
+      GG4(A, B, C, D, M[ 3], M[ 7], M[11], M[15]);
 
-      HH4(A, B, C, D, M00, M08, M04, M12);
-      HH4(A, B, C, D, M02, M10, M06, M14);
-      HH4(A, B, C, D, M01, M09, M05, M13);
-      HH4(A, B, C, D, M03, M11, M07, M15);
+      HH4(A, B, C, D, M[ 0], M[ 8], M[ 4], M[12]);
+      HH4(A, B, C, D, M[ 2], M[10], M[ 6], M[14]);
+      HH4(A, B, C, D, M[ 1], M[ 9], M[ 5], M[13]);
+      HH4(A, B, C, D, M[ 3], M[11], M[ 7], M[15]);
+
+      // clang-format on
 
       A = (digest[0] += A);
       B = (digest[1] += B);
