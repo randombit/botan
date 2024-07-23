@@ -18,255 +18,253 @@ namespace {
 
 std::vector<Test::Result> test_bitvector_bitwise_accessors() {
    return {
-      Botan_Tests::CHECK("default constructed bitvector",
-                         [](auto& result) {
-                            Botan::bitvector bv;
-                            result.confirm("default constructed bitvector is empty", bv.empty());
-                            result.test_eq("default constructed bitvector has zero size", bv.size(), size_t(0));
-                         }),
+      CHECK("default constructed bitvector",
+            [](auto& result) {
+               Botan::bitvector bv;
+               result.confirm("default constructed bitvector is empty", bv.empty());
+               result.test_eq("default constructed bitvector has zero size", bv.size(), size_t(0));
+            }),
 
-      Botan_Tests::CHECK("preallocated construction of bitvector",
-                         [](auto& result) {
-                            Botan::bitvector bv(10);
-                            result.confirm("allocated bitvector is not empty", !bv.empty());
-                            result.test_eq("allocated bitvector has allocated size", bv.size(), size_t(10));
-                            for(size_t i = 0; i < 10; ++i) {
-                               result.confirm("bit not set yet", !bv.at(i));
-                            }
-                         }),
+      CHECK("preallocated construction of bitvector",
+            [](auto& result) {
+               Botan::bitvector bv(10);
+               result.confirm("allocated bitvector is not empty", !bv.empty());
+               result.test_eq("allocated bitvector has allocated size", bv.size(), size_t(10));
+               for(size_t i = 0; i < 10; ++i) {
+                  result.confirm("bit not set yet", !bv.at(i));
+               }
+            }),
 
-      Botan_Tests::CHECK("setting bits",
-                         [](auto& result) {
-                            Botan::bitvector bv(32);
-                            bv.set(1);
-                            bv.at(2) = true;
-                            bv.set(3);
+      CHECK("setting bits",
+            [](auto& result) {
+               Botan::bitvector bv(32);
+               bv.set(1);
+               bv.at(2) = true;
+               bv.set(3);
 
-                            result.confirm("0", !bv.at(0));
-                            result.confirm("1", bv.at(1));
-                            result.confirm("2", bv.at(2));
-                            result.confirm("3", bv.at(3));
-                            result.confirm("4", !bv.at(4));
-                         }),
+               result.confirm("0", !bv.at(0));
+               result.confirm("1", bv.at(1));
+               result.confirm("2", bv.at(2));
+               result.confirm("3", bv.at(3));
+               result.confirm("4", !bv.at(4));
+            }),
 
-      Botan_Tests::CHECK("unsetting bits",
-                         [](auto& result) {
-                            Botan::bitvector bv(32);
-                            bv.set(1).set(2).set(3).unset(2);
-                            bv.at(3) = false;
+      CHECK("unsetting bits",
+            [](auto& result) {
+               Botan::bitvector bv(32);
+               bv.set(1).set(2).set(3).unset(2);
+               bv.at(3) = false;
 
-                            result.confirm("0", !bv.at(0));
-                            result.confirm("1", bv.at(1));
-                            result.confirm("2", !bv.at(2));
-                            result.confirm("3", !bv.at(3));
-                            result.confirm("4", !bv.at(4));
-                         }),
+               result.confirm("0", !bv.at(0));
+               result.confirm("1", bv.at(1));
+               result.confirm("2", !bv.at(2));
+               result.confirm("3", !bv.at(3));
+               result.confirm("4", !bv.at(4));
+            }),
 
-      Botan_Tests::CHECK("flipping bits",
-                         [](auto& result) {
-                            Botan::bitvector bv(32);
-                            bv.set(1).set(2).set(3).flip(2).flip(4);
+      CHECK("flipping bits",
+            [](auto& result) {
+               Botan::bitvector bv(32);
+               bv.set(1).set(2).set(3).flip(2).flip(4);
 
-                            result.confirm("0", !bv.at(0));
-                            result.confirm("1", bv.at(1));
-                            result.confirm("2", !bv.at(2));
-                            result.confirm("3", bv.at(3));
-                            result.confirm("4", bv.at(4));
-                         }),
+               result.confirm("0", !bv.at(0));
+               result.confirm("1", bv.at(1));
+               result.confirm("2", !bv.at(2));
+               result.confirm("3", bv.at(3));
+               result.confirm("4", bv.at(4));
+            }),
 
-      Botan_Tests::CHECK(
-         "accessors validate offsets",
-         [](auto& result) {
-            Botan::bitvector bv(10);
-            result.template test_throws<Botan::Invalid_Argument>(".at() const out of range",
-                                                                 [&] { const_cast<const decltype(bv)&>(bv).at(10); });
-            result.template test_throws<Botan::Invalid_Argument>(".at() out of range", [&] { bv.at(10); });
-            result.template test_throws<Botan::Invalid_Argument>(".set() out of range", [&] { bv.set(10); });
-            result.template test_throws<Botan::Invalid_Argument>(".unset() out of range", [&] { bv.unset(10); });
-            result.template test_throws<Botan::Invalid_Argument>(".flip() out of range", [&] { bv.flip(10); });
-         }),
+      CHECK("accessors validate offsets",
+            [](auto& result) {
+               Botan::bitvector bv(10);
+               result.template test_throws<Botan::Invalid_Argument>(
+                  ".at() const out of range", [&] { const_cast<const decltype(bv)&>(bv).at(10); });
+               result.template test_throws<Botan::Invalid_Argument>(".at() out of range", [&] { bv.at(10); });
+               result.template test_throws<Botan::Invalid_Argument>(".set() out of range", [&] { bv.set(10); });
+               result.template test_throws<Botan::Invalid_Argument>(".unset() out of range", [&] { bv.unset(10); });
+               result.template test_throws<Botan::Invalid_Argument>(".flip() out of range", [&] { bv.flip(10); });
+            }),
 
-      Botan_Tests::CHECK("multiblock handling",
-                         [](auto& result) {
-                            Botan::bitvector bv(128);
-                            result.test_eq("has more than 64 bits", bv.size(), 128);
-                            bv.set(1).set(63).set(64).set(127);
-                            for(size_t i = 0; i < bv.size(); ++i) {
-                               bool expected = (i == 1 || i == 63 || i == 64 || i == 127);
-                               result.test_eq(Botan::fmt("bit {} in expected state", i), bv.at(i), expected);
-                            }
-                         }),
+      CHECK("multiblock handling",
+            [](auto& result) {
+               Botan::bitvector bv(128);
+               result.test_eq("has more than 64 bits", bv.size(), 128);
+               bv.set(1).set(63).set(64).set(127);
+               for(size_t i = 0; i < bv.size(); ++i) {
+                  bool expected = (i == 1 || i == 63 || i == 64 || i == 127);
+                  result.test_eq(Botan::fmt("bit {} in expected state", i), bv.at(i), expected);
+               }
+            }),
 
-      Botan_Tests::CHECK("subscript operator",
-                         [](auto& result) {
-                            Botan::bitvector bv(128);
-                            bv[0].set();
-                            bv[1] = true;
-                            bv[2].flip();
-                            bv[64] = true;
-                            bv[80] = true;
-                            result.confirm("bit 0", bv[0]);
-                            result.confirm("bit 1", bv[1]);
-                            result.confirm("bit 2", bv[2]);
-                            result.confirm("bit 3", !bv[3]);
-                            result.confirm("bit 64", bv[64]);
-                            result.confirm("bit 80", bv[80]);
-                         }),
+      CHECK("subscript operator",
+            [](auto& result) {
+               Botan::bitvector bv(128);
+               bv[0].set();
+               bv[1] = true;
+               bv[2].flip();
+               bv[64] = true;
+               bv[80] = true;
+               result.confirm("bit 0", bv[0]);
+               result.confirm("bit 1", bv[1]);
+               result.confirm("bit 2", bv[2]);
+               result.confirm("bit 3", !bv[3]);
+               result.confirm("bit 64", bv[64]);
+               result.confirm("bit 80", bv[80]);
+            }),
 
-      Botan_Tests::CHECK("subscript operator does not validate offsets",
-                         [](auto& result) {
-                            Botan::bitvector bv(10);
-                            result.template test_throws<Botan::Invalid_Argument>(".at() out of range",
-                                                                                 [&] { bv.at(10); });
-                            // Technically the next line is undefined behaviour.
-                            // Though, the current implementation detail won't
-                            // cause issues, which might change!
-                            result.test_no_throw("subscript out of range", [&] { bv[10]; });
-                         }),
+      CHECK("subscript operator does not validate offsets",
+            [](auto& result) {
+               Botan::bitvector bv(10);
+               result.template test_throws<Botan::Invalid_Argument>(".at() out of range", [&] { bv.at(10); });
+               // Technically the next line is undefined behaviour.
+               // Though, the current implementation detail won't
+               // cause issues, which might change!
+               result.test_no_throw("subscript out of range", [&] { bv[10]; });
+            }),
 
-      Botan_Tests::CHECK("bitwise assignment modifiers",
-                         [](auto& result) {
-                            Botan::bitvector bv(4);
+      CHECK("bitwise assignment modifiers",
+            [](auto& result) {
+               Botan::bitvector bv(4);
 
-                            result.require("precondition", !bv[0] && !bv[1]);
-                            bv[0] &= 1;  // NOLINT(*-use-bool-literals)
-                            result.confirm("bv[0] still 0", !bv[0]);
-                            bv[0].set();
-                            bv[0] &= 1;  // NOLINT(*-use-bool-literals)
-                            result.confirm("bv[0] still 1", bv[0]);
-                            bv[0] &= false;
-                            result.confirm("bv[0] now 0 again", !bv[0]);
-                            bv[0] &= !bv[1];
-                            result.confirm("bv[0] still 0 once more", !bv[0]);
+               result.require("precondition", !bv[0] && !bv[1]);
+               bv[0] &= 1;  // NOLINT(*-use-bool-literals)
+               result.confirm("bv[0] still 0", !bv[0]);
+               bv[0].set();
+               bv[0] &= 1;  // NOLINT(*-use-bool-literals)
+               result.confirm("bv[0] still 1", bv[0]);
+               bv[0] &= false;
+               result.confirm("bv[0] now 0 again", !bv[0]);
+               bv[0] &= !bv[1];
+               result.confirm("bv[0] still 0 once more", !bv[0]);
 
-                            result.require("precondition 2", !bv[1] && !bv[2]);
-                            bv[1] |= 1;  // NOLINT(modernize-use-bool-literals)
-                            result.confirm("bv[1] is now 1", bv[1]);
-                            bv[1] |= 0;  // NOLINT(modernize-use-bool-literals)
-                            result.confirm("bv[1] is still 1", bv[1]);
-                            bv[1].unset();
-                            bv[1] |= false;
-                            result.confirm("bv[1] is 0", !bv[1]);
-                            bv[1] |= !bv[2];
-                            result.confirm("bv[1] is 1 again", bv[1]);
+               result.require("precondition 2", !bv[1] && !bv[2]);
+               bv[1] |= 1;  // NOLINT(modernize-use-bool-literals)
+               result.confirm("bv[1] is now 1", bv[1]);
+               bv[1] |= 0;  // NOLINT(modernize-use-bool-literals)
+               result.confirm("bv[1] is still 1", bv[1]);
+               bv[1].unset();
+               bv[1] |= false;
+               result.confirm("bv[1] is 0", !bv[1]);
+               bv[1] |= !bv[2];
+               result.confirm("bv[1] is 1 again", bv[1]);
 
-                            result.require("precondition 3", !bv[2] && !bv[3]);
-                            bv[2] ^= 0;  // NOLINT(modernize-use-bool-literals)
-                            result.confirm("bv[2] is still 0", !bv[2]);
-                            bv[2] ^= true;
-                            result.confirm("bv[2] is now 1", bv[2]);
-                            bv[2] ^= !bv[3];
-                            result.confirm("bv[2] is 0 again", !bv[2]);
-                         }),
+               result.require("precondition 3", !bv[2] && !bv[3]);
+               bv[2] ^= 0;  // NOLINT(modernize-use-bool-literals)
+               result.confirm("bv[2] is still 0", !bv[2]);
+               bv[2] ^= true;
+               result.confirm("bv[2] is now 1", bv[2]);
+               bv[2] ^= !bv[3];
+               result.confirm("bv[2] is 0 again", !bv[2]);
+            }),
    };
 }
 
 std::vector<Test::Result> test_bitvector_capacity() {
    return {
-      Botan_Tests::CHECK("default constructed bitvector",
-                         [](auto& result) {
-                            Botan::bitvector bv;
-                            result.confirm("empty", bv.empty());
-                            result.test_eq("no size", bv.size(), size_t(0));
-                            result.test_eq("no capacity", bv.capacity(), size_t(0));
-                         }),
+      CHECK("default constructed bitvector",
+            [](auto& result) {
+               Botan::bitvector bv;
+               result.confirm("empty", bv.empty());
+               result.test_eq("no size", bv.size(), size_t(0));
+               result.test_eq("no capacity", bv.capacity(), size_t(0));
+            }),
 
-      Botan_Tests::CHECK("allocated bitvector has capacity",
-                         [](auto& result) {
-                            Botan::bitvector bv(1);
-                            result.confirm("empty", !bv.empty());
-                            result.test_eq("small size", bv.size(), size_t(1));
-                            result.test_gte("a little capacity", bv.capacity(), size_t(8));
-                         }),
+      CHECK("allocated bitvector has capacity",
+            [](auto& result) {
+               Botan::bitvector bv(1);
+               result.confirm("empty", !bv.empty());
+               result.test_eq("small size", bv.size(), size_t(1));
+               result.test_gte("a little capacity", bv.capacity(), size_t(8));
+            }),
 
-      Botan_Tests::CHECK("reserved bitvector has capacity",
-                         [](auto& result) {
-                            Botan::bitvector bv;
-                            result.test_eq("no size", bv.size(), size_t(0));
-                            result.test_eq("no capacity", bv.capacity(), size_t(0));
+      CHECK("reserved bitvector has capacity",
+            [](auto& result) {
+               Botan::bitvector bv;
+               result.test_eq("no size", bv.size(), size_t(0));
+               result.test_eq("no capacity", bv.capacity(), size_t(0));
 
-                            bv.reserve(64);
-                            result.test_eq("no size", bv.size(), size_t(0));
-                            result.test_gte("no capacity", bv.capacity(), size_t(64));
+               bv.reserve(64);
+               result.test_eq("no size", bv.size(), size_t(0));
+               result.test_gte("no capacity", bv.capacity(), size_t(64));
 
-                            bv.reserve(128);
-                            result.test_eq("no size", bv.size(), size_t(0));
-                            result.test_gte("no capacity", bv.capacity(), size_t(128));
-                         }),
+               bv.reserve(128);
+               result.test_eq("no size", bv.size(), size_t(0));
+               result.test_gte("no capacity", bv.capacity(), size_t(128));
+            }),
 
-      Botan_Tests::CHECK("push_back() extends bitvector",
-                         [](Test::Result& result) {
-                            Botan::bitvector bv;
-                            result.confirm("empty", bv.empty());
-                            result.test_eq("no size", bv.size(), size_t(0));
+      CHECK("push_back() extends bitvector",
+            [](Test::Result& result) {
+               Botan::bitvector bv;
+               result.confirm("empty", bv.empty());
+               result.test_eq("no size", bv.size(), size_t(0));
 
-                            bv.push_back(true);
-                            bv.push_back(false);
-                            bv.push_back(true);
-                            bv.push_back(false);
+               bv.push_back(true);
+               bv.push_back(false);
+               bv.push_back(true);
+               bv.push_back(false);
 
-                            result.confirm("not empty", !bv.empty());
-                            result.test_eq("some size", bv.size(), size_t(4));
-                            result.test_gte("capacity is typically bigger than size", bv.capacity(), size_t(8));
+               result.confirm("not empty", !bv.empty());
+               result.test_eq("some size", bv.size(), size_t(4));
+               result.test_gte("capacity is typically bigger than size", bv.capacity(), size_t(8));
 
-                            result.confirm("bit 0", bv.at(0));
-                            result.confirm("bit 1", !bv.at(1));
-                            result.confirm("bit 2", bv.at(2));
-                            result.confirm("bit 3", !bv.at(3));
+               result.confirm("bit 0", bv.at(0));
+               result.confirm("bit 1", !bv.at(1));
+               result.confirm("bit 2", bv.at(2));
+               result.confirm("bit 3", !bv.at(3));
 
-                            result.test_throws("bit 4 is not yet allocated", [&] { bv.at(4); });
-                         }),
+               result.test_throws("bit 4 is not yet allocated", [&] { bv.at(4); });
+            }),
 
-      Botan_Tests::CHECK("pop_back() shortens bitvector",
-                         [](Test::Result& result) {
-                            Botan::bitvector bv;
-                            bv.push_back(true);
-                            bv.push_back(false);
-                            bv.push_back(true);
-                            bv.push_back(false);
-                            result.confirm("last is false", !bv.back());
+      CHECK("pop_back() shortens bitvector",
+            [](Test::Result& result) {
+               Botan::bitvector bv;
+               bv.push_back(true);
+               bv.push_back(false);
+               bv.push_back(true);
+               bv.push_back(false);
+               result.confirm("last is false", !bv.back());
 
-                            bv.pop_back();
-                            result.test_eq("size() == 3", bv.size(), 3);
-                            result.confirm("last is true", bv.back());
+               bv.pop_back();
+               result.test_eq("size() == 3", bv.size(), 3);
+               result.confirm("last is true", bv.back());
 
-                            bv.pop_back();
-                            result.test_eq("size() == 2", bv.size(), 2);
-                            result.confirm("last is false", !bv.back());
+               bv.pop_back();
+               result.test_eq("size() == 2", bv.size(), 2);
+               result.confirm("last is false", !bv.back());
 
-                            bv.pop_back();
-                            result.test_eq("size() == 1", bv.size(), 1);
-                            result.confirm("last is true", bv.back());
-                            result.confirm("first is true", bv.front());
+               bv.pop_back();
+               result.test_eq("size() == 1", bv.size(), 1);
+               result.confirm("last is true", bv.back());
+               result.confirm("first is true", bv.front());
 
-                            bv.pop_back();
-                            result.confirm("empty", bv.empty());
+               bv.pop_back();
+               result.confirm("empty", bv.empty());
 
-                            result.test_throws("bit 4 is not yet allocated", [&] { bv.at(4); });
-                         }),
+               result.test_throws("bit 4 is not yet allocated", [&] { bv.at(4); });
+            }),
 
-      Botan_Tests::CHECK("resize()",
-                         [](auto& result) {
-                            Botan::bitvector bv(10);
-                            bv[0] = true;
-                            bv[5] = true;
-                            bv[9] = true;
+      CHECK("resize()",
+            [](auto& result) {
+               Botan::bitvector bv(10);
+               bv[0] = true;
+               bv[5] = true;
+               bv[9] = true;
 
-                            bv.resize(8);
-                            result.test_eq("size is reduced", bv.size(), size_t(8));
+               bv.resize(8);
+               result.test_eq("size is reduced", bv.size(), size_t(8));
 
-                            for(size_t i = 0; i < bv.size(); ++i) {
-                               const bool expected = (i == 0 || i == 5);
-                               result.test_eq(Botan::fmt("{} is as expected", i), bv[i], expected);
-                            }
+               for(size_t i = 0; i < bv.size(); ++i) {
+                  const bool expected = (i == 0 || i == 5);
+                  result.test_eq(Botan::fmt("{} is as expected", i), bv[i], expected);
+               }
 
-                            bv.resize(0);
-                            result.confirm("resize(0) empties buffer", bv.empty());
+               bv.resize(0);
+               result.confirm("resize(0) empties buffer", bv.empty());
 
-                            bv.resize(8);
-                            result.confirm("0 is false", !bv[0]);
-                            result.confirm("5 is false", !bv[5]);
-                         }),
+               bv.resize(8);
+               result.confirm("0 is false", !bv[0]);
+               result.confirm("5 is false", !bv[5]);
+            }),
    };
 }
 
@@ -293,172 +291,171 @@ std::vector<Test::Result> test_bitvector_subvector() {
    };
 
    return {
-      Botan_Tests::CHECK(
-         "range errors are caught",
-         [&](auto& result) {
-            Botan::bitvector bv(100);
-            result.template test_throws<Botan::Invalid_Argument>("out of range", [&] { bv.subvector(0, 101); });
-            result.template test_throws<Botan::Invalid_Argument>("out of range", [&] { bv.subvector(90, 11); });
-            result.template test_throws<Botan::Invalid_Argument>("out of range", [&] { bv.subvector(100, 1); });
-            result.template test_throws<Botan::Invalid_Argument>("out of range", [&] { bv.subvector(101, 0); });
-         }),
+      CHECK("range errors are caught",
+            [&](auto& result) {
+               Botan::bitvector bv(100);
+               result.template test_throws<Botan::Invalid_Argument>("out of range", [&] { bv.subvector(0, 101); });
+               result.template test_throws<Botan::Invalid_Argument>("out of range", [&] { bv.subvector(90, 11); });
+               result.template test_throws<Botan::Invalid_Argument>("out of range", [&] { bv.subvector(100, 1); });
+               result.template test_throws<Botan::Invalid_Argument>("out of range", [&] { bv.subvector(101, 0); });
+            }),
 
-      Botan_Tests::CHECK("empty copy is allowed",
-                         [&](auto& result) {
-                            Botan::bitvector bv1(100);
-                            auto bv2 = bv1.subvector(0, 0);
-                            result.test_eq("empty at 0", bv2.size(), size_t(0));
-                            auto bv3 = bv1.subvector(10, 0);
-                            result.test_eq("empty at 10", bv3.size(), size_t(0));
-                            auto bv4 = bv1.subvector(100, 0);
-                            result.test_eq("empty at 100", bv3.size(), size_t(0));
-                         }),
+      CHECK("empty copy is allowed",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               auto bv2 = bv1.subvector(0, 0);
+               result.test_eq("empty at 0", bv2.size(), size_t(0));
+               auto bv3 = bv1.subvector(10, 0);
+               result.test_eq("empty at 10", bv3.size(), size_t(0));
+               auto bv4 = bv1.subvector(100, 0);
+               result.test_eq("empty at 100", bv3.size(), size_t(0));
+            }),
 
-      Botan_Tests::CHECK("byte-aligned copy",
-                         [&](auto& result) {
-                            Botan::bitvector bv1(100);
-                            make_bitpattern(bv1);
+      CHECK("byte-aligned copy",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               make_bitpattern(bv1);
 
-                            auto bv2 = bv1.subvector(16, 58);
-                            result.test_eq("size is as requested", bv2.size(), size_t(58));
-                            check_bitpattern(result, bv2, 16);
+               auto bv2 = bv1.subvector(16, 58);
+               result.test_eq("size is as requested", bv2.size(), size_t(58));
+               check_bitpattern(result, bv2, 16);
 
-                            auto bv3 = bv1.subvector(32);  // copy until the end
-                            result.test_eq("size is as expected", bv3.size(), size_t(68));
-                            check_bitpattern(result, bv3, 32);
-                         }),
+               auto bv3 = bv1.subvector(32);  // copy until the end
+               result.test_eq("size is as expected", bv3.size(), size_t(68));
+               check_bitpattern(result, bv3, 32);
+            }),
 
-      Botan_Tests::CHECK("byte-aligned 2",
-                         [&](auto& result) {
-                            Botan::bitvector bv1(100);
-                            make_bitpattern(bv1);
+      CHECK("byte-aligned 2",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               make_bitpattern(bv1);
 
-                            auto bv2 = bv1.subvector(8, 91);
-                            result.test_eq("size is as expected", bv2.size(), size_t(91));
-                            check_bitpattern(result, bv2, 8);
+               auto bv2 = bv1.subvector(8, 91);
+               result.test_eq("size is as expected", bv2.size(), size_t(91));
+               check_bitpattern(result, bv2, 8);
 
-                            auto bv3 = bv1.subvector(16, 58);
-                            result.test_eq("size is as requested", bv3.size(), size_t(58));
-                            check_bitpattern(result, bv3, 16);
+               auto bv3 = bv1.subvector(16, 58);
+               result.test_eq("size is as requested", bv3.size(), size_t(58));
+               check_bitpattern(result, bv3, 16);
 
-                            auto bv4 = bv1.subvector(24);  // copy until the end
-                            result.test_eq("size is as expected", bv4.size(), size_t(100 - 24));
-                            check_bitpattern(result, bv4, 24);
+               auto bv4 = bv1.subvector(24);  // copy until the end
+               result.test_eq("size is as expected", bv4.size(), size_t(100 - 24));
+               check_bitpattern(result, bv4, 24);
 
-                            auto bv5 = bv1.subvector(32);  // copy until the end
-                            result.test_eq("size is as expected", bv5.size(), size_t(100 - 32));
-                            check_bitpattern(result, bv5, 32);
+               auto bv5 = bv1.subvector(32);  // copy until the end
+               result.test_eq("size is as expected", bv5.size(), size_t(100 - 32));
+               check_bitpattern(result, bv5, 32);
 
-                            auto bv6 = bv1.subvector(48, 51);  // copy until the end
-                            result.test_eq("size is as expected", bv6.size(), size_t(51));
-                            check_bitpattern(result, bv6, 48);
-                         }),
+               auto bv6 = bv1.subvector(48, 51);  // copy until the end
+               result.test_eq("size is as expected", bv6.size(), size_t(51));
+               check_bitpattern(result, bv6, 48);
+            }),
 
-      Botan_Tests::CHECK("byte-aligned copy must zero-out unused bits",
-                         [&](auto& result) {
-                            Botan::bitvector bv1(100);
-                            make_bitpattern(bv1);
+      CHECK("byte-aligned copy must zero-out unused bits",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               make_bitpattern(bv1);
 
-                            auto bv2 = bv1.subvector(16, 17);
-                            result.test_eq("size is as requested", bv2.size(), size_t(17));
-                            check_bitpattern(result, bv2, 16);
+               auto bv2 = bv1.subvector(16, 17);
+               result.test_eq("size is as requested", bv2.size(), size_t(17));
+               check_bitpattern(result, bv2, 16);
 
-                            bv2.resize(32);
-                            for(size_t i = 17; i < bv2.size(); ++i) {
-                               result.confirm("tail is zero", !bv2[i]);
-                            }
-                         }),
+               bv2.resize(32);
+               for(size_t i = 17; i < bv2.size(); ++i) {
+                  result.confirm("tail is zero", !bv2[i]);
+               }
+            }),
 
-      Botan_Tests::CHECK("unaligned copy",
-                         [&](auto& result) {
-                            Botan::bitvector bv1(100);
-                            make_bitpattern(bv1);
+      CHECK("unaligned copy",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               make_bitpattern(bv1);
 
-                            auto bv2 = bv1.subvector(19, 69);
-                            result.test_eq("size is as requested", bv2.size(), size_t(69));
-                            check_bitpattern(result, bv2, 19);
+               auto bv2 = bv1.subvector(19, 69);
+               result.test_eq("size is as requested", bv2.size(), size_t(69));
+               check_bitpattern(result, bv2, 19);
 
-                            auto bv3 = bv1.subvector(21);  // copy until the end
-                            result.test_eq("size is as expected", bv3.size(), size_t(79));
-                            check_bitpattern(result, bv3, 21);
+               auto bv3 = bv1.subvector(21);  // copy until the end
+               result.test_eq("size is as expected", bv3.size(), size_t(79));
+               check_bitpattern(result, bv3, 21);
 
-                            auto bv4 = bv1.subvector(1, 16);
-                            result.test_eq("size is as expected", bv4.size(), size_t(16));
-                            check_bitpattern(result, bv4, 1);
+               auto bv4 = bv1.subvector(1, 16);
+               result.test_eq("size is as expected", bv4.size(), size_t(16));
+               check_bitpattern(result, bv4, 1);
 
-                            auto bv5 = bv1.subvector(1, 32);
-                            result.test_eq("size is as expected", bv5.size(), size_t(32));
-                            check_bitpattern(result, bv5, 1);
+               auto bv5 = bv1.subvector(1, 32);
+               result.test_eq("size is as expected", bv5.size(), size_t(32));
+               check_bitpattern(result, bv5, 1);
 
-                            auto bv6 = bv5.subvector(1, 12);
-                            result.test_eq("size is as expected", bv6.size(), size_t(12));
-                            check_bitpattern(result, bv6, 1 + 1);
+               auto bv6 = bv5.subvector(1, 12);
+               result.test_eq("size is as expected", bv6.size(), size_t(12));
+               check_bitpattern(result, bv6, 1 + 1);
 
-                            auto bv7 = bv1.subvector(17, 67);
-                            result.test_eq("size is as expected", bv7.size(), size_t(67));
-                            check_bitpattern(result, bv7, 17);
+               auto bv7 = bv1.subvector(17, 67);
+               result.test_eq("size is as expected", bv7.size(), size_t(67));
+               check_bitpattern(result, bv7, 17);
 
-                            auto bv8 = bv1.subvector(33);  // copy until the end
-                            result.test_eq("size is as expected", bv8.size(), size_t(67));
-                            check_bitpattern(result, bv8, 33);
-                         }),
+               auto bv8 = bv1.subvector(33);  // copy until the end
+               result.test_eq("size is as expected", bv8.size(), size_t(67));
+               check_bitpattern(result, bv8, 33);
+            }),
 
-      Botan_Tests::CHECK("byte-aligned unsigned integer subvector",
-                         [&](auto& result) {
-                            Botan::bitvector bv1(100);
-                            make_bitpattern(bv1);
+      CHECK("byte-aligned unsigned integer subvector",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               make_bitpattern(bv1);
 
-                            const auto u8_0 = bv1.subvector<uint8_t>(0);
-                            const auto u8_32 = bv1.subvector<uint8_t>(32);
-                            check_bitpattern(result, u8_0, 0);
-                            check_bitpattern(result, u8_32, 32);
+               const auto u8_0 = bv1.subvector<uint8_t>(0);
+               const auto u8_32 = bv1.subvector<uint8_t>(32);
+               check_bitpattern(result, u8_0, 0);
+               check_bitpattern(result, u8_32, 32);
 
-                            const auto u16_0 = bv1.subvector<uint16_t>(0);
-                            const auto u16_56 = bv1.subvector<uint16_t>(56);
-                            check_bitpattern(result, u16_0, 0);
-                            check_bitpattern(result, u16_56, 56);
+               const auto u16_0 = bv1.subvector<uint16_t>(0);
+               const auto u16_56 = bv1.subvector<uint16_t>(56);
+               check_bitpattern(result, u16_0, 0);
+               check_bitpattern(result, u16_56, 56);
 
-                            const auto u32_0 = bv1.subvector<uint32_t>(0);
-                            const auto u32_48 = bv1.subvector<uint32_t>(48);
-                            check_bitpattern(result, u32_0, 0);
-                            check_bitpattern(result, u32_48, 48);
+               const auto u32_0 = bv1.subvector<uint32_t>(0);
+               const auto u32_48 = bv1.subvector<uint32_t>(48);
+               check_bitpattern(result, u32_0, 0);
+               check_bitpattern(result, u32_48, 48);
 
-                            const auto u64_0 = bv1.subvector<uint64_t>(0);
-                            const auto u64_32 = bv1.subvector<uint64_t>(32);
-                            check_bitpattern(result, u64_0, 0);
-                            check_bitpattern(result, u64_32, 32);
+               const auto u64_0 = bv1.subvector<uint64_t>(0);
+               const auto u64_32 = bv1.subvector<uint64_t>(32);
+               check_bitpattern(result, u64_0, 0);
+               check_bitpattern(result, u64_32, 32);
 
-                            result.test_throws("out of range (uint8_t)", [&] { bv1.subvector<uint8_t>(93); });
-                            result.test_throws("out of range (uint16_t)", [&] { bv1.subvector<uint16_t>(85); });
-                            result.test_throws("out of range (uint32_t)", [&] { bv1.subvector<uint32_t>(69); });
-                            result.test_throws("out of range (uint64_t)", [&] { bv1.subvector<uint64_t>(37); });
-                         }),
+               result.test_throws("out of range (uint8_t)", [&] { bv1.subvector<uint8_t>(93); });
+               result.test_throws("out of range (uint16_t)", [&] { bv1.subvector<uint16_t>(85); });
+               result.test_throws("out of range (uint32_t)", [&] { bv1.subvector<uint32_t>(69); });
+               result.test_throws("out of range (uint64_t)", [&] { bv1.subvector<uint64_t>(37); });
+            }),
 
-      Botan_Tests::CHECK("unaligned unsigned integer subvector",
-                         [&](Test::Result& result) {
-                            Botan::bitvector bv1(100);
-                            make_bitpattern(bv1);
+      CHECK("unaligned unsigned integer subvector",
+            [&](Test::Result& result) {
+               Botan::bitvector bv1(100);
+               make_bitpattern(bv1);
 
-                            const auto u8_3 = bv1.subvector<uint8_t>(3);
-                            const auto u8_92 = bv1.subvector<uint8_t>(92);
-                            check_bitpattern(result, u8_3, 3);
-                            check_bitpattern(result, u8_92, 92);
+               const auto u8_3 = bv1.subvector<uint8_t>(3);
+               const auto u8_92 = bv1.subvector<uint8_t>(92);
+               check_bitpattern(result, u8_3, 3);
+               check_bitpattern(result, u8_92, 92);
 
-                            const auto u16_7 = bv1.subvector<uint16_t>(7);
-                            const auto u16_84 = bv1.subvector<uint16_t>(84);
-                            check_bitpattern(result, u16_7, 7);
-                            check_bitpattern(result, u16_84, 84);
+               const auto u16_7 = bv1.subvector<uint16_t>(7);
+               const auto u16_84 = bv1.subvector<uint16_t>(84);
+               check_bitpattern(result, u16_7, 7);
+               check_bitpattern(result, u16_84, 84);
 
-                            const auto u32_11 = bv1.subvector<uint32_t>(11);
-                            const auto u32_68 = bv1.subvector<uint32_t>(68);
-                            check_bitpattern(result, u32_11, 11);
-                            check_bitpattern(result, u32_68, 68);
+               const auto u32_11 = bv1.subvector<uint32_t>(11);
+               const auto u32_68 = bv1.subvector<uint32_t>(68);
+               check_bitpattern(result, u32_11, 11);
+               check_bitpattern(result, u32_68, 68);
 
-                            const auto u64_21 = bv1.subvector<uint64_t>(21);
-                            const auto u64_36 = bv1.subvector<uint64_t>(36);
-                            check_bitpattern(result, u64_21, 21);
-                            check_bitpattern(result, u64_36, 36);
-                         }),
+               const auto u64_21 = bv1.subvector<uint64_t>(21);
+               const auto u64_36 = bv1.subvector<uint64_t>(36);
+               check_bitpattern(result, u64_21, 21);
+               check_bitpattern(result, u64_36, 36);
+            }),
    };
 }
 
@@ -484,145 +481,144 @@ std::vector<Test::Result> test_bitvector_global_modifiers_and_predicates() {
    };
 
    return {
-      Botan_Tests::CHECK("one bit",
-                         [](auto& result) {
-                            Botan::bitvector bv;
-                            bv.push_back(true);
+      CHECK("one bit",
+            [](auto& result) {
+               Botan::bitvector bv;
+               bv.push_back(true);
 
-                            bv.flip();
-                            result.confirm("bit is flipped", !bv[0]);
+               bv.flip();
+               result.confirm("bit is flipped", !bv[0]);
 
-                            // check that unused bits aren't flipped
-                            bv.resize(8);
-                            for(size_t i = 0; i < bv.size(); ++i) {
-                               result.confirm("all bits are false", !bv[i]);
-                            }
-                            bv.resize(1);
+               // check that unused bits aren't flipped
+               bv.resize(8);
+               for(size_t i = 0; i < bv.size(); ++i) {
+                  result.confirm("all bits are false", !bv[i]);
+               }
+               bv.resize(1);
 
-                            bv.flip();
-                            result.confirm("bit is flipped again", bv[0]);
-                         }),
+               bv.flip();
+               result.confirm("bit is flipped again", bv[0]);
+            }),
 
-      Botan_Tests::CHECK("bits in many blocks",
-                         [&](auto& result) {
-                            Botan::bitvector bv(99);
+      CHECK("bits in many blocks",
+            [&](auto& result) {
+               Botan::bitvector bv(99);
 
-                            make_bitpattern(bv);
-                            bv.flip();
-                            check_flipped_bitpattern(result, bv);
+               make_bitpattern(bv);
+               bv.flip();
+               check_flipped_bitpattern(result, bv);
 
-                            bv = ~bv;
-                            check_bitpattern(result, bv);
+               bv = ~bv;
+               check_bitpattern(result, bv);
 
-                            bv.resize(112);
-                            for(size_t i = 99; i < bv.size(); ++i) {
-                               result.confirm("just-allocated bit is not set", !bv[i]);
-                            }
-                         }),
+               bv.resize(112);
+               for(size_t i = 99; i < bv.size(); ++i) {
+                  result.confirm("just-allocated bit is not set", !bv[i]);
+               }
+            }),
 
-      Botan_Tests::CHECK("set and unset",
-                         [&](auto& result) {
-                            Botan::bitvector bv(99);
+      CHECK("set and unset",
+            [&](auto& result) {
+               Botan::bitvector bv(99);
 
-                            make_bitpattern(bv);
-                            bv.set();
-                            bv.resize(128);
-                            for(size_t i = 0; i < bv.size(); ++i) {
-                               const bool expected = (i < 99);
-                               result.test_eq("only set bits are set", bv[i], expected);
-                            }
+               make_bitpattern(bv);
+               bv.set();
+               bv.resize(128);
+               for(size_t i = 0; i < bv.size(); ++i) {
+                  const bool expected = (i < 99);
+                  result.test_eq("only set bits are set", bv[i], expected);
+               }
 
-                            bv.unset();
-                            for(size_t i = 0; i < bv.size(); ++i) {
-                               result.confirm("bit is not set", !bv[i]);
-                            }
-                         }),
+               bv.unset();
+               for(size_t i = 0; i < bv.size(); ++i) {
+                  result.confirm("bit is not set", !bv[i]);
+               }
+            }),
 
-      Botan_Tests::CHECK("any, none and all",
-                         [&](auto& result) {
-                            Botan::bitvector bv(99);
+      CHECK("any, none and all",
+            [&](auto& result) {
+               Botan::bitvector bv(99);
 
-                            result.confirm("default construction yields all-zero", bv.none_vartime());
-                            result.confirm("default construction yields all-zero 2", !bv.any_vartime());
-                            result.confirm("default construction yields all-zero 3", !bv.all_vartime());
-                            result.confirm("default construction yields all-zero 4", bv.none());
-                            result.confirm("default construction yields all-zero 5", !bv.any());
-                            result.confirm("default construction yields all-zero 6", !bv.all());
+               result.confirm("default construction yields all-zero", bv.none_vartime());
+               result.confirm("default construction yields all-zero 2", !bv.any_vartime());
+               result.confirm("default construction yields all-zero 3", !bv.all_vartime());
+               result.confirm("default construction yields all-zero 4", bv.none());
+               result.confirm("default construction yields all-zero 5", !bv.any());
+               result.confirm("default construction yields all-zero 6", !bv.all());
 
-                            bv.set(42);
-                            result.confirm("setting a bit means there's a bit set", !bv.none_vartime());
-                            result.confirm("setting a bit means there's a bit set 2", bv.any_vartime());
-                            result.confirm("setting a bit means there's not all bits set", !bv.all_vartime());
-                            result.confirm("setting a bit means there's a bit set 3", !bv.none());
-                            result.confirm("setting a bit means there's a bit set 4", bv.any());
-                            result.confirm("setting a bit means there's not all bits set 2", !bv.all());
+               bv.set(42);
+               result.confirm("setting a bit means there's a bit set", !bv.none_vartime());
+               result.confirm("setting a bit means there's a bit set 2", bv.any_vartime());
+               result.confirm("setting a bit means there's not all bits set", !bv.all_vartime());
+               result.confirm("setting a bit means there's a bit set 3", !bv.none());
+               result.confirm("setting a bit means there's a bit set 4", bv.any());
+               result.confirm("setting a bit means there's not all bits set 2", !bv.all());
 
-                            bv.set();
-                            result.confirm("setting all bits means there's a bit set", !bv.none_vartime());
-                            result.confirm("setting all bits means there's a bit set 2", bv.any_vartime());
-                            result.confirm("setting all bits means all bits are set", bv.all_vartime());
-                            result.confirm("setting all bits means there's a bit set 3", !bv.none());
-                            result.confirm("setting all bits means there's a bit set 4", bv.any());
-                            result.confirm("setting all bits means all bits are set 2", bv.all());
+               bv.set();
+               result.confirm("setting all bits means there's a bit set", !bv.none_vartime());
+               result.confirm("setting all bits means there's a bit set 2", bv.any_vartime());
+               result.confirm("setting all bits means all bits are set", bv.all_vartime());
+               result.confirm("setting all bits means there's a bit set 3", !bv.none());
+               result.confirm("setting all bits means there's a bit set 4", bv.any());
+               result.confirm("setting all bits means all bits are set 2", bv.all());
 
-                            bv.unset(97);
-                            result.confirm("a single 0 at the end means that there's a bit set", !bv.none_vartime());
-                            result.confirm("a single 0 at the end means that there are bits set", bv.any_vartime());
-                            result.confirm("a single 0 at the end means that there are not all bits set",
-                                           !bv.all_vartime());
-                            result.confirm("a single 0 at the end means that there's a bit set 2", !bv.none());
-                            result.confirm("a single 0 at the end means that there are bits set 2", bv.any());
-                            result.confirm("a single 0 at the end means that there are not all bits set 2", !bv.all());
+               bv.unset(97);
+               result.confirm("a single 0 at the end means that there's a bit set", !bv.none_vartime());
+               result.confirm("a single 0 at the end means that there are bits set", bv.any_vartime());
+               result.confirm("a single 0 at the end means that there are not all bits set", !bv.all_vartime());
+               result.confirm("a single 0 at the end means that there's a bit set 2", !bv.none());
+               result.confirm("a single 0 at the end means that there are bits set 2", bv.any());
+               result.confirm("a single 0 at the end means that there are not all bits set 2", !bv.all());
 
-                            bv.unset();
-                            result.confirm("unsetting all bits means there's no bit set", bv.none_vartime());
-                            result.confirm("unsetting all bits means there's no bit set 2", !bv.any_vartime());
-                            result.confirm("unsetting all bits means there's not all bits set", !bv.all_vartime());
-                            result.confirm("unsetting all bits means there's no bit set 3", bv.none());
-                            result.confirm("unsetting all bits means there's no bit set 4", !bv.any());
-                            result.confirm("unsetting all bits means there's not all bits set 2", !bv.all());
-                         }),
+               bv.unset();
+               result.confirm("unsetting all bits means there's no bit set", bv.none_vartime());
+               result.confirm("unsetting all bits means there's no bit set 2", !bv.any_vartime());
+               result.confirm("unsetting all bits means there's not all bits set", !bv.all_vartime());
+               result.confirm("unsetting all bits means there's no bit set 3", bv.none());
+               result.confirm("unsetting all bits means there's no bit set 4", !bv.any());
+               result.confirm("unsetting all bits means there's not all bits set 2", !bv.all());
+            }),
 
-      Botan_Tests::CHECK("hamming weight oddness",
-                         [](auto& result) {
-                            const auto evn = Botan::hex_decode("FE3410CB0278E4D26602");
-                            const auto odd = Botan::hex_decode("BB2418C2B4F288921203");
+      CHECK("hamming weight oddness",
+            [](auto& result) {
+               const auto evn = Botan::hex_decode("FE3410CB0278E4D26602");
+               const auto odd = Botan::hex_decode("BB2418C2B4F288921203");
 
-                            result.confirm("odd hamming", Botan::bitvector(odd).has_odd_hamming_weight().as_bool());
-                            result.confirm("even hamming", !Botan::bitvector(evn).has_odd_hamming_weight().as_bool());
-                         }),
+               result.confirm("odd hamming", Botan::bitvector(odd).has_odd_hamming_weight().as_bool());
+               result.confirm("even hamming", !Botan::bitvector(evn).has_odd_hamming_weight().as_bool());
+            }),
 
-      Botan_Tests::CHECK("hamming weight",
-                         [](auto& result) {
-                            auto naive_count = [](auto& v) {
-                               size_t weight = 0;
-                               for(const auto& bit : v) {
-                                  weight += bit.template as<size_t>();
-                               }
-                               return weight;
-                            };
+      CHECK("hamming weight",
+            [](auto& result) {
+               auto naive_count = [](auto& v) {
+                  size_t weight = 0;
+                  for(const auto& bit : v) {
+                     weight += bit.template as<size_t>();
+                  }
+                  return weight;
+               };
 
-                            // the last three bits of this bitvector are set, then there's a gap
-                            auto bv = Botan::bitvector(Botan::hex_decode("FE3410CB0278E4D26602E0"));
-                            result.test_eq("hamming weight", bv.hamming_weight(), size_t(37));
-                            result.test_eq("hamming weight", bv.hamming_weight(), naive_count(bv));
+               // the last three bits of this bitvector are set, then there's a gap
+               auto bv = Botan::bitvector(Botan::hex_decode("FE3410CB0278E4D26602E0"));
+               result.test_eq("hamming weight", bv.hamming_weight(), size_t(37));
+               result.test_eq("hamming weight", bv.hamming_weight(), naive_count(bv));
 
-                            bv.pop_back();
-                            result.test_eq("hamming weight", bv.hamming_weight(), size_t(36));
-                            result.test_eq("hamming weight", bv.hamming_weight(), naive_count(bv));
+               bv.pop_back();
+               result.test_eq("hamming weight", bv.hamming_weight(), size_t(36));
+               result.test_eq("hamming weight", bv.hamming_weight(), naive_count(bv));
 
-                            bv.pop_back();
-                            result.test_eq("hamming weight", bv.hamming_weight(), size_t(35));
-                            result.test_eq("hamming weight", bv.hamming_weight(), naive_count(bv));
+               bv.pop_back();
+               result.test_eq("hamming weight", bv.hamming_weight(), size_t(35));
+               result.test_eq("hamming weight", bv.hamming_weight(), naive_count(bv));
 
-                            bv.pop_back();
-                            result.test_eq("hamming weight", bv.hamming_weight(), size_t(34));
-                            result.test_eq("hamming weight", bv.hamming_weight(), naive_count(bv));
+               bv.pop_back();
+               result.test_eq("hamming weight", bv.hamming_weight(), size_t(34));
+               result.test_eq("hamming weight", bv.hamming_weight(), naive_count(bv));
 
-                            bv.pop_back();
-                            result.test_eq("hamming weight", bv.hamming_weight(), size_t(34));
-                            result.test_eq("hamming weight", bv.hamming_weight(), naive_count(bv));
-                         }),
+               bv.pop_back();
+               result.test_eq("hamming weight", bv.hamming_weight(), size_t(34));
+               result.test_eq("hamming weight", bv.hamming_weight(), naive_count(bv));
+            }),
    };
 }
 
@@ -646,110 +642,110 @@ std::vector<Test::Result> test_bitvector_binary_operators() {
    };
 
    return {
-      Botan_Tests::CHECK("bitwise_equals",
-                         [&](auto& result) {
-                            Botan::bitvector lhs(20);
-                            lhs.set(0).set(4).set(15).set(16).set(19);
-                            Botan::bitvector rhs(20);
-                            rhs.set(1).set(4).set(16).set(17).set(18);
+      CHECK("bitwise_equals",
+            [&](auto& result) {
+               Botan::bitvector lhs(20);
+               lhs.set(0).set(4).set(15).set(16).set(19);
+               Botan::bitvector rhs(20);
+               rhs.set(1).set(4).set(16).set(17).set(18);
 
-                            result.test_eq("Not equal bitvectors", lhs.equals_vartime(rhs), false);
-                            result.test_eq("Not equal bitvectors 2", lhs.equals(rhs), false);
+               result.test_eq("Not equal bitvectors", lhs.equals_vartime(rhs), false);
+               result.test_eq("Not equal bitvectors 2", lhs.equals(rhs), false);
 
-                            lhs.unset().set(13);
-                            rhs.unset().set(13);
+               lhs.unset().set(13);
+               rhs.unset().set(13);
 
-                            result.test_eq("equal bitvectors", lhs.equals_vartime(rhs), true);
-                            result.test_eq("equal bitvectors 2", lhs.equals(rhs), true);
-                         }),
+               result.test_eq("equal bitvectors", lhs.equals_vartime(rhs), true);
+               result.test_eq("equal bitvectors 2", lhs.equals(rhs), true);
+            }),
 
-      Botan_Tests::CHECK("bitwise OR",
-                         [&](auto& result) {
-                            Botan::bitvector lhs(20);
-                            lhs.set(0).set(4).set(15).set(16).set(19);
-                            Botan::bitvector rhs(20);
-                            rhs.set(1).set(4).set(16).set(17).set(18);
-                            Botan::bitvector unary(20);
-                            unary.set(8);
+      CHECK("bitwise OR",
+            [&](auto& result) {
+               Botan::bitvector lhs(20);
+               lhs.set(0).set(4).set(15).set(16).set(19);
+               Botan::bitvector rhs(20);
+               rhs.set(1).set(4).set(16).set(17).set(18);
+               Botan::bitvector unary(20);
+               unary.set(8);
 
-                            Botan::bitvector res = lhs | rhs;
-                            check_set(result, res, {0, 1, 4, 15, 16, 17, 18, 19});
+               Botan::bitvector res = lhs | rhs;
+               check_set(result, res, {0, 1, 4, 15, 16, 17, 18, 19});
 
-                            res |= unary;
-                            check_set(result, res, {0, 1, 4, 8, 15, 16, 17, 18, 19});
+               res |= unary;
+               check_set(result, res, {0, 1, 4, 8, 15, 16, 17, 18, 19});
 
-                            is_standard_allocator(result, res);
-                         }),
+               is_standard_allocator(result, res);
+            }),
 
-      Botan_Tests::CHECK("bitwise AND",
-                         [&](auto& result) {
-                            Botan::bitvector lhs(20);
-                            lhs.set(0).set(4).set(15).set(16).set(18);
-                            Botan::bitvector rhs(20);
-                            rhs.set(1).set(4).set(16).set(17).set(18);
-                            Botan::bitvector unary(20);
-                            unary.set(8).set(16);
+      CHECK("bitwise AND",
+            [&](auto& result) {
+               Botan::bitvector lhs(20);
+               lhs.set(0).set(4).set(15).set(16).set(18);
+               Botan::bitvector rhs(20);
+               rhs.set(1).set(4).set(16).set(17).set(18);
+               Botan::bitvector unary(20);
+               unary.set(8).set(16);
 
-                            Botan::bitvector res = lhs & rhs;
-                            check_set(result, res, {4, 16, 18});
+               Botan::bitvector res = lhs & rhs;
+               check_set(result, res, {4, 16, 18});
 
-                            res &= unary;
-                            check_set(result, res, {16});
+               res &= unary;
+               check_set(result, res, {16});
 
-                            is_standard_allocator(result, res);
-                         }),
+               is_standard_allocator(result, res);
+            }),
 
-      Botan_Tests::CHECK("bitwise XOR",
-                         [&](auto& result) {
-                            Botan::bitvector lhs(20);
-                            lhs.set(0).set(4).set(15).set(16).set(18);
-                            Botan::bitvector rhs(20);
-                            rhs.set(1).set(4).set(16).set(17).set(18);
-                            Botan::bitvector unary(20);
-                            unary.set(8).set(16);
+      CHECK("bitwise XOR",
+            [&](auto& result) {
+               Botan::bitvector lhs(20);
+               lhs.set(0).set(4).set(15).set(16).set(18);
+               Botan::bitvector rhs(20);
+               rhs.set(1).set(4).set(16).set(17).set(18);
+               Botan::bitvector unary(20);
+               unary.set(8).set(16);
 
-                            Botan::bitvector res = lhs ^ rhs;
-                            check_set(result, res, {0, 1, 15, 17});
+               Botan::bitvector res = lhs ^ rhs;
+               check_set(result, res, {0, 1, 15, 17});
 
-                            res ^= unary;
-                            check_set(result, res, {0, 1, 8, 15, 16, 17});
+               res ^= unary;
+               check_set(result, res, {0, 1, 8, 15, 16, 17});
 
-                            is_standard_allocator(result, res);
-                         }),
+               is_standard_allocator(result, res);
+            }),
 
-      Botan_Tests::CHECK("bitwise operators with heterogeneous allocators",
-                         [&](auto& result) {
-                            Botan::bitvector lhs(20);
-                            lhs.set(0).set(4).set(15).set(16).set(18);
-                            Botan::secure_bitvector rhs(20);
-                            rhs.set(1).set(4).set(16).set(17).set(18);
-                            Botan::bitvector unary(20);
-                            unary.set(8).set(16);
+      CHECK("bitwise operators with heterogeneous allocators",
+            [&](auto& result) {
+               Botan::bitvector lhs(20);
+               lhs.set(0).set(4).set(15).set(16).set(18);
+               Botan::secure_bitvector rhs(20);
+               rhs.set(1).set(4).set(16).set(17).set(18);
+               Botan::bitvector unary(20);
+               unary.set(8).set(16);
 
-                            auto res1 = lhs | rhs;
-                            is_secure_allocator(result, res1);
-                            check_set(result, res1, {0, 1, 4, 15, 16, 17, 18, 20});
+               auto res1 = lhs | rhs;
+               is_secure_allocator(result, res1);
+               check_set(result, res1, {0, 1, 4, 15, 16, 17, 18, 20});
 
-                            auto res2 = rhs | lhs;
-                            is_secure_allocator(result, res2);
-                            check_set(result, res2, {0, 1, 4, 15, 16, 17, 18, 20});
+               auto res2 = rhs | lhs;
+               is_secure_allocator(result, res2);
+               check_set(result, res2, {0, 1, 4, 15, 16, 17, 18, 20});
 
-                            auto res3 = lhs & rhs;
-                            is_secure_allocator(result, res3);
-                            check_set(result, res3, {4, 16, 18});
+               auto res3 = lhs & rhs;
+               is_secure_allocator(result, res3);
+               check_set(result, res3, {4, 16, 18});
 
-                            auto res4 = rhs & lhs;
-                            is_secure_allocator(result, res4);
-                            check_set(result, res4, {4, 16, 18});
+               auto res4 = rhs & lhs;
+               is_secure_allocator(result, res4);
+               check_set(result, res4, {4, 16, 18});
 
-                            auto res5 = lhs ^ rhs;
-                            is_secure_allocator(result, res5);
-                            check_set(result, res5, {0, 1, 15, 17});
+               auto res5 = lhs ^ rhs;
+               is_secure_allocator(result, res5);
+               check_set(result, res5, {0, 1, 15, 17});
 
-                            auto res6 = rhs ^ lhs;
-                            is_secure_allocator(result, res6);
-                            check_set(result, res6, {0, 1, 15, 17});
-                         }),
+               auto res6 = rhs ^ lhs;
+               is_secure_allocator(result, res6);
+               check_set(result, res6, {0, 1, 15, 17});
+            }),
    };
 }
 
@@ -775,72 +771,71 @@ std::vector<Test::Result> test_bitvector_serialization() {
    };
 
    return {
-      Botan_Tests::CHECK("empty byte-array",
-                         [](auto& result) {
-                            std::vector<uint8_t> bytes;
-                            result.require("empty buffer", bytes.empty());
+      CHECK("empty byte-array",
+            [](auto& result) {
+               std::vector<uint8_t> bytes;
+               result.require("empty buffer", bytes.empty());
 
-                            Botan::bitvector bv(bytes);
-                            result.confirm("empty bit vector", bv.empty());
+               Botan::bitvector bv(bytes);
+               result.confirm("empty bit vector", bv.empty());
 
-                            auto rendered = bv.to_bytes();
-                            result.confirm("empty bit vector renders an empty buffer", rendered.empty());
-                         }),
+               auto rendered = bv.to_bytes();
+               result.confirm("empty bit vector renders an empty buffer", rendered.empty());
+            }),
 
-      Botan_Tests::CHECK("to_bytes() uses secure_allocator if necessary",
-                         [](auto& result) {
-                            Botan::bitvector bv;
-                            Botan::secure_bitvector sbv;
+      CHECK("to_bytes() uses secure_allocator if necessary",
+            [](auto& result) {
+               Botan::bitvector bv;
+               Botan::secure_bitvector sbv;
 
-                            auto rbv = bv.to_bytes();
-                            auto rsbv = sbv.to_bytes();
+               auto rbv = bv.to_bytes();
+               auto rsbv = sbv.to_bytes();
 
-                            result.confirm("ordinary bitvector uses ordinary std::vector",
-                                           std::is_same_v<std::vector<uint8_t>, decltype(rbv)>);
-                            result.confirm("secure bitvector uses secure_vector",
-                                           std::is_same_v<Botan::secure_vector<uint8_t>, decltype(rsbv)>);
-                         }),
+               result.confirm("ordinary bitvector uses ordinary std::vector",
+                              std::is_same_v<std::vector<uint8_t>, decltype(rbv)>);
+               result.confirm("secure bitvector uses secure_vector",
+                              std::is_same_v<Botan::secure_vector<uint8_t>, decltype(rsbv)>);
+            }),
 
-      Botan_Tests::CHECK("load all bits from byte-array (aligned data)",
-                         [&](auto& result) {
-                            Botan::bitvector bv(bytearray);
-                            validate_bytewise(result, bv, bytearray);
+      CHECK("load all bits from byte-array (aligned data)",
+            [&](auto& result) {
+               Botan::bitvector bv(bytearray);
+               validate_bytewise(result, bv, bytearray);
 
-                            const auto rbv = bv.to_bytes();
-                            result.confirm("uint8_t rendered correctly", std::ranges::equal(bytearray, rbv));
-                         }),
+               const auto rbv = bv.to_bytes();
+               result.confirm("uint8_t rendered correctly", std::ranges::equal(bytearray, rbv));
+            }),
 
-      Botan_Tests::CHECK("load all bits from byte-array (unaligned blocks)",
-                         [&](auto& result) {
-                            std::array<uint8_t, 63> unaligned_bytearray;
-                            Botan::copy_mem(unaligned_bytearray,
-                                            std::span{bytearray}.first<unaligned_bytearray.size()>());
+      CHECK("load all bits from byte-array (unaligned blocks)",
+            [&](auto& result) {
+               std::array<uint8_t, 63> unaligned_bytearray;
+               Botan::copy_mem(unaligned_bytearray, std::span{bytearray}.first<unaligned_bytearray.size()>());
 
-                            Botan::bitvector bv(unaligned_bytearray);
-                            validate_bytewise(result, bv, unaligned_bytearray);
+               Botan::bitvector bv(unaligned_bytearray);
+               validate_bytewise(result, bv, unaligned_bytearray);
 
-                            const auto rbv = bv.to_bytes();
-                            result.confirm("uint8_t rendered correctly", std::ranges::equal(unaligned_bytearray, rbv));
-                         }),
+               const auto rbv = bv.to_bytes();
+               result.confirm("uint8_t rendered correctly", std::ranges::equal(unaligned_bytearray, rbv));
+            }),
 
-      Botan_Tests::CHECK("load bits from byte-array (unaligned data)",
-                         [&](auto& result) {
-                            constexpr size_t bits_to_load = 31;
-                            constexpr size_t bytes_to_load = Botan::ceil_tobytes(bits_to_load);
+      CHECK("load bits from byte-array (unaligned data)",
+            [&](auto& result) {
+               constexpr size_t bits_to_load = 31;
+               constexpr size_t bytes_to_load = Botan::ceil_tobytes(bits_to_load);
 
-                            Botan::bitvector bv(bytearray, bits_to_load);
+               Botan::bitvector bv(bytearray, bits_to_load);
 
-                            for(size_t i = 0; i < bits_to_load; ++i) {
-                               const bool expected = (i == 8) || (i == 17) || (i == 24) || (i == 25);
-                               result.test_eq(Botan::fmt("bit {} is correct", i), bv.at(i), expected);
-                            }
+               for(size_t i = 0; i < bits_to_load; ++i) {
+                  const bool expected = (i == 8) || (i == 17) || (i == 24) || (i == 25);
+                  result.test_eq(Botan::fmt("bit {} is correct", i), bv.at(i), expected);
+               }
 
-                            const auto rbv = bv.to_bytes();
-                            std::array<uint8_t, bytes_to_load> expected_bytes;
-                            Botan::copy_mem(expected_bytes, std::span{bytearray}.first<bytes_to_load>());
-                            expected_bytes.back() &= (uint8_t(1) << (bits_to_load % 8)) - 1;
-                            result.confirm("uint8_t rendered correctly", std::ranges::equal(expected_bytes, rbv));
-                         }),
+               const auto rbv = bv.to_bytes();
+               std::array<uint8_t, bytes_to_load> expected_bytes;
+               Botan::copy_mem(expected_bytes, std::span{bytearray}.first<bytes_to_load>());
+               expected_bytes.back() &= (uint8_t(1) << (bits_to_load % 8)) - 1;
+               result.confirm("uint8_t rendered correctly", std::ranges::equal(expected_bytes, rbv));
+            }),
    };
 }
 
@@ -849,52 +844,52 @@ std::vector<Test::Result> test_bitvector_constant_time_operations() {
    constexpr Botan::CT::Choice no = Botan::CT::Choice::no();
 
    return {
-      Botan_Tests::CHECK("conditional XOR, block aligned",
-                         [&](auto& result) {
-                            Botan::bitvector bv1(Botan::hex_decode("BAADF00DCAFEBEEF"));
-                            Botan::secure_bitvector bv2(Botan::hex_decode("CAFEBEEFC001B33F"));
-                            const auto initial_bv1 = bv1;
-                            const auto xor_result = bv1 ^ bv2;
+      CHECK("conditional XOR, block aligned",
+            [&](auto& result) {
+               Botan::bitvector bv1(Botan::hex_decode("BAADF00DCAFEBEEF"));
+               Botan::secure_bitvector bv2(Botan::hex_decode("CAFEBEEFC001B33F"));
+               const auto initial_bv1 = bv1;
+               const auto xor_result = bv1 ^ bv2;
 
-                            bv1.ct_conditional_xor(no, bv2);
-                            result.confirm("no change after false condition", bv1 == initial_bv1);
+               bv1.ct_conditional_xor(no, bv2);
+               result.confirm("no change after false condition", bv1 == initial_bv1);
 
-                            bv1.ct_conditional_xor(yes, bv2);
-                            result.confirm("XORed if condition was true", bv1 == xor_result);
-                         }),
+               bv1.ct_conditional_xor(yes, bv2);
+               result.confirm("XORed if condition was true", bv1 == xor_result);
+            }),
 
-      Botan_Tests::CHECK("conditional XOR, byte aligned",
-                         [&](auto& result) {
-                            Botan::bitvector bv1(Botan::hex_decode("BAADF00DCAFEBEEF42"));
-                            Botan::secure_bitvector bv2(Botan::hex_decode("CAFEBEEFC001B33F13"));
-                            const auto initial_bv1 = bv1;
-                            const auto xor_result = bv1 ^ bv2;
+      CHECK("conditional XOR, byte aligned",
+            [&](auto& result) {
+               Botan::bitvector bv1(Botan::hex_decode("BAADF00DCAFEBEEF42"));
+               Botan::secure_bitvector bv2(Botan::hex_decode("CAFEBEEFC001B33F13"));
+               const auto initial_bv1 = bv1;
+               const auto xor_result = bv1 ^ bv2;
 
-                            bv1.ct_conditional_xor(no, bv2);
-                            result.confirm("no change after false condition", bv1 == initial_bv1);
+               bv1.ct_conditional_xor(no, bv2);
+               result.confirm("no change after false condition", bv1 == initial_bv1);
 
-                            bv1.ct_conditional_xor(yes, bv2);
-                            result.confirm("XORed if condition was true", bv1 == xor_result);
-                         }),
+               bv1.ct_conditional_xor(yes, bv2);
+               result.confirm("XORed if condition was true", bv1 == xor_result);
+            }),
 
-      Botan_Tests::CHECK("conditional XOR, no alignment",
-                         [&](auto& result) {
-                            Botan::bitvector bv1(Botan::hex_decode("BAADF00DCAFEBEEF42"));
-                            bv1.push_back(true);
-                            bv1.push_back(false);
-                            Botan::secure_bitvector bv2(Botan::hex_decode("CAFEBEEFC001B33F13"));
-                            bv2.push_back(false);
-                            bv2.push_back(false);
+      CHECK("conditional XOR, no alignment",
+            [&](auto& result) {
+               Botan::bitvector bv1(Botan::hex_decode("BAADF00DCAFEBEEF42"));
+               bv1.push_back(true);
+               bv1.push_back(false);
+               Botan::secure_bitvector bv2(Botan::hex_decode("CAFEBEEFC001B33F13"));
+               bv2.push_back(false);
+               bv2.push_back(false);
 
-                            const auto initial_bv1 = bv1;
-                            const auto xor_result = bv1 ^ bv2;
+               const auto initial_bv1 = bv1;
+               const auto xor_result = bv1 ^ bv2;
 
-                            bv1.ct_conditional_xor(no, bv2);
-                            result.confirm("no change after false condition", bv1 == initial_bv1);
+               bv1.ct_conditional_xor(no, bv2);
+               result.confirm("no change after false condition", bv1 == initial_bv1);
 
-                            bv1.ct_conditional_xor(yes, bv2);
-                            result.confirm("XORed if condition was true", bv1 == xor_result);
-                         }),
+               bv1.ct_conditional_xor(yes, bv2);
+               result.confirm("XORed if condition was true", bv1 == xor_result);
+            }),
    };
 }
 
@@ -928,119 +923,118 @@ Test::Result test_bitvector_conditional_xor_workload() {
 
 std::vector<Test::Result> test_bitvector_iterators() {
    return {
-      Botan_Tests::CHECK("Iterators: range-based for loop",
-                         [](auto& result) {
-                            Botan::bitvector bv(6);
-                            bv.set(0).set(3).set(4);
+      CHECK("Iterators: range-based for loop",
+            [](auto& result) {
+               Botan::bitvector bv(6);
+               bv.set(0).set(3).set(4);
 
-                            for(size_t i = 0; auto& ref : bv) {
-                               const bool expected = i == 0 || i == 3 || i == 4;
-                               result.test_eq(Botan::fmt("bit {} is as expected", i), ref, expected);
-                               ++i;
-                            }
+               for(size_t i = 0; auto& ref : bv) {
+                  const bool expected = i == 0 || i == 3 || i == 4;
+                  result.test_eq(Botan::fmt("bit {} is as expected", i), ref, expected);
+                  ++i;
+               }
 
-                            for(size_t i = 0; const auto& ref : bv) {
-                               const bool expected = i == 0 || i == 3 || i == 4;
-                               result.test_eq(Botan::fmt("const bit {} is as expected", i), ref, expected);
-                               ++i;
-                            }
+               for(size_t i = 0; const auto& ref : bv) {
+                  const bool expected = i == 0 || i == 3 || i == 4;
+                  result.test_eq(Botan::fmt("const bit {} is as expected", i), ref, expected);
+                  ++i;
+               }
 
-                            for(auto ref : bv) {
-                               ref = true;
-                            }
+               for(auto ref : bv) {
+                  ref = true;
+               }
 
-                            result.confirm("all bits are set", bv.all_vartime());
-                         }),
+               result.confirm("all bits are set", bv.all_vartime());
+            }),
 
-      Botan_Tests::CHECK("Iterators: bare usage",
-                         [](auto& result) {
-                            Botan::bitvector bv(6);
-                            bv.set(0).set(3).set(4);
+      CHECK("Iterators: bare usage",
+            [](auto& result) {
+               Botan::bitvector bv(6);
+               bv.set(0).set(3).set(4);
 
-                            size_t i = 0;
-                            for(auto itr = bv.begin(); itr != bv.end(); ++itr, ++i) {
-                               const bool expected = i == 0 || i == 3 || i == 4;
-                               result.test_eq(Botan::fmt("bit {} is as expected", i), *itr, expected);
-                            }
+               size_t i = 0;
+               for(auto itr = bv.begin(); itr != bv.end(); ++itr, ++i) {
+                  const bool expected = i == 0 || i == 3 || i == 4;
+                  result.test_eq(Botan::fmt("bit {} is as expected", i), *itr, expected);
+               }
 
-                            i = 0;
-                            for(auto itr = bv.cbegin(); itr != bv.cend(); itr++, ++i) {
-                               const bool expected = i == 0 || i == 3 || i == 4;
-                               result.test_eq(Botan::fmt("const bit {} is as expected", i), itr->is_set(), expected);
-                            }
+               i = 0;
+               for(auto itr = bv.cbegin(); itr != bv.cend(); itr++, ++i) {
+                  const bool expected = i == 0 || i == 3 || i == 4;
+                  result.test_eq(Botan::fmt("const bit {} is as expected", i), itr->is_set(), expected);
+               }
 
-                            i = 6;
-                            auto ritr = bv.end();
-                            do {
-                               --ritr;
-                               --i;
-                               const bool expected = i == 0 || i == 3 || i == 4;
-                               result.test_eq(Botan::fmt("reverse bit {} is as expected", i), *ritr, expected);
-                            } while(ritr != bv.begin());
+               i = 6;
+               auto ritr = bv.end();
+               do {
+                  --ritr;
+                  --i;
+                  const bool expected = i == 0 || i == 3 || i == 4;
+                  result.test_eq(Botan::fmt("reverse bit {} is as expected", i), *ritr, expected);
+               } while(ritr != bv.begin());
 
-                            for(auto itr = bv.begin(); itr != bv.end(); ++itr) {
-                               itr->flip();
-                            }
+               for(auto itr = bv.begin(); itr != bv.end(); ++itr) {
+                  itr->flip();
+               }
 
-                            i = 0;
-                            for(auto itr = bv.begin(); itr != bv.end(); ++itr, ++i) {
-                               const bool expected = i == 1 || i == 2 || i == 5;
-                               result.test_eq(Botan::fmt("flipped bit {} is as expected", i), *itr, expected);
-                            }
-                         }),
+               i = 0;
+               for(auto itr = bv.begin(); itr != bv.end(); ++itr, ++i) {
+                  const bool expected = i == 1 || i == 2 || i == 5;
+                  result.test_eq(Botan::fmt("flipped bit {} is as expected", i), *itr, expected);
+               }
+            }),
 
-      Botan_Tests::CHECK("Iterators: std::distance and std::advance",
-                         [](auto& result) {
-                            Botan::bitvector bv(6);
-                            using signed_size_t = std::make_signed_t<size_t>;
+      CHECK("Iterators: std::distance and std::advance",
+            [](auto& result) {
+               Botan::bitvector bv(6);
+               using signed_size_t = std::make_signed_t<size_t>;
 
-                            result.test_is_eq("distance", std::distance(bv.begin(), bv.end()), signed_size_t(6));
-                            result.test_is_eq(
-                               "const distance", std::distance(bv.cbegin(), bv.cend()), signed_size_t(6));
+               result.test_is_eq("distance", std::distance(bv.begin(), bv.end()), signed_size_t(6));
+               result.test_is_eq("const distance", std::distance(bv.cbegin(), bv.cend()), signed_size_t(6));
 
-                            auto b = bv.begin();
-                            std::advance(b, 3);
-                            result.test_is_eq("half distance", std::distance(bv.begin(), b), signed_size_t(3));
-                         }),
+               auto b = bv.begin();
+               std::advance(b, 3);
+               result.test_is_eq("half distance", std::distance(bv.begin(), b), signed_size_t(3));
+            }),
 
-      Botan_Tests::CHECK("Iterators: large bitvector",
-                         [](auto& result) {
-                            Botan::bitvector bv(500);
+      CHECK("Iterators: large bitvector",
+            [](auto& result) {
+               Botan::bitvector bv(500);
 
-                            for(auto itr = bv.begin(); itr != bv.end(); ++itr) {
-                               if(std::distance(bv.begin(), itr) % 2 == 0) {
-                                  itr->set();
-                               }
-                               if(std::distance(bv.begin(), itr) % 3 == 0) {
-                                  *itr = true;
-                               }
-                            }
+               for(auto itr = bv.begin(); itr != bv.end(); ++itr) {
+                  if(std::distance(bv.begin(), itr) % 2 == 0) {
+                     itr->set();
+                  }
+                  if(std::distance(bv.begin(), itr) % 3 == 0) {
+                     *itr = true;
+                  }
+               }
 
-                            for(size_t i = 0; const auto& bit : bv) {
-                               const bool expected = (i % 2 == 0) || (i % 3 == 0);
-                               result.test_eq(Botan::fmt("bit {} is as expected", i), bit, expected);
-                               ++i;
-                            }
-                         }),
+               for(size_t i = 0; const auto& bit : bv) {
+                  const bool expected = (i % 2 == 0) || (i % 3 == 0);
+                  result.test_eq(Botan::fmt("bit {} is as expected", i), bit, expected);
+                  ++i;
+               }
+            }),
 
-      Botan_Tests::CHECK("Iterators: satiesfies C++20 concepts",
-                         [](auto& result) {
-                            Botan::secure_bitvector bv(42);
-                            auto ro_itr = bv.cbegin();
-                            auto rw_itr = bv.begin();
+      CHECK("Iterators: satiesfies C++20 concepts",
+            [](auto& result) {
+               Botan::secure_bitvector bv(42);
+               auto ro_itr = bv.cbegin();
+               auto rw_itr = bv.begin();
 
-                            using ro = decltype(ro_itr);
-                            using rw = decltype(rw_itr);
+               using ro = decltype(ro_itr);
+               using rw = decltype(rw_itr);
 
-                            result.confirm("ro input iterator", std::input_iterator<ro>);
-                            result.confirm("rw input iterator", std::input_iterator<rw>);
-                            result.confirm("ro is not an output iterator", !std::output_iterator<ro, bool>);
-                            result.confirm("rw output iterator", std::output_iterator<rw, bool>);
-                            result.confirm("ro bidirectional iterator", std::bidirectional_iterator<ro>);
-                            result.confirm("rw bidirectional iterator", std::bidirectional_iterator<rw>);
-                            result.confirm("ro not a contiguous iterator", !std::contiguous_iterator<ro>);
-                            result.confirm("rw not a contiguous iterator", !std::contiguous_iterator<rw>);
-                         }),
+               result.confirm("ro input iterator", std::input_iterator<ro>);
+               result.confirm("rw input iterator", std::input_iterator<rw>);
+               result.confirm("ro is not an output iterator", !std::output_iterator<ro, bool>);
+               result.confirm("rw output iterator", std::output_iterator<rw, bool>);
+               result.confirm("ro bidirectional iterator", std::bidirectional_iterator<ro>);
+               result.confirm("rw bidirectional iterator", std::bidirectional_iterator<rw>);
+               result.confirm("ro not a contiguous iterator", !std::contiguous_iterator<ro>);
+               result.confirm("rw not a contiguous iterator", !std::contiguous_iterator<rw>);
+            }),
    };
 }
 
