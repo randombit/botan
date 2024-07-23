@@ -27,7 +27,7 @@ using CmceMatrix = Strong<std::vector<CmceMatrixRow>, struct CmceMatrix_>;
 namespace {
 
 CT::Mask<uint64_t> bit_at_mask(uint64_t val, size_t pos) {
-   return CT::Mask<uint64_t>::expand((val >> pos) & 1);
+   return CT::Mask<uint64_t>::expand((static_cast<uint64_t>(1) << pos) & val);
 }
 
 /// Swaps bit i with bit j in val
