@@ -820,6 +820,10 @@ class bitvector_base final {
          full_range_operation(maybe_xor, *this, unwrap_strong_type(other));
       }
 
+      constexpr void _const_time_poison() const { CT::poison(m_blocks); }
+
+      constexpr void _const_time_unpoison() const { CT::unpoison(m_blocks); }
+
       /// @}
 
       /// @name Iterators
@@ -841,7 +845,11 @@ class bitvector_base final {
       /// @}
 
    private:
-      void check_offset(size_type pos) const { BOTAN_ARG_CHECK(pos < m_bits, "Out of range"); }
+      void check_offset(size_type pos) const {
+         // BOTAN_ASSERT_NOMSG(!CT::is_poisoned(&m_bits, sizeof(m_bits)));
+         // BOTAN_ASSERT_NOMSG(!CT::is_poisoned(&pos, sizeof(pos)));
+         BOTAN_ARG_CHECK(pos < m_bits, "Out of range");
+      }
 
       void zero_unused_bits() {
          const auto first_unused_bit = size();
@@ -1346,6 +1354,10 @@ class Strong_Adapter<T> : public Container_Strong_Adapter_Base<T> {
       auto capacity() const { return this->get().capacity(); }
 
       auto reserve(size_type n) { return this->get().reserve(n); }
+
+      constexpr void _const_time_poison() const { this->get()._const_time_poison(); }
+
+      constexpr void _const_time_unpoison() const { this->get()._const_time_unpoison(); }
 };
 
 }  // namespace detail

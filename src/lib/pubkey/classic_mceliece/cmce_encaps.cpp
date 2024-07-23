@@ -23,6 +23,7 @@ CmceCodeWord Classic_McEliece_Encryptor::encode(const Classic_McEliece_Parameter
 std::optional<CmceErrorVector> Classic_McEliece_Encryptor::fixed_weight_vector_gen(
    const Classic_McEliece_Parameters& params, RandomNumberGenerator& rng) const {
    const auto rand = rng.random_vec((params.sigma1() / 8) * params.tau());
+   CT::poison(rand);
    uint16_t mask_m = (uint32_t(1) << params.m()) - 1;  // Only take m least significant bits
    secure_vector<uint16_t> a_values;
    a_values.reserve(params.tau());
@@ -36,7 +37,9 @@ std::optional<CmceErrorVector> Classic_McEliece_Encryptor::fixed_weight_vector_g
       // This side channel only leaks which random elements are selected and which are dropped,
       // but no information about their content is leaked.
       d &= mask_m;
-      if(d < params.n() && a_values.size() < params.t()) {
+      bool d_in_range = d < params.n();
+      CT::unpoison(d_in_range);
+      if(d_in_range && a_values.size() < params.t()) {
          a_values.push_back(d);
       }
    }
@@ -48,7 +51,9 @@ std::optional<CmceErrorVector> Classic_McEliece_Encryptor::fixed_weight_vector_g
    // Step 4: Restart if not all a_i are distinct
    for(size_t i = 1; i < params.t(); ++i) {
       for(size_t j = 0; j < i; ++j) {
-         if(a_values.at(i) == a_values.at(j)) {
+         bool a_i_j_equal = a_values.at(i) == a_values.at(j);
+         CT::unpoison(a_i_j_equal);
+         if(a_i_j_equal) {
             return std::nullopt;
          }
       }
@@ -120,6 +125,7 @@ void Classic_McEliece_Encryptor::raw_kem_encrypt(std::span<uint8_t> out_encapsul
    hash_func->update(e_bytes);
    hash_func->update(out_encapsulated_key);
    hash_func->final(out_shared_key);
+   CT::unpoison_all(out_encapsulated_key, out_shared_key);
 }
 
 }  // namespace Botan

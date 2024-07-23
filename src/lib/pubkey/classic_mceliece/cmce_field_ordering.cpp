@@ -14,7 +14,6 @@
 #include <botan/mem_ops.h>
 #include <botan/internal/loadstor.h>
 
-#include <bitset>
 #include <numeric>
 #include <utility>
 #include <vector>
@@ -97,6 +96,8 @@ std::pair<secure_vector<T1>, secure_vector<T2>> unzip(const std::span<std::pair<
 
 /// @returns (vec[0],0), ..., (vec[n-1],n-1)
 std::vector<std::pair<uint32_t, uint16_t>> enumerate(std::span<const uint32_t> vec) {
+   BOTAN_DEBUG_ASSERT(vec.size() < std::numeric_limits<uint16_t>::max());
+
    std::vector<std::pair<uint32_t, uint16_t>> enumerated;
 
    std::transform(vec.begin(), vec.end(), std::back_inserter(enumerated), [ctr = uint16_t(0)](uint32_t elem) mutable {
@@ -107,16 +108,20 @@ std::vector<std::pair<uint32_t, uint16_t>> enumerate(std::span<const uint32_t> v
 }
 
 /**
-* @brief Create permutation pi as in (Section 8.2, Step 3).
-*/
-CmcePermutation create_pi(std::span<const uint32_t> a) {
+ * @brief Create permutation pi as in (Section 8.2, Step 3).
+ *
+ * @param a The vector that is sorted
+ *
+ * @return (pi sorted after a, a sorted after pi)
+ */
+std::pair<secure_vector<uint32_t>, CmcePermutation> create_pi(secure_vector<uint32_t> a) {
    auto a_pi_zipped = enumerate(a);
    CMCE_CT::bitonic_sort_pair(std::span(a_pi_zipped));
 
    CmcePermutation pi_sorted;
    std::tie(a, pi_sorted.get()) = unzip(std::span(a_pi_zipped));
 
-   return pi_sorted;
+   return std::make_pair(a, pi_sorted);
 }
 
 /**
@@ -124,16 +129,9 @@ CmcePermutation create_pi(std::span<const uint32_t> a) {
 * Corresponds to the reverse bits of pi.
 */
 Classic_McEliece_GF from_pi(CmcePermutationElement pi_elem, CmceGfMod modulus, size_t m) {
-   std::bitset<16> bits(pi_elem.get());
-   std::bitset<16> reversed_bits;
-
-   for(int i = 0; i < 16; ++i) {
-      reversed_bits[i] = bits[15 - i];
-   }
-
+   auto reversed_bits = ct_reverse_bits(pi_elem.get());
    reversed_bits >>= (sizeof(uint16_t) * 8 - m);
-
-   return Classic_McEliece_GF(CmceGfElem(static_cast<uint16_t>(reversed_bits.to_ulong())), modulus);
+   return Classic_McEliece_GF(CmceGfElem(reversed_bits), modulus);
 }
 
 /**
@@ -244,6 +242,14 @@ secure_vector<uint16_t> generate_control_bits_internal(const secure_vector<uint1
    return concat(f, z, l);
 }
 
+CT::Choice ct_has_adjacent_duplicates(std::span<const uint32_t> vec) {
+   CT::Mask<uint32_t> mask = CT::Mask<uint32_t>::cleared();
+   for(size_t i = 0; i < vec.size() - 1; ++i) {
+      mask |= CT::Mask<uint32_t>::is_equal(vec[i], vec[i + 1]);
+   }
+   return mask.as_choice();
+}
+
 }  // anonymous namespace
 
 std::optional<Classic_McEliece_Field_Ordering> Classic_McEliece_Field_Ordering::create_field_ordering(
@@ -251,8 +257,8 @@ std::optional<Classic_McEliece_Field_Ordering> Classic_McEliece_Field_Ordering::
    BOTAN_ARG_CHECK(random_bits.size() == (params.sigma2() * params.q()) / 8, "Wrong random bits size");
 
    auto a = load_le<secure_vector<uint32_t>>(random_bits);  // contains a_0, a_1, ...
-   auto pi = create_pi(a);
-   if(std::adjacent_find(a.begin(), a.end()) != a.end()) {
+   auto [sorted_a, pi] = create_pi(std::move(a));
+   if(ct_has_adjacent_duplicates(sorted_a).as_bool()) {
       return std::nullopt;
    }
 

@@ -16,7 +16,7 @@
 namespace Botan {
 
 Classic_McEliece_GF Classic_McEliece_Polynomial::operator()(Classic_McEliece_GF a) const {
-   BOTAN_ASSERT(a.modulus() == coef_at(0).modulus(), "Galois fields match");
+   BOTAN_DEBUG_ASSERT(a.modulus() == coef_at(0).modulus());
 
    Classic_McEliece_GF r(CmceGfElem(0), a.modulus());
    for(auto it = m_coef.rbegin(); it != m_coef.rend(); ++it) {
@@ -93,8 +93,10 @@ std::optional<Classic_McEliece_Minimal_Polynomial> Classic_McEliece_Polynomial_R
          }
       }
 
-      if(mat.at(j).coef_at(j).is_zero()) {
-         // Fail if not systematic.
+      const bool is_zero_at_diagonal = mat.at(j).coef_at(j).is_zero();
+      CT::unpoison(is_zero_at_diagonal);
+      if(is_zero_at_diagonal) {
+         // Fail if not systematic. New rejection sampling iteration starts.
          return std::nullopt;
       }
 

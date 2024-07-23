@@ -99,6 +99,10 @@ class BOTAN_TEST_API Classic_McEliece_Field_Ordering {
        */
       void permute_with_pivots(const Classic_McEliece_Parameters& params, const CmceColumnSelection& pivots);
 
+      void _const_time_poison() const { CT::poison(m_pi); }
+
+      void _const_time_unpoison() const { CT::unpoison(m_pi); }
+
    private:
       Classic_McEliece_Field_Ordering(CmcePermutation pi, CmceGfMod poly_f) : m_pi(std::move(pi)), m_poly_f(poly_f) {}
 
