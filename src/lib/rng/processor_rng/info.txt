@@ -18,5 +18,7 @@ processor_rng.h
 </header:public>
 
 <isa>
+x86_32:rdrand
+x86_64:rdrand
 ppc64:power9
 </isa>
