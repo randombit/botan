@@ -5,50 +5,39 @@ Development Roadmap
 Near Term Plans
 ----------------------------------------
 
-Here is an outline for the development plans over the next 12-18 months, as of
-June 2019.
+Here is an outline for the development plans over the next 12-24 months,
+as of May 2024.
 
-TLS Hardening/Testing
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Botan 2
+---------------
 
-Leverage TLS-Attacker better, for example using custom workflows. Add
-interop testing with OpenSSL as part of CI. Improve fuzzer coverage.
+Botan 2 is still supported, but no further feature work is planned.
+Only security issues and serious bugs will be addressed.
 
-Expose TLS at FFI layer
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Botan 3
+---------------
 
-Exposing TLS to C would allow for many new applications to make use of Botan.
+The following future work is currently planned for Botan 3:
 
-TLS v1.3
-^^^^^^^^^^^^^^^
+* BSI Project 481 [https://github.com/randombit/botan/issues/3108]
+  will add several new post-quantum algorithms including LMS signatures
+  and Classic McEliece.
 
-A complete implementation of TLS v1.3 is planned. DTLS v1.3 may or may not be
-supported as well.
+* New ECC based password authenticated key exchanges, to replace SRP.
+  The most likely candidate algorithms are CPace and OPAQUE.
 
-Botan 3.x
-----------------------------------------
+* Adding an implementation of BLS12-381 elliptic curve pairing.
 
-Botan 3 is currently planned for release in 2021. Botan 2 will remain
-supported for several years past that, to allow plenty of time for
-applications to switch over.
+* Low level integer math and elliptic curve arithmetic optimizations.
 
-This version will adopt C++17 and use new std types such as string_view,
-optional, and any, along with adopting memory span and guarded integer
-types. All deprecated features/APIs of 2.x (which notably includes TLS v1.0/v1.1
-support) will be removed. Beyond explicitly deprecated functionality, there
-should be no breaking API changes in the transition to 3.x
+Botan 4
+---------------
 
-Features currently targeted for Botan 3 include
+At this time there is no immediate plan for a new major version. When it occurs,
+it will remove functionality currently marked as deprecated, and adopt a new C++
+version. This is unlikely to occur before 2027, at the earliest.
 
-* New post-quantum algorithms: especially a CCA2 secure encryption scheme and a
-  lattice-based signature scheme are of interest.
-
-* Password Authenticated Key Exchanges: one or more modern PAKEs
-  (such as SPAKE2+ or OPAQUE) to replace SRP.
-
-* Elliptic Curve Pairings: useful in many interesting protocols.
-  BN-256 and BLS12-381 seem the most likely.
-
-* New ASN.1 library
-
-Some of these features may end being backported to Botan 2 as well.
+One major change already planned for Botan 4 is that in this release, Public_Key
+will no longer derive from Private_Key. And similarly, specific private keys
+(for example RSA_PrivateKey) will no longer derive from their corresponding
+public key type.
