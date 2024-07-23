@@ -55,11 +55,15 @@ struct first_type {
 };
 
 // get the first type from a parameter pack
+// TODO: C++26 will bring Parameter Pack indexing:
+//       using first_t = Ts...[0];
 template <typename... Ts>
    requires(sizeof...(Ts) > 0)
 using first_t = typename first_type<Ts...>::type;
 
 // get the first object from a parameter pack
+// TODO: C++26 will bring Parameter Pack indexing:
+//       auto first = s...[0];
 template <typename T0, typename... Ts>
 constexpr static first_t<T0, Ts...> first(T0&& t, Ts&&...) {
    return std::forward<T0>(t);
@@ -746,6 +750,48 @@ class bitvector_base final {
          return wrap_strong_type<OutT>(out);
       }
 
+      /**
+       * Replaces a subvector of bits with the bits of another bitvector @p value
+       * starting at bit @p pos. The number of bits to replace is determined by
+       * the size of @p value.
+       *
+       * @note This is currently supported for byte-aligned @p pos only.
+       *
+       * @throws Not_Implemented when called with @p pos not divisible by 8.
+       *
+       * @param pos    the position to start replacing bits
+       * @param value  the bitvector to copy bits from
+       */
+      template <typename InT>
+         requires(std::unsigned_integral<strong_type_wrapped_type<InT>> && !std::same_as<bool, InT>)
+      void subvector_replace(size_type pos, InT value) {
+         using in_t = strong_type_wrapped_type<InT>;
+         constexpr size_t bits = sizeof(in_t) * 8;
+         BOTAN_ARG_CHECK(pos + bits <= size(), "Not enough bits to replace");
+
+         if(pos % 8 == 0) {
+            store_le(std::span{m_blocks}.subspan(block_index(pos)).template first<sizeof(in_t)>(),
+                     unwrap_strong_type(value));
+         } else {
+            BitRangeOperator<bitvector_base<AllocatorT>, BitRangeAlignment::no_alignment> op(*this, pos, bits);
+            range_operation(
+               [&]<std::unsigned_integral BlockT>(BlockT block) -> BlockT {
+                  if constexpr(std::same_as<in_t, BlockT>) {
+                     return unwrap_strong_type(value);
+                  } else {
+                     // This should never be reached. BOTAN_ASSERT_UNREACHABLE()
+                     // caused warning "unreachable code" on MSVC, though. You
+                     // don't say!
+                     //
+                     // Returning the given block back, is the most reasonable
+                     // thing to do in this case, though.
+                     return block;
+                  }
+               },
+               op);
+         }
+      }
+
       /// @}
 
       /// @name Operators
@@ -889,11 +935,18 @@ class bitvector_base final {
          private:
             constexpr static bool is_const() { return std::is_const_v<BitvectorT>; }
 
+            struct UnalignedDataHelper {
+                  const uint8_t padding_bits;
+                  const uint8_t bits_to_byte_alignment;
+            };
+
          public:
             BitRangeOperator(BitvectorT& source, size_type start_bitoffset, size_type bitlength) :
                   m_source(source),
                   m_start_bitoffset(start_bitoffset),
                   m_bitlength(bitlength),
+                  m_unaligned_helper({.padding_bits = static_cast<uint8_t>(start_bitoffset % 8),
+                                      .bits_to_byte_alignment = static_cast<uint8_t>(8 - (start_bitoffset % 8))}),
                   m_read_bitpos(start_bitoffset),
                   m_write_bitpos(start_bitoffset) {
                BOTAN_ASSERT(is_byte_aligned() == (m_start_bitoffset % 8 == 0), "byte alignment guarantee");
@@ -935,22 +988,18 @@ class bitvector_base final {
                   result_block = load_le(m_source.as_byte_span().subspan(read_bytepos()).template first<block_size>());
                } else {
                   const size_type byte_pos = read_bytepos();
+                  const size_type bits_to_collect = std::min(block_bits, bits_to_read());
 
-                  const size_type bits_to_ignore_in_carry = m_start_bitoffset % 8;
-                  const size_type bits_in_carry = 8 - bits_to_ignore_in_carry;
-                  const size_type bits_to_collect =
-                     std::min(block_bits, m_start_bitoffset + m_bitlength - m_read_bitpos);
+                  const uint8_t first_byte = m_source.as_byte_span()[byte_pos];
 
-                  const uint8_t carry = m_source.as_byte_span()[byte_pos];
-
-                  // Initialize the left-most bits with the carry.
-                  result_block = BlockT(carry) >> bits_to_ignore_in_carry;
+                  // Initialize the left-most bits from the first byte.
+                  result_block = BlockT(first_byte) >> m_unaligned_helper.padding_bits;
 
                   // If more bits are needed, we pull them from the remaining bytes.
-                  if(bits_in_carry < bits_to_collect) {
+                  if(m_unaligned_helper.bits_to_byte_alignment < bits_to_collect) {
                      const BlockT block =
                         load_le(m_source.as_byte_span().subspan(byte_pos + 1).template first<block_size>());
-                     result_block |= block << bits_in_carry;
+                     result_block |= block << m_unaligned_helper.bits_to_byte_alignment;
                   }
                }
 
@@ -973,10 +1022,28 @@ class bitvector_base final {
                if constexpr(is_byte_aligned()) {
                   auto sink = m_source.as_byte_span().subspan(write_bytepos()).template first<block_size>();
                   store_le(sink, block);
-                  m_write_bitpos += std::min(block_bits, bits_to_write());
                } else {
-                  throw Not_Implemented("Storing out-of-alignment blocks is NYI");
+                  const size_type byte_pos = write_bytepos();
+                  const size_type bits_to_store = std::min(block_bits, bits_to_write());
+
+                  uint8_t& first_byte = m_source.as_byte_span()[byte_pos];
+
+                  // Set the left-most bits in the first byte, leaving all others unchanged
+                  first_byte = (first_byte & uint8_t(0xFF >> m_unaligned_helper.bits_to_byte_alignment)) |
+                               uint8_t(block << m_unaligned_helper.padding_bits);
+
+                  // If more bits are provided, we store them in the remaining bytes.
+                  if(m_unaligned_helper.bits_to_byte_alignment < bits_to_store) {
+                     const auto remaining_bytes =
+                        m_source.as_byte_span().subspan(byte_pos + 1).template first<block_size>();
+                     const BlockT padding_mask = ~(BlockT(-1) >> m_unaligned_helper.bits_to_byte_alignment);
+                     const BlockT new_bytes =
+                        (load_le(remaining_bytes) & padding_mask) | block >> m_unaligned_helper.bits_to_byte_alignment;
+                     store_le(remaining_bytes, new_bytes);
+                  }
                }
+
+               m_write_bitpos += std::min(block_bits, bits_to_write());
             }
 
             template <std::unsigned_integral BlockT>
@@ -1029,6 +1096,8 @@ class bitvector_base final {
             BitvectorT& m_source;
             size_type m_start_bitoffset;
             size_type m_bitlength;
+
+            UnalignedDataHelper m_unaligned_helper;
 
             mutable size_type m_read_bitpos;
             mutable size_type m_write_bitpos;
@@ -1314,6 +1383,12 @@ class Strong_Adapter<T> : public Container_Strong_Adapter_Base<T> {
                   !std::same_as<bool, strong_type_wrapped_type<OutT>>)
       auto subvector(size_type pos) const {
          return this->get().template subvector<OutT>(pos);
+      }
+
+      template <typename InT>
+         requires(std::unsigned_integral<strong_type_wrapped_type<InT>> && !std::same_as<bool, InT>)
+      void subvector_replace(size_type pos, InT value) {
+         return this->get().subvector_replace(pos, value);
       }
 
       auto push_back(bool b) { return this->get().push_back(b); }
