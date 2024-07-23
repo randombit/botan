@@ -269,13 +269,25 @@ std::vector<Test::Result> test_bitvector_capacity() {
 }
 
 std::vector<Test::Result> test_bitvector_subvector() {
-   auto make_bitpattern = [](auto& bitvector) {
-      for(size_t i = 0; i < bitvector.size(); ++i) {
-         bitvector[i] = (i % 3);
+   auto make_bitpattern = []<typename T>(T& bitvector, size_t pattern_offset = 0) {
+      if constexpr(std::unsigned_integral<T>) {
+         for(size_t i = pattern_offset; i - pattern_offset < sizeof(T) * 8; ++i) {
+            bitvector |= static_cast<T>(i % 3 != 0) << (i - pattern_offset);
+         }
+      } else {
+         for(size_t i = pattern_offset; i - pattern_offset < bitvector.size(); ++i) {
+            bitvector[i - pattern_offset] = (i % 3);
+         }
       }
    };
 
-   auto check_bitpattern = [](auto& result, auto& bitvector, size_t offset) {
+   auto bitpattern_at = [&]<std::unsigned_integral T>(T /* ignored */, size_t pattern_offset) -> T {
+      T bitvector = 0;
+      make_bitpattern(bitvector, pattern_offset);
+      return bitvector;
+   };
+
+   auto check_bitpattern = [](auto& result, auto& bitvector, size_t offset = 0) {
       using bv_t = std::remove_cvref_t<decltype(bitvector)>;
       if constexpr(std::unsigned_integral<bv_t>) {
          for(size_t i = 0; i < sizeof(bv_t) * 8; ++i) {
@@ -287,6 +299,14 @@ std::vector<Test::Result> test_bitvector_subvector() {
             const bool expected = ((i + offset) % 3);
             result.confirm(Botan::fmt("{} is as expected", i), bitvector[i], expected);
          }
+      }
+   };
+
+   auto check_bitpattern_with_zero_region = [](auto& result, auto& bitvector, std::pair<size_t, size_t> zero_region) {
+      for(size_t i = 0; i < bitvector.size(); ++i) {
+         const bool i_in_range = (zero_region.first <= i && i < zero_region.second);
+         const bool expected = !i_in_range && (i % 3);
+         result.confirm(Botan::fmt("{} is as expected", i), bitvector[i], expected);
       }
    };
 
@@ -455,6 +475,83 @@ std::vector<Test::Result> test_bitvector_subvector() {
                const auto u64_36 = bv1.subvector<uint64_t>(36);
                check_bitpattern(result, u64_21, 21);
                check_bitpattern(result, u64_36, 36);
+            }),
+
+      CHECK("byte-aligned unsigned integer subvector replacement",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               make_bitpattern(bv1);
+
+               bv1.subvector_replace(0, uint8_t(0));
+               check_bitpattern_with_zero_region(result, bv1, {0, 8});
+               bv1.subvector_replace(0, bitpattern_at(uint8_t(0), 0));
+               check_bitpattern(result, bv1);
+
+               bv1.subvector_replace(32, uint8_t(0));
+               check_bitpattern_with_zero_region(result, bv1, {32, 32 + 8});
+               bv1.subvector_replace(32, bitpattern_at(uint8_t(0), 32));
+               check_bitpattern(result, bv1);
+
+               bv1.subvector_replace(56, uint16_t(0));
+               check_bitpattern_with_zero_region(result, bv1, {56, 56 + 16});
+               bv1.subvector_replace(56, bitpattern_at(uint16_t(0), 56));
+               check_bitpattern(result, bv1);
+
+               bv1.subvector_replace(48, uint32_t(0));
+               check_bitpattern_with_zero_region(result, bv1, {48, 48 + 32});
+               bv1.subvector_replace(48, bitpattern_at(uint32_t(0), 48));
+               check_bitpattern(result, bv1);
+
+               bv1.subvector_replace(16, uint64_t(0));
+               check_bitpattern_with_zero_region(result, bv1, {16, 16 + 64});
+               bv1.subvector_replace(16, bitpattern_at(uint64_t(0), 16));
+               check_bitpattern(result, bv1);
+
+               result.test_throws("out of range (uint8_t)", [&] { bv1.subvector_replace<uint8_t>(93, 42); });
+               result.test_throws("out of range (uint16_t)", [&] { bv1.subvector_replace<uint16_t>(85, 42); });
+               result.test_throws("out of range (uint32_t)", [&] { bv1.subvector_replace<uint32_t>(69, 42); });
+               result.test_throws("out of range (uint64_t)", [&] { bv1.subvector_replace<uint64_t>(37, 42); });
+            }),
+
+      CHECK("unaligned unsigned integer subvector replacement",
+            [&](auto& result) {
+               Botan::bitvector bv1(100);
+               make_bitpattern(bv1);
+
+               bv1.subvector_replace(3, uint8_t(0));
+               check_bitpattern_with_zero_region(result, bv1, {3, 3 + 8});
+               bv1.subvector_replace(3, bitpattern_at(uint8_t(0), 3));
+               check_bitpattern(result, bv1);
+
+               bv1.subvector_replace(92, uint8_t(0));
+               check_bitpattern_with_zero_region(result, bv1, {92, 92 + 8});
+               bv1.subvector_replace(92, bitpattern_at(uint8_t(0), 92));
+               check_bitpattern(result, bv1);
+
+               bv1.subvector_replace(7, uint16_t(0));
+               check_bitpattern_with_zero_region(result, bv1, {7, 7 + 16});
+               bv1.subvector_replace(7, bitpattern_at(uint16_t(0), 7));
+               check_bitpattern(result, bv1);
+
+               bv1.subvector_replace(84, uint16_t(0));
+               check_bitpattern_with_zero_region(result, bv1, {84, 84 + 16});
+               bv1.subvector_replace(84, bitpattern_at(uint16_t(0), 84));
+               check_bitpattern(result, bv1);
+
+               bv1.subvector_replace(11, uint32_t(0));
+               check_bitpattern_with_zero_region(result, bv1, {11, 11 + 32});
+               bv1.subvector_replace(11, bitpattern_at(uint32_t(0), 11));
+               check_bitpattern(result, bv1);
+
+               bv1.subvector_replace(68, uint32_t(0));
+               check_bitpattern_with_zero_region(result, bv1, {68, 68 + 32});
+               bv1.subvector_replace(68, bitpattern_at(uint32_t(0), 68));
+               check_bitpattern(result, bv1);
+
+               bv1.subvector_replace(21, uint64_t(0));
+               check_bitpattern_with_zero_region(result, bv1, {21, 21 + 64});
+               bv1.subvector_replace(21, bitpattern_at(uint64_t(0), 21));
+               check_bitpattern(result, bv1);
             }),
    };
 }
