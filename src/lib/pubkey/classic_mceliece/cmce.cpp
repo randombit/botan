@@ -14,6 +14,7 @@
 #include <botan/internal/cmce_field_ordering.h>
 #include <botan/internal/cmce_keys_internal.h>
 #include <botan/internal/cmce_matrix.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/pk_ops_impl.h>
 
 #include <algorithm>
@@ -87,12 +88,18 @@ std::unique_ptr<PK_Ops::KEM_Encryption> Classic_McEliece_PublicKey::create_kem_e
 Classic_McEliece_PrivateKey::Classic_McEliece_PrivateKey(RandomNumberGenerator& rng,
                                                          Classic_McEliece_Parameter_Set param_set) {
    auto params = Classic_McEliece_Parameters::create(param_set);
-   auto seed = rng.random_vec<CmceInitialSeed>(params.seed_len());
+   const auto seed = rng.random_vec<CmceInitialSeed>(params.seed_len());
+   CT::poison(seed);
    std::tie(m_private, m_public) = Classic_McEliece_KeyPair_Internal::generate(params, seed).decompose_to_pair();
+
+   BOTAN_ASSERT_NONNULL(m_private);
+   BOTAN_ASSERT_NONNULL(m_public);
+   CT::unpoison_all(*m_private, *m_public);
 }
 
 Classic_McEliece_PrivateKey::Classic_McEliece_PrivateKey(std::span<const uint8_t> sk,
                                                          Classic_McEliece_Parameter_Set param_set) {
+   auto scope = CT::scoped_poison(sk);
    auto params = Classic_McEliece_Parameters::create(param_set);
    auto sk_internal = Classic_McEliece_PrivateKeyInternal::from_bytes(params, sk);
    m_private = std::make_shared<Classic_McEliece_PrivateKeyInternal>(std::move(sk_internal));
@@ -100,6 +107,7 @@ Classic_McEliece_PrivateKey::Classic_McEliece_PrivateKey(std::span<const uint8_t
    // it on demand (since one may use the private key only for decapsulation without needing the public key).
    // TODO: consider building a load-on-demand mechanism for the public key
    m_public = Classic_McEliece_PublicKeyInternal::create_from_private_key(*m_private);
+   CT::unpoison_all(*m_public, *m_private);
 }
 
 Classic_McEliece_PrivateKey::Classic_McEliece_PrivateKey(const AlgorithmIdentifier& alg_id,

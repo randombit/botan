@@ -127,6 +127,8 @@ void Classic_McEliece_Decryptor::raw_kem_decrypt(std::span<uint8_t> out_shared_k
    BOTAN_ARG_CHECK(out_shared_key.size() == m_key->params().hash_out_bytes(), "Invalid shared key output size");
    BOTAN_ARG_CHECK(encapsulated_key.size() == m_key->params().ciphertext_size(), "Invalid ciphertext size");
 
+   auto scope = CT::scoped_poison(*m_key);
+
    auto [ct, c1] = [&]() -> std::pair<CmceCodeWord, std::span<const uint8_t>> {
       if(m_key->params().is_pc()) {
          BufferSlicer encaps_key_slicer(encapsulated_key);
@@ -160,6 +162,7 @@ void Classic_McEliece_Decryptor::raw_kem_decrypt(std::span<uint8_t> out_shared_k
    hash_func->update(e_bytes);
    hash_func->update(encapsulated_key);
    hash_func->final(out_shared_key);
+   CT::unpoison(out_shared_key);
 }
 
 }  // namespace Botan

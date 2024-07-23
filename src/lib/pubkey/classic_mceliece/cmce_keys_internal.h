@@ -67,6 +67,8 @@ class BOTAN_TEST_API Classic_McEliece_PublicKeyInternal {
        */
       const Classic_McEliece_Parameters& params() const { return m_params; }
 
+      constexpr void _const_time_unpoison() const { CT::unpoison(m_matrix); }
+
    private:
       Classic_McEliece_Parameters m_params;
       Classic_McEliece_Matrix m_matrix;
@@ -167,6 +169,10 @@ class BOTAN_TEST_API Classic_McEliece_PrivateKeyInternal {
        * See NIST Impl. guide 6.3 Double-Checks on Private Keys.
        */
       bool check_key() const;
+
+      constexpr void _const_time_poison() const { CT::poison_all(m_delta, m_c, m_g, m_field_ordering, m_s); }
+
+      constexpr void _const_time_unpoison() const { CT::unpoison_all(m_delta, m_c, m_g, m_field_ordering, m_s); }
 
    private:
       Classic_McEliece_Parameters m_params;

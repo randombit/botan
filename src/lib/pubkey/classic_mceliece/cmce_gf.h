@@ -86,7 +86,7 @@ class BOTAN_TEST_API Classic_McEliece_GF {
        * @brief Divide the element by @p other in GF(q). Constant time.
        */
       Classic_McEliece_GF operator/(Classic_McEliece_GF other) const {
-         BOTAN_ASSERT_NOMSG(m_modulus == other.m_modulus);
+         BOTAN_DEBUG_ASSERT(m_modulus == other.m_modulus);
          return *this * other.inv();
       }
 
@@ -94,7 +94,7 @@ class BOTAN_TEST_API Classic_McEliece_GF {
        * @brief Add @p other to the element. Constant time.
        */
       Classic_McEliece_GF operator+(Classic_McEliece_GF other) const {
-         BOTAN_ASSERT_NOMSG(m_modulus == other.m_modulus);
+         BOTAN_DEBUG_ASSERT(m_modulus == other.m_modulus);
          return Classic_McEliece_GF(m_elem ^ other.m_elem, m_modulus);
       }
 
@@ -102,7 +102,7 @@ class BOTAN_TEST_API Classic_McEliece_GF {
        * @brief Add @p other to the element. Constant time.
        */
       Classic_McEliece_GF& operator+=(Classic_McEliece_GF other) {
-         BOTAN_ASSERT_NOMSG(m_modulus == other.m_modulus);
+         BOTAN_DEBUG_ASSERT(m_modulus == other.m_modulus);
          m_elem ^= other.m_elem;
          return *this;
       }
@@ -119,7 +119,7 @@ class BOTAN_TEST_API Classic_McEliece_GF {
        * @brief Multiply the element by @p other in GF(q). Constant time.
        */
       Classic_McEliece_GF& operator*=(Classic_McEliece_GF other) {
-         BOTAN_ASSERT_NOMSG(m_modulus == other.m_modulus);
+         BOTAN_DEBUG_ASSERT(m_modulus == other.m_modulus);
          *this = *this * other;
          return *this;
       }

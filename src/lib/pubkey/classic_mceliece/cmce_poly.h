@@ -65,6 +65,10 @@ class BOTAN_TEST_API Classic_McEliece_Polynomial {
        */
       size_t degree() const { return m_coef.size() + 1; }
 
+      void _const_time_poison() const { CT::poison(m_coef); }
+
+      void _const_time_unpoison() const { CT::unpoison(m_coef); }
+
    private:
       std::vector<Classic_McEliece_GF> m_coef;
 };

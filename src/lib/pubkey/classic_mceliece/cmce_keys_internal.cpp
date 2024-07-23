@@ -136,9 +136,13 @@ std::shared_ptr<Classic_McEliece_PublicKeyInternal> Classic_McEliece_PublicKeyIn
       throw Decoding_Error("Cannot create public key from private key. Private key is invalid.");
    }
    auto& [pk_matrix, pivot] = pk_matrix_and_pivot.value();
-   if(!pivot.subvector(0, pivot.size() / 2).all() || !pivot.subvector(pivot.size() / 2).none()) {
-      // There should not be a pivot other than 0xff ff ff ff 00 00 00 00. Otherwise
-      // the gauss algorithm failed effectively.
+
+   // There should not be a pivot other than 0xff ff ff ff 00 00 00 00.
+   // Otherwise the gauss algorithm failed effectively.
+   const auto pivot_is_valid = (CT::Mask<uint8_t>::expand(pivot.subvector(0, pivot.size() / 2).all()) &
+                                CT::Mask<uint8_t>::expand(pivot.subvector(pivot.size() / 2).none()))
+                                  .as_choice();
+   if(!pivot_is_valid.as_bool()) {
       throw Decoding_Error("Cannot create public key from private key. Private key is invalid.");
    }
 

@@ -104,6 +104,8 @@ class BOTAN_TEST_API Classic_McEliece_Matrix {
        */
       CmceCodeWord mul(const Classic_McEliece_Parameters& params, const CmceErrorVector& e) const;
 
+      constexpr void _const_time_unpoison() const { CT::unpoison(m_mat_bytes); }
+
    private:
       /// The bytes of the submatrix T
       const std::vector<uint8_t> m_mat_bytes;  // can we use bitvector?
