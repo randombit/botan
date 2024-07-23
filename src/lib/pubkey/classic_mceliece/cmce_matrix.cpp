@@ -25,12 +25,6 @@ using CmceMatrix = Strong<std::vector<CmceMatrixRow>, struct CmceMatrix_>;
 }  // Anonymous namespace
 
 namespace {
-// TODO: This is only a (slow) crook. Impement a bitvector method for this.
-void bit_vector_insert_at(secure_bitvector& bv, size_t pos, uint64_t val) {
-   for(size_t i = 0; i < sizeof(uint64_t) * 8; ++i) {
-      bv[pos + i] = (val >> i) & 1;
-   }
-}
 
 CT::Mask<uint64_t> bit_at_mask(uint64_t val, size_t pos) {
    return CT::Mask<uint64_t>::expand((val >> pos) & 1);
@@ -174,7 +168,7 @@ std::optional<CmceColumnSelection> move_columns(CmceMatrix& mat, const Classic_M
 
    // Reinsert the swapped columns into the matrix
    for(size_t row = 0; row < params.pk_no_rows(); ++row) {
-      bit_vector_insert_at(mat[row].get(), pos_offset, matrix_swap_area[row]);
+      mat[row].subvector_replace(pos_offset, matrix_swap_area[row]);
    }
 
    return pivots;
