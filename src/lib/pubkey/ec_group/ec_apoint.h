@@ -28,7 +28,14 @@ class EC_AffinePoint_Data;
 
 class BOTAN_UNSTABLE_API EC_AffinePoint final {
    public:
+      /// Point deserialization. Throws if wrong length or not a valid point
+      ///
+      /// This accepts SEC1 compressed or uncompressed formats
+      EC_AffinePoint(const EC_Group& group, std::span<const uint8_t> bytes);
+
       /// Point deserialization. Returns nullopt if wrong length or not a valid point
+      ///
+      /// This accepts SEC1 compressed or uncompressed formats
       static std::optional<EC_AffinePoint> deserialize(const EC_Group& group, std::span<const uint8_t> bytes);
 
       /// Multiply by the group generator returning a complete point
@@ -132,8 +139,6 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
 
       EC_AffinePoint& operator=(const EC_AffinePoint& other);
       EC_AffinePoint& operator=(EC_AffinePoint&& other) noexcept;
-
-      EC_AffinePoint(const EC_Group& group, std::span<const uint8_t> bytes);
 
       /**
       * Deprecated conversion

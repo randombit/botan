@@ -14,6 +14,7 @@
 #include <botan/ec_point.h>
 #include <botan/numthry.h>
 #include <botan/secmem.h>
+#include <botan/internal/ec_key_data.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/workfactor.h>
 
@@ -29,7 +30,7 @@ size_t EC_PublicKey::estimated_strength() const {
 
 namespace {
 
-EC_Group_Encoding default_encoding_for(EC_Group& group) {
+EC_Group_Encoding default_encoding_for(const EC_Group& group) {
    if(group.get_curve_oid().empty()) {
       return EC_Group_Encoding::Explicit;
    } else {
@@ -39,16 +40,39 @@ EC_Group_Encoding default_encoding_for(EC_Group& group) {
 
 }  // namespace
 
-EC_PublicKey::EC_PublicKey(const EC_Group& dom_par, const EC_Point& pub_point) :
-      m_domain_params(dom_par), m_public_key(pub_point), m_domain_encoding(default_encoding_for(m_domain_params)) {}
+EC_PublicKey::EC_PublicKey(EC_Group group, const EC_Point& pub_point) {
+   auto pt = EC_AffinePoint(group, pub_point);
+   m_public_key = std::make_shared<const EC_PublicKey_Data>(std::move(group), std::move(pt));
+   m_domain_encoding = default_encoding_for(domain());
+}
 
-EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
-      m_domain_params{EC_Group(alg_id.parameters())},
-      m_public_key{domain().OS2ECP(key_bits)},
-      m_domain_encoding(default_encoding_for(m_domain_params)) {}
+EC_PublicKey::EC_PublicKey(EC_Group group, EC_AffinePoint pub_point) {
+   m_public_key = std::make_shared<const EC_PublicKey_Data>(std::move(group), std::move(pub_point));
+   m_domain_encoding = default_encoding_for(domain());
+}
+
+EC_PublicKey::EC_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) {
+   m_public_key = std::make_shared<const EC_PublicKey_Data>(EC_Group(alg_id.parameters()), key_bits);
+   m_domain_encoding = default_encoding_for(domain());
+}
+
+const EC_Group& EC_PublicKey::domain() const {
+   BOTAN_STATE_CHECK(m_public_key != nullptr);
+   return m_public_key->group();
+}
+
+const EC_Point& EC_PublicKey::public_point() const {
+   BOTAN_STATE_CHECK(m_public_key != nullptr);
+   return m_public_key->legacy_point();
+}
+
+const EC_AffinePoint& EC_PublicKey::_public_key() const {
+   BOTAN_STATE_CHECK(m_public_key != nullptr);
+   return m_public_key->public_key();
+}
 
 bool EC_PublicKey::check_key(RandomNumberGenerator& rng, bool /*strong*/) const {
-   return m_domain_params.verify_group(rng) && m_domain_params.verify_public_element(public_point());
+   return domain().verify_group(rng) && domain().verify_public_element(public_point());
 }
 
 AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const {
@@ -76,7 +100,7 @@ void EC_PublicKey::set_point_encoding(EC_Point_Format enc) {
 }
 
 void EC_PublicKey::set_parameter_encoding(EC_Group_Encoding form) {
-   if(form == EC_Group_Encoding::NamedCurve && m_domain_params.get_curve_oid().empty()) {
+   if(form == EC_Group_Encoding::NamedCurve && domain().get_curve_oid().empty()) {
       throw Invalid_Argument("Cannot used NamedCurve encoding for a curve without an OID");
    }
 
@@ -84,53 +108,58 @@ void EC_PublicKey::set_parameter_encoding(EC_Group_Encoding form) {
 }
 
 const BigInt& EC_PrivateKey::private_value() const {
-   if(m_private_key == 0) {
-      throw Invalid_State("EC_PrivateKey::private_value - uninitialized");
-   }
+   BOTAN_STATE_CHECK(m_private_key != nullptr);
+   return m_private_key->legacy_bigint();
+}
 
-   return m_private_key;
+const EC_Scalar& EC_PrivateKey::_private_key() const {
+   BOTAN_STATE_CHECK(m_private_key != nullptr);
+   return m_private_key->private_key();
 }
 
 /**
 * EC_PrivateKey constructor
 */
 EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng,
-                             const EC_Group& ec_group,
+                             EC_Group ec_group,
                              const BigInt& x,
                              bool with_modular_inverse) {
-   m_domain_params = ec_group;
-   m_domain_encoding = default_encoding_for(m_domain_params);
-
    if(x == 0) {
-      m_private_key = ec_group.random_scalar(rng);
+      m_private_key = std::make_shared<EC_PrivateKey_Data>(std::move(ec_group), rng);
    } else {
-      BOTAN_ARG_CHECK(x > 0 && x < ec_group.get_order(), "ECC private key out of range");
-      m_private_key = x;
+      m_private_key = std::make_shared<EC_PrivateKey_Data>(std::move(ec_group), x);
    }
 
-   std::vector<BigInt> ws;
+   m_public_key = m_private_key->public_key(rng, with_modular_inverse);
+   m_domain_encoding = default_encoding_for(domain());
+}
 
-   if(with_modular_inverse) {
-      // ECKCDSA
-      m_public_key = domain().blinded_base_point_multiply(m_domain_params.inverse_mod_order(m_private_key), rng, ws);
-   } else {
-      m_public_key = domain().blinded_base_point_multiply(m_private_key, rng, ws);
-   }
+EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng, EC_Group ec_group, bool with_modular_inverse) {
+   m_private_key = std::make_shared<EC_PrivateKey_Data>(std::move(ec_group), rng);
+   m_public_key = m_private_key->public_key(rng, with_modular_inverse);
+   m_domain_encoding = default_encoding_for(domain());
+}
 
-   BOTAN_ASSERT(m_public_key.on_the_curve(), "Generated public key point was on the curve");
+EC_PrivateKey::EC_PrivateKey(EC_Group ec_group, EC_Scalar x, bool with_modular_inverse) {
+   m_private_key = std::make_shared<EC_PrivateKey_Data>(std::move(ec_group), std::move(x));
+   m_public_key = m_private_key->public_key(with_modular_inverse);
+   m_domain_encoding = default_encoding_for(domain());
 }
 
 secure_vector<uint8_t> EC_PrivateKey::raw_private_key_bits() const {
-   return m_private_key.serialize<secure_vector<uint8_t>>(domain().get_order_bytes());
+   BOTAN_STATE_CHECK(m_private_key != nullptr);
+   return m_private_key->serialize<secure_vector<uint8_t>>();
 }
 
 secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const {
+   BOTAN_STATE_CHECK(m_private_key != nullptr && m_public_key != nullptr);
+
    return DER_Encoder()
       .start_sequence()
       .encode(static_cast<size_t>(1))
       .encode(raw_private_key_bits(), ASN1_Type::OctetString)
       .start_explicit_context_specific(1)
-      .encode(m_public_key.encode(EC_Point_Format::Uncompressed), ASN1_Type::BitString)
+      .encode(m_public_key->public_key().serialize_uncompressed(), ASN1_Type::BitString)
       .end_cons()
       .end_cons()
       .get_contents();
@@ -139,41 +168,33 @@ secure_vector<uint8_t> EC_PrivateKey::private_key_bits() const {
 EC_PrivateKey::EC_PrivateKey(const AlgorithmIdentifier& alg_id,
                              std::span<const uint8_t> key_bits,
                              bool with_modular_inverse) {
-   m_domain_params = EC_Group(alg_id.parameters());
-   m_domain_encoding = default_encoding_for(m_domain_params);
+   EC_Group group(alg_id.parameters());
 
    OID key_parameters;
+   secure_vector<uint8_t> private_key_bits;
    secure_vector<uint8_t> public_key_bits;
 
    BER_Decoder(key_bits)
       .start_sequence()
       .decode_and_check<size_t>(1, "Unknown version code for ECC key")
-      .decode_octet_string_bigint(m_private_key)
+      .decode(private_key_bits, ASN1_Type::OctetString)
       .decode_optional(key_parameters, ASN1_Type(0), ASN1_Class::ExplicitContextSpecific)
       .decode_optional_string(public_key_bits, ASN1_Type::BitString, 1, ASN1_Class::ExplicitContextSpecific)
       .end_cons();
 
-   if(m_private_key < 1 || m_private_key >= m_domain_params.get_order()) {
-      throw Decoding_Error("Invalid EC private key");
-   }
+   m_private_key = std::make_shared<EC_PrivateKey_Data>(group, private_key_bits);
 
    if(public_key_bits.empty()) {
-      if(with_modular_inverse) {
-         // ECKCDSA
-         m_public_key = domain().get_base_point() * m_domain_params.inverse_mod_order(m_private_key);
-      } else {
-         m_public_key = domain().get_base_point() * m_private_key;
-      }
-
-      BOTAN_ASSERT(m_public_key.on_the_curve(), "Public point derived from loaded key was on the curve");
+      m_public_key = m_private_key->public_key(with_modular_inverse);
    } else {
-      m_public_key = domain().OS2ECP(public_key_bits);
-      // OS2ECP verifies that the point is on the curve
+      m_public_key = std::make_shared<EC_PublicKey_Data>(group, public_key_bits);
    }
+
+   m_domain_encoding = default_encoding_for(domain());
 }
 
 bool EC_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
-   if(m_private_key < 1 || m_private_key >= m_domain_params.get_order()) {
+   if(!m_private_key) {
       return false;
    }
 

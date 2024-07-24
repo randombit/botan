@@ -37,9 +37,7 @@ namespace {
 class ECGDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    public:
       ECGDSA_Signature_Operation(const ECGDSA_PrivateKey& ecgdsa, std::string_view emsa) :
-            PK_Ops::Signature_with_Hash(emsa),
-            m_group(ecgdsa.domain()),
-            m_x(EC_Scalar::from_bigint(m_group, ecgdsa.private_value())) {}
+            PK_Ops::Signature_with_Hash(emsa), m_group(ecgdsa.domain()), m_x(ecgdsa._private_key()) {}
 
       std::vector<uint8_t> raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng) override;
 
@@ -82,14 +80,12 @@ std::vector<uint8_t> ECGDSA_Signature_Operation::raw_sign(std::span<const uint8_
 class ECGDSA_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
       ECGDSA_Verification_Operation(const ECGDSA_PublicKey& ecgdsa, std::string_view padding) :
-            PK_Ops::Verification_with_Hash(padding),
-            m_group(ecgdsa.domain()),
-            m_gy_mul(m_group, ecgdsa.public_point()) {}
+            PK_Ops::Verification_with_Hash(padding), m_group(ecgdsa.domain()), m_gy_mul(ecgdsa._public_key()) {}
 
       ECGDSA_Verification_Operation(const ECGDSA_PublicKey& ecgdsa, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(alg_id, "ECGDSA"),
             m_group(ecgdsa.domain()),
-            m_gy_mul(m_group, ecgdsa.public_point()) {}
+            m_gy_mul(ecgdsa._public_key()) {}
 
       bool verify(std::span<const uint8_t> msg, std::span<const uint8_t> sig) override;
 

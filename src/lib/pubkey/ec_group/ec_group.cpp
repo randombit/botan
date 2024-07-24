@@ -745,9 +745,6 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
    return true;
 }
 
-EC_Group::Mul2Table::Mul2Table(const EC_Group& group, const EC_Point& h) :
-      EC_Group::Mul2Table(EC_AffinePoint(group, h)) {}
-
 EC_Group::Mul2Table::Mul2Table(const EC_AffinePoint& h) : m_tbl(h._group()->make_mul2_table(h._inner())) {}
 
 EC_Group::Mul2Table::~Mul2Table() = default;

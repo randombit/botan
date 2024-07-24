@@ -38,11 +38,11 @@ class RFC6979_KAT_Tests final : public Text_Based_Test {
 
          result.test_eq("vector matches", Botan::generate_rfc6979_nonce(X, Q, H, hash), K);
 
-         Botan::RFC6979_Nonce_Generator gen(hash, Q, X);
+         Botan::RFC6979_Nonce_Generator gen(hash, Q.bits(), X);
 
-         result.test_eq("vector matches", gen.nonce_for(H), K);
-         result.test_ne("different output for H+1", gen.nonce_for(H + 1), K);
-         result.test_eq("vector matches when run again", gen.nonce_for(H), K);
+         result.test_eq("vector matches", gen.nonce_for(Q, H), K);
+         result.test_ne("different output for H+1", gen.nonce_for(Q, H + 1), K);
+         result.test_eq("vector matches when run again", gen.nonce_for(Q, H), K);
 
          return result;
       }

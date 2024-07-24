@@ -122,12 +122,12 @@ class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
       ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa, std::string_view padding, RandomNumberGenerator& rng) :
             PK_Ops::Signature_with_Hash(padding),
             m_group(ecdsa.domain()),
-            m_x(EC_Scalar::from_bigint(m_group, ecdsa.private_value())),
+            m_x(ecdsa._private_key()),
             m_b(EC_Scalar::random(m_group, rng)),
             m_b_inv(m_b.invert()) {
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
          m_rfc6979 = std::make_unique<RFC6979_Nonce_Generator>(
-            this->rfc6979_hash_function(), m_group.get_order(), ecdsa.private_value());
+            this->rfc6979_hash_function(), m_group.get_order_bits(), ecdsa._private_key());
 #endif
       }
 
@@ -194,12 +194,12 @@ std::vector<uint8_t> ECDSA_Signature_Operation::raw_sign(std::span<const uint8_t
 class ECDSA_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
       ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, std::string_view padding) :
-            PK_Ops::Verification_with_Hash(padding), m_group(ecdsa.domain()), m_gy_mul(m_group, ecdsa.public_point()) {}
+            PK_Ops::Verification_with_Hash(padding), m_group(ecdsa.domain()), m_gy_mul(ecdsa._public_key()) {}
 
       ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(alg_id, "ECDSA", true),
             m_group(ecdsa.domain()),
-            m_gy_mul(m_group, ecdsa.public_point()) {}
+            m_gy_mul(ecdsa._public_key()) {}
 
       bool verify(std::span<const uint8_t> msg, std::span<const uint8_t> sig) override;
 

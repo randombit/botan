@@ -18,3 +18,7 @@ numbertheory
 <header:public>
 ecc_key.h
 </header:public>
+
+<header:internal>
+ec_key_data.h
+</header:internal>

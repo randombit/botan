@@ -230,13 +230,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       class Mul2Table final {
          public:
             /**
-            * Internal transition function
-            *
-            * @warning this will be removed in 3.6.0, NOT COVERED BY SEMVER
-            */
-            Mul2Table(const EC_Group& group, const EC_Point& h);
-
-            /**
             * Create a table for computing g*x + h*y
             */
             Mul2Table(const EC_AffinePoint& h);

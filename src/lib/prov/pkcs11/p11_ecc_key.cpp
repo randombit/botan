@@ -13,16 +13,21 @@
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
 
    #include <botan/ber_dec.h>
+   #include <botan/internal/ec_key_data.h>
    #include <botan/internal/workfactor.h>
 
 namespace Botan::PKCS11 {
+
 namespace {
+
 /// Converts a DER-encoded ANSI X9.62 ECPoint to EC_Point
-EC_Point decode_public_point(const secure_vector<uint8_t>& ec_point_data, const EC_Group& group) {
-   secure_vector<uint8_t> ec_point;
+EC_AffinePoint decode_public_point(const EC_Group& group, std::span<const uint8_t> ec_point_data) {
+   std::vector<uint8_t> ec_point;
    BER_Decoder(ec_point_data).decode(ec_point, ASN1_Type::OctetString);
-   return group.OS2ECP(ec_point);
+   // Throws if invalid
+   return EC_AffinePoint(group, ec_point);
 }
+
 }  // namespace
 
 EC_PublicKeyGenerationProperties::EC_PublicKeyGenerationProperties(const std::vector<uint8_t>& ec_params) :
@@ -38,20 +43,19 @@ EC_PublicKeyImportProperties::EC_PublicKeyImportProperties(const std::vector<uin
 }
 
 PKCS11_EC_PublicKey::PKCS11_EC_PublicKey(Session& session, ObjectHandle handle) : Object(session, handle) {
-   secure_vector<uint8_t> ec_parameters = get_attribute_value(AttributeType::EcParams);
-   m_domain_params = EC_Group(unlock(ec_parameters));
-   m_public_key = decode_public_point(get_attribute_value(AttributeType::EcPoint), m_domain_params);
-   m_domain_encoding = EC_Group_Encoding::NamedCurve;
+   auto ec_parameters = get_attribute_value(AttributeType::EcParams);
+   auto pt_bytes = get_attribute_value(AttributeType::EcPoint);
+
+   EC_Group group(ec_parameters);
+   auto pt = decode_public_point(group, pt_bytes);
+   m_public_key = std::make_shared<EC_PublicKey_Data>(std::move(group), std::move(pt));
 }
 
 PKCS11_EC_PublicKey::PKCS11_EC_PublicKey(Session& session, const EC_PublicKeyImportProperties& props) :
       Object(session, props) {
-   m_domain_params = EC_Group(props.ec_params());
-
-   secure_vector<uint8_t> ec_point;
-   BER_Decoder(props.ec_point()).decode(ec_point, ASN1_Type::OctetString);
-   m_public_key = m_domain_params.OS2ECP(ec_point);
-   m_domain_encoding = EC_Group_Encoding::NamedCurve;
+   EC_Group group(props.ec_params());
+   auto pt = decode_public_point(group, props.ec_point());
+   m_public_key = std::make_shared<EC_PublicKey_Data>(std::move(group), std::move(pt));
 }
 
 EC_PrivateKeyImportProperties::EC_PrivateKeyImportProperties(const std::vector<uint8_t>& ec_params,
@@ -61,8 +65,7 @@ EC_PrivateKeyImportProperties::EC_PrivateKeyImportProperties(const std::vector<u
    add_binary(AttributeType::Value, m_value.serialize());
 }
 
-PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session, ObjectHandle handle) :
-      Object(session, handle), m_domain_params(), m_public_key() {
+PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session, ObjectHandle handle) : Object(session, handle) {
    secure_vector<uint8_t> ec_parameters = get_attribute_value(AttributeType::EcParams);
    m_domain_params = EC_Group(unlock(ec_parameters));
 }
@@ -96,9 +99,10 @@ PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session,
                                        &priv_key_handle);
 
    this->reset_handle(priv_key_handle);
-
    Object public_key(session, pub_key_handle);
-   m_public_key = decode_public_point(public_key.get_attribute_value(AttributeType::EcPoint), m_domain_params);
+
+   auto pt_bytes = public_key.get_attribute_value(AttributeType::EcPoint);
+   m_public_key = decode_public_point(m_domain_params, pt_bytes).to_legacy_point();
 }
 
 size_t PKCS11_EC_PrivateKey::key_length() const {

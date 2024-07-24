@@ -234,8 +234,12 @@ class ECDSA_Invalid_Key_Tests final : public Text_Based_Test {
             return result;
          }
 
-         auto key = std::make_unique<Botan::ECDSA_PublicKey>(group, *public_point);
-         result.test_eq("public key fails check", key->check_key(this->rng(), false), false);
+         try {
+            auto key = std::make_unique<Botan::ECDSA_PublicKey>(group, *public_point);
+            result.test_failure("Invalid public key was deserialized");
+         } catch(Botan::Decoding_Error&) {
+            result.test_success("public key fails to deserialize");
+         }
          return result;
       }
 };

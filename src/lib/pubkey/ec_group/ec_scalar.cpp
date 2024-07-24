@@ -63,6 +63,12 @@ EC_Scalar EC_Scalar::from_bigint(const EC_Group& group, const BigInt& bn) {
    return EC_Scalar(group._data()->scalar_from_bigint(bn));
 }
 
+BigInt EC_Scalar::to_bigint() const {
+   secure_vector<uint8_t> bytes(m_scalar->bytes());
+   m_scalar->serialize_to(bytes);
+   return BigInt::from_bytes(bytes);
+}
+
 EC_Scalar EC_Scalar::gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws) {
    const auto& group = scalar._inner().group();
    return EC_Scalar(group->gk_x_mod_order(scalar.inner(), rng, ws));
@@ -103,6 +109,13 @@ std::optional<EC_Scalar> EC_Scalar::deserialize(const EC_Group& group, std::span
       return EC_Scalar(std::move(v));
    } else {
       return {};
+   }
+}
+
+EC_Scalar::EC_Scalar(const EC_Group& group, std::span<const uint8_t> bytes) {
+   m_scalar = group._data()->scalar_deserialize(bytes);
+   if(!m_scalar) {
+      throw Decoding_Error("EC_Scalar::from_bytes is not a valid scalar value");
    }
 }
 
