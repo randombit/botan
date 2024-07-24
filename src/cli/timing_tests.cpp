@@ -254,37 +254,33 @@ class ECDSA_Timing_Test final : public Timing_Test {
    private:
       const Botan::EC_Group m_group;
       const Botan::ECDSA_PrivateKey m_privkey;
-      const Botan::BigInt& m_x;
+      const Botan::EC_Scalar m_x;
+      Botan::EC_Scalar m_b;
+      Botan::EC_Scalar m_b_inv;
       std::vector<Botan::BigInt> m_ws;
-      Botan::BigInt m_b, m_b_inv;
 };
 
 ECDSA_Timing_Test::ECDSA_Timing_Test(const std::string& ecgroup) :
       m_group(Botan::EC_Group::from_name(ecgroup)),
       m_privkey(timing_test_rng(), m_group),
-      m_x(m_privkey.private_value()) {
-   m_b = m_group.random_scalar(timing_test_rng());
-   m_b_inv = m_group.inverse_mod_order(m_b);
-}
+      m_x(m_privkey._private_key()),
+      m_b(Botan::EC_Scalar::random(m_group, timing_test_rng())),
+      m_b_inv(m_b.invert()) {}
 
 ticks ECDSA_Timing_Test::measure_critical_function(const std::vector<uint8_t>& input) {
-   const Botan::BigInt k(input.data(), input.size());
-   Botan::BigInt m(5);  // fixed message to minimize noise
+   const auto k = Botan::EC_Scalar::from_bytes_with_trunc(m_group, input);
+   // fixed message to minimize noise
+   const auto m = Botan::EC_Scalar::from_bytes_with_trunc(m_group, std::vector<uint8_t>{5});
 
    ticks start = get_ticks();
 
    // the following ECDSA operations involve and should not leak any information about k
-   const Botan::BigInt r = m_group.mod_order(m_group.blinded_base_point_multiply_x(k, timing_test_rng(), m_ws));
-   const Botan::BigInt k_inv = m_group.inverse_mod_order(k);
-
-   m_b = m_group.square_mod_order(m_b);
-   m_b_inv = m_group.square_mod_order(m_b_inv);
-
-   m = m_group.multiply_mod_order(m_b, m_group.mod_order(m));
-   const Botan::BigInt xr_m = m_group.mod_order(m_group.multiply_mod_order(m_x, m_b, r) + m);
-
-   const Botan::BigInt s = m_group.multiply_mod_order(k_inv, xr_m, m_b_inv);
-
+   const auto r = Botan::EC_Scalar::gk_x_mod_order(k, timing_test_rng(), m_ws);
+   const auto k_inv = k.invert();
+   m_b.square_self();
+   m_b_inv.square_self();
+   const auto xr_m = ((m_x * m_b) * r) + (m * m_b);
+   const auto s = (k_inv * xr_m) * m_b_inv;
    BOTAN_UNUSED(r, s);
 
    ticks end = get_ticks();
@@ -298,7 +294,7 @@ ticks ECDSA_Timing_Test::measure_critical_function(const std::vector<uint8_t>& i
 
 class ECC_Mul_Timing_Test final : public Timing_Test {
    public:
-      explicit ECC_Mul_Timing_Test(const std::string& ecgroup) : m_group(Botan::EC_Group::from_name(ecgroup)) {}
+      explicit ECC_Mul_Timing_Test(std::string_view ecgroup) : m_group(Botan::EC_Group::from_name(ecgroup)) {}
 
       ticks measure_critical_function(const std::vector<uint8_t>& input) override;
 
@@ -308,12 +304,10 @@ class ECC_Mul_Timing_Test final : public Timing_Test {
 };
 
 ticks ECC_Mul_Timing_Test::measure_critical_function(const std::vector<uint8_t>& input) {
-   const Botan::BigInt k(input.data(), input.size());
+   const auto k = Botan::EC_Scalar::from_bytes_with_trunc(m_group, input);
 
    ticks start = get_ticks();
-
-   const Botan::EC_Point k_times_P = m_group.blinded_base_point_multiply(k, timing_test_rng(), m_ws);
-
+   const auto kG = Botan::EC_AffinePoint::g_mul(k, timing_test_rng(), m_ws);
    ticks end = get_ticks();
 
    return (end - start);
@@ -325,7 +319,7 @@ ticks ECC_Mul_Timing_Test::measure_critical_function(const std::vector<uint8_t>&
 
 class Powmod_Timing_Test final : public Timing_Test {
    public:
-      explicit Powmod_Timing_Test(const std::string& dl_group) : m_group(dl_group) {}
+      explicit Powmod_Timing_Test(std::string_view dl_group) : m_group(dl_group) {}
 
       ticks measure_critical_function(const std::vector<uint8_t>& input) override;
 
@@ -473,7 +467,7 @@ class Timing_Test_Command final : public Command {
          return lines;
       }
 
-      static std::unique_ptr<Timing_Test> lookup_timing_test(const std::string& test_type);
+      static std::unique_ptr<Timing_Test> lookup_timing_test(std::string_view test_type);
 
       std::string help_text() const override {
          // TODO check feature macros
@@ -492,7 +486,7 @@ class Timing_Test_Command final : public Command {
       }
 };
 
-std::unique_ptr<Timing_Test> Timing_Test_Command::lookup_timing_test(const std::string& test_type) {
+std::unique_ptr<Timing_Test> Timing_Test_Command::lookup_timing_test(std::string_view test_type) {
 #if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_PKCS1) && defined(BOTAN_HAS_EME_RAW)
    if(test_type == "bleichenbacher") {
       return std::make_unique<Bleichenbacker_Timing_Test>(2048);

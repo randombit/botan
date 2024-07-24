@@ -71,8 +71,12 @@ void EC_Scalar_Data_BN::serialize_to(std::span<uint8_t> bytes) const {
 
 EC_AffinePoint_Data_BN::EC_AffinePoint_Data_BN(std::shared_ptr<const EC_Group_Data> group, EC_Point pt) :
       m_group(std::move(group)), m_pt(std::move(pt)) {
-   m_pt.force_affine();
-   m_xy = m_pt.xy_bytes();
+   if(!m_pt.is_zero()) {
+      m_pt.force_affine();
+      m_xy = m_pt.xy_bytes();
+   } else {
+      m_xy.resize(1 + 2 * this->field_element_bytes());
+   }
 }
 
 EC_AffinePoint_Data_BN::EC_AffinePoint_Data_BN(std::shared_ptr<const EC_Group_Data> group,
@@ -98,6 +102,11 @@ std::unique_ptr<EC_AffinePoint_Data> EC_AffinePoint_Data_BN::mul(const EC_Scalar
    const auto& bn = EC_Scalar_Data_BN::checked_ref(scalar);
 
    EC_Point_Var_Point_Precompute mul(m_pt, rng, ws);
+
+   // We pass order*cofactor here to "correctly" handle the case where the
+   // point is on the curve but not in the prime order subgroup. This only
+   // matters for groups with cofactor > 1
+   // See https://github.com/randombit/botan/issues/3800
 
    const auto order = m_group->order() * m_group->cofactor();
    auto pt = mul.mul(bn.value(), rng, order, ws);

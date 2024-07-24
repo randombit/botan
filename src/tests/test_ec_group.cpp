@@ -104,16 +104,15 @@ std::vector<Test::Result> ECC_Randomized_Tests::run() {
       auto group = Botan::EC_Group::from_name(group_name);
 
       const Botan::EC_Point pt = create_random_point(this->rng(), group);
-      const Botan::BigInt& group_order = group.get_order();
 
       std::vector<Botan::BigInt> blind_ws;
 
       try {
          const size_t trials = (Test::run_long_tests() ? 10 : 3);
          for(size_t i = 0; i < trials; ++i) {
-            const Botan::BigInt a = Botan::BigInt::random_integer(this->rng(), 2, group_order);
-            const Botan::BigInt b = Botan::BigInt::random_integer(this->rng(), 2, group_order);
-            const Botan::BigInt c = a + b;
+            const Botan::BigInt a = group.random_scalar(rng());
+            const Botan::BigInt b = group.random_scalar(rng());
+            const Botan::BigInt c = group.mod_order(a + b);
 
             const Botan::EC_Point P = pt * a;
             const Botan::EC_Point Q = pt * b;

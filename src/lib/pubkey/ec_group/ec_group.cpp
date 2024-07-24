@@ -416,14 +416,6 @@ const EC_Group_Data& EC_Group::data() const {
    return *m_data;
 }
 
-bool EC_Group::a_is_minus_3() const {
-   return data().a_is_minus_3();
-}
-
-bool EC_Group::a_is_zero() const {
-   return data().a_is_zero();
-}
-
 size_t EC_Group::get_p_bits() const {
    return data().p_bits();
 }
@@ -480,26 +472,6 @@ BigInt EC_Group::mod_order(const BigInt& k) const {
    return data().mod_order(k);
 }
 
-BigInt EC_Group::square_mod_order(const BigInt& x) const {
-   return data().square_mod_order(x);
-}
-
-BigInt EC_Group::cube_mod_order(const BigInt& x) const {
-   return multiply_mod_order(x, square_mod_order(x));
-}
-
-BigInt EC_Group::multiply_mod_order(const BigInt& x, const BigInt& y) const {
-   return data().multiply_mod_order(x, y);
-}
-
-BigInt EC_Group::multiply_mod_order(const BigInt& x, const BigInt& y, const BigInt& z) const {
-   return data().multiply_mod_order(x, y, z);
-}
-
-BigInt EC_Group::inverse_mod_order(const BigInt& x) const {
-   return data().inverse_mod_order(x);
-}
-
 const OID& EC_Group::get_curve_oid() const {
    return data().oid();
 }
@@ -531,65 +503,8 @@ EC_Point EC_Group::point_multiply(const BigInt& x, const EC_Point& pt, const Big
    return xy_mul.multi_exp(x, y);
 }
 
-EC_Point EC_Group::blinded_base_point_multiply(const BigInt& k,
-                                               RandomNumberGenerator& rng,
-                                               std::vector<BigInt>& ws) const {
-   return data().blinded_base_point_multiply(k, rng, ws);
-}
-
-BigInt EC_Group::blinded_base_point_multiply_x(const BigInt& k,
-                                               RandomNumberGenerator& rng,
-                                               std::vector<BigInt>& ws) const {
-   const EC_Point pt = data().blinded_base_point_multiply(k, rng, ws);
-
-   if(pt.is_zero()) {
-      return BigInt::zero();
-   }
-   return pt.get_affine_x();
-}
-
-BigInt EC_Group::random_scalar(RandomNumberGenerator& rng) const {
-   return BigInt::random_integer(rng, BigInt::one(), get_order());
-}
-
-EC_Point EC_Group::blinded_var_point_multiply(const EC_Point& point,
-                                              const BigInt& k,
-                                              RandomNumberGenerator& rng,
-                                              std::vector<BigInt>& ws) const {
-   EC_Point_Var_Point_Precompute mul(point, rng, ws);
-   // We pass order*cofactor here to "correctly" handle the case where the
-   // point is on the curve but not in the prime order subgroup. This only
-   // matters for groups with cofactor > 1
-   // See https://github.com/randombit/botan/issues/3800
-   return mul.mul(k, rng, get_order() * get_cofactor(), ws);
-}
-
 EC_Point EC_Group::zero_point() const {
    return EC_Point(data().curve());
-}
-
-EC_Point EC_Group::hash_to_curve(std::string_view hash_fn,
-                                 const uint8_t input[],
-                                 size_t input_len,
-                                 std::string_view domain,
-                                 bool random_oracle) const {
-   return this->hash_to_curve(
-      hash_fn, input, input_len, reinterpret_cast<const uint8_t*>(domain.data()), domain.size(), random_oracle);
-}
-
-EC_Point EC_Group::hash_to_curve(std::string_view hash_fn,
-                                 const uint8_t input[],
-                                 size_t input_len,
-                                 const uint8_t domain_sep[],
-                                 size_t domain_sep_len,
-                                 bool random_oracle) const {
-   if(random_oracle) {
-      return EC_AffinePoint::hash_to_curve_ro(*this, hash_fn, {input, input_len}, {domain_sep, domain_sep_len})
-         .to_legacy_point();
-   } else {
-      return EC_AffinePoint::hash_to_curve_nu(*this, hash_fn, {input, input_len}, {domain_sep, domain_sep_len})
-         .to_legacy_point();
-   }
 }
 
 std::vector<uint8_t> EC_Group::DER_encode() const {

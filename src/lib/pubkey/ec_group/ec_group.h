@@ -345,44 +345,59 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
 
       /**
       * Blinded point multiplication, attempts resistance to side channels
-      * @param k the scalar
+      * @param k_bn the scalar
       * @param rng a random number generator
       * @param ws a temp workspace
       * @return base_point*k
       */
       BOTAN_DEPRECATED("Use EC_AffinePoint and EC_Scalar")
-      EC_Point blinded_base_point_multiply(const BigInt& k, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const;
+      EC_Point
+         blinded_base_point_multiply(const BigInt& k_bn, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const {
+         auto k = EC_Scalar::from_bigint(*this, k_bn);
+         auto pt = EC_AffinePoint::g_mul(k, rng, ws);
+         return pt.to_legacy_point();
+      }
 
       /**
       * Blinded point multiplication, attempts resistance to side channels
       * Returns just the x coordinate of the point
       *
-      * @param k the scalar
+      * @param k_bn the scalar
       * @param rng a random number generator
       * @param ws a temp workspace
       * @return x coordinate of base_point*k
       */
       BOTAN_DEPRECATED("Use EC_AffinePoint and EC_Scalar")
-      BigInt blinded_base_point_multiply_x(const BigInt& k, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const;
+      BigInt
+         blinded_base_point_multiply_x(const BigInt& k_bn, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const {
+         auto k = EC_Scalar::from_bigint(*this, k_bn);
+         return BigInt(EC_AffinePoint::g_mul(k, rng, ws).x_bytes());
+      }
 
       /**
       * Blinded point multiplication, attempts resistance to side channels
       * @param point input point
-      * @param k the scalar
+      * @param k_bn the scalar
       * @param rng a random number generator
       * @param ws a temp workspace
       * @return point*k
       */
       BOTAN_DEPRECATED("Use EC_AffinePoint and EC_Scalar")
       EC_Point blinded_var_point_multiply(const EC_Point& point,
-                                          const BigInt& k,
+                                          const BigInt& k_bn,
                                           RandomNumberGenerator& rng,
-                                          std::vector<BigInt>& ws) const;
+                                          std::vector<BigInt>& ws) const {
+         auto k = EC_Scalar::from_bigint(*this, k_bn);
+         auto pt = EC_AffinePoint(*this, point);
+         return pt.mul(k, rng, ws).to_legacy_point();
+      }
 
       /**
       * Return a random scalar ie an integer in [1,order)
       */
-      BOTAN_DEPRECATED("Use EC_Scalar::random") BigInt random_scalar(RandomNumberGenerator& rng) const;
+      BOTAN_DEPRECATED("Use EC_Scalar::random") BigInt random_scalar(RandomNumberGenerator& rng) const {
+         return EC_Scalar::random(*this, rng).to_bigint();
+      }
 
       /**
       * Hash onto the curve.
@@ -397,12 +412,22 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @param random_oracle if the mapped point must be uniform (use
                "true" here unless you know what you are doing)
       */
+      BOTAN_DEPRECATED("Use EC_AffinePoint")
       EC_Point hash_to_curve(std::string_view hash_fn,
                              const uint8_t input[],
                              size_t input_len,
                              const uint8_t domain_sep[],
                              size_t domain_sep_len,
-                             bool random_oracle = true) const;
+                             bool random_oracle = true) const {
+         auto inp = std::span{input, input_len};
+         auto dst = std::span{domain_sep, domain_sep_len};
+
+         if(random_oracle) {
+            return EC_AffinePoint::hash_to_curve_ro(*this, hash_fn, inp, dst).to_legacy_point();
+         } else {
+            return EC_AffinePoint::hash_to_curve_nu(*this, hash_fn, inp, dst).to_legacy_point();
+         }
+      }
 
       /**
       * Hash onto the curve.
@@ -416,11 +441,21 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * @param random_oracle if the mapped point must be uniform (use
                "true" here unless you know what you are doing)
       */
+      BOTAN_DEPRECATED("Use EC_AffinePoint")
       EC_Point hash_to_curve(std::string_view hash_fn,
                              const uint8_t input[],
                              size_t input_len,
                              std::string_view domain_sep,
-                             bool random_oracle = true) const;
+                             bool random_oracle = true) const {
+         auto inp = std::span{input, input_len};
+         auto dst = std::span{reinterpret_cast<const uint8_t*>(domain_sep.data()), domain_sep.size()};
+
+         if(random_oracle) {
+            return EC_AffinePoint::hash_to_curve_ro(*this, hash_fn, inp, dst).to_legacy_point();
+         } else {
+            return EC_AffinePoint::hash_to_curve_nu(*this, hash_fn, inp, dst).to_legacy_point();
+         }
+      }
 
       /**
       * OS2ECP (Octet String To Elliptic Curve Point)
@@ -463,12 +498,12 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       /**
       * Return if a == -3 mod p
       */
-      BOTAN_DEPRECATED("Deprecated no replacement") bool a_is_minus_3() const;
+      BOTAN_DEPRECATED("Deprecated no replacement") bool a_is_minus_3() const { return get_a() + 3 == get_p(); }
 
       /**
       * Return if a == 0 mod p
       */
-      BOTAN_DEPRECATED("Deprecated no replacement") bool a_is_zero() const;
+      BOTAN_DEPRECATED("Deprecated no replacement") bool a_is_zero() const { return get_a().is_zero(); }
 
       /*
       * Reduce x modulo the order
@@ -478,28 +513,46 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       /*
       * Return inverse of x modulo the order
       */
-      BOTAN_DEPRECATED("Deprecated no replacement") BigInt inverse_mod_order(const BigInt& x) const;
+      BOTAN_DEPRECATED("Use EC_Scalar") BigInt inverse_mod_order(const BigInt& x) const {
+         return EC_Scalar::from_bigint(*this, x).invert().to_bigint();
+      }
 
       /*
       * Reduce (x*x) modulo the order
       */
-      BOTAN_DEPRECATED("Deprecated no replacement") BigInt square_mod_order(const BigInt& x) const;
+      BOTAN_DEPRECATED("Use EC_Scalar") BigInt square_mod_order(const BigInt& x) const {
+         auto xs = EC_Scalar::from_bigint(*this, x);
+         xs.square_self();
+         return xs.to_bigint();
+      }
 
       /*
       * Reduce (x*y) modulo the order
       */
-      BOTAN_DEPRECATED("Deprecated no replacement") BigInt multiply_mod_order(const BigInt& x, const BigInt& y) const;
+      BOTAN_DEPRECATED("Use EC_Scalar") BigInt multiply_mod_order(const BigInt& x, const BigInt& y) const {
+         auto xs = EC_Scalar::from_bigint(*this, x);
+         auto ys = EC_Scalar::from_bigint(*this, y);
+         return (xs * ys).to_bigint();
+      }
 
       /*
       * Reduce (x*y*z) modulo the order
       */
       BOTAN_DEPRECATED("Use EC_Scalar")
-      BigInt multiply_mod_order(const BigInt& x, const BigInt& y, const BigInt& z) const;
+      BigInt multiply_mod_order(const BigInt& x, const BigInt& y, const BigInt& z) const {
+         auto xs = EC_Scalar::from_bigint(*this, x);
+         auto ys = EC_Scalar::from_bigint(*this, y);
+         auto zs = EC_Scalar::from_bigint(*this, z);
+         return (xs * ys * zs).to_bigint();
+      }
 
       /*
       * Return x^3 modulo the order
       */
-      BOTAN_DEPRECATED("Deprecated no replacement") BigInt cube_mod_order(const BigInt& x) const;
+      BOTAN_DEPRECATED("Deprecated no replacement") BigInt cube_mod_order(const BigInt& x) const {
+         auto xs = EC_Scalar::from_bigint(*this, x);
+         return (xs * xs * xs).to_bigint();
+      }
 
       /**
       * Return a point on this curve with the affine values x, y
