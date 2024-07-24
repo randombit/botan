@@ -84,22 +84,27 @@ void SHA_1::compress_n(digest_type& digest, std::span<const uint8_t> input, size
 
    uint32_t A = digest[0], B = digest[1], C = digest[2], D = digest[3], E = digest[4];
    std::array<uint32_t, 80> W;
+   auto W_in = std::span{W}.first<block_bytes / sizeof(uint32_t)>();
 
    BufferSlicer in(input);
 
    for(size_t i = 0; i != blocks; ++i) {
-      load_be(W.data(), in.take(block_bytes).data(), 16);
+      load_be(W_in, in.take<block_bytes>());
+
+      // clang-format off
 
       for(size_t j = 16; j != 80; j += 8) {
-         W[j] = rotl<1>(W[j - 3] ^ W[j - 8] ^ W[j - 14] ^ W[j - 16]);
+         W[j + 0] = rotl<1>(W[j - 3] ^ W[j - 8] ^ W[j - 14] ^ W[j - 16]);
          W[j + 1] = rotl<1>(W[j - 2] ^ W[j - 7] ^ W[j - 13] ^ W[j - 15]);
          W[j + 2] = rotl<1>(W[j - 1] ^ W[j - 6] ^ W[j - 12] ^ W[j - 14]);
-         W[j + 3] = rotl<1>(W[j] ^ W[j - 5] ^ W[j - 11] ^ W[j - 13]);
+         W[j + 3] = rotl<1>(W[j    ] ^ W[j - 5] ^ W[j - 11] ^ W[j - 13]);
          W[j + 4] = rotl<1>(W[j + 1] ^ W[j - 4] ^ W[j - 10] ^ W[j - 12]);
-         W[j + 5] = rotl<1>(W[j + 2] ^ W[j - 3] ^ W[j - 9] ^ W[j - 11]);
-         W[j + 6] = rotl<1>(W[j + 3] ^ W[j - 2] ^ W[j - 8] ^ W[j - 10]);
-         W[j + 7] = rotl<1>(W[j + 4] ^ W[j - 1] ^ W[j - 7] ^ W[j - 9]);
+         W[j + 5] = rotl<1>(W[j + 2] ^ W[j - 3] ^ W[j -  9] ^ W[j - 11]);
+         W[j + 6] = rotl<1>(W[j + 3] ^ W[j - 2] ^ W[j -  8] ^ W[j - 10]);
+         W[j + 7] = rotl<1>(W[j + 4] ^ W[j - 1] ^ W[j -  7] ^ W[j -  9]);
       }
+
+      // clang-format on
 
       F1(A, B, C, D, E, W[0]);
       F1(E, A, B, C, D, W[1]);
