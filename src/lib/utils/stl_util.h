@@ -200,7 +200,7 @@ namespace detail {
  * time, this check will be performed at compile time as well. It will then
  * instantiate an output range and concatenate the input ranges' contents.
  */
-template <ranges::spanable_range OutR, ranges::spanable_range... Rs>
+template <ranges::spanable_range OutR, std::ranges::range... Rs>
 constexpr OutR concatenate(Rs&&... ranges)
    requires(concepts::reservable_container<OutR> || ranges::statically_spanable_range<OutR>)
 {
@@ -259,7 +259,7 @@ constexpr OutR concatenate(Rs&&... ranges)
  *
  * Alternatively, the output container type can be specified explicitly.
  */
-template <typename OutR = detail::AutoDetect, ranges::spanable_range... Rs>
+template <typename OutR = detail::AutoDetect, std::ranges::range... Rs>
 constexpr auto concat(Rs&&... ranges)
    requires(all_same_v<std::ranges::range_value_t<Rs>...>)
 {
