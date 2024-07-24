@@ -364,6 +364,14 @@ class Mask final {
       static constexpr Mask<T> expand_top_bit(T v) { return Mask<T>(Botan::expand_top_bit<T>(value_barrier<T>(v))); }
 
       /**
+       * Return a Mask<T> which is set if the given @p bit of @p v is set.
+       * @p bit must be from 0 (LSB) to (sizeof(T) * 8 - 1) (MSB).
+       */
+      static constexpr Mask<T> expand_bit(T v, size_t bit) {
+         return CT::Mask<T>::expand_top_bit(v << (sizeof(v) * 8 - 1 - bit));
+      }
+
+      /**
       * Return a Mask<T> which is set if m is set
       */
       template <typename U>
