@@ -84,6 +84,13 @@ std::shared_ptr<const PrimeOrderCurve> PCurveInstance::sm2p256v1() {
 }
 #endif
 
+#if !defined(BOTAN_HAS_PCURVES_NUMSP512D1)
+//static
+std::shared_ptr<const PrimeOrderCurve> PCurveInstance::numsp512d1() {
+   return nullptr;
+}
+#endif
+
 std::shared_ptr<const PrimeOrderCurve> PrimeOrderCurve::from_id(PrimeOrderCurveId id) {
    switch(id.code()) {
       case PrimeOrderCurveId::secp192r1:
@@ -106,6 +113,8 @@ std::shared_ptr<const PrimeOrderCurve> PrimeOrderCurve::from_id(PrimeOrderCurveI
          return PCurveInstance::frp256v1();
       case PrimeOrderCurveId::sm2p256v1:
          return PCurveInstance::sm2p256v1();
+      case PrimeOrderCurveId::numsp512d1:
+         return PCurveInstance::numsp512d1();
    }
    return {};
 }
@@ -122,6 +131,7 @@ std::vector<PrimeOrderCurveId> PrimeOrderCurveId::all() {
       PrimeOrderCurveId::brainpool512r1,
       PrimeOrderCurveId::frp256v1,
       PrimeOrderCurveId::sm2p256v1,
+      PrimeOrderCurveId::numsp512d1,
    };
 }
 
@@ -147,6 +157,8 @@ std::string PrimeOrderCurveId::to_string() const {
          return "frp256v1";
       case PrimeOrderCurveId::sm2p256v1:
          return "sm2p256v1";
+      case PrimeOrderCurveId::numsp512d1:
+         return "numsp512d1";
    }
 
    return "unknown";
@@ -174,6 +186,8 @@ std::optional<PrimeOrderCurveId> PrimeOrderCurveId::from_string(std::string_view
       return PCurve::PrimeOrderCurveId::frp256v1;
    } else if(name == "sm2p256v1") {
       return PCurve::PrimeOrderCurveId::sm2p256v1;
+   } else if(name == "numsp512d1") {
+      return PCurve::PrimeOrderCurveId::numsp512d1;
    } else {
       return {};
    }

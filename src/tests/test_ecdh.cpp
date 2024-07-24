@@ -52,8 +52,48 @@ class ECDH_Keygen_Tests final : public PK_Key_Generation_Test {
       }
 };
 
+class ECDH_AllGroups_Tests : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+
+         for(const std::string& group_name : Botan::EC_Group::known_named_groups()) {
+            Test::Result result("ECDH " + group_name);
+
+            const std::string kdf = "Raw";
+
+            try {
+               const auto group = Botan::EC_Group::from_name(group_name);
+
+               for(size_t i = 0; i != 4; ++i) {
+                  const Botan::ECDH_PrivateKey a_priv(rng(), group);
+                  const auto a_pub = a_priv.public_value();
+
+                  const Botan::ECDH_PrivateKey b_priv(rng(), group);
+                  const auto b_pub = b_priv.public_value();
+
+                  Botan::PK_Key_Agreement a_ka(a_priv, rng(), kdf);
+                  const auto a_ss = a_ka.derive_key(0, b_pub);
+
+                  Botan::PK_Key_Agreement b_ka(b_priv, rng(), kdf);
+                  const auto b_ss = b_ka.derive_key(0, a_pub);
+
+                  result.test_eq("Same shared secret", a_ss.bits_of(), b_ss.bits_of());
+               }
+            } catch(std::exception& e) {
+               result.test_failure("Exception", e.what());
+            }
+
+            results.push_back(result);
+         }
+
+         return results;
+      }
+};
+
 BOTAN_REGISTER_TEST("pubkey", "ecdh_kat", ECDH_KAT_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdh_keygen", ECDH_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecdh_all_groups", ECDH_AllGroups_Tests);
 
 #endif
 

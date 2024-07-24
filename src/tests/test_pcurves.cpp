@@ -33,18 +33,27 @@ class Pcurve_Basemul_Tests final : public Text_Based_Test {
 
          if(auto curve = Botan::PCurve::PrimeOrderCurve::from_name(group_id)) {
             if(auto scalar = curve->deserialize_scalar(k_bytes)) {
-               auto pt2 = curve->mul_by_g(scalar.value(), rng).to_affine().serialize();
+               const auto k = scalar.value();
+               auto pt2 = curve->mul_by_g(k, rng).to_affine().serialize();
                result.test_eq("mul_by_g correct", pt2, P_bytes);
 
-               auto pt3 = curve->mul_by_g(scalar.value(), null_rng).to_affine().serialize();
+               auto pt3 = curve->mul_by_g(k, null_rng).to_affine().serialize();
                result.test_eq("mul_by_g (Null_RNG) correct", pt3, P_bytes);
 
                auto g = curve->generator();
-               auto pt4 = curve->mul(g, scalar.value(), rng).to_affine().serialize();
+               auto pt4 = curve->mul(g, k, rng).to_affine().serialize();
                result.test_eq("mul correct", pt4, P_bytes);
 
-               auto pt5 = curve->mul(g, scalar.value(), null_rng).to_affine().serialize();
+               auto pt5 = curve->mul(g, k, null_rng).to_affine().serialize();
                result.test_eq("mul correct (Null_RNG)", pt5, P_bytes);
+
+               // Now test the var point mul with a blinded point ((g*b)*k)/b = pt
+               auto b = curve->random_scalar(rng);
+               auto binv = b.invert();
+               auto gx = curve->mul_by_g(b, rng).to_affine();
+               auto gx_k = curve->mul(gx, k, rng).to_affine();
+               auto g_k = curve->mul(gx_k, binv, rng).to_affine();
+               result.test_eq("blinded mul correct", g_k.serialize(), P_bytes);
             } else {
                result.test_failure("Curve rejected scalar input");
             }
