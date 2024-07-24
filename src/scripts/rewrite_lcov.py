@@ -18,15 +18,21 @@ def main(args = None):
         print("Usage: %s <lcov_filename>" % (args[0]))
         return 1
 
-    # SF:/home/jack/work/botan/build/include/botan/pkix_types.h
-    header_re = re.compile('^SF:(.*/build/include/botan/.*)')
+    header_re = re.compile(R'^SF:(.*/build/include/(public|internal|external)/botan(/internal)?/.*)')
 
     new_content = ""
 
     for line in open(args[1]):
         match = header_re.match(line)
         if match is not None:
-            new_path = os.path.realpath(match.group(1))
+            inc_path = match.group(1)
+
+            if not os.path.islink(inc_path):
+                print("ERROR %s in lcov but not a symlink" % (inc_path))
+                return 1
+
+            new_path = os.path.realpath(inc_path)
+            print("Rewrote %s to %s in lcov file" % (inc_path, new_path))
             new_content += "SF:%s\n" % (new_path)
         else:
             new_content += line
