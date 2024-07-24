@@ -657,8 +657,10 @@ class ProjectiveCurvePoint {
          const auto H = U2 - a.x();
          const auto r = S2 - a.y();
 
-         // If r is zero then we are in the doubling case
-         if(r.is_zero().as_bool()) {
+         // If r == H == 0 then we are in the doubling case
+         // For a == -b we compute the correct result because
+         // H will be zero, leading to Z3 being zero also
+         if((r.is_zero() && H.is_zero()).as_bool()) {
             return a.dbl();
          }
 
@@ -687,6 +689,7 @@ class ProjectiveCurvePoint {
       constexpr static Self add(const Self& a, const Self& b) {
          const auto a_is_identity = a.is_identity();
          const auto b_is_identity = b.is_identity();
+
          if((a_is_identity && b_is_identity).as_bool()) {
             return Self::identity();
          }
@@ -706,7 +709,10 @@ class ProjectiveCurvePoint {
          const auto H = U2 - U1;
          const auto r = S2 - S1;
 
-         if(r.is_zero().as_bool()) {
+         // If a == -b then H == 0 && r != 0, in which case
+         // at the end we'll set z = a.z * b.z * H = 0, resulting
+         // in the correct output (point at infinity)
+         if((r.is_zero() && H.is_zero()).as_bool()) {
             return a.dbl();
          }
 

@@ -258,7 +258,7 @@ class Pcurve_Point_Tests final : public Test {
             const auto inf_plus_ga = inf + g_one.to_affine();
             result.test_eq("inf + g (affine) == g", inf_plus_ga.to_affine().serialize(), g_bytes);
 
-            const auto g_neg_one = curve->mul_by_g(one.negate(), rng);
+            const auto g_neg_one = curve->mul_by_g(one.negate(), rng).to_affine();
 
             const auto inf_from_g = g_one + g_neg_one;
             result.test_eq("g - g is infinity", inf_from_g.to_affine().serialize(), inf_bytes);
