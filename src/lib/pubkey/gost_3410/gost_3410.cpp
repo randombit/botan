@@ -13,6 +13,7 @@
 #include <botan/der_enc.h>
 #include <botan/internal/ec_key_data.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/loadstor.h>
 #include <botan/internal/pk_ops_impl.h>
 
 namespace Botan {
@@ -77,11 +78,9 @@ GOST_3410_PublicKey::GOST_3410_PublicKey(const AlgorithmIdentifier& alg_id, std:
    const size_t part_size = bits.size() / 2;
 
    // Keys are stored in little endian format (WTF)
-   std::vector<uint8_t> encoding;
-   encoding.reserve(bits.size() + 1);
-   encoding.push_back(0x04);
-   encoding.insert(encoding.end(), bits.rbegin() + part_size, bits.rend());
-   encoding.insert(encoding.end(), bits.rbegin(), bits.rend() - part_size);
+   const auto encoding = concat<std::vector<uint8_t>>(store_be(uint8_t(0x04)),
+                                                      std::ranges::views::reverse(std::span{bits}.first(part_size)),
+                                                      std::ranges::views::reverse(std::span{bits}.last(part_size)));
 
    m_public_key = std::make_shared<EC_PublicKey_Data>(std::move(group), encoding);
 }
