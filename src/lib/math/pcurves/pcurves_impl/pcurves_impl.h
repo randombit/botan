@@ -621,7 +621,7 @@ class ProjectiveCurvePoint {
          /*
          https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
 
-         12M + 4S + 6add + 1*2
+         Cost: 8M + 3S + 6add + 1*2
          */
 
          const auto Z1Z1 = a.z().square();
@@ -671,6 +671,8 @@ class ProjectiveCurvePoint {
 
          /*
          https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian-3.html#addition-add-1998-cmo-2
+
+         Cost: 12M + 4S + 6add + 1*2
          */
 
          const auto Z1Z1 = a.z().square();
@@ -715,30 +717,59 @@ class ProjectiveCurvePoint {
       }
 
       constexpr Self dbl_n(size_t n) const {
-         if constexpr(Self::A_is_minus_3) {
-            /*
-            Repeated doubling using an adaptation of Algorithm 3.23 in
-            "Guide To Elliptic Curve Cryptography"
-            Hankerson, Menezes, Vanstone
+         /*
+         Repeated doubling using an adaptation of Algorithm 3.23 in
+         "Guide To Elliptic Curve Cryptography" (Hankerson, Menezes, Vanstone)
 
-            For A == -3
-            Cost: 2S + 1*2 + n*(4S + 4M + 2*2 + 1*3 + 4A)
-            Naive doubling
-            Cost: n*(4S + 4M + 2*2 + 1*3 + 5A + 1*4 + 1*8)
+         Curiously the book gives the algorithm only for A == -3, but
+         the largest gains come from applying it to the generic A case,
+         where it saves 2 squarings per iteration.
 
-            TODO adapt this for A == 0 and/or generic A cases
-            */
+         For A == 0
+           Pay 1*2 + 1half to save n*(1*4 + 1*8)
 
+         For A == -3:
+           Pay 2S + 1*2 + 1half to save n*(1A + 1*4 + 1*8) + 1M
+
+         For generic A:
+           Pay 2S + 1*2 + 1half to save n*(2S + 1*4 + 1*8)
+         */
+
+         if constexpr(Self::A_is_zero) {
             auto nx = x();
-            auto ny = y();
+            auto ny = y().mul2();
             auto nz = z();
-            ny = ny.mul2();
-            auto w = nz.square().square();
 
             while(n > 0) {
                const auto ny2 = ny.square();
                const auto ny4 = ny2.square();
-               const auto t1 = (nx.square() - w).mul3();
+               const auto t1 = nx.square().mul3();
+               const auto t2 = nx * ny2;
+               nx = t1.square() - t2.mul2();
+               nz *= ny;
+               ny = t1 * (t2 - nx).mul2() - ny4;
+               n--;
+            }
+            return Self(nx, ny.div2(), nz);
+         } else {
+            auto nx = x();
+            auto ny = y().mul2();
+            auto nz = z();
+            auto w = nz.square().square();
+
+            if constexpr(!Self::A_is_minus_3) {
+               w *= A;
+            }
+
+            while(n > 0) {
+               const auto ny2 = ny.square();
+               const auto ny4 = ny2.square();
+               FieldElement t1;
+               if constexpr(Self::A_is_minus_3) {
+                  t1 = (nx.square() - w).mul3();
+               } else {
+                  t1 = nx.square().mul3() + w;
+               }
                const auto t2 = nx * ny2;
                nx = t1.square() - t2.mul2();
                nz *= ny;
@@ -748,19 +779,18 @@ class ProjectiveCurvePoint {
                   w *= ny4;
                }
             }
-            ny = ny.div2();
-            return Self(nx, ny, nz);
-         } else {
-            Self pt = (*this);
-            for(size_t i = 0; i != n; ++i) {
-               pt = pt.dbl();
-            }
-            return pt;
+            return Self(nx, ny.div2(), nz);
          }
       }
 
       constexpr Self dbl() const {
-         //https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian.html#doubling-dbl-1998-cmo-2
+         /*
+         Using https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian.html#doubling-dbl-1998-cmo-2
+
+         Cost (generic A): 4M + 6S + 4A + 2*2 + 1*3 + 1*4 + 1*8
+         Cost (A == -3):   4M + 4S + 5A + 2*2 + 1*3 + 1*4 + 1*8
+         Cost (A == 0):    3M + 4S + 3A + 2*2 + 1*3 + 1*4 + 1*8
+         */
 
          FieldElement m = FieldElement::zero();
 
@@ -782,6 +812,8 @@ class ProjectiveCurvePoint {
             const auto z2 = z().square();
             m = x().square().mul3() + A * z2.square();
          }
+
+         // Remaining cost: 3M + 3S + 3A + 2*2 + 1*4 + 1*8
          const auto y2 = y().square();
          const auto s = x().mul4() * y2;
          const auto nx = m.square() - s.mul2();
