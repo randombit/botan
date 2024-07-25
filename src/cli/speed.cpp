@@ -1293,7 +1293,7 @@ class Speed final : public Command {
                const auto signature = [&]() {
                   const auto k = curve->random_scalar(rng());
                   const auto r = curve->base_point_mul_x_mod_order(k, rng());
-                  const auto k_inv = k.invert();
+                  const auto k_inv = (b * k).invert() * b;
                   b = b.square();
                   b_inv = b_inv.square();
                   const auto be = b * e;

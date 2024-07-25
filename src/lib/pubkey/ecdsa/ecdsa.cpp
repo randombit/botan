@@ -168,7 +168,8 @@ std::vector<uint8_t> ECDSA_Signature_Operation::raw_sign(std::span<const uint8_t
 
    const auto r = EC_Scalar::gk_x_mod_order(k, rng, m_ws);
 
-   const auto k_inv = k.invert();
+   // Blind the inversion of k
+   const auto k_inv = (m_b * k).invert() * m_b;
 
    /*
    * Blind the input message and compute x*r+m as (x*r*b + m*b)/b

@@ -104,13 +104,14 @@ class Pcurve_Ecdsa_Sign_Tests final : public Text_Based_Test {
          const auto e = curve.scalar_from_bits_with_trunc(msg);
          const auto k = curve.random_scalar(nonce_rng);
          const auto r = curve.base_point_mul_x_mod_order(k, rng);
-         const auto k_inv = k.invert();
 
          /*
          * Blind the input message and compute x*r+e as (b*x*r + b*e)/b
          */
          auto b = curve.random_scalar(rng);
          auto b_inv = b.invert();
+
+         const auto k_inv = (b * k).invert() * b;
 
          b = b.square();
          b_inv = b_inv.square();
