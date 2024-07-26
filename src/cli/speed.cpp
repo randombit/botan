@@ -1183,20 +1183,17 @@ class Speed final : public Command {
 
             const auto group = Botan::EC_Group::from_name(group_name);
 
+            const std::string hash_fn = "SHA-256";
+
             while(h2c_ro_timer->under(runtime)) {
-               std::vector<uint8_t> input(32);
+               const auto input = rng().random_array<32>();
+               const auto domain_sep = rng().random_array<32>();
 
-               rng().randomize(input.data(), input.size());
+               h2c_ro_timer->run(
+                  [&]() { return Botan::EC_AffinePoint::hash_to_curve_ro(group, hash_fn, input, domain_sep); });
 
-               const Botan::EC_Point p1 = h2c_ro_timer->run(
-                  [&]() { return group.hash_to_curve("SHA-256", input.data(), input.size(), nullptr, 0, true); });
-
-               BOTAN_ASSERT_NOMSG(p1.on_the_curve());
-
-               const Botan::EC_Point p2 = h2c_nu_timer->run(
-                  [&]() { return group.hash_to_curve("SHA-256", input.data(), input.size(), nullptr, 0, false); });
-
-               BOTAN_ASSERT_NOMSG(p2.on_the_curve());
+               h2c_nu_timer->run(
+                  [&]() { return Botan::EC_AffinePoint::hash_to_curve_nu(group, hash_fn, input, domain_sep); });
             }
 
             record_result(h2c_ro_timer);

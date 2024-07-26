@@ -1,6 +1,7 @@
 <defines>
 ECC_GROUP -> 20240531
 EC_CURVE_GFP -> 20240531
+EC_HASH_TO_CURVE -> 20210420
 </defines>
 
 <module_info>
@@ -11,6 +12,7 @@ brief -> "Wrapper for elliptic curve groups"
 <requires>
 asn1
 numbertheory
+pcurves
 pem
 </requires>
 

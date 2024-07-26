@@ -19,6 +19,12 @@
 
 namespace Botan {
 
+namespace PCurve {
+
+class PrimeOrderCurve;
+
+}
+
 class EC_Group_Data;
 
 class EC_Scalar_Data {
@@ -216,6 +222,9 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       std::unique_ptr<EC_Mul2Table_Data> make_mul2_table(const EC_AffinePoint_Data& pt) const;
 
    private:
+      // Will be nullptr if not an implemented curve
+      std::shared_ptr<const PCurve::PrimeOrderCurve> m_pcurve;
+
       CurveGFp m_curve;
       EC_Point m_base_point;
 

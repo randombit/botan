@@ -8,7 +8,9 @@
 
 #if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
    #include <botan/ec_group.h>
-   #include <botan/internal/ec_h2c.h>
+#endif
+
+#if defined(BOTAN_HAS_XMD)
    #include <botan/internal/xmd.h>
 #endif
 
@@ -16,7 +18,7 @@ namespace Botan_Tests {
 
 namespace {
 
-#if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
+#if defined(BOTAN_HAS_XMD)
 
 class ECC_H2C_XMD_Tests final : public Text_Based_Test {
    public:
@@ -41,9 +43,13 @@ class ECC_H2C_XMD_Tests final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("ec_h2c", "ec_h2c_xmd", ECC_H2C_XMD_Tests);
 
+#endif
+
+#if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
+
 class ECC_H2C_Tests final : public Text_Based_Test {
    public:
-      ECC_H2C_Tests() : Text_Based_Test("pubkey/ec_h2c.vec", "Group,Hash,Domain,Input,PointX,PointY") {}
+      ECC_H2C_Tests() : Text_Based_Test("pubkey/ec_h2c.vec", "Group,Hash,Domain,Input,Point") {}
 
       bool clear_between_callbacks() const override { return false; }
 
@@ -52,21 +58,28 @@ class ECC_H2C_Tests final : public Text_Based_Test {
 
          Test::Result result("ECC hash to curve " + method + " " + group_id);
 
-         const std::string hash = vars.get_req_str("Hash");
-         const std::string domain = vars.get_req_str("Domain");
+         const std::string hash_fn = vars.get_req_str("Hash");
+         const std::string domain_str = vars.get_req_str("Domain");
          const std::vector<uint8_t> input = vars.get_req_bin("Input");
-         const BigInt exp_point_x = vars.get_req_bn("PointX");
-         const BigInt exp_point_y = vars.get_req_bn("PointY");
+         const std::vector<uint8_t> expected_point = vars.get_req_bin("Point");
          const bool random_oracle = method.find("-RO") != std::string::npos;
+
+         auto domain = std::span{reinterpret_cast<const uint8_t*>(domain_str.data()), domain_str.size()};
 
          const auto group = Botan::EC_Group::from_name(group_id);
 
-         const auto point = group.hash_to_curve(hash, input.data(), input.size(), domain, random_oracle);
+         try {
+            std::vector<uint8_t> pt;
+            if(random_oracle) {
+               pt = Botan::EC_AffinePoint::hash_to_curve_ro(group, hash_fn, input, domain).serialize_uncompressed();
+            } else {
+               pt = Botan::EC_AffinePoint::hash_to_curve_nu(group, hash_fn, input, domain).serialize_uncompressed();
+            }
 
-         result.confirm("Generated point is on the curve", point.on_the_curve());
-
-         result.test_eq("Affine X", point.get_affine_x(), exp_point_x);
-         result.test_eq("Affine Y", point.get_affine_y(), exp_point_y);
+            result.test_eq("Generated point serialization", pt, expected_point);
+         } catch(Botan::Not_Implemented&) {
+            result.test_note("Skipping due to not implemented");
+         }
 
          return result;
       }
