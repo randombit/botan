@@ -12,8 +12,11 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/pcurves_util.h>
 #include <botan/internal/stl_util.h>
-#include <botan/internal/xmd.h>
 #include <vector>
+
+#if defined(BOTAN_HAS_XMD)
+   #include <botan/internal/xmd.h>
+#endif
 
 namespace Botan {
 
@@ -1499,6 +1502,7 @@ inline auto hash_to_curve_sswu(std::string_view hash,
                                std::span<const uint8_t> pw,
                                std::span<const uint8_t> dst) -> typename C::ProjectivePoint {
    static_assert(C::ValidForSswuHash);
+#if defined(BOTAN_HAS_XMD)
 
    const size_t SecurityLevel = (C::OrderBits + 1) / 2;
    const size_t L = (C::PrimeFieldBits + SecurityLevel + 7) / 8;
@@ -1519,6 +1523,9 @@ inline auto hash_to_curve_sswu(std::string_view hash,
       accum += map_to_curve_sswu<C>(u1);
       return accum;
    }
+#else
+   throw Not_Implemented("Hash to curve not available due to missing XMD");
+#endif
 }
 
 }  // namespace Botan

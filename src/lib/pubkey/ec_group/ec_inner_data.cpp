@@ -8,10 +8,7 @@
 
 #include <botan/der_enc.h>
 #include <botan/internal/ec_inner_bn.h>
-
-#if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
-   #include <botan/internal/ec_h2c.h>
-#endif
+#include <botan/internal/pcurves.h>
 
 namespace Botan {
 
@@ -44,6 +41,12 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
    if(!m_oid.empty()) {
       DER_Encoder der(m_der_named_curve);
       der.encode(m_oid);
+
+      if(const auto id = PCurve::PrimeOrderCurveId::from_oid(m_oid)) {
+         m_pcurve = PCurve::PrimeOrderCurve::from_id(*id);
+         // still possibly null, if the curve is supported in general but not
+         // available in the build
+      }
    }
 }
 
@@ -137,25 +140,23 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_deserialize(std::span<
 std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_hash_to_curve_ro(std::string_view hash_fn,
                                                                            std::span<const uint8_t> input,
                                                                            std::span<const uint8_t> domain_sep) const {
-#if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
-   auto pt = hash_to_curve_sswu(*this, hash_fn, input, domain_sep, true);
-   return std::make_unique<EC_AffinePoint_Data_BN>(shared_from_this(), std::move(pt));
-#else
-   BOTAN_UNUSED(hash_fn, input, domain_sep);
-   throw Not_Implemented("Hashing to curve not available in this build");
-#endif
+   if(m_pcurve) {
+      auto pt = m_pcurve->hash_to_curve(hash_fn, input, domain_sep, true).to_affine();
+      return std::make_unique<EC_AffinePoint_Data_BN>(shared_from_this(), pt.serialize());
+   } else {
+      throw Not_Implemented("Hash to curve is not implemented for this curve");
+   }
 }
 
 std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_hash_to_curve_nu(std::string_view hash_fn,
                                                                            std::span<const uint8_t> input,
                                                                            std::span<const uint8_t> domain_sep) const {
-#if defined(BOTAN_HAS_EC_HASH_TO_CURVE)
-   auto pt = hash_to_curve_sswu(*this, hash_fn, input, domain_sep, false);
-   return std::make_unique<EC_AffinePoint_Data_BN>(shared_from_this(), std::move(pt));
-#else
-   BOTAN_UNUSED(hash_fn, input, domain_sep);
-   throw Not_Implemented("Hashing to curve not available in this build");
-#endif
+   if(m_pcurve) {
+      auto pt = m_pcurve->hash_to_curve(hash_fn, input, domain_sep, false).to_affine();
+      return std::make_unique<EC_AffinePoint_Data_BN>(shared_from_this(), pt.serialize());
+   } else {
+      throw Not_Implemented("Hash to curve is not implemented for this curve");
+   }
 }
 
 std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_g_mul(const EC_Scalar_Data& scalar,

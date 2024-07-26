@@ -144,11 +144,11 @@ kdf1
 kdf2
 prf_x942
 sp800_56a
+xmd # disables h2c
 
 # pubkey
 x25519
 x448
-ec_h2c
 ed25519
 elgamal
 gost_3410
