@@ -53,9 +53,9 @@ inline void check_ecc_math(const Botan::EC_Group& group, const uint8_t in[], siz
    static std::vector<Botan::BigInt> ws(Botan::EC_Point::WORKSPACE_SIZE);
 
    const size_t hlen = len / 2;
-   const Botan::BigInt a = Botan::BigInt::decode(in, hlen);
-   const Botan::BigInt b = Botan::BigInt::decode(in + hlen, len - hlen);
-   const Botan::BigInt c = a + b;
+   const Botan::BigInt a = group.mod_order(Botan::BigInt::decode(in, hlen));
+   const Botan::BigInt b = group.mod_order(Botan::BigInt::decode(in + hlen, len - hlen));
+   const Botan::BigInt c = group.mod_order(a + b);
 
    const Botan::EC_Point P1 = base_point * a;
    const Botan::EC_Point Q1 = base_point * b;
