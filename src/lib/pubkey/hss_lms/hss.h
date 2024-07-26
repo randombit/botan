@@ -11,6 +11,7 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/rng.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/lms.h>
 
@@ -193,6 +194,10 @@ class BOTAN_TEST_API HSS_LMS_PrivateKeyInternal final {
        */
       size_t signature_size() const { return m_sig_size; }
 
+      void _const_time_poison() const { CT::poison(m_hss_seed); }
+
+      void _const_time_unpoison() const { CT::unpoison(m_hss_seed); }
+
    private:
       HSS_LMS_PrivateKeyInternal(HSS_LMS_Params hss_params, LMS_Seed hss_seed, LMS_Identifier identifier);
 
@@ -299,6 +304,8 @@ class BOTAN_TEST_API HSS_LMS_PublicKeyInternal final {
        * @return True iff the signature is valid.
        */
       bool verify_signature(std::span<const uint8_t> msg, const HSS_Signature& sig) const;
+
+      void _const_time_unpoison() const { CT::unpoison(m_top_lms_pub_key); }
 
    private:
       HSS_Level m_L;

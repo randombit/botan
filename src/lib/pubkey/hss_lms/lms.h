@@ -9,6 +9,7 @@
 #ifndef BOTAN_LMS_H_
 #define BOTAN_LMS_H_
 
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/lm_ots.h>
 
 #include <optional>
@@ -264,6 +265,8 @@ class BOTAN_TEST_API LMS_PublicKey : public LMS_Instance {
        * @return True if the signature is valid, false otherwise.
        */
       bool verify_signature(const LMS_Message& msg, const LMS_Signature& sig) const;
+
+      void _const_time_unpoison() const { CT::unpoison(m_lms_root); }
 
    private:
       /**

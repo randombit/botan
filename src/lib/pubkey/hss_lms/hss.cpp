@@ -287,6 +287,7 @@ LMS_PrivateKey HSS_LMS_PrivateKeyInternal::hss_derive_child_lms_private_key(
    seed_generator.set_i(SEED_CHILD_I);
    auto child_identifier = seed_generator.gen<LMS_Identifier>(*hash, parent_sk.seed());
    child_identifier.resize(LMS_IDENTIFIER_LEN);
+   CT::unpoison(child_identifier);  // identifiers are part of the signature
 
    return LMS_PrivateKey(child_lms_lmots_params.lms_params(),
                          child_lms_lmots_params.lmots_params(),

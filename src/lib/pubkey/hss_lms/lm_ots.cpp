@@ -11,6 +11,7 @@
 #include <botan/exceptn.h>
 #include <botan/strong_type.h>
 #include <botan/internal/bit_ops.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/hss_lms_utils.h>
 #include <botan/internal/int_utils.h>
 
@@ -283,6 +284,7 @@ void LMOTS_Private_Key::sign(StrongSpan<LMOTS_Signature_Bytes> out_sig, const LM
    // we need deterministic signatures to avoid reusing a OTS key to generate multiple signatures.
    // See also: https://github.com/cisco/hash-sigs/blob/b0631b8891295bf2929e68761205337b7c031726/lm_ots_sign.c#L110-L115
    derive_random_C(C, *hash);
+   CT::unpoison(C);  // contained in signature
 
    const auto Q_with_cksm = gen_Q_with_cksm(params(), identifier(), q(), C, msg);
 

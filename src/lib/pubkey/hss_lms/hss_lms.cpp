@@ -116,23 +116,30 @@ std::unique_ptr<Private_Key> HSS_LMS_PublicKey::generate_another(RandomNumberGen
 
 HSS_LMS_PrivateKey::HSS_LMS_PrivateKey(std::span<const uint8_t> private_key) {
    m_private = HSS_LMS_PrivateKeyInternal::from_bytes_or_throw(private_key);
+   auto scope = CT::scoped_poison(*m_private);
    m_public = std::make_shared<HSS_LMS_PublicKeyInternal>(HSS_LMS_PublicKeyInternal::create(*m_private));
+   CT::unpoison(*m_public);
 }
 
 HSS_LMS_PrivateKey::HSS_LMS_PrivateKey(RandomNumberGenerator& rng, std::string_view algo_params) {
    HSS_LMS_Params hss_params(algo_params);
    m_private = std::make_shared<HSS_LMS_PrivateKeyInternal>(hss_params, rng);
+   auto scope = CT::scoped_poison(*m_private);
    m_public = std::make_shared<HSS_LMS_PublicKeyInternal>(HSS_LMS_PublicKeyInternal::create(*m_private));
+   CT::unpoison(*m_public);
 }
 
 HSS_LMS_PrivateKey::HSS_LMS_PrivateKey(std::shared_ptr<HSS_LMS_PrivateKeyInternal> sk) : m_private(std::move(sk)) {
+   auto scope = CT::scoped_poison(*m_private);
    m_public = std::make_shared<HSS_LMS_PublicKeyInternal>(HSS_LMS_PublicKeyInternal::create(*m_private));
+   CT::unpoison(*m_public);
 }
 
 HSS_LMS_PrivateKey::~HSS_LMS_PrivateKey() = default;
 
 secure_vector<uint8_t> HSS_LMS_PrivateKey::private_key_bits() const {
-   return m_private->to_bytes();
+   auto scope = CT::scoped_poison(*m_private);
+   return CT::driveby_unpoison(m_private->to_bytes());
 }
 
 secure_vector<uint8_t> HSS_LMS_PrivateKey::raw_private_key_bits() const {
@@ -172,7 +179,8 @@ class HSS_LMS_Signature_Operation final : public PK_Ops::Signature {
 
       std::vector<uint8_t> sign(RandomNumberGenerator&) override {
          std::vector<uint8_t> message_to_sign = std::exchange(m_msg_buffer, {});
-         return m_private->sign(message_to_sign);
+         auto scope = CT::scoped_poison(*m_private);
+         return CT::driveby_unpoison(m_private->sign(message_to_sign));
       }
 
       size_t signature_length() const override { return m_private->signature_size(); }
