@@ -131,39 +131,36 @@ class Curve final : public EllipticCurve<Params, Secp256r1Rep> {
    public:
       // Return the square of the inverse of x
       static FieldElement fe_invert2(const FieldElement& x) {
-         FieldElement r = x.square();
-         r *= x;
+         // Generated using https://github.com/mmcloughlin/addchain
 
-         const auto p2 = r;
-         r.square_n(2);
-         r *= p2;
-         const auto p4 = r;
-         r.square_n(4);
-         r *= p4;
-         const auto p8 = r;
-         r.square_n(8);
-         r *= p8;
-         const auto p16 = r;
-         r.square_n(16);
-         r *= p16;
-         const auto p32 = r;
-         r.square_n(32);
-         r *= x;
-         r.square_n(128);
-         r *= p32;
-         r.square_n(32);
-         r *= p32;
-         r.square_n(16);
-         r *= p16;
-         r.square_n(8);
-         r *= p8;
-         r.square_n(4);
-         r *= p4;
-         r.square_n(2);
-         r *= p2;
-         r.square_n(2);
+         auto z = x.square();
+         z *= x;
+         z = z.square();
+         z *= x;
+         auto t0 = z;
+         t0.square_n(3);
+         t0 *= z;
+         auto t1 = t0;
+         t1.square_n(6);
+         t0 *= t1;
+         t0.square_n(3);
+         z *= t0;
+         t0 = z.square();
+         t0 *= x;
+         t1 = t0;
+         t1.square_n(16);
+         t0 *= t1;
+         t0.square_n(15);
+         z *= t0;
+         t0.square_n(17);
+         t0 *= x;
+         t0.square_n(143);
+         t0 *= z;
+         t0.square_n(47);
+         z *= t0;
+         z.square_n(2);
 
-         return r;
+         return z;
       }
 
       static Scalar scalar_invert(const Scalar& x) {
