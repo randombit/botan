@@ -293,8 +293,6 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
     if target in ['msan']:
         flags += ['--enable-sanitizers=memory']
-        # disabled temporarily so the cache saves
-        test_cmd = None
 
     if target in ['valgrind', 'valgrind-full', 'sanitizer', 'fuzzers']:
         flags += ['--disable-modules=locking_allocator']
