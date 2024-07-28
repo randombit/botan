@@ -63,6 +63,7 @@ def known_targets():
         'lint',
         'limbo',
         'minimized',
+        'msan',
         'nist',
         'sanitizer',
         'shared',
@@ -289,6 +290,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
             flags += ['--enable-sanitizers=address,undefined']
         else:
             flags += ['--enable-sanitizers=address']
+
+    if target in ['msan']:
+        flags += ['--enable-sanitizers=memory']
 
     if target in ['valgrind', 'valgrind-full', 'sanitizer', 'fuzzers']:
         flags += ['--disable-modules=locking_allocator']
