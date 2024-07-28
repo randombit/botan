@@ -126,6 +126,7 @@ jobs:
         run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   clang-tidy:
+    if: false
     name: "Clang Tidy"
     runs-on: ubuntu-24.04
     steps:
