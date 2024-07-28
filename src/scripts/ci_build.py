@@ -292,7 +292,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
             flags += ['--enable-sanitizers=address']
 
     if target in ['msan']:
-        flags += ['--enable-sanitizers=memory', '--cxx-abi-flags=-stdlib=libc++']
+        flags += ['--enable-sanitizers=memory', '--cc-abi-flags=-stdlib=libc++']
         # disabled temporarily so the cache saves
         test_cmd = None
 
