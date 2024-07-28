@@ -225,7 +225,7 @@ constexpr inline T value_barrier(T x) {
       * however the current approach seems sufficient with current compilers,
       * and is minimally damaging with regards to degrading code generation.
       */
-#if defined(BOTAN_USE_GCC_INLINE_ASM)
+#if defined(BOTAN_USE_GCC_INLINE_ASM) && !defined(BOTAN_HAS_SANITIZER_MEMORY)
       asm("" : "+r"(x) : /* no input */);
 #endif
       return x;
