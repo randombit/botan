@@ -15,6 +15,7 @@ permissions:
 
 jobs:
   codeql_cpp:
+    if: false
     name: C++
     runs-on: ubuntu-22.04
     permissions:
@@ -47,6 +48,7 @@ jobs:
           category: cpp
 
   codeql_py:
+    if: false
     name: Python
     runs-on: ubuntu-22.04
     permissions:

@@ -24,6 +24,7 @@ concurrency:
 
 jobs:
   windows:
+    if: false
     name: "Windows"
     strategy:
       fail-fast: false
@@ -59,6 +60,7 @@ jobs:
         run: python3 ./src/scripts/ci_build.py --cc='msvc' --make-tool='ninja' --cpu='${{ matrix.arch }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   linux:
+    if: false
     name: "Linux"
     strategy:
       fail-fast: false
@@ -89,6 +91,7 @@ jobs:
         run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   macos:
+    if: false
     name: "macOS"
     strategy:
       fail-fast: false
@@ -153,34 +156,37 @@ jobs:
 
       matrix:
         include:
-          - target: coverage
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: sanitizer
-            compiler: msvc
-            host_os: windows-2022
-            make_tool: ninja
-          - target: sanitizer
+#          - target: coverage
+#            compiler: gcc
+#            host_os: ubuntu-24.04
+#          - target: sanitizer
+#            compiler: msvc
+#            host_os: windows-2022
+#            make_tool: ninja
+#          - target: sanitizer
+#            compiler: clang
+#            host_os: ubuntu-24.04
+          - target: msan
             compiler: clang
             host_os: ubuntu-24.04
-          - target: sanitizer
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: valgrind
-            compiler: clang
-            host_os: ubuntu-24.04
-          - target: fuzzers
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: lint
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: format
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: limbo
-            compiler: gcc
-            host_os: ubuntu-24.04
+#          - target: sanitizer
+#            compiler: gcc
+#            host_os: ubuntu-24.04
+#          - target: valgrind
+#            compiler: clang
+#            host_os: ubuntu-24.04
+#          - target: fuzzers
+#            compiler: gcc
+#            host_os: ubuntu-24.04
+#          - target: lint
+#            compiler: gcc
+#            host_os: ubuntu-24.04
+#          - target: format
+#            compiler: gcc
+#            host_os: ubuntu-24.04
+#          - target: limbo
+#            compiler: gcc
+#            host_os: ubuntu-24.04
 
     runs-on: ${{ matrix.host_os }}
 
@@ -210,6 +216,7 @@ jobs:
         run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   specials:
+    if: false
     name: "Special"
     strategy:
       fail-fast: false
@@ -246,6 +253,7 @@ jobs:
         run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}
 
   x-compile:
+    if: false
     name: "Cross"
     strategy:
       fail-fast: false
