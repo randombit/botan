@@ -123,7 +123,11 @@ if type -p "apt-get"; then
         softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
         echo "PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so" >> "$GITHUB_ENV"
 
+    elif [ "$TARGET" = "msan" ]; then
+        sudo apt-get -qq install libc++-dev
+
     elif [ "$TARGET" = "docs" ]; then
+
         sudo apt-get -qq install doxygen python3-docutils python3-sphinx
 
     fi
