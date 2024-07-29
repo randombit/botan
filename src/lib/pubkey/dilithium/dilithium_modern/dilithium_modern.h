@@ -14,10 +14,6 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/shake_xof.h>
 
-#include <array>
-#include <memory>
-#include <vector>
-
 namespace Botan {
 
 class Dilithium_Common_Symmetric_Primitives : public Dilithium_Symmetric_Primitives {

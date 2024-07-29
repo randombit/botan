@@ -1,0 +1,11 @@
+<defines>
+ML_DSA_IPD -> 20240729
+</defines>
+
+<module_info>
+name -> "Module Lattice DSA (Initial Public Draft)"
+</module_info>
+
+<requires>
+dilithium_modern
+</requires>

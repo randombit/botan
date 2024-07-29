@@ -7,10 +7,5 @@ name -> "Dilithium"
 </module_info>
 
 <requires>
-dilithium_common
-shake_xof
+dilithium_modern
 </requires>
-
-<header:internal>
-dilithium_modern.h
-</header:internal>

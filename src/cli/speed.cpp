@@ -125,7 +125,7 @@
    #include <botan/kyber.h>
 #endif
 
-#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
+#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES) || defined(BOTAN_HAS_ML_DSA_IPD)
    #include <botan/dilithium.h>
 #endif
 
@@ -637,7 +637,7 @@ class Speed final : public Command {
                bench_kyber(provider, msec);
             }
 #endif
-#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
+#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES) || defined(BOTAN_HAS_ML_DSA_IPD)
             else if(algo == "Dilithium") {
                bench_dilithium(provider, msec);
             }
@@ -2186,7 +2186,7 @@ class Speed final : public Command {
       }
 #endif
 
-#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
+#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES) || defined(BOTAN_HAS_ML_DSA_IPD)
       void bench_dilithium(const std::string& provider, std::chrono::milliseconds msec) {
          const Botan::DilithiumMode::Mode all_modes[] = {Botan::DilithiumMode::Dilithium4x4,
                                                          Botan::DilithiumMode::Dilithium4x4_AES,
@@ -2208,6 +2208,11 @@ class Speed final : public Command {
 
    #if !defined(BOTAN_HAS_DILITHIUM_AES)
             if(mode.is_aes())
+               continue;
+   #endif
+
+   #if !defined(BOTAN_HAS_ML_DSA_IPD)
+            if(mode.is_ipd())
                continue;
    #endif
 

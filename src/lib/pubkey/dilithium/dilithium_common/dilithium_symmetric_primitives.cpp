@@ -10,7 +10,7 @@
 
 #include <botan/internal/dilithium_symmetric_primitives.h>
 
-#if defined(BOTAN_HAS_DILITHIUM)
+#if defined(BOTAN_HAS_DILITHIUM_MODERN)
    #include <botan/internal/dilithium_modern.h>
 #endif
 
@@ -21,13 +21,19 @@
 namespace Botan {
 
 std::unique_ptr<Dilithium_Symmetric_Primitives> Dilithium_Symmetric_Primitives::create(const DilithiumConstants& mode) {
-#if BOTAN_HAS_DILITHIUM
-   if(mode.is_modern()) {
+#if defined(BOTAN_HAS_ML_DSA_IPD)
+   if(mode.is_modern() && mode.is_ipd()) {
       return std::make_unique<Dilithium_Common_Symmetric_Primitives>(mode);
    }
 #endif
 
-#if BOTAN_HAS_DILITHIUM_AES
+#if defined(BOTAN_HAS_DILITHIUM)
+   if(mode.is_modern() && !mode.is_ipd()) {
+      return std::make_unique<Dilithium_Common_Symmetric_Primitives>(mode);
+   }
+#endif
+
+#if defined(BOTAN_HAS_DILITHIUM_AES)
    if(mode.is_aes()) {
       return std::make_unique<Dilithium_AES_Symmetric_Primitives>(mode);
    }
