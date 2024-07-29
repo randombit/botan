@@ -88,6 +88,16 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
       };                                                                                 \
       BOTAN_REGISTER_TEST("dilithium", "dilithium_kat_" #m "_" #rand, DILITHIUM##m##rand)
 
+// NOLINTNEXTLINE(*-macro-usage)
+   #define REGISTER_ML_DSA_INITIAL_PUBLIC_DRAFT_KAT_TEST(m, rand)                             \
+      class ML_DSA##m##rand##_IPD final : public Dilithium_KAT_Tests<ML_DSA##m##rand##_IPD> { \
+         public:                                                                              \
+            constexpr static auto test_vector = "pubkey/ml-dsa-ipd_" #m "_" #rand ".vec";     \
+            constexpr static auto mode = Botan::DilithiumMode::ML_DSA##m##_IPD;               \
+            constexpr static auto sign_param = #rand;                                         \
+      };                                                                                      \
+      BOTAN_REGISTER_TEST("dilithium", "ml-dsa-ipd_kat_" #m "_" #rand, ML_DSA##m##rand##_IPD)
+
    #if defined(BOTAN_HAS_DILITHIUM)
 REGISTER_DILITHIUM_KAT_TEST(4x4, Deterministic);
 REGISTER_DILITHIUM_KAT_TEST(6x5, Deterministic);
@@ -95,6 +105,13 @@ REGISTER_DILITHIUM_KAT_TEST(8x7, Deterministic);
 REGISTER_DILITHIUM_KAT_TEST(4x4, Randomized);
 REGISTER_DILITHIUM_KAT_TEST(6x5, Randomized);
 REGISTER_DILITHIUM_KAT_TEST(8x7, Randomized);
+
+REGISTER_ML_DSA_INITIAL_PUBLIC_DRAFT_KAT_TEST(4x4, Deterministic);
+REGISTER_ML_DSA_INITIAL_PUBLIC_DRAFT_KAT_TEST(6x5, Deterministic);
+REGISTER_ML_DSA_INITIAL_PUBLIC_DRAFT_KAT_TEST(8x7, Deterministic);
+REGISTER_ML_DSA_INITIAL_PUBLIC_DRAFT_KAT_TEST(4x4, Randomized);
+REGISTER_ML_DSA_INITIAL_PUBLIC_DRAFT_KAT_TEST(6x5, Randomized);
+REGISTER_ML_DSA_INITIAL_PUBLIC_DRAFT_KAT_TEST(8x7, Randomized);
    #endif
 
    #if defined(BOTAN_HAS_DILITHIUM_AES)
@@ -203,6 +220,13 @@ class DilithiumRoundtripTests final : public Test {
                run_roundtrip("Dilithium_4x4_AES_Randomized", Botan::DilithiumMode::Dilithium4x4_AES, true, 128, 44),
                run_roundtrip("Dilithium_6x5_AES_Randomized", Botan::DilithiumMode::Dilithium6x5_AES, true, 192, 65),
                run_roundtrip("Dilithium_8x7_AES_Randomized", Botan::DilithiumMode::Dilithium8x7_AES, true, 256, 87),
+
+               run_roundtrip("ML-DSA_4x4_IPD", Botan::DilithiumMode::ML_DSA4x4_IPD, false, 128, 44),
+               run_roundtrip("ML-DSA_6x5_IPD", Botan::DilithiumMode::ML_DSA6x5_IPD, false, 192, 65),
+               run_roundtrip("ML-DSA_8x7_IPD", Botan::DilithiumMode::ML_DSA8x7_IPD, false, 256, 87),
+               run_roundtrip("ML-DSA_4x4_IPD_Randomized", Botan::DilithiumMode::ML_DSA4x4_IPD, true, 128, 44),
+               run_roundtrip("ML-DSA_6x5_IPD_Randomized", Botan::DilithiumMode::ML_DSA6x5_IPD, true, 192, 65),
+               run_roundtrip("ML-DSA_8x7_IPD_Randomized", Botan::DilithiumMode::ML_DSA8x7_IPD, true, 256, 87),
    #endif
          };
       }
@@ -218,7 +242,8 @@ class Dilithium_Keygen_Tests final : public PK_Key_Generation_Test {
             "Dilithium-4x4-AES-r3", "Dilithium-6x5-AES-r3", "Dilithium-8x7-AES-r3",
    #endif
    #if defined(BOTAN_HAS_DILITHIUM)
-               "Dilithium-4x4-r3", "Dilithium-6x5-r3", "Dilithium-8x7-r3",
+               "Dilithium-4x4-r3", "Dilithium-6x5-r3", "Dilithium-8x7-r3", "ML-DSA-4x4-IPD", "ML-DSA-6x5-IPD",
+               "ML-DSA-8x7-IPD",
    #endif
          };
       }

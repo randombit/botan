@@ -1,5 +1,5 @@
 /*
-* Asymmetric primitives for dilithium AES
+* Symmetric primitives for dilithium AES
 * (C) 2022 Jack Lloyd
 * (C) 2022 Manuel Glaser, Michael Boric, René Meusel - Rohde & Schwarz Cybersecurity
 *
@@ -22,8 +22,7 @@ namespace Botan {
 
 class Dilithium_AES_Symmetric_Primitives : public Dilithium_Symmetric_Primitives {
    public:
-      Dilithium_AES_Symmetric_Primitives(size_t collision_strength_in_bytes) :
-            Dilithium_Symmetric_Primitives(collision_strength_in_bytes) {}
+      Dilithium_AES_Symmetric_Primitives(const DilithiumConstants& mode) : Dilithium_Symmetric_Primitives(mode) {}
 
       // AES mode always uses AES-256, regardless of the XofType
       Botan::XOF& XOF(XofType /* type */, std::span<const uint8_t> seed, uint16_t nonce) const final {

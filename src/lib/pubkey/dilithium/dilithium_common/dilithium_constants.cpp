@@ -15,10 +15,36 @@
 
 namespace Botan {
 
-DilithiumConstants::DilithiumConstants(DilithiumMode mode) : m_mode(mode) {
+namespace {
+uint32_t public_key_hash_size(DilithiumMode mode) {
+   // ML-KEM IPD l. 297:
+   //   [...] ML-DSA increases the length of tr to 512 bits [...]
+   return mode.is_ipd() ? 64 : 32;
+}
+
+uint32_t commitment_hash_full_size(DilithiumMode mode) {
+   // ML-KEM IPD l. 297-298:
+   //   [ML-DSA] increases the length of c~ to 384 and 512 bits, respectively,
+   //   for the parameter sets ML-DSA-65 and ML-DSA-87.
+   switch(mode.mode()) {
+      case Botan::DilithiumMode::ML_DSA6x5_IPD:
+         return 48;
+      case Botan::DilithiumMode::ML_DSA8x7_IPD:
+         return 64;
+      default:
+         return 32;
+   }
+}
+}  // namespace
+
+DilithiumConstants::DilithiumConstants(DilithiumMode mode) :
+      m_mode(mode),
+      m_public_key_hash_bytes(public_key_hash_size(m_mode)),
+      m_commitment_hash_full_bytes(commitment_hash_full_size(m_mode)) {
    switch(m_mode.mode()) {
       case Botan::DilithiumMode::Dilithium4x4:
       case Botan::DilithiumMode::Dilithium4x4_AES:
+      case Botan::DilithiumMode::ML_DSA4x4_IPD:
          m_tau = DilithiumTau::_39;
          m_lambda = DilithiumLambda::_128;
          m_gamma1 = DilithiumGamma1::ToThe17th;
@@ -31,6 +57,7 @@ DilithiumConstants::DilithiumConstants(DilithiumMode mode) : m_mode(mode) {
          break;
       case Botan::DilithiumMode::Dilithium6x5:
       case Botan::DilithiumMode::Dilithium6x5_AES:
+      case Botan::DilithiumMode::ML_DSA6x5_IPD:
          m_tau = DilithiumTau::_49;
          m_lambda = DilithiumLambda::_192;
          m_gamma1 = DilithiumGamma1::ToThe19th;
@@ -43,6 +70,7 @@ DilithiumConstants::DilithiumConstants(DilithiumMode mode) : m_mode(mode) {
          break;
       case Botan::DilithiumMode::Dilithium8x7:
       case Botan::DilithiumMode::Dilithium8x7_AES:
+      case Botan::DilithiumMode::ML_DSA8x7_IPD:
          m_tau = DilithiumTau::_60;
          m_lambda = DilithiumLambda::_256;
          m_gamma1 = DilithiumGamma1::ToThe19th;
@@ -63,9 +91,9 @@ DilithiumConstants::DilithiumConstants(DilithiumMode mode) : m_mode(mode) {
    const auto hint_bytes = m_omega + m_k;
 
    m_private_key_bytes =
-      SEED_RHO_BYTES + SEED_SIGNING_KEY_BYTES + PUBLIC_KEY_HASH_BYTES + s1_bytes + s2_bytes + t0_bytes;
+      SEED_RHO_BYTES + SEED_SIGNING_KEY_BYTES + m_public_key_hash_bytes + s1_bytes + s2_bytes + t0_bytes;
    m_public_key_bytes = SEED_RHO_BYTES + t1_bytes;
-   m_signature_bytes = COMMITMENT_HASH_FULL_BYTES + z_bytes + hint_bytes;
+   m_signature_bytes = m_commitment_hash_full_bytes + z_bytes + hint_bytes;
    m_serialized_commitment_bytes = 32 * m_k * bitlen(((Q - 1) / (2 * m_gamma2)) - 1);
 
    m_symmetric_primitives = Dilithium_Symmetric_Primitives::create(*this);

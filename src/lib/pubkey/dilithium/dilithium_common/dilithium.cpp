@@ -46,6 +46,15 @@ DilithiumMode::Mode dilithium_mode_from_string(std::string_view str) {
    if(str == "Dilithium-8x7-AES-r3") {
       return DilithiumMode::Dilithium8x7_AES;
    }
+   if(str == "ML-DSA-4x4-IPD") {
+      return DilithiumMode::ML_DSA4x4_IPD;
+   }
+   if(str == "ML-DSA-6x5-IPD") {
+      return DilithiumMode::ML_DSA6x5_IPD;
+   }
+   if(str == "ML-DSA-8x7-IPD") {
+      return DilithiumMode::ML_DSA8x7_IPD;
+   }
 
    throw Invalid_Argument(fmt("'{}' is not a valid Dilithium mode name", str));
 }
@@ -74,6 +83,12 @@ std::string DilithiumMode::to_string() const {
          return "Dilithium-8x7-r3";
       case DilithiumMode::Dilithium8x7_AES:
          return "Dilithium-8x7-AES-r3";
+      case DilithiumMode::ML_DSA4x4_IPD:
+         return "ML-DSA-4x4-IPD";
+      case DilithiumMode::ML_DSA6x5_IPD:
+         return "ML-DSA-6x5-IPD";
+      case DilithiumMode::ML_DSA8x7_IPD:
+         return "ML-DSA-8x7-IPD";
    }
 
    BOTAN_ASSERT_UNREACHABLE();
@@ -210,11 +225,7 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
          const auto& mode = m_priv_key->mode();
          const auto& sympri = mode.symmetric_primitives();
 
-         // TODO: ML-DSA generates rhoprime differently, namely
-         //       rhoprime = H(K, rnd, mu) with rnd being 32 random bytes or 32 zero bytes
-         const auto rhoprime = (m_randomized)
-                                  ? rng.random_vec<DilithiumSeedRhoPrime>(DilithiumConstants::SEED_RHOPRIME_BYTES)
-                                  : sympri.H(m_priv_key->signing_seed(), mu);
+         const auto rhoprime = sympri.calc_rhoprime(rng, m_priv_key->signing_seed(), mu, m_randomized);
          CT::poison(rhoprime);
 
          // Note: nonce (as requested by `polyvecl_uniform_gamma1`) is actually just uint16_t

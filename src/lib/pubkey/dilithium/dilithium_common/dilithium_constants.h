@@ -51,10 +51,10 @@ class DilithiumConstants final {
       static constexpr size_t SEED_RANDOMNESS_BYTES = 32;
       static constexpr size_t SEED_RHO_BYTES = 32;
       static constexpr size_t SEED_RHOPRIME_BYTES = 64;
+      // Byte length of 'rnd' (IPD Algorithm 2 l. 7 'rnd' - only used for ML-DSA)
+      static constexpr size_t OPTIONAL_RANDOMNESS_BYTES = 32;
       static constexpr size_t SEED_SIGNING_KEY_BYTES = 32;
       static constexpr size_t MESSAGE_HASH_BYTES = 64;
-      static constexpr size_t PUBLIC_KEY_HASH_BYTES = 32;
-      static constexpr size_t COMMITMENT_HASH_FULL_BYTES = 32;
       static constexpr size_t COMMITMENT_HASH_C1_BYTES = 32;
 
       /// @}
@@ -118,8 +118,11 @@ class DilithiumConstants final {
       /// maximal hamming weight of the hint polynomial vector 'h'
       DilithiumOmega omega() const { return m_omega; }
 
-      /// length of the entire commitment hash in bytes
-      size_t commitment_hash_full_bytes() const { return COMMITMENT_HASH_FULL_BYTES; }
+      /// length of the public key hash 'tr' in bytes (differs between R3 and IPD)
+      size_t public_key_hash_bytes() const { return m_public_key_hash_bytes; }
+
+      /// length of the entire commitment hash 'c~' in bytes (differs between R3 and IPD)
+      size_t commitment_hash_full_bytes() const { return m_commitment_hash_full_bytes; }
 
       /// @}
 
@@ -159,6 +162,8 @@ class DilithiumConstants final {
       DilithiumEta m_eta;
       DilithiumBeta m_beta;
       DilithiumOmega m_omega;
+      uint32_t m_public_key_hash_bytes;
+      uint32_t m_commitment_hash_full_bytes;
 
       uint32_t m_private_key_bytes;
       uint32_t m_public_key_bytes;

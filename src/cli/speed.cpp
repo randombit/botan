@@ -2193,7 +2193,10 @@ class Speed final : public Command {
                                                          Botan::DilithiumMode::Dilithium6x5,
                                                          Botan::DilithiumMode::Dilithium6x5_AES,
                                                          Botan::DilithiumMode::Dilithium8x7,
-                                                         Botan::DilithiumMode::Dilithium8x7_AES};
+                                                         Botan::DilithiumMode::Dilithium8x7_AES,
+                                                         Botan::DilithiumMode::ML_DSA4x4_IPD,
+                                                         Botan::DilithiumMode::ML_DSA6x5_IPD,
+                                                         Botan::DilithiumMode::ML_DSA8x7_IPD};
 
          for(auto modet : all_modes) {
             Botan::DilithiumMode mode(modet);
