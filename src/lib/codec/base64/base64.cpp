@@ -116,34 +116,60 @@ void Base64::encode(char out[4], const uint8_t in[3]) noexcept {
 
 //static
 uint8_t Base64::lookup_binary_value(char input) noexcept {
-   const uint8_t c = static_cast<uint8_t>(input);
+   auto has_zero_byte = [](uint64_t v) { return ((v - 0x0101010101010101) & ~(v) & 0x8080808080808080); };
 
-   const auto is_alpha_upper = CT::Mask<uint8_t>::is_lt(c - uint8_t('A'), 26);
-   const auto is_alpha_lower = CT::Mask<uint8_t>::is_lt(c - uint8_t('a'), 26);
-   const auto is_decimal = CT::Mask<uint8_t>::is_lt(c - uint8_t('0'), 10);
+   // Assumes each byte is either 0x00 or 0x80
+   auto index_of_first_set_byte = [](uint64_t v) {
+      return ((((v - 1) & 0x0101010101010101) * 0x0101010101010101) >> 56) - 1;
+   };
 
-   const auto is_plus = CT::Mask<uint8_t>::is_equal(c, uint8_t('+'));
-   const auto is_slash = CT::Mask<uint8_t>::is_equal(c, uint8_t('/'));
-   const auto is_equal = CT::Mask<uint8_t>::is_equal(c, uint8_t('='));
+   auto swar_lt = [](uint64_t a, uint64_t b) -> uint64_t {
+      // This assumes that the high bits of each byte of b are unset
+      constexpr uint64_t hi = 0x8080808080808080;
+      constexpr uint64_t lo7 = 0x7F7F7F7F7F7F7F7F;
 
-   const auto is_whitespace =
-      CT::Mask<uint8_t>::is_any_of(c, {uint8_t(' '), uint8_t('\t'), uint8_t('\n'), uint8_t('\r')});
+      const uint64_t a_lo = a & lo7;
+      const uint64_t a_hi = a & hi;
+      uint64_t r = (lo7 - a_lo + b) & hi;
+      r &= ~a_hi;
+      return r;
+   };
 
-   const uint8_t c_upper = c - uint8_t('A');
-   const uint8_t c_lower = c - uint8_t('a') + 26;
-   const uint8_t c_decim = c - uint8_t('0') + 2 * 26;
+   auto swar_sub = [](uint64_t x, uint64_t y) {
+      constexpr uint64_t hi = 0x8080808080808080;
+      constexpr uint64_t lo7 = 0x7F7F7F7F7F7F7F7F;
+      return ((x | hi) - (y & lo7)) ^ ((x ^ (~y)) & hi);
+   };
 
-   uint8_t ret = 0xFF;  // default value
+   constexpr uint64_t lo = 0x0101010101010101;
 
-   ret = is_alpha_upper.select(c_upper, ret);
-   ret = is_alpha_lower.select(c_lower, ret);
-   ret = is_decimal.select(c_decim, ret);
-   ret = is_plus.select(62, ret);
-   ret = is_slash.select(63, ret);
-   ret = is_equal.select(0x81, ret);
-   ret = is_whitespace.select(0x80, ret);
+   const uint8_t x = static_cast<uint8_t>(input);
 
-   return ret;
+   const uint64_t x8 = x * lo;
+
+   // 'A', 'a', '0'
+   const uint64_t val_l = 0x416130;
+   // 26, 26, 10
+   const uint64_t val_u = 0x1A1A0A;
+
+   // If x is in one of the ranges return a mask. Otherwise we xor in at the
+   // high word which will be our invalid marker
+   auto v_mask = swar_lt(swar_sub(x8, val_l), val_u) ^ 0x80000000;
+
+   // This is the offset added to x to get the value
+   const uint64_t val_v = 0xbfb904 ^ (0xFF000000 - (x << 24));
+
+   uint8_t z = x + static_cast<uint8_t>(val_v >> (8 * index_of_first_set_byte(v_mask)));
+
+   // Specials:
+   // [<empty>, '+', '/', '=', ' ', '\n', '\t', '\r']
+   constexpr uint64_t specials_i = 0x002b2f3d200a090d;
+
+   const uint64_t specials_v = 0x3e3f8180808080 ^ (static_cast<uint64_t>(z) << 56);
+
+   const uint64_t smask = has_zero_byte(x8 ^ specials_i) ^ 0x8000000000000000;
+
+   return static_cast<uint8_t>(specials_v >> (8 * index_of_first_set_byte(smask)));
 }
 
 //static
