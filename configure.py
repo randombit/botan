@@ -428,6 +428,8 @@ def process_command_line(args):
 
     add_with_without_pair(build_group, 'sanitizers', False, 'enable ASan/UBSan checks')
 
+    add_enable_disable_pair(build_group, 'asm', True, 'disable inline assembly')
+
     build_group.add_option('--enable-sanitizers', metavar='SAN', default='',
                            help='enable specific sanitizers')
 
@@ -2227,7 +2229,7 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'linker': cc.linker_name or choose_cxx_exe(),
         'make_supports_phony': osinfo.basename != 'windows',
 
-        'cxx_supports_gcc_inline_asm': cc.supports_gcc_inline_asm,
+        'cxx_supports_gcc_inline_asm': cc.supports_gcc_inline_asm and options.enable_asm,
 
         'sanitizer_types' : sorted(cc.sanitizer_types),
 
