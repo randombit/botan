@@ -246,6 +246,18 @@ std::vector<Test::Result> test_higher_level_ct_poison() {
                Botan::CT::unpoison_range(v);
                result.confirm("all unpoisoned", std::none_of(v.begin(), v.end(), is_poisoned));
             }),
+
+      CHECK("poison a poisonable objects with driveby_poison",
+            [](Test::Result& result) {
+               Poisonable p;
+               result.confirm("not poisoned", p.poisoned == false);
+               Poisonable p_poisoned =
+                  Botan::CT::driveby_poison(std::move(p));  // NOLINT(hicpp-move-const-arg,performance-move-const-arg)
+               result.confirm("poisoned", p_poisoned.poisoned == true);
+               Poisonable p_unpoisoned = Botan::CT::driveby_unpoison(
+                  std::move(p_poisoned));  // NOLINT(hicpp-move-const-arg,performance-move-const-arg)
+               result.confirm("unpoisoned", p_unpoisoned.poisoned == false);
+            }),
    };
 }
 
