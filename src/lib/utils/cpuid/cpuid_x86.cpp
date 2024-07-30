@@ -36,6 +36,7 @@ void invoke_cpuid(uint32_t type, uint32_t out[4]) {
    __cpuid((int*)out, type);
 
    #else
+   BOTAN_UNUSED(type);
       #warning "No way of calling x86 cpuid instruction for this compiler"
    #endif
 }
@@ -50,6 +51,7 @@ void invoke_cpuid_sublevel(uint32_t type, uint32_t level, uint32_t out[4]) {
    __cpuidex((int*)out, type, level);
 
    #else
+   BOTAN_UNUSED(type, level);
       #warning "No way of calling x86 cpuid instruction for this compiler"
    #endif
 }
