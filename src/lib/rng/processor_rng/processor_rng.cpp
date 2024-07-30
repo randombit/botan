@@ -9,7 +9,7 @@
 #include <botan/internal/cpuid.h>
 #include <botan/internal/loadstor.h>
 
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY) && !defined(BOTAN_USE_GCC_INLINE_ASM)
+#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
    #include <immintrin.h>
 #endif
 
@@ -59,7 +59,7 @@ hwrng_output read_hwrng(bool& success) {
    #elif defined(BOTAN_TARGET_ARCH_IS_X86_32)
    cf = _rdrand32_step(&output);
    #else
-   cf = _rdrand64_step(&output);
+   cf = _rdrand64_step(reinterpret_cast<unsigned long long*>(&output));
    #endif
    success = (1 == cf);
 
