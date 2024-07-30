@@ -8,6 +8,7 @@ Botan is released under the Simplified BSD License (see license.txt)
 Setup script for OSS-Fuzz
 """
 
+import os
 import sys
 import subprocess
 
@@ -28,10 +29,13 @@ args = [
     "--build-fuzzers=libfuzzer",
     "--build-targets=static",
     "--without-os-features=getrandom,getentropy",
+    "--disable-modules=system_rng,processor_rng",
     "--with-fuzzer-lib=FuzzingEngine",
 ]
 
 if cxxflags.find("-fsanitize=memory") > 0:
     args.append('--disable-asm')
 
-subprocess.run(["configure.py"] + args)
+configure = os.path.realpath(os.path.join(os.path.realpath(__file__), '..', '..', '..', 'configure.py'))
+
+subprocess.run([configure] + args)
