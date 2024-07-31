@@ -5,7 +5,6 @@ PCURVES_SECP521R1 -> 20240608
 <module_info>
 name -> "PCurve secp521r1"
 brief -> "secp521r1"
-type -> "Internal"
 </module_info>
 
 <requires>
