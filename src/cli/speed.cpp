@@ -54,6 +54,10 @@
    #include <botan/mac.h>
 #endif
 
+#if defined(BOTAN_HAS_BASE64_CODEC)
+   #include <botan/base64.h>
+#endif
+
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
    #include <botan/auto_rng.h>
 #endif
@@ -732,6 +736,12 @@ class Speed final : public Command {
 #if defined(BOTAN_HAS_RFC3394_KEYWRAP)
             else if(algo == "rfc3394") {
                bench_rfc3394(msec);
+            }
+#endif
+
+#if defined(BOTAN_HAS_BASE64_CODEC)
+            else if(algo == "base64") {
+               bench_base64(msec, buf_sizes);
             }
 #endif
 
@@ -2512,6 +2522,32 @@ class Speed final : public Command {
          }
       }
 
+#endif
+
+#if defined(BOTAN_HAS_BASE64_CODEC)
+      void bench_base64(std::chrono::milliseconds msec, const std::vector<size_t>& buf_sizes) {
+         for(size_t buf_size : buf_sizes) {
+            std::vector<uint8_t> ibuf(buf_size);
+            std::vector<uint8_t> rbuf(buf_size);
+            const size_t olen = Botan::base64_encode_max_output(ibuf.size());
+
+            auto enc_timer = make_timer("base64", ibuf.size(), "encode", "", ibuf.size());
+
+            auto dec_timer = make_timer("base64", olen, "decode", "", olen);
+
+            while(enc_timer->under(msec) && dec_timer->under(msec)) {
+               rng().randomize(ibuf);
+
+               std::string b64 = enc_timer->run([&]() { return Botan::base64_encode(ibuf); });
+
+               dec_timer->run([&]() { Botan::base64_decode(rbuf.data(), b64); });
+               BOTAN_ASSERT(rbuf == ibuf, "Encode/decode round trip ok");
+            }
+
+            record_result(enc_timer);
+            record_result(dec_timer);
+         }
+      }
 #endif
 };
 
