@@ -25,9 +25,9 @@ size_optimization_flags "/O1 /Os"
 # for using a PDB file:
 debug_info_flags "/Zi /FS"
 
-preproc_flags "/nologo /EP"
+preproc_flags "/nologo /EP /Zc:preprocessor"
 
-lang_flags "/std:c++20 /EHs /GR"
+lang_flags "/Zc:preprocessor /std:c++20 /EHs /GR"
 
 # 4251: STL types used in DLL interface
 # 4275: ???
