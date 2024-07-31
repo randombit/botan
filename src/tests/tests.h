@@ -757,14 +757,18 @@ class TestFnRegistration {
       }
 };
 
+#define BOTAN_REGISTER_TEST_FN_IMPL(category, name, smoke_test, needs_serialization, fn0, ...) \
+   static const TestFnRegistration register_##fn0(                                             \
+      category, name, smoke_test, needs_serialization, {__FILE__, __LINE__}, fn0 __VA_OPT__(, ) __VA_ARGS__)
+
 #define BOTAN_REGISTER_TEST_FN(category, name, ...) \
-   static const TestFnRegistration reg_##fn_name(category, name, false, false, {__FILE__, __LINE__}, __VA_ARGS__)
+   BOTAN_REGISTER_TEST_FN_IMPL(category, name, false, false, __VA_ARGS__)
 #define BOTAN_REGISTER_SMOKE_TEST_FN(category, name, ...) \
-   static const TestFnRegistration reg_##fn_name(category, name, true, false, {__FILE__, __LINE__}, __VA_ARGS__)
+   BOTAN_REGISTER_TEST_FN_IMPL(category, name, true, false, __VA_ARGS__)
 #define BOTAN_REGISTER_SERIALIZED_TEST_FN(category, name, ...) \
-   static const TestFnRegistration reg_##fn_name(category, name, false, true {__FILE__, __LINE__}, __VA_ARGS__)
+   BOTAN_REGISTER_TEST_FN_IMPL(category, name, false, true, __VA_ARGS__)
 #define BOTAN_REGISTER_SERIALIZED_SMOKE_TEST_FN(category, name, ...) \
-   static const TestFnRegistration reg_##fn_name(category, name, true, true {__FILE__, __LINE__}, __VA_ARGS__)
+   BOTAN_REGISTER_TEST_FN_IMPL(category, name, true, true, __VA_ARGS__)
 
 class VarMap {
    public:
