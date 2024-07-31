@@ -185,9 +185,35 @@ class IntMod final {
          return (*this);
       }
 
-      // if cond is true, assigns other to *this
-      constexpr void conditional_assign(CT::Choice cond, const Self& other) {
-         CT::conditional_assign_mem(cond, m_val.data(), other.data(), N);
+      // if cond is true, sets x to nx
+      static constexpr void conditional_assign(Self& x, CT::Choice cond, const Self& nx) {
+         const W mask = CT::Mask<W>::from_choice(cond).value();
+
+         for(size_t i = 0; i != N; ++i) {
+            x.m_val[i] = choose(mask, nx.m_val[i], x.m_val[i]);
+         }
+      }
+
+      // if cond is true, sets x to nx, y to ny
+      static constexpr void conditional_assign(Self& x, Self& y, CT::Choice cond, const Self& nx, const Self& ny) {
+         const W mask = CT::Mask<W>::from_choice(cond).value();
+
+         for(size_t i = 0; i != N; ++i) {
+            x.m_val[i] = choose(mask, nx.m_val[i], x.m_val[i]);
+            y.m_val[i] = choose(mask, ny.m_val[i], y.m_val[i]);
+         }
+      }
+
+      // if cond is true, sets x to nx, y to ny, z to nz
+      static constexpr void conditional_assign(
+         Self& x, Self& y, Self& z, CT::Choice cond, const Self& nx, const Self& ny, const Self& nz) {
+         const W mask = CT::Mask<W>::from_choice(cond).value();
+
+         for(size_t i = 0; i != N; ++i) {
+            x.m_val[i] = choose(mask, nx.m_val[i], x.m_val[i]);
+            y.m_val[i] = choose(mask, ny.m_val[i], y.m_val[i]);
+            z.m_val[i] = choose(mask, nz.m_val[i], z.m_val[i]);
+         }
       }
 
       constexpr Self square() const {
@@ -272,7 +298,7 @@ class IntMod final {
       {
          auto z = pow_vartime(Self::P_PLUS_1_OVER_4);
          const CT::Choice correct = (z.square() == *this);
-         z.conditional_assign(!correct, Self::zero());
+         Self::conditional_assign(z, !correct, Self::zero());
          return {z, correct};
       }
 
@@ -521,7 +547,8 @@ class AffineCurvePoint {
                auto [y, is_square] = x3_ax_b(*x).sqrt();
 
                if(is_square.as_bool()) {
-                  y.conditional_assign(y_is_even != y.is_even(), y.negate());
+                  const auto flip_y = y_is_even != y.is_even();
+                  FieldElement::conditional_assign(y, flip_y, y.negate());
                   return Self(*x, y);
                }
             }
@@ -537,8 +564,7 @@ class AffineCurvePoint {
       constexpr const FieldElement& y() const { return m_y; }
 
       constexpr void conditional_assign(CT::Choice cond, const Self& pt) {
-         m_x.conditional_assign(cond, pt.x());
-         m_y.conditional_assign(cond, pt.y());
+         FieldElement::conditional_assign(m_x, m_y, cond, pt.x(), pt.y());
       }
 
       constexpr void _const_time_poison() const { CT::poison_all(m_x, m_y); }
@@ -609,9 +635,7 @@ class ProjectiveCurvePoint {
       constexpr CT::Choice is_identity() const { return z().is_zero(); }
 
       constexpr void conditional_assign(CT::Choice cond, const Self& pt) {
-         m_x.conditional_assign(cond, pt.x());
-         m_y.conditional_assign(cond, pt.y());
-         m_z.conditional_assign(cond, pt.z());
+         FieldElement::conditional_assign(m_x, m_y, m_z, cond, pt.x(), pt.y(), pt.z());
       }
 
       constexpr static Self add_mixed(const Self& a, const AffinePoint& b) {
@@ -651,16 +675,11 @@ class ProjectiveCurvePoint {
          auto Y3 = t7 - t6;
          auto Z3 = a.z() * H;
 
-         // TODO these could be combined
          // if a is identity then return b
-         X3.conditional_assign(a_is_identity, b.x());
-         Y3.conditional_assign(a_is_identity, b.y());
-         Z3.conditional_assign(a_is_identity, FieldElement::one());
+         FieldElement::conditional_assign(X3, Y3, Z3, a_is_identity, b.x(), b.y(), FieldElement::one());
 
          // if b is identity then return a
-         X3.conditional_assign(b_is_identity, a.x());
-         Y3.conditional_assign(b_is_identity, a.y());
-         Z3.conditional_assign(b_is_identity, a.z());
+         FieldElement::conditional_assign(X3, Y3, Z3, b_is_identity, a.x(), a.y(), a.z());
 
          return Self(X3, Y3, Z3);
       }
@@ -705,16 +724,11 @@ class ProjectiveCurvePoint {
          const auto t8 = b.z() * H;
          auto Z3 = a.z() * t8;
 
-         // TODO these could be combined
          // if a is identity then return b
-         X3.conditional_assign(a_is_identity, b.x());
-         Y3.conditional_assign(a_is_identity, b.y());
-         Z3.conditional_assign(a_is_identity, b.z());
+         FieldElement::conditional_assign(X3, Y3, Z3, a_is_identity, b.x(), b.y(), b.z());
 
          // if b is identity then return a
-         X3.conditional_assign(b_is_identity, a.x());
-         Y3.conditional_assign(b_is_identity, a.y());
-         Z3.conditional_assign(b_is_identity, a.z());
+         FieldElement::conditional_assign(X3, Y3, Z3, b_is_identity, a.x(), a.y(), a.z());
 
          return Self(X3, Y3, Z3);
       }
@@ -1471,7 +1485,7 @@ inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::
    const auto z2_u4 = z_u2.square();
    const auto tv1 = (z2_u4 + z_u2).invert();
    auto x1 = C::SSWU_C1() * (C::FieldElement::one() + tv1);
-   x1.conditional_assign(tv1.is_zero(), C::SSWU_C2());
+   C::FieldElement::conditional_assign(x1, tv1.is_zero(), C::SSWU_C2());
    const auto gx1 = C::AffinePoint::x3_ax_b(x1);
 
    const auto x2 = z_u2 * x1;
@@ -1484,11 +1498,10 @@ inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::
    // By design one of gx1 and gx2 must be a quadratic residue
    auto y = gx2.sqrt().first;
 
-   x.conditional_assign(gx1_is_square, x1);
-   y.conditional_assign(gx1_is_square, gx1_sqrt);
+   C::FieldElement::conditional_assign(x, y, gx1_is_square, x1, gx1_sqrt);
 
    const auto flip_y = y.is_even() != u.is_even();
-   y.conditional_assign(flip_y, y.negate());
+   C::FieldElement::conditional_assign(y, flip_y, y.negate());
 
    auto pt = typename C::AffinePoint(x, y);
 

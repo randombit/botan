@@ -534,8 +534,9 @@ class Mask final {
       * cleared (resp)
       */
       constexpr void select_n(T output[], const T x[], const T y[], size_t len) const {
+         const T mask = value();
          for(size_t i = 0; i != len; ++i) {
-            output[i] = this->select(x[i], y[i]);
+            output[i] = choose(mask, x[i], y[i]);
          }
       }
 
