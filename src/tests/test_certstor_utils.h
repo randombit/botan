@@ -24,6 +24,7 @@ Botan::X509_DN read_dn(const std::string& hex);
 Botan::X509_DN get_dn();
 
 Botan::X509_DN get_utf8_dn();
+std::vector<std::pair<std::string, Botan::X509_DN>> get_utf8_dn_alternatives();
 
 std::vector<uint8_t> get_key_id();
 std::string get_subject_cn();

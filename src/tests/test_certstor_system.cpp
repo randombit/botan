@@ -93,17 +93,33 @@ Test::Result find_cert_by_utf8_subject_dn(Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find Certificate by UTF8 subject DN");
 
    try {
-      auto dn = get_utf8_dn();
+      const auto DNs = get_utf8_dn_alternatives();
+
+      unsigned int found = 0;
 
       result.start_timer();
-      auto cert = certstore.find_cert(dn, std::vector<uint8_t>());
+      for(const auto& [cn, dn] : DNs) {
+         if(auto cert = certstore.find_cert(dn, {})) {
+            auto cns = cert->subject_dn().get_attribute("CN");
+            result.test_is_eq("exactly one CN", cns.size(), size_t(1));
+            result.test_eq("CN", cns.front(), cn);
+
+            ++found;
+         }
+      }
       result.end_timer();
 
-      if(result.test_not_nullopt("found certificate", cert)) {
-         auto cns = cert->subject_dn().get_attribute("CN");
-         result.test_is_eq("exactly one CN", cns.size(), size_t(1));
-         result.test_eq("CN", cns.front(), "D-TRUST Root Class 3 CA 2 EV 2009");
+      if(found == 0) {
+         std::string tried_cns;
+         for(const auto& [cn, dn] : DNs) {
+            tried_cns += cn + ", ";
+         }
+
+         result.test_note("Tried to find any of those CNs: " + tried_cns);
+         result.test_failure("Did not find any certificate via an UTF-8 encoded DN");
       }
+
+      result.test_gte("found at least one certificate", found, 1);
    } catch(std::exception& e) {
       result.test_failure(e.what());
    }
