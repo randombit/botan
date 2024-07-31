@@ -257,6 +257,7 @@ LMS_PublicKey LMS_PrivateKey::sign_and_get_pk(StrongSpan<LMS_Signature_Bytes> ou
    LMS_Tree_Node pk_buffer(lms_params().m());
    lms_treehash(StrongSpan<LMS_Tree_Node>(pk_buffer.get()), auth_path_buffer, q, *this);
 
+   CT::unpoison(pk_buffer);
    return LMS_PublicKey(lms_params(), lmots_params(), identifier(), std::move(pk_buffer));
 }
 
