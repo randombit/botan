@@ -208,8 +208,10 @@ Maps:
 
      * ``Public`` Library users can directly interact with this module. E.g.
        they may enable or disable the module at will during build.
-     * ``Internal`` Library users must not directly interact with this module.
-       It is enabled and used as required by other modules.
+     * ``Internal`` Library users cannot directly interact with this module.
+       Typically, it does not expose any public API and is enabled as a
+       dependency of other modules. Explicitly disabling an internal module
+       explicitly disables all dependent modules.
      * ``Virtual`` This module does not contain any implementation but acts as
        a container for other sub-modules. It cannot be interacted with by the
        library user and cannot be depended upon directly.
