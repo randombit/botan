@@ -58,6 +58,10 @@
    #include <botan/base64.h>
 #endif
 
+#if defined(BOTAN_HAS_HEX_CODEC)
+   #include <botan/hex.h>
+#endif
+
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
    #include <botan/auto_rng.h>
 #endif
@@ -742,6 +746,11 @@ class Speed final : public Command {
 #if defined(BOTAN_HAS_BASE64_CODEC)
             else if(algo == "base64") {
                bench_base64(msec, buf_sizes);
+            }
+#endif
+#if defined(BOTAN_HAS_HEX_CODEC)
+            else if(algo == "hex") {
+               bench_hex(msec, buf_sizes);
             }
 #endif
 
@@ -2541,6 +2550,32 @@ class Speed final : public Command {
                std::string b64 = enc_timer->run([&]() { return Botan::base64_encode(ibuf); });
 
                dec_timer->run([&]() { Botan::base64_decode(rbuf.data(), b64); });
+               BOTAN_ASSERT(rbuf == ibuf, "Encode/decode round trip ok");
+            }
+
+            record_result(enc_timer);
+            record_result(dec_timer);
+         }
+      }
+#endif
+
+#if defined(BOTAN_HAS_HEX_CODEC)
+      void bench_hex(std::chrono::milliseconds msec, const std::vector<size_t>& buf_sizes) {
+         for(size_t buf_size : buf_sizes) {
+            std::vector<uint8_t> ibuf(buf_size);
+            std::vector<uint8_t> rbuf(buf_size);
+            const size_t olen = 2 * buf_size;
+
+            auto enc_timer = make_timer("hex", ibuf.size(), "encode", "", ibuf.size());
+
+            auto dec_timer = make_timer("hex", olen, "decode", "", olen);
+
+            while(enc_timer->under(msec) && dec_timer->under(msec)) {
+               rng().randomize(ibuf);
+
+               std::string hex = enc_timer->run([&]() { return Botan::hex_encode(ibuf); });
+
+               dec_timer->run([&]() { Botan::hex_decode(rbuf.data(), hex); });
                BOTAN_ASSERT(rbuf == ibuf, "Encode/decode round trip ok");
             }
 
