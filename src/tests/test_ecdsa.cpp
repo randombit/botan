@@ -246,15 +246,23 @@ class ECDSA_Invalid_Key_Tests final : public Text_Based_Test {
       }
 };
 
-class ECDSA_AllGroups_Tests : public Test {
+class ECDSA_AllGroups_Test : public Test {
    public:
       std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
 
-         const std::vector<std::string> hash_fn = {"SHA-256", "SHA-384", "SHA-512", "SHAKE-128(208)", "SHAKE-128(520)"};
+         const std::vector<std::string> hash_fn = {
+            "SHA-256", "SHA-384", "SHA-512", "SHAKE-128(208)", "SHAKE-128(520)", "SHAKE-128(1032)"};
 
          for(const std::string& group_name : Botan::EC_Group::known_named_groups()) {
             Test::Result result("ECDSA " + group_name);
+
+            result.start_timer();
+
+            const auto group = Botan::EC_Group::from_name(group_name);
+
+            const Botan::ECDSA_PrivateKey priv(rng(), group);
+            const auto pub = priv.public_key();
 
             for(const auto& hash : hash_fn) {
                if(!Botan::HashFunction::create(hash)) {
@@ -262,24 +270,27 @@ class ECDSA_AllGroups_Tests : public Test {
                }
 
                try {
-                  const auto group = Botan::EC_Group::from_name(group_name);
-
-                  const Botan::ECDSA_PrivateKey priv(rng(), group);
-                  const auto pub = priv.public_key();
-
                   Botan::PK_Signer signer(priv, rng(), hash);
 
-                  const auto message = rng().random_vec(rng().next_byte());
-                  const auto sig = signer.sign_message(message, rng());
+                  auto message = rng().random_vec(rng().next_byte());
+                  auto sig = signer.sign_message(message, rng());
                   result.test_eq("Expected signature size", sig.size(), 2 * group.get_order_bytes());
 
                   Botan::PK_Verifier verifier(*pub, hash);
                   result.confirm("Signature accepted", verifier.verify_message(message, sig));
+
+                  const auto corrupted_message = mutate_vec(message, rng(), true);
+                  result.confirm("Modified message rejected", !verifier.verify_message(corrupted_message, sig));
+
+                  const auto corrupted_sig = mutate_vec(sig, rng(), true);
+                  result.confirm("Modified signature rejected", !verifier.verify_message(message, corrupted_sig));
+
                } catch(std::exception& e) {
                   result.test_failure("Exception", e.what());
                }
             }
 
+            result.end_timer();
             results.push_back(result);
          }
 
@@ -295,7 +306,7 @@ BOTAN_REGISTER_TEST("pubkey", "ecdsa_sign_verify_der", ECDSA_Sign_Verify_DER_Tes
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_keygen", ECDSA_Keygen_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_keygen_stability", ECDSA_Keygen_Stability_Tests);
 BOTAN_REGISTER_TEST("pubkey", "ecdsa_invalid", ECDSA_Invalid_Key_Tests);
-BOTAN_REGISTER_TEST("pubkey", "ecdsa_all_groups", ECDSA_AllGroups_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecdsa_all_groups", ECDSA_AllGroups_Test);
 
 #endif
 
