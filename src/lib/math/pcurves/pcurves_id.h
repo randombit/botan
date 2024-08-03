@@ -44,6 +44,7 @@ class BOTAN_TEST_API PrimeOrderCurveId final {
          brainpool512r1,
          frp256v1,
          sm2p256v1,
+         numsp512d1,
       };
 
       using enum Code;

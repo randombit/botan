@@ -40,6 +40,8 @@ class PCurveInstance final {
       static std::shared_ptr<const PrimeOrderCurve> frp256v1();
 
       static std::shared_ptr<const PrimeOrderCurve> sm2p256v1();
+
+      static std::shared_ptr<const PrimeOrderCurve> numsp512d1();
 };
 
 }  // namespace Botan::PCurve
