@@ -189,6 +189,8 @@ std::vector<Test::Result> NIST_Path_Validation_Tests::run() {
    *  Testing of Relying Party Client Certificate Path Proccessing Logic",
    *  which is available on NIST's web site.
    *
+   * https://csrc.nist.gov/projects/pki-testing/x-509-path-validation-test-suite
+   *
    * Known Failures/Problems:
    *  - Policy extensions are not implemented, so we skip tests #34-#53.
    *  - Tests #75 and #76 are skipped as they make use of relatively
