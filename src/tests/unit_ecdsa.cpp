@@ -9,8 +9,6 @@
 */
 
 #include "tests.h"
-#include <botan/hex.h>
-#include <numeric>
 
 #if defined(BOTAN_HAS_ECDSA)
    #include <botan/data_src.h>
@@ -38,7 +36,7 @@ Test::Result test_decode_ecdsa_X509() {
 
    result.test_eq("correct signature oid", cert.signature_algorithm().oid().to_formatted_string(), "ECDSA/SHA-224");
 
-   result.test_eq("serial number", cert.serial_number(), Botan::hex_decode("01"));
+   result.test_eq("serial number", cert.serial_number(), std::vector<uint8_t>{1});
    result.test_eq("authority key id", cert.authority_key_id(), cert.subject_key_id());
    result.test_eq("key fingerprint",
                   cert.fingerprint("SHA-256"),
@@ -130,8 +128,6 @@ Test::Result test_read_pkcs8() {
 
    auto rng = Test::new_rng("ecdsa_read_pkcs8");
 
-   const std::vector<uint8_t> msg = Botan::hex_decode("12345678901234567890abcdef12");
-
    try {
       Botan::DataSource_Stream key_stream(Test::data_file("x509/ecc/nodompar_private.pkcs8.pem"));
       auto loaded_key_nodp = Botan::PKCS8::load_key(key_stream);
@@ -145,6 +141,8 @@ Test::Result test_read_pkcs8() {
 
       Botan::PK_Signer signer(*ecdsa_nodp, *rng, "SHA-256");
       Botan::PK_Verifier verifier(*ecdsa_nodp, "SHA-256");
+
+      const auto msg = rng->random_vec(48);
 
       std::vector<uint8_t> signature_nodp = signer.sign_message(msg, *rng);
 
