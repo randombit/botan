@@ -12,6 +12,7 @@
 #include <botan/internal/codec_base.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/rounding.h>
 
@@ -79,20 +80,12 @@ uint32_t lookup_base64_chars(uint32_t x32) {
    * Here we do a SWAR (simd within a register) implementation of Wojciech's lookup_version2_swar
    */
 
-   auto swar_lt_32 = [](uint32_t a, uint32_t b) -> uint32_t {
-      // This assumes the high bits of both a and b are clear!!
-      constexpr uint32_t hi = 0x80808080;
-      constexpr uint32_t lo = 0x7F7F7F7F;
-      uint32_t r = (lo - a + b) & hi;
-      return (r << 1) - (r >> 7);
-   };
-
    uint32_t r = x32 + 0x41414141;
 
-   r += (~swar_lt_32(x32, 0x1A1A1A1A)) & 0x06060606;
-   r -= (~swar_lt_32(x32, 0x34343434)) & 0x4B4B4B4B;
-   r -= (~swar_lt_32(x32, 0x3E3E3E3E)) & 0x0F0F0F0F;
-   r += (~swar_lt_32(x32, 0x3F3F3F3F)) & 0x03030303;
+   r += (~swar_lt<uint32_t>(x32, 0x1A1A1A1A)) & 0x06060606;
+   r -= (~swar_lt<uint32_t>(x32, 0x34343434)) & 0x4B4B4B4B;
+   r -= (~swar_lt<uint32_t>(x32, 0x3E3E3E3E)) & 0x0F0F0F0F;
+   r += (~swar_lt<uint32_t>(x32, 0x3F3F3F3F)) & 0x03030303;
 
    return r;
 }
@@ -123,47 +116,27 @@ uint8_t Base64::lookup_binary_value(char input) noexcept {
       return ((((v - 1) & 0x0101010101010101) * 0x0101010101010101) >> 56) - 1;
    };
 
-   auto swar_lt = [](uint64_t a, uint64_t b) -> uint64_t {
-      // This assumes that the high bits of each byte of b are unset
-      constexpr uint64_t hi = 0x8080808080808080;
-      constexpr uint64_t lo7 = 0x7F7F7F7F7F7F7F7F;
-
-      const uint64_t a_lo = a & lo7;
-      const uint64_t a_hi = a & hi;
-      uint64_t r = (lo7 - a_lo + b) & hi;
-      r &= ~a_hi;
-      return r;
-   };
-
-   auto swar_sub = [](uint64_t x, uint64_t y) {
-      constexpr uint64_t hi = 0x8080808080808080;
-      constexpr uint64_t lo7 = 0x7F7F7F7F7F7F7F7F;
-      return ((x | hi) - (y & lo7)) ^ ((x ^ (~y)) & hi);
-   };
-
    constexpr uint64_t lo = 0x0101010101010101;
 
    const uint8_t x = static_cast<uint8_t>(input);
 
    const uint64_t x8 = x * lo;
 
-   // 'A', 'a', '0'
-   const uint64_t val_l = 0x416130;
-   // 26, 26, 10
-   const uint64_t val_u = 0x1A1A0A;
+   // Defines the valid ASCII ranges of base64, except the special chars (below)
+   constexpr uint64_t val_l = make_uint64(0, 0, 0, 0, 0, 'A', 'a', '0');
+   constexpr uint64_t val_u = make_uint64(0, 0, 0, 0, 0, 26, 26, 10);
 
    // If x is in one of the ranges return a mask. Otherwise we xor in at the
    // high word which will be our invalid marker
-   auto v_mask = swar_lt(swar_sub(x8, val_l), val_u) ^ 0x80000000;
+   auto v_mask = swar_in_range<uint64_t>(x8, val_l, val_u) ^ 0x80000000;
 
    // This is the offset added to x to get the value
    const uint64_t val_v = 0xbfb904 ^ (0xFF000000 - (x << 24));
 
    uint8_t z = x + static_cast<uint8_t>(val_v >> (8 * index_of_first_set_byte(v_mask)));
 
-   // Specials:
-   // [<empty>, '+', '/', '=', ' ', '\n', '\t', '\r']
-   constexpr uint64_t specials_i = 0x002b2f3d200a090d;
+   // Valid base64 special characters, and some whitespace chars
+   constexpr uint64_t specials_i = make_uint64(0, '+', '/', '=', ' ', '\n', '\t', '\r');
 
    const uint64_t specials_v = 0x3e3f8180808080 ^ (static_cast<uint64_t>(z) << 56);
 
