@@ -82,14 +82,17 @@ def run_and_check(cmd_line, cwd=None):
 
     logging.info("Starting %s", ' '.join(cmd_line))
 
+    rc = None
+
     try:
         proc = subprocess.Popen(cmd_line, cwd=cwd)
 
         proc.communicate()
+        rc = proc.returncode
     except OSError as e:
         logging.error("Executing %s failed (%s)", ' '.join(cmd_line), e)
 
-    if proc.returncode != 0:
+    if rc != 0:
         logging.error("Error running %s", ' '.join(cmd_line))
         sys.exit(1)
 
