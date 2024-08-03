@@ -12,7 +12,6 @@
    #include <botan/pkcs8.h>
    #include <botan/pkix_types.h>
    #include <botan/x509cert.h>
-   #include <botan/internal/filesystem.h>
 
    #if defined(BOTAN_HAS_CERTSTOR_SQLITE3)
       #include <botan/certstor_sqlite.h>
@@ -308,7 +307,7 @@ Test::Result test_certstor_load_allcert() {
    Test::Result result("Certificate Store - Load every cert of every files");
    // test_dir_bundled dir should contain only one file with 2 certificates
    // concatenated (ValidCert and root)
-   const std::string test_dir_bundled = Test::data_dir() + "/x509/misc/bundledcertdir";
+   const std::string test_dir_bundled = Test::data_dir("x509/misc/bundledcertdir");
 
    try {
       result.test_note("load certs from dir: " + test_dir_bundled);
@@ -316,8 +315,8 @@ Test::Result test_certstor_load_allcert() {
       Botan::Certificate_Store_In_Memory store(test_dir_bundled);
 
       // X509_Certificate constructor loads only the first certificate found in the file.
-      Botan::X509_Certificate root_cert(Test::data_dir() + "/x509/x509test/root.pem");
-      Botan::X509_Certificate valid_cert(Test::data_dir() + "/x509/x509test/ValidCert.pem");
+      Botan::X509_Certificate root_cert(Test::data_file("x509/x509test/root.pem"));
+      Botan::X509_Certificate valid_cert(Test::data_file("x509/x509test/ValidCert.pem"));
       std::vector<uint8_t> key_id;
       result.confirm("Root cert found", store.find_cert(root_cert.subject_dn(), key_id) != std::nullopt);
       result.confirm("ValidCert found", store.find_cert(valid_cert.subject_dn(), key_id) != std::nullopt);
@@ -331,12 +330,6 @@ Test::Result test_certstor_load_allcert() {
 class Certstor_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
-         if(Botan::has_filesystem_impl() == false) {
-            return {Test::Result::Note("Certificate Store", "Skipping due to missing filesystem access")};
-         }
-
-         const std::string test_dir = Test::data_dir() + "/x509/certstor";
-
          struct CertificateAndKeyFilenames {
                const std::string certificate;
                const std::string private_key;
@@ -349,26 +342,19 @@ class Certstor_Tests final : public Test {
             {"cert5b.crt", "key06.pem"},
          };
 
-         const std::vector<std::string> all_files = Botan::get_files_recursive(test_dir);
-
-         if(all_files.empty()) {
-            Test::Result result("Certificate Store");
-            result.test_failure("No test files found in " + test_dir);
-            return {result};
-         }
-
          std::vector<CertificateAndKey> certsandkeys;
 
-         for(const auto& certandkey_filenames : certsandkeys_filenames) {
-            const Botan::X509_Certificate certificate(test_dir + "/" + certandkey_filenames.certificate);
+         for(const auto& [certpath, keypath] : certsandkeys_filenames) {
+            const auto test_cert = Test::data_file("x509/certstor/" + certpath);
+            const Botan::X509_Certificate certificate(test_cert);
 
-            Botan::DataSource_Stream key_stream(test_dir + "/" + certandkey_filenames.private_key);
+            const auto test_key = Test::data_file("x509/certstor/" + keypath);
+            Botan::DataSource_Stream key_stream(test_key);
             std::shared_ptr<Botan::Private_Key> private_key = Botan::PKCS8::load_key(key_stream);
 
             if(!private_key) {
                Test::Result result("Certificate Store");
-               result.test_failure("Failed to load key from disk at path: " + test_dir + "/" +
-                                   certandkey_filenames.private_key);
+               result.test_failure("Failed to load key from disk at path: " + test_key);
                return {result};
             }
 

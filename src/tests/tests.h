@@ -587,6 +587,8 @@ class Test {
       static std::unique_ptr<Test> get_test(const std::string& test_name);
       static bool test_needs_serialization(const std::string& test_name);
 
+      static std::string data_dir(const std::string& subdir);
+      static std::vector<std::string> files_in_data_dir(const std::string& subdir);
       static std::string data_file(const std::string& what);
       static std::string data_file_as_temporary_copy(const std::string& what);
 
@@ -628,8 +630,6 @@ class Test {
       static bool run_long_tests() { return options().run_long_tests(); }
 
       static bool run_memory_intensive_tests() { return options().run_memory_intensive_tests(); }
-
-      static const std::string& data_dir() { return options().data_dir(); }
 
       static const std::string& pkcs11_lib() { return options().pkcs11_lib(); }
 
