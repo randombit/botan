@@ -35,7 +35,7 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       * excess leading zero bytes.
       *
       * Returns nullopt if the length is incorrect or if the integer is not
-      * within the range [0,p) where p is the group order.
+      * within the range [0,n) where n is the group order.
       */
       static std::optional<EC_Scalar> deserialize(const EC_Group& group, std::span<const uint8_t> bytes);
 
@@ -149,8 +149,7 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       /**
       * Return the modular inverse of this EC_Scalar
       *
-      * If the EC_Scalar is zero, then invert() returns zero also
-      * Since the EC_Scalar
+      * If *this is zero, then invert() returns zero
       */
       EC_Scalar invert() const;
 

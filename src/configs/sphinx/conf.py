@@ -112,9 +112,9 @@ try:
         'source_directory': 'doc/',
     }
 except ImportError as e:
+    print("Could not import furo theme; falling back to agago")
     html_theme = 'agogo'
     html_theme_path = []
-    print("Ignoring ImportError and using old theme")
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
