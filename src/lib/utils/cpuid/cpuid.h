@@ -90,6 +90,7 @@ class BOTAN_TEST_API CPUID final {
          CPUID_RDTSC_BIT = (1U << 10),
          CPUID_ADX_BIT = (1U << 11),
          CPUID_BMI_BIT = (1U << 12),
+         CPUID_GFNI_BIT = (1U << 13),
 
          // Crypto-specific ISAs
          CPUID_AESNI_BIT = (1U << 16),
@@ -99,6 +100,11 @@ class BOTAN_TEST_API CPUID final {
          CPUID_SHA_BIT = (1U << 20),
          CPUID_AVX512_AES_BIT = (1U << 21),
          CPUID_AVX512_CLMUL_BIT = (1U << 22),
+         CPUID_AVX2_AES_BIT = (1U << 23),
+         CPUID_AVX2_CLMUL_BIT = (1U << 24),
+         CPUID_SHA512_BIT = (1U << 25),
+         CPUID_SM3_BIT = (1U << 26),
+         CPUID_SM4_BIT = (1U << 27),
 #endif
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
@@ -226,8 +232,20 @@ class BOTAN_TEST_API CPUID final {
 
       /**
       * Check if the processor supports AVX-512 AES (VAES)
+      *
+      * Only set if the baseline AVX-512 profile is also satisfied
       */
-      static bool has_avx512_aes() { return has_avx512() && has_cpuid_bit(CPUID_AVX512_AES_BIT); }
+      static bool has_avx512_aes() { return has_cpuid_bit(CPUID_AVX512_AES_BIT); }
+
+      /**
+      * Check if the processor supports AVX2 AES (VAES)
+      */
+      static bool has_avx2_vaes() { return has_cpuid_bit(CPUID_AVX2_AES_BIT); }
+
+      /**
+      * Check if the processor supports AVX2 CLMUL
+      */
+      static bool has_avx2_clmul() { return has_cpuid_bit(CPUID_AVX2_CLMUL_BIT); }
 
       /**
       * Check if the processor supports AVX-512 VPCLMULQDQ
@@ -238,6 +256,14 @@ class BOTAN_TEST_API CPUID final {
       * Check if the processor supports BMI2 (and BMI1)
       */
       static bool has_bmi2() { return has_cpuid_bit(CPUID_BMI_BIT); }
+
+      /**
+      * Check if the processor supports GFNI
+      *
+      * A few Atom processors supported GFNI only for SSE; we gate this bit
+      * on the processor also supporting GFNI-AVX2
+      */
+      static bool has_gfni() { return has_cpuid_bit(CPUID_GFNI_BIT); }
 
       /**
       * Check if the processor supports AES-NI
@@ -253,6 +279,21 @@ class BOTAN_TEST_API CPUID final {
       * Check if the processor supports Intel SHA extension
       */
       static bool has_intel_sha() { return has_sse2() && has_cpuid_bit(CPUID_SHA_BIT); }
+
+      /**
+      * Check if the processor supports Intel SHA-512 extension
+      */
+      static bool has_intel_sha512() { return has_cpuid_bit(CPUID_SHA512_BIT); }
+
+      /**
+      * Check if the processor supports Intel SM3
+      */
+      static bool has_intel_sm3() { return has_cpuid_bit(CPUID_SM3_BIT); }
+
+      /**
+      * Check if the processor supports Intel SM4
+      */
+      static bool has_intel_sm4() { return has_cpuid_bit(CPUID_SM4_BIT); }
 
       /**
       * Check if the processor supports ADX extension

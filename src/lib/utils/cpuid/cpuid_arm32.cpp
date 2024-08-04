@@ -40,14 +40,18 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
       detected_features |= CPUID::CPUID_ARM_NEON_BIT;
 
       const unsigned long hwcap_crypto = OS::get_auxval(ARM_hwcap_bit::ARCH_hwcap_crypto);
-      if(hwcap_crypto & ARM_hwcap_bit::AES_bit)
+      if(hwcap_crypto & ARM_hwcap_bit::AES_bit) {
          detected_features |= CPUID::CPUID_ARM_AES_BIT;
-      if(hwcap_crypto & ARM_hwcap_bit::PMULL_bit)
+      }
+      if(hwcap_crypto & ARM_hwcap_bit::PMULL_bit) {
          detected_features |= CPUID::CPUID_ARM_PMULL_BIT;
-      if(hwcap_crypto & ARM_hwcap_bit::SHA1_bit)
+      }
+      if(hwcap_crypto & ARM_hwcap_bit::SHA1_bit) {
          detected_features |= CPUID::CPUID_ARM_SHA1_BIT;
-      if(hwcap_crypto & ARM_hwcap_bit::SHA2_bit)
+      }
+      if(hwcap_crypto & ARM_hwcap_bit::SHA2_bit) {
          detected_features |= CPUID::CPUID_ARM_SHA2_BIT;
+      }
    }
    #endif
 

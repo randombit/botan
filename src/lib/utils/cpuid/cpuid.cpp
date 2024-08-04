@@ -49,16 +49,25 @@ std::string CPUID::to_string() {
 
    CPUID_PRINT(bmi2);
    CPUID_PRINT(adx);
+   CPUID_PRINT(gfni);
 
    CPUID_PRINT(aes_ni);
    CPUID_PRINT(clmul);
    CPUID_PRINT(rdrand);
    CPUID_PRINT(rdseed);
    CPUID_PRINT(intel_sha);
+   CPUID_PRINT(intel_sha512);
+
+   CPUID_PRINT(avx2_vaes);
+   CPUID_PRINT(avx2_clmul);
 
    CPUID_PRINT(avx512);
    CPUID_PRINT(avx512_aes);
    CPUID_PRINT(avx512_clmul);
+
+   CPUID_PRINT(intel_sm3);
+   CPUID_PRINT(intel_sm4);
+
 #elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
    CPUID_PRINT(altivec);
    CPUID_PRINT(power_crypto);
@@ -150,78 +159,78 @@ std::vector<CPUID::CPUID_bits> CPUID::bit_from_string(std::string_view tok) {
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
    if(tok == "sse2" || tok == "simd") {
       return {CPUID::CPUID_SSE2_BIT};
-   }
-   if(tok == "ssse3") {
+   } else if(tok == "ssse3") {
       return {CPUID::CPUID_SSSE3_BIT};
-   }
-   // aes_ni is the string printed on the console when running "botan cpuid"
-   if(tok == "aesni" || tok == "aes_ni") {
+   } else if(tok == "aesni" || tok == "aes_ni") {
+      // aes_ni is the string printed on the console when running "botan cpuid"
       return {CPUID::CPUID_AESNI_BIT};
-   }
-   if(tok == "clmul") {
+   } else if(tok == "clmul") {
       return {CPUID::CPUID_CLMUL_BIT};
-   }
-   if(tok == "avx2") {
+   } else if(tok == "avx2") {
       return {CPUID::CPUID_AVX2_BIT};
-   }
-   if(tok == "avx512") {
+   } else if(tok == "avx512") {
       return {CPUID::CPUID_AVX512_BIT};
    }
    // there were two if statements testing "sha" and "intel_sha" separately; combined
-   if(tok == "sha" || tok == "intel_sha") {
+   else if(tok == "sha" || tok == "intel_sha") {
       return {CPUID::CPUID_SHA_BIT};
-   }
-   if(tok == "rdtsc") {
+   } else if(tok == "rdtsc") {
       return {CPUID::CPUID_RDTSC_BIT};
-   }
-   if(tok == "bmi2") {
+   } else if(tok == "bmi2") {
       return {CPUID::CPUID_BMI_BIT};
-   }
-   if(tok == "adx") {
+   } else if(tok == "adx") {
       return {CPUID::CPUID_ADX_BIT};
-   }
-   if(tok == "rdrand") {
+   } else if(tok == "gfni") {
+      return {CPUID::CPUID_GFNI_BIT};
+   } else if(tok == "rdrand") {
       return {CPUID::CPUID_RDRAND_BIT};
-   }
-   if(tok == "rdseed") {
+   } else if(tok == "rdseed") {
       return {CPUID::CPUID_RDSEED_BIT};
-   }
-   if(tok == "avx512_aes") {
+   } else if(tok == "avx512_aes") {
       return {CPUID::CPUID_AVX512_AES_BIT};
-   }
-   if(tok == "avx512_clmul") {
+   } else if(tok == "avx512_clmul") {
       return {CPUID::CPUID_AVX512_CLMUL_BIT};
+   } else if(tok == "avx2_vaes") {
+      return {CPUID::CPUID_AVX2_AES_BIT};
+   } else if(tok == "avx2_clmul") {
+      return {CPUID::CPUID_AVX2_CLMUL_BIT};
+   } else if(tok == "intel_sm3") {
+      return {CPUID::CPUID_SM3_BIT};
+   } else if(tok == "intel_sm4") {
+      return {CPUID::CPUID_SM4_BIT};
    }
 
 #elif defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY)
-   if(tok == "altivec" || tok == "simd")
+   if(tok == "altivec" || tok == "simd") {
       return {CPUID::CPUID_ALTIVEC_BIT};
-   if(tok == "power_crypto")
+   } else if(tok == "power_crypto") {
       return {CPUID::CPUID_POWER_CRYPTO_BIT};
-   if(tok == "darn_rng")
+   } else if(tok == "darn_rng") {
       return {CPUID::CPUID_DARN_BIT};
+   }
 
 #elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
-   if(tok == "neon" || tok == "simd")
+   if(tok == "neon" || tok == "simd") {
       return {CPUID::CPUID_ARM_NEON_BIT};
-   if(tok == "arm_sve")
+   } else if(tok == "arm_sve") {
       return {CPUID::CPUID_ARM_SVE_BIT};
-   if(tok == "armv8sha1" || tok == "arm_sha1")
+   } else if(tok == "armv8sha1" || tok == "arm_sha1") {
       return {CPUID::CPUID_ARM_SHA1_BIT};
-   if(tok == "armv8sha2" || tok == "arm_sha2")
+   } else if(tok == "armv8sha2" || tok == "arm_sha2") {
       return {CPUID::CPUID_ARM_SHA2_BIT};
-   if(tok == "armv8aes" || tok == "arm_aes")
+   } else if(tok == "armv8aes" || tok == "arm_aes") {
       return {CPUID::CPUID_ARM_AES_BIT};
-   if(tok == "armv8pmull" || tok == "arm_pmull")
+   } else if(tok == "armv8pmull" || tok == "arm_pmull") {
       return {CPUID::CPUID_ARM_PMULL_BIT};
-   if(tok == "armv8sha3" || tok == "arm_sha3")
+   } else if(tok == "armv8sha3" || tok == "arm_sha3") {
       return {CPUID::CPUID_ARM_SHA3_BIT};
-   if(tok == "armv8sha2_512" || tok == "arm_sha2_512")
+   } else if(tok == "armv8sha2_512" || tok == "arm_sha2_512") {
       return {CPUID::CPUID_ARM_SHA2_512_BIT};
-   if(tok == "armv8sm3" || tok == "arm_sm3")
+   } else if(tok == "armv8sm3" || tok == "arm_sm3") {
       return {CPUID::CPUID_ARM_SM3_BIT};
-   if(tok == "armv8sm4" || tok == "arm_sm4")
+   } else if(tok == "armv8sm4" || tok == "arm_sm4") {
       return {CPUID::CPUID_ARM_SM4_BIT};
+   }
 
 #else
    BOTAN_UNUSED(tok);

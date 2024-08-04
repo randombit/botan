@@ -33,10 +33,12 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
       detected_features |= CPUID::CPUID_ALTIVEC_BIT;
 
       const unsigned long hwcap_crypto = OS::get_auxval(PPC_hwcap_bit::ARCH_hwcap_crypto);
-      if(hwcap_crypto & PPC_hwcap_bit::CRYPTO_bit)
+      if(hwcap_crypto & PPC_hwcap_bit::CRYPTO_bit) {
          detected_features |= CPUID::CPUID_POWER_CRYPTO_BIT;
-      if(hwcap_crypto & PPC_hwcap_bit::DARN_bit)
+      }
+      if(hwcap_crypto & PPC_hwcap_bit::DARN_bit) {
          detected_features |= CPUID::CPUID_DARN_BIT;
+      }
    }
 
    #else
@@ -55,8 +57,9 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
          return 1;
       };
 
-      if(OS::run_cpu_instruction_probe(vcipher_probe) == 1)
+      if(OS::run_cpu_instruction_probe(vcipher_probe) == 1) {
          detected_features |= CPUID::CPUID_POWER_CRYPTO_BIT;
+      }
 
       auto darn_probe = []() noexcept -> int {
          uint64_t output = 0;
@@ -64,8 +67,9 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
          return (~output) != 0;
       };
 
-      if(OS::run_cpu_instruction_probe(darn_probe) == 1)
+      if(OS::run_cpu_instruction_probe(darn_probe) == 1) {
          detected_features |= CPUID::CPUID_DARN_BIT;
+      }
       #endif
    }
 

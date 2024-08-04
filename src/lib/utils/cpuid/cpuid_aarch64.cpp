@@ -51,24 +51,33 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
    const unsigned long hwcap = OS::get_auxval(ARM_hwcap_bit::ARCH_hwcap);
    if(hwcap & ARM_hwcap_bit::NEON_bit) {
       detected_features |= CPUID::CPUID_ARM_NEON_BIT;
-      if(hwcap & ARM_hwcap_bit::AES_bit)
+      if(hwcap & ARM_hwcap_bit::AES_bit) {
          detected_features |= CPUID::CPUID_ARM_AES_BIT;
-      if(hwcap & ARM_hwcap_bit::PMULL_bit)
+      }
+      if(hwcap & ARM_hwcap_bit::PMULL_bit) {
          detected_features |= CPUID::CPUID_ARM_PMULL_BIT;
-      if(hwcap & ARM_hwcap_bit::SHA1_bit)
+      }
+      if(hwcap & ARM_hwcap_bit::SHA1_bit) {
          detected_features |= CPUID::CPUID_ARM_SHA1_BIT;
-      if(hwcap & ARM_hwcap_bit::SHA2_bit)
+      }
+      if(hwcap & ARM_hwcap_bit::SHA2_bit) {
          detected_features |= CPUID::CPUID_ARM_SHA2_BIT;
-      if(hwcap & ARM_hwcap_bit::SHA3_bit)
+      }
+      if(hwcap & ARM_hwcap_bit::SHA3_bit) {
          detected_features |= CPUID::CPUID_ARM_SHA3_BIT;
-      if(hwcap & ARM_hwcap_bit::SM3_bit)
+      }
+      if(hwcap & ARM_hwcap_bit::SM3_bit) {
          detected_features |= CPUID::CPUID_ARM_SM3_BIT;
-      if(hwcap & ARM_hwcap_bit::SM4_bit)
+      }
+      if(hwcap & ARM_hwcap_bit::SM4_bit) {
          detected_features |= CPUID::CPUID_ARM_SM4_BIT;
-      if(hwcap & ARM_hwcap_bit::SHA2_512_bit)
+      }
+      if(hwcap & ARM_hwcap_bit::SHA2_512_bit) {
          detected_features |= CPUID::CPUID_ARM_SHA2_512_BIT;
-      if(hwcap & ARM_hwcap_bit::SVE_bit)
+      }
+      if(hwcap & ARM_hwcap_bit::SVE_bit) {
          detected_features |= CPUID::CPUID_ARM_SVE_BIT;
+      }
    }
 
    #elif defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
@@ -87,10 +96,12 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
       return (feature == 1);
    };
 
-   if(sysctlbyname_has_feature("hw.optional.armv8_2_sha3"))
+   if(sysctlbyname_has_feature("hw.optional.armv8_2_sha3")) {
       detected_features |= CPUID::CPUID_ARM_SHA3_BIT;
-   if(sysctlbyname_has_feature("hw.optional.armv8_2_sha512"))
+   }
+   if(sysctlbyname_has_feature("hw.optional.armv8_2_sha512")) {
       detected_features |= CPUID::CPUID_ARM_SHA2_512_BIT;
+   }
 
    #elif defined(BOTAN_USE_GCC_INLINE_ASM)
 
@@ -133,16 +144,21 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
    if(OS::run_cpu_instruction_probe(neon_probe) == 1) {
       detected_features |= CPUID::CPUID_ARM_NEON_BIT;
 
-      if(OS::run_cpu_instruction_probe(aes_probe) == 1)
+      if(OS::run_cpu_instruction_probe(aes_probe) == 1) {
          detected_features |= CPUID::CPUID_ARM_AES_BIT;
-      if(OS::run_cpu_instruction_probe(pmull_probe) == 1)
+      }
+      if(OS::run_cpu_instruction_probe(pmull_probe) == 1) {
          detected_features |= CPUID::CPUID_ARM_PMULL_BIT;
-      if(OS::run_cpu_instruction_probe(sha1_probe) == 1)
+      }
+      if(OS::run_cpu_instruction_probe(sha1_probe) == 1) {
          detected_features |= CPUID::CPUID_ARM_SHA1_BIT;
-      if(OS::run_cpu_instruction_probe(sha2_probe) == 1)
+      }
+      if(OS::run_cpu_instruction_probe(sha2_probe) == 1) {
          detected_features |= CPUID::CPUID_ARM_SHA2_BIT;
-      if(OS::run_cpu_instruction_probe(sha512_probe) == 1)
+      }
+      if(OS::run_cpu_instruction_probe(sha512_probe) == 1) {
          detected_features |= CPUID::CPUID_ARM_SHA2_512_BIT;
+      }
    }
 
    #endif

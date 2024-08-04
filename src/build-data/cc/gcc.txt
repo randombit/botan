@@ -71,6 +71,12 @@ sse42   -> "-msse4.2"
 avx2    -> "-mavx2"
 avx512  -> "-mavx512f -mavx512bw -mavx512dq -mavx512vbmi -mavx512vbmi2 -mavx512bitalg -mavx512vl -mavx512ifma"
 
+vaes    -> "-mvaes -mavx2"
+sha512  -> "-msha512 -mavx2"
+sm3     -> "-msm3"
+sm4     -> "-msm4 -mavx2"
+
+gfni    -> "-mgfni -mavx2"
 bmi2    -> "-mbmi -mbmi2"
 aesni   -> "-maes -mpclmul"
 rdrand  -> "-mrdrnd"

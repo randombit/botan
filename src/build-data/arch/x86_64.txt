@@ -15,6 +15,7 @@ x86_amd64
 aesni
 avx2
 bmi2
+gfni
 rdrand
 rdseed
 sha
@@ -23,4 +24,8 @@ sse41
 sse42
 ssse3
 avx512
+vaes
+sha512
+sm3
+sm4
 </isa_extensions>
