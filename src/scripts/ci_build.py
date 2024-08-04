@@ -64,6 +64,7 @@ def known_targets():
         'limbo',
         'minimized',
         'nist',
+        'no_pcurves',
         'sanitizer',
         'shared',
         'static',
@@ -205,6 +206,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
     if target in ['minimized']:
         flags += ['--minimized-build', '--enable-modules=system_rng,sha2_32,sha2_64,aes']
+
+    if target in ['no_pcurves']:
+        flags += ['--disable-modules=pcurves_impl']
 
     if target in ['amalgamation', 'cross-arm64-amalgamation', 'cross-android-arm64-amalgamation']:
         flags += ['--amalgamation']
