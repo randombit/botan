@@ -52,11 +52,11 @@ const auto k_endpoints = std::vector<tcp::endpoint>{tcp::endpoint{net::ip::make_
 constexpr size_t MAX_MSG_LENGTH = 512;
 
 std::string server_cert() {
-   return Test::data_dir() + "/x509/certstor/cert1.crt";
+   return Test::data_file("x509/certstor/cert1.crt");
 }
 
 std::string server_key() {
-   return Test::data_dir() + "/x509/certstor/key01.pem";
+   return Test::data_file("x509/certstor/key01.pem");
 }
 
 class Timeout_Exception : public std::runtime_error {

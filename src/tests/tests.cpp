@@ -792,8 +792,22 @@ std::shared_ptr<Botan::RandomNumberGenerator> Test::new_shared_rng(std::string_v
 }
 
 //static
-std::string Test::data_file(const std::string& what) {
-   return Test::data_dir() + "/" + what;
+std::string Test::data_file(const std::string& file) {
+   return options().data_dir() + "/" + file;
+}
+
+//static
+std::string Test::data_dir(const std::string& subdir) {
+   return options().data_dir() + "/" + subdir;
+}
+
+//static
+std::vector<std::string> Test::files_in_data_dir(const std::string& subdir) {
+   auto fs = Botan::get_files_recursive(options().data_dir() + "/" + subdir);
+   if(fs.empty()) {
+      throw Test_Error("Test::files_in_data_dir encountered empty subdir " + subdir);
+   }
+   return fs;
 }
 
 //static
@@ -1023,14 +1037,13 @@ std::string Text_Based_Test::get_next_line() {
       if(m_cur == nullptr || m_cur->good() == false) {
          if(m_srcs.empty()) {
             if(m_first) {
-               const std::string full_path = Test::data_dir() + "/" + m_data_src;
-               if(full_path.find(".vec") != std::string::npos) {
-                  m_srcs.push_back(full_path);
+               if(m_data_src.ends_with(".vec")) {
+                  m_srcs.push_back(Test::data_file(m_data_src));
                } else {
-                  const auto fs = Botan::get_files_recursive(full_path);
+                  const auto fs = Test::files_in_data_dir(m_data_src);
                   m_srcs.assign(fs.begin(), fs.end());
                   if(m_srcs.empty()) {
-                     throw Test_Error("Error reading test data dir " + full_path);
+                     throw Test_Error("Error reading test data dir " + m_data_src);
                   }
                }
 

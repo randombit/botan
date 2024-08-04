@@ -42,9 +42,6 @@ test41:Verified
 test42:Verified
 test43:Verified
 test44:Verified
-#test45:Explicit policy required
-#test46:
-#test47:Explicit policy required
 test48:Verified
 test49:Verified
 test50:Verified
@@ -72,5 +69,16 @@ test71:Certificate is revoked
 test72:CRL has expired
 test73:CRL has expired
 test74:Verified
-#test75:
-#test76:
+
+# Following answers are incorrect:
+
+# test45/test46/test47: Wrong results due to not supporting policies
+test45:Verified
+test46:Verified
+test47:Verified
+
+# Right answer for wrong reason (delta CRL with no base CRL)
+test75:Certificate is revoked
+
+# CRL contains IDP extension saying CRL is for CA certs only
+test76:Verified

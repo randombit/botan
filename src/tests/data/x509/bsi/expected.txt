@@ -49,6 +49,8 @@ ext_13$Unknown critical extension encountered
 ext_14$Unknown critical extension encountered
 ext_15$Certificate does not pass name constraint
 ext_16$Verified
-#ext_17$
 ext_18$Unknown critical extension encountered
 ext_19$Unknown critical extension encountered
+
+# Incorrect result; we should reject because cert policy extn is non-critical
+ext_17$Verified

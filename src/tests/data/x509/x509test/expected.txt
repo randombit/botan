@@ -35,7 +35,3 @@ ValidChained.pem:Verified
 ValidNameConstraint.pem:Verified
 ValidIntCALen.pem:Verified
 ValidWildcard.pem:Verified
-
-# Need to fix date settings in x509test and regen
-#InvalidNotBefore.pem:Certificate is not yet valid
-#InvalidNotBeforeChained.pem:Certificate is not yet valid
