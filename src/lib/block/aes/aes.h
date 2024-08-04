@@ -50,6 +50,11 @@ class AES_128 final : public Block_Cipher_Fixed_Params<16, 16> {
       void hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
 #endif
 
+#if defined(BOTAN_HAS_AES_VAES)
+      void x86_vaes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
+      void x86_vaes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
+#endif
+
       secure_vector<uint32_t> m_EK, m_DK;
 };
 
@@ -86,6 +91,11 @@ class AES_192 final : public Block_Cipher_Fixed_Params<16, 24> {
 #if defined(BOTAN_HAS_AES_POWER8) || defined(BOTAN_HAS_AES_ARMV8) || defined(BOTAN_HAS_AES_NI)
       void hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
       void hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
+#endif
+
+#if defined(BOTAN_HAS_AES_VAES)
+      void x86_vaes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
+      void x86_vaes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
 #endif
 
       void key_schedule(std::span<const uint8_t> key) override;
@@ -126,6 +136,11 @@ class AES_256 final : public Block_Cipher_Fixed_Params<16, 32> {
 #if defined(BOTAN_HAS_AES_POWER8) || defined(BOTAN_HAS_AES_ARMV8) || defined(BOTAN_HAS_AES_NI)
       void hw_aes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
       void hw_aes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
+#endif
+
+#if defined(BOTAN_HAS_AES_VAES)
+      void x86_vaes_encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
+      void x86_vaes_decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const;
 #endif
 
       void key_schedule(std::span<const uint8_t> key) override;

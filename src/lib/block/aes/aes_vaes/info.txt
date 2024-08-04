@@ -1,0 +1,16 @@
+<defines>
+AES_VAES -> 20240803
+</defines>
+
+<module_info>
+name -> "AES-VAES"
+brief -> "AES using VAES"
+</module_info>
+
+<requires>
+simd_avx2
+</requires>
+
+<isa>
+vaes
+</isa>
