@@ -12,6 +12,7 @@
    #include <botan/internal/loadstor.h>
    #include <botan/internal/rotate.h>
    #include <botan/internal/simd_32.h>
+   #include <botan/internal/stl_util.h>
 #endif
 
 namespace Botan_Tests {
@@ -133,6 +134,39 @@ class SIMD_32_Tests final : public Test {
          test_eq(result, "shift right 1", input.shift_elems_right<1>(), pat2, pat3, pat4, 0);
          test_eq(result, "shift right 2", input.shift_elems_right<2>(), pat3, pat4, 0, 0);
          test_eq(result, "shift right 3", input.shift_elems_right<3>(), pat4, 0, 0, 0);
+
+         // Test load/stores SIMD wrapper types
+         const auto simd_le_in = Botan::hex_decode("ABCDEF01234567890123456789ABCDEF");
+         const auto simd_be_in = Botan::hex_decode("0123456789ABCDEFABCDEF0123456789");
+         const auto simd_le_array_in = Botan::concat(simd_le_in, simd_be_in);
+         const auto simd_be_array_in = Botan::concat(simd_be_in, simd_le_in);
+
+         auto simd_le = Botan::load_le<Botan::SIMD_4x32>(simd_le_in);
+         auto simd_be = Botan::load_be<Botan::SIMD_4x32>(simd_be_in);
+         auto simd_le_array = Botan::load_le<std::array<Botan::SIMD_4x32, 2>>(simd_le_array_in);
+         auto simd_be_array = Botan::load_be<std::array<Botan::SIMD_4x32, 2>>(simd_be_array_in);
+
+         auto simd_le_vec = Botan::store_le<std::vector<uint8_t>>(simd_le);
+         auto simd_be_vec = Botan::store_be(simd_be);
+         auto simd_le_array_vec = Botan::store_le<std::vector<uint8_t>>(simd_le_array);
+         auto simd_be_array_vec = Botan::store_be(simd_be_array);
+
+         result.test_is_eq("roundtrip SIMD little-endian", simd_le_vec, simd_le_in);
+         result.test_is_eq(
+            "roundtrip SIMD big-endian", std::vector(simd_be_vec.begin(), simd_be_vec.end()), simd_be_in);
+         result.test_is_eq("roundtrip SIMD array little-endian", simd_le_array_vec, simd_le_array_in);
+         result.test_is_eq("roundtrip SIMD array big-endian",
+                           std::vector(simd_be_array_vec.begin(), simd_be_array_vec.end()),
+                           simd_be_array_in);
+
+         using StrongSIMD = Botan::Strong<Botan::SIMD_4x32, struct StrongSIMD_>;
+         const auto simd_le_strong = Botan::load_le<StrongSIMD>(simd_le_in);
+         const auto simd_be_strong = Botan::load_be<StrongSIMD>(simd_be_in);
+
+         result.test_is_eq(
+            "roundtrip SIMD strong little-endian", Botan::store_le<std::vector<uint8_t>>(simd_le_strong), simd_le_in);
+         result.test_is_eq(
+            "roundtrip SIMD strong big-endian", Botan::store_be<std::vector<uint8_t>>(simd_be_strong), simd_be_in);
 
          return {result};
       }
