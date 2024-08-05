@@ -135,15 +135,43 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
          AVX512_VL = (1ULL << 31),
          AVX512_VBMI = (1ULL << 33),
          AVX512_VBMI2 = (1ULL << 38),
+         GFNI = (1ULL << 40),
          AVX512_VAES = (1ULL << 41),
          AVX512_VCLMUL = (1ULL << 42),
          AVX512_VBITALG = (1ULL << 44),
       };
 
+      // NOLINTNEXTLINE(performance-enum-size)
+      enum x86_CPUID_7_1_bits : uint64_t {
+         SHA512 = (1 << 0),
+         SM3 = (1 << 1),
+         SM4 = (1 << 2),
+      };
+
       const uint64_t flags7 = (static_cast<uint64_t>(cpuid[2]) << 32) | cpuid[1];
+
+      clear_mem(cpuid, 4);
+      invoke_cpuid_sublevel(7, 1, cpuid);
+      const uint32_t flags7_1 = cpuid[0];
 
       if((flags7 & x86_CPUID_7_bits::AVX2) && has_os_ymm_support) {
          features_detected |= CPUID::CPUID_AVX2_BIT;
+
+         if(flags7 & x86_CPUID_7_bits::GFNI) {
+            features_detected |= CPUID::CPUID_GFNI_BIT;
+         }
+         if(flags7 & x86_CPUID_7_bits::AVX512_VAES) {
+            features_detected |= CPUID::CPUID_AVX2_AES_BIT;
+         }
+         if(flags7 & x86_CPUID_7_bits::AVX512_VCLMUL) {
+            features_detected |= CPUID::CPUID_AVX2_CLMUL_BIT;
+         }
+         if(flags7_1 & x86_CPUID_7_1_bits::SHA512) {
+            features_detected |= CPUID::CPUID_SHA512_BIT;
+         }
+         if(flags7_1 & x86_CPUID_7_1_bits::SM4) {
+            features_detected |= CPUID::CPUID_SM4_BIT;
+         }
       }
       if(flags7 & x86_CPUID_7_bits::RDSEED) {
          features_detected |= CPUID::CPUID_RDSEED_BIT;
@@ -153,6 +181,9 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
       }
       if(flags7 & x86_CPUID_7_bits::SHA) {
          features_detected |= CPUID::CPUID_SHA_BIT;
+      }
+      if(flags7_1 & x86_CPUID_7_1_bits::SM3) {
+         features_detected |= CPUID::CPUID_SM3_BIT;
       }
 
       /*
