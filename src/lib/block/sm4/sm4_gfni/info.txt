@@ -1,0 +1,12 @@
+<defines>
+SM4_GFNI -> 20240803
+</defines>
+
+<module_info>
+name -> "SM4 GFNI"
+brief -> "SM4 using Intel GFNI"
+</module_info>
+
+<isa>
+gfni
+</isa>

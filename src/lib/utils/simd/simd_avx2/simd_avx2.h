@@ -48,6 +48,9 @@ class SIMD_8x32 final {
       static SIMD_8x32 splat(uint32_t B) noexcept { return SIMD_8x32(_mm256_set1_epi32(B)); }
 
       BOTAN_AVX2_FN
+      static SIMD_8x32 splat_u64(uint64_t B) noexcept { return SIMD_8x32(_mm256_set1_epi64x(B)); }
+
+      BOTAN_AVX2_FN
       static SIMD_8x32 load_le(const uint8_t* in) noexcept {
          return SIMD_8x32(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(in)));
       }
@@ -93,6 +96,11 @@ class SIMD_8x32 final {
                _mm256_set_epi64x(0x0d0c0f0e'09080b0a, 0x05040706'01000302, 0x0d0c0f0e'09080b0a, 0x05040706'01000302);
 
             return SIMD_8x32(_mm256_shuffle_epi8(m_avx2, shuf_rotl_16));
+         } else if constexpr(ROT == 24) {
+            const __m256i shuf_rotl_24 =
+               _mm256_set_epi64x(0x0c0f0e0d'080b0a09, 0x04070605'00030201, 0x0c0f0e0d'080b0a09, 0x04070605'00030201);
+
+            return SIMD_8x32(_mm256_shuffle_epi8(m_avx2, shuf_rotl_24));
          } else {
             return SIMD_8x32(_mm256_or_si256(_mm256_slli_epi32(m_avx2, static_cast<int>(ROT)),
                                              _mm256_srli_epi32(m_avx2, static_cast<int>(32 - ROT))));
@@ -204,6 +212,9 @@ class SIMD_8x32 final {
 
          return SIMD_8x32(output);
       }
+
+      BOTAN_AVX2_FN
+      SIMD_8x32 rev_words() const noexcept { return SIMD_8x32(_mm256_shuffle_epi32(raw(), 0b00011011)); }
 
       BOTAN_AVX2_FN
       static void transpose(SIMD_8x32& B0, SIMD_8x32& B1, SIMD_8x32& B2, SIMD_8x32& B3) noexcept {
