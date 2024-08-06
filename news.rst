@@ -4,34 +4,55 @@ Release Notes
 Version 3.6.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add new ``EC_Scalar`` and ``EC_AffinePoint`` types (GH #4042)
+* Add new ``EC_Scalar`` and ``EC_AffinePoint`` types (GH #4042 #4203
+  #4256 #4284)
 
 * Further improvements to elliptic curve performance
   (GH #4113 #4147 #4190 #4191 #4113 #4171 #4205 #4207 #4209 #4210
-  #4211 #4212 #4213 #4215 #4221 #4225 #4226 #4235 #4237 #4240)
+  #4211 #4212 #4213 #4215 #4221 #4225 #4226 #4235 #4237 #4240 #4242
+  #4257 #4261 #4264 #4276)
 
 * Constant time programming improvements including ``CT::Option``
-  (GH #4175 #4197 #4198 #4204 #4207)
+  (GH #4175 #4197 #4198 #4204 #4207 #4254 #4260)
 
-* Internal "strong types" improvments (GH #4170)
+* Improve performance of hex (GH #4275) and base64 (GH #4271)
+
+* In ECDSA blind the constant time inversion of the nonce. (GH #4259)
+
+* Add support for AVX2-VAES instructions (GH #4286 #4287)
+
+* Add support for elliptic curve numsp512d1 (GH #4251)
 
 * Apply const-time checking annotations to Dilithium and Kyber (GH #4223),
-  X448/Ed448 (GH #4204), FrodoKEM (GH #4198)
+  X448/Ed448 (GH #4204), FrodoKEM (GH #4198), LMS (GH #4272)
 
 * Refactor internals of Dilithium and Kyber to share common elements (GH #4024)
 
 * Add a test suite for validating the const-time annotations (GH #4182)
+
+* Internal refactorings of public key encryption to improve memory
+  safety and side channel resistance. (GH #4238 #4239)
 
 * Cache the DER encoding of the OID format of an elliptic curve (GH #4193)
 
 * Fix a bug where CMake and pkg-config files might be installed to the
   wrong path (GH #4236 #4231)
 
+* Fix certificate validation when the trust root is a self-signed MD2 cert.
+  (GH #4247 #4248)
+
+* Internal "strong types" improvments (GH #4170)
+
+* Fix a test that was somewhat brittle and would fail if a specific
+  certificate was not in the system trust root store. (GH #4280)
+
 * Update some documentation comments (GH #4185)
 
 * In Argon2, avoid instantiating a thread pool when ``p == 1`` (GH #4195 #4199)
 
 * Disable the thread pool by default on Emscripten target (GH #4195 #4199)
+
+* Add compile time option to disable all use of inline assembly (GH #4273 #4265)
 
 Version 3.5.0, 2024-07-08
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
