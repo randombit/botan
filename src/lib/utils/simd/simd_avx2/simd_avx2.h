@@ -48,9 +48,6 @@ class SIMD_8x32 final {
       static SIMD_8x32 splat(uint32_t B) noexcept { return SIMD_8x32(_mm256_set1_epi32(B)); }
 
       BOTAN_AVX2_FN
-      static SIMD_8x32 splat_u64(uint64_t B) noexcept { return SIMD_8x32(_mm256_set1_epi64x(B)); }
-
-      BOTAN_AVX2_FN
       static SIMD_8x32 load_le(const uint8_t* in) noexcept {
          return SIMD_8x32(_mm256_loadu_si256(reinterpret_cast<const __m256i*>(in)));
       }

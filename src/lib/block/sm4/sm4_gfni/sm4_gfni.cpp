@@ -18,14 +18,32 @@ BOTAN_FUNC_ISA_INLINE(BOTAN_GFNI_ISA) SIMD_8x32 sm4_sbox(const SIMD_8x32& x) {
    * See https://eprint.iacr.org/2022/1154 section 3.3 for details on
    * how this works
    */
-   const SIMD_8x32 pre_a = SIMD_8x32::splat_u64(0x4c287db91a22505d);
-   const SIMD_8x32 post_a = SIMD_8x32::splat_u64(0xf3ab34a974a6b589);
+   constexpr uint64_t pre_a = gfni_matrix(R"(
+      0 0 1 1 0 0 1 0
+      0 0 0 1 0 1 0 0
+      1 0 1 1 1 1 1 0
+      1 0 0 1 1 1 0 1
+      0 1 0 1 1 0 0 0
+      0 1 0 0 0 1 0 0
+      0 0 0 0 1 0 1 0
+      1 0 1 1 1 0 1 0)");
 
    constexpr uint8_t pre_c = 0b00111110;
+
+   constexpr uint64_t post_a = gfni_matrix(R"(
+      1 1 0 0 1 1 1 1
+      1 1 0 1 0 1 0 1
+      0 0 1 0 1 1 0 0
+      1 0 0 1 0 1 0 1
+      0 0 1 0 1 1 1 0
+      0 1 1 0 0 1 0 1
+      1 0 1 0 1 1 0 1
+      1 0 0 1 0 0 0 1)");
+
    constexpr uint8_t post_c = 0b11010011;
 
-   auto y = gf2p8affine<pre_c>(x, pre_a);
-   return gf2p8affineinv<post_c>(y, post_a);
+   auto y = gf2p8affine<pre_a, pre_c>(x);
+   return gf2p8affineinv<post_a, post_c>(y);
 }
 
 BOTAN_FUNC_ISA_INLINE(BOTAN_GFNI_ISA) SIMD_8x32 sm4_f(const SIMD_8x32& x) {
