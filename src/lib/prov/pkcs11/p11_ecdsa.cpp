@@ -13,7 +13,7 @@
    #include <botan/pk_ops.h>
    #include <botan/rng.h>
    #include <botan/internal/keypair.h>
-   #include <botan/internal/p11_mechanism.h>
+   #include <botan/p11_mechanism.h>
 
 namespace Botan::PKCS11 {
 
