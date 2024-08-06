@@ -92,27 +92,30 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
       if(flags0 & x86_CPUID_1_bits::RDTSC) {
          features_detected |= CPUID::CPUID_RDTSC_BIT;
       }
-      if(flags0 & x86_CPUID_1_bits::SSE2) {
-         features_detected |= CPUID::CPUID_SSE2_BIT;
-      }
-      if(flags0 & x86_CPUID_1_bits::CLMUL) {
-         features_detected |= CPUID::CPUID_CLMUL_BIT;
-      }
-      if(flags0 & x86_CPUID_1_bits::SSSE3) {
-         features_detected |= CPUID::CPUID_SSSE3_BIT;
-      }
-      if(flags0 & x86_CPUID_1_bits::AESNI) {
-         features_detected |= CPUID::CPUID_AESNI_BIT;
-      }
       if(flags0 & x86_CPUID_1_bits::RDRAND) {
          features_detected |= CPUID::CPUID_RDRAND_BIT;
       }
 
-      if((flags0 & x86_CPUID_1_bits::AVX) && (flags0 & x86_CPUID_1_bits::OSXSAVE)) {
-         const uint64_t xcr_flags = xgetbv();
-         if((xcr_flags & 0x6) == 0x6) {
-            has_os_ymm_support = true;
-            has_os_zmm_support = (xcr_flags & 0xE0) == 0xE0;
+      if(flags0 & x86_CPUID_1_bits::SSE2) {
+         features_detected |= CPUID::CPUID_SSE2_BIT;
+
+         if(flags0 & x86_CPUID_1_bits::SSSE3) {
+            features_detected |= CPUID::CPUID_SSSE3_BIT;
+
+            if(flags0 & x86_CPUID_1_bits::CLMUL) {
+               features_detected |= CPUID::CPUID_CLMUL_BIT;
+            }
+            if(flags0 & x86_CPUID_1_bits::AESNI) {
+               features_detected |= CPUID::CPUID_AESNI_BIT;
+            }
+         }
+
+         if((flags0 & x86_CPUID_1_bits::AVX) && (flags0 & x86_CPUID_1_bits::OSXSAVE)) {
+            const uint64_t xcr_flags = xgetbv();
+            if((xcr_flags & 0x6) == 0x6) {
+               has_os_ymm_support = true;
+               has_os_zmm_support = (xcr_flags & 0xE0) == 0xE0;
+            }
          }
       }
    }
@@ -179,11 +182,14 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
       if(flags7 & x86_CPUID_7_bits::ADX) {
          features_detected |= CPUID::CPUID_ADX_BIT;
       }
-      if(flags7 & x86_CPUID_7_bits::SHA) {
-         features_detected |= CPUID::CPUID_SHA_BIT;
-      }
-      if(flags7_1 & x86_CPUID_7_1_bits::SM3) {
-         features_detected |= CPUID::CPUID_SM3_BIT;
+
+      if(features_detected & CPUID::CPUID_SSSE3_BIT) {
+         if(flags7 & x86_CPUID_7_bits::SHA) {
+            features_detected |= CPUID::CPUID_SHA_BIT;
+         }
+         if(flags7_1 & x86_CPUID_7_1_bits::SM3) {
+            features_detected |= CPUID::CPUID_SM3_BIT;
+         }
       }
 
       /*

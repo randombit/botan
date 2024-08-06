@@ -139,7 +139,7 @@ class BOTAN_TEST_API CPUID final {
       /**
       * Check if the processor supports POWER8 crypto extensions
       */
-      static bool has_power_crypto() { return has_altivec() && has_cpuid_bit(CPUID_POWER_CRYPTO_BIT); }
+      static bool has_power_crypto() { return has_cpuid_bit(CPUID_POWER_CRYPTO_BIT); }
 
       /**
       * Check if the processor supports POWER9 DARN RNG
@@ -162,42 +162,42 @@ class BOTAN_TEST_API CPUID final {
       /**
       * Check if the processor supports ARMv8 SHA1
       */
-      static bool has_arm_sha1() { return has_neon() && has_cpuid_bit(CPUID_ARM_SHA1_BIT); }
+      static bool has_arm_sha1() { return has_cpuid_bit(CPUID_ARM_SHA1_BIT); }
 
       /**
       * Check if the processor supports ARMv8 SHA2
       */
-      static bool has_arm_sha2() { return has_neon() && has_cpuid_bit(CPUID_ARM_SHA2_BIT); }
+      static bool has_arm_sha2() { return has_cpuid_bit(CPUID_ARM_SHA2_BIT); }
 
       /**
       * Check if the processor supports ARMv8 AES
       */
-      static bool has_arm_aes() { return has_neon() && has_cpuid_bit(CPUID_ARM_AES_BIT); }
+      static bool has_arm_aes() { return has_cpuid_bit(CPUID_ARM_AES_BIT); }
 
       /**
       * Check if the processor supports ARMv8 PMULL
       */
-      static bool has_arm_pmull() { return has_neon() && has_cpuid_bit(CPUID_ARM_PMULL_BIT); }
+      static bool has_arm_pmull() { return has_cpuid_bit(CPUID_ARM_PMULL_BIT); }
 
       /**
       * Check if the processor supports ARMv8 SHA-512
       */
-      static bool has_arm_sha2_512() { return has_neon() && has_cpuid_bit(CPUID_ARM_SHA2_512_BIT); }
+      static bool has_arm_sha2_512() { return has_cpuid_bit(CPUID_ARM_SHA2_512_BIT); }
 
       /**
       * Check if the processor supports ARMv8 SHA-3
       */
-      static bool has_arm_sha3() { return has_neon() && has_cpuid_bit(CPUID_ARM_SHA3_BIT); }
+      static bool has_arm_sha3() { return has_cpuid_bit(CPUID_ARM_SHA3_BIT); }
 
       /**
       * Check if the processor supports ARMv8 SM3
       */
-      static bool has_arm_sm3() { return has_neon() && has_cpuid_bit(CPUID_ARM_SM3_BIT); }
+      static bool has_arm_sm3() { return has_cpuid_bit(CPUID_ARM_SM3_BIT); }
 
       /**
       * Check if the processor supports ARMv8 SM4
       */
-      static bool has_arm_sm4() { return has_neon() && has_cpuid_bit(CPUID_ARM_SM4_BIT); }
+      static bool has_arm_sm4() { return has_cpuid_bit(CPUID_ARM_SM4_BIT); }
 
 #endif
 
@@ -216,7 +216,7 @@ class BOTAN_TEST_API CPUID final {
       /**
       * Check if the processor supports SSSE3
       */
-      static bool has_ssse3() { return has_sse2() && has_cpuid_bit(CPUID_SSSE3_BIT); }
+      static bool has_ssse3() { return has_cpuid_bit(CPUID_SSSE3_BIT); }
 
       /**
       * Check if the processor supports AVX2
@@ -250,7 +250,7 @@ class BOTAN_TEST_API CPUID final {
       /**
       * Check if the processor supports AVX-512 VPCLMULQDQ
       */
-      static bool has_avx512_clmul() { return has_avx512() && has_cpuid_bit(CPUID_AVX512_CLMUL_BIT); }
+      static bool has_avx512_clmul() { return has_cpuid_bit(CPUID_AVX512_CLMUL_BIT); }
 
       /**
       * Check if the processor supports BMI2 (and BMI1)
@@ -268,17 +268,17 @@ class BOTAN_TEST_API CPUID final {
       /**
       * Check if the processor supports AES-NI
       */
-      static bool has_aes_ni() { return has_ssse3() && has_cpuid_bit(CPUID_AESNI_BIT); }
+      static bool has_aes_ni() { return has_cpuid_bit(CPUID_AESNI_BIT); }
 
       /**
       * Check if the processor supports CLMUL
       */
-      static bool has_clmul() { return has_ssse3() && has_cpuid_bit(CPUID_CLMUL_BIT); }
+      static bool has_clmul() { return has_cpuid_bit(CPUID_CLMUL_BIT); }
 
       /**
       * Check if the processor supports Intel SHA extension
       */
-      static bool has_intel_sha() { return has_sse2() && has_cpuid_bit(CPUID_SHA_BIT); }
+      static bool has_intel_sha() { return has_cpuid_bit(CPUID_SHA_BIT); }
 
       /**
       * Check if the processor supports Intel SHA-512 extension
