@@ -223,6 +223,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
 #if defined(BOTAN_DISABLE_DEPRECATED_FEATURES)
 
    private:
+      friend class EC_Mul2Table_Data_BN;
 #endif
 
       /**
