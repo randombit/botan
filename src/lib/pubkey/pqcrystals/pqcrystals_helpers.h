@@ -74,8 +74,8 @@ consteval eea_result<T> extended_euclidean_algorithm(T a, T b) {
    if(a != b) {
       while(a != 0) {
          const T q = b / a;
-         std::tie(a, b) = std::make_tuple(b - q * a, a);
-         std::tie(u1, v1, u2, v2) = std::make_tuple(u2, v2, u1 - q * u2, v1 - q * v2);
+         std::tie(a, b) = std::make_tuple(static_cast<T>(b - q * a), a);
+         std::tie(u1, v1, u2, v2) = std::make_tuple(u2, v2, static_cast<T>(u1 - q * u2), static_cast<T>(v1 - q * v2));
       }
    }
 

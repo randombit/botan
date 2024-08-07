@@ -100,7 +100,8 @@ class KyberPolyTraits final : public CRYSTALS::Trait_Base<KyberConstants, KyberP
           * NIST FIPS 203 IPD, Algorithm 11 (BaseCaseMultiply)
           */
          auto basemul = [](const auto s, const auto t, const T zeta) -> std::tuple<T, T> {
-            return {fqmul(fqmul(s[1], t[1]), zeta) + fqmul(s[0], t[0]), fqmul(s[0], t[1]) + fqmul(s[1], t[0])};
+            return {static_cast<T>(fqmul(fqmul(s[1], t[1]), zeta) + fqmul(s[0], t[0])),
+                    static_cast<T>(fqmul(s[0], t[1]) + fqmul(s[1], t[0]))};
          };
 
          auto Tq_elem_count = [](auto p) { return p.size() / 2; };
