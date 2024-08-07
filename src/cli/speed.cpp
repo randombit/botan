@@ -2201,20 +2201,9 @@ class Speed final : public Command {
          for(auto modet : all_modes) {
             Botan::DilithiumMode mode(modet);
 
-   #if !defined(BOTAN_HAS_DILITHIUM)
-            if(mode.is_modern())
+            if(mode.is_available()) {
                continue;
-   #endif
-
-   #if !defined(BOTAN_HAS_DILITHIUM_AES)
-            if(mode.is_aes())
-               continue;
-   #endif
-
-   #if !defined(BOTAN_HAS_ML_DSA_IPD)
-            if(mode.is_ipd())
-               continue;
-   #endif
+            }
 
             auto keygen_timer = make_timer(mode.to_string(), provider, "keygen");
 

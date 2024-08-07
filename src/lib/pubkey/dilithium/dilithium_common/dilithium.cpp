@@ -94,6 +94,25 @@ std::string DilithiumMode::to_string() const {
    BOTAN_ASSERT_UNREACHABLE();
 }
 
+bool DilithiumMode::is_available() const {
+#if defined(BOTAN_HAS_DILITHIUM_AES)
+   if(is_dilithium_round3() && is_aes()) {
+      return true;
+   }
+#endif
+#if defined(BOTAN_HAS_DILITHIUM)
+   if(is_dilithium_round3() && is_modern()) {
+      return true;
+   }
+#endif
+#if defined(BOTAN_HAS_ML_DSA_IPD)
+   if(is_ml_dsa_ipd()) {
+      return true;
+   }
+#endif
+   return false;
+}
+
 class Dilithium_PublicKeyInternal {
    public:
       static std::shared_ptr<Dilithium_PublicKeyInternal> decode(
@@ -372,6 +391,7 @@ Dilithium_PublicKey::Dilithium_PublicKey(const AlgorithmIdentifier& alg_id, std:
 
 Dilithium_PublicKey::Dilithium_PublicKey(std::span<const uint8_t> pk, DilithiumMode m) {
    DilithiumConstants mode(m);
+   BOTAN_ARG_CHECK(mode.mode().is_available(), "Dilithium/ML-DSA mode is not available in this build");
    BOTAN_ARG_CHECK(pk.empty() || pk.size() == mode.public_key_bytes(),
                    "dilithium public key does not have the correct byte count");
 
@@ -461,6 +481,7 @@ std::pair<DilithiumPolyVec, DilithiumPolyVec> compute_t1_and_t0(const DilithiumP
  */
 Dilithium_PrivateKey::Dilithium_PrivateKey(RandomNumberGenerator& rng, DilithiumMode m) {
    DilithiumConstants mode(m);
+   BOTAN_ARG_CHECK(mode.mode().is_available(), "Dilithium/ML-DSA mode is not available in this build");
    const auto& sympriv = mode.symmetric_primitives();
 
    const auto xi = rng.random_vec<DilithiumSeedRandomness>(DilithiumConstants::SEED_RANDOMNESS_BYTES);
@@ -486,6 +507,7 @@ Dilithium_PrivateKey::Dilithium_PrivateKey(std::span<const uint8_t> sk, Dilithiu
    auto scope = CT::scoped_poison(sk);
 
    DilithiumConstants mode(m);
+   BOTAN_ARG_CHECK(mode.mode().is_available(), "Dilithium/ML-DSA mode is not available in this build");
    BOTAN_ARG_CHECK(sk.size() == mode.private_key_bytes(), "dilithium private key does not have the correct byte count");
    m_private =
       Dilithium_PrivateKeyInternal::decode(std::move(mode), StrongSpan<const DilithiumSerializedPrivateKey>(sk));

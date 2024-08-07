@@ -29,7 +29,7 @@ class BOTAN_PUBLIC_API(3, 0) DilithiumMode {
          Dilithium8x7_AES,
          ML_DSA4x4_IPD,
          ML_DSA6x5_IPD,
-         ML_DSA8x7_IPD
+         ML_DSA8x7_IPD,
       };
 
    public:
@@ -41,13 +41,19 @@ class BOTAN_PUBLIC_API(3, 0) DilithiumMode {
       OID object_identifier() const;
       std::string to_string() const;
 
-      bool is_aes() const {
+      BOTAN_DEPRECATED("Dilithium AES mode is deprecated") bool is_aes() const {
          return m_mode == Dilithium4x4_AES || m_mode == Dilithium6x5_AES || m_mode == Dilithium8x7_AES;
       }
 
-      bool is_modern() const { return !is_aes(); }
+      BOTAN_DEPRECATED("Dilithium AES mode is deprecated") bool is_modern() const { return !is_aes(); }
 
-      bool is_ipd() const { return m_mode == ML_DSA4x4_IPD || m_mode == ML_DSA6x5_IPD || m_mode == ML_DSA8x7_IPD; }
+      bool is_ml_dsa_ipd() const {
+         return m_mode == ML_DSA4x4_IPD || m_mode == ML_DSA6x5_IPD || m_mode == ML_DSA8x7_IPD;
+      }
+
+      bool is_dilithium_round3() const { return !is_ml_dsa_ipd(); }
+
+      bool is_available() const;
 
       Mode mode() const { return m_mode; }
 

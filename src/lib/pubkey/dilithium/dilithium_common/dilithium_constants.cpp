@@ -17,23 +17,43 @@ namespace Botan {
 
 namespace {
 uint32_t public_key_hash_size(DilithiumMode mode) {
-   // ML-KEM IPD l. 297:
-   //   [...] ML-DSA increases the length of tr to 512 bits [...]
-   return mode.is_ipd() ? 64 : 32;
+   switch(mode.mode()) {
+      case DilithiumMode::ML_DSA4x4_IPD:
+      case DilithiumMode::ML_DSA6x5_IPD:
+      case DilithiumMode::ML_DSA8x7_IPD:
+         // ML-KEM IPD l. 297:
+         //   [...] ML-DSA increases the length of tr to 512 bits [...]
+         return 64;
+      case DilithiumMode::Dilithium4x4:
+      case DilithiumMode::Dilithium4x4_AES:
+      case DilithiumMode::Dilithium6x5:
+      case DilithiumMode::Dilithium6x5_AES:
+      case DilithiumMode::Dilithium8x7:
+      case DilithiumMode::Dilithium8x7_AES:
+         return 32;
+   }
+   BOTAN_ASSERT_UNREACHABLE();
 }
 
 uint32_t commitment_hash_full_size(DilithiumMode mode) {
-   // ML-KEM IPD l. 297-298:
-   //   [ML-DSA] increases the length of c~ to 384 and 512 bits, respectively,
-   //   for the parameter sets ML-DSA-65 and ML-DSA-87.
    switch(mode.mode()) {
-      case Botan::DilithiumMode::ML_DSA6x5_IPD:
-         return 48;
-      case Botan::DilithiumMode::ML_DSA8x7_IPD:
-         return 64;
-      default:
+      case DilithiumMode::Dilithium4x4:
+      case DilithiumMode::Dilithium4x4_AES:
+      case DilithiumMode::Dilithium6x5:
+      case DilithiumMode::Dilithium6x5_AES:
+      case DilithiumMode::Dilithium8x7:
+      case DilithiumMode::Dilithium8x7_AES:
+      case DilithiumMode::ML_DSA4x4_IPD:
          return 32;
+      // ML-KEM IPD l. 297-298:
+      //   [ML-DSA] increases the length of c~ to 384 and 512 bits, respectively,
+      //   for the parameter sets ML-DSA-65 and ML-DSA-87.
+      case DilithiumMode::ML_DSA6x5_IPD:
+         return 48;
+      case DilithiumMode::ML_DSA8x7_IPD:
+         return 64;
    }
+   BOTAN_ASSERT_UNREACHABLE();
 }
 }  // namespace
 

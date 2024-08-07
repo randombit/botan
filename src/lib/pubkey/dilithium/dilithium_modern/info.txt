@@ -4,7 +4,7 @@ DILITHIUM_MODERN -> 20240728
 
 <module_info>
 name -> "Dilithium Modern Instances"
-brief -> "Base module for modern dilithium and ML-KEM"
+brief -> "Base module for SHAKE-based Dilithium and ML-KEM"
 type -> "Internal"
 </module_info>
 

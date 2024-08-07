@@ -87,7 +87,7 @@ class DilithiumConstants final {
 
       bool is_aes() const { return m_mode.is_aes(); }
 
-      bool is_ipd() const { return m_mode.is_ipd(); }
+      bool is_ipd() const { return m_mode.is_ml_dsa_ipd(); }
 
    public:
       /// \name Foundational constants
