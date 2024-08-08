@@ -47,7 +47,6 @@ class Utility_Function_Tests final : public Test {
          results.push_back(test_loadstore_fallback());
          results.push_back(test_loadstore_constexpr());
          return Botan::concat(results, test_copy_out_be_le());
-         return results;
       }
 
    private:
