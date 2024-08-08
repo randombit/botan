@@ -66,6 +66,7 @@ def known_targets():
         'nist',
         'no_pcurves',
         'sanitizer',
+        'sde',
         'shared',
         'static',
         'valgrind',
@@ -242,6 +243,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
     if target in ['coverage', 'sanitizer', 'fuzzers']:
         flags += ['--unsafe-terminate-on-asserts']
+
+    if target in ['sde']:
+        test_prefix = ['sde', '-future', '--']
 
     if target in ['valgrind', 'valgrind-full']:
         flags += ['--with-valgrind']
