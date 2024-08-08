@@ -127,6 +127,7 @@ enum BOTAN_FFI_ERROR {
    BOTAN_FFI_ERROR_TLS_ERROR = -75,
    BOTAN_FFI_ERROR_HTTP_ERROR = -76,
    BOTAN_FFI_ERROR_ROUGHTIME_ERROR = -77,
+   BOTAN_FFI_ERROR_TPM_ERROR = -78,
 
    BOTAN_FFI_ERROR_UNKNOWN_ERROR = -100,
 };
@@ -2189,6 +2190,33 @@ int botan_zfec_encode(size_t K, size_t N, const uint8_t* input, size_t size, uin
 BOTAN_FFI_EXPORT(3, 0)
 int botan_zfec_decode(
    size_t K, size_t N, const size_t* indexes, uint8_t* const* inputs, size_t shareSize, uint8_t** outputs);
+
+/**
+* TPM2 context
+*/
+typedef struct botan_tpm2_ctx_struct* botan_tpm2_ctx_t;
+
+/**
+* Initialize a TPM2 context
+* @param ctx_out output TPM2 context
+* @param tcti_nameconf TCTI config (may be nullpointer)
+* @return 0 on success
+*/
+BOTAN_FFI_EXPORT(3, 6) int botan_tpm2_ctx_init(botan_tpm2_ctx_t* ctx_out, const char* tcti_nameconf);
+
+/**
+* Frees all resouces of a TPM2 context
+* @param ctx TPM2 context
+* @return 0 on success
+*/
+BOTAN_FFI_EXPORT(3, 6) int botan_tpm2_ctx_destroy(botan_tpm2_ctx_t ctx);
+
+/**
+* Initialize a random number generator object via TPM2
+* @param rng_out rng object to create
+* @param ctx TPM2 context
+*/
+BOTAN_FFI_EXPORT(3, 6) int botan_tpm2_rng_init(botan_rng_t* rng_out, botan_tpm2_ctx_t ctx);
 
 #ifdef __cplusplus
 }
