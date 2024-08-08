@@ -18,9 +18,6 @@
 #include <botan/internal/sp_types.h>
 #include <botan/internal/stl_util.h>
 
-#include <functional>
-#include <utility>
-
 namespace Botan {
 
 namespace {
@@ -34,7 +31,11 @@ std::vector<TreeNodeIndex> fors_message_to_indices(std::span<const uint8_t> mess
 
    for(auto& idx : indices) {
       for(uint32_t i = 0; i < params.a(); ++i, ++offset) {
-         idx ^= (((message[offset >> 3] >> (offset & 0x7)) & 0x1) << i);
+         if(params.is_slh_dsa()) {
+            idx ^= (((message[offset >> 3] >> (~offset & 0x7)) & 0x1) << (params.a() - 1 - i));
+         } else {
+            idx ^= (((message[offset >> 3] >> (offset & 0x7)) & 0x1) << i);
+         }
       }
    }
 

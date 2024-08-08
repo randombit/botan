@@ -46,6 +46,24 @@ Sphincs_Parameter_Set set_from_name(std::string_view name) {
       name == "SphincsPlus-haraka-256f-r3.1") {
       return Sphincs_Parameter_Set::Sphincs256Fast;
    }
+   if(name == "SLH-DSA-SHA2-128s" || name == "SLH-DSA-SHAKE-128s") {
+      return Sphincs_Parameter_Set::SLHDSA128Small;
+   }
+   if(name == "SLH-DSA-SHA2-128f" || name == "SLH-DSA-SHAKE-128f") {
+      return Sphincs_Parameter_Set::SLHDSA128Fast;
+   }
+   if(name == "SLH-DSA-SHA2-192s" || name == "SLH-DSA-SHAKE-192s") {
+      return Sphincs_Parameter_Set::SLHDSA192Small;
+   }
+   if(name == "SLH-DSA-SHA2-192f" || name == "SLH-DSA-SHAKE-192f") {
+      return Sphincs_Parameter_Set::SLHDSA192Fast;
+   }
+   if(name == "SLH-DSA-SHA2-256s" || name == "SLH-DSA-SHAKE-256s") {
+      return Sphincs_Parameter_Set::SLHDSA256Small;
+   }
+   if(name == "SLH-DSA-SHA2-256f" || name == "SLH-DSA-SHAKE-256f") {
+      return Sphincs_Parameter_Set::SLHDSA256Fast;
+   }
 
    throw Lookup_Error(fmt("No SphincsPlus parameter set found for: {}", name));
 }
@@ -53,12 +71,16 @@ Sphincs_Parameter_Set set_from_name(std::string_view name) {
 Sphincs_Hash_Type hash_from_name(std::string_view name) {
    if(name == "SphincsPlus-sha2-128s-r3.1" || name == "SphincsPlus-sha2-128f-r3.1" ||
       name == "SphincsPlus-sha2-192s-r3.1" || name == "SphincsPlus-sha2-192f-r3.1" ||
-      name == "SphincsPlus-sha2-256s-r3.1" || name == "SphincsPlus-sha2-256f-r3.1") {
+      name == "SphincsPlus-sha2-256s-r3.1" || name == "SphincsPlus-sha2-256f-r3.1" || name == "SLH-DSA-SHA2-128s" ||
+      name == "SLH-DSA-SHA2-128f" || name == "SLH-DSA-SHA2-192s" || name == "SLH-DSA-SHA2-192f" ||
+      name == "SLH-DSA-SHA2-256s" || name == "SLH-DSA-SHA2-256f") {
       return Sphincs_Hash_Type::Sha256;
    }
    if(name == "SphincsPlus-shake-128s-r3.1" || name == "SphincsPlus-shake-128f-r3.1" ||
       name == "SphincsPlus-shake-192s-r3.1" || name == "SphincsPlus-shake-192f-r3.1" ||
-      name == "SphincsPlus-shake-256s-r3.1" || name == "SphincsPlus-shake-256f-r3.1") {
+      name == "SphincsPlus-shake-256s-r3.1" || name == "SphincsPlus-shake-256f-r3.1" || name == "SLH-DSA-SHAKE-128s" ||
+      name == "SLH-DSA-SHAKE-128f" || name == "SLH-DSA-SHAKE-192s" || name == "SLH-DSA-SHAKE-192f" ||
+      name == "SLH-DSA-SHAKE-256s" || name == "SLH-DSA-SHAKE-256f") {
       return Sphincs_Hash_Type::Shake256;
    }
    if(name == "SphincsPlus-haraka-128s-r3.1" || name == "SphincsPlus-haraka-128f-r3.1" ||
@@ -85,17 +107,43 @@ const char* as_string(Sphincs_Hash_Type type) {
 const char* as_string(Sphincs_Parameter_Set set) {
    switch(set) {
       case Sphincs_Parameter_Set::Sphincs128Small:
-         return "128s-r3.1";
+      case Sphincs_Parameter_Set::SLHDSA128Small:
+         return "128s";
       case Sphincs_Parameter_Set::Sphincs128Fast:
-         return "128f-r3.1";
+      case Sphincs_Parameter_Set::SLHDSA128Fast:
+         return "128f";
       case Sphincs_Parameter_Set::Sphincs192Small:
-         return "192s-r3.1";
+      case Sphincs_Parameter_Set::SLHDSA192Small:
+         return "192s";
       case Sphincs_Parameter_Set::Sphincs192Fast:
-         return "192f-r3.1";
+      case Sphincs_Parameter_Set::SLHDSA192Fast:
+         return "192f";
       case Sphincs_Parameter_Set::Sphincs256Small:
-         return "256s-r3.1";
+      case Sphincs_Parameter_Set::SLHDSA256Small:
+         return "256s";
       case Sphincs_Parameter_Set::Sphincs256Fast:
-         return "256f-r3.1";
+      case Sphincs_Parameter_Set::SLHDSA256Fast:
+         return "256f";
+   }
+   BOTAN_ASSERT_UNREACHABLE();
+}
+
+constexpr bool is_slh_dsa_set(Sphincs_Parameter_Set set) {
+   switch(set) {
+      case Sphincs_Parameter_Set::SLHDSA128Small:
+      case Sphincs_Parameter_Set::SLHDSA128Fast:
+      case Sphincs_Parameter_Set::SLHDSA192Small:
+      case Sphincs_Parameter_Set::SLHDSA192Fast:
+      case Sphincs_Parameter_Set::SLHDSA256Small:
+      case Sphincs_Parameter_Set::SLHDSA256Fast:
+         return true;
+      case Sphincs_Parameter_Set::Sphincs128Small:
+      case Sphincs_Parameter_Set::Sphincs128Fast:
+      case Sphincs_Parameter_Set::Sphincs192Small:
+      case Sphincs_Parameter_Set::Sphincs192Fast:
+      case Sphincs_Parameter_Set::Sphincs256Small:
+      case Sphincs_Parameter_Set::Sphincs256Fast:
+         return false;
    }
    BOTAN_ASSERT_UNREACHABLE();
 }
@@ -152,22 +200,53 @@ Sphincs_Parameters::Sphincs_Parameters(Sphincs_Parameter_Set set,
    m_h_msg_digest_bytes = m_fors_message_bytes + m_tree_digest_bytes + m_leaf_digest_bytes;
 }
 
+bool Sphincs_Parameters::is_available() const {
+   [[maybe_unused]] bool is_slh_dsa = is_slh_dsa_set(m_set);
+#ifdef BOTAN_HAS_SLH_DSA_WITH_SHA2
+   if(is_slh_dsa && m_hash_type == Sphincs_Hash_Type::Sha256) {
+      return true;
+   }
+#endif
+#ifdef BOTAN_HAS_SLH_DSA_WITH_SHAKE
+   if(is_slh_dsa && m_hash_type == Sphincs_Hash_Type::Shake256) {
+      return true;
+   }
+#endif
+#ifdef BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2
+   if(!is_slh_dsa && m_hash_type == Sphincs_Hash_Type::Sha256) {
+      return true;
+   }
+#endif
+#ifdef BOTAN_HAS_SPHINCS_PLUS_SHAKE_BASED
+   if(!is_slh_dsa && m_hash_type == Sphincs_Hash_Type::Shake256) {
+      return true;
+   }
+#endif
+   return false;
+}
+
 Sphincs_Parameters Sphincs_Parameters::create(Sphincs_Parameter_Set set, Sphincs_Hash_Type hash) {
    // See "Table 3" in SPHINCS+ specification (NIST R3.1 submission, page 39)
    switch(set) {
       case Sphincs_Parameter_Set::Sphincs128Small:
+      case Sphincs_Parameter_Set::SLHDSA128Small:
          return Sphincs_Parameters(set, hash, 16, 63, 7, 12, 14, 16, 133);
       case Sphincs_Parameter_Set::Sphincs128Fast:
+      case Sphincs_Parameter_Set::SLHDSA128Fast:
          return Sphincs_Parameters(set, hash, 16, 66, 22, 6, 33, 16, 128);
 
       case Sphincs_Parameter_Set::Sphincs192Small:
+      case Sphincs_Parameter_Set::SLHDSA192Small:
          return Sphincs_Parameters(set, hash, 24, 63, 7, 14, 17, 16, 193);
       case Sphincs_Parameter_Set::Sphincs192Fast:
+      case Sphincs_Parameter_Set::SLHDSA192Fast:
          return Sphincs_Parameters(set, hash, 24, 66, 22, 8, 33, 16, 194);
 
       case Sphincs_Parameter_Set::Sphincs256Small:
+      case Sphincs_Parameter_Set::SLHDSA256Small:
          return Sphincs_Parameters(set, hash, 32, 64, 8, 14, 22, 16, 255);
       case Sphincs_Parameter_Set::Sphincs256Fast:
+      case Sphincs_Parameter_Set::SLHDSA256Fast:
          return Sphincs_Parameters(set, hash, 32, 68, 17, 9, 35, 16, 255);
    }
    BOTAN_ASSERT_UNREACHABLE();
@@ -175,6 +254,10 @@ Sphincs_Parameters Sphincs_Parameters::create(Sphincs_Parameter_Set set, Sphincs
 
 Sphincs_Parameters Sphincs_Parameters::create(std::string_view name) {
    return Sphincs_Parameters::create(set_from_name(name), hash_from_name(name));
+}
+
+bool Sphincs_Parameters::is_slh_dsa() const {
+   return is_slh_dsa_set(m_set);
 }
 
 std::string Sphincs_Parameters::hash_name() const {
@@ -190,7 +273,14 @@ std::string Sphincs_Parameters::hash_name() const {
 }
 
 std::string Sphincs_Parameters::to_string() const {
-   return fmt("SphincsPlus-{}-{}", as_string(m_hash_type), as_string(m_set));
+   if(is_slh_dsa()) {
+      std::string hash_name = as_string(m_hash_type);
+      // Hash names are uppercase for ML-DSA instances
+      std::transform(
+         hash_name.begin(), hash_name.end(), hash_name.begin(), [](unsigned char c) { return std::toupper(c); });
+      return fmt("SLH-DSA-{}-{}", hash_name, as_string(m_set));
+   }
+   return fmt("SphincsPlus-{}-{}-r3.1", as_string(m_hash_type), as_string(m_set));
 }
 
 Sphincs_Parameters Sphincs_Parameters::create(const OID& oid) {

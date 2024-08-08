@@ -15,11 +15,11 @@
 #include <botan/hash.h>
 #include <botan/sp_parameters.h>
 
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+#if defined(BOTAN_HAS_SPHINCS_PLUS_SHAKE_BASED)
    #include <botan/internal/sp_hash_shake.h>
 #endif
 
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2)
+#if defined(BOTAN_HAS_SPHINCS_PLUS_SHA2_BASED)
    #include <botan/internal/sp_hash_sha2.h>
 #endif
 
@@ -35,14 +35,14 @@ std::unique_ptr<Sphincs_Hash_Functions> Sphincs_Hash_Functions::create(const Sph
                                                                        const SphincsPublicSeed& pub_seed) {
    switch(sphincs_params.hash_type()) {
       case Sphincs_Hash_Type::Sha256:
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2)
+#if defined(BOTAN_HAS_SPHINCS_PLUS_SHA2_BASED)
          return std::make_unique<Sphincs_Hash_Functions_Sha2>(sphincs_params, pub_seed);
 #else
          throw Not_Implemented("SPHINCS+ with SHA-256 is not available in this build");
 #endif
 
       case Sphincs_Hash_Type::Shake256:
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+#if defined(BOTAN_HAS_SPHINCS_PLUS_SHAKE_BASED)
          return std::make_unique<Sphincs_Hash_Functions_Shake>(sphincs_params, pub_seed);
 #else
          throw Not_Implemented("SPHINCS+ with SHAKE is not available in this build");

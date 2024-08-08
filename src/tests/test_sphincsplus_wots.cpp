@@ -7,7 +7,7 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+#if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON)
 
    #include <botan/hash.h>
    #include <botan/hex.h>
@@ -42,20 +42,7 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test {
 
       bool skip_this_test(const std::string&, const VarMap& vars) override {
          [[maybe_unused]] auto params = Botan::Sphincs_Parameters::create(vars.get_req_str("SphincsParameterSet"));
-
-   #if not defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
-         if(params.hash_type() == Botan::Sphincs_Hash_Type::Shake256) {
-            return true;
-         }
-   #endif
-
-   #if not defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2)
-         if(params.hash_type() == Botan::Sphincs_Hash_Type::Sha256) {
-            return true;
-         }
-   #endif
-
-         return false;
+         return !params.is_available();
       }
 
       Test::Result run_one_test(const std::string&, const VarMap& vars) final {
@@ -131,4 +118,4 @@ BOTAN_REGISTER_TEST("pubkey", "sphincsplus_wots", SPHINCS_Plus_WOTS_Test);
 
 }  // namespace Botan_Tests
 
-#endif  // BOTAN_HAS_SPHINCS_PLUS
+#endif  // BOTAN_HAS_SPHINCS_PLUS_COMMON

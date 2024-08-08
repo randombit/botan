@@ -75,6 +75,21 @@
 1.3.6.1.4.1.25258.1.12.3.5 = SphincsPlus-haraka-256s-r3.1
 1.3.6.1.4.1.25258.1.12.3.6 = SphincsPlus-haraka-256f-r3.1
 
+# SLH-DSA Initial Public Draft - TODO: Change for final draft
+# (taken from the IETF hackathon: https://github.com/IETF-Hackathon/pqc-certificates/blob/f9ecf761c3b4f3a84520536b7ce3175e8c7726fd/docs/oid_mapping.md#nist-draft-standard-algorithm-oids)
+1.3.9999.6.4.16 = SLH-DSA-SHA2-128s
+1.3.9999.6.7.16 = SLH-DSA-SHAKE-128s
+1.3.9999.6.4.13 = SLH-DSA-SHA2-128f
+1.3.9999.6.7.13 = SLH-DSA-SHAKE-128f
+1.3.9999.6.5.12 = SLH-DSA-SHA2-192s
+1.3.9999.6.8.12 = SLH-DSA-SHAKE-192s
+1.3.9999.6.5.10 = SLH-DSA-SHA2-192f
+1.3.9999.6.8.10 = SLH-DSA-SHAKE-192f
+1.3.9999.6.6.12 = SLH-DSA-SHA2-256s
+1.3.9999.6.9.12 = SLH-DSA-SHAKE-256s
+1.3.9999.6.6.10 = SLH-DSA-SHA2-256f
+1.3.9999.6.9.10 = SLH-DSA-SHAKE-256f
+
 # XMSS
 1.3.6.1.4.1.25258.1.5 = XMSS-draft6
 1.3.6.1.4.1.25258.1.8 = XMSS-draft12

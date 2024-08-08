@@ -7,7 +7,7 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+#if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON)
 
    #include <botan/hex.h>
    #include <botan/internal/sp_address.h>
@@ -109,4 +109,4 @@ BOTAN_REGISTER_TEST_FN("pubkey", "sphincsplus_address", test_sphincsplus_address
 
 }  // namespace Botan_Tests
 
-#endif  // BOTAN_HAS_SPHINCS_PLUS
+#endif  // BOTAN_HAS_SPHINCS_PLUS_COMMON

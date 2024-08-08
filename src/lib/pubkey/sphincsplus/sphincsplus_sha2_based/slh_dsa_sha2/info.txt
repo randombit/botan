@@ -1,0 +1,7 @@
+<defines>
+SLH_DSA_WITH_SHA2 -> 20240806
+</defines>
+
+<module_info>
+name -> "SLH-DSA (SHA-256)"
+</module_info>

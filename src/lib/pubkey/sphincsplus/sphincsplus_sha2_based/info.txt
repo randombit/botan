@@ -1,9 +1,11 @@
 <defines>
-SPHINCS_PLUS_WITH_SHA2 -> 20230531
+SPHINCS_PLUS_SHA2_BASED -> 20240807
 </defines>
 
 <module_info>
-name -> "SPHINCS+ (SHA-256)"
+name -> "SPHINCS+ (SHA-256) Base"
+brief -> "Base module for SLH-DSA and SPHINCS+ with SHA-2"
+type -> "Internal"
 </module_info>
 
 <requires>

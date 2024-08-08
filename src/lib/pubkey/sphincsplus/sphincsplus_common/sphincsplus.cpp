@@ -19,10 +19,11 @@
 #include <botan/internal/sp_xmss.h>
 #include <botan/internal/stl_util.h>
 
-#if !defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) and !defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+#if !defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) and !defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE) and \
+   !defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) and !defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
 static_assert(
    false,
-   "botan module 'sphincsplus_common' is useful only when enabling at least 'sphincsplus_sha2' or 'sphincsplus_shake'");
+   "botan module 'sphincsplus_common' is useful only when enabling at least 'sphincsplus_sha2', 'sphincsplus_shake', 'slh_dsa_sha2', or 'slh_dsa_shake'");
 #endif
 
 namespace Botan {
@@ -91,13 +92,16 @@ class SphincsPlus_PrivateKeyInternal final {
 SphincsPlus_PublicKey::SphincsPlus_PublicKey(std::span<const uint8_t> pub_key,
                                              Sphincs_Parameter_Set type,
                                              Sphincs_Hash_Type hash) :
-      m_public(std::make_shared<SphincsPlus_PublicKeyInternal>(Sphincs_Parameters::create(type, hash), pub_key)) {}
+      SphincsPlus_PublicKey(pub_key, Sphincs_Parameters::create(type, hash)) {}
 
 SphincsPlus_PublicKey::SphincsPlus_PublicKey(std::span<const uint8_t> pub_key, Sphincs_Parameters params) :
-      m_public(std::make_shared<SphincsPlus_PublicKeyInternal>(params, pub_key)) {}
+      m_public(std::make_shared<SphincsPlus_PublicKeyInternal>(params, pub_key)) {
+   BOTAN_ARG_CHECK(params.is_available(),
+                   "The selected parameter-set-hash combination is not activated in this build.");
+}
 
 SphincsPlus_PublicKey::SphincsPlus_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
-      m_public(std::make_shared<SphincsPlus_PublicKeyInternal>(Sphincs_Parameters::create(alg_id.oid()), key_bits)) {}
+      SphincsPlus_PublicKey(key_bits, Sphincs_Parameters::create(alg_id.oid())) {}
 
 SphincsPlus_PublicKey::~SphincsPlus_PublicKey() = default;
 
@@ -238,6 +242,8 @@ SphincsPlus_PrivateKey::SphincsPlus_PrivateKey(const AlgorithmIdentifier& alg_id
 
 SphincsPlus_PrivateKey::SphincsPlus_PrivateKey(std::span<const uint8_t> private_key, Sphincs_Parameters params) :
       SphincsPlus_PublicKey(slice_off_public_key(params.object_identifier(), private_key), params) {
+   BOTAN_ARG_CHECK(params.is_available(),
+                   "The selected parameter-set-hash combination is not activated in this build.");
    const auto private_portion_bytes = params.private_key_bytes() - params.public_key_bytes();
    BOTAN_ASSERT_NOMSG(private_key.size() >= private_portion_bytes);
 
@@ -250,6 +256,8 @@ SphincsPlus_PrivateKey::SphincsPlus_PrivateKey(RandomNumberGenerator& rng,
       SphincsPlus_PrivateKey(rng, Sphincs_Parameters::create(type, hash)) {}
 
 SphincsPlus_PrivateKey::SphincsPlus_PrivateKey(RandomNumberGenerator& rng, Sphincs_Parameters params) {
+   BOTAN_ARG_CHECK(params.is_available(),
+                   "The selected parameter-set-hash combination is not activated in this build.");
    auto sk_seed = rng.random_vec<SphincsSecretSeed>(params.n());
    auto sk_prf = rng.random_vec<SphincsSecretPRF>(params.n());
 

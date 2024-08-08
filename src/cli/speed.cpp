@@ -141,7 +141,7 @@
    #include <botan/hss_lms.h>
 #endif
 
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+#if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON)
    #include <botan/sphincsplus.h>
 #endif
 
@@ -660,7 +660,7 @@ class Speed final : public Command {
                bench_hss_lms(provider, msec);
             }
 #endif
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+#if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON)
             else if(algo == "SPHINCS+") {
                bench_sphincs_plus(provider, msec);
             }
@@ -2235,35 +2235,34 @@ class Speed final : public Command {
       }
 #endif
 
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+#if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON)
       void bench_sphincs_plus(const std::string& provider, std::chrono::milliseconds msec) {
          // Sphincs_Parameter_Set set, Sphincs_Hash_Type hash
-         std::vector<std::string> sphincs_params{"SphincsPlus-sha2-128s-r3.1",
-                                                 "SphincsPlus-sha2-128f-r3.1",
-                                                 "SphincsPlus-sha2-192s-r3.1",
-                                                 "SphincsPlus-sha2-192f-r3.1",
-                                                 "SphincsPlus-sha2-256s-r3.1",
-                                                 "SphincsPlus-sha2-256f-r3.1",
-                                                 "SphincsPlus-shake-128s-r3.1",
-                                                 "SphincsPlus-shake-128f-r3.1",
-                                                 "SphincsPlus-shake-192s-r3.1",
-                                                 "SphincsPlus-shake-192f-r3.1",
-                                                 "SphincsPlus-shake-256s-r3.1",
-                                                 "SphincsPlus-shake-256f-r3.1"};
+         std::vector<std::string> sphincs_params{
+            "SphincsPlus-sha2-128s-r3.1",  "SphincsPlus-sha2-128f-r3.1",  "SphincsPlus-sha2-192s-r3.1",
+            "SphincsPlus-sha2-192f-r3.1",  "SphincsPlus-sha2-256s-r3.1",  "SphincsPlus-sha2-256f-r3.1",
+            "SphincsPlus-shake-128s-r3.1", "SphincsPlus-shake-128f-r3.1", "SphincsPlus-shake-192s-r3.1",
+            "SphincsPlus-shake-192f-r3.1", "SphincsPlus-shake-256s-r3.1", "SphincsPlus-shake-256f-r3.1",
 
-         for(auto params : sphincs_params) {
-            try {
-               auto keygen_timer = make_timer(params, provider, "keygen");
+            "SLH-DSA-SHA2-128s",           "SLH-DSA-SHA2-128f",           "SLH-DSA-SHA2-192s",
+            "SLH-DSA-SHA2-192f",           "SLH-DSA-SHA2-256s",           "SLH-DSA-SHA2-256f",
+            "SLH-DSA-SHAKE-128s",          "SLH-DSA-SHAKE-128f",          "SLH-DSA-SHAKE-192s",
+            "SLH-DSA-SHAKE-192f",          "SLH-DSA-SHAKE-256s",          "SLH-DSA-SHAKE-256f",
+         };
 
-               std::unique_ptr<Botan::Private_Key> key(
-                  keygen_timer->run([&] { return Botan::create_private_key("SPHINCS+", rng(), params); }));
-
-               record_result(keygen_timer);
-               if(bench_pk_sig(*key, params, provider, "", msec) == 1) {
-                  break;
-               }
-            } catch(Botan::Not_Implemented&) {
+         for(auto params_str : sphincs_params) {
+            auto sp_params = Botan::Sphincs_Parameters::create(params_str);
+            if(!sp_params.is_available()) {
                continue;
+            }
+            auto keygen_timer = make_timer(params_str, provider, "keygen");
+
+            std::unique_ptr<Botan::Private_Key> key(
+               keygen_timer->run([&] { return Botan::create_private_key("SPHINCS+", rng(), params_str); }));
+
+            record_result(keygen_timer);
+            if(bench_pk_sig(*key, params_str, provider, "", msec) == 1) {
+               break;
             }
          }
       }

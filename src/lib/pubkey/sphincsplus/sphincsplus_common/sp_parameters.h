@@ -28,6 +28,13 @@ enum class Sphincs_Parameter_Set {
    Sphincs192Fast,
    Sphincs256Small,
    Sphincs256Fast,
+
+   SLHDSA128Small,
+   SLHDSA128Fast,
+   SLHDSA192Small,
+   SLHDSA192Fast,
+   SLHDSA256Small,
+   SLHDSA256Fast,
 };
 
 /**
@@ -40,6 +47,13 @@ class BOTAN_PUBLIC_API(3, 1) Sphincs_Parameters final {
       static Sphincs_Parameters create(Sphincs_Parameter_Set set, Sphincs_Hash_Type hash);
       static Sphincs_Parameters create(std::string_view name);
       static Sphincs_Parameters create(const OID& oid);
+
+      /**
+       * @returns true iff the given parameter set and hash combination is available
+       * in this build. Note that parameter sets can only be used if this function
+       * evaluates to true.
+       */
+      bool is_available() const;
 
       /**
        * @returns the OID of the algorithm specified by those parameters
@@ -60,6 +74,11 @@ class BOTAN_PUBLIC_API(3, 1) Sphincs_Parameters final {
        * @returns the generic algorithm parameterization set to be used by those parameters
        */
       Sphincs_Parameter_Set parameter_set() const { return m_set; }
+
+      /**
+       * @returns true for SLH-DSA parameter sets. False for SPHINCS+ Round 3.1 parameter sets.
+       */
+      bool is_slh_dsa() const;
 
       /**
        * @returns a string representation of this parameter set

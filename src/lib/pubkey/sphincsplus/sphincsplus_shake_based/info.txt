@@ -1,9 +1,11 @@
 <defines>
-SPHINCS_PLUS_WITH_SHAKE -> 20230531
+SPHINCS_PLUS_SHAKE_BASED -> 20240809
 </defines>
 
 <module_info>
-name -> "SPHINCS+ (SHAKE-256)"
+name -> "SPHINCS+ (SHAKE) Base"
+brief -> "Base module for SLH-DSA and SPHINCS+ with SHAKE"
+type -> "Internal"
 </module_info>
 
 <requires>
