@@ -13,4 +13,5 @@ avx2
 
 <header:internal>
 simd_avx2.h
+simd_avx2_gfni.h
 </header:internal>

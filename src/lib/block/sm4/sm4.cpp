@@ -162,8 +162,15 @@ void SM4::encrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_SM4_ARMV8)
-   if(CPUID::has_arm_sm4())
+   if(CPUID::has_arm_sm4()) {
       return sm4_armv8_encrypt(in, out, blocks);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SM4_GFNI)
+   if(CPUID::has_gfni()) {
+      return sm4_gfni_encrypt(in, out, blocks);
+   }
 #endif
 
    while(blocks >= 2) {
@@ -222,8 +229,15 @@ void SM4::decrypt_n(const uint8_t in[], uint8_t out[], size_t blocks) const {
    assert_key_material_set();
 
 #if defined(BOTAN_HAS_SM4_ARMV8)
-   if(CPUID::has_arm_sm4())
+   if(CPUID::has_arm_sm4()) {
       return sm4_armv8_decrypt(in, out, blocks);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SM4_GFNI)
+   if(CPUID::has_gfni()) {
+      return sm4_gfni_decrypt(in, out, blocks);
+   }
 #endif
 
    while(blocks >= 2) {
@@ -316,6 +330,12 @@ size_t SM4::parallelism() const {
    }
 #endif
 
+#if defined(BOTAN_HAS_SM4_GFNI)
+   if(CPUID::has_gfni()) {
+      return 8;
+   }
+#endif
+
    return 1;
 }
 
@@ -323,6 +343,12 @@ std::string SM4::provider() const {
 #if defined(BOTAN_HAS_SM4_ARMV8)
    if(CPUID::has_arm_sm4()) {
       return "armv8";
+   }
+#endif
+
+#if defined(BOTAN_HAS_SM4_GFNI)
+   if(CPUID::has_gfni()) {
+      return "gfni";
    }
 #endif
 
