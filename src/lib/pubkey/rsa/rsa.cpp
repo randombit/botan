@@ -358,6 +358,15 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng, size_t bits, size_t e
    RSA_PrivateKey::init(std::move(d), std::move(p), std::move(q), std::move(d1), std::move(d2), std::move(c));
 }
 
+RSA_PrivateKey& RSA_PrivateKey::operator=(RSA_PrivateKey&& other) noexcept {
+   if(this != &other) {
+      static_cast<RSA_PublicKey&>(*this) = static_cast<RSA_PublicKey&&>(other);
+      m_private = std::move(other.m_private);
+   }
+
+   return *this;
+}
+
 const BigInt& RSA_PrivateKey::get_int_field(std::string_view field) const {
    if(field == "p") {
       return m_private->get_p();

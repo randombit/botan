@@ -349,6 +349,15 @@ Hybrid_KEM_PrivateKey::Hybrid_KEM_PrivateKey(std::vector<std::unique_ptr<Private
       });
 }
 
+Hybrid_KEM_PrivateKey& Hybrid_KEM_PrivateKey::operator=(Hybrid_KEM_PrivateKey&& other) noexcept {
+   if(this != &other) {
+      static_cast<Hybrid_KEM_PublicKey&>(*this) = static_cast<Hybrid_KEM_PublicKey&&>(other);
+      m_private_keys = std::move(other.m_private_keys);
+   }
+
+   return *this;
+}
+
 secure_vector<uint8_t> Hybrid_KEM_PrivateKey::private_key_bits() const {
    throw Not_Implemented("Hybrid private keys cannot be serialized");
 }

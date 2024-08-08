@@ -93,6 +93,19 @@ class BOTAN_TEST_API Hybrid_KEM_PrivateKey final : public Private_Key,
    public:
       Hybrid_KEM_PrivateKey(std::vector<std::unique_ptr<Private_Key>> private_keys);
 
+      /* Work around a bug/oddity in clang-cl on Windows - the default move assignment operator
+       * generates multiple calls to Public_Key(Public_Key&&) as a technically-valid-but-dangerous
+       * side-effect of the class having the dllexport attribute. In the cast of the Public_Key
+       * class, this isn't actually a problem since its just an interface and has no data members,
+       * but Clang still raises a warning for it.
+       *
+       * We implement an explicit move assignment operator to silence this warning.
+      */
+      Hybrid_KEM_PrivateKey(const Hybrid_KEM_PublicKey&) = delete;
+      Hybrid_KEM_PrivateKey& operator=(const Hybrid_KEM_PrivateKey&) = delete;
+      Hybrid_KEM_PrivateKey(Hybrid_KEM_PrivateKey&&) = default;
+      Hybrid_KEM_PrivateKey& operator=(Hybrid_KEM_PrivateKey&& other) noexcept;
+
       secure_vector<uint8_t> private_key_bits() const override;
 
       std::unique_ptr<Public_Key> public_key() const override;

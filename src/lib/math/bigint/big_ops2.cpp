@@ -11,6 +11,20 @@
 #include <botan/internal/mp_core.h>
 #include <algorithm>
 
+/* This hack works around an undefined reference to __udivti3() when compiling for 64-bit Windows
+ * using clang-cl, see:
+ *
+ * https://github.com/llvm/llvm-project/issues/25679
+ * https://stackoverflow.com/questions/68676184/clang-cl-error-lld-link-error-undefined-symbol-divti3
+ *
+ * I couldn't come up with a way to embed this into the build info files without extending
+ * configure.py to allow cpu-specific libs in the compiler info or os+cc+arch-specific libs in the
+ * module info. Hopefully this can go away when the above Clang issue is fixed anyway.
+*/
+#if defined(_WIN64) && defined(BOTAN_BUILD_COMPILER_IS_CLANGCL)
+   #pragma comment(lib, "clang_rt.builtins-x86_64.lib")
+#endif
+
 namespace Botan {
 
 BigInt& BigInt::add(const word y[], size_t y_words, Sign y_sign) {

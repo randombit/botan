@@ -76,6 +76,15 @@ DH_PrivateKey::DH_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const 
    m_public_key = m_private_key->public_key();
 }
 
+DH_PrivateKey& DH_PrivateKey::operator=(DH_PrivateKey&& other) noexcept {
+   if(this != &other) {
+      static_cast<DH_PublicKey&>(*this) = static_cast<DH_PublicKey&&>(other);
+      m_private_key = std::move(other.m_private_key);
+   }
+
+   return *this;
+}
+
 std::unique_ptr<Public_Key> DH_PrivateKey::public_key() const {
    return std::unique_ptr<DH_PublicKey>(new DH_PublicKey(m_public_key));
 }

@@ -133,6 +133,19 @@ class BOTAN_PUBLIC_API(2, 0) RSA_PrivateKey final : public Private_Key,
       */
       RSA_PrivateKey(RandomNumberGenerator& rng, size_t bits, size_t exp = 65537);
 
+      /* Work around a bug/oddity in clang-cl on Windows - the default move assignment operator
+       * generates multiple calls to Public_Key(Public_Key&&) as a technically-valid-but-dangerous
+       * side-effect of the class having the dllexport attribute. In the cast of the Public_Key
+       * class, this isn't actually a problem since its just an interface and has no data members,
+       * but Clang still raises a warning for it.
+       *
+       * We implement an explicit move assignment operator to silence this warning.
+      */
+      RSA_PrivateKey(const RSA_PrivateKey&) = default;
+      RSA_PrivateKey& operator=(const RSA_PrivateKey&) = default;
+      RSA_PrivateKey(RSA_PrivateKey&&) = default;
+      RSA_PrivateKey& operator=(RSA_PrivateKey&&) noexcept;
+
       std::unique_ptr<Public_Key> public_key() const override;
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;
