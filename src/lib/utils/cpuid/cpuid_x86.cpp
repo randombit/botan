@@ -11,13 +11,11 @@
 #include <botan/internal/loadstor.h>
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-
    #include <immintrin.h>
+#endif
 
-   #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
-      #include <intrin.h>
-   #endif
-
+#if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+   #include <intrin.h>
 #endif
 
 namespace Botan {
@@ -62,8 +60,67 @@ BOTAN_FUNC_ISA("xsave") uint64_t xgetbv() {
 
 }  // namespace
 
-uint32_t CPUID::CPUID_Data::detect_cpu_features() {
-   uint32_t features_detected = 0;
+uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
+   enum class x86_CPUID_1_bits : uint64_t {
+      RDTSC = (1ULL << 4),
+      SSE2 = (1ULL << 26),
+      CLMUL = (1ULL << 33),
+      SSSE3 = (1ULL << 41),
+      SSE41 = (1ULL << 51),
+      AESNI = (1ULL << 57),
+      // AVX + OSXSAVE
+      OSXSAVE = (1ULL << 59) | (1ULL << 60),
+      RDRAND = (1ULL << 62)
+   };
+
+   enum class x86_CPUID_7_bits : uint64_t {
+      BMI1 = (1ULL << 3),
+      AVX2 = (1ULL << 5),
+      BMI2 = (1ULL << 8),
+      BMI_1_AND_2 = BMI1 | BMI2,
+      AVX512_F = (1ULL << 16),
+      AVX512_DQ = (1ULL << 17),
+      RDSEED = (1ULL << 18),
+      ADX = (1ULL << 19),
+      AVX512_IFMA = (1ULL << 21),
+      SHA = (1ULL << 29),
+      AVX512_BW = (1ULL << 30),
+      AVX512_VL = (1ULL << 31),
+      AVX512_VBMI = (1ULL << 33),
+      AVX512_VBMI2 = (1ULL << 38),
+      GFNI = (1ULL << 40),
+      AVX512_VAES = (1ULL << 41),
+      AVX512_VCLMUL = (1ULL << 42),
+      AVX512_VBITALG = (1ULL << 44),
+
+      /*
+      We only enable AVX512 support if all of the below flags are available
+
+      This is more than we strictly need for most uses, however it also has
+      the effect of preventing execution of AVX512 codepaths on cores that
+      have serious downclocking problems when AVX512 code executes,
+      especially Intel Skylake.
+
+      VBMI2/VBITALG are the key flags here as they restrict us to Intel Ice
+      Lake/Rocket Lake, or AMD Zen4, all of which do not have penalties for
+      executing AVX512.
+
+      There is nothing stopping some future processor from supporting the
+      above flags and having AVX512 penalties, but maybe you should not have
+      bought such a processor.
+      */
+      AVX512_PROFILE =
+         AVX512_F | AVX512_DQ | AVX512_IFMA | AVX512_BW | AVX512_VL | AVX512_VBMI | AVX512_VBMI2 | AVX512_VBITALG,
+   };
+
+   // NOLINTNEXTLINE(performance-enum-size)
+   enum class x86_CPUID_7_1_bits : uint64_t {
+      SHA512 = (1 << 0),
+      SM3 = (1 << 1),
+      SM4 = (1 << 2),
+   };
+
+   uint32_t feat = 0;
    uint32_t cpuid[4] = {0};
    bool has_os_ymm_support = false;
    bool has_os_zmm_support = false;
@@ -78,39 +135,21 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
       invoke_cpuid(1, cpuid);
       const uint64_t flags0 = (static_cast<uint64_t>(cpuid[2]) << 32) | cpuid[3];
 
-      enum x86_CPUID_1_bits : uint64_t {
-         RDTSC = (1ULL << 4),
-         SSE2 = (1ULL << 26),
-         CLMUL = (1ULL << 33),
-         SSSE3 = (1ULL << 41),
-         AESNI = (1ULL << 57),
-         OSXSAVE = (1ULL << 59),
-         AVX = (1ULL << 60),
-         RDRAND = (1ULL << 62)
-      };
+      feat |= if_set(flags0, x86_CPUID_1_bits::RDTSC, CPUID::CPUID_RDTSC_BIT, allowed);
 
-      if(flags0 & x86_CPUID_1_bits::RDTSC) {
-         features_detected |= CPUID::CPUID_RDTSC_BIT;
-      }
-      if(flags0 & x86_CPUID_1_bits::RDRAND) {
-         features_detected |= CPUID::CPUID_RDRAND_BIT;
-      }
+      feat |= if_set(flags0, x86_CPUID_1_bits::RDRAND, CPUID::CPUID_RDRAND_BIT, allowed);
 
-      if(flags0 & x86_CPUID_1_bits::SSE2) {
-         features_detected |= CPUID::CPUID_SSE2_BIT;
+      feat |= if_set(flags0, x86_CPUID_1_bits::SSE2, CPUID::CPUID_SSE2_BIT, allowed);
 
-         if(flags0 & x86_CPUID_1_bits::SSSE3) {
-            features_detected |= CPUID::CPUID_SSSE3_BIT;
+      if(feat & CPUID::CPUID_SSE2_BIT) {
+         feat |= if_set(flags0, x86_CPUID_1_bits::SSSE3, CPUID::CPUID_SSSE3_BIT, allowed);
 
-            if(flags0 & x86_CPUID_1_bits::CLMUL) {
-               features_detected |= CPUID::CPUID_CLMUL_BIT;
-            }
-            if(flags0 & x86_CPUID_1_bits::AESNI) {
-               features_detected |= CPUID::CPUID_AESNI_BIT;
-            }
+         if(feat & CPUID::CPUID_SSSE3_BIT) {
+            feat |= if_set(flags0, x86_CPUID_1_bits::CLMUL, CPUID::CPUID_CLMUL_BIT, allowed);
+            feat |= if_set(flags0, x86_CPUID_1_bits::AESNI, CPUID::CPUID_AESNI_BIT, allowed);
          }
 
-         if((flags0 & x86_CPUID_1_bits::AVX) && (flags0 & x86_CPUID_1_bits::OSXSAVE)) {
+         if(flags0 & static_cast<uint64_t>(x86_CPUID_1_bits::OSXSAVE)) {
             const uint64_t xcr_flags = xgetbv();
             if((xcr_flags & 0x6) == 0x6) {
                has_os_ymm_support = true;
@@ -124,112 +163,43 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
       clear_mem(cpuid, 4);
       invoke_cpuid_sublevel(7, 0, cpuid);
 
-      enum x86_CPUID_7_bits : uint64_t {
-         BMI1 = (1ULL << 3),
-         AVX2 = (1ULL << 5),
-         BMI2 = (1ULL << 8),
-         AVX512_F = (1ULL << 16),
-         AVX512_DQ = (1ULL << 17),
-         RDSEED = (1ULL << 18),
-         ADX = (1ULL << 19),
-         AVX512_IFMA = (1ULL << 21),
-         SHA = (1ULL << 29),
-         AVX512_BW = (1ULL << 30),
-         AVX512_VL = (1ULL << 31),
-         AVX512_VBMI = (1ULL << 33),
-         AVX512_VBMI2 = (1ULL << 38),
-         GFNI = (1ULL << 40),
-         AVX512_VAES = (1ULL << 41),
-         AVX512_VCLMUL = (1ULL << 42),
-         AVX512_VBITALG = (1ULL << 44),
-      };
-
-      // NOLINTNEXTLINE(performance-enum-size)
-      enum x86_CPUID_7_1_bits : uint64_t {
-         SHA512 = (1 << 0),
-         SM3 = (1 << 1),
-         SM4 = (1 << 2),
-      };
-
       const uint64_t flags7 = (static_cast<uint64_t>(cpuid[2]) << 32) | cpuid[1];
 
       clear_mem(cpuid, 4);
       invoke_cpuid_sublevel(7, 1, cpuid);
       const uint32_t flags7_1 = cpuid[0];
 
-      if((flags7 & x86_CPUID_7_bits::AVX2) && has_os_ymm_support) {
-         features_detected |= CPUID::CPUID_AVX2_BIT;
-
-         if(flags7 & x86_CPUID_7_bits::GFNI) {
-            features_detected |= CPUID::CPUID_GFNI_BIT;
-         }
-         if(flags7 & x86_CPUID_7_bits::AVX512_VAES) {
-            features_detected |= CPUID::CPUID_AVX2_AES_BIT;
-         }
-         if(flags7 & x86_CPUID_7_bits::AVX512_VCLMUL) {
-            features_detected |= CPUID::CPUID_AVX2_CLMUL_BIT;
-         }
-         if(flags7_1 & x86_CPUID_7_1_bits::SHA512) {
-            features_detected |= CPUID::CPUID_SHA512_BIT;
-         }
-         if(flags7_1 & x86_CPUID_7_1_bits::SM4) {
-            features_detected |= CPUID::CPUID_SM4_BIT;
-         }
-      }
-      if(flags7 & x86_CPUID_7_bits::RDSEED) {
-         features_detected |= CPUID::CPUID_RDSEED_BIT;
-      }
-      if(flags7 & x86_CPUID_7_bits::ADX) {
-         features_detected |= CPUID::CPUID_ADX_BIT;
-      }
-
-      if(features_detected & CPUID::CPUID_SSSE3_BIT) {
-         if(flags7 & x86_CPUID_7_bits::SHA) {
-            features_detected |= CPUID::CPUID_SHA_BIT;
-         }
-         if(flags7_1 & x86_CPUID_7_1_bits::SM3) {
-            features_detected |= CPUID::CPUID_SM3_BIT;
-         }
-      }
+      feat |= if_set(flags7, x86_CPUID_7_bits::RDSEED, CPUID::CPUID_RDSEED_BIT, allowed);
+      feat |= if_set(flags7, x86_CPUID_7_bits::ADX, CPUID::CPUID_ADX_BIT, allowed);
 
       /*
       We only set the BMI bit if both BMI1 and BMI2 are supported, since
       typically we want to use both extensions in the same code.
       */
-      if((flags7 & x86_CPUID_7_bits::BMI1) && (flags7 & x86_CPUID_7_bits::BMI2)) {
-         features_detected |= CPUID::CPUID_BMI_BIT;
+      feat |= if_set(flags7, x86_CPUID_7_bits::BMI_1_AND_2, CPUID::CPUID_BMI_BIT, allowed);
+
+      if(feat & CPUID::CPUID_SSSE3_BIT) {
+         feat |= if_set(flags7, x86_CPUID_7_bits::SHA, CPUID::CPUID_SHA_BIT, allowed);
+         feat |= if_set(flags7, x86_CPUID_7_1_bits::SM3, CPUID::CPUID_SM3_BIT, allowed);
       }
 
-      if((flags7 & x86_CPUID_7_bits::AVX512_F) && has_os_zmm_support) {
-         const uint64_t AVX512_PROFILE_FLAGS = x86_CPUID_7_bits::AVX512_F | x86_CPUID_7_bits::AVX512_DQ |
-                                               x86_CPUID_7_bits::AVX512_IFMA | x86_CPUID_7_bits::AVX512_BW |
-                                               x86_CPUID_7_bits::AVX512_VL | x86_CPUID_7_bits::AVX512_VBMI |
-                                               x86_CPUID_7_bits::AVX512_VBMI2 | x86_CPUID_7_bits::AVX512_VBITALG;
+      if(has_os_ymm_support) {
+         feat |= if_set(flags7, x86_CPUID_7_bits::AVX2, CPUID::CPUID_AVX2_BIT, allowed);
 
-         /*
-         We only enable AVX512 support if all of the above flags are available
+         if(feat & CPUID::CPUID_AVX2_BIT) {
+            feat |= if_set(flags7, x86_CPUID_7_bits::GFNI, CPUID::CPUID_GFNI_BIT, allowed);
+            feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VAES, CPUID::CPUID_AVX2_AES_BIT, allowed);
+            feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VCLMUL, CPUID::CPUID_AVX2_CLMUL_BIT, allowed);
+            feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SHA512, CPUID::CPUID_SHA512_BIT, allowed);
+            feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SM4, CPUID::CPUID_SM4_BIT, allowed);
 
-         This is more than we strictly need for most uses, however it also has
-         the effect of preventing execution of AVX512 codepaths on cores that
-         have serious downclocking problems when AVX512 code executes,
-         especially Intel Skylake.
+            if(has_os_zmm_support) {
+               feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_PROFILE, CPUID::CPUID_AVX512_BIT, allowed);
 
-         VBMI2/VBITALG are the key flags here as they restrict us to Intel Ice
-         Lake/Rocket Lake, or AMD Zen4, all of which do not have penalties for
-         executing AVX512.
-
-         There is nothing stopping some future processor from supporting the
-         above flags and having AVX512 penalties, but maybe you should not have
-         bought such a processor.
-         */
-         if((flags7 & AVX512_PROFILE_FLAGS) == AVX512_PROFILE_FLAGS) {
-            features_detected |= CPUID::CPUID_AVX512_BIT;
-
-            if(flags7 & x86_CPUID_7_bits::AVX512_VAES) {
-               features_detected |= CPUID::CPUID_AVX512_AES_BIT;
-            }
-            if(flags7 & x86_CPUID_7_bits::AVX512_VCLMUL) {
-               features_detected |= CPUID::CPUID_AVX512_CLMUL_BIT;
+               if(feat & CPUID::CPUID_AVX512_BIT) {
+                  feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VAES, CPUID::CPUID_AVX512_AES_BIT, allowed);
+                  feat |= if_set(flags7, x86_CPUID_7_bits::AVX512_VCLMUL, CPUID::CPUID_AVX512_CLMUL_BIT, allowed);
+               }
             }
          }
       }
@@ -240,13 +210,13 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
    * any x86-64 processor has SSE2 and RDTSC
    */
    #if defined(BOTAN_TARGET_ARCH_IS_X86_64)
-   if(features_detected == 0) {
-      features_detected |= CPUID::CPUID_SSE2_BIT;
-      features_detected |= CPUID::CPUID_RDTSC_BIT;
+   if(feat == 0) {
+      feat |= CPUID::CPUID_SSE2_BIT & allowed;
+      feat |= CPUID::CPUID_RDTSC_BIT & allowed;
    }
    #endif
 
-   return features_detected;
+   return feat;
 }
 
 #endif

@@ -15,18 +15,6 @@
 
 namespace Botan {
 
-bool CPUID::has_simd_32() {
-#if defined(BOTAN_TARGET_SUPPORTS_SSE2)
-   return CPUID::has_sse2();
-#elif defined(BOTAN_TARGET_SUPPORTS_ALTIVEC)
-   return CPUID::has_altivec();
-#elif defined(BOTAN_TARGET_SUPPORTS_NEON)
-   return CPUID::has_neon();
-#else
-   return true;
-#endif
-}
-
 //static
 std::string CPUID::to_string() {
    std::vector<std::string> flags;
@@ -126,6 +114,19 @@ bool runtime_check_if_big_endian() {
    return is_big_endian;
 }
 
+uint32_t cleared_cpuid_bits() {
+   uint32_t cleared = 0;
+   std::string clear_cpuid_env;
+   if(OS::read_env_variable(clear_cpuid_env, "BOTAN_CLEAR_CPUID")) {
+      for(const auto& cpuid : split_on(clear_cpuid_env, ',')) {
+         for(auto& bit : CPUID::bit_from_string(cpuid)) {
+            cleared |= bit;
+         }
+      }
+   }
+   return cleared;
+}
+
 }  // namespace
 
 CPUID::CPUID_Data::CPUID_Data() {
@@ -134,7 +135,7 @@ CPUID::CPUID_Data::CPUID_Data() {
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY) || defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
    defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
-   m_processor_features = detect_cpu_features();
+   m_processor_features = detect_cpu_features(~cleared_cpuid_bits());
 
 #endif
 
@@ -142,16 +143,6 @@ CPUID::CPUID_Data::CPUID_Data() {
 
    if(runtime_check_if_big_endian()) {
       m_processor_features |= CPUID::CPUID_IS_BIG_ENDIAN_BIT;
-   }
-
-   std::string clear_cpuid_env;
-   if(OS::read_env_variable(clear_cpuid_env, "BOTAN_CLEAR_CPUID")) {
-      for(const auto& cpuid : split_on(clear_cpuid_env, ',')) {
-         for(auto& bit : CPUID::bit_from_string(cpuid)) {
-            const uint32_t cleared = ~static_cast<uint32_t>(bit);
-            m_processor_features &= cleared;
-         }
-      }
    }
 }
 

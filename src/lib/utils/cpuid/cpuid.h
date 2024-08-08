@@ -41,12 +41,6 @@ class BOTAN_TEST_API CPUID final {
       static void initialize();
 
       /**
-      * Return true if a 4x32 SIMD instruction set is available
-      * (SSE2, NEON, or Altivec/VMX)
-      */
-      static bool has_simd_32();
-
-      /**
       * Return a possibly empty string containing list of known CPU
       * extensions. Each name will be seperated by a space, and the ordering
       * will be arbitrary. This list only contains values that are useful to
@@ -73,6 +67,22 @@ class BOTAN_TEST_API CPUID final {
          return false;
 #else
          return has_cpuid_bit(CPUID_IS_BIG_ENDIAN_BIT);
+#endif
+      }
+
+      /**
+      * Return true if a 4x32 SIMD instruction set is available
+      * (SSE2, NEON, or Altivec/VMX)
+      */
+      static bool has_simd_32() {
+#if defined(BOTAN_TARGET_SUPPORTS_SSE2)
+         return CPUID::has_sse2();
+#elif defined(BOTAN_TARGET_SUPPORTS_ALTIVEC)
+         return CPUID::has_altivec();
+#elif defined(BOTAN_TARGET_SUPPORTS_NEON)
+         return CPUID::has_neon();
+#else
+         return false;
 #endif
       }
 
@@ -379,6 +389,18 @@ class BOTAN_TEST_API CPUID final {
       static std::vector<CPUID::CPUID_bits> bit_from_string(std::string_view tok);
 
    private:
+      /**
+      * A common helper for the various CPUID implementations
+      */
+      template <typename T>
+      static inline uint32_t if_set(uint64_t cpuid, T flag, CPUID::CPUID_bits bit, uint32_t allowed) {
+         if(cpuid & static_cast<uint64_t>(flag)) {
+            return (bit & allowed);
+         } else {
+            return 0;
+         }
+      }
+
       struct CPUID_Data {
          public:
             CPUID_Data();
@@ -391,10 +413,10 @@ class BOTAN_TEST_API CPUID final {
             bool has_bit(uint32_t bit) const { return (m_processor_features & bit) == bit; }
 
          private:
-#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY) || defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
+#if defined(BOTAN_TARGET_CPU_IS_PPC64) || defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
    defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
 
-            static uint32_t detect_cpu_features();
+            static uint32_t detect_cpu_features(uint32_t allowed_bits);
 
 #endif
             uint32_t m_processor_features;

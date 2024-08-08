@@ -13,8 +13,8 @@
 
 namespace Botan {
 
-uint32_t CPUID::CPUID_Data::detect_cpu_features() {
-   uint32_t detected_features = 0;
+uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
+   uint32_t feat = 0;
 
    #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
    /*
@@ -24,38 +24,35 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features() {
    * so we just hardcode them in ARM_hwcap_bit enum.
    */
 
-   enum ARM_hwcap_bit {
+   enum class ARM_hwcap_bit : uint64_t {
       NEON_bit = (1 << 12),
       AES_bit = (1 << 0),
       PMULL_bit = (1 << 1),
       SHA1_bit = (1 << 2),
       SHA2_bit = (1 << 3),
-
-      ARCH_hwcap_neon = 16,    // AT_HWCAP
-      ARCH_hwcap_crypto = 26,  // AT_HWCAP2
    };
 
-   const unsigned long hwcap_neon = OS::get_auxval(ARM_hwcap_bit::ARCH_hwcap_neon);
-   if(hwcap_neon & ARM_hwcap_bit::NEON_bit) {
-      detected_features |= CPUID::CPUID_ARM_NEON_BIT;
+   constexpr unsigned long hwcap_neon = 16;    // AT_HWCAP
+   constexpr unsigned long hwcap_crypto = 26;  // AT_HWCAP2
 
-      const unsigned long hwcap_crypto = OS::get_auxval(ARM_hwcap_bit::ARCH_hwcap_crypto);
-      if(hwcap_crypto & ARM_hwcap_bit::AES_bit) {
-         detected_features |= CPUID::CPUID_ARM_AES_BIT;
-      }
-      if(hwcap_crypto & ARM_hwcap_bit::PMULL_bit) {
-         detected_features |= CPUID::CPUID_ARM_PMULL_BIT;
-      }
-      if(hwcap_crypto & ARM_hwcap_bit::SHA1_bit) {
-         detected_features |= CPUID::CPUID_ARM_SHA1_BIT;
-      }
-      if(hwcap_crypto & ARM_hwcap_bit::SHA2_bit) {
-         detected_features |= CPUID::CPUID_ARM_SHA2_BIT;
-      }
+   const uint64_t hwcap_neon = OS::get_auxval(hwcap_neon);
+
+   feat |= if_set(hwcap_neon, ARM_hwcap_bit::NEON_bit, CPUID::CPUID_ARM_NEON_BIT, allowed);
+
+   if(feat & CPUID::CPUID_ARM_NEON_BIT) {
+      const uint64_t hwcap_crypto = OS::get_auxval(hwcap_crypto);
+
+      feat |= if_set(hwcap_crypto, ARM_hwcap_bit::AES_bit, CPUID::CPUID_ARM_AES_BIT, allowed);
+
+      feat |= if_set(hwcap_crypto, ARM_hwcap_bit::PMULL_bit, CPUID::CPUID_ARM_PMULL_BIT, allowed);
+
+      feat |= if_set(hwcap_crypto, ARM_hwcap_bit::SHA1_bit, CPUID::CPUID_ARM_SHA1_BIT, allowed);
+
+      feat |= if_set(hwcap_crypto, ARM_hwcap_bit::SHA2_bit, CPUID::CPUID_ARM_SHA2_BIT, allowed);
    }
    #endif
 
-   return detected_features;
+   return feat;
 }
 
 }  // namespace Botan
