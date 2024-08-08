@@ -369,7 +369,7 @@ decode_private_key(StrongSpan<const DilithiumSerializedPrivateKey> sk, const Dil
 
    auto rho = slicer.copy<DilithiumSeedRho>(DilithiumConstants::SEED_RHO_BYTES);
    auto key = slicer.copy<DilithiumSigningSeedK>(DilithiumConstants::SEED_SIGNING_KEY_BYTES);
-   auto tr = slicer.copy<DilithiumHashedPublicKey>(DilithiumConstants::PUBLIC_KEY_HASH_BYTES);
+   auto tr = slicer.copy<DilithiumHashedPublicKey>(mode.public_key_hash_bytes());
 
    DilithiumPolyVec s1(mode.l());
    for(auto& p : s1) {
@@ -417,7 +417,7 @@ std::optional<std::tuple<DilithiumCommitmentHash, DilithiumPolyVec, DilithiumPol
    BufferSlicer slicer(sig);
    BOTAN_ASSERT_NOMSG(slicer.remaining() == mode.signature_bytes());
 
-   auto commitment_hash = slicer.copy<DilithiumCommitmentHash>(DilithiumConstants::COMMITMENT_HASH_C1_BYTES);
+   auto commitment_hash = slicer.copy<DilithiumCommitmentHash>(mode.commitment_hash_full_bytes());
 
    DilithiumPolyVec response(mode.l());
    for(auto& p : response) {

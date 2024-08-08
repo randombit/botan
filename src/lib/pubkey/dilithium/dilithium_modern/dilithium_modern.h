@@ -14,16 +14,11 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/shake_xof.h>
 
-#include <array>
-#include <memory>
-#include <vector>
-
 namespace Botan {
 
 class Dilithium_Common_Symmetric_Primitives : public Dilithium_Symmetric_Primitives {
    public:
-      Dilithium_Common_Symmetric_Primitives(size_t collision_strength_in_bytes) :
-            Dilithium_Symmetric_Primitives(collision_strength_in_bytes) {}
+      Dilithium_Common_Symmetric_Primitives(const DilithiumConstants& mode) : Dilithium_Symmetric_Primitives(mode) {}
 
       Botan::XOF& XOF(XofType type, std::span<const uint8_t> seed, uint16_t nonce) const override {
          auto& xof = [&]() -> Botan::XOF& {

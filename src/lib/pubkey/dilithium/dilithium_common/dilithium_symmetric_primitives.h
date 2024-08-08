@@ -12,6 +12,7 @@
 #define BOTAN_DILITHIUM_ASYM_PRIMITIVES_H_
 
 #include <botan/dilithium.h>
+#include <botan/rng.h>
 
 #include <botan/internal/dilithium_types.h>
 #include <botan/internal/fmt.h>
@@ -61,8 +62,10 @@ class Dilithium_Symmetric_Primitives {
       enum class XofType { k128, k256 };
 
    protected:
-      Dilithium_Symmetric_Primitives(size_t commitment_hash_length_bytes) :
-            m_commitment_hash_length_bytes(commitment_hash_length_bytes) {}
+      Dilithium_Symmetric_Primitives(const DilithiumConstants& mode) :
+            m_commitment_hash_length_bytes(mode.commitment_hash_full_bytes()),
+            m_public_key_hash_bytes(mode.public_key_hash_bytes()),
+            m_mode(mode.mode()) {}
 
    public:
       static std::unique_ptr<Dilithium_Symmetric_Primitives> create(const DilithiumConstants& mode);
@@ -77,13 +80,14 @@ class Dilithium_Symmetric_Primitives {
          return DilithiumMessageHash(std::move(tr));
       }
 
-      DilithiumHashedPublicKey H(StrongSpan<const DilithiumSerializedPublicKey> pk) const {
-         return H_256<DilithiumHashedPublicKey>(DilithiumConstants::PUBLIC_KEY_HASH_BYTES, pk);
-      }
+      /// Computes the private random seed rho prime used for signing
+      DilithiumSeedRhoPrime calc_rhoprime(RandomNumberGenerator& rng,
+                                          StrongSpan<const DilithiumSigningSeedK> k,
+                                          StrongSpan<const DilithiumMessageRepresentative> mu,
+                                          bool randomized) const;
 
-      DilithiumSeedRhoPrime H(StrongSpan<const DilithiumSigningSeedK> k,
-                              StrongSpan<const DilithiumMessageRepresentative> mu) const {
-         return H_256<DilithiumSeedRhoPrime>(DilithiumConstants::SEED_RHOPRIME_BYTES, k, mu);
+      DilithiumHashedPublicKey H(StrongSpan<const DilithiumSerializedPublicKey> pk) const {
+         return H_256<DilithiumHashedPublicKey>(m_public_key_hash_bytes, pk);
       }
 
       std::tuple<DilithiumSeedRho, DilithiumSeedRhoPrime, DilithiumSigningSeedK> H(
@@ -142,8 +146,24 @@ class Dilithium_Symmetric_Primitives {
          return m_xof.output<OutT>(outbytes);
       }
 
+      /// Rho prime (deterministic) computation for Dilithium R3 instances
+      DilithiumSeedRhoPrime H(StrongSpan<const DilithiumSigningSeedK> k,
+                              StrongSpan<const DilithiumMessageRepresentative> mu) const {
+         return H_256<DilithiumSeedRhoPrime>(DilithiumConstants::SEED_RHOPRIME_BYTES, k, mu);
+      }
+
+      /// Rho prime computation for ML-KEM IPD
+      DilithiumSeedRhoPrime H(StrongSpan<const DilithiumSigningSeedK> k,
+                              StrongSpan<const DilithiumOptionalRandomness> rnd,
+                              StrongSpan<const DilithiumMessageRepresentative> mu) const {
+         return H_256<DilithiumSeedRhoPrime>(DilithiumConstants::SEED_RHOPRIME_BYTES, k, rnd, mu);
+      }
+
    private:
       size_t m_commitment_hash_length_bytes;
+      size_t m_public_key_hash_bytes;
+      DilithiumMode m_mode;
+
       mutable SHAKE_256_XOF m_xof;
       mutable SHAKE_256_XOF m_xof_external;
 };

@@ -32,6 +32,9 @@ using DilithiumSeedRho = Strong<std::vector<uint8_t>, struct DilithiumPublicSeed
 /// Private seed to sample the polynomial vectors s1 and s2 from
 using DilithiumSeedRhoPrime = Strong<secure_vector<uint8_t>, struct DilithiumSeedRhoPrime_>;
 
+/// Optional randomness 'rnd' used for rho prime computation in ML-DSA
+using DilithiumOptionalRandomness = Strong<secure_vector<uint8_t>, struct DilithiumOptionalRandomness_>;
+
 /// Private seed K used during signing
 using DilithiumSigningSeedK = Strong<secure_vector<uint8_t>, struct DilithiumSeedK_>;
 
