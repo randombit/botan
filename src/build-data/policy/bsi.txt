@@ -36,7 +36,6 @@ emsa_pssr
 iso9796
 
 # pubkey
-dlies
 dh
 #dilithium // not (yet) recommended
 #dilithium_aes // not (yet) recommended
