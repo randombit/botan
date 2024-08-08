@@ -1,6 +1,6 @@
 /*
 * Runtime CPU detection for Aarch64
-* (C) 2009,2010,2013,2017,2020 Jack Lloyd
+* (C) 2009,2010,2013,2017,2020,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,14 +8,12 @@
 #include <botan/internal/cpuid.h>
 
 #if defined(BOTAN_TARGET_ARCH_IS_ARM64)
-
    #include <botan/internal/os_utils.h>
+#endif
 
-   #if defined(BOTAN_TARGET_OS_HAS_SYSCTLBYNAME)
-      #include <sys/sysctl.h>
-      #include <sys/types.h>
-   #endif
-
+#if defined(BOTAN_TARGET_OS_HAS_SYSCTLBYNAME)
+   #include <sys/sysctl.h>
+   #include <sys/types.h>
 #endif
 
 namespace Botan {
@@ -23,45 +21,50 @@ namespace Botan {
 #if defined(BOTAN_TARGET_ARCH_IS_ARM64)
 
 uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
-   uint32_t feat = 0;
+   if(OS::has_auxval()) {
+      uint32_t feat = 0;
 
-   #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
-   /*
-   * On systems with getauxval these bits should normally be defined
-   * in bits/auxv.h but some buggy? glibc installs seem to miss them.
-   * These following values are all fixed, for the Linux ELF format,
-   * so we just hardcode them in ARM_hwcap_bit enum.
-   */
-   enum class ARM_hwcap_bit : uint64_t {
-      NEON_bit = (1 << 1),
-      AES_bit = (1 << 3),
-      PMULL_bit = (1 << 4),
-      SHA1_bit = (1 << 5),
-      SHA2_bit = (1 << 6),
-      SHA3_bit = (1 << 17),
-      SM3_bit = (1 << 18),
-      SM4_bit = (1 << 19),
-      SHA2_512_bit = (1 << 21),
-      SVE_bit = (1 << 22),
-   };
+      /*
+      * On systems with getauxval these bits should normally be defined
+      * in bits/auxv.h but some buggy? glibc installs seem to miss them.
+      * These following values are all fixed, for the Linux ELF format,
+      * so we just hardcode them in ARM_hwcap_bit enum.
+      */
+      enum class ARM_hwcap_bit : uint64_t {
+         NEON_bit = (1 << 1),
+         AES_bit = (1 << 3),
+         PMULL_bit = (1 << 4),
+         SHA1_bit = (1 << 5),
+         SHA2_bit = (1 << 6),
+         SHA3_bit = (1 << 17),
+         SM3_bit = (1 << 18),
+         SM4_bit = (1 << 19),
+         SHA2_512_bit = (1 << 21),
+         SVE_bit = (1 << 22),
+      };
 
-   const uint64_t hwcap = OS::get_auxval(16); // AT_HWCAP
+      const uint64_t hwcap = OS::get_auxval(16);  // AT_HWCAP
 
-   feat |= if_set(hwcap, ARM_hwcap_bit::NEON_bit, CPUID::CPUID_ARM_NEON_BIT, allowed);
+      feat |= if_set(hwcap, ARM_hwcap_bit::NEON_bit, CPUID::CPUID_ARM_NEON_BIT, allowed);
 
-   if(feat & CPUID::CPUID_ARM_NEON_BIT) {
-      feat |= if_set(hwcap, ARM_hwcap_bit::AES_bit, CPUID::CPUID_ARM_AES_BIT, allowed);
-      feat |= if_set(hwcap, ARM_hwcap_bit::PMULL_bit, CPUID::CPUID_ARM_PMULL_BIT, allowed);
-      feat |= if_set(hwcap, ARM_hwcap_bit::SHA1_bit, CPUID::CPUID_ARM_SHA1_BIT, allowed);
-      feat |= if_set(hwcap, ARM_hwcap_bit::SHA2_bit, CPUID::CPUID_ARM_SHA2_BIT, allowed);
-      feat |= if_set(hwcap, ARM_hwcap_bit::SHA3_bit, CPUID::CPUID_ARM_SHA3_BIT, allowed);
-      feat |= if_set(hwcap, ARM_hwcap_bit::SM3_bit, CPUID::CPUID_ARM_SM3_BIT, allowed);
-      feat |= if_set(hwcap, ARM_hwcap_bit::SM4_bit, CPUID::CPUID_ARM_SM4_BIT, allowed);
-      feat |= if_set(hwcap, ARM_hwcap_bit::SHA2_512_bit, CPUID::CPUID_ARM_SHA2_512_BIT, allowed);
-      feat |= if_set(hwcap, ARM_hwcap_bit::SVE_bit, CPUID::CPUID_ARM_SVE_BIT, allowed);
+      if(feat & CPUID::CPUID_ARM_NEON_BIT) {
+         feat |= if_set(hwcap, ARM_hwcap_bit::AES_bit, CPUID::CPUID_ARM_AES_BIT, allowed);
+         feat |= if_set(hwcap, ARM_hwcap_bit::PMULL_bit, CPUID::CPUID_ARM_PMULL_BIT, allowed);
+         feat |= if_set(hwcap, ARM_hwcap_bit::SHA1_bit, CPUID::CPUID_ARM_SHA1_BIT, allowed);
+         feat |= if_set(hwcap, ARM_hwcap_bit::SHA2_bit, CPUID::CPUID_ARM_SHA2_BIT, allowed);
+         feat |= if_set(hwcap, ARM_hwcap_bit::SHA3_bit, CPUID::CPUID_ARM_SHA3_BIT, allowed);
+         feat |= if_set(hwcap, ARM_hwcap_bit::SM3_bit, CPUID::CPUID_ARM_SM3_BIT, allowed);
+         feat |= if_set(hwcap, ARM_hwcap_bit::SM4_bit, CPUID::CPUID_ARM_SM4_BIT, allowed);
+         feat |= if_set(hwcap, ARM_hwcap_bit::SHA2_512_bit, CPUID::CPUID_ARM_SHA2_512_BIT, allowed);
+         feat |= if_set(hwcap, ARM_hwcap_bit::SVE_bit, CPUID::CPUID_ARM_SVE_BIT, allowed);
+      }
+
+      return feat;
    }
 
-   #elif defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
+   uint32_t feat = 0;
+
+   #if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
 
    auto sysctlbyname_has_feature = [](const char* feature_name) -> bool {
       unsigned int feature;

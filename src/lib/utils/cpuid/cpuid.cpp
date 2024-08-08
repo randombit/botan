@@ -114,6 +114,7 @@ bool runtime_check_if_big_endian() {
    return is_big_endian;
 }
 
+#if defined(BOTAN_CPUID_HAS_DETECTION)
 uint32_t cleared_cpuid_bits() {
    uint32_t cleared = 0;
    std::string clear_cpuid_env;
@@ -126,17 +127,15 @@ uint32_t cleared_cpuid_bits() {
    }
    return cleared;
 }
+#endif
 
 }  // namespace
 
 CPUID::CPUID_Data::CPUID_Data() {
    m_processor_features = 0;
 
-#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY) || defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
-   defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-
+#if defined(BOTAN_CPUID_HAS_DETECTION)
    m_processor_features = detect_cpu_features(~cleared_cpuid_bits());
-
 #endif
 
    m_processor_features |= CPUID::CPUID_INITIALIZED_BIT;

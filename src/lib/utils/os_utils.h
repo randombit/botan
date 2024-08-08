@@ -57,6 +57,11 @@ uint64_t BOTAN_TEST_API get_cpu_cycle_counter();
 size_t BOTAN_TEST_API get_cpu_available();
 
 /**
+* Return true if get_auxval is implemented on this system
+*/
+bool has_auxval();
+
+/**
 * Return the ELF auxiliary vector cooresponding to the given ID.
 * This only makes sense on Unix-like systems and is currently
 * only supported on Linux, Android, and FreeBSD.

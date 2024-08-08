@@ -127,6 +127,20 @@ uint32_t OS::get_process_id() {
 #endif
 }
 
+bool OS::has_auxval() {
+#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
+   return true;
+#elif defined(BOTAN_TARGET_OS_IS_ANDROID) && defined(BOTAN_TARGET_ARCH_IS_ARM32)
+   return true;
+#elif defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
+   return true;
+#elif defined(BOTAN_TARGET_OS_HAS_AUXINFO)
+   return true;
+#else
+   return false;
+#endif
+}
+
 unsigned long OS::get_auxval(unsigned long id) {
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
    return ::getauxval(id);
@@ -168,8 +182,12 @@ unsigned long OS::get_auxval(unsigned long id) {
 
 bool OS::running_in_privileged_state() {
 #if defined(AT_SECURE)
-   return OS::get_auxval(AT_SECURE) != 0;
-#elif defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   if(OS::has_auxval()) {
+      return OS::get_auxval(AT_SECURE) != 0;
+   }
+#endif
+
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    return (::getuid() != ::geteuid()) || (::getgid() != ::getegid());
 #else
    return false;

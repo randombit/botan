@@ -1,6 +1,6 @@
 /*
 * Runtime CPU detection for x86
-* (C) 2009,2010,2013,2017,2023 Jack Lloyd
+* (C) 2009,2010,2013,2017,2023,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */

@@ -15,6 +15,13 @@
 
 namespace Botan {
 
+#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY) || defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
+   defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+
+   #define BOTAN_CPUID_HAS_DETECTION
+
+#endif
+
 /**
 * A class handling runtime CPU feature detection. It is limited to
 * just the features necessary to implement CPU specific code in Botan,
@@ -413,12 +420,10 @@ class BOTAN_TEST_API CPUID final {
             bool has_bit(uint32_t bit) const { return (m_processor_features & bit) == bit; }
 
          private:
-#if defined(BOTAN_TARGET_CPU_IS_PPC64) || defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
-   defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-
+#if defined(BOTAN_CPUID_HAS_DETECTION)
             static uint32_t detect_cpu_features(uint32_t allowed_bits);
-
 #endif
+
             uint32_t m_processor_features;
       };
 
