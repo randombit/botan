@@ -10,6 +10,8 @@
 
 #include <botan/types.h>
 
+#include <span>
+
 #if defined(BOTAN_TARGET_SUPPORTS_SSE2)
    #include <emmintrin.h>
    #define BOTAN_SIMD_USE_SSE2
@@ -186,6 +188,10 @@ class SIMD_4x32 final {
 #endif
       }
 
+      static SIMD_4x32 load_le(std::span<const uint8_t, 16> in) { return SIMD_4x32::load_le(in.data()); }
+
+      static SIMD_4x32 load_be(std::span<const uint8_t, 16> in) { return SIMD_4x32::load_be(in.data()); }
+
       void store_le(uint32_t out[4]) const noexcept { this->store_le(reinterpret_cast<uint8_t*>(out)); }
 
       void store_be(uint32_t out[4]) const noexcept { this->store_be(reinterpret_cast<uint8_t*>(out)); }
@@ -245,6 +251,10 @@ class SIMD_4x32 final {
          }
 #endif
       }
+
+      void store_be(std::span<uint8_t, 16> out) const { this->store_be(out.data()); }
+
+      void store_le(std::span<uint8_t, 16> out) const { this->store_le(out.data()); }
 
       /*
       * This is used for SHA-2/SHACAL2
