@@ -415,14 +415,22 @@ class BOTAN_TEST_API PrimeOrderCurve {
       virtual Scalar random_scalar(RandomNumberGenerator& rng) const = 0;
 
       /**
-      * RFC 9380 hash to curve
+      * RFC 9380 hash to curve (NU variant)
       *
       * This is currently only supported for a few specific curves
       */
-      virtual ProjectivePoint hash_to_curve(std::string_view hash,
-                                            std::span<const uint8_t> input,
-                                            std::span<const uint8_t> domain_sep,
-                                            bool random_oracle) const = 0;
+      virtual AffinePoint hash_to_curve_nu(std::string_view hash,
+                                           std::span<const uint8_t> input,
+                                           std::span<const uint8_t> domain_sep) const = 0;
+
+      /**
+      * RFC 9380 hash to curve (RO variant)
+      *
+      * This is currently only supported for a few specific curves
+      */
+      virtual ProjectivePoint hash_to_curve_ro(std::string_view hash,
+                                               std::span<const uint8_t> input,
+                                               std::span<const uint8_t> domain_sep) const = 0;
 };
 
 }  // namespace Botan::PCurve

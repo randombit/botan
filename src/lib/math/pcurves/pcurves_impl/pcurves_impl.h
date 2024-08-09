@@ -20,6 +20,8 @@
 
 namespace Botan {
 
+namespace {
+
 template <typename Params>
 class MontgomeryRep final {
    public:
@@ -848,77 +850,6 @@ class ProjectiveCurvePoint {
 
       constexpr Self negate() const { return Self(x(), y().negate(), z()); }
 
-      constexpr AffinePoint to_affine() const {
-         // Not strictly required right? - default should work as long
-         // as (0,0) is identity and invert returns 0 on 0
-         if(this->is_identity().as_bool()) {
-            return AffinePoint::identity();
-         }
-
-         const auto z_inv = m_z.invert();
-         const auto z2_inv = z_inv.square();
-         const auto z3_inv = z_inv * z2_inv;
-
-         const auto x = m_x * z2_inv;
-         const auto y = m_y * z3_inv;
-         return AffinePoint(x, y);
-      }
-
-      static std::vector<AffinePoint> to_affine_batch(std::span<const Self> projective) {
-         const size_t N = projective.size();
-         std::vector<AffinePoint> affine(N, AffinePoint::identity());
-
-         bool any_identity = false;
-         for(size_t i = 0; i != N; ++i) {
-            if(projective[i].is_identity().as_bool()) {
-               any_identity = true;
-               // If any of the elements are the identity we fall back to
-               // performing the conversion without a batch
-               break;
-            }
-         }
-
-         if(N <= 2 || any_identity) {
-            for(size_t i = 0; i != N; ++i) {
-               affine[i] = projective[i].to_affine();
-            }
-         } else {
-            std::vector<FieldElement> c(N);
-
-            /*
-            Batch projective->affine using Montgomery's trick
-
-            See Algorithm 2.26 in "Guide to Elliptic Curve Cryptography"
-            (Hankerson, Menezes, Vanstone)
-            */
-
-            c[0] = projective[0].z();
-            for(size_t i = 1; i != N; ++i) {
-               c[i] = c[i - 1] * projective[i].z();
-            }
-
-            auto s_inv = c[N - 1].invert();
-
-            for(size_t i = N - 1; i > 0; --i) {
-               const auto& p = projective[i];
-
-               const auto z_inv = s_inv * c[i - 1];
-               const auto z2_inv = z_inv.square();
-               const auto z3_inv = z_inv * z2_inv;
-
-               s_inv = s_inv * p.z();
-
-               affine[i] = AffinePoint(p.x() * z2_inv, p.y() * z3_inv);
-            }
-
-            const auto z2_inv = s_inv.square();
-            const auto z3_inv = s_inv * z2_inv;
-            affine[0] = AffinePoint(projective[0].x() * z2_inv, projective[0].y() * z3_inv);
-         }
-
-         return affine;
-      }
-
       void randomize_rep(RandomNumberGenerator& rng) {
          if(!rng.is_seeded()) {
             return;
@@ -1017,24 +948,11 @@ class EllipticCurve {
          (Params::Z != 0 && A.is_nonzero().as_bool() && B.is_nonzero().as_bool() && FieldElement::P_MOD_4 == 3);
 
       static constexpr bool OrderIsLessThanField = bigint_cmp(NW.data(), NW.size(), PW.data(), PW.size()) == -1;
+};
 
-      // (-B / A), will be zero if A == 0 or B == 0 or Z == 0
-      static const FieldElement& SSWU_C1()
-         requires ValidForSswuHash
-      {
-         // We derive it from C2 to avoid a second inversion
-         static const auto C1 = (SSWU_C2() * SSWU_Z).negate();
-         return C1;
-      }
-
-      // (B / (Z * A)), will be zero if A == 0 or B == 0 or Z == 0
-      static const FieldElement& SSWU_C2()
-         requires ValidForSswuHash
-      {
-         // This could use a variable time inversion
-         static const auto C2 = (B * (SSWU_Z * A).invert());
-         return C2;
-      }
+template <typename C>
+concept curve_supports_fe_invert2 = requires(const typename C::FieldElement& fe) {
+   { C::fe_invert2(fe) } -> std::same_as<typename C::FieldElement>;
 };
 
 /**
@@ -1140,6 +1058,111 @@ class UnblindedScalarBits final {
       std::array<uint8_t, C::Scalar::BYTES> m_bytes;
 };
 
+template <typename C>
+inline auto invert_field_element(const typename C::FieldElement& fe) {
+   if constexpr(curve_supports_fe_invert2<C>) {
+      return C::fe_invert2(fe) * fe;
+   } else {
+      return fe.invert();
+   }
+}
+
+/// Convert a projective point into affine
+template <typename C>
+auto to_affine(const typename C::ProjectivePoint& pt) {
+   // Not strictly required right? - default should work as long
+   // as (0,0) is identity and invert returns 0 on 0
+   if(pt.is_identity().as_bool()) {
+      return C::AffinePoint::identity();
+   }
+
+   if constexpr(curve_supports_fe_invert2<C>) {
+      const auto z2_inv = C::fe_invert2(pt.z());
+      const auto z3_inv = z2_inv.square() * pt.z();
+      return typename C::AffinePoint(pt.x() * z2_inv, pt.y() * z3_inv);
+   } else {
+      const auto z_inv = invert_field_element<C>(pt.z());
+      const auto z2_inv = z_inv.square();
+      const auto z3_inv = z_inv * z2_inv;
+      return typename C::AffinePoint(pt.x() * z2_inv, pt.y() * z3_inv);
+   }
+}
+
+/// Convert a projective point into affine and return x coordinate only
+template <typename C>
+auto to_affine_x(const typename C::ProjectivePoint& pt) {
+   if constexpr(curve_supports_fe_invert2<C>) {
+      return pt.x() * C::fe_invert2(pt.z());
+   } else {
+      return to_affine<C>(pt).x();
+   }
+}
+
+/**
+* Batch projective->affine conversion
+*/
+template <typename C>
+auto to_affine_batch(std::span<const typename C::ProjectivePoint> projective) {
+   typedef typename C::AffinePoint AffinePoint;
+   typedef typename C::FieldElement FieldElement;
+
+   const size_t N = projective.size();
+   std::vector<AffinePoint> affine(N, AffinePoint::identity());
+
+   bool any_identity = false;
+   for(size_t i = 0; i != N; ++i) {
+      if(projective[i].is_identity().as_bool()) {
+         any_identity = true;
+         // If any of the elements are the identity we fall back to
+         // performing the conversion without a batch
+         break;
+      }
+   }
+
+   if(N <= 2 || any_identity) {
+      // If there are identity elements, using the batch inversion gets
+      // tricky. It can be done, but this should be a rare situation so
+      // just punt to the serial conversion if it occurs
+      for(size_t i = 0; i != N; ++i) {
+         affine[i] = to_affine<C>(projective[i]);
+      }
+   } else {
+      std::vector<FieldElement> c(N);
+
+      /*
+      Batch projective->affine using Montgomery's trick
+
+      See Algorithm 2.26 in "Guide to Elliptic Curve Cryptography"
+      (Hankerson, Menezes, Vanstone)
+      */
+
+      c[0] = projective[0].z();
+      for(size_t i = 1; i != N; ++i) {
+         c[i] = c[i - 1] * projective[i].z();
+      }
+
+      auto s_inv = invert_field_element<C>(c[N - 1]);
+
+      for(size_t i = N - 1; i > 0; --i) {
+         const auto& p = projective[i];
+
+         const auto z_inv = s_inv * c[i - 1];
+         const auto z2_inv = z_inv.square();
+         const auto z3_inv = z_inv * z2_inv;
+
+         s_inv = s_inv * p.z();
+
+         affine[i] = AffinePoint(p.x() * z2_inv, p.y() * z3_inv);
+      }
+
+      const auto z2_inv = s_inv.square();
+      const auto z3_inv = s_inv * z2_inv;
+      affine[0] = AffinePoint(projective[0].x() * z2_inv, projective[0].y() * z3_inv);
+   }
+
+   return affine;
+}
+
 /**
 * Base point precomputation table
 *
@@ -1218,7 +1241,7 @@ class PrecomputedBaseMulTable final {
             accum = table[i + (WindowElements / 2)].dbl();
          }
 
-         m_table = ProjectivePoint::to_affine_batch(table);
+         m_table = to_affine_batch<C>(table);
       }
 
       ProjectivePoint mul(const Scalar& s, RandomNumberGenerator& rng) const {
@@ -1297,7 +1320,7 @@ class WindowedMulTable final {
             }
          }
 
-         m_table = ProjectivePoint::to_affine_batch(table);
+         m_table = to_affine_batch<C>(table);
       }
 
       ProjectivePoint mul(const Scalar& s, RandomNumberGenerator& rng) const {
@@ -1439,7 +1462,7 @@ class WindowedMul2Table final {
             table.emplace_back(next_tbl_e());
          }
 
-         m_table = ProjectivePoint::to_affine_batch(table);
+         m_table = to_affine_batch<C>(table);
       }
 
       /**
@@ -1484,14 +1507,34 @@ class WindowedMul2Table final {
       std::vector<AffinePoint> m_table;
 };
 
+// SSWU constant C1 - (B / (Z * A))
+template <typename C>
+const auto& SSWU_C2()
+   requires C::ValidForSswuHash
+{
+   // This could use a variable time inversion
+   static const typename C::FieldElement C2 = C::B * invert_field_element<C>(C::SSWU_Z * C::A);
+   return C2;
+}
+
+// SSWU constant C1 - (-B / A)
+template <typename C>
+const auto& SSWU_C1()
+   requires C::ValidForSswuHash
+{
+   // We derive it from C2 to avoid a second inversion
+   static const typename C::FieldElement C1 = (SSWU_C2<C>() * C::SSWU_Z).negate();
+   return C1;
+}
+
 template <typename C>
 inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::AffinePoint {
    CT::poison(u);
    const auto z_u2 = C::SSWU_Z * u.square();  // z * u^2
    const auto z2_u4 = z_u2.square();
-   const auto tv1 = (z2_u4 + z_u2).invert();
-   auto x1 = C::SSWU_C1() * (C::FieldElement::one() + tv1);
-   C::FieldElement::conditional_assign(x1, tv1.is_zero(), C::SSWU_C2());
+   const auto tv1 = invert_field_element<C>(z2_u4 + z_u2);
+   auto x1 = SSWU_C1<C>() * (C::FieldElement::one() + tv1);
+   C::FieldElement::conditional_assign(x1, tv1.is_zero(), SSWU_C2<C>());
    const auto gx1 = C::AffinePoint::x3_ax_b(x1);
 
    const auto x2 = z_u2 * x1;
@@ -1515,37 +1558,35 @@ inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::
    return pt;
 }
 
-template <typename C>
-inline auto hash_to_curve_sswu(std::string_view hash,
-                               bool random_oracle,
-                               std::span<const uint8_t> pw,
-                               std::span<const uint8_t> dst) -> typename C::ProjectivePoint {
+template <typename C, bool RO>
+inline auto hash_to_curve_sswu(std::string_view hash, std::span<const uint8_t> pw, std::span<const uint8_t> dst) {
    static_assert(C::ValidForSswuHash);
 #if defined(BOTAN_HAS_XMD)
 
-   const size_t SecurityLevel = (C::OrderBits + 1) / 2;
-   const size_t L = (C::PrimeFieldBits + SecurityLevel + 7) / 8;
+   constexpr size_t SecurityLevel = (C::OrderBits + 1) / 2;
+   constexpr size_t L = (C::PrimeFieldBits + SecurityLevel + 7) / 8;
+   constexpr size_t Cnt = RO ? 2 : 1;
 
-   const size_t Cnt = (random_oracle ? 2 : 1);
-
-   std::vector<uint8_t> xmd(L * Cnt);
+   std::array<uint8_t, L * Cnt> xmd;
    expand_message_xmd(hash, xmd, pw, dst);
 
-   if(Cnt == 1) {
-      const auto u = C::FieldElement::from_wide_bytes(std::span<const uint8_t, L>(xmd));
-      return C::ProjectivePoint::from_affine(map_to_curve_sswu<C>(u));
-   } else {
+   if constexpr(RO) {
       const auto u0 = C::FieldElement::from_wide_bytes(std::span<const uint8_t, L>(xmd.data(), L));
       const auto u1 = C::FieldElement::from_wide_bytes(std::span<const uint8_t, L>(xmd.data() + L, L));
 
       auto accum = C::ProjectivePoint::from_affine(map_to_curve_sswu<C>(u0));
       accum += map_to_curve_sswu<C>(u1);
       return accum;
+   } else {
+      const auto u = C::FieldElement::from_wide_bytes(std::span<const uint8_t, L>(xmd.data(), L));
+      return map_to_curve_sswu<C>(u);
    }
 #else
    throw Not_Implemented("Hash to curve not available due to missing XMD");
 #endif
 }
+
+}  // namespace
 
 }  // namespace Botan
 
