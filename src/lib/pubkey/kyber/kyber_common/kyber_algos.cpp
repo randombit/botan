@@ -66,7 +66,7 @@ void byte_decode(KyberPolyNTT& p, BufferSlicer& bs) {
 void sample_ntt_uniform(KyberPolyNTT& p, XOF& xof) {
    auto sample = [&xof]() -> std::pair<uint16_t, uint16_t> {
       const auto x = load_le3(xof.output<3>());
-      return {static_cast<uint16_t>(x) & 0x0FFF, static_cast<uint16_t>(x >> 12)};
+      return {static_cast<uint16_t>(x & 0x0FFF), static_cast<uint16_t>(x >> 12)};
    };
 
    for(size_t count = 0; count < p.size();) {
