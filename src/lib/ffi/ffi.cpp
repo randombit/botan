@@ -129,8 +129,6 @@ int ffi_guard_thunk(const char* func_name, const std::function<int()>& thunk) {
    } catch(...) {
       return ffi_error_exception_thrown(func_name, "unknown exception");
    }
-
-   return BOTAN_FFI_ERROR_UNKNOWN_ERROR;
 }
 
 }  // namespace Botan_FFI
