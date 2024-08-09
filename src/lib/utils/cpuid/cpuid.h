@@ -15,6 +15,13 @@
 
 namespace Botan {
 
+#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY) || defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
+   defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+
+   #define BOTAN_CPUID_HAS_DETECTION
+
+#endif
+
 /**
 * A class handling runtime CPU feature detection. It is limited to
 * just the features necessary to implement CPU specific code in Botan,
@@ -39,12 +46,6 @@ class BOTAN_TEST_API CPUID final {
       * Probe the CPU and see what extensions are supported
       */
       static void initialize();
-
-      /**
-      * Return true if a 4x32 SIMD instruction set is available
-      * (SSE2, NEON, or Altivec/VMX)
-      */
-      static bool has_simd_32();
 
       /**
       * Return a possibly empty string containing list of known CPU
@@ -73,6 +74,22 @@ class BOTAN_TEST_API CPUID final {
          return false;
 #else
          return has_cpuid_bit(CPUID_IS_BIG_ENDIAN_BIT);
+#endif
+      }
+
+      /**
+      * Return true if a 4x32 SIMD instruction set is available
+      * (SSE2, NEON, or Altivec/VMX)
+      */
+      static bool has_simd_32() {
+#if defined(BOTAN_TARGET_SUPPORTS_SSE2)
+         return CPUID::has_sse2();
+#elif defined(BOTAN_TARGET_SUPPORTS_ALTIVEC)
+         return CPUID::has_altivec();
+#elif defined(BOTAN_TARGET_SUPPORTS_NEON)
+         return CPUID::has_neon();
+#else
+         return false;
 #endif
       }
 
@@ -139,7 +156,7 @@ class BOTAN_TEST_API CPUID final {
       /**
       * Check if the processor supports POWER8 crypto extensions
       */
-      static bool has_power_crypto() { return has_altivec() && has_cpuid_bit(CPUID_POWER_CRYPTO_BIT); }
+      static bool has_power_crypto() { return has_cpuid_bit(CPUID_POWER_CRYPTO_BIT); }
 
       /**
       * Check if the processor supports POWER9 DARN RNG
@@ -162,42 +179,42 @@ class BOTAN_TEST_API CPUID final {
       /**
       * Check if the processor supports ARMv8 SHA1
       */
-      static bool has_arm_sha1() { return has_neon() && has_cpuid_bit(CPUID_ARM_SHA1_BIT); }
+      static bool has_arm_sha1() { return has_cpuid_bit(CPUID_ARM_SHA1_BIT); }
 
       /**
       * Check if the processor supports ARMv8 SHA2
       */
-      static bool has_arm_sha2() { return has_neon() && has_cpuid_bit(CPUID_ARM_SHA2_BIT); }
+      static bool has_arm_sha2() { return has_cpuid_bit(CPUID_ARM_SHA2_BIT); }
 
       /**
       * Check if the processor supports ARMv8 AES
       */
-      static bool has_arm_aes() { return has_neon() && has_cpuid_bit(CPUID_ARM_AES_BIT); }
+      static bool has_arm_aes() { return has_cpuid_bit(CPUID_ARM_AES_BIT); }
 
       /**
       * Check if the processor supports ARMv8 PMULL
       */
-      static bool has_arm_pmull() { return has_neon() && has_cpuid_bit(CPUID_ARM_PMULL_BIT); }
+      static bool has_arm_pmull() { return has_cpuid_bit(CPUID_ARM_PMULL_BIT); }
 
       /**
       * Check if the processor supports ARMv8 SHA-512
       */
-      static bool has_arm_sha2_512() { return has_neon() && has_cpuid_bit(CPUID_ARM_SHA2_512_BIT); }
+      static bool has_arm_sha2_512() { return has_cpuid_bit(CPUID_ARM_SHA2_512_BIT); }
 
       /**
       * Check if the processor supports ARMv8 SHA-3
       */
-      static bool has_arm_sha3() { return has_neon() && has_cpuid_bit(CPUID_ARM_SHA3_BIT); }
+      static bool has_arm_sha3() { return has_cpuid_bit(CPUID_ARM_SHA3_BIT); }
 
       /**
       * Check if the processor supports ARMv8 SM3
       */
-      static bool has_arm_sm3() { return has_neon() && has_cpuid_bit(CPUID_ARM_SM3_BIT); }
+      static bool has_arm_sm3() { return has_cpuid_bit(CPUID_ARM_SM3_BIT); }
 
       /**
       * Check if the processor supports ARMv8 SM4
       */
-      static bool has_arm_sm4() { return has_neon() && has_cpuid_bit(CPUID_ARM_SM4_BIT); }
+      static bool has_arm_sm4() { return has_cpuid_bit(CPUID_ARM_SM4_BIT); }
 
 #endif
 
@@ -216,7 +233,7 @@ class BOTAN_TEST_API CPUID final {
       /**
       * Check if the processor supports SSSE3
       */
-      static bool has_ssse3() { return has_sse2() && has_cpuid_bit(CPUID_SSSE3_BIT); }
+      static bool has_ssse3() { return has_cpuid_bit(CPUID_SSSE3_BIT); }
 
       /**
       * Check if the processor supports AVX2
@@ -250,7 +267,7 @@ class BOTAN_TEST_API CPUID final {
       /**
       * Check if the processor supports AVX-512 VPCLMULQDQ
       */
-      static bool has_avx512_clmul() { return has_avx512() && has_cpuid_bit(CPUID_AVX512_CLMUL_BIT); }
+      static bool has_avx512_clmul() { return has_cpuid_bit(CPUID_AVX512_CLMUL_BIT); }
 
       /**
       * Check if the processor supports BMI2 (and BMI1)
@@ -268,17 +285,17 @@ class BOTAN_TEST_API CPUID final {
       /**
       * Check if the processor supports AES-NI
       */
-      static bool has_aes_ni() { return has_ssse3() && has_cpuid_bit(CPUID_AESNI_BIT); }
+      static bool has_aes_ni() { return has_cpuid_bit(CPUID_AESNI_BIT); }
 
       /**
       * Check if the processor supports CLMUL
       */
-      static bool has_clmul() { return has_ssse3() && has_cpuid_bit(CPUID_CLMUL_BIT); }
+      static bool has_clmul() { return has_cpuid_bit(CPUID_CLMUL_BIT); }
 
       /**
       * Check if the processor supports Intel SHA extension
       */
-      static bool has_intel_sha() { return has_sse2() && has_cpuid_bit(CPUID_SHA_BIT); }
+      static bool has_intel_sha() { return has_cpuid_bit(CPUID_SHA_BIT); }
 
       /**
       * Check if the processor supports Intel SHA-512 extension
@@ -379,6 +396,18 @@ class BOTAN_TEST_API CPUID final {
       static std::vector<CPUID::CPUID_bits> bit_from_string(std::string_view tok);
 
    private:
+      /**
+      * A common helper for the various CPUID implementations
+      */
+      template <typename T>
+      static inline uint32_t if_set(uint64_t cpuid, T flag, CPUID::CPUID_bits bit, uint32_t allowed) {
+         if(cpuid & static_cast<uint64_t>(flag)) {
+            return (bit & allowed);
+         } else {
+            return 0;
+         }
+      }
+
       struct CPUID_Data {
          public:
             CPUID_Data();
@@ -391,12 +420,10 @@ class BOTAN_TEST_API CPUID final {
             bool has_bit(uint32_t bit) const { return (m_processor_features & bit) == bit; }
 
          private:
-#if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY) || defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
-   defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-
-            static uint32_t detect_cpu_features();
-
+#if defined(BOTAN_CPUID_HAS_DETECTION)
+            static uint32_t detect_cpu_features(uint32_t allowed_bits);
 #endif
+
             uint32_t m_processor_features;
       };
 
