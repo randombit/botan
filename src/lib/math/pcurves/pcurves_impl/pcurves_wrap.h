@@ -13,11 +13,6 @@
 namespace Botan::PCurve {
 
 template <typename C>
-concept curve_supports_fe_invert2 = requires(const typename C::FieldElement& fe) {
-   { C::fe_invert2(fe) } -> std::same_as<typename C::FieldElement>;
-};
-
-template <typename C>
 concept curve_supports_scalar_invert = requires(const typename C::Scalar& s) {
    { C::scalar_invert(s) } -> std::same_as<typename C::Scalar>;
 };
@@ -37,28 +32,6 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          private:
             WindowedMul2Table<C, WindowBits> m_table;
       };
-
-      static typename C::AffinePoint curve_point_to_affine(const typename C::ProjectivePoint& pt) {
-         if constexpr(curve_supports_fe_invert2<C>) {
-            if(pt.is_identity().as_bool()) {
-               return C::AffinePoint::identity();
-            }
-
-            const auto z2_inv = C::fe_invert2(pt.z());
-            const auto z3_inv = z2_inv.square() * pt.z();
-            return typename C::AffinePoint(pt.x() * z2_inv, pt.y() * z3_inv);
-         } else {
-            return pt.to_affine();
-         }
-      }
-
-      static typename C::FieldElement curve_point_to_affine_x(const typename C::ProjectivePoint& pt) {
-         if constexpr(curve_supports_fe_invert2<C>) {
-            return pt.x() * C::fe_invert2(pt.z());
-         } else {
-            return pt.to_affine().x();
-         }
-      }
 
       static_assert(C::OrderBits <= PrimeOrderCurve::MaximumBitLength);
       static_assert(C::PrimeFieldBits <= PrimeOrderCurve::MaximumBitLength);
@@ -179,14 +152,14 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
       Scalar base_point_mul_x_mod_order(const Scalar& scalar, RandomNumberGenerator& rng) const override {
          auto pt = m_mul_by_g.mul(from_stash(scalar), rng);
          std::array<uint8_t, C::FieldElement::BYTES> x_bytes;
-         curve_point_to_affine_x(pt).serialize_to(std::span{x_bytes});
+         to_affine_x<C>(pt).serialize_to(std::span{x_bytes});
          return stash(C::Scalar::from_wide_bytes(std::span<const uint8_t, C::FieldElement::BYTES>{x_bytes}));
       }
 
       AffinePoint generator() const override { return stash(C::G); }
 
       AffinePoint point_to_affine(const ProjectivePoint& pt) const override {
-         return stash(curve_point_to_affine(from_stash(pt)));
+         return stash(to_affine<C>(from_stash(pt)));
       }
 
       ProjectivePoint point_to_projective(const AffinePoint& pt) const override {
@@ -260,12 +233,21 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          }
       }
 
-      ProjectivePoint hash_to_curve(std::string_view hash,
-                                    std::span<const uint8_t> input,
-                                    std::span<const uint8_t> domain_sep,
-                                    bool random_oracle) const override {
+      AffinePoint hash_to_curve_nu(std::string_view hash,
+                                   std::span<const uint8_t> input,
+                                   std::span<const uint8_t> domain_sep) const override {
          if constexpr(C::ValidForSswuHash) {
-            return stash(hash_to_curve_sswu<C>(hash, random_oracle, input, domain_sep));
+            return stash(hash_to_curve_sswu<C, false>(hash, input, domain_sep));
+         } else {
+            throw Not_Implemented("Hash to curve is not implemented for this curve");
+         }
+      }
+
+      ProjectivePoint hash_to_curve_ro(std::string_view hash,
+                                       std::span<const uint8_t> input,
+                                       std::span<const uint8_t> domain_sep) const override {
+         if constexpr(C::ValidForSswuHash) {
+            return stash(hash_to_curve_sswu<C, true>(hash, input, domain_sep));
          } else {
             throw Not_Implemented("Hash to curve is not implemented for this curve");
          }
