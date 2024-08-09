@@ -205,7 +205,7 @@ class Pcurve_Ecdsa_Sign_Tests final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("pcurves", "pcurves_ecdsa_sign", Pcurve_Ecdsa_Sign_Tests);
 
-class Pcurve_Point_Tests final : public Test {
+class Pcurve_Arithmetic_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
@@ -349,7 +349,62 @@ class Pcurve_Point_Tests final : public Test {
       }
 };
 
-BOTAN_REGISTER_TEST("pcurves", "pcurves_points", Pcurve_Point_Tests);
+BOTAN_REGISTER_TEST("pcurves", "pcurves_arith", Pcurve_Arithmetic_Tests);
+
+class Pcurve_PointEnc_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+
+         auto& rng = Test::rng();
+
+         for(auto id : Botan::PCurve::PrimeOrderCurveId::all()) {
+            Test::Result result("Pcurves point operations " + id.to_string());
+
+            result.start_timer();
+
+            auto curve = Botan::PCurve::PrimeOrderCurve::from_id(id);
+
+            if(!curve) {
+               result.test_note("Skipping test due to missing pcurve " + id.to_string());
+               continue;
+            }
+
+            for(size_t trial = 0; trial != 100; ++trial) {
+               const auto scalar = curve->random_scalar(rng);
+               const auto pt = curve->mul_by_g(scalar, rng).to_affine();
+
+               const auto pt_u = pt.serialize();
+               result.test_eq("Expected uncompressed header", static_cast<size_t>(pt_u[0]), 0x04);
+               const size_t fe_bytes = (pt_u.size() - 1) / 2;
+               const auto pt_c = pt.serialize_compressed();
+
+               result.test_eq("Expected compressed size", pt_c.size(), 1 + fe_bytes);
+               result.confirm("Expected compressed header", pt_c[0] == 0x02 || pt_c[0] == 0x03);
+
+               if(auto d_pt_u = curve->deserialize_point(pt_u)) {
+                  result.test_eq("Deserializing uncompressed returned correct point", d_pt_u->serialize(), pt_u);
+               } else {
+                  result.test_failure("Failed to deserialize uncompressed point");
+               }
+
+               if(auto d_pt_c = curve->deserialize_point(pt_c)) {
+                  result.test_eq("Deserializing compressed returned correct point", d_pt_c->serialize(), pt_u);
+               } else {
+                  result.test_failure("Failed to deserialize compressed point");
+               }
+            }
+
+            result.end_timer();
+
+            results.push_back(result);
+         }
+
+         return results;
+      }
+};
+
+BOTAN_REGISTER_TEST("pcurves", "pcurves_point_enc", Pcurve_PointEnc_Tests);
 
 #endif
 

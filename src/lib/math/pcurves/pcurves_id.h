@@ -30,6 +30,8 @@ class BOTAN_TEST_API PrimeOrderCurveId final {
       enum class Code : uint8_t {
          /// secp192r1 aka P-192
          secp192r1,
+         /// secp224r1 aka P-224
+         secp224r1,
          /// secp256r1 aka P-256
          secp256r1,
          /// secp384r1 aka P-384

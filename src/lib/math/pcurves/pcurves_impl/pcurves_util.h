@@ -191,6 +191,58 @@ inline consteval std::array<W, N> p_div_2_plus_1(const std::array<W, N>& p) {
 }
 
 template <WordType W, size_t N>
+inline consteval std::pair<size_t, std::array<W, N>> shanks_tonelli_c1c2(const std::array<W, N>& p) {
+   size_t c1 = 0;
+   auto c2 = p;
+
+   // This assumes p % 2 == 1
+   shift_right<1>(c2);
+   c1++;
+
+   for(;;) {
+      // If we found another one bit past the first, stop
+      if(c2[0] % 2 == 1) {
+         break;
+      }
+      shift_right<1>(c2);
+      c1++;
+   }
+
+   std::reverse(c2.begin(), c2.end());
+   return {c1, c2};
+}
+
+template <WordType W, size_t N>
+inline consteval std::array<W, N> shanks_tonelli_c3(const std::array<W, N>& c2) {
+   auto c3 = c2;
+   std::reverse(c3.begin(), c3.end());
+   shift_right<1>(c3);
+   std::reverse(c3.begin(), c3.end());
+   return c3;
+}
+
+template <typename Z, WordType W, size_t N>
+consteval auto shanks_tonelli_c4(const std::array<W, N>& p_minus_1_over_2) -> Z {
+   const auto one = Z::one();
+
+   // This is a silly performance hack; the first non-quadratic root in P-224
+   // is 11 so if we start the search there we save a little time.
+   auto z = Z::from_word(11);
+
+   for(;;) {
+      auto c = z.pow_vartime(p_minus_1_over_2);
+
+      auto is_square = c.is_zero() || c.is_one();
+
+      if(!is_square.as_bool()) {
+         return z;
+      }
+
+      z = z + one;
+   }
+}
+
+template <WordType W, size_t N>
 inline consteval size_t count_bits(const std::array<W, N>& p) {
    auto get_bit = [&](size_t i) {
       const size_t w = i / WordInfo<W>::bits;
