@@ -80,11 +80,32 @@ void EC_Group_Data::set_oid(const OID& oid) {
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_from_bytes_with_trunc(std::span<const uint8_t> bytes) const {
-   if(m_pcurve) {
-      return std::make_unique<EC_Scalar_Data_PC>(shared_from_this(), m_pcurve->scalar_from_bits_with_trunc(bytes));
+   const size_t bit_length = 8 * bytes.size();
+
+   if(bit_length < order_bits()) {
+      // No shifting required, but might still need to reduce by modulus
+      return this->scalar_from_bytes_mod_order(bytes);
    } else {
-      auto bn = BigInt::from_bytes_with_max_bits(bytes.data(), bytes.size(), m_order_bits);
-      return std::make_unique<EC_Scalar_Data_BN>(shared_from_this(), mod_order(bn));
+      const size_t shift = bit_length - order_bits();
+
+      const size_t new_length = bytes.size() - (shift / 8);
+      const size_t bit_shift = shift % 8;
+
+      if(bit_shift == 0) {
+         // Easy case just read different bytes
+         return this->scalar_from_bytes_mod_order(bytes.first(new_length));
+      } else {
+         std::vector<uint8_t> sbytes(new_length);
+
+         uint8_t carry = 0;
+         for(size_t i = 0; i != new_length; ++i) {
+            const uint8_t w = bytes[i];
+            sbytes[i] = (w >> bit_shift) | carry;
+            carry = w << (8 - bit_shift);
+         }
+
+         return this->scalar_from_bytes_mod_order(sbytes);
+      }
    }
 }
 

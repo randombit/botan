@@ -142,6 +142,7 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param max_bits if the resulting integer is more than max_bits,
        *        it will be shifted so it is at most max_bits in length.
        */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       static BigInt from_bytes_with_max_bits(const uint8_t buf[], size_t length, size_t max_bits);
 
       /**
