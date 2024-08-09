@@ -77,7 +77,6 @@ class IntMod final {
       typedef typename Rep::W W;
 
       static constexpr auto P_MINUS_2 = p_minus<2>(P);
-      static constexpr auto P_PLUS_1_OVER_4 = p_plus_1_over_4(P);
 
    public:
       static constexpr size_t BITS = count_bits(P);
@@ -291,17 +290,54 @@ class IntMod final {
       constexpr Self invert() const { return pow_vartime(Self::P_MINUS_2); }
 
       /**
-      * Return the modular square root, or zero if no root exists
-      *
-      * Current impl assumes p == 3 (mod 4)
+      * Return the modular square root if it exists
       */
-      constexpr std::pair<Self, CT::Choice> sqrt() const
-         requires(Self::P_MOD_4 == 3)
-      {
-         auto z = pow_vartime(Self::P_PLUS_1_OVER_4);
-         const CT::Choice correct = (z.square() == *this);
-         Self::conditional_assign(z, !correct, Self::zero());
-         return {z, correct};
+      constexpr std::pair<Self, CT::Choice> sqrt() const {
+         if constexpr(Self::P_MOD_4 == 3) {
+            constexpr auto P_PLUS_1_OVER_4 = p_plus_1_over_4(P);
+            auto z = pow_vartime(P_PLUS_1_OVER_4);
+            const CT::Choice correct = (z.square() == *this);
+            Self::conditional_assign(z, !correct, Self::zero());
+            return {z, correct};
+         } else {
+            // Shanks-Tonelli, following I.4 in RFC 9380
+
+            /*
+            Constants:
+            1. c1, the largest integer such that 2^c1 divides q - 1.
+            2. c2 = (q - 1) / (2^c1)        # Integer arithmetic
+            3. c3 = (c2 - 1) / 2            # Integer arithmetic
+            4. c4, a non-square value in F
+            5. c5 = c4^c2 in F
+            */
+            constexpr auto C1_C2 = shanks_tonelli_c1c2(Self::P);
+            constexpr std::array<W, N> C3 = shanks_tonelli_c3(C1_C2.second);
+            constexpr std::array<W, N> P_MINUS_1_OVER_2 = p_minus_1_over_2(Self::P);
+            constexpr Self C4 = shanks_tonelli_c4<Self>(P_MINUS_1_OVER_2);
+            constexpr Self C5 = C4.pow_vartime(C1_C2.second);
+
+            const Self& x = (*this);
+
+            auto z = x.pow_vartime(C3);
+            auto t = z.square();
+            t *= x;
+            z *= x;
+            auto b = t;
+            auto c = C5;
+
+            for(size_t i = C1_C2.first; i >= 2; i--) {
+               b.square_n(i - 2);
+               const auto e = b.is_one();
+               Self::conditional_assign(z, !e, z * c);
+               c.square_n(1);
+               Self::conditional_assign(t, !e, t * c);
+               b = t;
+            }
+
+            const CT::Choice correct = (z.square() == *this);
+            Self::conditional_assign(z, !correct, Self::zero());
+            return {z, correct};
+         }
       }
 
       constexpr CT::Choice operator==(const Self& other) const {
@@ -349,7 +385,7 @@ class IntMod final {
       }
 
       // Returns nullopt if the input is an encoding greater than or equal P
-      constexpr static std::optional<Self> deserialize(std::span<const uint8_t> bytes) {
+      static std::optional<Self> deserialize(std::span<const uint8_t> bytes) {
          // We could allow either short inputs or longer zero padded
          // inputs here, however it seems best to avoid non-canonical
          // representations unless required
@@ -522,7 +558,7 @@ class AffineCurvePoint {
 
       static constexpr FieldElement x3_ax_b(const FieldElement& x) { return (x.square() + Self::A) * x + Self::B; }
 
-      static constexpr std::optional<Self> deserialize(std::span<const uint8_t> bytes) {
+      static std::optional<Self> deserialize(std::span<const uint8_t> bytes) {
          if(bytes.size() == Self::BYTES) {
             if(bytes[0] != 0x04) {
                return {};

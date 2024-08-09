@@ -21,6 +21,13 @@ std::shared_ptr<const PrimeOrderCurve> PCurveInstance::secp192r1() {
 }
 #endif
 
+#if !defined(BOTAN_HAS_PCURVES_SECP224R1)
+//static
+std::shared_ptr<const PrimeOrderCurve> PCurveInstance::secp224r1() {
+   return nullptr;
+}
+#endif
+
 #if !defined(BOTAN_HAS_PCURVES_SECP256R1)
 //static
 std::shared_ptr<const PrimeOrderCurve> PCurveInstance::secp256r1() {
@@ -95,6 +102,8 @@ std::shared_ptr<const PrimeOrderCurve> PrimeOrderCurve::from_id(PrimeOrderCurveI
    switch(id.code()) {
       case PrimeOrderCurveId::secp192r1:
          return PCurveInstance::secp192r1();
+      case PrimeOrderCurveId::secp224r1:
+         return PCurveInstance::secp224r1();
       case PrimeOrderCurveId::secp256r1:
          return PCurveInstance::secp256r1();
       case PrimeOrderCurveId::secp384r1:
@@ -122,6 +131,7 @@ std::shared_ptr<const PrimeOrderCurve> PrimeOrderCurve::from_id(PrimeOrderCurveI
 std::vector<PrimeOrderCurveId> PrimeOrderCurveId::all() {
    return {
       PrimeOrderCurveId::secp192r1,
+      PrimeOrderCurveId::secp224r1,
       PrimeOrderCurveId::secp256r1,
       PrimeOrderCurveId::secp384r1,
       PrimeOrderCurveId::secp521r1,
@@ -139,6 +149,8 @@ std::string PrimeOrderCurveId::to_string() const {
    switch(this->code()) {
       case PrimeOrderCurveId::secp192r1:
          return "secp192r1";
+      case PrimeOrderCurveId::secp224r1:
+         return "secp224r1";
       case PrimeOrderCurveId::secp256r1:
          return "secp256r1";
       case PrimeOrderCurveId::secp384r1:
@@ -168,6 +180,8 @@ std::string PrimeOrderCurveId::to_string() const {
 std::optional<PrimeOrderCurveId> PrimeOrderCurveId::from_string(std::string_view name) {
    if(name == "secp192r1") {
       return PCurve::PrimeOrderCurveId::secp192r1;
+   } else if(name == "secp224r1") {
+      return PCurve::PrimeOrderCurveId::secp224r1;
    } else if(name == "secp256r1") {
       return PCurve::PrimeOrderCurveId::secp256r1;
    } else if(name == "secp384r1") {
