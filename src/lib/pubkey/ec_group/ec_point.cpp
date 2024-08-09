@@ -20,12 +20,12 @@ EC_Point::EC_Point(const CurveGFp& curve) : m_curve(curve), m_coord_x(0), m_coor
    // Assumes Montgomery rep of zero is zero
 }
 
-EC_Point::EC_Point(const CurveGFp& curve, const BigInt& x, const BigInt& y) :
-      m_curve(curve), m_coord_x(x), m_coord_y(y), m_coord_z(m_curve.get_1_rep()) {
-   if(x < 0 || x >= curve.get_p()) {
+EC_Point::EC_Point(const CurveGFp& curve, BigInt x, BigInt y) :
+      m_curve(curve), m_coord_x(std::move(x)), m_coord_y(std::move(y)), m_coord_z(m_curve.get_1_rep()) {
+   if(m_coord_x < 0 || m_coord_x >= curve.get_p()) {
       throw Invalid_Argument("Invalid EC_Point affine x");
    }
-   if(y < 0 || y >= curve.get_p()) {
+   if(m_coord_y < 0 || m_coord_y >= curve.get_p()) {
       throw Invalid_Argument("Invalid EC_Point affine y");
    }
 
