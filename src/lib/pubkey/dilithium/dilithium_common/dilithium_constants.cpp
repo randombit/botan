@@ -53,6 +53,8 @@ DilithiumConstants::DilithiumConstants(DilithiumMode mode) : m_mode(mode) {
          m_beta = DilithiumBeta::_120;
          m_omega = DilithiumOmega::_75;
          break;
+      default:
+         BOTAN_ASSERT_UNREACHABLE();
    }
 
    const auto s1_bytes = 32 * m_l * bitlen(2 * m_eta);
