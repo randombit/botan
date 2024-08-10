@@ -60,12 +60,14 @@ class ECDH_AllGroups_Tests : public Test {
          for(const std::string& group_name : Botan::EC_Group::known_named_groups()) {
             Test::Result result("ECDH " + group_name);
 
+            result.start_timer();
+
             const std::string kdf = "Raw";
 
             try {
                const auto group = Botan::EC_Group::from_name(group_name);
 
-               for(size_t i = 0; i != 4; ++i) {
+               for(size_t i = 0; i != 100; ++i) {
                   const Botan::ECDH_PrivateKey a_priv(rng(), group);
                   const auto a_pub = a_priv.public_value();
 
@@ -83,6 +85,8 @@ class ECDH_AllGroups_Tests : public Test {
             } catch(std::exception& e) {
                result.test_failure("Exception", e.what());
             }
+
+            result.end_timer();
 
             results.push_back(result);
          }

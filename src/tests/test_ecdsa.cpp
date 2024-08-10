@@ -271,20 +271,21 @@ class ECDSA_AllGroups_Test : public Test {
 
                try {
                   Botan::PK_Signer signer(priv, rng(), hash);
-
-                  auto message = rng().random_vec(rng().next_byte());
-                  auto sig = signer.sign_message(message, rng());
-                  result.test_eq("Expected signature size", sig.size(), 2 * group.get_order_bytes());
-
                   Botan::PK_Verifier verifier(*pub, hash);
-                  result.confirm("Signature accepted", verifier.verify_message(message, sig));
 
-                  const auto corrupted_message = mutate_vec(message, rng(), true);
-                  result.confirm("Modified message rejected", !verifier.verify_message(corrupted_message, sig));
+                  for(size_t i = 0; i != 16; ++i) {
+                     auto message = rng().random_vec(rng().next_byte());
+                     auto sig = signer.sign_message(message, rng());
+                     result.test_eq("Expected signature size", sig.size(), 2 * group.get_order_bytes());
 
-                  const auto corrupted_sig = mutate_vec(sig, rng(), true);
-                  result.confirm("Modified signature rejected", !verifier.verify_message(message, corrupted_sig));
+                     result.confirm("Signature accepted", verifier.verify_message(message, sig));
 
+                     const auto corrupted_message = mutate_vec(message, rng(), true);
+                     result.confirm("Modified message rejected", !verifier.verify_message(corrupted_message, sig));
+
+                     const auto corrupted_sig = mutate_vec(sig, rng(), true);
+                     result.confirm("Modified signature rejected", !verifier.verify_message(message, corrupted_sig));
+                  }
                } catch(std::exception& e) {
                   result.test_failure("Exception", e.what());
                }

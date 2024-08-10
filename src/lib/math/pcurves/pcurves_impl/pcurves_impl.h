@@ -402,31 +402,6 @@ class IntMod final {
          return Self::from_words(words);
       }
 
-      // ECDSA style hash->scalar conversion
-      //
-      // This must accept inputs of any length
-      static Self from_bits_with_trunc(std::span<const uint8_t> bytes) {
-         const size_t bit_length = bytes.size() * 8;
-
-         if(bit_length <= Self::BITS) {
-            // No shifting required, but might still need to reduce by modulus
-            std::array<uint8_t, 2 * BYTES> padded_bytes = {};
-            copy_mem(std::span{padded_bytes}.last(bytes.size()), bytes);
-            return Self(Rep::wide_to_rep(bytes_to_words<W, 2 * N, 2 * BYTES>(std::span{padded_bytes})));
-         } else {
-            const size_t shift = bit_length - Self::BITS;
-
-            if(shift % 8 == 0) {
-               // Easy case just copy different bytes
-               const size_t new_length = bytes.size() - (shift / 8);
-               return Self::from_bits_with_trunc(bytes.first(new_length));
-            } else {
-               // fixme
-               throw Not_Implemented("Bit shifting for hash to scalar conversion not implemented");
-            }
-         }
-      }
-
       // Reduces large input modulo the order
       template <size_t L>
       static constexpr Self from_wide_bytes(std::span<const uint8_t, L> bytes) {

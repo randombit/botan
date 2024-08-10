@@ -213,10 +213,6 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          return {};
       }
 
-      Scalar scalar_from_bits_with_trunc(std::span<const uint8_t> bytes) const override {
-         return stash(C::Scalar::from_bits_with_trunc(bytes));
-      }
-
       std::optional<Scalar> scalar_from_wide_bytes(std::span<const uint8_t> bytes) const override {
          if(auto s = C::Scalar::from_wide_bytes_varlen(bytes)) {
             return stash(*s);

@@ -351,12 +351,6 @@ class BOTAN_TEST_API PrimeOrderCurve {
       /// zero padding bytes.
       virtual std::optional<Scalar> deserialize_scalar(std::span<const uint8_t> bytes) const = 0;
 
-      /// Deserialize a scalar using ECDSA truncation rules
-      ///
-      /// ECDSA and other signature schemes use a specific rule for converting a hash
-      /// output into a scalar.
-      virtual Scalar scalar_from_bits_with_trunc(std::span<const uint8_t> bytes) const = 0;
-
       /// Reduce an integer modulo the group order
       ///
       /// The input can be at most twice the bit length of the order; if larger than this
