@@ -178,6 +178,31 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       EC_Group& operator=(const EC_Group&);
       EC_Group& operator=(EC_Group&&) = default;
 
+      bool initialized() const { return (m_data != nullptr); }
+
+      /**
+       * Verify EC_Group domain
+       * @returns true if group is valid. false otherwise
+       */
+      bool verify_group(RandomNumberGenerator& rng, bool strong = false) const;
+
+      bool operator==(const EC_Group& other) const;
+
+      EC_Group_Source source() const;
+
+      /**
+      * Return true if this EC_Group was derived from an explicit encoding
+      *
+      * Explicit encoding of groups is deprecated; when support for explicit curves
+      * is removed in a future major release, this function will also be removed.
+      */
+      bool used_explicit_encoding() const { return m_explicit_encoding; }
+
+      /**
+      * Return a set of known named EC groups
+      */
+      static const std::set<std::string>& known_named_groups();
+
       /**
       * Create the DER encoding of this domain
       * @param form of encoding to use
@@ -298,18 +323,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       const BigInt& get_b() const;
 
       /**
-      * Return group base point
-      * @result base point
-      */
-      const EC_Point& get_base_point() const { return generator(); }
-
-      /**
-      * Return the canonical group generator
-      * @result standard generator of the curve
-      */
-      const EC_Point& generator() const;
-
-      /**
       * Return the x coordinate of the base point
       */
       const BigInt& get_g_x() const;
@@ -336,12 +349,71 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       */
       bool has_cofactor() const;
 
+      /*
+      * For internal use only
+      */
+      static std::shared_ptr<EC_Group_Data> EC_group_info(const OID& oid);
+
+      /*
+      * For internal use only
+      */
+      static size_t clear_registered_curve_data();
+
+      /*
+      * For internal use only
+      */
+      static OID EC_group_identity_from_order(const BigInt& order);
+
+      /*
+      * For internal use only
+      */
+      const std::shared_ptr<EC_Group_Data>& _data() const { return m_data; }
+
+      /**
+      * OS2ECP (Octet String To Elliptic Curve Point)
+      *
+      * Deserialize an encoded point. Verifies that the point is on the curve.
+      */
+      EC_Point OS2ECP(const uint8_t bits[], size_t len) const {
+         return EC_AffinePoint(*this, std::span{bits, len}).to_legacy_point();
+      }
+
+      EC_Point OS2ECP(std::span<const uint8_t> encoded_point) const {
+         return EC_AffinePoint(*this, encoded_point).to_legacy_point();
+      }
+
+      /**
+      * Return group base point
+      * @result base point
+      */
+      BOTAN_DEPRECATED("Deprecated no replacement") const EC_Point& get_base_point() const;
+
+      // Everything below here will be removed in a future release:
+
+      /**
+      * Return the canonical group generator
+      * @result standard generator of the curve
+      */
+      BOTAN_DEPRECATED("Deprecated no replacement") const EC_Point& generator() const;
+
       /**
       * Multi exponentiate. Not constant time.
-      * @return base_point*x + pt*y
+      * @return base_point*x + h*y
       */
       BOTAN_DEPRECATED("Use EC_Group::Mul2Table")
-      EC_Point point_multiply(const BigInt& x, const EC_Point& pt, const BigInt& y) const;
+      EC_Point point_multiply(const BigInt& x_bn, const EC_Point& h_pt, const BigInt& y_bn) const {
+         auto x = EC_Scalar::from_bigint(*this, x_bn);
+         auto y = EC_Scalar::from_bigint(*this, y_bn);
+         auto h = EC_AffinePoint(*this, h_pt);
+
+         Mul2Table gh_mul(h);
+
+         if(auto r = gh_mul.mul2_vartime(x, y)) {
+            return r->to_legacy_point();
+         } else {
+            return EC_AffinePoint::identity(*this).to_legacy_point();
+         }
+      }
 
       /**
       * Blinded point multiplication, attempts resistance to side channels
@@ -458,44 +530,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       }
 
       /**
-      * OS2ECP (Octet String To Elliptic Curve Point)
-      *
-      * Deserialize an encoded point. Verifies that the point is on the curve.
-      */
-      EC_Point OS2ECP(const uint8_t bits[], size_t len) const;
-
-      EC_Point OS2ECP(std::span<const uint8_t> encoded_point) const {
-         return this->OS2ECP(encoded_point.data(), encoded_point.size());
-      }
-
-      bool initialized() const { return (m_data != nullptr); }
-
-      /**
-       * Verify EC_Group domain
-       * @returns true if group is valid. false otherwise
-       */
-      bool verify_group(RandomNumberGenerator& rng, bool strong = false) const;
-
-      bool operator==(const EC_Group& other) const;
-
-      EC_Group_Source source() const;
-
-      /**
-      * Return true if this EC_Group was derived from an explicit encoding
-      *
-      * Explicit encoding of groups is deprecated; when support for explicit curves
-      * is removed in a future major release, this function will also be removed.
-      */
-      bool used_explicit_encoding() const { return m_explicit_encoding; }
-
-      /**
-      * Return a set of known named EC groups
-      */
-      static const std::set<std::string>& known_named_groups();
-
-      // Everything below here will be removed in a future release:
-
-      /**
       * Return if a == -3 mod p
       */
       BOTAN_DEPRECATED("Deprecated no replacement") bool a_is_minus_3() const { return get_a() + 3 == get_p(); }
@@ -557,34 +591,29 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       /**
       * Return a point on this curve with the affine values x, y
       */
-      BOTAN_DEPRECATED("Deprecated - use OS2ECP") EC_Point point(const BigInt& x, const BigInt& y) const;
+      BOTAN_DEPRECATED("Deprecated - use EC_AffinePoint") EC_Point point(const BigInt& x, const BigInt& y) const {
+         if(auto pt = EC_AffinePoint::from_bigint_xy(*this, x, y)) {
+            return pt->to_legacy_point();
+         } else {
+            throw Decoding_Error("Invalid x/y coordinates for elliptic curve point");
+         }
+      }
 
       /**
       * Return the zero (or infinite) point on this curve
       */
-      BOTAN_DEPRECATED("Deprecated no replacement") EC_Point zero_point() const;
+      BOTAN_DEPRECATED("Deprecated no replacement") EC_Point zero_point() const {
+         return EC_AffinePoint::identity(*this).to_legacy_point();
+      }
 
-      BOTAN_DEPRECATED("Just serialize the point and check") size_t point_size(EC_Point_Format format) const;
-
-      /*
-      * For internal use only
-      */
-      static std::shared_ptr<EC_Group_Data> EC_group_info(const OID& oid);
-
-      /*
-      * For internal use only
-      */
-      static size_t clear_registered_curve_data();
-
-      /*
-      * For internal use only
-      */
-      static OID EC_group_identity_from_order(const BigInt& order);
-
-      /*
-      * For internal use only
-      */
-      const std::shared_ptr<EC_Group_Data>& _data() const { return m_data; }
+      BOTAN_DEPRECATED("Just serialize the point and check") size_t point_size(EC_Point_Format format) const {
+         // Hybrid and standard format are (x,y), compressed is y, +1 format byte
+         if(format == EC_Point_Format::Compressed) {
+            return (1 + get_p_bytes());
+         } else {
+            return (1 + 2 * get_p_bytes());
+         }
+      }
 
    private:
       static EC_Group_Data_Map& ec_group_data();

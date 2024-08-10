@@ -85,22 +85,20 @@ void EC_Scalar_Data_PC::serialize_to(std::span<uint8_t> bytes) const {
 
 EC_AffinePoint_Data_PC::EC_AffinePoint_Data_PC(std::shared_ptr<const EC_Group_Data> group,
                                                PCurve::PrimeOrderCurve::AffinePoint pt) :
-      m_group(std::move(group)),
-      m_pt(std::move(pt)),
-      m_bytes(m_pt.serialize<secure_vector<uint8_t>>()),
-      m_x_bytes(std::span{m_bytes}.subspan(1, field_element_bytes())),
-      m_y_bytes(std::span{m_bytes}.last(field_element_bytes())) {
-   BOTAN_ASSERT_NOMSG(m_bytes.size() == 1 + 2 * field_element_bytes());
+      m_group(std::move(group)), m_pt(std::move(pt)) {
+   if(!m_pt.is_identity()) {
+      m_xy = m_pt.serialize<secure_vector<uint8_t>>();
+      BOTAN_ASSERT_NOMSG(m_xy.size() == 1 + 2 * field_element_bytes());
+   }
 }
 
 EC_AffinePoint_Data_PC::EC_AffinePoint_Data_PC(std::shared_ptr<const EC_Group_Data> group,
                                                std::span<const uint8_t> bytes) :
-      m_group(std::move(group)),
-      m_pt(deserialize_pcurve_pt(m_group->pcurve(), bytes)),
-      m_bytes(m_pt.serialize<secure_vector<uint8_t>>()),
-      m_x_bytes(std::span{m_bytes}.subspan(1, field_element_bytes())),
-      m_y_bytes(std::span{m_bytes}.last(field_element_bytes())) {
-   BOTAN_ASSERT_NOMSG(m_bytes.size() == 1 + 2 * field_element_bytes());
+      m_group(std::move(group)), m_pt(deserialize_pcurve_pt(m_group->pcurve(), bytes)) {
+   if(!m_pt.is_identity()) {
+      m_xy = m_pt.serialize<secure_vector<uint8_t>>();
+      BOTAN_ASSERT_NOMSG(m_xy.size() == 1 + 2 * field_element_bytes());
+   }
 }
 
 const EC_AffinePoint_Data_PC& EC_AffinePoint_Data_PC::checked_ref(const EC_AffinePoint_Data& data) {
@@ -134,42 +132,58 @@ size_t EC_AffinePoint_Data_PC::field_element_bytes() const {
    return m_group->pcurve().field_element_bytes();
 }
 
+bool EC_AffinePoint_Data_PC::is_identity() const {
+   return m_xy.empty();
+}
+
 void EC_AffinePoint_Data_PC::serialize_x_to(std::span<uint8_t> bytes) const {
+   BOTAN_STATE_CHECK(!this->is_identity());
    const size_t fe_bytes = this->field_element_bytes();
    BOTAN_ARG_CHECK(bytes.size() == fe_bytes, "Invalid output size");
-   copy_mem(bytes, m_x_bytes);
+   copy_mem(bytes, std::span{m_xy}.subspan(1, fe_bytes));
 }
 
 void EC_AffinePoint_Data_PC::serialize_y_to(std::span<uint8_t> bytes) const {
+   BOTAN_STATE_CHECK(!this->is_identity());
    const size_t fe_bytes = this->field_element_bytes();
    BOTAN_ARG_CHECK(bytes.size() == fe_bytes, "Invalid output size");
-   copy_mem(bytes, m_y_bytes);
+   copy_mem(bytes, std::span{m_xy}.subspan(1 + fe_bytes, fe_bytes));
 }
 
 void EC_AffinePoint_Data_PC::serialize_xy_to(std::span<uint8_t> bytes) const {
+   BOTAN_STATE_CHECK(!this->is_identity());
    const size_t fe_bytes = this->field_element_bytes();
    BOTAN_ARG_CHECK(bytes.size() == 2 * fe_bytes, "Invalid output size");
-   copy_mem(bytes, std::span{m_bytes}.last(2 * fe_bytes));
+   copy_mem(bytes, std::span{m_xy}.last(2 * fe_bytes));
 }
 
 void EC_AffinePoint_Data_PC::serialize_compressed_to(std::span<uint8_t> bytes) const {
+   BOTAN_STATE_CHECK(!this->is_identity());
    const size_t fe_bytes = this->field_element_bytes();
    BOTAN_ARG_CHECK(bytes.size() == 1 + fe_bytes, "Invalid output size");
-   const bool y_is_odd = (m_bytes.back() & 0x01) == 0x01;
+   const bool y_is_odd = (m_xy.back() & 0x01) == 0x01;
 
    BufferStuffer stuffer(bytes);
    stuffer.append(y_is_odd ? 0x03 : 0x02);
    this->serialize_x_to(stuffer.next(fe_bytes));
 }
 
-EC_Point EC_AffinePoint_Data_PC::to_legacy_point() const {
-   return EC_Point(m_group->curve(), BigInt::from_bytes(m_x_bytes), BigInt::from_bytes(m_y_bytes));
-}
-
 void EC_AffinePoint_Data_PC::serialize_uncompressed_to(std::span<uint8_t> bytes) const {
+   BOTAN_STATE_CHECK(!this->is_identity());
    const size_t fe_bytes = this->field_element_bytes();
    BOTAN_ARG_CHECK(bytes.size() == 1 + 2 * fe_bytes, "Invalid output size");
-   copy_mem(bytes, m_bytes);
+   copy_mem(bytes, m_xy);
+}
+
+EC_Point EC_AffinePoint_Data_PC::to_legacy_point() const {
+   if(this->is_identity()) {
+      return EC_Point(m_group->curve());
+   } else {
+      const size_t fe_bytes = this->field_element_bytes();
+      return EC_Point(m_group->curve(),
+                      BigInt::from_bytes(std::span{m_xy}.subspan(1, fe_bytes)),
+                      BigInt::from_bytes(std::span{m_xy}.last(fe_bytes)));
+   }
 }
 
 EC_Mul2Table_Data_PC::EC_Mul2Table_Data_PC(const EC_AffinePoint_Data& g, const EC_AffinePoint_Data& h) :

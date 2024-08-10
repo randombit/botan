@@ -1132,41 +1132,28 @@ class Speed final : public Command {
 
       void bench_ecc_mult(const std::vector<std::string>& groups, const std::chrono::milliseconds runtime) {
          for(const std::string& group_name : groups) {
-            const auto ec_group = Botan::EC_Group::from_name(group_name);
+            const auto group = Botan::EC_Group::from_name(group_name);
 
-            auto mult_timer = make_timer(group_name + " Montgomery ladder");
-            auto blinded_mult_timer = make_timer(group_name + " blinded comb");
-            auto blinded_var_mult_timer = make_timer(group_name + " blinded window");
-
-            const Botan::EC_Point& base_point = ec_group.get_base_point();
+            auto bp_timer = make_timer(group_name + " base point");
+            auto vp_timer = make_timer(group_name + " variable point");
 
             std::vector<Botan::BigInt> ws;
 
-            while(mult_timer->under(runtime) && blinded_mult_timer->under(runtime) &&
-                  blinded_var_mult_timer->under(runtime)) {
-               const Botan::BigInt scalar = ec_group.random_scalar(rng());
+            auto g = Botan::EC_AffinePoint::generator(group);
 
-               const Botan::EC_Point r1 = mult_timer->run([&]() { return base_point * scalar; });
+            while(bp_timer->under(runtime) && vp_timer->under(runtime)) {
+               const auto k = Botan::EC_Scalar::random(group, rng());
 
-               const Botan::EC_Point r2 = blinded_mult_timer->run([&]() {
-                  auto pt = ec_group.blinded_base_point_multiply(scalar, rng(), ws);
-                  pt.force_affine();
-                  return pt;
-               });
+               const auto r1 = bp_timer->run([&]() { return Botan::EC_AffinePoint::g_mul(k, rng(), ws); });
 
-               const Botan::EC_Point r3 = blinded_var_mult_timer->run([&]() {
-                  auto pt = ec_group.blinded_var_point_multiply(base_point, scalar, rng(), ws);
-                  pt.force_affine();
-                  return pt;
-               });
+               const auto r2 = vp_timer->run([&]() { return g.mul(k, rng(), ws); });
 
-               BOTAN_ASSERT_EQUAL(r1, r2, "Same point computed by Montgomery and comb");
-               BOTAN_ASSERT_EQUAL(r1, r3, "Same point computed by Montgomery and window");
+               BOTAN_ASSERT_EQUAL(
+                  r1.serialize_uncompressed(), r2.serialize_uncompressed(), "Same result for multiplication");
             }
 
-            record_result(mult_timer);
-            record_result(blinded_mult_timer);
-            record_result(blinded_var_mult_timer);
+            record_result(bp_timer);
+            record_result(vp_timer);
          }
       }
 

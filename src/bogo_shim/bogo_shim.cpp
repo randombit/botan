@@ -149,6 +149,7 @@ std::string map_to_bogo_error(const std::string& e) {
       {"Extension removed in updated Client Hello", ":INCONSISTENT_CLIENT_HELLO:"},
       {"Failed to agree on a signature algorithm", ":NO_COMMON_SIGNATURE_ALGORITHMS:"},
       {"Failed to agree on any signature algorithm", ":NO_COMMON_SIGNATURE_ALGORITHMS:"},
+      {"Failed to deserialize elliptic curve point", ":BAD_ECPOINT:"},
       {"Failed to negotiate a common signature algorithm for client authentication",
        ":NO_COMMON_SIGNATURE_ALGORITHMS:"},
       {"PSK extension was not at the very end of the Client Hello", ":PRE_SHARED_KEY_MUST_BE_LAST:"},

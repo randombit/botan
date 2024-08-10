@@ -106,15 +106,15 @@ class Pcurve_Arithmetic_Tests final : public Test {
 
          auto& rng = Test::rng();
 
-         for(auto id : Botan::PCurve::PrimeOrderCurveId::all()) {
-            Test::Result result("Pcurves point operations " + id.to_string());
+         for(auto curve_id : Botan::PCurve::PrimeOrderCurveId::all()) {
+            Test::Result result("Pcurves point operations " + curve_id.to_string());
 
             result.start_timer();
 
-            auto curve = Botan::PCurve::PrimeOrderCurve::from_id(id);
+            auto curve = Botan::PCurve::PrimeOrderCurve::from_id(curve_id);
 
             if(!curve) {
-               result.test_note("Skipping test due to missing pcurve " + id.to_string());
+               result.test_note("Skipping test due to missing pcurve " + curve_id.to_string());
                continue;
             }
 
@@ -123,39 +123,34 @@ class Pcurve_Arithmetic_Tests final : public Test {
             const auto g = curve->generator();
             const auto g_bytes = g.serialize();
 
-            const auto inf = curve->mul_by_g(zero, rng);
-            result.confirm("g*zero is point at infinity", inf.to_affine().is_identity());
+            const auto id = curve->mul_by_g(zero, rng);
+            result.confirm("g*zero is point at identity", id.to_affine().is_identity());
 
-            std::vector<uint8_t> inf_bytes(g_bytes.size());
-            inf_bytes[0] = 0x04;
+            const auto id2 = id.dbl();
+            result.confirm("identity * 2 is identity", id2.to_affine().is_identity());
 
-            result.test_eq("infinity has expected encoding", inf.to_affine().serialize(), inf_bytes);
-
-            const auto inf2 = inf.dbl();
-            result.test_eq("infinity * 2 is infinity", inf2.to_affine().serialize(), inf_bytes);
-
-            const auto inf3 = inf2 + inf;
-            result.test_eq("infinity plus itself is infinity", inf3.to_affine().serialize(), inf_bytes);
+            const auto id3 = id2 + id;
+            result.confirm("identity plus itself is identity", id3.to_affine().is_identity());
 
             const auto g_one = curve->mul_by_g(one, rng);
             result.test_eq("g*one == generator", g_one.to_affine().serialize(), g_bytes);
 
-            const auto g_plus_inf = g_one + inf;
-            result.test_eq("g + inf == g", g_plus_inf.to_affine().serialize(), g_bytes);
+            const auto g_plus_id = g_one + id;
+            result.test_eq("g + id == g", g_plus_id.to_affine().serialize(), g_bytes);
 
-            const auto g_plus_infa = g_one + inf.to_affine();
-            result.test_eq("g + inf (affine) == g", g_plus_infa.to_affine().serialize(), g_bytes);
+            const auto g_plus_ida = g_one + id.to_affine();
+            result.test_eq("g + id (affine) == g", g_plus_ida.to_affine().serialize(), g_bytes);
 
-            const auto inf_plus_g = inf + g_one;
-            result.test_eq("inf + g == g", inf_plus_g.to_affine().serialize(), g_bytes);
+            const auto id_plus_g = id + g_one;
+            result.test_eq("id + g == g", id_plus_g.to_affine().serialize(), g_bytes);
 
-            const auto inf_plus_ga = inf + g_one.to_affine();
-            result.test_eq("inf + g (affine) == g", inf_plus_ga.to_affine().serialize(), g_bytes);
+            const auto id_plus_ga = id + g_one.to_affine();
+            result.test_eq("id + g (affine) == g", id_plus_ga.to_affine().serialize(), g_bytes);
 
             const auto g_neg_one = curve->mul_by_g(one.negate(), rng).to_affine();
 
-            const auto inf_from_g = g_one + g_neg_one;
-            result.test_eq("g - g is infinity", inf_from_g.to_affine().serialize(), inf_bytes);
+            const auto id_from_g = g_one + g_neg_one;
+            result.confirm("g - g is identity", id_from_g.to_affine().is_identity());
 
             const auto g_two = curve->mul_by_g(one + one, rng);
             const auto g_plus_g = g_one + g_one;

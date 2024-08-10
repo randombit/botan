@@ -28,7 +28,11 @@ enum class EC_Point_Format {
 };
 
 /**
-* This class represents one point on a curve of GF(p)
+* Deprecated elliptic curve type
+*
+* Use EC_AffinePoint in new code
+*
+* This type will be removed/hidden in Botan4
 */
 class BOTAN_PUBLIC_API(2, 0) EC_Point final {
    public:

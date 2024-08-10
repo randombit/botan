@@ -14,6 +14,8 @@
 
 namespace Botan {
 
+EC_Group_Data::~EC_Group_Data() = default;
+
 EC_Group_Data::EC_Group_Data(const BigInt& p,
                              const BigInt& a,
                              const BigInt& b,

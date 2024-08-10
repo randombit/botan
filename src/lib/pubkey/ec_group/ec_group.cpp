@@ -18,7 +18,6 @@
 #include <botan/rng.h>
 #include <botan/internal/ec_inner_data.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/point_mul.h>
 #include <botan/internal/primality.h>
 #include <vector>
 
@@ -444,6 +443,10 @@ const BigInt& EC_Group::get_b() const {
    return data().b();
 }
 
+const EC_Point& EC_Group::get_base_point() const {
+   return data().base_point();
+}
+
 const EC_Point& EC_Group::generator() const {
    return data().base_point();
 }
@@ -478,33 +481,6 @@ const OID& EC_Group::get_curve_oid() const {
 
 EC_Group_Source EC_Group::source() const {
    return data().source();
-}
-
-size_t EC_Group::point_size(EC_Point_Format format) const {
-   // Hybrid and standard format are (x,y), compressed is y, +1 format byte
-   if(format == EC_Point_Format::Compressed) {
-      return (1 + get_p_bytes());
-   } else {
-      return (1 + 2 * get_p_bytes());
-   }
-}
-
-EC_Point EC_Group::OS2ECP(const uint8_t bits[], size_t len) const {
-   return Botan::OS2ECP(bits, len, data().curve());
-}
-
-EC_Point EC_Group::point(const BigInt& x, const BigInt& y) const {
-   // TODO: randomize the representation?
-   return EC_Point(data().curve(), x, y);
-}
-
-EC_Point EC_Group::point_multiply(const BigInt& x, const EC_Point& pt, const BigInt& y) const {
-   EC_Point_Multi_Point_Precompute xy_mul(get_base_point(), pt);
-   return xy_mul.multi_exp(x, y);
-}
-
-EC_Point EC_Group::zero_point() const {
-   return EC_Point(data().curve());
 }
 
 std::vector<uint8_t> EC_Group::DER_encode() const {

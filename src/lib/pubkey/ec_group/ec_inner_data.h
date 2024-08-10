@@ -70,6 +70,9 @@ class EC_AffinePoint_Data {
       // Return size of a field element
       virtual size_t field_element_bytes() const = 0;
 
+      // Return if this is the identity element
+      virtual bool is_identity() const = 0;
+
       // Writes 1 field element worth of data to bytes
       virtual void serialize_x_to(std::span<uint8_t> bytes) const = 0;
 
@@ -119,6 +122,8 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
                     const BigInt& cofactor,
                     const OID& oid,
                     EC_Group_Source source);
+
+      ~EC_Group_Data();
 
       bool params_match(const BigInt& p,
                         const BigInt& a,
