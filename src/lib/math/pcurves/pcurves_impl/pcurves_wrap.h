@@ -195,7 +195,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
 
       void serialize_point_x(std::span<uint8_t> bytes, const AffinePoint& pt) const override {
          BOTAN_ARG_CHECK(bytes.size() == C::FieldElement::BYTES, "Invalid length for serialize_point_x");
-         from_stash(pt).x().serialize_to(bytes.subspan<0, C::FieldElement::BYTES>());
+         from_stash(pt).serialize_x_to(bytes.subspan<0, C::FieldElement::BYTES>());
       }
 
       void serialize_scalar(std::span<uint8_t> bytes, const Scalar& scalar) const override {

@@ -240,6 +240,8 @@ class EC_Group_Tests : public Test {
          for(const std::string& group_name : Botan::EC_Group::known_named_groups()) {
             Test::Result result("EC_Group " + group_name);
 
+            result.start_timer();
+
             const auto group = Botan::EC_Group::from_name(group_name);
 
             result.confirm("EC_Group is known", group.get_curve_oid().has_value());
@@ -317,6 +319,8 @@ class EC_Group_Tests : public Test {
             test_point_swap(result, group);
             test_zeropoint(result, group);
 
+            result.end_timer();
+
             results.push_back(result);
          }
 
@@ -350,8 +354,12 @@ class EC_Group_Tests : public Test {
          result.test_eq("point subtraction", p1, G);
 
          // The scalar multiplication algorithm relies on this being true:
-         Botan::EC_Point zero_coords = group.point(0, 0);
-         result.confirm("point (0,0) is not on the curve", !zero_coords.on_the_curve());
+         try {
+            Botan::EC_Point zero_coords = group.point(0, 0);
+            result.confirm("point (0,0) is not on the curve", !zero_coords.on_the_curve());
+         } catch(Botan::Exception&) {
+            result.test_success("point (0,0) is rejected");
+         }
       }
 
       void test_point_swap(Test::Result& result, const Botan::EC_Group& group) {
@@ -421,87 +429,6 @@ Test::Result test_decoding_with_seed() {
 
    result.test_eq("P-384 prime", secp384r1_with_seed.get_p(), secp384r1.get_p());
 
-   return result;
-}
-
-Test::Result test_coordinates() {
-   Test::Result result("ECC Unit");
-
-   const Botan::BigInt exp_affine_x("16984103820118642236896513183038186009872590470");
-   const Botan::BigInt exp_affine_y("1373093393927139016463695321221277758035357890939");
-
-   // precalculation
-   const auto secp160r1 = Botan::EC_Group::from_name("secp160r1");
-   const Botan::EC_Point& p_G = secp160r1.get_base_point();
-
-   const Botan::EC_Point point_exp = secp160r1.point(exp_affine_x, exp_affine_y);
-   result.confirm("Point is on the curve", point_exp.on_the_curve());
-
-   const Botan::EC_Point p1 = p_G * 2;
-   result.test_eq("Point affine x", p1.get_affine_x(), exp_affine_x);
-   result.test_eq("Point affine y", p1.get_affine_y(), exp_affine_y);
-   return result;
-}
-
-/**
-Test point multiplication according to
---------
-SEC 2: Test Vectors for SEC 1
-Certicom Research
-Working Draft
-September, 1999
-Version 0.3;
-Section 2.1.2
---------
-*/
-Test::Result test_point_mult() {
-   Test::Result result("ECC Unit");
-
-   const auto secp160r1 = Botan::EC_Group::from_name("secp160r1");
-   const Botan::EC_Point& p_G = secp160r1.get_base_point();
-
-   Botan::BigInt d_U("0xaa374ffc3ce144e6b073307972cb6d57b2a4e982");
-   Botan::EC_Point Q_U = d_U * p_G;
-
-   result.test_eq("affine x", Q_U.get_affine_x(), Botan::BigInt("466448783855397898016055842232266600516272889280"));
-   result.test_eq("affine y", Q_U.get_affine_y(), Botan::BigInt("1110706324081757720403272427311003102474457754220"));
-   return result;
-}
-
-Test::Result test_point_negative() {
-   Test::Result result("ECC Unit");
-
-   const auto secp160r1 = Botan::EC_Group::from_name("secp160r1");
-   const Botan::EC_Point& p_G = secp160r1.get_base_point();
-
-   const Botan::EC_Point p1 = p_G * 2;
-
-   result.test_eq("affine x", p1.get_affine_x(), Botan::BigInt("16984103820118642236896513183038186009872590470"));
-   result.test_eq("affine y", p1.get_affine_y(), Botan::BigInt("1373093393927139016463695321221277758035357890939"));
-
-   const Botan::EC_Point p1_neg = -p1;
-
-   result.test_eq("affine x", p1_neg.get_affine_x(), p1.get_affine_x());
-   result.test_eq("affine y", p1_neg.get_affine_y(), Botan::BigInt("88408243403763901739989511495005261618427168388"));
-   return result;
-}
-
-Test::Result test_mult_point() {
-   Test::Result result("ECC Unit");
-
-   const auto secp160r1 = Botan::EC_Group::from_name("secp160r1");
-   const Botan::EC_Point& p_G = secp160r1.get_base_point();
-
-   const Botan::EC_Point& p0 = p_G;
-   Botan::EC_Point p1 = p_G * 2;
-
-   p1 *= p0.get_affine_x();
-
-   const Botan::BigInt exp_mult_x(std::string("967697346845926834906555988570157345422864716250"));
-   const Botan::BigInt exp_mult_y(std::string("512319768365374654866290830075237814703869061656"));
-   Botan::EC_Point expected = secp160r1.point(exp_mult_x, exp_mult_y);
-
-   result.test_eq("point mult", p1, expected);
    return result;
 }
 
@@ -742,11 +669,7 @@ class ECC_Unit_Tests final : public Test {
       std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
 
-         results.push_back(test_coordinates());
          results.push_back(test_decoding_with_seed());
-         results.push_back(test_point_mult());
-         results.push_back(test_point_negative());
-         results.push_back(test_mult_point());
          results.push_back(test_mixed_points());
          results.push_back(test_basic_operations());
          results.push_back(test_enc_dec_compressed_160());

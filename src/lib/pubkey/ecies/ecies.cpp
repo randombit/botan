@@ -301,8 +301,21 @@ ECIES_Decryptor::ECIES_Decryptor(const PK_Key_Agreement_Key& key,
    m_cipher = m_params.create_cipher(Cipher_Dir::Decryption);
 }
 
+namespace {
+
+size_t compute_point_size(const EC_Group& group, EC_Point_Format format) {
+   const size_t fe_bytes = group.get_p_bytes();
+   if(format == EC_Point_Format::Compressed) {
+      return 1 + fe_bytes;
+   } else {
+      return 1 + 2 * fe_bytes;
+   }
+}
+
+}  // namespace
+
 size_t ECIES_Decryptor::plaintext_length(size_t ctext_len) const {
-   const size_t point_size = m_params.domain().point_size(m_params.compression_type());
+   const size_t point_size = compute_point_size(m_params.domain(), m_params.compression_type());
    const size_t overhead = point_size + m_mac->output_length();
 
    if(ctext_len < overhead) {
@@ -316,7 +329,7 @@ size_t ECIES_Decryptor::plaintext_length(size_t ctext_len) const {
 * ECIES Decryption according to ISO 18033-2
 */
 secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const uint8_t in[], size_t in_len) const {
-   const size_t point_size = m_params.domain().point_size(m_params.compression_type());
+   const size_t point_size = compute_point_size(m_params.domain(), m_params.compression_type());
 
    if(in_len < point_size + m_mac->output_length()) {
       throw Decoding_Error("ECIES decryption: ciphertext is too short");

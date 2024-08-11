@@ -224,24 +224,12 @@ class ECDSA_Invalid_Key_Tests final : public Text_Based_Test {
          const Botan::BigInt x = vars.get_req_bn("InvalidKeyX");
          const Botan::BigInt y = vars.get_req_bn("InvalidKeyY");
 
-         std::unique_ptr<Botan::EC_Point> public_point;
-
-         try {
-            public_point = std::make_unique<Botan::EC_Point>(group.point(x, y));
-         } catch(Botan::Invalid_Argument&) {
-            // EC_Point() performs a range check on x, y in [0, p−1],
-            // which is also part of the EC public key checks, e.g.,
-            // in NIST SP800-56A rev2, sec. 5.6.2.3.2
-            result.test_success("public key fails check");
-            return result;
-         }
-
-         try {
-            auto key = std::make_unique<Botan::ECDSA_PublicKey>(group, *public_point);
+         if(auto pt = Botan::EC_AffinePoint::from_bigint_xy(group, x, y)) {
             result.test_failure("Invalid public key was deserialized");
-         } catch(Botan::Decoding_Error&) {
-            result.test_success("public key fails to deserialize");
+         } else {
+            result.test_success("Invalid public key was rejected");
          }
+
          return result;
       }
 };

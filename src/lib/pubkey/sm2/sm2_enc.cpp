@@ -110,7 +110,6 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
       }
 
       secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) override {
-         const BigInt& cofactor = m_group.get_cofactor();
          const size_t p_bytes = m_group.get_p_bytes();
 
          valid_mask = 0x00;
@@ -149,18 +148,14 @@ class SM2_Decryption_Operation final : public PK_Ops::Decryption {
             return secure_vector<uint8_t>();
          }
 
-         EC_Point C1 = m_group.point(x1, y1);
+         auto C1 = EC_AffinePoint::from_bigint_xy(m_group, x1, y1);
 
          // Here C1 is publically invalid, so no problem with early return:
-         if(!C1.on_the_curve()) {
+         if(!C1) {
             return secure_vector<uint8_t>();
          }
 
-         if(cofactor > 1 && (C1 * cofactor).is_zero()) {
-            return secure_vector<uint8_t>();
-         }
-
-         const auto dbC1 = EC_AffinePoint(m_group, C1).mul(m_x, m_rng, m_ws);
+         const auto dbC1 = C1->mul(m_x, m_rng, m_ws);
          const auto x2_bytes = dbC1.x_bytes();
          const auto y2_bytes = dbC1.y_bytes();
 

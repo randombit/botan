@@ -42,8 +42,38 @@ EC_AffinePoint::EC_AffinePoint(const EC_Group& group, std::span<const uint8_t> b
 EC_AffinePoint::EC_AffinePoint(const EC_Group& group, const EC_Point& pt) :
       EC_AffinePoint(group, pt.encode(EC_Point_Format::Uncompressed)) {}
 
+EC_AffinePoint EC_AffinePoint::identity(const EC_Group& group) {
+   const uint8_t id_encoding[1] = {0};
+   return EC_AffinePoint(group, id_encoding);
+}
+
+EC_AffinePoint EC_AffinePoint::generator(const EC_Group& group) {
+   return EC_AffinePoint(group, group.get_base_point());
+}
+
+std::optional<EC_AffinePoint> EC_AffinePoint::from_bigint_xy(const EC_Group& group, const BigInt& x, const BigInt& y) {
+   if(x.is_negative() || x >= group.get_p()) {
+      return {};
+   }
+   if(y.is_negative() || y >= group.get_p()) {
+      return {};
+   }
+
+   const size_t fe_bytes = group.get_p_bytes();
+   std::vector<uint8_t> sec1(1 + 2 * fe_bytes);
+   sec1[0] = 0x04;
+   x.serialize_to(std::span{sec1}.subspan(1, fe_bytes));
+   y.serialize_to(std::span{sec1}.last(fe_bytes));
+
+   return EC_AffinePoint::deserialize(group, sec1);
+}
+
 size_t EC_AffinePoint::field_element_bytes() const {
    return inner().field_element_bytes();
+}
+
+bool EC_AffinePoint::is_identity() const {
+   return inner().is_identity();
 }
 
 EC_AffinePoint EC_AffinePoint::hash_to_curve_ro(const EC_Group& group,
@@ -82,22 +112,27 @@ EC_AffinePoint EC_AffinePoint::mul(const EC_Scalar& scalar, RandomNumberGenerato
 }
 
 void EC_AffinePoint::serialize_x_to(std::span<uint8_t> bytes) const {
+   BOTAN_STATE_CHECK(!this->is_identity());
    m_point->serialize_x_to(bytes);
 }
 
 void EC_AffinePoint::serialize_y_to(std::span<uint8_t> bytes) const {
+   BOTAN_STATE_CHECK(!this->is_identity());
    m_point->serialize_y_to(bytes);
 }
 
 void EC_AffinePoint::serialize_xy_to(std::span<uint8_t> bytes) const {
+   BOTAN_STATE_CHECK(!this->is_identity());
    m_point->serialize_xy_to(bytes);
 }
 
 void EC_AffinePoint::serialize_compressed_to(std::span<uint8_t> bytes) const {
+   BOTAN_STATE_CHECK(!this->is_identity());
    m_point->serialize_compressed_to(bytes);
 }
 
 void EC_AffinePoint::serialize_uncompressed_to(std::span<uint8_t> bytes) const {
+   BOTAN_STATE_CHECK(!this->is_identity());
    m_point->serialize_uncompressed_to(bytes);
 }
 

@@ -74,8 +74,6 @@ EC_AffinePoint_Data_BN::EC_AffinePoint_Data_BN(std::shared_ptr<const EC_Group_Da
    if(!m_pt.is_zero()) {
       m_pt.force_affine();
       m_xy = m_pt.xy_bytes();
-   } else {
-      m_xy.resize(1 + 2 * this->field_element_bytes());
    }
 }
 
@@ -84,7 +82,9 @@ EC_AffinePoint_Data_BN::EC_AffinePoint_Data_BN(std::shared_ptr<const EC_Group_Da
       m_group(std::move(group)) {
    BOTAN_ASSERT_NONNULL(m_group);
    m_pt = Botan::OS2ECP(pt.data(), pt.size(), m_group->curve());
-   m_xy = m_pt.xy_bytes();
+   if(!m_pt.is_zero()) {
+      m_xy = m_pt.xy_bytes();
+   }
 }
 
 std::unique_ptr<EC_AffinePoint_Data> EC_AffinePoint_Data_BN::clone() const {
@@ -114,28 +114,36 @@ std::unique_ptr<EC_AffinePoint_Data> EC_AffinePoint_Data_BN::mul(const EC_Scalar
 }
 
 size_t EC_AffinePoint_Data_BN::field_element_bytes() const {
-   return m_xy.size() / 2;
+   return m_group->p_bytes();
+}
+
+bool EC_AffinePoint_Data_BN::is_identity() const {
+   return m_xy.empty();
 }
 
 void EC_AffinePoint_Data_BN::serialize_x_to(std::span<uint8_t> bytes) const {
+   BOTAN_STATE_CHECK(!this->is_identity());
    const size_t fe_bytes = this->field_element_bytes();
    BOTAN_ARG_CHECK(bytes.size() == fe_bytes, "Invalid output size");
    copy_mem(bytes, std::span{m_xy}.first(fe_bytes));
 }
 
 void EC_AffinePoint_Data_BN::serialize_y_to(std::span<uint8_t> bytes) const {
+   BOTAN_STATE_CHECK(!this->is_identity());
    const size_t fe_bytes = this->field_element_bytes();
    BOTAN_ARG_CHECK(bytes.size() == fe_bytes, "Invalid output size");
    copy_mem(bytes, std::span{m_xy}.last(fe_bytes));
 }
 
 void EC_AffinePoint_Data_BN::serialize_xy_to(std::span<uint8_t> bytes) const {
+   BOTAN_STATE_CHECK(!this->is_identity());
    const size_t fe_bytes = this->field_element_bytes();
    BOTAN_ARG_CHECK(bytes.size() == 2 * fe_bytes, "Invalid output size");
    copy_mem(bytes, m_xy);
 }
 
 void EC_AffinePoint_Data_BN::serialize_compressed_to(std::span<uint8_t> bytes) const {
+   BOTAN_STATE_CHECK(!this->is_identity());
    const size_t fe_bytes = this->field_element_bytes();
    BOTAN_ARG_CHECK(bytes.size() == 1 + fe_bytes, "Invalid output size");
    const bool y_is_odd = (m_xy[m_xy.size() - 1] & 0x01) == 0x01;
@@ -146,6 +154,7 @@ void EC_AffinePoint_Data_BN::serialize_compressed_to(std::span<uint8_t> bytes) c
 }
 
 void EC_AffinePoint_Data_BN::serialize_uncompressed_to(std::span<uint8_t> bytes) const {
+   BOTAN_STATE_CHECK(!this->is_identity());
    const size_t fe_bytes = this->field_element_bytes();
    BOTAN_ARG_CHECK(bytes.size() == 1 + 2 * fe_bytes, "Invalid output size");
    BufferStuffer stuffer(bytes);

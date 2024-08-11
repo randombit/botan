@@ -102,10 +102,14 @@ int pubkey_load_ec(std::unique_ptr<ECPublicKey_t>& key,
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
-   const auto grp = Botan::EC_Group::from_name(curve_name);
-   Botan::EC_Point uncompressed_point = grp.point(public_x, public_y);
-   key.reset(new ECPublicKey_t(grp, uncompressed_point));
-   return BOTAN_FFI_SUCCESS;
+   const auto group = Botan::EC_Group::from_name(curve_name);
+
+   if(auto pt = Botan::EC_AffinePoint::from_bigint_xy(group, public_x, public_y)) {
+      key.reset(new ECPublicKey_t(group, pt->to_legacy_point()));
+      return BOTAN_FFI_SUCCESS;
+   } else {
+      return BOTAN_FFI_ERROR_BAD_PARAMETER;
+   }
 }
 
 #endif

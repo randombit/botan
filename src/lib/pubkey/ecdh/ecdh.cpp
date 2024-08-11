@@ -53,8 +53,7 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 
          if(group.has_cofactor()) {
             // We could precompute this but cofactors are rare
-            auto l = group.inverse_mod_order(group.get_cofactor());
-            return x * EC_Scalar::from_bigint(group, l);
+            return x * EC_Scalar::from_bigint(group, group.get_cofactor()).invert();
          } else {
             return x;
          }

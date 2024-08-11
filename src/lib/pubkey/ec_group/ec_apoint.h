@@ -38,10 +38,22 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
       /// This accepts SEC1 compressed or uncompressed formats
       static std::optional<EC_AffinePoint> deserialize(const EC_Group& group, std::span<const uint8_t> bytes);
 
+      /// Create a point from a pair (x,y) of integers
+      ///
+      /// The integers must be within the field - in the range [0,p) and must
+      /// satisfy the curve equation
+      static std::optional<EC_AffinePoint> from_bigint_xy(const EC_Group& group, const BigInt& x, const BigInt& y);
+
       /// Multiply by the group generator returning a complete point
       ///
       /// Workspace argument is transitional
       static EC_AffinePoint g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws);
+
+      /// Return the identity element
+      static EC_AffinePoint identity(const EC_Group& group);
+
+      /// Return the standard group generator
+      static EC_AffinePoint generator(const EC_Group& group);
 
       /// Hash to curve (RFC 9380), random oracle variant
       ///
@@ -69,32 +81,47 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
       /// A point consists of two field elements, plus possibly a header
       size_t field_element_bytes() const;
 
+      /// Return true if this point is the identity element
+      bool is_identity() const;
+
       /// Write the fixed length encoding of affine x coordinate
       ///
       /// The output span must be exactly field_element_bytes long
+      ///
+      /// This function will fail if this point is the identity element
       void serialize_x_to(std::span<uint8_t> bytes) const;
 
       /// Write the fixed length encoding of affine y coordinate
       ///
       /// The output span must be exactly field_element_bytes long
+      ///
+      /// This function will fail if this point is the identity element
       void serialize_y_to(std::span<uint8_t> bytes) const;
 
       /// Write the fixed length encoding of affine x and y coordinates
       ///
       /// The output span must be exactly 2*field_element_bytes long
+      ///
+      /// This function will fail if this point is the identity element
       void serialize_xy_to(std::span<uint8_t> bytes) const;
 
       /// Write the fixed length SEC1 compressed encoding
       ///
       /// The output span must be exactly 1 + field_element_bytes long
+      ///
+      /// This function will fail if this point is the identity element
       void serialize_compressed_to(std::span<uint8_t> bytes) const;
 
       /// Return the fixed length encoding of SEC1 uncompressed encoding
       ///
       /// The output span must be exactly 1 + 2*field_element_bytes long
+      ///
+      /// This function will fail if this point is the identity element
       void serialize_uncompressed_to(std::span<uint8_t> bytes) const;
 
       /// Return the bytes of the affine x coordinate in a container
+      ///
+      /// This function will fail if this point is the identity element
       template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
       T x_bytes() const {
          T bytes(this->field_element_bytes());
@@ -103,6 +130,8 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
       }
 
       /// Return the bytes of the affine y coordinate in a container
+      ///
+      /// This function will fail if this point is the identity element
       template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
       T y_bytes() const {
          T bytes(this->field_element_bytes());
@@ -111,6 +140,8 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
       }
 
       /// Return the bytes of the affine x and y coordinates in a container
+      ///
+      /// This function will fail if this point is the identity element
       template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
       T xy_bytes() const {
          T bytes(2 * this->field_element_bytes());
@@ -119,6 +150,8 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
       }
 
       /// Return the bytes of the affine x and y coordinates in a container
+      ///
+      /// This function will fail if this point is the identity element
       template <concepts::resizable_byte_buffer T = std::vector<uint8_t>>
       T serialize_uncompressed() const {
          T bytes(1 + 2 * this->field_element_bytes());
@@ -127,6 +160,8 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
       }
 
       /// Return the bytes of the affine x and y coordinates in a container
+      ///
+      /// This function will fail if this point is the identity element
       template <concepts::resizable_byte_buffer T = std::vector<uint8_t>>
       T serialize_compressed() const {
          T bytes(1 + this->field_element_bytes());

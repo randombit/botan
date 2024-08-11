@@ -296,6 +296,8 @@ class Choice final {
 
       constexpr Choice operator!=(const Choice& other) const { return Choice(value() ^ other.value()); }
 
+      constexpr Choice operator==(const Choice& other) const { return !(*this != other); }
+
       /**
       * Unsafe conversion to bool
       *

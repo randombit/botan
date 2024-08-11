@@ -67,6 +67,8 @@ class EC_AffinePoint_Data_PC final : public EC_AffinePoint_Data {
 
       size_t field_element_bytes() const override;
 
+      bool is_identity() const override;
+
       void serialize_x_to(std::span<uint8_t> bytes) const override;
 
       void serialize_y_to(std::span<uint8_t> bytes) const override;
@@ -88,9 +90,7 @@ class EC_AffinePoint_Data_PC final : public EC_AffinePoint_Data {
    private:
       std::shared_ptr<const EC_Group_Data> m_group;
       PCurve::PrimeOrderCurve::AffinePoint m_pt;
-      secure_vector<uint8_t> m_bytes;
-      std::span<uint8_t> m_x_bytes;  // points to m_bytes[1..1+fe_len]
-      std::span<uint8_t> m_y_bytes;  // points to m_bytes[1+fe_len..1+2*fe_len]
+      secure_vector<uint8_t> m_xy;  // empty if point is identity
 };
 
 class EC_Mul2Table_Data_PC final : public EC_Mul2Table_Data {
