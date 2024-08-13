@@ -28,10 +28,10 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       /**
        * Base enumerator for encoding and decoding
        */
-      enum BOTAN_DEPRECATED("All functions using this enum are deprecated") Base {
-         Decimal = 10,
-         Hexadecimal = 16,
-         Binary = 256
+      enum Base {
+         Decimal BOTAN_DEPRECATED("All functions using this enum are deprecated") = 10,
+         Hexadecimal BOTAN_DEPRECATED("All functions using this enum are deprecated") = 16,
+         Binary BOTAN_DEPRECATED("All functions using this enum are deprecated") = 256
       };
 
       /**
