@@ -288,6 +288,8 @@ class BOTAN_PUBLIC_API(3, 0) Session_Summary : public Session_Base {
 
       std::string kex_algo() const { return m_kex_algo; }
 
+      const std::optional<std::string>& kex_parameters() const { return m_kex_parameters; }
+
       std::string cipher_algo() const { return ciphersuite().cipher_algo(); }
 
       std::string mac_algo() const { return ciphersuite().mac_algo(); }
@@ -324,6 +326,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Summary : public Session_Base {
 
       bool m_was_resumption;
       std::string m_kex_algo;
+      std::optional<std::string> m_kex_parameters;
 };
 
 /**
