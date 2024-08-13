@@ -168,11 +168,33 @@ constexpr bool native_endianness_is_unknown() {
 }
 
 /**
+ * Models a custom type that provides factory methods to be loaded in big- or
+ * little-endian byte order.
+ */
+template <typename T>
+concept custom_loadable = requires(std::span<const uint8_t, sizeof(T)> data) {
+   { T::load_be(data) } -> std::same_as<T>;
+   { T::load_le(data) } -> std::same_as<T>;
+};
+
+/**
+ * Models a custom type that provides store methods to be stored in big- or
+ * little-endian byte order.
+ */
+template <typename T>
+concept custom_storable = requires(std::span<uint8_t, sizeof(T)> data, const T value) {
+   { value.store_be(data) };
+   { value.store_le(data) };
+};
+
+/**
  * Models a type that can be loaded/stored from/to a byte range.
  */
 template <typename T>
-concept unsigned_integralish = std::unsigned_integral<strong_type_wrapped_type<T>> ||
-                               (std::is_enum_v<T> && std::unsigned_integral<std::underlying_type_t<T>>);
+concept unsigned_integralish =
+   std::unsigned_integral<strong_type_wrapped_type<T>> ||
+   (std::is_enum_v<T> && std::unsigned_integral<std::underlying_type_t<T>>) ||
+   (custom_loadable<strong_type_wrapped_type<T>> || custom_storable<strong_type_wrapped_type<T>>);
 
 template <typename T>
 struct wrapped_type_helper_with_enum {
@@ -276,6 +298,7 @@ inline constexpr void fallback_store_any(InT in, OutR&& out_range) {
  * @return T loaded from @p in_range, as a big-endian value
  */
 template <Endianness endianness, unsigned_integralish WrappedOutT, ranges::contiguous_range<uint8_t> InR>
+   requires(!custom_loadable<strong_type_wrapped_type<WrappedOutT>>)
 inline constexpr WrappedOutT load_any(InR&& in_range) {
    using OutT = detail::wrapped_type<WrappedOutT>;
    ranges::assert_exact_byte_length<sizeof(OutT)>(in_range);
@@ -300,6 +323,28 @@ inline constexpr WrappedOutT load_any(InR&& in_range) {
          }
       }
    }());
+}
+
+/**
+ * Load a custom object from a range in either big or little endian byte order
+ *
+ * This is the base implementation for custom objects (e.g. SIMD type wrappres),
+ * all other overloads are just convenience overloads.
+ *
+ * @param in_range a fixed-length byte range
+ * @return T loaded from @p in_range, as a big-endian value
+ */
+template <Endianness endianness, unsigned_integralish WrappedOutT, ranges::contiguous_range<uint8_t> InR>
+   requires(custom_loadable<strong_type_wrapped_type<WrappedOutT>>)
+inline constexpr WrappedOutT load_any(InR&& in_range) {
+   using OutT = detail::wrapped_type<WrappedOutT>;
+   ranges::assert_exact_byte_length<sizeof(OutT)>(in_range);
+   std::span<const uint8_t, sizeof(OutT)> ins{in_range};
+   if constexpr(endianness == Endianness::Big) {
+      return wrap_strong_type<WrappedOutT>(OutT::load_be(ins));
+   } else {
+      return wrap_strong_type<WrappedOutT>(OutT::load_le(ins));
+   }
 }
 
 /**
@@ -335,9 +380,9 @@ template <Endianness endianness,
             (std::same_as<AutoDetect, OutT> || std::same_as<OutT, std::ranges::range_value_t<OutR>>))
 inline constexpr void load_any(OutR&& out, InR&& in) {
    ranges::assert_equal_byte_lengths(out, in);
+   using element_type = std::ranges::range_value_t<OutR>;
 
    auto load_elementwise = [&] {
-      using element_type = std::ranges::range_value_t<OutR>;
       constexpr size_t bytes_per_element = sizeof(element_type);
       std::span<const uint8_t> in_s(in);
       for(auto& out_elem : out) {
@@ -352,7 +397,7 @@ inline constexpr void load_any(OutR&& out, InR&& in) {
    if(std::is_constant_evaluated()) /* TODO: C++23: if consteval {} */ {
       load_elementwise();
    } else {
-      if constexpr(is_native(endianness)) {
+      if constexpr(is_native(endianness) && !custom_loadable<element_type>) {
          typecast_copy(out, in);
       } else {
          load_elementwise();
@@ -502,6 +547,7 @@ namespace detail {
  * @param out_range  a byte range to store the word into
  */
 template <Endianness endianness, unsigned_integralish WrappedInT, ranges::contiguous_output_range<uint8_t> OutR>
+   requires(!custom_storable<strong_type_wrapped_type<WrappedInT>>)
 inline constexpr void store_any(WrappedInT wrapped_in, OutR&& out_range) {
    const auto in = detail::unwrap_strong_type_or_enum(wrapped_in);
    using InT = decltype(in);
@@ -524,6 +570,29 @@ inline constexpr void store_any(WrappedInT wrapped_in, OutR&& out_range) {
          static_assert(native_endianness_is_unknown<endianness>());
          return fallback_store_any<endianness, InT>(in, std::forward<OutR>(out_range));
       }
+   }
+}
+
+/**
+ * Store a custom word in either big or little endian byte order into a range
+ *
+ * This is the base implementation for storing custom objects, all other
+ * overloads are just convenience overloads.
+ *
+ * @param wrapped_in a custom object to be stored
+ * @param out_range  a byte range to store the word into
+ */
+template <Endianness endianness, unsigned_integralish WrappedInT, ranges::contiguous_output_range<uint8_t> OutR>
+   requires(custom_storable<strong_type_wrapped_type<WrappedInT>>)
+inline constexpr void store_any(WrappedInT wrapped_in, OutR&& out_range) {
+   const auto in = detail::unwrap_strong_type_or_enum(wrapped_in);
+   using InT = decltype(in);
+   ranges::assert_exact_byte_length<sizeof(in)>(out_range);
+   std::span<uint8_t, sizeof(InT)> outs{out_range};
+   if constexpr(endianness == Endianness::Big) {
+      in.store_be(outs);
+   } else {
+      in.store_le(outs);
    }
 }
 
@@ -561,9 +630,9 @@ template <Endianness endianness,
    requires(std::same_as<AutoDetect, InT> || std::same_as<InT, std::ranges::range_value_t<InR>>)
 inline constexpr void store_any(OutR&& out, InR&& in) {
    ranges::assert_equal_byte_lengths(out, in);
+   using element_type = std::ranges::range_value_t<InR>;
 
    auto store_elementwise = [&] {
-      using element_type = std::ranges::range_value_t<InR>;
       constexpr size_t bytes_per_element = sizeof(element_type);
       std::span<uint8_t> out_s(out);
       for(auto in_elem : in) {
@@ -578,7 +647,7 @@ inline constexpr void store_any(OutR&& out, InR&& in) {
    if(std::is_constant_evaluated()) /* TODO: C++23: if consteval {} */ {
       store_elementwise();
    } else {
-      if constexpr(is_native(endianness)) {
+      if constexpr(is_native(endianness) && !custom_storable<element_type>) {
          typecast_copy(out, in);
       } else {
          store_elementwise();
