@@ -169,7 +169,9 @@ std::vector<Group_Params> Policy::key_exchange_groups() const {
 
       Group_Params::SECP256R1,
 
+#if defined(BOTAN_HAS_X25519) && defined(BOTAN_HAS_KYBER_ROUND3) && defined(BOTAN_HAS_TLS_13_PQC)
       Group_Params::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE,
+#endif
 
 #if defined(BOTAN_HAS_X448)
       Group_Params::X448,
