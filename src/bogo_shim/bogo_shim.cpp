@@ -1004,14 +1004,6 @@ class Shim_Policy final : public Botan::TLS::Policy {
                if(group == Botan::TLS::Group_Params::HYBRID_X25519_KYBER_768_R3_OQS) {
                   groups.push_back(group);
                }
-
-               // TODO: once `TLS::Policy::key_exchange_groups()` contains it by
-               //       default, remove this explicit check.
-               //
-               // See: https://github.com/randombit/botan/pull/4305
-               if(group == Botan::TLS::Group_Params::HYBRID_X25519_ML_KEM_768) {
-                  groups.push_back(group);
-               }
             }
 
             return groups;
