@@ -1,15 +1,12 @@
-allow_tls10 = false
-allow_tls11 = false
 allow_tls12 = true
 allow_tls13 = false
-allow_dtls10 = false
 allow_dtls12 = true
 ciphers = ChaCha20Poly1305 AES-256/GCM AES-128/GCM
 macs = AEAD SHA-256 SHA-384 SHA-1
 signature_hashes = SHA-512 SHA-384 SHA-256
 signature_methods = ECDSA RSA
 key_exchange_methods = ECDH DH
-key_exchange_groups = x25519 x448 secp256r1 brainpool256r1 secp384r1 brainpool384r1 secp521r1 brainpool512r1 ffdhe/ietf/2048 ffdhe/ietf/3072 ffdhe/ietf/4096 ffdhe/ietf/6144 ffdhe/ietf/8192
+key_exchange_groups = x25519 secp256r1 x25519/Kyber-512-r3/cloudflare x448 secp384r1 secp521r1 brainpool256r1 brainpool384r1 brainpool512r1 ffdhe/ietf/2048 ffdhe/ietf/3072
 allow_insecure_renegotiation = false
 include_time_in_hello_random = true
 allow_server_initiated_renegotiation = false
