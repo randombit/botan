@@ -40,8 +40,8 @@ void Stateful_RNG::generate_batched_output(std::span<uint8_t> output, std::span<
 
    const size_t max_per_request = max_number_of_bytes_per_request();
 
-   if(max_per_request == 0)  // no limit
-   {
+   if(max_per_request == 0) {
+      // no limit
       reseed_check();
       this->generate_output(output, input);
    } else {

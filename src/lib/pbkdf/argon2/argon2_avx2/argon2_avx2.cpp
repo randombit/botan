@@ -21,11 +21,8 @@ class SIMD_4x64 final {
 
       ~SIMD_4x64() = default;
 
-      BOTAN_FUNC_ISA("avx2")
-      SIMD_4x64()  // zero initialized
-      {
-         m_simd = _mm256_setzero_si256();
-      }
+      // zero initialized
+      BOTAN_FUNC_ISA("avx2") SIMD_4x64() { m_simd = _mm256_setzero_si256(); }
 
       // Load two halves at different addresses
       static BOTAN_FUNC_ISA("avx2") SIMD_4x64 load_le2(const void* inl, const void* inh) {

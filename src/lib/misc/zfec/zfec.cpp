@@ -229,8 +229,8 @@ void create_inverted_vdm(uint8_t vdm[], size_t K) {
       return;
    }
 
-   if(K == 1) /* degenerate case, matrix must be p^0 = 1 */
-   {
+   if(K == 1) {
+      // degenerate case, matrix must be p^0 = 1
       vdm[0] = 1;
       return;
    }
@@ -494,8 +494,8 @@ void ZFEC::decode_shares(const std::map<size_t, const uint8_t*>& shares,
       if(share_id < m_K) {
          decoding_matrix[i * (m_K + 1)] = 1;
          output_cb(share_id, share_data, share_size);
-      } else  // will decode after inverting matrix
-      {
+      } else {
+         // will decode after inverting matrix
          std::memcpy(&decoding_matrix[i * m_K], &m_enc_matrix[share_id * m_K], m_K);
       }
 

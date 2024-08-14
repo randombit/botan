@@ -86,8 +86,7 @@ class SIMD_4x32 final {
       /**
       * Zero initialize SIMD register with 4 32-bit elements
       */
-      SIMD_4x32() noexcept  // zero initialized
-      {
+      SIMD_4x32() noexcept {
 #if defined(BOTAN_SIMD_USE_SSE2)
          m_simd = _mm_setzero_si128();
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)

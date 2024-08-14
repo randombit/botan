@@ -95,8 +95,8 @@ void GOST_34_11::compress_n(const uint8_t input[], size_t blocks) {
          U[2] = U[3];
          U[3] = U[0] ^ A_U;
 
-         if(j == 1)  // C_3
-         {
+         if(j == 1) {
+            // C_3
             U[0] ^= 0x00FF00FF00FF00FF;
             U[1] ^= 0xFF00FF00FF00FF00;
             U[2] ^= 0x00FFFF00FF0000FF;

@@ -209,8 +209,8 @@ void Client_Impl_12::send_client_hello(Handshake_State& state_base,
       }
    }
 
-   if(!state.client_hello())  // not resuming
-   {
+   if(!state.client_hello()) {
+      // not resuming
       Client_Hello_12::Settings client_settings(version, m_info.hostname());
       state.client_hello(new Client_Hello_12(state.handshake_io(),
                                              state.hash(),
