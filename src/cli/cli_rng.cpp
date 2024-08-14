@@ -14,6 +14,10 @@
    #include <botan/auto_rng.h>
 #endif
 
+#if defined(BOTAN_HAS_ESDM_RNG)
+   #include <botan/esdm_rng.h>
+#endif
+
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    #include <botan/system_rng.h>
 #endif
@@ -33,6 +37,15 @@ std::shared_ptr<Botan::RandomNumberGenerator> cli_make_rng(const std::string& rn
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    if(rng_type == "system" || rng_type.empty()) {
       return std::make_shared<Botan::System_RNG>();
+   }
+#endif
+
+#if defined(BOTAN_HAS_ESDM_RNG)
+   if(rng_type == "esdm-full") {
+      return std::make_shared<Botan::ESDM_RNG>(false);
+   }
+   if(rng_type == "esdm-pr") {
+      return std::make_shared<Botan::ESDM_RNG>(true);
    }
 #endif
 
@@ -89,7 +102,10 @@ std::shared_ptr<Botan::RandomNumberGenerator> cli_make_rng(const std::string& rn
 
 class RNG final : public Command {
    public:
-      RNG() : Command("rng --format=hex --system --rdrand --auto --entropy --drbg --drbg-seed= *bytes") {}
+      RNG() :
+            Command(
+               "rng --format=hex --system --esdm-full --esdm-pr --rdrand --auto --entropy --drbg --drbg-seed= *bytes") {
+      }
 
       std::string group() const override { return "misc"; }
 
@@ -100,7 +116,7 @@ class RNG final : public Command {
          std::string type = get_arg("rng-type");
 
          if(type.empty()) {
-            for(std::string flag : {"system", "rdrand", "auto", "entropy", "drbg"}) {
+            for(std::string flag : {"system", "rdrand", "auto", "entropy", "drbg", "esdm-full", "esdm-pr"}) {
                if(flag_set(flag)) {
                   type = flag;
                   break;

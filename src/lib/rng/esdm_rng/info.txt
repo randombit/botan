@@ -1,0 +1,22 @@
+<defines>
+ESDM_RNG -> 20241107
+</defines>
+
+<module_info>
+name -> "ESDM RNG"
+brief -> "RNG based on ESDM - Entropy Source and DRNG Manager"
+</module_info>
+
+load_on vendor
+
+<header:public>
+esdm_rng.h
+</header:public>
+
+<libs>
+linux -> esdm_rpc_client
+</libs>
+
+<os_features>
+threads
+</os_features>
