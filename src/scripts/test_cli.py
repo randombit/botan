@@ -705,7 +705,12 @@ def cli_rng_tests(_tmp_dir):
 
     hex_10 = re.compile('[A-F0-9]{20}')
 
-    for rng in ['system', 'auto', 'entropy']:
+    rngs = ['system', 'auto', 'entropy']
+    # execute ESDM tests only on Linux
+    if platform.system() == "Linux":
+        rngs += ['esdm-full', 'esdm-pr']
+
+    for rng in rngs:
         output = test_cli("rng", ["10", '--%s' % (rng)], use_drbg=False)
         if output == "D80F88F6ADBE65ACB10C":
             logging.error('RNG produced DRBG output')
