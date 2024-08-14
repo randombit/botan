@@ -297,8 +297,8 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
                               secure_vector<uint8_t>& recbuf,
                               Connection_Sequence_Numbers* sequence_numbers,
                               const get_cipherstate_fn& get_cipherstate) {
-   if(readbuf.size() < TLS_HEADER_SIZE)  // header incomplete?
-   {
+   if(readbuf.size() < TLS_HEADER_SIZE) {
+      // header incomplete
       if(size_t needed = fill_buffer_to(readbuf, input, input_len, consumed, TLS_HEADER_SIZE)) {
          return Record_Header(needed);
       }
@@ -378,8 +378,8 @@ Record_Header read_tls_record(secure_vector<uint8_t>& readbuf,
       epoch = 0;
    }
 
-   if(epoch == 0)  // Unencrypted initial handshake
-   {
+   if(epoch == 0) {
+      // Unencrypted initial handshake
       recbuf.assign(readbuf.begin() + TLS_HEADER_SIZE, readbuf.begin() + TLS_HEADER_SIZE + record_size);
       readbuf.clear();
       return Record_Header(sequence, version, type);
@@ -408,8 +408,8 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
                                Connection_Sequence_Numbers* sequence_numbers,
                                const get_cipherstate_fn& get_cipherstate,
                                bool allow_epoch0_restart) {
-   if(readbuf.size() < DTLS_HEADER_SIZE)  // header incomplete?
-   {
+   if(readbuf.size() < DTLS_HEADER_SIZE) {
+      // header incomplete
       if(fill_buffer_to(readbuf, input, input_len, consumed, DTLS_HEADER_SIZE)) {
          readbuf.clear();
          return Record_Header(0);
@@ -453,8 +453,8 @@ Record_Header read_dtls_record(secure_vector<uint8_t>& readbuf,
       return Record_Header(0);
    }
 
-   if(epoch == 0)  // Unencrypted initial handshake
-   {
+   if(epoch == 0) {
+      // Unencrypted initial handshake
       recbuf.assign(readbuf.begin() + DTLS_HEADER_SIZE, readbuf.begin() + DTLS_HEADER_SIZE + record_size);
       readbuf.clear();
       if(sequence_numbers) {

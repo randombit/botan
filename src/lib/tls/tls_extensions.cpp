@@ -248,12 +248,12 @@ Server_Name_Indicator::Server_Name_Indicator(TLS_Data_Reader& reader, uint16_t e
       uint8_t name_type = reader.get_byte();
       name_bytes--;
 
-      if(name_type == 0)  // DNS
-      {
+      if(name_type == 0) {
+         // DNS
          m_sni_host_name = reader.get_string(2, 1, 65535);
          name_bytes -= static_cast<uint16_t>(2 + m_sni_host_name.size());
-      } else  // some other unknown name type
-      {
+      } else {
+         // some other unknown name type, which we will ignore
          reader.discard_next(name_bytes);
          name_bytes = 0;
       }

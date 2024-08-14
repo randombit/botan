@@ -135,8 +135,8 @@ void Processor_RNG::fill_bytes_with_input(std::span<uint8_t> out, std::span<cons
       out = out.subspan(sizeof(hwrng_output));
    }
 
-   if(!out.empty())  // at most sizeof(hwrng_output)-1
-   {
+   if(!out.empty()) {
+      // at most sizeof(hwrng_output)-1 bytes left
       const hwrng_output r = read_hwrng();
       uint8_t hwrng_bytes[sizeof(hwrng_output)];
       store_le(r, hwrng_bytes);

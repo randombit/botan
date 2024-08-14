@@ -21,10 +21,8 @@ class SIMD_2x64 final {
 
       ~SIMD_2x64() = default;
 
-      SIMD_2x64()  // zero initialized
-      {
-         m_simd = _mm_setzero_si128();
-      }
+      // zero initialized
+      SIMD_2x64() { m_simd = _mm_setzero_si128(); }
 
       static SIMD_2x64 load_le(const void* in) {
          return SIMD_2x64(_mm_loadu_si128(reinterpret_cast<const __m128i*>(in)));

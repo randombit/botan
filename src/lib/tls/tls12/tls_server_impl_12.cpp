@@ -456,8 +456,8 @@ void Server_Impl_12::process_client_hello_msg(const Handshake_State* active_stat
 
    if(session_info.has_value()) {
       this->session_resume(pending_state, {session_info.value(), session_handle.value()});
-   } else  // new session
-   {
+   } else {
+      // new session
       this->session_create(pending_state);
    }
 }

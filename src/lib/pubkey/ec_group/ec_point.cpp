@@ -546,8 +546,8 @@ bool EC_Point::on_the_curve() const {
    const BigInt ax = m_curve.mul_to_tmp(m_coord_x, m_curve.get_a_rep(), monty_ws);
    const BigInt z2 = m_curve.sqr_to_tmp(m_coord_z, monty_ws);
 
-   if(m_coord_z == z2)  // Is z equal to 1 (in Montgomery form)?
-   {
+   // Is z equal to 1 (in Montgomery form)?
+   if(m_coord_z == z2) {
       if(y2 != m_curve.from_rep_to_tmp(x3 + ax + m_curve.get_b_rep(), monty_ws)) {
          return false;
       }
