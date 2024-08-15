@@ -121,7 +121,7 @@ def build_targets(target, target_os):
         yield 'bogo_shim'
     if target in ['sanitizer'] and target_os not in ['windows']:
         yield 'bogo_shim'
-    if target in ['examples']:
+    if target in ['examples', 'amalgamation']:
         yield 'examples'
     if target in ['valgrind', 'valgrind-full']:
         yield 'ct_selftest'
@@ -425,7 +425,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
             flags += ['--with-commoncrypto']
 
         def add_boost_support(target, target_os):
-            if target in ['coverage', 'shared']:
+            if target in ['coverage', 'shared', 'amalgamation']:
                 return True
 
             if target == 'sanitizer' and target_os == 'linux':
@@ -803,7 +803,7 @@ def main(args=None):
             if target in ['coverage', 'fuzzers']:
                 make_targets += ['fuzzer_corpus_zip', 'fuzzers']
 
-            if target in ['examples']:
+            if target in ['examples', 'amalgamation']:
                 make_targets += ['examples']
 
             if target in ['valgrind', 'valgrind-full']:
