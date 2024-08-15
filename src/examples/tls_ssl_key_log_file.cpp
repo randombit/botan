@@ -140,15 +140,13 @@ class DtlsConnection : public Botan::TLS::Callbacks {
       std::function<void()> activated_callback;
 
    public:
-      DtlsConnection([[maybe_unused]] const std::string& r_addr,
-                     [[maybe_unused]] int r_port,
-                     int socket,
-                     bool is_server) :
-            fd(socket) {
+      DtlsConnection(const std::string& r_addr, int r_port, int socket, bool is_server) : fd(socket) {
 #if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
          remote_addr.sin_family = AF_INET;
          inet_aton(r_addr.c_str(), &remote_addr.sin_addr);
          remote_addr.sin_port = htons(r_port);
+#else
+         BOTAN_UNUSED(r_addr, r_port);
 #endif
          auto tls_callbacks_proxy = std::make_shared<BotanTLSCallbacksProxy>(*this);
          auto rng = std::make_shared<Botan::AutoSeeded_RNG>();
@@ -172,10 +170,11 @@ class DtlsConnection : public Botan::TLS::Callbacks {
          }
       }
 
-      void tls_emit_data([[maybe_unused]] std::span<const uint8_t> data) override {
+      void tls_emit_data(std::span<const uint8_t> data) override {
 #if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
          sendto(fd, data.data(), data.size(), 0, reinterpret_cast<const sockaddr*>(&remote_addr), sizeof(sockaddr_in));
 #else
+         BOTAN_UNUSED(data);
          // send data to the other side
          // ...
 #endif
