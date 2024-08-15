@@ -33,7 +33,7 @@ if type -p "apt-get"; then
         # (l)ist mode (avoiding https://github.com/actions/runner-images/issues/9996)
         sudo NEEDRESTART_MODE=l apt-get -qq install valgrind
 
-    elif [ "$TARGET" = "shared" ] || [ "$TARGET" = "examples" ] || [ "$TARGET" = "tlsanvil" ] || [ "$TARGET" = "clang-tidy" ] ; then
+    elif [ "$TARGET" = "shared" ] || [ "$TARGET" = "examples" ] || [ "$TARGET" = "amalgamation" ] || [ "$TARGET" = "tlsanvil" ] || [ "$TARGET" = "clang-tidy" ] ; then
         sudo apt-get -qq install libboost-dev
 
     elif [ "$TARGET" = "clang" ]; then
@@ -138,7 +138,7 @@ else
     export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
     brew install ccache
 
-    if [ "$TARGET" = "shared" ]; then
+    if [ "$TARGET" = "shared" ]  || [ "$TARGET" = "amalgamation" ] ; then
         brew install boost
 
         # On Apple Silicon we need to specify the include directory
