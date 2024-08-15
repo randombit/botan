@@ -23,6 +23,9 @@
    #include <sys/ioctl.h>
    #include <sys/socket.h>
 #endif
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   #include <unistd.h>
+#endif
 
 namespace {
 
@@ -137,7 +140,11 @@ class DtlsConnection : public Botan::TLS::Callbacks {
       std::function<void()> activated_callback;
 
    public:
-      DtlsConnection(const std::string& r_addr, int r_port, int socket, bool is_server) : fd(socket) {
+      DtlsConnection([[maybe_unused]] const std::string& r_addr,
+                     [[maybe_unused]] int r_port,
+                     int socket,
+                     bool is_server) :
+            fd(socket) {
 #if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
          remote_addr.sin_family = AF_INET;
          inet_aton(r_addr.c_str(), &remote_addr.sin_addr);
@@ -165,7 +172,7 @@ class DtlsConnection : public Botan::TLS::Callbacks {
          }
       }
 
-      void tls_emit_data(std::span<const uint8_t> data) override {
+      void tls_emit_data([[maybe_unused]] std::span<const uint8_t> data) override {
 #if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
          sendto(fd, data.data(), data.size(), 0, reinterpret_cast<const sockaddr*>(&remote_addr), sizeof(sockaddr_in));
 #else
@@ -201,7 +208,9 @@ class DtlsConnection : public Botan::TLS::Callbacks {
          if(fd) {
 #if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
             shutdown(fd, SHUT_RDWR);
+   #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
             ::close(fd);
+   #endif
 #endif
          }
       }

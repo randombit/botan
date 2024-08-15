@@ -3,10 +3,17 @@
 
 #include <botan/asio_compat.h>
 
+#if !defined(BOTAN_HAS_HAS_DEFAULT_TLS_CONTEXT)
+
+int main() {
+   std::cout << "Your system needs an auto seeded RNG and a certificate store.\n";
+   return 1;
+}
+
 // Boost 1.81.0 introduced support for the finalized C++20 coroutines
 // in clang 14 and newer. Older versions of Boost might work with other
 // compilers, though.
-#if defined(BOTAN_FOUND_COMPATIBLE_BOOST_ASIO_VERSION) && BOOST_VERSION >= 108100
+#elif defined(BOTAN_FOUND_COMPATIBLE_BOOST_ASIO_VERSION) && BOOST_VERSION >= 108100
 
    #include <botan/asio_stream.h>
    #include <botan/version.h>
@@ -43,6 +50,7 @@ net::awaitable<void> request(std::string host, std::string port, std::string tar
    const auto dns_result = co_await resolver.async_resolve(host, port);
 
    // Connect to host and establish a TLS session
+   // TODO: This constructor needs BOTAN_HAS_HAS_DEFAULT_TLS_CONTEXT. Is there any other way?
    auto tls_stream =
       tls::Stream(tls::Server_Information(host),
                   net::use_awaitable.as_default_on(beast::tcp_stream(co_await net::this_coro::executor)));
