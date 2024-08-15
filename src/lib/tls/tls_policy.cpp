@@ -201,7 +201,7 @@ std::vector<Group_Params> Policy::key_exchange_groups_to_offer() const {
 
    Likewise we skip DH since the keys are large
    */
-   for(auto group: key_exchange_groups()) {
+   for(auto group : key_exchange_groups()) {
       if(group.is_pure_ecc_group()) {
          return {group};
       }
