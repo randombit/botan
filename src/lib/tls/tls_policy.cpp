@@ -163,15 +163,15 @@ Group_Params Policy::default_dh_group() const {
 std::vector<Group_Params> Policy::key_exchange_groups() const {
    return {
       // clang-format off
+#if defined(BOTAN_HAS_X25519) && defined(BOTAN_HAS_KYBER_ROUND3) && defined(BOTAN_HAS_TLS_13_PQC)
+      Group_Params::HYBRID_X25519_KYBER_768_R3_OQS,
+#endif
+
 #if defined(BOTAN_HAS_X25519)
       Group_Params::X25519,
 #endif
 
       Group_Params::SECP256R1,
-
-#if defined(BOTAN_HAS_X25519) && defined(BOTAN_HAS_KYBER_ROUND3) && defined(BOTAN_HAS_TLS_13_PQC)
-      Group_Params::HYBRID_X25519_KYBER_768_R3_OQS,
-#endif
 
 #if defined(BOTAN_HAS_X448)
       Group_Params::X448,
@@ -192,13 +192,22 @@ std::vector<Group_Params> Policy::key_exchange_groups() const {
 }
 
 std::vector<Group_Params> Policy::key_exchange_groups_to_offer() const {
-   // by default, we offer a key share for the most-preferred group, only
-   std::vector<Group_Params> groups_to_offer;
-   const auto supported_groups = key_exchange_groups();
-   if(!supported_groups.empty()) {
-      groups_to_offer.push_back(supported_groups.front());
+   /*
+   By default, we offer a key share for the most-preferred pure ECC group.
+
+   We skip PQC (or hybrids) since the keys are much larger and they are not
+   yet widely supported; the most common case is we waste a lot of packet
+   space sending a key share that the peer will ignore.
+
+   Likewise we skip DH since the keys are large
+   */
+   for(auto group: key_exchange_groups()) {
+      if(group.is_pure_ecc_group()) {
+         return {group};
+      }
    }
-   return groups_to_offer;
+   // Send no initial key share
+   return {};
 }
 
 size_t Policy::minimum_dh_group_size() const {
