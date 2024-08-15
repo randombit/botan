@@ -101,6 +101,9 @@ class Hybrid_PublicKey : public virtual Botan::Public_Key {
       std::unique_ptr<Botan::Public_Key> m_kem_pk;
 };
 
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 /**
  * This is the private key class for the custom public-key algorithm.
  */
@@ -146,6 +149,8 @@ class Hybrid_PrivateKey : public virtual Botan::Private_Key,
       std::unique_ptr<Botan::Private_Key> m_kex_sk;
       std::unique_ptr<Botan::Private_Key> m_kem_sk;
 };
+
+BOTAN_DIAGNOSTIC_POP
 
 namespace {
 
