@@ -179,7 +179,6 @@ std::optional<Group_Params_Code> Group_Params::pqc_hybrid_ecc() const {
       case Group_Params_Code::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE:
       case Group_Params_Code::HYBRID_X25519_KYBER_512_R3_OQS:
       case Group_Params_Code::HYBRID_X25519_KYBER_768_R3_OQS:
-
       case Group_Params_Code::HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS:
       case Group_Params_Code::HYBRID_X25519_eFRODOKEM_640_AES_OQS:
          return Group_Params_Code::X25519;
