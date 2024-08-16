@@ -9,13 +9,9 @@ posix1
 posix_mlock
 clock_gettime
 
-# arc4random_buf preferably backed-up by Chacha20 rather
-# than RC4. can possibly be disabled by --without-os-feature=arc4random
 arc4random
 dev_random
 
-# getauxval is available in Android NDK for min API 18 and in Crystax NDK
-# for all min API levels. Use --without-os-feature=getauxval to disable
 getauxval
 
 # Added in API 28
