@@ -570,11 +570,167 @@ void test_pbe_roundtrip(Test::Result& result,
 }
    #endif
 
+std::vector<std::pair<std::string, std::string>> get_suitable_signing_parameters(std::string_view algo) {
+   if(algo.starts_with("Dilithium") || algo.starts_with("ML-DSA") || algo == "SPHINCS+") {
+      return {{"", ""}, {"Deterministic", ""}, {"Randomized", ""}};
+   } else if(algo == "RSA") {
+      return {{"PSS(SHA-256)", "PSS(SHA-256)"}, {"PKCS1v15(SHA-256)", "PKCS1v15(SHA-256)"}};
+   } else if(algo == "ECDSA" || algo == "ECGDSA" || algo == "ECKCDSA") {
+      return {{"SHA-256", "SHA-256"}};
+   } else if(algo == "DSA") {
+      return {{"SHA-256", "SHA-256"}};
+   } else if(algo == "Ed25519") {
+      return {{"Pure", "Pure"}, {"Ed25519ph", "Ed25519ph"}};
+   } else if(algo == "Ed448") {
+      return {{"", ""}, {"Ed448ph", "Ed448ph"}};
+   } else if(algo == "SM2") {
+      return {{"ALICE123@YAHOO.COM,SM3", "ALICE123@YAHOO.COM,SM3"}};
+   } else if(algo == "XMSS" || algo == "HSS-LMS") {
+      return {{"", ""}};
+   } else if(algo.starts_with("GOST-34.10")) {
+      return {{"SHA-256", "SHA-256"}};
+   }
+
+   throw Test_Error(Botan::fmt("No default signing parameters for {}", algo));
+}
+
+std::vector<std::string> get_suitable_encryption_parameters(std::string_view algo) {
+   if(algo == "RSA" || algo == "ElGamal") {
+      return {"EME-PKCS1-v1_5", "OAEP(SHA-256,MGF1(SHA-256),securelabel)"};
+   } else if(algo == "SM2") {
+      return {"", "SHA-256"};
+   }
+
+   throw Test_Error(Botan::fmt("No default encryption parameters for {}", algo));
+}
+
+std::vector<std::string> get_suitable_encapsulation_parameters(std::string_view algo) {
+   if(algo == "Kyber" || algo == "RSA" || algo == "McEliece" || algo == "FrodoKEM") {
+      return {"Raw"};
+   }
+
+   throw Test_Error(Botan::fmt("No default encapsulation parameters for {}", algo));
+}
+
+void test_signature_roundtrip(Test::Result& result, const Botan::Private_Key& key, Botan::RandomNumberGenerator& rng) {
+   for(const auto& [sig_param, verify_param] : get_suitable_signing_parameters(key.algo_name())) {
+      Botan::PK_Signer signer(key, rng, sig_param);
+      Botan::PK_Verifier verifier(key, verify_param);
+
+      auto test_sig_roundtrip = [&](std::string_view test_name) {
+         const auto message_1 = Botan::hex_decode("deadbeef");
+         const auto message_2 = Botan::hex_decode("badeaffe");
+
+         const auto sig_1 = signer.sign_message(message_1, rng);
+         const auto sig_2 = signer.sign_message(message_2, rng);
+         result.confirm(Botan::fmt("expected signature length ({})", test_name),
+                        sig_1.size() <= signer.signature_length());
+
+         // The messages are verified in reverse order to ensure the persistence
+         // of the associated data. If the associated data were to reset after
+         // each operation, this would provoke a failure.
+         result.test_eq(
+            Botan::fmt("signature roundtrip 2 ({})", test_name), verifier.verify_message(message_2, sig_2), true);
+         result.test_eq(
+            Botan::fmt("signature roundtrip 1 ({})", test_name), verifier.verify_message(message_1, sig_1), true);
+      };
+
+      test_sig_roundtrip("without associated data");
+
+      const auto ad = Botan::hex_decode("baadcafefeedface");
+      const auto signer_can_ad = signer.is_valid_associated_data_length(ad.size());
+      const auto verifier_can_ad = verifier.is_valid_associated_data_length(ad.size());
+      result.confirm("associated data support is consistent", signer_can_ad == verifier_can_ad);
+      if(signer_can_ad && verifier_can_ad) {
+         signer.set_associated_data(ad);
+         verifier.set_associated_data(ad);
+         test_sig_roundtrip("with associated data");
+      } else {
+         result.test_throws<Botan::Invalid_Argument>(
+            "if associated data is not supported, set_associated_data throws in signer",
+            [&] { signer.set_associated_data(ad); });
+
+         result.test_throws<Botan::Invalid_Argument>(
+            "if associated data is not supported, set_associated_data throws in verifier",
+            [&] { verifier.set_associated_data(ad); });
+      }
+   }
+}
+
+void test_encryption_roundtrip(Test::Result& result, const Botan::Private_Key& key, Botan::RandomNumberGenerator& rng) {
+   for(const auto& param : get_suitable_encryption_parameters(key.algo_name())) {
+      Botan::PK_Encryptor_EME enc(key, rng, param);
+      const auto message = Botan::hex_decode("deadbeef");
+      result.test_gte("ciphertext has reasonable length", enc.ciphertext_length(message.size()), 116);
+      result.test_lte("maximum input size is reasonable", enc.maximum_input_size(), 512);
+      const auto ct = enc.encrypt(message, rng);
+      result.test_lte("ciphertext stays within bounds", ct.size(), enc.ciphertext_length(message.size()));
+
+      Botan::PK_Decryptor_EME dec(key, rng, param);
+      result.test_gte("plaintext has a reasonable length", dec.plaintext_length(ct.size()), 10);
+      const auto peer_message = dec.decrypt(ct);
+      result.test_eq("encryption roundtrip", peer_message, message);
+      result.test_lte("plaintext stays within bounds", peer_message.size(), dec.plaintext_length(ct.size()));
+   }
+}
+
+void test_key_agreement_roundtrip(Test::Result& result,
+                                  const Botan::Private_Key& key,
+                                  Botan::RandomNumberGenerator& rng) {
+   auto my_pubkey = key.public_key();
+
+   // Note that KEX keys are _requiredd_ to support generate_another() and
+   // that raw_public_key_bits() must return the canonical public value.
+   // This is tested/ensured before this function is called.
+
+   auto peer_key = key.generate_another(rng);
+   auto peer_pubkey = peer_key->public_key();
+
+   // This is "us"
+   Botan::PK_Key_Agreement ka(key, rng, "Raw");
+   const size_t shared_key_length = ka.agreed_value_size();
+   result.test_gte("agreed value size", shared_key_length, 32);
+   const auto shared_key = ka.derive_key(0 /* no KDF */, peer_pubkey->raw_public_key_bits());
+   result.test_is_eq("shared key length", shared_key.size(), shared_key_length);
+
+   // This is "peer"
+   Botan::PK_Key_Agreement ka_peer(*peer_key, rng, "Raw");
+   result.test_eq("peer agreed value size", ka_peer.agreed_value_size(), shared_key_length);
+   const auto shared_key_peer = ka_peer.derive_key(0 /* no KDF */, my_pubkey->raw_public_key_bits());
+   result.test_eq("peer shared key length", shared_key_peer.size(), shared_key_length);
+
+   result.test_eq("shared key matches", shared_key, shared_key_peer);
+}
+
+void test_key_encapsulation_roundtrip(Test::Result& result,
+                                      const Botan::Private_Key& key,
+                                      Botan::RandomNumberGenerator& rng) {
+   for(const auto& param : get_suitable_encapsulation_parameters(key.algo_name())) {
+      auto my_pubkey = key.public_key();
+
+      Botan::PK_KEM_Encryptor enc(*my_pubkey, param);
+      const size_t enc_len = enc.encapsulated_key_length();
+      const size_t shared_len = enc.shared_key_length(0 /* no KDF */);
+      result.test_gte("encapsed key has a reasonable length", enc_len, 32);
+      result.test_gte("shared key has a reasonable length", shared_len, 16);
+      const auto [ct, shared_secret] = Botan::KEM_Encapsulation::destructure(enc.encrypt(rng));
+      result.test_eq("shared secret length matches", ct.size(), enc_len);
+      result.test_eq("shared secret length matches", shared_secret.size(), shared_len);
+
+      Botan::PK_KEM_Decryptor dec(key, rng, param);
+      result.test_gte("peer encapsed key has a reasonable length", dec.encapsulated_key_length(), enc_len);
+      result.test_gte("peer shared key has a reasonable length", dec.shared_key_length(0 /* no KDF */), shared_len);
+      const auto shared_secret_peer = dec.decrypt(ct);
+      result.test_eq("shared secret matches", shared_secret, shared_secret_peer);
+   }
+}
+
 }  // namespace
 
 std::vector<Test::Result> PK_Key_Generation_Test::run() {
    std::vector<Test::Result> results;
 
+   bool roundtrips_ran = false;
    for(const auto& param : keygen_params()) {
       const std::string report_name = algo_name() + (param.empty() ? param : " " + param);
 
@@ -735,6 +891,34 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
 
          test_pbe_roundtrip(result, key, "PBES2(AES-128/CBC,Scrypt)", this->rng());
    #endif
+
+         // Below are a few smoke tests trying out trivial roundtrips and sanity
+         // checking for the various public key operations. Those are not meant
+         // to be exhaustive for all algorithms, but rather to catch some common
+         // mistakes in the implementation of the public key interface.
+         //
+         // Given the amount of algorithm parameter sets, we only run those tests
+         // for a single instance of each algorithm, if --run-long-tests is not set.
+
+         if(Test::run_long_tests() || !roundtrips_ran) {
+            if(key.supports_operation(Botan::PublicKeyOperation::Signature)) {
+               test_signature_roundtrip(result, key, this->rng());
+            }
+
+            if(key.supports_operation(Botan::PublicKeyOperation::Encryption)) {
+               test_encryption_roundtrip(result, key, this->rng());
+            }
+
+            if(key.supports_operation(Botan::PublicKeyOperation::KeyAgreement)) {
+               test_key_agreement_roundtrip(result, key, this->rng());
+            }
+
+            if(key.supports_operation(Botan::PublicKeyOperation::KeyEncapsulation)) {
+               test_key_encapsulation_roundtrip(result, key, this->rng());
+            }
+
+            roundtrips_ran = true;
+         }
       }
 
       result.end_timer();
