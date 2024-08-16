@@ -141,6 +141,26 @@ bool OS::has_auxval() {
 #endif
 }
 
+unsigned long OS::auxval_hwcap() {
+#if defined(AT_HWCAP)
+   return AT_HWCAP;
+#else
+   // If the value is not defined in a header we can see,
+   // but auxval is supported, return the Linux/Android value
+   return (OS::has_auxval()) ? 16 : 0;
+#endif
+}
+
+unsigned long OS::auxval_hwcap2() {
+#if defined(AT_HWCAP2)
+   return AT_HWCAP2;
+#else
+   // If the value is not defined in a header we can see,
+   // but auxval is supported, return the Linux/Android value
+   return (OS::has_auxval()) ? 26 : 0;
+#endif
+}
+
 unsigned long OS::get_auxval(unsigned long id) {
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
    return ::getauxval(id);

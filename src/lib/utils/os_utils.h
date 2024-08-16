@@ -62,6 +62,20 @@ size_t BOTAN_TEST_API get_cpu_available();
 bool has_auxval();
 
 /**
+* If get_auxval is supported, returns the relevant value for AT_HWCAP
+*
+* If get_auxval is not supported on this system, arbitrarily returns 0
+*/
+unsigned long auxval_hwcap();
+
+/**
+* If get_auxval is supported, returns the relevant value for AT_HWCAP2
+*
+* If get_auxval is not supported on this system, arbitrarily returns 0
+*/
+unsigned long auxval_hwcap2();
+
+/**
 * Return the ELF auxiliary vector cooresponding to the given ID.
 * This only makes sense on Unix-like systems and is currently
 * only supported on Linux, Android, and FreeBSD.

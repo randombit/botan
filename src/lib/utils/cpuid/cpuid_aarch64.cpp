@@ -43,7 +43,7 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
          SVE_bit = (1 << 22),
       };
 
-      const uint64_t hwcap = OS::get_auxval(16);  // AT_HWCAP
+      const uint64_t hwcap = OS::get_auxval(OS::auxval_hwcap());
 
       feat |= if_set(hwcap, ARM_hwcap_bit::NEON_bit, CPUID::CPUID_ARM_NEON_BIT, allowed);
 
