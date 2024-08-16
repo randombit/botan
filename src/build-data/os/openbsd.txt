@@ -13,6 +13,7 @@ posix_mlock
 clock_gettime
 dev_random
 arc4random
+elf_aux_info
 getentropy
 explicit_bzero
 pledge
