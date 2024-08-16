@@ -272,6 +272,13 @@ PK_Signer::~PK_Signer() = default;
 PK_Signer::PK_Signer(PK_Signer&&) noexcept = default;
 PK_Signer& PK_Signer::operator=(PK_Signer&&) noexcept = default;
 
+void PK_Signer::set_associated_data(std::span<const uint8_t> associated_data) {
+   if(!is_valid_associated_data_length(associated_data.size())) {
+      throw Invalid_Argument("PK_Signer: Associated data does not have a supported length");
+   }
+   m_op->set_associated_data(associated_data);
+}
+
 void PK_Signer::update(std::string_view in) {
    this->update(cast_char_ptr_to_uint8(in.data()), in.size());
 }
@@ -311,6 +318,10 @@ size_t PK_Signer::signature_length() const {
    } else {
       throw Internal_Error("PK_Signer: Invalid signature format enum");
    }
+}
+
+bool PK_Signer::is_valid_associated_data_length(size_t length) const {
+   return m_op->is_valid_associated_data_length(length);
 }
 
 std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng) {
@@ -366,6 +377,17 @@ std::string PK_Verifier::hash_function() const {
 void PK_Verifier::set_input_format(Signature_Format format) {
    check_der_format_supported(format, m_parts);
    m_sig_format = format;
+}
+
+bool PK_Verifier::is_valid_associated_data_length(size_t length) const {
+   return m_op->is_valid_associated_data_length(length);
+}
+
+void PK_Verifier::set_associated_data(std::span<const uint8_t> associated_data) {
+   if(!is_valid_associated_data_length(associated_data.size())) {
+      throw Invalid_Argument("PK_Verifier: Associated data does not have a supported length");
+   }
+   m_op->set_associated_data(associated_data);
 }
 
 void PK_Verifier::update(std::string_view in) {

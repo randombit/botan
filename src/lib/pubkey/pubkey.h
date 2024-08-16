@@ -199,6 +199,23 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
       }
 
       /**
+      * Incorporate application-defined associated data into the signature. This
+      * is useful for (e.g.) domain separation, but is not supported by all
+      * signature schemes. This must be called at most once and before any calls
+      * to update().
+      *
+      * Unless reset by another call to set_associated_data(), it is kept between
+      * signature creations.
+      *
+      * @sa is_valid_associated_data_length
+      * @throws Invalid_Argument if associated data is not supported, or the data's
+      *                          length is invalid
+      *
+      * @param associated_data an application-defined associated data
+      */
+      void set_associated_data(std::span<const uint8_t> associated_data);
+
+      /**
       * Add a message part (single byte).
       * @param in the byte to add
       */
@@ -257,6 +274,11 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
       * (unhashed) encoding is being used.
       */
       std::string hash_function() const;
+
+      /**
+      * @returns true if the associated data's length is valid for this signature scheme
+      */
+      bool is_valid_associated_data_length(size_t length) const;
 
    private:
       std::unique_ptr<PK_Ops::Signature> m_op;
@@ -330,6 +352,23 @@ class BOTAN_PUBLIC_API(2, 0) PK_Verifier final {
       }
 
       /**
+      * Incorporate application-defined associated data into the signature. This
+      * is useful for (e.g.) domain separation, but is not supported by all
+      * signature schemes. This must be called at most once and before any calls
+      * to update().
+      *
+      * Unless reset by another call to set_associated_data(), it is kept between
+      * signature verifications.
+      *
+      * @sa is_valid_associated_data_length
+      * @throws Invalid_Argument if associated data is not supported, or the data's
+      *                          length is invalid
+      *
+      * @param associated_data an application-defined associated data
+      */
+      void set_associated_data(std::span<const uint8_t> associated_data);
+
+      /**
       * Add a message part (single byte) of the message corresponding to the
       * signature to be verified.
       * @param in the byte to add
@@ -387,6 +426,11 @@ class BOTAN_PUBLIC_API(2, 0) PK_Verifier final {
       * (unhashed) encoding is being used.
       */
       std::string hash_function() const;
+
+      /**
+      * @returns true if the associated data's length is valid for this signature scheme
+      */
+      bool is_valid_associated_data_length(size_t length) const;
 
    private:
       std::unique_ptr<PK_Ops::Verification> m_op;

@@ -80,6 +80,18 @@ class BOTAN_UNSTABLE_API Decryption {
 class BOTAN_UNSTABLE_API Verification {
    public:
       /**
+      * Incorporate an application-defined associated data into the signature
+      * verification. This is useful for domain separation, but is not supported
+      * by all signature schemes. The valid associated data's length is checked
+      * beforehand, using is_valid_associated_data_length().
+      *
+      * Note: The associated data is meant to be kept between individual message
+      *       verifications. It is the implementer's responsibility to handle
+      *       this state correctly.
+      */
+      virtual void set_associated_data(std::span<const uint8_t> label);
+
+      /**
       * Add more data to the message currently being signed
       * @param input the input to be hashed/verified
       */
@@ -96,6 +108,15 @@ class BOTAN_UNSTABLE_API Verification {
       */
       virtual std::string hash_function() const = 0;
 
+      /**
+      * @returns true if the associated data length is valid for this signature scheme.
+      *          Schemes that don't support associated data always return false.
+      */
+      virtual bool is_valid_associated_data_length(size_t length) const {
+         BOTAN_UNUSED(length);
+         return false;
+      }
+
       virtual ~Verification() = default;
 };
 
@@ -104,6 +125,18 @@ class BOTAN_UNSTABLE_API Verification {
 */
 class BOTAN_UNSTABLE_API Signature {
    public:
+      /**
+      * Incorporate an application-defined label into the signature. This is
+      * useful for domain separation, but is not supported by all signature
+      * schemes. The valid length of the label is checked beforehand, using
+      * is_valid_associated_data_length().
+      *
+      * Note: The associated data is meant to be kept between individual message
+      *       signings. It is the implementer's responsibility to handle this
+      *       state correctly.
+      */
+      virtual void set_associated_data(std::span<const uint8_t> associated_data);
+
       /**
       * Add more data to the message currently being signed
       * @param input the input to be hashed/signed
@@ -132,6 +165,15 @@ class BOTAN_UNSTABLE_API Signature {
       * Return the hash function being used by this signer
       */
       virtual std::string hash_function() const = 0;
+
+      /**
+      * @returns true if the label length is valid for this signature scheme
+      *          Schemes that don't support labels always return false.
+      */
+      virtual bool is_valid_associated_data_length(size_t length) const {
+         BOTAN_UNUSED(length);
+         return false;
+      }
 
       virtual ~Signature() = default;
 };

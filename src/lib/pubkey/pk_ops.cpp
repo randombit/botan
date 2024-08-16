@@ -82,6 +82,16 @@ secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
    return z;
 }
 
+void PK_Ops::Signature::set_associated_data(std::span<const uint8_t> associated_data) {
+   BOTAN_UNUSED(associated_data);
+   throw Not_Implemented("This signature scheme does not support labels for signing");
+}
+
+void PK_Ops::Verification::set_associated_data(std::span<const uint8_t> associated_data) {
+   BOTAN_UNUSED(associated_data);
+   throw Not_Implemented("This signature scheme does not support labels for verification");
+}
+
 namespace {
 
 std::unique_ptr<HashFunction> create_signature_hash(std::string_view padding) {
