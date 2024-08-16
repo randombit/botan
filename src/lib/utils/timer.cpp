@@ -49,25 +49,16 @@ void Timer::start() {
 
 void Timer::stop() {
    if(m_timer_start) {
+      const uint64_t now = OS::get_system_timestamp_ns();
+
+      if(now > m_timer_start) {
+         m_time_used += (now - m_timer_start);
+      }
+
       if(m_cpu_cycles_start != 0) {
          const uint64_t cycles_taken = OS::get_cpu_cycle_counter() - m_cpu_cycles_start;
          if(cycles_taken > 0) {
             m_cpu_cycles_used += static_cast<size_t>(cycles_taken * m_clock_cycle_ratio);
-         }
-      }
-
-      const uint64_t now = OS::get_system_timestamp_ns();
-
-      if(now > m_timer_start) {
-         const uint64_t dur = now - m_timer_start;
-
-         m_time_used += dur;
-
-         if(m_event_count == 0) {
-            m_min_time = m_max_time = dur;
-         } else {
-            m_max_time = std::max(m_max_time, dur);
-            m_min_time = std::min(m_min_time, dur);
          }
       }
 

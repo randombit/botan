@@ -111,11 +111,13 @@ class BOTAN_TEST_API Timer final {
 
       // set at runtime
       std::string m_custom_msg;
-      uint64_t m_time_used = 0, m_timer_start = 0;
       uint64_t m_event_count = 0;
 
-      uint64_t m_max_time = 0, m_min_time = 0;
-      uint64_t m_cpu_cycles_start = 0, m_cpu_cycles_used = 0;
+      uint64_t m_time_used = 0;
+      uint64_t m_timer_start = 0;
+
+      uint64_t m_cpu_cycles_used = 0;
+      uint64_t m_cpu_cycles_start = 0;
 };
 
 }  // namespace Botan

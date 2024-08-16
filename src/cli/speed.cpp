@@ -897,15 +897,24 @@ class Speed final : public Command {
 
          for(size_t buf_size : buf_sizes_in_blocks) {
             std::vector<uint8_t> buffer(buf_size);
+            const size_t mult = std::max<size_t>(1, 65536 / buf_size);
             const size_t blocks = buf_size / bs;
 
-            auto encrypt_timer = make_timer(cipher.name(), buffer.size(), "encrypt", provider, buf_size);
-            auto decrypt_timer = make_timer(cipher.name(), buffer.size(), "decrypt", provider, buf_size);
+            auto encrypt_timer = make_timer(cipher.name(), mult * buffer.size(), "encrypt", provider, buf_size);
+            auto decrypt_timer = make_timer(cipher.name(), mult * buffer.size(), "decrypt", provider, buf_size);
 
-            encrypt_timer->run_until_elapsed(runtime, [&]() { cipher.encrypt_n(&buffer[0], &buffer[0], blocks); });
+            encrypt_timer->run_until_elapsed(runtime, [&]() {
+               for(size_t i = 0; i != mult; ++i) {
+                  cipher.encrypt_n(&buffer[0], &buffer[0], blocks);
+               }
+            });
             record_result(encrypt_timer);
 
-            decrypt_timer->run_until_elapsed(runtime, [&]() { cipher.decrypt_n(&buffer[0], &buffer[0], blocks); });
+            decrypt_timer->run_until_elapsed(runtime, [&]() {
+               for(size_t i = 0; i != mult; ++i) {
+                  cipher.decrypt_n(&buffer[0], &buffer[0], blocks);
+               }
+            });
             record_result(decrypt_timer);
          }
       }
@@ -917,10 +926,6 @@ class Speed final : public Command {
                                const std::chrono::milliseconds runtime,
                                const std::vector<size_t>& buf_sizes) {
          for(auto buf_size : buf_sizes) {
-            Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
-
-            auto encrypt_timer = make_timer(cipher.name(), buffer.size(), "encrypt", provider, buf_size);
-
             const Botan::SymmetricKey key(rng(), cipher.maximum_keylength());
             cipher.set_key(key);
 
@@ -929,9 +934,17 @@ class Speed final : public Command {
                cipher.set_iv(iv.begin(), iv.size());
             }
 
-            while(encrypt_timer->under(runtime)) {
-               encrypt_timer->run([&]() { cipher.encipher(buffer); });
-            }
+            Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
+
+            const size_t mult = std::max<size_t>(1, 65536 / buf_size);
+
+            auto encrypt_timer = make_timer(cipher.name(), mult * buffer.size(), "encrypt", provider, buf_size);
+
+            encrypt_timer->run_until_elapsed(runtime, [&]() {
+               for(size_t i = 0; i != mult; ++i) {
+                  cipher.encipher(buffer);
+               }
+            });
 
             record_result(encrypt_timer);
 
@@ -957,10 +970,14 @@ class Speed final : public Command {
          for(auto buf_size : buf_sizes) {
             Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
 
-            auto timer = make_timer(hash.name(), buffer.size(), "hash", provider, buf_size);
+            const size_t mult = std::max<size_t>(1, 65536 / buf_size);
+
+            auto timer = make_timer(hash.name(), mult * buffer.size(), "hash", provider, buf_size);
             timer->run_until_elapsed(runtime, [&]() {
-               hash.update(buffer);
-               hash.final(output.data());
+               for(size_t i = 0; i != mult; ++i) {
+                  hash.update(buffer);
+                  hash.final(output.data());
+               }
             });
             record_result(timer);
          }
@@ -997,14 +1014,20 @@ class Speed final : public Command {
 
          for(auto buf_size : buf_sizes) {
             Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
+            const size_t mult = std::max<size_t>(1, 65536 / buf_size);
 
             const Botan::SymmetricKey key(rng(), mac.maximum_keylength());
             mac.set_key(key);
             mac.start(nullptr, 0);
 
-            auto timer = make_timer(mac.name(), buffer.size(), "mac", provider, buf_size);
-            timer->run_until_elapsed(runtime, [&]() { mac.update(buffer); });
-            timer->run([&]() { mac.final(output.data()); });
+            auto timer = make_timer(mac.name(), mult * buffer.size(), "mac", provider, buf_size);
+            timer->run_until_elapsed(runtime, [&]() {
+               for(size_t i = 0; i != mult; ++i) {
+                  mac.update(buffer);
+                  mac.final(output.data());
+               }
+            });
+
             record_result(timer);
          }
       }
@@ -1026,31 +1049,43 @@ class Speed final : public Command {
 
          for(auto buf_size : buf_sizes) {
             Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
+            const size_t mult = std::max<size_t>(1, 65536 / buf_size);
 
-            auto encrypt_timer = make_timer(enc.name(), buffer.size(), "encrypt", enc.provider(), buf_size);
-            auto decrypt_timer = make_timer(dec.name(), buffer.size(), "decrypt", dec.provider(), buf_size);
+            auto encrypt_timer = make_timer(enc.name(), mult * buffer.size(), "encrypt", enc.provider(), buf_size);
+            auto decrypt_timer = make_timer(dec.name(), mult * buffer.size(), "decrypt", dec.provider(), buf_size);
 
             Botan::secure_vector<uint8_t> iv = rng().random_vec(enc.default_nonce_length());
 
             if(buf_size >= enc.minimum_final_size()) {
-               while(encrypt_timer->under(runtime) && decrypt_timer->under(runtime)) {
-                  // Must run in this order, or AEADs will reject the ciphertext
-                  encrypt_timer->run([&]() {
+               encrypt_timer->run_until_elapsed(runtime, [&]() {
+                  for(size_t i = 0; i != mult; ++i) {
                      enc.start(iv);
                      enc.finish(buffer);
-                  });
+                     buffer.resize(buf_size);  // remove any tag or padding
+                  }
+               });
 
-                  decrypt_timer->run([&]() {
-                     dec.start(iv);
-                     dec.finish(buffer);
-                  });
-
+               while(decrypt_timer->under(runtime)) {
                   if(!iv.empty()) {
                      iv[iv.size() - 1] += 1;
                   }
+
+                  // Create a valid ciphertext/tag for decryption to run on
+                  buffer.resize(buf_size);
+                  enc.start(iv);
+                  enc.finish(buffer);
+
+                  Botan::secure_vector<uint8_t> dbuffer;
+
+                  decrypt_timer->run([&]() {
+                     for(size_t i = 0; i != mult; ++i) {
+                        dbuffer = buffer;
+                        dec.start(iv);
+                        dec.finish(dbuffer);
+                     }
+                  });
                }
             }
-
             record_result(encrypt_timer);
             record_result(decrypt_timer);
          }
@@ -1063,13 +1098,19 @@ class Speed final : public Command {
                      const std::vector<size_t>& buf_sizes) {
          for(auto buf_size : buf_sizes) {
             Botan::secure_vector<uint8_t> buffer(buf_size);
+            const size_t mult = std::max<size_t>(1, 65536 / buf_size);
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
             rng.reseed_from_rng(Botan::system_rng(), 256);
 #endif
 
-            auto timer = make_timer(rng_name, buffer.size(), "generate", "", buf_size);
-            timer->run_until_elapsed(runtime, [&]() { rng.randomize(buffer.data(), buffer.size()); });
+            auto timer = make_timer(rng_name, mult * buffer.size(), "generate", "", buf_size);
+            timer->run_until_elapsed(runtime, [&]() {
+               for(size_t i = 0; i != mult; ++i) {
+                  rng.randomize(buffer.data(), buffer.size());
+               }
+            });
+
             record_result(timer);
          }
       }
