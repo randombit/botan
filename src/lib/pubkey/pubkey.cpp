@@ -368,11 +368,6 @@ void PK_Verifier::set_input_format(Signature_Format format) {
    m_sig_format = format;
 }
 
-bool PK_Verifier::verify_message(const uint8_t msg[], size_t msg_length, const uint8_t sig[], size_t sig_length) {
-   update(msg, msg_length);
-   return check_signature(sig, sig_length);
-}
-
 void PK_Verifier::update(std::string_view in) {
    this->update(cast_char_ptr_to_uint8(in.data()), in.size());
 }

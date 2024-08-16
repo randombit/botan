@@ -314,7 +314,10 @@ class BOTAN_PUBLIC_API(2, 0) PK_Verifier final {
       * @param sig_length the length of the above byte array sig
       * @return true if the signature is valid
       */
-      bool verify_message(const uint8_t msg[], size_t msg_length, const uint8_t sig[], size_t sig_length);
+      bool verify_message(const uint8_t msg[], size_t msg_length, const uint8_t sig[], size_t sig_length) {
+         update(msg, msg_length);
+         return check_signature(sig, sig_length);
+      }
 
       /**
       * Verify a signature.
