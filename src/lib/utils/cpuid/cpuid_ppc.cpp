@@ -27,11 +27,11 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
 
       feat |= if_set(hwcap_altivec, PPC_hwcap_bit::ALTIVEC_bit, CPUID::CPUID_ALTIVEC_BIT, allowed);
 
-   #if defined(BOTAN_TARGET_CPU_IS_PPC64)
-      if(feat & CPUD::CPUID_ALTIVEC_BIT) {
+   #if defined(BOTAN_TARGET_ARCH_IS_PPC64)
+      if(feat & CPUID::CPUID_ALTIVEC_BIT) {
          const uint64_t hwcap_crypto = OS::get_auxval(26);  // AT_HWCAP2
          feat |= if_set(hwcap_crypto, PPC_hwcap_bit::CRYPTO_bit, CPUID::CPUID_POWER_CRYPTO_BIT, allowed);
-         feat |= if_set(hwcap_crypto, PPC_hwcap_bit::DARN_bit, CPUID::CPUID_POWER_DARN_BIT, allowed);
+         feat |= if_set(hwcap_crypto, PPC_hwcap_bit::DARN_bit, CPUID::CPUID_DARN_BIT, allowed);
       }
    #endif
 
