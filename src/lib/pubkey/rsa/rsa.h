@@ -174,9 +174,8 @@ class BOTAN_PUBLIC_API(2, 0) RSA_PrivateKey final : public Private_Key,
                                                                        std::string_view params,
                                                                        std::string_view provider) const override;
 
-      std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
-                                                             std::string_view params,
-                                                             std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
+                                                              const PK_Signature_Options& options) const override;
 
    private:
       void init(BigInt&& d, BigInt&& p, BigInt&& q, BigInt&& d1, BigInt&& d2, BigInt&& c);

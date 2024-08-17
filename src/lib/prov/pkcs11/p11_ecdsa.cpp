@@ -11,6 +11,7 @@
 #if defined(BOTAN_HAS_ECDSA)
 
    #include <botan/pk_ops.h>
+   #include <botan/pk_options.h>
    #include <botan/rng.h>
    #include <botan/internal/keypair.h>
    #include <botan/internal/p11_mechanism.h>
@@ -53,12 +54,12 @@ namespace {
 
 class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature {
    public:
-      PKCS11_ECDSA_Signature_Operation(const PKCS11_ECDSA_PrivateKey& key, std::string_view hash) :
+      PKCS11_ECDSA_Signature_Operation(const PKCS11_ECDSA_PrivateKey& key, const PK_Signature_Options& options) :
             PK_Ops::Signature(),
             m_key(key),
             m_order_bytes(key.domain().get_order_bytes()),
-            m_mechanism(MechanismWrapper::create_ecdsa_mechanism(hash)),
-            m_hash(hash) {}
+            m_mechanism(MechanismWrapper::create_ecdsa_mechanism(options.hash_function())),
+            m_hash(options.hash_function()) {}
 
       void update(std::span<const uint8_t> input) override {
          if(!m_initialized) {
@@ -179,10 +180,10 @@ std::unique_ptr<PK_Ops::Verification> PKCS11_ECDSA_PublicKey::create_verificatio
    return std::make_unique<PKCS11_ECDSA_Verification_Operation>(*this, params);
 }
 
-std::unique_ptr<PK_Ops::Signature> PKCS11_ECDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                                                                std::string_view params,
-                                                                                std::string_view /*provider*/) const {
-   return std::make_unique<PKCS11_ECDSA_Signature_Operation>(*this, params);
+std::unique_ptr<PK_Ops::Signature> PKCS11_ECDSA_PrivateKey::_create_signature_op(
+   RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng);
+   return std::make_unique<PKCS11_ECDSA_Signature_Operation>(*this, options);
 }
 
 PKCS11_ECDSA_KeyPair generate_ecdsa_keypair(Session& session,

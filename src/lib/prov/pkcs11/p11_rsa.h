@@ -191,9 +191,8 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_RSA_PrivateKey final : public Object,
                                                                std::string_view params,
                                                                std::string_view provider) const override;
 
-      std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
-                                                             std::string_view params,
-                                                             std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
+                                                              const PK_Signature_Options& options) const override;
 
    private:
       bool m_use_software_padding = false;

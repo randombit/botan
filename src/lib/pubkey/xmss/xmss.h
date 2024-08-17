@@ -232,9 +232,8 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
 
       std::optional<uint64_t> remaining_operations() const override;
 
-      std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator&,
-                                                             std::string_view,
-                                                             std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
+                                                              const PK_Signature_Options& options) const override;
 
       secure_vector<uint8_t> private_key_bits() const override;
 

@@ -120,9 +120,9 @@ std::unique_ptr<PK_Ops::KEM_Decryption> Private_Key::create_kem_decryption_op(Ra
    throw Lookup_Error(fmt("{} does not support KEM decryption", algo_name()));
 }
 
-std::unique_ptr<PK_Ops::Signature> Private_Key::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                                                    std::string_view /*params*/,
-                                                                    std::string_view /*provider*/) const {
+std::unique_ptr<PK_Ops::Signature> Private_Key::_create_signature_op(RandomNumberGenerator& rng,
+                                                                     const PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng, options);
    throw Lookup_Error(fmt("{} does not support signatures", algo_name()));
 }
 

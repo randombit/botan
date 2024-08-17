@@ -21,6 +21,7 @@ namespace Botan {
 
 class BigInt;
 class RandomNumberGenerator;
+class PK_Signature_Options;
 
 /**
 * Enumeration specifying the signature format.
@@ -357,12 +358,11 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       * @param rng a random number generator. The PK_Op may maintain a
       * reference to the RNG and use it many times. The rng must outlive
       * any operations which reference it.
-      * @param params additional parameters
-      * @param provider the provider to use
+      *
+      * @param options allow controlling behavior
       */
-      virtual std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
-                                                                     std::string_view params,
-                                                                     std::string_view provider) const;
+      virtual std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
+                                                                      const PK_Signature_Options& options) const;
 
       /**
       * This is an internal library function exposed on key types.

@@ -421,21 +421,18 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
       SphincsContext m_context;
 };
 
-std::unique_ptr<PK_Ops::Signature> SphincsPlus_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                                                               std::string_view params,
-                                                                               std::string_view provider) const {
+std::unique_ptr<PK_Ops::Signature> SphincsPlus_PrivateKey::_create_signature_op(
+   RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-   BOTAN_ARG_CHECK(params.empty() || params == "Deterministic" || params == "Randomized",
-                   "Unexpected parameters for signing with SLH-DSA (or SPHINCS+)");
 
    // FIPS 205, Section 9.2
    //   The hedged variant is the default and should be used on platforms where
    //   side-channel attacks are a concern.
-   const bool randomized = (params.empty() || params == "Randomized");
-   if(provider.empty() || provider == "base") {
+   const bool randomized = !options.using_deterministic_signature();
+   if(!options.using_provider()) {
       return std::make_unique<SphincsPlus_Signature_Operation>(m_private, m_public, randomized);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 }  // namespace Botan

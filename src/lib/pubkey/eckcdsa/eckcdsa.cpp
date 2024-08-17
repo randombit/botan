@@ -115,10 +115,10 @@ void truncate_hash_if_needed(std::vector<uint8_t>& digest, size_t group_order_by
 */
 class ECKCDSA_Signature_Operation final : public PK_Ops::Signature {
    public:
-      ECKCDSA_Signature_Operation(const ECKCDSA_PrivateKey& eckcdsa, std::string_view padding) :
+      ECKCDSA_Signature_Operation(const ECKCDSA_PrivateKey& eckcdsa, const PK_Signature_Options& options) :
             m_group(eckcdsa.domain()),
             m_x(eckcdsa._private_key()),
-            m_hash(eckcdsa_signature_hash(padding)),
+            m_hash(eckcdsa_signature_hash(options.hash_function())),
             m_prefix(eckcdsa_prefix(eckcdsa._public_key(), m_hash->hash_block_size())),
             m_prefix_used(false) {}
 
@@ -279,13 +279,14 @@ std::unique_ptr<PK_Ops::Verification> ECKCDSA_PublicKey::create_x509_verificatio
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Signature> ECKCDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                                                           std::string_view params,
-                                                                           std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<ECKCDSA_Signature_Operation>(*this, params);
+std::unique_ptr<PK_Ops::Signature> ECKCDSA_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                            const PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng);
+
+   if(!options.using_provider()) {
+      return std::make_unique<ECKCDSA_Signature_Operation>(*this, options);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 }  // namespace Botan
