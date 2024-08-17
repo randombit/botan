@@ -245,6 +245,13 @@ void check_der_format_supported(Signature_Format format, size_t parts) {
 }  // namespace
 
 PK_Signer::PK_Signer(const Private_Key& key, const PK_Signature_Options& options, RandomNumberGenerator& rng) {
+   if(options.using_context() && !key.supports_context_data()) {
+      throw Invalid_Argument(fmt("Key type {} does not support context information"));
+   }
+   if(options.using_der_encoded_signature() && key.message_parts() == 1) {
+      throw Invalid_Argument(fmt("Key type {} does not support DER encoded signatures"));
+   }
+
    m_op = key._create_signature_op(rng, options);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support signature generation", key.algo_name()));
