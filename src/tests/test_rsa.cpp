@@ -9,6 +9,7 @@
 
 #if defined(BOTAN_HAS_RSA)
    #include "test_pubkey.h"
+   #include <botan/pk_options.h>
    #include <botan/rsa.h>
    #include <botan/internal/blinding.h>
    #include <botan/internal/fmt.h>
@@ -205,9 +206,9 @@ class RSA_Blinding_Tests final : public Test {
          * are used as an additional test on the blinders.
          */
 
-         Botan::PK_Signer signer(
-            rsa, this->rng(), "Raw", Botan::Signature_Format::Standard, "base");  // don't try this at home
-         Botan::PK_Verifier verifier(rsa, "Raw", Botan::Signature_Format::Standard, "base");
+         // don't try this at home
+         Botan::PK_Signer signer(rsa, this->rng(), Botan::PK_Signature_Options().with_hash("Raw"));
+         Botan::PK_Verifier verifier(rsa, Botan::PK_Signature_Options().with_hash("Raw"));
 
          for(size_t i = 1; i <= Botan::Blinder::ReinitInterval * 6; ++i) {
             std::vector<uint8_t> input(16);

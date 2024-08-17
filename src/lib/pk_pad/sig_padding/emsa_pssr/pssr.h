@@ -10,6 +10,7 @@
 
 #include <botan/internal/sig_padding.h>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -25,14 +26,9 @@ class PSSR final : public SignaturePaddingScheme {
    public:
       /**
       * @param hash the hash function to use
-      */
-      explicit PSSR(std::unique_ptr<HashFunction> hash);
-
-      /**
-      * @param hash the hash function to use
       * @param salt_size the size of the salt to use in bytes
       */
-      PSSR(std::unique_ptr<HashFunction> hash, size_t salt_size);
+      PSSR(std::unique_ptr<HashFunction> hash, std::optional<size_t> salt_size);
 
       std::string name() const override;
 
@@ -62,14 +58,9 @@ class PSS_Raw final : public SignaturePaddingScheme {
    public:
       /**
       * @param hash the hash function to use
-      */
-      explicit PSS_Raw(std::unique_ptr<HashFunction> hash);
-
-      /**
-      * @param hash the hash function to use
       * @param salt_size the size of the salt to use in bytes
       */
-      PSS_Raw(std::unique_ptr<HashFunction> hash, size_t salt_size);
+      explicit PSS_Raw(std::unique_ptr<HashFunction> hash, std::optional<size_t> salt_size = std::nullopt);
 
       std::string hash_function() const override;
 

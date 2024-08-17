@@ -15,6 +15,7 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/ed448_internal.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 
 #include <utility>
 
@@ -213,18 +214,19 @@ AlgorithmIdentifier Ed448_Sign_Operation::algorithm_identifier() const {
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::create_verification_op(std::string_view params,
-                                                                              std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      if(params.empty() || params == "Identity" || params == "Pure" || params == "Ed448") {
-         return std::make_unique<Ed448_Verify_Operation>(*this);
-      } else if(params == "Ed448ph") {
-         return std::make_unique<Ed448_Verify_Operation>(*this, "SHAKE-256(512)");
+std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   BOTAN_ARG_CHECK(!options.using_padding(), "Ed448 does not support padding");
+
+   if(!options.using_provider()) {
+      if(options.using_prehash()) {
+         return std::make_unique<Ed448_Verify_Operation>(*this, options.prehash_fn().value_or("SHAKE-256(512)"));
       } else {
-         return std::make_unique<Ed448_Verify_Operation>(*this, std::string(params));
+         return std::make_unique<Ed448_Verify_Operation>(*this);
       }
    }
-   throw Provider_Not_Found(algo_name(), provider);
+
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
@@ -239,19 +241,21 @@ std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::create_x509_verification_
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Signature> Ed448_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                                                         std::string_view params,
-                                                                         std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      if(params.empty() || params == "Identity" || params == "Pure" || params == "Ed448") {
-         return std::make_unique<Ed448_Sign_Operation>(*this);
-      } else if(params == "Ed448ph") {
-         return std::make_unique<Ed448_Sign_Operation>(*this, "SHAKE-256(512)");
+std::unique_ptr<PK_Ops::Signature> Ed448_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                          const PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng);
+
+   BOTAN_ARG_CHECK(!options.using_padding(), "Ed448 does not support padding");
+   BOTAN_ARG_CHECK(!options.using_salt_size(), "Ed448 does not support a salt");
+
+   if(!options.using_provider()) {
+      if(options.using_prehash()) {
+         return std::make_unique<Ed448_Sign_Operation>(*this, options.prehash_fn().value_or("SHAKE-256(512)"));
       } else {
-         return std::make_unique<Ed448_Sign_Operation>(*this, std::string(params));
+         return std::make_unique<Ed448_Sign_Operation>(*this);
       }
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 }  // namespace Botan

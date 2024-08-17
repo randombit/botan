@@ -209,6 +209,9 @@ bool iso9796_verification(std::span<const uint8_t> repr,
 
 }  // namespace
 
+ISO_9796_DS2::ISO_9796_DS2(std::unique_ptr<HashFunction> hash, bool implicit, std::optional<size_t> salt_size) :
+      m_hash(std::move(hash)), m_implicit(implicit), m_salt_len(salt_size.value_or(m_hash->output_length())) {}
+
 /*
  *  ISO-9796-2 signature scheme 2
  *  DS 2 is probabilistic

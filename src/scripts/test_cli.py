@@ -585,13 +585,13 @@ def cli_xmss_sign_tests(tmp_dir):
              "6F:C4:08:CB:C3:61:CC:49:8A:25:90:3B:2F:D4:4D:B8:7F:2F:27:06:8C:8F:01:E0:01:DB:42:1F:B4:09:09:D9")
 
     # verify the key is updated after each signature:
-    test_cli("sign", [priv_key, msg, "--output=%s" % (sig1)], "")
-    test_cli("verify", [pub_key, msg, sig1], "Signature is valid")
+    test_cli("sign", [priv_key, "--hash=SHA-512", msg, "--output=%s" % (sig1)], "")
+    test_cli("verify", [pub_key, "--hash=SHA-512", msg, sig1], "Signature is valid")
     test_cli("hash", ["--no-fsname", sig1], "9DEBA79CE9FDC4966D7BA7B05ABEC54E3C11BB1C2C2732F7658820F2CAE47646")
     test_cli("hash", ["--no-fsname", priv_key], "A71507087530C85E9CF971CF3A305890B07B51519C405A2B3D0037C64D5802B1")
 
-    test_cli("sign", [priv_key, msg, "--output=%s" % (sig2)], "")
-    test_cli("verify", [pub_key, msg, sig2], "Signature is valid")
+    test_cli("sign", [priv_key, "--hash=SHA-512", msg, "--output=%s" % (sig2)], "")
+    test_cli("verify", [pub_key, "--hash=SHA-512", msg, sig2], "Signature is valid")
     test_cli("hash", ["--no-fsname", sig2], "803EC5D6BECDFB9DC676EE2EDFEFE3D71EE924343A2ED9D2D7BFF0A9D97D704E")
     test_cli("hash", ["--no-fsname", priv_key], "D581F5BFDA65669A825165C7A9CF17D6D5C5DF349004BCB7416DCD1A5C0349A0")
 
