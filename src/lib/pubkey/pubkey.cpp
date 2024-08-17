@@ -244,19 +244,15 @@ void check_der_format_supported(Signature_Format format, size_t parts) {
 
 }  // namespace
 
-PK_Signer::PK_Signer(const Private_Key& key,
-                     RandomNumberGenerator& rng,
-                     std::string_view emsa,
-                     Signature_Format format,
-                     std::string_view provider) {
-   m_op = key.create_signature_op(rng, emsa, provider);
+PK_Signer::PK_Signer(const Private_Key& key, const PK_Signature_Options& options, RandomNumberGenerator& rng) {
+   m_op = key._create_signature_op(rng, options);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support signature generation", key.algo_name()));
    }
-   m_sig_format = format;
+   m_sig_format = options.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
    m_parts = key.message_parts();
    m_part_size = key.message_part_size();
-   check_der_format_supported(format, m_parts);
+   check_der_format_supported(m_sig_format, m_parts);
 }
 
 AlgorithmIdentifier PK_Signer::algorithm_identifier() const {

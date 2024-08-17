@@ -115,9 +115,8 @@ class BOTAN_PUBLIC_API(2, 0) DSA_PrivateKey final : public DSA_PublicKey,
       const BigInt& get_int_field(std::string_view field) const override;
       secure_vector<uint8_t> raw_private_key_bits() const override;
 
-      std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
-                                                             std::string_view params,
-                                                             std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
+                                                              const PK_Signature_Options& options) const override;
 
    private:
       std::shared_ptr<const DL_PrivateKey> m_private_key;

@@ -195,16 +195,15 @@ class HSS_LMS_Signature_Operation final : public PK_Ops::Signature {
       std::vector<uint8_t> m_msg_buffer;
 };
 
-std::unique_ptr<PK_Ops::Signature> HSS_LMS_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                                                           std::string_view params,
-                                                                           std::string_view provider) const {
+std::unique_ptr<PK_Ops::Signature> HSS_LMS_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                            const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-   BOTAN_ARG_CHECK(params.empty(), "Unexpected parameters for signing with HSS-LMS");
+   BOTAN_ARG_CHECK(options.hash_function().empty(), "Unexpected parameters for signing with HSS-LMS");
 
-   if(provider.empty() || provider == "base") {
+   if(!options.using_provider()) {
       return std::make_unique<HSS_LMS_Signature_Operation>(m_private, m_public);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 }  // namespace Botan

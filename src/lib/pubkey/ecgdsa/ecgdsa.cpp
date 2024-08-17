@@ -36,8 +36,8 @@ namespace {
 */
 class ECGDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    public:
-      ECGDSA_Signature_Operation(const ECGDSA_PrivateKey& ecgdsa, std::string_view emsa) :
-            PK_Ops::Signature_with_Hash(emsa), m_group(ecgdsa.domain()), m_x(ecgdsa._private_key()) {}
+      ECGDSA_Signature_Operation(const ECGDSA_PrivateKey& ecgdsa, const PK_Signature_Options& options) :
+            PK_Ops::Signature_with_Hash(options), m_group(ecgdsa.domain()), m_x(ecgdsa._private_key()) {}
 
       std::vector<uint8_t> raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng) override;
 
@@ -134,13 +134,13 @@ std::unique_ptr<PK_Ops::Verification> ECGDSA_PublicKey::create_x509_verification
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Signature> ECGDSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                                                          std::string_view params,
-                                                                          std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<ECGDSA_Signature_Operation>(*this, params);
+std::unique_ptr<PK_Ops::Signature> ECGDSA_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                           const PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng);
+   if(!options.using_provider()) {
+      return std::make_unique<ECGDSA_Signature_Operation>(*this, options);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 }  // namespace Botan

@@ -11,6 +11,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/pk_keys.h>
 #include <botan/pk_ops_fwd.h>
+#include <botan/pk_options.h>
 #include <botan/symkey.h>
 #include <span>
 #include <string>
@@ -166,7 +167,10 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
                 RandomNumberGenerator& rng,
                 std::string_view padding,
                 Signature_Format format = Signature_Format::Standard,
-                std::string_view provider = "");
+                std::string_view provider = "") :
+            PK_Signer(key, PK_Signature_Options::_parse(key, padding, format, provider), rng) {}
+
+      PK_Signer(const Private_Key& key, const PK_Signature_Options& options, RandomNumberGenerator& rng);
 
       ~PK_Signer();
 

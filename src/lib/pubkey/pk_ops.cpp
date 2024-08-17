@@ -114,10 +114,34 @@ std::unique_ptr<HashFunction> create_signature_hash(std::string_view padding) {
    throw Algorithm_Not_Found(padding);
 }
 
+std::unique_ptr<HashFunction> create_signature_hash(const PK_Signature_Options& options) {
+   if(auto hash = HashFunction::create(options.hash_function())) {
+      return hash;
+   }
+
+#if defined(BOTAN_HAS_RAW_HASH_FN)
+   if(options.hash_function().starts_with("Raw")) {
+      if(options.hash_function() == "Raw") {
+         return std::make_unique<RawHashFunction>("Raw", 0);
+      }
+
+      SCAN_Name req(options.hash_function());
+      printf("hi %s\n", options.hash_function().c_str());
+      if(req.arg_count() == 1) {
+         if(auto hash = HashFunction::create(req.arg(0))) {
+            return std::make_unique<RawHashFunction>(std::move(hash));
+         }
+      }
+   }
+#endif
+
+   throw Algorithm_Not_Found(options.hash_function());
+}
+
 }  // namespace
 
-PK_Ops::Signature_with_Hash::Signature_with_Hash(std::string_view hash) :
-      Signature(), m_hash(create_signature_hash(hash)) {}
+PK_Ops::Signature_with_Hash::Signature_with_Hash(const PK_Signature_Options& options) :
+      Signature(), m_options(options), m_hash(create_signature_hash(m_options)) {}
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
 std::string PK_Ops::Signature_with_Hash::rfc6979_hash_function() const {

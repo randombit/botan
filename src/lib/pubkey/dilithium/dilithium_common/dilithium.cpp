@@ -505,21 +505,21 @@ secure_vector<uint8_t> Dilithium_PrivateKey::private_key_bits() const {
    return std::move(m_private->raw_sk().get());
 }
 
-std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                                                             std::string_view params,
-                                                                             std::string_view provider) const {
+std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::_create_signature_op(
+   RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
 
-   BOTAN_ARG_CHECK(params.empty() || params == "Deterministic" || params == "Randomized",
-                   "Unexpected parameters for signing with Dilithium");
+   BOTAN_ARG_CHECK(options.hash_function().empty(), "Dilithium does not allow specifying the hash function");
+   BOTAN_ARG_CHECK(!options.using_padding(), "Dilithium does not allow padding");
+   BOTAN_ARG_CHECK(!options.using_context(), "Dilithium does not support contexts");
 
    // TODO: ML-DSA uses the randomized (hedged) variant by default.
    //       We might even drop support for the deterministic variant.
-   const bool randomized = (params == "Randomized");
-   if(provider.empty() || provider == "base") {
+   const bool randomized = !options.using_deterministic_signature();
+   if(!options.using_provider()) {
       return std::make_unique<Dilithium_Signature_Operation>(m_private, randomized);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<Public_Key> Dilithium_PrivateKey::public_key() const {

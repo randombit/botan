@@ -211,8 +211,8 @@ class PKCS11_RSA_Encryption_Operation final : public PK_Ops::Encryption {
 
 class PKCS11_RSA_Signature_Operation final : public PK_Ops::Signature {
    public:
-      PKCS11_RSA_Signature_Operation(const PKCS11_RSA_PrivateKey& key, std::string_view padding) :
-            m_key(key), m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(padding)) {}
+      PKCS11_RSA_Signature_Operation(const PKCS11_RSA_PrivateKey& key, const PK_Signature_Options& options) :
+            m_key(key), m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(options._padding_with_hash())) {}
 
       size_t signature_length() const override { return m_key.get_n().bytes(); }
 
@@ -408,10 +408,10 @@ std::unique_ptr<PK_Ops::Decryption> PKCS11_RSA_PrivateKey::create_decryption_op(
    }
 }
 
-std::unique_ptr<PK_Ops::Signature> PKCS11_RSA_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                                                              std::string_view params,
-                                                                              std::string_view /*provider*/) const {
-   return std::make_unique<PKCS11_RSA_Signature_Operation>(*this, params);
+std::unique_ptr<PK_Ops::Signature> PKCS11_RSA_PrivateKey::_create_signature_op(
+   RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng);
+   return std::make_unique<PKCS11_RSA_Signature_Operation>(*this, options);
 }
 
 PKCS11_RSA_KeyPair generate_rsa_keypair(Session& session,

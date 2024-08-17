@@ -1,5 +1,5 @@
 <defines>
-PUBLIC_KEY_CRYPTO -> 20131128
+PUBLIC_KEY_CRYPTO -> 20240817
 </defines>
 
 <module_info>
@@ -9,6 +9,7 @@ brief -> "Implementations of public key schemes"
 
 <header:public>
 pk_algs.h
+pk_options.h
 pk_keys.h
 pk_ops_fwd.h
 pk_ops.h
