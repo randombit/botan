@@ -125,8 +125,7 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options {
       ///
       static PK_Signature_Options _parse(const Public_Key& key,
                                          std::string_view padding,
-                                         Signature_Format format,
-                                         std::string_view provider);
+                                         Signature_Format format);
 
    private:
       std::string m_hash_fn;

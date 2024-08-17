@@ -63,6 +63,10 @@ PK_Signature_Options PK_Signature_Options::with_der_encoded_signature() const {
 }
 
 std::string PK_Signature_Options::_padding_with_hash() const {
+   if(!m_hash_fn.empty() && m_padding.has_value()) {
+      return fmt("{}({})", m_padding.value(), m_hash_fn);
+   }
+
    if(m_padding.has_value()) {
       return m_padding.value();
    }
@@ -77,8 +81,7 @@ std::string PK_Signature_Options::_padding_with_hash() const {
 //static
 PK_Signature_Options PK_Signature_Options::_parse(const Public_Key& key,
                                                   std::string_view params,
-                                                  Signature_Format format,
-                                                  std::string_view provider) {
+                                                  Signature_Format format) {
    /*
    * This is a convoluted mess because we must handle dispatch for every algorithm
    * specific detail of how padding strings were formatted in versions prior to 3.6.
@@ -92,9 +95,9 @@ PK_Signature_Options PK_Signature_Options::_parse(const Public_Key& key,
                       "Unexpected parameters for signing with Dilithium");
 
       if(params == "Deterministic") {
-         return PK_Signature_Options().with_provider(provider).with_deterministic_signature();
+         return PK_Signature_Options().with_deterministic_signature();
       } else {
-         return PK_Signature_Options().with_provider(provider);
+         return PK_Signature_Options();
       }
    }
 
@@ -105,7 +108,7 @@ PK_Signature_Options PK_Signature_Options::_parse(const Public_Key& key,
       * Ident,Hash [since 2.3.0]
       */
       if(params.empty()) {
-         return PK_Signature_Options("SM3").with_provider(provider);
+         return PK_Signature_Options("SM3");
       } else {
          std::string userid;
          std::string hash = "SM3";
@@ -116,45 +119,45 @@ PK_Signature_Options PK_Signature_Options::_parse(const Public_Key& key,
             userid = params.substr(0, comma);
             hash = params.substr(comma + 1, std::string::npos);
          }
-         return PK_Signature_Options(hash).with_provider(provider).with_context(userid);
+         return PK_Signature_Options(hash).with_context(userid);
       }
    }
 
    if(key.algo_name() == "Ed25519") {
       if(params.empty() || params == "Identity" || params == "Pure") {
-         return PK_Signature_Options().with_provider(provider);
+         return PK_Signature_Options();
       } else if(params == "Ed25519ph") {
-         return PK_Signature_Options().with_provider(provider).with_prehash();
+         return PK_Signature_Options().with_prehash();
       } else {
-         return PK_Signature_Options().with_provider(provider).with_prehash(std::string(params));
+         return PK_Signature_Options().with_prehash(std::string(params));
       }
    }
 
    if(key.algo_name() == "Ed448") {
       if(params.empty() || params == "Identity" || params == "Pure" || params == "Ed448") {
-         return PK_Signature_Options().with_provider(provider);
+         return PK_Signature_Options();
       } else if(params == "Ed448ph") {
-         return PK_Signature_Options().with_provider(provider).with_prehash();
+         return PK_Signature_Options().with_prehash();
       } else {
-         return PK_Signature_Options().with_provider(provider).with_prehash(std::string(params));
+         return PK_Signature_Options().with_prehash(std::string(params));
       }
    }
 
    if(key.algo_name() == "RSA") {
-      return PK_Signature_Options().with_provider(provider).with_padding(params);
+      return PK_Signature_Options().with_padding(params);
    }
 
    if(params.empty()) {
-      return PK_Signature_Options().with_provider(provider);
+      return PK_Signature_Options();
    }
 
    // ECDSA/DSA/ECKCDSA/etc
    auto dsa_options = [&]() {
       if(params.starts_with("EMSA1")) {
          SCAN_Name req(params);
-         return PK_Signature_Options(req.arg(0)).with_provider(provider);
+         return PK_Signature_Options(req.arg(0));
       } else {
-         return PK_Signature_Options(params).with_provider(provider);
+         return PK_Signature_Options(params);
       }
    }();
 
