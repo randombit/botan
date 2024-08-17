@@ -4,13 +4,13 @@ Release Notes
 Version 3.6.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add new ``EC_Scalar`` and ``EC_AffinePoint`` types (GH #4042 #4203
-  #4256 #4284)
-
-* Further improvements to elliptic curve performance
-  (GH #4113 #4147 #4190 #4191 #4113 #4171 #4205 #4207 #4209 #4210
-  #4211 #4212 #4213 #4215 #4221 #4225 #4226 #4235 #4237 #4240 #4242
-  #4257 #4261 #4264 #4276)
+* Fully integrate and further optimize the new ECC library first introduced in
+  3.5.0. For common curves, operations are 2 to 3 times faster. This also
+  introduces a new API for low level EC operations, such a point multiplication,
+  using ``EC_Scalar`` and ``EC_AffinePoint`` types.
+  (GH   #4042 #4113 #4147 #4190 #4191 #4113 #4143 #4171 #4203 #4205 #4207
+  #4209 #4210 #4211 #4212 #4213 #4215 #4217 #4218 #4221 #4225 #4226 #4235
+  #4237 #4240 #4242 #4256 #4257 #4261 #4264 #4276 #4284 #4300)
 
 * Constant time programming improvements including ``CT::Option``
   (GH #4175 #4197 #4198 #4204 #4207 #4254 #4260)
@@ -20,6 +20,8 @@ Version 3.6.0, Not Yet Released
 * In ECDSA blind the constant time inversion of the nonce. (GH #4259)
 
 * Add support for AVX2-VAES instructions (GH #4286 #4287)
+
+* Add GFNI-AVX2 acceleration for SM4 (GH #4289)
 
 * Add support for elliptic curve numsp512d1 (GH #4251)
 
@@ -34,6 +36,19 @@ Version 3.6.0, Not Yet Released
   safety and side channel resistance. (GH #4238 #4239)
 
 * Cache the DER encoding of the OID format of an elliptic curve (GH #4193)
+
+* Correct inconsistencies with use of ``BOTAN_CLEAR_CPUID`` where dependent
+  instruction sets were not always disabled. (GH #4290)
+
+* Add CI nightly test using Intel SDE to test AVX-512 (GH #4296)
+
+* Fix armv7/aarch64 CPU feature detection on FreeBSD (GH #4315)
+
+* Add support for armv7/aarch64/ppc64 CPU feature detection on OpenBSD,
+  using a new API added in OpenBSD 7.6 (GH #4312)
+
+* Fix a bug in the speed subcommand which caused it to report incorrect
+  values, especially for ciphers/hashes with small input sizes. (GH #4311)
 
 * Fix a bug where CMake and pkg-config files might be installed to the
   wrong path (GH #4236 #4231)
