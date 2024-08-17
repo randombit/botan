@@ -182,11 +182,26 @@ class Dilithium_PrivateKeyInternal {
       DilithiumPolyVec m_s2;
 };
 
+namespace {
+
+// Return true if randomized signatures were requested
+bool check_dilithium_options(const PK_Signature_Options& options) {
+   BOTAN_ARG_CHECK(options.hash_function().empty(), "Dilithium does not allow specifying the hash function");
+   BOTAN_ARG_CHECK(!options.using_padding(), "Dilithium does not support padding");
+
+   // This is available in ML-DSA and might be supported in the future
+   BOTAN_ARG_CHECK(!options.using_prehash(), "Dilithium does not support prehashing");
+
+   // TODO: ML-DSA uses the randomized (hedged) variant by default.
+   //       We might even drop support for the deterministic variant.
+   return !options.using_deterministic_signature();
+}
+
 class Dilithium_Signature_Operation final : public PK_Ops::Signature {
    public:
-      Dilithium_Signature_Operation(std::shared_ptr<Dilithium_PrivateKeyInternal> sk, bool randomized) :
+      Dilithium_Signature_Operation(std::shared_ptr<Dilithium_PrivateKeyInternal> sk, const PK_Signature_Options& options) :
             m_priv_key(std::move(sk)),
-            m_randomized(randomized),
+            m_randomized(check_dilithium_options(options)),
             m_h(m_priv_key->mode().symmetric_primitives().get_message_hash(m_priv_key->tr())),
             m_s1(ntt(m_priv_key->s1().clone())),
             m_s2(ntt(m_priv_key->s2().clone())),
@@ -356,6 +371,8 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
       DilithiumMessageHash m_h;
 };
 
+}  // namespace
+
 Dilithium_PublicKey::Dilithium_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> pk) :
       Dilithium_PublicKey(pk, DilithiumMode(alg_id.oid())) {}
 
@@ -509,15 +526,8 @@ std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::_create_signature_op(
    RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
 
-   BOTAN_ARG_CHECK(options.hash_function().empty(), "Dilithium does not allow specifying the hash function");
-   BOTAN_ARG_CHECK(!options.using_padding(), "Dilithium does not allow padding");
-   BOTAN_ARG_CHECK(!options.using_context(), "Dilithium does not support contexts");
-
-   // TODO: ML-DSA uses the randomized (hedged) variant by default.
-   //       We might even drop support for the deterministic variant.
-   const bool randomized = !options.using_deterministic_signature();
    if(!options.using_provider()) {
-      return std::make_unique<Dilithium_Signature_Operation>(m_private, randomized);
+      return std::make_unique<Dilithium_Signature_Operation>(m_private, options);
    }
    throw Provider_Not_Found(algo_name(), options.provider().value());
 }

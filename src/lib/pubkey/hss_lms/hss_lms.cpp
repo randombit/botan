@@ -11,6 +11,7 @@
 #include <botan/rng.h>
 #include <botan/internal/hss.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
@@ -198,6 +199,9 @@ class HSS_LMS_Signature_Operation final : public PK_Ops::Signature {
 std::unique_ptr<PK_Ops::Signature> HSS_LMS_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
                                                                             const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
+
+   PK_Options_Checks::validate_for_hash_based_signature(options, "HSS-LMS", "");
+
    BOTAN_ARG_CHECK(options.hash_function().empty(), "Unexpected parameters for signing with HSS-LMS");
 
    if(!options.using_provider()) {

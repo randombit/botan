@@ -90,9 +90,12 @@ PK_Signature_Options PK_Signature_Options::_parse(const Public_Key& key,
    * are removed in Botan4.
    */
 
-   if(key.algo_name().starts_with("Dilithium")) {
-      BOTAN_ARG_CHECK(params.empty() || params == "Randomized" || params == "Deterministic",
-                      "Unexpected parameters for signing with Dilithium");
+   const std::string algo = key.algo_name();
+
+   if(algo.starts_with("Dilithium") || algo == "SPHINCS+") {
+      if(!params.empty() && params != "Randomized" && params != "Deterministic") {
+         throw Invalid_Argument(fmt("Unexpected parameters for signing with {}", algo));
+      }
 
       if(params == "Deterministic") {
          return PK_Signature_Options().with_deterministic_signature();
@@ -101,7 +104,7 @@ PK_Signature_Options PK_Signature_Options::_parse(const Public_Key& key,
       }
    }
 
-   if(key.algo_name() == "SM2") {
+   if(algo == "SM2") {
       /*
       * SM2 parameters have the following possible formats:
       * Ident [since 2.2.0]
@@ -123,7 +126,7 @@ PK_Signature_Options PK_Signature_Options::_parse(const Public_Key& key,
       }
    }
 
-   if(key.algo_name() == "Ed25519") {
+   if(algo == "Ed25519") {
       if(params.empty() || params == "Identity" || params == "Pure") {
          return PK_Signature_Options();
       } else if(params == "Ed25519ph") {
@@ -133,7 +136,7 @@ PK_Signature_Options PK_Signature_Options::_parse(const Public_Key& key,
       }
    }
 
-   if(key.algo_name() == "Ed448") {
+   if(algo == "Ed448") {
       if(params.empty() || params == "Identity" || params == "Pure" || params == "Ed448") {
          return PK_Signature_Options();
       } else if(params == "Ed448ph") {
@@ -143,7 +146,7 @@ PK_Signature_Options PK_Signature_Options::_parse(const Public_Key& key,
       }
    }
 
-   if(key.algo_name() == "RSA") {
+   if(algo == "RSA") {
       return PK_Signature_Options().with_padding(params);
    }
 

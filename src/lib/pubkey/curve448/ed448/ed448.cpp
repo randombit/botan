@@ -15,6 +15,7 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/ed448_internal.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 
 #include <utility>
 
@@ -244,6 +245,8 @@ std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::create_x509_verification_
 std::unique_ptr<PK_Ops::Signature> Ed448_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
                                                                           const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
+
+   BOTAN_ARG_CHECK(!options.using_padding(), "Ed448 does not support padding");
 
    if(!options.using_provider()) {
       if(options.using_prehash()) {

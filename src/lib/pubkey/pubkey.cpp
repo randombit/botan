@@ -244,7 +244,7 @@ void check_der_format_supported(Signature_Format format, size_t parts) {
 
 }  // namespace
 
-PK_Signer::PK_Signer(const Private_Key& key, const PK_Signature_Options& options, RandomNumberGenerator& rng) {
+PK_Signer::PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, const PK_Signature_Options& options) {
    if(options.using_context() && !key.supports_context_data()) {
       throw Invalid_Argument(fmt("Key type {} does not support context information"));
    }

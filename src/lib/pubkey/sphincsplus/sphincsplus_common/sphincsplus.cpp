@@ -10,6 +10,7 @@
 
 #include <botan/rng.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/pk_options_impl.h>
 #include <botan/internal/sp_fors.h>
 #include <botan/internal/sp_hash.h>
 #include <botan/internal/sp_hypertree.h>
@@ -352,6 +353,8 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
 std::unique_ptr<PK_Ops::Signature> SphincsPlus_PrivateKey::_create_signature_op(
    RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
+
+   PK_Options_Checks::validate_for_hash_based_signature(options, "SPHINCS+", m_public->parameters().hash_name());
 
    const bool randomized = !options.using_deterministic_signature();
    if(!options.using_provider()) {

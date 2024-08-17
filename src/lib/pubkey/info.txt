@@ -21,6 +21,7 @@ x509_key.h
 <header:internal>
 blinding.h
 pk_ops_impl.h
+pk_options_impl.h
 workfactor.h
 </header:internal>
 

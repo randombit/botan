@@ -303,6 +303,8 @@ std::unique_ptr<PK_Ops::Signature> Ed25519_PrivateKey::_create_signature_op(Rand
                                                                             const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
 
+   BOTAN_ARG_CHECK(!options.using_padding(), "Ed25519 does not support padding");
+
    if(!options.using_provider()) {
       if(options.using_prehash()) {
          if(options.prehash_fn().has_value()) {
