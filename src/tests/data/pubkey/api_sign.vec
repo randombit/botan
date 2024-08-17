@@ -62,4 +62,4 @@ SigParams =
 [XMSS]
 
 AlgoParams = XMSS-SHA2_10_256
-SigParams = SHA2_10_256
+SigParams = SHA-256

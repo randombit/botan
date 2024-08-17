@@ -44,6 +44,12 @@ namespace Botan {
          Botan::throw_invalid_state(#expr, __func__, __FILE__); \
    } while(0)
 
+#define BOTAN_STATE_CHECK_MSG(expr, msg)                      \
+   do {                                                       \
+      if(!(expr))                                             \
+         Botan::throw_invalid_state(msg, __func__, __FILE__); \
+   } while(0)
+
 /**
 * Make an assertion
 */

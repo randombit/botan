@@ -8,6 +8,7 @@
 
 #include <botan/p11_mechanism.h>
 
+#include <botan/pk_options.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/scan_name.h>
@@ -85,39 +86,24 @@ class RSA_SignMechanism final : public MechanismData {
 const std::map<std::string, RSA_SignMechanism> SignMechanisms = {
    {"Raw", RSA_SignMechanism(MechanismType::RsaX509)},
 
-   {"EMSA2(Raw)", RSA_SignMechanism(MechanismType::RsaX931)},
-   {"EMSA2(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaX931)},
+   {"X9.31(Raw)", RSA_SignMechanism(MechanismType::RsaX931)},
+   {"X9.31(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaX931)},
 
    // RSASSA PKCS#1 v1.5
-   {"EMSA3(Raw)", RSA_SignMechanism(MechanismType::RsaPkcs)},
-   {"EMSA3(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcs)},
-   {"EMSA3(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcs)},
-   {"EMSA3(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcs)},
-   {"EMSA3(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcs)},
-   {"EMSA3(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcs)},
-
-   {"EMSA_PKCS1(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcs)},
-   {"EMSA_PKCS1(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcs)},
-   {"EMSA_PKCS1(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcs)},
-   {"EMSA_PKCS1(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcs)},
-   {"EMSA_PKCS1(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcs)},
+   {"PKCS1v15(Raw)", RSA_SignMechanism(MechanismType::RsaPkcs)},
+   {"PKCS1v15(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcs)},
+   {"PKCS1v15(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcs)},
+   {"PKCS1v15(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcs)},
+   {"PKCS1v15(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcs)},
+   {"PKCS1v15(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcs)},
 
    // RSASSA PKCS#1 PSS
-   {"EMSA4(Raw)", RSA_SignMechanism(MechanismType::RsaPkcsPss)},
-   {"EMSA4(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcsPss)},
-   {"EMSA4(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcsPss)},
-
-   {"EMSA4(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss)},
-   {"EMSA4(SHA-256,MGF1,32)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss)},
-   {"PSSR(SHA-256,MGF1,32)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss)},
-
-   {"EMSA4(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcsPss)},
-   {"EMSA4(SHA-384,MGF1,48)", RSA_SignMechanism(MechanismType::Sha384RsaPkcsPss)},
-   {"PSSR(SHA-384,MGF1,48)", RSA_SignMechanism(MechanismType::Sha384RsaPkcsPss)},
-
-   {"EMSA4(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
-   {"EMSA4(SHA-512,MGF1,64)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
-   {"PSSR(SHA-512,MGF1,64)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
+   {"PSS(Raw)", RSA_SignMechanism(MechanismType::RsaPkcsPss)},
+   {"PSS(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcsPss)},
+   {"PSS(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcsPss)},
+   {"PSS(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss)},
+   {"PSS(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcsPss)},
+   {"PSS(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
 
    {"ISO9796", RSA_SignMechanism(MechanismType::Rsa9796)}};
 
@@ -204,12 +190,27 @@ MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(std::string_view p
    return mech;
 }
 
-MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(std::string_view padding_view) {
-   const std::string padding(padding_view);
+MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(const PK_Signature_Options& options) {
+   const std::string padding = [&]() {
+      if(options.using_hash() && options.using_padding()) {
+         return fmt("{}({})", options.padding().value(), options.hash_function_name());
+      }
+
+      if(options.using_padding()) {
+         return options.padding().value();
+      }
+
+      if(options.using_hash()) {
+         return options.hash_function_name();
+      }
+
+      throw Invalid_Argument("RSA signature requires a padding scheme");
+   }();
+
    auto mechanism_info_it = SignMechanisms.find(padding);
    if(mechanism_info_it == SignMechanisms.end()) {
       // at this point it would be possible to support additional configurations that are not predefined above by parsing `padding`
-      throw Lookup_Error("PKCS#11 RSA sign/verify does not support EMSA " + padding);
+      throw Lookup_Error("PKCS#11 RSA sign/verify does not support padding with " + padding);
    }
    RSA_SignMechanism mechanism_info = mechanism_info_it->second;
 

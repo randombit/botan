@@ -111,7 +111,7 @@ std::pair<Certificate_Status_Code, std::string> X509_Object::verify_signature(co
       }
    } catch(Decoding_Error&) {
       return std::make_pair(Certificate_Status_Code::SIGNATURE_ALGO_BAD_PARAMS, "");
-   } catch(Algorithm_Not_Found&) {
+   } catch(Lookup_Error&) {
       return std::make_pair(Certificate_Status_Code::SIGNATURE_ALGO_UNKNOWN, "");
    } catch(...) {
       // This shouldn't happen, fallback to generic signature error

@@ -11,6 +11,7 @@
 #include <botan/hash.h>
 #include <botan/kdf.h>
 #include <botan/pk_ops.h>
+#include <botan/pk_options.h>
 #include <botan/internal/eme.h>
 
 namespace Botan::PK_Ops {
@@ -57,7 +58,7 @@ class Verification_with_Hash : public Verification {
       std::string hash_function() const final { return m_hash->name(); }
 
    protected:
-      explicit Verification_with_Hash(std::string_view hash);
+      explicit Verification_with_Hash(const PK_Signature_Options& options);
 
       explicit Verification_with_Hash(const AlgorithmIdentifier& alg_id,
                                       std::string_view pk_algo,
@@ -86,7 +87,7 @@ class Signature_with_Hash : public Signature {
       ~Signature_with_Hash() override = default;
 
    protected:
-      explicit Signature_with_Hash(std::string_view hash);
+      explicit Signature_with_Hash(const PK_Signature_Options& options);
 
       std::string hash_function() const final { return m_hash->name(); }
 

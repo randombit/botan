@@ -15,13 +15,13 @@ int main() {
    const std::string message("This is a tasty burger!");
 
    // sign data
-   Botan::PK_Signer signer(key, rng, "SHA-256");
+   Botan::PK_Signer signer(key, rng, Botan::PK_Signature_Options().with_hash("SHA-256"));
    signer.update(message);
    std::vector<uint8_t> signature = signer.signature(rng);
    std::cout << "Signature:\n" << Botan::hex_encode(signature);
 
    // now verify the signature
-   Botan::PK_Verifier verifier(key, "SHA-256");
+   Botan::PK_Verifier verifier(key, Botan::PK_Signature_Options().with_hash("SHA-256"));
    verifier.update(message);
    std::cout << "\nis " << (verifier.check_signature(signature) ? "valid" : "invalid");
    return 0;

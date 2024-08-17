@@ -219,21 +219,21 @@ std::vector<uint8_t> ISO_9796_DS2::raw_data() {
 std::vector<uint8_t> ISO_9796_DS2::encoding_of(const std::vector<uint8_t>& msg,
                                                size_t output_bits,
                                                RandomNumberGenerator& rng) {
-   return iso9796_encoding(msg, output_bits, m_hash, m_SALT_SIZE, m_implicit, rng);
+   return iso9796_encoding(msg, output_bits, m_hash, m_salt_size, m_implicit, rng);
 }
 
 /*
  * ISO-9796-2 scheme 2 verify operation
  */
 bool ISO_9796_DS2::verify(const std::vector<uint8_t>& const_coded, const std::vector<uint8_t>& raw, size_t key_bits) {
-   return iso9796_verification(const_coded, raw, key_bits, m_hash, m_SALT_SIZE);
+   return iso9796_verification(const_coded, raw, key_bits, m_hash, m_salt_size);
 }
 
 /*
  * Return the SCAN name
  */
 std::string ISO_9796_DS2::name() const {
-   return "ISO_9796_DS2(" + m_hash->name() + "," + (m_implicit ? "imp" : "exp") + "," + std::to_string(m_SALT_SIZE) +
+   return "ISO_9796_DS2(" + m_hash->name() + "," + (m_implicit ? "imp" : "exp") + "," + std::to_string(m_salt_size) +
           ")";
 }
 

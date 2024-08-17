@@ -20,6 +20,7 @@
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/pk_ops_impl.h>
+#include <botan/internal/scan_name.h>
 #include <botan/internal/workfactor.h>
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
@@ -564,8 +565,12 @@ class RSA_Signature_Operation final : public PK_Ops::Signature,
 
       std::string hash_function() const override { return m_emsa->hash_function(); }
 
-      RSA_Signature_Operation(const RSA_PrivateKey& rsa, std::string_view padding, RandomNumberGenerator& rng) :
-            RSA_Private_Operation(rsa, rng), m_emsa(EMSA::create_or_throw(padding)) {}
+      RSA_Signature_Operation(const RSA_PrivateKey& rsa,
+                              const PK_Signature_Options& options,
+                              RandomNumberGenerator& rng) :
+            RSA_Private_Operation(rsa, rng) {
+         m_emsa = EMSA::create_or_throw(options);
+      }
 
    private:
       std::unique_ptr<EMSA> m_emsa;
@@ -671,8 +676,8 @@ class RSA_Verify_Operation final : public PK_Ops::Verification,
          return m_emsa->verify(message_repr, msg, public_modulus_bits() - 1);
       }
 
-      RSA_Verify_Operation(const RSA_PublicKey& rsa, std::string_view padding) :
-            RSA_Public_Operation(rsa), m_emsa(EMSA::create_or_throw(padding)) {}
+      RSA_Verify_Operation(const RSA_PublicKey& rsa, const PK_Signature_Options& options) :
+            RSA_Public_Operation(rsa), m_emsa(EMSA::create_or_throw(options)) {}
 
       std::string hash_function() const override { return m_emsa->hash_function(); }
 
@@ -729,25 +734,24 @@ std::unique_ptr<PK_Ops::KEM_Encryption> RSA_PublicKey::create_kem_encryption_op(
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Verification> RSA_PublicKey::create_verification_op(std::string_view params,
-                                                                            std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<RSA_Verify_Operation>(*this, params);
+std::unique_ptr<PK_Ops::Verification> RSA_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   if(!options.using_provider()) {
+      return std::make_unique<RSA_Verify_Operation>(*this, options);
    }
-
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 namespace {
 
-std::string parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id) {
+PK_Signature_Options parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id) {
    const auto sig_info = split_on(alg_id.oid().to_formatted_string(), '/');
 
    if(sig_info.empty() || sig_info.size() != 2 || sig_info[0] != "RSA") {
       throw Decoding_Error("Unknown AlgorithmIdentifier for RSA X.509 signatures");
    }
 
-   std::string padding = sig_info[1];
+   const std::string& padding = sig_info[1];
 
    if(padding == "EMSA4") {
       // "MUST contain RSASSA-PSS-params"
@@ -780,10 +784,16 @@ std::string parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id) {
          throw Decoding_Error("Unacceptable trailer field for PSS signatures");
       }
 
-      padding += fmt("({},MGF1,{})", hash_algo, pss_params.salt_length());
-   }
+      return PK_Signature_Options().with_padding("PSS").with_hash(hash_algo).with_salt_size(pss_params.salt_length());
+   } else {
+      SCAN_Name scan(padding);
 
-   return padding;
+      if(scan.algo_name() != "EMSA3") {
+         throw Decoding_Error("Unexpected OID for RSA signatures");
+      }
+
+      return PK_Signature_Options().with_padding("PKCS1v15").with_hash(scan.arg(0));
+   }
 }
 
 }  // namespace
@@ -817,14 +827,13 @@ std::unique_ptr<PK_Ops::KEM_Decryption> RSA_PrivateKey::create_kem_decryption_op
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Signature> RSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                                                       std::string_view params,
-                                                                       std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<RSA_Signature_Operation>(*this, params, rng);
+std::unique_ptr<PK_Ops::Signature> RSA_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                        const PK_Signature_Options& options) const {
+   if(!options.using_provider()) {
+      return std::make_unique<RSA_Signature_Operation>(*this, options, rng);
    }
 
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 }  // namespace Botan
