@@ -121,8 +121,10 @@ namespace {
 */
 class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    public:
-      ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa, std::string_view padding, RandomNumberGenerator& rng) :
-            PK_Ops::Signature_with_Hash(padding),
+      ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa,
+                                const PK_Signature_Options& options,
+                                RandomNumberGenerator& rng) :
+            PK_Ops::Signature_with_Hash(options),
             m_group(ecdsa.domain()),
             m_x(ecdsa._private_key()),
             m_b(EC_Scalar::random(m_group, rng)),
@@ -196,8 +198,8 @@ std::vector<uint8_t> ECDSA_Signature_Operation::raw_sign(std::span<const uint8_t
 */
 class ECDSA_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
-      ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, std::string_view padding) :
-            PK_Ops::Verification_with_Hash(padding), m_group(ecdsa.domain()), m_gy_mul(ecdsa._public_ec_point()) {}
+      ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, const PK_Signature_Options& options) :
+            PK_Ops::Verification_with_Hash(options), m_group(ecdsa.domain()), m_gy_mul(ecdsa._public_ec_point()) {}
 
       ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(alg_id, "ECDSA", true),
@@ -230,13 +232,12 @@ bool ECDSA_Verification_Operation::verify(std::span<const uint8_t> msg, std::spa
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Verification> ECDSA_PublicKey::create_verification_op(std::string_view params,
-                                                                              std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<ECDSA_Verification_Operation>(*this, params);
+std::unique_ptr<PK_Ops::Verification> ECDSA_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   if(!options.using_provider()) {
+      return std::make_unique<ECDSA_Verification_Operation>(*this, options);
    }
-
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> ECDSA_PublicKey::create_x509_verification_op(
@@ -248,14 +249,13 @@ std::unique_ptr<PK_Ops::Verification> ECDSA_PublicKey::create_x509_verification_
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Signature> ECDSA_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                                                         std::string_view params,
-                                                                         std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<ECDSA_Signature_Operation>(*this, params, rng);
+std::unique_ptr<PK_Ops::Signature> ECDSA_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                          const PK_Signature_Options& options) const {
+   if(!options.using_provider()) {
+      return std::make_unique<ECDSA_Signature_Operation>(*this, options, rng);
    }
 
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 }  // namespace Botan

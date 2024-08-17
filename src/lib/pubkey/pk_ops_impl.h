@@ -10,6 +10,8 @@
 
 #include <botan/pk_ops.h>
 
+#include <botan/pk_options.h>
+
 namespace Botan {
 
 class HashFunction;
@@ -62,7 +64,7 @@ class Verification_with_Hash : public Verification {
       std::string hash_function() const final;
 
    protected:
-      explicit Verification_with_Hash(std::string_view hash);
+      explicit Verification_with_Hash(const PK_Signature_Options& options);
 
       explicit Verification_with_Hash(const AlgorithmIdentifier& alg_id,
                                       std::string_view pk_algo,
@@ -89,7 +91,7 @@ class Signature_with_Hash : public Signature {
       ~Signature_with_Hash() override;
 
    protected:
-      explicit Signature_with_Hash(std::string_view hash);
+      explicit Signature_with_Hash(const PK_Signature_Options& options);
 
       std::string hash_function() const final;
 
