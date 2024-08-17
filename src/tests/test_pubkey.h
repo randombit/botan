@@ -34,6 +34,10 @@ class PK_Test : public Text_Based_Test {
          throw Test_Error("No default padding scheme set for " + algo_name());
       }
 
+      virtual std::string printed_params(const VarMap& /*vm*/, const std::string& padding) const {
+         return padding;
+      }
+
       virtual std::string choose_padding(const VarMap& vars, const std::string& pad_hdr);
 
    private:

@@ -7,6 +7,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 **/
 
+#include "botan/pk_options.h"
 #include "tests.h"
 
 #if defined(BOTAN_HAS_XMSS_RFC8391)
@@ -43,7 +44,11 @@ class XMSS_Signature_Tests final : public PK_Signature_Generation_Test {
          return false;
       }
 
-      std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Params"); }
+      std::string default_padding(const VarMap& /*vars*/) const override { return ""; }
+
+      std::string printed_params(const VarMap& vars, const std::string& /*padding*/) const override {
+         return vars.get_req_str("Params");
+      }
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override {
          const std::vector<uint8_t> raw_key = vars.get_req_bin("PrivateKey");
@@ -60,6 +65,10 @@ class XMSS_Signature_Verify_Tests final : public PK_Signature_Verification_Test 
 
       std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Params"); }
 
+      std::string printed_params(const VarMap& vars, const std::string& /*padding*/) const override {
+         return vars.get_req_str("Params");
+      }
+
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
          const std::vector<uint8_t> raw_key = vars.get_req_bin("PublicKey");
          return std::make_unique<Botan::XMSS_PublicKey>(raw_key);
@@ -73,6 +82,10 @@ class XMSS_Signature_Verify_Invalid_Tests final : public PK_Signature_NonVerific
                "XMSS", "pubkey/xmss_invalid.vec", "Params,Msg,PublicKey,InvalidSignature") {}
 
       std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Params"); }
+
+      std::string printed_params(const VarMap& vars, const std::string& /*padding*/) const override {
+         return vars.get_req_str("Params");
+      }
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
          const std::vector<uint8_t> raw_key = vars.get_req_bin("PublicKey");
@@ -157,7 +170,7 @@ std::vector<Test::Result> xmss_statefulness() {
    auto sign_something = [&rng](auto& sk) {
       auto msg = Botan::hex_decode("deadbeef");
 
-      Botan::PK_Signer signer(sk, *rng, "SHA2_10_256");
+      Botan::PK_Signer signer(sk, *rng);
       signer.sign_message(msg, *rng);
    };
 
@@ -286,7 +299,7 @@ std::vector<Test::Result> xmss_legacy_private_key() {
    return {
       CHECK("Use a legacy private key to create a signature",
             [&](auto& result) {
-               Botan::PK_Signer signer(legacy_secret_key, *rng, algo_name);
+               Botan::PK_Signer signer(legacy_secret_key, *rng);
                auto signature = signer.sign_message(message, *rng);
 
                Botan::PK_Verifier verifier(public_key_from_secret_key, algo_name);
@@ -303,7 +316,7 @@ std::vector<Test::Result> xmss_legacy_private_key() {
 
       CHECK("Verify a new signature by a legacy private key with a legacy public key",
             [&](auto& result) {
-               Botan::PK_Signer signer(legacy_secret_key, *rng, algo_name);
+               Botan::PK_Signer signer(legacy_secret_key, *rng);
                auto signature = signer.sign_message(message, *rng);
 
                Botan::PK_Verifier verifier(legacy_public_key, algo_name);

@@ -114,9 +114,18 @@ std::unique_ptr<HashFunction> create_signature_hash(std::string_view padding) {
    throw Algorithm_Not_Found(padding);
 }
 
-std::unique_ptr<HashFunction> create_signature_hash(const PK_Signature_Options& options) {
-   if(auto hash = HashFunction::create(options.hash_function())) {
-      return hash;
+std::unique_ptr<HashFunction> validate_options_returning_hash(const PK_Signature_Options& options) {
+   BOTAN_ARG_CHECK(!options.hash_function().empty(), "This algorithm requires a hash function for signing");
+   BOTAN_ARG_CHECK(!options.using_padding(), "This algorithm does not support padding modes");
+
+   /*
+   * In a sense ECDSA/DSA are *always* in prehashing mode, so we accept the case
+   * where prehashing is requested as long as the prehash hash matches the signature hash.
+   */
+   if(options.prehash_fn().has_value()) {
+      if(options.prehash_fn().value() != options.hash_function()) {
+         throw Invalid_Argument("This algorithm does not support prehashing with a different hash");
+      }
    }
 
 #if defined(BOTAN_HAS_RAW_HASH_FN)
@@ -126,7 +135,6 @@ std::unique_ptr<HashFunction> create_signature_hash(const PK_Signature_Options& 
       }
 
       SCAN_Name req(options.hash_function());
-      printf("hi %s\n", options.hash_function().c_str());
       if(req.arg_count() == 1) {
          if(auto hash = HashFunction::create(req.arg(0))) {
             return std::make_unique<RawHashFunction>(std::move(hash));
@@ -135,23 +143,13 @@ std::unique_ptr<HashFunction> create_signature_hash(const PK_Signature_Options& 
    }
 #endif
 
-   throw Algorithm_Not_Found(options.hash_function());
+   return HashFunction::create_or_throw(options.hash_function());
 }
 
 }  // namespace
 
 PK_Ops::Signature_with_Hash::Signature_with_Hash(const PK_Signature_Options& options) :
-      Signature(), m_options(options), m_hash(create_signature_hash(m_options)) {
-
-   /*
-   * In a sense ECDSA/DSA are *always* in prehashing mode, so we accept the case
-   * where prehashing is requested as long as the prehash hash matches the signature hash.
-   */
-   if(options.prehash_fn().has_value()) {
-      if(options.prehash_fn().value() != m_hash->name()) {
-         throw Invalid_Argument("This algorithm does not support prehashing with a different hash");
-      }
-   }
+      Signature(), m_options(options), m_hash(validate_options_returning_hash(m_options)) {
 }
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)

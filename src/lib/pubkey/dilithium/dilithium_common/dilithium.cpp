@@ -126,11 +126,28 @@ bool DilithiumMode::is_available() const {
    return false;
 }
 
+namespace {
+
+// Return true if randomized signatures were requested
+bool check_dilithium_options(const PK_Signature_Options& options) {
+   BOTAN_ARG_CHECK(options.hash_function().empty(), "Dilithium does not allow specifying the hash function");
+   BOTAN_ARG_CHECK(!options.using_padding(), "Dilithium does not support padding");
+
+   // This is available in ML-DSA and might be supported in the future
+   BOTAN_ARG_CHECK(!options.using_prehash(), "Dilithium does not support prehashing");
+
+   // FIPS 204, Section 3.4
+   //   By default, this standard specifies the signing algorithm to use both
+   //   types of randomness [fresh from the RNG and a value in the private key].
+   //   This is referred to as the “hedged” variant of the signing procedure.
+   return !options.using_deterministic_signature();
+}
+
 class Dilithium_Signature_Operation final : public PK_Ops::Signature {
    public:
-      Dilithium_Signature_Operation(DilithiumInternalKeypair keypair, bool randomized) :
+      Dilithium_Signature_Operation(DilithiumInternalKeypair keypair, const PK_Signature_Options& options) :
             m_keypair(std::move(keypair)),
-            m_randomized(randomized),
+            m_randomized(check_dilithium_options(options)),
             m_h(m_keypair.second->mode().symmetric_primitives().get_message_hash(m_keypair.first->tr())),
             m_s1(ntt(m_keypair.second->s1().clone())),
             m_s2(ntt(m_keypair.second->s2().clone())),
@@ -312,6 +329,8 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
       std::unique_ptr<DilithiumMessageHash> m_h;
 };
 
+}  // namespace
+
 Dilithium_PublicKey::Dilithium_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> pk) :
       Dilithium_PublicKey(pk, DilithiumMode(alg_id.oid())) {}
 
@@ -428,17 +447,8 @@ std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::_create_signature_op(
    RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
 
-   BOTAN_ARG_CHECK(options.hash_function().empty(), "Dilithium does not allow specifying the hash function");
-   BOTAN_ARG_CHECK(!options.using_padding(), "Dilithium does not allow padding");
-   BOTAN_ARG_CHECK(!options.using_context(), "Dilithium does not support contexts");
-
-   // FIPS 204, Section 3.4
-   //   By default, this standard specifies the signing algorithm to use both
-   //   types of randomness [fresh from the RNG and a value in the private key].
-   //   This is referred to as the “hedged” variant of the signing procedure.
-   const bool randomized = !options.using_deterministic_signature();
    if(!options.using_provider()) {
-      return std::make_unique<Dilithium_Signature_Operation>(DilithiumInternalKeypair{m_public, m_private}, randomized);
+      return std::make_unique<Dilithium_Signature_Operation>(DilithiumInternalKeypair{m_public, m_private}, options);
    }
    throw Provider_Not_Found(algo_name(), options.provider().value());
 }

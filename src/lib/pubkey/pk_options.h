@@ -110,10 +110,6 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options {
 
       bool using_provider() const { return provider().has_value() && provider().value() != "base"; }
 
-      // TODO
-      bool _valid_for_rsa() const;
-      bool _valid_for_ecc() const;
-
       // Returns padding plus hash formatted for RSA
       std::string _padding_with_hash() const;
 

@@ -57,6 +57,18 @@ std::unique_ptr<HashFunction> eckcdsa_signature_hash(std::string_view padding) {
    throw Algorithm_Not_Found(padding);
 }
 
+std::unique_ptr<HashFunction> eckcdsa_signature_hash(const PK_Signature_Options& options) {
+   BOTAN_ARG_CHECK(!options.using_padding(), "ECKCDSA does not support padding modes");
+
+   // We could support this, but it's not standard
+   BOTAN_ARG_CHECK(!options.using_prehash(), "ECKCDSA does not support prehashing");
+
+   // intentionally not supporting Raw for ECKCDSA, since we need to know
+   // the length in advance which complicates the logic for Raw
+
+   return HashFunction::create_or_throw(options.hash_function());
+}
+
 std::unique_ptr<HashFunction> eckcdsa_signature_hash(const AlgorithmIdentifier& alg_id) {
    const auto oid_info = split_on(alg_id.oid().to_formatted_string(), '/');
 
@@ -115,11 +127,11 @@ void truncate_hash_if_needed(std::vector<uint8_t>& digest, size_t group_order_by
 */
 class ECKCDSA_Signature_Operation final : public PK_Ops::Signature {
    public:
-      ECKCDSA_Signature_Operation(const ECKCDSA_PrivateKey& eckcdsa, const PK_Signature_Options& options) :
-            m_group(eckcdsa.domain()),
-            m_x(eckcdsa._private_key()),
-            m_hash(eckcdsa_signature_hash(options.hash_function())),
-            m_prefix(eckcdsa_prefix(eckcdsa._public_key(), m_hash->hash_block_size())),
+      ECKCDSA_Signature_Operation(const ECKCDSA_PrivateKey& key, const PK_Signature_Options& options) :
+            m_group(key.domain()),
+            m_x(key._private_key()),
+            m_hash(eckcdsa_signature_hash(options)),
+            m_prefix(eckcdsa_prefix(key._public_key(), m_hash->hash_block_size())),
             m_prefix_used(false) {}
 
       void update(std::span<const uint8_t> input) override {
