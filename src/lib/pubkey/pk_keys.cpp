@@ -19,6 +19,10 @@ const BigInt& Asymmetric_Key::get_int_field(std::string_view field) const {
    throw Unknown_PK_Field_Name(algo_name(), field);
 }
 
+bool Asymmetric_Key::supports_context_data() const {
+   return false;
+}
+
 OID Asymmetric_Key::object_identifier() const {
    try {
       return OID::from_string(algo_name());

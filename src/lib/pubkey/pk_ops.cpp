@@ -141,7 +141,18 @@ std::unique_ptr<HashFunction> create_signature_hash(const PK_Signature_Options& 
 }  // namespace
 
 PK_Ops::Signature_with_Hash::Signature_with_Hash(const PK_Signature_Options& options) :
-      Signature(), m_options(options), m_hash(create_signature_hash(m_options)) {}
+      Signature(), m_options(options), m_hash(create_signature_hash(m_options)) {
+
+   /*
+   * In a sense ECDSA/DSA are *always* in prehashing mode, so we accept the case
+   * where prehashing is requested as long as the prehash hash matches the signature hash.
+   */
+   if(options.prehash_fn().has_value()) {
+      if(options.prehash_fn().value() != m_hash->name()) {
+         throw Invalid_Argument("This algorithm does not support prehashing with a different hash");
+      }
+   }
+}
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
 std::string PK_Ops::Signature_with_Hash::rfc6979_hash_function() const {

@@ -106,6 +106,23 @@ class BOTAN_PUBLIC_API(3, 0) Asymmetric_Key {
       virtual bool supports_operation(PublicKeyOperation op) const = 0;
 
       /**
+      * Return true if this key supports contextual inputs during processing
+      *
+      * This is typically some protocol or user specific binding information
+      * which is included during cryptographic computations.
+      *
+      * This is only supported by a few algorithm types, so default
+      * implementation return false.
+      *
+      * Note that support for contextual data may depend on both the algorithm
+      * and the library version. For example Ed25519 can support contextual
+      * data, using RFC 8032's Ed25519ctx construction, but this is not
+      * currently supported. In a future release, if Ed25519ctx was supported,
+      * then this function would start returning true for Ed25519 keys.
+      */
+      virtual bool supports_context_data() const;
+
+      /**
        * Generate another (cryptographically independent) key pair using the
        * same algorithm parameters as this key. This is most useful for algorithms
        * that support PublicKeyOperation::KeyAgreement to generate a fitting ephemeral

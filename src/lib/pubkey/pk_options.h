@@ -66,9 +66,10 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options {
 
       /// Request producing a deterministic signature
       ///
-      /// Some signature schemes are always randomized, while others support a
-      /// randomized or deterministic option. This allows requesting this. For
-      /// signatures which are always deterministic, this option has no effect.
+      /// Some signature schemes are always deterministic, or always randomized.
+      /// Others support both randomized or deterministic options. This allows
+      /// requesting this. For signatures which are always deterministic or
+      /// always randomized, this option has no effect.
       ///
       /// This option is ignored for verification
       PK_Signature_Options with_deterministic_signature() const;
