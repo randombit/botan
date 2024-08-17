@@ -10,6 +10,7 @@
 #include <botan/der_enc.h>
 #include <botan/hash.h>
 #include <botan/pk_ops.h>
+#include <botan/pk_options.h>
 #include <botan/rsa.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/hash_id.h>
