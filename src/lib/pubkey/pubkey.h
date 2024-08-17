@@ -156,6 +156,14 @@ class BOTAN_PUBLIC_API(2, 0) PK_Decryptor {
 class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
    public:
       /**
+      * Construct a PK signer
+      * @param key the key to use to generate signatures
+      * @param options controls the behavior of the signature generation, eg which hash function to use
+      * @param rng the random generator to use
+      */
+      PK_Signer(const Private_Key& key, const PK_Signature_Options& options, RandomNumberGenerator& rng);
+
+      /**
       * Construct a PK Signer.
       * @param key the key to use inside this signer
       * @param rng the random generator to use
@@ -168,9 +176,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
                 std::string_view padding,
                 Signature_Format format = Signature_Format::Standard,
                 std::string_view provider = "") :
-            PK_Signer(key, PK_Signature_Options::_parse(key, padding, format, provider), rng) {}
-
-      PK_Signer(const Private_Key& key, const PK_Signature_Options& options, RandomNumberGenerator& rng);
+         PK_Signer(key, PK_Signature_Options::_parse(key, padding, format).with_provider(provider), rng) {}
 
       ~PK_Signer();
 
