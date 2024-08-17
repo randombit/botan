@@ -32,12 +32,12 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
          SHA2_bit = (1 << 3),
       };
 
-      const uint64_t hwcap_neon = OS::get_auxval(16);  // AT_HWCAP
+      const uint64_t hwcap_neon = OS::get_auxval(OS::auxval_hwcap());
 
       feat |= if_set(hwcap_neon, ARM_hwcap_bit::NEON_bit, CPUID::CPUID_ARM_NEON_BIT, allowed);
 
       if(feat & CPUID::CPUID_ARM_NEON_BIT) {
-         const uint64_t hwcap_crypto = OS::get_auxval(26);  // AT_HWCAP2
+         const uint64_t hwcap_crypto = OS::get_auxval(OS::auxval_hwcap2());
 
          feat |= if_set(hwcap_crypto, ARM_hwcap_bit::AES_bit, CPUID::CPUID_ARM_AES_BIT, allowed);
 
