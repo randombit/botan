@@ -371,10 +371,10 @@ class TPM_Signing_Operation final : public PK_Ops::Signature {
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Signature> TPM_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                                                       std::string_view params,
-                                                                       std::string_view /*provider*/) const {
-   return std::make_unique<TPM_Signing_Operation>(*this, params);
+std::unique_ptr<PK_Ops::Signature> TPM_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                        const PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng);
+   return std::make_unique<TPM_Signing_Operation>(*this, options._padding_with_hash());
 }
 
 }  // namespace Botan
