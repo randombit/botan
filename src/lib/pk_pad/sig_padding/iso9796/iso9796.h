@@ -10,6 +10,7 @@
 
 #include <botan/internal/sig_padding.h>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -27,8 +28,7 @@ class ISO_9796_DS2 final : public SignaturePaddingScheme {
        * @param implicit whether or not the trailer is implicit
        * @param salt_size size of the salt to use in bytes
        */
-      ISO_9796_DS2(std::unique_ptr<HashFunction> hash, bool implicit, size_t salt_size) :
-            m_hash(std::move(hash)), m_implicit(implicit), m_salt_len(salt_size) {}
+      ISO_9796_DS2(std::unique_ptr<HashFunction> hash, bool implicit, std::optional<size_t> salt_size);
 
       std::string hash_function() const override;
 

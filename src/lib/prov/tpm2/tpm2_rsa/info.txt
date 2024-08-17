@@ -2,6 +2,9 @@
 TPM2_RSA_ADAPTER -> 20240819
 </defines>
 
+# TODO needs to be fixed before merge
+load_on never
+
 <module_info>
 name -> "TPM2 RSA Adapter"
 brief -> "Support for RSA key pairs hosted on TPM 2.0"

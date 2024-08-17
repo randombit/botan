@@ -1,5 +1,5 @@
 /*
-* (C) 1999-2010,2015,2018 Jack Lloyd
+* (C) 1999-2010,2015,2018,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -17,6 +17,8 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/mem_utils.h>
 #include <botan/internal/parsing.h>
+#include <botan/internal/pk_options_impl.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -255,14 +257,27 @@ PK_Signer::PK_Signer(const Private_Key& key,
                      std::string_view padding,
                      Signature_Format format,
                      std::string_view provider) :
-      m_sig_format(format), m_sig_element_size(key._signature_element_size_for_DER_encoding()) {
-   if(m_sig_format == Signature_Format::DerSequence) {
-      BOTAN_ARG_CHECK(m_sig_element_size.has_value(), "This key does not support DER signatures");
+      PK_Signer(key,
+                rng,
+                parse_legacy_sig_options(key, padding)
+                   .with_der_encoded_signature(format == Signature_Format::DerSequence)
+                   .with_provider(provider)) {}
+
+PK_Signer::PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, const PK_Signature_Options& options) {
+   if(options.using_context() && !key.supports_context_data()) {
+      throw Invalid_Argument(fmt("Key type {} does not support context information", key.algo_name()));
    }
 
-   m_op = key.create_signature_op(rng, padding, provider);
+   m_op = key._create_signature_op(rng, options);
+
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support signature generation", key.algo_name()));
+   }
+   m_sig_format = options.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
+   m_sig_element_size = key._signature_element_size_for_DER_encoding();
+
+   if(m_sig_format == Signature_Format::DerSequence && !m_sig_element_size.has_value()) {
+      throw Invalid_Argument(fmt("Key type {} does not support DER encoded signatures", key.algo_name()));
    }
 }
 
@@ -365,20 +380,27 @@ std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng) {
    }
 }
 
-PK_Verifier::PK_Verifier(const Public_Key& key,
+PK_Verifier::PK_Verifier(const Public_Key& pub_key,
                          std::string_view padding,
                          Signature_Format format,
-                         std::string_view provider) {
-   m_op = key.create_verification_op(padding, provider);
+                         std::string_view provider) :
+      PK_Verifier(pub_key,
+                  parse_legacy_sig_options(pub_key, padding)
+                     .with_der_encoded_signature(format == Signature_Format::DerSequence)
+                     .with_provider(provider)) {}
+
+PK_Verifier::PK_Verifier(const Public_Key& key, const PK_Signature_Options& options) {
+   m_op = key._create_verification_op(options);
+
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support signature verification", key.algo_name()));
    }
 
-   m_sig_format = format;
    m_sig_element_size = key._signature_element_size_for_DER_encoding();
+   m_sig_format = options.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
 
-   if(m_sig_format == Signature_Format::DerSequence) {
-      BOTAN_ARG_CHECK(m_sig_element_size.has_value(), "This key does not support DER signatures");
+   if(m_sig_format == Signature_Format::DerSequence && !m_sig_element_size.has_value()) {
+      throw Invalid_Argument(fmt("Key type {} does not support DER encoded signatures", key.algo_name()));
    }
 }
 

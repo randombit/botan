@@ -11,8 +11,8 @@
 #include <botan/internal/sig_padding.h>
 
 #include <memory>
+#include <optional>
 #include <string>
-#include <string_view>
 #include <vector>
 
 namespace Botan {
@@ -73,7 +73,7 @@ class PKCS1v15_Raw_SignaturePaddingScheme final : public SignaturePaddingScheme 
       * @param hash_algo the digest id for that hash is included in
       * the signature.
       */
-      explicit PKCS1v15_Raw_SignaturePaddingScheme(std::string_view hash_algo);
+      explicit PKCS1v15_Raw_SignaturePaddingScheme(const std::optional<std::string>& hash_algo = std::nullopt);
 
       std::string hash_function() const override { return m_hash_name; }
 

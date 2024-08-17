@@ -14,6 +14,7 @@
 #include <botan/rsa.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/hash_id.h>
+#include <botan/internal/pk_options.h>
 #include <botan/internal/workfactor.h>
 #include <limits>
 
@@ -372,10 +373,13 @@ class TPM_Signing_Operation final : public PK_Ops::Signature {
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Signature> TPM_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                                                       std::string_view params,
-                                                                       std::string_view /*provider*/) const {
-   return std::make_unique<TPM_Signing_Operation>(*this, params);
+std::unique_ptr<PK_Ops::Signature> TPM_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                        const PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng);
+   if(!options.using_padding() || options.padding().value() != "PKCS1v15") {
+      throw Invalid_Argument("TPMv1 can only sign using PKCS1v15 padding");
+   }
+   return std::make_unique<TPM_Signing_Operation>(*this, options.hash_function_name());
 }
 
 }  // namespace Botan

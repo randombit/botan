@@ -272,18 +272,23 @@ class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature {
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::create_verification_op(std::string_view params,
-                                                                                std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      if(params.empty() || params == "Identity" || params == "Pure") {
-         return std::make_unique<Ed25519_Pure_Verify_Operation>(*this);
-      } else if(params == "Ed25519ph") {
-         return std::make_unique<Ed25519_Hashed_Verify_Operation>(*this, "SHA-512", true);
+std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   BOTAN_ARG_CHECK(!options.using_padding(), "Ed25519 does not support padding");
+
+   if(!options.using_provider()) {
+      if(options.using_prehash()) {
+         if(options.prehash_fn().has_value()) {
+            return std::make_unique<Ed25519_Hashed_Verify_Operation>(*this, options.prehash_fn().value(), false);
+         } else {
+            return std::make_unique<Ed25519_Hashed_Verify_Operation>(*this, "SHA-512", true);
+         }
       } else {
-         return std::make_unique<Ed25519_Hashed_Verify_Operation>(*this, params, false);
+         return std::make_unique<Ed25519_Pure_Verify_Operation>(*this);
       }
    }
-   throw Provider_Not_Found(algo_name(), provider);
+
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
@@ -298,19 +303,26 @@ std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::create_x509_verificatio
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Signature> Ed25519_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                                                           std::string_view params,
-                                                                           std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      if(params.empty() || params == "Identity" || params == "Pure") {
-         return std::make_unique<Ed25519_Pure_Sign_Operation>(*this);
-      } else if(params == "Ed25519ph") {
-         return std::make_unique<Ed25519_Hashed_Sign_Operation>(*this, "SHA-512", true);
+std::unique_ptr<PK_Ops::Signature> Ed25519_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                            const PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng);
+
+   BOTAN_ARG_CHECK(!options.using_padding(), "Ed25519 does not support padding");
+   BOTAN_ARG_CHECK(!options.using_salt_size(), "Ed25519 does not support a salt");
+
+   if(!options.using_provider()) {
+      if(options.using_prehash()) {
+         if(options.prehash_fn().has_value()) {
+            return std::make_unique<Ed25519_Hashed_Sign_Operation>(*this, options.prehash_fn().value(), false);
+         } else {
+            return std::make_unique<Ed25519_Hashed_Sign_Operation>(*this, "SHA-512", true);
+         }
       } else {
-         return std::make_unique<Ed25519_Hashed_Sign_Operation>(*this, params, false);
+         return std::make_unique<Ed25519_Pure_Sign_Operation>(*this);
       }
    }
-   throw Provider_Not_Found(algo_name(), provider);
+
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 }  // namespace Botan

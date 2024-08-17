@@ -12,6 +12,7 @@
    #include <botan/ed25519.h>
    #include <botan/pkcs8.h>
    #include <botan/x509_key.h>
+   #include <botan/internal/pk_options.h>
 #endif
 
 namespace Botan_Tests {
@@ -88,11 +89,11 @@ class Ed25519_Curdle_Format_Tests final : public Test {
          auto pub_key = Botan::X509::load_key(pub_data);
          result.confirm("Public key loaded", pub_key != nullptr);
 
-         Botan::PK_Signer signer(*priv_key, this->rng(), "Pure");
+         Botan::PK_Signer signer(*priv_key, this->rng(), Botan::PK_Signature_Options());
          signer.update("message");
          std::vector<uint8_t> sig = signer.signature(this->rng());
 
-         Botan::PK_Verifier verifier(*pub_key, "Pure");
+         Botan::PK_Verifier verifier(*pub_key, Botan::PK_Signature_Options());
          verifier.update("message");
          result.confirm("Signature valid", verifier.check_signature(sig));
 

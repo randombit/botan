@@ -19,6 +19,7 @@
 
 namespace Botan {
 
+class PK_Signature_Options;
 class RandomNumberGenerator;
 
 /**
@@ -168,6 +169,21 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
                 Signature_Format format = Signature_Format::Standard,
                 std::string_view provider = "");
 
+      /**
+      * Construct a PK signer
+      *
+      * @param key the key to use to generate signatures
+      * @param rng the random generator to use
+      * @param options controls the behavior of the signature generation, eg which hash function to use
+      *
+      * Note that most common algorithms (eg RSA or ECDSA) require an options
+      * parameter to specify at least which hash function to use.
+      *
+      * @note This function is not currently usable by applications as
+      * PK_Signature_Options is not a public type
+      */
+      PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, const PK_Signature_Options& options);
+
       ~PK_Signer();
 
       PK_Signer(const PK_Signer&) = delete;
@@ -274,7 +290,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Verifier final {
       /**
       * Construct a PK Verifier.
       * @param pub_key the public key to verify against
-      * @param padding the padding/hash to use (eg "SHA-512" or "PSS(SHA-256)")
+      * @param padding the padding/hash to use (eg "EMSA_PKCS1(SHA-256)")
       * @param format the signature format to use
       * @param provider the provider to use
       */
@@ -282,6 +298,16 @@ class BOTAN_PUBLIC_API(2, 0) PK_Verifier final {
                   std::string_view padding,
                   Signature_Format format = Signature_Format::Standard,
                   std::string_view provider = "");
+
+      /**
+      * Construct a PK Verifier.
+      * @param pub_key the public key to verify against
+      * @param options relating to the signature
+      *
+      * @note This function is not currently usable by applications as
+      * PK_Signature_Options is not a public type
+      */
+      PK_Verifier(const Public_Key& pub_key, const PK_Signature_Options& options);
 
       /**
       * Construct a PK Verifier (X.509 specific)

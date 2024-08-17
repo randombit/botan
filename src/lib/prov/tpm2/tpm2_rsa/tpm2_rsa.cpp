@@ -11,6 +11,7 @@
 #include <botan/hash.h>
 #include <botan/pss_params.h>
 #include <botan/rsa.h>
+#include <botan/internal/pk_options.h>
 
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
@@ -142,22 +143,23 @@ std::unique_ptr<TPM2::PrivateKey> RSA_PrivateKey::create_unrestricted_transient(
 
 namespace {
 
-SignatureAlgorithmSelection select_signature_algorithms(std::string_view padding) {
-   const SCAN_Name req(padding);
-   if(req.arg_count() == 0) {
-      throw Invalid_Argument("RSA signing padding scheme must at least specify a hash function");
-   }
+SignatureAlgorithmSelection select_signature_algorithms(const PK_Signature_Options& options) {
+   const std::string hash_name = options.hash_function_name();
 
-   auto sig_scheme = rsa_signature_scheme_botan_to_tss2(padding);
-   if(!sig_scheme) {
-      throw Not_Implemented(Botan::fmt("RSA signing with padding scheme {}", padding));
-   }
+   if(auto padding = options.padding()) {
+      auto sig_scheme = rsa_signature_scheme_botan_to_tss2(*padding);
+      if(!sig_scheme) {
+         throw Not_Implemented(Botan::fmt("RSA signing with padding scheme {}", *padding));
+      }
 
-   return {
-      .signature_scheme = sig_scheme.value(),
-      .hash_name = req.arg(0),
-      .padding = std::string(padding),
-   };
+      return {
+         .signature_scheme = sig_scheme.value(),
+         .hash_name = hash_name,
+         .padding = std::string(*padding),
+      };
+   } else {
+      throw Not_Implemented("TPM2 RSA signing without padding is not supported");
+   }
 }
 
 size_t signature_length_for_rsa_key_handle(const SessionBundle& sessions, const Object& key_handle) {
@@ -166,32 +168,24 @@ size_t signature_length_for_rsa_key_handle(const SessionBundle& sessions, const 
 
 class RSA_Signature_Operation final : public Signature_Operation {
    public:
-      RSA_Signature_Operation(const Object& object, const SessionBundle& sessions, std::string_view padding) :
-            Signature_Operation(object, sessions, select_signature_algorithms(padding)) {}
+      RSA_Signature_Operation(const Object& object,
+                              const SessionBundle& sessions,
+                              const PK_Signature_Options& options) :
+            Signature_Operation(object, sessions, select_signature_algorithms(options)) {}
 
       size_t signature_length() const override { return signature_length_for_rsa_key_handle(sessions(), key_handle()); }
 
       AlgorithmIdentifier algorithm_identifier() const override {
-         // TODO: This is essentially a copy of the ::algorithm_identifier()
-         //       in `rsa.h`. We should probably refactor this into a common
-         //       function.
-
-         // This EMSA object actually isn't required, we just need it to
-         // conveniently figure out the algorithm identifier.
-         //
-         // TODO: This is a hack, and we should clean this up.
-         BOTAN_STATE_CHECK(padding().has_value());
-         const std::string padding_name = SignaturePaddingScheme::create_or_throw(padding().value())->name();
-
-         try {
+         if(scheme == TPM2_ALG_RSASSA) {
             const std::string full_name = "RSA/" + padding_name;
             const OID oid = OID::from_string(full_name);
             return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
-         } catch(Lookup_Error&) {}
-
-         if(padding_name.starts_with("PSS(")) {
+         } else if(scheme == TPM2_ALG_RSAPSS) {
             auto parameters = PSS_Params::from_padding_name(padding_name).serialize();
             return AlgorithmIdentifier("RSA/PSS", parameters);
+         } else {
+            throw Internal_Error(
+               fmt("Unexpected signature scheme {} used for RSA signatures", static_cast<int>(scheme)));
          }
 
          throw Invalid_Argument(fmt("Signatures using RSA/{} are not supported", padding_name));
@@ -215,8 +209,10 @@ class RSA_Signature_Operation final : public Signature_Operation {
 
 class RSA_Verification_Operation final : public Verification_Operation {
    public:
-      RSA_Verification_Operation(const Object& object, const SessionBundle& sessions, std::string_view padding) :
-            Verification_Operation(object, sessions, select_signature_algorithms(padding)) {}
+      RSA_Verification_Operation(const Object& object,
+                                 const SessionBundle& sessions,
+                                 const PK_Signature_Options& options) :
+            Verification_Operation(object, sessions, select_signature_algorithms(options)) {}
 
    private:
       TPMT_SIGNATURE unmarshal_signature(std::span<const uint8_t> signature) const override {
@@ -389,17 +385,15 @@ class RSA_Decryption_Operation final : public PK_Ops::Decryption {
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Verification> RSA_PublicKey::create_verification_op(std::string_view params,
-                                                                            std::string_view provider) const {
-   BOTAN_UNUSED(provider);
-   return std::make_unique<RSA_Verification_Operation>(handles(), sessions(), params);
+std::unique_ptr<PK_Ops::Verification> RSA_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   return std::make_unique<RSA_Verification_Operation>(handles(), sessions(), options);
 }
 
-std::unique_ptr<PK_Ops::Signature> RSA_PrivateKey::create_signature_op(Botan::RandomNumberGenerator& rng,
-                                                                       std::string_view params,
-                                                                       std::string_view provider) const {
-   BOTAN_UNUSED(rng, provider);
-   return std::make_unique<RSA_Signature_Operation>(handles(), sessions(), params);
+std::unique_ptr<PK_Ops::Signature> RSA_PrivateKey::_create_signature_op(Botan::RandomNumberGenerator& rng,
+                                                                        const PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng);
+   return std::make_unique<RSA_Signature_Operation>(handles(), sessions(), options);
 }
 
 std::unique_ptr<PK_Ops::Encryption> RSA_PublicKey::create_encryption_op(Botan::RandomNumberGenerator& rng,

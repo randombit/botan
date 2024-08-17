@@ -15,6 +15,7 @@
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
    #include <botan/pkcs8.h>
+   #include <botan/internal/pk_options.h>
 #endif
 
 namespace Botan_Tests {
@@ -280,8 +281,8 @@ class ECDSA_AllGroups_Test : public Test {
                }
 
                try {
-                  Botan::PK_Signer signer(priv, rng(), hash);
-                  Botan::PK_Verifier verifier(*pub, hash);
+                  Botan::PK_Signer signer(priv, rng(), Botan::PK_Signature_Options().with_hash(hash));
+                  Botan::PK_Verifier verifier(*pub, Botan::PK_Signature_Options().with_hash(hash));
 
                   for(size_t i = 0; i != 16; ++i) {
                      auto message = rng().random_vec(rng().next_byte());
