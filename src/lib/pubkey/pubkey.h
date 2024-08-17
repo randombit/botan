@@ -165,7 +165,9 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
       * Note that most common algorithms (eg RSA or ECDSA) require an options
       * parameter to specify at least which hash function to use.
       */
-      PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, const PK_Signature_Options& options = PK_Signature_Options());
+      PK_Signer(const Private_Key& key,
+                RandomNumberGenerator& rng,
+                const PK_Signature_Options& options = PK_Signature_Options());
 
       /**
       * Construct a PK Signer.
@@ -180,7 +182,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
                 std::string_view padding,
                 Signature_Format format = Signature_Format::Standard,
                 std::string_view provider = "") :
-         PK_Signer(key, rng, PK_Signature_Options::_parse(key, padding, format).with_provider(provider)) {}
+            PK_Signer(key, rng, PK_Signature_Options::_parse(key, padding, format).with_provider(provider)) {}
 
       ~PK_Signer();
 

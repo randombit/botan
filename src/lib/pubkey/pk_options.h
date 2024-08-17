@@ -119,9 +119,7 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options {
       /// This is an internal library function and should not be called by
       /// applications. It will be removed in Botan4.
       ///
-      static PK_Signature_Options _parse(const Public_Key& key,
-                                         std::string_view padding,
-                                         Signature_Format format);
+      static PK_Signature_Options _parse(const Public_Key& key, std::string_view padding, Signature_Format format);
 
    private:
       std::string m_hash_fn;

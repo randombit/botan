@@ -199,7 +199,8 @@ bool check_dilithium_options(const PK_Signature_Options& options) {
 
 class Dilithium_Signature_Operation final : public PK_Ops::Signature {
    public:
-      Dilithium_Signature_Operation(std::shared_ptr<Dilithium_PrivateKeyInternal> sk, const PK_Signature_Options& options) :
+      Dilithium_Signature_Operation(std::shared_ptr<Dilithium_PrivateKeyInternal> sk,
+                                    const PK_Signature_Options& options) :
             m_priv_key(std::move(sk)),
             m_randomized(check_dilithium_options(options)),
             m_h(m_priv_key->mode().symmetric_primitives().get_message_hash(m_priv_key->tr())),

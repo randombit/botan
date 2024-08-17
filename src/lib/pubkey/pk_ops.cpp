@@ -149,8 +149,7 @@ std::unique_ptr<HashFunction> validate_options_returning_hash(const PK_Signature
 }  // namespace
 
 PK_Ops::Signature_with_Hash::Signature_with_Hash(const PK_Signature_Options& options) :
-      Signature(), m_options(options), m_hash(validate_options_returning_hash(m_options)) {
-}
+      Signature(), m_options(options), m_hash(validate_options_returning_hash(m_options)) {}
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
 std::string PK_Ops::Signature_with_Hash::rfc6979_hash_function() const {
