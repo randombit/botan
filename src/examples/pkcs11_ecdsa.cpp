@@ -93,13 +93,16 @@ int main() {
 
    /************ PKCS#11 ECDSA sign and verify *************/
 
-   std::vector<uint8_t> plaintext(20, 0x01);
+   // The token signs this digest directly (CKM_ECDSA) without hashing it
+   std::vector<uint8_t> digest(20, 0x01);
 
-   Botan::PK_Signer signer(key_pair.second, rng, "Raw", Botan::Signature_Format::Standard, "pkcs11");
-   auto signature = signer.sign_message(plaintext, rng);
+   const auto options = Botan::PK_Signature_Options().with_externally_computed_prehash().with_provider("pkcs11");
 
-   Botan::PK_Verifier token_verifier(key_pair.first, "Raw", Botan::Signature_Format::Standard, "pkcs11");
-   const bool ecdsa_ok = token_verifier.verify_message(plaintext, signature);
+   Botan::PK_Signer signer(key_pair.second, rng, options);
+   auto signature = signer.sign_message(digest, rng);
+
+   Botan::PK_Verifier token_verifier(key_pair.first, options);
+   const bool ecdsa_ok = token_verifier.verify_message(digest, signature);
 
    return ecdsa_ok ? 0 : 1;
 }

@@ -16,19 +16,14 @@
 namespace Botan {
 
 class HashFunction;
+class PK_Signature_Options;
 
 /**
 * ISO-9796-2 - Digital signature scheme 2 (probabilistic)
 */
 class ISO_9796_DS2 final : public SignaturePaddingScheme {
    public:
-      /**
-       * @param hash function to use
-       * @param implicit whether or not the trailer is implicit
-       * @param salt_size size of the salt to use in bytes
-       */
-      ISO_9796_DS2(std::unique_ptr<HashFunction> hash, bool implicit, size_t salt_size) :
-            m_hash(std::move(hash)), m_implicit(implicit), m_salt_len(salt_size) {}
+      explicit ISO_9796_DS2(const PK_Signature_Options& options);
 
       std::string hash_function() const override;
 
@@ -56,12 +51,7 @@ class ISO_9796_DS2 final : public SignaturePaddingScheme {
 */
 class ISO_9796_DS3 final : public SignaturePaddingScheme {
    public:
-      /**
-       * @param hash function to use
-       * @param implicit whether or not the trailer is implicit
-       */
-      explicit ISO_9796_DS3(std::unique_ptr<HashFunction> hash, bool implicit = false) :
-            m_hash(std::move(hash)), m_implicit(implicit) {}
+      explicit ISO_9796_DS3(const PK_Signature_Options& options);
 
       std::string name() const override;
 

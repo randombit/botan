@@ -22,6 +22,7 @@ namespace Botan {
 
 class BigInt;
 class RandomNumberGenerator;
+class PK_Signature_Options;
 
 /**
 * Enumeration specifying the signature format.
@@ -277,11 +278,24 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       * In all cases applications should use wrappers in pubkey.h
       *
       * Return a verification operation for this key/params or throw
+      *
+      * @param options which specify parameters of the signature beyond those
+      * implicit to the public key itself
+      */
+      virtual std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const;
+
+      /**
+      * This is an internal library function exposed on key types.
+      * In all cases applications should use wrappers in pubkey.h
+      *
+      * Return a verification operation for this key/params or throw
+      *
       * @param params additional parameters
       * @param provider the provider to use
       */
-      virtual std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
-                                                                           std::string_view provider) const;
+      BOTAN_DEPRECATED("Use PK_Verifier")
+      std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
+                                                                   std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -404,12 +418,29 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       * @param rng a random number generator. The PK_Op may maintain a
       * reference to the RNG and use it many times. The rng must outlive
       * any operations which reference it.
+      *
+      * @param options allow controlling behavior
+      */
+      virtual std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
+                                                                      const PK_Signature_Options& options) const;
+
+      /**
+      * This is an internal library function exposed on key types.
+      * In all cases applications should use wrappers in pubkey.h
+      *
+      * Return a signature operation for this key/params or throw
+      *
+      * @param rng a random number generator. The PK_Op may maintain a
+      * reference to the RNG and use it many times. The rng must outlive
+      * any operations which reference it.
+      *
       * @param params additional parameters
       * @param provider the provider to use
       */
-      virtual std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
-                                                                     std::string_view params,
-                                                                     std::string_view provider) const;
+      BOTAN_DEPRECATED("Use PK_Signer")
+      std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
+                                                             std::string_view params,
+                                                             std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.

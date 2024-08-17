@@ -598,9 +598,10 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
              "83:FC:67:87:30:C7:0C:9C:54:9A:E7:A1:FA:25:83:4C:77:A4:43:16:33:6D:47:3C:CE:4B:91:62:30:97:62:D4",
              open(pub_key, 'rb').read().decode())
 
+    # RFC 6979 deterministic signature, so it does not depend on the RNG
     valid_sig = "nI4mI1ec14Y7nYUWs2edysAVvkob0TWpmGh5rrYWDA+/W9Fj0ZM21qJw8qa3/avAOIVBO6hoMEVmfJYXlS+ReA=="
 
-    test_cli("sign", "%s %s" % (priv_key, pub_key), valid_sig)
+    test_cli("sign", "--deterministic %s %s" % (priv_key, pub_key), valid_sig)
 
     test_cli("verify", [pub_key, pub_key, '-'],
              "Signature is valid", valid_sig)
@@ -632,6 +633,64 @@ mlLtJ5JvZ0/p6zP3x+Y9yPIrAR8L/acG5ItSrAKXzzuqQQZMv4aN
 
     test_cli("cert_verify", user_cert,
              "Certificate did not validate - Certificate issuer not found")
+
+def cli_pk_sign_tests(tmp_dir):
+    # Ed25519 key from RFC 8032 section 7.1 "TEST 2"
+    ed25519_priv_pem = """-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VwBCIEIEzNCJso/5banbbDRuwRTg9bijGfNaumJNqM9u1PuKb7
+-----END PRIVATE KEY-----"""
+
+    ed25519_pub_pem = """-----BEGIN PUBLIC KEY-----
+MCowBQYDK2VwAyEAPUAXw+hDiVqStwqnTRt+vJyYLM8uxJaMwM1V8Sr0Zgw=
+-----END PUBLIC KEY-----"""
+
+    priv_key = os.path.join(tmp_dir, 'ed25519.pem')
+    pub_key = os.path.join(tmp_dir, 'ed25519.pub')
+    msg = os.path.join(tmp_dir, 'msg')
+    sig = os.path.join(tmp_dir, 'sig')
+
+    with open(priv_key, 'w', encoding='utf8') as f:
+        f.write(ed25519_priv_pem)
+    with open(pub_key, 'w', encoding='utf8') as f:
+        f.write(ed25519_pub_pem)
+    with open(msg, 'wb') as f:
+        f.write(b'\x72')
+
+    # The signature from RFC 8032 for this key and message; verifies that the
+    # CLI produces standard (pure) Ed25519 signatures by default
+    rfc8032_sig = "kqAJqfDUyrhyDoILX2QlQKKye1QWUD+Ps3YiI+vbadoIWsHkPhWZbkWPNhPQ8R2MOHsurrQwKu6wDSkWErsMAA=="
+
+    test_cli("sign", [priv_key, msg], rfc8032_sig)
+    test_cli("verify", [pub_key, msg, '-'], "Signature is valid", rfc8032_sig)
+
+    # Ed25519ph is a distinct signature scheme
+    test_cli("sign", ["--prehash=default", priv_key, msg, "--output=%s" % (sig)], "")
+    test_cli("verify", ["--prehash=default", pub_key, msg, sig], "Signature is valid")
+    test_cli("verify", [pub_key, msg, sig], "Signature is invalid")
+
+    # ML-DSA takes no options at all
+    mldsa_priv = os.path.join(tmp_dir, 'mldsa.pem')
+    mldsa_pub = os.path.join(tmp_dir, 'mldsa.pub')
+    test_cli("keygen", ["--algo=ML-DSA", "--params=ML-DSA-4x4", "--output=%s" % (mldsa_priv)], "")
+    test_cli("pkcs8", "--pub-out --output=%s %s" % (mldsa_pub, mldsa_priv), "")
+    test_cli("sign", [mldsa_priv, msg, "--output=%s" % (sig)], "")
+    test_cli("verify", [mldsa_pub, msg, sig], "Signature is valid")
+    test_cli("sign", ["--deterministic", mldsa_priv, msg, "--output=%s" % (sig)], "")
+    test_cli("verify", [mldsa_pub, msg, sig], "Signature is valid")
+
+    # RSA defaults to PSS with SHA-256; other paddings and salt sizes can be selected
+    rsa_priv = os.path.join(tmp_dir, 'rsa.pem')
+    rsa_pub = os.path.join(tmp_dir, 'rsa.pub')
+    test_cli("keygen", ["--algo=RSA", "--params=2048", "--output=%s" % (rsa_priv)], "")
+    test_cli("pkcs8", "--pub-out --output=%s %s" % (rsa_pub, rsa_priv), "")
+    test_cli("sign", [rsa_priv, msg, "--output=%s" % (sig)], "")
+    test_cli("verify", [rsa_pub, msg, sig], "Signature is valid")
+    test_cli("verify", ["--padding=PSS", "--hash=SHA-256", rsa_pub, msg, sig], "Signature is valid")
+    test_cli("verify", ["--padding=PKCS1v15", rsa_pub, msg, sig], "Signature is invalid")
+    test_cli("sign", ["--padding=PKCS1v15", "--hash=SHA-512", rsa_priv, msg, "--output=%s" % (sig)], "")
+    test_cli("verify", ["--padding=PKCS1v15", "--hash=SHA-512", rsa_pub, msg, sig], "Signature is valid")
+    test_cli("sign", ["--padding=PSS", "--salt-size=0", "--deterministic", rsa_priv, msg, "--output=%s" % (sig)], "")
+    test_cli("verify", ["--padding=PSS", "--salt-size=0", rsa_pub, msg, sig], "Signature is valid")
 
 def cli_xmss_sign_tests(tmp_dir):
     if os.linesep != '\n':
@@ -2133,6 +2192,7 @@ def main(args=None):
         cli_ocsp_check_tests,
         cli_pbkdf_tune_tests,
         cli_pk_encrypt_tests,
+        cli_pk_sign_tests,
         cli_pk_workfactor_tests,
         cli_pkcs12_tests,
         cli_psk_db_tests,

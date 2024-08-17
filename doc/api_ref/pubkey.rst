@@ -912,52 +912,309 @@ Name: ``Raw``
 Public Key Signature Schemes
 ---------------------------------
 
+Signatures are generated using :cpp:class:`PK_Signer` and verified using
+:cpp:class:`PK_Verifier`. Both are configured with a
+:cpp:class:`PK_Signature_Options` object, which specifies every detail of how the
+signature is formed: the hash function, any padding scheme, the signature
+encoding, and so on.
+
+.. _pk_signature_options:
+
+Signature Options
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. versionadded:: 3.14.0
+
+.. cpp:class:: PK_Signature_Options
+
+   Describes how a signature is to be generated or verified. The object is
+   built up in a builder style; each ``with_xxx`` function returns a new
+   options object with that option added, so the calls can be chained::
+
+      auto opts = Botan::PK_Signature_Options()
+                     .with_hash("SHA-256")
+                     .with_der_encoded_signature();
+
+      Botan::PK_Signer signer(key, rng, opts);
+      Botan::PK_Verifier verifier(key, opts);
+
+   Every option that is set must be understood and acted upon by the signature
+   scheme in use. If a scheme does not support an option (for example a context
+   for RSA, or a padding scheme for Ed25519) then constructing the
+   :cpp:class:`PK_Signer` or :cpp:class:`PK_Verifier` throws an exception which
+   names the offending option(s); an option is never silently ignored. The
+   options are validated when the signer or verifier is constructed, not when
+   they are set.
+
+   Each option can be set at most once; attempting to set an option a second time
+   throws ``Invalid_State``.
+
+   The signer and verifier must be configured compatibly. Most options (the
+   hash, padding, encoding, context, and the prehash options) affect the
+   signature itself and so must match on both sides. The exception is
+   :cpp:func:`PK_Signature_Options::with_deterministic_signature`, which only
+   affects signature generation and is ignored by :cpp:class:`PK_Verifier`.
+
+   .. cpp:function:: PK_Signature_Options()
+
+      Creates an empty set of options. This is sufficient for schemes which
+      take no parameters (such as Ed25519, ML-DSA, or XMSS).
+
+   .. cpp:function:: PK_Signature_Options with_hash(std::string_view hash)
+
+      Specify the hash function used for signing and verification. Most, but not
+      all, schemes require this; RSA, DSA, ECDSA, ECGDSA, ECKCDSA and GOST 34.10
+      must be given a hash, while SM2 defaults to SM3 if none is given.
+
+      Schemes where the hash is fixed by the key (XMSS, HSS-LMS, SLH-DSA) accept
+      this option only if it names the hash the operation uses, as reported by
+      :cpp:func:`PK_Signer::hash_function`; so that name can always be passed
+      to a verifier. Note that for SLH-DSA this is the function used to hash
+      the message, which for the larger parameter sets is not the one named in
+      the parameter set (for example SLH-DSA-SHA2-192s reports ``SHA-512``).
+      Schemes which have no hash function parameter at all (Ed25519, Ed448,
+      ML-DSA) reject it.
+
+      An empty string is ignored, which allows passing through a possibly-unset
+      user configuration.
+
+   .. cpp:function:: PK_Signature_Options with_padding(std::string_view padding)
+
+      Specify a padding scheme. This is only used for RSA, which requires it;
+      see :ref:`rsa_padding` for the available schemes. All other schemes reject
+      this option.
+
+      An empty string is ignored.
+
+   .. cpp:function:: PK_Signature_Options with_der_encoded_signature(bool der = true)
+
+      Produce, or expect, a signature encoded as an ASN.1 ``SEQUENCE`` of two
+      integers, rather than the default fixed-length concatenation of the two
+      signature elements. This formatting is used in protocols such as TLS and
+      in X.509 certificates.
+
+      Supported by DSA, ECDSA, ECGDSA, ECKCDSA, GOST 34.10 and SM2; rejected by
+      all other schemes.
+
+   .. cpp:function:: PK_Signature_Options with_deterministic_signature(bool deterministic = true)
+
+      Request a deterministic signature, that is one which depends only on the
+      key and the message and not on the random number generator.
+
+      Some schemes are always deterministic (for example RSA PKCS #1 v1.5,
+      Ed25519, XMSS, HSS-LMS); these accept the option as it is trivially
+      satisfied. DSA and ECDSA are randomized by default but can produce
+      deterministic signatures using the RFC 6979 nonce derivation; this
+      requires the ``rfc6979`` module, and if it is not included in the build
+      the option is rejected with ``Not_Implemented``. ML-DSA and SLH-DSA use
+      their "hedged" (randomized) variants by default, and this option selects
+      the deterministic variant instead. Schemes which cannot produce a
+      deterministic signature (for example RSA-PSS with a non-zero salt) reject
+      the option.
+
+      This option is ignored for verification.
+
+   .. cpp:function:: PK_Signature_Options with_salt_size(size_t salt_size)
+
+      Specify the size in bytes of the random salt. This applies to RSA with the
+      ``PSS`` and ``ISO_9796_DS2`` padding schemes, where the salt size
+      otherwise defaults to the output length of the hash function. When
+      verifying a ``PSS`` signature, if a salt size is specified then the
+      signature is only accepted if its salt has exactly that size; otherwise
+      any salt size is accepted. For ``ISO_9796_DS2`` the salt size is part of
+      the encoding, so the verifier must use the same size as the signer.
+
+      ML-DSA also accepts this option, but only if the size equals the 32 bytes
+      of randomness the scheme uses (64 for Dilithium), and not in combination
+      with a deterministic signature.
+
+   .. cpp:function:: PK_Signature_Options with_context(std::span<const uint8_t> context)
+   .. cpp:function:: PK_Signature_Options with_context(std::string_view context)
+
+      Specify a context which is bound into the signature. Currently this is
+      only supported by SM2, where the context is the user identifier
+      ``IDA``; if no context is given SM2 uses the default identifier
+      ``1234567812345678`` specified in GM/T 0009-2012.
+
+   .. cpp:function:: PK_Signature_Options with_prehash(std::optional<std::string> prehash = std::nullopt)
+
+      Request that the library hash the message before signing it, for schemes
+      which normally sign the entire message directly. Ed25519 and Ed448 are
+      such schemes; they sign the full message (which consequently must be
+      buffered in memory), but also define prehashed variants Ed25519ph and
+      Ed448ph. Calling this with no argument selects the scheme's standard
+      prehash (SHA-512 for Ed25519ph, SHAKE-256(512) for Ed448ph). Naming a
+      hash function instead uses that function; for Ed25519 this selects the
+      hash-then-sign construction used by GnuPG, which is not compatible with
+      Ed25519ph even if SHA-512 is named. See :ref:`Ed25519_Ed448_variants`.
+
+      The caller still provides the complete message, and the library computes
+      the hash. Schemes which always hash the message as part of signing (DSA,
+      ECDSA, RSA, ...) do not offer a separate prehash mode and reject this
+      option, with the exception that DSA, ECDSA, ECGDSA and GOST 34.10 accept
+      it if the named prehash is the same as the signature hash.
+
+      This cannot be combined with
+      :cpp:func:`PK_Signature_Options::with_externally_computed_prehash`.
+
+   .. cpp:function:: PK_Signature_Options with_externally_computed_prehash(std::optional<std::string> hash = std::nullopt)
+
+      Specify that the caller has already hashed the message. The data passed
+      to the signer or verifier is then not the message but a digest of it, and
+      is signed (or verified) directly without being hashed again.
+
+      .. warning::
+
+         This is intended for situations where the hash is computed by another
+         component and only the digest is available for signing. Many ways of
+         doing this are insecure. Don't use this unless you know what you are
+         doing.
+
+      The hash function the caller used may be named, either as the argument
+      here or using :cpp:func:`PK_Signature_Options::with_hash` (if both are
+      given they must agree). Naming it allows the scheme to check that the
+      input has the correct length, and to identify the hash in the signature
+      where the format requires it; for example a signature created with RSA
+      ``PKCS1v15`` and an externally computed SHA-256 digest is identical to one
+      created over the original message with ``PKCS1v15`` and ``SHA-256``. If no
+      hash is named the input is signed as an opaque byte string of any length.
+
+      This is supported by DSA, ECDSA, ECGDSA, GOST 34.10 (these four require
+      the ``raw_hash`` module, and reject the option with ``Lookup_Error`` if
+      it is not included in the build), SM2 (where the ``ZA`` identifier hash
+      is then not computed and any context is rejected) and RSA with the
+      ``PKCS1v15`` or ``Raw`` padding schemes. It is rejected by
+      ECKCDSA (whose hash input includes a key-derived prefix), by the RSA
+      padding schemes which must hash the message themselves, and by all other
+      schemes.
+
+      This cannot be combined with :cpp:func:`PK_Signature_Options::with_prehash`.
+
+   .. cpp:function:: PK_Signature_Options with_explicit_trailer_field(bool trailer = true)
+
+      Use the "explicit" trailer field, which identifies the hash function,
+      rather than the "implicit" one. This only applies to the RSA
+      ``ISO_9796_DS2`` and ``ISO_9796_DS3`` padding schemes, which default to
+      the explicit trailer; all other schemes reject it.
+
+   .. cpp:function:: PK_Signature_Options with_provider(std::string_view provider)
+
+      Request a specific implementation. This is rarely needed; the main use is
+      with keys held in hardware (providers ``pkcs11``, ``tpm2``), which accept
+      only their own provider name. The default (an empty string, or ``base``)
+      selects the software implementation.
+
+      Hardware providers support a subset of the options described here. For
+      RSA they require a padding scheme and a hash (PKCS#11 additionally
+      accepts ``Raw`` padding, and an unnamed externally computed prehash with
+      ``PKCS1v15``, ``PSS`` or ``X9.31``), accept a deterministic signature
+      only for the deterministic padding schemes (not ``PSS``), and do not
+      allow choosing the PSS salt size (TPM2) beyond the sizes the token
+      supports (PKCS#11).
+
+   .. cpp:function:: std::string to_string() const
+
+      Formats the options as a string, for debugging and error messages. The
+      format is not fixed.
+
+Options Accepted by Each Scheme
+""""""""""""""""""""""""""""""""""""
+
+The following summarizes which options each signature scheme accepts; any
+option not listed is rejected when the signer or verifier is constructed.
+
+- **RSA**: requires a padding scheme, and (except for ``Raw`` padding) a hash.
+  See :ref:`rsa_padding`. Additionally accepts a salt size (``PSS``,
+  ``ISO_9796_DS2``), an explicit trailer field (``ISO_9796_DS2``,
+  ``ISO_9796_DS3``), an externally computed prehash (``PKCS1v15``, ``Raw``),
+  and a deterministic signature (``PKCS1v15``, ``X9.31``, ``ISO_9796_DS3``,
+  and ``PSS`` or ``ISO_9796_DS2`` with a salt size of zero).
+- **DSA** and **ECDSA**: require a hash. Accept DER encoding, a deterministic
+  signature (RFC 6979), and an externally computed prehash.
+- **ECGDSA** and **GOST 34.10**: require a hash. Accept DER encoding and an
+  externally computed prehash.
+- **ECKCDSA**: requires a hash. Accepts DER encoding.
+- **SM2**: accepts a hash (default SM3), a context (the user identifier), DER
+  encoding, and an externally computed prehash.
+- **Ed25519** and **Ed448**: take no hash. Accept a prehash and a deterministic
+  signature (they are always deterministic).
+- **ML-DSA** (and Dilithium): accept a deterministic signature, and a salt size
+  equal to the scheme's randomness length.
+- **SLH-DSA**, **XMSS**, **HSS-LMS**: accept a hash only if it names the hash
+  the operation reports, and a deterministic signature (SLH-DSA is randomized
+  by default; XMSS and HSS-LMS are always deterministic).
+
+Signing and Verifying
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Signature generation is performed using
 
 .. cpp:class:: PK_Signer
 
    .. cpp:function:: PK_Signer(const Private_Key& key, \
-      const std::string& padding, \
-      Signature_Format format = Signature_Format::Standard)
+      RandomNumberGenerator& rng, \
+      const PK_Signature_Options& options = PK_Signature_Options())
 
-     Constructs a new signer object for the private key *key* using the
-     hash/padding specified in *padding*. The key must support signature operations. In
-     the current version of the library, this includes RSA, ECDSA, ML-DSA, ECKCDSA,
-     ECGDSA, SM2, and others.
+      Constructs a new signer object for the private key *key*, configured as
+      described by *options* (see :ref:`pk_signature_options`). The key must
+      support signature operations. In the current version of the library, this
+      includes RSA, ECDSA, ML-DSA, ECKCDSA, ECGDSA, SM2, and others.
 
-     .. note::
+      Most common algorithms, including RSA and ECDSA, require the options to
+      specify at least a hash function (and for RSA, a padding scheme). Schemes
+      without any parameters, such as Ed25519, ML-DSA or XMSS, can be used with
+      the default options.
 
-       Botan both supports non-deterministic and deterministic (as per RFC
-       6979) DSA and ECDSA signatures. Either type of signature can be verified
-       by any other (EC)DSA library, regardless of which mode it prefers. If the
-       ``rfc6979`` module is enabled at build time, deterministic DSA and ECDSA
-       signatures will be created.
+      Any option not supported by the key's algorithm causes an exception.
 
-     The proper value of *padding* depends on the algorithm. For many signature
-     schemes including ECDSA and DSA, simply naming a hash function like "SHA-256"
-     is all that is required.
+   .. cpp:function:: PK_Signer(const Private_Key& key, \
+      RandomNumberGenerator& rng, \
+      std::string_view padding, \
+      Signature_Format format = Signature_Format::Standard, \
+      std::string_view provider = "")
 
-     For RSA, more complicated padding is required. The two most common schemes
-     for RSA signature padding are PSS and PKCS1v1.5, so you must specify both
-     the padding mechanism as well as a hash, for example "PSS(SHA-256)"
-     or "PKCS1v15(SHA-256)".
+      Constructs a new signer using the hash/padding specified by the string
+      *padding*, which is the interface available in previous versions of
+      Botan. The string is translated into the equivalent
+      :cpp:class:`PK_Signature_Options`; new code should prefer to construct
+      the options directly.
 
-     Certain newer signature schemes, especially post-quantum based ones, hardcode the
-     hash function associated with their signatures, and no configuration is
-     possible. In this case *padding* should be left blank, or may possibly be used to identify
-     some algorithm-specific option. For instance ML-DSA may be parameterized with
-     "Randomized" or "Deterministic" to choose if the generated signature is randomized or
-     not. If left blank, a default is chosen.
+      The proper value of *padding* depends on the algorithm. For many signature
+      schemes including ECDSA and DSA, simply naming a hash function like
+      "SHA-256" is all that is required.
 
-     Another available option, usable in certain specialized scenarios, is using
-     padding scheme "Raw", where the provided input is treated as if it was
-     already hashed, and directly signed with no other processing.
+      For RSA, more complicated padding is required. The two most common schemes
+      for RSA signature padding are PSS and PKCS1v1.5, so you must specify both
+      the padding mechanism as well as a hash, for example "PSS(SHA-256)"
+      or "PKCS1v15(SHA-256)".
 
-     The *format* defaults to ``Standard`` which is either the usual, or the
-     only, available formatting method, depending on the algorithm. For certain
-     signature schemes including ECDSA, DSA, ECGDSA and ECKCDSA you can also use
-     ``DerSequence``, which will format the signature as an ASN.1 SEQUENCE
-     value. This formatting is used in protocols such as TLS and Bitcoin.
+      Certain newer signature schemes, especially post-quantum based ones, hardcode the
+      hash function associated with their signatures, and no configuration is
+      possible. In this case *padding* should be left blank, or may possibly be used to identify
+      some algorithm-specific option. For instance ML-DSA may be parameterized with
+      "Randomized" or "Deterministic" to choose if the generated signature is randomized or
+      not. If left blank, a default is chosen.
+
+      Another available option, usable in certain specialized scenarios, is using
+      padding scheme "Raw", where the provided input is treated as if it was
+      already hashed, and directly signed with no other processing. This
+      corresponds to :cpp:func:`PK_Signature_Options::with_externally_computed_prehash`.
+
+      The *format* defaults to ``Standard`` which is either the usual, or the
+      only, available formatting method, depending on the algorithm. For certain
+      signature schemes including ECDSA, DSA, ECGDSA and ECKCDSA you can also use
+      ``DerSequence``, which will format the signature as an ASN.1 SEQUENCE
+      value. This formatting is used in protocols such as TLS and Bitcoin. This
+      corresponds to :cpp:func:`PK_Signature_Options::with_der_encoded_signature`.
+
+      .. note::
+
+         Botan both supports non-deterministic and deterministic (as per RFC
+         6979) DSA and ECDSA signatures. Either type of signature can be verified
+         by any other (EC)DSA library, regardless of which mode it prefers. With
+         the string interface, a deterministic signature can be requested by
+         appending ",Deterministic" to the hash name, eg "SHA-256,Deterministic";
+         this requires the ``rfc6979`` module.
 
    .. cpp:function:: void update(const uint8_t* in, size_t length)
    .. cpp:function:: void update(std::span<const uint8_t> in)
@@ -999,10 +1256,22 @@ Signatures are verified using
 .. cpp:class:: PK_Verifier
 
    .. cpp:function:: PK_Verifier(const Public_Key& pub_key, \
-          const std::string& padding, Signature_Format format = Signature_Format::Standard)
+          const PK_Signature_Options& options = PK_Signature_Options())
+
+      Construct a new verifier for signatures associated with public key
+      *pub_key*. The *options* should be the same as those used by the signer
+      (see :ref:`pk_signature_options`); the deterministic signature option is
+      ignored, as it does not affect verification.
+
+   .. cpp:function:: PK_Verifier(const Public_Key& pub_key, \
+          std::string_view padding, \
+          Signature_Format format = Signature_Format::Standard, \
+          std::string_view provider = "")
 
       Construct a new verifier for signatures associated with public key *pub_key*. The
-      *padding* and *format* should be the same as that used by the signer.
+      *padding* and *format* should be the same as that used by the signer. As
+      with :cpp:class:`PK_Signer`, the string is translated into the equivalent
+      :cpp:class:`PK_Signature_Options`.
 
    .. cpp:function:: void update(const uint8_t* in, size_t length)
    .. cpp:function:: void update(std::span<const uint8_t> in)
@@ -1029,7 +1298,9 @@ Signatures are verified using
       calling :cpp:func:`PK_Verifier::check_signature` on *sig*. Any data previously
       provided to :cpp:func:`PK_Verifier::update` will also be included.
 
-Botan implements the following signature algorithms:
+Botan implements the following signature algorithms. The string parameter
+each accepts in the string based constructors is described below; the
+equivalent options are listed in :ref:`pk_signature_options`.
 
 1. RSA. Requires a :ref:`padding scheme <rsa_padding>` as parameter.
 #. DSA. Requires a :ref:`hash function <sig_with_hash>` as parameter.
@@ -1099,7 +1370,9 @@ PKCS #1 v1.5 Type 1 (signature) padding, aka EMSA3 in IEEE 1363.
   - ``(Raw,<optional HashFunction>)``
 
 - The raw variant encodes a precomputed hash,
-  optionally with the digest ID of the given hash.
+  optionally with the digest ID of the given hash. With
+  :cpp:class:`PK_Signature_Options` this is selected using
+  :cpp:func:`PK_Signature_Options::with_externally_computed_prehash`.
 - Examples:
   ``PKCS1v15(SHA-256)``,
   ``PKCS1v15(Raw)``,
@@ -1197,6 +1470,8 @@ Sign inputs directly with no hashing or padding
 - Examples:
   ``Raw``,
   ``Raw(SHA-256)``
+- With :cpp:class:`PK_Signature_Options`, the optional hash is given using
+  :cpp:func:`PK_Signature_Options::with_externally_computed_prehash`.
 
 .. _sig_with_hash:
 
@@ -1232,6 +1507,9 @@ Parameters specification:
 - ``Raw``
 - ``Raw(<HashFunction>)``
 
+With :cpp:class:`PK_Signature_Options`, this mode is selected using
+:cpp:func:`PK_Signature_Options::with_externally_computed_prehash`.
+
 .. _Ed25519_Ed448_variants:
 
 Ed25519 and Ed448 Variants
@@ -1260,15 +1538,16 @@ Parameter specification:
 
 Ed25519ph (or Ed448) (pre-hashed) instead hashes the message with SHA-512 (or SHAKE256(512))
 and then signs the digest plus a special prefix specified in RFC 8032. To use it, specify
-padding name "Ed25519ph" (or "Ed448ph").
+padding name "Ed25519ph" (or "Ed448ph"), or with :cpp:class:`PK_Signature_Options`
+call :cpp:func:`PK_Signature_Options::with_prehash` with no argument.
 
 Parameter specification:
 ``Ed25519ph``
 
 Another variant of pre-hashing is used by GnuPG. There the message is digested
 with any hash function, then the digest is signed. To use it, specify any valid
-hash function. Even if SHA-512 is used, this variant is not compatible with
-Ed25519ph.
+hash function (or pass its name to :cpp:func:`PK_Signature_Options::with_prehash`).
+Even if SHA-512 is used, this variant is not compatible with Ed25519ph.
 
 Parameter specification:
 ``<HashFunction>``
