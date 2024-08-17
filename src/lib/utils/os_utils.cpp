@@ -40,8 +40,7 @@
    #include <emscripten/emscripten.h>
 #endif
 
-#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_IS_ANDROID) || \
-   defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
+#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
    #include <sys/auxv.h>
 #endif
 
@@ -58,11 +57,6 @@
       #include <libloaderapi.h>
       #include <stringapiset.h>
    #endif
-#endif
-
-#if defined(BOTAN_TARGET_OS_IS_ANDROID)
-   #include <elf.h>
-extern "C" char** environ;
 #endif
 
 #if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
@@ -130,8 +124,6 @@ uint32_t OS::get_process_id() {
 bool OS::has_auxval() {
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
    return true;
-#elif defined(BOTAN_TARGET_OS_IS_ANDROID) && defined(BOTAN_TARGET_ARCH_IS_ARM32)
-   return true;
 #elif defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
    return true;
 #elif defined(BOTAN_TARGET_OS_HAS_AUXINFO)
@@ -164,25 +156,6 @@ unsigned long OS::auxval_hwcap2() {
 unsigned long OS::get_auxval(unsigned long id) {
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
    return ::getauxval(id);
-#elif defined(BOTAN_TARGET_OS_IS_ANDROID) && defined(BOTAN_TARGET_ARCH_IS_ARM32)
-
-   if(id == 0)
-      return 0;
-
-   char** p = environ;
-
-   while(*p++ != nullptr)
-      ;
-
-   Elf32_auxv_t* e = reinterpret_cast<Elf32_auxv_t*>(p);
-
-   while(e != nullptr) {
-      if(e->a_type == id)
-         return e->a_un.a_val;
-      e++;
-   }
-
-   return 0;
 #elif defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
    unsigned long auxinfo = 0;
    ::elf_aux_info(static_cast<int>(id), &auxinfo, sizeof(auxinfo));
