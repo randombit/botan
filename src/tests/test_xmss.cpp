@@ -7,7 +7,6 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 **/
 
-#include "botan/pk_options.h"
 #include "tests.h"
 
 #if defined(BOTAN_HAS_XMSS_RFC8391)
