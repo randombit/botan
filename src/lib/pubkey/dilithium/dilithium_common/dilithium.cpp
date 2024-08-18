@@ -143,6 +143,11 @@ bool check_dilithium_options(const PK_Signature_Options& options) {
    return !options.using_deterministic_signature();
 }
 
+}  // namespace
+
+// The signature and verification operations should be in an anonymous namespace
+// as well, but cannot due to an apparent bug in MSVC
+
 class Dilithium_Signature_Operation final : public PK_Ops::Signature {
    public:
       Dilithium_Signature_Operation(DilithiumInternalKeypair keypair, const PK_Signature_Options& options) :
@@ -328,8 +333,6 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
       DilithiumPolyVecNTT m_t1_ntt_shifted;
       std::unique_ptr<DilithiumMessageHash> m_h;
 };
-
-}  // namespace
 
 Dilithium_PublicKey::Dilithium_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> pk) :
       Dilithium_PublicKey(pk, DilithiumMode(alg_id.oid())) {}
