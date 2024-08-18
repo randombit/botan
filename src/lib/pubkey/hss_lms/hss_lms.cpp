@@ -86,12 +86,12 @@ class HSS_LMS_Verification_Operation final : public PK_Ops::Verification {
       std::vector<uint8_t> m_msg_buffer;
 };
 
-std::unique_ptr<PK_Ops::Verification> HSS_LMS_PublicKey::create_verification_op(std::string_view /*params*/,
-                                                                                std::string_view provider) const {
-   if(provider.empty() || provider == "base") {
+std::unique_ptr<PK_Ops::Verification> HSS_LMS_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   if(!options.using_provider()) {
       return std::make_unique<HSS_LMS_Verification_Operation>(m_public);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> HSS_LMS_PublicKey::create_x509_verification_op(

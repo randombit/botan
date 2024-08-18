@@ -169,15 +169,17 @@ std::vector<uint8_t> SM2_Signature_Operation::sign(RandomNumberGenerator& rng) {
 */
 class SM2_Verification_Operation final : public PK_Ops::Verification {
    public:
-      SM2_Verification_Operation(const SM2_PublicKey& sm2, std::string_view ident, std::string_view hash) :
+      SM2_Verification_Operation(const SM2_PublicKey& sm2, const PK_Signature_Options& options) :
             m_group(sm2.domain()), m_gy_mul(sm2._public_key()) {
-         if(hash == "Raw") {
+         if(options.hash_function() == "Raw") {
             // m_hash is null, m_za is empty
          } else {
-            m_hash = HashFunction::create_or_throw(hash);
+            // TODO(C++23) Use std::optional::or_else
+            auto context = options.context().has_value() ? options.context().value() : sm2_default_userid;
+
+            m_hash = HashFunction::create_or_throw(options.hash_function());
             // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
-            const auto ident_bytes = std::span{cast_char_ptr_to_uint8(ident.data()), ident.size()};
-            m_za = sm2_compute_za(*m_hash, ident_bytes, m_group, sm2._public_key());
+            m_za = sm2_compute_za(*m_hash, context, m_group, sm2._public_key());
             m_hash->update(m_za);
          }
       }
@@ -230,29 +232,6 @@ bool SM2_Verification_Operation::is_valid_signature(std::span<const uint8_t> sig
    return false;
 }
 
-void parse_sm2_param_string(std::string_view params, std::string& userid, std::string& hash) {
-   // GM/T 0009-2012 specifies this as the default userid
-   const std::string default_userid = "1234567812345678";
-
-   // defaults:
-   userid = default_userid;
-   hash = "SM3";
-
-   /*
-   * SM2 parameters have the following possible formats:
-   * Ident [since 2.2.0]
-   * Ident,Hash [since 2.3.0]
-   */
-
-   auto comma = params.find(',');
-   if(comma == std::string::npos) {
-      userid = params;
-   } else {
-      userid = params.substr(0, comma);
-      hash = params.substr(comma + 1, std::string::npos);
-   }
-}
-
 }  // namespace
 
 std::unique_ptr<Private_Key> SM2_PublicKey::generate_another(RandomNumberGenerator& rng) const {
@@ -268,15 +247,12 @@ std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
    return sm2_compute_za(hash, ident_bytes, group, apoint);
 }
 
-std::unique_ptr<PK_Ops::Verification> SM2_PublicKey::create_verification_op(std::string_view params,
-                                                                            std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      std::string userid, hash;
-      parse_sm2_param_string(params, userid, hash);
-      return std::make_unique<SM2_Verification_Operation>(*this, userid, hash);
+std::unique_ptr<PK_Ops::Verification> SM2_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   if(!options.using_provider()) {
+      return std::make_unique<SM2_Verification_Operation>(*this, options);
    }
-
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Signature> SM2_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,

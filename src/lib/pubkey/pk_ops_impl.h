@@ -58,7 +58,7 @@ class Verification_with_Hash : public Verification {
       std::string hash_function() const final { return m_hash->name(); }
 
    protected:
-      explicit Verification_with_Hash(std::string_view hash);
+      explicit Verification_with_Hash(const PK_Signature_Options& options);
 
       explicit Verification_with_Hash(const AlgorithmIdentifier& alg_id,
                                       std::string_view pk_algo,

@@ -18,7 +18,9 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/pk_options.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/pk_options_impl.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/xmss_verification_operation.h>
 
@@ -100,12 +102,15 @@ XMSS_PublicKey::XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid,
    BOTAN_ARG_CHECK(m_public_seed.size() == m_xmss_params.element_size(), "XMSS: unexpected byte length of public seed");
 }
 
-std::unique_ptr<PK_Ops::Verification> XMSS_PublicKey::create_verification_op(std::string_view /*params*/,
-                                                                             std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
+std::unique_ptr<PK_Ops::Verification> XMSS_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   PK_Options_Checks::validate_for_hash_based_signature(options, "XMSS", this->m_xmss_params.hash_function_name());
+
+   if(!options.using_provider()) {
       return std::make_unique<XMSS_Verification_Operation>(*this);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> XMSS_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,

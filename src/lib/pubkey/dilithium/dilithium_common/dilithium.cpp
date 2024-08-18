@@ -185,16 +185,12 @@ class Dilithium_PrivateKeyInternal {
 namespace {
 
 // Return true if randomized signatures were requested
-bool check_dilithium_options(const PK_Signature_Options& options) {
+void validate_dilithium_options(const PK_Signature_Options& options) {
    BOTAN_ARG_CHECK(options.hash_function().empty(), "Dilithium does not allow specifying the hash function");
    BOTAN_ARG_CHECK(!options.using_padding(), "Dilithium does not support padding");
 
    // This is available in ML-DSA and might be supported in the future
    BOTAN_ARG_CHECK(!options.using_prehash(), "Dilithium does not support prehashing");
-
-   // TODO: ML-DSA uses the randomized (hedged) variant by default.
-   //       We might even drop support for the deterministic variant.
-   return !options.using_deterministic_signature();
 }
 
 }  // namespace
@@ -207,12 +203,14 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
       Dilithium_Signature_Operation(std::shared_ptr<Dilithium_PrivateKeyInternal> sk,
                                     const PK_Signature_Options& options) :
             m_priv_key(std::move(sk)),
-            m_randomized(check_dilithium_options(options)),
+            m_randomized(!options.using_deterministic_signature()),
             m_h(m_priv_key->mode().symmetric_primitives().get_message_hash(m_priv_key->tr())),
             m_s1(ntt(m_priv_key->s1().clone())),
             m_s2(ntt(m_priv_key->s2().clone())),
             m_t0(ntt(m_priv_key->t0().clone())),
-            m_A(Dilithium_Algos::expand_A(m_priv_key->rho(), m_priv_key->mode())) {}
+            m_A(Dilithium_Algos::expand_A(m_priv_key->rho(), m_priv_key->mode())) {
+         validate_dilithium_options(options);
+      }
 
       void update(std::span<const uint8_t> input) override { m_h.update(input); }
 
@@ -426,13 +424,12 @@ std::unique_ptr<Private_Key> Dilithium_PublicKey::generate_another(RandomNumberG
    return std::make_unique<Dilithium_PrivateKey>(rng, m_public->mode().mode());
 }
 
-std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_verification_op(std::string_view params,
-                                                                                  std::string_view provider) const {
-   BOTAN_ARG_CHECK(params.empty() || params == "Pure", "Unexpected parameters for verifying with Dilithium");
-   if(provider.empty() || provider == "base") {
+std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   if(!options.using_provider()) {
       return std::make_unique<Dilithium_Verification_Operation>(m_public);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_x509_verification_op(

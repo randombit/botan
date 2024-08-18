@@ -102,8 +102,8 @@ std::unique_ptr<PK_Ops::KEM_Encryption> Public_Key::create_kem_encryption_op(std
    throw Lookup_Error(fmt("{} does not support KEM encryption", algo_name()));
 }
 
-std::unique_ptr<PK_Ops::Verification> Public_Key::create_verification_op(std::string_view /*params*/,
-                                                                         std::string_view /*provider*/) const {
+std::unique_ptr<PK_Ops::Verification> Public_Key::_create_verification_op(const PK_Signature_Options& options) const {
+   BOTAN_UNUSED(options);
    throw Lookup_Error(fmt("{} does not support verification", algo_name()));
 }
 

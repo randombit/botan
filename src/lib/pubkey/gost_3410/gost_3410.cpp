@@ -168,23 +168,23 @@ std::vector<uint8_t> GOST_3410_Signature_Operation::raw_sign(std::span<const uin
    return EC_Scalar::serialize_pair(s, r);
 }
 
-std::string gost_hash_from_algid(const AlgorithmIdentifier& alg_id) {
+PK_Signature_Options gost_hash_from_algid(const AlgorithmIdentifier& alg_id) {
    if(!alg_id.parameters_are_empty()) {
       throw Decoding_Error("Unexpected non-empty AlgorithmIdentifier parameters for GOST 34.10 signature");
    }
 
    const std::string oid_str = alg_id.oid().to_formatted_string();
    if(oid_str == "GOST-34.10/GOST-R-34.11-94") {
-      return "GOST-R-34.11-94";
+      return PK_Signature_Options("GOST-R-34.11-94");
    }
    if(oid_str == "GOST-34.10-2012-256/Streebog-256") {
-      return "Streebog-256";
+      return PK_Signature_Options("Streebog-256");
    }
    if(oid_str == "GOST-34.10-2012-512/Streebog-512") {
-      return "Streebog-512";
+      return PK_Signature_Options("Streebog-512");
    }
    if(oid_str == "GOST-34.10-2012-256/SHA-256") {
-      return "SHA-256";
+      return PK_Signature_Options("SHA-256");
    }
 
    throw Decoding_Error(fmt("Unknown OID ({}) for GOST 34.10 signatures", alg_id.oid()));
@@ -195,8 +195,8 @@ std::string gost_hash_from_algid(const AlgorithmIdentifier& alg_id) {
 */
 class GOST_3410_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
-      GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, std::string_view padding) :
-            PK_Ops::Verification_with_Hash(padding), m_group(gost.domain()), m_gy_mul(gost._public_key()) {}
+      GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, const PK_Signature_Options& options) :
+            PK_Ops::Verification_with_Hash(options), m_group(gost.domain()), m_gy_mul(gost._public_key()) {}
 
       GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(gost_hash_from_algid(alg_id)),
@@ -233,12 +233,12 @@ std::unique_ptr<Private_Key> GOST_3410_PublicKey::generate_another(RandomNumberG
    return std::make_unique<GOST_3410_PrivateKey>(rng, domain());
 }
 
-std::unique_ptr<PK_Ops::Verification> GOST_3410_PublicKey::create_verification_op(std::string_view params,
-                                                                                  std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<GOST_3410_Verification_Operation>(*this, params);
+std::unique_ptr<PK_Ops::Verification> GOST_3410_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   if(!options.using_provider()) {
+      return std::make_unique<GOST_3410_Verification_Operation>(*this, options);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> GOST_3410_PublicKey::create_x509_verification_op(

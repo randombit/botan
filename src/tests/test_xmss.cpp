@@ -62,7 +62,7 @@ class XMSS_Signature_Verify_Tests final : public PK_Signature_Verification_Test 
       XMSS_Signature_Verify_Tests() :
             PK_Signature_Verification_Test("XMSS", "pubkey/xmss_verify.vec", "Params,Msg,PublicKey,Signature") {}
 
-      std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Params"); }
+      std::string default_padding(const VarMap& /*vars*/) const override { return ""; }
 
       std::string printed_params(const VarMap& vars, const std::string& /*padding*/) const override {
          return vars.get_req_str("Params");
@@ -80,7 +80,7 @@ class XMSS_Signature_Verify_Invalid_Tests final : public PK_Signature_NonVerific
             PK_Signature_NonVerification_Test(
                "XMSS", "pubkey/xmss_invalid.vec", "Params,Msg,PublicKey,InvalidSignature") {}
 
-      std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Params"); }
+      std::string default_padding(const VarMap& /*vars*/) const override { return ""; }
 
       std::string printed_params(const VarMap& vars, const std::string& /*padding*/) const override {
          return vars.get_req_str("Params");
@@ -291,7 +291,6 @@ std::vector<Test::Result> xmss_legacy_private_key() {
    Botan::XMSS_PublicKey legacy_public_key = Botan::XMSS_PublicKey(legacy_xmss_public_key);
 
    const auto message = Botan::hex_decode("deadcafe");
-   const auto algo_name = "SHA2_10_256";
 
    auto rng = Test::new_rng(__func__);
 
@@ -301,14 +300,14 @@ std::vector<Test::Result> xmss_legacy_private_key() {
                Botan::PK_Signer signer(legacy_secret_key, *rng);
                auto signature = signer.sign_message(message, *rng);
 
-               Botan::PK_Verifier verifier(public_key_from_secret_key, algo_name);
+               Botan::PK_Verifier verifier(public_key_from_secret_key);
                result.confirm("legacy private key generates signatures that are still verifiable",
                               verifier.verify_message(message, signature));
             }),
 
       CHECK("Verify a legacy signature",
             [&](auto& result) {
-               Botan::PK_Verifier verifier(public_key_from_secret_key, algo_name);
+               Botan::PK_Verifier verifier(public_key_from_secret_key);
                result.confirm("legacy private key generates signatures that are still verifiable",
                               verifier.verify_message(message, legacy_signature));
             }),
@@ -318,7 +317,7 @@ std::vector<Test::Result> xmss_legacy_private_key() {
                Botan::PK_Signer signer(legacy_secret_key, *rng);
                auto signature = signer.sign_message(message, *rng);
 
-               Botan::PK_Verifier verifier(legacy_public_key, algo_name);
+               Botan::PK_Verifier verifier(legacy_public_key);
                result.confirm("legacy private key generates signatures that are still verifiable",
                               verifier.verify_message(message, legacy_signature));
             }),

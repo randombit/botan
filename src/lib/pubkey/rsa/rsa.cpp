@@ -675,8 +675,8 @@ class RSA_Verify_Operation final : public PK_Ops::Verification,
          return m_emsa->verify(message_repr, msg, public_modulus_bits() - 1);
       }
 
-      RSA_Verify_Operation(const RSA_PublicKey& rsa, std::string_view padding) :
-            RSA_Public_Operation(rsa), m_emsa(EMSA::create_or_throw(padding)) {}
+      RSA_Verify_Operation(const RSA_PublicKey& rsa, const PK_Signature_Options& options) :
+            RSA_Public_Operation(rsa), m_emsa(EMSA::create_or_throw(options._padding_with_hash())) {}
 
       std::string hash_function() const override { return m_emsa->hash_function(); }
 
@@ -733,18 +733,17 @@ std::unique_ptr<PK_Ops::KEM_Encryption> RSA_PublicKey::create_kem_encryption_op(
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Verification> RSA_PublicKey::create_verification_op(std::string_view params,
-                                                                            std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<RSA_Verify_Operation>(*this, params);
+std::unique_ptr<PK_Ops::Verification> RSA_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   if(!options.using_provider()) {
+      return std::make_unique<RSA_Verify_Operation>(*this, options);
    }
-
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 namespace {
 
-std::string parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id) {
+PK_Signature_Options parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id) {
    const auto sig_info = split_on(alg_id.oid().to_formatted_string(), '/');
 
    if(sig_info.empty() || sig_info.size() != 2 || sig_info[0] != "RSA") {
@@ -787,7 +786,7 @@ std::string parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id) {
       padding += fmt("({},MGF1,{})", hash_algo, pss_params.salt_length());
    }
 
-   return padding;
+   return PK_Signature_Options().with_padding(padding);
 }
 
 }  // namespace
