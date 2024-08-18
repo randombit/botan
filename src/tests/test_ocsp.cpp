@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "botan/types.h"
+#include "tests.h"
 
 #if defined(BOTAN_HAS_OCSP)
    #include <botan/certstor.h>
@@ -14,8 +14,6 @@
    #include <botan/internal/calendar.h>
    #include <fstream>
 #endif
-
-#include "tests.h"
 
 namespace Botan_Tests {
 
