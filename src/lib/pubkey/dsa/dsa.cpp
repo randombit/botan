@@ -204,8 +204,8 @@ std::vector<uint8_t> DSA_Signature_Operation::raw_sign(std::span<const uint8_t> 
 */
 class DSA_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
-      DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key, std::string_view emsa) :
-            PK_Ops::Verification_with_Hash(emsa), m_key(key) {}
+      DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key, const PK_Signature_Options& options) :
+            PK_Ops::Verification_with_Hash(options), m_key(key) {}
 
       DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(alg_id, "DSA"), m_key(key) {}
@@ -251,12 +251,12 @@ bool DSA_Verification_Operation::verify(std::span<const uint8_t> input, std::spa
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::create_verification_op(std::string_view params,
-                                                                            std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<DSA_Verification_Operation>(this->m_public_key, params);
+std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   if(!options.using_provider()) {
+      return std::make_unique<DSA_Verification_Operation>(this->m_public_key, options);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::create_x509_verification_op(

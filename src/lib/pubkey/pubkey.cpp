@@ -328,18 +328,15 @@ std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng) {
    }
 }
 
-PK_Verifier::PK_Verifier(const Public_Key& key,
-                         std::string_view emsa,
-                         Signature_Format format,
-                         std::string_view provider) {
-   m_op = key.create_verification_op(emsa, provider);
+PK_Verifier::PK_Verifier(const Public_Key& key, const PK_Signature_Options& options) {
+   m_op = key._create_verification_op(options);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support signature verification", key.algo_name()));
    }
-   m_sig_format = format;
+   m_sig_format = options.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
    m_parts = key.message_parts();
    m_part_size = key.message_part_size();
-   check_der_format_supported(format, m_parts);
+   check_der_format_supported(m_sig_format, m_parts);
 }
 
 PK_Verifier::PK_Verifier(const Public_Key& key,

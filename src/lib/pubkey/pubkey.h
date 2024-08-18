@@ -290,6 +290,13 @@ class BOTAN_PUBLIC_API(2, 0) PK_Verifier final {
       /**
       * Construct a PK Verifier.
       * @param pub_key the public key to verify against
+      * @param options relating to the signature
+      */
+      PK_Verifier(const Public_Key& pub_key, const PK_Signature_Options& options = PK_Signature_Options());
+
+      /**
+      * Construct a PK Verifier.
+      * @param pub_key the public key to verify against
       * @param padding the padding/hash to use (eg "EMSA_PKCS1(SHA-256)")
       * @param format the signature format to use
       * @param provider the provider to use
@@ -297,7 +304,8 @@ class BOTAN_PUBLIC_API(2, 0) PK_Verifier final {
       PK_Verifier(const Public_Key& pub_key,
                   std::string_view padding,
                   Signature_Format format = Signature_Format::Standard,
-                  std::string_view provider = "");
+                  std::string_view provider = "") :
+            PK_Verifier(pub_key, PK_Signature_Options::_parse(pub_key, padding, format).with_provider(provider)) {}
 
       /**
       * Construct a PK Verifier (X.509 specific)

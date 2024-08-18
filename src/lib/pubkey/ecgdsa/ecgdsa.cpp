@@ -79,8 +79,8 @@ std::vector<uint8_t> ECGDSA_Signature_Operation::raw_sign(std::span<const uint8_
 */
 class ECGDSA_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
-      ECGDSA_Verification_Operation(const ECGDSA_PublicKey& ecgdsa, std::string_view padding) :
-            PK_Ops::Verification_with_Hash(padding), m_group(ecgdsa.domain()), m_gy_mul(ecgdsa._public_key()) {}
+      ECGDSA_Verification_Operation(const ECGDSA_PublicKey& ecgdsa, const PK_Signature_Options& options) :
+            PK_Ops::Verification_with_Hash(options), m_group(ecgdsa.domain()), m_gy_mul(ecgdsa._public_key()) {}
 
       ECGDSA_Verification_Operation(const ECGDSA_PublicKey& ecgdsa, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(alg_id, "ECGDSA"),
@@ -117,12 +117,12 @@ std::unique_ptr<Private_Key> ECGDSA_PublicKey::generate_another(RandomNumberGene
    return std::make_unique<ECGDSA_PrivateKey>(rng, domain());
 }
 
-std::unique_ptr<PK_Ops::Verification> ECGDSA_PublicKey::create_verification_op(std::string_view params,
-                                                                               std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<ECGDSA_Verification_Operation>(*this, params);
+std::unique_ptr<PK_Ops::Verification> ECGDSA_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   if(!options.using_provider()) {
+      return std::make_unique<ECGDSA_Verification_Operation>(*this, options);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> ECGDSA_PublicKey::create_x509_verification_op(

@@ -239,12 +239,15 @@ class SphincsPlus_Verification_Operation final : public PK_Ops::Verification {
       SphincsContext m_context;
 };
 
-std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::create_verification_op(std::string_view /*params*/,
-                                                                                    std::string_view provider) const {
-   if(provider.empty() || provider == "base") {
+std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   PK_Options_Checks::validate_for_hash_based_signature(options, "SPHINCS+", m_public->parameters().hash_name());
+
+   if(!options.using_provider()) {
       return std::make_unique<SphincsPlus_Verification_Operation>(m_public);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::create_x509_verification_op(

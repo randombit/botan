@@ -38,25 +38,6 @@ bool ECKCDSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) cons
 
 namespace {
 
-std::unique_ptr<HashFunction> eckcdsa_signature_hash(std::string_view padding) {
-   if(auto hash = HashFunction::create(padding)) {
-      return hash;
-   }
-
-   SCAN_Name req(padding);
-
-   if(req.algo_name() == "EMSA1" && req.arg_count() == 1) {
-      if(auto hash = HashFunction::create(req.arg(0))) {
-         return hash;
-      }
-   }
-
-   // intentionally not supporting Raw for ECKCDSA, we need to know
-   // the length in advance which complicates the logic for Raw
-
-   throw Algorithm_Not_Found(padding);
-}
-
 std::unique_ptr<HashFunction> eckcdsa_signature_hash(const PK_Signature_Options& options) {
    BOTAN_ARG_CHECK(!options.using_padding(), "ECKCDSA does not support padding modes");
 
@@ -197,10 +178,10 @@ std::vector<uint8_t> ECKCDSA_Signature_Operation::raw_sign(std::span<const uint8
 */
 class ECKCDSA_Verification_Operation final : public PK_Ops::Verification {
    public:
-      ECKCDSA_Verification_Operation(const ECKCDSA_PublicKey& eckcdsa, std::string_view padding) :
+      ECKCDSA_Verification_Operation(const ECKCDSA_PublicKey& eckcdsa, const PK_Signature_Options& options) :
             m_group(eckcdsa.domain()),
             m_gy_mul(eckcdsa._public_key()),
-            m_hash(eckcdsa_signature_hash(padding)),
+            m_hash(eckcdsa_signature_hash(options)),
             m_prefix(eckcdsa_prefix(eckcdsa._public_key(), m_hash->hash_block_size())),
             m_prefix_used(false) {}
 
@@ -274,12 +255,12 @@ std::unique_ptr<Private_Key> ECKCDSA_PublicKey::generate_another(RandomNumberGen
    return std::make_unique<ECKCDSA_PrivateKey>(rng, domain());
 }
 
-std::unique_ptr<PK_Ops::Verification> ECKCDSA_PublicKey::create_verification_op(std::string_view params,
-                                                                                std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      return std::make_unique<ECKCDSA_Verification_Operation>(*this, params);
+std::unique_ptr<PK_Ops::Verification> ECKCDSA_PublicKey::_create_verification_op(
+   const PK_Signature_Options& options) const {
+   if(!options.using_provider()) {
+      return std::make_unique<ECKCDSA_Verification_Operation>(*this, options);
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> ECKCDSA_PublicKey::create_x509_verification_op(

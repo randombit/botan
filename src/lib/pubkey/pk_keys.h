@@ -253,11 +253,11 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       * In all cases applications should use wrappers in pubkey.h
       *
       * Return a verification operation for this key/params or throw
-      * @param params additional parameters
-      * @param provider the provider to use
+      *
+      * @param options which specify parameters of the signature beyond those
+      * implicit to the public key itself
       */
-      virtual std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
-                                                                           std::string_view provider) const;
+      virtual std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const;
 
       /**
       * This is an internal library function exposed on key types.

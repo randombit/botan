@@ -20,7 +20,7 @@ namespace Botan {
  *
  * By default, Ed448 without prehash is used (recommended). To use
  * Ed448ph, "Ed448ph" or a custom hash function identifier is passed
- * as a parameter to the create_verification_op method.
+ * as a parameter to the _create_verification_op method.
  *
  * Note that contexts (i.e. Ed448ctx) are not supported by this interface.
  */
@@ -56,8 +56,7 @@ class BOTAN_PUBLIC_API(3, 4) Ed448_PublicKey : public virtual Public_Key {
       */
       Ed448_PublicKey(std::span<const uint8_t> key_bits);
 
-      std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
-                                                                   std::string_view provider) const override;
+      std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const override;
 
       std::unique_ptr<PK_Ops::Verification> create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
                                                                         std::string_view provider) const override;
@@ -75,7 +74,7 @@ BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
  *
  * By default, Ed448 without prehash is used (recommended). To use
  * Ed448ph, "Ed448ph" or a custom hash function identifier is passed
- * as a parameter to the create_verification_op method.
+ * as a parameter to the _create_verification_op method.
  *
  * Note that contexts (i.e. Ed448ctx) are not supported by this interface.
  */
