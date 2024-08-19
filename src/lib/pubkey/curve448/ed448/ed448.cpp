@@ -222,9 +222,7 @@ std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::_create_verification_op(
 
    if(!options.using_provider()) {
       if(options.using_prehash()) {
-         // TODO(C++23) options.prehash_fn().or_else("SHAKE-256(512)")
-         const auto prehash_fn = options.prehash_fn().has_value() ? options.prehash_fn().value() : "SHAKE-256(512)";
-         return std::make_unique<Ed448_Verify_Operation>(*this, prehash_fn);
+         return std::make_unique<Ed448_Verify_Operation>(*this, options.prehash_fn().value_or("SHAKE-256(512)"));
       } else {
          return std::make_unique<Ed448_Verify_Operation>(*this);
       }
@@ -253,9 +251,7 @@ std::unique_ptr<PK_Ops::Signature> Ed448_PrivateKey::_create_signature_op(Random
 
    if(!options.using_provider()) {
       if(options.using_prehash()) {
-         // TODO(C++23) options.prehash_fn().or_else("SHAKE-256(512)")
-         const auto prehash_fn = options.prehash_fn().has_value() ? options.prehash_fn().value() : "SHAKE-256(512)";
-         return std::make_unique<Ed448_Sign_Operation>(*this, prehash_fn);
+         return std::make_unique<Ed448_Sign_Operation>(*this, options.prehash_fn().value_or("SHAKE-256(512)");
       } else {
          return std::make_unique<Ed448_Sign_Operation>(*this);
       }
