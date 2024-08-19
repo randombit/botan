@@ -181,8 +181,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
                 RandomNumberGenerator& rng,
                 std::string_view padding,
                 Signature_Format format = Signature_Format::Standard,
-                std::string_view provider = "") :
-            PK_Signer(key, rng, PK_Signature_Options::_parse(key, padding, format).with_provider(provider)) {}
+                std::string_view provider = "");
 
       ~PK_Signer();
 
@@ -304,8 +303,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Verifier final {
       PK_Verifier(const Public_Key& pub_key,
                   std::string_view padding,
                   Signature_Format format = Signature_Format::Standard,
-                  std::string_view provider = "") :
-            PK_Verifier(pub_key, PK_Signature_Options::_parse(pub_key, padding, format).with_provider(provider)) {}
+                  std::string_view provider = "");
 
       /**
       * Construct a PK Verifier (X.509 specific)

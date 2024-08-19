@@ -568,7 +568,7 @@ class RSA_Signature_Operation final : public PK_Ops::Signature,
                               const PK_Signature_Options& options,
                               RandomNumberGenerator& rng) :
             RSA_Private_Operation(rsa, rng) {
-         m_emsa = EMSA::create_or_throw(options._padding_with_hash());
+         m_emsa = EMSA::create_or_throw(options);
       }
 
    private:
@@ -676,7 +676,7 @@ class RSA_Verify_Operation final : public PK_Ops::Verification,
       }
 
       RSA_Verify_Operation(const RSA_PublicKey& rsa, const PK_Signature_Options& options) :
-            RSA_Public_Operation(rsa), m_emsa(EMSA::create_or_throw(options._padding_with_hash())) {}
+            RSA_Public_Operation(rsa), m_emsa(EMSA::create_or_throw(options)) {}
 
       std::string hash_function() const override { return m_emsa->hash_function(); }
 

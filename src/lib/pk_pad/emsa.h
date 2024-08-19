@@ -14,6 +14,7 @@
 namespace Botan {
 
 class RandomNumberGenerator;
+class PK_Signature_Options;
 
 /**
 * EMSA, from IEEE 1363s Encoding Method for Signatures, Appendix
@@ -39,6 +40,14 @@ class BOTAN_TEST_API EMSA {
       * @return pointer to newly allocated object of that type, or throws
       */
       static std::unique_ptr<EMSA> create_or_throw(std::string_view algo_spec);
+
+      /**
+      * Factory method for EMSA (message-encoding methods for signatures
+      * with appendix) objects
+      * @param options the algorithm parameters
+      * @return pointer to newly allocated object of that type, or throws
+      */
+      static std::unique_ptr<EMSA> create_or_throw(const PK_Signature_Options& options);
 
       /**
       * Add more data to the signature computation

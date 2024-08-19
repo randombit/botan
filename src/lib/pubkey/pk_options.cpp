@@ -9,166 +9,75 @@
 #include <botan/hash.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/scan_name.h>
 
 namespace Botan {
 
-PK_Signature_Options PK_Signature_Options::with_padding(std::string_view padding) const {
+PK_Signature_Options::~PK_Signature_Options() = default;
+
+PK_Signature_Options PK_Signature_Options::with_hash(std::string_view hash) && {
+   BOTAN_STATE_CHECK_MSG(!using_hash(), "PK_Signature_Options::with_hash cannot specify hash twice");
+   BOTAN_ARG_CHECK(!hash.empty(), "Argument cannot be empty");
+   this->m_hash_fn = hash;
+   return std::move(*this);
+}
+
+PK_Signature_Options PK_Signature_Options::with_padding(std::string_view padding) && {
    BOTAN_STATE_CHECK_MSG(!using_padding(), "PK_Signature_Options::with_padding cannot specify padding twice");
-   auto next = (*this);
-   next.m_padding = padding;
-   return next;
+   BOTAN_ARG_CHECK(!padding.empty(), "Argument cannot be empty");
+   this->m_padding = padding;
+   return std::move(*this);
 }
 
-PK_Signature_Options PK_Signature_Options::with_prehash(std::optional<std::string> prehash_fn) const {
+PK_Signature_Options PK_Signature_Options::with_prehash(std::optional<std::string> prehash_fn) && {
    BOTAN_STATE_CHECK_MSG(!using_prehash(), "PK_Signature_Options::with_prehash cannot specify prehash twice");
-   auto next = (*this);
-   next.m_use_prehash = true;
-   next.m_prehash = std::move(prehash_fn);
-   return next;
+   this->m_using_prehash = true;
+   this->m_prehash = std::move(prehash_fn);
+   return std::move(*this);
 }
 
-PK_Signature_Options PK_Signature_Options::with_provider(std::string_view provider) const {
-   if(provider.empty()) {
-      return (*this);
+PK_Signature_Options PK_Signature_Options::with_provider(std::string_view provider) && {
+   if(!provider.empty()) {
+      BOTAN_STATE_CHECK_MSG(!using_provider(), "PK_Signature_Options::with_provider cannot specify provider twice");
+      this->m_provider = provider;
    }
-
-   BOTAN_STATE_CHECK_MSG(!using_provider(), "PK_Signature_Options::with_provider cannot specify provider twice");
-   auto next = (*this);
-   next.m_provider = provider;
-   return next;
+   return std::move(*this);
 }
 
-PK_Signature_Options PK_Signature_Options::with_context(std::span<const uint8_t> context) const {
+PK_Signature_Options PK_Signature_Options::with_context(std::span<const uint8_t> context) && {
    BOTAN_STATE_CHECK_MSG(!using_context(), "PK_Signature_Options::with_context cannot specify context twice");
-   auto next = (*this);
-   next.m_context = std::vector<uint8_t>(context.begin(), context.end());
-   return next;
+   this->m_context = std::vector<uint8_t>(context.begin(), context.end());
+   return std::move(*this);
 }
 
-PK_Signature_Options PK_Signature_Options::with_context(std::string_view context) const {
-   return this->with_context(std::span{cast_char_ptr_to_uint8(context.data()), context.size()});
+PK_Signature_Options PK_Signature_Options::with_context(std::string_view context) && {
+   BOTAN_STATE_CHECK_MSG(!using_context(), "PK_Signature_Options::with_context cannot specify context twice");
+   const uint8_t* ptr = cast_char_ptr_to_uint8(context.data());
+   this->m_context = std::vector<uint8_t>(ptr, ptr + context.size());
+   return std::move(*this);
 }
 
-PK_Signature_Options PK_Signature_Options::with_deterministic_signature() const {
-   auto next = (*this);
-   next.m_deterministic_sig = true;
-   return next;
+PK_Signature_Options PK_Signature_Options::with_salt_size(size_t salt_size) && {
+   BOTAN_STATE_CHECK_MSG(!using_salt_size(), "PK_Signature_Options::with_salt_size cannot specify salt size twice");
+   this->m_salt_size = salt_size;
+   return std::move(*this);
 }
 
-PK_Signature_Options PK_Signature_Options::with_der_encoded_signature() const {
-   auto next = (*this);
-   next.m_use_der = true;
-   return next;
+PK_Signature_Options PK_Signature_Options::with_deterministic_signature() && {
+   this->m_deterministic_sig = true;
+   return std::move(*this);
 }
 
-std::string PK_Signature_Options::_padding_with_hash() const {
-   if(!m_hash_fn.empty() && m_padding.has_value()) {
-      return fmt("{}({})", m_padding.value(), m_hash_fn);
-   }
-
-   if(m_padding.has_value()) {
-      return m_padding.value();
-   }
-
-   if(!m_hash_fn.empty()) {
-      return m_hash_fn;
-   }
-
-   throw Invalid_Argument("RSA signature requires a padding scheme");
+PK_Signature_Options PK_Signature_Options::with_der_encoded_signature() && {
+   this->m_use_der = true;
+   return std::move(*this);
 }
 
-//static
-PK_Signature_Options PK_Signature_Options::_parse(const Public_Key& key,
-                                                  std::string_view params,
-                                                  Signature_Format format) {
-   /*
-   * This is a convoluted mess because we must handle dispatch for every algorithm
-   * specific detail of how padding strings were formatted in versions prior to 3.6.
-   *
-   * This will all go away once the deprecated constructors of PK_Signer and PK_Verifier
-   * are removed in Botan4.
-   */
-
-   const std::string algo = key.algo_name();
-
-   if(algo.starts_with("Dilithium") || algo == "SPHINCS+") {
-      if(!params.empty() && params != "Randomized" && params != "Deterministic") {
-         throw Invalid_Argument(fmt("Unexpected parameters for signing with {}", algo));
-      }
-
-      if(params == "Deterministic") {
-         return PK_Signature_Options().with_deterministic_signature();
-      } else {
-         return PK_Signature_Options();
-      }
+std::string PK_Signature_Options::hash_function_name() const {
+   if(m_hash_fn.has_value()) {
+      return m_hash_fn.value();
    }
 
-   if(algo == "SM2") {
-      /*
-      * SM2 parameters have the following possible formats:
-      * Ident [since 2.2.0]
-      * Ident,Hash [since 2.3.0]
-      */
-      if(params.empty()) {
-         return PK_Signature_Options("SM3");
-      } else {
-         std::string userid;
-         std::string hash = "SM3";
-         auto comma = params.find(',');
-         if(comma == std::string::npos) {
-            userid = params;
-         } else {
-            userid = params.substr(0, comma);
-            hash = params.substr(comma + 1, std::string::npos);
-         }
-         return PK_Signature_Options(hash).with_context(userid);
-      }
-   }
-
-   if(algo == "Ed25519") {
-      if(params.empty() || params == "Identity" || params == "Pure") {
-         return PK_Signature_Options();
-      } else if(params == "Ed25519ph") {
-         return PK_Signature_Options().with_prehash();
-      } else {
-         return PK_Signature_Options().with_prehash(std::string(params));
-      }
-   }
-
-   if(algo == "Ed448") {
-      if(params.empty() || params == "Identity" || params == "Pure" || params == "Ed448") {
-         return PK_Signature_Options();
-      } else if(params == "Ed448ph") {
-         return PK_Signature_Options().with_prehash();
-      } else {
-         return PK_Signature_Options().with_prehash(std::string(params));
-      }
-   }
-
-   if(algo == "RSA") {
-      return PK_Signature_Options().with_padding(params);
-   }
-
-   if(params.empty()) {
-      return PK_Signature_Options();
-   }
-
-   // ECDSA/DSA/ECKCDSA/etc
-   auto dsa_options = [&]() {
-      if(params.starts_with("EMSA1")) {
-         SCAN_Name req(params);
-         return PK_Signature_Options(req.arg(0));
-      } else {
-         return PK_Signature_Options(params);
-      }
-   }();
-
-   if(format == Signature_Format::DerSequence) {
-      return dsa_options.with_der_encoded_signature();
-   } else {
-      return dsa_options;
-   }
+   throw Invalid_State("This signature scheme requires specifying a hash function");
 }
 
 }  // namespace Botan

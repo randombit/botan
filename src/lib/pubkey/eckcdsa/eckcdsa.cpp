@@ -40,6 +40,7 @@ namespace {
 
 std::unique_ptr<HashFunction> eckcdsa_signature_hash(const PK_Signature_Options& options) {
    BOTAN_ARG_CHECK(!options.using_padding(), "ECKCDSA does not support padding modes");
+   BOTAN_ARG_CHECK(!options.using_salt_size(), "ECKCDSA does not support a salt");
 
    // We could support this, but it's not standard
    BOTAN_ARG_CHECK(!options.using_prehash(), "ECKCDSA does not support prehashing");
@@ -47,7 +48,7 @@ std::unique_ptr<HashFunction> eckcdsa_signature_hash(const PK_Signature_Options&
    // intentionally not supporting Raw for ECKCDSA, since we need to know
    // the length in advance which complicates the logic for Raw
 
-   return HashFunction::create_or_throw(options.hash_function());
+   return HashFunction::create_or_throw(options.hash_function_name());
 }
 
 std::unique_ptr<HashFunction> eckcdsa_signature_hash(const AlgorithmIdentifier& alg_id) {

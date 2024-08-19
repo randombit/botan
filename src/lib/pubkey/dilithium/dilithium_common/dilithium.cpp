@@ -130,8 +130,14 @@ namespace {
 
 // Return true if randomized signatures were requested
 void validate_dilithium_options(const PK_Signature_Options& options) {
-   BOTAN_ARG_CHECK(options.hash_function().empty(), "Dilithium does not allow specifying the hash function");
+   BOTAN_ARG_CHECK(!options.using_hash(), "Dilithium does not allow specifying the hash function");
    BOTAN_ARG_CHECK(!options.using_padding(), "Dilithium does not support padding");
+
+   if(options.using_salt_size()) {
+      BOTAN_ARG_CHECK(!options.using_deterministic_signature(),
+                      "Dilithium cannot support a salt while also being deterministic");
+      BOTAN_ARG_CHECK(options.salt_size().value() == 32, "Dilithium can only be used with a 32 byte salt");
+   }
 
    // This is available in ML-DSA and might be supported in the future
    BOTAN_ARG_CHECK(!options.using_prehash(), "Dilithium does not support prehashing");

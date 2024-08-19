@@ -112,7 +112,7 @@ class BOTAN_PUBLIC_API(3, 0) Asymmetric_Key {
       * which is included during cryptographic computations.
       *
       * This is only supported by a few algorithm types, so default
-      * implementation return false.
+      * implementation returns false.
       *
       * Note that support for contextual data may depend on both the algorithm
       * and the library version. For example Ed25519 can support contextual

@@ -104,13 +104,13 @@ class SM2_Signature_Operation final : public PK_Ops::Signature {
    public:
       SM2_Signature_Operation(const SM2_PrivateKey& sm2, const PK_Signature_Options& options) :
             m_group(sm2.domain()), m_x(sm2._private_key()), m_da_inv(sm2._get_da_inv()) {
-         if(options.hash_function() == "Raw") {
+         if(options.hash_function_name() == "Raw") {
             // m_hash is null, m_za is empty
          } else {
             // TODO(C++23) Use std::optional::or_else
             auto context = options.context().has_value() ? options.context().value() : sm2_default_userid;
 
-            m_hash = HashFunction::create_or_throw(options.hash_function());
+            m_hash = HashFunction::create_or_throw(options.hash_function_name());
             // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
             m_za = sm2_compute_za(*m_hash, context, m_group, sm2._public_key());
             m_hash->update(m_za);
@@ -171,13 +171,13 @@ class SM2_Verification_Operation final : public PK_Ops::Verification {
    public:
       SM2_Verification_Operation(const SM2_PublicKey& sm2, const PK_Signature_Options& options) :
             m_group(sm2.domain()), m_gy_mul(sm2._public_key()) {
-         if(options.hash_function() == "Raw") {
+         if(options.hash_function_name() == "Raw") {
             // m_hash is null, m_za is empty
          } else {
             // TODO(C++23) Use std::optional::or_else
             auto context = options.context().has_value() ? options.context().value() : sm2_default_userid;
 
-            m_hash = HashFunction::create_or_throw(options.hash_function());
+            m_hash = HashFunction::create_or_throw(options.hash_function_name());
             // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
             m_za = sm2_compute_za(*m_hash, context, m_group, sm2._public_key());
             m_hash->update(m_za);
