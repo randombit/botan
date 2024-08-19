@@ -15,12 +15,12 @@ namespace Botan::PK_Options_Checks {
 void validate_for_hash_based_signature(const PK_Signature_Options& options,
                                        std::string_view algo_name,
                                        std::string_view hash_fn) {
-   if(!options.hash_function().empty()) {
+   if(options.using_hash()) {
       if(hash_fn.empty()) {
          throw Invalid_Argument(fmt("This {} key does not support explicit hash function choice", algo_name));
-      } else if(options.hash_function() != hash_fn) {
+      } else if(options.hash_function_name() != hash_fn) {
          throw Invalid_Argument(
-            fmt("This {} key can only be used with {}, not {}", algo_name, hash_fn, options.hash_function()));
+            fmt("This {} key can only be used with {}, not {}", algo_name, hash_fn, options.hash_function_name()));
       }
    }
 

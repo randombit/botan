@@ -13,8 +13,13 @@
 
 #include <botan/mem_ops.h>
 #include <memory>
-#include <string>
-#include <utility>
+#include <string_view>
+
+namespace Botan {
+
+class PK_Signature_Options;
+
+}  // namespace Botan
 
 namespace Botan::PKCS11 {
 
@@ -36,10 +41,10 @@ class MechanismWrapper final {
 
       /**
       * Creates the CK_MECHANISM data for RSA signature/verification
-      * @param padding supported paddings are Raw (X.509), EMSA3 (PKCS#1 v1.5), EMSA4 (PKCS#1 PSS),
+      * @param options supported paddings are Raw (X.509), EMSA3 (PKCS#1 v1.5), EMSA4 (PKCS#1 PSS),
       * EMSA2 (ANSI X9.31) and ISO9796 (ISO/IEC 9796)
       */
-      static MechanismWrapper create_rsa_sign_mechanism(std::string_view padding);
+      static MechanismWrapper create_rsa_sign_mechanism(const PK_Signature_Options& options);
 
       /**
       * Creates the CK_MECHANISM data for ECDSA signature/verification

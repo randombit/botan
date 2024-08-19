@@ -212,7 +212,7 @@ class PKCS11_RSA_Encryption_Operation final : public PK_Ops::Encryption {
 class PKCS11_RSA_Signature_Operation final : public PK_Ops::Signature {
    public:
       PKCS11_RSA_Signature_Operation(const PKCS11_RSA_PrivateKey& key, const PK_Signature_Options& options) :
-            m_key(key), m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(options._padding_with_hash())) {}
+            m_key(key), m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(options)) {}
 
       size_t signature_length() const override { return m_key.get_n().bytes(); }
 
@@ -329,7 +329,7 @@ AlgorithmIdentifier PKCS11_RSA_Signature_Operation::algorithm_identifier() const
 class PKCS11_RSA_Verification_Operation final : public PK_Ops::Verification {
    public:
       PKCS11_RSA_Verification_Operation(const PKCS11_RSA_PublicKey& key, const PK_Signature_Options& options) :
-            m_key(key), m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(options._padding_with_hash())) {}
+            m_key(key), m_mechanism(MechanismWrapper::create_rsa_sign_mechanism(options)) {}
 
       void update(std::span<const uint8_t> input) override {
          if(!m_initialized) {

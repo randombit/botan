@@ -89,8 +89,6 @@ class Signature_with_Hash : public Signature {
    protected:
       explicit Signature_with_Hash(const PK_Signature_Options& options);
 
-      const PK_Signature_Options& options() const { return m_options; }
-
       std::string hash_function() const final { return m_hash->name(); }
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
@@ -100,7 +98,6 @@ class Signature_with_Hash : public Signature {
    private:
       virtual std::vector<uint8_t> raw_sign(std::span<const uint8_t> input, RandomNumberGenerator& rng) = 0;
 
-      PK_Signature_Options m_options;
       std::unique_ptr<HashFunction> m_hash;
 };
 

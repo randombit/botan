@@ -8,6 +8,7 @@
 
 #include <botan/internal/p11_mechanism.h>
 
+#include <botan/pk_options.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/scan_name.h>
@@ -204,12 +205,27 @@ MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(std::string_view p
    return mech;
 }
 
-MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(std::string_view padding_view) {
-   const std::string padding(padding_view);
+MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(const PK_Signature_Options& options) {
+   const std::string padding = [&]() {
+      if(options.using_hash() && options.using_padding()) {
+         return fmt("{}({})", options.padding().value(), options.hash_function_name());
+      }
+
+      if(options.using_padding()) {
+         return options.padding().value();
+      }
+
+      if(options.using_hash()) {
+         return options.hash_function_name();
+      }
+
+      throw Invalid_Argument("RSA signature requires a padding scheme");
+   }();
+
    auto mechanism_info_it = SignMechanisms.find(padding);
    if(mechanism_info_it == SignMechanisms.end()) {
       // at this point it would be possible to support additional configurations that are not predefined above by parsing `padding`
-      throw Lookup_Error("PKCS#11 RSA sign/verify does not support EMSA " + padding);
+      throw Lookup_Error("PKCS#11 RSA sign/verify does not support padding with " + padding);
    }
    RSA_SignMechanism mechanism_info = mechanism_info_it->second;
 

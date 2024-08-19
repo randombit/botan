@@ -309,6 +309,7 @@ std::unique_ptr<PK_Ops::Signature> Ed25519_PrivateKey::_create_signature_op(Rand
    BOTAN_UNUSED(rng);
 
    BOTAN_ARG_CHECK(!options.using_padding(), "Ed25519 does not support padding");
+   BOTAN_ARG_CHECK(!options.using_salt_size(), "Ed25519 does not support a salt");
 
    if(!options.using_provider()) {
       if(options.using_prehash()) {

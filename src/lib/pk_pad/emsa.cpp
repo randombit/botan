@@ -1,5 +1,5 @@
 /*
-* (C) 2015 Jack Lloyd
+* (C) 2015,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,6 +8,8 @@
 
 #include <botan/exceptn.h>
 #include <botan/hash.h>
+#include <botan/pk_options.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/scan_name.h>
 
 #if defined(BOTAN_HAS_EMSA_X931)
@@ -31,6 +33,22 @@
 #endif
 
 namespace Botan {
+
+std::unique_ptr<EMSA> EMSA::create_or_throw(const PK_Signature_Options& options) {
+   if(options.using_hash() && options.using_padding()) {
+      return EMSA::create_or_throw(fmt("{}({})", options.padding().value(), options.hash_function_name()));
+   }
+
+   if(options.using_padding()) {
+      return EMSA::create_or_throw(options.padding().value());
+   }
+
+   if(options.using_hash()) {
+      return EMSA::create_or_throw(options.hash_function_name());
+   }
+
+   throw Invalid_Argument("This signature scheme requires you specify a padding mode");
+}
 
 std::unique_ptr<EMSA> EMSA::create(std::string_view algo_spec) {
    SCAN_Name req(algo_spec);

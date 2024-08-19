@@ -58,8 +58,8 @@ class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature {
             PK_Ops::Signature(),
             m_key(key),
             m_order_bytes(key.domain().get_order_bytes()),
-            m_mechanism(MechanismWrapper::create_ecdsa_mechanism(options.hash_function())),
-            m_hash(options.hash_function()) {}
+            m_mechanism(MechanismWrapper::create_ecdsa_mechanism(options.hash_function_name())),
+            m_hash(options.hash_function_name()) {}
 
       void update(std::span<const uint8_t> input) override {
          if(!m_initialized) {
@@ -119,8 +119,8 @@ class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification {
       PKCS11_ECDSA_Verification_Operation(const PKCS11_ECDSA_PublicKey& key, const PK_Signature_Options& options) :
             PK_Ops::Verification(),
             m_key(key),
-            m_mechanism(MechanismWrapper::create_ecdsa_mechanism(options.hash_function())),
-            m_hash(options.hash_function()) {}
+            m_mechanism(MechanismWrapper::create_ecdsa_mechanism(options.hash_function_name())),
+            m_hash(options.hash_function_name()) {}
 
       void update(std::span<const uint8_t> input) override {
          if(!m_initialized) {

@@ -248,6 +248,7 @@ std::unique_ptr<PK_Ops::Signature> Ed448_PrivateKey::_create_signature_op(Random
    BOTAN_UNUSED(rng);
 
    BOTAN_ARG_CHECK(!options.using_padding(), "Ed448 does not support padding");
+   BOTAN_ARG_CHECK(!options.using_salt_size(), "Ed448 does not support a salt");
 
    if(!options.using_provider()) {
       if(options.using_prehash()) {
