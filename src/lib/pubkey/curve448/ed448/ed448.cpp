@@ -251,7 +251,7 @@ std::unique_ptr<PK_Ops::Signature> Ed448_PrivateKey::_create_signature_op(Random
 
    if(!options.using_provider()) {
       if(options.using_prehash()) {
-         return std::make_unique<Ed448_Sign_Operation>(*this, options.prehash_fn().value_or("SHAKE-256(512)");
+         return std::make_unique<Ed448_Sign_Operation>(*this, options.prehash_fn().value_or("SHAKE-256(512)"));
       } else {
          return std::make_unique<Ed448_Sign_Operation>(*this);
       }
