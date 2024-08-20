@@ -21,17 +21,10 @@ class ISO_9796_DS2 final : public EMSA {
       /**
        * @param hash function to use
        * @param implicit whether or not the trailer is implicit
-       */
-      explicit ISO_9796_DS2(std::unique_ptr<HashFunction> hash, bool implicit = false) :
-            m_hash(std::move(hash)), m_implicit(implicit), m_SALT_SIZE(hash->output_length()) {}
-
-      /**
-       * @param hash function to use
-       * @param implicit whether or not the trailer is implicit
        * @param salt_size size of the salt to use in bytes
        */
-      ISO_9796_DS2(std::unique_ptr<HashFunction> hash, bool implicit, size_t salt_size) :
-            m_hash(std::move(hash)), m_implicit(implicit), m_SALT_SIZE(salt_size) {}
+      ISO_9796_DS2(std::unique_ptr<HashFunction> hash, bool implicit, std::optional<size_t> salt_size) :
+         m_hash(std::move(hash)), m_implicit(implicit), m_salt_size(salt_size.value_or(m_hash->output_length())) {}
 
       std::string hash_function() const override { return m_hash->name(); }
 
@@ -50,7 +43,7 @@ class ISO_9796_DS2 final : public EMSA {
 
       std::unique_ptr<HashFunction> m_hash;
       bool m_implicit;
-      size_t m_SALT_SIZE;
+      size_t m_salt_size;
       std::vector<uint8_t> m_msg_buffer;
 };
 

@@ -10,6 +10,7 @@
 #include <botan/pk_keys.h>
 #include <optional>
 #include <span>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -152,6 +153,12 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options {
       bool using_salt_size() const { return salt_size().has_value(); }
 
       bool using_provider() const { return provider().has_value() && provider().value() != "base"; }
+
+      /// Format this PK_Signature_Options as a string
+      ///
+      /// This is primarily intended for debugging and error messages;
+      /// the format is not fixed
+      std::string to_string() const;
 
    private:
       std::optional<std::string> m_hash_fn;

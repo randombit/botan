@@ -144,11 +144,8 @@ bool pss_verify(HashFunction& hash,
 
 }  // namespace
 
-PSSR::PSSR(std::unique_ptr<HashFunction> hash) :
-      m_hash(std::move(hash)), m_salt_size(m_hash->output_length()), m_required_salt_len(false) {}
-
-PSSR::PSSR(std::unique_ptr<HashFunction> hash, size_t salt_size) :
-      m_hash(std::move(hash)), m_salt_size(salt_size), m_required_salt_len(true) {}
+PSSR::PSSR(std::unique_ptr<HashFunction> hash, std::optional<size_t> salt_size) :
+   m_hash(std::move(hash)), m_salt_size(salt_size.value_or(m_hash->output_length())), m_required_salt_len(salt_size.has_value()) {}
 
 /*
 * PSSR Update Operation
@@ -189,11 +186,8 @@ std::string PSSR::name() const {
    return "EMSA4(" + m_hash->name() + ",MGF1," + std::to_string(m_salt_size) + ")";
 }
 
-PSSR_Raw::PSSR_Raw(std::unique_ptr<HashFunction> hash) :
-      m_hash(std::move(hash)), m_salt_size(m_hash->output_length()), m_required_salt_len(false) {}
-
-PSSR_Raw::PSSR_Raw(std::unique_ptr<HashFunction> hash, size_t salt_size) :
-      m_hash(std::move(hash)), m_salt_size(salt_size), m_required_salt_len(true) {}
+PSSR_Raw::PSSR_Raw(std::unique_ptr<HashFunction> hash, std::optional<size_t> salt_size) :
+   m_hash(std::move(hash)), m_salt_size(salt_size.value_or(m_hash->output_length())), m_required_salt_len(salt_size.has_value()) {}
 
 /*
 * PSSR_Raw Update Operation

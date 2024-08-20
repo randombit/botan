@@ -7,8 +7,10 @@
 #include <botan/pk_options.h>
 
 #include <botan/hash.h>
+#include <botan/hex.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
+#include <sstream>
 
 namespace Botan {
 
@@ -78,6 +80,37 @@ std::string PK_Signature_Options::hash_function_name() const {
    }
 
    throw Invalid_State("This signature scheme requires specifying a hash function");
+}
+
+std::string PK_Signature_Options::to_string() const {
+   std::ostringstream out;
+
+   auto print_str = [&](std::string_view name, std::optional<std::string> val) {
+      if(val.has_value()) {
+         out << name << "='" << val.value() << "' ";
+      }
+   };
+
+   print_str("Hash", this->hash_function());
+   print_str("Padding", this->padding());
+   print_str("Prehash", this->prehash_fn());
+   print_str("Provider", this->provider());
+
+   if(auto context = this->context()) {
+      out << "Context=" << hex_encode(*context) << " ";
+   }
+
+   if(auto salt = this->salt_size()) {
+      out << "SaltLen=" << *salt << " ";
+   }
+   if(this->using_der_encoded_signature()) {
+      out << "DerSignature ";
+   }
+   if(this->using_deterministic_signature()) {
+      out << "Deterministic ";
+   }
+
+   return out.str();
 }
 
 }  // namespace Botan

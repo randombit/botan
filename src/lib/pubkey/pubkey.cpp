@@ -309,8 +309,84 @@ PK_Signature_Options parse_legacy_sig_options(const Public_Key& key, std::string
    }
 
    if(algo == "RSA") {
-      return PK_Signature_Options().with_padding(params);
-   }
+      SCAN_Name req(params);
+
+      // handling various deprecated aliases that have accumulated over the years ...
+      auto padding = [](std::string_view alg) -> std::string_view {
+         if(alg == "EMSA_PKCS1" || alg == "EMSA-PKCS1-v1_5" || alg == "EMSA3") {
+            return "PKCS1v15";
+         }
+
+         if(alg == "PSSR_Raw") {
+            return "PSS_Raw";
+         }
+
+         if(alg == "PSSR" || alg == "EMSA-PSS" || alg == "PSS-MGF1" || alg == "EMSA4") {
+            return "PSS";
+         }
+
+         if(alg == "EMSA_X931" || alg == "EMSA2" || alg == "X9.31") {
+            return "X9.31";
+         }
+
+         return alg;
+      }(req.algo_name());
+
+      if(padding == "Raw") {
+         if(req.arg_count() == 0) {
+            return PK_Signature_Options().with_padding(padding);
+         } else if(req.arg_count() == 1) {
+            return PK_Signature_Options().with_padding(padding).with_prehash(req.arg(0));
+         }
+      }
+
+      if(padding == "PKCS1v15") {
+         if(req.arg_count() == 2 && req.arg(0) == "Raw") {
+            return PK_Signature_Options().with_padding(padding).with_hash(req.arg(0)).with_prehash(req.arg(1));
+         } else if(req.arg_count() == 1) {
+            return PK_Signature_Options().with_padding(padding).with_hash(req.arg(0));
+         }
+      }
+
+      if(padding == "PSS_Raw" || padding == "PSS") {
+         if(req.arg_count_between(1, 3) && req.arg(1, "MGF1") == "MGF1") {
+            auto pss_opt = PK_Signature_Options().with_padding(padding).with_hash(req.arg(0));
+
+            if(req.arg_count() == 3) {
+               return std::move(pss_opt).with_salt_size(req.arg_as_integer(2));
+            } else {
+               return pss_opt;
+            }
+         }
+      }
+
+      if(padding == "ISO_9796_DS2") {
+         if(req.arg_count_between(1, 3)) {
+            // FIXME
+            //const bool implicit = req.arg(1, "exp") == "imp";
+
+            if(req.arg_count() == 3) {
+               return PK_Signature_Options().with_padding(padding).with_hash(req.arg(0)).with_salt_size(req.arg_as_integer(2));
+            } else {
+               return PK_Signature_Options().with_padding(padding).with_hash(req.arg(0));
+            }
+         }
+      }
+
+      //ISO-9796-2 DS 3 is deterministic and DS2 without a salt
+      if(padding == "ISO_9796_DS3") {
+         if(req.arg_count_between(1, 2)) {
+            // FIXME
+            //const bool implicit = req.arg(1, "exp") == "imp";
+
+            return PK_Signature_Options().with_padding(padding).with_hash(req.arg(0));
+         }
+      }
+
+      if(padding == "X9.31" && req.arg_count() == 1) {
+         return PK_Signature_Options().with_padding(padding).with_hash(req.arg(0));
+      }
+   } // RSA block
 
    if(params.empty()) {
       return PK_Signature_Options();
@@ -340,7 +416,7 @@ PK_Signer::PK_Signer(const Private_Key& key,
                      std::string_view padding,
                      Signature_Format format,
                      std::string_view provider) :
-      PK_Signer(key, rng, parse_legacy_sig_options(key, padding, format).with_provider(provider)) {}
+   PK_Signer(key, rng, parse_legacy_sig_options(key, padding, format).with_provider(provider)) {}
 
 PK_Signer::PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, const PK_Signature_Options& options) {
    if(options.using_context() && !key.supports_context_data()) {
@@ -430,7 +506,7 @@ PK_Verifier::PK_Verifier(const Public_Key& pub_key,
                          std::string_view padding,
                          Signature_Format format,
                          std::string_view provider) :
-      PK_Verifier(pub_key, parse_legacy_sig_options(pub_key, padding, format).with_provider(provider)) {}
+   PK_Verifier(pub_key, parse_legacy_sig_options(pub_key, padding, format).with_provider(provider)) {}
 
 PK_Verifier::PK_Verifier(const Public_Key& key, const PK_Signature_Options& options) {
    m_op = key._create_verification_op(options);
