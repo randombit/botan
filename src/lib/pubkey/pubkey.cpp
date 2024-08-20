@@ -365,9 +365,7 @@ PK_Signature_Options parse_legacy_sig_options(const Public_Key& key, std::string
             // FIXME
             const bool implicit = req.arg(1, "exp") == "imp";
 
-            auto opt = PK_Signature_Options()
-               .with_padding(padding)
-               .with_hash(req.arg(0));
+            auto opt = PK_Signature_Options().with_padding(padding).with_hash(req.arg(0));
 
             if(req.arg_count() == 3) {
                if(implicit) {
