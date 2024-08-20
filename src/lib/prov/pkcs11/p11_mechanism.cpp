@@ -86,39 +86,24 @@ class RSA_SignMechanism final : public MechanismData {
 const std::map<std::string, RSA_SignMechanism> SignMechanisms = {
    {"Raw", RSA_SignMechanism(MechanismType::RsaX509)},
 
-   {"EMSA2(Raw)", RSA_SignMechanism(MechanismType::RsaX931)},
-   {"EMSA2(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaX931)},
+   {"X9.31(Raw)", RSA_SignMechanism(MechanismType::RsaX931)},
+   {"X9.31(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaX931)},
 
    // RSASSA PKCS#1 v1.5
-   {"EMSA3(Raw)", RSA_SignMechanism(MechanismType::RsaPkcs)},
-   {"EMSA3(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcs)},
-   {"EMSA3(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcs)},
-   {"EMSA3(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcs)},
-   {"EMSA3(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcs)},
-   {"EMSA3(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcs)},
-
-   {"EMSA_PKCS1(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcs)},
-   {"EMSA_PKCS1(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcs)},
-   {"EMSA_PKCS1(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcs)},
-   {"EMSA_PKCS1(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcs)},
-   {"EMSA_PKCS1(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcs)},
+   {"PKCS1v15(Raw)", RSA_SignMechanism(MechanismType::RsaPkcs)},
+   {"PKCS1v15(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcs)},
+   {"PKCS1v15(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcs)},
+   {"PKCS1v15(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcs)},
+   {"PKCS1v15(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcs)},
+   {"PKCS1v15(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcs)},
 
    // RSASSA PKCS#1 PSS
-   {"EMSA4(Raw)", RSA_SignMechanism(MechanismType::RsaPkcsPss)},
-   {"EMSA4(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcsPss)},
-   {"EMSA4(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcsPss)},
-
-   {"EMSA4(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss)},
-   {"EMSA4(SHA-256,MGF1,32)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss)},
-   {"PSSR(SHA-256,MGF1,32)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss)},
-
-   {"EMSA4(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcsPss)},
-   {"EMSA4(SHA-384,MGF1,48)", RSA_SignMechanism(MechanismType::Sha384RsaPkcsPss)},
-   {"PSSR(SHA-384,MGF1,48)", RSA_SignMechanism(MechanismType::Sha384RsaPkcsPss)},
-
-   {"EMSA4(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
-   {"EMSA4(SHA-512,MGF1,64)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
-   {"PSSR(SHA-512,MGF1,64)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
+   {"PSS(Raw)", RSA_SignMechanism(MechanismType::RsaPkcsPss)},
+   {"PSS(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcsPss)},
+   {"PSS(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcsPss)},
+   {"PSS(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss)},
+   {"PSS(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcsPss)},
+   {"PSS(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
 
    {"ISO9796", RSA_SignMechanism(MechanismType::Rsa9796)}};
 
