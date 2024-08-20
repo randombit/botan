@@ -145,7 +145,9 @@ bool pss_verify(HashFunction& hash,
 }  // namespace
 
 PSSR::PSSR(std::unique_ptr<HashFunction> hash, std::optional<size_t> salt_size) :
-   m_hash(std::move(hash)), m_salt_size(salt_size.value_or(m_hash->output_length())), m_required_salt_len(salt_size.has_value()) {}
+      m_hash(std::move(hash)),
+      m_salt_size(salt_size.value_or(m_hash->output_length())),
+      m_required_salt_len(salt_size.has_value()) {}
 
 /*
 * PSSR Update Operation
@@ -187,7 +189,9 @@ std::string PSSR::name() const {
 }
 
 PSSR_Raw::PSSR_Raw(std::unique_ptr<HashFunction> hash, std::optional<size_t> salt_size) :
-   m_hash(std::move(hash)), m_salt_size(salt_size.value_or(m_hash->output_length())), m_required_salt_len(salt_size.has_value()) {}
+      m_hash(std::move(hash)),
+      m_salt_size(salt_size.value_or(m_hash->output_length())),
+      m_required_salt_len(salt_size.has_value()) {}
 
 /*
 * PSSR_Raw Update Operation

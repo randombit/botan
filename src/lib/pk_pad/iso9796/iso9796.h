@@ -24,7 +24,7 @@ class ISO_9796_DS2 final : public EMSA {
        * @param salt_size size of the salt to use in bytes
        */
       ISO_9796_DS2(std::unique_ptr<HashFunction> hash, bool implicit, std::optional<size_t> salt_size) :
-         m_hash(std::move(hash)), m_implicit(implicit), m_salt_size(salt_size.value_or(m_hash->output_length())) {}
+            m_hash(std::move(hash)), m_implicit(implicit), m_salt_size(salt_size.value_or(m_hash->output_length())) {}
 
       std::string hash_function() const override { return m_hash->name(); }
 
