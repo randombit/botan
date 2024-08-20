@@ -10,6 +10,7 @@
 
 #include <botan/hash.h>
 #include <botan/internal/emsa.h>
+#include <optional>
 
 namespace Botan {
 
