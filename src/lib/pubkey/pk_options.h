@@ -34,9 +34,10 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options {
       PK_Signature_Options() = default;
 
       PK_Signature_Options(PK_Signature_Options&& other) = default;
+      PK_Signature_Options& operator=(PK_Signature_Options&& other) = default;
+
       PK_Signature_Options(const PK_Signature_Options&) = delete;
       PK_Signature_Options& operator=(const PK_Signature_Options& other) = delete;
-      PK_Signature_Options& operator=(PK_Signature_Options&& other) = delete;
       ~PK_Signature_Options();
 
       /// Format this PK_Signature_Options as a string
@@ -120,7 +121,7 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options {
       /// For schemes that do not support such formatting (such as RSA
       /// or post-quantum schemes), an exception will be thrown when the
       /// PK_Signer or PK_Verifier is created.
-      PK_Signature_Options with_der_encoded_signature() &&;
+      PK_Signature_Options with_der_encoded_signature(bool der = true) &&;
 
       /// Specify producing or expecting an explicit trailer field
       ///

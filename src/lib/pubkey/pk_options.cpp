@@ -18,15 +18,17 @@ PK_Signature_Options::~PK_Signature_Options() = default;
 
 PK_Signature_Options PK_Signature_Options::with_hash(std::string_view hash) && {
    BOTAN_STATE_CHECK_MSG(!using_hash(), "PK_Signature_Options::with_hash cannot specify hash twice");
-   BOTAN_ARG_CHECK(!hash.empty(), "Argument cannot be empty");
-   this->m_hash_fn = hash;
+   if(!hash.empty()) {
+      this->m_hash_fn = hash;
+   }
    return std::move(*this);
 }
 
 PK_Signature_Options PK_Signature_Options::with_padding(std::string_view padding) && {
    BOTAN_STATE_CHECK_MSG(!using_padding(), "PK_Signature_Options::with_padding cannot specify padding twice");
-   BOTAN_ARG_CHECK(!padding.empty(), "Argument cannot be empty");
-   this->m_padding = padding;
+   if(!padding.empty()) {
+      this->m_padding = padding;
+   }
    return std::move(*this);
 }
 
@@ -69,8 +71,8 @@ PK_Signature_Options PK_Signature_Options::with_deterministic_signature() && {
    return std::move(*this);
 }
 
-PK_Signature_Options PK_Signature_Options::with_der_encoded_signature() && {
-   this->m_use_der = true;
+PK_Signature_Options PK_Signature_Options::with_der_encoded_signature(bool der) && {
+   this->m_use_der = der;
    return std::move(*this);
 }
 
