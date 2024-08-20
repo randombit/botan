@@ -263,6 +263,19 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       * This is an internal library function exposed on key types.
       * In all cases applications should use wrappers in pubkey.h
       *
+      * Return a verification operation for this key/params or throw
+      *
+      * @param params additional parameters
+      * @param provider the provider to use
+      */
+      BOTAN_DEPRECATED("Deprecated no replacement")
+      std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
+                                                                   std::string_view provider) const;
+
+      /**
+      * This is an internal library function exposed on key types.
+      * In all cases applications should use wrappers in pubkey.h
+      *
       * Return a verification operation for this combination of key and
       * signature algorithm or throw.
       *
@@ -380,6 +393,23 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       */
       virtual std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
                                                                       const PK_Signature_Options& options) const;
+
+      /**
+      * This is an internal library function exposed on key types.
+      * In all cases applications should use wrappers in pubkey.h
+      *
+      * Return a signature operation for this key/params or throw
+      *
+      * @param rng a random number generator. The PK_Op may maintain a
+      * reference to the RNG and use it many times. The rng must outlive
+      * any operations which reference it.
+      *
+      * @param params additional parameters
+      * @param provider the provider to use
+      */
+      std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
+                                                             std::string_view params,
+                                                             std::string_view provider) const;
 
       /**
       * This is an internal library function exposed on key types.
