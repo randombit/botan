@@ -74,6 +74,11 @@ PK_Signature_Options PK_Signature_Options::with_der_encoded_signature() && {
    return std::move(*this);
 }
 
+PK_Signature_Options PK_Signature_Options::with_explicit_trailer_field() && {
+   this->m_explicit_trailer_field = true;
+   return std::move(*this);
+}
+
 std::string PK_Signature_Options::hash_function_name() const {
    if(m_hash_fn.has_value()) {
       return m_hash_fn.value();
