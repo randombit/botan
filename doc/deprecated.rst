@@ -178,10 +178,10 @@ release, or where a backwards incompatible change is expected.
 
 - Currently some public key padding mechanisms can be used with several
   different names. This is deprecated.
-   * "EMSA_PKCS1", "EMSA-PKCS1-v1_5", "EMSA3": Use "PKCS1v15"
-   * "PSSR_Raw": Use "PSS_Raw"
-   * "PSSR", "EMSA-PSS", "PSS-MGF1", "EMSA4": Use "PSS"
-   * "EMSA_X931", "EMSA2": Use "X9.31"
+  "EMSA_PKCS1", "EMSA-PKCS1-v1_5", "EMSA3": Use "PKCS1v15"
+  "PSSR_Raw": Use "PSS_Raw"
+  "PSSR", "EMSA-PSS", "PSS-MGF1", "EMSA4": Use "PSS"
+  "EMSA_X931", "EMSA2": Use "X9.31"
 
 Deprecated Headers
 ^^^^^^^^^^^^^^^^^^^^^^
