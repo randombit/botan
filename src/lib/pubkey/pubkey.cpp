@@ -431,10 +431,10 @@ PK_Signer::PK_Signer(const Private_Key& key,
 
 PK_Signer::PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, const PK_Signature_Options& options) {
    if(options.using_context() && !key.supports_context_data()) {
-      throw Invalid_Argument(fmt("Key type {} does not support context information"));
+      throw Invalid_Argument(fmt("Key type {} does not support context information", key.algo_name()));
    }
    if(options.using_der_encoded_signature() && key.message_parts() == 1) {
-      throw Invalid_Argument(fmt("Key type {} does not support DER encoded signatures"));
+      throw Invalid_Argument(fmt("Key type {} does not support DER encoded signatures", key.algo_name()));
    }
 
    m_op = key._create_signature_op(rng, options);

@@ -16,7 +16,7 @@ int main() {
    const Botan::XMSS_PublicKey& public_key(private_key);
 
    // create Public Key Signer using the private key.
-   Botan::PK_Signer signer(private_key, rng, "");
+   Botan::PK_Signer signer(private_key, rng);
 
    // create and sign a message using the Public Key Signer.
    Botan::secure_vector<uint8_t> msg{0x01, 0x02, 0x03, 0x04};
@@ -24,7 +24,7 @@ int main() {
    std::vector<uint8_t> sig = signer.signature(rng);
 
    // create Public Key Verifier using the public key
-   Botan::PK_Verifier verifier(public_key, "");
+   Botan::PK_Verifier verifier(public_key);
 
    // verify the signature for the previously generated message.
    verifier.update(msg.data(), msg.size());
