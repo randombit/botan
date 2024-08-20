@@ -268,7 +268,7 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       * @param params additional parameters
       * @param provider the provider to use
       */
-      BOTAN_DEPRECATED("Deprecated no replacement")
+      BOTAN_DEPRECATED("Use PK_Verifier")
       std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
                                                                    std::string_view provider) const;
 
@@ -407,6 +407,7 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       * @param params additional parameters
       * @param provider the provider to use
       */
+      BOTAN_DEPRECATED("Use PK_Signer")
       std::unique_ptr<PK_Ops::Signature> create_signature_op(RandomNumberGenerator& rng,
                                                              std::string_view params,
                                                              std::string_view provider) const;
