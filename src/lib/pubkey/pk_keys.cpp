@@ -12,6 +12,7 @@
 #include <botan/hex.h>
 #include <botan/pk_ops.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
@@ -134,6 +135,19 @@ std::unique_ptr<PK_Ops::Key_Agreement> Private_Key::create_key_agreement_op(Rand
                                                                             std::string_view /*params*/,
                                                                             std::string_view /*provider*/) const {
    throw Lookup_Error(fmt("{} does not support key agreement", algo_name()));
+}
+
+// Forwarding functions for compat
+
+std::unique_ptr<PK_Ops::Verification> Public_Key::create_verification_op(std::string_view params,
+                                                                         std::string_view provider) const {
+   return this->_create_verification_op(parse_legacy_sig_options(*this, params).with_provider(provider));
+}
+
+std::unique_ptr<PK_Ops::Signature> Private_Key::create_signature_op(RandomNumberGenerator& rng,
+                                                                    std::string_view params,
+                                                                    std::string_view provider) const {
+   return this->_create_signature_op(rng, parse_legacy_sig_options(*this, params).with_provider(provider));
 }
 
 }  // namespace Botan
