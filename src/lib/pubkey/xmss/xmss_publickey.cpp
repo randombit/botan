@@ -104,7 +104,7 @@ XMSS_PublicKey::XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid,
 
 std::unique_ptr<PK_Ops::Verification> XMSS_PublicKey::_create_verification_op(
    const PK_Signature_Options& options) const {
-   PK_Options_Checks::validate_for_hash_based_signature(options, "XMSS", this->m_xmss_params.hash_function_name());
+   validate_for_hash_based_signature(options, "XMSS", this->m_xmss_params.hash_function_name());
 
    if(!options.using_provider()) {
       return std::make_unique<XMSS_Verification_Operation>(*this);

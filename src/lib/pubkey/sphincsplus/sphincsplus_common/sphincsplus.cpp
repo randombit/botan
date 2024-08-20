@@ -190,7 +190,7 @@ class SphincsPlus_Verification_Operation final : public PK_Ops::Verification {
 
 std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::_create_verification_op(
    const PK_Signature_Options& options) const {
-   PK_Options_Checks::validate_for_hash_based_signature(options, "SPHINCS+", m_public->parameters().hash_name());
+   validate_for_hash_based_signature(options, "SPHINCS+", m_public->parameters().hash_name());
 
    if(!options.using_provider()) {
       return std::make_unique<SphincsPlus_Verification_Operation>(m_public);
@@ -357,7 +357,7 @@ std::unique_ptr<PK_Ops::Signature> SphincsPlus_PrivateKey::_create_signature_op(
    RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
 
-   PK_Options_Checks::validate_for_hash_based_signature(options, "SPHINCS+", m_public->parameters().hash_name());
+   validate_for_hash_based_signature(options, "SPHINCS+", m_public->parameters().hash_name());
 
    const bool randomized = !options.using_deterministic_signature();
    if(!options.using_provider()) {

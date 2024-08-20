@@ -1,5 +1,5 @@
 /*
-* (C) 1999-2010,2015,2018 Jack Lloyd
+* (C) 1999-2010,2015,2018,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,15 +9,11 @@
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/der_enc.h>
-#include <botan/mem_ops.h>
 #include <botan/pk_ops.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/parsing.h>
-#include <botan/internal/pss_params.h>
-#include <botan/internal/scan_name.h>
-#include <botan/internal/stl_util.h>
+#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
@@ -243,183 +239,6 @@ void check_der_format_supported(Signature_Format format, size_t parts) {
    }
 }
 
-PK_Signature_Options parse_legacy_sig_options(const Public_Key& key, std::string_view params, Signature_Format format) {
-   /*
-   * This is a convoluted mess because we must handle dispatch for every algorithm
-   * specific detail of how padding strings were formatted in versions prior to 3.6.
-   *
-   * This will all go away once the deprecated constructors of PK_Signer and PK_Verifier
-   * are removed in Botan4.
-   */
-
-   const std::string algo = key.algo_name();
-
-   if(algo.starts_with("Dilithium") || algo == "SPHINCS+") {
-      if(!params.empty() && params != "Randomized" && params != "Deterministic") {
-         throw Invalid_Argument(fmt("Unexpected parameters for signing with {}", algo));
-      }
-
-      if(params == "Deterministic") {
-         return PK_Signature_Options().with_deterministic_signature();
-      } else {
-         return PK_Signature_Options();
-      }
-   }
-
-   if(algo == "SM2") {
-      /*
-      * SM2 parameters have the following possible formats:
-      * Ident [since 2.2.0]
-      * Ident,Hash [since 2.3.0]
-      */
-      if(params.empty()) {
-         return PK_Signature_Options().with_hash("SM3");
-      } else {
-         std::string userid;
-         std::string hash = "SM3";
-         auto comma = params.find(',');
-         if(comma == std::string::npos) {
-            userid = params;
-         } else {
-            userid = params.substr(0, comma);
-            hash = params.substr(comma + 1, std::string::npos);
-         }
-         return PK_Signature_Options(hash).with_context(userid);
-      }
-   }
-
-   if(algo == "Ed25519") {
-      if(params.empty() || params == "Identity" || params == "Pure") {
-         return PK_Signature_Options();
-      } else if(params == "Ed25519ph") {
-         return PK_Signature_Options().with_prehash();
-      } else {
-         return PK_Signature_Options().with_prehash(std::string(params));
-      }
-   }
-
-   if(algo == "Ed448") {
-      if(params.empty() || params == "Identity" || params == "Pure" || params == "Ed448") {
-         return PK_Signature_Options();
-      } else if(params == "Ed448ph") {
-         return PK_Signature_Options().with_prehash();
-      } else {
-         return PK_Signature_Options().with_prehash(std::string(params));
-      }
-   }
-
-   if(algo == "RSA") {
-      SCAN_Name req(params);
-
-      // handling various deprecated aliases that have accumulated over the years ...
-      auto padding = [](std::string_view alg) -> std::string_view {
-         if(alg == "EMSA_PKCS1" || alg == "EMSA-PKCS1-v1_5" || alg == "EMSA3") {
-            return "PKCS1v15";
-         }
-
-         if(alg == "PSSR_Raw") {
-            return "PSS_Raw";
-         }
-
-         if(alg == "PSSR" || alg == "EMSA-PSS" || alg == "PSS-MGF1" || alg == "EMSA4") {
-            return "PSS";
-         }
-
-         if(alg == "EMSA_X931" || alg == "EMSA2" || alg == "X9.31") {
-            return "X9.31";
-         }
-
-         return alg;
-      }(req.algo_name());
-
-      if(padding == "Raw") {
-         if(req.arg_count() == 0) {
-            return PK_Signature_Options().with_padding(padding);
-         } else if(req.arg_count() == 1) {
-            return PK_Signature_Options().with_padding(padding).with_prehash(req.arg(0));
-         }
-      }
-
-      if(padding == "PKCS1v15") {
-         if(req.arg_count() == 2 && req.arg(0) == "Raw") {
-            return PK_Signature_Options().with_padding(padding).with_hash(req.arg(0)).with_prehash(req.arg(1));
-         } else if(req.arg_count() == 1) {
-            return PK_Signature_Options().with_padding(padding).with_hash(req.arg(0));
-         }
-      }
-
-      if(padding == "PSS_Raw" || padding == "PSS") {
-         if(req.arg_count_between(1, 3) && req.arg(1, "MGF1") == "MGF1") {
-            auto pss_opt = PK_Signature_Options().with_padding(padding).with_hash(req.arg(0));
-
-            if(req.arg_count() == 3) {
-               return std::move(pss_opt).with_salt_size(req.arg_as_integer(2));
-            } else {
-               return pss_opt;
-            }
-         }
-      }
-
-      if(padding == "ISO_9796_DS2") {
-         if(req.arg_count_between(1, 3)) {
-            // FIXME
-            const bool implicit = req.arg(1, "exp") == "imp";
-
-            auto opt = PK_Signature_Options().with_padding(padding).with_hash(req.arg(0));
-
-            if(req.arg_count() == 3) {
-               if(implicit) {
-                  return std::move(opt).with_salt_size(req.arg_as_integer(2));
-               } else {
-                  return std::move(opt).with_salt_size(req.arg_as_integer(2)).with_explicit_trailer_field();
-               }
-            } else {
-               if(implicit) {
-                  return opt;
-               } else {
-                  return std::move(opt).with_explicit_trailer_field();
-               }
-            }
-         }
-      }
-
-      //ISO-9796-2 DS 3 is deterministic and DS2 without a salt
-      if(padding == "ISO_9796_DS3") {
-         if(req.arg_count_between(1, 2)) {
-            if(req.arg(1, "exp") == "imp") {
-               return PK_Signature_Options().with_padding(padding).with_hash(req.arg(0));
-            } else {
-               return PK_Signature_Options().with_padding(padding).with_hash(req.arg(0)).with_explicit_trailer_field();
-            }
-         }
-      }
-
-      if(padding == "X9.31" && req.arg_count() == 1) {
-         return PK_Signature_Options().with_padding(padding).with_hash(req.arg(0));
-      }
-   }  // RSA block
-
-   if(params.empty()) {
-      return PK_Signature_Options();
-   }
-
-   // ECDSA/DSA/ECKCDSA/etc
-   auto hash = [&]() {
-      if(params.starts_with("EMSA1")) {
-         SCAN_Name req(params);
-         return req.arg(0);
-      } else {
-         return std::string(params);
-      }
-   }();
-
-   if(format == Signature_Format::DerSequence) {
-      return PK_Signature_Options().with_hash(hash).with_der_encoded_signature();
-   } else {
-      return PK_Signature_Options().with_hash(hash);
-   }
-}
-
 }  // namespace
 
 PK_Signer::PK_Signer(const Private_Key& key,
@@ -427,7 +246,11 @@ PK_Signer::PK_Signer(const Private_Key& key,
                      std::string_view padding,
                      Signature_Format format,
                      std::string_view provider) :
-      PK_Signer(key, rng, parse_legacy_sig_options(key, padding, format).with_provider(provider)) {}
+      PK_Signer(key,
+                rng,
+                parse_legacy_sig_options(key, padding)
+                   .with_der_encoded_signature(format == Signature_Format::DerSequence)
+                   .with_provider(provider)) {}
 
 PK_Signer::PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, const PK_Signature_Options& options) {
    if(options.using_context() && !key.supports_context_data()) {
@@ -517,7 +340,10 @@ PK_Verifier::PK_Verifier(const Public_Key& pub_key,
                          std::string_view padding,
                          Signature_Format format,
                          std::string_view provider) :
-      PK_Verifier(pub_key, parse_legacy_sig_options(pub_key, padding, format).with_provider(provider)) {}
+      PK_Verifier(pub_key,
+                  parse_legacy_sig_options(pub_key, padding)
+                     .with_der_encoded_signature(format == Signature_Format::DerSequence)
+                     .with_provider(provider)) {}
 
 PK_Verifier::PK_Verifier(const Public_Key& key, const PK_Signature_Options& options) {
    m_op = key._create_verification_op(options);

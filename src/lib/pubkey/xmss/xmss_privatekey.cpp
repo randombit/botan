@@ -435,7 +435,7 @@ std::unique_ptr<PK_Ops::Signature> XMSS_PrivateKey::_create_signature_op(RandomN
                                                                          const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
 
-   PK_Options_Checks::validate_for_hash_based_signature(options, "XMSS", this->m_private->hash().hash_function());
+   validate_for_hash_based_signature(options, "XMSS", this->m_private->hash().hash_function());
 
    if(!options.using_provider()) {
       return std::make_unique<XMSS_Signature_Operation>(*this);
