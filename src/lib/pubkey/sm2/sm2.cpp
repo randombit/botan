@@ -107,8 +107,7 @@ class SM2_Signature_Operation final : public PK_Ops::Signature {
          if(options.hash_function_name() == "Raw") {
             // m_hash is null, m_za is empty
          } else {
-            // TODO(C++23) Use std::optional::or_else
-            auto context = options.context().has_value() ? options.context().value() : sm2_default_userid;
+            auto context = options.context().value_or(sm2_default_userid);
 
             m_hash = HashFunction::create_or_throw(options.hash_function_name());
             // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
@@ -174,8 +173,7 @@ class SM2_Verification_Operation final : public PK_Ops::Verification {
          if(options.hash_function_name() == "Raw") {
             // m_hash is null, m_za is empty
          } else {
-            // TODO(C++23) Use std::optional::or_else
-            auto context = options.context().has_value() ? options.context().value() : sm2_default_userid;
+            auto context = options.context().value_or(sm2_default_userid);
 
             m_hash = HashFunction::create_or_throw(options.hash_function_name());
             // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
