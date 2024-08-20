@@ -363,15 +363,24 @@ PK_Signature_Options parse_legacy_sig_options(const Public_Key& key, std::string
       if(padding == "ISO_9796_DS2") {
          if(req.arg_count_between(1, 3)) {
             // FIXME
-            //const bool implicit = req.arg(1, "exp") == "imp";
+            const bool implicit = req.arg(1, "exp") == "imp";
+
+            auto opt = PK_Signature_Options()
+               .with_padding(padding)
+               .with_hash(req.arg(0));
 
             if(req.arg_count() == 3) {
-               return PK_Signature_Options()
-                  .with_padding(padding)
-                  .with_hash(req.arg(0))
-                  .with_salt_size(req.arg_as_integer(2));
+               if(implicit) {
+                  return std::move(opt).with_salt_size(req.arg_as_integer(2));
+               } else {
+                  return std::move(opt).with_salt_size(req.arg_as_integer(2)).with_explicit_trailer_field();
+               }
             } else {
-               return PK_Signature_Options().with_padding(padding).with_hash(req.arg(0));
+               if(implicit) {
+                  return opt;
+               } else {
+                  return std::move(opt).with_explicit_trailer_field();
+               }
             }
          }
       }
@@ -379,10 +388,11 @@ PK_Signature_Options parse_legacy_sig_options(const Public_Key& key, std::string
       //ISO-9796-2 DS 3 is deterministic and DS2 without a salt
       if(padding == "ISO_9796_DS3") {
          if(req.arg_count_between(1, 2)) {
-            // FIXME
-            //const bool implicit = req.arg(1, "exp") == "imp";
-
-            return PK_Signature_Options().with_padding(padding).with_hash(req.arg(0));
+            if(req.arg(1, "exp") == "imp") {
+               return PK_Signature_Options().with_padding(padding).with_hash(req.arg(0));
+            } else {
+               return PK_Signature_Options().with_padding(padding).with_hash(req.arg(0)).with_explicit_trailer_field();
+            }
          }
       }
 

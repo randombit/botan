@@ -83,16 +83,12 @@ std::unique_ptr<EMSA> EMSA::create_or_throw(const PK_Signature_Options& options)
 
 #if defined(BOTAN_HAS_ISO_9796)
       if(padding == "ISO_9796_DS2" && hash) {
-         //const bool implicit = req.arg(1, "exp") == "imp";
-         const bool implicit = false;  // fixme
-         return std::make_unique<ISO_9796_DS2>(std::move(hash), implicit, options.salt_size());
+         return std::make_unique<ISO_9796_DS2>(std::move(hash), !options.using_explicit_trailer_field(), options.salt_size());
       }
 
       //ISO-9796-2 DS 3 is deterministic and DS2 without a salt
       if(padding == "ISO_9796_DS3" && hash) {
-         //const bool implicit = req.arg(1, "exp") == "imp";
-         const bool implicit = false;  // fixme
-         return std::make_unique<ISO_9796_DS3>(std::move(hash), implicit);
+         return std::make_unique<ISO_9796_DS3>(std::move(hash), !options.using_explicit_trailer_field());
       }
 #endif
 

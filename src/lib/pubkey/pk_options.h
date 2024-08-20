@@ -116,6 +116,20 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options {
       /// PK_Signer or PK_Verifier is created.
       PK_Signature_Options with_der_encoded_signature() &&;
 
+      /// Specify producing or expecting an explicit trailer field
+      ///
+      /// Certain RSA padding schemes, such as PSS and ISO-9796, support two
+      /// different trailer fields. One is an "implicit" trailer, which does not
+      /// directly identify the hash. The other is an "explicit" trailer, which
+      /// does.
+      ///
+      /// Note that currently this option is only supported by ISO-9796. While
+      /// some standards allow PSS to use a trailer field, others (such as RFC
+      /// 4055) prohibit using explicit trailers for PSS, and it is not
+      /// currently supported.
+      ///
+      PK_Signature_Options with_explicit_trailer_field() &&;
+
       /// Specify a provider that should be used
       ///
       /// This is rarely relevant
@@ -141,6 +155,8 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options {
       bool using_der_encoded_signature() const { return m_use_der; }
 
       bool using_deterministic_signature() const { return m_deterministic_sig; }
+
+      bool using_explicit_trailer_field() const { return m_explicit_trailer_field; }
 
       bool using_hash() const { return hash_function().has_value(); }
 
@@ -170,6 +186,7 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options {
       bool m_using_prehash = false;
       bool m_use_der = false;
       bool m_deterministic_sig = false;
+      bool m_explicit_trailer_field = false;
 };
 
 }  // namespace Botan
