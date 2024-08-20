@@ -20,6 +20,7 @@
 #include <botan/internal/parsing.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/pss_params.h>
+#include <botan/internal/scan_name.h>
 #include <botan/internal/workfactor.h>
 
 #if defined(BOTAN_HAS_THREAD_UTILS)
@@ -783,10 +784,16 @@ PK_Signature_Options parse_rsa_signature_algorithm(const AlgorithmIdentifier& al
          throw Decoding_Error("Unacceptable trailer field for PSS signatures");
       }
 
-      padding += fmt("({},MGF1,{})", hash_algo, pss_params.salt_length());
-   }
+      return PK_Signature_Options().with_padding("PSS").with_hash(hash_algo).with_salt_size(pss_params.salt_length());
+   } else {
+      SCAN_Name scan(padding);
 
-   return PK_Signature_Options().with_padding(padding);
+      if(scan.algo_name() != "EMSA3") {
+         throw Decoding_Error("Unexpected OID for RSA signatures");
+      }
+
+      return PK_Signature_Options().with_padding("PKCS1v15").with_hash(scan.arg(0));
+   }
 }
 
 }  // namespace

@@ -57,13 +57,11 @@ class EMSA_PKCS1v15_Raw final : public EMSA {
 
       bool verify(const std::vector<uint8_t>&, const std::vector<uint8_t>&, size_t) override;
 
-      EMSA_PKCS1v15_Raw();
-
       /**
       * @param hash_algo the digest id for that hash is included in
       * the signature.
       */
-      EMSA_PKCS1v15_Raw(std::string_view hash_algo);
+      EMSA_PKCS1v15_Raw(const std::optional<std::string>& hash_algo = std::nullopt);
 
       std::string hash_function() const override { return m_hash_name; }
 

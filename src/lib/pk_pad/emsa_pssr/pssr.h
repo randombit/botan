@@ -20,14 +20,9 @@ class PSSR final : public EMSA {
    public:
       /**
       * @param hash the hash function to use
-      */
-      explicit PSSR(std::unique_ptr<HashFunction> hash);
-
-      /**
-      * @param hash the hash function to use
       * @param salt_size the size of the salt to use in bytes
       */
-      PSSR(std::unique_ptr<HashFunction> hash, size_t salt_size);
+      PSSR(std::unique_ptr<HashFunction> hash, std::optional<size_t> salt_size);
 
       std::string name() const override;
 
@@ -57,14 +52,9 @@ class PSSR_Raw final : public EMSA {
    public:
       /**
       * @param hash the hash function to use
-      */
-      explicit PSSR_Raw(std::unique_ptr<HashFunction> hash);
-
-      /**
-      * @param hash the hash function to use
       * @param salt_size the size of the salt to use in bytes
       */
-      PSSR_Raw(std::unique_ptr<HashFunction> hash, size_t salt_size);
+      PSSR_Raw(std::unique_ptr<HashFunction> hash, std::optional<size_t> salt_size = std::nullopt);
 
       std::string hash_function() const override { return m_hash->name(); }
 
