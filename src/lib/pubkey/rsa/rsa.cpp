@@ -751,7 +751,7 @@ PK_Signature_Options parse_rsa_signature_algorithm(const AlgorithmIdentifier& al
       throw Decoding_Error("Unknown AlgorithmIdentifier for RSA X.509 signatures");
    }
 
-   std::string padding = sig_info[1];
+   const std::string& padding = sig_info[1];
 
    if(padding == "EMSA4") {
       // "MUST contain RSASSA-PSS-params"
