@@ -200,7 +200,7 @@ std::unique_ptr<PK_Ops::Signature> HSS_LMS_PrivateKey::_create_signature_op(Rand
                                                                             const PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
 
-   PK_Options_Checks::validate_for_hash_based_signature(options, "HSS-LMS", "");
+   validate_for_hash_based_signature(options, "HSS-LMS", "");
 
    BOTAN_ARG_CHECK(!options.using_hash(), "Unexpected parameters for signing with HSS-LMS");
 
