@@ -39,6 +39,12 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options {
       PK_Signature_Options& operator=(PK_Signature_Options&& other) = delete;
       ~PK_Signature_Options();
 
+      /// Format this PK_Signature_Options as a string
+      ///
+      /// This is primarily intended for debugging and error messages;
+      /// the format is not fixed
+      std::string to_string() const;
+
       /// Create a PK_Signature_Options specifying the hash to use
       ///
       /// Most but not all signture schemes require specifying the hash
@@ -140,6 +146,8 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options {
       /// This will throw an exception if no hash function was configured
       std::string hash_function_name() const;
 
+      // Getters; these are mostly for internal use
+
       const std::optional<std::string>& hash_function() const { return m_hash_fn; }
 
       const std::optional<std::string>& prehash_fn() const { return m_prehash; }
@@ -169,12 +177,6 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options {
       bool using_salt_size() const { return salt_size().has_value(); }
 
       bool using_provider() const { return provider().has_value() && provider().value() != "base"; }
-
-      /// Format this PK_Signature_Options as a string
-      ///
-      /// This is primarily intended for debugging and error messages;
-      /// the format is not fixed
-      std::string to_string() const;
 
    private:
       std::optional<std::string> m_hash_fn;
