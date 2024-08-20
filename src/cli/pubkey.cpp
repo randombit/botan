@@ -97,8 +97,8 @@ BOTAN_REGISTER_COMMAND("keygen", PK_Keygen);
 
 namespace {
 
-Botan::PK_Signature_Options sig_options(std::string_view key, std::string_view padding, std::string_view hash,
-                                        bool use_der, std::string_view provider) {
+Botan::PK_Signature_Options sig_options(
+   std::string_view key, std::string_view padding, std::string_view hash, bool use_der, std::string_view provider) {
    if(key == "RSA" && padding.empty()) {
       return sig_options(key, "PSS", hash, use_der, provider);
    }
@@ -187,8 +187,8 @@ class PK_Sign final : public Command {
             throw CLI_Error_Unsupported("hashing", hash_fn);
          }
 
-         const auto options = sig_options(key->algo_name(), get_arg("padding"), hash_fn,
-                                          flag_set("der-format"), get_arg("provider"));
+         const auto options =
+            sig_options(key->algo_name(), get_arg("padding"), hash_fn, flag_set("der-format"), get_arg("provider"));
 
          Botan::PK_Signer signer(*key, rng(), options);
 
@@ -234,8 +234,7 @@ class PK_Verify final : public Command {
             throw CLI_Error_Unsupported("hashing", hash_fn);
          }
 
-         const auto options = sig_options(key->algo_name(), get_arg("padding"), hash_fn,
-                                          flag_set("der-format"), "");
+         const auto options = sig_options(key->algo_name(), get_arg("padding"), hash_fn, flag_set("der-format"), "");
 
          Botan::PK_Verifier verifier(*key, options);
          auto onData = [&verifier](const uint8_t b[], size_t l) { verifier.update(b, l); };
