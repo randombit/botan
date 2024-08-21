@@ -29,9 +29,9 @@ from datetime import datetime
 from collections.abc import Iterable
 from enum import IntEnum
 
-# This Python module requires the FFI API version introduced in Botan 3.11.0
+# This Python module requires the FFI API version introduced in Botan 3.13.0
 #
-# 3.13.0 - botan_hash_security_level
+# 3.13.0 - botan_hash_security_level, SPAKE2+
 # 3.12.0 - EcScalar/EcPoint, DRBG
 # 3.11.0 - XOF API
 # 3.10.0 - introduced botan_pubkey_load_ec*_sec1()
@@ -619,6 +619,32 @@ def _set_prototypes(dll):
             [c_char_p, c_char_p, c_char_p, c_char_p, c_char_p, c_size_t, c_char_p, c_size_t, c_void_p,
              c_char_p, POINTER(c_size_t), c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_srp6_group_size, [c_char_p, POINTER(c_size_t)])
+
+    # SPAKE2+
+    ffi_api(dll.botan_spake2p_params_init, [c_void_p, c_char_p])
+    ffi_api(dll.botan_spake2p_params_init_custom, [c_void_p, c_void_p, c_char_p, c_size_t, c_char_p])
+    ffi_api(dll.botan_spake2p_params_destroy, [c_void_p])
+    ffi_api(dll.botan_spake2p_params_share_size, [c_void_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_spake2p_params_confirmation_size, [c_void_p, POINTER(c_size_t)])
+    ffi_api(dll.botan_spake2p_derive_secret,
+            [c_void_p, c_char_p, c_char_p, c_size_t, c_char_p, c_size_t, c_char_p, c_size_t, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_spake2p_registration_record,
+            [c_void_p, c_void_p, c_char_p, c_size_t, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_spake2p_prover_init,
+            [c_void_p, c_void_p, c_char_p, c_size_t, c_char_p, c_size_t, c_char_p, c_size_t, c_char_p, c_size_t])
+    ffi_api(dll.botan_spake2p_prover_destroy, [c_void_p])
+    ffi_api(dll.botan_spake2p_prover_generate_message, [c_void_p, c_void_p, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_spake2p_prover_process_message,
+            [c_void_p, c_void_p, c_char_p, c_size_t, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_spake2p_prover_shared_secret, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_spake2p_verifier_init,
+            [c_void_p, c_void_p, c_char_p, c_size_t, c_char_p, c_size_t, c_char_p, c_size_t, c_char_p, c_size_t])
+    ffi_api(dll.botan_spake2p_verifier_destroy, [c_void_p])
+    ffi_api(dll.botan_spake2p_verifier_process_message,
+            [c_void_p, c_void_p, c_char_p, c_size_t, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_spake2p_verifier_verify_confirmation, [c_void_p, c_char_p, c_size_t])
+    ffi_api(dll.botan_spake2p_verifier_skip_confirmation, [c_void_p])
+    ffi_api(dll.botan_spake2p_verifier_shared_secret, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
 
     # ZFEC
     ffi_api(dll.botan_zfec_encode,
@@ -3379,6 +3405,184 @@ def srp6_client_agree(username: str, password: str, group: str, hsh: str, salt: 
                                                                     rng.handle_(),
                                                                     a, al,
                                                                     k, kl))
+
+class Spake2pParams:
+    """
+    SPAKE2+ (RFC 9383) system parameters, selecting the elliptic curve
+    group, the SPAKE2+ M/N group elements, and the hash function.
+
+    The ciphersuite is one of "P256-SHA256", "P256-SHA512", "P384-SHA256",
+    "P384-SHA512", or "P521-SHA512".
+    """
+    def __init__(self, ciphersuite: str | None = None):
+        self.__obj = c_void_p(0)
+        if ciphersuite is not None:
+            _DLL.botan_spake2p_params_init(byref(self.__obj), _ctype_str(ciphersuite))
+
+    @classmethod
+    def custom(cls, group: ECGroup, seed: bytes, hash_fn: str) -> Spake2pParams:
+        """
+        Create custom system parameters for an arbitrary group, deriving the
+        M/N group elements from the seed using hash to curve (which not all
+        groups support). Both peers must use the same group, seed, and hash.
+        """
+        params = cls()
+        _DLL.botan_spake2p_params_init_custom(byref(params.handle_()),
+                                              group.handle_(),
+                                              seed, len(seed),
+                                              _ctype_str(hash_fn))
+        return params
+
+    def __del__(self):
+        _DLL.botan_spake2p_params_destroy(self.__obj)
+
+    def handle_(self):
+        return self.__obj
+
+    def share_size(self) -> int:
+        """
+        Return the size in bytes of a key share (shareP or shareV)
+        """
+        return _call_fn_returning_sz(lambda sz: _DLL.botan_spake2p_params_share_size(self.__obj, sz))
+
+    def confirmation_size(self) -> int:
+        """
+        Return the size in bytes of a key confirmation message (confirmP or confirmV)
+        """
+        return _call_fn_returning_sz(lambda sz: _DLL.botan_spake2p_params_confirmation_size(self.__obj, sz))
+
+def spake2p_derive_secret(params: Spake2pParams, password: str, prover_id: bytes = b'', verifier_id: bytes = b'', salt: bytes = b'') -> bytes:
+    """
+    Derive a SPAKE2+ (RFC 9383) prover secret from a password, using Argon2id.
+
+    The returned secret is password equivalent, and is used with
+    spake2p_registration_record and Spake2pProver.
+    """
+    return _call_fn_viewing_vec(lambda vc, vf:
+                                _DLL.botan_spake2p_derive_secret(params.handle_(),
+                                                                 _ctype_str(password),
+                                                                 prover_id, len(prover_id),
+                                                                 verifier_id, len(verifier_id),
+                                                                 salt, len(salt),
+                                                                 vc, vf))
+
+def spake2p_registration_record(params: Spake2pParams, secret: bytes, rng: RandomNumberGenerator) -> bytes:
+    """
+    Compute a SPAKE2+ registration record from a prover secret.
+
+    The registration record is provided to the verifier during registration.
+    """
+    return _call_fn_viewing_vec(lambda vc, vf:
+                                _DLL.botan_spake2p_registration_record(params.handle_(),
+                                                                       rng.handle_(),
+                                                                       secret, len(secret),
+                                                                       vc, vf))
+
+class Spake2pProver:
+    """
+    SPAKE2+ (RFC 9383) prover: the side which knows the password secret.
+
+    The expected message flow is
+
+    * The prover calls generate_message and sends the result to the verifier
+    * The verifier calls process_message on it and sends the result to the prover
+    * The prover calls process_message on it, verifying the verifier's key
+      confirmation, and sends the resulting confirmation to the verifier
+    * The verifier calls verify_confirmation on it
+
+    After the final step both sides can call shared_secret.
+    """
+    def __init__(self, params: Spake2pParams, secret: bytes, prover_id: bytes = b'', verifier_id: bytes = b'', context: bytes = b''):
+        self.__obj = c_void_p(0)
+        _DLL.botan_spake2p_prover_init(byref(self.__obj),
+                                       params.handle_(),
+                                       secret, len(secret),
+                                       prover_id, len(prover_id),
+                                       verifier_id, len(verifier_id),
+                                       context, len(context))
+
+    def __del__(self):
+        _DLL.botan_spake2p_prover_destroy(self.__obj)
+
+    def generate_message(self, rng: RandomNumberGenerator) -> bytes:
+        """
+        Generate the prover's key share, which is sent to the verifier.
+        Can be called only once.
+        """
+        return _call_fn_viewing_vec(lambda vc, vf:
+                                    _DLL.botan_spake2p_prover_generate_message(self.__obj, rng.handle_(), vc, vf))
+
+    def process_message(self, peer_message: bytes, rng: RandomNumberGenerator) -> bytes:
+        """
+        Consume the verifier's response and return the prover's key
+        confirmation, which is sent to the verifier. Raises an exception
+        if the verifier's key confirmation is wrong, typically meaning
+        the passwords do not match.
+        """
+        return _call_fn_viewing_vec(lambda vc, vf:
+                                    _DLL.botan_spake2p_prover_process_message(self.__obj, rng.handle_(),
+                                                                              peer_message, len(peer_message),
+                                                                              vc, vf))
+
+    def shared_secret(self) -> bytes:
+        """
+        Return the shared secret. Only valid after process_message succeeded.
+        """
+        return _call_fn_viewing_vec(lambda vc, vf:
+                                    _DLL.botan_spake2p_prover_shared_secret(self.__obj, vc, vf))
+
+class Spake2pVerifier:
+    """
+    SPAKE2+ (RFC 9383) verifier: the side which stores only the registration
+    record derived from the password. See Spake2pProver for the message flow.
+    """
+    def __init__(self, params: Spake2pParams, record: bytes, prover_id: bytes = b'', verifier_id: bytes = b'', context: bytes = b''):
+        self.__obj = c_void_p(0)
+        _DLL.botan_spake2p_verifier_init(byref(self.__obj),
+                                         params.handle_(),
+                                         record, len(record),
+                                         prover_id, len(prover_id),
+                                         verifier_id, len(verifier_id),
+                                         context, len(context))
+
+    def __del__(self):
+        _DLL.botan_spake2p_verifier_destroy(self.__obj)
+
+    def process_message(self, peer_message: bytes, rng: RandomNumberGenerator) -> bytes:
+        """
+        Consume the prover's key share and return the verifier's response
+        (its own key share followed by a key confirmation), which is sent
+        to the prover. Can be called only once.
+        """
+        return _call_fn_viewing_vec(lambda vc, vf:
+                                    _DLL.botan_spake2p_verifier_process_message(self.__obj, rng.handle_(),
+                                                                                peer_message, len(peer_message),
+                                                                                vc, vf))
+
+    def verify_confirmation(self, confirmation: bytes) -> None:
+        """
+        Check the prover's key confirmation. Raises an exception if the
+        confirmation is wrong, meaning the prover does not know the password.
+        """
+        _DLL.botan_spake2p_verifier_verify_confirmation(self.__obj, confirmation, len(confirmation))
+
+    def skip_confirmation(self) -> None:
+        """
+        Skip checking the prover's key confirmation, allowing shared_secret
+        to be called without verify_confirmation. After calling this, no
+        evidence has been received that the peer knows the password; it is
+        intended solely for protocols which embed SPAKE2+ and perform the
+        prover's key confirmation themselves.
+        """
+        _DLL.botan_spake2p_verifier_skip_confirmation(self.__obj)
+
+    def shared_secret(self) -> bytes:
+        """
+        Return the shared secret. Only valid after verify_confirmation
+        succeeded, or after skip_confirmation.
+        """
+        return _call_fn_viewing_vec(lambda vc, vf:
+                                    _DLL.botan_spake2p_verifier_shared_secret(self.__obj, vc, vf))
 
 def zfec_encode(k: int, n: int, input_bytes: bytes) -> list[bytes]:
     """

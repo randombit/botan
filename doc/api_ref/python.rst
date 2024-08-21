@@ -723,6 +723,99 @@ HOTP
       in. If the code did verify and resync_range was zero, then the
       next counter will always be counter+1.
 
+SPAKE2+
+-----------------------------------------
+.. versionadded:: 3.13.0
+
+An implementation of the SPAKE2+ password authenticated key exchange
+(RFC 9383). The prover knows the password itself, while the verifier
+stores only a registration record derived from the password.
+
+.. py:class:: Spake2pParams(ciphersuite)
+
+   The system parameters, selecting the elliptic curve group, the SPAKE2+
+   M/N group elements, and the hash function. The ciphersuite is one of
+   "P256-SHA256", "P256-SHA512", "P384-SHA256", "P384-SHA512", or
+   "P521-SHA512".
+
+   .. py:classmethod:: custom(group, seed, hash_fn)
+
+      Create custom system parameters for an arbitrary ``ECGroup``,
+      deriving the M/N group elements from the seed using hash to curve
+      (which not all groups support). Both peers must use the same group,
+      seed, and hash.
+
+   .. py:method:: share_size()
+
+      Return the size in bytes of a key share.
+
+   .. py:method:: confirmation_size()
+
+      Return the size in bytes of a key confirmation message.
+
+.. py:function:: spake2p_derive_secret(params, password, prover_id=b'', verifier_id=b'', salt=b'')
+
+   Derive the prover secret from a password, using Argon2id. The returned
+   secret is password equivalent, and must be protected accordingly.
+
+.. py:function:: spake2p_registration_record(params, secret, rng)
+
+   Compute the registration record for a prover secret, which is provided
+   to the verifier during registration.
+
+.. py:class:: Spake2pProver(params, secret, prover_id=b'', verifier_id=b'', context=b'')
+
+   The identities and context must be agreed upon by both parties; the
+   identities must additionally match the values used when deriving the
+   prover secret.
+
+   .. py:method:: generate_message(rng)
+
+      Generate the prover's key share, which is sent to the verifier.
+      Can be called only once.
+
+   .. py:method:: process_message(peer_message, rng)
+
+      Consume the verifier's response and return the prover's key
+      confirmation, which is sent to the verifier. Raises an exception if
+      the verifier's key confirmation is wrong, typically meaning the
+      passwords do not match.
+
+   .. py:method:: shared_secret()
+
+      Return the shared secret. Only valid after ``process_message``
+      succeeded.
+
+.. py:class:: Spake2pVerifier(params, record, prover_id=b'', verifier_id=b'', context=b'')
+
+   The verifier side of the exchange, using the registration record.
+
+   .. py:method:: process_message(peer_message, rng)
+
+      Consume the prover's key share and return the verifier's response
+      (its own key share followed by a key confirmation), which is sent to
+      the prover. Can be called only once.
+
+   .. py:method:: verify_confirmation(confirmation)
+
+      Check the prover's key confirmation. Raises an exception if the
+      confirmation is wrong, meaning the prover does not know the
+      password.
+
+   .. py:method:: skip_confirmation()
+
+      Skip checking the prover's key confirmation, allowing
+      ``shared_secret`` to be called without ``verify_confirmation``.
+      After calling this, no evidence has been received that the peer
+      knows the password; it is intended solely for protocols which
+      embed SPAKE2+ and perform the prover's key confirmation
+      themselves.
+
+   .. py:method:: shared_secret()
+
+      Return the shared secret. Only valid after ``verify_confirmation``
+      succeeded, or after ``skip_confirmation``.
+
 X509Cert
 -----------------------------------------
 
