@@ -225,6 +225,23 @@ ZFEC
 .. autofunction:: zfec_decode
 
 
+SPAKE2+
+-----------------------------------------
+.. versionadded:: 3.13.0
+
+.. autoclass:: Spake2pParams
+   :members:
+
+.. autofunction:: spake2p_derive_secret
+
+.. autofunction:: spake2p_registration_record
+
+.. autoclass:: Spake2pProver
+   :members:
+
+.. autoclass:: Spake2pVerifier
+   :members:
+
 X509Cert
 -----------------------------------------
 
