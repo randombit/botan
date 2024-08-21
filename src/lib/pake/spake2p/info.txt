@@ -1,0 +1,21 @@
+<defines>
+PAKE_SPAKE2PLUS -> 20240821
+</defines>
+
+<module_info>
+name -> "SPAKE2+"
+brief -> "SPAKE2+ password authenticated key exchange"
+</module_info>
+
+<header:public>
+spake2p.h
+</header:public>
+
+<requires>
+argon2
+ec_group
+hkdf
+hmac
+sha2_32
+sha2_64
+</requires>
