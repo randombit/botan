@@ -1,0 +1,36 @@
+
+Group = secp256r1
+Secret = squirrel
+Hash = SHA-256
+AId = F00F
+BId = ABE5
+
+Group = secp256r1
+Secret = squirrel
+Hash = SHA-384
+AId = F00F
+BId = ABE5
+
+Group = secp256r1
+Secret = squirrel
+Hash = SHA-512
+AId = F00F
+BId = ABE5
+
+Group = secp384r1
+Secret = squirrel
+Hash = SHA-384
+AId = F00F
+BId = ABE5
+
+Group = secp384r1
+Secret = squirrel
+Hash = SHA-512
+AId = F00F
+BId = ABE5
+
+Group = secp521r1
+Secret = squirrel
+Hash = SHA-512
+AId = F00F
+BId = ABE5
