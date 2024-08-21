@@ -599,6 +599,7 @@ Test::Result test_x509_authority_info_access_extension() {
 Test::Result test_x509_encode_authority_info_access_extension() {
    Test::Result result("X509 with encoded PKIX.AuthorityInformationAccess extension");
 
+      #if defined(BOTAN_HAS_RSA)
    auto rng = Test::new_rng(__func__);
 
    const std::string sig_algo{"RSA"};
@@ -615,6 +616,7 @@ Test::Result test_x509_encode_authority_info_access_extension() {
 
    // create a CA
    auto ca_key = make_a_private_key(sig_algo, *rng);
+   result.require("CA key", ca_key != nullptr);
    const auto ca_cert = Botan::X509::create_self_signed_cert(ca_opts(), *ca_key, hash_fn, *rng);
    Botan::X509_CA ca(ca_cert, *ca_key, hash_fn, padding_method, *rng);
 
@@ -661,6 +663,7 @@ Test::Result test_x509_encode_authority_info_access_extension() {
 
    result.confirm("OCSP URI available", !cert.ocsp_responder().empty());
    result.confirm("CA Issuer URI available", !cert.ca_issuers().empty());
+      #endif
 
    return result;
 }
