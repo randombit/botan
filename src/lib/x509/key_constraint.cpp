@@ -74,9 +74,12 @@ bool Key_Constraints::compatible_with(const Public_Key& pub_key) const {
       permitted |= Key_Constraints::KeyAgreement | Key_Constraints::EncipherOnly | Key_Constraints::DecipherOnly;
    }
 
-   if(pub_key.supports_operation(PublicKeyOperation::Encryption) ||
-      pub_key.supports_operation(PublicKeyOperation::KeyEncapsulation)) {
+   if(pub_key.supports_operation(PublicKeyOperation::Encryption)) {
       permitted |= Key_Constraints::KeyEncipherment | Key_Constraints::DataEncipherment;
+   }
+
+   if(pub_key.supports_operation(PublicKeyOperation::KeyEncapsulation)) {
+      permitted |= Key_Constraints::KeyEncipherment;
    }
 
    if(pub_key.supports_operation(PublicKeyOperation::Signature)) {
