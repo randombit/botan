@@ -26,7 +26,7 @@ if type -p "apt-get"; then
     fi
 
     # Normal workflow follows
-    #sudo apt-get -qq update
+    sudo apt-get -qq update
     sudo apt-get -qq install ccache libbz2-dev liblzma-dev libsqlite3-dev
 
     if [ "$TARGET" = "valgrind" ] || [ "$TARGET" = "valgrind-full" ]; then
