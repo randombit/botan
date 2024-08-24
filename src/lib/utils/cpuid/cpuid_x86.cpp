@@ -180,7 +180,7 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
 
       if(feat & CPUID::CPUID_SSSE3_BIT) {
          feat |= if_set(flags7, x86_CPUID_7_bits::SHA, CPUID::CPUID_SHA_BIT, allowed);
-         feat |= if_set(flags7, x86_CPUID_7_1_bits::SM3, CPUID::CPUID_SM3_BIT, allowed);
+         feat |= if_set(flags7_1, x86_CPUID_7_1_bits::SM3, CPUID::CPUID_SM3_BIT, allowed);
       }
 
       if(has_os_ymm_support) {
