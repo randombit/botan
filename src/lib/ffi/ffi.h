@@ -60,6 +60,17 @@ API follows a few simple rules:
 #include <stdint.h>
 
 /**
+* The compile time API version. This matches the value of
+* botan_ffi_api_version. This can be used for compile-time checking if a
+* particular feature is available.
+*
+* Note this same value is also reflected in BOTAN_HAS_FFI in build.h, however
+* that declaration is not visible here since this header is intentionally
+* free-standing, depending only on a few C standard library headers.
+*/
+#define BOTAN_FFI_API_VERSION 20240408
+
+/**
 * BOTAN_FFI_EXPORT indicates public FFI functions.
 *
 * The arguments to the macro are to indicate the version that

@@ -235,6 +235,10 @@ class FFI_Utils_Test final : public FFI_Test {
          result.test_is_eq("Botan version datestamp", botan_version_datestamp(), Botan::version_datestamp());
          result.test_is_eq("FFI supports its own version", botan_ffi_supports_api(botan_ffi_api_version()), 0);
 
+         result.test_is_eq("FFI compile time time var matches botan_ffi_api_version",
+                           botan_ffi_api_version(),
+                           uint32_t(BOTAN_FFI_API_VERSION));
+
          result.test_is_eq("FFI supports 2.0 version", botan_ffi_supports_api(20150515), 0);
          result.test_is_eq("FFI supports 2.1 version", botan_ffi_supports_api(20170327), 0);
          result.test_is_eq("FFI supports 2.3 version", botan_ffi_supports_api(20170815), 0);
