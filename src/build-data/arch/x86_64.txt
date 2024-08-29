@@ -21,7 +21,6 @@ rdseed
 sha
 sse2
 sse41
-sse42
 ssse3
 avx512
 vaes
