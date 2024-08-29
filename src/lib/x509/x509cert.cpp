@@ -691,10 +691,22 @@ std::string X509_Certificate::to_string() const {
    out << "Issued: " << this->not_before().readable_string() << "\n";
    out << "Expires: " << this->not_after().readable_string() << "\n";
 
+   try {
+      auto pubkey = this->subject_public_key();
+      out << "Public Key [" << pubkey->algo_name() << "-" << pubkey->key_length() << "]\n\n";
+      out << X509::PEM_encode(*pubkey) << "\n";
+   } catch(const Decoding_Error& ex) {
+      const AlgorithmIdentifier& alg_id = this->subject_public_key_algo();
+      out << "Public Key Invalid!\n"
+          << " OID: " << alg_id.oid().to_formatted_string() << "\n"
+          << " Error: " << ex.what() << "\n"
+          << " Hex: " << hex_encode(this->subject_public_key_bitstring()) << "\n";
+   }
+
    out << "Constraints:\n";
    Key_Constraints constraints = this->constraints();
    if(constraints.empty()) {
-      out << " None\n";
+      out << " No key constraints set\n";
    } else {
       if(constraints.includes(Key_Constraints::DigitalSignature)) {
          out << "   Digital Signature\n";
@@ -792,13 +804,8 @@ std::string X509_Certificate::to_string() const {
       out << "Subject keyid: " << hex_encode(this->subject_key_id()) << "\n";
    }
 
-   try {
-      auto pubkey = this->subject_public_key();
-      out << "Public Key [" << pubkey->algo_name() << "-" << pubkey->key_length() << "]\n\n";
-      out << X509::PEM_encode(*pubkey);
-   } catch(Decoding_Error&) {
-      const AlgorithmIdentifier& alg_id = this->subject_public_key_algo();
-      out << "Failed to decode key with oid " << alg_id.oid().to_string() << "\n";
+   if(this->is_self_signed()) {
+      out << "Certificate is self signed\n";
    }
 
    return out.str();
