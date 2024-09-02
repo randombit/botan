@@ -67,7 +67,6 @@ mingw   -> "{cxx} -shared -Wl,--out-implib,{shared_lib_name}.a"
 sse2    -> "-msse2"
 ssse3   -> "-mssse3"
 sse41   -> "-msse4.1"
-sse42   -> "-msse4.2"
 avx2    -> "-mavx2"
 avx512  -> "-mavx512f -mavx512bw -mavx512dq -mavx512vbmi -mavx512vbmi2 -mavx512bitalg -mavx512vl -mavx512ifma"
 

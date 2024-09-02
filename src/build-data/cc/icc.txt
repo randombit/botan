@@ -15,7 +15,6 @@ supports_gcc_inline_asm yes
 sse2    -> "-msse2"
 ssse3   -> "-mssse3"
 sse41   -> "-msse4.1"
-sse42   -> "-msse4.2"
 avx2    -> "-march=core-avx2"
 aesni   -> "-march=corei7"
 rdrand  -> "-march=core-avx-i"
