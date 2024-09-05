@@ -27,5 +27,6 @@ tpm2_util.h
 tpm2_context.h
 tpm2_error.h
 tpm2_object.h
+tpm2_rng.h
 tpm2_session.h
 </header:public>

@@ -13,6 +13,7 @@
 
 #if defined(BOTAN_HAS_TPM2)
    #include <botan/pubkey.h>
+   #include <botan/tpm2_rng.h>
    #include <botan/tpm2_session.h>
 
    #include <tss2/tss2_esys.h>
@@ -50,6 +51,19 @@ Test::Result bail_out() {
       result.test_failure("Not sure we're on a simulated TPM2, cautiously refusing any action.");
       return result;
    }
+}
+
+bool not_zero_64(std::span<const uint8_t> in) {
+   Botan::BufferSlicer bs(in);
+
+   while(bs.remaining() > 8) {
+      if(Botan::load_be(bs.take<8>()) == 0) {
+         return false;
+      }
+   }
+   // Ignore remaining bytes
+
+   return true;
 }
 
 std::vector<Test::Result> test_tpm2_properties() {
@@ -139,11 +153,62 @@ std::vector<Test::Result> test_tpm2_sessions() {
    };
 }
 
+std::vector<Test::Result> test_tpm2_rng() {
+   auto ctx = get_tpm2_context(__func__);
+   if(!ctx) {
+      return {bail_out()};
+   }
+
+   auto rng = Botan::TPM2::RandomNumberGenerator(ctx, Botan::TPM2::Session::unauthenticated_session(ctx));
+
+   return {
+      CHECK("Basic functionalities",
+            [&](Test::Result& result) {
+               result.confirm("Accepts input", rng.accepts_input());
+               result.confirm("Is seeded", rng.is_seeded());
+               result.test_eq("Right name", rng.name(), "TPM2_RNG");
+
+               result.test_no_throw("Clear", [&] { rng.clear(); });
+            }),
+
+      CHECK("Random number generation",
+            [&](Test::Result& result) {
+               std::array<uint8_t, 8> buf1 = {};
+               rng.randomize(buf1);
+               result.confirm("Is at least not 0 (8)", not_zero_64(buf1));
+
+               std::array<uint8_t, 15> buf2 = {};
+               rng.randomize(buf2);
+               result.confirm("Is at least not 0 (15)", not_zero_64(buf2));
+
+               std::array<uint8_t, 256> buf3 = {};
+               rng.randomize(buf3);
+               result.confirm("Is at least not 0 (256)", not_zero_64(buf3));
+            }),
+
+      CHECK("Randomize with inputs",
+            [&](Test::Result& result) {
+               std::array<uint8_t, 9> buf1 = {};
+               rng.randomize_with_input(buf1, std::array<uint8_t, 30>{});
+               result.confirm("Randomized with inputs is at least not 0 (9)", not_zero_64(buf1));
+
+               std::array<uint8_t, 66> buf2 = {};
+               rng.randomize_with_input(buf2, std::array<uint8_t, 64>{});
+               result.confirm("Randomized with inputs is at least not 0 (66)", not_zero_64(buf2));
+
+               std::array<uint8_t, 256> buf3 = {};
+               rng.randomize_with_input(buf3, std::array<uint8_t, 196>{});
+               result.confirm("Randomized with inputs is at least not 0 (256)", not_zero_64(buf3));
+            }),
+   };
+}
+
 }  // namespace
 
 BOTAN_REGISTER_TEST_FN("tpm2", "tpm2_props", test_tpm2_properties);
 BOTAN_REGISTER_TEST_FN("tpm2", "tpm2_ctx", test_tpm2_context);
 BOTAN_REGISTER_TEST_FN("tpm2", "tpm2_sessions", test_tpm2_sessions);
+BOTAN_REGISTER_TEST_FN("tpm2", "tpm2_rng", test_tpm2_rng);
 
 #endif
 
