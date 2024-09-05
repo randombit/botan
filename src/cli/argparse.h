@@ -32,6 +32,8 @@ class Argument_Parser final {
 
       size_t get_arg_sz(const std::string& option) const;
 
+      size_t get_arg_hex_sz_or(const std::string& opt_name, const std::string& otherwise) const;
+
       std::vector<std::string> get_arg_list(const std::string& what) const;
 
       static std::vector<std::string> split_on(const std::string& str, char delim);
@@ -107,6 +109,16 @@ size_t Argument_Parser::get_arg_sz(const std::string& opt_name) const {
       return static_cast<size_t>(std::stoul(s));
    } catch(std::exception&) {
       throw CLI_Usage_Error("Invalid integer value '" + s + "' for option " + opt_name);
+   }
+}
+
+size_t Argument_Parser::get_arg_hex_sz_or(const std::string& opt_name, const std::string& otherwise) const {
+   const std::string s = get_arg_or(opt_name, otherwise);
+
+   try {
+      return static_cast<size_t>(std::stoul(s, nullptr, 16));
+   } catch(std::exception&) {
+      throw CLI_Usage_Error("Invalid hex integer value '" + s + "' for option " + opt_name);
    }
 }
 

@@ -452,6 +452,24 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         if target_os == 'linux':
             flags += ['--with-lzma']
 
+        if is_running_in_github_actions() and 'BOTAN_TPM2_ENABLED' in os.environ:
+            flags += ['--with-tpm2']
+
+            if os.environ.get('BOTAN_TPM2_ENABLED') == 'test':
+                # run the TPM2 tests
+                test_cmd += ["--tpm2-tcti-name=%s" % os.getenv('BOTAN_TPM2_TCTI_NAME'),
+                             "--tpm2-tcti-conf=%s" % os.getenv('BOTAN_TPM2_TCTI_CONF'),
+                             "--tpm2-persistent-rsa-handle=%s" % os.getenv('BOTAN_TPM2_PERSISTENT_RSA_KEY_HANDLE'),
+                             "--tpm2-persistent-auth-value=%s" % os.getenv('BOTAN_TPM2_PERSISTENT_KEY_AUTH_VALUE')]
+            elif os.environ.get('BOTAN_TPM2_ENABLED') == 'build':
+                # build the TPM2 module but don't run the tests
+                # TCTI name 'disabled' is a special value that disables the TPM2 tests
+                #
+                # TODO: This is a hack. It would be great if `./botan-test --skip-tests=`
+                #       would also work for test categories like `tpm2`. Currently it
+                #       only works for individual test names.
+                test_cmd += ["--tpm2-tcti-name=disabled"]
+
         if target in ['coverage']:
             flags += ['--with-tpm']
             test_cmd += ['--run-online-tests']

@@ -1,0 +1,14 @@
+<defines>
+TPM2 -> 20240610
+</defines>
+
+<module_info>
+name -> "TPM2"
+brief -> "Wrappers and Utilites to interact with TPM2"
+</module_info>
+
+load_on vendor
+
+<libs>
+all -> tss2-esys,tss2-rc,tss2-tctildr,tss2-mu
+</libs>

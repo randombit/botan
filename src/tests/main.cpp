@@ -60,9 +60,12 @@ int main(int argc, char* argv[]) {
    try {
       const std::string arg_spec =
          "botan-test --verbose --help --data-dir= --pkcs11-lib= --provider= "
-         "--log-success --abort-on-first-fail --no-stdout --no-avoid-undefined --skip-tests= "
-         "--test-threads=0 --test-results-dir= --run-long-tests --run-memory-intensive-tests "
-         "--run-online-tests --test-runs=1 --drbg-seed= --report-properties= *suites";
+         "--tpm2-tcti-name= --tpm2-tcti-conf= --tpm2-persistent-rsa-handle=0x81000008 "
+         "--tpm2-persistent-ecc-handle=0x81000010 --tpm2-persistent-auth-value=password "
+         "--log-success --abort-on-first-fail --no-stdout --no-avoid-undefined "
+         "--skip-tests= --test-threads=0 --test-results-dir= --run-long-tests "
+         "--run-memory-intensive-tests --run-online-tests --test-runs=1 "
+         "--drbg-seed= --report-properties= *suites";
 
       Botan_CLI::Argument_Parser parser(arg_spec);
 
@@ -88,6 +91,11 @@ int main(int argc, char* argv[]) {
                                            parser.get_arg_or("data-dir", "src/tests/data"),
                                            parser.get_arg("pkcs11-lib"),
                                            parser.get_arg("provider"),
+                                           parser.get_arg("tpm2-tcti-name"),
+                                           parser.get_arg("tpm2-tcti-conf"),
+                                           parser.get_arg_hex_sz_or("tpm2-persistent-rsa-handle", "0x81000008"),
+                                           parser.get_arg_hex_sz_or("tpm2-persistent-ecc-handle", "0x81000010"),
+                                           parser.get_arg_or("tpm2-persistent-auth-value", "password"),
                                            parser.get_arg("drbg-seed"),
                                            parser.get_arg("test-results-dir"),
                                            parser.get_arg_list("report-properties"),

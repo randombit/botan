@@ -17,6 +17,30 @@ ARCH="$2"
 SCRIPT_LOCATION=$(cd "$(dirname "$0")"; pwd)
 
 if type -p "apt-get"; then
+    # TPM2-TSS library (to build the library against)
+    tpm2_specific_packages=("libtss2-dev")
+
+    # Our simulated TPM 2.0 setup depends on convenience features that are
+    # available only in Ubuntu 24.04. Technically, most of the TPM 2.0 support
+    # in Botan should work on 22.04 as well.
+    #
+    # TODO: Look into whether we can use the TPM 2.0 simulator on 22.04 to be
+    #       able to run the tests on that version as well.
+    if [ "$(lsb_release -sr)" = "24.04" ]; then
+        # Additional TPM 2.0 related packages to set up a simulated
+        # TPM 2.0 environment for testing.
+        tpm2_specific_packages+=("tpm2-tools"            # CLI tools to interact with the TPM
+                                 "swtpm"                 # TPM 2.0 simulator
+                                 "swtpm-tools"           # CLI tools to set up the TPM simulator
+                                 "tpm2-abrmd"            # user-space resource manager for TPM 2.0
+                                 "libtss2-tcti-tabrmd0") # TCTI (TPM Command Transmission Interface) for the user-space resource manager)
+        ci_support_of_tpm2="test"
+    else
+        # If we are not on Ubuntu 24.04, we can't set up a TPM 2.0 simulator
+        # and potentially just build the library with TPM 2.0 support but don't
+        # run the tests.
+        ci_support_of_tpm2="build"
+    fi
 
     if [ "$(lsb_release -sr)" = "22.04" ]; then
         # Hack to deal with https://github.com/actions/runner-images/issues/8659
@@ -33,8 +57,16 @@ if type -p "apt-get"; then
         # (l)ist mode (avoiding https://github.com/actions/runner-images/issues/9996)
         sudo NEEDRESTART_MODE=l apt-get -qq install valgrind
 
-    elif [ "$TARGET" = "shared" ] || [ "$TARGET" = "examples" ] || [ "$TARGET" = "tlsanvil" ] || [ "$TARGET" = "clang-tidy" ] ; then
-        sudo apt-get -qq install libboost-dev
+    elif [ "$TARGET" = "static" ]; then
+        sudo apt-get -qq install "${tpm2_specific_packages[@]}"
+        echo "BOTAN_TPM2_ENABLED=${ci_support_of_tpm2}" >> "$GITHUB_ENV"
+
+    elif [ "$TARGET" = "shared" ]; then
+        sudo apt-get -qq install libboost-dev "${tpm2_specific_packages[@]}"
+        echo "BOTAN_TPM2_ENABLED=${ci_support_of_tpm2}" >> "$GITHUB_ENV"
+
+    elif [ "$TARGET" = "examples" ] || [ "$TARGET" = "tlsanvil" ] || [ "$TARGET" = "clang-tidy" ] ; then
+        sudo apt-get -qq install libboost-dev libtss2-dev
 
     elif [ "$TARGET" = "clang" ]; then
         sudo apt-get -qq install clang
@@ -119,7 +151,8 @@ if type -p "apt-get"; then
             curl -L https://coveralls.io/coveralls-linux.tar.gz | tar -xz -C /usr/local/bin
         fi
 
-        sudo apt-get -qq install softhsm2 libtspi-dev libboost-dev
+        sudo apt-get -qq install softhsm2 libtspi-dev libboost-dev "${tpm2_specific_packages[@]}"
+        echo "BOTAN_TPM2_ENABLED=${ci_support_of_tpm2}" >> "$GITHUB_ENV"
 
         echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 

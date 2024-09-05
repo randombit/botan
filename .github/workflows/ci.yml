@@ -135,7 +135,7 @@ jobs:
           cache-key: linux-x86_64-clang-tidy
 
       - name: Configure Build
-        run: python3 ./configure.py --cc=clang --build-targets=shared,cli,tests,examples,bogo_shim --build-fuzzers=test --with-boost --with-sqlite --with-zlib --with-lzma --with-bzip2
+        run: python3 ./configure.py --cc=clang --build-targets=shared,cli,tests,examples,bogo_shim --build-fuzzers=test --with-boost --with-sqlite --with-zlib --with-lzma --with-bzip2 --with-tpm2
 
       - name: Run Clang Tidy
         run: |
