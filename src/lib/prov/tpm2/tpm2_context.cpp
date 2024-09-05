@@ -21,6 +21,10 @@
 #include <tss2/tss2_tcti.h>
 #include <tss2/tss2_tctildr.h>
 
+#if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
+   #include <botan/internal/tpm2_crypto_backend.h>
+#endif
+
 namespace Botan::TPM2 {
 
 namespace {
@@ -32,7 +36,19 @@ constexpr TPM2_HANDLE storage_root_key_handle = TPM2_HR_PERSISTENT + 1;
 struct Context::Impl {
       TSS2_TCTI_CONTEXT* m_tcti_ctx;
       ESYS_CONTEXT* m_ctx;
+
+#if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
+      std::unique_ptr<CryptoCallbackState> m_crypto_callback_state;
+#endif
 };
+
+bool Context::supports_botan_crypto_backend() noexcept {
+#if defined(BOTAN_TSS2_SUPPORTS_CRYPTO_CALLBACKS) and defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
+   return true;
+#else
+   return false;
+#endif
+}
 
 std::shared_ptr<Context> Context::create(const std::string& tcti_nameconf) {
    // We cannot std::make_shared as the constructor is private
@@ -60,6 +76,32 @@ Context::Context(const char* tcti_name, const char* tcti_conf) : m_impl(std::mak
    check_rc("TPM2 Initialization", Esys_Initialize(&m_impl->m_ctx, m_impl->m_tcti_ctx, nullptr /* ABI version */));
    BOTAN_ASSERT_NONNULL(m_impl->m_ctx);
 }
+
+void Context::use_botan_crypto_backend(const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
+#if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
+   BOTAN_STATE_CHECK(!uses_botan_crypto_backend());
+   m_impl->m_crypto_callback_state = std::make_unique<CryptoCallbackState>(rng);
+   enable_crypto_callbacks(shared_from_this());
+#else
+   BOTAN_UNUSED(rng);
+   throw Not_Implemented("This build of botan does not provide the TPM2 crypto backend");
+#endif
+}
+
+bool Context::uses_botan_crypto_backend() const noexcept {
+#if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
+   return m_impl->m_crypto_callback_state != nullptr;
+#else
+   return false;
+#endif
+}
+
+#if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
+CryptoCallbackState& Context::crypto_callback_state() {
+   BOTAN_ASSERT_NONNULL(m_impl->m_crypto_callback_state);
+   return *m_impl->m_crypto_callback_state;
+}
+#endif
 
 ESYS_CONTEXT* Context::esys_context() noexcept {
    return m_impl->m_ctx;

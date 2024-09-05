@@ -26,6 +26,8 @@ struct ESYS_CONTEXT;
 
 namespace Botan::TPM2 {
 
+struct CryptoCallbackState;
+
 class PrivateKey;
 class SessionBundle;
 
@@ -56,6 +58,32 @@ class BOTAN_PUBLIC_API(3, 6) Context final : public std::enable_shared_from_this
 
       Context& operator=(const Context&) = delete;
       Context& operator=(Context&& ctx) noexcept = default;
+
+      /**
+       * Overrides the TSS2's crypto callbacks with Botan's functionality.
+       *
+       * This replaces all cryptographic functionality required for the
+       * communication with the TPM by botan's implementations. The TSS2
+       * would otherwise use OpenSSL or mbedTLS.
+       *
+       * Note that the provided @p rng should not be dependent on the TPM.
+       *
+       * @param rng  the RNG to use for the crypto operations
+       * @throws Not_Implemented if the TPM2-TSS does not support crypto callbacks
+       * @sa supports_botan_crypto_backend()
+       */
+      void use_botan_crypto_backend(const std::shared_ptr<Botan::RandomNumberGenerator>& rng);
+
+      /**
+       * Checks if the TSS2 supports registering Botan's crypto backend at runtime.
+       * Older versions of the TSS2 do not support this feature ( 4.0.0), also
+       * Botan may be compiled without support for TSS' crypto backend.
+       * @return true if the TSS2 supports Botan's crypto backend
+       */
+      static bool supports_botan_crypto_backend() noexcept;
+
+      /// @returns true if botan is used for the TSS' crypto functions
+      bool uses_botan_crypto_backend() const noexcept;
 
       /// @return an ESYS_CONTEXT* for use in other TPM2 functions.
       ESYS_CONTEXT* esys_context() noexcept;
@@ -104,6 +132,11 @@ class BOTAN_PUBLIC_API(3, 6) Context final : public std::enable_shared_from_this
    private:
       Context(const char* tcti_nameconf);
       Context(const char* tcti_name, const char* tcti_conf);
+
+#if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
+      friend void enable_crypto_callbacks(const std::shared_ptr<Context>&);
+      CryptoCallbackState& crypto_callback_state();
+#endif
 
    private:
       struct Impl;  // PImpl to avoid TPM2-TSS includes in this header

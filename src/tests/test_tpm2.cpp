@@ -31,6 +31,12 @@ namespace Botan_Tests {
 #if defined(BOTAN_HAS_TPM2)
 namespace {
 
+   #if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND) && defined(BOTAN_TSS2_SUPPORTS_CRYPTO_CALLBACKS)
+constexpr bool crypto_backend_should_be_available = true;
+   #else
+constexpr bool crypto_backend_should_be_available = false;
+   #endif
+
 std::shared_ptr<Botan::TPM2::Context> get_tpm2_context(std::string_view rng_tag) {
    const auto tcti_name = Test::options().tpm2_tcti_name();
    if(tcti_name.value() == "disabled") {
@@ -43,7 +49,9 @@ std::shared_ptr<Botan::TPM2::Context> get_tpm2_context(std::string_view rng_tag)
       return {};
    }
 
-   BOTAN_UNUSED(rng_tag);
+   if(ctx->supports_botan_crypto_backend()) {
+      ctx->use_botan_crypto_backend(Test::new_rng(rng_tag));
+   }
 
    return ctx;
 }
@@ -132,6 +140,28 @@ std::vector<Test::Result> test_tpm2_context() {
                result.confirm("Test persistence location is not in the list",
                               !Botan::value_exists(handles, persistent_key_id + 1));
             }),
+
+         CHECK("Crypto backend",
+               [&](Test::Result& result) {
+                  const bool backend_supported = ctx->supports_botan_crypto_backend();
+                  const bool backend_used = ctx->uses_botan_crypto_backend();
+                  result.require("Crypto backend availability",
+                                 backend_supported == crypto_backend_should_be_available);
+                  result.require("Crypto backend is used in the tests, if it is available",
+                                 backend_used == backend_supported);
+
+                  if(backend_used) {
+                     result.test_throws<Botan::Invalid_State>(
+                        "If the backend is already in use, we cannot enable it once more",
+                        [&] { ctx->use_botan_crypto_backend(Test::new_rng(__func__)); });
+                  }
+
+                  if(!backend_supported) {
+                     result.test_throws<Botan::Not_Implemented>(
+                        "If the backend is not supported, we cannot enable it",
+                        [&] { ctx->use_botan_crypto_backend(Test::new_rng(__func__)); });
+                  }
+               }),
 
    // TODO: once ECC support is added, add an ifdef and test for ECC keys
    #if defined(BOTAN_HAS_TPM2_RSA_ADAPTER)
