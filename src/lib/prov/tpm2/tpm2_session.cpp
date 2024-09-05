@@ -8,6 +8,8 @@
 
 #include <botan/tpm2_session.h>
 
+#include <botan/tpm2_key.h>
+
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tpm2_algo_mappings.h>
 #include <botan/internal/tpm2_util.h>
@@ -50,6 +52,37 @@ std::shared_ptr<Session> Session::unauthenticated_session(const std::shared_ptr<
             Esys_StartAuthSession(*ctx,
                                   ESYS_TR_NONE,
                                   ESYS_TR_NONE,
+                                  ESYS_TR_NONE,
+                                  ESYS_TR_NONE,
+                                  ESYS_TR_NONE,
+                                  nullptr /*NonceCaller generated automatically*/,
+                                  TPM2_SE_HMAC,
+                                  &auth_sym,
+                                  auth_hash_algo,
+                                  out_transient_handle(session)));
+
+   return std::shared_ptr<Session>(new Session(std::move(session),
+                                               {
+                                                  .continue_session = true,
+                                                  .decrypt = true,
+                                                  .encrypt = true,
+                                               }));
+}
+
+std::shared_ptr<Session> Session::authenticated_session(const std::shared_ptr<Context>& ctx,
+                                                        const TPM2::PrivateKey& tpm_key,
+                                                        std::string_view sym_algo,
+                                                        std::string_view hash_algo) {
+   Object session(ctx);
+   const auto auth_sym = get_tpm2_sym_cipher_spec(sym_algo);
+   const auto auth_hash_algo = get_tpm2_hash_type(hash_algo);
+
+   BOTAN_ASSERT_NONNULL(ctx);
+
+   check_rc("Esys_StartSession",
+            Esys_StartAuthSession(*ctx,
+                                  tpm_key.handles().transient_handle(),
+                                  tpm_key.handles().transient_handle(),
                                   ESYS_TR_NONE,
                                   ESYS_TR_NONE,
                                   ESYS_TR_NONE,

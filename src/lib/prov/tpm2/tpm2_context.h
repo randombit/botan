@@ -26,6 +26,7 @@ struct ESYS_CONTEXT;
 
 namespace Botan::TPM2 {
 
+class PrivateKey;
 class SessionBundle;
 
 /**
@@ -85,6 +86,20 @@ class BOTAN_PUBLIC_API(3, 6) Context final : public std::enable_shared_from_this
       std::optional<TPM2_HANDLE> find_free_persistent_handle() const;
 
       std::vector<TPM2_HANDLE> persistent_handles() const;
+
+      /// Makes @p key persistent at location @p persistent_handle or any free
+      TPM2_HANDLE persist(TPM2::PrivateKey& key,
+                          const SessionBundle& sessions,
+                          std::span<const uint8_t> auth_value = {},
+                          std::optional<TPM2_HANDLE> persistent_handle = std::nullopt);
+
+      /// Evicts a persistent @p key from the TPM. The key cannot be used after.
+      void evict(std::unique_ptr<TPM2::PrivateKey> key, const SessionBundle& sessions);
+
+      // TODO: Currently this assumes that the SRK is a persistent object,
+      //       this assumption may not hold forever.
+      std::unique_ptr<TPM2::PrivateKey> storage_root_key(std::span<const uint8_t> auth_value,
+                                                         const SessionBundle& sessions);
 
    private:
       Context(const char* tcti_nameconf);

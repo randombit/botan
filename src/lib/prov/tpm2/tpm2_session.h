@@ -47,6 +47,7 @@ struct SessionAttributes {
 };
 
 class Session;
+class PrivateKey;
 
 namespace detail {
 
@@ -101,6 +102,26 @@ class BOTAN_PUBLIC_API(3, 6) Session {
       static std::shared_ptr<Session> unauthenticated_session(const std::shared_ptr<Context>& ctx,
                                                               std::string_view sym_algo = "CFB(AES-256)",
                                                               std::string_view hash_algo = "SHA-256");
+
+      /**
+       * Instantiate a session based on a salt encrypted for @p tpm_key. This
+       * allows for the encryption of sensitive parameters passed to and from
+       * the TPM. The application's random salt is generated automatically (via
+       * the software RNG in the TSS2's crypto backend).
+       *
+       * Such a session is protected against man-in-the-middle attacks with
+       * access to the data channel between the application and the TPM, under
+       * the assumption that the @p tpm_key is not compromised.
+       *
+       * @param ctx       the TPM context
+       * @param tpm_key   the key to use for session establishment
+       * @param sym_algo  the symmetric algorithm used for parameter encryption
+       * @param hash_algo the hash algorithm in the HMAC used for authentication
+       */
+      static std::shared_ptr<Session> authenticated_session(const std::shared_ptr<Context>& ctx,
+                                                            const TPM2::PrivateKey& tpm_key,
+                                                            std::string_view sym_algo = "CFB(AES-256)",
+                                                            std::string_view hash_algo = "SHA-256");
 
    public:
       /**
