@@ -125,7 +125,7 @@ Other Useful Things
 ----------------------------------------
 
 * Full C++ PKCS #11 API wrapper
-* Interfaces for TPM v1.2 device access
+* Interfaces for TPM v1.2 and v2.0 device access
 * Simple compression API wrapping zlib, bzip2, and lzma libraries
 * RNG wrappers for system RNG and hardware RNGs
 * HMAC_DRBG and entropy collection system for userspace RNGs

@@ -23,6 +23,16 @@ The TPM 1.2 standard is a specification for a hardware device which provides
 cryptographic algorithms. Botan ships a :doc:`TPM provider <tpm>` for interacting
 with TPM devices. It is disabled by default.
 
+TPM 2.0
+^^^^^^^^^^^^^
+
+Botan ships a :doc:`TPM 2.0 provider <tpm>` for interacting with TPM 2.0 devices.
+Access to the TPM is implemented via the TPM Software Stack (TSS) and is tested using
+the open source `tpm2-tss implementation <https://github.com/tpm2-software/tpm2-tss>`__.
+Botan allows to hook into the crypto callbacks of tpm2-tss (requires 4.0 or later) to
+avoid pulling in another crypto library as a transitive dependency.
+This provider is disabled by default.
+
 CommonCrypto
 ^^^^^^^^^^^^^
 

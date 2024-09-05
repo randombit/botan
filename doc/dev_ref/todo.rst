@@ -64,6 +64,7 @@ External Providers
 * Windows CryptoNG provider (ciphers, hashes)
 * Extend Apple CommonCrypto provider (HMAC, CMAC, RSA, ECDSA, ECDH)
 * Add support for iOS keychain access
+* Extend support for TPM 2.0 (ECC keys, PCR, NVRAM, Policies, etc)
 
 TLS
 ----------------------------------------

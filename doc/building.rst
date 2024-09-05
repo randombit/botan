@@ -420,7 +420,9 @@ by the user using
  - ``--with-sqlite3`` enables using sqlite3 databases in various contexts
    (TLS session cache, PSK database, etc).
 
- - ``--with-tpm`` adds support for using TPM hardware via the TrouSerS library.
+ - ``--with-tpm`` adds support for TPM 1.2 hardware via the TrouSerS library.
+
+ - ``--with-tpm2`` adds support for TPM 2.0 hardware via the TSS2 library.
 
  - ``--with-boost`` enables using some Boost libraries. In particular
    Boost.Filesystem is used for a few operations (but on most platforms, a
@@ -1070,7 +1072,12 @@ Enable using sqlite3 for data storage
 ``--with-tpm``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Enable support for TPM
+Enable support for TPM 1.2
+
+``--with-tpm2``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Enable support for TPM 2.0
 
 ``--program-suffix=SUFFIX``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
