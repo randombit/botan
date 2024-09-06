@@ -99,9 +99,9 @@ class LoggingGroup:
             print("::endgroup::")
 
 def build_targets(target, target_os):
-    if target in ['shared', 'minimized', 'bsi', 'nist']:
+    if target in ['shared', 'minimized', 'bsi', 'nist', 'examples']:
         yield 'shared'
-    elif target in ['static', 'examples', 'fuzzers', 'cross-arm32-baremetal', 'emscripten']:
+    elif target in ['static', 'fuzzers', 'cross-arm32-baremetal', 'emscripten']:
         yield 'static'
     elif target_os in ['windows']:
         yield 'shared'
