@@ -88,9 +88,9 @@ rule link_tests
 
 # Executable targets
 
-build %{cli_exe}: link_cli %{join cli_objs} | %{library_targets}
+build %{cli_exe}: link_cli %{join cli_objs} | libs
 
-build %{test_exe}: link_tests %{join test_objs} | %{library_targets}
+build %{test_exe}: link_tests %{join test_objs} | libs
 
 %{if build_fuzzers}
 
@@ -120,7 +120,7 @@ build examples: phony | %{example_bin}
 
 %{if build_bogo_shim}
 
-build botan_bogo_shim: link_cli bogo_shim_object | %{library_targets}
+build botan_bogo_shim: link_cli bogo_shim_object | libs
 
 # BoGo shim
 build %{out_dir}/bogo_shim_object: compile_exe %{bogo_shim_src}
@@ -129,7 +129,7 @@ build %{out_dir}/bogo_shim_object: compile_exe %{bogo_shim_src}
 
 %{if build_ct_selftest}
 
-build botan_ct_selftest: link_cli ct_selftest_object | %{library_targets}
+build botan_ct_selftest: link_cli ct_selftest_object | libs
 
 build %{out_dir}/ct_selftest_object: compile_exe %{ct_selftest_src}
 
@@ -208,10 +208,10 @@ build %{obj}: compile_exe %{src}
 %{for fuzzer_build_info}
 build %{obj}: compile_exe %{src}
 
-build %{exe}: link_fuzzer %{obj} | %{library_targets}
+build %{exe}: link_fuzzer %{obj} | libs
 %{endfor}
 
 %{for examples_build_info}
 build %{obj}: compile_example_exe %{src}
-build %{exe}: link_cli %{obj} | %{library_targets}
+build %{exe}: link_cli %{obj} | libs
 %{endfor}
