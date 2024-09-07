@@ -1,0 +1,25 @@
+<defines>
+ARGON2_SIMD_2X64 -> 20220303
+</defines>
+
+<module_info>
+name -> "Argon2 SIMD"
+brief -> "Argon2 using SSSE3/NEON instructions"
+</module_info>
+
+<isa>
+x86_32:ssse3
+x86_64:ssse3
+x32:ssse3
+arm32:neon
+arm64:neon
+</isa>
+
+<requires>
+simd_2x64
+</requires>
+
+# MSVC miscompiles this code on x86-32
+<cc>
+!msvc
+</cc>

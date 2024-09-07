@@ -18,7 +18,7 @@
    #include <botan/internal/thread_pool.h>
 #endif
 
-#if defined(BOTAN_HAS_ARGON2_AVX2) || defined(BOTAN_HAS_ARGON2_SSSE3)
+#if defined(BOTAN_HAS_ARGON2_AVX2) || defined(BOTAN_HAS_ARGON2_SIMD_2X64)
    #include <botan/internal/cpuid.h>
 #endif
 
@@ -172,9 +172,9 @@ void Argon2::blamka(uint64_t N[128], uint64_t T[128]) {
    }
 #endif
 
-#if defined(BOTAN_HAS_ARGON2_SSSE3)
-   if(CPUID::has_ssse3()) {
-      return Argon2::blamka_ssse3(N, T);
+#if defined(BOTAN_HAS_ARGON2_SIMD_2X64)
+   if(CPUID::has_simd_2x64()) {
+      return Argon2::blamka_simd_2x64(N, T);
    }
 #endif
 

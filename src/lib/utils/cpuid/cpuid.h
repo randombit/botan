@@ -93,6 +93,20 @@ class BOTAN_TEST_API CPUID final {
 #endif
       }
 
+      /**
+      * Return true if a 2x64 SIMD instruction set is available
+      * (SSSE3 or NEON)
+      */
+      static bool has_simd_2x64() {
+#if defined(BOTAN_TARGET_SUPPORTS_SSSE3)
+         return CPUID::has_ssse3();
+#elif defined(BOTAN_TARGET_SUPPORTS_NEON)
+         return CPUID::has_neon();
+#else
+         return false;
+#endif
+      }
+
       enum CPUID_bits : uint32_t {
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
          // These values have no relation to cpuid bitfields

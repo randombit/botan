@@ -1,0 +1,28 @@
+<defines>
+SIMD_2X64 -> 20240908
+</defines>
+
+<module_info>
+name -> "SIMD 2x64"
+brief -> "Helpers for working with SIMD instructions"
+</module_info>
+
+<isa>
+x86_32:ssse3
+x86_64:ssse3
+x32:ssse3
+arm32:neon
+arm64:neon
+</isa>
+
+<arch>
+x86_32
+x86_64
+x32
+arm32
+arm64
+</arch>
+
+<header:internal>
+simd_2x64.h
+</header:internal>

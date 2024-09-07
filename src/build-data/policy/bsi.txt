@@ -80,7 +80,7 @@ win32_stats
 
 # pbkdf
 argon2_avx2
-argon2_ssse3
+argon2_simd_2x64
 
 # rng
 processor_rng
