@@ -11,8 +11,8 @@
 #include <botan/hash.h>
 #include <botan/hex.h>
 #include <botan/pk_ops.h>
+#include <botan/pk_options.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
@@ -103,7 +103,7 @@ std::unique_ptr<PK_Ops::KEM_Encryption> Public_Key::create_kem_encryption_op(std
    throw Lookup_Error(fmt("{} does not support KEM encryption", algo_name()));
 }
 
-std::unique_ptr<PK_Ops::Verification> Public_Key::_create_verification_op(const PK_Signature_Options& options) const {
+std::unique_ptr<PK_Ops::Verification> Public_Key::_create_verification_op(PK_Signature_Options& options) const {
    BOTAN_UNUSED(options);
    throw Lookup_Error(fmt("{} does not support verification", algo_name()));
 }
@@ -126,7 +126,7 @@ std::unique_ptr<PK_Ops::KEM_Decryption> Private_Key::create_kem_decryption_op(Ra
 }
 
 std::unique_ptr<PK_Ops::Signature> Private_Key::_create_signature_op(RandomNumberGenerator& rng,
-                                                                     const PK_Signature_Options& options) const {
+                                                                     PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng, options);
    throw Lookup_Error(fmt("{} does not support signatures", algo_name()));
 }
@@ -141,13 +141,15 @@ std::unique_ptr<PK_Ops::Key_Agreement> Private_Key::create_key_agreement_op(Rand
 
 std::unique_ptr<PK_Ops::Verification> Public_Key::create_verification_op(std::string_view params,
                                                                          std::string_view provider) const {
-   return this->_create_verification_op(parse_legacy_sig_options(*this, params).with_provider(provider));
+   PK_Signature_Options opts(algo_name(), params, provider);
+   return this->_create_verification_op(opts);
 }
 
 std::unique_ptr<PK_Ops::Signature> Private_Key::create_signature_op(RandomNumberGenerator& rng,
                                                                     std::string_view params,
                                                                     std::string_view provider) const {
-   return this->_create_signature_op(rng, parse_legacy_sig_options(*this, params).with_provider(provider));
+   PK_Signature_Options opts(algo_name(), params, provider);
+   return this->_create_signature_op(rng, opts);
 }
 
 }  // namespace Botan

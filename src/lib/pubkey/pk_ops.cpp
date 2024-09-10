@@ -84,42 +84,40 @@ secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
 
 namespace {
 
-std::unique_ptr<HashFunction> validate_options_returning_hash(const PK_Signature_Options& options) {
-   BOTAN_ARG_CHECK(!options.hash_function_name().empty(), "This algorithm requires a hash function for signing");
-   BOTAN_ARG_CHECK(!options.using_padding(), "This algorithm does not support padding modes");
-   BOTAN_ARG_CHECK(!options.using_salt_size(), "This algorithm does not support a salt");
+std::unique_ptr<HashFunction> validate_options_returning_hash(PK_Signature_Options& options) {
+   const auto hash = options.hash_function();
 
    /*
    * In a sense ECDSA/DSA are *always* in prehashing mode, so we accept the case
    * where prehashing is requested as long as the prehash hash matches the signature hash.
    */
-   if(options.prehash_fn().has_value()) {
-      if(options.prehash_fn().value() != options.hash_function_name()) {
+   if(auto [uses_prehash, prehash_fn] = options.prehash(); uses_prehash) {
+      if(prehash_fn.has_value() && prehash_fn.value() != hash) {
          throw Invalid_Argument("This algorithm does not support prehashing with a different hash");
       }
    }
 
 #if defined(BOTAN_HAS_RAW_HASH_FN)
-   if(options.hash_function_name().starts_with("Raw")) {
-      if(options.hash_function_name() == "Raw") {
+   if(hash.starts_with("Raw")) {
+      if(hash == "Raw") {
          return std::make_unique<RawHashFunction>("Raw", 0);
       }
 
-      SCAN_Name req(options.hash_function_name());
+      SCAN_Name req(hash);
       if(req.arg_count() == 1) {
-         if(auto hash = HashFunction::create(req.arg(0))) {
-            return std::make_unique<RawHashFunction>(std::move(hash));
+         if(auto hash_object = HashFunction::create(req.arg(0))) {
+            return std::make_unique<RawHashFunction>(std::move(hash_object));
          }
       }
    }
 #endif
 
-   return HashFunction::create_or_throw(options.hash_function_name());
+   return HashFunction::create_or_throw(hash);
 }
 
 }  // namespace
 
-PK_Ops::Signature_with_Hash::Signature_with_Hash(const PK_Signature_Options& options) :
+PK_Ops::Signature_with_Hash::Signature_with_Hash(PK_Signature_Options& options) :
       Signature(), m_hash(validate_options_returning_hash(options)) {}
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
@@ -141,7 +139,7 @@ std::vector<uint8_t> PK_Ops::Signature_with_Hash::sign(RandomNumberGenerator& rn
    return raw_sign(msg, rng);
 }
 
-PK_Ops::Verification_with_Hash::Verification_with_Hash(const PK_Signature_Options& options) :
+PK_Ops::Verification_with_Hash::Verification_with_Hash(PK_Signature_Options& options) :
       Verification(), m_hash(validate_options_returning_hash(options)) {}
 
 PK_Ops::Verification_with_Hash::Verification_with_Hash(const AlgorithmIdentifier& alg_id,

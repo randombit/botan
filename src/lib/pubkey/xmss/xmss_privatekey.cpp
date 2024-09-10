@@ -22,7 +22,6 @@
 #include <botan/der_enc.h>
 #include <botan/pk_options.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/pk_options_impl.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/xmss_common_ops.h>
 #include <botan/internal/xmss_index_registry.h>
@@ -432,16 +431,11 @@ std::unique_ptr<Public_Key> XMSS_PrivateKey::public_key() const {
 }
 
 std::unique_ptr<PK_Ops::Signature> XMSS_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
-                                                                         const PK_Signature_Options& options) const {
+                                                                         PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-
-   validate_for_hash_based_signature(options, "XMSS", this->m_private->hash().hash_function());
-
-   if(!options.using_provider()) {
-      return std::make_unique<XMSS_Signature_Operation>(*this);
-   }
-
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   options.exclude_provider_for_algorithm(algo_name());
+   options.validate_for_hash_based_signature_algorithm(algo_name(), m_private->hash().hash_function());
+   return std::make_unique<XMSS_Signature_Operation>(*this);
 }
 
 }  // namespace Botan

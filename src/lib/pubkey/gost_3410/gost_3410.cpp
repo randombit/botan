@@ -116,7 +116,7 @@ EC_Scalar gost_msg_to_scalar(const EC_Group& group, std::span<const uint8_t> msg
 */
 class GOST_3410_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    public:
-      GOST_3410_Signature_Operation(const GOST_3410_PrivateKey& gost_3410, const PK_Signature_Options& options) :
+      GOST_3410_Signature_Operation(const GOST_3410_PrivateKey& gost_3410, PK_Signature_Options& options) :
             PK_Ops::Signature_with_Hash(options), m_group(gost_3410.domain()), m_x(gost_3410._private_key()) {}
 
       size_t signature_length() const override { return 2 * m_group.get_order_bytes(); }
@@ -195,7 +195,7 @@ PK_Signature_Options gost_hash_from_algid(const AlgorithmIdentifier& alg_id) {
 */
 class GOST_3410_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
-      GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, const PK_Signature_Options& options) :
+      GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, PK_Signature_Options& options) :
             PK_Ops::Verification_with_Hash(options), m_group(gost.domain()), m_gy_mul(gost._public_key()) {}
 
       GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, const AlgorithmIdentifier& alg_id) :
@@ -234,11 +234,9 @@ std::unique_ptr<Private_Key> GOST_3410_PublicKey::generate_another(RandomNumberG
 }
 
 std::unique_ptr<PK_Ops::Verification> GOST_3410_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<GOST_3410_Verification_Operation>(*this, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   PK_Signature_Options& options) const {
+   options.exclude_provider_for_algorithm(algo_name());
+   return std::make_unique<GOST_3410_Verification_Operation>(*this, options);
 }
 
 std::unique_ptr<PK_Ops::Verification> GOST_3410_PublicKey::create_x509_verification_op(
@@ -250,14 +248,11 @@ std::unique_ptr<PK_Ops::Verification> GOST_3410_PublicKey::create_x509_verificat
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Signature> GOST_3410_PrivateKey::_create_signature_op(
-   RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
+std::unique_ptr<PK_Ops::Signature> GOST_3410_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                              PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-
-   if(!options.using_provider()) {
-      return std::make_unique<GOST_3410_Signature_Operation>(*this, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   options.exclude_provider_for_algorithm(algo_name());
+   return std::make_unique<GOST_3410_Signature_Operation>(*this, options);
 }
 
 }  // namespace Botan

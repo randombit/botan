@@ -12,6 +12,7 @@ load_on always
 <header:public>
 assert.h
 allocator.h
+base_builder.h
 compiler.h
 concepts.h
 data_src.h
@@ -19,6 +20,7 @@ database.h
 exceptn.h
 mem_ops.h
 mutex.h
+template_utils.h
 types.h
 strong_type.h
 version.h
