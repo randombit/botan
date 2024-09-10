@@ -104,7 +104,7 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PublicKey : public virtual Public_Key {
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::Signature); }
 
-      std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const override;
+      std::unique_ptr<PK_Ops::Verification> _create_verification_op(PK_Signature_Options& options) const override;
 
       std::unique_ptr<PK_Ops::Verification> create_x509_verification_op(const AlgorithmIdentifier& alg_id,
                                                                         std::string_view provider) const override;
@@ -232,7 +232,7 @@ class BOTAN_PUBLIC_API(2, 0) XMSS_PrivateKey final : public virtual XMSS_PublicK
       std::optional<uint64_t> remaining_operations() const override;
 
       std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
-                                                              const PK_Signature_Options& options) const override;
+                                                              PK_Signature_Options& options) const override;
 
       secure_vector<uint8_t> private_key_bits() const override;
 

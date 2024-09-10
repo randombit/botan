@@ -51,7 +51,7 @@ class BOTAN_PUBLIC_API(3, 5) HSS_LMS_PublicKey : public virtual Public_Key {
       std::vector<uint8_t> raw_public_key_bits() const override;
       std::vector<uint8_t> public_key_bits() const override;
 
-      std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const override;
+      std::unique_ptr<PK_Ops::Verification> _create_verification_op(PK_Signature_Options& options) const override;
 
       std::unique_ptr<PK_Ops::Verification> create_x509_verification_op(const AlgorithmIdentifier& signature_algorithm,
                                                                         std::string_view provider) const override;
@@ -146,7 +146,7 @@ class BOTAN_PUBLIC_API(3, 5) HSS_LMS_PrivateKey final : public virtual HSS_LMS_P
       std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const override;
 
       std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
-                                                              const PK_Signature_Options& options) const override;
+                                                              PK_Signature_Options& options) const override;
 
    private:
       HSS_LMS_PrivateKey(std::shared_ptr<HSS_LMS_PrivateKeyInternal> sk);

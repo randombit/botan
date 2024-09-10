@@ -32,17 +32,20 @@
 
 namespace Botan {
 
-std::unique_ptr<EMSA> EMSA::create_or_throw(const PK_Signature_Options& options) {
-   const bool is_raw_hash = !options.using_hash() || options.hash_function_name() == "Raw";
+std::unique_ptr<EMSA> EMSA::create_or_throw(PK_Signature_Options& options) {
+   const auto hash = options.maybe_hash_function();
+   const auto padding = options.padding();
+   const bool is_raw_hash = !hash.has_value() || hash.value() == "Raw";
+   const bool is_raw_padding = !padding.has_value() || padding.value() == "Raw";
 
-   if(!options.using_padding() || options.padding() == "Raw") {
+   if(is_raw_padding) {
       // Only valid possibility for empty padding is no hash / "Raw" hash
 
 #if defined(BOTAN_HAS_EMSA_RAW)
       if(is_raw_hash) {
-         if(options.using_prehash()) {
-            if(auto hash = HashFunction::create(options.prehash_fn().value())) {
-               return std::make_unique<EMSA_Raw>(hash->output_length());
+         if(auto [using_prehash, prehash_fn] = options.prehash(); using_prehash && prehash_fn.has_value()) {
+            if(auto prehash = HashFunction::create(prehash_fn.value())) {
+               return std::make_unique<EMSA_Raw>(prehash->output_length());
             }
          } else {
             return std::make_unique<EMSA_Raw>();
@@ -50,57 +53,55 @@ std::unique_ptr<EMSA> EMSA::create_or_throw(const PK_Signature_Options& options)
       }
 #endif
    } else {
-      const std::string padding = options.padding().value();
-
       // null if raw_hash
-      auto hash = [&]() -> std::unique_ptr<HashFunction> {
+      auto hash_fn = [&]() -> std::unique_ptr<HashFunction> {
          if(is_raw_hash) {
             return nullptr;
          } else {
-            return HashFunction::create(options.hash_function_name());
+            return HashFunction::create(hash.value());
          }
       }();
 
 #if defined(BOTAN_HAS_EMSA_PKCS1)
       if(padding == "PKCS1v15") {
          if(is_raw_hash) {
-            return std::make_unique<EMSA_PKCS1v15_Raw>(options.prehash_fn());
-         } else if(hash) {
-            return std::make_unique<EMSA_PKCS1v15>(std::move(hash));
+            return std::make_unique<EMSA_PKCS1v15_Raw>(options.prehash().second);
+         } else if(hash_fn) {
+            return std::make_unique<EMSA_PKCS1v15>(std::move(hash_fn));
          }
       }
 #endif
 
 #if defined(BOTAN_HAS_EMSA_PSSR)
-      if(padding == "PSS_Raw" && hash) {
-         return std::make_unique<PSSR_Raw>(std::move(hash), options.salt_size());
+      if(padding == "PSS_Raw" && hash_fn) {
+         return std::make_unique<PSSR_Raw>(std::move(hash_fn), options.salt_size());
       }
 
-      if(padding == "PSS" && hash) {
-         return std::make_unique<PSSR>(std::move(hash), options.salt_size());
+      if(padding == "PSS" && hash_fn) {
+         return std::make_unique<PSSR>(std::move(hash_fn), options.salt_size());
       }
 #endif
 
 #if defined(BOTAN_HAS_ISO_9796)
-      if(padding == "ISO_9796_DS2" && hash) {
+      if(padding == "ISO_9796_DS2" && hash_fn) {
          return std::make_unique<ISO_9796_DS2>(
-            std::move(hash), !options.using_explicit_trailer_field(), options.salt_size());
+            std::move(hash_fn), !options.using_explicit_trailer_field(), options.salt_size());
       }
 
       //ISO-9796-2 DS 3 is deterministic and DS2 without a salt
-      if(padding == "ISO_9796_DS3" && hash) {
-         return std::make_unique<ISO_9796_DS3>(std::move(hash), !options.using_explicit_trailer_field());
+      if(padding == "ISO_9796_DS3" && hash_fn) {
+         return std::make_unique<ISO_9796_DS3>(std::move(hash_fn), !options.using_explicit_trailer_field());
       }
 #endif
 
 #if defined(BOTAN_HAS_EMSA_X931)
-      if(padding == "X9.31" && hash) {
-         return std::make_unique<EMSA_X931>(std::move(hash));
+      if(padding == "X9.31" && hash_fn) {
+         return std::make_unique<EMSA_X931>(std::move(hash_fn));
       }
 #endif
    }
 
-   throw Lookup_Error("Invalid or unavailable signature padding scheme " + options.to_string());
+   throw Lookup_Error("Invalid or unavailable signature padding scheme\n" + options.to_string());
 }
 
 }  // namespace Botan

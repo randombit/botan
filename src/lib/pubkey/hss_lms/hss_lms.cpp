@@ -11,7 +11,6 @@
 #include <botan/rng.h>
 #include <botan/internal/hss.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
@@ -86,12 +85,10 @@ class HSS_LMS_Verification_Operation final : public PK_Ops::Verification {
       std::vector<uint8_t> m_msg_buffer;
 };
 
-std::unique_ptr<PK_Ops::Verification> HSS_LMS_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<HSS_LMS_Verification_Operation>(m_public);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+std::unique_ptr<PK_Ops::Verification> HSS_LMS_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
+   options.exclude_provider_for_algorithm(algo_name());
+   options.validate_for_hash_based_signature_algorithm(algo_name());
+   return std::make_unique<HSS_LMS_Verification_Operation>(m_public);
 }
 
 std::unique_ptr<PK_Ops::Verification> HSS_LMS_PublicKey::create_x509_verification_op(
@@ -197,17 +194,13 @@ class HSS_LMS_Signature_Operation final : public PK_Ops::Signature {
 };
 
 std::unique_ptr<PK_Ops::Signature> HSS_LMS_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
-                                                                            const PK_Signature_Options& options) const {
+                                                                            PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
 
-   validate_for_hash_based_signature(options, "HSS-LMS", "");
+   options.exclude_provider_for_algorithm(algo_name());
+   options.validate_for_hash_based_signature_algorithm(algo_name());
 
-   BOTAN_ARG_CHECK(!options.using_hash(), "Unexpected parameters for signing with HSS-LMS");
-
-   if(!options.using_provider()) {
-      return std::make_unique<HSS_LMS_Signature_Operation>(m_private, m_public);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   return std::make_unique<HSS_LMS_Signature_Operation>(m_private, m_public);
 }
 
 }  // namespace Botan

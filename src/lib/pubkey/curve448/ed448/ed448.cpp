@@ -15,7 +15,6 @@
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/ed448_internal.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/internal/pk_options_impl.h>
 
 #include <utility>
 
@@ -216,19 +215,14 @@ AlgorithmIdentifier Ed448_Sign_Operation::algorithm_identifier() const {
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
-   BOTAN_ARG_CHECK(!options.using_padding(), "Ed448 does not support padding");
+std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
+   options.exclude_provider_for_algorithm(algo_name());
 
-   if(!options.using_provider()) {
-      if(options.using_prehash()) {
-         return std::make_unique<Ed448_Verify_Operation>(*this, options.prehash_fn().value_or("SHAKE-256(512)"));
-      } else {
-         return std::make_unique<Ed448_Verify_Operation>(*this);
-      }
+   if(const auto [uses_prehash, prehash_fn] = options.prehash(); uses_prehash) {
+      return std::make_unique<Ed448_Verify_Operation>(*this, prehash_fn.value_or("SHAKE-256(512)"));
+   } else {
+      return std::make_unique<Ed448_Verify_Operation>(*this);
    }
-
-   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
@@ -244,20 +238,15 @@ std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::create_x509_verification_
 }
 
 std::unique_ptr<PK_Ops::Signature> Ed448_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
-                                                                          const PK_Signature_Options& options) const {
+                                                                          PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
+   options.exclude_provider_for_algorithm(algo_name());
 
-   BOTAN_ARG_CHECK(!options.using_padding(), "Ed448 does not support padding");
-   BOTAN_ARG_CHECK(!options.using_salt_size(), "Ed448 does not support a salt");
-
-   if(!options.using_provider()) {
-      if(options.using_prehash()) {
-         return std::make_unique<Ed448_Sign_Operation>(*this, options.prehash_fn().value_or("SHAKE-256(512)"));
-      } else {
-         return std::make_unique<Ed448_Sign_Operation>(*this);
-      }
+   if(const auto [uses_prehash, prehash_fn] = options.prehash(); uses_prehash) {
+      return std::make_unique<Ed448_Sign_Operation>(*this, prehash_fn.value_or("SHAKE-256(512)"));
+   } else {
+      return std::make_unique<Ed448_Sign_Operation>(*this);
    }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
 }
 
 }  // namespace Botan

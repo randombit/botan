@@ -1,123 +1,200 @@
 /*
 * (C) 2024 Jack Lloyd
+* (C) 2024 René Meusel - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
 #include <botan/pk_options.h>
 
-#include <botan/hash.h>
-#include <botan/hex.h>
-#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
-#include <sstream>
+#include <botan/internal/scan_name.h>
 
 namespace Botan {
 
-PK_Signature_Options::~PK_Signature_Options() = default;
+PK_Signature_Options::PK_Signature_Options(std::string_view algo, std::string_view params, std::string_view provider) {
+   /*
+   * This is a convoluted mess because we must handle dispatch for every algorithm
+   * specific detail of how padding strings were formatted in versions prior to 3.6.
+   *
+   * This will all go away once the deprecated constructors of PK_Signer and PK_Verifier
+   * are removed in Botan4.
+   */
 
-PK_Signature_Options PK_Signature_Options::with_hash(std::string_view hash) && {
-   BOTAN_STATE_CHECK_MSG(!using_hash(), "PK_Signature_Options::with_hash cannot specify hash twice");
-   if(!hash.empty()) {
-      this->m_hash_fn = hash;
-   }
-   return std::move(*this);
-}
+   auto options = PK_Signature_Options();
 
-PK_Signature_Options PK_Signature_Options::with_padding(std::string_view padding) && {
-   BOTAN_STATE_CHECK_MSG(!using_padding(), "PK_Signature_Options::with_padding cannot specify padding twice");
-   if(!padding.empty()) {
-      this->m_padding = padding;
-   }
-   return std::move(*this);
-}
-
-PK_Signature_Options PK_Signature_Options::with_prehash(std::optional<std::string> prehash_fn) && {
-   BOTAN_STATE_CHECK_MSG(!using_prehash(), "PK_Signature_Options::with_prehash cannot specify prehash twice");
-   this->m_using_prehash = true;
-   this->m_prehash = std::move(prehash_fn);
-   return std::move(*this);
-}
-
-PK_Signature_Options PK_Signature_Options::with_provider(std::string_view provider) && {
-   if(!provider.empty()) {
-      BOTAN_STATE_CHECK_MSG(!using_provider(), "PK_Signature_Options::with_provider cannot specify provider twice");
-      this->m_provider = provider;
-   }
-   return std::move(*this);
-}
-
-PK_Signature_Options PK_Signature_Options::with_context(std::span<const uint8_t> context) && {
-   BOTAN_STATE_CHECK_MSG(!using_context(), "PK_Signature_Options::with_context cannot specify context twice");
-   this->m_context = std::vector<uint8_t>(context.begin(), context.end());
-   return std::move(*this);
-}
-
-PK_Signature_Options PK_Signature_Options::with_context(std::string_view context) && {
-   BOTAN_STATE_CHECK_MSG(!using_context(), "PK_Signature_Options::with_context cannot specify context twice");
-   const uint8_t* ptr = cast_char_ptr_to_uint8(context.data());
-   this->m_context = std::vector<uint8_t>(ptr, ptr + context.size());
-   return std::move(*this);
-}
-
-PK_Signature_Options PK_Signature_Options::with_salt_size(size_t salt_size) && {
-   BOTAN_STATE_CHECK_MSG(!using_salt_size(), "PK_Signature_Options::with_salt_size cannot specify salt size twice");
-   this->m_salt_size = salt_size;
-   return std::move(*this);
-}
-
-PK_Signature_Options PK_Signature_Options::with_deterministic_signature() && {
-   this->m_deterministic_sig = true;
-   return std::move(*this);
-}
-
-PK_Signature_Options PK_Signature_Options::with_der_encoded_signature(bool der) && {
-   this->m_use_der = der;
-   return std::move(*this);
-}
-
-PK_Signature_Options PK_Signature_Options::with_explicit_trailer_field() && {
-   this->m_explicit_trailer_field = true;
-   return std::move(*this);
-}
-
-std::string PK_Signature_Options::hash_function_name() const {
-   if(m_hash_fn.has_value()) {
-      return m_hash_fn.value();
+   if(!provider.empty() && provider != "base") {
+      with_provider(provider);
    }
 
-   throw Invalid_State("This signature scheme requires specifying a hash function");
-}
-
-std::string PK_Signature_Options::to_string() const {
-   std::ostringstream out;
-
-   auto print_str = [&](std::string_view name, std::optional<std::string> val) {
-      if(val.has_value()) {
-         out << name << "='" << val.value() << "' ";
+   if(algo.starts_with("Dilithium") || algo == "SPHINCS+") {
+      if(!params.empty() && params != "Randomized" && params != "Deterministic") {
+         throw Invalid_Argument(fmt("Unexpected parameters for signing with {}", algo));
       }
-   };
 
-   print_str("Hash", this->hash_function());
-   print_str("Padding", this->padding());
-   print_str("Prehash", this->prehash_fn());
-   print_str("Provider", this->provider());
+      if(params == "Deterministic") {
+         with_deterministic_signature();
+      }
+   } else if(algo == "SM2") {
+      /*
+      * SM2 parameters have the following possible formats:
+      * Ident [since 2.2.0]
+      * Ident,Hash [since 2.3.0]
+      */
+      if(params.empty()) {
+         with_hash("SM3");
+      } else {
+         const auto [userid, hash] = [&]() -> std::pair<std::string_view, std::string_view> {
+            if(const auto comma = params.find(','); comma != std::string::npos) {
+               return {params.substr(0, comma), params.substr(comma + 1)};
+            } else {
+               return {params, "SM3"};
+            }
+         }();
 
-   if(auto context = this->context()) {
-      out << "Context=" << hex_encode(*context) << " ";
-   }
+         with_context(userid);
+         with_hash(hash);
+      }
+   } else if(algo == "Ed25519") {
+      if(!params.empty() && params != "Identity" && params != "Pure") {
+         if(params == "Ed25519ph") {
+            with_prehash();
+         } else {
+            with_prehash(std::string(params));
+         }
+      }
+   } else if(algo == "Ed448") {
+      if(!params.empty() && params != "Identity" && params != "Pure" && params != "Ed448") {
+         if(params == "Ed448ph") {
+            with_prehash();
+         } else {
+            with_prehash(std::string(params));
+         }
+      }
+   } else if(algo == "RSA") {
+      SCAN_Name req(params);
 
-   if(auto salt = this->salt_size()) {
-      out << "SaltLen=" << *salt << " ";
-   }
-   if(this->using_der_encoded_signature()) {
-      out << "DerSignature ";
-   }
-   if(this->using_deterministic_signature()) {
-      out << "Deterministic ";
-   }
+      // handling various deprecated aliases that have accumulated over the years ...
+      auto padding = [](std::string_view alg) -> std::string_view {
+         if(alg == "EMSA_PKCS1" || alg == "EMSA-PKCS1-v1_5" || alg == "EMSA3") {
+            return "PKCS1v15";
+         }
 
-   return out.str();
+         if(alg == "PSSR_Raw") {
+            return "PSS_Raw";
+         }
+
+         if(alg == "PSSR" || alg == "EMSA-PSS" || alg == "PSS-MGF1" || alg == "EMSA4") {
+            return "PSS";
+         }
+
+         if(alg == "EMSA_X931" || alg == "EMSA2" || alg == "X9.31") {
+            return "X9.31";
+         }
+
+         return alg;
+      }(req.algo_name());
+
+      if(padding == "Raw") {
+         if(req.arg_count() == 0) {
+            with_padding(padding);
+         } else if(req.arg_count() == 1) {
+            with_padding(padding).with_prehash(req.arg(0));
+         } else {
+            throw Invalid_Argument("Raw padding with more than one parameter");
+         }
+      } else if(padding == "PKCS1v15") {
+         if(req.arg_count() == 2 && req.arg(0) == "Raw") {
+            with_padding(padding);
+            with_hash(req.arg(0));
+            with_prehash(req.arg(1));
+         } else if(req.arg_count() == 1) {
+            with_padding(padding);
+            with_hash(req.arg(0));
+         } else {
+            throw Lookup_Error("PKCS1v15 padding with unexpected parameters");
+         }
+      } else if(padding == "PSS_Raw" || padding == "PSS") {
+         if(req.arg_count_between(1, 3) && req.arg(1, "MGF1") == "MGF1") {
+            with_padding(padding);
+            with_hash(req.arg(0));
+
+            if(req.arg_count() == 3) {
+               with_salt_size(req.arg_as_integer(2));
+            }
+         } else {
+            throw Lookup_Error("PSS padding with unexpected parameters");
+         }
+      } else if(padding == "ISO_9796_DS2") {
+         if(req.arg_count_between(1, 3)) {
+            // FIXME
+            const bool implicit = req.arg(1, "exp") == "imp";
+
+            with_padding(padding);
+            with_hash(req.arg(0));
+
+            if(req.arg_count() == 3) {
+               if(implicit) {
+                  with_salt_size(req.arg_as_integer(2));
+               } else {
+                  with_salt_size(req.arg_as_integer(2));
+                  with_explicit_trailer_field();
+               }
+            } else if(!implicit) {
+               with_explicit_trailer_field();
+            }
+         } else {
+            throw Lookup_Error("ISO-9796-2 DS2 padding with unexpected parameters");
+         }
+      } else if(padding == "ISO_9796_DS3") {
+         //ISO-9796-2 DS 3 is deterministic and DS2 without a salt
+         with_padding(padding);
+         if(req.arg_count_between(1, 2)) {
+            with_hash(req.arg(0));
+            if(req.arg(1, "exp") != "imp") {
+               with_explicit_trailer_field();
+            }
+         } else {
+            throw Lookup_Error("ISO-9796-2 DS3 padding with unexpected parameters");
+         }
+      } else if(padding == "X9.31") {
+         if(req.arg_count() == 1) {
+            with_padding(padding);
+            with_hash(req.arg(0));
+         } else {
+            throw Lookup_Error("X9.31 padding with unexpected parameters");
+         }
+      }
+      // end of RSA block
+   } else {
+      if(!params.empty()) {
+         // ECDSA/DSA/ECKCDSA/etc
+         auto hash = [&]() {
+            if(params.starts_with("EMSA1")) {
+               SCAN_Name req(params);
+               return req.arg(0);
+            } else {
+               return std::string(params);
+            }
+         };
+
+         with_hash(hash());
+      }
+   }
+}
+
+void PK_Signature_Options::validate_for_hash_based_signature_algorithm(
+   std::string_view algo_name, std::optional<std::string_view> acceptable_hash) {
+   if(auto hash = take(m_hash_fn)) {
+      if(!acceptable_hash.has_value()) {
+         throw Invalid_Argument(fmt("This {} key does not support explicit hash function choice", algo_name));
+      }
+
+      if(hash != acceptable_hash.value()) {
+         throw Invalid_Argument(
+            fmt("This {} key can only be used with {}, not {}", algo_name, acceptable_hash.value(), hash.value()));
+      }
+   }
 }
 
 }  // namespace Botan

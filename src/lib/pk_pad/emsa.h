@@ -31,7 +31,7 @@ class BOTAN_TEST_API EMSA {
       * @param options the algorithm parameters
       * @return pointer to newly allocated object of that type, or throws
       */
-      static std::unique_ptr<EMSA> create_or_throw(const PK_Signature_Options& options);
+      static std::unique_ptr<EMSA> create_or_throw(PK_Signature_Options& options);
 
       /**
       * Add more data to the signature computation

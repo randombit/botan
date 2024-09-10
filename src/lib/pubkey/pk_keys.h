@@ -257,7 +257,7 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       * @param options which specify parameters of the signature beyond those
       * implicit to the public key itself
       */
-      virtual std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const;
+      virtual std::unique_ptr<PK_Ops::Verification> _create_verification_op(PK_Signature_Options& options) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -392,7 +392,7 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       * @param options allow controlling behavior
       */
       virtual std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
-                                                                      const PK_Signature_Options& options) const;
+                                                                      PK_Signature_Options& options) const;
 
       /**
       * This is an internal library function exposed on key types.

@@ -126,7 +126,7 @@ namespace {
 class DSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    public:
       DSA_Signature_Operation(const std::shared_ptr<const DL_PrivateKey>& key,
-                              const PK_Signature_Options& options,
+                              PK_Signature_Options& options,
                               RandomNumberGenerator& rng) :
             PK_Ops::Signature_with_Hash(options), m_key(key) {
          m_b = BigInt::random_integer(rng, 2, m_key->group().get_q());
@@ -204,7 +204,7 @@ std::vector<uint8_t> DSA_Signature_Operation::raw_sign(std::span<const uint8_t> 
 */
 class DSA_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
-      DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key, const PK_Signature_Options& options) :
+      DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key, PK_Signature_Options& options) :
             PK_Ops::Verification_with_Hash(options), m_key(key) {}
 
       DSA_Verification_Operation(const std::shared_ptr<const DL_PublicKey>& key, const AlgorithmIdentifier& alg_id) :
@@ -251,12 +251,9 @@ bool DSA_Verification_Operation::verify(std::span<const uint8_t> input, std::spa
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<DSA_Verification_Operation>(this->m_public_key, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
+   options.exclude_provider_for_algorithm(algo_name());
+   return std::make_unique<DSA_Verification_Operation>(this->m_public_key, options);
 }
 
 std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::create_x509_verification_op(
@@ -269,11 +266,9 @@ std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::create_x509_verification_op
 }
 
 std::unique_ptr<PK_Ops::Signature> DSA_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
-                                                                        const PK_Signature_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<DSA_Signature_Operation>(this->m_private_key, options, rng);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+                                                                        PK_Signature_Options& options) const {
+   options.exclude_provider_for_algorithm(algo_name());
+   return std::make_unique<DSA_Signature_Operation>(this->m_private_key, options, rng);
 }
 
 }  // namespace Botan

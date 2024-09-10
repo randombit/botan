@@ -373,12 +373,12 @@ class TPM_Signing_Operation final : public PK_Ops::Signature {
 }  // namespace
 
 std::unique_ptr<PK_Ops::Signature> TPM_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
-                                                                        const PK_Signature_Options& options) const {
+                                                                        PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-   if(!options.using_padding() || options.padding().value() != "PKCS1v15") {
+   if(auto padding = options.padding(); padding && padding.value() != "PKCS1v15") {
       throw Invalid_Argument("TPMv1 can only sign using PKCS1v15 padding");
    }
-   return std::make_unique<TPM_Signing_Operation>(*this, options.hash_function_name());
+   return std::make_unique<TPM_Signing_Operation>(*this, options.hash_function());
 }
 
 }  // namespace Botan
