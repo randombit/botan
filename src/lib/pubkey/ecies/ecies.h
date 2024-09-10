@@ -13,6 +13,7 @@
 #include <botan/ec_apoint.h>
 #include <botan/ec_group.h>
 #include <botan/mac.h>
+#include <botan/pk_keys.h>
 #include <botan/pubkey.h>
 #include <botan/secmem.h>
 #include <botan/symkey.h>

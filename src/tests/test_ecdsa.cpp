@@ -280,8 +280,8 @@ class ECDSA_AllGroups_Test : public Test {
                }
 
                try {
-                  Botan::PK_Signer signer(priv, rng(), Botan::PK_Signature_Options().with_hash(hash));
-                  Botan::PK_Verifier verifier(*pub, Botan::PK_Signature_Options().with_hash(hash));
+                  auto signer = priv.signer().with_rng(rng()).with_hash(hash).create();
+                  auto verifier = pub->signature_verifier().with_hash(hash).create();
 
                   for(size_t i = 0; i != 16; ++i) {
                      auto message = rng().random_vec(rng().next_byte());

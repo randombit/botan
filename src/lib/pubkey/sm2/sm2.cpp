@@ -117,14 +117,15 @@ const std::vector<uint8_t> sm2_default_userid = {
 */
 class SM2_Signature_Operation final : public PK_Ops::Signature {
    public:
-      SM2_Signature_Operation(const SM2_PrivateKey& sm2, const PK_Signature_Options& options) :
+      SM2_Signature_Operation(const SM2_PrivateKey& sm2, PK_Signature_Options& options) :
             m_group(sm2.domain()), m_x(sm2._private_key()), m_da_inv(sm2._get_da_inv()) {
-         if(options.hash_function_name() == "Raw") {
+         const auto hash = options.hash_function().required();
+         if(hash == "Raw") {
             // m_hash is null, m_za is empty
          } else {
-            auto context = options.context().value_or(sm2_default_userid);
+            auto context = options.context().or_default(sm2_default_userid);
 
-            m_hash = HashFunction::create_or_throw(options.hash_function_name());
+            m_hash = HashFunction::create_or_throw(hash);
             // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
             m_za = sm2_compute_za(*m_hash, context, m_group, sm2._public_ec_point());
             m_hash->update(m_za);
@@ -183,14 +184,15 @@ std::vector<uint8_t> SM2_Signature_Operation::sign(RandomNumberGenerator& rng) {
 */
 class SM2_Verification_Operation final : public PK_Ops::Verification {
    public:
-      SM2_Verification_Operation(const SM2_PublicKey& sm2, const PK_Signature_Options& options) :
+      SM2_Verification_Operation(const SM2_PublicKey& sm2, PK_Signature_Options& options) :
             m_group(sm2.domain()), m_gy_mul(sm2._public_ec_point()) {
-         if(options.hash_function_name() == "Raw") {
+         const auto hash = options.hash_function().required();
+         if(hash == "Raw") {
             // m_hash is null, m_za is empty
          } else {
-            auto context = options.context().value_or(sm2_default_userid);
+            auto context = options.context().or_default(sm2_default_userid);
 
-            m_hash = HashFunction::create_or_throw(options.hash_function_name());
+            m_hash = HashFunction::create_or_throw(hash);
             // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
             m_za = sm2_compute_za(*m_hash, context, m_group, sm2._public_ec_point());
             m_hash->update(m_za);
@@ -251,22 +253,16 @@ std::unique_ptr<Private_Key> SM2_PublicKey::generate_another(RandomNumberGenerat
    return std::make_unique<SM2_PrivateKey>(rng, domain());
 }
 
-std::unique_ptr<PK_Ops::Verification> SM2_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<SM2_Verification_Operation>(*this, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+std::unique_ptr<PK_Ops::Verification> SM2_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
+   options.exclude_provider();
+   return std::make_unique<SM2_Verification_Operation>(*this, options);
 }
 
 std::unique_ptr<PK_Ops::Signature> SM2_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
-                                                                        const PK_Signature_Options& options) const {
+                                                                        PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-
-   if(!options.using_provider()) {
-      return std::make_unique<SM2_Signature_Operation>(*this, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   options.exclude_provider();
+   return std::make_unique<SM2_Signature_Operation>(*this, options);
 }
 
 }  // namespace Botan

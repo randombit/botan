@@ -11,7 +11,9 @@
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/pem.h>
+#include <botan/pk_keys.h>
 #include <botan/pubkey.h>
+#include <botan/internal/emsa.h>
 #include <botan/internal/fmt.h>
 #include <algorithm>
 #include <sstream>

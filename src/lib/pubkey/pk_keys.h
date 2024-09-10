@@ -9,7 +9,9 @@
 #define BOTAN_PK_KEYS_H_
 
 #include <botan/asn1_obj.h>
+#include <botan/pk_enums.h>
 #include <botan/pk_ops_fwd.h>
+#include <botan/pk_options.h>
 #include <botan/secmem.h>
 
 #include <memory>
@@ -23,34 +25,6 @@ namespace Botan {
 class BigInt;
 class RandomNumberGenerator;
 class PK_Signature_Options;
-
-/**
-* Enumeration specifying the signature format.
-*
-* This is mostly used for requesting DER encoding of ECDSA signatures;
-* most other algorithms only support "standard".
-*/
-enum class Signature_Format {
-   Standard,
-   DerSequence,
-
-   IEEE_1363 BOTAN_DEPRECATED("Use Standard") = Standard,
-   DER_SEQUENCE BOTAN_DEPRECATED("Use DerSequence") = DerSequence,
-};
-
-/**
-* Enumeration of possible operations a public key could be used for.
-*
-* It is possible to query if a key supports a particular operation
-* type using Asymmetric_Key::supports_operation()
-*/
-enum class PublicKeyOperation {
-   Encryption,
-   Signature,
-   KeyEncapsulation,
-   KeyAgreement,
-};
-
 class Private_Key;
 
 /**
@@ -248,6 +222,24 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       }
 
       /**
+       * Initiate the creation of a signature verification operation.
+       * This is a builder-style interface which allows setting various
+       * options for the operation.
+       *
+       * Typical usage:
+       *
+       * auto verifier = pub_key.signature_verifier()
+       *                        .with_padding("PSS(SHA-256)")
+       *                        .with_der_encoded_signature()
+       *                        .create();
+       *
+       * @return a builder object for verification options
+       */
+      PK_Verification_Options_Builder signature_verifier() const {
+         return PK_Verification_Options_Builder().with_public_key(*this);
+      }
+
+      /**
       * This is an internal library function exposed on key types.
       * In almost all cases applications should use wrappers in pubkey.h
       *
@@ -284,7 +276,7 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       * @param options which specify parameters of the signature beyond those
       * implicit to the public key itself
       */
-      virtual std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const;
+      virtual std::unique_ptr<PK_Ops::Verification> _create_verification_op(PK_Signature_Options& options) const;
 
       /**
       * This is an internal library function exposed on key types.
@@ -374,6 +366,22 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       std::string fingerprint_private(std::string_view alg) const;
 
       /**
+       * Initiate the creation of a signature creation operation.
+       * This is a builder-style interface which allows setting various
+       * options for the operation.
+       *
+       * Typical usage:
+       *
+       * auto signer = pub_key.signer()
+       *                      .with_padding("PSS(SHA-256)")
+       *                      .with_der_encoded_signature()
+       *                      .create();
+       *
+       * @return a builder object for signing options
+       */
+      PK_Signature_Options_Builder signer() const { return PK_Signature_Options_Builder().with_private_key(*this); }
+
+      /**
       * This is an internal library function exposed on key types.
       * In all cases applications should use wrappers in pubkey.h
       *
@@ -419,7 +427,7 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
       * @param options allow controlling behavior
       */
       virtual std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
-                                                                      const PK_Signature_Options& options) const;
+                                                                      PK_Signature_Options& options) const;
 
       /**
       * This is an internal library function exposed on key types.

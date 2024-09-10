@@ -206,8 +206,8 @@ class RSA_Blinding_Tests final : public Test {
          */
 
          // don't try this at home
-         Botan::PK_Signer signer(rsa, this->rng(), Botan::PK_Signature_Options().with_hash("Raw"));
-         Botan::PK_Verifier verifier(rsa, Botan::PK_Signature_Options().with_hash("Raw"));
+         auto signer = rsa.signer().with_rng(this->rng()).with_hash("Raw").create();
+         auto verifier = rsa.signature_verifier().with_hash("Raw").create();
 
          for(size_t i = 1; i <= Botan::Blinder::ReinitInterval * 6; ++i) {
             std::vector<uint8_t> input(16);

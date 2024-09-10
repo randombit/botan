@@ -97,17 +97,12 @@ BOTAN_REGISTER_COMMAND("keygen", PK_Keygen);
 
 namespace {
 
-Botan::PK_Signature_Options sig_options(
-   std::string_view key, std::string_view padding, std::string_view hash, bool use_der, std::string_view provider) {
-   if(key == "RSA" && padding.empty()) {
-      return sig_options(key, "PSS", hash, use_der, provider);
+std::string_view normalize_padding(const std::string& algo, const std::string& requested_padding) {
+   if(algo == "RSA" && requested_padding.empty()) {
+      return "PSS";
+   } else {
+      return requested_padding;
    }
-
-   return Botan::PK_Signature_Options()
-      .with_hash(hash)
-      .with_padding(padding)
-      .with_der_encoded_signature(use_der)
-      .with_provider(provider);
 }
 
 }  // namespace
@@ -191,10 +186,17 @@ class PK_Sign final : public Command {
             throw CLI_Usage_Error("Key type " + key->algo_name() + " does not support DER formatting for signatures");
          }
 
-         const auto options =
-            sig_options(key->algo_name(), get_arg("padding"), hash_fn, flag_set("der-format"), get_arg("provider"));
+         auto signer_builder = key->signer()
+                                  .with_rng(rng())
+                                  .with_hash(hash_fn)
+                                  .with_der_encoded_signature(flag_set("der-format"))
+                                  .with_provider(get_arg("provider"));
 
-         Botan::PK_Signer signer(*key, rng(), options);
+         if(const auto padding = normalize_padding(key->algo_name(), get_arg("padding")); !padding.empty()) {
+            signer_builder.with_padding(padding);
+         }
+
+         auto signer = signer_builder.create();
 
          auto onData = [&signer](const uint8_t b[], size_t l) { signer.update(b, l); };
          Command::read_file(get_arg("file"), onData);
@@ -238,9 +240,15 @@ class PK_Verify final : public Command {
             throw CLI_Error_Unsupported("hashing", hash_fn);
          }
 
-         const auto options = sig_options(key->algo_name(), get_arg("padding"), hash_fn, flag_set("der-format"), "");
+         auto verifier_builder =
+            key->signature_verifier().with_hash(hash_fn).with_der_encoded_signature(flag_set("der-format"));
 
-         Botan::PK_Verifier verifier(*key, options);
+         if(const auto padding = normalize_padding(key->algo_name(), get_arg("padding")); !padding.empty()) {
+            verifier_builder.with_padding(padding);
+         }
+
+         auto verifier = verifier_builder.create();
+
          auto onData = [&verifier](const uint8_t b[], size_t l) { verifier.update(b, l); };
          Command::read_file(get_arg("file"), onData);
 
