@@ -10,7 +10,6 @@
 
 #include <botan/rng.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/internal/pk_options_impl.h>
 #include <botan/internal/sp_fors.h>
 #include <botan/internal/sp_hash.h>
 #include <botan/internal/sp_hypertree.h>
@@ -189,14 +188,10 @@ class SphincsPlus_Verification_Operation final : public PK_Ops::Verification {
 };
 
 std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
-   validate_for_hash_based_signature(options, "SPHINCS+", m_public->parameters().hash_name());
-
-   if(!options.using_provider()) {
-      return std::make_unique<SphincsPlus_Verification_Operation>(m_public);
-   }
-
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   PK_Signature_Options& options) const {
+   options.exclude_provider_for_algorithm(algo_name());
+   options.validate_for_hash_based_signature_algorithm(algo_name(), m_public->parameters().hash_name());
+   return std::make_unique<SphincsPlus_Verification_Operation>(m_public);
 }
 
 std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::create_x509_verification_op(
@@ -284,11 +279,11 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
    public:
       SphincsPlus_Signature_Operation(std::shared_ptr<SphincsPlus_PrivateKeyInternal> private_key,
                                       std::shared_ptr<SphincsPlus_PublicKeyInternal> public_key,
-                                      bool randomized) :
+                                      bool deterministic) :
             m_private(std::move(private_key)),
             m_public(std::move(public_key)),
             m_hashes(Botan::Sphincs_Hash_Functions::create(m_public->parameters(), m_public->seed())),
-            m_randomized(randomized) {}
+            m_deterministic(deterministic) {}
 
       void update(std::span<const uint8_t> msg) override {
          m_msg_buffer.insert(m_msg_buffer.end(), msg.begin(), msg.end());
@@ -302,7 +297,7 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
 
          // Compute and append the digest randomization value (R of spec).
          SphincsOptionalRandomness opt_rand(m_public->seed());
-         if(m_randomized) {
+         if(!m_deterministic) {
             opt_rand = rng.random_vec<SphincsOptionalRandomness>(p.n());
          }
          auto msg_random_s = sphincs_sig.next<SphincsMessageRandomness>(p.n());
@@ -350,20 +345,16 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
       std::shared_ptr<SphincsPlus_PublicKeyInternal> m_public;
       std::unique_ptr<Sphincs_Hash_Functions> m_hashes;
       std::vector<uint8_t> m_msg_buffer;
-      bool m_randomized;
+      bool m_deterministic;
 };
 
-std::unique_ptr<PK_Ops::Signature> SphincsPlus_PrivateKey::_create_signature_op(
-   RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
+std::unique_ptr<PK_Ops::Signature> SphincsPlus_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                                PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-
-   validate_for_hash_based_signature(options, "SPHINCS+", m_public->parameters().hash_name());
-
-   const bool randomized = !options.using_deterministic_signature();
-   if(!options.using_provider()) {
-      return std::make_unique<SphincsPlus_Signature_Operation>(m_private, m_public, randomized);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   options.exclude_provider_for_algorithm(algo_name());
+   options.validate_for_hash_based_signature_algorithm(algo_name(), m_public->parameters().hash_name());
+   return std::make_unique<SphincsPlus_Signature_Operation>(
+      m_private, m_public, options.using_deterministic_signature());
 }
 
 }  // namespace Botan

@@ -85,7 +85,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_RSA_PublicKey : public Object,
                                                                std::string_view params,
                                                                std::string_view provider) const override;
 
-      std::unique_ptr<PK_Ops::Verification> _create_verification_op(const PK_Signature_Options& options) const override;
+      std::unique_ptr<PK_Ops::Verification> _create_verification_op(PK_Signature_Options& options) const override;
 };
 
 /// Properties for importing a PKCS#11 RSA private key
@@ -191,7 +191,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_RSA_PrivateKey final : public Object,
                                                                std::string_view provider) const override;
 
       std::unique_ptr<PK_Ops::Signature> _create_signature_op(RandomNumberGenerator& rng,
-                                                              const PK_Signature_Options& options) const override;
+                                                              PK_Signature_Options& options) const override;
 
    private:
       bool m_use_software_padding = false;

@@ -13,7 +13,6 @@
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/pk_options_impl.h>
 
 namespace Botan {
 
@@ -248,18 +247,10 @@ PK_Signer::PK_Signer(const Private_Key& key,
                      std::string_view provider) :
       PK_Signer(key,
                 rng,
-                parse_legacy_sig_options(key, padding)
-                   .with_der_encoded_signature(format == Signature_Format::DerSequence)
-                   .with_provider(provider)) {}
+                PK_Signature_Options(key.algo_name(), padding, provider)
+                   .with_der_encoded_signature(format == Signature_Format::DerSequence)) {}
 
-PK_Signer::PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, const PK_Signature_Options& options) {
-   if(options.using_context() && !key.supports_context_data()) {
-      throw Invalid_Argument(fmt("Key type {} does not support context information", key.algo_name()));
-   }
-   if(options.using_der_encoded_signature() && key.message_parts() == 1) {
-      throw Invalid_Argument(fmt("Key type {} does not support DER encoded signatures", key.algo_name()));
-   }
-
+PK_Signer::PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, PK_Signature_Options& options) {
    m_op = key._create_signature_op(rng, options);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support signature generation", key.algo_name()));
@@ -341,11 +332,10 @@ PK_Verifier::PK_Verifier(const Public_Key& pub_key,
                          Signature_Format format,
                          std::string_view provider) :
       PK_Verifier(pub_key,
-                  parse_legacy_sig_options(pub_key, padding)
-                     .with_der_encoded_signature(format == Signature_Format::DerSequence)
-                     .with_provider(provider)) {}
+                  PK_Signature_Options(pub_key.algo_name(), padding, provider)
+                     .with_der_encoded_signature(format == Signature_Format::DerSequence)) {}
 
-PK_Verifier::PK_Verifier(const Public_Key& key, const PK_Signature_Options& options) {
+PK_Verifier::PK_Verifier(const Public_Key& key, PK_Signature_Options& options) {
    m_op = key._create_verification_op(options);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support signature verification", key.algo_name()));

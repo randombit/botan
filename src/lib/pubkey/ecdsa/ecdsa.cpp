@@ -120,7 +120,7 @@ namespace {
 class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
    public:
       ECDSA_Signature_Operation(const ECDSA_PrivateKey& ecdsa,
-                                const PK_Signature_Options& options,
+                                PK_Signature_Options& options,
                                 RandomNumberGenerator& rng) :
             PK_Ops::Signature_with_Hash(options),
             m_group(ecdsa.domain()),
@@ -196,7 +196,7 @@ std::vector<uint8_t> ECDSA_Signature_Operation::raw_sign(std::span<const uint8_t
 */
 class ECDSA_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
-      ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, const PK_Signature_Options& options) :
+      ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, PK_Signature_Options& options) :
             PK_Ops::Verification_with_Hash(options), m_group(ecdsa.domain()), m_gy_mul(ecdsa._public_key()) {}
 
       ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, const AlgorithmIdentifier& alg_id) :
@@ -230,12 +230,9 @@ bool ECDSA_Verification_Operation::verify(std::span<const uint8_t> msg, std::spa
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Verification> ECDSA_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<ECDSA_Verification_Operation>(*this, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+std::unique_ptr<PK_Ops::Verification> ECDSA_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
+   options.exclude_provider_for_algorithm(algo_name());
+   return std::make_unique<ECDSA_Verification_Operation>(*this, options);
 }
 
 std::unique_ptr<PK_Ops::Verification> ECDSA_PublicKey::create_x509_verification_op(
@@ -248,12 +245,9 @@ std::unique_ptr<PK_Ops::Verification> ECDSA_PublicKey::create_x509_verification_
 }
 
 std::unique_ptr<PK_Ops::Signature> ECDSA_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
-                                                                          const PK_Signature_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<ECDSA_Signature_Operation>(*this, options, rng);
-   }
-
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+                                                                          PK_Signature_Options& options) const {
+   options.exclude_provider_for_algorithm(algo_name());
+   return std::make_unique<ECDSA_Signature_Operation>(*this, options, rng);
 }
 
 }  // namespace Botan

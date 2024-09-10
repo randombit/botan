@@ -53,13 +53,17 @@ std::unique_ptr<Public_Key> PKCS11_ECDSA_PrivateKey::public_key() const {
 namespace {
 
 class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature {
-   public:
-      PKCS11_ECDSA_Signature_Operation(const PKCS11_ECDSA_PrivateKey& key, const PK_Signature_Options& options) :
+   private:
+      PKCS11_ECDSA_Signature_Operation(const PKCS11_ECDSA_PrivateKey& key, std::string_view hash) :
             PK_Ops::Signature(),
             m_key(key),
             m_order_bytes(key.domain().get_order_bytes()),
-            m_mechanism(MechanismWrapper::create_ecdsa_mechanism(options.hash_function_name())),
-            m_hash(options.hash_function_name()) {}
+            m_mechanism(MechanismWrapper::create_ecdsa_mechanism(hash)),
+            m_hash(hash) {}
+
+   public:
+      PKCS11_ECDSA_Signature_Operation(const PKCS11_ECDSA_PrivateKey& key, PK_Signature_Options& options) :
+            PKCS11_ECDSA_Signature_Operation(key, options.hash_function()) {}
 
       void update(std::span<const uint8_t> input) override {
          if(!m_initialized) {
@@ -115,12 +119,16 @@ AlgorithmIdentifier PKCS11_ECDSA_Signature_Operation::algorithm_identifier() con
 }
 
 class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification {
-   public:
-      PKCS11_ECDSA_Verification_Operation(const PKCS11_ECDSA_PublicKey& key, const PK_Signature_Options& options) :
+   private:
+      PKCS11_ECDSA_Verification_Operation(const PKCS11_ECDSA_PublicKey& key, std::string_view hash) :
             PK_Ops::Verification(),
             m_key(key),
-            m_mechanism(MechanismWrapper::create_ecdsa_mechanism(options.hash_function_name())),
-            m_hash(options.hash_function_name()) {}
+            m_mechanism(MechanismWrapper::create_ecdsa_mechanism(hash)),
+            m_hash(hash) {}
+
+   public:
+      PKCS11_ECDSA_Verification_Operation(const PKCS11_ECDSA_PublicKey& key, PK_Signature_Options& options) :
+            PKCS11_ECDSA_Verification_Operation(key, options.hash_function()) {}
 
       void update(std::span<const uint8_t> input) override {
          if(!m_initialized) {
@@ -176,12 +184,12 @@ class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification {
 }  // namespace
 
 std::unique_ptr<PK_Ops::Verification> PKCS11_ECDSA_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
+   PK_Signature_Options& options) const {
    return std::make_unique<PKCS11_ECDSA_Verification_Operation>(*this, options);
 }
 
-std::unique_ptr<PK_Ops::Signature> PKCS11_ECDSA_PrivateKey::_create_signature_op(
-   RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
+std::unique_ptr<PK_Ops::Signature> PKCS11_ECDSA_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                                 PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
    return std::make_unique<PKCS11_ECDSA_Signature_Operation>(*this, options);
 }

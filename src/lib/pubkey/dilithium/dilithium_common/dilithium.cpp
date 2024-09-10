@@ -182,41 +182,19 @@ class Dilithium_PrivateKeyInternal {
       DilithiumPolyVec m_s2;
 };
 
-namespace {
-
-// Return true if randomized signatures were requested
-void validate_dilithium_options(const PK_Signature_Options& options) {
-   BOTAN_ARG_CHECK(!options.using_hash(), "Dilithium does not allow specifying the hash function");
-   BOTAN_ARG_CHECK(!options.using_padding(), "Dilithium does not support padding");
-
-   if(options.using_salt_size()) {
-      BOTAN_ARG_CHECK(!options.using_deterministic_signature(),
-                      "Dilithium cannot support a salt while also being deterministic");
-      BOTAN_ARG_CHECK(options.salt_size().value() == 32, "Dilithium can only be used with a 32 byte salt");
-   }
-
-   // This is available in ML-DSA and might be supported in the future
-   BOTAN_ARG_CHECK(!options.using_prehash(), "Dilithium does not support prehashing");
-}
-
-}  // namespace
-
 // The signature and verification operations should be in an anonymous namespace
 // as well, but cannot due to an apparent bug in MSVC
 
 class Dilithium_Signature_Operation final : public PK_Ops::Signature {
    public:
-      Dilithium_Signature_Operation(std::shared_ptr<Dilithium_PrivateKeyInternal> sk,
-                                    const PK_Signature_Options& options) :
+      Dilithium_Signature_Operation(std::shared_ptr<Dilithium_PrivateKeyInternal> sk, PK_Signature_Options& options) :
             m_priv_key(std::move(sk)),
             m_randomized(!options.using_deterministic_signature()),
             m_h(m_priv_key->mode().symmetric_primitives().get_message_hash(m_priv_key->tr())),
             m_s1(ntt(m_priv_key->s1().clone())),
             m_s2(ntt(m_priv_key->s2().clone())),
             m_t0(ntt(m_priv_key->t0().clone())),
-            m_A(Dilithium_Algos::expand_A(m_priv_key->rho(), m_priv_key->mode())) {
-         validate_dilithium_options(options);
-      }
+            m_A(Dilithium_Algos::expand_A(m_priv_key->rho(), m_priv_key->mode())) {}
 
       void update(std::span<const uint8_t> input) override { m_h.update(input); }
 
@@ -431,11 +409,9 @@ std::unique_ptr<Private_Key> Dilithium_PublicKey::generate_another(RandomNumberG
 }
 
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::_create_verification_op(
-   const PK_Signature_Options& options) const {
-   if(!options.using_provider()) {
-      return std::make_unique<Dilithium_Verification_Operation>(m_public);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   PK_Signature_Options& options) const {
+   options.exclude_provider_for_algorithm(algo_name());
+   return std::make_unique<Dilithium_Verification_Operation>(m_public);
 }
 
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_x509_verification_op(
@@ -529,14 +505,11 @@ secure_vector<uint8_t> Dilithium_PrivateKey::private_key_bits() const {
    return std::move(m_private->raw_sk().get());
 }
 
-std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::_create_signature_op(
-   RandomNumberGenerator& rng, const PK_Signature_Options& options) const {
+std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                              PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-
-   if(!options.using_provider()) {
-      return std::make_unique<Dilithium_Signature_Operation>(m_private, options);
-   }
-   throw Provider_Not_Found(algo_name(), options.provider().value());
+   options.exclude_provider_for_algorithm(algo_name());
+   return std::make_unique<Dilithium_Signature_Operation>(m_private, options);
 }
 
 std::unique_ptr<Public_Key> Dilithium_PrivateKey::public_key() const {

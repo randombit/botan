@@ -44,7 +44,7 @@ class MechanismWrapper final {
       * @param options supported paddings are Raw (X.509), EMSA3 (PKCS#1 v1.5), EMSA4 (PKCS#1 PSS),
       * EMSA2 (ANSI X9.31) and ISO9796 (ISO/IEC 9796)
       */
-      static MechanismWrapper create_rsa_sign_mechanism(const PK_Signature_Options& options);
+      static MechanismWrapper create_rsa_sign_mechanism(PK_Signature_Options& options);
 
       /**
       * Creates the CK_MECHANISM data for ECDSA signature/verification

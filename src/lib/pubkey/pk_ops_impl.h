@@ -58,7 +58,9 @@ class Verification_with_Hash : public Verification {
       std::string hash_function() const final { return m_hash->name(); }
 
    protected:
-      explicit Verification_with_Hash(const PK_Signature_Options& options);
+      explicit Verification_with_Hash(PK_Signature_Options& options);
+
+      explicit Verification_with_Hash(PK_Signature_Options&& options) : Verification_with_Hash(options) {}
 
       explicit Verification_with_Hash(const AlgorithmIdentifier& alg_id,
                                       std::string_view pk_algo,
@@ -66,10 +68,8 @@ class Verification_with_Hash : public Verification {
 
       /*
       * Perform a signature check operation
-      * @param msg the message
-      * @param msg_len the length of msg in bytes
+      * @param input the message
       * @param sig the signature
-      * @param sig_len the length of sig in bytes
       * @returns if signature is a valid one for message
       */
       virtual bool verify(std::span<const uint8_t> input, std::span<const uint8_t> sig) = 0;
@@ -87,7 +87,9 @@ class Signature_with_Hash : public Signature {
       ~Signature_with_Hash() override = default;
 
    protected:
-      explicit Signature_with_Hash(const PK_Signature_Options& options);
+      explicit Signature_with_Hash(PK_Signature_Options& options);
+
+      explicit Signature_with_Hash(PK_Signature_Options&& options) : Signature_with_Hash(options) {}
 
       std::string hash_function() const final { return m_hash->name(); }
 

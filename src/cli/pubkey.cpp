@@ -187,10 +187,10 @@ class PK_Sign final : public Command {
             throw CLI_Error_Unsupported("hashing", hash_fn);
          }
 
-         const auto options =
-            sig_options(key->algo_name(), get_arg("padding"), hash_fn, flag_set("der-format"), get_arg("provider"));
-
-         Botan::PK_Signer signer(*key, rng(), options);
+         Botan::PK_Signer signer(
+            *key,
+            rng(),
+            sig_options(key->algo_name(), get_arg("padding"), hash_fn, flag_set("der-format"), get_arg("provider")));
 
          auto onData = [&signer](const uint8_t b[], size_t l) { signer.update(b, l); };
          Command::read_file(get_arg("file"), onData);
@@ -234,9 +234,8 @@ class PK_Verify final : public Command {
             throw CLI_Error_Unsupported("hashing", hash_fn);
          }
 
-         const auto options = sig_options(key->algo_name(), get_arg("padding"), hash_fn, flag_set("der-format"), "");
-
-         Botan::PK_Verifier verifier(*key, options);
+         Botan::PK_Verifier verifier(
+            *key, sig_options(key->algo_name(), get_arg("padding"), hash_fn, flag_set("der-format"), ""));
          auto onData = [&verifier](const uint8_t b[], size_t l) { verifier.update(b, l); };
          Command::read_file(get_arg("file"), onData);
 
