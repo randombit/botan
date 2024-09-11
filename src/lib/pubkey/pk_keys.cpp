@@ -141,14 +141,21 @@ std::unique_ptr<PK_Ops::Key_Agreement> Private_Key::create_key_agreement_op(Rand
 
 std::unique_ptr<PK_Ops::Verification> Public_Key::create_verification_op(std::string_view params,
                                                                          std::string_view provider) const {
-   auto opts = PK_Signature_Options_Builder(algo_name(), params, provider).commit();
+   auto opts = PK_Verification_Options_Builder(
+                  *this /* won't be consumed */, params, Signature_Format::Standard /* won't be consumed */, provider)
+                  .commit();
    return this->_create_verification_op(opts);
 }
 
 std::unique_ptr<PK_Ops::Signature> Private_Key::create_signature_op(RandomNumberGenerator& rng,
                                                                     std::string_view params,
                                                                     std::string_view provider) const {
-   auto opts = PK_Signature_Options_Builder(algo_name(), params, provider).commit();
+   auto opts = PK_Signature_Options_Builder(*this /* won't be consumed */,
+                                            rng /* won't be consumed */,
+                                            params,
+                                            Signature_Format::Standard /* won't be consumed */,
+                                            provider)
+                  .commit();
    return this->_create_signature_op(rng, opts);
 }
 

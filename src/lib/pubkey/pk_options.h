@@ -10,7 +10,7 @@
 
 #include <botan/mem_ops.h>
 #include <botan/options_builder.h>
-#include <botan/pk_keys.h>
+#include <botan/pubkey.h>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -18,11 +18,17 @@
 
 namespace Botan {
 
+class Public_Key;
+class Private_Key;
+
 namespace detail {
 
 struct PK_Signature_Options_Container final {
       // NOLINTBEGIN(misc-non-private-member-variables-in-classes)
 
+      Option<"public key", std::reference_wrapper<const Public_Key>> public_key;
+      Option<"private key", std::reference_wrapper<const Private_Key>> private_key;
+      Option<"random number generator", std::reference_wrapper<RandomNumberGenerator>> rng;
       Option<"hash", std::string> hash_fn;
       Option<"prehash", std::optional<std::string>> prehash;
       Option<"padding", std::string> padding;
@@ -36,7 +42,10 @@ struct PK_Signature_Options_Container final {
       // NOLINTEND(misc-non-private-member-variables-in-classes)
 
       auto all_options() const {
-         return std::tie(hash_fn,
+         return std::tie(public_key,
+                         private_key,
+                         rng,
+                         hash_fn,
                          prehash,
                          padding,
                          context,
@@ -55,6 +64,12 @@ class BOTAN_UNSTABLE_API PK_Signature_Options final : public Options<detail::PK_
       using Options::Options;
 
    public:
+      [[nodiscard]] auto public_key() { return take(options().public_key); }
+
+      [[nodiscard]] auto private_key() { return take(options().private_key); }
+
+      [[nodiscard]] auto rng() { return take(options().rng); }
+
       [[nodiscard]] auto hash_function() { return take(options().hash_fn); }
 
       [[nodiscard]] auto prehash() { return take(options().prehash); }
@@ -95,48 +110,52 @@ class BOTAN_UNSTABLE_API PK_Signature_Options final : public Options<detail::PK_
 /**
 * Signature generation/verification options
 *
-* The normal usage of this is in a builder style, eg
+* The normal usage of this is in a builder style, eg.
 *
-* auto opts = PK_Signature_Options_Builder()
-*                .with_hash("SHA-256")
-*                .with_der_encoded_signature()
-*                .with_context("Foo")
-*                .commit();
+* auto signer = private_key.signer()
+*                          .with_hash("SHA-256")
+*                          .with_der_encoded_signature()
+*                          .with_context("Foo")
+*                          .create();
+*
+* This is a base class for the common options of 'signing' and 'verification'.
+* We use CRTP to track the derived class type, so that the with_xxx functions
+* can be chained and return the correct derived type.
+*
+* To properly handle method chaining even when the builder was transformed into
+* an lvalue, we have to provide two overloads for each with_xxx function. The
+* first overload is for lvalues and the second overload is for rvalues.
+* Typically, the rvalue overload is implemented in terms of the lvalue overload.
+*
+* TODO: C++23: deducing-this will likely remove the need for CRTP and the
+*              lvalue/rvalue overloads. It allows the base class to know the
+*              derived type on which its methods were called. Along with the
+*              type, each method can also know whether it was called on an
+*              lvalue or rvalue and handle the return type accordingly.
 */
-class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options_Builder : public OptionsBuilder<PK_Signature_Options> {
+template <typename DerivedT>
+class PK_Signature_Options_Builder_Base : public OptionsBuilder<PK_Signature_Options> {
+   private:
+      using Self = DerivedT;
+
+      DerivedT& self() { return static_cast<DerivedT&>(*this); }
+
+   protected:
+      PK_Signature_Options_Builder_Base() = default;
+
    public:
-      /// Create a PK_Signature_Options_Builder  with no options set
-      ///
-      /// This can be further parameterized by calling with_xxx functions
-      PK_Signature_Options_Builder() = default;
-
-      /// Create a PK_Signature_Options_Builder  specifying the hash to use
-      ///
-      /// Most but not all signature schemes require specifying the hash
-      ///
-      /// This can be further parameterized by calling with_xxx functions
-      PK_Signature_Options_Builder(std::string_view hash_fn) { with_hash(hash_fn); }
-
-      /// Parse the legacy set of parameters that used to be passed to
-      /// PK_Signer/PK_Verifier. This should not be used by new code.
-      ///
-      /// @param algo the public key algorithm name
-      /// @param params the legacy parameters string
-      /// @param provider the provider to use
-      PK_Signature_Options_Builder(std::string_view algo, std::string_view params, std::string_view provider);
-
       /// Specify the hash function to use for signing/verification
       ///
       /// Most, but not all, schemes require specifying a hash function.
-      PK_Signature_Options_Builder& with_hash(std::string_view hash) & {
+      Self& with_hash(std::string_view hash) & {
          set_or_throw(options().hash_fn, std::string(hash));
-         return *this;
+         return self();
       }
 
       /// Specify the hash function to use for signing/verification
       ///
       /// Most, but not all, schemes require specifying a hash function.
-      PK_Signature_Options_Builder with_hash(std::string_view hash) && { return std::move(with_hash(hash)); }
+      Self with_hash(std::string_view hash) && { return std::move(with_hash(hash)); }
 
       /// Specify a padding scheme
       ///
@@ -144,9 +163,9 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options_Builder : public OptionsBuilde
       ///
       /// If the scheme does not support a padding option, it will throw an
       /// exception when presented with such an option.
-      PK_Signature_Options_Builder& with_padding(std::string_view padding) & {
+      Self& with_padding(std::string_view padding) & {
          set_or_throw(options().padding, std::string(padding));
-         return *this;
+         return self();
       }
 
       /// Specify a padding scheme
@@ -155,9 +174,7 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options_Builder : public OptionsBuilde
       ///
       /// If the scheme does not support a padding option, it will throw an
       /// exception when presented with such an option.
-      PK_Signature_Options_Builder with_padding(std::string_view padding) && {
-         return std::move(with_padding(padding));
-      }
+      Self with_padding(std::string_view padding) && { return std::move(with_padding(padding)); }
 
       /// Specify the signature is prehashed
       ///
@@ -172,9 +189,9 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options_Builder : public OptionsBuilde
       ///
       /// If the scheme does not support prehashing, it will throw an
       /// exception when presented with such an option.
-      PK_Signature_Options_Builder& with_prehash(std::optional<std::string> prehash = std::nullopt) & {
+      Self& with_prehash(std::optional<std::string> prehash = std::nullopt) & {
          set_or_throw(options().prehash, std::move(prehash));
-         return *this;
+         return self();
       }
 
       /// Specify the signature is prehashed
@@ -190,7 +207,7 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options_Builder : public OptionsBuilde
       ///
       /// If the scheme does not support prehashing, it will throw an
       /// exception when presented with such an option.
-      PK_Signature_Options_Builder with_prehash(std::optional<std::string> prehash = std::nullopt) && {
+      Self with_prehash(std::optional<std::string> prehash = std::nullopt) && {
          return std::move(with_prehash(std::move(prehash)));
       }
 
@@ -203,9 +220,9 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options_Builder : public OptionsBuilde
       ///
       /// If the scheme does not support contextual identifiers, then an exception
       /// will be thrown.
-      PK_Signature_Options_Builder& with_context(std::span<const uint8_t> context) & {
+      Self& with_context(std::span<const uint8_t> context) & {
          set_or_throw(options().context, std::vector<uint8_t>(context.begin(), context.end()));
-         return *this;
+         return self();
       }
 
       /// Specify a context
@@ -217,9 +234,7 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options_Builder : public OptionsBuilde
       ///
       /// If the scheme does not support contextual identifiers, then an exception
       /// will be thrown.
-      PK_Signature_Options_Builder with_context(std::span<const uint8_t> context) && {
-         return std::move(with_context(context));
-      }
+      Self with_context(std::span<const uint8_t> context) && { return std::move(with_context(context)); }
 
       /// Specify a context
       ///
@@ -230,9 +245,9 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options_Builder : public OptionsBuilde
       ///
       /// If the scheme does not support contextual identifiers, then an exception
       /// will be thrown.
-      PK_Signature_Options_Builder& with_context(std::string_view context) & {
+      Self& with_context(std::string_view context) & {
          with_context(std::span{cast_char_ptr_to_uint8(context.data()), context.size()});
-         return *this;
+         return self();
       }
 
       /// Specify a context
@@ -244,24 +259,136 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options_Builder : public OptionsBuilde
       ///
       /// If the scheme does not support contextual identifiers, then an exception
       /// will be thrown.
-      PK_Signature_Options_Builder with_context(std::string_view context) && {
-         return std::move(with_context(context));
+      Self with_context(std::string_view context) && { return std::move(with_context(context)); }
+
+      /// Specify the size of salt to be used
+      ///
+      /// A small number of padding schemes (most importantly RSA-PSS) use a randomized
+      /// salt. This allows controlling the size of the salt that is used.
+      Self& with_salt_size(size_t salt_size) & {
+         set_or_throw(options().salt_size, salt_size);
+         return self();
       }
 
       /// Specify the size of salt to be used
       ///
       /// A small number of padding schemes (most importantly RSA-PSS) use a randomized
       /// salt. This allows controlling the size of the salt that is used.
-      PK_Signature_Options_Builder& with_salt_size(size_t salt_size) & {
-         set_or_throw(options().salt_size, salt_size);
+      Self with_salt_size(size_t salt_size) && { return std::move(with_salt_size(salt_size)); }
+
+      /// Specify producing or expecting a DER encoded signature
+      ///
+      /// This is mostly used with ECDSA
+      ///
+      /// For schemes that do not support such formatting (such as RSA
+      /// or post-quantum schemes), an exception will be thrown when the
+      /// PK_Signer or PK_Verifier is created.
+      Self& with_der_encoded_signature(bool der = true) & {
+         set_or_throw(options().use_der, der);
+         return self();
+      }
+
+      /// Specify producing or expecting a DER encoded signature
+      ///
+      /// This is mostly used with ECDSA
+      ///
+      /// For schemes that do not support such formatting (such as RSA
+      /// or post-quantum schemes), an exception will be thrown when the
+      /// PK_Signer or PK_Verifier is created.
+      Self with_der_encoded_signature(bool der = true) && { return std::move(with_der_encoded_signature(der)); }
+
+      /// Specify producing or expecting an explicit trailer field
+      ///
+      /// Certain RSA padding schemes, such as PSS and ISO-9796, support two
+      /// different trailer fields. One is an "implicit" trailer, which does not
+      /// directly identify the hash. The other is an "explicit" trailer, which
+      /// does.
+      ///
+      /// Note that currently this option is only supported by ISO-9796. While
+      /// some standards allow PSS to use a trailer field, others (such as RFC
+      /// 4055) prohibit using explicit trailers for PSS, and it is not
+      /// currently supported.
+      ///
+      Self& with_explicit_trailer_field(bool value = true) & {
+         set_or_throw(options().explicit_trailer_field, value);
+         return self();
+      }
+
+      /// Specify producing or expecting an explicit trailer field
+      ///
+      /// Certain RSA padding schemes, such as PSS and ISO-9796, support two
+      /// different trailer fields. One is an "implicit" trailer, which does not
+      /// directly identify the hash. The other is an "explicit" trailer, which
+      /// does.
+      ///
+      /// Note that currently this option is only supported by ISO-9796. While
+      /// some standards allow PSS to use a trailer field, others (such as RFC
+      /// 4055) prohibit using explicit trailers for PSS, and it is not
+      /// currently supported.
+      ///
+      Self with_explicit_trailer_field(bool value = true) && { return std::move(with_explicit_trailer_field(value)); }
+
+      /// Specify a provider that should be used
+      ///
+      /// This is rarely relevant
+      Self& with_provider(std::string_view provider) & {
+         set_or_throw(options().provider, std::string(provider));
+         return self();
+      }
+
+      /// Specify a provider that should be used
+      ///
+      /// This is rarely relevant
+      Self with_provider(std::string_view provider) && { return std::move(with_provider(provider)); }
+};
+
+class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options_Builder final
+      : public PK_Signature_Options_Builder_Base<PK_Signature_Options_Builder> {
+   public:
+      using Self = PK_Signature_Options_Builder;
+
+   public:
+      /// Create a PK_Signature_Options_Builder with no options set
+      ///
+      /// This can be further parameterized by calling with_xxx functions
+      PK_Signature_Options_Builder() = default;
+
+      /// Parse the legacy set of parameters that used to be passed to
+      /// PK_Signer. This should not be used by new code.
+      ///
+      /// @param key the private key to use
+      /// @param rng the rng to use
+      /// @param params the legacy parameters string
+      /// @param format the encoding format to use
+      /// @param provider the provider to use
+      PK_Signature_Options_Builder(const Private_Key& key,
+                                   RandomNumberGenerator& rng,
+                                   std::string_view params,
+                                   Signature_Format format,
+                                   std::string_view provider);
+
+      /// Specify the private key to use for verification
+      Self& with_private_key(const Private_Key& key) &;
+
+      /// Specify the private key to use for verification
+      Self with_private_key(const Private_Key& key) && { return std::move(with_private_key(key)); }
+
+      /// Specify the random number generator to use
+      ///
+      /// If the signature scheme requires randomness, this RNG will be used.
+      /// Some schemes have a deterministic and a randomized mode, an RNG does
+      /// not need to be provided in the deterministic case.
+      Self& with_rng(RandomNumberGenerator& rng) & {
+         set_or_throw(options().rng, rng);
          return *this;
       }
 
-      /// Specify the size of salt to be used
+      /// Specify the random number generator to use
       ///
-      /// A small number of padding schemes (most importantly RSA-PSS) use a randomized
-      /// salt. This allows controlling the size of the salt that is used.
-      PK_Signature_Options_Builder with_salt_size(size_t salt_size) && { return std::move(with_salt_size(salt_size)); }
+      /// If the signature scheme requires randomness, this RNG will be used.
+      /// Some schemes have a deterministic and a randomized mode, an RNG does
+      /// not need to be provided in the deterministic case.
+      Self with_rng(RandomNumberGenerator& rng) && { return std::move(with_rng(rng)); }
 
       /// Request producing a deterministic signature
       ///
@@ -271,7 +398,7 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options_Builder : public OptionsBuilde
       /// always randomized, this option has no effect.
       ///
       /// This option is ignored for verification
-      PK_Signature_Options_Builder& with_deterministic_signature(bool value = true) & {
+      Self& with_deterministic_signature(bool value = true) & {
          set_or_throw(options().deterministic_sig, value);
          return *this;
       }
@@ -284,80 +411,43 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options_Builder : public OptionsBuilde
       /// always randomized, this option has no effect.
       ///
       /// This option is ignored for verification
-      PK_Signature_Options_Builder with_deterministic_signature(bool value = true) && {
-         return std::move(with_deterministic_signature(value));
-      }
+      Self with_deterministic_signature(bool value = true) && { return std::move(with_deterministic_signature(value)); }
 
-      /// Specify producing or expecting a DER encoded signature
-      ///
-      /// This is mostly used with ECDSA
-      ///
-      /// For schemes that do not support such formatting (such as RSA
-      /// or post-quantum schemes), an exception will be thrown when the
-      /// PK_Signer or PK_Verifier is created.
-      PK_Signature_Options_Builder& with_der_encoded_signature(bool der = true) & {
-         set_or_throw(options().use_der, der);
-         return *this;
-      }
+      /// Commit the options and create a PK_Signer object
+      PK_Signer create() { return PK_Signer(commit()); }
+};
 
-      /// Specify producing or expecting a DER encoded signature
-      ///
-      /// This is mostly used with ECDSA
-      ///
-      /// For schemes that do not support such formatting (such as RSA
-      /// or post-quantum schemes), an exception will be thrown when the
-      /// PK_Signer or PK_Verifier is created.
-      PK_Signature_Options_Builder with_der_encoded_signature(bool der = true) && {
-         return std::move(with_der_encoded_signature(der));
-      }
+class BOTAN_PUBLIC_API(3, 6) PK_Verification_Options_Builder final
+      : public PK_Signature_Options_Builder_Base<PK_Verification_Options_Builder> {
+   public:
+      using Self = PK_Verification_Options_Builder;
 
-      /// Specify producing or expecting an explicit trailer field
+   public:
+      /// Create a PK_Verification_Options_Builder with no options set
       ///
-      /// Certain RSA padding schemes, such as PSS and ISO-9796, support two
-      /// different trailer fields. One is an "implicit" trailer, which does not
-      /// directly identify the hash. The other is an "explicit" trailer, which
-      /// does.
-      ///
-      /// Note that currently this option is only supported by ISO-9796. While
-      /// some standards allow PSS to use a trailer field, others (such as RFC
-      /// 4055) prohibit using explicit trailers for PSS, and it is not
-      /// currently supported.
-      ///
-      PK_Signature_Options_Builder& with_explicit_trailer_field(bool value = true) & {
-         set_or_throw(options().explicit_trailer_field, value);
-         return *this;
-      }
+      /// This can be further parameterized by calling with_xxx functions
+      PK_Verification_Options_Builder() = default;
 
-      /// Specify producing or expecting an explicit trailer field
+      /// Parse the legacy set of parameters that used to be passed to
+      /// PK_Verifier. This should not be used by new code.
       ///
-      /// Certain RSA padding schemes, such as PSS and ISO-9796, support two
-      /// different trailer fields. One is an "implicit" trailer, which does not
-      /// directly identify the hash. The other is an "explicit" trailer, which
-      /// does.
-      ///
-      /// Note that currently this option is only supported by ISO-9796. While
-      /// some standards allow PSS to use a trailer field, others (such as RFC
-      /// 4055) prohibit using explicit trailers for PSS, and it is not
-      /// currently supported.
-      ///
-      PK_Signature_Options_Builder with_explicit_trailer_field(bool value = true) && {
-         return std::move(with_explicit_trailer_field(value));
-      }
+      /// @param key the private key to use
+      /// @param params the legacy parameters string
+      /// @param format the encoding format to use
+      /// @param provider the provider to use
+      PK_Verification_Options_Builder(const Public_Key& key,
+                                      std::string_view params,
+                                      Signature_Format format,
+                                      std::string_view provider);
 
-      /// Specify a provider that should be used
-      ///
-      /// This is rarely relevant
-      PK_Signature_Options_Builder& with_provider(std::string_view provider) & {
-         set_or_throw(options().provider, std::string(provider));
-         return *this;
-      }
+      /// Specify the public key to use for verification
+      Self& with_public_key(const Public_Key& key) &;
 
-      /// Specify a provider that should be used
-      ///
-      /// This is rarely relevant
-      PK_Signature_Options_Builder with_provider(std::string_view provider) && {
-         return std::move(with_provider(provider));
-      }
+      /// Specify the public key to use for verification
+      Self with_public_key(const Public_Key& key) && { return std::move(with_public_key(key)); }
+
+      /// Commit the options and create a PK_Verifier object
+      PK_Verifier create() { return PK_Verifier(commit()); }
 };
 
 }  // namespace Botan
