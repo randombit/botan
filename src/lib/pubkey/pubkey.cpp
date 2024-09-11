@@ -240,16 +240,35 @@ void check_der_format_supported(Signature_Format format, size_t parts) {
 
 }  // namespace
 
+PK_Signer::PK_Signer(PK_Signature_Options options) {
+   // Appease GCC warning about a possibly dangling reference because when using
+   // std::reference_wrapper's implicit conversion to the contained reference
+   // the wrapper does not outlive the reference which seems to confuse GCC.
+   const auto key_wrapped = options.private_key().required();
+   const Private_Key& key = key_wrapped.get();
+
+   // TODO: The downstream algorithms should decide whether to require an RNG
+   //       (e.g. explicitly 'deterministic' signatures should not require it).
+   RandomNumberGenerator& rng = options.rng().required();
+
+   m_op = key._create_signature_op(rng, options);
+   if(!m_op) {
+      throw Invalid_Argument(fmt("Key type {} does not support signature generation", key.algo_name()));
+   }
+   m_sig_format = options.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
+   m_parts = key.message_parts();
+   m_part_size = key.message_part_size();
+   check_der_format_supported(m_sig_format, m_parts);
+
+   options.validate_option_consumption();
+}
+
 PK_Signer::PK_Signer(const Private_Key& key,
                      RandomNumberGenerator& rng,
                      std::string_view padding,
                      Signature_Format format,
                      std::string_view provider) :
-      PK_Signer(key,
-                rng,
-                PK_Signature_Options_Builder(key.algo_name(), padding, provider)
-                   .with_der_encoded_signature(format == Signature_Format::DerSequence)
-                   .commit()) {}
+      PK_Signer(PK_Signature_Options_Builder(key, rng, padding, format, provider).commit()) {}
 
 PK_Signer::PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, PK_Signature_Options& options) {
    m_op = key._create_signature_op(rng, options);
@@ -328,14 +347,29 @@ std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng) {
    }
 }
 
+PK_Verifier::PK_Verifier(PK_Signature_Options options) {
+   // Appease GCC warning about a possibly dangling reference because when using
+   // std::reference_wrapper's implicit conversion to the contained reference
+   // the wrapper does not outlive the reference which seems to confuse GCC.
+   const auto key_wrapped = options.public_key().required();
+   const Public_Key& key = key_wrapped.get();
+   m_op = key._create_verification_op(options);
+   if(!m_op) {
+      throw Invalid_Argument(fmt("Key type {} does not support signature verification", key.algo_name()));
+   }
+   m_sig_format = options.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
+   m_parts = key.message_parts();
+   m_part_size = key.message_part_size();
+   check_der_format_supported(m_sig_format, m_parts);
+
+   options.validate_option_consumption();
+}
+
 PK_Verifier::PK_Verifier(const Public_Key& pub_key,
                          std::string_view padding,
                          Signature_Format format,
                          std::string_view provider) :
-      PK_Verifier(pub_key,
-                  PK_Signature_Options_Builder(pub_key.algo_name(), padding, provider)
-                     .with_der_encoded_signature(format == Signature_Format::DerSequence)
-                     .commit()) {}
+      PK_Verifier(PK_Verification_Options_Builder(pub_key, padding, format, provider).commit()) {}
 
 PK_Verifier::PK_Verifier(const Public_Key& key, PK_Signature_Options& options) {
    m_op = key._create_verification_op(options);

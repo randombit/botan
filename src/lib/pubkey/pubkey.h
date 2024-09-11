@@ -162,6 +162,16 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
       /**
       * Construct a PK signer
       *
+      * @param options controls the behavior of the signature generation, eg which hash function to use
+      *
+      * Note that most common algorithms (eg RSA or ECDSA) require an options
+      * parameter to specify at least which hash function to use.
+      */
+      explicit PK_Signer(PK_Signature_Options options);
+
+      /**
+      * Construct a PK signer
+      *
       * @param key the key to use to generate signatures
       * @param rng the random generator to use
       * @param options controls the behavior of the signature generation, eg which hash function to use
@@ -301,6 +311,12 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
 */
 class BOTAN_PUBLIC_API(2, 0) PK_Verifier final {
    public:
+      /**
+      * Construct a PK Verifier.
+      * @param options relating to the signature
+      */
+      explicit PK_Verifier(PK_Signature_Options options);
+
       /**
       * Construct a PK Verifier.
       * @param pub_key the public key to verify against

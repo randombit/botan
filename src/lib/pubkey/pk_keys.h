@@ -195,6 +195,24 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       }
 
       /**
+       * Initiate the creation of a signature verification operation.
+       * This is a builder-style interface which allows setting various
+       * options for the operation.
+       *
+       * Typical usage:
+       *
+       * auto verifier = pub_key.signature_verifier()
+       *                        .with_padding("PSS(SHA-256)")
+       *                        .with_der_encoded_signature()
+       *                        .create();
+       *
+       * @return a builder object for verification options
+       */
+      PK_Verification_Options_Builder signature_verifier() const {
+         return PK_Verification_Options_Builder().with_public_key(*this);
+      }
+
+      /**
       * This is an internal library function exposed on key types.
       * In almost all cases applications should use wrappers in pubkey.h
       *
@@ -319,6 +337,22 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
        * @return Hash of the PKCS #8 encoding for this key object
        */
       std::string fingerprint_private(std::string_view alg) const;
+
+      /**
+       * Initiate the creation of a signature creation operation.
+       * This is a builder-style interface which allows setting various
+       * options for the operation.
+       *
+       * Typical usage:
+       *
+       * auto signer = pub_key.signer()
+       *                      .with_padding("PSS(SHA-256)")
+       *                      .with_der_encoded_signature()
+       *                      .create();
+       *
+       * @return a builder object for signing options
+       */
+      PK_Signature_Options_Builder signer() const { return PK_Signature_Options_Builder().with_private_key(*this); }
 
       /**
       * This is an internal library function exposed on key types.

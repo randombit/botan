@@ -242,20 +242,6 @@ class Options {
          return oss.str();
       }
 
-   protected:
-      Container& options() { return m_options; }
-
-      template <detail::BuilderOption OptionT>
-      [[nodiscard]] auto take(OptionT& o) noexcept {
-         return detail::OptionValue(std::exchange(o.value, {}), OptionT::name, m_product_name);
-      }
-
-      template <typename FnT>
-      void foreach_option(FnT&& fn) const {
-         std::apply([&]<detail::BuilderOption... OptionTs>(const OptionTs&... options) { (fn(options), ...); },
-                    m_options.all_options());
-      }
-
       void validate_option_consumption() {
          std::vector<std::string_view> disdained_options;
          foreach_option([&]<detail::BuilderOption OptionT>(const OptionT& option) {
@@ -275,6 +261,20 @@ class Options {
          if(!disdained_options.empty()) {
             throw Invalid_Argument("'" + m_product_name + "' failed to use some options: " + join(disdained_options));
          }
+      }
+
+   protected:
+      Container& options() { return m_options; }
+
+      template <detail::BuilderOption OptionT>
+      [[nodiscard]] auto take(OptionT& o) noexcept {
+         return detail::OptionValue(std::exchange(o.value, {}), OptionT::name, m_product_name);
+      }
+
+      template <typename FnT>
+      void foreach_option(FnT&& fn) const {
+         std::apply([&]<detail::BuilderOption... OptionTs>(const OptionTs&... options) { (fn(options), ...); },
+                    m_options.all_options());
       }
 
    private:
