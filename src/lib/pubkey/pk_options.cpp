@@ -13,9 +13,14 @@
 
 namespace Botan {
 
-PK_Signature_Options_Builder::PK_Signature_Options_Builder(std::string_view algo,
-                                                           std::string_view params,
-                                                           std::string_view provider) {
+namespace {
+
+template <typename SigOptsBaseT>
+void retrofit_legacy_parameters(SigOptsBaseT& builder,
+                                const Public_Key& key,
+                                std::string_view params,
+                                Signature_Format format,
+                                std::string_view provider) {
    /*
    * This is a convoluted mess because we must handle dispatch for every algorithm
    * specific detail of how padding strings were formatted in versions prior to 3.6.
@@ -24,8 +29,14 @@ PK_Signature_Options_Builder::PK_Signature_Options_Builder(std::string_view algo
    * are removed in Botan4.
    */
 
+   const auto algo = key.algo_name();
+
+   if(key.message_parts() != 1) {
+      builder.with_der_encoded_signature(format == Signature_Format::DerSequence);
+   }
+
    if(!provider.empty() && provider != "base") {
-      with_provider(provider);
+      builder.with_provider(provider);
    }
 
    if(algo.starts_with("Dilithium") || algo == "SPHINCS+") {
@@ -33,8 +44,10 @@ PK_Signature_Options_Builder::PK_Signature_Options_Builder(std::string_view algo
          throw Invalid_Argument(fmt("Unexpected parameters for signing with {}", algo));
       }
 
-      if(params == "Deterministic") {
-         with_deterministic_signature();
+      if constexpr(std::is_same_v<SigOptsBaseT, PK_Signature_Options_Builder>) {
+         if(params == "Deterministic") {
+            builder.with_deterministic_signature();
+         }
       }
    } else if(algo == "SM2") {
       /*
@@ -43,7 +56,7 @@ PK_Signature_Options_Builder::PK_Signature_Options_Builder(std::string_view algo
       * Ident,Hash [since 2.3.0]
       */
       if(params.empty()) {
-         with_hash("SM3");
+         builder.with_hash("SM3");
       } else {
          const auto [userid, hash] = [&]() -> std::pair<std::string_view, std::string_view> {
             if(const auto comma = params.find(','); comma != std::string::npos) {
@@ -53,23 +66,25 @@ PK_Signature_Options_Builder::PK_Signature_Options_Builder(std::string_view algo
             }
          }();
 
-         with_context(userid);
-         with_hash(hash);
+         builder.with_hash(hash);
+         if(hash != "Raw") {
+            builder.with_context(userid);
+         }
       }
    } else if(algo == "Ed25519") {
       if(!params.empty() && params != "Identity" && params != "Pure") {
          if(params == "Ed25519ph") {
-            with_prehash();
+            builder.with_prehash();
          } else {
-            with_prehash(std::string(params));
+            builder.with_prehash(std::string(params));
          }
       }
    } else if(algo == "Ed448") {
       if(!params.empty() && params != "Identity" && params != "Pure" && params != "Ed448") {
          if(params == "Ed448ph") {
-            with_prehash();
+            builder.with_prehash();
          } else {
-            with_prehash(std::string(params));
+            builder.with_prehash(std::string(params));
          }
       }
    } else if(algo == "RSA") {
@@ -98,30 +113,26 @@ PK_Signature_Options_Builder::PK_Signature_Options_Builder(std::string_view algo
 
       if(padding == "Raw") {
          if(req.arg_count() == 0) {
-            with_padding(padding);
+            builder.with_padding(padding);
          } else if(req.arg_count() == 1) {
-            with_padding(padding).with_prehash(req.arg(0));
+            builder.with_padding(padding).with_prehash(req.arg(0));
          } else {
             throw Invalid_Argument("Raw padding with more than one parameter");
          }
       } else if(padding == "PKCS1v15") {
          if(req.arg_count() == 2 && req.arg(0) == "Raw") {
-            with_padding(padding);
-            with_hash(req.arg(0));
-            with_prehash(req.arg(1));
+            builder.with_padding(padding).with_hash(req.arg(0)).with_prehash(req.arg(1));
          } else if(req.arg_count() == 1) {
-            with_padding(padding);
-            with_hash(req.arg(0));
+            builder.with_padding(padding).with_hash(req.arg(0));
          } else {
             throw Lookup_Error("PKCS1v15 padding with unexpected parameters");
          }
       } else if(padding == "PSS_Raw" || padding == "PSS") {
          if(req.arg_count_between(1, 3) && req.arg(1, "MGF1") == "MGF1") {
-            with_padding(padding);
-            with_hash(req.arg(0));
+            builder.with_padding(padding).with_hash(req.arg(0));
 
             if(req.arg_count() == 3) {
-               with_salt_size(req.arg_as_integer(2));
+               builder.with_salt_size(req.arg_as_integer(2));
             }
          } else {
             throw Lookup_Error("PSS padding with unexpected parameters");
@@ -131,37 +142,34 @@ PK_Signature_Options_Builder::PK_Signature_Options_Builder(std::string_view algo
             // FIXME
             const bool implicit = req.arg(1, "exp") == "imp";
 
-            with_padding(padding);
-            with_hash(req.arg(0));
+            builder.with_padding(padding).with_hash(req.arg(0));
 
             if(req.arg_count() == 3) {
                if(implicit) {
-                  with_salt_size(req.arg_as_integer(2));
+                  builder.with_salt_size(req.arg_as_integer(2));
                } else {
-                  with_salt_size(req.arg_as_integer(2));
-                  with_explicit_trailer_field();
+                  builder.with_salt_size(req.arg_as_integer(2)).with_explicit_trailer_field();
                }
             } else if(!implicit) {
-               with_explicit_trailer_field();
+               builder.with_explicit_trailer_field();
             }
          } else {
             throw Lookup_Error("ISO-9796-2 DS2 padding with unexpected parameters");
          }
       } else if(padding == "ISO_9796_DS3") {
          //ISO-9796-2 DS 3 is deterministic and DS2 without a salt
-         with_padding(padding);
+         builder.with_padding(padding);
          if(req.arg_count_between(1, 2)) {
-            with_hash(req.arg(0));
+            builder.with_hash(req.arg(0));
             if(req.arg(1, "exp") != "imp") {
-               with_explicit_trailer_field();
+               builder.with_explicit_trailer_field();
             }
          } else {
             throw Lookup_Error("ISO-9796-2 DS3 padding with unexpected parameters");
          }
       } else if(padding == "X9.31") {
          if(req.arg_count() == 1) {
-            with_padding(padding);
-            with_hash(req.arg(0));
+            builder.with_padding(padding).with_hash(req.arg(0));
          } else {
             throw Lookup_Error("X9.31 padding with unexpected parameters");
          }
@@ -179,9 +187,41 @@ PK_Signature_Options_Builder::PK_Signature_Options_Builder(std::string_view algo
             }
          };
 
-         with_hash(hash());
+         builder.with_hash(hash());
       }
    }
+}
+
+}  // namespace
+
+PK_Signature_Options_Builder::PK_Signature_Options_Builder(const Private_Key& key,
+                                                           RandomNumberGenerator& rng,
+                                                           std::string_view params,
+                                                           Signature_Format format,
+                                                           std::string_view provider) {
+   with_private_key(key);
+   with_rng(rng);
+   retrofit_legacy_parameters(*this, key, params, format, provider);
+}
+
+PK_Verification_Options_Builder::PK_Verification_Options_Builder(const Public_Key& key,
+                                                                 std::string_view params,
+                                                                 Signature_Format format,
+                                                                 std::string_view provider) {
+   with_public_key(key);
+   retrofit_legacy_parameters(*this, key, params, format, provider);
+}
+
+PK_Signature_Options_Builder& PK_Signature_Options_Builder::with_private_key(const Private_Key& key) & {
+   with_product_name(key.algo_name());
+   set_or_throw(options().private_key, std::cref(key));
+   return *this;
+}
+
+PK_Verification_Options_Builder& PK_Verification_Options_Builder::with_public_key(const Public_Key& key) & {
+   with_product_name(key.algo_name());
+   set_or_throw(options().public_key, std::cref(key));
+   return *this;
 }
 
 void PK_Signature_Options::validate_for_hash_based_signature_algorithm(
