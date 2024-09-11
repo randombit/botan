@@ -204,8 +204,8 @@ class RSA_Blinding_Tests final : public Test {
          */
 
          // don't try this at home
-         Botan::PK_Signer signer(rsa, this->rng(), Botan::PK_Signature_Options().with_hash("Raw"));
-         Botan::PK_Verifier verifier(rsa, Botan::PK_Signature_Options().with_hash("Raw"));
+         Botan::PK_Signer signer(rsa, this->rng(), Botan::PK_Signature_Options_Builder().with_hash("Raw").commit());
+         Botan::PK_Verifier verifier(rsa, Botan::PK_Signature_Options_Builder().with_hash("Raw").commit());
 
          for(size_t i = 1; i <= BOTAN_BLINDING_REINIT_INTERVAL * 6; ++i) {
             std::vector<uint8_t> input(16);

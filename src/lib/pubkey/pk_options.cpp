@@ -12,7 +12,9 @@
 
 namespace Botan {
 
-PK_Signature_Options::PK_Signature_Options(std::string_view algo, std::string_view params, std::string_view provider) {
+PK_Signature_Options_Builder::PK_Signature_Options_Builder(std::string_view algo,
+                                                           std::string_view params,
+                                                           std::string_view provider) {
    /*
    * This is a convoluted mess because we must handle dispatch for every algorithm
    * specific detail of how padding strings were formatted in versions prior to 3.6.
@@ -20,8 +22,6 @@ PK_Signature_Options::PK_Signature_Options(std::string_view algo, std::string_vi
    * This will all go away once the deprecated constructors of PK_Signer and PK_Verifier
    * are removed in Botan4.
    */
-
-   auto options = PK_Signature_Options();
 
    if(!provider.empty() && provider != "base") {
       with_provider(provider);
