@@ -748,7 +748,7 @@ PK_Signature_Options parse_rsa_signature_algorithm(const AlgorithmIdentifier& al
 
    const std::string& padding = sig_info[1];
 
-   PK_Signature_Options_Builder opts;
+   PK_Verification_Options_Builder opts;
 
    if(padding == "EMSA4") {
       // "MUST contain RSASSA-PSS-params"
