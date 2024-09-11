@@ -63,7 +63,7 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
          }
 
          Botan::Dilithium_PublicKey pub_key(priv_key.public_key_bits(), DerivedT::mode);
-         auto verifier = Botan::PK_Verifier(pub_key);
+         auto verifier = Botan::PK_Verifier(pub_key, Botan::PK_Signature_Options{});
          verifier.update(ref_msg.data(), ref_msg.size());
          result.confirm("signature verifies", verifier.check_signature(signature.data(), signature.size()));
 
@@ -145,7 +145,7 @@ class DilithiumRoundtripTests final : public Test {
          };
 
          auto verify = [](const auto& public_key, const auto& msg, const auto& signature) {
-            auto verifier = Botan::PK_Verifier(public_key);
+            auto verifier = Botan::PK_Verifier(public_key, Botan::PK_Signature_Options{});
             verifier.update(msg);
             return verifier.check_signature(signature);
          };

@@ -9,6 +9,7 @@ brief -> "Implementations of public key schemes"
 
 <header:public>
 pk_algs.h
+pk_enums.h
 pk_options.h
 pk_keys.h
 pk_ops_fwd.h

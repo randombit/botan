@@ -7,6 +7,7 @@
 
 #include <botan/pk_options.h>
 
+#include <botan/pk_keys.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/scan_name.h>
 

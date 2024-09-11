@@ -11,7 +11,7 @@
 #include <botan/ber_dec.h>
 #include <botan/certstor.h>
 #include <botan/der_enc.h>
-#include <botan/pubkey.h>
+#include <botan/pk_keys.h>
 #include <botan/x509_ext.h>
 #include <botan/internal/parsing.h>
 

@@ -9,7 +9,9 @@
 #define BOTAN_PK_KEYS_H_
 
 #include <botan/asn1_obj.h>
+#include <botan/pk_enums.h>
 #include <botan/pk_ops_fwd.h>
+#include <botan/pk_options.h>
 #include <botan/secmem.h>
 
 #include <optional>
@@ -22,34 +24,6 @@ namespace Botan {
 class BigInt;
 class RandomNumberGenerator;
 class PK_Signature_Options;
-
-/**
-* Enumeration specifying the signature format.
-*
-* This is mostly used for requesting DER encoding of ECDSA signatures;
-* most other algorithms only support "standard".
-*/
-enum class Signature_Format {
-   Standard,
-   DerSequence,
-
-   IEEE_1363 BOTAN_DEPRECATED("Use Standard") = Standard,
-   DER_SEQUENCE BOTAN_DEPRECATED("Use DerSequence") = DerSequence,
-};
-
-/**
-* Enumeration of possible operations a public key could be used for.
-*
-* It is possible to query if a key supports a particular operation
-* type using Asymmetric_Key::supports_operation()
-*/
-enum class PublicKeyOperation {
-   Encryption,
-   Signature,
-   KeyEncapsulation,
-   KeyAgreement,
-};
-
 class Private_Key;
 
 /**
