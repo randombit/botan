@@ -276,9 +276,9 @@ class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature {
 std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
    options.exclude_provider_for_algorithm(algo_name());
 
-   if(auto [uses_prehash, prehash_fn] = options.prehash(); uses_prehash) {
+   if(auto prehash = options.prehash().optional()) {
       return std::make_unique<Ed25519_Hashed_Verify_Operation>(
-         *this, prehash_fn.value_or("SHA-512"), !prehash_fn.has_value());
+         *this, prehash->value_or("SHA-512"), !prehash->has_value());
    } else {
       return std::make_unique<Ed25519_Pure_Verify_Operation>(*this);
    }
@@ -301,9 +301,9 @@ std::unique_ptr<PK_Ops::Signature> Ed25519_PrivateKey::_create_signature_op(Rand
    BOTAN_UNUSED(rng);
    options.exclude_provider_for_algorithm(algo_name());
 
-   if(auto [uses_prehash, prehash_fn] = options.prehash(); uses_prehash) {
+   if(auto prehash = options.prehash().optional()) {
       return std::make_unique<Ed25519_Hashed_Sign_Operation>(
-         *this, prehash_fn.value_or("SHA-512"), !prehash_fn.has_value());
+         *this, prehash->value_or("SHA-512"), !prehash->has_value());
    } else {
       return std::make_unique<Ed25519_Pure_Sign_Operation>(*this);
    }

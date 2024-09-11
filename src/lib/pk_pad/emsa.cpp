@@ -33,8 +33,8 @@
 namespace Botan {
 
 std::unique_ptr<EMSA> EMSA::create_or_throw(PK_Signature_Options& options) {
-   const auto hash = options.maybe_hash_function();
-   const auto padding = options.padding();
+   const auto hash = options.hash_function().optional();
+   const auto padding = options.padding().optional();
    const bool is_raw_hash = !hash.has_value() || hash.value() == "Raw";
    const bool is_raw_padding = !padding.has_value() || padding.value() == "Raw";
 
@@ -43,9 +43,9 @@ std::unique_ptr<EMSA> EMSA::create_or_throw(PK_Signature_Options& options) {
 
 #if defined(BOTAN_HAS_EMSA_RAW)
       if(is_raw_hash) {
-         if(auto [using_prehash, prehash_fn] = options.prehash(); using_prehash && prehash_fn.has_value()) {
-            if(auto prehash = HashFunction::create(prehash_fn.value())) {
-               return std::make_unique<EMSA_Raw>(prehash->output_length());
+         if(auto prehash = options.prehash().optional(); prehash.has_value() && prehash->has_value()) {
+            if(auto prehash_fn = HashFunction::create(prehash->value())) {
+               return std::make_unique<EMSA_Raw>(prehash_fn->output_length());
             }
          } else {
             return std::make_unique<EMSA_Raw>();
@@ -65,7 +65,7 @@ std::unique_ptr<EMSA> EMSA::create_or_throw(PK_Signature_Options& options) {
 #if defined(BOTAN_HAS_EMSA_PKCS1)
       if(padding == "PKCS1v15") {
          if(is_raw_hash) {
-            return std::make_unique<EMSA_PKCS1v15_Raw>(options.prehash().second);
+            return std::make_unique<EMSA_PKCS1v15_Raw>(options.prehash().or_default(std::nullopt));
          } else if(hash_fn) {
             return std::make_unique<EMSA_PKCS1v15>(std::move(hash_fn));
          }
@@ -74,18 +74,18 @@ std::unique_ptr<EMSA> EMSA::create_or_throw(PK_Signature_Options& options) {
 
 #if defined(BOTAN_HAS_EMSA_PSSR)
       if(padding == "PSS_Raw" && hash_fn) {
-         return std::make_unique<PSSR_Raw>(std::move(hash_fn), options.salt_size());
+         return std::make_unique<PSSR_Raw>(std::move(hash_fn), options.salt_size().optional());
       }
 
       if(padding == "PSS" && hash_fn) {
-         return std::make_unique<PSSR>(std::move(hash_fn), options.salt_size());
+         return std::make_unique<PSSR>(std::move(hash_fn), options.salt_size().optional());
       }
 #endif
 
 #if defined(BOTAN_HAS_ISO_9796)
       if(padding == "ISO_9796_DS2" && hash_fn) {
          return std::make_unique<ISO_9796_DS2>(
-            std::move(hash_fn), !options.using_explicit_trailer_field(), options.salt_size());
+            std::move(hash_fn), !options.using_explicit_trailer_field(), options.salt_size().optional());
       }
 
       //ISO-9796-2 DS 3 is deterministic and DS2 without a salt

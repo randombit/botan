@@ -185,7 +185,7 @@ PK_Signature_Options::PK_Signature_Options(std::string_view algo, std::string_vi
 
 void PK_Signature_Options::validate_for_hash_based_signature_algorithm(
    std::string_view algo_name, std::optional<std::string_view> acceptable_hash) {
-   if(auto hash = take(m_hash_fn)) {
+   if(auto hash = hash_function().optional()) {
       if(!acceptable_hash.has_value()) {
          throw Invalid_Argument(fmt("This {} key does not support explicit hash function choice", algo_name));
       }

@@ -8,8 +8,8 @@
 #ifndef BOTAN_PK_OPTIONS_H_
 #define BOTAN_PK_OPTIONS_H_
 
-#include <botan/base_builder.h>
 #include <botan/mem_ops.h>
+#include <botan/options_builder.h>
 #include <botan/pk_keys.h>
 #include <optional>
 #include <span>
@@ -286,9 +286,7 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options : public Builder<PK_Signature_
 
       // Getters; these are mostly for internal use
 
-      [[nodiscard]] std::string hash_function() { return require(m_hash_fn); }
-
-      [[nodiscard]] std::optional<std::string> maybe_hash_function() { return take(m_hash_fn); }
+      [[nodiscard]] auto hash_function() { return take(m_hash_fn); }
 
       /// It may be acceptable to provide a hash function, for hash-based
       /// signatures (like SLH-DSA or LMS), but it is not required.
@@ -296,36 +294,30 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options : public Builder<PK_Signature_
       void validate_for_hash_based_signature_algorithm(std::string_view algo_name,
                                                        std::optional<std::string_view> acceptable_hash = std::nullopt);
 
-      [[nodiscard]] std::pair<bool, std::optional<std::string>> prehash() {
-         if(auto prehash = take(m_prehash)) {
-            return {true, std::move(prehash.value())};
-         } else {
-            return {false, std::nullopt};
-         }
-      }
+      [[nodiscard]] auto prehash() { return take(m_prehash); }
 
-      [[nodiscard]] std::optional<std::string> padding() { return take(m_padding); }
+      [[nodiscard]] auto padding() { return take(m_padding); }
 
-      [[nodiscard]] std::optional<std::vector<uint8_t>> context() { return take(m_context); }
+      [[nodiscard]] auto context() { return take(m_context); }
 
-      [[nodiscard]] std::optional<std::string> provider() { return take(m_provider); }
+      [[nodiscard]] auto provider() { return take(m_provider); }
 
       /// This is a convenience helper for algorithms that do not support
       /// specifying a provider.
       /// @throws Provider_Not_Found if a provider is set
       void exclude_provider_for_algorithm(std::string_view algo_name) {
-         if(auto p = provider()) {
+         if(auto p = provider().optional()) {
             throw Provider_Not_Found(algo_name, p.value());
          };
       }
 
-      [[nodiscard]] std::optional<size_t> salt_size() { return take(m_salt_size); }
+      [[nodiscard]] auto salt_size() { return take(m_salt_size); }
 
-      [[nodiscard]] bool using_der_encoded_signature() { return take(m_use_der).value_or(false); }
+      [[nodiscard]] bool using_der_encoded_signature() { return take(m_use_der).or_default(false); }
 
-      [[nodiscard]] bool using_deterministic_signature() { return take(m_deterministic_sig).value_or(false); }
+      [[nodiscard]] bool using_deterministic_signature() { return take(m_deterministic_sig).or_default(false); }
 
-      [[nodiscard]] bool using_explicit_trailer_field() { return take(m_explicit_trailer_field).value_or(false); }
+      [[nodiscard]] bool using_explicit_trailer_field() { return take(m_explicit_trailer_field).or_default(false); }
 
    private:
       friend class Builder<PK_Signature_Options>;

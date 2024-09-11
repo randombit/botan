@@ -40,11 +40,12 @@ namespace {
 
 std::unique_ptr<HashFunction> eckcdsa_signature_hash(PK_Signature_Options& options) {
    // TODO: We could support prehashing, but it's not standard
+   options.prehash().not_implemented("non-standard prehashing is not supported");
 
    // intentionally not supporting Raw for ECKCDSA, since we need to know
    // the length in advance which complicates the logic for Raw
 
-   return HashFunction::create_or_throw(options.hash_function());
+   return HashFunction::create_or_throw(options.hash_function().required());
 }
 
 std::unique_ptr<HashFunction> eckcdsa_signature_hash(const AlgorithmIdentifier& alg_id) {

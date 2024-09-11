@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/base_builder.h>
+#include <botan/options_builder.h>
 
 #if defined(BOTAN_HAS_HASH)
    #include <botan/hash.h>

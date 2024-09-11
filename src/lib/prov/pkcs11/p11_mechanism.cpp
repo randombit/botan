@@ -192,8 +192,8 @@ MechanismWrapper MechanismWrapper::create_rsa_crypt_mechanism(std::string_view p
 
 MechanismWrapper MechanismWrapper::create_rsa_sign_mechanism(PK_Signature_Options& options) {
    const std::string mechanism_padding = [&]() {
-      const auto hash = options.maybe_hash_function();
-      const auto padding = options.padding();
+      const auto hash = options.hash_function().optional();
+      const auto padding = options.padding().optional();
 
       if(hash && padding) {
          return fmt("{}({})", padding.value(), hash.value());
