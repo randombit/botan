@@ -169,7 +169,7 @@ std::vector<Test::Result> xmss_statefulness() {
    auto sign_something = [&rng](auto& sk) {
       auto msg = Botan::hex_decode("deadbeef");
 
-      Botan::PK_Signer signer(sk, *rng);
+      Botan::PK_Signer signer(sk, *rng, Botan::PK_Signature_Options{});
       signer.sign_message(msg, *rng);
    };
 
@@ -297,27 +297,27 @@ std::vector<Test::Result> xmss_legacy_private_key() {
    return {
       CHECK("Use a legacy private key to create a signature",
             [&](auto& result) {
-               Botan::PK_Signer signer(legacy_secret_key, *rng);
+               Botan::PK_Signer signer(legacy_secret_key, *rng, Botan::PK_Signature_Options{});
                auto signature = signer.sign_message(message, *rng);
 
-               Botan::PK_Verifier verifier(public_key_from_secret_key);
+               Botan::PK_Verifier verifier(public_key_from_secret_key, Botan::PK_Signature_Options{});
                result.confirm("legacy private key generates signatures that are still verifiable",
                               verifier.verify_message(message, signature));
             }),
 
       CHECK("Verify a legacy signature",
             [&](auto& result) {
-               Botan::PK_Verifier verifier(public_key_from_secret_key);
+               Botan::PK_Verifier verifier(public_key_from_secret_key, Botan::PK_Signature_Options{});
                result.confirm("legacy private key generates signatures that are still verifiable",
                               verifier.verify_message(message, legacy_signature));
             }),
 
       CHECK("Verify a new signature by a legacy private key with a legacy public key",
             [&](auto& result) {
-               Botan::PK_Signer signer(legacy_secret_key, *rng);
+               Botan::PK_Signer signer(legacy_secret_key, *rng, Botan::PK_Signature_Options{});
                auto signature = signer.sign_message(message, *rng);
 
-               Botan::PK_Verifier verifier(legacy_public_key);
+               Botan::PK_Verifier verifier(legacy_public_key, Botan::PK_Signature_Options{});
                result.confirm("legacy private key generates signatures that are still verifiable",
                               verifier.verify_message(message, legacy_signature));
             }),
