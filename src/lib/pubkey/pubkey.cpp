@@ -247,8 +247,9 @@ PK_Signer::PK_Signer(const Private_Key& key,
                      std::string_view provider) :
       PK_Signer(key,
                 rng,
-                PK_Signature_Options(key.algo_name(), padding, provider)
-                   .with_der_encoded_signature(format == Signature_Format::DerSequence)) {}
+                PK_Signature_Options_Builder(key.algo_name(), padding, provider)
+                   .with_der_encoded_signature(format == Signature_Format::DerSequence)
+                   .commit()) {}
 
 PK_Signer::PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, PK_Signature_Options& options) {
    m_op = key._create_signature_op(rng, options);
@@ -332,8 +333,9 @@ PK_Verifier::PK_Verifier(const Public_Key& pub_key,
                          Signature_Format format,
                          std::string_view provider) :
       PK_Verifier(pub_key,
-                  PK_Signature_Options(pub_key.algo_name(), padding, provider)
-                     .with_der_encoded_signature(format == Signature_Format::DerSequence)) {}
+                  PK_Signature_Options_Builder(pub_key.algo_name(), padding, provider)
+                     .with_der_encoded_signature(format == Signature_Format::DerSequence)
+                     .commit()) {}
 
 PK_Verifier::PK_Verifier(const Public_Key& key, PK_Signature_Options& options) {
    m_op = key._create_verification_op(options);

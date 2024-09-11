@@ -103,11 +103,12 @@ Botan::PK_Signature_Options sig_options(
       return sig_options(key, "PSS", hash, use_der, provider);
    }
 
-   return Botan::PK_Signature_Options()
+   return Botan::PK_Signature_Options_Builder()
       .with_hash(hash)
       .with_padding(padding)
       .with_der_encoded_signature(use_der)
-      .with_provider(provider);
+      .with_provider(provider)
+      .commit();
 }
 
 }  // namespace

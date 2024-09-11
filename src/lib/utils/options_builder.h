@@ -24,8 +24,14 @@ namespace Botan {
 class HashFunction;
 class MessageAuthenticationCode;
 
-template <typename DerivedT>
-class Builder;
+template <typename T>
+class OptionsBuilder;
+
+template <typename T>
+class Options;
+
+template <StringLiteral option_name, typename T>
+class Option;
 
 namespace detail {
 
@@ -57,32 +63,6 @@ std::string to_string(const std::unique_ptr<HashFunction>& value);
 std::string to_string(const std::unique_ptr<MessageAuthenticationCode>& value);
 
 }  // namespace BuilderOptionHelper
-
-/**
- * Wraps a builder option value and provides a way to convert it to a string
- * for debugging and error messages.
- */
-template <StringLiteral option_name, typename T>
-class Option {
-   public:
-      constexpr static std::string_view name = option_name.value;
-      using value_type = T;
-
-      std::string to_string() const {
-         if(!value.has_value()) {
-            return "<unset>";
-         } else {
-            return BuilderOptionHelper::to_string(*value);
-         }
-      }
-
-   private:
-      // Only the abstract builder may access the wrapped value
-      template <typename DerivedT>
-      friend class Botan::Builder;
-
-      std::optional<T> value;
-};
 
 /**
  * Return wrapper of an option value that allows for different ways to consume
@@ -144,115 +124,80 @@ template <typename T>
 struct is_builder_option : std::false_type {};
 
 template <StringLiteral option_name, typename T>
-struct is_builder_option<Option<option_name, T>> : std::true_type {};
+struct is_builder_option<Botan::Option<option_name, T>> : std::true_type {};
 
 template <typename T>
 concept BuilderOption = is_builder_option<T>::value;
 
-template <typename... OptionTs>
-consteval bool all_builder_options(std::tuple<OptionTs&...>) {
-   return (BuilderOption<OptionTs> && ... && true);
-}
+template <typename T>
+concept AllBuilderOptionsTuple =
+   requires(const T t) { std::apply([]<BuilderOption... OptionTs>(const OptionTs&...) {}, t); };
+
+template <typename T>
+concept OptionsContainer = std::is_default_constructible_v<T> && std::is_move_assignable_v<T> &&
+                           std::is_move_constructible_v<T> && requires(const T opts) {
+                              { opts.all_options() } -> AllBuilderOptionsTuple;
+                           };
+
+template <typename T>
+concept ConcreteOptions = OptionsContainer<typename T::Container> &&
+                          requires(typename T::Container&& container, std::string_view name) { T(container, name); };
+
+static constexpr auto unknown_product = "Unknown";
 
 }  // namespace detail
 
 /**
- * Base class for all builder helper classes
- *
- * Concrete implementations of builders should derive from this class, wrap all
- * its options in `Option` instances and implement the `all_options` method.
- *
- * Below is an example that sets up a hypothetical key derivation function.
- * Note that the `with_*` methods are overloaded for lvalue and rvalue refs, to
- * allow for properly chaining the calls.
- *
- * TODO: C++23: Using "deducing-this" we will be able to remove the CRTP and
- *              remove the overloads for lvalue and rvalue refs.
- *
- * class KDF_Builder : public Builder<KDF_Builder> {
- *    private:
- *       detail::Option<"context", std::string> m_context;
- *       detail::Option<"label", std::string> m_label;
- *       detail::Option<"hash", std::unique_ptr<HashFunction>> m_hash;
- *
- *       friend class Builder<KDF_Builder>;
- *
- *       /// Returns a tuple of all options (needed for the base implementation)
- *       auto all_options() const { return std::tie(m_context, m_hash); }
- *
- *    public:
- *       KDF_Builder& with_context(std::string_view ctx) & {
- *          set_or_throw(m_context, std::string(ctx));
- *          return *this;
- *       }
- *
- *       KDF_Builder with_context(std::string_view ctx) && {
- *          return std::move(with_context(ctx));
- *       }
- *
- *       KDF_Builder& with_label(std::string_view label) & {
- *          set_or_throw(m_context, std::string(label));
- *          return *this;
- *       }
- *
- *       KDF_Builder with_label(std::string_view label) && {
- *          return std::move(with_label(label));
- *       }
- *
- *       KDF_Builder& with_hash(std::string_view hash) & {
- *          set_or_throw(m_hash, Botan::HashFunction::create_or_throw(hash));
- *          return *this;
- *       }
- *
- *       KDF_Builder with_hash(std::string_view hash) && {
- *          return std::move(with_hash(hash));
- *       }
- *
- *       KDF_Builder& with_hash(std::unique_ptr<HashFunction> hash) & {
- *          set_or_throw(m_hash, std::move(hash));
- *          return *this;
- *       }
- *
- *       KDF_Builder with_hash(std::unique_ptr<HashFunction> hash) && {
- *          return std::move(with_hash(std::move(hash)));
- *       }
- *
- *       /// Creates a new KDF instance with the current options and validates
- *       /// that all options have been consumed by the new KDF instance.
- *       KDF create() {
- *          KDF kdf(*this);
- *          validate_option_consumption();
- *          return kdf;
- *       }
- *
- *       /// Gets the context value or std::nullopt if it wasn't set
- *       std::optional<std::string> context() { return take(context); }
- *
- *       /// Gets the label value or a default if it wasn't set
- *       std::string label() { return take(label).value_or("default"); }
- *
- *       /// Gets the hash function or throws if it wasn't set
- *       std::unique_ptr<HashFunction> hash() { return require(hash); }
- * };
+ * Wraps a builder option value and provides a way to convert it to a string
+ * for debugging and error messages.
  */
-template <typename DerivedT>
-class Builder {
+template <StringLiteral option_name, typename T>
+class Option {
    public:
-      [[nodiscard]] std::string to_string() const {
-         std::ostringstream oss;
-         foreach_option([&]<detail::BuilderOption OptionT>(const OptionT& option) {
-            oss << OptionT::name << ": " << option.to_string() << '\n';
-         });
-         return oss.str();
+      constexpr static std::string_view name = option_name.value;
+      using value_type = T;
+
+      std::string to_string() const {
+         if(!value.has_value()) {
+            return "<unset>";
+         } else {
+            return detail::BuilderOptionHelper::to_string(*value);
+         }
+      }
+
+   private:
+      template <typename OptionsT>
+      friend class Botan::OptionsBuilder;
+
+      template <typename OptionsContainerT>
+      friend class Options;
+
+      std::optional<T> value;
+};
+
+/**
+ * Base class for all options builder helper classes.
+ *
+ * Concrete implementations of builders should derive from this class and
+ * pass their concrete implementation of the options consumer as the template,
+ * parameter. All available options must be wrapped  in a default-constructible
+ * struct of `Option<>` instances that implements the `all_options` method.
+ *
+ * See the example at the end of this file for a full picture.
+ */
+template <typename OptionsT>
+class OptionsBuilder {
+   public:
+      static_assert(detail::ConcreteOptions<OptionsT>);
+      using Container = typename OptionsT::Container;
+
+   public:
+      OptionsT commit() {
+         return OptionsT(std::exchange(m_options, {}), std::exchange(m_product_name, detail::unknown_product));
       }
 
    protected:
-      void set_product_name(std::string_view name) { m_product_name = std::string(name); }
-
-      template <detail::BuilderOption OptionT>
-      [[nodiscard]] auto take(OptionT& o) noexcept {
-         return detail::OptionValue(std::exchange(o.value, {}), OptionT::name, m_product_name);
-      }
+      Container& options() { return m_options; }
 
       template <detail::BuilderOption OptionT, std::convertible_to<typename OptionT::value_type> ValueT>
       void set_or_throw(OptionT& option, ValueT&& value) {
@@ -262,12 +207,53 @@ class Builder {
          option.value.emplace(std::forward<ValueT>(value));
       }
 
+      void with_product_name(std::string name) { m_product_name = std::move(name); }
+
+   private:
+      Container m_options;
+      std::string m_product_name = detail::unknown_product;
+};
+
+/**
+ * Base class for all options consumer classes.
+ *
+ * Concrete implementations of options consumers should derive from this class
+ * and pass their concrete implementation of the options container as the
+ * template parameter. The options container must implement the `all_options`
+ * method that returns a tuple of all available options.
+ */
+template <typename OptionsContainerT>
+class Options {
+   public:
+      static_assert(detail::OptionsContainer<OptionsContainerT>);
+      using Container = OptionsContainerT;
+
+   public:
+      Options() = default;
+
+      Options(Container options, std::string_view product_name) :
+            m_options(std::move(options)), m_product_name(product_name) {}
+
+      [[nodiscard]] std::string to_string() const {
+         std::ostringstream oss;
+         foreach_option([&]<detail::BuilderOption OptionT>(const OptionT& option) {
+            oss << OptionT::name << ": " << option.to_string() << '\n';
+         });
+         return oss.str();
+      }
+
+   protected:
+      Container& options() { return m_options; }
+
+      template <detail::BuilderOption OptionT>
+      [[nodiscard]] auto take(OptionT& o) noexcept {
+         return detail::OptionValue(std::exchange(o.value, {}), OptionT::name, m_product_name);
+      }
+
       template <typename FnT>
       void foreach_option(FnT&& fn) const {
-         // TODO: C++23: using deducing-this we can remove the CRTP and simply
-         //              deduce the DerivedT from the explicit object parameter.
          std::apply([&]<detail::BuilderOption... OptionTs>(const OptionTs&... options) { (fn(options), ...); },
-                    static_cast<const DerivedT&>(*this).all_options());
+                    m_options.all_options());
       }
 
       void validate_option_consumption() {
@@ -292,9 +278,91 @@ class Builder {
       }
 
    private:
-      std::string m_product_name = "Unknown";
+      Container m_options;
+      std::string m_product_name = detail::unknown_product;
 };
 
 }  // namespace Botan
+
+/**
+ * Below is an example that sets up options for a hypothetical KDF.
+ * Note that the `with_*` methods are overloaded for lvalue and rvalue refs, to
+ * allow for properly chaining the calls.
+ *
+ * struct KDF_OptionsContainer {
+ *   Option<"context", std::string> context;
+ *   Option<"label", std::string> label;
+ *   Option<"hash", std::unique_ptr<HashFunction>> hash;
+ *
+ *   auto all_options() { return std::tie(context, label, hash); }
+ * };
+ *
+ * class KDF_Options : public Options<KDF_OptionsContainer> {
+ *    public:
+ *       using Options::Options;
+ *
+ *    public:
+ *       /// Gets the context value or std::nullopt if it wasn't set
+ *       [[nodiscard]] auto context() { return take(options().context); }
+ *
+ *       /// Gets the label value or a default if it wasn't set
+ *       [[nodiscard]] auto label() { return take(options().label); }
+ *
+ *       /// Gets the hash function or throws if it wasn't set
+ *       [[nodiscard]] auto hash() { return take(options().hash); }
+ * };
+ *
+ * // TODO: C++23: Using "deducing-this" we will be able to remove the CRTP and
+ * //              remove the overloads for lvalue and rvalue refs.
+ *
+ * class KDF_Builder : public OptionsBuilder<KDF_Options> {
+ *    public:
+ *       KDF_Builder& with_context(std::string_view ctx) & {
+ *          set_or_throw(options().context, std::string(ctx));
+ *          return *this;
+ *       }
+ *
+ *       KDF_Builder with_context(std::string_view ctx) && {
+ *          return std::move(with_context(ctx));
+ *       }
+ *
+ *       KDF_Builder& with_label(std::string_view label) & {
+ *          set_or_throw(options().label, std::string(label));
+ *          return *this;
+ *       }
+ *
+ *       KDF_Builder with_label(std::string_view label) && {
+ *          return std::move(with_label(label));
+ *       }
+ *
+ *       KDF_Builder& with_hash(std::string_view hash) & {
+ *          set_or_throw(options().hash, Botan::HashFunction::create_or_throw(hash));
+ *          return *this;
+ *       }
+ *
+ *       KDF_Builder with_hash(std::string_view hash) && {
+ *          return std::move(with_hash(hash));
+ *       }
+ *
+ *       KDF_Builder& with_hash(std::unique_ptr<HashFunction> hash) & {
+ *          set_or_throw(options().hash, std::move(hash));
+ *          return *this;
+ *       }
+ *
+ *       KDF_Builder with_hash(std::unique_ptr<HashFunction> hash) && {
+ *          return std::move(with_hash(std::move(hash)));
+ *       }
+ *
+ *       /// Creates a new KDF instance with the current options and validates
+ *       /// that all options have been consumed by the new KDF instance.
+ *       KDF create() {
+ *          with_product_name("KDF");
+ *          auto opts = this->commit();
+ *          KDF kdf(opts);
+ *          opts.validate_option_consumption();
+ *          return kdf;
+ *       }
+ * };
+ */
 
 #endif
