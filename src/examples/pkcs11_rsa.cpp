@@ -92,14 +92,12 @@ int main() {
 
    /************ RSA sign *************/
 
-   Botan::PK_Signer signer(
-      rsa_keypair.second, rng, Botan::PK_Signature_Options_Builder().with_hash("SHA-256").with_padding("PSS").commit());
+   auto signer = rsa_keypair.second.signer().with_rng(rng).with_hash("SHA-256").with_padding("PSS").create();
    auto signature = signer.sign_message(plaintext, rng);
 
    /************ RSA verify *************/
 
-   Botan::PK_Verifier verifier(rsa_keypair.first,
-                               Botan::PK_Signature_Options_Builder().with_hash("SHA-256").with_padding("PSS").commit());
+   auto verifier = rsa_keypair.first.signature_verifier().with_hash("SHA-256").with_padding("PSS").create();
    auto ok = verifier.verify_message(plaintext, signature);
 
    return ok ? 0 : 1;
