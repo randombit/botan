@@ -173,21 +173,25 @@ PK_Signature_Options gost_hash_from_algid(const AlgorithmIdentifier& alg_id) {
       throw Decoding_Error("Unexpected non-empty AlgorithmIdentifier parameters for GOST 34.10 signature");
    }
 
-   const std::string oid_str = alg_id.oid().to_formatted_string();
-   if(oid_str == "GOST-34.10/GOST-R-34.11-94") {
-      return PK_Signature_Options("GOST-R-34.11-94");
-   }
-   if(oid_str == "GOST-34.10-2012-256/Streebog-256") {
-      return PK_Signature_Options("Streebog-256");
-   }
-   if(oid_str == "GOST-34.10-2012-512/Streebog-512") {
-      return PK_Signature_Options("Streebog-512");
-   }
-   if(oid_str == "GOST-34.10-2012-256/SHA-256") {
-      return PK_Signature_Options("SHA-256");
+   const auto hash = [&](std::string_view oid_str) -> std::optional<std::string> {
+      if(oid_str == "GOST-34.10/GOST-R-34.11-94") {
+         return "GOST-R-34.11-94";
+      } else if(oid_str == "GOST-34.10-2012-256/Streebog-256") {
+         return "Streebog-256";
+      } else if(oid_str == "GOST-34.10-2012-512/Streebog-512") {
+         return "Streebog-512";
+      } else if(oid_str == "GOST-34.10-2012-256/SHA-256") {
+         return "SHA-256";
+      } else {
+         return std::nullopt;
+      }
+   }(alg_id.oid().to_formatted_string());
+
+   if(!hash.has_value()) {
+      throw Decoding_Error(fmt("Unknown OID ({}) for GOST 34.10 signatures", alg_id.oid()));
    }
 
-   throw Decoding_Error(fmt("Unknown OID ({}) for GOST 34.10 signatures", alg_id.oid()));
+   return PK_Signature_Options_Builder().with_hash(hash.value()).commit();
 }
 
 /**
@@ -197,11 +201,6 @@ class GOST_3410_Verification_Operation final : public PK_Ops::Verification_with_
    public:
       GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, PK_Signature_Options& options) :
             PK_Ops::Verification_with_Hash(options), m_group(gost.domain()), m_gy_mul(gost._public_key()) {}
-
-      GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, const AlgorithmIdentifier& alg_id) :
-            PK_Ops::Verification_with_Hash(gost_hash_from_algid(alg_id)),
-            m_group(gost.domain()),
-            m_gy_mul(gost._public_key()) {}
 
       bool verify(std::span<const uint8_t> msg, std::span<const uint8_t> sig) override;
 
@@ -242,7 +241,8 @@ std::unique_ptr<PK_Ops::Verification> GOST_3410_PublicKey::_create_verification_
 std::unique_ptr<PK_Ops::Verification> GOST_3410_PublicKey::create_x509_verification_op(
    const AlgorithmIdentifier& signature_algorithm, std::string_view provider) const {
    if(provider == "base" || provider.empty()) {
-      return std::make_unique<GOST_3410_Verification_Operation>(*this, signature_algorithm);
+      auto opts = gost_hash_from_algid(signature_algorithm);
+      return std::make_unique<GOST_3410_Verification_Operation>(*this, opts);
    }
 
    throw Provider_Not_Found(algo_name(), provider);

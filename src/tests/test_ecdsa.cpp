@@ -258,8 +258,8 @@ class ECDSA_AllGroups_Test : public Test {
                }
 
                try {
-                  Botan::PK_Signer signer(priv, rng(), Botan::PK_Signature_Options().with_hash(hash));
-                  Botan::PK_Verifier verifier(*pub, Botan::PK_Signature_Options().with_hash(hash));
+                  Botan::PK_Signer signer(priv, rng(), Botan::PK_Signature_Options_Builder().with_hash(hash).commit());
+                  Botan::PK_Verifier verifier(*pub, Botan::PK_Signature_Options_Builder().with_hash(hash).commit());
 
                   for(size_t i = 0; i != 16; ++i) {
                      auto message = rng().random_vec(rng().next_byte());

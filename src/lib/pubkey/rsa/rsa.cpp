@@ -748,6 +748,8 @@ PK_Signature_Options parse_rsa_signature_algorithm(const AlgorithmIdentifier& al
 
    const std::string& padding = sig_info[1];
 
+   PK_Signature_Options_Builder opts;
+
    if(padding == "EMSA4") {
       // "MUST contain RSASSA-PSS-params"
       if(alg_id.parameters().empty()) {
@@ -779,7 +781,7 @@ PK_Signature_Options parse_rsa_signature_algorithm(const AlgorithmIdentifier& al
          throw Decoding_Error("Unacceptable trailer field for PSS signatures");
       }
 
-      return PK_Signature_Options().with_padding("PSS").with_hash(hash_algo).with_salt_size(pss_params.salt_length());
+      opts.with_padding("PSS").with_hash(hash_algo).with_salt_size(pss_params.salt_length());
    } else {
       SCAN_Name scan(padding);
 
@@ -787,8 +789,10 @@ PK_Signature_Options parse_rsa_signature_algorithm(const AlgorithmIdentifier& al
          throw Decoding_Error("Unexpected OID for RSA signatures");
       }
 
-      return PK_Signature_Options().with_padding("PKCS1v15").with_hash(scan.arg(0));
+      opts.with_padding("PKCS1v15").with_hash(scan.arg(0));
    }
+
+   return opts.commit();
 }
 
 }  // namespace
