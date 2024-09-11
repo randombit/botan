@@ -85,16 +85,15 @@ secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
 namespace {
 
 std::unique_ptr<HashFunction> validate_options_returning_hash(PK_Signature_Options& options) {
-   const auto hash = options.hash_function();
+   const auto hash = options.hash_function().required();
 
    /*
    * In a sense ECDSA/DSA are *always* in prehashing mode, so we accept the case
    * where prehashing is requested as long as the prehash hash matches the signature hash.
    */
-   if(auto [uses_prehash, prehash_fn] = options.prehash(); uses_prehash) {
-      if(prehash_fn.has_value() && prehash_fn.value() != hash) {
-         throw Invalid_Argument("This algorithm does not support prehashing with a different hash");
-      }
+   if(auto prehash = options.prehash().optional();
+      prehash.has_value() && prehash->has_value() && prehash->value() != hash) {
+      throw Invalid_Argument("This algorithm does not support prehashing with a different hash");
    }
 
 #if defined(BOTAN_HAS_RAW_HASH_FN)

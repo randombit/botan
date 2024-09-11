@@ -63,7 +63,7 @@ class PKCS11_ECDSA_Signature_Operation final : public PK_Ops::Signature {
 
    public:
       PKCS11_ECDSA_Signature_Operation(const PKCS11_ECDSA_PrivateKey& key, PK_Signature_Options& options) :
-            PKCS11_ECDSA_Signature_Operation(key, options.hash_function()) {}
+            PKCS11_ECDSA_Signature_Operation(key, options.hash_function().required()) {}
 
       void update(std::span<const uint8_t> input) override {
          if(!m_initialized) {
@@ -128,7 +128,7 @@ class PKCS11_ECDSA_Verification_Operation final : public PK_Ops::Verification {
 
    public:
       PKCS11_ECDSA_Verification_Operation(const PKCS11_ECDSA_PublicKey& key, PK_Signature_Options& options) :
-            PKCS11_ECDSA_Verification_Operation(key, options.hash_function()) {}
+            PKCS11_ECDSA_Verification_Operation(key, options.hash_function().required()) {}
 
       void update(std::span<const uint8_t> input) override {
          if(!m_initialized) {

@@ -352,6 +352,8 @@ std::unique_ptr<PK_Ops::Signature> SphincsPlus_PrivateKey::_create_signature_op(
                                                                                 PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
    options.exclude_provider_for_algorithm(algo_name());
+   options.context().not_implemented("will come in Botan 3.7.0");
+   options.prehash().not_implemented("will come in Botan 3.7.0");
    options.validate_for_hash_based_signature_algorithm(algo_name(), m_public->parameters().hash_name());
    return std::make_unique<SphincsPlus_Signature_Operation>(
       m_private, m_public, options.using_deterministic_signature());

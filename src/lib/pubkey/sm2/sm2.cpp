@@ -104,11 +104,11 @@ class SM2_Signature_Operation final : public PK_Ops::Signature {
    public:
       SM2_Signature_Operation(const SM2_PrivateKey& sm2, PK_Signature_Options& options) :
             m_group(sm2.domain()), m_x(sm2._private_key()), m_da_inv(sm2._get_da_inv()) {
-         const auto hash = options.hash_function();
+         const auto hash = options.hash_function().required();
          if(hash == "Raw") {
             // m_hash is null, m_za is empty
          } else {
-            auto context = options.context().value_or(sm2_default_userid);
+            auto context = options.context().or_default(sm2_default_userid);
 
             m_hash = HashFunction::create_or_throw(hash);
             // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
@@ -171,11 +171,11 @@ class SM2_Verification_Operation final : public PK_Ops::Verification {
    public:
       SM2_Verification_Operation(const SM2_PublicKey& sm2, PK_Signature_Options& options) :
             m_group(sm2.domain()), m_gy_mul(sm2._public_key()) {
-         const auto hash = options.hash_function();
+         const auto hash = options.hash_function().required();
          if(hash == "Raw") {
             // m_hash is null, m_za is empty
          } else {
-            auto context = options.context().value_or(sm2_default_userid);
+            auto context = options.context().or_default(sm2_default_userid);
 
             m_hash = HashFunction::create_or_throw(hash);
             // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)

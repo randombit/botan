@@ -194,7 +194,10 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
             m_s1(ntt(m_priv_key->s1().clone())),
             m_s2(ntt(m_priv_key->s2().clone())),
             m_t0(ntt(m_priv_key->t0().clone())),
-            m_A(Dilithium_Algos::expand_A(m_priv_key->rho(), m_priv_key->mode())) {}
+            m_A(Dilithium_Algos::expand_A(m_priv_key->rho(), m_priv_key->mode())) {
+         options.context().not_implemented("will come in Botan 3.7.0");
+         options.prehash().not_implemented("will come in Botan 3.7.0");
+      }
 
       void update(std::span<const uint8_t> input) override { m_h.update(input); }
 
