@@ -96,10 +96,10 @@ int main() {
 
    std::vector<uint8_t> plaintext(20, 0x01);
 
-   Botan::PK_Signer signer(key_pair.second, rng, Botan::PK_Signature_Options_Builder().with_hash("Raw").commit());
+   auto signer = key_pair.second.signer().with_rng(rng).with_hash("Raw").create();
    auto signature = signer.sign_message(plaintext, rng);
 
-   Botan::PK_Verifier token_verifier(key_pair.first, Botan::PK_Signature_Options_Builder().with_hash("Raw").commit());
+   auto token_verifier = key_pair.first.signature_verifier().with_hash("Raw").create();
    bool ecdsa_ok = token_verifier.verify_message(plaintext, signature);
 
    return ecdsa_ok ? 0 : 1;

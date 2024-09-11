@@ -191,7 +191,7 @@ PK_Signature_Options gost_hash_from_algid(const AlgorithmIdentifier& alg_id) {
       throw Decoding_Error(fmt("Unknown OID ({}) for GOST 34.10 signatures", alg_id.oid()));
    }
 
-   return PK_Signature_Options_Builder().with_hash(hash.value()).commit();
+   return PK_Verification_Options_Builder().with_hash(hash.value()).commit();
 }
 
 /**

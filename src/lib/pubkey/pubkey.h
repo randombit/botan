@@ -170,31 +170,6 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
       explicit PK_Signer(PK_Signature_Options options);
 
       /**
-      * Construct a PK signer
-      *
-      * @param key the key to use to generate signatures
-      * @param rng the random generator to use
-      * @param options controls the behavior of the signature generation, eg which hash function to use
-      *
-      * Note that most common algorithms (eg RSA or ECDSA) require an options
-      * parameter to specify at least which hash function to use.
-      */
-      PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, PK_Signature_Options& options);
-
-      /**
-      * Construct a PK signer
-      *
-      * @param key the key to use to generate signatures
-      * @param rng the random generator to use
-      * @param options controls the behavior of the signature generation, eg which hash function to use
-      *
-      * Note that most common algorithms (eg RSA or ECDSA) require an options
-      * parameter to specify at least which hash function to use.
-      */
-      PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, PK_Signature_Options&& options) :
-            PK_Signer(key, rng, options) {}
-
-      /**
       * Construct a PK Signer.
       * @param key the key to use inside this signer
       * @param rng the random generator to use
@@ -316,20 +291,6 @@ class BOTAN_PUBLIC_API(2, 0) PK_Verifier final {
       * @param options relating to the signature
       */
       explicit PK_Verifier(PK_Signature_Options options);
-
-      /**
-      * Construct a PK Verifier.
-      * @param pub_key the public key to verify against
-      * @param options relating to the signature
-      */
-      PK_Verifier(const Public_Key& pub_key, PK_Signature_Options& options);
-
-      /**
-      * Construct a PK Verifier.
-      * @param pub_key the public key to verify against
-      * @param options relating to the signature
-      */
-      PK_Verifier(const Public_Key& pub_key, PK_Signature_Options&& options) : PK_Verifier(pub_key, options) {}
 
       /**
       * Construct a PK Verifier.

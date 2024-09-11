@@ -270,17 +270,6 @@ PK_Signer::PK_Signer(const Private_Key& key,
                      std::string_view provider) :
       PK_Signer(PK_Signature_Options_Builder(key, rng, padding, format, provider).commit()) {}
 
-PK_Signer::PK_Signer(const Private_Key& key, RandomNumberGenerator& rng, PK_Signature_Options& options) {
-   m_op = key._create_signature_op(rng, options);
-   if(!m_op) {
-      throw Invalid_Argument(fmt("Key type {} does not support signature generation", key.algo_name()));
-   }
-   m_sig_format = options.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
-   m_parts = key.message_parts();
-   m_part_size = key.message_part_size();
-   check_der_format_supported(m_sig_format, m_parts);
-}
-
 AlgorithmIdentifier PK_Signer::algorithm_identifier() const {
    return m_op->algorithm_identifier();
 }
@@ -370,17 +359,6 @@ PK_Verifier::PK_Verifier(const Public_Key& pub_key,
                          Signature_Format format,
                          std::string_view provider) :
       PK_Verifier(PK_Verification_Options_Builder(pub_key, padding, format, provider).commit()) {}
-
-PK_Verifier::PK_Verifier(const Public_Key& key, PK_Signature_Options& options) {
-   m_op = key._create_verification_op(options);
-   if(!m_op) {
-      throw Invalid_Argument(fmt("Key type {} does not support signature verification", key.algo_name()));
-   }
-   m_sig_format = options.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
-   m_parts = key.message_parts();
-   m_part_size = key.message_part_size();
-   check_der_format_supported(m_sig_format, m_parts);
-}
 
 PK_Verifier::PK_Verifier(const Public_Key& key,
                          const AlgorithmIdentifier& signature_algorithm,

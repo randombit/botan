@@ -60,8 +60,6 @@ class Verification_with_Hash : public Verification {
    protected:
       explicit Verification_with_Hash(PK_Signature_Options& options);
 
-      explicit Verification_with_Hash(PK_Signature_Options&& options) : Verification_with_Hash(options) {}
-
       explicit Verification_with_Hash(const AlgorithmIdentifier& alg_id,
                                       std::string_view pk_algo,
                                       bool allow_null_parameters = false);
@@ -88,8 +86,6 @@ class Signature_with_Hash : public Signature {
 
    protected:
       explicit Signature_with_Hash(PK_Signature_Options& options);
-
-      explicit Signature_with_Hash(PK_Signature_Options&& options) : Signature_with_Hash(options) {}
 
       std::string hash_function() const final { return m_hash->name(); }
 
