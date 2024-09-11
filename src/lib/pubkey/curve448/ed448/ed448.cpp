@@ -218,8 +218,8 @@ AlgorithmIdentifier Ed448_Sign_Operation::algorithm_identifier() const {
 std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
    options.exclude_provider_for_algorithm(algo_name());
 
-   if(const auto [uses_prehash, prehash_fn] = options.prehash(); uses_prehash) {
-      return std::make_unique<Ed448_Verify_Operation>(*this, prehash_fn.value_or("SHAKE-256(512)"));
+   if(auto prehash = options.prehash().optional()) {
+      return std::make_unique<Ed448_Verify_Operation>(*this, prehash->value_or("SHAKE-256(512)"));
    } else {
       return std::make_unique<Ed448_Verify_Operation>(*this);
    }
@@ -242,8 +242,8 @@ std::unique_ptr<PK_Ops::Signature> Ed448_PrivateKey::_create_signature_op(Random
    BOTAN_UNUSED(rng);
    options.exclude_provider_for_algorithm(algo_name());
 
-   if(const auto [uses_prehash, prehash_fn] = options.prehash(); uses_prehash) {
-      return std::make_unique<Ed448_Sign_Operation>(*this, prehash_fn.value_or("SHAKE-256(512)"));
+   if(auto prehash = options.prehash().optional()) {
+      return std::make_unique<Ed448_Sign_Operation>(*this, prehash->value_or("SHAKE-256(512)"));
    } else {
       return std::make_unique<Ed448_Sign_Operation>(*this);
    }

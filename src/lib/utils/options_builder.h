@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_BASE_BUILDER_H_
-#define BOTAN_BASE_BUILDER_H_
+#ifndef BOTAN_OPTIONS_BUILDER_H_
+#define BOTAN_OPTIONS_BUILDER_H_
 
 #include <botan/exceptn.h>
 #include <botan/template_utils.h>
@@ -82,6 +82,61 @@ class Option {
       friend class Botan::Builder;
 
       std::optional<T> value;
+};
+
+/**
+ * Return wrapper of an option value that allows for different ways to consume
+ * the value. Downstream code can choose to either require the option to be set
+ * or to handle it as an optional value.
+ */
+template <typename T>
+class OptionValue {
+   private:
+      std::optional<T> take() noexcept { return std::exchange(m_value, {}); }
+
+   public:
+      OptionValue(std::optional<T> option, std::string_view option_name, std::string_view product_name) :
+            m_value(std::move(option)), m_option_name(option_name), m_product_name(product_name) {}
+
+      /**
+       * @returns the option value or std::nullopt if it wasn't set.
+       */
+      [[nodiscard]] std::optional<T> optional() && noexcept { return take(); }
+
+      /**
+       * @throws Invalid_Argument if the option wasn't set.
+       * @returns the option value or throws if it wasn't set.
+       */
+      [[nodiscard]] T required() && {
+         if(!m_value.has_value()) {
+            throw Invalid_Argument("'" + m_product_name + "' requires the '" + std::string(m_option_name) + "' option");
+         }
+         return take().value();
+      }
+
+      /**
+       * @returns the option value or the given @p default_value if it wasn't set.
+       */
+      template <std::convertible_to<T> U>
+      [[nodiscard]] T or_default(U&& default_value) && noexcept {
+         return take().value_or(std::forward<U>(default_value));
+      }
+
+      /**
+       * Consumes the option value and throws if it was set.
+       * @throws Not_Implemented if the option was set, with given @p message.
+       */
+      void not_implemented(std::string_view message) {
+         if(take().has_value()) {
+            throw Not_Implemented("'" + m_product_name + "' currently does not implement the '" +
+                                  std::string(m_option_name) + "' option: " + std::string(message));
+         }
+      }
+
+   private:
+      std::optional<T> m_value;
+      std::string_view m_option_name;
+      std::string m_product_name;
 };
 
 /// Concept to check whether T is a BuilderOption
@@ -194,16 +249,9 @@ class Builder {
    protected:
       void set_product_name(std::string_view name) { m_product_name = std::string(name); }
 
-      [[nodiscard]] static auto take(detail::BuilderOption auto& o) noexcept {
-         return std::exchange(o.value, std::nullopt);
-      }
-
       template <detail::BuilderOption OptionT>
-      [[nodiscard]] auto require(OptionT& o) {
-         if(!o.value.has_value()) {
-            throw Invalid_Argument("'" + m_product_name + "' requires the '" + std::string(OptionT::name) + "' option");
-         }
-         return take(o).value();
+      [[nodiscard]] auto take(OptionT& o) noexcept {
+         return detail::OptionValue(std::exchange(o.value, {}), OptionT::name, m_product_name);
       }
 
       template <detail::BuilderOption OptionT, std::convertible_to<typename OptionT::value_type> ValueT>
