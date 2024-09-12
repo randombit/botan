@@ -231,7 +231,7 @@ bool ECDSA_Verification_Operation::verify(std::span<const uint8_t> msg, std::spa
 }  // namespace
 
 std::unique_ptr<PK_Ops::Verification> ECDSA_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
    return std::make_unique<ECDSA_Verification_Operation>(*this, options);
 }
 
@@ -246,7 +246,7 @@ std::unique_ptr<PK_Ops::Verification> ECDSA_PublicKey::create_x509_verification_
 
 std::unique_ptr<PK_Ops::Signature> ECDSA_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
                                                                           PK_Signature_Options& options) const {
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
    return std::make_unique<ECDSA_Signature_Operation>(*this, options, rng);
 }
 

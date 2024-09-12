@@ -234,7 +234,7 @@ std::unique_ptr<Private_Key> GOST_3410_PublicKey::generate_another(RandomNumberG
 
 std::unique_ptr<PK_Ops::Verification> GOST_3410_PublicKey::_create_verification_op(
    PK_Signature_Options& options) const {
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
    return std::make_unique<GOST_3410_Verification_Operation>(*this, options);
 }
 
@@ -251,7 +251,7 @@ std::unique_ptr<PK_Ops::Verification> GOST_3410_PublicKey::create_x509_verificat
 std::unique_ptr<PK_Ops::Signature> GOST_3410_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
                                                                               PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
    return std::make_unique<GOST_3410_Signature_Operation>(*this, options);
 }
 

@@ -254,7 +254,7 @@ std::unique_ptr<Private_Key> ECKCDSA_PublicKey::generate_another(RandomNumberGen
 }
 
 std::unique_ptr<PK_Ops::Verification> ECKCDSA_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
    return std::make_unique<ECKCDSA_Verification_Operation>(*this, options);
 }
 
@@ -270,7 +270,7 @@ std::unique_ptr<PK_Ops::Verification> ECKCDSA_PublicKey::create_x509_verificatio
 std::unique_ptr<PK_Ops::Signature> ECKCDSA_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
                                                                             PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
    return std::make_unique<ECKCDSA_Signature_Operation>(*this, options);
 }
 
