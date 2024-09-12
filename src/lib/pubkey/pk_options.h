@@ -330,9 +330,13 @@ class PK_Signature_Options_Builder_Base : public OptionsBuilder<PK_Signature_Opt
 
       /// Specify a provider that should be used
       ///
-      /// This is rarely relevant
+      /// The default provider used to be referred to as "base". There's no
+      /// need to specify the default provider explicitly and setting a
+      /// provider is rarely relevant in general.
       Self& with_provider(std::string_view provider) & {
-         set_or_throw(options().provider, std::string(provider));
+         if(!provider.empty() && provider != "base") {
+            set_or_throw(options().provider, std::string(provider));
+         }
          return self();
       }
 
