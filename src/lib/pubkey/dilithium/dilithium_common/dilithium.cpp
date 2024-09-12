@@ -436,6 +436,8 @@ std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::_create_signature_op(Ra
                                                                               PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
    options.exclude_provider();
+   options.context().not_implemented("will come in Botan 3.7.0");
+   options.prehash().not_implemented("will come in Botan 3.7.0");
    return std::make_unique<Dilithium_Signature_Operation>(DilithiumInternalKeypair{m_public, m_private}, options);
 }
 
