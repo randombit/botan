@@ -105,6 +105,33 @@ class BOTAN_UNSTABLE_API PK_Signature_Options final : public Options<detail::PK_
             throw Provider_Not_Found(algo_name, p.value());
          };
       }
+
+   public:
+      /// Parse the legacy set of parameters that used to be passed to
+      /// PK_Signer. This should not be used by new code.
+      ///
+      /// @param key the private key to use
+      /// @param rng the rng to use
+      /// @param params the legacy parameters string
+      /// @param format the encoding format to use
+      /// @param provider the provider to use
+      static PK_Signature_Options from_legacy(const Private_Key& key,
+                                              RandomNumberGenerator& rng,
+                                              std::string_view params,
+                                              Signature_Format format,
+                                              std::string_view provider);
+
+      /// Parse the legacy set of parameters that used to be passed to
+      /// PK_Verifier. This should not be used by new code.
+      ///
+      /// @param key the private key to use
+      /// @param params the legacy parameters string
+      /// @param format the encoding format to use
+      /// @param provider the provider to use
+      static PK_Signature_Options from_legacy(const Public_Key& key,
+                                              std::string_view params,
+                                              Signature_Format format,
+                                              std::string_view provider);
 };
 
 /**
@@ -357,20 +384,6 @@ class BOTAN_PUBLIC_API(3, 6) PK_Signature_Options_Builder final
       /// This can be further parameterized by calling with_xxx functions
       PK_Signature_Options_Builder() = default;
 
-      /// Parse the legacy set of parameters that used to be passed to
-      /// PK_Signer. This should not be used by new code.
-      ///
-      /// @param key the private key to use
-      /// @param rng the rng to use
-      /// @param params the legacy parameters string
-      /// @param format the encoding format to use
-      /// @param provider the provider to use
-      PK_Signature_Options_Builder(const Private_Key& key,
-                                   RandomNumberGenerator& rng,
-                                   std::string_view params,
-                                   Signature_Format format,
-                                   std::string_view provider);
-
       /// Specify the private key to use for verification
       Self& with_private_key(const Private_Key& key) &;
 
@@ -431,18 +444,6 @@ class BOTAN_PUBLIC_API(3, 6) PK_Verification_Options_Builder final
       ///
       /// This can be further parameterized by calling with_xxx functions
       PK_Verification_Options_Builder() = default;
-
-      /// Parse the legacy set of parameters that used to be passed to
-      /// PK_Verifier. This should not be used by new code.
-      ///
-      /// @param key the private key to use
-      /// @param params the legacy parameters string
-      /// @param format the encoding format to use
-      /// @param provider the provider to use
-      PK_Verification_Options_Builder(const Public_Key& key,
-                                      std::string_view params,
-                                      Signature_Format format,
-                                      std::string_view provider);
 
       /// Specify the public key to use for verification
       Self& with_public_key(const Public_Key& key) &;

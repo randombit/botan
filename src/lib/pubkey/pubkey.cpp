@@ -268,7 +268,7 @@ PK_Signer::PK_Signer(const Private_Key& key,
                      std::string_view padding,
                      Signature_Format format,
                      std::string_view provider) :
-      PK_Signer(PK_Signature_Options_Builder(key, rng, padding, format, provider).commit()) {}
+      PK_Signer(PK_Signature_Options::from_legacy(key, rng, padding, format, provider)) {}
 
 AlgorithmIdentifier PK_Signer::algorithm_identifier() const {
    return m_op->algorithm_identifier();
@@ -358,7 +358,7 @@ PK_Verifier::PK_Verifier(const Public_Key& pub_key,
                          std::string_view padding,
                          Signature_Format format,
                          std::string_view provider) :
-      PK_Verifier(PK_Verification_Options_Builder(pub_key, padding, format, provider).commit()) {}
+      PK_Verifier(PK_Signature_Options::from_legacy(pub_key, padding, format, provider)) {}
 
 PK_Verifier::PK_Verifier(const Public_Key& key,
                          const AlgorithmIdentifier& signature_algorithm,
