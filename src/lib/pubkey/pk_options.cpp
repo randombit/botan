@@ -31,12 +31,10 @@ void retrofit_legacy_parameters(SigOptsBaseT& builder,
 
    const auto algo = key.algo_name();
 
+   builder.with_provider(provider);
+
    if(key.message_parts() != 1) {
       builder.with_der_encoded_signature(format == Signature_Format::DerSequence);
-   }
-
-   if(!provider.empty() && provider != "base") {
-      builder.with_provider(provider);
    }
 
    if(algo.starts_with("Dilithium") || algo == "SPHINCS+") {
