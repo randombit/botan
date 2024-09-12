@@ -11,8 +11,10 @@
 #include <botan/exceptn.h>
 #include <botan/template_utils.h>
 
+#include <array>
 #include <numeric>
 #include <optional>
+#include <span>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -59,8 +61,23 @@ inline std::string to_string(bool value) {
    return value ? "true" : "false";
 }
 
-std::string to_string(const std::unique_ptr<HashFunction>& value);
-std::string to_string(const std::unique_ptr<MessageAuthenticationCode>& value);
+std::string BOTAN_UNSTABLE_API to_string(const std::unique_ptr<HashFunction>& value);
+std::string BOTAN_UNSTABLE_API to_string(const std::unique_ptr<MessageAuthenticationCode>& value);
+std::string BOTAN_UNSTABLE_API to_string(std::span<const uint8_t> value);
+
+template <typename AllocatorT>
+std::string to_string(const std::vector<uint8_t, AllocatorT>& value) {
+   // This is needed to bind std::vector<uint8_t>-style buffers to the span
+   // instead of to the catch-all template at the very top.
+   return to_string(std::span{value});
+}
+
+template <size_t N>
+std::string to_string(const std::array<uint8_t, N>& value) {
+   // This is needed to bind std::array<uint8_t>-style buffers to the span
+   // instead of to the catch-all template at the very top.
+   return to_string(std::span<const uint8_t>{value});
+}
 
 }  // namespace BuilderOptionHelper
 
