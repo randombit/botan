@@ -72,7 +72,7 @@ std::string to_string(const std::unique_ptr<MessageAuthenticationCode>& value);
 template <typename T>
 class OptionValue {
    private:
-      std::optional<T> take() noexcept { return std::exchange(m_value, {}); }
+      std::optional<T> take() { return std::exchange(m_value, {}); }
 
    public:
       OptionValue(std::optional<T> option, std::string_view option_name, std::string_view product_name) :
@@ -81,24 +81,25 @@ class OptionValue {
       /**
        * @returns the option value or std::nullopt if it wasn't set.
        */
-      [[nodiscard]] std::optional<T> optional() && noexcept { return take(); }
+      [[nodiscard]] std::optional<T> optional() && { return take(); }
 
       /**
        * @throws Invalid_Argument if the option wasn't set.
        * @returns the option value or throws if it wasn't set.
        */
       [[nodiscard]] T required() && {
-         if(!m_value.has_value()) {
+         auto value = take();
+         if(!value.has_value()) {
             throw Invalid_Argument("'" + m_product_name + "' requires the '" + std::string(m_option_name) + "' option");
          }
-         return take().value();
+         return value.value();
       }
 
       /**
        * @returns the option value or the given @p default_value if it wasn't set.
        */
       template <std::convertible_to<T> U>
-      [[nodiscard]] T or_default(U&& default_value) && noexcept {
+      [[nodiscard]] T or_default(U&& default_value) && {
          return take().value_or(std::forward<U>(default_value));
       }
 
@@ -106,7 +107,7 @@ class OptionValue {
        * Consumes the option value and throws if it was set.
        * @throws Not_Implemented if the option was set, with given @p message.
        */
-      void not_implemented(std::string_view message) {
+      void not_implemented(std::string_view message) && {
          if(take().has_value()) {
             throw Not_Implemented("'" + m_product_name + "' currently does not implement the '" +
                                   std::string(m_option_name) + "' option: " + std::string(message));
@@ -154,25 +155,41 @@ static constexpr auto unknown_product = "Unknown";
 template <StringLiteral option_name, typename T>
 class Option {
    public:
-      constexpr static std::string_view name = option_name.value;
       using value_type = T;
 
-      std::string to_string() const {
-         if(!value.has_value()) {
-            return "<unset>";
-         } else {
-            return detail::BuilderOptionHelper::to_string(*value);
-         }
-      }
+      std::string_view name() const { return option_name.value; }
 
    private:
+      // Only the OptionsBuilder and Options base classes should be able to
+      // access the internals of any Option instance.
+
       template <typename OptionsT>
       friend class Botan::OptionsBuilder;
 
       template <typename OptionsContainerT>
       friend class Options;
 
-      std::optional<T> value;
+   private:
+      std::string to_string() const {
+         if(!m_value.has_value()) {
+            return "<unset>";
+         } else {
+            return detail::BuilderOptionHelper::to_string(*m_value);
+         }
+      }
+
+      bool has_value() const noexcept { return m_value.has_value(); }
+
+      template <std::convertible_to<T> U>
+      void set(U&& value) {
+         BOTAN_DEBUG_ASSERT(!m_value.has_value());
+         m_value.emplace(std::forward<U>(value));
+      }
+
+      std::optional<T> take() { return std::exchange(m_value, {}); }
+
+   private:
+      std::optional<T> m_value;
 };
 
 /**
@@ -201,10 +218,10 @@ class OptionsBuilder {
 
       template <detail::BuilderOption OptionT, std::convertible_to<typename OptionT::value_type> ValueT>
       void set_or_throw(OptionT& option, ValueT&& value) {
-         if(option.value.has_value()) {
-            throw Invalid_State("'" + m_product_name + "' already set the '" + std::string(OptionT::name) + "' option");
+         if(option.has_value()) {
+            throw Invalid_State("'" + m_product_name + "' already set the '" + std::string(option.name()) + "' option");
          }
-         option.value.emplace(std::forward<ValueT>(value));
+         option.set(std::forward<ValueT>(value));
       }
 
       void with_product_name(std::string name) { m_product_name = std::move(name); }
@@ -236,17 +253,17 @@ class Options {
 
       [[nodiscard]] std::string to_string() const {
          std::ostringstream oss;
-         foreach_option([&]<detail::BuilderOption OptionT>(const OptionT& option) {
-            oss << OptionT::name << ": " << option.to_string() << '\n';
+         foreach_option([&](const detail::BuilderOption auto& option) {
+            oss << option.name() << ": " << option.to_string() << '\n';
          });
          return oss.str();
       }
 
       void validate_option_consumption() {
          std::vector<std::string_view> disdained_options;
-         foreach_option([&]<detail::BuilderOption OptionT>(const OptionT& option) {
-            if(option.value.has_value()) {
-               disdained_options.push_back(OptionT::name);
+         foreach_option([&](const detail::BuilderOption auto& option) {
+            if(option.has_value()) {
+               disdained_options.emplace_back(option.name());
             }
          });
 
@@ -266,9 +283,8 @@ class Options {
    protected:
       Container& options() { return m_options; }
 
-      template <detail::BuilderOption OptionT>
-      [[nodiscard]] auto take(OptionT& o) noexcept {
-         return detail::OptionValue(std::exchange(o.value, {}), OptionT::name, m_product_name);
+      [[nodiscard]] auto take(detail::BuilderOption auto& o) {
+         return detail::OptionValue(o.take(), o.name(), m_product_name);
       }
 
       template <typename FnT>
