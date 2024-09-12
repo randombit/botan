@@ -192,22 +192,23 @@ void retrofit_legacy_parameters(SigOptsBaseT& builder,
 
 }  // namespace
 
-PK_Signature_Options_Builder::PK_Signature_Options_Builder(const Private_Key& key,
-                                                           RandomNumberGenerator& rng,
-                                                           std::string_view params,
-                                                           Signature_Format format,
-                                                           std::string_view provider) {
-   with_private_key(key);
-   with_rng(rng);
-   retrofit_legacy_parameters(*this, key, params, format, provider);
+PK_Signature_Options PK_Signature_Options::from_legacy(const Private_Key& key,
+                                                       RandomNumberGenerator& rng,
+                                                       std::string_view params,
+                                                       Signature_Format format,
+                                                       std::string_view provider) {
+   auto builder = PK_Signature_Options_Builder().with_private_key(key).with_rng(rng);
+   retrofit_legacy_parameters(builder, key, params, format, provider);
+   return builder.commit();
 }
 
-PK_Verification_Options_Builder::PK_Verification_Options_Builder(const Public_Key& key,
-                                                                 std::string_view params,
-                                                                 Signature_Format format,
-                                                                 std::string_view provider) {
-   with_public_key(key);
-   retrofit_legacy_parameters(*this, key, params, format, provider);
+PK_Signature_Options PK_Signature_Options::from_legacy(const Public_Key& key,
+                                                       std::string_view params,
+                                                       Signature_Format format,
+                                                       std::string_view provider) {
+   auto builder = PK_Verification_Options_Builder().with_public_key(key);
+   retrofit_legacy_parameters(builder, key, params, format, provider);
+   return builder.commit();
 }
 
 PK_Signature_Options_Builder& PK_Signature_Options_Builder::with_private_key(const Private_Key& key) & {
