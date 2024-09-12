@@ -256,14 +256,14 @@ std::unique_ptr<Private_Key> SM2_PublicKey::generate_another(RandomNumberGenerat
 }
 
 std::unique_ptr<PK_Ops::Verification> SM2_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
    return std::make_unique<SM2_Verification_Operation>(*this, options);
 }
 
 std::unique_ptr<PK_Ops::Signature> SM2_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
                                                                         PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
    return std::make_unique<SM2_Signature_Operation>(*this, options);
 }
 

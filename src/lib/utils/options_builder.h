@@ -283,6 +283,8 @@ class Options {
    protected:
       Container& options() { return m_options; }
 
+      std::string_view product_name() const { return m_product_name; }
+
       [[nodiscard]] auto take(detail::BuilderOption auto& o) {
          return detail::OptionValue(o.take(), o.name(), m_product_name);
       }

@@ -252,7 +252,7 @@ bool DSA_Verification_Operation::verify(std::span<const uint8_t> input, std::spa
 }  // namespace
 
 std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
    return std::make_unique<DSA_Verification_Operation>(this->m_public_key, options);
 }
 
@@ -267,7 +267,7 @@ std::unique_ptr<PK_Ops::Verification> DSA_PublicKey::create_x509_verification_op
 
 std::unique_ptr<PK_Ops::Signature> DSA_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
                                                                         PK_Signature_Options& options) const {
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
    return std::make_unique<DSA_Signature_Operation>(this->m_private_key, options, rng);
 }
 

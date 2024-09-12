@@ -433,8 +433,8 @@ std::unique_ptr<Public_Key> XMSS_PrivateKey::public_key() const {
 std::unique_ptr<PK_Ops::Signature> XMSS_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
                                                                          PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-   options.exclude_provider_for_algorithm(algo_name());
-   options.validate_for_hash_based_signature_algorithm(algo_name(), m_private->hash().hash_function());
+   options.exclude_provider();
+   options.validate_for_hash_based_signature(m_private->hash().hash_function());
    return std::make_unique<XMSS_Signature_Operation>(*this);
 }
 

@@ -118,7 +118,7 @@ std::unique_ptr<Private_Key> ECGDSA_PublicKey::generate_another(RandomNumberGene
 }
 
 std::unique_ptr<PK_Ops::Verification> ECGDSA_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
    return std::make_unique<ECGDSA_Verification_Operation>(*this, options);
 }
 
@@ -134,7 +134,7 @@ std::unique_ptr<PK_Ops::Verification> ECGDSA_PublicKey::create_x509_verification
 std::unique_ptr<PK_Ops::Signature> ECGDSA_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
                                                                            PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
    return std::make_unique<ECGDSA_Signature_Operation>(*this, options);
 }
 

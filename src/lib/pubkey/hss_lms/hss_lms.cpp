@@ -86,8 +86,8 @@ class HSS_LMS_Verification_Operation final : public PK_Ops::Verification {
 };
 
 std::unique_ptr<PK_Ops::Verification> HSS_LMS_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
-   options.exclude_provider_for_algorithm(algo_name());
-   options.validate_for_hash_based_signature_algorithm(algo_name());
+   options.exclude_provider();
+   options.validate_for_hash_based_signature();
    return std::make_unique<HSS_LMS_Verification_Operation>(m_public);
 }
 
@@ -197,8 +197,8 @@ std::unique_ptr<PK_Ops::Signature> HSS_LMS_PrivateKey::_create_signature_op(Rand
                                                                             PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
 
-   options.exclude_provider_for_algorithm(algo_name());
-   options.validate_for_hash_based_signature_algorithm(algo_name());
+   options.exclude_provider();
+   options.validate_for_hash_based_signature();
 
    return std::make_unique<HSS_LMS_Signature_Operation>(m_private, m_public);
 }

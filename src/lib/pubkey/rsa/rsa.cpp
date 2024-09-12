@@ -733,7 +733,7 @@ std::unique_ptr<PK_Ops::KEM_Encryption> RSA_PublicKey::create_kem_encryption_op(
 }
 
 std::unique_ptr<PK_Ops::Verification> RSA_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
    return std::make_unique<RSA_Verify_Operation>(*this, options);
 }
 
@@ -829,7 +829,7 @@ std::unique_ptr<PK_Ops::KEM_Decryption> RSA_PrivateKey::create_kem_decryption_op
 
 std::unique_ptr<PK_Ops::Signature> RSA_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
                                                                         PK_Signature_Options& options) const {
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
    return std::make_unique<RSA_Signature_Operation>(*this, options, rng);
 }
 

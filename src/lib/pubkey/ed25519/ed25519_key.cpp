@@ -274,7 +274,7 @@ class Ed25519_Hashed_Sign_Operation final : public PK_Ops::Signature {
 }  // namespace
 
 std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
 
    if(auto prehash = options.prehash().optional()) {
       return std::make_unique<Ed25519_Hashed_Verify_Operation>(
@@ -299,7 +299,7 @@ std::unique_ptr<PK_Ops::Verification> Ed25519_PublicKey::create_x509_verificatio
 std::unique_ptr<PK_Ops::Signature> Ed25519_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
                                                                             PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
 
    if(auto prehash = options.prehash().optional()) {
       return std::make_unique<Ed25519_Hashed_Sign_Operation>(

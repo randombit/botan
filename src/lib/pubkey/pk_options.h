@@ -94,15 +94,14 @@ class BOTAN_UNSTABLE_API PK_Signature_Options final : public Options<detail::PK_
       /// It may be acceptable to provide a hash function, for hash-based
       /// signatures (like SLH-DSA or LMS), but it is not required.
       /// @throws Invalid_Argument if the provided hash is not acceptable
-      void validate_for_hash_based_signature_algorithm(std::string_view algo_name,
-                                                       std::optional<std::string_view> acceptable_hash = std::nullopt);
+      void validate_for_hash_based_signature(std::optional<std::string_view> acceptable_hash = std::nullopt);
 
       /// This is a convenience helper for algorithms that do not support
       /// specifying a provider.
       /// @throws Provider_Not_Found if a provider is set
-      void exclude_provider_for_algorithm(std::string_view algo_name) {
+      void exclude_provider() {
          if(auto p = provider().optional()) {
-            throw Provider_Not_Found(algo_name, p.value());
+            throw Provider_Not_Found(product_name(), p.value());
          };
       }
 

@@ -102,8 +102,8 @@ XMSS_PublicKey::XMSS_PublicKey(XMSS_Parameters::xmss_algorithm_t xmss_oid,
 }
 
 std::unique_ptr<PK_Ops::Verification> XMSS_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
-   options.exclude_provider_for_algorithm(algo_name());
-   options.validate_for_hash_based_signature_algorithm(algo_name(), m_xmss_params.hash_function_name());
+   options.exclude_provider();
+   options.validate_for_hash_based_signature(m_xmss_params.hash_function_name());
    return std::make_unique<XMSS_Verification_Operation>(*this);
 }
 
