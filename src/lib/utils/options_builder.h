@@ -259,7 +259,7 @@ class Options {
          };
 
          if(!disdained_options.empty()) {
-            throw Invalid_Argument("'" + m_product_name + "' failed to use some options: " + join(disdained_options));
+            throw Invalid_Argument("'" + m_product_name + "' failed to use the options " + join(disdained_options));
          }
       }
 
