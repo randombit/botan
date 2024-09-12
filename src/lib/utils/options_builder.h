@@ -109,7 +109,7 @@ class OptionValue {
          if(!value.has_value()) {
             throw Invalid_Argument("'" + m_product_name + "' requires the '" + std::string(m_option_name) + "' option");
          }
-         return value.value();
+         return std::move(value).value();
       }
 
       /**
@@ -158,8 +158,9 @@ concept OptionsContainer = std::is_default_constructible_v<T> && std::is_move_as
                            };
 
 template <typename T>
-concept ConcreteOptions = OptionsContainer<typename T::Container> &&
-                          requires(typename T::Container&& container, std::string_view name) { T(container, name); };
+concept ConcreteOptions =
+   OptionsContainer<typename T::Container> &&
+   requires(typename T::Container container, std::string_view name) { T(std::move(container), name); };
 
 static constexpr auto unknown_product = "Unknown";
 
