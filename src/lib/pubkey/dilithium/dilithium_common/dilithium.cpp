@@ -383,7 +383,7 @@ std::unique_ptr<Private_Key> Dilithium_PublicKey::generate_another(RandomNumberG
 
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::_create_verification_op(
    PK_Signature_Options& options) const {
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
    return std::make_unique<Dilithium_Verification_Operation>(m_public);
 }
 
@@ -435,7 +435,7 @@ secure_vector<uint8_t> Dilithium_PrivateKey::private_key_bits() const {
 std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
                                                                               PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-   options.exclude_provider_for_algorithm(algo_name());
+   options.exclude_provider();
    return std::make_unique<Dilithium_Signature_Operation>(DilithiumInternalKeypair{m_public, m_private}, options);
 }
 
