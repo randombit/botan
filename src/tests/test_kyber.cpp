@@ -4,10 +4,10 @@
  * - KAT tests using the KAT vectors from
  *   https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Kyber-Round3.zip
  *
- * (C) 2021-2022 Jack Lloyd
+ * (C) 2021-2024 Jack Lloyd
  * (C) 2021-2022 Manuel Glaser and Michael Boric, Rohde & Schwarz Cybersecurity
  * (C) 2021-2022 René Meusel and Hannes Rantzsch, neXenio GmbH
- * (C) 2023      René Meusel, Rohde & Schwarz Cybersecurity
+ * (C) 2023-2024 René Meusel, Rohde & Schwarz Cybersecurity
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */
@@ -249,10 +249,21 @@ class Kyber_Keygen_Tests final : public PK_Key_Generation_Test {
    #if defined(BOTAN_HAS_KYBER)
                "Kyber-512-r3", "Kyber-768-r3", "Kyber-1024-r3",
    #endif
+   #if defined(BOTAN_HAS_ML_KEM)
+               "ML-KEM-512", "ML-KEM-768", "ML-KEM-1024",
+   #endif
          };
       }
 
-      std::string algo_name() const override { return "Kyber"; }
+      std::string algo_name(std::string_view param) const override {
+         if(param.starts_with("Kyber-")) {
+            return "Kyber";
+         } else {
+            return "ML-KEM";
+         }
+      }
+
+      std::string algo_name() const override { throw Test_Error("No default algo name set for Kyber"); }
 
       std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view keygen_params,
                                                              std::string_view /* provider */,

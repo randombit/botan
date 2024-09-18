@@ -576,19 +576,20 @@ std::vector<Test::Result> PK_Key_Generation_Test::run() {
    std::vector<Test::Result> results;
 
    for(const auto& param : keygen_params()) {
-      const std::string report_name = algo_name() + (param.empty() ? param : " " + param);
+      const auto algo = algo_name(param);
+      const std::string report_name = Botan::fmt("{}{}", algo, (param.empty() ? param : " " + param));
 
       Test::Result result(report_name + " keygen");
 
-      const std::vector<std::string> providers = possible_providers(algo_name());
+      const std::vector<std::string> providers = possible_providers(algo);
 
       if(providers.empty()) {
-         result.note_missing("provider key generation " + algo_name());
+         result.note_missing("provider key generation " + algo);
       }
 
       result.start_timer();
       for(auto&& prov : providers) {
-         auto key_p = Botan::create_private_key(algo_name(), this->rng(), param, prov);
+         auto key_p = Botan::create_private_key(algo, this->rng(), param, prov);
 
          if(key_p == nullptr) {
             result.test_failure("create_private_key returned null, should throw instead");
