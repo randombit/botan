@@ -17,6 +17,7 @@
    #include <botan/hash.h>
    #include <botan/pk_algs.h>
    #include <botan/pubkey.h>
+   #include <botan/internal/fmt.h>
 
    #include "test_pubkey.h"
 #endif
@@ -88,6 +89,16 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
       };                                                                                 \
       BOTAN_REGISTER_TEST("pubkey", "dilithium_kat_" #m "_" #rand, DILITHIUM##m##rand)
 
+   // NOLINTNEXTLINE(*-macro-usage)
+   #define REGISTER_ML_DSA_KAT_TEST(m, rand)                                          \
+      class ML_DSA##m##rand final : public Dilithium_KAT_Tests<ML_DSA##m##rand> {     \
+         public:                                                                      \
+            constexpr static auto test_vector = "pubkey/ml-dsa-" #m "_" #rand ".vec"; \
+            constexpr static auto mode = Botan::DilithiumMode::ML_DSA_##m;            \
+            constexpr static auto sign_param = #rand;                                 \
+      };                                                                              \
+      BOTAN_REGISTER_TEST("pubkey", "ml-dsa_kat_" #m "_" #rand, ML_DSA##m##rand)
+
    #if defined(BOTAN_HAS_DILITHIUM)
 REGISTER_DILITHIUM_KAT_TEST(4x4, Deterministic);
 REGISTER_DILITHIUM_KAT_TEST(6x5, Deterministic);
@@ -104,6 +115,15 @@ REGISTER_DILITHIUM_KAT_TEST(8x7_AES, Deterministic);
 REGISTER_DILITHIUM_KAT_TEST(4x4_AES, Randomized);
 REGISTER_DILITHIUM_KAT_TEST(6x5_AES, Randomized);
 REGISTER_DILITHIUM_KAT_TEST(8x7_AES, Randomized);
+   #endif
+
+   #if defined(BOTAN_HAS_ML_DSA)
+REGISTER_ML_DSA_KAT_TEST(4x4, Deterministic);
+REGISTER_ML_DSA_KAT_TEST(6x5, Deterministic);
+REGISTER_ML_DSA_KAT_TEST(8x7, Deterministic);
+REGISTER_ML_DSA_KAT_TEST(4x4, Randomized);
+REGISTER_ML_DSA_KAT_TEST(6x5, Randomized);
+REGISTER_ML_DSA_KAT_TEST(8x7, Randomized);
    #endif
 
 class DilithiumRoundtripTests final : public Test {
