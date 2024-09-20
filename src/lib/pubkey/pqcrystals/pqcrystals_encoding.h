@@ -55,8 +55,8 @@ concept coeff_unmap_fn =
    };
 
 /**
- * Helper for base implementations of NIST FIPS 204 IPD, Algorithms 10-13 and
- * NIST FIPS Algorithms 4-5. It pre-computes generic values to bit-(un)pack
+ * Helper for base implementations of NIST FIPS 204, Algorithms 16-19 and
+ * NIST FIPS 203 Algorithms 5-6. It pre-computes generic values to bit-(un)pack
  * polynomial coefficients at compile-time.
  *
  * The base implementations are also templated with the @p range parameter
@@ -94,7 +94,7 @@ struct BitPackingTrait final {
 
 /**
  * Base implementation of NIST FIPS 203 Algorithm 5 (ByteEncode) and NIST
- * FIPS 204 Algorithms 10 (SimpleBitPack) and 11 (BitPack).
+ * FIPS 204 Algorithms 16 (SimpleBitPack) and 17 (BitPack).
  *
  * This takes a polynomial @p p and packs its coefficients into the buffer
  * represented by @p stuffer. Optionally, the coefficients can be transformed
@@ -166,7 +166,7 @@ constexpr void pack(const Polynomial<PolyTrait, D>& p, BufferStuffer& stuffer, M
 
 /**
  * Base implementation of NIST FIPS 203 Algorithm 6 (ByteDecode) and NIST
- * FIPS 204 Algorithms 12 (SimpleBitUnpack) and 13 (BitUnpack).
+ * FIPS 204 Algorithms 18 (SimpleBitUnpack) and 19 (BitUnpack).
  *
  * This takes a byte sequence represented by @p byte_source and unpacks its
  * coefficients into the polynomial @p p. Optionally, the coefficients can be

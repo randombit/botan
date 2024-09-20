@@ -66,7 +66,7 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
          verifier.update(ref_msg.data(), ref_msg.size());
          result.confirm("signature verifies", verifier.check_signature(signature.data(), signature.size()));
 
-         // test validating incorrect wrong signagture
+         // test validating incorrect wrong signature
          auto mutated_signature = Test::mutate_vec(signature, this->rng());
          result.confirm("invalid signature rejected",
                         !verifier.check_signature(mutated_signature.data(), mutated_signature.size()));
@@ -86,7 +86,7 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
             constexpr static auto mode = Botan::DilithiumMode::Dilithium##m;             \
             constexpr static auto sign_param = #rand;                                    \
       };                                                                                 \
-      BOTAN_REGISTER_TEST("dilithium", "dilithium_kat_" #m "_" #rand, DILITHIUM##m##rand)
+      BOTAN_REGISTER_TEST("pubkey", "dilithium_kat_" #m "_" #rand, DILITHIUM##m##rand)
 
    #if defined(BOTAN_HAS_DILITHIUM)
 REGISTER_DILITHIUM_KAT_TEST(4x4, Deterministic);
@@ -111,6 +111,10 @@ class DilithiumRoundtripTests final : public Test {
       static Test::Result run_roundtrip(
          const char* test_name, Botan::DilithiumMode mode, bool randomized, size_t strength, size_t psid) {
          Test::Result result(test_name);
+         if(!mode.is_available()) {
+            result.note_missing(mode.to_string());
+            return result;
+         }
 
          auto rng = Test::new_rng(test_name);
 
@@ -187,43 +191,61 @@ class DilithiumRoundtripTests final : public Test {
 
       std::vector<Test::Result> run() override {
          return {
-   #if defined(BOTAN_HAS_DILITHIUM)
             run_roundtrip("Dilithium_4x4_Common", Botan::DilithiumMode::Dilithium4x4, false, 128, 44),
-               run_roundtrip("Dilithium_6x5_Common", Botan::DilithiumMode::Dilithium6x5, false, 192, 65),
-               run_roundtrip("Dilithium_8x7_Common", Botan::DilithiumMode::Dilithium8x7, false, 256, 87),
-               run_roundtrip("Dilithium_4x4_Common_Randomized", Botan::DilithiumMode::Dilithium4x4, true, 128, 44),
-               run_roundtrip("Dilithium_6x5_Common_Randomized", Botan::DilithiumMode::Dilithium6x5, true, 192, 65),
-               run_roundtrip("Dilithium_8x7_Common_Randomized", Botan::DilithiumMode::Dilithium8x7, true, 256, 87),
-   #endif
-
-   #if defined(BOTAN_HAS_DILITHIUM_AES)
-               run_roundtrip("Dilithium_4x4_AES", Botan::DilithiumMode::Dilithium4x4_AES, false, 128, 44),
-               run_roundtrip("Dilithium_6x5_AES", Botan::DilithiumMode::Dilithium6x5_AES, false, 192, 65),
-               run_roundtrip("Dilithium_8x7_AES", Botan::DilithiumMode::Dilithium8x7_AES, false, 256, 87),
-               run_roundtrip("Dilithium_4x4_AES_Randomized", Botan::DilithiumMode::Dilithium4x4_AES, true, 128, 44),
-               run_roundtrip("Dilithium_6x5_AES_Randomized", Botan::DilithiumMode::Dilithium6x5_AES, true, 192, 65),
-               run_roundtrip("Dilithium_8x7_AES_Randomized", Botan::DilithiumMode::Dilithium8x7_AES, true, 256, 87),
-   #endif
+            run_roundtrip("Dilithium_6x5_Common", Botan::DilithiumMode::Dilithium6x5, false, 192, 65),
+            run_roundtrip("Dilithium_8x7_Common", Botan::DilithiumMode::Dilithium8x7, false, 256, 87),
+            run_roundtrip("Dilithium_4x4_Common_Randomized", Botan::DilithiumMode::Dilithium4x4, true, 128, 44),
+            run_roundtrip("Dilithium_6x5_Common_Randomized", Botan::DilithiumMode::Dilithium6x5, true, 192, 65),
+            run_roundtrip("Dilithium_8x7_Common_Randomized", Botan::DilithiumMode::Dilithium8x7, true, 256, 87),
+            run_roundtrip("Dilithium_4x4_AES", Botan::DilithiumMode::Dilithium4x4_AES, false, 128, 44),
+            run_roundtrip("Dilithium_6x5_AES", Botan::DilithiumMode::Dilithium6x5_AES, false, 192, 65),
+            run_roundtrip("Dilithium_8x7_AES", Botan::DilithiumMode::Dilithium8x7_AES, false, 256, 87),
+            run_roundtrip("Dilithium_4x4_AES_Randomized", Botan::DilithiumMode::Dilithium4x4_AES, true, 128, 44),
+            run_roundtrip("Dilithium_6x5_AES_Randomized", Botan::DilithiumMode::Dilithium6x5_AES, true, 192, 65),
+            run_roundtrip("Dilithium_8x7_AES_Randomized", Botan::DilithiumMode::Dilithium8x7_AES, true, 256, 87),
+            run_roundtrip("ML-DSA_4x4", Botan::DilithiumMode::ML_DSA_4x4, false, 128, 44),
+            run_roundtrip("ML-DSA_6x5", Botan::DilithiumMode::ML_DSA_6x5, false, 192, 65),
+            run_roundtrip("ML-DSA_8x7", Botan::DilithiumMode::ML_DSA_8x7, false, 256, 87),
+            run_roundtrip("ML-DSA_4x4_Randomized", Botan::DilithiumMode::ML_DSA_4x4, true, 128, 44),
+            run_roundtrip("ML-DSA_6x5_Randomized", Botan::DilithiumMode::ML_DSA_6x5, true, 192, 65),
+            run_roundtrip("ML-DSA_8x7_Randomized", Botan::DilithiumMode::ML_DSA_8x7, true, 256, 87),
          };
       }
 };
 
-BOTAN_REGISTER_TEST("dilithium", "dilithium_roundtrips", DilithiumRoundtripTests);
+BOTAN_REGISTER_TEST("pubkey", "dilithium_roundtrips", DilithiumRoundtripTests);
 
 class Dilithium_Keygen_Tests final : public PK_Key_Generation_Test {
    public:
       std::vector<std::string> keygen_params() const override {
-         return {
-   #if defined(BOTAN_HAS_DILITHIUM_AES)
-            "Dilithium-4x4-AES-r3", "Dilithium-6x5-AES-r3", "Dilithium-8x7-AES-r3",
-   #endif
-   #if defined(BOTAN_HAS_DILITHIUM)
-               "Dilithium-4x4-r3", "Dilithium-6x5-r3", "Dilithium-8x7-r3",
-   #endif
+         std::vector<std::string> all_instances = {
+            "Dilithium-4x4-AES-r3",
+            "Dilithium-6x5-AES-r3",
+            "Dilithium-8x7-AES-r3",
+            "Dilithium-4x4-r3",
+            "Dilithium-6x5-r3",
+            "Dilithium-8x7-r3",
+            "ML-DSA-4x4",
+            "ML-DSA-6x5",
+            "ML-DSA-8x7",
          };
+         std::vector<std::string> available_instances;
+         std::copy_if(all_instances.begin(),
+                      all_instances.end(),
+                      std::back_inserter(available_instances),
+                      [](const std::string& instance) { return Botan::DilithiumMode(instance).is_available(); });
+         return available_instances;
       }
 
-      std::string algo_name() const override { return "Dilithium"; }
+      std::string algo_name(std::string_view param) const override {
+         if(param.starts_with("Dilithium-")) {
+            return "Dilithium";
+         } else {
+            return "ML-DSA";
+         }
+      }
+
+      std::string algo_name() const override { throw Test_Error("No default algo name set for Dilithium"); }
 
       std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view keygen_params,
                                                              std::string_view /* provider */,

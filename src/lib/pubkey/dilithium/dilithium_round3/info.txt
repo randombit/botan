@@ -1,17 +1,16 @@
 <defines>
-DILITHIUM_AES -> 20221018
+DILITHIUM_ROUND3 -> 20240916
 </defines>
 
 <module_info>
-name -> "Dilithium (AES)"
-lifecycle -> "Deprecated"
+name -> "Dilithium Round 3"
+type -> "Internal"
 </module_info>
 
 <requires>
 dilithium_common
-aes_crystals_xof
 </requires>
 
 <header:internal>
-dilithium_aes.h
+dilithium_round3_symmetric_primitives.h
 </header:internal>

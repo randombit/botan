@@ -378,4 +378,32 @@ BOTAN_REGISTER_PERF_TEST("Dilithium", PerfTest_Dilithium);
 
 #endif
 
+#if defined(BOTAN_HAS_ML_DSA)
+
+class PerfTest_ML_DSA final : public PerfTest_PKSig {
+   public:
+      std::string algo() const override { return "ML-DSA"; }
+
+      std::string hash() const override { return ""; }
+
+      std::string format_name(const std::string& alg, const std::string& param) const override {
+         BOTAN_UNUSED(alg);
+         return param;  // Param already has algo in the string
+      }
+
+      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
+         BOTAN_UNUSED(config);
+
+         return {
+            "ML-DSA-4x4",
+            "ML-DSA-6x5",
+            "ML-DSA-8x7",
+         };
+      }
+};
+
+BOTAN_REGISTER_PERF_TEST("ML-DSA", PerfTest_ML_DSA);
+
+#endif
+
 }  // namespace Botan_CLI

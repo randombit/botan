@@ -20,7 +20,17 @@ namespace Botan {
 
 class BOTAN_PUBLIC_API(3, 0) DilithiumMode {
    public:
-      enum Mode { Dilithium4x4 = 1, Dilithium4x4_AES, Dilithium6x5, Dilithium6x5_AES, Dilithium8x7, Dilithium8x7_AES };
+      enum Mode {
+         Dilithium4x4 = 1,
+         Dilithium4x4_AES BOTAN_DEPRECATED("Dilithium AES mode is deprecated"),
+         Dilithium6x5,
+         Dilithium6x5_AES BOTAN_DEPRECATED("Dilithium AES mode is deprecated"),
+         Dilithium8x7,
+         Dilithium8x7_AES BOTAN_DEPRECATED("Dilithium AES mode is deprecated"),
+         ML_DSA_4x4,
+         ML_DSA_6x5,
+         ML_DSA_8x7,
+      };
 
    public:
       DilithiumMode(Mode mode) : m_mode(mode) {}
@@ -31,11 +41,13 @@ class BOTAN_PUBLIC_API(3, 0) DilithiumMode {
       OID object_identifier() const;
       std::string to_string() const;
 
-      bool is_aes() const {
-         return m_mode == Dilithium4x4_AES || m_mode == Dilithium6x5_AES || m_mode == Dilithium8x7_AES;
-      }
+      BOTAN_DEPRECATED("Dilithium AES mode is deprecated") bool is_aes() const;
+      BOTAN_DEPRECATED("Dilithium AES mode is deprecated") bool is_modern() const;
+      bool is_ml_dsa() const;
 
-      bool is_modern() const { return !is_aes(); }
+      bool is_dilithium_round3() const { return !is_ml_dsa(); }
+
+      bool is_available() const;
 
       Mode mode() const { return m_mode; }
 
