@@ -115,19 +115,28 @@ Dilithium
 
 Post-quantum secure signature scheme based on lattice problems.
 
-Kyber
-~~~~~~~~~~~
+ML-KEM (FIPS 203)
+~~~~~~~~~~~~~~~~~
 
-Post-quantum key encapsulation scheme based on (structured) lattices.
+Post-quantum key encapsulation scheme based on (structured) lattices. This
+algorithm is standardized in FIPS 203. Decapsulation keys are always stored and
+expanded from the 64-byte private random seeds (``d || z``), loading the
+expanded key format specified in FIPS 203 is explicitly not supported.
 
-.. note::
+Support for ML-KEM is implemented in the module ``ml_kem``.
 
-   Currently two modes for Kyber are defined: the round3 specification
-   from the NIST PQC competition, and the "90s mode" (which uses
-   AES/SHA-2 instead of SHA-3 based primitives). The 90s mode Kyber is
-   deprecated and will be removed in a future release.
+Additionally, support for the pre-standardized version "Kyber" is retained for
+the time being. The implemented specification is commonly referred to as version
+3.01 of the CRYSTALS-Kyber submission to NIST's third round of the PQC
+competition. This is not compatible to the "Initial Public Draft" version of
+FIPS 203 for which Botan does not offer an implementation.
 
-   The final NIST specification version of Kyber is not yet implemented.
+Currently two flavors of Kyber are implemented in separate Botan modules:
+
+ * ``kyber``, that uses Keccak (SHAKE and SHA-3), and that saw some public
+   usage by early adopters.
+ * ``kyber_90s``, that uses AES/SHA-2 instead of Keccak-based primitives.
+   This mode is deprecated and will be removed in a future release.
 
 Ed25519 and Ed448
 ~~~~~~~~~~~~~~~~~
@@ -1160,18 +1169,19 @@ encapsulated key and returns the shared secret.
 Botan implements the following KEM schemes:
 
 1. RSA
-#. Kyber
+#. ML-KEM (Kyber)
 #. FrodoKEM
 #. McEliece
 
-.. _kyber_example:
+.. _mlkem_example:
 
-Code Example: Kyber
+Code Example: ML-KEM
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The code below demonstrates key encapsulation using the Kyber post-quantum scheme.
+The code below demonstrates key encapsulation using ML-KEM (FIPS 203), formerly
+known as Kyber.
 
-.. literalinclude:: /../src/examples/kyber.cpp
+.. literalinclude:: /../src/examples/ml_kem.cpp
    :language: cpp
 
 .. _mceliece:

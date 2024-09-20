@@ -299,6 +299,11 @@ Public Key
      "sm2p256v1") and the public point as a pair of integers giving
      the affine coordinates.
 
+  .. py:classmethod:: load_ml_kem(mode, raw_encoding)
+
+     Load an ML-KEM public key giving the mode as a string (like
+     "ML-KEM-512") and the raw encoding of the public key.
+
   .. py:method:: check_key(rng_obj, strong=True):
 
      Test the key for consistency. If ``strong`` is ``True`` then
@@ -389,6 +394,10 @@ Private Key
   .. py:classmethod:: load_sm2(curve, x)
 
      Return a private SM2 key
+
+  .. py:classmethod:: load_ml_kem(mode, raw_encoding)
+
+     Return a private ML-KEM key
 
   .. py:method:: get_public_key()
 

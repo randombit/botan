@@ -372,12 +372,12 @@ int main() {
 
    // Alice generates two key pairs suitable for:
    //   1) key exchange (X25519), and
-   //   2) key encapsulation (Kyber).
+   //   2) key encapsulation (ML-KEM).
    //
    // She then combines them into a custom "hybrid" key pair that acts
    // like a key encapsulation mechanism (KEM).
    const auto private_key_of_alice = std::make_unique<Hybrid_PrivateKey>(
-      Botan::create_private_key("X25519", rng), Botan::create_private_key("Kyber", rng, "Kyber-768-r3"));
+      Botan::create_private_key("X25519", rng), Botan::create_private_key("ML-KEM", rng, "ML-KEM-768"));
    const auto public_key_of_alice = private_key_of_alice->public_key();
 
    // Bob uses Alice's public key to encapsulate a shared secret, and
