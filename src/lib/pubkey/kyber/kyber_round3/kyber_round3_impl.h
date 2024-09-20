@@ -1,5 +1,5 @@
 /*
- * Crystals Kyber key encapsulation mechanism
+ * Crystals Kyber key encapsulation mechanism and key codec
  *
  * (C) 2024 Jack Lloyd
  * (C) 2024 René Meusel, Rohde & Schwarz Cybersecurity
@@ -51,6 +51,12 @@ class Kyber_KEM_Decryptor final : public Kyber_KEM_Decryptor_Base {
    private:
       std::shared_ptr<const Kyber_PublicKeyInternal> m_public_key;
       std::shared_ptr<const Kyber_PrivateKeyInternal> m_private_key;
+};
+
+class Kyber_Expanded_Keypair_Codec final : public Kyber_Keypair_Codec {
+   public:
+      KyberInternalKeypair decode_keypair(std::span<const uint8_t> buffer, KyberConstants mode) const override;
+      secure_vector<uint8_t> encode_keypair(KyberInternalKeypair private_key) const override;
 };
 
 }  // namespace Botan

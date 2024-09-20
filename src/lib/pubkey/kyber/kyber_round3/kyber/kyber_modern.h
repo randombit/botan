@@ -1,6 +1,6 @@
 /*
  * Symmetric primitives for Kyber (modern (non-90s) mode)
- * (C) 2022 Jack Lloyd
+ * (C) 2022-2024 Jack Lloyd
  * (C) 2022 Hannes Rantzsch, René Meusel, neXenio GmbH
  * (C) 2024 René Meusel, Rohde & Schwarz Cybersecurity
  *
@@ -20,7 +20,7 @@
 
 namespace Botan {
 
-class Kyber_Modern_Symmetric_Primitives : public Kyber_Symmetric_Primitives {
+class Kyber_Modern_Symmetric_Primitives final : public Kyber_Symmetric_Primitives {
    public:
       Kyber_Modern_Symmetric_Primitives() :
             m_sha3_512(HashFunction::create_or_throw("SHA-3(512)")),
@@ -30,9 +30,15 @@ class Kyber_Modern_Symmetric_Primitives : public Kyber_Symmetric_Primitives {
             m_shake256(Botan::XOF::create_or_throw("SHAKE-256")) {}
 
    protected:
+      std::optional<std::array<uint8_t, 1>> seed_expansion_domain_separator(const KyberConstants&) const override {
+         return {};
+      }
+
       HashFunction& get_G() const override { return *m_sha3_512; }
 
       HashFunction& get_H() const override { return *m_sha3_256; }
+
+      HashFunction& get_J() const override { throw Invalid_State("Kyber-R3 does not support J()"); }
 
       HashFunction& get_KDF() const override { return *m_shake256_256; }
 

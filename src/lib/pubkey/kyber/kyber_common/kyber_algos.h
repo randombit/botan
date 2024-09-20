@@ -31,6 +31,8 @@ KyberPoly polynomial_from_message(StrongSpan<const KyberMessage> msg);
 
 KyberMessage polynomial_to_message(const KyberPoly& p);
 
+KyberInternalKeypair expand_keypair(KyberPrivateKeySeed seed, KyberConstants mode);
+
 void compress_ciphertext(StrongSpan<KyberCompressedCiphertext> out,
                          const KyberPolyVec& u,
                          const KyberPoly& v,
@@ -55,7 +57,7 @@ T encode_polynomial_vector(const KyberPolyVecNTT& vec, const KyberConstants& mod
 /**
  * Allows sampling multiple polynomials from a single seed via a XOF.
  *
- * Used in Algorithms 12 (K-PKE.KeyGen) and 13 (K-PKE.Encrypt), and takes care
+ * Used in Algorithms 13 (K-PKE.KeyGen) and 14 (K-PKE.Encrypt), and takes care
  * of the continuous nonce value internally.
  */
 template <typename SeedT>
