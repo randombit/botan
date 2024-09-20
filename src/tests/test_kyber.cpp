@@ -115,13 +115,16 @@ class KYBER_Tests final : public Test {
       }
 };
 
-BOTAN_REGISTER_TEST("kyber", "kyber_pairwise", KYBER_Tests);
+BOTAN_REGISTER_TEST("pubkey", "kyber_pairwise", KYBER_Tests);
 
 namespace {
 
-class Kyber_KAT_Tests final : public PK_PQC_KEM_KAT_Test {
-   public:
-      Kyber_KAT_Tests() : PK_PQC_KEM_KAT_Test("Kyber", "pubkey/kyber_kat.vec") {}
+class Kyber_KAT_Tests : public PK_PQC_KEM_KAT_Test {
+   protected:
+      Kyber_KAT_Tests(const std::string& algo_name,
+                      const std::string& kat_file,
+                      const std::string& further_optional_keys = "") :
+            PK_PQC_KEM_KAT_Test(algo_name, kat_file, further_optional_keys) {}
 
    private:
       Botan::KyberMode get_mode(const std::string& mode) const { return Botan::KyberMode(mode); }
@@ -134,19 +137,28 @@ class Kyber_KAT_Tests final : public PK_PQC_KEM_KAT_Test {
          if(var_type == VarType::SharedSecret) {
             return {value.begin(), value.end()};
          }
-         // We use different hash functions for Kyber 90s and Kyber "modern", as
-         // those are consistent with the requirements of the implementations.
-         std::string_view hash_name = get_mode(mode).is_modern() ? "SHAKE-256(128)" : "SHA-256";
+
+         // We use different hash functions for Kyber 90s, as those are
+         // consistent with the algorithm requirements of the implementations.
+         std::string_view hash_name = get_mode(mode).is_90s() ? "SHA-256" : "SHAKE-256(128)";
 
          auto hash = Botan::HashFunction::create_or_throw(hash_name);
          const auto digest = hash->process(value);
          return {digest.begin(), digest.begin() + 16};
       }
 
-      Fixed_Output_RNG rng_for_keygen(const std::string&, Botan::RandomNumberGenerator& rng) const final {
-         const auto seed = rng.random_vec(32);
-         const auto z = rng.random_vec(32);
-         return Fixed_Output_RNG(Botan::concat(seed, z));
+      Fixed_Output_RNG rng_for_keygen(const std::string& mode, Botan::RandomNumberGenerator& rng) const final {
+         if(get_mode(mode).is_kyber_round3()) {
+            const auto seed = rng.random_vec(32);
+            const auto z = rng.random_vec(32);
+            return Fixed_Output_RNG(Botan::concat(seed, z));
+         } else if(get_mode(mode).is_ml_kem()) {
+            const auto z = rng.random_vec(32);
+            const auto d = rng.random_vec(32);
+            return Fixed_Output_RNG(Botan::concat(d, z));
+         } else {
+            return Fixed_Output_RNG(rng.random_vec(64));
+         }
       }
 
       Fixed_Output_RNG rng_for_encapsulation(const std::string&, Botan::RandomNumberGenerator& rng) const final {
@@ -154,61 +166,71 @@ class Kyber_KAT_Tests final : public PK_PQC_KEM_KAT_Test {
       }
 };
 
+class KyberR3_KAT_Tests : public Kyber_KAT_Tests {
+   public:
+      KyberR3_KAT_Tests() : Kyber_KAT_Tests("Kyber", "pubkey/kyber_kat.vec") {}
+};
+
+class ML_KEM_KAT_Tests : public Kyber_KAT_Tests {
+   public:
+      ML_KEM_KAT_Tests() : Kyber_KAT_Tests("ML-KEM", "pubkey/ml_kem.vec", "CT_N,SS_N") {}
+};
+
+class ML_KEM_ACVP_KAT_KeyGen_Tests : public PK_PQC_KEM_ACVP_KAT_KeyGen_Test {
+   public:
+      ML_KEM_ACVP_KAT_KeyGen_Tests() :
+            PK_PQC_KEM_ACVP_KAT_KeyGen_Test("ML-KEM", "pubkey/ml_kem_acvp_keygen.vec", "Z,D") {}
+
+   private:
+      Botan::KyberMode get_mode(const std::string& mode) const { return Botan::KyberMode(mode); }
+
+      bool is_available(const std::string& mode) const final { return get_mode(mode).is_available(); }
+
+      Fixed_Output_RNG rng_for_keygen(const VarMap& vars) const override {
+         const auto d = vars.get_req_bin("D");
+         const auto z = vars.get_req_bin("Z");
+         return Fixed_Output_RNG(Botan::concat(d, z));
+      }
+};
+
+class ML_KEM_PQC_KEM_ACVP_KAT_Encap_Test : public PK_PQC_KEM_ACVP_KAT_Encap_Test {
+   public:
+      ML_KEM_PQC_KEM_ACVP_KAT_Encap_Test() : PK_PQC_KEM_ACVP_KAT_Encap_Test("ML-KEM", "pubkey/ml_kem_acvp_encap.vec") {}
+
+   private:
+      Botan::KyberMode get_mode(const std::string& mode) const { return Botan::KyberMode(mode); }
+
+      bool is_available(const std::string& mode) const final { return get_mode(mode).is_available(); }
+
+      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars, const std::string& mode) const final {
+         return std::make_unique<Botan::Kyber_PublicKey>(vars.get_req_bin("EK"), get_mode(mode));
+      }
+};
+
 }  // namespace
 
-BOTAN_REGISTER_TEST("kyber", "kyber_kat", Kyber_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "kyber_kat", KyberR3_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ml_kem_kat", ML_KEM_KAT_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ml_kem_acvp_kat_keygen", ML_KEM_ACVP_KAT_KeyGen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ml_kem_acvp_kat_encap", ML_KEM_PQC_KEM_ACVP_KAT_Encap_Test);
+
+// Currently we cannot use the ACVP decapsulation tests because they do not
+// provide the private key's seed values.
+//BOTAN_REGISTER_TEST("pubkey", "ml_kem_acvp_kat_decap", ML_KEM_PQC_KEM_ACVP_KAT_Decap_Test);
 
 class Kyber_Encoding_Test : public Text_Based_Test {
    public:
       Kyber_Encoding_Test() : Text_Based_Test("pubkey/kyber_encodings.vec", "PrivateRaw,PublicRaw", "Error") {}
 
-   private:
-      static Botan::KyberMode name_to_mode(const std::string& algo_name) {
-         if(algo_name == "Kyber-512-r3") {
-            return Botan::KyberMode::Kyber512_R3;
-         }
-         if(algo_name == "Kyber-512-90s-r3") {
-            return Botan::KyberMode::Kyber512_90s;
-         }
-         if(algo_name == "Kyber-768-r3") {
-            return Botan::KyberMode::Kyber768_R3;
-         }
-         if(algo_name == "Kyber-768-90s-r3") {
-            return Botan::KyberMode::Kyber768_90s;
-         }
-         if(algo_name == "Kyber-1024-r3") {
-            return Botan::KyberMode::Kyber1024_R3;
-         }
-         if(algo_name == "Kyber-1024-90s-r3") {
-            return Botan::KyberMode::Kyber1024_90s;
-         }
-
-         throw Botan::Invalid_Argument("don't know kyber mode: " + algo_name);
-      }
-
    public:
       bool skip_this_test(const std::string& algo_name, const VarMap& /*vars*/) override {
-         const auto mode = name_to_mode(algo_name);
-   #if defined(BOTAN_HAS_KYBER)
-         if(!mode.is_90s()) {
-            return false;
-         }
-   #endif
-   #if defined(BOTAN_HAS_KYBER_90S)
-         if(mode.is_90s()) {
-            return false;
-         }
-   #endif
-
-         BOTAN_UNUSED(algo_name, mode);
-         return true;
+         return !Botan::KyberMode(algo_name).is_available();
       }
 
       Test::Result run_one_test(const std::string& algo_name, const VarMap& vars) override {
          Test::Result result("kyber_encodings");
 
-         const auto mode = name_to_mode(algo_name);
-
+         const auto mode = Botan::KyberMode(algo_name);
          const auto pk_raw = Botan::hex_decode(vars.get_req_str("PublicRaw"));
          const auto sk_raw = Botan::hex_decode_locked(vars.get_req_str("PrivateRaw"));
          const auto error = vars.get_opt_str("Error", "");
@@ -239,7 +261,7 @@ class Kyber_Encoding_Test : public Text_Based_Test {
       }
 };
 
-BOTAN_REGISTER_TEST("kyber", "kyber_encodings", Kyber_Encoding_Test);
+BOTAN_REGISTER_TEST("pubkey", "kyber_encodings", Kyber_Encoding_Test);
 
 class Kyber_Keygen_Tests final : public PK_Key_Generation_Test {
    public:
@@ -274,7 +296,7 @@ class Kyber_Keygen_Tests final : public PK_Key_Generation_Test {
       }
 };
 
-BOTAN_REGISTER_TEST("kyber", "kyber_keygen", Kyber_Keygen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "kyber_keygen", Kyber_Keygen_Tests);
 
 namespace {
 
@@ -369,7 +391,7 @@ std::vector<Test::Result> test_kyber_helpers() {
 
 }  // namespace
 
-BOTAN_REGISTER_TEST_FN("kyber", "kyber_helpers", test_kyber_helpers);
+BOTAN_REGISTER_TEST_FN("pubkey", "kyber_helpers", test_kyber_helpers);
 
 #endif
 
