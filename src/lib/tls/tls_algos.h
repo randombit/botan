@@ -113,7 +113,7 @@ enum class Group_Params_Code : uint16_t {
 
    // Cloudflare code points for hybrid PQC
    // https://blog.cloudflare.com/post-quantum-for-all/
-   HYBRID_X25519_KYBER_512_R3_CLOUDFLARE = 0xFE30,
+   HYBRID_X25519_KYBER_512_R3_CLOUDFLARE BOTAN_DEPRECATED("removed without replacement") = 0xFE30,
 
    // libOQS defines those in:
    // https://github.com/open-quantum-safe/oqs-provider/blob/main/ALGORITHMS.md
@@ -213,6 +213,9 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
       constexpr bool is_post_quantum() const { return is_pure_kyber() || is_pure_frodokem() || is_pqc_hybrid(); }
 
       constexpr bool is_pqc_hybrid() const {
+         BOTAN_DIAGNOSTIC_PUSH
+         BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
+
          return m_code == Group_Params_Code::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE ||
                 m_code == Group_Params_Code::HYBRID_X25519_KYBER_512_R3_OQS ||
                 m_code == Group_Params_Code::HYBRID_X25519_KYBER_768_R3_OQS ||
@@ -231,6 +234,8 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
                 m_code == Group_Params_Code::HYBRID_SECP521R1_KYBER_1024_R3_OQS ||
                 m_code == Group_Params_Code::HYBRID_SECP521R1_eFRODOKEM_1344_SHAKE_OQS ||
                 m_code == Group_Params_Code::HYBRID_SECP521R1_eFRODOKEM_1344_AES_OQS;
+
+         BOTAN_DIAGNOSTIC_POP
       }
 
       constexpr bool is_kem() const { return is_pure_kyber() || is_pure_frodokem() || is_pqc_hybrid(); }
