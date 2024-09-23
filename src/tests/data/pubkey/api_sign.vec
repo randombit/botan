@@ -54,9 +54,9 @@ SigParams = ALICE123@YAHOO.COM,SM3
 AlgoParams = secp256r1
 SigParams = ALICE123@YAHOO.COM,Raw
 
-[SPHINCS+]
+[SLH-DSA]
 
-AlgoParams = SphincsPlus-shake-128s-r3.1
+AlgoParams = SLH-DSA-SHA2-128f
 SigParams =
 
 [XMSS]
