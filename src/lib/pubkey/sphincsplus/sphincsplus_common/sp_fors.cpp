@@ -1,10 +1,12 @@
 /*
- * FORS - Forest of Random Subsets
+ * FORS - Forest of Random Subsets (FIPS 205, Section 8)
  * (C) 2023 Jack Lloyd
  *     2023 Fabian Albert, René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity
  *
+ * Parts of this file have been adapted from https://github.com/sphincs/sphincsplus
+ *
  * Botan is released under the Simplified BSD License (see license.txt)
- **/
+ */
 
 #include <botan/internal/sp_fors.h>
 
@@ -18,13 +20,11 @@
 #include <botan/internal/sp_types.h>
 #include <botan/internal/stl_util.h>
 
-#include <functional>
-#include <utility>
-
 namespace Botan {
 
 namespace {
 
+/// FIPS 205, Algorithm 4: base_2^b(X,b,out_len) with b = a and out_len = k (for usage in FORS)
 std::vector<TreeNodeIndex> fors_message_to_indices(std::span<const uint8_t> message, const Sphincs_Parameters& params) {
    BOTAN_ASSERT_NOMSG((message.size() * 8) >= (params.k() * params.a()));
 
@@ -32,9 +32,26 @@ std::vector<TreeNodeIndex> fors_message_to_indices(std::span<const uint8_t> mess
 
    uint32_t offset = 0;
 
+   // This is one of the few places where the logic of SPHINCS+ round 3.1 and SLH-DSA differs
+   auto update_idx = [&]() -> std::function<void(TreeNodeIndex&, uint32_t)> {
+#if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
+      if(params.is_slh_dsa()) {
+         return [&](TreeNodeIndex& idx, uint32_t i) {
+            idx ^= (((message[offset >> 3] >> (~offset & 0x7)) & 0x1) << (params.a() - 1 - i));
+         };
+      }
+#endif
+#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+      if(!params.is_slh_dsa()) {
+         return [&](TreeNodeIndex& idx, uint32_t i) { idx ^= (((message[offset >> 3] >> (offset & 0x7)) & 0x1) << i); };
+      }
+#endif
+      throw Internal_Error("Missing FORS index update logic for SPHINCS+ or SLH-DSA");
+   }();
+
    for(auto& idx : indices) {
       for(uint32_t i = 0; i < params.a(); ++i, ++offset) {
-         idx ^= (((message[offset >> 3] >> (offset & 0x7)) & 0x1) << i);
+         update_idx(idx, i);
       }
    }
 
@@ -72,9 +89,9 @@ SphincsTreeNode fors_sign_and_pkgen(StrongSpan<ForsSignature> sig_out,
       uint32_t idx_offset = i * (1 << params.a());
 
       // Compute the secret leaf given by the chunk of the message and append it to the signature
-      fors_tree_addr.set_tree_height(TreeLayerIndex(0))
-         .set_tree_index(indices[i] + idx_offset)
-         .set_type(Sphincs_Address_Type::ForsKeyGeneration);
+      fors_tree_addr.set_type(Sphincs_Address_Type::ForsKeyGeneration)
+         .set_tree_height(TreeLayerIndex(0))
+         .set_tree_index(indices[i] + idx_offset);
 
       hashes.PRF(sig.next<ForsLeafSecret>(params.n()), secret_seed, fors_tree_addr);
 

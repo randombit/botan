@@ -1,5 +1,5 @@
 /*
- * SPHINCS+ Hash Implementation for SHA-256
+ * SLH-DSA Hash Implementation for SHA-256
  * (C) 2023 Jack Lloyd
  *     2023 Fabian Albert, René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity
  *
@@ -16,7 +16,7 @@
 namespace Botan {
 
 /**
- * Implementation of SPHINCS+ hash function abstraction for SHAKE256
+ * Implementation of SLH-DSA hash function abstraction for SHAKE256
  */
 class Sphincs_Hash_Functions_Shake : public Sphincs_Hash_Functions {
    private:
@@ -29,11 +29,12 @@ class Sphincs_Hash_Functions_Shake : public Sphincs_Hash_Functions {
 
       std::vector<uint8_t> H_msg_digest(StrongSpan<const SphincsMessageRandomness> r,
                                         const SphincsTreeNode& root,
-                                        std::span<const uint8_t> message) override {
+                                        const SphincsMessageInternal& message) override {
          m_h_msg_hash.update(r);
          m_h_msg_hash.update(m_pub_seed);
          m_h_msg_hash.update(root);
-         m_h_msg_hash.update(message);
+         m_h_msg_hash.update(message.prefix);
+         m_h_msg_hash.update(message.message);
 
          return m_h_msg_hash.final_stdvec();
       }
@@ -48,12 +49,13 @@ class Sphincs_Hash_Functions_Shake : public Sphincs_Hash_Functions {
       }
 
       void PRF_msg(StrongSpan<SphincsMessageRandomness> out,
-                   const SphincsSecretPRF& sk_prf,
-                   const SphincsOptionalRandomness& opt_rand,
-                   std::span<const uint8_t> in) override {
+                   StrongSpan<const SphincsSecretPRF> sk_prf,
+                   StrongSpan<const SphincsOptionalRandomness> opt_rand,
+                   const SphincsMessageInternal& msg) override {
          m_hash.update(sk_prf);
          m_hash.update(opt_rand);
-         m_hash.update(in);
+         m_hash.update(msg.prefix);
+         m_hash.update(msg.message);
          m_hash.final(out);
       }
 

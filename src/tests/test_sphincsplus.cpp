@@ -53,10 +53,16 @@ class SPHINCS_Plus_Test final : public Text_Based_Test {
             case Botan::Sphincs_Parameter_Set::Sphincs128Fast:
             case Botan::Sphincs_Parameter_Set::Sphincs192Fast:
             case Botan::Sphincs_Parameter_Set::Sphincs256Fast:
+            case Botan::Sphincs_Parameter_Set::SLHDSA128Fast:
+            case Botan::Sphincs_Parameter_Set::SLHDSA192Fast:
+            case Botan::Sphincs_Parameter_Set::SLHDSA256Fast:
                return false;
             case Botan::Sphincs_Parameter_Set::Sphincs128Small:
             case Botan::Sphincs_Parameter_Set::Sphincs192Small:
             case Botan::Sphincs_Parameter_Set::Sphincs256Small:
+            case Botan::Sphincs_Parameter_Set::SLHDSA128Small:
+            case Botan::Sphincs_Parameter_Set::SLHDSA192Small:
+            case Botan::Sphincs_Parameter_Set::SLHDSA256Small:
                return !Test::run_long_tests();
          }
          BOTAN_ASSERT_UNREACHABLE();

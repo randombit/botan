@@ -1,6 +1,6 @@
 /*
- * SPHINCS+ Hash based signature scheme
- * Based on the creative commons (CC0 1.0) reference implementation by the
+ * SLH-DSA - Stateless Hash-Based Digital Signature Standard - FIPS 205
+ * Based on the creative commons (CC0 1.0) SPHINCS+ reference implementation by the
  * designers (https://github.com/sphincs/sphincsplus/)
  *
  * (C) 2023 Jack Lloyd
@@ -24,11 +24,9 @@ class SphincsPlus_PublicKeyInternal;
 class SphincsPlus_PrivateKeyInternal;
 
 /**
- * This implementation is based on
- * https://github.com/sphincs/sphincsplus/commit/06f42f47491085ac879a72b486ca8edb10891963
+ * @brief An SLH-DSA (or SPHINCS+ Round 3.1) public key.
  *
- * which implements SPHINCS+ Specification Round 3.1 (https://sphincs.org/data/sphincs+-r3.1-specification.pdf).
- * The used tweaked hashes are implemented according to the variant 'simple' ('robust' is not supported).
+ * For more information see the documentation of SphincsPlus_PrivateKey.
  */
 class BOTAN_PUBLIC_API(3, 1) SphincsPlus_PublicKey : public virtual Public_Key {
    public:
@@ -40,7 +38,7 @@ class BOTAN_PUBLIC_API(3, 1) SphincsPlus_PublicKey : public virtual Public_Key {
 
       size_t key_length() const override;
 
-      std::string algo_name() const override { return "SPHINCS+"; }
+      std::string algo_name() const override;
 
       size_t estimated_strength() const override;
       AlgorithmIdentifier algorithm_identifier() const override;
@@ -68,6 +66,27 @@ class BOTAN_PUBLIC_API(3, 1) SphincsPlus_PublicKey : public virtual Public_Key {
 BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 
+/**
+ * @brief An SLH-DSA private key.
+ *
+ * This class represents an SLH-DSA private key (or a SPHINCS+ Round 3.1 private key).
+ * Supported are all parameter sets defined in FIPS 205, Section 11. Parameter
+ * sets are specified using the Sphincs_Parameter_Set and
+ * Sphincs_Hash_Type enums, for example SLH-DSA-SHA2-128s is defined as
+ * Sphincs_Parameter_Set::SLHDSA128Small and Sphincs_Hash_Type::Sha256.
+ *
+ * For legacy usage of SPHINCS+ Round 3 (not recommended), the parameter sets
+ * Sphincs128Small, ..., Sphincs256Fast are used.
+ *
+ * Note that the parameter sets denoted as 'small' optimize for signature size
+ * at the expense of signing speed, whereas 'fast' trades larger signatures for
+ * faster signing speeds.
+ *
+ * This implementation is based on the SPHINCS+
+ * https://github.com/sphincs/sphincsplus/commit/06f42f47491085ac879a72b486ca8edb10891963
+ * which implements SPHINCS+ Specification Round 3.1 (https://sphincs.org/data/sphincs+-r3.1-specification.pdf).
+ * The used tweaked hashes are implemented according to the variant 'simple' ('robust' is not supported).
+ */
 class BOTAN_PUBLIC_API(3, 1) SphincsPlus_PrivateKey final : public virtual SphincsPlus_PublicKey,
                                                             public virtual Private_Key {
    public:

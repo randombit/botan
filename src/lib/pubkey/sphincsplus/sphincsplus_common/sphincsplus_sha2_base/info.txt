@@ -1,0 +1,21 @@
+<defines>
+SPHINCS_PLUS_SHA2_BASE -> 20240807
+</defines>
+
+<module_info>
+name -> "SLH-DSA/SPHINCS+ (SHA-256) Base"
+brief -> "Base module for SLH-DSA and SPHINCS+ with SHA-2"
+type -> "Internal"
+</module_info>
+
+<requires>
+sha2_32
+sha2_64
+mgf1
+hmac
+trunc_hash
+</requires>
+
+<header:internal>
+sp_hash_sha2.h
+</header:internal>

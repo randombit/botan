@@ -98,7 +98,7 @@
    #include <botan/dilithium.h>
 #endif
 
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+#if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON)
    #include <botan/sphincsplus.h>
 #endif
 
@@ -230,8 +230,9 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
-   if(alg_name == "SPHINCS+" || alg_name.starts_with("SphincsPlus-")) {
+#if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON)
+   if(alg_name == "SPHINCS+" || alg_name.starts_with("SphincsPlus-") || alg_name.starts_with("SLH-DSA-") ||
+      alg_name.starts_with("Hash-SLH-DSA-")) {
       return std::make_unique<SphincsPlus_PublicKey>(alg_id, key_bits);
    }
 #endif
@@ -365,8 +366,9 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
-   if(alg_name == "SPHINCS+" || alg_name.starts_with("SphincsPlus-")) {
+#if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON)
+   if(alg_name == "SPHINCS+" || alg_name.starts_with("SphincsPlus-") || alg_name.starts_with("SLH-DSA-") ||
+      alg_name.starts_with("Hash-SLH-DSA-")) {
       return std::make_unique<SphincsPlus_PrivateKey>(alg_id, key_bits);
    }
 #endif
@@ -533,8 +535,8 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
    }
 #endif
 
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
-   if(alg_name == "SPHINCS+" || alg_name == "SphincsPlus-") {
+#if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON)
+   if(alg_name == "SPHINCS+" || alg_name == "SphincsPlus" || alg_name == "SLH-DSA") {
       auto sphincs_params = Sphincs_Parameters::create(params);
 
       return std::make_unique<SphincsPlus_PrivateKey>(rng, sphincs_params);

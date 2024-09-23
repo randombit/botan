@@ -35,11 +35,11 @@ std::vector<Test::Result> test_sphincsplus_address() {
       CHECK("set up an address",
             [&](Test::Result& result) {
                Botan::Sphincs_Address a(Botan::Sphincs_Address::ForsTree);
-               a.set_layer(Botan::HypertreeLayerIndex(1337))
-                  .set_tree(Botan::XmssTreeIndexInLayer(4294967338) /* longer than 32bits */)
-                  .set_keypair(Botan::TreeNodeIndex(131072))
-                  .set_chain(Botan::WotsChainIndex(67108864))
-                  .set_hash(Botan::WotsHashIndex(42));
+               a.set_layer_address(Botan::HypertreeLayerIndex(1337))
+                  .set_tree_address(Botan::XmssTreeIndexInLayer(4294967338) /* longer than 32bits */)
+                  .set_keypair_address(Botan::TreeNodeIndex(131072))
+                  .set_chain_address(Botan::WotsChainIndex(67108864))
+                  .set_hash_address(Botan::WotsHashIndex(42));
 
                result.test_is_eq("SHA-256(a1)",
                                  sha256(a),
@@ -49,9 +49,9 @@ std::vector<Test::Result> test_sphincsplus_address() {
       CHECK("set up another address",
             [&](Test::Result& result) {
                Botan::Sphincs_Address a(Botan::Sphincs_Address::ForsTree);
-               a.set_layer(Botan::HypertreeLayerIndex(1337))
-                  .set_tree(Botan::XmssTreeIndexInLayer(4294967338) /* longer than 32bits */)
-                  .set_keypair(Botan::TreeNodeIndex(131072))
+               a.set_layer_address(Botan::HypertreeLayerIndex(1337))
+                  .set_tree_address(Botan::XmssTreeIndexInLayer(4294967338) /* longer than 32bits */)
+                  .set_keypair_address(Botan::TreeNodeIndex(131072))
                   .set_tree_height(Botan::TreeLayerIndex(67108864))
                   .set_tree_index(Botan::TreeNodeIndex(1073741824));
                result.test_is_eq("SHA-256(a2)",
@@ -62,9 +62,9 @@ std::vector<Test::Result> test_sphincsplus_address() {
       CHECK("copy subtree",
             [&](Test::Result& result) {
                Botan::Sphincs_Address a(Botan::Sphincs_Address::ForsTree);
-               a.set_layer(Botan::HypertreeLayerIndex(1337))
-                  .set_tree(Botan::XmssTreeIndexInLayer(4294967338) /* longer than 32bits */)
-                  .set_keypair(Botan::TreeNodeIndex(131072))
+               a.set_layer_address(Botan::HypertreeLayerIndex(1337))
+                  .set_tree_address(Botan::XmssTreeIndexInLayer(4294967338) /* longer than 32bits */)
+                  .set_keypair_address(Botan::TreeNodeIndex(131072))
                   .set_tree_height(Botan::TreeLayerIndex(67108864))
                   .set_tree_index(Botan::TreeNodeIndex(1073741824));
 
@@ -83,11 +83,11 @@ std::vector<Test::Result> test_sphincsplus_address() {
       CHECK("copy keypair",
             [&](Test::Result& result) {
                Botan::Sphincs_Address a(Botan::Sphincs_Address::ForsTree);
-               a.set_layer(Botan::HypertreeLayerIndex(1337))
-                  .set_tree(Botan::XmssTreeIndexInLayer(4294967338) /* longer than 32bits */)
-                  .set_keypair(Botan::TreeNodeIndex(131072))
-                  .set_chain(Botan::WotsChainIndex(67108864))
-                  .set_hash(Botan::WotsHashIndex(42));
+               a.set_layer_address(Botan::HypertreeLayerIndex(1337))
+                  .set_tree_address(Botan::XmssTreeIndexInLayer(4294967338) /* longer than 32bits */)
+                  .set_keypair_address(Botan::TreeNodeIndex(131072))
+                  .set_chain_address(Botan::WotsChainIndex(67108864))
+                  .set_hash_address(Botan::WotsHashIndex(42));
 
                auto keypair1 = Botan::Sphincs_Address::as_keypair_from(a);
                Botan::Sphincs_Address keypair2({0, 0, 0, 0, 0, 0, 0, 0});

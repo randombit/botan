@@ -92,7 +92,7 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test {
          // Address used for hashing the WOTS+ public key
          auto pk_addr_pk_from_sig = Botan::Sphincs_Address::as_subtree_from(address).set_type(
             Botan::Sphincs_Address_Type::WotsPublicKeyCompression);
-         pk_addr_pk_from_sig.set_keypair(leaf_idx);
+         pk_addr_pk_from_sig.set_keypair_address(leaf_idx);
 
          // Prepare the message
          auto wots_steps = Botan::chain_lengths(root_to_sign, params);
