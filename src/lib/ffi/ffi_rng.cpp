@@ -19,6 +19,10 @@
    #include <botan/processor_rng.h>
 #endif
 
+#if defined(BOTAN_HAS_ESDM_RNG)
+   #include <botan/esdm_rng.h>
+#endif
+
 extern "C" {
 
 using namespace Botan_FFI;
@@ -43,6 +47,13 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type) {
 #if defined(BOTAN_HAS_PROCESSOR_RNG)
       else if((rng_type_s == "rdrand" || rng_type_s == "hwrng") && Botan::Processor_RNG::available()) {
          rng = std::make_unique<Botan::Processor_RNG>();
+      }
+#endif
+#if defined(BOTAN_HAS_ESDM_RNG)
+      else if(rng_type_s == "esdm-full") {
+         rng = std::make_unique<Botan::ESDM_RNG>(false);
+      } else if(rng_type_s == "esdm-pr") {
+         rng = std::make_unique<Botan::ESDM_RNG>(true);
       }
 #endif
 

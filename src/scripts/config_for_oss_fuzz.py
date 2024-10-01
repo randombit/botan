@@ -29,7 +29,7 @@ args = [
     "--build-fuzzers=libfuzzer",
     "--build-targets=static",
     "--without-os-features=getrandom,getentropy",
-    "--disable-modules=system_rng,processor_rng",
+    "--disable-modules=system_rng,processor_rng,esdm_rng",
     "--with-fuzzer-lib=FuzzingEngine",
 ]
 

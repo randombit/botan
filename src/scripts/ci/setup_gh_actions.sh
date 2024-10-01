@@ -34,7 +34,7 @@ if type -p "apt-get"; then
         sudo NEEDRESTART_MODE=l apt-get -qq install valgrind
 
     elif [ "$TARGET" = "shared" ] || [ "$TARGET" = "examples" ] || [ "$TARGET" = "tlsanvil" ] || [ "$TARGET" = "clang-tidy" ] ; then
-        sudo apt-get -qq install libboost-dev
+        sudo apt-get -qq install libboost-dev 
 
     elif [ "$TARGET" = "clang" ]; then
         sudo apt-get -qq install clang
@@ -132,6 +132,20 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "docs" ]; then
         sudo apt-get -qq install doxygen python3-docutils python3-sphinx
 
+    fi
+
+    # ESDM for shared, coverage and sanitizer target
+    if [ "$TARGET" = "shared" ] || [ "$TARGET" = "coverage" ] || [ "$TARGET" = "sanitizer" ]; then
+        sudo apt-get -qq install libprotobuf-c-dev meson
+
+        # install ESDM 1.2.0
+        wget -O esdm.tar.gz https://github.com/smuellerDD/esdm/archive/refs/tags/v1.2.0.tar.gz
+        tar xvfz esdm.tar.gz
+        pushd esdm-*
+        meson setup build -Dselinux=disabled -Dais2031=false -Dlinux-devfiles=disabled -Des_jent=disabled --prefix=/usr --libdir=lib
+        meson compile -C build
+        sudo meson install -C build
+        popd
     fi
 else
     export HOMEBREW_NO_AUTO_UPDATE=1

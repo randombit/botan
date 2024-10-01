@@ -176,6 +176,28 @@ class BotanPythonTests(unittest.TestCase):
 
         user_rng.add_entropy('seed material...')
 
+        # execute ESDM tests only on Linux
+        if platform.system() != "Linux":
+            return
+
+        esdm_rng = botan.RandomNumberGenerator("esdm-full")
+
+        output1 = esdm_rng.get(32)
+        output2 = esdm_rng.get(32)
+
+        self.assertEqual(len(output1), 32)
+        self.assertEqual(len(output2), 32)
+        self.assertNotEqual(output1, output2)
+
+        esdm_rng = botan.RandomNumberGenerator("esdm-pr")
+
+        output1 = esdm_rng.get(32)
+        output2 = esdm_rng.get(32)
+
+        self.assertEqual(len(output1), 32)
+        self.assertEqual(len(output2), 32)
+        self.assertNotEqual(output1, output2)
+
     def test_hash(self):
 
         try:
