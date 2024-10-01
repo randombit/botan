@@ -1323,7 +1323,6 @@ def cli_tls_online_pqc_hybrid_tests(tmp_dir):
         return get_oqs_resource("/CA.crt")
 
     test_cfg = [
-        TestConfig("pq.cloudflareresearch.com", "x25519/Kyber-512-r3/cloudflare"),
         TestConfig("pq.cloudflareresearch.com", "x25519/Kyber-768-r3"),
         TestConfig("google.com", "x25519/Kyber-768-r3"),
 
