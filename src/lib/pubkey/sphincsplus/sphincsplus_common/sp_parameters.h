@@ -18,7 +18,7 @@ namespace Botan {
 enum class Sphincs_Hash_Type {
    Shake256,
    Sha256,
-   BOTAN_DEPRECATED("Haraka is not and will not be supported") Haraka,  ///< Haraka is currently not supported
+   Haraka BOTAN_DEPRECATED("Haraka is not and will not be supported"),  ///< Haraka is currently not supported
 };
 
 enum class Sphincs_Parameter_Set {
