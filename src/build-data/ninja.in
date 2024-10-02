@@ -57,7 +57,9 @@ default all
 %{if build_static_lib}
 
 rule link_static
-  command = %{ar_command} %{ar_options} %{ar_output_to}$out $in
+  rspfile = %{response_file_dir}/static.txt
+  rspfile_content = $in
+  command = %{ar_command} %{ar_options} %{ar_output_to}$out @%{response_file_dir}/static.txt
 
 build %{out_dir}/%{static_lib_name}: link_static %{join lib_objs}
 
@@ -65,7 +67,9 @@ build %{out_dir}/%{static_lib_name}: link_static %{join lib_objs}
 %{if build_shared_lib}
 
 rule link_shared
-  command = %{lib_link_cmd} ${ABI_FLAGS} ${LDFLAGS} $in ${LIB_LINKS_TO} %{output_to_exe}$out
+  rspfile = %{response_file_dir}/shared.txt
+  rspfile_content = $in
+  command = %{lib_link_cmd} ${ABI_FLAGS} ${LDFLAGS} @%{response_file_dir}/shared.txt ${LIB_LINKS_TO} %{output_to_exe}$out
 
 build %{out_dir}/%{shared_lib_name}: link_shared %{join lib_objs}
 %{endif}
@@ -80,15 +84,19 @@ build %{out_dir}/%{soname_patch}: symlink %{out_dir}/%{shared_lib_name}
 %{endif}
 
 rule link_cli
-  command = ${EXE_LINK_CMD} ${ABI_FLAGS} $in ${BUILD_DIR_LINK_PATH} ${LANG_EXE_FLAGS} ${LDFLAGS} ${EXE_LINKS_TO} %{output_to_exe}$out
+  rspfile = %{response_file_dir}/cli_${cli_name}.txt
+  rspfile_content = $in
+  command = ${EXE_LINK_CMD} ${ABI_FLAGS} @%{response_file_dir}/cli_${cli_name}.txt ${BUILD_DIR_LINK_PATH} ${LANG_EXE_FLAGS} ${LDFLAGS} ${EXE_LINKS_TO} %{output_to_exe}$out
 
 rule link_tests
-  command = ${EXE_LINK_CMD} ${ABI_FLAGS} $in ${BUILD_DIR_LINK_PATH} ${LANG_EXE_FLAGS} ${LDFLAGS} %{test_exe_extra_ldflags} ${EXE_LINKS_TO} %{output_to_exe}$out
-
+  rspfile = %{response_file_dir}/tests.txt
+  rspfile_content = $in
+  command = ${EXE_LINK_CMD} ${ABI_FLAGS} @%{response_file_dir}/tests.txt ${BUILD_DIR_LINK_PATH} ${LANG_EXE_FLAGS} ${LDFLAGS} %{test_exe_extra_ldflags} ${EXE_LINKS_TO} %{output_to_exe}$out
 
 # Executable targets
 
 build %{cli_exe}: link_cli %{join cli_objs} | libs
+  cli_name = cli
 
 build %{test_exe}: link_tests %{join test_objs} | libs
 
@@ -121,6 +129,7 @@ build examples: phony | %{example_bin}
 %{if build_bogo_shim}
 
 build botan_bogo_shim: link_cli bogo_shim_object | libs
+  cli_name = bogo
 
 # BoGo shim
 build %{out_dir}/bogo_shim_object: compile_exe %{bogo_shim_src}
@@ -130,6 +139,7 @@ build %{out_dir}/bogo_shim_object: compile_exe %{bogo_shim_src}
 %{if build_ct_selftest}
 
 build botan_ct_selftest: link_cli ct_selftest_object | libs
+  cli_name = ct_selftest
 
 build %{out_dir}/ct_selftest_object: compile_exe %{ct_selftest_src}
 
@@ -214,4 +224,5 @@ build %{exe}: link_fuzzer %{obj} | libs
 %{for examples_build_info}
 build %{obj}: compile_example_exe %{src}
 build %{exe}: link_cli %{obj} | libs
+  cli_name = example_%{exe_basename}
 %{endfor}
