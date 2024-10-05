@@ -26,7 +26,7 @@ template <typename T>
   * MSVC in debug mode uses non-integral proxy types in container types
   * like std::vector, thus we disable the check there.
  */
-   requires std::is_integral<T>::value
+   requires std::is_integral<T>::value || std::is_enum<T>::value
 #endif
 class secure_allocator {
 
