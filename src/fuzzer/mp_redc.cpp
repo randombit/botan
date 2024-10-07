@@ -9,8 +9,8 @@
 namespace {
 
 template <size_t N>
-void fuzz_mp_redc(const uint8_t in[], size_t in_len) {
-   FUZZER_ASSERT_EQUAL(in_len, (N * 3 + 1) * sizeof(word));
+void fuzz_mp_redc(std::span<const uint8_t> in) {
+   FUZZER_ASSERT_EQUAL(in.size(), (N * 3 + 1) * sizeof(word));
 
    word z[2 * N] = {0};
 
@@ -21,9 +21,9 @@ void fuzz_mp_redc(const uint8_t in[], size_t in_len) {
 
    word ws[2 * (N + 1)] = {0};
 
-   std::memcpy(z, in, sizeof(z));
-   std::memcpy(p, in + sizeof(z), sizeof(p));
-   std::memcpy(&p_dash, in + sizeof(z) + sizeof(p), sizeof(p_dash));
+   std::memcpy(z, in.data(), sizeof(z));
+   std::memcpy(p, in.data() + sizeof(z), sizeof(p));
+   std::memcpy(&p_dash, in.data() + sizeof(z) + sizeof(p), sizeof(p_dash));
 
    for(size_t i = 0; i != 2 * N; ++i) {
       z_script[i] = z_ref[i] = z[i];
@@ -62,26 +62,26 @@ void fuzz_mp_redc(const uint8_t in[], size_t in_len) {
 
 }  // namespace
 
-void fuzz(const uint8_t in[], size_t len) {
-   if(len == 0 || len % sizeof(word) != 0) {
+void fuzz(std::span<const uint8_t> in) {
+   if(in.empty() || in.size() % sizeof(word) != 0) {
       return;
    }
 
-   const size_t words = len / sizeof(word);
+   const size_t words = in.size() / sizeof(word);
 
    switch(words) {
       case 4 * 3 + 1:
-         return fuzz_mp_redc<4>(in, len);
+         return fuzz_mp_redc<4>(in);
       case 6 * 3 + 1:
-         return fuzz_mp_redc<6>(in, len);
+         return fuzz_mp_redc<6>(in);
       case 8 * 3 + 1:
-         return fuzz_mp_redc<8>(in, len);
+         return fuzz_mp_redc<8>(in);
       case 16 * 3 + 1:
-         return fuzz_mp_redc<16>(in, len);
+         return fuzz_mp_redc<16>(in);
       case 24 * 3 + 1:
-         return fuzz_mp_redc<24>(in, len);
+         return fuzz_mp_redc<24>(in);
       case 32 * 3 + 1:
-         return fuzz_mp_redc<32>(in, len);
+         return fuzz_mp_redc<32>(in);
       default:
          return;
    }

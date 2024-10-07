@@ -34,7 +34,7 @@ std::vector<uint8_t> simple_pkcs1_unpad(const uint8_t in[], size_t len) {
 
 }  // namespace
 
-void fuzz(const uint8_t in[], size_t len) {
+void fuzz(std::span<const uint8_t> in) {
    static Botan::EME_PKCS1v15 pkcs1;
 
    std::vector<uint8_t> lib_result;
@@ -42,8 +42,8 @@ void fuzz(const uint8_t in[], size_t len) {
    bool lib_rejected = false, ref_rejected = false;
 
    try {
-      lib_result.resize(len);
-      auto written = (static_cast<Botan::EME*>(&pkcs1))->unpad(lib_result, std::span{in, len});
+      lib_result.resize(in.size());
+      auto written = (static_cast<Botan::EME*>(&pkcs1))->unpad(lib_result, in);
       lib_rejected = !written.has_value().as_bool();
 
       lib_result.resize(written.value_or(0));
@@ -52,7 +52,7 @@ void fuzz(const uint8_t in[], size_t len) {
    }
 
    try {
-      ref_result = simple_pkcs1_unpad(in, len);
+      ref_result = simple_pkcs1_unpad(in.data(), in.size());
    } catch(Botan::Decoding_Error& e) {
       ref_rejected = true;
    }

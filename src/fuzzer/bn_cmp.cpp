@@ -8,18 +8,18 @@
 
 #include <botan/bigint.h>
 
-void fuzz(const uint8_t in[], size_t len) {
+void fuzz(const std::span<const uint8_t> in) {
    const size_t max_bits = 512;
 
-   if(len < 3 || len > 1 + 2 * (max_bits / 8)) {
+   if(in.size() < 3 || in.size() > 1 + 2 * (max_bits / 8)) {
       return;
    }
 
    const uint8_t signs = in[0];
-   const size_t x_len = (len - 1) / 2;
+   const size_t x_len = (in.size() - 1) / 2;
 
-   Botan::BigInt x = Botan::BigInt::decode(in + 1, x_len);
-   Botan::BigInt y = Botan::BigInt::decode(in + 1 + x_len, len - x_len - 1);
+   Botan::BigInt x = Botan::BigInt::from_bytes(in.subspan(1, x_len));
+   Botan::BigInt y = Botan::BigInt::from_bytes(in.subspan(1 + x_len, in.size() - x_len - 1));
 
    if(signs & 1) {
       x.flip_sign();

@@ -45,16 +45,16 @@ inline Botan::BigInt decompress_point(bool yMod2,
    return z;
 }
 
-inline void check_ecc_math(const Botan::EC_Group& group, const uint8_t in[], size_t len) {
+inline void check_ecc_math(const Botan::EC_Group& group, std::span<const uint8_t> in) {
    // These depend only on the group, which is also static
    static const Botan::EC_Point base_point = group.get_base_point();
 
    // This is shared across runs to reduce overhead
    static std::vector<Botan::BigInt> ws(Botan::EC_Point::WORKSPACE_SIZE);
 
-   const size_t hlen = len / 2;
-   const Botan::BigInt a = group.mod_order(Botan::BigInt::decode(in, hlen));
-   const Botan::BigInt b = group.mod_order(Botan::BigInt::decode(in + hlen, len - hlen));
+   const size_t hlen = in.size() / 2;
+   const Botan::BigInt a = group.mod_order(Botan::BigInt::from_bytes(in.subspan(0, hlen)));
+   const Botan::BigInt b = group.mod_order(Botan::BigInt::from_bytes(in.subspan(hlen, in.size() - hlen)));
    const Botan::BigInt c = group.mod_order(a + b);
 
    if(a.is_zero() || b.is_zero() || c.is_zero()) {

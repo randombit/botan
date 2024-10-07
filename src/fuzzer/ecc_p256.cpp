@@ -7,10 +7,10 @@
 
 #include "ecc_helper.h"
 
-void fuzz(const uint8_t in[], size_t len) {
-   if(len > 2 * 256 / 8) {
+void fuzz(std::span<const uint8_t> in) {
+   if(in.size() > 2 * 256 / 8) {
       return;
    }
    static Botan::EC_Group p256("secp256r1");
-   return check_ecc_math(p256, in, len);
+   return check_ecc_math(p256, in);
 }

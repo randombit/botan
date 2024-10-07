@@ -3187,10 +3187,6 @@ def canonicalize_options(options, info_os, info_arch):
         else:
             options.build_static_lib = True
 
-    # Set default fuzzing lib
-    if options.build_fuzzers == 'libfuzzer' and options.fuzzer_lib is None:
-        options.fuzzer_lib = 'Fuzzer'
-
     if options.ldflags is not None:
         extra_libs = []
         link_to_lib = re.compile('^-l(.*)')

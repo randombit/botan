@@ -10,21 +10,21 @@
 #include <botan/reducer.h>
 #include <botan/internal/divide.h>
 
-void fuzz(const uint8_t in[], size_t len) {
+void fuzz(std::span<const uint8_t> in) {
    static const size_t max_bits = 4096;
 
-   if(len <= 4) {
+   if(in.size() <= 4) {
       return;
    }
 
-   if(len > 2 * (max_bits / 8)) {
+   if(in.size() > 2 * (max_bits / 8)) {
       return;
    }
 
-   const size_t x_len = 2 * ((len + 2) / 3);
+   const size_t x_len = 2 * ((in.size() + 2) / 3);
 
-   Botan::BigInt x = Botan::BigInt::decode(in, x_len);
-   const Botan::BigInt p = Botan::BigInt::decode(in + x_len, len - x_len);
+   Botan::BigInt x = Botan::BigInt::from_bytes(in.subspan(0, x_len));
+   const Botan::BigInt p = Botan::BigInt::from_bytes(in.subspan(x_len, in.size() - x_len));
 
    if(p.is_zero()) {
       return;
@@ -43,10 +43,10 @@ void fuzz(const uint8_t in[], size_t len) {
    const Botan::BigInt ct = ct_modulo(x, p);
 
    if(ref != z || ref != ct) {
-      FUZZER_WRITE_AND_CRASH("X = " << x << "\n"
-                                    << "P = " << p << "\n"
-                                    << "Barrett = " << z << "\n"
-                                    << "Ct = " << ct << "\n"
-                                    << "Ref = " << ref << "\n");
+      FUZZER_WRITE_AND_CRASH("X = " << x.to_hex_string() << "\n"
+                                    << "P = " << p.to_hex_string() << "\n"
+                                    << "Barrett = " << z.to_hex_string() << "\n"
+                                    << "Ct = " << ct.to_hex_string() << "\n"
+                                    << "Ref = " << ref.to_hex_string() << "\n");
    }
 }
