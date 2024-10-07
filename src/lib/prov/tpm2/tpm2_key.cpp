@@ -23,6 +23,19 @@
 
 namespace Botan::TPM2 {
 
+#if defined(BOTAN_HAS_RSA)
+Botan::RSA_PublicKey rsa_pubkey_from_tss2_public(const TPM2B_PUBLIC* public_area) {
+   BOTAN_ASSERT_NONNULL(public_area);
+   const auto& pub = public_area->publicArea;
+   BOTAN_ARG_CHECK(pub.type == TPM2_ALG_RSA, "Public key is not an RSA key");
+
+   // TPM2 may report 0 when the exponent is 'the default' (2^16 + 1)
+   const auto exponent = (pub.parameters.rsaDetail.exponent == 0) ? 65537 : pub.parameters.rsaDetail.exponent;
+
+   return Botan::RSA_PublicKey(BigInt(as_span(pub.unique.rsa)), exponent);
+}
+#endif
+
 namespace {
 
 Object load_persistent_object(const std::shared_ptr<Context>& ctx,

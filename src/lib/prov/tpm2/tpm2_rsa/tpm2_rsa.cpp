@@ -9,7 +9,6 @@
 #include <botan/tpm2_rsa.h>
 
 #include <botan/hash.h>
-#include <botan/pk_ops.h>
 #include <botan/rsa.h>
 
 #include <botan/internal/ct_utils.h>
@@ -20,22 +19,12 @@
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tpm2_algo_mappings.h>
 #include <botan/internal/tpm2_hash.h>
+#include <botan/internal/tpm2_pkops.h>
 #include <botan/internal/tpm2_util.h>
 
 #include <tss2/tss2_esys.h>
 
 namespace Botan::TPM2 {
-
-Botan::RSA_PublicKey rsa_pubkey_from_tss2_public(const TPM2B_PUBLIC* public_area) {
-   BOTAN_ASSERT_NONNULL(public_area);
-   const auto& pub = public_area->publicArea;
-   BOTAN_ARG_CHECK(pub.type == TPM2_ALG_RSA, "Public key is not an RSA key");
-
-   // TPM2 may report 0 when the exponent is 'the default' (2^16 + 1)
-   const auto exponent = (pub.parameters.rsaDetail.exponent == 0) ? 65537 : pub.parameters.rsaDetail.exponent;
-
-   return Botan::RSA_PublicKey(BigInt(as_span(pub.unique.rsa)), exponent);
-}
 
 RSA_PublicKey::RSA_PublicKey(Object handle, SessionBundle session_bundle, const TPM2B_PUBLIC* public_blob) :
       Botan::TPM2::PublicKey(std::move(handle), std::move(session_bundle)),
@@ -136,12 +125,6 @@ std::unique_ptr<TPM2::PrivateKey> RSA_PrivateKey::create_unrestricted_transient(
 
 namespace {
 
-struct SignatureAlgorithmSelection {
-      TPMT_SIG_SCHEME signature_scheme;
-      std::string hash_name;
-      std::string padding;
-};
-
 SignatureAlgorithmSelection select_signature_algorithms(std::string_view padding) {
    const SCAN_Name req(padding);
    if(req.arg_count() == 0) {
@@ -160,85 +143,16 @@ SignatureAlgorithmSelection select_signature_algorithms(std::string_view padding
    };
 }
 
-/**
- * Signing with a restricted key requires a validation ticket that is provided
- * when hashing the data to sign on the TPM. Otherwise, it is fine to hash the
- * data in software.
- *
- * @param key_handle  the key to create the signature with
- * @param sessions    the sessions to use for the TPM operations
- * @param hash_name   the name of the hash function to use
- *
- * @return a HashFunction that hashes in hardware if the key is restricted
- */
-std::unique_ptr<Botan::HashFunction> create_hash_function(const Object& key_handle,
-                                                          const SessionBundle& sessions,
-                                                          std::string_view hash_name) {
-   if(key_handle.attributes(sessions).restricted) {
-      // TODO: this could also be ENDORSEMENT or PLATFORM, and we're not 100% sure
-      //       that OWNER is always the right choice here.
-      const TPMI_RH_HIERARCHY hierarchy = ESYS_TR_RH_OWNER;
-      return std::make_unique<HashFunction>(key_handle.context(), hash_name, hierarchy, sessions);
-   } else {
-      return Botan::HashFunction::create_or_throw(hash_name);
-   }
+size_t signature_length_for_key_handle(const SessionBundle& sessions, const Object& key_handle) {
+   return key_handle._public_info(sessions, TPM2_ALG_RSA).pub->publicArea.parameters.rsaDetail.keyBits / 8;
 }
 
-/**
- * If the key is restricted, this will transparently use the TPM to hash the
- * data to obtain a validation ticket.
- *
- * TPM Library, Part 1: Architecture", Section 11.4.6.3 (4)
- *    This ticket is used to indicate that a digest of external data is safe to
- *    sign using a restricted signing key. A restricted signing key may only
- *    sign a digest that was produced by the TPM. [...] This prevents forgeries
- *    of attestation data.
- */
-class RSA_Signature_Operation final : public PK_Ops::Signature {
-   private:
-      RSA_Signature_Operation(const Object& object,
-                              const SessionBundle& sessions,
-                              SignatureAlgorithmSelection algorithms) :
-            m_key_handle(object),
-            m_sessions(sessions),
-            m_scheme(algorithms.signature_scheme),
-            m_hash(create_hash_function(m_key_handle, m_sessions, algorithms.hash_name)),
-            m_padding(std::move(algorithms.padding)) {
-         BOTAN_ASSERT_NONNULL(m_hash);
-      }
-
+class RSA_Signature_Operation final : public Signature_Operation {
    public:
       RSA_Signature_Operation(const Object& object, const SessionBundle& sessions, std::string_view padding) :
-            RSA_Signature_Operation(object, sessions, select_signature_algorithms(padding)) {}
+            Signature_Operation(object, sessions, select_signature_algorithms(padding)) {}
 
-      void update(std::span<const uint8_t> msg) override { m_hash->update(msg); }
-
-      std::vector<uint8_t> sign(Botan::RandomNumberGenerator& /* rng */) override {
-         if(auto hash = dynamic_cast<HashFunction*>(m_hash.get())) {
-            // This is a TPM2-based hash object that calculated the digest on
-            // the TPM. We can use the validation ticket to create the signature.
-            auto [digest, validation] = hash->final_with_ticket();
-            return create_signature(digest.get(), validation.get());
-         } else {
-            // This is a software hash, so we have to stub the validation ticket
-            // and create the signature without it.
-            TPMT_TK_HASHCHECK dummy_validation = {
-               .tag = TPM2_ST_HASHCHECK,
-               .hierarchy = TPM2_RH_NULL,
-               .digest = init_empty<TPM2B_DIGEST>(),
-            };
-
-            auto digest = init_with_size<TPM2B_DIGEST>(m_hash->output_length());
-            m_hash->final(as_span(digest));
-            return create_signature(&digest, &dummy_validation);
-         }
-      }
-
-      size_t signature_length() const override {
-         return m_key_handle._public_info(m_sessions, TPM2_ALG_RSA).pub->publicArea.parameters.rsaDetail.keyBits / 8;
-      }
-
-      std::string hash_function() const override { return m_hash->name(); }
+      size_t signature_length() const override { return signature_length_for_key_handle(sessions(), key_handle()); }
 
       AlgorithmIdentifier algorithm_identifier() const override {
          // TODO: This is essentially a copy of the ::algorithm_identifier()
@@ -249,7 +163,8 @@ class RSA_Signature_Operation final : public PK_Ops::Signature {
          // conveniently figure out the algorithm identifier.
          //
          // TODO: This is a hack, and we should clean this up.
-         const auto emsa = EMSA::create_or_throw(m_padding);
+         BOTAN_STATE_CHECK(padding().has_value());
+         const auto emsa = EMSA::create_or_throw(padding().value());
          const std::string emsa_name = emsa->name();
 
          try {
@@ -267,104 +182,51 @@ class RSA_Signature_Operation final : public PK_Ops::Signature {
       }
 
    private:
-      std::vector<uint8_t> create_signature(const TPM2B_DIGEST* digest, const TPMT_TK_HASHCHECK* validation) {
-         unique_esys_ptr<TPMT_SIGNATURE> signature;
-         check_rc("Esys_Sign",
-                  Esys_Sign(*m_key_handle.context(),
-                            m_key_handle.transient_handle(),
-                            m_sessions[0],
-                            m_sessions[1],
-                            m_sessions[2],
-                            digest,
-                            &m_scheme,
-                            validation,
-                            out_ptr(signature)));
-
-         BOTAN_ASSERT_NONNULL(signature);
-         const auto& sig = [&]() -> TPMS_SIGNATURE_RSA& {
-            if(signature->sigAlg == TPM2_ALG_RSASSA) {
-               return signature->signature.rsassa;
-            } else if(signature->sigAlg == TPM2_ALG_RSAPSS) {
-               return signature->signature.rsapss;
+      std::vector<uint8_t> marshal_signature(const TPMT_SIGNATURE& signature) const override {
+         const auto& sig = [&] {
+            switch(signature.sigAlg) {
+               case TPM2_ALG_RSASSA:
+                  return signature.signature.rsassa;
+               case TPM2_ALG_RSAPSS:
+                  return signature.signature.rsapss;
+               default:
+                  throw Invalid_State(fmt("TPM2 returned an unexpected signature scheme {}", signature.sigAlg));
             }
-
-            throw Invalid_State(fmt("TPM2 returned an unexpected signature scheme {}", signature->sigAlg));
          }();
 
-         BOTAN_ASSERT_NOMSG(sig.hash == m_scheme.details.any.hashAlg);
-
+         BOTAN_ASSERT_NOMSG(sig.sig.size == signature_length());
          return copy_into<std::vector<uint8_t>>(sig.sig);
       }
-
-   private:
-      const Object& m_key_handle;
-      const SessionBundle& m_sessions;
-      TPMT_SIG_SCHEME m_scheme;
-      std::unique_ptr<Botan::HashFunction> m_hash;
-      std::string m_padding;
 };
 
-/**
- * Signature verification on the TPM. This does not require a validation ticket,
- * therefore the hash is always calculated in software.
- */
-class RSA_Verification_Operation final : public PK_Ops::Verification {
-   private:
-      RSA_Verification_Operation(const Object& object,
-                                 const SessionBundle& sessions,
-                                 const SignatureAlgorithmSelection& algorithms) :
-            m_key_handle(object),
-            m_sessions(sessions),
-            m_scheme(algorithms.signature_scheme),
-            m_hash(Botan::HashFunction::create_or_throw(algorithms.hash_name)) {}
-
+class RSA_Verification_Operation final : public Verification_Operation {
    public:
       RSA_Verification_Operation(const Object& object, const SessionBundle& sessions, std::string_view padding) :
-            RSA_Verification_Operation(object, sessions, select_signature_algorithms(padding)) {}
-
-      void update(std::span<const uint8_t> msg) override { m_hash->update(msg); }
-
-      bool is_valid_signature(std::span<const uint8_t> sig_data) override {
-         auto digest = init_with_size<TPM2B_DIGEST>(m_hash->output_length());
-         m_hash->final(as_span(digest));
-
-         const auto signature = [&]() -> TPMT_SIGNATURE {
-            TPMT_SIGNATURE sig;
-            sig.sigAlg = m_scheme.scheme;
-            sig.signature.any.hashAlg = m_scheme.details.any.hashAlg;
-
-            if(sig.sigAlg == TPM2_ALG_RSASSA) {
-               copy_into(sig.signature.rsassa.sig, sig_data);
-            } else if(sig.sigAlg == TPM2_ALG_RSAPSS) {
-               copy_into(sig.signature.rsapss.sig, sig_data);
-            } else {
-               throw Invalid_State(fmt("Requested an unexpected signature scheme {}", sig.sigAlg));
-            }
-
-            return sig;
-         }();
-
-         // If the signature is not valid, this returns TPM2_RC_SIGNATURE.
-         const auto rc = check_rc_expecting<TPM2_RC_SIGNATURE>("Esys_VerifySignature",
-                                                               Esys_VerifySignature(*m_key_handle.context(),
-                                                                                    m_key_handle.transient_handle(),
-                                                                                    m_sessions[0],
-                                                                                    m_sessions[1],
-                                                                                    m_sessions[2],
-                                                                                    &digest,
-                                                                                    &signature,
-                                                                                    nullptr /* validation */));
-
-         return rc == TPM2_RC_SUCCESS;
-      }
-
-      std::string hash_function() const override { return m_hash->name(); }
+            Verification_Operation(object, sessions, select_signature_algorithms(padding)) {}
 
    private:
-      const Object& m_key_handle;
-      const SessionBundle& m_sessions;
-      TPMT_SIG_SCHEME m_scheme;
-      std::unique_ptr<Botan::HashFunction> m_hash;
+      TPMT_SIGNATURE unmarshal_signature(std::span<const uint8_t> signature) const override {
+         BOTAN_ARG_CHECK(signature.size() == signature_length_for_key_handle(sessions(), key_handle()),
+                         "Unexpected signature byte length");
+
+         TPMT_SIGNATURE sig;
+         sig.sigAlg = scheme().scheme;
+
+         auto& sig_data = [&]() -> TPMS_SIGNATURE_RSA& {
+            switch(sig.sigAlg) {
+               case TPM2_ALG_RSASSA:
+                  return sig.signature.rsassa;
+               case TPM2_ALG_RSAPSS:
+                  return sig.signature.rsapss;
+               default:
+                  throw Invalid_State(fmt("Requested an unexpected signature scheme {}", sig.sigAlg));
+            }
+         }();
+
+         sig_data.hash = scheme().details.any.hashAlg;
+         copy_into(sig_data.sig, signature);
+         return sig;
+      }
 };
 
 TPMT_RSA_DECRYPT select_encryption_algorithms(std::string_view padding) {

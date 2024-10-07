@@ -22,6 +22,7 @@ pubkey
 tpm2_algo_mappings.h
 tpm2_hash.h
 tpm2_util.h
+tpm2_pkops.h
 </header:internal>
 
 <header:public>

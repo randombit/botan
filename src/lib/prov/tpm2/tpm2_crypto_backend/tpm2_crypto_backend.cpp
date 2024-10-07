@@ -23,6 +23,7 @@
 #include <botan/mem_ops.h>
 #include <botan/pubkey.h>
 #include <botan/tpm2_context.h>
+#include <botan/tpm2_key.h>
 
 #if defined(BOTAN_HAS_TPM2_RSA_ADAPTER)
    #include <botan/tpm2_rsa.h>
