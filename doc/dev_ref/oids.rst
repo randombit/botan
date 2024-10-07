@@ -43,6 +43,8 @@ Values currently assigned are::
   kyber-768-90s  OBJECT IDENTIFIER ::= { kyber-90s 2 }
   kyber-1024-90s OBJECT IDENTIFIER ::= { kyber-90s 3 }
 
+  x-wing       OBJECT IDENTIFIER ::= { publicKey 19 }
+
   xmss        OBJECT IDENTIFIER ::= { publicKey 8 }
 
   -- The current dilithium implementation is compatible with the reference
