@@ -23,6 +23,7 @@ tcti_conf="bus_name=${dbus_name},bus_type=session"
 tcti="${tcti_name}:${tcti_conf}"
 test_pwd="password"
 persistent_rsa_key_handle="0x81000008"
+persistent_ecc_key_handle="0x81000010"
 
 if ! systemctl is-active --quiet dbus; then
     echo "DBus is not running. Starting it..."
@@ -74,6 +75,7 @@ tpm2_createprimary --tcti="$tcti"          \
                    --key-algorithm rsa     \
                    --key-context $tmp_dir/primary.ctx
 
+
 # Use default key template of tpm2_create for rsa.
 # This means that the key will NOT be "restricted".
 tpm2_create --tcti="$tcti"                        \
@@ -92,6 +94,23 @@ tpm2_evictcontrol --tcti="$tcti"                    \
                   --object-context $tmp_dir/rsa.ctx \
                   $persistent_rsa_key_handle
 
+# Do the same for ecc
+tpm2_create --tcti="$tcti"                        \
+            --parent-context $tmp_dir/primary.ctx \
+            --key-algorithm ecc                   \
+            --public $tmp_dir/ecc.pub             \
+            --private $tmp_dir/ecc.priv           \
+            --key-auth $test_pwd
+tpm2_load --tcti="$tcti"                        \
+          --parent-context $tmp_dir/primary.ctx \
+          --public $tmp_dir/ecc.pub             \
+          --private $tmp_dir/ecc.priv           \
+          --key-context $tmp_dir/ecc.ctx
+tpm2_evictcontrol --tcti="$tcti"                    \
+                  --hierarchy o                     \
+                  --object-context $tmp_dir/ecc.ctx \
+                  $persistent_ecc_key_handle
+
 echo "Effectively disable dictionary attack lockout..."
 tpm2_dictionarylockout --tcti="$tcti"     \
                        --setup-parameters \
@@ -107,4 +126,5 @@ if [ -n "$GITHUB_ACTIONS" ]; then
     echo "BOTAN_TPM2_TCTI_CONF=$tcti_conf"                                 >> $GITHUB_ENV
     echo "BOTAN_TPM2_PERSISTENT_KEY_AUTH_VALUE=$test_pwd"                  >> $GITHUB_ENV
     echo "BOTAN_TPM2_PERSISTENT_RSA_KEY_HANDLE=$persistent_rsa_key_handle" >> $GITHUB_ENV
+    echo "BOTAN_TPM2_PERSISTENT_ECC_KEY_HANDLE=$persistent_ecc_key_handle" >> $GITHUB_ENV
 fi

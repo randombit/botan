@@ -460,6 +460,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 test_cmd += ["--tpm2-tcti-name=%s" % os.getenv('BOTAN_TPM2_TCTI_NAME'),
                              "--tpm2-tcti-conf=%s" % os.getenv('BOTAN_TPM2_TCTI_CONF'),
                              "--tpm2-persistent-rsa-handle=%s" % os.getenv('BOTAN_TPM2_PERSISTENT_RSA_KEY_HANDLE'),
+                             "--tpm2-persistent-ecc-handle=%s" % os.getenv('BOTAN_TPM2_PERSISTENT_ECC_KEY_HANDLE'),
                              "--tpm2-persistent-auth-value=%s" % os.getenv('BOTAN_TPM2_PERSISTENT_KEY_AUTH_VALUE')]
             elif os.environ.get('BOTAN_TPM2_ENABLED') == 'build':
                 # build the TPM2 module but don't run the tests
