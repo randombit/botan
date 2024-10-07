@@ -209,6 +209,7 @@ class BuildPaths:
         self.handbook_output_dir = os.path.join(self.doc_output_dir, 'handbook')
         self.doc_output_dir_doxygen = os.path.join(self.doc_output_dir, 'doxygen') if options.with_doxygen else None
         self.doc_module_info = os.path.join(self.build_dir, 'module_info') if options.with_doxygen else None
+        self.response_file_dir = os.path.join(self.build_dir, 'response_files')
 
         # We split the header include paths into 'public', 'internal' and 'external'
         # to allow for better control over what is exposed to each compilation unit.
@@ -272,6 +273,7 @@ class BuildPaths:
             self.internal_include_dir,
             self.external_include_dir,
             self.handbook_output_dir,
+            self.response_file_dir
         ]
         if self.doc_output_dir_doxygen:
             out += [self.doc_output_dir_doxygen, self.doc_module_info]
@@ -1938,6 +1940,7 @@ def generate_build_info(build_paths, modules, cc, arch, osinfo, options):
 
             if target_type in ['fuzzer', 'examples']:
                 exe_basename = os.path.basename(obj_file).replace('.' + osinfo.obj_suffix, osinfo.program_suffix)
+                info['exe_basename'] = exe_basename
 
                 if target_type == 'fuzzer':
                     info['exe'] = os.path.join(build_paths.fuzzer_output_dir, exe_basename)
@@ -2210,6 +2213,7 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'doc_output_dir': build_paths.doc_output_dir,
         'handbook_output_dir': build_paths.handbook_output_dir,
         'doc_output_dir_doxygen': build_paths.doc_output_dir_doxygen,
+        'response_file_dir': build_paths.response_file_dir,
 
         'os': options.os,
         'arch': options.arch,
