@@ -131,16 +131,22 @@ template <std::invocable<> F>
  * The bytes in @p data are encrypted/decrypted in-place.
  */
 [[nodiscard]] TSS2_RC symmetric_algo(Botan::Cipher_Dir direction,
+                                     const uint8_t* key,
                                      TPM2_ALG_ID tpm_sym_alg,
                                      TPMI_AES_KEY_BITS key_bits,
                                      TPM2_ALG_ID tpm_mode,
-                                     const uint8_t* key,
-                                     const uint8_t* iv,
-                                     std::span<uint8_t> data) noexcept {
+                                     uint8_t* buffer,
+                                     size_t buffer_size,
+                                     const uint8_t* iv) noexcept {
    return thunk([&] {
       if(!key) {
          return (direction == Botan::Cipher_Dir::Encryption) ? TSS2_ESYS_RC_NO_ENCRYPT_PARAM
                                                              : TSS2_ESYS_RC_NO_DECRYPT_PARAM;
+      }
+
+      // nullptr buffer with size 0 is alright
+      if(!buffer && buffer_size != 0) {
+         return TSS2_ESYS_RC_BAD_VALUE;
       }
 
       const auto cipher_name = Botan::TPM2::cipher_tss2_to_botan({
@@ -169,6 +175,7 @@ template <std::invocable<> F>
          return TSS2_ESYS_RC_BAD_VALUE;
       }
 
+      const auto s_data = std::span{buffer, buffer_size};
       const auto s_key = std::span{key, keylength};
       const auto s_iv = [&]() -> std::span<const uint8_t> {
          if(iv) {
@@ -180,7 +187,7 @@ template <std::invocable<> F>
 
       cipher->set_key(s_key);
       cipher->start(s_iv);
-      cipher->process(data);
+      cipher->process(s_data);
       return TSS2_RC_SUCCESS;
    });
 }
@@ -199,6 +206,10 @@ extern "C" {
 TSS2_RC hash_start(ESYS_CRYPTO_CONTEXT_BLOB** context, TPM2_ALG_ID hash_alg, void* userdata) {
    BOTAN_UNUSED(userdata);
    return thunk([&] {
+      if(!context) {
+         return TSS2_ESYS_RC_BAD_REFERENCE;
+      }
+
       const auto hash_name = Botan::TPM2::hash_algo_tss2_to_botan(hash_alg);
       if(!hash_name) {
          return TSS2_ESYS_RC_NOT_SUPPORTED;
@@ -234,6 +245,11 @@ TSS2_RC hash_update(ESYS_CRYPTO_CONTEXT_BLOB* context, const uint8_t* buffer, si
          return TSS2_ESYS_RC_BAD_REFERENCE;
       }
 
+      // nullptr buffer with size 0 is alright
+      if(!buffer && size != 0) {
+         return TSS2_ESYS_RC_BAD_VALUE;
+      }
+
       hash->get().update(std::span{buffer, size});
       return TSS2_RC_SUCCESS;
    });
@@ -252,14 +268,21 @@ TSS2_RC hash_update(ESYS_CRYPTO_CONTEXT_BLOB* context, const uint8_t* buffer, si
  */
 TSS2_RC hash_finish(ESYS_CRYPTO_CONTEXT_BLOB** context, uint8_t* buffer, size_t* size, void* userdata) {
    BOTAN_UNUSED(userdata);
+   if(size != nullptr) {
+      *size = 0;
+   }
+
    return thunk([&] {
       auto hash = get<Botan::HashFunction>(context);
-      if(!hash) {
+      if(!hash || !buffer) {
          return TSS2_ESYS_RC_BAD_REFERENCE;
       }
 
-      *size = hash->get().output_length();
-      hash->get().final(std::span{buffer, *size});
+      const auto digest_size = hash->get().output_length();
+      hash->get().final(std::span{buffer, digest_size});
+      if(size != nullptr) {
+         *size = digest_size;
+      }
 
       delete *context;  // allocated in hash_start()
       *context = nullptr;
@@ -275,8 +298,10 @@ TSS2_RC hash_finish(ESYS_CRYPTO_CONTEXT_BLOB** context, uint8_t* buffer, size_t*
  */
 void hash_abort(ESYS_CRYPTO_CONTEXT_BLOB** context, void* userdata) {
    BOTAN_UNUSED(userdata);
-   delete *context;  // allocated in hash_start()
-   *context = nullptr;
+   if(context) {
+      delete *context;  // allocated in hash_start()
+      *context = nullptr;
+   }
 }
 
 /** Provide the context an HMAC digest object from a byte buffer key.
@@ -295,6 +320,10 @@ TSS2_RC hmac_start(
    ESYS_CRYPTO_CONTEXT_BLOB** context, TPM2_ALG_ID hash_alg, const uint8_t* key, size_t size, void* userdata) {
    BOTAN_UNUSED(userdata);
    return thunk([&] {
+      if(!context || !key) {
+         return TSS2_ESYS_RC_BAD_REFERENCE;
+      }
+
       const auto hash_name = Botan::TPM2::hash_algo_tss2_to_botan(hash_alg);
       if(!hash_name) {
          return TSS2_ESYS_RC_NOT_SUPPORTED;
@@ -332,6 +361,11 @@ TSS2_RC hmac_update(ESYS_CRYPTO_CONTEXT_BLOB* context, const uint8_t* buffer, si
          return TSS2_ESYS_RC_BAD_REFERENCE;
       }
 
+      // nullptr buffer with size 0 is alright
+      if(!buffer && size != 0) {
+         return TSS2_ESYS_RC_BAD_VALUE;
+      }
+
       hmac->get().update(std::span{buffer, size});
       return TSS2_RC_SUCCESS;
    });
@@ -350,14 +384,21 @@ TSS2_RC hmac_update(ESYS_CRYPTO_CONTEXT_BLOB* context, const uint8_t* buffer, si
  */
 TSS2_RC hmac_finish(ESYS_CRYPTO_CONTEXT_BLOB** context, uint8_t* buffer, size_t* size, void* userdata) {
    BOTAN_UNUSED(userdata);
+   if(size != nullptr) {
+      *size = 0;
+   }
+
    return thunk([&] {
       auto hmac = get<Botan::MessageAuthenticationCode>(context);
-      if(!hmac) {
+      if(!hmac || !buffer) {
          return TSS2_ESYS_RC_BAD_REFERENCE;
       }
 
-      *size = hmac->get().output_length();
-      hmac->get().final(std::span{buffer, *size});
+      const auto digest_size = hmac->get().output_length();
+      hmac->get().final(std::span{buffer, digest_size});
+      if(size != nullptr) {
+         *size = digest_size;
+      }
 
       delete *context;  // allocated in hmac_start()
       *context = nullptr;
@@ -373,8 +414,10 @@ TSS2_RC hmac_finish(ESYS_CRYPTO_CONTEXT_BLOB** context, uint8_t* buffer, size_t*
  */
 void hmac_abort(ESYS_CRYPTO_CONTEXT_BLOB** context, void* userdata) {
    BOTAN_UNUSED(userdata);
-   delete *context;  // allocated in hmac_start()
-   *context = nullptr;
+   if(context) {
+      delete *context;  // allocated in hmac_start()
+      *context = nullptr;
+   }
 }
 
 /** Compute random TPM2B data.
@@ -390,12 +433,11 @@ void hmac_abort(ESYS_CRYPTO_CONTEXT_BLOB** context, void* userdata) {
 TSS2_RC get_random2b(TPM2B_NONCE* nonce, size_t num_bytes, void* userdata) {
    return thunk([&] {
       auto ccs = get(userdata);
-      if(!ccs) {
+      if(!ccs || !ccs->get().rng || !nonce) {
          return TSS2_ESYS_RC_BAD_REFERENCE;
       }
 
-      nonce->size = num_bytes;
-      ccs->get().rng->randomize(Botan::TPM2::as_span(*nonce));
+      ccs->get().rng->randomize(Botan::TPM2::as_span(*nonce, num_bytes));
       return TSS2_RC_SUCCESS;
    });
 }
@@ -423,6 +465,10 @@ TSS2_RC rsa_pk_encrypt(TPM2B_PUBLIC* pub_tpm_key,
                        size_t* out_size,
                        const char* label,
                        void* userdata) {
+   if(out_size != nullptr) {
+      *out_size = 0;
+   }
+
    // TODO: This is currently a dumpster fire of code duplication and
    //       YOLO manual padding.
    //
@@ -430,7 +476,6 @@ TSS2_RC rsa_pk_encrypt(TPM2B_PUBLIC* pub_tpm_key,
    //       this up. See the extensive discussions in:
    //
    //       https://github.com/randombit/botan/pull/4318#issuecomment-2297682058
-
    #if defined(BOTAN_HAS_RSA)
    auto create_eme = [&](
                         const TPMT_RSA_SCHEME& scheme,
@@ -493,7 +538,13 @@ TSS2_RC rsa_pk_encrypt(TPM2B_PUBLIC* pub_tpm_key,
    };
 
    return thunk([&] {
-      BOTAN_ASSERT_NONNULL(pub_tpm_key);
+      auto ccs = get(userdata);
+      if(!ccs || !pub_tpm_key || !in_buffer || !out_buffer || !ccs->get().rng) {
+         return TSS2_ESYS_RC_BAD_REFERENCE;
+      }
+
+      Botan::RandomNumberGenerator& rng = *ccs->get().rng;
+
       BOTAN_ASSERT_NOMSG(pub_tpm_key->publicArea.type == TPM2_ALG_RSA);
 
       const auto maybe_eme = create_eme(pub_tpm_key->publicArea.parameters.rsaDetail.scheme,
@@ -530,13 +581,6 @@ TSS2_RC rsa_pk_encrypt(TPM2B_PUBLIC* pub_tpm_key,
          return TSS2_ESYS_RC_INSUFFICIENT_BUFFER;
       }
 
-      auto ccs = get(userdata);
-      if(!ccs) {
-         return TSS2_ESYS_RC_BAD_REFERENCE;
-      }
-
-      Botan::RandomNumberGenerator& rng = *ccs->get().rng;
-
       const auto max_raw_bits = keybits - 1;
       const auto max_raw_bytes = (max_raw_bits + 7) / 8;
       const auto padded_bytes = eme->pad({out_buffer, max_raw_bytes}, {in_buffer, in_size}, max_raw_bits, rng);
@@ -545,16 +589,19 @@ TSS2_RC rsa_pk_encrypt(TPM2B_PUBLIC* pub_tpm_key,
       // TODO: provide an `.encrypt()` overload that accepts an output buffer.
       Botan::PK_Encryptor_EME encryptor(pubkey, rng, "Raw");
       const auto encrypted = encryptor.encrypt({out_buffer, padded_bytes}, rng);
+      BOTAN_DEBUG_ASSERT(encrypted.size() == output_size);
 
       // We abused the `out_buffer` to hold the result of the padding. Hence, we
       // now have to copy the encrypted data over the padded plaintext data.
-      *out_size = encrypted.size();
-      Botan::copy_mem(std::span{out_buffer, *out_size}, encrypted);
+      Botan::copy_mem(std::span{out_buffer, encrypted.size()}, encrypted);
+      if(out_size != nullptr) {
+         *out_size = encrypted.size();
+      }
 
       return TSS2_RC_SUCCESS;
    });
    #else
-   BOTAN_UNUSED(pub_tpm_key, in_size, in_buffer, max_out_size, out_buffer, out_size, label, userdata);
+   BOTAN_UNUSED(pub_tpm_key, in_size, in_buffer, max_out_size, out_buffer, label, userdata);
    return TSS2_ESYS_RC_NOT_IMPLEMENTED;
    #endif
 }
@@ -589,10 +636,8 @@ TSS2_RC get_ecdh_point(TPM2B_PUBLIC* key,
 
    #if defined(BOTAN_HAS_ECDH)
    return thunk([&] {
-      BOTAN_ASSERT_NONNULL(key);
-
       auto ccs = get(userdata);
-      if(!ccs) {
+      if(!ccs || !key || !Z || !Q || !out_buffer | !ccs->get().rng) {
          return TSS2_ESYS_RC_BAD_REFERENCE;
       }
 
@@ -658,8 +703,7 @@ TSS2_RC aes_encrypt(uint8_t* key,
       return TSS2_ESYS_RC_BAD_VALUE;
    }
 
-   return symmetric_algo(
-      Botan::Cipher_Dir::Encryption, tpm_sym_alg, key_bits, tpm_mode, key, iv, std::span{buffer, buffer_size});
+   return symmetric_algo(Botan::Cipher_Dir::Encryption, key, tpm_sym_alg, key_bits, tpm_mode, buffer, buffer_size, iv);
 }
 
 /** Decrypt data with AES.
@@ -690,8 +734,7 @@ TSS2_RC aes_decrypt(uint8_t* key,
       return TSS2_ESYS_RC_BAD_VALUE;
    }
 
-   return symmetric_algo(
-      Botan::Cipher_Dir::Decryption, tpm_sym_alg, key_bits, tpm_mode, key, iv, std::span{buffer, buffer_size});
+   return symmetric_algo(Botan::Cipher_Dir::Decryption, key, tpm_sym_alg, key_bits, tpm_mode, buffer, buffer_size, iv);
 }
 
    #if defined(BOTAN_TSS2_SUPPORTS_SM4_IN_CRYPTO_CALLBACKS)
@@ -724,8 +767,7 @@ TSS2_RC sm4_encrypt(uint8_t* key,
       return TSS2_ESYS_RC_BAD_VALUE;
    }
 
-   return symmetric_algo(
-      Botan::Cipher_Dir::Encryption, tpm_sym_alg, key_bits, tpm_mode, key, iv, std::span{buffer, buffer_size});
+   return symmetric_algo(Botan::Cipher_Dir::Encryption, key, tpm_sym_alg, key_bits, tpm_mode, buffer, buffer_size, iv);
 }
 
 /** Decrypt data with SM4.
@@ -756,8 +798,7 @@ TSS2_RC sm4_decrypt(uint8_t* key,
       return TSS2_ESYS_RC_BAD_VALUE;
    }
 
-   return symmetric_algo(
-      Botan::Cipher_Dir::Decryption, tpm_sym_alg, key_bits, tpm_mode, key, iv, std::span{buffer, buffer_size});
+   return symmetric_algo(Botan::Cipher_Dir::Decryption, key, tpm_sym_alg, key_bits, tpm_mode, buffer, buffer_size, iv);
 }
 
    #endif /* TPM2_ALG_SM4 */
@@ -810,9 +851,16 @@ namespace Botan::TPM2 {
  * The runtime crypto backend is available since TSS2 4.0.0 and later. Explicit
  * support for SM4 was added in TSS2 4.1.0.
  *
+ * Note that the callback implementations should be defensive in regard to the
+ * input parameters. All pointers should be checked for nullptr before being
+ * dereferenced. Some output parameters (e.g. out-buffer lengths) may be
+ * regarded as optional, and should be checked for nullptr before being written
+ * to.
+ *
  * Error code conventions:
  *
  *  * TSS2_ESYS_RC_BAD_REFERENCE:   reference (typically userdata) invalid
+ *  * TSS2_ESYS_RC_BAD_VALUE:       invalid input (e.g. size != 0 w/ nullptr buffer)
  *  * TSS2_ESYS_RC_NOT_SUPPORTED:   algorithm identifier not mapped to Botan
  *  * TSS2_ESYS_RC_NOT_IMPLEMENTED: algorithm not available (e.g. disabled)
  */
