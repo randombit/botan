@@ -103,13 +103,19 @@ constexpr auto as_span(tpm2_buffer auto& data) {
    return std::span{data.buffer, data.size};
 }
 
+/// Set the size of @p data to @p length and construct a std::span
+/// as a view into @p data
+constexpr auto as_span(tpm2_buffer auto& data, size_t length) {
+   BOTAN_ASSERT_NOMSG(length <= sizeof(data.buffer));
+   data.size = static_cast<decltype(data.size)>(length);
+   return as_span(data);
+}
+
 /// Copy the @p data into the TPM2 buffer @p dest, assuming that the
 /// provided @p data is not larger than the capacity of the buffer.
 template <tpm2_buffer T>
 constexpr void copy_into(T& dest, std::span<const uint8_t> data) {
-   BOTAN_ASSERT_NOMSG(data.size() <= sizeof(dest.buffer));
-   dest.size = static_cast<decltype(dest.size)>(data.size());
-   copy_mem(as_span(dest), data);
+   copy_mem(as_span(dest, data.size()), data);
 }
 
 /// Create a TPM2 buffer from the provided @p data, assuming that the

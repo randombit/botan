@@ -8,6 +8,22 @@
 
 #include <botan/internal/tpm2_crypto_backend.h>
 
+#include <botan/cipher_mode.h>
+#include <botan/hash.h>
+#include <botan/mac.h>
+#include <botan/mem_ops.h>
+#include <botan/pubkey.h>
+#include <botan/tpm2_context.h>
+#include <botan/tpm2_key.h>
+
+#if defined(BOTAN_HAS_RSA)
+   #include <botan/rsa.h>
+#endif
+
+#if defined(BOTAN_HAS_ECDH)
+   #include <botan/ecdh.h>
+#endif
+
 #include <botan/internal/eme.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/tpm2_algo_mappings.h>
@@ -17,21 +33,10 @@
    #include <botan/internal/oaep.h>
 #endif
 
-#include <botan/cipher_mode.h>
-#include <botan/hash.h>
-#include <botan/mac.h>
-#include <botan/mem_ops.h>
-#include <botan/pubkey.h>
-#include <botan/tpm2_context.h>
-#include <botan/tpm2_key.h>
-
-#if defined(BOTAN_HAS_TPM2_RSA_ADAPTER)
-   #include <botan/tpm2_rsa.h>
-#endif
+#include <tss2/tss2_esys.h>
+#include <tss2/tss2_mu.h>
 
 #include <variant>
-
-#include <tss2/tss2_esys.h>
 
 #if defined(BOTAN_TSS2_SUPPORTS_CRYPTO_CALLBACKS)
 
@@ -426,7 +431,7 @@ TSS2_RC rsa_pk_encrypt(TPM2B_PUBLIC* pub_tpm_key,
    //
    //       https://github.com/randombit/botan/pull/4318#issuecomment-2297682058
 
-   #if defined(BOTAN_HAS_TPM2_RSA_ADAPTER)
+   #if defined(BOTAN_HAS_RSA)
    auto create_eme = [&](
                         const TPMT_RSA_SCHEME& scheme,
                         [[maybe_unused]] TPM2_ALG_ID name_algo,
@@ -578,16 +583,51 @@ TSS2_RC get_ecdh_point(TPM2B_PUBLIC* key,
                        BYTE* out_buffer,
                        size_t* out_size,
                        void* userdata) {
-   BOTAN_UNUSED(key, max_out_size, Z, Q, out_buffer, out_size, userdata);
-   // This is currently not required for the exposed functionality.
-   // TODO: Implement this function if required.
-   //
-   // Note that "if required" does not mean it can wait until we actually
-   // implement support for ECC keys. As soon as one wants to work with a
-   // TPM that contains ECC keys (from another source) and they would want
-   // to use such a key as the basis of a session key, this function would
-   // be required.
+   if(out_size != nullptr) {
+      *out_size = 0;
+   }
+
+   #if defined(BOTAN_HAS_ECDH)
+   return thunk([&] {
+      BOTAN_ASSERT_NONNULL(key);
+
+      auto ccs = get(userdata);
+      if(!ccs) {
+         return TSS2_ESYS_RC_BAD_REFERENCE;
+      }
+
+      Botan::RandomNumberGenerator& rng = *ccs->get().rng;
+
+      // 1: Get TPM public key
+      const auto [tpm_ec_group, tpm_ec_point] = Botan::TPM2::ecc_pubkey_from_tss2_public(key);
+      const auto tpm_sw_pubkey = Botan::ECDH_PublicKey(tpm_ec_group, tpm_ec_point);
+
+      const auto curve_order_byte_size = tpm_sw_pubkey.domain().get_p_bytes();
+
+      // 2: Generate ephemeral key
+      const auto eph_key = Botan::ECDH_PrivateKey(rng, tpm_sw_pubkey.domain());
+
+      // Serialize public key coordinates into TPM2B_ECC_PARAMETER with Big Endian encoding.
+      // This ensures bn_{x,y}.bytes() <= curve_order_byte_size.
+      const Botan::PointGFp& eph_pub_point = eph_key.public_point();
+      eph_pub_point.get_affine_x().serialize_to(Botan::TPM2::as_span(Q->x, curve_order_byte_size));
+      eph_pub_point.get_affine_y().serialize_to(Botan::TPM2::as_span(Q->y, curve_order_byte_size));
+
+      // 3: ECDH Key Agreement
+      Botan::PK_Key_Agreement ecdh(eph_key, rng, "Raw" /*No KDF used here*/);
+      const auto shared_secret = ecdh.derive_key(0 /*Ignored for raw KDF*/, tpm_sw_pubkey.public_value()).bits_of();
+
+      Botan::TPM2::copy_into(*Z, shared_secret);
+
+      Botan::TPM2::check_rc("Tss2_MU_TPMS_ECC_POINT_Marshal",
+                            Tss2_MU_TPMS_ECC_POINT_Marshal(Q, out_buffer, max_out_size, out_size));
+
+      return TSS2_RC_SUCCESS;
+   });
+   #else
+   BOTAN_UNUSED(key, max_out_size, Z, Q, out_buffer, userdata);
    return TSS2_ESYS_RC_NOT_IMPLEMENTED;
+   #endif
 }
 
 /** Encrypt data with AES.
