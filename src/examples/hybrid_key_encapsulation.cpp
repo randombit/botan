@@ -196,9 +196,9 @@ class Hybrid_Encryption_Operation : public Botan::PK_Ops::KEM_Encryption {
          //      other party, resulting in a shared secret and its encapsulation,
          //   4. Concatenate the ephemeral public key and the encapsulation to
          //      form a "hybrid encapsulation" (to be sent to the other party),
-         //   5. Concatenate the shared secrets of both algorithms and pass the
-         //      result through a user-defined key derivation function to form a
-         //      "hybrid shared secret" (to be used by the application).
+         //   5. Concatenate the shared secrets and ciphertexts of both algorithms
+         //      and pass the result through a user-defined key derivation function
+         //      to form a "hybrid shared secret" (to be used by the application).
 
          // 1. KEX: Generate an ephemeral key pair with the same parameters as
          //         the provided key exchange public key.
@@ -236,9 +236,15 @@ class Hybrid_Encryption_Operation : public Botan::PK_Ops::KEM_Encryption {
          std::copy(
             kem_encapsed_key.begin(), kem_encapsed_key.end(), out_encapsed_key.begin() + kex_encapsed_key.size());
 
-         // 5. Hybrid: Combine the shared secrets of both algorithms.
+         // 5. Hybrid: Combine the shared secrets and ciphertexts of both
+         //            algorithms. Note that there are various known ways for
+         //            such combination logic (see, for example, X-Wing,
+         //            CatKDF, etc.). Applications are encouraged to use a
+         //            well-known KEM-Combiner instead of this example.
          Botan::secure_vector<uint8_t> concat_shared_key;
+         concat_shared_key.insert(concat_shared_key.end(), kex_encapsed_key.begin(), kex_encapsed_key.end());
          concat_shared_key.insert(concat_shared_key.end(), kex_shared_key.begin(), kex_shared_key.end());
+         concat_shared_key.insert(concat_shared_key.end(), kem_encapsed_key.begin(), kem_encapsed_key.end());
          concat_shared_key.insert(concat_shared_key.end(), kem_shared_key.begin(), kem_shared_key.end());
 
          BOTAN_ASSERT_NOMSG(out_shared_key.size() >= desired_shared_key_length);
@@ -301,9 +307,9 @@ class Hybrid_Decryption_Operation : public Botan::PK_Ops::KEM_Decryption {
          //     ephemeral public key (from the other party),
          //  3. Decapsulate a shared secret using the KEM's private key and
          //     the KEM's encapsulation (from the other party),
-         //  4. Concatenate the shared secrets of both algorithms and pass the
-         //     result through a user-defined key derivation function to form a
-         //     "hybrid shared secret" (to be used by the application).
+         //  4. Concatenate the shared secrets and ciphertexts of both algorithms
+         //     and pass the result through a user-defined key derivation function
+         //     to form a "hybrid shared secret" (to be used by the application).
 
          // 1. Hybrid: Extract the ephemeral public key and the encapsulation.
          const auto kex_encapsed_key =
@@ -318,9 +324,15 @@ class Hybrid_Decryption_Operation : public Botan::PK_Ops::KEM_Decryption {
          //         the encapsulation of the other party.
          const auto kem_shared_key = m_kem_decryptor.decrypt(kem_encapsed_key);
 
-         // 4. Hybrid: Combine the shared secrets of both algorithms.
+         // 5. Hybrid: Combine the shared secrets and ciphertexts of both
+         //            algorithms. Note that there are various known ways for
+         //            such combination logic (see, for example, X-Wing,
+         //            CatKDF, etc.). Applications are encouraged to use a
+         //            well-known KEM-Combiner instead of this example.
          Botan::secure_vector<uint8_t> concat_shared_key;
+         concat_shared_key.insert(concat_shared_key.end(), kex_encapsed_key.begin(), kex_encapsed_key.end());
          concat_shared_key.insert(concat_shared_key.end(), kex_shared_key.begin(), kex_shared_key.end());
+         concat_shared_key.insert(concat_shared_key.end(), kem_encapsed_key.begin(), kem_encapsed_key.end());
          concat_shared_key.insert(concat_shared_key.end(), kem_shared_key.begin(), kem_shared_key.end());
 
          BOTAN_ASSERT_NOMSG(out_shared_key.size() >= desired_shared_key_length);
