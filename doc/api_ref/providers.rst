@@ -136,7 +136,7 @@ For example, the following code signs a message using an RSA key with the
     Botan::AutoSeeded_RNG rng;
     auto key = Botan::create_private_key("RSA", rng, "3072");
 
-    Botan::PK_Signer signer(key, rng, "EMSA3(SHA-256)", Botan::Signature_Format::Standard, "CommonCrypto");
+    Botan::PK_Signer signer(key, rng, "PKCS1v15(SHA-256)", Botan::Signature_Format::Standard, "CommonCrypto");
 
     signer.update("Hello");
     signer.update(" ");

@@ -633,7 +633,8 @@ OAEP
 OAEP (called EME1 in IEEE 1363 and in earlier versions of the library)
 as specified in PKCS#1 v2.0 (RFC 2437) or PKCS#1 v2.1 (RFC 3447).
 
-- Names: ``OAEP`` / ``EME-OAEP`` / ``EME1``
+- Name: ``OAEP``,
+- Deprecated aliases: ``EME-OAEP``, ``EME1``
 - Parameters specification:
 
   - ``(<HashFunction>)``
@@ -641,12 +642,12 @@ as specified in PKCS#1 v2.0 (RFC 2437) or PKCS#1 v2.1 (RFC 3447).
   - ``(<HashFunction>,MGF1(<HashFunction>))``
   - ``(<HashFunction>,MGF1(<HashFunction>),<optional label>)``
 
-- The only Mask generation function available is MGF1
-  which is also the default.
+- The only Mask generation function available is MGF1, which is also the default.
 - By default the same hash function will be used for the label and MGF1.
+- By default the OAEP label is the empty string
 - Examples:
   ``OAEP(SHA-256)``,
-  ``EME-OAEP(SHA-256,MGF1)``,
+  ``OAEP(SHA-256,MGF1)``,
   ``OAEP(SHA-256,MGF1(SHA-512))``,
   ``OAEP(SHA-512,MGF1(SHA-512),TCPA)``
 
@@ -655,7 +656,8 @@ PKCS #1 v1.5 Type 2 (encryption)
 
 PKCS #1 v1.5 Type 2 (encryption) padding.
 
-Names: ``PKCS1v15`` / ``EME-PKCS1-v1_5``
+Name: ``PKCS1v15``
+Deprecated alias: ``EME-PKCS1-v1_5``
 
 Raw EME
 """""""
@@ -837,9 +839,10 @@ Available signature padding schemes
 PKCS #1 v1.5 Type 1 (signature)
 """""""""""""""""""""""""""""""
 
-PKCS #1 v1.5 Type 1 (signature) padding or EMSA3 from IEEE 1363.
+PKCS #1 v1.5 Type 1 (signature) padding, aka EMSA3 in IEEE 1363.
 
-- Names: ``PKCS1v15`` / ``EMSA_PKCS1`` / ``EMSA-PKCS1-v1_5`` / ``EMSA3``
+- Name: ``PKCS1v15``
+- Deprecated aliases: ``EMSA_PKCS1``, ``EMSA-PKCS1-v1_5``, ``EMSA3``
 - Parameters specification:
 
   - ``(<HashFunction>)``
@@ -857,7 +860,8 @@ EMSA-PSS
 
 Probabilistic signature scheme (PSS) (called EMSA4 in IEEE 1363).
 
-- Names: ``PSS`` / ``EMSA-PSS`` / ``PSSR`` / ``PSS-MGF1`` / ``EMSA4``
+- Name: ``PSS``
+- Deprecated aliases: ``EMSA-PSS``, ``PSSR``, ``PSS-MGF1``, ``EMSA4``
 - Parameters specification:
 
   - ``(<HashFunction>)``
@@ -871,7 +875,8 @@ There also exists a raw version,
 which accepts a pre-hashed buffer instead of the message.
 Don't use this unless you know what you are doing.
 
-- Names: ``PSS_Raw`` / ``PSSR_Raw``
+- Name: ``PSS_Raw``
+- Deprecated alias: ``PSSR_Raw``
 - Parameters specification:
 
   - ``(<HashFunction>)``
@@ -912,10 +917,11 @@ X9.31
 
 EMSA from X9.31 (EMSA2 in IEEE 1363).
 
-- Names: ``EMSA2`` / ``EMSA_X931`` / ``X9.31``
+- Name: ``X9.31``
+- Deprecated aliases: ``EMSA2``, ``EMSA_X931``
 - Parameters specification:
   ``(<HashFunction>)``
-- Example: ``EMSA2(SHA-256)``
+- Example: ``X9.31(SHA-256)``
 
 Raw EMSA
 """"""""
