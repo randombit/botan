@@ -310,11 +310,11 @@ need this functionality, and it can be done in the library for less than that,
 then it makes sense to just write the code. Yup.
 
 Currently the (optional) external dependencies of the library are several
-compression libraries (zlib, bzip2, lzma), sqlite3 database, Trousers (TPM
-integration), plus various operating system utilities like basic filesystem
-operations. These provide major pieces of functionality which seem worth the
-trouble of maintaining an integration with.
+compression libraries (zlib, bzip2, lzma), sqlite3 database, Trousers (TPM 1.2
+integration), TSS2 (TPM 2.0 integration) plus various operating system utilities
+like basic filesystem operations. These provide major pieces of functionality
+which seem worth the trouble of maintaining an integration with.
 
 At this point the most plausible examples of an appropriate new external
 dependency are all deeper integrations with system level cryptographic
-interfaces (CommonCrypto, CryptoAPI, /dev/crypto, iOS keychain, TPM 2.0, etc)
+interfaces (CommonCrypto, CryptoAPI, /dev/crypto, iOS keychain, etc)

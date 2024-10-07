@@ -584,7 +584,7 @@ def process_command_line(args):
                             'disable building of deprecated features and modules')
 
     # Should be derived from info.txt but this runs too early
-    third_party = ['boost', 'bzip2', 'lzma', 'commoncrypto', 'sqlite3', 'zlib', 'tpm']
+    third_party = ['boost', 'bzip2', 'lzma', 'commoncrypto', 'sqlite3', 'zlib', 'tpm', 'tpm2']
 
     for mod in third_party:
         mods_group.add_option('--with-%s' % (mod),
