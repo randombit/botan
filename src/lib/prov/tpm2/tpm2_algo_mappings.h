@@ -9,6 +9,7 @@
 #ifndef BOTAN_TPM2_ALGORITHM_MAPPINGS_H_
 #define BOTAN_TPM2_ALGORITHM_MAPPINGS_H_
 
+#include <botan/asn1_obj.h>
 #include <botan/exceptn.h>
 
 #include <botan/internal/fmt.h>
@@ -29,7 +30,7 @@ namespace Botan::TPM2 {
    } else if(algo_name == "ECC") {
       return TPM2_ALG_ECC;
    } else if(algo_name == "ECDSA") {
-      return TPM2_ALG_ECC;
+      return TPM2_ALG_ECDSA;
    } else if(algo_name == "ECDH") {
       return TPM2_ALG_ECDH;
    } else if(algo_name == "ECDAA") {
@@ -192,6 +193,69 @@ namespace Botan::TPM2 {
          return "CTR";
       default:  // TPMI_ALG_SYM_MODE is not an enum
          return std::nullopt;
+   }
+}
+
+[[nodiscard]] inline std::optional<std::string> curve_id_tss2_to_botan(TPMI_ECC_CURVE mode_id) {
+   // Currently, tpm2-tss does not include support for Brainpool curves or 25519/448.
+   // Once the corresponding PR (https://github.com/tpm2-software/tpm2-tss/pull/2897) is merged and released,
+   // this function should be updated.
+   switch(mode_id) {
+      case TPM2_ECC_NIST_P192:
+         return "secp192r1";
+      case TPM2_ECC_NIST_P224:
+         return "secp224r1";
+      case TPM2_ECC_NIST_P256:
+         return "secp256r1";
+      case TPM2_ECC_NIST_P384:
+         return "secp384r1";
+      case TPM2_ECC_NIST_P521:
+         return "secp521r1";
+      case TPM2_ECC_SM2_P256:
+         return "sm2p256v1";
+      default:
+         return std::nullopt;
+   }
+}
+
+[[nodiscard]] inline std::optional<size_t> curve_id_order_byte_size(TPMI_ECC_CURVE curve_id) {
+   switch(curve_id) {
+      case TPM2_ECC_NIST_P192:
+         return 24;
+      case TPM2_ECC_NIST_P224:
+         return 28;
+      case TPM2_ECC_NIST_P256:
+         return 32;
+      case TPM2_ECC_NIST_P384:
+         return 48;
+      case TPM2_ECC_NIST_P521:
+         return 66;  // Rounded up to the next full byte
+      case TPM2_ECC_SM2_P256:
+         return 32;
+      default:
+         return std::nullopt;
+   }
+}
+
+[[nodiscard]] inline std::optional<TPM2_ECC_CURVE> get_tpm2_curve_id(const OID& curve_oid) {
+   // Currently, tpm2-tss does not include support for Brainpool curves or 25519/448.
+   // Once the corresponding PR (https://github.com/tpm2-software/tpm2-tss/pull/2897) is merged and released,
+   // this function should be updated.
+   const std::string curve_name = curve_oid.to_formatted_string();
+   if(curve_name == "secp192r1") {
+      return TPM2_ECC_NIST_P192;
+   } else if(curve_name == "secp224r1") {
+      return TPM2_ECC_NIST_P224;
+   } else if(curve_name == "secp256r1") {
+      return TPM2_ECC_NIST_P256;
+   } else if(curve_name == "secp384r1") {
+      return TPM2_ECC_NIST_P384;
+   } else if(curve_name == "secp521r1") {
+      return TPM2_ECC_NIST_P521;
+   } else if(curve_name == "sm2p256v1") {
+      return TPM2_ECC_SM2_P256;
+   } else {
+      return std::nullopt;
    }
 }
 

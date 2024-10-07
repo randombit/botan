@@ -15,6 +15,10 @@
 #if defined(BOTAN_HAS_RSA)
    #include <botan/rsa.h>
 #endif
+#if defined(BOTAN_HAS_ECC_GROUP)
+   #include <botan/ec_group.h>
+   #include <botan/ec_point.h>
+#endif
 
 struct TPM2B_SENSITIVE_CREATE;
 struct TPMT_PUBLIC;
@@ -31,6 +35,19 @@ namespace Botan::TPM2 {
  * @param public_blob The public blob to load as an ordinary RSA key
  */
 BOTAN_PUBLIC_API(3, 6) Botan::RSA_PublicKey rsa_pubkey_from_tss2_public(const TPM2B_PUBLIC* public_blob);
+#endif
+
+#if defined(BOTAN_HAS_ECC_GROUP)
+/**
+ * This helper function transforms a @p public_blob in a TPM2B_PUBLIC* format
+ * into an ordinary Botan::EC_PublicKey in the form of a Botan::EC_Group and
+ * a Botan::EC_Point. Note that the resulting key is not bound to a TPM
+ * and can be used as any other ECC key.
+ *
+ * @param public_blob The public blob to load as an ordinary EC_Group and EC_Point
+ */
+
+std::pair<EC_Group, EC_Point> ecc_pubkey_from_tss2_public(const TPM2B_PUBLIC* public_blob);
 #endif
 
 /**

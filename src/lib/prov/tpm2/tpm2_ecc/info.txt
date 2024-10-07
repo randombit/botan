@@ -1,0 +1,16 @@
+<defines>
+TPM2_ECC_ADAPTER -> 20240925
+</defines>
+
+<module_info>
+name -> "TPM2 ECC Adapter"
+brief -> "Support for ECC pairs hosted on TPM 2.0"
+</module_info>
+
+<requires>
+ecdsa
+</requires>
+
+<header:public>
+tpm2_ecc.h
+</header:public>
