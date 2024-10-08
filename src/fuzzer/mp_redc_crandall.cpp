@@ -35,7 +35,7 @@ void fuzz(std::span<const uint8_t> in) {
 
    std::array<word, 8> z = {};
    for(size_t i = 0; i != 8; ++i) {
-      z[7 - i] = Botan::load_be<word>(in.subspan(0, i));
+      z[7 - i] = Botan::load_be<word>(in.subspan(sizeof(word) * i, sizeof(word)));
    }
 
    const auto rc = Botan::redc_crandall<word, 4, C>(z);
