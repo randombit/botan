@@ -157,14 +157,7 @@ jobs:
             compiler: gcc
             host_os: ubuntu-24.04
           - target: sanitizer
-            compiler: msvc
-            host_os: windows-2022
-            make_tool: ninja
-          - target: sanitizer
             compiler: clang
-            host_os: ubuntu-24.04
-          - target: sanitizer
-            compiler: gcc
             host_os: ubuntu-24.04
           - target: valgrind
             compiler: clang

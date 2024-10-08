@@ -22,6 +22,44 @@ on:
     - cron:  '23 3 * * *'
 
 jobs:
+  sanitizer:
+    name: "Sanitizers"
+    strategy:
+      fail-fast: false
+
+      matrix:
+        include:
+          - target: sanitizer
+            compiler: msvc
+            host_os: windows-2022
+            make_tool: ninja
+          - target: sanitizer
+            compiler: gcc
+            host_os: ubuntu-24.04
+
+    runs-on: ${{ matrix.host_os }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: ./source
+
+      - name: Fetch BoringSSL fork for BoGo tests
+        uses: actions/checkout@v4
+        with:
+          repository: randombit/boringssl
+          ref: rene/runner-20240524
+          path: ./boringssl
+
+      - name: Setup Build Agent
+        uses: ./source/.github/actions/setup-build-agent
+        with:
+          target: ${{ matrix.target }}
+          cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
+
+      - name: Build and Test Botan
+        run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
+
   x-compile:
     name: "Cross"
     strategy:
