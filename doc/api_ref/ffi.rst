@@ -177,6 +177,10 @@ The following enum values are defined in the FFI header:
    calling :cpp:func:`botan_hash_destroy` on a ``botan_rng_t`` object will cause
    this error.
 
+.. cpp:enumerator:: BOTAN_FFI_TPM_ERROR = -78
+
+   An error occured when performing TPM2 interactions.
+
 .. cpp:enumerator:: BOTAN_FFI_ERROR_UNKNOWN_ERROR = -100
 
    Something bad happened, but we are not sure why or how.
@@ -1336,6 +1340,61 @@ Public Key Encapsulation
 .. cpp:function:: int botan_pk_op_kem_decrypt_destroy(botan_pk_op_kem_decrypt_t op)
 
    Destroy the operation, freeing memory
+
+
+TPM 2.0 Functions
+----------------------------------------
+
+.. versionadded:: 3.6.0
+
+.. cpp:type:: opaque* botan_tpm2_ctx_t
+
+   An opaque data type for a TPM 2.0 context object. Don't mess with it.
+
+.. cpp:type:: opaque* botan_tpm2_session_t
+
+   An opaque data type for a TPM 2.0 session object. Don't mess with it.
+
+
+.. cpp:function:: int botan_tpm2_supports_crypto_backend()
+
+   Returns 1 if the Botan-based TPM 2.0 crypto backend is available, 0 otherwise.
+
+.. cpp:function:: int botan_tpm2_ctx_init(botan_tpm2_ctx_t* ctx_out, const char* tcti_nameconf)
+
+   Initialize a TPM 2.0 context object. The TCTI name and configuration are
+   mangled into a single string separated by a colon. for instance "device:/dev/tpm0".
+
+.. cpp:function:: int botan_tpm2_ctx_init_ex(botan_tpm2_ctx_t* ctx_out, const char* tcti_name, const char* tcti_conf)
+
+   Initialize a TPM 2.0 context object. The TCTI name and configuration are
+   passed as separate strings.
+
+.. cpp:function:: int botan_tpm2_ctx_enable_crypto_backend(botan_tpm2_ctx_t ctx, botan_rng_t rng)
+
+   Enable the Botan-based TPM 2.0 crypto backend. Note that the random number
+   generator passed to this function must not be dependent on the TPM itself.
+
+.. cpp:function:: int botan_tpm2_unauthenticated_session_init(botan_tpm2_session_t* session_out, botan_tpm2_ctx_t ctx)
+
+   Initialize an unauthenticated session that can be used to encrypt the
+   communication between your application and the TPM.
+
+.. cpp:function:: int botan_tpm2_rng_init(botan_rng_t* rng_out, \
+                                          botan_tpm2_ctx_t ctx, \
+                                          botan_tpm2_session_t s1, \
+                                          botan_tpm2_session_t s2, \
+                                          botan_tpm2_session_t s3)
+
+   Initialize a random number generator that uses the TPM as a source of entropy.
+
+.. cpp:function:: int botan_tpm2_ctx_destroy(botan_tpm2_ctx_t ctx)
+
+   Destroy a TPM 2.0 context object.
+
+.. cpp:function:: int botan_tpm2_session_destroy(botan_tpm2_session_t session)
+
+   Destroy a TPM 2.0 session object.
 
 X.509 Certificates
 ----------------------------------------
