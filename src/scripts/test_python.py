@@ -31,10 +31,10 @@ def hex_decode(buf):
 
 # pylint: disable=global-statement
 
-TEST_DATA_DIR = '.'
+ARGS = None
 
 def test_data(relpath):
-    return os.path.join(TEST_DATA_DIR, relpath)
+    return os.path.join(ARGS.test_data_dir, relpath)
 
 class BotanPythonTests(unittest.TestCase):
     def test_version(self):
@@ -926,13 +926,15 @@ class BotanPythonZfecTests(unittest.TestCase):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--test-data-dir', default='.')
+    parser.add_argument("--tpm2-tcti-name")
+    parser.add_argument("--tpm2-tcti-conf")
+
     parser.add_argument('unittest_args', nargs='*')
 
-    args = parser.parse_args()
-    global TEST_DATA_DIR
-    TEST_DATA_DIR = args.test_data_dir
+    global ARGS
+    ARGS = parser.parse_args()
 
-    sys.argv[1:] = args.unittest_args
+    sys.argv[1:] = ARGS.unittest_args
     unittest.main()
 
 if __name__ == '__main__':
