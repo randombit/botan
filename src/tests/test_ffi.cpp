@@ -367,6 +367,15 @@ class FFI_RNG_Test final : public FFI_Test {
             result.test_eq("custom_destroy_cb called", cb_counter, 5);
          }
 
+   #ifdef BOTAN_HAS_JITTER_RNG
+         botan_rng_t jitter_rng;
+         if(TEST_FFI_OK(botan_rng_init, (&jitter_rng, "jitter"))) {
+            std::vector<uint8_t> buf(256);
+            TEST_FFI_OK(botan_rng_get, (jitter_rng, outbuf.data(), buf.size()));
+            TEST_FFI_OK(botan_rng_destroy, (jitter_rng));
+         }
+   #endif
+
          TEST_FFI_OK(botan_rng_destroy, (rng));
          TEST_FFI_OK(botan_rng_destroy, (null_rng));
          TEST_FFI_OK(botan_rng_destroy, (system_rng));
