@@ -470,6 +470,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 #       only works for individual test names.
                 test_cmd += ["--tpm2-tcti-name=disabled"]
 
+        if is_running_in_github_actions() and 'BOTAN_BUILD_WITH_JITTERENTROPY' in os.environ:
+            flags += ['--enable-modules=jitter_rng']
+
         if target in ['coverage']:
             flags += ['--with-tpm']
             test_cmd += ['--run-online-tests']

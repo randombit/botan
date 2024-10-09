@@ -16,6 +16,17 @@ ARCH="$2"
 
 SCRIPT_LOCATION=$(cd "$(dirname "$0")"; pwd)
 
+function build_and_install_jitterentropy() {
+    mkdir jitterentropy-library
+    curl -L https://github.com/smuellerDD/jitterentropy-library/archive/refs/tags/v3.6.0.tar.gz | tar -xz -C .
+    jel_dir="$(realpath jitterentropy-library-*)"
+    cmake -B "${jel_dir}/build" -S "${jel_dir}" -DCMAKE_BUILD_TYPE=Release
+    cmake --build "${jel_dir}/build"
+    sudo cmake --install "${jel_dir}/build"
+    echo "BOTAN_BUILD_WITH_JITTERENTROPY=1" >> "$GITHUB_ENV"
+    rm -rf "${jel_dir}"
+}
+
 if type -p "apt-get"; then
     # TPM2-TSS library (to build the library against)
     tpm2_specific_packages=("libtss2-dev")
@@ -56,6 +67,7 @@ if type -p "apt-get"; then
     if [ "$TARGET" = "valgrind" ] || [ "$TARGET" = "valgrind-full" ]; then
         # (l)ist mode (avoiding https://github.com/actions/runner-images/issues/9996)
         sudo NEEDRESTART_MODE=l apt-get -qq install valgrind
+        build_and_install_jitterentropy
 
     elif [ "$TARGET" = "static" ]; then
         sudo apt-get -qq install "${tpm2_specific_packages[@]}"
@@ -67,6 +79,7 @@ if type -p "apt-get"; then
 
     elif [ "$TARGET" = "examples" ] || [ "$TARGET" = "tlsanvil" ] || [ "$TARGET" = "clang-tidy" ] ; then
         sudo apt-get -qq install libboost-dev libtss2-dev
+        build_and_install_jitterentropy
 
     elif [ "$TARGET" = "clang" ]; then
         sudo apt-get -qq install clang
@@ -161,6 +174,8 @@ if type -p "apt-get"; then
 
         softhsm2-util --init-token --free --label test --pin 123456 --so-pin 12345678
         echo "PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so" >> "$GITHUB_ENV"
+
+        build_and_install_jitterentropy
 
     elif [ "$TARGET" = "docs" ]; then
         sudo apt-get -qq install doxygen python3-docutils python3-sphinx
