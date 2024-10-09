@@ -866,6 +866,10 @@ def main(args=None):
         if root_dir != '.':
             python_tests.append('--test-data-dir=%s' % root_dir)
 
+        if is_running_in_github_actions() and os.environ.get('BOTAN_TPM2_ENABLED', 'no') == 'test':
+            python_tests.extend(["--tpm2-tcti-name=%s" % os.getenv('BOTAN_TPM2_TCTI_NAME'),
+                                 "--tpm2-tcti-conf=%s" % os.getenv('BOTAN_TPM2_TCTI_CONF')])
+
         if target in ['shared', 'coverage'] and not (options.os == 'windows' and options.cpu == 'x86'):
             cmds.append([py_interp, '-b'] + python_tests)
 
