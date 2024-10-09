@@ -170,11 +170,69 @@ class BotanPythonTests(unittest.TestCase):
         output3 = user_rng.get(1021)
         self.assertEqual(len(output3), 1021)
 
+        with self.assertRaisesRegex(botan.BotanException, r".*Unexpected arguments for RNG.*"):
+            botan.RandomNumberGenerator("user", unexpected="unexpected")
+
         system_rng = botan.RandomNumberGenerator('system')
 
         user_rng.reseed_from_rng(system_rng, 256)
 
         user_rng.add_entropy('seed material...')
+
+    def test_tpm2_rng(self):
+        if ARGS.tpm2_tcti_name is None or ARGS.tpm2_tcti_name == "disabled":
+            self.skipTest("TPM2 runtime tests are disabled")
+
+        try:
+            tpm2_ctx = botan.TPM2Context(ARGS.tpm2_tcti_name, ARGS.tpm2_tcti_conf)
+        except botan.BotanException as ex:
+            if ex.error_code() == -40: # Not Implemented
+                self.skipTest("No TPM2 support in this build")
+            else:
+                raise ex
+
+        if tpm2_ctx.supports_botan_crypto_backend():
+            user_rng = botan.RandomNumberGenerator("user")
+            tpm2_ctx.enable_botan_crypto_backend(user_rng)
+
+        session = botan.TPM2UnauthenticatedSession(tpm2_ctx)
+
+        # no TPM context provided
+        with self.assertRaisesRegex(botan.BotanException, r".*without a TPM2 context.*"):
+            botan.RandomNumberGenerator("tpm2")
+
+        # invalid session object provided
+        with self.assertRaisesRegex(botan.BotanException, r".*0 to 3 TPM2Session objects.*"):
+            botan.RandomNumberGenerator("tpm2", tpm2_context=tpm2_ctx,
+                                                tpm2_sessions=int(0))
+
+        # too many "sessions" provided
+        with self.assertRaisesRegex(botan.BotanException, r".*0 to 3 TPM2Session objects.*"):
+            botan.RandomNumberGenerator("tpm2", tpm2_context=tpm2_ctx,
+                                                tpm2_sessions=[session, None, None, None])
+
+        # unexpected kwarg provided
+        with self.assertRaisesRegex(botan.BotanException, r".*Unexpected arguments for TPM2.*"):
+            botan.RandomNumberGenerator("tpm2", tpm2_context=tpm2_ctx,
+                                                unexpected_arg="unexpected")
+
+        # session provided as a single session (not wrapped into an Iterable)
+        tpm2_rng = botan.RandomNumberGenerator("tpm2", tpm2_context=tpm2_ctx, tpm2_sessions=session)
+
+        output1 = tpm2_rng.get(32)
+        output2 = tpm2_rng.get(32)
+
+        self.assertEqual(len(output1), 32)
+        self.assertEqual(len(output2), 32)
+        self.assertNotEqual(output1, output2)
+        tpm2_rng.add_entropy('xkcd #221: 4 - chosen by fair dice roll')
+
+        # session provided wrapped into an Iterable
+        tpm2_rng2 = botan.RandomNumberGenerator("tpm2", tpm2_context=tpm2_ctx, tpm2_sessions=[session])
+        output3 = tpm2_rng2.get(32)
+
+        self.assertEqual(len(output3), 32)
+        self.assertNotEqual(output2, output3)
 
     def test_hash(self):
 

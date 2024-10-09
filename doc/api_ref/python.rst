@@ -46,6 +46,11 @@ Random Number Generators
      no matter how many 'system' rng instances are created. Thus it is
      easy to use the RNG in a one-off way, with `botan.RandomNumberGenerator().get(32)`.
 
+     When Botan is configured with TPM 2.0 support, also 'tpm2' is allowed
+     to instantiate a TPM-backed RNG. Note that this requires passing
+     additional named arguments ``tpm2_context=`` with a ``TPM2Context`` and
+     (optionally) ``tpm2_sessions=`` with one or more ``TPM2Session`` objects.
+
    .. py:method:: get(length)
 
       Return some bytes
@@ -460,6 +465,31 @@ Public Key Operations
     .. py:method:: agree(other, key_len, salt)
 
     Returns a key derived by the KDF.
+
+TPM 2.0 Bindings
+-------------------------------------
+
+.. versionadded:: 3.6.0
+
+.. py:class:: TPM2Context(tcti_nameconf = None, tcti_conf = None)
+
+   Create a TPM 2.0 context optionally with a TCTI name and configuration,
+   separated by a colon, or as separate parameters.
+
+   .. py:method:: supports_botan_crypto_backend()
+
+   Returns True if the TPM adapter can use Botan-based crypto primitives
+   to communicate with the TPM
+
+   .. py:method:: enable_botan_crypto_backend(rng)
+
+   Enables the TPM adapter to use Botan-based crypto primitives. The passed
+   RNG must not depend on the TPM itself.
+
+.. py:class:: TPM2UnauthenticatedSession(ctx)
+
+   Creates a TPM 2.0 session that is not bound to any authentication credential
+   but provides basic parameter encryption between the TPM and the application.
 
 Multiple Precision Integers (MPI)
 -------------------------------------
