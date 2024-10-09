@@ -281,6 +281,10 @@ class FFI_RNG_Test final : public FFI_Test {
          botan_rng_t hwrng_rng = nullptr;
          botan_rng_t null_rng;
          botan_rng_t custom_rng;
+         botan_rng_t tpm2_rng = nullptr;
+
+         botan_tpm2_ctx_t tpm2_ctx = nullptr;
+         botan_tpm2_session_t tpm2_session = nullptr;
 
          TEST_FFI_FAIL("invalid rng type", botan_rng_init, (&rng, "invalid_type"));
 
@@ -375,6 +379,56 @@ class FFI_RNG_Test final : public FFI_Test {
             TEST_FFI_OK(botan_rng_destroy, (jitter_rng));
          }
    #endif
+
+         const auto tcti_name = Test::options().tpm2_tcti_name().value_or("");
+         const auto tcti_conf = Test::options().tpm2_tcti_conf().value_or("");
+         if(tcti_name.empty() || tcti_name == "disabled") {
+            result.test_note("TPM2 tests are disabled.");
+         } else if(TEST_FFI_INIT(botan_tpm2_ctx_init_ex, (&tpm2_ctx, tcti_name.c_str(), tcti_conf.c_str()))) {
+            if(botan_tpm2_supports_crypto_backend() == 1) {
+               TEST_FFI_OK(botan_tpm2_ctx_enable_crypto_backend, (tpm2_ctx, system_rng));
+               result.test_note("TPM2 crypto backend enabled");
+            } else {
+               result.test_note("TPM2 crypto backend not supported");
+            }
+
+            // Create and use an RNG without a TPM2 session
+            // (communication between application and TPM won't be encrypted)
+            if(TEST_FFI_INIT(botan_tpm2_rng_init, (&tpm2_rng, tpm2_ctx, nullptr, nullptr, nullptr))) {
+               Botan::clear_mem(outbuf.data(), outbuf.size());
+
+               TEST_FFI_OK(botan_rng_get, (tpm2_rng, outbuf.data(), outbuf.size()));
+               TEST_FFI_OK(botan_rng_reseed, (tpm2_rng, 256));
+
+               TEST_FFI_OK(botan_rng_reseed_from_rng, (tpm2_rng, system_rng, 256));
+
+               uint8_t not_really_entropy[32] = {0};
+               TEST_FFI_OK(botan_rng_add_entropy, (tpm2_rng, not_really_entropy, 32));
+               TEST_FFI_OK(botan_rng_destroy, (tpm2_rng));
+            }
+
+            // Create an anonymous TPM2 session
+            if(TEST_FFI_INIT(botan_tpm2_unauthenticated_session_init, (&tpm2_session, tpm2_ctx))) {
+               // Create and use an RNG with an anonymous TPM2 session
+               // (communication between application and TPM will be encrypted)
+               if(TEST_FFI_INIT(botan_tpm2_rng_init, (&tpm2_rng, tpm2_ctx, tpm2_session, nullptr, nullptr))) {
+                  Botan::clear_mem(outbuf.data(), outbuf.size());
+
+                  TEST_FFI_OK(botan_rng_get, (tpm2_rng, outbuf.data(), outbuf.size()));
+                  TEST_FFI_OK(botan_rng_reseed, (tpm2_rng, 256));
+
+                  TEST_FFI_OK(botan_rng_reseed_from_rng, (tpm2_rng, system_rng, 256));
+
+                  uint8_t not_really_entropy[32] = {0};
+                  TEST_FFI_OK(botan_rng_add_entropy, (tpm2_rng, not_really_entropy, 32));
+                  TEST_FFI_OK(botan_rng_destroy, (tpm2_rng));
+               }
+
+               TEST_FFI_OK(botan_tpm2_session_destroy, (tpm2_session));
+            }
+
+            TEST_FFI_OK(botan_tpm2_ctx_destroy, (tpm2_ctx));
+         }
 
          TEST_FFI_OK(botan_rng_destroy, (rng));
          TEST_FFI_OK(botan_rng_destroy, (null_rng));
