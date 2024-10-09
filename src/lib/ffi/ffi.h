@@ -138,6 +138,7 @@ enum BOTAN_FFI_ERROR {
    BOTAN_FFI_ERROR_TLS_ERROR = -75,
    BOTAN_FFI_ERROR_HTTP_ERROR = -76,
    BOTAN_FFI_ERROR_ROUGHTIME_ERROR = -77,
+   BOTAN_FFI_ERROR_TPM_ERROR = -78,
 
    BOTAN_FFI_ERROR_UNKNOWN_ERROR = -100,
 };
@@ -2200,6 +2201,90 @@ int botan_zfec_encode(size_t K, size_t N, const uint8_t* input, size_t size, uin
 BOTAN_FFI_EXPORT(3, 0)
 int botan_zfec_decode(
    size_t K, size_t N, const size_t* indexes, uint8_t* const* inputs, size_t shareSize, uint8_t** outputs);
+
+/**
+* TPM2 context
+*/
+typedef struct botan_tpm2_ctx_struct* botan_tpm2_ctx_t;
+
+/**
+* TPM2 session
+*/
+typedef struct botan_tpm2_session_struct* botan_tpm2_session_t;
+
+/**
+* Checks if Botan's TSS2 crypto backend can be used in this build
+* @returns 1 if the crypto backend can be enabled
+*/
+BOTAN_FFI_EXPORT(3, 6)
+int botan_tpm2_supports_crypto_backend();
+
+/**
+* Initialize a TPM2 context
+* @param ctx_out output TPM2 context
+* @param tcti_nameconf TCTI config (may be nullptr)
+* @return 0 on success
+*/
+BOTAN_FFI_EXPORT(3, 6) int botan_tpm2_ctx_init(botan_tpm2_ctx_t* ctx_out, const char* tcti_nameconf);
+
+/**
+* Initialize a TPM2 context
+* @param ctx_out output TPM2 context
+* @param tcti_name TCTI name (may be nullptr)
+* @param tcti_conf TCTI config (may be nullptr)
+* @return 0 on success
+*/
+BOTAN_FFI_EXPORT(3, 6)
+int botan_tpm2_ctx_init_ex(botan_tpm2_ctx_t* ctx_out, const char* tcti_name, const char* tcti_conf);
+
+/**
+* Enable Botan's TSS2 crypto backend that replaces the cryptographic functions
+* required for the communication with the TPM with implementations provided
+* by Botan instead of using TSS' defaults OpenSSL or mbedTLS.
+* Note that the provided @p rng should not be dependent on the TPM and the
+* caller must ensure that it remains usable for the lifetime of the @p ctx.
+* @param ctx TPM2 context
+* @param rng random number generator to be used by the crypto backend
+*/
+BOTAN_FFI_EXPORT(3, 6)
+int botan_tpm2_ctx_enable_crypto_backend(botan_tpm2_ctx_t ctx, botan_rng_t rng);
+
+/**
+* Frees all resouces of a TPM2 context
+* @param ctx TPM2 context
+* @return 0 on success
+*/
+BOTAN_FFI_EXPORT(3, 6) int botan_tpm2_ctx_destroy(botan_tpm2_ctx_t ctx);
+
+/**
+* Initialize a random number generator object via TPM2
+* @param rng_out rng object to create
+* @param ctx TPM2 context
+* @param s1 the first session to use (optional, may be nullptr)
+* @param s2 the second session to use (optional, may be nullptr)
+* @param s3 the third session to use (optional, may be nullptr)
+*/
+BOTAN_FFI_EXPORT(3, 6)
+int botan_tpm2_rng_init(botan_rng_t* rng_out,
+                        botan_tpm2_ctx_t ctx,
+                        botan_tpm2_session_t s1,
+                        botan_tpm2_session_t s2,
+                        botan_tpm2_session_t s3);
+
+/**
+* Create an unauthenticated session for use with TPM2
+* @param session_out the session object to create
+* @param ctx TPM2 context
+*/
+BOTAN_FFI_EXPORT(3, 6)
+int botan_tpm2_unauthenticated_session_init(botan_tpm2_session_t* session_out, botan_tpm2_ctx_t ctx);
+
+/**
+* Create an unauthenticated session for use with TPM2
+* @param session the session object to destroy
+*/
+BOTAN_FFI_EXPORT(3, 6)
+int botan_tpm2_session_destroy(botan_tpm2_session_t session);
 
 #ifdef __cplusplus
 }
