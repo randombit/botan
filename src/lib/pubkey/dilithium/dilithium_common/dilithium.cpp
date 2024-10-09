@@ -182,16 +182,22 @@ class Dilithium_PrivateKeyInternal {
       DilithiumPolyVec m_s2;
 };
 
+// The signature and verification operations should be in an anonymous namespace
+// as well, but cannot due to an apparent bug in MSVC
+
 class Dilithium_Signature_Operation final : public PK_Ops::Signature {
    public:
-      Dilithium_Signature_Operation(std::shared_ptr<Dilithium_PrivateKeyInternal> sk, bool randomized) :
+      Dilithium_Signature_Operation(std::shared_ptr<Dilithium_PrivateKeyInternal> sk, PK_Signature_Options& options) :
             m_priv_key(std::move(sk)),
-            m_randomized(randomized),
+            m_randomized(!options.using_deterministic_signature()),
             m_h(m_priv_key->mode().symmetric_primitives().get_message_hash(m_priv_key->tr())),
             m_s1(ntt(m_priv_key->s1().clone())),
             m_s2(ntt(m_priv_key->s2().clone())),
             m_t0(ntt(m_priv_key->t0().clone())),
-            m_A(Dilithium_Algos::expand_A(m_priv_key->rho(), m_priv_key->mode())) {}
+            m_A(Dilithium_Algos::expand_A(m_priv_key->rho(), m_priv_key->mode())) {
+         options.context().not_implemented("will come in Botan 3.7.0");
+         options.prehash().not_implemented("will come in Botan 3.7.0");
+      }
 
       void update(std::span<const uint8_t> input) override { m_h.update(input); }
 
@@ -405,13 +411,10 @@ std::unique_ptr<Private_Key> Dilithium_PublicKey::generate_another(RandomNumberG
    return std::make_unique<Dilithium_PrivateKey>(rng, m_public->mode().mode());
 }
 
-std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_verification_op(std::string_view params,
-                                                                                  std::string_view provider) const {
-   BOTAN_ARG_CHECK(params.empty() || params == "Pure", "Unexpected parameters for verifying with Dilithium");
-   if(provider.empty() || provider == "base") {
-      return std::make_unique<Dilithium_Verification_Operation>(m_public);
-   }
-   throw Provider_Not_Found(algo_name(), provider);
+std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::_create_verification_op(
+   PK_Signature_Options& options) const {
+   options.exclude_provider();
+   return std::make_unique<Dilithium_Verification_Operation>(m_public);
 }
 
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_x509_verification_op(
@@ -505,21 +508,13 @@ secure_vector<uint8_t> Dilithium_PrivateKey::private_key_bits() const {
    return std::move(m_private->raw_sk().get());
 }
 
-std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                                                             std::string_view params,
-                                                                             std::string_view provider) const {
+std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                              PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-
-   BOTAN_ARG_CHECK(params.empty() || params == "Deterministic" || params == "Randomized",
-                   "Unexpected parameters for signing with Dilithium");
-
-   // TODO: ML-DSA uses the randomized (hedged) variant by default.
-   //       We might even drop support for the deterministic variant.
-   const bool randomized = (params == "Randomized");
-   if(provider.empty() || provider == "base") {
-      return std::make_unique<Dilithium_Signature_Operation>(m_private, randomized);
-   }
-   throw Provider_Not_Found(algo_name(), provider);
+   options.exclude_provider();
+   options.context().not_implemented("will come in Botan 3.7.0");
+   options.prehash().not_implemented("will come in Botan 3.7.0");
+   return std::make_unique<Dilithium_Signature_Operation>(m_private, options);
 }
 
 std::unique_ptr<Public_Key> Dilithium_PrivateKey::public_key() const {
