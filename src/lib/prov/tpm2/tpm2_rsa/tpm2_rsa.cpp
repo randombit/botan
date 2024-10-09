@@ -184,14 +184,12 @@ class RSA_Signature_Operation final : public Signature_Operation {
    private:
       std::vector<uint8_t> marshal_signature(const TPMT_SIGNATURE& signature) const override {
          const auto& sig = [&] {
-            switch(signature.sigAlg) {
-               case TPM2_ALG_RSASSA:
-                  return signature.signature.rsassa;
-               case TPM2_ALG_RSAPSS:
-                  return signature.signature.rsapss;
-               default:
-                  throw Invalid_State(fmt("TPM2 returned an unexpected signature scheme {}", signature.sigAlg));
+            if(signature.sigAlg == TPM2_ALG_RSASSA) {
+               return signature.signature.rsassa;
+            } else if(signature.sigAlg == TPM2_ALG_RSAPSS) {
+               return signature.signature.rsapss;
             }
+            throw Invalid_State(fmt("TPM2 returned an unexpected signature scheme {}", signature.sigAlg));
          }();
 
          BOTAN_ASSERT_NOMSG(sig.sig.size == signature_length());
@@ -213,14 +211,12 @@ class RSA_Verification_Operation final : public Verification_Operation {
          sig.sigAlg = scheme().scheme;
 
          auto& sig_data = [&]() -> TPMS_SIGNATURE_RSA& {
-            switch(sig.sigAlg) {
-               case TPM2_ALG_RSASSA:
-                  return sig.signature.rsassa;
-               case TPM2_ALG_RSAPSS:
-                  return sig.signature.rsapss;
-               default:
-                  throw Invalid_State(fmt("Requested an unexpected signature scheme {}", sig.sigAlg));
+            if(sig.sigAlg == TPM2_ALG_RSASSA) {
+               return sig.signature.rsassa;
+            } else if(sig.sigAlg == TPM2_ALG_RSAPSS) {
+               return sig.signature.rsapss;
             }
+            throw Invalid_State(fmt("Requested an unexpected signature scheme {}", sig.sigAlg));
          }();
 
          sig_data.hash = scheme().details.any.hashAlg;

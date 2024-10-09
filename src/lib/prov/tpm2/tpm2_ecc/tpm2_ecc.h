@@ -41,7 +41,7 @@ class BOTAN_PUBLIC_API(3, 6) EC_PublicKey final : public virtual Botan::TPM2::Pu
       friend class TPM2::PublicKey;
 
       EC_PublicKey(Object handle, SessionBundle sessions, const TPM2B_PUBLIC* public_blob);
-      EC_PublicKey(Object handle, SessionBundle sessions, std::pair<EC_Group, EC_Point> public_key);
+      EC_PublicKey(Object handle, SessionBundle sessions, std::pair<EC_Group, EC_AffinePoint> public_key);
 };
 
 BOTAN_DIAGNOSTIC_PUSH
@@ -110,7 +110,7 @@ class BOTAN_PUBLIC_API(3, 6) EC_PrivateKey final : public virtual Botan::TPM2::P
 
       EC_PrivateKey(Object handle,
                     SessionBundle sessions,
-                    std::pair<EC_Group, EC_Point> public_key,
+                    std::pair<EC_Group, EC_AffinePoint> public_key,
                     std::span<const uint8_t> private_blob = {});
 };
 

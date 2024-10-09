@@ -40,7 +40,7 @@ Botan::RSA_PublicKey rsa_pubkey_from_tss2_public(const TPM2B_PUBLIC* public_area
 #endif
 
 #if defined(BOTAN_HAS_ECC_GROUP)
-std::pair<EC_Group, EC_Point> ecc_pubkey_from_tss2_public(const TPM2B_PUBLIC* public_blob) {
+std::pair<EC_Group, EC_AffinePoint> ecc_pubkey_from_tss2_public(const TPM2B_PUBLIC* public_blob) {
    BOTAN_ASSERT_NONNULL(public_blob);
    BOTAN_ARG_CHECK(public_blob->publicArea.type == TPM2_ALG_ECC, "Public blob is not an ECC key");
 
@@ -51,10 +51,16 @@ std::pair<EC_Group, EC_Point> ecc_pubkey_from_tss2_public(const TPM2B_PUBLIC* pu
    }
 
    auto curve = Botan::EC_Group::from_name(curve_name.value());
-   auto point = curve.point(BigInt(as_span(public_blob->publicArea.unique.ecc.x)),
-                            BigInt(as_span(public_blob->publicArea.unique.ecc.y)));
-
-   return {std::move(curve), std::move(point)};
+   // Create an EC_AffinePoint from the x and y coordinates as SEC1 uncompressed point.
+   // According to the TPM2.0 specification Part 1 C.8, each coordinate is already padded to the curve's size.
+   auto point = EC_AffinePoint::deserialize(curve,
+                                            concat(std::vector<uint8_t>({0x04}),
+                                                   as_span(public_blob->publicArea.unique.ecc.x),
+                                                   as_span(public_blob->publicArea.unique.ecc.y)));
+   if(!point) {
+      throw Invalid_Argument("Invalid ECC Point");
+   }
+   return {std::move(curve), std::move(point.value())};
 }
 #endif
 
