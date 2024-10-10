@@ -12,6 +12,10 @@ Version 3.6.0, Not Yet Released
   #4209 #4210 #4211 #4212 #4213 #4215 #4217 #4218 #4221 #4225 #4226 #4235
   #4237 #4240 #4242 #4256 #4257 #4261 #4264 #4276 #4284 #4300)
 
+* Add support for TPM2 hardware (GH #4337)
+
+* Add support for jitterentropy RNG (GH #4325)
+
 * Constant time programming improvements including ``CT::Option``
   (GH #4175 #4197 #4198 #4204 #4207 #4254 #4260)
 
@@ -39,6 +43,8 @@ Version 3.6.0, Not Yet Released
 
 * Correct inconsistencies with use of ``BOTAN_CLEAR_CPUID`` where dependent
   instruction sets were not always disabled. (GH #4290)
+
+* Deprecate the x25519/Kyber-512-r3 TLS ciphersuite. (GH #4347)
 
 * Add CI nightly test using Intel SDE to test AVX-512 (GH #4296)
 
