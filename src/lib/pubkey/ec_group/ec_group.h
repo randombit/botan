@@ -252,7 +252,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       bool verify_public_element(const EC_Point& y) const;
 
       /// Table for computing g*x + h*y
-      class Mul2Table final {
+      class BOTAN_PUBLIC_API(3, 6) Mul2Table final {
          public:
             /**
             * Create a table for computing g*x + h*y
