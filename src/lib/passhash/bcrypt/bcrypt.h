@@ -61,6 +61,8 @@ class RandomNumberGenerator;
 *        have identical behavior in this implementation).
 *
 * @see https://www.usenix.org/events/usenix99/provos/provos_html/
+*
+* TODO(Botan4) Convert work_factor to a size_t
 */
 std::string BOTAN_PUBLIC_API(2, 0) generate_bcrypt(std::string_view password,
                                                    RandomNumberGenerator& rng,
