@@ -5,8 +5,8 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include "../tests/test_rng.h"  // FIXME
 #include "cli.h"
+#include "perf.h"
 
 #include <algorithm>
 #include <chrono>
@@ -24,11 +24,6 @@
 #include <botan/internal/os_utils.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/timer.h>
-
-#if defined(BOTAN_HAS_BIGINT)
-   #include <botan/bigint.h>
-   #include <botan/internal/divide.h>
-#endif
 
 #if defined(BOTAN_HAS_BLOCK_CIPHER)
    #include <botan/block_cipher.h>
@@ -54,63 +49,11 @@
    #include <botan/mac.h>
 #endif
 
-#if defined(BOTAN_HAS_BASE64_CODEC)
-   #include <botan/base64.h>
-#endif
-
-#if defined(BOTAN_HAS_HEX_CODEC)
-   #include <botan/hex.h>
-#endif
-
-#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-   #include <botan/auto_rng.h>
-#endif
-
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-   #include <botan/system_rng.h>
-#endif
-
-#if defined(BOTAN_HAS_HMAC_DRBG)
-   #include <botan/hmac_drbg.h>
-#endif
-
-#if defined(BOTAN_HAS_PROCESSOR_RNG)
-   #include <botan/processor_rng.h>
-#endif
-
-#if defined(BOTAN_HAS_CHACHA_RNG)
-   #include <botan/chacha_rng.h>
-#endif
-
-#if defined(BOTAN_HAS_FPE_FE1)
-   #include <botan/fpe_fe1.h>
-#endif
-
-#if defined(BOTAN_HAS_RFC3394_KEYWRAP)
-   #include <botan/rfc3394.h>
-#endif
-
-#if defined(BOTAN_HAS_COMPRESSION)
-   #include <botan/compression.h>
-#endif
-
-#if defined(BOTAN_HAS_POLY_DBL)
-   #include <botan/internal/poly_dbl.h>
-#endif
-
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
    #include <botan/pk_algs.h>
    #include <botan/pkcs8.h>
    #include <botan/pubkey.h>
    #include <botan/x509_key.h>
-   #include <botan/internal/workfactor.h>
-#endif
-
-#if defined(BOTAN_HAS_NUMBERTHEORY)
-   #include <botan/numthry.h>
-   #include <botan/reducer.h>
-   #include <botan/internal/curve_nistp.h>
-   #include <botan/internal/primality.h>
 #endif
 
 #if defined(BOTAN_HAS_ECC_GROUP)
@@ -119,10 +62,6 @@
 
 #if defined(BOTAN_HAS_PCURVES)
    #include <botan/internal/pcurves.h>
-#endif
-
-#if defined(BOTAN_HAS_DL_GROUP)
-   #include <botan/dl_group.h>
 #endif
 
 #if defined(BOTAN_HAS_MCELIECE)
@@ -151,22 +90,6 @@
 
 #if defined(BOTAN_HAS_ECDSA)
    #include <botan/ecdsa.h>
-#endif
-
-#if defined(BOTAN_HAS_BCRYPT)
-   #include <botan/bcrypt.h>
-#endif
-
-#if defined(BOTAN_HAS_PASSHASH9)
-   #include <botan/passhash9.h>
-#endif
-
-#if defined(BOTAN_HAS_PASSWORD_HASHING)
-   #include <botan/pwdhash.h>
-#endif
-
-#if defined(BOTAN_HAS_ZFEC)
-   #include <botan/zfec.h>
 #endif
 
 namespace Botan_CLI {
@@ -508,11 +431,44 @@ class Speed final : public Command {
             algos = default_benchmark_list();
          }
 
+         class PerfConfig_Cli final : public PerfConfig {
+            public:
+               PerfConfig_Cli(std::chrono::milliseconds runtime,
+                              const std::vector<size_t>& buffer_sizes,
+                              Speed* speed) :
+                     m_runtime(runtime), m_buffer_sizes(buffer_sizes), m_speed(speed) {}
+
+               const std::vector<size_t>& buffer_sizes() const override { return m_buffer_sizes; }
+
+               std::chrono::milliseconds runtime() const override { return m_runtime; }
+
+               std::ostream& error_output() const override { return m_speed->error_output(); }
+
+               Botan::RandomNumberGenerator& rng() const override { return m_speed->rng(); }
+
+               void record_result(const Botan::Timer& timer) const override { m_speed->record_result(timer); }
+
+               std::unique_ptr<Botan::Timer> make_timer(const std::string& alg,
+                                                        uint64_t event_mult,
+                                                        const std::string& what,
+                                                        const std::string& provider,
+                                                        size_t buf_size) const override {
+                  return m_speed->make_timer(alg, event_mult, what, provider, buf_size);
+               }
+
+            private:
+               std::chrono::milliseconds m_runtime;
+               std::vector<size_t> m_buffer_sizes;
+               Speed* m_speed;
+         };
+
+         PerfConfig_Cli perf_config(msec, buf_sizes, this);
+
          for(const auto& algo : algos) {
             using namespace std::placeholders;
 
-            if(false) {
-               // Since everything might be disabled, need a block to else if from
+            if(auto perf = PerfTest::get(algo)) {
+               perf->go(perf_config);
             }
 #if defined(BOTAN_HAS_HASH)
             else if(!Botan::HashFunction::providers(algo).empty()) {
@@ -670,89 +626,6 @@ class Speed final : public Command {
                bench_frodokem(provider, msec);
             }
 #endif
-#if defined(BOTAN_HAS_SCRYPT)
-            else if(algo == "scrypt") {
-               bench_scrypt(provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_ARGON2)
-            else if(algo == "argon2") {
-               bench_argon2(provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_BCRYPT)
-            else if(algo == "bcrypt") {
-               bench_bcrypt();
-            }
-#endif
-#if defined(BOTAN_HAS_PASSHASH9)
-            else if(algo == "passhash9") {
-               bench_passhash9();
-            }
-#endif
-#if defined(BOTAN_HAS_ZFEC)
-            else if(algo == "zfec") {
-               bench_zfec(msec);
-            }
-#endif
-#if defined(BOTAN_HAS_POLY_DBL)
-            else if(algo == "poly_dbl") {
-               bench_poly_dbl(msec);
-            }
-#endif
-
-#if defined(BOTAN_HAS_DL_GROUP)
-            else if(algo == "modexp") {
-               bench_modexp(msec);
-            }
-#endif
-
-#if defined(BOTAN_HAS_BIGINT)
-            else if(algo == "mp_mul") {
-               bench_mp_mul(msec);
-            } else if(algo == "mp_div") {
-               bench_mp_div(msec);
-            } else if(algo == "mp_div10") {
-               bench_mp_div10(msec);
-            }
-#endif
-
-#if defined(BOTAN_HAS_NUMBERTHEORY)
-            else if(algo == "primality_test") {
-               bench_primality_tests(msec);
-            } else if(algo == "random_prime") {
-               bench_random_prime(msec);
-            } else if(algo == "inverse_mod") {
-               bench_inverse_mod(msec);
-            } else if(algo == "bn_redc") {
-               bench_bn_redc(msec);
-            } else if(algo == "nistp_redc") {
-               bench_nistp_redc(msec);
-            }
-#endif
-
-#if defined(BOTAN_HAS_FPE_FE1)
-            else if(algo == "fpe_fe1") {
-               bench_fpe_fe1(msec);
-            }
-#endif
-
-#if defined(BOTAN_HAS_RFC3394_KEYWRAP)
-            else if(algo == "rfc3394") {
-               bench_rfc3394(msec);
-            }
-#endif
-
-#if defined(BOTAN_HAS_BASE64_CODEC)
-            else if(algo == "base64") {
-               bench_base64(msec, buf_sizes);
-            }
-#endif
-#if defined(BOTAN_HAS_HEX_CODEC)
-            else if(algo == "hex") {
-               bench_hex(msec, buf_sizes);
-            }
-#endif
 
 #if defined(BOTAN_HAS_ECC_GROUP)
             else if(algo == "ecc_mult") {
@@ -768,39 +641,7 @@ class Speed final : public Command {
                bench_ec_h2c(msec);
             }
 #endif
-            else if(algo == "RNG") {
-#if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
-               Botan::AutoSeeded_RNG auto_rng;
-               bench_rng(auto_rng, "AutoSeeded_RNG (with reseed)", msec, buf_sizes);
-#endif
-
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-               bench_rng(Botan::system_rng(), "System_RNG", msec, buf_sizes);
-#endif
-
-#if defined(BOTAN_HAS_PROCESSOR_RNG)
-               if(Botan::Processor_RNG::available()) {
-                  Botan::Processor_RNG hwrng;
-                  bench_rng(hwrng, "Processor_RNG", msec, buf_sizes);
-               }
-#endif
-
-#if defined(BOTAN_HAS_HMAC_DRBG)
-               for(std::string hash : {"SHA-256", "SHA-384", "SHA-512"}) {
-                  Botan::HMAC_DRBG hmac_drbg(hash);
-                  bench_rng(hmac_drbg, hmac_drbg.name(), msec, buf_sizes);
-               }
-#endif
-
-#if defined(BOTAN_HAS_CHACHA_RNG)
-               // Provide a dummy seed
-               Botan::ChaCha_RNG chacha_rng(Botan::secure_vector<uint8_t>(32));
-               bench_rng(chacha_rng, "ChaCha_RNG", msec, buf_sizes);
-#endif
-
-            } else if(algo == "entropy") {
-               bench_entropy_sources(msec);
-            } else {
+            else {
                if(verbose() || !using_defaults) {
                   error_output() << "Unknown algorithm '" << algo << "'\n";
                }
@@ -830,18 +671,20 @@ class Speed final : public Command {
       std::unique_ptr<Summary> m_summary;
       std::unique_ptr<JSON_Output> m_json;
 
-      void record_result(const std::unique_ptr<Timer>& t) {
-         m_ns_taken += t->value();
-         m_cycles_consumed += t->cycles_consumed();
+      void record_result(const Timer& t) {
+         m_ns_taken += t.value();
+         m_cycles_consumed += t.cycles_consumed();
          if(m_json) {
-            m_json->add(*t);
+            m_json->add(t);
          } else {
-            output() << t->to_string() << std::flush;
+            output() << t.to_string() << std::flush;
             if(m_summary) {
-               m_summary->add(*t);
+               m_summary->add(t);
             }
          }
       }
+
+      void record_result(const std::unique_ptr<Timer>& t) { record_result(*t); }
 
       template <typename T>
       using bench_fn = std::function<void(T&, std::string, std::chrono::milliseconds, const std::vector<size_t>&)>;
@@ -1094,71 +937,6 @@ class Speed final : public Command {
          }
       }
 #endif
-
-      void bench_rng(Botan::RandomNumberGenerator& rng,
-                     const std::string& rng_name,
-                     const std::chrono::milliseconds runtime,
-                     const std::vector<size_t>& buf_sizes) {
-         for(auto buf_size : buf_sizes) {
-            Botan::secure_vector<uint8_t> buffer(buf_size);
-            const size_t mult = std::max<size_t>(1, 65536 / buf_size);
-
-#if defined(BOTAN_HAS_SYSTEM_RNG)
-            rng.reseed_from_rng(Botan::system_rng(), 256);
-#endif
-
-            auto timer = make_timer(rng_name, mult * buffer.size(), "generate", "", buf_size);
-            timer->run_until_elapsed(runtime, [&]() {
-               for(size_t i = 0; i != mult; ++i) {
-                  rng.randomize(buffer.data(), buffer.size());
-               }
-            });
-
-            record_result(timer);
-         }
-      }
-
-      void bench_entropy_sources(const std::chrono::milliseconds /*unused*/) {
-         Botan::Entropy_Sources& srcs = Botan::Entropy_Sources::global_sources();
-
-         for(auto src : srcs.enabled_sources()) {
-            size_t entropy_bits = 0;
-            Botan_Tests::SeedCapturing_RNG rng;
-
-            auto timer = make_timer(src, "", "bytes");
-            timer->run([&]() { entropy_bits = srcs.poll_just(rng, src); });
-
-            size_t compressed_size = 0;
-
-#if defined(BOTAN_HAS_ZLIB)
-            auto comp = Botan::Compression_Algorithm::create("zlib");
-
-            if(comp) {
-               Botan::secure_vector<uint8_t> compressed;
-               compressed.assign(rng.seed_material().begin(), rng.seed_material().end());
-               comp->start(9);
-               comp->finish(compressed);
-
-               compressed_size = compressed.size();
-            }
-#endif
-
-            std::ostringstream msg;
-
-            msg << "Entropy source " << src << " output " << rng.seed_material().size() << " bytes"
-                << " estimated entropy " << entropy_bits << " in " << timer->milliseconds() << " ms";
-
-            if(compressed_size > 0) {
-               msg << " output compressed to " << compressed_size << " bytes";
-            }
-
-            msg << " total samples " << rng.samples() << "\n";
-
-            timer->set_custom_msg(msg.str());
-
-            record_result(timer);
-         }
-      }
 
 #if defined(BOTAN_HAS_ECC_GROUP)
       void bench_ecc_init(const std::vector<std::string>& groups, const std::chrono::milliseconds runtime) {
@@ -1431,366 +1209,6 @@ class Speed final : public Command {
          }
       }
 
-#endif
-
-#if defined(BOTAN_HAS_FPE_FE1)
-
-      void bench_fpe_fe1(const std::chrono::milliseconds runtime) {
-         const auto n = Botan::BigInt::from_u64(1000000000000000);
-
-         auto enc_timer = make_timer("FPE_FE1 encrypt");
-         auto dec_timer = make_timer("FPE_FE1 decrypt");
-
-         const Botan::SymmetricKey key(rng(), 32);
-         const std::vector<uint8_t> tweak(8);  // 8 zeros
-
-         auto x = Botan::BigInt::one();
-
-         Botan::FPE_FE1 fpe_fe1(n);
-         fpe_fe1.set_key(key);
-
-         while(enc_timer->under(runtime)) {
-            enc_timer->start();
-            x = fpe_fe1.encrypt(x, tweak.data(), tweak.size());
-            enc_timer->stop();
-         }
-
-         for(size_t i = 0; i != enc_timer->events(); ++i) {
-            dec_timer->start();
-            x = fpe_fe1.decrypt(x, tweak.data(), tweak.size());
-            dec_timer->stop();
-         }
-
-         BOTAN_ASSERT(x == 1, "FPE works");
-
-         record_result(enc_timer);
-         record_result(dec_timer);
-      }
-#endif
-
-#if defined(BOTAN_HAS_RFC3394_KEYWRAP)
-
-      void bench_rfc3394(const std::chrono::milliseconds runtime) {
-         auto wrap_timer = make_timer("RFC3394 AES-256 key wrap");
-         auto unwrap_timer = make_timer("RFC3394 AES-256 key unwrap");
-
-         const Botan::SymmetricKey kek(rng(), 32);
-         Botan::secure_vector<uint8_t> key(64, 0);
-
-         while(wrap_timer->under(runtime)) {
-            wrap_timer->start();
-            key = Botan::rfc3394_keywrap(key, kek);
-            wrap_timer->stop();
-
-            unwrap_timer->start();
-            key = Botan::rfc3394_keyunwrap(key, kek);
-            unwrap_timer->stop();
-
-            key[0] += 1;
-         }
-
-         record_result(wrap_timer);
-         record_result(unwrap_timer);
-      }
-#endif
-
-#if defined(BOTAN_HAS_BIGINT)
-
-      void bench_mp_mul(const std::chrono::milliseconds runtime) {
-         std::chrono::milliseconds runtime_per_size = runtime;
-         for(size_t bits : {256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096}) {
-            auto mul_timer = make_timer("BigInt mul " + std::to_string(bits));
-            auto sqr_timer = make_timer("BigInt sqr " + std::to_string(bits));
-
-            const Botan::BigInt y(rng(), bits);
-            Botan::secure_vector<Botan::word> ws;
-
-            while(mul_timer->under(runtime_per_size)) {
-               Botan::BigInt x(rng(), bits);
-
-               sqr_timer->start();
-               x.square(ws);
-               sqr_timer->stop();
-
-               x.mask_bits(bits);
-
-               mul_timer->start();
-               x.mul(y, ws);
-               mul_timer->stop();
-            }
-
-            record_result(mul_timer);
-            record_result(sqr_timer);
-         }
-      }
-
-      void bench_mp_div(const std::chrono::milliseconds runtime) {
-         std::chrono::milliseconds runtime_per_size = runtime;
-
-         for(size_t n_bits : {256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096}) {
-            const size_t q_bits = n_bits / 2;
-            const std::string bit_descr = std::to_string(n_bits) + "/" + std::to_string(q_bits);
-
-            auto div_timer = make_timer("BigInt div " + bit_descr);
-            auto ct_div_timer = make_timer("BigInt ct_div " + bit_descr);
-
-            Botan::BigInt y;
-            Botan::BigInt x;
-            Botan::secure_vector<Botan::word> ws;
-
-            Botan::BigInt q1, r1, q2, r2;
-
-            while(ct_div_timer->under(runtime_per_size)) {
-               x.randomize(rng(), n_bits);
-               y.randomize(rng(), q_bits);
-
-               div_timer->start();
-               Botan::vartime_divide(x, y, q1, r1);
-               div_timer->stop();
-
-               ct_div_timer->start();
-               Botan::ct_divide(x, y, q2, r2);
-               ct_div_timer->stop();
-
-               BOTAN_ASSERT_EQUAL(q1, q2, "Quotient ok");
-               BOTAN_ASSERT_EQUAL(r1, r2, "Remainder ok");
-            }
-
-            record_result(div_timer);
-            record_result(ct_div_timer);
-         }
-      }
-
-      void bench_mp_div10(const std::chrono::milliseconds runtime) {
-         std::chrono::milliseconds runtime_per_size = runtime;
-
-         for(size_t n_bits : {256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096}) {
-            const std::string bit_descr = std::to_string(n_bits) + "/10";
-
-            auto div_timer = make_timer("BigInt div " + bit_descr);
-            auto ct_div_timer = make_timer("BigInt ct_div " + bit_descr);
-
-            Botan::BigInt x;
-            Botan::secure_vector<Botan::word> ws;
-
-            const auto ten = Botan::BigInt::from_word(10);
-            Botan::BigInt q1, r1, q2;
-            Botan::word r2;
-
-            while(ct_div_timer->under(runtime_per_size)) {
-               x.randomize(rng(), n_bits);
-
-               div_timer->start();
-               Botan::vartime_divide(x, ten, q1, r1);
-               div_timer->stop();
-
-               ct_div_timer->start();
-               Botan::ct_divide_word(x, 10, q2, r2);
-               ct_div_timer->stop();
-
-               BOTAN_ASSERT_EQUAL(q1, q2, "Quotient ok");
-               BOTAN_ASSERT_EQUAL(r1, r2, "Remainder ok");
-            }
-
-            record_result(div_timer);
-            record_result(ct_div_timer);
-         }
-      }
-
-#endif
-
-#if defined(BOTAN_HAS_DL_GROUP)
-
-      void bench_modexp(const std::chrono::milliseconds runtime) {
-         for(size_t group_bits : {1024, 1536, 2048, 3072, 4096}) {
-            const std::string group_bits_str = std::to_string(group_bits);
-            const Botan::DL_Group group("modp/srp/" + group_bits_str);
-
-            const size_t e_bits = Botan::dl_exponent_size(group_bits);
-            const size_t f_bits = group_bits - 1;
-
-            const Botan::BigInt random_e(rng(), e_bits);
-            const Botan::BigInt random_f(rng(), f_bits);
-
-            auto e_timer = make_timer(group_bits_str + " short exponent");
-            auto f_timer = make_timer(group_bits_str + "  full exponent");
-
-            while(f_timer->under(runtime)) {
-               e_timer->run([&]() { group.power_g_p(random_e); });
-               f_timer->run([&]() { group.power_g_p(random_f); });
-            }
-
-            record_result(e_timer);
-            record_result(f_timer);
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_NUMBERTHEORY)
-      void bench_nistp_redc(const std::chrono::milliseconds runtime) {
-         Botan::secure_vector<Botan::word> ws;
-
-         auto p192_timer = make_timer("P-192 redc");
-         Botan::BigInt r192(rng(), 192 * 2 - 1);
-         while(p192_timer->under(runtime)) {
-            Botan::BigInt r = r192;
-            p192_timer->run([&]() { Botan::redc_p192(r, ws); });
-            r192 += 1;
-         }
-         record_result(p192_timer);
-
-         auto p224_timer = make_timer("P-224 redc");
-         Botan::BigInt r224(rng(), 224 * 2 - 1);
-         while(p224_timer->under(runtime)) {
-            Botan::BigInt r = r224;
-            p224_timer->run([&]() { Botan::redc_p224(r, ws); });
-            r224 += 1;
-         }
-         record_result(p224_timer);
-
-         auto p256_timer = make_timer("P-256 redc");
-         Botan::BigInt r256(rng(), 256 * 2 - 1);
-         while(p256_timer->under(runtime)) {
-            Botan::BigInt r = r256;
-            p256_timer->run([&]() { Botan::redc_p256(r, ws); });
-            r256 += 1;
-         }
-         record_result(p256_timer);
-
-         auto p384_timer = make_timer("P-384 redc");
-         Botan::BigInt r384(rng(), 384 * 2 - 1);
-         while(p384_timer->under(runtime)) {
-            Botan::BigInt r = r384;
-            p384_timer->run([&]() { Botan::redc_p384(r384, ws); });
-            r384 += 1;
-         }
-         record_result(p384_timer);
-
-         auto p521_timer = make_timer("P-521 redc");
-         Botan::BigInt r521(rng(), 521 * 2 - 1);
-         while(p521_timer->under(runtime)) {
-            Botan::BigInt r = r521;
-            p521_timer->run([&]() { Botan::redc_p521(r521, ws); });
-            r521 += 1;
-         }
-         record_result(p521_timer);
-      }
-
-      void bench_bn_redc(const std::chrono::milliseconds runtime) {
-         for(size_t bitsize : {512, 1024, 2048, 4096}) {
-            Botan::BigInt p(rng(), bitsize);
-
-            std::string bit_str = std::to_string(bitsize);
-            auto barrett_timer = make_timer("Barrett-" + bit_str);
-            auto schoolbook_timer = make_timer("Schoolbook-" + bit_str);
-
-            Botan::Modular_Reducer mod_p(p);
-
-            while(schoolbook_timer->under(runtime)) {
-               const Botan::BigInt x(rng(), p.bits() * 2 - 2);
-
-               const Botan::BigInt r1 = barrett_timer->run([&] { return mod_p.reduce(x); });
-               const Botan::BigInt r2 = schoolbook_timer->run([&] { return x % p; });
-
-               BOTAN_ASSERT(r1 == r2, "Computed different results");
-            }
-
-            record_result(barrett_timer);
-            record_result(schoolbook_timer);
-         }
-      }
-
-      void bench_inverse_mod(const std::chrono::milliseconds runtime) {
-         for(size_t bits : {256, 384, 512, 1024, 2048}) {
-            const std::string bit_str = std::to_string(bits);
-
-            auto timer = make_timer("inverse_mod-" + bit_str);
-            auto gcd_timer = make_timer("gcd-" + bit_str);
-
-            while(timer->under(runtime) && gcd_timer->under(runtime)) {
-               const Botan::BigInt x(rng(), bits - 1);
-               Botan::BigInt mod(rng(), bits);
-
-               const Botan::BigInt x_inv = timer->run([&] { return Botan::inverse_mod(x, mod); });
-
-               const Botan::BigInt g = gcd_timer->run([&] { return gcd(x, mod); });
-
-               if(x_inv == 0) {
-                  BOTAN_ASSERT(g != 1, "Inversion only fails if gcd(x, mod) > 1");
-               } else {
-                  BOTAN_ASSERT(g == 1, "Inversion succeeds only if gcd != 1");
-                  const Botan::BigInt check = (x_inv * x) % mod;
-                  BOTAN_ASSERT_EQUAL(check, 1, "Const time inversion correct");
-               }
-            }
-
-            record_result(timer);
-            record_result(gcd_timer);
-         }
-      }
-
-      void bench_primality_tests(const std::chrono::milliseconds runtime) {
-         for(size_t bits : {256, 512, 1024}) {
-            auto mr_timer = make_timer("Miller-Rabin-" + std::to_string(bits));
-            auto bpsw_timer = make_timer("Bailie-PSW-" + std::to_string(bits));
-            auto lucas_timer = make_timer("Lucas-" + std::to_string(bits));
-
-            Botan::BigInt n = Botan::random_prime(rng(), bits);
-
-            while(lucas_timer->under(runtime)) {
-               Botan::Modular_Reducer mod_n(n);
-
-               mr_timer->run([&]() { return Botan::is_miller_rabin_probable_prime(n, mod_n, rng(), 2); });
-
-               bpsw_timer->run([&]() { return Botan::is_bailie_psw_probable_prime(n, mod_n); });
-
-               lucas_timer->run([&]() { return Botan::is_lucas_probable_prime(n, mod_n); });
-
-               n += 2;
-            }
-
-            record_result(mr_timer);
-            record_result(bpsw_timer);
-            record_result(lucas_timer);
-         }
-      }
-
-      void bench_random_prime(const std::chrono::milliseconds runtime) {
-         const auto coprime = Botan::BigInt::from_word(0x10001);
-
-         for(size_t bits : {256, 384, 512, 768, 1024, 1536}) {
-            auto genprime_timer = make_timer("random_prime " + std::to_string(bits));
-            auto gensafe_timer = make_timer("random_safe_prime " + std::to_string(bits));
-            auto is_prime_timer = make_timer("is_prime " + std::to_string(bits));
-
-            while(gensafe_timer->under(runtime)) {
-               const Botan::BigInt p = genprime_timer->run([&] { return Botan::random_prime(rng(), bits, coprime); });
-
-               if(!is_prime_timer->run([&] { return Botan::is_prime(p, rng(), 64, true); })) {
-                  error_output() << "Generated prime " << p << " which failed a primality test";
-               }
-
-               const Botan::BigInt sg = gensafe_timer->run([&] { return Botan::random_safe_prime(rng(), bits); });
-
-               if(!is_prime_timer->run([&] { return Botan::is_prime(sg, rng(), 64, true); })) {
-                  error_output() << "Generated safe prime " << sg << " which failed a primality test";
-               }
-
-               if(!is_prime_timer->run([&] { return Botan::is_prime(sg / 2, rng(), 64, true); })) {
-                  error_output() << "Generated prime " << sg / 2 << " which failed a primality test";
-               }
-
-               // Now test p+2, p+4, ... which may or may not be prime
-               for(size_t i = 2; i <= 64; i += 2) {
-                  is_prime_timer->run([&]() { Botan::is_prime(p + i, rng(), 64, true); });
-               }
-            }
-
-            record_result(genprime_timer);
-            record_result(gensafe_timer);
-            record_result(is_prime_timer);
-         }
-      }
 #endif
 
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
@@ -2386,232 +1804,6 @@ class Speed final : public Command {
             if(bench_pk_sig(*key, params, provider, "", msec) == 1) {
                break;
             }
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_ZFEC)
-      void bench_zfec(std::chrono::milliseconds msec) {
-         const size_t k = 4;
-         const size_t n = 16;
-
-         Botan::ZFEC zfec(k, n);
-
-         const size_t share_size = 256 * 1024;
-
-         std::vector<uint8_t> input(share_size * k);
-         rng().randomize(input.data(), input.size());
-
-         std::vector<uint8_t> output(share_size * n);
-
-         auto enc_fn = [&](size_t share, const uint8_t buf[], size_t len) {
-            std::memcpy(&output[share * share_size], buf, len);
-         };
-
-         auto enc_timer =
-            make_timer("zfec " + std::to_string(k) + "/" + std::to_string(n), input.size(), "encode", "", input.size());
-
-         enc_timer->run_until_elapsed(msec, [&]() { zfec.encode(input.data(), input.size(), enc_fn); });
-
-         record_result(enc_timer);
-
-         auto dec_timer =
-            make_timer("zfec " + std::to_string(k) + "/" + std::to_string(n), input.size(), "decode", "", input.size());
-
-         std::map<size_t, const uint8_t*> shares;
-         for(size_t i = 0; i != n; ++i) {
-            shares[i] = &output[share_size * i];
-         }
-
-         // remove data shares to make decoding maximally expensive:
-         while(shares.size() != k) {
-            shares.erase(shares.begin());
-         }
-
-         std::vector<uint8_t> recovered(share_size * k);
-
-         auto dec_fn = [&](size_t share, const uint8_t buf[], size_t len) {
-            std::memcpy(&recovered[share * share_size], buf, len);
-         };
-
-         dec_timer->run_until_elapsed(msec, [&]() { zfec.decode_shares(shares, share_size, dec_fn); });
-
-         record_result(dec_timer);
-
-         if(recovered != input) {
-            error_output() << "ZFEC recovery failed\n";
-         }
-      }
-
-#endif
-
-#if defined(BOTAN_HAS_POLY_DBL)
-      void bench_poly_dbl(std::chrono::milliseconds msec) {
-         for(size_t sz : {8, 16, 24, 32, 64, 128}) {
-            auto be_timer = make_timer("poly_dbl_be_" + std::to_string(sz));
-            auto le_timer = make_timer("poly_dbl_le_" + std::to_string(sz));
-
-            std::vector<uint8_t> buf(sz);
-            rng().randomize(buf.data(), sz);
-
-            be_timer->run_until_elapsed(msec, [&]() { Botan::poly_double_n(buf.data(), buf.data(), sz); });
-            le_timer->run_until_elapsed(msec, [&]() { Botan::poly_double_n_le(buf.data(), buf.data(), sz); });
-
-            record_result(be_timer);
-            record_result(le_timer);
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_BCRYPT)
-
-      void bench_bcrypt() {
-         const std::string password = "not a very good password";
-
-         for(uint8_t work_factor = 4; work_factor <= 14; ++work_factor) {
-            auto timer = make_timer("bcrypt wf=" + std::to_string(work_factor));
-
-            timer->run([&] { Botan::generate_bcrypt(password, rng(), work_factor); });
-
-            record_result(timer);
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_PASSHASH9)
-
-      void bench_passhash9() {
-         const std::string password = "not a very good password";
-
-         for(uint8_t alg = 0; alg <= 4; ++alg) {
-            if(Botan::is_passhash9_alg_supported(alg) == false) {
-               continue;
-            }
-
-            for(auto work_factor : {10, 15}) {
-               auto timer = make_timer("passhash9 alg=" + std::to_string(alg) + " wf=" + std::to_string(work_factor));
-
-               timer->run([&] { Botan::generate_passhash9(password, rng(), static_cast<uint8_t>(work_factor), alg); });
-
-               record_result(timer);
-            }
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_SCRYPT)
-
-      void bench_scrypt(const std::string& /*provider*/, std::chrono::milliseconds msec) {
-         auto pwdhash_fam = Botan::PasswordHashFamily::create_or_throw("Scrypt");
-
-         for(size_t N : {8192, 16384, 32768, 65536}) {
-            for(size_t r : {1, 8, 16}) {
-               for(size_t p : {1}) {
-                  auto pwdhash = pwdhash_fam->from_params(N, r, p);
-
-                  auto scrypt_timer =
-                     make_timer("scrypt-" + std::to_string(N) + "-" + std::to_string(r) + "-" + std::to_string(p) +
-                                " (" + std::to_string(pwdhash->total_memory_usage() / (1024 * 1024)) + " MiB)");
-
-                  uint8_t out[64];
-                  uint8_t salt[8];
-                  rng().randomize(salt, sizeof(salt));
-
-                  while(scrypt_timer->under(msec)) {
-                     scrypt_timer->run([&] {
-                        pwdhash->derive_key(out, sizeof(out), "password", 8, salt, sizeof(salt));
-
-                        Botan::copy_mem(salt, out, 8);
-                     });
-                  }
-
-                  record_result(scrypt_timer);
-
-                  if(scrypt_timer->events() == 1) {
-                     break;
-                  }
-               }
-            }
-         }
-      }
-
-#endif
-
-#if defined(BOTAN_HAS_ARGON2)
-
-      void bench_argon2(const std::string& /*provider*/, std::chrono::milliseconds msec) {
-         auto pwhash_fam = Botan::PasswordHashFamily::create_or_throw("Argon2id");
-
-         for(size_t M : {8 * 1024, 64 * 1024, 256 * 1024}) {
-            for(size_t t : {1, 4}) {
-               for(size_t p : {1, 4}) {
-                  auto pwhash = pwhash_fam->from_params(M, t, p);
-                  auto timer = make_timer(pwhash->to_string());
-
-                  uint8_t out[64];
-                  uint8_t salt[16];
-                  rng().randomize(salt, sizeof(salt));
-
-                  while(timer->under(msec)) {
-                     timer->run([&] { pwhash->derive_key(out, sizeof(out), "password", 8, salt, sizeof(salt)); });
-                  }
-
-                  record_result(timer);
-               }
-            }
-         }
-      }
-
-#endif
-
-#if defined(BOTAN_HAS_BASE64_CODEC)
-      void bench_base64(std::chrono::milliseconds msec, const std::vector<size_t>& buf_sizes) {
-         for(size_t buf_size : buf_sizes) {
-            std::vector<uint8_t> ibuf(buf_size);
-            std::vector<uint8_t> rbuf(buf_size);
-            const size_t olen = Botan::base64_encode_max_output(ibuf.size());
-
-            auto enc_timer = make_timer("base64", ibuf.size(), "encode", "", ibuf.size());
-
-            auto dec_timer = make_timer("base64", olen, "decode", "", olen);
-
-            while(enc_timer->under(msec) && dec_timer->under(msec)) {
-               rng().randomize(ibuf);
-
-               std::string b64 = enc_timer->run([&]() { return Botan::base64_encode(ibuf); });
-
-               dec_timer->run([&]() { Botan::base64_decode(rbuf.data(), b64); });
-               BOTAN_ASSERT(rbuf == ibuf, "Encode/decode round trip ok");
-            }
-
-            record_result(enc_timer);
-            record_result(dec_timer);
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_HEX_CODEC)
-      void bench_hex(std::chrono::milliseconds msec, const std::vector<size_t>& buf_sizes) {
-         for(size_t buf_size : buf_sizes) {
-            std::vector<uint8_t> ibuf(buf_size);
-            std::vector<uint8_t> rbuf(buf_size);
-            const size_t olen = 2 * buf_size;
-
-            auto enc_timer = make_timer("hex", ibuf.size(), "encode", "", ibuf.size());
-
-            auto dec_timer = make_timer("hex", olen, "decode", "", olen);
-
-            while(enc_timer->under(msec) && dec_timer->under(msec)) {
-               rng().randomize(ibuf);
-
-               std::string hex = enc_timer->run([&]() { return Botan::hex_encode(ibuf); });
-
-               dec_timer->run([&]() { Botan::hex_decode(rbuf.data(), hex); });
-               BOTAN_ASSERT(rbuf == ibuf, "Encode/decode round trip ok");
-            }
-
-            record_result(enc_timer);
-            record_result(dec_timer);
          }
       }
 #endif
