@@ -17,7 +17,6 @@
 #include <sstream>
 
 // Always available:
-#include <botan/entropy_src.h>
 #include <botan/version.h>
 #include <botan/internal/cpuid.h>
 #include <botan/internal/fmt.h>
@@ -49,23 +48,12 @@
    #include <botan/mac.h>
 #endif
 
-#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
-   #include <botan/pk_algs.h>
-   #include <botan/pkcs8.h>
-   #include <botan/pubkey.h>
-   #include <botan/x509_key.h>
-#endif
-
 #if defined(BOTAN_HAS_ECC_GROUP)
    #include <botan/ec_group.h>
 #endif
 
 #if defined(BOTAN_HAS_PCURVES)
    #include <botan/internal/pcurves.h>
-#endif
-
-#if defined(BOTAN_HAS_ECDSA)
-   #include <botan/ecdsa.h>
 #endif
 
 namespace Botan_CLI {
@@ -485,11 +473,6 @@ class Speed final : public Command {
                   algo, provider, msec, buf_sizes, std::bind(&Speed::bench_mac, this, _1, _2, _3, _4));
             }
 #endif
-#if defined(BOTAN_HAS_RSA)
-            else if(algo == "RSA_keygen") {
-               bench_rsa_keygen(provider, msec);
-            }
-#endif
 
 #if defined(BOTAN_HAS_PCURVES)
             else if(algo == "ECDSA-pcurves") {
@@ -498,12 +481,6 @@ class Speed final : public Command {
                bench_pcurve_ecdh(ecc_groups, msec);
             } else if(algo == "pcurves") {
                bench_pcurves(ecc_groups, msec);
-            }
-#endif
-
-#if defined(BOTAN_HAS_ECDSA)
-            else if(algo == "ecdsa_recovery") {
-               bench_ecdsa_recovery(ecc_groups, provider, msec);
             }
 #endif
 
@@ -1086,63 +1063,6 @@ class Speed final : public Command {
             }
 
             record_result(ka_timer);
-         }
-      }
-
-#endif
-
-#if defined(BOTAN_HAS_RSA)
-      void bench_rsa_keygen(const std::string& provider, std::chrono::milliseconds msec) {
-         for(size_t keylen : {1024, 2048, 3072, 4096}) {
-            const std::string nm = "RSA-" + std::to_string(keylen);
-            auto keygen_timer = make_timer(nm, provider, "keygen");
-
-            while(keygen_timer->under(msec)) {
-               std::unique_ptr<Botan::Private_Key> key(
-                  keygen_timer->run([&] { return Botan::create_private_key("RSA", rng(), std::to_string(keylen)); }));
-
-               BOTAN_ASSERT(key->check_key(rng(), true), "Key is ok");
-            }
-
-            record_result(keygen_timer);
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_ECDSA)
-      void bench_ecdsa_recovery(const std::vector<std::string>& groups,
-                                const std::string& /*unused*/,
-                                std::chrono::milliseconds msec) {
-         for(const std::string& group_name : groups) {
-            const auto group = Botan::EC_Group::from_name(group_name);
-            auto recovery_timer = make_timer("ECDSA recovery " + group_name);
-
-            while(recovery_timer->under(msec)) {
-               Botan::ECDSA_PrivateKey key(rng(), group);
-
-               std::vector<uint8_t> message(group.get_order_bits() / 8);
-               rng().randomize(message.data(), message.size());
-
-               Botan::PK_Signer signer(key, rng(), "Raw");
-               signer.update(message);
-               std::vector<uint8_t> signature = signer.signature(rng());
-
-               Botan::PK_Verifier verifier(key, "Raw", Botan::Signature_Format::Standard, "base");
-               verifier.update(message);
-               BOTAN_ASSERT(verifier.check_signature(signature), "Valid signature");
-
-               Botan::BigInt r(signature.data(), signature.size() / 2);
-               Botan::BigInt s(signature.data() + signature.size() / 2, signature.size() / 2);
-
-               const uint8_t v = key.recovery_param(message, r, s);
-
-               recovery_timer->run([&]() {
-                  Botan::ECDSA_PublicKey pubkey(group, message, r, s, v);
-                  BOTAN_ASSERT(pubkey.public_point() == key.public_point(), "Recovered public key");
-               });
-            }
-
-            record_result(recovery_timer);
          }
       }
 
