@@ -1018,11 +1018,14 @@ class Speed final : public Command {
 
             const Botan::SymmetricKey key(rng(), mac.maximum_keylength());
             mac.set_key(key);
-            mac.start(nullptr, 0);
 
             auto timer = make_timer(mac.name(), mult * buffer.size(), "mac", provider, buf_size);
             timer->run_until_elapsed(runtime, [&]() {
                for(size_t i = 0; i != mult; ++i) {
+                  if(mac.fresh_key_required_per_message()) {
+                     mac.set_key(key);
+                  }
+                  mac.start(nullptr, 0);
                   mac.update(buffer);
                   mac.final(output.data());
                }
