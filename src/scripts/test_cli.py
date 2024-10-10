@@ -1622,7 +1622,7 @@ def cli_speed_pk_tests(_tmp_dir):
     msec = 1
 
     pk_algos = ["ECDSA", "ECDH", "SM2", "ECKCDSA", "ECGDSA", "GOST-34.10",
-                "DH", "DSA", "ElGamal", "Ed25519", "Ed448", "X25519", "X448", "McEliece",
+                "DH", "DSA", "ElGamal", "Ed25519", "Ed448", "X25519", "X448",
                 "RSA", "RSA_keygen", "XMSS", "ec_h2c", "Kyber", "Dilithium",
                 "SPHINCS+"]
 

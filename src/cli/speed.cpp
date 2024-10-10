@@ -64,18 +64,6 @@
    #include <botan/internal/pcurves.h>
 #endif
 
-#if defined(BOTAN_HAS_MCELIECE)
-   #include <botan/mceliece.h>
-#endif
-
-#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
-   #include <botan/kyber.h>
-#endif
-
-#if defined(BOTAN_HAS_FRODOKEM)
-   #include <botan/frodokem.h>
-#endif
-
 #if defined(BOTAN_HAS_ECDSA)
    #include <botan/ecdsa.h>
 #endif
@@ -336,7 +324,6 @@ class Speed final : public Command {
             "Ed448",
             "X25519",
             "X448",
-            "McEliece",
             "Kyber",
             "SPHINCS+",
             "FrodoKEM",
@@ -522,21 +509,6 @@ class Speed final : public Command {
 #if defined(BOTAN_HAS_ELGAMAL)
             else if(algo == "ElGamal") {
                bench_elgamal(provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_MCELIECE)
-            else if(algo == "McEliece") {
-               bench_mceliece(provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
-            else if(algo == "Kyber") {
-               bench_kyber(provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_FRODOKEM)
-            else if(algo == "FrodoKEM") {
-               bench_frodokem(provider, msec);
             }
 #endif
 
@@ -1159,37 +1131,6 @@ class Speed final : public Command {
          record_result(dec_timer);
       }
 
-      void bench_pk_kem(const Botan::Private_Key& key,
-                        const std::string& nm,
-                        const std::string& provider,
-                        const std::string& kdf,
-                        std::chrono::milliseconds msec) {
-         Botan::PK_KEM_Decryptor dec(key, rng(), kdf, provider);
-         Botan::PK_KEM_Encryptor enc(key, kdf, provider);
-
-         auto kem_enc_timer = make_timer(nm, provider, "KEM encrypt");
-         auto kem_dec_timer = make_timer(nm, provider, "KEM decrypt");
-
-         while(kem_enc_timer->under(msec) && kem_dec_timer->under(msec)) {
-            Botan::secure_vector<uint8_t> salt = rng().random_vec(16);
-
-            kem_enc_timer->start();
-            const auto kem_result = enc.encrypt(rng(), 64, salt);
-            kem_enc_timer->stop();
-
-            kem_dec_timer->start();
-            Botan::secure_vector<uint8_t> dec_shared_key = dec.decrypt(kem_result.encapsulated_shared_key(), 64, salt);
-            kem_dec_timer->stop();
-
-            if(kem_result.shared_key() != dec_shared_key) {
-               error_output() << "KEM mismatch in PK bench\n";
-            }
-         }
-
-         record_result(kem_enc_timer);
-         record_result(kem_dec_timer);
-      }
-
 #endif
 
 #if defined(BOTAN_HAS_RSA)
@@ -1264,108 +1205,6 @@ class Speed final : public Command {
             record_result(keygen_timer);
 
             bench_pk_enc(*key, nm, provider, "EME-PKCS1-v1_5", msec);
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_MCELIECE)
-      void bench_mceliece(const std::string& provider, std::chrono::milliseconds msec) {
-         /*
-         SL=80 n=1632 t=33 - 59 KB pubkey 140 KB privkey
-         SL=107 n=2480 t=45 - 128 KB pubkey 300 KB privkey
-         SL=128 n=2960 t=57 - 195 KB pubkey 459 KB privkey
-         SL=147 n=3408 t=67 - 265 KB pubkey 622 KB privkey
-         SL=191 n=4624 t=95 - 516 KB pubkey 1234 KB privkey
-         SL=256 n=6624 t=115 - 942 KB pubkey 2184 KB privkey
-         */
-
-         const std::vector<std::pair<size_t, size_t>> mce_params = {
-            {2480, 45}, {2960, 57}, {3408, 67}, {4624, 95}, {6624, 115}};
-
-         for(auto params : mce_params) {
-            size_t n = params.first;
-            size_t t = params.second;
-
-            const std::string nm = "McEliece-" + std::to_string(n) + "," + std::to_string(t) +
-                                   " (WF=" + std::to_string(Botan::mceliece_work_factor(n, t)) + ")";
-
-            auto keygen_timer = make_timer(nm, provider, "keygen");
-
-            std::unique_ptr<Botan::Private_Key> key =
-               keygen_timer->run([&] { return std::make_unique<Botan::McEliece_PrivateKey>(rng(), n, t); });
-
-            record_result(keygen_timer);
-            bench_pk_kem(*key, nm, provider, "KDF2(SHA-256)", msec);
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
-      void bench_kyber(const std::string& provider, std::chrono::milliseconds msec) {
-         const Botan::KyberMode::Mode all_modes[] = {
-            Botan::KyberMode::Kyber512_R3,
-            Botan::KyberMode::Kyber512_90s,
-            Botan::KyberMode::Kyber768_R3,
-            Botan::KyberMode::Kyber768_90s,
-            Botan::KyberMode::Kyber1024_R3,
-            Botan::KyberMode::Kyber1024_90s,
-         };
-
-         for(auto modet : all_modes) {
-            Botan::KyberMode mode(modet);
-
-   #if !defined(BOTAN_HAS_KYBER)
-            if(mode.is_modern())
-               continue;
-   #endif
-
-   #if !defined(BOTAN_HAS_KYBER_90S)
-            if(mode.is_90s())
-               continue;
-   #endif
-
-            auto keygen_timer = make_timer(mode.to_string(), provider, "keygen");
-
-            auto key = keygen_timer->run([&] { return Botan::Kyber_PrivateKey(rng(), mode); });
-
-            record_result(keygen_timer);
-
-            bench_pk_kem(key, mode.to_string(), provider, "KDF2(SHA-256)", msec);
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_FRODOKEM)
-      void bench_frodokem(const std::string& provider, std::chrono::milliseconds msec) {
-         std::vector<Botan::FrodoKEMMode> frodo_modes{
-            Botan::FrodoKEMMode::FrodoKEM640_SHAKE,
-            Botan::FrodoKEMMode::FrodoKEM976_SHAKE,
-            Botan::FrodoKEMMode::FrodoKEM1344_SHAKE,
-            Botan::FrodoKEMMode::eFrodoKEM640_SHAKE,
-            Botan::FrodoKEMMode::eFrodoKEM976_SHAKE,
-            Botan::FrodoKEMMode::eFrodoKEM1344_SHAKE,
-            Botan::FrodoKEMMode::FrodoKEM640_AES,
-            Botan::FrodoKEMMode::FrodoKEM976_AES,
-            Botan::FrodoKEMMode::FrodoKEM1344_AES,
-            Botan::FrodoKEMMode::eFrodoKEM640_AES,
-            Botan::FrodoKEMMode::eFrodoKEM976_AES,
-            Botan::FrodoKEMMode::eFrodoKEM1344_AES,
-         };
-
-         for(auto modet : frodo_modes) {
-            if(!modet.is_available()) {
-               continue;
-            }
-
-            Botan::FrodoKEMMode mode(modet);
-
-            auto keygen_timer = make_timer(mode.to_string(), provider, "keygen");
-
-            auto key = keygen_timer->run([&] { return Botan::FrodoKEM_PrivateKey(rng(), mode); });
-
-            record_result(keygen_timer);
-
-            bench_pk_kem(key, mode.to_string(), provider, "KDF2(SHA-256)", msec);
          }
       }
 #endif
