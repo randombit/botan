@@ -55,14 +55,6 @@
 
 namespace Botan {
 
-#if defined(BOTAN_SIMD_USE_SSE2)
-using native_simd_type = __m128i;
-#elif defined(BOTAN_SIMD_USE_ALTIVEC)
-using native_simd_type = __vector unsigned int;
-#elif defined(BOTAN_SIMD_USE_NEON)
-using native_simd_type = uint32x4_t;
-#endif
-
 /**
 * 4x32 bit SIMD register
 *
@@ -75,6 +67,14 @@ using native_simd_type = uint32x4_t;
 */
 class SIMD_4x32 final {
    public:
+#if defined(BOTAN_SIMD_USE_SSE2)
+      using native_simd_type = __m128i;
+#elif defined(BOTAN_SIMD_USE_ALTIVEC)
+      using native_simd_type = __vector unsigned int;
+#elif defined(BOTAN_SIMD_USE_NEON)
+      using native_simd_type = uint32x4_t;
+#endif
+
       SIMD_4x32& operator=(const SIMD_4x32& other) = default;
       SIMD_4x32(const SIMD_4x32& other) = default;
 

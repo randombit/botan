@@ -80,10 +80,7 @@ class SIMD_4x64 final {
 
             return SIMD_4x64(_mm256_shuffle_epi8(m_simd, shuf_rot_24));
          } else if constexpr(ROT == 32) {
-            auto shuf_rot_32 =
-               _mm256_set_epi64x(0x0b0a09080f0e0d0c, 0x0302010007060504, 0x0b0a09080f0e0d0c, 0x0302010007060504);
-
-            return SIMD_4x64(_mm256_shuffle_epi8(m_simd, shuf_rot_32));
+            return SIMD_4x64(_mm256_shuffle_epi32(m_simd, 0b10110001));
          } else {
             return SIMD_4x64(_mm256_or_si256(_mm256_srli_epi64(m_simd, static_cast<int>(ROT)),
                                              _mm256_slli_epi64(m_simd, static_cast<int>(64 - ROT))));
