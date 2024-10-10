@@ -1,7 +1,7 @@
 /*
 * TPM 2.0 Key Wrappers' Base Class
 * (C) 2024 Jack Lloyd
-* (C) 2024 René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity GmbH
+* (C) 2024 René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity GmbH, financed by LANCOM Systems GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -12,6 +12,13 @@
 #include <botan/tpm2_context.h>
 #include <botan/tpm2_object.h>
 #include <botan/tpm2_session.h>
+#if defined(BOTAN_HAS_RSA)
+   #include <botan/rsa.h>
+#endif
+#if defined(BOTAN_HAS_ECC_GROUP)
+   #include <botan/ec_apoint.h>
+   #include <botan/ec_group.h>
+#endif
 
 struct TPM2B_SENSITIVE_CREATE;
 struct TPMT_PUBLIC;
@@ -19,12 +26,36 @@ struct TPM2B_PUBLIC;
 
 namespace Botan::TPM2 {
 
+#if defined(BOTAN_HAS_RSA)
+/**
+ * This helper function transforms a @p public_blob in a TPM2B_PUBLIC* format
+ * into an ordinary Botan::RSA_PublicKey. Note that the resulting key is not
+ * bound to a TPM and can be used as any other RSA key.
+ *
+ * @param public_blob The public blob to load as an ordinary RSA key
+ */
+BOTAN_PUBLIC_API(3, 6) Botan::RSA_PublicKey rsa_pubkey_from_tss2_public(const TPM2B_PUBLIC* public_blob);
+#endif
+
+#if defined(BOTAN_HAS_ECC_GROUP)
+/**
+ * This helper function transforms a @p public_blob in a TPM2B_PUBLIC* format
+ * into an ordinary Botan::EC_PublicKey in the form of a Botan::EC_Group and
+ * a Botan::EC_AffinePoint. Note that the resulting key is not bound to a TPM
+ * and can be used as any other ECC key.
+ *
+ * @param public_blob The public blob to load as an ordinary EC_Group and EC_AffinePoint
+ */
+
+std::pair<EC_Group, EC_AffinePoint> ecc_pubkey_from_tss2_public(const TPM2B_PUBLIC* public_blob);
+#endif
+
 /**
  * This wraps a public key that is hosted in a TPM 2.0 device. This class allows
  * performing public-key operations on the TPM. Namely verifying signatures and
  * encrypting data.
  *
- * The class does not provied public constructors, but instead provides static
+ * The class does not provide public constructors, but instead provides static
  * methods to obtain a public key handle from a TPM.
  */
 class BOTAN_PUBLIC_API(3, 6) PublicKey : public virtual Botan::Public_Key {

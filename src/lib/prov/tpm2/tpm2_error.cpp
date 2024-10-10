@@ -1,7 +1,7 @@
 /*
 * TPM 2 error handling
 * (C) 2024 Jack Lloyd
-* (C) 2024 René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity GmbH
+* (C) 2024 René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity GmbH, financed by LANCOM Systems GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -33,7 +33,7 @@ TSS2_RC get_raw_rc(TSS2_RC rc) {
       return rc & 0xFFFF;
    }
 #endif
-};
+}
 
 namespace {
 

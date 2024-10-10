@@ -1,7 +1,7 @@
 /*
 * TPM 2.0 RSA Key Wrappers
 * (C) 2024 Jack Lloyd
-* (C) 2024 René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity GmbH
+* (C) 2024 René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity GmbH, financed by LANCOM Systems GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -12,16 +12,6 @@
 #include <botan/tpm2_key.h>
 
 namespace Botan::TPM2 {
-
-/**
- * This helper function transforms a @p public_blob in a TPM2B_PUBLIC* format
- * into an ordinary Botan::RSA_PublicKey. Note that the resulting key is not
- * bound to a TPM and can be used as any other RSA key.
- *
- * @param public_blob The public blob to load as an ordinary RSA key
- */
-BOTAN_PUBLIC_API(3, 6) Botan::RSA_PublicKey rsa_pubkey_from_tss2_public(const TPM2B_PUBLIC* public_blob);
-
 class BOTAN_PUBLIC_API(3, 6) RSA_PublicKey final : public virtual Botan::TPM2::PublicKey,
                                                    public virtual Botan::RSA_PublicKey {
    public:

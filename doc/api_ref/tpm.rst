@@ -144,8 +144,9 @@ Asymmetric Keys hosted by a TPM 2.0
 
 The TPM v2.0 supports RSA and ECC keys. Botan provides the classed
 ``PrivateKey`` and ``PublicKey`` in the ``TPM2`` namespace, to manage and use
-asymmetric keys on the TPM. Additionally there are derived classes for RSA. ECC
-is not supported at this time, but could be added in the future.
+asymmetric keys on the TPM. Additionally there are derived classes for RSA and ECC.
+Currently, RSA keys can be used for signing and encryption, while ECC keys can only
+be used for ECDSA signing (i.e., ECDH, ECSCHNORR, and SM2 are not supported).
 
 Objects of these classes can be used throughout the Botan library to perform
 cryptographic operations with TPM keys wherever an abstract
@@ -215,6 +216,23 @@ and manage RSA keys on the TPM.
          padding schemes. Furthermore, they are transient, i.e. they are not
          stored in the TPM's NVRAM and must be loaded from their public and
          private blobs after a reboot.
+
+Similarly, Botan provides a set of derived classes for ECC keys.
+
+.. cpp:class:: Botan::TPM2::EC_PrivateKey
+
+     .. cpp:function:: static std::unique_ptr<TPM2::PrivateKey> create_unrestricted_transient(const std::shared_ptr<Context>& ctx, const SessionBundle& sessions, std::span<const uint8_t> auth_value, const TPM2::PrivateKey& parent, const EC_Group& group);
+
+         Creates a new ECC key pair on the TPM with the given ``group``. The
+         group must be one of the supported curves by the TPM and currently
+         must be one of the NIST curves (secp192r1, secp224r1, secp256r1,
+         secp384r1, secp521r1).
+
+         Keys generated with this function are not restricted in their usage.
+         They may only be used for signing: Currently, Botan only supports creating
+         ECDSA keys. Furthermore, they are transient, i.e. they are not stored in
+         the TPM's NVRAM and must be loaded from their public and private blobs after
+         a reboot.
 
 Once a transient key pair was created on the TPM, it can be persisted into the
 TPM's NVRAM to make it available across reboots independently of the "private

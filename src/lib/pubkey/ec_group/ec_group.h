@@ -229,7 +229,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       size_t get_p_bits() const;
 
       /**
-      * Return the size of p in bits (same as get_p().bytes())
+      * Return the size of p in bytes (same as get_p().bytes())
       */
       size_t get_p_bytes() const;
 

@@ -1,7 +1,7 @@
 /*
 * TPM 2.0 Key Wrappers' Base Class
 * (C) 2024 Jack Lloyd
-* (C) 2024 René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity GmbH
+* (C) 2024 René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity GmbH, financed by LANCOM Systems GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -10,6 +10,9 @@
 
 #if defined(BOTAN_HAS_TPM2_RSA_ADAPTER)
    #include <botan/tpm2_rsa.h>
+#endif
+#if defined(BOTAN_HAS_TPM2_ECC_ADAPTER)
+   #include <botan/tpm2_ecc.h>
 #endif
 
 #include <botan/internal/fmt.h>
@@ -22,6 +25,44 @@
 #include <tss2/tss2_mu.h>
 
 namespace Botan::TPM2 {
+
+#if defined(BOTAN_HAS_RSA)
+Botan::RSA_PublicKey rsa_pubkey_from_tss2_public(const TPM2B_PUBLIC* public_area) {
+   BOTAN_ASSERT_NONNULL(public_area);
+   const auto& pub = public_area->publicArea;
+   BOTAN_ARG_CHECK(pub.type == TPM2_ALG_RSA, "Public key is not an RSA key");
+
+   // TPM2 may report 0 when the exponent is 'the default' (2^16 + 1)
+   const auto exponent = (pub.parameters.rsaDetail.exponent == 0) ? 65537 : pub.parameters.rsaDetail.exponent;
+
+   return Botan::RSA_PublicKey(BigInt(as_span(pub.unique.rsa)), exponent);
+}
+#endif
+
+#if defined(BOTAN_HAS_ECC_GROUP)
+std::pair<EC_Group, EC_AffinePoint> ecc_pubkey_from_tss2_public(const TPM2B_PUBLIC* public_blob) {
+   BOTAN_ASSERT_NONNULL(public_blob);
+   BOTAN_ARG_CHECK(public_blob->publicArea.type == TPM2_ALG_ECC, "Public blob is not an ECC key");
+
+   const auto curve_id = public_blob->publicArea.parameters.eccDetail.curveID;
+   const auto curve_name = curve_id_tss2_to_botan(curve_id);
+   if(!curve_name) {
+      throw Invalid_Argument(Botan::fmt("Unsupported ECC curve: {}", curve_id));
+   }
+
+   auto curve = Botan::EC_Group::from_name(curve_name.value());
+   // Create an EC_AffinePoint from the x and y coordinates as SEC1 uncompressed point.
+   // According to the TPM2.0 specification Part 1 C.8, each coordinate is already padded to the curve's size.
+   auto point = EC_AffinePoint::deserialize(curve,
+                                            concat(std::vector<uint8_t>({0x04}),
+                                                   as_span(public_blob->publicArea.unique.ecc.x),
+                                                   as_span(public_blob->publicArea.unique.ecc.y)));
+   if(!point) {
+      throw Invalid_Argument("Invalid ECC Point");
+   }
+   return {std::move(curve), std::move(point.value())};
+}
+#endif
 
 namespace {
 
@@ -124,6 +165,11 @@ std::unique_ptr<PublicKey> PublicKey::create(Object handles, const SessionBundle
       return std::unique_ptr<PublicKey>(new RSA_PublicKey(std::move(handles), sessions, pubinfo));
    }
 #endif
+#if defined(BOTAN_HAS_TPM2_ECC_ADAPTER)
+   if(pubinfo->publicArea.type == TPM2_ALG_ECC) {
+      return std::unique_ptr<PublicKey>(new EC_PublicKey(std::move(handles), sessions, pubinfo));
+   }
+#endif
 
    throw Not_Implemented(Botan::fmt("Loaded a {} public key of an unsupported type",
                                     handles.has_persistent_handle() ? "persistent" : "transient"));
@@ -185,8 +231,9 @@ std::unique_ptr<PrivateKey> PrivateKey::create_transient_from_template(const std
 #endif
          break;
       case TPM2_ALG_ECC:
-         // TODO: support ECC keys
-         throw Not_Implemented("TPM2-based ECC keys are not yet supported");
+#if not defined(BOTAN_HAS_TPM2_ECC_ADAPTER)
+         throw Not_Implemented("TPM2-based ECC keys are not supported in this build");
+#endif
          break;
       default:
          throw Invalid_Argument("Unsupported key type");
@@ -256,7 +303,11 @@ std::unique_ptr<PrivateKey> PrivateKey::create(Object handles,
    }
 #endif
 
-   // TODO: Support ECC keys
+#if defined(BOTAN_HAS_TPM2_ECC_ADAPTER)
+   if(public_info->publicArea.type == TPM2_ALG_ECC) {
+      return std::unique_ptr<EC_PrivateKey>(new EC_PrivateKey(std::move(handles), sessions, public_info, private_blob));
+   }
+#endif
 
    throw Not_Implemented(Botan::fmt("Loaded a {} private key of an unsupported type",
                                     handles.has_persistent_handle() ? "persistent" : "transient"));
