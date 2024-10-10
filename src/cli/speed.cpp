@@ -72,18 +72,6 @@
    #include <botan/kyber.h>
 #endif
 
-#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
-   #include <botan/dilithium.h>
-#endif
-
-#if defined(BOTAN_HAS_HSS_LMS)
-   #include <botan/hss_lms.h>
-#endif
-
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
-   #include <botan/sphincsplus.h>
-#endif
-
 #if defined(BOTAN_HAS_FRODOKEM)
    #include <botan/frodokem.h>
 #endif
@@ -434,11 +422,14 @@ class Speed final : public Command {
          class PerfConfig_Cli final : public PerfConfig {
             public:
                PerfConfig_Cli(std::chrono::milliseconds runtime,
+                              const std::vector<std::string>& ecc_groups,
                               const std::vector<size_t>& buffer_sizes,
                               Speed* speed) :
-                     m_runtime(runtime), m_buffer_sizes(buffer_sizes), m_speed(speed) {}
+                     m_runtime(runtime), m_ecc_groups(ecc_groups), m_buffer_sizes(buffer_sizes), m_speed(speed) {}
 
                const std::vector<size_t>& buffer_sizes() const override { return m_buffer_sizes; }
+
+               const std::vector<std::string>& ecc_groups() const override { return m_ecc_groups; }
 
                std::chrono::milliseconds runtime() const override { return m_runtime; }
 
@@ -458,11 +449,12 @@ class Speed final : public Command {
 
             private:
                std::chrono::milliseconds m_runtime;
+               std::vector<std::string> m_ecc_groups;
                std::vector<size_t> m_buffer_sizes;
                Speed* m_speed;
          };
 
-         PerfConfig_Cli perf_config(msec, buf_sizes, this);
+         PerfConfig_Cli perf_config(msec, ecc_groups, buf_sizes, this);
 
          for(const auto& algo : algos) {
             using namespace std::placeholders;
@@ -507,9 +499,7 @@ class Speed final : public Command {
             }
 #endif
 #if defined(BOTAN_HAS_RSA)
-            else if(algo == "RSA") {
-               bench_rsa(provider, msec);
-            } else if(algo == "RSA_keygen") {
+            else if(algo == "RSA_keygen") {
                bench_rsa_keygen(provider, msec);
             }
 #endif
@@ -525,50 +515,13 @@ class Speed final : public Command {
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
-            else if(algo == "ECDSA") {
-               bench_ecdsa(ecc_groups, provider, msec);
-            } else if(algo == "ecdsa_recovery") {
+            else if(algo == "ecdsa_recovery") {
                bench_ecdsa_recovery(ecc_groups, provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_SM2)
-            else if(algo == "SM2") {
-               bench_sm2(ecc_groups, provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_ECKCDSA)
-            else if(algo == "ECKCDSA") {
-               bench_eckcdsa(ecc_groups, provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_GOST_34_10_2001)
-            else if(algo == "GOST-34.10") {
-               bench_gost_3410(provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_ECGDSA)
-            else if(algo == "ECGDSA") {
-               bench_ecgdsa(ecc_groups, provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_ED25519)
-            else if(algo == "Ed25519") {
-               bench_ed25519(provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_ED448)
-            else if(algo == "Ed448") {
-               bench_ed448(provider, msec);
             }
 #endif
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
             else if(algo == "DH") {
                bench_dh(provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_DSA)
-            else if(algo == "DSA") {
-               bench_dsa(provider, msec);
             }
 #endif
 #if defined(BOTAN_HAS_ELGAMAL)
@@ -599,26 +552,6 @@ class Speed final : public Command {
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
             else if(algo == "Kyber") {
                bench_kyber(provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
-            else if(algo == "Dilithium") {
-               bench_dilithium(provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_XMSS_RFC8391)
-            else if(algo == "XMSS") {
-               bench_xmss(provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_HSS_LMS)
-            else if(algo == "HSS-LMS") {
-               bench_hss_lms(provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
-            else if(algo == "SPHINCS+") {
-               bench_sphincs_plus(provider, msec);
             }
 #endif
 #if defined(BOTAN_HAS_FRODOKEM)
@@ -1316,79 +1249,6 @@ class Speed final : public Command {
          record_result(kem_dec_timer);
       }
 
-      void bench_pk_sig_ecc(const std::string& algo,
-                            const std::string& emsa,
-                            const std::string& provider,
-                            const std::vector<std::string>& params,
-                            std::chrono::milliseconds msec) {
-         for(std::string grp : params) {
-            const std::string nm = grp.empty() ? algo : Botan::fmt("{}-{}", algo, grp);
-
-            auto keygen_timer = make_timer(nm, provider, "keygen");
-
-            std::unique_ptr<Botan::Private_Key> key(
-               keygen_timer->run([&] { return Botan::create_private_key(algo, rng(), grp); }));
-
-            record_result(keygen_timer);
-            bench_pk_sig(*key, nm, provider, emsa, msec);
-         }
-      }
-
-      size_t bench_pk_sig(const Botan::Private_Key& key,
-                          const std::string& nm,
-                          const std::string& provider,
-                          const std::string& padding,
-                          std::chrono::milliseconds msec) {
-         std::vector<uint8_t> message, signature, bad_signature;
-
-         Botan::PK_Signer sig(key, rng(), padding, Botan::Signature_Format::Standard, provider);
-         Botan::PK_Verifier ver(key, padding, Botan::Signature_Format::Standard, provider);
-
-         auto sig_timer = make_timer(nm + " " + padding, provider, "sign");
-         auto ver_timer = make_timer(nm + " " + padding, provider, "verify");
-
-         size_t invalid_sigs = 0;
-
-         while(ver_timer->under(msec) || sig_timer->under(msec)) {
-            if(signature.empty() || sig_timer->under(msec)) {
-               /*
-               Length here is kind of arbitrary, but 48 bytes fits into a single
-               hash block so minimizes hashing overhead versus the PK op itself.
-               */
-               rng().random_vec(message, 48);
-
-               signature = sig_timer->run([&]() { return sig.sign_message(message, rng()); });
-
-               bad_signature = signature;
-               bad_signature[rng().next_byte() % bad_signature.size()] ^= rng().next_nonzero_byte();
-            }
-
-            if(ver_timer->under(msec)) {
-               const bool verified = ver_timer->run([&] { return ver.verify_message(message, signature); });
-
-               if(!verified) {
-                  invalid_sigs += 1;
-               }
-
-               const bool verified_bad = ver_timer->run([&] { return ver.verify_message(message, bad_signature); });
-
-               if(verified_bad) {
-                  error_output() << "Bad signature accepted in " << nm << " signature bench\n";
-               }
-            }
-         }
-
-         if(invalid_sigs > 0) {
-            error_output() << invalid_sigs << " generated signatures rejected in " << nm << " signature bench\n";
-         }
-
-         const size_t events = static_cast<size_t>(std::min(sig_timer->events(), ver_timer->events()));
-
-         record_result(sig_timer);
-         record_result(ver_timer);
-
-         return events;
-      }
 #endif
 
 #if defined(BOTAN_HAS_RSA)
@@ -1407,35 +1267,9 @@ class Speed final : public Command {
             record_result(keygen_timer);
          }
       }
-
-      void bench_rsa(const std::string& provider, std::chrono::milliseconds msec) {
-         for(size_t keylen : {1024, 2048, 3072, 4096}) {
-            const std::string nm = "RSA-" + std::to_string(keylen);
-
-            auto keygen_timer = make_timer(nm, provider, "keygen");
-
-            std::unique_ptr<Botan::Private_Key> key(
-               keygen_timer->run([&] { return Botan::create_private_key("RSA", rng(), std::to_string(keylen)); }));
-
-            record_result(keygen_timer);
-
-            // Using PKCS #1 padding so OpenSSL provider can play along
-            bench_pk_sig(*key, nm, provider, "EMSA-PKCS1-v1_5(SHA-256)", msec);
-
-            //bench_pk_sig(*key, nm, provider, "PSSR(SHA-256)", msec);
-            //bench_pk_enc(*key, nm, provider, "EME-PKCS1-v1_5", msec);
-            //bench_pk_enc(*key, nm, provider, "OAEP(SHA-1)", msec);
-         }
-      }
 #endif
 
 #if defined(BOTAN_HAS_ECDSA)
-      void bench_ecdsa(const std::vector<std::string>& groups,
-                       const std::string& provider,
-                       std::chrono::milliseconds msec) {
-         return bench_pk_sig_ecc("ECDSA", "SHA-256", provider, groups, msec);
-      }
-
       void bench_ecdsa_recovery(const std::vector<std::string>& groups,
                                 const std::string& /*unused*/,
                                 std::chrono::milliseconds msec) {
@@ -1474,71 +1308,10 @@ class Speed final : public Command {
 
 #endif
 
-#if defined(BOTAN_HAS_ECKCDSA)
-      void bench_eckcdsa(const std::vector<std::string>& groups,
-                         const std::string& provider,
-                         std::chrono::milliseconds msec) {
-         return bench_pk_sig_ecc("ECKCDSA", "SHA-256", provider, groups, msec);
-      }
-#endif
-
-#if defined(BOTAN_HAS_GOST_34_10_2001)
-      void bench_gost_3410(const std::string& provider, std::chrono::milliseconds msec) {
-         return bench_pk_sig_ecc("GOST-34.10", "GOST-34.11", provider, {"gost_256A"}, msec);
-      }
-#endif
-
-#if defined(BOTAN_HAS_SM2)
-      void bench_sm2(const std::vector<std::string>& groups,
-                     const std::string& provider,
-                     std::chrono::milliseconds msec) {
-         return bench_pk_sig_ecc("SM2_Sig", "SM3", provider, groups, msec);
-      }
-#endif
-
-#if defined(BOTAN_HAS_ECGDSA)
-      void bench_ecgdsa(const std::vector<std::string>& groups,
-                        const std::string& provider,
-                        std::chrono::milliseconds msec) {
-         return bench_pk_sig_ecc("ECGDSA", "SHA-256", provider, groups, msec);
-      }
-#endif
-
-#if defined(BOTAN_HAS_ED25519)
-      void bench_ed25519(const std::string& provider, std::chrono::milliseconds msec) {
-         return bench_pk_sig_ecc("Ed25519", "Pure", provider, std::vector<std::string>{""}, msec);
-      }
-#endif
-
-#if defined(BOTAN_HAS_ED448)
-      void bench_ed448(const std::string& provider, std::chrono::milliseconds msec) {
-         return bench_pk_sig_ecc("Ed448", "Pure", provider, std::vector<std::string>{""}, msec);
-      }
-#endif
-
 #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
       void bench_dh(const std::string& provider, std::chrono::milliseconds msec) {
          for(size_t bits : {2048, 3072, 4096, 6144, 8192}) {
             bench_pk_ka("DH", "DH-" + std::to_string(bits), "ffdhe/ietf/" + std::to_string(bits), provider, msec);
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_DSA)
-      void bench_dsa(const std::string& provider, std::chrono::milliseconds msec) {
-         for(size_t bits : {1024, 2048, 3072}) {
-            const std::string nm = "DSA-" + std::to_string(bits);
-
-            const std::string params = (bits == 1024) ? "dsa/jce/1024" : ("dsa/botan/" + std::to_string(bits));
-
-            auto keygen_timer = make_timer(nm, provider, "keygen");
-
-            std::unique_ptr<Botan::Private_Key> key(
-               keygen_timer->run([&] { return Botan::create_private_key("DSA", rng(), params); }));
-
-            record_result(keygen_timer);
-
-            bench_pk_sig(*key, nm, provider, "SHA-256", msec);
          }
       }
 #endif
@@ -1651,73 +1424,6 @@ class Speed final : public Command {
       }
 #endif
 
-#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
-      void bench_dilithium(const std::string& provider, std::chrono::milliseconds msec) {
-         const Botan::DilithiumMode::Mode all_modes[] = {Botan::DilithiumMode::Dilithium4x4,
-                                                         Botan::DilithiumMode::Dilithium4x4_AES,
-                                                         Botan::DilithiumMode::Dilithium6x5,
-                                                         Botan::DilithiumMode::Dilithium6x5_AES,
-                                                         Botan::DilithiumMode::Dilithium8x7,
-                                                         Botan::DilithiumMode::Dilithium8x7_AES};
-
-         for(auto modet : all_modes) {
-            Botan::DilithiumMode mode(modet);
-
-   #if !defined(BOTAN_HAS_DILITHIUM)
-            if(mode.is_modern())
-               continue;
-   #endif
-
-   #if !defined(BOTAN_HAS_DILITHIUM_AES)
-            if(mode.is_aes())
-               continue;
-   #endif
-
-            auto keygen_timer = make_timer(mode.to_string(), provider, "keygen");
-
-            auto key = keygen_timer->run([&] { return Botan::Dilithium_PrivateKey(rng(), mode); });
-
-            record_result(keygen_timer);
-
-            bench_pk_sig(key, mode.to_string(), provider, "", msec);
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
-      void bench_sphincs_plus(const std::string& provider, std::chrono::milliseconds msec) {
-         // Sphincs_Parameter_Set set, Sphincs_Hash_Type hash
-         std::vector<std::string> sphincs_params{"SphincsPlus-sha2-128s-r3.1",
-                                                 "SphincsPlus-sha2-128f-r3.1",
-                                                 "SphincsPlus-sha2-192s-r3.1",
-                                                 "SphincsPlus-sha2-192f-r3.1",
-                                                 "SphincsPlus-sha2-256s-r3.1",
-                                                 "SphincsPlus-sha2-256f-r3.1",
-                                                 "SphincsPlus-shake-128s-r3.1",
-                                                 "SphincsPlus-shake-128f-r3.1",
-                                                 "SphincsPlus-shake-192s-r3.1",
-                                                 "SphincsPlus-shake-192f-r3.1",
-                                                 "SphincsPlus-shake-256s-r3.1",
-                                                 "SphincsPlus-shake-256f-r3.1"};
-
-         for(auto params : sphincs_params) {
-            try {
-               auto keygen_timer = make_timer(params, provider, "keygen");
-
-               std::unique_ptr<Botan::Private_Key> key(
-                  keygen_timer->run([&] { return Botan::create_private_key("SPHINCS+", rng(), params); }));
-
-               record_result(keygen_timer);
-               if(bench_pk_sig(*key, params, provider, "", msec) == 1) {
-                  break;
-               }
-            } catch(Botan::Not_Implemented&) {
-               continue;
-            }
-         }
-      }
-#endif
-
 #if defined(BOTAN_HAS_FRODOKEM)
       void bench_frodokem(const std::string& provider, std::chrono::milliseconds msec) {
          std::vector<Botan::FrodoKEMMode> frodo_modes{
@@ -1749,61 +1455,6 @@ class Speed final : public Command {
             record_result(keygen_timer);
 
             bench_pk_kem(key, mode.to_string(), provider, "KDF2(SHA-256)", msec);
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_XMSS_RFC8391)
-      void bench_xmss(const std::string& provider, std::chrono::milliseconds msec) {
-         /*
-         We only test H10 signatures here since already they are quite slow (a
-         few seconds per signature). On a fast machine, H16 signatures take 1-2
-         minutes to generate and H20 signatures take 5-10 minutes to generate
-         */
-         std::vector<std::string> xmss_params{
-            "XMSS-SHA2_10_256",
-            "XMSS-SHAKE_10_256",
-            "XMSS-SHA2_10_512",
-            "XMSS-SHAKE_10_512",
-         };
-
-         for(std::string params : xmss_params) {
-            auto keygen_timer = make_timer(params, provider, "keygen");
-
-            std::unique_ptr<Botan::Private_Key> key(
-               keygen_timer->run([&] { return Botan::create_private_key("XMSS", rng(), params); }));
-
-            record_result(keygen_timer);
-            if(bench_pk_sig(*key, params, provider, "", msec) == 1) {
-               break;
-            }
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_HSS_LMS)
-      void bench_hss_lms(const std::string& provider, std::chrono::milliseconds msec) {
-         // At first we compare instances with multiple hash functions. LMS trees with
-         // height 10 are suitable, since they can be used for enough signatures and are
-         // fast enough for speed testing.
-         // Afterward, setups with multiple HSS layers are tested
-         std::vector<std::string> hss_lms_instances{"SHA-256,HW(10,1)",
-                                                    "SHAKE-256(256),HW(10,1)",
-                                                    "SHAKE-256(192),HW(10,1)",
-                                                    "Truncated(SHA-256,192),HW(10,1)",
-                                                    "SHA-256,HW(10,1),HW(10,1)",
-                                                    "SHA-256,HW(10,1),HW(10,1),HW(10,1)"};
-
-         for(const auto& params : hss_lms_instances) {
-            auto keygen_timer = make_timer(params, provider, "keygen");
-
-            std::unique_ptr<Botan::Private_Key> key(
-               keygen_timer->run([&] { return Botan::create_private_key("HSS-LMS", rng(), params); }));
-
-            record_result(keygen_timer);
-            if(bench_pk_sig(*key, params, provider, "", msec) == 1) {
-               break;
-            }
          }
       }
 #endif
