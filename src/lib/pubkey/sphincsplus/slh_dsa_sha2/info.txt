@@ -1,9 +1,9 @@
 <defines>
-SPHINCS_PLUS_WITH_SHA2 -> 20230531
+SLH_DSA_WITH_SHA2 -> 20240806
 </defines>
 
 <module_info>
-name -> "SPHINCS+ (SHA-256)"
+name -> "SLH-DSA (SHA-256)"
 </module_info>
 
 <requires>

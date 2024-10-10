@@ -1,10 +1,10 @@
 /*
-* Sphincs+ hypertree logic
-* (C) 2023 Jack Lloyd
-*     2023 Fabian Albert, René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity
-*
-* Botan is released under the Simplified BSD License (see license.txt)
-**/
+ * SLH-DSA's Hypertree Logic (FIPS 205, Section 7)
+ * (C) 2023 Jack Lloyd
+ *     2023 Fabian Albert, René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity
+ *
+ * Botan is released under the Simplified BSD License (see license.txt)
+ */
 
 #include <botan/internal/sp_hypertree.h>
 
@@ -29,7 +29,7 @@ void ht_sign(StrongSpan<SphincsHypertreeSignature> out_sig,
    BufferStuffer ht_signature(out_sig);
 
    Sphincs_Address wots_addr(Sphincs_Address_Type::WotsHash);
-   wots_addr.set_tree(tree_index_in_layer).set_keypair(idx_leaf);
+   wots_addr.set_tree_address(tree_index_in_layer).set_keypair_address(idx_leaf);
 
    Sphincs_Address tree_addr(Sphincs_Address_Type::HashTree);
 
@@ -38,8 +38,8 @@ void ht_sign(StrongSpan<SphincsHypertreeSignature> out_sig,
       // The first XMSS tree signs the message, the others their underlying XMSS tree root
       const SphincsTreeNode& node_to_xmss_sign = (layer_idx == 0U) ? message_to_sign : xmss_root;
 
-      tree_addr.set_layer(layer_idx).set_tree(tree_index_in_layer);
-      wots_addr.copy_subtree_from(tree_addr).set_keypair(idx_leaf);
+      tree_addr.set_layer_address(layer_idx).set_tree_address(tree_index_in_layer);
+      wots_addr.copy_subtree_from(tree_addr).set_keypair_address(idx_leaf);
 
       xmss_root = xmss_sign_and_pkgen(ht_signature.next<SphincsXmssSignature>(params.xmss_signature_bytes()),
                                       node_to_xmss_sign,
@@ -79,11 +79,11 @@ bool ht_verify(const SphincsTreeNode& signed_msg,
       // The first XMSS tree signs the message, the others their underlying XMSS tree root
       const SphincsTreeNode& current_root = (layer_idx == 0U) ? signed_msg : reconstructed_root;
 
-      tree_addr.set_layer(layer_idx);
-      tree_addr.set_tree(tree_index_in_layer);
+      tree_addr.set_layer_address(layer_idx);
+      tree_addr.set_tree_address(tree_index_in_layer);
 
       wots_addr.copy_subtree_from(tree_addr);
-      wots_addr.set_keypair(idx_leaf);
+      wots_addr.set_keypair_address(idx_leaf);
 
       wots_pk_addr.copy_keypair_from(wots_addr);
 

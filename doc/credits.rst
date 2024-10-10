@@ -163,7 +163,7 @@ snail-mail address (S), and Bitcoin address (B).
   N: René Meusel
   E: rene.meusel@rohde-schwarz.com
   W: https://www.rohde-schwarz.com/cybersecurity
-  D: CI, TLS 1.3, Kyber, Dilithium, SPHINCS+, FrodoKEM
+  D: CI, TLS 1.3, Kyber, Dilithium, SLH-DSA, FrodoKEM
   S: Berlin, Germany
 
   N: Philippe Lieser
@@ -175,5 +175,5 @@ snail-mail address (S), and Bitcoin address (B).
   N: Fabian Albert
   E: fabian.albert@rohde-schwarz.com
   W: https://www.rohde-schwarz.com/cybersecurity
-  D: SPHINCS+, HSS/LMS
+  D: SLH-DSA, HSS/LMS
   S: Bochum, Germany

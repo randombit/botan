@@ -112,6 +112,9 @@ std::unique_ptr<Botan::Private_Key> make_a_private_key(const std::string& algo, 
       if(algo == "HSS-LMS") {
          return "SHA-256,HW(5,4),HW(5,4)";
       }
+      if(algo == "SLH-DSA") {
+         return "SLH-DSA-SHA2-128f";
+      }
       return "";  // default "" means choose acceptable algo-specific params
    }();
 
@@ -1234,7 +1237,7 @@ Test::Result test_valid_constraints(const Botan::Private_Key& key, const std::st
       result.test_eq("crl sign not permitted", crl_sign.compatible_with(key), false);
       result.test_eq("sign", sign_everything.compatible_with(key), false);
    } else if(pk_algo == "DSA" || pk_algo == "ECDSA" || pk_algo == "ECGDSA" || pk_algo == "ECKCDSA" ||
-             pk_algo == "GOST-34.10" || pk_algo == "Dilithium" || pk_algo == "HSS-LMS") {
+             pk_algo == "GOST-34.10" || pk_algo == "Dilithium" || pk_algo == "HSS-LMS" || pk_algo == "SLH-DSA") {
       // these are signature algorithms only
       result.test_eq("all constraints not permitted", all.compatible_with(key), false);
 
@@ -1596,8 +1599,17 @@ class X509_Cert_Unit_Tests final : public Test {
 
          auto& rng = this->rng();
 
-         const std::string sig_algos[]{
-            "RSA", "DSA", "ECDSA", "ECGDSA", "ECKCDSA", "GOST-34.10", "Ed25519", "Ed448", "Dilithium", "HSS-LMS"};
+         const std::string sig_algos[]{"RSA",
+                                       "DSA",
+                                       "ECDSA",
+                                       "ECGDSA",
+                                       "ECKCDSA",
+                                       "GOST-34.10",
+                                       "Ed25519",
+                                       "Ed448",
+                                       "Dilithium",
+                                       "HSS-LMS",
+                                       "SLH-DSA"};
 
          for(const std::string& algo : sig_algos) {
    #if !defined(BOTAN_HAS_EMSA_PKCS1)
