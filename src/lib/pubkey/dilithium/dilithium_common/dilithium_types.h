@@ -16,6 +16,9 @@
 
 namespace Botan {
 
+class Dilithium_PublicKeyInternal;
+class Dilithium_PrivateKeyInternal;
+
 using DilithiumPolyNTT = Botan::CRYSTALS::Polynomial<DilithiumPolyTraits, Botan::CRYSTALS::Domain::NTT>;
 using DilithiumPolyVecNTT = Botan::CRYSTALS::PolynomialVector<DilithiumPolyTraits, Botan::CRYSTALS::Domain::NTT>;
 using DilithiumPolyMatNTT = Botan::CRYSTALS::PolynomialMatrix<DilithiumPolyTraits>;
@@ -31,6 +34,9 @@ using DilithiumSeedRho = Strong<std::vector<uint8_t>, struct DilithiumPublicSeed
 
 /// Private seed to sample the polynomial vectors s1 and s2 from
 using DilithiumSeedRhoPrime = Strong<secure_vector<uint8_t>, struct DilithiumSeedRhoPrime_>;
+
+/// Optional randomness 'rnd' used for rho prime computation in ML-DSA
+using DilithiumOptionalRandomness = Strong<secure_vector<uint8_t>, struct DilithiumOptionalRandomness_>;
 
 /// Private seed K used during signing
 using DilithiumSigningSeedK = Strong<secure_vector<uint8_t>, struct DilithiumSeedK_>;
@@ -56,6 +62,10 @@ using DilithiumSerializedCommitment = Strong<std::vector<uint8_t>, struct Dilith
 
 /// Hash of the message representative and the signer's commitment
 using DilithiumCommitmentHash = Strong<std::vector<uint8_t>, struct DilithiumCommitmentHash_>;
+
+/// Internal representation of a Dilithium key pair
+using DilithiumInternalKeypair =
+   std::pair<std::shared_ptr<Dilithium_PublicKeyInternal>, std::shared_ptr<Dilithium_PrivateKeyInternal>>;
 
 }  // namespace Botan
 

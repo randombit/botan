@@ -133,7 +133,7 @@
    #include <botan/kyber.h>
 #endif
 
-#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
+#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES) || defined(BOTAN_HAS_ML_DSA)
    #include <botan/dilithium.h>
 #endif
 
@@ -647,7 +647,12 @@ class Speed final : public Command {
 #endif
 #if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
             else if(algo == "Dilithium") {
-               bench_dilithium(provider, msec);
+               bench_dilithium(provider, msec, true /* dilithium */);
+            }
+#endif
+#if defined(BOTAN_HAS_ML_DSA)
+            else if(algo == "ML-DSA") {
+               bench_dilithium(provider, msec, false /* ml_dsa */);
             }
 #endif
 #if defined(BOTAN_HAS_XMSS_RFC8391)
@@ -2230,27 +2235,33 @@ class Speed final : public Command {
       }
 #endif
 
-#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
-      void bench_dilithium(const std::string& provider, std::chrono::milliseconds msec) {
-         const Botan::DilithiumMode::Mode all_modes[] = {Botan::DilithiumMode::Dilithium4x4,
-                                                         Botan::DilithiumMode::Dilithium4x4_AES,
-                                                         Botan::DilithiumMode::Dilithium6x5,
-                                                         Botan::DilithiumMode::Dilithium6x5_AES,
-                                                         Botan::DilithiumMode::Dilithium8x7,
-                                                         Botan::DilithiumMode::Dilithium8x7_AES};
+#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES) || defined(BOTAN_HAS_ML_DSA)
+      void bench_dilithium(const std::string& provider, std::chrono::milliseconds msec, bool dilithium) {
+         const auto all_modes = [&]() -> std::vector<Botan::DilithiumMode> {
+            if(dilithium) {
+               return {
+                  Botan::DilithiumMode::Dilithium4x4,
+                  Botan::DilithiumMode::Dilithium4x4_AES,
+                  Botan::DilithiumMode::Dilithium6x5,
+                  Botan::DilithiumMode::Dilithium6x5_AES,
+                  Botan::DilithiumMode::Dilithium8x7,
+                  Botan::DilithiumMode::Dilithium8x7_AES,
+               };
+            } else {
+               return {
+                  Botan::DilithiumMode::ML_DSA_4x4,
+                  Botan::DilithiumMode::ML_DSA_6x5,
+                  Botan::DilithiumMode::ML_DSA_8x7,
+               };
+            }
+         }();
 
          for(auto modet : all_modes) {
             Botan::DilithiumMode mode(modet);
 
-   #if !defined(BOTAN_HAS_DILITHIUM)
-            if(mode.is_modern())
+            if(!mode.is_available()) {
                continue;
-   #endif
-
-   #if !defined(BOTAN_HAS_DILITHIUM_AES)
-            if(mode.is_aes())
-               continue;
-   #endif
+            }
 
             auto keygen_timer = make_timer(mode.to_string(), provider, "keygen");
 
