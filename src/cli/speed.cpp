@@ -506,11 +506,6 @@ class Speed final : public Command {
                bench_ecdsa_recovery(ecc_groups, provider, msec);
             }
 #endif
-#if defined(BOTAN_HAS_ELGAMAL)
-            else if(algo == "ElGamal") {
-               bench_elgamal(provider, msec);
-            }
-#endif
 
 #if defined(BOTAN_HAS_ECC_GROUP)
             else if(algo == "ecc_mult") {
@@ -1096,43 +1091,6 @@ class Speed final : public Command {
 
 #endif
 
-#if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
-      void bench_pk_enc(const Botan::Private_Key& key,
-                        const std::string& nm,
-                        const std::string& provider,
-                        const std::string& padding,
-                        std::chrono::milliseconds msec) {
-         std::vector<uint8_t> plaintext, ciphertext;
-
-         Botan::PK_Encryptor_EME enc(key, rng(), padding, provider);
-         Botan::PK_Decryptor_EME dec(key, rng(), padding, provider);
-
-         auto enc_timer = make_timer(nm + " " + padding, provider, "encrypt");
-         auto dec_timer = make_timer(nm + " " + padding, provider, "decrypt");
-
-         while(enc_timer->under(msec) || dec_timer->under(msec)) {
-            // Generate a new random ciphertext to decrypt
-            if(ciphertext.empty() || enc_timer->under(msec)) {
-               rng().random_vec(plaintext, enc.maximum_input_size());
-               ciphertext = enc_timer->run([&]() { return enc.encrypt(plaintext, rng()); });
-            }
-
-            if(dec_timer->under(msec)) {
-               const auto dec_pt = dec_timer->run([&]() { return dec.decrypt(ciphertext); });
-
-               if(!(Botan::unlock(dec_pt) == plaintext))  // sanity check
-               {
-                  error_output() << "Bad roundtrip in PK encrypt/decrypt bench\n";
-               }
-            }
-         }
-
-         record_result(enc_timer);
-         record_result(dec_timer);
-      }
-
-#endif
-
 #if defined(BOTAN_HAS_RSA)
       void bench_rsa_keygen(const std::string& provider, std::chrono::milliseconds msec) {
          for(size_t keylen : {1024, 2048, 3072, 4096}) {
@@ -1188,25 +1146,6 @@ class Speed final : public Command {
          }
       }
 
-#endif
-
-#if defined(BOTAN_HAS_ELGAMAL)
-      void bench_elgamal(const std::string& provider, std::chrono::milliseconds msec) {
-         for(size_t keylen : {1024, 2048, 3072, 4096}) {
-            const std::string nm = "ElGamal-" + std::to_string(keylen);
-
-            const std::string params = "modp/ietf/" + std::to_string(keylen);
-
-            auto keygen_timer = make_timer(nm, provider, "keygen");
-
-            std::unique_ptr<Botan::Private_Key> key(
-               keygen_timer->run([&] { return Botan::create_private_key("ElGamal", rng(), params); }));
-
-            record_result(keygen_timer);
-
-            bench_pk_enc(*key, nm, provider, "EME-PKCS1-v1_5", msec);
-         }
-      }
 #endif
 };
 
