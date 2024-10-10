@@ -93,7 +93,7 @@ struct BitPackingTrait final {
 };
 
 /**
- * Base implementation of NIST FIPS 203 IPD Algorithm 4 (ByteEncode) and NIST
+ * Base implementation of NIST FIPS 203 Algorithm 5 (ByteEncode) and NIST
  * FIPS 204 Algorithms 10 (SimpleBitPack) and 11 (BitPack).
  *
  * This takes a polynomial @p p and packs its coefficients into the buffer
@@ -165,7 +165,7 @@ constexpr void pack(const Polynomial<PolyTrait, D>& p, BufferStuffer& stuffer, M
 }
 
 /**
- * Base implementation of NIST FIPS 203 IPD Algorithm 5 (ByteDecode) and NIST
+ * Base implementation of NIST FIPS 203 Algorithm 6 (ByteDecode) and NIST
  * FIPS 204 Algorithms 12 (SimpleBitUnpack) and 13 (BitUnpack).
  *
  * This takes a byte sequence represented by @p byte_source and unpacks its

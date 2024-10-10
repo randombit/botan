@@ -17,6 +17,7 @@
 namespace Botan {
 
 class Kyber_Symmetric_Primitives;
+class Kyber_Keypair_Codec;
 
 class KyberConstants final {
    public:
@@ -29,7 +30,7 @@ class KyberConstants final {
       /// modulus
       static constexpr T Q = 3329;
 
-      /// as specified in FIPS 203 (see Algorithm 9 (NTT^-1), f = 128^-1 mod Q)
+      /// as specified in FIPS 203 (see Algorithm 10 (NTT^-1), f = 128^-1 mod Q)
       static constexpr T F = 3303;
 
       /// the primitive 256-th root of unity modulo Q (see FIPS 203 Section 4.3)
@@ -42,6 +43,9 @@ class KyberConstants final {
       static constexpr size_t SEED_BYTES = 32;
       static constexpr size_t PUBLIC_KEY_HASH_BYTES = 32;
       static constexpr size_t SHARED_KEY_BYTES = 32;
+
+      /// sampling limit for SampleNTT (in bytes), see FIPS 204, Apx B
+      static constexpr uint16_t SAMPLE_NTT_POLY_FROM_XOF_BOUND = 280 * 3 /* XOF bytes per while iteration */;
 
    public:
       enum KyberEta : uint8_t { _2 = 2, _3 = 3 };
@@ -107,13 +111,13 @@ class KyberConstants final {
       size_t public_key_bytes() const { return polynomial_vector_bytes() + SEED_BYTES; }
 
       /// byte length of an encoded private key
-      size_t private_key_bytes() const {
-         return polynomial_vector_bytes() + public_key_bytes() + PUBLIC_KEY_HASH_BYTES + SEED_BYTES;
-      }
+      size_t private_key_bytes() const { return m_private_key_bytes; }
 
       /// @}
 
       Kyber_Symmetric_Primitives& symmetric_primitives() const { return *m_symmetric_primitives; }
+
+      Kyber_Keypair_Codec& keypair_codec() const { return *m_keypair_codec; }
 
    private:
       KyberMode m_mode;
@@ -127,7 +131,9 @@ class KyberConstants final {
       uint32_t m_polynomial_vector_bytes;
       uint32_t m_polynomial_vector_compressed_bytes;
       uint32_t m_polynomial_compressed_bytes;
+      uint32_t m_private_key_bytes;
 
+      std::unique_ptr<Kyber_Keypair_Codec> m_keypair_codec;
       std::unique_ptr<Kyber_Symmetric_Primitives> m_symmetric_primitives;
 };
 

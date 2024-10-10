@@ -21,8 +21,10 @@
 
 #include <span>
 
-#if !defined(BOTAN_HAS_KYBER_90S) && !defined(BOTAN_HAS_KYBER)
-static_assert(false, "botan module 'kyber_common' is useful only when enabling modules 'kyber', 'kyber_90s' or both");
+#if !defined(BOTAN_HAS_KYBER_90S) && !defined(BOTAN_HAS_KYBER) && !defined(BOTAN_HAS_ML_KEM)
+static_assert(
+   false,
+   "botan module 'kyber_common' is useful only when enabling at least one of those modules: 'kyber', 'kyber_90s', 'ml_kem'");
 #endif
 
 namespace Botan {
@@ -41,6 +43,10 @@ class BOTAN_PUBLIC_API(3, 0) KyberMode {
          Kyber768 BOTAN_DEPRECATED("Use Kyber768_R3") = Kyber768_R3,
          Kyber1024 BOTAN_DEPRECATED("Use Kyber1024_R3") = Kyber1024_R3,
 
+         ML_KEM_512,
+         ML_KEM_768,
+         ML_KEM_1024,
+
          Kyber512_90s BOTAN_DEPRECATED("Kyber 90s mode is deprecated"),
          Kyber768_90s BOTAN_DEPRECATED("Kyber 90s mode is deprecated"),
          Kyber1024_90s BOTAN_DEPRECATED("Kyber 90s mode is deprecated"),
@@ -58,6 +64,8 @@ class BOTAN_PUBLIC_API(3, 0) KyberMode {
       BOTAN_DEPRECATED("Kyber 90s mode is deprecated") bool is_90s() const;
 
       BOTAN_DEPRECATED("Kyber 90s mode is deprecated") bool is_modern() const;
+
+      bool is_ml_kem() const;
 
       bool is_kyber_round3() const;
 
@@ -100,7 +108,7 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PublicKey : public virtual Public_Key {
 
       std::vector<uint8_t> public_key_bits() const override;
 
-      bool check_key(RandomNumberGenerator&, bool) const override;
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
 
@@ -143,6 +151,8 @@ class BOTAN_PUBLIC_API(3, 0) Kyber_PrivateKey final : public virtual Kyber_Publi
       secure_vector<uint8_t> private_key_bits() const override;
 
       secure_vector<uint8_t> raw_private_key_bits() const override;
+
+      bool check_key(RandomNumberGenerator& rng, bool strong) const override;
 
       std::unique_ptr<PK_Ops::KEM_Decryption> create_kem_decryption_op(RandomNumberGenerator& rng,
                                                                        std::string_view params,

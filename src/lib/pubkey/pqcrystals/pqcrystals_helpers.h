@@ -13,8 +13,10 @@
 
 #include <concepts>
 #include <cstdint>
+#include <span>
 #include <tuple>
 
+#include <botan/exceptn.h>
 #include <botan/internal/bit_ops.h>
 
 namespace Botan {
@@ -132,6 +134,91 @@ consteval static auto precompute_zetas(T q, T monty, T root_of_unity) {
 
    return result;
 }
+
+namespace detail {
+
+/**
+ * Wraps any XOF to limit the number of bytes that can be produced to @p bound.
+ * When the bound is reached, the XOF will throw an Internal_Error.
+ */
+template <typename XofT, size_t bound>
+   requires requires(XofT xof) {
+      { xof.template output<1>() } -> std::convertible_to<std::span<const uint8_t, 1>>;
+      { xof.template output<42>() } -> std::convertible_to<std::span<const uint8_t, 42>>;
+   }
+class Bounded_XOF final {
+   private:
+      template <size_t bytes, typename MapFnT>
+      using MappedValueT = std::invoke_result_t<MapFnT, std::array<uint8_t, bytes>>;
+
+   public:
+      template <size_t bytes>
+      constexpr static auto default_transformer(std::array<uint8_t, bytes> x) {
+         return x;
+      }
+
+      template <size_t bytes, typename T>
+      constexpr static bool default_predicate(T) {
+         return true;
+      }
+
+   public:
+      Bounded_XOF()
+         requires std::default_initializable<XofT>
+            : m_bytes_consumed(0) {}
+
+      explicit Bounded_XOF(XofT xof) : m_xof(xof), m_bytes_consumed(0) {}
+
+      /**
+       * @returns the next byte from the XOF that fulfills @p predicate.
+       */
+      template <typename PredicateFnT = decltype(default_predicate<1, uint8_t>)>
+         requires std::invocable<PredicateFnT, uint8_t>
+      constexpr auto next_byte(PredicateFnT&& predicate = default_predicate<1, uint8_t>) {
+         return next<1>([](const auto bytes) { return bytes[0]; }, std::forward<PredicateFnT>(predicate));
+      }
+
+      /**
+       * Pulls the next @p bytes from the XOF and applies @p transformer to the
+       * output. The result is returned if @p predicate is fulfilled.
+       * @returns the transformed output of the XOF that fulfills @p predicate.
+       */
+      template <size_t bytes,
+                typename MapFnT = decltype(default_transformer<bytes>),
+                typename PredicateFnT = decltype(default_predicate<bytes, MappedValueT<bytes, MapFnT>>)>
+         requires std::invocable<MapFnT, std::array<uint8_t, bytes>> &&
+                  std::invocable<PredicateFnT, MappedValueT<bytes, MapFnT>>
+      constexpr auto next(MapFnT&& transformer = default_transformer<bytes>,
+                          PredicateFnT&& predicate = default_predicate<bytes, MappedValueT<bytes, MapFnT>>) {
+         while(true) {
+            auto output = transformer(take<bytes>());
+            if(predicate(output)) {
+               return output;
+            }
+         }
+      }
+
+   private:
+      template <size_t bytes>
+      constexpr std::array<uint8_t, bytes> take() {
+         m_bytes_consumed += bytes;
+         if(m_bytes_consumed > bound) {
+            throw Internal_Error("XOF consumed more bytes than allowed");
+         }
+         return m_xof.template output<bytes>();
+      }
+
+   private:
+      XofT m_xof;
+      size_t m_bytes_consumed;
+};
+
+}  // namespace detail
+
+class XOF;
+
+template <size_t bound>
+using Bounded_XOF = detail::Bounded_XOF<XOF&, bound>;
 
 }  // namespace Botan
 

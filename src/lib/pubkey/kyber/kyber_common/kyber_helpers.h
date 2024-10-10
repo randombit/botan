@@ -26,7 +26,7 @@ inline uint32_t load_le3(std::span<const uint8_t, 3> in) {
 }
 
 /**
- * NIST FIPS 203 IPD, Formula 4.5 (Compress)
+ * NIST FIPS 203, Formula 4.7 (Compress)
  */
 template <size_t d>
    requires(d > 0 && d < 12)
@@ -57,7 +57,7 @@ constexpr std::make_unsigned_t<KyberConstants::T> compress(KyberConstants::T x) 
 };
 
 /**
- * NIST FIPS 203 IPD, Formula 4.6 (Decompress)
+ * NIST FIPS 203, Formula 4.8 (Decompress)
  */
 template <size_t d>
    requires(d > 0 && d < 12)

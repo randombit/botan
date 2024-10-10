@@ -1197,7 +1197,7 @@ Test::Result test_valid_constraints(const Botan::Private_Key& key, const std::st
       result.test_eq("usage acceptable", key_agreement_decipher_only.compatible_with(key), true);
       result.test_eq("crl sign not permitted", crl_sign.compatible_with(key), false);
       result.test_eq("sign", sign_everything.compatible_with(key), false);
-   } else if(pk_algo == "Kyber" || pk_algo == "FrodoKEM") {
+   } else if(pk_algo == "Kyber" || pk_algo == "FrodoKEM" || pk_algo == "ML-KEM") {
       // KEMs can encrypt and agree
       result.test_eq("all constraints not permitted", all.compatible_with(key), false);
       result.test_eq("cert sign not permitted", ca.compatible_with(key), false);
@@ -1681,7 +1681,7 @@ class X509_Cert_Unit_Tests final : public Test {
          /*
          These are algos which cannot sign but can be included in certs
          */
-         const std::vector<std::string> enc_algos = {"DH", "ECDH", "ElGamal", "Kyber", "FrodoKEM"};
+         const std::vector<std::string> enc_algos = {"DH", "ECDH", "ElGamal", "Kyber", "ML-KEM", "FrodoKEM"};
 
          for(const std::string& algo : enc_algos) {
             auto key = make_a_private_key(algo, rng);

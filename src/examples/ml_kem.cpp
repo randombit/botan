@@ -13,7 +13,7 @@ int main() {
    std::array<uint8_t, 16> salt;
    rng.randomize(salt);
 
-   Botan::Kyber_PrivateKey priv_key(rng, Botan::KyberMode::Kyber512_R3);
+   Botan::Kyber_PrivateKey priv_key(rng, Botan::KyberMode::ML_KEM_768);
    auto pub_key = priv_key.public_key();
 
    Botan::PK_KEM_Encryptor enc(*pub_key, kdf);

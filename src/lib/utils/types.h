@@ -57,7 +57,7 @@ namespace Botan {
 *        @ref dlies.h "DLIES", @ref ecies.h "ECIES", @ref elgamal.h "ElGamal",
 *        @ref rsa.h "RSA", @ref mceliece.h "McEliece", @ref sm2.h "SM2"
 * <dt>Key Encapsulation Mechanisms<dd>
-*        @ref frodokem.h "FrodoKEM", @ref kyber.h "Kyber", @ref rsa.h "RSA"
+*        @ref frodokem.h "FrodoKEM", @ref kyber.h "ML-KEM/Kyber", @ref rsa.h "RSA"
 * <dt>Public Key Signature Schemes<dd>
 *        @ref dsa.h "DSA", @ref dilithium.h "Dilithium", @ref ecdsa.h "ECDSA", @ref ecgdsa.h "ECGDSA",
 *        @ref eckcdsa.h "ECKCDSA", @ref gost_3410.h "GOST 34.10-2001", @ref hss_lms.h "HSS/LMS", @ref sm2.h "SM2",

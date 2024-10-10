@@ -78,7 +78,7 @@
    #include <botan/frodokem.h>
 #endif
 
-#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S) || defined(BOTAN_HAS_ML_KEM)
    #include <botan/kyber.h>
 #endif
 
@@ -140,8 +140,8 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
-#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
-   if(alg_name == "Kyber" || alg_name.starts_with("Kyber-")) {
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S) || defined(BOTAN_HAS_ML_KEM)
+   if(alg_name.starts_with("ML-KEM-") || alg_name == "Kyber" || alg_name.starts_with("Kyber-")) {
       return std::make_unique<Kyber_PublicKey>(alg_id, key_bits);
    }
 #endif
@@ -293,8 +293,8 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
-#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
-   if(alg_name == "Kyber" || alg_name.starts_with("Kyber-")) {
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S) || defined(BOTAN_HAS_ML_KEM)
+   if(alg_name.starts_with("ML-KEM-") || alg_name == "Kyber" || alg_name.starts_with("Kyber-")) {
       return std::make_unique<Kyber_PrivateKey>(alg_id, key_bits);
    }
 #endif
@@ -480,6 +480,19 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
       const auto mode = [&]() -> KyberMode {
          if(params.empty()) {
             return KyberMode::Kyber1024_R3;
+         }
+         return KyberMode(params);
+      }();
+
+      return std::make_unique<Kyber_PrivateKey>(rng, mode);
+   }
+#endif
+
+#if defined(BOTAN_HAS_ML_KEM)
+   if(alg_name == "ML-KEM") {
+      const auto mode = [&]() -> KyberMode {
+         if(params.empty()) {
+            return KyberMode::ML_KEM_768;
          }
          return KyberMode(params);
       }();
