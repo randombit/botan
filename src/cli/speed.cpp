@@ -519,29 +519,9 @@ class Speed final : public Command {
                bench_ecdsa_recovery(ecc_groups, provider, msec);
             }
 #endif
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-            else if(algo == "DH") {
-               bench_dh(provider, msec);
-            }
-#endif
 #if defined(BOTAN_HAS_ELGAMAL)
             else if(algo == "ElGamal") {
                bench_elgamal(provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_ECDH)
-            else if(algo == "ECDH") {
-               bench_ecdh(ecc_groups, provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_X25519)
-            else if(algo == "X25519") {
-               bench_x25519(provider, msec);
-            }
-#endif
-#if defined(BOTAN_HAS_X448)
-            else if(algo == "X448") {
-               bench_x448(provider, msec);
             }
 #endif
 #if defined(BOTAN_HAS_MCELIECE)
@@ -1179,45 +1159,6 @@ class Speed final : public Command {
          record_result(dec_timer);
       }
 
-      void bench_pk_ka(const std::string& algo,
-                       const std::string& nm,
-                       const std::string& params,
-                       const std::string& provider,
-                       std::chrono::milliseconds msec) {
-         const std::string kdf = "KDF2(SHA-256)";  // arbitrary choice
-
-         auto keygen_timer = make_timer(nm, provider, "keygen");
-
-         std::unique_ptr<Botan::Private_Key> key1(
-            keygen_timer->run([&] { return Botan::create_private_key(algo, rng(), params); }));
-         std::unique_ptr<Botan::Private_Key> key2(
-            keygen_timer->run([&] { return Botan::create_private_key(algo, rng(), params); }));
-
-         record_result(keygen_timer);
-
-         const Botan::PK_Key_Agreement_Key& ka_key1 = dynamic_cast<const Botan::PK_Key_Agreement_Key&>(*key1);
-         const Botan::PK_Key_Agreement_Key& ka_key2 = dynamic_cast<const Botan::PK_Key_Agreement_Key&>(*key2);
-
-         Botan::PK_Key_Agreement ka1(ka_key1, rng(), kdf, provider);
-         Botan::PK_Key_Agreement ka2(ka_key2, rng(), kdf, provider);
-
-         const std::vector<uint8_t> ka1_pub = ka_key1.public_value();
-         const std::vector<uint8_t> ka2_pub = ka_key2.public_value();
-
-         auto ka_timer = make_timer(nm, provider, "key agreements");
-
-         while(ka_timer->under(msec)) {
-            Botan::SymmetricKey symkey1 = ka_timer->run([&]() { return ka1.derive_key(32, ka2_pub); });
-            Botan::SymmetricKey symkey2 = ka_timer->run([&]() { return ka2.derive_key(32, ka1_pub); });
-
-            if(symkey1 != symkey2) {
-               error_output() << "Key agreement mismatch in PK bench\n";
-            }
-         }
-
-         record_result(ka_timer);
-      }
-
       void bench_pk_kem(const Botan::Private_Key& key,
                         const std::string& nm,
                         const std::string& provider,
@@ -1308,14 +1249,6 @@ class Speed final : public Command {
 
 #endif
 
-#if defined(BOTAN_HAS_DIFFIE_HELLMAN)
-      void bench_dh(const std::string& provider, std::chrono::milliseconds msec) {
-         for(size_t bits : {2048, 3072, 4096, 6144, 8192}) {
-            bench_pk_ka("DH", "DH-" + std::to_string(bits), "ffdhe/ietf/" + std::to_string(bits), provider, msec);
-         }
-      }
-#endif
-
 #if defined(BOTAN_HAS_ELGAMAL)
       void bench_elgamal(const std::string& provider, std::chrono::milliseconds msec) {
          for(size_t keylen : {1024, 2048, 3072, 4096}) {
@@ -1332,28 +1265,6 @@ class Speed final : public Command {
 
             bench_pk_enc(*key, nm, provider, "EME-PKCS1-v1_5", msec);
          }
-      }
-#endif
-
-#if defined(BOTAN_HAS_ECDH)
-      void bench_ecdh(const std::vector<std::string>& groups,
-                      const std::string& provider,
-                      std::chrono::milliseconds msec) {
-         for(const std::string& grp : groups) {
-            bench_pk_ka("ECDH", "ECDH-" + grp, grp, provider, msec);
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_X25519)
-      void bench_x25519(const std::string& provider, std::chrono::milliseconds msec) {
-         bench_pk_ka("X25519", "X25519", "", provider, msec);
-      }
-#endif
-
-#if defined(BOTAN_HAS_X448)
-      void bench_x448(const std::string& provider, std::chrono::milliseconds msec) {
-         bench_pk_ka("X448", "X448", "", provider, msec);
       }
 #endif
 
