@@ -19,6 +19,10 @@
    #include <botan/processor_rng.h>
 #endif
 
+#if defined(BOTAN_HAS_JITTER_RNG)
+   #include <botan/jitter_rng.h>
+#endif
+
 extern "C" {
 
 using namespace Botan_FFI;
@@ -43,6 +47,11 @@ int botan_rng_init(botan_rng_t* rng_out, const char* rng_type) {
 #if defined(BOTAN_HAS_PROCESSOR_RNG)
       else if((rng_type_s == "rdrand" || rng_type_s == "hwrng") && Botan::Processor_RNG::available()) {
          rng = std::make_unique<Botan::Processor_RNG>();
+      }
+#endif
+#if defined(BOTAN_HAS_JITTER_RNG)
+      else if(rng_type_s == "jitter") {
+         rng = std::make_unique<Botan::Jitter_RNG>();
       }
 #endif
 

@@ -29,6 +29,10 @@
    #include <botan/internal/getentropy.h>
 #endif
 
+#if defined(BOTAN_HAS_JITTER_RNG)
+   #include <botan/jitter_rng.h>
+#endif
+
 namespace Botan {
 
 namespace {
@@ -83,6 +87,24 @@ class Processor_RNG_EntropySource final : public Entropy_Source {
 
 #endif
 
+#if defined(BOTAN_HAS_JITTER_RNG)
+
+class Jitter_RNG_EntropySource final : public Entropy_Source {
+   public:
+      size_t poll(RandomNumberGenerator& rng) override {
+         const size_t poll_bits = BOTAN_RNG_RESEED_POLL_BITS;
+         rng.reseed_from_rng(m_rng, poll_bits);
+         return poll_bits;
+      }
+
+      std::string name() const override { return m_rng.name(); }
+
+   private:
+      Jitter_RNG m_rng;
+};
+
+#endif
+
 }  // namespace
 
 std::unique_ptr<Entropy_Source> Entropy_Source::create(std::string_view name) {
@@ -115,6 +137,12 @@ std::unique_ptr<Entropy_Source> Entropy_Source::create(std::string_view name) {
 #if defined(BOTAN_HAS_ENTROPY_SRC_WIN32)
    if(name == "system_stats") {
       return std::make_unique<Win32_EntropySource>();
+   }
+#endif
+
+#if defined(BOTAN_HAS_JITTER_RNG)
+   if(name == "jitter_rng") {
+      return std::make_unique<Jitter_RNG_EntropySource>();
    }
 #endif
 
