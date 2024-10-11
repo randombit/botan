@@ -86,6 +86,10 @@
    #include <botan/hss_lms.h>
 #endif
 
+#if defined(BOTAN_HAS_X_WING)
+   #include <botan/x_wing.h>
+#endif
+
 #if defined(BOTAN_HAS_XMSS_RFC8391)
    #include <botan/xmss.h>
 #endif
@@ -143,6 +147,12 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
    if(alg_name == "Kyber" || alg_name.starts_with("Kyber-")) {
       return std::make_unique<Kyber_PublicKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_X_WING)
+   if(alg_name == "X-Wing") {
+      return std::make_unique<X_Wing_PublicKey>(key_bits);
    }
 #endif
 
@@ -296,6 +306,12 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
 #if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
    if(alg_name == "Kyber" || alg_name.starts_with("Kyber-")) {
       return std::make_unique<Kyber_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_X_WING)
+   if(alg_name == "X-Wing") {
+      return std::make_unique<X_Wing_PrivateKey>(key_bits);
    }
 #endif
 
@@ -485,6 +501,12 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
       }();
 
       return std::make_unique<Kyber_PrivateKey>(rng, mode);
+   }
+#endif
+
+#if defined(BOTAN_HAS_X_WING)
+   if(alg_name == "X-Wing") {
+      return std::make_unique<X_Wing_PrivateKey>(rng);
    }
 #endif
 

@@ -39,6 +39,9 @@
 1.3.6.1.4.1.25258.1.11.2 = Kyber-768-90s-r3
 1.3.6.1.4.1.25258.1.11.3 = Kyber-1024-90s-r3
 
+# draft-connolly-cfrg-xwing-kem-02 (currently in Botan's private arc until published)
+1.3.6.1.4.1.25258.1.19 = X-Wing
+
 # Dilithium OIDs are currently in Botan's private arc
 1.3.6.1.4.1.25258.1.9.1 = Dilithium-4x4-r3
 1.3.6.1.4.1.25258.1.9.2 = Dilithium-6x5-r3
