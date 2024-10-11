@@ -26,6 +26,8 @@ class PerfConfig {
 
       //virtual std::vector<std::string> providers() const = 0;
 
+      virtual const std::vector<std::string>& ecc_groups() const = 0;
+
       virtual const std::vector<size_t>& buffer_sizes() const = 0;
 
       virtual std::ostream& error_output() const = 0;
