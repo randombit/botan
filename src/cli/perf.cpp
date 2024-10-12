@@ -35,7 +35,7 @@ std::unique_ptr<PerfTest> PerfTest::get(const std::string& name) {
       return i->second();
    }
 
-   return nullptr;
+   return PerfTest::get_sym(name);
 }
 
 }  // namespace Botan_CLI
