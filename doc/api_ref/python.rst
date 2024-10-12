@@ -318,6 +318,11 @@ Public Key
 
      Like ``self.export(True)``
 
+  .. py:method:: to_raw()
+
+     Exports the key in its canonical raw encoding. This might not be
+     available for all key types and raise an exception in that case.
+
   .. py:method:: get_field(field_name)
 
      Return an integer field related to the public key. The valid field names
@@ -396,6 +401,11 @@ Private Key
   .. py:method:: to_der()
 
      Return the PEM encoded private key (unencrypted). Like ``self.export(False)``
+
+  .. py:method:: to_raw()
+
+     Exports the key in its canonical raw encoding. This might not be
+     available for all key types and raise an exception in that case.
 
   .. py:method:: check_key(rng_obj, strong=True):
 

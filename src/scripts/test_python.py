@@ -362,8 +362,16 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         self.assertEqual(rsapriv.to_pem(), rsa_priv_pem)
 
+        # RSA does not provide a dedicated raw encoding for its keys
+        with self.assertRaisesRegex(botan.BotanException, r".*Not implemented.*"):
+            rsapriv.to_raw()
+
         rsapub = rsapriv.get_public_key()
         self.assertEqual(rsapub.to_pem(), rsa_pub_pem)
+
+        # RSA does not provide a dedicated raw encoding for its keys
+        with self.assertRaisesRegex(botan.BotanException, r".*Not implemented.*"):
+            rsapub.to_raw()
 
         rsapub = botan.PublicKey.load(rsa_pub_pem)
         self.assertEqual(rsapub.to_pem(), rsa_pub_pem)
@@ -582,9 +590,11 @@ ofvkP1EDmpx50fHLawIDAQAB
 
             a_pub_pt = a_priv.get_public_key().get_public_point()
             b_pub_pt = b_priv.get_public_key().get_public_point()
+            a_pub_raw = a_priv.get_public_key().to_raw()
 
             self.assertEqual(a_op.public_value(), a_pub_pt)
             self.assertEqual(b_op.public_value(), b_pub_pt)
+            self.assertEqual(a_pub_raw, a_pubv)
 
             salt = a_rng.get(8) + b_rng.get(8)
 
@@ -600,6 +610,9 @@ ofvkP1EDmpx50fHLawIDAQAB
             new_a = botan.PrivateKey.load_ecdh(grp, a_priv_x)
 
             self.assertEqual(a_pem, new_a.to_pem())
+
+            a_raw = hex_encode(a_priv.to_raw())
+            self.assertEqual(int(a_raw, base=16), a_priv_x)
 
     def test_rfc7748_kex(self):
         rng = botan.RandomNumberGenerator()
@@ -910,11 +923,15 @@ ofvkP1EDmpx50fHLawIDAQAB
         b_priv = botan.PrivateKey.load_kyber(b_priv_bits) #2400
 
         privkey_read = b_priv.view_kyber_raw_key()
+        privkey_generic_raw = b_priv.to_raw()
         self.assertEqual(privkey_read, b_priv_bits)
+        self.assertEqual(privkey_generic_raw, b_priv_bits)
 
         b_pub = b_priv.get_public_key()
         pubkey_read = b_pub.view_kyber_raw_key()
+        pubkey_generic_raw = b_pub.to_raw()
         self.assertEqual(pubkey_read, b_pub_bits)
+        self.assertEqual(pubkey_generic_raw, b_pub_bits)
 
         a_pub = botan.PublicKey.load_kyber(a_pub_bits) #1184
         pubkey_read = a_pub.view_kyber_raw_key()

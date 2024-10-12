@@ -947,6 +947,12 @@ Public Key Creation, Import and Export
 
    View the unencrypted PEM encoding of the private key
 
+.. cpp:function:: int botan_privkey_view_raw(botan_privkey_t key, \
+      botan_view_ctx ctx, botan_view_str_fn view)
+
+   View the unencrypted canonical raw encoding of the private key
+   This might not be defined for all key types and throw in that case.
+
 .. cpp:function:: int botan_privkey_export_encrypted(botan_privkey_t key, \
                                              uint8_t out[], size_t* out_len, \
                                              botan_rng_t rng, \
@@ -1010,6 +1016,12 @@ Public Key Creation, Import and Export
       botan_view_ctx ctx, botan_view_str_fn view)
 
    View the PEM encoding of the public key
+
+.. cpp:function:: int botan_pubkey_view_raw(botan_pubkey_t key, \
+      botan_view_ctx ctx, botan_view_bin_fn view)
+
+   View the canonical raw encoding of the public key.
+   This may not be defined for all public key types and throw.
 
 .. cpp:function:: int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len)
 

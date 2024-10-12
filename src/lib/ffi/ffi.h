@@ -1179,6 +1179,7 @@ BOTAN_FFI_EXPORT(2, 0) int botan_privkey_destroy(botan_privkey_t key);
 
 #define BOTAN_PRIVKEY_EXPORT_FLAG_DER 0
 #define BOTAN_PRIVKEY_EXPORT_FLAG_PEM 1
+#define BOTAN_PRIVKEY_EXPORT_FLAG_RAW 2
 
 /**
 * On input *out_len is number of bytes in out[]
@@ -1198,6 +1199,11 @@ BOTAN_FFI_EXPORT(3, 0) int botan_privkey_view_der(botan_privkey_t key, botan_vie
 * View the private key's PEM encoding
 */
 BOTAN_FFI_EXPORT(3, 0) int botan_privkey_view_pem(botan_privkey_t key, botan_view_ctx ctx, botan_view_str_fn view);
+
+/**
+* View the private key's raw encoding
+*/
+BOTAN_FFI_EXPORT(3, 6) int botan_privkey_view_raw(botan_privkey_t key, botan_view_ctx ctx, botan_view_bin_fn view);
 
 BOTAN_FFI_EXPORT(2, 8) int botan_privkey_algo_name(botan_privkey_t key, char out[], size_t* out_len);
 
@@ -1325,6 +1331,11 @@ BOTAN_FFI_EXPORT(3, 0) int botan_pubkey_view_der(botan_pubkey_t key, botan_view_
 * View the public key's PEM encoding
 */
 BOTAN_FFI_EXPORT(3, 0) int botan_pubkey_view_pem(botan_pubkey_t key, botan_view_ctx ctx, botan_view_str_fn view);
+
+/**
+* View the public key's raw encoding
+*/
+BOTAN_FFI_EXPORT(3, 6) int botan_pubkey_view_raw(botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view);
 
 BOTAN_FFI_EXPORT(2, 0) int botan_pubkey_algo_name(botan_pubkey_t key, char out[], size_t* out_len);
 

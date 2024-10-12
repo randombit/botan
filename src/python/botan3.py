@@ -284,6 +284,7 @@ def _set_prototypes(dll):
 
     ffi_api(dll.botan_privkey_view_der, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_privkey_view_pem, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_privkey_view_raw, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
 
     ffi_api(dll.botan_privkey_algo_name, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_privkey_export_encrypted,
@@ -309,6 +310,7 @@ def _set_prototypes(dll):
 
     ffi_api(dll.botan_pubkey_view_der, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_pubkey_view_pem, [c_void_p, c_void_p, VIEW_STR_CALLBACK])
+    ffi_api(dll.botan_pubkey_view_raw, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
 
     ffi_api(dll.botan_pubkey_algo_name, [c_void_p, c_char_p, POINTER(c_size_t)])
     ffi_api(dll.botan_pubkey_check_key, [c_void_p, c_void_p, c_uint32], [-1])
@@ -1261,6 +1263,9 @@ class PublicKey: # pylint: disable=invalid-name
     def to_pem(self):
         return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_pubkey_view_pem(self.__obj, vc, vfn))
 
+    def to_raw(self):
+        return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_pubkey_view_raw(self.__obj, vc, vfn))
+
     def view_kyber_raw_key(self):
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_pubkey_view_kyber_raw_key(self.__obj, vc, vfn))
 
@@ -1409,6 +1414,9 @@ class PrivateKey:
 
     def to_pem(self):
         return _call_fn_viewing_str(lambda vc, vfn: _DLL.botan_privkey_view_pem(self.__obj, vc, vfn))
+
+    def to_raw(self):
+        return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_privkey_view_raw(self.__obj, vc, vfn))
 
     def view_kyber_raw_key(self):
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_privkey_view_kyber_raw_key(self.__obj, vc, vfn))

@@ -3317,15 +3317,21 @@ class FFI_Kyber512_Test final : public FFI_Test {
          }
 
          std::vector<uint8_t> privkey_read(1632);
+         std::vector<uint8_t> privkey_read_raw(1632);
          TEST_FFI_OK(botan_privkey_view_kyber_raw_key, (b_priv, privkey_read.data(), botan_ffi_view_u8_fn));
+         TEST_FFI_OK(botan_privkey_view_raw, (b_priv, privkey_read_raw.data(), botan_ffi_view_u8_fn));
          result.test_eq("kyber512 private key", privkey_read, b_priv_bits);
+         result.test_eq("kyber512 private key raw", privkey_read_raw, b_priv_bits);
 
          std::vector<uint8_t> pubkey_read(800);
+         std::vector<uint8_t> pubkey_read_raw(800);
 
          botan_pubkey_t b_pub;
          TEST_FFI_OK(botan_privkey_export_pubkey, (&b_pub, b_priv));
          TEST_FFI_OK(botan_pubkey_view_kyber_raw_key, (b_pub, pubkey_read.data(), botan_ffi_view_u8_fn));
+         TEST_FFI_OK(botan_pubkey_view_raw, (b_pub, pubkey_read_raw.data(), botan_ffi_view_u8_fn));
          result.test_eq("kyber512 public key b", pubkey_read, b_pub_bits);
+         result.test_eq("kyber512 raw public key b", pubkey_read_raw, b_pub_bits);
 
          botan_pubkey_t a_pub;
          TEST_FFI_OK(botan_pubkey_load_kyber, (&a_pub, a_pub_bits.data(), 800));
@@ -3356,15 +3362,21 @@ class FFI_Kyber768_Test final : public FFI_Test {
          }
 
          std::vector<uint8_t> privkey_read(2400);
+         std::vector<uint8_t> privkey_read_raw(2400);
          TEST_FFI_OK(botan_privkey_view_kyber_raw_key, (b_priv, privkey_read.data(), botan_ffi_view_u8_fn));
+         TEST_FFI_OK(botan_privkey_view_raw, (b_priv, privkey_read_raw.data(), botan_ffi_view_u8_fn));
          result.test_eq("kyber768 private key", privkey_read, b_priv_bits);
+         result.test_eq("kyber768 private key raw", privkey_read_raw, b_priv_bits);
 
          std::vector<uint8_t> pubkey_read(1184);
+         std::vector<uint8_t> pubkey_read_raw(1184);
 
          botan_pubkey_t b_pub;
          TEST_FFI_OK(botan_privkey_export_pubkey, (&b_pub, b_priv));
          TEST_FFI_OK(botan_pubkey_view_kyber_raw_key, (b_pub, pubkey_read.data(), botan_ffi_view_u8_fn));
+         TEST_FFI_OK(botan_pubkey_view_raw, (b_pub, pubkey_read_raw.data(), botan_ffi_view_u8_fn));
          result.test_eq("kyber768 public key b", pubkey_read, b_pub_bits);
+         result.test_eq("kyber768 public key raw b", pubkey_read_raw, b_pub_bits);
 
          botan_pubkey_t a_pub;
          TEST_FFI_OK(botan_pubkey_load_kyber, (&a_pub, a_pub_bits.data(), 1184));
@@ -3395,15 +3407,21 @@ class FFI_Kyber1024_Test final : public FFI_Test {
          }
 
          std::vector<uint8_t> privkey_read(3168);
+         std::vector<uint8_t> privkey_read_raw(3168);
          TEST_FFI_OK(botan_privkey_view_kyber_raw_key, (b_priv, privkey_read.data(), botan_ffi_view_u8_fn));
+         TEST_FFI_OK(botan_privkey_view_raw, (b_priv, privkey_read_raw.data(), botan_ffi_view_u8_fn));
          result.test_eq("kyber1024 private key", privkey_read, b_priv_bits);
+         result.test_eq("kyber1024 private key raw", privkey_read_raw, b_priv_bits);
 
          std::vector<uint8_t> pubkey_read(1568);
+         std::vector<uint8_t> pubkey_read_raw(1568);
 
          botan_pubkey_t b_pub;
          TEST_FFI_OK(botan_privkey_export_pubkey, (&b_pub, b_priv));
          TEST_FFI_OK(botan_pubkey_view_kyber_raw_key, (b_pub, pubkey_read.data(), botan_ffi_view_u8_fn));
+         TEST_FFI_OK(botan_pubkey_view_raw, (b_pub, pubkey_read_raw.data(), botan_ffi_view_u8_fn));
          result.test_eq("kyber1024 public key b", pubkey_read, b_pub_bits);
+         result.test_eq("kyber1024 public key raw b", pubkey_read_raw, b_pub_bits);
 
          botan_pubkey_t a_pub;
          TEST_FFI_OK(botan_pubkey_load_kyber, (&a_pub, a_pub_bits.data(), 1568));
