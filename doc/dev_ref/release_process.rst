@@ -1,9 +1,9 @@
 Release Process and Checklist
 ========================================
 
-Releases are done quarterly, normally on the second non-holiday Monday
-of January, April, July and October. A feature freeze goes into effect
-starting 9 days before the release.
+Releases are done quarterly, normally on the first non-holiday Tuesday
+of February, May, August, and November. A feature freeze goes into effect
+starting 8 days before the release (ie the Monday of the week prior).
 
 .. highlight:: shell
 
