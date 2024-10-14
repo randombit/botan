@@ -39,6 +39,7 @@ Hardware Specific Optimizations
 * Add support for ARMv8.4-A SHA-3, SM3 and RNG instructions
 * POWER8 SHA-2 extensions (GH #1486 + #1487)
 * Add support for VPSUM on big-endian PPC64 (GH #2252)
+* Add support for RISC-V crypto extensions
 
 Public Key Crypto, Math
 ----------------------------------------
