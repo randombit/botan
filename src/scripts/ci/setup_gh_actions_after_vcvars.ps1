@@ -6,7 +6,9 @@
 #
 # Botan is released under the Simplified BSD License (see license.txt)
 
-if ($args[0] -in @('shared')) {
+$targets_with_boost = @("shared", "amalgamation")
+
+if ($targets_with_boost -contains $args[0]) {
     nuget install -NonInteractive -OutputDirectory $env:DEPENDENCIES_LOCATION -Version 1.79.0 boost
 
     $boostincdir = Join-Path -Path $env:DEPENDENCIES_LOCATION -ChildPath "boost.1.79.0/lib/native/include"

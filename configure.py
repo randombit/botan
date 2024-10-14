@@ -3440,6 +3440,8 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
         build_paths.lib_sources = amalg_cpp_files
         template_vars['generated_files'] = ' '.join(amalg_cpp_files + amalg_headers)
 
+        link_headers(amalg_headers, 'public', build_paths.public_include_dir)
+
         # Inserting an amalgamation generated using DLL visibility flags into a
         # binary project will either cause errors (on Windows) or unnecessary overhead.
         # Provide a hint

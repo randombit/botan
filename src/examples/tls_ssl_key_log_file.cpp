@@ -23,6 +23,9 @@
    #include <sys/ioctl.h>
    #include <sys/socket.h>
 #endif
+#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
+   #include <unistd.h>
+#endif
 
 namespace {
 
@@ -142,6 +145,8 @@ class DtlsConnection : public Botan::TLS::Callbacks {
          remote_addr.sin_family = AF_INET;
          inet_aton(r_addr.c_str(), &remote_addr.sin_addr);
          remote_addr.sin_port = htons(r_port);
+#else
+         BOTAN_UNUSED(r_addr, r_port);
 #endif
          auto tls_callbacks_proxy = std::make_shared<BotanTLSCallbacksProxy>(*this);
          auto rng = std::make_shared<Botan::AutoSeeded_RNG>();
@@ -169,6 +174,7 @@ class DtlsConnection : public Botan::TLS::Callbacks {
 #if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
          sendto(fd, data.data(), data.size(), 0, reinterpret_cast<const sockaddr*>(&remote_addr), sizeof(sockaddr_in));
 #else
+         BOTAN_UNUSED(data);
          // send data to the other side
          // ...
 #endif
@@ -201,7 +207,9 @@ class DtlsConnection : public Botan::TLS::Callbacks {
          if(fd) {
 #if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
             shutdown(fd, SHUT_RDWR);
+   #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
             ::close(fd);
+   #endif
 #endif
          }
       }

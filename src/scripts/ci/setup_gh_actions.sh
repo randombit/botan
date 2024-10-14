@@ -77,7 +77,7 @@ if type -p "apt-get"; then
         sudo apt-get -qq install libboost-dev "${tpm2_specific_packages[@]}"
         echo "BOTAN_TPM2_ENABLED=${ci_support_of_tpm2}" >> "$GITHUB_ENV"
 
-    elif [ "$TARGET" = "examples" ] || [ "$TARGET" = "tlsanvil" ] || [ "$TARGET" = "clang-tidy" ] ; then
+    elif [ "$TARGET" = "examples" ] || [ "$TARGET" = "amalgamation" ] || [ "$TARGET" = "tlsanvil" ] || [ "$TARGET" = "clang-tidy" ] ; then
         sudo apt-get -qq install libboost-dev libtss2-dev
         build_and_install_jitterentropy
 
@@ -186,7 +186,7 @@ else
     export HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1
     brew install ccache
 
-    if [ "$TARGET" = "shared" ]; then
+    if [ "$TARGET" = "shared" ]  || [ "$TARGET" = "amalgamation" ] ; then
         brew install boost
 
         # On Apple Silicon we need to specify the include directory
