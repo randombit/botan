@@ -3603,6 +3603,35 @@ class FFI_Kyber1024_Test final : public FFI_Test {
       }
 };
 
+class FFI_FrodoKEM_Test final : public FFI_KEM_Roundtrip_Test {
+   public:
+      std::string name() const override { return "FFI FrodoKEM"; }
+
+   protected:
+      const char* algo() const override { return "FrodoKEM"; }
+
+      privkey_loader_fn_t private_key_load_function() const override { return botan_privkey_load_frodokem; }
+
+      pubkey_loader_fn_t public_key_load_function() const override { return botan_pubkey_load_frodokem; }
+
+      std::vector<const char*> modes() const override {
+         return std::vector{
+            "FrodoKEM-640-SHAKE",
+            "FrodoKEM-976-SHAKE",
+            "FrodoKEM-1344-SHAKE",
+            "eFrodoKEM-640-SHAKE",
+            "eFrodoKEM-976-SHAKE",
+            "eFrodoKEM-1344-SHAKE",
+            "FrodoKEM-640-AES",
+            "FrodoKEM-976-AES",
+            "FrodoKEM-1344-AES",
+            "eFrodoKEM-640-AES",
+            "eFrodoKEM-976-AES",
+            "eFrodoKEM-1344-AES",
+         };
+      }
+};
+
 class FFI_ElGamal_Test final : public FFI_Test {
    public:
       std::string name() const override { return "FFI ElGamal"; }
@@ -3845,6 +3874,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_x448", FFI_X448_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_kyber512", FFI_Kyber512_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_kyber768", FFI_Kyber768_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_kyber1024", FFI_Kyber1024_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_frodokem", FFI_FrodoKEM_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_elgamal", FFI_ElGamal_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_dh", FFI_DH_Test);
 
