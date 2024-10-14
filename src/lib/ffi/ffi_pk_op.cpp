@@ -343,7 +343,7 @@ int botan_pk_op_kem_decrypt_shared_key(botan_pk_op_kem_decrypt_t op,
       const auto shared_key =
          kem.decrypt(encapsulated_key, encapsulated_key_len, desired_shared_key_len, salt, salt_len);
 
-      write_vec_output(shared_key_out, shared_key_len, shared_key);
+      return write_vec_output(shared_key_out, shared_key_len, shared_key);
    });
 }
 
