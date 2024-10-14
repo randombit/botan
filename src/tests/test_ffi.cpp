@@ -3323,6 +3323,151 @@ class ViewBytesSink final {
       std::vector<uint8_t> m_buf;
 };
 
+/**
+ * Base class for roundtrip tests of FFI bindings for Key Encapsulation Mechanisms.
+ */
+class FFI_KEM_Roundtrip_Test : public FFI_Test {
+   protected:
+      using privkey_loader_fn_t = int (*)(botan_privkey_t*, const uint8_t[], size_t, const char*);
+      using pubkey_loader_fn_t = int (*)(botan_pubkey_t*, const uint8_t[], size_t, const char*);
+
+   protected:
+      virtual const char* algo() const = 0;
+      virtual privkey_loader_fn_t private_key_load_function() const = 0;
+      virtual pubkey_loader_fn_t public_key_load_function() const = 0;
+      virtual std::vector<const char*> modes() const = 0;
+
+   public:
+      void ffi_test(Test::Result& result, botan_rng_t rng) override {
+         for(auto mode : modes()) {
+            // generate a key pair
+            botan_privkey_t priv;
+            botan_pubkey_t pub;
+            if(!TEST_FFI_INIT(botan_privkey_create, (&priv, algo(), mode, rng))) {
+               continue;
+            }
+            TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
+
+            // raw-encode the key pair
+            ViewBytesSink priv_bytes;
+            ViewBytesSink pub_bytes;
+            TEST_FFI_OK(botan_privkey_view_raw, (priv, priv_bytes.delegate(), priv_bytes.callback()));
+            TEST_FFI_OK(botan_pubkey_view_raw, (pub, pub_bytes.delegate(), pub_bytes.callback()));
+
+            // decode the key pair from raw encoding
+            botan_privkey_t priv_loaded;
+            botan_pubkey_t pub_loaded;
+            TEST_FFI_OK(private_key_load_function(),
+                        (&priv_loaded, priv_bytes.get().data(), priv_bytes.get().size(), mode));
+            TEST_FFI_OK(public_key_load_function(),
+                        (&pub_loaded, pub_bytes.get().data(), pub_bytes.get().size(), mode));
+
+            // re-encode and compare to the first round
+            ViewBytesSink priv_bytes2;
+            ViewBytesSink pub_bytes2;
+            TEST_FFI_OK(botan_privkey_view_raw, (priv_loaded, priv_bytes2.delegate(), priv_bytes2.callback()));
+            TEST_FFI_OK(botan_pubkey_view_raw, (pub_loaded, pub_bytes2.delegate(), pub_bytes2.callback()));
+            result.test_eq("private key encoding", priv_bytes.get(), priv_bytes2.get());
+            result.test_eq("public key encoding", pub_bytes.get(), pub_bytes2.get());
+
+            // KEM encryption (using the loaded public key)
+            botan_pk_op_kem_encrypt_t kem_enc;
+            TEST_FFI_OK(botan_pk_op_kem_encrypt_create, (&kem_enc, pub_loaded, "Raw"));
+
+            // explicitly query output lengths
+            size_t shared_key_length = 0;
+            size_t ciphertext_length = 0;
+            TEST_FFI_OK(botan_pk_op_kem_encrypt_shared_key_length, (kem_enc, 0, &shared_key_length));
+            TEST_FFI_OK(botan_pk_op_kem_encrypt_encapsulated_key_length, (kem_enc, &ciphertext_length));
+
+            // check that insufficient buffer space is handled correctly
+            size_t shared_key_length_out = 0;
+            size_t ciphertext_length_out = 0;
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
+                        botan_pk_op_kem_encrypt_create_shared_key,
+                        (kem_enc,
+                         rng,
+                         nullptr /* no salt */,
+                         0,
+                         0 /* default key length */,
+                         nullptr,
+                         &shared_key_length_out,
+                         nullptr,
+                         &ciphertext_length_out));
+
+            // TODO: should this report both lengths for usage convenience?
+            result.confirm("at least one buffer length is reported",
+                           shared_key_length_out == shared_key_length || ciphertext_length_out == ciphertext_length);
+
+            // allocate buffers (with additional space) and perform the actual encryption
+            shared_key_length_out = shared_key_length * 2;
+            ciphertext_length_out = ciphertext_length * 2;
+            Botan::secure_vector<uint8_t> shared_key(shared_key_length_out);
+            std::vector<uint8_t> ciphertext(ciphertext_length_out);
+            TEST_FFI_OK(botan_pk_op_kem_encrypt_create_shared_key,
+                        (kem_enc,
+                         rng,
+                         nullptr /* no salt */,
+                         0,
+                         0 /* default key length */,
+                         shared_key.data(),
+                         &shared_key_length_out,
+                         ciphertext.data(),
+                         &ciphertext_length_out));
+            result.test_eq("shared key length", shared_key_length, shared_key_length_out);
+            result.test_eq("ciphertext length", ciphertext_length, ciphertext_length_out);
+            shared_key.resize(shared_key_length_out);
+            ciphertext.resize(ciphertext_length_out);
+            TEST_FFI_OK(botan_pk_op_kem_encrypt_destroy, (kem_enc));
+
+            // KEM decryption (using the generated private key)
+            botan_pk_op_kem_decrypt_t kem_dec;
+            TEST_FFI_OK(botan_pk_op_kem_decrypt_create, (&kem_dec, priv, "Raw"));
+            size_t shared_key_length2 = 0;
+            TEST_FFI_OK(botan_pk_op_kem_decrypt_shared_key_length, (kem_dec, shared_key_length, &shared_key_length2));
+            result.test_eq("shared key lengths are consistent", shared_key_length, shared_key_length2);
+
+            // check that insufficient buffer space is handled correctly
+            shared_key_length_out = 0;
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
+                        botan_pk_op_kem_decrypt_shared_key,
+                        (kem_dec,
+                         nullptr /* no salt */,
+                         0,
+                         ciphertext.data(),
+                         ciphertext.size(),
+                         0 /* default length */,
+                         nullptr,
+                         &shared_key_length_out));
+            result.test_eq("reported buffer length requirement", shared_key_length, shared_key_length_out);
+
+            // allocate buffer (double the size) and perform the actual decryption
+            shared_key_length_out = shared_key_length * 2;
+            Botan::secure_vector<uint8_t> shared_key2(shared_key_length_out);
+            TEST_FFI_OK(botan_pk_op_kem_decrypt_shared_key,
+                        (kem_dec,
+                         nullptr /* no salt */,
+                         0,
+                         ciphertext.data(),
+                         ciphertext.size(),
+                         0 /* default length */,
+                         shared_key2.data(),
+                         &shared_key_length_out));
+            result.test_eq("shared key output length", shared_key_length, shared_key_length_out);
+            shared_key2.resize(shared_key_length_out);
+            TEST_FFI_OK(botan_pk_op_kem_decrypt_destroy, (kem_dec));
+
+            // final check and clean up
+            result.test_eq("shared keys match", shared_key, shared_key2);
+
+            TEST_FFI_OK(botan_pubkey_destroy, (pub));
+            TEST_FFI_OK(botan_pubkey_destroy, (pub_loaded));
+            TEST_FFI_OK(botan_privkey_destroy, (priv));
+            TEST_FFI_OK(botan_privkey_destroy, (priv_loaded));
+         }
+      }
+};
+
 class FFI_Kyber512_Test final : public FFI_Test {
    public:
       std::string name() const override { return "FFI Kyber512"; }
