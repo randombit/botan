@@ -361,6 +361,8 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_pubkey_x448_get_pubkey, [c_void_p, c_char_p])
     ffi_api(dll.botan_privkey_load_ml_dsa, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_pubkey_load_ml_dsa, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_privkey_load_slh_dsa, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_pubkey_load_slh_dsa, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_privkey_load_kyber, [c_void_p, c_char_p, c_int])
     ffi_api(dll.botan_pubkey_load_kyber, [c_void_p, c_char_p, c_int])
     ffi_api(dll.botan_privkey_view_kyber_raw_key, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
@@ -1251,6 +1253,12 @@ class PublicKey: # pylint: disable=invalid-name
         return PublicKey(obj)
 
     @classmethod
+    def load_slh_dsa(cls, slhdsa_mode, key):
+        obj = c_void_p(0)
+        _DLL.botan_pubkey_load_slh_dsa(byref(obj), key, len(key), _ctype_str(slhdsa_mode))
+        return PublicKey(obj)
+
+    @classmethod
     def load_frodokem(cls, frodo_mode, key):
         obj = c_void_p(0)
         _DLL.botan_pubkey_load_frodokem(byref(obj), key, len(key), _ctype_str(frodo_mode))
@@ -1425,6 +1433,12 @@ class PrivateKey:
     def load_ml_dsa(cls, mldsa_mode, key):
         obj = c_void_p(0)
         _DLL.botan_privkey_load_ml_dsa(byref(obj), key, len(key), _ctype_str(mldsa_mode))
+        return PrivateKey(obj)
+
+    @classmethod
+    def load_slh_dsa(cls, slh_dsa, key):
+        obj = c_void_p(0)
+        _DLL.botan_privkey_load_slh_dsa(byref(obj), key, len(key), _ctype_str(slh_dsa))
         return PrivateKey(obj)
 
     @classmethod

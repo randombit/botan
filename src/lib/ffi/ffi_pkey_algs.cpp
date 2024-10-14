@@ -84,6 +84,10 @@
    #include <botan/dilithium.h>
 #endif
 
+#if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
+   #include <botan/sphincsplus.h>
+#endif
+
 namespace {
 
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
@@ -1144,6 +1148,58 @@ int botan_pubkey_load_ml_dsa(botan_pubkey_t* key, const uint8_t pubkey[], size_t
    });
 #else
    BOTAN_UNUSED(key, key_len, pubkey, mldsa_mode);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+/*
+* Algorithm specific key operations: SLH-DSA
+*/
+
+int botan_privkey_load_slh_dsa(botan_privkey_t* key, const uint8_t privkey[], size_t key_len, const char* slhdsa_mode) {
+#if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
+   if(key == nullptr || privkey == nullptr || slhdsa_mode == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   *key = nullptr;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto mode = Botan::Sphincs_Parameters::create(slhdsa_mode);
+      if(!mode.is_slh_dsa()) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+
+      auto slhdsa_key = std::make_unique<Botan::SphincsPlus_PrivateKey>(std::span{privkey, key_len}, mode);
+      *key = new botan_privkey_struct(std::move(slhdsa_key));
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(key, key_len, privkey, slhdsa_mode);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_pubkey_load_slh_dsa(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len, const char* slhdsa_mode) {
+#if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
+   if(key == nullptr || pubkey == nullptr || slhdsa_mode == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   *key = nullptr;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto mode = Botan::Sphincs_Parameters::create(slhdsa_mode);
+      if(!mode.is_slh_dsa()) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+
+      auto mldsa_key = std::make_unique<Botan::SphincsPlus_PublicKey>(std::span{pubkey, key_len}, mode);
+      *key = new botan_pubkey_struct(std::move(mldsa_key));
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(key, key_len, pubkey, slhdsa_mode);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }

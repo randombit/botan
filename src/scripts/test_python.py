@@ -965,6 +965,20 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertEqual(sk_read.to_raw(), sk_bits)
         self.assertEqual(pk_read.to_raw(), pk_bits)
 
+    def test_slh_dsa_raw_keys(self):
+        slhdsa_mode = "SLH-DSA-SHAKE-128f"
+        sk = botan.PrivateKey.create("SLH-DSA", slhdsa_mode, botan.RandomNumberGenerator("user"))
+        pk = sk.get_public_key()
+
+        sk_bits = sk.to_raw()
+        pk_bits = pk.to_raw()
+
+        sk_read = botan.PrivateKey.load_slh_dsa(slhdsa_mode, sk_bits)
+        pk_read = botan.PublicKey.load_slh_dsa(slhdsa_mode, pk_bits)
+
+        self.assertEqual(sk_read.to_raw(), sk_bits)
+        self.assertEqual(pk_read.to_raw(), pk_bits)
+
     def test_frodokem_raw_keys(self):
         frodo_mode = "FrodoKEM-640-SHAKE"
         sk = botan.PrivateKey.create("FrodoKEM", frodo_mode, botan.RandomNumberGenerator("user"))

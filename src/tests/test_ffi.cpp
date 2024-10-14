@@ -17,6 +17,7 @@
    #include <botan/hex.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/loadstor.h>
+   #include <botan/internal/stl_util.h>
    #include <set>
 #endif
 
@@ -3778,6 +3779,45 @@ class FFI_ML_DSA_Test final : public FFI_Signature_Roundtrip_Test {
       const char* hash_algo_or_padding() const override { return ""; }
 };
 
+class FFI_SLH_DSA_Test final : public FFI_Signature_Roundtrip_Test {
+   public:
+      std::string name() const override { return "FFI SLH-DSA"; }
+
+   private:
+      const char* algo() const override { return "SLH-DSA"; }
+
+      privkey_loader_fn_t private_key_load_function() const override { return botan_privkey_load_slh_dsa; }
+
+      pubkey_loader_fn_t public_key_load_function() const override { return botan_pubkey_load_slh_dsa; }
+
+      std::vector<const char*> modes() const override {
+         auto modes = std::vector{
+            "SLH-DSA-SHA2-128f",
+            "SLH-DSA-SHAKE-128f",
+            "SLH-DSA-SHA2-192f",
+            "SLH-DSA-SHAKE-192f",
+            "SLH-DSA-SHA2-256f",
+            "SLH-DSA-SHAKE-256f",
+         };
+
+         if(Test::run_long_tests()) {
+            modes = Botan::concat(modes,
+                                  std::vector{
+                                     "SLH-DSA-SHA2-128s",
+                                     "SLH-DSA-SHA2-192s",
+                                     "SLH-DSA-SHA2-256s",
+                                     "SLH-DSA-SHAKE-128s",
+                                     "SLH-DSA-SHAKE-192s",
+                                     "SLH-DSA-SHAKE-256s",
+                                  });
+         }
+
+         return modes;
+      }
+
+      const char* hash_algo_or_padding() const override { return ""; }
+};
+
 class FFI_ElGamal_Test final : public FFI_Test {
    public:
       std::string name() const override { return "FFI ElGamal"; }
@@ -4021,8 +4061,9 @@ BOTAN_REGISTER_TEST("ffi", "ffi_kyber512", FFI_Kyber512_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_kyber768", FFI_Kyber768_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_kyber1024", FFI_Kyber1024_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ml_kem", FFI_ML_KEM_Test);
-BOTAN_REGISTER_TEST("ffi", "ffi_frodokem", FFI_FrodoKEM_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_ml_dsa", FFI_ML_DSA_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_slh_dsa", FFI_SLH_DSA_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_frodokem", FFI_FrodoKEM_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_elgamal", FFI_ElGamal_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_dh", FFI_DH_Test);
 
