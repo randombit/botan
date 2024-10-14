@@ -1283,6 +1283,7 @@ class PublicKey: # pylint: disable=invalid-name
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_pubkey_view_raw(self.__obj, vc, vfn))
 
     def view_kyber_raw_key(self):
+        """Deprecated: use to_raw() instead"""
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_pubkey_view_kyber_raw_key(self.__obj, vc, vfn))
 
     def fingerprint(self, hash_algorithm='SHA-256'):
@@ -1447,6 +1448,7 @@ class PrivateKey:
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_privkey_view_raw(self.__obj, vc, vfn))
 
     def view_kyber_raw_key(self):
+        """Deprecated: use to_raw() instead"""
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_privkey_view_kyber_raw_key(self.__obj, vc, vfn))
 
     def export(self, pem=False):
