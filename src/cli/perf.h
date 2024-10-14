@@ -24,8 +24,6 @@ class PerfConfig {
 
       virtual std::chrono::milliseconds runtime() const = 0;
 
-      //virtual std::vector<std::string> providers() const = 0;
-
       virtual const std::vector<std::string>& ecc_groups() const = 0;
 
       virtual const std::vector<size_t>& buffer_sizes() const = 0;
@@ -60,6 +58,8 @@ class PerfTest {
       };
 
    private:
+      static std::unique_ptr<PerfTest> get_sym(const std::string& alg);
+
       static std::map<std::string, pt_maker_fn>& global_registry();
 };
 

@@ -10,7 +10,6 @@
 
 #include <algorithm>
 #include <chrono>
-#include <functional>
 #include <iomanip>
 #include <map>
 #include <set>
@@ -23,30 +22,6 @@
 #include <botan/internal/os_utils.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/timer.h>
-
-#if defined(BOTAN_HAS_BLOCK_CIPHER)
-   #include <botan/block_cipher.h>
-#endif
-
-#if defined(BOTAN_HAS_STREAM_CIPHER)
-   #include <botan/stream_cipher.h>
-#endif
-
-#if defined(BOTAN_HAS_HASH)
-   #include <botan/hash.h>
-#endif
-
-#if defined(BOTAN_HAS_XOF)
-   #include <botan/xof.h>
-#endif
-
-#if defined(BOTAN_HAS_CIPHER_MODES)
-   #include <botan/cipher_mode.h>
-#endif
-
-#if defined(BOTAN_HAS_MAC)
-   #include <botan/mac.h>
-#endif
 
 #if defined(BOTAN_HAS_ECC_GROUP)
    #include <botan/ec_group.h>
@@ -223,7 +198,7 @@ class Speed final : public Command {
    public:
       Speed() :
             Command(
-               "speed --msec=500 --format=default --ecc-groups= --provider= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos") {
+               "speed --msec=500 --format=default --ecc-groups= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos") {
       }
 
       static std::vector<std::string> default_benchmark_list() {
@@ -322,7 +297,6 @@ class Speed final : public Command {
 
       void go() override {
          std::chrono::milliseconds msec(get_arg_sz("msec"));
-         const std::string provider = get_arg("provider");
          std::vector<std::string> ecc_groups = Command::split_on(get_arg("ecc-groups"), ',');
          const std::string format = get_arg("format");
          const std::string clock_ratio = get_arg("cpu-clock-ratio");
@@ -432,47 +406,8 @@ class Speed final : public Command {
 
             if(auto perf = PerfTest::get(algo)) {
                perf->go(perf_config);
-            }
-#if defined(BOTAN_HAS_HASH)
-            else if(!Botan::HashFunction::providers(algo).empty()) {
-               bench_providers_of<Botan::HashFunction>(
-                  algo, provider, msec, buf_sizes, std::bind(&Speed::bench_hash, this, _1, _2, _3, _4));
-            }
-#endif
-#if defined(BOTAN_HAS_XOF)
-            else if(!Botan::XOF::providers(algo).empty()) {
-               bench_providers_of<Botan::XOF>(
-                  algo, provider, msec, buf_sizes, std::bind(&Speed::bench_xof, this, _1, _2, _3, _4));
-            }
-#endif
-#if defined(BOTAN_HAS_BLOCK_CIPHER)
-            else if(!Botan::BlockCipher::providers(algo).empty()) {
-               bench_providers_of<Botan::BlockCipher>(
-                  algo, provider, msec, buf_sizes, std::bind(&Speed::bench_block_cipher, this, _1, _2, _3, _4));
-            }
-#endif
-#if defined(BOTAN_HAS_STREAM_CIPHER)
-            else if(!Botan::StreamCipher::providers(algo).empty()) {
-               bench_providers_of<Botan::StreamCipher>(
-                  algo, provider, msec, buf_sizes, std::bind(&Speed::bench_stream_cipher, this, _1, _2, _3, _4));
-            }
-#endif
-#if defined(BOTAN_HAS_CIPHER_MODES)
-            else if(auto enc = Botan::Cipher_Mode::create(algo, Botan::Cipher_Dir::Encryption, provider)) {
-               auto dec = Botan::Cipher_Mode::create_or_throw(algo, Botan::Cipher_Dir::Decryption, provider);
-               bench_cipher_mode(*enc, *dec, msec, buf_sizes);
-            }
-#endif
-#if defined(BOTAN_HAS_MAC)
-            else if(!Botan::MessageAuthenticationCode::providers(algo).empty()) {
-               bench_providers_of<Botan::MessageAuthenticationCode>(
-                  algo, provider, msec, buf_sizes, std::bind(&Speed::bench_mac, this, _1, _2, _3, _4));
-            }
-#endif
-            else {
-               if(verbose() || !using_defaults) {
-                  error_output() << "Unknown algorithm '" << algo << "'\n";
-               }
+            } else if(verbose() || !using_defaults) {
+               error_output() << "Unknown algorithm '" << algo << "'\n";
             }
          }
 
@@ -514,26 +449,6 @@ class Speed final : public Command {
 
       void record_result(const std::unique_ptr<Timer>& t) { record_result(*t); }
 
-      template <typename T>
-      using bench_fn = std::function<void(T&, std::string, std::chrono::milliseconds, const std::vector<size_t>&)>;
-
-      template <typename T>
-      void bench_providers_of(const std::string& algo,
-                              const std::string& provider, /* user request, if any */
-                              const std::chrono::milliseconds runtime,
-                              const std::vector<size_t>& buf_sizes,
-                              bench_fn<T> bench_one) {
-         for(const auto& prov : T::providers(algo)) {
-            if(provider.empty() || provider == prov) {
-               auto p = T::create(algo, prov);
-
-               if(p) {
-                  bench_one(*p, prov, runtime, buf_sizes);
-               }
-            }
-         }
-      }
-
       std::unique_ptr<Timer> make_timer(const std::string& name,
                                         uint64_t event_mult = 1,
                                         const std::string& what = "",
@@ -541,230 +456,6 @@ class Speed final : public Command {
                                         size_t buf_size = 0) {
          return std::make_unique<Timer>(name, provider, what, event_mult, buf_size, m_clock_cycle_ratio, m_clock_speed);
       }
-
-      std::unique_ptr<Timer> make_timer(const std::string& algo, const std::string& provider, const std::string& what) {
-         return make_timer(algo, 1, what, provider, 0);
-      }
-
-#if defined(BOTAN_HAS_BLOCK_CIPHER)
-      void bench_block_cipher(Botan::BlockCipher& cipher,
-                              const std::string& provider,
-                              std::chrono::milliseconds runtime,
-                              const std::vector<size_t>& buf_sizes) {
-         auto ks_timer = make_timer(cipher.name(), provider, "key schedule");
-
-         const Botan::SymmetricKey key(rng(), cipher.maximum_keylength());
-         ks_timer->run([&]() { cipher.set_key(key); });
-
-         const size_t bs = cipher.block_size();
-         std::set<size_t> buf_sizes_in_blocks;
-         for(size_t buf_size : buf_sizes) {
-            if(buf_size % bs == 0) {
-               buf_sizes_in_blocks.insert(buf_size);
-            } else {
-               buf_sizes_in_blocks.insert(buf_size + bs - (buf_size % bs));
-            }
-         }
-
-         for(size_t buf_size : buf_sizes_in_blocks) {
-            std::vector<uint8_t> buffer(buf_size);
-            const size_t mult = std::max<size_t>(1, 65536 / buf_size);
-            const size_t blocks = buf_size / bs;
-
-            auto encrypt_timer = make_timer(cipher.name(), mult * buffer.size(), "encrypt", provider, buf_size);
-            auto decrypt_timer = make_timer(cipher.name(), mult * buffer.size(), "decrypt", provider, buf_size);
-
-            encrypt_timer->run_until_elapsed(runtime, [&]() {
-               for(size_t i = 0; i != mult; ++i) {
-                  cipher.encrypt_n(&buffer[0], &buffer[0], blocks);
-               }
-            });
-            record_result(encrypt_timer);
-
-            decrypt_timer->run_until_elapsed(runtime, [&]() {
-               for(size_t i = 0; i != mult; ++i) {
-                  cipher.decrypt_n(&buffer[0], &buffer[0], blocks);
-               }
-            });
-            record_result(decrypt_timer);
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_STREAM_CIPHER)
-      void bench_stream_cipher(Botan::StreamCipher& cipher,
-                               const std::string& provider,
-                               const std::chrono::milliseconds runtime,
-                               const std::vector<size_t>& buf_sizes) {
-         for(auto buf_size : buf_sizes) {
-            const Botan::SymmetricKey key(rng(), cipher.maximum_keylength());
-            cipher.set_key(key);
-
-            if(cipher.valid_iv_length(12)) {
-               const Botan::InitializationVector iv(rng(), 12);
-               cipher.set_iv(iv.begin(), iv.size());
-            }
-
-            Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
-
-            const size_t mult = std::max<size_t>(1, 65536 / buf_size);
-
-            auto encrypt_timer = make_timer(cipher.name(), mult * buffer.size(), "encrypt", provider, buf_size);
-
-            encrypt_timer->run_until_elapsed(runtime, [&]() {
-               for(size_t i = 0; i != mult; ++i) {
-                  cipher.encipher(buffer);
-               }
-            });
-
-            record_result(encrypt_timer);
-
-            if(verbose()) {
-               auto ks_timer = make_timer(cipher.name(), buffer.size(), "write_keystream", provider, buf_size);
-
-               while(ks_timer->under(runtime)) {
-                  ks_timer->run([&]() { cipher.write_keystream(buffer.data(), buffer.size()); });
-               }
-               record_result(ks_timer);
-            }
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_HASH)
-      void bench_hash(Botan::HashFunction& hash,
-                      const std::string& provider,
-                      const std::chrono::milliseconds runtime,
-                      const std::vector<size_t>& buf_sizes) {
-         std::vector<uint8_t> output(hash.output_length());
-
-         for(auto buf_size : buf_sizes) {
-            Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
-
-            const size_t mult = std::max<size_t>(1, 65536 / buf_size);
-
-            auto timer = make_timer(hash.name(), mult * buffer.size(), "hash", provider, buf_size);
-            timer->run_until_elapsed(runtime, [&]() {
-               for(size_t i = 0; i != mult; ++i) {
-                  hash.update(buffer);
-                  hash.final(output.data());
-               }
-            });
-            record_result(timer);
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_XOF)
-      void bench_xof(Botan::XOF& xof,
-                     const std::string& provider,
-                     const std::chrono::milliseconds runtime,
-                     const std::vector<size_t>& buf_sizes) {
-         for(auto buf_size : buf_sizes) {
-            Botan::secure_vector<uint8_t> in = rng().random_vec(buf_size);
-            Botan::secure_vector<uint8_t> out(buf_size);
-
-            auto in_timer = make_timer(xof.name(), in.size(), "input", provider, buf_size);
-            in_timer->run_until_elapsed(runtime / 2, [&]() { xof.update(in); });
-
-            auto out_timer = make_timer(xof.name(), out.size(), "output", provider, buf_size);
-            out_timer->run_until_elapsed(runtime / 2, [&] { xof.output(out); });
-
-            record_result(in_timer);
-            record_result(out_timer);
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_MAC)
-      void bench_mac(Botan::MessageAuthenticationCode& mac,
-                     const std::string& provider,
-                     const std::chrono::milliseconds runtime,
-                     const std::vector<size_t>& buf_sizes) {
-         std::vector<uint8_t> output(mac.output_length());
-
-         for(auto buf_size : buf_sizes) {
-            Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
-            const size_t mult = std::max<size_t>(1, 65536 / buf_size);
-
-            const Botan::SymmetricKey key(rng(), mac.maximum_keylength());
-            mac.set_key(key);
-
-            auto timer = make_timer(mac.name(), mult * buffer.size(), "mac", provider, buf_size);
-            timer->run_until_elapsed(runtime, [&]() {
-               for(size_t i = 0; i != mult; ++i) {
-                  if(mac.fresh_key_required_per_message()) {
-                     mac.set_key(key);
-                  }
-                  mac.start(nullptr, 0);
-                  mac.update(buffer);
-                  mac.final(output.data());
-               }
-            });
-
-            record_result(timer);
-         }
-      }
-#endif
-
-#if defined(BOTAN_HAS_CIPHER_MODES)
-      void bench_cipher_mode(Botan::Cipher_Mode& enc,
-                             Botan::Cipher_Mode& dec,
-                             const std::chrono::milliseconds runtime,
-                             const std::vector<size_t>& buf_sizes) {
-         auto ks_timer = make_timer(enc.name(), enc.provider(), "key schedule");
-
-         const Botan::SymmetricKey key(rng(), enc.key_spec().maximum_keylength());
-
-         ks_timer->run([&]() { enc.set_key(key); });
-         ks_timer->run([&]() { dec.set_key(key); });
-
-         record_result(ks_timer);
-
-         for(auto buf_size : buf_sizes) {
-            Botan::secure_vector<uint8_t> buffer = rng().random_vec(buf_size);
-            const size_t mult = std::max<size_t>(1, 65536 / buf_size);
-
-            auto encrypt_timer = make_timer(enc.name(), mult * buffer.size(), "encrypt", enc.provider(), buf_size);
-            auto decrypt_timer = make_timer(dec.name(), mult * buffer.size(), "decrypt", dec.provider(), buf_size);
-
-            Botan::secure_vector<uint8_t> iv = rng().random_vec(enc.default_nonce_length());
-
-            if(buf_size >= enc.minimum_final_size()) {
-               encrypt_timer->run_until_elapsed(runtime, [&]() {
-                  for(size_t i = 0; i != mult; ++i) {
-                     enc.start(iv);
-                     enc.finish(buffer);
-                     buffer.resize(buf_size);  // remove any tag or padding
-                  }
-               });
-
-               while(decrypt_timer->under(runtime)) {
-                  if(!iv.empty()) {
-                     iv[iv.size() - 1] += 1;
-                  }
-
-                  // Create a valid ciphertext/tag for decryption to run on
-                  buffer.resize(buf_size);
-                  enc.start(iv);
-                  enc.finish(buffer);
-
-                  Botan::secure_vector<uint8_t> dbuffer;
-
-                  decrypt_timer->run([&]() {
-                     for(size_t i = 0; i != mult; ++i) {
-                        dbuffer = buffer;
-                        dec.start(iv);
-                        dec.finish(dbuffer);
-                     }
-                  });
-               }
-            }
-            record_result(encrypt_timer);
-            record_result(decrypt_timer);
-         }
-      }
-#endif
 };
 
 BOTAN_REGISTER_COMMAND("speed", Speed);
