@@ -15,7 +15,9 @@
 namespace Botan {
 
 FrodoKEMConstants::FrodoKEMConstants(FrodoKEMMode mode) : m_mode(mode), m_len_a(128), m_n_bar(8) {
-   BOTAN_ASSERT(m_mode.is_available(), "Mode is not available.");
+   if(!mode.is_available()) {
+      throw Not_Implemented("FrodoKEM mode " + mode.to_string() + " is not available");
+   }
 
    if(mode.is_ephemeral()) {
       m_len_salt = 0;
