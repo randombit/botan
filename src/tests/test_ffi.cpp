@@ -17,6 +17,7 @@
    #include <botan/hex.h>
    #include <botan/internal/fmt.h>
    #include <botan/internal/loadstor.h>
+   #include <botan/internal/stl_util.h>
    #include <set>
 #endif
 
@@ -3632,6 +3633,45 @@ class FFI_FrodoKEM_Test final : public FFI_KEM_Roundtrip_Test {
       }
 };
 
+class FFI_Classic_McEliece_Test final : public FFI_KEM_Roundtrip_Test {
+   public:
+      std::string name() const override { return "FFI Classic McEliece"; }
+
+   protected:
+      const char* algo() const override { return "ClassicMcEliece"; }
+
+      privkey_loader_fn_t private_key_load_function() const override { return botan_privkey_load_classic_mceliece; }
+
+      pubkey_loader_fn_t public_key_load_function() const override { return botan_pubkey_load_classic_mceliece; }
+
+      std::vector<const char*> modes() const override {
+         auto modes = std::vector{
+            "mceliece348864f",
+            "mceliece460896f",
+         };
+         if(Test::run_long_tests()) {
+            modes = Botan::concat(modes,
+                                  std::vector{
+                                     "mceliece348864",
+                                     "mceliece460896",
+                                     "mceliece6688128",
+                                     "mceliece6688128f",
+                                     "mceliece6688128pc",
+                                     "mceliece6688128pcf",
+                                     "mceliece6960119",
+                                     "mceliece6960119f",
+                                     "mceliece6960119pc",
+                                     "mceliece6960119pcf",
+                                     "mceliece8192128",
+                                     "mceliece8192128f",
+                                     "mceliece8192128pc",
+                                     "mceliece8192128pcf",
+                                  });
+         }
+         return modes;
+      }
+};
+
 class FFI_ElGamal_Test final : public FFI_Test {
    public:
       std::string name() const override { return "FFI ElGamal"; }
@@ -3875,6 +3915,7 @@ BOTAN_REGISTER_TEST("ffi", "ffi_kyber512", FFI_Kyber512_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_kyber768", FFI_Kyber768_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_kyber1024", FFI_Kyber1024_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_frodokem", FFI_FrodoKEM_Test);
+BOTAN_REGISTER_TEST("ffi", "ffi_cmce", FFI_Classic_McEliece_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_elgamal", FFI_ElGamal_Test);
 BOTAN_REGISTER_TEST("ffi", "ffi_dh", FFI_DH_Test);
 
