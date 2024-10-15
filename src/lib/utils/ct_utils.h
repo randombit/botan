@@ -138,6 +138,25 @@ constexpr void unpoison(const T& x) {
    x._const_time_unpoison();
 }
 
+/**
+ * Poison an optional object if it has a value.
+ */
+template <typename T>
+   requires requires(const T& v) { ::Botan::CT::poison(v); }
+constexpr void poison(const std::optional<T>& x) {
+   if(x.has_value()) {
+      poison(x.value());
+   }
+}
+
+template <typename T>
+   requires requires(const T& v) { ::Botan::CT::unpoison(v); }
+constexpr void unpoison(const std::optional<T>& x) {
+   if(x.has_value()) {
+      unpoison(x.value());
+   }
+}
+
 /// @}
 
 /// @name Higher-level Constant Time Check Annotation Helpers
