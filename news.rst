@@ -12,7 +12,13 @@ Version 3.6.0, Not Yet Released
   #4209 #4210 #4211 #4212 #4213 #4215 #4217 #4218 #4221 #4225 #4226 #4235
   #4237 #4240 #4242 #4256 #4257 #4261 #4264 #4276 #4284 #4300)
 
-* Add support for TPM2 hardware (GH #4337)
+* Add support for FIPS 203 ML-KEM, the NIST standardized version of Kyber (GH #3893)
+
+* Add support for FIPS 204 ML-DSA, the NIST standardized version of Dilithium (GH #4270)
+
+* Add support for FIPS 205 SLH-DSA, the NIST standardized version of SPHINCS+ (GH #4291)
+
+* Add support for TPM2 hardware (GH #4337 #4357 #4361)
 
 * Add support for jitterentropy RNG (GH #4325)
 
@@ -21,7 +27,8 @@ Version 3.6.0, Not Yet Released
 
 * Improve performance of hex (GH #4275) and base64 (GH #4271)
 
-* In ECDSA blind the constant time inversion of the nonce. (GH #4259)
+* In ECDSA blind the constant time inversion of the nonce, as an extra precaution
+  against side channel attacks. (GH #4259)
 
 * Add support for AVX2-VAES instructions (GH #4286 #4287)
 
@@ -53,7 +60,7 @@ Version 3.6.0, Not Yet Released
 * Add support for armv7/aarch64/ppc64 CPU feature detection on OpenBSD,
   using a new API added in OpenBSD 7.6 (GH #4312)
 
-* Fix a bug in the speed subcommand which caused it to report incorrect
+* Fix a bug in the ``speed`` cli utility which caused it to report incorrect
   values, especially for ciphers/hashes with small input sizes. (GH #4311)
 
 * Fix a bug where CMake and pkg-config files might be installed to the
@@ -63,6 +70,8 @@ Version 3.6.0, Not Yet Released
   (GH #4247 #4248)
 
 * Internal "strong types" improvments (GH #4170)
+
+* Refactor the ``speed`` cli utility (GH #4364 #4367 #4369)
 
 * Fix a test that was somewhat brittle and would fail if a specific
   certificate was not in the system trust root store. (GH #4280)
