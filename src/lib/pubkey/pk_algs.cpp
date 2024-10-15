@@ -78,8 +78,12 @@
    #include <botan/frodokem.h>
 #endif
 
-#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S) || defined(BOTAN_HAS_ML_KEM)
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
    #include <botan/kyber.h>
+#endif
+
+#if defined(BOTAN_HAS_ML_KEM)
+   #include <botan/ml_kem.h>
 #endif
 
 #if defined(BOTAN_HAS_HSS_LMS)
@@ -140,9 +144,15 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
-#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S) || defined(BOTAN_HAS_ML_KEM)
-   if(alg_name.starts_with("ML-KEM-") || alg_name == "Kyber" || alg_name.starts_with("Kyber-")) {
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
+   if(alg_name == "Kyber" || alg_name.starts_with("Kyber-")) {
       return std::make_unique<Kyber_PublicKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_ML_KEM)
+   if(alg_name.starts_with("ML-KEM-")) {
+      return std::make_unique<ML_KEM_PublicKey>(alg_id, key_bits);
    }
 #endif
 
@@ -294,9 +304,15 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
-#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S) || defined(BOTAN_HAS_ML_KEM)
-   if(alg_name.starts_with("ML-KEM-") || alg_name == "Kyber" || alg_name.starts_with("Kyber-")) {
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
+   if(alg_name == "Kyber" || alg_name.starts_with("Kyber-")) {
       return std::make_unique<Kyber_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_ML_KEM)
+   if(alg_name.starts_with("ML-KEM-")) {
+      return std::make_unique<ML_KEM_PrivateKey>(alg_id, key_bits);
    }
 #endif
 
@@ -492,14 +508,14 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 
 #if defined(BOTAN_HAS_ML_KEM)
    if(alg_name == "ML-KEM") {
-      const auto mode = [&]() -> KyberMode {
+      const auto mode = [&]() -> ML_KEM_Mode {
          if(params.empty()) {
-            return KyberMode::ML_KEM_768;
+            return ML_KEM_Mode::ML_KEM_768;
          }
-         return KyberMode(params);
+         return ML_KEM_Mode(params);
       }();
 
-      return std::make_unique<Kyber_PrivateKey>(rng, mode);
+      return std::make_unique<ML_KEM_PrivateKey>(rng, mode);
    }
 #endif
 

@@ -17,3 +17,7 @@ shake_xof
 <header:internal>
 ml_kem_impl.h
 </header:internal>
+
+<header:public>
+ml_kem.h
+</header:public>
