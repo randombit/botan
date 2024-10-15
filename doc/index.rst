@@ -28,7 +28,7 @@ are listed below:
 * :ref:`PBKDFs <pbkdf_example>`
 * :ref:`Key Agreement <ecdh_example>`
 * :ref:`ECDSA <ecdsa_example>`
-* :ref:`Kyber <kyber_example>`
+* :ref:`ML-KEM <mlkem_example>`
 * :ref:`RSA <rsa_example>`
 * :ref:`XMSS <xmss_example>`
 * :ref:`Stream Ciphers <stream_ciphers_example>`

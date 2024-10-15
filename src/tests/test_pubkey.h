@@ -186,6 +186,11 @@ class PK_Key_Generation_Test : public Test {
 
       virtual std::vector<std::string> keygen_params() const = 0;
 
+      virtual std::string algo_name(std::string_view param) const {
+         BOTAN_UNUSED(param);
+         return algo_name();
+      }
+
       virtual std::string algo_name() const = 0;
 
       /**

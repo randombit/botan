@@ -13,5 +13,5 @@ kyber_common
 </requires>
 
 <header:internal>
-kyber_encaps.h
+kyber_round3_impl.h
 </header:internal>

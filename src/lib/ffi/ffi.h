@@ -1528,9 +1528,11 @@ BOTAN_FFI_EXPORT(3, 1) int botan_privkey_load_kyber(botan_privkey_t* key, const 
 
 BOTAN_FFI_EXPORT(3, 1) int botan_pubkey_load_kyber(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len);
 
+BOTAN_FFI_DEPRECATED("Use generic botan_privkey_view_raw")
 BOTAN_FFI_EXPORT(3, 1)
 int botan_privkey_view_kyber_raw_key(botan_privkey_t key, botan_view_ctx ctx, botan_view_bin_fn view);
 
+BOTAN_FFI_DEPRECATED("Use generic botan_pubkey_view_raw")
 BOTAN_FFI_EXPORT(3, 1)
 int botan_pubkey_view_kyber_raw_key(botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view);
 
@@ -1543,6 +1545,16 @@ int botan_privkey_load_frodokem(botan_privkey_t* key, const uint8_t privkey[], s
 
 BOTAN_FFI_EXPORT(3, 6)
 int botan_pubkey_load_frodokem(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len, const char* frodo_mode);
+
+/*
+* Algorithm specific key operations: ML-KEM
+*/
+
+BOTAN_FFI_EXPORT(3, 6)
+int botan_privkey_load_ml_kem(botan_privkey_t* key, const uint8_t privkey[], size_t key_len, const char* mlkem_mode);
+
+BOTAN_FFI_EXPORT(3, 6)
+int botan_pubkey_load_ml_kem(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len, const char* mlkem_mode);
 
 /*
 * Algorithm specific key operations: ECDSA and ECDH

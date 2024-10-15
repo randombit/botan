@@ -363,6 +363,8 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_pubkey_load_kyber, [c_void_p, c_char_p, c_int])
     ffi_api(dll.botan_privkey_view_kyber_raw_key, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_pubkey_view_kyber_raw_key, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
+    ffi_api(dll.botan_privkey_load_ml_kem, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_pubkey_load_ml_kem, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_privkey_load_frodokem, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_pubkey_load_frodokem, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_privkey_load_ecdsa, [c_void_p, c_void_p, c_char_p])
@@ -1235,6 +1237,12 @@ class PublicKey: # pylint: disable=invalid-name
         return PublicKey(obj)
 
     @classmethod
+    def load_ml_kem(cls, mlkem_mode, key):
+        obj = c_void_p(0)
+        _DLL.botan_pubkey_load_ml_kem(byref(obj), key, len(key), _ctype_str(mlkem_mode))
+        return PublicKey(obj)
+
+    @classmethod
     def load_frodokem(cls, frodo_mode, key):
         obj = c_void_p(0)
         _DLL.botan_pubkey_load_frodokem(byref(obj), key, len(key), _ctype_str(frodo_mode))
@@ -1275,6 +1283,7 @@ class PublicKey: # pylint: disable=invalid-name
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_pubkey_view_raw(self.__obj, vc, vfn))
 
     def view_kyber_raw_key(self):
+        """Deprecated: use to_raw() instead"""
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_pubkey_view_kyber_raw_key(self.__obj, vc, vfn))
 
     def fingerprint(self, hash_algorithm='SHA-256'):
@@ -1399,6 +1408,12 @@ class PrivateKey:
         return PrivateKey(obj)
 
     @classmethod
+    def load_ml_kem(cls, mlkem_mode, key):
+        obj = c_void_p(0)
+        _DLL.botan_privkey_load_ml_kem(byref(obj), key, len(key), _ctype_str(mlkem_mode))
+        return PrivateKey(obj)
+
+    @classmethod
     def load_frodokem(cls, frodo_mode, key):
         obj = c_void_p(0)
         _DLL.botan_privkey_load_frodokem(byref(obj), key, len(key), _ctype_str(frodo_mode))
@@ -1433,6 +1448,7 @@ class PrivateKey:
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_privkey_view_raw(self.__obj, vc, vfn))
 
     def view_kyber_raw_key(self):
+        """Deprecated: use to_raw() instead"""
         return _call_fn_viewing_vec(lambda vc, vfn: _DLL.botan_privkey_view_kyber_raw_key(self.__obj, vc, vfn))
 
     def export(self, pem=False):

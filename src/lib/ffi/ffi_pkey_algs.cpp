@@ -71,8 +71,9 @@
    #include <botan/dh.h>
 #endif
 
-#if defined(BOTAN_HAS_KYBER)
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_ML_KEM)
    #include <botan/kyber.h>
+   #include <botan/internal/kyber_constants.h>
 #endif
 
 #if defined(BOTAN_HAS_FRODOKEM)
@@ -961,7 +962,7 @@ int botan_privkey_load_kyber(botan_privkey_t* key, const uint8_t privkey[], size
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
    }
 #else
-   BOTAN_UNUSED(key, privkey);
+   BOTAN_UNUSED(key, key_len, privkey);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
@@ -1027,6 +1028,66 @@ int botan_pubkey_view_kyber_raw_key(botan_pubkey_t key, botan_view_ctx ctx, bota
    });
 #else
    BOTAN_UNUSED(key, ctx, view);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+/*
+* Algorithm specific key operations: ML-KEM
+*/
+
+int botan_privkey_load_ml_kem(botan_privkey_t* key, const uint8_t privkey[], size_t key_len, const char* mlkem_mode) {
+#if defined(BOTAN_HAS_ML_KEM)
+   if(key == nullptr || privkey == nullptr || mlkem_mode == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   *key = nullptr;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto mode = Botan::KyberConstants(Botan::KyberMode(mlkem_mode));
+      if(!mode.mode().is_ml_kem()) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+
+      if(key_len != mode.private_key_bytes()) {
+         return BOTAN_FFI_ERROR_INVALID_KEY_LENGTH;
+      }
+
+      auto mlkem_key = std::make_unique<Botan::Kyber_PrivateKey>(std::span{privkey, key_len}, mode.mode());
+      *key = new botan_privkey_struct(std::move(mlkem_key));
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(key, key_len, privkey, mlkem_mode);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_pubkey_load_ml_kem(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len, const char* mlkem_mode) {
+#if defined(BOTAN_HAS_ML_KEM)
+   if(key == nullptr || pubkey == nullptr || mlkem_mode == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   *key = nullptr;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      auto mode = Botan::KyberConstants(Botan::KyberMode(mlkem_mode));
+      if(!mode.mode().is_ml_kem()) {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+
+      if(key_len != mode.public_key_bytes()) {
+         return BOTAN_FFI_ERROR_INVALID_KEY_LENGTH;
+      }
+
+      auto mlkem_key = std::make_unique<Botan::Kyber_PublicKey>(std::span{pubkey, key_len}, mode.mode());
+      *key = new botan_pubkey_struct(std::move(mlkem_key));
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(key, key_len, pubkey, mlkem_mode);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }

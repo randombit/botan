@@ -499,9 +499,88 @@ std::vector<Test::Result> test_encoding() {
    };
 }
 
+class MockedXOF {
+   public:
+      MockedXOF() : m_counter(0) {}
+
+      template <size_t bytes>
+      auto output() {
+         std::array<uint8_t, bytes> result;
+         for(uint8_t& byte : result) {
+            byte = static_cast<uint8_t>(m_counter++);
+         }
+         return result;
+      }
+
+   private:
+      size_t m_counter;
+};
+
+template <size_t bound>
+using Mocked_Bounded_XOF = Botan::detail::Bounded_XOF<MockedXOF, bound>;
+
+std::vector<Test::Result> test_bounded_xof() {
+   return {
+      CHECK("zero bound is reached immediately",
+            [](Test::Result& result) {
+               Mocked_Bounded_XOF<0> xof;
+               result.test_throws<Botan::Internal_Error>("output<1> throws", [&xof]() { xof.next_byte(); });
+            }),
+
+      CHECK("bounded XOF with small bound",
+            [](Test::Result& result) {
+               Mocked_Bounded_XOF<3> xof;
+               result.test_is_eq("next_byte() returns 0", xof.next_byte(), uint8_t(0));
+               result.test_is_eq("next_byte() returns 1", xof.next_byte(), uint8_t(1));
+               result.test_is_eq("next_byte() returns 2", xof.next_byte(), uint8_t(2));
+               result.test_throws<Botan::Internal_Error>("next_byte() throws", [&xof]() { xof.next_byte(); });
+            }),
+
+      CHECK("filter bytes",
+            [](Test::Result& result) {
+               auto filter = [](uint8_t byte) {
+                  //test
+                  return byte % 2 == 1;
+               };
+
+               Mocked_Bounded_XOF<5> xof;
+               result.test_is_eq("next_byte() returns 1", xof.next_byte(filter), uint8_t(1));
+               result.test_is_eq("next_byte() returns 3", xof.next_byte(filter), uint8_t(3));
+               result.test_throws<Botan::Internal_Error>("next_byte() throws", [&]() { xof.next_byte(filter); });
+            }),
+
+      CHECK("map bytes",
+            [](Test::Result& result) {
+               auto map = [](auto bytes) { return Botan::load_be(bytes); };
+
+               Mocked_Bounded_XOF<17> xof;
+               result.test_is_eq("next returns 0x00010203", xof.next<4>(map), uint32_t(0x00010203));
+               result.test_is_eq("next returns 0x04050607", xof.next<4>(map), uint32_t(0x04050607));
+               result.test_is_eq("next returns 0x08090A0B", xof.next<4>(map), uint32_t(0x08090A0B));
+               result.test_is_eq("next returns 0x0C0D0E0F", xof.next<4>(map), uint32_t(0x0C0D0E0F));
+               result.test_throws<Botan::Internal_Error>("next() throws", [&]() { xof.next<4>(map); });
+            }),
+
+      CHECK("map and filter bytes",
+            [](Test::Result& result) {
+               auto map = [](std::array<uint8_t, 3> bytes) -> uint32_t { return bytes[0] + bytes[1] + bytes[2]; };
+               auto filter = [](uint32_t number) { return number < 50; };
+
+               Mocked_Bounded_XOF<17> xof;
+               result.test_is_eq("next returns 3", xof.next<3>(map, filter), uint32_t(3));
+               result.test_is_eq("next returns 12", xof.next<3>(map, filter), uint32_t(12));
+               result.test_is_eq("next returns 21", xof.next<3>(map, filter), uint32_t(21));
+               result.test_is_eq("next returns 30", xof.next<3>(map, filter), uint32_t(30));
+               result.test_is_eq("next returns 39", xof.next<3>(map, filter), uint32_t(39));
+               result.test_throws<Botan::Internal_Error>("next() throws", [&]() { xof.next<3>(map, filter); });
+            }),
+   };
+}
+
 }  // namespace
 
-BOTAN_REGISTER_TEST_FN("pubkey", "crystals", test_extended_euclidean_algorithm, test_polynomial_basics, test_encoding);
+BOTAN_REGISTER_TEST_FN(
+   "pubkey", "crystals", test_extended_euclidean_algorithm, test_polynomial_basics, test_encoding, test_bounded_xof);
 
 }  // namespace Botan_Tests
 

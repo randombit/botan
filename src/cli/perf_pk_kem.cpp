@@ -97,11 +97,34 @@ class PerfTest_Kyber final : public PerfTest_PK_KEM {
             "Kyber-768-90s-r3",
             "Kyber-1024-r3",
             "Kyber-1024-90s-r3",
+            "ML-KEM-512",
+            "ML-KEM-768",
+            "ML-KEM-1024",
          };
       }
 };
 
 BOTAN_REGISTER_PERF_TEST("Kyber", PerfTest_Kyber);
+
+#endif
+
+#if defined(BOTAN_HAS_ML_KEM)
+
+class PerfTest_ML_KEM final : public PerfTest_PK_KEM {
+   public:
+      std::string algo() const override { return "ML-KEM"; }
+
+      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
+         BOTAN_UNUSED(config);
+         return {
+            "ML-KEM-512",
+            "ML-KEM-768",
+            "ML-KEM-1024",
+         };
+      }
+};
+
+BOTAN_REGISTER_PERF_TEST("ML-KEM", PerfTest_ML_KEM);
 
 #endif
 

@@ -19,19 +19,17 @@
 
 namespace Botan {
 
+class Kyber_Keypair_Codec {
+   public:
+      virtual ~Kyber_Keypair_Codec() = default;
+      virtual secure_vector<uint8_t> encode_keypair(KyberInternalKeypair keypair) const = 0;
+      virtual KyberInternalKeypair decode_keypair(std::span<const uint8_t> private_key, KyberConstants mode) const = 0;
+};
+
 class Kyber_PublicKeyInternal {
    public:
+      Kyber_PublicKeyInternal(KyberConstants mode, KyberSerializedPublicKey public_key);
       Kyber_PublicKeyInternal(KyberConstants mode, KyberPolyVecNTT polynomials, KyberSeedRho seed);
-
-      Kyber_PublicKeyInternal(const KyberConstants& mode, std::span<const uint8_t> polynomials, KyberSeedRho seed) :
-            Kyber_PublicKeyInternal(mode, Kyber_Algos::decode_polynomial_vector(polynomials, mode), std::move(seed)) {}
-
-      Kyber_PublicKeyInternal(const Kyber_PublicKeyInternal& other) :
-            m_mode(other.m_mode),
-            m_t(other.m_t.clone()),
-            m_rho(other.m_rho),
-            m_public_key_bits_raw(other.m_public_key_bits_raw),
-            m_H_public_key_bits_raw(other.m_H_public_key_bits_raw) {}
 
       void indcpa_encrypt(StrongSpan<KyberCompressedCiphertext> out_ct,
                           StrongSpan<const KyberMessage> m,
@@ -60,16 +58,16 @@ class Kyber_PublicKeyInternal {
 
    private:
       const KyberConstants m_mode;
-      KyberPolyVecNTT m_t;
-      const KyberSeedRho m_rho;
       const KyberSerializedPublicKey m_public_key_bits_raw;
       const KyberHashedPublicKey m_H_public_key_bits_raw;
+      KyberPolyVecNTT m_t;
+      const KyberSeedRho m_rho;
 };
 
 class Kyber_PrivateKeyInternal {
    public:
-      Kyber_PrivateKeyInternal(KyberConstants mode, KyberPolyVecNTT s, KyberImplicitRejectionValue z) :
-            m_mode(std::move(mode)), m_s(std::move(s)), m_z(std::move(z)) {}
+      Kyber_PrivateKeyInternal(KyberConstants mode, KyberPolyVecNTT s, KyberPrivateKeySeed seed) :
+            m_mode(std::move(mode)), m_s(std::move(s)), m_seed(std::move(seed)) {}
 
       KyberMessage indcpa_decrypt(StrongSpan<const KyberCompressedCiphertext> ct) const;
 
@@ -77,20 +75,22 @@ class Kyber_PrivateKeyInternal {
 
       const KyberPolyVecNTT& s() const { return m_s; }
 
-      const KyberImplicitRejectionValue& z() const { return m_z; }
+      const KyberPrivateKeySeed& seed() const { return m_seed; }
+
+      const KyberImplicitRejectionValue& z() const { return m_seed.z; }
 
       const KyberConstants& mode() const { return m_mode; }
 
       Kyber_PrivateKeyInternal() = delete;
 
-      void _const_time_poison() const { CT::poison_all(m_s, m_z); }
+      void _const_time_poison() const { CT::poison_all(m_s, m_seed.d, m_seed.z); }
 
-      void _const_time_unpoison() const { CT::unpoison_all(m_s, m_z); }
+      void _const_time_unpoison() const { CT::unpoison_all(m_s, m_seed.d, m_seed.z); }
 
    private:
       KyberConstants m_mode;
       KyberPolyVecNTT m_s;
-      KyberImplicitRejectionValue m_z;
+      KyberPrivateKeySeed m_seed;
 };
 
 }  // namespace Botan
