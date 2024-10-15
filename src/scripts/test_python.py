@@ -937,6 +937,20 @@ ofvkP1EDmpx50fHLawIDAQAB
         pubkey_read = a_pub.view_kyber_raw_key()
         self.assertEqual(pubkey_read, a_pub_bits)
 
+    def test_frodokem_raw_keys(self):
+        frodo_mode = "FrodoKEM-640-SHAKE"
+        sk = botan.PrivateKey.create("FrodoKEM", frodo_mode, botan.RandomNumberGenerator("user"))
+        pk = sk.get_public_key()
+
+        sk_bits = sk.to_raw()
+        pk_bits = pk.to_raw()
+
+        sk_read = botan.PrivateKey.load_frodokem(frodo_mode, sk_bits)
+        pk_read = botan.PublicKey.load_frodokem(frodo_mode, pk_bits)
+
+        self.assertEqual(sk_read.to_raw(), sk_bits)
+        self.assertEqual(pk_read.to_raw(), pk_bits)
+
 
 class BotanPythonZfecTests(unittest.TestCase):
     """

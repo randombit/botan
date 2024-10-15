@@ -75,6 +75,10 @@
    #include <botan/kyber.h>
 #endif
 
+#if defined(BOTAN_HAS_FRODOKEM)
+   #include <botan/frodokem.h>
+#endif
+
 namespace {
 
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
@@ -1023,6 +1027,50 @@ int botan_pubkey_view_kyber_raw_key(botan_pubkey_t key, botan_view_ctx ctx, bota
    });
 #else
    BOTAN_UNUSED(key, ctx, view);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+/*
+* Algorithm specific key operations: FrodoKEM
+*/
+
+int botan_privkey_load_frodokem(botan_privkey_t* key, const uint8_t privkey[], size_t key_len, const char* frodo_mode) {
+#if defined(BOTAN_HAS_FRODOKEM)
+   if(key == nullptr || privkey == nullptr || frodo_mode == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   *key = nullptr;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const auto mode = Botan::FrodoKEMMode(frodo_mode);
+      auto frodo_key = std::make_unique<Botan::FrodoKEM_PrivateKey>(std::span{privkey, key_len}, mode);
+      *key = new botan_privkey_struct(std::move(frodo_key));
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(key, privkey, key_len, frodo_mode);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_pubkey_load_frodokem(botan_pubkey_t* key, const uint8_t pubkey[], size_t key_len, const char* frodo_mode) {
+#if defined(BOTAN_HAS_FRODOKEM)
+   if(key == nullptr || pubkey == nullptr || frodo_mode == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   *key = nullptr;
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      const auto mode = Botan::FrodoKEMMode(frodo_mode);
+      auto frodo_key = std::make_unique<Botan::FrodoKEM_PublicKey>(std::span{pubkey, key_len}, mode);
+      *key = new botan_pubkey_struct(std::move(frodo_key));
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(key, pubkey, key_len, frodo_mode);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
