@@ -365,6 +365,8 @@ def _set_prototypes(dll):
     ffi_api(dll.botan_pubkey_view_kyber_raw_key, [c_void_p, c_void_p, VIEW_BIN_CALLBACK])
     ffi_api(dll.botan_privkey_load_frodokem, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_pubkey_load_frodokem, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_privkey_load_classic_mceliece, [c_void_p, c_void_p, c_int, c_char_p])
+    ffi_api(dll.botan_pubkey_load_classic_mceliece, [c_void_p, c_void_p, c_int, c_char_p])
     ffi_api(dll.botan_privkey_load_ecdsa, [c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_pubkey_load_ecdsa, [c_void_p, c_void_p, c_void_p, c_char_p])
     ffi_api(dll.botan_pubkey_load_ecdh, [c_void_p, c_void_p, c_void_p, c_char_p])
@@ -1240,6 +1242,12 @@ class PublicKey: # pylint: disable=invalid-name
         _DLL.botan_pubkey_load_frodokem(byref(obj), key, len(key), _ctype_str(frodo_mode))
         return PublicKey(obj)
 
+    @classmethod
+    def load_classic_mceliece(cls, cmce_mode, key):
+        obj = c_void_p(0)
+        _DLL.botan_pubkey_load_classic_mceliece(byref(obj), key, len(key), _ctype_str(cmce_mode))
+        return PublicKey(obj)
+
     def __del__(self):
         _DLL.botan_pubkey_destroy(self.__obj)
 
@@ -1402,6 +1410,12 @@ class PrivateKey:
     def load_frodokem(cls, frodo_mode, key):
         obj = c_void_p(0)
         _DLL.botan_privkey_load_frodokem(byref(obj), key, len(key), _ctype_str(frodo_mode))
+        return PrivateKey(obj)
+
+    @classmethod
+    def load_classic_mceliece(cls, cmce_mode, key):
+        obj = c_void_p(0)
+        _DLL.botan_privkey_load_classic_mceliece(byref(obj), key, len(key), _ctype_str(cmce_mode))
         return PrivateKey(obj)
 
     def __del__(self):
