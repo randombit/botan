@@ -109,15 +109,15 @@ class SPHINCS_Plus_Test final : public Text_Based_Test {
          result.test_is_eq("private key bits", unlock(priv_key.private_key_bits()), sk_ref);
 
          // Signature with generated Keypair
-         auto signer = Botan::PK_Signer(priv_key, fixed_rng, "Randomized");  // TODO: No KAT for 'deterministic'?
-         auto signature = signer.sign_message(msg_ref.data(), msg_ref.size(), fixed_rng);
+
+         // TODO: No KAT for 'deterministic'?
+         auto signature = priv_key.signer().with_rng(fixed_rng).create().sign_message(msg_ref, fixed_rng);
 
          result.test_is_eq("signature creation", unlock(hash->process(signature)), sig_hash);
 
          // Verification with generated Keypair
-         Botan::PK_Verifier verifier(*priv_key.public_key(), params.algorithm_identifier());
-         bool verify_success =
-            verifier.verify_message(msg_ref.data(), msg_ref.size(), signature.data(), signature.size());
+         const bool verify_success =
+            priv_key.public_key()->signature_verifier().create().verify_message(msg_ref, signature);
          result.confirm("verification of valid signature", verify_success);
 
          // Run additional parsing and re-verification tests on one parameter
