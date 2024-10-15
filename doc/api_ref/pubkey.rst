@@ -172,19 +172,34 @@ signatures, then the whole scheme becomes insecure, and signatures can be
 forged.
 
 HSS-LMS
--------
+~~~~~~~
 
 A post-quantum secure hash-based signature scheme similar to XMSS. Contains
 support for multitrees. It is stateful, meaning the private key changes after
 each signature.
 
-SPHINCS+
-~~~~~~~~~
+SLH-DSA (FIPS 205)
+~~~~~~~~~~~~~~~~~~
 
-A post-quantum secure signature scheme whose security is based (only) on the
-security of a hash function. Unlike XMSS, it is a stateless signature
-scheme, meaning that the private key does not change with each signature. It
-has high security but very long signatures and high runtime.
+The Stateless Hash-Based Digital Signature Standard (SLH-DSA)
+is the FIPS 205 post-quantum secure signature scheme whose security is solely
+based on the security of a hash function. Unlike XMSS, it is a stateless
+signature scheme, meaning that the private key does not change with each
+signature. It has high security but very long signatures and high runtime.
+
+Support for SLH-DSA is implemented in the modules ``slh_dsa_sha2`` and ``slh_dsa_shake``.
+
+Additionally, support for the pre-standardized version "SPHINCS+" is retained
+for the time being. The implemented specification is commonly referred to as
+version 3.1 of the SPHINCS+ submission to NIST's third round of the
+PQC competition. This is not compatible with the "Initial Public Draft" version of
+FIPS 205 for which Botan does not offer an implementation. Also, Botan does not
+support the Haraka hash function.
+
+Currently, two flavors of SPHINCS+ are implemented in separate Botan modules:
+
+ * ``sphincsplus_shake``, that uses Keccak (SHAKE) hash functions
+ * ``sphincsplus_sha2``, that uses SHA-256
 
 FrodoKEM
 ~~~~~~~~
@@ -836,7 +851,7 @@ Botan implements the following signature algorithms:
 
 #. ML-DSA (Dilithium).
    Takes the optional parameter ``Deterministic`` (default) or ``Randomized``.
-#. SPHINCS+.
+#. SLH-DSA.
    Takes the optional parameter ``Deterministic`` (default) or ``Randomized``.
 #. XMSS. Takes no parameter.
 #. HSS-LMS. Takes no parameter.

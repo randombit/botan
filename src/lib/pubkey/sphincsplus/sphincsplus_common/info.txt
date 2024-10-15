@@ -3,8 +3,8 @@ SPHINCS_PLUS_COMMON -> 20230426
 </defines>
 
 <module_info>
-name -> "SPHINCS+ (common)"
-brief -> "Base implementation of SPHINCS+"
+name -> "SLH-DSA (common)"
+brief -> "Base implementation of Stateless Hash Function DSA"
 type -> "Internal"
 </module_info>
 

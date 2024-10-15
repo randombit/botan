@@ -1,5 +1,5 @@
 /*
- * SPHINCS+ Hash Implementation for SHA-256
+ * SLH-DSA Hash Implementation for SHA-256
  * (C) 2023 Jack Lloyd
  *     2023 Fabian Albert, René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity
  *
@@ -21,7 +21,7 @@
 namespace Botan {
 
 /**
- * Implementation of SPHINCS+ hash function abstraction for SHA2
+ * Implementation of SLH-DSA hash function abstraction for SHA2
  */
 class Sphincs_Hash_Functions_Sha2 : public Sphincs_Hash_Functions {
    private:
@@ -44,11 +44,12 @@ class Sphincs_Hash_Functions_Sha2 : public Sphincs_Hash_Functions {
 
       std::vector<uint8_t> H_msg_digest(StrongSpan<const SphincsMessageRandomness> r,
                                         const SphincsTreeNode& root,
-                                        std::span<const uint8_t> message) override {
+                                        const SphincsMessageInternal& message) override {
          m_sha_x_full->update(r);
          m_sha_x_full->update(m_pub_seed);
          m_sha_x_full->update(root);
-         m_sha_x_full->update(message);
+         m_sha_x_full->update(message.prefix);
+         m_sha_x_full->update(message.message);
 
          auto r_pk_buffer = m_sha_x_full->final();
          std::vector<uint8_t> mgf1_input = concat<std::vector<uint8_t>>(r, m_pub_seed, r_pk_buffer);
@@ -88,13 +89,14 @@ class Sphincs_Hash_Functions_Sha2 : public Sphincs_Hash_Functions {
       }
 
       void PRF_msg(StrongSpan<SphincsMessageRandomness> out,
-                   const SphincsSecretPRF& sk_prf,
-                   const SphincsOptionalRandomness& opt_rand,
-                   std::span<const uint8_t> in) override {
+                   StrongSpan<const SphincsSecretPRF> sk_prf,
+                   StrongSpan<const SphincsOptionalRandomness> opt_rand,
+                   const SphincsMessageInternal& msg) override {
          HMAC hmac_sha_x(m_sha_x_full->new_object());
          hmac_sha_x.set_key(sk_prf);
          hmac_sha_x.update(opt_rand);
-         hmac_sha_x.update(in);
+         hmac_sha_x.update(msg.prefix);
+         hmac_sha_x.update(msg.message);
 
          const auto prf = hmac_sha_x.final();
          std::copy(prf.begin(), prf.begin() + out.size(), out.begin());

@@ -1,5 +1,5 @@
 /*
- * SPHINCS+ Strong Type Definitions
+ * SLH-DSA Strong Type Definitions
  * (C) 2023 Jack Lloyd
  *     2023 Fabian Albert, René Meusel, Amos Treiber - Rohde & Schwarz Cybersecurity
  *
@@ -16,18 +16,18 @@ namespace Botan {
 
 /*
  * The following gives an overview about the different building blocks of
- * Sphincs+ and how they are connected. In general, we always consider sequences of bytes
+ * SLH-DSA and how they are connected. In general, we always consider sequences of bytes
  * that are interpreted in the following manner (flattening the || operation, i.e.,
  * mapping the byte sequence of a strong type onto the underlying byte sequence of the containing strong type).
  * Only FORS indices are not seen as byte sequences.
  *
- * Sphincs+ secret key is built up like the following:
- * [SphincsSecretSeed || SphincsSecretPRF || SphincsPublicSeed || SphincsTreeNode] (the last chunk is the root node of Sphincs+' topmost XMSS tree)
+ * SLH-DSA secret key is built up like the following:
+ * [SphincsSecretSeed || SphincsSecretPRF || SphincsPublicSeed || SphincsTreeNode] (the last chunk is the root node of SLH-DSA' topmost XMSS tree)
  *
- * Sphincs+ public key is built up like the following:
- * [SphincsPublicSeed || SphincsTreeNode] (the last chunk is the root node of Sphincs+' topmost XMSS tree)]
+ * SLH-DSA public key is built up like the following:
+ * [SphincsPublicSeed || SphincsTreeNode] (the last chunk is the root node of SLH-DSA's topmost XMSS tree)]
  *
- * Sphincs+ signature is built up like the following:
+ * SLH-DSA signature is built up like the following:
  * [SphincsMessageRandomness (n bytes) || ForsSignature (k(a+1)*n = fors_signature_bytes bytes) || SphincsHypertreeSignature]. SphincsHypertreeSignature contains a total of
  * d SphincsXMSSSignatures, with (h+d*len)*n = xmss_signature_bytes bytes each.
  *
@@ -41,6 +41,20 @@ namespace Botan {
  * WotsSignature is built up like the following:
  * [WotsNode || ... || WotsNode] contains len WotsNodes, each of length n bytes.
  */
+
+/// The prefix appended to the message in [hash_]slh_sign and slh_verify.
+/// E.g. for SLH-DSA (pure): 0x00 || |ctx| || ctx. Empty for SPHINCS+.
+using SphincsMessagePrefix = Strong<std::vector<uint8_t>, struct SphincsMessagePrefix_>;
+// The input to [hash_]slh_sign and [hash_]slh_verify
+using SphincsInputMessage = Strong<std::vector<uint8_t>, struct SphincsInputMessage_>;
+
+/// M' representation of FIPS 205 (the input to slh_sign_internal and slh_verify_internal)
+struct SphincsMessageInternal {
+      SphincsMessagePrefix prefix;
+      SphincsInputMessage message;
+};
+
+using SphincsContext = Strong<std::vector<uint8_t>, struct SphincsContext_>;
 
 using SphincsHashedMessage = Strong<std::vector<uint8_t>, struct SphincsHashedMessage_>;
 using SphincsPublicSeed = Strong<std::vector<uint8_t>, struct SphincsPublicSeed_>;

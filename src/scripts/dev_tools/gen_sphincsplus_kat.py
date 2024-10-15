@@ -83,7 +83,7 @@ def main(args = None):
 
     reader = KatReader(open(katfile, encoding="utf-8"))
 
-    hash_fn = sha256 if "sha2" in param else sha3_256
+    hash_fn = sha256 if "sha2" in param.lower() else sha3_256
 
     l = 0
     for kat in reader.read_kats():

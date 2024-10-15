@@ -1,9 +1,9 @@
 <defines>
-SPHINCS_PLUS_WITH_SHAKE -> 20230531
+SLH_DSA_WITH_SHAKE -> 20240808
 </defines>
 
 <module_info>
-name -> "SPHINCS+ (SHAKE-256)"
+name -> "SLH-DSA (SHAKE)"
 </module_info>
 
 <requires>

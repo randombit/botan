@@ -1,0 +1,17 @@
+<defines>
+SPHINCS_PLUS_SHAKE_BASE -> 20240809
+</defines>
+
+<module_info>
+name -> "SLH-DSA/SPHINCS+ (SHAKE) Base"
+brief -> "Base module for SLH-DSA and SPHINCS+ with SHAKE"
+type -> "Internal"
+</module_info>
+
+<requires>
+shake
+</requires>
+
+<header:internal>
+sp_hash_shake.h
+</header:internal>

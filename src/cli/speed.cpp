@@ -285,6 +285,7 @@ class Speed final : public Command {
             "X448",
             "Kyber",
             "ML-KEM",
+            "SLH-DSA",
             "SPHINCS+",
             "FrodoKEM",
             "HSS-LMS",

@@ -347,6 +347,41 @@ BOTAN_REGISTER_PERF_TEST("SPHINCS+", PerfTest_SPHINCSp);
 
 #endif
 
+#if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
+
+class PerfTest_SLH_DSA final : public PerfTest_PKSig {
+   public:
+      std::string algo() const override { return "SLH-DSA"; }
+
+      std::string hash() const override { return ""; }
+
+      std::string format_name(const std::string& alg, const std::string& param) const override {
+         BOTAN_UNUSED(alg);
+         return param;  // Param already has algo in the string
+      }
+
+      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
+         BOTAN_UNUSED(config);
+
+         return {"SLH-DSA-SHA2-128s",
+                 "SLH-DSA-SHA2-128f",
+                 "SLH-DSA-SHA2-192s",
+                 "SLH-DSA-SHA2-192f",
+                 "SLH-DSA-SHA2-256s",
+                 "SLH-DSA-SHA2-256f",
+                 "SLH-DSA-SHAKE-128s",
+                 "SLH-DSA-SHAKE-128f",
+                 "SLH-DSA-SHAKE-192s",
+                 "SLH-DSA-SHAKE-192f",
+                 "SLH-DSA-SHAKE-256s",
+                 "SLH-DSA-SHAKE-256f"};
+      }
+};
+
+BOTAN_REGISTER_PERF_TEST("SLH-DSA", PerfTest_SLH_DSA);
+
+#endif
+
 #if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
 
 class PerfTest_Dilithium final : public PerfTest_PKSig {
