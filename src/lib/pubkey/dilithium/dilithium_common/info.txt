@@ -15,6 +15,7 @@ dilithium.h
 <header:internal>
 dilithium_algos.h
 dilithium_constants.h
+dilithium_keys.h
 dilithium_polynomial.h
 dilithium_symmetric_primitives.h
 dilithium_types.h

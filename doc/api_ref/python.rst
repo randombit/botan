@@ -304,6 +304,11 @@ Public Key
      Load an ML-KEM public key giving the mode as a string (like
      "ML-KEM-512") and the raw encoding of the public key.
 
+  .. py:classmethod:: load_ml_dsa(mode, raw_encoding)
+
+     Load an ML-DSA public key giving the mode as a string (like
+     "ML-DSA-4x4") and the raw encoding of the public key.
+
   .. py:method:: check_key(rng_obj, strong=True):
 
      Test the key for consistency. If ``strong`` is ``True`` then
@@ -398,6 +403,10 @@ Private Key
   .. py:classmethod:: load_ml_kem(mode, raw_encoding)
 
      Return a private ML-KEM key
+
+  .. py:classmethod:: load_ml_dsa(mode, raw_encoding)
+
+      Return a private ML-DSA key
 
   .. py:method:: get_public_key()
 

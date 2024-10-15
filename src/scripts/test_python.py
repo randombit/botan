@@ -951,6 +951,20 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertEqual(sk_read.to_raw(), sk_bits)
         self.assertEqual(pk_read.to_raw(), pk_bits)
 
+    def test_ml_dsa_raw_keys(self):
+        mldsa_mode = "ML-DSA-4x4"
+        sk = botan.PrivateKey.create("ML-DSA", mldsa_mode, botan.RandomNumberGenerator("user"))
+        pk = sk.get_public_key()
+
+        sk_bits = sk.to_raw()
+        pk_bits = pk.to_raw()
+
+        sk_read = botan.PrivateKey.load_ml_dsa(mldsa_mode, sk_bits)
+        pk_read = botan.PublicKey.load_ml_dsa(mldsa_mode, pk_bits)
+
+        self.assertEqual(sk_read.to_raw(), sk_bits)
+        self.assertEqual(pk_read.to_raw(), pk_bits)
+
     def test_frodokem_raw_keys(self):
         frodo_mode = "FrodoKEM-640-SHAKE"
         sk = botan.PrivateKey.create("FrodoKEM", frodo_mode, botan.RandomNumberGenerator("user"))
@@ -964,7 +978,6 @@ ofvkP1EDmpx50fHLawIDAQAB
 
         self.assertEqual(sk_read.to_raw(), sk_bits)
         self.assertEqual(pk_read.to_raw(), pk_bits)
-
 
 class BotanPythonZfecTests(unittest.TestCase):
     """

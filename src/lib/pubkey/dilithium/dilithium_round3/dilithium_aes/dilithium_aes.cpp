@@ -1,32 +1,34 @@
 /*
-* Asymmetric primitives for dilithium AES
+* Symmetric primitives for dilithium AES
 * (C) 2022 Jack Lloyd
 * (C) 2022 Manuel Glaser, Michael Boric, René Meusel - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_DILITHIUM_AES_SYM_PRIMITIVES_H_
-#define BOTAN_DILITHIUM_AES_SYM_PRIMITIVES_H_
-
-#include <botan/internal/dilithium_symmetric_primitives.h>
+#include <botan/internal/dilithium_aes.h>
 
 #include <botan/internal/aes_crystals_xof.h>
 #include <botan/internal/loadstor.h>
 
 #include <array>
-#include <memory>
-#include <vector>
 
 namespace Botan {
 
-class Dilithium_AES_Symmetric_Primitives : public Dilithium_Symmetric_Primitives {
+namespace {
+
+class AES_XOF final : public DilithiumXOF {
    public:
-      Dilithium_AES_Symmetric_Primitives(size_t collision_strength_in_bytes) :
-            Dilithium_Symmetric_Primitives(collision_strength_in_bytes) {}
+      Botan::XOF& XOF128(std::span<const uint8_t> seed, uint16_t nonce) const override {
+         return XOF(m_aes_xof, seed, nonce);
+      }
+
+      Botan::XOF& XOF256(std::span<const uint8_t> seed, uint16_t nonce) const override {
+         return XOF(m_aes_xof, seed, nonce);
+      }
 
       // AES mode always uses AES-256, regardless of the XofType
-      Botan::XOF& XOF(XofType /* type */, std::span<const uint8_t> seed, uint16_t nonce) const final {
+      static Botan::XOF& XOF(Botan::XOF& xof, std::span<const uint8_t> seed, uint16_t nonce) {
          // Algorithm Spec V. 3.1 Section 5.3
          //    In the AES variant, the first 32 bytes of rhoprime are used as
          //    the key and i is extended to a 12 byte nonce for AES-256 in
@@ -39,15 +41,18 @@ class Dilithium_AES_Symmetric_Primitives : public Dilithium_Symmetric_Primitives
          const std::array<uint8_t, 12> iv{get_byte<1>(nonce), get_byte<0>(nonce), 0};
          const auto key = seed.first(32);
 
-         m_aes_xof.clear();
-         m_aes_xof.start(iv, key);
-         return m_aes_xof;
+         xof.clear();
+         xof.start(iv, key);
+         return xof;
       }
 
    private:
       mutable AES_256_CTR_XOF m_aes_xof;
 };
 
-}  // namespace Botan
+}  // namespace
 
-#endif
+Dilithium_AES_Symmetric_Primitives::Dilithium_AES_Symmetric_Primitives(const DilithiumConstants& mode) :
+      Dilithium_Round3_Symmetric_Primitives(mode, std::make_unique<AES_XOF>()) {}
+
+}  // namespace Botan

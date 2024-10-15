@@ -21,7 +21,7 @@ removed in a future major release.
   .. cpp:function:: std::string algo_name()
 
      Return a short string identifying the algorithm of this key,
-     eg "RSA" or "Dilithium".
+     eg "RSA" or "ML-DSA".
 
   .. cpp:function:: size_t estimated_strength() const
 
@@ -110,10 +110,28 @@ ECDH, DH, X25519 and X448
 Key agreement schemes. DH uses arithmetic over finite fields and is slower and
 with larger keys. ECDH, X25519 and X448 use elliptic curves instead.
 
-Dilithium
-~~~~~~~~~~
+ML-DSA (FIPS 204)
+~~~~~~~~~~~~~~~~~
 
-Post-quantum secure signature scheme based on lattice problems.
+Post-quantum secure signature scheme based on (structured) lattices.
+This algorithm is standardized in FIPS 204. Signing keys are always stored and
+expanded from the 32-byte private random seed (`xi`), loading the expanded key
+format specified in FIPS 204 is explicitly not supported.
+
+Support for ML-DSA is implemented in the module ``ml_dsa``
+
+Additionally, support for the pre-standardized version "Dilithium" is retained
+for the time being. The implemented specification is commonly referred to as
+version 3.1 of the CRYSTALS-Dilithium submission to NIST's third round of the
+PQC competition. This is not compatible to the "Initial Public Draft" version of
+FIPS 204 for which Botan does not offer an implementation.
+
+Currently two flavors of Dilithium are implemented in separate Botan modules:
+
+ * ``dilithium``, that uses Keccak (SHAKE), and that saw some public usage
+   by early adopters.
+ * ``dilithium_aes``, that uses AES instead of Keccak-based primitives.
+   This mode is deprecated and will be removed in a future release.
 
 ML-KEM (FIPS 203)
 ~~~~~~~~~~~~~~~~~
@@ -816,7 +834,7 @@ Botan implements the following signature algorithms:
    - ``<user ID>`` (uses ``SM3``)
    - ``<user ID>,<HashFunction>``
 
-#. Dilithium.
+#. ML-DSA (Dilithium).
    Takes the optional parameter ``Deterministic`` (default) or ``Randomized``.
 #. SPHINCS+.
    Takes the optional parameter ``Deterministic`` (default) or ``Randomized``.
