@@ -283,10 +283,9 @@ class Speed final : public Command {
             "Ed448",
             "X25519",
             "X448",
-            "Kyber",
             "ML-KEM",
+            "ML-DSA",
             "SLH-DSA",
-            "SPHINCS+",
             "FrodoKEM",
             "HSS-LMS",
          };
@@ -302,9 +301,10 @@ class Speed final : public Command {
          std::vector<std::string> ecc_groups = Command::split_on(get_arg("ecc-groups"), ',');
          const std::string format = get_arg("format");
          const std::string clock_ratio = get_arg("cpu-clock-ratio");
-         m_clock_speed = get_arg_sz("cpu-clock-speed");
 
-         m_clock_cycle_ratio = std::strtod(clock_ratio.c_str(), nullptr);
+         const size_t clock_speed = get_arg_sz("cpu-clock-speed");
+
+         double clock_cycle_ratio = std::strtod(clock_ratio.c_str(), nullptr);
 
          /*
          * This argument is intended to be the ratio between the cycle counter
@@ -312,16 +312,16 @@ class Speed final : public Command {
          * any machine where the cycle counter increments faster than the actual
          * clock.
          */
-         if(m_clock_cycle_ratio < 0.0 || m_clock_cycle_ratio > 1.0) {
+         if(clock_cycle_ratio < 0.0 || clock_cycle_ratio > 1.0) {
             throw CLI_Usage_Error("Unlikely CPU clock ratio of " + clock_ratio);
          }
 
-         m_clock_cycle_ratio = 1.0 / m_clock_cycle_ratio;
+         clock_cycle_ratio = 1.0 / clock_cycle_ratio;
 
-         if(m_clock_speed != 0 && Botan::OS::get_cpu_cycle_counter() != 0) {
+         if(clock_speed != 0 && Botan::OS::get_cpu_cycle_counter() != 0) {
             error_output() << "The --cpu-clock-speed option is only intended to be used on "
                               "platforms without access to a cycle counter.\n"
-                              "Expected incorrect results\n\n";
+                              "Expect incorrect results\n\n";
          }
 
          if(format == "table") {
@@ -366,46 +366,16 @@ class Speed final : public Command {
             algos = default_benchmark_list();
          }
 
-         class PerfConfig_Cli final : public PerfConfig {
-            public:
-               PerfConfig_Cli(std::chrono::milliseconds runtime,
-                              const std::vector<std::string>& ecc_groups,
-                              const std::vector<size_t>& buffer_sizes,
-                              Speed* speed) :
-                     m_runtime(runtime), m_ecc_groups(ecc_groups), m_buffer_sizes(buffer_sizes), m_speed(speed) {}
-
-               const std::vector<size_t>& buffer_sizes() const override { return m_buffer_sizes; }
-
-               const std::vector<std::string>& ecc_groups() const override { return m_ecc_groups; }
-
-               std::chrono::milliseconds runtime() const override { return m_runtime; }
-
-               std::ostream& error_output() const override { return m_speed->error_output(); }
-
-               Botan::RandomNumberGenerator& rng() const override { return m_speed->rng(); }
-
-               void record_result(const Botan::Timer& timer) const override { m_speed->record_result(timer); }
-
-               std::unique_ptr<Botan::Timer> make_timer(const std::string& alg,
-                                                        uint64_t event_mult,
-                                                        const std::string& what,
-                                                        const std::string& provider,
-                                                        size_t buf_size) const override {
-                  return m_speed->make_timer(alg, event_mult, what, provider, buf_size);
-               }
-
-            private:
-               std::chrono::milliseconds m_runtime;
-               std::vector<std::string> m_ecc_groups;
-               std::vector<size_t> m_buffer_sizes;
-               Speed* m_speed;
-         };
-
-         PerfConfig_Cli perf_config(msec, ecc_groups, buf_sizes, this);
+         PerfConfig perf_config([&](const Botan::Timer& t) { this->record_result(t); },
+                                clock_speed,
+                                clock_cycle_ratio,
+                                msec,
+                                ecc_groups,
+                                buf_sizes,
+                                this->error_output(),
+                                this->rng());
 
          for(const auto& algo : algos) {
-            using namespace std::placeholders;
-
             if(auto perf = PerfTest::get(algo)) {
                perf->go(perf_config);
             } else if(verbose() || !using_defaults) {
@@ -420,7 +390,7 @@ class Speed final : public Command {
             output() << m_summary->print() << "\n";
          }
 
-         if(verbose() && m_clock_speed == 0 && m_cycles_consumed > 0 && m_ns_taken > 0) {
+         if(verbose() && clock_speed == 0 && m_cycles_consumed > 0 && m_ns_taken > 0) {
             const double seconds = static_cast<double>(m_ns_taken) / 1000000000;
             const double Hz = static_cast<double>(m_cycles_consumed) / seconds;
             const double MHz = Hz / 1000000;
@@ -429,8 +399,6 @@ class Speed final : public Command {
       }
 
    private:
-      size_t m_clock_speed = 0;
-      double m_clock_cycle_ratio = 0.0;
       uint64_t m_cycles_consumed = 0;
       uint64_t m_ns_taken = 0;
       std::unique_ptr<Summary> m_summary;
@@ -447,16 +415,6 @@ class Speed final : public Command {
                m_summary->add(t);
             }
          }
-      }
-
-      void record_result(const std::unique_ptr<Timer>& t) { record_result(*t); }
-
-      std::unique_ptr<Timer> make_timer(const std::string& name,
-                                        uint64_t event_mult = 1,
-                                        const std::string& what = "",
-                                        const std::string& provider = "",
-                                        size_t buf_size = 0) {
-         return std::make_unique<Timer>(name, provider, what, event_mult, buf_size, m_clock_cycle_ratio, m_clock_speed);
       }
 };
 

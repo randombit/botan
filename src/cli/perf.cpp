@@ -38,4 +38,14 @@ std::unique_ptr<PerfTest> PerfTest::get(const std::string& name) {
    return PerfTest::get_sym(name);
 }
 
+std::string PerfTest::format_name(const std::string& alg, const std::string& param) const {
+   if(param.empty()) {
+      return alg;
+   }
+   if(param.starts_with(alg)) {
+      return param;
+   }
+   return Botan::fmt("{}-{}", alg, param);
+}
+
 }  // namespace Botan_CLI

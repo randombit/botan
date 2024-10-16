@@ -26,10 +26,6 @@ class PerfTest_PKSig : public PerfTest {
          return {""};
       }
 
-      virtual std::string format_name(const std::string& alg, const std::string& param) const {
-         return param.empty() ? alg : Botan::fmt("{}-{}", alg, param);
-      }
-
       void go(const PerfConfig& config) override {
          const std::string alg = this->algo();
          const std::string padding = this->hash();
@@ -258,11 +254,6 @@ class PerfTest_XMSS final : public PerfTest_PKSig {
 
       std::string hash() const override { return ""; }
 
-      std::string format_name(const std::string& alg, const std::string& param) const override {
-         BOTAN_UNUSED(alg);
-         return param;  // Param already has XMSS in the name...
-      }
-
       std::vector<std::string> keygen_params(const PerfConfig& config) const override {
          BOTAN_UNUSED(config);
 
@@ -321,8 +312,7 @@ class PerfTest_SPHINCSp final : public PerfTest_PKSig {
       std::string hash() const override { return ""; }
 
       std::string format_name(const std::string& alg, const std::string& param) const override {
-         BOTAN_UNUSED(alg);
-         return param;  // Param already has algo in the string
+         return alg + param.substr(11);
       }
 
       std::vector<std::string> keygen_params(const PerfConfig& config) const override {
@@ -355,11 +345,6 @@ class PerfTest_SLH_DSA final : public PerfTest_PKSig {
 
       std::string hash() const override { return ""; }
 
-      std::string format_name(const std::string& alg, const std::string& param) const override {
-         BOTAN_UNUSED(alg);
-         return param;  // Param already has algo in the string
-      }
-
       std::vector<std::string> keygen_params(const PerfConfig& config) const override {
          BOTAN_UNUSED(config);
 
@@ -390,11 +375,6 @@ class PerfTest_Dilithium final : public PerfTest_PKSig {
 
       std::string hash() const override { return ""; }
 
-      std::string format_name(const std::string& alg, const std::string& param) const override {
-         BOTAN_UNUSED(alg);
-         return param;  // Param already has algo in the string
-      }
-
       std::vector<std::string> keygen_params(const PerfConfig& config) const override {
          BOTAN_UNUSED(config);
 
@@ -420,11 +400,6 @@ class PerfTest_ML_DSA final : public PerfTest_PKSig {
       std::string algo() const override { return "ML-DSA"; }
 
       std::string hash() const override { return ""; }
-
-      std::string format_name(const std::string& alg, const std::string& param) const override {
-         BOTAN_UNUSED(alg);
-         return param;  // Param already has algo in the string
-      }
 
       std::vector<std::string> keygen_params(const PerfConfig& config) const override {
          BOTAN_UNUSED(config);

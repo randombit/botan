@@ -24,10 +24,6 @@ class PerfTest_PKKa : public PerfTest {
          return {""};
       }
 
-      virtual std::string format_name(const std::string& alg, const std::string& param) const {
-         return param.empty() ? alg : Botan::fmt("{}-{}", alg, param);
-      }
-
       void go(const PerfConfig& config) override {
          const std::string alg = this->algo();
 

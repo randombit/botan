@@ -18,27 +18,55 @@
 
 namespace Botan_CLI {
 
-class PerfConfig {
+class PerfConfig final {
    public:
-      virtual ~PerfConfig() = default;
+      PerfConfig(std::function<void(const Botan::Timer&)> record_result,
+                 size_t clock_speed,
+                 double clock_cycle_ratio,
+                 std::chrono::milliseconds runtime,
+                 const std::vector<std::string>& ecc_groups,
+                 const std::vector<size_t>& buffer_sizes,
+                 std::ostream& error_output,
+                 Botan::RandomNumberGenerator& rng) :
+            m_record_result(std::move(record_result)),
+            m_clock_speed(clock_speed),
+            m_clock_cycle_ratio(clock_cycle_ratio),
+            m_runtime(runtime),
+            m_ecc_groups(ecc_groups),
+            m_buffer_sizes(buffer_sizes),
+            m_error_output(error_output),
+            m_rng(rng) {}
 
-      virtual std::chrono::milliseconds runtime() const = 0;
+      const std::vector<size_t>& buffer_sizes() const { return m_buffer_sizes; }
 
-      virtual const std::vector<std::string>& ecc_groups() const = 0;
+      const std::vector<std::string>& ecc_groups() const { return m_ecc_groups; }
 
-      virtual const std::vector<size_t>& buffer_sizes() const = 0;
+      std::chrono::milliseconds runtime() const { return m_runtime; }
 
-      virtual std::ostream& error_output() const = 0;
+      std::ostream& error_output() const { return m_error_output; }
 
-      virtual Botan::RandomNumberGenerator& rng() const = 0;
+      Botan::RandomNumberGenerator& rng() const { return m_rng; }
 
-      virtual void record_result(const Botan::Timer& timer) const = 0;
+      void record_result(const Botan::Timer& timer) const { m_record_result(timer); }
 
-      virtual std::unique_ptr<Botan::Timer> make_timer(const std::string& alg,
-                                                       uint64_t event_mult = 1,
-                                                       const std::string& what = "",
-                                                       const std::string& provider = "",
-                                                       size_t buf_size = 0) const = 0;
+      std::unique_ptr<Botan::Timer> make_timer(const std::string& alg,
+                                               uint64_t event_mult = 1,
+                                               const std::string& what = "",
+                                               const std::string& provider = "",
+                                               size_t buf_size = 0) const {
+         return std::make_unique<Botan::Timer>(
+            alg, provider, what, event_mult, buf_size, m_clock_cycle_ratio, m_clock_speed);
+      }
+
+   private:
+      std::function<void(const Botan::Timer&)> m_record_result;
+      size_t m_clock_speed = 0;
+      double m_clock_cycle_ratio = 0.0;
+      std::chrono::milliseconds m_runtime;
+      std::vector<std::string> m_ecc_groups;
+      std::vector<size_t> m_buffer_sizes;
+      std::ostream& m_error_output;
+      Botan::RandomNumberGenerator& m_rng;
 };
 
 class PerfTest {
@@ -49,6 +77,8 @@ class PerfTest {
       static std::unique_ptr<PerfTest> get(const std::string& alg);
 
       virtual void go(const PerfConfig& config) = 0;
+
+      virtual std::string format_name(const std::string& alg, const std::string& param) const;
 
       typedef std::function<std::unique_ptr<PerfTest>()> pt_maker_fn;
 
