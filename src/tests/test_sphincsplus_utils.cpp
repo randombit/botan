@@ -7,7 +7,7 @@
 
 #include "tests.h"
 
-#if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON)
+#if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON) && defined(BOTAN_HAS_SHA2_32)
 
    #include <botan/hex.h>
    #include <botan/internal/sp_address.h>
