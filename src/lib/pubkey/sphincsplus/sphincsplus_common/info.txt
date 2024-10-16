@@ -9,6 +9,7 @@ type -> "Internal"
 </module_info>
 
 <header:public>
+slh_dsa.h
 sphincsplus.h
 sp_parameters.h
 </header:public>

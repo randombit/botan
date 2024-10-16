@@ -85,7 +85,7 @@
 #endif
 
 #if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
-   #include <botan/sphincsplus.h>
+   #include <botan/slh_dsa.h>
 #endif
 
 namespace {
@@ -1165,12 +1165,12 @@ int botan_privkey_load_slh_dsa(botan_privkey_t* key, const uint8_t privkey[], si
    *key = nullptr;
 
    return ffi_guard_thunk(__func__, [=]() -> int {
-      auto mode = Botan::Sphincs_Parameters::create(slhdsa_mode);
+      auto mode = Botan::SLH_DSA_Parameters::create(slhdsa_mode);
       if(!mode.is_slh_dsa()) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
 
-      auto slhdsa_key = std::make_unique<Botan::SphincsPlus_PrivateKey>(std::span{privkey, key_len}, mode);
+      auto slhdsa_key = std::make_unique<Botan::SLH_DSA_PrivateKey>(std::span{privkey, key_len}, mode);
       *key = new botan_privkey_struct(std::move(slhdsa_key));
       return BOTAN_FFI_SUCCESS;
    });
@@ -1189,12 +1189,12 @@ int botan_pubkey_load_slh_dsa(botan_pubkey_t* key, const uint8_t pubkey[], size_
    *key = nullptr;
 
    return ffi_guard_thunk(__func__, [=]() -> int {
-      auto mode = Botan::Sphincs_Parameters::create(slhdsa_mode);
+      auto mode = Botan::SLH_DSA_Parameters::create(slhdsa_mode);
       if(!mode.is_slh_dsa()) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
 
-      auto mldsa_key = std::make_unique<Botan::SphincsPlus_PublicKey>(std::span{pubkey, key_len}, mode);
+      auto mldsa_key = std::make_unique<Botan::SLH_DSA_PublicKey>(std::span{pubkey, key_len}, mode);
       *key = new botan_pubkey_struct(std::move(mldsa_key));
       return BOTAN_FFI_SUCCESS;
    });
