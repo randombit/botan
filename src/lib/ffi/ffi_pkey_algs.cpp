@@ -71,9 +71,12 @@
    #include <botan/dh.h>
 #endif
 
-#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_ML_KEM)
+#if defined(BOTAN_HAS_KYBER) || defined(BOTAN_HAS_KYBER_90S)
    #include <botan/kyber.h>
-   #include <botan/internal/kyber_constants.h>
+#endif
+
+#if defined(BOTAN_HAS_ML_KEM)
+   #include <botan/ml_kem.h>
 #endif
 
 #if defined(BOTAN_HAS_FRODOKEM)
@@ -1053,16 +1056,12 @@ int botan_privkey_load_ml_kem(botan_privkey_t* key, const uint8_t privkey[], siz
    *key = nullptr;
 
    return ffi_guard_thunk(__func__, [=]() -> int {
-      auto mode = Botan::KyberConstants(Botan::KyberMode(mlkem_mode));
-      if(!mode.mode().is_ml_kem()) {
+      auto mode = Botan::ML_KEM_Mode(mlkem_mode);
+      if(!mode.is_ml_kem()) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
 
-      if(key_len != mode.private_key_bytes()) {
-         return BOTAN_FFI_ERROR_INVALID_KEY_LENGTH;
-      }
-
-      auto mlkem_key = std::make_unique<Botan::Kyber_PrivateKey>(std::span{privkey, key_len}, mode.mode());
+      auto mlkem_key = std::make_unique<Botan::ML_KEM_PrivateKey>(std::span{privkey, key_len}, mode);
       *key = new botan_privkey_struct(std::move(mlkem_key));
       return BOTAN_FFI_SUCCESS;
    });
@@ -1081,16 +1080,12 @@ int botan_pubkey_load_ml_kem(botan_pubkey_t* key, const uint8_t pubkey[], size_t
    *key = nullptr;
 
    return ffi_guard_thunk(__func__, [=]() -> int {
-      auto mode = Botan::KyberConstants(Botan::KyberMode(mlkem_mode));
-      if(!mode.mode().is_ml_kem()) {
+      auto mode = Botan::ML_KEM_Mode(mlkem_mode);
+      if(!mode.is_ml_kem()) {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
       }
 
-      if(key_len != mode.public_key_bytes()) {
-         return BOTAN_FFI_ERROR_INVALID_KEY_LENGTH;
-      }
-
-      auto mlkem_key = std::make_unique<Botan::Kyber_PublicKey>(std::span{pubkey, key_len}, mode.mode());
+      auto mlkem_key = std::make_unique<Botan::ML_KEM_PublicKey>(std::span{pubkey, key_len}, mode.mode());
       *key = new botan_pubkey_struct(std::move(mlkem_key));
       return BOTAN_FFI_SUCCESS;
    });

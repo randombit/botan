@@ -1,4 +1,4 @@
-#include <botan/kyber.h>
+#include <botan/ml_kem.h>
 #include <botan/pubkey.h>
 #include <botan/system_rng.h>
 #include <array>
@@ -13,7 +13,7 @@ int main() {
    std::array<uint8_t, 16> salt;
    rng.randomize(salt);
 
-   Botan::Kyber_PrivateKey priv_key(rng, Botan::KyberMode::ML_KEM_768);
+   Botan::ML_KEM_PrivateKey priv_key(rng, Botan::ML_KEM_Mode::ML_KEM_768);
    auto pub_key = priv_key.public_key();
 
    Botan::PK_KEM_Encryptor enc(*pub_key, kdf);
