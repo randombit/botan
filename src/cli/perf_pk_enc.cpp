@@ -52,7 +52,7 @@ class PerfTest_PKEnc : public PerfTest {
          auto keygen_timer = config.make_timer(nm, 1, "keygen");
 
          auto key = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
-         while (keygen_timer->under(msec)) {
+         while(keygen_timer->under(msec)) {
             key = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
          }
 
