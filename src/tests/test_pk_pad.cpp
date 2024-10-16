@@ -14,8 +14,7 @@
 
 namespace Botan_Tests {
 
-#if defined(BOTAN_HAS_PK_PADDING)
-
+#if defined(BOTAN_HAS_EME_PKCS1)
 class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test {
    public:
       EME_PKCS1v15_Decoding_Tests() : Text_Based_Test("pk_pad_eme/pkcs1.vec", "RawCiphertext", "Plaintext") {}
@@ -63,7 +62,9 @@ class EME_PKCS1v15_Decoding_Tests final : public Text_Based_Test {
 };
 
 BOTAN_REGISTER_TEST("pubkey", "eme_pkcs1v15", EME_PKCS1v15_Decoding_Tests);
+#endif
 
+#if defined(BOTAN_HAS_PK_PADDING)
 class EMSA_unit_tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
