@@ -890,6 +890,15 @@ class PK_API_Sign_Test : public Text_Based_Test {
 
          return result;
       }
+
+      bool skip_this_test([[maybe_unused]] const std::string& header, const VarMap&) override {
+   #if !defined(BOTAN_HAS_SLH_DSA_WITH_SHA2)
+         if(header == "SLH-DSA") {
+            return true;
+         }
+   #endif
+         return false;
+      }
 };
 
 BOTAN_REGISTER_TEST("pubkey", "pk_api_sign", PK_API_Sign_Test);
