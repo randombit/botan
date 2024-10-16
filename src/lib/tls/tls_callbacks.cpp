@@ -345,6 +345,13 @@ secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(
       X25519_PublicKey peer_key(public_value);
       policy.check_peer_key_acceptable(peer_key);
 
+      // RFC 8422 - 5.11.
+      //   With X25519 and X448, a receiving party MUST check whether the
+      //   computed premaster secret is the all-zero value and abort the
+      //   handshake if so, as described in Section 6 of [RFC7748].
+      //
+      // This is done within the key agreement operation and throws
+      // an Invalid_Argument exception if the shared secret is all-zero.
       return agree(private_key, peer_key);
    }
 #endif
@@ -358,6 +365,13 @@ secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(
       X448_PublicKey peer_key(public_value);
       policy.check_peer_key_acceptable(peer_key);
 
+      // RFC 8422 - 5.11.
+      //   With X25519 and X448, a receiving party MUST check whether the
+      //   computed premaster secret is the all-zero value and abort the
+      //   handshake if so, as described in Section 6 of [RFC7748].
+      //
+      // This is done within the key agreement operation and throws
+      // an Invalid_Argument exception if the shared secret is all-zero.
       return agree(private_key, peer_key);
    }
 #endif
