@@ -189,7 +189,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: randombit/boringssl
-          ref: rene/runner-20240524
+          ref: rene/runner-20241016
           path: ./boringssl
         if: matrix.target == 'coverage' || matrix.target == 'sanitizer'
 
