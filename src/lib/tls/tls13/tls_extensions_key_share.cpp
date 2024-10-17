@@ -119,22 +119,10 @@ class Key_Share_Entry {
                                          const Policy& policy,
                                          Callbacks& cb,
                                          RandomNumberGenerator& rng) {
+         auto scope = scoped_cleanup([&] { m_private_key.reset(); });
          BOTAN_ASSERT_NOMSG(m_group == received.m_group);
          BOTAN_STATE_CHECK(m_private_key != nullptr);
-
-         auto shared_secret = cb.tls_kem_decapsulate(m_group, *m_private_key, received.m_key_exchange, rng, policy);
-         m_private_key.reset();
-
-         // RFC 8422 - 5.11.
-         //   With X25519 and X448, a receiving party MUST check whether the
-         //   computed premaster secret is the all-zero value and abort the
-         //   handshake if so, as described in Section 6 of [RFC7748].
-         if((m_group == Named_Group::X25519 || m_group == Named_Group::X448) &&
-            CT::all_zeros(shared_secret.data(), shared_secret.size()).as_bool()) {
-            throw TLS_Exception(Alert::DecryptError, "Bad X25519 or X448 key exchange");
-         }
-
-         return shared_secret;
+         return cb.tls_kem_decapsulate(m_group, *m_private_key, received.m_key_exchange, rng, policy);
       }
 
    private:

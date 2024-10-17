@@ -116,6 +116,20 @@ class X448_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
          auto shared_secret = encode_point(x448(k, u));
          CT::unpoison(shared_secret);
 
+         // RFC 7748 Section 6.2
+         //    As with X25519, both sides MAY check, without leaking extra
+         //    information about the value of K, whether the resulting shared K
+         //    is the all-zero value and abort if so.
+         //
+         // TODO: once the generic Key Agreement operation creation is equipped
+         //       with a more flexible parameterization, this check could be
+         //       made optional.
+         //       For instance: `sk->agree().with_optional_sanity_checks(true)`.
+         //       See also:     https://github.com/randombit/botan/pull/4318
+         if(CT::all_zeros(shared_secret.data(), shared_secret.size()).as_bool()) {
+            throw Invalid_Argument("X448 public point appears to be of low order");
+         }
+
          return shared_secret;
       }
 

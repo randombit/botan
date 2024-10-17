@@ -118,15 +118,6 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          auto shared_secret =
             state.callbacks().tls_ephemeral_key_agreement(curve_id, *private_key, peer_public_value, rng, policy);
 
-         // RFC 8422 - 5.11.
-         //   With X25519 and X448, a receiving party MUST check whether the
-         //   computed premaster secret is the all-zero value and abort the
-         //   handshake if so, as described in Section 6 of [RFC7748].
-         if((curve_id == Group_Params::X25519 || curve_id == Group_Params::X448) &&
-            CT::all_zeros(shared_secret.data(), shared_secret.size()).as_bool()) {
-            throw TLS_Exception(Alert::DecryptError, "Bad X25519 or X448 key exchange");
-         }
-
          if(kex_algo == Kex_Algo::ECDH) {
             m_pre_master = std::move(shared_secret);
          } else {
@@ -273,19 +264,6 @@ Client_Key_Exchange::Client_Key_Exchange(const std::vector<uint8_t>& contents,
 
             if(ka_key.algo_name() == "DH") {
                shared_secret = CT::strip_leading_zeros(shared_secret);
-            }
-
-            if(kex_algo == Kex_Algo::ECDH || kex_algo == Kex_Algo::ECDHE_PSK) {
-               // RFC 8422 - 5.11.
-               //   With X25519 and X448, a receiving party MUST check whether the
-               //   computed premaster secret is the all-zero value and abort the
-               //   handshake if so, as described in Section 6 of [RFC7748].
-               BOTAN_ASSERT_NOMSG(state.server_kex()->params().size() >= 3);
-               Group_Params group = static_cast<Group_Params>(state.server_kex()->params().at(2));
-               if((group == Group_Params::X25519 || group == Group_Params::X448) &&
-                  CT::all_zeros(shared_secret.data(), shared_secret.size()).as_bool()) {
-                  throw TLS_Exception(Alert::DecryptError, "Bad X25519 or X448 key exchange");
-               }
             }
 
             if(kex_algo == Kex_Algo::ECDHE_PSK) {

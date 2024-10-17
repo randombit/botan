@@ -10,6 +10,7 @@
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/rng.h>
+#include <botan/internal/ct_utils.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/pk_ops_impl.h>
 
@@ -120,7 +121,24 @@ class X25519_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 
       size_t agreed_value_size() const override { return 32; }
 
-      secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override { return m_key.agree(w, w_len); }
+      secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override {
+         auto shared_key = m_key.agree(w, w_len);
+
+         // RFC 7748 Section 6.1
+         //    Both [parties] MAY check, without leaking extra information about
+         //    the value of K, whether K is the all-zero value and abort if so.
+         //
+         // TODO: once the generic Key Agreement operation creation is equipped
+         //       with a more flexible parameterization, this check could be
+         //       made optional.
+         //       For instance: `sk->agree().with_optional_sanity_checks(true)`.
+         //       See also:     https://github.com/randombit/botan/pull/4318
+         if(CT::all_zeros(shared_key.data(), shared_key.size()).as_bool()) {
+            throw Invalid_Argument("X25519 public point appears to be of low order");
+         }
+
+         return shared_key;
+      }
 
    private:
       const X25519_PrivateKey& m_key;

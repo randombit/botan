@@ -156,6 +156,11 @@ class PK_Key_Agreement_Test : public PK_Test {
                             const std::string& optional_keys = "") :
             PK_Test(algo, test_src, required_keys, optional_keys) {}
 
+      virtual bool agreement_should_fail(const std::string& header, const VarMap& vars) const {
+         BOTAN_UNUSED(header, vars);
+         return false;
+      }
+
       virtual std::unique_ptr<Botan::Private_Key> load_our_key(const std::string& header, const VarMap& vars) = 0;
 
       virtual std::vector<uint8_t> load_their_key(const std::string& header, const VarMap& vars) = 0;

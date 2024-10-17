@@ -510,11 +510,15 @@ Test::Result PK_Key_Agreement_Test::run_one_test(const std::string& header, cons
       try {
          kas = std::make_unique<Botan::PK_Key_Agreement>(*privkey, this->rng(), kdf, provider);
 
-         auto derived_key = kas->derive_key(key_len, pubkey).bits_of();
-         result.test_eq(provider, "agreement", derived_key, shared);
+         if(agreement_should_fail(header, vars)) {
+            result.test_throws("key agreement fails", [&] { kas->derive_key(key_len, pubkey); });
+         } else {
+            auto derived_key = kas->derive_key(key_len, pubkey).bits_of();
+            result.test_eq(provider, "agreement", derived_key, shared);
 
-         if(key_len == 0 && kdf == "Raw") {
-            result.test_eq("Expected size", derived_key.size(), kas->agreed_value_size());
+            if(key_len == 0 && kdf == "Raw") {
+               result.test_eq("Expected size", derived_key.size(), kas->agreed_value_size());
+            }
          }
       } catch(Botan::Lookup_Error&) {
          //result.test_note("Skipping key agreement with with " + provider);
