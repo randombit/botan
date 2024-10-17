@@ -179,8 +179,9 @@
         "Renegotiate-Client-UnfinishedWrite": "BoringSSL specific API test",
         "FailEarlyCallback": "BoringSSL specific API test",
 
-        "*MLKEM*": "No support for hybrid key exchange with ML-KEM, yet",
-
+        "MLKEMKeyShareIncludedSecond": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
+        "NotJustMLKEMKeyShare": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
+        "MLKEMKeyShareIncludedThird": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
         "NotJustKyberKeyShare": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
         "KyberKeyShareIncludedSecond": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
         "KyberKeyShareIncludedThird": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
