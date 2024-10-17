@@ -38,26 +38,21 @@ class Callbacks : public Botan::TLS::Callbacks {
             return std::make_unique<Botan::ECDH_PrivateKey>(rng, ec_group);
          } else {
             // no custom curve used: up-call the default implementation
-            return tls_generate_ephemeral_key(group, rng);
+            return Botan::TLS::Callbacks::tls_generate_ephemeral_key(group, rng);
          }
       }
 
-      Botan::secure_vector<uint8_t> tls_ephemeral_key_agreement(
+      std::unique_ptr<Botan::Public_Key> tls_deserialize_peer_public_key(
          const std::variant<Botan::TLS::Group_Params, Botan::DL_Group>& group,
-         const Botan::PK_Key_Agreement_Key& private_key,
-         const std::vector<uint8_t>& public_value,
-         Botan::RandomNumberGenerator& rng,
-         const Botan::TLS::Policy& policy) override {
+         std::span<const uint8_t> public_value) override {
          if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
             std::get<Botan::TLS::Group_Params>(group) == Botan::TLS::Group_Params(0xFE00)) {
-            // perform a key agreement on my custom curve
+            // load the peer's public key of my custom curve
             const auto ec_group = Botan::EC_Group::from_name("numsp256d1");
-            Botan::ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(public_value));
-            Botan::PK_Key_Agreement ka(private_key, rng, "Raw");
-            return ka.derive_key(0, peer_key.public_value()).bits_of();
+            return std::make_unique<Botan::ECDH_PublicKey>(ec_group, ec_group.OS2ECP(public_value));
          } else {
             // no custom curve used: up-call the default implementation
-            return tls_ephemeral_key_agreement(group, private_key, public_value, rng, policy);
+            return Botan::TLS::Callbacks::tls_deserialize_peer_public_key(group, public_value);
          }
       }
 };
