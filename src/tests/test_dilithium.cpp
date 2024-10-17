@@ -24,7 +24,7 @@
 
 namespace Botan_Tests {
 
-#if defined(BOTAN_HAS_DILITHIUM_COMMON) && defined(BOTAN_HAS_AES)
+#if defined(BOTAN_HAS_DILITHIUM_COMMON) && defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_SHA3)
 
 template <typename DerivedT>
 class Dilithium_KAT_Tests : public Text_Based_Test {

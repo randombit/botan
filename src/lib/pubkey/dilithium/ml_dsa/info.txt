@@ -15,3 +15,7 @@ dilithium_shake
 <header:internal>
 ml_dsa_impl.h
 </header:internal>
+
+<header:public>
+ml_dsa.h
+</header:public>

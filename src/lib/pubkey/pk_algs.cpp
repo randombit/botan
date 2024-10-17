@@ -98,12 +98,20 @@
    #include <botan/sm2.h>
 #endif
 
-#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES) || defined(BOTAN_HAS_ML_DSA)
+#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
    #include <botan/dilithium.h>
 #endif
 
-#if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON)
+#if defined(BOTAN_HAS_ML_DSA)
+   #include <botan/ml_dsa.h>
+#endif
+
+#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
    #include <botan/sphincsplus.h>
+#endif
+
+#if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
+   #include <botan/slh_dsa.h>
 #endif
 
 namespace Botan {
@@ -228,9 +236,15 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
-#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES) || defined(BOTAN_HAS_ML_DSA)
-   if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-") || alg_name.starts_with("ML-DSA-")) {
+#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
+   if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-")) {
       return std::make_unique<Dilithium_PublicKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_ML_DSA)
+   if(alg_name.starts_with("ML-DSA-")) {
+      return std::make_unique<ML_DSA_PublicKey>(alg_id, key_bits);
    }
 #endif
 
@@ -240,10 +254,15 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
-#if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON)
-   if(alg_name == "SPHINCS+" || alg_name.starts_with("SphincsPlus-") || alg_name.starts_with("SLH-DSA-") ||
-      alg_name.starts_with("Hash-SLH-DSA-")) {
+#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+   if(alg_name == "SPHINCS+" || alg_name.starts_with("SphincsPlus-")) {
       return std::make_unique<SphincsPlus_PublicKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
+   if(alg_name.starts_with("SLH-DSA-") || alg_name.starts_with("Hash-SLH-DSA-")) {
+      return std::make_unique<SLH_DSA_PublicKey>(alg_id, key_bits);
    }
 #endif
 
@@ -370,9 +389,15 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
-#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES) || defined(BOTAN_HAS_ML_DSA)
-   if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-") || alg_name.starts_with("ML-DSA-")) {
+#if defined(BOTAN_HAS_DILITHIUM) || defined(BOTAN_HAS_DILITHIUM_AES)
+   if(alg_name == "Dilithium" || alg_name.starts_with("Dilithium-")) {
       return std::make_unique<Dilithium_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_ML_DSA)
+   if(alg_name.starts_with("ML-DSA-")) {
+      return std::make_unique<ML_DSA_PrivateKey>(alg_id, key_bits);
    }
 #endif
 
@@ -382,10 +407,15 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
-#if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON)
-   if(alg_name == "SPHINCS+" || alg_name.starts_with("SphincsPlus-") || alg_name.starts_with("SLH-DSA-") ||
-      alg_name.starts_with("Hash-SLH-DSA-")) {
+#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+   if(alg_name == "SPHINCS+" || alg_name.starts_with("SphincsPlus-")) {
       return std::make_unique<SphincsPlus_PrivateKey>(alg_id, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
+   if(alg_name.starts_with("SLH-DSA-") || alg_name.starts_with("Hash-SLH-DSA-")) {
+      return std::make_unique<SLH_DSA_PrivateKey>(alg_id, key_bits);
    }
 #endif
 
@@ -534,14 +564,14 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 
 #if defined(BOTAN_HAS_ML_DSA)
    if(alg_name == "ML-DSA") {
-      const auto mode = [&]() -> DilithiumMode {
+      const auto mode = [&]() -> ML_DSA_Mode {
          if(params.empty()) {
-            return DilithiumMode::ML_DSA_6x5;
+            return ML_DSA_Mode::ML_DSA_6x5;
          }
-         return DilithiumMode(params);
+         return ML_DSA_Mode(params);
       }();
 
-      return std::make_unique<Dilithium_PrivateKey>(rng, mode);
+      return std::make_unique<ML_DSA_PrivateKey>(rng, mode);
    }
 #endif
 
@@ -551,11 +581,19 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
    }
 #endif
 
-#if defined(BOTAN_HAS_SPHINCS_PLUS_COMMON)
-   if(alg_name == "SPHINCS+" || alg_name == "SphincsPlus" || alg_name == "SLH-DSA") {
+#if defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHA2) || defined(BOTAN_HAS_SPHINCS_PLUS_WITH_SHAKE)
+   if(alg_name == "SPHINCS+" || alg_name == "SphincsPlus") {
       auto sphincs_params = Sphincs_Parameters::create(params);
 
       return std::make_unique<SphincsPlus_PrivateKey>(rng, sphincs_params);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SLH_DSA_WITH_SHA2) || defined(BOTAN_HAS_SLH_DSA_WITH_SHAKE)
+   if(alg_name == "SLH-DSA") {
+      auto slh_dsa_params = SLH_DSA_Parameters::create(params);
+
+      return std::make_unique<SLH_DSA_PrivateKey>(rng, slh_dsa_params);
    }
 #endif
 
