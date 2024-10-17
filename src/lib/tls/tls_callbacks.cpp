@@ -158,6 +158,91 @@ bool TLS::Callbacks::tls_verify_message(const Public_Key& key,
    return verifier.verify_message(msg, sig);
 }
 
+namespace {
+
+bool is_dh_group(const std::variant<TLS::Group_Params, DL_Group>& group) {
+   return std::holds_alternative<DL_Group>(group) || std::get<TLS::Group_Params>(group).is_dh_named_group();
+}
+
+DL_Group get_dl_group(const std::variant<TLS::Group_Params, DL_Group>& group) {
+   BOTAN_ASSERT_NOMSG(is_dh_group(group));
+
+   // TLS 1.2 allows specifying arbitrary DL_Group parameters in-lieu of
+   // a standardized DH group identifier. TLS 1.3 just offers pre-defined
+   // groups.
+   return std::visit(
+      overloaded{[](const DL_Group& dl_group) { return dl_group; },
+                 [&](TLS::Group_Params group_param) { return DL_Group(group_param.to_string().value()); }},
+      group);
+}
+
+}  // namespace
+
+std::unique_ptr<Public_Key> TLS::Callbacks::tls_deserialize_peer_public_key(
+   const std::variant<TLS::Group_Params, DL_Group>& group, std::span<const uint8_t> key_bits) {
+   if(is_dh_group(group)) {
+      // TLS 1.2 allows specifying arbitrary DL_Group parameters in-lieu of
+      // a standardized DH group identifier.
+      const auto dl_group = get_dl_group(group);
+
+      auto Y = BigInt::from_bytes(key_bits);
+
+      /*
+       * A basic check for key validity. As we do not know q here we
+       * cannot check that Y is in the right subgroup. However since
+       * our key is ephemeral there does not seem to be any
+       * advantage to bogus keys anyway.
+       */
+      if(Y <= 1 || Y >= dl_group.get_p() - 1) {
+         throw Decoding_Error("Server sent bad DH key for DHE exchange");
+      }
+
+      return std::make_unique<DH_PublicKey>(dl_group, Y);
+   }
+
+   // The special case for TLS 1.2 with an explicit DH group definition is
+   // handled above. All other cases are based on the opaque group definition.
+   BOTAN_ASSERT_NOMSG(std::holds_alternative<TLS::Group_Params>(group));
+   const auto group_params = std::get<TLS::Group_Params>(group);
+
+   if(group_params.is_ecdh_named_curve()) {
+      const auto ec_group = EC_Group::from_name(group_params.to_string().value());
+      return std::make_unique<ECDH_PublicKey>(ec_group, ec_group.OS2ECP(key_bits));
+   }
+
+#if defined(BOTAN_HAS_X25519)
+   if(group_params.is_x25519()) {
+      return std::make_unique<X25519_PublicKey>(key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_X448)
+   if(group_params.is_x448()) {
+      return std::make_unique<X448_PublicKey>(key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_TLS_13_PQC)
+   if(group_params.is_pqc_hybrid()) {
+      return Hybrid_KEM_PublicKey::load_for_group(group_params, key_bits);
+   }
+#endif
+
+#if defined(BOTAN_HAS_KYBER)
+   if(group_params.is_pure_kyber()) {
+      return std::make_unique<Kyber_PublicKey>(key_bits, KyberMode(group_params.to_string().value()));
+   }
+#endif
+
+#if defined(BOTAN_HAS_FRODOKEM)
+   if(group_params.is_pure_frodokem()) {
+      return std::make_unique<FrodoKEM_PublicKey>(key_bits, FrodoKEMMode(group_params.to_string().value()));
+   }
+#endif
+
+   throw Decoding_Error("cannot create a key offering without a group definition");
+}
+
 std::unique_ptr<Private_Key> TLS::Callbacks::tls_kem_generate_key(TLS::Group_Params group, RandomNumberGenerator& rng) {
 #if defined(BOTAN_HAS_KYBER)
    if(group.is_pure_kyber()) {
@@ -185,38 +270,33 @@ KEM_Encapsulation TLS::Callbacks::tls_kem_encapsulate(TLS::Group_Params group,
                                                       RandomNumberGenerator& rng,
                                                       const Policy& policy) {
    if(group.is_kem()) {
-      auto kem_pub_key = [&]() -> std::unique_ptr<Public_Key> {
-
-#if defined(BOTAN_HAS_TLS_13_PQC)
-         if(group.is_pqc_hybrid()) {
-            return Hybrid_KEM_PublicKey::load_for_group(group, encoded_public_key);
+      auto kem_pub_key = [&] {
+         try {
+            return tls_deserialize_peer_public_key(group, encoded_public_key);
+         } catch(const Decoding_Error& ex) {
+            // This exception means that the public key was invalid. However,
+            // TLS' DecodeError would imply that a protocol message was invalid.
+            throw TLS_Exception(Alert::IllegalParameter, ex.what());
          }
-#endif
-
-#if defined(BOTAN_HAS_KYBER)
-         if(group.is_pure_kyber()) {
-            return std::make_unique<Kyber_PublicKey>(encoded_public_key, KyberMode(group.to_string().value()));
-         }
-#endif
-
-#if defined(BOTAN_HAS_FRODOKEM)
-         if(group.is_pure_frodokem()) {
-            return std::make_unique<FrodoKEM_PublicKey>(encoded_public_key, FrodoKEMMode(group.to_string().value()));
-         }
-#endif
-
-         throw TLS_Exception(Alert::IllegalParameter, "KEM is not supported");
       }();
 
-      return PK_KEM_Encryptor(*kem_pub_key, "Raw").encrypt(rng);
-   }
+      BOTAN_ASSERT_NONNULL(kem_pub_key);
+      policy.check_peer_key_acceptable(*kem_pub_key);
 
-   // TODO: We could use the KEX_to_KEM_Adapter to remove the case distinction
-   //       of KEM and KEX. However, the workarounds in this adapter class
-   //       should first be addressed.
-   auto ephemeral_keypair = tls_generate_ephemeral_key(group, rng);
-   return KEM_Encapsulation(ephemeral_keypair->public_value(),
-                            tls_ephemeral_key_agreement(group, *ephemeral_keypair, encoded_public_key, rng, policy));
+      try {
+         return PK_KEM_Encryptor(*kem_pub_key, "Raw").encrypt(rng);
+      } catch(const Invalid_Argument& ex) {
+         throw TLS_Exception(Alert::IllegalParameter, ex.what());
+      }
+   } else {
+      // TODO: We could use the KEX_to_KEM_Adapter to remove the case distinction
+      //       of KEM and KEX. However, the workarounds in this adapter class
+      //       should first be addressed.
+      auto ephemeral_keypair = tls_generate_ephemeral_key(group, rng);
+      BOTAN_ASSERT_NONNULL(ephemeral_keypair);
+      return {ephemeral_keypair->public_value(),
+              tls_ephemeral_key_agreement(group, *ephemeral_keypair, encoded_public_key, rng, policy)};
+   }
 }
 
 secure_vector<uint8_t> TLS::Callbacks::tls_kem_decapsulate(TLS::Group_Params group,
@@ -236,26 +316,6 @@ secure_vector<uint8_t> TLS::Callbacks::tls_kem_decapsulate(TLS::Group_Params gro
       throw Invalid_Argument("provided ephemeral key is not a PK_Key_Agreement_Key");
    }
 }
-
-namespace {
-
-bool is_dh_group(const std::variant<TLS::Group_Params, DL_Group>& group) {
-   return std::holds_alternative<DL_Group>(group) || std::get<TLS::Group_Params>(group).is_dh_named_group();
-}
-
-DL_Group get_dl_group(const std::variant<TLS::Group_Params, DL_Group>& group) {
-   BOTAN_ASSERT_NOMSG(is_dh_group(group));
-
-   // TLS 1.2 allows specifying arbitrary DL_Group parameters in-lieu of
-   // a standardized DH group identifier. TLS 1.3 just offers pre-defined
-   // groups.
-   return std::visit(
-      overloaded{[](const DL_Group& dl_group) { return dl_group; },
-                 [&](TLS::Group_Params group_param) { return DL_Group(group_param.to_string().value()); }},
-      group);
-}
-
-}  // namespace
 
 std::unique_ptr<PK_Key_Agreement_Key> TLS::Callbacks::tls_generate_ephemeral_key(
    const std::variant<TLS::Group_Params, DL_Group>& group, RandomNumberGenerator& rng) {
@@ -297,86 +357,32 @@ secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(
    const std::vector<uint8_t>& public_value,
    RandomNumberGenerator& rng,
    const Policy& policy) {
-   auto agree = [&](const PK_Key_Agreement_Key& sk, const auto& pk) {
-      PK_Key_Agreement ka(sk, rng, "Raw");
-      return ka.derive_key(0, pk.public_value()).bits_of();
-   };
-
-   if(is_dh_group(group)) {
-      // TLS 1.2 allows specifying arbitrary DL_Group parameters in-lieu of
-      // a standardized DH group identifier.
-      const auto dl_group = get_dl_group(group);
-
-      auto Y = BigInt::from_bytes(public_value);
-
-      /*
-       * A basic check for key validity. As we do not know q here we
-       * cannot check that Y is in the right subgroup. However since
-       * our key is ephemeral there does not seem to be any
-       * advantage to bogus keys anyway.
-       */
-      if(Y <= 1 || Y >= dl_group.get_p() - 1) {
-         throw TLS_Exception(Alert::IllegalParameter, "Server sent bad DH key for DHE exchange");
+   const auto kex_pub_key = [&]() {
+      try {
+         return tls_deserialize_peer_public_key(group, public_value);
+      } catch(const Decoding_Error& ex) {
+         // This exception means that the public key was invalid. However,
+         // TLS' DecodeError would imply that a protocol message was invalid.
+         throw TLS_Exception(Alert::IllegalParameter, ex.what());
       }
+   }();
 
-      DH_PublicKey peer_key(dl_group, Y);
-      policy.check_peer_key_acceptable(peer_key);
+   BOTAN_ASSERT_NONNULL(kex_pub_key);
+   policy.check_peer_key_acceptable(*kex_pub_key);
 
-      return agree(private_key, peer_key);
+   // RFC 8422 - 5.11.
+   //   With X25519 and X448, a receiving party MUST check whether the
+   //   computed premaster secret is the all-zero value and abort the
+   //   handshake if so, as described in Section 6 of [RFC7748].
+   //
+   // This is done within the key agreement operation and throws
+   // an Invalid_Argument exception if the shared secret is all-zero.
+   try {
+      PK_Key_Agreement ka(private_key, rng, "Raw");
+      return ka.derive_key(0, kex_pub_key->raw_public_key_bits()).bits_of();
+   } catch(const Invalid_Argument& ex) {
+      throw TLS_Exception(Alert::IllegalParameter, ex.what());
    }
-
-   BOTAN_ASSERT_NOMSG(std::holds_alternative<TLS::Group_Params>(group));
-   const auto group_params = std::get<TLS::Group_Params>(group);
-
-   if(group_params.is_ecdh_named_curve()) {
-      const auto ec_group = EC_Group::from_name(group_params.to_string().value());
-      ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(public_value));
-      policy.check_peer_key_acceptable(peer_key);
-
-      return agree(private_key, peer_key);
-   }
-
-#if defined(BOTAN_HAS_X25519)
-   if(group_params.is_x25519()) {
-      if(public_value.size() != 32) {
-         throw TLS_Exception(Alert::HandshakeFailure, "Invalid X25519 key size");
-      }
-
-      X25519_PublicKey peer_key(public_value);
-      policy.check_peer_key_acceptable(peer_key);
-
-      // RFC 8422 - 5.11.
-      //   With X25519 and X448, a receiving party MUST check whether the
-      //   computed premaster secret is the all-zero value and abort the
-      //   handshake if so, as described in Section 6 of [RFC7748].
-      //
-      // This is done within the key agreement operation and throws
-      // an Invalid_Argument exception if the shared secret is all-zero.
-      return agree(private_key, peer_key);
-   }
-#endif
-
-#if defined(BOTAN_HAS_X448)
-   if(group_params.is_x448()) {
-      if(public_value.size() != 56) {
-         throw TLS_Exception(Alert::HandshakeFailure, "Invalid X448 key size");
-      }
-
-      X448_PublicKey peer_key(public_value);
-      policy.check_peer_key_acceptable(peer_key);
-
-      // RFC 8422 - 5.11.
-      //   With X25519 and X448, a receiving party MUST check whether the
-      //   computed premaster secret is the all-zero value and abort the
-      //   handshake if so, as described in Section 6 of [RFC7748].
-      //
-      // This is done within the key agreement operation and throws
-      // an Invalid_Argument exception if the shared secret is all-zero.
-      return agree(private_key, peer_key);
-   }
-#endif
-
-   throw TLS_Exception(Alert::IllegalParameter, "Did not recognize the key exchange group");
 }
 
 }  // namespace Botan

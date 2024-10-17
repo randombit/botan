@@ -335,6 +335,26 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
                                       const std::vector<uint8_t>& sig);
 
       /**
+       * Optional callback: deserialize a public key received from the peer
+       *
+       * Default implementation simply parses the public key using Botan's
+       * public keys. Override to provide a different approach, e.g. using an
+       * external device.
+       *
+       * If deserialization fails, the default implementation throws a
+       * Botan::Decoding_Error exception that will be translated into a
+       * TLS_Exception with an Alert::IllegalParamter.
+       *
+       * @param group the group identifier or (in case of TLS 1.2) an explicit
+       *              discrete-log group of the public key
+       * @param key_bits the serialized public key
+       *
+       * @return the deserialized and ready-to-use public key
+       */
+      virtual std::unique_ptr<Public_Key> tls_deserialize_peer_public_key(
+         const std::variant<TLS::Group_Params, DL_Group>& group, std::span<const uint8_t> key_bits);
+
+      /**
        * Generate an ephemeral KEM key for a TLS 1.3 handshake
        *
        * Applications may use this to add custom KEM algorithms or entirely
@@ -614,7 +634,7 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
        *
        * Useful to implement the SSLKEYLOGFILE for connection debugging as
        * specified in ietf.org/archive/id/draft-thomson-tls-keylogfile-00.html
-       * 
+       *
        * Invoked if Policy::allow_ssl_key_log_file returns true.
        *
        * Default implementation simply ignores the inputs.
