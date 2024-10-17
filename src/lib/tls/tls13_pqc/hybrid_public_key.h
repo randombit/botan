@@ -82,8 +82,8 @@ BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
  * Composes a number of private keys for hybrid key agreement as defined in this
  * IETF draft: https://datatracker.ietf.org/doc/html/draft-ietf-tls-hybrid-design-04
  */
-class BOTAN_TEST_API Hybrid_KEM_PrivateKey final : public Private_Key,
-                                                   public Hybrid_KEM_PublicKey {
+class BOTAN_TEST_API Hybrid_KEM_PrivateKey final : public virtual Private_Key,
+                                                   public virtual Hybrid_KEM_PublicKey {
    public:
       /**
        * Generate a hybrid private key for the given TLS code point.
