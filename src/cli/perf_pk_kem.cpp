@@ -24,10 +24,6 @@ class PerfTest_PK_KEM : public PerfTest {
          return {""};
       }
 
-      virtual std::string format_name(const std::string& alg, const std::string& param) const {
-         return param.empty() ? alg : Botan::fmt("{}-{}", alg, param);
-      }
-
       void go(const PerfConfig& config) override {
          const std::string alg = this->algo();
 
@@ -97,9 +93,6 @@ class PerfTest_Kyber final : public PerfTest_PK_KEM {
             "Kyber-768-90s-r3",
             "Kyber-1024-r3",
             "Kyber-1024-90s-r3",
-            "ML-KEM-512",
-            "ML-KEM-768",
-            "ML-KEM-1024",
          };
       }
 };
