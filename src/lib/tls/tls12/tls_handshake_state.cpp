@@ -310,7 +310,7 @@ std::pair<std::string, Signature_Format> Handshake_State::parse_sig_format(
    }
 
    if(!scheme.is_available()) {
-      throw TLS_Exception(Alert::HandshakeFailure, "Peer sent unknown signature scheme");
+      throw TLS_Exception(Alert::IllegalParameter, "Peer sent unknown signature scheme");
    }
 
    if(key_type != scheme.algorithm_name()) {

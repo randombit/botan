@@ -306,6 +306,9 @@ secure_vector<uint8_t> TLS::Callbacks::tls_kem_decapsulate(TLS::Group_Params gro
                                                            const Policy& policy) {
    if(group.is_kem()) {
       PK_KEM_Decryptor kemdec(private_key, rng, "Raw");
+      if(encapsulated_bytes.size() != kemdec.encapsulated_key_length()) {
+         throw TLS_Exception(Alert::IllegalParameter, "Invalid encapsulated key length");
+      }
       return kemdec.decrypt(encapsulated_bytes, 0, {});
    }
 

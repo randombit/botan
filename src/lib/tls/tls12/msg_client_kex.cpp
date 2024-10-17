@@ -106,7 +106,7 @@ Client_Key_Exchange::Client_Key_Exchange(Handshake_IO& io,
          const std::vector<uint8_t> peer_public_value = reader.get_range<uint8_t>(1, 1, 255);
 
          if(!curve_id.is_ecdh_named_curve() && !curve_id.is_x25519() && !curve_id.is_x448()) {
-            throw TLS_Exception(Alert::HandshakeFailure,
+            throw TLS_Exception(Alert::IllegalParameter,
                                 "Server selected a group that is not compatible with the negotiated ciphersuite");
          }
 

@@ -152,8 +152,9 @@ std::unique_ptr<Hybrid_KEM_PublicKey> Hybrid_KEM_PublicKey::load_for_group(
 
    const auto expected_public_values_length =
       reduce(public_value_lengths, size_t(0), [](size_t acc, size_t len) { return acc + len; });
-   BOTAN_ARG_CHECK(expected_public_values_length == concatenated_public_values.size(),
-                   "Concatenated public values have an unexpected length");
+   if(expected_public_values_length != concatenated_public_values.size()) {
+      throw Decoding_Error("Concatenated public values have an unexpected length");
+   }
 
    BufferSlicer public_value_slicer(concatenated_public_values);
    std::vector<std::unique_ptr<Public_Key>> pks;
