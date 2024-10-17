@@ -54,16 +54,17 @@ class Client_Policy : public Botan::TLS::Default_Policy {
       // additional to the default (classical) key exchange groups
       std::vector<Botan::TLS::Group_Params> key_exchange_groups() const override {
          auto groups = Botan::TLS::Default_Policy::key_exchange_groups();
+         groups.push_back(Botan::TLS::Group_Params::HYBRID_X25519_ML_KEM_768);
+         groups.push_back(Botan::TLS::Group_Params::HYBRID_SECP256R1_ML_KEM_768);
          groups.push_back(Botan::TLS::Group_Params::HYBRID_X25519_KYBER_768_R3_OQS);
-         groups.push_back(Botan::TLS::Group_Params::HYBRID_X25519_KYBER_512_R3_OQS);
+         groups.push_back(Botan::TLS::Group_Params::HYBRID_SECP256R1_KYBER_768_R3_OQS);
          return groups;
       }
 
       // Define that the client should exclusively pre-offer hybrid groups
       // in its initial Client Hello.
       std::vector<Botan::TLS::Group_Params> key_exchange_groups_to_offer() const override {
-         return {Botan::TLS::Group_Params::HYBRID_X25519_KYBER_768_R3_OQS,
-                 Botan::TLS::Group_Params::HYBRID_X25519_KYBER_512_R3_OQS};
+         return {Botan::TLS::Group_Params::HYBRID_X25519_ML_KEM_768};
       }
 };
 

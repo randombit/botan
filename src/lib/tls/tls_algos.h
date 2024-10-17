@@ -123,6 +123,10 @@ enum class Group_Params_Code : uint16_t {
    HYBRID_X25519_KYBER_512_R3_OQS = 0x2F39,
    HYBRID_X25519_KYBER_768_R3_OQS = 0x6399,
 
+   // https://datatracker.ietf.org/doc/draft-kwiatkowski-tls-ecdhe-mlkem/02/
+   HYBRID_SECP256R1_ML_KEM_768 = 0x11EB,
+   HYBRID_X25519_ML_KEM_768 = 0x11EC,
+
    HYBRID_X448_KYBER_768_R3_OQS = 0x2F90,
 
    HYBRID_SECP256R1_KYBER_512_R3_OQS = 0x2F3A,
@@ -216,7 +220,9 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
          BOTAN_DIAGNOSTIC_PUSH
          BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
 
-         return m_code == Group_Params_Code::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE ||
+         return m_code == Group_Params_Code::HYBRID_SECP256R1_ML_KEM_768 ||
+                m_code == Group_Params_Code::HYBRID_X25519_ML_KEM_768 ||
+                m_code == Group_Params_Code::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE ||
                 m_code == Group_Params_Code::HYBRID_X25519_KYBER_512_R3_OQS ||
                 m_code == Group_Params_Code::HYBRID_X25519_KYBER_768_R3_OQS ||
                 m_code == Group_Params_Code::HYBRID_X448_KYBER_768_R3_OQS ||
