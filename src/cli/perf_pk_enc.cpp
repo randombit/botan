@@ -48,6 +48,9 @@ class PerfTest_PKEnc : public PerfTest {
          auto keygen_timer = config.make_timer(nm, 1, "keygen");
 
          auto key = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
+         while(keygen_timer->under(msec)) {
+            key = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
+         }
 
          // TODO this would have to be generalized for anything but RSA/ElGamal
          const std::string padding = "PKCS1v15";
@@ -75,6 +78,7 @@ class PerfTest_PKEnc : public PerfTest {
             }
          }
 
+         config.record_result(*keygen_timer);
          config.record_result(*enc_timer);
          config.record_result(*dec_timer);
       }
