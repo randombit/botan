@@ -1178,7 +1178,7 @@ To use custom curves with the Botan :cpp:class:`TLS::Client` or :cpp:class:`TLS:
 additional adjustments have to be implemented as shown in the following code examples.
 
 1. Registration of the custom curve
-2. Implementation TLS callbacks ``tls_generate_ephemeral_key`` and ``tls_ephemeral_key_agreement``
+2. Implementation of TLS callbacks ``tls_generate_ephemeral_key`` and ``tls_deserialize_peer_public_key``
 3. Adjustment of the TLS policy by allowing the custom curve
 
 Below is a code example for a TLS client using a custom curve.
