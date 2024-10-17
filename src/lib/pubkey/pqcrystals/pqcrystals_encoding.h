@@ -139,6 +139,9 @@ constexpr void pack(const Polynomial<PolyTrait, D>& p, BufferStuffer& stuffer, M
          // Transform p[i] via a custom map function (that may be a NOOP).
          const typename trait::unsigned_T mapped_coeff = map(p[i + j]);
          const auto coeff_value = static_cast<typename trait::sink_t>(mapped_coeff);
+
+         // pack() is called only on data produced by us. If the values returned
+         // by the map function are not in the range [0, range] we have a bug.
          BOTAN_DEBUG_ASSERT(coeff_value <= range);
 
          // Bit-pack the coefficient into the collectors array and keep track of
@@ -170,8 +173,9 @@ constexpr void pack(const Polynomial<PolyTrait, D>& p, BufferStuffer& stuffer, M
  *
  * This takes a byte sequence represented by @p byte_source and unpacks its
  * coefficients into the polynomial @p p. Optionally, the coefficients can be
- * transformed using the @p unmap function after unpacking them. Note that the
- * provided range is assumed for the coefficients _before_ the transformation.
+ * transformed using the @p unmap function after unpacking them. Note that
+ * the @p unmap function must be able to deal with out-of-range values, as the
+ * input to `unpack()` may be untrusted data.
  *
  * Kyber uses @p unmap to decompress the coefficients as needed, Dilithium uses
  * it to convert the coefficients back to signed integers.
@@ -202,9 +206,13 @@ constexpr void unpack(Polynomial<PolyTrait, D>& p, ByteSourceT& byte_source, Unm
             bit_offset = bit_offset - trait::bits_in_collector;
             coeff_value |= collectors[++c] << (trait::bits_per_coeff - bit_offset);
          }
-         const auto mapped_coeff = static_cast<typename trait::unsigned_T>(coeff_value & trait::value_mask);
-         BOTAN_DEBUG_ASSERT(mapped_coeff <= range);
-         p[i + j] = unmap(mapped_coeff);
+
+         // unpack() may be called on data produced by an untrusted party.
+         // The values passed into the unmap function may be out of range, hence
+         // it is acceptable for unmap to return an out-of-range value then.
+         //
+         // For that reason we cannot use BOTAN_ASSERT[_DEBUG] on the values.
+         p[i + j] = unmap(static_cast<typename trait::unsigned_T>(coeff_value & trait::value_mask));
       }
    }
 }
