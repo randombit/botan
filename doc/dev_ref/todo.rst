@@ -65,12 +65,13 @@ External Providers
 * Windows CryptoNG provider (ciphers, hashes)
 * Extend Apple CommonCrypto provider (HMAC, CMAC, RSA, ECDSA, ECDH)
 * Add support for iOS keychain access
-* Extend support for TPM 2.0 (ECC keys, PCR, NVRAM, Policies, etc)
+* Extend support for TPM 2.0 (PCR, NVRAM, Policies, etc)
 
 TLS
 ----------------------------------------
 
 * Make DTLS support optional at build time
+* Make TLS 1.2 support optional at build time
 * Improve/optimize DTLS defragmentation and retransmission
 * Make RSA optional at build time
 * Make finite field DH optional at build time

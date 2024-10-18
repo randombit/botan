@@ -84,7 +84,7 @@ Transport Layer Security (TLS) Protocol
   encrypt-then-mac CBC, and extended master secret.
 * Supports authentication using certificates or preshared keys (PSK)
 * Supports record encryption with modern AEAD modes as well as legacy CBC ciphersuites.
-* TLS 1.3 supports post-quantum key exchange with Kyber and FrodoKEM
+* TLS 1.3 supports hybrid post-quantum key exchange with ML-KEM/Kyber and FrodoKEM
 
 Public Key Infrastructure
 ----------------------------------------
@@ -100,10 +100,10 @@ Public Key Cryptography
 ----------------------------------------
 
 * RSA signatures and encryption
-* DH and ECDH key agreement
+* DH, ECDH, X25519 and X448 key agreement
 * Signature schemes ECDSA, DSA, Ed25519, Ed448, ECGDSA, ECKCDSA, SM2, GOST 34.10
 * Post-quantum signature schemes ML-DSA (Dilithium), SLH-DSA (SPHINCS+), HSS/LMS, XMSS
-* Post-quantum key agreement schemes ML-KEM (Kyber), McEliece, and FrodoKEM
+* Post-quantum key encapsulation schemes ML-KEM (Kyber), FrodoKEM, McEliece
 * ElGamal encryption
 * Padding schemes OAEP, PSS, PKCS #1 v1.5, X9.31
 
@@ -117,6 +117,7 @@ Ciphers, hashes, MACs, and checksums
 * Stream ciphers (X)ChaCha20, (X)Salsa20, SHAKE-128, RC4
 * Hash functions SHA-1, SHA-2, SHA-3, MD5, RIPEMD-160, BLAKE2b/BLAKE2s,
   Skein-512, SM3, Streebog, Whirlpool
+* eXtendable Output Functions (XOFs) SHAKE-128, SHAKE-256
 * Password hashing schemes PBKDF2, Argon2, Scrypt, bcrypt
 * Authentication codes HMAC, CMAC, Poly1305, KMAC, SipHash, GMAC, X9.19 DES-MAC
 * Non-cryptographic checksums Adler32, CRC24, CRC32
