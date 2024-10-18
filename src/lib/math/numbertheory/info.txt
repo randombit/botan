@@ -13,7 +13,6 @@ reducer.h
 </header:public>
 
 <header:internal>
-curve_nistp.h
 monty.h
 monty_exp.h
 primality.h
