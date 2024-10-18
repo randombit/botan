@@ -186,6 +186,16 @@ std::optional<Group_Params> Group_Params::from_string(std::string_view group_nam
       return Group_Params::KYBER_1024_R3_OQS;
    }
 
+   if(group_name == "ML-KEM-512") {
+      return Group_Params::ML_KEM_512;
+   }
+   if(group_name == "ML-KEM-768") {
+      return Group_Params::ML_KEM_768;
+   }
+   if(group_name == "ML-KEM-1024") {
+      return Group_Params::ML_KEM_1024;
+   }
+
    if(group_name == "eFrodoKEM-640-SHAKE") {
       return Group_Params::eFRODOKEM_640_SHAKE_OQS;
    }
@@ -310,6 +320,13 @@ std::optional<std::string> Group_Params::to_string() const {
          return "Kyber-768-r3";
       case Group_Params::KYBER_1024_R3_OQS:
          return "Kyber-1024-r3";
+
+      case Group_Params::ML_KEM_512:
+         return "ML-KEM-512";
+      case Group_Params::ML_KEM_768:
+         return "ML-KEM-768";
+      case Group_Params::ML_KEM_1024:
+         return "ML-KEM-1024";
 
       case Group_Params::eFRODOKEM_640_SHAKE_OQS:
          return "eFrodoKEM-640-SHAKE";
