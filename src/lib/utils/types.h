@@ -61,7 +61,7 @@ namespace Botan {
 * <dt>Public Key Signature Schemes<dd>
 *        @ref dsa.h "DSA", @ref dilithium.h "ML-DSA/Dilithium", @ref ecdsa.h "ECDSA", @ref ecgdsa.h "ECGDSA",
 *        @ref eckcdsa.h "ECKCDSA", @ref gost_3410.h "GOST 34.10-2001", @ref hss_lms.h "HSS/LMS", @ref sm2.h "SM2",
-         @ref sphincsplus.h "SPHINCS+", @ref xmss.h "XMSS"
+         @ref sphincsplus.h "SLH-DSA/SPHINCS+", @ref xmss.h "XMSS"
 * <dt>Key Agreement<dd>
 *        @ref dh.h "DH", @ref ecdh.h "ECDH"
 * <dt>Compression<dd>
