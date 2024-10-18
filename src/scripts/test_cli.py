@@ -1324,7 +1324,9 @@ def cli_tls_online_pqc_hybrid_tests(tmp_dir):
 
     test_cfg = [
         TestConfig("pq.cloudflareresearch.com", "x25519/Kyber-768-r3"),
+        TestConfig("pq.cloudflareresearch.com", "x25519/ML-KEM-768"),
         TestConfig("google.com", "x25519/Kyber-768-r3"),
+        TestConfig("google.com", "x25519/ML-KEM-768"),
 
         TestConfig("qsc.eu-de.kms.cloud.ibm.com", "secp256r1/Kyber-512-r3"),
         TestConfig("qsc.eu-de.kms.cloud.ibm.com", "secp384r1/Kyber-768-r3"),
@@ -1339,6 +1341,8 @@ def cli_tls_online_pqc_hybrid_tests(tmp_dir):
     if oqsp and oqs_test_ca:
         # src/scripts/test_cli.py --run-online-tests ./botan pqc_hybrid_tests
         test_cfg += [
+            TestConfig("test.openquantumsafe.org", "x25519/ML-KEM-768", port=oqsp['X25519MLKEM768'], ca=oqs_test_ca),
+            TestConfig("test.openquantumsafe.org", "secp256r1/ML-KEM-768", port=oqsp['SecP256r1MLKEM768'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "x25519/Kyber-512-r3", port=oqsp['x25519_kyber512'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "x25519/Kyber-768-r3", port=oqsp['x25519_kyber768'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "x448/Kyber-768-r3", port=oqsp['x448_kyber768'], ca=oqs_test_ca),

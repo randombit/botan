@@ -25,6 +25,22 @@ std::vector<std::pair<std::string, std::string>> algorithm_specs_for_group(Group
    BOTAN_ARG_CHECK(group.is_pqc_hybrid(), "Group is not hybrid");
 
    switch(group.code()) {
+      // draft-kwiatkowski-tls-ecdhe-mlkem-02 Section 3
+      //
+      //    NIST's special publication 800-56Cr2 approves the usage of HKDF with
+      //    two distinct shared secrets, with the condition that the first one
+      //    is computed by a FIPS-approved key-establishment scheme.  FIPS also
+      //    requires a certified implementation of the scheme, which will remain
+      //    more ubiqutous for secp256r1 in the coming years.
+      //
+      //    For this reason we put the ML-KEM-768 shared secret first in
+      //    X25519MLKEM768, and the secp256r1 shared secret first in
+      //    SecP256r1MLKEM768.
+      case Group_Params::HYBRID_X25519_ML_KEM_768:
+         return {{"ML-KEM", "ML-KEM-768"}, {"X25519", "X25519"}};
+      case Group_Params::HYBRID_SECP256R1_ML_KEM_768:
+         return {{"ECDH", "secp256r1"}, {"ML-KEM", "ML-KEM-768"}};
+
       case Group_Params::HYBRID_X25519_KYBER_512_R3_OQS:
       case Group_Params::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE:
          return {{"X25519", "X25519"}, {"Kyber", "Kyber-512-r3"}};
@@ -98,6 +114,11 @@ std::vector<size_t> public_value_lengths_for_group(Group_Params group) {
    // TODO: Find a way to expose important algorithm constants globally
    //       in the library, to avoid violating the DRY principle.
    switch(group.code()) {
+      case Group_Params::HYBRID_X25519_ML_KEM_768:
+         return {1184, 32};
+      case Group_Params::HYBRID_SECP256R1_ML_KEM_768:
+         return {32, 1184};
+
       case Group_Params::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE:
       case Group_Params::HYBRID_X25519_KYBER_512_R3_OQS:
          return {32, 800};
