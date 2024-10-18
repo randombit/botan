@@ -104,6 +104,11 @@ enum class Group_Params_Code : uint16_t {
    KYBER_768_R3_OQS = 0x023C,
    KYBER_1024_R3_OQS = 0x023D,
 
+   // https://datatracker.ietf.org/doc/draft-connolly-tls-mlkem-key-agreement/02/
+   ML_KEM_512 = 0x0512,
+   ML_KEM_768 = 0x0768,
+   ML_KEM_1024 = 0x1024,
+
    eFRODOKEM_640_SHAKE_OQS = 0x0201,
    eFRODOKEM_976_SHAKE_OQS = 0x0203,
    eFRODOKEM_1344_SHAKE_OQS = 0x0205,
@@ -194,6 +199,11 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
                 m_code == Group_Params_Code::FFDHE_8192;
       }
 
+      constexpr bool is_pure_ml_kem() const {
+         return m_code == Group_Params_Code::ML_KEM_512 || m_code == Group_Params_Code::ML_KEM_768 ||
+                m_code == Group_Params_Code::ML_KEM_1024;
+      }
+
       constexpr bool is_pure_kyber() const {
          return m_code == Group_Params_Code::KYBER_512_R3_OQS || m_code == Group_Params_Code::KYBER_768_R3_OQS ||
                 m_code == Group_Params_Code::KYBER_1024_R3_OQS;
@@ -210,7 +220,9 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
 
       constexpr bool is_pure_ecc_group() const { return is_x25519() || is_x448() || is_ecdh_named_curve(); }
 
-      constexpr bool is_post_quantum() const { return is_pure_kyber() || is_pure_frodokem() || is_pqc_hybrid(); }
+      constexpr bool is_post_quantum() const {
+         return is_pure_kyber() || is_pure_ml_kem() || is_pure_frodokem() || is_pqc_hybrid();
+      }
 
       constexpr bool is_pqc_hybrid() const {
          BOTAN_DIAGNOSTIC_PUSH
@@ -238,7 +250,9 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
          BOTAN_DIAGNOSTIC_POP
       }
 
-      constexpr bool is_kem() const { return is_pure_kyber() || is_pure_frodokem() || is_pqc_hybrid(); }
+      constexpr bool is_kem() const {
+         return is_pure_kyber() || is_pure_ml_kem() || is_pure_frodokem() || is_pqc_hybrid();
+      }
 
       // Returns std::nullopt if the param has no known name
       std::optional<std::string> to_string() const;
