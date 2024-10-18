@@ -50,6 +50,9 @@ class PerfTest_PKKa : public PerfTest {
 
          auto key1 = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
          auto key2 = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
+         while(keygen_timer->under(msec)) {
+            key2 = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
+         }
 
          config.record_result(*keygen_timer);
 
