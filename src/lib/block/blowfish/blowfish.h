@@ -23,10 +23,18 @@ class BOTAN_TEST_API Blowfish final : public Block_Cipher_Fixed_Params<8, 1, 56>
       /**
       * Modified EKSBlowfish key schedule, used for bcrypt password hashing
       */
+      BOTAN_DEPRECATED("use std::span<> overload")
       void salted_set_key(const uint8_t key[],
                           size_t key_length,
                           const uint8_t salt[],
                           size_t salt_length,
+                          size_t workfactor,
+                          bool salt_first = false) {
+         salted_set_key({key, key_length}, {salt, salt_length}, workfactor, salt_first);
+      }
+
+      void salted_set_key(std::span<const uint8_t> key,
+                          std::span<const uint8_t> salt,
                           size_t workfactor,
                           bool salt_first = false);
 
@@ -39,16 +47,14 @@ class BOTAN_TEST_API Blowfish final : public Block_Cipher_Fixed_Params<8, 1, 56>
       bool has_keying_material() const override;
 
    private:
-      void key_schedule(std::span<const uint8_t> key) override;
+      void key_schedule(std::span<const uint8_t> key) override { key_schedule(key, {}); }
 
-      void key_expansion(const uint8_t key[], size_t key_length, const uint8_t salt[], size_t salt_length);
+      void key_schedule(std::span<const uint8_t> key, std::span<const uint8_t> salt);
 
-      void generate_sbox(secure_vector<uint32_t>& box,
-                         uint32_t& L,
-                         uint32_t& R,
-                         const uint8_t salt[],
-                         size_t salt_length,
-                         size_t salt_off) const;
+      void key_expansion(std::span<const uint8_t> key, std::span<const uint8_t> salt);
+
+      void generate_sbox(
+         std::span<uint32_t> box, uint32_t& L, uint32_t& R, std::span<const uint8_t> salt, size_t salt_off) const;
 
       secure_vector<uint32_t> m_S, m_P;
 };
