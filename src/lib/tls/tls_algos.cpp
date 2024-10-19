@@ -214,6 +214,14 @@ std::optional<Group_Params> Group_Params::from_string(std::string_view group_nam
    if(group_name == "x25519/Kyber-768-r3") {
       return Group_Params::HYBRID_X25519_KYBER_768_R3_OQS;
    }
+
+   if(group_name == "x25519/ML-KEM-768") {
+      return Group_Params::HYBRID_X25519_ML_KEM_768;
+   }
+   if(group_name == "secp256r1/ML-KEM-768") {
+      return Group_Params::HYBRID_SECP256R1_ML_KEM_768;
+   }
+
    if(group_name == "x448/Kyber-768-r3") {
       return Group_Params::HYBRID_X448_KYBER_768_R3_OQS;
    }
@@ -344,6 +352,12 @@ std::optional<std::string> Group_Params::to_string() const {
          return "x25519/Kyber-512-r3";
       case Group_Params::HYBRID_X25519_KYBER_768_R3_OQS:
          return "x25519/Kyber-768-r3";
+
+      case Group_Params::HYBRID_X25519_ML_KEM_768:
+         return "x25519/ML-KEM-768";
+      case Group_Params::HYBRID_SECP256R1_ML_KEM_768:
+         return "secp256r1/ML-KEM-768";
+
       case Group_Params::HYBRID_X448_KYBER_768_R3_OQS:
          return "x448/Kyber-768-r3";
 
