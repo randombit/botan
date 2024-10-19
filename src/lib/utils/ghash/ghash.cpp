@@ -131,7 +131,7 @@ void GHASH::key_schedule(std::span<const uint8_t> key) {
          m_HM[4 * j + 2 * i + 1] = H1;
 
          // GCM's bit ops are reversed so we carry out of the bottom
-         const uint64_t carry = R * (H1 & 1);
+         const uint64_t carry = CT::Mask<uint64_t>::expand(H1 & 1).if_set_return(R);
          H1 = (H1 >> 1) | (H0 << 63);
          H0 = (H0 >> 1) ^ carry;
       }
