@@ -344,14 +344,13 @@ void fmonty(uint64_t result_two_q_x[5],
 * This function performs the swap without leaking any side-channel
 * information.
 */
-inline void swap_conditional(uint64_t a[5], uint64_t b[5], uint64_t c[5], uint64_t d[5], uint64_t iswap) {
-   const uint64_t swap = 0 - iswap;
-
+inline void swap_conditional(uint64_t a[5], uint64_t b[5], uint64_t c[5], uint64_t d[5], CT::Mask<uint64_t> swap) {
    for(size_t i = 0; i < 5; ++i) {
-      const uint64_t x0 = swap & (a[i] ^ b[i]);
-      const uint64_t x1 = swap & (c[i] ^ d[i]);
+      const uint64_t x0 = swap.if_set_return(a[i] ^ b[i]);
       a[i] ^= x0;
       b[i] ^= x0;
+
+      const uint64_t x1 = swap.if_set_return(c[i] ^ d[i]);
       c[i] ^= x1;
       d[i] ^= x1;
    }
@@ -376,14 +375,15 @@ void cmult(uint64_t resultx[5], uint64_t resultz[5], const uint8_t n[32], const 
    copy_mem(a, q, 5);
 
    for(size_t i = 0; i < 32; ++i) {
-      const uint64_t bit0 = (n[31 - i] >> 7) & 1;
-      const uint64_t bit1 = (n[31 - i] >> 6) & 1;
-      const uint64_t bit2 = (n[31 - i] >> 5) & 1;
-      const uint64_t bit3 = (n[31 - i] >> 4) & 1;
-      const uint64_t bit4 = (n[31 - i] >> 3) & 1;
-      const uint64_t bit5 = (n[31 - i] >> 2) & 1;
-      const uint64_t bit6 = (n[31 - i] >> 1) & 1;
-      const uint64_t bit7 = (n[31 - i] >> 0) & 1;
+      const uint64_t si = n[31 - i];
+      const auto bit0 = CT::Mask<uint64_t>::expand_bit(si, 7);
+      const auto bit1 = CT::Mask<uint64_t>::expand_bit(si, 6);
+      const auto bit2 = CT::Mask<uint64_t>::expand_bit(si, 5);
+      const auto bit3 = CT::Mask<uint64_t>::expand_bit(si, 4);
+      const auto bit4 = CT::Mask<uint64_t>::expand_bit(si, 3);
+      const auto bit5 = CT::Mask<uint64_t>::expand_bit(si, 2);
+      const auto bit6 = CT::Mask<uint64_t>::expand_bit(si, 1);
+      const auto bit7 = CT::Mask<uint64_t>::expand_bit(si, 0);
 
       swap_conditional(c, a, d, b, bit0);
       fmonty(g, h, e, f, c, d, a, b, q);
