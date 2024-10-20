@@ -78,10 +78,11 @@ FrodoMatrix FrodoMatrix::sample(const FrodoKEMConstants& constants,
 
    load_le<uint16_t>(elements.data(), r.data(), n);
 
-   for(size_t i = 0; i < n; ++i) {
-      uint32_t sample = 0;                         // Avoid integral promotion
-      const uint16_t prnd = elements.at(i) >> 1;   // Drop the least significant bit
-      const uint16_t sign = elements.at(i) & 0x1;  // Pick the least significant bit
+   for(auto& elem : elements) {
+      const auto prnd = CT::value_barrier(static_cast<uint16_t>(elem >> 1));  // Drop the least significant bit
+      const auto sign = CT::Mask<uint16_t>::expand_bit(elem, 0);              // Pick the least significant bit
+
+      uint32_t sample = 0;  // Avoid integral promotion
 
       // No need to compare with the last value.
       for(size_t j = 0; j < constants.cdf_table_len() - 1; ++j) {
@@ -89,7 +90,9 @@ FrodoMatrix FrodoMatrix::sample(const FrodoKEMConstants& constants,
          sample += CT::Mask<uint16_t>::is_lt(constants.cdf_table_at(j), prnd).if_set_return(1);
       }
       // Assuming that sign is either 0 or 1, flips sample iff sign = 1
-      elements.at(i) = static_cast<uint16_t>((-sign) ^ sample) + sign;
+      const uint16_t sample_u16 = static_cast<uint16_t>(sample);
+
+      elem = sign.select(~sample_u16 + 1, sample_u16);
    }
 
    return FrodoMatrix(dimensions, std::move(elements));
