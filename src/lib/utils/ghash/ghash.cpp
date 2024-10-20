@@ -49,8 +49,6 @@ void GHASH::ghash_multiply(secure_vector<uint8_t>& x, std::span<const uint8_t> i
 
    CT::poison(x.data(), x.size());
 
-   const uint64_t ALL_BITS = 0xFFFFFFFFFFFFFFFF;
-
    uint64_t X[2] = {load_be<uint64_t>(x.data(), 0), load_be<uint64_t>(x.data(), 1)};
 
    for(size_t b = 0; b != blocks; ++b) {
@@ -60,16 +58,17 @@ void GHASH::ghash_multiply(secure_vector<uint8_t>& x, std::span<const uint8_t> i
       uint64_t Z[2] = {0, 0};
 
       for(size_t i = 0; i != 64; ++i) {
-         const uint64_t X0MASK = (ALL_BITS + (X[0] >> 63)) ^ ALL_BITS;
-         const uint64_t X1MASK = (ALL_BITS + (X[1] >> 63)) ^ ALL_BITS;
+         const auto X0MASK = CT::Mask<uint64_t>::expand_top_bit(X[0]);
+         const auto X1MASK = CT::Mask<uint64_t>::expand_top_bit(X[1]);
 
          X[0] <<= 1;
          X[1] <<= 1;
 
-         Z[0] ^= m_HM[4 * i] & X0MASK;
-         Z[1] ^= m_HM[4 * i + 1] & X0MASK;
-         Z[0] ^= m_HM[4 * i + 2] & X1MASK;
-         Z[1] ^= m_HM[4 * i + 3] & X1MASK;
+         Z[0] = X0MASK.select(Z[0] ^ m_HM[4 * i], Z[0]);
+         Z[1] = X0MASK.select(Z[1] ^ m_HM[4 * i + 1], Z[1]);
+
+         Z[0] = X1MASK.select(Z[0] ^ m_HM[4 * i + 2], Z[0]);
+         Z[1] = X1MASK.select(Z[1] ^ m_HM[4 * i + 3], Z[1]);
       }
 
       X[0] = Z[0];
