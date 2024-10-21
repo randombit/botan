@@ -48,6 +48,9 @@ class PerfTest_PK_KEM : public PerfTest {
          auto keygen_timer = config.make_timer(nm, 1, "keygen");
 
          auto key = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
+         while(keygen_timer->under(msec)) {
+            key = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
+         }
 
          Botan::PK_KEM_Decryptor dec(*key, rng, kdf, provider);
          Botan::PK_KEM_Encryptor enc(*key, kdf, provider);
@@ -70,7 +73,7 @@ class PerfTest_PK_KEM : public PerfTest {
                config.error_output() << "KEM mismatch in PK bench\n";
             }
          }
-
+         config.record_result(*keygen_timer);
          config.record_result(*kem_enc_timer);
          config.record_result(*kem_dec_timer);
       }
