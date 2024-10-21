@@ -10,6 +10,8 @@
 #include <botan/concepts.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/alignment_buffer.h>
+#include <botan/internal/buffer_transformer.h>
+#include <botan/internal/loadstor.h>
 #include <botan/internal/stl_util.h>
 
 #include <array>
@@ -663,8 +665,270 @@ std::vector<Test::Result> test_concat() {
    };
 }
 
-BOTAN_REGISTER_TEST_FN(
-   "utils", "buffer_utilities", test_buffer_slicer, test_buffer_stuffer, test_alignment_buffer, test_concat);
+std::vector<Test::Result> test_buffer_transformer() {
+   return {
+      Botan_Tests::CHECK("BufferTransformer basics with arrays",
+                         [](Test::Result& result) {
+                            const std::array<uint8_t, 8> input = {1, 2, 3, 4, 5, 6, 7, 8};
+                            std::array<uint8_t, 8> output = {};
+
+                            Botan::BufferTransformer bt(input, output);
+                            auto n1 = bt.next(2);
+                            result.require("got requested in bytes (1)", n1.first.size() == 2);
+                            result.require("got requested out bytes (1)", n1.second.size() == 2);
+                            result.confirm("dynamic extent in", decltype(n1.first)::extent == std::dynamic_extent);
+                            result.confirm("dynamic extent out", decltype(n1.second)::extent == std::dynamic_extent);
+                            Botan::copy_mem(n1.second, n1.first);
+
+                            auto n2 = bt.next<5>();
+                            result.require("got requested in bytes (2)", n2.first.size() == 5);
+                            result.require("got requested out bytes (2)", n2.second.size() == 5);
+                            result.confirm("static extent in", decltype(n2.first)::extent == 5);
+                            result.confirm("static extent out", decltype(n2.second)::extent == 5);
+                            Botan::copy_mem(n2.second, n2.first);
+
+                            result.require("not done yet", !bt.done());
+                            result.test_eq("has one more bytes", bt.remaining(), 1);
+
+                            bt.skip(1);
+                            result.require("done now", bt.done());
+                            result.test_eq("has no more bytes", bt.remaining(), 0);
+
+                            result.test_is_eq("output is as expected", output, {1, 2, 3, 4, 5, 6, 7, 0 /* skipped */});
+
+                            result.test_no_throw("empty request is okay (dynamic)", [&] { bt.next(0); });
+                            result.test_no_throw("empty request is okay (static)", [&] { bt.next<0>(); });
+                            result.test_no_throw("empty skipping request is okay", [&] { bt.skip(0); });
+                            result.test_throws("data request will fail (1)", [&] { bt.next(1); });
+                            result.test_throws("data request will fail (2)", [&] { bt.next<1>(); });
+                            result.test_throws("data skipping request will fail", [&] { bt.skip(1); });
+                         }),
+
+      Botan_Tests::CHECK("BufferTransformer basics with vectors",
+                         [](Test::Result& result) {
+                            const std::vector<uint8_t> input = {1, 2, 3, 4, 5, 6, 7, 8};
+                            std::vector<uint8_t> output(input.size());
+
+                            Botan::BufferTransformer bt(input, output);
+                            auto n1 = bt.next(4);
+                            result.require("got requested in bytes (1)", n1.first.size() == 4);
+                            result.require("got requested out bytes (1)", n1.second.size() == 4);
+                            result.confirm("dynamic extent in", decltype(n1.first)::extent == std::dynamic_extent);
+                            result.confirm("dynamic extent out", decltype(n1.second)::extent == std::dynamic_extent);
+                            Botan::copy_mem(n1.second, n1.first);
+
+                            bt.skip(2);
+                            result.require("not done yet", !bt.done());
+                            result.test_eq("has two more bytes", bt.remaining(), 2);
+
+                            auto n2 = bt.next<2>();
+                            result.require("got requested in bytes (2)", n2.first.size() == 2);
+                            result.require("got requested out bytes (2)", n2.second.size() == 2);
+                            result.confirm("static extent in", decltype(n2.first)::extent == 2);
+                            result.confirm("static extent out", decltype(n2.second)::extent == 2);
+                            Botan::copy_mem(n2.second, n2.first);
+
+                            result.require("done now", bt.done());
+                            result.test_eq("has no more bytes", bt.remaining(), 0);
+
+                            result.test_is_eq("output is as expected", output, {1, 2, 3, 4, 0, 0, 7, 8});
+
+                            result.test_no_throw("empty request is okay (dynamic)", [&] { bt.next(0); });
+                            result.test_no_throw("empty request is okay (static)", [&] { bt.next<0>(); });
+                            result.test_no_throw("empty skipping request is okay", [&] { bt.skip(0); });
+                            result.test_throws("data request will fail (1)", [&] { bt.next(1); });
+                            result.test_throws("data request will fail (2)", [&] { bt.next<1>(); });
+                            result.test_throws("data skipping request will fail", [&] { bt.skip(1); });
+                         }),
+
+      Botan_Tests::CHECK("BufferTransformer::process_blocks_of() with a single block",
+                         [](Test::Result& result) {
+                            const auto in =
+                               Botan::hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F");
+                            std::vector<uint8_t> out(in.size());
+
+                            Botan::BufferTransformer bt(in, out);
+                            bt.process_blocks_of<8>(
+                               [](std::span<const uint8_t, 8> i, std::span<uint8_t, 8> o) { Botan::copy_mem(o, i); });
+
+                            result.require("done now", bt.done());
+                            result.test_is_eq("output is as expected", out, in);
+                         }),
+
+      Botan_Tests::CHECK("concept strictly_monotonic_decreasing",
+                         [](Test::Result& result) {
+                            result.confirm("empty is strictly monotonic decreasing by definition",
+                                           Botan::detail::strictly_monotonic_decreasing<>);
+                            result.confirm("single element is strictly monotonic decreasing by definition",
+                                           Botan::detail::strictly_monotonic_decreasing<1>);
+                            result.confirm("strictly monotonic decreasing",
+                                           Botan::detail::strictly_monotonic_decreasing<3, 2, 1>);
+                            result.confirm("not strictly monotonic decreasing because 1 < 2",
+                                           !Botan::detail::strictly_monotonic_decreasing<3, 1, 2>);
+                            result.confirm("not strictly monotonic decreasing because 2 == 2",
+                                           !Botan::detail::strictly_monotonic_decreasing<3, 2, 2>);
+                         }),
+
+      Botan_Tests::CHECK(
+         "concept block_processing_callback",
+         [](Test::Result& result) {
+            auto takes_8 = [](std::span<const uint8_t, 8>, std::span<uint8_t, 8>) {};
+            auto takes_dynamic = [](std::span<const uint8_t>, std::span<uint8_t>) {};
+            auto takes_8_or_16 = Botan::overloaded{
+               [](std::span<const uint8_t, 8>, std::span<uint8_t, 8>) {},
+               [](std::span<const uint8_t, 16>, std::span<uint8_t, 16>) {},
+            };
+            auto takes_anything = [](auto, auto) {};
+            result.confirm("need just 8", Botan::detail::block_processing_callback<decltype(takes_8), 8>);
+            result.confirm("need just 8 but could also take 16",
+                           Botan::detail::block_processing_callback<decltype(takes_8_or_16), 8>);
+            result.confirm("need both 8 and 16 but can do only 8",
+                           !Botan::detail::block_processing_callback<decltype(takes_8), 8, 16>);
+            result.confirm("need both 8 and 16, can do dynamic",
+                           Botan::detail::block_processing_callback<decltype(takes_dynamic), 8, 16>);
+            result.confirm("need both 8 and 16, can do anything",
+                           Botan::detail::block_processing_callback<decltype(takes_anything), 8, 16>);
+            result.confirm("need 4, can only do 8 or 16",
+                           !Botan::detail::block_processing_callback<decltype(takes_8_or_16), 4>);
+            result.confirm("need 4, can only do 8", !Botan::detail::block_processing_callback<decltype(takes_8), 4>);
+         }),
+
+      Botan_Tests::CHECK(
+         "BufferTransformer::process_blocks_of() failure modes with a single block",
+         [](Test::Result& result) {
+            const auto in = Botan::hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F");
+            std::vector<uint8_t> out(in.size());
+
+            Botan::BufferTransformer bt1(in, out);
+            result.test_throws("data must be divisible by block size",
+                               [&] { bt1.process_blocks_of<3>([](auto, auto) {}); });
+
+            Botan::BufferTransformer bt2(in, out);
+            result.test_throws<Botan::Invalid_State>("dynamically requesting data while block processing", [&] {
+               bt2.process_blocks_of<8>([&](auto, auto) { bt2.next(8); });
+            });
+
+            Botan::BufferTransformer bt3(in, out);
+            result.test_throws<Botan::Invalid_State>("statically requesting data while block processing", [&] {
+               bt3.process_blocks_of<8>([&](auto, auto) { bt3.next<8>(); });
+            });
+
+            Botan::BufferTransformer bt4(in, out);
+            result.test_throws<Botan::Invalid_State>("skipping data while block processing", [&] {
+               bt4.process_blocks_of<8>([&](auto, auto) { bt4.skip(8); });
+            });
+
+            Botan::BufferTransformer bt5(in, out);
+            result.test_throws<Botan::Invalid_State>("nested block processing", [&] {
+               bt5.process_blocks_of<8>([&](auto, auto) { bt5.process_blocks_of<8>([](auto, auto) {}); });
+            });
+         }),
+
+      Botan_Tests::CHECK("BufferTransformer::process_blocks_of() with two block sizes",
+                         [](Test::Result& result) {
+                            const auto in =
+                               Botan::hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F");
+                            std::vector<uint8_t> out(in.size());
+
+                            Botan::BufferTransformer bt(in, out);
+                            size_t block5 = 0;
+                            size_t block2 = 0;
+
+                            bt.process_blocks_of<5, 2>(
+                               Botan::overloaded{[&](std::span<const uint8_t, 5> ins, std::span<uint8_t, 5> outs) {
+                                                    ++block5;
+                                                    Botan::copy_mem(outs, ins);
+                                                 },
+                                                 [&](std::span<const uint8_t, 2> ins, std::span<uint8_t, 2> outs) {
+                                                    ++block2;
+                                                    Botan::copy_mem(outs, ins);
+                                                 }});
+
+                            result.require("done now", bt.done());
+                            result.test_is_eq("output is as expected", out, in);
+
+                            result.test_eq("block size 5 processed", block5, 6);
+                            result.test_eq("block size 2 processed", block2, 1);
+                         }),
+
+      Botan_Tests::CHECK("BufferTransformer::process_blocks_of() with four block sizes",
+                         [](Test::Result& result) {
+                            const auto in = Botan::hex_decode("000102030405060708090A0B0C0D0E0FFFFEFDFFFCFBFA");
+                            std::vector<uint8_t> out(in.size());
+
+                            // Will be processed in blocks of 8, 4, 2, 1 bytes
+                            // 2x8 bytes, 1x4 bytes, 1x2 bytes, 1x1 bytes
+                            result.require("sanity check input length", in.size() == 2 * 8 + 1 * 4 + 1 * 2 + 1 * 1);
+
+                            Botan::BufferTransformer bt(in, out);
+
+                            size_t processed_8_bytes = 0;
+                            size_t processed_4_bytes = 0;
+                            size_t processed_2_bytes = 0;
+                            size_t processed_1_bytes = 0;
+
+                            bt.process_blocks_of<8, 4, 2, 1>([&](auto i, auto o) {
+                               const auto integer = Botan::load_be(i);
+                               Botan::copy_mem(o, Botan::store_be(i));
+
+                               // This is more involved than it has to be to exercise the
+                               // ability to use constexpr if in the lambda with the
+                               // std::span::size() methods.
+                               if constexpr(i.size() == 8) {
+                                  result.confirm("uint64_t", std::same_as<const uint64_t, decltype(integer)>);
+                                  ++processed_8_bytes;
+                               } else if constexpr(i.size() == 4) {
+                                  result.confirm("uint32_t", std::same_as<const uint32_t, decltype(integer)>);
+                                  ++processed_4_bytes;
+                               } else if constexpr(i.size() == 2) {
+                                  result.confirm("uint16_t", std::same_as<const uint16_t, decltype(integer)>);
+                                  ++processed_2_bytes;
+                               } else if constexpr(i.size() == 1) {
+                                  result.confirm("uint8_t", std::same_as<const uint8_t, decltype(integer)>);
+                                  ++processed_1_bytes;
+                               } else {
+                                  result.test_failure("unexpected block size");
+                               }
+                            });
+
+                            result.require("done now", bt.done());
+                            result.test_is_eq("output is as expected", out, in);
+
+                            result.test_eq("2x8 bytes processed", processed_8_bytes, 2);
+                            result.test_eq("1x4 bytes processed", processed_4_bytes, 1);
+                            result.test_eq("1x2 bytes processed", processed_2_bytes, 1);
+                            result.test_eq("1x1 bytes processed", processed_1_bytes, 1);
+                         }),
+
+      Botan_Tests::CHECK(
+         "BufferTransformer::process_blocks_of() failure modes with multiple block sizes",
+         [](Test::Result& result) {
+            std::array<uint8_t, 11> in1 = {};
+            std::array<uint8_t, 11> out1 = {};
+
+            Botan::BufferTransformer bt1(in1, out1);
+            result.test_throws<Botan::Invalid_Argument>("data must be processible by the sequence block size", [&] {
+               bt1.process_blocks_of<5, 3>([&](auto, auto) { result.test_failure("should not be called"); });
+            });
+
+            std::vector<uint8_t> in2;
+            std::vector<uint8_t> out2;
+
+            Botan::BufferTransformer bt2(in2, out2);
+            result.test_no_throw("empty input should always work", [&] {
+               bt2.process_blocks_of<50, 5, 2>([&](auto, auto) { result.test_failure("should not be called"); });
+            });
+         }),
+   };
+}
+
+BOTAN_REGISTER_TEST_FN("utils",
+                       "buffer_utilities",
+                       test_buffer_slicer,
+                       test_buffer_stuffer,
+                       test_alignment_buffer,
+                       test_concat,
+                       test_buffer_transformer);
 
 }  // namespace
 
