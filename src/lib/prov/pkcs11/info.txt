@@ -14,10 +14,6 @@ pubkey
 pk_pad
 </requires>
 
-<header:internal>
-p11_mechanism.h
-</header:internal>
-
 <header:external>
 pkcs11.h
 pkcs11f.h
@@ -34,4 +30,5 @@ p11_randomgenerator.h
 p11_rsa.h
 p11_types.h
 p11_x509.h
+p11_mechanism.h
 </header:public>
