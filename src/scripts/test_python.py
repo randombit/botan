@@ -993,6 +993,21 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertEqual(sk_read.to_raw(), sk_bits)
         self.assertEqual(pk_read.to_raw(), pk_bits)
 
+    def test_classic_mceliece_raw_keys(self):
+        cmce_mode = "mceliece348864f"
+        sk = botan.PrivateKey.create("ClassicMcEliece", cmce_mode, botan.RandomNumberGenerator("user"))
+        pk = sk.get_public_key()
+
+        sk_bits = sk.to_raw()
+        pk_bits = pk.to_raw()
+
+        sk_read = botan.PrivateKey.load_classic_mceliece(cmce_mode, sk_bits)
+        pk_read = botan.PublicKey.load_classic_mceliece(cmce_mode, pk_bits)
+
+        self.assertEqual(sk_read.to_raw(), sk_bits)
+        self.assertEqual(pk_read.to_raw(), pk_bits)
+
+
 class BotanPythonZfecTests(unittest.TestCase):
     """
     Tests relating to the ZFEC bindings
