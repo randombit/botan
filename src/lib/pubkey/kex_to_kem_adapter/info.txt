@@ -1,0 +1,18 @@
+<defines>
+KEX_TO_KEM_ADAPTER -> 20240504
+</defines>
+
+<module_info>
+name -> "KEX to KEM adapter"
+brief -> "Basic KEX to KEM key transformation"
+type -> "Internal"
+</module_info>
+
+
+<header:internal>
+kex_to_kem_adapter.h
+</header:internal>
+
+<requires>
+
+</requires>
