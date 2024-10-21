@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 3.6.0, Not Yet Released
+Version 3.6.0, 2024-10-21
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Fully integrate and further optimize the new ECC library first introduced in

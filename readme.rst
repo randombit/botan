@@ -57,9 +57,9 @@ Releases
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The latest release from the Botan3 release series is
-`3.5.0 <https://botan.randombit.net/releases/Botan-3.5.0.tar.xz>`_
-`(sig) <https://botan.randombit.net/releases/Botan-3.5.0.tar.xz.asc>`__,
-released on 2024-07-08.
+`3.6.0 <https://botan.randombit.net/releases/Botan-3.6.0.tar.xz>`_
+`(sig) <https://botan.randombit.net/releases/Botan-3.6.0.tar.xz.asc>`__,
+released on 2024-10-21.
 
 The latest release from the Botan2 release series is
 `2.19.5 <https://botan.randombit.net/releases/Botan-2.19.5.tar.xz>`_
