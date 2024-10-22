@@ -335,11 +335,11 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
    public:
       SphincsPlus_Signature_Operation(std::shared_ptr<SphincsPlus_PrivateKeyInternal> private_key,
                                       std::shared_ptr<SphincsPlus_PublicKeyInternal> public_key,
-                                      bool randomized) :
+                                      bool deterministic) :
             m_private(std::move(private_key)),
             m_public(std::move(public_key)),
             m_hashes(Botan::Sphincs_Hash_Functions::create(m_public->parameters(), m_public->seed())),
-            m_randomized(randomized),
+            m_deterministic(deterministic),
             m_context(/* TODO: add API for context */ {}) {
          BOTAN_ARG_CHECK(m_context.size() <= 255, "Context must not exceed 255 bytes");
          BOTAN_ARG_CHECK(m_public->parameters().is_available(),
@@ -353,7 +353,7 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
 
       std::vector<uint8_t> sign(RandomNumberGenerator& rng) override {
          std::optional<SphincsOptionalRandomness> addrnd = std::nullopt;
-         if(m_randomized) {
+         if(!m_deterministic) {
             addrnd = rng.random_vec<SphincsOptionalRandomness>(m_public->parameters().n());
          }
          auto internal_msg = prepare_message(std::exchange(m_msg_buffer, {}), m_public->parameters(), m_context);
@@ -416,7 +416,7 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
       std::shared_ptr<SphincsPlus_PublicKeyInternal> m_public;
       std::unique_ptr<Sphincs_Hash_Functions> m_hashes;
       SphincsInputMessage m_msg_buffer;
-      bool m_randomized;
+      bool m_deterministic;
       SphincsContext m_context;
 };
 
@@ -432,7 +432,7 @@ std::unique_ptr<PK_Ops::Signature> SphincsPlus_PrivateKey::_create_signature_op(
    //   The hedged variant is the default and should be used on platforms where
    //   side-channel attacks are a concern.
    return std::make_unique<SphincsPlus_Signature_Operation>(
-      m_private, m_public, !options.using_deterministic_signature());
+      m_private, m_public, options.using_deterministic_signature());
 }
 
 }  // namespace Botan
