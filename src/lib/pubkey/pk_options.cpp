@@ -37,7 +37,7 @@ void retrofit_legacy_parameters(SigOptsBaseT& builder,
       builder.with_der_encoded_signature(format == Signature_Format::DerSequence);
    }
 
-   if(algo.starts_with("Dilithium") || algo == "SPHINCS+") {
+   if(algo.starts_with("Dilithium") || algo == "SPHINCS+" || algo == "ML-DSA" || algo == "SLH-DSA") {
       if(!params.empty() && params != "Randomized" && params != "Deterministic") {
          throw Invalid_Argument(fmt("Unexpected parameters for signing with {}", algo));
       }
