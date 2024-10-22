@@ -258,7 +258,7 @@ class Generic_SlhDsa_Signature_Tests final : public PK_Signature_Generation_Test
          return sk;
       }
 
-      std::string default_padding(const VarMap&) const override { return ""; }
+      std::string default_padding(const VarMap&) const override { return "Deterministic"; }
 
       bool skip_this_test(const std::string&, const VarMap& vars) override {
          return !Botan::Sphincs_Parameters::create(vars.get_req_str("Instance")).is_available();

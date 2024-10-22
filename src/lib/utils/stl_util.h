@@ -397,17 +397,6 @@ T assert_is_some(std::optional<T> v, const char* expr, const char* func, const c
 
 #define BOTAN_ASSERT_IS_SOME(v) assert_is_some(v, #v, __func__, __FILE__, __LINE__)
 
-/*
- * @brief Helper class to pass literal strings to C++ templates
- */
-template <size_t N>
-class StringLiteral {
-   public:
-      constexpr StringLiteral(const char (&str)[N]) { std::copy_n(str, N, value); }
-
-      char value[N];
-};
-
 // TODO: C++23: replace with std::to_underlying
 template <typename T>
    requires std::is_enum_v<T>
