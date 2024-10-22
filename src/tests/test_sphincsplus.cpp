@@ -240,7 +240,7 @@ class Generic_SlhDsa_Signature_Tests final : public PK_Signature_Generation_Test
    public:
       Generic_SlhDsa_Signature_Tests() :
             PK_Signature_Generation_Test(
-               "SLH-DSA", "pubkey/slh_dsa_generic.vec", "Instance,Msg,PrivateKey,PublicKey,Valid,Signature") {}
+               "SLH-DSA", "pubkey/slh_dsa_generic.vec", "Instance,Msg,PrivateKey,PublicKey,Valid,Signature", "Nonce") {}
 
       bool clear_between_callbacks() const override { return false; }
 
@@ -258,7 +258,9 @@ class Generic_SlhDsa_Signature_Tests final : public PK_Signature_Generation_Test
          return sk;
       }
 
-      std::string default_padding(const VarMap&) const override { return ""; }
+      std::string default_padding(const VarMap& vars) const override {
+         return vars.has_key("Nonce") ? "Randomized" : "Deterministic";
+      }
 
       bool skip_this_test(const std::string&, const VarMap& vars) override {
          return !Botan::Sphincs_Parameters::create(vars.get_req_str("Instance")).is_available();
@@ -269,7 +271,7 @@ class Generic_SlhDsa_Verification_Tests final : public PK_Signature_Verification
    public:
       Generic_SlhDsa_Verification_Tests() :
             PK_Signature_Verification_Test(
-               "SLH-DSA", "pubkey/slh_dsa_generic.vec", "Instance,Msg,PrivateKey,PublicKey,Valid,Signature") {}
+               "SLH-DSA", "pubkey/slh_dsa_generic.vec", "Instance,Msg,PrivateKey,PublicKey,Valid,Signature", "Nonce") {}
 
       bool clear_between_callbacks() const override { return false; }
 
