@@ -428,7 +428,10 @@ std::unique_ptr<PK_Ops::Signature> SphincsPlus_PrivateKey::create_signature_op(R
    BOTAN_ARG_CHECK(params.empty() || params == "Deterministic" || params == "Randomized",
                    "Unexpected parameters for signing with SLH-DSA (or SPHINCS+)");
 
-   const bool randomized = (params == "Randomized");
+   // FIPS 205, Section 9.2
+   //   The hedged variant is the default and should be used on platforms where
+   //   side-channel attacks are a concern.
+   const bool randomized = (params.empty() || params == "Randomized");
    if(provider.empty() || provider == "base") {
       return std::make_unique<SphincsPlus_Signature_Operation>(m_private, m_public, randomized);
    }
