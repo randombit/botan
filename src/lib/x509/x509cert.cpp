@@ -181,6 +181,20 @@ std::unique_ptr<X509_Certificate_Data> parse_x509_cert_body(const X509_Object& o
 
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Extended_Key_Usage>()) {
       data->m_extended_key_usage = ext->object_identifiers();
+      /*
+      RFC 5280 section 4.2.1.12
+
+      "This extension indicates one or more purposes ..."
+
+      "If the extension is present, then the certificate MUST only be
+      used for one of the purposes indicated."
+
+      Thus we reject an EKU extension which is empty, since this indicates
+      the certificate cannot be used for any purpose.
+      */
+      if(data->m_extended_key_usage.empty()) {
+         throw Decoding_Error("Certificate has invalid empty EKU extension");
+      }
    }
 
    if(auto ext = data->m_v3_extensions.get_extension_object_as<Cert_Extension::Basic_Constraints>()) {

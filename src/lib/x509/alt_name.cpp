@@ -109,6 +109,53 @@ void AlternativeName::encode_into(DER_Encoder& der) const {
    der.end_cons();
 }
 
+namespace {
+
+std::string check_and_canonicalize_dns_name(std::string_view name) {
+   if(name.size() > 255) {
+      throw Decoding_Error("DNS SAN exceeds maximum allowed length");
+   }
+
+   if(name.empty()) {
+      throw Decoding_Error("DNS SAN cannot be empty");
+   }
+
+   if(name.starts_with(".")) {
+      throw Decoding_Error("DNS SAN cannot start with a dot");
+   }
+
+   /*
+   Table mapping uppercase to lowercase and only including values for valid DNS names
+   namely A-Z, a-z, 0-9, hypen, and dot, plus '*' for wildcarding.
+   */
+   const uint8_t DNS_TABLE[128] = {
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x2A, 0x00, 0x00, 0x2D, 0x2E, 0x00, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38,
+      0x39, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B,
+      0x6C, 0x6D, 0x6E, 0x6F, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F, 0x70, 0x71,
+      0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+   std::string canon;
+
+   for(char c : name) {
+      const uint8_t cu = static_cast<uint8_t>(c);
+      if(cu >= 128) {
+         throw Decoding_Error("DNS name should not have any high bits set");
+      }
+      const uint8_t mapped = DNS_TABLE[cu];
+      if(mapped == 0) {
+         throw Decoding_Error("Name in DNS SAN includes invalid character");
+      }
+      canon.push_back(static_cast<char>(mapped));
+   }
+
+   return canon;
+}
+
+}  // namespace
+
 void AlternativeName::decode_from(BER_Decoder& source) {
    BER_Decoder names = source.start_sequence();
 
@@ -140,7 +187,7 @@ void AlternativeName::decode_from(BER_Decoder& source) {
       } else if(obj.is_a(1, ASN1_Class::ContextSpecific)) {
          add_email(ASN1::to_string(obj));
       } else if(obj.is_a(2, ASN1_Class::ContextSpecific)) {
-         add_dns(ASN1::to_string(obj));
+         m_dns.insert(check_and_canonicalize_dns_name(ASN1::to_string(obj)));
       } else if(obj.is_a(4, ASN1_Class::ContextSpecific | ASN1_Class::Constructed)) {
          BER_Decoder dec(obj);
          X509_DN dn;
