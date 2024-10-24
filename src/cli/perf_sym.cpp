@@ -221,11 +221,17 @@ class PerfTest_StreamCipher final : public PerfTest {
 
             config.record_result(*encrypt_timer);
 
-            auto ks_timer = config.make_timer(cipher.name(), buffer.size(), "write_keystream", provider, buf_size);
+            auto ks_timer =
+               config.make_timer(cipher.name(), mult * buffer.size(), "write_keystream", provider, buf_size);
 
             while(ks_timer->under(runtime)) {
-               ks_timer->run([&]() { cipher.write_keystream(buffer.data(), buffer.size()); });
+               ks_timer->run([&]() {
+                  for(size_t i = 0; i != mult; ++i) {
+                     cipher.write_keystream(buffer.data(), buffer.size());
+                  }
+               });
             }
+
             config.record_result(*ks_timer);
          }
       }
