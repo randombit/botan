@@ -401,7 +401,8 @@ class BOTAN_TEST_API CPUID final {
       */
       template <typename T>
       static inline uint32_t if_set(uint64_t cpuid, T flag, CPUID::CPUID_bits bit, uint32_t allowed) {
-         if(cpuid & static_cast<uint64_t>(flag)) {
+         const uint64_t flag64 = static_cast<uint64_t>(flag);
+         if((cpuid & flag64) == flag64) {
             return (bit & allowed);
          } else {
             return 0;
