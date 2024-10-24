@@ -191,6 +191,41 @@ std::vector<Test::Result> test_container_strong_type() {
                               std::vector(tfa.begin(), tfa.end()),
                               Botan::hex_decode("baadf00d"));
             }),
+
+      CHECK("bounds-checked accessors are exposed opportunistically",
+            [](Test::Result& result) {
+               using Test_Array = Botan::Strong<std::array<uint8_t, 4>, struct Test_Array_>;
+               using Test_Map = Botan::Strong<std::map<int, std::string>, struct Test_Map_>;
+               using Test_Vector = Botan::Strong<std::vector<uint8_t>, struct Test_Vector_>;
+
+               Test_Array a({1, 2, 3, 4});
+               result.test_is_eq<uint8_t>("at() returns 3", a.at(2), 3);
+               result.test_throws("at() throws on out-of-bounds access", [&a]() { a.at(4); });
+
+               Test_Map m({{1, "one"}, {2, "two"}, {3, "three"}});
+               result.test_is_eq<std::string>("at() returns 'two'", m.at(2), "two");
+               result.test_throws("at() throws on out-of-bounds access", [&m]() { m.at(4); });
+
+               Test_Vector v({1, 2, 3, 4});
+               result.test_is_eq<uint8_t>("at() returns 2", v.at(1), 2);
+               result.test_throws("at() throws on out-of-bounds access", [&v]() { v.at(4); });
+            }),
+
+      CHECK("subscript accessors are exposed",
+            [](Test::Result& result) {
+               using Test_Array = Botan::Strong<std::array<uint8_t, 4>, struct Test_Array_>;
+               using Test_Map = Botan::Strong<std::map<int, std::string>, struct Test_Map_>;
+               using Test_Vector = Botan::Strong<std::vector<uint8_t>, struct Test_Vector_>;
+
+               Test_Array a({1, 2, 3, 4});
+               result.test_is_eq<uint8_t>("[] returns 3", a[2], 3);
+
+               Test_Map m({{1, "one"}, {2, "two"}, {3, "three"}});
+               result.test_is_eq<std::string>("[] returns 'two'", m[2], "two");
+
+               Test_Vector v({1, 2, 3, 4});
+               result.test_is_eq<uint8_t>("[] returns 2", v[1], 2);
+            }),
    };
 }
 
