@@ -149,7 +149,8 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
             feat |= if_set(flags0, x86_CPUID_1_bits::AESNI, CPUID::CPUID_AESNI_BIT, allowed);
          }
 
-         if(flags0 & static_cast<uint64_t>(x86_CPUID_1_bits::OSXSAVE)) {
+         const uint64_t osxsave64 = static_cast<uint64_t>(x86_CPUID_1_bits::OSXSAVE);
+         if((flags0 & osxsave64) == osxsave64) {
             const uint64_t xcr_flags = xgetbv();
             if((xcr_flags & 0x6) == 0x6) {
                has_os_ymm_support = true;
