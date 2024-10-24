@@ -140,15 +140,27 @@ class TLS_Policy_Unit_Tests final : public Test {
          Botan::TLS::Policy default_policy;
          result.test_eq(
             "default TLS Policy offers exactly one", default_policy.key_exchange_groups_to_offer().size(), 1);
-         result.confirm(
-            "default TLS Policy offers preferred group",
-            default_policy.key_exchange_groups().front() == default_policy.key_exchange_groups_to_offer().front());
+
+         auto first_pure_ecc_group =
+            [](std::span<const Botan::TLS::Named_Group> groups) -> std::optional<Botan::TLS::Named_Group> {
+            for(auto& group : groups) {
+               if(group.is_pure_ecc_group()) {
+                  return {group};
+               }
+            }
+            return {};
+         };
+
+         result.confirm("default TLS Policy offers preferred pure ECC group",
+                        first_pure_ecc_group(default_policy.key_exchange_groups()).value() ==
+                           default_policy.key_exchange_groups_to_offer().front());
 
          using TP = Botan::TLS::Text_Policy;
 
          result.test_eq("default behaviour from text policy (size)", TP("").key_exchange_groups_to_offer().size(), 1);
-         result.confirm("default behaviour from text policy (preferred)",
-                        TP("").key_exchange_groups().front() == TP("").key_exchange_groups_to_offer().front());
+         result.test_eq("default behaviour from text policy (preferred)",
+                        first_pure_ecc_group(TP("").key_exchange_groups()).value().to_string().value(),
+                        TP("").key_exchange_groups_to_offer().front().to_string().value());
 
          result.confirm("no offerings",
                         TP("key_exchange_groups_to_offer = none").key_exchange_groups_to_offer().empty());

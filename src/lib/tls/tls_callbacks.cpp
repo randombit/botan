@@ -229,7 +229,7 @@ std::unique_ptr<Public_Key> TLS::Callbacks::tls_deserialize_peer_public_key(
 #endif
 
 #if defined(BOTAN_HAS_KYBER)
-   if(group_params.is_pure_kyber()) {
+   if(group_params.is_pure_kyber_r3()) {
       return std::make_unique<Kyber_PublicKey>(key_bits, KyberMode(group_params.to_string().value()));
    }
 #endif
@@ -245,7 +245,7 @@ std::unique_ptr<Public_Key> TLS::Callbacks::tls_deserialize_peer_public_key(
 
 std::unique_ptr<Private_Key> TLS::Callbacks::tls_kem_generate_key(TLS::Group_Params group, RandomNumberGenerator& rng) {
 #if defined(BOTAN_HAS_KYBER)
-   if(group.is_pure_kyber()) {
+   if(group.is_pure_kyber_r3()) {
       return std::make_unique<Kyber_PrivateKey>(rng, KyberMode(group.to_string().value()));
    }
 #endif
