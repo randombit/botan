@@ -14,7 +14,6 @@
 #if defined(BOTAN_HAS_NUMBERTHEORY)
    #include <botan/numthry.h>
    #include <botan/reducer.h>
-   #include <botan/internal/curve_nistp.h>
    #include <botan/internal/primality.h>
 #endif
 
@@ -147,62 +146,6 @@ BOTAN_REGISTER_PERF_TEST("mp_div10", PerfTest_MpDiv10);
 #endif
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
-
-class PerfTest_NistpRedc final : public PerfTest {
-   public:
-      void go(const PerfConfig& config) override {
-         std::chrono::milliseconds runtime_per_group = config.runtime();
-
-         Botan::secure_vector<Botan::word> ws;
-
-         auto p192_timer = config.make_timer("P-192 redc");
-         Botan::BigInt r192(config.rng(), 192 * 2 - 1);
-         while(p192_timer->under(runtime_per_group)) {
-            Botan::BigInt r = r192;
-            p192_timer->run([&]() { Botan::redc_p192(r, ws); });
-            r192 += 1;
-         }
-         config.record_result(*p192_timer);
-
-         auto p224_timer = config.make_timer("P-224 redc");
-         Botan::BigInt r224(config.rng(), 224 * 2 - 1);
-         while(p224_timer->under(runtime_per_group)) {
-            Botan::BigInt r = r224;
-            p224_timer->run([&]() { Botan::redc_p224(r, ws); });
-            r224 += 1;
-         }
-         config.record_result(*p224_timer);
-
-         auto p256_timer = config.make_timer("P-256 redc");
-         Botan::BigInt r256(config.rng(), 256 * 2 - 1);
-         while(p256_timer->under(runtime_per_group)) {
-            Botan::BigInt r = r256;
-            p256_timer->run([&]() { Botan::redc_p256(r, ws); });
-            r256 += 1;
-         }
-         config.record_result(*p256_timer);
-
-         auto p384_timer = config.make_timer("P-384 redc");
-         Botan::BigInt r384(config.rng(), 384 * 2 - 1);
-         while(p384_timer->under(runtime_per_group)) {
-            Botan::BigInt r = r384;
-            p384_timer->run([&]() { Botan::redc_p384(r384, ws); });
-            r384 += 1;
-         }
-         config.record_result(*p384_timer);
-
-         auto p521_timer = config.make_timer("P-521 redc");
-         Botan::BigInt r521(config.rng(), 521 * 2 - 1);
-         while(p521_timer->under(runtime_per_group)) {
-            Botan::BigInt r = r521;
-            p521_timer->run([&]() { Botan::redc_p521(r521, ws); });
-            r521 += 1;
-         }
-         config.record_result(*p521_timer);
-      }
-};
-
-BOTAN_REGISTER_PERF_TEST("nistp_redc", PerfTest_NistpRedc);
 
 class PerfTest_BnRedc final : public PerfTest {
    public:

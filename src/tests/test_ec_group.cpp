@@ -18,7 +18,6 @@
    #include <botan/pk_keys.h>
    #include <botan/reducer.h>
    #include <botan/x509_key.h>
-   #include <botan/internal/curve_nistp.h>
 #endif
 
 namespace Botan_Tests {
@@ -110,8 +109,8 @@ std::vector<Test::Result> ECC_Randomized_Tests::run() {
       try {
          const size_t trials = (Test::run_long_tests() ? 10 : 3);
          for(size_t i = 0; i < trials; ++i) {
-            const Botan::BigInt a = group.random_scalar(rng());
-            const Botan::BigInt b = group.random_scalar(rng());
+            const Botan::BigInt a = test_integer(rng(), group.get_order_bits(), group.get_order());
+            const Botan::BigInt b = test_integer(rng(), group.get_order_bits(), group.get_order());
             const Botan::BigInt c = group.mod_order(a + b);
 
             const Botan::EC_Point P = pt * a;
@@ -159,78 +158,6 @@ std::vector<Test::Result> ECC_Randomized_Tests::run() {
 }
 
 BOTAN_REGISTER_TEST("pubkey", "ecc_randomized", ECC_Randomized_Tests);
-
-class NIST_Curve_Reduction_Tests final : public Test {
-   public:
-      typedef std::function<void(Botan::BigInt&, Botan::secure_vector<Botan::word>&)> reducer_fn;
-
-      std::vector<Test::Result> run() override {
-         std::vector<Test::Result> results;
-
-         // Using lambdas here to avoid strange UbSan warning (#1370)
-
-         results.push_back(random_redc_test(
-            "P-384", Botan::prime_p384(), [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void {
-               Botan::redc_p384(p, ws);
-            }));
-         results.push_back(random_redc_test(
-            "P-256", Botan::prime_p256(), [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void {
-               Botan::redc_p256(p, ws);
-            }));
-         results.push_back(random_redc_test(
-            "P-224", Botan::prime_p224(), [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void {
-               Botan::redc_p224(p, ws);
-            }));
-         results.push_back(random_redc_test(
-            "P-192", Botan::prime_p192(), [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void {
-               Botan::redc_p192(p, ws);
-            }));
-         results.push_back(random_redc_test(
-            "P-521", Botan::prime_p521(), [](Botan::BigInt& p, Botan::secure_vector<Botan::word>& ws) -> void {
-               Botan::redc_p521(p, ws);
-            }));
-
-         return results;
-      }
-
-      static Test::Result random_redc_test(const std::string& prime_name,
-                                           const Botan::BigInt& p,
-                                           const reducer_fn& redc_fn) {
-         const Botan::BigInt p2 = p * p;
-         const size_t p_bits = p.bits();
-
-         Botan::Modular_Reducer p_redc(p);
-         Botan::secure_vector<Botan::word> ws;
-
-         auto rng = Test::new_rng("random_redc " + prime_name);
-
-         Test::Result result("NIST " + prime_name + " reduction");
-         result.start_timer();
-
-         const size_t trials = (Test::run_long_tests() ? 128 : 16);
-
-         for(size_t i = 0; i <= trials; ++i) {
-            const Botan::BigInt x = test_integer(*rng, 2 * p_bits, p2);
-
-            // TODO: time and report all three approaches
-            const Botan::BigInt v1 = x % p;
-            const Botan::BigInt v2 = p_redc.reduce(x);
-
-            Botan::BigInt v3 = x;
-            redc_fn(v3, ws);
-
-            if(!result.test_eq("reference redc", v1, v2) || !result.test_eq("specialized redc", v2, v3)) {
-               result.test_note("failing input" + Botan::hex_encode(Botan::BigInt::encode(x)));
-            }
-         }
-
-         result.end_timer();
-
-         return result;
-      }
-};
-
-BOTAN_REGISTER_TEST("pubkey", "nist_redc", NIST_Curve_Reduction_Tests);
 
 class EC_Group_Tests : public Test {
    public:
