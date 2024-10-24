@@ -50,7 +50,9 @@ class PerfTest_PKSig : public PerfTest {
          auto keygen_timer = config.make_timer(nm, 1, "keygen");
 
          auto key = keygen_timer->run([&] { return Botan::create_private_key(alg, rng, param); });
-         ;
+         while(keygen_timer->under(msec)) {
+            key = keygen_timer->run([&] { return Botan::create_private_key(alg, rng, param); });
+         }
 
          if(key != nullptr) {
             config.record_result(*keygen_timer);
@@ -98,7 +100,6 @@ class PerfTest_PKSig : public PerfTest {
                config.error_output() << invalid_sigs << " generated signatures rejected in " << nm
                                      << " signature bench\n";
             }
-
             config.record_result(*sig_timer);
             config.record_result(*ver_timer);
          }
