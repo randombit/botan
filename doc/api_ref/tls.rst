@@ -1128,7 +1128,18 @@ key exchanges must enable the hybrid algorithms in their TLS policy. Override
 `TLS::Policy::key_exchange_groups()` and return a list of the desired exchange
 groups. For text-based policy configurations use the identifiers in parenthesis.
 
+.. warning::
+
+   Support for the Kyber r3 ciphersuites are considered experimental,
+   and will be removed in Botan 3.7.0
+
 Currently, Botan supports the following post-quantum secure key exchanges:
+
+* ML-KEM plus ECC hybrid, as deployed by Google, Cloudflare, etc and likely
+  to be in the future standardized by IETF
+
+  * ``HYBRID_SECP256R1_ML_KEM_768`` ("secp256r1/ML-KEM-768")
+  * ``HYBRID_X25519_ML_KEM_768`` ("x25519/ML-KEM-768")
 
 * used `in Open Quantum Safe <https://github.com/open-quantum-safe/oqs-provider/blob/main/oqs-template/oqs-kem-info.md>`_
   (PQC algorithm without a classical algorithm)
