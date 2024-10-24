@@ -78,7 +78,7 @@ Auth_Method BOTAN_TEST_API auth_method_from_string(std::string_view str);
 
 #define BOTAN_TLS_KYBER_R3_DEPRECATED \
    BOTAN_DEPRECATED(                  \
-      "Kyber r3 TLS support will be removed completely in Botan 3.7.0 see https://github.com/randombit/botan/issues/4403")
+      "Kyber r3 TLS support will be removed completely in Botan 3.7.0 (early 2025) see https://github.com/randombit/botan/issues/4403")
 
 /*
 * Matches with wire encoding
@@ -202,7 +202,7 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
                 m_code == Group_Params_Code::FFDHE_8192;
       }
 
-      constexpr bool is_pure_kyber() const {
+      BOTAN_TLS_KYBER_R3_DEPRECATED constexpr bool is_pure_kyber() const {
          BOTAN_DIAGNOSTIC_PUSH
          BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
 

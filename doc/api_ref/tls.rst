@@ -1130,7 +1130,7 @@ groups. For text-based policy configurations use the identifiers in parenthesis.
 
 .. warning::
 
-   Support for the Kyber r3 ciphersuites are considered exerimental,
+   Support for the Kyber r3 ciphersuites are considered experimental,
    and will be removed in Botan 3.7.0
 
 Currently, Botan supports the following post-quantum secure key exchanges:
