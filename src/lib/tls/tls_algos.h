@@ -76,6 +76,10 @@ enum class Auth_Method {
 std::string BOTAN_TEST_API auth_method_to_string(Auth_Method method);
 Auth_Method BOTAN_TEST_API auth_method_from_string(std::string_view str);
 
+#define BOTAN_TLS_KYBER_R3_DEPRECATED \
+   BOTAN_DEPRECATED(                  \
+      "Kyber r3 TLS support will be removed completely in Botan 3.7.0 (early 2025) see https://github.com/randombit/botan/issues/4403")
+
 /*
 * Matches with wire encoding
 */
@@ -100,9 +104,9 @@ enum class Group_Params_Code : uint16_t {
 
    // libOQS defines those in:
    // https://github.com/open-quantum-safe/oqs-provider/blob/main/ALGORITHMS.md
-   KYBER_512_R3_OQS = 0x023A,
-   KYBER_768_R3_OQS = 0x023C,
-   KYBER_1024_R3_OQS = 0x023D,
+   KYBER_512_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x023A,
+   KYBER_768_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x023C,
+   KYBER_1024_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x023D,
 
    eFRODOKEM_640_SHAKE_OQS = 0x0201,
    eFRODOKEM_976_SHAKE_OQS = 0x0203,
@@ -113,28 +117,28 @@ enum class Group_Params_Code : uint16_t {
 
    // Cloudflare code points for hybrid PQC
    // https://blog.cloudflare.com/post-quantum-for-all/
-   HYBRID_X25519_KYBER_512_R3_CLOUDFLARE BOTAN_DEPRECATED("removed without replacement") = 0xFE30,
+   HYBRID_X25519_KYBER_512_R3_CLOUDFLARE BOTAN_TLS_KYBER_R3_DEPRECATED = 0xFE30,
 
    // libOQS defines those in:
    // https://github.com/open-quantum-safe/oqs-provider/blob/main/ALGORITHMS.md
    //
    // X25519/Kyber768 is also defined in:
    // https://datatracker.ietf.org/doc/draft-tls-westerbaan-xyber768d00/03/
-   HYBRID_X25519_KYBER_512_R3_OQS = 0x2F39,
-   HYBRID_X25519_KYBER_768_R3_OQS = 0x6399,
+   HYBRID_X25519_KYBER_512_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x2F39,
+   HYBRID_X25519_KYBER_768_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x6399,
 
    // https://datatracker.ietf.org/doc/draft-kwiatkowski-tls-ecdhe-mlkem/02/
    HYBRID_SECP256R1_ML_KEM_768 = 0x11EB,
    HYBRID_X25519_ML_KEM_768 = 0x11EC,
 
-   HYBRID_X448_KYBER_768_R3_OQS = 0x2F90,
+   HYBRID_X448_KYBER_768_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x2F90,
 
-   HYBRID_SECP256R1_KYBER_512_R3_OQS = 0x2F3A,
-   HYBRID_SECP256R1_KYBER_768_R3_OQS = 0x639A,
+   HYBRID_SECP256R1_KYBER_512_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x2F3A,
+   HYBRID_SECP256R1_KYBER_768_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x639A,
 
-   HYBRID_SECP384R1_KYBER_768_R3_OQS = 0x2F3C,
+   HYBRID_SECP384R1_KYBER_768_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x2F3C,
 
-   HYBRID_SECP521R1_KYBER_1024_R3_OQS = 0x2F3D,
+   HYBRID_SECP521R1_KYBER_1024_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x2F3D,
 
    HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS = 0x2F81,
    HYBRID_X25519_eFRODOKEM_640_AES_OQS = 0x2F80,
@@ -198,9 +202,14 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
                 m_code == Group_Params_Code::FFDHE_8192;
       }
 
-      constexpr bool is_pure_kyber() const {
+      BOTAN_TLS_KYBER_R3_DEPRECATED constexpr bool is_pure_kyber() const {
+         BOTAN_DIAGNOSTIC_PUSH
+         BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
+
          return m_code == Group_Params_Code::KYBER_512_R3_OQS || m_code == Group_Params_Code::KYBER_768_R3_OQS ||
                 m_code == Group_Params_Code::KYBER_1024_R3_OQS;
+
+         BOTAN_DIAGNOSTIC_POP
       }
 
       constexpr bool is_pure_frodokem() const {
@@ -214,7 +223,14 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
 
       constexpr bool is_pure_ecc_group() const { return is_x25519() || is_x448() || is_ecdh_named_curve(); }
 
-      constexpr bool is_post_quantum() const { return is_pure_kyber() || is_pure_frodokem() || is_pqc_hybrid(); }
+      constexpr bool is_post_quantum() const {
+         BOTAN_DIAGNOSTIC_PUSH
+         BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
+
+         return is_pure_kyber() || is_pure_frodokem() || is_pqc_hybrid();
+
+         BOTAN_DIAGNOSTIC_POP
+      }
 
       constexpr bool is_pqc_hybrid() const {
          BOTAN_DIAGNOSTIC_PUSH
@@ -244,7 +260,14 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
          BOTAN_DIAGNOSTIC_POP
       }
 
-      constexpr bool is_kem() const { return is_pure_kyber() || is_pure_frodokem() || is_pqc_hybrid(); }
+      constexpr bool is_kem() const {
+         BOTAN_DIAGNOSTIC_PUSH
+         BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
+
+         return is_pure_kyber() || is_pure_frodokem() || is_pqc_hybrid();
+
+         BOTAN_DIAGNOSTIC_POP
+      }
 
       // Returns std::nullopt if the param has no known name
       std::optional<std::string> to_string() const;
