@@ -19,6 +19,12 @@ size_t blinding_size(const BigInt& group_order) {
    return (group_order.bits() + 1) / 2;
 }
 
+BigInt blinding_mask(const BigInt& group_order, RandomNumberGenerator& rng) {
+   BigInt mask(rng, blinding_size(group_order));
+   mask.set_bit(0);
+   return mask;
+}
+
 }  // namespace
 
 EC_Point multi_exponentiate(const EC_Point& x, const BigInt& z1, const EC_Point& y, const BigInt& z2) {
@@ -83,8 +89,7 @@ EC_Point EC_Point_Base_Point_Precompute::mul(const BigInt& k,
 
    if(rng.is_seeded()) {
       // Choose a small mask m and use k' = k + m*order (Coron's 1st countermeasure)
-      const BigInt mask(rng, blinding_size(group_order));
-      scalar += group_order * mask;
+      scalar += group_order * blinding_mask(group_order, rng);
    } else {
       /*
       When we don't have an RNG we cannot do scalar blinding. Instead use the
@@ -209,8 +214,7 @@ EC_Point EC_Point_Var_Point_Precompute::mul(const BigInt& k,
    }
 
    // Choose a small mask m and use k' = k + m*order (Coron's 1st countermeasure)
-   const BigInt mask(rng, blinding_size(group_order), false);
-   const BigInt scalar = k + group_order * mask;
+   const BigInt scalar = k + group_order * blinding_mask(group_order, rng);
 
    const size_t elem_size = 3 * m_p_words;
    const size_t window_elems = static_cast<size_t>(1) << m_window_bits;
