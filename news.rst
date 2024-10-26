@@ -6,13 +6,19 @@ Version 3.6.1, Not Yet Released
 
 * Notice: Botan 3.7.0 will remove support for the currently supported
   experimental Kyber r3 TLS ciphersuites, leaving only the standardized
-  ML-KEM suites. (GH #4403)
+  ML-KEM suites. (GH #4407 #4403)
 
 * Fix a bug in x86 CPUID detection introduced in 3.6.0 which would cause
   crashes on systems which have BMI1 but not BMI2. (GH #4402 #4401)
 
 * Fix a bug in SLH-DSA signing, which did not default to the FIPS
   required randomized variant. (GH #4398)
+
+* Modify how elliptic curve blinding is performed, reducing the number
+  of self-additions that may occur during multiplication. (GH #4408)
+
+* In ``speed`` command line utility, also iterate keygen several times.
+  (GH #4381)
 
 Version 3.6.0, 2024-10-21
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
