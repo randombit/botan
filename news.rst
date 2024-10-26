@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 3.6.1, Not Yet Released
+Version 3.6.1, 2024-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Notice: Botan 3.7.0 will remove support for the currently supported
