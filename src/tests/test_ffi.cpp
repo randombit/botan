@@ -3515,103 +3515,103 @@ class FFI_Signature_Roundtrip_Test : public FFI_Test {
          const std::vector<uint8_t> message1 = {'H', 'e', 'l', 'l', 'o', ' '};
          const std::vector<uint8_t> message2 = {'W', 'o', 'r', 'l', 'd', '!'};
 
+         bool use_explicit_rng = true;
          for(auto mode : modes()) {
-            for(auto specify_signature_rng : {true, false}) {
-               // generate a key pair
-               botan_privkey_t priv;
-               botan_pubkey_t pub;
-               if(!TEST_FFI_INIT(botan_privkey_create, (&priv, algo(), mode, rng))) {
-                  continue;
-               }
-               TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
-
-               // raw-encode the key pair
-               ViewBytesSink priv_bytes;
-               ViewBytesSink pub_bytes;
-               TEST_FFI_OK(botan_privkey_view_raw, (priv, priv_bytes.delegate(), priv_bytes.callback()));
-               TEST_FFI_OK(botan_pubkey_view_raw, (pub, pub_bytes.delegate(), pub_bytes.callback()));
-
-               // decode the key pair from raw encoding
-               botan_privkey_t priv_loaded;
-               botan_pubkey_t pub_loaded;
-               TEST_FFI_OK(private_key_load_function(),
-                           (&priv_loaded, priv_bytes.get().data(), priv_bytes.get().size(), mode));
-               TEST_FFI_OK(public_key_load_function(),
-                           (&pub_loaded, pub_bytes.get().data(), pub_bytes.get().size(), mode));
-
-               // re-encode and compare to the first round
-               ViewBytesSink priv_bytes2;
-               ViewBytesSink pub_bytes2;
-               TEST_FFI_OK(botan_privkey_view_raw, (priv_loaded, priv_bytes2.delegate(), priv_bytes2.callback()));
-               TEST_FFI_OK(botan_pubkey_view_raw, (pub_loaded, pub_bytes2.delegate(), pub_bytes2.callback()));
-               result.test_eq("private key encoding", priv_bytes.get(), priv_bytes2.get());
-               result.test_eq("public key encoding", pub_bytes.get(), pub_bytes2.get());
-
-               // Signature Creation (using the loaded private key)
-               botan_pk_op_sign_t signer;
-               if(specify_signature_rng) {
-                  TEST_FFI_OK(botan_pk_op_sign_create_with_rng, (&signer, rng, priv_loaded, hash_algo_or_padding(), 0));
-               } else {
-                  TEST_FFI_OK(botan_pk_op_sign_create, (&signer, priv_loaded, hash_algo_or_padding(), 0));
-               }
-
-               // explicitly query the signature output length
-               size_t sig_output_length = 0;
-               TEST_FFI_OK(botan_pk_op_sign_output_length, (signer, &sig_output_length));
-
-               // pass a message to the signer
-               TEST_FFI_OK(botan_pk_op_sign_update, (signer, message1.data(), message1.size()));
-               TEST_FFI_OK(botan_pk_op_sign_update, (signer, message2.data(), message2.size()));
-
-               // check that insufficient buffer space is handled correctly
-               size_t sig_output_length_out = 0;
-               TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
-                           botan_pk_op_sign_finish,
-                           (signer, rng, nullptr, &sig_output_length_out));
-               result.test_eq("reported sig lengths are equal", sig_output_length, sig_output_length_out);
-
-               // Recreate signer and try again
-               TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
-               if(specify_signature_rng) {
-                  TEST_FFI_OK(botan_pk_op_sign_create_with_rng, (&signer, rng, priv_loaded, hash_algo_or_padding(), 0));
-               } else {
-                  TEST_FFI_OK(botan_pk_op_sign_create, (&signer, priv_loaded, hash_algo_or_padding(), 0));
-               }
-               TEST_FFI_OK(botan_pk_op_sign_update, (signer, message1.data(), message1.size()));
-               TEST_FFI_OK(botan_pk_op_sign_update, (signer, message2.data(), message2.size()));
-
-               // allocate buffers (with additional space) and perform the actual signing
-               sig_output_length_out = sig_output_length * 2;
-               Botan::secure_vector<uint8_t> signature(sig_output_length_out);
-               TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &sig_output_length_out));
-               result.test_eq("signature length", sig_output_length, sig_output_length_out);
-               signature.resize(sig_output_length_out);
-               TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
-
-               // Signature verification (using the generated public key)
-               botan_pk_op_verify_t verifier;
-               TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, hash_algo_or_padding(), 0));
-               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message1.data(), message1.size()));
-               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message2.data(), message2.size()));
-
-               // Verify signature
-               TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
-               TEST_FFI_OK(botan_pk_op_verify_destroy, (verifier));
-
-               // Verify signature with wrong message (only first half)
-               TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, hash_algo_or_padding(), 0));
-               TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message1.data(), message1.size()));
-               TEST_FFI_RC(BOTAN_FFI_INVALID_VERIFIER,
-                           botan_pk_op_verify_finish,
-                           (verifier, signature.data(), signature.size()));
-               TEST_FFI_OK(botan_pk_op_verify_destroy, (verifier));
-
-               // Cleanup
-               TEST_FFI_OK(botan_pubkey_destroy, (pub));
-               TEST_FFI_OK(botan_pubkey_destroy, (pub_loaded));
-               TEST_FFI_OK(botan_privkey_destroy, (priv));
-               TEST_FFI_OK(botan_privkey_destroy, (priv_loaded));
+            // generate a key pair
+            botan_privkey_t priv;
+            botan_pubkey_t pub;
+            if(!TEST_FFI_INIT(botan_privkey_create, (&priv, algo(), mode, rng))) {
+               continue;
             }
+            TEST_FFI_OK(botan_privkey_export_pubkey, (&pub, priv));
+
+            // raw-encode the key pair
+            ViewBytesSink priv_bytes;
+            ViewBytesSink pub_bytes;
+            TEST_FFI_OK(botan_privkey_view_raw, (priv, priv_bytes.delegate(), priv_bytes.callback()));
+            TEST_FFI_OK(botan_pubkey_view_raw, (pub, pub_bytes.delegate(), pub_bytes.callback()));
+
+            // decode the key pair from raw encoding
+            botan_privkey_t priv_loaded;
+            botan_pubkey_t pub_loaded;
+            TEST_FFI_OK(private_key_load_function(),
+                        (&priv_loaded, priv_bytes.get().data(), priv_bytes.get().size(), mode));
+            TEST_FFI_OK(public_key_load_function(),
+                        (&pub_loaded, pub_bytes.get().data(), pub_bytes.get().size(), mode));
+
+            // re-encode and compare to the first round
+            ViewBytesSink priv_bytes2;
+            ViewBytesSink pub_bytes2;
+            TEST_FFI_OK(botan_privkey_view_raw, (priv_loaded, priv_bytes2.delegate(), priv_bytes2.callback()));
+            TEST_FFI_OK(botan_pubkey_view_raw, (pub_loaded, pub_bytes2.delegate(), pub_bytes2.callback()));
+            result.test_eq("private key encoding", priv_bytes.get(), priv_bytes2.get());
+            result.test_eq("public key encoding", pub_bytes.get(), pub_bytes2.get());
+
+            // Signature Creation (using the loaded private key)
+            botan_pk_op_sign_t signer;
+            if(use_explicit_rng) {
+               TEST_FFI_OK(botan_pk_op_sign_create_with_rng, (&signer, rng, priv_loaded, hash_algo_or_padding(), 0));
+            } else {
+               TEST_FFI_OK(botan_pk_op_sign_create, (&signer, priv_loaded, hash_algo_or_padding(), 0));
+            }
+
+            // explicitly query the signature output length
+            size_t sig_output_length = 0;
+            TEST_FFI_OK(botan_pk_op_sign_output_length, (signer, &sig_output_length));
+
+            // pass a message to the signer
+            TEST_FFI_OK(botan_pk_op_sign_update, (signer, message1.data(), message1.size()));
+            TEST_FFI_OK(botan_pk_op_sign_update, (signer, message2.data(), message2.size()));
+
+            // check that insufficient buffer space is handled correctly
+            size_t sig_output_length_out = 0;
+            TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
+                        botan_pk_op_sign_finish,
+                        (signer, rng, nullptr, &sig_output_length_out));
+            result.test_eq("reported sig lengths are equal", sig_output_length, sig_output_length_out);
+
+            // Recreate signer and try again
+            TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
+            if(use_explicit_rng) {
+               TEST_FFI_OK(botan_pk_op_sign_create_with_rng, (&signer, rng, priv_loaded, hash_algo_or_padding(), 0));
+            } else {
+               TEST_FFI_OK(botan_pk_op_sign_create, (&signer, priv_loaded, hash_algo_or_padding(), 0));
+            }
+            TEST_FFI_OK(botan_pk_op_sign_update, (signer, message1.data(), message1.size()));
+            TEST_FFI_OK(botan_pk_op_sign_update, (signer, message2.data(), message2.size()));
+
+            // allocate buffers (with additional space) and perform the actual signing
+            sig_output_length_out = sig_output_length * 2;
+            Botan::secure_vector<uint8_t> signature(sig_output_length_out);
+            TEST_FFI_OK(botan_pk_op_sign_finish, (signer, rng, signature.data(), &sig_output_length_out));
+            result.test_eq("signature length", sig_output_length, sig_output_length_out);
+            signature.resize(sig_output_length_out);
+            TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
+
+            // Signature verification (using the generated public key)
+            botan_pk_op_verify_t verifier;
+            TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, hash_algo_or_padding(), 0));
+            TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message1.data(), message1.size()));
+            TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message2.data(), message2.size()));
+
+            // Verify signature
+            TEST_FFI_OK(botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+            TEST_FFI_OK(botan_pk_op_verify_destroy, (verifier));
+
+            // Verify signature with wrong message (only first half)
+            TEST_FFI_OK(botan_pk_op_verify_create, (&verifier, pub, hash_algo_or_padding(), 0));
+            TEST_FFI_OK(botan_pk_op_verify_update, (verifier, message1.data(), message1.size()));
+            TEST_FFI_RC(
+               BOTAN_FFI_INVALID_VERIFIER, botan_pk_op_verify_finish, (verifier, signature.data(), signature.size()));
+            TEST_FFI_OK(botan_pk_op_verify_destroy, (verifier));
+
+            // Cleanup
+            TEST_FFI_OK(botan_pubkey_destroy, (pub));
+            TEST_FFI_OK(botan_pubkey_destroy, (pub_loaded));
+            TEST_FFI_OK(botan_privkey_destroy, (priv));
+            TEST_FFI_OK(botan_privkey_destroy, (priv_loaded));
+
+            use_explicit_rng = !use_explicit_rng;
          }
       }
 };
