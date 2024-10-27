@@ -172,6 +172,30 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op, botan_privkey_t key_obj, con
    });
 }
 
+int botan_pk_op_sign_create_with_rng(
+   botan_pk_op_sign_t* op, botan_rng_t rng_obj, botan_privkey_t key_obj, const char* hash, uint32_t flags) {
+   if(op == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   if(flags != 0 && flags != BOTAN_PUBKEY_DER_FORMAT_SIGNATURE) {
+      return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      *op = nullptr;
+
+      auto format = (flags & BOTAN_PUBKEY_DER_FORMAT_SIGNATURE) ? Botan::Signature_Format::DerSequence
+                                                                : Botan::Signature_Format::Standard;
+
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+
+      auto pk = std::make_unique<Botan::PK_Signer>(safe_get(key_obj), rng, hash, format);
+      *op = new botan_pk_op_sign_struct(std::move(pk));
+      return BOTAN_FFI_SUCCESS;
+   });
+}
+
 int botan_pk_op_sign_destroy(botan_pk_op_sign_t op) {
    return BOTAN_FFI_CHECKED_DELETE(op);
 }
