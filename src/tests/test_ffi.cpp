@@ -2484,9 +2484,7 @@ class FFI_RSA_Test final : public FFI_Test {
                result.test_eq("algo name", std::string(namebuf), "RSA");
             }
 
-            botan_pk_op_encrypt_t encrypt;
-
-            if(TEST_FFI_INIT(botan_pk_op_encrypt_create, (&encrypt, loaded_pubkey, "OAEP(SHA-256)", 0))) {
+            auto test_encrypt_opt_fn = [&result, &rng, &priv](botan_pk_op_encrypt_t encrypt) {
                std::vector<uint8_t> plaintext(32);
                TEST_FFI_OK(botan_rng_get, (rng, plaintext.data(), plaintext.size()));
 
@@ -2514,6 +2512,16 @@ class FFI_RSA_Test final : public FFI_Test {
                }
 
                TEST_FFI_OK(botan_pk_op_encrypt_destroy, (encrypt));
+            };
+
+            botan_pk_op_encrypt_t encrypt;
+
+            if(TEST_FFI_INIT(botan_pk_op_encrypt_create, (&encrypt, loaded_pubkey, "OAEP(SHA-256)", 0))) {
+               test_encrypt_opt_fn(encrypt);
+            }
+
+            if(TEST_FFI_INIT(botan_pk_op_encrypt_create_with_rng, (&encrypt, rng, loaded_pubkey, "OAEP(SHA-256)", 0))) {
+               test_encrypt_opt_fn(encrypt);
             }
 
             TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey));

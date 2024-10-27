@@ -56,7 +56,7 @@ int botan_pk_op_encrypt_create_with_rng(
    return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
 
-      Botan::RandomNumberGenerator &rng = safe_get(rng_obj);
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
 
       auto pk = std::make_unique<Botan::PK_Encryptor_EME>(safe_get(key_obj), rng, padding);
       *op = new botan_pk_op_encrypt_struct(std::move(pk));
