@@ -2983,7 +2983,7 @@ class FFI_ECDH_Test final : public FFI_Test {
          botan_pk_op_ka_t ka1;
          REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka1, loaded_privkey1, "KDF2(SHA-256)", 0));
          botan_pk_op_ka_t ka2;
-         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka2, priv2, "KDF2(SHA-256)", 0));
+         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create_with_rng, (&ka2, rng, priv2, "KDF2(SHA-256)", 0));
 
          size_t pubkey1_len = 0;
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
@@ -4004,7 +4004,7 @@ class FFI_DH_Test final : public FFI_Test {
          result.confirm("bigint_mp_cmp(y, y)", cmp == 0);
 
          botan_pk_op_ka_t ka1;
-         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka1, loaded_privkey1, "Raw", 0));
+         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create_with_rng, (&ka1, rng, loaded_privkey1, "Raw", 0));
          botan_pk_op_ka_t ka2;
          REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka2, priv2, "Raw", 0));
 

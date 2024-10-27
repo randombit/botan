@@ -271,6 +271,25 @@ int botan_pk_op_key_agreement_create(botan_pk_op_ka_t* op, botan_privkey_t key_o
    });
 }
 
+int botan_pk_op_key_agreement_create_with_rng(
+   botan_pk_op_ka_t* op, botan_rng_t rng_obj, botan_privkey_t key_obj, const char* kdf, uint32_t flags) {
+   if(op == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   if(flags != 0) {
+      return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+      *op = nullptr;
+      auto pk = std::make_unique<Botan::PK_Key_Agreement>(safe_get(key_obj), rng, kdf);
+      *op = new botan_pk_op_ka_struct(std::move(pk));
+      return BOTAN_FFI_SUCCESS;
+   });
+}
+
 int botan_pk_op_key_agreement_destroy(botan_pk_op_ka_t op) {
    return BOTAN_FFI_CHECKED_DELETE(op);
 }

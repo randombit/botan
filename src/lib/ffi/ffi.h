@@ -1724,6 +1724,10 @@ typedef struct botan_pk_op_ka_struct* botan_pk_op_ka_t;
 BOTAN_FFI_EXPORT(2, 0)
 int botan_pk_op_key_agreement_create(botan_pk_op_ka_t* op, botan_privkey_t key, const char* kdf, uint32_t flags);
 
+BOTAN_FFI_EXPORT(3, 7)
+int botan_pk_op_key_agreement_create_with_rng(
+   botan_pk_op_ka_t* op, botan_rng_t rng, botan_privkey_t key, const char* kdf, uint32_t flags);
+
 /**
 * @return 0 if success, error if invalid object handle
 */
