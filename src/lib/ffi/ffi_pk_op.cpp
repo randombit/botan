@@ -110,6 +110,27 @@ int botan_pk_op_decrypt_create(botan_pk_op_decrypt_t* op,
    });
 }
 
+int botan_pk_op_decrypt_create_with_rng(
+   botan_pk_op_decrypt_t* op, botan_rng_t rng_obj, botan_privkey_t key_obj, const char* padding, uint32_t flags) {
+   if(op == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   if(flags != 0) {
+      return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      *op = nullptr;
+
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+
+      auto pk = std::make_unique<Botan::PK_Decryptor_EME>(safe_get(key_obj), rng, padding);
+      *op = new botan_pk_op_decrypt_struct(std::move(pk));
+      return BOTAN_FFI_SUCCESS;
+   });
+}
+
 int botan_pk_op_decrypt_destroy(botan_pk_op_decrypt_t op) {
    return BOTAN_FFI_CHECKED_DELETE(op);
 }

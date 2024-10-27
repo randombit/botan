@@ -2497,7 +2497,7 @@ class FFI_RSA_Test final : public FFI_Test {
                   ciphertext.resize(ctext_len);
 
                   botan_pk_op_decrypt_t decrypt;
-                  if(TEST_FFI_OK(botan_pk_op_decrypt_create, (&decrypt, priv, "OAEP(SHA-256)", 0))) {
+                  if(TEST_FFI_OK(botan_pk_op_decrypt_create_with_rng, (&decrypt, rng, priv, "OAEP(SHA-256)", 0))) {
                      size_t decrypted_len;
                      TEST_FFI_OK(botan_pk_op_decrypt_output_length, (decrypt, ciphertext.size(), &decrypted_len));
                      std::vector<uint8_t> decrypted(decrypted_len);
@@ -3893,8 +3893,7 @@ class FFI_ElGamal_Test final : public FFI_Test {
          }
 
          // Test decryption
-         botan_pk_op_decrypt_t op_dec;
-         if(TEST_FFI_OK(botan_pk_op_decrypt_create, (&op_dec, loaded_privkey, "Raw", 0))) {
+         auto test_decrypt_fn = [&result, &decryption, &ciphertext](botan_pk_op_decrypt_t op_dec) {
             size_t ptext_len;
             TEST_FFI_OK(botan_pk_op_decrypt_output_length, (op_dec, ciphertext.size(), &ptext_len));
             decryption.resize(ptext_len);
@@ -3902,6 +3901,16 @@ class FFI_ElGamal_Test final : public FFI_Test {
                         (op_dec, decryption.data(), &ptext_len, ciphertext.data(), ciphertext.size()));
             decryption.resize(ptext_len);
             TEST_FFI_OK(botan_pk_op_decrypt_destroy, (op_dec));
+         };
+
+         botan_pk_op_decrypt_t op_dec;
+
+         if(TEST_FFI_OK(botan_pk_op_decrypt_create, (&op_dec, loaded_privkey, "Raw", 0))) {
+            test_decrypt_fn(op_dec);
+         }
+
+         if(TEST_FFI_OK(botan_pk_op_decrypt_create_with_rng, (&op_dec, rng, loaded_privkey, "Raw", 0))) {
+            test_decrypt_fn(op_dec);
          }
 
          result.test_eq("decryption worked", decryption, plaintext);
