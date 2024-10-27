@@ -93,7 +93,11 @@ def revision_of(tag):
 def extract_revision(revision, to):
     tar_val = run_git(['archive', '--format=tar', '--prefix=%s/' % (to), revision])
     tar_f = tarfile.open(fileobj=io.BytesIO(tar_val))
-    tar_f.extractall()
+
+    if sys.version_info.major == 3 and sys.version_info.minor >= 12:
+        tar_f.extractall(filter='fully_trusted')
+    else:
+        tar_f.extractall()
 
 def gpg_sign(keyid, passphrase_file, files, detached=True):
 
