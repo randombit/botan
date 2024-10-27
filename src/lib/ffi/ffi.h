@@ -1787,6 +1787,12 @@ typedef struct botan_pk_op_kem_decrypt_struct* botan_pk_op_kem_decrypt_t;
 BOTAN_FFI_EXPORT(3, 0)
 int botan_pk_op_kem_decrypt_create(botan_pk_op_kem_decrypt_t* op, botan_privkey_t key, const char* kdf);
 
+BOTAN_FFI_EXPORT(3, 7)
+int botan_pk_op_kem_decrypt_create_with_rng(botan_pk_op_kem_decrypt_t* op,
+                                            botan_rng_t rng,
+                                            botan_privkey_t key,
+                                            const char* kdf);
+
 /**
 * @return 0 if success, error if invalid object handle
 */

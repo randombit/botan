@@ -3359,6 +3359,7 @@ class FFI_KEM_Roundtrip_Test : public FFI_Test {
 
    public:
       void ffi_test(Test::Result& result, botan_rng_t rng) override {
+         bool use_explicit_rng = true;
          for(auto mode : modes()) {
             // generate a key pair
             botan_privkey_t priv;
@@ -3442,7 +3443,11 @@ class FFI_KEM_Roundtrip_Test : public FFI_Test {
 
             // KEM decryption (using the generated private key)
             botan_pk_op_kem_decrypt_t kem_dec;
-            TEST_FFI_OK(botan_pk_op_kem_decrypt_create, (&kem_dec, priv, "Raw"));
+            if(use_explicit_rng) {
+               TEST_FFI_OK(botan_pk_op_kem_decrypt_create_with_rng, (&kem_dec, rng, priv, "Raw"));
+            } else {
+               TEST_FFI_OK(botan_pk_op_kem_decrypt_create, (&kem_dec, priv, "Raw"));
+            }
             size_t shared_key_length2 = 0;
             TEST_FFI_OK(botan_pk_op_kem_decrypt_shared_key_length, (kem_dec, shared_key_length, &shared_key_length2));
             result.test_eq("shared key lengths are consistent", shared_key_length, shared_key_length2);
@@ -3484,6 +3489,8 @@ class FFI_KEM_Roundtrip_Test : public FFI_Test {
             TEST_FFI_OK(botan_pubkey_destroy, (pub_loaded));
             TEST_FFI_OK(botan_privkey_destroy, (priv));
             TEST_FFI_OK(botan_privkey_destroy, (priv_loaded));
+
+            use_explicit_rng = !use_explicit_rng;
          }
       }
 };
