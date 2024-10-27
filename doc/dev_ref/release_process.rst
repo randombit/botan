@@ -15,27 +15,28 @@ starting 8 days before the release (ie the Monday of the week prior).
 Pre Release Testing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Update relevant third party test suites (eg Limbo and BoGo) and
+address any issues.
+
 Do maintainer-mode builds with Clang and GCC to catch any warnings
 that should be corrected.
 
-Other checks which are not in CI:
+Test build configurations using `src/scripts/test_all_configs.py`
 
- - Native compile on FreeBSD x86-64
- - Native compile on at least one unusual platform (AIX, NetBSD, ...)
- - Build the website content to detect any Doxygen problems
- - Test many build configurations (using `src/scripts/test_all_configs.py`)
- - Build/test SoftHSM
+Test a few builds on platforms not in CI (eg OpenBSD, FreeBSD, Solaris)
 
-Confirm that the release notes in ``news.rst`` are accurate and
-complete and that the version number in ``version.txt`` is correct.
+Confirm that the release notes in ``news.rst`` are accurate and complete.
+
+Check that the version number in ``src/build-data/version.txt`` is correct.
 
 Tag the Release
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Update the release date in the release notes and change the entry for
-the appropriate branch in ``readme.rst`` to point to the new release.
+Update the release date in the release notes.
 
-Now check in, and backport changes to the release branch::
+Update ``readme.rst`` to point to the new release URL
+
+Check in those changes then backport to the release branch::
 
   $ git commit readme.rst news.rst -m "Update for 3.8.2 release"
   $ git checkout release-3
@@ -78,7 +79,7 @@ A cron job updates the live site every 10 minutes.
 Push to GitHub
 ^^^^^^^^^^^^^^^^^^
 
-Don't forget to also push tags::
+Push the ``release-3`` and ``master`` branches, including the new tag::
 
   $ git push origin --tags release-3 master
 
@@ -95,9 +96,3 @@ The website is mirrored automatically from a git repository which must be update
   $ git add .
   $ git commit -m "Update for 3.8.2"
   $ git push origin master
-
-Announce The Release
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Send an email to the botan-announce and botan-devel mailing lists
-noting that a new release is available.
