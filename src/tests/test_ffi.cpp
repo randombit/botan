@@ -3158,7 +3158,6 @@ class FFI_Ed448_Test final : public FFI_Test {
          TEST_FFI_OK(botan_pubkey_destroy, (pub));
          TEST_FFI_OK(botan_pubkey_load_ed448, (&pub, pk_ref.data()));
 
-         botan_pk_op_sign_t signer;
          std::vector<uint8_t> signature;
 
          auto sign_fn = [&result, &rng, &msg, &signature](botan_pk_op_sign_t signer) {
@@ -3174,6 +3173,8 @@ class FFI_Ed448_Test final : public FFI_Test {
 
             TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
          };
+
+         botan_pk_op_sign_t signer;
 
          if(TEST_FFI_OK(botan_pk_op_sign_create, (&signer, priv, "Pure", 0))) {
             sign_fn(signer);
