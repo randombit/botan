@@ -59,6 +59,12 @@ Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, const
       }
    }
 
+   if(x == 0) {
+      // EC_Scalar rejects zero as an input, if we hit this case instead
+      // test with a completely randomized scalar
+      return BigInt::random_integer(rng, 1, max);
+   }
+
    if(max > 0) {
       while(x >= max) {
          const size_t b = x.bits() - 1;
