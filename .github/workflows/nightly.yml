@@ -18,8 +18,8 @@ on:
       # validate it works properly before merging.
       - '.github/workflows/nightly.yml'
   schedule:
-    # runs every day at 3:23 AM UTC
-    - cron:  '23 3 * * *'
+    # runs every day at 3:14 AM UTC
+    - cron:  '14 3 * * *'
 
 jobs:
   sanitizer:
