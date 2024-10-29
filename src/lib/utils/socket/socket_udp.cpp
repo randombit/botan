@@ -331,11 +331,11 @@ std::unique_ptr<OS::SocketUDP> OS::open_socket_udp(std::string_view hostname,
 }
 
 std::unique_ptr<OS::SocketUDP> OS::open_socket_udp(std::string_view uri_string, std::chrono::microseconds timeout) {
-   const auto uri = URI::fromAny(uri_string);
-   if(uri.port == 0) {
+   const auto uri = URI::from_any(uri_string);
+   if(uri.port() == 0) {
       throw Invalid_Argument("UDP port not specified");
    }
-   return open_socket_udp(uri.host, std::to_string(uri.port), timeout);
+   return open_socket_udp(uri.host(), std::to_string(uri.port()), timeout);
 }
 
 }  // namespace Botan

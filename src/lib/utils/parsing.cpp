@@ -364,4 +364,63 @@ bool host_wildcard_match(std::string_view issued_, std::string_view host_) {
    return true;
 }
 
+std::string check_and_canonicalize_dns_name(std::string_view name) {
+   if(name.size() > 255) {
+      throw Decoding_Error("DNS name exceeds maximum allowed length");
+   }
+
+   if(name.empty()) {
+      throw Decoding_Error("DNS name cannot be empty");
+   }
+
+   if(name.starts_with(".")) {
+      throw Decoding_Error("DNS name cannot start with a dot");
+   }
+
+   /*
+   * Table mapping uppercase to lowercase and only including values for valid DNS names
+   * namely A-Z, a-z, 0-9, hypen, and dot, plus '*' for wildcarding.
+   */
+   // clang-format off
+   constexpr uint8_t DNS_CHAR_MAPPING[128] = {
+      '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
+      '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
+      '\0', '\0', '\0', '\0',  '*', '\0', '\0',  '-',  '.', '\0',  '0',  '1',  '2',  '3',  '4',  '5',  '6',  '7',  '8',
+       '9', '\0', '\0', '\0', '\0', '\0', '\0', '\0',  'a',  'b',  'c',  'd',  'e',  'f',  'g',  'h',  'i',  'j',  'k',
+       'l',  'm',  'n',  'o',  'p',  'q',  'r',  's',  't',  'u',  'v',  'w',  'x',  'y',  'z', '\0', '\0', '\0', '\0',
+      '\0', '\0',  'a',  'b',  'c',  'd',  'e',  'f',  'g',  'h',  'i',  'j',  'k',  'l',  'm',  'n',  'o',  'p',  'q',
+       'r',  's',  't',  'u',  'v',  'w',  'x',  'y',  'z', '\0', '\0', '\0', '\0', '\0',
+   };
+   // clang-format on
+
+   std::string canon;
+   canon.reserve(name.size());
+
+   for(size_t i = 0; i != name.size(); ++i) {
+      char c = name[i];
+
+      if(c == '.') {
+         if(name[i - 1] == '.') {
+            throw Decoding_Error("DNS name contains sequential period chars");
+         }
+         if(i == name.size() - 1) {
+            throw Decoding_Error("DNS name cannot end in a period");
+         }
+      }
+
+      const uint8_t cu = static_cast<uint8_t>(c);
+      if(cu >= 128) {
+         throw Decoding_Error("DNS name must not contain any extended ASCII code points");
+      }
+      const uint8_t mapped = DNS_CHAR_MAPPING[cu];
+      if(mapped == 0) {
+         throw Decoding_Error("DNS name includes invalid character");
+      }
+      // TODO check label lengths
+      canon.push_back(static_cast<char>(mapped));
+   }
+
+   return canon;
+}
+
 }  // namespace Botan

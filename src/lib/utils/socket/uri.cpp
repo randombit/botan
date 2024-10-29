@@ -1,5 +1,6 @@
 /*
 * (C) 2019 Nuno Goncalves <nunojpg@gmail.com>
+*     2023,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -7,8 +8,8 @@
 #include <botan/internal/uri.h>
 
 #include <botan/exceptn.h>
-
-#include <regex>
+#include <botan/internal/fmt.h>
+#include <botan/internal/parsing.h>
 
 #if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
    #include <arpa/inet.h>
@@ -20,146 +21,133 @@
 
 #if defined(BOTAN_TARGET_OS_HAS_SOCKETS) || defined(BOTAN_TARGET_OS_HAS_WINSOCK2)
 
+namespace Botan {
+
 namespace {
 
-constexpr bool isdigit(char ch) {
-   return ch >= '0' && ch <= '9';
+bool is_domain_name(std::string_view domain) {
+   try {
+      check_and_canonicalize_dns_name(domain);
+      return true;
+   } catch(Decoding_Error&) {
+      return false;
+   }
 }
 
-bool isDomain(std::string_view domain) {
-   std::string domain_str(domain);
-   std::regex re(
-      R"(^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$)");
-   std::cmatch m;
-   return std::regex_match(domain_str.c_str(), m, re);
-}
-
-bool isIPv4(std::string_view ip) {
+bool is_ipv4(std::string_view ip) {
    std::string ip_str(ip);
    sockaddr_storage inaddr;
    return !!inet_pton(AF_INET, ip_str.c_str(), &inaddr);
 }
 
-bool isIPv6(std::string_view ip) {
+bool is_ipv6(std::string_view ip) {
    std::string ip_str(ip);
    sockaddr_storage in6addr;
    return !!inet_pton(AF_INET6, ip_str.c_str(), &in6addr);
 }
+
+uint16_t parse_port_number(const char* func_name, std::string_view uri, size_t pos) {
+   if(pos == std::string::npos || uri.empty()) {
+      return 0;
+   }
+
+   BOTAN_ARG_CHECK(pos < uri.size(), "URI invalid port specifier");
+
+   uint32_t port = 0;
+
+   for(char c : uri.substr(pos + 1)) {
+      size_t digit = c - '0';
+      if(digit >= 10) {
+         throw Invalid_Argument(fmt("URI::{} invalid port field in {}", func_name, uri));
+      }
+      port = port * 10 + (c - '0');
+      if(port > 65535) {
+         throw Invalid_Argument(fmt("URI::{} invalid port field in {}", func_name, uri));
+      }
+   }
+
+   return static_cast<uint16_t>(port);
+}
+
 }  // namespace
 
-namespace Botan {
+URI URI::from_domain(std::string_view uri) {
+   BOTAN_ARG_CHECK(!uri.empty(), "URI::from_domain empty URI is invalid");
 
-URI URI::fromDomain(std::string_view uri) {
-   unsigned port = 0;
+   uint16_t port = 0;
    const auto port_pos = uri.find(':');
    if(port_pos != std::string::npos) {
-      for(char c : uri.substr(port_pos + 1)) {
-         if(!isdigit(c)) {
-            throw Invalid_Argument("invalid");
-         }
-         port = port * 10 + c - '0';
-         if(port > 65535) {
-            throw Invalid_Argument("invalid");
-         }
-      }
+      port = parse_port_number("from_domain", uri, port_pos);
    }
    const auto domain = uri.substr(0, port_pos);
-   if(isIPv4(domain)) {
-      throw Invalid_Argument("invalid");
+   if(is_ipv4(domain)) {
+      throw Invalid_Argument("URI::from_domain domain name should not be IP address");
    }
-   if(!isDomain(domain)) {
-      throw Invalid_Argument("invalid");
+   if(!is_domain_name(domain)) {
+      throw Invalid_Argument(fmt("URI::from_domain domain name '{}' not valid", domain));
    }
-   return {Type::Domain, domain, uint16_t(port)};
+
+   return URI(Type::Domain, domain, port);
 }
 
-URI URI::fromIPv4(std::string_view uri) {
-   unsigned port = 0;
+URI URI::from_ipv4(std::string_view uri) {
+   BOTAN_ARG_CHECK(!uri.empty(), "URI::from_ipv4 empty URI is invalid");
+
    const auto port_pos = uri.find(':');
-   if(port_pos != std::string::npos) {
-      for(char c : uri.substr(port_pos + 1)) {
-         if(!isdigit(c)) {
-            throw Invalid_Argument("invalid");
-         }
-         port = port * 10 + c - '0';
-         if(port > 65535) {
-            throw Invalid_Argument("invalid");
-         }
-      }
-   }
+   const uint16_t port = parse_port_number("from_ipv4", uri, port_pos);
    const auto ip = uri.substr(0, port_pos);
-   if(!isIPv4(ip)) {
-      throw Invalid_Argument("invalid");
+   if(!is_ipv4(ip)) {
+      throw Invalid_Argument("URI::from_ipv4: Invalid IPv4 specifier");
    }
-   return {Type::IPv4, ip, uint16_t(port)};
+   return URI(Type::IPv4, ip, port);
 }
 
-URI URI::fromIPv6(std::string_view uri) {
-   unsigned port = 0;
+URI URI::from_ipv6(std::string_view uri) {
+   BOTAN_ARG_CHECK(!uri.empty(), "URI::from_ipv6 empty URI is invalid");
+
    const auto port_pos = uri.find(']');
    const bool with_braces = (port_pos != std::string::npos);
    if((uri[0] == '[') != with_braces) {
-      throw Invalid_Argument("invalid");
+      throw Invalid_Argument("URI::from_ipv6 Invalid IPv6 address with mismatch braces");
    }
 
+   uint16_t port = 0;
    if(with_braces && (uri.size() > port_pos + 1)) {
       if(uri[port_pos + 1] != ':') {
-         throw Invalid_Argument("invalid");
+         throw Invalid_Argument("URI::from_ipv6 Invalid IPv6 address");
       }
-      for(char c : uri.substr(port_pos + 2)) {
-         if(!isdigit(c)) {
-            throw Invalid_Argument("invalid");
-         }
-         port = port * 10 + c - '0';
-         if(port > 65535) {
-            throw Invalid_Argument("invalid");
-         }
-      }
+
+      port = parse_port_number("from_ipv6", uri, port_pos + 1);
    }
    const auto ip = uri.substr((with_braces ? 1 : 0), port_pos - with_braces);
-   if(!isIPv6(ip)) {
-      throw Invalid_Argument("invalid");
+   if(!is_ipv6(ip)) {
+      throw Invalid_Argument("URI::from_ipv6 URI has invalid IPv6 address");
    }
-   return {Type::IPv6, ip, uint16_t(port)};
+   return URI(Type::IPv6, ip, port);
 }
 
-URI URI::fromAny(std::string_view uri) {
-   bool colon_seen = false;
-   bool non_number = false;
-   if(uri[0] == '[') {
-      return fromIPv6(uri);
-   }
-   for(auto c : uri) {
-      if(c == ':') {
-         if(colon_seen)  //seen two ':'
-         {
-            return fromIPv6(uri);
-         }
-         colon_seen = true;
-      } else if(!isdigit(c) && c != '.') {
-         non_number = true;
-      }
-   }
-   if(!non_number) {
-      if(isIPv4(uri.substr(0, uri.find(':')))) {
-         return fromIPv4(uri);
-      }
-   }
-   return fromDomain(uri);
+URI URI::from_any(std::string_view uri) {
+   BOTAN_ARG_CHECK(!uri.empty(), "URI::from_any empty URI is invalid");
+
+   try {
+      return URI::from_ipv4(uri);
+   } catch(Invalid_Argument&) {}
+
+   try {
+      return URI::from_ipv6(uri);
+   } catch(Invalid_Argument&) {}
+
+   return URI::from_domain(uri);
 }
 
 std::string URI::to_string() const {
-   if(type == Type::NotSet) {
-      throw Invalid_Argument("not set");
-   }
-
-   if(port != 0) {
-      if(type == Type::IPv6) {
-         return "[" + host + "]:" + std::to_string(port);
+   if(m_port != 0) {
+      if(m_type == Type::IPv6) {
+         return "[" + m_host + "]:" + std::to_string(m_port);
       }
-      return host + ":" + std::to_string(port);
+      return m_host + ":" + std::to_string(m_port);
    }
-   return host;
+   return m_host;
 }
 
 }  // namespace Botan
@@ -168,19 +156,19 @@ std::string URI::to_string() const {
 
 namespace Botan {
 
-URI URI::fromDomain(std::string_view) {
+URI URI::from_domain(std::string_view) {
    throw Not_Implemented("No socket support enabled in build");
 }
 
-URI URI::fromIPv4(std::string_view) {
+URI URI::from_ipv4(std::string_view) {
    throw Not_Implemented("No socket support enabled in build");
 }
 
-URI URI::fromIPv6(std::string_view) {
+URI URI::from_ipv6(std::string_view) {
    throw Not_Implemented("No socket support enabled in build");
 }
 
-URI URI::fromAny(std::string_view) {
+URI URI::from_any(std::string_view) {
    throw Not_Implemented("No socket support enabled in build");
 }
 
