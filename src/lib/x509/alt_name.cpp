@@ -109,6 +109,57 @@ void AlternativeName::encode_into(DER_Encoder& der) const {
    der.end_cons();
 }
 
+namespace {
+
+std::string check_and_canonicalize_dns_name(std::string_view name) {
+   if(name.size() > 255) {
+      throw Decoding_Error("DNS SAN exceeds maximum allowed length");
+   }
+
+   if(name.empty()) {
+      throw Decoding_Error("DNS SAN cannot be empty");
+   }
+
+   if(name.starts_with(".")) {
+      throw Decoding_Error("DNS SAN cannot start with a dot");
+   }
+
+   /*
+   * Table mapping uppercase to lowercase and only including values for valid DNS names
+   * namely A-Z, a-z, 0-9, hypen, and dot, plus '*' for wildcarding.
+   */
+   // clang-format off
+   constexpr uint8_t DNS_CHAR_MAPPING[128] = {
+      '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
+      '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0',
+      '\0', '\0', '\0', '\0',  '*', '\0', '\0',  '-',  '.', '\0',  '0',  '1',  '2',  '3',  '4',  '5',  '6',  '7',  '8',
+       '9', '\0', '\0', '\0', '\0', '\0', '\0', '\0',  'a',  'b',  'c',  'd',  'e',  'f',  'g',  'h',  'i',  'j',  'k',
+       'l',  'm',  'n',  'o',  'p',  'q',  'r',  's',  't',  'u',  'v',  'w',  'x',  'y',  'z', '\0', '\0', '\0', '\0',
+      '\0', '\0',  'a',  'b',  'c',  'd',  'e',  'f',  'g',  'h',  'i',  'j',  'k',  'l',  'm',  'n',  'o',  'p',  'q',
+       'r',  's',  't',  'u',  'v',  'w',  'x',  'y',  'z', '\0', '\0', '\0', '\0', '\0',
+   };
+   // clang-format on
+
+   std::string canon;
+   canon.reserve(name.size());
+
+   for(char c : name) {
+      const uint8_t cu = static_cast<uint8_t>(c);
+      if(cu >= 128) {
+         throw Decoding_Error("DNS name must not contain any extended ASCII code points");
+      }
+      const uint8_t mapped = DNS_CHAR_MAPPING[cu];
+      if(mapped == 0) {
+         throw Decoding_Error("Name in DNS SAN includes invalid character");
+      }
+      canon.push_back(static_cast<char>(mapped));
+   }
+
+   return canon;
+}
+
+}  // namespace
+
 void AlternativeName::decode_from(BER_Decoder& source) {
    BER_Decoder names = source.start_sequence();
 
@@ -140,7 +191,7 @@ void AlternativeName::decode_from(BER_Decoder& source) {
       } else if(obj.is_a(1, ASN1_Class::ContextSpecific)) {
          add_email(ASN1::to_string(obj));
       } else if(obj.is_a(2, ASN1_Class::ContextSpecific)) {
-         add_dns(ASN1::to_string(obj));
+         m_dns.insert(check_and_canonicalize_dns_name(ASN1::to_string(obj)));
       } else if(obj.is_a(4, ASN1_Class::ContextSpecific | ASN1_Class::Constructed)) {
          BER_Decoder dec(obj);
          X509_DN dn;
