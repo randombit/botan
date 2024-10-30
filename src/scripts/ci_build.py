@@ -278,6 +278,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                 'xmss_keygen', 'xmss_keygen_reference', 'xmss_sign', 'xmss_unit_tests',
                 'xmss_verify', 'xmss_verify_invalid',
             ]
+            slow_tests += [f"dilithium_kat_{mode}_{rand}" for mode in ('6x5', '8x7', '6x5_AES', '8x7_AES') for rand in ('Deterministic', 'Randomized')]
+            slow_tests += [f"ml_dsa_kat_{mode}_{rand}" for mode in ('6x5', '8x7') for rand in ('Deterministic', 'Randomized')]
 
             disabled_tests += slow_tests
 
