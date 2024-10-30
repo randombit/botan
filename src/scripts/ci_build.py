@@ -71,6 +71,8 @@ def known_targets():
         'static',
         'valgrind',
         'valgrind-full',
+        'valgrind-ct',
+        'valgrind-ct-full',
     ]
 
 def is_running_in_github_actions():
@@ -123,12 +125,12 @@ def build_targets(target, target_os):
         yield 'bogo_shim'
     if target in ['examples', 'amalgamation']:
         yield 'examples'
-    if target in ['valgrind', 'valgrind-full']:
+    if target in ['valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full']:
         yield 'ct_selftest'
 
 def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                     root_dir, build_dir, test_results_dir, pkcs11_lib, use_gdb,
-                    disable_werror, extra_cxxflags, disabled_tests):
+                    disable_werror, extra_cxxflags, custom_optimization_flags, disabled_tests):
 
     """
     Return the configure.py flags as well as make/test running prefixes
@@ -198,6 +200,11 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target_cpu is not None:
         flags += ['--cpu=%s' % (target_cpu)]
 
+    if custom_optimization_flags and any(flag for flag in custom_optimization_flags):
+        flags += ['--no-optimizations']
+        for flag in custom_optimization_flags:
+            flags += ['--extra-cxxflags=%s' % (flag)]
+
     for flag in extra_cxxflags:
         flags += ['--extra-cxxflags=%s' % (flag)]
 
@@ -247,15 +254,20 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
     if target in ['sde']:
         test_prefix = ['sde', '-future', '--']
 
-    if target in ['valgrind', 'valgrind-full']:
+    if target in ['valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full']:
         flags += ['--with-valgrind']
 
         test_prefix = ['valgrind',
                        '-v',
-                       '--error-exitcode=9',
-                       '--leak-check=full',
-                       '--show-reachable=yes',
-                       '--track-origins=yes']
+                       '--error-exitcode=9']
+
+        # For finding memory bugs, we're enabling more features that add runtime
+        # overhead which we don't need for the secret-dependent execution checks
+        # that 'valgrind-ct' and 'valgrind-ct-full' are aiming for.
+        if target not in ['valgrind-ct', 'valgrind-ct-full']:
+            test_prefix += ['--leak-check=full',
+                            '--show-reachable=yes',
+                            '--track-origins=yes']
 
         build_config = os.path.join(build_dir, 'build', 'build_config.json')
         pretest_cmd = ['python3', os.path.join(root_dir, 'src', 'ct_selftest', 'ct_selftest.py'), "--build-config-path=%s" % build_config, os.path.join(build_dir, 'botan_ct_selftest')]
@@ -263,7 +275,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         # valgrind is single threaded anyway
         test_cmd += ['--test-threads=1']
 
-        if target != 'valgrind-full':
+        if target not in ['valgrind-full', 'valgrind-ct-full']:
             # valgrind is slow, so some tests only run in the nightly check
             slow_tests = [
                 'argon2', 'bcrypt', 'bcrypt_pbkdf', 'compression_tests', 'cryptobox',
@@ -301,7 +313,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         else:
             flags += ['--enable-sanitizers=address']
 
-    if target in ['valgrind', 'valgrind-full', 'sanitizer', 'fuzzers']:
+    if target in ['valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full', 'sanitizer', 'fuzzers']:
         flags += ['--disable-modules=locking_allocator']
 
     if target == 'emscripten':
@@ -610,6 +622,8 @@ def parse_args(args):
 
     parser.add_option('--extra-cxxflags', metavar='FLAGS', default=[], action='append',
                       help='Specify extra build flags')
+    parser.add_option('--custom-optimization-flags', metavar='FLAGS', default=[], action='append',
+                      help='Specify custom optimization flags (disables all default optimizations)')
 
     parser.add_option('--disabled-tests', metavar='DISABLED_TESTS', default=[], action='append',
                       help='Comma separated list of tests that should not be run')
@@ -781,7 +795,7 @@ def main(args=None):
             target, options.os, options.cpu, options.cc, options.cc_bin,
             options.compiler_cache, root_dir, build_dir, options.test_results_dir,
             options.pkcs11_lib, options.use_gdb, options.disable_werror,
-            options.extra_cxxflags, options.disabled_tests)
+            options.extra_cxxflags, options.custom_optimization_flags, options.disabled_tests)
 
         make_tool, make_opts = validate_make_tool(options.make_tool, options.build_jobs)
 
@@ -809,7 +823,7 @@ def main(args=None):
             if target in ['examples', 'amalgamation']:
                 make_targets += ['examples']
 
-            if target in ['valgrind', 'valgrind-full']:
+            if target in ['valgrind', 'valgrind-full', 'valgrind-ct', 'valgrind-ct-full']:
                 make_targets += ['ct_selftest']
 
             if target in ['coverage', 'sanitizer'] and options.os not in ['windows']:

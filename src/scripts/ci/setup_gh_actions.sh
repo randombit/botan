@@ -64,7 +64,7 @@ if type -p "apt-get"; then
     sudo apt-get -qq update
     sudo apt-get -qq install ccache libbz2-dev liblzma-dev libsqlite3-dev
 
-    if [ "$TARGET" = "valgrind" ] || [ "$TARGET" = "valgrind-full" ]; then
+    if [ "$TARGET" = "valgrind" ] || [ "$TARGET" = "valgrind-full" ] || [ "$TARGET" = "valgrind-ct-full" ] || [ "$TARGET" = "valgrind-ct" ]; then
         # (l)ist mode (avoiding https://github.com/actions/runner-images/issues/9996)
         sudo NEEDRESTART_MODE=l apt-get -qq install valgrind
         build_and_install_jitterentropy
