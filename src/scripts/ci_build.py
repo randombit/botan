@@ -257,7 +257,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                        '--show-reachable=yes',
                        '--track-origins=yes']
 
-        pretest_cmd = ['python3', os.path.join(root_dir, 'src', 'ct_selftest', 'ct_selftest.py'), os.path.join(build_dir, 'botan_ct_selftest')]
+        build_config = os.path.join(build_dir, 'build', 'build_config.json')
+        pretest_cmd = ['python3', os.path.join(root_dir, 'src', 'ct_selftest', 'ct_selftest.py'), "--build-config-path=%s" % build_config, os.path.join(build_dir, 'botan_ct_selftest')]
 
         # valgrind is single threaded anyway
         test_cmd += ['--test-threads=1']
