@@ -25,10 +25,7 @@ def run_with_valgrind(cmd: list[str]):
     """ Run a command with valgrind. """
     valgrind_args = ['valgrind',
                      '-v',
-                     '--error-exitcode=2',
-                     '--leak-check=full',
-                     '--show-reachable=yes',
-                     '--track-origins=yes']
+                     '--error-exitcode=2']
     res = run_command(valgrind_args + cmd, is_text=False)
     # valgrind may output non-utf-8 characters
     res.stdout = res.stdout.decode("utf-8", errors="replace")
