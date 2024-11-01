@@ -8,6 +8,38 @@ The Github Actions builds are orchestrated using a script
 ``src/scripts/ci_build.py``. This allows one to easily reproduce the CI process
 on a local machine.
 
+Repository Configuration
+------------------------
+
+Specific configuration for test dependencies and CI-related global settings
+are centralized in ``src/configs/repo_config.env``. This file is pulled into
+the CI environment using the python script ``src/scripts/repo_config.py``.
+
+If one needs direct access to the configuration variables (without relying on
+environment variables in CI), use ``src/scripts/repo_config.py`` in one of the
+following ways:
+
+1. From the command line:
+
+   .. code-block:: bash
+
+      # print all key-value pairs, like: VAR=VALUE\n...
+      python3 src/scripts/repo_config.py all
+
+      # print the value of a specific key
+      python3 src/scripts/repo_config.py get VAR
+
+      # list all available variables in repo_config.env
+      python3 src/scripts/repo_config.py list
+
+2. As a python module (assuming the script is in the PYTHONPATH):
+
+   .. code-block:: python
+
+      from repo_config import RepoConfig
+      config = RepoConfig()
+      print(config['VAR'])
+
 Github Actions
 ---------------
 
