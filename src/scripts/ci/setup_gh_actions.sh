@@ -144,7 +144,7 @@ if type -p "apt-get"; then
         echo ${SDE_VER} >> "$GITHUB_PATH"
 
     elif [ "$TARGET" = "cross-android-arm32" ] || [ "$TARGET" = "cross-android-arm64" ] || [ "$TARGET" = "cross-android-arm64-amalgamation" ]; then
-        wget -nv https://dl.google.com/android/repository/"$ANDROID_NDK"-linux.zip
+        wget -nv "https://dl.google.com/android/repository/${ANDROID_NDK}-linux.zip"
         unzip -qq "$ANDROID_NDK"-linux.zip
 
     elif [ "$TARGET" = "cross-arm32-baremetal" ]; then

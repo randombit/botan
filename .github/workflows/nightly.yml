@@ -112,9 +112,6 @@ jobs:
 
     runs-on: ${{ matrix.host_os }}
 
-    env:
-      ANDROID_NDK: android-ndk-r26
-
     steps:
       - uses: actions/checkout@v4
 
