@@ -18,7 +18,7 @@ SCRIPT_LOCATION=$(cd "$(dirname "$0")"; pwd)
 
 function build_and_install_jitterentropy() {
     mkdir jitterentropy-library
-    curl -L https://github.com/smuellerDD/jitterentropy-library/archive/refs/tags/v3.6.0.tar.gz | tar -xz -C .
+    curl -L "https://github.com/smuellerDD/jitterentropy-library/archive/refs/tags/v${JITTERENTROPY_VERSION}.tar.gz" | tar -xz -C .
     jel_dir="$(realpath jitterentropy-library-*)"
     cmake -B "${jel_dir}/build" -S "${jel_dir}" -DCMAKE_BUILD_TYPE=Release
     cmake --build "${jel_dir}/build"
