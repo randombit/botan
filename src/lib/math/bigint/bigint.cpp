@@ -515,8 +515,8 @@ void BigInt::ct_cond_assign(bool predicate, const BigInt& other) {
       this->set_word_at(i, mask.select(o_word, t_word));
    }
 
-   const bool different_sign = sign() != other.sign();
-   cond_flip_sign(predicate && different_sign);
+   const auto same_sign = CT::Mask<word>::is_equal(sign(), other.sign()).as_choice();
+   cond_flip_sign((mask.as_choice() && !same_sign).as_bool());
 }
 
 #if defined(BOTAN_CT_POISON_ENABLED)
