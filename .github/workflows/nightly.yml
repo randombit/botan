@@ -50,8 +50,8 @@ jobs:
       - name: Fetch BoringSSL fork for BoGo tests
         uses: actions/checkout@v4
         with:
-          repository: randombit/boringssl
-          ref: rene/runner-20241016
+          repository: ${{ env.BORINGSSL_REPO }}
+          ref: ${{ env.BORINGSSL_BRANCH }}
           path: ./boringssl
 
       - name: Setup Build Agent
