@@ -11,7 +11,7 @@
 #ifndef BOTAN_TLS_13_KEX_TO_KEM_ADAPTER_H_
 #define BOTAN_TLS_13_KEX_TO_KEM_ADAPTER_H_
 
-#include <botan/pubkey.h>
+#include <botan/pk_keys.h>
 
 #include <memory>
 

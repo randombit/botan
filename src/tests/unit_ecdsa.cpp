@@ -139,8 +139,8 @@ Test::Result test_read_pkcs8() {
 
       result.confirm("EC_Group is marked as explicit encoding", ecdsa_nodp->domain().used_explicit_encoding());
 
-      Botan::PK_Signer signer(*ecdsa_nodp, *rng, "SHA-256");
-      Botan::PK_Verifier verifier(*ecdsa_nodp, "SHA-256");
+      auto signer = ecdsa_nodp->signer().with_rng(*rng).with_hash("SHA-256").create();
+      auto verifier = ecdsa_nodp->signature_verifier().with_hash("SHA-256").create();
 
       const auto msg = rng->random_vec(48);
 
