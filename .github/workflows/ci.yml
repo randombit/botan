@@ -48,6 +48,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
+
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
         with:
@@ -78,6 +81,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
@@ -113,6 +119,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
+
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
         with:
@@ -127,6 +136,9 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
@@ -185,6 +197,9 @@ jobs:
         with:
           path: ./source
 
+      - name: Read Repository Configuration
+        uses: ./source/.github/actions/read-repo-config
+
       - name: Fetch BoringSSL fork for BoGo tests
         uses: actions/checkout@v4
         with:
@@ -231,6 +246,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: ./source
+
+      - name: Read Repository Configuration
+        uses: ./source/.github/actions/read-repo-config
 
       - name: Setup Build Agent
         uses: ./source/.github/actions/setup-build-agent
@@ -281,6 +299,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent

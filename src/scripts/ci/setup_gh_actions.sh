@@ -27,6 +27,11 @@ function build_and_install_jitterentropy() {
     rm -rf "${jel_dir}"
 }
 
+if [ -z $REPO_CONFIG_LOADED ]; then
+    echo "Repository configuration not loaded" >&2
+    exit 1
+fi
+
 if type -p "apt-get"; then
     # TPM2-TSS library (to build the library against)
     tpm2_specific_packages=("libtss2-dev")

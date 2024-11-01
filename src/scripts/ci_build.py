@@ -767,6 +767,7 @@ def main(args=None):
             'src/scripts/test_python.py',
             'src/scripts/test_fuzzers.py',
             'src/scripts/test_cli.py',
+            'src/scripts/repo_config.py',
             'src/scripts/python_unittests.py',
             'src/scripts/python_unittests_unix.py',
             'src/scripts/dev_tools/run_clang_format.py',
