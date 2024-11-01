@@ -619,7 +619,7 @@ class Mask final {
 * to access the inner value if the Choice is unset.
 */
 template <typename T>
-class Option {
+class Option final {
    public:
       /// Construct an Option which contains the specified value, and is set or not
       constexpr Option(T v, Choice valid) : m_has_value(valid), m_value(std::move(v)) {}

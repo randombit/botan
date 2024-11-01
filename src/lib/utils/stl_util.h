@@ -139,7 +139,7 @@ class BufferSlicer final {
  * The size of the final buffer must be known from the start, reallocations are
  * not performed.
  */
-class BufferStuffer {
+class BufferStuffer final {
    public:
       constexpr BufferStuffer(std::span<uint8_t> buffer) : m_buffer(buffer) {}
 
@@ -351,7 +351,7 @@ overloaded(Ts...) -> overloaded<Ts...>;
  * leaving the current scope.
  */
 template <std::invocable FunT>
-class scoped_cleanup {
+class scoped_cleanup final {
    public:
       explicit scoped_cleanup(FunT cleanup) : m_cleanup(std::move(cleanup)) {}
 
@@ -401,7 +401,7 @@ T assert_is_some(std::optional<T> v, const char* expr, const char* func, const c
  * @brief Helper class to pass literal strings to C++ templates
  */
 template <size_t N>
-class StringLiteral {
+class StringLiteral final {
    public:
       constexpr StringLiteral(const char (&str)[N]) { std::copy_n(str, N, value); }
 

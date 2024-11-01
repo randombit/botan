@@ -41,7 +41,7 @@ constexpr uint32_t get_uint32(const W xw[], size_t i) {
 }
 
 template <WordType W, size_t N>
-class SolinasAccum {
+class SolinasAccum final {
    public:
       static_assert(WordInfo<W>::bits == 32 || WordInfo<W>::bits == 64);
 

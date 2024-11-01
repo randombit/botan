@@ -22,7 +22,7 @@ namespace Botan {
 
 class XOF;
 
-class BOTAN_TEST_API FrodoKEMConstants {
+class BOTAN_TEST_API FrodoKEMConstants final {
    public:
       FrodoKEMConstants(FrodoKEMMode mode);
 

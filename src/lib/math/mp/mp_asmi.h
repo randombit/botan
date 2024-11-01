@@ -593,7 +593,7 @@ inline constexpr void word3_muladd_2(W* w2, W* w1, W* w0, W x, W y) {
 * bits.
 */
 template <WordType W>
-class word3 {
+class word3 final {
 #if defined(__BITINT_MAXWIDTH__) && (__BITINT_MAXWIDTH__ >= 3 * 64)
 
    public:

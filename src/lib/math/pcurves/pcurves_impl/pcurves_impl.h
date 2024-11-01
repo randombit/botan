@@ -468,7 +468,7 @@ class IntMod final {
 };
 
 template <typename FieldElement, typename Params>
-class AffineCurvePoint {
+class AffineCurvePoint final {
    public:
       // We can't pass a FieldElement directly because FieldElement is
       // not "structural" due to having private members, so instead

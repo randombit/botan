@@ -24,7 +24,7 @@
 
 namespace Botan {
 
-class FrodoMatrix {
+class FrodoMatrix final {
    public:
       using Dimensions = std::tuple<size_t, size_t>;
 
