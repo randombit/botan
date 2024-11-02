@@ -27,7 +27,7 @@ function build_and_install_jitterentropy() {
     rm -rf "${jel_dir}"
 }
 
-if [ -z $REPO_CONFIG_LOADED ]; then
+if [ -z "$REPO_CONFIG_LOADED" ]; then
     echo "Repository configuration not loaded" >&2
     exit 1
 fi
@@ -138,8 +138,9 @@ if type -p "apt-get"; then
         sudo apt-get -qq install qemu-user g++-s390x-linux-gnu
 
     elif [ "$TARGET" = "sde" ]; then
-        wget https://downloadmirror.intel.com/823664/${INTEL_SDE_VERSION}.tar.xz
-        tar -xvf ${INTEL_SDE_VERSION}.tar.xz
+        wget "https://downloadmirror.intel.com/823664/${INTEL_SDE_VERSION}.tar.xz"
+        tar -xvf "${INTEL_SDE_VERSION}.tar.xz"
+        echo ${INTEL_SDE_VERSION} >> "$GITHUB_PATH"
 
     elif [ "$TARGET" = "cross-android-arm32" ] || [ "$TARGET" = "cross-android-arm64" ] || [ "$TARGET" = "cross-android-arm64-amalgamation" ]; then
         wget -nv "https://dl.google.com/android/repository/${ANDROID_NDK}-linux.zip"
