@@ -31,5 +31,3 @@ if($identifiers_for_64bit -contains $ARCH ) {
 } else {
     echo "VSENV_ARCH=$ARCH" >> $env:GITHUB_ENV
 }
-
-echo "SCCACHE_CACHE_SIZE=200M" >> $env:GITHUB_ENV

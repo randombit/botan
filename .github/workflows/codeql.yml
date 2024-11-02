@@ -26,6 +26,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
+
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
         with:

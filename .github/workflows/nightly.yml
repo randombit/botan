@@ -44,11 +44,14 @@ jobs:
         with:
           path: ./source
 
+      - name: Read Repository Configuration
+        uses: ./source/.github/actions/read-repo-config
+
       - name: Fetch BoringSSL fork for BoGo tests
         uses: actions/checkout@v4
         with:
-          repository: randombit/boringssl
-          ref: rene/runner-20241016
+          repository: ${{ env.BORINGSSL_REPO }}
+          ref: ${{ env.BORINGSSL_BRANCH }}
           path: ./boringssl
 
       - name: Setup Build Agent
@@ -109,11 +112,11 @@ jobs:
 
     runs-on: ${{ matrix.host_os }}
 
-    env:
-      ANDROID_NDK: android-ndk-r26
-
     steps:
       - uses: actions/checkout@v4
+
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
@@ -131,6 +134,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
@@ -184,6 +190,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
+
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
         with:
@@ -200,6 +209,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
@@ -218,6 +230,9 @@ jobs:
     steps:
       - name: Fetch Botan Repository
         uses: actions/checkout@v4
+
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
 
       - name: Setup Build Agent
         uses: ./.github/actions/setup-build-agent
