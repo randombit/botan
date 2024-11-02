@@ -2101,10 +2101,10 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
     def choose_python_exe():
         return normalize_source_path(sys.executable)
 
-    def choose_cxx_exe():
+    def choose_cxx_exe(with_compiler_cache = False):
         cxx = options.compiler_binary or cc.binary_name
 
-        if options.compiler_cache is None:
+        if options.compiler_cache is None or with_compiler_cache is False:
             return cxx
         else:
             return '%s %s' % (normalize_source_path(options.compiler_cache), cxx)
@@ -2228,7 +2228,7 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'python_version': options.python_version,
         'install_python_module': not options.no_install_python_module,
 
-        'cxx': choose_cxx_exe(),
+        'cxx': choose_cxx_exe(True),
         'cxx_abi_flags': cc.mach_abi_link_flags(options),
         'linker': cc.linker_name or choose_cxx_exe(),
         'make_supports_phony': osinfo.basename != 'windows',

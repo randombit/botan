@@ -29,6 +29,8 @@ undefined -> "-fsanitize=undefined -fno-sanitize-recover=undefined"
 coverage  -> "-fsanitize=fuzzer-no-link"
 memory    -> "-fsanitize=memory"
 fuzzer    -> "-fsanitize=fuzzer"
+
+iterator  -> "-D_LIBCPP_DEBUG=1 -D_GLIBCXX_DEBUG"
 </sanitizers>
 
 shared_flags "-fPIC"

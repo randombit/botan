@@ -1381,7 +1381,7 @@ class FFI_AEAD_Test final : public FFI_Test {
             std::vector<uint8_t> ciphertext(ideal_granularity * pt_multiplier + taglen);
             TEST_FFI_OK(botan_rng_get, (rng, plaintext.data(), plaintext.size()));
 
-            std::vector<uint8_t> dummy_buffer(256);
+            std::vector<uint8_t> dummy_buffer(1024);
             TEST_FFI_OK(botan_rng_get, (rng, dummy_buffer.data(), dummy_buffer.size()));
             std::vector<uint8_t> dummy_buffer_reference = dummy_buffer;
 
@@ -1405,6 +1405,7 @@ class FFI_AEAD_Test final : public FFI_Test {
                // input if there is no space in the output buffer. Even when
                // the cipher is a mode that won't produce any output until the
                // entire message is processed. Hence, give it some dummy buffer.
+               BOTAN_ASSERT_NOMSG(dummy_buffer.size() > ideal_granularity);
                auto ct_chunk = (requires_entire_message) ? std::span(dummy_buffer).first(ideal_granularity)
                                                          : ct_stuffer.first(ideal_granularity);
 

@@ -544,11 +544,17 @@ BOTAN_REGISTER_TEST("math", "bn_rshift", BigInt_Rshift_Test);
 
 Test::Result test_const_time_left_shift() {
    Test::Result result("BigInt const time shift");
-   const size_t bits = Test::run_long_tests() ? 2 * 4096 : 2048;
+   const size_t bits = Test::run_long_tests() ? 4096 : 2048;
+
+   auto rng = Test::new_rng("const_time_left_shift");
+
+   result.start_timer();
 
    Botan::BigInt a = Botan::BigInt::with_capacity(bits / sizeof(Botan::word));
    for(size_t i = 0; i < bits; ++i) {
-      a.set_bit(i);
+      if(rng->next_byte() & 1) {
+         a.set_bit(i);
+      }
    }
 
    for(size_t i = 0; i < bits; ++i) {
@@ -560,6 +566,8 @@ Test::Result test_const_time_left_shift() {
       chk <<= i;
       result.test_eq(Botan::fmt("ct << {}", i), ct, chk);
    }
+
+   result.end_timer();
 
    return result;
 }

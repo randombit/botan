@@ -28,6 +28,8 @@ address   -> "-fsanitize=address"
 undefined -> "-fsanitize=undefined -fno-sanitize-recover=undefined"
 coverage  -> "-fsanitize=fuzzer-no-link"
 memory    -> "-fsanitize=memory"
+
+iterator  -> "-D_LIBCPP_DEBUG=1"
 </sanitizers>
 
 shared_flags "-fPIC"
