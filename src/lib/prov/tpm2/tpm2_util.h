@@ -137,12 +137,20 @@ constexpr OutT copy_into(const tpm2_buffer auto& data) {
    return result;
 }
 
+/// Create a TPM2 buffer of a given type and @p length.
+template <tpm2_buffer T>
+constexpr T init_with_size(size_t length) {
+   T result;
+   BOTAN_ASSERT_NOMSG(length <= sizeof(result.buffer));
+   result.size = length;
+   clear_bytes(result.buffer, length);
+   return result;
+}
+
 /// Create an empty TPM2 buffer of the given type.
 template <tpm2_buffer T>
 constexpr T init_empty() {
-   T result;
-   result.size = 0;
-   return result;
+   return init_with_size<T>(0);
 }
 
 struct esys_liberator {
