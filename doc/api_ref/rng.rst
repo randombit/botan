@@ -239,7 +239,7 @@ Jitter_RNG
 This is an RNG based on low-level CPU timing jitter, using the
 `jitterentropy library <https://github.com/smuellerDD/jitterentropy-library>`_.
 
-Can be enabled with ``configure.py`` via ``--enable-module="jitter_rng"``, provided
+Can be enabled with ``configure.py`` via ``--enable-modules="jitter_rng"``, provided
 you have the library installed and made available to the build, including headers.
 
 Entropy Sources
