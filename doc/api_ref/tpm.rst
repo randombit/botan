@@ -53,6 +53,14 @@ persisting and evicting keys into the TPM's NVRAM.
         TCTI. Both values may by empty, in which case the TPM-TSS2 will try to
         determine them from default values.
 
+    .. cpp:function:: std::shared_ptr<Context> create(ESYS_CONTEXT* ctx)
+
+        Create a TPM2 context from an already set up TPM2-TSS ESYS_CONTEXT*
+        to enable usage of Botan's TPM2 functionalities via an outside
+        ESYS Context.
+        If the Botan TPM2 Context was created this way, the destructor will
+        not finalize the underlying ESYS_CONTEXT.
+
     .. cpp:function:: TPM2_HANDLE persist(TPM2::PrivateKey& key, const SessionBundle& sessions, std::span<const uint8_t> auth_value, std::optional<TPM2_HANDLE> persistent_handle)
 
         Persists the given ``key`` in the TPM's NVRAM. The returned handle can be
@@ -249,6 +257,14 @@ avoid a dependency on another cryptographic library in applications.
 Once a ``Context`` is created, the Botan-based crypto backend may be enabled for
 it via the ``Context::use_botan_crypto_backend`` method. This will only succeed
 if the method ``Context::supports_botan_crypto_backend`` returns true.
+
+Alternatively, if one just wants to utilize the backend in a TPM2-TSS ESAPI
+application without using Botan's wrappers, free-standing functions are provided
+in ``tpm2_crypto_backend.h``. The ``use_botan_crypto_backend`` works similar to
+the ``Context::use_botan_crypto_backend`` method but is given an ``ESYS_CONTEXT*``
+and returns a ``TPM2::CryptoCallbackState`` that needs to stay alive as long
+as the crypto backend is used. This will only succeed if the method
+``supports_botan_crypto_backend`` returns true.
 
 TPM 2.0 Example
 ~~~~~~~~~~~~~~~

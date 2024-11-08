@@ -1367,6 +1367,12 @@ TPM 2.0 Functions
 
    An opaque data type for a TPM 2.0 session object. Don't mess with it.
 
+.. cpp:type:: opaque* botan_tpm2_crypto_backend_state_t
+
+   An opaque data type to hold the TPM 2.0 crypto backend state when registering
+   the botan-based crypto backend on a bare ESYS_CONTEXT. When the TPM 2.0
+   context is managed via Botan botan_tpm2_ctx_t, this state object is maintained
+   internally.
 
 .. cpp:function:: int botan_tpm2_supports_crypto_backend()
 
@@ -1382,10 +1388,30 @@ TPM 2.0 Functions
    Initialize a TPM 2.0 context object. The TCTI name and configuration are
    passed as separate strings.
 
+.. cpp:function:: int botan_tpm2_ctx_from_esys(botan_tpm2_ctx_t* ctx_out, ESYS_CONTEXT* esys_ctx)
+
+   Initialize a TPM 2.0 context object from a pre-existing ``ESYS_CONTEXT`` that
+   is managed by the application. Destroying this object *will not* finalize the
+   ``ESYS_CONTEXT``, this responsibility remains with the application.
+
 .. cpp:function:: int botan_tpm2_ctx_enable_crypto_backend(botan_tpm2_ctx_t ctx, botan_rng_t rng)
 
    Enable the Botan-based TPM 2.0 crypto backend. Note that the random number
    generator passed to this function must not be dependent on the TPM itself.
+   This should be used when the ``ESYS_CONTEXT`` is managed by the TPM 2.0
+   wrapper provided by Botan (i.e. the application did not explicitly instantiate
+   the ``ESYS_CONTEXT`` itself).
+
+.. cpp:function:: int botan_tpm2_enable_crypto_backend(botan_tpm2_crypto_backend_state_t* cbs_out, \
+                                                       ESYS_CONTEXT* esys_ctx, \
+                                                       botan_rng_t rng)
+
+   Enable the Botan-based TPM 2.0 crypto backend on a pre-existing ``ESYS_CONTEXT``
+   that is managed by the application. Note that the random number generator
+   passed to this function must not be dependent on the TPM itself.
+   The crypto backend has to keep internal state. The application is responsible
+   to keep this state alive and destroy it after the ``ESYS_CONTEXT`` is no longer
+   used.
 
 .. cpp:function:: int botan_tpm2_unauthenticated_session_init(botan_tpm2_session_t* session_out, botan_tpm2_ctx_t ctx)
 
@@ -1407,6 +1433,14 @@ TPM 2.0 Functions
 .. cpp:function:: int botan_tpm2_session_destroy(botan_tpm2_session_t session)
 
    Destroy a TPM 2.0 session object.
+
+.. cpp:function:: int botan_tpm2_crypto_backend_state_destroy(botan_tpm2_crypto_backend_state_t cbs)
+
+   Destroy a TPM 2.0 crypto backend state. This is required when registering the
+   botan-based crypto backend on an ESYS_CONTEXT managed by the application
+   using botan_tpm2_enable_crypto_backend. When the ESYS_CONTEXT is managed in
+   the botan wrapper, and botan_tpm2_ctx_enable_crypto_backend was used, this
+   state is managed within the library and does not need to be cleaned up.
 
 X.509 Certificates
 ----------------------------------------
