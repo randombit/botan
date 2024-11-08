@@ -23,6 +23,7 @@
 
 #if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
    #include <botan/tpm2_crypto_backend.h>
+   #include <botan/internal/tpm2_crypto_backend_impl.h>
 #endif
 
 namespace Botan::TPM2 {
@@ -34,8 +35,8 @@ constexpr TPM2_HANDLE storage_root_key_handle = TPM2_HR_PERSISTENT + 1;
 }  // namespace
 
 struct Context::Impl {
-      TSS2_TCTI_CONTEXT* m_tcti_ctx;
-      ESYS_CONTEXT* m_ctx;
+      ESYS_CONTEXT* m_ctx;  /// m_ctx is owned by the library user
+      bool m_external;
 
 #if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
       std::unique_ptr<CryptoCallbackState> m_crypto_callback_state;
@@ -49,29 +50,44 @@ bool Context::supports_botan_crypto_backend() noexcept {
 }
 
 std::shared_ptr<Context> Context::create(const std::string& tcti_nameconf) {
+   const auto nameconf_ptr = tcti_nameconf.c_str();
+
+   TSS2_TCTI_CONTEXT* tcti_ctx = nullptr;
+   ESYS_CONTEXT* esys_ctx = nullptr;
+   check_rc("TCTI Initialization", Tss2_TctiLdr_Initialize(nameconf_ptr, &tcti_ctx));
+   BOTAN_ASSERT_NONNULL(tcti_ctx);
+   check_rc("TPM2 Initialization", Esys_Initialize(&esys_ctx, tcti_ctx, nullptr /* ABI version */));
+   BOTAN_ASSERT_NONNULL(esys_ctx);
+
    // We cannot std::make_shared as the constructor is private
-   return std::shared_ptr<Context>(new Context(tcti_nameconf.c_str()));
+   return std::shared_ptr<Context>(new Context(esys_ctx, false /* context is managed by us */));
 }
 
 std::shared_ptr<Context> Context::create(std::optional<std::string> tcti, std::optional<std::string> conf) {
    const auto tcti_ptr = tcti.has_value() ? tcti->c_str() : nullptr;
    const auto conf_ptr = conf.has_value() ? conf->c_str() : nullptr;
 
+   TSS2_TCTI_CONTEXT* tcti_ctx = nullptr;
+   ESYS_CONTEXT* esys_ctx = nullptr;
+   check_rc("TCTI Initialization", Tss2_TctiLdr_Initialize_Ex(tcti_ptr, conf_ptr, &tcti_ctx));
+   BOTAN_ASSERT_NONNULL(tcti_ctx);
+   check_rc("TPM2 Initialization", Esys_Initialize(&esys_ctx, tcti_ctx, nullptr /* ABI version */));
+   BOTAN_ASSERT_NONNULL(esys_ctx);
+
    // We cannot std::make_shared as the constructor is private
-   return std::shared_ptr<Context>(new Context(tcti_ptr, conf_ptr));
+   return std::shared_ptr<Context>(new Context(esys_ctx, false /* context is managed by us */));
 }
 
-Context::Context(const char* tcti_nameconf) : m_impl(std::make_unique<Impl>()) {
-   check_rc("TCTI Initialization", Tss2_TctiLdr_Initialize(tcti_nameconf, &m_impl->m_tcti_ctx));
-   BOTAN_ASSERT_NONNULL(m_impl->m_tcti_ctx);
-   check_rc("TPM2 Initialization", Esys_Initialize(&m_impl->m_ctx, m_impl->m_tcti_ctx, nullptr /* ABI version */));
-   BOTAN_ASSERT_NONNULL(m_impl->m_ctx);
+std::shared_ptr<Context> Context::create(ESYS_CONTEXT* esys_ctx) {
+   BOTAN_ASSERT_NONNULL(esys_ctx);
+
+   // We cannot std::make_shared as the constructor is private
+   return std::shared_ptr<Context>(new Context(esys_ctx, true /* context is managed externally */));
 }
 
-Context::Context(const char* tcti_name, const char* tcti_conf) : m_impl(std::make_unique<Impl>()) {
-   check_rc("TCTI Initialization", Tss2_TctiLdr_Initialize_Ex(tcti_name, tcti_conf, &m_impl->m_tcti_ctx));
-   BOTAN_ASSERT_NONNULL(m_impl->m_tcti_ctx);
-   check_rc("TPM2 Initialization", Esys_Initialize(&m_impl->m_ctx, m_impl->m_tcti_ctx, nullptr /* ABI version */));
+Context::Context(ESYS_CONTEXT* ctx, bool external) : m_impl(std::make_unique<Impl>()) {
+   m_impl->m_ctx = ctx;
+   m_impl->m_external = external;
    BOTAN_ASSERT_NONNULL(m_impl->m_ctx);
 }
 
@@ -394,9 +410,45 @@ void Context::evict(std::unique_ptr<TPM2::PrivateKey> key, const SessionBundle& 
 }
 
 Context::~Context() {
-   if(m_impl) {
+   if(!m_impl) {
+      return;
+   }
+
+#if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
+   // If this object manages a crypto backend state object and the ESYS context
+   // will live on, because it was externally provided, we have to de-register
+   // this state object from the crypto callbacks.
+   //
+   // This will prevent the crypto backend callbacks from using a dangling
+   // pointer and cause graceful errors if the externally provided ESYS context
+   // is used for any action that would still need the crypto backend state.
+   //
+   // We deliberately do not just disable the crypto backend silently, as that
+   // might give users the false impression that they continue to benefit from
+   // the crypto backend while in fact they're back to the TSS' default.
+   if(m_impl->m_external && uses_botan_crypto_backend()) {
+      try {
+         set_crypto_callbacks(esys_context(), nullptr /* reset callback state */);
+      } catch(...) {
+         // ignore errors in destructor
+      }
+      m_impl->m_crypto_callback_state.reset();
+   }
+#endif
+
+   // We don't finalize contexts that were provided externally. Those are
+   // expected to be handled by the library users' applications.
+   if(!m_impl->m_external) {
+      // If the TCTI context was initialized explicitly, Esys_GetTcti() will
+      // return a pointer to the TCTI context that then has to be finalized
+      // explicitly. See ESAPI Specification Section 6.3 "Esys_GetTcti".
+      TSS2_TCTI_CONTEXT* tcti_ctx = nullptr;
+      Esys_GetTcti(m_impl->m_ctx, &tcti_ctx);  // ignore error in destructor
+      if(tcti_ctx != nullptr) {
+         Tss2_TctiLdr_Finalize(&tcti_ctx);
+      }
+
       Esys_Finalize(&m_impl->m_ctx);
-      Tss2_TctiLdr_Finalize(&m_impl->m_tcti_ctx);
    }
 }
 
