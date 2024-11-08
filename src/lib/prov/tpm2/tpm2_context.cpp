@@ -22,7 +22,7 @@
 #include <tss2/tss2_tctildr.h>
 
 #if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
-   #include <botan/internal/tpm2_crypto_backend.h>
+   #include <botan/tpm2_crypto_backend.h>
 #endif
 
 namespace Botan::TPM2 {
@@ -43,10 +43,8 @@ struct Context::Impl {
 };
 
 bool Context::supports_botan_crypto_backend() noexcept {
-#if defined(BOTAN_TSS2_SUPPORTS_CRYPTO_CALLBACKS) and defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
-   return true;
-#else
-   return false;
+#if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
+   return Botan::TPM2::supports_botan_crypto_backend();
 #endif
 }
 
@@ -80,8 +78,7 @@ Context::Context(const char* tcti_name, const char* tcti_conf) : m_impl(std::mak
 void Context::use_botan_crypto_backend(const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
 #if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
    BOTAN_STATE_CHECK(!uses_botan_crypto_backend());
-   m_impl->m_crypto_callback_state = std::make_unique<CryptoCallbackState>(rng);
-   enable_crypto_callbacks(shared_from_this());
+   m_impl->m_crypto_callback_state = Botan::TPM2::use_botan_crypto_backend(esys_context(), rng);
 #else
    BOTAN_UNUSED(rng);
    throw Not_Implemented("This build of botan does not provide the TPM2 crypto backend");

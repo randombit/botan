@@ -16,5 +16,9 @@ eme_raw
 </requires>
 
 <header:internal>
-tpm2_crypto_backend.h
+tpm2_crypto_backend_impl.h
 </header:internal>
+
+<header:public>
+tpm2_crypto_backend.h
+</header:public>
