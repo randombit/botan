@@ -2266,6 +2266,13 @@ typedef struct botan_tpm2_ctx_struct* botan_tpm2_ctx_t;
 typedef struct botan_tpm2_session_struct* botan_tpm2_session_t;
 
 /**
+* TPM2 crypto backend state object
+*/
+typedef struct botan_tpm2_crypto_backend_state_struct* botan_tpm2_crypto_backend_state_t;
+
+struct ESYS_CONTEXT;
+
+/**
 * Checks if Botan's TSS2 crypto backend can be used in this build
 * @returns 1 if the crypto backend can be enabled
 */
@@ -2291,6 +2298,17 @@ BOTAN_FFI_EXPORT(3, 6)
 int botan_tpm2_ctx_init_ex(botan_tpm2_ctx_t* ctx_out, const char* tcti_name, const char* tcti_conf);
 
 /**
+* Wrap an existing ESYS_CONTEXT for use in Botan.
+* Note that destroying the created botan_tpm2_ctx_t won't
+* finalize @p esys_ctx
+* @param ctx_out output TPM2 context
+* @param esys_ctx ESYS_CONTEXT to wrap
+* @return 0 on success
+*/
+BOTAN_FFI_EXPORT(3, 7)
+int botan_tpm2_ctx_from_esys(botan_tpm2_ctx_t* ctx_out, ESYS_CONTEXT* esys_ctx);
+
+/**
 * Enable Botan's TSS2 crypto backend that replaces the cryptographic functions
 * required for the communication with the TPM with implementations provided
 * by Botan instead of using TSS' defaults OpenSSL or mbedTLS.
@@ -2308,6 +2326,29 @@ int botan_tpm2_ctx_enable_crypto_backend(botan_tpm2_ctx_t ctx, botan_rng_t rng);
 * @return 0 on success
 */
 BOTAN_FFI_EXPORT(3, 6) int botan_tpm2_ctx_destroy(botan_tpm2_ctx_t ctx);
+
+/**
+* Use this if you just need Botan's crypto backend but do not want to wrap any
+* other ESYS functionality using Botan's TPM2 wrapper.
+* A Crypto Backend State is created that the user needs to keep alive for as
+* long as the crypto backend is used and needs to be destroyed after.
+* Note that the provided @p rng should not be dependent on the TPM and the
+* caller must ensure that it remains usable for the lifetime of the @p esys_ctx.
+* @param cbs_out To be created Crypto Backend State
+* @param esys_ctx TPM2 context
+* @param rng random number generator to be used by the crypto backend
+*/
+BOTAN_FFI_EXPORT(3, 7)
+int botan_tpm2_enable_crypto_backend(botan_tpm2_crypto_backend_state_t* cbs_out,
+                                     ESYS_CONTEXT* esys_ctx,
+                                     botan_rng_t rng);
+
+/**
+* Frees all resouces of a TPM2 Crypto Callback State
+* @param cbs TPM2 Crypto Callback State
+* @return 0 on success
+*/
+BOTAN_FFI_EXPORT(3, 7) int botan_tpm2_crypto_backend_state_destroy(botan_tpm2_crypto_backend_state_t cbs);
 
 /**
 * Initialize a random number generator object via TPM2

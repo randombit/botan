@@ -13,6 +13,7 @@
 
 #if defined(BOTAN_HAS_TPM2)
    #include <botan/tpm2_context.h>
+   #include <botan/tpm2_crypto_backend.h>
    #include <botan/tpm2_key.h>
    #include <botan/tpm2_rng.h>
    #include <botan/tpm2_session.h>
@@ -38,6 +39,7 @@ struct botan_tpm2_session_wrapper {
 
 BOTAN_FFI_DECLARE_STRUCT(botan_tpm2_ctx_struct, botan_tpm2_ctx_wrapper, 0xD2B95E15);
 BOTAN_FFI_DECLARE_STRUCT(botan_tpm2_session_struct, botan_tpm2_session_wrapper, 0x9ACCAB52);
+BOTAN_FFI_DECLARE_STRUCT(botan_tpm2_crypto_backend_state_struct, Botan::TPM2::CryptoCallbackState, 0x1AC84DE5);
 
 }  // extern "C"
 
@@ -123,6 +125,24 @@ int botan_tpm2_ctx_init_ex(botan_tpm2_ctx_t* ctx_out, const char* tcti_name, con
 #endif
 }
 
+int botan_tpm2_ctx_from_esys(botan_tpm2_ctx_t* ctx_out, ESYS_CONTEXT* esys_ctx) {
+#if defined(BOTAN_HAS_TPM2)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      if(ctx_out == nullptr || esys_ctx == nullptr) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      auto ctx = std::make_unique<botan_tpm2_ctx_wrapper>();
+      ctx->ctx = Botan::TPM2::Context::create(esys_ctx);
+      *ctx_out = new botan_tpm2_ctx_struct(std::move(ctx));
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(ctx_out, esys_ctx);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
 int botan_tpm2_ctx_enable_crypto_backend(botan_tpm2_ctx_t ctx, botan_rng_t rng) {
 #if defined(BOTAN_HAS_TPM2)
    return BOTAN_FFI_VISIT(ctx, [=](botan_tpm2_ctx_wrapper& ctx_wrapper) -> int {
@@ -151,6 +171,38 @@ int botan_tpm2_ctx_destroy(botan_tpm2_ctx_t ctx) {
    return BOTAN_FFI_CHECKED_DELETE(ctx);
 #else
    BOTAN_UNUSED(ctx);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_tpm2_enable_crypto_backend(botan_tpm2_crypto_backend_state_t* cbs_out,
+                                     ESYS_CONTEXT* esys_ctx,
+                                     botan_rng_t rng) {
+#if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      if(cbs_out == nullptr || esys_ctx == nullptr) {
+         return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
+
+      Botan::RandomNumberGenerator& rng_ref = safe_get(rng);
+
+      // Here, we just need to trust the user that they keep the passed-in RNG
+      // instance intact for the lifetime of the context.
+      std::shared_ptr<Botan::RandomNumberGenerator> rng_ptr(&rng_ref, [](auto*) {});
+      *cbs_out = new botan_tpm2_crypto_backend_state_struct(Botan::TPM2::use_botan_crypto_backend(esys_ctx, rng_ptr));
+      return BOTAN_FFI_SUCCESS;
+   });
+#else
+   BOTAN_UNUSED(cbs_out, esys_ctx, rng);
+   return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+int botan_tpm2_crypto_backend_state_destroy(botan_tpm2_crypto_backend_state_t cbs) {
+#if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
+   return BOTAN_FFI_CHECKED_DELETE(cbs);
+#else
+   BOTAN_UNUSED(cbs);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
 #endif
 }
