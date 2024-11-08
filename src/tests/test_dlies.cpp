@@ -98,6 +98,7 @@ BOTAN_REGISTER_TEST("pubkey", "dlies", DLIES_KAT_Tests);
 
 Test::Result test_xor() {
    Test::Result result("DLIES XOR");
+   result.start_timer();
 
    std::vector<std::string> kdfs = {"KDF2(SHA-512)", "KDF1-18033(SHA-512)"};
    std::vector<std::string> macs = {"HMAC(SHA-512)", "CMAC(AES-128)"};
@@ -150,6 +151,7 @@ Test::Result test_xor() {
       }
    }
 
+   result.end_timer();
    return result;
 }
 

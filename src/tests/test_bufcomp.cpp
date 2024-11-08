@@ -65,6 +65,7 @@ Test::Result test_buffered_computation_convenience_api() {
    // types as in and out parameters. Hence, we refrain from checking
    // the 'final' output everywhere.
    Test::Result result("Convenience API of Buffered_Computation");
+   result.start_timer();
 
    Test_Buf_Comp t(result);
 
@@ -127,6 +128,7 @@ Test::Result test_buffered_computation_convenience_api() {
 
    check(result, out_strong_sec_vec, 12);
 
+   result.end_timer();
    return result;
 }
 

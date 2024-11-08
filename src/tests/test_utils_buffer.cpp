@@ -29,6 +29,7 @@ std::vector<Test::Result> test_buffer_slicer() {
    return {
       CHECK("Empty BufferSlicer",
             [](auto& result) {
+               result.start_timer();
                const std::vector<uint8_t> buffer(0);
                Botan::BufferSlicer s(buffer);
                result.confirm("empty slicer has no remaining bytes", s.remaining() == 0);
@@ -38,10 +39,12 @@ std::vector<Test::Result> test_buffer_slicer() {
                result.test_throws("empty slicer cannot emit bytes", [&]() { s.take(1); });
                result.test_throws("empty slicer cannot skip bytes", [&]() { s.skip(1); });
                result.test_throws("empty slicer cannot copy bytes", [&]() { s.copy_as_vector(1); });
+               result.end_timer();
             }),
 
       CHECK("Read from BufferSlicer",
             [](auto& result) {
+               result.start_timer();
                const std::vector<uint8_t> buffer{'h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd', ' ', '!'};
                Botan::BufferSlicer s(buffer);
 
@@ -88,10 +91,12 @@ std::vector<Test::Result> test_buffer_slicer() {
                result.test_throws("empty slicer cannot emit bytes", [&]() { s.take(1); });
                result.test_throws("empty slicer cannot skip bytes", [&]() { s.skip(1); });
                result.test_throws("empty slicer cannot copy bytes", [&]() { s.copy_as_vector(1); });
+               result.end_timer();
             }),
 
       CHECK("Strong type support",
             [](auto& result) {
+               result.start_timer();
                const Botan::secure_vector<uint8_t> secure_buffer{'h', 'e', 'l', 'l', 'o', ' ', 'w', 'o', 'r', 'l', 'd'};
                Botan::BufferSlicer s(secure_buffer);
 
@@ -105,6 +110,7 @@ std::vector<Test::Result> test_buffer_slicer() {
 
                const auto reproduce = Botan::concat<std::vector<uint8_t>>(span1, span2, vec1, vec2, vec3, vec4);
                result.test_eq("sliced into various types", reproduce, secure_buffer);
+               result.end_timer();
             }),
    };
 }
@@ -113,6 +119,7 @@ std::vector<Test::Result> test_buffer_stuffer() {
    return {
       CHECK("Empty BufferStuffer",
             [](auto& result) {
+               result.start_timer();
                std::vector<uint8_t> empty_buffer;
                Botan::BufferStuffer s(empty_buffer);
 
@@ -125,10 +132,12 @@ std::vector<Test::Result> test_buffer_stuffer() {
                   std::vector<uint8_t> some_bytes(42);
                   s.append(some_bytes);
                });
+               result.end_timer();
             }),
 
       CHECK("Fill BufferStuffer",
             [](auto& result) {
+               result.start_timer();
                std::vector<uint8_t> sink(13);
                Botan::BufferStuffer s(sink);
 
@@ -175,6 +184,7 @@ std::vector<Test::Result> test_buffer_stuffer() {
 
                std::string final_string(Botan::cast_uint8_ptr_to_char(sink.data()), sink.size());
                result.test_eq("final buffer is as expected", final_string, "hello world !");
+               result.end_timer();
             }),
    };
 }
@@ -188,16 +198,19 @@ std::vector<Test::Result> test_alignment_buffer() {
    return {
       CHECK("Fresh Alignment Buffer",
             [](auto& result) {
+               result.start_timer();
                Botan::AlignmentBuffer<uint8_t, 32> b;
                result.test_eq("size()", b.size(), 32);
                result.test_eq("elements_in_buffer()", b.elements_in_buffer(), 0);
                result.test_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
                result.confirm("in_alignment()", b.in_alignment());
                result.confirm("!ready_to_consume()", !b.ready_to_consume());
+               result.end_timer();
             }),
 
       CHECK("Fill Alignment Buffer",
             [=](auto& result) {
+               result.start_timer();
                Botan::AlignmentBuffer<uint8_t, 32> b;
 
                b.append(first_half_data);
@@ -215,10 +228,12 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_eq("elements_until_alignment()", b.elements_until_alignment(), 0);
                result.confirm("!in_alignment()", !b.in_alignment());
                result.confirm("ready_to_consume()", b.ready_to_consume());
+               result.end_timer();
             }),
 
       CHECK("Consume Alignment Buffer",
             [=](auto& result) {
+               result.start_timer();
                Botan::AlignmentBuffer<uint8_t, 32> b;
 
                b.append(data);
@@ -233,10 +248,12 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.confirm("!ready_to_consume()", !b.ready_to_consume());
 
                result.test_is_eq("in == out", v(data), v(out));
+               result.end_timer();
             }),
 
       CHECK("Consume partially filled Alignment Buffer",
             [=](auto& result) {
+               result.start_timer();
                Botan::AlignmentBuffer<uint8_t, 32> b;
 
                result.require("!ready_to_consume()", !b.ready_to_consume());
@@ -255,10 +272,12 @@ std::vector<Test::Result> test_alignment_buffer() {
                const auto out_full = b.consume_partial();
                result.test_eq("consumed full-data resets buffer", b.elements_in_buffer(), 0);
                result.test_is_eq("full-in == full-out", v(out_full), v(data));
+               result.end_timer();
             }),
 
       CHECK("Clear Alignment Buffer",
             [=](auto& result) {
+               result.start_timer();
                Botan::AlignmentBuffer<uint8_t, 32> b;
 
                b.append(first_half_data);
@@ -271,10 +290,12 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_eq("elements_until_alignment()", b.elements_until_alignment(), 32);
                result.confirm("in_alignment()", b.in_alignment());
                result.confirm("!ready_to_consume()", !b.ready_to_consume());
+               result.end_timer();
             }),
 
       CHECK("Add Zero-Padding to Alignment Buffer",
             [=](auto& result) {
+               result.start_timer();
                Botan::AlignmentBuffer<uint8_t, 32> b;
 
                b.append(first_half_data);
@@ -303,10 +324,12 @@ std::vector<Test::Result> test_alignment_buffer() {
                const auto out_without_padding = b.consume();
 
                result.test_is_eq("no padding", v(out_without_padding), v(data));
+               result.end_timer();
             }),
 
       CHECK("Handle unaligned data in Alignment Buffer (no block-defer)",
             [=](auto& result) {
+               result.start_timer();
                Botan::AlignmentBuffer<uint8_t, 32> b;
 
                Botan::BufferSlicer first_half(first_half_data);
@@ -331,10 +354,12 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.confirm("!ready_to_consume()", !b.ready_to_consume());
 
                result.test_is_eq("collected block is correct", v(r2.value()), v(data));
+               result.end_timer();
             }),
 
       CHECK("Aligned data is not buffered unneccesarily (no block-defer)",
             [=](auto& result) {
+               result.start_timer();
                Botan::AlignmentBuffer<uint8_t, 32> b;
 
                Botan::BufferSlicer full_block_1(data);
@@ -357,10 +382,12 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.confirm("in_alignment()", b.in_alignment());
                result.confirm("!ready_to_consume()", !b.ready_to_consume());
                result.test_eq("input is consumed until alignment", full_block_2.remaining(), 16);
+               result.end_timer();
             }),
 
       CHECK("Handle unaligned data in Alignment Buffer (with block-defer)",
             [=](auto& result) {
+               result.start_timer();
                Botan::AlignmentBuffer<uint8_t, 32, Botan::AlignmentBufferFinalBlock::must_be_deferred> b;
 
                Botan::BufferSlicer first_half(first_half_data);
@@ -395,10 +422,12 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.confirm("!ready_to_consume()", !b.ready_to_consume());
 
                result.test_is_eq("collected block is correct", v(r3.value()), v(data));
+               result.end_timer();
             }),
 
       CHECK("Aligned data is not buffered unneccesarily (with block-defer)",
             [=](auto& result) {
+               result.start_timer();
                Botan::AlignmentBuffer<uint8_t, 32, Botan::AlignmentBufferFinalBlock::must_be_deferred> b;
 
                Botan::BufferSlicer full_block_1(data);
@@ -423,10 +452,12 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_eq("no input data is consumed", one_extra_byte.remaining(), 1);
 
                result.test_is_eq("collected block is correct", v(r3.value()), v(data));
+               result.end_timer();
             }),
 
       CHECK("Aligned data passthrough (no block-defer)",
             [=](auto& result) {
+               result.start_timer();
                Botan::AlignmentBuffer<uint8_t, 32> b;
                result.require("buffer is in alignment", b.in_alignment());
 
@@ -451,10 +482,12 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_eq("two blocks for processing", r3, 2);
                result.test_is_eq(v(s3), two_blocks_data);
                result.test_eq("aligned data is fully consumed", two_blocks.remaining(), 0);
+               result.end_timer();
             }),
 
       CHECK("Aligned data blockwise (no block-defer)",
             [=](auto& result) {
+               result.start_timer();
                Botan::AlignmentBuffer<uint8_t, 32> b;
                result.require("buffer is in alignment", b.in_alignment());
 
@@ -484,10 +517,12 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_eq("data of second block for processing", s3_2->size(), 32);
                result.test_is_eq(v(s3_2.value()), v(data));
                result.test_eq("second block is consumed", two_blocks.remaining(), 0);
+               result.end_timer();
             }),
 
       CHECK("Aligned data passthrough (with block-defer)",
             [=](auto& result) {
+               result.start_timer();
                Botan::AlignmentBuffer<uint8_t, 32, Botan::AlignmentBufferFinalBlock::must_be_deferred> b;
                result.require("buffer is in alignment", b.in_alignment());
 
@@ -512,10 +547,12 @@ std::vector<Test::Result> test_alignment_buffer() {
                result.test_eq("one block for processing", r3, 1);
                result.test_is_eq(v(s3), v(data));
                result.test_eq("aligned data is partially consumed", two_blocks.remaining(), 32);
+               result.end_timer();
             }),
 
       CHECK("Aligned data blockwise (with block-defer)",
             [=](auto& result) {
+               result.start_timer();
                Botan::AlignmentBuffer<uint8_t, 32, Botan::AlignmentBufferFinalBlock::must_be_deferred> b;
                result.require("buffer is in alignment", b.in_alignment());
 
@@ -543,6 +580,7 @@ std::vector<Test::Result> test_alignment_buffer() {
                const auto s3_2 = b.next_aligned_block_to_process(two_blocks);
                result.confirm("second block is not passed through", !s3_2.has_value());
                result.test_eq("second block is not consumed", two_blocks.remaining(), 32);
+               result.end_timer();
             }),
    };
 }
@@ -551,6 +589,7 @@ std::vector<Test::Result> test_concat() {
    return {
       CHECK("empty concat",
             [](Test::Result& result) {
+               result.start_timer();
                // only define a dynamic output type, but no input to be concat'ed
                const auto empty1 = Botan::concat<std::vector<uint8_t>>();
                result.confirm("empty concat 1", empty1.empty());
@@ -567,11 +606,13 @@ std::vector<Test::Result> test_concat() {
                const auto empty4 = Botan::concat<std::array<uint8_t, 0>>(
                   std::vector<uint8_t>(), std::array<uint8_t, 0>(), Botan::secure_vector<uint8_t>());
                result.confirm("empty concat 4", empty4.empty());
+               result.end_timer();
             }),
 
       CHECK(
          "auto-detected output type",
          [](Test::Result& result) {
+            result.start_timer();
             // define a static output type without any input parameters
             const auto t0 = Botan::concat<std::array<uint8_t, 0>>();
             result.confirm("type 0", std::is_same_v<std::array<uint8_t, 0>, std::remove_cvref_t<decltype(t0)>>);
@@ -597,10 +638,12 @@ std::vector<Test::Result> test_concat() {
             const std::array<uint8_t, 5> some_buffer{};
             const auto t5 = Botan::concat(std::array<uint8_t, 1>(), std::array<uint8_t, 3>(), std::span{some_buffer});
             result.confirm("type 5", std::is_same_v<std::array<uint8_t, 9>, std::remove_cvref_t<decltype(t5)>>);
+            result.end_timer();
          }),
 
       CHECK("concatenate",
             [](Test::Result& result) {
+               result.start_timer();
                constexpr std::array<uint8_t, 5> a1 = {1, 2, 3, 4, 5};
                const std::vector<uint8_t> v1{6, 7, 8, 9, 10};
 
@@ -627,10 +670,12 @@ std::vector<Test::Result> test_concat() {
                result.test_is_eq("concat 4", concat4, {1, 2, 3, 4, 5, 1, 2, 3, 4, 5});
                result.confirm("correct type 4",
                               std::is_same_v<std::array<uint8_t, 10>, std::remove_cvref_t<decltype(concat4)>>);
+               result.end_timer();
             }),
 
       CHECK("dynamic length-check",
             [](Test::Result& result) {
+               result.start_timer();
                std::vector<uint8_t> v1{1, 2, 3, 4, 5};
                std::vector<uint8_t> v2{6, 7, 8, 9, 10};
 
@@ -638,10 +683,12 @@ std::vector<Test::Result> test_concat() {
                                   [&]() { Botan::concat<std::array<uint8_t, 4>>(v1, v2); });
                result.test_throws("concatenate into a statically sized type with too much space",
                                   [&]() { Botan::concat<std::array<uint8_t, 20>>(v1, v2); });
+               result.end_timer();
             }),
 
       CHECK("concatenate strong types",
             [](Test::Result& result) {
+               result.start_timer();
                using StrongV = Botan::Strong<std::vector<uint8_t>, struct StrongV_>;
                using StrongA = Botan::Strong<std::array<uint8_t, 4>, struct StrongA_>;
 
@@ -659,6 +706,7 @@ std::vector<Test::Result> test_concat() {
                // concat strong types into a dynamically allocated strong type
                auto concat2 = Botan::concat<StrongV>(a2, v1);
                result.test_is_eq("concat 2", concat2.get(), {6, 7, 8, 9, 1, 2, 3, 4, 5});
+               result.end_timer();
             }),
    };
 }

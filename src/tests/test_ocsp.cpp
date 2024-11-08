@@ -32,6 +32,7 @@ class OCSP_Tests final : public Test {
 
       static Test::Result test_response_parsing() {
          Test::Result result("OCSP response parsing");
+         result.start_timer();
 
          // Simple parsing tests
          const std::vector<std::string> ocsp_input_paths = {
@@ -52,11 +53,13 @@ class OCSP_Tests final : public Test {
          result.confirm("parsing exposes correct status code",
                         resp.status() == Botan::OCSP::Response_Status_Code::Try_Later);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_response_certificate_access() {
          Test::Result result("OCSP response certificate access");
+         result.start_timer();
 
          try {
             Botan::OCSP::Response resp1(Test::read_binary_data_file("x509/ocsp/resp1.der"));
@@ -76,11 +79,13 @@ class OCSP_Tests final : public Test {
             result.test_failure("Parsing failed", e.what());
          }
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_request_encoding() {
          Test::Result result("OCSP request encoding");
+         result.start_timer();
 
          const Botan::X509_Certificate end_entity(Test::data_file("x509/ocsp/gmail.pem"));
          const Botan::X509_Certificate issuer(Test::data_file("x509/ocsp/google_g2.pem"));
@@ -101,11 +106,13 @@ class OCSP_Tests final : public Test {
          const Botan::OCSP::Request req2(issuer, BigInt::from_bytes(end_entity.serial_number()));
          result.test_eq("Encoded OCSP request", req2.base64_encode(), expected_request);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_response_find_signing_certificate() {
          Test::Result result("OCSP response finding signature certificates");
+         result.start_timer();
 
          const std::optional<Botan::X509_Certificate> nullopt_cert;
 
@@ -151,11 +158,13 @@ class OCSP_Tests final : public Test {
                            randombit_alt_resp_ocsp.find_signing_certificate(randombit_ca, trusted_responders.get()),
                            std::optional(randombit_alt_resp_cert));
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_response_verification_with_next_update_without_max_age() {
          Test::Result result("OCSP request check with next_update w/o max_age");
+         result.start_timer();
 
          auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
          auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
@@ -188,11 +197,13 @@ class OCSP_Tests final : public Test {
          check_ocsp(Botan::calendar_point(2016, 11, 28, 8, 30, 0).to_std_timepoint(),
                     Botan::Certificate_Status_Code::OCSP_HAS_EXPIRED);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_response_verification_with_next_update_with_max_age() {
          Test::Result result("OCSP request check with next_update with max_age");
+         result.start_timer();
 
          auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
          auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
@@ -228,11 +239,13 @@ class OCSP_Tests final : public Test {
          check_ocsp(Botan::calendar_point(2016, 11, 28, 8, 30, 0).to_std_timepoint(),
                     Botan::Certificate_Status_Code::OCSP_HAS_EXPIRED);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_response_verification_without_next_update_with_max_age() {
          Test::Result result("OCSP request check w/o next_update with max_age");
+         result.start_timer();
 
          auto ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
          auto ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
@@ -266,11 +279,13 @@ class OCSP_Tests final : public Test {
          check_ocsp(Botan::calendar_point(2019, 5, 28, 8, 0, 0).to_std_timepoint(),
                     Botan::Certificate_Status_Code::OCSP_IS_TOO_OLD);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_response_verification_without_next_update_without_max_age() {
          Test::Result result("OCSP request check w/o next_update w/o max_age");
+         result.start_timer();
 
          auto ee = load_test_X509_cert("x509/ocsp/patrickschmidt.pem");
          auto ca = load_test_X509_cert("x509/ocsp/bdrive_encryption.pem");
@@ -301,11 +316,13 @@ class OCSP_Tests final : public Test {
          check_ocsp(Botan::calendar_point(2019, 5, 28, 8, 0, 0).to_std_timepoint(),
                     Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_response_verification_softfail() {
          Test::Result result("OCSP request softfail check");
+         result.start_timer();
 
          auto ee = load_test_X509_cert("x509/ocsp/randombit.pem");
          auto ca = load_test_X509_cert("x509/ocsp/letsencrypt.pem");
@@ -330,12 +347,14 @@ class OCSP_Tests final : public Test {
             }
          }
 
+         result.end_timer();
          return result;
       }
 
    #if defined(BOTAN_HAS_ONLINE_REVOCATION_CHECKS)
       static Test::Result test_online_request() {
          Test::Result result("OCSP online check");
+         result.start_timer();
 
          auto cert = load_test_X509_cert("x509/ocsp/digicert-ecdsa-int.pem");
          auto trust_root = load_test_X509_cert("x509/ocsp/digicert-root.pem");
@@ -359,12 +378,14 @@ class OCSP_Tests final : public Test {
             }
          }
 
+         result.end_timer();
          return result;
       }
    #endif
 
       static Test::Result test_response_verification_with_additionally_trusted_responder() {
          Test::Result result("OCSP response with user-defined (additional) responder certificate");
+         result.start_timer();
 
          // OCSP response is signed by 3rd party responder certificate that is
          // not included in the OCSP response itself
@@ -396,11 +417,13 @@ class OCSP_Tests final : public Test {
                            ocsp.verify_signature(responder),
                            Botan::Certificate_Status_Code::OCSP_SIGNATURE_OK);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_responder_cert_with_nocheck_extension() {
          Test::Result result("BDr's OCSP response contains certificate featuring NoCheck extension");
+         result.start_timer();
 
          auto ocsp = load_test_OCSP_resp("x509/ocsp/bdr-ocsp-resp.der");
          const bool contains_cert_with_nocheck =
@@ -410,6 +433,7 @@ class OCSP_Tests final : public Test {
 
          result.confirm("Contains NoCheck extension", contains_cert_with_nocheck);
 
+         result.end_timer();
          return result;
       }
 

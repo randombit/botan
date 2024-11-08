@@ -16,6 +16,7 @@ class PEM_Tests : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("PEM encoding");
+         result.start_timer();
 
          std::vector<uint8_t> vec = {0, 1, 2, 3, 4};
 
@@ -42,6 +43,7 @@ class PEM_Tests : public Test {
             Botan::PEM_Code::decode_check_label(malformed_pem2, "BUNNY");
          });
 
+         result.end_timer();
          return {result};
       }
 };

@@ -275,6 +275,7 @@ std::vector<Test::Result> PK_Sign_Verify_DER_Test::run() {
    auto privkey = key();
 
    Test::Result result(algo_name() + "/" + padding + " signature sign/verify using DER format");
+   result.start_timer();
 
    for(const auto& provider : possible_providers(algo_name())) {
       std::unique_ptr<Botan::PK_Signer> signer;
@@ -305,6 +306,7 @@ std::vector<Test::Result> PK_Sign_Verify_DER_Test::run() {
       }
    }
 
+   result.end_timer();
    return {result};
 }
 

@@ -42,6 +42,7 @@ class PKCS_HashID_Test final : public Test {
             const size_t hash_len = hash_info.second;
 
             Test::Result result("PKCS hash id for " + hash_fn);
+            result.start_timer();
 
             try {
                const std::vector<uint8_t> pkcs_id = Botan::pkcs_hash_id(hash_fn);
@@ -71,6 +72,7 @@ class PKCS_HashID_Test final : public Test {
                result.test_failure(e.what());
             }
 
+            result.end_timer();
             results.push_back(result);
          }
 

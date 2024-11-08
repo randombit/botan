@@ -216,6 +216,7 @@ Test::Result no_certificate_matches() {
 
 Test::Result certstore_contains_user_certificate() {
    Test::Result result("Flatfile Certificate Store - rejects bundles with non-CA certs");
+   result.start_timer();
 
    try {
       result.start_timer();
@@ -225,6 +226,7 @@ Test::Result certstore_contains_user_certificate() {
       result.test_success();
    }
 
+   result.end_timer();
    return result;
 }
 

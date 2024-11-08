@@ -61,6 +61,7 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test {
 
       std::vector<Test::Result> run_final_tests() override {
          Test::Result result("DH negative tests");
+         result.start_timer();
 
          const BigInt g("2");
          const BigInt p("58458002095536094658683755258523362961421200751439456159756164191494576279467");
@@ -81,6 +82,7 @@ class Diffie_Hellman_KAT_Tests final : public PK_Key_Agreement_Test {
             kas->derive_key(16, BigInt::encode(too_small));
          });
 
+         result.end_timer();
          return {result};
       }
 };

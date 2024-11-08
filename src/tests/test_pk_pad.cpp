@@ -69,6 +69,7 @@ class EMSA_unit_tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result name_tests("EMSA_name_tests");
+         name_tests.start_timer();
 
          std::vector<std::string> pads_need_hash = {
    #if BOTAN_HAS_EMSA_X931
@@ -135,6 +136,7 @@ class EMSA_unit_tests final : public Test {
             }
          }
 
+         name_tests.end_timer();
          return {name_tests};
       }
 };

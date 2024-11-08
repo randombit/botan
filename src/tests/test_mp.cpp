@@ -32,6 +32,7 @@ class MP_Unit_Tests final : public Test {
    private:
       static Result test_cnd_add() {
          Result result("bigint_cnd_add");
+         result.start_timer();
 
          const Botan::word max = ~static_cast<Botan::word>(0);
 
@@ -47,12 +48,13 @@ class MP_Unit_Tests final : public Test {
          result.test_int_eq(c, 1, "Carry");
 
          // TODO more tests
-
+         result.end_timer();
          return result;
       }
 
       static Result test_cnd_sub() {
          Result result("bigint_cnd_sub");
+         result.start_timer();
 
          Botan::word a = 2;
          Botan::word b = 3;
@@ -66,11 +68,13 @@ class MP_Unit_Tests final : public Test {
          result.test_int_eq(a, ~static_cast<Botan::word>(0), "Sub");
          result.test_int_eq(c, 1, "Borrow");
 
+         result.end_timer();
          return result;
       }
 
       static Result test_cnd_abs() {
          Result result("bigint_cnd_abs");
+         result.start_timer();
 
          const Botan::word max = Botan::WordInfo<Botan::word>::max;
 
@@ -96,11 +100,13 @@ class MP_Unit_Tests final : public Test {
          result.test_int_eq(x2[0], 1, "Abs");
          result.test_int_eq(x2[1], 0, "Abs");
 
+         result.end_timer();
          return result;
       }
 
       static Result test_cnd_swap() {
          Result result("bigint_cnd_swap");
+         result.start_timer();
 
          // null with zero length is ok
          Botan::bigint_cnd_swap<Botan::word>(0, nullptr, nullptr, 0);
@@ -129,6 +135,7 @@ class MP_Unit_Tests final : public Test {
          }
          result.test_int_eq(y5[4], 9, "Not touched");
 
+         result.end_timer();
          return result;
       }
 };

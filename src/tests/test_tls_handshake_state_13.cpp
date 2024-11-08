@@ -50,6 +50,8 @@ std::vector<Test::Result> finished_message_handling() {
    return {
       CHECK("Client sends and receives Finished messages",
             [&](auto& result) {
+               result.start_timer();
+
                Botan::TLS::Client_Handshake_State_13 state;
 
                Botan::TLS::Finished_13 client_finished(client_finished_message);
@@ -70,6 +72,8 @@ std::vector<Test::Result> finished_message_handling() {
                   "correct client Finished stored", state.client_finished().serialize(), client_finished_message);
                result.test_eq(
                   "correct server Finished stored", state.server_finished().serialize(), server_finished_message);
+
+               result.end_timer();
             }),
    };
 }
@@ -78,6 +82,8 @@ std::vector<Test::Result> handshake_message_filtering() {
    return {
       CHECK("Client with client hello",
             [&](auto& result) {
+               result.start_timer();
+
                Botan::TLS::Client_Handshake_State_13 state;
 
                auto client_hello =
@@ -94,9 +100,12 @@ std::vector<Test::Result> handshake_message_filtering() {
                         std::get<Botan::TLS::Client_Hello_13>(Botan::TLS::Client_Hello_13::parse(client_hello_message));
                      state.received(std::move(ch));
                   });
+
+               result.end_timer();
             }),
       CHECK("Client with server hello",
             [&](auto& result) {
+               result.start_timer();
                Botan::TLS::Client_Handshake_State_13 state;
 
                auto server_hello =
@@ -107,6 +116,7 @@ std::vector<Test::Result> handshake_message_filtering() {
                               std::holds_alternative<std::reference_wrapper<Botan::TLS::Server_Hello_13>>(filtered));
 
                result.test_eq("correct server hello stored", state.server_hello().serialize(), server_hello_message);
+               result.end_timer();
             }),
    };
 }

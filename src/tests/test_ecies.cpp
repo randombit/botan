@@ -243,6 +243,7 @@ BOTAN_REGISTER_TEST("pubkey", "ecies", ECIES_Tests);
 
 Test::Result test_other_key_not_set() {
    Test::Result result("ECIES other key not set");
+   result.start_timer();
 
    auto rng = Test::new_rng("ecies_other_key_not_set");
 
@@ -269,11 +270,13 @@ Test::Result test_other_key_not_set() {
    result.test_throws("encrypt not possible without setting other public key",
                       [&ecies_enc, &rng]() { ecies_enc.encrypt(std::vector<uint8_t>(8), *rng); });
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_kdf_not_found() {
    Test::Result result("ECIES kdf not found");
+   result.start_timer();
 
    auto rng = Test::new_rng("ecies_kdf_not_found");
 
@@ -300,11 +303,13 @@ Test::Result test_kdf_not_found() {
       ecies_enc.encrypt(std::vector<uint8_t>(8), *rng);
    });
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_mac_not_found() {
    Test::Result result("ECIES mac not found");
+   result.start_timer();
 
    auto rng = Test::new_rng("ecies_mac_not_found");
 
@@ -331,11 +336,13 @@ Test::Result test_mac_not_found() {
       ecies_enc.encrypt(std::vector<uint8_t>(8), *rng);
    });
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_cipher_not_found() {
    Test::Result result("ECIES cipher not found");
+   result.start_timer();
 
    auto rng = Test::new_rng("ecies_cipher_not_found");
 
@@ -362,11 +369,13 @@ Test::Result test_cipher_not_found() {
       ecies_enc.encrypt(std::vector<uint8_t>(8), *rng);
    });
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_system_params_short_ctor() {
    Test::Result result("ECIES short system params ctor");
+   result.start_timer();
 
    auto rng = Test::new_rng("ecies_params_short_ctor");
 
@@ -405,11 +414,13 @@ Test::Result test_system_params_short_ctor() {
 
    check_encrypt_decrypt(result, private_key, other_private_key, ecies_params, iv, label, plaintext, ciphertext, *rng);
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_ciphertext_too_short() {
    Test::Result result("ECIES ciphertext too short");
+   result.start_timer();
 
    const auto domain = Botan::EC_Group::from_name("secp521r1");
    const Botan::BigInt private_key_value(
@@ -435,6 +446,7 @@ Test::Result test_ciphertext_too_short() {
    result.test_throws("ciphertext too short",
                       [&ecies_dec]() { ecies_dec.decrypt(Botan::hex_decode("0401519EAA0489FF9D51E98E4C22349A")); });
 
+   result.end_timer();
    return result;
 }
 

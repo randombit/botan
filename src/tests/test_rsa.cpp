@@ -157,6 +157,7 @@ class RSA_Keygen_Bad_RNG_Test final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("RSA keygen with bad RNG");
+         result.start_timer();
 
          /*
          We don't need to count requests here; actually this test
@@ -173,6 +174,7 @@ class RSA_Keygen_Bad_RNG_Test final : public Test {
             result.test_eq("Expected message", e.what(), "Internal error: RNG failure during RSA key generation");
          }
 
+         result.end_timer();
          return {result};
       }
 };
@@ -181,6 +183,7 @@ class RSA_Blinding_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("RSA blinding");
+         result.start_timer();
 
          /* This test makes only sense with the base provider, else skip it. */
          if(provider_filter({"base"}).empty()) {
@@ -269,6 +272,7 @@ class RSA_Blinding_Tests final : public Test {
 
    #endif
 
+         result.end_timer();
          return std::vector<Test::Result>{result};
       }
 };

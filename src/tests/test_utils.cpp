@@ -53,6 +53,8 @@ class Utility_Function_Tests final : public Test {
       Test::Result test_checked_add() {
          Test::Result result("checked_add");
 
+         result.start_timer();
+
          const size_t large = static_cast<size_t>(-5);
          const size_t zero = 0;
 
@@ -85,11 +87,14 @@ class Utility_Function_Tests final : public Test {
             }
          }
 
+         result.end_timer();
          return result;
       }
 
       Test::Result test_checked_mul() {
          Test::Result result("checked_mul");
+
+         result.start_timer();
 
          auto& rng = Test::rng();
 
@@ -106,11 +111,13 @@ class Utility_Function_Tests final : public Test {
             }
          }
 
+         result.end_timer();
          return result;
       }
 
       Test::Result test_checked_cast() {
          Test::Result result("checked_cast");
+         result.start_timer();
 
          const uint32_t large = static_cast<uint32_t>(-1);
          const uint32_t is_16_bits = 0x8123;
@@ -123,11 +130,13 @@ class Utility_Function_Tests final : public Test {
          result.test_int_eq("checked_cast converts", Botan::checked_cast_to<uint16_t>(is_16_bits), 0x8123);
          result.test_int_eq("checked_cast converts", Botan::checked_cast_to<uint8_t>(is_8_bits), 0x89);
 
+         result.end_timer();
          return result;
       }
 
       Test::Result test_round_up() {
          Test::Result result("Util round_up");
+         result.start_timer();
 
          // clang-format off
          const std::vector<size_t> inputs = {
@@ -157,6 +166,7 @@ class Utility_Function_Tests final : public Test {
 
          result.test_throws("Integer overflow is detected", []() { Botan::round_up(static_cast<size_t>(-1), 1024); });
 
+         result.end_timer();
          return result;
       }
 
@@ -176,6 +186,7 @@ class Utility_Function_Tests final : public Test {
 
       static Test::Result test_loadstore() {
          Test::Result result("Util load/store");
+         result.start_timer();
 
          const std::vector<uint8_t> membuf = Botan::hex_decode("00112233445566778899AABBCCDDEEFF");
          const uint8_t* mem = membuf.data();
@@ -465,6 +476,7 @@ class Utility_Function_Tests final : public Test {
          result.test_is_eq(Botan::store_le<std::vector<uint8_t>>(TestEnum32::_1), Botan::hex_decode("78563412"));
          result.test_is_eq<std::array<uint8_t, 4>>(Botan::store_be(TestEnum32::_2), {0x78, 0x56, 0x34, 0x12});
 
+         result.end_timer();
          return result;
       }
 
@@ -508,6 +520,8 @@ class Utility_Function_Tests final : public Test {
          const size_t inszt = 0x87654321;
 
          Test::Result result("Util load/store ambiguity");
+         result.start_timer();
+
          const auto out_be_32 = Botan::store_be(in32);
          const auto out_le_32 = Botan::store_le(in32);
          const auto out_be_64 = Botan::store_be(in64);
@@ -522,6 +536,7 @@ class Utility_Function_Tests final : public Test {
          result.test_is_eq<size_t>("be szt", Botan::load_be<size_t>(out_be_szt), inszt);
          result.test_is_eq<size_t>("le szt", Botan::load_le<size_t>(out_le_szt), inszt);
 
+         result.end_timer();
          return result;
       }
 
@@ -531,6 +546,7 @@ class Utility_Function_Tests final : public Test {
          // fallback implementation is correct. On all typical platforms it
          // won't be called in production.
          Test::Result result("Util load/store fallback");
+         result.start_timer();
 
          result.test_is_eq<uint16_t>("lLE 16", fb_load_le<uint16_t>({1, 2}), 0x0201);
          result.test_is_eq<uint32_t>("lLE 32", fb_load_le<uint32_t>({1, 2, 3, 4}), 0x04030201);
@@ -548,11 +564,13 @@ class Utility_Function_Tests final : public Test {
          result.test_is_eq<a<4>>("sBE 32", fb_store_be<uint32_t>(0x01020304), {1, 2, 3, 4});
          result.test_is_eq<a<8>>("sBE 64", fb_store_be<uint64_t>(0x0102030405060708), {1, 2, 3, 4, 5, 6, 7, 8});
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_loadstore_constexpr() {
          Test::Result result("Util load/store constexpr");
+         result.start_timer();
 
          constexpr uint16_t in16 = 0x1234;
          constexpr uint32_t in32 = 0xA0B0C0D0;
@@ -694,6 +712,7 @@ class Utility_Function_Tests final : public Test {
          constexpr auto cex_load_be64s = Botan::load_be<std::array<uint64_t, cex_mem.size() / 8>>(cex_mem);
          result.test_is_eq(cex_load_be64s, {0x0011223344556677, 0x8899AABBCCDDEEFF});
 
+         result.end_timer();
          return result;
       }
 
@@ -701,66 +720,82 @@ class Utility_Function_Tests final : public Test {
          return {
             CHECK("copy_out_be with 16bit input (word aligned)",
                   [&](auto& result) {
+                     result.start_timer();
                      std::vector<uint8_t> out_vector(4);
                      const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
                      Botan::copy_out_be(out_vector, in_array);
                      result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C0D"));
+                     result.end_timer();
                   }),
 
             CHECK("copy_out_be with 16bit input (partial words)",
                   [&](auto& result) {
+                     result.start_timer();
                      std::vector<uint8_t> out_vector(3);
                      const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
                      Botan::copy_out_be(out_vector, in_array);
                      result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C"));
+                     result.end_timer();
                   }),
 
             CHECK("copy_out_le with 16bit input (word aligned)",
                   [&](auto& result) {
+                     result.start_timer();
                      std::vector<uint8_t> out_vector(4);
                      const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
                      Botan::copy_out_le(out_vector, in_array);
                      result.test_is_eq(out_vector, Botan::hex_decode("0B0A0D0C"));
+                     result.end_timer();
                   }),
 
             CHECK("copy_out_le with 16bit input (partial words)",
                   [&](auto& result) {
+                     result.start_timer();
                      std::vector<uint8_t> out_vector(3);
                      const std::array<uint16_t, 2> in_array = {0x0A0B, 0x0C0D};
                      Botan::copy_out_le(out_vector, in_array);
                      result.test_is_eq(out_vector, Botan::hex_decode("0B0A0D"));
+                     result.end_timer();
                   }),
 
             CHECK("copy_out_be with 64bit input (word aligned)",
                   [&](auto& result) {
+                     result.start_timer();
                      std::vector<uint8_t> out_vector(16);
                      const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
                      Botan::copy_out_be(out_vector, in_array);
                      result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C0D0E0F10111213141516171819"));
+                     result.end_timer();
                   }),
 
             CHECK("copy_out_le with 64bit input (word aligned)",
                   [&](auto& result) {
+                     result.start_timer();
                      std::vector<uint8_t> out_vector(16);
                      const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
                      Botan::copy_out_le(out_vector, in_array);
                      result.test_is_eq(out_vector, Botan::hex_decode("11100F0E0D0C0B0A1918171615141312"));
+                     result.end_timer();
                   }),
 
             CHECK("copy_out_be with 64bit input (partial words)",
                   [&](auto& result) {
+                     result.start_timer();
                      std::vector<uint8_t> out_vector(15);
                      const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
                      Botan::copy_out_be(out_vector, in_array);
                      result.test_is_eq(out_vector, Botan::hex_decode("0A0B0C0D0E0F101112131415161718"));
+                     result.end_timer();
                   }),
 
             CHECK("copy_out_le with 64bit input (partial words)",
                   [&](auto& result) {
+                     result.start_timer();
                      std::vector<uint8_t> out_vector(15);
                      const std::array<uint64_t, 2> in_array = {0x0A0B0C0D0E0F1011, 0x1213141516171819};
                      Botan::copy_out_le(out_vector, in_array);
                      result.test_is_eq(out_vector, Botan::hex_decode("11100F0E0D0C0B0A19181716151413"));
+                     result.end_timer();
                   }),
          };
       }
@@ -788,6 +823,8 @@ class BitOps_Tests final : public Test {
 
       Test::Result test_ctz() {
          Test::Result result("ctz");
+         result.start_timer();
+
          test_ctz<uint32_t>(result, 0, 32);
          test_ctz<uint32_t>(result, 1, 0);
          test_ctz<uint32_t>(result, 0x80, 7);
@@ -795,6 +832,7 @@ class BitOps_Tests final : public Test {
          test_ctz<uint32_t>(result, 0x8100000, 20);
          test_ctz<uint32_t>(result, 0x80000000, 31);
 
+         result.end_timer();
          return result;
       }
 
@@ -805,6 +843,8 @@ class BitOps_Tests final : public Test {
 
       Test::Result test_sig_bytes() {
          Test::Result result("significant_bytes");
+         result.start_timer();
+
          test_sig_bytes<uint32_t>(result, 0, 0);
          test_sig_bytes<uint32_t>(result, 1, 1);
          test_sig_bytes<uint32_t>(result, 0x80, 1);
@@ -821,6 +861,7 @@ class BitOps_Tests final : public Test {
          test_sig_bytes<uint64_t>(result, 0x80000000, 4);
          test_sig_bytes<uint64_t>(result, 0x100000000, 5);
 
+         result.end_timer();
          return result;
       }
 
@@ -831,6 +872,7 @@ class BitOps_Tests final : public Test {
 
       Test::Result test_power_of_2() {
          Test::Result result("is_power_of_2");
+         result.start_timer();
 
          test_power_of_2<uint32_t>(result, 0, false);
          test_power_of_2<uint32_t>(result, 1, false);
@@ -849,6 +891,7 @@ class BitOps_Tests final : public Test {
          test_power_of_2<uint64_t>(result, 0x8000000, true);
          test_power_of_2<uint64_t>(result, 0x100000000000, true);
 
+         result.end_timer();
          return result;
       }
 };
@@ -882,6 +925,7 @@ class Version_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("Versions");
+         result.start_timer();
 
          result.confirm("Version datestamp matches macro", Botan::version_datestamp() == BOTAN_VERSION_DATESTAMP);
 
@@ -915,6 +959,7 @@ class Version_Tests final : public Test {
 
          result.test_eq("Expected warning text", version_check_bad, expected_error);
 
+         result.end_timer();
          return {result};
       }
 };
@@ -977,9 +1022,11 @@ class Date_Format_Tests final : public Text_Based_Test {
 
       std::vector<Test::Result> run_final_tests() override {
          Test::Result result("calendar_point::to_string");
+         result.start_timer();
          Botan::calendar_point d(2008, 5, 15, 9, 30, 33);
          // desired format: <YYYY>-<MM>-<dd>T<HH>:<mm>:<ss>
          result.test_eq("calendar_point::to_string", d.to_string(), "2008-05-15T09:30:33");
+         result.end_timer();
          return {result};
       }
 };
@@ -1131,6 +1178,7 @@ class CPUID_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("CPUID");
+         result.start_timer();
 
          result.confirm("Endian is either little or big",
                         Botan::CPUID::is_big_endian() || Botan::CPUID::is_little_endian());
@@ -1157,7 +1205,7 @@ class CPUID_Tests final : public Test {
             result.test_eq("After reinitializing, has_sse2 returns true", Botan::CPUID::has_sse2(), true);
          }
 #endif
-
+         result.end_timer();
          return {result};
       }
 };
@@ -1170,6 +1218,7 @@ class UUID_Tests : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("UUID");
+         result.start_timer();
 
          const Botan::UUID empty_uuid;
          const Botan::UUID random_uuid1(this->rng());
@@ -1225,6 +1274,7 @@ class UUID_Tests : public Test {
          const Botan::UUID ones_uuid(ones);
          result.test_eq("Ones UUID matches expected", ones_uuid.to_string(), "FFFFFFFF-FFFF-4FFF-BFFF-FFFFFFFFFFFF");
 
+         result.end_timer();
          return {result};
       }
 };
@@ -1237,6 +1287,7 @@ class Formatter_Tests : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("Format utility");
+         result.start_timer();
 
          /*
          In a number of these tests, we are not strictly depending on the
@@ -1251,6 +1302,7 @@ class Formatter_Tests : public Test {
          result.test_eq("test 4", Botan::fmt("{}"), "{}");
          result.test_eq("test 5", Botan::fmt("{} == '{}'", 5, "five"), "5 == 'five'");
 
+         result.end_timer();
          return {result};
       }
 };
@@ -1263,15 +1315,18 @@ class ScopedCleanup_Tests : public Test {
          return {
             CHECK("leaving a scope results in cleanup",
                   [](Test::Result& result) {
+                     result.start_timer();
                      bool ran = false;
                      {
                         auto clean = Botan::scoped_cleanup([&] { ran = true; });
                      }
                      result.confirm("cleanup ran", ran);
+                     result.end_timer();
                   }),
 
             CHECK("leaving a function, results in cleanup",
                   [](Test::Result& result) {
+                     result.start_timer();
                      bool ran = false;
                      bool fn_called = false;
                      auto fn = [&] {
@@ -1283,10 +1338,12 @@ class ScopedCleanup_Tests : public Test {
                      fn();
                      result.confirm("fn called", fn_called);
                      result.confirm("cleanup ran", ran);
+                     result.end_timer();
                   }),
 
             CHECK("stack unwinding results in cleanup",
                   [](Test::Result& result) {
+                     result.start_timer();
                      bool ran = false;
                      bool fn_called = false;
                      bool exception_caught = false;
@@ -1306,16 +1363,19 @@ class ScopedCleanup_Tests : public Test {
                      result.confirm("fn called", fn_called);
                      result.confirm("cleanup ran", ran);
                      result.confirm("exception caught", exception_caught);
+                     result.end_timer();
                   }),
 
             CHECK("cleanup isn't called after disengaging",
                   [](Test::Result& result) {
+                     result.start_timer();
                      bool ran = false;
                      {
                         auto clean = Botan::scoped_cleanup([&] { ran = true; });
                         clean.disengage();
                      }
                      result.confirm("cleanup not ran", !ran);
+                     result.end_timer();
                   }),
 
          };

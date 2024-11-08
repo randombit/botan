@@ -123,6 +123,8 @@ class Ed448_Utils_Test final : public Test {
 
       Test::Result test_reduce_mod_L() {
          Test::Result result("Reduce mod L test");
+         result.start_timer();
+
          std::array<uint8_t, 114> full = {0};
          std::memset(full.data(), 0xff, full.size());
 
@@ -136,6 +138,7 @@ class Ed448_Utils_Test final : public Test {
             result.test_is_eq("Reduce mod L result", res, ref);
          }
 
+         result.end_timer();
          return result;
       }
 

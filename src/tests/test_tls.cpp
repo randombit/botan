@@ -30,6 +30,7 @@ class TLS_Session_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("TLS::Session");
+         result.start_timer();
 
          Botan::TLS::Session session(Botan::secure_vector<uint8_t>{0xCC, 0xDD},
                                      Botan::TLS::Protocol_Version::TLS_V12,
@@ -87,6 +88,7 @@ class TLS_Session_Tests final : public Test {
                             "Serialized TLS session contains unknown cipher suite (47789)",
                             [&] { Botan::TLS::Session{pem_with_unknown_ciphersuite}; });
 
+         result.end_timer();
          return {result};
       }
 };
@@ -106,7 +108,9 @@ class TLS_CBC_Padding_Tests final : public Text_Based_Test {
          uint16_t res = Botan::TLS::check_tls_cbc_padding(record.data(), record.size());
 
          Test::Result result("TLS CBC padding check");
+         result.start_timer();
          result.test_eq("Expected", res, output);
+         result.end_timer();
          return result;
       }
 };
@@ -187,6 +191,7 @@ class TLS_CBC_Tests final : public Text_Based_Test {
 
       Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
          Test::Result result("TLS CBC");
+         result.start_timer();
 
          const size_t block_size = vars.get_req_sz("Blocksize");
          const size_t mac_len = vars.get_req_sz("MACsize");
@@ -224,6 +229,7 @@ class TLS_CBC_Tests final : public Text_Based_Test {
             }
          }
 
+         result.end_timer();
          return result;
       }
 };
@@ -236,6 +242,7 @@ class Test_TLS_Alert_Strings : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("TLS::Alert::type_string");
+         result.start_timer();
 
          const std::vector<Botan::TLS::Alert::Type> alert_types = {
             Botan::TLS::Alert::CloseNotify,
@@ -285,6 +292,7 @@ class Test_TLS_Alert_Strings : public Test {
 
          result.test_eq("Unknown alert str", unknown_alert.type_string(), "unrecognized_alert_66");
 
+         result.end_timer();
          return {result};
       }
 };
@@ -295,6 +303,7 @@ class Test_TLS_Policy_Text : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("TLS Policy");
+         result.start_timer();
 
          const std::vector<std::string> policies = {"default", "suiteb_128", "suiteb_192", "strict", "datagram", "bsi"};
 
@@ -310,6 +319,7 @@ class Test_TLS_Policy_Text : public Test {
             result.test_eq("Values for TLS " + policy + " policy", from_file, from_policy_obj);
          }
 
+         result.end_timer();
          return {result};
       }
 
@@ -354,6 +364,7 @@ class Test_TLS_Ciphersuites : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("TLS::Ciphersuite");
+         result.start_timer();
 
          for(size_t csuite_id = 0; csuite_id <= 0xFFFF; ++csuite_id) {
             const uint16_t csuite_id16 = static_cast<uint16_t>(csuite_id);
@@ -375,6 +386,7 @@ class Test_TLS_Ciphersuites : public Test {
             }
          }
 
+         result.end_timer();
          return {result};
       }
 };
@@ -396,6 +408,7 @@ class Test_TLS_Algo_Strings : public Test {
    private:
       static Test::Result test_tls_sig_method_strings() {
          Test::Result result("TLS::Signature_Scheme");
+         result.start_timer();
 
          std::vector<Botan::TLS::Signature_Scheme> schemes = Botan::TLS::Signature_Scheme::all_available_schemes();
 
@@ -408,11 +421,13 @@ class Test_TLS_Algo_Strings : public Test {
             scheme_strs.insert(scheme_str);
          }
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_auth_method_strings() {
          Test::Result result("TLS::Auth_Method");
+         result.start_timer();
 
          const std::vector<Botan::TLS::Auth_Method> auth_methods({
             Botan::TLS::Auth_Method::RSA,
@@ -427,11 +442,13 @@ class Test_TLS_Algo_Strings : public Test {
             result.confirm("Decoded method matches", meth == meth2);
          }
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_kex_algo_strings() {
          Test::Result result("TLS::Kex_Algo");
+         result.start_timer();
 
          const std::vector<Botan::TLS::Kex_Algo> kex_algos({Botan::TLS::Kex_Algo::STATIC_RSA,
                                                             Botan::TLS::Kex_Algo::DH,
@@ -446,6 +463,7 @@ class Test_TLS_Algo_Strings : public Test {
             result.confirm("Decoded method matches", meth == meth2);
          }
 
+         result.end_timer();
          return result;
       }
 };

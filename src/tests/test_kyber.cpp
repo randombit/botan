@@ -40,6 +40,7 @@ class KYBER_Tests final : public Test {
    public:
       static Test::Result run_kyber_test(const char* test_name, Botan::KyberMode mode, size_t strength, size_t psid) {
          Test::Result result(test_name);
+         result.start_timer();
 
          if(!mode.is_available()) {
             result.note_missing(mode.to_string());
@@ -97,6 +98,7 @@ class KYBER_Tests final : public Test {
          const auto key_alice_try2 = dec.decrypt(kem_result.encapsulated_shared_key(), 0 /* no KDF */, empty_salt);
          result.test_eq("shared secrets are equal", key_alice_try2, kem_result.shared_key());
 
+         result.end_timer();
          return result;
       }
 
@@ -229,6 +231,7 @@ class Kyber_Encoding_Test : public Text_Based_Test {
 
       Test::Result run_one_test(const std::string& algo_name, const VarMap& vars) override {
          Test::Result result("kyber_encodings");
+         result.start_timer();
 
          const auto mode = Botan::KyberMode(algo_name);
          const auto pk_raw = Botan::hex_decode(vars.get_req_str("PublicRaw"));
@@ -257,6 +260,7 @@ class Kyber_Encoding_Test : public Text_Based_Test {
             result.test_eq("pk's encoding of pk", skr->public_key_bits(), pk_raw);
          }
 
+         result.end_timer();
          return result;
       }
 };

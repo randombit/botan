@@ -29,6 +29,7 @@ class GF2m_Tests final : public Test {
    private:
       static Test::Result test_gf_overflow() {
          Test::Result result("GF2m");
+         result.start_timer();
 
          /*
          * This is testing one specific case where an overflow
@@ -57,6 +58,7 @@ class GF2m_Tests final : public Test {
                }
             }
          }
+         result.end_timer();
          return result;
       }
 };

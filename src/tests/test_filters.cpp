@@ -60,6 +60,7 @@ class Filter_Tests final : public Test {
    private:
       static Test::Result test_secqueue() {
          Test::Result result("SecureQueue");
+         result.start_timer();
 
          try {
             Botan::SecureQueue queue_a;
@@ -90,11 +91,13 @@ class Filter_Tests final : public Test {
             result.test_failure("SecureQueue", e.what());
          }
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_data_src_sink() {
          Test::Result result("DataSink");
+         result.start_timer();
 
    #if defined(BOTAN_HAS_CODEC_FILTERS)
          std::ostringstream oss;
@@ -117,11 +120,13 @@ class Filter_Tests final : public Test {
 
          result.test_eq("output string", oss.str(), "efghAAAACC");
    #endif
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_data_src_sink_flush() {
          Test::Result result("DataSinkFlush");
+         result.start_timer();
 
    #if defined(BOTAN_HAS_CODEC_FILTERS) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
@@ -152,11 +157,13 @@ class Filter_Tests final : public Test {
             result.test_failure("Failed to remove temporary file at conclusion of test");
          }
    #endif
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_pipe_io() {
          Test::Result result("Pipe I/O operators");
+         result.start_timer();
 
    #if defined(BOTAN_HAS_CODEC_FILTERS)
          Botan::Pipe pipe(new Botan::Hex_Encoder);
@@ -177,11 +184,13 @@ class Filter_Tests final : public Test {
          result.test_eq("output string2", oss.str(), "4142434441414141");
    #endif
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_pipe_errors() {
          Test::Result result("Pipe");
+         result.start_timer();
 
          Botan::Pipe pipe;
 
@@ -248,11 +257,13 @@ class Filter_Tests final : public Test {
          pipe.prepend(nullptr);  // ignored
          pipe.pop();             // empty pipe, so ignored
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_pipe_mac() {
          Test::Result result("Pipe");
+         result.start_timer();
 
    #if defined(BOTAN_HAS_CODEC_FILTERS) && defined(BOTAN_HAS_HMAC) && defined(BOTAN_HAS_SHA2_32)
          const Botan::SymmetricKey key("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
@@ -275,11 +286,14 @@ class Filter_Tests final : public Test {
          result.test_eq("MAC 2", pipe.read_all_as_string(1), "LhPnfEG+0rk+Ej6y");
          result.test_eq("MAC 3", pipe.read_all_as_string(2), "e7NoVbtudgU0QiCZ");
    #endif
+
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_pipe_hash() {
          Test::Result result("Pipe");
+         result.start_timer();
 
    #if defined(BOTAN_HAS_SHA2_32)
          // unrelated test of popping a chain
@@ -328,11 +342,13 @@ class Filter_Tests final : public Test {
          result.test_eq("Expected CRC32d", pipe.read_all(1), "99841F60");
       #endif
    #endif
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_pipe_cfb() {
          Test::Result result("Pipe CFB");
+         result.start_timer();
 
    #if defined(BOTAN_HAS_BLOWFISH) && defined(BOTAN_HAS_MODE_CFB) && defined(BOTAN_HAS_CODEC_FILTERS)
 
@@ -388,11 +404,13 @@ class Filter_Tests final : public Test {
          }
    #endif
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_pipe_cbc() {
          Test::Result result("Pipe CBC");
+         result.start_timer();
 
    #if defined(BOTAN_HAS_AES) && defined(BOTAN_HAS_MODE_CBC) && defined(BOTAN_HAS_CIPHER_MODE_PADDING)
          Botan::Cipher_Mode_Filter* cipher = new Botan::Cipher_Mode_Filter(
@@ -452,11 +470,14 @@ class Filter_Tests final : public Test {
 
          result.test_eq("Cipher roundtrip", zeros_in, zeros_out);
    #endif
+
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_pipe_compress() {
          Test::Result result("Pipe compress zlib");
+         result.start_timer();
 
    #if defined(BOTAN_HAS_ZLIB)
 
@@ -486,11 +507,13 @@ class Filter_Tests final : public Test {
          result.test_eq("Decompressed ok", decomp, input_str);
    #endif
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_pipe_compress_bzip2() {
          Test::Result result("Pipe compress bzip2");
+         result.start_timer();
 
    #if defined(BOTAN_HAS_BZIP2)
 
@@ -519,11 +542,13 @@ class Filter_Tests final : public Test {
          result.test_eq("Decompressed ok", decomp, input_str);
    #endif
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_pipe_codec() {
          Test::Result result("Pipe");
+         result.start_timer();
 
    #if defined(BOTAN_HAS_CODEC_FILTERS)
          Botan::Pipe pipe(new Botan::Base64_Encoder);
@@ -596,11 +621,13 @@ class Filter_Tests final : public Test {
                         "68657820656e636f\n64696e6720746869\n7320737472696e67\n");
    #endif
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_pipe_stream() {
          Test::Result result("Pipe CTR");
+         result.start_timer();
 
    #if defined(BOTAN_HAS_CTR_BE) && defined(BOTAN_HAS_AES)
          Botan::Keyed_Filter* aes = nullptr;
@@ -620,11 +647,14 @@ class Filter_Tests final : public Test {
          pipe.process_msg("ABCDEF");
          result.test_eq("Ciphertext", pipe.read_all(1), "8E72F1153514");
    #endif
+
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_fork() {
          Test::Result result("Filter Fork");
+         result.start_timer();
 
    #if defined(BOTAN_HAS_SHA2_32) && defined(BOTAN_HAS_SHA2_64)
          Botan::Pipe pipe(new Botan::Fork(new Botan::Hash_Filter("SHA-256"), new Botan::Hash_Filter("SHA-512-256")));
@@ -637,11 +667,14 @@ class Filter_Tests final : public Test {
          result.test_eq("Hash 2", pipe.read_all(1), "610480FFA82F24F6926544B976FE387878E3D973C03DFD591C2E9896EFB903E0");
          result.test_eq("Hash 1", pipe.read_all(0), "C00862D1C6C1CF7C1B49388306E7B3C1BB79D8D6EC978B41035B556DBB3797DF");
    #endif
+
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_chain() {
          Test::Result result("Filter Chain");
+         result.start_timer();
 
    #if defined(BOTAN_HAS_CODEC_FILTERS) && defined(BOTAN_HAS_SHA2_32) && defined(BOTAN_HAS_SHA2_64)
 
@@ -666,11 +699,13 @@ class Filter_Tests final : public Test {
          result.test_eq("Hash 2", pipe.read_all_as_string(1), "610480FFA82F24F6926544B976FE387878E3D9");
    #endif
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_pipe_fd_io() {
          Test::Result result("Pipe file descriptor IO");
+         result.start_timer();
 
    #if defined(BOTAN_HAS_PIPE_UNIXFD_IO) && defined(BOTAN_HAS_CODEC_FILTERS)
          int fd[2];
@@ -695,11 +730,13 @@ class Filter_Tests final : public Test {
          result.test_eq("IO through Unix pipe works", dec, "hi chappy");
    #endif
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_threaded_fork() {
          Test::Result result("Threaded_Fork");
+         result.start_timer();
 
    #if defined(BOTAN_HAS_THREAD_UTILS) && defined(BOTAN_HAS_CODEC_FILTERS) && defined(BOTAN_HAS_SHA2_32)
          Botan::Pipe pipe(new Botan::Threaded_Fork(new Botan::Hex_Encoder, new Botan::Base64_Encoder));
@@ -737,6 +774,7 @@ class Filter_Tests final : public Test {
                "Output", pipe.read_all(2 + i), "327AD8055223F5926693D8BEA40F7B35BDEEB535647DFB93F464E40EA01939A9");
          }
    #endif
+         result.end_timer();
          return result;
       }
 };

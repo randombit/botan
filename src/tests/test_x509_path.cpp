@@ -387,6 +387,9 @@ class Validate_V1Cert_Test final : public Test {
 };
 
 std::vector<Test::Result> Validate_V1Cert_Test::run() {
+   Test::Result result("Verifying using v1 certificate");
+   result.start_timer();
+
    if(Botan::has_filesystem_impl() == false) {
       return {Test::Result::Note("BSI path validation", "Skipping due to missing filesystem access")};
    }
@@ -412,7 +415,6 @@ std::vector<Test::Result> Validate_V1Cert_Test::run() {
    Botan::Path_Validation_Result validation_result =
       Botan::x509_path_validate(chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
-   Test::Result result("Verifying using v1 certificate");
    result.test_eq("Path validation result", validation_result.result_string(), "Verified");
 
    Botan::Certificate_Store_In_Memory empty;
@@ -424,6 +426,7 @@ std::vector<Test::Result> Validate_V1Cert_Test::run() {
 
    result.test_eq("Path validation result", validation_result2.result_string(), "Cannot establish trust");
 
+   result.end_timer();
    return {result};
 }
 
@@ -435,6 +438,9 @@ class Validate_V2Uid_in_V1_Test final : public Test {
 };
 
 std::vector<Test::Result> Validate_V2Uid_in_V1_Test::run() {
+   Test::Result result("Verifying v1 certificate using v2 uid fields");
+   result.start_timer();
+
    if(Botan::has_filesystem_impl() == false) {
       return {Test::Result::Note("Path validation", "Skipping due to missing filesystem access")};
    }
@@ -460,11 +466,11 @@ std::vector<Test::Result> Validate_V2Uid_in_V1_Test::run() {
    Botan::Path_Validation_Result validation_result =
       Botan::x509_path_validate(chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
-   Test::Result result("Verifying v1 certificate using v2 uid fields");
    result.test_eq("Path validation failed", validation_result.successful_validation(), false);
    result.test_eq(
       "Path validation result", validation_result.result_string(), "Encountered v2 identifiers in v1 certificate");
 
+   result.end_timer();
    return {result};
 }
 
@@ -476,6 +482,9 @@ class Validate_Name_Constraint_SAN_Test final : public Test {
 };
 
 std::vector<Test::Result> Validate_Name_Constraint_SAN_Test::run() {
+   Test::Result result("Verifying certificate with alternative SAN violating name constraint");
+   result.start_timer();
+
    if(Botan::has_filesystem_impl() == false) {
       return {Test::Result::Note("Path validation", "Skipping due to missing filesystem access")};
    }
@@ -501,11 +510,11 @@ std::vector<Test::Result> Validate_Name_Constraint_SAN_Test::run() {
    Botan::Path_Validation_Result validation_result =
       Botan::x509_path_validate(chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
-   Test::Result result("Verifying certificate with alternative SAN violating name constraint");
    result.test_eq("Path validation failed", validation_result.successful_validation(), false);
    result.test_eq(
       "Path validation result", validation_result.result_string(), "Certificate does not pass name constraint");
 
+   result.end_timer();
    return {result};
 }
 
@@ -517,6 +526,9 @@ class Validate_Name_Constraint_CaseInsensitive final : public Test {
 };
 
 std::vector<Test::Result> Validate_Name_Constraint_CaseInsensitive::run() {
+   Test::Result result("DNS name constraints are case insensitive");
+   result.start_timer();
+
    if(Botan::has_filesystem_impl() == false) {
       return {Test::Result::Note("Path validation", "Skipping due to missing filesystem access")};
    }
@@ -542,9 +554,8 @@ std::vector<Test::Result> Validate_Name_Constraint_CaseInsensitive::run() {
    Botan::Path_Validation_Result validation_result =
       Botan::x509_path_validate(chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
-   Test::Result result("DNS name constraints are case insensitive");
    result.test_eq("Path validation succeeded", validation_result.successful_validation(), true);
-
+   result.end_timer();
    return {result};
 }
 
@@ -556,6 +567,9 @@ class Validate_Name_Constraint_NoCheckSelf final : public Test {
 };
 
 std::vector<Test::Result> Validate_Name_Constraint_NoCheckSelf::run() {
+   Test::Result result("Name constraints do not apply to the certificate which includes them");
+   result.start_timer();
+
    if(Botan::has_filesystem_impl() == false) {
       return {Test::Result::Note("Path validation", "Skipping due to missing filesystem access")};
    }
@@ -581,9 +595,8 @@ std::vector<Test::Result> Validate_Name_Constraint_NoCheckSelf::run() {
    Botan::Path_Validation_Result validation_result =
       Botan::x509_path_validate(chain, restrictions, trusted, "", Botan::Usage_Type::UNSPECIFIED, validation_time);
 
-   Test::Result result("Name constraints do not apply to the certificate which includes them");
    result.test_eq("Path validation succeeded", validation_result.successful_validation(), true);
-
+   result.end_timer();
    return {result};
 }
 
@@ -608,6 +621,7 @@ class Root_Cert_Time_Check_Test final : public Test {
          const std::vector<Botan::X509_Certificate> chain = {leaf_cert};
 
          Test::Result result("Root cert time check");
+         result.start_timer();
 
          auto assert_path_validation_result = [&](std::string_view descr,
                                                   bool ignore_trusted_root_time_range,
@@ -685,6 +699,7 @@ class Root_Cert_Time_Check_Test final : public Test {
                                        Botan::Certificate_Status_Code::OK,
                                        Botan::Certificate_Status_Code::TRUSTED_CERT_NOT_YET_VALID);
 
+         result.end_timer();
          return {result};
       }
 };
@@ -844,6 +859,8 @@ class Path_Validation_With_OCSP_Tests final : public Test {
 
       static Test::Result validate_with_ocsp_with_next_update_without_max_age() {
          Test::Result result("path check with ocsp with next_update w/o max_age");
+         result.start_timer();
+
          Botan::Certificate_Store_In_Memory trusted;
 
          auto restrictions = Botan::Path_Validation_Restrictions(false, 110, false);
@@ -882,11 +899,14 @@ class Path_Validation_With_OCSP_Tests final : public Test {
          check_path(Botan::calendar_point(2016, 11, 28, 8, 30, 0).to_std_timepoint(),
                     Botan::Certificate_Status_Code::OCSP_HAS_EXPIRED);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result validate_with_ocsp_with_next_update_with_max_age() {
          Test::Result result("path check with ocsp with next_update with max_age");
+         result.start_timer();
+
          Botan::Certificate_Store_In_Memory trusted;
 
          auto restrictions = Botan::Path_Validation_Restrictions(false, 110, false, std::chrono::minutes(59));
@@ -925,11 +945,14 @@ class Path_Validation_With_OCSP_Tests final : public Test {
          check_path(Botan::calendar_point(2016, 11, 28, 8, 30, 0).to_std_timepoint(),
                     Botan::Certificate_Status_Code::OCSP_HAS_EXPIRED);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result validate_with_ocsp_without_next_update_without_max_age() {
          Test::Result result("path check with ocsp w/o next_update w/o max_age");
+         result.start_timer();
+
          Botan::Certificate_Store_In_Memory trusted;
 
          auto restrictions = Botan::Path_Validation_Restrictions(false, 110, false);
@@ -966,11 +989,14 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                     Botan::Certificate_Status_Code::OK);
          check_path(Botan::calendar_point(2019, 5, 28, 8, 0, 0).to_std_timepoint(), Botan::Certificate_Status_Code::OK);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result validate_with_ocsp_without_next_update_with_max_age() {
          Test::Result result("path check with ocsp w/o next_update with max_age");
+         result.start_timer();
+
          Botan::Certificate_Store_In_Memory trusted;
 
          auto restrictions = Botan::Path_Validation_Restrictions(false, 110, false, std::chrono::minutes(59));
@@ -1008,11 +1034,14 @@ class Path_Validation_With_OCSP_Tests final : public Test {
          check_path(Botan::calendar_point(2019, 5, 28, 8, 0, 0).to_std_timepoint(),
                     Botan::Certificate_Status_Code::OCSP_IS_TOO_OLD);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result validate_with_ocsp_with_authorized_responder() {
          Test::Result result("path check with ocsp response from authorized responder certificate");
+         result.start_timer();
+
          Botan::Certificate_Store_In_Memory trusted;
 
          auto restrictions = Botan::Path_Validation_Restrictions(true,   // require revocation info
@@ -1056,12 +1085,15 @@ class Path_Validation_With_OCSP_Tests final : public Test {
          check_path(Botan::calendar_point(2022, 9, 20, 16, 30, 0).to_std_timepoint(),
                     Botan::Certificate_Status_Code::OCSP_HAS_EXPIRED);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result validate_with_ocsp_with_authorized_responder_without_keyusage() {
          Test::Result result(
             "path check with ocsp response from authorized responder certificate (without sufficient key usage)");
+         result.start_timer();
+
          Botan::Certificate_Store_In_Memory trusted;
 
          auto restrictions = Botan::Path_Validation_Restrictions(true,    // require revocation info
@@ -1114,11 +1146,14 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                     Botan::Certificate_Status_Code::OCSP_RESPONSE_MISSING_KEYUSAGE,
                     Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result validate_with_forged_ocsp_using_self_signed_cert() {
          Test::Result result("path check with forged ocsp using self-signed certificate");
+         result.start_timer();
+
          Botan::Certificate_Store_In_Memory trusted;
 
          auto restrictions = Botan::Path_Validation_Restrictions(true,    // require revocation info
@@ -1163,12 +1198,15 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                     Botan::Certificate_Status_Code::CERT_ISSUER_NOT_FOUND,
                     Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_TRUSTED);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result validate_with_ocsp_self_signed_by_intermediate_cert() {
          Test::Result result(
             "path check with ocsp response for intermediate that is (maliciously) self-signed by the intermediate");
+         result.start_timer();
+
          Botan::Certificate_Store_In_Memory trusted;
 
          auto restrictions = Botan::Path_Validation_Restrictions(true,   // require revocation info
@@ -1202,6 +1240,7 @@ class Path_Validation_With_OCSP_Tests final : public Test {
                         path_result.result() == Botan::Certificate_Status_Code::OCSP_ISSUER_NOT_FOUND);
          result.test_note(std::string("Failed with: ") + Botan::to_string(path_result.result()));
 
+         result.end_timer();
          return result;
       }
 
@@ -1227,6 +1266,8 @@ class CVE_2020_0601_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("CVE-2020-0601");
+         result.start_timer();
+
          auto ca_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/ca.pem"));
          auto fake_ca_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/fake_ca.pem"));
          auto ee_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/ee.pem"));
@@ -1281,6 +1322,7 @@ class CVE_2020_0601_Tests final : public Test {
 
          result.confirm("Validation succeeded", path_result3.successful_validation());
 
+         result.end_timer();
          return {result};
       }
 };
@@ -1295,6 +1337,7 @@ class XMSS_Path_Validation_Tests final : public Test {
    public:
       static Test::Result validate_self_signed(const std::string& name, const std::string& file) {
          Test::Result result(name);
+         result.start_timer();
 
          Botan::Path_Validation_Restrictions restrictions;
          auto self_signed = Botan::X509_Certificate(Test::data_file("x509/xmss/" + file));
@@ -1305,6 +1348,7 @@ class XMSS_Path_Validation_Tests final : public Test {
          auto status = Botan::PKIX::overall_status(
             Botan::PKIX::check_chain(cert_path, valid_time, "", Botan::Usage_Type::UNSPECIFIED, restrictions));
          result.test_eq("Cert validation status", Botan::to_string(status), "Verified");
+         result.end_timer();
          return result;
       }
 

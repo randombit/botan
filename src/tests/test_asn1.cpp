@@ -21,6 +21,7 @@ namespace {
 
 Test::Result test_ber_stack_recursion() {
    Test::Result result("BER stack recursion");
+   result.start_timer();
 
    // OSS-Fuzz #813 GitHub #989
 
@@ -36,12 +37,13 @@ Test::Result test_ber_stack_recursion() {
    } catch(Botan::Decoding_Error&) {}
 
    result.test_success("No crash");
-
+   result.end_timer();
    return result;
 }
 
 Test::Result test_ber_eoc_decoding_limits() {
    Test::Result result("BER nested indefinite length");
+   result.start_timer();
 
    // OSS-Fuzz #4353
 
@@ -71,12 +73,13 @@ Test::Result test_ber_eoc_decoding_limits() {
    }
 
    result.test_eq("EOC limited to prevent stack exhaustion", max_eoc_allowed, 16);
-
+   result.end_timer();
    return result;
 }
 
 Test::Result test_asn1_utf8_ascii_parsing() {
    Test::Result result("ASN.1 ASCII parsing");
+   result.start_timer();
 
    try {
       // \x13 - ASN1 tag for 'printable string'
@@ -95,11 +98,13 @@ Test::Result test_asn1_utf8_ascii_parsing() {
       result.test_failure(ex.what());
    }
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_asn1_utf8_parsing() {
    Test::Result result("ASN.1 UTF-8 parsing");
+   result.start_timer();
 
    try {
       // \x0C - ASN1 tag for 'UTF8 string'
@@ -118,11 +123,13 @@ Test::Result test_asn1_utf8_parsing() {
       result.test_failure(ex.what());
    }
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_asn1_ucs2_parsing() {
    Test::Result result("ASN.1 BMP string (UCS-2) parsing");
+   result.start_timer();
 
    try {
       // \x1E     - ASN1 tag for 'BMP (UCS-2) string'
@@ -142,11 +149,13 @@ Test::Result test_asn1_ucs2_parsing() {
       result.test_failure(ex.what());
    }
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_asn1_ucs4_parsing() {
    Test::Result result("ASN.1 universal string (UCS-4) parsing");
+   result.start_timer();
 
    try {
       // \x1C - ASN1 tag for 'universal string'
@@ -166,11 +175,13 @@ Test::Result test_asn1_ucs4_parsing() {
       result.test_failure(ex.what());
    }
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_asn1_ascii_encoding() {
    Test::Result result("ASN.1 ASCII encoding");
+   result.start_timer();
 
    try {
       // UTF-8 encoded (ASCII chars only) word 'Moscow'
@@ -192,11 +203,13 @@ Test::Result test_asn1_ascii_encoding() {
       result.test_failure(ex.what());
    }
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_asn1_utf8_encoding() {
    Test::Result result("ASN.1 UTF-8 encoding");
+   result.start_timer();
 
    try {
       // UTF-8 encoded russian word for Moscow in cyrillic script
@@ -218,11 +231,13 @@ Test::Result test_asn1_utf8_encoding() {
       result.test_failure(ex.what());
    }
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_asn1_tag_underlying_type() {
    Test::Result result("ASN.1 class and type underlying type");
+   result.start_timer();
 
    if constexpr(std::is_same_v<std::underlying_type_t<Botan::ASN1_Class>, std::underlying_type_t<Botan::ASN1_Type>>) {
       if constexpr(!std::is_same_v<std::underlying_type_t<Botan::ASN1_Class>,
@@ -236,6 +251,7 @@ Test::Result test_asn1_tag_underlying_type() {
       result.test_failure("ASN1_Class and ASN1_Type have different underlying types");
    }
 
+   result.end_timer();
    return result;
 }
 
@@ -299,6 +315,7 @@ class ASN1_Printer_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("ASN1_Pretty_Printer");
+         result.start_timer();
 
          Botan::ASN1_Pretty_Printer printer;
 
@@ -317,6 +334,7 @@ class ASN1_Printer_Tests final : public Test {
             }
          }
 
+         result.end_timer();
          return {result};
       }
 };

@@ -22,6 +22,7 @@ namespace {
 
 Test::Result find_certificate_by_pubkey_sha1(Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find Certificate by SHA1(pubkey)");
+   result.start_timer();
 
    try {
       result.start_timer();
@@ -39,11 +40,13 @@ Test::Result find_certificate_by_pubkey_sha1(Botan::Certificate_Store& certstore
 
    result.test_throws("on invalid SHA1 hash data", [&] { certstore.find_cert_by_pubkey_sha1({}); });
 
+   result.end_timer();
    return result;
 }
 
 Test::Result find_certificate_by_pubkey_sha1_with_unmatching_key_id(Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find Certificate by SHA1(pubkey) - regression test for GH #2779");
+   result.start_timer();
 
    if(!certstore.find_cert(get_dn_of_cert_with_different_key_id(), {}).has_value()) {
       result.note_missing("OS does not trust the certificate used for this regression test, skipping");
@@ -64,11 +67,13 @@ Test::Result find_certificate_by_pubkey_sha1_with_unmatching_key_id(Botan::Certi
       result.test_failure(e.what());
    }
 
+   result.end_timer();
    return result;
 }
 
 Test::Result find_cert_by_subject_dn(Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find Certificate by subject DN");
+   result.start_timer();
 
    try {
       auto dn = get_dn();
@@ -86,11 +91,13 @@ Test::Result find_cert_by_subject_dn(Botan::Certificate_Store& certstore) {
       result.test_failure(e.what());
    }
 
+   result.end_timer();
    return result;
 }
 
 Test::Result find_cert_by_utf8_subject_dn(Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find Certificate by UTF8 subject DN");
+   result.start_timer();
 
    try {
       const auto DNs = get_utf8_dn_alternatives();
@@ -124,11 +131,13 @@ Test::Result find_cert_by_utf8_subject_dn(Botan::Certificate_Store& certstore) {
       result.test_failure(e.what());
    }
 
+   result.end_timer();
    return result;
 }
 
 Test::Result find_cert_by_subject_dn_and_key_id(Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find Certificate by subject DN and key ID");
+   result.start_timer();
 
    try {
       auto dn = get_dn();
@@ -146,11 +155,13 @@ Test::Result find_cert_by_subject_dn_and_key_id(Botan::Certificate_Store& certst
       result.test_failure(e.what());
    }
 
+   result.end_timer();
    return result;
 }
 
 Test::Result find_certs_by_subject_dn_and_key_id(Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find Certificates by subject DN and key ID");
+   result.start_timer();
 
    try {
       auto dn = get_dn();
@@ -169,11 +180,13 @@ Test::Result find_certs_by_subject_dn_and_key_id(Botan::Certificate_Store& certs
       result.test_failure(e.what());
    }
 
+   result.end_timer();
    return result;
 }
 
 Test::Result find_all_certs_by_subject_dn(Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find all Certificates by subject DN");
+   result.start_timer();
 
    try {
       auto dn = get_dn();
@@ -199,11 +212,13 @@ Test::Result find_all_certs_by_subject_dn(Botan::Certificate_Store& certstore) {
       result.test_failure(e.what());
    }
 
+   result.end_timer();
    return result;
 }
 
 Test::Result find_all_subjects(Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - Find all Certificate Subjects");
+   result.start_timer();
 
    try {
       result.start_timer();
@@ -223,11 +238,13 @@ Test::Result find_all_subjects(Botan::Certificate_Store& certstore) {
       result.test_failure(e.what());
    }
 
+   result.end_timer();
    return result;
 }
 
 Test::Result no_certificate_matches(Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - can deal with no matches (regression test)");
+   result.start_timer();
 
    try {
       auto dn = get_unknown_dn();
@@ -246,6 +263,7 @@ Test::Result no_certificate_matches(Botan::Certificate_Store& certstore) {
       result.test_failure(e.what());
    }
 
+   result.end_timer();
    return result;
 }
 
@@ -253,6 +271,7 @@ Test::Result no_certificate_matches(Botan::Certificate_Store& certstore) {
 
 Test::Result certificate_matching_with_dn_normalization(Botan::Certificate_Store& certstore) {
    Test::Result result("System Certificate Store - normalization of X.509 DN (regression test)");
+   result.start_timer();
 
    try {
       auto dn = get_skewed_dn();
@@ -272,6 +291,7 @@ Test::Result certificate_matching_with_dn_normalization(Botan::Certificate_Store
       result.test_failure(e.what());
    }
 
+   result.end_timer();
    return result;
 }
 
@@ -281,6 +301,7 @@ class Certstor_System_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result open_result("System Certificate Store - Open Keychain");
+         open_result.start_timer();
 
          std::unique_ptr<Botan::Certificate_Store> system;
 
@@ -315,6 +336,7 @@ class Certstor_System_Tests final : public Test {
          results.push_back(certificate_matching_with_dn_normalization(*system));
    #endif
 
+         open_result.end_timer();
          return results;
       }
 };

@@ -353,6 +353,7 @@ BOTAN_REGISTER_TEST("pubkey", "ec_group", EC_Group_Tests);
 
 Test::Result test_decoding_with_seed() {
    Test::Result result("ECC Unit");
+   result.start_timer();
 
    const auto secp384r1_with_seed = Botan::EC_Group::from_PEM(Test::read_data_file("x509/ecc/secp384r1_seed.pem"));
 
@@ -362,11 +363,13 @@ Test::Result test_decoding_with_seed() {
 
    result.test_eq("P-384 prime", secp384r1_with_seed.get_p(), secp384r1.get_p());
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_mixed_points() {
    Test::Result result("ECC Unit");
+   result.start_timer();
 
    const auto secp256r1 = Botan::EC_Group::from_name("secp256r1");
    const auto secp384r1 = Botan::EC_Group::from_name("secp384r1");
@@ -375,11 +378,14 @@ Test::Result test_mixed_points() {
    const Botan::EC_Point& G384 = secp384r1.get_base_point();
 
    result.test_throws("Mixing points from different groups", [&] { Botan::EC_Point p = G256 + G384; });
+
+   result.end_timer();
    return result;
 }
 
 Test::Result test_basic_operations() {
    Test::Result result("ECC Unit");
+   result.start_timer();
 
    // precalculation
    const auto secp160r1 = Botan::EC_Group::from_name("secp160r1");
@@ -410,11 +416,13 @@ Test::Result test_basic_operations() {
                   simpleMult.get_affine_y(),
                   Botan::BigInt("56841378500012376527163928510402662349220202981"));
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_enc_dec_compressed_160() {
    Test::Result result("ECC Unit");
+   result.start_timer();
 
    // Test for compressed conversion (02/03) 160bit
    const auto secp160r1 = Botan::EC_Group::from_name("secp160r1");
@@ -423,11 +431,14 @@ Test::Result test_enc_dec_compressed_160() {
    const std::vector<uint8_t> sv_result = p.encode(Botan::EC_Point_Format::Compressed);
 
    result.test_eq("result", sv_result, G_comp);
+
+   result.end_timer();
    return result;
 }
 
 Test::Result test_enc_dec_compressed_256() {
    Test::Result result("ECC Unit");
+   result.start_timer();
 
    const auto group = Botan::EC_Group::from_name("secp256r1");
 
@@ -438,11 +449,14 @@ Test::Result test_enc_dec_compressed_256() {
    std::vector<uint8_t> sv_result = p_G.encode(Botan::EC_Point_Format::Compressed);
 
    result.test_eq("compressed_256", sv_result, sv_G_secp_comp);
+
+   result.end_timer();
    return result;
 }
 
 Test::Result test_enc_dec_uncompressed_112() {
    Test::Result result("ECC Unit");
+   result.start_timer();
 
    // Test for uncompressed conversion (04) 112bit
 
@@ -468,11 +482,14 @@ Test::Result test_enc_dec_uncompressed_112() {
    std::vector<uint8_t> sv_result = p_G.encode(Botan::EC_Point_Format::Uncompressed);
 
    result.test_eq("uncompressed_112", sv_result, sv_G_secp_uncomp);
+
+   result.end_timer();
    return result;
 }
 
 Test::Result test_enc_dec_uncompressed_521() {
    Test::Result result("ECC Unit");
+   result.start_timer();
 
    // Test for uncompressed conversion(04) with big values(521 bit)
 
@@ -488,11 +505,14 @@ Test::Result test_enc_dec_uncompressed_521() {
    std::vector<uint8_t> sv_result = p_G.encode(Botan::EC_Point_Format::Uncompressed);
 
    result.test_eq("expected", sv_result, sv_G_secp_uncomp);
+
+   result.end_timer();
    return result;
 }
 
 Test::Result test_ecc_registration() {
    Test::Result result("ECC registration");
+   result.start_timer();
 
    // secp128r1
    const Botan::BigInt p("0xfffffffdffffffffffffffffffffffff");
@@ -512,11 +532,13 @@ Test::Result test_ecc_registration() {
 
    result.test_eq("Group registration worked", group.get_p(), p);
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_ec_group_from_params() {
    Test::Result result("EC_Group from params");
+   result.start_timer();
 
    Botan::EC_Group::clear_registered_curve_data();
 
@@ -536,11 +558,13 @@ Test::Result test_ec_group_from_params() {
    Botan::EC_Group reg_group(p, a, b, g_x, g_y, order, 1);
    result.confirm("Group has correct OID", reg_group.get_curve_oid() == oid);
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_ec_group_bad_registration() {
    Test::Result result("EC_Group registering non-match");
+   result.start_timer();
 
    Botan::EC_Group::clear_registered_curve_data();
 
@@ -562,11 +586,13 @@ Test::Result test_ec_group_bad_registration() {
       result.test_success("Got expected exception");
    }
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_ec_group_duplicate_orders() {
    Test::Result result("EC_Group with duplicate group order");
+   result.start_timer();
 
    Botan::EC_Group::clear_registered_curve_data();
 
@@ -594,6 +620,7 @@ Test::Result test_ec_group_duplicate_orders() {
    const auto other_group = Botan::EC_Group::from_OID(secp160r1);
    result.confirm("Group has correct OID", other_group.get_curve_oid() == secp160r1);
 
+   result.end_timer();
    return result;
 }
 

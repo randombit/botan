@@ -54,6 +54,7 @@ class X25519_Roundtrip_Test final : public Test {
 
          for(size_t i = 0; i < 10; ++i) {
             Test::Result result("X25519 roundtrip");
+            result.start_timer();
 
             Botan::X25519_PrivateKey a_priv_gen(this->rng());
             Botan::X25519_PrivateKey b_priv_gen(this->rng());
@@ -114,6 +115,7 @@ class X25519_Roundtrip_Test final : public Test {
                result.test_failure("Cast back to X25519 failed");
             }
 
+            result.end_timer();
             results.push_back(result);
          }
 

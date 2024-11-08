@@ -26,6 +26,7 @@ class Test_Tests final : public Test {
          */
 
          Test::Result result("Test Framework");
+         result.start_timer();
 
          // Test a few success corner cases first
          const std::string testcase_name = "Failing Test";
@@ -197,12 +198,14 @@ class Test_Tests final : public Test {
          }
 #endif
 
+         result.end_timer();
          return {result, test_testsuite_rng()};
       }
 
    private:
       static Test::Result test_testsuite_rng() {
          Test::Result result("Testsuite_RNG");
+         result.start_timer();
 
          size_t histogram[256] = {0};
 
@@ -222,6 +225,7 @@ class Test_Tests final : public Test {
             }
          }
 
+         result.end_timer();
          return result;
       }
 

@@ -14,6 +14,7 @@ class CT_Mask_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("CT::Mask");
+         result.start_timer();
 
          result.test_eq_sz("CT::is_zero8", Botan::CT::Mask<uint8_t>::is_zero(0).value(), 0xFF);
          result.test_eq_sz("CT::is_zero8", Botan::CT::Mask<uint8_t>::is_zero(1).value(), 0x00);
@@ -71,6 +72,7 @@ class CT_Mask_Tests final : public Test {
             }
          }
 
+         result.end_timer();
          return {result};
       }
 };
@@ -81,6 +83,7 @@ class CT_Choice_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("CT::Choice");
+         result.start_timer();
 
          result.test_eq("CT::Choice::yes", Botan::CT::Choice::yes().as_bool(), true);
          result.test_eq("CT::Choice::no", Botan::CT::Choice::no().as_bool(), false);
@@ -90,6 +93,7 @@ class CT_Choice_Tests final : public Test {
          test_choice_from_int<uint32_t>("uint32_t", result);
          test_choice_from_int<uint64_t>("uint64_t", result);
 
+         result.end_timer();
          return {result};
       }
 
@@ -113,6 +117,7 @@ class CT_Option_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("CT::Option");
+         result.start_timer();
 
          class Val {
             public:
@@ -142,6 +147,7 @@ class CT_Option_Tests final : public Test {
          test_ct_option<uint32_t>(result, 42424242, 23232323);
          test_ct_option<uint64_t>(result, 4242424242424242, 2323232323232323);
 
+         result.end_timer();
          return {result};
       }
 
@@ -192,16 +198,19 @@ std::vector<Test::Result> test_higher_level_ct_poison() {
    return {
       CHECK("custom poisonable object",
             [](Test::Result& result) {
+               result.start_timer();
                Poisonable p;
                result.confirm("not poisoned", p.poisoned == false);
                Botan::CT::poison(p);
                result.confirm("poisoned", p.poisoned == true);
                Botan::CT::unpoison(p);
                result.confirm("unpoisoned", p.poisoned == false);
+               result.end_timer();
             }),
 
       CHECK("poison multiple objects",
             [](Test::Result& result) {
+               result.start_timer();
                // template is useless, but p1, p2, and p3 are different types and we
                // want to make sure that poison_all/unpoison_all can deal with that.
                Poisonable<int> p1;
@@ -213,10 +222,12 @@ std::vector<Test::Result> test_higher_level_ct_poison() {
                result.confirm("all poisoned", p1.poisoned && p2.poisoned && p3.poisoned);
                Botan::CT::unpoison_all(p1, p2, p3);
                result.confirm("all unpoisoned", !p1.poisoned && !p2.poisoned && !p3.poisoned);
+               result.end_timer();
             }),
 
       CHECK("scoped poison",
             [](Test::Result& result) {
+               result.start_timer();
                // template is useless, but p1, p2, and p3 are different types and we
                // want to make sure that poison_all/unpoison_all can deal with that.
                Poisonable<int> p1;
@@ -231,10 +242,13 @@ std::vector<Test::Result> test_higher_level_ct_poison() {
                }
 
                result.confirm("unpoisoned", !p1.poisoned && !p2.poisoned && !p3.poisoned);
+               result.end_timer();
             }),
 
       CHECK("poison a range of poisonable objects",
             [](Test::Result& result) {
+               result.start_timer();
+
                auto is_poisoned = [](const auto& p) { return p.poisoned; };
 
                std::vector<Poisonable<>> v(10);
@@ -245,10 +259,14 @@ std::vector<Test::Result> test_higher_level_ct_poison() {
 
                Botan::CT::unpoison_range(v);
                result.confirm("all unpoisoned", std::none_of(v.begin(), v.end(), is_poisoned));
+
+               result.end_timer();
             }),
 
       CHECK("poison a poisonable objects with driveby_poison",
             [](Test::Result& result) {
+               result.start_timer();
+
                Poisonable p;
                result.confirm("not poisoned", p.poisoned == false);
                Poisonable p_poisoned =
@@ -257,6 +275,8 @@ std::vector<Test::Result> test_higher_level_ct_poison() {
                Poisonable p_unpoisoned = Botan::CT::driveby_unpoison(
                   std::move(p_poisoned));  // NOLINT(hicpp-move-const-arg,performance-move-const-arg)
                result.confirm("unpoisoned", p_unpoisoned.poisoned == false);
+
+               result.end_timer();
             }),
    };
 }

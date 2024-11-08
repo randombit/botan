@@ -184,6 +184,8 @@ class XOF_Tests final : public Text_Based_Test {
    #if defined(BOTAN_HAS_CSHAKE_XOF)
             CHECK("cSHAKE without a name",
                   [](Test::Result& result) {
+                     result.start_timer();
+
                      std::vector<std::unique_ptr<Botan::XOF>> cshakes;
                      cshakes.push_back(std::make_unique<Botan::cSHAKE_128_XOF>(""));
                      cshakes.push_back(std::make_unique<Botan::cSHAKE_256_XOF>(""));
@@ -194,16 +196,20 @@ class XOF_Tests final : public Text_Based_Test {
                                        cshake->valid_salt_length(1));
                         result.test_throws("cSHAKE without a name throws without salt", [&]() { cshake->start({}); });
                      }
+                     result.end_timer();
                   }),
    #endif
    #if defined(BOTAN_HAS_AES_CRYSTALS_XOF)
                CHECK("AES-256/CTR XOF failure modes", [](Test::Result& result) {
+                  result.start_timer();
+
                   Botan::AES_256_CTR_XOF aes_xof;
                   result.test_throws("AES-256/CTR XOF throws for empty key", [&]() { aes_xof.start({}, {}); });
                   result.test_throws("AES-256/CTR XOF throws for too long key",
                                      [&]() { aes_xof.start({}, std::vector<uint8_t>(33)); });
                   result.test_throws("AES-256/CTR XOF throws for too long IV",
                                      [&]() { aes_xof.start(std::vector<uint8_t>(17), std::vector<uint8_t>(32)); });
+                  result.end_timer();
                }),
    #endif
          };

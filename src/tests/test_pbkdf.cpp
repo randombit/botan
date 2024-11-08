@@ -253,6 +253,7 @@ class PGP_S2K_Iter_Test final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("PGP_S2K iteration encoding");
+         result.start_timer();
 
          // The maximum representable iteration count
          const size_t max_iter = 65011712;
@@ -285,6 +286,7 @@ class PGP_S2K_Iter_Test final : public Test {
             last_enc = enc;
          }
 
+         result.end_timer();
          return std::vector<Test::Result>{result};
       }
 };

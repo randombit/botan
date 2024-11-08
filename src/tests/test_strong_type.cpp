@@ -53,37 +53,45 @@ std::vector<Test::Result> test_strong_type() {
 
       CHECK("value retrieval",
             [](auto& result) {
+               result.start_timer();
                Test_Size a(42);
                const Test_Size b(42);
 
                result.test_is_eq("get()", a.get(), size_t(42));
                result.test_is_eq("const get()", b.get(), size_t(42));
+               result.end_timer();
             }),
 
       CHECK("comparisons",
             [](auto& result) {
+               result.start_timer();
                const Test_Size a(42);
                const Test_Size b(42);
 
                result.confirm("equal", a == b);
                result.confirm("lower than", a < Test_Size(1337));
                result.confirm("greater than", Test_Size(1337) > b);
+               result.end_timer();
             }),
 
       CHECK("function overloading",
             [](auto& result) {
+               result.start_timer();
                result.test_eq("overloading size", foo(Test_Size(42)), "some size");
                result.test_eq("overloading size", foo(Test_Length(42)), "some length");
+               result.end_timer();
             }),
 
       CHECK("is_strong_type",
             [](auto& result) {
+               result.start_timer();
                result.confirm("strong type (int)", Botan::is_strong_type_v<Test_Size>);
                result.confirm("no strong type (int)", !Botan::is_strong_type_v<size_t>);
                result.confirm("strong type (vector)", Botan::is_strong_type_v<Test_Nonce>);
                result.confirm("no strong type (vector)", !Botan::is_strong_type_v<std::vector<uint8_t>>);
                result.confirm("strong type (const vector)", Botan::is_strong_type_v<const Test_Nonce>);
                result.confirm("no strong type (const vector)", !Botan::is_strong_type_v<const std::vector<uint8_t>>);
+               result.end_timer();
             }),
    };
 }
@@ -98,6 +106,7 @@ std::vector<Test::Result> test_container_strong_type() {
 
       CHECK("behaves like a standard container",
             [](auto& result) {
+               result.start_timer();
                auto base_nonce = Botan::hex_decode("DEADBEEF");
                auto dataptr = base_nonce.data();
                auto nonce = Test_Nonce(std::move(base_nonce));
@@ -109,11 +118,13 @@ std::vector<Test::Result> test_container_strong_type() {
                for(auto& c : nonce) {
                   result.confirm("iteration", c > 0);
                }
+               result.end_timer();
             }),
 
       CHECK(
          "container concepts are satisfied",
          [](auto& result) {
+            result.start_timer();
             using Test_Map = Botan::Strong<std::map<int, std::string>, struct Test_Map_>;
             using Test_Array = Botan::Strong<std::array<uint64_t, 32>, struct Test_Array_>;
 
@@ -131,28 +142,34 @@ std::vector<Test::Result> test_container_strong_type() {
             result.confirm("Test_Array is not resizable_container", !Botan::concepts::resizable_container<Test_Array>);
             result.confirm("Test_Map is not resizable_container", !Botan::concepts::resizable_container<Test_Map>);
             result.confirm("Test_Size is not resizable_container", !Botan::concepts::resizable_container<Test_Size>);
+            result.end_timer();
          }),
 
       CHECK("binds to a std::span<>",
             [](auto& result) {
+               result.start_timer();
                auto get_size = [](std::span<const uint8_t> data) { return data.size(); };
 
                const auto nonce = Test_Nonce(Botan::hex_decode("DEADBEEF"));
 
                result.test_is_eq("can bind to std::span<>", get_size(nonce), nonce.size());
+               result.end_timer();
             }),
 
       CHECK("std::string container",
             [](auto& result) {
+               result.start_timer();
                Test_Hash_Name thn("SHA-1");
 
                std::stringstream stream;
                stream << thn;
                result.test_eq("strong types are streamable", stream.str(), std::string("SHA-1"));
+               result.end_timer();
             }),
 
       CHECK("strong types are sortable",
             [](auto& result) {
+               result.start_timer();
                using Test_Length_List = Botan::Strong<std::vector<Test_Length>, struct Test_Length_List_>;
 
                Test_Length_List hashes({Test_Length(3), Test_Length(1), Test_Length(4), Test_Length(2)});
@@ -164,10 +181,12 @@ std::vector<Test::Result> test_container_strong_type() {
                result.test_eq("2", hashes.get().at(1).get(), size_t(2));
                result.test_eq("3", hashes.get().at(2).get(), size_t(3));
                result.test_eq("4", hashes.get().at(3).get(), size_t(4));
+               result.end_timer();
             }),
 
       CHECK("byte-container strong types can be randomly generated",
             [](auto& result) {
+               result.start_timer();
                using Test_Buffer = Botan::Strong<std::vector<uint8_t>, struct Test_Buffer_>;
                using Test_Secure_Buffer = Botan::Strong<Botan::secure_vector<uint8_t>, struct Test_Secure_Buffer_>;
                using Test_Fixed_Array = Botan::Strong<std::array<uint8_t, 4>, struct Test_Fixed_Array_>;
@@ -190,6 +209,7 @@ std::vector<Test::Result> test_container_strong_type() {
                result.test_eq("generated expected fixed output",
                               std::vector(tfa.begin(), tfa.end()),
                               Botan::hex_decode("baadf00d"));
+               result.end_timer();
             }),
    };
 }
@@ -201,6 +221,7 @@ std::vector<Test::Result> test_integer_strong_type() {
    return {
       CHECK("comparison operators with POD are always allowed",
             [](auto& result) {
+               result.start_timer();
                StrongInt i(42);
 
                result.confirm("i ==", i == 42);
@@ -220,10 +241,12 @@ std::vector<Test::Result> test_integer_strong_type() {
                result.confirm("< i", 41 < i);
                result.confirm("<= 1 i", 41 <= i);
                result.confirm("<= 2 i", 42 <= i);
+               result.end_timer();
             }),
 
       CHECK("increment/decrement are always allowed",
             [](auto& result) {
+               result.start_timer();
                StrongInt i(42);
 
                result.confirm("i++", i++ == 42);
@@ -235,10 +258,12 @@ std::vector<Test::Result> test_integer_strong_type() {
                result.confirm("i post-decremented", i == 43);
                result.confirm("--i", --i == 42);
                result.confirm("i pre-decremented", i == 42);
+               result.end_timer();
             }),
 
       CHECK("comparison operators with Strong<>",
             [](auto& result) {
+               result.start_timer();
                StrongInt i(42);
                StrongInt i42(42);
                StrongInt i41(41);
@@ -253,10 +278,12 @@ std::vector<Test::Result> test_integer_strong_type() {
                result.confirm("<", i < i43);
                result.confirm("<= 1", i <= i43);
                result.confirm("<= 2", i <= i42);
+               result.end_timer();
             }),
 
       CHECK("arithmetics with Strong<>",
             [](auto& result) {
+               result.start_timer();
                StrongInt i(42);
                StrongInt i2(2);
                StrongInt i4(4);
@@ -281,10 +308,12 @@ std::vector<Test::Result> test_integer_strong_type() {
                result.confirm("|=", (i |= i2) == 10);
                result.confirm("<<=", (i <<= i2) == 40);
                result.confirm(">>=", (i >>= i4) == 2);
+               result.end_timer();
             }),
 
       CHECK("arithmetics with POD",
             [](auto& result) {
+               result.start_timer();
                StrongIntWithPodArithmetics i(42);
                StrongIntWithPodArithmetics i2(2);
 
@@ -317,10 +346,12 @@ std::vector<Test::Result> test_integer_strong_type() {
                result.confirm("i |=", (i |= 2) == 10);
                result.confirm("i <<=", (i <<= 2) == 40);
                result.confirm("i >>=", (i >>= 4) == 2);
+               result.end_timer();
             }),
 
       CHECK("arithmetics with POD is still Strong<>",
             [](auto& result) {
+               result.start_timer();
                StrongIntWithPodArithmetics i(42);
                StrongIntWithPodArithmetics i2(2);
 
@@ -353,6 +384,7 @@ std::vector<Test::Result> test_integer_strong_type() {
                result.confirm("i |=", Botan::is_strong_type_v<decltype(i |= 2)>);
                result.confirm("i <<=", Botan::is_strong_type_v<decltype(i <<= 2)>);
                result.confirm("i >>=", Botan::is_strong_type_v<decltype(i >>= 4)>);
+               result.end_timer();
             }),
    };
 }
@@ -374,6 +406,7 @@ using Test_Bar = Botan::Strong<std::vector<uint8_t>, struct Test_Bar_>;
 
 Test::Result test_strong_span() {
    Test::Result result("StrongSpan<>");
+   result.start_timer();
 
    const Test_Foo foo(Botan::hex_decode("DEADBEEF"));
    result.test_is_eq("binds to StrongSpan<const Test_Foo>", test_strong_helper(foo), 1);
@@ -391,6 +424,7 @@ Test::Result test_strong_span() {
    result.confirm("strong span is not a contiguous strong type buffer",
                   !Botan::concepts::contiguous_strong_type<decltype(span)>);
 
+   result.end_timer();
    return result;
 }
 
@@ -403,6 +437,7 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
    return {
       CHECK("generically wrapping an object into a strong type",
             [&](Test::Result& result) {
+               result.start_timer();
                const std::string expl("explicit creation"s);
                std::string rval("rvalue-ref creation"s);
                auto stt_copy = Botan::wrap_strong_type<Strong_String>(expl);
@@ -424,10 +459,12 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
 
                result.test_eq("stt_implicit_ptr", *stt_implicit_ptr.get(), "implicit creation from ptr");
                result.test_eq("stt_rvalue_ptr", *stt_rvalue_ptr.get(), "rvalue creation from ptr");
+               result.end_timer();
             }),
 
       CHECK("generically wrapping a strong type from itself",
             [&](Test::Result& result) {
+               result.start_timer();
                const Strong_String stt("wrapped");
                Strong_String stt_rval("wrapped and moved");
 
@@ -444,10 +481,12 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
                auto stt_ptr_move = Botan::wrap_strong_type<Strong_Unique>(std::move(stt_ptr));
 
                result.test_eq("stt_ptr_move", *stt_ptr_move.get(), "wrapped ptr");
+               result.end_timer();
             }),
 
       CHECK("unwrapping a strong type wisely chooses return reference type",
             [&](Test::Result& result) {
+               result.start_timer();
                Strong_String stt("wrapped");
                const Strong_String stt_const("const wrapped");
 
@@ -483,11 +522,13 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
                result.confirm("wrapped_type on rvalue strong type",
                               std::same_as<Botan::strong_type_wrapped_type<decltype(Strong_String("wrapped rvalue"))>,
                                            std::remove_cvref_t<lvalue2>>);
+               result.end_timer();
             }),
 
       CHECK(
          "unwrapping a non-strong type does not alter return reference type",
          [](Test::Result& result) {
+            result.start_timer();
             std::string stt("wrapped");
             const std::string stt_const("const wrapped");
 
@@ -522,10 +563,12 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
             result.confirm("wrapped_type on rvalue non-strong type",
                            std::same_as<Botan::strong_type_wrapped_type<decltype(std::string("rvalue"))>,
                                         std::remove_cvref_t<lvalue2>>);
+            result.end_timer();
          }),
 
       CHECK("generically unwrapping an object from a strong type",
             [&](Test::Result& result) {
+               result.start_timer();
                Strong_String stt("wrapped lvalue");
                Strong_String stt_move("wrapped lvalue to be moved");
                const Strong_String const_stt("wrapped const lvalue");
@@ -551,10 +594,12 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
                result.test_eq("unwrapped_ptr", *unwrapped_ptr, "wrapped ptr");
                result.test_eq("unwrapped_ptr_move", *unwrapped_ptr_move, "wrapped ptr to be moved");
                result.test_eq("unwrapped_ptr_rvalue", *unwrapped_ptr_rvalue, "wrapped ptr rvalue");
+               result.end_timer();
             }),
 
       CHECK("generically unwrapping an object that isn't a strong type",
             [&](Test::Result& result) {
+               result.start_timer();
                std::string stt("wrapped lvalue");
                std::string stt_move("wrapped lvalue to be moved");
                const std::string const_stt("wrapped const lvalue");
@@ -580,6 +625,7 @@ std::vector<Test::Result> test_wrapping_unwrapping() {
                result.test_eq("unwrapped_ptr", *unwrapped_ptr, "wrapped ptr");
                result.test_eq("unwrapped_ptr_move", *unwrapped_ptr_move, "wrapped ptr to be moved");
                result.test_eq("unwrapped_ptr_rvalue", *unwrapped_ptr_rvalue, "wrapped ptr rvalue");
+               result.end_timer();
             }),
    };
 }

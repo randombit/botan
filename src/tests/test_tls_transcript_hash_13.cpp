@@ -60,24 +60,29 @@ std::vector<Test::Result> transcript_hash() {
    return {
       CHECK("trying to get 'previous' or 'current' with invalid state",
             [](Test::Result& result) {
+               result.start_timer();
                result.test_throws<Botan::Invalid_State>("previous throws invalid state exception",
                                                         [] { Transcript_Hash_State().previous(); });
 
                result.test_throws<Botan::Invalid_State>("current throws invalid state exception",
                                                         [] { Transcript_Hash_State().current(); });
+               result.end_timer();
             }),
 
       CHECK("update without an algorithm",
             [](Test::Result& result) {
+               result.start_timer();
                Transcript_Hash_State h;
                result.test_no_throw("update is successful", [&] { h.update(Botan::hex_decode("baadbeef")); });
                result.test_throws<Botan::Invalid_State>("previous throws invalid state exception",
                                                         [&] { h.previous(); });
                result.test_throws<Botan::Invalid_State>("current throws invalid state exception", [&] { h.current(); });
+               result.end_timer();
             }),
 
       CHECK("cannot change algorithm",
             [](Test::Result& result) {
+               result.start_timer();
                Transcript_Hash_State h;
                result.test_no_throw("initial set is successful", [&] { h.set_algorithm("SHA-256"); });
                result.test_no_throw("resetting is successful (NOOP)", [&] { h.set_algorithm("SHA-256"); });
@@ -88,10 +93,12 @@ std::vector<Test::Result> transcript_hash() {
                result.test_no_throw("resetting is successful (NOOP)", [&] { h2.set_algorithm("SHA-256"); });
                result.test_throws<Botan::Invalid_State>("set_algorithm throws invalid state exception",
                                                         [&] { h2.set_algorithm("SHA-384"); });
+               result.end_timer();
             }),
 
       CHECK("update and result retrieval (algorithm is set)",
             [&](Test::Result& result) {
+               result.start_timer();
                Transcript_Hash_State h("SHA-256");
 
                h.update(Botan::hex_decode("baadbeef"));
@@ -102,10 +109,12 @@ std::vector<Test::Result> transcript_hash() {
                h.update(Botan::hex_decode("600df00d"));
                result.test_eq("p = SHA-256(baadbeef)", h.previous(), sha256("baadbeef"));
                result.test_eq("c = SHA-256(deadbeef | goodfood)", h.current(), sha256("baadbeef600df00d"));
+               result.end_timer();
             }),
 
       CHECK("update and result retrieval (deferred algorithm specification)",
             [&](Test::Result& result) {
+               result.start_timer();
                Transcript_Hash_State h;
 
                h.update(Botan::hex_decode("baadbeef"));
@@ -114,10 +123,12 @@ std::vector<Test::Result> transcript_hash() {
                result.test_throws<Botan::Invalid_State>("previous throws invalid state exception",
                                                         [&] { h.previous(); });
                result.test_eq("c = SHA-256(baadbeef)", h.current(), sha256("baadbeef"));
+               result.end_timer();
             }),
 
       CHECK("update and result retrieval (deferred algorithm specification multiple updates)",
             [&](Test::Result& result) {
+               result.start_timer();
                Transcript_Hash_State h;
 
                h.update(Botan::hex_decode("baadbeef"));
@@ -125,10 +136,12 @@ std::vector<Test::Result> transcript_hash() {
                h.set_algorithm("SHA-256");
 
                result.test_eq("c = SHA-256(baadbeef | goodfood)", h.current(), sha256("baadbeef600df00d"));
+               result.end_timer();
             }),
 
       CHECK("C-style update interface",
             [&](Test::Result& result) {
+               result.start_timer();
                Transcript_Hash_State h;
 
                std::array<uint8_t, 2> baad{0xba, 0xad};
@@ -142,10 +155,12 @@ std::vector<Test::Result> transcript_hash() {
                h.update(food);
 
                result.test_eq("c = SHA-256(baadbeef | goodfood)", h.current(), sha256("baadbeef600df00d"));
+               result.end_timer();
             }),
 
       CHECK("cloning creates independent transcript_hash instances",
             [&](Test::Result& result) {
+               result.start_timer();
                Transcript_Hash_State h1("SHA-256");
 
                h1.update(std::array<uint8_t, 4>{0xba, 0xad, 0xbe, 0xef});
@@ -159,10 +174,12 @@ std::vector<Test::Result> transcript_hash() {
                result.test_eq(
                   "c1 = SHA-256(baadbeef | goodfood | cafedude)", h1.current(), sha256("baadbeef600df00dcafed00d"));
                result.test_eq("c2 = SHA-256(baadbeef | goodfood)", h2.current(), sha256("baadbeef600df00d"));
+               result.end_timer();
             }),
 
       CHECK("recreation after hello retry request",
             [&](Test::Result& result) {
+               result.start_timer();
                Transcript_Hash_State h1;
 
                h1.update(std::array<uint8_t, 4>{0xc0, 0xca, 0xc0, 0x1a} /* client hello 1 */);
@@ -174,10 +191,12 @@ std::vector<Test::Result> transcript_hash() {
                const std::string hash_of_client_hello = Botan::hex_encode(sha256("c0cac01a"));
                const std::string transcript = "fe000020" + hash_of_client_hello + "c001f00d";
                result.test_eq("transcript hash of hello retry request", h2.current(), sha256(transcript));
+               result.end_timer();
             }),
 
       CHECK("truncated transcript hash in client hellos with PSK",
             [&](Test::Result& result) {
+               result.start_timer();
                Transcript_Hash_State h1;
 
                const size_t truncation_mark = 477;
@@ -193,6 +212,7 @@ std::vector<Test::Result> transcript_hash() {
                // truncated hash is cleared as soon as new messages are read
                h1.update(std::array<uint8_t, 4>{0xc0, 0xca, 0xc0, 0x1a} /* server hello */);
                result.test_throws("truncated hash is cleared", [&] { h1.truncated(); });
+               result.end_timer();
             }),
    };
 }

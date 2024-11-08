@@ -24,6 +24,7 @@ std::vector<Test::Result> test_signature_scheme() {
 
    for(const auto& s : Botan::TLS::Signature_Scheme::all_available_schemes()) {
       results.push_back(CHECK(s.to_string().c_str(), [&](auto& result) {
+         result.start_timer();
          result.confirm("is_set handles all cases", s.is_set());
          result.confirm("is_available handles all cases", s.is_available());
 
@@ -35,11 +36,13 @@ std::vector<Test::Result> test_signature_scheme() {
          result.confirm("format handles all cases", s.format().has_value());
          result.confirm("algorithm_identifier handles all cases",
                         Botan::AlgorithmIdentifier() != s.key_algorithm_identifier());
+         result.end_timer();
       }));
    }
 
    Botan::TLS::Signature_Scheme bogus(0x1337);
    results.push_back(CHECK("bogus scheme", [&](auto& result) {
+      result.start_timer();
       result.confirm("is_set still works", bogus.is_set());
       result.confirm("is not available", !bogus.is_available());
 
@@ -51,6 +54,7 @@ std::vector<Test::Result> test_signature_scheme() {
       result.confirm("format deals with bogus schemes", !bogus.format().has_value());
       result.confirm("algorithm_identifier deals with bogus schemes",
                      Botan::AlgorithmIdentifier() == bogus.key_algorithm_identifier());
+      result.end_timer();
    }));
 
    return results;

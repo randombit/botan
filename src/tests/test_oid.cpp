@@ -47,14 +47,17 @@ Test::Result test_OID_to_string() {
    Botan::OID oid{1, 2, 1000, 1001, 1002000};
 
    Test::Result result("OID::to_string");
+   result.start_timer();
 
    result.test_eq("OID::to_string behaves as we expect", oid.to_string(), "1.2.1000.1001.1002000");
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_oid_registration() {
    Test::Result result("OID add");
+   result.start_timer();
 
    const std::string name = "botan-test-oid1";
    const Botan::OID oid("1.3.6.1.4.1.25258.1000.1");
@@ -67,11 +70,13 @@ Test::Result test_oid_registration() {
 
    result.test_eq("name of OID matches expected", oid.to_formatted_string(), name);
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_add_and_lookup() {
    Test::Result result("OID add with redundant entries");
+   result.start_timer();
 
    const std::string name = "botan-test-oid2";
    const std::string name2 = "botan-test-oid2.2";
@@ -107,6 +112,7 @@ Test::Result test_add_and_lookup() {
       result.test_success("Registration of second name to the same OID fails");
    }
 
+   result.end_timer();
    return result;
 }
 
@@ -144,6 +150,7 @@ class OID_Encoding_Tests : public Text_Based_Test {
          const auto expected_der = vars.get_req_bin("DER");
 
          Test::Result result("OID DER encode/decode");
+         result.start_timer();
 
          const Botan::OID oid(oid_str);
 
@@ -166,6 +173,7 @@ class OID_Encoding_Tests : public Text_Based_Test {
             result.test_failure("Decoding OID failed", e.what());
          }
 
+         result.end_timer();
          return result;
       }
 };
@@ -180,6 +188,7 @@ class OID_Invalid_Encoding_Tests : public Text_Based_Test {
          const auto test_der = vars.get_req_bin("DER");
 
          Test::Result result("OID DER decode invalid");
+         result.start_timer();
 
          try {
             Botan::BER_Decoder dec(test_der);
@@ -191,6 +200,7 @@ class OID_Invalid_Encoding_Tests : public Text_Based_Test {
             result.test_success("Rejected invalid OID with Decoding_Error");
          }
 
+         result.end_timer();
          return result;
       }
 };
