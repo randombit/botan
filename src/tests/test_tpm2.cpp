@@ -27,6 +27,14 @@
       #include <botan/ecdsa.h>
       #include <botan/tpm2_ecc.h>
    #endif
+
+   #if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
+      #include <botan/tpm2_crypto_backend.h>
+   #endif
+
+   // for testing externally-provided ESYS context
+   #include <tss2/tss2_esys.h>
+   #include <tss2/tss2_tctildr.h>
 #endif
 
 namespace Botan_Tests {
@@ -40,6 +48,10 @@ constexpr bool crypto_backend_should_be_available = true;
 constexpr bool crypto_backend_should_be_available = false;
    #endif
 
+bool validate_context_environment(const std::shared_ptr<Botan::TPM2::Context>& ctx) {
+   return (ctx->vendor() == "SW   TPM" && ctx->manufacturer() == "IBM");
+}
+
 std::shared_ptr<Botan::TPM2::Context> get_tpm2_context(std::string_view rng_tag) {
    const auto tcti_name = Test::options().tpm2_tcti_name();
    if(tcti_name.value() == "disabled") {
@@ -48,7 +60,7 @@ std::shared_ptr<Botan::TPM2::Context> get_tpm2_context(std::string_view rng_tag)
    }
 
    auto ctx = Botan::TPM2::Context::create(tcti_name, Test::options().tpm2_tcti_conf());
-   if(ctx->vendor() != "SW   TPM" || ctx->manufacturer() != "IBM") {
+   if(!validate_context_environment(ctx)) {
       return {};
    }
 
@@ -59,16 +71,94 @@ std::shared_ptr<Botan::TPM2::Context> get_tpm2_context(std::string_view rng_tag)
    return ctx;
 }
 
-Test::Result bail_out() {
-   Test::Result result("TPM2 test bail out");
+/// RAII helper to manage raw transient resources (ESYS_TR) handles
+class TR {
+   private:
+      ESYS_CONTEXT* m_esys_ctx;
+      ESYS_TR m_handle;
 
-   if(Test::options().tpm2_tcti_name() == "disabled") {
+   public:
+      TR(ESYS_CONTEXT* esys_ctx, ESYS_TR handle) : m_esys_ctx(esys_ctx), m_handle(handle) {}
+
+      TR(TR&& other) noexcept { *this = std::move(other); }
+
+      TR& operator=(TR&& other) noexcept {
+         if(this != &other) {
+            m_esys_ctx = other.m_esys_ctx;
+            m_handle = std::exchange(other.m_handle, ESYS_TR_NONE);
+         }
+         return *this;
+      }
+
+      TR(const TR&) = delete;
+      TR& operator=(const TR&) = delete;
+
+      ~TR() {
+         if(m_esys_ctx && m_handle != ESYS_TR_NONE) {
+            Esys_FlushContext(m_esys_ctx, m_handle);
+         }
+      }
+
+      constexpr operator ESYS_TR() const { return m_handle; }
+};
+
+struct esys_context_liberator {
+      void operator()(ESYS_CONTEXT* esys_ctx) {
+         TSS2_TCTI_CONTEXT* tcti_ctx = nullptr;
+         Esys_GetTcti(esys_ctx, &tcti_ctx);  // ignore error in destructor
+         if(tcti_ctx != nullptr) {
+            Tss2_TctiLdr_Finalize(&tcti_ctx);
+         }
+         Esys_Finalize(&esys_ctx);
+      }
+};
+
+auto get_external_tpm2_context() -> std::unique_ptr<ESYS_CONTEXT, esys_context_liberator> {
+   const auto tcti_name = Test::options().tpm2_tcti_name();
+   const auto tcti_conf = Test::options().tpm2_tcti_conf();
+   if(tcti_name.value() == "disabled") {
+      // skip the test if the special 'disabled' TCTI is configured
+      return nullptr;
+   }
+
+   TSS2_RC rc;
+   TSS2_TCTI_CONTEXT* tcti_ctx;
+   std::unique_ptr<ESYS_CONTEXT, esys_context_liberator> esys_ctx;
+
+   rc = Tss2_TctiLdr_Initialize_Ex(tcti_name->c_str(), tcti_conf->c_str(), &tcti_ctx);
+   if(rc != TSS2_RC_SUCCESS) {
+      throw Test_Error("failed to initialize external TCTI");
+   }
+
+   rc = Esys_Initialize(Botan::out_ptr(esys_ctx), tcti_ctx, nullptr /* ABI version */);
+   if(rc != TSS2_RC_SUCCESS) {
+      throw Test_Error("failed to initialize external ESYS");
+   }
+
+   // This TPM2::Context is created for environment validation only.
+   // It is transient, but the 'externally provided' ESYS_CONTEXT will live on!
+   auto ctx = Botan::TPM2::Context::create(esys_ctx.get());
+   if(!validate_context_environment(ctx)) {
+      return nullptr;
+   }
+
+   return esys_ctx;
+}
+
+void bail_out(Test::Result& result, std::optional<std::string> reason = {}) {
+   if(reason.has_value()) {
+      result.test_note(reason.value());
+   } else if(Test::options().tpm2_tcti_name() == "disabled") {
       result.test_note("TPM2 tests are disabled.");
-      return result;
    } else {
       result.test_failure("Not sure we're on a simulated TPM2, cautiously refusing any action.");
-      return result;
    }
+}
+
+Test::Result bail_out() {
+   Test::Result result("TPM2 test bail out");
+   bail_out(result);
+   return result;
 }
 
 bool not_zero_64(std::span<const uint8_t> in) {
@@ -174,6 +264,137 @@ std::vector<Test::Result> test_tpm2_context() {
             result.test_eq("Algo", srk->algo_name(), "RSA");
             result.test_eq("Key size", srk->key_length(), 2048);
             result.confirm("Has persistent handle", srk->handles().has_persistent_handle());
+         }),
+   #endif
+   };
+}
+
+std::vector<Test::Result> test_external_tpm2_context() {
+   auto raw_start_session = [](ESYS_CONTEXT* esys_ctx) -> std::pair<TR, TSS2_RC> {
+      const TPMT_SYM_DEF sym_spec{
+         .algorithm = TPM2_ALG_AES,
+         .keyBits = {.sym = 256},
+         .mode = {.sym = TPM2_ALG_CFB},
+      };
+      ESYS_TR session;
+
+      auto rc = Esys_StartAuthSession(esys_ctx,
+                                      ESYS_TR_NONE,
+                                      ESYS_TR_NONE,
+                                      ESYS_TR_NONE,
+                                      ESYS_TR_NONE,
+                                      ESYS_TR_NONE,
+                                      nullptr,
+                                      TPM2_SE_HMAC,
+                                      &sym_spec,
+                                      TPM2_ALG_SHA256,
+                                      &session);
+
+      if(rc == TSS2_RC_SUCCESS) {
+         const auto session_attributes = TPMA_SESSION_CONTINUESESSION | TPMA_SESSION_DECRYPT | TPMA_SESSION_ENCRYPT;
+         rc = Esys_TRSess_SetAttributes(esys_ctx, session, session_attributes, 0xFF);
+      }
+
+      return {TR{esys_ctx, session}, rc};
+   };
+
+   auto raw_get_random_bytes = [](ESYS_CONTEXT* esys_ctx, uint16_t bytes, ESYS_TR session = ESYS_TR_NONE) {
+      Botan::TPM2::unique_esys_ptr<TPM2B_DIGEST> random_bytes;
+      const auto rc =
+         Esys_GetRandom(esys_ctx, session, ESYS_TR_NONE, ESYS_TR_NONE, bytes, Botan::out_ptr(random_bytes));
+      return std::make_pair(std::move(random_bytes), rc);
+   };
+
+   return {
+      CHECK("ESYS context is still functional after TPM2::Context destruction",
+            [&](Test::Result& result) {
+               auto esys_ctx = get_external_tpm2_context();
+               if(!esys_ctx) {
+                  bail_out(result);
+                  return;
+               }
+
+               {
+                  // Do some TPM2-stuff via the Botan wrappers
+
+                  auto ctx = Botan::TPM2::Context::create(esys_ctx.get());
+                  auto session = Botan::TPM2::Session::unauthenticated_session(ctx);
+                  auto rng = Botan::TPM2::RandomNumberGenerator(ctx, session);
+
+                  auto bytes = rng.random_vec(16);
+                  result.test_eq("some random bytes generated", bytes.size(), 16);
+
+                  // All Botan-wrapped things go out of scope...
+               }
+
+               auto [raw_session, rc_session] = raw_start_session(esys_ctx.get());
+               Botan::TPM2::check_rc("session creation successful", rc_session);
+
+               auto [bytes, rc_random] = raw_get_random_bytes(esys_ctx.get(), 16, raw_session);
+               Botan::TPM2::check_rc("random byte generation successful", rc_random);
+               result.test_eq_sz("some raw random bytes generated", bytes->size, 16);
+            }),
+
+         CHECK("TPM2::Context-managed crypto backend fails gracefully after TPM2::Context destruction",
+               [&](Test::Result& result) {
+                  auto esys_ctx = get_external_tpm2_context();
+                  if(!esys_ctx) {
+                     bail_out(result);
+                     return;
+                  }
+
+                  {
+                     auto ctx = Botan::TPM2::Context::create(esys_ctx.get());
+                     if(!ctx->supports_botan_crypto_backend()) {
+                        bail_out(result, "skipping, because botan-based crypto backend is not supported");
+                        return;
+                     }
+
+                     ctx->use_botan_crypto_backend(Test::new_rng(__func__));
+                  }
+
+                  auto [session, session_rc1] = raw_start_session(esys_ctx.get());
+
+                  // After the destruction of the TPM2::Context in the anonymous
+                  // scope above the botan-based TSS crypto callbacks aren't able
+                  // to access the state that was managed by the TPM2::Context.
+                  result.require("expected error", session_rc1 == TSS2_ESYS_RC_BAD_REFERENCE);
+
+   #if defined(BOTAN_TSS2_SUPPORTS_CRYPTO_CALLBACKS)
+                  // Manually resetting the crypto callbacks (in retrospect) fixes this
+                  const auto callbacks_rc = Esys_SetCryptoCallbacks(esys_ctx.get(), nullptr);
+                  Botan::TPM2::check_rc("resetting crypto callbacks", callbacks_rc);
+
+                  auto [raw_session, session_rc2] = raw_start_session(esys_ctx.get());
+                  Botan::TPM2::check_rc("session creation successful", session_rc2);
+
+                  auto [bytes, rc_random] = raw_get_random_bytes(esys_ctx.get(), 16, raw_session);
+                  Botan::TPM2::check_rc("random byte generation successful", rc_random);
+                  result.test_eq_sz("some raw random bytes generated", bytes->size, 16);
+   #endif
+               }),
+
+   #if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
+         CHECK("free-standing crypto backend", [&](Test::Result& result) {
+            if(!Botan::TPM2::supports_botan_crypto_backend()) {
+               bail_out(result, "botan crypto backend is not supported");
+               return;
+            }
+
+            auto esys_ctx = get_external_tpm2_context();
+            if(!esys_ctx) {
+               bail_out(result);
+               return;
+            }
+
+            auto cb_state = Botan::TPM2::use_botan_crypto_backend(esys_ctx.get(), Test::new_rng(__func__));
+
+            auto [raw_session, session_rc2] = raw_start_session(esys_ctx.get());
+            Botan::TPM2::check_rc("session creation successful", session_rc2);
+
+            auto [bytes, rc_random] = raw_get_random_bytes(esys_ctx.get(), 16, raw_session);
+            Botan::TPM2::check_rc("random byte generation successful", rc_random);
+            result.test_eq_sz("some raw random bytes generated", bytes->size, 16);
          }),
    #endif
    };
@@ -1142,6 +1363,7 @@ std::vector<Test::Result> test_tpm2_hash() {
 
 BOTAN_REGISTER_TEST_FN("tpm2", "tpm2_props", test_tpm2_properties);
 BOTAN_REGISTER_TEST_FN("tpm2", "tpm2_ctx", test_tpm2_context);
+BOTAN_REGISTER_TEST_FN("tpm2", "tpm2_external_ctx", test_external_tpm2_context);
 BOTAN_REGISTER_TEST_FN("tpm2", "tpm2_sessions", test_tpm2_sessions);
 BOTAN_REGISTER_TEST_FN("tpm2", "tpm2_rng", test_tpm2_rng);
    #if defined(BOTAN_HAS_TPM2_RSA_ADAPTER)

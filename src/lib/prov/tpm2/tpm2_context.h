@@ -52,6 +52,19 @@ class BOTAN_PUBLIC_API(3, 6) Context final : public std::enable_shared_from_this
       static std::shared_ptr<Context> create(std::optional<std::string> tcti = {},
                                              std::optional<std::string> conf = {});
 
+      /**
+       * Create a TPM2::Context from an externally sourced TPM2-TSS ESYS
+       * Context. Note that the input contexts need to remain alive for the
+       * lifetime of the entire TPM2::Context! This allows to use Botan's TPM2
+       * functionality within an exising ESAPI application.
+       *
+       * Note that Botan won't finalize an externally provided ESYS context,
+       * this responsibility remains with the caller in this case.
+       *
+       * @param ctx  the already set up ESYS_CONTEXT*
+       */
+      static std::shared_ptr<Context> create(ESYS_CONTEXT* ctx);
+
       Context(const Context&) = delete;
       Context(Context&& ctx) noexcept = default;
       ~Context();
@@ -130,8 +143,7 @@ class BOTAN_PUBLIC_API(3, 6) Context final : public std::enable_shared_from_this
                                                          const SessionBundle& sessions);
 
    private:
-      Context(const char* tcti_nameconf);
-      Context(const char* tcti_name, const char* tcti_conf);
+      Context(ESYS_CONTEXT* ctx, bool external);
 
 #if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
       friend void enable_crypto_callbacks(const std::shared_ptr<Context>&);
