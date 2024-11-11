@@ -35,7 +35,7 @@ constexpr TPM2_HANDLE storage_root_key_handle = TPM2_HR_PERSISTENT + 1;
 }  // namespace
 
 struct Context::Impl {
-      ESYS_CONTEXT* m_ctx;  /// m_ctx is owned by the library user
+      ESYS_CONTEXT* m_ctx;  /// m_ctx may be owned by the library user (see m_external)
       bool m_external;
 
 #if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
@@ -46,6 +46,8 @@ struct Context::Impl {
 bool Context::supports_botan_crypto_backend() noexcept {
 #if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
    return Botan::TPM2::supports_botan_crypto_backend();
+#else
+   return false;
 #endif
 }
 
@@ -79,7 +81,7 @@ std::shared_ptr<Context> Context::create(std::optional<std::string> tcti, std::o
 }
 
 std::shared_ptr<Context> Context::create(ESYS_CONTEXT* esys_ctx) {
-   BOTAN_ASSERT_NONNULL(esys_ctx);
+   BOTAN_ARG_CHECK(esys_ctx != nullptr, "provided esys_ctx must not be null");
 
    // We cannot std::make_shared as the constructor is private
    return std::shared_ptr<Context>(new Context(esys_ctx, true /* context is managed externally */));

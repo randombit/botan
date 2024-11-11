@@ -13,10 +13,13 @@
 
 #if defined(BOTAN_HAS_TPM2)
    #include <botan/tpm2_context.h>
-   #include <botan/tpm2_crypto_backend.h>
    #include <botan/tpm2_key.h>
    #include <botan/tpm2_rng.h>
    #include <botan/tpm2_session.h>
+
+   #if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
+      #include <botan/tpm2_crypto_backend.h>
+   #endif
 #endif
 
 extern "C" {
@@ -39,7 +42,10 @@ struct botan_tpm2_session_wrapper {
 
 BOTAN_FFI_DECLARE_STRUCT(botan_tpm2_ctx_struct, botan_tpm2_ctx_wrapper, 0xD2B95E15);
 BOTAN_FFI_DECLARE_STRUCT(botan_tpm2_session_struct, botan_tpm2_session_wrapper, 0x9ACCAB52);
+
+   #if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
 BOTAN_FFI_DECLARE_STRUCT(botan_tpm2_crypto_backend_state_struct, Botan::TPM2::CryptoCallbackState, 0x1AC84DE5);
+   #endif
 
 }  // extern "C"
 

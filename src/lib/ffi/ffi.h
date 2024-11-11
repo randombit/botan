@@ -2345,6 +2345,9 @@ int botan_tpm2_enable_crypto_backend(botan_tpm2_crypto_backend_state_t* cbs_out,
 
 /**
 * Frees all resouces of a TPM2 Crypto Callback State
+* Note that this does not attempt to de-register the crypto backend,
+* it just frees the resource pointed to by @p cbs. Use the ESAPI function
+* ``Esys_SetCryptoCallbacks(ctx, nullptr)`` to deregister manually.
 * @param cbs TPM2 Crypto Callback State
 * @return 0 on success
 */
