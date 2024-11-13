@@ -63,33 +63,33 @@ BOTAN_REGISTER_TEST("pubkey", "ecc_basemul", ECC_Basepoint_Mul_Tests);
 
 class ECC_Varpoint_Mul_Tests final : public Text_Based_Test {
    public:
-      ECC_Varpoint_Mul_Tests() : Text_Based_Test("pubkey/ecc_var_point_mul.vec", "X,Y,k,kX,kY") {}
+      ECC_Varpoint_Mul_Tests() : Text_Based_Test("pubkey/ecc_var_point_mul.vec", "P,k,Z") {}
 
       Test::Result run_one_test(const std::string& group_id, const VarMap& vars) override {
          Test::Result result("ECC var point multiply " + group_id);
 
-         const Botan::BigInt X = vars.get_req_bn("X");
-         const Botan::BigInt Y = vars.get_req_bn("Y");
+         const auto p = vars.get_req_bin("P");
          const Botan::BigInt k = vars.get_req_bn("k");
-         const Botan::BigInt kX = vars.get_req_bn("kX");
-         const Botan::BigInt kY = vars.get_req_bn("kY");
+         const auto z = vars.get_req_bin("Z");
 
          const auto group = Botan::EC_Group::from_name(group_id);
 
-         const Botan::EC_Point pt = group.point(X, Y);
+         const Botan::EC_Point pt = group.OS2ECP(p);
 
          result.confirm("Input point is on the curve", pt.on_the_curve());
 
          const Botan::EC_Point p1 = pt * k;
-         result.test_eq("p1 affine X", p1.get_affine_x(), kX);
-         result.test_eq("p1 affine Y", p1.get_affine_y(), kY);
+         result.test_eq("p * k", p1.encode(Botan::EC_Point::Compressed), z);
 
          result.confirm("Output point is on the curve", p1.on_the_curve());
 
          std::vector<Botan::BigInt> ws;
          const Botan::EC_Point p2 = group.blinded_var_point_multiply(pt, k, this->rng(), ws);
-         result.test_eq("p2 affine X", p2.get_affine_x(), kX);
-         result.test_eq("p2 affine Y", p2.get_affine_y(), kY);
+         result.test_eq("p * k (blinded)", p2.encode(Botan::EC_Point::Compressed), z);
+
+         const auto apt = Botan::EC_AffinePoint::deserialize(group, p).value();
+         const auto apt_k = apt.mul(Botan::EC_Scalar::from_bigint(group, k), this->rng(), ws);
+         result.test_eq("p * k (AffinePoint)", apt_k.serialize_compressed(), z);
 
          return result;
       }
