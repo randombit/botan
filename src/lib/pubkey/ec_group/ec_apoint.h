@@ -76,6 +76,15 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
       /// Workspace argument is transitional
       EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const;
 
+      /// Compute 2-ary multiscalar multiplication - p*x + q*y
+      ///
+      /// This operation runs in constant time with respect to p, x, q, and y
+      static EC_AffinePoint mul_px_qy(const EC_AffinePoint& p,
+                                      const EC_Scalar& x,
+                                      const EC_AffinePoint& q,
+                                      const EC_Scalar& y,
+                                      RandomNumberGenerator& rng);
+
       /// Return the number of bytes of a field element
       ///
       /// A point consists of two field elements, plus possibly a header
