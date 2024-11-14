@@ -265,7 +265,7 @@ Only curves over prime fields are supported.
                                              std::span<const uint8_t> input, \
                                              std::span<const uint8_t> domain_sep)
 
-      Has to curve (RFC 9380), random oracle variant.
+      Hash to curve (RFC 9380), random oracle variant.
 
       This is currently only supported for a few curves.
 
@@ -274,7 +274,7 @@ Only curves over prime fields are supported.
                                              std::span<const uint8_t> input, \
                                              std::span<const uint8_t> domain_sep)
 
-      Has to curve (RFC 9380), non-uniform variant.
+      Hash to curve (RFC 9380), non-uniform variant.
 
       This is currently only supported for a few curves.
 
