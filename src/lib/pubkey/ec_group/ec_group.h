@@ -341,26 +341,31 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       /**
       * Return the cofactor
       * @result the cofactor
+      * TODO(Botan4): Remove this
       */
       const BigInt& get_cofactor() const;
 
       /**
       * Return true if the cofactor is > 1
+      * TODO(Botan4): Remove this
       */
       bool has_cofactor() const;
 
       /*
       * For internal use only
+      * TODO(Botan4): Add underscore prefix
       */
       static std::shared_ptr<EC_Group_Data> EC_group_info(const OID& oid);
 
       /*
       * For internal use only
+      * TODO(Botan4): Add underscore prefix
       */
       static size_t clear_registered_curve_data();
 
       /*
       * For internal use only
+      * TODO(Botan4): Add underscore prefix
       */
       static OID EC_group_identity_from_order(const BigInt& order);
 

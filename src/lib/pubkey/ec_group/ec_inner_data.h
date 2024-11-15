@@ -12,6 +12,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/bigint.h>
 #include <botan/reducer.h>
+#include <botan/internal/monty.h>
 #include <botan/internal/stl_util.h>
 #include <memory>
 #include <span>
@@ -113,15 +114,15 @@ class EC_Mul2Table_Data {
 
 class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
    public:
-      EC_Group_Data(const BigInt& p,
-                    const BigInt& a,
-                    const BigInt& b,
-                    const BigInt& g_x,
-                    const BigInt& g_y,
-                    const BigInt& order,
-                    const BigInt& cofactor,
-                    const OID& oid,
-                    EC_Group_Source source);
+      static std::shared_ptr<EC_Group_Data> create(const BigInt& p,
+                                                   const BigInt& a,
+                                                   const BigInt& b,
+                                                   const BigInt& g_x,
+                                                   const BigInt& g_y,
+                                                   const BigInt& order,
+                                                   const BigInt& cofactor,
+                                                   const OID& oid,
+                                                   EC_Group_Source source);
 
       ~EC_Group_Data();
 
@@ -141,15 +142,21 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
 
       const std::vector<uint8_t>& der_named_curve() const { return m_der_named_curve; }
 
-      const BigInt& p() const { return m_curve.get_p(); }
+      const BigInt& p() const { return m_p; }
 
-      const BigInt& a() const { return m_curve.get_a(); }
+      const BigInt& a() const { return m_a; }
 
-      const BigInt& b() const { return m_curve.get_b(); }
+      const BigInt& b() const { return m_b; }
 
       const BigInt& order() const { return m_order; }
 
       const BigInt& cofactor() const { return m_cofactor; }
+
+      const Montgomery_Params& monty() const { return m_monty; }
+
+      const BigInt& monty_a() const { return m_a_r; }
+
+      const BigInt& monty_b() const { return m_b_r; }
 
       bool order_is_less_than_p() const { return m_order_is_less_than_p; }
 
@@ -158,6 +165,8 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       const BigInt& g_x() const { return m_g_x; }
 
       const BigInt& g_y() const { return m_g_y; }
+
+      size_t p_words() const { return m_p_words; }
 
       size_t p_bits() const { return m_p_bits; }
 
@@ -259,6 +268,21 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
          return *m_pcurve;
       }
 
+      /**
+      * Note this constructor should *only* be called by EC_Group_Data::create.
+      *
+      * It is only public to allow use of std::make_shared
+      */
+      EC_Group_Data(const BigInt& p,
+                    const BigInt& a,
+                    const BigInt& b,
+                    const BigInt& g_x,
+                    const BigInt& g_y,
+                    const BigInt& order,
+                    const BigInt& cofactor,
+                    const OID& oid,
+                    EC_Group_Source source);
+
    private:
       // Possibly nullptr (if pcurves not available or not a standard curve)
       std::shared_ptr<const PCurve::PrimeOrderCurve> m_pcurve;
@@ -266,16 +290,27 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       // Set only if m_pcurve is nullptr
       std::unique_ptr<EC_Point_Base_Point_Precompute> m_base_mult;
 
-      CurveGFp m_curve;
-      EC_Point m_base_point;
-
+      BigInt m_p;
+      BigInt m_a;
+      BigInt m_b;
       BigInt m_g_x;
       BigInt m_g_y;
       BigInt m_order;
       BigInt m_cofactor;
+
+      CurveGFp m_curve;
+      EC_Point m_base_point;
+
+      // Montgomery parameters (only used for legacy EC_Point)
+      Montgomery_Params m_monty;
+
+      BigInt m_a_r;  // (a*r) % p
+      BigInt m_b_r;  // (b*r) % p
+
       Modular_Reducer m_mod_order;
       OID m_oid;
       std::vector<uint8_t> m_der_named_curve;
+      size_t m_p_words;
       size_t m_p_bits;
       size_t m_order_bits;
       size_t m_order_bytes;
