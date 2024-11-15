@@ -323,6 +323,17 @@ class BOTAN_TEST_API PrimeOrderCurve {
                                                           const Scalar& s1,
                                                           const Scalar& s2) const = 0;
 
+      /// Perform 2-ary multiplication (constant time)
+      ///
+      /// Compute p*x + q*y
+      ///
+      /// Returns nullopt if the produced point is the point at infinity
+      virtual std::optional<ProjectivePoint> mul_px_qy(const AffinePoint& p,
+                                                       const Scalar& x,
+                                                       const AffinePoint& q,
+                                                       const Scalar& y,
+                                                       RandomNumberGenerator& rng) const = 0;
+
       /// Perform 2-ary multiplication (variable time), reducing x modulo order
       ///
       /// Compute s1*pt1 + s2*pt2 in variable time, then extract the x

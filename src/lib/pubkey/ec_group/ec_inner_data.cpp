@@ -262,6 +262,47 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_g_mul(const EC_Scalar_
    }
 }
 
+std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::mul_px_qy(const EC_AffinePoint_Data& p,
+                                                              const EC_Scalar_Data& x,
+                                                              const EC_AffinePoint_Data& q,
+                                                              const EC_Scalar_Data& y,
+                                                              RandomNumberGenerator& rng) const {
+   if(m_pcurve) {
+      auto pt = m_pcurve->mul_px_qy(EC_AffinePoint_Data_PC::checked_ref(p).value(),
+                                    EC_Scalar_Data_PC::checked_ref(x).value(),
+                                    EC_AffinePoint_Data_PC::checked_ref(q).value(),
+                                    EC_Scalar_Data_PC::checked_ref(y).value(),
+                                    rng);
+
+      if(pt) {
+         return std::make_unique<EC_AffinePoint_Data_PC>(shared_from_this(), pt->to_affine());
+      } else {
+         return nullptr;
+      }
+   } else {
+      std::vector<BigInt> ws;
+      const auto& group = p.group();
+
+      // TODO this could be better!
+      EC_Point_Var_Point_Precompute p_mul(p.to_legacy_point(), rng, ws);
+      EC_Point_Var_Point_Precompute q_mul(q.to_legacy_point(), rng, ws);
+
+      const auto order = group->order() * group->cofactor();  // See #3800
+
+      auto px = p_mul.mul(EC_Scalar_Data_BN::checked_ref(x).value(), rng, order, ws);
+      auto qy = q_mul.mul(EC_Scalar_Data_BN::checked_ref(y).value(), rng, order, ws);
+
+      auto px_qy = px + qy;
+      px_qy.force_affine();
+
+      if(!px_qy.is_zero()) {
+         return std::make_unique<EC_AffinePoint_Data_BN>(shared_from_this(), std::move(px_qy));
+      } else {
+         return nullptr;
+      }
+   }
+}
+
 std::unique_ptr<EC_Mul2Table_Data> EC_Group_Data::make_mul2_table(const EC_AffinePoint_Data& h) const {
    if(m_pcurve) {
       EC_AffinePoint_Data_PC g(shared_from_this(), m_pcurve->generator());

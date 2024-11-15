@@ -72,6 +72,20 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          }
       }
 
+      std::optional<ProjectivePoint> mul_px_qy(const AffinePoint& p,
+                                               const Scalar& x,
+                                               const AffinePoint& q,
+                                               const Scalar& y,
+                                               RandomNumberGenerator& rng) const override {
+         WindowedMul2Table<C, 2> tbl(from_stash(p), from_stash(q));
+         auto pt = tbl.mul2(from_stash(x), from_stash(y), rng);
+         if(pt.is_identity().as_bool()) {
+            return {};
+         } else {
+            return stash(pt);
+         }
+      }
+
       bool mul2_vartime_x_mod_order_eq(const PrecomputedMul2Table& tableb,
                                        const Scalar& v,
                                        const Scalar& s1,

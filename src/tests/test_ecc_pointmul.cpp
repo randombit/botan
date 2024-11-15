@@ -97,6 +97,32 @@ class ECC_Varpoint_Mul_Tests final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("pubkey", "ecc_varmul", ECC_Varpoint_Mul_Tests);
 
+class ECC_Mul2_Tests final : public Text_Based_Test {
+   public:
+      ECC_Mul2_Tests() : Text_Based_Test("pubkey/ecc_var_point_mul2.vec", "P,x,Q,y,Z") {}
+
+      Test::Result run_one_test(const std::string& group_id, const VarMap& vars) override {
+         Test::Result result("ECC mul2 " + group_id);
+
+         const auto Z_bytes = vars.get_req_bin("Z");
+
+         const auto group = Botan::EC_Group::from_name(group_id);
+
+         const auto p = Botan::EC_AffinePoint::deserialize(group, vars.get_req_bin("P")).value();
+         const auto q = Botan::EC_AffinePoint::deserialize(group, vars.get_req_bin("Q")).value();
+         const auto x = Botan::EC_Scalar::from_bigint(group, vars.get_req_bn("x"));
+         const auto y = Botan::EC_Scalar::from_bigint(group, vars.get_req_bn("y"));
+
+         const auto z1 = Botan::EC_AffinePoint::mul_px_qy(p, x, q, y, rng());
+
+         result.test_eq("EC_AffinePoint::mul_px_qy", z1.serialize_compressed(), Z_bytes);
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "ecc_mul2", ECC_Mul2_Tests);
+
 #endif
 
 }  // namespace

@@ -1441,8 +1441,6 @@ class WindowedMul2Table final {
 
       static constexpr size_t WindowBits = W;
 
-      static constexpr size_t Windows = (Scalar::BITS + WindowBits - 1) / WindowBits;
-
       static constexpr size_t WindowSize = (1 << WindowBits);
 
       // 2^(2*W) elements, less the identity element
@@ -1495,20 +1493,49 @@ class WindowedMul2Table final {
       }
 
       /**
+      * Constant time 2-ary multiplication
+      */
+      ProjectivePoint mul2(const Scalar& s1, const Scalar& s2, RandomNumberGenerator& rng) const {
+         using BlindedScalar = BlindedScalarBits<C, WindowBits>;
+
+         BlindedScalar bits1(s1, rng);
+         BlindedScalar bits2(s2, rng);
+
+         constexpr size_t Windows = (BlindedScalar::Bits + WindowBits - 1) / WindowBits;
+
+         auto accum = ProjectivePoint::identity();
+
+         for(size_t i = 0; i != Windows; ++i) {
+            if(i > 0) {
+               accum = accum.dbl_n(WindowBits);
+            }
+
+            const size_t w_1 = bits1.get_window((Windows - i - 1) * WindowBits);
+            const size_t w_2 = bits2.get_window((Windows - i - 1) * WindowBits);
+            const size_t window = w_1 + (w_2 << WindowBits);
+            accum += AffinePoint::ct_select(m_table, window);
+
+            if(i <= 3) {
+               accum.randomize_rep(rng);
+            }
+         }
+
+         return accum;
+      }
+
+      /**
       * Variable time 2-ary multiplication
       *
       * A common use of 2-ary multiplication is when verifying the commitments
       * of an elliptic curve signature. Since in this case the inputs are all
       * public, there is no problem with variable time computation.
       *
-      * It may be useful to offer a constant time (+blinded) variant of this in
-      * the future for handling secret inputs, for example when computing
-      * Pedersen commitments
-      *
       * TODO for variable time computation we could make use of a wNAF
       * representation instead
       */
       ProjectivePoint mul2_vartime(const Scalar& s1, const Scalar& s2) const {
+         constexpr size_t Windows = (Scalar::BITS + WindowBits - 1) / WindowBits;
+
          const UnblindedScalarBits<C, W> bits1(s1);
          const UnblindedScalarBits<C, W> bits2(s2);
 

@@ -246,6 +246,12 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
                                                        RandomNumberGenerator& rng,
                                                        std::vector<BigInt>& ws) const;
 
+      std::unique_ptr<EC_AffinePoint_Data> mul_px_qy(const EC_AffinePoint_Data& p,
+                                                     const EC_Scalar_Data& x,
+                                                     const EC_AffinePoint_Data& q,
+                                                     const EC_Scalar_Data& y,
+                                                     RandomNumberGenerator& rng) const;
+
       std::unique_ptr<EC_Mul2Table_Data> make_mul2_table(const EC_AffinePoint_Data& pt) const;
 
       const PCurve::PrimeOrderCurve& pcurve() const {
