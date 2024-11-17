@@ -18,18 +18,6 @@ void expand_message_xmd(HashFunction& hash,
                         std::span<uint8_t> output,
                         std::span<const uint8_t> input,
                         std::span<const uint8_t> domain_sep) {
-   if(domain_sep.size() > 0xFF) {
-      // RFC 9380 has a specification for handling this
-      throw Not_Implemented("XMD does not currently implement oversize DST handling");
-   }
-
-   if(domain_sep.empty()) {
-      // RFC 9380 Section 3.1: "Tags MUST have nonzero length."
-      throw Invalid_Argument("expand_message_xmd requires a non-empty domain separation tag");
-   }
-
-   const uint8_t domain_sep_len = static_cast<uint8_t>(domain_sep.size());
-
    const size_t block_size = hash.hash_block_size();
    if(block_size == 0) {
       throw Invalid_Argument(fmt("expand_message_xmd cannot be used with {}", hash.name()));
@@ -38,13 +26,37 @@ void expand_message_xmd(HashFunction& hash,
    const size_t hash_output_size = hash.output_length();
 
    // RFC 9380 Section 5.3.1: "For correctness, H requires b <= s."
-   if(hash_output_size > block_size) {
+   if(hash_output_size > block_size || hash_output_size == 0 || hash_output_size >= 256) {
       throw Invalid_Argument(fmt("expand_message_xmd cannot be used with {}", hash.name()));
    }
 
    if(output.size() > 255 * hash_output_size || output.size() > 0xFFFF) {
       throw Invalid_Argument("expand_message_xmd requested output length too long");
    }
+
+   std::vector<uint8_t> hashed_domain_sep;
+   if(domain_sep.size() > 0xFF) {
+      /* RFC 9380 section 5.3.3: "If applications require a domain
+       * separation tag longer than 255 bytes, e.g., because of
+       * requirements imposed by an invoking protocol, implementors MUST
+       * compute a short domain separation tag by hashing, as follows:
+       *
+       * For expand_message_xmd using hash function H, DST is computed as
+       *
+       *    DST = H("H2C-OVERSIZE-DST-" || a_very_long_DST)"
+       */
+      hash.update("H2C-OVERSIZE-DST-");
+      hash.update(domain_sep);
+      hashed_domain_sep = hash.final_stdvec();
+      domain_sep = hashed_domain_sep;
+   }
+
+   if(domain_sep.empty()) {
+      // RFC 9380 Section 3.1: "Tags MUST have nonzero length."
+      throw Invalid_Argument("expand_message_xmd requires a non-empty domain separation tag");
+   }
+
+   const uint8_t domain_sep_len = static_cast<uint8_t>(domain_sep.size());
 
    // Compute b_0 = H(msg_prime) = H(Z_pad || msg || l_i_b_str || 0x00 || DST_prime)
 
