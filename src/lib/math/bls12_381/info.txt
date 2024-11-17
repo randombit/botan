@@ -1,0 +1,11 @@
+<defines>
+BLS12_381 -> 20241115
+</defines>
+
+<module_info>
+name -> "BLS12-381"
+</module_info>
+
+<header:public>
+bls12_381.h
+</header:public>

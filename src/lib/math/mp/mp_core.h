@@ -14,6 +14,7 @@
 #include <botan/mem_ops.h>
 #include <botan/types.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/loadstor.h>
 #include <botan/internal/mp_asmi.h>
 #include <algorithm>
 #include <array>
@@ -1143,6 +1144,59 @@ constexpr std::array<W, N> redc_crandall(std::span<const W, 2 * N> z) {
    bigint_monty_maybe_sub<N, W>(r.data(), carry, hi.data(), P.data());
 
    return r;
+}
+
+template <WordType W, size_t N, size_t L>
+inline constexpr auto bytes_to_words(std::span<const uint8_t, L> bytes) {
+   static_assert(L <= WordInfo<W>::bytes * N);
+
+   std::array<W, N> r = {};
+
+   constexpr size_t full_words = L / WordInfo<W>::bytes;
+   constexpr size_t extra_bytes = L % WordInfo<W>::bytes;
+
+   static_assert(full_words + (extra_bytes ? 1 : 0) <= N);
+
+   for(size_t i = 0; i != full_words; ++i) {
+      r[i] = load_be<W>(bytes.data(), full_words - 1 - i);
+   }
+
+   if constexpr(extra_bytes > 0) {
+      constexpr size_t shift = extra_bytes * 8;
+      shift_left<shift>(r);
+
+      for(size_t i = 0; i != extra_bytes; ++i) {
+         const W b0 = bytes[WordInfo<W>::bytes * full_words + i];
+         r[0] |= (b0 << (8 * (extra_bytes - 1 - i)));
+      }
+   }
+
+   return r;
+}
+
+// Extract a WindowBits sized window out of s, depending on offset.
+template <size_t WindowBits, typename W, size_t N>
+constexpr size_t read_window_bits(std::span<const W, N> words, size_t offset) {
+   static_assert(WindowBits >= 1 && WindowBits <= 7);
+
+   const uint8_t WindowMask = static_cast<uint8_t>(1 << WindowBits) - 1;
+
+   const size_t W_bits = sizeof(W) * 8;
+   const auto bit_shift = offset % W_bits;
+   const auto word_offset = words.size() - 1 - (offset / W_bits);
+
+   const bool single_byte_window = bit_shift <= (W_bits - WindowBits) || word_offset == 0;
+
+   const auto w0 = words[word_offset];
+
+   if(single_byte_window) {
+      return (w0 >> bit_shift) & WindowMask;
+   } else {
+      // Otherwise we must join two words and extract the result
+      const auto w1 = words[word_offset - 1];
+      const auto combined = ((w0 >> bit_shift) | (w1 << (W_bits - bit_shift)));
+      return combined & WindowMask;
+   }
 }
 
 }  // namespace Botan

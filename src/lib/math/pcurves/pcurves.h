@@ -51,6 +51,8 @@ class BOTAN_TEST_API PrimeOrderCurve {
 
       static std::shared_ptr<const PrimeOrderCurve> from_id(PrimeOrderCurveId id);
 
+      static std::shared_ptr<const PrimeOrderCurve> from_params();
+
       typedef std::array<word, StorageWords> StorageUnit;
       typedef std::shared_ptr<const PrimeOrderCurve> CurvePtr;
 

@@ -297,8 +297,7 @@ class Test {
 
             void test_note(const std::string& note, const char* extra = nullptr);
 
-            template <typename Alloc>
-            void test_note(const std::string& who, const std::vector<uint8_t, Alloc>& vec) {
+            void test_note(const std::string& who, std::span<const uint8_t> vec) {
                const std::string hex = Botan::hex_encode(vec);
                return test_note(who, hex.c_str());
             }
@@ -313,8 +312,7 @@ class Test {
 
             void test_failure(const std::string& what, const uint8_t buf[], size_t buf_len);
 
-            template <typename Alloc>
-            void test_failure(const std::string& what, const std::vector<uint8_t, Alloc>& buf) {
+            void test_failure(const std::string& what, std::span<const uint8_t> buf) {
                test_failure(what, buf.data(), buf.size());
             }
 
@@ -460,34 +458,30 @@ class Test {
                          const uint8_t expected[],
                          size_t expected_len);
 
-            template <typename Alloc1, typename Alloc2>
             bool test_eq(const std::string& what,
-                         const std::vector<uint8_t, Alloc1>& produced,
-                         const std::vector<uint8_t, Alloc2>& expected) {
+                         std::span<const uint8_t> produced,
+                         std::span<const uint8_t> expected) {
                return test_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
             }
 
-            template <typename Alloc1, typename Alloc2>
             bool test_eq(const std::string& producer,
                          const std::string& what,
-                         const std::vector<uint8_t, Alloc1>& produced,
-                         const std::vector<uint8_t, Alloc2>& expected) {
+                         std::span<const uint8_t> produced,
+                         std::span<const uint8_t> expected) {
                return test_eq(
                   producer.c_str(), what, produced.data(), produced.size(), expected.data(), expected.size());
             }
 
-            template <typename Alloc>
             bool test_eq(const std::string& what,
-                         const std::vector<uint8_t, Alloc>& produced,
+                         std::span<const uint8_t> produced,
                          const char* expected_hex) {
                const std::vector<uint8_t> expected = Botan::hex_decode(expected_hex);
                return test_eq(nullptr, what, produced.data(), produced.size(), expected.data(), expected.size());
             }
 
-            template <typename Alloc1, typename Alloc2>
             bool test_ne(const std::string& what,
-                         const std::vector<uint8_t, Alloc1>& produced,
-                         const std::vector<uint8_t, Alloc2>& expected) {
+                         std::span<const uint8_t> produced,
+                         std::span<const uint8_t> expected) {
                return test_ne(what, produced.data(), produced.size(), expected.data(), expected.size());
             }
 
