@@ -75,12 +75,29 @@ class BOTAN_PUBLIC_API(2, 0) ECGDSA_PrivateKey final : public ECGDSA_PublicKey,
             EC_PrivateKey(alg_id, key_bits, true) {}
 
       /**
+      * Create a private key from a given secret @p x
+      * @param domain curve parameters to bu used for this key
+      * @param x      the private key
+      */
+      ECGDSA_PrivateKey(const EC_Group& domain, const BigInt& x) :
+            EC_PrivateKey(domain, EC_Scalar::from_bigint(domain, x), true) {}
+
+      /**
+      * Create a new private key
+      * @param rng a random number generator
+      * @param domain parameters to used for this key
+      */
+      ECGDSA_PrivateKey(RandomNumberGenerator& rng, EC_Group domain) :
+            EC_PrivateKey(rng, std::move(domain), BigInt::zero(), true) {}
+
+      /**
       * Generate a new private key.
       * @param rng a random number generator
       * @param domain parameters to used for this key
       * @param x the private key (if zero, generate a new random key)
       */
-      ECGDSA_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x = BigInt::zero()) :
+      BOTAN_DEPRECATED("Use one of the other constructors")
+      ECGDSA_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x) :
             EC_PrivateKey(rng, domain, x, true) {}
 
       std::unique_ptr<Public_Key> public_key() const override;

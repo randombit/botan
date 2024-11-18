@@ -77,12 +77,27 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PrivateKey final : public SM2_PublicKey,
       SM2_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits);
 
       /**
+      * Create a private key from a given secret @p x
+      * @param domain curve parameters to bu used for this key
+      * @param x      the private key
+      */
+      SM2_PrivateKey(const EC_Group& domain, const BigInt& x);
+
+      /**
+      * Create a new private key
+      * @param rng a random number generator
+      * @param domain parameters to used for this key
+      */
+      SM2_PrivateKey(RandomNumberGenerator& rng, EC_Group domain);
+
+      /**
       * Create a private key.
       * @param rng a random number generator
       * @param domain parameters to used for this key
       * @param x the private key (if zero, generate a new random key)
       */
-      SM2_PrivateKey(RandomNumberGenerator& rng, EC_Group domain, const BigInt& x = BigInt::zero());
+      BOTAN_DEPRECATED("Use one of the other constructors")
+      SM2_PrivateKey(RandomNumberGenerator& rng, EC_Group domain, const BigInt& x);
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;
 
