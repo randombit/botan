@@ -173,6 +173,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_PrivateKey : public virtual EC_PublicKey,
       * the base point with the modular inverse of
       * x (as in ECGDSA and ECKCDSA), otherwise by
       * multiplying directly with x (as in ECDSA).
+      *
+      * TODO: Remove, once the respective deprecated constructors of the
+      *       concrete ECC algorithms is removed.
       */
       EC_PrivateKey(RandomNumberGenerator& rng, EC_Group domain, const BigInt& x, bool with_modular_inverse = false);
 
@@ -184,6 +187,15 @@ class BOTAN_PUBLIC_API(2, 0) EC_PrivateKey : public virtual EC_PublicKey,
       * and ECKCDSA), otherwise by multiplying directly with x (as in ECDSA).
       */
       EC_PrivateKey(RandomNumberGenerator& rng, EC_Group group, bool with_modular_inverse = false);
+
+      /**
+      * Load a EC private key from the secret scalar
+      *
+      * If @p with_modular_inverse is set, the public key will be calculated by
+      * multiplying the base point with the modular inverse of x (as in ECGDSA
+      * and ECKCDSA), otherwise by multiplying directly with x (as in ECDSA).
+      */
+      EC_PrivateKey(EC_Group group, const BigInt& scalar, bool with_modular_inverse = false);
 
       /**
       * Load a EC private key from the secret scalar

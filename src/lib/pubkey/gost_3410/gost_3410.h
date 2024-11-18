@@ -83,12 +83,27 @@ class BOTAN_PUBLIC_API(2, 0) GOST_3410_PrivateKey final : public GOST_3410_Publi
             EC_PrivateKey(alg_id, key_bits) {}
 
       /**
+      * Create a private key from a given secret @p x
+      * @param domain curve parameters to bu used for this key
+      * @param x      the private key
+      */
+      GOST_3410_PrivateKey(const EC_Group& domain, const BigInt& x);
+
+      /**
+      * Create a new private key
+      * @param rng a random number generator
+      * @param domain parameters to used for this key
+      */
+      GOST_3410_PrivateKey(RandomNumberGenerator& rng, EC_Group domain);
+
+      /**
       * Generate a new private key
       * @param rng a random number generator
       * @param domain parameters to used for this key
       * @param x the private key; if zero, a new random key is generated
       */
-      GOST_3410_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x = BigInt::zero());
+      BOTAN_DEPRECATED("Use one of the other constructors")
+      GOST_3410_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x);
 
       std::unique_ptr<Public_Key> public_key() const override;
 
