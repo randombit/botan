@@ -82,8 +82,7 @@ class BOTAN_PUBLIC_API(2, 0) ECDH_PrivateKey final : public ECDH_PublicKey,
       * @param domain curve parameters to bu used for this key
       * @param x      the private key
       */
-      ECDH_PrivateKey(const EC_Group& domain, const BigInt& x) :
-            EC_PrivateKey(domain, EC_Scalar::from_bigint(domain, x)) {}
+      ECDH_PrivateKey(EC_Group domain, const BigInt& x) : EC_PrivateKey(std::move(domain), x) {}
 
       /**
       * Create a new private key

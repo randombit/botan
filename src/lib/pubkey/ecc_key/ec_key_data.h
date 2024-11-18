@@ -39,8 +39,6 @@ class EC_PublicKey_Data final {
 
 class EC_PrivateKey_Data final {
    public:
-      EC_PrivateKey_Data(EC_Group group, RandomNumberGenerator& rng);
-
       EC_PrivateKey_Data(EC_Group group, const BigInt& x);
 
       EC_PrivateKey_Data(EC_Group group, EC_Scalar x);

@@ -81,7 +81,7 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PrivateKey final : public SM2_PublicKey,
       * @param domain curve parameters to bu used for this key
       * @param x      the private key
       */
-      SM2_PrivateKey(const EC_Group& domain, const BigInt& x);
+      SM2_PrivateKey(EC_Group domain, const BigInt& x);
 
       /**
       * Create a new private key

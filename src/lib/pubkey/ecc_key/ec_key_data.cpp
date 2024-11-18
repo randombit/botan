@@ -13,9 +13,6 @@ namespace Botan {
 EC_PublicKey_Data::EC_PublicKey_Data(EC_Group group, std::span<const uint8_t> bytes) :
       m_group(std::move(group)), m_point(m_group, bytes), m_legacy_point(m_point.to_legacy_point()) {}
 
-EC_PrivateKey_Data::EC_PrivateKey_Data(EC_Group group, RandomNumberGenerator& rng) :
-      m_group(std::move(group)), m_scalar(EC_Scalar::random(m_group, rng)), m_legacy_x(m_scalar.to_bigint()) {}
-
 EC_PrivateKey_Data::EC_PrivateKey_Data(EC_Group group, const BigInt& x) :
       m_group(std::move(group)), m_scalar(EC_Scalar::from_bigint(m_group, x)), m_legacy_x(m_scalar.to_bigint()) {}
 
