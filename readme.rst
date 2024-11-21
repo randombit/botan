@@ -103,7 +103,7 @@ Public Key Cryptography
 * DH, ECDH, X25519 and X448 key agreement
 * Signature schemes ECDSA, DSA, Ed25519, Ed448, ECGDSA, ECKCDSA, SM2, GOST 34.10
 * Post-quantum signature schemes ML-DSA (Dilithium), SLH-DSA (SPHINCS+), HSS/LMS, XMSS
-* Post-quantum key encapsulation schemes ML-KEM (Kyber), FrodoKEM, McEliece
+* Post-quantum key encapsulation schemes ML-KEM (Kyber), FrodoKEM, Classic McEliece
 * ElGamal encryption
 * Padding schemes OAEP, PSS, PKCS #1 v1.5, X9.31
 

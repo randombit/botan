@@ -4,6 +4,22 @@ Release Notes
 Version 3.7.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Add post-quantum scheme Classic McEliece (GH #3883)
+
+* Add new EC key constructors (GH #4437)
+
+* Internal EC related cleanups (GH #4385)
+
+* Add new operations to EC_AffinePoint (GH #4433)
+
+* TPM 2.0 improvements (GH #4429 #4430)
+
+* Update the Limbo test suite (GH #4406)
+
+* Mark several classes not intended for derivation as ``final`` (GH #4419)
+
+* Add iterator debugging to CI (GH #4413)
+
 Version 3.6.1, 2024-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
