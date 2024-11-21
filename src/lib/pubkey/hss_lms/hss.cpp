@@ -81,7 +81,14 @@ HSS_LMS_Params::HSS_LMS_Params(std::vector<LMS_LMOTS_Params_Pair> lm_lmots_param
 }
 
 HSS_LMS_Params::HSS_LMS_Params(std::string_view algo_params) {
-   SCAN_Name scan(fmt("HSS-LMS({})", algo_params));
+   const auto wrap_in_hss_lms = [&]() {
+      if(algo_params.starts_with("HSS-LMS(")) {
+         return std::string(algo_params);
+      } else {
+         return fmt("HSS-LMS({})", algo_params);
+      }
+   }();
+   SCAN_Name scan(wrap_in_hss_lms);
 
    BOTAN_ARG_CHECK(scan.arg_count() >= 2 && scan.arg_count() <= HSS_MAX_LEVELS + 1, "Invalid number of arguments");
    std::string hash = scan.arg(0);
