@@ -212,6 +212,11 @@ McEliece
 Post-quantum secure key encapsulation scheme based on the hardness of certain
 decoding problems.
 
+Classic McEliece
+~~~~~~~~~~~~~~~~
+
+Post-quantum secure, code-based key encapsulation scheme.
+
 ElGamal
 ~~~~~~~~
 
@@ -1205,6 +1210,7 @@ Botan implements the following KEM schemes:
 #. ML-KEM (Kyber)
 #. FrodoKEM
 #. McEliece
+#. Classic McEliece
 
 .. _mlkem_example:
 
@@ -1270,6 +1276,48 @@ parameters n and t, and have the corresponding key sizes listed:
 
 You can check the speed of McEliece with the suggested parameters above
 using ``botan speed McEliece``
+
+Classic McEliece KEM
+--------------------
+
+`Classic McEliece <https://classic.mceliece.org/>`_ is an IND-CCA2 secure key
+encapsulation algorithm based on the McEliece cryptosystem introduced in 1978.
+It is a code-based scheme that relies on conservative security assumptions and
+is considered secure against quantum computers. It is an alternative to
+lattice-based schemes.
+
+Other advantages of Classic McEliece are the small ciphertext size and the fast
+encapsulation. Key generation and decapsulation are slower than in lattice-based
+schemes. The main disadvantage of Classic McEliece is the large public key size,
+ranging from 0.26 MB to 1.36 MB, depending on the instance. Due to its large key
+size, Classic McEliece is recommended for applications where the public key is
+stored for a long time, and memory is not a critical resource. Usage with
+ephemeral keys is not recommended.
+
+Botan's implementation covers the parameter sets of the `NIST round 4
+specification <https://classic.mceliece.org/mceliece-spec-20221023.pdf#page=15>`_
+and the `Classic McEliece ISO draft specification
+<https://classic.mceliece.org/iso-mceliece-20230419.pdf#page=13>`_.
+These are the following:
+
++------------------+-------------------+-------------------+--------------------+-------------------+
+| Set without f/pc | Set with f        | Set with pc       | Set with pcf       | Public Key Size   |
++==================+===================+===================+====================+===================+
+|  mceliece348864  | mceliece348864f   |                   |                    | 0.26 MB           |
++------------------+-------------------+-------------------+--------------------+-------------------+
+| mceliece460896   | mceliece460896f   |                   |                    | 0.52 MB           |
++------------------+-------------------+-------------------+--------------------+-------------------+
+| mceliece6688128  | mceliece6688128f  | mceliece6688128pc | mceliece6688128pcf | 1.04 MB           |
++------------------+-------------------+-------------------+--------------------+-------------------+
+| mceliece6960119  | mceliece6960119f  | mceliece6960119pc | mceliece6960119pcf | 1.05 MB           |
++------------------+-------------------+-------------------+--------------------+-------------------+
+| mceliece8192128  | mceliece8192128f  | mceliece8192128pc | mceliece8192128pcf | 1.36 MB           |
++------------------+-------------------+-------------------+--------------------+-------------------+
+
+The instances with the suffix 'f' use a faster key generation algorithm that is more consistent in
+runtime. The instances with the suffix 'pc' use plaintext confirmation, which is only specified in
+the ISO document. The instances mceliece348864(f) and mceliece460896(f) are only defined in the
+NIST round 4 submission.
 
 
 eXtended Merkle Signature Scheme (XMSS)

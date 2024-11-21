@@ -153,4 +153,37 @@ BOTAN_REGISTER_PERF_TEST("FrodoKEM", PerfTest_FrodoKEM);
 
 #endif
 
+#if defined(BOTAN_HAS_CLASSICMCELIECE)
+
+class PerfTest_Classic_McEliece final : public PerfTest_PK_KEM {
+   public:
+      std::string algo() const override { return "ClassicMcEliece"; }
+
+      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
+         BOTAN_UNUSED(config);
+         return {
+            "mceliece348864",
+            "mceliece348864f",
+            "mceliece460896",
+            "mceliece460896f",
+            "mceliece6688128",
+            "mceliece6688128f",
+            "mceliece6688128pc",
+            "mceliece6688128pcf",
+            "mceliece6960119",
+            "mceliece6960119f",
+            "mceliece6960119pc",
+            "mceliece6960119pcf",
+            "mceliece8192128",
+            "mceliece8192128f",
+            "mceliece8192128pc",
+            "mceliece8192128pcf",
+         };
+      }
+};
+
+BOTAN_REGISTER_PERF_TEST("ClassicMcEliece", PerfTest_Classic_McEliece);
+
+#endif
+
 }  // namespace Botan_CLI
