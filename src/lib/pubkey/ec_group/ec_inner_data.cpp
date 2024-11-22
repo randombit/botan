@@ -9,6 +9,7 @@
 #include <botan/der_enc.h>
 #include <botan/internal/ec_inner_bn.h>
 #include <botan/internal/ec_inner_pc.h>
+#include <botan/internal/mp_core.h>
 #include <botan/internal/pcurves.h>
 #include <botan/internal/point_mul.h>
 
@@ -16,6 +17,7 @@ namespace Botan {
 
 EC_Group_Data::~EC_Group_Data() = default;
 
+// Note this constructor *does not* initialize m_curve, m_base_point or m_base_mult
 EC_Group_Data::EC_Group_Data(const BigInt& p,
                              const BigInt& a,
                              const BigInt& b,
@@ -25,14 +27,17 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
                              const BigInt& cofactor,
                              const OID& oid,
                              EC_Group_Source source) :
-      m_curve(p, a, b),
-      m_base_point(m_curve, g_x, g_y),
+      m_p(p),
+      m_a(a),
+      m_b(b),
       m_g_x(g_x),
       m_g_y(g_y),
       m_order(order),
       m_cofactor(cofactor),
+      m_monty(m_p),
       m_mod_order(order),
       m_oid(oid),
+      m_p_words(p.sig_words()),
       m_p_bits(p.bits()),
       m_order_bits(order.bits()),
       m_order_bytes((m_order_bits + 7) / 8),
@@ -52,9 +57,29 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
       }
    }
 
-   if(!m_pcurve) {
-      m_base_mult = std::make_unique<EC_Point_Base_Point_Precompute>(m_base_point, m_mod_order);
+   secure_vector<word> ws;
+   m_a_r = m_monty.mul(a, m_monty.R2(), ws);
+   m_b_r = m_monty.mul(b, m_monty.R2(), ws);
+}
+
+std::shared_ptr<EC_Group_Data> EC_Group_Data::create(const BigInt& p,
+                                                     const BigInt& a,
+                                                     const BigInt& b,
+                                                     const BigInt& g_x,
+                                                     const BigInt& g_y,
+                                                     const BigInt& order,
+                                                     const BigInt& cofactor,
+                                                     const OID& oid,
+                                                     EC_Group_Source source) {
+   auto group = std::make_shared<EC_Group_Data>(p, a, b, g_x, g_y, order, cofactor, oid, source);
+
+   group->m_curve = CurveGFp(group.get());
+   group->m_base_point = EC_Point(group->m_curve, g_x, g_y);
+   if(!group->m_pcurve) {
+      group->m_base_mult = std::make_unique<EC_Point_Base_Point_Precompute>(group->m_base_point, group->m_mod_order);
    }
+
+   return group;
 }
 
 bool EC_Group_Data::params_match(const BigInt& p,
@@ -215,8 +240,7 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_deserialize(std::span<
             return nullptr;
          }
       } else {
-         auto pt = Botan::OS2ECP(bytes.data(), bytes.size(), curve());
-         return std::make_unique<EC_AffinePoint_Data_BN>(shared_from_this(), std::move(pt));
+         return std::make_unique<EC_AffinePoint_Data_BN>(shared_from_this(), bytes);
       }
    } catch(...) {
       return nullptr;

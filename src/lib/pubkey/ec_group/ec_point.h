@@ -2,7 +2,7 @@
 * Point arithmetic on elliptic curves over GF(p)
 *
 * (C) 2007 Martin Doering, Christoph Ludwig, Falko Strenzke
-*     2008-2011,2014,2015 Jack Lloyd
+*     2008-2011,2014,2015,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -54,7 +54,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       * Construct the zero point
       * @param curve The base curve
       */
-      explicit EC_Point(const CurveGFp& curve);
+      BOTAN_DEPRECATED("Deprecated no replacement") explicit EC_Point(const CurveGFp& curve);
 
       /**
       * Copy constructor
@@ -96,12 +96,11 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
 
       /**
       * Construct a point from its affine coordinates
-      * Prefer EC_Group::point(x,y) for this operation.
       * @param curve the base curve
       * @param x affine x coordinate
       * @param y affine y coordinate
       */
-      EC_Point(const CurveGFp& curve, BigInt x, BigInt y);
+      BOTAN_DEPRECATED("Use EC_AffinePoint::from_bigint_xy") EC_Point(const CurveGFp& curve, BigInt x, BigInt y);
 
       /**
       * EC2OSP - elliptic curve to octet string primitive
@@ -136,7 +135,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       */
       EC_Point& negate() {
          if(!is_zero()) {
-            m_coord_y = m_curve.get_p() - m_coord_y;
+            m_y = m_curve.get_p() - m_y;
          }
          return *this;
       }
@@ -164,7 +163,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       * Is this the point at infinity?
       * @result true, if this point is at infinity, false otherwise.
       */
-      bool is_zero() const { return m_coord_z.is_zero(); }
+      bool is_zero() const { return m_z.is_zero(); }
 
       /**
       * Checks whether the point is to be found on the underlying
@@ -203,7 +202,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       /**
       * Return the zero (aka infinite) point associated with this curve
       */
-      EC_Point zero() const { return EC_Point(m_curve); }
+      EC_Point zero() const;
 
       /**
       * Randomize the point representation
@@ -224,10 +223,14 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       */
       void swap(EC_Point& other) noexcept;
 
+      /**
+      * For internal use only
+      */
+      bool _is_x_eq_to_v_mod_order(const BigInt& v) const;
+
 #if defined(BOTAN_DISABLE_DEPRECATED_FEATURES)
 
    private:
-      friend class EC_Mul2Table_Data_BN;
 #endif
 
       /**
@@ -235,28 +238,28 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       *
       * Note this may be in Montgomery form
       */
-      BOTAN_DEPRECATED("Use affine coordinates only") const BigInt& get_x() const { return m_coord_x; }
+      BOTAN_DEPRECATED("Use affine coordinates only") const BigInt& get_x() const { return m_x; }
 
       /**
       * Return the internal y coordinate
       *
       * Note this may be in Montgomery form
       */
-      BOTAN_DEPRECATED("Use affine coordinates only") const BigInt& get_y() const { return m_coord_y; }
+      BOTAN_DEPRECATED("Use affine coordinates only") const BigInt& get_y() const { return m_y; }
 
       /**
       * Return the internal z coordinate
       *
       * Note this may be in Montgomery form
       */
-      BOTAN_DEPRECATED("Use affine coordinates only") const BigInt& get_z() const { return m_coord_z; }
+      BOTAN_DEPRECATED("Use affine coordinates only") const BigInt& get_z() const { return m_z; }
 
       BOTAN_DEPRECATED("Deprecated no replacement")
 
       void swap_coords(BigInt& new_x, BigInt& new_y, BigInt& new_z) {
-         m_coord_x.swap(new_x);
-         m_coord_y.swap(new_y);
-         m_coord_z.swap(new_z);
+         m_x.swap(new_x);
+         m_y.swap(new_y);
+         m_z.swap(new_z);
       }
 
       friend void swap(EC_Point& x, EC_Point& y) { x.swap(y); }
@@ -277,12 +280,12 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
 
          const size_t p_words = m_curve.get_p_words();
 
-         add(other.m_coord_x._data(),
-             std::min(p_words, other.m_coord_x.size()),
-             other.m_coord_y._data(),
-             std::min(p_words, other.m_coord_y.size()),
-             other.m_coord_z._data(),
-             std::min(p_words, other.m_coord_z.size()),
+         add(other.m_x._data(),
+             std::min(p_words, other.m_x.size()),
+             other.m_y._data(),
+             std::min(p_words, other.m_y.size()),
+             other.m_z._data(),
+             std::min(p_words, other.m_z.size()),
              workspace);
       }
 
@@ -319,10 +322,10 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
          BOTAN_DEBUG_ASSERT(other.is_affine());
 
          const size_t p_words = m_curve.get_p_words();
-         add_affine(other.m_coord_x._data(),
-                    std::min(p_words, other.m_coord_x.size()),
-                    other.m_coord_y._data(),
-                    std::min(p_words, other.m_coord_y.size()),
+         add_affine(other.m_x._data(),
+                    std::min(p_words, other.m_x.size()),
+                    other.m_y._data(),
+                    std::min(p_words, other.m_y.size()),
                     workspace);
       }
 
@@ -380,11 +383,11 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
       *
       * You should not need to use this
       */
-      const CurveGFp& get_curve() const { return m_curve; }
+      BOTAN_DEPRECATED("Deprecated no replacement") const CurveGFp& get_curve() const { return m_curve; }
 
    private:
       CurveGFp m_curve;
-      BigInt m_coord_x, m_coord_y, m_coord_z;
+      BigInt m_x, m_y, m_z;
 };
 
 /**
@@ -395,8 +398,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_Point final {
 * @param z2 a scalar
 * @result (p1 * z1 + p2 * z2)
 */
-BOTAN_PUBLIC_API(2, 0)
-EC_Point multi_exponentiate(const EC_Point& p1, const BigInt& z1, const EC_Point& p2, const BigInt& z2);
+BOTAN_DEPRECATED("Use EC_AffinePoint::mul_px_qy")
+EC_Point BOTAN_PUBLIC_API(2, 0)
+   multi_exponentiate(const EC_Point& p1, const BigInt& z1, const EC_Point& p2, const BigInt& z2);
 
 // arithmetic operators
 inline EC_Point operator-(const EC_Point& lhs) {
@@ -430,7 +434,9 @@ EC_Point BOTAN_PUBLIC_API(2, 0) OS2ECP(const uint8_t data[], size_t data_len, co
 
 /**
 * Perform point decoding
-* Use EC_Group::OS2ECP instead
+*
+* This is an internal function which was accidentally made public.
+* Do not use it; it will be removed in Botan4.
 *
 * @param data the encoded point
 * @param data_len length of data in bytes

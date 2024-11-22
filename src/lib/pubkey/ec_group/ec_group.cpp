@@ -126,8 +126,7 @@ class EC_Group_Data_Map final {
          registration under an OID
          */
 
-         std::shared_ptr<EC_Group_Data> new_group =
-            std::make_shared<EC_Group_Data>(p, a, b, g_x, g_y, order, cofactor, oid, source);
+         auto new_group = EC_Group_Data::create(p, a, b, g_x, g_y, order, cofactor, oid, source);
 
          if(oid.has_value()) {
             std::shared_ptr<EC_Group_Data> data = EC_Group::EC_group_info(oid);
@@ -199,7 +198,7 @@ std::shared_ptr<EC_Group_Data> EC_Group::load_EC_group_info(const char* p_str,
    const BigInt order(order_str);
    const BigInt cofactor(1);  // implicit
 
-   return std::make_shared<EC_Group_Data>(p, a, b, g_x, g_y, order, cofactor, oid, EC_Group_Source::Builtin);
+   return EC_Group_Data::create(p, a, b, g_x, g_y, order, cofactor, oid, EC_Group_Source::Builtin);
 }
 
 //static
@@ -267,10 +266,9 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
          throw Decoding_Error("Invalid ECC cofactor parameter");
       }
 
-      std::pair<BigInt, BigInt> base_xy = Botan::OS2ECP(base_pt.data(), base_pt.size(), p, a, b);
+      const auto [g_x, g_y] = Botan::OS2ECP(base_pt.data(), base_pt.size(), p, a, b);
 
-      auto data =
-         ec_group_data().lookup_or_create(p, a, b, base_xy.first, base_xy.second, order, cofactor, OID(), source);
+      auto data = ec_group_data().lookup_or_create(p, a, b, g_x, g_y, order, cofactor, OID(), source);
       return std::make_pair(data, true);
    }
 

@@ -1,5 +1,5 @@
 /*
-* (C) 2018 Jack Lloyd
+* (C) 2018,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -48,9 +48,9 @@ Montgomery_Params::Montgomery_Params(const BigInt& p) {
    m_r3 = mod_p.multiply(m_r1, m_r2);
 }
 
-BigInt Montgomery_Params::inv_mod_p(const BigInt& x) const {
+BigInt Montgomery_Params::inv_mod_p(const BigInt& x, secure_vector<word>& ws) const {
    // TODO use Montgomery inverse here?
-   return inverse_mod(x, p());
+   return this->mul(inverse_mod(x, p()), this->R3(), ws);
 }
 
 BigInt Montgomery_Params::redc(const BigInt& x, secure_vector<word>& ws) const {
@@ -68,8 +68,26 @@ BigInt Montgomery_Params::redc(const BigInt& x, secure_vector<word>& ws) const {
    return z;
 }
 
+void Montgomery_Params::redc_in_place(BigInt& x, secure_vector<word>& ws) const {
+   const size_t output_size = 2 * m_p_words;
+
+   if(ws.size() < output_size) {
+      ws.resize(output_size);
+   }
+
+   x.grow_to(output_size);
+
+   bigint_monty_redc(x.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
+}
+
 BigInt Montgomery_Params::mul(const BigInt& x, const BigInt& y, secure_vector<word>& ws) const {
-   const size_t output_size = 2 * m_p_words + 2;
+   BigInt z = BigInt::with_capacity(2 * m_p_words);
+   this->mul(z, x, y, ws);
+   return z;
+}
+
+void Montgomery_Params::mul(BigInt& z, const BigInt& x, const BigInt& y, secure_vector<word>& ws) const {
+   const size_t output_size = 2 * m_p_words;
 
    if(ws.size() < output_size) {
       ws.resize(output_size);
@@ -78,7 +96,10 @@ BigInt Montgomery_Params::mul(const BigInt& x, const BigInt& y, secure_vector<wo
    BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
    BOTAN_DEBUG_ASSERT(y.sig_words() <= m_p_words);
 
-   BigInt z = BigInt::with_capacity(output_size);
+   if(z.size() < output_size) {
+      z.grow_to(output_size);
+   }
+
    bigint_mul(z.mutable_data(),
               z.size(),
               x._data(),
@@ -91,16 +112,22 @@ BigInt Montgomery_Params::mul(const BigInt& x, const BigInt& y, secure_vector<wo
               ws.size());
 
    bigint_monty_redc(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
+}
 
+BigInt Montgomery_Params::mul(const BigInt& x, std::span<const word> y, secure_vector<word>& ws) const {
+   BigInt z = BigInt::with_capacity(2 * m_p_words);
+   this->mul(z, x, y, ws);
    return z;
 }
 
-BigInt Montgomery_Params::mul(const BigInt& x, const secure_vector<word>& y, secure_vector<word>& ws) const {
-   const size_t output_size = 2 * m_p_words + 2;
+void Montgomery_Params::mul(BigInt& z, const BigInt& x, std::span<const word> y, secure_vector<word>& ws) const {
+   const size_t output_size = 2 * m_p_words;
    if(ws.size() < output_size) {
       ws.resize(output_size);
    }
-   BigInt z = BigInt::with_capacity(output_size);
+   if(z.size() < output_size) {
+      z.grow_to(output_size);
+   }
 
    BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
 
@@ -116,11 +143,9 @@ BigInt Montgomery_Params::mul(const BigInt& x, const secure_vector<word>& y, sec
               ws.size());
 
    bigint_monty_redc(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
-
-   return z;
 }
 
-void Montgomery_Params::mul_by(BigInt& x, const secure_vector<word>& y, secure_vector<word>& ws) const {
+void Montgomery_Params::mul_by(BigInt& x, std::span<const word> y, secure_vector<word>& ws) const {
    const size_t output_size = 2 * m_p_words;
 
    if(ws.size() < 2 * output_size) {
@@ -183,21 +208,34 @@ void Montgomery_Params::mul_by(BigInt& x, const BigInt& y, secure_vector<word>& 
 }
 
 BigInt Montgomery_Params::sqr(const BigInt& x, secure_vector<word>& ws) const {
+   BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
+   return this->sqr(std::span{x._data(), x.size()}, ws);
+}
+
+BigInt Montgomery_Params::sqr(std::span<const word> x, secure_vector<word>& ws) const {
+   BigInt z = BigInt::with_capacity(2 * m_p_words);
+   this->sqr(z, x, ws);
+   return z;
+}
+
+void Montgomery_Params::sqr(BigInt& z, const BigInt& x, secure_vector<word>& ws) const {
+   this->sqr(z, std::span{x._data(), x.size()}, ws);
+}
+
+void Montgomery_Params::sqr(BigInt& z, std::span<const word> x, secure_vector<word>& ws) const {
    const size_t output_size = 2 * m_p_words;
 
    if(ws.size() < output_size) {
       ws.resize(output_size);
    }
 
-   BigInt z = BigInt::with_capacity(output_size);
+   if(z.size() < output_size) {
+      z.grow_to(output_size);
+   }
 
-   BOTAN_DEBUG_ASSERT(x.sig_words() <= m_p_words);
-
-   bigint_sqr(z.mutable_data(), z.size(), x._data(), x.size(), std::min(m_p_words, x.size()), ws.data(), ws.size());
+   bigint_sqr(z.mutable_data(), z.size(), x.data(), x.size(), std::min(m_p_words, x.size()), ws.data(), ws.size());
 
    bigint_monty_redc(z.mutable_data(), m_p._data(), m_p_words, m_p_dash, ws.data(), ws.size());
-
-   return z;
 }
 
 void Montgomery_Params::square_this(BigInt& x, secure_vector<word>& ws) const {
@@ -381,8 +419,7 @@ Montgomery_Int Montgomery_Int::cube(secure_vector<word>& ws) const {
 
 Montgomery_Int Montgomery_Int::multiplicative_inverse() const {
    secure_vector<word> ws;
-   const BigInt iv = m_params->mul(m_params->inv_mod_p(m_v), m_params->R3(), ws);
-   return Montgomery_Int(m_params, iv, false);
+   return Montgomery_Int(m_params, m_params->inv_mod_p(m_v, ws), false);
 }
 
 Montgomery_Int Montgomery_Int::additive_inverse() const {

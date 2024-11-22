@@ -1,5 +1,5 @@
 /*
-* (C) 2018 Jack Lloyd
+* (C) 2018,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -154,19 +154,31 @@ class BOTAN_TEST_API Montgomery_Params final {
 
       BigInt redc(const BigInt& x, secure_vector<word>& ws) const;
 
+      void redc_in_place(BigInt& x, secure_vector<word>& ws) const;
+
+      void mul(BigInt& z, const BigInt& x, const BigInt& y, secure_vector<word>& ws) const;
+
+      void mul(BigInt& z, const BigInt& x, std::span<const word> y, secure_vector<word>& ws) const;
+
       BigInt mul(const BigInt& x, const BigInt& y, secure_vector<word>& ws) const;
 
-      BigInt mul(const BigInt& x, const secure_vector<word>& y, secure_vector<word>& ws) const;
+      BigInt mul(const BigInt& x, std::span<const word> y, secure_vector<word>& ws) const;
 
-      void mul_by(BigInt& x, const secure_vector<word>& y, secure_vector<word>& ws) const;
+      void mul_by(BigInt& x, std::span<const word> y, secure_vector<word>& ws) const;
 
       void mul_by(BigInt& x, const BigInt& y, secure_vector<word>& ws) const;
 
       BigInt sqr(const BigInt& x, secure_vector<word>& ws) const;
 
+      BigInt sqr(std::span<const word> x, secure_vector<word>& ws) const;
+
+      void sqr(BigInt& z, const BigInt& x, secure_vector<word>& ws) const;
+
+      void sqr(BigInt& z, std::span<const word> x, secure_vector<word>& ws) const;
+
       void square_this(BigInt& x, secure_vector<word>& ws) const;
 
-      BigInt inv_mod_p(const BigInt& x) const;
+      BigInt inv_mod_p(const BigInt& x, secure_vector<word>& ws) const;
 
    private:
       BigInt m_p;
