@@ -130,6 +130,8 @@ class BOTAN_PUBLIC_API(3, 9) FieldElement final {
 
       static FieldElement from_bytes_wide(std::span<const uint8_t, 96> bytes);
 
+      bool is_zero() const;
+
       void serialize_to(std::span<uint8_t, FieldElement::BYTES> bytes) const;
 
       std::array<uint8_t, FieldElement::BYTES> serialize() const {
@@ -262,6 +264,8 @@ class BOTAN_PUBLIC_API(3, 9) G1Affine final {
       bool is_identity() const;
 
    private:
+      friend class G1Projective;
+
       G1Affine(FieldElement x, FieldElement y, uint32_t infinity) : m_x(x), m_y(y), m_infinity(infinity) {}
 
       FieldElement m_x;
@@ -272,11 +276,13 @@ class BOTAN_PUBLIC_API(3, 9) G1Affine final {
 class BOTAN_PUBLIC_API(3, 9) G1Projective final {
    public:
       static G1Projective from_affine(const G1Affine& affine) {
-         return G1Projective(affine.x(), affine.y(), FieldElement::one(), affine.is_identity());
+         // z == 0 if the identity element or 1 otherwise
+         auto z = FieldElement::from_u32(affine.is_identity() ^ 1);
+         return G1Projective(affine.x(), affine.y(), z);
       }
 
       static G1Projective identity() {
-         return G1Projective(FieldElement::zero(), FieldElement::one(), FieldElement::one(), 1);
+         return G1Projective(FieldElement::zero(), FieldElement::one(), FieldElement::zero());
       }
 
       static G1Projective generator();
@@ -291,23 +297,28 @@ class BOTAN_PUBLIC_API(3, 9) G1Projective final {
 
       G1Projective mul(const Scalar& scalar) const;
 
+      /**
+      * Check if this point is the identity element
+      */
+      bool is_identity() const;
+
       // TODO
       // std::vector<G1Affine> batch_to_affine(std::span<const G1Projective> points);
 
       // TODO multiscalar multiplications
 
       // TODO hash to curve
+      //G1Projective hash_to_curve_ro(std::span<const uint8_t> input, std::span<const uint8_t> dst, std::string_view hash = "SHA-256");
 
    private:
-      G1Projective(FieldElement x, FieldElement y, FieldElement z, uint32_t infinity) :
-            m_x(x), m_y(y), m_z(z), m_infinity(infinity) {}
+      G1Projective(FieldElement x, FieldElement y, FieldElement z) :
+            m_x(x), m_y(y), m_z(z) {}
 
       G1Projective dbl() const;
 
       FieldElement m_x;
       FieldElement m_y;
       FieldElement m_z;
-      uint32_t m_infinity;
 };
 
 #if 0

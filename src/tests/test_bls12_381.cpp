@@ -320,6 +320,30 @@ class BLS12_381_FieldElement_Tests final : public Test {
 
 BOTAN_REGISTER_TEST("bls12_381", "bls12_381_fe", BLS12_381_FieldElement_Tests);
 
+class BLS12_381_G1_Mul_Tests final : public Text_Based_Test {
+   public:
+      BLS12_381_G1_Mul_Tests() : Text_Based_Test("bls12_381/g1_mul.vec", "P,K,Z") {}
+
+      Test::Result run_one_test(const std::string&, const VarMap& vars) override {
+         Test::Result result("BLS12-381 G1 mul");
+
+         const auto pt = Botan::BLS12_381::G1Affine::deserialize(vars.get_req_bin("P"));
+         const auto k = Botan::BLS12_381::Scalar::deserialize(vars.get_req_bin("K"));
+         const auto z = vars.get_req_bin("Z");
+
+         result.confirm("P is accepted", pt.has_value());
+         result.confirm("K is accepted", k.has_value());
+
+         auto cz = Botan::BLS12_381::G1Projective::from_affine(pt.value()).mul(k.value());
+
+         result.test_eq("Expected Z", cz.to_affine().serialize(), z);
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("bls12_381", "bls12_381_g1_mul", BLS12_381_G1_Mul_Tests);
+
 #endif
 
 }  // namespace

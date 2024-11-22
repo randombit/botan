@@ -142,6 +142,16 @@ FieldElement FieldElement::negate() const {
    return FieldElement(r);
 }
 
+bool FieldElement::is_zero() const {
+   auto v_is_zero = CT::all_zeros(this->data(), N);
+   return v_is_zero.as_bool();
+}
+
+bool FieldElement::_is_lexicographically_largest() const {
+   // FIXME
+   return false;
+}
+
 FieldElement FieldElement::invert() const {
    // Addition chain for exponentiation to p - 2
    // Found using https://github.com/mmcloughlin/addchain
