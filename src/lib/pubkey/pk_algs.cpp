@@ -600,7 +600,14 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 
 #if defined(BOTAN_HAS_HSS_LMS)
    if(alg_name == "HSS-LMS") {
-      return std::make_unique<HSS_LMS_PrivateKey>(rng, params);
+      const auto hss_params = [&]() -> std::string {
+         if(params.empty()) {
+            return "SHA-256,HW(10,1)";
+         } else {
+            return std::string(params);
+         }
+      }();
+      return std::make_unique<HSS_LMS_PrivateKey>(rng, hss_params);
    }
 #endif
 
