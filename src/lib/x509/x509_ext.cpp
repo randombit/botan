@@ -3,6 +3,7 @@
 * (C) 1999-2010,2012 Jack Lloyd
 * (C) 2016 René Korthaus, Rohde & Schwarz Cybersecurity
 * (C) 2017 Fabian Weissberg, Rohde & Schwarz Cybersecurity
+* (C) 2024 Anton Einax, Dominik Schricker
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -84,6 +85,14 @@ std::unique_ptr<Certificate_Extension> extension_from_oid(const OID& oid) {
 
    if(oid == Cert_Extension::TNAuthList::static_oid()) {
       return std::make_unique<Cert_Extension::TNAuthList>();
+   }
+
+   if(oid == Cert_Extension::IPAddressBlocks::static_oid()) {
+      return std::make_unique<Cert_Extension::IPAddressBlocks>();
+   }
+
+   if(oid == Cert_Extension::ASBlocks::static_oid()) {
+      return std::make_unique<Cert_Extension::ASBlocks>();
    }
 
    return nullptr;  // unknown
@@ -866,6 +875,582 @@ const TNAuthList::Entry::RangeContainer& TNAuthList::Entry::telephone_number_ran
 const std::string& TNAuthList::Entry::telephone_number() const {
    BOTAN_STATE_CHECK(type() == Type::TelephoneNumber);
    return std::get<ASN1_String>(m_data).value();
+}
+
+std::vector<uint8_t> IPAddressBlocks::encode_inner() const {
+   std::vector<uint8_t> output;
+   DER_Encoder(output).start_sequence().encode_list(m_ip_addr_blocks).end_cons();
+   return output;
+}
+
+void IPAddressBlocks::decode_inner(const std::vector<uint8_t>& in) {
+   BER_Decoder(in).decode_list(m_ip_addr_blocks).verify_end();
+}
+
+void IPAddressBlocks::sort_and_merge() {
+   // std::map is ordered, so a uint32_t of [afi,safi] will be in the right order
+   std::map<uint32_t, std::vector<IPAddressFamily>> afam_map;
+   for(IPAddressFamily& block : m_ip_addr_blocks) {
+      uint32_t afam = block.afi();
+      if(block.safi().has_value()) {
+         afam = static_cast<uint32_t>(afam << 8) | block.safi().value();
+      }
+      std::vector<IPAddressFamily>& fams = afam_map[afam];
+      fams.push_back(block);
+   }
+
+   std::vector<IPAddressFamily> merged_blocks;
+   for(auto it = afam_map.begin(); it != afam_map.end(); it++) {
+      std::vector<IPAddressFamily>& fams = it->second;
+
+      // fams[0] has to have the same choice type as the fams in the same bucket
+      if(std::holds_alternative<IPAddressChoice<Version::IPv4>>(fams[0].addr_choice())) {
+         merged_blocks.push_back(merge<Version::IPv4>(fams));
+      } else {
+         merged_blocks.push_back(merge<Version::IPv6>(fams));
+      }
+   }
+   m_ip_addr_blocks = merged_blocks;
+}
+
+template <IPAddressBlocks::Version V>
+IPAddressBlocks::IPAddressFamily IPAddressBlocks::merge(std::vector<IPAddressFamily>& blocks) {
+   if(blocks.size() == 1) {
+      return blocks[0];
+   }
+
+   bool all_inherit = true;
+   bool none_inherit = true;
+   for(IPAddressFamily& block : blocks) {
+      IPAddressChoice<V> choice = std::get<IPAddressChoice<V>>(block.addr_choice());
+      all_inherit = !choice.ranges().has_value() && all_inherit;
+      none_inherit = choice.ranges().has_value() && none_inherit;
+   }
+
+   if(all_inherit) {
+      return IPAddressFamily(IPAddressChoice<V>(), blocks[0].safi());
+   }
+
+   if(not(all_inherit || none_inherit)) {
+      throw Decoding_Error("Having AFIs that inherit and don't inherit at the same time is not allowed");
+   }
+
+   std::vector<IPAddressOrRange<V>> merged_ranges;
+   for(IPAddressFamily& block : blocks) {
+      IPAddressChoice<V> choice = std::get<IPAddressChoice<V>>(block.addr_choice());
+      std::vector<IPAddressOrRange<V>> ranges = choice.ranges().value();
+      for(IPAddressOrRange<V>& r : ranges) {
+         merged_ranges.push_back(r);
+      }
+   }
+
+   IPAddressChoice<V> choice(merged_ranges);
+   IPAddressFamily fam(choice, blocks[0].safi());
+   return fam;
+}
+
+void IPAddressBlocks::IPAddressFamily::encode_into(Botan::DER_Encoder& into) const {
+   into.start_sequence();
+
+   std::vector<uint8_t> afam = {static_cast<uint8_t>(m_afi >> 8), static_cast<uint8_t>(m_afi & 0xff)};
+
+   if(m_safi.has_value()) {
+      afam.push_back(m_safi.value());
+   }
+
+   into.add_object(ASN1_Type::OctetString, ASN1_Class::Universal, afam);
+
+   if(std::holds_alternative<IPAddressChoice<Version::IPv4>>(m_ip_addr_choice)) {
+      into.encode(std::get<IPAddressChoice<Version::IPv4>>(m_ip_addr_choice));
+   } else {
+      into.encode(std::get<IPAddressChoice<Version::IPv6>>(m_ip_addr_choice));
+   }
+   into.end_cons();
+}
+
+void IPAddressBlocks::IPAddressFamily::decode_from(Botan::BER_Decoder& from) {
+   BER_Object obj = from.get_next_object();
+   ASN1_Type type_tag = obj.type_tag();
+   if(type_tag != ASN1_Type::Sequence) {
+      throw Decoding_Error(fmt("Unexpected type for IPAddressFamily {}", static_cast<uint32_t>(type_tag)));
+   }
+   BER_Decoder obj_ber = BER_Decoder(obj);
+
+   std::vector<uint8_t> addr_family;
+   obj_ber.decode(addr_family, ASN1_Type::OctetString);
+   size_t addr_family_length = addr_family.size();
+
+   if(addr_family_length != 2 && addr_family_length != 3) {
+      throw Decoding_Error("(S)AFI can only contain 2 or 3 bytes");
+   }
+
+   m_afi = (addr_family[0] << 8) | addr_family[1];
+
+   if(addr_family_length == 3) {
+      m_safi = addr_family[2];
+   }
+
+   if(m_afi == 1) {
+      IPAddressChoice<Version::IPv4> addr_choice;
+      obj_ber.decode(addr_choice);
+      m_ip_addr_choice = addr_choice;
+   } else if(m_afi == 2) {
+      IPAddressChoice<Version::IPv6> addr_choice;
+      obj_ber.decode(addr_choice);
+      m_ip_addr_choice = addr_choice;
+   } else {
+      throw Decoding_Error("Only AFI IPv4 and IPv6 are supported.");
+   }
+}
+
+template <IPAddressBlocks::Version V>
+void IPAddressBlocks::IPAddressChoice<V>::encode_into(Botan::DER_Encoder& into) const {
+   if(m_ip_addr_ranges.has_value()) {
+      into.start_sequence().encode_list(m_ip_addr_ranges.value()).end_cons();
+   } else {
+      into.encode_null();
+   }
+}
+
+template <IPAddressBlocks::Version V>
+void IPAddressBlocks::IPAddressChoice<V>::decode_from(Botan::BER_Decoder& from) {
+   ASN1_Type next_tag = from.peek_next_object().type_tag();
+
+   if(next_tag == ASN1_Type::Null) {
+      from.decode_null();
+      m_ip_addr_ranges = std::nullopt;
+   } else if(next_tag == ASN1_Type::Sequence) {
+      std::vector<IPAddressOrRange<V>> ip_ranges;
+      from.decode_list(ip_ranges);
+      m_ip_addr_ranges = ip_ranges;
+   } else {
+      throw Decoding_Error(fmt("Unexpected type for IPAddressChoice {}", static_cast<uint32_t>(next_tag)));
+   }
+}
+
+template <IPAddressBlocks::Version V>
+void IPAddressBlocks::IPAddressChoice<V>::sort_and_merge() {
+   if(!m_ip_addr_ranges.has_value()) {
+      return;
+   }
+   std::vector<IPAddressOrRange<V>> current = m_ip_addr_ranges.value();
+   if(current.empty()) {
+      return;
+   }
+   bool changed = true;
+   while(changed) {
+      changed = false;
+      // sort by the minimum address
+      std::sort(current.begin(), current.end(), [](IPAddressOrRange<V>& a, IPAddressOrRange<V>& b) {
+         return a.min() < b.min();
+      });
+      for(size_t i = 0; i < current.size() - 1; i++) {
+         IPAddressOrRange<V> a = current[i];
+         IPAddressOrRange<V> b = current[i + 1];
+         // only ++ is implemented for IPAddress<V>, instead of +
+         if(b.min() <= a.max() || b.min() == (++a.max())) {
+            // erase old a and b
+            current.erase(current.begin() + i, current.begin() + i + 2);
+            current.insert(current.begin() + i, IPAddressOrRange<V>(a.min(), std::max(a.max(), b.max())));
+            // look again at the new element we just created, might need to be merged with others still
+            i -= 1;
+            changed = true;
+         }
+      }
+   }
+   m_ip_addr_ranges = current;
+}
+
+template <IPAddressBlocks::Version V>
+void IPAddressBlocks::IPAddressOrRange<V>::encode_into(Botan::DER_Encoder& into) const {
+   const uint8_t version_octets = static_cast<uint8_t>(V);
+
+   std::array<uint8_t, version_octets> min = m_min.value();
+   std::array<uint8_t, version_octets> max = m_max.value();
+
+   uint8_t zeros = 0;
+   uint8_t ones = 0;
+
+   bool zeros_done = false;
+   bool ones_done = false;
+
+   // count contiguos 0s/1s from the right of the min/max addresses
+   for(size_t i = static_cast<size_t>(version_octets); i > 0; i--) {
+      if(!zeros_done) {
+         uint8_t local_zeros = static_cast<uint8_t>(std::countr_zero(min[i - 1]));
+         zeros += local_zeros;
+         zeros_done = (local_zeros != 8);
+      }
+
+      if(!ones_done) {
+         uint8_t local_ones = static_cast<uint8_t>(std::countr_one(max[i - 1]));
+         ones += local_ones;
+         ones_done = (local_ones != 8);
+      }
+
+      if(zeros_done && ones_done) {
+         break;
+      }
+   }
+
+   // the part we want to compress
+   uint8_t host = std::min(zeros, ones);
+
+   // these we can outright drop
+   uint8_t discarded_octets = host / 8;
+   // in a partially used byte
+   uint8_t unused_bits = host % 8;
+
+   bool octets_match = true;
+   for(size_t i = 0; i < static_cast<uint8_t>(version_octets - discarded_octets - 1); i++) {
+      if(min[i] != max[i]) {
+         octets_match = false;
+         break;
+      }
+   }
+
+   // we only partially use this octet, and the used part has to match for prefix encoding
+   bool used_bits_match = true;
+   // if we would discard all octets we don't actually have a partially used octet, so this doesn't matter
+   if(discarded_octets < version_octets - 1) {
+      uint8_t shifted_min = (min[version_octets - 1 - discarded_octets] >> unused_bits);
+      uint8_t shifted_max = (max[version_octets - 1 - discarded_octets] >> unused_bits);
+      used_bits_match = (shifted_min == shifted_max);
+   }
+
+   // both the full octets and the partially used one match
+   if(octets_match && used_bits_match) {
+      // at this point the range can be encoded as a prefix
+      std::vector<uint8_t> prefix;
+
+      prefix.push_back(unused_bits);
+      for(size_t i = 0; i < static_cast<uint8_t>(version_octets - discarded_octets); i++) {
+         prefix.push_back(min[i]);
+      }
+
+      into.add_object(ASN1_Type::BitString, ASN1_Class::Universal, prefix);
+   } else {
+      uint8_t discarded_octets_min = zeros / 8;
+      uint8_t unused_bits_min = zeros % 8;
+
+      uint8_t discarded_octets_max = ones / 8;
+      uint8_t unused_bits_max = ones % 8;
+
+      // compress the max address by setting unused bits to 0, for the min address these are already 0
+      if(unused_bits_max != 0) {
+         max[version_octets - 1 - discarded_octets_max] >>= unused_bits_max;
+         max[version_octets - 1 - discarded_octets_max] <<= unused_bits_max;
+      }
+
+      std::vector<uint8_t> compressed_min;
+      std::vector<uint8_t> compressed_max;
+
+      // construct the address as a byte sequence of the unused bits followed by the compressed address
+      compressed_min.push_back(unused_bits_min);
+      for(size_t i = 0; i < static_cast<uint8_t>(version_octets - discarded_octets_min); i++) {
+         compressed_min.push_back(min[i]);
+      }
+
+      compressed_max.push_back(unused_bits_max);
+      for(size_t i = 0; i < static_cast<uint8_t>(version_octets - discarded_octets_max); i++) {
+         compressed_max.push_back(max[i]);
+      }
+
+      into.start_sequence()
+         .add_object(ASN1_Type::BitString, ASN1_Class::Universal, compressed_min)
+         .add_object(ASN1_Type::BitString, ASN1_Class::Universal, compressed_max)
+         .end_cons();
+   }
+}
+
+template <IPAddressBlocks::Version V>
+void IPAddressBlocks::IPAddressOrRange<V>::decode_from(Botan::BER_Decoder& from) {
+   const uint8_t version_octets = static_cast<uint8_t>(V);
+
+   ASN1_Type next_tag = from.peek_next_object().type_tag();
+
+   // this can either be a prefix or a single address
+   if(next_tag == ASN1_Type::BitString) {
+      // construct a min and a max address from the prefix
+
+      std::vector<uint8_t> prefix;
+      from.decode(prefix, ASN1_Type::OctetString, ASN1_Type::BitString, ASN1_Class::Universal);
+
+      // we have to account for the octet at the beginning that specifies how many bits are unused in the last octet
+      if(prefix.empty() || prefix.size() > version_octets + 1) {
+         throw Decoding_Error(
+            fmt("IP address range entries must have a length between 2 and {} bits.", static_cast<uint8_t>(V)));
+      }
+
+      uint8_t unused = prefix.front();
+      uint8_t discarded_octets = version_octets - (static_cast<uint8_t>(prefix.size()) - 1);
+
+      prefix.erase(prefix.begin());
+
+      for(size_t i = 0; i < discarded_octets; i++) {
+         prefix.push_back(0);
+      }
+
+      IPAddress<V> addr_min(prefix);
+
+      for(size_t i = version_octets - discarded_octets; i < version_octets; i++) {
+         prefix[i] = 0xff;
+      }
+
+      // set all unused bits to 1
+      for(size_t i = 0; i < unused; i++) {
+         prefix[version_octets - 1 - discarded_octets] |= (1 << i);
+      }
+
+      IPAddress<V> addr_max(prefix);
+
+      m_min = addr_min;
+      m_max = addr_max;
+   } else if(next_tag == ASN1_Type::Sequence) {
+      // this is a range
+
+      std::vector<uint8_t> addr_min;
+      std::vector<uint8_t> addr_max;
+
+      from.start_sequence()
+         .decode(addr_min, ASN1_Type::OctetString, ASN1_Type::BitString, ASN1_Class::Universal)
+         .decode(addr_max, ASN1_Type::OctetString, ASN1_Type::BitString, ASN1_Class::Universal)
+         .end_cons();
+
+      // address 1 (min)
+
+      // again accounting for the 'unused' octet at the beginning
+      if(addr_min.empty() || addr_min.size() > version_octets + 1) {
+         throw Decoding_Error(
+            fmt("IP address range entries must have a length between 1 and {} bytes.", static_cast<uint8_t>(V)));
+      }
+
+      addr_min.erase(addr_min.begin());  // remove 'unused' octet
+
+      // restore trailing zeros
+      size_t addr_len = addr_min.size();
+      for(size_t i = 0; i < version_octets - addr_len; i++) {
+         addr_min.push_back(0);
+      }
+
+      m_min = IPAddress<V>(addr_min);
+
+      // address 2 (max)
+
+      if(addr_max.empty() || addr_max.size() > version_octets + 1) {
+         throw Decoding_Error(
+            fmt("IP address range entries must have a length between 1 and {} bytes.", static_cast<uint8_t>(V)));
+      }
+
+      // here we need the unused bits to restore the least significant 1s correctly
+      uint8_t unused = addr_max.front();
+      addr_max.erase(addr_max.begin());
+
+      // we were given 0 actual address octets, but the unused octet claims there are unused bits - this doesn't make sense!
+      if(addr_max.empty() && unused != 0) {
+         throw Decoding_Error("IP address range entry specified unused bits, but did not provide any octets.");
+      }
+
+      // restore trailing ones
+      addr_len = addr_max.size();
+      for(size_t i = 0; i < version_octets - addr_len; i++) {
+         addr_max.push_back(0xff);
+      }
+
+      // restore ones stored in 'unused' octet (which is the last octet before trailing ones)
+      for(size_t i = 0; i < unused; i++) {
+         addr_max[addr_len - 1] |= (1 << i);
+      }
+
+      m_max = IPAddress<V>(addr_max);
+
+      if(m_min > m_max) {
+         throw Decoding_Error("IP address ranges must be sorted.");
+      }
+   } else {
+      throw Decoding_Error(fmt("Unexpected type for IPAddressOrRange {}", static_cast<uint32_t>(next_tag)));
+   }
+}
+
+template <IPAddressBlocks::Version V>
+IPAddressBlocks::IPAddress<V>::IPAddress(std::span<uint8_t> v) {
+   const size_t version_octets = static_cast<size_t>(V);
+   if(v.size() != version_octets) {
+      throw Decoding_Error("number of bytes does not match IP version used");
+   }
+
+   for(size_t i = 0; i < version_octets; i++) {
+      m_value[i] = v[i];
+   }
+}
+
+template class IPAddressBlocks::IPAddress<IPAddressBlocks::Version::IPv4>;
+template class IPAddressBlocks::IPAddress<IPAddressBlocks::Version::IPv6>;
+template class IPAddressBlocks::IPAddressOrRange<IPAddressBlocks::Version::IPv4>;
+template class IPAddressBlocks::IPAddressOrRange<IPAddressBlocks::Version::IPv6>;
+template class IPAddressBlocks::IPAddressChoice<IPAddressBlocks::Version::IPv4>;
+template class IPAddressBlocks::IPAddressChoice<IPAddressBlocks::Version::IPv6>;
+
+std::vector<uint8_t> ASBlocks::encode_inner() const {
+   std::vector<uint8_t> output;
+   DER_Encoder(output).encode(m_as_identifiers);
+   return output;
+}
+
+void ASBlocks::decode_inner(const std::vector<uint8_t>& in) {
+   BER_Decoder(in).decode(m_as_identifiers).verify_end();
+}
+
+void ASBlocks::ASIdentifiers::encode_into(Botan::DER_Encoder& into) const {
+   into.start_sequence();
+
+   if(m_asnum.has_value()) {
+      into.start_explicit(0);
+      into.encode(m_asnum.value());
+      into.end_explicit();
+   }
+
+   if(m_rdi.has_value()) {
+      into.start_explicit(1);
+      into.encode(m_rdi.value());
+      into.end_explicit();
+   }
+
+   into.end_cons();
+}
+
+void ASBlocks::ASIdentifiers::decode_from(Botan::BER_Decoder& from) {
+   BER_Object obj = from.get_next_object();
+   ASN1_Type type_tag = obj.type_tag();
+   if(type_tag != ASN1_Type::Sequence) {
+      throw Decoding_Error(fmt("Unexpected type for ASIdentifiers {}", static_cast<uint32_t>(type_tag)));
+   }
+   BER_Decoder obj_ber = BER_Decoder(obj);
+
+   BER_Object elem_obj = obj_ber.get_next_object();
+   uint32_t elem_type_tag = static_cast<uint32_t>(elem_obj.type_tag());
+
+   // asnum, potentially followed by an rdi
+   if(elem_type_tag == 0) {
+      BER_Decoder as_obj_ber = BER_Decoder(elem_obj);
+      ASIdentifierChoice asnum;
+      as_obj_ber.decode(asnum);
+      m_asnum = asnum;
+
+      BER_Object rdi_obj = obj_ber.get_next_object();
+      ASN1_Type rdi_type_tag = rdi_obj.type_tag();
+      if(static_cast<uint32_t>(rdi_type_tag) == 1) {
+         BER_Decoder rdi_obj_ber = BER_Decoder(rdi_obj);
+         ASIdentifierChoice rdi;
+         rdi_obj_ber.decode(rdi);
+         m_rdi = rdi;
+      } else if(rdi_type_tag != ASN1_Type::NoObject) {
+         throw Decoding_Error(fmt("Unexpected type for ASIdentifiers rdi: {}", static_cast<uint32_t>(rdi_type_tag)));
+      }
+   }
+
+   // just an rdi
+   if(elem_type_tag == 1) {
+      BER_Decoder rdi_obj_ber = BER_Decoder(elem_obj);
+      ASIdentifierChoice rdi;
+      rdi_obj_ber.decode(rdi);
+      m_rdi = rdi;
+      BER_Object end = obj_ber.get_next_object();
+      ASN1_Type end_type_tag = end.type_tag();
+      if(end_type_tag != ASN1_Type::NoObject) {
+         throw Decoding_Error(
+            fmt("Unexpected element with type {} in ASIdentifiers", static_cast<uint32_t>(end_type_tag)));
+      }
+   }
+}
+
+void ASBlocks::ASIdentifierChoice::encode_into(Botan::DER_Encoder& into) const {
+   if(m_as_ranges.has_value()) {
+      into.start_sequence().encode_list(m_as_ranges.value()).end_cons();
+   } else {
+      into.encode_null();
+   }
+}
+
+void ASBlocks::ASIdentifierChoice::decode_from(Botan::BER_Decoder& from) {
+   BER_Object obj = from.get_next_object();
+   ASN1_Type type_tag = obj.type_tag();
+
+   if(type_tag == ASN1_Type::Null) {
+      m_as_ranges = std::nullopt;
+   } else if(type_tag == ASN1_Type::Sequence) {
+      BER_Decoder obj_ber = BER_Decoder(obj);
+      std::vector<ASIdOrRange> as_ranges;
+
+      while(obj_ber.more_items()) {
+         ASIdOrRange as_id_or_range;
+         obj_ber.decode(as_id_or_range);
+         as_ranges.push_back(as_id_or_range);
+      }
+
+      m_as_ranges = as_ranges;
+      sort_and_merge();
+   } else {
+      throw Decoding_Error(fmt("Unexpected type for ASIdentifierChoice {}", static_cast<uint32_t>(type_tag)));
+   }
+}
+
+void ASBlocks::ASIdentifierChoice::sort_and_merge() {
+   if(!m_as_ranges.has_value()) {
+      return;
+   }
+   std::vector<ASIdOrRange> current = m_as_ranges.value();
+   if(current.empty()) {
+      return;
+   }
+   bool changed = true;
+   while(changed) {
+      changed = false;
+      std::sort(current.begin(), current.end(), [](ASIdOrRange& a, ASIdOrRange& b) { return a.min() < b.min(); });
+      for(size_t i = 0; i < current.size() - 1; i++) {
+         ASIdOrRange a = current[i];
+         ASIdOrRange b = current[i + 1];
+         if(b.min() <= a.max() || b.min() == (a.max() + 1)) {
+            // erase old a and b
+            current.erase(current.begin() + i, current.begin() + i + 2);
+            current.insert(current.begin() + i, ASIdOrRange(a.min(), std::max(a.max(), b.max())));
+            // look again at the new element we just created, might need to be merged with others still
+            i -= 1;
+            changed = true;
+         }
+      }
+   }
+   m_as_ranges = current;
+}
+
+void ASBlocks::ASIdOrRange::encode_into(Botan::DER_Encoder& into) const {
+   if(m_min == m_max) {
+      into.encode(static_cast<size_t>(m_min));
+   } else {
+      if(m_min >= m_max) {
+         throw Encoding_Error("AS range numbers must be sorted");
+      }
+      into.start_sequence().encode(static_cast<size_t>(m_min)).encode(static_cast<size_t>(m_max)).end_cons();
+   }
+}
+
+void ASBlocks::ASIdOrRange::decode_from(BER_Decoder& from) {
+   ASN1_Type next_tag = from.peek_next_object().type_tag();
+
+   size_t min;
+   size_t max;
+
+   if(next_tag == ASN1_Type::Integer) {
+      from.decode(min);
+      m_min = static_cast<uint32_t>(min);
+      m_max = m_min;
+   } else if(next_tag == ASN1_Type::Sequence) {
+      from.start_sequence().decode(min).decode(max).end_cons();
+      m_min = static_cast<uint32_t>(min);
+      m_max = static_cast<uint32_t>(max);
+   } else {
+      throw Decoding_Error(fmt("Unexpected type for ASIdOrRange {}", static_cast<uint32_t>(next_tag)));
+   }
 }
 
 void OCSP_NoCheck::decode_inner(const std::vector<uint8_t>& buf) {
