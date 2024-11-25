@@ -137,18 +137,13 @@ std::shared_ptr<Classic_McEliece_PublicKeyInternal> Classic_McEliece_PublicKeyIn
    }
    auto& [pk_matrix, pivot] = pk_matrix_and_pivot.value();
 
-   // There should not be a pivot other than 0xff ff ff ff 00 00 00 00.
-   // Otherwise the gauss algorithm failed effectively.
-   const auto pivot_is_valid = (CT::Mask<uint8_t>::expand(pivot.subvector(0, pivot.size() / 2).all()) &
-                                CT::Mask<uint8_t>::expand(pivot.subvector(pivot.size() / 2).none()))
-                                  .as_choice();
-   if(!pivot_is_valid.as_bool()) {
+   // There should not be a pivot of any other form. Otherwise the gauss
+   // algorithm failed effectively.
+   if(!CT::driveby_unpoison(pivot.equals(bitvector{0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00}))) {
       throw Decoding_Error("Cannot create public key from private key. Private key is invalid.");
    }
 
-   auto pk = std::make_shared<Classic_McEliece_PublicKeyInternal>(sk.params(), std::move(pk_matrix));
-
-   return pk;
+   return std::make_shared<Classic_McEliece_PublicKeyInternal>(sk.params(), std::move(pk_matrix));
 }
 
 Classic_McEliece_KeyPair_Internal Classic_McEliece_KeyPair_Internal::generate(const Classic_McEliece_Parameters& params,
