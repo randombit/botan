@@ -173,6 +173,8 @@ Test::Result test_cert_status_strings() {
       Botan::Certificate_Status_Code::CERT_CHAIN_TOO_LONG,
       Botan::Certificate_Status_Code::CA_CERT_NOT_FOR_CERT_ISSUER,
       Botan::Certificate_Status_Code::NAME_CONSTRAINT_ERROR,
+      Botan::Certificate_Status_Code::IPADDR_BLOCK_ERROR,
+      Botan::Certificate_Status_Code::ASBLOCKS_ERROR,
       Botan::Certificate_Status_Code::CA_CERT_NOT_FOR_CRL_ISSUER,
       Botan::Certificate_Status_Code::OCSP_CERT_NOT_LISTED,
       Botan::Certificate_Status_Code::OCSP_BAD_STATUS,

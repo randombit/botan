@@ -67,6 +67,8 @@ enum class Certificate_Status_Code {
    CERT_CHAIN_TOO_LONG = 4002,
    CA_CERT_NOT_FOR_CERT_ISSUER = 4003,
    NAME_CONSTRAINT_ERROR = 4004,
+   IPADDR_BLOCK_ERROR = 4011,
+   ASBLOCKS_ERROR = 4012,
 
    // Revocation errors
    CA_CERT_NOT_FOR_CRL_ISSUER = 4005,
