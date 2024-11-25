@@ -1,6 +1,7 @@
 /*
 * X.509 Certificate Extensions
 * (C) 1999-2007,2012 Jack Lloyd
+* (C) 2024 Anton Einax, Dominik Schricker
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -566,6 +567,200 @@ class BOTAN_PUBLIC_API(3, 5) TNAuthList final : public Certificate_Extension {
       void decode_inner(const std::vector<uint8_t>&) override;
 
       std::vector<Entry> m_tn_entries;
+};
+
+/**
+ * IP Adress Blocks Extension
+ *
+ * RFC 3779 X.509 Extensions for IP Addr
+ *
+*/
+class BOTAN_PUBLIC_API(3, 6) IPAddressBlocks final : public Certificate_Extension {
+   public:
+      enum class Version : uint8_t {
+         IPv4 = 4,
+         IPv6 = 16,
+      };
+
+      template <Version V>
+      class IPAddress {
+         public:
+            void set_from_bytes(const std::vector<uint8_t> v) {
+               if(v.size() != static_cast<size_t>(V)) {
+                  throw Decoding_Error("number of bytes does not match IP version used");
+               }
+
+               for(size_t i = 0; i < static_cast<size_t>(V); i++) {
+                  m_value[i] = v[i];
+               }
+            }
+
+            const std::array<uint8_t, static_cast<size_t>(V)> value() const { return m_value; }
+
+         private:
+            std::array<uint8_t, static_cast<size_t>(V)> m_value;
+      };
+
+      template <Version V>
+      class IPAddressOrRange : public ASN1_Object {
+         public:
+            void encode_into(DER_Encoder&) const override;
+            void decode_from(class BER_Decoder& from) override;
+
+            IPAddress<V> min() const { return m_min; }
+
+            IPAddress<V> max() const { return m_max; }
+
+            void set_min(const IPAddress<V>& min) { m_min = min; }
+
+            void set_max(const IPAddress<V>& max) { m_max = max; }
+
+         private:
+            IPAddress<V> m_min;
+            IPAddress<V> m_max;
+      };
+
+      template <Version V>
+      class IPAddressChoice : public ASN1_Object {
+         public:
+            void encode_into(DER_Encoder&) const override;
+            void decode_from(BER_Decoder& from) override;
+
+            const std::optional<std::vector<IPAddressOrRange<V>>>& range() const { return m_ip_addr_ranges; }
+
+            void set_range(const std::optional<std::vector<IPAddressOrRange<V>>>& range) { m_ip_addr_ranges = range; }
+
+         private:
+            std::optional<std::vector<IPAddressOrRange<V>>> m_ip_addr_ranges;
+      };
+
+      class IPAddressFamily : public ASN1_Object {
+         public:
+            void encode_into(DER_Encoder&) const override;
+            void decode_from(BER_Decoder& from) override;
+
+            const std::vector<uint8_t>& addr_family() const { return m_addr_family; }
+
+            void set_addr_family(const std::vector<uint8_t>& addr_family) { m_addr_family = addr_family; }
+
+            const std::variant<IPAddressChoice<Version::IPv4>, IPAddressChoice<Version::IPv6>>& addr_choice() const {
+               return m_ip_addr_choice;
+            }
+
+            void set_addr_choice(
+               const std::variant<IPAddressChoice<Version::IPv4>, IPAddressChoice<Version::IPv6>>& choice) {
+               m_ip_addr_choice = choice;
+            }
+
+         private:
+            std::vector<uint8_t> m_addr_family;
+            std::variant<IPAddressChoice<Version::IPv4>, IPAddressChoice<Version::IPv6>> m_ip_addr_choice;
+      };
+
+      IPAddressBlocks() = default;
+
+      std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<IPAddressBlocks>(*this); }
+
+      static OID static_oid() { return OID("1.3.6.1.5.5.7.1.7"); }
+
+      OID oid_of() const override { return static_oid(); }
+
+      const std::vector<IPAddressFamily>& addr_blocks() const { return m_ip_addr_blocks; }
+
+      void set_addr_blocks(const std::vector<IPAddressFamily>& addr_blocks) { m_ip_addr_blocks = addr_blocks; }
+
+   private:
+      std::string oid_name() const override { return "PKIX.ipAddrBlocks"; }
+
+      bool should_encode() const override { return true; }
+
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
+
+      std::vector<IPAddressFamily> m_ip_addr_blocks;
+};
+
+/**
+ * IP Adress Blocks Extension
+ *
+ * RFC 3779 X.509 Extensions for AS ID
+ *
+*/
+class BOTAN_PUBLIC_API(3, 6) ASBlocks final : public Certificate_Extension {
+   public:
+      typedef uint32_t asnum_t;
+
+      class BOTAN_PUBLIC_API(3, 5) ASIdOrRange : public ASN1_Object {
+         public:
+            void encode_into(DER_Encoder&) const override;
+            void decode_from(class BER_Decoder& from) override;
+
+            asnum_t min() const { return m_min; }
+
+            asnum_t max() const { return m_max; }
+
+            void set_min(asnum_t min) { m_min = min; }
+
+            void set_max(asnum_t max) { m_max = max; }
+
+         private:
+            asnum_t m_min = 0;
+            asnum_t m_max = 0;
+            std::vector<uint8_t> encode_asnum(asnum_t) const;
+      };
+
+      class BOTAN_PUBLIC_API(3, 5) ASIdentifierChoice : public ASN1_Object {
+         public:
+            void encode_into(DER_Encoder&) const override;
+            void decode_from(class BER_Decoder& from) override;
+
+            const std::optional<std::vector<ASIdOrRange>>& ranges() const { return m_as_ranges; }
+
+            void set_ranges(const std::optional<std::vector<ASIdOrRange>>& ranges) { m_as_ranges = ranges; }
+
+         private:
+            std::optional<std::vector<ASIdOrRange>> m_as_ranges;
+      };
+
+      class BOTAN_PUBLIC_API(3, 5) ASIdentifiers : public ASN1_Object {
+         public:
+            void encode_into(DER_Encoder&) const override;
+            void decode_from(class BER_Decoder& from) override;
+
+            const std::optional<ASIdentifierChoice>& asnum() const { return m_asnum; }
+
+            const std::optional<ASIdentifierChoice>& rdi() const { return m_rdi; }
+
+            void set_asnum(const std::optional<ASIdentifierChoice>& asnum) { m_asnum = asnum; }
+
+            void set_rdi(const std::optional<ASIdentifierChoice>& rdi) { m_rdi = rdi; }
+
+         private:
+            std::optional<ASIdentifierChoice> m_asnum;
+            std::optional<ASIdentifierChoice> m_rdi;
+      };
+
+      ASBlocks() = default;
+
+      std::unique_ptr<Certificate_Extension> copy() const override { return std::make_unique<ASBlocks>(*this); }
+
+      static OID static_oid() { return OID("1.3.6.1.5.5.7.1.8"); }
+
+      OID oid_of() const override { return static_oid(); }
+
+      const ASIdentifiers& as_identifiers() const { return m_as_identifiers; }
+
+      void set_as_identifiers(const ASIdentifiers& as_identifiers) { m_as_identifiers = as_identifiers; }
+
+   private:
+      ASIdentifiers m_as_identifiers;
+
+      std::string oid_name() const override { return "PKIX.autonomousSysIds"; }
+
+      bool should_encode() const override { return true; }
+
+      std::vector<uint8_t> encode_inner() const override;
+      void decode_inner(const std::vector<uint8_t>&) override;
 };
 
 /**
