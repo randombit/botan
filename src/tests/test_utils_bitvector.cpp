@@ -56,6 +56,15 @@ std::pair<Botan::bitvector, std::set<size_t>> rnd_bitvector_with_rnd_pois(Botan:
    return {bv, {points_of_interest.begin(), points_of_interest.end()}};
 }
 
+template <size_t mod>
+auto pattern_generator(size_t offset = 0) {
+   return [i = offset]() mutable -> bool {
+      const bool result = (i % mod) != 0;
+      ++i;
+      return result;
+   };
+}
+
 std::vector<Test::Result> test_bitvector_bitwise_accessors(Botan::RandomNumberGenerator& rng) {
    return {
       CHECK("default constructed bitvector",
@@ -320,14 +329,16 @@ std::vector<Test::Result> test_bitvector_capacity(Botan::RandomNumberGenerator&)
 }
 
 std::vector<Test::Result> test_bitvector_subvector(Botan::RandomNumberGenerator&) {
-   auto make_bitpattern = []<typename T>(T& bitvector, size_t pattern_offset = 0) {
+   auto make_bitpattern = [&]<typename T>(T& bitvector, size_t pattern_offset = 0) {
+      auto next = pattern_generator<3>(pattern_offset);
+
       if constexpr(std::unsigned_integral<T>) {
-         for(size_t i = pattern_offset; i - pattern_offset < sizeof(T) * 8; ++i) {
-            bitvector |= static_cast<T>(i % 3 != 0) << (i - pattern_offset);
+         for(size_t i = 0; i < sizeof(T) * 8; ++i) {
+            bitvector |= static_cast<T>(next()) << i;
          }
       } else {
-         for(size_t i = pattern_offset; i - pattern_offset < bitvector.size(); ++i) {
-            bitvector[i - pattern_offset] = (i % 3);
+         for(auto& i : bitvector) {
+            i = next();
          }
       }
    };
@@ -338,26 +349,27 @@ std::vector<Test::Result> test_bitvector_subvector(Botan::RandomNumberGenerator&
       return bitvector;
    };
 
-   auto check_bitpattern = [](auto& result, auto& bitvector, size_t offset = 0) {
+   auto check_bitpattern = [&](auto& result, auto& bitvector, size_t offset = 0) {
       using bv_t = std::remove_cvref_t<decltype(bitvector)>;
+      auto next = pattern_generator<3>(offset);
+
       if constexpr(std::unsigned_integral<bv_t>) {
          for(size_t i = 0; i < sizeof(bv_t) * 8; ++i) {
-            const bool expected = ((i + offset) % 3);
-            result.confirm(Botan::fmt("{} is as expected", i), (bitvector & (bv_t(1) << i)) != 0, expected);
+            result.confirm(Botan::fmt("{} is as expected", i), (bitvector & (bv_t(1) << i)) != 0, next());
          }
       } else {
          for(size_t i = 0; i < bitvector.size(); ++i) {
-            const bool expected = ((i + offset) % 3);
-            result.confirm(Botan::fmt("{} is as expected", i), bitvector[i], expected);
+            result.confirm(Botan::fmt("{} is as expected", i), bitvector[i], next());
          }
       }
    };
 
-   auto check_bitpattern_with_zero_region = [](auto& result, auto& bitvector, std::pair<size_t, size_t> zero_region) {
+   auto check_bitpattern_with_zero_region = [&](auto& result, auto& bitvector, std::pair<size_t, size_t> zero_region) {
+      auto next = pattern_generator<3>();
       for(size_t i = 0; i < bitvector.size(); ++i) {
          const bool i_in_range = (zero_region.first <= i && i < zero_region.second);
-         const bool expected = !i_in_range && (i % 3);
-         result.confirm(Botan::fmt("{} is as expected", i), bitvector[i], expected);
+         const bool expected = next();
+         result.confirm(Botan::fmt("{} is as expected", i), bitvector[i], !i_in_range && expected);
       }
    };
 
@@ -609,22 +621,23 @@ std::vector<Test::Result> test_bitvector_subvector(Botan::RandomNumberGenerator&
 
 std::vector<Test::Result> test_bitvector_global_modifiers_and_predicates(Botan::RandomNumberGenerator&) {
    auto make_bitpattern = [](auto& bitvector) {
-      for(size_t i = 0; i < bitvector.size(); ++i) {
-         bitvector[i] = (i % 5);
+      auto next = pattern_generator<5>();
+      for(auto& i : bitvector) {
+         i = next();
       }
    };
 
    auto check_bitpattern = [](auto& result, auto& bitvector) {
+      auto next = pattern_generator<5>();
       for(size_t i = 0; i < bitvector.size(); ++i) {
-         const bool expected = (i % 5);
-         result.confirm(Botan::fmt("{} is as expected", i), bitvector[i], expected);
+         result.confirm(Botan::fmt("{} is as expected", i), bitvector[i], next());
       }
    };
 
    auto check_flipped_bitpattern = [](auto& result, auto& bitvector) {
+      auto next = pattern_generator<5>();
       for(size_t i = 0; i < bitvector.size(); ++i) {
-         const bool expected = (i % 5 == 0);
-         result.confirm(Botan::fmt("{} is as expected", i), bitvector[i], expected);
+         result.confirm(Botan::fmt("{} is as expected", i), bitvector[i], !next());
       }
    };
 
