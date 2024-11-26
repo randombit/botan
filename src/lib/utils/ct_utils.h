@@ -244,6 +244,20 @@ template <unpoisonable T>
 /// @}
 
 /**
+* This forces a volatile read on the input value and returns the same value and
+* type as passed in. Useful to prevent the compiler from reasoning about the
+* value's range and suppress optimizations harmful to constant-time code.
+*
+* Note that this imposes a runtime overhead, as @p x will be physically stored
+* and loaded from memory.
+*/
+template <typename T>
+constexpr inline T volatile_read(T x) {
+   volatile T vx = x;
+   return vx;
+}
+
+/**
 * This function returns its argument, but (if called in a non-constexpr context)
 * attempts to prevent the compiler from reasoning about the value or the possible
 * range of values. Such optimizations have a way of breaking constant time code.
@@ -254,8 +268,9 @@ constexpr inline T value_barrier(T x) {
       /*
       * For compilers without inline asm, is there something else we can do?
       *
-      * For instance we could potentially launder the value through a
-      * `volatile T` or `volatile T*`. This would require some experimentation.
+      * Currently, we launder the value through a `volatile T`, as is done in
+      * Rust's subtlecrypto for instance:
+      * https://github.com/dsprenkels/subtlecrypto/blob/b4b070/src/lib.rs#L213-L228
       *
       * GCC has an attribute noipa which disables interprocedural analysis, which
       * might be useful here. However Clang does not currently support this attribute.
@@ -265,11 +280,16 @@ constexpr inline T value_barrier(T x) {
       * (see https://theunixzoo.co.uk/blog/2021-10-14-preventing-optimisations.html)
       * however the current approach seems sufficient with current compilers,
       * and is minimally damaging with regards to degrading code generation.
+      *
+      * Note that the asm-based approach is disabled on SuperH because it caused
+      * miscompilation on GCC 13.2. See GH #4444 for more details.
       */
-#if defined(BOTAN_USE_GCC_INLINE_ASM) && !defined(BOTAN_HAS_SANITIZER_MEMORY)
+#if defined(BOTAN_USE_GCC_INLINE_ASM) && !defined(BOTAN_HAS_SANITIZER_MEMORY) && !defined(BOTAN_TARGET_ARCH_IS_SUPERH)
       asm("" : "+r"(x) : /* no input */);
-#endif
       return x;
+#else
+      return volatile_read(x);
+#endif
    } else {
       return x;
    }
