@@ -111,12 +111,26 @@ EC_AffinePoint EC_AffinePoint::mul(const EC_Scalar& scalar, RandomNumberGenerato
    return EC_AffinePoint(inner().mul(scalar._inner(), rng, ws));
 }
 
-EC_AffinePoint EC_AffinePoint::mul_px_qy(const EC_AffinePoint& p,
-                                         const EC_Scalar& x,
-                                         const EC_AffinePoint& q,
-                                         const EC_Scalar& y,
-                                         RandomNumberGenerator& rng) {
+std::optional<EC_AffinePoint> EC_AffinePoint::mul_px_qy(const EC_AffinePoint& p,
+                                                        const EC_Scalar& x,
+                                                        const EC_AffinePoint& q,
+                                                        const EC_Scalar& y,
+                                                        RandomNumberGenerator& rng) {
    auto pt = p._inner().group()->mul_px_qy(p._inner(), x._inner(), q._inner(), y._inner(), rng);
+   if(pt) {
+      return EC_AffinePoint(std::move(pt));
+   } else {
+      return {};
+   }
+}
+
+EC_AffinePoint EC_AffinePoint::add(const EC_AffinePoint& q) const {
+   auto pt = _inner().group()->affine_add(_inner(), q._inner());
+   return EC_AffinePoint(std::move(pt));
+}
+
+EC_AffinePoint EC_AffinePoint::negate() const {
+   auto pt = this->_inner().group()->affine_neg(this->_inner());
    return EC_AffinePoint(std::move(pt));
 }
 

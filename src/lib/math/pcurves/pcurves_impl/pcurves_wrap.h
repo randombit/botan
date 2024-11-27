@@ -190,7 +190,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          return stash(from_stash(a) + from_stash(b));
       }
 
-      ProjectivePoint point_negate(const ProjectivePoint& pt) const override { return stash(from_stash(pt).negate()); }
+      AffinePoint point_negate(const AffinePoint& pt) const override { return stash(from_stash(pt).negate()); }
 
       bool affine_point_is_identity(const AffinePoint& pt) const override {
          return from_stash(pt).is_identity().as_bool();

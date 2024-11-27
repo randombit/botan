@@ -208,11 +208,11 @@ class Pcurve_Arithmetic_Tests final : public Test {
 
                auto pt2 = [&]() {
                   const auto lo = curve->scalar_from_u32(static_cast<uint32_t>(i / 2));
-                  auto x = curve->mul_by_g(lo, rng);
+                  auto x = curve->mul_by_g(lo, rng).to_affine();
                   if(i % 2 == 0) {
                      x = x.negate();
                   }
-                  return x.to_affine();
+                  return x;
                }();
 
                const auto s1 = curve->random_scalar(rng);
