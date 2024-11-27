@@ -115,3 +115,10 @@ x32     -> "-mx32"
 qnx     -> "-fexceptions"
 cygwin  -> "-U__STRICT_ANSI__"
 </mach_abi_linking>
+
+<ct_value_barrier>
+default -> asm
+# Work around an ICE in GCC 13.2
+# see GH #4444
+superh -> volatile
+</ct_value_barrier>

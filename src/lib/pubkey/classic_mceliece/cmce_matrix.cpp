@@ -32,8 +32,8 @@ CT::Mask<uint64_t> bit_at_mask(uint64_t val, size_t pos) {
 
 /// Swaps bit i with bit j in val
 void swap_bits(uint64_t& val, size_t i, size_t j) {
-   uint64_t bit_i = (val >> i) & CT::value_barrier(1);
-   uint64_t bit_j = (val >> j) & CT::value_barrier(1);
+   uint64_t bit_i = (val >> i) & CT::value_barrier<uint64_t>(1);
+   uint64_t bit_j = (val >> j) & CT::value_barrier<uint64_t>(1);
    uint64_t xor_sum = bit_i ^ bit_j;
    val ^= (xor_sum << i);
    val ^= (xor_sum << j);

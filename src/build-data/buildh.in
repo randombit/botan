@@ -122,6 +122,10 @@
 #define BOTAN_USE_GCC_INLINE_ASM
 %{endif}
 
+%{if cxx_ct_value_barrier_type}
+#define BOTAN_CT_VALUE_BARRIER_USE_%{cxx_ct_value_barrier_type|upper}
+%{endif}
+
 %{for sanitizer_types}
 #define BOTAN_HAS_SANITIZER_%{i|upper}
 %{endfor}

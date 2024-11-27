@@ -106,3 +106,7 @@ ppc64   -> "-m64"
 macos   -> "-stdlib=libc++"
 ios     -> "-stdlib=libc++"
 </mach_abi_linking>
+
+<ct_value_barrier>
+default -> asm
+</ct_value_barrier>

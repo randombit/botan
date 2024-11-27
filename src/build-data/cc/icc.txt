@@ -23,3 +23,9 @@ rdrand  -> "-march=core-avx-i"
 <so_link_commands>
 default -> "{cxx} -fPIC -shared -Wl,-soname,{soname_abi}"
 </so_link_commands>
+
+# Modern Intel C++ is based on Clang so we assume it can perform Clang-like
+# optimizations that harm constant time code
+<ct_value_barrier>
+default -> asm
+</ct_value_barrier>
