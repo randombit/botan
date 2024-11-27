@@ -400,6 +400,9 @@ def process_command_line(args):
     target_group.add_option('--with-endian', metavar='ORDER', default=None,
                             help='override byte order guess')
 
+    target_group.add_option('--ct-value-barrier-type', metavar='TYPE', default=None,
+                            help=optparse.SUPPRESS_HELP)
+
     target_group.add_option('--with-os-features', action='append', metavar='FEAT',
                             help='specify OS features to use')
     target_group.add_option('--without-os-features', action='append', metavar='FEAT',
@@ -1228,7 +1231,7 @@ class CompilerInfo(InfoObject):
             infofile,
             [],
             ['cpu_flags', 'cpu_flags_no_debug', 'so_link_commands', 'binary_link_commands',
-             'mach_abi_linking', 'isa_flags', 'sanitizers', 'lib_flags'],
+             'mach_abi_linking', 'isa_flags', 'sanitizers', 'lib_flags', 'ct_value_barrier'],
             {
                 'binary_name': None,
                 'linker_name': None,
@@ -1313,6 +1316,7 @@ class CompilerInfo(InfoObject):
         self.ninja_header_deps_style = lex.ninja_header_deps_style
         self.header_deps_flag = lex.header_deps_flag
         self.header_deps_out = lex.header_deps_out
+        self.ct_value_barrier = lex.ct_value_barrier
 
     def cross_check(self, os_info, arch_info, all_isas):
 
@@ -1399,6 +1403,27 @@ class CompilerInfo(InfoObject):
         if options.build_shared_lib:
             return self.visibility_attribute
         return ''
+
+    def ct_value_barrier_type(self, options):
+        if options.ct_value_barrier_type:
+            if options.ct_value_barrier_type == 'asm' and not self.supports_gcc_inline_asm:
+                raise UserError('Invalid setting for --ct-value-barrier-type: the requested compiler does not support GCC inline asm')
+            return options.ct_value_barrier_type
+
+        if 'memory' in self.sanitizer_types:
+            return None
+
+        if self.ct_value_barrier:
+            for pref in [options.arch, 'default']:
+                if pref in self.ct_value_barrier:
+                    x = self.ct_value_barrier[pref]
+                    if x == 'asm' and not options.enable_asm:
+                        return None
+                    if x == 'none':
+                        return None
+                    return x
+
+        return None
 
     def mach_abi_link_flags(self, options, debug_mode=None):
 
@@ -2234,6 +2259,8 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'make_supports_phony': osinfo.basename != 'windows',
 
         'cxx_supports_gcc_inline_asm': cc.supports_gcc_inline_asm and options.enable_asm,
+
+        'cxx_ct_value_barrier_type': cc.ct_value_barrier_type(options),
 
         'sanitizer_types' : sorted(cc.sanitizer_types),
 
@@ -3275,6 +3302,10 @@ def validate_options(options, info_os, info_cc, available_module_policies):
 
     if options.with_pdf and not options.with_sphinx:
         raise UserError('Option --with-pdf requires --with-sphinx')
+
+    if options.ct_value_barrier_type:
+        if options.ct_value_barrier_type not in ['asm', 'volatile', 'none']:
+            raise UserError('Unknown setting "%s" for --ct-value-barrier-type' % (options.ct_value_barrier_type))
 
     # Warnings
     if options.os == 'windows' and options.compiler != 'msvc':

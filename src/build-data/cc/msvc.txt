@@ -89,3 +89,13 @@ all              -> "/bigobj"
 rt               -> "/MD"
 rt-debug         -> "/MDd"
 </mach_abi_linking>
+
+# Currently, MSVC is not known to perform the sorts of optimizations
+# which break constant time code. Using inline asm as a value barrier
+# is not an option in MSVC, leaving only use of volatile. Using
+# volatile is likely to introduce a significant performance
+# regression, and does not seem worth it at this time.
+
+<ct_value_barrier>
+default -> none
+</ct_value_barrier>

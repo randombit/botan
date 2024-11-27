@@ -77,3 +77,7 @@ all -> "-pthread -stdlib=libc++"
 
 x86_64  -> "-m64"
 </mach_abi_linking>
+
+<ct_value_barrier>
+default -> asm
+</ct_value_barrier>

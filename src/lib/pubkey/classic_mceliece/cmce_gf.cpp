@@ -50,7 +50,7 @@ Classic_McEliece_GF Classic_McEliece_GF::operator*(Classic_McEliece_GF other) co
    uint32_t a = m_elem.get();
    uint32_t b = other.m_elem.get();
 
-   uint32_t acc = a * (b & CT::value_barrier(1));
+   uint32_t acc = a * (b & CT::value_barrier<uint32_t>(1));
 
    for(size_t i = 1; i < log_q(); i++) {
       acc ^= (a * (b & (1 << i)));

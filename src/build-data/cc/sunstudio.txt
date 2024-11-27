@@ -37,3 +37,7 @@ aesni      -> "-xarch=aes"
 rdrand     -> "-xarch=avx_i"
 avx2       -> "-xarch=avx2"
 </isa_flags>
+
+<ct_value_barrier>
+default -> none
+</ct_value_barrier>
