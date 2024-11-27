@@ -1396,6 +1396,11 @@ class Strong_Adapter<T> : public Container_Strong_Adapter_Base<T> {
          return this->get().subvector_replace(pos, value);
       }
 
+      template <bitvectorish OtherT>
+      auto equals(const OtherT& other) const {
+         return this->get().equals(other);
+      }
+
       auto push_back(bool b) { return this->get().push_back(b); }
 
       auto pop_back() { return this->get().pop_back(); }
