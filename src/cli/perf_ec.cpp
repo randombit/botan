@@ -34,6 +34,7 @@ class PerfTest_EllipticCurve final : public PerfTest {
 
             auto bp_timer = config.make_timer(group_name + " base point mul");
             auto vp_timer = config.make_timer(group_name + " variable point mul");
+            auto add_timer = config.make_timer(group_name + " point addition");
             auto der_uc_timer = config.make_timer(group_name + " point deserialize (uncompressed)");
             auto der_c_timer = config.make_timer(group_name + " point deserialize (compressed)");
             auto mul2_setup_timer = config.make_timer(group_name + " mul2 setup");
@@ -64,6 +65,8 @@ class PerfTest_EllipticCurve final : public PerfTest {
                const auto r2_bytes = r2.serialize_uncompressed();
                BOTAN_ASSERT_EQUAL(r1_bytes, r2_bytes, "Same result for multiplication");
 
+               add_timer->run([&]() { r1.add(r2); });
+
                der_uc_timer->run([&]() { Botan::EC_AffinePoint::deserialize(group, r1_bytes); });
 
                const auto r1_cbytes = r1.serialize_compressed();
@@ -81,6 +84,7 @@ class PerfTest_EllipticCurve final : public PerfTest {
                }
             }
 
+            config.record_result(*add_timer);
             config.record_result(*bp_timer);
             config.record_result(*vp_timer);
             config.record_result(*mul2_setup_timer);

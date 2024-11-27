@@ -317,13 +317,38 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::mul_px_qy(const EC_AffinePoi
       auto qy = q_mul.mul(EC_Scalar_Data_BN::checked_ref(y).value(), rng, order, ws);
 
       auto px_qy = px + qy;
-      px_qy.force_affine();
 
       if(!px_qy.is_zero()) {
+         px_qy.force_affine();
          return std::make_unique<EC_AffinePoint_Data_BN>(shared_from_this(), std::move(px_qy));
       } else {
          return nullptr;
       }
+   }
+}
+
+std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::affine_add(const EC_AffinePoint_Data& p,
+                                                               const EC_AffinePoint_Data& q) const {
+   if(m_pcurve) {
+      auto pt = m_pcurve->point_add_mixed(
+         PCurve::PrimeOrderCurve::ProjectivePoint::from_affine(EC_AffinePoint_Data_PC::checked_ref(p).value()),
+         EC_AffinePoint_Data_PC::checked_ref(q).value());
+
+      return std::make_unique<EC_AffinePoint_Data_PC>(shared_from_this(), pt.to_affine());
+   } else {
+      auto pt = p.to_legacy_point() + q.to_legacy_point();
+      return std::make_unique<EC_AffinePoint_Data_BN>(shared_from_this(), std::move(pt));
+   }
+}
+
+std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::affine_neg(const EC_AffinePoint_Data& p) const {
+   if(m_pcurve) {
+      auto pt = m_pcurve->point_negate(EC_AffinePoint_Data_PC::checked_ref(p).value());
+      return std::make_unique<EC_AffinePoint_Data_PC>(shared_from_this(), pt);
+   } else {
+      auto pt = p.to_legacy_point();
+      pt.negate();  // negates in place
+      return std::make_unique<EC_AffinePoint_Data_BN>(shared_from_this(), std::move(pt));
    }
 }
 

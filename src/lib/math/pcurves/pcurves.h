@@ -192,6 +192,11 @@ class BOTAN_TEST_API PrimeOrderCurve {
             }
 
             /**
+            * Point negation
+            */
+            AffinePoint negate() const { return m_curve->point_negate(*this); }
+
+            /**
             * Return true if this is the curve identity element (aka the point at infinity)
             */
             bool is_identity() const { return m_curve->affine_point_is_identity(*this); }
@@ -242,8 +247,6 @@ class BOTAN_TEST_API PrimeOrderCurve {
             AffinePoint to_affine() const { return m_curve->point_to_affine(*this); }
 
             ProjectivePoint dbl() const { return m_curve->point_double(*this); }
-
-            ProjectivePoint negate() const { return m_curve->point_negate(*this); }
 
             friend ProjectivePoint operator+(const ProjectivePoint& x, const ProjectivePoint& y) {
                return x.m_curve->point_add(x, y);
@@ -376,7 +379,7 @@ class BOTAN_TEST_API PrimeOrderCurve {
 
       virtual ProjectivePoint point_double(const ProjectivePoint& pt) const = 0;
 
-      virtual ProjectivePoint point_negate(const ProjectivePoint& pt) const = 0;
+      virtual AffinePoint point_negate(const AffinePoint& pt) const = 0;
 
       virtual ProjectivePoint point_add(const ProjectivePoint& a, const ProjectivePoint& b) const = 0;
 

@@ -256,9 +256,37 @@ Only curves over prime fields are supported.
 
       Fixed base scalar multiplication. Constant time with blinding.
 
+   .. cpp:function::  static std::optional<EC_AffinePoint> mul_px_qy(const EC_AffinePoint& p, \
+                          const EC_Scalar& x, \
+                          const EC_AffinePoint& q, \
+                          const EC_Scalar& y, \
+                          RandomNumberGenerator& rng)
+
+      Constant time 2-ary multiscalar multiplication. Returns p*x + q*y, or
+      nullopt if the resulting point was the identity element.
+
    .. cpp:function:: EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const
 
       Variable base scalar multiplication. Constant time with blinding.
+
+   .. cpp:function::  static EC_AffinePoint add(const EC_AffinePoint& p, const EC_AffinePoint& q)
+
+      Elliptic curve point addition.
+
+      .. note::
+
+         This point addition operation is relatively quite expensive since it
+         must convert the point directly from projective to affine coordinates,
+         which requires an expensive field inversion. This is, however,
+         sufficient for protocols which just require a small number of point
+         additions. In the future a type for projective coordinate points may
+         also be added, to better handle protocols which require many point
+         additions. If you are implementing such a protocol using this interface
+         please open an issue on Github.
+
+   .. cpp:function:: EC_AffinePoint negate() const
+
+      Return the negation of this point.
 
    .. cpp:function:: static EC_AffinePoint hash_to_curve_ro(const EC_Group& group, \
                                              std::string_view hash_fn, \
