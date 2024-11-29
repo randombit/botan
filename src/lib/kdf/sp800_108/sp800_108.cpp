@@ -1,6 +1,7 @@
 /*
 * KDFs defined in NIST SP 800-108
 * (C) 2016 Kai Michaelis
+* (C) 2024 René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -8,9 +9,10 @@
 #include <botan/internal/sp800_108.h>
 
 #include <botan/exceptn.h>
+#include <botan/internal/bit_ops.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
-#include <iterator>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -22,51 +24,44 @@ std::unique_ptr<KDF> SP800_108_Counter::new_object() const {
    return std::make_unique<SP800_108_Counter>(m_prf->new_object());
 }
 
-void SP800_108_Counter::kdf(uint8_t key[],
-                            size_t key_len,
-                            const uint8_t secret[],
-                            size_t secret_len,
-                            const uint8_t salt[],
-                            size_t salt_len,
-                            const uint8_t label[],
-                            size_t label_len) const {
-   const std::size_t prf_len = m_prf->output_length();
-
-   const uint64_t blocks_required = (key_len + prf_len - 1) / prf_len;
-
-   if(blocks_required > 0xFFFFFFFF) {
-      throw Invalid_Argument("SP800_108_Counter output size too large");
+void SP800_108_Counter::perform_kdf(std::span<uint8_t> key,
+                                    std::span<const uint8_t> secret,
+                                    std::span<const uint8_t> salt,
+                                    std::span<const uint8_t> label) const {
+   if(key.empty()) {
+      return;
    }
 
-   const uint8_t delim = 0;
-   const uint32_t length = static_cast<uint32_t>(key_len * 8);
+   const auto length = static_cast<uint32_t>(key.size() * 8);
+   const auto prf_len = m_prf->output_length();
+   const auto blocks_required = ceil_division<uint64_t /* for 32bit systems */>(key.size(), prf_len);
 
-   uint8_t* p = key;
-   uint32_t counter = 1;
-   uint8_t be_len[4] = {0};
-   secure_vector<uint8_t> tmp;
+   // This KDF uses a 32-bit counter for the hash blocks, initialized at 1.
+   // It will wrap around after 2^32 - 1 iterations limiting the theoretically
+   // possible output to 2^32 - 1 blocks.
+   BOTAN_ARG_CHECK(blocks_required <= 0xFFFFFFFE, "SP800_108_Counter output size too large");
 
-   store_be(length, be_len);
-   m_prf->set_key(secret, secret_len);
+   constexpr uint8_t delim = 0;
 
-   while(p < key + key_len) {
-      const std::size_t to_copy = std::min<std::size_t>(key + key_len - p, prf_len);
-      uint8_t be_cnt[4] = {0};
-
-      store_be(counter, be_cnt);
-
-      m_prf->update(be_cnt, 4);
-      m_prf->update(label, label_len);
-      m_prf->update(delim);
-      m_prf->update(salt, salt_len);
-      m_prf->update(be_len, 4);
-      m_prf->final(tmp);
-
-      copy_mem(p, tmp.data(), to_copy);
-      p += to_copy;
-
-      ++counter;
+   BufferStuffer k(key);
+   m_prf->set_key(secret);
+   for(uint32_t counter = 1; !k.full(); ++counter) {
       BOTAN_ASSERT(counter != 0, "No counter overflow");
+
+      m_prf->update(store_be(counter));
+      m_prf->update(label);
+      m_prf->update(delim);
+      m_prf->update(salt);
+      m_prf->update(store_be(length));
+
+      // Write straight into the output buffer, except if the PRF output needs
+      // a truncation in the final iteration.
+      if(k.remaining_capacity() >= prf_len) {
+         m_prf->final(k.next(prf_len));
+      } else {
+         const auto h = m_prf->final();
+         k.append(std::span{h}.first(k.remaining_capacity()));
+      }
    }
 }
 
@@ -78,54 +73,42 @@ std::unique_ptr<KDF> SP800_108_Feedback::new_object() const {
    return std::make_unique<SP800_108_Feedback>(m_prf->new_object());
 }
 
-void SP800_108_Feedback::kdf(uint8_t key[],
-                             size_t key_len,
-                             const uint8_t secret[],
-                             size_t secret_len,
-                             const uint8_t salt[],
-                             size_t salt_len,
-                             const uint8_t label[],
-                             size_t label_len) const {
-   const uint32_t length = static_cast<uint32_t>(key_len * 8);
-   const std::size_t prf_len = m_prf->output_length();
-   const std::size_t iv_len = (salt_len >= prf_len ? prf_len : 0);
-   const uint8_t delim = 0;
-
-   const uint64_t blocks_required = (key_len + prf_len - 1) / prf_len;
-
-   if(blocks_required > 0xFFFFFFFF) {
-      throw Invalid_Argument("SP800_108_Feedback output size too large");
+void SP800_108_Feedback::perform_kdf(std::span<uint8_t> key,
+                                     std::span<const uint8_t> secret,
+                                     std::span<const uint8_t> salt,
+                                     std::span<const uint8_t> label) const {
+   if(key.empty()) {
+      return;
    }
 
-   uint8_t* p = key;
-   uint32_t counter = 1;
-   uint8_t be_len[4] = {0};
-   secure_vector<uint8_t> prev(salt, salt + iv_len);
-   secure_vector<uint8_t> ctx(salt + iv_len, salt + salt_len);
+   const auto length = static_cast<uint32_t>(key.size() * 8);
+   const auto prf_len = m_prf->output_length();
+   const auto iv_len = (salt.size() >= prf_len ? prf_len : 0);
+   constexpr uint8_t delim = 0;
 
-   store_be(length, be_len);
-   m_prf->set_key(secret, secret_len);
+   const uint64_t blocks_required = (key.size() + prf_len - 1) / prf_len;
+   BOTAN_ARG_CHECK(blocks_required < 0xFFFFFFFF, "SP800_108_Feedback output size too large");
 
-   while(p < key + key_len) {
-      const std::size_t to_copy = std::min<std::size_t>(key + key_len - p, prf_len);
-      uint8_t be_cnt[4] = {0};
+   BufferSlicer s(salt);
+   auto prev = s.copy_as_secure_vector(iv_len);
+   const auto ctx = s.take(s.remaining());
+   BOTAN_ASSERT_NOMSG(s.empty());
 
-      store_be(counter, be_cnt);
+   BufferStuffer k(key);
+   m_prf->set_key(secret);
+   for(uint32_t counter = 1; !k.full(); ++counter) {
+      BOTAN_ASSERT(counter != 0, "No counter overflow");
 
       m_prf->update(prev);
-      m_prf->update(be_cnt, 4);
-      m_prf->update(label, label_len);
+      m_prf->update(store_be(counter));
+      m_prf->update(label);
       m_prf->update(delim);
       m_prf->update(ctx);
-      m_prf->update(be_len, 4);
+      m_prf->update(store_be(length));
       m_prf->final(prev);
 
-      copy_mem(p, prev.data(), to_copy);
-      p += to_copy;
-
-      ++counter;
-
-      BOTAN_ASSERT(counter != 0, "No overflow");
+      const auto bytes_to_write = std::min(prev.size(), k.remaining_capacity());
+      k.append(std::span{prev}.first(bytes_to_write));
    }
 }
 
@@ -137,63 +120,46 @@ std::unique_ptr<KDF> SP800_108_Pipeline::new_object() const {
    return std::make_unique<SP800_108_Pipeline>(m_prf->new_object());
 }
 
-void SP800_108_Pipeline::kdf(uint8_t key[],
-                             size_t key_len,
-                             const uint8_t secret[],
-                             size_t secret_len,
-                             const uint8_t salt[],
-                             size_t salt_len,
-                             const uint8_t label[],
-                             size_t label_len) const {
-   const uint32_t length = static_cast<uint32_t>(key_len * 8);
-   const std::size_t prf_len = m_prf->output_length();
-   const uint8_t delim = 0;
-
-   const uint64_t blocks_required = (key_len + prf_len - 1) / prf_len;
-
-   if(blocks_required > 0xFFFFFFFF) {
-      throw Invalid_Argument("SP800_108_Feedback output size too large");
+void SP800_108_Pipeline::perform_kdf(std::span<uint8_t> key,
+                                     std::span<const uint8_t> secret,
+                                     std::span<const uint8_t> salt,
+                                     std::span<const uint8_t> label) const {
+   if(key.empty()) {
+      return;
    }
 
-   uint8_t* p = key;
-   uint32_t counter = 1;
-   uint8_t be_len[4] = {0};
-   secure_vector<uint8_t> ai, ki;
+   const auto length = static_cast<uint32_t>(key.size() * 8);
+   const auto prf_len = m_prf->output_length();
+   constexpr uint8_t delim = 0;
 
-   store_be(length, be_len);
-   m_prf->set_key(secret, secret_len);
+   const uint64_t blocks_required = (key.size() + prf_len - 1) / prf_len;
+   BOTAN_ARG_CHECK(blocks_required < 0xFFFFFFFF, "SP800_108_Feedback output size too large");
 
    // A(0)
-   std::copy(label, label + label_len, std::back_inserter(ai));
-   ai.emplace_back(delim);
-   std::copy(salt, salt + salt_len, std::back_inserter(ai));
-   std::copy(be_len, be_len + 4, std::back_inserter(ai));
+   auto ai = concat<secure_vector<uint8_t>>(label, store_be(delim), salt, store_be(length));
+   secure_vector<uint8_t> ki;
 
-   while(p < key + key_len) {
+   BufferStuffer k(key);
+   m_prf->set_key(secret);
+   for(uint32_t counter = 1; !k.full(); ++counter) {
+      BOTAN_ASSERT(counter != 0, "No counter overflow");
+
       // A(i)
       m_prf->update(ai);
       m_prf->final(ai);
 
       // K(i)
-      const std::size_t to_copy = std::min<std::size_t>(key + key_len - p, prf_len);
-      uint8_t be_cnt[4] = {0};
-
-      store_be(counter, be_cnt);
-
       m_prf->update(ai);
-      m_prf->update(be_cnt, 4);
-      m_prf->update(label, label_len);
+      m_prf->update(store_be(counter));
+      m_prf->update(label);
       m_prf->update(delim);
-      m_prf->update(salt, salt_len);
-      m_prf->update(be_len, 4);
+      m_prf->update(salt);
+      m_prf->update(store_be(length));
       m_prf->final(ki);
 
-      copy_mem(p, ki.data(), to_copy);
-      p += to_copy;
-
-      ++counter;
-
-      BOTAN_ASSERT(counter != 0, "No overflow");
+      const auto bytes_to_write = std::min(ki.size(), k.remaining_capacity());
+      k.append(std::span{ki}.first(bytes_to_write));
    }
 }
+
 }  // namespace Botan

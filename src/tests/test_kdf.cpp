@@ -75,8 +75,8 @@ class HKDF_Expand_Label_Tests final : public Text_Based_Test {
             return result;
          }
 
-         Botan::secure_vector<uint8_t> output = Botan::hkdf_expand_label(
-            hash_name, secret.data(), secret.size(), label, hashval.data(), hashval.size(), expected.size());
+         Botan::secure_vector<uint8_t> output =
+            Botan::hkdf_expand_label(hash_name, secret, label, hashval, expected.size());
 
          result.test_eq("Output matches", output, expected);
 

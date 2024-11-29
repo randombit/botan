@@ -1,6 +1,7 @@
 /*
 * Two-Step KDF defined in NIST SP 800-56Cr2 (Section 5)
 * (C) 2016 Kai Michaelis
+* (C) 2024 René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -19,23 +20,17 @@ std::unique_ptr<KDF> SP800_56C_Two_Step::new_object() const {
    return std::make_unique<SP800_56C_Two_Step>(m_prf->new_object(), m_exp->new_object());
 }
 
-void SP800_56C_Two_Step::kdf(uint8_t key[],
-                             size_t key_len,
-                             const uint8_t secret[],
-                             size_t secret_len,
-                             const uint8_t salt[],
-                             size_t salt_len,
-                             const uint8_t label[],
-                             size_t label_len) const {
+void SP800_56C_Two_Step::perform_kdf(std::span<uint8_t> key,
+                                     std::span<const uint8_t> secret,
+                                     std::span<const uint8_t> salt,
+                                     std::span<const uint8_t> label) const {
    // Randomness Extraction
-   secure_vector<uint8_t> k_dk;
-
-   m_prf->set_key(salt, salt_len);
-   m_prf->update(secret, secret_len);
-   m_prf->final(k_dk);
+   m_prf->set_key(salt);
+   m_prf->update(secret);
+   const auto k_dk = m_prf->final();
 
    // Key Expansion
-   m_exp->kdf(key, key_len, k_dk.data(), k_dk.size(), nullptr, 0, label, label_len);
+   m_exp->derive_key(key, k_dk, {} /* no salt */, label);
 }
 
 }  // namespace Botan
