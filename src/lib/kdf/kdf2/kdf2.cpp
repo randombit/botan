@@ -1,6 +1,7 @@
 /*
 * KDF2
 * (C) 1999-2007 Jack Lloyd
+* (C) 2024      René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,6 +10,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
@@ -20,41 +22,31 @@ std::unique_ptr<KDF> KDF2::new_object() const {
    return std::make_unique<KDF2>(m_hash->new_object());
 }
 
-void KDF2::kdf(uint8_t key[],
-               size_t key_len,
-               const uint8_t secret[],
-               size_t secret_len,
-               const uint8_t salt[],
-               size_t salt_len,
-               const uint8_t label[],
-               size_t label_len) const {
-   if(key_len == 0) {
+void KDF2::perform_kdf(std::span<uint8_t> key,
+                       std::span<const uint8_t> secret,
+                       std::span<const uint8_t> salt,
+                       std::span<const uint8_t> label) const {
+   if(key.empty()) {
       return;
    }
 
-   const size_t blocks_required = key_len / m_hash->output_length();
+   const size_t blocks_required = key.size() / m_hash->output_length();
+   BOTAN_ARG_CHECK(blocks_required < 0xFFFFFFFF, "KDF2 maximum output length exceeeded");
 
-   if(blocks_required >= 0xFFFFFFFE) {
-      throw Invalid_Argument("KDF2 maximum output length exceeeded");
-   }
-
-   uint32_t counter = 1;
    secure_vector<uint8_t> h;
 
-   size_t offset = 0;
-   while(offset != key_len) {
-      m_hash->update(secret, secret_len);
+   BufferStuffer k(key);
+   for(uint32_t counter = 1; !k.full(); ++counter) {
+      BOTAN_ASSERT_NOMSG(counter != 0);  // no overflow
+
+      m_hash->update(secret);
       m_hash->update_be(counter);
-      m_hash->update(label, label_len);
-      m_hash->update(salt, salt_len);
+      m_hash->update(label);
+      m_hash->update(salt);
       m_hash->final(h);
 
-      const size_t added = std::min(h.size(), key_len - offset);
-      copy_mem(&key[offset], h.data(), added);
-      offset += added;
-
-      counter += 1;
-      BOTAN_ASSERT_NOMSG(counter != 0);  // no overflow
+      const auto bytes_to_write = std::min(h.size(), k.remaining_capacity());
+      k.append(std::span{h}.first(bytes_to_write));
    }
 }
 
