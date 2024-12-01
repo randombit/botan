@@ -117,6 +117,15 @@ needed. If your diff is less than roughly 100 lines, it should probably be a
 single commit. Only split commits as needed to help with review/understanding of
 the change.
 
+Occasionally we apply and commit updated clang-format rules to the code base. To
+avoid cluttering the ``git blame`` output with these intrusive commits, we
+maintain a list of them in ``src/configs/git-blame-ignore-revs``. To use it,
+either manually add ``--ignore-revs-file=`` to your ``git blame`` command, or
+configure it to be used in your local checkout, like so::
+
+  git config --local blame.ignoreRevsFile src/configs/git-blame-ignore-revs
+  git config --local blame.markIgnoredLines true
+
 Python
 ----------------------------------------
 
