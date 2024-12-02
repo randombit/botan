@@ -1,19 +1,19 @@
 /*
-* (C) 2018 Jack Lloyd
+* (C) 2018,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#ifndef BOTAN_TIMER_H_
-#define BOTAN_TIMER_H_
+#ifndef BOTAN_CLI_TIMER_H_
+#define BOTAN_CLI_TIMER_H_
 
 #include <botan/types.h>
 #include <chrono>
 #include <string>
 
-namespace Botan {
+namespace Botan_CLI {
 
-class BOTAN_TEST_API Timer final {
+class Timer final {
    public:
       Timer(std::string_view name,
             std::string_view provider,
@@ -120,6 +120,6 @@ class BOTAN_TEST_API Timer final {
       uint64_t m_cpu_cycles_start = 0;
 };
 
-}  // namespace Botan
+}  // namespace Botan_CLI
 
 #endif

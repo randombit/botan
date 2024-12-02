@@ -9,18 +9,19 @@
 
 #include <botan/rng.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/timer.h>
 #include <chrono>
 #include <functional>
 #include <iosfwd>
 #include <map>
 #include <string>
 
+#include "timer.h"
+
 namespace Botan_CLI {
 
 class PerfConfig final {
    public:
-      PerfConfig(std::function<void(const Botan::Timer&)> record_result,
+      PerfConfig(std::function<void(const Timer&)> record_result,
                  size_t clock_speed,
                  double clock_cycle_ratio,
                  std::chrono::milliseconds runtime,
@@ -47,19 +48,18 @@ class PerfConfig final {
 
       Botan::RandomNumberGenerator& rng() const { return m_rng; }
 
-      void record_result(const Botan::Timer& timer) const { m_record_result(timer); }
+      void record_result(const Timer& timer) const { m_record_result(timer); }
 
-      std::unique_ptr<Botan::Timer> make_timer(const std::string& alg,
-                                               uint64_t event_mult = 1,
-                                               const std::string& what = "",
-                                               const std::string& provider = "",
-                                               size_t buf_size = 0) const {
-         return std::make_unique<Botan::Timer>(
-            alg, provider, what, event_mult, buf_size, m_clock_cycle_ratio, m_clock_speed);
+      std::unique_ptr<Timer> make_timer(const std::string& alg,
+                                        uint64_t event_mult = 1,
+                                        const std::string& what = "",
+                                        const std::string& provider = "",
+                                        size_t buf_size = 0) const {
+         return std::make_unique<Timer>(alg, provider, what, event_mult, buf_size, m_clock_cycle_ratio, m_clock_speed);
       }
 
    private:
-      std::function<void(const Botan::Timer&)> m_record_result;
+      std::function<void(const Timer&)> m_record_result;
       size_t m_clock_speed = 0;
       double m_clock_cycle_ratio = 0.0;
       std::chrono::milliseconds m_runtime;
