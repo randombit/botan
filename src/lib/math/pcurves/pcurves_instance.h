@@ -9,6 +9,12 @@
 
 #include <memory>
 
+namespace Botan {
+
+class BigInt;
+
+}
+
 namespace Botan::PCurve {
 
 class PrimeOrderCurve;
@@ -44,6 +50,13 @@ class PCurveInstance final {
       static std::shared_ptr<const PrimeOrderCurve> sm2p256v1();
 
       static std::shared_ptr<const PrimeOrderCurve> numsp512d1();
+
+      static std::shared_ptr<const PrimeOrderCurve> from_params(const BigInt& p,
+                                                                const BigInt& a,
+                                                                const BigInt& b,
+                                                                const BigInt& base_x,
+                                                                const BigInt& base_y,
+                                                                const BigInt& order);
 };
 
 }  // namespace Botan::PCurve
