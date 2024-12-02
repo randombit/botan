@@ -10,7 +10,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/timer.h>
+#include <botan/internal/time_utils.h>
 #include <algorithm>
 
 namespace Botan {
@@ -95,13 +95,12 @@ std::unique_ptr<PasswordHash> RFC4880_S2K_Family::tune(size_t output_len,
                                                        std::chrono::milliseconds msec,
                                                        size_t /*max_memory_usage_mb*/,
                                                        std::chrono::milliseconds tune_time) const {
-   const size_t buf_size = 1024;
+   constexpr size_t buf_size = 1024;
    std::vector<uint8_t> buffer(buf_size);
 
-   Timer timer("RFC4880_S2K", buf_size);
-   timer.run_until_elapsed(tune_time, [&]() { m_hash->update(buffer); });
+   const uint64_t measured_nsec = measure_cost(tune_time, [&]() { m_hash->update(buffer); });
 
-   const double hash_bytes_per_second = timer.bytes_per_second();
+   const double hash_bytes_per_second = (buf_size * 1000000000.0) / measured_nsec;
    const uint64_t desired_nsec = msec.count() * 1000000;
 
    const size_t hash_size = m_hash->output_length();

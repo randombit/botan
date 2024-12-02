@@ -13,7 +13,7 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/salsa20.h>
-#include <botan/internal/timer.h>
+#include <botan/internal/time_utils.h>
 
 namespace Botan {
 
@@ -59,23 +59,12 @@ std::unique_ptr<PasswordHash> Scrypt_Family::tune(size_t output_length,
    size_t r = 1;
    size_t p = 1;
 
-   Timer timer("Scrypt");
-
    auto pwdhash = this->from_params(N, r, p);
 
-   timer.run_until_elapsed(tune_time, [&]() {
+   const uint64_t measured_time = measure_cost(tune_time, [&]() {
       uint8_t output[32] = {0};
       pwdhash->derive_key(output, sizeof(output), "test", 4, nullptr, 0);
    });
-
-   // No timer events seems strange, perhaps something is wrong - give
-   // up on this and just return default params
-   if(timer.events() == 0) {
-      return default_params();
-   }
-
-   // nsec per eval of scrypt with initial params
-   const uint64_t measured_time = timer.value() / timer.events();
 
    const uint64_t target_nsec = msec.count() * static_cast<uint64_t>(1000000);
 

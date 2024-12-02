@@ -8,7 +8,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/timer.h>
+#include <botan/internal/time_utils.h>
 #include <algorithm>
 #include <limits>
 
@@ -85,22 +85,16 @@ std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
    const size_t p = 1;
    size_t t = 1;
 
-   Timer timer("Argon2");
+   size_t M = 4 * 1024;
 
    auto pwhash = this->from_params(tune_M, t, p);
 
-   timer.run_until_elapsed(tune_time, [&]() {
+   auto tune_fn = [&]() {
       uint8_t output[64] = {0};
       pwhash->derive_key(output, sizeof(output), "test", 4, nullptr, 0);
-   });
+   };
 
-   if(timer.events() == 0 || timer.value() == 0) {
-      return default_params();
-   }
-
-   size_t M = 4 * 1024;
-
-   const uint64_t measured_time = timer.value() / (timer.events() * (tune_M / M));
+   const uint64_t measured_time = measure_cost(tune_time, tune_fn) / (tune_M / M);
 
    const uint64_t target_nsec = msec.count() * static_cast<uint64_t>(1000000);
 
@@ -108,10 +102,8 @@ std::unique_ptr<PasswordHash> Argon2_Family::tune(size_t /*output_length*/,
    * Argon2 scaling rules:
    * k*M, k*t, k*p all increase cost by about k
    *
-   * Since we don't even take advantage of p > 1, we prefer increasing
-   * t or M instead.
-   *
-   * If possible to increase M, prefer that.
+   * First preference is to increase M up to max allowed value.
+   * Any remaining time budget is spent on increasing t.
    */
 
    uint64_t est_nsec = measured_time;
