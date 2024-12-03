@@ -79,36 +79,6 @@
 
 namespace Botan {
 
-// Not defined in OS namespace for historical reasons
-void secure_scrub_memory(void* ptr, size_t n) {
-#if defined(BOTAN_TARGET_OS_HAS_RTLSECUREZEROMEMORY)
-   ::RtlSecureZeroMemory(ptr, n);
-
-#elif defined(BOTAN_TARGET_OS_HAS_EXPLICIT_BZERO)
-   ::explicit_bzero(ptr, n);
-
-#elif defined(BOTAN_TARGET_OS_HAS_EXPLICIT_MEMSET)
-   (void)::explicit_memset(ptr, 0, n);
-
-#elif defined(BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO) && (BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO == 1)
-   /*
-   Call memset through a static volatile pointer, which the compiler
-   should not elide. This construct should be safe in conforming
-   compilers, but who knows. I did confirm that on x86-64 GCC 6.1 and
-   Clang 3.8 both create code that saves the memset address in the
-   data segment and unconditionally loads and jumps to that address.
-   */
-   static void* (*const volatile memset_ptr)(void*, int, size_t) = std::memset;
-   (memset_ptr)(ptr, 0, n);
-#else
-
-   volatile uint8_t* p = reinterpret_cast<volatile uint8_t*>(ptr);
-
-   for(size_t i = 0; i != n; ++i)
-      p[i] = 0;
-#endif
-}
-
 uint32_t OS::get_process_id() {
 #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    return ::getpid();
@@ -188,7 +158,13 @@ std::optional<std::pair<unsigned long, unsigned long>> OS::get_auxval_hwcap() {
    }
 }
 
-bool OS::running_in_privileged_state() {
+namespace {
+
+/**
+* Test if we are currently running with elevated permissions
+* eg setuid, setgid, or with POSIX caps set.
+*/
+bool running_in_privileged_state() {
 #if defined(AT_SECURE)
    if(auto at_secure = get_auxval(AT_SECURE)) {
       return at_secure != 0;
@@ -201,6 +177,8 @@ bool OS::running_in_privileged_state() {
    return false;
 #endif
 }
+
+}  // namespace
 
 uint64_t OS::get_cpu_cycle_counter() {
    uint64_t rtc = 0;

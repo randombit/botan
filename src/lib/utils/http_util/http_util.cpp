@@ -11,7 +11,6 @@
 #include <botan/hex.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/os_utils.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/socket.h>
 #include <botan/internal/stl_util.h>

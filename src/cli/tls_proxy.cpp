@@ -18,7 +18,6 @@
    #include <utility>
    #include <vector>
 
-   #include <botan/internal/os_utils.h>
    #include <boost/asio.hpp>
    #include <boost/bind.hpp>
 
@@ -31,6 +30,10 @@
 
    #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
       #include <botan/tls_session_manager_sqlite.h>
+   #endif
+
+   #if defined(BOTAN_HAS_OS_UTILS)
+      #include <botan/internal/os_utils.h>
    #endif
 
    #include "tls_helpers.h"
@@ -408,9 +411,11 @@ class TLS_Proxy final : public Command {
          if(size_t t = get_arg_sz("threads")) {
             return t;
          }
+   #if defined(BOTAN_HAS_OS_UTILS)
          if(size_t t = Botan::OS::get_cpu_available()) {
             return t;
          }
+   #endif
          return 2;
       }
 

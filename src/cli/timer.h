@@ -99,6 +99,9 @@ class Timer final {
       bool operator<(const Timer& other) const;
 
    private:
+      static uint64_t timestamp_ns();
+      static uint64_t cycle_counter();
+
       // const data
       std::string m_name, m_doing;
       size_t m_buf_size;

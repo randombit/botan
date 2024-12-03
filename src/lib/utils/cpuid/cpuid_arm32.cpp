@@ -7,7 +7,9 @@
 
 #include <botan/internal/cpuid.h>
 
-#include <botan/internal/os_utils.h>
+#if defined(BOTAN_HAS_OS_UTILS)
+   #include <botan/internal/os_utils.h>
+#endif
 
 namespace Botan {
 
@@ -15,6 +17,8 @@ namespace Botan {
 
 uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
    uint32_t feat = 0;
+
+   #if defined(BOTAN_HAS_OS_UTILS)
 
    if(auto auxval = OS::get_auxval_hwcap()) {
       const auto [hwcap_neon, hwcap_crypto] = *auxval;
@@ -43,6 +47,7 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
          feat |= if_set(hwcap_crypto, ARM_hwcap_bit::SHA2_bit, CPUID::CPUID_ARM_SHA2_BIT, allowed);
       }
    }
+   #endif
 
    return feat;
 }

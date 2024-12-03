@@ -13,5 +13,6 @@ virtual_lock
 </os_features>
 
 <requires>
+os_utils
 mem_pool
 </requires>

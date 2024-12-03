@@ -10,3 +10,7 @@ brief -> "Base class for RNGs that must keep an internal state"
 <header:public>
 stateful_rng.h
 </header:public>
+
+<requires>
+os_utils
+</requires>

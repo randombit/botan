@@ -14,7 +14,6 @@
 #include <botan/tls_algos.h>
 #include <botan/tls_ciphersuite.h>
 #include <botan/tls_exceptn.h>
-#include <botan/internal/os_utils.h>
 #include <botan/internal/stl_util.h>
 #include <optional>
 #include <sstream>
