@@ -187,6 +187,55 @@ class BOTAN_PUBLIC_API(2, 0) KDF {
       }
 
       /**
+      * Derive a key
+      * @tparam key_len the desired output length in bytes
+      * @param secret the secret input
+      * @param salt a diversifier
+      * @param label purpose for the derived keying material
+      * @return the derived key
+      */
+      template <size_t key_len>
+      std::array<uint8_t, key_len> derive_key(std::span<const uint8_t> secret,
+                                              std::span<const uint8_t> salt = {},
+                                              std::span<const uint8_t> label = {}) {
+         std::array<uint8_t, key_len> key;
+         perform_kdf(key, secret, salt, label);
+         return key;
+      }
+
+      /**
+      * Derive a key
+      * @tparam key_len the desired output length in bytes
+      * @param secret the secret input
+      * @param salt a diversifier
+      * @param label purpose for the derived keying material
+      * @return the derived key
+      */
+      template <size_t key_len>
+      std::array<uint8_t, key_len> derive_key(std::span<const uint8_t> secret,
+                                              std::span<const uint8_t> salt = {},
+                                              std::string_view label = "") {
+         return derive_key<key_len>(secret, salt, {cast_char_ptr_to_uint8(label.data()), label.size()});
+      }
+
+      /**
+      * Derive a key
+      * @tparam key_len the desired output length in bytes
+      * @param secret the secret input
+      * @param salt a diversifier
+      * @param label purpose for the derived keying material
+      * @return the derived key
+      */
+      template <size_t key_len>
+      std::array<uint8_t, key_len> derive_key(std::span<const uint8_t> secret,
+                                              std::string_view salt = "",
+                                              std::string_view label = "") {
+         return derive_key<key_len>(secret,
+                                    {cast_char_ptr_to_uint8(salt.data()), salt.size()},
+                                    {cast_char_ptr_to_uint8(label.data()), label.size()});
+      }
+
+      /**
       * @return new object representing the same algorithm as *this
       */
       virtual std::unique_ptr<KDF> new_object() const = 0;
