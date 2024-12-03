@@ -42,6 +42,11 @@ class KDF_KAT_Tests final : public Text_Based_Test {
          result.test_eq("name", kdf->name(), kdf_name);
          result.test_eq("derived key", kdf->derive_key(expected.size(), secret, salt, label), expected);
 
+         if(expected.size() == 32) {
+            const auto key = kdf->derive_key<32>(secret, salt, label);
+            result.test_eq("derived key as array", Botan::secure_vector<uint8_t>{key.begin(), key.end()}, expected);
+         }
+
          // Test that clone works
          auto clone = kdf->new_object();
          result.confirm("Clone has different pointer", kdf.get() != clone.get());
