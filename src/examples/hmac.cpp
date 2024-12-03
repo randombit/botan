@@ -6,7 +6,7 @@
 
 namespace {
 
-std::string compute_mac(const std::string& msg, const Botan::secure_vector<uint8_t>& key) {
+std::string compute_mac(std::string_view msg, std::span<const uint8_t> key) {
    auto hmac = Botan::MessageAuthenticationCode::create_or_throw("HMAC(SHA-256)");
 
    hmac->set_key(key);

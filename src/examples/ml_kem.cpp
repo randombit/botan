@@ -1,17 +1,16 @@
 #include <botan/ml_kem.h>
 #include <botan/pubkey.h>
 #include <botan/system_rng.h>
-#include <array>
+
 #include <iostream>
 
 int main() {
    const size_t shared_key_len = 32;
-   const std::string kdf = "HKDF(SHA-512)";
+   const std::string_view kdf = "HKDF(SHA-512)";
 
    Botan::System_RNG rng;
 
-   std::array<uint8_t, 16> salt;
-   rng.randomize(salt);
+   const auto salt = rng.random_array<16>();
 
    Botan::ML_KEM_PrivateKey priv_key(rng, Botan::ML_KEM_Mode::ML_KEM_768);
    auto pub_key = priv_key.public_key();

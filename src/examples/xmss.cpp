@@ -20,15 +20,13 @@ int main() {
 
    // create and sign a message using the Public Key Signer.
    Botan::secure_vector<uint8_t> msg{0x01, 0x02, 0x03, 0x04};
-   signer.update(msg.data(), msg.size());
-   std::vector<uint8_t> sig = signer.signature(rng);
+   auto sig = signer.sign_message(msg, rng);
 
    // create Public Key Verifier using the public key
    Botan::PK_Verifier verifier(public_key, "");
 
    // verify the signature for the previously generated message.
-   verifier.update(msg.data(), msg.size());
-   if(verifier.check_signature(sig.data(), sig.size())) {
+   if(verifier.verify_message(msg, sig)) {
       std::cout << "Success.\n";
       return 0;
    } else {
