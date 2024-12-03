@@ -46,7 +46,7 @@ rotate.h
 rounding.h
 scan_name.h
 stl_util.h
-timer.h
+time_utils.h
 </header:internal>
 
 <requires>

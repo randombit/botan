@@ -10,7 +10,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/timer.h>
+#include <botan/internal/time_utils.h>
 
 namespace Botan {
 
@@ -40,21 +40,13 @@ size_t tune_pbkdf2(MessageAuthenticationCode& prf,
 
    // Short output ensures we only need a single PBKDF2 block
 
-   Timer timer("PBKDF2");
-
    prf.set_key(nullptr, 0);
 
-   timer.run_until_elapsed(tune_time, [&]() {
+   const uint64_t duration_nsec = measure_cost(tune_time, [&]() {
       uint8_t out[12] = {0};
       uint8_t salt[12] = {0};
       pbkdf2(prf, out, sizeof(out), salt, sizeof(salt), trial_iterations);
    });
-
-   if(timer.events() == 0) {
-      return trial_iterations;
-   }
-
-   const uint64_t duration_nsec = timer.value() / timer.events();
 
    const uint64_t desired_nsec = static_cast<uint64_t>(msec.count()) * 1000000;
 

@@ -21,15 +21,12 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/os_utils.h>
 #include <botan/internal/stl_util.h>
-#include <botan/internal/timer.h>
 
 #if defined(BOTAN_HAS_ECC_GROUP)
    #include <botan/ec_group.h>
 #endif
 
 namespace Botan_CLI {
-
-using Botan::Timer;
 
 namespace {
 
@@ -366,7 +363,7 @@ class Speed final : public Command {
             algos = default_benchmark_list();
          }
 
-         PerfConfig perf_config([&](const Botan::Timer& t) { this->record_result(t); },
+         PerfConfig perf_config([&](const Timer& t) { this->record_result(t); },
                                 clock_speed,
                                 clock_cycle_ratio,
                                 msec,

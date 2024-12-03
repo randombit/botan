@@ -4,14 +4,14 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/timer.h>
+#include "timer.h"
 
 #include <botan/internal/os_utils.h>
 #include <algorithm>
 #include <iomanip>
 #include <sstream>
 
-namespace Botan {
+namespace Botan_CLI {
 
 namespace {
 
@@ -43,20 +43,20 @@ Timer::Timer(std::string_view name,
 
 void Timer::start() {
    stop();
-   m_timer_start = OS::get_system_timestamp_ns();
-   m_cpu_cycles_start = OS::get_cpu_cycle_counter();
+   m_timer_start = Botan::OS::get_system_timestamp_ns();
+   m_cpu_cycles_start = Botan::OS::get_cpu_cycle_counter();
 }
 
 void Timer::stop() {
    if(m_timer_start) {
-      const uint64_t now = OS::get_system_timestamp_ns();
+      const uint64_t now = Botan::OS::get_system_timestamp_ns();
 
       if(now > m_timer_start) {
          m_time_used += (now - m_timer_start);
       }
 
       if(m_cpu_cycles_start != 0) {
-         const uint64_t cycles_taken = OS::get_cpu_cycle_counter() - m_cpu_cycles_start;
+         const uint64_t cycles_taken = Botan::OS::get_cpu_cycle_counter() - m_cpu_cycles_start;
          if(cycles_taken > 0) {
             m_cpu_cycles_used += static_cast<size_t>(cycles_taken * m_clock_cycle_ratio);
          }
@@ -142,4 +142,4 @@ std::string Timer::result_string_ops() const {
    return oss.str();
 }
 
-}  // namespace Botan
+}  // namespace Botan_CLI
