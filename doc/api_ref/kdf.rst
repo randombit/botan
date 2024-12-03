@@ -34,36 +34,32 @@ two contexts.
       Create a new KDF object. Throws an exception if the named key derivation
       function was not available
 
+  .. cpp:function:: void KDF::derive_key(std::span<uint8_t> key, \
+                                         std::span<const uint8_t> secret, \
+                                         std::span<const uint8_t> salt, \
+                                         std::span<const uint8_t> label) const
+
+      Performs a key derivation using ``secret`` as secret input, and ``salt``,
+      and ``label`` as deversifiers. The passed ``key`` buffer is fully filled
+      with key material derived from the inputs.
+
   .. cpp:function:: template<concepts::resizable_byte_buffer T = secure_vector<uint8_t>> \
-      T derive_key(size_t key_len, \
-                   std::span<const uint8_t> secret, \
-                   std::span<const uint8_t> salt, \
-                   std::span<const uint8_t> label) const
+      T KDF::derive_key(size_t key_len, \
+                        std::span<const uint8_t> secret, \
+                        std::span<const uint8_t> salt, \
+                        std::span<const uint8_t> label) const
 
       This version is parameterized to the output buffer type, so it can be used
       to return a ``std::vector``, a ``secure_vector``, or anything else
       satisfying the ``resizable_byte_buffer`` concept.
 
-  .. cpp:function:: secure_vector<uint8_t> derive_key( \
-                                    const uint8_t secret[], \
-                                    size_t secret_len, \
-                                    const uint8_t salt[], \
-                                    size_t salt_len, \
-                                    const uint8_t label[], \
-                                    size_t label_len) const
+  .. cpp:function:: template<size_t key_len> \
+      std::array<uint8_t, key_len> KDF::derive_key(std::span<const uint8_t> secret, \
+                                                   std::span<const uint8_t> salt, \
+                                                   std::span<const uint8_t> label) const
 
-  .. cpp:function:: secure_vector<uint8_t> derive_key( \
-     size_t key_len, const std::vector<uint8_t>& secret, \
-     const std::vector<uint8_t>& salt, \
-     const std::vector<uint8_t>& label) const
-
-  .. cpp:function:: secure_vector<uint8_t> derive_key( \
-     size_t key_len, const std::vector<uint8_t>& secret, \
-     const uint8_t* salt, size_t salt_len) const
-
-  .. cpp:function:: secure_vector<uint8_t> derive_key( \
-     size_t key_len, const uint8_t* secret, size_t secret_len, \
-     const std::string& salt) const
+      This version returns the key material as a std::array<> of ``key_len``
+      bytes.
 
    All variations on the same theme. Deterministically creates a
    uniform random value from *secret*, *salt*, and *label*, whose
