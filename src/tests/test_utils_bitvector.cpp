@@ -7,13 +7,18 @@
 
 #include "tests.h"
 
-#include <botan/internal/bitvector.h>
 #include <botan/internal/fmt.h>
+
+#if defined(BOTAN_HAS_BITVECTOR)
+   #include <botan/internal/bitvector.h>
+#endif
 
 #include <algorithm>
 #include <numeric>
 
 namespace Botan_Tests {
+
+#if defined(BOTAN_HAS_BITVECTOR)
 
 namespace {
 
@@ -1291,5 +1296,7 @@ class BitVector_Tests final : public Test {
 };
 
 BOTAN_REGISTER_TEST("utils", "bitvector", BitVector_Tests);
+
+#endif
 
 }  // namespace Botan_Tests

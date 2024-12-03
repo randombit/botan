@@ -1,0 +1,11 @@
+<defines>
+BITVECTOR -> 20241202
+</defines>
+
+<module_info>
+name -> "Bitvector utility"
+</module_info>
+
+<header:internal>
+bitvector.h
+</header:internal>
