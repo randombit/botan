@@ -63,6 +63,7 @@ class BOTAN_PUBLIC_API(2, 0) KDF {
       * @param label purpose for the derived keying material
       * @param label_len size of label in bytes
       */
+      BOTAN_DEPRECATED("Use KDF::derive_key")
       void kdf(uint8_t key[],
                size_t key_len,
                const uint8_t secret[],
@@ -71,7 +72,7 @@ class BOTAN_PUBLIC_API(2, 0) KDF {
                size_t salt_len,
                const uint8_t label[],
                size_t label_len) const {
-         perform_kdf({key, key_len}, {secret, secret_len}, {salt, salt_len}, {label, label_len});
+         derive_key({key, key_len}, {secret, secret_len}, {salt, salt_len}, {label, label_len});
       }
 
       /**
@@ -86,6 +87,7 @@ class BOTAN_PUBLIC_API(2, 0) KDF {
       * @return the derived key
       */
       template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      BOTAN_DEPRECATED("Use std::span or std::string_view overloads")
       T derive_key(size_t key_len,
                    const uint8_t secret[],
                    size_t secret_len,
@@ -157,6 +159,7 @@ class BOTAN_PUBLIC_API(2, 0) KDF {
       * @return the derived key
       */
       template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      BOTAN_DEPRECATED("Use std::span or std::string_view overloads")
       T derive_key(size_t key_len,
                    std::span<const uint8_t> secret,
                    const uint8_t salt[],
@@ -175,6 +178,7 @@ class BOTAN_PUBLIC_API(2, 0) KDF {
       * @return the derived key
       */
       template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
+      BOTAN_DEPRECATED("Use std::span or std::string_view overloads")
       T derive_key(size_t key_len,
                    const uint8_t secret[],
                    size_t secret_len,
