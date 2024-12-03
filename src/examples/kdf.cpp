@@ -5,7 +5,7 @@
 int main() {
    // Replicate a test from RFC 5869
    // https://www.rfc-editor.org/rfc/rfc5869#appendix-A.1
-   const std::vector<uint8_t> input_secret(22, 0x0b);
+   const Botan::secure_vector<uint8_t> input_secret(22, 0x0b);
    const std::vector<uint8_t> salt = Botan::hex_decode("000102030405060708090a0b0c");
    const std::vector<uint8_t> label = Botan::hex_decode("f0f1f2f3f4f5f6f7f8f9");
    const size_t derived_key_len = 42;

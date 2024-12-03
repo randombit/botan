@@ -11,7 +11,7 @@
 int main() {
    const std::string curve_name = "secp256r1";
    const auto private_scalar_bytes =
-      Botan::hex_decode("D2AC61C35CAEE918E47B0BD5E61DA9B3A5C2964AB317647DEF6DFC042A06C829");
+      Botan::hex_decode_locked("D2AC61C35CAEE918E47B0BD5E61DA9B3A5C2964AB317647DEF6DFC042A06C829");
 
    const auto domain = Botan::EC_Group::from_name(curve_name);
    const auto private_scalar = Botan::BigInt(private_scalar_bytes);
