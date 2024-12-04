@@ -188,7 +188,7 @@ class CMCE_Utility_Tests final : public Test {
          class All_Zero_RNG : public Botan::RandomNumberGenerator {
             public:
                void fill_bytes_with_input(std::span<uint8_t> output, std::span<const uint8_t> /* ignored */) override {
-                  std::fill(output.begin(), output.end(), 0);
+                  std::fill(output.begin(), output.end(), static_cast<uint8_t>(0));
                }
 
                std::string name() const override { return "All_Zero_RNG"; }

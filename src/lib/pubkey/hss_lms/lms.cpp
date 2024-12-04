@@ -113,45 +113,45 @@ LMS_Params LMS_Params::create_or_throw(LMS_Algorithm_Type type) {
    auto [hash_name, height] = [](const LMS_Algorithm_Type& lms_type) -> std::pair<std::string_view, uint8_t> {
       switch(lms_type) {
          case LMS_Algorithm_Type::SHA256_M32_H5:
-            return {"SHA-256", 5};
+            return {"SHA-256", static_cast<uint8_t>(5)};
          case LMS_Algorithm_Type::SHA256_M32_H10:
-            return {"SHA-256", 10};
+            return {"SHA-256", static_cast<uint8_t>(10)};
          case LMS_Algorithm_Type::SHA256_M32_H15:
-            return {"SHA-256", 15};
+            return {"SHA-256", static_cast<uint8_t>(15)};
          case LMS_Algorithm_Type::SHA256_M32_H20:
-            return {"SHA-256", 20};
+            return {"SHA-256", static_cast<uint8_t>(20)};
          case LMS_Algorithm_Type::SHA256_M32_H25:
-            return {"SHA-256", 25};
+            return {"SHA-256", static_cast<uint8_t>(25)};
          case LMS_Algorithm_Type::SHA256_M24_H5:
-            return {"Truncated(SHA-256,192)", 5};
+            return {"Truncated(SHA-256,192)", static_cast<uint8_t>(5)};
          case LMS_Algorithm_Type::SHA256_M24_H10:
-            return {"Truncated(SHA-256,192)", 10};
+            return {"Truncated(SHA-256,192)", static_cast<uint8_t>(10)};
          case LMS_Algorithm_Type::SHA256_M24_H15:
-            return {"Truncated(SHA-256,192)", 15};
+            return {"Truncated(SHA-256,192)", static_cast<uint8_t>(15)};
          case LMS_Algorithm_Type::SHA256_M24_H20:
-            return {"Truncated(SHA-256,192)", 20};
+            return {"Truncated(SHA-256,192)", static_cast<uint8_t>(20)};
          case LMS_Algorithm_Type::SHA256_M24_H25:
-            return {"Truncated(SHA-256,192)", 25};
+            return {"Truncated(SHA-256,192)", static_cast<uint8_t>(25)};
          case LMS_Algorithm_Type::SHAKE_M32_H5:
-            return {"SHAKE-256(256)", 5};
+            return {"SHAKE-256(256)", static_cast<uint8_t>(5)};
          case LMS_Algorithm_Type::SHAKE_M32_H10:
-            return {"SHAKE-256(256)", 10};
+            return {"SHAKE-256(256)", static_cast<uint8_t>(10)};
          case LMS_Algorithm_Type::SHAKE_M32_H15:
-            return {"SHAKE-256(256)", 15};
+            return {"SHAKE-256(256)", static_cast<uint8_t>(15)};
          case LMS_Algorithm_Type::SHAKE_M32_H20:
-            return {"SHAKE-256(256)", 20};
+            return {"SHAKE-256(256)", static_cast<uint8_t>(20)};
          case LMS_Algorithm_Type::SHAKE_M32_H25:
-            return {"SHAKE-256(256)", 25};
+            return {"SHAKE-256(256)", static_cast<uint8_t>(25)};
          case LMS_Algorithm_Type::SHAKE_M24_H5:
-            return {"SHAKE-256(192)", 5};
+            return {"SHAKE-256(192)", static_cast<uint8_t>(5)};
          case LMS_Algorithm_Type::SHAKE_M24_H10:
-            return {"SHAKE-256(192)", 10};
+            return {"SHAKE-256(192)", static_cast<uint8_t>(10)};
          case LMS_Algorithm_Type::SHAKE_M24_H15:
-            return {"SHAKE-256(192)", 15};
+            return {"SHAKE-256(192)", static_cast<uint8_t>(15)};
          case LMS_Algorithm_Type::SHAKE_M24_H20:
-            return {"SHAKE-256(192)", 20};
+            return {"SHAKE-256(192)", static_cast<uint8_t>(20)};
          case LMS_Algorithm_Type::SHAKE_M24_H25:
-            return {"SHAKE-256(192)", 25};
+            return {"SHAKE-256(192)", static_cast<uint8_t>(25)};
          default:
             throw Decoding_Error("Unsupported LMS algorithm type");
       }
