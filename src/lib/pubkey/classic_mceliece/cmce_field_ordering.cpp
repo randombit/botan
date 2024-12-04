@@ -179,7 +179,7 @@ secure_vector<uint16_t> generate_control_bits_internal(const secure_vector<uint1
    }
 
    secure_vector<uint16_t> range_n(n);
-   std::iota(range_n.begin(), range_n.end(), 0);
+   std::iota(range_n.begin(), range_n.end(), static_cast<uint16_t>(0));
    auto piinv = composeinv(range_n, pi);
 
    simultaneous_composeinv(p, q);
@@ -296,7 +296,7 @@ Classic_McEliece_Field_Ordering Classic_McEliece_Field_Ordering::create_from_con
    BOTAN_ASSERT_NOMSG(control_bits.size() == (2 * params.m() - 1) << (params.m() - 1));
    const uint16_t n = uint16_t(1) << params.m();
    CmcePermutation pi(n);
-   std::iota(pi.begin(), pi.end(), 0);
+   std::iota(pi.begin(), pi.end(), static_cast<uint16_t>(0));
    for(size_t i = 0; i < 2 * params.m() - 1; ++i) {
       const size_t gap = size_t(1) << std::min(i, 2 * params.m() - 2 - i);
       for(size_t j = 0; j < size_t(n / 2); ++j) {
