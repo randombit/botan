@@ -5,7 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/internal/pss_params.h>
+#include <botan/pss_params.h>
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
