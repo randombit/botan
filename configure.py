@@ -174,10 +174,11 @@ class SourcePaths:
     """
     A collection of paths defined by the project structure and
     independent of user configurations.
-    All paths are relative to the base_dir, which may be relative as well (e.g. ".")
+    All paths are relative to the base_dir, which is always absolute
     """
 
     def __init__(self, base_dir):
+        assert os.path.isabs(base_dir), "base_dir must be absolute"
         self.base_dir = base_dir
         self.doc_dir = os.path.join(self.base_dir, 'doc')
         self.src_dir = os.path.join(self.base_dir, 'src')
@@ -199,7 +200,8 @@ class BuildPaths:
     Constructor
     """
     def __init__(self, source_paths, options, modules):
-        self.build_dir = os.path.join(options.with_build_dir, 'build')
+        self.out_dir = os.path.realpath(options.with_build_dir if options.with_build_dir else os.getcwd())
+        self.build_dir = os.path.join(self.out_dir, 'build')
 
         self.libobj_dir = os.path.join(self.build_dir, 'obj', 'lib')
         self.cliobj_dir = os.path.join(self.build_dir, 'obj', 'cli')
@@ -264,11 +266,14 @@ class BuildPaths:
             self.fuzzer_output_dir = None
             self.fuzzobj_dir = None
 
+        self.miscobj_dir = os.path.join(self.build_dir, 'obj', 'misc')
+
     def build_dirs(self):
         out = [
             self.libobj_dir,
             self.cliobj_dir,
             self.testobj_dir,
+            self.miscobj_dir,
             self.public_include_dir,
             self.internal_include_dir,
             self.external_include_dir,
@@ -474,7 +479,7 @@ def process_command_line(args):
     build_group.add_option('--name-amalgamation', metavar='NAME', default='botan_all',
                            help='specify alternate name for amalgamation files')
 
-    build_group.add_option('--with-build-dir', metavar='DIR', default='',
+    build_group.add_option('--with-build-dir', metavar='DIR', default=None,
                            help='setup the build in DIR')
 
     build_group.add_option('--with-external-includedir', metavar='DIR', default=[],
@@ -2079,20 +2084,7 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
 
         return osinfo.ar_command
 
-    build_dir = options.with_build_dir or os.path.curdir
     program_suffix = options.program_suffix or osinfo.program_suffix
-
-    def join_with_build_dir(path):
-        # jom (and mingw32-make) seem to string-compare Makefile targets and
-        # requirements. For them, `./botan.lib` is NOT equal to `botan.lib` or
-        # `C:\botan\botan-test.exe` is NOT equal to `C:\botan/botan-test.exe`
-        #
-        # `normalize_source_path` will "fix" the path slashes but remove
-        # a redundant `./` for the "trivial" relative path.
-        normalized = normalize_source_path(os.path.join(build_dir, path))
-        if build_dir == '.':
-            normalized = './%s' % normalized
-        return normalized
 
     def all_targets(options):
         yield 'libs'
@@ -2180,9 +2172,9 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'python_dir': source_paths.python_dir,
 
         'cli_exe_name': osinfo.cli_exe_name + program_suffix,
-        'cli_exe': join_with_build_dir(osinfo.cli_exe_name + program_suffix),
+        'cli_exe': normalize_source_path(os.path.join(build_paths.out_dir, osinfo.cli_exe_name + program_suffix)),
         'build_cli_exe': bool('cli' in options.build_targets),
-        'test_exe': join_with_build_dir('botan-test' + program_suffix),
+        'test_exe': normalize_source_path(os.path.join(build_paths.out_dir, 'botan-test' + program_suffix)),
 
         'lib_prefix': osinfo.lib_prefix,
         'static_suffix': osinfo.static_suffix,
@@ -2211,7 +2203,7 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'with_doxygen': options.with_doxygen,
         'maintainer_mode': options.maintainer_mode,
 
-        'out_dir': normalize_source_path(build_dir),
+        'out_dir': normalize_source_path(build_paths.out_dir),
         'build_dir': normalize_source_path(build_paths.build_dir),
         'module_info_dir': build_paths.doc_module_info,
 
@@ -2233,6 +2225,7 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'cliobj_dir': build_paths.cliobj_dir,
         'testobj_dir': build_paths.testobj_dir,
         'fuzzobj_dir': build_paths.fuzzobj_dir,
+        'miscobj_dir': build_paths.miscobj_dir,
 
         'fuzzer_output_dir': build_paths.fuzzer_output_dir if build_paths.fuzzer_output_dir else '',
         'doc_output_dir': build_paths.doc_output_dir,
@@ -2388,14 +2381,14 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
     if options.build_shared_lib:
         lib_targets.append('shared_lib_name')
 
-    variables['library_targets'] = ' '.join([join_with_build_dir(variables[t]) for t in lib_targets])
+    variables['library_targets'] = ' '.join(normalize_source_paths([os.path.join(build_paths.out_dir, variables[t]) for t in lib_targets]))
 
     if options.os == 'llvm' or options.compiler == 'msvc':
         # llvm-link and msvc require just naming the file directly
         variables['build_dir_link_path'] = ''
-        variables['link_to_botan'] = normalize_source_path(os.path.join(build_dir, variables['static_lib_name']))
+        variables['link_to_botan'] = normalize_source_path(os.path.join(build_paths.out_dir, variables['static_lib_name']))
     else:
-        variables['build_dir_link_path'] = '%s%s' % (cc.add_lib_dir_option, build_dir)
+        variables['build_dir_link_path'] = '%s%s' % (cc.add_lib_dir_option, build_paths.out_dir)
         variables['link_to_botan'] = cc.add_lib_option % variables['libname']
 
     return variables
@@ -3590,7 +3583,7 @@ def main(argv):
 
     setup_logging(options)
 
-    source_paths = SourcePaths(os.path.dirname(argv[0]))
+    source_paths = SourcePaths(os.path.dirname(os.path.realpath(__file__)))
 
     info_modules = load_info_files(source_paths.lib_dir, 'Modules', "info.txt", ModuleInfo)
 
