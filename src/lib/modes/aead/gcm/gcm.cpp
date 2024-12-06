@@ -58,7 +58,7 @@ std::string GCM_Mode::provider() const {
 }
 
 size_t GCM_Mode::update_granularity() const {
-   return GCM_BS;
+   return 1;
 }
 
 size_t GCM_Mode::ideal_granularity() const {

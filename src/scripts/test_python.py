@@ -283,7 +283,7 @@ class BotanPythonTests(unittest.TestCase):
             elif mode == 'Serpent/GCM':
                 self.assertEqual(enc.algo_name(), 'Serpent/GCM(16)')
                 self.assertTrue(enc.is_authenticated())
-                self.assertEqual(enc.update_granularity(), 16)
+                self.assertEqual(enc.update_granularity(), 1)
                 self.assertGreater(enc.ideal_update_granularity(), 16)
             elif mode == 'ChaCha20Poly1305':
                 self.assertEqual(enc.algo_name(), 'ChaCha20Poly1305')
