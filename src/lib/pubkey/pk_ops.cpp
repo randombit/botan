@@ -32,9 +32,12 @@ size_t PK_Ops::Encryption_with_EME::max_input_bits() const {
 }
 
 std::vector<uint8_t> PK_Ops::Encryption_with_EME::encrypt(std::span<const uint8_t> msg, RandomNumberGenerator& rng) {
-   const size_t max_raw = max_ptext_input_bits();
-   secure_vector<uint8_t> eme_output((max_raw + 7) / 8);
-   size_t written = m_eme->pad(eme_output, msg, max_raw, rng);
+   const size_t max_input_bits = max_ptext_input_bits();
+   const size_t max_input_bytes = (max_input_bits + 7) / 8;
+   BOTAN_ARG_CHECK(msg.size() <= max_input_bytes, "Plaintext too large");
+
+   secure_vector<uint8_t> eme_output(max_input_bits);
+   const size_t written = m_eme->pad(eme_output, msg, max_input_bits, rng);
    return raw_encrypt(std::span{eme_output}.first(written), rng);
 }
 
