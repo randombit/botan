@@ -9,9 +9,12 @@
 
 #include <botan/exceptn.h>
 #include <botan/types.h>
-#include <botan/internal/os_utils.h>
 #include <botan/internal/parsing.h>
 #include <ostream>
+
+#if defined(BOTAN_HAS_OS_UTILS)
+   #include <botan/internal/os_utils.h>
+#endif
 
 namespace Botan {
 
@@ -117,6 +120,8 @@ bool runtime_check_if_big_endian() {
 #if defined(BOTAN_CPUID_HAS_DETECTION)
 uint32_t cleared_cpuid_bits() {
    uint32_t cleared = 0;
+
+   #if defined(BOTAN_HAS_OS_UTILS)
    std::string clear_cpuid_env;
    if(OS::read_env_variable(clear_cpuid_env, "BOTAN_CLEAR_CPUID")) {
       for(const auto& cpuid : split_on(clear_cpuid_env, ',')) {
@@ -125,6 +130,8 @@ uint32_t cleared_cpuid_bits() {
          }
       }
    }
+   #endif
+
    return cleared;
 }
 #endif
