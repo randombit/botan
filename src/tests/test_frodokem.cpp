@@ -96,6 +96,7 @@ std::vector<Test::Result> test_frodo_roundtrips() {
       }
       Botan::FrodoKEMConstants consts(mode);
       Test::Result& result = results.emplace_back("FrodoKEM roundtrip: " + m.to_string());
+      result.start_timer();
 
       Botan::FrodoKEM_PrivateKey sk1(*rng, mode);
       Botan::FrodoKEM_PublicKey pk1(sk1.public_key_bits(), mode);
@@ -136,6 +137,7 @@ std::vector<Test::Result> test_frodo_roundtrips() {
             short_encaps_value.pop_back();
             dec1.decrypt(short_encaps_value, 0);
          });
+      result.end_timer();
    }
 
    return results;

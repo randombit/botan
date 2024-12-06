@@ -25,6 +25,7 @@ class HOTP_KAT_Tests final : public Text_Based_Test {
 
       Test::Result run_one_test(const std::string& hash_algo, const VarMap& vars) override {
          Test::Result result("HOTP " + hash_algo);
+         result.start_timer();
 
          auto hash_test = Botan::HashFunction::create(hash_algo);
          if(!hash_test) {
@@ -59,6 +60,7 @@ class HOTP_KAT_Tests final : public Text_Based_Test {
          result.test_eq("OTP verify result", otp_res.first, true);
          result.confirm("OTP verify next counter", otp_res.second == counter + 1);
 
+         result.end_timer();
          return result;
       }
 };
@@ -73,6 +75,7 @@ class TOTP_KAT_Tests final : public Text_Based_Test {
 
       Test::Result run_one_test(const std::string& hash_algo, const VarMap& vars) override {
          Test::Result result("TOTP " + hash_algo);
+         result.start_timer();
 
          auto hash_test = Botan::HashFunction::create(hash_algo);
          if(!hash_test) {
@@ -99,6 +102,7 @@ class TOTP_KAT_Tests final : public Text_Based_Test {
          result.test_eq("TOTP verify time slip allowed", totp.verify_totp(otp, later_time, 1), true);
          result.test_eq("TOTP verify time slip out of range", totp.verify_totp(otp, too_late, 1), false);
 
+         result.end_timer();
          return result;
       }
 

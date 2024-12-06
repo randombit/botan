@@ -23,6 +23,7 @@ class SIMD_32_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("SIMD_4x32");
+         result.start_timer();
 
          if(Botan::CPUID::has_simd_32() == false) {
             result.test_note("Skipping SIMD_4x32 tests due to missing CPU support at runtime");
@@ -168,6 +169,7 @@ class SIMD_32_Tests final : public Test {
          result.test_is_eq(
             "roundtrip SIMD strong big-endian", Botan::store_be<std::vector<uint8_t>>(simd_be_strong), simd_be_in);
 
+         result.end_timer();
          return {result};
       }
 

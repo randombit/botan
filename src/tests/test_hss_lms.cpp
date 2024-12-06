@@ -27,6 +27,7 @@ std::vector<Test::Result> test_hss_lms_params_parsing() {
    return {
       CHECK("HSS Parameter Parsing",
             [&](Test::Result& result) {
+               result.start_timer();
                result.test_no_throw("no throw", [&] {
                   Botan::HSS_LMS_Params hss_params("SHA-256,HW(5,1),HW(25,8)");
 
@@ -48,6 +49,7 @@ std::vector<Test::Result> test_hss_lms_params_parsing() {
                                     second_lms_params.lmots_params().algorithm_type(),
                                     Botan::LMOTS_Algorithm_Type::SHA256_N32_W8);
                });
+               result.end_timer();
             }),
 
    };
@@ -124,6 +126,7 @@ class HSS_LMS_Key_Generation_Test final : public PK_Key_Generation_Test {
 class HSS_LMS_Negative_Tests final : public Test {
       Test::Result test_flipped_signature_bits() {
          Test::Result result("HSS-LMS - flipped signature bits");
+         result.start_timer();
 
          auto sk = Botan::create_private_key("HSS-LMS", Test::rng(), "Truncated(SHA-256,192),HW(5,8)");
 
@@ -146,11 +149,13 @@ class HSS_LMS_Negative_Tests final : public Test {
             });
          }
 
+         result.end_timer();
          return result;
       }
 
       Test::Result test_too_short_signature() {
          Test::Result result("HSS-LMS");
+         result.start_timer();
 
          auto sk = Botan::create_private_key("HSS-LMS", Test::rng(), "Truncated(SHA-256,192),HW(5,8)");
 
@@ -171,11 +176,13 @@ class HSS_LMS_Negative_Tests final : public Test {
             });
          }
 
+         result.end_timer();
          return result;
       }
 
       Test::Result test_too_short_private_key() {
          Test::Result result("HSS-LMS");
+         result.start_timer();
 
          // HSS_LMS_PublicKey::key_length()
          auto sk = Botan::create_private_key("HSS-LMS", Test::rng(), "Truncated(SHA-256,192),HW(5,8)");
@@ -192,11 +199,14 @@ class HSS_LMS_Negative_Tests final : public Test {
                BOTAN_UNUSED(key);
             });
          }
+
+         result.end_timer();
          return result;
       }
 
       Test::Result test_too_short_public_key() {
          Test::Result result("HSS-LMS");
+         result.start_timer();
 
          // HSS_LMS_PublicKey::key_length()
          auto sk = Botan::create_private_key("HSS-LMS", Test::rng(), "Truncated(SHA-256,192),HW(5,8)");
@@ -213,6 +223,8 @@ class HSS_LMS_Negative_Tests final : public Test {
                BOTAN_UNUSED(key);
             });
          }
+
+         result.end_timer();
          return result;
       }
 
@@ -238,6 +250,7 @@ class HSS_LMS_Statefulness_Test final : public Test {
 
       Test::Result test_sig_changes_state() {
          Test::Result result("HSS-LMS");
+         result.start_timer();
 
          auto sk = Botan::HSS_LMS_PrivateKey(Test::rng(), "Truncated(SHA-256,192),HW(5,8),HW(5,8)");
          Botan::PK_Signer signer(sk, Test::rng(), "");
@@ -266,11 +279,13 @@ class HSS_LMS_Statefulness_Test final : public Test {
             "Next signature uses the new index.",
             Botan::HSS_Signature::from_bytes_or_throw(sig_1).bottom_sig().q() == Botan::LMS_Tree_Node_Idx(1));
 
+         result.end_timer();
          return result;
       }
 
       Test::Result test_max_sig_count() {
          Test::Result result("HSS-LMS");
+         result.start_timer();
 
          uint64_t total_sig_count = 32;
          auto sk = create_private_key_with_idx(total_sig_count - 1);
@@ -285,6 +300,7 @@ class HSS_LMS_Statefulness_Test final : public Test {
          result.test_throws("Cannot sign with exhausted key.", [&]() { signer.sign_message(mes, Test::rng()); });
          result.confirm("Still zero remaining signatures.", sk.remaining_operations() == uint64_t(0));
 
+         result.end_timer();
          return result;
       }
 
@@ -297,6 +313,7 @@ class HSS_LMS_Statefulness_Test final : public Test {
 class HSS_LMS_Missing_API_Test final : public Test {
       std::vector<Test::Result> run() final {
          Test::Result result("HSS-LMS");
+         result.start_timer();
 
          // HSS_LMS_PublicKey::key_length()
          auto sk = Botan::create_private_key("HSS-LMS", Test::rng(), "SHA-256,HW(10,4)");
@@ -319,6 +336,7 @@ class HSS_LMS_Missing_API_Test final : public Test {
          // HSS_LMS_Signature_Operation::hash_function()
          result.test_eq("PK_Signer should report the hash of the key", signer.hash_function(), "SHA-256");
 
+         result.end_timer();
          return {result};
       }
 };

@@ -269,6 +269,7 @@ Test::Result test_certstor_sqlite3_find_all_certs_test(const std::vector<Certifi
 
 Test::Result test_certstor_find_hash_subject(const std::vector<CertificateAndKey>& certsandkeys) {
    Test::Result result("Certificate Store - Find by subject hash");
+   result.start_timer();
 
    try {
       Botan::Certificate_Store_In_Memory store;
@@ -284,6 +285,7 @@ Test::Result test_certstor_find_hash_subject(const std::vector<CertificateAndKey
          const auto found = store.find_cert_by_raw_subject_dn_sha256(hash);
          if(!found) {
             result.test_failure("Can't retrieve certificate " + cert.fingerprint("SHA-1"));
+            result.end_timer();
             return result;
          }
 
@@ -293,18 +295,22 @@ Test::Result test_certstor_find_hash_subject(const std::vector<CertificateAndKey
       const auto found = store.find_cert_by_raw_subject_dn_sha256(std::vector<uint8_t>(32, 0));
       if(found) {
          result.test_failure("Certificate found for dummy hash");
+         result.end_timer();
          return result;
       }
-
+      result.end_timer();
       return result;
    } catch(std::exception& e) {
       result.test_failure(e.what());
+      result.end_timer();
       return result;
    }
 }
 
 Test::Result test_certstor_load_allcert() {
    Test::Result result("Certificate Store - Load every cert of every files");
+   result.start_timer();
+
    // test_dir_bundled dir should contain only one file with 2 certificates
    // concatenated (ValidCert and root)
    const std::string test_dir_bundled = Test::data_dir("x509/misc/bundledcertdir");
@@ -320,9 +326,11 @@ Test::Result test_certstor_load_allcert() {
       std::vector<uint8_t> key_id;
       result.confirm("Root cert found", store.find_cert(root_cert.subject_dn(), key_id) != std::nullopt);
       result.confirm("ValidCert found", store.find_cert(valid_cert.subject_dn(), key_id) != std::nullopt);
+      result.end_timer();
       return result;
    } catch(std::exception& e) {
       result.test_failure(e.what());
+      result.end_timer();
       return result;
    }
 }
