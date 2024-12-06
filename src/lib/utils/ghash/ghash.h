@@ -9,6 +9,7 @@
 #define BOTAN_GCM_GHASH_H_
 
 #include <botan/sym_algo.h>
+#include <botan/internal/alignment_buffer.h>
 
 namespace Botan {
 
@@ -16,21 +17,21 @@ namespace Botan {
 * GCM's GHASH
 */
 class GHASH final : public SymmetricAlgorithm {
-   public:
-      void set_associated_data(std::span<const uint8_t> ad);
+   private:
+      static constexpr size_t GCM_BS = 16;
 
+   public:
+      /// Hashing of non-default length nonce values for both GCM and GMAC use-cases
       void nonce_hash(secure_vector<uint8_t>& y0, std::span<const uint8_t> nonce);
 
       void start(std::span<const uint8_t> nonce);
 
-      /*
-      * Assumes input len is multiple of 16
-      */
       void update(std::span<const uint8_t> in);
 
-      /*
-      * Incremental update of associated data
-      */
+      /// Monolithic setting of associated data usid in the GCM use-case
+      void set_associated_data(std::span<const uint8_t> ad);
+
+      /// Incremental update of associated data used in the GMAC use-case
       void update_associated_data(std::span<const uint8_t> ad);
 
       void final(std::span<uint8_t> out);
@@ -47,11 +48,11 @@ class GHASH final : public SymmetricAlgorithm {
 
       std::string provider() const;
 
-      void ghash_update(secure_vector<uint8_t>& x, std::span<const uint8_t> input);
-
-      void add_final_block(secure_vector<uint8_t>& x, size_t ad_len, size_t pt_len);
-
    private:
+      void ghash_update(std::span<uint8_t, GCM_BS> x, std::span<const uint8_t> input);
+      void ghash_zeropad(std::span<uint8_t, GCM_BS> x);
+      void ghash_final_block(std::span<uint8_t, GCM_BS> x, uint64_t ad_len, uint64_t pt_len);
+
 #if defined(BOTAN_HAS_GHASH_CLMUL_CPU)
       static void ghash_precompute_cpu(const uint8_t H[16], uint64_t H_pow[4 * 2]);
 
@@ -64,16 +65,17 @@ class GHASH final : public SymmetricAlgorithm {
 
       void key_schedule(std::span<const uint8_t> key) override;
 
-      void ghash_multiply(secure_vector<uint8_t>& x, std::span<const uint8_t> input, size_t blocks);
+      void ghash_multiply(std::span<uint8_t, GCM_BS> x, std::span<const uint8_t> input, size_t blocks);
 
-      static const size_t GCM_BS = 16;
+   private:
+      AlignmentBuffer<uint8_t, GCM_BS> m_buffer;
 
-      secure_vector<uint8_t> m_H;
-      secure_vector<uint8_t> m_H_ad;
-      secure_vector<uint8_t> m_ghash;
-      secure_vector<uint8_t> m_nonce;
+      std::array<uint8_t, GCM_BS> m_H_ad;   /// cache of hash state after consuming the AD, reused for multiple messages
+      std::array<uint8_t, GCM_BS> m_ghash;  /// hash state used for update() or update_associated_data()
       secure_vector<uint64_t> m_HM;
       secure_vector<uint64_t> m_H_pow;
+
+      std::optional<std::array<uint8_t, GCM_BS>> m_nonce;
       size_t m_ad_len = 0;
       size_t m_text_len = 0;
 };
