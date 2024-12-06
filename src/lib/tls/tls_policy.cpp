@@ -161,20 +161,33 @@ Group_Params Policy::default_dh_group() const {
 }
 
 std::vector<Group_Params> Policy::key_exchange_groups() const {
-   // Default list is ordered by performance
    return {
+      // clang-format off
 #if defined(BOTAN_HAS_X25519)
       Group_Params::X25519,
 #endif
-#if defined(BOTAN_HAS_X448)
-         Group_Params::X448,
+
+      Group_Params::SECP256R1,
+
+#if defined(BOTAN_HAS_X25519) && defined(BOTAN_HAS_KYBER_ROUND3) && defined(BOTAN_HAS_TLS_13_PQC)
+      Group_Params::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE,
 #endif
 
-         Group_Params::SECP256R1, Group_Params::BRAINPOOL256R1, Group_Params::SECP384R1, Group_Params::BRAINPOOL384R1,
-         Group_Params::SECP521R1, Group_Params::BRAINPOOL512R1,
+#if defined(BOTAN_HAS_X448)
+      Group_Params::X448,
+#endif
 
-         Group_Params::FFDHE_2048, Group_Params::FFDHE_3072, Group_Params::FFDHE_4096, Group_Params::FFDHE_6144,
-         Group_Params::FFDHE_8192,
+      Group_Params::SECP384R1,
+      Group_Params::SECP521R1,
+
+      Group_Params::BRAINPOOL256R1,
+      Group_Params::BRAINPOOL384R1,
+      Group_Params::BRAINPOOL512R1,
+
+      Group_Params::FFDHE_2048,
+      Group_Params::FFDHE_3072,
+
+      // clang-format on
    };
 }
 
@@ -651,7 +664,7 @@ void Policy::print(std::ostream& o) const {
    }
    o << "maximum_session_tickets_per_client_hello = " << maximum_session_tickets_per_client_hello() << '\n';
    o << "session_ticket_lifetime = " << session_ticket_lifetime().count() << '\n';
-   o << "reuse_session_tickets = " << reuse_session_tickets() << '\n';
+   print_bool(o, "reuse_session_tickets", reuse_session_tickets());
    o << "new_session_tickets_upon_handshake_success = " << new_session_tickets_upon_handshake_success() << '\n';
    o << "minimum_dh_group_size = " << minimum_dh_group_size() << '\n';
    o << "minimum_ecdh_group_size = " << minimum_ecdh_group_size() << '\n';
