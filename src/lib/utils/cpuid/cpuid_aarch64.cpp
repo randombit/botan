@@ -21,7 +21,7 @@ namespace Botan {
 #if defined(BOTAN_TARGET_ARCH_IS_ARM64)
 
 uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
-   if(OS::has_auxval()) {
+   if(auto auxval = OS::get_auxval_hwcap()) {
       uint32_t feat = 0;
 
       /*
@@ -43,7 +43,7 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
          SVE_bit = (1 << 22),
       };
 
-      const uint64_t hwcap = OS::get_auxval(OS::auxval_hwcap());
+      const auto hwcap = auxval->first;
 
       feat |= if_set(hwcap, ARM_hwcap_bit::NEON_bit, CPUID::CPUID_ARM_NEON_BIT, allowed);
 

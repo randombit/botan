@@ -121,62 +121,77 @@ uint32_t OS::get_process_id() {
 #endif
 }
 
-bool OS::has_auxval() {
-#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
-   return true;
-#elif defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
-   return true;
-#elif defined(BOTAN_TARGET_OS_HAS_AUXINFO)
-   return true;
-#else
-   return false;
-#endif
-}
+namespace {
 
-unsigned long OS::auxval_hwcap() {
+#if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL) || defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO) || \
+   defined(BOTAN_TARGET_OS_HAS_AUXINFO)
+
+   #define BOTAN_TARGET_HAS_AUXVAL_INTERFACE
+#endif
+
+std::optional<unsigned long> auxval_hwcap() {
 #if defined(AT_HWCAP)
    return AT_HWCAP;
-#else
+#elif defined(BOTAN_TARGET_HAS_AUXVAL_INTERFACE)
    // If the value is not defined in a header we can see,
    // but auxval is supported, return the Linux/Android value
-   return (OS::has_auxval()) ? 16 : 0;
+   return 16;
+#else
+   return {};
 #endif
 }
 
-unsigned long OS::auxval_hwcap2() {
+std::optional<unsigned long> auxval_hwcap2() {
 #if defined(AT_HWCAP2)
    return AT_HWCAP2;
-#else
+#elif defined(BOTAN_TARGET_HAS_AUXVAL_INTERFACE)
    // If the value is not defined in a header we can see,
    // but auxval is supported, return the Linux/Android value
-   return (OS::has_auxval()) ? 26 : 0;
+   return 26;
+#else
+   return {};
 #endif
 }
 
-unsigned long OS::get_auxval(unsigned long id) {
+std::optional<unsigned long> get_auxval(std::optional<unsigned long> id) {
+   if(id) {
 #if defined(BOTAN_TARGET_OS_HAS_GETAUXVAL)
-   return ::getauxval(id);
+      return ::getauxval(*id);
 #elif defined(BOTAN_TARGET_OS_HAS_ELF_AUX_INFO)
-   unsigned long auxinfo = 0;
-   ::elf_aux_info(static_cast<int>(id), &auxinfo, sizeof(auxinfo));
-   return auxinfo;
+      unsigned long auxinfo = 0;
+      if(::elf_aux_info(static_cast<int>(*id), &auxinfo, sizeof(auxinfo)) == 0) {
+         return auxinfo;
+      }
 #elif defined(BOTAN_TARGET_OS_HAS_AUXINFO)
-   for(const AuxInfo* auxinfo = static_cast<AuxInfo*>(::_dlauxinfo()); auxinfo != AT_NULL; ++auxinfo) {
-      if(id == auxinfo->a_type)
-         return auxinfo->a_v;
+      for(const AuxInfo* auxinfo = static_cast<AuxInfo*>(::_dlauxinfo()); auxinfo != AT_NULL; ++auxinfo) {
+         if(*id == auxinfo->a_type)
+            return auxinfo->a_v;
+      }
+      // no match; fall off the end and return nullopt
+#endif
    }
 
-   return 0;
-#else
-   BOTAN_UNUSED(id);
-   return 0;
-#endif
+   return {};
+}
+
+}  // namespace
+
+std::optional<std::pair<unsigned long, unsigned long>> OS::get_auxval_hwcap() {
+   if(const auto hwcap = get_auxval(auxval_hwcap())) {
+      if(const auto hwcap2 = get_auxval(auxval_hwcap2())) {
+         return std::make_pair(*hwcap, *hwcap2);
+      } else {
+         return std::make_pair(*hwcap, 0);
+      }
+   } else {
+      return {};
+   }
 }
 
 bool OS::running_in_privileged_state() {
 #if defined(AT_SECURE)
-   if(OS::has_auxval()) {
-      return OS::get_auxval(AT_SECURE) != 0;
+   if(auto at_secure = get_auxval(AT_SECURE)) {
+      return at_secure != 0;
    }
 #endif
 
