@@ -26,6 +26,12 @@ std::string sha256_provider() {
    }
 #endif
 
+#if defined(BOTAN_HAS_SHA2_32_RISCV64)
+   if(CPUID::has_riscv_scalar_sha256()) {
+      return "riscv64";
+   }
+#endif
+
 #if defined(BOTAN_HAS_SHA2_32_X86_BMI2)
    if(CPUID::has_bmi2()) {
       return "bmi2";
@@ -50,6 +56,12 @@ void SHA_256::compress_digest(digest_type& digest, std::span<const uint8_t> inpu
 #if defined(BOTAN_HAS_SHA2_32_X86)
    if(CPUID::has_intel_sha()) {
       return SHA_256::compress_digest_x86(digest, input, blocks);
+   }
+#endif
+
+#if defined(BOTAN_HAS_SHA2_32_RISCV64)
+   if(CPUID::has_riscv_scalar_sha256()) {
+      return SHA_256::compress_digest_riscv64(digest, input, blocks);
    }
 #endif
 

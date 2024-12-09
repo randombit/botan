@@ -1,0 +1,16 @@
+<defines>
+SHA2_32_RISCV64 -> 20241208
+</defines>
+
+<module_info>
+name -> "SHA-256 RISC-V"
+brief -> "SHA-256 using RISC-V instructions"
+</module_info>
+
+<isa>
+scalar_sha2
+</isa>
+
+<arch>
+riscv64
+</arch>

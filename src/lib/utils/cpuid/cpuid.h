@@ -16,7 +16,7 @@
 namespace Botan {
 
 #if defined(BOTAN_TARGET_CPU_IS_PPC_FAMILY) || defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY) || \
-   defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+   defined(BOTAN_TARGET_CPU_IS_X86_FAMILY) || defined(BOTAN_TARGET_ARCH_IS_RISCV64)
 
    #define BOTAN_CPUID_HAS_DETECTION
 
@@ -143,6 +143,13 @@ class BOTAN_TEST_API CPUID final {
          CPUID_ARM_SM4_BIT = (1U << 23),
 #endif
 
+#if defined(BOTAN_TARGET_ARCH_IS_RISCV64)
+         CPUID_RISCV64_SCALAR_AES = (1U << 0),
+         CPUID_RISCV64_SCALAR_SHA256 = (1U << 1),
+         CPUID_RISCV64_SCALAR_SM3 = (1U << 2),
+         CPUID_RISCV64_SCALAR_SM4 = (1U << 3),
+#endif
+
          CPUID_IS_BIG_ENDIAN_BIT = (1U << 30),
          CPUID_INITIALIZED_BIT = (1U << 31)
       };
@@ -162,6 +169,37 @@ class BOTAN_TEST_API CPUID final {
       * Check if the processor supports POWER9 DARN RNG
       */
       static bool has_darn_rng() { return has_cpuid_bit(CPUID_DARN_BIT); }
+
+#endif
+
+#if defined(BOTAN_TARGET_ARCH_IS_RISCV64)
+      /**
+      * Check if the processor supports RISC-V scalar AES
+      *
+      * This covers Zba, Zbb, Zkne, Zknd, Zkt
+      */
+      static bool has_riscv_scalar_aes() { return has_cpuid_bit(CPUID_RISCV64_SCALAR_AES); }
+
+      /**
+      * Check if the processor supports RISC-V scalar SHA-256
+      *
+      * This covers Zba, Zbb, Zknh, Zkt
+      */
+      static bool has_riscv_scalar_sha256() { return has_cpuid_bit(CPUID_RISCV64_SCALAR_SHA256); }
+
+      /**
+      * Check if the processor supports RISC-V scalar SM3
+      *
+      * This covers Zba, Zbb, Zksh, Zkt
+      */
+      static bool has_riscv_scalar_sm3() { return has_cpuid_bit(CPUID_RISCV64_SCALAR_SM3); }
+
+      /**
+      * Check if the processor supports RISC-V scalar SM4
+      *
+      * This covers Zba, Zbb, Zksed, Zkt
+      */
+      static bool has_riscv_scalar_sm4() { return has_cpuid_bit(CPUID_RISCV64_SCALAR_SM4); }
 
 #endif
 

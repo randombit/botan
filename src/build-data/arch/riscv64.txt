@@ -1,3 +1,8 @@
 family riscv
 endian little
 wordsize 64
+
+<isa_extensions>
+scalar_aes
+scalar_sha2
+</isa_extensions>

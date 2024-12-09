@@ -1208,7 +1208,7 @@ class ArchInfo(InfoObject):
         if self.wordsize not in [32, 64]:
             logging.error('Unexpected wordsize %d for arch %s', self.wordsize, infofile)
 
-        alphanumeric = re.compile('^[a-z0-9]+$')
+        alphanumeric = re.compile('^[a-z0-9_]+$')
         for isa in self.isa_extensions:
             if alphanumeric.match(isa) is None:
                 logging.error('Invalid name for ISA extension "%s"', isa)

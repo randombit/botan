@@ -97,6 +97,9 @@ arm64:armv8sha3 -> "-march=armv8.2-a+sha3"
 # For Aarch64 NEON is enabled by default
 arm32:neon    -> "-mfpu=neon"
 arm64:neon    -> ""
+
+riscv64:scalar_aes -> "-march=rv64imacd_zba_zbb_zkne_zknd"
+riscv64:scalar_sha2 -> "-march=rv64imacd_zba_zbb_zknh"
 </isa_flags>
 
 # Flags set here are included at compile and link time

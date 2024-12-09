@@ -99,6 +99,10 @@ class SHA_256 final : public HashFunction {
       static void compress_digest_x86(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
 #endif
 
+#if defined(BOTAN_HAS_SHA2_32_RISCV64)
+      static void compress_digest_riscv64(digest_type& digest, std::span<const uint8_t> input, size_t blocks);
+#endif
+
    private:
       void add_data(std::span<const uint8_t> input) override;
 

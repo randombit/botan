@@ -60,6 +60,13 @@ std::string CPUID::to_string() {
    CPUID_PRINT(altivec);
    CPUID_PRINT(power_crypto);
    CPUID_PRINT(darn_rng);
+
+#elif defined(BOTAN_TARGET_ARCH_IS_RISCV64)
+   CPUID_PRINT(riscv_scalar_aes);
+   CPUID_PRINT(riscv_scalar_sha256);
+   CPUID_PRINT(riscv_scalar_sm3);
+   CPUID_PRINT(riscv_scalar_sm4);
+
 #elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
    CPUID_PRINT(neon);
    CPUID_PRINT(arm_sve);
@@ -199,6 +206,17 @@ std::vector<CPUID::CPUID_bits> CPUID::bit_from_string(std::string_view tok) {
       return {CPUID::CPUID_DARN_BIT};
    }
 
+#elif defined(BOTAN_TARGET_ARCH_IS_RISCV64)
+   if(tok == "riscv_scalar_aes") {
+      return {CPUID::CPUID_RISCV64_SCALAR_AES};
+   } else if(tok == "riscv_scalar_sha256") {
+      return {CPUID::CPUID_RISCV64_SCALAR_SHA256};
+   } else if(tok == "riscv_scalar_sm3") {
+      return {CPUID::CPUID_RISCV64_SCALAR_SM3};
+   } else if(tok == "riscv_scalar_sm4") {
+      return {CPUID::CPUID_RISCV64_SCALAR_SM4};
+   }
+
 #elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
    if(tok == "neon" || tok == "simd") {
       return {CPUID::CPUID_ARM_NEON_BIT};
@@ -221,7 +239,6 @@ std::vector<CPUID::CPUID_bits> CPUID::bit_from_string(std::string_view tok) {
    } else if(tok == "armv8sm4" || tok == "arm_sm4") {
       return {CPUID::CPUID_ARM_SM4_BIT};
    }
-
 #else
    BOTAN_UNUSED(tok);
 #endif
