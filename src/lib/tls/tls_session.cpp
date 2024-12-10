@@ -103,6 +103,43 @@ Session_Summary::Session_Summary(const Session_Base& base,
 
 #if defined(BOTAN_HAS_TLS_13)
 
+namespace {
+
+std::string tls13_kex_to_string(bool psk, std::optional<Named_Group> group) {
+   if(psk && group) {
+      if(group->is_dh_named_group()) {
+         return kex_method_to_string(Kex_Algo::DHE_PSK);
+      } else if(group->is_ecdh_named_curve() || group->is_x25519() || group->is_x448()) {
+         return kex_method_to_string(Kex_Algo::ECDHE_PSK);
+      } else if(group->is_pure_kyber()) {
+         return kex_method_to_string(Kex_Algo::KEM_PSK);
+      } else if(group->is_pqc_hybrid()) {
+         return kex_method_to_string(Kex_Algo::HYBRID_PSK);
+      } else if(auto s = group->to_string()) {
+         return *s;
+      }
+   } else if(psk) {
+      return kex_method_to_string(Kex_Algo::PSK);
+   } else {
+      BOTAN_ASSERT_NOMSG(group.has_value());
+      if(group->is_dh_named_group()) {
+         return kex_method_to_string(Kex_Algo::DH);
+      } else if(group->is_ecdh_named_curve() || group->is_x25519() || group->is_x448()) {
+         return kex_method_to_string(Kex_Algo::ECDH);
+      } else if(group->is_pure_kyber()) {
+         return kex_method_to_string(Kex_Algo::KEM);
+      } else if(group->is_pqc_hybrid()) {
+         return kex_method_to_string(Kex_Algo::HYBRID);
+      } else if(auto s = group->to_string()) {
+         return *s;
+      }
+   }
+
+   return kex_method_to_string(Kex_Algo::UNDEFINED);
+}
+
+}  // namespace
+
 Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
                                  Connection_Side side,
                                  std::vector<X509_Certificate> peer_certs,
@@ -138,39 +175,26 @@ Session_Summary::Session_Summary(const Server_Hello_13& server_hello,
 
    // In TLS 1.3 the key exchange algorithm is not negotiated in the ciphersuite
    // anymore. This provides a compatible identifier for applications to use.
-   m_kex_algo = kex_method_to_string([&] {
+
+   std::optional<Named_Group> group = [&]() -> std::optional<Named_Group> {
       if(psk_used() || was_resumption()) {
          if(const auto keyshare = server_hello.extensions().get<Key_Share>()) {
-            const auto group = keyshare->selected_group();
-            if(group.is_dh_named_group()) {
-               return Kex_Algo::DHE_PSK;
-            } else if(group.is_ecdh_named_curve() || group.is_x25519() || group.is_x448()) {
-               return Kex_Algo::ECDHE_PSK;
-            } else if(group.is_pure_kyber()) {
-               return Kex_Algo::KEM_PSK;
-            } else if(group.is_pqc_hybrid()) {
-               return Kex_Algo::HYBRID_PSK;
-            }
+            return keyshare->selected_group();
          } else {
-            return Kex_Algo::PSK;
+            return {};
          }
       } else {
          const auto keyshare = server_hello.extensions().get<Key_Share>();
          BOTAN_ASSERT_NONNULL(keyshare);
-         const auto group = keyshare->selected_group();
-         if(group.is_dh_named_group()) {
-            return Kex_Algo::DH;
-         } else if(group.is_ecdh_named_curve() || group.is_x25519() || group.is_x448()) {
-            return Kex_Algo::ECDH;
-         } else if(group.is_pure_kyber()) {
-            return Kex_Algo::KEM;
-         } else if(group.is_pqc_hybrid()) {
-            return Kex_Algo::HYBRID;
-         }
+         return keyshare->selected_group();
       }
+   }();
 
-      return Kex_Algo::UNDEFINED;
-   }());
+   if(group.has_value()) {
+      m_kex_parameters = group->to_string();
+   }
+
+   m_kex_algo = tls13_kex_to_string(psk_used() || was_resumption(), group);
 }
 
 #endif
