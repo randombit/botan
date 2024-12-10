@@ -152,51 +152,62 @@ std::vector<Test::Result> read_handshake_messages() {
    return {
       CHECK("empty read",
             [&](auto& result) {
+               result.start_timer();
                Handshake_Layer hl(Connection_Side::Client);
                Transcript_Hash_State th("SHA-256");
                result.confirm("needs header bytes", !hl.next_message(Policy(), th));
                check_transcript_hash_empty(result, th);
+               result.end_timer();
             }),
 
       CHECK("read incomplete header",
             [&](auto& result) {
+               result.start_timer();
                Handshake_Layer hl(Connection_Side::Client);
                Transcript_Hash_State th("SHA-256");
                hl.copy_data(std::vector<uint8_t>{0x00, 0x01, 0x02});
                result.confirm("needs more bytes", !hl.next_message(Policy(), th));
                check_transcript_hash_empty(result, th);
+               result.end_timer();
             }),
 
       CHECK("read client hello",
             [&](auto& result) {
+               result.start_timer();
                Handshake_Layer hl(Connection_Side::Client);
                Transcript_Hash_State th("SHA-256");
                hl.copy_data(client_hello_message);
                result.confirm("is a client hello", has_message<Client_Hello_13>(result, hl.next_message(Policy(), th)));
                check_transcript_hash_filled(result, th);
+               result.end_timer();
             }),
 
       CHECK("read server hello",
             [&](auto& result) {
+               result.start_timer();
                Handshake_Layer hl(Connection_Side::Client);
                Transcript_Hash_State th("SHA-256");
                hl.copy_data(server_hello_message);
                result.confirm("is a server hello", has_message<Server_Hello_13>(result, hl.next_message(Policy(), th)));
                check_transcript_hash_filled(result, th);
+               result.end_timer();
             }),
 
       CHECK("read legacy server hello",
             [&](auto& result) {
+               result.start_timer();
                Handshake_Layer hl(Connection_Side::Client);
                Transcript_Hash_State th("SHA-256");
                hl.copy_data(server_hello_12_message);
                result.confirm("is a legacy server hello",
                               has_message<Server_Hello_12>(result, hl.next_message(Policy(), th)));
                check_transcript_hash_filled(result, th);
+               result.end_timer();
             }),
 
       CHECK("read client hello in two steps",
             [&](auto& result) {
+               result.start_timer();
                Handshake_Layer hl(Connection_Side::Client);
                Transcript_Hash_State th("SHA-256");
 
@@ -212,10 +223,12 @@ std::vector<Test::Result> read_handshake_messages() {
                result.confirm("is a client hello", has_message<Client_Hello_13>(result, hl.next_message(Policy(), th)));
 
                check_transcript_hash_filled(result, th);
+               result.end_timer();
             }),
 
       CHECK("read multiple messages",
             [&](auto& result) {
+               result.start_timer();
                Handshake_Layer hl(Connection_Side::Client);
                Transcript_Hash_State th("SHA-256");
                hl.copy_data(Botan::concat(server_hello_message, encrypted_extensions));
@@ -223,10 +236,12 @@ std::vector<Test::Result> read_handshake_messages() {
                result.confirm("is encrypted extensions",
                               has_message<Encrypted_Extensions>(result, hl.next_message(Policy(), th)));
                check_transcript_hash_filled(result, th);
+               result.end_timer();
             }),
 
       CHECK("reject TLS 1.2 messages",
             [&](auto& result) {
+               result.start_timer();
                for(const auto& msg : tls_12_only_messages) {
                   Handshake_Layer hl(Connection_Side::Client);
                   Transcript_Hash_State th("SHA-256");
@@ -238,6 +253,7 @@ std::vector<Test::Result> read_handshake_messages() {
 
                   check_transcript_hash_empty(result, th);
                }
+               result.end_timer();
             }),
 
       CHECK("reject incomplete messages with invalid type",
@@ -247,6 +263,7 @@ std::vector<Test::Result> read_handshake_messages() {
                // to "random data" with an insensible type tag and a long (insensible) length field.
                // This caused a deadlock as we waited to receive the complete message, rather than validating the type
                // tag to exit early.
+               result.start_timer();
                const auto data = Botan::hex_decode_locked("D4B028717D0FA310FF8664127B9448D7952E06A4F9EA23");
                // data from the bogo test --          ~~~~~~ <- length
                //                                   ~~ <- bogus message type
@@ -255,6 +272,7 @@ std::vector<Test::Result> read_handshake_messages() {
                hl.copy_data(data);
                result.template test_throws<TLS_Exception>(
                   "message is rejected", "Unknown handshake message received", [&] { hl.next_message(Policy(), th); });
+               result.end_timer();
             }),
    };
 }
@@ -263,22 +281,26 @@ std::vector<Test::Result> prepare_message() {
    return {
       CHECK("prepare client hello",
             [&](auto& result) {
+               result.start_timer();
                auto hello = std::get<Client_Hello_13>(
                   Client_Hello_13::parse({client_hello_message.cbegin() + 4, client_hello_message.cend()}));
                Handshake_Layer hl(Connection_Side::Client);
                Transcript_Hash_State th("SHA-256");
                result.test_eq("produces the same message", hl.prepare_message(hello, th), client_hello_message);
                check_transcript_hash_filled(result, th);
+               result.end_timer();
             }),
 
       CHECK("prepare server hello",
             [&](auto& result) {
+               result.start_timer();
                auto hello = std::get<Server_Hello_13>(
                   Server_Hello_13::parse({server_hello_message.cbegin() + 4, server_hello_message.cend()}));
                Handshake_Layer hl(Connection_Side::Server);
                Transcript_Hash_State th("SHA-256");
                result.test_eq("produces the same message", hl.prepare_message(hello, th), server_hello_message);
                check_transcript_hash_filled(result, th);
+               result.end_timer();
             }),
    };
 }
@@ -292,14 +314,17 @@ std::vector<Test::Result> full_client_handshake() {
    return {
       CHECK("client hello",
             [&](auto& result) {
+               result.start_timer();
                auto hello = std::get<Client_Hello_13>(
                   Client_Hello_13::parse({client_hello_message.cbegin() + 4, client_hello_message.cend()}));
                hl.prepare_message(hello, th);
                check_transcript_hash_empty(result, th);
+               result.end_timer();
             }),
 
       CHECK("server hello",
             [&](auto& result) {
+               result.start_timer();
                hl.copy_data(server_hello_message);
 
                const auto server_hello = hl.next_message(policy, th);
@@ -315,10 +340,12 @@ std::vector<Test::Result> full_client_handshake() {
 
                result.test_eq(
                   "correct transcript hash produced after server hello", th.current(), expected_after_server_hello);
+               result.end_timer();
             }),
 
       CHECK("server handshake messages",
             [&](auto& result) {
+               result.start_timer();
                hl.copy_data(server_handshake_messages);
 
                const auto enc_exts = hl.next_message(policy, th);
@@ -340,16 +367,19 @@ std::vector<Test::Result> full_client_handshake() {
                const auto server_finished = hl.next_message(policy, th);
                result.confirm("is Finished", has_message<Finished_13>(result, server_finished));
                result.test_eq("hash is updated after server Finished", th.current(), expected_after_server_finished);
+               result.end_timer();
             }),
 
       CHECK("client finished",
             [&](auto& result) {
+               result.start_timer();
                const auto expected_after_client_finished = Botan::hex_decode(
                   "20 91 45 a9 6e e8 e2 a1 22 ff 81 00 47 cc 95 26 84 65 8d 60 49 e8 64 29 42 6d b8 7c 54 ad 14 3d");
 
                Finished_13 client_finished({client_finished_message.cbegin() + 4, client_finished_message.cend()});
                hl.prepare_message(client_finished, th);
                result.test_eq("hash is updated after client Finished", th.current(), expected_after_client_finished);
+               result.end_timer();
             }),
    };
 }
@@ -363,15 +393,18 @@ std::vector<Test::Result> hello_retry_request_handshake() {
    return {
       CHECK("client hello 1",
             [&](auto& result) {
+               result.start_timer();
                auto hello = std::get<Client_Hello_13>(
                   Client_Hello_13::parse({hrr_client_hello_msg.cbegin() + 4, hrr_client_hello_msg.cend()}));
                auto msg = hl.prepare_message(hello, th);
                result.test_eq("parsing and re-marshalling produces same message", msg, hrr_client_hello_msg);
                check_transcript_hash_empty(result, th);
+               result.end_timer();
             }),
 
       CHECK("hello retry request",
             [&](auto& result) {
+               result.start_timer();
                hl.copy_data(hrr_hello_retry_request_msg);
 
                const auto hrr = hl.next_message(policy, th);
@@ -389,6 +422,7 @@ std::vector<Test::Result> hello_retry_request_handshake() {
                result.test_eq("correct transcript hash produced after hello retry request",
                               th.current(),
                               expected_after_hello_retry_request);
+               result.end_timer();
             }),
 
       // ... the rest of the handshake will work just like in full_client_handshake

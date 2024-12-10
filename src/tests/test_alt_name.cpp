@@ -19,6 +19,7 @@ class X509_Alt_Name_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("X509 AlternativeName tests");
+         result.start_timer();
 
          const std::vector<std::string> uri_names = {
             "https://example.com", "https://example.org", "https://sub.example.net"};
@@ -90,6 +91,7 @@ class X509_Alt_Name_Tests final : public Test {
          result.test_eq("Expected number of DNs", recoded.directory_names().size(), 2);
          result.test_eq("Expected number of Othernames", recoded.other_names().size(), 2);
 
+         result.end_timer();
          return {result};
       }
 };

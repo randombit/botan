@@ -58,6 +58,7 @@ std::vector<Test::Result> keccak_helpers() {
    return {
       CHECK("keccak_int_encoding_size()",
             [](Test::Result& result) {
+               result.start_timer();
                result.test_eq("keccak_int_encoding_size(0)", encode_size(0), 2);
                result.test_eq("keccak_int_encoding_size(255)", encode_size(0xFF), 2);
                result.test_eq("keccak_int_encoding_size(256)", encode_size(0xFF + 1), 3);
@@ -65,10 +66,12 @@ std::vector<Test::Result> keccak_helpers() {
                result.test_eq("keccak_int_encoding_size(65.536)", encode_size(0xFFFF + 1), 4);
                result.test_eq("keccak_int_encoding_size(16.777.215)", encode_size(0xFFFFFF), 4);
                result.test_eq("keccak_int_encoding_size(16.777.216)", encode_size(0xFFFFFF + 1), 5);
+               result.end_timer();
             }),
 
          CHECK("keccak_int_left_encode()",
                [](Test::Result& result) {
+                  result.start_timer();
                   result.test_is_eq("left_encode(0)", left_encode(result, 0), hex("0100"));
                   result.test_is_eq("left_encode(1)", left_encode(result, 1), hex("0101"));
                   result.test_is_eq("left_encode(255)", left_encode(result, 255), hex("01FF"));
@@ -79,10 +82,12 @@ std::vector<Test::Result> keccak_helpers() {
                   result.test_is_eq("left_encode(16.777.215)", left_encode(result, 0xFFFFFF), hex("03FFFFFF"));
                   result.test_is_eq("left_encode(16.777.216)", left_encode(result, 0xFFFFFF + 1), hex("0401000000"));
                   result.test_is_eq("left_encode(287.454.020)", left_encode(result, 0x11223344), hex("0411223344"));
+                  result.end_timer();
                }),
 
          CHECK("keccak_int_right_encode()",
                [](Test::Result& result) {
+                  result.start_timer();
                   result.test_is_eq("right_encode(0)", right_encode(result, 0), hex("0001"));
                   result.test_is_eq("right_encode(1)", right_encode(result, 1), hex("0101"));
                   result.test_is_eq("right_encode(255)", right_encode(result, 255), hex("FF01"));
@@ -93,11 +98,14 @@ std::vector<Test::Result> keccak_helpers() {
                   result.test_is_eq("right_encode(16.777.215)", right_encode(result, 0xFFFFFF), hex("FFFFFF03"));
                   result.test_is_eq("right_encode(16.777.216)", right_encode(result, 0xFFFFFF + 1), hex("0100000004"));
                   result.test_is_eq("right_encode(287.454.020)", right_encode(result, 0x11223344), hex("1122334404"));
+                  result.end_timer();
                }),
 
          CHECK(
             "keccak_absorb_padded_strings_encoding() with one byte string (std::vector<>)",
             [](Test::Result& result) {
+               result.start_timer();
+
                std::vector<uint8_t> out;
                const auto padmod = 136 /* SHAKE-256 byte rate */;
 
@@ -112,11 +120,14 @@ std::vector<Test::Result> keccak_helpers() {
                      "0120"     /* left_encode(n.size() * 8) */
                      "4B4D4143" /* "KMAC" */
                      "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"));
+               result.end_timer();
             }),
 
          CHECK(
             "keccak_absorb_padded_strings_encoding() with two byte strings (std::vector<>)",
             [](Test::Result& result) {
+               result.start_timer();
+
                std::vector<uint8_t> out;
                const auto padmod = 136 /* SHAKE-256 byte rate */;
 
@@ -137,6 +148,7 @@ std::vector<Test::Result> keccak_helpers() {
                      "020420"   /* left_encode(s.size() * 8) */
                      "546869732069732061206c6f6e672073616c742c2074686174206973206c6f6e676572207468616e2031323820627974657320696e206f7264657220746f2066696c6c2075702074686520666972737420726f756e64206f6620746865204b656363616b207065726d75746174696f6e2e20546861742073686f756c6420646f2069742e"
                      "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"));
+               result.end_timer();
             }),
 
    #if defined(BOTAN_HAS_SHAKE_XOF)
@@ -144,6 +156,8 @@ std::vector<Test::Result> keccak_helpers() {
          CHECK(
             "keccak_absorb_padded_strings_encoding() with one byte string",
             [](Test::Result& result) {
+               result.start_timer();
+
                std::vector<uint8_t> out(32);
                const auto xof = Botan::XOF::create_or_throw("SHAKE-256");
                const auto padmod = xof->block_size();
@@ -159,9 +173,12 @@ std::vector<Test::Result> keccak_helpers() {
                      "0120"     /* left_encode(n.size() * 8) */
                      "4B4D4143" /* "KMAC" */
                      "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")));
+               result.end_timer();
             }),
 
          CHECK("keccak_absorb_padded_strings_encoding() with two byte strings", [](Test::Result& result) {
+            result.start_timer();
+
             std::vector<uint8_t> out(32);
             const auto xof = Botan::XOF::create_or_throw("SHAKE-256");
             const auto padmod = xof->block_size();
@@ -183,6 +200,7 @@ std::vector<Test::Result> keccak_helpers() {
                   "020420"   /* left_encode(s.size() * 8) */
                   "546869732069732061206c6f6e672073616c742c2074686174206973206c6f6e676572207468616e2031323820627974657320696e206f7264657220746f2066696c6c2075702074686520666972737420726f756e64206f6620746865204b656363616b207065726d75746174696f6e2e20546861742073686f756c6420646f2069742e"
                   "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")));
+            result.end_timer();
          }),
 
    #endif

@@ -32,6 +32,7 @@ class AEAD_Tests final : public Text_Based_Test {
          const bool is_siv = algo.find("/SIV") != std::string::npos;
 
          Test::Result result(algo);
+         result.start_timer();
 
          auto enc = Botan::AEAD_Mode::create(algo, Botan::Cipher_Dir::Encryption);
 
@@ -177,6 +178,7 @@ class AEAD_Tests final : public Text_Based_Test {
                                [&]() { enc->set_associated_data(ad.data(), ad.size()); });
          }
 
+         result.end_timer();
          return result;
       }
 
@@ -190,6 +192,7 @@ class AEAD_Tests final : public Text_Based_Test {
          const bool is_siv = algo.find("/SIV") != std::string::npos;
 
          Test::Result result(algo);
+         result.start_timer();
 
          auto dec = Botan::AEAD_Mode::create(algo, Botan::Cipher_Dir::Decryption);
 
@@ -381,6 +384,7 @@ class AEAD_Tests final : public Text_Based_Test {
                                [&]() { dec->set_associated_data(ad.data(), ad.size()); });
          }
 
+         result.end_timer();
          return result;
       }
 
@@ -392,6 +396,7 @@ class AEAD_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> ad = vars.get_opt_bin("AD");
 
          Test::Result result(algo);
+         result.start_timer();
 
          auto enc = Botan::AEAD_Mode::create(algo, Botan::Cipher_Dir::Encryption);
          auto dec = Botan::AEAD_Mode::create(algo, Botan::Cipher_Dir::Decryption);
@@ -433,6 +438,7 @@ class AEAD_Tests final : public Text_Based_Test {
          // test dec
          result.merge(test_dec(key, nonce, expected, input, ad, algo, this->rng()));
 
+         result.end_timer();
          return result;
       }
 };

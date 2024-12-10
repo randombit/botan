@@ -110,6 +110,7 @@ class Stateful_RNG_Tests : public Test {
    private:
       Test::Result test_reseed() {
          Test::Result result(rng_name() + " Reseed");
+         result.start_timer();
 
          // test reseed_interval is enforced
          Request_Counting_RNG counting_rng;
@@ -140,11 +141,13 @@ class Stateful_RNG_Tests : public Test {
             result.test_eq("request exceeds output limit", counting_rng.randomize_count(), 9);
          }
 
+         result.end_timer();
          return result;
       }
 
       Test::Result test_broken_entropy_input() {
          Test::Result result(rng_name() + " Broken Entropy Input");
+         result.start_timer();
 
          class Broken_Entropy_Source final : public Botan::Entropy_Source {
             public:
@@ -210,11 +213,13 @@ class Stateful_RNG_Tests : public Test {
             rng_with_broken_rng_and_broken_es->random_vec(16);
          });
 
+         result.end_timer();
          return result;
       }
 
       Test::Result test_check_nonce() {
          Test::Result result(rng_name() + " Nonce Check");
+         result.start_timer();
 
          // make sure the nonce has at least security_strength bits
          auto rng = create_rng(nullptr, nullptr, 0);
@@ -235,11 +240,13 @@ class Stateful_RNG_Tests : public Test {
             }
          }
 
+         result.end_timer();
          return result;
       }
 
       Test::Result test_prediction_resistance() {
          Test::Result result(rng_name() + " Prediction Resistance");
+         result.start_timer();
 
          // set reseed_interval = 1, forcing a reseed for every RNG request
          Request_Counting_RNG counting_rng;
@@ -254,11 +261,13 @@ class Stateful_RNG_Tests : public Test {
          rng->random_vec(16);
          result.test_eq("third request", counting_rng.randomize_count(), size_t(3));
 
+         result.end_timer();
          return result;
       }
 
       Test::Result test_fork_safety() {
          Test::Result result(rng_name() + " Fork Safety");
+         result.start_timer();
 
    #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
          const size_t reseed_interval = 1024;
@@ -339,11 +348,13 @@ class Stateful_RNG_Tests : public Test {
             ::_exit(0);  // just in case /bin/true isn't available (sandbox?)
          }
    #endif
+         result.end_timer();
          return result;
       }
 
       Test::Result test_randomize_with_ts_input() {
          Test::Result result(rng_name() + " Randomize With Timestamp Input");
+         result.start_timer();
 
          const size_t request_bytes = 64;
          const std::vector<uint8_t> seed(128);
@@ -369,11 +380,13 @@ class Stateful_RNG_Tests : public Test {
 
          result.test_ne("output differs due to different timestamp", output1, output2);
 
+         result.end_timer();
          return result;
       }
 
       Test::Result test_input_output_edge_cases() {
          Test::Result result(rng_name() + " randomize");
+         result.start_timer();
 
          const std::vector<uint8_t> seed(128);
          Fixed_Output_RNG fixed_output_rng(seed);
@@ -388,6 +401,7 @@ class Stateful_RNG_Tests : public Test {
             result.test_success("RNG accepted input and output length");
          }
 
+         result.end_timer();
          return result;
       }
 };
@@ -421,6 +435,7 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests {
 
       Test::Result test_max_number_of_bytes_per_request() override {
          Test::Result result("HMAC_DRBG max_number_of_bytes_per_request");
+         result.start_timer();
 
          const std::string mac_string = "HMAC(SHA-256)";
 
@@ -464,11 +479,13 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests {
          rng.random_vec(1025);
          result.test_eq("17 requests", counting_rng.randomize_count(), 17);
 
+         result.end_timer();
          return result;
       }
 
       Test::Result test_reseed_interval_limits() override {
          Test::Result result("HMAC_DRBG reseed_interval limits");
+         result.start_timer();
 
          const std::string mac_string = "HMAC(SHA-256)";
 
@@ -485,11 +502,13 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests {
                                                             (static_cast<size_t>(1) << 24) + 1);
                             });
 
+         result.end_timer();
          return result;
       }
 
       Test::Result test_security_level() override {
          Test::Result result("HMAC_DRBG Security Level");
+         result.start_timer();
 
          std::vector<std::string> approved_hash_fns{"SHA-1", "SHA-224", "SHA-256", "SHA-512/256", "SHA-384", "SHA-512"};
          std::vector<uint32_t> security_strengths{128, 192, 256, 256, 256, 256};
@@ -507,11 +526,13 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests {
             result.test_eq(hash_fn + " security level", rng.security_level(), security_strengths[i]);
          }
 
+         result.end_timer();
          return result;
       }
 
       Test::Result test_reseed_kat() override {
          Test::Result result("HMAC_DRBG Reseed KAT");
+         result.start_timer();
 
          Request_Counting_RNG counting_rng;
          auto rng = make_rng(counting_rng, 2);
@@ -535,6 +556,7 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests {
          result.test_eq("underlying RNG calls", counting_rng.randomize_count(), size_t(1));
          result.test_eq("out after reseed", out, "2F8FCA696832C984781123FD64F4B20C7379A25C87AB29A21C9BF468B0081CE2");
 
+         result.end_timer();
          return result;
       }
 };
@@ -555,6 +577,8 @@ std::vector<Test::Result> hmac_drbg_multiple_requests() {
 
    return {CHECK("bulk and split output without input",
                  [&](auto& result) {
+                    result.start_timer();
+
                     auto rng1 = make_seeded_rng(2);
                     auto rng2 = make_seeded_rng(2);
 
@@ -569,10 +593,12 @@ std::vector<Test::Result> hmac_drbg_multiple_requests() {
 
                     result.test_eq("Output is equal, regardless bulk request", bulk, split1);
 
+                    result.end_timer();
                     return result;
                  }),
 
            CHECK("bulk and split output with input", [&](auto& result) {
+              result.start_timer();
               auto rng1 = make_seeded_rng(3);
               auto rng2 = make_seeded_rng(3);
 
@@ -590,6 +616,7 @@ std::vector<Test::Result> hmac_drbg_multiple_requests() {
 
               result.test_eq("Output is equal, regardless bulk request", bulk, split);
 
+              result.end_timer();
               return result;
            })};
 }
@@ -623,25 +650,32 @@ class ChaCha_RNG_Unit_Tests final : public Stateful_RNG_Tests {
 
       Test::Result test_security_level() override {
          Test::Result result("ChaCha_RNG Security Level");
+         result.start_timer();
          Botan::ChaCha_RNG rng;
          result.test_eq("Expected security level", rng.security_level(), size_t(256));
+         result.end_timer();
          return result;
       }
 
       Test::Result test_max_number_of_bytes_per_request() override {
          Test::Result result("ChaCha_RNG max_number_of_bytes_per_request");
+         result.start_timer();
          // ChaCha_RNG doesn't have this notion
+         result.end_timer();
          return result;
       }
 
       Test::Result test_reseed_interval_limits() override {
          Test::Result result("ChaCha_RNG reseed_interval limits");
+         result.start_timer();
          // ChaCha_RNG doesn't apply any limits to reseed_interval
+         result.end_timer();
          return result;
       }
 
       Test::Result test_reseed_kat() override {
          Test::Result result("ChaCha_RNG Reseed KAT");
+         result.start_timer();
 
          Request_Counting_RNG counting_rng;
          auto rng = make_rng(counting_rng, 2);
@@ -663,6 +697,7 @@ class ChaCha_RNG_Unit_Tests final : public Stateful_RNG_Tests {
          result.test_eq("underlying RNG calls", counting_rng.randomize_count(), size_t(1));
          result.test_eq("out after reseed", out, "F2CAE73F22684D5D773290B48FDCDA0E6C0661EBA0A854AFEC922832BDBB9C49");
 
+         result.end_timer();
          return result;
       }
 };
@@ -677,6 +712,7 @@ class AutoSeeded_RNG_Tests final : public Test {
    private:
       static Test::Result auto_rng_tests() {
          Test::Result result("AutoSeeded_RNG");
+         result.start_timer();
 
          Botan::Entropy_Sources no_entropy_for_you;
          Botan::Null_RNG null_rng;
@@ -737,6 +773,7 @@ class AutoSeeded_RNG_Tests final : public Test {
 
          rng.clear();
 
+         result.end_timer();
          return result;
       }
 
@@ -758,6 +795,7 @@ class System_RNG_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("System_RNG");
+         result.start_timer();
 
          Botan::System_RNG rng;
 
@@ -790,6 +828,7 @@ class System_RNG_Tests final : public Test {
                            std::memcmp(large_buf.data() + size32BitsMax, check_buf.data(), checkSize) != 0);
          }
 
+         result.end_timer();
          return std::vector<Test::Result>{result};
       }
 };
@@ -804,6 +843,7 @@ class Processor_RNG_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("Processor_RNG");
+         result.start_timer();
 
          if(Botan::Processor_RNG::available()) {
             Botan::Processor_RNG rng;
@@ -834,6 +874,7 @@ class Processor_RNG_Tests final : public Test {
             result.test_throws("Processor_RNG throws if instruction not available", []() { Botan::Processor_RNG rng; });
          }
 
+         result.end_timer();
          return std::vector<Test::Result>{result};
       }
 };

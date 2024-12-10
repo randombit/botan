@@ -249,6 +249,7 @@ class Cipher_Mode_IV_Carry_Tests final : public Test {
    private:
       static Test::Result test_cbc_iv_carry() {
          Test::Result result("CBC IV carry");
+         result.start_timer();
 
    #if defined(BOTAN_HAS_MODE_CBC) && defined(BOTAN_HAS_AES)
          std::unique_ptr<Botan::Cipher_Mode> enc(
@@ -292,11 +293,14 @@ class Cipher_Mode_IV_Carry_Tests final : public Test {
          result.test_eq("Third plaintext", msg3, "49562063617272796F76657232");
 
    #endif
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_cfb_iv_carry() {
          Test::Result result("CFB IV carry");
+         result.start_timer();
+
    #if defined(BOTAN_HAS_MODE_CFB) && defined(BOTAN_HAS_AES)
          std::unique_ptr<Botan::Cipher_Mode> enc(
             Botan::Cipher_Mode::create("AES-128/CFB(8)", Botan::Cipher_Dir::Encryption));
@@ -339,11 +343,14 @@ class Cipher_Mode_IV_Carry_Tests final : public Test {
          dec->finish(msg3);
          result.test_eq("Third plaintext", msg3, "012345");
    #endif
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_ctr_iv_carry() {
          Test::Result result("CTR IV carry");
+         result.start_timer();
+
    #if defined(BOTAN_HAS_CTR_BE) && defined(BOTAN_HAS_AES)
 
          std::unique_ptr<Botan::Cipher_Mode> enc(
@@ -391,6 +398,7 @@ class Cipher_Mode_IV_Carry_Tests final : public Test {
             }
          }
    #endif
+         result.end_timer();
          return result;
       }
 };
