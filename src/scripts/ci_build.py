@@ -212,6 +212,9 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
         # Workaround for https://github.com/actions/runner-images/issues/10004
         flags += ['--extra-cxxflags=/D_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR']
 
+    if target_os == 'linux' and target in ['shared', 'coverage', 'sanitizer']:
+        flags += ['--with-esdm_rng']
+
     if target in ['minimized']:
         flags += ['--minimized-build', '--enable-modules=system_rng,sha2_32,sha2_64,aes']
 
@@ -922,11 +925,23 @@ def main(args=None):
         cmds.append(make_cmd + ['clean'])
         cmds.append(make_cmd + ['distclean'])
 
+    # start ESDM in background, if on Linux
+    if target in ['shared', 'coverage', 'sanitizer'] and platform.system() == "Linux":
+        print('Starting esdm-server for this target')
+        esdm_process = subprocess.Popen('sudo /usr/bin/esdm-server -f', shell=True)
+        assert esdm_process.poll() is None, f"esdm-server did not start for target {target}"
+    else:
+        print('Not starting esdm-server for this target')
+
     for cmd in cmds:
         if options.dry_run:
             print('$ ' + ' '.join(cmd))
         else:
             run_cmd(cmd, root_dir, build_dir)
+
+    if target in ['shared', 'coverage', 'sanitizer'] and platform.system() == "Linux":
+        print('Stopping esdm-server')
+        esdm_process.kill()
 
     return 0
 
