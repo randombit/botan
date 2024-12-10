@@ -27,6 +27,19 @@ function build_and_install_jitterentropy() {
     rm -rf "${jel_dir}"
 }
 
+function build_and_install_esdm() {
+    # build dependencies
+    sudo apt-get -qq install libprotobuf-c-dev meson
+
+    # download, build and install ESDM
+    curl -L "https://github.com/smuellerDD/esdm/archive/refs/tags/v${ESDM_VERSION}.tar.gz" | tar -xz -C .
+    pushd "$(realpath esdm-*)"
+    meson setup build -Dselinux=disabled -Dais2031=false -Dlinux-devfiles=disabled -Des_jent=disabled --prefix=/usr --libdir=lib
+    meson compile -C build
+    sudo meson install -C build
+    popd
+}
+
 if [ -z "$REPO_CONFIG_LOADED" ]; then
     echo "Repository configuration not loaded" >&2
     exit 1
@@ -81,6 +94,7 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "shared" ]; then
         sudo apt-get -qq install libboost-dev "${tpm2_specific_packages[@]}"
         echo "BOTAN_TPM2_ENABLED=${ci_support_of_tpm2}" >> "$GITHUB_ENV"
+        build_and_install_esdm
 
     elif [ "$TARGET" = "examples" ] || [ "$TARGET" = "amalgamation" ] || [ "$TARGET" = "tlsanvil" ] || [ "$TARGET" = "clang-tidy" ] ; then
         sudo apt-get -qq install libboost-dev libtss2-dev
@@ -180,24 +194,11 @@ if type -p "apt-get"; then
         echo "PKCS11_LIB=/usr/lib/softhsm/libsofthsm2.so" >> "$GITHUB_ENV"
 
         build_and_install_jitterentropy
+        build_and_install_esdm
 
     elif [ "$TARGET" = "docs" ]; then
         sudo apt-get -qq install doxygen python3-docutils python3-sphinx
 
-    fi
-
-    # ESDM for shared, coverage and sanitizer target
-    if [ "$TARGET" = "shared" ] || [ "$TARGET" = "coverage" ] || [ "$TARGET" = "sanitizer" ]; then
-        sudo apt-get -qq install libprotobuf-c-dev meson
-
-        # install ESDM 1.2.0
-        wget -O esdm.tar.gz https://github.com/smuellerDD/esdm/archive/refs/tags/v1.2.0.tar.gz
-        tar xvfz esdm.tar.gz
-        pushd esdm-*
-        meson setup build -Dselinux=disabled -Dais2031=false -Dlinux-devfiles=disabled -Des_jent=disabled --prefix=/usr --libdir=lib
-        meson compile -C build
-        sudo meson install -C build
-        popd
     fi
 else
     export HOMEBREW_NO_AUTO_UPDATE=1
