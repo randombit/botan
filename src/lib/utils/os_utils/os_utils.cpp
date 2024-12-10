@@ -173,7 +173,13 @@ unsigned long OS::get_auxval(unsigned long id) {
 #endif
 }
 
-bool OS::running_in_privileged_state() {
+namespace {
+
+/**
+* Test if we are currently running with elevated permissions
+* eg setuid, setgid, or with POSIX caps set.
+*/
+bool running_in_privileged_state() {
 #if defined(AT_SECURE)
    if(OS::has_auxval()) {
       return OS::get_auxval(AT_SECURE) != 0;
@@ -186,6 +192,8 @@ bool OS::running_in_privileged_state() {
    return false;
 #endif
 }
+
+}  // namespace
 
 uint64_t OS::get_cpu_cycle_counter() {
    uint64_t rtc = 0;

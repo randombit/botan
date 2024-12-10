@@ -7,7 +7,9 @@
 
 #include <botan/internal/cpuid.h>
 
-#include <botan/internal/os_utils.h>
+#if defined(BOTAN_HAS_OS_UTILS)
+   #include <botan/internal/os_utils.h>
+#endif
 
 namespace Botan {
 
@@ -16,6 +18,7 @@ namespace Botan {
 uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
    uint32_t feat = 0;
 
+   #if defined(BOTAN_HAS_OS_UTILS)
    if(OS::has_auxval()) {
       enum class PPC_hwcap_bit : uint64_t {
          ALTIVEC_bit = (1 << 28),
@@ -27,18 +30,19 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
 
       feat |= if_set(hwcap_altivec, PPC_hwcap_bit::ALTIVEC_bit, CPUID::CPUID_ALTIVEC_BIT, allowed);
 
-   #if defined(BOTAN_TARGET_ARCH_IS_PPC64)
+      #if defined(BOTAN_TARGET_ARCH_IS_PPC64)
       if(feat & CPUID::CPUID_ALTIVEC_BIT) {
          const uint64_t hwcap_crypto = OS::get_auxval(OS::auxval_hwcap2());
          feat |= if_set(hwcap_crypto, PPC_hwcap_bit::CRYPTO_bit, CPUID::CPUID_POWER_CRYPTO_BIT, allowed);
          feat |= if_set(hwcap_crypto, PPC_hwcap_bit::DARN_bit, CPUID::CPUID_DARN_BIT, allowed);
       }
-   #endif
+      #endif
 
       return feat;
    }
+   #endif
 
-   #if defined(BOTAN_USE_GCC_INLINE_ASM)
+   #if defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_HAS_OS_UTILS)
    auto vmx_probe = []() noexcept -> int {
       asm("vor 0, 0, 0");
       return 1;

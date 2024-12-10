@@ -11,8 +11,11 @@
 #include <botan/internal/chacha.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/os_utils.h>
 #include <cstdlib>
+
+#if defined(BOTAN_HAS_OS_UTILS)
+   #include <botan/internal/os_utils.h>
+#endif
 
 namespace Botan {
 
@@ -136,13 +139,23 @@ void* Sodium::sodium_allocarray(size_t count, size_t size) {
 }
 
 int Sodium::sodium_mprotect_noaccess(void* ptr) {
+#if defined(BOTAN_HAS_OS_UTILS)
    OS::page_prohibit_access(ptr);
    return 0;
+#else
+   BOTAN_UNUSED(ptr);
+   return -1;
+#endif
 }
 
 int Sodium::sodium_mprotect_readwrite(void* ptr) {
+#if defined(BOTAN_HAS_OS_UTILS)
    OS::page_allow_access(ptr);
    return 0;
+#else
+   BOTAN_UNUSED(ptr);
+   return -1;
+#endif
 }
 
 }  // namespace Botan
