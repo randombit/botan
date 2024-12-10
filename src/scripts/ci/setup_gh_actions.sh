@@ -12,6 +12,8 @@ command -v shellcheck > /dev/null && shellcheck "$0" # Run shellcheck on this if
 set -ex
 
 TARGET="$1"
+
+# shellcheck disable=SC2034
 ARCH="$2"
 
 SCRIPT_LOCATION=$(cd "$(dirname "$0")"; pwd)
@@ -140,7 +142,7 @@ if type -p "apt-get"; then
     elif [ "$TARGET" = "sde" ]; then
         wget "https://downloadmirror.intel.com/823664/${INTEL_SDE_VERSION}.tar.xz"
         tar -xvf "${INTEL_SDE_VERSION}.tar.xz"
-        echo ${INTEL_SDE_VERSION} >> "$GITHUB_PATH"
+        echo "${INTEL_SDE_VERSION}" >> "$GITHUB_PATH"
 
     elif [ "$TARGET" = "cross-android-arm32" ] || [ "$TARGET" = "cross-android-arm64" ] || [ "$TARGET" = "cross-android-arm64-amalgamation" ]; then
         wget -nv "https://dl.google.com/android/repository/${ANDROID_NDK}-linux.zip"
