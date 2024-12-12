@@ -11,6 +11,7 @@
 
 #include <botan/assert.h>
 
+#include <algorithm>
 #include <compare>
 #include <concepts>
 #include <cstdint>
@@ -42,6 +43,18 @@ template <typename... Ts>
 static constexpr bool all_same_v = all_same<Ts...>::value;
 
 namespace detail {
+
+/**
+ * @brief Helper class to pass literal strings to C++ templates
+ */
+template <size_t N>
+class StringLiteral final {
+   public:
+      constexpr StringLiteral(const char (&str)[N]) { std::copy_n(str, N, value); }
+
+   public:
+      char value[N];
+};
 
 /**
  * Helper type to indicate that a certain type should be automatically
