@@ -7,6 +7,7 @@
 #ifndef BOTAN_PCURVES_IMPL_H_
 #define BOTAN_PCURVES_IMPL_H_
 
+#include <botan/concepts.h>
 #include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/loadstor.h>
@@ -1139,12 +1140,12 @@ class ProjectiveCurvePoint {
 * These are constructed using compile time strings which contain the relevant values
 * (P, A, B, the group order, and the group generator x/y coordinates)
 */
-template <StringLiteral PS,
-          StringLiteral AS,
-          StringLiteral BS,
-          StringLiteral NS,
-          StringLiteral GXS,
-          StringLiteral GYS,
+template <detail::StringLiteral PS,
+          detail::StringLiteral AS,
+          detail::StringLiteral BS,
+          detail::StringLiteral NS,
+          detail::StringLiteral GXS,
+          detail::StringLiteral GYS,
           int8_t ZI = 0>
 class EllipticCurveParameters {
    public:
