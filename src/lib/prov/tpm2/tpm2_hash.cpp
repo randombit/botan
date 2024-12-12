@@ -47,7 +47,6 @@ size_t HashFunction::output_length() const {
       case TPM2_ALG_SHA512:
       case TPM2_ALG_SHA3_512:
          return 64;
-         return 64;
       default:
          throw Invalid_State("TPM 2.0 hash object with unexpected hash type");
    }
