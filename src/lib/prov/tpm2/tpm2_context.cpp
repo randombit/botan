@@ -197,7 +197,7 @@ template <TPM2_CAP capability, typename ReturnT>
       const auto new_properties = extract(capability_data->data, count);
       BOTAN_ASSERT_NOMSG(new_properties.size() <= count);
       properties.insert(properties.end(), new_properties.begin(), new_properties.end());
-      count -= new_properties.size();
+      count -= static_cast<uint32_t>(new_properties.size());
    }
 
    return properties;

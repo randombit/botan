@@ -142,7 +142,7 @@ template <tpm2_buffer T>
 constexpr T init_with_size(size_t length) {
    T result;
    BOTAN_ASSERT_NOMSG(length <= sizeof(result.buffer));
-   result.size = length;
+   result.size = static_cast<decltype(result.size)>(length);
    clear_bytes(result.buffer, length);
    return result;
 }
