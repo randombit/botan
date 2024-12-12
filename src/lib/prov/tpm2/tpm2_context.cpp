@@ -93,6 +93,9 @@ Context::Context(ESYS_CONTEXT* ctx, bool external) : m_impl(std::make_unique<Imp
    BOTAN_ASSERT_NONNULL(m_impl->m_ctx);
 }
 
+Context::Context(Context&&) noexcept = default;
+Context& Context::operator=(Context&&) noexcept = default;
+
 void Context::use_botan_crypto_backend(const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
 #if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
    BOTAN_STATE_CHECK(!uses_botan_crypto_backend());

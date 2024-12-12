@@ -66,11 +66,11 @@ class BOTAN_PUBLIC_API(3, 6) Context final : public std::enable_shared_from_this
       static std::shared_ptr<Context> create(ESYS_CONTEXT* ctx);
 
       Context(const Context&) = delete;
-      Context(Context&& ctx) noexcept = default;
+      Context(Context&&) noexcept;
       ~Context();
 
       Context& operator=(const Context&) = delete;
-      Context& operator=(Context&& ctx) noexcept = default;
+      Context& operator=(Context&&) noexcept;
 
       /**
        * Overrides the TSS2's crypto callbacks with Botan's functionality.
