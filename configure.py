@@ -379,6 +379,9 @@ def process_command_line(args):
     target_group.add_option('--extra-cxxflags', metavar='FLAGS', default=[], action='append',
                             help='set extra compiler flags')
 
+    target_group.add_option('--lto-cxxflags-to-ldflags', default=False, action='store_true',
+                            help='set all compilation flags also during linking (for LTO)')
+
     target_group.add_option('--ldflags', metavar='FLAGS',
                             help='set linker flags', default=None)
 
@@ -1515,48 +1518,50 @@ class CompilerInfo(InfoObject):
     def cc_lang_binary_linker_flags(self):
         return self.lang_binary_linker_flags
 
-    def cc_compile_flags(self, options, with_debug_info=None, enable_optimizations=None):
-        def gen_flags(with_debug_info, enable_optimizations):
+    def ldflags(self, options):
+        if options.ldflags:
+            yield options.ldflags
 
-            sanitizers_enabled = options.with_sanitizers or (len(options.enable_sanitizers) > 0)
+        if options.lto_cxxflags_to_ldflags:
+            yield from self.cc_compile_flags(options)
 
-            if with_debug_info is None:
-                with_debug_info = options.with_debug_info
-            if enable_optimizations is None:
-                enable_optimizations = not options.no_optimizations
+    def cc_compile_flags(self, options):
+        sanitizers_enabled = options.with_sanitizers or (len(options.enable_sanitizers) > 0)
 
-            if with_debug_info:
-                yield self.debug_info_flags
+        if options.cxxflags:
+            # CXXFLAGS is assumed to be the entire set of desired compilation flags
+            # if not the case the user should have used --extra-cxxflags
+            yield options.cxxflags
+            return
 
-            if enable_optimizations:
-                if options.optimize_for_size:
-                    if self.size_optimization_flags != '':
-                        yield self.size_optimization_flags
-                    else:
-                        logging.warning("No size optimization flags set for current compiler")
-                        yield self.optimization_flags
-                elif sanitizers_enabled and self.sanitizer_optimization_flags != '':
-                    yield self.sanitizer_optimization_flags
+        if options.with_debug_info:
+            yield self.debug_info_flags
+
+        if not options.no_optimizations:
+            if options.optimize_for_size:
+                if self.size_optimization_flags != '':
+                    yield self.size_optimization_flags
                 else:
+                    logging.warning("No size optimization flags set for current compiler")
                     yield self.optimization_flags
+            elif sanitizers_enabled and self.sanitizer_optimization_flags != '':
+                yield self.sanitizer_optimization_flags
+            else:
+                yield self.optimization_flags
 
-            if options.arch in self.cpu_flags:
-                yield self.cpu_flags[options.arch]
+        if options.arch in self.cpu_flags:
+            yield self.cpu_flags[options.arch]
 
-            if options.arch in self.cpu_flags_no_debug:
+        if options.arch in self.cpu_flags_no_debug:
+            # Only enable these if no debug/sanitizer options enabled
+            if not (options.debug_mode or sanitizers_enabled):
+                yield self.cpu_flags_no_debug[options.arch]
 
-                # Only enable these if no debug/sanitizer options enabled
+        for flag in options.extra_cxxflags:
+            yield flag
 
-                if not (options.debug_mode or sanitizers_enabled):
-                    yield self.cpu_flags_no_debug[options.arch]
-
-            for flag in options.extra_cxxflags:
-                yield flag
-
-            for definition in options.define_build_macro:
-                yield self.add_compile_definition_option + definition
-
-        return (' '.join(gen_flags(with_debug_info, enable_optimizations))).strip()
+        for definition in options.define_build_macro:
+            yield self.add_compile_definition_option + definition
 
     @staticmethod
     def _so_link_search(osname, debug_info):
@@ -2264,9 +2269,6 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
 
         'sanitizer_types' : sorted(cc.sanitizer_types),
 
-        'cc_compile_opt_flags': cc.cc_compile_flags(options, False, True),
-        'cc_compile_debug_flags': cc.cc_compile_flags(options, True, False),
-
         'dash_o': cc.output_to_object,
         'dash_c': cc.compile_flags,
 
@@ -2274,8 +2276,8 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'cc_lang_binary_linker_flags': cc.cc_lang_binary_linker_flags(),
         'os_feature_macros': osinfo.macros(cc),
         'cc_sysroot': sysroot_option(),
-        'cc_compile_flags': options.cxxflags or cc.cc_compile_flags(options),
-        'ldflags': options.ldflags or '',
+        'cc_compile_flags': ' '.join(cc.cc_compile_flags(options)).strip(),
+        'ldflags': ' '.join(cc.ldflags(options)).strip(),
         'test_exe_extra_ldflags': test_exe_extra_ldflags(),
         'extra_libs': extra_libs(options.extra_libs, cc),
         'cc_warning_flags': cc.cc_warning_flags(options),
