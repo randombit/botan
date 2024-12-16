@@ -737,38 +737,13 @@ inline constexpr int32_t bigint_sub_abs(W z[], const W x[], size_t x_size, const
 */
 template <WordType W>
 inline constexpr void bigint_mod_sub(W t[], const W s[], const W mod[], size_t mod_sw, W ws[]) {
-   // is t < s or not?
-   const auto is_lt = bigint_ct_is_lt(t, mod_sw, s, mod_sw);
+   // ws = t - s
+   const W borrow = bigint_sub3(ws, t, mod_sw, s, mod_sw);
 
-   // ws = p - s
-   const W borrow = bigint_sub3(ws, mod, mod_sw, s, mod_sw);
+   // Conditionally add back the modulus
+   bigint_cnd_add(borrow, ws, mod, mod_sw);
 
-   // Compute either (t - s) or (t + (p - s)) depending on mask
-   const W carry = bigint_cnd_addsub(is_lt, t, ws, s, mod_sw);
-
-   if(!std::is_constant_evaluated()) {
-      BOTAN_DEBUG_ASSERT(borrow == 0 && carry == 0);
-   }
-
-   BOTAN_UNUSED(carry, borrow);
-}
-
-template <size_t N, WordType W>
-inline constexpr void bigint_mod_sub_n(W t[], const W s[], const W mod[], W ws[]) {
-   // is t < s or not?
-   const auto is_lt = bigint_ct_is_lt(t, N, s, N);
-
-   // ws = p - s
-   const W borrow = bigint_sub3(ws, mod, N, s, N);
-
-   // Compute either (t - s) or (t + (p - s)) depending on mask
-   const W carry = bigint_cnd_addsub(is_lt, t, ws, s, N);
-
-   if(!std::is_constant_evaluated()) {
-      BOTAN_DEBUG_ASSERT(borrow == 0 && carry == 0);
-   }
-
-   BOTAN_UNUSED(carry, borrow);
+   copy_mem(t, ws, mod_sw);
 }
 
 /**
