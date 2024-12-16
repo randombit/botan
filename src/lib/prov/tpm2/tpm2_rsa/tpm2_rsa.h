@@ -12,10 +12,10 @@
 #include <botan/tpm2_key.h>
 
 namespace Botan::TPM2 {
-    
+
 BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
-    
+
 class BOTAN_PUBLIC_API(3, 6) RSA_PublicKey final : public virtual Botan::TPM2::PublicKey,
                                                    public virtual Botan::RSA_PublicKey {
    public:
