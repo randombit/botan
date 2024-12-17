@@ -41,7 +41,7 @@ class BOTAN_TEST_API Dynamically_Loaded_Library final {
       * @param symbol names the symbol to load
       * @return address of the loaded symbol
       */
-      void* resolve_symbol(const std::string& symbol);
+      void* resolve_symbol(const std::string& symbol) const;
 
       /**
       * Convenience function for casting symbol to the right type
@@ -49,7 +49,7 @@ class BOTAN_TEST_API Dynamically_Loaded_Library final {
       * @return address of the loaded symbol
       */
       template <typename T>
-      T resolve(const std::string& symbol) {
+      T resolve(const std::string& symbol) const {
          return reinterpret_cast<T>(resolve_symbol(symbol));
       }
 

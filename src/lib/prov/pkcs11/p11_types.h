@@ -13,7 +13,6 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include <utility>
 
 namespace Botan {
 
@@ -25,10 +24,11 @@ namespace PKCS11 {
 * Loads the PKCS#11 shared library
 * Calls C_Initialize on load and C_Finalize on destruction
 */
-class BOTAN_PUBLIC_API(2, 0) Module final {
+class BOTAN_PUBLIC_API(2, 0) Module {
    public:
       /**
-      * Loads the shared library and calls C_Initialize
+      * Loads the shared library and calls C_Initialize. The latest supported
+      * "PKCS 11" interface is used.
       * @param file_path the path to the PKCS#11 shared library
       * @param init_args flags to use for `C_Initialize`
       */
@@ -45,10 +45,11 @@ class BOTAN_PUBLIC_API(2, 0) Module final {
       Module& operator=(const Module& other) = delete;
 
       /// Calls C_Finalize()
-      ~Module() noexcept;
+      virtual ~Module() noexcept;
 
       /**
-      * Reloads the module and reinitializes it
+      * Reloads the module and reinitializes it. Subclasses may override this
+      * interface method to load custom vendor-specific PKCS#11 interfaces.
       * @param init_args flags to use for `C_Initialize`
       */
       void reload(C_InitializeArgs init_args = {
@@ -63,9 +64,20 @@ class BOTAN_PUBLIC_API(2, 0) Module final {
          return info;
       }
 
+      std::string_view library_path() const { return m_file_path; }
+
+      const Dynamically_Loaded_Library& library() { return *m_library; }
+
+   protected:
+      /**
+       * Callback to (re-)load the LowLevel object used by this class.
+       * Subclasses can override this class to use custom LowLevel with custom
+       * (vendor defined) interfaces.
+       */
+      virtual std::unique_ptr<LowLevel> load_low_level() const;
+
    private:
       const std::string m_file_path;
-      FunctionListPtr m_func_list = nullptr;
       std::unique_ptr<Dynamically_Loaded_Library> m_library;
       std::unique_ptr<LowLevel> m_low_level = nullptr;
 };
