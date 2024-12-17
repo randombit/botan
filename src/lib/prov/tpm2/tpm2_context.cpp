@@ -12,6 +12,7 @@
 #include <botan/tpm2_session.h>
 
 #include <botan/internal/fmt.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tpm2_algo_mappings.h>
@@ -92,6 +93,9 @@ Context::Context(ESYS_CONTEXT* ctx, bool external) : m_impl(std::make_unique<Imp
    m_impl->m_external = external;
    BOTAN_ASSERT_NONNULL(m_impl->m_ctx);
 }
+
+Context::Context(Context&&) noexcept = default;
+Context& Context::operator=(Context&&) noexcept = default;
 
 void Context::use_botan_crypto_backend(const std::shared_ptr<Botan::RandomNumberGenerator>& rng) {
 #if defined(BOTAN_HAS_TPM2_CRYPTO_BACKEND)
@@ -194,7 +198,7 @@ template <TPM2_CAP capability, typename ReturnT>
       const auto new_properties = extract(capability_data->data, count);
       BOTAN_ASSERT_NOMSG(new_properties.size() <= count);
       properties.insert(properties.end(), new_properties.begin(), new_properties.end());
-      count -= new_properties.size();
+      count -= checked_cast_to<uint32_t>(new_properties.size());
    }
 
    return properties;

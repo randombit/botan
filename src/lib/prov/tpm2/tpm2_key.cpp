@@ -122,7 +122,8 @@ TPM2B_TEMPLATE marshal_template(const TPMT_PUBLIC& key_template) {
    size_t offset = 0;
    check_rc("Tss2_MU_TPMT_PUBLIC_Marshal",
             Tss2_MU_TPMT_PUBLIC_Marshal(&key_template, result.buffer, sizeof(TPMT_PUBLIC), &offset));
-   result.size = offset;
+   BOTAN_ASSERT_NOMSG(offset <= sizeof(result.buffer));
+   result.size = static_cast<uint16_t>(offset);
    return result;
 }
 

@@ -13,6 +13,9 @@
 
 namespace Botan::TPM2 {
 
+BOTAN_DIAGNOSTIC_PUSH
+BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+
 class BOTAN_PUBLIC_API(3, 6) EC_PublicKey final : public virtual Botan::TPM2::PublicKey,
                                                   public virtual Botan::EC_PublicKey {
    public:
@@ -43,9 +46,6 @@ class BOTAN_PUBLIC_API(3, 6) EC_PublicKey final : public virtual Botan::TPM2::Pu
       EC_PublicKey(Object handle, SessionBundle sessions, const TPM2B_PUBLIC* public_blob);
       EC_PublicKey(Object handle, SessionBundle sessions, std::pair<EC_Group, EC_AffinePoint> public_key);
 };
-
-BOTAN_DIAGNOSTIC_PUSH
-BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 
 class BOTAN_PUBLIC_API(3, 6) EC_PrivateKey final : public virtual Botan::TPM2::PrivateKey,
                                                    public virtual Botan::EC_PublicKey {

@@ -38,7 +38,12 @@ void RandomNumberGenerator::fill_bytes_with_input(std::span<uint8_t> output, std
       unique_esys_ptr<TPM2B_DIGEST> digest = nullptr;
       const auto requested_bytes = std::min(out.remaining_capacity(), m_max_tpm2_rng_bytes);
       check_rc("Esys_GetRandom",
-               Esys_GetRandom(*m_ctx, m_sessions[0], m_sessions[1], m_sessions[2], requested_bytes, out_ptr(digest)));
+               Esys_GetRandom(*m_ctx,
+                              m_sessions[0],
+                              m_sessions[1],
+                              m_sessions[2],
+                              static_cast<uint16_t>(requested_bytes),
+                              out_ptr(digest)));
 
       BOTAN_ASSERT_NOMSG(digest->size == requested_bytes);
       out.append(as_span(*digest));
