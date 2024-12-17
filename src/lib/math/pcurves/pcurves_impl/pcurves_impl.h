@@ -135,7 +135,12 @@ class IntMod final {
          return Self(r);
       }
 
-      friend constexpr Self operator-(const Self& a, const Self& b) { return a + b.negate(); }
+      friend constexpr Self operator-(const Self& a, const Self& b) {
+         std::array<W, N> r;
+         word carry = bigint_sub3(r.data(), a.data(), N, b.data(), N);
+         bigint_cnd_add(carry, r.data(), N, P.data(), N);
+         return Self(r);
+      }
 
       /// Return (*this) divided by 2
       Self div2() const {

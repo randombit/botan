@@ -105,13 +105,7 @@ BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>&
       ws.resize(mod_sw);
    }
 
-   if(mod_sw == 4) {
-      bigint_mod_sub_n<4>(mutable_data(), s._data(), mod._data(), ws.data());
-   } else if(mod_sw == 6) {
-      bigint_mod_sub_n<6>(mutable_data(), s._data(), mod._data(), ws.data());
-   } else {
-      bigint_mod_sub(mutable_data(), s._data(), mod._data(), mod_sw, ws.data());
-   }
+   bigint_mod_sub(mutable_data(), s._data(), mod._data(), mod_sw, ws.data());
 
    return (*this);
 }
