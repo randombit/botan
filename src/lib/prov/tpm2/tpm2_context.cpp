@@ -12,6 +12,7 @@
 #include <botan/tpm2_session.h>
 
 #include <botan/internal/fmt.h>
+#include <botan/internal/int_utils.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tpm2_algo_mappings.h>
@@ -197,7 +198,7 @@ template <TPM2_CAP capability, typename ReturnT>
       const auto new_properties = extract(capability_data->data, count);
       BOTAN_ASSERT_NOMSG(new_properties.size() <= count);
       properties.insert(properties.end(), new_properties.begin(), new_properties.end());
-      count -= static_cast<uint32_t>(new_properties.size());
+      count -= checked_cast_to<uint32_t>(new_properties.size());
    }
 
    return properties;
