@@ -2322,7 +2322,7 @@ int botan_tpm2_ctx_init_ex(botan_tpm2_ctx_t* ctx_out, const char* tcti_name, con
 * @return 0 on success
 */
 BOTAN_FFI_EXPORT(3, 7)
-int botan_tpm2_ctx_from_esys(botan_tpm2_ctx_t* ctx_out, ESYS_CONTEXT* esys_ctx);
+int botan_tpm2_ctx_from_esys(botan_tpm2_ctx_t* ctx_out, struct ESYS_CONTEXT* esys_ctx);
 
 /**
 * Enable Botan's TSS2 crypto backend that replaces the cryptographic functions
@@ -2356,7 +2356,7 @@ BOTAN_FFI_EXPORT(3, 6) int botan_tpm2_ctx_destroy(botan_tpm2_ctx_t ctx);
 */
 BOTAN_FFI_EXPORT(3, 7)
 int botan_tpm2_enable_crypto_backend(botan_tpm2_crypto_backend_state_t* cbs_out,
-                                     ESYS_CONTEXT* esys_ctx,
+                                     struct ESYS_CONTEXT* esys_ctx,
                                      botan_rng_t rng);
 
 /**
