@@ -48,6 +48,7 @@ class Sodium_API_Tests : public Test {
    private:
       static Test::Result sodium_malloc() {
          Test::Result result("sodium_malloc");
+         result.start_timer();
 
          void* p = Botan::Sodium::sodium_malloc(50);
          std::memset(p, 0xFF, 50);
@@ -57,11 +58,13 @@ class Sodium_API_Tests : public Test {
 
          result.test_success("Didn't crash");
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result sodium_utils() {
          Test::Result result("sodium math utils");
+         result.start_timer();
 
          result.confirm("sodium_is_zero", Botan::Sodium::sodium_is_zero(nullptr, 0) == 1);
 
@@ -95,11 +98,13 @@ class Sodium_API_Tests : public Test {
          Botan::Sodium::sodium_add(b.data(), a.data(), a.size());
          result.test_eq("sodium_add", b, "5350505050");
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result randombytes_buf_deterministic() {
          Test::Result result("randombytes_buf_deterministic");
+         result.start_timer();
 
          const uint8_t seed[32] = {1, 0};
          std::vector<uint8_t> output(18);
@@ -108,11 +113,13 @@ class Sodium_API_Tests : public Test {
 
          result.test_eq("output", output, "04069B5F37E82F91DC37FD5EB99F1A4124B1");
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result hash_sha512() {
          Test::Result result("crypto_hash_sha512");
+         result.start_timer();
 
          std::vector<uint8_t> output(64);
          Botan::Sodium::crypto_hash_sha512(output.data(), nullptr, 0);
@@ -122,22 +129,26 @@ class Sodium_API_Tests : public Test {
             output,
             "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e");
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result hash_sha256() {
          Test::Result result("crypto_hash_sha256");
+         result.start_timer();
 
          std::vector<uint8_t> output(32);
          Botan::Sodium::crypto_hash_sha256(output.data(), nullptr, 0);
 
          result.test_eq("expected output", output, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result box_curve25519xsalsa20poly1305() {
          Test::Result result("crypto_box_curve25519xsalsa20poly1305");
+         result.start_timer();
 
          const std::vector<uint8_t> seed(32);
 
@@ -182,11 +193,13 @@ class Sodium_API_Tests : public Test {
 
          result.test_eq("recover1", recovered, ptext);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result aead_chacha20poly1305() {
          Test::Result result("crypto_aead_chacha20poly1305");
+         result.start_timer();
 
          const std::vector<uint8_t> key =
             Botan::hex_decode("0000000000000000000000000000000000000000000000000000000000000000");
@@ -272,11 +285,13 @@ class Sodium_API_Tests : public Test {
 
          result.test_eq("recovered", recovered, in);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result aead_chacha20poly1305_ietf() {
          Test::Result result("crypto_aead_chacha20poly1305_ietf");
+         result.start_timer();
 
          const std::vector<uint8_t> key =
             Botan::hex_decode("0000000000000000000000000000000000000000000000000000000000000000");
@@ -362,11 +377,13 @@ class Sodium_API_Tests : public Test {
 
          result.test_eq("recovered", recovered, in);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result aead_xchacha20poly1305() {
          Test::Result result("crypto_aead_xchacha20poly1305");
+         result.start_timer();
 
          const std::vector<uint8_t> key =
             Botan::hex_decode("0000000000000000000000000000000000000000000000000000000000000000");
@@ -452,11 +469,13 @@ class Sodium_API_Tests : public Test {
 
          result.test_eq("recovered", recovered, in);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result auth_hmacsha512() {
          Test::Result result("crypto_auth_hmacsha512");
+         result.start_timer();
 
          const std::vector<uint8_t> key =
             Botan::hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F");
@@ -481,11 +500,13 @@ class Sodium_API_Tests : public Test {
             "invalid mac",
             Botan::Sodium::crypto_auth_hmacsha512_verify(mac.data(), in.data(), in.size(), key.data()));
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result auth_hmacsha512256() {
          Test::Result result("crypto_auth_hmacsha512256");
+         result.start_timer();
 
          const std::vector<uint8_t> key =
             Botan::hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F");
@@ -505,11 +526,13 @@ class Sodium_API_Tests : public Test {
             "invalid mac",
             Botan::Sodium::crypto_auth_hmacsha512256_verify(mac.data(), in.data(), in.size(), key.data()));
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result auth_hmacsha256() {
          Test::Result result("crypto_auth_hmacsha256");
+         result.start_timer();
 
          const std::vector<uint8_t> key =
             Botan::hex_decode("0102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F20");
@@ -529,11 +552,13 @@ class Sodium_API_Tests : public Test {
             "invalid mac",
             Botan::Sodium::crypto_auth_hmacsha256_verify(mac.data(), in.data(), in.size(), key.data()));
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result auth_poly1305() {
          Test::Result result("crypto_onetimeauth_poly1305");
+         result.start_timer();
 
          const std::vector<uint8_t> key(Botan::Sodium::crypto_onetimeauth_keybytes(), 0x42);
          const std::vector<uint8_t> in(15);
@@ -555,11 +580,13 @@ class Sodium_API_Tests : public Test {
             "invalid mac",
             Botan::Sodium::crypto_onetimeauth_poly1305_verify(mac.data(), in.data(), in.size(), key.data()));
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result shorthash_siphash24() {
          Test::Result result("crypto_shorthash_siphash24");
+         result.start_timer();
 
          const std::vector<uint8_t> key = Botan::hex_decode("000102030405060708090A0B0C0D0E0F");
          const std::vector<uint8_t> in = Botan::hex_decode("000102030405060708090A0B0C0D0E");
@@ -569,11 +596,13 @@ class Sodium_API_Tests : public Test {
 
          result.test_eq("expected mac", mac, "E545BE4961CA29A1");
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result secretbox_xsalsa20poly1305() {
          Test::Result result("secretbox_xsalsa20poly1305");
+         result.start_timer();
 
          const std::vector<uint8_t> ptext(33);
          std::vector<uint8_t> ctext(33);
@@ -593,11 +622,13 @@ class Sodium_API_Tests : public Test {
 
          result.test_eq("decrypted", recovered, ptext);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result secretbox_xsalsa20poly1305_detached() {
          Test::Result result("secretbox_xsalsa20poly1305");
+         result.start_timer();
 
          const std::vector<uint8_t> ptext(33);
          const std::vector<uint8_t> nonce(Botan::Sodium::crypto_secretbox_xsalsa20poly1305_noncebytes());
@@ -620,11 +651,13 @@ class Sodium_API_Tests : public Test {
 
          result.test_eq("recovered", recovered, ptext);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result sign_ed25519() {
          Test::Result result("crypto_sign_ed25519");
+         result.start_timer();
 
          const std::vector<uint8_t> seed(32);
          std::vector<uint8_t> pk(32), sk(64);
@@ -661,11 +694,13 @@ class Sodium_API_Tests : public Test {
             "reject invalid",
             Botan::Sodium::crypto_sign_ed25519_verify_detached(sig.data(), msg.data(), msg.size(), pk.data()));
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result stream_salsa20() {
          Test::Result result("crypto_stream_salsa20");
+         result.start_timer();
 
          const std::vector<uint8_t> key =
             Botan::hex_decode("0F62B5085BAE0154A7FA4DA0F34699EC3F92E5388BDE3184D72A7DD02376C91C");
@@ -682,11 +717,13 @@ class Sodium_API_Tests : public Test {
             xor_output.data(), output.data(), output.size(), nonce.data(), key.data());
          result.test_eq("stream", xor_output, std::vector<uint8_t>(32));  // all zeros
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result stream_xsalsa20() {
          Test::Result result("crypto_stream_xsalsa20");
+         result.start_timer();
 
          const std::vector<uint8_t> key =
             Botan::hex_decode("1B27556473E985D462CD51197A9A46C76009549EAC6474F206C4EE0844F68389");
@@ -703,11 +740,13 @@ class Sodium_API_Tests : public Test {
             xor_output.data(), output.data(), output.size(), nonce.data(), key.data());
          result.test_eq("stream", xor_output, std::vector<uint8_t>(32));  // all zeros
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result stream_chacha20() {
          Test::Result result("crypto_stream_chacha20");
+         result.start_timer();
 
          const std::vector<uint8_t> key =
             Botan::hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F");
@@ -724,11 +763,13 @@ class Sodium_API_Tests : public Test {
             xor_output.data(), output.data(), output.size(), nonce.data(), key.data());
          result.test_eq("stream", xor_output, std::vector<uint8_t>(32));  // all zeros
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result stream_chacha20_ietf() {
          Test::Result result("crypto_stream_chacha20");
+         result.start_timer();
 
          const std::vector<uint8_t> key =
             Botan::hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F");
@@ -745,11 +786,13 @@ class Sodium_API_Tests : public Test {
             xor_output.data(), output.data(), output.size(), nonce.data(), key.data());
          result.test_eq("stream", xor_output, std::vector<uint8_t>(32));  // all zeros
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result stream_xchacha20() {
          Test::Result result("crypto_stream_xchacha20");
+         result.start_timer();
 
          const std::vector<uint8_t> key =
             Botan::hex_decode("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F");
@@ -766,6 +809,7 @@ class Sodium_API_Tests : public Test {
             xor_output.data(), output.data(), output.size(), nonce.data(), key.data());
          result.test_eq("stream", xor_output, std::vector<uint8_t>(32));  // all zeros
 
+         result.end_timer();
          return result;
       }
 };

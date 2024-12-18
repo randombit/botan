@@ -314,6 +314,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
       {CHECK_both(
           "secret logging during initialization",
           [&](Cipher_State*, Journaling_Secret_Logger* sl, Connection_Side, Test::Result& result) {
+             result.start_timer();
              result.test_eq("logged expected secrets", sl->secrets.size(), 2);
              result.require("has client traffic secret", sl->secrets.contains("CLIENT_HANDSHAKE_TRAFFIC_SECRET"));
              result.require("has server traffic secret", sl->secrets.contains("SERVER_HANDSHAKE_TRAFFIC_SECRET"));
@@ -324,10 +325,12 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
              result.test_is_eq("server traffic secret",
                                sl->secrets.at("SERVER_HANDSHAKE_TRAFFIC_SECRET"),
                                server_handshake_traffic_secret);
+             result.end_timer();
           }),
 
        CHECK_both("ciphersuite compatibility",
                   [&](Cipher_State* cs, Journaling_Secret_Logger*, Connection_Side side, Test::Result& result) {
+                     result.start_timer();
                      result.confirm("self-compatibility", cs->is_compatible_with(cipher));
                      result.confirm(
                         "fully defined state is not compatible to other suites",
@@ -341,16 +344,20 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
                         result.confirm("Servers must expect unprotected alerts in response to their server hello",
                                        cs->must_expect_unprotected_alert_traffic());
                      }
+                     result.end_timer();
                   }),
 
        CHECK_both("ticket nonce counter is not yet available",
                   [&](Cipher_State* cs, Journaling_Secret_Logger*, Connection_Side, Test::Result& result) {
+                     result.start_timer();
                      result.test_throws<Botan::Invalid_State>("nonce counter is disabled",
                                                               [&] { cs->next_ticket_nonce(); });
+                     result.end_timer();
                   }),
 
        CHECK_both("handshake traffic without PSK",
                   [&](Cipher_State* cs, Journaling_Secret_Logger* sl, Connection_Side side, Test::Result& result) {
+                     result.start_timer();
                      result.confirm("can not yet write application data", !cs->can_encrypt_application_traffic());
                      result.confirm("can not yet export key material", !cs->can_export_keys());
 
@@ -443,10 +450,12 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
                      result.test_eq("key export result did not change",
                                     cs->export_key(export_label, export_context, 16),
                                     expected_key_export);
+                     result.end_timer();
                   }),
 
        CHECK_both("ticket nonce counter counts",
                   [&](Cipher_State* cs, Journaling_Secret_Logger*, Connection_Side, Test::Result& result) {
+                     result.start_timer();
                      result.test_is_eq("nonce is 0x00, 0x00",
                                        cs->next_ticket_nonce(),
                                        Botan::TLS::Ticket_Nonce(std::vector<uint8_t>{0x00, 0x00}));
@@ -463,18 +472,22 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
 
                      // Cannot generate more than 2^16 ticket nonces
                      result.test_throws<Botan::Invalid_State>("nonces are depleted", [&] { cs->next_ticket_nonce(); });
+                     result.end_timer();
                   }),
 
        CHECK_both("PSK",
                   [&](Cipher_State* cs, Journaling_Secret_Logger*, Connection_Side, Test::Result& result) {
+                     result.start_timer();
                      // derive PSK for resumption
                      const auto psk = cs->psk(Botan::TLS::Ticket_Nonce(
                         std::vector<uint8_t>{0x00, 0x00}) /* ticket_nonce as defined in RFC 8448 */);
                      result.test_eq("PSK matches", psk, expected_psk);
+                     result.end_timer();
                   }),
 
        CHECK_both("key update",
                   [&](Cipher_State* cs, Journaling_Secret_Logger* sl, Connection_Side side, Test::Result& result) {
+                     result.start_timer();
                      const auto read_label =
                         side == Connection_Side::Client ? "SERVER_TRAFFIC_SECRET_1" : "CLIENT_TRAFFIC_SECRET_1";
                      const auto write_label =
@@ -496,9 +509,11 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
                                     updated_server_traffic_secret);
 
                      result.confirm("can encrypt application traffic", cs->can_encrypt_application_traffic());
+                     result.end_timer();
                   }),
 
        CHECK_both("cleanup", [&](Cipher_State* cs, Journaling_Secret_Logger*, Connection_Side, Test::Result& result) {
+          result.start_timer();
           // cleanup
           cs->clear_write_keys();
           result.confirm("can no longer write application data", !cs->can_encrypt_application_traffic());
@@ -507,6 +522,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt1() {
           cs->clear_read_keys();
           result.confirm("can no longer write application data", !cs->can_encrypt_application_traffic());
           result.confirm("can no longer read application data", !cs->can_decrypt_application_traffic());
+          result.end_timer();
        })});
 }
 
@@ -673,18 +689,23 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
    return Test::flatten_result_lists(
       {CHECK_both("no secrets logged for PSK initialization",
                   [&](Cipher_State*, Journaling_Secret_Logger* sl, Connection_Side, Test::Result& result) {
+                     result.start_timer();
                      result.test_eq("no secrets logged", sl->secrets.size(), 0);
+                     result.end_timer();
                   }),
 
        CHECK_both("calculating PSK binder",
                   [&](Cipher_State* cs, Journaling_Secret_Logger*, Connection_Side, Test::Result& result) {
+                     result.start_timer();
                      const auto mac = cs->psk_binder_mac(th_client_hello_prefix);
                      result.test_eq("PSK binder is as expected", mac, expected_psk_binder);
+                     result.end_timer();
                   }),
 
        CHECK_both(
           "ciphersuite compatibility",
           [&](Cipher_State* cs, Journaling_Secret_Logger*, Connection_Side, Test::Result& result) {
+             result.start_timer();
              result.confirm("self-compatibility", cs->is_compatible_with(cipher));
              result.confirm("partially defined state is compatible with suites using the same hash",
                             cs->is_compatible_with(Ciphersuite::from_name("CHACHA20_POLY1305_SHA256").value()) &&
@@ -694,10 +715,12 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
              result.confirm("partially defined state is not compatible with other hashes or protocol versions",
                             !cs->is_compatible_with(Ciphersuite::from_name("PSK_WITH_AES_128_GCM_SHA256").value()) &&
                                !cs->is_compatible_with(Ciphersuite::from_name("AES_256_GCM_SHA384").value()));
+             result.end_timer();
           }),
 
        CHECK_both("calculate the early traffic secrets",
                   [&](Cipher_State* cs, Journaling_Secret_Logger* sl, Connection_Side side, Test::Result& result) {
+                     result.start_timer();
                      cs->advance_with_client_hello(th_client_hello, *sl);
                      result.require("early key export is possible", cs->can_export_keys());
                      result.test_eq("early key export produces expected result",
@@ -722,11 +745,13 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
                      //       application traffic in this state.
                      result.confirm("can not yet write application data", !cs->can_encrypt_application_traffic());
                      result.confirm("can not yet read application data", !cs->can_decrypt_application_traffic());
+                     result.end_timer();
                   }),
 
        CHECK_both(
           "handshake traffic after PSK",
           [&](Cipher_State* cs, Journaling_Secret_Logger* sl, Connection_Side side, Test::Result& result) {
+             result.start_timer();
              cs->advance_with_server_hello(cipher, secure_vector<uint8_t>(shared_secret), th_server_hello, *sl);
 
              // decrypt encrypted extensions from server
@@ -809,10 +834,12 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
              // encrypt client Finished message by client
              // (under the client handshake traffic secret)
              encrypted_client_finished_message.xxcrypt(result, cs, side);
+             result.end_timer();
           }),
 
        CHECK_both("application traffic after PSK",
                   [&](Cipher_State* cs, Journaling_Secret_Logger*, Connection_Side side, Test::Result& result) {
+                     result.start_timer();
                      // advance Cipher_State with client_hello...client_Finished
                      // (allows generation of resumption PSKs)
                      result.test_no_throw("state advancement is legal",
@@ -833,6 +860,7 @@ std::vector<Test::Result> test_secret_derivation_rfc8448_rtt0() {
                      // decrypt application data from server
                      // (encrypted under the application traffic secret -- and a new sequence number)
                      encrypted_application_data_server.xxcrypt(result, cs, side);
+                     result.end_timer();
                   })});
 }
 

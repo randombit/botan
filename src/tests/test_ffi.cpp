@@ -1384,6 +1384,7 @@ class FFI_AEAD_Test final : public FFI_Test {
 
          for(const std::string& aead : aeads) {
             Test::Result result(Botan::fmt("AEAD {}", aead));
+            result.start_timer();
 
             if(!TEST_FFI_INIT(botan_cipher_init, (&cipher_encrypt, aead.c_str(), BOTAN_CIPHER_INIT_FLAG_ENCRYPT))) {
                continue;
@@ -1593,6 +1594,7 @@ class FFI_AEAD_Test final : public FFI_Test {
 
             TEST_FFI_OK(botan_cipher_destroy, (cipher_decrypt));
 
+            result.end_timer();
             merged_result.merge(result, true /* ignore names */);
          }
       }

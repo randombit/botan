@@ -46,6 +46,7 @@ class OS_Utils_Tests final : public Test {
    private:
       static Test::Result test_get_process_id() {
          Test::Result result("OS::get_process_id");
+         result.start_timer();
 
          uint32_t pid1 = Botan::OS::get_process_id();
          uint32_t pid2 = Botan::OS::get_process_id();
@@ -57,7 +58,7 @@ class OS_Utils_Tests final : public Test {
 #else
          result.test_ne("PID is non-zero on systems with processes", pid1, 0);
 #endif
-
+         result.end_timer();
          return result;
       }
 
@@ -66,6 +67,7 @@ class OS_Utils_Tests final : public Test {
          const size_t max_repeats = 32;
 
          Test::Result result("OS::get_cpu_cycle_counter");
+         result.start_timer();
 
          const uint64_t proc_ts1 = Botan::OS::get_cpu_cycle_counter();
 
@@ -82,6 +84,7 @@ class OS_Utils_Tests final : public Test {
 
          result.test_lt("CPU cycle counter eventually changes value", counts, max_repeats);
 
+         result.end_timer();
          return result;
       }
 
@@ -90,6 +93,7 @@ class OS_Utils_Tests final : public Test {
          const size_t max_repeats = 128;
 
          Test::Result result("OS::get_high_resolution_clock");
+         result.start_timer();
 
          // TODO better tests
          const uint64_t hr_ts1 = Botan::OS::get_high_resolution_clock();
@@ -102,22 +106,26 @@ class OS_Utils_Tests final : public Test {
 
          result.test_lt("high resolution clock eventually changes value", counts, max_repeats);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_get_cpu_numbers() {
          Test::Result result("OS::get_cpu_available");
+         result.start_timer();
 
          const size_t ta = Botan::OS::get_cpu_available();
 
          result.test_gte("get_cpu_available is at least 1", ta, 1);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_get_system_timestamp() {
          // TODO better tests
          Test::Result result("OS::get_system_timestamp_ns");
+         result.start_timer();
 
          uint64_t sys_ts1 = Botan::OS::get_system_timestamp_ns();
          result.confirm("System timestamp value is never zero", sys_ts1 != 0);
@@ -129,19 +137,23 @@ class OS_Utils_Tests final : public Test {
 
          result.confirm("System time moves forward", sys_ts1 <= sys_ts2);
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_memory_locking() {
          Test::Result result("OS memory locked pages");
+         result.start_timer();
 
          // TODO any tests...
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_cpu_instruction_probe() {
          Test::Result result("OS::run_cpu_instruction_probe");
+         result.start_timer();
 
          // OS::run_cpu_instruction_probe only implemented for Unix signals or Windows SEH
 
@@ -194,6 +206,7 @@ class OS_Utils_Tests final : public Test {
             result.confirm("Result for function executing undefined opcode", crash_rc < 0);
          }
 
+         result.end_timer();
          return result;
       }
 };

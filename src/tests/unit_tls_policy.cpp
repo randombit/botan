@@ -52,6 +52,8 @@ class TLS_Policy_Unit_Tests final : public Test {
    private:
       static Test::Result test_peer_key_acceptable_rsa(Botan::RandomNumberGenerator& rng) {
          Test::Result result("TLS Policy RSA key verification");
+         result.start_timer();
+
    #if defined(BOTAN_HAS_RSA)
          auto rsa_key_1024 = std::make_unique<Botan::RSA_PrivateKey>(rng, 1024);
          Botan::TLS::Policy policy;
@@ -67,11 +69,15 @@ class TLS_Policy_Unit_Tests final : public Test {
          policy.check_peer_key_acceptable(*rsa_key_2048);
          result.test_success("Correctly accepting 2048 bit RSA keys");
    #endif
+
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_peer_key_acceptable_ecdh(Botan::RandomNumberGenerator& rng) {
          Test::Result result("TLS Policy ECDH key verification");
+         result.start_timer();
+
    #if defined(BOTAN_HAS_ECDH)
          const auto group_192 = Botan::EC_Group::from_name("secp192r1");
          auto ecdh_192 = std::make_unique<Botan::ECDH_PrivateKey>(rng, group_192);
@@ -89,11 +95,15 @@ class TLS_Policy_Unit_Tests final : public Test {
          policy.check_peer_key_acceptable(*ecdh_256);
          result.test_success("Correctly accepting 256 bit EC keys");
    #endif
+
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_peer_key_acceptable_ecdsa(Botan::RandomNumberGenerator& rng) {
          Test::Result result("TLS Policy ECDSA key verification");
+         result.start_timer();
+
    #if defined(BOTAN_HAS_ECDSA)
          const auto group_192 = Botan::EC_Group::from_name("secp192r1");
          auto ecdsa_192 = std::make_unique<Botan::ECDSA_PrivateKey>(rng, group_192);
@@ -111,11 +121,15 @@ class TLS_Policy_Unit_Tests final : public Test {
          policy.check_peer_key_acceptable(*ecdsa_256);
          result.test_success("Correctly accepting 256 bit EC keys");
    #endif
+
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_peer_key_acceptable_dh() {
          Test::Result result("TLS Policy DH key verification");
+         result.start_timer();
+
    #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
          const BigInt g("2");
          const BigInt p("58458002095536094658683755258523362961421200751439456159756164191494576279467");
@@ -131,11 +145,14 @@ class TLS_Policy_Unit_Tests final : public Test {
             result.test_success("Correctly rejecting short bit DH keys");
          }
    #endif
+
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_key_exchange_groups_to_offer() {
          Test::Result result("TLS Policy key share offering");
+         result.start_timer();
 
          Botan::TLS::Policy default_policy;
          result.test_eq(
@@ -160,6 +177,7 @@ class TLS_Policy_Unit_Tests final : public Test {
          result.confirm("list of offerings (1)",
                         TP(two_groups).key_exchange_groups_to_offer()[1] == Botan::TLS::Group_Params::FFDHE_4096);
 
+         result.end_timer();
          return result;
       }
 };

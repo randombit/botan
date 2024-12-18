@@ -81,6 +81,7 @@ class Ed25519_Curdle_Format_Tests final : public Test {
             "-----END PUBLIC KEY-----\n";
 
          Test::Result result("Ed25519 CURDLE format");
+         result.start_timer();
 
          Botan::DataSource_Memory priv_data(priv_key_str);
          auto priv_key = Botan::PKCS8::load_key(priv_data);
@@ -98,6 +99,7 @@ class Ed25519_Curdle_Format_Tests final : public Test {
          verifier.update("message");
          result.confirm("Signature valid", verifier.check_signature(sig));
 
+         result.end_timer();
          return std::vector<Test::Result>{result};
       }
 };

@@ -31,6 +31,8 @@ class DL_Group_Tests final : public Test {
    private:
       static Test::Result test_dl_errors() {
          Test::Result result("DL_Group errors");
+         result.start_timer();
+
          result.test_throws("Uninitialized", "DL_Group uninitialized", []() {
             Botan::DL_Group dl;
             dl.get_p();
@@ -45,11 +47,13 @@ class DL_Group_Tests final : public Test {
          });
    #endif
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_dl_encoding() {
          Test::Result result("DL_Group encoding");
+         result.start_timer();
 
          const Botan::DL_Group orig("modp/ietf/1024");
 
@@ -75,6 +79,7 @@ class DL_Group_Tests final : public Test {
          // no q in PKCS #3 format
          result.test_eq("Same g in X9.57 decoding", group3.get_g(), orig.get_g());
 
+         result.end_timer();
          return result;
       }
 };

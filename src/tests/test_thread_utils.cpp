@@ -20,6 +20,7 @@ namespace {
 
 Test::Result thread_pool() {
    Test::Result result("Thread_Pool");
+   result.start_timer();
 
    // Using lots of threads since here the works spend most of the time sleeping
    Botan::Thread_Pool pool(16);
@@ -54,6 +55,7 @@ Test::Result thread_pool() {
 
    pool.shutdown();
 
+   result.end_timer();
    return result;
 }
 
