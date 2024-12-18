@@ -50,13 +50,12 @@ class Asio_Socket final : public OS::Socket {
          check_timeout();
 
          boost::asio::ip::tcp::resolver resolver(m_io);
-         boost::asio::ip::tcp::resolver::results_type dns_iter = resolver.resolve(std::string{hostname}, std::string{service});
+         boost::asio::ip::tcp::resolver::results_type dns_iter =
+            resolver.resolve(std::string{hostname}, std::string{service});
 
          boost::system::error_code ec = boost::asio::error::would_block;
 
-         auto connect_cb = [&ec](const boost::system::error_code& e, boost::asio::ip::tcp::resolver::results_type::iterator) {
-            ec = e;
-         };
+         auto connect_cb = [&ec](const boost::system::error_code& e, const auto&) { ec = e; };
 
          boost::asio::async_connect(m_tcp, dns_iter.begin(), dns_iter.end(), connect_cb);
 

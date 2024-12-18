@@ -287,7 +287,7 @@ class tls_proxy_session final : public std::enable_shared_from_this<tls_proxy_se
 
       void tls_session_activated() override {
          auto onConnect = [self = weak_from_this()](boost::system::error_code ec,
-                                                    tcp::resolver::results_type::iterator /*endpoint*/) {
+                                                    const tcp::resolver::results_type::iterator& /*endpoint*/) {
             if(ec) {
                log_error("Server connection", ec);
                return;

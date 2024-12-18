@@ -35,7 +35,7 @@ class Credentials_Manager : public Botan::Credentials_Manager {
 class client {
    public:
       client(boost::asio::io_context& io_context,
-             boost::asio::ip::tcp::resolver::iterator endpoint_iterator,
+             const boost::asio::ip::tcp::resolver::results_type& endpoints,
              std::string_view host,
              const http::request<http::string_body>& req) :
             m_request(req),
@@ -46,7 +46,8 @@ class client {
                                                         host)),
             m_stream(io_context, m_ctx) {
          boost::asio::async_connect(m_stream.lowest_layer(),
-                                    std::move(endpoint_iterator),
+                                    endpoints.begin(),
+                                    endpoints.end(),
                                     boost::bind(&client::handle_connect, this, ap::error));
       }
 
@@ -111,8 +112,7 @@ int main(int argc, char* argv[]) {
       boost::asio::io_context io_context;
 
       boost::asio::ip::tcp::resolver resolver(io_context);
-      boost::asio::ip::tcp::resolver::query query(host, port);
-      boost::asio::ip::tcp::resolver::iterator iterator = resolver.resolve(query);
+      boost::asio::ip::tcp::resolver::results_type endpoints = resolver.resolve(host, port);
 
       http::request<http::string_body> req;
       req.version(11);
@@ -121,7 +121,7 @@ int main(int argc, char* argv[]) {
       req.set(http::field::host, host);
       req.set(http::field::user_agent, Botan::version_string());
 
-      client c(io_context, iterator, host, req);
+      client c(io_context, endpoints, host, req);
 
       io_context.run();
    } catch(std::exception& e) {

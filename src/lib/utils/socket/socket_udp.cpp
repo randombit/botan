@@ -50,13 +50,13 @@ class Asio_SocketUDP final : public OS::SocketUDP {
          check_timeout();
 
          boost::asio::ip::udp::resolver resolver(m_io);
-         boost::asio::ip::udp::resolver::results_type dns_iter = resolver.resolve(std::string{hostname}, std::string{service});
+         boost::asio::ip::udp::resolver::results_type dns_iter =
+            resolver.resolve(std::string{hostname}, std::string{service});
 
          boost::system::error_code ec = boost::asio::error::would_block;
 
-         auto connect_cb = [&ec](const boost::system::error_code& e, boost::asio::ip::udp::resolver::results_type::iterator) {
-            ec = e;
-         };
+         auto connect_cb = [&ec](const boost::system::error_code& e,
+                                 const boost::asio::ip::udp::resolver::results_type::iterator&) { ec = e; };
 
          boost::asio::async_connect(m_udp, dns_iter.begin(), dns_iter.end(), connect_cb);
 
