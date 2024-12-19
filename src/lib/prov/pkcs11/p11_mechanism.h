@@ -23,7 +23,7 @@ namespace Botan::PKCS11 {
 * for RSA (encryption/decryption, signature/verification)
 * and EC (ECDSA signature/verification, ECDH key derivation).
 */
-class MechanismWrapper final {
+class BOTAN_PUBLIC_API(3, 7) MechanismWrapper final {
    public:
       /// @param mechanism_type the CK_MECHANISM_TYPE for the `mechanism` field of the CK_MECHANISM struct
       explicit MechanismWrapper(MechanismType mechanism_type);
