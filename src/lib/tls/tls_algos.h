@@ -181,6 +181,11 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
 
       constexpr uint16_t wire_code() const { return static_cast<uint16_t>(m_code); }
 
+      /**
+      * Returns false if this group/KEX is not available in the build configuration
+      */
+      bool is_available() const;
+
       constexpr bool is_x25519() const { return m_code == Group_Params_Code::X25519; }
 
       constexpr bool is_x448() const { return m_code == Group_Params_Code::X448; }
@@ -232,7 +237,7 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
          BOTAN_DIAGNOSTIC_POP
       }
 
-      constexpr bool is_pqc_hybrid() const {
+      constexpr bool is_pqc_hybrid_kyber() const {
          BOTAN_DIAGNOSTIC_PUSH
          BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
 
@@ -242,22 +247,25 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
                 m_code == Group_Params_Code::HYBRID_X25519_KYBER_512_R3_OQS ||
                 m_code == Group_Params_Code::HYBRID_X25519_KYBER_768_R3_OQS ||
                 m_code == Group_Params_Code::HYBRID_X448_KYBER_768_R3_OQS ||
-                m_code == Group_Params_Code::HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP256R1_KYBER_512_R3_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP256R1_KYBER_768_R3_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP384R1_KYBER_768_R3_OQS ||
+                m_code == Group_Params_Code::HYBRID_SECP521R1_KYBER_1024_R3_OQS;
+
+         BOTAN_DIAGNOSTIC_POP
+      }
+
+      constexpr bool is_pqc_hybrid_frodokem() const {
+         return m_code == Group_Params_Code::HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS ||
                 m_code == Group_Params_Code::HYBRID_X25519_eFRODOKEM_640_AES_OQS ||
                 m_code == Group_Params_Code::HYBRID_X448_eFRODOKEM_976_SHAKE_OQS ||
                 m_code == Group_Params_Code::HYBRID_X448_eFRODOKEM_976_AES_OQS ||
-                m_code == Group_Params_Code::HYBRID_SECP256R1_KYBER_512_R3_OQS ||
-                m_code == Group_Params_Code::HYBRID_SECP256R1_KYBER_768_R3_OQS ||
                 m_code == Group_Params_Code::HYBRID_SECP256R1_eFRODOKEM_640_SHAKE_OQS ||
                 m_code == Group_Params_Code::HYBRID_SECP256R1_eFRODOKEM_640_AES_OQS ||
-                m_code == Group_Params_Code::HYBRID_SECP384R1_KYBER_768_R3_OQS ||
                 m_code == Group_Params_Code::HYBRID_SECP384R1_eFRODOKEM_976_SHAKE_OQS ||
                 m_code == Group_Params_Code::HYBRID_SECP384R1_eFRODOKEM_976_AES_OQS ||
-                m_code == Group_Params_Code::HYBRID_SECP521R1_KYBER_1024_R3_OQS ||
                 m_code == Group_Params_Code::HYBRID_SECP521R1_eFRODOKEM_1344_SHAKE_OQS ||
                 m_code == Group_Params_Code::HYBRID_SECP521R1_eFRODOKEM_1344_AES_OQS;
-
-         BOTAN_DIAGNOSTIC_POP
       }
 
       constexpr bool is_kem() const {
@@ -268,6 +276,11 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
 
          BOTAN_DIAGNOSTIC_POP
       }
+
+      // If this is a pqc hybrid group, returns the ECC ID
+      std::optional<Group_Params_Code> pqc_hybrid_ecc() const;
+
+      constexpr bool is_pqc_hybrid() const { return is_pqc_hybrid_kyber() || is_pqc_hybrid_frodokem(); }
 
       // Returns std::nullopt if the param has no known name
       std::optional<std::string> to_string() const;
