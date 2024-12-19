@@ -43,6 +43,7 @@ tls_reader.h
 </header:internal>
 
 <requires>
+literals
 rng
 tls12
 </requires>
