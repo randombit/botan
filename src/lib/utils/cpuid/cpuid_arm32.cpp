@@ -16,7 +16,9 @@ namespace Botan {
 uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
    uint32_t feat = 0;
 
-   if(OS::has_auxval()) {
+   if(auto auxval = OS::get_auxval_hwcap()) {
+      const auto [hwcap_neon, hwcap_crypto] = *auxval;
+
       /*
       * On systems with getauxval these bits should normally be defined
       * in bits/auxv.h but some buggy? glibc installs seem to miss them.
@@ -32,19 +34,12 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
          SHA2_bit = (1 << 3),
       };
 
-      const uint64_t hwcap_neon = OS::get_auxval(OS::auxval_hwcap());
-
       feat |= if_set(hwcap_neon, ARM_hwcap_bit::NEON_bit, CPUID::CPUID_ARM_NEON_BIT, allowed);
 
       if(feat & CPUID::CPUID_ARM_NEON_BIT) {
-         const uint64_t hwcap_crypto = OS::get_auxval(OS::auxval_hwcap2());
-
          feat |= if_set(hwcap_crypto, ARM_hwcap_bit::AES_bit, CPUID::CPUID_ARM_AES_BIT, allowed);
-
          feat |= if_set(hwcap_crypto, ARM_hwcap_bit::PMULL_bit, CPUID::CPUID_ARM_PMULL_BIT, allowed);
-
          feat |= if_set(hwcap_crypto, ARM_hwcap_bit::SHA1_bit, CPUID::CPUID_ARM_SHA1_BIT, allowed);
-
          feat |= if_set(hwcap_crypto, ARM_hwcap_bit::SHA2_bit, CPUID::CPUID_ARM_SHA2_BIT, allowed);
       }
    }

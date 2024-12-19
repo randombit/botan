@@ -10,6 +10,7 @@
 
 #include <botan/types.h>
 #include <functional>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -57,33 +58,13 @@ uint64_t BOTAN_TEST_API get_cpu_cycle_counter();
 size_t BOTAN_TEST_API get_cpu_available();
 
 /**
-* Return true if get_auxval is implemented on this system
-*/
-bool has_auxval();
-
-/**
-* If get_auxval is supported, returns the relevant value for AT_HWCAP
+* If this system supports getauxval (or an equivalent interface,
+* like FreeBSD's elf_aux_info) queries AT_HWCAP and AT_HWCAP2
+* and returns both.
 *
-* If get_auxval is not supported on this system, arbitrarily returns 0
+* Otherwise returns nullopt.
 */
-unsigned long auxval_hwcap();
-
-/**
-* If get_auxval is supported, returns the relevant value for AT_HWCAP2
-*
-* If get_auxval is not supported on this system, arbitrarily returns 0
-*/
-unsigned long auxval_hwcap2();
-
-/**
-* Return the ELF auxiliary vector cooresponding to the given ID.
-* This only makes sense on Unix-like systems and is currently
-* only supported on Linux, Android, and FreeBSD.
-*
-* Returns zero if not supported on the current system or if
-* the id provided is not known.
-*/
-unsigned long get_auxval(unsigned long id);
+std::optional<std::pair<unsigned long, unsigned long>> get_auxval_hwcap();
 
 /*
 * @return best resolution timestamp available
