@@ -17,6 +17,9 @@ Currently systems such as VMS, OS/390, and OS/400 are not supported by the build
 system, primarily due to lack of access and interest.  Please contact the
 maintainer if you would like to build Botan on such a system.
 
+Botan is a C++20 code base, make sure to use an appropriate compiler and
+settings. See also :ref:`support_info`.
+
 Botan's build is controlled by configure.py, which is a `Python
 <https://www.python.org>`_ script. Python 3.x or later is required.
 
