@@ -1,3 +1,5 @@
+.. _support_info:
+
 Support Information
 =======================
 
