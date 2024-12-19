@@ -7,7 +7,9 @@
 
 #include <botan/internal/cpuid.h>
 
-#if defined(BOTAN_TARGET_ARCH_IS_ARM64)
+#include <optional>
+
+#if defined(BOTAN_HAS_OS_UTILS)
    #include <botan/internal/os_utils.h>
 #endif
 
@@ -20,7 +22,10 @@ namespace Botan {
 
 #if defined(BOTAN_TARGET_ARCH_IS_ARM64)
 
-uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
+namespace {
+
+std::optional<uint32_t> aarch64_feat_via_auxval(uint32_t allowed) {
+   #if defined(BOTAN_HAS_OS_UTILS)
    if(OS::has_auxval()) {
       uint32_t feat = 0;
 
@@ -45,26 +50,32 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
 
       const uint64_t hwcap = OS::get_auxval(OS::auxval_hwcap());
 
-      feat |= if_set(hwcap, ARM_hwcap_bit::NEON_bit, CPUID::CPUID_ARM_NEON_BIT, allowed);
+      feat |= CPUID::if_set(hwcap, ARM_hwcap_bit::NEON_bit, CPUID::CPUID_ARM_NEON_BIT, allowed);
 
       if(feat & CPUID::CPUID_ARM_NEON_BIT) {
-         feat |= if_set(hwcap, ARM_hwcap_bit::AES_bit, CPUID::CPUID_ARM_AES_BIT, allowed);
-         feat |= if_set(hwcap, ARM_hwcap_bit::PMULL_bit, CPUID::CPUID_ARM_PMULL_BIT, allowed);
-         feat |= if_set(hwcap, ARM_hwcap_bit::SHA1_bit, CPUID::CPUID_ARM_SHA1_BIT, allowed);
-         feat |= if_set(hwcap, ARM_hwcap_bit::SHA2_bit, CPUID::CPUID_ARM_SHA2_BIT, allowed);
-         feat |= if_set(hwcap, ARM_hwcap_bit::SHA3_bit, CPUID::CPUID_ARM_SHA3_BIT, allowed);
-         feat |= if_set(hwcap, ARM_hwcap_bit::SM3_bit, CPUID::CPUID_ARM_SM3_BIT, allowed);
-         feat |= if_set(hwcap, ARM_hwcap_bit::SM4_bit, CPUID::CPUID_ARM_SM4_BIT, allowed);
-         feat |= if_set(hwcap, ARM_hwcap_bit::SHA2_512_bit, CPUID::CPUID_ARM_SHA2_512_BIT, allowed);
-         feat |= if_set(hwcap, ARM_hwcap_bit::SVE_bit, CPUID::CPUID_ARM_SVE_BIT, allowed);
+         feat |= CPUID::if_set(hwcap, ARM_hwcap_bit::AES_bit, CPUID::CPUID_ARM_AES_BIT, allowed);
+         feat |= CPUID::if_set(hwcap, ARM_hwcap_bit::PMULL_bit, CPUID::CPUID_ARM_PMULL_BIT, allowed);
+         feat |= CPUID::if_set(hwcap, ARM_hwcap_bit::SHA1_bit, CPUID::CPUID_ARM_SHA1_BIT, allowed);
+         feat |= CPUID::if_set(hwcap, ARM_hwcap_bit::SHA2_bit, CPUID::CPUID_ARM_SHA2_BIT, allowed);
+         feat |= CPUID::if_set(hwcap, ARM_hwcap_bit::SHA3_bit, CPUID::CPUID_ARM_SHA3_BIT, allowed);
+         feat |= CPUID::if_set(hwcap, ARM_hwcap_bit::SM3_bit, CPUID::CPUID_ARM_SM3_BIT, allowed);
+         feat |= CPUID::if_set(hwcap, ARM_hwcap_bit::SM4_bit, CPUID::CPUID_ARM_SM4_BIT, allowed);
+         feat |= CPUID::if_set(hwcap, ARM_hwcap_bit::SHA2_512_bit, CPUID::CPUID_ARM_SHA2_512_BIT, allowed);
+         feat |= CPUID::if_set(hwcap, ARM_hwcap_bit::SVE_bit, CPUID::CPUID_ARM_SVE_BIT, allowed);
       }
 
       return feat;
    }
+   #else
+   BOTAN_UNUSED(allowed);
+   #endif
 
-   uint32_t feat = 0;
+   return {};
+}
 
+std::optional<uint32_t> aarch64_feat_using_mac_api(uint32_t allowed) {
    #if defined(BOTAN_TARGET_OS_IS_IOS) || defined(BOTAN_TARGET_OS_IS_MACOS)
+   uint32_t feat = 0;
 
    auto sysctlbyname_has_feature = [](const char* feature_name) -> bool {
       unsigned int feature;
@@ -89,7 +100,15 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
       }
    }
 
-   #elif defined(BOTAN_USE_GCC_INLINE_ASM)
+   return feat;
+   #else
+   BOTAN_UNUSED(allowed);
+   return {};
+   #endif
+}
+
+std::optional<uint32_t> aarch64_feat_using_instr_probe(uint32_t allowed) {
+   #if defined(BOTAN_USE_GCC_INLINE_ASM)
 
    /*
    No getauxval API available, fall back on probe functions.
@@ -121,6 +140,7 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
       return 1;
    };
 
+   uint32_t feat = 0;
    if(allowed & CPUID::CPUID_ARM_NEON_BIT) {
       if(OS::run_cpu_instruction_probe(neon_probe) == 1) {
          feat |= CPUID::CPUID_ARM_NEON_BIT;
@@ -145,9 +165,25 @@ uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
       }
    }
 
-   #endif
-
    return feat;
+   #else
+   BOTAN_UNUSED(allowed);
+   return {};
+   #endif
+}
+
+}  // namespace
+
+uint32_t CPUID::CPUID_Data::detect_cpu_features(uint32_t allowed) {
+   if(auto feat = aarch64_feat_via_auxval(allowed)) {
+      return feat.value();
+   } else if(auto feat = aarch64_feat_using_mac_api(allowed)) {
+      return feat.value();
+   } else if(auto feat = aarch64_feat_using_instr_probe(allowed)) {
+      return feat.value();
+   } else {
+      return 0;
+   }
 }
 
 #endif

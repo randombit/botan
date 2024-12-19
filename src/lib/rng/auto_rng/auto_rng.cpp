@@ -9,7 +9,6 @@
 #include <botan/entropy_src.h>
 #include <botan/hmac_drbg.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/os_utils.h>
 
 #include <array>
 
