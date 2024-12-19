@@ -176,7 +176,7 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
       typedef std::shared_ptr<TLS_Asio_HTTP_Session> pointer;
 
       static pointer create(
-         boost::asio::io_service& io,
+         boost::asio::io_context& io,
          Botan::TLS::Session_Manager& session_manager,
          Botan::Credentials_Manager& credentials,
          Botan::TLS::Policy& policy)
@@ -201,7 +201,7 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
          }
 
    private:
-      TLS_Asio_HTTP_Session(boost::asio::io_service& io,
+      TLS_Asio_HTTP_Session(boost::asio::io_context& io,
                             Botan::TLS::Session_Manager& session_manager,
                             Botan::Credentials_Manager& credentials,
                             Botan::TLS::Policy& policy)
@@ -230,7 +230,8 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
 
          m_client_socket.async_read_some(
             boost::asio::buffer(&m_c2s[0], m_c2s.size()),
-            m_strand.wrap(
+            boost::asio::bind_executor(
+               m_strand,
                boost::bind(
                   &TLS_Asio_HTTP_Session::client_read, shared_from_this(),
                   boost::asio::placeholders::error,
@@ -332,7 +333,8 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
             boost::asio::async_write(
                m_client_socket,
                boost::asio::buffer(&m_s2c[0], m_s2c.size()),
-               m_strand.wrap(
+               boost::asio::bind_executor(
+                  m_strand,
                   boost::bind(
                      &TLS_Asio_HTTP_Session::handle_client_write_completion,
                      shared_from_this(),
@@ -406,7 +408,7 @@ class TLS_Asio_HTTP_Session final : public std::enable_shared_from_this<TLS_Asio
             }
          }
 
-      boost::asio::io_service::strand m_strand;
+      boost::asio::io_context::strand m_strand;
 
       tcp::socket m_client_socket;
 
@@ -427,7 +429,7 @@ class TLS_Asio_HTTP_Server final
       typedef TLS_Asio_HTTP_Session session;
 
       TLS_Asio_HTTP_Server(
-         boost::asio::io_service& io, unsigned short port,
+         boost::asio::io_context& io, unsigned short port,
          Botan::Credentials_Manager& creds,
          Botan::TLS::Policy& policy,
          Botan::TLS::Session_Manager& session_mgr,
@@ -551,7 +553,7 @@ class TLS_HTTP_Server final : public Command
             session_mgr.reset(new Botan::TLS::Session_Manager_In_Memory(rng()));
             }
 
-         boost::asio::io_service io;
+         boost::asio::io_context io;
 
          TLS_Asio_HTTP_Server server(io, listen_port, creds, *policy, *session_mgr, max_clients);
 

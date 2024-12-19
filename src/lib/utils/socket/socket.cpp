@@ -48,19 +48,17 @@ class Asio_Socket final : public OS::Socket
                   std::chrono::milliseconds timeout) :
          m_timeout(timeout), m_timer(m_io), m_tcp(m_io)
          {
-         m_timer.expires_from_now(m_timeout);
+         m_timer.expires_after(m_timeout);
          check_timeout();
 
          boost::asio::ip::tcp::resolver resolver(m_io);
-         boost::asio::ip::tcp::resolver::query query(hostname, service);
-         boost::asio::ip::tcp::resolver::iterator dns_iter = resolver.resolve(query);
+         boost::asio::ip::tcp::resolver::results_type endpoints = resolver.resolve(hostname, service);
 
          boost::system::error_code ec = boost::asio::error::would_block;
 
          auto connect_cb = [&ec](const boost::system::error_code& e,
-                                 boost::asio::ip::tcp::resolver::iterator) { ec = e; };
-
-         boost::asio::async_connect(m_tcp, dns_iter, connect_cb);
+                                 const boost::asio::ip::tcp::resolver::results_type::iterator&) { ec = e; };
+         boost::asio::async_connect(m_tcp, endpoints.begin(), endpoints.end(), connect_cb);
 
          while(ec == boost::asio::error::would_block)
             {
@@ -75,7 +73,7 @@ class Asio_Socket final : public OS::Socket
 
       void write(const uint8_t buf[], size_t len) override
          {
-         m_timer.expires_from_now(m_timeout);
+         m_timer.expires_after(m_timeout);
 
          boost::system::error_code ec = boost::asio::error::would_block;
 
@@ -92,7 +90,7 @@ class Asio_Socket final : public OS::Socket
 
       size_t read(uint8_t buf[], size_t len) override
          {
-         m_timer.expires_from_now(m_timeout);
+         m_timer.expires_after(m_timeout);
 
          boost::system::error_code ec = boost::asio::error::would_block;
          size_t got = 0;
@@ -115,7 +113,7 @@ class Asio_Socket final : public OS::Socket
    private:
       void check_timeout()
          {
-         if(m_tcp.is_open() && m_timer.expires_at() < std::chrono::system_clock::now())
+         if(m_tcp.is_open() && m_timer.expiry() < std::chrono::system_clock::now())
             {
             boost::system::error_code err;
             m_tcp.close(err);
@@ -125,7 +123,7 @@ class Asio_Socket final : public OS::Socket
          }
 
       const std::chrono::milliseconds m_timeout;
-      boost::asio::io_service m_io;
+      boost::asio::io_context m_io;
       boost::asio::system_timer m_timer;
       boost::asio::ip::tcp::socket m_tcp;
    };
