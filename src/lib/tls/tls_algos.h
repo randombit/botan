@@ -78,7 +78,7 @@ Auth_Method BOTAN_TEST_API auth_method_from_string(std::string_view str);
 
 #define BOTAN_TLS_KYBER_R3_DEPRECATED \
    BOTAN_DEPRECATED(                  \
-      "Kyber r3 TLS support will be removed completely in Botan 3.7.0 (early 2025) see https://github.com/randombit/botan/issues/4403")
+      "Kyber r3 TLS support will be removed completely in Botan 3.7.0 (early 2025) use ML-KEM and see https://github.com/randombit/botan/issues/4403")
 
 /*
 * Matches with wire encoding
@@ -108,11 +108,16 @@ enum class Group_Params_Code : uint16_t {
    KYBER_768_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x023C,
    KYBER_1024_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x023D,
 
-   eFRODOKEM_640_SHAKE_OQS = 0x0201,
+   // https://datatracker.ietf.org/doc/draft-connolly-tls-mlkem-key-agreement/05/
+   ML_KEM_512 = 0x0200,
+   ML_KEM_768 = 0x0201,
+   ML_KEM_1024 = 0x0202,
+
+   eFRODOKEM_640_SHAKE_OQS = 0xFE01,
    eFRODOKEM_976_SHAKE_OQS = 0x0203,
    eFRODOKEM_1344_SHAKE_OQS = 0x0205,
-   eFRODOKEM_640_AES_OQS = 0x0200,
-   eFRODOKEM_976_AES_OQS = 0x0202,
+   eFRODOKEM_640_AES_OQS = 0xFE00,
+   eFRODOKEM_976_AES_OQS = 0xFE02,
    eFRODOKEM_1344_AES_OQS = 0x0204,
 
    // Cloudflare code points for hybrid PQC
@@ -202,6 +207,11 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
                 m_code == Group_Params_Code::FFDHE_8192;
       }
 
+      constexpr bool is_pure_ml_kem() const {
+         return m_code == Group_Params_Code::ML_KEM_512 || m_code == Group_Params_Code::ML_KEM_768 ||
+                m_code == Group_Params_Code::ML_KEM_1024;
+      }
+
       BOTAN_TLS_KYBER_R3_DEPRECATED constexpr bool is_pure_kyber() const {
          BOTAN_DIAGNOSTIC_PUSH
          BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
@@ -227,7 +237,7 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
          BOTAN_DIAGNOSTIC_PUSH
          BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
 
-         return is_pure_kyber() || is_pure_frodokem() || is_pqc_hybrid();
+         return is_pure_kyber() || is_pure_ml_kem() || is_pure_frodokem() || is_pqc_hybrid();
 
          BOTAN_DIAGNOSTIC_POP
       }
@@ -264,7 +274,7 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
          BOTAN_DIAGNOSTIC_PUSH
          BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
 
-         return is_pure_kyber() || is_pure_frodokem() || is_pqc_hybrid();
+         return is_pure_kyber() || is_pure_ml_kem() || is_pure_frodokem() || is_pqc_hybrid();
 
          BOTAN_DIAGNOSTIC_POP
       }
