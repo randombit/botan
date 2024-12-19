@@ -1,6 +1,7 @@
 /*
 * KDF1 from ISO 18033-2
 * (C) 2016 Philipp Weber
+* (C) 2024 René Meusel, Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,41 +10,33 @@
 
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/stl_util.h>
 
 namespace Botan {
 
-void KDF1_18033::kdf(uint8_t key[],
-                     size_t key_len,
-                     const uint8_t secret[],
-                     size_t secret_len,
-                     const uint8_t salt[],
-                     size_t salt_len,
-                     const uint8_t label[],
-                     size_t label_len) const {
-   if(key_len == 0) {
+void KDF1_18033::perform_kdf(std::span<uint8_t> key,
+                             std::span<const uint8_t> secret,
+                             std::span<const uint8_t> salt,
+                             std::span<const uint8_t> label) const {
+   if(key.empty()) {
       return;
    }
 
-   const size_t blocks_required = key_len / m_hash->output_length();
+   const size_t blocks_required = key.size() / m_hash->output_length();
+   BOTAN_ARG_CHECK(blocks_required < 0xFFFFFFFF, "KDF1-18033 maximum output length exceeeded");
 
-   if(blocks_required >= 0xFFFFFFFE) {
-      throw Invalid_Argument("KDF1-18033 maximum output length exceeeded");
-   }
-
-   uint32_t counter = 0;
    secure_vector<uint8_t> h;
 
-   size_t offset = 0;
-   while(offset != key_len) {
-      m_hash->update(secret, secret_len);
-      m_hash->update_be(counter++);
-      m_hash->update(label, label_len);
-      m_hash->update(salt, salt_len);
+   BufferStuffer k(key);
+   for(uint32_t counter = 0; !k.full(); ++counter) {
+      m_hash->update(secret);
+      m_hash->update_be(counter);
+      m_hash->update(label);
+      m_hash->update(salt);
       m_hash->final(h);
 
-      const size_t added = std::min(h.size(), key_len - offset);
-      copy_mem(&key[offset], h.data(), added);
-      offset += added;
+      const auto bytes_to_write = std::min(h.size(), k.remaining_capacity());
+      k.append(std::span{h}.first(bytes_to_write));
    }
 }
 
