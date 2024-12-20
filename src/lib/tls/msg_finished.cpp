@@ -11,6 +11,7 @@
 
 #include <botan/kdf.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/literals.h>
 #include <botan/internal/tls_handshake_io.h>
 #include <botan/internal/tls_handshake_state.h>
 
@@ -26,22 +27,17 @@ namespace {
 * Compute the verify_data for TLS 1.2
 */
 std::vector<uint8_t> finished_compute_verify_12(const Handshake_State& state, Connection_Side side) {
-   const uint8_t TLS_CLIENT_LABEL[] = {
-      0x63, 0x6C, 0x69, 0x65, 0x6E, 0x74, 0x20, 0x66, 0x69, 0x6E, 0x69, 0x73, 0x68, 0x65, 0x64};
+   using namespace literals;
 
-   const uint8_t TLS_SERVER_LABEL[] = {
-      0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x20, 0x66, 0x69, 0x6E, 0x69, 0x73, 0x68, 0x65, 0x64};
+   constexpr auto TLS_CLIENT_LABEL = "636C69656E742066696E6973686564"_hex;
+   constexpr auto TLS_SERVER_LABEL = "7365727665722066696E6973686564"_hex;
 
    auto prf = state.protocol_specific_prf();
 
-   std::vector<uint8_t> input;
-   std::vector<uint8_t> label;
-   label += (side == Connection_Side::Client) ? std::make_pair(TLS_CLIENT_LABEL, sizeof(TLS_CLIENT_LABEL))
-                                              : std::make_pair(TLS_SERVER_LABEL, sizeof(TLS_SERVER_LABEL));
+   const auto input = state.hash().final(state.ciphersuite().prf_algo());
+   const auto label = (side == Connection_Side::Client) ? TLS_CLIENT_LABEL : TLS_SERVER_LABEL;
 
-   input += state.hash().final(state.ciphersuite().prf_algo());
-
-   return unlock(prf->derive_key(12, state.session_keys().master_secret(), input, label));
+   return prf->derive_key<std::vector<uint8_t>>(12, state.session_keys().master_secret(), input, label);
 }
 
 }  // namespace
