@@ -19,8 +19,11 @@
 #include <botan/version.h>
 #include <botan/internal/cpuid.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/os_utils.h>
 #include <botan/internal/stl_util.h>
+
+#if defined(BOTAN_HAS_OS_UTILS)
+   #include <botan/internal/os_utils.h>
+#endif
 
 #if defined(BOTAN_HAS_ECC_GROUP)
    #include <botan/ec_group.h>
@@ -315,11 +318,13 @@ class Speed final : public Command {
 
          clock_cycle_ratio = 1.0 / clock_cycle_ratio;
 
+#if defined(BOTAN_HAS_OS_UTILS)
          if(clock_speed != 0 && Botan::OS::get_cpu_cycle_counter() != 0) {
             error_output() << "The --cpu-clock-speed option is only intended to be used on "
                               "platforms without access to a cycle counter.\n"
                               "Expect incorrect results\n\n";
          }
+#endif
 
          if(format == "table") {
             m_summary = std::make_unique<Summary>();

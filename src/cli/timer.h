@@ -99,6 +99,9 @@ class Timer final {
       std::string to_string() const;
 
    private:
+      static uint64_t timestamp_ns();
+      static uint64_t cycle_counter();
+
       std::string result_string_bps() const;
       std::string result_string_ops() const;
 

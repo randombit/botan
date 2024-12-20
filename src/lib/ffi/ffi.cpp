@@ -12,9 +12,12 @@
 #include <botan/version.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/ffi_util.h>
-#include <botan/internal/os_utils.h>
 #include <cstdio>
 #include <cstdlib>
+
+#if defined(BOTAN_HAS_OS_UTILS)
+   #include <botan/internal/os_utils.h>
+#endif
 
 namespace Botan_FFI {
 
@@ -24,10 +27,13 @@ thread_local std::string g_last_exception_what;
 int ffi_error_exception_thrown(const char* func_name, const char* exn, int rc) {
    g_last_exception_what.assign(exn);
 
+#if defined(BOTAN_HAS_OS_UTILS)
    std::string val;
    if(Botan::OS::read_env_variable(val, "BOTAN_FFI_PRINT_EXCEPTIONS") == true && !val.empty()) {
       static_cast<void>(std::fprintf(stderr, "in %s exception '%s' returning %d\n", func_name, exn, rc));
    }
+#endif
+
    return rc;
 }
 

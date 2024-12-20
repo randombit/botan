@@ -38,7 +38,6 @@ fmt.h
 int_utils.h
 loadstor.h
 mul128.h
-os_utils.h
 parsing.h
 prefetch.h
 rotate.h

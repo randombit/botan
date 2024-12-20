@@ -9,7 +9,7 @@
 #include <botan/mem_ops.h>
 #include <algorithm>
 
-#if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS)
+#if defined(BOTAN_MEM_POOL_USE_MMU_PROTECTIONS) && defined(BOTAN_HAS_OS_UTILS)
    #include <botan/internal/os_utils.h>
 #endif
 
