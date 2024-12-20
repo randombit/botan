@@ -3320,6 +3320,9 @@ def validate_options(options, info_os, info_cc, available_module_policies):
         if options.msvc_runtime not in ['MT', 'MD', 'MTd', 'MDd']:
             logging.warning("MSVC runtime option '%s' not known", options.msvc_runtime)
 
+    if 'threads' in options.without_os_features:
+        logging.warning('Disabling thread support will cause data races if threads are used by the application')
+
 def run_compiler_preproc(options, ccinfo, source_file, default_return, extra_flags=None):
     if extra_flags is None:
         extra_flags = []
