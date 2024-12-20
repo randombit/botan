@@ -100,6 +100,12 @@ class BOTAN_PUBLIC_API(2, 0) X509_CRL final : public X509_Object {
       const std::vector<CRL_Entry>& get_revoked() const;
 
       /**
+      * Get the X509 version of this CRL object
+      * @return X509 version
+      */
+      uint32_t x509_version() const;
+
+      /**
       * Get the issuer DN of this CRL.
       * @return CRLs issuer DN
       */
