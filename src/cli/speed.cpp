@@ -189,13 +189,79 @@ std::vector<size_t> unique_buffer_sizes(const std::string& cmdline_arg) {
    return std::vector<size_t>(buf.begin(), buf.end());
 }
 
+std::string format_timer(const Timer& t, size_t time_unit) {
+   constexpr size_t MiB = 1024 * 1024;
+
+   std::ostringstream oss;
+
+   oss << t.get_name() << " ";
+
+   const uint64_t events = t.events();
+
+   if(t.buf_size() == 0) {
+      // Report operations/time unit
+
+      if(events == 0) {
+         oss << "no events ";
+      } else {
+         oss << static_cast<uint64_t>(t.events_per_second()) << ' ' << t.doing() << "/sec; ";
+
+         if(time_unit == 1000) {
+            oss << std::setprecision(2) << std::fixed << (t.milliseconds() / events) << " ms/op ";
+         } else if(time_unit == 1000 * 1000) {
+            oss << std::setprecision(2) << std::fixed << (t.microseconds() / events) << " us/op ";
+         } else if(time_unit == 1000 * 1000 * 1000) {
+            oss << std::setprecision(0) << std::fixed << (t.nanoseconds() / events) << " ns/op ";
+         }
+
+         if(t.cycles_consumed() != 0 && events > 0) {
+            const double cycles_per_op = static_cast<double>(t.cycles_consumed()) / events;
+            const int precision = (cycles_per_op < 10000) ? 2 : 0;
+            oss << std::fixed << std::setprecision(precision) << cycles_per_op << " cycles/op ";
+         }
+
+         oss << "(" << events << " " << (events == 1 ? "op" : "ops") << " in " << t.milliseconds() << " ms)";
+      }
+   } else {
+      // Bulk op - report bytes/time unit
+
+      const double MiB_total = static_cast<double>(events) / MiB;
+      const double MiB_per_sec = MiB_total / t.seconds();
+
+      if(!t.doing().empty()) {
+         oss << t.doing() << " ";
+      }
+
+      if(t.buf_size() > 0) {
+         oss << "buffer size " << t.buf_size() << " bytes: ";
+      }
+
+      if(events == 0) {
+         oss << "N/A ";
+      } else {
+         oss << std::fixed << std::setprecision(3) << MiB_per_sec << " MiB/sec ";
+      }
+
+      if(t.cycles_consumed() != 0 && events > 0) {
+         const double cycles_per_byte = static_cast<double>(t.cycles_consumed()) / events;
+         oss << std::fixed << std::setprecision(2) << cycles_per_byte << " cycles/byte ";
+      }
+
+      oss << "(" << MiB_total << " MiB in " << t.milliseconds() << " ms)";
+   }
+
+   oss << "\n";
+
+   return oss.str();
+}
+
 }  // namespace
 
 class Speed final : public Command {
    public:
       Speed() :
             Command(
-               "speed --msec=500 --format=default --ecc-groups= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos") {
+               "speed --msec=500 --format=default --time-unit=ms --ecc-groups= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos") {
       }
 
       static std::vector<std::string> default_benchmark_list() {
@@ -303,6 +369,18 @@ class Speed final : public Command {
 
          double clock_cycle_ratio = std::strtod(clock_ratio.c_str(), nullptr);
 
+         m_time_unit = [](std::string_view tu) {
+            if(tu == "ms") {
+               return 1000;
+            } else if(tu == "us") {
+               return 1000 * 1000;
+            } else if(tu == "ns") {
+               return 1000 * 1000 * 1000;
+            } else {
+               throw CLI_Usage_Error("Unknown time unit (supported: ms, us, ns)");
+            }
+         }(get_arg("time-unit"));
+
          /*
          * This argument is intended to be the ratio between the cycle counter
          * and the actual machine cycles. It is extremely unlikely that there is
@@ -396,6 +474,7 @@ class Speed final : public Command {
       }
 
    private:
+      size_t m_time_unit = 0;
       uint64_t m_cycles_consumed = 0;
       uint64_t m_ns_taken = 0;
       std::unique_ptr<Summary> m_summary;
@@ -407,7 +486,8 @@ class Speed final : public Command {
          if(m_json) {
             m_json->add(t);
          } else {
-            output() << t.to_string() << std::flush;
+            output() << format_timer(t, m_time_unit);
+
             if(m_summary) {
                m_summary->add(t);
             }
