@@ -41,7 +41,14 @@ BOTAN_FORCE_INLINE SIMD_4x32 BOTAN_FUNC_ISA(BOTAN_CLMUL_ISA) clmul(const SIMD_4x
 #elif defined(BOTAN_SIMD_USE_NEON)
    const uint64_t a = vgetq_lane_u64(vreinterpretq_u64_u32(x.raw()), M & 0x01);
    const uint64_t b = vgetq_lane_u64(vreinterpretq_u64_u32(H.raw()), (M & 0x10) >> 4);
+
+   #if defined(BOTAN_BUILD_COMPILER_IS_MSVC)
+   __n64 a1 = {a}, b1 = {b};
+   return SIMD_4x32(vmull_p64(a1, b1));
+   #else
    return SIMD_4x32(reinterpret_cast<uint32x4_t>(vmull_p64(a, b)));
+   #endif
+
 #elif defined(BOTAN_SIMD_USE_ALTIVEC)
    const SIMD_4x32 mask_lo = SIMD_4x32(0, 0, 0xFFFFFFFF, 0xFFFFFFFF);
 
