@@ -1690,7 +1690,7 @@ def cli_speed_table_tests(_tmp_dir):
         logging.error("Unexpected trailing message got %s", output[10])
 
 def cli_speed_invalid_option_tests(_tmp_dir):
-    speed_usage = "Usage: speed --msec=500 --format=default --ecc-groups= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos"
+    speed_usage = "Usage: speed --msec=500 --format=default --time-unit=ms --ecc-groups= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos"
 
     test_cli("speed", ["--buf-size=0", "--msec=1", "AES-128"],
              expected_stderr="Usage error: Cannot have a zero-sized buffer\n%s" % (speed_usage))
