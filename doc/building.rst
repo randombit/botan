@@ -155,6 +155,12 @@ completely supported by the build system. To extend the example, we must tell
    threading or mutexes in the C++ standard library. You can work around
    this by disabling thread support using ``--without-os-feature=threads``
 
+.. warning::
+
+   Using ``--without-os-feature=threads`` disables *all* support for threads,
+   including any locking of internal data structures. In this configuration,
+   calling into the library from multiple threads will cause data races.
+
 You can also specify the alternate tools by setting the `CXX` and `AR`
 environment variables (instead of the `--cc-bin` and `--ar-command` options), as
 is commonly done with autoconf builds.
@@ -719,6 +725,16 @@ Specify an OS feature to enable. See ``src/build-data/os`` and
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Specify an OS feature to disable.
+
+.. warning::
+
+   One operating system feature that can be disabled using this option is
+   ``threads``. Be warned that doing so will disable all support for threads
+   including any locking of internal data structures. Calling the library from
+   multiple threads in such a configuration will lead to data races.
+
+   This is intended for use only on targets which truly do not support threads,
+   for example certain baremetal configurations.
 
 ``--enable-experimental-features``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
