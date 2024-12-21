@@ -6,8 +6,6 @@
 
 #include "perf.h"
 
-#include "../tests/test_rng.h"  // FIXME
-#include <botan/entropy_src.h>
 #include <botan/rng.h>
 
 #if defined(BOTAN_HAS_COMPRESSION)
@@ -95,52 +93,5 @@ class PerfTest_Rng final : public PerfTest {
 };
 
 BOTAN_REGISTER_PERF_TEST("RNG", PerfTest_Rng);
-
-class PerfTest_Entropy final : public PerfTest {
-   public:
-      void go(const PerfConfig& config) override {
-         Botan::Entropy_Sources& srcs = Botan::Entropy_Sources::global_sources();
-
-         for(auto src : srcs.enabled_sources()) {
-            size_t entropy_bits = 0;
-            Botan_Tests::SeedCapturing_RNG rng;
-
-            auto timer = config.make_timer(src);
-            timer->run([&]() { entropy_bits = srcs.poll_just(rng, src); });
-
-            size_t compressed_size = 0;
-
-#if defined(BOTAN_HAS_ZLIB)
-            auto comp = Botan::Compression_Algorithm::create("zlib");
-
-            if(comp) {
-               Botan::secure_vector<uint8_t> compressed;
-               compressed.assign(rng.seed_material().begin(), rng.seed_material().end());
-               comp->start(9);
-               comp->finish(compressed);
-
-               compressed_size = compressed.size();
-            }
-#endif
-
-            std::ostringstream msg;
-
-            msg << "Entropy source " << src << " output " << rng.seed_material().size() << " bytes"
-                << " estimated entropy " << entropy_bits << " in " << timer->milliseconds() << " ms";
-
-            if(compressed_size > 0) {
-               msg << " output compressed to " << compressed_size << " bytes";
-            }
-
-            msg << " total samples " << rng.samples() << "\n";
-
-            timer->set_custom_msg(msg.str());
-
-            config.record_result(*timer);
-         }
-      }
-};
-
-BOTAN_REGISTER_PERF_TEST("entropy", PerfTest_Entropy);
 
 }  // namespace Botan_CLI
