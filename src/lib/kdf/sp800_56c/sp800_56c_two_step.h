@@ -23,35 +23,28 @@ class SP800_56C_Two_Step final : public KDF {
       std::unique_ptr<KDF> new_object() const override;
 
       /**
+      * @param mac MAC algorithm used for randomness extraction
+      * @param exp KDF used for key expansion
+      */
+      SP800_56C_Two_Step(std::unique_ptr<MessageAuthenticationCode> mac, std::unique_ptr<KDF> exp) :
+            m_prf(std::move(mac)), m_exp(std::move(exp)) {}
+
+   private:
+      /**
       * Derive a key using the SP800-56C Two-Step KDF.
       *
       * The implementation hard codes the context value for the
       * expansion step to the empty string.
       *
       * @param key derived keying material K_M
-      * @param key_len the desired output length in bytes
       * @param secret shared secret Z
-      * @param secret_len size of Z in bytes
       * @param salt salt s of the extraction step
-      * @param salt_len size of s in bytes
       * @param label label for the expansion step
-      * @param label_len size of label in bytes
       */
-      void kdf(uint8_t key[],
-               size_t key_len,
-               const uint8_t secret[],
-               size_t secret_len,
-               const uint8_t salt[],
-               size_t salt_len,
-               const uint8_t label[],
-               size_t label_len) const override;
-
-      /**
-      * @param mac MAC algorithm used for randomness extraction
-      * @param exp KDF used for key expansion
-      */
-      SP800_56C_Two_Step(std::unique_ptr<MessageAuthenticationCode> mac, std::unique_ptr<KDF> exp) :
-            m_prf(std::move(mac)), m_exp(std::move(exp)) {}
+      void perform_kdf(std::span<uint8_t> key,
+                       std::span<const uint8_t> secret,
+                       std::span<const uint8_t> salt,
+                       std::span<const uint8_t> label) const override;
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
