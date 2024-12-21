@@ -1150,10 +1150,10 @@ def cli_tls_socket_tests(tmp_dir):
 
         TestConfig("PSK TLS 1.2", "1.2", "allow_tls12=true\nallow_tls13=false\nkey_exchange_methods=ECDHE_PSK\n",
                    psk=psk, psk_identity=psk_identity,
-                   stdout_regex=f'Handshake complete, TLS v1\\.2.*utilized PSK identity: {psk_identity}.*'),
+                   stdout_regex=f'Handshake complete, TLS v1\\.2.*\nUtilized PSK identity: {psk_identity}.*'),
         TestConfig("PSK TLS 1.3", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_methods=ECDHE_PSK\n",
                    psk=psk, psk_identity=psk_identity,
-                   stdout_regex=f'Handshake complete, TLS v1\\.3.*utilized PSK identity: {psk_identity}.*'),
+                   stdout_regex=f'Handshake complete, TLS v1\\.3.*\nUtilized PSK identity: {psk_identity}.*'),
 
         TestConfig("Kyber KEM", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_groups=Kyber-512-r3"),
         TestConfig("Hybrid PQ/T", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_groups=x25519/Kyber-512-r3"),
