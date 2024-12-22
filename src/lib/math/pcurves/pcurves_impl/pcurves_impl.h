@@ -1350,7 +1350,7 @@ class WindowedMulTable final {
             if(i % 2 == 1) {
                table.push_back(table[i / 2].dbl());
             } else {
-               table.push_back(table[i - 1] + table[0]);
+               table.push_back(table[i - 1] + p);
             }
          }
 
