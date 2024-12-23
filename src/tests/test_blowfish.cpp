@@ -25,7 +25,7 @@ class Blowfish_Salted_Tests final : public Text_Based_Test {
 
          Botan::Blowfish blowfish;
 
-         blowfish.salted_set_key(key.data(), key.size(), salt.data(), salt.size(), 0);
+         blowfish.salted_set_key(key, salt, 0);
 
          std::vector<uint8_t> block(8);
          blowfish.encrypt(block);
