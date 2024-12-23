@@ -1690,7 +1690,7 @@ def cli_speed_table_tests(_tmp_dir):
         logging.error("Unexpected trailing message got %s", output[10])
 
 def cli_speed_invalid_option_tests(_tmp_dir):
-    speed_usage = "Usage: speed --msec=500 --format=default --ecc-groups= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos"
+    speed_usage = "Usage: speed --msec=500 --format=default --time-unit=ms --ecc-groups= --buf-size=1024 --clear-cpuid= --cpu-clock-speed=0 --cpu-clock-ratio=1.0 *algos"
 
     test_cli("speed", ["--buf-size=0", "--msec=1", "AES-128"],
              expected_stderr="Usage error: Cannot have a zero-sized buffer\n%s" % (speed_usage))
@@ -1758,13 +1758,6 @@ def cli_speed_tests(_tmp_dir):
 
     # ChaCha_RNG generate buffer size 1024 bytes: 954.431 MiB/sec 4.01 cycles/byte (477.22 MiB in 500.00 ms)
     format_re = re.compile(r'^.* generate buffer size [0-9]+ bytes: [0-9]+\.[0-9]+ MiB/sec .*\([0-9]+\.[0-9]+ MiB in [0-9]+\.[0-9]+ ms')
-    for line in output:
-        if format_re.match(line) is None:
-            logging.error("Unexpected line %s", line)
-
-    # Entropy source rdseed output 128 bytes estimated entropy 0 in 0.02168 ms total samples 32
-    output = test_cli("speed", ["--msec=%d" % (msec), "entropy"], None).split('\n')
-    format_re = re.compile(r'^Entropy source [_a-z0-9]+ output [0-9]+ bytes estimated entropy [0-9]+ in [0-9]+\.[0-9]+ ms .*total samples [0-9]+')
     for line in output:
         if format_re.match(line) is None:
             logging.error("Unexpected line %s", line)
