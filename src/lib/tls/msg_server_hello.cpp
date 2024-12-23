@@ -17,6 +17,7 @@
 #include <botan/tls_extensions.h>
 #include <botan/tls_session_manager.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/literals.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_handshake_hash.h>
 #include <botan/internal/tls_handshake_io.h>
@@ -33,9 +34,9 @@ const uint64_t DOWNGRADE_TLS11 = 0x444F574E47524400;
 const uint64_t DOWNGRADE_TLS12 = 0x444F574E47524401;
 
 // SHA-256("HelloRetryRequest")
-const std::vector<uint8_t> HELLO_RETRY_REQUEST_MARKER = {
-   0xCF, 0x21, 0xAD, 0x74, 0xE5, 0x9A, 0x61, 0x11, 0xBE, 0x1D, 0x8C, 0x02, 0x1E, 0x65, 0xB8, 0x91,
-   0xC2, 0xA2, 0x11, 0x16, 0x7A, 0xBB, 0x8C, 0x5E, 0x07, 0x9E, 0x09, 0xE2, 0xC8, 0xA8, 0x33, 0x9C};
+using namespace literals;
+constexpr auto HELLO_RETRY_REQUEST_MARKER =
+   "CF:21:AD:74:E5:9A:61:11:BE:1D:8C:02:1E:65:B8:91:C2:A2:11:16:7A:BB:8C:5E:07:9E:09:E2:C8:A8:33:9C"_hex;
 
 bool random_signals_hello_retry_request(const std::vector<uint8_t>& random) {
    return CT::is_equal(random.data(), HELLO_RETRY_REQUEST_MARKER.data(), HELLO_RETRY_REQUEST_MARKER.size()).as_bool();
@@ -789,13 +790,14 @@ Hello_Retry_Request::Hello_Retry_Request(const Client_Hello_13& ch,
                                          Named_Group selected_group,
                                          const Policy& policy,
                                          Callbacks& cb) :
-      Server_Hello_13(std::make_unique<Server_Hello_Internal>(Protocol_Version::TLS_V12 /* legacy_version */,
-                                                              ch.session_id(),
-                                                              HELLO_RETRY_REQUEST_MARKER,
-                                                              choose_ciphersuite(ch, policy),
-                                                              uint8_t(0) /* compression method */,
-                                                              true /* is Hello Retry Request */
-                                                              ),
+      Server_Hello_13(std::make_unique<Server_Hello_Internal>(
+                         Protocol_Version::TLS_V12 /* legacy_version */,
+                         ch.session_id(),
+                         std::vector(HELLO_RETRY_REQUEST_MARKER.begin(), HELLO_RETRY_REQUEST_MARKER.end()),
+                         choose_ciphersuite(ch, policy),
+                         uint8_t(0) /* compression method */,
+                         true /* is Hello Retry Request */
+                         ),
                       as_new_hello_retry_request) {
    // RFC 8446 4.1.4
    //     As with the ServerHello, a HelloRetryRequest MUST NOT contain any

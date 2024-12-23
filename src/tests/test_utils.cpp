@@ -19,6 +19,10 @@
 #include <botan/internal/rounding.h>
 #include <botan/internal/stl_util.h>
 
+#if defined(BOTAN_HAS_CUSTOM_LITERALS)
+   #include <botan/internal/literals.h>
+#endif
+
 #include <bit>
 #include <ctime>
 #include <functional>
@@ -1397,6 +1401,63 @@ class ScopedCleanup_Tests : public Test {
 };
 
 BOTAN_REGISTER_TEST("utils", "scoped_cleanup", ScopedCleanup_Tests);
+
+class HexDecoding : public Test {
+   private:
+      constexpr static bool cmp(std::span<const uint8_t> lhs, std::span<const uint8_t> rhs) {
+         return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+      }
+
+   public:
+      std::vector<Test::Result> run() override {
+         return {
+            CHECK("constexpr decoding to std::array<>",
+                  [this](Test::Result& result) {
+                     constexpr char char_array[] = {'d', 'e', 'a', 'd', 'b', 'e', 'e', 'f'};
+                     result.test_eq_sz("char array does not containtain null-terminator", sizeof(char_array), 8);
+                     constexpr auto from_char_array = Botan::hex_decode_array(char_array);
+                     result.test_eq_sz("4 bytes", from_char_array.size(), 4);
+                     result.confirm("result 1", cmp(from_char_array, Botan::hex_decode("DEADBEEF")));
+
+                     constexpr auto from_string_literal = Botan::hex_decode_array("baADcAFe133742");
+                     result.test_eq_sz("7 bytes", from_string_literal.size(), 7);
+                     result.confirm("result 2", cmp(from_string_literal, Botan::hex_decode("BaaDCafE133742")));
+
+                     char random_char_array[17] = {};
+                     for(size_t i = 0; i < sizeof(random_char_array) - 1 /* zero termination */; ++i) {
+                        const auto chr = Test::rng().next_byte() % 16;
+                        random_char_array[i] =
+                           (chr < 10) ? static_cast<uint8_t>('0' + chr) : static_cast<uint8_t>('a' + chr - 10);
+                     }
+
+                     // random_char_array is not known at compile-time, hence no constexpr
+                     const auto from_random_char_array = Botan::hex_decode_array(random_char_array);
+                     result.test_eq_sz("8 bytes", from_random_char_array.size(), 8);
+                     result.confirm("result 3", cmp(from_random_char_array, Botan::hex_decode(random_char_array)));
+                  }),
+
+#if defined(BOTAN_HAS_CUSTOM_LITERALS)
+               CHECK("constexpr hex literal", [](Test::Result& result) {
+                  using namespace Botan::literals;
+
+                  constexpr auto from_literal = "deaDBeef42"_hex;
+                  result.test_eq_sz("5 bytes", from_literal.size(), 5);
+                  result.confirm("result 1", cmp(from_literal, Botan::hex_decode("DEADBEEF42")));
+
+                  constexpr auto from_literal_with_colon = "ba:ad:ca:fe"_hex;
+                  result.test_eq_sz("4 bytes", from_literal_with_colon.size(), 4);
+                  result.confirm("result 1", cmp(from_literal_with_colon, Botan::hex_decode("baadcafe")));
+
+                  constexpr auto from_literal_with_whitespace = "c0 01 be ef"_hex;
+                  result.test_eq_sz("4 bytes", from_literal_with_whitespace.size(), 4);
+                  result.confirm("result 1", cmp(from_literal_with_whitespace, Botan::hex_decode("c001beef")));
+               }),
+#endif
+         };
+      }
+};
+
+BOTAN_REGISTER_TEST("utils", "hex_decode", HexDecoding);
 
 }  // namespace
 

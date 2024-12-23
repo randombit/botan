@@ -172,22 +172,26 @@ when the application is later compiled using GCC.
    #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS \
       _Pragma("clang diagnostic ignored \"-Wdeprecated-declarations\"")
    #define BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+   #define BOTAN_DIAGNOSTIC_IGNORE_EXPRESSION_IS_CONST
    #define BOTAN_DIAGNOSTIC_POP _Pragma("clang diagnostic pop")
 #elif defined(__GNUG__)
    #define BOTAN_DIAGNOSTIC_PUSH _Pragma("GCC diagnostic push")
    #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS \
       _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
    #define BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+   #define BOTAN_DIAGNOSTIC_IGNORE_EXPRESSION_IS_CONST
    #define BOTAN_DIAGNOSTIC_POP _Pragma("GCC diagnostic pop")
 #elif defined(_MSC_VER)
    #define BOTAN_DIAGNOSTIC_PUSH __pragma(warning(push))
    #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS __pragma(warning(disable : 4996))
    #define BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE __pragma(warning(disable : 4250))
+   #define BOTAN_DIAGNOSTIC_IGNORE_EXPRESSION_IS_CONST __pragma(warning(disable : 4127))
    #define BOTAN_DIAGNOSTIC_POP __pragma(warning(pop))
 #else
    #define BOTAN_DIAGNOSTIC_PUSH
    #define BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
    #define BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
+   #define BOTAN_DIAGNOSTIC_IGNORE_EXPRESSION_IS_CONST
    #define BOTAN_DIAGNOSTIC_POP
 #endif
 
