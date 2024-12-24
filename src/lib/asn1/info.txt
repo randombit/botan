@@ -17,9 +17,9 @@ asn1_obj.h
 der_enc.h
 oids.h
 ber_dec.h
+pss_params.h
 </header:public>
 
 <header:internal>
 oid_map.h
-pss_params.h
 </header:internal>
