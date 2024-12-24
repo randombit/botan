@@ -33,6 +33,7 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
 
       Test::Result run_one_test(const std::string& name, const VarMap& vars) override {
          Test::Result result(name);
+         result.start_timer();
 
          // read input from test file
          const auto ref_seed = vars.get_req_bin("Seed");
@@ -75,6 +76,7 @@ class Dilithium_KAT_Tests : public Text_Based_Test {
          verifier.update(ref_msg.data(), ref_msg.size());
          result.confirm("signature verifies", verifier.check_signature(signature.data(), signature.size()));
 
+         result.end_timer();
          return result;
       }
 };
@@ -131,8 +133,11 @@ class DilithiumRoundtripTests final : public Test {
       static Test::Result run_roundtrip(
          const char* test_name, Botan::DilithiumMode mode, bool randomized, size_t strength, size_t psid) {
          Test::Result result(test_name);
+         result.start_timer();
+
          if(!mode.is_available()) {
             result.note_missing(mode.to_string());
+            result.end_timer();
             return result;
          }
 
@@ -206,6 +211,7 @@ class DilithiumRoundtripTests final : public Test {
          result.confirm("verification with generic private key",
                         verify(*generic_privkey_decoded, msgvec, sig_before_codec));
 
+         result.end_timer();
          return result;
       }
 

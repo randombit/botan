@@ -408,14 +408,9 @@ std::vector<std::string> Test::possible_providers(const std::string& /*unused*/)
 
 //static
 std::string Test::format_time(uint64_t ns) {
+   // Use a stringstream to convert nanoseconds to seconds. ns in a second is 1'000'000'000
    std::ostringstream o;
-
-   if(ns > 1000000000) {
-      o << std::setprecision(2) << std::fixed << ns / 1000000000.0 << " sec";
-   } else {
-      o << std::setprecision(2) << std::fixed << ns / 1000000.0 << " msec";
-   }
-
+   o << std::fixed << std::setprecision(6) << static_cast<long double>(ns) / 1'000'000'000 << " sec";
    return o.str();
 }
 

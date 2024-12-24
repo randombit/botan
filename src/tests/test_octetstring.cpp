@@ -16,37 +16,44 @@ namespace {
 
 Test::Result test_from_rng() {
    Test::Result result("OctetString");
+   result.start_timer();
 
    auto rng = Test::new_rng("octet_string_from_rng");
 
    Botan::OctetString os(*rng, 32);
    result.test_eq("length is 32 bytes", os.size(), 32);
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_from_hex() {
    Test::Result result("OctetString");
+   result.start_timer();
 
    Botan::OctetString os("0123456789ABCDEF");
    result.test_eq("length is 8 bytes", os.size(), 8);
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_from_byte() {
    Test::Result result("OctetString");
+   result.start_timer();
 
    auto rng = Test::new_rng("octet_string_from_byte");
    auto rand_bytes = rng->random_vec(8);
    Botan::OctetString os(rand_bytes.data(), rand_bytes.size());
    result.test_eq("length is 8 bytes", os.size(), 8);
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_odd_parity() {
    Test::Result result("OctetString");
+   result.start_timer();
 
    Botan::OctetString os("FFFFFFFFFFFFFFFF");
    os.set_odd_parity();
@@ -58,20 +65,24 @@ Test::Result test_odd_parity() {
    Botan::OctetString expected2("EFCBDA4FAB987F62");
    result.test_eq("odd parity set correctly", os2, expected2);
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_to_string() {
    Test::Result result("OctetString");
+   result.start_timer();
 
    Botan::OctetString os("0123456789ABCDEF");
    result.test_eq("OctetString::to_string() returns correct string", os.to_string(), "0123456789ABCDEF");
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_xor() {
    Test::Result result("OctetString");
+   result.start_timer();
 
    Botan::OctetString os1("0000000000000000");
    Botan::OctetString os2("FFFFFFFFFFFFFFFF");
@@ -91,11 +102,13 @@ Test::Result test_xor() {
    Botan::OctetString expected("FEDCBA9876543210");
    result.test_eq("OctetString XOR operations works as expected", xor_result, expected);
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_equality() {
    Test::Result result("OctetString");
+   result.start_timer();
 
    const Botan::OctetString os1("0000000000000000");
    const Botan::OctetString& os1_copy = os1;
@@ -106,11 +119,13 @@ Test::Result test_equality() {
    result.confirm("OctetString equality operations works as expected", os2 == os2_copy);
    result.confirm("OctetString equality operations works as expected", os1 != os2);
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_append() {
    Test::Result result("OctetString");
+   result.start_timer();
 
    Botan::OctetString os1("0000");
    Botan::OctetString os2("FFFF");
@@ -120,6 +135,7 @@ Test::Result test_append() {
 
    result.test_eq("OctetString append operations works as expected", append_result, expected);
 
+   result.end_timer();
    return result;
 }
 

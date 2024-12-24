@@ -35,6 +35,7 @@ namespace {
 #if defined(BOTAN_HAS_TLS)
 Test::Result test_hello_verify_request() {
    Test::Result result("hello_verify_request construction");
+   result.start_timer();
 
    std::vector<uint8_t> test_data;
    std::vector<uint8_t> key_data(32);
@@ -51,6 +52,7 @@ Test::Result test_hello_verify_request() {
    std::vector<uint8_t> test = unlock(hmac->final());
 
    result.test_eq("Cookie comparison", hfr.cookie(), test);
+   result.end_timer();
    return result;
 }
 
@@ -91,6 +93,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
          const bool is_positive_test = exception.empty();
 
          Test::Result result(algo + " parsing");
+         result.start_timer();
 
          if(is_positive_test) {
             try {
@@ -191,6 +194,7 @@ class TLS_Message_Parsing_Test final : public Text_Based_Test {
             }
          }
 
+         result.end_timer();
          return result;
       }
 

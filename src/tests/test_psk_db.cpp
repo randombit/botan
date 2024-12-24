@@ -85,6 +85,7 @@ class PSK_DB_Tests final : public Test {
    private:
       static Test::Result test_psk_db() {
          Test::Result result("PSK_DB");
+         result.start_timer();
 
          const Botan::secure_vector<uint8_t> zeros(32);
          Test_Map_PSK_Db db(zeros);
@@ -135,6 +136,7 @@ class PSK_DB_Tests final : public Test {
          // test that redundant remove calls accepted
          db.remove("name2");
 
+         result.end_timer();
          return result;
       }
 
@@ -157,6 +159,7 @@ class PSK_DB_Tests final : public Test {
 
       Test::Result test_psk_sql_db() {
          Test::Result result("PSK_DB SQL");
+         result.start_timer();
 
          const Botan::secure_vector<uint8_t> zeros(32);
          const Botan::secure_vector<uint8_t> not_zeros = this->rng().random_vec(32);
@@ -226,6 +229,7 @@ class PSK_DB_Tests final : public Test {
          // test that redundant remove calls accepted
          db.remove("name2");
 
+         result.end_timer();
          return result;
       }
    #endif

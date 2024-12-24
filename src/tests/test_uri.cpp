@@ -17,26 +17,31 @@ class URI_Tests final : public Test {
    private:
       static Test::Result test_uri_ctor() {
          Test::Result result("URI constructors");
+         result.start_timer();
          Botan::URI uri(Botan::URI::Type::Domain, "localhost", 9000);
          result.confirm("type", uri.type() == Botan::URI::Type::Domain);
          result.test_eq("host", uri.host(), "localhost");
          result.test_eq("post", size_t(uri.port()), 9000);
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_uri_tostring() {
          Test::Result result("URI to_string");
+         result.start_timer();
 
          result.test_eq("domain", Botan::URI(Botan::URI::Type::Domain, "localhost", 23).to_string(), "localhost:23");
          result.test_eq("IPv4", Botan::URI(Botan::URI::Type::IPv4, "192.168.1.1", 25).to_string(), "192.168.1.1:25");
          result.test_eq("IPv6", Botan::URI(Botan::URI::Type::IPv6, "::1", 65535).to_string(), "[::1]:65535");
          result.test_eq("IPv6 no port", Botan::URI(Botan::URI::Type::IPv6, "::1", 0).to_string(), "::1");
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_uri_parsing() {
          Test::Result result("URI parsing");
+         result.start_timer();
 
          struct {
                std::string uri;
@@ -84,11 +89,13 @@ class URI_Tests final : public Test {
          result.test_throws("invalid IPv6", []() { Botan::URI::from_ipv6("]"); });
          result.test_throws("invalid IPv6", []() { Botan::URI::from_ipv6("[::1]1"); });
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_uri_parsing_invalid() {
          Test::Result result("URI parsing invalid");
+         result.start_timer();
 
          const std::vector<std::string> invalid_uris = {
             "localhost::80",
@@ -108,6 +115,7 @@ class URI_Tests final : public Test {
                result.test_success("Rejected invalid URI");
             }
          }
+         result.end_timer();
          return result;
       }
 

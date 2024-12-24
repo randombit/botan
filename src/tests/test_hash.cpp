@@ -21,6 +21,8 @@ class Invalid_Hash_Name_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("Invalid HashFunction names");
+         result.start_timer();
+
          test_invalid_name(result, "NonExistentHash");
          test_invalid_name(result, "Blake2b(9)", "Bad output bits size for BLAKE2b");
          test_invalid_name(result, "Comb4P(MD5,MD5)", "Comb4P: Must use two distinct hashes");
@@ -28,6 +30,7 @@ class Invalid_Hash_Name_Tests final : public Test {
          test_invalid_name(result, "Keccak-1600(160)", "Keccak_1600: Invalid output length 160");
          test_invalid_name(result, "SHA-3(160)", "SHA_3: Invalid output length 160");
 
+         result.end_timer();
          return {result};
       }
 
@@ -67,6 +70,7 @@ class Hash_Function_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> expected = vars.get_req_bin("Out");
 
          Test::Result result(algo);
+         result.start_timer();
 
          const std::vector<std::string> providers = possible_providers(algo);
 
@@ -152,6 +156,7 @@ class Hash_Function_Tests final : public Text_Based_Test {
             }
          }
 
+         result.end_timer();
          return result;
       }
 };
@@ -172,6 +177,7 @@ class Hash_NIST_MonteCarlo_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> expected = vars.get_req_bin("Output");
 
          Test::Result result("NIST Monte Carlo " + algo);
+         result.start_timer();
 
          const std::vector<std::string> providers = possible_providers(algo);
 
@@ -215,6 +221,7 @@ class Hash_NIST_MonteCarlo_Tests final : public Text_Based_Test {
             result.test_eq("Output is expected", input[2], expected);
          }
 
+         result.end_timer();
          return result;
       }
 };
@@ -247,6 +254,7 @@ class Hash_LongRepeat_Tests final : public Text_Based_Test {
          const std::vector<uint8_t> expected = vars.get_req_bin("Digest");
 
          Test::Result result("Long input " + algo);
+         result.start_timer();
 
          const std::vector<std::string> providers = possible_providers(algo);
 
@@ -283,6 +291,7 @@ class Hash_LongRepeat_Tests final : public Text_Based_Test {
             result.test_eq("Output is expected", output, expected);
          }
 
+         result.end_timer();
          return result;
       }
 };
@@ -294,12 +303,16 @@ BOTAN_REGISTER_TEST("hash", "hash_rep", Hash_LongRepeat_Tests);
 /// negative tests for Truncated_Hash, positive tests are implemented in hash/truncated.vec
 Test::Result hash_truncation_negative_tests() {
    Test::Result result("hash truncation parameter validation");
+   result.start_timer();
+
    result.test_throws<Botan::Invalid_Argument>("truncation to zero",
                                                [] { Botan::HashFunction::create("Truncated(SHA-256,0)"); });
    result.test_throws<Botan::Invalid_Argument>("cannot output more bits than the underlying hash",
                                                [] { Botan::HashFunction::create("Truncated(SHA-256,257)"); });
    auto unobtainable = Botan::HashFunction::create("Truncated(NonExistentHash-256,128)");
    result.confirm("non-existent hashes are not created", unobtainable == nullptr);
+
+   result.end_timer();
    return result;
 }
 

@@ -28,6 +28,7 @@ class Roughtime_Request_Tests final : public Text_Based_Test {
 
       Test::Result run_one_test(const std::string& type, const VarMap& vars) override {
          Test::Result result("Roughtime request");
+         result.start_timer();
 
          const auto nonce = vars.get_req_bin("Nonce");
          const auto request_v = vars.get_req_bin("Request");
@@ -36,6 +37,7 @@ class Roughtime_Request_Tests final : public Text_Based_Test {
          result.test_eq(
             "encode", type == "Valid", request == Botan::typecast_copy<std::array<uint8_t, 1024>>(request_v.data()));
 
+         result.end_timer();
          return result;
       }
 };
@@ -51,6 +53,7 @@ class Roughtime_Response_Tests final : public Text_Based_Test {
 
       Test::Result run_one_test(const std::string& type, const VarMap& vars) override {
          Test::Result result("Roughtime response");
+         result.start_timer();
 
          const auto response_v = vars.get_req_bin("Response");
          const auto nonce_bits = vars.has_key("Nonce") ? vars.get_opt_bin("Nonce") : std::vector<uint8_t>(64);
@@ -79,6 +82,7 @@ class Roughtime_Response_Tests final : public Text_Based_Test {
             result.confirm(e.what(), type == "Invalid");
          }
 
+         result.end_timer();
          return result;
       }
 };
@@ -92,6 +96,7 @@ class Roughtime_nonce_from_blind_Tests final : public Text_Based_Test {
 
       Test::Result run_one_test(const std::string& type, const VarMap& vars) override {
          Test::Result result("roughtime nonce_from_blind");
+         result.start_timer();
 
          const auto response = vars.get_req_bin("Response");
          const auto blind = vars.get_req_bin("Blind");
@@ -100,6 +105,7 @@ class Roughtime_nonce_from_blind_Tests final : public Text_Based_Test {
          result.test_eq(
             "fail_validation", Botan::Roughtime::nonce_from_blind(response, blind) == nonce, type == "Valid");
 
+         result.end_timer();
          return result;
       }
 };
@@ -110,6 +116,7 @@ class Roughtime final : public Test {
    private:
       static Test::Result test_nonce(Botan::RandomNumberGenerator& rng) {
          Test::Result result("roughtime nonce");
+         result.start_timer();
 
          auto rand64 = Botan::unlock(rng.random_vec(64));
          Botan::Roughtime::Nonce nonce_v(rand64);
@@ -124,11 +131,13 @@ class Roughtime final : public Test {
          rand64.pop_back();
          result.test_throws("vector undersize", [&rand64]() { Botan::Roughtime::Nonce nonce_v2(rand64); });  //size 63
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_chain(Botan::RandomNumberGenerator& rng) {
          Test::Result result("roughtime chain");
+         result.start_timer();
 
          Botan::Roughtime::Chain c1;
          result.confirm("default constructed is empty", c1.links().empty() && c1.responses().empty());
@@ -177,11 +186,13 @@ class Roughtime final : public Test {
                "ed25519 bbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE= eu9yhsJfVfguVSqGZdE8WKIxaBBM0ZG3Vmuc+IyZmG2UByDdwIFw6F4rZqmSFsBO85ljoVPz5bVPCOw== BQAAAEAAAABAAAAApAAAADwBAABTSUcAUEFUSFNSRVBDRVJUSU5EWBnGOEajOwPA6G7oL47seBP4C7eEpr57H43C2/fK/kMA0UGZVUdf4KNX8oxOK6JIcsbVk8qhghTwA70qtwpYmQkDAAAABAAAAAwAAABSQURJTUlEUFJPT1RAQg8AJrA8tEqPBQAqisiuAxgy2Pj7UJAiWbCdzGz1xcCnja3T+AqhC8fwpeIwW4GPy/vEb/awXW2DgSLKJfzWIAz+2lsR7t4UjNPvAgAAAEAAAABTSUcAREVMRes9Ch4X0HIw5KdOTB8xK4VDFSJBD/G9t7Et/CU7UW61OiTBXYYQTG2JekWZmGa0OHX1JPGG+APkpbsNw0BKUgYDAAAAIAAAACgAAABQVUJLTUlOVE1BWFR/9BWjpsWTQ1f6iUJea3EfZ1MkX3ftJiV3ABqNLpncFwAAAAAAAAAA//////////8AAAAA");
          });
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_server_information() {
          Test::Result result("roughtime server_information");
+         result.start_timer();
 
          const auto servers = Botan::Roughtime::servers_from_str(
             "Chainpoint-Roughtime ed25519 bbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE= udp roughtime.chainpoint.org:2002\n"
@@ -225,11 +236,13 @@ class Roughtime final : public Test {
                "A ed25519 bbT+RPS7zKX6w71ssPibzmwWqU9ffRV5oj2OresSmhE= tcp roughtime.chainpoint.org:2002");
          });
 
+         result.end_timer();
          return result;
       }
 
       static Test::Result test_request_online(Botan::RandomNumberGenerator& rng) {
          Test::Result result("roughtime request online");
+         result.start_timer();
 
          Botan::Roughtime::Nonce nonce(rng);
          try {
@@ -244,6 +257,8 @@ class Roughtime final : public Test {
          } catch(const std::exception& e) {
             result.test_failure(e.what());
          }
+
+         result.end_timer();
          return result;
       }
 
