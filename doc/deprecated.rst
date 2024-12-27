@@ -118,6 +118,14 @@ Deprecated modules include
 
 - Hash function ``md4``: It's time to let go
 
+- Hash function ``md5``: See above
+
+- Hash function ``keccak``: Note this is not SHA-3 or the Keccak
+  permutation, but rather the Keccak hash originally proposed during
+  the SHA-3 competition.
+
+- MAC ``x919_mac``: Quite obsolete at this point
+
 - Signature scheme ``gost_3410``
 
 - McEliece implementation ``mce``. Will be replaced by the proposal Classic

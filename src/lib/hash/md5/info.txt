@@ -4,6 +4,7 @@ MD5 -> 20131128
 
 <module_info>
 name -> "MD5"
+lifecycle -> "Deprecated"
 </module_info>
 
 <requires>

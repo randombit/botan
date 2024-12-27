@@ -113,13 +113,11 @@ Ciphers, hashes, MACs, and checksums
 * Authenticated cipher modes EAX, OCB, GCM, SIV, CCM, (X)ChaCha20Poly1305
 * Cipher modes CTR, CBC, XTS, CFB, OFB
 * Block ciphers AES, ARIA, Blowfish, Camellia, CAST-128, DES/3DES, IDEA,
-  Lion, SEED, Serpent, SHACAL2, SM4, Threefish-512, Twofish
-* Stream ciphers (X)ChaCha20, (X)Salsa20, SHAKE-128, RC4
-* Hash functions SHA-1, SHA-2, SHA-3, MD5, RIPEMD-160, BLAKE2b/BLAKE2s,
-  Skein-512, SM3, Streebog, Whirlpool
-* eXtendable Output Functions (XOFs) SHAKE-128, SHAKE-256
-* Password hashing schemes PBKDF2, Argon2, Scrypt, bcrypt
-* Authentication codes HMAC, CMAC, Poly1305, KMAC, SipHash, GMAC, X9.19 DES-MAC
+  SEED, Serpent, SHACAL2, SM4, Threefish-512, Twofish
+* Stream ciphers (X)ChaCha20, (X)Salsa20, RC4
+* Hash functions SHA-1, SHA-2, SHA-3, RIPEMD-160, BLAKE2b/BLAKE2s, Skein-512, SM3, Whirlpool
+* Password hashing schemes Argon2, Scrypt, bcrypt, and PBKDF2
+* Authentication codes HMAC, CMAC, Poly1305, KMAC, SipHash, GMAC
 * Non-cryptographic checksums Adler32, CRC24, CRC32
 
 Other Useful Things
