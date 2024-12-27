@@ -99,14 +99,17 @@ class Callbacks : public Botan::TLS::Callbacks {
       void tls_session_activated() override { output() << "Handshake complete\n"; }
 
       void tls_session_established(const Botan::TLS::Session_Summary& session) override {
-         output() << "Handshake complete, " << session.version().to_string() << " using "
-                  << session.ciphersuite().to_string();
+         output() << "Handshake complete, " << session.version().to_string() << "\n";
 
          if(const auto& psk = session.external_psk_identity()) {
-            output() << " (utilized PSK identity: " << maybe_hex_encode(psk.value()) << ")";
+            output() << "Utilized PSK identity: " << maybe_hex_encode(psk.value()) << "\n";
          }
 
-         output() << std::endl;
+         output() << "Negotiated ciphersuite " << session.ciphersuite().to_string() << "\n";
+
+         if(auto kex_params = session.kex_parameters()) {
+            output() << "Key exchange using " << *kex_params << "\n";
+         }
 
          if(const auto& session_id = session.session_id(); !session_id.empty()) {
             output() << "Session ID " << Botan::hex_encode(session_id.get()) << "\n";
