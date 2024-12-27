@@ -313,6 +313,13 @@ class BOTAN_TEST_API PrimeOrderCurve {
       /// Multiply an arbitrary point by a scalar
       virtual ProjectivePoint mul(const AffinePoint& pt, const Scalar& scalar, RandomNumberGenerator& rng) const = 0;
 
+      /// Generic x-only point multiplication
+      ///
+      /// Multiply an arbitrary point by a scalar, returning only the x coordinate
+      virtual secure_vector<uint8_t> mul_x_only(const AffinePoint& pt,
+                                                const Scalar& scalar,
+                                                RandomNumberGenerator& rng) const = 0;
+
       /// Setup a table for 2-ary multiplication
       virtual std::unique_ptr<const PrecomputedMul2Table> mul2_setup(const AffinePoint& pt1,
                                                                      const AffinePoint& pt2) const = 0;

@@ -163,6 +163,8 @@ AlgorithmIdentifier ECKCDSA_Signature_Operation::algorithm_identifier() const {
 std::vector<uint8_t> ECKCDSA_Signature_Operation::raw_sign(std::span<const uint8_t> msg, RandomNumberGenerator& rng) {
    const auto k = EC_Scalar::random(m_group, rng);
 
+   // We cannot use gk_x_mod_order because ECKCDSA, unlike ECDSA or ECGDSA, does
+   // not reduce the x coordinate modulo the group order.
    m_hash->update(EC_AffinePoint::g_mul(k, rng, m_ws).x_bytes());
    auto c = m_hash->final_stdvec();
    truncate_hash_if_needed(c, m_group.get_order_bytes());

@@ -111,6 +111,12 @@ EC_AffinePoint EC_AffinePoint::mul(const EC_Scalar& scalar, RandomNumberGenerato
    return EC_AffinePoint(inner().mul(scalar._inner(), rng, ws));
 }
 
+secure_vector<uint8_t> EC_AffinePoint::mul_x_only(const EC_Scalar& scalar,
+                                                  RandomNumberGenerator& rng,
+                                                  std::vector<BigInt>& ws) const {
+   return inner().mul_x_only(scalar._inner(), rng, ws);
+}
+
 std::optional<EC_AffinePoint> EC_AffinePoint::mul_px_qy(const EC_AffinePoint& p,
                                                         const EC_Scalar& x,
                                                         const EC_AffinePoint& q,

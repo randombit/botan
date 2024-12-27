@@ -36,10 +36,10 @@ class ECDH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
       secure_vector<uint8_t> raw_agree(const uint8_t w[], size_t w_len) override {
          if(m_group.has_cofactor()) {
             EC_AffinePoint input_point(m_group, m_group.get_cofactor() * m_group.OS2ECP(w, w_len));
-            return input_point.mul(m_l_times_priv, m_rng, m_ws).x_bytes();
+            return input_point.mul_x_only(m_l_times_priv, m_rng, m_ws);
          } else {
             if(auto input_point = EC_AffinePoint::deserialize(m_group, {w, w_len})) {
-               return input_point->mul(m_l_times_priv, m_rng, m_ws).x_bytes();
+               return input_point->mul_x_only(m_l_times_priv, m_rng, m_ws);
             } else {
                throw Decoding_Error("ECDH - Invalid elliptic curve point");
             }
