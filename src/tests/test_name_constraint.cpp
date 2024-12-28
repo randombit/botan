@@ -52,6 +52,7 @@ class Name_Constraint_Tests final : public Test {
             Botan::X509_Certificate sub(Test::data_file("x509/name_constraint/" + std::get<1>(t)));
             Botan::Certificate_Store_In_Memory trusted;
             Test::Result result("X509v3 Name Constraints: " + std::get<1>(t));
+            result.start_timer();
 
             trusted.add_certificate(root);
             Botan::Path_Validation_Result path_result = Botan::x509_path_validate(
@@ -62,6 +63,7 @@ class Name_Constraint_Tests final : public Test {
             }
 
             result.test_eq("validation result", path_result.result_string(), std::get<3>(t));
+            result.end_timer();
             results.emplace_back(result);
          }
 

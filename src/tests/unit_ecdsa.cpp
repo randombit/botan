@@ -32,6 +32,8 @@ namespace {
    #if defined(BOTAN_HAS_X509_CERTIFICATES) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 Test::Result test_decode_ecdsa_X509() {
    Test::Result result("ECDSA Unit");
+   result.start_timer();
+
    Botan::X509_Certificate cert(Test::data_file("x509/ecc/CSCA.CSCA.csca-germany.1.crt"));
 
    result.test_eq("correct signature oid", cert.signature_algorithm().oid().to_formatted_string(), "ECDSA/SHA-224");
@@ -45,16 +47,21 @@ Test::Result test_decode_ecdsa_X509() {
    auto pubkey = cert.subject_public_key();
    result.test_eq("verify self-signed signature", cert.check_signature(*pubkey), true);
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_decode_ver_link_SHA256() {
    Test::Result result("ECDSA Unit");
+   result.start_timer();
+
    Botan::X509_Certificate root_cert(Test::data_file("x509/ecc/root2_SHA256.cer"));
    Botan::X509_Certificate link_cert(Test::data_file("x509/ecc/link_SHA256.cer"));
 
    auto pubkey = root_cert.subject_public_key();
    result.confirm("verified self-signed signature", link_cert.check_signature(*pubkey));
+
+   result.end_timer();
    return result;
 }
 
@@ -63,6 +70,8 @@ Test::Result test_decode_ver_link_SHA1() {
    Botan::X509_Certificate link_cert(Test::data_file("x509/ecc/link_SHA1.166.crt"));
 
    Test::Result result("ECDSA Unit");
+   result.start_timer();
+
    auto pubkey = root_cert.subject_public_key();
 
    auto sha1 = Botan::HashFunction::create("SHA-1");
@@ -73,12 +82,15 @@ Test::Result test_decode_ver_link_SHA1() {
       return result;
    }
    result.confirm("verified self-signed signature", link_cert.check_signature(*pubkey));
+
+   result.end_timer();
    return result;
 }
    #endif
 
 Test::Result test_encoding_options() {
    Test::Result result("ECDSA Unit");
+   result.start_timer();
 
    auto rng = Test::new_rng("ecdsa_encoding_options");
 
@@ -118,6 +130,7 @@ Test::Result test_encoding_options() {
    });
    #endif
 
+   result.end_timer();
    return result;
 }
 
@@ -125,6 +138,7 @@ Test::Result test_encoding_options() {
 
 Test::Result test_read_pkcs8() {
    Test::Result result("ECDSA Unit");
+   result.start_timer();
 
    auto rng = Test::new_rng("ecdsa_read_pkcs8");
 
@@ -159,11 +173,13 @@ Test::Result test_read_pkcs8() {
       result.test_failure("read_pkcs8", e.what());
    }
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_ecc_key_with_rfc5915_extensions() {
    Test::Result result("ECDSA Unit");
+   result.start_timer();
 
    try {
       Botan::DataSource_Stream key_stream(Test::data_file("x509/ecc/ecc_private_with_rfc5915_ext.pem"));
@@ -176,11 +192,13 @@ Test::Result test_ecc_key_with_rfc5915_extensions() {
       result.test_failure("load_rfc5915_ext", e.what());
    }
 
+   result.end_timer();
    return result;
 }
 
 Test::Result test_ecc_key_with_rfc5915_parameters() {
    Test::Result result("ECDSA Unit");
+   result.start_timer();
 
    try {
       Botan::DataSource_Stream key_stream(Test::data_file("x509/ecc/ecc_private_with_rfc5915_parameters.pem"));
@@ -193,6 +211,7 @@ Test::Result test_ecc_key_with_rfc5915_parameters() {
       result.test_failure("load_rfc5915_params", e.what());
    }
 
+   result.end_timer();
    return result;
 }
 

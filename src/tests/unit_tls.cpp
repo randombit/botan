@@ -1199,6 +1199,7 @@ class DTLS_Reconnection_Test : public Test {
          };
 
          Test::Result result("DTLS reconnection");
+         result.start_timer();
 
          auto rng = Test::new_shared_rng(this->test_name());
 
@@ -1330,6 +1331,7 @@ class DTLS_Reconnection_Test : public Test {
             }
          }
 
+         result.end_timer();
          return {result};
       }
 };

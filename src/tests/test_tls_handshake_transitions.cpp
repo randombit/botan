@@ -19,6 +19,7 @@ std::vector<Test::Result> test_handshake_state_transitions() {
    return {
       CHECK("uninitialized expects nothing",
             [](Test::Result& result) {
+               result.start_timer();
                Botan::TLS::Handshake_Transitions ht;
                result.confirm("CCS is not expected by default", !ht.change_cipher_spec_expected());
 
@@ -26,10 +27,12 @@ std::vector<Test::Result> test_handshake_state_transitions() {
                               !ht.received_handshake_msg(Botan::TLS::Handshake_Type::ClientHello));
                result.test_throws("no expectations set, always throws",
                                   [&] { ht.confirm_transition_to(Botan::TLS::Handshake_Type::ClientHello); });
+               result.end_timer();
             }),
 
       CHECK("expect exactly one message",
             [](Test::Result& result) {
+               result.start_timer();
                Botan::TLS::Handshake_Transitions ht;
                ht.set_expected_next(Botan::TLS::Handshake_Type::ClientHello);
 
@@ -41,19 +44,23 @@ std::vector<Test::Result> test_handshake_state_transitions() {
 
                result.test_throws("confirmation resets expectations",
                                   [&] { ht.confirm_transition_to(Botan::TLS::Handshake_Type::ClientHello); });
+               result.end_timer();
             }),
 
       CHECK("expect exactly one message but don't satisfy it",
             [](Test::Result& result) {
+               result.start_timer();
                Botan::TLS::Handshake_Transitions ht;
                ht.set_expected_next(Botan::TLS::Handshake_Type::ClientHello);
 
                result.test_throws("server hello does not meet expectation",
                                   [&] { ht.confirm_transition_to(Botan::TLS::Handshake_Type::ServerHello); });
+               result.end_timer();
             }),
 
       CHECK("two expectations can be fulfilled",
             [](Test::Result& result) {
+               result.start_timer();
                Botan::TLS::Handshake_Transitions ht;
                ht.set_expected_next(
                   {Botan::TLS::Handshake_Type::CertificateRequest, Botan::TLS::Handshake_Type::Certificate});
@@ -69,13 +76,16 @@ std::vector<Test::Result> test_handshake_state_transitions() {
                                     [&] { ht2.confirm_transition_to(Botan::TLS::Handshake_Type::CertificateRequest); });
                result.confirm("received CERTIFICATE_REQUEST",
                               ht2.received_handshake_msg(Botan::TLS::Handshake_Type::CertificateRequest));
+               result.end_timer();
             }),
 
       CHECK("expect CCS",
             [](Test::Result& result) {
+               result.start_timer();
                Botan::TLS::Handshake_Transitions ht;
                ht.set_expected_next(Botan::TLS::Handshake_Type::HandshakeCCS);
                result.confirm("CCS expected", ht.change_cipher_spec_expected());
+               result.end_timer();
             }),
    };
 }

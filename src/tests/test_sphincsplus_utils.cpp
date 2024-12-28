@@ -26,14 +26,17 @@ std::vector<Test::Result> test_sphincsplus_address() {
    return {
       CHECK("default address",
             [&](Test::Result& result) {
+               result.start_timer();
                Botan::Sphincs_Address a({0, 0, 0, 0, 0, 0, 0, 0});
                result.test_is_eq("SHA-256(32*0x00)",
                                  sha256(a),
                                  Botan::hex_decode("66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"));
+               result.end_timer();
             }),
 
       CHECK("set up an address",
             [&](Test::Result& result) {
+               result.start_timer();
                Botan::Sphincs_Address a(Botan::Sphincs_Address::ForsTree);
                a.set_layer_address(Botan::HypertreeLayerIndex(1337))
                   .set_tree_address(Botan::XmssTreeIndexInLayer(4294967338) /* longer than 32bits */)
@@ -44,10 +47,12 @@ std::vector<Test::Result> test_sphincsplus_address() {
                result.test_is_eq("SHA-256(a1)",
                                  sha256(a),
                                  Botan::hex_decode("aecc0696fee5c4aa601779343d01090aae0d0a3b6cf118d3c7245d48dc0f3af9"));
+               result.end_timer();
             }),
 
       CHECK("set up another address",
             [&](Test::Result& result) {
+               result.start_timer();
                Botan::Sphincs_Address a(Botan::Sphincs_Address::ForsTree);
                a.set_layer_address(Botan::HypertreeLayerIndex(1337))
                   .set_tree_address(Botan::XmssTreeIndexInLayer(4294967338) /* longer than 32bits */)
@@ -57,10 +62,12 @@ std::vector<Test::Result> test_sphincsplus_address() {
                result.test_is_eq("SHA-256(a2)",
                                  sha256(a),
                                  Botan::hex_decode("607fdc9d063168fbea64e4da2a255693314712d859062abb80cf7c78116ded2a"));
+               result.end_timer();
             }),
 
       CHECK("copy subtree",
             [&](Test::Result& result) {
+               result.start_timer();
                Botan::Sphincs_Address a(Botan::Sphincs_Address::ForsTree);
                a.set_layer_address(Botan::HypertreeLayerIndex(1337))
                   .set_tree_address(Botan::XmssTreeIndexInLayer(4294967338) /* longer than 32bits */)
@@ -78,10 +85,12 @@ std::vector<Test::Result> test_sphincsplus_address() {
                result.test_is_eq("SHA-256(subtree2)",
                                  sha256(subtree2),
                                  Botan::hex_decode("f192c8f8e946aa16d16eafe88bd4eabcc88a305b69bb7c0bb49e65bd122bb973"));
+               result.end_timer();
             }),
 
       CHECK("copy keypair",
             [&](Test::Result& result) {
+               result.start_timer();
                Botan::Sphincs_Address a(Botan::Sphincs_Address::ForsTree);
                a.set_layer_address(Botan::HypertreeLayerIndex(1337))
                   .set_tree_address(Botan::XmssTreeIndexInLayer(4294967338) /* longer than 32bits */)
@@ -99,6 +108,7 @@ std::vector<Test::Result> test_sphincsplus_address() {
                result.test_is_eq("SHA-256(keypair2)",
                                  sha256(keypair2),
                                  Botan::hex_decode("1cdd4835a6057306678e7d8cb903c140aba1d4805a8a1f75b11f1129bb22d08c"));
+               result.end_timer();
             }),
    };
 }
