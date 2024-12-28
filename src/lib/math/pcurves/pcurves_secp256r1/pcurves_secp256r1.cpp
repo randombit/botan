@@ -22,7 +22,7 @@ class Secp256r1Rep final {
 
       // Adds 4 * P-256 to prevent underflow
       static constexpr auto P256_4 =
-         hex_to_words<uint32_t>("0x3fffffffc00000004000000000000000000000003fffffffffffffffffffffffc");
+         hex_to_words<uint32_t>("3fffffffc00000004000000000000000000000003fffffffffffffffffffffffc");
 
       constexpr static std::array<W, N> redc(const std::array<W, 2 * N>& z) {
          const int64_t X00 = get_uint32(z.data(), 0);

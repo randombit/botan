@@ -1,0 +1,9 @@
+<defines>
+CUSTOM_LITERALS -> 20241219
+</defines>
+
+<module_info>
+name -> "Literals"
+brief -> "Custom C++ literals"
+type -> "Internal"
+</module_info>
