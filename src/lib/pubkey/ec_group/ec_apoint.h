@@ -78,6 +78,13 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
       /// Workspace argument is transitional
       EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const;
 
+      /// Multiply a point by a scalar, returning the byte encoding of the x coordinate only
+      ///
+      /// Workspace argument is transitional
+      secure_vector<uint8_t> mul_x_only(const EC_Scalar& scalar,
+                                        RandomNumberGenerator& rng,
+                                        std::vector<BigInt>& ws) const;
+
       /// Compute 2-ary multiscalar multiplication - p*x + q*y
       ///
       /// This operation runs in constant time with respect to p, x, q, and y

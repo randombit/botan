@@ -1128,7 +1128,9 @@ auto to_affine_x(const typename C::ProjectivePoint& pt) {
    if constexpr(curve_supports_fe_invert2<C>) {
       return pt.x() * C::fe_invert2(pt.z());
    } else {
-      return to_affine<C>(pt).x();
+      const auto z_inv = invert_field_element<C>(pt.z());
+      const auto z2_inv = z_inv.square();
+      return pt.x() * z2_inv;
    }
 }
 

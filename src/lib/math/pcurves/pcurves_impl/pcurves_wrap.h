@@ -51,6 +51,16 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          return stash(tbl.mul(from_stash(scalar), rng));
       }
 
+      secure_vector<uint8_t> mul_x_only(const AffinePoint& pt,
+                                        const Scalar& scalar,
+                                        RandomNumberGenerator& rng) const override {
+         auto tbl = WindowedMulTable<C, 4>(from_stash(pt));
+         auto pt_x = to_affine_x<C>(tbl.mul(from_stash(scalar), rng));
+         secure_vector<uint8_t> x_bytes(C::FieldElement::BYTES);
+         pt_x.serialize_to(std::span<uint8_t, C::FieldElement::BYTES>{x_bytes});
+         return x_bytes;
+      }
+
       std::unique_ptr<const PrecomputedMul2Table> mul2_setup(const AffinePoint& x,
                                                              const AffinePoint& y) const override {
          return std::make_unique<PrecomputedMul2TableC>(from_stash(x), from_stash(y));
@@ -167,6 +177,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          auto pt = m_mul_by_g.mul(from_stash(scalar), rng);
          std::array<uint8_t, C::FieldElement::BYTES> x_bytes;
          to_affine_x<C>(pt).serialize_to(std::span{x_bytes});
+         // Reduction might be required (if unlikely)
          return stash(C::Scalar::from_wide_bytes(std::span<const uint8_t, C::FieldElement::BYTES>{x_bytes}));
       }
 

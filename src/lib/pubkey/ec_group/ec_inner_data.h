@@ -93,6 +93,10 @@ class EC_AffinePoint_Data {
                                                        RandomNumberGenerator& rng,
                                                        std::vector<BigInt>& ws) const = 0;
 
+      virtual secure_vector<uint8_t> mul_x_only(const EC_Scalar_Data& scalar,
+                                                RandomNumberGenerator& rng,
+                                                std::vector<BigInt>& ws) const = 0;
+
       virtual EC_Point to_legacy_point() const = 0;
 };
 

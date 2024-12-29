@@ -113,6 +113,24 @@ std::unique_ptr<EC_AffinePoint_Data> EC_AffinePoint_Data_BN::mul(const EC_Scalar
    return std::make_unique<EC_AffinePoint_Data_BN>(m_group, std::move(pt));
 }
 
+secure_vector<uint8_t> EC_AffinePoint_Data_BN::mul_x_only(const EC_Scalar_Data& scalar,
+                                                          RandomNumberGenerator& rng,
+                                                          std::vector<BigInt>& ws) const {
+   BOTAN_ARG_CHECK(scalar.group() == m_group, "Curve mismatch");
+   const auto& bn = EC_Scalar_Data_BN::checked_ref(scalar);
+
+   EC_Point_Var_Point_Precompute mul(m_pt, rng, ws);
+
+   // We pass order*cofactor here to "correctly" handle the case where the
+   // point is on the curve but not in the prime order subgroup. This only
+   // matters for groups with cofactor > 1
+   // See https://github.com/randombit/botan/issues/3800
+
+   const auto order = m_group->order() * m_group->cofactor();
+   auto pt = mul.mul(bn.value(), rng, order, ws);
+   return pt.x_bytes();
+}
+
 size_t EC_AffinePoint_Data_BN::field_element_bytes() const {
    return m_group->p_bytes();
 }

@@ -128,6 +128,16 @@ std::unique_ptr<EC_AffinePoint_Data> EC_AffinePoint_Data_PC::mul(const EC_Scalar
    return std::make_unique<EC_AffinePoint_Data_PC>(m_group, std::move(pt));
 }
 
+secure_vector<uint8_t> EC_AffinePoint_Data_PC::mul_x_only(const EC_Scalar_Data& scalar,
+                                                          RandomNumberGenerator& rng,
+                                                          std::vector<BigInt>& ws) const {
+   BOTAN_UNUSED(ws);
+
+   BOTAN_ARG_CHECK(scalar.group() == m_group, "Curve mismatch");
+   const auto& k = EC_Scalar_Data_PC::checked_ref(scalar).value();
+   return m_group->pcurve().mul_x_only(m_pt, k, rng);
+}
+
 size_t EC_AffinePoint_Data_PC::field_element_bytes() const {
    return m_group->pcurve().field_element_bytes();
 }
