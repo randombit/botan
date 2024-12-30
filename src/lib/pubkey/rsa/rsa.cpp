@@ -9,6 +9,7 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/pss_params.h>
 #include <botan/reducer.h>
 #include <botan/internal/blinding.h>
 #include <botan/internal/divide.h>
@@ -19,7 +20,6 @@
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/pk_ops_impl.h>
-#include <botan/internal/pss_params.h>
 #include <botan/internal/workfactor.h>
 
 #if defined(BOTAN_HAS_THREAD_UTILS)

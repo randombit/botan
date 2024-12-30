@@ -11,9 +11,9 @@
 #include <botan/ec_group.h>
 #include <botan/hash.h>
 #include <botan/hex.h>
+#include <botan/pss_params.h>
 #include <botan/tls_exceptn.h>
 #include <botan/tls_version.h>
-#include <botan/internal/pss_params.h>
 #include <botan/internal/stl_util.h>
 
 namespace Botan::TLS {

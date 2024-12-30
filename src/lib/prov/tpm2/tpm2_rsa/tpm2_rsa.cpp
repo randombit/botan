@@ -9,12 +9,12 @@
 #include <botan/tpm2_rsa.h>
 
 #include <botan/hash.h>
+#include <botan/pss_params.h>
 #include <botan/rsa.h>
 
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/emsa.h>
 #include <botan/internal/fmt.h>
-#include <botan/internal/pss_params.h>
 #include <botan/internal/scan_name.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tpm2_algo_mappings.h>
