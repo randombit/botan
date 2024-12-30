@@ -30,11 +30,11 @@ eme_oaep
 emsa_pssr
 
 # pubkey
-dh
 rsa
-dsa
 ecdsa
 ecdh
+ml_kem
+ml_dsa
 
 # rng
 auto_rng
@@ -50,6 +50,7 @@ aes_ni
 aes_vperm
 aes_armv8
 aes_power8
+aes_vaes
 
 # hash
 sha2_32_x86
@@ -98,6 +99,7 @@ serpent
 serpent_simd
 serpent_avx2
 sm4
+sm4_gfni
 shacal2
 shacal2_x86
 shacal2_simd
@@ -127,10 +129,6 @@ kdf2
 prf_x942
 
 # pubkey
-x25519
-x448
-ed25519
-ed448
 ecgdsa
 eckcdsa
 elgamal
