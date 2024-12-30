@@ -1128,11 +1128,6 @@ key exchanges must enable the hybrid algorithms in their TLS policy. Override
 `TLS::Policy::key_exchange_groups()` and return a list of the desired exchange
 groups. For text-based policy configurations use the identifiers in parenthesis.
 
-.. warning::
-
-   Support for the Kyber r3 ciphersuites are considered experimental,
-   and will be removed in Botan 3.7.0
-
 Currently, Botan supports the following post-quantum secure key exchanges:
 
 * ML-KEM plus ECC hybrid, as deployed by Google, Cloudflare, etc and likely
@@ -1141,27 +1136,11 @@ Currently, Botan supports the following post-quantum secure key exchanges:
   * ``HYBRID_SECP256R1_ML_KEM_768`` ("secp256r1/ML-KEM-768")
   * ``HYBRID_X25519_ML_KEM_768`` ("x25519/ML-KEM-768")
 
-* used `in Open Quantum Safe <https://github.com/open-quantum-safe/oqs-provider/blob/main/oqs-template/oqs-kem-info.md>`_
-  (PQC algorithm without a classical algorithm)
+* Pure ML-KEM as documented in IETF draft ``draft-connolly-tls-mlkem-key-agreement``
 
-  * ``KYBER_512_R3`` ("Kyber-512-r3")
-  * ``KYBER_768_R3`` ("Kyber-768-r3")
-  * ``KYBER_1024_R3`` ("Kyber-1024-r3")
-
-* used `in Open Quantum Safe <https://github.com/open-quantum-safe/oqs-provider/blob/main/oqs-template/oqs-kem-info.md>`_
-  (hybrid between Kyber and a classical ECDH algorithm)
-
-  * ``HYBRID_X25519_KYBER_512_R3_OQS`` ("x25519/Kyber-512-r3")
-  * ``HYBRID_X25519_KYBER_768_R3_OQS`` ("x25519/Kyber-768-r3")
-  * ``HYBRID_SECP256R1_KYBER_512_R3_OQS`` ("secp256r1/Kyber-512-r3")
-  * ``HYBRID_SECP384R1_KYBER_768_R3_OQS`` ("secp384r1/Kyber-768-r3")
-  * ``HYBRID_SECP521R1_KYBER_1024_R3_OQS`` ("secp521r1/Kyber-1024-r3")
-
-* used `by Cloudflare <https://blog.cloudflare.com/post-quantum-for-all/>`_
-  (hybrid between Kyber and the classical X25519 algorithm)
-
-  * ``HYBRID_X25519_KYBER_512_R3_CLOUDFLARE`` ("x25519/Kyber-512-r3/cloudflare")
-  * ``HYBRID_X25519_KYBER_768_R3_CLOUDFLARE`` ("x25519/Kyber-768-r3/cloudflare")
+  * ``ML_KEM_512``
+  * ``ML_KEM_768``
+  * ``ML_KEM_1024``
 
 .. _tls_hybrid_client_example:
 

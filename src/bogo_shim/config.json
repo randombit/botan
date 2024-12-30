@@ -187,6 +187,7 @@
         "NotJustKyberKeyShare": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
         "KyberKeyShareIncludedSecond": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
         "KyberKeyShareIncludedThird": "BoringSSL specific policy test (we may offer solo PQ/T groups)",
+        "CurveTest-*Kyber*": "We no longer support Kyber r3 key exchange",
 
         "ShimTicketRewritable": "Botan has a different ticket format",
         "Resume-Server-DeclineCrossVersion*": "Botan has a different ticket format",
