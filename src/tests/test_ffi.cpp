@@ -3874,26 +3874,26 @@ class FFI_Classic_McEliece_Test final : public FFI_KEM_Roundtrip_Test {
 
       std::vector<const char*> modes() const override {
          auto modes = std::vector{
-            "mceliece348864f",
-            "mceliece460896f",
+            "348864f",
+            "460896f",
          };
          if(Test::run_long_tests()) {
             modes = Botan::concat(modes,
                                   std::vector{
-                                     "mceliece348864",
-                                     "mceliece460896",
-                                     "mceliece6688128",
-                                     "mceliece6688128f",
-                                     "mceliece6688128pc",
-                                     "mceliece6688128pcf",
-                                     "mceliece6960119",
-                                     "mceliece6960119f",
-                                     "mceliece6960119pc",
-                                     "mceliece6960119pcf",
-                                     "mceliece8192128",
-                                     "mceliece8192128f",
-                                     "mceliece8192128pc",
-                                     "mceliece8192128pcf",
+                                     "348864",
+                                     "460896",
+                                     "6688128",
+                                     "6688128f",
+                                     "6688128pc",
+                                     "6688128pcf",
+                                     "6960119",
+                                     "6960119f",
+                                     "6960119pc",
+                                     "6960119pcf",
+                                     "8192128",
+                                     "8192128f",
+                                     "8192128pc",
+                                     "8192128pcf",
                                   });
          }
          return modes;

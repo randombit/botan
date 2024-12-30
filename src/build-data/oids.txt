@@ -99,24 +99,24 @@
 1.3.6.1.4.1.25258.1.12.3.6 = SphincsPlus-haraka-256f-r3.1
 
 # Classic McEliece OID selection from IETF Hackathon/BouncyCastle for non PC instances
-1.3.6.1.4.1.22554.5.1.1  = mceliece348864
-1.3.6.1.4.1.22554.5.1.2 = mceliece348864f
-1.3.6.1.4.1.22554.5.1.3 = mceliece460896
-1.3.6.1.4.1.22554.5.1.4 = mceliece460896f
-1.3.6.1.4.1.22554.5.1.5 = mceliece6688128
-1.3.6.1.4.1.22554.5.1.6 = mceliece6688128f
-1.3.6.1.4.1.22554.5.1.7 = mceliece6960119
-1.3.6.1.4.1.22554.5.1.8 = mceliece6960119f
-1.3.6.1.4.1.22554.5.1.9 = mceliece8192128
-1.3.6.1.4.1.22554.5.1.10 = mceliece8192128f
+1.3.6.1.4.1.22554.5.1.1 = ClassicMcEliece_348864
+1.3.6.1.4.1.22554.5.1.2 = ClassicMcEliece_348864f
+1.3.6.1.4.1.22554.5.1.3 = ClassicMcEliece_460896
+1.3.6.1.4.1.22554.5.1.4 = ClassicMcEliece_460896f
+1.3.6.1.4.1.22554.5.1.5 = ClassicMcEliece_6688128
+1.3.6.1.4.1.22554.5.1.6 = ClassicMcEliece_6688128f
+1.3.6.1.4.1.22554.5.1.7 = ClassicMcEliece_6960119
+1.3.6.1.4.1.22554.5.1.8 = ClassicMcEliece_6960119f
+1.3.6.1.4.1.22554.5.1.9 = ClassicMcEliece_8192128
+1.3.6.1.4.1.22554.5.1.10 = ClassicMcEliece_8192128f
 
 # Classic McEliece PC OIDs are currently in Botan's private arc
-1.3.6.1.4.1.25258.1.18.1 = mceliece6688128pc
-1.3.6.1.4.1.25258.1.18.2 = mceliece6688128pcf
-1.3.6.1.4.1.25258.1.18.3 = mceliece6960119pc
-1.3.6.1.4.1.25258.1.18.4 = mceliece6960119pcf
-1.3.6.1.4.1.25258.1.18.5 = mceliece8192128pc
-1.3.6.1.4.1.25258.1.18.6 = mceliece8192128pcf
+1.3.6.1.4.1.25258.1.18.1 = ClassicMcEliece_6688128pc
+1.3.6.1.4.1.25258.1.18.2 = ClassicMcEliece_6688128pcf
+1.3.6.1.4.1.25258.1.18.3 = ClassicMcEliece_6960119pc
+1.3.6.1.4.1.25258.1.18.4 = ClassicMcEliece_6960119pcf
+1.3.6.1.4.1.25258.1.18.5 = ClassicMcEliece_8192128pc
+1.3.6.1.4.1.25258.1.18.6 = ClassicMcEliece_8192128pcf
 
 # XMSS
 1.3.6.1.4.1.25258.1.5 = XMSS-draft6

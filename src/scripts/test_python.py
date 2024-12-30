@@ -1019,7 +1019,7 @@ ofvkP1EDmpx50fHLawIDAQAB
         self.assertEqual(pk_read.to_raw(), pk_bits)
 
     def test_classic_mceliece_raw_keys(self):
-        cmce_mode = "mceliece348864f"
+        cmce_mode = "348864f"
         sk = botan.PrivateKey.create("ClassicMcEliece", cmce_mode, botan.RandomNumberGenerator("user"))
         pk = sk.get_public_key()
 
