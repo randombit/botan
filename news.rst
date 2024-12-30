@@ -4,21 +4,50 @@ Release Notes
 Version 3.7.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add post-quantum scheme Classic McEliece (GH #3883)
+* Add post-quantum scheme Classic McEliece (GH #3883 #4448 #4458)
+
+* In TLS enable the hybrid x25519/ML-KEM-768 post quantum secure key
+  exchange by default for clients and servers. (GH #4305)
+
+* In TLS add support for "pure" ML-KEM key exchange, in addition
+  to the existing hybrid ML-KEM + EC suites. (GH #4393)
 
 * Add new EC key constructors (GH #4437)
 
-* Internal EC related cleanups (GH #4385)
+* Internal EC related cleanups and optimizations (GH #4385 #4432 #4436 #4492 #4479)
 
-* Add new operations to EC_AffinePoint (GH #4433)
+* Add new operations to EC_AffinePoint (GH #4433 #4503)
 
-* TPM 2.0 improvements (GH #4429 #4430)
+* TPM 2.0 improvements (GH #4429 #4430 #4482)
+
+* Expand constant-time testing in CI to cover both GCC and Clang,
+  and multiple optimization levels. (GH #4421)
+
+* GCM/GHASH internal cleanups (GH #4469)
+
+* Internal cleanups related to calling ``getauxval`` (GH #4471)
+
+* Add a ``--timer-unit=`` option to ``botan speed`` (GH #4456 #4490)
 
 * Update the Limbo test suite (GH #4406)
 
 * Mark several classes not intended for derivation as ``final`` (GH #4419)
 
 * Add iterator debugging to CI (GH #4413)
+
+* Starting in 3.6.0, ``configure.py`` would pass through any values set as
+  ``CXXFLAGS`` into the link invocation as well. This was done to support
+  LTO style options. However it causes build regressions, especially with MSVC,
+  and so has been reverted. Using the new option ``--lto-cxxflags-to-ldflags``
+  will cause this passthrough behavior to continue. (GH #4196 #4200 #4451 #4452)
+
+* Fix an iterator error in the test suite (GH #4413)
+
+* Fix build issues caused by incompatible changes in Boost 1.87 (GH #4484)
+
+* Fix a build issue when AVX2 support is disabled (GH #4493)
+
+* Fix a build issue when compiling with MSVC on ARM (GH #4483)
 
 Version 3.6.1, 2024-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
