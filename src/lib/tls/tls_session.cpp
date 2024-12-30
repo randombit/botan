@@ -111,7 +111,7 @@ std::string tls13_kex_to_string(bool psk, std::optional<Named_Group> group) {
          return kex_method_to_string(Kex_Algo::DHE_PSK);
       } else if(group->is_ecdh_named_curve() || group->is_x25519() || group->is_x448()) {
          return kex_method_to_string(Kex_Algo::ECDHE_PSK);
-      } else if(group->is_pure_kyber() || group->is_pure_ml_kem() || group->is_pure_frodokem()) {
+      } else if(group->is_pure_ml_kem() || group->is_pure_frodokem()) {
          return kex_method_to_string(Kex_Algo::KEM_PSK);
       } else if(group->is_pqc_hybrid()) {
          return kex_method_to_string(Kex_Algo::HYBRID_PSK);
@@ -126,7 +126,7 @@ std::string tls13_kex_to_string(bool psk, std::optional<Named_Group> group) {
          return kex_method_to_string(Kex_Algo::DH);
       } else if(group->is_ecdh_named_curve() || group->is_x25519() || group->is_x448()) {
          return kex_method_to_string(Kex_Algo::ECDH);
-      } else if(group->is_pure_kyber() || group->is_pure_ml_kem() || group->is_pure_frodokem()) {
+      } else if(group->is_pure_ml_kem() || group->is_pure_frodokem()) {
          return kex_method_to_string(Kex_Algo::KEM);
       } else if(group->is_pqc_hybrid()) {
          return kex_method_to_string(Kex_Algo::HYBRID);

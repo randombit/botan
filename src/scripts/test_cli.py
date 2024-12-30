@@ -1155,8 +1155,8 @@ def cli_tls_socket_tests(tmp_dir):
                    psk=psk, psk_identity=psk_identity,
                    stdout_regex=f'Handshake complete, TLS v1\\.3.*\nUtilized PSK identity: {psk_identity}.*'),
 
-        TestConfig("Kyber KEM", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_groups=Kyber-512-r3"),
-        TestConfig("Hybrid PQ/T", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_groups=x25519/Kyber-512-r3"),
+        TestConfig("Kyber KEM", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_groups=ML-KEM-768"),
+        TestConfig("Hybrid PQ/T", "1.3", "allow_tls12=false\nallow_tls13=true\nkey_exchange_groups=x25519/ML-KEM-768"),
     ]
 
     class TestServer(AsyncTestProcess):
@@ -1172,7 +1172,7 @@ def cli_tls_socket_tests(tmp_dir):
 
             with open(self.policy, 'w', encoding='utf8') as f:
                 f.write('key_exchange_methods = ECDH DH ECDHE_PSK\n')
-                f.write("key_exchange_groups = x25519 x448 secp256r1 ffdhe/ietf/2048 Kyber-512-r3 x25519/Kyber-512-r3")
+                f.write("key_exchange_groups = x25519 x448 secp256r1 ffdhe/ietf/2048 ML-KEM-768 x25519/ML-KEM-768")
 
         @property
         def ca_cert(self):
@@ -1323,17 +1323,8 @@ def cli_tls_online_pqc_hybrid_tests(tmp_dir):
         return get_oqs_resource("/CA.crt")
 
     test_cfg = [
-        TestConfig("pq.cloudflareresearch.com", "x25519/Kyber-768-r3"),
-        TestConfig("pq.cloudflareresearch.com", "x25519/ML-KEM-768"),
-        TestConfig("google.com", "x25519/Kyber-768-r3"),
+        TestConfig("cloudflare.com", "x25519/ML-KEM-768"),
         TestConfig("google.com", "x25519/ML-KEM-768"),
-
-        TestConfig("qsc.eu-de.kms.cloud.ibm.com", "secp256r1/Kyber-512-r3"),
-        TestConfig("qsc.eu-de.kms.cloud.ibm.com", "secp384r1/Kyber-768-r3"),
-        TestConfig("qsc.eu-de.kms.cloud.ibm.com", "secp521r1/Kyber-1024-r3"),
-        TestConfig("qsc.eu-de.kms.cloud.ibm.com", "Kyber-512-r3"),
-        TestConfig("qsc.eu-de.kms.cloud.ibm.com", "Kyber-768-r3"),
-        TestConfig("qsc.eu-de.kms.cloud.ibm.com", "Kyber-1024-r3"),
     ]
 
     oqsp = get_oqs_ports()
@@ -1343,22 +1334,13 @@ def cli_tls_online_pqc_hybrid_tests(tmp_dir):
         test_cfg += [
             TestConfig("test.openquantumsafe.org", "x25519/ML-KEM-768", port=oqsp['X25519MLKEM768'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "secp256r1/ML-KEM-768", port=oqsp['SecP256r1MLKEM768'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "x25519/Kyber-512-r3", port=oqsp['x25519_kyber512'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "x25519/Kyber-768-r3", port=oqsp['x25519_kyber768'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "x448/Kyber-768-r3", port=oqsp['x448_kyber768'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp256r1/Kyber-512-r3", port=oqsp['p256_kyber512'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp256r1/Kyber-768-r3", port=oqsp['p256_kyber768'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp384r1/Kyber-768-r3", port=oqsp['p384_kyber768'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "secp521r1/Kyber-1024-r3", port=oqsp['p521_kyber1024'], ca=oqs_test_ca),
+
             # Currently oqs did not adopt the 0x0200, 0x0201 and 0x0202 code point defined in draft-connolly-tls-mlkem-key-agreement-05.
             # Neither did they deploy a new server that re-assigns the respective Frodo code points that used those before.
             # TODO: enable those tests once the code point are re-assigned by the OQS test server
             # TestConfig("test.openquantumsafe.org", "ML-KEM-512", port=oqsp['mlkem512'], ca=oqs_test_ca),
             # TestConfig("test.openquantumsafe.org", "ML-KEM-768", port=oqsp['mlkem768'], ca=oqs_test_ca),
             # TestConfig("test.openquantumsafe.org", "ML-KEM-1024", port=oqsp['mlkem1024'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "Kyber-512-r3", port=oqsp['kyber512'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "Kyber-768-r3", port=oqsp['kyber768'], ca=oqs_test_ca),
-            TestConfig("test.openquantumsafe.org", "Kyber-1024-r3", port=oqsp['kyber1024'], ca=oqs_test_ca),
             # TestConfig("test.openquantumsafe.org", "eFrodoKEM-640-SHAKE", port=oqsp['frodo640shake'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "eFrodoKEM-976-SHAKE", port=oqsp['frodo976shake'], ca=oqs_test_ca),
             TestConfig("test.openquantumsafe.org", "eFrodoKEM-1344-SHAKE", port=oqsp['frodo1344shake'], ca=oqs_test_ca),

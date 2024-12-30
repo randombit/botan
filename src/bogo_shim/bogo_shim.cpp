@@ -997,13 +997,6 @@ class Shim_Policy final : public Botan::TLS::Policy {
                if(std::find(supported_groups.cbegin(), supported_groups.cend(), group) != supported_groups.end()) {
                   groups.push_back(group);
                }
-
-               // Eventually the pre-standard hybrid exchange using Kyber-R3 will be
-               // retired and removed. Hence, it will likely never be part of the
-               // default `TLS::Policy::key_exchange_groups()`.
-               if(group == Botan::TLS::Group_Params::HYBRID_X25519_KYBER_768_R3_OQS) {
-                  groups.push_back(group);
-               }
             }
 
             return groups;

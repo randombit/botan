@@ -76,10 +76,6 @@ enum class Auth_Method {
 std::string BOTAN_TEST_API auth_method_to_string(Auth_Method method);
 Auth_Method BOTAN_TEST_API auth_method_from_string(std::string_view str);
 
-#define BOTAN_TLS_KYBER_R3_DEPRECATED \
-   BOTAN_DEPRECATED(                  \
-      "Kyber r3 TLS support will be removed completely in Botan 3.7.0 (early 2025) use ML-KEM and see https://github.com/randombit/botan/issues/4403")
-
 /*
 * Matches with wire encoding
 */
@@ -102,17 +98,13 @@ enum class Group_Params_Code : uint16_t {
    FFDHE_6144 = 259,
    FFDHE_8192 = 260,
 
-   // libOQS defines those in:
-   // https://github.com/open-quantum-safe/oqs-provider/blob/main/ALGORITHMS.md
-   KYBER_512_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x023A,
-   KYBER_768_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x023C,
-   KYBER_1024_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x023D,
-
    // https://datatracker.ietf.org/doc/draft-connolly-tls-mlkem-key-agreement/05/
    ML_KEM_512 = 0x0200,
    ML_KEM_768 = 0x0201,
    ML_KEM_1024 = 0x0202,
 
+   // libOQS defines those in:
+   // https://github.com/open-quantum-safe/oqs-provider/blob/main/ALGORITHMS.md
    eFRODOKEM_640_SHAKE_OQS = 0xFE01,
    eFRODOKEM_976_SHAKE_OQS = 0x0203,
    eFRODOKEM_1344_SHAKE_OQS = 0x0205,
@@ -120,31 +112,11 @@ enum class Group_Params_Code : uint16_t {
    eFRODOKEM_976_AES_OQS = 0xFE02,
    eFRODOKEM_1344_AES_OQS = 0x0204,
 
-   // Cloudflare code points for hybrid PQC
-   // https://blog.cloudflare.com/post-quantum-for-all/
-   HYBRID_X25519_KYBER_512_R3_CLOUDFLARE BOTAN_TLS_KYBER_R3_DEPRECATED = 0xFE30,
-
-   // libOQS defines those in:
-   // https://github.com/open-quantum-safe/oqs-provider/blob/main/ALGORITHMS.md
-   //
-   // X25519/Kyber768 is also defined in:
-   // https://datatracker.ietf.org/doc/draft-tls-westerbaan-xyber768d00/03/
-   HYBRID_X25519_KYBER_512_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x2F39,
-   HYBRID_X25519_KYBER_768_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x6399,
-
-   // https://datatracker.ietf.org/doc/draft-kwiatkowski-tls-ecdhe-mlkem/02/
+   // https://datatracker.ietf.org/doc/draft-kwiatkowski-tls-ecdhe-mlkem/03/
    HYBRID_SECP256R1_ML_KEM_768 = 0x11EB,
    HYBRID_X25519_ML_KEM_768 = 0x11EC,
 
-   HYBRID_X448_KYBER_768_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x2F90,
-
-   HYBRID_SECP256R1_KYBER_512_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x2F3A,
-   HYBRID_SECP256R1_KYBER_768_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x639A,
-
-   HYBRID_SECP384R1_KYBER_768_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x2F3C,
-
-   HYBRID_SECP521R1_KYBER_1024_R3_OQS BOTAN_TLS_KYBER_R3_DEPRECATED = 0x2F3D,
-
+   // https://github.com/open-quantum-safe/oqs-provider/blob/main/ALGORITHMS.md
    HYBRID_X25519_eFRODOKEM_640_SHAKE_OQS = 0x2F81,
    HYBRID_X25519_eFRODOKEM_640_AES_OQS = 0x2F80,
 
@@ -217,16 +189,6 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
                 m_code == Group_Params_Code::ML_KEM_1024;
       }
 
-      BOTAN_TLS_KYBER_R3_DEPRECATED constexpr bool is_pure_kyber() const {
-         BOTAN_DIAGNOSTIC_PUSH
-         BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
-
-         return m_code == Group_Params_Code::KYBER_512_R3_OQS || m_code == Group_Params_Code::KYBER_768_R3_OQS ||
-                m_code == Group_Params_Code::KYBER_1024_R3_OQS;
-
-         BOTAN_DIAGNOSTIC_POP
-      }
-
       constexpr bool is_pure_frodokem() const {
          return m_code == Group_Params_Code::eFRODOKEM_640_SHAKE_OQS ||
                 m_code == Group_Params_Code::eFRODOKEM_976_SHAKE_OQS ||
@@ -242,7 +204,7 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
          BOTAN_DIAGNOSTIC_PUSH
          BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
 
-         return is_pure_kyber() || is_pure_ml_kem() || is_pure_frodokem() || is_pqc_hybrid();
+         return is_pure_ml_kem() || is_pure_frodokem() || is_pqc_hybrid();
 
          BOTAN_DIAGNOSTIC_POP
       }
@@ -250,22 +212,6 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
       constexpr bool is_pqc_hybrid_ml_kem() const {
          return m_code == Group_Params_Code::HYBRID_SECP256R1_ML_KEM_768 ||
                 m_code == Group_Params_Code::HYBRID_X25519_ML_KEM_768;
-      }
-
-      constexpr bool is_pqc_hybrid_kyber() const {
-         BOTAN_DIAGNOSTIC_PUSH
-         BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
-
-         return m_code == Group_Params_Code::HYBRID_X25519_KYBER_512_R3_CLOUDFLARE ||
-                m_code == Group_Params_Code::HYBRID_X25519_KYBER_512_R3_OQS ||
-                m_code == Group_Params_Code::HYBRID_X25519_KYBER_768_R3_OQS ||
-                m_code == Group_Params_Code::HYBRID_X448_KYBER_768_R3_OQS ||
-                m_code == Group_Params_Code::HYBRID_SECP256R1_KYBER_512_R3_OQS ||
-                m_code == Group_Params_Code::HYBRID_SECP256R1_KYBER_768_R3_OQS ||
-                m_code == Group_Params_Code::HYBRID_SECP384R1_KYBER_768_R3_OQS ||
-                m_code == Group_Params_Code::HYBRID_SECP521R1_KYBER_1024_R3_OQS;
-
-         BOTAN_DIAGNOSTIC_POP
       }
 
       constexpr bool is_pqc_hybrid_frodokem() const {
@@ -281,15 +227,13 @@ class BOTAN_PUBLIC_API(3, 2) Group_Params final {
                 m_code == Group_Params_Code::HYBRID_SECP521R1_eFRODOKEM_1344_AES_OQS;
       }
 
-      constexpr bool is_pqc_hybrid() const {
-         return is_pqc_hybrid_ml_kem() || is_pqc_hybrid_kyber() || is_pqc_hybrid_frodokem();
-      }
+      constexpr bool is_pqc_hybrid() const { return is_pqc_hybrid_ml_kem() || is_pqc_hybrid_frodokem(); }
 
       constexpr bool is_kem() const {
          BOTAN_DIAGNOSTIC_PUSH
          BOTAN_DIAGNOSTIC_IGNORE_DEPRECATED_DECLARATIONS
 
-         return is_pure_kyber() || is_pure_ml_kem() || is_pure_frodokem() || is_pqc_hybrid();
+         return is_pure_ml_kem() || is_pure_frodokem() || is_pqc_hybrid();
 
          BOTAN_DIAGNOSTIC_POP
       }
