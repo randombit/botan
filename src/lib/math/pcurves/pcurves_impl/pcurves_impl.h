@@ -991,8 +991,16 @@ concept curve_supports_fe_invert2 = requires(const typename C::FieldElement& fe)
 /**
 * Blinded Scalar
 *
-* This randomizes the scalar representation by computing s + n*k
+* This randomizes the scalar representation by computing s + n*k,
 * where n is the group order and k is a random value
+*
+* Note that the field arithmetic and point multiplication algorithms
+* implemented in this file are already constant time; blinding is used here as
+* an additional precaution to guard against compilers introducing conditional
+* jumps where not expected.
+*
+* If you would like a "go faster" button, change the BlindingEnabled variable
+* below to false.
 */
 template <typename C, size_t WindowBits>
 class BlindedScalarBits final {
@@ -1001,9 +1009,29 @@ class BlindedScalarBits final {
 
       static constexpr bool BlindingEnabled = true;
 
-      // For blinding use 1/4 the order, rounded up to the next word
-      static constexpr size_t BlindingBits =
-         ((C::OrderBits / 4 + WordInfo<W>::bits - 1) / WordInfo<W>::bits) * WordInfo<W>::bits;
+      // Decide size of scalar blinding factor based on bitlength of the scalar
+      //
+      // This can return any value between 0 and the scalar bit length, as long
+      // as it is a multiple of the word size.
+      static constexpr size_t blinding_bits(size_t sb) {
+         constexpr size_t wb = WordInfo<W>::bits;
+
+         static_assert(wb == 32 || wb == 64, "Unexpected W size");
+
+         if(sb == 521) {
+            /*
+            Treat P-521 as if it was a 512 bit field; otherwise it is penalized
+            by the below computation, using either 160 or 192 bits of blinding
+            (depending on wb), vs 128 bits used for 512 bit groups.
+            */
+            return blinding_bits(512);
+         } else {
+            // For blinding use 1/4 the order, rounded up to the next word
+            return ((sb / 4 + wb - 1) / wb) * wb;
+         }
+      }
+
+      static constexpr size_t BlindingBits = blinding_bits(C::OrderBits);
 
       static_assert(BlindingBits % WordInfo<W>::bits == 0);
       static_assert(BlindingBits < C::Scalar::BITS);
