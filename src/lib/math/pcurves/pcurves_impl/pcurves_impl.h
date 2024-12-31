@@ -1498,7 +1498,13 @@ class WindowedMul2Table final {
                   return table[(t_i / 2) - 1].dbl();
                } else if(x_i > 0 && y_i > 0) {
                   // A combination of x and y
-                  return table[x_i - 1] + table[(y_i << WindowBits) - 1];
+                  if(x_i == 1) {
+                     return x + table[(y_i << WindowBits) - 1];
+                  } else if(y_i == 1) {
+                     return table[x_i - 1] + y;
+                  } else {
+                     return table[x_i - 1] + table[(y_i << WindowBits) - 1];
+                  }
                } else if(x_i > 0 && y_i == 0) {
                   // A multiple of x without a y component
                   if(x_i == 1) {
