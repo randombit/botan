@@ -271,11 +271,11 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
          const auto& sympri = mode.symmetric_primitives();
          StrongSpan<const DilithiumSerializedSignature> sig_bytes(sig);
 
+         const auto mu = m_h->final();
+
          if(sig_bytes.size() != mode.signature_bytes()) {
             return false;
          }
-
-         const auto mu = m_h->final();
 
          auto signature = Dilithium_Algos::decode_signature(sig_bytes, mode);
          if(!signature.has_value()) {
@@ -283,9 +283,12 @@ class Dilithium_Verification_Operation final : public PK_Ops::Verification {
          }
          auto [ch, z, h] = std::move(signature.value());
 
-         // TODO: The first check was removed from the final version of ML-DSA
-         if(h.hamming_weight() > mode.omega() ||
-            !Dilithium_Algos::infinity_norm_within_bound(z, to_underlying(mode.gamma1()) - mode.beta())) {
+         // This check was removed from the final version of ML-DSA
+         if(!mode.is_ml_dsa() && h.hamming_weight() > mode.omega()) {
+            return false;
+         }
+
+         if(!Dilithium_Algos::infinity_norm_within_bound(z, to_underlying(mode.gamma1()) - mode.beta())) {
             return false;
          }
 
