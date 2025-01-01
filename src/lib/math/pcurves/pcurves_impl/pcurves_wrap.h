@@ -17,6 +17,11 @@ concept curve_supports_scalar_invert = requires(const typename C::Scalar& s) {
    { C::scalar_invert(s) } -> std::same_as<typename C::Scalar>;
 };
 
+/**
+* This class provides a bridge between the "public" (actually still
+* internal) PrimeOrderCurve type, and the inner templates which are
+* subclasses of EllipticCurve from pcurves_impl.h
+*/
 template <typename C>
 class PrimeOrderCurveImpl final : public PrimeOrderCurve {
    public:
@@ -308,8 +313,6 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
       Scalar scalar_zero() const override { return stash(C::Scalar::zero()); }
 
       Scalar scalar_one() const override { return stash(C::Scalar::one()); }
-
-      Scalar scalar_from_u32(uint32_t x) const override { return stash(C::Scalar::from_word(x)); }
 
       Scalar random_scalar(RandomNumberGenerator& rng) const override { return stash(C::Scalar::random(rng)); }
 
