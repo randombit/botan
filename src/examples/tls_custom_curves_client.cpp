@@ -49,7 +49,7 @@ class Callbacks : public Botan::TLS::Callbacks {
             std::get<Botan::TLS::Group_Params>(group) == Botan::TLS::Group_Params(0xFE00)) {
             // load the peer's public key of my custom curve
             const auto ec_group = Botan::EC_Group::from_name("numsp256d1");
-            return std::make_unique<Botan::ECDH_PublicKey>(ec_group, ec_group.OS2ECP(public_value));
+            return std::make_unique<Botan::ECDH_PublicKey>(ec_group, Botan::EC_AffinePoint(ec_group, public_value));
          } else {
             // no custom curve used: up-call the default implementation
             return Botan::TLS::Callbacks::tls_deserialize_peer_public_key(group, public_value);

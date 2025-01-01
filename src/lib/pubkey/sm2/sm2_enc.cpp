@@ -22,7 +22,7 @@ namespace {
 class SM2_Encryption_Operation final : public PK_Ops::Encryption {
    public:
       SM2_Encryption_Operation(const SM2_Encryption_PublicKey& key, std::string_view kdf_hash) :
-            m_group(key.domain()), m_peer(key._public_key()), m_ws(EC_Point::WORKSPACE_SIZE) {
+            m_group(key.domain()), m_peer(key._public_ec_point()) {
          m_hash = HashFunction::create_or_throw(kdf_hash);
          m_kdf = KDF::create_or_throw(fmt("KDF2({})", kdf_hash));
       }

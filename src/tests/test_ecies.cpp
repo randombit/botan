@@ -48,7 +48,8 @@ void check_encrypt_decrypt(Test::Result& result,
                            Botan::RandomNumberGenerator& rng) {
    try {
       Botan::ECIES_Encryptor ecies_enc(private_key, ecies_params, rng);
-      ecies_enc.set_other_key(other_private_key.public_point());
+      ecies_enc.set_other_key(
+         Botan::EC_AffinePoint(other_private_key.domain(), other_private_key.raw_public_key_bits()));
       Botan::ECIES_Decryptor ecies_dec(other_private_key, ecies_params, rng);
       if(!iv.bits_of().empty()) {
          ecies_enc.set_initialization_vector(iv);
@@ -125,13 +126,12 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
 
          // keys of bob
          const Botan::ECDH_PrivateKey other_private_key(this->rng(), domain, x);
-         const Botan::EC_Point other_public_key_point = domain.point(hx, hy);
+         const auto other_public_key_point = Botan::EC_AffinePoint::from_bigint_xy(domain, hx, hy).value();
          const Botan::ECDH_PublicKey other_public_key(domain, other_public_key_point);
 
          // (ephemeral) keys of alice
          const Botan::ECDH_PrivateKey eph_private_key(this->rng(), domain, r);
-         const Botan::EC_Point eph_public_key_point = eph_private_key.public_point();
-         const std::vector<uint8_t> eph_public_key_bin = eph_public_key_point.encode(compression_type);
+         const auto eph_public_key_bin = eph_private_key.public_value(compression_type);
          result.test_eq("encoded (ephemeral) public key", eph_public_key_bin, c0);
 
          // test secret derivation: ISO 18033 test vectors use KDF1 from ISO 18033

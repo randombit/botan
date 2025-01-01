@@ -53,8 +53,7 @@ int main() {
 
    // set import properties
    std::vector<uint8_t> ec_point;
-   Botan::DER_Encoder(ec_point).encode(priv_key_sw.public_point().encode(Botan::EC_Point_Format::Uncompressed),
-                                       Botan::ASN1_Type::OctetString);
+   Botan::DER_Encoder(ec_point).encode(priv_key_sw.raw_public_key_bits(), Botan::ASN1_Type::OctetString);
    Botan::PKCS11::EC_PublicKeyImportProperties pub_import_props(priv_key_sw.DER_domain(), ec_point);
 
    pub_import_props.set_token(true);
@@ -103,11 +102,9 @@ int main() {
    Botan::PK_Key_Agreement ka(key_pair.second, rng, "Raw", "pkcs11");
    Botan::PK_Key_Agreement kb(key_pair_other.second, rng, "Raw", "pkcs11");
 
-   Botan::SymmetricKey alice_key =
-      ka.derive_key(32, key_pair_other.first.public_point().encode(Botan::EC_Point_Format::Uncompressed));
+   Botan::SymmetricKey alice_key = ka.derive_key(32, key_pair_other.first.raw_public_key_bits());
 
-   Botan::SymmetricKey bob_key =
-      kb.derive_key(32, key_pair.first.public_point().encode(Botan::EC_Point_Format::Uncompressed));
+   Botan::SymmetricKey bob_key = kb.derive_key(32, key_pair.first.raw_public_key_bits());
 
    bool eq = alice_key == bob_key;
 

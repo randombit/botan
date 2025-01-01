@@ -95,9 +95,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_ECDH_PrivateKey final : public virtual PKCS1
 
       std::unique_ptr<Public_Key> public_key() const override;
 
-      inline std::vector<uint8_t> public_value() const override {
-         return public_point().encode(EC_Point_Format::Uncompressed);
-      }
+      inline std::vector<uint8_t> public_value() const override { return public_ec_point().serialize_uncompressed(); }
 
       /// @return the exported ECDH private key
       ECDH_PrivateKey export_key() const;

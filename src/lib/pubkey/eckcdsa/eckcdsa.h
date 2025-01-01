@@ -19,10 +19,19 @@ class BOTAN_PUBLIC_API(2, 0) ECKCDSA_PublicKey : public virtual EC_PublicKey {
    public:
       /**
       * Construct a public key from a given public point.
-      * @param dom_par the domain parameters associated with this key
+      * @param group the domain parameters associated with this key
+      * @param public_key the public point defining this key
+      */
+      ECKCDSA_PublicKey(const EC_Group& group, const EC_AffinePoint& public_key) : EC_PublicKey(group, public_key) {}
+
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+      /**
+      * Construct a public key from a given public point.
+      * @param group the domain parameters associated with this key
       * @param public_point the public point defining this key
       */
-      ECKCDSA_PublicKey(const EC_Group& dom_par, const EC_Point& public_point) : EC_PublicKey(dom_par, public_point) {}
+      ECKCDSA_PublicKey(const EC_Group& group, const EC_Point& public_point) : EC_PublicKey(group, public_point) {}
+#endif
 
       /**
       * Load a public key.

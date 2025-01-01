@@ -30,7 +30,7 @@ EC_Group check_domain(EC_Group domain) {
 }  // namespace
 
 std::vector<uint8_t> GOST_3410_PublicKey::public_key_bits() const {
-   auto bits = public_point().xy_bytes();
+   auto bits = _public_ec_point().xy_bytes();
 
    const size_t part_size = bits.size() / 2;
 
@@ -103,7 +103,7 @@ GOST_3410_PrivateKey::GOST_3410_PrivateKey(RandomNumberGenerator& rng, const EC_
       EC_PrivateKey(rng, check_domain(domain), x) {}
 
 std::unique_ptr<Public_Key> GOST_3410_PrivateKey::public_key() const {
-   return std::make_unique<GOST_3410_PublicKey>(domain(), public_point());
+   return std::make_unique<GOST_3410_PublicKey>(domain(), _public_ec_point());
 }
 
 namespace {
@@ -204,12 +204,12 @@ std::string gost_hash_from_algid(const AlgorithmIdentifier& alg_id) {
 class GOST_3410_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
       GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, std::string_view padding) :
-            PK_Ops::Verification_with_Hash(padding), m_group(gost.domain()), m_gy_mul(gost._public_key()) {}
+            PK_Ops::Verification_with_Hash(padding), m_group(gost.domain()), m_gy_mul(gost._public_ec_point()) {}
 
       GOST_3410_Verification_Operation(const GOST_3410_PublicKey& gost, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(gost_hash_from_algid(alg_id)),
             m_group(gost.domain()),
-            m_gy_mul(gost._public_key()) {}
+            m_gy_mul(gost._public_ec_point()) {}
 
       bool verify(std::span<const uint8_t> msg, std::span<const uint8_t> sig) override;
 

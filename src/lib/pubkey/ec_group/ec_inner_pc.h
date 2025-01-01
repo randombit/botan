@@ -89,7 +89,9 @@ class EC_AffinePoint_Data_PC final : public EC_AffinePoint_Data {
 
       const PCurve::PrimeOrderCurve::AffinePoint& value() const { return m_pt; }
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
       EC_Point to_legacy_point() const override;
+#endif
 
    private:
       std::shared_ptr<const EC_Group_Data> m_group;

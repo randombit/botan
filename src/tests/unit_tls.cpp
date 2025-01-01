@@ -452,7 +452,8 @@ class TLS_Handshake_Test final {
                if(std::holds_alternative<Botan::TLS::Group_Params>(group) &&
                   std::get<Botan::TLS::Group_Params>(group).wire_code() == 0xFEE1) {
                   const auto ec_group = Botan::EC_Group::from_name("numsp256d1");
-                  Botan::ECDH_PublicKey peer_key(ec_group, ec_group.OS2ECP(public_value));
+                  const auto ec_point = Botan::EC_AffinePoint(ec_group, public_value);
+                  Botan::ECDH_PublicKey peer_key(ec_group, ec_point);
                   Botan::PK_Key_Agreement ka(private_key, rng, "Raw");
                   return ka.derive_key(0, peer_key.public_value()).bits_of();
                }

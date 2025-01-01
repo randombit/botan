@@ -31,6 +31,9 @@ class ECC_Basepoint_Mul_Tests final : public Text_Based_Test {
          const auto group = Botan::EC_Group::from_name(group_id);
 
          const Botan::BigInt k(k_bytes);
+         std::vector<Botan::BigInt> ws;
+
+   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
          const auto pt = group.OS2ECP(P_bytes);
 
          const Botan::EC_Point& base_point = group.get_base_point();
@@ -38,20 +41,20 @@ class ECC_Basepoint_Mul_Tests final : public Text_Based_Test {
          const Botan::EC_Point p1 = base_point * k;
          result.test_eq("mul with *", p1, pt);
 
-         std::vector<Botan::BigInt> ws;
          const Botan::EC_Point p2 = group.blinded_base_point_multiply(k, this->rng(), ws);
          result.test_eq("blinded_base_point_multiply", p2, pt);
 
          const Botan::EC_Point p3 = group.blinded_var_point_multiply(base_point, k, this->rng(), ws);
          result.test_eq("blinded_var_point_multiply", p3, pt);
+   #endif
 
          const auto scalar = Botan::EC_Scalar::from_bigint(group, k);
          const auto apg = Botan::EC_AffinePoint::g_mul(scalar, this->rng(), ws);
          result.test_eq("AffinePoint::g_mul", apg.serialize_uncompressed(), P_bytes);
 
-         const auto ag = Botan::EC_AffinePoint(group, base_point);
+         const auto ag = Botan::EC_AffinePoint::generator(group);
          const auto ap = ag.mul(scalar, this->rng(), ws);
-         result.test_eq("AffinePoint::mul", ap.to_legacy_point(), pt);
+         result.test_eq("AffinePoint::mul", ap.serialize_uncompressed(), P_bytes);
 
          return result;
       }
@@ -72,6 +75,9 @@ class ECC_Varpoint_Mul_Tests final : public Text_Based_Test {
 
          const auto group = Botan::EC_Group::from_name(group_id);
 
+         std::vector<Botan::BigInt> ws;
+
+   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
          const Botan::EC_Point pt = group.OS2ECP(p);
 
          result.confirm("Input point is on the curve", pt.on_the_curve());
@@ -81,9 +87,9 @@ class ECC_Varpoint_Mul_Tests final : public Text_Based_Test {
 
          result.confirm("Output point is on the curve", p1.on_the_curve());
 
-         std::vector<Botan::BigInt> ws;
          const Botan::EC_Point p2 = group.blinded_var_point_multiply(pt, k, this->rng(), ws);
          result.test_eq("p * k (blinded)", p2.encode(Botan::EC_Point::Compressed), z);
+   #endif
 
          const auto s_k = Botan::EC_Scalar::from_bigint(group, k);
          const auto apt = Botan::EC_AffinePoint::deserialize(group, p).value();

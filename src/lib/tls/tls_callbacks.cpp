@@ -207,7 +207,7 @@ std::unique_ptr<Public_Key> TLS::Callbacks::tls_deserialize_peer_public_key(
 
    if(group_params.is_ecdh_named_curve()) {
       const auto ec_group = EC_Group::from_name(group_params.to_string().value());
-      return std::make_unique<ECDH_PublicKey>(ec_group, ec_group.OS2ECP(key_bits));
+      return std::make_unique<ECDH_PublicKey>(ec_group, EC_AffinePoint(ec_group, key_bits));
    }
 
 #if defined(BOTAN_HAS_X25519)

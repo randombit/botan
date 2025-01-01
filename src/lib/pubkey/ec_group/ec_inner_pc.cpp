@@ -185,6 +185,7 @@ void EC_AffinePoint_Data_PC::serialize_uncompressed_to(std::span<uint8_t> bytes)
    copy_mem(bytes, m_xy);
 }
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
 EC_Point EC_AffinePoint_Data_PC::to_legacy_point() const {
    if(this->is_identity()) {
       return EC_Point(m_group->curve());
@@ -195,6 +196,7 @@ EC_Point EC_AffinePoint_Data_PC::to_legacy_point() const {
                       BigInt::from_bytes(std::span{m_xy}.last(fe_bytes)));
    }
 }
+#endif
 
 EC_Mul2Table_Data_PC::EC_Mul2Table_Data_PC(const EC_AffinePoint_Data& g, const EC_AffinePoint_Data& h) :
       m_group(g.group()) {
