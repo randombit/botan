@@ -227,7 +227,7 @@ consteval auto shanks_tonelli_c4(const std::array<W, N>& p_minus_1_over_2) -> Z 
 
    // This is a silly performance hack; the first non-quadratic root in P-224
    // is 11 so if we start the search there we save a little time.
-   auto z = Z::from_word(11);
+   auto z = Z::constant(11);
 
    for(;;) {
       auto c = z.pow_vartime(p_minus_1_over_2);

@@ -221,7 +221,15 @@ class Pcurve_Arithmetic_Tests final : public Test {
                const auto pt1 = curve->generator();
 
                auto pt2 = [&]() {
-                  const auto lo = curve->scalar_from_u32(static_cast<uint32_t>(i / 2));
+                  const auto lo = [&]() {
+                     if((i / 2) == 0) {
+                        return curve->scalar_zero();
+                     } else {
+                        std::vector<uint8_t> sbytes(curve->scalar_bytes());
+                        sbytes[sbytes.size() - 1] = static_cast<uint8_t>(i / 2);
+                        return curve->deserialize_scalar(sbytes).value();
+                     }
+                  }();
                   auto x = curve->mul_by_g(lo, rng).to_affine();
                   if(i % 2 == 0) {
                      x = x.negate();

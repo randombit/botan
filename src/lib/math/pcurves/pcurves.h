@@ -365,11 +365,14 @@ class BOTAN_TEST_API PrimeOrderCurve {
       /// Note that the deprecated "hybrid" encoding is not supported here
       virtual std::optional<AffinePoint> deserialize_point(std::span<const uint8_t> bytes) const = 0;
 
-      /// Deserialize a scalar
+      /// Deserialize a scalar in [1,p)
       ///
       /// This function requires the input length be exactly scalar_bytes long;
       /// it does not accept inputs that are shorter, or with excess leading
       /// zero padding bytes.
+      ///
+      /// This function also rejects zero as an input, since in normal usage
+      /// scalars are integers in Z_p*
       virtual std::optional<Scalar> deserialize_scalar(std::span<const uint8_t> bytes) const = 0;
 
       /// Reduce an integer modulo the group order
@@ -409,11 +412,6 @@ class BOTAN_TEST_API PrimeOrderCurve {
       * Return the scalar one
       */
       virtual Scalar scalar_one() const = 0;
-
-      /**
-      * Return a small scalar
-      */
-      virtual Scalar scalar_from_u32(uint32_t x) const = 0;
 
       virtual Scalar scalar_add(const Scalar& a, const Scalar& b) const = 0;
       virtual Scalar scalar_sub(const Scalar& a, const Scalar& b) const = 0;

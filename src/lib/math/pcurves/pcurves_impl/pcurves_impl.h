@@ -1,5 +1,5 @@
 /*
-* (C) 2024 Jack Lloyd
+* (C) 2024,2025 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -20,8 +20,44 @@
 
 namespace Botan {
 
+/*
+This file implements a system for compile-time instantiation of elliptic curve arithmetic.
+
+All computations including point multiplication are implemented to be constant time,
+with the exception of any function which includes "vartime" or equivalent in its
+name. Randomization techniques (scalar blinding, point rerandomization) are also
+used, largely to guard against situations where a compiler inserts a conditional jump
+where not expected.
+
+A specific elliptic curve is created by creating a set of EllipticCurveParameters,
+which are templatized over the relevant constants (p, a, b, etc) and then
+passing that set of parameters to an EllipticCurve template.
+
+For a simple example of how these are used see pcurves_brainpool256r1.cpp
+
+The system also includes various hooks which allow for specialized representations of
+field elements (for curves where a modular reduction technique faster than Montgomery
+is available) and to provide pre-computed addition chains for field and scalar
+inversions. See pcurves_secp256r1.cpp or pcurves_secp256k1.cpp for examples with all
+the bells and whistles.
+*/
+
 namespace {
 
+/**
+* Montomgomery Representation of Integers
+*
+* Integers modulo a prime (IntMod, see below) use some representation that
+* allows for fast arithmetic.
+*
+* The default representation used is Montgomery arithmetic. Curves with
+* specialized fields (eg Mersenne primes, Solinas primes, or Crandall primes)
+* provide a different type as the FieldRep parameter to the EllipticCurve
+* template.
+*
+* Since the curve parameters are public and known at compile time, we can
+* similarly compute the Montgomery parameters at compile time.
+*/
 template <typename Params>
 class MontgomeryRep final {
    public:
@@ -39,8 +75,14 @@ class MontgomeryRep final {
       static constexpr auto R2 = mul_mod(R1, R1, P);
       static constexpr auto R3 = mul_mod(R1, R2, P);
 
+      /**
+      * Return the constant one, pre-converted into Montgomery form
+      */
       constexpr static std::array<W, N> one() { return R1; }
 
+      /**
+      * Modular reduction
+      */
       constexpr static std::array<W, N> redc(const std::array<W, 2 * N>& z) {
          if constexpr(P_dash == 1) {
             return monty_redc_pdash1(z, P);
@@ -49,12 +91,21 @@ class MontgomeryRep final {
          }
       }
 
+      /**
+      * Convert an integer into Montgomery representation
+      */
       constexpr static std::array<W, N> to_rep(const std::array<W, N>& x) {
          std::array<W, 2 * N> z;
          comba_mul<N>(z.data(), x.data(), R2.data());
          return Self::redc(z);
       }
 
+      /**
+      * Wide reduction modulo the prime
+      *
+      * Modular reduces an input of up to twice the length of the modulus, and
+      * converts it into Montgomery form.
+      */
       constexpr static std::array<W, N> wide_to_rep(const std::array<W, 2 * N>& x) {
          auto redc_x = Self::redc(x);
          std::array<W, 2 * N> z;
@@ -62,6 +113,9 @@ class MontgomeryRep final {
          return Self::redc(z);
       }
 
+      /**
+      * Convert an integer out of Montgomery representation
+      */
       constexpr static std::array<W, N> from_rep(const std::array<W, N>& z) {
          std::array<W, 2 * N> ze = {};
          copy_mem(std::span{ze}.template first<N>(), z);
@@ -69,6 +123,24 @@ class MontgomeryRep final {
       }
 };
 
+/**
+* Integers Modulo (a Prime)
+*
+* This is used to store and manipulate integers modulo the field (for the affine
+* x/y or Jacobian x/y/z coordinates) and group order (for scalar arithmetic).
+*
+* This class is parameterized by Rep which handles the modular reduction step,
+* as well (if required) any conversions into or out of the inner
+* representation. This is primarily for Montgomery arithmetic; specialized
+* reduction methods instead keep the integer in the "standard" form.
+*
+* _Most_ of the code in this class does work for arbitrary moduli. However
+* at least div2 and invert make assumptions that the modulus is prime.
+*
+* Any function that does not contain "vartime" or equivalent in the name is
+* written such that it does not leak information about its arguments via control
+* flow or memory access patterns.
+*/
 template <typename Rep>
 class IntMod final {
    private:
@@ -94,15 +166,28 @@ class IntMod final {
       IntMod& operator=(const Self& other) = default;
       IntMod& operator=(Self&& other) = default;
 
+      /**
+      * Return integer zero
+      *
+      * Note this assumes that the representation of zero is an all zero
+      * sequence of words. This is true for both Montgomery and standard
+      * representations.
+      */
       static constexpr Self zero() { return Self(std::array<W, N>{0}); }
 
+      /**
+      * Return integer one
+      */
       static constexpr Self one() { return Self(Rep::one()); }
 
-      static constexpr Self from_word(W x) {
-         std::array<W, 1> v{x};
-         return Self::from_words(v);
-      }
-
+      /**
+      * Consume an array of words and convert it to an IntMod
+      *
+      * This handles the Montgomery conversion, if required.
+      *
+      * Note that this function assumes that `w` represents an integer that is
+      * less than the modulus.
+      */
       template <size_t L>
       static constexpr Self from_words(std::array<W, L> w) {
          if constexpr(L == N) {
@@ -115,17 +200,32 @@ class IntMod final {
          }
       }
 
+      /**
+      * Check in constant time if this is equal to zero
+      */
       constexpr CT::Choice is_zero() const { return CT::all_zeros(m_val.data(), m_val.size()).as_choice(); }
 
+      /**
+      * Check in constant time if this not equal to zero
+      */
       constexpr CT::Choice is_nonzero() const { return !is_zero(); }
 
+      /**
+      * Check in constant time if this equal to one
+      */
       constexpr CT::Choice is_one() const { return (*this == Self::one()); }
 
+      /**
+      * Check in constant time if this is an even integer
+      */
       constexpr CT::Choice is_even() const {
          auto v = Rep::from_rep(m_val);
          return !CT::Choice::from_int(v[0] & 0x01);
       }
 
+      /**
+      * Modular addition; return c = a + b
+      */
       friend constexpr Self operator+(const Self& a, const Self& b) {
          std::array<W, N> t;
          W carry = bigint_add<W, N>(t, a.value(), b.value());
@@ -135,6 +235,9 @@ class IntMod final {
          return Self(r);
       }
 
+      /**
+      * Modular subtraction; return c = a - b
+      */
       friend constexpr Self operator-(const Self& a, const Self& b) {
          std::array<W, N> r;
          word carry = bigint_sub3(r.data(), a.data(), N, b.data(), N);
@@ -142,7 +245,9 @@ class IntMod final {
          return Self(r);
       }
 
-      /// Return (*this) divided by 2
+      /**
+      * Return the value of this divided by 2
+      */
       Self div2() const {
          // The inverse of 2 modulo P is (P/2)+1; this avoids a constexpr time
          // general inversion, which some compilers can't handle
@@ -178,12 +283,18 @@ class IntMod final {
       /// Return (*this) multiplied by 8
       constexpr Self mul8() const { return mul2().mul2().mul2(); }
 
+      /**
+      * Modular multiplication; return c = a * b
+      */
       friend constexpr Self operator*(const Self& a, const Self& b) {
          std::array<W, 2 * N> z;
          comba_mul<N>(z.data(), a.data(), b.data());
          return Self(Rep::redc(z));
       }
 
+      /**
+      * Modular multiplication; set this to this * other
+      */
       constexpr Self& operator*=(const Self& other) {
          std::array<W, 2 * N> z;
          comba_mul<N>(z.data(), data(), other.data());
@@ -191,7 +302,11 @@ class IntMod final {
          return (*this);
       }
 
-      // if cond is true, sets x to nx
+      /**
+      * Conditional assignment
+      *
+      * If `cond` is true, sets `x` to `nx`
+      */
       static constexpr void conditional_assign(Self& x, CT::Choice cond, const Self& nx) {
          const W mask = CT::Mask<W>::from_choice(cond).value();
 
@@ -200,7 +315,11 @@ class IntMod final {
          }
       }
 
-      // if cond is true, sets x to nx, y to ny
+      /**
+      * Conditional assignment
+      *
+      * If `cond` is true, sets `x` to `nx` and `y` to `ny`
+      */
       static constexpr void conditional_assign(Self& x, Self& y, CT::Choice cond, const Self& nx, const Self& ny) {
          const W mask = CT::Mask<W>::from_choice(cond).value();
 
@@ -210,7 +329,11 @@ class IntMod final {
          }
       }
 
-      // if cond is true, sets x to nx, y to ny, z to nz
+      /**
+      * Conditional assignment
+      *
+      * If `cond` is true, sets `x` to `nx`, `y` to `ny`, and `z` to `nz`
+      */
       static constexpr void conditional_assign(
          Self& x, Self& y, Self& z, CT::Choice cond, const Self& nx, const Self& ny, const Self& nz) {
          const W mask = CT::Mask<W>::from_choice(cond).value();
@@ -222,12 +345,24 @@ class IntMod final {
          }
       }
 
+      /**
+      * Modular squaring
+      *
+      * Returns the square of this after modular reduction
+      */
       constexpr Self square() const {
          std::array<W, 2 * N> z;
          comba_sqr<N>(z.data(), this->data());
          return Self(Rep::redc(z));
       }
 
+      /**
+      * Repeated modular squaring
+      *
+      * Returns the nth square of this
+      *
+      * (Alternate view, returns this raised to the 2^nth power)
+      */
       constexpr void square_n(size_t n) {
          std::array<W, 2 * N> z;
          for(size_t i = 0; i != n; ++i) {
@@ -236,7 +371,11 @@ class IntMod final {
          }
       }
 
-      // Negation modulo p
+      /**
+      * Modular negation
+      *
+      * Returns the additive inverse of (*this)
+      */
       constexpr Self negate() const {
          auto x_is_zero = CT::all_zeros(this->data(), N);
 
@@ -246,11 +385,30 @@ class IntMod final {
          return Self(r);
       }
 
+      /**
+      * Modular Exponentiation (Variable Time)
+      *
+      * This function is variable time with respect to the exponent. It should
+      * only be used when exp is not secret. In the current code, `exp` is
+      * always a compile-time constant.
+      *
+      * This function should not leak any information about this, since the
+      * value being operated on may be a secret.
+      *
+      * TODO: this interface should be changed so that the exponent is always a
+      * compile-time constant; this should allow some interesting optimizations.
+      */
       constexpr Self pow_vartime(const std::array<W, N>& exp) const {
          constexpr size_t WindowBits = (Self::BITS <= 256) ? 4 : 5;
          constexpr size_t WindowElements = (1 << WindowBits) - 1;
 
          constexpr size_t Windows = (Self::BITS + WindowBits - 1) / WindowBits;
+
+         /*
+         A simple fixed width window modular multiplication.
+
+         TODO: investigate using sliding window here
+         */
 
          std::array<Self, WindowElements> tbl;
 
@@ -291,17 +449,28 @@ class IntMod final {
       * If the modulus is prime the only value that has no modular inverse is 0.
       *
       * This uses Fermat's little theorem, and so assumes that p is prime
+      *
+      * Since P is public, P-2 is as well, thus using a variable time modular
+      * exponentiation routine is safe.
+      *
+      * This function is only used if the curve does not provide an addition
+      * chain for specific inversions (see for example pcurves_secp256r1.cpp)
       */
       constexpr Self invert() const { return pow_vartime(Self::P_MINUS_2); }
 
       /**
       * Return the modular square root if it exists
+      *
+      * The CT::Choice indicates if the square root exists or not.
       */
       constexpr std::pair<Self, CT::Choice> sqrt() const {
          if constexpr(Self::P_MOD_4 == 3) {
+            // The easy case for square root is when p == 3 (mod 4)
+
             constexpr auto P_PLUS_1_OVER_4 = p_plus_1_over_4(P);
             auto z = pow_vartime(P_PLUS_1_OVER_4);
             const CT::Choice correct = (z.square() == *this);
+            // Zero out the return value if it would otherwise be incorrect
             Self::conditional_assign(z, !correct, Self::zero());
             return {z, correct};
          } else {
@@ -332,7 +501,7 @@ class IntMod final {
 
             for(size_t i = C1_C2.first; i >= 2; i--) {
                b.square_n(i - 2);
-               const auto e = b.is_one();
+               const CT::Choice e = b.is_one();
                Self::conditional_assign(z, !e, z * c);
                c.square_n(1);
                Self::conditional_assign(t, !e, t * c);
@@ -345,16 +514,29 @@ class IntMod final {
          }
       }
 
+      /**
+      * Constant time integer equality test
+      *
+      * Since both this and other are in Montgomery representation (if applicable),
+      * we can always compare the words directly, without having to convert out.
+      */
       constexpr CT::Choice operator==(const Self& other) const {
          return CT::is_equal(this->data(), other.data(), N).as_choice();
       }
 
-      constexpr CT::Choice operator!=(const Self& other) const {
-         return CT::is_not_equal(this->data(), other.data(), N).as_choice();
-      }
+      /**
+      * Constant time integer inequality test
+      */
+      constexpr CT::Choice operator!=(const Self& other) const { return !(*this == other); }
 
+      /**
+      * Convert the integer to standard representation and return the sequence of words
+      */
       constexpr std::array<W, Self::N> to_words() const { return Rep::from_rep(m_val); }
 
+      /**
+      * Serialize the integer to a bytestring
+      */
       constexpr void serialize_to(std::span<uint8_t, Self::BYTES> bytes) const {
          auto v = Rep::from_rep(m_val);
          std::reverse(v.begin(), v.end());
@@ -369,6 +551,11 @@ class IntMod final {
          }
       }
 
+      /**
+      * Store the raw words to an array
+      *
+      * See pcurves_wrap.h for why/where this is used
+      */
       template <size_t L>
       std::array<W, L> stash_value() const {
          static_assert(L >= N);
@@ -379,6 +566,11 @@ class IntMod final {
          return stash;
       }
 
+      /**
+      * Restore the value previously stashed
+      *
+      * See pcurves_wrap.h for why/where this is used
+      */
       template <size_t L>
       static Self from_stash(const std::array<W, L>& stash) {
          static_assert(L >= N);
@@ -389,11 +581,16 @@ class IntMod final {
          return Self(val);
       }
 
-      // Returns nullopt if the input is an encoding greater than or equal P
+      /**
+      * Deserialize an integer from a bytestring
+      *
+      * Returns nullopt if the input is an encoding greater than or equal P
+      *
+      * This function also requires that the bytestring be exactly of the expected
+      * length; short bytestrings, or a long bytestring with leading zero bytes, are
+      * also rejected.
+      */
       static std::optional<Self> deserialize(std::span<const uint8_t> bytes) {
-         // We could allow either short inputs or longer zero padded
-         // inputs here, however it seems best to avoid non-canonical
-         // representations unless required
          if(bytes.size() != Self::BYTES) {
             return {};
          }
@@ -404,10 +601,16 @@ class IntMod final {
             return {};
          }
 
+         // Safe because we checked above that words is an integer < P
          return Self::from_words(words);
       }
 
-      // Reduces large input modulo the order
+      /**
+      * Modular reduce a larger input
+      *
+      * This takes a bytestring that is at most twice the length of the modulus, and
+      * modular reduces it.
+      */
       template <size_t L>
       static constexpr Self from_wide_bytes(std::span<const uint8_t, L> bytes) {
          static_assert(8 * L <= 2 * Self::BITS);
@@ -416,7 +619,12 @@ class IntMod final {
          return Self(Rep::wide_to_rep(bytes_to_words<W, 2 * N, 2 * BYTES>(std::span{padded_bytes})));
       }
 
-      // Reduces large input modulo the order
+      /**
+      * Modular reduce a larger input
+      *
+      * This takes a bytestring that is at most twice the length of the modulus, and
+      * modular reduces it.
+      */
       static constexpr std::optional<Self> from_wide_bytes_varlen(std::span<const uint8_t> bytes) {
          if(8 * bytes.size() > 2 * Self::BITS) {
             return {};
@@ -426,6 +634,17 @@ class IntMod final {
          return Self(Rep::wide_to_rep(bytes_to_words<W, 2 * N, 2 * BYTES>(std::span{padded_bytes})));
       }
 
+      /**
+      * Return a random integer value in [1,p)
+      *
+      * This uses rejection sampling. This could have alternatively been implemented
+      * by oversampling the random number generator and then performing a wide
+      * reduction. The main reason that approach is avoided here is because it makes
+      * testing ECDSA-style known answer tests more difficult.
+      *
+      * This function avoids returning zero since in almost all contexts where a
+      * random integer is desired we want a random integer in Z_p*
+      */
       static Self random(RandomNumberGenerator& rng) {
          constexpr size_t MAX_ATTEMPTS = 1000;
 
@@ -451,6 +670,11 @@ class IntMod final {
          throw Internal_Error("Failed to generate random Scalar within bounded number of attempts");
       }
 
+      /**
+      * Create a small compile time constant
+      *
+      * Notice this function is consteval, and so can only be called at compile time
+      */
       static consteval Self constant(int8_t x) {
          std::array<W, 1> v;
          v[0] = (x >= 0) ? x : -x;
@@ -472,6 +696,11 @@ class IntMod final {
       std::array<W, N> m_val;
 };
 
+/**
+* Affine Curve Point
+*
+* This contains a pair of integers (x,y) which satisfy the curve equation
+*/
 template <typename FieldElement, typename Params>
 class AffineCurvePoint final {
    public:
@@ -501,6 +730,9 @@ class AffineCurvePoint final {
 
       constexpr Self negate() const { return Self(x(), y().negate()); }
 
+      /**
+      * Serialize the point in uncompressed format
+      */
       constexpr void serialize_to(std::span<uint8_t, Self::BYTES> bytes) const {
          BOTAN_STATE_CHECK(this->is_identity().as_bool() == false);
          BufferStuffer pack(bytes);
@@ -510,6 +742,9 @@ class AffineCurvePoint final {
          BOTAN_DEBUG_ASSERT(pack.full());
       }
 
+      /**
+      * Serialize the point in compressed format
+      */
       constexpr void serialize_compressed_to(std::span<uint8_t, Self::COMPRESSED_BYTES> bytes) const {
          BOTAN_STATE_CHECK(this->is_identity().as_bool() == false);
          const uint8_t hdr = CT::Mask<uint8_t>::from_choice(y().is_even()).select(0x02, 0x03);
@@ -520,6 +755,9 @@ class AffineCurvePoint final {
          BOTAN_DEBUG_ASSERT(pack.full());
       }
 
+      /**
+      * Serialize the affine x coordinate only
+      */
       constexpr void serialize_x_to(std::span<uint8_t, FieldElement::BYTES> bytes) const {
          BOTAN_STATE_CHECK(this->is_identity().as_bool() == false);
          x().serialize_to(bytes);
@@ -543,8 +781,19 @@ class AffineCurvePoint final {
          return result;
       }
 
+      /**
+      * Return (x^3 + A*x + B) mod p
+      */
       static constexpr FieldElement x3_ax_b(const FieldElement& x) { return (x.square() + Self::A) * x + Self::B; }
 
+      /**
+      * Point deserialization
+      *
+      * This accepts compressed or uncompressed formats.
+      *
+      * It also currently accepts the deprecated hybrid format.
+      * TODO(Botan4): remove support for decoding hybrid points
+      */
       static std::optional<Self> deserialize(std::span<const uint8_t> bytes) {
          if(bytes.size() == Self::BYTES) {
             if(bytes[0] == 0x04) {
@@ -594,10 +843,19 @@ class AffineCurvePoint final {
          return {};
       }
 
+      /**
+      * Return the affine x coordinate
+      */
       constexpr const FieldElement& x() const { return m_x; }
 
+      /**
+      * Return the affine y coordinate
+      */
       constexpr const FieldElement& y() const { return m_y; }
 
+      /**
+      * Conditional assignment of an affine point
+      */
       constexpr void conditional_assign(CT::Choice cond, const Self& pt) {
          FieldElement::conditional_assign(m_x, m_y, cond, pt.x(), pt.y());
       }
@@ -611,6 +869,11 @@ class AffineCurvePoint final {
       FieldElement m_y;
 };
 
+/**
+* Projective curve point
+*
+* This uses Jacobian coordinates
+*/
 template <typename FieldElement, typename Params>
 class ProjectiveCurvePoint {
    public:
@@ -625,6 +888,9 @@ class ProjectiveCurvePoint {
       using Self = ProjectiveCurvePoint<FieldElement, Params>;
       using AffinePoint = AffineCurvePoint<FieldElement, Params>;
 
+      /**
+      * Convert a point from affine to projective form
+      */
       static constexpr Self from_affine(const AffinePoint& pt) {
          if(pt.is_identity().as_bool()) {
             return Self::identity();
@@ -633,14 +899,26 @@ class ProjectiveCurvePoint {
          }
       }
 
+      /**
+      * Return the identity element
+      */
       static constexpr Self identity() { return Self(FieldElement::zero(), FieldElement::one(), FieldElement::zero()); }
 
+      /**
+      * Default constructor: the identity element
+      */
       constexpr ProjectiveCurvePoint() :
             m_x(FieldElement::zero()), m_y(FieldElement::one()), m_z(FieldElement::zero()) {}
 
+      /**
+      * Affine constructor: take x/y coordinates
+      */
       constexpr ProjectiveCurvePoint(const FieldElement& x, const FieldElement& y) :
             m_x(x), m_y(y), m_z(FieldElement::one()) {}
 
+      /**
+      * Projective constructor: take x/y/z coordinates
+      */
       constexpr ProjectiveCurvePoint(const FieldElement& x, const FieldElement& y, const FieldElement& z) :
             m_x(x), m_y(y), m_z(z) {}
 
@@ -673,6 +951,9 @@ class ProjectiveCurvePoint {
          FieldElement::conditional_assign(m_x, m_y, m_z, cond, pt.x(), pt.y(), pt.z());
       }
 
+      /**
+      * Mixed (projective + affine) point addition
+      */
       constexpr static Self add_mixed(const Self& a, const AffinePoint& b) {
          const auto a_is_identity = a.is_identity();
          const auto b_is_identity = b.is_identity();
@@ -721,6 +1002,9 @@ class ProjectiveCurvePoint {
          return Self(X3, Y3, Z3);
       }
 
+      /**
+      * Projective point addition
+      */
       constexpr static Self add(const Self& a, const Self& b) {
          const auto a_is_identity = a.is_identity();
          const auto b_is_identity = b.is_identity();
@@ -774,6 +1058,9 @@ class ProjectiveCurvePoint {
          return Self(X3, Y3, Z3);
       }
 
+      /**
+      * Iterated point doubling
+      */
       constexpr Self dbl_n(size_t n) const {
          /*
          Repeated doubling using an adaptation of Algorithm 3.23 in
@@ -841,6 +1128,9 @@ class ProjectiveCurvePoint {
          }
       }
 
+      /**
+      * Point doubling
+      */
       constexpr Self dbl() const {
          /*
          Using https://hyperelliptic.org/EFD/g1p/auto-shortw-jacobian.html#doubling-dbl-1998-cmo-2
@@ -881,27 +1171,46 @@ class ProjectiveCurvePoint {
          return Self(nx, ny, nz);
       }
 
+      /**
+      * Point negation
+      */
       constexpr Self negate() const { return Self(x(), y().negate(), z()); }
 
+      /**
+      * Randomize the point representation
+      *
+      * Projective coordinates are redundant; if (x,y,z) is a projective
+      * point then so is (x*r^2,y*r^3,z*r) for any non-zero r.
+      */
       void randomize_rep(RandomNumberGenerator& rng) {
-         if(!rng.is_seeded()) {
-            return;
+         // In certain contexts we may be called with a Null_RNG; in that case the
+         // caller is accepting that randomization will not occur
+
+         if(rng.is_seeded()) {
+            auto r = FieldElement::random(rng);
+
+            auto r2 = r.square();
+            auto r3 = r2 * r;
+
+            m_x *= r2;
+            m_y *= r3;
+            m_z *= r;
          }
-
-         auto r = FieldElement::random(rng);
-
-         auto r2 = r.square();
-         auto r3 = r2 * r;
-
-         m_x *= r2;
-         m_y *= r3;
-         m_z *= r;
       }
 
+      /**
+      * Return the projective x coordinate
+      */
       constexpr const FieldElement& x() const { return m_x; }
 
+      /**
+      * Return the projective y coordinate
+      */
       constexpr const FieldElement& y() const { return m_y; }
 
+      /**
+      * Return the projective z coordinate
+      */
       constexpr const FieldElement& z() const { return m_z; }
 
       constexpr void _const_time_poison() const { CT::poison_all(m_x, m_y, m_z); }
@@ -914,6 +1223,12 @@ class ProjectiveCurvePoint {
       FieldElement m_z;
 };
 
+/**
+* Elliptic Curve Parameters
+*
+* These are constructed using compile time strings which contain the relevant values
+* (P, A, B, the group order, and the group generator x/y coordinates)
+*/
 template <StringLiteral PS,
           StringLiteral AS,
           StringLiteral BS,
@@ -935,6 +1250,9 @@ class EllipticCurveParameters {
       static constexpr int8_t Z = ZI;
 };
 
+/**
+* This exists soley as a hack which somewhat reduces symbol lengths
+*/
 template <WordType WI, size_t NI, std::array<WI, NI> PI>
 struct IntParams {
    public:
@@ -943,6 +1261,11 @@ struct IntParams {
       static constexpr auto P = PI;
 };
 
+/**
+* Elliptic Curve
+*
+* Takes as input a set of parameters, and instantiates the elliptic curve
+*/
 template <typename Params, template <typename FieldParamsT> typename FieldRep = MontgomeryRep>
 class EllipticCurve {
    public:
@@ -972,6 +1295,8 @@ class EllipticCurve {
       static constexpr FieldElement A = FieldElement::from_words(Params::AW);
       static constexpr FieldElement B = FieldElement::from_words(Params::BW);
 
+      static_assert(B.is_nonzero().as_bool(), "B must be non-zero");
+
       static constexpr AffinePoint G =
          AffinePoint(FieldElement::from_words(Params::GXW), FieldElement::from_words(Params::GYW));
 
@@ -983,10 +1308,132 @@ class EllipticCurve {
       static constexpr bool OrderIsLessThanField = bigint_cmp(NW.data(), NW.size(), PW.data(), PW.size()) == -1;
 };
 
+/**
+* Field inversion concept
+*
+* This concept checks if the FieldElement supports fe_invert2
+*/
 template <typename C>
 concept curve_supports_fe_invert2 = requires(const typename C::FieldElement& fe) {
    { C::fe_invert2(fe) } -> std::same_as<typename C::FieldElement>;
 };
+
+/**
+* Field inversion
+*
+* Uses the specialized fe_invert2 if available, or otherwise the standard
+* (FLT-based) field inversion.
+*/
+template <typename C>
+inline auto invert_field_element(const typename C::FieldElement& fe) {
+   if constexpr(curve_supports_fe_invert2<C>) {
+      return C::fe_invert2(fe) * fe;
+   } else {
+      return fe.invert();
+   }
+}
+
+/**
+* Convert a projective point into affine
+*/
+template <typename C>
+auto to_affine(const typename C::ProjectivePoint& pt) {
+   // Not strictly required right? - default should work as long
+   // as (0,0) is identity and invert returns 0 on 0
+   if(pt.is_identity().as_bool()) {
+      return C::AffinePoint::identity();
+   }
+
+   if constexpr(curve_supports_fe_invert2<C>) {
+      const auto z2_inv = C::fe_invert2(pt.z());
+      const auto z3_inv = z2_inv.square() * pt.z();
+      return typename C::AffinePoint(pt.x() * z2_inv, pt.y() * z3_inv);
+   } else {
+      const auto z_inv = invert_field_element<C>(pt.z());
+      const auto z2_inv = z_inv.square();
+      const auto z3_inv = z_inv * z2_inv;
+      return typename C::AffinePoint(pt.x() * z2_inv, pt.y() * z3_inv);
+   }
+}
+
+/**
+* Convert a projective point into affine and return x coordinate only
+*/
+template <typename C>
+auto to_affine_x(const typename C::ProjectivePoint& pt) {
+   if constexpr(curve_supports_fe_invert2<C>) {
+      return pt.x() * C::fe_invert2(pt.z());
+   } else {
+      const auto z_inv = invert_field_element<C>(pt.z());
+      const auto z2_inv = z_inv.square();
+      return pt.x() * z2_inv;
+   }
+}
+
+/**
+* Batch projective->affine conversion
+*/
+template <typename C>
+auto to_affine_batch(std::span<const typename C::ProjectivePoint> projective) {
+   typedef typename C::AffinePoint AffinePoint;
+   typedef typename C::FieldElement FieldElement;
+
+   const size_t N = projective.size();
+   std::vector<AffinePoint> affine(N, AffinePoint::identity());
+
+   bool any_identity = false;
+   for(size_t i = 0; i != N; ++i) {
+      if(projective[i].is_identity().as_bool()) {
+         any_identity = true;
+         // If any of the elements are the identity we fall back to
+         // performing the conversion without a batch
+         break;
+      }
+   }
+
+   if(N <= 2 || any_identity) {
+      // If there are identity elements, using the batch inversion gets
+      // tricky. It can be done, but this should be a rare situation so
+      // just punt to the serial conversion if it occurs
+      for(size_t i = 0; i != N; ++i) {
+         affine[i] = to_affine<C>(projective[i]);
+      }
+   } else {
+      std::vector<FieldElement> c(N);
+
+      /*
+      Batch projective->affine using Montgomery's trick
+
+      See Algorithm 2.26 in "Guide to Elliptic Curve Cryptography"
+      (Hankerson, Menezes, Vanstone)
+      */
+
+      c[0] = projective[0].z();
+      for(size_t i = 1; i != N; ++i) {
+         c[i] = c[i - 1] * projective[i].z();
+      }
+
+      auto s_inv = invert_field_element<C>(c[N - 1]);
+
+      for(size_t i = N - 1; i > 0; --i) {
+         const auto& p = projective[i];
+
+         const auto z_inv = s_inv * c[i - 1];
+         const auto z2_inv = z_inv.square();
+         const auto z3_inv = z_inv * z2_inv;
+
+         s_inv = s_inv * p.z();
+
+         affine[i] = AffinePoint(p.x() * z2_inv, p.y() * z3_inv);
+      }
+
+      const auto z2_inv = s_inv.square();
+      const auto z3_inv = s_inv * z2_inv;
+      affine[0] = AffinePoint(projective[0].x() * z2_inv, projective[0].y() * z3_inv);
+   }
+
+   return affine;
+}
 
 /**
 * Blinded Scalar
@@ -1119,113 +1566,6 @@ class UnblindedScalarBits final {
    private:
       std::array<uint8_t, C::Scalar::BYTES> m_bytes;
 };
-
-template <typename C>
-inline auto invert_field_element(const typename C::FieldElement& fe) {
-   if constexpr(curve_supports_fe_invert2<C>) {
-      return C::fe_invert2(fe) * fe;
-   } else {
-      return fe.invert();
-   }
-}
-
-/// Convert a projective point into affine
-template <typename C>
-auto to_affine(const typename C::ProjectivePoint& pt) {
-   // Not strictly required right? - default should work as long
-   // as (0,0) is identity and invert returns 0 on 0
-   if(pt.is_identity().as_bool()) {
-      return C::AffinePoint::identity();
-   }
-
-   if constexpr(curve_supports_fe_invert2<C>) {
-      const auto z2_inv = C::fe_invert2(pt.z());
-      const auto z3_inv = z2_inv.square() * pt.z();
-      return typename C::AffinePoint(pt.x() * z2_inv, pt.y() * z3_inv);
-   } else {
-      const auto z_inv = invert_field_element<C>(pt.z());
-      const auto z2_inv = z_inv.square();
-      const auto z3_inv = z_inv * z2_inv;
-      return typename C::AffinePoint(pt.x() * z2_inv, pt.y() * z3_inv);
-   }
-}
-
-/// Convert a projective point into affine and return x coordinate only
-template <typename C>
-auto to_affine_x(const typename C::ProjectivePoint& pt) {
-   if constexpr(curve_supports_fe_invert2<C>) {
-      return pt.x() * C::fe_invert2(pt.z());
-   } else {
-      const auto z_inv = invert_field_element<C>(pt.z());
-      const auto z2_inv = z_inv.square();
-      return pt.x() * z2_inv;
-   }
-}
-
-/**
-* Batch projective->affine conversion
-*/
-template <typename C>
-auto to_affine_batch(std::span<const typename C::ProjectivePoint> projective) {
-   typedef typename C::AffinePoint AffinePoint;
-   typedef typename C::FieldElement FieldElement;
-
-   const size_t N = projective.size();
-   std::vector<AffinePoint> affine(N, AffinePoint::identity());
-
-   bool any_identity = false;
-   for(size_t i = 0; i != N; ++i) {
-      if(projective[i].is_identity().as_bool()) {
-         any_identity = true;
-         // If any of the elements are the identity we fall back to
-         // performing the conversion without a batch
-         break;
-      }
-   }
-
-   if(N <= 2 || any_identity) {
-      // If there are identity elements, using the batch inversion gets
-      // tricky. It can be done, but this should be a rare situation so
-      // just punt to the serial conversion if it occurs
-      for(size_t i = 0; i != N; ++i) {
-         affine[i] = to_affine<C>(projective[i]);
-      }
-   } else {
-      std::vector<FieldElement> c(N);
-
-      /*
-      Batch projective->affine using Montgomery's trick
-
-      See Algorithm 2.26 in "Guide to Elliptic Curve Cryptography"
-      (Hankerson, Menezes, Vanstone)
-      */
-
-      c[0] = projective[0].z();
-      for(size_t i = 1; i != N; ++i) {
-         c[i] = c[i - 1] * projective[i].z();
-      }
-
-      auto s_inv = invert_field_element<C>(c[N - 1]);
-
-      for(size_t i = N - 1; i > 0; --i) {
-         const auto& p = projective[i];
-
-         const auto z_inv = s_inv * c[i - 1];
-         const auto z2_inv = z_inv.square();
-         const auto z3_inv = z_inv * z2_inv;
-
-         s_inv = s_inv * p.z();
-
-         affine[i] = AffinePoint(p.x() * z2_inv, p.y() * z3_inv);
-      }
-
-      const auto z2_inv = s_inv.square();
-      const auto z3_inv = s_inv * z2_inv;
-      affine[0] = AffinePoint(projective[0].x() * z2_inv, projective[0].y() * z3_inv);
-   }
-
-   return affine;
-}
 
 /**
 * Base point precomputation table
@@ -1571,8 +1911,7 @@ class WindowedMul2Table final {
       * of an elliptic curve signature. Since in this case the inputs are all
       * public, there is no problem with variable time computation.
       *
-      * TODO for variable time computation we could make use of a wNAF
-      * representation instead
+      * TODO in the future we could use joint sparse form here.
       */
       ProjectivePoint mul2_vartime(const Scalar& s1, const Scalar& s2) const {
          constexpr size_t Windows = (Scalar::BITS + WindowBits - 1) / WindowBits;
@@ -1604,7 +1943,11 @@ class WindowedMul2Table final {
       std::vector<AffinePoint> m_table;
 };
 
-// SSWU constant C1 - (B / (Z * A))
+/**
+* SSWU constant C2 - (B / (Z * A))
+*
+* See RFC 9380 section 6.6.2
+*/
 template <typename C>
 const auto& SSWU_C2()
    requires C::ValidForSswuHash
@@ -1614,7 +1957,11 @@ const auto& SSWU_C2()
    return C2;
 }
 
-// SSWU constant C1 - (-B / A)
+/**
+* SSWU constant C1 - (-B / A)
+*
+* See RFC 9380 section 6.6.2
+*/
 template <typename C>
 const auto& SSWU_C1()
    requires C::ValidForSswuHash
@@ -1624,6 +1971,11 @@ const auto& SSWU_C1()
    return C1;
 }
 
+/**
+* Map to curve (SSWU)
+*
+* See RFC 9380 ("Hashing to Elliptic Curves") section 6.6.2
+*/
 template <typename C>
 inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::AffinePoint {
    CT::poison(u);
@@ -1655,6 +2007,14 @@ inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::
    return pt;
 }
 
+/**
+* Hash to curve (SSWU); RFC 9380
+*
+* Hashes the input using XMD and the specified hash function, producing either one or
+* two field elements `u`/(`u0`,`u1`) resp. These are then mapped to curve point(s)
+* using SSWU, and if a pair of points were generated these are combined using point
+* addition.
+*/
 template <typename C, bool RO>
 inline auto hash_to_curve_sswu(std::string_view hash, std::span<const uint8_t> pw, std::span<const uint8_t> dst) {
    static_assert(C::ValidForSswuHash);
