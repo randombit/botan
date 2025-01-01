@@ -68,7 +68,7 @@ Branch Support Status
 -------------------------
 
 Following table provides the support status for Botan branches, as of
-May 2024.
+January 2025.
 
 "Active development" refers to adding new features and optimizations. At the
 conclusion of the active development phase, only bugfixes are applied.
@@ -80,7 +80,7 @@ Branch         First Release  End of Active Development  End of Life
 ============== ============== ========================== ============
 Botan 1.8      2008-12-08     2010-08-31                 2016-02-13
 Botan 1.10     2011-06-20     2012-07-10                 2018-12-31
-Botan 2        2017-01-06     2020-11-05                 2024-12-31 or later
+Botan 2        2017-01-06     2020-11-05                 2024-12-31
 Botan 3        2023-04-11     ?                          2027-12-31 or later
 ============== ============== ========================== ============
 

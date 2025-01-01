@@ -1,4 +1,4 @@
-Copyright (C) 1999-2024 The Botan Authors
+Copyright (C) 1999-2025 The Botan Authors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
