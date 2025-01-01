@@ -4,19 +4,18 @@ Botan: Crypto for Real Systems
 Botan (Japanese for peony flower) is a cryptography library released under the
 permissive `Simplified BSD <https://botan.randombit.net/license.txt>`_ license.
 
-Botan's goal is to be the best option for production cryptography by offering the
-tools necessary to implement a range of practical systems, such as TLSv1.3, X.509
-PKI, modern AEAD ciphers, support for PKCS#11 and TPM hardware, memory-hard password
-hashing, and post quantum cryptography. All of this is covered by an extensive test
-suite, including an automated system for detecting side channels.
+Botan's `goal <https://botan.randombit.net/handbook/goals.html>`_
+is to be the best option for production cryptography by offering the tools
+necessary to implement a range of practical systems, such as TLSv1.3, X.509 PKI,
+modern AEAD ciphers, support for PKCS#11 and TPM hardware, memory-hard password
+hashing, and post quantum cryptography. All of this is covered by an extensive
+test suite, including an automated system for detecting side channels.
 
 It comes out of the box with C++, C, and Python APIs, and several other `language
 bindings <https://github.com/randombit/botan/wiki/Language-Bindings>`_ are available.
 The library is accompanied by a featureful `command line interface
-<https://botan.randombit.net/handbook/cli.html>`_. See the `documentation
-<https://botan.randombit.net/handbook>`_ for more information about included
-features, as well as a further outline of the projects `goals
-<https://botan.randombit.net/handbook/goals.html>`_
+<https://botan.randombit.net/handbook/cli.html>`_. Consult the `documentation
+<https://botan.randombit.net/handbook>`_ for more information.
 
 Development is coordinated on `GitHub <https://github.com/randombit/botan>`__ and
 contributions are welcome. If you need help, please open an issue on `GitHub
