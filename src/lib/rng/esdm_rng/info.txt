@@ -16,3 +16,7 @@ esdm_rng.h
 <libs>
 linux -> esdm_rpc_client
 </libs>
+
+<os_features>
+threads
+</os_features>

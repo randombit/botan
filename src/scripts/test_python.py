@@ -179,10 +179,14 @@ class BotanPythonTests(unittest.TestCase):
 
         user_rng.add_entropy('seed material...')
 
-        if platform.system() != "Linux":
-            self.skipTest("This test requires Linux")
-
-        esdm_rng = botan.RandomNumberGenerator("esdm-full")
+    def test_esdm_rng(self):
+        try:
+            esdm_rng = botan.RandomNumberGenerator("esdm-full")
+        except botan.BotanException as ex:
+            if ex.error_code() == -40: # Not Implemented
+                self.skipTest("No ESDM support in this build")
+            else:
+                raise ex
 
         output1 = esdm_rng.get(32)
         output2 = esdm_rng.get(32)

@@ -8,6 +8,7 @@
 #include <botan/esdm_rng.h>
 
 #include <esdm/esdm_rpc_client.h>
+#include <mutex>
 
 namespace Botan {
 
@@ -70,6 +71,9 @@ void ESDM_RNG::fill_bytes_with_input(std::span<uint8_t> out, std::span<const uin
       * as this information is not included in the API
       */
       esdm_invoke(esdm_rpcc_write_data(in.data(), in.size()));
+      /*
+      * ret was set by esdm_invoke, as mentioned above
+      */
       if(ret != 0) {
          throw Botan::System_Error("Writing additional input to ESDM failed");
       }
@@ -83,6 +87,9 @@ void ESDM_RNG::fill_bytes_with_input(std::span<uint8_t> out, std::span<const uin
       } else {
          esdm_invoke(esdm_rpcc_get_random_bytes_full(out.data(), out.size()));
       }
+      /*
+      * ret was set by esdm_invoke, as mentioned above
+      */
       if(ret != static_cast<ssize_t>(out.size())) {
          throw Botan::System_Error("Fetching random bytes from ESDM failed");
       }
