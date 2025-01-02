@@ -55,6 +55,15 @@ example using ECDSA signatures or TLS, but only applications doing unusual thing
 such as custom elliptic curve parameters, or creating your own protocol using
 elliptic curve points.
 
+- The `EC_Point` class is used to perform point arithmetic. This
+  class is deprecated, and replaced by `EC_AffinePoint`. `EC_Point`
+  will be removed in a future major release.
+
+- Currently an ECC key can be configured as to which form of point encoding
+  (uncompressed vs compressed) is used when the key is serialized. This
+  is deprecated; in a future major release only uncompressed will be used.
+  [Compressed points will still be accepted for deserialization]
+
 - Support for explicit ECC curve parameters and ImplicitCA encoded parameters in
   ``EC_Group`` and all users (including X.509 certificates and PKCS#8 private keys).
 
@@ -86,11 +95,6 @@ elliptic curve points.
   "brainpool192r1", "brainpool224r1", "brainpool320r1", "x962_p192v2",
   "x962_p192v3", "x962_p239v1", "x962_p239v2", "x962_p239v3",
   "gost_256A", "gost_512A"
-
-- Currently `EC_Point` offers a wide variety of functionality almost
-  all of which was intended only for internal implementation. In a
-  future release, the only operations available for EC_Points will be
-  to extract the byte encoding of their affine x and y coordinates.
 
 Deprecated Modules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
