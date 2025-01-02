@@ -92,7 +92,7 @@ KyberConstants::KyberConstants(KyberMode mode) : m_mode(mode) {
    m_polynomial_vector_bytes = (bitlen(Q) * (N / 8)) * k();
    m_polynomial_vector_compressed_bytes = d_u() * k() * (N / 8);
    m_polynomial_compressed_bytes = d_v() * (N / 8);
-   m_private_key_bytes = static_cast<uint32_t>([this] {
+   m_private_key_bytes = static_cast<uint32_t>([this]() -> size_t {
       if(m_mode.is_ml_kem()) {
          // ML-KEM's private keys are simply expanded from their seeds.
          return 2 * SEED_BYTES;

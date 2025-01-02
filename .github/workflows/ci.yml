@@ -291,6 +291,9 @@ jobs:
           - target: cross-ios-arm64
             compiler: xcode
             host_os: macos-13
+          - target: cross-arm32-baremetal
+            compiler: gcc
+            host_os: ubuntu-24.04
 
     runs-on: ${{ matrix.host_os }}
 
