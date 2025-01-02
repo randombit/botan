@@ -362,6 +362,8 @@
 2.5.29.36 = X509v3.PolicyConstraints
 2.5.29.37 = X509v3.ExtendedKeyUsage
 1.3.6.1.5.5.7.1.1 = PKIX.AuthorityInformationAccess
+1.3.6.1.5.5.7.1.7 = PKIX.ipAddrBlocks
+1.3.6.1.5.5.7.1.8 = PKIX.autonomousSysIds
 1.3.6.1.5.5.7.1.26 = PKIX.TNAuthList
 
 2.5.29.32.0 = X509v3.AnyPolicy
