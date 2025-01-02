@@ -9,6 +9,7 @@
 #define BOTAN_OS_UTILS_H_
 
 #include <botan/types.h>
+#include <ctime>
 #include <functional>
 #include <optional>
 #include <string>

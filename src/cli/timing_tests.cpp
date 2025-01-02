@@ -542,7 +542,7 @@ std::unique_ptr<Timing_Test> Timing_Test_Command::lookup_timing_test(std::string
 
 BOTAN_REGISTER_COMMAND("timing_test", Timing_Test_Command);
 
-#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_PKCS1)
+#if defined(BOTAN_HAS_RSA) && defined(BOTAN_HAS_EME_PKCS1) && defined(BOTAN_TARGET_OS_HAS_FILESYSTEM)
 
 class MARVIN_Test_Command final : public Command {
    public:
