@@ -75,6 +75,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_PublicKey : public virtual Public_Key {
       * Set the point encoding method to be used when encoding this key.
       * @param enc the encoding to use
       */
+      BOTAN_DEPRECATED("Support for serializing using anything but uncompressed points is deprecated")
       void set_point_encoding(EC_Point_Format enc);
 
       /**
