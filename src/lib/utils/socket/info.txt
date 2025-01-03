@@ -20,3 +20,7 @@ haiku -> network
 solaris -> socket,nsl
 qnx -> socket
 </libs>
+
+<os_features>
+system_clock
+</os_features>

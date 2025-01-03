@@ -17,6 +17,7 @@ getrandom # since freebsd 12
 
 atomics
 sockets
+system_clock
 threads
 thread_local
 filesystem

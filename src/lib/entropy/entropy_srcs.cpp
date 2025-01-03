@@ -166,16 +166,19 @@ std::vector<std::string> Entropy_Sources::enabled_sources() const {
 }
 
 size_t Entropy_Sources::poll(RandomNumberGenerator& rng, size_t poll_bits, std::chrono::milliseconds timeout) {
+#if defined(BOTAN_TARGET_OS_HAS_SYSTEM_CLOCK)
    typedef std::chrono::system_clock clock;
-
-   auto deadline = clock::now() + timeout;
+   auto timeout_expired = [to = clock::now() + timeout] { return clock::now() > to; };
+#else
+   auto timeout_expired = [] { return false; };
+#endif
 
    size_t bits_collected = 0;
 
    for(auto& src : m_srcs) {
       bits_collected += src->poll(rng);
 
-      if(bits_collected >= poll_bits || clock::now() > deadline) {
+      if(bits_collected >= poll_bits || timeout_expired()) {
          break;
       }
    }
