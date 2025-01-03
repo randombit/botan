@@ -71,8 +71,9 @@ int botan_hotp_check(
    return botan_ffi_visit(hotp, [=](auto& h) {
       auto resp = h.verify_hotp(hotp_code, hotp_counter, resync_range);
 
-      if(next_hotp_counter)
+      if(next_hotp_counter) {
          *next_hotp_counter = resp.second;
+      }
 
       return (resp.first == true) ? BOTAN_FFI_SUCCESS : BOTAN_FFI_INVALID_VERIFIER;
    });
