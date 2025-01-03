@@ -124,6 +124,10 @@ void EC_Point::randomize_repr(RandomNumberGenerator& rng) {
 }
 
 void EC_Point::randomize_repr(RandomNumberGenerator& rng, secure_vector<word>& ws) {
+   if(!rng.is_seeded()) {
+      return;
+   }
+
    const auto& group = m_curve.group();
 
    const BigInt mask = BigInt::random_integer(rng, 2, group.p());

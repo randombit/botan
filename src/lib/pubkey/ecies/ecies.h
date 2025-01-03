@@ -1,6 +1,7 @@
 /*
 * ECIES
 * (C) 2016 Philipp Weber
+*     2025 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,16 +10,20 @@
 #define BOTAN_ECIES_H_
 
 #include <botan/cipher_mode.h>
+#include <botan/ec_apoint.h>
 #include <botan/ec_group.h>
-#include <botan/ec_point.h>
-#include <botan/ecdh.h>
 #include <botan/mac.h>
 #include <botan/pubkey.h>
 #include <botan/secmem.h>
 #include <botan/symkey.h>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
+
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+   #include <botan/ec_point.h>
+#endif
 
 namespace Botan {
 
@@ -163,6 +168,8 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_System_Params final : public ECIES_KA_Params 
 
 /**
 * ECIES secret derivation according to ISO 18033-2
+*
+* TODO(Botan4) hide this
 */
 class BOTAN_PUBLIC_API(2, 0) ECIES_KA_Operation {
    public:
@@ -173,11 +180,13 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_KA_Operation {
       * (according to ISO 18033 cofactor mode is only used during decryption)
       * @param rng the RNG to use
       */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       ECIES_KA_Operation(const PK_Key_Agreement_Key& private_key,
                          const ECIES_KA_Params& ecies_params,
                          bool for_encryption,
                          RandomNumberGenerator& rng);
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
       /**
       * Performs a key agreement with the provided keys and derives the secret from the result
       * @param eph_public_key_bin the encoded (ephemeral) public key which belongs to the used (ephemeral) private key
@@ -185,6 +194,15 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_KA_Operation {
       */
       SymmetricKey derive_secret(const std::vector<uint8_t>& eph_public_key_bin,
                                  const EC_Point& other_public_key_point) const;
+#endif
+
+      /**
+      * Performs a key agreement with the provided keys and derives the secret from the result
+      * @param eph_public_key_bin the encoded (ephemeral) public key which belongs to the used (ephemeral) private key
+      * @param other_public_key_point public key point of the other party
+      */
+      SymmetricKey derive_secret(const std::vector<uint8_t>& eph_public_key_bin,
+                                 const EC_AffinePoint& other_public_key_point) const;
 
    private:
       const PK_Key_Agreement m_ka;
@@ -212,14 +230,21 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_Encryptor final : public PK_Encryptor {
       */
       ECIES_Encryptor(RandomNumberGenerator& rng, const ECIES_System_Params& ecies_params);
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
       /// Set the public key of the other party
-      inline void set_other_key(const EC_Point& public_point) { m_other_point = public_point; }
+      inline void set_other_key(const EC_Point& public_point) {
+         m_other_point = EC_AffinePoint(m_params.domain(), public_point);
+      }
+#endif
+
+      /// Set the public key of the other party
+      void set_other_key(const EC_AffinePoint& pt) { m_other_point = pt; }
 
       /// Set the initialization vector for the data encryption method
-      inline void set_initialization_vector(const InitializationVector& iv) { m_iv = iv; }
+      void set_initialization_vector(const InitializationVector& iv) { m_iv = iv; }
 
       /// Set the label which is appended to the input for the message authentication code
-      inline void set_label(std::string_view label) { m_label = std::vector<uint8_t>(label.begin(), label.end()); }
+      void set_label(std::string_view label) { m_label.assign(label.begin(), label.end()); }
 
    private:
       std::vector<uint8_t> enc(const uint8_t data[], size_t length, RandomNumberGenerator&) const override;
@@ -234,7 +259,7 @@ class BOTAN_PUBLIC_API(2, 0) ECIES_Encryptor final : public PK_Encryptor {
       std::unique_ptr<Cipher_Mode> m_cipher;
       std::vector<uint8_t> m_eph_public_key_bin;
       InitializationVector m_iv;
-      EC_Point m_other_point;
+      std::optional<EC_AffinePoint> m_other_point;
       std::vector<uint8_t> m_label;
 };
 

@@ -655,9 +655,9 @@ TSS2_RC get_ecdh_point(TPM2B_PUBLIC* key,
 
       // Serialize public key coordinates into TPM2B_ECC_PARAMETER with Big Endian encoding.
       // This ensures bn_{x,y}.bytes() <= curve_order_byte_size.
-      const Botan::PointGFp& eph_pub_point = eph_key.public_point();
-      eph_pub_point.get_affine_x().serialize_to(Botan::TPM2::as_span(Q->x, curve_order_byte_size));
-      eph_pub_point.get_affine_y().serialize_to(Botan::TPM2::as_span(Q->y, curve_order_byte_size));
+      const auto& eph_pub_point = eph_key._public_ec_point();
+      eph_pub_point.serialize_x_to(Botan::TPM2::as_span(Q->x, curve_order_byte_size));
+      eph_pub_point.serialize_y_to(Botan::TPM2::as_span(Q->y, curve_order_byte_size));
 
       // 3: ECDH Key Agreement
       Botan::PK_Key_Agreement ecdh(eph_key, rng, "Raw" /*No KDF used here*/);

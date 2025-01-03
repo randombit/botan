@@ -8,6 +8,7 @@
 #define BOTAN_EC_APOINT_H_
 
 #include <botan/concepts.h>
+#include <botan/ec_point_format.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <optional>
@@ -21,7 +22,10 @@ class BigInt;
 class RandomNumberGenerator;
 class EC_Group;
 class EC_Scalar;
+
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
 class EC_Point;
+#endif
 
 class EC_Group_Data;
 class EC_AffinePoint_Data;
@@ -203,12 +207,16 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
          return bytes;
       }
 
+      /// Return an encoding depending on the requested format
+      std::vector<uint8_t> serialize(EC_Point_Format format) const;
+
       EC_AffinePoint(const EC_AffinePoint& other);
       EC_AffinePoint(EC_AffinePoint&& other) noexcept;
 
       EC_AffinePoint& operator=(const EC_AffinePoint& other);
       EC_AffinePoint& operator=(EC_AffinePoint&& other) noexcept;
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
       /**
       * Deprecated conversion
       */
@@ -218,6 +226,7 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
       * Deprecated conversion
       */
       EC_Point to_legacy_point() const;
+#endif
 
       ~EC_AffinePoint();
 

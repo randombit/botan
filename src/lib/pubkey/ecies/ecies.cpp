@@ -1,7 +1,8 @@
 /*
 * ECIES
 * (C) 2016 Philipp Weber
-* (C) 2016 Daniel Neus, Rohde & Schwarz Cybersecurity
+*     2016 Daniel Neus, Rohde & Schwarz Cybersecurity
+*     2025 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,8 +10,10 @@
 #include <botan/ecies.h>
 
 #include <botan/cipher_mode.h>
+#include <botan/ecdh.h>
 #include <botan/mac.h>
 #include <botan/numthry.h>
+#include <botan/rng.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/pk_ops_impl.h>
 #include <botan/internal/stl_util.h>
@@ -124,6 +127,7 @@ ECIES_KA_Operation::ECIES_KA_Operation(const PK_Key_Agreement_Key& private_key,
                                        RandomNumberGenerator& rng) :
       m_ka(create_key_agreement(private_key, ecies_params, for_encryption, rng)), m_params(ecies_params) {}
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
 /**
 * ECIES secret derivation according to ISO 18033-2
 */
@@ -138,7 +142,7 @@ SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_p
    EC_Point other_point = other_public_key_point;
 
    // ISO 18033: step b
-   if(m_params.old_cofactor_mode()) {
+   if(m_params.old_cofactor_mode() && m_params.domain().has_cofactor()) {
       other_point *= m_params.domain().get_cofactor();
    }
 
@@ -151,6 +155,47 @@ SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_p
 
    // ISO 18033: encryption step f / decryption step h
    std::vector<uint8_t> other_public_key_bin = other_point.encode(m_params.compression_type());
+   // Note: the argument `m_params.secret_length()` passed for `key_len` will only be used by providers because
+   // "Raw" is passed to the `PK_Key_Agreement` if the implementation of botan is used.
+   const SymmetricKey peh =
+      m_ka.derive_key(m_params.domain().get_order_bytes(), other_public_key_bin.data(), other_public_key_bin.size());
+   derivation_input.insert(derivation_input.end(), peh.begin(), peh.end());
+
+   // ISO 18033: encryption step g / decryption step i
+   return SymmetricKey(kdf->derive_key(m_params.secret_length(), derivation_input));
+}
+#endif
+
+/**
+* ECIES secret derivation according to ISO 18033-2
+*/
+SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_public_key_bin,
+                                               const EC_AffinePoint& other_public_key_point) const {
+   if(other_public_key_point.is_identity()) {
+      throw Invalid_Argument("ECIES: peer public key point is the identity element");
+   }
+
+   auto kdf = KDF::create_or_throw(m_params.kdf_spec());
+
+   auto other_point = other_public_key_point;
+
+   // ISO 18033: step b
+   if(m_params.old_cofactor_mode() && m_params.domain().has_cofactor()) {
+      std::vector<BigInt> ws;
+      Null_RNG null_rng;
+      auto cofactor = EC_Scalar::from_bigint(m_params.domain(), m_params.domain().get_cofactor());
+      other_point = other_point.mul(cofactor, null_rng, ws);
+   }
+
+   secure_vector<uint8_t> derivation_input;
+
+   // ISO 18033: encryption step e / decryption step g
+   if(!m_params.single_hash_mode()) {
+      derivation_input += eph_public_key_bin;
+   }
+
+   // ISO 18033: encryption step f / decryption step h
+   std::vector<uint8_t> other_public_key_bin = other_point.serialize(m_params.compression_type());
    // Note: the argument `m_params.secret_length()` passed for `key_len` will only be used by providers because
    // "Raw" is passed to the `PK_Key_Agreement` if the implementation of botan is used.
    const SymmetricKey peh =
@@ -225,7 +270,8 @@ ECIES_Encryptor::ECIES_Encryptor(const PK_Key_Agreement_Key& private_key,
    if(ecies_params.compression_type() != EC_Point_Format::Uncompressed) {
       // ISO 18033: step d
       // convert only if necessary; m_eph_public_key_bin has been initialized with the uncompressed format
-      m_eph_public_key_bin = m_params.domain().OS2ECP(m_eph_public_key_bin).encode(ecies_params.compression_type());
+      m_eph_public_key_bin =
+         EC_AffinePoint(m_params.domain(), m_eph_public_key_bin).serialize(ecies_params.compression_type());
    }
    m_mac = m_params.create_mac();
    m_cipher = m_params.create_cipher(Cipher_Dir::Encryption);
@@ -255,11 +301,11 @@ size_t ECIES_Encryptor::ciphertext_length(size_t ptext_len) const {
 std::vector<uint8_t> ECIES_Encryptor::enc(const uint8_t data[],
                                           size_t length,
                                           RandomNumberGenerator& /*unused*/) const {
-   if(m_other_point.is_zero()) {
-      throw Invalid_State("ECIES: the other key is zero");
+   if(!m_other_point.has_value()) {
+      throw Invalid_State("ECIES_Encryptor: peer key invalid or not set");
    }
 
-   const SymmetricKey secret_key = m_ka.derive_secret(m_eph_public_key_bin, m_other_point);
+   const SymmetricKey secret_key = m_ka.derive_secret(m_eph_public_key_bin, m_other_point.value());
 
    // encryption
 
@@ -341,12 +387,10 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
    const std::vector<uint8_t> mac_data(in + in_len - m_mac->output_length(), in + in_len);
 
    // ISO 18033: step a
-   EC_Point other_public_key = m_params.domain().OS2ECP(other_public_key_bin);
+   auto other_public_key = EC_AffinePoint(m_params.domain(), other_public_key_bin);
 
-   // ISO 18033: step b
-   if(m_params.check_mode() && !other_public_key.on_the_curve()) {
-      throw Decoding_Error("ECIES decryption: received public key is not on the curve");
-   }
+   // ISO 18033: step b would check if other_public_key is on the curve iff check_mode is on
+   // but we ignore this and always check if the point is on the curve
 
    // ISO 18033: step e (and step f because get_affine_x (called by ECDH_KA_Operation::raw_agree)
    // throws Illegal_Transformation if the point is zero)

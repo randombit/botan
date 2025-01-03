@@ -22,7 +22,7 @@ std::string SM2_PublicKey::algo_name() const {
 }
 
 std::unique_ptr<Public_Key> SM2_PrivateKey::public_key() const {
-   return std::make_unique<SM2_Signature_PublicKey>(domain(), public_point());
+   return std::make_unique<SM2_Signature_PublicKey>(domain(), _public_ec_point());
 }
 
 bool SM2_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
@@ -66,8 +66,6 @@ SM2_PrivateKey::SM2_PrivateKey(RandomNumberGenerator& rng, EC_Group group, const
       m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()),
       m_da_inv_legacy(m_da_inv.to_bigint()) {}
 
-namespace {
-
 std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
                                     std::string_view user_id,
                                     const EC_Group& group,
@@ -93,6 +91,8 @@ std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
    return hash.final<std::vector<uint8_t>>();
 }
 
+namespace {
+
 /**
 * SM2 signature operation
 */
@@ -105,7 +105,7 @@ class SM2_Signature_Operation final : public PK_Ops::Signature {
          } else {
             m_hash = HashFunction::create_or_throw(hash);
             // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
-            m_za = sm2_compute_za(*m_hash, ident, m_group, sm2._public_key());
+            m_za = sm2_compute_za(*m_hash, ident, m_group, sm2._public_ec_point());
             m_hash->update(m_za);
          }
       }
@@ -163,13 +163,13 @@ std::vector<uint8_t> SM2_Signature_Operation::sign(RandomNumberGenerator& rng) {
 class SM2_Verification_Operation final : public PK_Ops::Verification {
    public:
       SM2_Verification_Operation(const SM2_PublicKey& sm2, std::string_view ident, std::string_view hash) :
-            m_group(sm2.domain()), m_gy_mul(sm2._public_key()) {
+            m_group(sm2.domain()), m_gy_mul(sm2._public_ec_point()) {
          if(hash == "Raw") {
             // m_hash is null, m_za is empty
          } else {
             m_hash = HashFunction::create_or_throw(hash);
             // ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
-            m_za = sm2_compute_za(*m_hash, ident, m_group, sm2._public_key());
+            m_za = sm2_compute_za(*m_hash, ident, m_group, sm2._public_ec_point());
             m_hash->update(m_za);
          }
       }
@@ -249,14 +249,6 @@ void parse_sm2_param_string(std::string_view params, std::string& userid, std::s
 
 std::unique_ptr<Private_Key> SM2_PublicKey::generate_another(RandomNumberGenerator& rng) const {
    return std::make_unique<SM2_PrivateKey>(rng, domain());
-}
-
-std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
-                                    std::string_view user_id,
-                                    const EC_Group& group,
-                                    const EC_Point& point) {
-   auto apoint = EC_AffinePoint(group, point);
-   return sm2_compute_za(hash, user_id, group, apoint);
 }
 
 std::unique_ptr<PK_Ops::Verification> SM2_PublicKey::create_verification_op(std::string_view params,

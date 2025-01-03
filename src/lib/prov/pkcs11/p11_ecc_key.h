@@ -138,12 +138,24 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_EC_PrivateKey : public virtual Private_Key,
       /// @returns the domain of the EC private key
       inline const EC_Group& domain() const { return m_domain_params; }
 
+   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
       /**
       * Sets the associated public point of this private key
       * @param point the public point
       * @param point_encoding encoding of the point (default DER-encoded)
       */
       void set_public_point(const EC_Point& point, PublicPointEncoding point_encoding = PublicPointEncoding::Der) {
+         this->set_public_point(EC_AffinePoint(domain(), point), point_encoding);
+      }
+   #endif
+
+      /**
+      * Sets the associated public point of this private key
+      * @param point the public point
+      * @param point_encoding encoding of the point (default DER-encoded)
+      */
+      void set_public_point(const EC_AffinePoint& point,
+                            PublicPointEncoding point_encoding = PublicPointEncoding::Der) {
          m_public_key = point;
          m_point_encoding = point_encoding;
       }
@@ -155,6 +167,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_EC_PrivateKey : public virtual Private_Key,
        */
       void set_point_encoding(PublicPointEncoding point_encoding) { m_point_encoding = point_encoding; }
 
+   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
       /**
       * Gets the public_point
       * @note the public key must be set using `set_public_point`
@@ -162,12 +175,25 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_EC_PrivateKey : public virtual Private_Key,
       * @return the public point of the private key
       * @throws Exception if the public point was not set using set_public_point()
       */
-      const EC_Point& public_point() const {
-         if(m_public_key.is_zero()) {
+      EC_Point public_point() const { return this->public_ec_point().to_legacy_point(); }
+   #endif
+
+      /**
+      * Gets the elliptic curve point associated with the public key
+      *
+      * @note the public key must be set using `set_public_point` because it is
+      *       not possible to infer the public key from a PKCS#11 EC private key
+      *
+      * @return the public point of the private key
+      * @throws Exception if the public point was not set using set_public_point()
+      */
+      EC_AffinePoint public_ec_point() const {
+         if(m_public_key) {
+            return m_public_key.value();
+         } else {
             throw Invalid_State(
                "Public point not set. Inferring the public key from a PKCS#11 ec private key is not possible.");
          }
-         return m_public_key;
       }
 
       /// @return the encoding format for the public point when it is passed to cryptoki functions as an argument
@@ -189,7 +215,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_EC_PrivateKey : public virtual Private_Key,
 
    private:
       EC_Group m_domain_params;
-      EC_Point m_public_key;
+      std::optional<EC_AffinePoint> m_public_key;
       PublicPointEncoding m_point_encoding = PublicPointEncoding::Der;
 };
 }  // namespace Botan::PKCS11

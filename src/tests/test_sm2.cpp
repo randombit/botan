@@ -91,8 +91,8 @@ class SM2_Keygen_Tests final : public PK_Key_Generation_Test {
                                                              std::string_view /* provider */,
                                                              std::span<const uint8_t> raw_pk) const override {
          const auto group = Botan::EC_Group(keygen_params);
-         const auto public_point = group.OS2ECP(raw_pk);
-         return std::make_unique<Botan::SM2_PublicKey>(group, public_point);
+         const auto public_key = Botan::EC_AffinePoint(group, raw_pk);
+         return std::make_unique<Botan::SM2_PublicKey>(group, public_key);
       }
 };
 

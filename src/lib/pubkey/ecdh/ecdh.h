@@ -27,12 +27,21 @@ class BOTAN_PUBLIC_API(2, 0) ECDH_PublicKey : public virtual EC_PublicKey {
       ECDH_PublicKey(const AlgorithmIdentifier& alg_id, std::span<const uint8_t> key_bits) :
             EC_PublicKey(alg_id, key_bits) {}
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
       /**
       * Construct a public key from a given public point.
-      * @param dom_par the domain parameters associated with this key
+      * @param group the domain parameters associated with this key
       * @param public_point the public point defining this key
       */
-      ECDH_PublicKey(const EC_Group& dom_par, const EC_Point& public_point) : EC_PublicKey(dom_par, public_point) {}
+      ECDH_PublicKey(const EC_Group& group, const EC_Point& public_point) : EC_PublicKey(group, public_point) {}
+#endif
+
+      /**
+      * Construct a public key from a given public point.
+      * @param group the domain parameters associated with this key
+      * @param public_key the public point defining this key
+      */
+      ECDH_PublicKey(const EC_Group& group, const EC_AffinePoint& public_key) : EC_PublicKey(group, public_key) {}
 
       /**
       * Get this keys algorithm name.
@@ -43,12 +52,12 @@ class BOTAN_PUBLIC_API(2, 0) ECDH_PublicKey : public virtual EC_PublicKey {
       /**
       * @return public point value
       */
-      std::vector<uint8_t> public_value() const { return public_point().encode(EC_Point_Format::Uncompressed); }
+      std::vector<uint8_t> public_value() const { return this->public_value(EC_Point_Format::Uncompressed); }
 
       /**
       * @return public point value
       */
-      std::vector<uint8_t> public_value(EC_Point_Format format) const { return public_point().encode(format); }
+      std::vector<uint8_t> public_value(EC_Point_Format format) const;
 
       bool supports_operation(PublicKeyOperation op) const override { return (op == PublicKeyOperation::KeyAgreement); }
 

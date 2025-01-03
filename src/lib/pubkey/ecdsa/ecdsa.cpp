@@ -21,7 +21,7 @@ namespace Botan {
 
 namespace {
 
-EC_Point recover_ecdsa_public_key(
+EC_AffinePoint recover_ecdsa_public_key(
    const EC_Group& group, const std::vector<uint8_t>& msg, const BigInt& r, const BigInt& s, uint8_t v) {
    if(group.has_cofactor()) {
       throw Invalid_Argument("ECDSA public key recovery only supported for prime order groups");
@@ -62,7 +62,7 @@ EC_Point recover_ecdsa_public_key(
 
          EC_Group::Mul2Table GR_mul(R.value());
          if(auto egsr = GR_mul.mul2_vartime(ne * r_inv, ss * r_inv)) {
-            return egsr->to_legacy_point();
+            return egsr.value();
          }
       }
    }
@@ -81,11 +81,13 @@ std::unique_ptr<Private_Key> ECDSA_PublicKey::generate_another(RandomNumberGener
 }
 
 uint8_t ECDSA_PublicKey::recovery_param(const std::vector<uint8_t>& msg, const BigInt& r, const BigInt& s) const {
+   const auto this_key = this->_public_ec_point().serialize_compressed();
+
    for(uint8_t v = 0; v != 4; ++v) {
       try {
-         EC_Point R = recover_ecdsa_public_key(this->domain(), msg, r, s, v);
+         const auto R = recover_ecdsa_public_key(this->domain(), msg, r, s, v);
 
-         if(R == this->public_point()) {
+         if(R.serialize_compressed() == this_key) {
             return v;
          }
       } catch(Decoding_Error&) {
@@ -97,7 +99,7 @@ uint8_t ECDSA_PublicKey::recovery_param(const std::vector<uint8_t>& msg, const B
 }
 
 std::unique_ptr<Public_Key> ECDSA_PrivateKey::public_key() const {
-   return std::make_unique<ECDSA_PublicKey>(domain(), public_point());
+   return std::make_unique<ECDSA_PublicKey>(domain(), _public_ec_point());
 }
 
 bool ECDSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
@@ -195,12 +197,12 @@ std::vector<uint8_t> ECDSA_Signature_Operation::raw_sign(std::span<const uint8_t
 class ECDSA_Verification_Operation final : public PK_Ops::Verification_with_Hash {
    public:
       ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, std::string_view padding) :
-            PK_Ops::Verification_with_Hash(padding), m_group(ecdsa.domain()), m_gy_mul(ecdsa._public_key()) {}
+            PK_Ops::Verification_with_Hash(padding), m_group(ecdsa.domain()), m_gy_mul(ecdsa._public_ec_point()) {}
 
       ECDSA_Verification_Operation(const ECDSA_PublicKey& ecdsa, const AlgorithmIdentifier& alg_id) :
             PK_Ops::Verification_with_Hash(alg_id, "ECDSA", true),
             m_group(ecdsa.domain()),
-            m_gy_mul(ecdsa._public_key()) {}
+            m_gy_mul(ecdsa._public_ec_point()) {}
 
       bool verify(std::span<const uint8_t> msg, std::span<const uint8_t> sig) override;
 

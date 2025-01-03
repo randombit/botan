@@ -12,7 +12,6 @@
    #include <botan/bigint.h>
    #include <botan/data_src.h>
    #include <botan/ec_group.h>
-   #include <botan/ec_point.h>
    #include <botan/hex.h>
    #include <botan/numthry.h>
    #include <botan/pk_keys.h>
@@ -25,6 +24,8 @@ namespace Botan_Tests {
 namespace {
 
 #if defined(BOTAN_HAS_ECC_GROUP)
+
+   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
 
 Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, const BigInt& max) {
    /*
@@ -165,6 +166,8 @@ std::vector<Test::Result> ECC_Randomized_Tests::run() {
 
 BOTAN_REGISTER_TEST("pubkey", "ecc_randomized", ECC_Randomized_Tests);
 
+   #endif
+
 class EC_Group_Tests : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -215,9 +218,6 @@ class EC_Group_Tests : public Test {
             result.confirm("EC_Group via explicit DER is considered explict encoding",
                            group_via_explicit.used_explicit_encoding());
 
-            const auto pt_mult_by_order = group.get_base_point() * group.get_order();
-            result.confirm("Multiplying point by the order results in zero point", pt_mult_by_order.is_zero());
-
             if(group.a_is_minus_3()) {
                result.test_eq("Group A equals -3", group.get_a(), group.get_p() - 3);
             } else {
@@ -229,6 +229,10 @@ class EC_Group_Tests : public Test {
             } else {
                result.test_ne("Group " + group_name + " A does not equal zero", group.get_a(), BigInt(0));
             }
+
+   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
+            const auto pt_mult_by_order = group.get_base_point() * group.get_order();
+            result.confirm("Multiplying point by the order results in zero point", pt_mult_by_order.is_zero());
 
             // get a valid point
             Botan::EC_Point p = group.get_base_point() * this->rng().next_nonzero_byte();
@@ -251,6 +255,7 @@ class EC_Group_Tests : public Test {
             test_basic_math(result, group);
             test_point_swap(result, group);
             test_zeropoint(result, group);
+   #endif
 
             result.end_timer();
 
@@ -261,6 +266,8 @@ class EC_Group_Tests : public Test {
       }
 
    private:
+   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
+
       void test_ser_der(Test::Result& result, const Botan::EC_Group& group) {
          // generate point
          const Botan::EC_Point pt = create_random_point(this->rng(), group);
@@ -347,6 +354,7 @@ class EC_Group_Tests : public Test {
             result.test_eq("encoded/decode rt works", group.OS2ECP(v), zero);
          }
       }
+   #endif
 };
 
 BOTAN_REGISTER_TEST("pubkey", "ec_group", EC_Group_Tests);
@@ -365,6 +373,7 @@ Test::Result test_decoding_with_seed() {
    return result;
 }
 
+   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
 Test::Result test_mixed_points() {
    Test::Result result("ECC Unit");
 
@@ -490,6 +499,7 @@ Test::Result test_enc_dec_uncompressed_521() {
    result.test_eq("expected", sv_result, sv_G_secp_uncomp);
    return result;
 }
+   #endif
 
 Test::Result test_ecc_registration() {
    Test::Result result("ECC registration");
@@ -603,12 +613,16 @@ class ECC_Unit_Tests final : public Test {
          std::vector<Test::Result> results;
 
          results.push_back(test_decoding_with_seed());
+
+   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
          results.push_back(test_mixed_points());
          results.push_back(test_basic_operations());
          results.push_back(test_enc_dec_compressed_160());
          results.push_back(test_enc_dec_compressed_256());
          results.push_back(test_enc_dec_uncompressed_112());
          results.push_back(test_enc_dec_uncompressed_521());
+   #endif
+
          results.push_back(test_ecc_registration());
          results.push_back(test_ec_group_from_params());
          results.push_back(test_ec_group_bad_registration());

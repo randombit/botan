@@ -19,7 +19,9 @@
 
 namespace Botan {
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
 class EC_Point_Base_Point_Precompute;
+#endif
 
 namespace PCurve {
 
@@ -97,7 +99,9 @@ class EC_AffinePoint_Data {
                                                 RandomNumberGenerator& rng,
                                                 std::vector<BigInt>& ws) const = 0;
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
       virtual EC_Point to_legacy_point() const = 0;
+#endif
 };
 
 class EC_Mul2Table_Data {
@@ -156,11 +160,17 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
 
       const BigInt& cofactor() const { return m_cofactor; }
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+      const CurveGFp& curve() const { return m_curve; }
+
+      const EC_Point& base_point() const { return m_base_point; }
+
       const Montgomery_Params& monty() const { return m_monty; }
 
       const BigInt& monty_a() const { return m_a_r; }
 
       const BigInt& monty_b() const { return m_b_r; }
+#endif
 
       bool order_is_less_than_p() const { return m_order_is_less_than_p; }
 
@@ -179,10 +189,6 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       size_t order_bits() const { return m_order_bits; }
 
       size_t order_bytes() const { return m_order_bytes; }
-
-      const CurveGFp& curve() const { return m_curve; }
-
-      const EC_Point& base_point() const { return m_base_point; }
 
       bool a_is_minus_3() const { return m_a_is_minus_3; }
 
@@ -295,8 +301,10 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       // Possibly nullptr (if pcurves not available or not a standard curve)
       std::shared_ptr<const PCurve::PrimeOrderCurve> m_pcurve;
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
       // Set only if m_pcurve is nullptr
       std::unique_ptr<EC_Point_Base_Point_Precompute> m_base_mult;
+#endif
 
       BigInt m_p;
       BigInt m_a;
@@ -306,6 +314,7 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       BigInt m_order;
       BigInt m_cofactor;
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
       CurveGFp m_curve;
       EC_Point m_base_point;
 
@@ -314,6 +323,7 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
 
       BigInt m_a_r;  // (a*r) % p
       BigInt m_b_r;  // (b*r) % p
+#endif
 
       Modular_Reducer m_mod_order;
       OID m_oid;

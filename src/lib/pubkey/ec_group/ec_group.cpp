@@ -220,6 +220,8 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
    }
 
    if(obj.type() == ASN1_Type::Sequence) {
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+
       BigInt p, a, b, order, cofactor;
       std::vector<uint8_t> base_pt;
       std::vector<uint8_t> seed;
@@ -258,7 +260,7 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
          throw Decoding_Error("Invalid ECC b parameter");
       }
 
-      if(order <= 0 || !is_bailie_psw_probable_prime(order)) {
+      if(order <= 0 || order >= 2 * p || !is_bailie_psw_probable_prime(order)) {
          throw Decoding_Error("Invalid ECC order parameter");
       }
 
@@ -270,6 +272,10 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
 
       auto data = ec_group_data().lookup_or_create(p, a, b, g_x, g_y, order, cofactor, OID(), source);
       return std::make_pair(data, true);
+#else
+      BOTAN_UNUSED(source);
+      throw Not_Implemented("Support for decoding explicit curve params is not supported in this build configuration");
+#endif
    }
 
    if(obj.type() == ASN1_Type::Null) {
@@ -441,6 +447,7 @@ const BigInt& EC_Group::get_b() const {
    return data().b();
 }
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
 const EC_Point& EC_Group::get_base_point() const {
    return data().base_point();
 }
@@ -448,6 +455,33 @@ const EC_Point& EC_Group::get_base_point() const {
 const EC_Point& EC_Group::generator() const {
    return data().base_point();
 }
+
+bool EC_Group::verify_public_element(const EC_Point& point) const {
+   //check that public point is not at infinity
+   if(point.is_zero()) {
+      return false;
+   }
+
+   //check that public point is on the curve
+   if(point.on_the_curve() == false) {
+      return false;
+   }
+
+   //check that public point has order q
+   if((point * get_order()).is_zero() == false) {
+      return false;
+   }
+
+   if(has_cofactor()) {
+      if((point * get_cofactor()).is_zero()) {
+         return false;
+      }
+   }
+
+   return true;
+}
+
+#endif
 
 const BigInt& EC_Group::get_order() const {
    return data().order();
@@ -500,6 +534,8 @@ std::vector<uint8_t> EC_Group::DER_encode(EC_Group_Encoding form) const {
 
       const size_t p_bytes = get_p_bytes();
 
+      const auto generator = EC_AffinePoint::generator(*this).serialize_uncompressed();
+
       der.start_sequence()
          .encode(ecpVers1)
          .start_sequence()
@@ -510,7 +546,7 @@ std::vector<uint8_t> EC_Group::DER_encode(EC_Group_Encoding form) const {
          .encode(get_a().serialize(p_bytes), ASN1_Type::OctetString)
          .encode(get_b().serialize(p_bytes), ASN1_Type::OctetString)
          .end_cons()
-         .encode(get_base_point().encode(EC_Point_Format::Uncompressed), ASN1_Type::OctetString)
+         .encode(generator, ASN1_Type::OctetString)
          .encode(get_order())
          .encode(get_cofactor())
          .end_cons();
@@ -539,31 +575,6 @@ bool EC_Group::operator==(const EC_Group& other) const {
            get_cofactor() == other.get_cofactor());
 }
 
-bool EC_Group::verify_public_element(const EC_Point& point) const {
-   //check that public point is not at infinity
-   if(point.is_zero()) {
-      return false;
-   }
-
-   //check that public point is on the curve
-   if(point.on_the_curve() == false) {
-      return false;
-   }
-
-   //check that public point has order q
-   if((point * get_order()).is_zero() == false) {
-      return false;
-   }
-
-   if(has_cofactor()) {
-      if((point * get_cofactor()).is_zero()) {
-         return false;
-      }
-   }
-
-   return true;
-}
-
 bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
    const bool is_builtin = source() == EC_Group_Source::Builtin;
 
@@ -575,7 +586,6 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
    const BigInt& a = get_a();
    const BigInt& b = get_b();
    const BigInt& order = get_order();
-   const EC_Point& base_point = get_base_point();
 
    if(p <= 3 || order <= 0) {
       return false;
@@ -614,6 +624,8 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
       return false;
    }
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+   const EC_Point& base_point = get_base_point();
    //check if the base point is on the curve
    if(!base_point.on_the_curve()) {
       return false;
@@ -625,6 +637,7 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
    if(!(base_point * order).is_zero()) {
       return false;
    }
+#endif
 
    // check the Hasse bound (roughly)
    if((p - get_cofactor() * order).abs().bits() > (p.bits() / 2) + 1) {

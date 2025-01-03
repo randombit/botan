@@ -11,7 +11,11 @@
 namespace Botan {
 
 EC_PublicKey_Data::EC_PublicKey_Data(EC_Group group, std::span<const uint8_t> bytes) :
-      m_group(std::move(group)), m_point(m_group, bytes), m_legacy_point(m_point.to_legacy_point()) {}
+      m_group(std::move(group)), m_point(m_group, bytes) {
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+   m_legacy_point = m_point.to_legacy_point();
+#endif
+}
 
 EC_PrivateKey_Data::EC_PrivateKey_Data(EC_Group group, const BigInt& x) :
       m_group(std::move(group)), m_scalar(EC_Scalar::from_bigint(m_group, x)), m_legacy_x(m_scalar.to_bigint()) {}

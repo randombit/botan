@@ -30,7 +30,8 @@ int main() {
 
    // This loads the public point into an ECDSA_PublicKey. Creating an
    // ECDH_PublicKey would work the same way.
-   const auto public_key = Botan::ECDSA_PublicKey(domain, domain.OS2ECP(encoded_public_point));
+
+   const auto public_key = Botan::ECDSA_PublicKey(domain, Botan::EC_AffinePoint(domain, encoded_public_point));
 
    std::cout << "Public Key (PEM):\n\n" << Botan::X509::PEM_encode(public_key) << '\n';
 }

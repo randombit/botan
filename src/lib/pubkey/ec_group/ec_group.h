@@ -11,12 +11,17 @@
 #define BOTAN_ECC_DOMAIN_PARAMETERS_H_
 
 #include <botan/asn1_obj.h>
+#include <botan/bigint.h>
 #include <botan/ec_apoint.h>
-#include <botan/ec_point.h>
+#include <botan/ec_point_format.h>
 #include <botan/ec_scalar.h>
 #include <memory>
 #include <set>
 #include <span>
+
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+   #include <botan/ec_point.h>
+#endif
 
 namespace Botan {
 
@@ -243,14 +248,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       */
       size_t get_order_bytes() const;
 
-      /**
-      * Check if y is a plausible point on the curve
-      *
-      * In particular, checks that it is a point on the curve, not infinity,
-      * and that it has order matching the group.
-      */
-      bool verify_public_element(const EC_Point& y) const;
-
       /// Table for computing g*x + h*y
       class BOTAN_PUBLIC_API(3, 6) Mul2Table final {
          public:
@@ -374,15 +371,25 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       */
       const std::shared_ptr<EC_Group_Data>& _data() const { return m_data; }
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+      /**
+      * Check if y is a plausible point on the curve
+      *
+      * In particular, checks that it is a point on the curve, not infinity,
+      * and that it has order matching the group.
+      */
+      bool verify_public_element(const EC_Point& y) const;
+
       /**
       * OS2ECP (Octet String To Elliptic Curve Point)
       *
       * Deserialize an encoded point. Verifies that the point is on the curve.
       */
-      EC_Point OS2ECP(const uint8_t bits[], size_t len) const {
+      BOTAN_DEPRECATED("Use EC_AffinePoint::deserialize") EC_Point OS2ECP(const uint8_t bits[], size_t len) const {
          return EC_AffinePoint(*this, std::span{bits, len}).to_legacy_point();
       }
 
+      BOTAN_DEPRECATED("Use EC_AffinePoint::deserialize")
       EC_Point OS2ECP(std::span<const uint8_t> encoded_point) const {
          return EC_AffinePoint(*this, encoded_point).to_legacy_point();
       }
@@ -391,7 +398,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * Return group base point
       * @result base point
       */
-      BOTAN_DEPRECATED("Deprecated no replacement") const EC_Point& get_base_point() const;
+      BOTAN_DEPRECATED("Use EC_AffinePoint::generator") const EC_Point& get_base_point() const;
 
       // Everything below here will be removed in a future release:
 
@@ -399,7 +406,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * Return the canonical group generator
       * @result standard generator of the curve
       */
-      BOTAN_DEPRECATED("Deprecated no replacement") const EC_Point& generator() const;
+      BOTAN_DEPRECATED("Use EC_AffinePoint::generator") const EC_Point& generator() const;
 
       /**
       * Multi exponentiate. Not constant time.
@@ -535,6 +542,25 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       }
 
       /**
+      * Return a point on this curve with the affine values x, y
+      */
+      BOTAN_DEPRECATED("Deprecated - use EC_AffinePoint") EC_Point point(const BigInt& x, const BigInt& y) const {
+         if(auto pt = EC_AffinePoint::from_bigint_xy(*this, x, y)) {
+            return pt->to_legacy_point();
+         } else {
+            throw Decoding_Error("Invalid x/y coordinates for elliptic curve point");
+         }
+      }
+
+      /**
+      * Return the zero (or infinite) point on this curve
+      */
+      BOTAN_DEPRECATED("Deprecated no replacement") EC_Point zero_point() const {
+         return EC_AffinePoint::identity(*this).to_legacy_point();
+      }
+#endif
+
+      /**
       * Return if a == -3 mod p
       */
       BOTAN_DEPRECATED("Deprecated no replacement") bool a_is_minus_3() const { return get_a() + 3 == get_p(); }
@@ -591,24 +617,6 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       BOTAN_DEPRECATED("Deprecated no replacement") BigInt cube_mod_order(const BigInt& x) const {
          auto xs = EC_Scalar::from_bigint(*this, x);
          return (xs * xs * xs).to_bigint();
-      }
-
-      /**
-      * Return a point on this curve with the affine values x, y
-      */
-      BOTAN_DEPRECATED("Deprecated - use EC_AffinePoint") EC_Point point(const BigInt& x, const BigInt& y) const {
-         if(auto pt = EC_AffinePoint::from_bigint_xy(*this, x, y)) {
-            return pt->to_legacy_point();
-         } else {
-            throw Decoding_Error("Invalid x/y coordinates for elliptic curve point");
-         }
-      }
-
-      /**
-      * Return the zero (or infinite) point on this curve
-      */
-      BOTAN_DEPRECATED("Deprecated no replacement") EC_Point zero_point() const {
-         return EC_AffinePoint::identity(*this).to_legacy_point();
       }
 
       BOTAN_DEPRECATED("Just serialize the point and check") size_t point_size(EC_Point_Format format) const {

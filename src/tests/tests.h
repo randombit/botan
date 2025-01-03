@@ -33,7 +33,7 @@ namespace Botan {
 class BigInt;
 #endif
 
-#if defined(BOTAN_HAS_EC_CURVE_GFP)
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
 class EC_Point;
 #endif
 
@@ -443,7 +443,7 @@ class Test {
             bool test_ne(const std::string& what, const BigInt& produced, const BigInt& expected);
 #endif
 
-#if defined(BOTAN_HAS_EC_CURVE_GFP)
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
             bool test_eq(const std::string& what, const Botan::EC_Point& a, const Botan::EC_Point& b);
 #endif
 

@@ -21,7 +21,7 @@
 namespace Botan {
 
 std::unique_ptr<Public_Key> ECKCDSA_PrivateKey::public_key() const {
-   return std::make_unique<ECKCDSA_PublicKey>(domain(), public_point());
+   return std::make_unique<ECKCDSA_PublicKey>(domain(), _public_ec_point());
 }
 
 bool ECKCDSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
@@ -119,7 +119,7 @@ class ECKCDSA_Signature_Operation final : public PK_Ops::Signature {
             m_group(eckcdsa.domain()),
             m_x(eckcdsa._private_key()),
             m_hash(eckcdsa_signature_hash(padding)),
-            m_prefix(eckcdsa_prefix(eckcdsa._public_key(), m_hash->hash_block_size())),
+            m_prefix(eckcdsa_prefix(eckcdsa._public_ec_point(), m_hash->hash_block_size())),
             m_prefix_used(false) {}
 
       void update(std::span<const uint8_t> input) override {
@@ -189,16 +189,16 @@ class ECKCDSA_Verification_Operation final : public PK_Ops::Verification {
    public:
       ECKCDSA_Verification_Operation(const ECKCDSA_PublicKey& eckcdsa, std::string_view padding) :
             m_group(eckcdsa.domain()),
-            m_gy_mul(eckcdsa._public_key()),
+            m_gy_mul(eckcdsa._public_ec_point()),
             m_hash(eckcdsa_signature_hash(padding)),
-            m_prefix(eckcdsa_prefix(eckcdsa._public_key(), m_hash->hash_block_size())),
+            m_prefix(eckcdsa_prefix(eckcdsa._public_ec_point(), m_hash->hash_block_size())),
             m_prefix_used(false) {}
 
       ECKCDSA_Verification_Operation(const ECKCDSA_PublicKey& eckcdsa, const AlgorithmIdentifier& alg_id) :
             m_group(eckcdsa.domain()),
-            m_gy_mul(eckcdsa._public_key()),
+            m_gy_mul(eckcdsa._public_ec_point()),
             m_hash(eckcdsa_signature_hash(alg_id)),
-            m_prefix(eckcdsa_prefix(eckcdsa._public_key(), m_hash->hash_block_size())),
+            m_prefix(eckcdsa_prefix(eckcdsa._public_ec_point(), m_hash->hash_block_size())),
             m_prefix_used(false) {}
 
       void update(std::span<const uint8_t> msg) override;

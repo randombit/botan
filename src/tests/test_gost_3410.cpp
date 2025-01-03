@@ -37,7 +37,7 @@ class GOST_3410_2001_Verification_Tests final : public PK_Signature_Verification
          const BigInt Px = vars.get_req_bn("Px");
          const BigInt Py = vars.get_req_bn("Py");
 
-         const Botan::EC_Point public_point = group.point(Px, Py);
+         const auto public_point = Botan::EC_AffinePoint::from_bigint_xy(group, Px, Py).value();
 
          return std::make_unique<Botan::GOST_3410_PublicKey>(group, public_point);
       }
@@ -84,8 +84,8 @@ class GOST_3410_2001_Keygen_Tests final : public PK_Key_Generation_Test {
                                                              std::string_view /* provider */,
                                                              std::span<const uint8_t> raw_pk) const override {
          const auto group = Botan::EC_Group(keygen_params);
-         const auto public_point = group.OS2ECP(raw_pk);
-         return std::make_unique<Botan::GOST_3410_PublicKey>(group, public_point);
+         const auto public_key = Botan::EC_AffinePoint(group, raw_pk);
+         return std::make_unique<Botan::GOST_3410_PublicKey>(group, public_key);
       }
 };
 

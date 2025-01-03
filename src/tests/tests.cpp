@@ -20,7 +20,7 @@
    #include <botan/bigint.h>
 #endif
 
-#if defined(BOTAN_HAS_EC_CURVE_GFP)
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
    #include <botan/ec_point.h>
 #endif
 
@@ -335,7 +335,7 @@ bool Test::Result::test_ne(const std::string& what, const BigInt& produced, cons
 }
 #endif
 
-#if defined(BOTAN_HAS_EC_CURVE_GFP)
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
 bool Test::Result::test_eq(const std::string& what, const Botan::EC_Point& a, const Botan::EC_Point& b) {
    //return test_is_eq(what, a, b);
    if(a == b) {

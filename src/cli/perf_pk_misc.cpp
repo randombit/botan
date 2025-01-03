@@ -77,8 +77,9 @@ class PerfTest_ECDSAKeyRec final : public PerfTest {
                const uint8_t v = key.recovery_param(message, r, s);
 
                recovery_timer->run([&]() {
-                  Botan::ECDSA_PublicKey pubkey(group, message, r, s, v);
-                  BOTAN_ASSERT(pubkey.public_point() == key.public_point(), "Recovered public key");
+                  Botan::ECDSA_PublicKey recovered_key(group, message, r, s, v);
+                  BOTAN_ASSERT(recovered_key.public_key_bits() == key.public_key_bits(),
+                               "Recovered public key correctly");
                });
             }
 

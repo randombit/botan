@@ -102,7 +102,7 @@ PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session,
    Object public_key(session, pub_key_handle);
 
    auto pt_bytes = public_key.get_attribute_value(AttributeType::EcPoint);
-   m_public_key = decode_public_point(m_domain_params, pt_bytes).to_legacy_point();
+   m_public_key = decode_public_point(m_domain_params, pt_bytes);
 }
 
 size_t PKCS11_EC_PrivateKey::key_length() const {
@@ -110,11 +110,11 @@ size_t PKCS11_EC_PrivateKey::key_length() const {
 }
 
 std::vector<uint8_t> PKCS11_EC_PrivateKey::raw_public_key_bits() const {
-   return public_point().encode(EC_Point_Format::Compressed);
+   return public_ec_point().serialize_compressed();
 }
 
 std::vector<uint8_t> PKCS11_EC_PrivateKey::public_key_bits() const {
-   return public_point().encode(EC_Point_Format::Compressed);
+   return raw_public_key_bits();
 }
 
 size_t PKCS11_EC_PrivateKey::estimated_strength() const {
@@ -122,7 +122,7 @@ size_t PKCS11_EC_PrivateKey::estimated_strength() const {
 }
 
 bool PKCS11_EC_PrivateKey::check_key(RandomNumberGenerator& /*rng*/, bool /*strong*/) const {
-   return m_public_key.on_the_curve();
+   return true;
 }
 
 AlgorithmIdentifier PKCS11_EC_PrivateKey::algorithm_identifier() const {
