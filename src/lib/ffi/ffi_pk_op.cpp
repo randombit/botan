@@ -181,10 +181,11 @@ int botan_pk_op_verify_finish(botan_pk_op_verify_t op, const uint8_t sig[], size
    return BOTAN_FFI_VISIT(op, [=](auto& o) {
       const bool legit = o.check_signature(sig, sig_len);
 
-      if(legit)
+      if(legit) {
          return BOTAN_FFI_SUCCESS;
-      else
+      } else {
          return BOTAN_FFI_INVALID_VERIFIER;
+      }
    });
 }
 
@@ -215,17 +216,19 @@ int botan_pk_op_key_agreement_export_public(botan_privkey_t key, uint8_t out[], 
 
 int botan_pk_op_key_agreement_view_public(botan_privkey_t key, botan_view_ctx ctx, botan_view_bin_fn view) {
    return BOTAN_FFI_VISIT(key, [=](const auto& k) -> int {
-      if(auto kak = dynamic_cast<const Botan::PK_Key_Agreement_Key*>(&k))
+      if(auto kak = dynamic_cast<const Botan::PK_Key_Agreement_Key*>(&k)) {
          return invoke_view_callback(view, ctx, kak->public_value());
-      else
+      } else {
          return BOTAN_FFI_ERROR_INVALID_INPUT;
+      }
    });
 }
 
 int botan_pk_op_key_agreement_size(botan_pk_op_ka_t op, size_t* out_len) {
    return BOTAN_FFI_VISIT(op, [=](const auto& o) {
-      if(out_len == nullptr)
+      if(out_len == nullptr) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
+      }
       *out_len = o.agreed_value_size();
       return BOTAN_FFI_SUCCESS;
    });
@@ -299,8 +302,9 @@ int botan_pk_op_kem_encrypt_create_shared_key(botan_pk_op_kem_encrypt_t op,
 
       int rc = write_vec_output(encapsulated_key_out, encapsulated_key_len, result.encapsulated_shared_key());
 
-      if(rc != 0)
+      if(rc != 0) {
          return rc;
+      }
 
       return write_vec_output(shared_key_out, shared_key_len, result.shared_key());
    });

@@ -140,8 +140,9 @@ int botan_x509_cert_allowed_usage(botan_x509_cert_t cert, unsigned int key_usage
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
    return BOTAN_FFI_VISIT(cert, [=](const auto& c) -> int {
       const Botan::Key_Constraints k = static_cast<Botan::Key_Constraints>(key_usage);
-      if(c.allowed_usage(k))
+      if(c.allowed_usage(k)) {
          return BOTAN_FFI_SUCCESS;
+      }
       return 1;
    });
 #else
