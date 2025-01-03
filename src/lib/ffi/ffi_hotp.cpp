@@ -57,7 +57,7 @@ int botan_hotp_generate(botan_hotp_t hotp, uint32_t* hotp_code, uint64_t hotp_co
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
-   return BOTAN_FFI_VISIT(hotp, [=](auto& h) { *hotp_code = h.generate_hotp(hotp_counter); });
+   return botan_ffi_visit(hotp, [=](auto& h) { *hotp_code = h.generate_hotp(hotp_counter); });
 
 #else
    BOTAN_UNUSED(hotp, hotp_code, hotp_counter);
@@ -68,7 +68,7 @@ int botan_hotp_generate(botan_hotp_t hotp, uint32_t* hotp_code, uint64_t hotp_co
 int botan_hotp_check(
    botan_hotp_t hotp, uint64_t* next_hotp_counter, uint32_t hotp_code, uint64_t hotp_counter, size_t resync_range) {
 #if defined(BOTAN_HAS_HOTP)
-   return BOTAN_FFI_VISIT(hotp, [=](auto& h) {
+   return botan_ffi_visit(hotp, [=](auto& h) {
       auto resp = h.verify_hotp(hotp_code, hotp_counter, resync_range);
 
       if(next_hotp_counter)
