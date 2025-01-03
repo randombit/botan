@@ -6,18 +6,21 @@
 
 #include <botan/auto_rng.h>
 
-#include <botan/entropy_src.h>
 #include <botan/hmac_drbg.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/os_utils.h>
 
-#include <array>
+#if defined(BOTAN_HAS_ENTROPY_SOURCE)
+   #include <botan/entropy_src.h>
+#endif
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    #include <botan/system_rng.h>
 #endif
 
 namespace Botan {
+
+class Entropy_Sources;
 
 namespace {
 
