@@ -70,7 +70,7 @@ int botan_srp6_server_session_step1(botan_srp6_server_session_t srp6,
                                     uint8_t b_pub[],
                                     size_t* b_pub_len) {
 #if defined(BOTAN_HAS_SRP6)
-   return BOTAN_FFI_VISIT(srp6, [=](auto& s) -> int {
+   return botan_ffi_visit(srp6, [=](auto& s) -> int {
       if(!verifier || !group_id || !hash_id || !rng_obj) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }
@@ -94,7 +94,7 @@ int botan_srp6_server_session_step1(botan_srp6_server_session_t srp6,
 int botan_srp6_server_session_step2(
    botan_srp6_server_session_t srp6, const uint8_t a[], size_t a_len, uint8_t key[], size_t* key_len) {
 #if defined(BOTAN_HAS_SRP6)
-   return BOTAN_FFI_VISIT(srp6, [=](auto& s) -> int {
+   return botan_ffi_visit(srp6, [=](auto& s) -> int {
       if(!a) {
          return BOTAN_FFI_ERROR_NULL_POINTER;
       }

@@ -58,7 +58,7 @@ int botan_totp_generate(botan_totp_t totp, uint32_t* totp_code, uint64_t timesta
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
 
-   return BOTAN_FFI_VISIT(totp, [=](auto& t) { *totp_code = t.generate_totp(timestamp); });
+   return botan_ffi_visit(totp, [=](auto& t) { *totp_code = t.generate_totp(timestamp); });
 
 #else
    BOTAN_UNUSED(totp, totp_code, timestamp);
@@ -68,7 +68,7 @@ int botan_totp_generate(botan_totp_t totp, uint32_t* totp_code, uint64_t timesta
 
 int botan_totp_check(botan_totp_t totp, uint32_t totp_code, uint64_t timestamp, size_t acceptable_clock_drift) {
 #if defined(BOTAN_HAS_TOTP)
-   return BOTAN_FFI_VISIT(totp, [=](auto& t) {
+   return botan_ffi_visit(totp, [=](auto& t) {
       const bool ok = t.verify_totp(totp_code, timestamp, acceptable_clock_drift);
       return (ok ? BOTAN_FFI_SUCCESS : BOTAN_FFI_INVALID_VERIFIER);
    });
