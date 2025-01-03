@@ -35,7 +35,9 @@ EMCC __EMSCRIPTEN_major__ __EMSCRIPTEN_minor__
 * __apple_build_version__ to 15000309
 */
 
-   #if __apple_build_version__ >= 15000300
+   #if __apple_build_version__ >= 16000000
+XCODE 16 0
+   #elif __apple_build_version__ >= 15000300
 XCODE 15 3
    #elif __apple_build_version__ >= 15000000
 XCODE 15 0
