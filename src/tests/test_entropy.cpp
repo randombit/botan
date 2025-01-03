@@ -6,13 +6,18 @@
 
 #include "test_rng.h"
 #include "tests.h"
-#include <botan/entropy_src.h>
+
+#if defined(BOTAN_HAS_ENTROPY_SOURCE)
+   #include <botan/entropy_src.h>
+#endif
 
 #if defined(BOTAN_HAS_COMPRESSION)
    #include <botan/compression.h>
 #endif
 
 namespace Botan_Tests {
+
+#if defined(BOTAN_HAS_ENTROPY_SOURCE)
 
 namespace {
 
@@ -44,7 +49,7 @@ class Entropy_Source_Tests final : public Test {
 
                result.test_note("poll result", rng.seed_material());
 
-#if defined(BOTAN_HAS_COMPRESSION)
+   #if defined(BOTAN_HAS_COMPRESSION)
                if(!rng.seed_material().empty()) {
                   /*
                   * Skip bzip2 both due to OS X problem (GH #394) and because bzip2's
@@ -102,7 +107,7 @@ class Entropy_Source_Tests final : public Test {
                      }
                   }
                }
-#endif
+   #endif
             } catch(std::exception& e) {
                result.test_failure("during entropy collection test", e.what());
             }
@@ -118,5 +123,7 @@ class Entropy_Source_Tests final : public Test {
 BOTAN_REGISTER_TEST("rng", "entropy", Entropy_Source_Tests);
 
 }  // namespace
+
+#endif
 
 }  // namespace Botan_Tests

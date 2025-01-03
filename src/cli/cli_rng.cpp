@@ -5,10 +5,14 @@
 */
 
 #include "cli.h"
-#include <botan/entropy_src.h>
+
 #include <botan/hex.h>
 #include <botan/rng.h>
 #include <botan/internal/parsing.h>
+
+#if defined(BOTAN_HAS_ENTROPY_SOURCE)
+   #include <botan/entropy_src.h>
+#endif
 
 #if defined(BOTAN_HAS_AUTO_SEEDING_RNG)
    #include <botan/auto_rng.h>
@@ -56,7 +60,11 @@ std::shared_ptr<Botan::RandomNumberGenerator> cli_make_rng(const std::string& rn
       std::shared_ptr<Botan::RandomNumberGenerator> rng;
 
       if(rng_type == "entropy") {
+   #if defined(BOTAN_HAS_ENTROPY_SOURCE)
          rng = std::make_shared<Botan::AutoSeeded_RNG>(Botan::Entropy_Sources::global_sources());
+   #else
+         throw CLI_Error_Unsupported("Entropy sources not included in this build");
+   #endif
       } else {
          rng = std::make_shared<Botan::AutoSeeded_RNG>();
       }
