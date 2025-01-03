@@ -1483,7 +1483,7 @@ class BlindedScalarBits final {
       static constexpr size_t Bits = C::Scalar::BITS + (BlindingEnabled ? BlindingBits : 0);
       static constexpr size_t Bytes = (Bits + 7) / 8;
 
-      BlindedScalarBits(const typename C::Scalar& scalar, RandomNumberGenerator& rng) {
+      BlindedScalarBits(const C::Scalar& scalar, RandomNumberGenerator& rng) {
          if constexpr(BlindingEnabled) {
             constexpr size_t mask_words = BlindingBits / WordInfo<W>::bits;
             constexpr size_t mask_bytes = mask_words * WordInfo<W>::bytes;
@@ -1552,7 +1552,7 @@ class UnblindedScalarBits final {
    public:
       static constexpr size_t Bits = C::Scalar::BITS;
 
-      UnblindedScalarBits(const typename C::Scalar& scalar) { scalar.serialize_to(std::span{m_bytes}); }
+      UnblindedScalarBits(const C::Scalar& scalar) { scalar.serialize_to(std::span{m_bytes}); }
 
       size_t get_window(size_t offset) const {
          // Extract a WindowBits sized window out of s, depending on offset.
@@ -1973,7 +1973,7 @@ const auto& SSWU_C1()
 * See RFC 9380 ("Hashing to Elliptic Curves") section 6.6.2
 */
 template <typename C>
-inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::AffinePoint {
+inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> C::AffinePoint {
    CT::poison(u);
    const auto z_u2 = C::SSWU_Z * u.square();  // z * u^2
    const auto z2_u4 = z_u2.square();
