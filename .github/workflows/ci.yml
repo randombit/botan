@@ -70,14 +70,16 @@ jobs:
         include:
           - compiler: gcc
             target: shared
+            runs-on: ubuntu-22.04
           - compiler: gcc
             target: amalgamation
+            runs-on: ubuntu-22.04
           - compiler: gcc
             target: static
+            runs-on: ubuntu-22.04
           - compiler: clang
             target: shared
-
-    runs-on: ubuntu-22.04
+            runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
