@@ -16,3 +16,7 @@ thread_pool.h
 <os_features>
 threads
 </os_features>
+
+<requires>
+os_utils
+</requires>

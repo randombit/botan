@@ -41,10 +41,13 @@
    #include <botan/tls_session_manager_memory.h>
    #include <botan/version.h>
    #include <botan/internal/fmt.h>
-   #include <botan/internal/os_utils.h>
 
    #if defined(BOTAN_HAS_TLS_SQLITE3_SESSION_MANAGER)
       #include <botan/tls_session_manager_sqlite.h>
+   #endif
+
+   #if defined(BOTAN_HAS_OS_UTILS)
+      #include <botan/internal/os_utils.h>
    #endif
 
    #include "tls_helpers.h"
@@ -63,7 +66,13 @@ using tcp_stream = typename beast::tcp_stream::rebind_executor<
 
 class Logger final {
    private:
-      std::string timestamp() const { return Botan::OS::format_time(std::time(nullptr), "%c"); }
+      std::string timestamp() const {
+   #if defined(BOTAN_HAS_OS_UTILS)
+         return Botan::OS::format_time(std::time(nullptr), "%c");
+   #else
+         return std::to_string(std::time(nullptr));
+   #endif
+      }
 
    public:
       Logger(std::ostream& out, std::ostream& err) : m_out(out), m_err(err) {}
@@ -331,9 +340,11 @@ class TLS_HTTP_Server final : public Command {
          if(size_t t = get_arg_sz("threads")) {
             return t;
          }
+   #if defined(BOTAN_HAS_OS_UTILS)
          if(size_t t = Botan::OS::get_cpu_available()) {
             return t;
          }
+   #endif
          return 2;
       }
 

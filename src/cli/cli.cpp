@@ -7,7 +7,6 @@
 #include "cli.h"
 #include "argparse.h"
 #include <botan/rng.h>
-#include <botan/internal/os_utils.h>
 #include <fstream>
 #include <iostream>
 
@@ -21,6 +20,10 @@
 
 #if defined(BOTAN_HAS_BASE58_CODEC)
    #include <botan/base58.h>
+#endif
+
+#if defined(BOTAN_HAS_OS_UTILS)
+   #include <botan/internal/os_utils.h>
 #endif
 
 #ifdef _WIN32
@@ -241,8 +244,12 @@ std::string Command::get_passphrase_arg(const std::string& prompt, const std::st
 namespace {
 
 bool echo_suppression_supported() {
+#if defined(BOTAN_HAS_OS_UTILS)
    auto echo = Botan::OS::suppress_echo_on_terminal();
    return (echo != nullptr);
+#else
+   return false;
+#endif
 }
 
 }  // namespace
@@ -255,7 +262,9 @@ std::string Command::get_passphrase(const std::string& prompt) {
    error_output() << prompt << ": " << std::flush;
    std::string pass;
 
+#if defined(BOTAN_HAS_OS_UTILS)
    auto echo_suppress = Botan::OS::suppress_echo_on_terminal();
+#endif
 
    std::getline(std::cin, pass);
 

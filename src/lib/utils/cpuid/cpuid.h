@@ -395,7 +395,6 @@ class BOTAN_TEST_API CPUID final {
 
       static std::vector<CPUID::CPUID_bits> bit_from_string(std::string_view tok);
 
-   private:
       /**
       * A common helper for the various CPUID implementations
       */
@@ -409,6 +408,7 @@ class BOTAN_TEST_API CPUID final {
          }
       }
 
+   private:
       struct CPUID_Data {
          public:
             CPUID_Data();

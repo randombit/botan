@@ -32,8 +32,8 @@
    #include <botan/tls_policy.h>
    #include <botan/tls_server.h>
    #include <botan/tls_session_manager_memory.h>
-   #include <botan/internal/os_utils.h>
 
+   #include <chrono>
    #include <fstream>
    #include <list>
    #include <memory>
@@ -223,7 +223,8 @@ class TLS_Server final : public Command {
             std::unique_ptr<std::ostream> dump_stream;
 
             if(!dump_traces_to.empty()) {
-               uint64_t timestamp = Botan::OS::get_high_resolution_clock();
+               auto now = std::chrono::system_clock::now().time_since_epoch();
+               uint64_t timestamp = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
                const std::string dump_file = dump_traces_to + "/tls_" + std::to_string(timestamp) + ".bin";
                dump_stream = std::make_unique<std::ofstream>(dump_file.c_str());
             }

@@ -6,7 +6,10 @@
 */
 
 #include "tests.h"
-#include <botan/internal/os_utils.h>
+
+#if defined(BOTAN_HAS_OS_UTILS)
+   #include <botan/internal/os_utils.h>
+#endif
 
 // For __ud2 intrinsic
 #if defined(BOTAN_TARGET_COMPILER_IS_MSVC)
@@ -14,6 +17,8 @@
 #endif
 
 namespace Botan_Tests {
+
+#if defined(BOTAN_HAS_OS_UTILS)
 
 namespace {
 
@@ -52,11 +57,11 @@ class OS_Utils_Tests final : public Test {
 
          result.test_eq("PID same across calls", static_cast<size_t>(pid1), static_cast<size_t>(pid2));
 
-#if defined(BOTAN_TARGET_OS_IS_LLVM) || defined(BOTAN_TARGET_OS_IS_NONE)
+   #if defined(BOTAN_TARGET_OS_IS_LLVM) || defined(BOTAN_TARGET_OS_IS_NONE)
          result.test_eq("PID is expected to be zero on this platform", pid1, size_t(0));
-#else
+   #else
          result.test_ne("PID is non-zero on systems with processes", pid1, 0);
-#endif
+   #endif
 
          return result;
       }
@@ -157,21 +162,21 @@ class OS_Utils_Tests final : public Test {
 
          std::function<int()> crash_probe;
 
-#if defined(BOTAN_TARGET_COMPILER_IS_MSVC)
+   #if defined(BOTAN_TARGET_COMPILER_IS_MSVC)
          crash_probe = []() noexcept -> int {
             __ud2();
             return 3;
          };
 
-#elif defined(BOTAN_USE_GCC_INLINE_ASM)
+   #elif defined(BOTAN_USE_GCC_INLINE_ASM)
 
-   #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+      #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
          crash_probe = []() noexcept -> int {
             asm volatile("ud2");
             return 3;
          };
 
-   #elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
+      #elif defined(BOTAN_TARGET_CPU_IS_ARM_FAMILY)
          //ARM: asm volatile (".word 0xf7f0a000\n");
          // illegal instruction in both ARM and Thumb modes
          crash_probe = []() noexcept -> int {
@@ -179,15 +184,15 @@ class OS_Utils_Tests final : public Test {
             return 3;
          };
 
-   #else
-            /*
+      #else
+               /*
          PPC: "The instruction with primary opcode 0, when the instruction does not consist
          entirely of binary zeros"
          Others ?
          */
-   #endif
+      #endif
 
-#endif
+   #endif
 
          if(crash_probe) {
             const int crash_rc = Botan::OS::run_cpu_instruction_probe(crash_probe);
@@ -201,5 +206,7 @@ class OS_Utils_Tests final : public Test {
 BOTAN_REGISTER_TEST("utils", "os_utils", OS_Utils_Tests);
 
 }  // namespace
+
+#endif
 
 }  // namespace Botan_Tests

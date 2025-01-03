@@ -6,10 +6,13 @@
 
 #include "timer.h"
 
-#include <botan/internal/os_utils.h>
-#include <algorithm>
+#include <chrono>
 #include <iomanip>
 #include <sstream>
+
+#if defined(BOTAN_HAS_OS_UTILS)
+   #include <botan/internal/os_utils.h>
+#endif
 
 namespace Botan_CLI {
 
@@ -43,20 +46,33 @@ Timer::Timer(std::string_view name,
 
 void Timer::start() {
    stop();
-   m_timer_start = Botan::OS::get_system_timestamp_ns();
-   m_cpu_cycles_start = Botan::OS::get_cpu_cycle_counter();
+   m_timer_start = timestamp_ns();
+   m_cpu_cycles_start = cycle_counter();
+}
+
+uint64_t Timer::timestamp_ns() {
+   auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+   return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+}
+
+uint64_t Timer::cycle_counter() {
+#if defined(BOTAN_HAS_OS_UTILS)
+   return Botan::OS::get_cpu_cycle_counter();
+#else
+   return 0;
+#endif
 }
 
 void Timer::stop() {
    if(m_timer_start) {
-      const uint64_t now = Botan::OS::get_system_timestamp_ns();
+      const uint64_t now = timestamp_ns();
 
       if(now > m_timer_start) {
          m_time_used += (now - m_timer_start);
       }
 
       if(m_cpu_cycles_start != 0) {
-         const uint64_t cycles_taken = Botan::OS::get_cpu_cycle_counter() - m_cpu_cycles_start;
+         const uint64_t cycles_taken = cycle_counter() - m_cpu_cycles_start;
          if(cycles_taken > 0) {
             m_cpu_cycles_used += static_cast<size_t>(cycles_taken * m_clock_cycle_ratio);
          }

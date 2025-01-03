@@ -24,8 +24,8 @@
 #include <botan/internal/filesystem.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
-#include <botan/internal/os_utils.h>
 #include <botan/internal/parsing.h>
+#include <chrono>
 #include <fstream>
 #include <sstream>
 
@@ -95,9 +95,8 @@ class Timing_Test {
 
    protected:
       static ticks get_ticks() {
-         // Returns CPU counter or best approximation (monotonic clock of some kind)
-         //return Botan::OS::get_high_resolution_clock();
-         return Botan::OS::get_system_timestamp_ns();
+         auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
+         return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
       }
 
       Botan::RandomNumberGenerator& timing_test_rng() { return (*m_rng); }
@@ -614,11 +613,11 @@ class MARVIN_Test_Command final : public Command {
                // FIXME should this load be constant time?
                Botan::copy_mem(&ciphertext[0], &ciphertext_data[testcase * modulus_bytes], modulus_bytes);
 
-               const uint64_t start = Botan::OS::get_system_timestamp_ns();
+               const uint64_t start = ticks();
 
                op.decrypt_or_random(ciphertext.data(), modulus_bytes, expect_pt_len, rng());
 
-               const uint64_t duration = Botan::OS::get_system_timestamp_ns() - start;
+               const uint64_t duration = ticks() - start;
                BOTAN_ASSERT_NOMSG(measurements[testcase].size() == r);
                measurements[testcase].push_back(duration);
             }

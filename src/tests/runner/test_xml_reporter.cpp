@@ -12,7 +12,10 @@
    #include <botan/build.h>
    #include <botan/version.h>
    #include <botan/internal/loadstor.h>
-   #include <botan/internal/os_utils.h>
+
+   #if defined(BOTAN_HAS_OS_UTILS)
+      #include <botan/internal/os_utils.h>
+   #endif
 
    #include <iomanip>
    #include <numeric>
@@ -63,7 +66,11 @@ std::string full_compiler_name_string() {
 /// formats a given time point in ISO 8601 format (with time zone)
 std::string format(const std::chrono::system_clock::time_point& tp) {
    auto seconds_since_epoch = std::chrono::system_clock::to_time_t(tp);
+   #if defined(BOTAN_HAS_OS_UTILS)
    return Botan::OS::format_time(seconds_since_epoch, "%FT%T%z");
+   #else
+   return std::to_string(seconds_since_epoch);
+   #endif
 }
 
 std::string format(const std::chrono::nanoseconds& dur) {
