@@ -45,12 +45,13 @@ int botan_mp_set_from_str(botan_mp_t mp, const char* str) {
 int botan_mp_set_from_radix_str(botan_mp_t mp, const char* str, size_t radix) {
    return BOTAN_FFI_VISIT(mp, [=](auto& bn) {
       Botan::BigInt::Base base;
-      if(radix == 10)
+      if(radix == 10) {
          base = Botan::BigInt::Decimal;
-      else if(radix == 16)
+      } else if(radix == 16) {
          base = Botan::BigInt::Hexadecimal;
-      else
+      } else {
          return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+      }
 
       const uint8_t* bytes = Botan::cast_char_ptr_to_uint8(str);
       const size_t len = strlen(str);
@@ -89,12 +90,13 @@ int botan_mp_to_hex(const botan_mp_t mp, char* out) {
 
 int botan_mp_to_str(const botan_mp_t mp, uint8_t digit_base, char* out, size_t* out_len) {
    return BOTAN_FFI_VISIT(mp, [=](const auto& bn) -> int {
-      if(digit_base == 0 || digit_base == 10)
+      if(digit_base == 0 || digit_base == 10) {
          return write_str_output(out, out_len, bn.to_dec_string());
-      else if(digit_base == 16)
+      } else if(digit_base == 16) {
          return write_str_output(out, out_len, bn.to_hex_string());
-      else
+      } else {
          return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
    });
 }
 
@@ -115,46 +117,51 @@ int botan_mp_destroy(botan_mp_t mp) {
 
 int botan_mp_add(botan_mp_t result, const botan_mp_t x, const botan_mp_t y) {
    return BOTAN_FFI_VISIT(result, [=](auto& res) {
-      if(result == x)
+      if(result == x) {
          res += safe_get(y);
-      else
+      } else {
          res = safe_get(x) + safe_get(y);
+      }
    });
 }
 
 int botan_mp_sub(botan_mp_t result, const botan_mp_t x, const botan_mp_t y) {
    return BOTAN_FFI_VISIT(result, [=](auto& res) {
-      if(result == x)
+      if(result == x) {
          res -= safe_get(y);
-      else
+      } else {
          res = safe_get(x) - safe_get(y);
+      }
    });
 }
 
 int botan_mp_add_u32(botan_mp_t result, const botan_mp_t x, uint32_t y) {
    return BOTAN_FFI_VISIT(result, [=](auto& res) {
-      if(result == x)
+      if(result == x) {
          res += static_cast<Botan::word>(y);
-      else
+      } else {
          res = safe_get(x) + static_cast<Botan::word>(y);
+      }
    });
 }
 
 int botan_mp_sub_u32(botan_mp_t result, const botan_mp_t x, uint32_t y) {
    return BOTAN_FFI_VISIT(result, [=](auto& res) {
-      if(result == x)
+      if(result == x) {
          res -= static_cast<Botan::word>(y);
-      else
+      } else {
          res = safe_get(x) - static_cast<Botan::word>(y);
+      }
    });
 }
 
 int botan_mp_mul(botan_mp_t result, const botan_mp_t x, const botan_mp_t y) {
    return BOTAN_FFI_VISIT(result, [=](auto& res) {
-      if(result == x)
+      if(result == x) {
          res *= safe_get(y);
-      else
+      } else {
          res = safe_get(x) * safe_get(y);
+      }
    });
 }
 
