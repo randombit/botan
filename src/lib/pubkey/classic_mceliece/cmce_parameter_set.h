@@ -26,26 +26,26 @@ namespace Botan {
 class BOTAN_PUBLIC_API(3, 4) Classic_McEliece_Parameter_Set {
    public:
       enum class Code {
-         mceliece348864,   // NIST
-         mceliece348864f,  // NIST
+         ClassicMcEliece_348864,   // NIST
+         ClassicMcEliece_348864f,  // NIST
 
-         mceliece460896,   // NIST
-         mceliece460896f,  // NIST
+         ClassicMcEliece_460896,   // NIST
+         ClassicMcEliece_460896f,  // NIST
 
-         mceliece6688128,     // ISO + NIST
-         mceliece6688128f,    // ISO + NIST
-         mceliece6688128pc,   // ISO
-         mceliece6688128pcf,  // ISO
+         ClassicMcEliece_6688128,     // ISO + NIST
+         ClassicMcEliece_6688128f,    // ISO + NIST
+         ClassicMcEliece_6688128pc,   // ISO
+         ClassicMcEliece_6688128pcf,  // ISO
 
-         mceliece6960119,     // ISO + NIST
-         mceliece6960119f,    // ISO + NIST
-         mceliece6960119pc,   // ISO
-         mceliece6960119pcf,  // ISO
+         ClassicMcEliece_6960119,     // ISO + NIST
+         ClassicMcEliece_6960119f,    // ISO + NIST
+         ClassicMcEliece_6960119pc,   // ISO
+         ClassicMcEliece_6960119pcf,  // ISO
 
-         mceliece8192128,     // ISO + NIST
-         mceliece8192128f,    // ISO + NIST
-         mceliece8192128pc,   // ISO
-         mceliece8192128pcf,  // ISO
+         ClassicMcEliece_8192128,     // ISO + NIST
+         ClassicMcEliece_8192128f,    // ISO + NIST
+         ClassicMcEliece_8192128pc,   // ISO
+         ClassicMcEliece_8192128pcf,  // ISO
       };
 
       using enum Code;

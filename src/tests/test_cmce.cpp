@@ -45,32 +45,32 @@ Botan::Classic_McEliece_Polynomial create_element_from_bytes(std::span<const uin
 
 std::vector<Botan::Classic_McEliece_Parameter_Set> get_test_instances_all() {
    return {// All instances
-           Botan::Classic_McEliece_Parameter_Set::mceliece348864,
-           Botan::Classic_McEliece_Parameter_Set::mceliece348864f,
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_348864,
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_348864f,
 
-           Botan::Classic_McEliece_Parameter_Set::mceliece460896,
-           Botan::Classic_McEliece_Parameter_Set::mceliece460896f,
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_460896,
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_460896f,
 
-           Botan::Classic_McEliece_Parameter_Set::mceliece6688128,
-           Botan::Classic_McEliece_Parameter_Set::mceliece6688128f,
-           Botan::Classic_McEliece_Parameter_Set::mceliece6688128pc,
-           Botan::Classic_McEliece_Parameter_Set::mceliece6688128pcf,
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_6688128,
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_6688128f,
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_6688128pc,
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_6688128pcf,
 
-           Botan::Classic_McEliece_Parameter_Set::mceliece6960119,
-           Botan::Classic_McEliece_Parameter_Set::mceliece6960119f,
-           Botan::Classic_McEliece_Parameter_Set::mceliece6960119pc,
-           Botan::Classic_McEliece_Parameter_Set::mceliece6960119pcf,
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_6960119,
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_6960119f,
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_6960119pc,
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_6960119pcf,
 
-           Botan::Classic_McEliece_Parameter_Set::mceliece8192128,
-           Botan::Classic_McEliece_Parameter_Set::mceliece8192128f,
-           Botan::Classic_McEliece_Parameter_Set::mceliece8192128pc,
-           Botan::Classic_McEliece_Parameter_Set::mceliece8192128pcf};
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_8192128,
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_8192128f,
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_8192128pc,
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_8192128pcf};
 }
 
 std::vector<Botan::Classic_McEliece_Parameter_Set> get_test_instances_min() {
    return {// Testing with and without pc and f. Also testing 6960119 with m*t mod 8 != 0.
-           Botan::Classic_McEliece_Parameter_Set::mceliece348864,
-           Botan::Classic_McEliece_Parameter_Set::mceliece6960119pcf};
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_348864,
+           Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_6960119pcf};
 }
 
 std::vector<Botan::Classic_McEliece_Parameter_Set> instances_to_test() {
@@ -94,7 +94,7 @@ class CMCE_Utility_Tests final : public Test {
          Test::Result result("Seed expansion");
 
          auto params =
-            Botan::Classic_McEliece_Parameters::create(Botan::Classic_McEliece_Parameter_Set::mceliece348864);
+            Botan::Classic_McEliece_Parameters::create(Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_348864);
 
          // Created using the reference implementation
          auto seed = Botan::hex_decode_locked("0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20");
@@ -118,7 +118,7 @@ class CMCE_Utility_Tests final : public Test {
          Test::Result result("Irreducible Polynomial Generation");
 
          auto params =
-            Botan::Classic_McEliece_Parameters::create(Botan::Classic_McEliece_Parameter_Set::mceliece348864);
+            Botan::Classic_McEliece_Parameters::create(Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_348864);
 
          // Created using the reference implementation
          auto random_bits = Botan::CmceIrreducibleBits(Botan::hex_decode(
@@ -142,7 +142,7 @@ class CMCE_Utility_Tests final : public Test {
          Test::Result result("GF inv test");
 
          auto params =
-            Botan::Classic_McEliece_Parameters::create(Botan::Classic_McEliece_Parameter_Set::mceliece348864);
+            Botan::Classic_McEliece_Parameters::create(Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_348864);
 
          auto v = params.gf(Botan::CmceGfElem(42));
          auto v_inv = v.inv();
@@ -155,7 +155,7 @@ class CMCE_Utility_Tests final : public Test {
          Test::Result result("GF Poly Mul");
 
          auto params =
-            Botan::Classic_McEliece_Parameters::create(Botan::Classic_McEliece_Parameter_Set::mceliece348864);
+            Botan::Classic_McEliece_Parameters::create(Botan::Classic_McEliece_Parameter_Set::ClassicMcEliece_348864);
 
          const auto& field = params.poly_ring();
 

@@ -10,96 +10,96 @@
 
 namespace Botan {
 
-Classic_McEliece_Parameter_Set Classic_McEliece_Parameter_Set::from_string(std::string_view param_name) {
+Classic_McEliece_Parameter_Set Classic_McEliece_Parameter_Set::from_string(std::string_view nm) {
    Code code = [&] {
-      if(param_name == "mceliece348864") {
-         return mceliece348864;
+      if(nm == "ClassicMcEliece_348864" || nm == "348864") {
+         return ClassicMcEliece_348864;
       }
-      if(param_name == "mceliece348864f") {
-         return mceliece348864f;
+      if(nm == "ClassicMcEliece_348864f" || nm == "348864f") {
+         return ClassicMcEliece_348864f;
       }
-      if(param_name == "mceliece460896") {
-         return mceliece460896;
+      if(nm == "ClassicMcEliece_460896" || nm == "460896") {
+         return ClassicMcEliece_460896;
       }
-      if(param_name == "mceliece460896f") {
-         return mceliece460896f;
+      if(nm == "ClassicMcEliece_460896f" || nm == "460896f") {
+         return ClassicMcEliece_460896f;
       }
-      if(param_name == "mceliece6688128") {
-         return mceliece6688128;
+      if(nm == "ClassicMcEliece_6688128" || nm == "6688128") {
+         return ClassicMcEliece_6688128;
       }
-      if(param_name == "mceliece6688128f") {
-         return mceliece6688128f;
+      if(nm == "ClassicMcEliece_6688128f" || nm == "6688128f") {
+         return ClassicMcEliece_6688128f;
       }
-      if(param_name == "mceliece6688128pc") {
-         return mceliece6688128pc;
+      if(nm == "ClassicMcEliece_6688128pc" || nm == "6688128pc") {
+         return ClassicMcEliece_6688128pc;
       }
-      if(param_name == "mceliece6688128pcf") {
-         return mceliece6688128pcf;
+      if(nm == "ClassicMcEliece_6688128pcf" || nm == "6688128pcf") {
+         return ClassicMcEliece_6688128pcf;
       }
-      if(param_name == "mceliece6960119") {
-         return mceliece6960119;
+      if(nm == "ClassicMcEliece_6960119" || nm == "6960119") {
+         return ClassicMcEliece_6960119;
       }
-      if(param_name == "mceliece6960119f") {
-         return mceliece6960119f;
+      if(nm == "ClassicMcEliece_6960119f" || nm == "6960119f") {
+         return ClassicMcEliece_6960119f;
       }
-      if(param_name == "mceliece6960119pc") {
-         return mceliece6960119pc;
+      if(nm == "ClassicMcEliece_6960119pc" || nm == "6960119pc") {
+         return ClassicMcEliece_6960119pc;
       }
-      if(param_name == "mceliece6960119pcf") {
-         return mceliece6960119pcf;
+      if(nm == "ClassicMcEliece_6960119pcf" || nm == "6960119pcf") {
+         return ClassicMcEliece_6960119pcf;
       }
-      if(param_name == "mceliece8192128") {
-         return mceliece8192128;
+      if(nm == "ClassicMcEliece_8192128" || nm == "8192128") {
+         return ClassicMcEliece_8192128;
       }
-      if(param_name == "mceliece8192128f") {
-         return mceliece8192128f;
+      if(nm == "ClassicMcEliece_8192128f" || nm == "8192128f") {
+         return ClassicMcEliece_8192128f;
       }
-      if(param_name == "mceliece8192128pc") {
-         return mceliece8192128pc;
+      if(nm == "ClassicMcEliece_8192128pc" || nm == "8192128pc") {
+         return ClassicMcEliece_8192128pc;
       }
-      if(param_name == "mceliece8192128pcf") {
-         return mceliece8192128pcf;
+      if(nm == "ClassicMcEliece_8192128pcf" || nm == "8192128pcf") {
+         return ClassicMcEliece_8192128pcf;
       }
 
-      throw Decoding_Error("Cannot convert string to CMCE parameter set");
+      throw Decoding_Error("Cannot convert string to ClassicMcEliece parameter set");
    }();
    return Classic_McEliece_Parameter_Set(code);
 }
 
 std::string Classic_McEliece_Parameter_Set::to_string() const {
    switch(m_code) {
-      case mceliece348864:
-         return "mceliece348864";
-      case mceliece348864f:
-         return "mceliece348864f";
-      case mceliece460896:
-         return "mceliece460896";
-      case mceliece460896f:
-         return "mceliece460896f";
-      case mceliece6688128:
-         return "mceliece6688128";
-      case mceliece6688128f:
-         return "mceliece6688128f";
-      case mceliece6688128pc:
-         return "mceliece6688128pc";
-      case mceliece6688128pcf:
-         return "mceliece6688128pcf";
-      case mceliece6960119:
-         return "mceliece6960119";
-      case mceliece6960119f:
-         return "mceliece6960119f";
-      case mceliece6960119pc:
-         return "mceliece6960119pc";
-      case mceliece6960119pcf:
-         return "mceliece6960119pcf";
-      case mceliece8192128:
-         return "mceliece8192128";
-      case mceliece8192128f:
-         return "mceliece8192128f";
-      case mceliece8192128pc:
-         return "mceliece8192128pc";
-      case mceliece8192128pcf:
-         return "mceliece8192128pcf";
+      case ClassicMcEliece_348864:
+         return "ClassicMcEliece_348864";
+      case ClassicMcEliece_348864f:
+         return "ClassicMcEliece_348864f";
+      case ClassicMcEliece_460896:
+         return "ClassicMcEliece_460896";
+      case ClassicMcEliece_460896f:
+         return "ClassicMcEliece_460896f";
+      case ClassicMcEliece_6688128:
+         return "ClassicMcEliece_6688128";
+      case ClassicMcEliece_6688128f:
+         return "ClassicMcEliece_6688128f";
+      case ClassicMcEliece_6688128pc:
+         return "ClassicMcEliece_6688128pc";
+      case ClassicMcEliece_6688128pcf:
+         return "ClassicMcEliece_6688128pcf";
+      case ClassicMcEliece_6960119:
+         return "ClassicMcEliece_6960119";
+      case ClassicMcEliece_6960119f:
+         return "ClassicMcEliece_6960119f";
+      case ClassicMcEliece_6960119pc:
+         return "ClassicMcEliece_6960119pc";
+      case ClassicMcEliece_6960119pcf:
+         return "ClassicMcEliece_6960119pcf";
+      case ClassicMcEliece_8192128:
+         return "ClassicMcEliece_8192128";
+      case ClassicMcEliece_8192128f:
+         return "ClassicMcEliece_8192128f";
+      case ClassicMcEliece_8192128pc:
+         return "ClassicMcEliece_8192128pc";
+      case ClassicMcEliece_8192128pcf:
+         return "ClassicMcEliece_8192128pcf";
    }
    BOTAN_ASSERT_UNREACHABLE();
 }
