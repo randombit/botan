@@ -70,16 +70,18 @@ jobs:
         include:
           - compiler: gcc
             target: shared
-            runs-on: ubuntu-22.04
+            host_os: ubuntu-22.04
           - compiler: gcc
             target: amalgamation
-            runs-on: ubuntu-22.04
+            host_os: ubuntu-22.04
           - compiler: gcc
             target: static
-            runs-on: ubuntu-22.04
+            host_os: ubuntu-22.04
           - compiler: clang
             target: shared
-            runs-on: ubuntu-24.04
+            host_os: ubuntu-24.04
+
+    runs-on: ${{ matrix.host_os }}
 
     steps:
       - uses: actions/checkout@v4
