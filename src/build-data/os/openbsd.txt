@@ -21,6 +21,7 @@ alloc_conceal
 
 atomics
 sockets
+system_clock
 threads
 thread_local
 filesystem

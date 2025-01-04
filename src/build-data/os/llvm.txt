@@ -11,5 +11,6 @@ use_stack_protector no
 
 <target_features>
 filesystem
+system_clock
 atomics
 </target_features>

@@ -30,3 +30,7 @@ x509cert.h
 x509path.h
 x509self.h
 </header:public>
+
+<os_features>
+system_clock
+</os_features>

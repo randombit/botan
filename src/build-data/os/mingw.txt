@@ -29,6 +29,7 @@ rtlgenrandom
 virtual_lock
 
 atomics
+system_clock
 threads
 thread_local
 filesystem

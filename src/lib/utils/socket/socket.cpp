@@ -356,9 +356,7 @@ std::unique_ptr<OS::Socket> OS::open_socket(std::string_view hostname,
    return std::make_unique<BSD_Socket>(hostname, service, timeout);
 
 #else
-   BOTAN_UNUSED(hostname);
-   BOTAN_UNUSED(service);
-   BOTAN_UNUSED(timeout);
+   BOTAN_UNUSED(hostname, service, timeout);
    // No sockets for you
    return std::unique_ptr<Socket>();
 #endif

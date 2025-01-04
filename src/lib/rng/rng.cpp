@@ -27,9 +27,8 @@ void RandomNumberGenerator::randomize_with_ts_input(std::span<uint8_t> output) {
 
 #if defined(BOTAN_HAS_OS_UTILS)
       store_le(std::span{additional_input}.subspan<0, 8>(), OS::get_high_resolution_clock());
-      store_le(std::span{additional_input}.subspan<8, 8>(), OS::get_system_timestamp_ns());
-      store_le(std::span{additional_input}.subspan<16, 4>(), OS::get_process_id());
-      constexpr size_t offset = 20;
+      store_le(std::span{additional_input}.subspan<8, 4>(), OS::get_process_id());
+      constexpr size_t offset = 12;
 #else
       constexpr size_t offset = 0;
 #endif
