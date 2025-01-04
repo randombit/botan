@@ -2,7 +2,7 @@ macro_name CLANG
 
 binary_name clang++
 
-minimum_supported_version 14.0
+minimum_supported_version 17.0
 
 lang_flags "-std=c++20 -D_REENTRANT"
 

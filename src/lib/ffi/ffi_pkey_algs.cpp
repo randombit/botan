@@ -185,7 +185,7 @@ int botan_pubkey_get_field(botan_mp_t output, botan_pubkey_t key, const char* fi
 
    const std::string field_name(field_name_cstr);
 
-   return BOTAN_FFI_VISIT(key, [=](const auto& k) { safe_get(output) = pubkey_get_field(k, field_name); });
+   return botan_ffi_visit(key, [=](const auto& k) { safe_get(output) = pubkey_get_field(k, field_name); });
 }
 
 int botan_privkey_get_field(botan_mp_t output, botan_privkey_t key, const char* field_name_cstr) {
@@ -195,7 +195,7 @@ int botan_privkey_get_field(botan_mp_t output, botan_privkey_t key, const char* 
 
    const std::string field_name(field_name_cstr);
 
-   return BOTAN_FFI_VISIT(key, [=](const auto& k) { safe_get(output) = privkey_get_field(k, field_name); });
+   return botan_ffi_visit(key, [=](const auto& k) { safe_get(output) = privkey_get_field(k, field_name); });
 }
 
 /* RSA specific operations */
@@ -286,7 +286,7 @@ int botan_pubkey_rsa_get_n(botan_mp_t n, botan_pubkey_t key) {
 
 int botan_privkey_rsa_get_privkey(botan_privkey_t rsa_key, uint8_t out[], size_t* out_len, uint32_t flags) {
 #if defined(BOTAN_HAS_RSA)
-   return BOTAN_FFI_VISIT(rsa_key, [=](const auto& k) -> int {
+   return botan_ffi_visit(rsa_key, [=](const auto& k) -> int {
       if(const Botan::RSA_PrivateKey* rsa = dynamic_cast<const Botan::RSA_PrivateKey*>(&k)) {
          if(flags == BOTAN_PRIVKEY_EXPORT_FLAG_DER) {
             return write_vec_output(out, out_len, rsa->private_key_bits());
@@ -710,7 +710,7 @@ int botan_pubkey_load_ed25519(botan_pubkey_t* key, const uint8_t pubkey[32]) {
 
 int botan_privkey_ed25519_get_privkey(botan_privkey_t key, uint8_t output[64]) {
 #if defined(BOTAN_HAS_ED25519)
-   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+   return botan_ffi_visit(key, [=](const auto& k) {
       if(auto ed = dynamic_cast<const Botan::Ed25519_PrivateKey*>(&k)) {
          const auto ed_key = ed->raw_private_key_bits();
          if(ed_key.size() != 64) {
@@ -730,7 +730,7 @@ int botan_privkey_ed25519_get_privkey(botan_privkey_t key, uint8_t output[64]) {
 
 int botan_pubkey_ed25519_get_pubkey(botan_pubkey_t key, uint8_t output[32]) {
 #if defined(BOTAN_HAS_ED25519)
-   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+   return botan_ffi_visit(key, [=](const auto& k) {
       if(auto ed = dynamic_cast<const Botan::Ed25519_PublicKey*>(&k)) {
          const std::vector<uint8_t>& ed_key = ed->get_public_key();
          if(ed_key.size() != 32) {
@@ -780,7 +780,7 @@ int botan_pubkey_load_ed448(botan_pubkey_t* key, const uint8_t pubkey[57]) {
 
 int botan_privkey_ed448_get_privkey(botan_privkey_t key, uint8_t output[57]) {
 #if defined(BOTAN_HAS_ED448)
-   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+   return botan_ffi_visit(key, [=](const auto& k) {
       if(auto ed = dynamic_cast<const Botan::Ed448_PrivateKey*>(&k)) {
          const auto ed_key = ed->raw_private_key_bits();
          Botan::copy_mem(std::span(output, 57), ed_key);
@@ -797,7 +797,7 @@ int botan_privkey_ed448_get_privkey(botan_privkey_t key, uint8_t output[57]) {
 
 int botan_pubkey_ed448_get_pubkey(botan_pubkey_t key, uint8_t output[57]) {
 #if defined(BOTAN_HAS_ED448)
-   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+   return botan_ffi_visit(key, [=](const auto& k) {
       if(auto ed = dynamic_cast<const Botan::Ed448_PublicKey*>(&k)) {
          const auto ed_key = ed->public_key_bits();
          Botan::copy_mem(std::span(output, 57), ed_key);
@@ -846,7 +846,7 @@ int botan_pubkey_load_x25519(botan_pubkey_t* key, const uint8_t pubkey[32]) {
 
 int botan_privkey_x25519_get_privkey(botan_privkey_t key, uint8_t output[32]) {
 #if defined(BOTAN_HAS_X25519)
-   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+   return botan_ffi_visit(key, [=](const auto& k) {
       if(auto x25519 = dynamic_cast<const Botan::X25519_PrivateKey*>(&k)) {
          const auto x25519_key = x25519->raw_private_key_bits();
          if(x25519_key.size() != 32) {
@@ -866,7 +866,7 @@ int botan_privkey_x25519_get_privkey(botan_privkey_t key, uint8_t output[32]) {
 
 int botan_pubkey_x25519_get_pubkey(botan_pubkey_t key, uint8_t output[32]) {
 #if defined(BOTAN_HAS_X25519)
-   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+   return botan_ffi_visit(key, [=](const auto& k) {
       if(auto x25519 = dynamic_cast<const Botan::X25519_PublicKey*>(&k)) {
          const std::vector<uint8_t>& x25519_key = x25519->public_value();
          if(x25519_key.size() != 32) {
@@ -916,7 +916,7 @@ int botan_pubkey_load_x448(botan_pubkey_t* key, const uint8_t pubkey[56]) {
 
 int botan_privkey_x448_get_privkey(botan_privkey_t key, uint8_t output[56]) {
 #if defined(BOTAN_HAS_X448)
-   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+   return botan_ffi_visit(key, [=](const auto& k) {
       if(auto x448 = dynamic_cast<const Botan::X448_PrivateKey*>(&k)) {
          const auto x448_key = x448->raw_private_key_bits();
          Botan::copy_mem(std::span(output, 56), x448_key);
@@ -933,7 +933,7 @@ int botan_privkey_x448_get_privkey(botan_privkey_t key, uint8_t output[56]) {
 
 int botan_pubkey_x448_get_pubkey(botan_pubkey_t key, uint8_t output[56]) {
 #if defined(BOTAN_HAS_X448)
-   return BOTAN_FFI_VISIT(key, [=](const auto& k) {
+   return botan_ffi_visit(key, [=](const auto& k) {
       if(auto x448 = dynamic_cast<const Botan::X448_PublicKey*>(&k)) {
          const std::vector<uint8_t>& x448_key = x448->public_value();
          Botan::copy_mem(std::span(output, 56), x448_key);
@@ -1024,7 +1024,7 @@ int botan_pubkey_load_kyber(botan_pubkey_t* key, const uint8_t pubkey[], size_t 
 
 int botan_privkey_view_kyber_raw_key(botan_privkey_t key, botan_view_ctx ctx, botan_view_bin_fn view) {
 #if defined(BOTAN_HAS_KYBER)
-   return BOTAN_FFI_VISIT(key, [=](const auto& k) -> int {
+   return botan_ffi_visit(key, [=](const auto& k) -> int {
       if(auto kyber = dynamic_cast<const Botan::Kyber_PrivateKey*>(&k)) {
          return invoke_view_callback(view, ctx, kyber->raw_private_key_bits());
       } else {
@@ -1039,7 +1039,7 @@ int botan_privkey_view_kyber_raw_key(botan_privkey_t key, botan_view_ctx ctx, bo
 
 int botan_pubkey_view_kyber_raw_key(botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view) {
 #if defined(BOTAN_HAS_KYBER)
-   return BOTAN_FFI_VISIT(key, [=](const auto& k) -> int {
+   return botan_ffi_visit(key, [=](const auto& k) -> int {
       if(auto kyber = dynamic_cast<const Botan::Kyber_PublicKey*>(&k)) {
          return invoke_view_callback(view, ctx, kyber->public_key_bits());
       } else {
@@ -1304,7 +1304,7 @@ int botan_pubkey_load_classic_mceliece(botan_pubkey_t* key,
 
 int botan_pubkey_view_ec_public_point(const botan_pubkey_t key, botan_view_ctx ctx, botan_view_bin_fn view) {
 #if defined(BOTAN_HAS_ECC_PUBLIC_KEY_CRYPTO)
-   return BOTAN_FFI_VISIT(key, [=](const auto& k) -> int {
+   return botan_ffi_visit(key, [=](const auto& k) -> int {
       if(auto ecc = dynamic_cast<const Botan::EC_PublicKey*>(&k)) {
          auto pt = ecc->public_point().encode(Botan::EC_Point_Format::Uncompressed);
          return invoke_view_callback(view, ctx, pt);

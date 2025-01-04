@@ -70,14 +70,18 @@ jobs:
         include:
           - compiler: gcc
             target: shared
+            host_os: ubuntu-22.04
           - compiler: gcc
             target: amalgamation
+            host_os: ubuntu-22.04
           - compiler: gcc
             target: static
+            host_os: ubuntu-22.04
           - compiler: clang
             target: shared
+            host_os: ubuntu-24.04
 
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.host_os }}
 
     steps:
       - uses: actions/checkout@v4
@@ -89,7 +93,7 @@ jobs:
         uses: ./.github/actions/setup-build-agent
         with:
           target: ${{ matrix.target }}
-          cache-key: linux-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
+          cache-key: linux-${{ matrix.compiler }}-x86_64-${{ matrix.target }}-{{ matrix.host_os }}
 
       - name: Build and Test Botan
         run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --test-results-dir=junit_results ${{ matrix.target }}

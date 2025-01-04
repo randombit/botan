@@ -31,8 +31,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
 
             const WindowedMul2Table<C, WindowBits>& table() const { return m_table; }
 
-            explicit PrecomputedMul2TableC(const typename C::AffinePoint& x, const typename C::AffinePoint& y) :
-                  m_table(x, y) {}
+            explicit PrecomputedMul2TableC(const C::AffinePoint& x, const C::AffinePoint& y) : m_table(x, y) {}
 
          private:
             WindowedMul2Table<C, WindowBits> m_table;
@@ -324,24 +323,24 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
       }
 
    private:
-      static Scalar stash(const typename C::Scalar& s) {
+      static Scalar stash(const C::Scalar& s) {
          return Scalar::_create(instance(), s.template stash_value<StorageWords>());
       }
 
-      static typename C::Scalar from_stash(const Scalar& s) {
+      static C::Scalar from_stash(const Scalar& s) {
          if(s._curve() != instance()) {
             throw Invalid_Argument("Curve mismatch");
          }
          return C::Scalar::from_stash(s._value());
       }
 
-      static AffinePoint stash(const typename C::AffinePoint& pt) {
+      static AffinePoint stash(const C::AffinePoint& pt) {
          auto x_w = pt.x().template stash_value<StorageWords>();
          auto y_w = pt.y().template stash_value<StorageWords>();
          return AffinePoint::_create(instance(), x_w, y_w);
       }
 
-      static typename C::AffinePoint from_stash(const AffinePoint& pt) {
+      static C::AffinePoint from_stash(const AffinePoint& pt) {
          if(pt._curve() != instance()) {
             throw Invalid_Argument("Curve mismatch");
          }
@@ -350,14 +349,14 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
          return typename C::AffinePoint(x, y);
       }
 
-      static ProjectivePoint stash(const typename C::ProjectivePoint& pt) {
+      static ProjectivePoint stash(const C::ProjectivePoint& pt) {
          auto x_w = pt.x().template stash_value<StorageWords>();
          auto y_w = pt.y().template stash_value<StorageWords>();
          auto z_w = pt.z().template stash_value<StorageWords>();
          return ProjectivePoint::_create(instance(), x_w, y_w, z_w);
       }
 
-      static typename C::ProjectivePoint from_stash(const ProjectivePoint& pt) {
+      static C::ProjectivePoint from_stash(const ProjectivePoint& pt) {
          if(pt._curve() != instance()) {
             throw Invalid_Argument("Curve mismatch");
          }
