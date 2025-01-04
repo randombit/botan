@@ -4,6 +4,9 @@ Release Notes
 Version 3.7.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+* Notice: Botan 3.8.0 will increase the minimum version of LLVM Clang
+  needed to build the library from Clang 14 to Clang 17. (GH #4528 #4529)
+
 * Add post-quantum scheme Classic McEliece (GH #3883 #4448 #4458)
 
 * In TLS enable the hybrid x25519/ML-KEM-768 post quantum secure key
