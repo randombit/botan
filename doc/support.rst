@@ -14,6 +14,11 @@ For Botan 3, the tier-1 supported platforms are
 * Linux ppc64le, GCC 11.2 or later
 * Windows x86-64, Visual C++ 2022 or later
 
+.. warning::
+
+   Starting in Botan 3.8, the minimum required version of Clang will change
+   to Clang 17.
+
 These platforms are all tested by continuous integration, and the developers
 have access to hardware in order to test patches. Problems affecting these
 platforms are considered release blockers.
