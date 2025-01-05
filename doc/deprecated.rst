@@ -67,8 +67,9 @@ elliptic curve points.
   future release the parameters of application provided elliptic curve
   will be limited in the following ways.
 
-  a) The bitlength must be between 128 and 512 bits, and a multiple of 32
+  a) The bitlength must be between 192 and 512 bits, and a multiple of 32
   b) As an extension of (a) you can also use the 521 bit Mersenne prime
+     or the X9.62 239 bit prime.
   c) The prime must be congruent to 3 modulo 4
   d) The bitlength of the prime and the bitlength of the order must be equal
 
