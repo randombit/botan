@@ -42,6 +42,24 @@ EC_AffinePoint::EC_AffinePoint(const EC_Group& group, std::span<const uint8_t> b
 EC_AffinePoint::EC_AffinePoint(const EC_Group& group, const EC_Point& pt) :
       EC_AffinePoint(group, pt.encode(EC_Point_Format::Uncompressed)) {}
 
+bool EC_AffinePoint::operator==(const EC_AffinePoint& other) const {
+   if(this == &other) {
+      return true;
+   }
+
+   // We are relying on EC_Group to ensure there is just a single shared_ptr
+   // for any set of group params
+   if(this->_group() != other._group()) {
+      return false;
+   }
+
+   auto a_xy = this->serialize_uncompressed();
+   auto b_xy = other.serialize_uncompressed();
+   BOTAN_ASSERT_NOMSG(a_xy.size() == b_xy.size());
+
+   return CT::is_equal(a_xy.data(), b_xy.data(), a_xy.size()).as_bool();
+}
+
 EC_AffinePoint EC_AffinePoint::identity(const EC_Group& group) {
    const uint8_t id_encoding[1] = {0};
    return EC_AffinePoint(group, id_encoding);

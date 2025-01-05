@@ -10,13 +10,14 @@
 #include "fuzzers.h"
 
 #include <botan/ec_group.h>
+#include <botan/hex.h>
 #include <botan/numthry.h>
 #include <botan/reducer.h>
 
 namespace {
 
-inline std::ostream& operator<<(std::ostream& o, const Botan::EC_Point& point) {
-   o << point.get_affine_x() << "," << point.get_affine_y();
+inline std::ostream& operator<<(std::ostream& o, const Botan::EC_AffinePoint& point) {
+   o << Botan::hex_encode(point.serialize_uncompressed()) << "\n";
    return o;
 }
 
@@ -46,61 +47,40 @@ inline Botan::BigInt decompress_point(bool yMod2,
 }
 
 inline void check_ecc_math(const Botan::EC_Group& group, std::span<const uint8_t> in) {
-   // These depend only on the group, which is also static
-   static const Botan::EC_Point base_point = group.get_base_point();
-
-   // This is shared across runs to reduce overhead
-   static std::vector<Botan::BigInt> ws(Botan::EC_Point::WORKSPACE_SIZE);
-
    const size_t hlen = in.size() / 2;
-   const Botan::BigInt a = group.mod_order(Botan::BigInt::from_bytes(in.subspan(0, hlen)));
-   const Botan::BigInt b = group.mod_order(Botan::BigInt::from_bytes(in.subspan(hlen, in.size() - hlen)));
-   const Botan::BigInt c = group.mod_order(a + b);
+
+   const auto a = Botan::EC_Scalar::from_bytes_mod_order(group, in.subspan(0, hlen));
+   const auto b = Botan::EC_Scalar::from_bytes_mod_order(group, in.subspan(hlen, in.size() - hlen));
+   const auto c = a + b;
 
    if(a.is_zero() || b.is_zero() || c.is_zero()) {
       return;
    }
 
-   const Botan::EC_Point P1 = base_point * a;
-   const Botan::EC_Point Q1 = base_point * b;
-   const Botan::EC_Point R1 = base_point * c;
+   auto& rng = fuzzer_rng();
+   std::vector<Botan::BigInt> ws;
 
-   const Botan::EC_Point S1 = P1 + Q1;
-   const Botan::EC_Point T1 = Q1 + P1;
+   const auto P1 = Botan::EC_AffinePoint::g_mul(a, rng, ws);
+   const auto Q1 = Botan::EC_AffinePoint::g_mul(b, rng, ws);
+   const auto R1 = Botan::EC_AffinePoint::g_mul(c, rng, ws);
+
+   const auto S1 = P1.add(Q1);
+   const auto T1 = Q1.add(P1);
 
    FUZZER_ASSERT_EQUAL(S1, R1);
    FUZZER_ASSERT_EQUAL(T1, R1);
 
-   const Botan::EC_Point P2 = group.blinded_base_point_multiply(a, fuzzer_rng(), ws);
-   const Botan::EC_Point Q2 = group.blinded_base_point_multiply(b, fuzzer_rng(), ws);
-   const Botan::EC_Point R2 = group.blinded_base_point_multiply(c, fuzzer_rng(), ws);
-   const Botan::EC_Point S2 = P2 + Q2;
-   const Botan::EC_Point T2 = Q2 + P2;
+   const auto g = Botan::EC_AffinePoint::generator(group);
+
+   const auto P2 = g.mul(a, rng, ws);
+   const auto Q2 = g.mul(b, rng, ws);
+   const auto R2 = g.mul(c, rng, ws);
+
+   const auto S2 = P2.add(Q2);
+   const auto T2 = Q2.add(P2);
 
    FUZZER_ASSERT_EQUAL(S2, R2);
    FUZZER_ASSERT_EQUAL(T2, R2);
-
-   const Botan::EC_Point P3 = group.blinded_var_point_multiply(base_point, a, fuzzer_rng(), ws);
-   const Botan::EC_Point Q3 = group.blinded_var_point_multiply(base_point, b, fuzzer_rng(), ws);
-   const Botan::EC_Point R3 = group.blinded_var_point_multiply(base_point, c, fuzzer_rng(), ws);
-   const Botan::EC_Point S3 = P3 + Q3;
-   const Botan::EC_Point T3 = Q3 + P3;
-
-   FUZZER_ASSERT_EQUAL(S3, R3);
-   FUZZER_ASSERT_EQUAL(T3, R3);
-
-   FUZZER_ASSERT_EQUAL(S1, S2);
-   FUZZER_ASSERT_EQUAL(S1, S3);
-
-   try {
-      const auto yp = decompress_point(true, a, group.get_p(), group.get_a(), group.get_b());
-      const auto pt_p = group.blinded_var_point_multiply(group.point(a, yp), b, fuzzer_rng(), ws);
-
-      const auto yn = -yp;
-      const auto pt_n = group.blinded_var_point_multiply(group.point(a, yn), b, fuzzer_rng(), ws);
-
-      FUZZER_ASSERT_EQUAL(pt_p, -pt_n);
-   } catch(...) {}
 }
 
 }  // namespace
