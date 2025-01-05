@@ -203,6 +203,10 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
          return bytes;
       }
 
+      bool operator==(const EC_AffinePoint& other) const;
+
+      bool operator!=(const EC_AffinePoint& other) const { return !(*this == other); }
+
       EC_AffinePoint(const EC_AffinePoint& other);
       EC_AffinePoint(EC_AffinePoint&& other) noexcept;
 
