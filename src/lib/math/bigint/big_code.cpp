@@ -166,13 +166,11 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base) {
       return r;
    } else if(base == Decimal) {
       BigInt r;
-      // This could be made faster using the same trick as to_dec_string
+      // TODO this could be made faster using the same trick as to_dec_string
       for(size_t i = 0; i != length; ++i) {
          const char c = buf[i];
 
-         if(c < '0' || c > '9') {
-            throw Invalid_Argument("BigInt::decode: invalid decimal char");
-         }
+         BOTAN_ARG_CHECK(c >= '0' && c <= '9', "Invalid decimal character");
 
          const uint8_t x = c - '0';
          BOTAN_ASSERT_NOMSG(x < 10);
@@ -182,7 +180,7 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base) {
       }
       return r;
    } else {
-      throw Invalid_Argument("Unknown BigInt decoding method");
+      BOTAN_INVALID_ARG("Unknown BigInt decoding method");
    }
 }
 

@@ -35,13 +35,10 @@ ASN1_Time::ASN1_Time(std::string_view t_spec, ASN1_Type tag) {
 }
 
 ASN1_Time::ASN1_Time(std::string_view t_spec) {
-   if(t_spec.size() == 13) {
-      set_to(t_spec, ASN1_Type::UtcTime);
-   } else if(t_spec.size() == 15) {
-      set_to(t_spec, ASN1_Type::GeneralizedTime);
-   } else {
-      throw Invalid_Argument("Time string could not be parsed as GeneralizedTime or UTCTime.");
-   }
+   BOTAN_ARG_CHECK(t_spec.size() == 13 || t_spec.size() == 15,
+                   "Time string not valid length to be a GeneralizedTime or UTCTime");
+
+   set_to(t_spec, t_spec.size() == 13 ? ASN1_Type::UtcTime : ASN1_Type::GeneralizedTime);
 }
 
 void ASN1_Time::encode_into(DER_Encoder& der) const {
@@ -192,9 +189,7 @@ void ASN1_Time::set_to(std::string_view t_spec, ASN1_Type spec_tag) {
       }
    }
 
-   if(!passes_sanity_check()) {
-      throw Invalid_Argument(fmt("ASN1_Time string '{}' does not seem to be valid", t_spec));
-   }
+   BOTAN_ARG_CHECK(passes_sanity_check(), fmt("ASN1_Time string '{}' does not seem to be valid", t_spec));
 }
 
 /*

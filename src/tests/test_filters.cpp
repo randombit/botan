@@ -195,10 +195,10 @@ class Filter_Tests final : public Test {
 
          // can't explicitly insert a queue into the pipe because they are implicit
          result.test_throws(
-            "pipe error", "Pipe::append: SecureQueue cannot be used", [&]() { pipe.append(queue_filter.get()); });
+            "pipe error", "SecureQueue cannot be inserted into a Pipe", [&]() { pipe.append(queue_filter.get()); });
 
          result.test_throws(
-            "pipe error", "Pipe::prepend: SecureQueue cannot be used", [&]() { pipe.prepend(queue_filter.get()); });
+            "pipe error", "SecureQueue cannot be inserted into a Pipe", [&]() { pipe.prepend(queue_filter.get()); });
 
          pipe.append_filter(new Botan::BitBucket);  // succeeds
          pipe.pop();

@@ -18,9 +18,8 @@ namespace Botan {
 PSS_Params PSS_Params::from_emsa_name(std::string_view emsa_name) {
    SCAN_Name scanner(emsa_name);
 
-   if((scanner.algo_name() != "PSS" && scanner.algo_name() != "PSS_Raw") || scanner.arg_count() != 3) {
-      throw Invalid_Argument(fmt("PSS_Params::from_emsa_name unexpected param '{}'", emsa_name));
-   }
+   BOTAN_ARG_CHECK((scanner.algo_name() == "PSS" || scanner.algo_name() == "PSS_Raw") && scanner.arg_count() == 3,
+                   fmt("PSS_Params::from_emsa_name unexpected param '{}'", emsa_name));
 
    const std::string hash_fn = scanner.arg(0);
    BOTAN_ASSERT_NOMSG(scanner.arg(1) == "MGF1");

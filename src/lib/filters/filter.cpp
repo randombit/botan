@@ -88,9 +88,8 @@ void Filter::attach(Filter* new_filter) {
 * Set the active port on a filter
 */
 void Filter::set_port(size_t new_port) {
-   if(new_port >= total_ports()) {
-      throw Invalid_Argument("Filter: Invalid port number");
-   }
+   BOTAN_ARG_CHECK(new_port < total_ports(), "Invalid port number");
+
    m_port_num = new_port;
 }
 

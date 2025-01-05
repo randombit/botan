@@ -20,9 +20,8 @@ std::unique_ptr<HashFunction> Keccak_1600::copy_state() const {
 Keccak_1600::Keccak_1600(size_t output_bits) : m_keccak(2 * output_bits, 0, 0), m_output_length(output_bits / 8) {
    // We only support the parameters for the SHA-3 proposal
 
-   if(output_bits != 224 && output_bits != 256 && output_bits != 384 && output_bits != 512) {
-      throw Invalid_Argument(fmt("Keccak_1600: Invalid output length {}", output_bits));
-   }
+   BOTAN_ARG_CHECK(output_bits == 224 || output_bits == 256 || output_bits == 384 || output_bits == 512,
+                   fmt("Keccak-1600: Invalid output length {}", output_bits));
 }
 
 std::string Keccak_1600::name() const {

@@ -115,21 +115,17 @@ std::unique_ptr<MessageAuthenticationCode> MessageAuthenticationCode::create(std
 #if defined(BOTAN_HAS_KMAC)
    if(req.algo_name() == "KMAC-128") {
       if(provider.empty() || provider == "base") {
-         if(req.arg_count() != 1) {
-            throw Invalid_Argument(
-               "invalid algorithm specification for KMAC-128: need exactly one argument for output bit length");
+         if(req.arg_count() == 1) {
+            return std::make_unique<KMAC128>(req.arg_as_integer(0));
          }
-         return std::make_unique<KMAC128>(req.arg_as_integer(0));
       }
    }
 
    if(req.algo_name() == "KMAC-256") {
       if(provider.empty() || provider == "base") {
-         if(req.arg_count() != 1) {
-            throw Invalid_Argument(
-               "invalid algorithm specification for KMAC-256: need exactly one argument for output bit length");
+         if(req.arg_count() == 1) {
+            return std::make_unique<KMAC256>(req.arg_as_integer(0));
          }
-         return std::make_unique<KMAC256>(req.arg_as_integer(0));
       }
    }
 #endif

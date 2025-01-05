@@ -25,8 +25,8 @@ class Invalid_Hash_Name_Tests final : public Test {
          test_invalid_name(result, "Blake2b(9)", "Bad output bits size for BLAKE2b");
          test_invalid_name(result, "Comb4P(MD5,MD5)", "Comb4P: Must use two distinct hashes");
          test_invalid_name(result, "Comb4P(MD5,SHA-256)", "Comb4P: Incompatible hashes MD5 and SHA-256");
-         test_invalid_name(result, "Keccak-1600(160)", "Keccak_1600: Invalid output length 160");
-         test_invalid_name(result, "SHA-3(160)", "SHA_3: Invalid output length 160");
+         test_invalid_name(result, "Keccak-1600(160)", "Keccak-1600: Invalid output length 160");
+         test_invalid_name(result, "SHA-3(160)", "SHA-3: Invalid output length 160");
 
          return {result};
       }
@@ -38,8 +38,7 @@ class Invalid_Hash_Name_Tests final : public Test {
             result.test_failure("Was successfully able to create " + name);
          } catch(Botan::Invalid_Argument& e) {
             const std::string msg = e.what();
-            const std::string full_msg = "" + expected_msg;
-            result.test_eq("expected error message", msg, full_msg);
+            result.confirm("expected error message", msg.starts_with(expected_msg));
          } catch(Botan::Lookup_Error& e) {
             const std::string algo_not_found_msg = "Unavailable Hash " + name;
             const std::string msg = e.what();

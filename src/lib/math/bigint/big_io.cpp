@@ -18,7 +18,7 @@ std::ostream& operator<<(std::ostream& stream, const BigInt& n) {
    const auto stream_flags = stream.flags();
    // NOLINTNEXTLINE(*-non-zero-enum-to-bool-conversion)
    if(stream_flags & std::ios::oct) {
-      throw Invalid_Argument("Octal output of BigInt not supported");
+      throw Not_Implemented("Octal output of BigInt not supported");
    }
 
    // NOLINTNEXTLINE(*-non-zero-enum-to-bool-conversion)

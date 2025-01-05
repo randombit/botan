@@ -19,7 +19,7 @@
 
 namespace Botan {
 
-void throw_invalid_argument(const char* message, const char* func, const char* file) {
+void throw_invalid_argument(std::string_view message, const char* func, const char* file) {
    throw Invalid_Argument(fmt("{} in {}:{}", message, func, file));
 }
 

@@ -108,7 +108,7 @@ bool Test::Result::ThrowExpectations::check(const std::string& test_name, Test::
       if(m_expected_exception_type.has_value() && m_expected_exception_type.value() != typeid(ex)) {
          return result.test_failure(test_name + " threw unexpected exception: " + ex.what());
       }
-      if(m_expected_message.has_value() && m_expected_message.value() != ex.what()) {
+      if(m_expected_message.has_value() && !std::string(ex.what()).starts_with(m_expected_message.value())) {
          return result.test_failure(test_name + " threw exception with unexpected message (expected: '" +
                                     m_expected_message.value() + "', got: '" + ex.what() + "')");
       }

@@ -59,13 +59,10 @@ Truncated_Hash::Truncated_Hash(std::unique_ptr<HashFunction> hash, size_t bits) 
       m_hash(std::move(hash)), m_output_bits(bits), m_buffer(m_hash->output_length()) {
    BOTAN_ASSERT_NONNULL(m_hash);
 
-   if(m_output_bits == 0) {
-      throw Invalid_Argument("Truncating a hash to 0 does not make sense");
-   }
+   BOTAN_ARG_CHECK(bits > 0, "Truncating a hash to empty does not make sense");
 
-   if(m_hash->output_length() * 8 < m_output_bits) {
-      throw Invalid_Argument("Underlying hash function does not produce enough bytes for truncation");
-   }
+   BOTAN_ARG_CHECK(bits <= m_hash->output_length() * 8,
+                   "Underlying hash function does not produce enough bits for truncation");
 }
 
 }  // namespace Botan

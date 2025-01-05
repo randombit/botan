@@ -145,13 +145,11 @@ void Base64_Decoder::end_msg() {
 
    send(m_out, written);
 
-   const bool not_full_bytes = consumed != m_position;
+   const bool full_bytes = consumed == m_position;
 
    m_position = 0;
 
-   if(not_full_bytes) {
-      throw Invalid_Argument("Base64_Decoder: Input not full bytes");
-   }
+   BOTAN_ARG_CHECK(full_bytes, "Base64_Decoder: Input not full bytes");
 }
 
 }  // namespace Botan

@@ -13,9 +13,7 @@
 namespace Botan {
 
 SHAKE_128::SHAKE_128(size_t output_bits) : m_keccak(256, 0xF, 4), m_output_bits(output_bits) {
-   if(output_bits % 8 != 0) {
-      throw Invalid_Argument(fmt("SHAKE_128: Invalid output length {}", output_bits));
-   }
+   BOTAN_ARG_CHECK(output_bits % 8 == 0, fmt("SHAKE_128: Invalid output length {}", output_bits));
 }
 
 std::string SHAKE_128::name() const {
@@ -41,9 +39,7 @@ void SHAKE_128::final_result(std::span<uint8_t> output) {
 }
 
 SHAKE_256::SHAKE_256(size_t output_bits) : m_keccak(512, 0xF, 4), m_output_bits(output_bits) {
-   if(output_bits % 8 != 0) {
-      throw Invalid_Argument(fmt("SHAKE_256: Invalid output length {}", output_bits));
-   }
+   BOTAN_ARG_CHECK(output_bits % 8 == 0, fmt("SHAKE_256: Invalid output length {}", output_bits));
 }
 
 std::string SHAKE_256::name() const {
