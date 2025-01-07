@@ -1,0 +1,24 @@
+<defines>
+EC_CURVE_GFP -> 20250101
+LEGACY_EC_POINT -> 20250101
+</defines>
+
+<module_info>
+name -> "Legacy EC Point type"
+brief -> "Deprecated EC arithmetic interfaces"
+lifecycle -> "Deprecated"
+</module_info>
+
+<requires>
+numbertheory
+</requires>
+
+<header:internal>
+point_mul.h
+ec_inner_bn.h
+</header:internal>
+
+<header:public>
+curve_gfp.h
+ec_point.h
+</header:public>

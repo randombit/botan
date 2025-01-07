@@ -35,9 +35,9 @@ class ECDSA_Verification_Tests final : public PK_Signature_Verification_Test {
          const BigInt py = vars.get_req_bn("Py");
          const auto group = Botan::EC_Group::from_name(group_id);
 
-         const Botan::EC_Point public_point = group.point(px, py);
+         const auto public_key = Botan::EC_AffinePoint::from_bigint_xy(group, px, py).value();
 
-         return std::make_unique<Botan::ECDSA_PublicKey>(group, public_point);
+         return std::make_unique<Botan::ECDSA_PublicKey>(group, public_key);
       }
 
       std::string default_padding(const VarMap& /*unused*/) const override { return "Raw"; }
@@ -61,9 +61,9 @@ class ECDSA_Wycheproof_Verification_Tests final : public PK_Signature_Verificati
          const BigInt py = vars.get_req_bn("Py");
          const auto group = Botan::EC_Group::from_name(group_id);
 
-         const Botan::EC_Point public_point = group.point(px, py);
+         const auto public_key = Botan::EC_AffinePoint::from_bigint_xy(group, px, py).value();
 
-         return std::make_unique<Botan::ECDSA_PublicKey>(group, public_point);
+         return std::make_unique<Botan::ECDSA_PublicKey>(group, public_key);
       }
 
       std::string default_padding(const VarMap& vars) const override { return vars.get_req_str("Hash"); }
@@ -155,8 +155,8 @@ class ECDSA_Keygen_Tests final : public PK_Key_Generation_Test {
                                                              std::string_view /* provider */,
                                                              std::span<const uint8_t> raw_pk) const override {
          const auto group = Botan::EC_Group(keygen_params);
-         const auto public_point = group.OS2ECP(raw_pk);
-         return std::make_unique<Botan::ECDSA_PublicKey>(group, public_point);
+         const auto public_key = Botan::EC_AffinePoint(group, raw_pk);
+         return std::make_unique<Botan::ECDSA_PublicKey>(group, public_key);
       }
 };
 
@@ -169,8 +169,7 @@ class ECDSA_Keygen_Stability_Tests final : public PK_Key_Generation_Stability_Te
 
 class ECDSA_Key_Recovery_Tests final : public Text_Based_Test {
    public:
-      ECDSA_Key_Recovery_Tests() :
-            Text_Based_Test("pubkey/ecdsa_key_recovery.vec", "Group,Msg,R,S,V,PubkeyX,PubkeyY") {}
+      ECDSA_Key_Recovery_Tests() : Text_Based_Test("pubkey/ecdsa_key_recovery.vec", "Group,Msg,R,S,V,Pubkey") {}
 
       Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
          Test::Result result("ECDSA key recovery");
@@ -182,13 +181,11 @@ class ECDSA_Key_Recovery_Tests final : public Text_Based_Test {
          const BigInt S = vars.get_req_bn("S");
          const uint8_t V = vars.get_req_u8("V");
          const std::vector<uint8_t> msg = vars.get_req_bin("Msg");
-         const BigInt pubkey_x = vars.get_req_bn("PubkeyX");
-         const BigInt pubkey_y = vars.get_req_bn("PubkeyY");
+         const auto expected_pubkey = vars.get_req_bin("Pubkey");
 
          try {
             Botan::ECDSA_PublicKey pubkey(group, msg, R, S, V);
-            result.test_eq("Pubkey X coordinate", pubkey.public_point().get_affine_x(), pubkey_x);
-            result.test_eq("Pubkey Y coordinate", pubkey.public_point().get_affine_y(), pubkey_y);
+            result.test_eq("Pubkey X coordinate", pubkey.public_key_bits(), expected_pubkey);
 
             const uint8_t computed_V = pubkey.recovery_param(msg, R, S);
             result.test_eq("Recovery param is correct", static_cast<size_t>(computed_V), static_cast<size_t>(V));

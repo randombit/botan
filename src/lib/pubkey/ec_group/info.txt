@@ -1,6 +1,5 @@
 <defines>
-ECC_GROUP -> 20240531
-EC_CURVE_GFP -> 20240531
+ECC_GROUP -> 20250101
 EC_HASH_TO_CURVE -> 20210420
 </defines>
 
@@ -10,6 +9,9 @@ brief -> "Wrapper for elliptic curve groups"
 </module_info>
 
 <requires>
+# The library builds without this but many tests (involving the deprecated curves) fail
+legacy_ec_point
+
 asn1
 numbertheory
 pcurves
@@ -17,16 +19,13 @@ pem
 </requires>
 
 <header:internal>
-point_mul.h
-ec_inner_bn.h
 ec_inner_pc.h
 ec_inner_data.h
 </header:internal>
 
 <header:public>
-curve_gfp.h
 ec_group.h
-ec_point.h
+ec_point_format.h
 ec_apoint.h
 ec_scalar.h
 </header:public>

@@ -19,10 +19,19 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PublicKey : public virtual EC_PublicKey {
    public:
       /**
       * Create a public key from a given public point.
-      * @param dom_par the domain parameters associated with this key
+      * @param group the domain parameters associated with this key
+      * @param public_key the public point defining this key
+      */
+      SM2_PublicKey(const EC_Group& group, const EC_AffinePoint& public_key) : EC_PublicKey(group, public_key) {}
+
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+      /**
+      * Create a public key from a given public point.
+      * @param group the domain parameters associated with this key
       * @param public_point the public point defining this key
       */
-      SM2_PublicKey(const EC_Group& dom_par, const EC_Point& public_point) : EC_PublicKey(dom_par, public_point) {}
+      SM2_PublicKey(const EC_Group& group, const EC_Point& public_point) : EC_PublicKey(group, public_point) {}
+#endif
 
       /**
       * Load a public key.
@@ -130,8 +139,24 @@ class HashFunction;
 * Open an issue on GH if you are using this
 */
 BOTAN_DEPRECATED("Deprecated unclear usage")
-std::vector<uint8_t> BOTAN_PUBLIC_API(2, 5)
-   sm2_compute_za(HashFunction& hash, std::string_view user_id, const EC_Group& domain, const EC_Point& pubkey);
+std::vector<uint8_t> BOTAN_PUBLIC_API(3, 7)
+   sm2_compute_za(HashFunction& hash, std::string_view user_id, const EC_Group& group, const EC_AffinePoint& pubkey);
+
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+/*
+* This is deprecated because it's not clear what it is useful for
+*
+* Open an issue on GH if you are using this
+*/
+BOTAN_DEPRECATED("Deprecated unclear usage")
+inline std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
+                                           std::string_view user_id,
+                                           const EC_Group& group,
+                                           const EC_Point& pubkey) {
+   auto apoint = EC_AffinePoint(group, pubkey);
+   return sm2_compute_za(hash, user_id, group, apoint);
+}
+#endif
 
 // For compat with versions 2.2 - 2.7
 typedef SM2_PublicKey SM2_Signature_PublicKey;

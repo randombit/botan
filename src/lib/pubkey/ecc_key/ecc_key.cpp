@@ -11,12 +11,15 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
-#include <botan/ec_point.h>
 #include <botan/numthry.h>
 #include <botan/secmem.h>
 #include <botan/internal/ec_key_data.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/workfactor.h>
+
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+   #include <botan/ec_point.h>
+#endif
 
 namespace Botan {
 
@@ -40,11 +43,13 @@ EC_Group_Encoding default_encoding_for(const EC_Group& group) {
 
 }  // namespace
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
 EC_PublicKey::EC_PublicKey(EC_Group group, const EC_Point& pub_point) {
    auto pt = EC_AffinePoint(group, pub_point);
    m_public_key = std::make_shared<const EC_PublicKey_Data>(std::move(group), std::move(pt));
    m_domain_encoding = default_encoding_for(domain());
 }
+#endif
 
 EC_PublicKey::EC_PublicKey(EC_Group group, EC_AffinePoint pub_point) {
    m_public_key = std::make_shared<const EC_PublicKey_Data>(std::move(group), std::move(pub_point));
@@ -61,18 +66,21 @@ const EC_Group& EC_PublicKey::domain() const {
    return m_public_key->group();
 }
 
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
 const EC_Point& EC_PublicKey::public_point() const {
    BOTAN_STATE_CHECK(m_public_key != nullptr);
    return m_public_key->legacy_point();
 }
+#endif
 
-const EC_AffinePoint& EC_PublicKey::_public_key() const {
+const EC_AffinePoint& EC_PublicKey::_public_ec_point() const {
    BOTAN_STATE_CHECK(m_public_key != nullptr);
    return m_public_key->public_key();
 }
 
 bool EC_PublicKey::check_key(RandomNumberGenerator& rng, bool /*strong*/) const {
-   return domain().verify_group(rng) && domain().verify_public_element(public_point());
+   // We already checked when deserializing that the point was on the curve
+   return domain().verify_group(rng) && !_public_ec_point().is_identity();
 }
 
 AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const {
@@ -80,7 +88,7 @@ AlgorithmIdentifier EC_PublicKey::algorithm_identifier() const {
 }
 
 std::vector<uint8_t> EC_PublicKey::raw_public_key_bits() const {
-   return public_point().encode(point_encoding());
+   return _public_ec_point().serialize(point_encoding());
 }
 
 std::vector<uint8_t> EC_PublicKey::public_key_bits() const {

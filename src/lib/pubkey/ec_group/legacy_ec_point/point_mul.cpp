@@ -20,9 +20,13 @@ size_t blinding_size(const BigInt& group_order) {
 }
 
 BigInt blinding_mask(const BigInt& group_order, RandomNumberGenerator& rng) {
-   BigInt mask(rng, blinding_size(group_order));
-   mask.set_bit(0);
-   return mask;
+   if(rng.is_seeded()) {
+      BigInt mask(rng, blinding_size(group_order));
+      mask.set_bit(0);
+      return mask;
+   } else {
+      return 1;
+   }
 }
 
 }  // namespace
