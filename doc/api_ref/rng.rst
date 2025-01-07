@@ -251,10 +251,12 @@ gather "real" entropy. This tends to be very system dependent. The
 that will extract entropy from it -- never use the output directly for
 any kind of key or nonce generation!
 
-``EntropySource`` has a pair of functions for getting entropy from
-some external source, called ``fast_poll`` and ``slow_poll``. These
-pass a buffer of bytes to be written; the functions then return how
-many bytes of entropy were gathered.
+``EntropySource`` has a single function which is called at runtime, ``poll`,
+which is passed the ``RandomNumberGenerator`` that it should be seeding. The
+source can perform polling and pass whatever it gathers to the RNG using the
+object's ``add_entropy`` function. The source then returns a best estimate of
+the number of bits of entropy gathered; this can be zero if the source should be
+used but not counted.
 
 Note for writers of ``EntropySource`` subclasses: it isn't necessary
 to use any kind of cryptographic hash on your output. The data
@@ -263,17 +265,30 @@ has been hashed by the ``RandomNumberGenerator`` that asked for the
 entropy, thus any hashing you do will be wasteful of both CPU cycles
 and entropy.
 
-The following entropy sources are currently used:
+The following entropy sources are currently included in the library:
 
  * The system RNG (``/dev/urandom``, ``getrandom``, ``arc4random``,
    ``BCryptGenRandom``, or ``RtlGenRandom``).
- * Processor provided RNG outputs (RDRAND, RDSEED, DARN) are used if available,
-   but not counted as contributing entropy
+ * Processor provided RNG outputs (RDRAND, RDSEED, DARN) are used if available
+   (but not counted as contributing entropy)
  * The ``getentropy`` call is used on OpenBSD, FreeBSD, and macOS
- * ``/proc`` walk: read files in ``/proc``. Last ditch protection against
-   flawed system RNG.
- * Win32 stats: takes snapshot of current system processes. Last ditch
-   protection against flawed system RNG.
+ * Gathering Windows system statistics (a last ditch protection against
+   a flawed system RNG)
+
+Custom Entropy Sources
+---------------------------------
+
+On some systems (most notably baremetal embedded systems without an
+operating system) you may have to implement your own RNG and/or
+entropy source.
+
+An example of how to create an entropy source::
+
+.. literalinclude:: /../src/examples/entropy.cpp
+
+An example of how to create a custom RNG::
+
+.. literalinclude:: /../src/examples/custom_system_rng.cpp
 
 Fork Safety
 ---------------------------------
