@@ -56,9 +56,7 @@ std::string make_arg(const std::vector<std::pair<size_t, std::string>>& name, si
 SCAN_Name::SCAN_Name(const char* algo_spec) : SCAN_Name(std::string(algo_spec)) {}
 
 SCAN_Name::SCAN_Name(std::string_view algo_spec) : m_orig_algo_spec(algo_spec), m_alg_name(), m_args(), m_mode_info() {
-   if(algo_spec.empty()) {
-      throw_invalid_argument("Expected algorithm name, got empty string", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(algo_spec.empty()), "Expected algorithm name, got empty string");
 
    std::vector<std::pair<size_t, std::string>> name;
    size_t level = 0;
@@ -117,9 +115,8 @@ SCAN_Name::SCAN_Name(std::string_view algo_spec) : m_orig_algo_spec(algo_spec), 
 }
 
 std::string SCAN_Name::arg(size_t i) const {
-   if(i >= arg_count()) {
-      throw_invalid_argument("SCAN_Name::arg " + std::to_string(i) + " out of range for '" + to_string() + "'", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(i >= arg_count()),
+                   "SCAN_Name::arg " + std::to_string(i) + " out of range for '" + to_string() + "'");
    return m_args[i];
 }
 

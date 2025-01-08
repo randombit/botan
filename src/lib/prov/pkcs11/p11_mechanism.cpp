@@ -247,9 +247,8 @@ MechanismWrapper MechanismWrapper::create_ecdsa_mechanism(std::string_view hash_
 MechanismWrapper MechanismWrapper::create_ecdh_mechanism(std::string_view params) {
    std::vector<std::string> param_parts = split_on(params, ',');
 
-   if(param_parts.empty() || param_parts.size() > 2) {
-      throw_invalid_argument(fmt("PKCS #11 ECDH key derivation bad params {}", params), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(param_parts.empty() || param_parts.size() > 2),
+                   fmt("PKCS #11 ECDH key derivation bad params {}", params));
 
    const bool use_cofactor =
       (param_parts[0] == "Cofactor") || (param_parts.size() == 2 && param_parts[1] == "Cofactor");

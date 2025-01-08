@@ -23,15 +23,12 @@ namespace Botan {
 */
 GCM_Mode::GCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size) :
       m_tag_size(tag_size), m_cipher_name(cipher->name()) {
-   if(cipher->block_size() != GCM_BS) {
-      throw_invalid_argument("Invalid block cipher for GCM", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(cipher->block_size() != GCM_BS), "Invalid block cipher for GCM");
 
    /* We allow any of the values 128, 120, 112, 104, or 96 bits as a tag size */
    /* 64 bit tag is still supported but deprecated and will be removed in the future */
-   if(m_tag_size != 8 && (m_tag_size < 12 || m_tag_size > 16)) {
-      throw_invalid_argument(fmt("{} cannot use a tag of {} bytes", name(), m_tag_size), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(m_tag_size != 8 && (m_tag_size < 12 || m_tag_size > 16)),
+                   fmt("{} cannot use a tag of {} bytes", name(), m_tag_size));
 
    m_ctr = std::make_unique<CTR_BE>(std::move(cipher), 4);
    m_ghash = std::make_unique<GHASH>();

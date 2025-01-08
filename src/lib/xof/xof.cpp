@@ -60,9 +60,8 @@ void XOF::start(std::span<const uint8_t> salt, std::span<const uint8_t> key) {
       throw Invalid_Key_Length(name(), key.size());
    }
 
-   if(!valid_salt_length(salt.size())) {
-      throw_invalid_argument(fmt("{} cannot accept a salt length of {}", name(), salt.size()), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!valid_salt_length(salt.size())),
+                   fmt("{} cannot accept a salt length of {}", name(), salt.size()));
 
    m_xof_started = true;
    start_msg(salt, key);

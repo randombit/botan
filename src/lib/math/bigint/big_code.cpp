@@ -155,9 +155,7 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base) {
       for(size_t i = 0; i != length; ++i) {
          const char c = buf[i];
 
-         if(c < '0' || c > '9') {
-            throw_invalid_argument("BigInt::decode: invalid decimal char", __func__, __FILE__);
-         }
+         BOTAN_ARG_CHECK(!(c < '0' || c > '9'), "BigInt::decode: invalid decimal char");
 
          const uint8_t x = c - '0';
          BOTAN_ASSERT_NOMSG(x < 10);

@@ -233,7 +233,8 @@ std::unique_ptr<PK_Signer> X509_Object::choose_sig_format(const Private_Key& key
       }
       return pk_signer;
    } catch(Not_Implemented&) {
-      throw_invalid_argument("Signatures using " + key.algo_name() + "/" + padding + " are not supported", __func__, __FILE__);
+      throw_invalid_argument(
+         "Signatures using " + key.algo_name() + "/" + padding + " are not supported", __func__, __FILE__);
    }
 }
 

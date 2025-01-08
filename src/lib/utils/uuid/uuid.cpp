@@ -26,9 +26,7 @@ UUID::UUID(RandomNumberGenerator& rng) {
 }
 
 UUID::UUID(const std::vector<uint8_t>& blob) {
-   if(blob.size() != 16) {
-      throw_invalid_argument("Bad UUID blob " + hex_encode(blob), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(blob.size() != 16), "Bad UUID blob " + hex_encode(blob));
 
    m_uuid = blob;
 }
@@ -50,9 +48,7 @@ UUID::UUID(std::string_view uuid_str) {
 
    m_uuid = hex_decode(just_hex);
 
-   if(m_uuid.size() != 16) {
-      throw_invalid_argument(fmt("Bad UUID '{}'", uuid_str), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(m_uuid.size() != 16), fmt("Bad UUID '{}'", uuid_str));
 }
 
 std::string UUID::to_string() const {

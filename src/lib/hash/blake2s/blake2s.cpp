@@ -159,9 +159,9 @@ std::unique_ptr<HashFunction> BLAKE2s::copy_state() const {
  * BLAKE2s Constructor
  */
 BLAKE2s::BLAKE2s(size_t output_bits) {
-   if(output_bits == 0 || output_bits > 256 || output_bits % 8 != 0) {
-      throw_invalid_argument("Bad output bits size for BLAKE2s", __func__, __FILE__);
-   };
+   BOTAN_ARG_CHECK(!(output_bits == 0 || output_bits > 256 || output_bits % 8 != 0),
+                   "Bad output bits size for BLAKE2s");
+   ;
    state_init(output_bits >> 3, nullptr, 0);
 }
 

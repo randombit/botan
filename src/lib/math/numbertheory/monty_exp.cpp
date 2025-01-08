@@ -161,9 +161,7 @@ BigInt monty_multi_exp(const std::shared_ptr<const Montgomery_Params>& params_p,
                        const BigInt& z1,
                        const BigInt& y_bn,
                        const BigInt& z2) {
-   if(z1.is_negative() || z2.is_negative()) {
-      throw_invalid_argument("multi_exponentiate exponents must be positive", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(z1.is_negative() || z2.is_negative()), "multi_exponentiate exponents must be positive");
 
    const size_t z_bits = round_up(std::max(z1.bits(), z2.bits()), 2);
 

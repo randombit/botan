@@ -32,9 +32,7 @@ void KDF1::kdf(uint8_t key[],
       return;
    }
 
-   if(key_len > m_hash->output_length()) {
-      throw_invalid_argument("KDF1 maximum output length exceeeded", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(key_len > m_hash->output_length()), "KDF1 maximum output length exceeeded");
 
    m_hash->update(secret, secret_len);
    m_hash->update(label, label_len);

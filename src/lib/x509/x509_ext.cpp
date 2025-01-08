@@ -198,9 +198,7 @@ bool Extensions::critical_extension_set(const OID& oid) const {
 
 std::vector<uint8_t> Extensions::get_extension_bits(const OID& oid) const {
    auto i = m_extension_info.find(oid);
-   if(i == m_extension_info.end()) {
-      throw_invalid_argument("Extensions::get_extension_bits no such extension set", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(i == m_extension_info.end()), "Extensions::get_extension_bits no such extension set");
 
    return i->second.bits();
 }

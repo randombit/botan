@@ -225,9 +225,7 @@ size_t BigInt::Data::calc_sig_words() const {
 * Return bits {offset...offset+length}
 */
 uint32_t BigInt::get_substring(size_t offset, size_t length) const {
-   if(length == 0 || length > 32) {
-      throw_invalid_argument("BigInt::get_substring invalid substring length", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(length == 0 || length > 32), "BigInt::get_substring invalid substring length");
 
    const uint32_t mask = 0xFFFFFFFF >> (32 - length);
 
@@ -315,9 +313,7 @@ BigInt BigInt::operator-() const {
 }
 
 size_t BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws) {
-   if(p.is_negative() || this->is_negative()) {
-      throw_invalid_argument("BigInt::reduce_below both values must be positive", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(p.is_negative() || this->is_negative()), "BigInt::reduce_below both values must be positive");
 
    const size_t p_words = p.sig_words();
 
@@ -347,9 +343,7 @@ size_t BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws) {
 }
 
 void BigInt::ct_reduce_below(const BigInt& mod, secure_vector<word>& ws, size_t bound) {
-   if(mod.is_negative() || this->is_negative()) {
-      throw_invalid_argument("BigInt::ct_reduce_below both values must be positive", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(mod.is_negative() || this->is_negative()), "BigInt::ct_reduce_below both values must be positive");
 
    const size_t mod_words = mod.sig_words();
 
@@ -435,9 +429,8 @@ void BigInt::assign_from_bytes(std::span<const uint8_t> bytes) {
 }
 
 void BigInt::ct_cond_add(bool predicate, const BigInt& value) {
-   if(this->is_negative() || value.is_negative()) {
-      throw_invalid_argument("BigInt::ct_cond_add requires both values to be positive", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(this->is_negative() || value.is_negative()),
+                   "BigInt::ct_cond_add requires both values to be positive");
    this->grow_to(1 + value.sig_words());
 
    bigint_cnd_add(static_cast<word>(predicate), this->mutable_data(), this->size(), value._data(), value.sig_words());

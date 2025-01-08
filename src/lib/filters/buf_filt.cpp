@@ -16,13 +16,9 @@ namespace Botan {
 * Buffered_Filter Constructor
 */
 Buffered_Filter::Buffered_Filter(size_t b, size_t f) : m_main_block_mod(b), m_final_minimum(f) {
-   if(m_main_block_mod == 0) {
-      throw_invalid_argument("m_main_block_mod == 0", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(m_main_block_mod == 0), "m_main_block_mod == 0");
 
-   if(m_final_minimum > m_main_block_mod) {
-      throw_invalid_argument("m_final_minimum > m_main_block_mod", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(m_final_minimum > m_main_block_mod), "m_final_minimum > m_main_block_mod");
 
    m_buffer.resize(2 * m_main_block_mod);
    m_buffer_pos = 0;

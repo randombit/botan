@@ -22,9 +22,7 @@ namespace Botan {
 uint16_t to_uint16(std::string_view str) {
    const uint32_t x = to_u32bit(str);
 
-   if(x >> 16) {
-      throw_invalid_argument("Integer value exceeds 16 bit range", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(x >> 16), "Integer value exceeds 16 bit range");
 
    return static_cast<uint16_t>(x);
 }
@@ -34,18 +32,14 @@ uint32_t to_u32bit(std::string_view str_view) {
 
    // std::stoul is not strict enough. Ensure that str is digit only [0-9]*
    for(const char chr : str) {
-      if(chr < '0' || chr > '9') {
-         throw_invalid_argument("to_u32bit invalid decimal string '" + str + "'", __func__, __FILE__);
-      }
+      BOTAN_ARG_CHECK(!(chr < '0' || chr > '9'), "to_u32bit invalid decimal string '" + str + "'");
    }
 
    const unsigned long int x = std::stoul(str);
 
    if constexpr(sizeof(unsigned long int) > 4) {
       // x might be uint64
-      if(x > std::numeric_limits<uint32_t>::max()) {
-         throw_invalid_argument("Integer value of " + str + " exceeds 32 bit range", __func__, __FILE__);
-      }
+      BOTAN_ARG_CHECK(!(x > std::numeric_limits<uint32_t>::max()), "Integer value of " + str + " exceeds 32 bit range");
    }
 
    return static_cast<uint32_t>(x);
@@ -126,9 +120,7 @@ std::vector<std::string> split_on(std::string_view str, char delim) {
       }
    }
 
-   if(substr.empty()) {
-      throw_invalid_argument(fmt("Unable to split string '{}", str), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(substr.empty()), fmt("Unable to split string '{}", str));
    elems.push_back(substr);
 
    return elems;

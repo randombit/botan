@@ -136,9 +136,7 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
 secure_vector<uint8_t> DH_KA_Operation::raw_agree(const uint8_t w[], size_t w_len) {
    BigInt v = BigInt::from_bytes(std::span{w, w_len});
 
-   if(v <= 1 || v >= group().get_p()) {
-      throw_invalid_argument("DH agreement - invalid key provided", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(v <= 1 || v >= group().get_p()), "DH agreement - invalid key provided");
 
    v = m_blinder.blind(v);
    v = powermod_x_p(v);

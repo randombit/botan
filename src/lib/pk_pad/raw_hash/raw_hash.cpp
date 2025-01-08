@@ -18,9 +18,12 @@ void RawHashFunction::add_data(std::span<const uint8_t> input) {
 void RawHashFunction::final_result(std::span<uint8_t> out) {
    if(m_output_length > 0 && m_bits.size() != m_output_length) {
       m_bits.clear();
-      throw_invalid_argument(fmt("Raw padding was configured to use a {} byte hash but was instead used with a {} byte hash",
-                                 m_output_length, m_bits.size()),
-                             __func__, __FILE__);
+      throw_invalid_argument(
+         fmt("Raw padding was configured to use a {} byte hash but was instead used with a {} byte hash",
+             m_output_length,
+             m_bits.size()),
+         __func__,
+         __FILE__);
    }
 
    copy_mem(out.data(), m_bits.data(), m_bits.size());

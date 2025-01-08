@@ -274,9 +274,7 @@ std::pair<std::string, Signature_Format> Handshake_State::choose_sig_format(cons
       throw TLS_Exception(Alert::HandshakeFailure, "Policy refuses to accept signing with any hash supported by peer");
    }
 
-   if(!chosen_scheme.format().has_value()) {
-      throw_invalid_argument(sig_algo + " is invalid/unknown for TLS signatures", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!chosen_scheme.format().has_value()), sig_algo + " is invalid/unknown for TLS signatures");
 
    return std::make_pair(chosen_scheme.padding_string(), chosen_scheme.format().value());
 }
@@ -340,9 +338,7 @@ std::pair<std::string, Signature_Format> Handshake_State::parse_sig_format(
                           "TLS signature extension did not allow for " + key_type + "/" + hash_algo + " signature");
    }
 
-   if(!scheme.format().has_value()) {
-      throw_invalid_argument(key_type + " is invalid/unknown for TLS signatures", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!scheme.format().has_value()), key_type + " is invalid/unknown for TLS signatures");
 
    return std::make_pair(scheme.padding_string(), scheme.format().value());
 }

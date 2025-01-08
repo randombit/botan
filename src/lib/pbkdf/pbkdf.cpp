@@ -83,9 +83,7 @@ void PBKDF::pbkdf_iterations(uint8_t out[],
                              const uint8_t salt[],
                              size_t salt_len,
                              size_t iterations) const {
-   if(iterations == 0) {
-      throw_invalid_argument(name() + ": Invalid iteration count", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(iterations == 0), name() + ": Invalid iteration count");
 
    const size_t iterations_run =
       pbkdf(out, out_len, passphrase, salt, salt_len, iterations, std::chrono::milliseconds(0));

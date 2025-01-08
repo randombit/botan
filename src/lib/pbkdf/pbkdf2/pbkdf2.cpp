@@ -92,9 +92,7 @@ void pbkdf2(MessageAuthenticationCode& prf,
             const uint8_t salt[],
             size_t salt_len,
             size_t iterations) {
-   if(iterations == 0) {
-      throw_invalid_argument("PBKDF2: Invalid iteration count", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(iterations == 0), "PBKDF2: Invalid iteration count");
 
    clear_mem(out, out_len);
 

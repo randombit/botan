@@ -18,9 +18,7 @@ namespace Botan {
 * Simple O(N^2) Multiplication
 */
 void basecase_mul(word z[], size_t z_size, const word x[], size_t x_size, const word y[], size_t y_size) {
-   if(z_size < x_size + y_size) {
-      throw_invalid_argument("basecase_mul z_size too small", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(z_size < x_size + y_size), "basecase_mul z_size too small");
 
    const size_t x_size_8 = x_size - (x_size % 8);
 
@@ -44,9 +42,7 @@ void basecase_mul(word z[], size_t z_size, const word x[], size_t x_size, const 
 }
 
 void basecase_sqr(word z[], size_t z_size, const word x[], size_t x_size) {
-   if(z_size < 2 * x_size) {
-      throw_invalid_argument("basecase_sqr z_size too small", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(z_size < 2 * x_size), "basecase_sqr z_size too small");
 
    const size_t x_size_8 = x_size - (x_size % 8);
 

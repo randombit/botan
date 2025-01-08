@@ -34,8 +34,10 @@ void EMSA_Raw::update(const uint8_t input[], size_t length) {
 std::vector<uint8_t> EMSA_Raw::raw_data() {
    if(m_expected_size && m_message.size() != m_expected_size) {
       throw_invalid_argument(fmt("EMSA_Raw was configured to use a {} byte hash but was used for a {} byte hash",
-                                 m_expected_size, m_message.size()),
-                             __func__, __FILE__);
+                                 m_expected_size,
+                                 m_message.size()),
+                             __func__,
+                             __FILE__);
    }
 
    std::vector<uint8_t> output;
@@ -51,8 +53,10 @@ std::vector<uint8_t> EMSA_Raw::encoding_of(const std::vector<uint8_t>& msg,
                                            RandomNumberGenerator& /*rng*/) {
    if(m_expected_size && msg.size() != m_expected_size) {
       throw_invalid_argument(fmt("EMSA_Raw was configured to use a {} byte hash but was used for a {} byte hash",
-                                 m_expected_size, msg.size()),
-                             __func__, __FILE__);
+                                 m_expected_size,
+                                 msg.size()),
+                             __func__,
+                             __FILE__);
    }
 
    return msg;

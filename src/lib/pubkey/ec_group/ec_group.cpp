@@ -106,8 +106,9 @@ class EC_Group_Data_Map final {
             */
             if(same_oid && !same_params) {
                throw_invalid_argument("Attempting to register a curve using OID " + oid.to_string() +
-                                      " but a distinct curve is already registered using that OID",
-                                      __func__, __FILE__);
+                                         " but a distinct curve is already registered using that OID",
+                                      __func__,
+                                      __FILE__);
             }
 
             /*
@@ -131,9 +132,8 @@ class EC_Group_Data_Map final {
 
          if(oid.has_value()) {
             std::shared_ptr<EC_Group_Data> data = EC_Group::EC_group_info(oid);
-            if(data != nullptr && !new_group->params_match(*data)) {
-               throw_invalid_argument("Attempting to register an EC group under OID of hardcoded group", __func__, __FILE__);
-            }
+            BOTAN_ARG_CHECK(!(data != nullptr && !new_group->params_match(*data)),
+                            "Attempting to register an EC group under OID of hardcoded group");
          } else {
             // Here try to use the order as a hint to look up the group id, to identify common groups
             const OID oid_from_store = EC_Group::EC_group_identity_from_order(order);
@@ -301,9 +301,7 @@ EC_Group::EC_Group(std::shared_ptr<EC_Group_Data>&& data) : m_data(std::move(dat
 EC_Group EC_Group::from_OID(const OID& oid) {
    auto data = ec_group_data().lookup(oid);
 
-   if(!data) {
-      throw_invalid_argument(fmt("No EC_Group associated with OID '{}'", oid.to_string()), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!data), fmt("No EC_Group associated with OID '{}'", oid.to_string()));
 
    return EC_Group(std::move(data));
 }
@@ -316,9 +314,7 @@ EC_Group EC_Group::from_name(std::string_view name) {
       data = ec_group_data().lookup(oid.value());
    }
 
-   if(!data) {
-      throw_invalid_argument(fmt("Unknown EC_Group '{}'", name), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!data), fmt("Unknown EC_Group '{}'", name));
 
    return EC_Group(std::move(data));
 }
@@ -346,9 +342,7 @@ EC_Group::EC_Group(std::string_view str) {
       }
    }
 
-   if(m_data == nullptr) {
-      throw_invalid_argument(fmt("Unknown ECC group '{}'", str), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(m_data == nullptr), fmt("Unknown ECC group '{}'", str));
 }
 
 //static

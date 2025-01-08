@@ -100,17 +100,16 @@ std::vector<uint8_t> EC_PublicKey::DER_domain() const {
 }
 
 void EC_PublicKey::set_point_encoding(EC_Point_Format enc) {
-   if(enc != EC_Point_Format::Compressed && enc != EC_Point_Format::Uncompressed && enc != EC_Point_Format::Hybrid) {
-      throw_invalid_argument("Invalid point encoding for EC_PublicKey", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(
+      !(enc != EC_Point_Format::Compressed && enc != EC_Point_Format::Uncompressed && enc != EC_Point_Format::Hybrid),
+      "Invalid point encoding for EC_PublicKey");
 
    m_point_encoding = enc;
 }
 
 void EC_PublicKey::set_parameter_encoding(EC_Group_Encoding form) {
-   if(form == EC_Group_Encoding::NamedCurve && domain().get_curve_oid().empty()) {
-      throw_invalid_argument("Cannot used NamedCurve encoding for a curve without an OID", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(form == EC_Group_Encoding::NamedCurve && domain().get_curve_oid().empty()),
+                   "Cannot used NamedCurve encoding for a curve without an OID");
 
    m_domain_encoding = form;
 }

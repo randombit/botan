@@ -149,9 +149,9 @@ uint8_t Base64::lookup_binary_value(char input) noexcept {
 bool Base64::check_bad_char(uint8_t bin, char input, bool ignore_ws) {
    if(bin <= 0x3F) {
       return true;
-   } else if(!(bin == 0x81 || (bin == 0x80 && ignore_ws))) {
-      throw_invalid_argument(fmt("base64_decode: invalid character '{}'", format_char_for_display(input)), __func__, __FILE__);
-   }
+   } else
+      BOTAN_ARG_CHECK(!(!(bin == 0x81 || (bin == 0x80 && ignore_ws))),
+                      fmt("base64_decode: invalid character '{}'", format_char_for_display(input)));
    return false;
 }
 
@@ -179,9 +179,8 @@ size_t base64_decode(uint8_t output[], std::string_view input, bool ignore_ws) {
 }
 
 size_t base64_decode(std::span<uint8_t> output, std::string_view input, bool ignore_ws) {
-   if(output.size() < base64_decode_max_output(input.size())) {
-      throw_invalid_argument("base64_decode: output buffer is too short", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(output.size() < base64_decode_max_output(input.size())),
+                   "base64_decode: output buffer is too short");
    return base64_decode(output.data(), input.data(), input.length(), ignore_ws);
 }
 

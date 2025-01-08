@@ -177,12 +177,8 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k) {
 }  // namespace
 
 BigInt inverse_mod(const BigInt& n, const BigInt& mod) {
-   if(mod.is_zero()) {
-      throw_invalid_argument("inverse_mod modulus cannot be zero", __func__, __FILE__);
-   }
-   if(mod.is_negative() || n.is_negative()) {
-      throw_invalid_argument("inverse_mod: arguments must be non-negative", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(mod.is_zero()), "inverse_mod modulus cannot be zero");
+   BOTAN_ARG_CHECK(!(mod.is_negative() || n.is_negative()), "inverse_mod: arguments must be non-negative");
    if(n.is_zero() || (n.is_even() && mod.is_even())) {
       return BigInt::zero();
    }

@@ -24,9 +24,7 @@ size_t OAEP::pad(std::span<uint8_t> output,
                  RandomNumberGenerator& rng) const {
    key_length /= 8;
 
-   if(input.size() > maximum_input_size(key_length * 8)) {
-      throw_invalid_argument("OAEP: Input is too large", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(input.size() > maximum_input_size(key_length * 8)), "OAEP: Input is too large");
 
    const size_t output_size = key_length;
 

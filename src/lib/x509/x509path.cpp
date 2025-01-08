@@ -38,9 +38,7 @@ CertificatePathStatusCodes PKIX::check_chain(const std::vector<X509_Certificate>
                                              std::string_view hostname,
                                              Usage_Type usage,
                                              const Path_Validation_Restrictions& restrictions) {
-   if(cert_path.empty()) {
-      throw_invalid_argument("PKIX::check_chain cert_path empty", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(cert_path.empty()), "PKIX::check_chain cert_path empty");
 
    const bool self_signed_ee_cert = (cert_path.size() == 1);
 
@@ -309,9 +307,7 @@ CertificatePathStatusCodes PKIX::check_ocsp(const std::vector<X509_Certificate>&
                                             const std::vector<Certificate_Store*>& certstores,
                                             std::chrono::system_clock::time_point ref_time,
                                             const Path_Validation_Restrictions& restrictions) {
-   if(cert_path.empty()) {
-      throw_invalid_argument("PKIX::check_ocsp cert_path empty", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(cert_path.empty()), "PKIX::check_ocsp cert_path empty");
 
    CertificatePathStatusCodes cert_status(cert_path.size() - 1);
 
@@ -362,9 +358,7 @@ CertificatePathStatusCodes PKIX::check_ocsp(const std::vector<X509_Certificate>&
 CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
                                            const std::vector<std::optional<X509_CRL>>& crls,
                                            std::chrono::system_clock::time_point ref_time) {
-   if(cert_path.empty()) {
-      throw_invalid_argument("PKIX::check_crl cert_path empty", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(cert_path.empty()), "PKIX::check_crl cert_path empty");
 
    CertificatePathStatusCodes cert_status(cert_path.size());
    const X509_Time validation_time(ref_time);
@@ -433,13 +427,9 @@ CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& 
 CertificatePathStatusCodes PKIX::check_crl(const std::vector<X509_Certificate>& cert_path,
                                            const std::vector<Certificate_Store*>& certstores,
                                            std::chrono::system_clock::time_point ref_time) {
-   if(cert_path.empty()) {
-      throw_invalid_argument("PKIX::check_crl cert_path empty", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(cert_path.empty()), "PKIX::check_crl cert_path empty");
 
-   if(certstores.empty()) {
-      throw_invalid_argument("PKIX::check_crl certstores empty", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(certstores.empty()), "PKIX::check_crl certstores empty");
 
    std::vector<std::optional<X509_CRL>> crls(cert_path.size());
 
@@ -462,9 +452,7 @@ CertificatePathStatusCodes PKIX::check_ocsp_online(const std::vector<X509_Certif
                                                    std::chrono::system_clock::time_point ref_time,
                                                    std::chrono::milliseconds timeout,
                                                    const Path_Validation_Restrictions& restrictions) {
-   if(cert_path.empty()) {
-      throw_invalid_argument("PKIX::check_ocsp_online cert_path empty", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(cert_path.empty()), "PKIX::check_ocsp_online cert_path empty");
 
    std::vector<std::future<std::optional<OCSP::Response>>> ocsp_response_futures;
 
@@ -524,12 +512,8 @@ CertificatePathStatusCodes PKIX::check_crl_online(const std::vector<X509_Certifi
                                                   Certificate_Store_In_Memory* crl_store,
                                                   std::chrono::system_clock::time_point ref_time,
                                                   std::chrono::milliseconds timeout) {
-   if(cert_path.empty()) {
-      throw_invalid_argument("PKIX::check_crl_online cert_path empty", __func__, __FILE__);
-   }
-   if(certstores.empty()) {
-      throw_invalid_argument("PKIX::check_crl_online certstores empty", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(cert_path.empty()), "PKIX::check_crl_online cert_path empty");
+   BOTAN_ARG_CHECK(!(certstores.empty()), "PKIX::check_crl_online certstores empty");
 
    std::vector<std::future<std::optional<X509_CRL>>> future_crls;
    std::vector<std::optional<X509_CRL>> crls(cert_path.size());
@@ -697,9 +681,7 @@ Certificate_Status_Code PKIX::build_all_certificate_paths(std::vector<std::vecto
                                                           const std::vector<Certificate_Store*>& trusted_certstores,
                                                           const std::optional<X509_Certificate>& end_entity,
                                                           const std::vector<X509_Certificate>& end_entity_extra) {
-   if(!cert_paths_out.empty()) {
-      throw_invalid_argument("PKIX::build_all_certificate_paths: cert_paths_out must be empty", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!cert_paths_out.empty()), "PKIX::build_all_certificate_paths: cert_paths_out must be empty");
 
    if(end_entity->is_self_signed()) {
       return Certificate_Status_Code::CANNOT_ESTABLISH_TRUST;
@@ -821,9 +803,7 @@ void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
                                    const CertificatePathStatusCodes& crl,
                                    const CertificatePathStatusCodes& ocsp,
                                    const Path_Validation_Restrictions& restrictions) {
-   if(chain_status.empty()) {
-      throw_invalid_argument("PKIX::merge_revocation_status chain_status was empty", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(chain_status.empty()), "PKIX::merge_revocation_status chain_status was empty");
 
    for(size_t i = 0; i != chain_status.size() - 1; ++i) {
       bool had_crl = false, had_ocsp = false;
@@ -860,9 +840,7 @@ void PKIX::merge_revocation_status(CertificatePathStatusCodes& chain_status,
 }
 
 Certificate_Status_Code PKIX::overall_status(const CertificatePathStatusCodes& cert_status) {
-   if(cert_status.empty()) {
-      throw_invalid_argument("PKIX::overall_status empty cert status", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(cert_status.empty()), "PKIX::overall_status empty cert status");
 
    Certificate_Status_Code overall_status = Certificate_Status_Code::OK;
 
@@ -887,9 +865,7 @@ Path_Validation_Result x509_path_validate(const std::vector<X509_Certificate>& e
                                           std::chrono::system_clock::time_point ref_time,
                                           std::chrono::milliseconds ocsp_timeout,
                                           const std::vector<std::optional<OCSP::Response>>& ocsp_resp) {
-   if(end_certs.empty()) {
-      throw_invalid_argument("x509_path_validate called with no subjects", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(end_certs.empty()), "x509_path_validate called with no subjects");
 
    X509_Certificate end_entity = end_certs[0];
    std::vector<X509_Certificate> end_entity_extra;

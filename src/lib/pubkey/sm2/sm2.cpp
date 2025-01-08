@@ -70,9 +70,7 @@ std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
                                     std::string_view user_id,
                                     const EC_Group& group,
                                     const EC_AffinePoint& pubkey) {
-   if(user_id.size() >= 8192) {
-      throw_invalid_argument("SM2 user id too long to represent", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(user_id.size() >= 8192), "SM2 user id too long to represent");
 
    const uint16_t uid_len = static_cast<uint16_t>(8 * user_id.size());
 

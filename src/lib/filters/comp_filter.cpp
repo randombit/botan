@@ -21,9 +21,7 @@ namespace Botan {
 
 Compression_Filter::Compression_Filter(std::string_view type, size_t level, size_t bs) :
       m_comp(Compression_Algorithm::create(type)), m_buffersize(std::max<size_t>(bs, 256)), m_level(level) {
-   if(!m_comp) {
-      throw_invalid_argument(fmt("Compression type '{}' not found", type), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!m_comp), fmt("Compression type '{}' not found", type));
 }
 
 Compression_Filter::~Compression_Filter() = default;
@@ -65,9 +63,7 @@ void Compression_Filter::end_msg() {
 
 Decompression_Filter::Decompression_Filter(std::string_view type, size_t bs) :
       m_comp(Decompression_Algorithm::create(type)), m_buffersize(std::max<size_t>(bs, 256)) {
-   if(!m_comp) {
-      throw_invalid_argument(fmt("Compression type '{}' not found", type), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!m_comp), fmt("Compression type '{}' not found", type));
 }
 
 Decompression_Filter::~Decompression_Filter() = default;

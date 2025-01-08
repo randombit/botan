@@ -27,17 +27,13 @@ class FE_25519 {
       * Zero element
       */
       FE_25519(int init = 0) {
-         if(init != 0 && init != 1) {
-            throw_invalid_argument("Invalid FE_25519 initial value", __func__, __FILE__);
-         }
+         BOTAN_ARG_CHECK(!(init != 0 && init != 1), "Invalid FE_25519 initial value");
          clear_mem(m_fe, 10);
          m_fe[0] = init;
       }
 
       FE_25519(std::initializer_list<int32_t> x) {
-         if(x.size() != 10) {
-            throw_invalid_argument("Invalid FE_25519 initializer list", __func__, __FILE__);
-         }
+         BOTAN_ARG_CHECK(!(x.size() != 10), "Invalid FE_25519 initializer list");
          copy_mem(m_fe, x.begin(), 10);
       }
 

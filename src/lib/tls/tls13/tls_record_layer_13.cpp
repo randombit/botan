@@ -197,9 +197,8 @@ std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
    BOTAN_ASSERT(!data.empty() || type == Record_Type::ApplicationData,
                 "zero-length fragments of types other than application data are not allowed");
 
-   if(type == Record_Type::ChangeCipherSpec && !verify_change_cipher_spec(data.begin(), data.size())) {
-      throw_invalid_argument("TLS 1.3 deprecated CHANGE_CIPHER_SPEC", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(type == Record_Type::ChangeCipherSpec && !verify_change_cipher_spec(data.begin(), data.size())),
+                   "TLS 1.3 deprecated CHANGE_CIPHER_SPEC");
 
    std::vector<uint8_t> output;
 

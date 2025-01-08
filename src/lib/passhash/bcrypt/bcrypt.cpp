@@ -147,9 +147,8 @@ std::string generate_bcrypt(std::string_view pass, RandomNumberGenerator& rng, u
    never had the truncation or signed char bugs in the first place.
    */
 
-   if(version != 'a' && version != 'b' && version != 'y') {
-      throw_invalid_argument("Unknown bcrypt version '" + std::string(1, version) + "'", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(version != 'a' && version != 'b' && version != 'y'),
+                   "Unknown bcrypt version '" + std::string(1, version) + "'");
 
    std::vector<uint8_t> salt;
    rng.random_vec(salt, 16);

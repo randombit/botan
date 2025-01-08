@@ -78,9 +78,7 @@ gf2m random_gf2m(RandomNumberGenerator& rng) {
 }
 
 gf2m random_code_element(uint16_t code_length, RandomNumberGenerator& rng) {
-   if(code_length == 0) {
-      throw_invalid_argument("random_code_element() was supplied a code length of zero", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(code_length == 0), "random_code_element() was supplied a code length of zero");
    const unsigned nlz = nlz_16bit(code_length - 1);
    const gf2m mask = (1 << (16 - nlz)) - 1;
 
@@ -227,9 +225,7 @@ void polyn_gf2m::remainder(polyn_gf2m& p, const polyn_gf2m& g) {
 std::vector<polyn_gf2m> polyn_gf2m::sqmod_init(const polyn_gf2m& g) {
    std::vector<polyn_gf2m> sq;
    const int signed_deg = g.get_degree();
-   if(signed_deg <= 0) {
-      throw_invalid_argument("cannot compute sqmod for such low degree", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(signed_deg <= 0), "cannot compute sqmod for such low degree");
 
    const uint32_t d = static_cast<uint32_t>(signed_deg);
    uint32_t t = g.m_deg;
@@ -552,9 +548,7 @@ polyn_gf2m::polyn_gf2m(size_t t, RandomNumberGenerator& rng, const std::shared_p
 }
 
 void polyn_gf2m::poly_shiftmod(const polyn_gf2m& g) {
-   if(g.get_degree() <= 1) {
-      throw_invalid_argument("shiftmod cannot be called on polynomials of degree 1 or less", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(g.get_degree() <= 1), "shiftmod cannot be called on polynomials of degree 1 or less");
    std::shared_ptr<GF2m_Field> field = g.m_sp_field;
 
    int t = g.get_degree();

@@ -146,9 +146,9 @@ std::pair<std::string, std::string> choose_pbe_params(std::string_view pbe_algo,
 
    SCAN_Name request(pbe_algo);
 
-   if(request.arg_count() != 2 || (request.algo_name() != "PBE-PKCS5v20" && request.algo_name() != "PBES2")) {
-      throw_invalid_argument(fmt("Unsupported PBE '{}'", pbe_algo), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(
+      !(request.arg_count() != 2 || (request.algo_name() != "PBE-PKCS5v20" && request.algo_name() != "PBES2")),
+      fmt("Unsupported PBE '{}'", pbe_algo));
 
    return std::make_pair(request.arg(0), request.arg(1));
 }

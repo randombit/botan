@@ -192,9 +192,7 @@ void ASN1_Time::set_to(std::string_view t_spec, ASN1_Type spec_tag) {
       }
    }
 
-   if(!passes_sanity_check()) {
-      throw_invalid_argument(fmt("ASN1_Time string '{}' does not seem to be valid", t_spec), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!passes_sanity_check()), fmt("ASN1_Time string '{}' does not seem to be valid", t_spec));
 }
 
 /*

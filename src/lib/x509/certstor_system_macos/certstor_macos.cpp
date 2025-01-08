@@ -379,9 +379,7 @@ std::vector<X509_Certificate> Certificate_Store_MacOS::find_all_certs(const X509
 
 std::optional<X509_Certificate> Certificate_Store_MacOS::find_cert_by_pubkey_sha1(
    const std::vector<uint8_t>& key_hash) const {
-   if(key_hash.size() != 20) {
-      throw_invalid_argument("Certificate_Store_MacOS::find_cert_by_pubkey_sha1 invalid hash", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(key_hash.size() != 20), "Certificate_Store_MacOS::find_cert_by_pubkey_sha1 invalid hash");
 
    Certificate_Store_MacOS_Impl::Query query;
    query.addParameter(kSecAttrPublicKeyHash, key_hash);

@@ -124,19 +124,11 @@ std::unique_ptr<PasswordHash> Scrypt_Family::from_iterations(size_t iter) const 
 }
 
 Scrypt::Scrypt(size_t N, size_t r, size_t p) : m_N(N), m_r(r), m_p(p) {
-   if(!is_power_of_2(N)) {
-      throw_invalid_argument("Scrypt N parameter must be a power of 2", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!is_power_of_2(N)), "Scrypt N parameter must be a power of 2");
 
-   if(p == 0 || p > 1024) {
-      throw_invalid_argument("Invalid or unsupported scrypt p", __func__, __FILE__);
-   }
-   if(r == 0 || r > 256) {
-      throw_invalid_argument("Invalid or unsupported scrypt r", __func__, __FILE__);
-   }
-   if(N < 1 || N > 4194304) {
-      throw_invalid_argument("Invalid or unsupported scrypt N", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(p == 0 || p > 1024), "Invalid or unsupported scrypt p");
+   BOTAN_ARG_CHECK(!(r == 0 || r > 256), "Invalid or unsupported scrypt r");
+   BOTAN_ARG_CHECK(!(N < 1 || N > 4194304), "Invalid or unsupported scrypt N");
 }
 
 std::string Scrypt::to_string() const {

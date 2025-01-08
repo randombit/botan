@@ -25,9 +25,7 @@ X509_CA::X509_CA(const X509_Certificate& cert,
                  std::string_view padding_method,
                  RandomNumberGenerator& rng) :
       m_ca_cert(cert) {
-   if(!m_ca_cert.is_CA_cert()) {
-      throw_invalid_argument("X509_CA: This certificate is not for a CA", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!m_ca_cert.is_CA_cert()), "X509_CA: This certificate is not for a CA");
 
    m_signer = X509_Object::choose_sig_format(key, rng, hash_fn, padding_method);
    m_ca_sig_algo = m_signer->algorithm_identifier();
@@ -42,9 +40,8 @@ Extensions X509_CA::choose_extensions(const PKCS10_Request& req,
    const auto constraints = req.is_CA() ? Key_Constraints::ca_constraints() : req.constraints();
 
    auto key = req.subject_public_key();
-   if(!constraints.compatible_with(*key)) {
-      throw_invalid_argument("The requested key constraints are incompatible with the algorithm", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!constraints.compatible_with(*key)),
+                   "The requested key constraints are incompatible with the algorithm");
 
    Extensions extensions = req.extensions();
 

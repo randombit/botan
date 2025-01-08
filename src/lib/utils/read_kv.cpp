@@ -33,21 +33,15 @@ std::map<std::string, std::string> read_kv(std::string_view kv) {
       if(c == '\\' && !escaped) {
          escaped = true;
       } else if(c == ',' && !escaped) {
-         if(cur_key.empty()) {
-            throw_invalid_argument("Bad KV spec empty key", __func__, __FILE__);
-         }
+         BOTAN_ARG_CHECK(!(cur_key.empty()), "Bad KV spec empty key");
 
-         if(m.find(cur_key) != m.end()) {
-            throw_invalid_argument("Bad KV spec duplicated key", __func__, __FILE__);
-         }
+         BOTAN_ARG_CHECK(!(m.find(cur_key) != m.end()), "Bad KV spec duplicated key");
          m[cur_key] = cur_val;
          cur_key = "";
          cur_val = "";
          reading_key = true;
       } else if(c == '=' && !escaped) {
-         if(reading_key == false) {
-            throw_invalid_argument("Bad KV spec unexpected equals sign", __func__, __FILE__);
-         }
+         BOTAN_ARG_CHECK(!(reading_key == false), "Bad KV spec unexpected equals sign");
          reading_key = false;
       } else {
          if(reading_key) {
@@ -64,9 +58,7 @@ std::map<std::string, std::string> read_kv(std::string_view kv) {
 
    if(!cur_key.empty()) {
       if(reading_key == false) {
-         if(m.find(cur_key) != m.end()) {
-            throw_invalid_argument("Bad KV spec duplicated key", __func__, __FILE__);
-         }
+         BOTAN_ARG_CHECK(!(m.find(cur_key) != m.end()), "Bad KV spec duplicated key");
          m[cur_key] = cur_val;
       } else {
          throw_invalid_argument("Bad KV spec incomplete string", __func__, __FILE__);

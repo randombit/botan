@@ -62,9 +62,7 @@ void set_pin(Slot& slot, const secure_string& so_pin, const secure_string& pin) 
 }
 
 LowLevel::LowLevel(FunctionListPtr ptr) : m_func_list_ptr(ptr) {
-   if(m_func_list_ptr == nullptr) {
-      throw_invalid_argument("Invalid PKCS#11 function list ptr", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(m_func_list_ptr == nullptr), "Invalid PKCS#11 function list ptr");
 }
 
 /****************************** General purpose functions ******************************/

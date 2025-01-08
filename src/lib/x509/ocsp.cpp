@@ -50,9 +50,8 @@ void decode_optional_list(BER_Decoder& ber, ASN1_Type tag, std::vector<X509_Cert
 
 Request::Request(const X509_Certificate& issuer_cert, const X509_Certificate& subject_cert) :
       m_issuer(issuer_cert), m_certid(m_issuer, BigInt::from_bytes(subject_cert.serial_number())) {
-   if(subject_cert.issuer_dn() != issuer_cert.subject_dn()) {
-      throw_invalid_argument("Invalid cert pair to OCSP::Request (mismatched issuer,subject args?)", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(subject_cert.issuer_dn() != issuer_cert.subject_dn()),
+                   "Invalid cert pair to OCSP::Request (mismatched issuer,subject args?)");
 }
 
 Request::Request(const X509_Certificate& issuer_cert, const BigInt& subject_serial) :
@@ -264,9 +263,7 @@ Response online_check(const X509_Certificate& issuer,
                       const BigInt& subject_serial,
                       std::string_view ocsp_responder,
                       std::chrono::milliseconds timeout) {
-   if(ocsp_responder.empty()) {
-      throw_invalid_argument("No OCSP responder specified", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(ocsp_responder.empty()), "No OCSP responder specified");
 
    OCSP::Request req(issuer, subject_serial);
 
@@ -282,9 +279,8 @@ Response online_check(const X509_Certificate& issuer,
 Response online_check(const X509_Certificate& issuer,
                       const X509_Certificate& subject,
                       std::chrono::milliseconds timeout) {
-   if(subject.issuer_dn() != issuer.subject_dn()) {
-      throw_invalid_argument("Invalid cert pair to OCSP::online_check (mismatched issuer,subject args?)", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(subject.issuer_dn() != issuer.subject_dn()),
+                   "Invalid cert pair to OCSP::online_check (mismatched issuer,subject args?)");
 
    return online_check(issuer, BigInt::from_bytes(subject.serial_number()), subject.ocsp_responder(), timeout);
 }

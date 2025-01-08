@@ -22,17 +22,11 @@ static const size_t CCM_BS = 16;
 */
 CCM_Mode::CCM_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size, size_t L) :
       m_tag_size(tag_size), m_L(L), m_cipher(std::move(cipher)) {
-   if(m_cipher->block_size() != CCM_BS) {
-      throw_invalid_argument(m_cipher->name() + " cannot be used with CCM mode", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(m_cipher->block_size() != CCM_BS), m_cipher->name() + " cannot be used with CCM mode");
 
-   if(L < 2 || L > 8) {
-      throw_invalid_argument(fmt("Invalid CCM L value {}", L), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(L < 2 || L > 8), fmt("Invalid CCM L value {}", L));
 
-   if(tag_size < 4 || tag_size > 16 || tag_size % 2 != 0) {
-      throw_invalid_argument(fmt("Invalid CCM tag length {}", tag_size), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(tag_size < 4 || tag_size > 16 || tag_size % 2 != 0), fmt("Invalid CCM tag length {}", tag_size));
 }
 
 void CCM_Mode::clear() {

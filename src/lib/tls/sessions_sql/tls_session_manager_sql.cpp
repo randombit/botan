@@ -138,9 +138,7 @@ void Session_Manager_SQL::initialize_existing_database(std::string_view passphra
 
    const size_t check_val_created = make_uint16(derived_key[0], derived_key[1]);
 
-   if(check_val_created != check_val_db) {
-      throw_invalid_argument("Session database password not valid", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(check_val_created != check_val_db), "Session database password not valid");
 
    m_session_key = SymmetricKey(std::span(derived_key).subspan(2));
 }

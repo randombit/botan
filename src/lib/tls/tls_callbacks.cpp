@@ -89,9 +89,7 @@ void TLS::Callbacks::tls_verify_cert_chain(const std::vector<X509_Certificate>& 
                                            Usage_Type usage,
                                            std::string_view hostname,
                                            const TLS::Policy& policy) {
-   if(cert_chain.empty()) {
-      throw_invalid_argument("Certificate chain was empty", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(cert_chain.empty()), "Certificate chain was empty");
 
    Path_Validation_Restrictions restrictions(policy.require_cert_revocation_info(),
                                              policy.minimum_signature_strength());

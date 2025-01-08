@@ -127,13 +127,9 @@ std::vector<RTSS_Share> RTSS_Share::split(uint8_t M,
                                           const std::vector<uint8_t>& identifier,
                                           std::string_view hash_fn,
                                           RandomNumberGenerator& rng) {
-   if(M <= 1 || N <= 1 || M > N || N >= 255) {
-      throw_invalid_argument("RTSS_Share::split: Invalid N or M", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(M <= 1 || N <= 1 || M > N || N >= 255), "RTSS_Share::split: Invalid N or M");
 
-   if(identifier.size() > 16) {
-      throw_invalid_argument("RTSS_Share::split Invalid identifier size", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(identifier.size() > 16), "RTSS_Share::split Invalid identifier size");
 
    const uint8_t hash_id = rtss_hash_id(hash_fn);
 

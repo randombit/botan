@@ -145,9 +145,7 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
       const std::string pbkdf_name = fmt("PBKDF2({})", prf);
 
       auto pwhash_fam = PasswordHashFamily::create(pbkdf_name);
-      if(!pwhash_fam) {
-         throw_invalid_argument(fmt("Unknown password hash digest {}", digest), __func__, __FILE__);
-      }
+      BOTAN_ARG_CHECK(!(!pwhash_fam), fmt("Unknown password hash digest {}", digest));
 
       std::unique_ptr<PasswordHash> pwhash;
 

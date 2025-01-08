@@ -155,9 +155,7 @@ std::array<uint8_t, N> vector_to_array(std::vector<uint8_t, T> vec) {
 namespace Roughtime {
 
 Nonce::Nonce(const std::vector<uint8_t>& nonce) {
-   if(nonce.size() != 64) {
-      throw_invalid_argument("Roughtime nonce must be 64 bytes long", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(nonce.size() != 64), "Roughtime nonce must be 64 bytes long");
    m_nonce = typecast_copy<std::array<uint8_t, 64>>(nonce.data());
 }
 
@@ -308,9 +306,7 @@ Nonce Chain::next_nonce(const Nonce& blind) const {
 }
 
 void Chain::append(const Link& new_link, size_t max_chain_size) {
-   if(max_chain_size <= 0) {
-      throw_invalid_argument("Max chain size must be positive", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(max_chain_size <= 0), "Max chain size must be positive");
 
    while(m_links.size() >= max_chain_size) {
       if(m_links.size() == 1) {

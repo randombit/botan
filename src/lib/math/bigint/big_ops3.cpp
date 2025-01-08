@@ -106,9 +106,7 @@ BigInt operator/(const BigInt& x, const BigInt& y) {
 * Division Operator
 */
 BigInt operator/(const BigInt& x, word y) {
-   if(y == 0) {
-      throw_invalid_argument("BigInt::operator/ divide by zero", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(y == 0), "BigInt::operator/ divide by zero");
 
    BigInt q;
    word r;
@@ -120,12 +118,8 @@ BigInt operator/(const BigInt& x, word y) {
 * Modulo Operator
 */
 BigInt operator%(const BigInt& n, const BigInt& mod) {
-   if(mod.is_zero()) {
-      throw_invalid_argument("BigInt::operator% divide by zero", __func__, __FILE__);
-   }
-   if(mod.is_negative()) {
-      throw_invalid_argument("BigInt::operator% modulus must be > 0", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(mod.is_zero()), "BigInt::operator% divide by zero");
+   BOTAN_ARG_CHECK(!(mod.is_negative()), "BigInt::operator% modulus must be > 0");
    if(n.is_positive() && mod.is_positive() && n < mod) {
       return n;
    }
@@ -143,9 +137,7 @@ BigInt operator%(const BigInt& n, const BigInt& mod) {
 * Modulo Operator
 */
 word operator%(const BigInt& n, word mod) {
-   if(mod == 0) {
-      throw_invalid_argument("BigInt::operator% divide by zero", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(mod == 0), "BigInt::operator% divide by zero");
 
    if(mod == 1) {
       return 0;

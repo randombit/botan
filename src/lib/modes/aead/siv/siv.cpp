@@ -22,9 +22,7 @@ SIV_Mode::SIV_Mode(std::unique_ptr<BlockCipher> cipher) :
       m_ctr(std::make_unique<CTR_BE>(cipher->new_object(), 8)),
       m_mac(std::make_unique<CMAC>(std::move(cipher))) {
    // Not really true but only 128 bit allowed at the moment
-   if(m_bs != 16) {
-      throw_invalid_argument("SIV requires a 128 bit block cipher", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(m_bs != 16), "SIV requires a 128 bit block cipher");
 }
 
 SIV_Mode::~SIV_Mode() = default;
@@ -83,9 +81,7 @@ size_t SIV_Mode::maximum_associated_data_inputs() const {
 
 void SIV_Mode::set_associated_data_n(size_t n, std::span<const uint8_t> ad) {
    const size_t max_ads = maximum_associated_data_inputs();
-   if(n > max_ads) {
-      throw_invalid_argument(name() + " allows no more than " + std::to_string(max_ads) + " ADs", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(n > max_ads), name() + " allows no more than " + std::to_string(max_ads) + " ADs");
 
    if(n >= m_ad_macs.size()) {
       m_ad_macs.resize(n + 1);

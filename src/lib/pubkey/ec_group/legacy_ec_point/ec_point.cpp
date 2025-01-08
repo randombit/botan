@@ -104,12 +104,8 @@ EC_Point::EC_Point(const CurveGFp& curve, BigInt x, BigInt y) :
       m_curve(curve), m_x(std::move(x)), m_y(std::move(y)), m_z(m_curve.group().monty().R1()) {
    const auto& group = m_curve.group();
 
-   if(m_x < 0 || m_x >= group.p()) {
-      throw_invalid_argument("Invalid EC_Point affine x", __func__, __FILE__);
-   }
-   if(m_y < 0 || m_y >= group.p()) {
-      throw_invalid_argument("Invalid EC_Point affine y", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(m_x < 0 || m_x >= group.p()), "Invalid EC_Point affine x");
+   BOTAN_ARG_CHECK(!(m_y < 0 || m_y >= group.p()), "Invalid EC_Point affine y");
 
    secure_vector<word> monty_ws(monty_ws_size(group));
 

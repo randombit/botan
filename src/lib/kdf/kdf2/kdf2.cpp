@@ -34,9 +34,7 @@ void KDF2::kdf(uint8_t key[],
 
    const size_t blocks_required = key_len / m_hash->output_length();
 
-   if(blocks_required >= 0xFFFFFFFE) {
-      throw_invalid_argument("KDF2 maximum output length exceeeded", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(blocks_required >= 0xFFFFFFFE), "KDF2 maximum output length exceeeded");
 
    uint32_t counter = 1;
    secure_vector<uint8_t> h;

@@ -126,9 +126,8 @@ class X448_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
          //       made optional.
          //       For instance: `sk->agree().with_optional_sanity_checks(true)`.
          //       See also:     https://github.com/randombit/botan/pull/4318
-         if(CT::all_zeros(shared_secret.data(), shared_secret.size()).as_bool()) {
-            throw_invalid_argument("X448 public point appears to be of low order", __func__, __FILE__);
-         }
+         BOTAN_ARG_CHECK(!(CT::all_zeros(shared_secret.data(), shared_secret.size()).as_bool()),
+                         "X448 public point appears to be of low order");
 
          return shared_secret;
       }

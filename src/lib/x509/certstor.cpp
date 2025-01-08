@@ -95,9 +95,7 @@ std::vector<X509_Certificate> Certificate_Store_In_Memory::find_all_certs(const 
 
 std::optional<X509_Certificate> Certificate_Store_In_Memory::find_cert_by_pubkey_sha1(
    const std::vector<uint8_t>& key_hash) const {
-   if(key_hash.size() != 20) {
-      throw_invalid_argument("Certificate_Store_In_Memory::find_cert_by_pubkey_sha1 invalid hash", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(key_hash.size() != 20), "Certificate_Store_In_Memory::find_cert_by_pubkey_sha1 invalid hash");
 
    auto hash = HashFunction::create("SHA-1");
 
@@ -113,9 +111,8 @@ std::optional<X509_Certificate> Certificate_Store_In_Memory::find_cert_by_pubkey
 
 std::optional<X509_Certificate> Certificate_Store_In_Memory::find_cert_by_raw_subject_dn_sha256(
    const std::vector<uint8_t>& subject_hash) const {
-   if(subject_hash.size() != 32) {
-      throw_invalid_argument("Certificate_Store_In_Memory::find_cert_by_raw_subject_dn_sha256 invalid hash", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(subject_hash.size() != 32),
+                   "Certificate_Store_In_Memory::find_cert_by_raw_subject_dn_sha256 invalid hash");
 
    auto hash = HashFunction::create("SHA-256");
 

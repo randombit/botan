@@ -166,9 +166,8 @@ class Frodo_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF {
          auto& shake = consts.SHAKE_XOF();
          auto sample_generator = FrodoMatrix::make_sample_generator(consts, shake);
 
-         if(encapsulated_key.size() != consts.len_ct_bytes()) {
-            throw_invalid_argument("FrodoKEM ciphertext does not have the correct byte count", __func__, __FILE__);
-         }
+         BOTAN_ARG_CHECK(!(encapsulated_key.size() != consts.len_ct_bytes()),
+                         "FrodoKEM ciphertext does not have the correct byte count");
 
          BufferSlicer ct_bs(encapsulated_key);
          auto c_1 = ct_bs.take<FrodoPackedMatrix>(consts.len_packed_b_bytes());
@@ -240,9 +239,8 @@ class Frodo_KEM_Decryptor final : public PK_Ops::KEM_Decryption_with_KDF {
 
 FrodoKEM_PublicKey::FrodoKEM_PublicKey(std::span<const uint8_t> pub_key, FrodoKEMMode mode) {
    FrodoKEMConstants consts(mode);
-   if(pub_key.size() != consts.len_public_key_bytes()) {
-      throw_invalid_argument("FrodoKEM public key does not have the correct byte count", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(pub_key.size() != consts.len_public_key_bytes()),
+                   "FrodoKEM public key does not have the correct byte count");
 
    BufferSlicer pk_bs(pub_key);
    auto seed_a = pk_bs.copy<FrodoSeedA>(consts.len_a_bytes());
@@ -349,9 +347,8 @@ FrodoKEM_PrivateKey::FrodoKEM_PrivateKey(RandomNumberGenerator& rng, FrodoKEMMod
 FrodoKEM_PrivateKey::FrodoKEM_PrivateKey(std::span<const uint8_t> sk, FrodoKEMMode mode) {
    FrodoKEMConstants consts(mode);
 
-   if(sk.size() != consts.len_private_key_bytes()) {
-      throw_invalid_argument("FrodoKEM private key does not have the correct byte count", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(sk.size() != consts.len_private_key_bytes()),
+                   "FrodoKEM private key does not have the correct byte count");
 
    BufferSlicer sk_bs(sk);
    auto s = sk_bs.copy<FrodoSeedS>(consts.len_sec_bytes());

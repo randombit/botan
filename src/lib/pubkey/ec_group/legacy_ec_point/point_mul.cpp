@@ -84,9 +84,7 @@ EC_Point EC_Point_Base_Point_Precompute::mul(const BigInt& k,
                                              RandomNumberGenerator& rng,
                                              const BigInt& group_order,
                                              std::vector<BigInt>& ws) const {
-   if(k.is_negative()) {
-      throw_invalid_argument("EC_Point_Base_Point_Precompute scalar must be positive", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(k.is_negative()), "EC_Point_Base_Point_Precompute scalar must be positive");
 
    // Instead of reducing k mod group order should we alter the mask size??
    BigInt scalar = m_mod_order.reduce(k);
@@ -210,9 +208,7 @@ EC_Point EC_Point_Var_Point_Precompute::mul(const BigInt& k,
                                             RandomNumberGenerator& rng,
                                             const BigInt& group_order,
                                             std::vector<BigInt>& ws) const {
-   if(k.is_negative()) {
-      throw_invalid_argument("EC_Point_Var_Point_Precompute scalar must be positive", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(k.is_negative()), "EC_Point_Var_Point_Precompute scalar must be positive");
    if(ws.size() < EC_Point::WORKSPACE_SIZE) {
       ws.resize(EC_Point::WORKSPACE_SIZE);
    }

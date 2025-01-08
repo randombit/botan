@@ -60,13 +60,9 @@ void HKDF_Extract::kdf(uint8_t key[],
 
    const size_t prf_output_len = m_prf->output_length();
 
-   if(key_len > prf_output_len) {
-      throw_invalid_argument("HKDF-Extract maximum output length exceeeded", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(key_len > prf_output_len), "HKDF-Extract maximum output length exceeeded");
 
-   if(label_len > 0) {
-      throw_invalid_argument("HKDF-Extract does not support a label input", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(label_len > 0), "HKDF-Extract does not support a label input");
 
    if(salt_len == 0) {
       m_prf->set_key(std::vector<uint8_t>(prf_output_len));
@@ -105,9 +101,7 @@ void HKDF_Expand::kdf(uint8_t key[],
       return;
    }
 
-   if(key_len > m_prf->output_length() * 255) {
-      throw_invalid_argument("HKDF-Expand maximum output length exceeeded", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(key_len > m_prf->output_length() * 255), "HKDF-Expand maximum output length exceeeded");
 
    m_prf->set_key(secret, secret_len);
 

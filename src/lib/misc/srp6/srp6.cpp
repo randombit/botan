@@ -95,9 +95,8 @@ std::pair<BigInt, SymmetricKey> srp6_client_agree(std::string_view identifier,
    }
 
    auto hash_fn = HashFunction::create_or_throw(hash_id);
-   if(8 * hash_fn->output_length() >= group.p_bits()) {
-      throw_invalid_argument(fmt("Hash function {} too large for SRP6 with this group", hash_fn->name()), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(8 * hash_fn->output_length() >= group.p_bits()),
+                   fmt("Hash function {} too large for SRP6 with this group", hash_fn->name()));
 
    const BigInt k = hash_seq(*hash_fn, p_bytes, p, g);
 
@@ -140,9 +139,8 @@ BigInt srp6_generate_verifier(std::string_view identifier,
                               const DL_Group& group,
                               std::string_view hash_id) {
    auto hash_fn = HashFunction::create_or_throw(hash_id);
-   if(8 * hash_fn->output_length() >= group.p_bits()) {
-      throw_invalid_argument(fmt("Hash function {} too large for SRP6 with this group", hash_fn->name()), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(8 * hash_fn->output_length() >= group.p_bits()),
+                   fmt("Hash function {} too large for SRP6 with this group", hash_fn->name()));
 
    const BigInt x = compute_x(*hash_fn, identifier, password, salt);
    return group.power_g_p(x, hash_fn->output_length() * 8);
@@ -171,9 +169,8 @@ BigInt SRP6_Server_Session::step1(
    m_hash_id = hash_id;
 
    auto hash_fn = HashFunction::create_or_throw(hash_id);
-   if(8 * hash_fn->output_length() >= group.p_bits()) {
-      throw_invalid_argument(fmt("Hash function {} too large for SRP6 with this group", hash_fn->name()), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(8 * hash_fn->output_length() >= group.p_bits()),
+                   fmt("Hash function {} too large for SRP6 with this group", hash_fn->name()));
 
    const BigInt k = hash_seq(*hash_fn, m_group.p_bytes(), p, g);
    m_B = group.mod_p(v * k + group.power_g_p(m_b, b_bits));
@@ -187,9 +184,8 @@ SymmetricKey SRP6_Server_Session::step2(const BigInt& A) {
    }
 
    auto hash_fn = HashFunction::create_or_throw(m_hash_id);
-   if(8 * hash_fn->output_length() >= m_group.p_bits()) {
-      throw_invalid_argument(fmt("Hash function {} too large for SRP6 with this group", hash_fn->name()), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(8 * hash_fn->output_length() >= m_group.p_bits()),
+                   fmt("Hash function {} too large for SRP6 with this group", hash_fn->name()));
 
    const BigInt u = hash_seq(*hash_fn, m_group.p_bytes(), A, m_B);
 

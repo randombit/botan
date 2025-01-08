@@ -181,9 +181,7 @@ void append_tls_length_value(std::vector<uint8_t, Alloc>& buf, const T* vals, si
    const size_t T_size = sizeof(T);
    const size_t val_bytes = T_size * vals_size;
 
-   if(tag_size != 1 && tag_size != 2 && tag_size != 3) {
-      throw_invalid_argument("append_tls_length_value: invalid tag size", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(tag_size != 1 && tag_size != 2 && tag_size != 3), "append_tls_length_value: invalid tag size");
 
    if((tag_size == 1 && val_bytes > 255) || (tag_size == 2 && val_bytes > 65535) ||
       (tag_size == 3 && val_bytes > 16777215)) {

@@ -114,9 +114,7 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
 * Calculate the Jacobi symbol
 */
 int32_t jacobi(const BigInt& a, const BigInt& n) {
-   if(n.is_even() || n < 2) {
-      throw_invalid_argument("jacobi: second argument must be odd and > 1", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(n.is_even() || n < 2), "jacobi: second argument must be odd and > 1");
 
    BigInt x = a % n;
    BigInt y = n;
@@ -319,9 +317,7 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod) {
 }
 
 BigInt is_perfect_square(const BigInt& C) {
-   if(C < 1) {
-      throw_invalid_argument("is_perfect_square requires C >= 1", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(C < 1), "is_perfect_square requires C >= 1");
    if(C == 1) {
       return BigInt::one();
    }

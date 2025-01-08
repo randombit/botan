@@ -143,9 +143,7 @@ void Hex_Decoder::end_msg() {
 
    m_position = 0;
 
-   if(not_full_bytes) {
-      throw_invalid_argument("Hex_Decoder: Input not full bytes", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(not_full_bytes), "Hex_Decoder: Input not full bytes");
 }
 
 }  // namespace Botan

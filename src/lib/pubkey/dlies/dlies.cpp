@@ -63,9 +63,8 @@ std::vector<uint8_t> DLIES_Encryptor::enc(const uint8_t in[], size_t length, Ran
       SymmetricKey enc_key(secret_keys.data(), cipher_key_len);
       m_cipher->set_key(enc_key);
 
-      if(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size())) {
-         throw_invalid_argument("DLIES with " + m_cipher->name() + " requires an IV be set", __func__, __FILE__);
-      }
+      BOTAN_ARG_CHECK(!(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size())),
+                      "DLIES with " + m_cipher->name() + " requires an IV be set");
       m_cipher->start(m_iv.bits_of());
       m_cipher->finish(ciphertext);
    } else {
@@ -169,9 +168,8 @@ secure_vector<uint8_t> DLIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
             // the decryption can fail:
             // e.g. Invalid_Authentication_Tag is thrown if GCM is used and the message does not have a valid tag
 
-            if(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size())) {
-               throw_invalid_argument("DLIES with " + m_cipher->name() + " requires an IV be set", __func__, __FILE__);
-            }
+            BOTAN_ARG_CHECK(!(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size())),
+                            "DLIES with " + m_cipher->name() + " requires an IV be set");
             m_cipher->start(m_iv.bits_of());
             m_cipher->finish(ciphertext);
          } catch(...) {

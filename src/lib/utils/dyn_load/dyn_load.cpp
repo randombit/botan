@@ -74,9 +74,7 @@ void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol) {
    addr = reinterpret_cast<void*>(::GetProcAddress(reinterpret_cast<HMODULE>(m_lib), symbol.c_str()));
 #endif
 
-   if(!addr) {
-      throw_invalid_argument(fmt("Failed to resolve symbol {} in {}", symbol, m_lib_name), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!addr), fmt("Failed to resolve symbol {} in {}", symbol, m_lib_name));
 
    return addr;
 }

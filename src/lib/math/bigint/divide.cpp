@@ -46,9 +46,7 @@ inline bool division_check(word q, word y2, word y1, word x3, word x2, word x1) 
 }  // namespace
 
 void ct_divide(const BigInt& x, const BigInt& y, BigInt& q_out, BigInt& r_out) {
-   if(y.is_zero()) {
-      throw_invalid_argument("ct_divide: cannot divide by zero", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(y.is_zero()), "ct_divide: cannot divide by zero");
 
    const size_t x_words = x.sig_words();
    const size_t y_words = y.sig_words();
@@ -78,9 +76,7 @@ void ct_divide(const BigInt& x, const BigInt& y, BigInt& q_out, BigInt& r_out) {
 }
 
 void ct_divide_word(const BigInt& x, word y, BigInt& q_out, word& r_out) {
-   if(y == 0) {
-      throw_invalid_argument("ct_divide_word: cannot divide by zero", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(y == 0), "ct_divide_word: cannot divide by zero");
 
    const size_t x_words = x.sig_words();
    const size_t x_bits = x.bits();
@@ -115,9 +111,7 @@ void ct_divide_word(const BigInt& x, word y, BigInt& q_out, word& r_out) {
 }
 
 BigInt ct_modulo(const BigInt& x, const BigInt& y) {
-   if(y.is_negative() || y.is_zero()) {
-      throw_invalid_argument("ct_modulo requires y > 0", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(y.is_negative() || y.is_zero()), "ct_modulo requires y > 0");
 
    const size_t y_words = y.sig_words();
 
@@ -153,9 +147,7 @@ BigInt ct_modulo(const BigInt& x, const BigInt& y) {
 * See Handbook of Applied Cryptography section 14.2.5
 */
 void vartime_divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt& r_out) {
-   if(y_arg.is_zero()) {
-      throw_invalid_argument("vartime_divide: cannot divide by zero", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(y_arg.is_zero()), "vartime_divide: cannot divide by zero");
 
    const size_t y_words = y_arg.sig_words();
 

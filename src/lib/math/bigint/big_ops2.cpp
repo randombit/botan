@@ -43,9 +43,8 @@ BigInt& BigInt::add(const word y[], size_t y_words, Sign y_sign) {
 }
 
 BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>& ws) {
-   if(this->is_negative() || s.is_negative() || mod.is_negative()) {
-      throw_invalid_argument("BigInt::mod_add expects all arguments are positive", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(this->is_negative() || s.is_negative() || mod.is_negative()),
+                   "BigInt::mod_add expects all arguments are positive");
 
    BOTAN_DEBUG_ASSERT(*this < mod);
    BOTAN_DEBUG_ASSERT(s < mod);
@@ -88,9 +87,8 @@ BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>&
 }
 
 BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>& ws) {
-   if(this->is_negative() || s.is_negative() || mod.is_negative()) {
-      throw_invalid_argument("BigInt::mod_sub expects all arguments are positive", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(this->is_negative() || s.is_negative() || mod.is_negative()),
+                   "BigInt::mod_sub expects all arguments are positive");
 
    // We are assuming in this function that *this and s are no more than mod_sw words long
    BOTAN_DEBUG_ASSERT(*this < mod);
@@ -223,9 +221,7 @@ BigInt& BigInt::operator%=(const BigInt& mod) {
 * Modulo Operator
 */
 word BigInt::operator%=(word mod) {
-   if(mod == 0) {
-      throw_invalid_argument("BigInt::operator%= divide by zero", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(mod == 0), "BigInt::operator%= divide by zero");
 
    word remainder = 0;
 

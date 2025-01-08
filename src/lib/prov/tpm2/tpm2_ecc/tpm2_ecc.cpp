@@ -67,9 +67,7 @@ std::unique_ptr<TPM2::PrivateKey> EC_PrivateKey::create_unrestricted_transient(c
    BOTAN_ARG_CHECK(parent.is_parent(), "The passed key cannot be used as a parent key");
 
    const auto curve_id = get_tpm2_curve_id(group.get_curve_oid());
-   if(!curve_id) {
-      throw_invalid_argument("Unsupported ECC curve", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!curve_id), "Unsupported ECC curve");
 
    TPM2B_SENSITIVE_CREATE sensitive_data = {
       .size = 0,  // ignored
@@ -175,9 +173,8 @@ size_t signature_length_for_key_handle(const SessionBundle& sessions, const Obje
    const auto curve_id = object._public_info(sessions, TPM2_ALG_ECDSA).pub->publicArea.parameters.eccDetail.curveID;
 
    const auto order_bytes = curve_id_order_byte_size(curve_id);
-   if(!order_bytes) {
-      throw_invalid_argument(Botan::fmt("Unsupported ECC curve: {}", curve_id), __func__, __FILE__);
-   };
+   BOTAN_ARG_CHECK(!(!order_bytes), Botan::fmt("Unsupported ECC curve: {}", curve_id));
+   ;
    return 2 * order_bytes.value();
 }
 

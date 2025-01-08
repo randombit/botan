@@ -74,9 +74,7 @@ PK_Ops::Key_Agreement_with_KDF::Key_Agreement_with_KDF(std::string_view kdf) {
 secure_vector<uint8_t> PK_Ops::Key_Agreement_with_KDF::agree(size_t key_len,
                                                              std::span<const uint8_t> other_key,
                                                              std::span<const uint8_t> salt) {
-   if(!salt.empty() && m_kdf == nullptr) {
-      throw_invalid_argument("PK_Key_Agreement::derive_key requires a KDF to use a salt", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!salt.empty() && m_kdf == nullptr), "PK_Key_Agreement::derive_key requires a KDF to use a salt");
 
    secure_vector<uint8_t> z = raw_agree(other_key.data(), other_key.size());
    if(m_kdf) {

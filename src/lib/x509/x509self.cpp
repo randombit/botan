@@ -95,9 +95,8 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
 
    const auto constraints = opts.is_CA ? Key_Constraints::ca_constraints() : opts.constraints;
 
-   if(!constraints.compatible_with(key)) {
-      throw_invalid_argument("The requested key constraints are incompatible with the algorithm", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!constraints.compatible_with(key)),
+                   "The requested key constraints are incompatible with the algorithm");
 
    extensions.add_new(std::make_unique<Cert_Extension::Basic_Constraints>(opts.is_CA, opts.path_limit), true);
 
@@ -128,9 +127,8 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
 
    const auto constraints = opts.is_CA ? Key_Constraints::ca_constraints() : opts.constraints;
 
-   if(!constraints.compatible_with(key)) {
-      throw_invalid_argument("The requested key constraints are incompatible with the algorithm", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!constraints.compatible_with(key)),
+                   "The requested key constraints are incompatible with the algorithm");
 
    Extensions extensions = opts.extensions;
 

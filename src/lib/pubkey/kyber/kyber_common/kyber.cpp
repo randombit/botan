@@ -242,9 +242,7 @@ Kyber_PrivateKey::Kyber_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<
 Kyber_PrivateKey::Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode m) {
    KyberConstants mode(m);
 
-   if(mode.private_key_bytes() != sk.size()) {
-      throw_invalid_argument("Private key does not have the correct byte count", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(mode.private_key_bytes() != sk.size()), "Private key does not have the correct byte count");
 
    const auto& codec = mode.keypair_codec();
    std::tie(m_public, m_private) = codec.decode_keypair(sk, std::move(mode));

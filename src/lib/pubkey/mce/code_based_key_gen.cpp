@@ -184,9 +184,7 @@ std::unique_ptr<binary_matrix> generate_R(
 McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator& rng, size_t ext_deg, size_t code_length, size_t t) {
    const size_t codimension = t * ext_deg;
 
-   if(code_length <= codimension) {
-      throw_invalid_argument("invalid McEliece parameters", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(code_length <= codimension), "invalid McEliece parameters");
 
    auto sp_field = std::make_shared<GF2m_Field>(ext_deg);
 

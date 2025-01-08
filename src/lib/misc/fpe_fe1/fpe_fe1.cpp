@@ -59,17 +59,13 @@ void factor(BigInt n, BigInt& a, BigInt& b) {
 }  // namespace
 
 FPE_FE1::FPE_FE1(const BigInt& n, size_t rounds, bool compat_mode, std::string_view mac_algo) : m_rounds(rounds) {
-   if(m_rounds < 3) {
-      throw_invalid_argument("FPE_FE1 rounds too small", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(m_rounds < 3), "FPE_FE1 rounds too small");
 
    m_mac = MessageAuthenticationCode::create_or_throw(mac_algo);
 
    m_n_bytes = n.serialize();
 
-   if(m_n_bytes.size() > MAX_N_BYTES) {
-      throw_invalid_argument("N is too large for FPE encryption", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(m_n_bytes.size() > MAX_N_BYTES), "N is too large for FPE encryption");
 
    factor(n, m_a, m_b);
 

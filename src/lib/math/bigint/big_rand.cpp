@@ -41,9 +41,7 @@ void BigInt::randomize(RandomNumberGenerator& rng, size_t bitsize, bool set_high
 * Generate a random integer within given range
 */
 BigInt BigInt::random_integer(RandomNumberGenerator& rng, const BigInt& min, const BigInt& max) {
-   if(min.is_negative() || max.is_negative() || max <= min) {
-      throw_invalid_argument("BigInt::random_integer invalid range", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(min.is_negative() || max.is_negative() || max <= min), "BigInt::random_integer invalid range");
 
    /*
    If min is > 1 then we generate a random number `r` in [0,max-min)

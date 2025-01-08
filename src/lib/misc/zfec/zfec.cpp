@@ -173,9 +173,7 @@ void invert_matrix(uint8_t matrix[], size_t K) {
       const uint8_t c = pivot_row[icol];
       pivot_row[icol] = 1;
 
-      if(c == 0) {
-         throw_invalid_argument("ZFEC: singlar matrix", __func__, __FILE__);
-      }
+      BOTAN_ARG_CHECK(!(c == 0), "ZFEC: singlar matrix");
 
       if(c != 1) {
          const uint8_t* mul_c = GF_MUL_TABLE(GF_INVERSE[c]);
@@ -353,9 +351,7 @@ void ZFEC::addmul(uint8_t z[], const uint8_t x[], uint8_t y, size_t size) {
 * ZFEC constructor
 */
 ZFEC::ZFEC(size_t K, size_t N) : m_K(K), m_N(N), m_enc_matrix(N * K) {
-   if(m_K == 0 || m_N == 0 || m_K > 256 || m_N > 256 || m_K > N) {
-      throw_invalid_argument("ZFEC: violated 1 <= K <= N <= 256", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(m_K == 0 || m_N == 0 || m_K > 256 || m_N > 256 || m_K > N), "ZFEC: violated 1 <= K <= N <= 256");
 
    std::vector<uint8_t> temp_matrix(m_N * m_K);
 
@@ -397,9 +393,7 @@ ZFEC::ZFEC(size_t K, size_t N) : m_K(K), m_N(N), m_enc_matrix(N * K) {
 * ZFEC encoding routine
 */
 void ZFEC::encode(const uint8_t input[], size_t size, const output_cb_t& output_cb) const {
-   if(size % m_K != 0) {
-      throw_invalid_argument("ZFEC::encode: input must be multiple of K uint8_ts", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(size % m_K != 0), "ZFEC::encode: input must be multiple of K uint8_ts");
 
    const size_t share_size = size / m_K;
 
@@ -414,9 +408,7 @@ void ZFEC::encode(const uint8_t input[], size_t size, const output_cb_t& output_
 void ZFEC::encode_shares(const std::vector<const uint8_t*>& shares,
                          size_t share_size,
                          const output_cb_t& output_cb) const {
-   if(shares.size() != m_K) {
-      throw_invalid_argument("ZFEC::encode_shares must provide K shares", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(shares.size() != m_K), "ZFEC::encode_shares must provide K shares");
 
    // The initial shares are just the original input shares
    for(size_t i = 0; i != m_K; ++i) {

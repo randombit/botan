@@ -35,9 +35,7 @@ std::vector<std::vector<uint8_t>> decode_all_certificates(DataSource& source) {
 }  // namespace
 
 Flatfile_Certificate_Store::Flatfile_Certificate_Store(std::string_view file, bool ignore_non_ca) {
-   if(file.empty()) {
-      throw_invalid_argument("Flatfile_Certificate_Store::Flatfile_Certificate_Store invalid file path", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(file.empty()), "Flatfile_Certificate_Store::Flatfile_Certificate_Store invalid file path");
 
    DataSource_Stream file_stream(file);
 
@@ -55,14 +53,13 @@ Flatfile_Certificate_Store::Flatfile_Certificate_Store(std::string_view file, bo
          m_dn_to_cert[cert.subject_dn()].push_back(cert);
          m_pubkey_sha1_to_cert.emplace(cert.subject_public_key_bitstring_sha1(), cert);
          m_subject_dn_sha256_to_cert.emplace(cert.raw_subject_dn_sha256(), cert);
-      } else if(!ignore_non_ca) {
-         throw_invalid_argument("Flatfile_Certificate_Store received non CA cert " + cert.subject_dn().to_string(), __func__, __FILE__);
-      }
+      } else
+         BOTAN_ARG_CHECK(!(!ignore_non_ca),
+                         "Flatfile_Certificate_Store received non CA cert " + cert.subject_dn().to_string());
    }
 
-   if(m_all_subjects.empty()) {
-      throw_invalid_argument("Flatfile_Certificate_Store::Flatfile_Certificate_Store cert file is empty", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(m_all_subjects.empty()),
+                   "Flatfile_Certificate_Store::Flatfile_Certificate_Store cert file is empty");
 }
 
 std::vector<X509_DN> Flatfile_Certificate_Store::all_subjects() const {
@@ -89,9 +86,7 @@ std::vector<X509_Certificate> Flatfile_Certificate_Store::find_all_certs(const X
 
 std::optional<X509_Certificate> Flatfile_Certificate_Store::find_cert_by_pubkey_sha1(
    const std::vector<uint8_t>& key_hash) const {
-   if(key_hash.size() != 20) {
-      throw_invalid_argument("Flatfile_Certificate_Store::find_cert_by_pubkey_sha1 invalid hash", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(key_hash.size() != 20), "Flatfile_Certificate_Store::find_cert_by_pubkey_sha1 invalid hash");
 
    auto found_cert = m_pubkey_sha1_to_cert.find(key_hash);
 
@@ -104,9 +99,8 @@ std::optional<X509_Certificate> Flatfile_Certificate_Store::find_cert_by_pubkey_
 
 std::optional<X509_Certificate> Flatfile_Certificate_Store::find_cert_by_raw_subject_dn_sha256(
    const std::vector<uint8_t>& subject_hash) const {
-   if(subject_hash.size() != 32) {
-      throw_invalid_argument("Flatfile_Certificate_Store::find_cert_by_raw_subject_dn_sha256 invalid hash", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(subject_hash.size() != 32),
+                   "Flatfile_Certificate_Store::find_cert_by_raw_subject_dn_sha256 invalid hash");
 
    auto found_cert = m_subject_dn_sha256_to_cert.find(subject_hash);
 

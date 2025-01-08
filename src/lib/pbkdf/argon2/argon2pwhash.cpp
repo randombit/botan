@@ -64,9 +64,7 @@ std::string Argon2::to_string() const {
 }
 
 Argon2_Family::Argon2_Family(uint8_t family) : m_family(family) {
-   if(m_family != 0 && m_family != 1 && m_family != 2) {
-      throw_invalid_argument("Unknown Argon2 family identifier", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(m_family != 0 && m_family != 1 && m_family != 2), "Unknown Argon2 family identifier");
 }
 
 std::string Argon2_Family::name() const {

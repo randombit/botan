@@ -32,13 +32,11 @@ size_t hmac_drbg_security_level(size_t mac_output_length) {
 void check_limits(size_t reseed_interval, size_t max_number_of_bytes_per_request) {
    // SP800-90A permits up to 2^48, but it is not usable on 32 bit
    // platforms, so we only allow up to 2^24, which is still reasonably high
-   if(reseed_interval == 0 || reseed_interval > static_cast<size_t>(1) << 24) {
-      throw_invalid_argument("Invalid value for reseed_interval", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(reseed_interval == 0 || reseed_interval > static_cast<size_t>(1) << 24),
+                   "Invalid value for reseed_interval");
 
-   if(max_number_of_bytes_per_request == 0 || max_number_of_bytes_per_request > 64 * 1024) {
-      throw_invalid_argument("Invalid value for max_number_of_bytes_per_request", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(max_number_of_bytes_per_request == 0 || max_number_of_bytes_per_request > 64 * 1024),
+                   "Invalid value for max_number_of_bytes_per_request");
 }
 
 }  // namespace

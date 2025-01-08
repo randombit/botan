@@ -187,9 +187,7 @@ DL_Group::DL_Group(std::string_view str) {
       } catch(...) {}
    }
 
-   if(m_data == nullptr) {
-      throw_invalid_argument(fmt("DL_Group: Unknown group '{}'", str), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(m_data == nullptr), fmt("DL_Group: Unknown group '{}'", str));
 }
 
 namespace {
@@ -201,9 +199,7 @@ BigInt make_dsa_generator(const BigInt& p, const BigInt& q) {
    BigInt e, r;
    vartime_divide(p - 1, q, e, r);
 
-   if(e == 0 || r > 0) {
-      throw_invalid_argument("make_dsa_generator q does not divide p-1", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(e == 0 || r > 0), "make_dsa_generator q does not divide p-1");
 
    for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i) {
       // TODO precompute!
@@ -222,18 +218,12 @@ BigInt make_dsa_generator(const BigInt& p, const BigInt& q) {
 * DL_Group Constructor
 */
 DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, size_t qbits) {
-   if(pbits < 1024) {
-      throw_invalid_argument(fmt("DL_Group: requested prime size {} is too small", pbits), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(pbits < 1024), fmt("DL_Group: requested prime size {} is too small", pbits));
 
-   if(qbits >= pbits) {
-      throw_invalid_argument(fmt("DL_Group: requested q size {} is too big for p {}", qbits, pbits), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(qbits >= pbits), fmt("DL_Group: requested q size {} is too big for p {}", qbits, pbits));
 
    if(type == Strong) {
-      if(qbits != 0 && qbits != pbits - 1) {
-         throw_invalid_argument("Cannot create strong-prime DL_Group with specified q bits", __func__, __FILE__);
-      }
+      BOTAN_ARG_CHECK(!(qbits != 0 && qbits != pbits - 1), "Cannot create strong-prime DL_Group with specified q bits");
 
       const BigInt p = random_safe_prime(rng, pbits);
       const BigInt q = (p - 1) / 2;
@@ -290,9 +280,8 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, siz
 DL_Group::DL_Group(RandomNumberGenerator& rng, const std::vector<uint8_t>& seed, size_t pbits, size_t qbits) {
    BigInt p, q;
 
-   if(!generate_dsa_primes(rng, p, q, pbits, qbits, seed)) {
-      throw_invalid_argument("DL_Group: The seed given does not generate a DSA group", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!generate_dsa_primes(rng, p, q, pbits, qbits, seed)),
+                   "DL_Group: The seed given does not generate a DSA group");
 
    BigInt g = make_dsa_generator(p, q);
 

@@ -17,9 +17,8 @@ namespace Botan {
 
 CBC_Mode::CBC_Mode(std::unique_ptr<BlockCipher> cipher, std::unique_ptr<BlockCipherModePaddingMethod> padding) :
       m_cipher(std::move(cipher)), m_padding(std::move(padding)), m_block_size(m_cipher->block_size()) {
-   if(m_padding && !m_padding->valid_blocksize(m_block_size)) {
-      throw_invalid_argument(fmt("Padding {} cannot be used with {} in CBC mode", m_padding->name(), m_cipher->name()), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(m_padding && !m_padding->valid_blocksize(m_block_size)),
+                   fmt("Padding {} cannot be used with {} in CBC mode", m_padding->name(), m_cipher->name()));
 }
 
 void CBC_Mode::clear() {

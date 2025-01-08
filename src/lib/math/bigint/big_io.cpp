@@ -17,9 +17,7 @@ namespace Botan {
 std::ostream& operator<<(std::ostream& stream, const BigInt& n) {
    const auto stream_flags = stream.flags();
    // NOLINTNEXTLINE(*-non-zero-enum-to-bool-conversion)
-   if(stream_flags & std::ios::oct) {
-      throw_invalid_argument("Octal output of BigInt not supported", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(stream_flags & std::ios::oct), "Octal output of BigInt not supported");
 
    // NOLINTNEXTLINE(*-non-zero-enum-to-bool-conversion)
    const size_t base = (stream_flags & std::ios::hex) ? 16 : 10;

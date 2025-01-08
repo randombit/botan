@@ -46,9 +46,7 @@ std::pair<EC_Group, EC_AffinePoint> ecc_pubkey_from_tss2_public(const TPM2B_PUBL
 
    const auto curve_id = public_blob->publicArea.parameters.eccDetail.curveID;
    const auto curve_name = curve_id_tss2_to_botan(curve_id);
-   if(!curve_name) {
-      throw_invalid_argument(Botan::fmt("Unsupported ECC curve: {}", curve_id), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!curve_name), Botan::fmt("Unsupported ECC curve: {}", curve_id));
 
    auto curve = Botan::EC_Group::from_name(curve_name.value());
    // Create an EC_AffinePoint from the x and y coordinates as SEC1 uncompressed point.
@@ -57,9 +55,7 @@ std::pair<EC_Group, EC_AffinePoint> ecc_pubkey_from_tss2_public(const TPM2B_PUBL
                                             concat(std::vector<uint8_t>({0x04}),
                                                    as_span(public_blob->publicArea.unique.ecc.x),
                                                    as_span(public_blob->publicArea.unique.ecc.y)));
-   if(!point) {
-      throw_invalid_argument("Invalid ECC Point", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(!point), "Invalid ECC Point");
    return {std::move(curve), std::move(point.value())};
 }
 #endif

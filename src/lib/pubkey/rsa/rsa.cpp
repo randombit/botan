@@ -304,13 +304,9 @@ RSA_PrivateKey::RSA_PrivateKey(
 * Create a RSA private key
 */
 RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng, size_t bits, size_t exp) {
-   if(bits < 1024) {
-      throw_invalid_argument(fmt("Cannot create an RSA key only {} bits long", bits), __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(bits < 1024), fmt("Cannot create an RSA key only {} bits long", bits));
 
-   if(exp < 3 || exp % 2 == 0) {
-      throw_invalid_argument("Invalid RSA encryption exponent", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(exp < 3 || exp % 2 == 0), "Invalid RSA encryption exponent");
 
    const size_t p_bits = (bits + 1) / 2;
    const size_t q_bits = bits - p_bits;

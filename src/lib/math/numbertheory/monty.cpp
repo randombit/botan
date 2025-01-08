@@ -14,9 +14,7 @@
 namespace Botan {
 
 Montgomery_Params::Montgomery_Params(const BigInt& p, const Modular_Reducer& mod_p) {
-   if(p.is_even() || p < 3) {
-      throw_invalid_argument("Montgomery_Params invalid modulus", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(p.is_even() || p < 3), "Montgomery_Params invalid modulus");
 
    m_p = p;
    m_p_words = m_p.sig_words();
@@ -30,9 +28,7 @@ Montgomery_Params::Montgomery_Params(const BigInt& p, const Modular_Reducer& mod
 }
 
 Montgomery_Params::Montgomery_Params(const BigInt& p) {
-   if(p.is_even() || p < 3) {
-      throw_invalid_argument("Montgomery_Params invalid modulus", __func__, __FILE__);
-   }
+   BOTAN_ARG_CHECK(!(p.is_even() || p < 3), "Montgomery_Params invalid modulus");
 
    m_p = p;
    m_p_words = m_p.sig_words();
