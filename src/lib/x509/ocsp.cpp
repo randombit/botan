@@ -35,12 +35,15 @@ void decode_optional_list(BER_Decoder& ber, ASN1_Type tag, std::vector<X509_Cert
    }
 
    BER_Decoder list(obj);
-
-   while(list.more_items()) {
-      BER_Object certbits = list.get_next_object();
-      X509_Certificate cert(certbits.bits(), certbits.length());
-      output.push_back(std::move(cert));
+   auto seq = list.start_sequence();
+   while(seq.more_items()) {
+      output.push_back([&] {
+         X509_Certificate cert;
+         cert.decode_from(seq);
+         return cert;
+      }());
    }
+   seq.end_cons();
 }
 
 }  // namespace
