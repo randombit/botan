@@ -20,7 +20,7 @@ namespace {
 
 KyberSerializedPublicKey validate_public_key_length(KyberSerializedPublicKey public_key, size_t expected_length) {
    if(public_key.size() != expected_length) {
-      throw Invalid_Argument("Public key does not have the correct byte count");
+      throw_invalid_argument("Public key does not have the correct byte count", __func__, __FILE__);
    }
    return public_key;
 }

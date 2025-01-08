@@ -92,7 +92,7 @@ bool Pipe::end_of_data() const {
 */
 void Pipe::set_default_msg(message_id msg) {
    if(msg >= message_count()) {
-      throw Invalid_Argument("Pipe::set_default_msg: msg number is too high");
+      throw_invalid_argument("Pipe::set_default_msg: msg number is too high", __func__, __FILE__);
    }
    m_default_read = msg;
 }
@@ -228,10 +228,10 @@ void Pipe::do_append(Filter* filter) {
       return;
    }
    if(dynamic_cast<SecureQueue*>(filter)) {
-      throw Invalid_Argument("Pipe::append: SecureQueue cannot be used");
+      throw_invalid_argument("Pipe::append: SecureQueue cannot be used", __func__, __FILE__);
    }
    if(filter->m_owned) {
-      throw Invalid_Argument("Filters cannot be shared among multiple Pipes");
+      throw_invalid_argument("Filters cannot be shared among multiple Pipes", __func__, __FILE__);
    }
 
    if(m_inside_msg) {
@@ -258,10 +258,10 @@ void Pipe::do_prepend(Filter* filter) {
       return;
    }
    if(dynamic_cast<SecureQueue*>(filter)) {
-      throw Invalid_Argument("Pipe::prepend: SecureQueue cannot be used");
+      throw_invalid_argument("Pipe::prepend: SecureQueue cannot be used", __func__, __FILE__);
    }
    if(filter->m_owned) {
-      throw Invalid_Argument("Filters cannot be shared among multiple Pipes");
+      throw_invalid_argument("Filters cannot be shared among multiple Pipes", __func__, __FILE__);
    }
 
    filter->m_owned = true;

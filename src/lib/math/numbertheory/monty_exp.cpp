@@ -41,7 +41,7 @@ Montgomery_Exponentation_State::Montgomery_Exponentation_State(const std::shared
    BOTAN_ARG_CHECK(g < m_params->p(), "Montgomery base too big");
 
    if(m_window_bits < 1 || m_window_bits > 12) {  // really even 8 is too large ...
-      throw Invalid_Argument("Invalid window bits for Montgomery exponentiation");
+      throw_invalid_argument("Invalid window bits for Montgomery exponentiation", __func__, __FILE__);
    }
 
    const size_t window_size = (static_cast<size_t>(1) << m_window_bits);
@@ -162,7 +162,7 @@ BigInt monty_multi_exp(const std::shared_ptr<const Montgomery_Params>& params_p,
                        const BigInt& y_bn,
                        const BigInt& z2) {
    if(z1.is_negative() || z2.is_negative()) {
-      throw Invalid_Argument("multi_exponentiate exponents must be positive");
+      throw_invalid_argument("multi_exponentiate exponents must be positive", __func__, __FILE__);
    }
 
    const size_t z_bits = round_up(std::max(z1.bits(), z2.bits()), 2);

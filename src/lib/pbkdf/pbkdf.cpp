@@ -84,7 +84,7 @@ void PBKDF::pbkdf_iterations(uint8_t out[],
                              size_t salt_len,
                              size_t iterations) const {
    if(iterations == 0) {
-      throw Invalid_Argument(name() + ": Invalid iteration count");
+      throw_invalid_argument(name() + ": Invalid iteration count", __func__, __FILE__);
    }
 
    const size_t iterations_run =

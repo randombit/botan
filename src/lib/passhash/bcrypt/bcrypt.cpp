@@ -148,7 +148,7 @@ std::string generate_bcrypt(std::string_view pass, RandomNumberGenerator& rng, u
    */
 
    if(version != 'a' && version != 'b' && version != 'y') {
-      throw Invalid_Argument("Unknown bcrypt version '" + std::string(1, version) + "'");
+      throw_invalid_argument("Unknown bcrypt version '" + std::string(1, version) + "'", __func__, __FILE__);
    }
 
    std::vector<uint8_t> salt;

@@ -752,7 +752,7 @@ inline constexpr void bigint_mod_sub(W t[], const W s[], const W mod[], size_t m
 template <WordType W>
 inline constexpr auto bigint_divop_vartime(W n1, W n0, W d) -> W {
    if(d == 0) {
-      throw Invalid_Argument("bigint_divop_vartime divide by zero");
+      throw_invalid_argument("bigint_divop_vartime divide by zero", __func__, __FILE__);
    }
 
    if constexpr(WordInfo<W>::dword_is_native) {
@@ -787,7 +787,7 @@ inline constexpr auto bigint_divop_vartime(W n1, W n0, W d) -> W {
 template <WordType W>
 inline constexpr auto bigint_modop_vartime(W n1, W n0, W d) -> W {
    if(d == 0) {
-      throw Invalid_Argument("bigint_modop_vartime divide by zero");
+      throw_invalid_argument("bigint_modop_vartime divide by zero", __func__, __FILE__);
    }
 
    W z = bigint_divop_vartime(n1, n0, d);
@@ -806,7 +806,7 @@ inline constexpr auto bigint_modop_vartime(W n1, W n0, W d) -> W {
 template <WordType W>
 inline constexpr auto monty_inverse(W a) -> W {
    if(a % 2 == 0) {
-      throw Invalid_Argument("monty_inverse only valid for odd integers");
+      throw_invalid_argument("monty_inverse only valid for odd integers", __func__, __FILE__);
    }
 
    /*

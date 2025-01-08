@@ -23,7 +23,7 @@ uint16_t to_uint16(std::string_view str) {
    const uint32_t x = to_u32bit(str);
 
    if(x >> 16) {
-      throw Invalid_Argument("Integer value exceeds 16 bit range");
+      throw_invalid_argument("Integer value exceeds 16 bit range", __func__, __FILE__);
    }
 
    return static_cast<uint16_t>(x);
@@ -35,7 +35,7 @@ uint32_t to_u32bit(std::string_view str_view) {
    // std::stoul is not strict enough. Ensure that str is digit only [0-9]*
    for(const char chr : str) {
       if(chr < '0' || chr > '9') {
-         throw Invalid_Argument("to_u32bit invalid decimal string '" + str + "'");
+         throw_invalid_argument("to_u32bit invalid decimal string '" + str + "'", __func__, __FILE__);
       }
    }
 
@@ -44,7 +44,7 @@ uint32_t to_u32bit(std::string_view str_view) {
    if constexpr(sizeof(unsigned long int) > 4) {
       // x might be uint64
       if(x > std::numeric_limits<uint32_t>::max()) {
-         throw Invalid_Argument("Integer value of " + str + " exceeds 32 bit range");
+         throw_invalid_argument("Integer value of " + str + " exceeds 32 bit range", __func__, __FILE__);
       }
    }
 
@@ -127,7 +127,7 @@ std::vector<std::string> split_on(std::string_view str, char delim) {
    }
 
    if(substr.empty()) {
-      throw Invalid_Argument(fmt("Unable to split string '{}", str));
+      throw_invalid_argument(fmt("Unable to split string '{}", str), __func__, __FILE__);
    }
    elems.push_back(substr);
 

@@ -49,7 +49,7 @@ secure_vector<uint8_t> raw_nist_key_unwrap(const uint8_t input[],
                                            const BlockCipher& bc,
                                            uint64_t& ICV_out) {
    if(input_len < 16 || input_len % 8 != 0) {
-      throw Invalid_Argument("Bad input size for NIST key unwrap");
+      throw_invalid_argument("Bad input size for NIST key unwrap", __func__, __FILE__);
    }
 
    const size_t n = (input_len - 8) / 8;
@@ -89,11 +89,11 @@ secure_vector<uint8_t> raw_nist_key_unwrap(const uint8_t input[],
 
 std::vector<uint8_t> nist_key_wrap(const uint8_t input[], size_t input_len, const BlockCipher& bc) {
    if(bc.block_size() != 16) {
-      throw Invalid_Argument("NIST key wrap algorithm requires a 128-bit cipher");
+      throw_invalid_argument("NIST key wrap algorithm requires a 128-bit cipher", __func__, __FILE__);
    }
 
    if(input_len % 8 != 0) {
-      throw Invalid_Argument("Bad input size for NIST key wrap");
+      throw_invalid_argument("Bad input size for NIST key wrap", __func__, __FILE__);
    }
 
    const uint64_t ICV = 0xA6A6A6A6A6A6A6A6;
@@ -115,11 +115,11 @@ std::vector<uint8_t> nist_key_wrap(const uint8_t input[], size_t input_len, cons
 
 secure_vector<uint8_t> nist_key_unwrap(const uint8_t input[], size_t input_len, const BlockCipher& bc) {
    if(bc.block_size() != 16) {
-      throw Invalid_Argument("NIST key wrap algorithm requires a 128-bit cipher");
+      throw_invalid_argument("NIST key wrap algorithm requires a 128-bit cipher", __func__, __FILE__);
    }
 
    if(input_len < 16 || input_len % 8 != 0) {
-      throw Invalid_Argument("Bad input size for NIST key unwrap");
+      throw_invalid_argument("Bad input size for NIST key unwrap", __func__, __FILE__);
    }
 
    const uint64_t ICV = 0xA6A6A6A6A6A6A6A6;
@@ -147,7 +147,7 @@ secure_vector<uint8_t> nist_key_unwrap(const uint8_t input[], size_t input_len, 
 
 std::vector<uint8_t> nist_key_wrap_padded(const uint8_t input[], size_t input_len, const BlockCipher& bc) {
    if(bc.block_size() != 16) {
-      throw Invalid_Argument("NIST key wrap algorithm requires a 128-bit cipher");
+      throw_invalid_argument("NIST key wrap algorithm requires a 128-bit cipher", __func__, __FILE__);
    }
 
    const uint64_t ICV = 0xA65959A600000000 | static_cast<uint32_t>(input_len);
@@ -168,11 +168,11 @@ std::vector<uint8_t> nist_key_wrap_padded(const uint8_t input[], size_t input_le
 
 secure_vector<uint8_t> nist_key_unwrap_padded(const uint8_t input[], size_t input_len, const BlockCipher& bc) {
    if(bc.block_size() != 16) {
-      throw Invalid_Argument("NIST key wrap algorithm requires a 128-bit cipher");
+      throw_invalid_argument("NIST key wrap algorithm requires a 128-bit cipher", __func__, __FILE__);
    }
 
    if(input_len < 16 || input_len % 8 != 0) {
-      throw Invalid_Argument("Bad input size for NIST key unwrap");
+      throw_invalid_argument("Bad input size for NIST key unwrap", __func__, __FILE__);
    }
 
    uint64_t ICV_out = 0;

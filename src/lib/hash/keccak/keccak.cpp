@@ -21,7 +21,7 @@ Keccak_1600::Keccak_1600(size_t output_bits) : m_keccak(2 * output_bits, 0, 0), 
    // We only support the parameters for the SHA-3 proposal
 
    if(output_bits != 224 && output_bits != 256 && output_bits != 384 && output_bits != 512) {
-      throw Invalid_Argument(fmt("Keccak_1600: Invalid output length {}", output_bits));
+      throw_invalid_argument(fmt("Keccak_1600: Invalid output length {}", output_bits), __func__, __FILE__);
    }
 }
 

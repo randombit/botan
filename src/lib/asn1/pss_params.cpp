@@ -19,7 +19,7 @@ PSS_Params PSS_Params::from_emsa_name(std::string_view emsa_name) {
    SCAN_Name scanner(emsa_name);
 
    if((scanner.algo_name() != "EMSA4" && scanner.algo_name() != "PSSR") || scanner.arg_count() != 3) {
-      throw Invalid_Argument(fmt("PSS_Params::from_emsa_name unexpected param '{}'", emsa_name));
+      throw_invalid_argument(fmt("PSS_Params::from_emsa_name unexpected param '{}'", emsa_name), __func__, __FILE__);
    }
 
    const std::string hash_fn = scanner.arg(0);

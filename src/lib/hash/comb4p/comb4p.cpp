@@ -38,11 +38,11 @@ void comb4p_round(secure_vector<uint8_t>& out,
 Comb4P::Comb4P(std::unique_ptr<HashFunction> h1, std::unique_ptr<HashFunction> h2) :
       m_hash1(std::move(h1)), m_hash2(std::move(h2)) {
    if(m_hash1->name() == m_hash2->name()) {
-      throw Invalid_Argument("Comb4P: Must use two distinct hashes");
+      throw_invalid_argument("Comb4P: Must use two distinct hashes", __func__, __FILE__);
    }
 
    if(m_hash1->output_length() != m_hash2->output_length()) {
-      throw Invalid_Argument(fmt("Comb4P: Incompatible hashes {} and {}", m_hash1->name(), m_hash2->name()));
+      throw_invalid_argument(fmt("Comb4P: Incompatible hashes {} and {}", m_hash1->name(), m_hash2->name()), __func__, __FILE__);
    }
 
    clear();

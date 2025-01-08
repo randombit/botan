@@ -185,7 +185,7 @@ McEliece_PrivateKey generate_mceliece_key(RandomNumberGenerator& rng, size_t ext
    const size_t codimension = t * ext_deg;
 
    if(code_length <= codimension) {
-      throw Invalid_Argument("invalid McEliece parameters");
+      throw_invalid_argument("invalid McEliece parameters", __func__, __FILE__);
    }
 
    auto sp_field = std::make_shared<GF2m_Field>(ext_deg);

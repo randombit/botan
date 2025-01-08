@@ -130,7 +130,7 @@ std::shared_ptr<DL_Group_Data> DL_Group::BER_decode_DL_group(const uint8_t data[
       // q is left as zero
       ber.decode(p).decode(g).discard_remaining();
    } else {
-      throw Invalid_Argument("Unknown DL_Group encoding");
+      throw_invalid_argument("Unknown DL_Group encoding", __func__, __FILE__);
    }
 
    return std::make_shared<DL_Group_Data>(p, q, g, source);
@@ -188,7 +188,7 @@ DL_Group::DL_Group(std::string_view str) {
    }
 
    if(m_data == nullptr) {
-      throw Invalid_Argument(fmt("DL_Group: Unknown group '{}'", str));
+      throw_invalid_argument(fmt("DL_Group: Unknown group '{}'", str), __func__, __FILE__);
    }
 }
 
@@ -202,7 +202,7 @@ BigInt make_dsa_generator(const BigInt& p, const BigInt& q) {
    vartime_divide(p - 1, q, e, r);
 
    if(e == 0 || r > 0) {
-      throw Invalid_Argument("make_dsa_generator q does not divide p-1");
+      throw_invalid_argument("make_dsa_generator q does not divide p-1", __func__, __FILE__);
    }
 
    for(size_t i = 0; i != PRIME_TABLE_SIZE; ++i) {
@@ -223,16 +223,16 @@ BigInt make_dsa_generator(const BigInt& p, const BigInt& q) {
 */
 DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, size_t qbits) {
    if(pbits < 1024) {
-      throw Invalid_Argument(fmt("DL_Group: requested prime size {} is too small", pbits));
+      throw_invalid_argument(fmt("DL_Group: requested prime size {} is too small", pbits), __func__, __FILE__);
    }
 
    if(qbits >= pbits) {
-      throw Invalid_Argument(fmt("DL_Group: requested q size {} is too big for p {}", qbits, pbits));
+      throw_invalid_argument(fmt("DL_Group: requested q size {} is too big for p {}", qbits, pbits), __func__, __FILE__);
    }
 
    if(type == Strong) {
       if(qbits != 0 && qbits != pbits - 1) {
-         throw Invalid_Argument("Cannot create strong-prime DL_Group with specified q bits");
+         throw_invalid_argument("Cannot create strong-prime DL_Group with specified q bits", __func__, __FILE__);
       }
 
       const BigInt p = random_safe_prime(rng, pbits);
@@ -280,7 +280,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, siz
       const BigInt g = make_dsa_generator(p, q);
       m_data = std::make_shared<DL_Group_Data>(p, q, g, DL_Group_Source::RandomlyGenerated);
    } else {
-      throw Invalid_Argument("DL_Group unknown PrimeType");
+      throw_invalid_argument("DL_Group unknown PrimeType", __func__, __FILE__);
    }
 }
 
@@ -291,7 +291,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, const std::vector<uint8_t>& seed,
    BigInt p, q;
 
    if(!generate_dsa_primes(rng, p, q, pbits, qbits, seed)) {
-      throw Invalid_Argument("DL_Group: The seed given does not generate a DSA group");
+      throw_invalid_argument("DL_Group: The seed given does not generate a DSA group", __func__, __FILE__);
    }
 
    BigInt g = make_dsa_generator(p, q);
@@ -556,7 +556,7 @@ std::vector<uint8_t> DL_Group::DER_encode(DL_Group_Format format) const {
    } else if(format == DL_Group_Format::PKCS_3) {
       der.start_sequence().encode(get_p()).encode(get_g()).end_cons();
    } else {
-      throw Invalid_Argument("Unknown DL_Group encoding");
+      throw_invalid_argument("Unknown DL_Group encoding", __func__, __FILE__);
    }
 
    return output;
@@ -575,7 +575,7 @@ std::string DL_Group::PEM_encode(DL_Group_Format format) const {
    } else if(format == DL_Group_Format::ANSI_X9_42) {
       return PEM_Code::encode(encoding, "X9.42 DH PARAMETERS");
    } else {
-      throw Invalid_Argument("Unknown DL_Group encoding");
+      throw_invalid_argument("Unknown DL_Group encoding", __func__, __FILE__);
    }
 }
 

@@ -133,7 +133,7 @@ void mceliece_decrypt(secure_vector<uint8_t>& plaintext,
    secure_vector<uint8_t> result((code_length + 7) / 8);
    for(auto&& pos : error_pos) {
       if(pos > code_length) {
-         throw Invalid_Argument("error position larger than code size");
+         throw_invalid_argument("error position larger than code size", __func__, __FILE__);
       }
       result[pos / 8] |= (1 << (pos % 8));
    }
@@ -157,12 +157,12 @@ secure_vector<uint8_t> mceliece_decrypt(secure_vector<gf2m>& error_pos,
    const uint8_t unused_pt_bits_mask = (1 << unused_pt_bits) - 1;
 
    if(ciphertext_len != (key.get_code_length() + 7) / 8) {
-      throw Invalid_Argument("wrong size of McEliece ciphertext");
+      throw_invalid_argument("wrong size of McEliece ciphertext", __func__, __FILE__);
    }
    const size_t cleartext_len = (key.get_message_word_bit_length() + 7) / 8;
 
    if(cleartext_len != bit_size_to_byte_size(dimension)) {
-      throw Invalid_Argument("mce-decryption: wrong length of cleartext buffer");
+      throw_invalid_argument("mce-decryption: wrong length of cleartext buffer", __func__, __FILE__);
    }
 
    secure_vector<uint32_t> syndrome_vec(bit_size_to_32bit_size(codimension));

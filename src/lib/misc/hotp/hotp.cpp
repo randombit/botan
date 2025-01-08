@@ -34,7 +34,7 @@ HOTP::HOTP(const uint8_t key[], size_t key_len, std::string_view hash_algo, size
    } else if(hash_algo == "SHA-512") {
       m_mac = MessageAuthenticationCode::create_or_throw("HMAC(SHA-512)");
    } else {
-      throw Invalid_Argument("Unsupported HOTP hash function");
+      throw_invalid_argument("Unsupported HOTP hash function", __func__, __FILE__);
    }
 
    m_mac->set_key(key, key_len);

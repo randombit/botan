@@ -241,10 +241,10 @@ std::string name_from_set_and_hash(Sphincs_Parameter_Set set, Sphincs_Hash_Type 
          case Sphincs_Parameter_Set::SLHDSA192Fast:
          case Sphincs_Parameter_Set::SLHDSA256Small:
          case Sphincs_Parameter_Set::SLHDSA256Fast:
-            throw Invalid_Argument("SLH-DSA does not support Haraka");
+            throw_invalid_argument("SLH-DSA does not support Haraka", __func__, __FILE__);
       }
    }
-   throw Invalid_Argument("Cannot serialize invalid parameter combination");
+   throw_invalid_argument("Cannot serialize invalid parameter combination", __func__, __FILE__);
 }
 
 constexpr bool is_slh_dsa_set(Sphincs_Parameter_Set set) {

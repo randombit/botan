@@ -275,7 +275,7 @@ std::pair<std::string, Signature_Format> Handshake_State::choose_sig_format(cons
    }
 
    if(!chosen_scheme.format().has_value()) {
-      throw Invalid_Argument(sig_algo + " is invalid/unknown for TLS signatures");
+      throw_invalid_argument(sig_algo + " is invalid/unknown for TLS signatures", __func__, __FILE__);
    }
 
    return std::make_pair(chosen_scheme.padding_string(), chosen_scheme.format().value());
@@ -341,7 +341,7 @@ std::pair<std::string, Signature_Format> Handshake_State::parse_sig_format(
    }
 
    if(!scheme.format().has_value()) {
-      throw Invalid_Argument(key_type + " is invalid/unknown for TLS signatures");
+      throw_invalid_argument(key_type + " is invalid/unknown for TLS signatures", __func__, __FILE__);
    }
 
    return std::make_pair(scheme.padding_string(), scheme.format().value());

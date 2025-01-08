@@ -174,7 +174,7 @@ std::string x509_signature_padding_for(const std::string& algo_name,
       // These algorithms do not take any padding, but if the user insists, we pass it along
       return std::string(user_specified_padding);
    } else {
-      throw Invalid_Argument("Unknown X.509 signing key type: " + algo_name);
+      throw_invalid_argument("Unknown X.509 signing key type: " + algo_name, __func__, __FILE__);
    }
 }
 
@@ -233,7 +233,7 @@ std::unique_ptr<PK_Signer> X509_Object::choose_sig_format(const Private_Key& key
       }
       return pk_signer;
    } catch(Not_Implemented&) {
-      throw Invalid_Argument("Signatures using " + key.algo_name() + "/" + padding + " are not supported");
+      throw_invalid_argument("Signatures using " + key.algo_name() + "/" + padding + " are not supported", __func__, __FILE__);
    }
 }
 

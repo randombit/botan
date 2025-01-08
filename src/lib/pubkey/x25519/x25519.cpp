@@ -134,7 +134,7 @@ class X25519_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
          //       For instance: `sk->agree().with_optional_sanity_checks(true)`.
          //       See also:     https://github.com/randombit/botan/pull/4318
          if(CT::all_zeros(shared_key.data(), shared_key.size()).as_bool()) {
-            throw Invalid_Argument("X25519 public point appears to be of low order");
+            throw_invalid_argument("X25519 public point appears to be of low order", __func__, __FILE__);
          }
 
          return shared_key;

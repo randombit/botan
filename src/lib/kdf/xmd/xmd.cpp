@@ -27,12 +27,12 @@ void expand_message_xmd(std::string_view hash_fn,
    auto hash = HashFunction::create_or_throw(hash_fn);
    const size_t block_size = hash->hash_block_size();
    if(block_size == 0) {
-      throw Invalid_Argument(fmt("expand_message_xmd cannot be used with {}", hash_fn));
+      throw_invalid_argument(fmt("expand_message_xmd cannot be used with {}", hash_fn), __func__, __FILE__);
    }
 
    const size_t hash_output_size = hash->output_length();
    if(output.size() > 255 * hash_output_size || output.size() > 0xFFFF) {
-      throw Invalid_Argument("expand_message_xmd requested output length too long");
+      throw_invalid_argument("expand_message_xmd requested output length too long", __func__, __FILE__);
    }
 
    // Compute b_0 = H(msg_prime) = H(Z_pad || msg || l_i_b_str || 0x00 || DST_prime)

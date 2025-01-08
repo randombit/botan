@@ -121,11 +121,11 @@ Lion::Lion(std::unique_ptr<HashFunction> hash, std::unique_ptr<StreamCipher> cip
       m_hash(std::move(hash)),
       m_cipher(std::move(cipher)) {
    if(2 * left_size() + 1 > m_block_size) {
-      throw Invalid_Argument(fmt("Block size {} is too small for {}", m_block_size, name()));
+      throw_invalid_argument(fmt("Block size {} is too small for {}", m_block_size, name()), __func__, __FILE__);
    }
 
    if(!m_cipher->valid_keylength(left_size())) {
-      throw Invalid_Argument(fmt("Lion does not support combining {} and {}", m_cipher->name(), m_hash->name()));
+      throw_invalid_argument(fmt("Lion does not support combining {} and {}", m_cipher->name(), m_hash->name()), __func__, __FILE__);
    }
 }
 

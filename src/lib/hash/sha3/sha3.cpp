@@ -19,7 +19,7 @@ SHA_3::SHA_3(size_t output_bits) : m_keccak(2 * output_bits, 2, 2), m_output_len
    // We only support the parameters for SHA-3 in this constructor
 
    if(output_bits != 224 && output_bits != 256 && output_bits != 384 && output_bits != 512) {
-      throw Invalid_Argument(fmt("SHA_3: Invalid output length {}", output_bits));
+      throw_invalid_argument(fmt("SHA_3: Invalid output length {}", output_bits), __func__, __FILE__);
    }
 }
 

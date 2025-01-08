@@ -130,7 +130,7 @@ std::vector<uint8_t> TLS_CBC_HMAC_AEAD_Mode::assoc_data_with_len(uint16_t len) {
 void TLS_CBC_HMAC_AEAD_Mode::set_associated_data_n(size_t idx, std::span<const uint8_t> ad) {
    BOTAN_ARG_CHECK(idx == 0, "TLS 1.2 CBC/HMAC: cannot handle non-zero index in set_associated_data_n");
    if(ad.size() != 13) {
-      throw Invalid_Argument("Invalid TLS AEAD associated data length");
+      throw_invalid_argument("Invalid TLS AEAD associated data length", __func__, __FILE__);
    }
    m_ad.assign(ad.begin(), ad.end());
 }

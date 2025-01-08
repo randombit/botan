@@ -20,7 +20,7 @@ void pbkdf2_set_key(MessageAuthenticationCode& prf, const char* password, size_t
    try {
       prf.set_key(cast_char_ptr_to_uint8(password), password_len);
    } catch(Invalid_Key_Length&) {
-      throw Invalid_Argument("PBKDF2 cannot accept passphrase of the given size");
+      throw_invalid_argument("PBKDF2 cannot accept passphrase of the given size", __func__, __FILE__);
    }
 }
 
@@ -93,7 +93,7 @@ void pbkdf2(MessageAuthenticationCode& prf,
             size_t salt_len,
             size_t iterations) {
    if(iterations == 0) {
-      throw Invalid_Argument("PBKDF2: Invalid iteration count");
+      throw_invalid_argument("PBKDF2: Invalid iteration count", __func__, __FILE__);
    }
 
    clear_mem(out, out_len);

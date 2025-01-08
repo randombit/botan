@@ -105,8 +105,9 @@ class EC_Group_Data_Map final {
             * Check for someone trying to reuse an already in-use OID
             */
             if(same_oid && !same_params) {
-               throw Invalid_Argument("Attempting to register a curve using OID " + oid.to_string() +
-                                      " but a distinct curve is already registered using that OID");
+               throw_invalid_argument("Attempting to register a curve using OID " + oid.to_string() +
+                                      " but a distinct curve is already registered using that OID",
+                                      __func__, __FILE__);
             }
 
             /*
@@ -131,7 +132,7 @@ class EC_Group_Data_Map final {
          if(oid.has_value()) {
             std::shared_ptr<EC_Group_Data> data = EC_Group::EC_group_info(oid);
             if(data != nullptr && !new_group->params_match(*data)) {
-               throw Invalid_Argument("Attempting to register an EC group under OID of hardcoded group");
+               throw_invalid_argument("Attempting to register an EC group under OID of hardcoded group", __func__, __FILE__);
             }
          } else {
             // Here try to use the order as a hint to look up the group id, to identify common groups
@@ -301,7 +302,7 @@ EC_Group EC_Group::from_OID(const OID& oid) {
    auto data = ec_group_data().lookup(oid);
 
    if(!data) {
-      throw Invalid_Argument(fmt("No EC_Group associated with OID '{}'", oid.to_string()));
+      throw_invalid_argument(fmt("No EC_Group associated with OID '{}'", oid.to_string()), __func__, __FILE__);
    }
 
    return EC_Group(std::move(data));
@@ -316,7 +317,7 @@ EC_Group EC_Group::from_name(std::string_view name) {
    }
 
    if(!data) {
-      throw Invalid_Argument(fmt("Unknown EC_Group '{}'", name));
+      throw_invalid_argument(fmt("Unknown EC_Group '{}'", name), __func__, __FILE__);
    }
 
    return EC_Group(std::move(data));
@@ -346,7 +347,7 @@ EC_Group::EC_Group(std::string_view str) {
    }
 
    if(m_data == nullptr) {
-      throw Invalid_Argument(fmt("Unknown ECC group '{}'", str));
+      throw_invalid_argument(fmt("Unknown ECC group '{}'", str), __func__, __FILE__);
    }
 }
 

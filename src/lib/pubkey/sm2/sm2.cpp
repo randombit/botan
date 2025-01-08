@@ -71,7 +71,7 @@ std::vector<uint8_t> sm2_compute_za(HashFunction& hash,
                                     const EC_Group& group,
                                     const EC_AffinePoint& pubkey) {
    if(user_id.size() >= 8192) {
-      throw Invalid_Argument("SM2 user id too long to represent");
+      throw_invalid_argument("SM2 user id too long to represent", __func__, __FILE__);
    }
 
    const uint16_t uid_len = static_cast<uint16_t>(8 * user_id.size());

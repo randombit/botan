@@ -58,7 +58,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
                          const std::vector<uint8_t>& seed_c,
                          size_t offset) {
    if(!fips186_3_valid_size(pbits, qbits)) {
-      throw Invalid_Argument(fmt("FIPS 186-3 does not allow DSA domain parameters of {}/{} bits long", pbits, qbits));
+      throw_invalid_argument(fmt("FIPS 186-3 does not allow DSA domain parameters of {}/{} bits long", pbits, qbits), __func__, __FILE__);
    }
 
    if(seed_c.size() * 8 < qbits) {

@@ -226,7 +226,7 @@ size_t BigInt::Data::calc_sig_words() const {
 */
 uint32_t BigInt::get_substring(size_t offset, size_t length) const {
    if(length == 0 || length > 32) {
-      throw Invalid_Argument("BigInt::get_substring invalid substring length");
+      throw_invalid_argument("BigInt::get_substring invalid substring length", __func__, __FILE__);
    }
 
    const uint32_t mask = 0xFFFFFFFF >> (32 - length);
@@ -316,7 +316,7 @@ BigInt BigInt::operator-() const {
 
 size_t BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws) {
    if(p.is_negative() || this->is_negative()) {
-      throw Invalid_Argument("BigInt::reduce_below both values must be positive");
+      throw_invalid_argument("BigInt::reduce_below both values must be positive", __func__, __FILE__);
    }
 
    const size_t p_words = p.sig_words();
@@ -348,7 +348,7 @@ size_t BigInt::reduce_below(const BigInt& p, secure_vector<word>& ws) {
 
 void BigInt::ct_reduce_below(const BigInt& mod, secure_vector<word>& ws, size_t bound) {
    if(mod.is_negative() || this->is_negative()) {
-      throw Invalid_Argument("BigInt::ct_reduce_below both values must be positive");
+      throw_invalid_argument("BigInt::ct_reduce_below both values must be positive", __func__, __FILE__);
    }
 
    const size_t mod_words = mod.sig_words();
@@ -436,7 +436,7 @@ void BigInt::assign_from_bytes(std::span<const uint8_t> bytes) {
 
 void BigInt::ct_cond_add(bool predicate, const BigInt& value) {
    if(this->is_negative() || value.is_negative()) {
-      throw Invalid_Argument("BigInt::ct_cond_add requires both values to be positive");
+      throw_invalid_argument("BigInt::ct_cond_add requires both values to be positive", __func__, __FILE__);
    }
    this->grow_to(1 + value.sig_words());
 

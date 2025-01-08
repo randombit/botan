@@ -47,7 +47,7 @@ std::pair<EC_Group, EC_AffinePoint> ecc_pubkey_from_tss2_public(const TPM2B_PUBL
    const auto curve_id = public_blob->publicArea.parameters.eccDetail.curveID;
    const auto curve_name = curve_id_tss2_to_botan(curve_id);
    if(!curve_name) {
-      throw Invalid_Argument(Botan::fmt("Unsupported ECC curve: {}", curve_id));
+      throw_invalid_argument(Botan::fmt("Unsupported ECC curve: {}", curve_id), __func__, __FILE__);
    }
 
    auto curve = Botan::EC_Group::from_name(curve_name.value());
@@ -58,7 +58,7 @@ std::pair<EC_Group, EC_AffinePoint> ecc_pubkey_from_tss2_public(const TPM2B_PUBL
                                                    as_span(public_blob->publicArea.unique.ecc.x),
                                                    as_span(public_blob->publicArea.unique.ecc.y)));
    if(!point) {
-      throw Invalid_Argument("Invalid ECC Point");
+      throw_invalid_argument("Invalid ECC Point", __func__, __FILE__);
    }
    return {std::move(curve), std::move(point.value())};
 }
@@ -237,7 +237,7 @@ std::unique_ptr<PrivateKey> PrivateKey::create_transient_from_template(const std
 #endif
          break;
       default:
-         throw Invalid_Argument("Unsupported key type");
+         throw_invalid_argument("Unsupported key type", __func__, __FILE__);
    }
 
    const auto marshalled_template = marshal_template(key_template);

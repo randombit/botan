@@ -52,7 +52,7 @@ std::string generate_passhash9(std::string_view pass,
    auto prf = get_pbkdf_prf(alg_id);
 
    if(!prf) {
-      throw Invalid_Argument("Passhash9: Algorithm id " + std::to_string(alg_id) + " is not defined");
+      throw_invalid_argument("Passhash9: Algorithm id " + std::to_string(alg_id) + " is not defined", __func__, __FILE__);
    }
 
    PKCS5_PBKDF2 kdf(std::move(prf));
@@ -103,7 +103,7 @@ bool check_passhash9(std::string_view pass, std::string_view hash) {
    }
 
    if(work_factor > 512) {
-      throw Invalid_Argument("Requested passhash9 work factor " + std::to_string(work_factor) + " is too large");
+      throw_invalid_argument("Requested passhash9 work factor " + std::to_string(work_factor) + " is too large", __func__, __FILE__);
    }
 
    const size_t kdf_iterations = WORK_FACTOR_SCALE * work_factor;

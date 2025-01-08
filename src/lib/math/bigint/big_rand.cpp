@@ -42,7 +42,7 @@ void BigInt::randomize(RandomNumberGenerator& rng, size_t bitsize, bool set_high
 */
 BigInt BigInt::random_integer(RandomNumberGenerator& rng, const BigInt& min, const BigInt& max) {
    if(min.is_negative() || max.is_negative() || max <= min) {
-      throw Invalid_Argument("BigInt::random_integer invalid range");
+      throw_invalid_argument("BigInt::random_integer invalid range", __func__, __FILE__);
    }
 
    /*

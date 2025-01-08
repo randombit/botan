@@ -41,7 +41,7 @@ EAX_Mode::EAX_Mode(std::unique_ptr<BlockCipher> cipher, size_t tag_size) :
       m_ctr(std::make_unique<CTR_BE>(m_cipher->new_object())),
       m_cmac(std::make_unique<CMAC>(m_cipher->new_object())) {
    if(m_tag_size < 8 || m_tag_size > m_cmac->output_length()) {
-      throw Invalid_Argument(fmt("Tag size {} is not allowed for {}", tag_size, name()));
+      throw_invalid_argument(fmt("Tag size {} is not allowed for {}", tag_size, name()), __func__, __FILE__);
    }
 }
 

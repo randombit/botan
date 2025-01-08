@@ -198,7 +198,7 @@ std::vector<uint8_t> Record_Layer::prepare_records(const Record_Type type,
                 "zero-length fragments of types other than application data are not allowed");
 
    if(type == Record_Type::ChangeCipherSpec && !verify_change_cipher_spec(data.begin(), data.size())) {
-      throw Invalid_Argument("TLS 1.3 deprecated CHANGE_CIPHER_SPEC");
+      throw_invalid_argument("TLS 1.3 deprecated CHANGE_CIPHER_SPEC", __func__, __FILE__);
    }
 
    std::vector<uint8_t> output;

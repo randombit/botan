@@ -18,7 +18,7 @@ namespace Botan {
 */
 Modular_Reducer::Modular_Reducer(const BigInt& mod) {
    if(mod < 0) {
-      throw Invalid_Argument("Modular_Reducer: modulus must be positive");
+      throw_invalid_argument("Modular_Reducer: modulus must be positive", __func__, __FILE__);
    }
 
    // Left uninitialized if mod == 0

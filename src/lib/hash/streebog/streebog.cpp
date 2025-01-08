@@ -25,7 +25,7 @@ std::unique_ptr<HashFunction> Streebog::copy_state() const {
 
 Streebog::Streebog(size_t output_bits) : m_output_bits(output_bits), m_count(0), m_h(8), m_S(8) {
    if(output_bits != 256 && output_bits != 512) {
-      throw Invalid_Argument(fmt("Streebog: Invalid output length {}", output_bits));
+      throw_invalid_argument(fmt("Streebog: Invalid output length {}", output_bits), __func__, __FILE__);
    }
 
    clear();

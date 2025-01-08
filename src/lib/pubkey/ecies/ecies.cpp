@@ -109,7 +109,7 @@ PK_Key_Agreement create_key_agreement(const PK_Key_Agreement_Key& private_key,
       // there is no way to determine or control whether the provider uses cofactor mode or not.
       // ISO 18033 does not allow cofactor mode in combination with old cofactor mode or check mode
       // => disable cofactor mode, old cofactor mode and check mode for unknown keys/providers (as a precaution).
-      throw Invalid_Argument("ECIES: cofactor, old cofactor and check mode are only supported for ECDH_PrivateKey");
+      throw_invalid_argument("ECIES: cofactor, old cofactor and check mode are only supported for ECDH_PrivateKey", __func__, __FILE__);
    }
 
    if(ecdh_key && (for_encryption || !ecies_params.cofactor_mode())) {
@@ -134,7 +134,7 @@ ECIES_KA_Operation::ECIES_KA_Operation(const PK_Key_Agreement_Key& private_key,
 SymmetricKey ECIES_KA_Operation::derive_secret(const std::vector<uint8_t>& eph_public_key_bin,
                                                const EC_Point& other_public_key_point) const {
    if(other_public_key_point.is_zero()) {
-      throw Invalid_Argument("ECIES: other public key point is zero");
+      throw_invalid_argument("ECIES: other public key point is zero", __func__, __FILE__);
    }
 
    auto kdf = KDF::create_or_throw(m_params.kdf_spec());
@@ -226,7 +226,7 @@ ECIES_System_Params::ECIES_System_Params(const EC_Group& domain,
       m_mac_keylen(mac_key_len) {
    // ISO 18033: "At most one of CofactorMode, OldCofactorMode, and CheckMode may be 1."
    if(size_t(cofactor_mode()) + size_t(old_cofactor_mode()) + size_t(check_mode()) > 1) {
-      throw Invalid_Argument("ECIES: only one of cofactor_mode, old_cofactor_mode and check_mode can be set");
+      throw_invalid_argument("ECIES: only one of cofactor_mode, old_cofactor_mode and check_mode can be set", __func__, __FILE__);
    }
 }
 
@@ -309,7 +309,7 @@ std::vector<uint8_t> ECIES_Encryptor::enc(const uint8_t data[],
 
    m_cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
    if(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size())) {
-      throw Invalid_Argument("ECIES with " + m_cipher->name() + " requires an IV be set");
+      throw_invalid_argument("ECIES with " + m_cipher->name() + " requires an IV be set", __func__, __FILE__);
    }
 
    m_cipher->start(m_iv.bits_of());
@@ -337,7 +337,7 @@ ECIES_Decryptor::ECIES_Decryptor(const PK_Key_Agreement_Key& key,
    if(!ecies_params.check_mode()) {
       const BigInt& cofactor = m_params.domain().get_cofactor();
       if(cofactor > 1 && gcd(cofactor, m_params.domain().get_order()) != 1) {
-         throw Invalid_Argument("ECIES: gcd of cofactor and order must be 1 if check_mode is 0");
+         throw_invalid_argument("ECIES: gcd of cofactor and order must be 1 if check_mode is 0", __func__, __FILE__);
       }
    }
 
@@ -408,7 +408,7 @@ secure_vector<uint8_t> ECIES_Decryptor::do_decrypt(uint8_t& valid_mask, const ui
 
       m_cipher->set_key(SymmetricKey(secret_key.begin(), m_params.dem_keylen()));
       if(m_iv.empty() && !m_cipher->valid_nonce_length(m_iv.size())) {
-         throw Invalid_Argument("ECIES with " + m_cipher->name() + " requires an IV be set");
+         throw_invalid_argument("ECIES with " + m_cipher->name() + " requires an IV be set", __func__, __FILE__);
       }
       m_cipher->start(m_iv.bits_of());
 

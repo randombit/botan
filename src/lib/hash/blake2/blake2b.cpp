@@ -35,7 +35,7 @@ constexpr std::array<uint64_t, 8> blake2b_IV{0x6a09e667f3bcc908,
 
 BLAKE2b::BLAKE2b(size_t output_bits) : m_output_bits(output_bits), m_H(blake2b_IV.size()), m_T(), m_F(), m_key_size(0) {
    if(output_bits == 0 || output_bits > 512 || output_bits % 8 != 0) {
-      throw Invalid_Argument("Bad output bits size for BLAKE2b");
+      throw_invalid_argument("Bad output bits size for BLAKE2b", __func__, __FILE__);
    }
 
    state_init();

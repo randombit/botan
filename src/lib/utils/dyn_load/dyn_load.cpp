@@ -75,7 +75,7 @@ void* Dynamically_Loaded_Library::resolve_symbol(const std::string& symbol) {
 #endif
 
    if(!addr) {
-      throw Invalid_Argument(fmt("Failed to resolve symbol {} in {}", symbol, m_lib_name));
+      throw_invalid_argument(fmt("Failed to resolve symbol {} in {}", symbol, m_lib_name), __func__, __FILE__);
    }
 
    return addr;

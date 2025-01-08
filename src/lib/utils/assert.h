@@ -10,6 +10,7 @@
 #define BOTAN_ASSERTION_CHECKING_H_
 
 #include <botan/compiler.h>
+#include <string_view>
 
 namespace Botan {
 
@@ -24,7 +25,7 @@ namespace Botan {
 * Called when an invalid argument is used
 * Throws Invalid_Argument
 */
-[[noreturn]] void BOTAN_UNSTABLE_API throw_invalid_argument(const char* message, const char* func, const char* file);
+[[noreturn]] void BOTAN_UNSTABLE_API throw_invalid_argument(std::string_view message, const char* func, const char* file);
 
 #define BOTAN_ARG_CHECK(expr, msg)                               \
    do {                                                          \

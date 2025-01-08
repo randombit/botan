@@ -90,7 +90,7 @@ void TLS::Callbacks::tls_verify_cert_chain(const std::vector<X509_Certificate>& 
                                            std::string_view hostname,
                                            const TLS::Policy& policy) {
    if(cert_chain.empty()) {
-      throw Invalid_Argument("Certificate chain was empty");
+      throw_invalid_argument("Certificate chain was empty", __func__, __FILE__);
    }
 
    Path_Validation_Restrictions restrictions(policy.require_cert_revocation_info(),
@@ -316,7 +316,7 @@ secure_vector<uint8_t> TLS::Callbacks::tls_kem_decapsulate(TLS::Group_Params gro
       auto& key_agreement_key = dynamic_cast<const PK_Key_Agreement_Key&>(private_key);
       return tls_ephemeral_key_agreement(group, key_agreement_key, encapsulated_bytes, rng, policy);
    } catch(const std::bad_cast&) {
-      throw Invalid_Argument("provided ephemeral key is not a PK_Key_Agreement_Key");
+      throw_invalid_argument("provided ephemeral key is not a PK_Key_Agreement_Key", __func__, __FILE__);
    }
 }
 

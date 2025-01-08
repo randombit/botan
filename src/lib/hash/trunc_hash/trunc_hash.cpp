@@ -59,11 +59,11 @@ Truncated_Hash::Truncated_Hash(std::unique_ptr<HashFunction> hash, size_t bits) 
    BOTAN_ASSERT_NONNULL(m_hash);
 
    if(m_output_bits == 0) {
-      throw Invalid_Argument("Truncating a hash to 0 does not make sense");
+      throw_invalid_argument("Truncating a hash to 0 does not make sense", __func__, __FILE__);
    }
 
    if(m_hash->output_length() * 8 < m_output_bits) {
-      throw Invalid_Argument("Underlying hash function does not produce enough bytes for truncation");
+      throw_invalid_argument("Underlying hash function does not produce enough bytes for truncation", __func__, __FILE__);
    }
 }
 

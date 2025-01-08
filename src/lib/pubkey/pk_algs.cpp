@@ -520,7 +520,7 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
          const auto mce_params = split_on(params, ',');
 
          if(mce_params.size() != 2) {
-            throw Invalid_Argument(fmt("create_private_key: invalid McEliece parameters '{}'", params));
+            throw_invalid_argument(fmt("create_private_key: invalid McEliece parameters '{}'", params), __func__, __FILE__);
          }
 
          const size_t mce_n = to_u32bit(mce_params[0]);

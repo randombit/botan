@@ -17,7 +17,7 @@ CFB_Mode::CFB_Mode(std::unique_ptr<BlockCipher> cipher, size_t feedback_bits) :
       m_block_size(m_cipher->block_size()),
       m_feedback_bytes(feedback_bits ? feedback_bits / 8 : m_block_size) {
    if(feedback_bits % 8 || feedback() > m_block_size) {
-      throw Invalid_Argument(fmt("{} does not support feedback bits of {}", name(), feedback_bits));
+      throw_invalid_argument(fmt("{} does not support feedback bits of {}", name(), feedback_bits), __func__, __FILE__);
    }
 }
 

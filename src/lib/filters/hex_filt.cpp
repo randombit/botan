@@ -144,7 +144,7 @@ void Hex_Decoder::end_msg() {
    m_position = 0;
 
    if(not_full_bytes) {
-      throw Invalid_Argument("Hex_Decoder: Input not full bytes");
+      throw_invalid_argument("Hex_Decoder: Input not full bytes", __func__, __FILE__);
    }
 }
 

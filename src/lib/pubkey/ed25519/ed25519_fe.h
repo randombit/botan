@@ -28,7 +28,7 @@ class FE_25519 {
       */
       FE_25519(int init = 0) {
          if(init != 0 && init != 1) {
-            throw Invalid_Argument("Invalid FE_25519 initial value");
+            throw_invalid_argument("Invalid FE_25519 initial value", __func__, __FILE__);
          }
          clear_mem(m_fe, 10);
          m_fe[0] = init;
@@ -36,7 +36,7 @@ class FE_25519 {
 
       FE_25519(std::initializer_list<int32_t> x) {
          if(x.size() != 10) {
-            throw Invalid_Argument("Invalid FE_25519 initializer list");
+            throw_invalid_argument("Invalid FE_25519 initializer list", __func__, __FILE__);
          }
          copy_mem(m_fe, x.begin(), 10);
       }

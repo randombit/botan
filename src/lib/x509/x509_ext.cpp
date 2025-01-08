@@ -143,7 +143,7 @@ void Extensions::add(std::unique_ptr<Certificate_Extension> extn, bool critical)
    // sanity check: we don't want to have the same extension more than once
    if(m_extension_info.contains(extn->oid_of())) {
       const std::string name = extn->oid_name();
-      throw Invalid_Argument("Extension " + name + " already present in Extensions::add");
+      throw_invalid_argument("Extension " + name + " already present in Extensions::add", __func__, __FILE__);
    }
 
    const OID oid = extn->oid_of();
@@ -199,7 +199,7 @@ bool Extensions::critical_extension_set(const OID& oid) const {
 std::vector<uint8_t> Extensions::get_extension_bits(const OID& oid) const {
    auto i = m_extension_info.find(oid);
    if(i == m_extension_info.end()) {
-      throw Invalid_Argument("Extensions::get_extension_bits no such extension set");
+      throw_invalid_argument("Extensions::get_extension_bits no such extension set", __func__, __FILE__);
    }
 
    return i->second.bits();

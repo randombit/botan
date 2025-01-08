@@ -183,7 +183,7 @@ class Channel_Impl_13 : public Channel_Impl,
       * Attempt to renegotiate the session
       */
       void renegotiate(bool /* unused */) override {
-         throw Invalid_Argument("renegotiation is not allowed in TLS 1.3");
+         throw_invalid_argument("renegotiation is not allowed in TLS 1.3", __func__, __FILE__);
       }
 
       /**

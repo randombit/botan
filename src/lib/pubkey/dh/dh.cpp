@@ -137,7 +137,7 @@ secure_vector<uint8_t> DH_KA_Operation::raw_agree(const uint8_t w[], size_t w_le
    BigInt v = BigInt::from_bytes(std::span{w, w_len});
 
    if(v <= 1 || v >= group().get_p()) {
-      throw Invalid_Argument("DH agreement - invalid key provided");
+      throw_invalid_argument("DH agreement - invalid key provided", __func__, __FILE__);
    }
 
    v = m_blinder.blind(v);

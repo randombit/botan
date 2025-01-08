@@ -36,7 +36,7 @@ std::vector<std::vector<uint8_t>> decode_all_certificates(DataSource& source) {
 
 Flatfile_Certificate_Store::Flatfile_Certificate_Store(std::string_view file, bool ignore_non_ca) {
    if(file.empty()) {
-      throw Invalid_Argument("Flatfile_Certificate_Store::Flatfile_Certificate_Store invalid file path");
+      throw_invalid_argument("Flatfile_Certificate_Store::Flatfile_Certificate_Store invalid file path", __func__, __FILE__);
    }
 
    DataSource_Stream file_stream(file);
@@ -56,12 +56,12 @@ Flatfile_Certificate_Store::Flatfile_Certificate_Store(std::string_view file, bo
          m_pubkey_sha1_to_cert.emplace(cert.subject_public_key_bitstring_sha1(), cert);
          m_subject_dn_sha256_to_cert.emplace(cert.raw_subject_dn_sha256(), cert);
       } else if(!ignore_non_ca) {
-         throw Invalid_Argument("Flatfile_Certificate_Store received non CA cert " + cert.subject_dn().to_string());
+         throw_invalid_argument("Flatfile_Certificate_Store received non CA cert " + cert.subject_dn().to_string(), __func__, __FILE__);
       }
    }
 
    if(m_all_subjects.empty()) {
-      throw Invalid_Argument("Flatfile_Certificate_Store::Flatfile_Certificate_Store cert file is empty");
+      throw_invalid_argument("Flatfile_Certificate_Store::Flatfile_Certificate_Store cert file is empty", __func__, __FILE__);
    }
 }
 
@@ -90,7 +90,7 @@ std::vector<X509_Certificate> Flatfile_Certificate_Store::find_all_certs(const X
 std::optional<X509_Certificate> Flatfile_Certificate_Store::find_cert_by_pubkey_sha1(
    const std::vector<uint8_t>& key_hash) const {
    if(key_hash.size() != 20) {
-      throw Invalid_Argument("Flatfile_Certificate_Store::find_cert_by_pubkey_sha1 invalid hash");
+      throw_invalid_argument("Flatfile_Certificate_Store::find_cert_by_pubkey_sha1 invalid hash", __func__, __FILE__);
    }
 
    auto found_cert = m_pubkey_sha1_to_cert.find(key_hash);
@@ -105,7 +105,7 @@ std::optional<X509_Certificate> Flatfile_Certificate_Store::find_cert_by_pubkey_
 std::optional<X509_Certificate> Flatfile_Certificate_Store::find_cert_by_raw_subject_dn_sha256(
    const std::vector<uint8_t>& subject_hash) const {
    if(subject_hash.size() != 32) {
-      throw Invalid_Argument("Flatfile_Certificate_Store::find_cert_by_raw_subject_dn_sha256 invalid hash");
+      throw_invalid_argument("Flatfile_Certificate_Store::find_cert_by_raw_subject_dn_sha256 invalid hash", __func__, __FILE__);
    }
 
    auto found_cert = m_subject_dn_sha256_to_cert.find(subject_hash);

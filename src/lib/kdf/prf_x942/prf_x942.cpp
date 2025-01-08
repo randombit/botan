@@ -45,7 +45,7 @@ void X942_PRF::kdf(uint8_t key[],
    const size_t blocks_required = key_len / 20;  // Fixed to use SHA-1
 
    if(blocks_required >= 0xFFFFFFFE) {
-      throw Invalid_Argument("X942_PRF maximum output length exceeeded");
+      throw_invalid_argument("X942_PRF maximum output length exceeeded", __func__, __FILE__);
    }
 
    auto hash = HashFunction::create("SHA-1");

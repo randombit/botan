@@ -83,7 +83,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
                return stash(pt);
             }
          } catch(std::bad_cast&) {
-            throw Invalid_Argument("Curve mismatch");
+            throw_invalid_argument("Curve mismatch", __func__, __FILE__);
          }
       }
 
@@ -174,7 +174,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
 
             return false;
          } catch(std::bad_cast&) {
-            throw Invalid_Argument("Curve mismatch");
+            throw_invalid_argument("Curve mismatch", __func__, __FILE__);
          }
       }
 
@@ -330,7 +330,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
 
       static typename C::Scalar from_stash(const Scalar& s) {
          if(s._curve() != instance()) {
-            throw Invalid_Argument("Curve mismatch");
+            throw_invalid_argument("Curve mismatch", __func__, __FILE__);
          }
          return C::Scalar::from_stash(s._value());
       }
@@ -343,7 +343,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
 
       static typename C::AffinePoint from_stash(const AffinePoint& pt) {
          if(pt._curve() != instance()) {
-            throw Invalid_Argument("Curve mismatch");
+            throw_invalid_argument("Curve mismatch", __func__, __FILE__);
          }
          auto x = C::FieldElement::from_stash(pt._x());
          auto y = C::FieldElement::from_stash(pt._y());
@@ -359,7 +359,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
 
       static typename C::ProjectivePoint from_stash(const ProjectivePoint& pt) {
          if(pt._curve() != instance()) {
-            throw Invalid_Argument("Curve mismatch");
+            throw_invalid_argument("Curve mismatch", __func__, __FILE__);
          }
          auto x = C::FieldElement::from_stash(pt._x());
          auto y = C::FieldElement::from_stash(pt._y());

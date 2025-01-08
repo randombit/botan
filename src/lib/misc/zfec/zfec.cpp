@@ -138,7 +138,7 @@ void invert_matrix(uint8_t matrix[], size_t K) {
                }
             }
 
-            throw Invalid_Argument("ZFEC: pivot not found in invert_matrix");
+            throw_invalid_argument("ZFEC: pivot not found in invert_matrix", __func__, __FILE__);
          }
 
       private:
@@ -174,7 +174,7 @@ void invert_matrix(uint8_t matrix[], size_t K) {
       pivot_row[icol] = 1;
 
       if(c == 0) {
-         throw Invalid_Argument("ZFEC: singlar matrix");
+         throw_invalid_argument("ZFEC: singlar matrix", __func__, __FILE__);
       }
 
       if(c != 1) {
@@ -354,7 +354,7 @@ void ZFEC::addmul(uint8_t z[], const uint8_t x[], uint8_t y, size_t size) {
 */
 ZFEC::ZFEC(size_t K, size_t N) : m_K(K), m_N(N), m_enc_matrix(N * K) {
    if(m_K == 0 || m_N == 0 || m_K > 256 || m_N > 256 || m_K > N) {
-      throw Invalid_Argument("ZFEC: violated 1 <= K <= N <= 256");
+      throw_invalid_argument("ZFEC: violated 1 <= K <= N <= 256", __func__, __FILE__);
    }
 
    std::vector<uint8_t> temp_matrix(m_N * m_K);
@@ -398,7 +398,7 @@ ZFEC::ZFEC(size_t K, size_t N) : m_K(K), m_N(N), m_enc_matrix(N * K) {
 */
 void ZFEC::encode(const uint8_t input[], size_t size, const output_cb_t& output_cb) const {
    if(size % m_K != 0) {
-      throw Invalid_Argument("ZFEC::encode: input must be multiple of K uint8_ts");
+      throw_invalid_argument("ZFEC::encode: input must be multiple of K uint8_ts", __func__, __FILE__);
    }
 
    const size_t share_size = size / m_K;
@@ -415,7 +415,7 @@ void ZFEC::encode_shares(const std::vector<const uint8_t*>& shares,
                          size_t share_size,
                          const output_cb_t& output_cb) const {
    if(shares.size() != m_K) {
-      throw Invalid_Argument("ZFEC::encode_shares must provide K shares");
+      throw_invalid_argument("ZFEC::encode_shares must provide K shares", __func__, __FILE__);
    }
 
    // The initial shares are just the original input shares

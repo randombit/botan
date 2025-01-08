@@ -131,7 +131,7 @@ bool Base32::check_bad_char(uint8_t bin, char input, bool ignore_ws) {
    if(bin <= 0x1F) {
       return true;
    } else if(!(bin == 0x81 || (bin == 0x80 && ignore_ws))) {
-      throw Invalid_Argument(fmt("base32_decode: invalid character '{}'", format_char_for_display(input)));
+      throw_invalid_argument(fmt("base32_decode: invalid character '{}'", format_char_for_display(input)), __func__, __FILE__);
    }
    return false;
 }

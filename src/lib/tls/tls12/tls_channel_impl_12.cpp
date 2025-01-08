@@ -181,7 +181,7 @@ void Channel_Impl_12::renegotiate(bool force_full_renegotiation) {
 }
 
 void Channel_Impl_12::update_traffic_keys(bool) {
-   throw Invalid_Argument("cannot update traffic keys on a TLS 1.2 channel");
+   throw_invalid_argument("cannot update traffic keys on a TLS 1.2 channel", __func__, __FILE__);
 }
 
 void Channel_Impl_12::change_cipher_spec_reader(Connection_Side side) {
@@ -639,7 +639,7 @@ SymmetricKey Channel_Impl_12::key_material_export(std::string_view label,
       if(!context.empty()) {
          size_t context_size = context.length();
          if(context_size > 0xFFFF) {
-            throw Invalid_Argument("key_material_export context is too long");
+            throw_invalid_argument("key_material_export context is too long", __func__, __FILE__);
          }
          salt.push_back(get_byte<0>(static_cast<uint16_t>(context_size)));
          salt.push_back(get_byte<1>(static_cast<uint16_t>(context_size)));

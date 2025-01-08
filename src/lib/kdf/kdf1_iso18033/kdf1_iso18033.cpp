@@ -27,7 +27,7 @@ void KDF1_18033::kdf(uint8_t key[],
    const size_t blocks_required = key_len / m_hash->output_length();
 
    if(blocks_required >= 0xFFFFFFFE) {
-      throw Invalid_Argument("KDF1-18033 maximum output length exceeeded");
+      throw_invalid_argument("KDF1-18033 maximum output length exceeeded", __func__, __FILE__);
    }
 
    uint32_t counter = 0;

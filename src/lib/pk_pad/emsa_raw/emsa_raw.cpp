@@ -10,6 +10,7 @@
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/fmt.h>
 
 namespace Botan {
 
@@ -32,8 +33,9 @@ void EMSA_Raw::update(const uint8_t input[], size_t length) {
 */
 std::vector<uint8_t> EMSA_Raw::raw_data() {
    if(m_expected_size && m_message.size() != m_expected_size) {
-      throw Invalid_Argument("EMSA_Raw was configured to use a " + std::to_string(m_expected_size) +
-                             " byte hash but instead was used for a " + std::to_string(m_message.size()) + " hash");
+      throw_invalid_argument(fmt("EMSA_Raw was configured to use a {} byte hash but was used for a {} byte hash",
+                                 m_expected_size, m_message.size()),
+                             __func__, __FILE__);
    }
 
    std::vector<uint8_t> output;
@@ -48,8 +50,9 @@ std::vector<uint8_t> EMSA_Raw::encoding_of(const std::vector<uint8_t>& msg,
                                            size_t /*output_bits*/,
                                            RandomNumberGenerator& /*rng*/) {
    if(m_expected_size && msg.size() != m_expected_size) {
-      throw Invalid_Argument("EMSA_Raw was configured to use a " + std::to_string(m_expected_size) +
-                             " byte hash but instead was used for a " + std::to_string(msg.size()) + " hash");
+      throw_invalid_argument(fmt("EMSA_Raw was configured to use a {} byte hash but was used for a {} byte hash",
+                                 m_expected_size, msg.size()),
+                             __func__, __FILE__);
    }
 
    return msg;

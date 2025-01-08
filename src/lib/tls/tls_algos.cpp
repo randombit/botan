@@ -99,7 +99,7 @@ Kex_Algo kex_method_from_string(std::string_view str) {
       return Kex_Algo::UNDEFINED;
    }
 
-   throw Invalid_Argument(fmt("Unknown kex method '{}'", str));
+   throw_invalid_argument(fmt("Unknown kex method '{}'", str), __func__, __FILE__);
 }
 
 std::string auth_method_to_string(Auth_Method method) {
@@ -131,7 +131,7 @@ Auth_Method auth_method_from_string(std::string_view str) {
       return Auth_Method::UNDEFINED;
    }
 
-   throw Invalid_Argument(fmt("Unknown TLS signature method '{}'", str));
+   throw_invalid_argument(fmt("Unknown TLS signature method '{}'", str), __func__, __FILE__);
 }
 
 bool Group_Params::is_available() const {

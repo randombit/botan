@@ -26,7 +26,7 @@ void pgp_s2k(HashFunction& hash,
              size_t salt_len,
              size_t iterations) {
    if(iterations > 1 && salt_len == 0) {
-      throw Invalid_Argument("OpenPGP S2K requires a salt in iterated mode");
+      throw_invalid_argument("OpenPGP S2K requires a salt in iterated mode", __func__, __FILE__);
    }
 
    secure_vector<uint8_t> input_buf(salt_len + password_size);

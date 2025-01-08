@@ -62,7 +62,7 @@ auto create_alt_name_ext(const X509_Cert_Options& opts, Extensions& extensions) 
       if(auto ipv4 = string_to_ipv4(opts.ip)) {
          subject_alt.add_ipv4_address(*ipv4);
       } else {
-         throw Invalid_Argument(fmt("Invalid IPv4 address '{}'", opts.ip));
+         throw_invalid_argument(fmt("Invalid IPv4 address '{}'", opts.ip), __func__, __FILE__);
       }
    }
 
@@ -96,7 +96,7 @@ X509_Certificate create_self_signed_cert(const X509_Cert_Options& opts,
    const auto constraints = opts.is_CA ? Key_Constraints::ca_constraints() : opts.constraints;
 
    if(!constraints.compatible_with(key)) {
-      throw Invalid_Argument("The requested key constraints are incompatible with the algorithm");
+      throw_invalid_argument("The requested key constraints are incompatible with the algorithm", __func__, __FILE__);
    }
 
    extensions.add_new(std::make_unique<Cert_Extension::Basic_Constraints>(opts.is_CA, opts.path_limit), true);
@@ -129,7 +129,7 @@ PKCS10_Request create_cert_req(const X509_Cert_Options& opts,
    const auto constraints = opts.is_CA ? Key_Constraints::ca_constraints() : opts.constraints;
 
    if(!constraints.compatible_with(key)) {
-      throw Invalid_Argument("The requested key constraints are incompatible with the algorithm");
+      throw_invalid_argument("The requested key constraints are incompatible with the algorithm", __func__, __FILE__);
    }
 
    Extensions extensions = opts.extensions;

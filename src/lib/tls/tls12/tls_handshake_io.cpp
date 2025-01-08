@@ -397,7 +397,7 @@ std::vector<uint8_t> Datagram_Handshake_IO::send_message(uint16_t msg_seq,
       const size_t header_overhead = DTLS_HEADER_SIZE + DTLS_HANDSHAKE_HEADER_LEN;
 
       if(m_mtu <= (header_overhead + ciphersuite_overhead)) {
-         throw Invalid_Argument("DTLS MTU is too small to send headers");
+         throw_invalid_argument("DTLS MTU is too small to send headers", __func__, __FILE__);
       }
 
       const size_t max_rec_size = m_mtu - (header_overhead + ciphersuite_overhead);

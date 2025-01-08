@@ -135,7 +135,7 @@ std::vector<uint8_t> pkcs_hash_id(std::string_view name) {
       return std::vector<uint8_t>(SM3_PKCS_ID, SM3_PKCS_ID + sizeof(SM3_PKCS_ID));
    }
 
-   throw Invalid_Argument("No PKCS #1 identifier for " + std::string(name));
+   throw_invalid_argument("No PKCS #1 identifier for " + std::string(name), __func__, __FILE__);
 }
 
 /*

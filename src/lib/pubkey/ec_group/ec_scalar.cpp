@@ -66,7 +66,7 @@ EC_Scalar EC_Scalar::from_bigint(const EC_Group& group, const BigInt& bn) {
    if(auto data = group._data()->scalar_from_bigint(bn)) {
       return EC_Scalar(std::move(data));
    } else {
-      throw Invalid_Argument("EC_Scalar::from_bigint input out of range");
+      throw_invalid_argument("EC_Scalar::from_bigint input out of range", __func__, __FILE__);
    }
 }
 

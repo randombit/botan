@@ -89,7 +89,7 @@ void Filter::attach(Filter* new_filter) {
 */
 void Filter::set_port(size_t new_port) {
    if(new_port >= total_ports()) {
-      throw Invalid_Argument("Filter: Invalid port number");
+      throw_invalid_argument("Filter: Invalid port number", __func__, __FILE__);
    }
    m_port_num = new_port;
 }

@@ -57,7 +57,7 @@ SCAN_Name::SCAN_Name(const char* algo_spec) : SCAN_Name(std::string(algo_spec)) 
 
 SCAN_Name::SCAN_Name(std::string_view algo_spec) : m_orig_algo_spec(algo_spec), m_alg_name(), m_args(), m_mode_info() {
    if(algo_spec.empty()) {
-      throw Invalid_Argument("Expected algorithm name, got empty string");
+      throw_invalid_argument("Expected algorithm name, got empty string", __func__, __FILE__);
    }
 
    std::vector<std::pair<size_t, std::string>> name;
@@ -118,7 +118,7 @@ SCAN_Name::SCAN_Name(std::string_view algo_spec) : m_orig_algo_spec(algo_spec), 
 
 std::string SCAN_Name::arg(size_t i) const {
    if(i >= arg_count()) {
-      throw Invalid_Argument("SCAN_Name::arg " + std::to_string(i) + " out of range for '" + to_string() + "'");
+      throw_invalid_argument("SCAN_Name::arg " + std::to_string(i) + " out of range for '" + to_string() + "'", __func__, __FILE__);
    }
    return m_args[i];
 }

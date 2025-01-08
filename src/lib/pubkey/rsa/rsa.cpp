@@ -305,11 +305,11 @@ RSA_PrivateKey::RSA_PrivateKey(
 */
 RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng, size_t bits, size_t exp) {
    if(bits < 1024) {
-      throw Invalid_Argument(fmt("Cannot create an RSA key only {} bits long", bits));
+      throw_invalid_argument(fmt("Cannot create an RSA key only {} bits long", bits), __func__, __FILE__);
    }
 
    if(exp < 3 || exp % 2 == 0) {
-      throw Invalid_Argument("Invalid RSA encryption exponent");
+      throw_invalid_argument("Invalid RSA encryption exponent", __func__, __FILE__);
    }
 
    const size_t p_bits = (bits + 1) / 2;

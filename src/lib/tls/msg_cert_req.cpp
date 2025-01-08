@@ -43,7 +43,7 @@ uint8_t cert_type_name_to_code(std::string_view name) {
       return 64;
    }
 
-   throw Invalid_Argument(fmt("Unknown/unhandled TLS cert type {}", name));
+   throw_invalid_argument(fmt("Unknown/unhandled TLS cert type {}", name), __func__, __FILE__);
 }
 
 }  // namespace

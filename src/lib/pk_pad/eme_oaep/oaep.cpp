@@ -25,7 +25,7 @@ size_t OAEP::pad(std::span<uint8_t> output,
    key_length /= 8;
 
    if(input.size() > maximum_input_size(key_length * 8)) {
-      throw Invalid_Argument("OAEP: Input is too large");
+      throw_invalid_argument("OAEP: Input is too large", __func__, __FILE__);
    }
 
    const size_t output_size = key_length;

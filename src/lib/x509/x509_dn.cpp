@@ -453,7 +453,7 @@ std::istream& operator>>(std::istream& in, X509_DN& dn) {
          } else if(c == '=') {
             break;
          } else {
-            throw Invalid_Argument("Ill-formed X.509 DN");
+            throw_invalid_argument("Ill-formed X.509 DN", __func__, __FILE__);
          }
       }
 

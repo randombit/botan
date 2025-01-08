@@ -190,7 +190,7 @@ std::vector<X509_Certificate> Certificate_Store_Windows::find_all_certs(const X5
 std::optional<X509_Certificate> Certificate_Store_Windows::find_cert_by_pubkey_sha1(
    const std::vector<uint8_t>& key_hash) const {
    if(key_hash.size() != 20) {
-      throw Invalid_Argument("Certificate_Store_Windows::find_cert_by_pubkey_sha1 invalid hash");
+      throw_invalid_argument("Certificate_Store_Windows::find_cert_by_pubkey_sha1 invalid hash", __func__, __FILE__);
    }
 
    CRYPT_HASH_BLOB blob;

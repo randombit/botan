@@ -63,7 +63,7 @@ void set_pin(Slot& slot, const secure_string& so_pin, const secure_string& pin) 
 
 LowLevel::LowLevel(FunctionListPtr ptr) : m_func_list_ptr(ptr) {
    if(m_func_list_ptr == nullptr) {
-      throw Invalid_Argument("Invalid PKCS#11 function list ptr");
+      throw_invalid_argument("Invalid PKCS#11 function list ptr", __func__, __FILE__);
    }
 }
 

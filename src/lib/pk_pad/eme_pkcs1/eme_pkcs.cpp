@@ -26,7 +26,7 @@ size_t EME_PKCS1v15::pad(std::span<uint8_t> output,
    key_length /= 8;
 
    if(input.size() > maximum_input_size(key_length * 8)) {
-      throw Invalid_Argument("PKCS1: Input is too large");
+      throw_invalid_argument("PKCS1: Input is too large", __func__, __FILE__);
    }
 
    BufferStuffer stuffer(output);

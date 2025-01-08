@@ -21,7 +21,7 @@ std::map<std::string, std::string> read_kv(std::string_view kv) {
    try {
       parts = split_on(kv, ',');
    } catch(std::exception&) {
-      throw Invalid_Argument("Bad KV spec");
+      throw_invalid_argument("Bad KV spec", __func__, __FILE__);
    }
 
    bool escaped = false;
@@ -34,11 +34,11 @@ std::map<std::string, std::string> read_kv(std::string_view kv) {
          escaped = true;
       } else if(c == ',' && !escaped) {
          if(cur_key.empty()) {
-            throw Invalid_Argument("Bad KV spec empty key");
+            throw_invalid_argument("Bad KV spec empty key", __func__, __FILE__);
          }
 
          if(m.find(cur_key) != m.end()) {
-            throw Invalid_Argument("Bad KV spec duplicated key");
+            throw_invalid_argument("Bad KV spec duplicated key", __func__, __FILE__);
          }
          m[cur_key] = cur_val;
          cur_key = "";
@@ -46,7 +46,7 @@ std::map<std::string, std::string> read_kv(std::string_view kv) {
          reading_key = true;
       } else if(c == '=' && !escaped) {
          if(reading_key == false) {
-            throw Invalid_Argument("Bad KV spec unexpected equals sign");
+            throw_invalid_argument("Bad KV spec unexpected equals sign", __func__, __FILE__);
          }
          reading_key = false;
       } else {
@@ -65,11 +65,11 @@ std::map<std::string, std::string> read_kv(std::string_view kv) {
    if(!cur_key.empty()) {
       if(reading_key == false) {
          if(m.find(cur_key) != m.end()) {
-            throw Invalid_Argument("Bad KV spec duplicated key");
+            throw_invalid_argument("Bad KV spec duplicated key", __func__, __FILE__);
          }
          m[cur_key] = cur_val;
       } else {
-         throw Invalid_Argument("Bad KV spec incomplete string");
+         throw_invalid_argument("Bad KV spec incomplete string", __func__, __FILE__);
       }
    }
 

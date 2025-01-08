@@ -146,7 +146,7 @@ secure_vector<uint8_t> derive_key(std::string_view passphrase,
 
       auto pwhash_fam = PasswordHashFamily::create(pbkdf_name);
       if(!pwhash_fam) {
-         throw Invalid_Argument(fmt("Unknown password hash digest {}", digest));
+         throw_invalid_argument(fmt("Unknown password hash digest {}", digest), __func__, __FILE__);
       }
 
       std::unique_ptr<PasswordHash> pwhash;

@@ -58,7 +58,7 @@ size_t days_since_epoch(uint32_t year, uint32_t month, uint32_t day) {
 
 std::chrono::system_clock::time_point calendar_point::to_std_timepoint() const {
    if(year() < 1970) {
-      throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years before 1970");
+      throw_invalid_argument("calendar_point::to_std_timepoint() does not support years before 1970", __func__, __FILE__);
    }
 
    // 32 bit time_t ends at January 19, 2038
@@ -67,13 +67,13 @@ std::chrono::system_clock::time_point calendar_point::to_std_timepoint() const {
 
    if constexpr(sizeof(std::time_t) == 4) {
       if(year() > 2037) {
-         throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years after 2037 on this system");
+         throw_invalid_argument("calendar_point::to_std_timepoint() does not support years after 2037 on this system", __func__, __FILE__);
       }
    }
 
    // This upper bound is completely arbitrary
    if(year() >= 2400) {
-      throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years after 2400");
+      throw_invalid_argument("calendar_point::to_std_timepoint() does not support years after 2400", __func__, __FILE__);
    }
 
    const uint64_t seconds_64 =
@@ -82,7 +82,7 @@ std::chrono::system_clock::time_point calendar_point::to_std_timepoint() const {
    const time_t seconds_time_t = static_cast<time_t>(seconds_64);
 
    if(seconds_64 - seconds_time_t != 0) {
-      throw Invalid_Argument("calendar_point::to_std_timepoint time_t overflow");
+      throw_invalid_argument("calendar_point::to_std_timepoint time_t overflow", __func__, __FILE__);
    }
 
    return std::chrono::system_clock::from_time_t(seconds_time_t);

@@ -182,12 +182,12 @@ void append_tls_length_value(std::vector<uint8_t, Alloc>& buf, const T* vals, si
    const size_t val_bytes = T_size * vals_size;
 
    if(tag_size != 1 && tag_size != 2 && tag_size != 3) {
-      throw Invalid_Argument("append_tls_length_value: invalid tag size");
+      throw_invalid_argument("append_tls_length_value: invalid tag size", __func__, __FILE__);
    }
 
    if((tag_size == 1 && val_bytes > 255) || (tag_size == 2 && val_bytes > 65535) ||
       (tag_size == 3 && val_bytes > 16777215)) {
-      throw Invalid_Argument("append_tls_length_value: value too large");
+      throw_invalid_argument("append_tls_length_value: value too large", __func__, __FILE__);
    }
 
    for(size_t i = 0; i != tag_size; ++i) {

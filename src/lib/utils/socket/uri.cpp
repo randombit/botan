@@ -58,11 +58,11 @@ uint16_t parse_port_number(const char* func_name, std::string_view uri, size_t p
    for(char c : uri.substr(pos + 1)) {
       size_t digit = c - '0';
       if(digit >= 10) {
-         throw Invalid_Argument(fmt("URI::{} invalid port field in {}", func_name, uri));
+         throw_invalid_argument(fmt("URI::{} invalid port field in {}", func_name, uri), __func__, __FILE__);
       }
       port = port * 10 + (c - '0');
       if(port > 65535) {
-         throw Invalid_Argument(fmt("URI::{} invalid port field in {}", func_name, uri));
+         throw_invalid_argument(fmt("URI::{} invalid port field in {}", func_name, uri), __func__, __FILE__);
       }
    }
 
@@ -81,10 +81,10 @@ URI URI::from_domain(std::string_view uri) {
    }
    const auto domain = uri.substr(0, port_pos);
    if(is_ipv4(domain)) {
-      throw Invalid_Argument("URI::from_domain domain name should not be IP address");
+      throw_invalid_argument("URI::from_domain domain name should not be IP address", __func__, __FILE__);
    }
    if(!is_domain_name(domain)) {
-      throw Invalid_Argument(fmt("URI::from_domain domain name '{}' not valid", domain));
+      throw_invalid_argument(fmt("URI::from_domain domain name '{}' not valid", domain), __func__, __FILE__);
    }
 
    return URI(Type::Domain, domain, port);
@@ -97,7 +97,7 @@ URI URI::from_ipv4(std::string_view uri) {
    const uint16_t port = parse_port_number("from_ipv4", uri, port_pos);
    const auto ip = uri.substr(0, port_pos);
    if(!is_ipv4(ip)) {
-      throw Invalid_Argument("URI::from_ipv4: Invalid IPv4 specifier");
+      throw_invalid_argument("URI::from_ipv4: Invalid IPv4 specifier", __func__, __FILE__);
    }
    return URI(Type::IPv4, ip, port);
 }
@@ -108,20 +108,20 @@ URI URI::from_ipv6(std::string_view uri) {
    const auto port_pos = uri.find(']');
    const bool with_braces = (port_pos != std::string::npos);
    if((uri[0] == '[') != with_braces) {
-      throw Invalid_Argument("URI::from_ipv6 Invalid IPv6 address with mismatch braces");
+      throw_invalid_argument("URI::from_ipv6 Invalid IPv6 address with mismatch braces", __func__, __FILE__);
    }
 
    uint16_t port = 0;
    if(with_braces && (uri.size() > port_pos + 1)) {
       if(uri[port_pos + 1] != ':') {
-         throw Invalid_Argument("URI::from_ipv6 Invalid IPv6 address");
+         throw_invalid_argument("URI::from_ipv6 Invalid IPv6 address", __func__, __FILE__);
       }
 
       port = parse_port_number("from_ipv6", uri, port_pos + 1);
    }
    const auto ip = uri.substr((with_braces ? 1 : 0), port_pos - with_braces);
    if(!is_ipv6(ip)) {
-      throw Invalid_Argument("URI::from_ipv6 URI has invalid IPv6 address");
+      throw_invalid_argument("URI::from_ipv6 URI has invalid IPv6 address", __func__, __FILE__);
    }
    return URI(Type::IPv6, ip, port);
 }

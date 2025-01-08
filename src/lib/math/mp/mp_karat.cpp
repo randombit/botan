@@ -19,7 +19,7 @@ namespace Botan {
 */
 void basecase_mul(word z[], size_t z_size, const word x[], size_t x_size, const word y[], size_t y_size) {
    if(z_size < x_size + y_size) {
-      throw Invalid_Argument("basecase_mul z_size too small");
+      throw_invalid_argument("basecase_mul z_size too small", __func__, __FILE__);
    }
 
    const size_t x_size_8 = x_size - (x_size % 8);
@@ -45,7 +45,7 @@ void basecase_mul(word z[], size_t z_size, const word x[], size_t x_size, const 
 
 void basecase_sqr(word z[], size_t z_size, const word x[], size_t x_size) {
    if(z_size < 2 * x_size) {
-      throw Invalid_Argument("basecase_sqr z_size too small");
+      throw_invalid_argument("basecase_sqr z_size too small", __func__, __FILE__);
    }
 
    const size_t x_size_8 = x_size - (x_size % 8);

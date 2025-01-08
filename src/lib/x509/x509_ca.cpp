@@ -26,7 +26,7 @@ X509_CA::X509_CA(const X509_Certificate& cert,
                  RandomNumberGenerator& rng) :
       m_ca_cert(cert) {
    if(!m_ca_cert.is_CA_cert()) {
-      throw Invalid_Argument("X509_CA: This certificate is not for a CA");
+      throw_invalid_argument("X509_CA: This certificate is not for a CA", __func__, __FILE__);
    }
 
    m_signer = X509_Object::choose_sig_format(key, rng, hash_fn, padding_method);
@@ -43,7 +43,7 @@ Extensions X509_CA::choose_extensions(const PKCS10_Request& req,
 
    auto key = req.subject_public_key();
    if(!constraints.compatible_with(*key)) {
-      throw Invalid_Argument("The requested key constraints are incompatible with the algorithm");
+      throw_invalid_argument("The requested key constraints are incompatible with the algorithm", __func__, __FILE__);
    }
 
    Extensions extensions = req.extensions();

@@ -178,10 +178,10 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k) {
 
 BigInt inverse_mod(const BigInt& n, const BigInt& mod) {
    if(mod.is_zero()) {
-      throw Invalid_Argument("inverse_mod modulus cannot be zero");
+      throw_invalid_argument("inverse_mod modulus cannot be zero", __func__, __FILE__);
    }
    if(mod.is_negative() || n.is_negative()) {
-      throw Invalid_Argument("inverse_mod: arguments must be non-negative");
+      throw_invalid_argument("inverse_mod: arguments must be non-negative", __func__, __FILE__);
    }
    if(n.is_zero() || (n.is_even() && mod.is_even())) {
       return BigInt::zero();

@@ -128,7 +128,7 @@ namespace {
 SignatureAlgorithmSelection select_signature_algorithms(std::string_view padding) {
    const SCAN_Name req(padding);
    if(req.arg_count() == 0) {
-      throw Invalid_Argument("RSA signing padding scheme must at least specify a hash function");
+      throw_invalid_argument("RSA signing padding scheme must at least specify a hash function", __func__, __FILE__);
    }
 
    auto sig_scheme = rsa_signature_scheme_botan_to_tss2(padding);

@@ -39,7 +39,7 @@ std::optional<Session_Handle> Session_Manager_Stateless::establish(const Session
 }
 
 void Session_Manager_Stateless::store(const Session&, const Session_Handle&) {
-   throw Invalid_Argument("A stateless Session Manager cannot store Sessions with their handle");
+   throw_invalid_argument("A stateless Session Manager cannot store Sessions with their handle", __func__, __FILE__);
 }
 
 std::optional<Session> Session_Manager_Stateless::retrieve_one(const Session_Handle& handle) {

@@ -35,7 +35,7 @@ void SP800_108_Counter::kdf(uint8_t key[],
    const uint64_t blocks_required = (key_len + prf_len - 1) / prf_len;
 
    if(blocks_required > 0xFFFFFFFF) {
-      throw Invalid_Argument("SP800_108_Counter output size too large");
+      throw_invalid_argument("SP800_108_Counter output size too large", __func__, __FILE__);
    }
 
    const uint8_t delim = 0;
@@ -94,7 +94,7 @@ void SP800_108_Feedback::kdf(uint8_t key[],
    const uint64_t blocks_required = (key_len + prf_len - 1) / prf_len;
 
    if(blocks_required > 0xFFFFFFFF) {
-      throw Invalid_Argument("SP800_108_Feedback output size too large");
+      throw_invalid_argument("SP800_108_Feedback output size too large", __func__, __FILE__);
    }
 
    uint8_t* p = key;
@@ -152,7 +152,7 @@ void SP800_108_Pipeline::kdf(uint8_t key[],
    const uint64_t blocks_required = (key_len + prf_len - 1) / prf_len;
 
    if(blocks_required > 0xFFFFFFFF) {
-      throw Invalid_Argument("SP800_108_Feedback output size too large");
+      throw_invalid_argument("SP800_108_Feedback output size too large", __func__, __FILE__);
    }
 
    uint8_t* p = key;

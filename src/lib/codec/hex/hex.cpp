@@ -84,7 +84,7 @@ size_t hex_decode(uint8_t output[], const char input[], size_t input_length, siz
             continue;
          }
 
-         throw Invalid_Argument(fmt("hex_decode: invalid character '{}'", format_char_for_display(input[i])));
+         throw_invalid_argument(fmt("hex_decode: invalid character '{}'", format_char_for_display(input[i])), __func__, __FILE__);
       }
 
       if(top_nibble) {
@@ -119,7 +119,7 @@ size_t hex_decode(uint8_t output[], const char input[], size_t input_length, boo
    size_t written = hex_decode(output, input, input_length, consumed, ignore_ws);
 
    if(consumed != input_length) {
-      throw Invalid_Argument("hex_decode: input did not have full bytes");
+      throw_invalid_argument("hex_decode: input did not have full bytes", __func__, __FILE__);
    }
 
    return written;

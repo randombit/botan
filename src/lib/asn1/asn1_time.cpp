@@ -40,7 +40,7 @@ ASN1_Time::ASN1_Time(std::string_view t_spec) {
    } else if(t_spec.size() == 15) {
       set_to(t_spec, ASN1_Type::GeneralizedTime);
    } else {
-      throw Invalid_Argument("Time string could not be parsed as GeneralizedTime or UTCTime.");
+      throw_invalid_argument("Time string could not be parsed as GeneralizedTime or UTCTime.", __func__, __FILE__);
    }
 }
 
@@ -193,7 +193,7 @@ void ASN1_Time::set_to(std::string_view t_spec, ASN1_Type spec_tag) {
    }
 
    if(!passes_sanity_check()) {
-      throw Invalid_Argument(fmt("ASN1_Time string '{}' does not seem to be valid", t_spec));
+      throw_invalid_argument(fmt("ASN1_Time string '{}' does not seem to be valid", t_spec), __func__, __FILE__);
    }
 }
 

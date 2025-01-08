@@ -273,7 +273,7 @@ class Key_Share_ClientHello {
          return offered_groups;
       }
 
-      Named_Group selected_group() const { throw Invalid_Argument("Client Hello Key Share does not select a group"); }
+      Named_Group selected_group() const { throw_invalid_argument("Client Hello Key Share does not select a group", __func__, __FILE__); }
 
       std::vector<uint8_t> serialize() const {
          std::vector<uint8_t> shares;
@@ -380,7 +380,7 @@ class Key_Share_HelloRetryRequest {
       Named_Group selected_group() const { return m_selected_group; }
 
       std::vector<Named_Group> offered_groups() const {
-         throw Invalid_Argument("Hello Retry Request never offers any key exchange groups");
+         throw_invalid_argument("Hello Retry Request never offers any key exchange groups", __func__, __FILE__);
       }
 
       bool empty() const { return m_selected_group == Group_Params::NONE; }
@@ -411,8 +411,9 @@ Key_Share::Key_Share(TLS_Data_Reader& reader, uint16_t extension_size, Handshake
       // Connection_Side::Server
       m_impl = std::make_unique<Key_Share_Impl>(Key_Share_ServerHello(reader, extension_size));
    } else {
-      throw Invalid_Argument(std::string("cannot create a Key_Share extension for message of type: ") +
-                             handshake_type_to_string(message_type));
+      throw_invalid_argument(fmt("Cannot create a Key_Share extension for message of type {} ",
+                                 handshake_type_to_string(message_type)),
+                             __func__, __FILE__);
    }
 }
 
@@ -478,7 +479,7 @@ secure_vector<uint8_t> Key_Share::take_shared_secret() {
    return std::visit(
       overloaded{[](Key_Share_ServerHello& server_keyshare) { return server_keyshare.take_shared_secret(); },
                  [](auto&) -> secure_vector<uint8_t> {
-                    throw Invalid_Argument("Only the key share in Server Hello contains a shared secret");
+                    throw_invalid_argument("Only the key share in Server Hello contains a shared secret", __func__, __FILE__);
                  }},
       m_impl->key_share);
 }
@@ -499,7 +500,7 @@ void Key_Share::retry_offer(const Key_Share& retry_request_keyshare,
                             return ch.retry_offer(selected, cb, rng);
                          },
                          [](const auto&, const auto&) {
-                            throw Invalid_Argument("can only retry with HelloRetryRequest on a ClientHello Key_Share");
+                            throw_invalid_argument("can only retry with HelloRetryRequest on a ClientHello Key_Share", __func__, __FILE__);
                          }},
               m_impl->key_share,
               retry_request_keyshare.m_impl->key_share);

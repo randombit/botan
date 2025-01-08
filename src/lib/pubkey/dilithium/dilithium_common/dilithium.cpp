@@ -57,7 +57,7 @@ DilithiumMode::Mode dilithium_mode_from_string(std::string_view str) {
       return DilithiumMode::ML_DSA_8x7;
    }
 
-   throw Invalid_Argument(fmt("'{}' is not a valid Dilithium mode name", str));
+   throw_invalid_argument(fmt("'{}' is not a valid Dilithium mode name", str), __func__, __FILE__);
 }
 
 }  // namespace

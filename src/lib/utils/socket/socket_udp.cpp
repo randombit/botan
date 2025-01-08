@@ -332,7 +332,7 @@ std::unique_ptr<OS::SocketUDP> OS::open_socket_udp(std::string_view hostname,
 std::unique_ptr<OS::SocketUDP> OS::open_socket_udp(std::string_view uri_string, std::chrono::microseconds timeout) {
    const auto uri = URI::from_any(uri_string);
    if(uri.port() == 0) {
-      throw Invalid_Argument("UDP port not specified");
+      throw_invalid_argument("UDP port not specified", __func__, __FILE__);
    }
    return open_socket_udp(uri.host(), std::to_string(uri.port()), timeout);
 }

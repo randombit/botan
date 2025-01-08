@@ -139,7 +139,7 @@ void Session_Manager_SQL::initialize_existing_database(std::string_view passphra
    const size_t check_val_created = make_uint16(derived_key[0], derived_key[1]);
 
    if(check_val_created != check_val_db) {
-      throw Invalid_Argument("Session database password not valid");
+      throw_invalid_argument("Session database password not valid", __func__, __FILE__);
    }
 
    m_session_key = SymmetricKey(std::span(derived_key).subspan(2));
@@ -253,7 +253,7 @@ size_t Session_Manager_SQL::remove(const Session_Handle& handle) {
       stmt->spin();
    } else {
       // should not happen, as session handles are exclusively either an ID or a ticket
-      throw Invalid_Argument("provided a session handle that is neither ID nor ticket");
+      throw_invalid_argument("provided a session handle that is neither ID nor ticket", __func__, __FILE__);
    }
 
    return m_db->rows_changed_by_last_statement();

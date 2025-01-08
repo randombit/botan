@@ -35,7 +35,7 @@ void KDF2::kdf(uint8_t key[],
    const size_t blocks_required = key_len / m_hash->output_length();
 
    if(blocks_required >= 0xFFFFFFFE) {
-      throw Invalid_Argument("KDF2 maximum output length exceeeded");
+      throw_invalid_argument("KDF2 maximum output length exceeeded", __func__, __FILE__);
    }
 
    uint32_t counter = 1;

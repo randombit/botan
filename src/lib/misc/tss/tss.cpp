@@ -72,7 +72,7 @@ uint8_t rtss_hash_id(std::string_view hash_name) {
    } else if(hash_name == "SHA-256") {
       return 2;
    } else {
-      throw Invalid_Argument("RTSS only supports SHA-1 and SHA-256");
+      throw_invalid_argument("RTSS only supports SHA-1 and SHA-256", __func__, __FILE__);
    }
 }
 
@@ -128,11 +128,11 @@ std::vector<RTSS_Share> RTSS_Share::split(uint8_t M,
                                           std::string_view hash_fn,
                                           RandomNumberGenerator& rng) {
    if(M <= 1 || N <= 1 || M > N || N >= 255) {
-      throw Invalid_Argument("RTSS_Share::split: Invalid N or M");
+      throw_invalid_argument("RTSS_Share::split: Invalid N or M", __func__, __FILE__);
    }
 
    if(identifier.size() > 16) {
-      throw Invalid_Argument("RTSS_Share::split Invalid identifier size");
+      throw_invalid_argument("RTSS_Share::split Invalid identifier size", __func__, __FILE__);
    }
 
    const uint8_t hash_id = rtss_hash_id(hash_fn);

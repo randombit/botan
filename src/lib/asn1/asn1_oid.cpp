@@ -71,7 +71,7 @@ void OID::register_oid(const OID& oid, std::string_view name) {
 //static
 std::optional<OID> OID::from_name(std::string_view name) {
    if(name.empty()) {
-      throw Invalid_Argument("OID::from_name argument must be non-empty");
+      throw_invalid_argument("OID::from_name argument must be non-empty", __func__, __FILE__);
    }
 
    OID o = OID_Map::global_registry().str2oid(name);
@@ -85,7 +85,7 @@ std::optional<OID> OID::from_name(std::string_view name) {
 //static
 OID OID::from_string(std::string_view str) {
    if(str.empty()) {
-      throw Invalid_Argument("OID::from_string argument must be non-empty");
+      throw_invalid_argument("OID::from_string argument must be non-empty", __func__, __FILE__);
    }
 
    OID o = OID_Map::global_registry().str2oid(str);
@@ -167,7 +167,7 @@ bool operator<(const OID& a, const OID& b) {
 */
 void OID::encode_into(DER_Encoder& der) const {
    if(m_id.size() < 2) {
-      throw Invalid_Argument("OID::encode_into: OID is invalid");
+      throw_invalid_argument("OID::encode_into: OID is invalid", __func__, __FILE__);
    }
 
    auto append = [](std::vector<uint8_t>& encoding, uint32_t z) {

@@ -105,10 +105,10 @@ EC_Point::EC_Point(const CurveGFp& curve, BigInt x, BigInt y) :
    const auto& group = m_curve.group();
 
    if(m_x < 0 || m_x >= group.p()) {
-      throw Invalid_Argument("Invalid EC_Point affine x");
+      throw_invalid_argument("Invalid EC_Point affine x", __func__, __FILE__);
    }
    if(m_y < 0 || m_y >= group.p()) {
-      throw Invalid_Argument("Invalid EC_Point affine y");
+      throw_invalid_argument("Invalid EC_Point affine y", __func__, __FILE__);
    }
 
    secure_vector<word> monty_ws(monty_ws_size(group));
@@ -786,7 +786,7 @@ std::vector<uint8_t> EC_Point::encode(EC_Point_Format format) const {
       x.serialize_to(stuffer.next(p_bytes));
       y.serialize_to(stuffer.next(p_bytes));
    } else {
-      throw Invalid_Argument("EC2OSP illegal point encoding");
+      throw_invalid_argument("EC2OSP illegal point encoding", __func__, __FILE__);
    }
 
    return result;

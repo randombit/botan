@@ -173,7 +173,7 @@ size_t base_decode_full(Base&& base, uint8_t output[], const char input[], size_
    const size_t written = base_decode(base, output, input, input_length, consumed, true, ignore_ws);
 
    if(consumed != input_length) {
-      throw Invalid_Argument(base.name() + " decoding failed, input did not have full bytes");
+      throw_invalid_argument(base.name() + " decoding failed, input did not have full bytes", __func__, __FILE__);
    }
 
    return written;

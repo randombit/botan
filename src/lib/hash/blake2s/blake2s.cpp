@@ -160,7 +160,7 @@ std::unique_ptr<HashFunction> BLAKE2s::copy_state() const {
  */
 BLAKE2s::BLAKE2s(size_t output_bits) {
    if(output_bits == 0 || output_bits > 256 || output_bits % 8 != 0) {
-      throw Invalid_Argument("Bad output bits size for BLAKE2s");
+      throw_invalid_argument("Bad output bits size for BLAKE2s", __func__, __FILE__);
    };
    state_init(output_bits >> 3, nullptr, 0);
 }

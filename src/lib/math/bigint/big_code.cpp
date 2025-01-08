@@ -156,7 +156,7 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base) {
          const char c = buf[i];
 
          if(c < '0' || c > '9') {
-            throw Invalid_Argument("BigInt::decode: invalid decimal char");
+            throw_invalid_argument("BigInt::decode: invalid decimal char", __func__, __FILE__);
          }
 
          const uint8_t x = c - '0';
@@ -167,7 +167,7 @@ BigInt BigInt::decode(const uint8_t buf[], size_t length, Base base) {
       }
       return r;
    } else {
-      throw Invalid_Argument("Unknown BigInt decoding method");
+      throw_invalid_argument("Unknown BigInt decoding method", __func__, __FILE__);
    }
 }
 

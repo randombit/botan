@@ -535,7 +535,7 @@ class BOTAN_PUBLIC_API(2, 0) Object {
 
       void reset_handle(ObjectHandle handle) {
          if(m_handle != CK_INVALID_HANDLE) {
-            throw Invalid_Argument("Cannot reset handle on already valid PKCS11 object");
+            throw_invalid_argument("Cannot reset handle on already valid PKCS11 object", __func__, __FILE__);
          }
          m_handle = handle;
       }

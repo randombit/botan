@@ -44,7 +44,7 @@ BigInt& BigInt::add(const word y[], size_t y_words, Sign y_sign) {
 
 BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>& ws) {
    if(this->is_negative() || s.is_negative() || mod.is_negative()) {
-      throw Invalid_Argument("BigInt::mod_add expects all arguments are positive");
+      throw_invalid_argument("BigInt::mod_add expects all arguments are positive", __func__, __FILE__);
    }
 
    BOTAN_DEBUG_ASSERT(*this < mod);
@@ -89,7 +89,7 @@ BigInt& BigInt::mod_add(const BigInt& s, const BigInt& mod, secure_vector<word>&
 
 BigInt& BigInt::mod_sub(const BigInt& s, const BigInt& mod, secure_vector<word>& ws) {
    if(this->is_negative() || s.is_negative() || mod.is_negative()) {
-      throw Invalid_Argument("BigInt::mod_sub expects all arguments are positive");
+      throw_invalid_argument("BigInt::mod_sub expects all arguments are positive", __func__, __FILE__);
    }
 
    // We are assuming in this function that *this and s are no more than mod_sw words long
@@ -224,7 +224,7 @@ BigInt& BigInt::operator%=(const BigInt& mod) {
 */
 word BigInt::operator%=(word mod) {
    if(mod == 0) {
-      throw Invalid_Argument("BigInt::operator%= divide by zero");
+      throw_invalid_argument("BigInt::operator%= divide by zero", __func__, __FILE__);
    }
 
    word remainder = 0;

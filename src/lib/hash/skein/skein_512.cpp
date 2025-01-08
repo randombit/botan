@@ -21,7 +21,7 @@ Skein_512::Skein_512(size_t arg_output_bits, std::string_view arg_personalizatio
       m_threefish(std::make_unique<Threefish_512>()),
       m_T(2) {
    if(m_output_bits == 0 || m_output_bits % 8 != 0 || m_output_bits > 512) {
-      throw Invalid_Argument("Bad output bits size for Skein-512");
+      throw_invalid_argument("Bad output bits size for Skein-512", __func__, __FILE__);
    }
 
    initial_block();
@@ -79,7 +79,7 @@ void Skein_512::initial_block() {
         doesn't seem worth the trouble.
       */
       if(m_personalization.length() > 64) {
-         throw Invalid_Argument("Skein personalization must be less than 64 bytes");
+         throw_invalid_argument("Skein personalization must be less than 64 bytes", __func__, __FILE__);
       }
 
       const uint8_t* bits = cast_char_ptr_to_uint8(m_personalization.data());

@@ -125,7 +125,7 @@ std::vector<uint8_t> ElGamal_Encryption_Operation::raw_encrypt(std::span<const u
    const auto& group = m_key->group();
 
    if(m >= group.get_p()) {
-      throw Invalid_Argument("ElGamal encryption: Input is too large");
+      throw_invalid_argument("ElGamal encryption: Input is too large", __func__, __FILE__);
    }
 
    /*
@@ -178,14 +178,14 @@ secure_vector<uint8_t> ElGamal_Decryption_Operation::raw_decrypt(std::span<const
    const size_t p_bytes = group.p_bytes();
 
    if(ctext.size() != 2 * p_bytes) {
-      throw Invalid_Argument("ElGamal decryption: Invalid message");
+      throw_invalid_argument("ElGamal decryption: Invalid message", __func__, __FILE__);
    }
 
    BigInt a(ctext.first(p_bytes));
    const BigInt b(ctext.last(p_bytes));
 
    if(a >= group.get_p() || b >= group.get_p()) {
-      throw Invalid_Argument("ElGamal decryption: Invalid message");
+      throw_invalid_argument("ElGamal decryption: Invalid message", __func__, __FILE__);
    }
 
    a = m_blinder.blind(a);

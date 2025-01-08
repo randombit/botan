@@ -61,7 +61,7 @@ FrodoKEMMode::Mode FrodoKEM_mode_from_string(std::string_view str) {
       return FrodoKEMMode::eFrodoKEM1344_AES;
    }
 
-   throw Invalid_Argument(fmt("'{}' is not a valid FrodoKEM mode name", str));
+   throw_invalid_argument(fmt("'{}' is not a valid FrodoKEM mode name", str), __func__, __FILE__);
 }
 
 }  // anonymous namespace

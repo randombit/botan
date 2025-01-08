@@ -14,7 +14,7 @@ namespace Botan::PKCS11 {
 
 Module::Module(std::string_view file_path, C_InitializeArgs init_args) : m_file_path(file_path) {
    if(file_path.empty()) {
-      throw Invalid_Argument("PKCS11 no module path specified");
+      throw_invalid_argument("PKCS11 no module path specified", __func__, __FILE__);
    }
    reload(init_args);
 }

@@ -67,7 +67,7 @@ secure_vector<uint8_t> Encrypted_PSK_Database::get(std::string_view name) const 
    const std::string val_base64 = kv_get(base64_encode(wrapped_name));
 
    if(val_base64.empty()) {
-      throw Invalid_Argument("Named PSK not located");
+      throw_invalid_argument("Named PSK not located", __func__, __FILE__);
    }
 
    const secure_vector<uint8_t> val = base64_decode(val_base64);

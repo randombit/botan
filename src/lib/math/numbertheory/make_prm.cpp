@@ -97,19 +97,19 @@ bool no_small_multiples(const BigInt& v, const Prime_Sieve& sieve) {
 BigInt random_prime(
    RandomNumberGenerator& rng, size_t bits, const BigInt& coprime, size_t equiv, size_t modulo, size_t prob) {
    if(bits <= 1) {
-      throw Invalid_Argument("random_prime: Can't make a prime of " + std::to_string(bits) + " bits");
+      throw_invalid_argument("random_prime: Can't make a prime of " + std::to_string(bits) + " bits", __func__, __FILE__);
    }
    if(coprime.is_negative() || (!coprime.is_zero() && coprime.is_even()) || coprime.bits() >= bits) {
-      throw Invalid_Argument("random_prime: invalid coprime");
+      throw_invalid_argument("random_prime: invalid coprime", __func__, __FILE__);
    }
    if(modulo == 0 || modulo >= 100000) {
-      throw Invalid_Argument("random_prime: Invalid modulo value");
+      throw_invalid_argument("random_prime: Invalid modulo value", __func__, __FILE__);
    }
 
    equiv %= modulo;
 
    if(equiv == 0) {
-      throw Invalid_Argument("random_prime Invalid value for equiv/modulo");
+      throw_invalid_argument("random_prime Invalid value for equiv/modulo", __func__, __FILE__);
    }
 
    // Handle small values:
@@ -214,7 +214,7 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
                           const BigInt& coprime,
                           size_t prob) {
    if(bits < 512) {
-      throw Invalid_Argument("generate_rsa_prime bits too small");
+      throw_invalid_argument("generate_rsa_prime bits too small", __func__, __FILE__);
    }
 
    /*
@@ -223,7 +223,7 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
    * to attacks on small d.
    */
    if(coprime <= 1 || coprime.is_even() || coprime.bits() > 64) {
-      throw Invalid_Argument("generate_rsa_prime coprime must be small odd positive integer");
+      throw_invalid_argument("generate_rsa_prime coprime must be small odd positive integer", __func__, __FILE__);
    }
 
    const size_t MAX_ATTEMPTS = 32 * 1024;
@@ -293,7 +293,7 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
 */
 BigInt random_safe_prime(RandomNumberGenerator& rng, size_t bits) {
    if(bits <= 64) {
-      throw Invalid_Argument("random_safe_prime: Can't make a prime of " + std::to_string(bits) + " bits");
+      throw_invalid_argument("random_safe_prime: Can't make a prime of " + std::to_string(bits) + " bits", __func__, __FILE__);
    }
 
    const size_t error_bound = 128;

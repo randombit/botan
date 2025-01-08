@@ -125,17 +125,17 @@ std::unique_ptr<PasswordHash> Scrypt_Family::from_iterations(size_t iter) const 
 
 Scrypt::Scrypt(size_t N, size_t r, size_t p) : m_N(N), m_r(r), m_p(p) {
    if(!is_power_of_2(N)) {
-      throw Invalid_Argument("Scrypt N parameter must be a power of 2");
+      throw_invalid_argument("Scrypt N parameter must be a power of 2", __func__, __FILE__);
    }
 
    if(p == 0 || p > 1024) {
-      throw Invalid_Argument("Invalid or unsupported scrypt p");
+      throw_invalid_argument("Invalid or unsupported scrypt p", __func__, __FILE__);
    }
    if(r == 0 || r > 256) {
-      throw Invalid_Argument("Invalid or unsupported scrypt r");
+      throw_invalid_argument("Invalid or unsupported scrypt r", __func__, __FILE__);
    }
    if(N < 1 || N > 4194304) {
-      throw Invalid_Argument("Invalid or unsupported scrypt N");
+      throw_invalid_argument("Invalid or unsupported scrypt N", __func__, __FILE__);
    }
 }
 
@@ -212,7 +212,7 @@ void Scrypt::derive_key(uint8_t output[],
    try {
       hmac_sha256->set_key(cast_char_ptr_to_uint8(password), password_len);
    } catch(Invalid_Key_Length&) {
-      throw Invalid_Argument("Scrypt cannot accept passphrases of the provided length");
+      throw_invalid_argument("Scrypt cannot accept passphrases of the provided length", __func__, __FILE__);
    }
 
    pbkdf2(*hmac_sha256, B.data(), B.size(), salt, salt_len, 1);

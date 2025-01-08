@@ -53,7 +53,7 @@ TSS_FLAG bit_flag(size_t bits) {
       case 16384:
          return TSS_KEY_SIZE_16384;
       default:
-         throw Invalid_Argument("Unsupported TPM key size " + std::to_string(bits));
+         throw_invalid_argument("Unsupported TPM key size " + std::to_string(bits), __func__, __FILE__);
    }
 }
 

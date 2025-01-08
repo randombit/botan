@@ -33,7 +33,7 @@ void KDF1::kdf(uint8_t key[],
    }
 
    if(key_len > m_hash->output_length()) {
-      throw Invalid_Argument("KDF1 maximum output length exceeeded");
+      throw_invalid_argument("KDF1 maximum output length exceeeded", __func__, __FILE__);
    }
 
    m_hash->update(secret, secret_len);

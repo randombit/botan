@@ -17,11 +17,11 @@ namespace Botan {
 */
 Buffered_Filter::Buffered_Filter(size_t b, size_t f) : m_main_block_mod(b), m_final_minimum(f) {
    if(m_main_block_mod == 0) {
-      throw Invalid_Argument("m_main_block_mod == 0");
+      throw_invalid_argument("m_main_block_mod == 0", __func__, __FILE__);
    }
 
    if(m_final_minimum > m_main_block_mod) {
-      throw Invalid_Argument("m_final_minimum > m_main_block_mod");
+      throw_invalid_argument("m_final_minimum > m_main_block_mod", __func__, __FILE__);
    }
 
    m_buffer.resize(2 * m_main_block_mod);

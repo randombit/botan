@@ -81,7 +81,7 @@ KyberMode::Mode kyber_mode_from_string(std::string_view str) {
       return KyberMode::ML_KEM_1024;
    }
 
-   throw Invalid_Argument(fmt("'{}' is not a valid Kyber mode name", str));
+   throw_invalid_argument(fmt("'{}' is not a valid Kyber mode name", str), __func__, __FILE__);
 }
 
 }  // namespace
@@ -243,7 +243,7 @@ Kyber_PrivateKey::Kyber_PrivateKey(std::span<const uint8_t> sk, KyberMode m) {
    KyberConstants mode(m);
 
    if(mode.private_key_bytes() != sk.size()) {
-      throw Invalid_Argument("Private key does not have the correct byte count");
+      throw_invalid_argument("Private key does not have the correct byte count", __func__, __FILE__);
    }
 
    const auto& codec = mode.keypair_codec();

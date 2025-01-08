@@ -80,7 +80,7 @@ X509_Cert_Options::X509_Cert_Options(std::string_view initial_opts, uint32_t exp
    std::vector<std::string> parsed = split_on(initial_opts, '/');
 
    if(parsed.size() > 4) {
-      throw Invalid_Argument("X.509 cert options: Too many names");
+      throw_invalid_argument("X.509 cert options: Too many names", __func__, __FILE__);
    }
 
    if(!parsed.empty()) {

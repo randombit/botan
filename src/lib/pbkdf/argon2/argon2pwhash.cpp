@@ -53,7 +53,7 @@ std::string argon2_family_name(uint8_t f) {
       case 2:
          return "Argon2id";
       default:
-         throw Invalid_Argument("Unknown Argon2 parameter");
+         throw_invalid_argument("Unknown Argon2 parameter", __func__, __FILE__);
    }
 }
 
@@ -65,7 +65,7 @@ std::string Argon2::to_string() const {
 
 Argon2_Family::Argon2_Family(uint8_t family) : m_family(family) {
    if(m_family != 0 && m_family != 1 && m_family != 2) {
-      throw Invalid_Argument("Unknown Argon2 family identifier");
+      throw_invalid_argument("Unknown Argon2 family identifier", __func__, __FILE__);
    }
 }
 
