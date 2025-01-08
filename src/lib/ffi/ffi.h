@@ -276,6 +276,8 @@ typedef struct botan_rng_struct* botan_rng_t;
 * @param rng rng object
 * @param rng_type type of the rng, possible values:
 *    "system": system RNG
+*    "esdm-full": ESDM RNG (fully seeded)
+*    "esdm-pr": ESDM RNG (w. prediction resistance)
 *    "user": userspace RNG
 *    "user-threadsafe": userspace RNG, with internal locking
 *    "rdrand": directly read RDRAND

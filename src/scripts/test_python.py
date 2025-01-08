@@ -179,6 +179,31 @@ class BotanPythonTests(unittest.TestCase):
 
         user_rng.add_entropy('seed material...')
 
+    def test_esdm_rng(self):
+        try:
+            esdm_rng = botan.RandomNumberGenerator("esdm-full")
+        except botan.BotanException as ex:
+            if ex.error_code() == -40: # Not Implemented
+                self.skipTest("No ESDM support in this build")
+            else:
+                raise ex
+
+        output1 = esdm_rng.get(32)
+        output2 = esdm_rng.get(32)
+
+        self.assertEqual(len(output1), 32)
+        self.assertEqual(len(output2), 32)
+        self.assertNotEqual(output1, output2)
+
+        esdm_rng = botan.RandomNumberGenerator("esdm-pr")
+
+        output1 = esdm_rng.get(32)
+        output2 = esdm_rng.get(32)
+
+        self.assertEqual(len(output1), 32)
+        self.assertEqual(len(output2), 32)
+        self.assertNotEqual(output1, output2)
+
     def test_tpm2_rng(self):
         if ARGS.tpm2_tcti_name is None or ARGS.tpm2_tcti_name == "disabled":
             self.skipTest("TPM2 runtime tests are disabled")
