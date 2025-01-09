@@ -108,10 +108,7 @@ std::unique_ptr<Extension> make_extension(TLS_Data_Reader& reader,
 }  // namespace
 
 void Extensions::add(std::unique_ptr<Extension> extn) {
-   if(has(extn->type())) {
-      throw Invalid_Argument("cannot add the same extension twice: " +
-                             std::to_string(static_cast<uint16_t>(extn->type())));
-   }
+   BOTAN_ARG_CHECK(!has(extn->type()), "Cannot add the same extension twice");
 
    m_extensions.emplace_back(extn.release());
 }

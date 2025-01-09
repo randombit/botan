@@ -60,8 +60,9 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
    BOTAN_ARG_CHECK(fips186_3_valid_size(pbits, qbits),
                    fmt("FIPS 186-3 does not allow DSA domain parameters of {}/{} bits long", pbits, qbits));
 
-   BOTAN_ARG_CHECK(seed_c.size() * 8 >= qbits,
-                   fmt("Generating a DSA parameter set with a {} bit long q requires a seed at least as many bits long", qbits));
+   BOTAN_ARG_CHECK(
+      seed_c.size() * 8 >= qbits,
+      fmt("Generating a DSA parameter set with a {} bit long q requires a seed at least as many bits long", qbits));
 
    const std::string hash_name = hash_function_for(qbits);
    auto hash = HashFunction::create_or_throw(hash_name);
