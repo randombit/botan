@@ -12,19 +12,33 @@ Version 3.7.0, Not Yet Released
 * In TLS enable the hybrid x25519/ML-KEM-768 post quantum secure key
   exchange by default for clients and servers. (GH #4305)
 
+* Support for the pre-standard Kyber-r3 key exchange has been removed from TLS
+  (GH #4507 #4403)
+
 * In TLS add support for "pure" ML-KEM key exchange, in addition
   to the existing hybrid ML-KEM + EC suites. (GH #4393)
 
 * Add new EC key constructors (GH #4437)
 
-* Internal EC related cleanups and optimizations (GH #4385 #4432 #4436 #4492 #4479)
+* Internal EC related cleanups and optimizations (GH #4385 #4432 #4436
+  #4492 #4479 #4510 #4511 #4512 #4517 #4518 #4532 #4533)
 
 * Add new operations to EC_AffinePoint (GH #4433 #4503)
 
 * TPM 2.0 improvements (GH #4429 #4430 #4482)
 
+* Add support for invoking Entropy Source and DRNG Manager (ESDM) RNG (GH #4309)
+
+* Fix some build issues for baremetal environments (GH #4521)
+
+* Fix a bug preventing parsing of OCSP responses containing more than
+  one pinned certificate (GH #4536)
+
 * Expand constant-time testing in CI to cover both GCC and Clang,
   and multiple optimization levels. (GH #4421)
+
+* Allow configuring at build time how constant-time value barriers
+  are implemented. (GH #4447)
 
 * GCM/GHASH internal cleanups (GH #4469)
 
