@@ -47,7 +47,7 @@ GOST_28147_89_Params::GOST_28147_89_Params(std::string_view n) : m_name(n) {
    } else if(m_name == "R3411_CryptoPro") {
       m_sboxes = GOST_R_3411_CRYPTOPRO_PARAMS;
    } else {
-      throw_invalid_argument(fmt("GOST_28147_89_Params: Unknown sbox params '{}'", m_name), __func__, __FILE__);
+      throw Invalid_Argument(fmt("GOST_28147_89_Params: Unknown sbox params '{}'", m_name));
    }
 }
 

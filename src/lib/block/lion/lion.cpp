@@ -120,10 +120,10 @@ Lion::Lion(std::unique_ptr<HashFunction> hash, std::unique_ptr<StreamCipher> cip
       m_block_size(std::max<size_t>(2 * hash->output_length() + 1, bs)),
       m_hash(std::move(hash)),
       m_cipher(std::move(cipher)) {
-   BOTAN_ARG_CHECK(!(2 * left_size() + 1 > m_block_size),
-                   fmt("Block size {} is too small for {}", m_block_size, name()));
 
-   BOTAN_ARG_CHECK(!(!m_cipher->valid_keylength(left_size())),
+   BOTAN_ASSERT_NOMSG(2 * left_size() + 1 <= m_block_size);
+
+   BOTAN_ARG_CHECK(m_cipher->valid_keylength(left_size()),
                    fmt("Lion does not support combining {} and {}", m_cipher->name(), m_hash->name()));
 }
 

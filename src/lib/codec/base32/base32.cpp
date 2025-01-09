@@ -130,9 +130,11 @@ uint8_t Base32::lookup_binary_value(char input) noexcept {
 bool Base32::check_bad_char(uint8_t bin, char input, bool ignore_ws) {
    if(bin <= 0x1F) {
       return true;
-   } else
-      BOTAN_ARG_CHECK(!(!(bin == 0x81 || (bin == 0x80 && ignore_ws))),
-                      fmt("base32_decode: invalid character '{}'", format_char_for_display(input)));
+   }
+
+   BOTAN_ARG_CHECK(bin == 0x81 || (bin == 0x80 && ignore_ws),
+                   fmt("base32_decode: invalid character {}", format_char_for_display(input)));
+
    return false;
 }
 

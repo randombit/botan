@@ -62,7 +62,7 @@ bool ASN1_String::is_string_type(ASN1_Type tag) {
 }
 
 ASN1_String::ASN1_String(std::string_view str, ASN1_Type t) : m_utf8_str(str), m_tag(t) {
-   BOTAN_ARG_CHECK(!(!is_utf8_subset_string_type(m_tag)),
+   BOTAN_ARG_CHECK(is_utf8_subset_string_type(m_tag),
                    "ASN1_String only supports encoding to UTF-8 or a UTF-8 subset");
 }
 

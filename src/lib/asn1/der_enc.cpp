@@ -317,7 +317,7 @@ DER_Encoder& DER_Encoder::encode(const BigInt& n, ASN1_Type type_tag, ASN1_Class
 */
 DER_Encoder& DER_Encoder::encode(
    const uint8_t bytes[], size_t length, ASN1_Type real_type, ASN1_Type type_tag, ASN1_Class class_tag) {
-   BOTAN_ARG_CHECK(!(real_type != ASN1_Type::OctetString && real_type != ASN1_Type::BitString),
+   BOTAN_ARG_CHECK(real_type == ASN1_Type::OctetString || real_type == ASN1_Type::BitString,
                    "DER_Encoder: Invalid tag for byte/bit string");
 
    if(real_type == ASN1_Type::BitString) {

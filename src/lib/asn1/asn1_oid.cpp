@@ -70,7 +70,7 @@ void OID::register_oid(const OID& oid, std::string_view name) {
 
 //static
 std::optional<OID> OID::from_name(std::string_view name) {
-   BOTAN_ARG_CHECK(!(name.empty()), "OID::from_name argument must be non-empty");
+   BOTAN_ARG_CHECK(!name.empty(), "OID::from_name argument must be non-empty");
 
    OID o = OID_Map::global_registry().str2oid(name);
    if(o.has_value()) {
@@ -82,7 +82,7 @@ std::optional<OID> OID::from_name(std::string_view name) {
 
 //static
 OID OID::from_string(std::string_view str) {
-   BOTAN_ARG_CHECK(!(str.empty()), "OID::from_string argument must be non-empty");
+   BOTAN_ARG_CHECK(!str.empty(), "OID::from_string argument must be non-empty");
 
    OID o = OID_Map::global_registry().str2oid(str);
    if(o.has_value()) {
@@ -162,7 +162,7 @@ bool operator<(const OID& a, const OID& b) {
 * DER encode an OBJECT IDENTIFIER
 */
 void OID::encode_into(DER_Encoder& der) const {
-   BOTAN_ARG_CHECK(!(m_id.size() < 2), "OID::encode_into: OID is invalid");
+   BOTAN_ARG_CHECK(m_id.size() >= 2, "OID is invalid");
 
    auto append = [](std::vector<uint8_t>& encoding, uint32_t z) {
       if(z <= 0x7F) {

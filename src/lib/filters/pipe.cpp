@@ -91,7 +91,7 @@ bool Pipe::end_of_data() const {
 * Set the default read message
 */
 void Pipe::set_default_msg(message_id msg) {
-   BOTAN_ARG_CHECK(!(msg >= message_count()), "Pipe::set_default_msg: msg number is too high");
+   BOTAN_ARG_CHECK(msg < message_count(), "Pipe::set_default_msg: msg number is too high");
    m_default_read = msg;
 }
 
@@ -225,8 +225,8 @@ void Pipe::do_append(Filter* filter) {
    if(!filter) {
       return;
    }
-   BOTAN_ARG_CHECK(!(dynamic_cast<SecureQueue*>(filter)), "Pipe::append: SecureQueue cannot be used");
-   BOTAN_ARG_CHECK(!(filter->m_owned), "Filters cannot be shared among multiple Pipes");
+   BOTAN_ARG_CHECK(!dynamic_cast<SecureQueue*>(filter), "Pipe::append: SecureQueue cannot be used");
+   BOTAN_ARG_CHECK(!filter->m_owned, "Filters cannot be shared among multiple Pipes");
 
    if(m_inside_msg) {
       throw Invalid_State("Cannot append to a Pipe while it is processing");
@@ -251,8 +251,8 @@ void Pipe::do_prepend(Filter* filter) {
    if(!filter) {
       return;
    }
-   BOTAN_ARG_CHECK(!(dynamic_cast<SecureQueue*>(filter)), "Pipe::prepend: SecureQueue cannot be used");
-   BOTAN_ARG_CHECK(!(filter->m_owned), "Filters cannot be shared among multiple Pipes");
+   BOTAN_ARG_CHECK(!dynamic_cast<SecureQueue*>(filter), "Pipe::prepend: SecureQueue cannot be used");
+   BOTAN_ARG_CHECK(!filter->m_owned, "Filters cannot be shared among multiple Pipes");
 
    filter->m_owned = true;
 

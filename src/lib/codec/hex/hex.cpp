@@ -84,8 +84,7 @@ size_t hex_decode(uint8_t output[], const char input[], size_t input_length, siz
             continue;
          }
 
-         throw_invalid_argument(
-            fmt("hex_decode: invalid character '{}'", format_char_for_display(input[i])), __func__, __FILE__);
+         BOTAN_ARG_CHECK(false, fmt("hex_decode: invalid character {}", format_char_for_display(input[i])));
       }
 
       if(top_nibble) {
@@ -119,7 +118,7 @@ size_t hex_decode(uint8_t output[], const char input[], size_t input_length, boo
    size_t consumed = 0;
    size_t written = hex_decode(output, input, input_length, consumed, ignore_ws);
 
-   BOTAN_ARG_CHECK(!(consumed != input_length), "hex_decode: input did not have full bytes");
+   BOTAN_ARG_CHECK(consumed == input_length, "hex_decode: input did not have full bytes");
 
    return written;
 }

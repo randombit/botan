@@ -31,8 +31,9 @@ namespace Botan {
 
 #define BOTAN_ARG_CHECK(expr, msg)                               \
    do {                                                          \
-      if(!(expr))                                                \
+      if(!(expr)) {                                              \
          Botan::throw_invalid_argument(msg, __func__, __FILE__); \
+      }                                                          \
    } while(0)
 
 /**
