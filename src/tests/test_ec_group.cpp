@@ -477,6 +477,7 @@ Test::Result test_enc_dec_uncompressed_112() {
    std::vector<uint8_t> sv_result = p_G.encode(Botan::EC_Point_Format::Uncompressed);
 
    result.test_eq("uncompressed_112", sv_result, sv_G_secp_uncomp);
+
    return result;
 }
 
@@ -504,16 +505,16 @@ Test::Result test_enc_dec_uncompressed_521() {
 Test::Result test_ecc_registration() {
    Test::Result result("ECC registration");
 
-   // secp128r1
-   const Botan::BigInt p("0xfffffffdffffffffffffffffffffffff");
-   const Botan::BigInt a("0xfffffffdfffffffffffffffffffffffc");
-   const Botan::BigInt b("0xe87579c11079f43dd824993c2cee5ed3");
+   // numsp256d1
+   const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF43");
+   const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF40");
+   const Botan::BigInt b("0x25581");
+   const Botan::BigInt order("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE43C8275EA265C6020AB20294751A825");
 
-   const Botan::BigInt g_x("0x161ff7528b899b2d0c28607ca52c5b86");
-   const Botan::BigInt g_y("0xcf5ac8395bafeb13c02da292dded7a83");
-   const Botan::BigInt order("0xfffffffe0000000075a30d1b9038a115");
+   const Botan::BigInt g_x("0x01");
+   const Botan::BigInt g_y("0x696F1853C1E466D7FC82C96CCEEEDD6BD02C2F9375894EC10BF46306C2B56C77");
 
-   const Botan::OID oid("1.3.132.0.28");
+   const Botan::OID oid("1.3.6.1.4.1.25258.4.1");
 
    // Creating this object implicitly registers the curve for future use ...
    Botan::EC_Group reg_group(oid, p, a, b, g_x, g_y, order);

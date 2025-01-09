@@ -376,11 +376,32 @@ EC_Group::EC_Group(const OID& oid,
                    const BigInt& base_y,
                    const BigInt& order) {
    BOTAN_ARG_CHECK(oid.has_value(), "An OID is required for creating an EC_Group");
-   BOTAN_ARG_CHECK(p.bits() >= 128, "EC_Group p too small");
+
+   // TODO(Botan4) remove this and require 192 bits minimum
+#if defined(BOTAN_DISABLE_DEPRECATED_FEATURES)
+   constexpr size_t p_bits_lower_bound = 192;
+#else
+   constexpr size_t p_bits_lower_bound = 128;
+#endif
+
+   BOTAN_ARG_CHECK(p.bits() >= p_bits_lower_bound, "EC_Group p too small");
    BOTAN_ARG_CHECK(p.bits() <= 521, "EC_Group p too large");
 
    if(p.bits() == 521) {
-      BOTAN_ARG_CHECK(p == BigInt::power_of_2(521) - 1, "EC_Group with p of 521 bits must be 2**521-1");
+      const auto p521 = BigInt::power_of_2(521) - 1;
+      BOTAN_ARG_CHECK(p == p521, "EC_Group with p of 521 bits must be 2**521-1");
+   } else if(p.bits() == 239) {
+      const auto x962_p239 = []() {
+         BigInt p239;
+         for(size_t i = 0; i != 239; ++i) {
+            if(i < 47 || ((i >= 94) && (i != 143))) {
+               p239.set_bit(i);
+            }
+         }
+         return p239;
+      }();
+
+      BOTAN_ARG_CHECK(p == x962_p239, "EC_Group with p of 239 bits must be the X9.62 prime");
    } else {
       BOTAN_ARG_CHECK(p.bits() % 32 == 0, "EC_Group p must be a multiple of 32 bits");
    }
@@ -393,12 +414,22 @@ EC_Group::EC_Group(const OID& oid,
    BOTAN_ARG_CHECK(base_y >= 0 && base_y < p, "EC_Group base_y is invalid");
    BOTAN_ARG_CHECK(p.bits() == order.bits(), "EC_Group p and order must have the same number of bits");
 
-   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(p), "EC_Group p is not prime");
+   Modular_Reducer mod_p(p);
+   BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(p, mod_p), "EC_Group p is not prime");
    BOTAN_ARG_CHECK(is_bailie_psw_probable_prime(order), "EC_Group order is not prime");
 
    // This catches someone "ignoring" a cofactor and just trying to
    // provide the subgroup order
    BOTAN_ARG_CHECK((p - order).abs().bits() <= (p.bits() / 2) + 1, "Hasse bound invalid");
+
+   // Check that 4*a^3 + 27*b^2 != 0
+   const auto discriminant = mod_p.reduce(mod_p.multiply(4, mod_p.cube(a)) + mod_p.multiply(27, mod_p.square(b)));
+   BOTAN_ARG_CHECK(discriminant != 0, "EC_Group discriminant is invalid");
+
+   // Check that the generator (base_x,base_y) is on the curve; y^2 = x^3 + a*x + b
+   auto y2 = mod_p.square(base_y);
+   auto x3_ax_b = mod_p.reduce(mod_p.cube(base_x) + mod_p.multiply(a, base_x) + b);
+   BOTAN_ARG_CHECK(y2 == x3_ax_b, "EC_Group generator is not on the curve");
 
    BigInt cofactor(1);
 
@@ -581,6 +612,10 @@ bool EC_Group::verify_group(RandomNumberGenerator& rng, bool strong) const {
    if(is_builtin && !strong) {
       return true;
    }
+
+   // TODO(Botan4) this can probably all be removed once the deprecated EC_Group
+   // constructor is removed, since at that point it no longer becomes possible
+   // to create an EC_Group which fails to satisfy these conditions
 
    const BigInt& p = get_p();
    const BigInt& a = get_a();
