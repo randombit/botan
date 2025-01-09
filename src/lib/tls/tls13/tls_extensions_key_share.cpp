@@ -464,7 +464,7 @@ secure_vector<uint8_t> Key_Share::decapsulate(const Key_Share& server_keyshare,
                                 },
                                 [](const auto&, const auto&) -> secure_vector<uint8_t> {
                                    throw Invalid_Argument(
-                                      "can only decapsulate in ClientHello Key_Share with a ServerHello Key_Share");
+                                      "Can only decapsulate in ClientHello Key_Share with a ServerHello Key_Share");
                                 }},
                      m_impl->key_share,
                      server_keyshare.m_impl->key_share);
