@@ -830,6 +830,16 @@ Test::Result test_c_copy_object() {
    return result;
 }
 
+Test::Result test_load_latest_interface() {
+   Test::Result res("Load latest PKCS #11 interface");
+   Botan::Dynamically_Loaded_Library pkcs11_module(Test::pkcs11_lib());
+   res.test_no_throw("Get v.2.40 function list of latest interface", [&] {
+      auto latest_interface = InterfaceWrapper::latest_p11_interface(pkcs11_module);
+      latest_interface->func_2_40();
+   });
+   return res;
+}
+
 class LowLevelTests final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -857,7 +867,9 @@ class LowLevelTests final : public Test {
             {STRING_AND_FUNCTION(test_c_get_object_size)},
             {STRING_AND_FUNCTION(test_c_get_attribute_value)},
             {STRING_AND_FUNCTION(test_c_set_attribute_value)},
-            {STRING_AND_FUNCTION(test_c_copy_object)}};
+            {STRING_AND_FUNCTION(test_c_copy_object)},
+            {STRING_AND_FUNCTION(test_load_latest_interface)},
+         };
 
          return run_pkcs11_tests("PKCS11 low level", fns);
       }

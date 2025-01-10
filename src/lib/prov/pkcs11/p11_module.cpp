@@ -34,13 +34,9 @@ void Module::reload(C_InitializeArgs init_args) {
       m_low_level->C_Finalize(nullptr);
    }
    m_library = std::make_unique<Dynamically_Loaded_Library>(m_file_path);
-   m_low_level = load_low_level();
+   m_low_level = std::make_unique<LowLevel>(InterfaceWrapper::latest_p11_interface(*m_library));
 
    m_low_level->C_Initialize(&init_args);
-}
-
-std::unique_ptr<LowLevel> Module::load_low_level() const {
-   return std::make_unique<LowLevel>(InterfaceWrapperDefault::latest_p11_interface(*m_library));
 }
 
 }  // namespace Botan::PKCS11

@@ -24,7 +24,7 @@ namespace PKCS11 {
 * Loads the PKCS#11 shared library
 * Calls C_Initialize on load and C_Finalize on destruction
 */
-class BOTAN_PUBLIC_API(2, 0) Module {
+class BOTAN_PUBLIC_API(2, 0) Module final {
    public:
       /**
       * Loads the shared library and calls C_Initialize. The latest supported
@@ -68,18 +68,11 @@ class BOTAN_PUBLIC_API(2, 0) Module {
 
       const Dynamically_Loaded_Library& library() { return *m_library; }
 
-   protected:
-      /**
-       * Callback to (re-)load the LowLevel object used by this class.
-       * Subclasses can override this class to use custom LowLevel with custom
-       * (vendor defined) interfaces.
-       */
-      virtual std::unique_ptr<LowLevel> load_low_level() const;
-
    private:
       const std::string m_file_path;
       std::unique_ptr<Dynamically_Loaded_Library> m_library;
       std::unique_ptr<LowLevel> m_low_level = nullptr;
+      std::function<std::unique_ptr<LowLevel>(const Dynamically_Loaded_Library&)> m_create_low_level_callback;
 };
 
 /// Represents a PKCS#11 Slot, i.e., a card reader

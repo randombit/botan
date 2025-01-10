@@ -1150,12 +1150,12 @@ BOTAN_PUBLIC_API(2, 0) void change_so_pin(Slot& slot, const secure_string& old_s
 BOTAN_PUBLIC_API(2, 0) void set_pin(Slot& slot, const secure_string& so_pin, const secure_string& pin);
 
 /**
- * @brief Abstract base class for PKCS #11 interface wrappers.
+ * @brief Wraps a PKCS #11 Interface object.
  *
  * This class provides an interface to access PKCS#11 functions of various versions.
  * For example func_3_0() returns the PKCS#11 v3.0 function list for a loaded interface.
- * The default interface as specified by the PKCS#11 standard is implemented via
- * InterfaceWrapperDefault.
+ * The default implementation only supports the official "PKCS 11" named
+ * interfaces .
  *
  * When using vendor defined interfaces, this class can be subclassed to specify access
  * to the official PKCS#11 functions while vendor defined function lists can be added.
@@ -1163,61 +1163,47 @@ BOTAN_PUBLIC_API(2, 0) void set_pin(Slot& slot, const secure_string& so_pin, con
  * default PKCS#11 functions (via func_2_40(), func_3_0(), etc.) which is extended by
  * the vendor defined ones.
  */
-/*abstract*/ class InterfaceWrapperBase {
+class BOTAN_PUBLIC_API(3, 7) InterfaceWrapper {
    private:
       Interface m_interface;
 
    public:
-      virtual ~InterfaceWrapperBase() = default;
+      /// Basic constructor using an interface.
+      InterfaceWrapper(Interface interface) : m_interface(interface) {}
 
-      Version version() const;
+      InterfaceWrapper(const InterfaceWrapper&) = default;
+      InterfaceWrapper& operator=(const InterfaceWrapper&) = default;
+      InterfaceWrapper(InterfaceWrapper&&) = default;
+      InterfaceWrapper& operator=(InterfaceWrapper&&) = default;
+      virtual ~InterfaceWrapper() = default;
 
-      std::string_view name() const;
-
+      /// Access the underlying interface object
       const Interface& get() const { return m_interface; }
 
+      /// Access the version of the interface
+      Version version() const;
+
+      /// Access the name of the interface
+      std::string_view name() const;
+
+      /// Access a function list that contains all methods since PKCS #11 v.2.40
       virtual const CK_FUNCTION_LIST& func_2_40() const;
 
+      /// Access a function list that contains all methods since PKCS #11 v.3.0
       virtual const CK_FUNCTION_LIST_3_0& func_3_0() const;
 
+      /// Access a function list that contains all methods since PKCS #11 v.3.2
       virtual const CK_FUNCTION_LIST_3_2& func_3_2() const;
 
-   protected:
-      InterfaceWrapperBase(Interface interface) : m_interface(interface) {}
-
-      InterfaceWrapperBase(const InterfaceWrapperBase&) = default;
-      InterfaceWrapperBase& operator=(const InterfaceWrapperBase&) = default;
-      InterfaceWrapperBase(InterfaceWrapperBase&&) = default;
-      InterfaceWrapperBase& operator=(InterfaceWrapperBase&&) = default;
-};
-
-/**
- * Interface wrapper for interfaces named 'PKCS 11', which are well defined
- * by the PKCS#11 standard. This wrapper does not allow vendor defined interfaces
- * but is compatible with PKCS#11 versions 2.40 to 3.2. If interfaces of the
- * non-latest versions are used, calls to get the respective function lists
- * will throw an exception.
- *
- * Searching for the best 'PKCS 11' interface is available.
- */
-class InterfaceWrapperDefault : public InterfaceWrapperBase {
-   public:
-      InterfaceWrapperDefault(Interface interface) : InterfaceWrapperBase(interface) {}
-
-      // Loads the latest supported "PKCS 11" interface. Fork safe interfaces are prefered.
-      static std::unique_ptr<InterfaceWrapperDefault> latest_p11_interface(Dynamically_Loaded_Library& library);
-
-      const CK_FUNCTION_LIST& func_2_40() const override;
-
-      const CK_FUNCTION_LIST_3_0& func_3_0() const override;
-
-      const CK_FUNCTION_LIST_3_2& func_3_2() const override;
+      /// Find the latest supported "PKCS 11" interface. Fork safe interfaces
+      /// are prefered.
+      static std::unique_ptr<InterfaceWrapper> latest_p11_interface(Dynamically_Loaded_Library& library);
 
       /**
        * @brief Returns "PKCS 11"
        *
        * Returns an immortal pointer to the uint8_t string "PKCS 11".
-       * This is used to define an interface object.
+       *  Used to define an interface object.
        *
        * @warning Unfortunately, the interface object requires a non constant
        * pointer. However, this string MUST not be modified!
@@ -1232,7 +1218,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       BOTAN_DEPRECATED("Use LowLevel(InterfaceWrapperDefault::latest_p11_interface(module.library()))")
       explicit LowLevel(FunctionListPtr ptr);
 
-      explicit LowLevel(std::unique_ptr<InterfaceWrapperBase> interface_wrapper);
+      explicit LowLevel(std::unique_ptr<InterfaceWrapper> interface_wrapper);
 
       /****************************** General purpose functions ******************************/
 
@@ -3846,11 +3832,9 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * functions which are not supported directly by LowLevel or the higher
       * level PKCS11 API.
       */
-      BOTAN_DEPRECATED("Use get_interface().func_2_40()") FunctionListPtr get_functions() const {
-         return reinterpret_cast<FunctionListPtr>(m_interface_wrapper->get().pFunctionList);
-      }
+      BOTAN_DEPRECATED("Use get_interface().func_2_40()") FunctionListPtr get_functions() const;
 
-      const InterfaceWrapperBase& get_interface() { return *m_interface_wrapper; }
+      const InterfaceWrapper& interface() { return *m_interface_wrapper; }
 
    protected:
       /**
@@ -3861,7 +3845,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       static bool handle_return_value(CK_RV function_result, ReturnValue* return_value);
 
    private:
-      std::unique_ptr<InterfaceWrapperBase> m_interface_wrapper;
+      std::unique_ptr<InterfaceWrapper> m_interface_wrapper;
 };
 
 class BOTAN_PUBLIC_API(2, 0) PKCS11_Error : public Exception {
