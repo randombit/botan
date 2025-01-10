@@ -28,33 +28,26 @@ class SP800_56C_One_Step_Hash final : public KDF {
       std::unique_ptr<KDF> new_object() const override;
 
       /**
+      * @param hash the hash function to use as the auxiliary function
+      */
+      explicit SP800_56C_One_Step_Hash(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {}
+
+   private:
+      /**
       * Derive a key using the SP800-56Cr2 One-Step KDF.
       *
       * @param key DerivedKeyingMaterial output buffer
-      * @param key_len the desired output length in bytes
       * @param secret shared secret Z
-      * @param secret_len size of Z in bytes
       * @param salt the salt. Ignored.
-      * @param salt_len size of salt in bytes. Must be 0.
       * @param label FixedInfo
-      * @param label_len size of label in bytes
       *
       * @throws Invalid_Argument if key_len > (2^32 - 1) * Hash output bits.
       *         Or thrown if salt is non-empty
       */
-      void kdf(uint8_t key[],
-               size_t key_len,
-               const uint8_t secret[],
-               size_t secret_len,
-               const uint8_t salt[],
-               size_t salt_len,
-               const uint8_t label[],
-               size_t label_len) const override;
-
-      /**
-      * @param hash the hash function to use as the auxiliary function
-      */
-      explicit SP800_56C_One_Step_Hash(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {}
+      void perform_kdf(std::span<uint8_t> key,
+                       std::span<const uint8_t> secret,
+                       std::span<const uint8_t> salt,
+                       std::span<const uint8_t> label) const override;
 
    private:
       std::unique_ptr<HashFunction> m_hash;
@@ -70,32 +63,25 @@ class SP800_56C_One_Step_HMAC final : public KDF {
       std::unique_ptr<KDF> new_object() const override;
 
       /**
-      * Derive a key using the SP800-56Cr2 One-Step KDF.
-      *
-      * @param key DerivedKeyingMaterial output buffer
-      * @param key_len the desired output length in bytes
-      * @param secret shared secret Z
-      * @param secret_len size of Z in bytes
-      * @param salt the salt. If empty the default_salt is used.
-      * @param salt_len size of salt in bytes
-      * @param label FixedInfo
-      * @param label_len size of label in bytes
-      *
-      * @throws Invalid_Argument if key_len > (2^32 - 1) * HMAC output bits
-      */
-      void kdf(uint8_t key[],
-               size_t key_len,
-               const uint8_t secret[],
-               size_t secret_len,
-               const uint8_t salt[],
-               size_t salt_len,
-               const uint8_t label[],
-               size_t label_len) const override;
-
-      /**
       * @param mac the HMAC to use as the auxiliary function
       */
       explicit SP800_56C_One_Step_HMAC(std::unique_ptr<MessageAuthenticationCode> mac);
+
+   private:
+      /**
+      * Derive a key using the SP800-56Cr2 One-Step KDF.
+      *
+      * @param key DerivedKeyingMaterial output buffer
+      * @param secret shared secret Z
+      * @param salt the salt. If empty the default_salt is used.
+      * @param label FixedInfo
+      *
+      * @throws Invalid_Argument if key_len > (2^32 - 1) * HMAC output bits
+      */
+      void perform_kdf(std::span<uint8_t> key,
+                       std::span<const uint8_t> secret,
+                       std::span<const uint8_t> salt,
+                       std::span<const uint8_t> label) const override;
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_mac;
@@ -105,29 +91,21 @@ class SP800_56C_One_Step_HMAC final : public KDF {
  * NIST SP800-56Cr2 One-Step KDF using KMAC (Abstract class)
  */
 class SP800_56A_One_Step_KMAC_Abstract : public KDF {
-   public:
+   private:
       /**
       * Derive a key using the SP800-56Cr2 One-Step KDF.
       *
       * @param key DerivedKeyingMaterial output buffer
-      * @param key_len the desired output length in bytes
       * @param secret shared secret Z
-      * @param secret_len size of Z in bytes
       * @param salt the salt. If empty the default_salt is used.
-      * @param salt_len size of salt in bytes
       * @param label FixedInfo
-      * @param label_len size of label in bytes
       *
       * @throws Invalid_Argument if key_len > (2^32 - 1) * KMAC output bits
       */
-      void kdf(uint8_t key[],
-               size_t key_len,
-               const uint8_t secret[],
-               size_t secret_len,
-               const uint8_t salt[],
-               size_t salt_len,
-               const uint8_t label[],
-               size_t label_len) const override;
+      void perform_kdf(std::span<uint8_t> key,
+                       std::span<const uint8_t> secret,
+                       std::span<const uint8_t> salt,
+                       std::span<const uint8_t> label) const final;
 
    protected:
       virtual std::unique_ptr<MessageAuthenticationCode> create_kmac_instance(size_t output_byte_len) const = 0;

@@ -23,35 +23,28 @@ class SP800_108_Counter final : public KDF {
       std::unique_ptr<KDF> new_object() const override;
 
       /**
+      * @param mac MAC algorithm to use
+      */
+      explicit SP800_108_Counter(std::unique_ptr<MessageAuthenticationCode> mac) : m_prf(std::move(mac)) {}
+
+   private:
+      /**
       * Derive a key using the SP800-108 KDF in Counter mode.
       *
       * The implementation hard codes the length of [L]_2
       * and [i]_2 (the value r) to 32 bits.
       *
       * @param key resulting keying material
-      * @param key_len the desired output length in bytes
       * @param secret K_I
-      * @param secret_len size of K_I in bytes
       * @param salt Context
-      * @param salt_len size of Context in bytes
       * @param label Label
-      * @param label_len size of Label in bytes
       *
       * @throws Invalid_Argument key_len > 2^32
       */
-      void kdf(uint8_t key[],
-               size_t key_len,
-               const uint8_t secret[],
-               size_t secret_len,
-               const uint8_t salt[],
-               size_t salt_len,
-               const uint8_t label[],
-               size_t label_len) const override;
-
-      /**
-      * @param mac MAC algorithm to use
-      */
-      explicit SP800_108_Counter(std::unique_ptr<MessageAuthenticationCode> mac) : m_prf(std::move(mac)) {}
+      void perform_kdf(std::span<uint8_t> key,
+                       std::span<const uint8_t> secret,
+                       std::span<const uint8_t> salt,
+                       std::span<const uint8_t> label) const override;
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
@@ -66,6 +59,9 @@ class SP800_108_Feedback final : public KDF {
 
       std::unique_ptr<KDF> new_object() const override;
 
+      explicit SP800_108_Feedback(std::unique_ptr<MessageAuthenticationCode> mac) : m_prf(std::move(mac)) {}
+
+   private:
       /**
       * Derive a key using the SP800-108 KDF in Feedback mode.
       *
@@ -73,26 +69,16 @@ class SP800_108_Feedback final : public KDF {
       * codes the length of [L]_2 and [i]_2 (the value r) to 32 bits.
       *
       * @param key resulting keying material
-      * @param key_len the desired output length in bytes
       * @param secret K_I
-      * @param secret_len size of K_I in bytes
       * @param salt IV || Context
-      * @param salt_len size of Context plus IV in bytes
       * @param label Label
-      * @param label_len size of Label in bytes
       *
       * @throws Invalid_Argument key_len > 2^32
       */
-      void kdf(uint8_t key[],
-               size_t key_len,
-               const uint8_t secret[],
-               size_t secret_len,
-               const uint8_t salt[],
-               size_t salt_len,
-               const uint8_t label[],
-               size_t label_len) const override;
-
-      explicit SP800_108_Feedback(std::unique_ptr<MessageAuthenticationCode> mac) : m_prf(std::move(mac)) {}
+      void perform_kdf(std::span<uint8_t> key,
+                       std::span<const uint8_t> secret,
+                       std::span<const uint8_t> salt,
+                       std::span<const uint8_t> label) const override;
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
@@ -107,6 +93,9 @@ class SP800_108_Pipeline final : public KDF {
 
       std::unique_ptr<KDF> new_object() const override;
 
+      explicit SP800_108_Pipeline(std::unique_ptr<MessageAuthenticationCode> mac) : m_prf(std::move(mac)) {}
+
+   private:
       /**
       * Derive a key using the SP800-108 KDF in Double Pipeline mode.
       *
@@ -114,26 +103,16 @@ class SP800_108_Pipeline final : public KDF {
       * codes the length of [L]_2 and [i]_2 (the value r) to 32 bits.
       *
       * @param key resulting keying material
-      * @param key_len the desired output length in bytes
       * @param secret K_I
-      * @param secret_len size of K_I in bytes
       * @param salt Context
-      * @param salt_len size of Context in bytes
       * @param label Label
-      * @param label_len size of Label in bytes
       *
       * @throws Invalid_Argument key_len > 2^32
       */
-      void kdf(uint8_t key[],
-               size_t key_len,
-               const uint8_t secret[],
-               size_t secret_len,
-               const uint8_t salt[],
-               size_t salt_len,
-               const uint8_t label[],
-               size_t label_len) const override;
-
-      explicit SP800_108_Pipeline(std::unique_ptr<MessageAuthenticationCode> mac) : m_prf(std::move(mac)) {}
+      void perform_kdf(std::span<uint8_t> key,
+                       std::span<const uint8_t> secret,
+                       std::span<const uint8_t> salt,
+                       std::span<const uint8_t> label) const override;
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;

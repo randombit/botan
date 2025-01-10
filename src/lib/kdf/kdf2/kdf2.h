@@ -22,19 +22,16 @@ class KDF2 final : public KDF {
 
       std::unique_ptr<KDF> new_object() const override;
 
-      void kdf(uint8_t key[],
-               size_t key_len,
-               const uint8_t secret[],
-               size_t secret_len,
-               const uint8_t salt[],
-               size_t salt_len,
-               const uint8_t label[],
-               size_t label_len) const override;
-
       /**
       * @param hash the hash function to use
       */
       explicit KDF2(std::unique_ptr<HashFunction> hash) : m_hash(std::move(hash)) {}
+
+   private:
+      void perform_kdf(std::span<uint8_t> key,
+                       std::span<const uint8_t> secret,
+                       std::span<const uint8_t> salt,
+                       std::span<const uint8_t> label) const override;
 
    private:
       std::unique_ptr<HashFunction> m_hash;

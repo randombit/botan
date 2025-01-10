@@ -4,6 +4,7 @@
 *
 * (C) 2017 Ribose Inc. Written by Krzysztof Kwiatkowski.
 * (C) 2024 Fabian Albert - Rohde & Schwarz Cybersecurity
+* (C) 2024 René Meusel - Rohde & Schwarz Cybersecurity
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -82,19 +83,12 @@ void kdm_internal(std::span<uint8_t> output_buffer,
 
 }  // namespace
 
-void SP800_56C_One_Step_Hash::kdf(uint8_t key[],
-                                  size_t key_len,
-                                  const uint8_t secret[],
-                                  size_t secret_len,
-                                  const uint8_t salt[],
-                                  size_t salt_len,
-                                  const uint8_t label[],
-                                  size_t label_len) const {
-   BOTAN_UNUSED(salt);
-   BOTAN_ARG_CHECK(salt_len == 0, "SP800_56A_Hash does not support a non-empty salt");
-
-   kdm_internal<HashFunction>(
-      {key, key_len}, {secret, secret_len}, {label, label_len}, *m_hash, [](HashFunction&) { /* NOP */ });
+void SP800_56C_One_Step_Hash::perform_kdf(std::span<uint8_t> key,
+                                          std::span<const uint8_t> secret,
+                                          std::span<const uint8_t> salt,
+                                          std::span<const uint8_t> label) const {
+   BOTAN_ARG_CHECK(salt.empty(), "SP800_56A_Hash does not support a non-empty salt");
+   kdm_internal<HashFunction>(key, secret, label, *m_hash, [](HashFunction&) { /* NOP */ });
 }
 
 std::string SP800_56C_One_Step_Hash::name() const {
@@ -113,26 +107,21 @@ SP800_56C_One_Step_HMAC::SP800_56C_One_Step_HMAC(std::unique_ptr<MessageAuthenti
    }
 }
 
-void SP800_56C_One_Step_HMAC::kdf(uint8_t key[],
-                                  size_t key_len,
-                                  const uint8_t secret[],
-                                  size_t secret_len,
-                                  const uint8_t salt[],
-                                  size_t salt_len,
-                                  const uint8_t label[],
-                                  size_t label_len) const {
-   kdm_internal<MessageAuthenticationCode>(
-      {key, key_len}, {secret, secret_len}, {label, label_len}, *m_mac, [&](MessageAuthenticationCode& kdf_mac) {
-         // 4.1 Option 2 and 3 - An implementation dependent byte string, salt,
-         //     whose (non-null) value may be optionally provided in
-         //     OtherInput, serves as the HMAC# key ..
+void SP800_56C_One_Step_HMAC::perform_kdf(std::span<uint8_t> key,
+                                          std::span<const uint8_t> secret,
+                                          std::span<const uint8_t> salt,
+                                          std::span<const uint8_t> label) const {
+   kdm_internal<MessageAuthenticationCode>(key, secret, label, *m_mac, [&](MessageAuthenticationCode& kdf_mac) {
+      // 4.1 Option 2 and 3 - An implementation dependent byte string, salt,
+      //     whose (non-null) value may be optionally provided in
+      //     OtherInput, serves as the HMAC# key ..
 
-         // SP 800-56Cr2 specifies if the salt is empty then a block of zeros
-         // equal to the hash's underlying block size are used. However for HMAC
-         // this is equivalent to setting a zero-length key, so the same call
-         // works for either case.
-         kdf_mac.set_key(std::span{salt, salt_len});
-      });
+      // SP 800-56Cr2 specifies if the salt is empty then a block of zeros
+      // equal to the hash's underlying block size are used. However for HMAC
+      // this is equivalent to setting a zero-length key, so the same call
+      // works for either case.
+      kdf_mac.set_key(salt);
+   });
 }
 
 std::string SP800_56C_One_Step_HMAC::name() const {
@@ -144,36 +133,31 @@ std::unique_ptr<KDF> SP800_56C_One_Step_HMAC::new_object() const {
 }
 
 // Option 3 - KMAC
-void SP800_56A_One_Step_KMAC_Abstract::kdf(uint8_t key[],
-                                           size_t key_len,
-                                           const uint8_t secret[],
-                                           size_t secret_len,
-                                           const uint8_t salt[],
-                                           size_t salt_len,
-                                           const uint8_t label[],
-                                           size_t label_len) const {
-   auto mac = create_kmac_instance(key_len);
-   kdm_internal<MessageAuthenticationCode>(
-      {key, key_len}, {secret, secret_len}, {label, label_len}, *mac, [&](MessageAuthenticationCode& kdf_mac) {
-         // 4.1 Option 2 and 3 - An implementation dependent byte string, salt,
-         //     whose (non-null) value may be optionally provided in
-         //     OtherInput, serves as the KMAC# key ...
-         if(salt_len == 0) {
-            // 4.1 Implementation-Dependent Parameters 3
-            //     If H(x) = KMAC128[or 256](salt, x, H_outputBits, "KDF"),
-            //     then – in the absence of an agreed-upon alternative –
-            //     the default_salt shall be an all - zero string of
-            //     164 bytes [or 132 bytes]
-            kdf_mac.set_key(std::vector<uint8_t>(default_salt_length(), 0));
-         } else {
-            kdf_mac.set_key(std::span{salt, salt_len});
-         }
+void SP800_56A_One_Step_KMAC_Abstract::perform_kdf(std::span<uint8_t> key,
+                                                   std::span<const uint8_t> secret,
+                                                   std::span<const uint8_t> salt,
+                                                   std::span<const uint8_t> label) const {
+   auto mac = create_kmac_instance(key.size());
+   kdm_internal<MessageAuthenticationCode>(key, secret, label, *mac, [&](MessageAuthenticationCode& kdf_mac) {
+      // 4.1 Option 2 and 3 - An implementation dependent byte string, salt,
+      //     whose (non-null) value may be optionally provided in
+      //     OtherInput, serves as the KMAC# key ...
+      if(salt.empty()) {
+         // 4.1 Implementation-Dependent Parameters 3
+         //     If H(x) = KMAC128[or 256](salt, x, H_outputBits, "KDF"),
+         //     then – in the absence of an agreed-upon alternative –
+         //     the default_salt shall be an all - zero string of
+         //     164 bytes [or 132 bytes]
+         kdf_mac.set_key(std::vector<uint8_t>(default_salt_length(), 0));
+      } else {
+         kdf_mac.set_key(salt);
+      }
 
-         // 4.1 Option 3 - The "customization string" S shall be the byte string
-         //     01001011 || 01000100 || 01000110, which represents the sequence
-         //     of characters 'K', 'D', and 'F' in 8-bit ASCII.
-         kdf_mac.start(std::array<uint8_t, 3>{'K', 'D', 'F'});
-      });
+      // 4.1 Option 3 - The "customization string" S shall be the byte string
+      //     01001011 || 01000100 || 01000110, which represents the sequence
+      //     of characters 'K', 'D', and 'F' in 8-bit ASCII.
+      kdf_mac.start(std::array<uint8_t, 3>{'K', 'D', 'F'});
+   });
 }
 
 std::unique_ptr<MessageAuthenticationCode> SP800_56C_One_Step_KMAC128::create_kmac_instance(
