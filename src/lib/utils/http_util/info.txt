@@ -9,3 +9,7 @@ name -> "HTTP"
 <requires>
 socket
 </requires>
+
+<os_features>
+system_clock
+</os_features>

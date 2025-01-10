@@ -45,4 +45,9 @@ tls_reader.h
 <requires>
 rng
 tls12
+x509
 </requires>
+
+<os_features>
+system_clock
+</os_features>

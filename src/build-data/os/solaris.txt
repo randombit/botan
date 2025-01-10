@@ -12,6 +12,7 @@ atomics
 threads
 thread_local
 sockets
+system_clock
 filesystem
 setppriv
 </target_features>

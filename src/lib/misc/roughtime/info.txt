@@ -14,6 +14,10 @@ sha2_64
 socket
 </requires>
 
+<os_features>
+system_clock
+</os_features>
+
 <header:public>
 roughtime.h
 </header:public>

@@ -314,9 +314,13 @@ uint64_t OS::get_high_resolution_clock() {
    }
 #endif
 
+#if defined(BOTAN_TARGET_OS_HAS_SYSTEM_CLOCK)
    // Plain C++11 fallback
    auto now = std::chrono::high_resolution_clock::now().time_since_epoch();
    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+#else
+   return 0;
+#endif
 }
 
 uint64_t OS::get_system_timestamp_ns() {
@@ -327,8 +331,12 @@ uint64_t OS::get_system_timestamp_ns() {
    }
 #endif
 
+#if defined(BOTAN_TARGET_OS_HAS_SYSTEM_CLOCK)
    auto now = std::chrono::system_clock::now().time_since_epoch();
    return std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+#else
+   throw Not_Implemented("OS::get_system_timestamp_ns this system does not support a clock");
+#endif
 }
 
 std::string OS::format_time(time_t time, const std::string& format) {

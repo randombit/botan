@@ -1,4 +1,15 @@
 
 <target_features>
+
+# Historically we assumed that even baremetal systems had a RTC.
+# Starting in 3.7.0 this became a named feature, which can be enabled
+# or disabled. It is included in the default baremetal configuration
+# to avoid a confusing situation for existing users, who would
+# otherwise have their clock support vanish.
+#
+# If your baremetal system does not have a clock you should use
+# --disable-os-features=system_clock
+
+system_clock
 </target_features>
 

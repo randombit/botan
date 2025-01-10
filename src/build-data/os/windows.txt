@@ -34,6 +34,7 @@ atomics
 threads
 thread_local
 filesystem
+system_clock
 
 certificate_store
 </target_features>
