@@ -177,14 +177,9 @@ Only curves over prime fields are supported.
 
       The encoded integer should be no greater than ``n**2``.
 
-   .. cpp:function:: EC_Scalar(const EC_Group& group, std::span<const uint8_t> buf)
-
-      Deserialize a scalar. This is equivalent to :cpp:func:`deserialize` except that
-      it will throw an exception if the input is unacceptable.
-
    .. cpp:function:: static EC_Scalar random(const EC_Group& group, RandomNumberGenerator& rng)
 
-       Return a random scalar
+       Return a random non-zero scalar value
 
    .. cpp:function:: static EC_Scalar gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws)
 

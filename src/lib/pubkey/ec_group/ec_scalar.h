@@ -60,7 +60,7 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       * This is similar to deserialize but instead of returning nullopt if the input
       * is invalid, it will throw an exception.
       */
-      EC_Scalar(const EC_Group& group, std::span<const uint8_t> bytes);
+      BOTAN_DEPRECATED("Use EC_Scalar::deserialize") EC_Scalar(const EC_Group& group, std::span<const uint8_t> bytes);
 
       /**
       * Deserialize a pair of scalars

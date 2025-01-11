@@ -907,6 +907,36 @@ class PK_API_Sign_Test : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("pubkey", "pk_api_sign", PK_API_Sign_Test);
 
+/**
+ * @brief Testing PK key decoding
+ */
+class PK_Key_Decoding_Test : public Text_Based_Test {
+   public:
+      PK_Key_Decoding_Test() : Text_Based_Test("pubkey/key_encoding.vec", "Key") {}
+
+   protected:
+      Test::Result run_one_test(const std::string&, const VarMap& vars) final {
+         const auto key = vars.get_req_bin("Key");
+
+         Test::Result result("PK Key Decoding");
+
+         try {
+            auto k = Botan::PKCS8::load_key(key);
+            result.test_success("Was able to deserialize the key");
+         } catch(Botan::Exception& e) {
+            if(std::string(e.what()).starts_with("Unknown or unavailable public key algorithm")) {
+               result.test_note("Skipping test due to to algorithm being unavailable");
+            } else {
+               result.test_failure("Failed to deserialize key", e.what());
+            }
+         }
+
+         return result;
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "pk_key_decoding", PK_Key_Decoding_Test);
+
 }  // namespace Botan_Tests
 
 #endif
