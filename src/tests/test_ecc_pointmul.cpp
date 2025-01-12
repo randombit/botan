@@ -301,6 +301,7 @@ class ECC_Scalar_Arithmetic_Tests final : public Test {
 
          const auto ser_one = [=]() {
             auto b = ser_zero;
+            BOTAN_ASSERT_NOMSG(b.size() > 1);
             b[b.size() - 1] = 1;
             return b;
          }();
