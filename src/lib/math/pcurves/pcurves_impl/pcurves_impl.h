@@ -265,7 +265,7 @@ class IntMod final {
       }
 
       /// Return (*this) multiplied by 2
-      Self mul2() const {
+      constexpr Self mul2() const {
          std::array<W, N> t = value();
          W carry = shift_left<1>(t);
 

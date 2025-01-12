@@ -122,7 +122,7 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       /**
       * Write the fixed length serialization to bytes
       *
-      * The provided span must be exactly bytes() long
+      * The provided span must be exactly 2*bytes() long
       */
       static void serialize_pair_to(std::span<uint8_t> bytes, const EC_Scalar& r, const EC_Scalar& s);
 
