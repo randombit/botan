@@ -292,9 +292,9 @@ template <size_t WindowBits, typename W, size_t N>
 constexpr size_t read_window_bits(std::span<const W, N> words, size_t offset) {
    static_assert(WindowBits >= 1 && WindowBits <= 7);
 
-   const uint8_t WindowMask = static_cast<uint8_t>(1 << WindowBits) - 1;
+   constexpr uint8_t WindowMask = static_cast<uint8_t>(1 << WindowBits) - 1;
 
-   const size_t W_bits = sizeof(W) * 8;
+   constexpr size_t W_bits = sizeof(W) * 8;
    const auto bit_shift = offset % W_bits;
    const auto word_offset = words.size() - 1 - (offset / W_bits);
 
