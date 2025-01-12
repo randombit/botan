@@ -916,6 +916,16 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
       static secure_vector<uint8_t> encode_fixed_length_int_pair(const BigInt& n1, const BigInt& n2, size_t bytes);
 
       /**
+       * Return a span over the register
+       *
+       * @warning this is an implementation detail which is not for
+       * public use and not covered by SemVer.
+       *
+       * @result span over the internal register
+       */
+      std::span<const word> _as_span() const { return m_data.const_span(); }
+
+      /**
        * Return a const pointer to the register
        *
        * @warning this is an implementation detail which is not for
@@ -967,6 +977,8 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
             }
 
             const word* const_data() const { return m_reg.data(); }
+
+            std::span<const word> const_span() const { return std::span{m_reg}; }
 
             secure_vector<word>& mutable_vector() {
                invalidate_sig_words();

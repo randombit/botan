@@ -10,5 +10,7 @@ type -> "Internal"
 
 <header:internal>
 pcurves.h
+pcurves_algos.h
 pcurves_instance.h
+pcurves_mul.h
 </header:internal>

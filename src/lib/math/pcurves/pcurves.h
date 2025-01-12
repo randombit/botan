@@ -19,6 +19,7 @@
 
 namespace Botan {
 
+class BigInt;
 class RandomNumberGenerator;
 
 }  // namespace Botan
@@ -33,14 +34,27 @@ class PrimeOrderCurve {
       /// Somewhat arbitrary maximum size for a field or scalar
       ///
       /// Sized to fit at least P-521
-      static const size_t MaximumBitLength = 521;
+      static constexpr size_t MaximumBitLength = 521;
 
-      static const size_t MaximumByteLength = (MaximumBitLength + 7) / 8;
+      static constexpr size_t MaximumByteLength = (MaximumBitLength + 7) / 8;
 
       /// Number of words used to store MaximumByteLength
-      static const size_t StorageWords = (MaximumByteLength + sizeof(word) - 1) / sizeof(word);
+      static constexpr size_t StorageWords = (MaximumByteLength + sizeof(word) - 1) / sizeof(word);
 
+      /// @returns nullptr if the curve specified is not available
       static std::shared_ptr<const PrimeOrderCurve> for_named_curve(std::string_view name);
+
+      /// @returns nullptr if the parameters seem unsuitable for pcurves
+      /// for example if the prime is too large
+      ///
+      /// This function *should* accept the same subset of curves as
+      /// the EC_Group constructor that accepts BigInts.
+      static std::shared_ptr<const PrimeOrderCurve> from_params(const BigInt& p,
+                                                                const BigInt& a,
+                                                                const BigInt& b,
+                                                                const BigInt& base_x,
+                                                                const BigInt& base_y,
+                                                                const BigInt& order);
 
       typedef std::array<word, StorageWords> StorageUnit;
       typedef std::shared_ptr<const PrimeOrderCurve> CurvePtr;
