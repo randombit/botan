@@ -221,7 +221,7 @@ class ECC_Mul2_Inf_Tests final : public Test {
 
 BOTAN_REGISTER_TEST("pubkey", "ecc_mul2_inf", ECC_Mul2_Inf_Tests);
 
-class ECC_Addition_Tests final : public Test {
+class ECC_Point_Addition_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          std::vector<Test::Result> results;
@@ -268,7 +268,108 @@ class ECC_Addition_Tests final : public Test {
       }
 };
 
-BOTAN_REGISTER_TEST("pubkey", "ecc_addition", ECC_Addition_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ecc_pt_addition", ECC_Point_Addition_Tests);
+
+class ECC_Scalar_Arithmetic_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+
+         auto& rng = Test::rng();
+
+         for(const auto& group_id : Botan::EC_Group::known_named_groups()) {
+            const auto group = Botan::EC_Group::from_name(group_id);
+
+            Test::Result result("ECC scalar arithmetic " + group_id);
+            test_scalar_arith(result, group, rng);
+            results.push_back(result);
+         }
+         return results;
+      }
+
+   private:
+      void test_scalar_arith(Test::Result& result,
+                             const Botan::EC_Group& group,
+                             Botan::RandomNumberGenerator& rng) const {
+         const auto one = Botan::EC_Scalar::one(group);
+         const auto zero = one - one;
+         const auto two = one + one;
+
+         const size_t order_bytes = group.get_order_bytes();
+
+         const auto ser_zero = std::vector<uint8_t>(order_bytes);
+
+         const auto ser_one = [=]() {
+            auto b = ser_zero;
+            b[b.size() - 1] = 1;
+            return b;
+         }();
+
+         result.test_eq("Serialization of zero is expected value", zero.serialize(), ser_zero);
+         result.test_eq("Serialization of one is expected value", one.serialize(), ser_one);
+
+         result.test_eq("Zero is zero", zero.is_zero(), true);
+         result.test_eq("Negation of zero is zero", zero.negate().is_zero(), true);
+         result.test_eq("One is not zero", one.is_zero(), false);
+
+         // Zero inverse is not mathematically correct, but works out for our purposes
+         result.test_eq("Inverse of zero is zero", zero.invert().serialize(), ser_zero);
+         result.test_eq("Inverse of one is one", one.invert().serialize(), ser_one);
+
+         constexpr size_t test_iter = 128;
+
+         for(size_t i = 0; i != test_iter; ++i) {
+            const auto r = Botan::EC_Scalar::random(group, rng);
+
+            // Negation and addition are inverses
+            result.test_eq("r + -r == 0", (r + r.negate()).serialize(), ser_zero);
+
+            // Serialization and deserialization are inverses
+            const auto r_bytes = r.serialize();
+            result.test_eq("Deserialization of r round trips",
+                           Botan::EC_Scalar::deserialize(group, r_bytes).value().serialize(),
+                           r_bytes);
+
+            // Multiplication and inversion are inverses
+            const auto r2 = r * r;
+            const auto r_inv = r.invert();
+            result.test_eq("r * r^-1 = 1", (r * r_inv).serialize(), ser_one);
+         }
+
+         for(size_t i = 0; i != test_iter; ++i) {
+            const auto a = Botan::EC_Scalar::random(group, rng);
+            const auto b = Botan::EC_Scalar::random(group, rng);
+
+            const auto ab = a * b;
+            const auto a_inv = a.invert();
+            const auto b_inv = b.invert();
+
+            result.test_eq("a * b / b = a", (ab * b_inv).serialize(), a.serialize());
+            result.test_eq("a * b / a = b", (ab * a_inv).serialize(), b.serialize());
+
+            auto a_plus_b = a + b;
+            result.test_eq("(a + b) - b == a", (a_plus_b - b).serialize(), a.serialize());
+            result.test_eq("(a + b) - a == b", (a_plus_b - a).serialize(), b.serialize());
+            result.test_eq("b - (a + b) == -a", (b - a_plus_b).serialize(), a.negate().serialize());
+            result.test_eq("a - (a + b) == -b", (a - a_plus_b).serialize(), b.negate().serialize());
+         }
+
+         for(size_t i = 0; i != test_iter; ++i) {
+            const auto a = Botan::EC_Scalar::random(group, rng);
+            const auto b = Botan::EC_Scalar::random(group, rng);
+            const auto c = Botan::EC_Scalar::random(group, rng);
+
+            const auto ab_c = (a + b) * c;
+            const auto ac_bc = a * c + b * c;
+
+            result.test_eq("(a + b)*c == a * c + b * c", ab_c.serialize(), ac_bc.serialize());
+         }
+
+         result.end_timer();
+      }
+};
+
+BOTAN_REGISTER_TEST("pubkey", "ecc_scalar_arith", ECC_Scalar_Arithmetic_Tests);
 
 #endif
 
