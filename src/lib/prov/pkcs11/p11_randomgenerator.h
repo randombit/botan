@@ -9,7 +9,6 @@
 #ifndef BOTAN_P11_RNG_H_
 #define BOTAN_P11_RNG_H_
 
-#include <botan/entropy_src.h>
 #include <botan/p11_types.h>
 #include <botan/rng.h>
 

@@ -6,11 +6,12 @@
 
 #include <botan/auto_rng.h>
 
-#include <botan/entropy_src.h>
 #include <botan/hmac_drbg.h>
 #include <botan/internal/loadstor.h>
 
-#include <array>
+#if defined(BOTAN_HAS_ENTROPY_SOURCE)
+   #include <botan/entropy_src.h>
+#endif
 
 #if defined(BOTAN_HAS_SYSTEM_RNG)
    #include <botan/system_rng.h>
@@ -27,7 +28,7 @@ std::unique_ptr<MessageAuthenticationCode> auto_rng_hmac() {
    };
 
    for(const auto& hmac : possible_auto_rng_hmacs) {
-      if(auto mac = MessageAuthenticationCode::create_or_throw(hmac)) {
+      if(auto mac = MessageAuthenticationCode::create(hmac)) {
          return mac;
       }
    }
@@ -60,13 +61,17 @@ AutoSeeded_RNG::AutoSeeded_RNG(RandomNumberGenerator& underlying_rng,
    force_reseed();
 }
 
-AutoSeeded_RNG::AutoSeeded_RNG(size_t reseed_interval) :
+AutoSeeded_RNG::AutoSeeded_RNG(size_t reseed_interval) {
 #if defined(BOTAN_HAS_SYSTEM_RNG)
-      AutoSeeded_RNG(system_rng(), reseed_interval)
+   m_rng = std::make_unique<HMAC_DRBG>(auto_rng_hmac(), system_rng(), reseed_interval);
+#elif defined(BOTAN_HAS_ENTROPY_SOURCE)
+   m_rng = std::make_unique<HMAC_DRBG>(auto_rng_hmac(), Entropy_Sources::global_sources(), reseed_interval);
 #else
-      AutoSeeded_RNG(Entropy_Sources::global_sources(), reseed_interval)
+   BOTAN_UNUSED(reseed_interval);
+   throw Not_Implemented("AutoSeeded_RNG default constructor not available due to no RNG or entropy sources");
 #endif
-{
+
+   force_reseed();
 }
 
 void AutoSeeded_RNG::force_reseed() {

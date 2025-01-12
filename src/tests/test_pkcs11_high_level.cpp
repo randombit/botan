@@ -26,6 +26,10 @@
    #include <botan/der_enc.h>
 #endif
 
+#if defined(BOTAN_HAS_ENTROPY_SOURCE)
+   #include <botan/entropy_src.h>
+#endif
+
 #if defined(BOTAN_HAS_PUBLIC_KEY_CRYPTO)
    #include <botan/pubkey.h>
 #endif
@@ -1404,9 +1408,11 @@ Test::Result test_rng_add_entropy() {
    p11_rng.clear();
    result.confirm("RNG ignores call to clear", p11_rng.is_seeded());
 
+   #if defined(BOTAN_HAS_ENTROPY_SOURCE)
    result.test_eq("RNG ignores calls to reseed",
                   p11_rng.reseed(Botan::Entropy_Sources::global_sources(), 256, std::chrono::milliseconds(300)),
                   0);
+   #endif
 
    auto rng = Test::new_rng(__func__);
    auto random = rng->random_vec(20);

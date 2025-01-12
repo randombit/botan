@@ -7,13 +7,17 @@
 #include "../tests/test_rng.h"  // FIXME
 #include "cli.h"
 
-#include <botan/entropy_src.h>
+#if defined(BOTAN_HAS_ENTROPY_SOURCE)
+   #include <botan/entropy_src.h>
+#endif
 
 #if defined(BOTAN_HAS_COMPRESSION)
    #include <botan/compression.h>
 #endif
 
 namespace Botan_CLI {
+
+#if defined(BOTAN_HAS_ENTROPY_SOURCE)
 
 class Entropy final : public Command {
    public:
@@ -50,7 +54,7 @@ class Entropy final : public Command {
             output() << "Polling " << source << " gathered " << sample.size() << " bytes in " << rng.samples()
                      << " outputs with estimated entropy " << entropy_estimate << "\n";
 
-#if defined(BOTAN_HAS_COMPRESSION)
+   #if defined(BOTAN_HAS_COMPRESSION)
             if(!sample.empty()) {
                auto comp = Botan::Compression_Algorithm::create("zlib");
                if(comp) {
@@ -69,7 +73,7 @@ class Entropy final : public Command {
                   }
                }
             }
-#endif
+   #endif
 
             if(sample.size() <= truncate_sample) {
                output() << Botan::hex_encode(sample) << "\n";
@@ -81,5 +85,7 @@ class Entropy final : public Command {
 };
 
 BOTAN_REGISTER_COMMAND("entropy", Entropy);
+
+#endif
 
 }  // namespace Botan_CLI
