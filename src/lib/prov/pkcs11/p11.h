@@ -3857,8 +3857,7 @@ class BOTAN_PUBLIC_API(2, 0) PKCS11_Error : public Exception {
 
 class BOTAN_PUBLIC_API(2, 0) PKCS11_ReturnError final : public PKCS11_Error {
    public:
-      explicit PKCS11_ReturnError(ReturnValue return_val) :
-            PKCS11_Error(std::to_string(static_cast<uint32_t>(return_val))), m_return_val(return_val) {}
+      explicit PKCS11_ReturnError(ReturnValue return_val);
 
       inline ReturnValue get_return_value() const { return m_return_val; }
 
