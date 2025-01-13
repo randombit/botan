@@ -8,13 +8,14 @@
 #include <botan/p11.h>
 #include <algorithm>
 #include <array>
+#include <iterator>
 #include <vector>
 
 namespace Botan::PKCS11 {
 
 namespace {
 
-auto operator<=>(const Version& left, const Version& right) {
+std::strong_ordering operator<=>(const Version& left, const Version& right) {
    // Compare both versions by concatenating their bytes: major || minor
    auto version_value = [](const Version& v) -> uint16_t {
       return static_cast<uint16_t>(v.major) << 8 | static_cast<uint16_t>(v.minor);
@@ -22,8 +23,19 @@ auto operator<=>(const Version& left, const Version& right) {
    return version_value(left) <=> version_value(right);
 }
 
-auto operator==(const Version& left, const Version& right) {
+bool operator==(const Version& left, const Version& right) {
    return left.major == right.major && left.minor == right.minor;
+}
+
+Version version_of(const Interface& interface) {
+   // PKCS #11 CK_INTERFACE documentation:
+   //   pFunctionList - the interface function list which must always begin with
+   //   a CK_VERSION structure as the first field
+   return *reinterpret_cast<Version*>(interface.pFunctionList);
+};
+
+std::string_view name_of(const Interface& interface) {
+   return std::string_view(reinterpret_cast<const char*>(interface.pInterfaceName));
 }
 
 constexpr std::string_view PKCS11_INTERFACE_NAME = "PKCS 11";
@@ -31,11 +43,11 @@ constexpr std::string_view PKCS11_INTERFACE_NAME = "PKCS 11";
 }  // namespace
 
 Version InterfaceWrapper::version() const {
-   return *reinterpret_cast<Version*>(m_interface.pFunctionList);
+   return version_of(m_interface);
 }
 
 std::string_view InterfaceWrapper::name() const {
-   return std::string_view(reinterpret_cast<const char*>(m_interface.pInterfaceName));
+   return name_of(m_interface);
 }
 
 std::unique_ptr<InterfaceWrapper> InterfaceWrapper::latest_p11_interface(Dynamically_Loaded_Library& library) {
@@ -63,14 +75,9 @@ std::unique_ptr<InterfaceWrapper> InterfaceWrapper::latest_p11_interface(Dynamic
       throw Invalid_Argument("Unexpected error while loading PKCS#11 interface list.");
    }
 
-   auto version_of = [](const Interface& i) -> Version { return *reinterpret_cast<Version*>(i.pFunctionList); };
-   auto name_of = [](const Interface& i) -> std::string_view {
-      return std::string_view(reinterpret_cast<const char*>(i.pInterfaceName));
-   };
-
    // We only load interfaces named "PKCS 11" (which are the pure ones defined in the spec) with
    // version >= 2.40.
-   auto is_valid_interface = [&](const Interface& i) {
+   auto is_valid_interface = [](const Interface& i) {
       if(name_of(i) != PKCS11_INTERFACE_NAME) {
          return false;
       }
@@ -90,15 +97,15 @@ std::unique_ptr<InterfaceWrapper> InterfaceWrapper::latest_p11_interface(Dynamic
    // We prioritize valid interfaces the following way:
    // Higher versions are prefered over lower ones. If multiple interfaces of
    // the highest version exist, fork safe interfaces are prefered.
-   auto priority_comparator = [&](const Interface& a, const Interface& b) {
-      Version a_version = version_of(a);
-      Version b_version = version_of(b);
+   auto priority_comparator = [](const Interface& left, const Interface& right) {
+      Version left_version = version_of(left);
+      Version right_version = version_of(right);
 
-      if(a_version == b_version) {
-         return (a.flags & static_cast<CK_FLAGS>(Flag::InterfaceForkSafe)) <
-                (b.flags & static_cast<CK_FLAGS>(Flag::InterfaceForkSafe));
+      if(left_version == right_version) {
+         return (left.flags & static_cast<CK_FLAGS>(Flag::InterfaceForkSafe)) <
+                (right.flags & static_cast<CK_FLAGS>(Flag::InterfaceForkSafe));
       }
-      return a_version < b_version;
+      return left_version < right_version;
    };
    auto best_interface = std::max_element(valid_interfaces.begin(), valid_interfaces.end(), priority_comparator);
    return std::make_unique<InterfaceWrapper>(*best_interface);
