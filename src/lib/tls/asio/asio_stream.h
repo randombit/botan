@@ -293,7 +293,11 @@ class Stream {
          m_context->set_verify_callback(std::move(callback));
       }
 
-      //! @throws Not_Implemented
+      /**
+       * Not Implemented.
+       * @param depth the desired verification depth
+       * @throws Not_Implemented todo
+       */
       void set_verify_depth(int depth) {
          BOTAN_UNUSED(depth);
          throw Not_Implemented("set_verify_depth is not implemented");
@@ -309,7 +313,11 @@ class Stream {
          ec = ErrorType::NotImplemented;
       }
 
-      //! @throws Not_Implemented
+      /**
+       * Not Implemented.
+       * @param v the desired verify mode
+       * @throws Not_Implemented todo
+       */
       template <typename verify_mode>
       void set_verify_mode(verify_mode v) {
          BOTAN_UNUSED(v);
@@ -415,7 +423,10 @@ class Stream {
             side);
       }
 
-      //! @throws Not_Implemented
+      /**
+       * Not Implemented.
+       * @throws Not_Implemented todo
+       */
       template <typename ConstBufferSequence, detail::basic_completion_token BufferedHandshakeHandler>
       auto async_handshake(Connection_Side side,
                            const ConstBufferSequence& buffers,
