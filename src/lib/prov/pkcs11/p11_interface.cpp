@@ -6,6 +6,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 #include <botan/p11.h>
+#include <algorithm>
 #include <array>
 #include <vector>
 
