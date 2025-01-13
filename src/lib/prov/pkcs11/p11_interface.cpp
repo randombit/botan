@@ -7,7 +7,6 @@
 */
 #include <botan/p11.h>
 #include <array>
-#include <ranges>
 #include <vector>
 
 namespace Botan::PKCS11 {
@@ -44,7 +43,7 @@ std::unique_ptr<InterfaceWrapper> InterfaceWrapper::latest_p11_interface(Dynamic
    if(!rv) {
       // Method could not be executed. Probably due to a cryptoki library with PKCS #11 < 3.0.
       // Try the legacy C_GetFunctionList method (for PKCS#11 version 2.40).
-      CK_FUNCTION_LIST* func_list;
+      FunctionList* func_list;
       rv = LowLevel::C_GetFunctionList(library, &func_list, nullptr);
       if(!rv) {
          throw Invalid_Argument("Failed to load function list for PKCS#11 library.");

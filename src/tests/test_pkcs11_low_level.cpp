@@ -136,7 +136,7 @@ class RAII_LowLevel {
 
    private:
       Dynamically_Loaded_Library m_module;
-      FunctionListPtr m_func_list;
+      FunctionList* m_func_list;
       std::unique_ptr<LowLevel> m_low_level;
       SessionHandle m_session_handle;
       bool m_is_session_open;
@@ -224,7 +224,7 @@ Test::Result test_low_level_ctor() {
    Test::Result result("PKCS 11 low level - LowLevel ctor");
 
    Dynamically_Loaded_Library pkcs11_module(Test::pkcs11_lib());
-   FunctionListPtr func_list(nullptr);
+   FunctionList* func_list(nullptr);
    LowLevel::C_GetFunctionList(pkcs11_module, &func_list);
 
    LowLevel p11_low_level(func_list);
@@ -238,7 +238,7 @@ Test::Result test_low_level_ctor() {
 
 Test::Result test_c_get_function_list() {
    Dynamically_Loaded_Library pkcs11_module(Test::pkcs11_lib());
-   FunctionListPtr func_list = nullptr;
+   FunctionList* func_list = nullptr;
    return test_function(
       "C_GetFunctionList",
       std::bind(&LowLevel::C_GetFunctionList, std::ref(pkcs11_module), &func_list, std::placeholders::_1));
@@ -246,7 +246,7 @@ Test::Result test_c_get_function_list() {
 
 Test::Result test_initialize_finalize() {
    Dynamically_Loaded_Library pkcs11_module(Test::pkcs11_lib());
-   FunctionListPtr func_list = nullptr;
+   FunctionList* func_list = nullptr;
    LowLevel::C_GetFunctionList(pkcs11_module, &func_list);
 
    LowLevel p11_low_level(func_list);
@@ -833,9 +833,16 @@ Test::Result test_c_copy_object() {
 Test::Result test_load_latest_interface() {
    Test::Result res("Load latest PKCS #11 interface");
    Botan::Dynamically_Loaded_Library pkcs11_module(Test::pkcs11_lib());
-   res.test_no_throw("Get v.2.40 function list of latest interface", [&] {
+   res.test_no_throw("Get function lists of latest interface", [&] {
       auto latest_interface = InterfaceWrapper::latest_p11_interface(pkcs11_module);
       latest_interface->func_2_40();
+      if(latest_interface->version().major >= 3) {
+         latest_interface->func_3_0();
+
+         if(latest_interface->version().major > 3 || latest_interface->version().minor >= 2) {
+            latest_interface->func_3_2();
+         }
+      }
    });
    return res;
 }

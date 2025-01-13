@@ -1200,13 +1200,11 @@ class BOTAN_PUBLIC_API(3, 7) InterfaceWrapper {
       static std::unique_ptr<InterfaceWrapper> latest_p11_interface(Dynamically_Loaded_Library& library);
 
       /**
-       * @brief Returns "PKCS 11"
-       *
        * Returns an immortal pointer to the uint8_t string "PKCS 11".
-       *  Used to define an interface object.
+       * Used to define an interface object.
        *
        * @warning Unfortunately, the interface object requires a non constant
-       * pointer. However, this string MUST not be modified!
+       * pointer. However, this string MUST NOT be modified!
        */
       static uint8_t* p11_interface_name_ptr();
 };
@@ -1216,7 +1214,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
    public:
       /// @param ptr the functon list pointer to use. Can be retrieved via `LowLevel::C_GetFunctionList`
       BOTAN_DEPRECATED("Use LowLevel(InterfaceWrapperDefault::latest_p11_interface(module.library()))")
-      explicit LowLevel(FunctionListPtr ptr);
+      explicit LowLevel(FunctionList* ptr);
 
       explicit LowLevel(std::unique_ptr<InterfaceWrapper> interface_wrapper);
 
@@ -1271,7 +1269,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       static bool C_GetFunctionList(const Dynamically_Loaded_Library& pkcs11_module,
-                                    FunctionListPtr* function_list_ptr_ptr,
+                                    FunctionList** function_list_ptr_ptr,
                                     ReturnValue* return_value = ThrowException);
 
       /**
@@ -3832,7 +3830,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * functions which are not supported directly by LowLevel or the higher
       * level PKCS11 API.
       */
-      BOTAN_DEPRECATED("Use get_interface().func_2_40()") FunctionListPtr get_functions() const;
+      BOTAN_DEPRECATED("Use get_interface().func_2_40()") FunctionList* get_functions() const;
 
       const InterfaceWrapper& interface() { return *m_interface_wrapper; }
 

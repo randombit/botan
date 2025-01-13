@@ -48,8 +48,7 @@ class BOTAN_PUBLIC_API(2, 0) Module final {
       virtual ~Module() noexcept;
 
       /**
-      * Reloads the module and reinitializes it. Subclasses may override this
-      * interface method to load custom vendor-specific PKCS#11 interfaces.
+      * Reloads the module and reinitializes it.
       * @param init_args flags to use for `C_Initialize`
       */
       void reload(C_InitializeArgs init_args = {

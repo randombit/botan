@@ -60,7 +60,7 @@ void set_pin(Slot& slot, const secure_string& so_pin, const secure_string& pin) 
    session.init_pin(pin);
 }
 
-LowLevel::LowLevel(FunctionListPtr ptr) {
+LowLevel::LowLevel(FunctionList* ptr) {
    BOTAN_ARG_CHECK(ptr != nullptr, "Function list pointer must not be nullptr");
    m_interface_wrapper = std::make_unique<InterfaceWrapper>(Interface{
       .pInterfaceName = InterfaceWrapper::p11_interface_name_ptr(),
@@ -89,9 +89,9 @@ bool LowLevel::C_GetInfo(Info* info_ptr, ReturnValue* return_value) const {
 }
 
 bool LowLevel::C_GetFunctionList(const Dynamically_Loaded_Library& pkcs11_module,
-                                 FunctionListPtr* function_list_ptr_ptr,
+                                 FunctionList** function_list_ptr_ptr,
                                  ReturnValue* return_value) {
-   using get_function_list = CK_RV (*)(FunctionListPtr*);
+   using get_function_list = CK_RV (*)(FunctionList**);
 
    get_function_list get_function_list_ptr = pkcs11_module.resolve<get_function_list>("C_GetFunctionList");
 
@@ -1090,8 +1090,8 @@ bool LowLevel::C_AsyncJoin(SessionHandle session,
       m_interface_wrapper->func_3_2().C_AsyncJoin(session, function_name_ptr, id, data_ptr, data_len), return_value);
 }
 
-FunctionListPtr LowLevel::get_functions() const {
-   return reinterpret_cast<FunctionListPtr>(m_interface_wrapper->get().pFunctionList);
+FunctionList* LowLevel::get_functions() const {
+   return reinterpret_cast<FunctionList*>(m_interface_wrapper->get().pFunctionList);
 }
 
 }  // namespace Botan::PKCS11
