@@ -1187,16 +1187,16 @@ class BOTAN_PUBLIC_API(3, 7) InterfaceWrapper {
       std::string_view name() const;
 
       /// Access a function list that contains all methods since PKCS #11 v.2.40
-      virtual const CK_FUNCTION_LIST& func_2_40() const;
+      virtual const FunctionList& func_2_40() const;
 
       /// Access a function list that contains all methods since PKCS #11 v.3.0
-      virtual const CK_FUNCTION_LIST_3_0& func_3_0() const;
+      virtual const FunctionList30& func_3_0() const;
 
       /// Access a function list that contains all methods since PKCS #11 v.3.2
-      virtual const CK_FUNCTION_LIST_3_2& func_3_2() const;
+      virtual const FunctionList32& func_3_2() const;
 
       /// Find the latest supported "PKCS 11" interface. Fork safe interfaces
-      /// are prefered.
+      /// are prefered over non fork safe ones of the same version.
       static std::unique_ptr<InterfaceWrapper> latest_p11_interface(Dynamically_Loaded_Library& library);
 
       /**

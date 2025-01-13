@@ -56,8 +56,8 @@ std::unique_ptr<InterfaceWrapper> InterfaceWrapper::latest_p11_interface(Dynamic
          .flags = 0,
       });
    }
-   std::vector<Interface> interfaceList(count);
-   rv = LowLevel::C_GetInterfaceList(library, interfaceList.data(), &count, nullptr);
+   std::vector<Interface> interface_list(count);
+   rv = LowLevel::C_GetInterfaceList(library, interface_list.data(), &count, nullptr);
    if(!rv) {
       // The interface list count could be computed but the interface list cannot be received. This should not happen.
       throw Invalid_Argument("Unexpected error while loading PKCS#11 interface list.");
@@ -80,7 +80,8 @@ std::unique_ptr<InterfaceWrapper> InterfaceWrapper::latest_p11_interface(Dynamic
       Version version = version_of(i);
       return version >= Version{2, 40};
    };
-   auto valid_interfaces = interfaceList | std::views::filter(is_valid_interface);
+   std::vector<Interface> valid_interfaces;
+   std::copy_if(interface_list.begin(), interface_list.end(), std::back_inserter(valid_interfaces), is_valid_interface);
 
    if(valid_interfaces.empty()) {
       throw Invalid_Argument("No supported PKCS #11 interfaces found.");
@@ -99,35 +100,35 @@ std::unique_ptr<InterfaceWrapper> InterfaceWrapper::latest_p11_interface(Dynamic
       }
       return a_version < b_version;
    };
-   auto best_interface = std::ranges::max_element(valid_interfaces, priority_comparator);
+   auto best_interface = std::max_element(valid_interfaces.begin(), valid_interfaces.end(), priority_comparator);
    return std::make_unique<InterfaceWrapper>(*best_interface);
 }
 
-const CK_FUNCTION_LIST& InterfaceWrapper::func_2_40() const {
+const FunctionList& InterfaceWrapper::func_2_40() const {
    if(name() != PKCS11_INTERFACE_NAME) {
       throw Botan::Invalid_State("Vendor defined PKCS #11 interfaces are not supported.");
    }
-   return *reinterpret_cast<CK_FUNCTION_LIST*>(get().pFunctionList);
+   return *reinterpret_cast<FunctionList*>(get().pFunctionList);
 }
 
-const CK_FUNCTION_LIST_3_0& InterfaceWrapper::func_3_0() const {
+const FunctionList30& InterfaceWrapper::func_3_0() const {
    if(name() != PKCS11_INTERFACE_NAME) {
       throw Botan::Invalid_State("Vendor defined PKCS #11 interfaces are not supported.");
    }
    if(version() < Version{3, 0}) {
       throw Botan::Invalid_State("Loaded interface does not support PKCS #11 v3.0 features");
    }
-   return *reinterpret_cast<CK_FUNCTION_LIST_3_0*>(get().pFunctionList);
+   return *reinterpret_cast<FunctionList30*>(get().pFunctionList);
 }
 
-const CK_FUNCTION_LIST_3_2& InterfaceWrapper::func_3_2() const {
+const FunctionList32& InterfaceWrapper::func_3_2() const {
    if(name() != PKCS11_INTERFACE_NAME) {
       throw Botan::Invalid_State("Vendor defined PKCS #11 interfaces are not supported.");
    }
    if(version() < Version{3, 2}) {
       throw Botan::Invalid_State("Loaded interface does not support PKCS #11 v3.2 features");
    }
-   return *reinterpret_cast<CK_FUNCTION_LIST_3_2*>(get().pFunctionList);
+   return *reinterpret_cast<FunctionList32*>(get().pFunctionList);
 }
 
 uint8_t* InterfaceWrapper::p11_interface_name_ptr() {
