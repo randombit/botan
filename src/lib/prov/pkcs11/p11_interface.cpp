@@ -6,7 +6,9 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 #include <botan/p11.h>
+#include <array>
 #include <ranges>
+#include <vector>
 
 namespace Botan::PKCS11 {
 
@@ -78,7 +80,7 @@ std::unique_ptr<InterfaceWrapper> InterfaceWrapper::latest_p11_interface(Dynamic
       Version version = version_of(i);
       return version >= Version{2, 40};
    };
-   auto valid_interfaces = interfaceList | std::ranges::views::filter(is_valid_interface);
+   auto valid_interfaces = interfaceList | std::views::filter(is_valid_interface);
 
    if(valid_interfaces.empty()) {
       throw Invalid_Argument("No supported PKCS #11 interfaces found.");
