@@ -65,6 +65,10 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
    secure_vector<word> ws;
    m_a_r = m_monty.mul(a, m_monty.R2(), ws);
    m_b_r = m_monty.mul(b, m_monty.R2(), ws);
+#else
+   if(!m_pcurve) {
+      throw Not_Implemented("EC_Group this group is not supported unless legacy_ec_point is included in the build");
+   }
 #endif
 }
 
