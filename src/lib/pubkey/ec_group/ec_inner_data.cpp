@@ -145,7 +145,7 @@ std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_from_bytes_with_trunc(std:
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_from_bytes_mod_order(std::span<const uint8_t> bytes) const {
-   if(bytes.size() >= 2 * order_bytes()) {
+   if(bytes.size() > 2 * order_bytes()) {
       return {};
    }
 

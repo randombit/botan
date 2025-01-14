@@ -366,6 +366,34 @@ class ECC_Scalar_Arithmetic_Tests final : public Test {
             result.test_eq("(a + b)*c == a * c + b * c", ab_c.serialize(), ac_bc.serialize());
          }
 
+         for(size_t i = 0; i != test_iter; ++i) {
+            const auto a = Botan::EC_Scalar::random(group, rng);
+            const auto b = Botan::EC_Scalar::random(group, rng);
+            const auto c = a * b;
+
+            const auto c_bn = (a.to_bigint() * b.to_bigint());
+            result.test_eq("matches BigInt", c.serialize(), (c_bn % group.get_order()).serialize(order_bytes));
+
+            const auto c_wide_bytes = c_bn.serialize();
+            result.test_lte("Expected size", c_wide_bytes.size(), 2 * order_bytes);
+
+            const auto z = Botan::EC_Scalar::from_bytes_mod_order(group, c_wide_bytes);
+
+            result.test_eq("from_bytes_mod_order", c.serialize(), z.serialize());
+         }
+
+         for(size_t i = 0; i != test_iter; ++i) {
+            std::vector<uint8_t> r(2 * group.get_order_bytes());
+
+            rng.randomize(r);
+
+            const auto ref = Botan::BigInt::from_bytes(r) % group.get_order();
+
+            const auto scalar = Botan::EC_Scalar::from_bytes_mod_order(group, r);
+
+            result.test_eq("from_bytes_mod_order (random)", scalar.serialize(), ref.serialize(group.get_order_bytes()));
+         }
+
          result.end_timer();
       }
 };
