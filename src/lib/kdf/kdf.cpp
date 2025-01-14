@@ -53,14 +53,14 @@ namespace Botan {
 
 namespace {
 
-template <typename KDF_Type>
-std::unique_ptr<KDF> kdf_create_mac_or_hash(std::string_view nm) {
+template <typename KDF_Type, typename... ParamTs>
+std::unique_ptr<KDF> kdf_create_mac_or_hash(std::string_view nm, ParamTs&&... params) {
    if(auto mac = MessageAuthenticationCode::create(fmt("HMAC({})", nm))) {
-      return std::make_unique<KDF_Type>(std::move(mac));
+      return std::make_unique<KDF_Type>(std::move(mac), std::forward<ParamTs>(params)...);
    }
 
    if(auto mac = MessageAuthenticationCode::create(nm)) {
-      return std::make_unique<KDF_Type>(std::move(mac));
+      return std::make_unique<KDF_Type>(std::move(mac), std::forward<ParamTs>(params)...);
    }
 
    return nullptr;
@@ -138,21 +138,24 @@ std::unique_ptr<KDF> KDF::create(std::string_view algo_spec, std::string_view pr
 #endif
 
 #if defined(BOTAN_HAS_SP800_108)
-   if(req.algo_name() == "SP800-108-Counter" && req.arg_count() == 1) {
+   if(req.algo_name() == "SP800-108-Counter" && req.arg_count_between(1, 3)) {
       if(provider.empty() || provider == "base") {
-         return kdf_create_mac_or_hash<SP800_108_Counter>(req.arg(0));
+         return kdf_create_mac_or_hash<SP800_108_Counter>(
+            req.arg(0), req.arg_as_integer(1, 32), req.arg_as_integer(2, 32));
       }
    }
 
-   if(req.algo_name() == "SP800-108-Feedback" && req.arg_count() == 1) {
+   if(req.algo_name() == "SP800-108-Feedback" && req.arg_count_between(1, 3)) {
       if(provider.empty() || provider == "base") {
-         return kdf_create_mac_or_hash<SP800_108_Feedback>(req.arg(0));
+         return kdf_create_mac_or_hash<SP800_108_Feedback>(
+            req.arg(0), req.arg_as_integer(1, 32), req.arg_as_integer(2, 32));
       }
    }
 
-   if(req.algo_name() == "SP800-108-Pipeline" && req.arg_count() == 1) {
+   if(req.algo_name() == "SP800-108-Pipeline" && req.arg_count_between(1, 3)) {
       if(provider.empty() || provider == "base") {
-         return kdf_create_mac_or_hash<SP800_108_Pipeline>(req.arg(0));
+         return kdf_create_mac_or_hash<SP800_108_Pipeline>(
+            req.arg(0), req.arg_as_integer(1, 32), req.arg_as_integer(2, 32));
       }
    }
 #endif
@@ -176,7 +179,7 @@ std::unique_ptr<KDF> KDF::create(std::string_view algo_spec, std::string_view pr
 
 #if defined(BOTAN_HAS_SP800_56C)
    if(req.algo_name() == "SP800-56C" && req.arg_count() == 1) {
-      std::unique_ptr<KDF> exp(kdf_create_mac_or_hash<SP800_108_Feedback>(req.arg(0)));
+      std::unique_ptr<KDF> exp(kdf_create_mac_or_hash<SP800_108_Feedback>(req.arg(0), 32, 32));
       if(exp) {
          if(auto mac = MessageAuthenticationCode::create(req.arg(0))) {
             return std::make_unique<SP800_56C_Two_Step>(std::move(mac), std::move(exp));
