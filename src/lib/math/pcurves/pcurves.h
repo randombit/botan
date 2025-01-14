@@ -29,7 +29,7 @@ namespace Botan::PCurve {
 /**
 * An elliptic curve without cofactor in Weierstrass form
 */
-class BOTAN_TEST_API PrimeOrderCurve {
+class PrimeOrderCurve {
    public:
       /// Somewhat arbitrary maximum size for a field or scalar
       ///
