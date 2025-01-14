@@ -22,7 +22,7 @@ function build_and_install_jitterentropy() {
     mkdir jitterentropy-library
     curl -L "https://github.com/smuellerDD/jitterentropy-library/archive/refs/tags/v${JITTERENTROPY_VERSION}.tar.gz" | tar -xz -C .
     jel_dir="$(realpath jitterentropy-library-*)"
-    cmake -B "${jel_dir}/build" -S "${jel_dir}" -DCMAKE_BUILD_TYPE=Release
+    cmake -B "${jel_dir}/build" -S "${jel_dir}" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER_LAUNCHER=ccache
     cmake --build "${jel_dir}/build"
     sudo cmake --install "${jel_dir}/build"
     echo "BOTAN_BUILD_WITH_JITTERENTROPY=1" >> "$GITHUB_ENV"
