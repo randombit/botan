@@ -635,6 +635,191 @@ class ECC_Unit_Tests final : public Test {
 
 BOTAN_REGISTER_SERIALIZED_TEST("pubkey", "ecc_unit", ECC_Unit_Tests);
 
+class EC_PointEnc_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+
+         auto& rng = Test::rng();
+
+         for(const auto& group_id : Botan::EC_Group::known_named_groups()) {
+            const auto group = Botan::EC_Group::from_name(group_id);
+
+            Result result("EC_AffinePoint encoding " + group_id);
+
+            result.start_timer();
+
+            std::vector<Botan::BigInt> ws;
+
+            for(size_t trial = 0; trial != 100; ++trial) {
+               const auto scalar = Botan::EC_Scalar::random(group, rng);
+               const auto pt = Botan::EC_AffinePoint::g_mul(scalar, rng, ws);
+
+               const auto pt_u = pt.serialize_uncompressed();
+               result.test_eq("Expected uncompressed header", static_cast<size_t>(pt_u[0]), 0x04);
+               const size_t fe_bytes = (pt_u.size() - 1) / 2;
+               const auto pt_c = pt.serialize_compressed();
+
+               result.test_eq("Expected compressed size", pt_c.size(), 1 + fe_bytes);
+               result.confirm("Expected compressed header", pt_c[0] == 0x02 || pt_c[0] == 0x03);
+
+               if(auto d_pt_u = Botan::EC_AffinePoint::deserialize(group, pt_u)) {
+                  result.test_eq(
+                     "Deserializing uncompressed returned correct point", d_pt_u->serialize_uncompressed(), pt_u);
+               } else {
+                  result.test_failure("Failed to deserialize uncompressed point");
+               }
+
+               if(auto d_pt_c = Botan::EC_AffinePoint::deserialize(group, pt_c)) {
+                  result.test_eq(
+                     "Deserializing compressed returned correct point", d_pt_c->serialize_uncompressed(), pt_u);
+               } else {
+                  result.test_failure("Failed to deserialize compressed point");
+               }
+            }
+
+            result.end_timer();
+
+            results.push_back(result);
+         }
+
+         return results;
+      }
+};
+
+BOTAN_REGISTER_TEST("pcurves", "ec_point_enc", EC_PointEnc_Tests);
+
+class EC_Point_Arithmetic_Tests final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         std::vector<Test::Result> results;
+
+         auto& rng = Test::rng();
+
+         std::vector<Botan::BigInt> ws;
+
+         for(const auto& group_id : Botan::EC_Group::known_named_groups()) {
+            const auto group = Botan::EC_Group::from_name(group_id);
+
+            Result result("EC_AffinePoint arithmetic " + group_id);
+
+            result.start_timer();
+
+            const auto one = Botan::EC_Scalar::one(group);
+            const auto zero = one - one;
+            const auto g = Botan::EC_AffinePoint::generator(group);
+            const auto g_bytes = g.serialize_uncompressed();
+
+            const auto id = Botan::EC_AffinePoint::g_mul(zero, rng, ws);
+            result.confirm("g*zero is point at identity", id.is_identity());
+
+            const auto id2 = id.add(id);
+            result.confirm("identity plus itself is identity", id2.is_identity());
+
+            const auto g_one = Botan::EC_AffinePoint::g_mul(one, rng, ws);
+            result.test_eq("g*one == generator", g_one.serialize_uncompressed(), g_bytes);
+
+            const auto g_plus_id = g_one.add(id);
+            result.test_eq("g + id == g", g_plus_id.serialize_uncompressed(), g_bytes);
+
+            const auto id_plus_g = id.add(g_one);
+            result.test_eq("id + g == g", id_plus_g.serialize_uncompressed(), g_bytes);
+
+            const auto g_neg_one = Botan::EC_AffinePoint::g_mul(one.negate(), rng, ws);
+
+            const auto id_from_g = g_one.add(g_neg_one);
+            result.confirm("g - g is identity", id_from_g.is_identity());
+
+            const auto g_two = Botan::EC_AffinePoint::g_mul(one + one, rng, ws);
+            const auto g_plus_g = g_one.add(g_one);
+            result.test_eq("2*g == g+g", g_two.serialize_uncompressed(), g_plus_g.serialize_uncompressed());
+
+            result.confirm("Scalar::zero is zero", zero.is_zero());
+            result.confirm("(zero+zero) is zero", (zero + zero).is_zero());
+            result.confirm("(zero*zero) is zero", (zero * zero).is_zero());
+            result.confirm("(zero-zero) is zero", (zero - zero).is_zero());
+
+            const auto neg_zero = zero.negate();
+            result.confirm("zero.negate() is zero", neg_zero.is_zero());
+
+            result.confirm("(zero+nz) is zero", (zero + neg_zero).is_zero());
+            result.confirm("(nz+nz) is zero", (neg_zero + neg_zero).is_zero());
+            result.confirm("(nz+zero) is zero", (neg_zero + zero).is_zero());
+
+            result.confirm("Scalar::one is not zero", !one.is_zero());
+            result.confirm("(one-one) is zero", (one - one).is_zero());
+            result.confirm("(one+one.negate()) is zero", (one + one.negate()).is_zero());
+            result.confirm("(one.negate()+one) is zero", (one.negate() + one).is_zero());
+
+            for(size_t i = 0; i != 16; ++i) {
+               const auto pt = Botan::EC_AffinePoint::g_mul(Botan::EC_Scalar::random(group, rng), rng, ws);
+
+               const auto a = Botan::EC_Scalar::random(group, rng);
+               const auto b = Botan::EC_Scalar::random(group, rng);
+               const auto c = a + b;
+
+               const auto Pa = pt.mul(a, rng, ws);
+               const auto Pb = pt.mul(b, rng, ws);
+               const auto Pc = pt.mul(c, rng, ws);
+
+               const auto Pc_bytes = Pc.serialize_uncompressed();
+
+               const auto Pab = Pa.add(Pb);
+               result.test_eq("Pa + Pb == Pc", Pab.serialize_uncompressed(), Pc_bytes);
+
+               const auto Pba = Pb.add(Pa);
+               result.test_eq("Pb + Pa == Pc", Pba.serialize_uncompressed(), Pc_bytes);
+            }
+
+            for(size_t i = 0; i != 64; ++i) {
+               auto h = [&]() {
+                  const auto s = [&]() {
+                     if(i == 0) {
+                        // Test the identity case
+                        return Botan::EC_Scalar(zero);
+                     } else if(i <= 32) {
+                        // Test cases where the two points have a linear relation
+                        std::vector<uint8_t> sbytes(group.get_order_bytes());
+                        sbytes[sbytes.size() - 1] = static_cast<uint8_t>((i + 1) / 2);
+                        auto si = Botan::EC_Scalar::deserialize(group, sbytes).value();
+                        if(i % 2 == 0) {
+                           return si;
+                        } else {
+                           return si.negate();
+                        }
+                     } else {
+                        return Botan::EC_Scalar::random(group, rng);
+                     }
+                  }();
+                  auto x = Botan::EC_AffinePoint::g_mul(s, rng, ws);
+                  return x;
+               }();
+
+               const auto s1 = Botan::EC_Scalar::random(group, rng);
+               const auto s2 = Botan::EC_Scalar::random(group, rng);
+
+               const Botan::EC_Group::Mul2Table mul2_table(h);
+
+               const auto ref = Botan::EC_AffinePoint::g_mul(s1, rng, ws).add(h.mul(s2, rng, ws));
+
+               if(auto mul2pt = mul2_table.mul2_vartime(s1, s2)) {
+                  result.test_eq("ref == mul2t", ref.serialize_uncompressed(), mul2pt->serialize_uncompressed());
+               } else {
+                  result.confirm("ref is identity", ref.is_identity());
+               }
+            }
+
+            result.end_timer();
+
+            results.push_back(result);
+         }
+
+         return results;
+      }
+};
+
+BOTAN_REGISTER_TEST("pcurves", "ec_point_arith", EC_Point_Arithmetic_Tests);
+
    #if defined(BOTAN_HAS_ECDSA)
 
 class ECC_Invalid_Key_Tests final : public Text_Based_Test {
