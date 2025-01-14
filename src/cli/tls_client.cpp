@@ -71,7 +71,7 @@ class Callbacks : public Botan::TLS::Callbacks {
 
          if(result.successful_validation()) {
             output() << "Certificate validation status: " << result.result_string() << "\n";
-            auto status = result.all_statuses();
+            const auto& status = result.all_statuses();
 
             if(!status.empty() && status[0].contains(Botan::Certificate_Status_Code::OCSP_RESPONSE_GOOD)) {
                output() << "Valid OCSP response for this server\n";

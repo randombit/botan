@@ -11,6 +11,8 @@
 
 namespace Botan {
 
+namespace {
+
 /*
 * Noekeon's Theta Operation
 */
@@ -54,6 +56,8 @@ inline void gamma(SIMD_4x32& A0, SIMD_4x32& A1, SIMD_4x32& A2, SIMD_4x32& A3) {
    A1 ^= ~(A2 | A3);
    A0 ^= A2 & A1;
 }
+
+}  // namespace
 
 /*
 * Noekeon Encryption
