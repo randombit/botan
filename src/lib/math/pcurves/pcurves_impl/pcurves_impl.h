@@ -626,10 +626,11 @@ class IntMod final {
       * modular reduces it.
       */
       static constexpr std::optional<Self> from_wide_bytes_varlen(std::span<const uint8_t> bytes) {
-         if(8 * bytes.size() > 2 * Self::BITS) {
+         if(bytes.size() > 2 * Self::BYTES) {
             return {};
          }
-         std::array<uint8_t, 2 * BYTES> padded_bytes = {};
+
+         std::array<uint8_t, 2 * Self::BYTES> padded_bytes = {};
          copy_mem(std::span{padded_bytes}.last(bytes.size()), bytes);
          return Self(Rep::wide_to_rep(bytes_to_words<W, 2 * N, 2 * BYTES>(std::span{padded_bytes})));
       }
