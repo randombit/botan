@@ -140,19 +140,17 @@ std::optional<EC_AffinePoint> EC_AffinePoint::deserialize(const EC_Group& group,
    }
 }
 
-EC_AffinePoint EC_AffinePoint::g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws) {
-   auto pt = scalar._inner().group()->point_g_mul(scalar.inner(), rng, ws);
+EC_AffinePoint EC_AffinePoint::g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng) {
+   auto pt = scalar._inner().group()->point_g_mul(scalar.inner(), rng);
    return EC_AffinePoint(std::move(pt));
 }
 
-EC_AffinePoint EC_AffinePoint::mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const {
-   return EC_AffinePoint(inner().mul(scalar._inner(), rng, ws));
+EC_AffinePoint EC_AffinePoint::mul(const EC_Scalar& scalar, RandomNumberGenerator& rng) const {
+   return EC_AffinePoint(inner().mul(scalar._inner(), rng));
 }
 
-secure_vector<uint8_t> EC_AffinePoint::mul_x_only(const EC_Scalar& scalar,
-                                                  RandomNumberGenerator& rng,
-                                                  std::vector<BigInt>& ws) const {
-   return inner().mul_x_only(scalar._inner(), rng, ws);
+secure_vector<uint8_t> EC_AffinePoint::mul_x_only(const EC_Scalar& scalar, RandomNumberGenerator& rng) const {
+   return inner().mul_x_only(scalar._inner(), rng);
 }
 
 std::optional<EC_AffinePoint> EC_AffinePoint::mul_px_qy(const EC_AffinePoint& p,

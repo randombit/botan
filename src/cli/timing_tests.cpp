@@ -266,7 +266,6 @@ class ECDSA_Timing_Test final : public Timing_Test {
       const Botan::EC_Scalar m_x;
       Botan::EC_Scalar m_b;
       Botan::EC_Scalar m_b_inv;
-      std::vector<Botan::BigInt> m_ws;
 };
 
 ECDSA_Timing_Test::ECDSA_Timing_Test(const std::string& ecgroup) :
@@ -284,7 +283,7 @@ uint64_t ECDSA_Timing_Test::measure_critical_function(const std::vector<uint8_t>
    TimingTestTimer timer;
 
    // the following ECDSA operations involve and should not leak any information about k
-   const auto r = Botan::EC_Scalar::gk_x_mod_order(k, timing_test_rng(), m_ws);
+   const auto r = Botan::EC_Scalar::gk_x_mod_order(k, timing_test_rng());
    const auto k_inv = k.invert();
    m_b.square_self();
    m_b_inv.square_self();
@@ -307,14 +306,13 @@ class ECC_Mul_Timing_Test final : public Timing_Test {
 
    private:
       const Botan::EC_Group m_group;
-      std::vector<Botan::BigInt> m_ws;
 };
 
 uint64_t ECC_Mul_Timing_Test::measure_critical_function(const std::vector<uint8_t>& input) {
    const auto k = Botan::EC_Scalar::from_bytes_with_trunc(m_group, input);
 
    TimingTestTimer timer;
-   const auto kG = Botan::EC_AffinePoint::g_mul(k, timing_test_rng(), m_ws);
+   const auto kG = Botan::EC_AffinePoint::g_mul(k, timing_test_rng());
    return timer.complete();
 }
 

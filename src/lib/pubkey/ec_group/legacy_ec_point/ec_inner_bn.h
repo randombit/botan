@@ -76,13 +76,9 @@ class EC_AffinePoint_Data_BN final : public EC_AffinePoint_Data {
 
       void serialize_uncompressed_to(std::span<uint8_t> bytes) const override;
 
-      std::unique_ptr<EC_AffinePoint_Data> mul(const EC_Scalar_Data& scalar,
-                                               RandomNumberGenerator& rng,
-                                               std::vector<BigInt>& ws) const override;
+      std::unique_ptr<EC_AffinePoint_Data> mul(const EC_Scalar_Data& scalar, RandomNumberGenerator& rng) const override;
 
-      secure_vector<uint8_t> mul_x_only(const EC_Scalar_Data& scalar,
-                                        RandomNumberGenerator& rng,
-                                        std::vector<BigInt>& ws) const override;
+      secure_vector<uint8_t> mul_x_only(const EC_Scalar_Data& scalar, RandomNumberGenerator& rng) const override;
 
       EC_Point to_legacy_point() const override { return m_pt; }
 

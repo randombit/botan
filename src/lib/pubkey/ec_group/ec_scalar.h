@@ -92,10 +92,13 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       * Compute the elliptic curve scalar multiplication (g*k) where g is the
       * standard base point on the curve. Then extract the x coordinate of
       * the resulting point, and reduce it modulo the group order.
-      *
-      * Workspace argument is transitional
       */
-      static EC_Scalar gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws);
+      static EC_Scalar gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng);
+
+      BOTAN_DEPRECATED("Use version without workspace arg")
+      static EC_Scalar gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>&) {
+         return EC_Scalar::gk_x_mod_order(scalar, rng);
+      }
 
       /**
       * Return the byte size of this scalar

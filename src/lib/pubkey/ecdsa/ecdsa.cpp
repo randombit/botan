@@ -147,8 +147,6 @@ class ECDSA_Signature_Operation final : public PK_Ops::Signature_with_Hash {
       std::unique_ptr<RFC6979_Nonce_Generator> m_rfc6979;
 #endif
 
-      std::vector<BigInt> m_ws;
-
       EC_Scalar m_b;
       EC_Scalar m_b_inv;
 };
@@ -168,7 +166,7 @@ std::vector<uint8_t> ECDSA_Signature_Operation::raw_sign(std::span<const uint8_t
    const auto k = EC_Scalar::random(m_group, rng);
 #endif
 
-   const auto r = EC_Scalar::gk_x_mod_order(k, rng, m_ws);
+   const auto r = EC_Scalar::gk_x_mod_order(k, rng);
 
    // Blind the inversion of k
    const auto k_inv = (m_b * k).invert() * m_b;

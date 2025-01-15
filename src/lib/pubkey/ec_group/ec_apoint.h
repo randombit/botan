@@ -52,9 +52,7 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
       static std::optional<EC_AffinePoint> from_bigint_xy(const EC_Group& group, const BigInt& x, const BigInt& y);
 
       /// Multiply by the group generator returning a complete point
-      ///
-      /// Workspace argument is transitional
-      static EC_AffinePoint g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws);
+      static EC_AffinePoint g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng);
 
       /// Return the identity element
       static EC_AffinePoint identity(const EC_Group& group);
@@ -79,16 +77,10 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
                                              std::span<const uint8_t> domain_sep);
 
       /// Multiply a point by a scalar returning a complete point
-      ///
-      /// Workspace argument is transitional
-      EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const;
+      EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng) const;
 
       /// Multiply a point by a scalar, returning the byte encoding of the x coordinate only
-      ///
-      /// Workspace argument is transitional
-      secure_vector<uint8_t> mul_x_only(const EC_Scalar& scalar,
-                                        RandomNumberGenerator& rng,
-                                        std::vector<BigInt>& ws) const;
+      secure_vector<uint8_t> mul_x_only(const EC_Scalar& scalar, RandomNumberGenerator& rng) const;
 
       /// Compute 2-ary multiscalar multiplication - p*x + q*y
       ///
@@ -232,6 +224,23 @@ class BOTAN_UNSTABLE_API EC_AffinePoint final {
       */
       EC_Point to_legacy_point() const;
 #endif
+
+      BOTAN_DEPRECATED("Use version without workspace arg")
+      static EC_AffinePoint g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>&) {
+         return EC_AffinePoint::g_mul(scalar, rng);
+      }
+
+      BOTAN_DEPRECATED("Use version without workspace arg")
+      EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>&) const {
+         return this->mul(scalar, rng);
+      }
+
+      /// Multiply a point by a scalar, returning the byte encoding of the x coordinate only
+      secure_vector<uint8_t> mul_x_only(const EC_Scalar& scalar,
+                                        RandomNumberGenerator& rng,
+                                        std::vector<BigInt>&) const {
+         return this->mul_x_only(scalar, rng);
+      }
 
       ~EC_AffinePoint();
 

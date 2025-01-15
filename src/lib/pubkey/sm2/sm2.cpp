@@ -131,7 +131,6 @@ class SM2_Signature_Operation final : public PK_Ops::Signature {
       std::vector<uint8_t> m_za;
       secure_vector<uint8_t> m_digest;
       std::unique_ptr<HashFunction> m_hash;
-      std::vector<BigInt> m_ws;
 };
 
 std::vector<uint8_t> SM2_Signature_Operation::sign(RandomNumberGenerator& rng) {
@@ -150,7 +149,7 @@ std::vector<uint8_t> SM2_Signature_Operation::sign(RandomNumberGenerator& rng) {
 
    const auto k = EC_Scalar::random(m_group, rng);
 
-   const auto r = EC_Scalar::gk_x_mod_order(k, rng, m_ws) + e;
+   const auto r = EC_Scalar::gk_x_mod_order(k, rng) + e;
    const auto s = (k - r * m_x) * m_da_inv;
 
    return EC_Scalar::serialize_pair(r, s);

@@ -57,7 +57,7 @@ side channels) unless otherwise documented. Usually this is denoted by including
 
        Return a random non-zero scalar value
 
-   .. cpp:function:: static EC_Scalar gk_x_mod_order(const EC_Scalar& k, RandomNumberGenerator& rng, std::vector<BigInt>& ws)
+   .. cpp:function:: static EC_Scalar gk_x_mod_order(const EC_Scalar& k, RandomNumberGenerator& rng)
 
        Compute the elliptic curve scalar multiplication (``g*k``) where ``g`` is
        the standard base point on the curve. Then extract the ``x`` coordinate
@@ -140,12 +140,12 @@ side channels) unless otherwise documented. Usually this is denoted by including
 
       Return true if this point is the identity element.
 
-   .. cpp:function:: EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const
+   .. cpp:function:: EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng) const
 
       Variable base scalar multiplication. Constant time. If the rng object is
       seeded, also uses blinding and point rerandomization.
 
-   .. cpp:function::  static EC_AffinePoint g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws)
+   .. cpp:function::  static EC_AffinePoint g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng)
 
       Fixed base scalar multiplication. Constant time. If the rng object is
       seeded, also uses blinding and point rerandomization.
