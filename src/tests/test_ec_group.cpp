@@ -373,134 +373,25 @@ Test::Result test_decoding_with_seed() {
    return result;
 }
 
-   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
 Test::Result test_mixed_points() {
    Test::Result result("ECC Unit");
 
    const auto secp256r1 = Botan::EC_Group::from_name("secp256r1");
    const auto secp384r1 = Botan::EC_Group::from_name("secp384r1");
 
+   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
    const Botan::EC_Point& G256 = secp256r1.get_base_point();
    const Botan::EC_Point& G384 = secp384r1.get_base_point();
 
    result.test_throws("Mixing points from different groups", [&] { Botan::EC_Point p = G256 + G384; });
-   return result;
-}
-
-Test::Result test_basic_operations() {
-   Test::Result result("ECC Unit");
-
-   // precalculation
-   const auto secp160r1 = Botan::EC_Group::from_name("secp160r1");
-   const Botan::EC_Point& p_G = secp160r1.get_base_point();
-
-   const Botan::EC_Point& p0 = p_G;
-   const Botan::EC_Point p1 = p_G * 2;
-
-   result.test_eq("p1 affine x", p1.get_affine_x(), Botan::BigInt("16984103820118642236896513183038186009872590470"));
-   result.test_eq("p1 affine y", p1.get_affine_y(), Botan::BigInt("1373093393927139016463695321221277758035357890939"));
-
-   const Botan::EC_Point simplePlus = p1 + p0;
-   const Botan::EC_Point exp_simplePlus =
-      secp160r1.point(Botan::BigInt("704859595002530890444080436569091156047721708633"),
-                      Botan::BigInt("1147993098458695153857594941635310323215433166682"));
-
-   result.test_eq("point addition", simplePlus, exp_simplePlus);
-
-   const Botan::EC_Point simpleMinus = p1 - p0;
-   result.test_eq("point subtraction", simpleMinus, p_G);
-
-   const Botan::EC_Point simpleMult = p1 * 123456789;
-
-   result.test_eq("point mult affine x",
-                  simpleMult.get_affine_x(),
-                  Botan::BigInt("43638877777452195295055270548491599621118743290"));
-   result.test_eq("point mult affine y",
-                  simpleMult.get_affine_y(),
-                  Botan::BigInt("56841378500012376527163928510402662349220202981"));
-
-   return result;
-}
-
-Test::Result test_enc_dec_compressed_160() {
-   Test::Result result("ECC Unit");
-
-   // Test for compressed conversion (02/03) 160bit
-   const auto secp160r1 = Botan::EC_Group::from_name("secp160r1");
-   const std::vector<uint8_t> G_comp = Botan::hex_decode("024A96B5688EF573284664698968C38BB913CBFC82");
-   const Botan::EC_Point p = secp160r1.OS2ECP(G_comp);
-   const std::vector<uint8_t> sv_result = p.encode(Botan::EC_Point_Format::Compressed);
-
-   result.test_eq("result", sv_result, G_comp);
-   return result;
-}
-
-Test::Result test_enc_dec_compressed_256() {
-   Test::Result result("ECC Unit");
-
-   const auto group = Botan::EC_Group::from_name("secp256r1");
-
-   const std::string G_secp_comp = "036B17D1F2E12C4247F8BCE6E563A440F277037D812DEB33A0F4A13945D898C296";
-   const std::vector<uint8_t> sv_G_secp_comp = Botan::hex_decode(G_secp_comp);
-
-   Botan::EC_Point p_G = group.OS2ECP(sv_G_secp_comp);
-   std::vector<uint8_t> sv_result = p_G.encode(Botan::EC_Point_Format::Compressed);
-
-   result.test_eq("compressed_256", sv_result, sv_G_secp_comp);
-   return result;
-}
-
-Test::Result test_enc_dec_uncompressed_112() {
-   Test::Result result("ECC Unit");
-
-   // Test for uncompressed conversion (04) 112bit
-
-   // Curve is secp112r2
-
-   const Botan::BigInt p("0xdb7c2abf62e35e668076bead208b");
-   const Botan::BigInt a("0x6127C24C05F38A0AAAF65C0EF02C");
-   const Botan::BigInt b("0x51DEF1815DB5ED74FCC34C85D709");
-
-   const Botan::BigInt g_x("0x4BA30AB5E892B4E1649DD0928643");
-   const Botan::BigInt g_y("0xADCD46F5882E3747DEF36E956E97");
-
-   const Botan::BigInt order("0x36DF0AAFD8B8D7597CA10520D04B");
-   const Botan::BigInt cofactor("4");  // !
-
-   // This uses the deprecated constructor due to making use of cofactor > 1
-   const Botan::EC_Group group(p, a, b, g_x, g_y, order, cofactor);
-
-   const std::string G_secp_uncomp = "044BA30AB5E892B4E1649DD0928643ADCD46F5882E3747DEF36E956E97";
-   const std::vector<uint8_t> sv_G_secp_uncomp = Botan::hex_decode(G_secp_uncomp);
-
-   Botan::EC_Point p_G = group.OS2ECP(sv_G_secp_uncomp);
-   std::vector<uint8_t> sv_result = p_G.encode(Botan::EC_Point_Format::Uncompressed);
-
-   result.test_eq("uncompressed_112", sv_result, sv_G_secp_uncomp);
-
-   return result;
-}
-
-Test::Result test_enc_dec_uncompressed_521() {
-   Test::Result result("ECC Unit");
-
-   // Test for uncompressed conversion(04) with big values(521 bit)
-
-   const std::string G_secp_uncomp =
-      "0400C6858E06B70404E9CD9E3ECB662395B4429C648139053FB521F828AF606B4D3DBAA14B5E77EFE75928FE1DC127A2ffA8DE3348B3C1856A429BF97E7E31C2E5BD66011839296A789A3BC0045C8A5FB42C7D1BD998F54449579B446817AFBD17273E662C97EE72995EF42640C550B9013FAD0761353C7086A272C24088BE94769FD16650";
-
-   const std::vector<uint8_t> sv_G_secp_uncomp = Botan::hex_decode(G_secp_uncomp);
-
-   const auto group = Botan::EC_Group::from_name("secp521r1");
-
-   Botan::EC_Point p_G = group.OS2ECP(sv_G_secp_uncomp);
-
-   std::vector<uint8_t> sv_result = p_G.encode(Botan::EC_Point_Format::Uncompressed);
-
-   result.test_eq("expected", sv_result, sv_G_secp_uncomp);
-   return result;
-}
    #endif
+
+   const auto p1 = Botan::EC_AffinePoint::generator(secp256r1);
+   const auto p2 = Botan::EC_AffinePoint::generator(secp384r1);
+   result.test_throws("Mixing points from different groups", [&] { auto p3 = p1.add(p2); });
+
+   return result;
+}
 
 Test::Result test_ecc_registration() {
    Test::Result result("ECC registration");
@@ -614,16 +505,7 @@ class ECC_Unit_Tests final : public Test {
          std::vector<Test::Result> results;
 
          results.push_back(test_decoding_with_seed());
-
-   #if defined(BOTAN_HAS_LEGACY_EC_POINT)
          results.push_back(test_mixed_points());
-         results.push_back(test_basic_operations());
-         results.push_back(test_enc_dec_compressed_160());
-         results.push_back(test_enc_dec_compressed_256());
-         results.push_back(test_enc_dec_uncompressed_112());
-         results.push_back(test_enc_dec_uncompressed_521());
-   #endif
-
          results.push_back(test_ecc_registration());
          results.push_back(test_ec_group_from_params());
          results.push_back(test_ec_group_bad_registration());
@@ -661,7 +543,11 @@ class EC_PointEnc_Tests final : public Test {
                const auto pt_c = pt.serialize_compressed();
 
                result.test_eq("Expected compressed size", pt_c.size(), 1 + fe_bytes);
-               result.confirm("Expected compressed header", pt_c[0] == 0x02 || pt_c[0] == 0x03);
+               const uint8_t expected_c_header = (pt_u[pt_u.size() - 1] % 2 == 0) ? 0x02 : 0x03;
+               result.confirm("Expected compressed header", pt_c[0] == expected_c_header);
+
+               result.test_eq(
+                  "Expected compressed x", std::span{pt_c}.subspan(1), std::span{pt_u}.subspan(1, fe_bytes));
 
                if(auto d_pt_u = Botan::EC_AffinePoint::deserialize(group, pt_u)) {
                   result.test_eq(
@@ -673,6 +559,20 @@ class EC_PointEnc_Tests final : public Test {
                if(auto d_pt_c = Botan::EC_AffinePoint::deserialize(group, pt_c)) {
                   result.test_eq(
                      "Deserializing compressed returned correct point", d_pt_c->serialize_uncompressed(), pt_u);
+               } else {
+                  result.test_failure("Failed to deserialize compressed point");
+               }
+
+               const auto neg_pt_c = [&]() {
+                  auto x = pt_c;
+                  x[0] ^= 0x01;
+                  return x;
+               }();
+
+               if(auto d_neg_pt_c = Botan::EC_AffinePoint::deserialize(group, neg_pt_c)) {
+                  result.test_eq("Deserializing compressed with inverted header returned negated point",
+                                 d_neg_pt_c->serialize_uncompressed(),
+                                 pt.negate().serialize_uncompressed());
                } else {
                   result.test_failure("Failed to deserialize compressed point");
                }

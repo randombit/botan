@@ -35,17 +35,8 @@ class ECC_Basepoint_Mul_Tests final : public Text_Based_Test {
 
    #if defined(BOTAN_HAS_LEGACY_EC_POINT)
          const auto pt = group.OS2ECP(P_bytes);
-
-         const Botan::EC_Point& base_point = group.get_base_point();
-
-         const Botan::EC_Point p1 = base_point * k;
-         result.test_eq("mul with *", p1, pt);
-
-         const Botan::EC_Point p2 = group.blinded_base_point_multiply(k, this->rng(), ws);
-         result.test_eq("blinded_base_point_multiply", p2, pt);
-
-         const Botan::EC_Point p3 = group.blinded_var_point_multiply(base_point, k, this->rng(), ws);
-         result.test_eq("blinded_var_point_multiply", p3, pt);
+         const Botan::EC_Point p1 = group.get_base_point() * k;
+         result.test_eq("EC_Point Montgomery ladder", p1.encode(Botan::EC_Point_Format::Uncompressed), P_bytes);
    #endif
 
          const auto scalar = Botan::EC_Scalar::from_bigint(group, k);
@@ -78,17 +69,9 @@ class ECC_Varpoint_Mul_Tests final : public Text_Based_Test {
          std::vector<Botan::BigInt> ws;
 
    #if defined(BOTAN_HAS_LEGACY_EC_POINT)
-         const Botan::EC_Point pt = group.OS2ECP(p);
-
-         result.confirm("Input point is on the curve", pt.on_the_curve());
-
-         const Botan::EC_Point p1 = pt * k;
-         result.test_eq("p * k", p1.encode(Botan::EC_Point::Compressed), z);
-
+         const Botan::EC_Point p1 = group.OS2ECP(p) * k;
+         result.test_eq("EC_Point Montgomery ladder", p1.encode(Botan::EC_Point::Compressed), z);
          result.confirm("Output point is on the curve", p1.on_the_curve());
-
-         const Botan::EC_Point p2 = group.blinded_var_point_multiply(pt, k, this->rng(), ws);
-         result.test_eq("p * k (blinded)", p2.encode(Botan::EC_Point::Compressed), z);
    #endif
 
          const auto s_k = Botan::EC_Scalar::from_bigint(group, k);
