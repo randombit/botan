@@ -1169,7 +1169,7 @@ class BOTAN_PUBLIC_API(3, 7) InterfaceWrapper {
 
    public:
       /// Basic constructor using an interface.
-      InterfaceWrapper(Interface interface) : m_interface(interface) {}
+      InterfaceWrapper(Interface raw_interface) : m_interface(raw_interface) {}
 
       InterfaceWrapper(const InterfaceWrapper&) = default;
       InterfaceWrapper& operator=(const InterfaceWrapper&) = default;
@@ -1178,7 +1178,7 @@ class BOTAN_PUBLIC_API(3, 7) InterfaceWrapper {
       virtual ~InterfaceWrapper() = default;
 
       /// Access the underlying interface object
-      const Interface& get() const { return m_interface; }
+      const Interface& raw_interface() const { return m_interface; }
 
       /// Access the version of the interface
       Version version() const;
@@ -3832,7 +3832,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       */
       BOTAN_DEPRECATED("Use get_interface().func_2_40()") FunctionList* get_functions() const;
 
-      const InterfaceWrapper& interface() { return *m_interface_wrapper; }
+      const InterfaceWrapper& get_interface() { return *m_interface_wrapper; }
 
    protected:
       /**
