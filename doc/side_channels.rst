@@ -151,71 +151,62 @@ See eme_oaep.cpp.
 ECC point decoding
 ----------------------
 
-The API function OS2ECP, which is used to convert byte strings to ECC points,
-verifies that all points satisfy the ECC curve equation. Points that do not
-satisfy the equation are invalid, and can sometimes be used to break
-protocols ([InvalidCurve] [InvalidCurveTLS]). See ec_point.cpp.
+The API function EC_AffinePoint::deserialize, which is used to convert
+byte strings to ECC points, verifies that all points satisfy the ECC
+curve equation. Points that do not satisfy the equation are invalid,
+and can sometimes be used to break protocols ([InvalidCurve]
+[InvalidCurveTLS]).
 
-ECC scalar multiply
-----------------------
+The implementation is in the file pcurves_impl.h as
+AffineCurvePoint::deserialize
 
-There are several different implementations of ECC scalar multiplications which
-depend on the API invoked. This include ``EC_Point::operator*``,
-``EC_Group::blinded_base_point_multiply`` and
-``EC_Group::blinded_var_point_multiply``.
+ECC scalar multiplication
+--------------------------
 
-The ``EC_Point::operator*`` implementation uses the Montgomery ladder, which is
-fairly resistant to side channels. However it leaks the size of the scalar,
-because the loop iterations are bounded by the scalar size. It should not be
-used in cases when the scalar is a secret.
+Several elliptic curve scalar multiplication algorithms are implemented to
+accomodate different use cases. The implementations can be found in
+pcurves_impl.h as PrecomputedBaseMulTable, WindowedMulTable, and
+WindowedMul2Table.
 
-Both ``blinded_base_point_multiply`` and ``blinded_var_point_multiply`` apply
-side channel countermeasures. The scalar is masked by a multiple of the group
-order (this is commonly called Coron's first countermeasure [CoronDpa]),
-currently the mask is scaled to be half the bit length of the order of the group.
+WindowedMul2Table additionally implements a variable time scalar multiplication;
+this is used only for verifying signatures. In the public API this is invoked
+using the functions EC_Group::Mul2Table::mul2_vartime and
+EC_Group::Mul2Table::mul2_vartime_x_mod_order_eq
 
-Botan stores all ECC points in Jacobian representation. This form allows faster
-computation by representing points (x,y) as (X,Y,Z) where x=X/Z^2 and
-y=Y/Z^3. As the representation is redundant, for any randomly chosen non-zero r,
-(X*r^2,Y*r^3,Z*r) is an equivalent point. Changing the point values prevents an
-attacker from mounting attacks based on the input point remaining unchanged over
-multiple executions. This is commonly called Coron's third countermeasure, see
-again [CoronDpa].
+All other scalar multiplication algorithms are written to avoid timing and cache
+based side channels. Multiplication algorithms intended for use with secret
+inputs also use scalar blinding and point rerandomization techniques [CoronDpa]
+as additional precautions. See BlindedScalarBits in pcurves_impl.h
 
 The base point multiplication algorithm is a comb-like technique which
-precomputes ``P^i,(2*P)^i,(3*P)^i`` for all ``i`` in the range of valid scalars.
-This means the scalar multiplication involves only point additions and no
-doublings, which may help against attacks which rely on distinguishing between
-point doublings and point additions. The elements of the table are accessed by
-masked lookups, so as not to leak information about bits of the scalar via a
-cache side channel. However, whenever 3 sequential bits of the (masked) scalar
-are all 0, no operation is performed in that iteration of the loop. This exposes
-the scalar multiply to a cache-based side channel attack; scalar blinding is
-necessary to prevent this attack from leaking information about the scalar.
+precomputes successive powers of the base point. During the online phase,
+elements from this table are added together. The elements of the table are
+accessed by masked lookups, so as not to leak information about bits of the
+scalar via a cache side channel.
 
-The variable point multiplication algorithm uses a fixed-window algorithm. Since
-this is normally invoked using untrusted points (eg during ECDH key exchange) it
-randomizes all inputs to prevent attacks which are based on chosen input
-points. The table of precomputed multiples is accessed using a masked lookup
-which should not leak information about the secret scalar to an attacker who can
-mount a cache-based side channel attack.
+The variable point multiplication algorithms use a fixed-window double-and-add
+algorithm. The table of precomputed multiples is accessed using a masked lookup
+which should not leak information about the secret scalar to side channels.
 
-See ec_point.cpp and point_mul.cpp in src/lib/pubkey/ec_group
+For details see pcurves_impl.h in src/lib/math/pcurves/pcurves_impl
 
 ECDH
 ----------------------
 
-ECDH verifies (through its use of OS2ECP) that all input points received from
-the other party satisfy the curve equation. This prevents twist attacks. The
-same check is performed on the output point, which helps prevent fault attacks.
+ECDH verifies that all input points received from the other party satisfy the
+curve equation, preventing twist attacks.
 
 ECDSA
 ----------------------
 
 Inversion of the ECDSA nonce k must be done in constant time, as any leak of
 even a single bit of the nonce can be sufficient to allow recovering the private
-key. In Botan all inverses modulo an odd number are performed using a constant
-time algorithm due to Niels Möller.
+key. The inversion makes use of Fermat's little theorem.
+
+In addition to being constant time, the inversion and portions of the scalar
+arithmetic use blinding. The inverse of k is computed as ``(k*z)^-1 * z``, and
+the computation of ``s``, normally ``((x * r) + m)/k``, is computed instead as
+``((((x * z) * r) + (m * z)) / k) / z``, for a random z.
 
 x25519
 ----------------------
