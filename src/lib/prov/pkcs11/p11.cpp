@@ -76,11 +76,12 @@ LowLevel::LowLevel(std::unique_ptr<InterfaceWrapper> interface_wrapper) {
 
 /****************************** General purpose functions ******************************/
 
-bool LowLevel::C_Initialize(VoidPtr init_args, ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_Initialize(init_args), return_value);
+bool LowLevel::C_Initialize(const void* init_args, ReturnValue* return_value) const {
+   return handle_return_value(m_interface_wrapper->func_2_40().C_Initialize(const_cast<void*>(init_args)),
+                              return_value);
 }
 
-bool LowLevel::C_Finalize(VoidPtr reserved, ReturnValue* return_value) const {
+bool LowLevel::C_Finalize(void* reserved, ReturnValue* return_value) const {
    return handle_return_value(m_interface_wrapper->func_2_40().C_Finalize(reserved), return_value);
 }
 
@@ -115,8 +116,8 @@ bool LowLevel::C_GetInterfaceList(const Dynamically_Loaded_Library& pkcs11_modul
 }
 
 bool LowLevel::C_GetInterface(const Dynamically_Loaded_Library& pkcs11_module,
-                              Utf8Char* interface_name_ptr,
-                              Version* version_ptr,
+                              const Utf8Char* interface_name_ptr,
+                              const Version* version_ptr,
                               Interface* interface_ptr_ptr,
                               Flags flags,
                               ReturnValue* return_value) {
@@ -130,8 +131,10 @@ bool LowLevel::C_GetInterface(const Dynamically_Loaded_Library& pkcs11_module,
       return handle_return_value(CKR_GENERAL_ERROR, return_value);
    }
 
-   return handle_return_value(get_interface_ptr(interface_name_ptr, version_ptr, interface_ptr_ptr, flags),
-                              return_value);
+   return handle_return_value(
+      get_interface_ptr(
+         const_cast<Utf8Char*>(interface_name_ptr), const_cast<Version*>(version_ptr), interface_ptr_ptr, flags),
+      return_value);
 }
 
 /****************************** Slot and token management functions ******************************/
@@ -169,7 +172,7 @@ bool LowLevel::C_GetTokenInfo(SlotId slot_id, TokenInfo* info_ptr, ReturnValue* 
    return handle_return_value(m_interface_wrapper->func_2_40().C_GetTokenInfo(slot_id, info_ptr), return_value);
 }
 
-bool LowLevel::C_WaitForSlotEvent(Flags flags, SlotId* slot_ptr, VoidPtr reserved, ReturnValue* return_value) const {
+bool LowLevel::C_WaitForSlotEvent(Flags flags, SlotId* slot_ptr, void* reserved, ReturnValue* return_value) const {
    return handle_return_value(m_interface_wrapper->func_2_40().C_WaitForSlotEvent(flags, slot_ptr, reserved),
                               return_value);
 }
@@ -212,31 +215,42 @@ bool LowLevel::C_GetMechanismInfo(SlotId slot_id,
       return_value);
 }
 
-bool LowLevel::C_InitToken(
-   SlotId slot_id, Utf8Char* so_pin_ptr, Ulong so_pin_len, Utf8Char* label_ptr, ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_InitToken(slot_id, so_pin_ptr, so_pin_len, label_ptr),
-                              return_value);
+bool LowLevel::C_InitToken(SlotId slot_id,
+                           const Utf8Char* so_pin_ptr,
+                           Ulong so_pin_len,
+                           const Utf8Char* label_ptr,
+                           ReturnValue* return_value) const {
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_InitToken(
+         slot_id, const_cast<Utf8Char*>(so_pin_ptr), so_pin_len, const_cast<Utf8Char*>(label_ptr)),
+      return_value);
 }
 
-bool LowLevel::C_InitPIN(SessionHandle session, Utf8Char* pin_ptr, Ulong pin_len, ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_InitPIN(session, pin_ptr, pin_len), return_value);
+bool LowLevel::C_InitPIN(SessionHandle session,
+                         const Utf8Char* pin_ptr,
+                         Ulong pin_len,
+                         ReturnValue* return_value) const {
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_InitPIN(session, const_cast<Utf8Char*>(pin_ptr), pin_len), return_value);
 }
 
 bool LowLevel::C_SetPIN(SessionHandle session,
-                        Utf8Char* old_pin_ptr,
+                        const Utf8Char* old_pin_ptr,
                         Ulong old_len,
-                        Utf8Char* new_pin_ptr,
+                        const Utf8Char* new_pin_ptr,
                         Ulong new_len,
                         ReturnValue* return_value) const {
    return handle_return_value(
-      m_interface_wrapper->func_2_40().C_SetPIN(session, old_pin_ptr, old_len, new_pin_ptr, new_len), return_value);
+      m_interface_wrapper->func_2_40().C_SetPIN(
+         session, const_cast<Utf8Char*>(old_pin_ptr), old_len, const_cast<Utf8Char*>(new_pin_ptr), new_len),
+      return_value);
 }
 
 /****************************** Session management ******************************/
 
 bool LowLevel::C_OpenSession(SlotId slot_id,
                              Flags flags,
-                             VoidPtr application,
+                             void* application,
                              Notify notify,
                              SessionHandle* session_ptr,
                              ReturnValue* return_value) const {
@@ -270,34 +284,39 @@ bool LowLevel::C_GetOperationState(SessionHandle session,
 }
 
 bool LowLevel::C_SetOperationState(SessionHandle session,
-                                   Byte* operation_state_ptr,
+                                   const Byte* operation_state_ptr,
                                    Ulong operation_state_len,
                                    ObjectHandle encryption_key,
                                    ObjectHandle authentication_key,
                                    ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_SetOperationState(
-                                 session, operation_state_ptr, operation_state_len, encryption_key, authentication_key),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_SetOperationState(
+         session, const_cast<Byte*>(operation_state_ptr), operation_state_len, encryption_key, authentication_key),
+      return_value);
 }
 
 bool LowLevel::C_Login(
-   SessionHandle session, UserType user_type, Utf8Char* pin_ptr, Ulong pin_len, ReturnValue* return_value) const {
+   SessionHandle session, UserType user_type, const Utf8Char* pin_ptr, Ulong pin_len, ReturnValue* return_value) const {
    return handle_return_value(
-      m_interface_wrapper->func_2_40().C_Login(session, static_cast<CK_USER_TYPE>(user_type), pin_ptr, pin_len),
+      m_interface_wrapper->func_2_40().C_Login(
+         session, static_cast<CK_USER_TYPE>(user_type), const_cast<Utf8Char*>(pin_ptr), pin_len),
       return_value);
 }
 
 bool LowLevel::C_LoginUser(SessionHandle session,
                            UserType user_type,
-                           Utf8Char* pin_ptr,
+                           const Utf8Char* pin_ptr,
                            Ulong pin_len,
-                           Utf8Char* username_ptr,
+                           const Utf8Char* username_ptr,
                            Ulong username_len,
                            ReturnValue* return_value) {
-   return handle_return_value(
-      m_interface_wrapper->func_3_0().C_LoginUser(
-         session, static_cast<CK_USER_TYPE>(user_type), pin_ptr, pin_len, username_ptr, username_len),
-      return_value);
+   return handle_return_value(m_interface_wrapper->func_3_0().C_LoginUser(session,
+                                                                          static_cast<CK_USER_TYPE>(user_type),
+                                                                          const_cast<Utf8Char*>(pin_ptr),
+                                                                          pin_len,
+                                                                          const_cast<Utf8Char*>(username_ptr),
+                                                                          username_len),
+                              return_value);
 }
 
 bool LowLevel::C_Logout(SessionHandle session, ReturnValue* return_value) const {
@@ -392,33 +411,36 @@ bool LowLevel::C_FindObjectsFinal(SessionHandle session, ReturnValue* return_val
 /****************************** Encryption functions ******************************/
 
 bool LowLevel::C_EncryptInit(SessionHandle session,
-                             Mechanism* mechanism_ptr,
+                             const Mechanism* mechanism_ptr,
                              ObjectHandle key,
                              ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_EncryptInit(session, mechanism_ptr, key),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_EncryptInit(session, const_cast<Mechanism*>(mechanism_ptr), key),
+      return_value);
 }
 
 bool LowLevel::C_Encrypt(SessionHandle session,
-                         Byte* data_ptr,
+                         const Byte* data_ptr,
                          Ulong data_len,
                          Byte* encrypted_data_ptr,
                          Ulong* encrypted_data_len_ptr,
                          ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_Encrypt(
-                                 session, data_ptr, data_len, encrypted_data_ptr, encrypted_data_len_ptr),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_Encrypt(
+         session, const_cast<Byte*>(data_ptr), data_len, encrypted_data_ptr, encrypted_data_len_ptr),
+      return_value);
 }
 
 bool LowLevel::C_EncryptUpdate(SessionHandle session,
-                               Byte* part_ptr,
+                               const Byte* part_ptr,
                                Ulong part_len,
                                Byte* encrypted_part_ptr,
                                Ulong* encrypted_part_len_ptr,
                                ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_EncryptUpdate(
-                                 session, part_ptr, part_len, encrypted_part_ptr, encrypted_part_len_ptr),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_EncryptUpdate(
+         session, const_cast<Byte*>(part_ptr), part_len, encrypted_part_ptr, encrypted_part_len_ptr),
+      return_value);
 }
 
 bool LowLevel::C_EncryptFinal(SessionHandle session,
@@ -433,29 +455,30 @@ bool LowLevel::C_EncryptFinal(SessionHandle session,
 /*********************** Message-based encryption functions ***********************/
 
 bool LowLevel::C_MessageEncryptInit(SessionHandle session,
-                                    Mechanism* mechanism_ptr,
+                                    const Mechanism* mechanism_ptr,
                                     ObjectHandle key,
                                     ReturnValue* return_value) {
-   return handle_return_value(m_interface_wrapper->func_3_0().C_MessageEncryptInit(session, mechanism_ptr, key),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_3_0().C_MessageEncryptInit(session, const_cast<Mechanism*>(mechanism_ptr), key),
+      return_value);
 }
 
 bool LowLevel::C_EncryptMessage(SessionHandle session,
-                                VoidPtr parameter_ptr,
+                                const void* parameter_ptr,
                                 Ulong parameter_len,
-                                Byte* associated_data_ptr,
+                                const Byte* associated_data_ptr,
                                 Ulong associated_data_len,
-                                Byte* plaintext_ptr,
+                                const Byte* plaintext_ptr,
                                 Ulong plaintext_len,
                                 Byte* ciphertext_ptr,
                                 Ulong* ciphertext_len_ptr,
                                 ReturnValue* return_value) {
    return handle_return_value(m_interface_wrapper->func_3_0().C_EncryptMessage(session,
-                                                                               parameter_ptr,
+                                                                               const_cast<void*>(parameter_ptr),
                                                                                parameter_len,
-                                                                               associated_data_ptr,
+                                                                               const_cast<Byte*>(associated_data_ptr),
                                                                                associated_data_len,
-                                                                               plaintext_ptr,
+                                                                               const_cast<Byte*>(plaintext_ptr),
                                                                                plaintext_len,
                                                                                ciphertext_ptr,
                                                                                ciphertext_len_ptr),
@@ -463,34 +486,39 @@ bool LowLevel::C_EncryptMessage(SessionHandle session,
 }
 
 bool LowLevel::C_EncryptMessageBegin(SessionHandle session,
-                                     VoidPtr parameter_ptr,
+                                     const void* parameter_ptr,
                                      Ulong parameter_len,
-                                     Byte* associated_data_ptr,
+                                     const Byte* associated_data_ptr,
                                      Ulong associated_data_len,
                                      ReturnValue* return_value) {
-   return handle_return_value(m_interface_wrapper->func_3_0().C_EncryptMessageBegin(
-                                 session, parameter_ptr, parameter_len, associated_data_ptr, associated_data_len),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_3_0().C_EncryptMessageBegin(session,
+                                                            const_cast<void*>(parameter_ptr),
+                                                            parameter_len,
+                                                            const_cast<Byte*>(associated_data_ptr),
+                                                            associated_data_len),
+      return_value);
 }
 
 bool LowLevel::C_EncryptMessageNext(SessionHandle session,
-                                    VoidPtr parameter_ptr,
+                                    const void* parameter_ptr,
                                     Ulong parameter_len,
-                                    Byte* plaintext_part_ptr,
+                                    const Byte* plaintext_part_ptr,
                                     Ulong plaintext_part_len,
                                     Byte* ciphertext_ptr,
                                     Ulong* ciphertext_part_len_ptr,
                                     Flags flags,
                                     ReturnValue* return_value) {
-   return handle_return_value(m_interface_wrapper->func_3_0().C_EncryptMessageNext(session,
-                                                                                   parameter_ptr,
-                                                                                   parameter_len,
-                                                                                   plaintext_part_ptr,
-                                                                                   plaintext_part_len,
-                                                                                   ciphertext_ptr,
-                                                                                   ciphertext_part_len_ptr,
-                                                                                   flags),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_3_0().C_EncryptMessageNext(session,
+                                                           const_cast<void*>(parameter_ptr),
+                                                           parameter_len,
+                                                           const_cast<Byte*>(plaintext_part_ptr),
+                                                           plaintext_part_len,
+                                                           ciphertext_ptr,
+                                                           ciphertext_part_len_ptr,
+                                                           flags),
+      return_value);
 }
 
 bool LowLevel::C_MessageEncryptFinal(SessionHandle session, ReturnValue* return_value) {
@@ -500,33 +528,36 @@ bool LowLevel::C_MessageEncryptFinal(SessionHandle session, ReturnValue* return_
 /****************************** Decryption functions ******************************/
 
 bool LowLevel::C_DecryptInit(SessionHandle session,
-                             Mechanism* mechanism_ptr,
+                             const Mechanism* mechanism_ptr,
                              ObjectHandle key,
                              ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_DecryptInit(session, mechanism_ptr, key),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_DecryptInit(session, const_cast<Mechanism*>(mechanism_ptr), key),
+      return_value);
 }
 
 bool LowLevel::C_Decrypt(SessionHandle session,
-                         Byte* encrypted_data_ptr,
+                         const Byte* encrypted_data_ptr,
                          Ulong encrypted_data_len,
                          Byte* data_ptr,
                          Ulong* data_len_ptr,
                          ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_Decrypt(
-                                 session, encrypted_data_ptr, encrypted_data_len, data_ptr, data_len_ptr),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_Decrypt(
+         session, const_cast<Byte*>(encrypted_data_ptr), encrypted_data_len, data_ptr, data_len_ptr),
+      return_value);
 }
 
 bool LowLevel::C_DecryptUpdate(SessionHandle session,
-                               Byte* encrypted_part_ptr,
+                               const Byte* encrypted_part_ptr,
                                Ulong encrypted_part_len,
                                Byte* part_ptr,
                                Ulong* part_len_ptr,
                                ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_DecryptUpdate(
-                                 session, encrypted_part_ptr, encrypted_part_len, part_ptr, part_len_ptr),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_DecryptUpdate(
+         session, const_cast<Byte*>(encrypted_part_ptr), encrypted_part_len, part_ptr, part_len_ptr),
+      return_value);
 }
 
 bool LowLevel::C_DecryptFinal(SessionHandle session,
@@ -540,29 +571,30 @@ bool LowLevel::C_DecryptFinal(SessionHandle session,
 /*********************** Message-based decryption functions ***********************/
 
 bool LowLevel::C_MessageDecryptInit(SessionHandle session,
-                                    Mechanism* mechanism_ptr,
+                                    const Mechanism* mechanism_ptr,
                                     ObjectHandle key,
                                     ReturnValue* return_value) {
-   return handle_return_value(m_interface_wrapper->func_3_0().C_MessageDecryptInit(session, mechanism_ptr, key),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_3_0().C_MessageDecryptInit(session, const_cast<Mechanism*>(mechanism_ptr), key),
+      return_value);
 }
 
 bool LowLevel::C_DecryptMessage(SessionHandle session,
-                                VoidPtr parameter_ptr,
+                                const void* parameter_ptr,
                                 Ulong parameter_len,
-                                Byte* associated_data_ptr,
+                                const Byte* associated_data_ptr,
                                 Ulong associated_data_len,
-                                Byte* ciphertext_ptr,
+                                const Byte* ciphertext_ptr,
                                 Ulong ciphertext_len,
                                 Byte* plaintext_ptr,
                                 Ulong* plaintext_len_ptr,
                                 ReturnValue* return_value) {
    return handle_return_value(m_interface_wrapper->func_3_0().C_DecryptMessage(session,
-                                                                               parameter_ptr,
+                                                                               const_cast<void*>(parameter_ptr),
                                                                                parameter_len,
-                                                                               associated_data_ptr,
+                                                                               const_cast<Byte*>(associated_data_ptr),
                                                                                associated_data_len,
-                                                                               ciphertext_ptr,
+                                                                               const_cast<Byte*>(ciphertext_ptr),
                                                                                ciphertext_len,
                                                                                plaintext_ptr,
                                                                                plaintext_len_ptr),
@@ -570,34 +602,39 @@ bool LowLevel::C_DecryptMessage(SessionHandle session,
 }
 
 bool LowLevel::C_DecryptMessageBegin(SessionHandle session,
-                                     VoidPtr parameter_ptr,
+                                     const void* parameter_ptr,
                                      Ulong parameter_len,
-                                     Byte* associated_data_ptr,
+                                     const Byte* associated_data_ptr,
                                      Ulong associated_data_len,
                                      ReturnValue* return_value) {
-   return handle_return_value(m_interface_wrapper->func_3_0().C_DecryptMessageBegin(
-                                 session, parameter_ptr, parameter_len, associated_data_ptr, associated_data_len),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_3_0().C_DecryptMessageBegin(session,
+                                                            const_cast<void*>(parameter_ptr),
+                                                            parameter_len,
+                                                            const_cast<Byte*>(associated_data_ptr),
+                                                            associated_data_len),
+      return_value);
 }
 
 bool LowLevel::C_DecryptMessageNext(SessionHandle session,
-                                    VoidPtr parameter_ptr,
+                                    const void* parameter_ptr,
                                     Ulong parameter_len,
-                                    Byte* ciphertext_part_ptr,
+                                    const Byte* ciphertext_part_ptr,
                                     Ulong ciphertext_part_len,
                                     Byte* plaintext_ptr,
                                     Ulong* plaintext_part_len_ptr,
                                     Flags flags,
                                     ReturnValue* return_value) {
-   return handle_return_value(m_interface_wrapper->func_3_0().C_DecryptMessageNext(session,
-                                                                                   parameter_ptr,
-                                                                                   parameter_len,
-                                                                                   ciphertext_part_ptr,
-                                                                                   ciphertext_part_len,
-                                                                                   plaintext_ptr,
-                                                                                   plaintext_part_len_ptr,
-                                                                                   flags),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_3_0().C_DecryptMessageNext(session,
+                                                           const_cast<void*>(parameter_ptr),
+                                                           parameter_len,
+                                                           const_cast<Byte*>(ciphertext_part_ptr),
+                                                           ciphertext_part_len,
+                                                           plaintext_ptr,
+                                                           plaintext_part_len_ptr,
+                                                           flags),
+      return_value);
 }
 
 bool LowLevel::C_MessageDecryptFinal(SessionHandle session, ReturnValue* return_value) {
@@ -606,23 +643,28 @@ bool LowLevel::C_MessageDecryptFinal(SessionHandle session, ReturnValue* return_
 
 /****************************** Message digesting functions ******************************/
 
-bool LowLevel::C_DigestInit(SessionHandle session, Mechanism* mechanism, ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_DigestInit(session, mechanism), return_value);
+bool LowLevel::C_DigestInit(SessionHandle session, const Mechanism* mechanism, ReturnValue* return_value) const {
+   return handle_return_value(m_interface_wrapper->func_2_40().C_DigestInit(session, const_cast<Mechanism*>(mechanism)),
+                              return_value);
 }
 
 bool LowLevel::C_Digest(SessionHandle session,
-                        Byte* data_ptr,
+                        const Byte* data_ptr,
                         Ulong data_len,
                         Byte* digest_ptr,
                         Ulong* digest_len_ptr,
                         ReturnValue* return_value) const {
-   return handle_return_value(
-      m_interface_wrapper->func_2_40().C_Digest(session, data_ptr, data_len, digest_ptr, digest_len_ptr), return_value);
+   return handle_return_value(m_interface_wrapper->func_2_40().C_Digest(
+                                 session, const_cast<Byte*>(data_ptr), data_len, digest_ptr, digest_len_ptr),
+                              return_value);
 }
 
-bool LowLevel::C_DigestUpdate(SessionHandle session, Byte* part_ptr, Ulong part_len, ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_DigestUpdate(session, part_ptr, part_len),
-                              return_value);
+bool LowLevel::C_DigestUpdate(SessionHandle session,
+                              const Byte* part_ptr,
+                              Ulong part_len,
+                              ReturnValue* return_value) const {
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_DigestUpdate(session, const_cast<Byte*>(part_ptr), part_len), return_value);
 }
 
 bool LowLevel::C_DigestKey(SessionHandle session, ObjectHandle key, ReturnValue* return_value) const {
@@ -640,10 +682,11 @@ bool LowLevel::C_DigestFinal(SessionHandle session,
 /****************************** Signing and MACing functions ******************************/
 
 bool LowLevel::C_SignInit(SessionHandle session,
-                          Mechanism* mechanism_ptr,
+                          const Mechanism* mechanism_ptr,
                           ObjectHandle key,
                           ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_SignInit(session, mechanism_ptr, key), return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_SignInit(session, const_cast<Mechanism*>(mechanism_ptr), key), return_value);
 }
 
 bool LowLevel::C_Sign(SessionHandle session,
@@ -674,67 +717,79 @@ bool LowLevel::C_SignFinal(SessionHandle session,
 }
 
 bool LowLevel::C_SignRecoverInit(SessionHandle session,
-                                 Mechanism* mechanism_ptr,
+                                 const Mechanism* mechanism_ptr,
                                  ObjectHandle key,
                                  ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_SignRecoverInit(session, mechanism_ptr, key),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_SignRecoverInit(session, const_cast<Mechanism*>(mechanism_ptr), key),
+      return_value);
 }
 
 bool LowLevel::C_SignRecover(SessionHandle session,
-                             Byte* data,
+                             const Byte* data,
                              Ulong data_len,
                              Byte* signature,
                              Ulong* signature_len,
                              ReturnValue* return_value) const {
-   return handle_return_value(
-      m_interface_wrapper->func_2_40().C_SignRecover(session, data, data_len, signature, signature_len), return_value);
+   return handle_return_value(m_interface_wrapper->func_2_40().C_SignRecover(
+                                 session, const_cast<Byte*>(data), data_len, signature, signature_len),
+                              return_value);
 }
 
 /******************* Message-based signing and MACing functions *******************/
 
 bool LowLevel::C_MessageSignInit(SessionHandle session,
-                                 Mechanism* mechanism_ptr,
+                                 const Mechanism* mechanism_ptr,
                                  ObjectHandle key,
                                  ReturnValue* return_value) {
-   return handle_return_value(m_interface_wrapper->func_3_0().C_MessageSignInit(session, mechanism_ptr, key),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_3_0().C_MessageSignInit(session, const_cast<Mechanism*>(mechanism_ptr), key),
+      return_value);
 }
 
 bool LowLevel::C_SignMessage(SessionHandle session,
-                             VoidPtr parameter_ptr,
+                             const void* parameter_ptr,
                              Ulong parameter_len,
-                             Byte* data_ptr,
+                             const Byte* data_ptr,
                              Ulong data_len,
                              Byte* signature_ptr,
                              Ulong* signature_len_ptr,
                              ReturnValue* return_value) {
-   return handle_return_value(
-      m_interface_wrapper->func_3_0().C_SignMessage(
-         session, parameter_ptr, parameter_len, data_ptr, data_len, signature_ptr, signature_len_ptr),
-      return_value);
-}
-
-bool LowLevel::C_SignMessageBegin(SessionHandle session,
-                                  VoidPtr parameter_ptr,
-                                  Ulong parameter_len,
-                                  ReturnValue* return_value) {
-   return handle_return_value(m_interface_wrapper->func_3_0().C_SignMessageBegin(session, parameter_ptr, parameter_len),
+   return handle_return_value(m_interface_wrapper->func_3_0().C_SignMessage(session,
+                                                                            const_cast<void*>(parameter_ptr),
+                                                                            parameter_len,
+                                                                            const_cast<Byte*>(data_ptr),
+                                                                            data_len,
+                                                                            signature_ptr,
+                                                                            signature_len_ptr),
                               return_value);
 }
 
+bool LowLevel::C_SignMessageBegin(SessionHandle session,
+                                  const void* parameter_ptr,
+                                  Ulong parameter_len,
+                                  ReturnValue* return_value) {
+   return handle_return_value(
+      m_interface_wrapper->func_3_0().C_SignMessageBegin(session, const_cast<void*>(parameter_ptr), parameter_len),
+      return_value);
+}
+
 bool LowLevel::C_SignMessageNext(SessionHandle session,
-                                 VoidPtr parameter_ptr,
+                                 const void* parameter_ptr,
                                  Ulong parameter_len,
-                                 Byte* data_ptr,
+                                 const Byte* data_ptr,
                                  Ulong data_len,
                                  Byte* signature_ptr,
                                  Ulong* signature_len_ptr,
                                  ReturnValue* return_value) {
-   return handle_return_value(
-      m_interface_wrapper->func_3_0().C_SignMessageNext(
-         session, parameter_ptr, parameter_len, data_ptr, data_len, signature_ptr, signature_len_ptr),
-      return_value);
+   return handle_return_value(m_interface_wrapper->func_3_0().C_SignMessageNext(session,
+                                                                                const_cast<void*>(parameter_ptr),
+                                                                                parameter_len,
+                                                                                const_cast<Byte*>(data_ptr),
+                                                                                data_len,
+                                                                                signature_ptr,
+                                                                                signature_len_ptr),
+                              return_value);
 }
 
 bool LowLevel::C_MessageSignFinal(SessionHandle session, ReturnValue* return_value) {
@@ -744,10 +799,11 @@ bool LowLevel::C_MessageSignFinal(SessionHandle session, ReturnValue* return_val
 /****************************** Functions for verifying signatures and MACs ******************************/
 
 bool LowLevel::C_VerifyInit(SessionHandle session,
-                            Mechanism* mechanism_ptr,
+                            const Mechanism* mechanism_ptr,
                             ObjectHandle key,
                             ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_VerifyInit(session, mechanism_ptr, key), return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_VerifyInit(session, const_cast<Mechanism*>(mechanism_ptr), key), return_value);
 }
 
 bool LowLevel::C_Verify(SessionHandle session,
@@ -780,46 +836,52 @@ bool LowLevel::C_VerifyFinal(SessionHandle session,
 }
 
 bool LowLevel::C_VerifyRecoverInit(SessionHandle session,
-                                   Mechanism* mechanism_ptr,
+                                   const Mechanism* mechanism_ptr,
                                    ObjectHandle key,
                                    ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_VerifyRecoverInit(session, mechanism_ptr, key),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_VerifyRecoverInit(session, const_cast<Mechanism*>(mechanism_ptr), key),
+      return_value);
 }
 
 bool LowLevel::C_VerifyRecover(SessionHandle session,
-                               Byte* signature_ptr,
+                               const Byte* signature_ptr,
                                Ulong signature_len,
                                Byte* data_ptr,
                                Ulong* data_len_ptr,
                                ReturnValue* return_value) const {
-   return handle_return_value(
-      m_interface_wrapper->func_2_40().C_VerifyRecover(session, signature_ptr, signature_len, data_ptr, data_len_ptr),
-      return_value);
+   return handle_return_value(m_interface_wrapper->func_2_40().C_VerifyRecover(
+                                 session, const_cast<Byte*>(signature_ptr), signature_len, data_ptr, data_len_ptr),
+                              return_value);
 }
 
 bool LowLevel::C_VerifySignatureInit(SessionHandle session,
-                                     Mechanism* mechanism_ptr,
+                                     const Mechanism* mechanism_ptr,
                                      ObjectHandle key,
-                                     Byte* signature_ptr,
+                                     const Byte* signature_ptr,
                                      Ulong signature_len,
                                      ReturnValue* return_value) {
    return handle_return_value(
-      m_interface_wrapper->func_3_2().C_VerifySignatureInit(session, mechanism_ptr, key, signature_ptr, signature_len),
+      m_interface_wrapper->func_3_2().C_VerifySignatureInit(
+         session, const_cast<Mechanism*>(mechanism_ptr), key, const_cast<Byte*>(signature_ptr), signature_len),
       return_value);
 }
 
-bool LowLevel::C_VerifySignature(SessionHandle session, Byte* data_ptr, Ulong data_len, ReturnValue* return_value) {
-   return handle_return_value(m_interface_wrapper->func_3_2().C_VerifySignature(session, data_ptr, data_len),
-                              return_value);
+bool LowLevel::C_VerifySignature(SessionHandle session,
+                                 const Byte* data_ptr,
+                                 Ulong data_len,
+                                 ReturnValue* return_value) {
+   return handle_return_value(
+      m_interface_wrapper->func_3_2().C_VerifySignature(session, const_cast<Byte*>(data_ptr), data_len), return_value);
 }
 
 bool LowLevel::C_VerifySignatureUpdate(SessionHandle session,
-                                       Byte* part_ptr,
+                                       const Byte* part_ptr,
                                        Ulong part_len,
                                        ReturnValue* return_value) {
-   return handle_return_value(m_interface_wrapper->func_3_2().C_VerifySignatureUpdate(session, part_ptr, part_len),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_3_2().C_VerifySignatureUpdate(session, const_cast<Byte*>(part_ptr), part_len),
+      return_value);
 }
 
 bool LowLevel::C_VerifySignatureFinal(SessionHandle session, ReturnValue* return_value) {
@@ -829,47 +891,57 @@ bool LowLevel::C_VerifySignatureFinal(SessionHandle session, ReturnValue* return
 /*********** Message-based functions for verifying signatures and MACs ************/
 
 bool LowLevel::C_MessageVerifyInit(SessionHandle session,
-                                   Mechanism* mechanism_ptr,
+                                   const Mechanism* mechanism_ptr,
                                    ObjectHandle key,
                                    ReturnValue* return_value) {
-   return handle_return_value(m_interface_wrapper->func_3_0().C_MessageVerifyInit(session, mechanism_ptr, key),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_3_0().C_MessageVerifyInit(session, const_cast<Mechanism*>(mechanism_ptr), key),
+      return_value);
 }
 
 bool LowLevel::C_VerifyMessage(SessionHandle session,
-                               VoidPtr parameter_ptr,
+                               const void* parameter_ptr,
                                Ulong parameter_len,
-                               Byte* data_ptr,
+                               const Byte* data_ptr,
                                Ulong data_len,
-                               Byte* signature_ptr,
+                               const Byte* signature_ptr,
                                Ulong signature_len,
                                ReturnValue* return_value) {
-   return handle_return_value(
-      m_interface_wrapper->func_3_0().C_VerifyMessage(
-         session, parameter_ptr, parameter_len, data_ptr, data_len, signature_ptr, signature_len),
-      return_value);
+   return handle_return_value(m_interface_wrapper->func_3_0().C_VerifyMessage(session,
+                                                                              const_cast<void*>(parameter_ptr),
+                                                                              parameter_len,
+                                                                              const_cast<Byte*>(data_ptr),
+                                                                              data_len,
+                                                                              const_cast<Byte*>(signature_ptr),
+                                                                              signature_len),
+                              return_value);
 }
 
 bool LowLevel::C_VerifyMessageBegin(SessionHandle session,
-                                    VoidPtr parameter_ptr,
+                                    const void* parameter_ptr,
                                     Ulong parameter_len,
                                     ReturnValue* return_value) {
    return handle_return_value(
-      m_interface_wrapper->func_3_0().C_VerifyMessageBegin(session, parameter_ptr, parameter_len), return_value);
+      m_interface_wrapper->func_3_0().C_VerifyMessageBegin(session, const_cast<void*>(parameter_ptr), parameter_len),
+      return_value);
 }
 
 bool LowLevel::C_VerifyMessageNext(SessionHandle session,
-                                   VoidPtr parameter_ptr,
+                                   const void* parameter_ptr,
                                    Ulong parameter_len,
-                                   Byte* data_ptr,
+                                   const Byte* data_ptr,
                                    Ulong data_len,
-                                   Byte* signature_ptr,
+                                   const Byte* signature_ptr,
                                    Ulong signature_len,
                                    ReturnValue* return_value) {
-   return handle_return_value(
-      m_interface_wrapper->func_3_0().C_VerifyMessageNext(
-         session, parameter_ptr, parameter_len, data_ptr, data_len, signature_ptr, signature_len),
-      return_value);
+   return handle_return_value(m_interface_wrapper->func_3_0().C_VerifyMessageNext(session,
+                                                                                  const_cast<void*>(parameter_ptr),
+                                                                                  parameter_len,
+                                                                                  const_cast<Byte*>(data_ptr),
+                                                                                  data_len,
+                                                                                  const_cast<Byte*>(signature_ptr),
+                                                                                  signature_len),
+                              return_value);
 }
 
 bool LowLevel::C_MessageVerifyFinal(SessionHandle session, ReturnValue* return_value) {
@@ -879,64 +951,69 @@ bool LowLevel::C_MessageVerifyFinal(SessionHandle session, ReturnValue* return_v
 /****************************** Dual-purpose cryptographic functions ******************************/
 
 bool LowLevel::C_DigestEncryptUpdate(SessionHandle session,
-                                     Byte* part_ptr,
+                                     const Byte* part_ptr,
                                      Ulong part_len,
                                      Byte* encrypted_part_ptr,
                                      Ulong* encrypted_part_len_ptr,
                                      ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_DigestEncryptUpdate(
-                                 session, part_ptr, part_len, encrypted_part_ptr, encrypted_part_len_ptr),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_DigestEncryptUpdate(
+         session, const_cast<Byte*>(part_ptr), part_len, encrypted_part_ptr, encrypted_part_len_ptr),
+      return_value);
 }
 
 bool LowLevel::C_DecryptDigestUpdate(SessionHandle session,
-                                     Byte* encrypted_part_ptr,
+                                     const Byte* encrypted_part_ptr,
                                      Ulong encrypted_part_len,
                                      Byte* part_ptr,
                                      Ulong* part_len_ptr,
                                      ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_DecryptDigestUpdate(
-                                 session, encrypted_part_ptr, encrypted_part_len, part_ptr, part_len_ptr),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_DecryptDigestUpdate(
+         session, const_cast<Byte*>(encrypted_part_ptr), encrypted_part_len, part_ptr, part_len_ptr),
+      return_value);
 }
 
 bool LowLevel::C_SignEncryptUpdate(SessionHandle session,
-                                   Byte* part_ptr,
+                                   const Byte* part_ptr,
                                    Ulong part_len,
                                    Byte* encrypted_part_ptr,
                                    Ulong* encrypted_part_len_ptr,
                                    ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_SignEncryptUpdate(
-                                 session, part_ptr, part_len, encrypted_part_ptr, encrypted_part_len_ptr),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_SignEncryptUpdate(
+         session, const_cast<Byte*>(part_ptr), part_len, encrypted_part_ptr, encrypted_part_len_ptr),
+      return_value);
 }
 
 bool LowLevel::C_DecryptVerifyUpdate(SessionHandle session,
-                                     Byte* encrypted_part_ptr,
+                                     const Byte* encrypted_part_ptr,
                                      Ulong encrypted_part_len,
                                      Byte* part_ptr,
                                      Ulong* part_len_ptr,
                                      ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_DecryptVerifyUpdate(
-                                 session, encrypted_part_ptr, encrypted_part_len, part_ptr, part_len_ptr),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_DecryptVerifyUpdate(
+         session, const_cast<Byte*>(encrypted_part_ptr), encrypted_part_len, part_ptr, part_len_ptr),
+      return_value);
 }
 
 /****************************** Key management functions ******************************/
 
 bool LowLevel::C_GenerateKey(SessionHandle session,
-                             Mechanism* mechanism_ptr,
+                             const Mechanism* mechanism_ptr,
                              Attribute* attribute_template_ptr,
                              Ulong count,
                              ObjectHandle* key_ptr,
                              ReturnValue* return_value) const {
    return handle_return_value(
-      m_interface_wrapper->func_2_40().C_GenerateKey(session, mechanism_ptr, attribute_template_ptr, count, key_ptr),
+      m_interface_wrapper->func_2_40().C_GenerateKey(
+         session, const_cast<Mechanism*>(mechanism_ptr), attribute_template_ptr, count, key_ptr),
       return_value);
 }
 
 bool LowLevel::C_GenerateKeyPair(SessionHandle session,
-                                 Mechanism* mechanism_ptr,
+                                 const Mechanism* mechanism_ptr,
                                  Attribute* public_key_template_ptr,
                                  Ulong public_key_attribute_count,
                                  Attribute* private_key_template_ptr,
@@ -945,7 +1022,7 @@ bool LowLevel::C_GenerateKeyPair(SessionHandle session,
                                  ObjectHandle* private_key_ptr,
                                  ReturnValue* return_value) const {
    return handle_return_value(m_interface_wrapper->func_2_40().C_GenerateKeyPair(session,
-                                                                                 mechanism_ptr,
+                                                                                 const_cast<Mechanism*>(mechanism_ptr),
                                                                                  public_key_template_ptr,
                                                                                  public_key_attribute_count,
                                                                                  private_key_template_ptr,
@@ -956,30 +1033,31 @@ bool LowLevel::C_GenerateKeyPair(SessionHandle session,
 }
 
 bool LowLevel::C_WrapKey(SessionHandle session,
-                         Mechanism* mechanism_ptr,
+                         const Mechanism* mechanism_ptr,
                          ObjectHandle wrapping_key,
                          ObjectHandle key,
                          Byte* wrapped_key_ptr,
                          Ulong* wrapped_key_len_ptr,
                          ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_WrapKey(
-                                 session, mechanism_ptr, wrapping_key, key, wrapped_key_ptr, wrapped_key_len_ptr),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_WrapKey(
+         session, const_cast<Mechanism*>(mechanism_ptr), wrapping_key, key, wrapped_key_ptr, wrapped_key_len_ptr),
+      return_value);
 }
 
 bool LowLevel::C_UnwrapKey(SessionHandle session,
-                           Mechanism* mechanism_ptr,
+                           const Mechanism* mechanism_ptr,
                            ObjectHandle unwrapping_key,
-                           Byte* wrapped_key_ptr,
+                           const Byte* wrapped_key_ptr,
                            Ulong wrapped_key_len,
                            Attribute* attribute_template_ptr,
                            Ulong attribute_count,
                            ObjectHandle* key_ptr,
                            ReturnValue* return_value) const {
    return handle_return_value(m_interface_wrapper->func_2_40().C_UnwrapKey(session,
-                                                                           mechanism_ptr,
+                                                                           const_cast<Mechanism*>(mechanism_ptr),
                                                                            unwrapping_key,
-                                                                           wrapped_key_ptr,
+                                                                           const_cast<Byte*>(wrapped_key_ptr),
                                                                            wrapped_key_len,
                                                                            attribute_template_ptr,
                                                                            attribute_count,
@@ -988,19 +1066,20 @@ bool LowLevel::C_UnwrapKey(SessionHandle session,
 }
 
 bool LowLevel::C_DeriveKey(SessionHandle session,
-                           Mechanism* mechanism_ptr,
+                           const Mechanism* mechanism_ptr,
                            ObjectHandle base_key,
                            Attribute* attribute_template_ptr,
                            Ulong attribute_count,
                            ObjectHandle* key_ptr,
                            ReturnValue* return_value) const {
-   return handle_return_value(m_interface_wrapper->func_2_40().C_DeriveKey(
-                                 session, mechanism_ptr, base_key, attribute_template_ptr, attribute_count, key_ptr),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_2_40().C_DeriveKey(
+         session, const_cast<Mechanism*>(mechanism_ptr), base_key, attribute_template_ptr, attribute_count, key_ptr),
+      return_value);
 }
 
 bool LowLevel::C_EncapsulateKey(SessionHandle session,
-                                Mechanism* mechanism_ptr,
+                                const Mechanism* mechanism_ptr,
                                 ObjectHandle public_key,
                                 Attribute* template_ptr,
                                 Ulong attribute_count,
@@ -1009,7 +1088,7 @@ bool LowLevel::C_EncapsulateKey(SessionHandle session,
                                 Ulong* ciphertext_len_ptr,
                                 ReturnValue* return_value) {
    return handle_return_value(m_interface_wrapper->func_3_2().C_EncapsulateKey(session,
-                                                                               mechanism_ptr,
+                                                                               const_cast<Mechanism*>(mechanism_ptr),
                                                                                public_key,
                                                                                template_ptr,
                                                                                attribute_count,
@@ -1020,18 +1099,23 @@ bool LowLevel::C_EncapsulateKey(SessionHandle session,
 }
 
 bool LowLevel::C_DecapsulateKey(SessionHandle session,
-                                Mechanism* mechanism_ptr,
+                                const Mechanism* mechanism_ptr,
                                 ObjectHandle private_key,
-                                Byte* ciphertext_ptr,
+                                const Byte* ciphertext_ptr,
                                 Ulong ciphertext_len,
                                 Attribute* template_ptr,
                                 Ulong attribute_count,
                                 ObjectHandle* key_ptr,
                                 ReturnValue* return_value) {
-   return handle_return_value(
-      m_interface_wrapper->func_3_2().C_DecapsulateKey(
-         session, mechanism_ptr, private_key, ciphertext_ptr, ciphertext_len, template_ptr, attribute_count, key_ptr),
-      return_value);
+   return handle_return_value(m_interface_wrapper->func_3_2().C_DecapsulateKey(session,
+                                                                               const_cast<Mechanism*>(mechanism_ptr),
+                                                                               private_key,
+                                                                               const_cast<Byte*>(ciphertext_ptr),
+                                                                               ciphertext_len,
+                                                                               template_ptr,
+                                                                               attribute_count,
+                                                                               key_ptr),
+                              return_value);
 }
 
 /****************************** Random number generation functions ******************************/
@@ -1065,33 +1149,36 @@ bool LowLevel::C_CancelFunction(SessionHandle session, ReturnValue* return_value
 /******************* Asynchronous function management functions *******************/
 
 bool LowLevel::C_AsyncComplete(SessionHandle session,
-                               Utf8Char* function_name_ptr,
+                               const Utf8Char* function_name_ptr,
                                AsyncData* result_ptr,
                                ReturnValue* return_value) {
-   return handle_return_value(m_interface_wrapper->func_3_2().C_AsyncComplete(session, function_name_ptr, result_ptr),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_3_2().C_AsyncComplete(session, const_cast<Utf8Char*>(function_name_ptr), result_ptr),
+      return_value);
 }
 
 bool LowLevel::C_AsyncGetID(SessionHandle session,
-                            Utf8Char* function_name_ptr,
+                            const Utf8Char* function_name_ptr,
                             Ulong* id_ptr,
                             ReturnValue* return_value) {
-   return handle_return_value(m_interface_wrapper->func_3_2().C_AsyncGetID(session, function_name_ptr, id_ptr),
-                              return_value);
+   return handle_return_value(
+      m_interface_wrapper->func_3_2().C_AsyncGetID(session, const_cast<Utf8Char*>(function_name_ptr), id_ptr),
+      return_value);
 }
 
 bool LowLevel::C_AsyncJoin(SessionHandle session,
-                           Utf8Char* function_name_ptr,
+                           const Utf8Char* function_name_ptr,
                            Ulong id,
                            Byte* data_ptr,
                            Ulong data_len,
                            ReturnValue* return_value) {
-   return handle_return_value(
-      m_interface_wrapper->func_3_2().C_AsyncJoin(session, function_name_ptr, id, data_ptr, data_len), return_value);
+   return handle_return_value(m_interface_wrapper->func_3_2().C_AsyncJoin(
+                                 session, const_cast<Utf8Char*>(function_name_ptr), id, data_ptr, data_len),
+                              return_value);
 }
 
 FunctionList* LowLevel::get_functions() const {
-   return reinterpret_cast<FunctionList*>(m_interface_wrapper->get().pFunctionList);
+   return reinterpret_cast<FunctionList*>(m_interface_wrapper->raw_interface().pFunctionList);
 }
 
 }  // namespace Botan::PKCS11

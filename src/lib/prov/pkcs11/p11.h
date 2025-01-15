@@ -1231,7 +1231,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       *     \li NeedToCreateThreads \li OK
       * @return true on success, false otherwise
       */
-      bool C_Initialize(VoidPtr init_args, ReturnValue* return_value = ThrowException) const;
+      bool C_Initialize(const void* init_args, ReturnValue* return_value = ThrowException) const;
 
       /**
       * C_Finalize indicates that an application is done with the Cryptoki library.
@@ -1243,7 +1243,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       *     \li GeneralError \li HostMemory \li OK
       * @return true on success, false otherwise
       */
-      bool C_Finalize(VoidPtr reserved, ReturnValue* return_value = ThrowException) const;
+      bool C_Finalize(void* reserved, ReturnValue* return_value = ThrowException) const;
 
       /**
       * C_GetInfo returns general information about Cryptoki.
@@ -1338,8 +1338,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       static bool C_GetInterface(const Dynamically_Loaded_Library& pkcs11_module,
-                                 Utf8Char* interface_name_ptr,
-                                 Version* version_ptr,
+                                 const Utf8Char* interface_name_ptr,
+                                 const Version* version_ptr,
                                  Interface* interface_ptr_ptr,
                                  Flags flags,
                                  ReturnValue* return_value = ThrowException);
@@ -1424,7 +1424,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       */
       bool C_WaitForSlotEvent(Flags flags,
                               SlotId* slot_ptr,
-                              VoidPtr reserved,
+                              void* reserved,
                               ReturnValue* return_value = ThrowException) const;
 
       /**
@@ -1503,9 +1503,9 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_InitToken(SlotId slot_id,
-                       Utf8Char* so_pin_ptr,
+                       const Utf8Char* so_pin_ptr,
                        Ulong so_pin_len,
-                       Utf8Char* label_ptr,
+                       const Utf8Char* label_ptr,
                        ReturnValue* return_value = ThrowException) const;
 
       /**
@@ -1558,7 +1558,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_InitPIN(SessionHandle session,
-                     Utf8Char* pin_ptr,
+                     const Utf8Char* pin_ptr,
                      Ulong pin_len,
                      ReturnValue* return_value = ThrowException) const;
 
@@ -1606,9 +1606,9 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_SetPIN(SessionHandle session,
-                    Utf8Char* old_pin_ptr,
+                    const Utf8Char* old_pin_ptr,
                     Ulong old_len,
-                    Utf8Char* new_pin_ptr,
+                    const Utf8Char* new_pin_ptr,
                     Ulong new_len,
                     ReturnValue* return_value = ThrowException) const;
 
@@ -1663,7 +1663,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       */
       bool C_OpenSession(SlotId slot_id,
                          Flags flags,
-                         VoidPtr application,
+                         void* application,
                          Notify notify,
                          SessionHandle* session_ptr,
                          ReturnValue* return_value = ThrowException) const;
@@ -1761,7 +1761,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_SetOperationState(SessionHandle session,
-                               Byte* operation_state_ptr,
+                               const Byte* operation_state_ptr,
                                Ulong operation_state_len,
                                ObjectHandle encryption_key,
                                ObjectHandle authentication_key,
@@ -1787,7 +1787,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       */
       bool C_Login(SessionHandle session,
                    UserType user_type,
-                   Utf8Char* pin_ptr,
+                   const Utf8Char* pin_ptr,
                    Ulong pin_len,
                    ReturnValue* return_value = ThrowException) const;
 
@@ -1834,9 +1834,9 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        */
       bool C_LoginUser(SessionHandle session,
                        UserType user_type,
-                       Utf8Char* pin_ptr,
+                       const Utf8Char* pin_ptr,
                        Ulong pin_len,
-                       Utf8Char* username_ptr,
+                       const Utf8Char* username_ptr,
                        Ulong username_len,
                        ReturnValue* return_value = ThrowException);
 
@@ -2171,7 +2171,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_EncryptInit(SessionHandle session,
-                         Mechanism* mechanism_ptr,
+                         const Mechanism* mechanism_ptr,
                          ObjectHandle key,
                          ReturnValue* return_value = ThrowException) const;
 
@@ -2194,7 +2194,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_Encrypt(SessionHandle session,
-                     Byte* data_ptr,
+                     const Byte* data_ptr,
                      Ulong data_len,
                      Byte* encrypted_data,
                      Ulong* encrypted_data_len_ptr,
@@ -2262,7 +2262,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_EncryptUpdate(SessionHandle session,
-                           Byte* part_ptr,
+                           const Byte* part_ptr,
                            Ulong part_len,
                            Byte* encrypted_part_ptr,
                            Ulong* encrypted_part_len_ptr,
@@ -2302,7 +2302,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_MessageEncryptInit(SessionHandle session,
-                                Mechanism* mechanism_ptr,
+                                const Mechanism* mechanism_ptr,
                                 ObjectHandle key,
                                 ReturnValue* return_value = ThrowException);
 
@@ -2322,11 +2322,11 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_EncryptMessage(SessionHandle session,
-                            VoidPtr parameter_ptr,
+                            const void* parameter_ptr,
                             Ulong parameter_len,
-                            Byte* associated_data_ptr,
+                            const Byte* associated_data_ptr,
                             Ulong associated_data_len,
-                            Byte* plaintext_ptr,
+                            const Byte* plaintext_ptr,
                             Ulong plaintext_len,
                             Byte* ciphertext_ptr,
                             Ulong* ciphertext_len_ptr,
@@ -2344,9 +2344,9 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_EncryptMessageBegin(SessionHandle session,
-                                 VoidPtr parameter_ptr,
+                                 const void* parameter_ptr,
                                  Ulong parameter_len,
-                                 Byte* associated_data_ptr,
+                                 const Byte* associated_data_ptr,
                                  Ulong associated_data_len,
                                  ReturnValue* return_value = ThrowException);
 
@@ -2366,9 +2366,9 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_EncryptMessageNext(SessionHandle session,
-                                VoidPtr parameter_ptr,
+                                const void* parameter_ptr,
                                 Ulong parameter_len,
-                                Byte* plaintext_part_ptr,
+                                const Byte* plaintext_part_ptr,
                                 Ulong plaintext_part_len,
                                 Byte* ciphertext_ptr,
                                 Ulong* ciphertext_part_len_ptr,
@@ -2404,7 +2404,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_DecryptInit(SessionHandle session,
-                         Mechanism* mechanism_ptr,
+                         const Mechanism* mechanism_ptr,
                          ObjectHandle key,
                          ReturnValue* return_value = ThrowException) const;
 
@@ -2427,7 +2427,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_Decrypt(SessionHandle session,
-                     Byte* encrypted_data_ptr,
+                     const Byte* encrypted_data_ptr,
                      Ulong encrypted_data_len,
                      Byte* data_ptr,
                      Ulong* data_len_ptr,
@@ -2496,7 +2496,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_DecryptUpdate(SessionHandle session,
-                           Byte* encrypted_part_ptr,
+                           const Byte* encrypted_part_ptr,
                            Ulong encrypted_part_len,
                            Byte* part_ptr,
                            Ulong* part_len_ptr,
@@ -2537,7 +2537,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_MessageDecryptInit(SessionHandle session,
-                                Mechanism* mechanism_ptr,
+                                const Mechanism* mechanism_ptr,
                                 ObjectHandle key,
                                 ReturnValue* return_value = ThrowException);
 
@@ -2557,11 +2557,11 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_DecryptMessage(SessionHandle session,
-                            VoidPtr parameter_ptr,
+                            const void* parameter_ptr,
                             Ulong parameter_len,
-                            Byte* associated_data_ptr,
+                            const Byte* associated_data_ptr,
                             Ulong associated_data_len,
-                            Byte* ciphertext_ptr,
+                            const Byte* ciphertext_ptr,
                             Ulong ciphertext_len,
                             Byte* plaintext_ptr,
                             Ulong* plaintext_len_ptr,
@@ -2579,9 +2579,9 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_DecryptMessageBegin(SessionHandle session,
-                                 VoidPtr parameter_ptr,
+                                 const void* parameter_ptr,
                                  Ulong parameter_len,
-                                 Byte* associated_data_ptr,
+                                 const Byte* associated_data_ptr,
                                  Ulong associated_data_len,
                                  ReturnValue* return_value = ThrowException);
 
@@ -2601,9 +2601,9 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_DecryptMessageNext(SessionHandle session,
-                                VoidPtr parameter_ptr,
+                                const void* parameter_ptr,
                                 Ulong parameter_len,
-                                Byte* ciphertext_part_ptr,
+                                const Byte* ciphertext_part_ptr,
                                 Ulong ciphertext_part_len,
                                 Byte* plaintext_ptr,
                                 Ulong* plaintext_part_len_ptr,
@@ -2637,7 +2637,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_DigestInit(SessionHandle session,
-                        Mechanism* mechanism_ptr,
+                        const Mechanism* mechanism_ptr,
                         ReturnValue* return_value = ThrowException) const;
 
       /**
@@ -2658,7 +2658,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_Digest(SessionHandle session,
-                    Byte* data_ptr,
+                    const Byte* data_ptr,
                     Ulong data_len,
                     Byte* digest_ptr,
                     Ulong* digest_len_ptr,
@@ -2680,7 +2680,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_DigestUpdate(SessionHandle session,
-                          Byte* part_ptr,
+                          const Byte* part_ptr,
                           Ulong part_len,
                           ReturnValue* return_value = ThrowException) const;
 
@@ -2740,7 +2740,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_SignInit(SessionHandle session,
-                      Mechanism* mechanism_ptr,
+                      const Mechanism* mechanism_ptr,
                       ObjectHandle key,
                       ReturnValue* return_value = ThrowException) const;
 
@@ -2920,7 +2920,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_SignRecoverInit(SessionHandle session,
-                             Mechanism* mechanism_ptr,
+                             const Mechanism* mechanism_ptr,
                              ObjectHandle key,
                              ReturnValue* return_value = ThrowException) const;
 
@@ -2943,7 +2943,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_SignRecover(SessionHandle session,
-                         Byte* data_ptr,
+                         const Byte* data_ptr,
                          Ulong data_len,
                          Byte* signature_ptr,
                          Ulong* signature_len_ptr,
@@ -2964,7 +2964,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_MessageSignInit(SessionHandle session,
-                             Mechanism* mechanism_ptr,
+                             const Mechanism* mechanism_ptr,
                              ObjectHandle key,
                              ReturnValue* return_value = ThrowException);
 
@@ -2984,9 +2984,9 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_SignMessage(SessionHandle session,
-                         VoidPtr parameter_ptr,
+                         const void* parameter_ptr,
                          Ulong parameter_len,
-                         Byte* data_ptr,
+                         const Byte* data_ptr,
                          Ulong data_len,
                          Byte* signature_ptr,
                          Ulong* signature_len_ptr,
@@ -3004,7 +3004,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_SignMessageBegin(SessionHandle session,
-                              VoidPtr parameter_ptr,
+                              const void* parameter_ptr,
                               Ulong parameter_len,
                               ReturnValue* return_value = ThrowException);
 
@@ -3024,9 +3024,9 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_SignMessageNext(SessionHandle session,
-                             VoidPtr parameter_ptr,
+                             const void* parameter_ptr,
                              Ulong parameter_len,
-                             Byte* data_ptr,
+                             const Byte* data_ptr,
                              Ulong data_len,
                              Byte* signature_ptr,
                              Ulong* signature_len_ptr,
@@ -3061,7 +3061,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_VerifyInit(SessionHandle session,
-                        Mechanism* mechanism_ptr,
+                        const Mechanism* mechanism_ptr,
                         ObjectHandle key,
                         ReturnValue* return_value = ThrowException) const;
 
@@ -3199,7 +3199,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_VerifyRecoverInit(SessionHandle session,
-                               Mechanism* mechanism_ptr,
+                               const Mechanism* mechanism_ptr,
                                ObjectHandle key,
                                ReturnValue* return_value = ThrowException) const;
 
@@ -3222,7 +3222,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_VerifyRecover(SessionHandle session,
-                           Byte* signature_ptr,
+                           const Byte* signature_ptr,
                            Ulong signature_len,
                            Byte* data_ptr,
                            Ulong* data_len_ptr,
@@ -3241,9 +3241,9 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_VerifySignatureInit(SessionHandle session,
-                                 Mechanism* mechanism_ptr,
+                                 const Mechanism* mechanism_ptr,
                                  ObjectHandle key,
-                                 Byte* signature_ptr,
+                                 const Byte* signature_ptr,
                                  Ulong signature_len,
                                  ReturnValue* return_value = ThrowException);
 
@@ -3258,7 +3258,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_VerifySignature(SessionHandle session,
-                             Byte* data_ptr,
+                             const Byte* data_ptr,
                              Ulong data_len,
                              ReturnValue* return_value = ThrowException);
 
@@ -3273,7 +3273,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_VerifySignatureUpdate(SessionHandle session,
-                                   Byte* part_ptr,
+                                   const Byte* part_ptr,
                                    Ulong part_len,
                                    ReturnValue* return_value = ThrowException);
 
@@ -3302,7 +3302,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_MessageVerifyInit(SessionHandle session,
-                               Mechanism* mechanism_ptr,
+                               const Mechanism* mechanism_ptr,
                                ObjectHandle key,
                                ReturnValue* return_value = ThrowException);
 
@@ -3322,11 +3322,11 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_VerifyMessage(SessionHandle session,
-                           VoidPtr parameter_ptr,
+                           const void* parameter_ptr,
                            Ulong parameter_len,
-                           Byte* data_ptr,
+                           const Byte* data_ptr,
                            Ulong data_len,
-                           Byte* signature_ptr,
+                           const Byte* signature_ptr,
                            Ulong signature_len,
                            ReturnValue* return_value = ThrowException);
 
@@ -3342,7 +3342,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_VerifyMessageBegin(SessionHandle session,
-                                VoidPtr parameter_ptr,
+                                const void* parameter_ptr,
                                 Ulong parameter_len,
                                 ReturnValue* return_value = ThrowException);
 
@@ -3362,11 +3362,11 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_VerifyMessageNext(SessionHandle session,
-                               VoidPtr parameter_ptr,
+                               const void* parameter_ptr,
                                Ulong parameter_len,
-                               Byte* data_ptr,
+                               const Byte* data_ptr,
                                Ulong data_len,
-                               Byte* signature_ptr,
+                               const Byte* signature_ptr,
                                Ulong signature_len,
                                ReturnValue* return_value = ThrowException);
 
@@ -3399,7 +3399,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_DigestEncryptUpdate(SessionHandle session,
-                                 Byte* part_ptr,
+                                 const Byte* part_ptr,
                                  Ulong part_len,
                                  Byte* encrypted_part_ptr,
                                  Ulong* encrypted_part_len_ptr,
@@ -3424,7 +3424,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_DecryptDigestUpdate(SessionHandle session,
-                                 Byte* encrypted_part_ptr,
+                                 const Byte* encrypted_part_ptr,
                                  Ulong encrypted_part_len,
                                  Byte* part_ptr,
                                  Ulong* part_len_ptr,
@@ -3449,7 +3449,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_SignEncryptUpdate(SessionHandle session,
-                               Byte* part_ptr,
+                               const Byte* part_ptr,
                                Ulong part_len,
                                Byte* encrypted_part_ptr,
                                Ulong* encrypted_part_len_ptr,
@@ -3474,7 +3474,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_DecryptVerifyUpdate(SessionHandle session,
-                                 Byte* encrypted_part_ptr,
+                                 const Byte* encrypted_part_ptr,
                                  Ulong encrypted_part_len,
                                  Byte* part_ptr,
                                  Ulong* part_len_ptr,
@@ -3504,7 +3504,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_GenerateKey(SessionHandle session,
-                         Mechanism* mechanism_ptr,
+                         const Mechanism* mechanism_ptr,
                          Attribute* attribute_template_ptr,
                          Ulong count,
                          ObjectHandle* key_ptr,
@@ -3535,7 +3535,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_GenerateKeyPair(SessionHandle session,
-                             Mechanism* mechanism_ptr,
+                             const Mechanism* mechanism_ptr,
                              Attribute* public_key_template_ptr,
                              Ulong public_key_attribute_count,
                              Attribute* private_key_template_ptr,
@@ -3567,7 +3567,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_WrapKey(SessionHandle session,
-                     Mechanism* mechanism_ptr,
+                     const Mechanism* mechanism_ptr,
                      ObjectHandle wrapping_key,
                      ObjectHandle key,
                      Byte* wrapped_key_ptr,
@@ -3601,9 +3601,9 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_UnwrapKey(SessionHandle session,
-                       Mechanism* mechanism_ptr,
+                       const Mechanism* mechanism_ptr,
                        ObjectHandle unwrapping_key,
-                       Byte* wrapped_key_ptr,
+                       const Byte* wrapped_key_ptr,
                        Ulong wrapped_key_len,
                        Attribute* attribute_template_ptr,
                        Ulong attribute_count,
@@ -3634,7 +3634,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @return true on success, false otherwise
       */
       bool C_DeriveKey(SessionHandle session,
-                       Mechanism* mechanism_ptr,
+                       const Mechanism* mechanism_ptr,
                        ObjectHandle base_key,
                        Attribute* attribute_template_ptr,
                        Ulong attribute_count,
@@ -3657,7 +3657,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_EncapsulateKey(SessionHandle session,
-                            Mechanism* mechanism_ptr,
+                            const Mechanism* mechanism_ptr,
                             ObjectHandle public_key,
                             Attribute* template_ptr,
                             Ulong attribute_count,
@@ -3686,9 +3686,9 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_DecapsulateKey(SessionHandle session,
-                            Mechanism* mechanism_ptr,
+                            const Mechanism* mechanism_ptr,
                             ObjectHandle private_key,
-                            Byte* ciphertext_ptr,
+                            const Byte* ciphertext_ptr,
                             Ulong ciphertext_len,
                             Attribute* template_ptr,
                             Ulong attribute_count,
@@ -3780,7 +3780,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_AsyncComplete(SessionHandle session,
-                           Utf8Char* function_name_ptr,
+                           const Utf8Char* function_name_ptr,
                            AsyncData* result_ptr,
                            ReturnValue* return_value = ThrowException);
 
@@ -3798,7 +3798,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_AsyncGetID(SessionHandle session,
-                        Utf8Char* function_name_ptr,
+                        const Utf8Char* function_name_ptr,
                         Ulong* id_ptr,
                         ReturnValue* return_value = ThrowException);
 
@@ -3817,7 +3817,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * @return true on success, false otherwise
        */
       bool C_AsyncJoin(SessionHandle session,
-                       Utf8Char* function_name_ptr,
+                       const Utf8Char* function_name_ptr,
                        Ulong id,
                        Byte* data_ptr,
                        Ulong data_len,
