@@ -187,6 +187,11 @@ release, or where a backwards incompatible change is expected.
 - All support for loading, generating or using RSA keys with a public
   exponent larger than 2**64-1
 
+- Currently RSA_PrivateKey will allow generating any key of bitlength
+  greater than or equal to 1024 bits. In a future major release the
+  allowed bitlengths of new RSA keys will be restricted to 2048 bits
+  or higher, and the bitlength must be a multiple of 1024 bits.
+
 - Currently some public key padding mechanisms can be used with several
   different names. This is deprecated.
   "EMSA_PKCS1", "EMSA-PKCS1-v1_5", "EMSA3": Use "PKCS1v15"

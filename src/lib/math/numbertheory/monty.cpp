@@ -260,6 +260,18 @@ void Montgomery_Params::square_this(BigInt& x, secure_vector<word>& ws) const {
    copy_mem(x.mutable_data(), z_data, output_size);
 }
 
+Montgomery_Int Montgomery_Int::one(const std::shared_ptr<const Montgomery_Params>& params) {
+   return Montgomery_Int(params, params->R1(), false);
+}
+
+Montgomery_Int Montgomery_Int::from_wide_int(const std::shared_ptr<const Montgomery_Params>& params, const BigInt& x) {
+   //BOTAN_ARG_CHECK(x < params->p() * params->p(), "Input too large");
+
+   secure_vector<word> ws;
+   auto redc_x = params->mul(params->redc(x, ws), params->R3(), ws);
+   return Montgomery_Int(params, redc_x, false);
+}
+
 Montgomery_Int::Montgomery_Int(const std::shared_ptr<const Montgomery_Params>& params,
                                const BigInt& v,
                                bool redc_needed) :
@@ -301,11 +313,7 @@ Montgomery_Int::Montgomery_Int(std::shared_ptr<const Montgomery_Params> params,
 
 void Montgomery_Int::fix_size() {
    const size_t p_words = m_params->p_words();
-
-   if(m_v.sig_words() > p_words) {
-      throw Internal_Error("Montgomery_Int::fix_size v too large");
-   }
-
+   BOTAN_DEBUG_ASSERT(m_v.sig_words() <= p_words);
    m_v.grow_to(p_words);
 }
 
@@ -335,6 +343,7 @@ BigInt Montgomery_Int::value() const {
 }
 
 Montgomery_Int Montgomery_Int::operator+(const Montgomery_Int& other) const {
+   BOTAN_STATE_CHECK(other.m_params == m_params);
    secure_vector<word> ws;
    BigInt z = m_v;
    z.mod_add(other.m_v, m_params->p(), ws);
@@ -342,6 +351,7 @@ Montgomery_Int Montgomery_Int::operator+(const Montgomery_Int& other) const {
 }
 
 Montgomery_Int Montgomery_Int::operator-(const Montgomery_Int& other) const {
+   BOTAN_STATE_CHECK(other.m_params == m_params);
    secure_vector<word> ws;
    BigInt z = m_v;
    z.mod_sub(other.m_v, m_params->p(), ws);
@@ -349,35 +359,42 @@ Montgomery_Int Montgomery_Int::operator-(const Montgomery_Int& other) const {
 }
 
 Montgomery_Int& Montgomery_Int::operator+=(const Montgomery_Int& other) {
+   BOTAN_STATE_CHECK(other.m_params == m_params);
    secure_vector<word> ws;
    return this->add(other, ws);
 }
 
 Montgomery_Int& Montgomery_Int::add(const Montgomery_Int& other, secure_vector<word>& ws) {
+   BOTAN_STATE_CHECK(other.m_params == m_params);
    m_v.mod_add(other.m_v, m_params->p(), ws);
    return (*this);
 }
 
 Montgomery_Int& Montgomery_Int::operator-=(const Montgomery_Int& other) {
+   BOTAN_STATE_CHECK(other.m_params == m_params);
    secure_vector<word> ws;
    return this->sub(other, ws);
 }
 
 Montgomery_Int& Montgomery_Int::sub(const Montgomery_Int& other, secure_vector<word>& ws) {
+   BOTAN_STATE_CHECK(other.m_params == m_params);
    m_v.mod_sub(other.m_v, m_params->p(), ws);
    return (*this);
 }
 
 Montgomery_Int Montgomery_Int::operator*(const Montgomery_Int& other) const {
+   BOTAN_STATE_CHECK(other.m_params == m_params);
    secure_vector<word> ws;
    return Montgomery_Int(m_params, m_params->mul(m_v, other.m_v, ws), false);
 }
 
 Montgomery_Int Montgomery_Int::mul(const Montgomery_Int& other, secure_vector<word>& ws) const {
+   BOTAN_STATE_CHECK(other.m_params == m_params);
    return Montgomery_Int(m_params, m_params->mul(m_v, other.m_v, ws), false);
 }
 
 Montgomery_Int& Montgomery_Int::mul_by(const Montgomery_Int& other, secure_vector<word>& ws) {
+   BOTAN_STATE_CHECK(other.m_params == m_params);
    m_params->mul_by(m_v, other.m_v, ws);
    return (*this);
 }
@@ -388,6 +405,7 @@ Montgomery_Int& Montgomery_Int::mul_by(const secure_vector<word>& other, secure_
 }
 
 Montgomery_Int& Montgomery_Int::operator*=(const Montgomery_Int& other) {
+   BOTAN_STATE_CHECK(other.m_params == m_params);
    secure_vector<word> ws;
    return mul_by(other, ws);
 }

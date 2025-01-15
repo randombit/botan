@@ -44,7 +44,7 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
 
    // If p == 3 (mod 4) there is a simple solution
    if(p % 4 == 3) {
-      return monty_exp_vartime(monty_p, a, ((p + 1) >> 2));
+      return monty_exp_vartime(monty_p, a, ((p + 1) >> 2)).value();
    }
 
    // Otherwise we have to use Shanks-Tonelli
@@ -54,7 +54,7 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
    q -= 1;
    q >>= 1;
 
-   BigInt r = monty_exp_vartime(monty_p, a, q);
+   BigInt r = monty_exp_vartime(monty_p, a, q).value();
    BigInt n = mod_p.multiply(a, mod_p.square(r));
    r = mod_p.multiply(r, a);
 
@@ -81,7 +81,7 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
       }
    }
 
-   BigInt c = monty_exp_vartime(monty_p, BigInt::from_word(z), (q << 1) + 1);
+   BigInt c = monty_exp_vartime(monty_p, BigInt::from_word(z), (q << 1) + 1).value();
 
    while(n > 1) {
       q = n;
@@ -97,7 +97,7 @@ BigInt sqrt_modulo_prime(const BigInt& a, const BigInt& p) {
       }
 
       BOTAN_ASSERT_NOMSG(s >= (i + 1));  // No underflow!
-      c = monty_exp_vartime(monty_p, c, BigInt::power_of_2(s - i - 1));
+      c = monty_exp_vartime(monty_p, c, BigInt::power_of_2(s - i - 1)).value();
       r = mod_p.multiply(r, c);
       c = mod_p.square(c);
       n = mod_p.multiply(n, c);
@@ -299,7 +299,7 @@ BigInt power_mod(const BigInt& base, const BigInt& exp, const BigInt& mod) {
 
    if(mod.is_odd()) {
       auto monty_params = std::make_shared<Montgomery_Params>(mod, reduce_mod);
-      return monty_exp(monty_params, reduce_mod.reduce(base), exp, exp_bits);
+      return monty_exp(monty_params, reduce_mod.reduce(base), exp, exp_bits).value();
    }
 
    /*
