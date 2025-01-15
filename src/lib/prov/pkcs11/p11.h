@@ -946,6 +946,33 @@ enum class PseudoRandom : CK_PKCS5_PBKD2_PSEUDO_RANDOM_FUNCTION_TYPE {
    Pkcs5Pbkd2HmacSha512256 = CKP_PKCS5_PBKD2_HMAC_SHA512_256,
 };
 
+enum class MlDsaParameterSet : CK_ML_DSA_PARAMETER_SET_TYPE {
+   MlDsa44 = CKP_ML_DSA_44,
+   MlDsa65 = CKP_ML_DSA_65,
+   MlDsa87 = CKP_ML_DSA_87,
+};
+
+enum class SlhDsaParameterSet : CK_SLH_DSA_PARAMETER_SET_TYPE {
+   SlhDsaSha2_128s = CKP_SLH_DSA_SHA2_128S,
+   SlhDsaShake128s = CKP_SLH_DSA_SHAKE_128S,
+   SlhDsaSha2_128f = CKP_SLH_DSA_SHA2_128F,
+   SlhDsaShake128f = CKP_SLH_DSA_SHAKE_128F,
+   SlhDsaSha2_192s = CKP_SLH_DSA_SHA2_192S,
+   SlhDsaShake192s = CKP_SLH_DSA_SHAKE_192S,
+   SlhDsaSha2_192f = CKP_SLH_DSA_SHA2_192F,
+   SlhDsaShake192f = CKP_SLH_DSA_SHAKE_192F,
+   SlhDsaSha2_256s = CKP_SLH_DSA_SHA2_256S,
+   SlhDsaShake256s = CKP_SLH_DSA_SHAKE_256S,
+   SlhDsaSha2_256f = CKP_SLH_DSA_SHA2_256F,
+   SlhDsaShake256f = CKP_SLH_DSA_SHAKE_256F,
+};
+
+enum class MlKemParameterSet : CK_ML_KEM_PARAMETER_SET_TYPE {
+   MlKem512 = CKP_ML_KEM_512,
+   MlKem768 = CKP_ML_KEM_768,
+   MlKem1024 = CKP_ML_KEM_1024,
+};
+
 enum class SessionState : CK_STATE {
    RoPublicSession = CKS_RO_PUBLIC_SESSION,
    RoUserFunctions = CKS_RO_USER_FUNCTIONS,
