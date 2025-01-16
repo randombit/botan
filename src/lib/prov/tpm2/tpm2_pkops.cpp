@@ -8,6 +8,7 @@
 
 #include <botan/internal/tpm2_pkops.h>
 
+#include <botan/internal/emsa.h>
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tpm2_algo_mappings.h>
 #include <botan/internal/tpm2_hash.h>
@@ -44,9 +45,14 @@ std::unique_ptr<Botan::HashFunction> create_hash_function(const Object& key_hand
 
 Signature_Operation::Signature_Operation(const Object& object,
                                          const SessionBundle& sessions,
-                                         const SignatureAlgorithmSelection& algorithms) :
+                                         SignatureAlgorithmSelection algorithms) :
       Botan::TPM2::Signature_Operation_Base<PK_Ops::Signature>(
-         object, sessions, algorithms, create_hash_function(object, sessions, algorithms.hash_name)) {}
+         object,
+         sessions,
+         {
+            create_hash_function(object, sessions, algorithms.hash_name),
+            std::move(algorithms),
+         }) {}
 
 std::vector<uint8_t> Signature_Operation::sign(Botan::RandomNumberGenerator& rng) {
    BOTAN_UNUSED(rng);
@@ -96,9 +102,13 @@ std::vector<uint8_t> Signature_Operation::sign(Botan::RandomNumberGenerator& rng
 
 Verification_Operation::Verification_Operation(const Object& object,
                                                const SessionBundle& sessions,
-                                               const SignatureAlgorithmSelection& algorithms) :
-      Signature_Operation_Base<PK_Ops::Verification>(
-         object, sessions, algorithms, Botan::HashFunction::create_or_throw(algorithms.hash_name)) {}
+                                               SignatureAlgorithmSelection algorithms) :
+      Signature_Operation_Base<PK_Ops::Verification>(object,
+                                                     sessions,
+                                                     {
+                                                        Botan::HashFunction::create_or_throw(algorithms.hash_name),
+                                                        std::move(algorithms),
+                                                     }) {}
 
 bool Verification_Operation::is_valid_signature(std::span<const uint8_t> sig_data) {
    TPM2B_DIGEST digest;
