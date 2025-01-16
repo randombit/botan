@@ -15,6 +15,9 @@ namespace Botan::PKCS11 {
 
 namespace {
 
+constexpr std::array<Utf8Char, 8> PKCS11_INTERFACE_NAME_ARR = {"PKCS 11"};
+constexpr std::basic_string_view<Utf8Char> PKCS11_INTERFACE_NAME(PKCS11_INTERFACE_NAME_ARR.data());
+
 std::strong_ordering operator<=>(const Version& left, const Version& right) {
    // Compare both versions by concatenating their bytes: major || minor
    auto version_value = [](const Version& v) -> uint16_t {
@@ -34,11 +37,9 @@ Version version_of(const Interface& interface) {
    return *reinterpret_cast<Version*>(interface.pFunctionList);
 };
 
-std::string_view name_of(const Interface& interface) {
-   return std::string_view(reinterpret_cast<const char*>(interface.pInterfaceName));
+std::basic_string_view<Utf8Char> name_of(const Interface& interface) {
+   return std::basic_string_view<Utf8Char>(interface.pInterfaceName);
 }
-
-constexpr std::string_view PKCS11_INTERFACE_NAME = "PKCS 11";
 
 }  // namespace
 
@@ -46,7 +47,7 @@ Version InterfaceWrapper::version() const {
    return version_of(m_interface);
 }
 
-std::string_view InterfaceWrapper::name() const {
+std::basic_string_view<Utf8Char> InterfaceWrapper::name() const {
    return name_of(m_interface);
 }
 
@@ -78,9 +79,6 @@ std::unique_ptr<InterfaceWrapper> InterfaceWrapper::latest_p11_interface(Dynamic
    // We only load interfaces named "PKCS 11" (which are the pure ones defined in the spec) with
    // version >= 2.40.
    auto is_valid_interface = [](const Interface& i) {
-      if(name_of(i) != PKCS11_INTERFACE_NAME) {
-         return false;
-      }
       // This is also done by the example in PKCS #11 (version >= 3.0) spec.
       // Note that version above the currently supported maximal version should
       // be compatible too.
@@ -138,9 +136,9 @@ const FunctionList32& InterfaceWrapper::func_3_2() const {
    return *reinterpret_cast<FunctionList32*>(raw_interface().pFunctionList);
 }
 
-uint8_t* InterfaceWrapper::p11_interface_name_ptr() {
-   static std::array<uint8_t, 8> PKCS11_INTERFACE_NAME_ARR = {'P', 'K', 'C', 'S', ' ', '1', '1', '\0'};
-   return PKCS11_INTERFACE_NAME_ARR.data();
+Utf8Char* InterfaceWrapper::p11_interface_name_ptr() {
+   static std::array<Utf8Char, 8> STATIC_PKCS11_INTERFACE_NAME_ARR = {"PKCS 11"};
+   return STATIC_PKCS11_INTERFACE_NAME_ARR.data();
 }
 
 }  // namespace Botan::PKCS11

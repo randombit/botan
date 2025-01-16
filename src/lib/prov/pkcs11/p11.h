@@ -1211,7 +1211,7 @@ class BOTAN_PUBLIC_API(3, 7) InterfaceWrapper {
       Version version() const;
 
       /// Access the name of the interface
-      std::string_view name() const;
+      std::basic_string_view<Utf8Char> name() const;
 
       /// Access a function list that contains all methods since PKCS #11 v.2.40
       virtual const FunctionList& func_2_40() const;
@@ -1227,13 +1227,13 @@ class BOTAN_PUBLIC_API(3, 7) InterfaceWrapper {
       static std::unique_ptr<InterfaceWrapper> latest_p11_interface(Dynamically_Loaded_Library& library);
 
       /**
-       * Returns an immortal pointer to the uint8_t string "PKCS 11".
+       * Returns an immortal pointer to the Utf8Char string "PKCS 11".
        * Used to define an interface object.
        *
        * @warning Unfortunately, the interface object requires a non constant
        * pointer. However, this string MUST NOT be modified!
        */
-      static uint8_t* p11_interface_name_ptr();
+      static Utf8Char* p11_interface_name_ptr();
 };
 
 /// Provides access to all PKCS#11 functions
