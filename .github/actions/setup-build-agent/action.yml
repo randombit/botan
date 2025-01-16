@@ -53,6 +53,10 @@ runs:
       run: ${{ github.action_path }}/../../../src/scripts/ci/setup_gh_actions_after_vcvars.ps1 ${{ inputs.target }}
       shell: pwsh
       if: runner.os == 'Windows'
+    - name: Install Build Dependencies # after setting up the compiler cache infrastructure
+      run: ${{ github.action_path }}/../../../src/scripts/ci/setup_gh_actions_after_ccache.sh ${{ inputs.target }}
+      shell: bash
+      if: runner.os != 'Windows'
 
     - name: Start TPM 2.0 Simulator
       run: ${{ github.action_path }}/../../../src/scripts/ci/start_tpm2_simulator.sh "${{ github.workspace }}/tpm2_simulator_state"
