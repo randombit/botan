@@ -113,10 +113,7 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
                m_key->group().get_p(),
                rng,
                [](const BigInt& k) { return k; },
-               [this](const BigInt& k) {
-                  const BigInt inv_k = inverse_mod(k, group().get_p());
-                  return powermod_x_p(inv_k);
-               }) {}
+               [this](const BigInt& k) { return powermod_x_p(group().inverse_mod_p(k)); }) {}
 
       size_t agreed_value_size() const override { return group().p_bytes(); }
 
