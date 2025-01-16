@@ -11,6 +11,8 @@
 #include <botan/pk_keys.h>
 #include <memory>
 
+BOTAN_DEPRECATED_HEADER("dsa.h")
+
 namespace Botan {
 
 class BigInt;

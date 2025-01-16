@@ -106,8 +106,10 @@ class BOTAN_PUBLIC_API(2, 2) Ed25519_PrivateKey final : public Ed25519_PublicKey
 
 BOTAN_DIAGNOSTIC_POP
 
+BOTAN_DEPRECATED("Use Ed25519_PrivateKey or Sodium::crypto_sign_ed25519_seed_keypair")
 void ed25519_gen_keypair(uint8_t pk[32], uint8_t sk[64], const uint8_t seed[32]);
 
+BOTAN_DEPRECATED("Use Ed25519_PrivateKey or Sodium::crypto_sign_ed25519_detached")
 void ed25519_sign(uint8_t sig[64],
                   const uint8_t msg[],
                   size_t msg_len,
@@ -115,6 +117,7 @@ void ed25519_sign(uint8_t sig[64],
                   const uint8_t domain_sep[],
                   size_t domain_sep_len);
 
+BOTAN_DEPRECATED("Use Ed25519_PublicKey or Sodium::crypto_sign_ed25519_verify_detached")
 bool ed25519_verify(const uint8_t msg[],
                     size_t msg_len,
                     const uint8_t sig[64],

@@ -209,8 +209,10 @@ A post-quantum secure key encapsulation scheme based on (unstructured) lattices.
 McEliece
 ~~~~~~~~~~
 
+.. deprecated:: 3.0.0
+
 Post-quantum secure key encapsulation scheme based on the hardness of certain
-decoding problems.
+decoding problems. Deprecated; use Classic McEliece
 
 Classic McEliece
 ~~~~~~~~~~~~~~~~
@@ -226,6 +228,8 @@ except in PGP.
 DSA
 ~~~~
 
+.. deprecated:: 3.7.0
+
 Finite field based signature scheme. A NIST standard but now quite obsolete.
 
 ECGDSA, ECKCDSA, SM2, GOST-34.10
@@ -234,6 +238,8 @@ ECGDSA, ECKCDSA, SM2, GOST-34.10
 A set of signature schemes based on elliptic curves. All are national standards
 in their respective countries (Germany, South Korea, China, and Russia, resp),
 and are completely obscure and unused outside of that context.
+
+GOST-34.10 support is deprecated.
 
 .. _creating_new_private_keys:
 

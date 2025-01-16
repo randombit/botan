@@ -115,11 +115,9 @@ Public Key Cryptography
 
 * RSA signatures and encryption
 * DH, ECDH, X25519 and X448 key agreement
-* Signature schemes ECDSA, DSA, Ed25519, Ed448, ECGDSA, ECKCDSA, SM2, GOST 34.10
+* Elliptic curve signature schemes ECDSA, Ed25519, Ed448, ECGDSA, ECKCDSA, SM2
 * Post-quantum signature schemes ML-DSA (Dilithium), SLH-DSA (SPHINCS+), HSS/LMS, XMSS
 * Post-quantum key encapsulation schemes ML-KEM (Kyber), FrodoKEM, Classic McEliece
-* ElGamal encryption
-* Padding schemes OAEP, PSS, PKCS #1 v1.5, X9.31
 
 Ciphers, hashes, MACs, and checksums
 ----------------------------------------
@@ -138,7 +136,7 @@ Other Useful Things
 ----------------------------------------
 
 * Full C++ PKCS #11 API wrapper
-* Interfaces for TPM v1.2 and v2.0 device access
+* Interfaces for TPM v2.0 device access
 * Simple compression API wrapping zlib, bzip2, and lzma libraries
 * RNG wrappers for system RNG, ESDM and hardware RNGs
 * HMAC_DRBG and entropy collection system for userspace RNGs
