@@ -38,7 +38,7 @@ void retrofit_legacy_parameters(SigOptsBaseT& builder,
    }
 
    if(algo.starts_with("Dilithium") || algo == "SPHINCS+" || algo == "ML-DSA" || algo == "SLH-DSA") {
-      if(!params.empty() && params != "Randomized" && params != "Deterministic") {
+      if(!params.empty() && params != "Randomized" && params != "Deterministic" && params != "Pure") {
          throw Invalid_Argument(fmt("Unexpected parameters for signing with {}", algo));
       }
 
