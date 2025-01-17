@@ -84,28 +84,27 @@ class BOTAN_PUBLIC_API(2, 0) ECKCDSA_PrivateKey final : public ECKCDSA_PublicKey
 
       /**
       * Create a private key from a given secret @p x
-      * @param domain curve parameters to bu used for this key
+      * @param group curve parameters to bu used for this key
       * @param x      the private key
       */
-      ECKCDSA_PrivateKey(EC_Group domain, const BigInt& x) : EC_PrivateKey(std::move(domain), x, true) {}
+      ECKCDSA_PrivateKey(EC_Group group, EC_Scalar x) : EC_PrivateKey(std::move(group), std::move(x), true) {}
 
       /**
       * Create a new private key
       * @param rng a random number generator
-      * @param domain parameters to used for this key
+      * @param group parameters to used for this key
       */
-      ECKCDSA_PrivateKey(RandomNumberGenerator& rng, EC_Group domain) :
-            EC_PrivateKey(rng, std::move(domain), BigInt::zero(), true) {}
+      ECKCDSA_PrivateKey(RandomNumberGenerator& rng, EC_Group group) : EC_PrivateKey(rng, std::move(group), true) {}
 
       /**
       * Create a private key.
       * @param rng a random number generator
-      * @param domain parameters to used for this key
+      * @param group parameters to used for this key
       * @param x the private key (if zero, generate a new random key)
       */
       BOTAN_DEPRECATED("Use one of the other constructors")
-      ECKCDSA_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x) :
-            EC_PrivateKey(rng, domain, x, true) {}
+      ECKCDSA_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x) :
+            EC_PrivateKey(rng, group, x, true) {}
 
       bool check_key(RandomNumberGenerator& rng, bool) const override;
 

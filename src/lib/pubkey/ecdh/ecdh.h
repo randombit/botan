@@ -88,27 +88,27 @@ class BOTAN_PUBLIC_API(2, 0) ECDH_PrivateKey final : public ECDH_PublicKey,
 
       /**
       * Create a private key from a given secret @p x
-      * @param domain curve parameters to bu used for this key
+      * @param group curve parameters to bu used for this key
       * @param x      the private key
       */
-      ECDH_PrivateKey(EC_Group domain, const BigInt& x) : EC_PrivateKey(std::move(domain), x) {}
+      ECDH_PrivateKey(EC_Group group, EC_Scalar x) : EC_PrivateKey(std::move(group), std::move(x)) {}
 
       /**
       * Create a new private key
       * @param rng a random number generator
-      * @param domain parameters to used for this key
+      * @param group parameters to used for this key
       */
-      ECDH_PrivateKey(RandomNumberGenerator& rng, EC_Group domain) : EC_PrivateKey(rng, std::move(domain)) {}
+      ECDH_PrivateKey(RandomNumberGenerator& rng, EC_Group group) : EC_PrivateKey(rng, std::move(group)) {}
 
       /**
       * Generate a new private key
       * @param rng a random number generator
-      * @param domain parameters to used for this key
+      * @param group parameters to used for this key
       * @param x the private key; if zero, a new random key is generated
       */
       BOTAN_DEPRECATED("Use one of the other constructors")
-      ECDH_PrivateKey(RandomNumberGenerator& rng, const EC_Group& domain, const BigInt& x) :
-            EC_PrivateKey(rng, domain, x) {}
+      ECDH_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group, const BigInt& x) :
+            EC_PrivateKey(rng, group, x) {}
 
       std::unique_ptr<Public_Key> public_key() const override;
 

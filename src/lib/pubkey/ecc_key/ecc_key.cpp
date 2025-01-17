@@ -145,13 +145,6 @@ EC_PrivateKey::EC_PrivateKey(RandomNumberGenerator& rng, EC_Group ec_group, bool
    m_domain_encoding = default_encoding_for(domain());
 }
 
-EC_PrivateKey::EC_PrivateKey(EC_Group group, const BigInt& bn_scalar, bool with_modular_inverse) {
-   auto scalar = EC_Scalar::from_bigint(group, bn_scalar);
-   m_private_key = std::make_shared<EC_PrivateKey_Data>(std::move(group), std::move(scalar));
-   m_public_key = m_private_key->public_key(with_modular_inverse);
-   m_domain_encoding = default_encoding_for(domain());
-}
-
 EC_PrivateKey::EC_PrivateKey(EC_Group ec_group, EC_Scalar x, bool with_modular_inverse) {
    m_private_key = std::make_shared<EC_PrivateKey_Data>(std::move(ec_group), std::move(x));
    m_public_key = m_private_key->public_key(with_modular_inverse);
