@@ -129,6 +129,9 @@ Deprecated modules include
 
 - MAC ``x919_mac``: Quite obsolete at this point
 
+- Signature scheme ``dsa``: Finite field DSA is slow, very rarely used anymore,
+  and no longer approved by NIST
+
 - Signature scheme ``gost_3410``
 
 - McEliece implementation ``mce``. Will be replaced by the proposal Classic
@@ -210,6 +213,7 @@ internal to the library in the future.
 
   Internal implementation headers - seemingly no reason for applications to use:
   ``curve_gfp.h``,
+  ``numthry.h``,
   ``reducer.h``,
   ``tls_algos.h``,
   ``tls_magic.h``

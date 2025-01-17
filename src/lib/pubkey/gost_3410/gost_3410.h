@@ -12,6 +12,8 @@
 
 #include <botan/ecc_key.h>
 
+BOTAN_DEPRECATED_HEADER("gost_3410.h")
+
 namespace Botan {
 
 /**
