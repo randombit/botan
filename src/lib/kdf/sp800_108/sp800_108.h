@@ -24,8 +24,10 @@ class SP800_108_Counter final : public KDF {
 
       /**
       * @param mac MAC algorithm to use
+      * @param r  encoding bit-length of the internal counter {8, 16, 24, or 32}
+      * @param L  encoding bit-length of the output length in bits {8, 16, 24, or 32}
       */
-      explicit SP800_108_Counter(std::unique_ptr<MessageAuthenticationCode> mac) : m_prf(std::move(mac)) {}
+      SP800_108_Counter(std::unique_ptr<MessageAuthenticationCode> mac, size_t r, size_t L);
 
    private:
       /**
@@ -48,6 +50,8 @@ class SP800_108_Counter final : public KDF {
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
+      size_t m_counter_bits;
+      size_t m_output_length_bits;
 };
 
 /**
@@ -59,7 +63,12 @@ class SP800_108_Feedback final : public KDF {
 
       std::unique_ptr<KDF> new_object() const override;
 
-      explicit SP800_108_Feedback(std::unique_ptr<MessageAuthenticationCode> mac) : m_prf(std::move(mac)) {}
+      /**
+      * @param mac MAC algorithm to use
+      * @param r  encoding bit-length of the internal counter {8, 16, 24, or 32}
+      * @param L  encoding bit-length of the output length in bits {8, 16, 24, or 32}
+      */
+      SP800_108_Feedback(std::unique_ptr<MessageAuthenticationCode> mac, size_t r, size_t L);
 
    private:
       /**
@@ -82,6 +91,8 @@ class SP800_108_Feedback final : public KDF {
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
+      size_t m_counter_bits;
+      size_t m_output_length_bits;
 };
 
 /**
@@ -93,7 +104,12 @@ class SP800_108_Pipeline final : public KDF {
 
       std::unique_ptr<KDF> new_object() const override;
 
-      explicit SP800_108_Pipeline(std::unique_ptr<MessageAuthenticationCode> mac) : m_prf(std::move(mac)) {}
+      /**
+      * @param mac MAC algorithm to use
+      * @param r  encoding bit-length of the internal counter {8, 16, 24, or 32}
+      * @param L  encoding bit-length of the output length in bits {8, 16, 24, or 32}
+      */
+      SP800_108_Pipeline(std::unique_ptr<MessageAuthenticationCode> mac, size_t r, size_t L);
 
    private:
       /**
@@ -116,6 +132,8 @@ class SP800_108_Pipeline final : public KDF {
 
    private:
       std::unique_ptr<MessageAuthenticationCode> m_prf;
+      size_t m_counter_bits;
+      size_t m_output_length_bits;
 };
 
 }  // namespace Botan

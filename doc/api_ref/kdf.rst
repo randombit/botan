@@ -185,18 +185,27 @@ SP800-108
 KDFs from NIST SP 800-108. Variants include "SP800-108-Counter",
 "SP800-108-Feedback" and "SP800-108-Pipeline".
 
+SP800-108 does not explicitly specify the encoding width of the internally used
+counter and output length values. As those values are incorporated into the key
+derivation, applications can optionally specify their encoding bit lengths as of
+Botan 3.7.0. Values of 8, 16, 24, and 32 are supported and Botan will always
+encode in big-endian byte order. If not otherwise specified, both fields are
+encoded using 32 bits.
+
 Available if ``BOTAN_HAS_SP800_108`` is defined.
 
 Algorithm specification names:
 
-- ``SP800-108-Counter(<MessageAuthenticationCode|HashFunction>)``,
-  e.g. ``SP800-108-Counter(HMAC(SHA-256))``
-- ``SP800-108-Feedback(<MessageAuthenticationCode|HashFunction>)``
-- ``SP800-108-Pipeline(<MessageAuthenticationCode|HashFunction>)``
+- ``SP800-108-Counter(<MessageAuthenticationCode|HashFunction>[,<counter bit length>[,<output length bit length>]])``,
+  e.g. ``SP800-108-Counter(HMAC(SHA-256),8,24)``
+- ``SP800-108-Feedback(<MessageAuthenticationCode|HashFunction>[,<counter bit length>[,<output length bit length>]])``
+- ``SP800-108-Pipeline(<MessageAuthenticationCode|HashFunction>[,<counter bit length>[,<output length bit length>]])``
 
 If a ``HashFunction`` is provided as an argument,
 it will create ``HMAC(HashFunction)`` as the ``MessageAuthenticationCode``.
-I.e. ``SP800-108-Counter(SHA-256)`` will result in ``SP800-108-Counter(HMAC(SHA-256))``.
+If no field encoding lengths are specified, both are defaulted to 32 bits.
+I.e. ``SP800-108-Counter(SHA-256)`` will result in
+``SP800-108-Counter(HMAC(SHA-256),32,32)``.
 
 TLS 1.2 PRF
 ~~~~~~~~~~~
