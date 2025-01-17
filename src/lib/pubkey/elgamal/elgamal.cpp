@@ -140,7 +140,7 @@ std::vector<uint8_t> ElGamal_Encryption_Operation::raw_encrypt(std::span<const u
    const BigInt k(rng, k_bits, false);
 
    const BigInt a = group.power_g_p(k, k_bits);
-   const BigInt b = group.multiply_mod_p(m, monty_execute(*m_monty_y_p, k, k_bits));
+   const BigInt b = group.multiply_mod_p(m, monty_execute(*m_monty_y_p, k, k_bits).value());
 
    return unlock(BigInt::encode_fixed_length_int_pair(a, b, group.p_bytes()));
 }

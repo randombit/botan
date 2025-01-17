@@ -48,6 +48,13 @@ class BOTAN_TEST_API Montgomery_Int final {
                      size_t len,
                      bool redc_needed = true);
 
+      static Montgomery_Int one(const std::shared_ptr<const Montgomery_Params>& params);
+
+      /**
+      * Wide reduction - input can be at most 2*bytes long
+      */
+      static Montgomery_Int from_wide_int(const std::shared_ptr<const Montgomery_Params>& params, const BigInt& x);
+
       bool operator==(const Montgomery_Int& other) const;
 
       bool operator!=(const Montgomery_Int& other) const { return (m_v != other.m_v); }
@@ -117,6 +124,8 @@ class BOTAN_TEST_API Montgomery_Int final {
       void _const_time_poison() const { CT::poison(m_v); }
 
       void _const_time_unpoison() const { CT::unpoison(m_v); }
+
+      const std::shared_ptr<const Montgomery_Params>& _params() const { return m_params; }
 
    private:
       std::shared_ptr<const Montgomery_Params> m_params;
