@@ -49,8 +49,6 @@ class EC_PublicKey_Data final {
 
 class EC_PrivateKey_Data final {
    public:
-      EC_PrivateKey_Data(EC_Group group, const BigInt& x);
-
       EC_PrivateKey_Data(EC_Group group, EC_Scalar x);
 
       EC_PrivateKey_Data(EC_Group group, std::span<const uint8_t> bytes);

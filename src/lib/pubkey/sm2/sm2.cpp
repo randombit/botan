@@ -51,8 +51,8 @@ SM2_PrivateKey::SM2_PrivateKey(const AlgorithmIdentifier& alg_id, std::span<cons
       m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()),
       m_da_inv_legacy(m_da_inv.to_bigint()) {}
 
-SM2_PrivateKey::SM2_PrivateKey(EC_Group group, const BigInt& x) :
-      EC_PrivateKey(std::move(group), x),
+SM2_PrivateKey::SM2_PrivateKey(EC_Group group, EC_Scalar x) :
+      EC_PrivateKey(std::move(group), std::move(x)),
       m_da_inv((this->_private_key() + EC_Scalar::one(domain())).invert()),
       m_da_inv_legacy(m_da_inv.to_bigint()) {}
 

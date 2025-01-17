@@ -17,9 +17,6 @@ EC_PublicKey_Data::EC_PublicKey_Data(EC_Group group, std::span<const uint8_t> by
 #endif
 }
 
-EC_PrivateKey_Data::EC_PrivateKey_Data(EC_Group group, const BigInt& x) :
-      m_group(std::move(group)), m_scalar(EC_Scalar::from_bigint(m_group, x)), m_legacy_x(m_scalar.to_bigint()) {}
-
 EC_PrivateKey_Data::EC_PrivateKey_Data(EC_Group group, EC_Scalar x) :
       m_group(std::move(group)), m_scalar(std::move(x)), m_legacy_x(m_scalar.to_bigint()) {}
 
