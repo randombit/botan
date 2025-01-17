@@ -100,9 +100,9 @@ jobs:
           - target: cross-android-arm64-amalgamation
             compiler: clang
             host_os: ubuntu-24.04
-          - target: cross-arm64-amalgamation
+          - target: amalgamation
             compiler: gcc
-            host_os: ubuntu-24.04
+            host_os: ubuntu-24.04-arm
           - target: emscripten
             compiler: emcc
             host_os: macos-14
@@ -201,6 +201,32 @@ jobs:
 
       - name: Valgrind Checks
         run: python3 ./src/scripts/ci_build.py --make-tool=make --cc=${{ matrix.compiler }} --custom-optimization-flags="${{ matrix.cxxflags }}" ${{ matrix.target }}
+
+  valgrind_aarch64:
+    name: "valgrind"
+    strategy:
+      fail-fast: false
+
+      matrix:
+        compiler: ["clang", "gcc"]
+        cxxflags: ["-O2", "-O3"]
+
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read Repository Configuration
+        uses: ./.github/actions/read-repo-config
+
+      - name: Setup Build Agent
+        uses: ./.github/actions/setup-build-agent
+        with:
+          target: valgrind-ct-full
+          cache-key: linux-aarch64-${{ matrix.compiler }}-valgrind-${{ matrix.cxxflags }}
+
+      - name: Valgrind Checks
+        run: python3 ./src/scripts/ci_build.py --make-tool=make --cc=${{ matrix.compiler }} --custom-optimization-flags="${{ matrix.cxxflags }}" valgrind-ct-full
 
   hybrid_tls_interop:
     name: "PQ/T TLS 1.3"
