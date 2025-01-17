@@ -238,7 +238,7 @@ bool DSA_Verification_Operation::verify(std::span<const uint8_t> input, std::spa
       i -= q;
    }
 
-   s = inverse_mod(s, q);
+   s = group.inverse_mod_q(s);
 
    const BigInt sr = group.multiply_mod_q(s, r);
    const BigInt si = group.multiply_mod_q(s, i);
