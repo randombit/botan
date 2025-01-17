@@ -1078,7 +1078,7 @@ std::string Text_Based_Test::get_next_line() {
          }
 
          if(line[0] == '#') {
-            if(line.compare(0, 6, "#test ") == 0) {
+            if(line.starts_with("#test ")) {
                return line;
             } else {
                continue;
@@ -1136,7 +1136,7 @@ std::vector<Test::Result> Text_Based_Test::run() {
          break;
       }
 
-      if(line.compare(0, 6, "#test ") == 0) {
+      if(line.starts_with("#test ")) {
          std::vector<std::string> pragma_tokens = Botan::split_on(line.substr(6), ' ');
 
          if(pragma_tokens.empty()) {

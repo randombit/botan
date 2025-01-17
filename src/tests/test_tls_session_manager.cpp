@@ -335,6 +335,7 @@ std::vector<Test::Result> test_session_manager_in_memory() {
 
             // fill the Session_Manager up fully
             std::vector<Botan::TLS::Session_Handle> handles;
+            handles.reserve(mgr->capacity());
             for(size_t i = 0; i < mgr->capacity(); ++i) {
                handles.push_back(
                   mgr->establish(default_session(Botan::TLS::Connection_Side::Server, cbs), random_id(*rng)).value());
@@ -707,7 +708,7 @@ std::vector<Test::Result> test_session_manager_hybrid() {
 
    return Test::flatten_result_lists({
       CHECK_all("ticket vs ID preference in establishment",
-                [&](auto make_manager, auto& result) {
+                [&](const auto& make_manager, auto& result) {
                    auto mgr_prefers_tickets = make_manager(true);
                    auto ticket1 =
                       mgr_prefers_tickets.establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
@@ -729,7 +730,7 @@ std::vector<Test::Result> test_session_manager_hybrid() {
                 }),
 
       CHECK_all("ticket vs ID preference in retrieval",
-                [&](auto make_manager, auto& result) {
+                [&](const auto& make_manager, auto& result) {
                    auto mgr_prefers_tickets = make_manager(true);
                    auto mgr_prefers_ids = make_manager(false);
 
@@ -751,7 +752,7 @@ std::vector<Test::Result> test_session_manager_hybrid() {
                 }),
 
       CHECK_all("no session tickets if hybrid manager cannot create them",
-                [&](auto make_manager, auto& result) {
+                [&](const auto& make_manager, auto& result) {
                    Botan::TLS::Session_Manager_Hybrid empty_mgr(
                       std::make_unique<Botan::TLS::Session_Manager_In_Memory>(rng, 10),
                       std::make_shared<Empty_Credentials_Manager>(),
@@ -1026,7 +1027,7 @@ std::vector<Test::Result> tls_session_manager_expiry() {
 
    return Test::flatten_result_lists({
       CHECK_all("sessions expire",
-                [&](auto, auto factory, auto& result) {
+                [&](const auto&, const auto& factory, auto& result) {
                    auto mgr = factory();
 
                    auto handle = mgr->establish(default_session(Botan::TLS::Connection_Side::Server, cbs));
@@ -1038,7 +1039,7 @@ std::vector<Test::Result> tls_session_manager_expiry() {
                 }),
 
          CHECK_all("expired sessions are not found",
-                   [&](const std::string& type, auto factory, auto& result) {
+                   [&](const std::string& type, const auto& factory, auto& result) {
                       if(type == "Stateless") {
                          return;  // this manager can neither store nor find anything
                       }
@@ -1065,7 +1066,7 @@ std::vector<Test::Result> tls_session_manager_expiry() {
 
          CHECK_all(
             "session tickets are not reused",
-            [&](const std::string& type, auto factory, auto& result) {
+            [&](const std::string& type, const auto& factory, auto& result) {
                if(type == "Stateless") {
                   return;  // this manager can neither store nor find anything
                }
@@ -1103,7 +1104,7 @@ std::vector<Test::Result> tls_session_manager_expiry() {
             }),
 
          CHECK_all("number of found tickets is capped",
-                   [&](const std::string& type, auto factory, auto& result) {
+                   [&](const std::string& type, const auto& factory, auto& result) {
                       if(type == "Stateless") {
                          return;  // this manager can neither store nor find anything
                       }
@@ -1133,31 +1134,32 @@ std::vector<Test::Result> tls_session_manager_expiry() {
                    }),
 
    #if defined(BOTAN_HAS_TLS_13)
-         CHECK_all("expired tickets are not selected for PSK resumption", [&](auto, auto factory, auto& result) {
-            auto ticket = [&](const Botan::TLS::Session_Handle& handle) {
-               return Botan::TLS::PskIdentity(handle.opaque_handle().get(), 0);
-            };
+         CHECK_all("expired tickets are not selected for PSK resumption",
+                   [&](const auto&, const auto& factory, auto& result) {
+                      auto ticket = [&](const Botan::TLS::Session_Handle& handle) {
+                         return Botan::TLS::PskIdentity(handle.opaque_handle().get(), 0);
+                      };
 
-            auto mgr = factory();
+                      auto mgr = factory();
 
-            auto old_handle = mgr->establish(
-               default_session(Botan::TLS::Connection_Side::Server, cbs, Botan::TLS::Version_Code::TLS_V13));
-            cbs.tick();
-            auto new_handle = mgr->establish(
-               default_session(Botan::TLS::Connection_Side::Server, cbs, Botan::TLS::Version_Code::TLS_V13));
-            result.require("both sessions are stored", old_handle.has_value() && new_handle.has_value());
+                      auto old_handle = mgr->establish(
+                         default_session(Botan::TLS::Connection_Side::Server, cbs, Botan::TLS::Version_Code::TLS_V13));
+                      cbs.tick();
+                      auto new_handle = mgr->establish(
+                         default_session(Botan::TLS::Connection_Side::Server, cbs, Botan::TLS::Version_Code::TLS_V13));
+                      result.require("both sessions are stored", old_handle.has_value() && new_handle.has_value());
 
-            auto session_and_index = mgr->choose_from_offered_tickets(
-               std::vector{ticket(old_handle.value()), ticket(new_handle.value())}, "SHA-256", cbs, plcy);
-            result.require("a ticket was chosen", session_and_index.has_value());
-            result.test_is_eq("the new ticket was chosen", session_and_index->second, uint16_t(1));
+                      auto session_and_index = mgr->choose_from_offered_tickets(
+                         std::vector{ticket(old_handle.value()), ticket(new_handle.value())}, "SHA-256", cbs, plcy);
+                      result.require("a ticket was chosen", session_and_index.has_value());
+                      result.test_is_eq("the new ticket was chosen", session_and_index->second, uint16_t(1));
 
-            cbs.tick();
+                      cbs.tick();
 
-            auto nothing = mgr->choose_from_offered_tickets(
-               std::vector{ticket(new_handle.value()), ticket(old_handle.value())}, "SHA-256", cbs, plcy);
-            result.require("all tickets are expired", !nothing.has_value());
-         }),
+                      auto nothing = mgr->choose_from_offered_tickets(
+                         std::vector{ticket(new_handle.value()), ticket(old_handle.value())}, "SHA-256", cbs, plcy);
+                      result.require("all tickets are expired", !nothing.has_value());
+                   }),
    #endif
    });
 }

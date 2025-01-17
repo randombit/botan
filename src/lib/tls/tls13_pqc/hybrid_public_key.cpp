@@ -149,6 +149,7 @@ std::unique_ptr<Hybrid_KEM_PublicKey> Hybrid_KEM_PublicKey::load_for_group(
 
    BufferSlicer public_value_slicer(concatenated_public_values);
    std::vector<std::unique_ptr<Public_Key>> pks;
+   pks.reserve(alg_ids.size());
    for(size_t idx = 0; idx < alg_ids.size(); ++idx) {
       pks.emplace_back(load_public_key(alg_ids[idx], public_value_slicer.take(public_value_lengths[idx])));
    }

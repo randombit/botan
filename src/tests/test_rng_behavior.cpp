@@ -500,8 +500,10 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests {
          std::vector<uint32_t> security_strengths{128, 192, 256, 256, 256, 256};
 
          for(size_t i = 0; i < approved_hash_fns.size(); ++i) {
-            std::string hash_fn = approved_hash_fns[i];
-            std::string mac_name = "HMAC(" + hash_fn + ")";
+            const auto& hash_fn = approved_hash_fns[i];
+            const size_t expected_security_level = security_strengths[i];
+
+            const std::string mac_name = "HMAC(" + hash_fn + ")";
             auto mac = Botan::MessageAuthenticationCode::create(mac_name);
             if(!mac) {
                result.note_missing(mac_name);
@@ -509,7 +511,7 @@ class HMAC_DRBG_Unit_Tests final : public Stateful_RNG_Tests {
             }
 
             Botan::HMAC_DRBG rng(std::move(mac));
-            result.test_eq(hash_fn + " security level", rng.security_level(), security_strengths[i]);
+            result.test_eq(hash_fn + " security level", rng.security_level(), expected_security_level);
          }
 
          return result;

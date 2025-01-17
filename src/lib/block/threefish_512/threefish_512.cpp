@@ -15,6 +15,8 @@ namespace Botan {
 
 namespace Threefish_F {
 
+namespace {
+
 template <size_t R1, size_t R2, size_t R3, size_t R4>
 BOTAN_FORCE_INLINE void e_round(
    uint64_t& X0, uint64_t& X1, uint64_t& X2, uint64_t& X3, uint64_t& X4, uint64_t& X5, uint64_t& X6, uint64_t& X7) {
@@ -141,6 +143,8 @@ BOTAN_FORCE_INLINE void d8_rounds(uint64_t& X0,
    d_round<46, 36, 19, 37>(X0, X2, X4, X6, X1, X3, X5, X7);
    key.d_add(R2, X0, X1, X2, X3, X4, X5, X6, X7);
 }
+
+}  // namespace
 
 }  // namespace Threefish_F
 

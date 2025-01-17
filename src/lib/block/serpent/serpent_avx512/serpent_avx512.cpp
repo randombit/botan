@@ -10,6 +10,8 @@
 
 namespace Botan {
 
+namespace {
+
 BOTAN_FORCE_INLINE void SBoxE0(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD_16x32& d) {
    const SIMD_16x32 t0 = SIMD_16x32::ternary_fn<0xb9>(b, d, c);
    const SIMD_16x32 t1 = SIMD_16x32::ternary_fn<0xe2>(a, b, d);
@@ -260,6 +262,8 @@ BOTAN_FORCE_INLINE void SBoxD7(SIMD_16x32& a, SIMD_16x32& b, SIMD_16x32& c, SIMD
    c = o2;
    d = o3;
 }
+
+}  // namespace
 
 BOTAN_AVX512_FN
 void Serpent::avx512_encrypt_16(const uint8_t in[16 * 16], uint8_t out[16 * 16]) const {

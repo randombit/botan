@@ -330,8 +330,8 @@ void test_decompress(Test::Result& result) {
 
    result.start_timer();
 
-   const auto twotothed = (uint32_t(1) << d);
    using from_t = std::conditional_t<d <= 8, uint8_t, uint16_t>;
+   const from_t twotothed = static_cast<from_t>(from_t(1) << d);
 
    for(from_t y = 0; y < twotothed; ++y) {
       const uint32_t c = Kyber_Algos::decompress<d>(y);

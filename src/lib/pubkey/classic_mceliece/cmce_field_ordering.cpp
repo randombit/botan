@@ -22,6 +22,8 @@ namespace Botan {
 
 namespace CMCE_CT {
 
+namespace {
+
 template <std::unsigned_integral T1, std::unsigned_integral T2>
    requires(sizeof(T1) <= 8 && sizeof(T2) <= 8)
 void cond_swap_pair(CT::Mask<uint64_t> cond_mask, std::pair<T1, T2>& a, std::pair<T1, T2>& b) {
@@ -65,6 +67,8 @@ T min(const T& a, const T& b) {
    auto mask = CT::Mask<T>::is_lt(a, b);
    return mask.select(a, b);
 }
+
+}  // namespace
 
 }  // namespace CMCE_CT
 

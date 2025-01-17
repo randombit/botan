@@ -150,6 +150,7 @@ const T& get(const std::reference_wrapper<T>& v) {
 
 template <typename T>
 const T& get(const T& v) {
+   // NOLINTNEXTLINE(bugprone-return-const-ref-from-parameter)
    return v;
 }
 
