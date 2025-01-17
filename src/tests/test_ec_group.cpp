@@ -17,6 +17,7 @@
    #include <botan/pk_keys.h>
    #include <botan/reducer.h>
    #include <botan/x509_key.h>
+   #include <botan/internal/ec_inner_data.h>
 #endif
 
 namespace Botan_Tests {
@@ -499,6 +500,52 @@ Test::Result test_ec_group_duplicate_orders() {
    return result;
 }
 
+Test::Result test_ec_group_registration_with_custom_oid() {
+   Test::Result result("EC_Group registration of standard group with custom OID");
+
+   Botan::EC_Group::clear_registered_curve_data();
+
+   const Botan::OID secp256r1_oid("1.2.840.10045.3.1.7");
+   const auto secp256r1 = Botan::EC_Group::from_OID(secp256r1_oid);
+   result.confirm("Group has correct OID", secp256r1.get_curve_oid() == secp256r1_oid);
+
+   const Botan::OID custom_oid("1.3.6.1.4.1.25258.100.99");  // some other random OID
+
+   Botan::OID::register_oid(custom_oid, "secp256r1");
+
+   Botan::EC_Group reg_group(custom_oid,
+                             secp256r1.get_p(),
+                             secp256r1.get_a(),
+                             secp256r1.get_b(),
+                             secp256r1.get_g_x(),
+                             secp256r1.get_g_y(),
+                             secp256r1.get_order());
+
+   result.test_success("Registration success");
+   result.confirm("Group has correct OID", reg_group.get_curve_oid() == custom_oid);
+
+   // We can now get it by OID:
+   result.confirm("Group has correct OID", Botan::EC_Group::from_OID(custom_oid).get_curve_oid() == custom_oid);
+
+   // In the current data model of EC_Group there is a 1:1 OID:group, so these
+   // have distinct underlying data
+   result.confirm("Groups have different inner data pointers", reg_group._data() != secp256r1._data());
+
+   #if defined(BOTAN_HAS_PCURVES_SECP256R1)
+   // However we should have gotten a pcurves out of the deal *and* it
+   // should be the exact same shared_ptr as the official curve
+
+   try {
+      const auto& pcurve = reg_group._data()->pcurve();
+      result.confirm("Group with custom OID got the same pcurve pointer", &pcurve == &secp256r1._data()->pcurve());
+   } catch(...) {
+      result.test_failure("Group with custom OID did not get a pcurve pointer");
+   }
+   #endif
+
+   return result;
+}
+
 class ECC_Unit_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
@@ -510,6 +557,7 @@ class ECC_Unit_Tests final : public Test {
          results.push_back(test_ec_group_from_params());
          results.push_back(test_ec_group_bad_registration());
          results.push_back(test_ec_group_duplicate_orders());
+         results.push_back(test_ec_group_registration_with_custom_oid());
 
          return results;
       }
