@@ -144,8 +144,8 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
             m_s2(ntt(m_keypair.second->s2().clone())),
             m_t0(ntt(m_keypair.second->t0().clone())),
             m_A(Dilithium_Algos::expand_A(m_keypair.first->rho(), m_keypair.second->mode())) {
-         options.context().not_implemented("will come in Botan 3.7.0");
-         options.prehash().not_implemented("will come in Botan 3.7.0");
+         m_h->start(options.context().optional().value_or(std::vector<uint8_t>()));
+         options.prehash().not_implemented("HashML-DSA currently not supported");
       }
 
       void update(std::span<const uint8_t> input) override { m_h->update(input); }
@@ -259,11 +259,15 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
 
 class Dilithium_Verification_Operation final : public PK_Ops::Verification {
    public:
-      Dilithium_Verification_Operation(std::shared_ptr<Dilithium_PublicKeyInternal> pubkey) :
+      Dilithium_Verification_Operation(std::shared_ptr<Dilithium_PublicKeyInternal> pubkey,
+                                       PK_Signature_Options& options) :
             m_pub_key(std::move(pubkey)),
             m_A(Dilithium_Algos::expand_A(m_pub_key->rho(), m_pub_key->mode())),
             m_t1_ntt_shifted(ntt(m_pub_key->t1() << DilithiumConstants::D)),
-            m_h(m_pub_key->mode().symmetric_primitives().get_message_hash(m_pub_key->tr())) {}
+            m_h(m_pub_key->mode().symmetric_primitives().get_message_hash(m_pub_key->tr())) {
+         m_h->start(options.context().optional().value_or(std::vector<uint8_t>()));
+         options.prehash().not_implemented("HashML-DSA currently not supported");
+      }
 
       void update(std::span<const uint8_t> input) override { m_h->update(input); }
 
@@ -387,18 +391,16 @@ std::unique_ptr<Private_Key> Dilithium_PublicKey::generate_another(RandomNumberG
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::_create_verification_op(
    PK_Signature_Options& options) const {
    options.exclude_provider();
-   return std::make_unique<Dilithium_Verification_Operation>(m_public);
+   return std::make_unique<Dilithium_Verification_Operation>(m_public, options);
 }
 
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_x509_verification_op(
    const AlgorithmIdentifier& alg_id, std::string_view provider) const {
-   if(provider.empty() || provider == "base") {
-      if(alg_id != this->algorithm_identifier()) {
-         throw Decoding_Error("Unexpected AlgorithmIdentifier for Dilithium X.509 signature");
-      }
-      return std::make_unique<Dilithium_Verification_Operation>(m_public);
+   if(alg_id != this->algorithm_identifier()) {
+      throw Decoding_Error("Unexpected AlgorithmIdentifier for Dilithium X.509 signature");
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   auto options = PK_Verification_Options_Builder().with_provider(provider).commit();
+   return _create_verification_op(options);
 }
 
 /**
@@ -439,8 +441,6 @@ std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::_create_signature_op(Ra
                                                                               PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
    options.exclude_provider();
-   options.context().not_implemented("will come in Botan 3.7.0");
-   options.prehash().not_implemented("will come in Botan 3.7.0");
    return std::make_unique<Dilithium_Signature_Operation>(DilithiumInternalKeypair{m_public, m_private}, options);
 }
 

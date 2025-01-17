@@ -92,7 +92,7 @@ class BOTAN_UNSTABLE_API PK_Signature_Options final : public Options<detail::PK_
 
    public:
       /// It may be acceptable to provide a hash function, for hash-based
-      /// signatures (like SLH-DSA or LMS), but it is not required.
+      /// signatures (like LMS), but it is not required.
       /// @throws Invalid_Argument if the provided hash is not acceptable
       void validate_for_hash_based_signature(std::optional<std::string_view> acceptable_hash = std::nullopt);
 
