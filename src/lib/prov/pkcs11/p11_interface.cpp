@@ -43,6 +43,11 @@ std::basic_string_view<Utf8Char> name_of(const Interface& interface) {
 
 }  // namespace
 
+InterfaceWrapper::InterfaceWrapper(Interface raw_interface) : m_interface(raw_interface) {
+   BOTAN_ASSERT_NONNULL(raw_interface.pInterfaceName);
+   BOTAN_ASSERT_NONNULL(raw_interface.pFunctionList);
+}
+
 Version InterfaceWrapper::version() const {
    return version_of(m_interface);
 }

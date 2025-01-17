@@ -1,3 +1,11 @@
+/*
+* PKCS #11 Error Information
+* (C) 2025 Jack Lloyd
+* (C) 2025 Fabian Albert - Rohde & Schwarz Cybersecurity GmbH
+*
+* Botan is released under the Simplified BSD License (see license.txt)
+*/
+
 #include <botan/p11.h>
 #include <botan/internal/fmt.h>
 

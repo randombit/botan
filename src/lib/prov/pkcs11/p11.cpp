@@ -104,15 +104,12 @@ bool LowLevel::C_GetInterfaceList(const Dynamically_Loaded_Library& pkcs11_modul
                                   Ulong* count_ptr,
                                   ReturnValue* return_value) {
    using get_interface_list = CK_RV (*)(Interface*, Ulong*);
-   get_interface_list get_interface_list_ptr;
-   try {
-      get_interface_list_ptr = pkcs11_module.resolve<get_interface_list>("C_GetInterfaceList");
-   } catch(Invalid_Argument&) {
-      // Loading the library function failed. Probably due to a cryptoki library with PKCS #11 < 3.0.
-      return handle_return_value(CKR_GENERAL_ERROR, return_value);
+   if(auto get_interface_list_ptr = pkcs11_module.try_resolve_symbol<get_interface_list>("C_GetInterfaceList");
+      get_interface_list_ptr.has_value()) {
+      return handle_return_value(get_interface_list_ptr.value()(interface_list_ptr, count_ptr), return_value);
    }
-
-   return handle_return_value(get_interface_list_ptr(interface_list_ptr, count_ptr), return_value);
+   // Loading the library function failed. Probably due to a cryptoki library with PKCS #11 < 3.0.
+   return handle_return_value(CKR_GENERAL_ERROR, return_value);
 }
 
 bool LowLevel::C_GetInterface(const Dynamically_Loaded_Library& pkcs11_module,
@@ -123,18 +120,15 @@ bool LowLevel::C_GetInterface(const Dynamically_Loaded_Library& pkcs11_module,
                               ReturnValue* return_value) {
    using get_interface =
       CK_RV (*)(Utf8Char* interface_name_ptr, Version* version_ptr, Interface* interface_ptr_ptr, Flags flags);
-   get_interface get_interface_ptr;
-   try {
-      get_interface_ptr = pkcs11_module.resolve<get_interface>("C_GetInterface");
-   } catch(Invalid_Argument&) {
-      // Loading the library function failed. Probably due to a cryptoki library with PKCS #11 < 3.0.
-      return handle_return_value(CKR_GENERAL_ERROR, return_value);
+   if(auto get_interface_ptr = pkcs11_module.try_resolve_symbol<get_interface>("C_GetInterface");
+      get_interface_ptr.has_value()) {
+      return handle_return_value(
+         get_interface_ptr.value()(
+            const_cast<Utf8Char*>(interface_name_ptr), const_cast<Version*>(version_ptr), interface_ptr_ptr, flags),
+         return_value);
    }
-
-   return handle_return_value(
-      get_interface_ptr(
-         const_cast<Utf8Char*>(interface_name_ptr), const_cast<Version*>(version_ptr), interface_ptr_ptr, flags),
-      return_value);
+   // Loading the library function failed. Probably due to a cryptoki library with PKCS #11 < 3.0.
+   return handle_return_value(CKR_GENERAL_ERROR, return_value);
 }
 
 /****************************** Slot and token management functions ******************************/

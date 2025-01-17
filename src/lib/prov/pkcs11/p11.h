@@ -1196,7 +1196,7 @@ class BOTAN_PUBLIC_API(3, 7) InterfaceWrapper {
 
    public:
       /// Basic constructor using an interface.
-      InterfaceWrapper(Interface raw_interface) : m_interface(raw_interface) {}
+      InterfaceWrapper(Interface raw_interface);
 
       InterfaceWrapper(const InterfaceWrapper&) = default;
       InterfaceWrapper& operator=(const InterfaceWrapper&) = default;
