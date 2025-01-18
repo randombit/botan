@@ -57,27 +57,27 @@ class BOTAN_TEST_API Classic_McEliece_Parameters final {
        * @returns true iff the instance is a plaintext confirmation (PC) instance.
        */
       bool is_pc() const {
-         return (m_set == Classic_McEliece_Parameter_Set::mceliece6688128pc) ||
-                (m_set == Classic_McEliece_Parameter_Set::mceliece6688128pcf) ||
-                (m_set == Classic_McEliece_Parameter_Set::mceliece6960119pc) ||
-                (m_set == Classic_McEliece_Parameter_Set::mceliece6960119pcf) ||
-                (m_set == Classic_McEliece_Parameter_Set::mceliece8192128pc) ||
-                (m_set == Classic_McEliece_Parameter_Set::mceliece8192128pcf);
+         return (m_set == Classic_McEliece_Parameter_Set::ClassicMcEliece_6688128pc) ||
+                (m_set == Classic_McEliece_Parameter_Set::ClassicMcEliece_6688128pcf) ||
+                (m_set == Classic_McEliece_Parameter_Set::ClassicMcEliece_6960119pc) ||
+                (m_set == Classic_McEliece_Parameter_Set::ClassicMcEliece_6960119pcf) ||
+                (m_set == Classic_McEliece_Parameter_Set::ClassicMcEliece_8192128pc) ||
+                (m_set == Classic_McEliece_Parameter_Set::ClassicMcEliece_8192128pcf);
       }
 
       /**
        * @returns true iff the instance is a fast (F) instance, i.e. if the semi-systematic
        * matrix creation is used.
-       */
+`       */
       bool is_f() const {
-         return (m_set == Classic_McEliece_Parameter_Set::mceliece348864f) ||
-                (m_set == Classic_McEliece_Parameter_Set::mceliece460896f) ||
-                (m_set == Classic_McEliece_Parameter_Set::mceliece6688128f) ||
-                (m_set == Classic_McEliece_Parameter_Set::mceliece6688128pcf) ||
-                (m_set == Classic_McEliece_Parameter_Set::mceliece6960119f) ||
-                (m_set == Classic_McEliece_Parameter_Set::mceliece6960119pcf) ||
-                (m_set == Classic_McEliece_Parameter_Set::mceliece8192128f) ||
-                (m_set == Classic_McEliece_Parameter_Set::mceliece8192128pcf);
+         return (m_set == Classic_McEliece_Parameter_Set::ClassicMcEliece_348864f) ||
+                (m_set == Classic_McEliece_Parameter_Set::ClassicMcEliece_460896f) ||
+                (m_set == Classic_McEliece_Parameter_Set::ClassicMcEliece_6688128f) ||
+                (m_set == Classic_McEliece_Parameter_Set::ClassicMcEliece_6688128pcf) ||
+                (m_set == Classic_McEliece_Parameter_Set::ClassicMcEliece_6960119f) ||
+                (m_set == Classic_McEliece_Parameter_Set::ClassicMcEliece_6960119pcf) ||
+                (m_set == Classic_McEliece_Parameter_Set::ClassicMcEliece_8192128f) ||
+                (m_set == Classic_McEliece_Parameter_Set::ClassicMcEliece_8192128pcf);
       }
 
       /**

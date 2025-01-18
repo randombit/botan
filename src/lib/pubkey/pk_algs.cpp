@@ -270,8 +270,8 @@ std::unique_ptr<Public_Key> load_public_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
-#if defined(BOTAN_HAS_CLASSICMCELIECE) || defined(BOTAN_HAS_CLASSICMCELIECE)
-   if(alg_name.starts_with("mceliece")) {
+#if defined(BOTAN_HAS_CLASSICMCELIECE)
+   if(alg_name.starts_with("ClassicMcEliece")) {
       return std::make_unique<Classic_McEliece_PublicKey>(alg_id, key_bits);
    }
 #endif
@@ -429,8 +429,8 @@ std::unique_ptr<Private_Key> load_private_key(const AlgorithmIdentifier& alg_id,
    }
 #endif
 
-#if defined(BOTAN_HAS_CLASSICMCELIECE) || defined(BOTAN_HAS_CLASSICMCELIECE)
-   if(alg_name.starts_with("mceliece")) {
+#if defined(BOTAN_HAS_CLASSICMCELIECE)
+   if(alg_name.starts_with("ClassicMcEliece")) {
       return std::make_unique<Classic_McEliece_PrivateKey>(alg_id, key_bits);
    }
 #endif
@@ -533,7 +533,7 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
 #endif
 #if defined(BOTAN_HAS_CLASSICMCELIECE)
    if(alg_name == "ClassicMcEliece") {
-      auto cmce_params_set = params.empty() ? Classic_McEliece_Parameter_Set::mceliece6960119f
+      auto cmce_params_set = params.empty() ? Classic_McEliece_Parameter_Set::ClassicMcEliece_6960119f
                                             : Classic_McEliece_Parameter_Set::from_string(params);
       return std::make_unique<Classic_McEliece_PrivateKey>(rng, cmce_params_set);
    }
