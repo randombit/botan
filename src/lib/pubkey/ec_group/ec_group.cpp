@@ -205,11 +205,12 @@ std::shared_ptr<EC_Group_Data> EC_Group::load_EC_group_info(const char* p_str,
 std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(std::span<const uint8_t> bits,
                                                                               EC_Group_Source source) {
    BER_Decoder ber(bits);
-   BER_Object obj = ber.get_next_object();
 
-   if(obj.type() == ASN1_Type::ObjectId) {
+   auto next_obj_type = ber.peek_next_object().type_tag();
+
+   if(next_obj_type == ASN1_Type::ObjectId) {
       OID oid;
-      BER_Decoder(bits).decode(oid);
+      ber.decode(oid);
 
       auto data = ec_group_data().lookup(oid);
       if(!data) {
@@ -217,17 +218,14 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
       }
 
       return std::make_pair(data, false);
-   }
-
-   if(obj.type() == ASN1_Type::Sequence) {
+   } else if(next_obj_type == ASN1_Type::Sequence) {
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
 
       BigInt p, a, b, order, cofactor;
       std::vector<uint8_t> base_pt;
       std::vector<uint8_t> seed;
 
-      BER_Decoder(bits)
-         .start_sequence()
+      ber.start_sequence()
          .decode_and_check<size_t>(1, "Unknown ECC param version code")
          .start_sequence()
          .decode_and_check(OID("1.2.840.10045.1.1"), "Only prime ECC fields supported")
@@ -274,14 +272,13 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
       return std::make_pair(data, true);
 #else
       BOTAN_UNUSED(source);
-      throw Not_Implemented("Support for decoding explicit curve params is not supported in this build configuration");
+      throw Decoding_Error("Decoding explicit ECC parameters is not supported");
 #endif
-   }
-
-   if(obj.type() == ASN1_Type::Null) {
-      throw Decoding_Error("Cannot handle ImplicitCA ECC parameters");
+   } else if(next_obj_type == ASN1_Type::Null) {
+      throw Decoding_Error("Decoding ImplicitCA ECC parameters is not supported");
    } else {
-      throw Decoding_Error(fmt("Unexpected tag {} while decoding ECC domain params", asn1_tag_to_string(obj.type())));
+      throw Decoding_Error(
+         fmt("Unexpected tag {} while decoding ECC domain params", asn1_tag_to_string(next_obj_type)));
    }
 }
 
