@@ -635,7 +635,7 @@ class EC_PointEnc_Tests final : public Test {
       }
 };
 
-BOTAN_REGISTER_TEST("pcurves", "ec_point_enc", EC_PointEnc_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ec_point_enc", EC_PointEnc_Tests);
 
 class EC_Point_Arithmetic_Tests final : public Test {
    public:
@@ -766,7 +766,7 @@ class EC_Point_Arithmetic_Tests final : public Test {
       }
 };
 
-BOTAN_REGISTER_TEST("pcurves", "ec_point_arith", EC_Point_Arithmetic_Tests);
+BOTAN_REGISTER_TEST("pubkey", "ec_point_arith", EC_Point_Arithmetic_Tests);
 
    #if defined(BOTAN_HAS_ECDSA)
 
