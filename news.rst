@@ -7,7 +7,7 @@ Version 3.7.0, Not Yet Released
 * Notice: Botan 3.8.0 will increase the minimum version of LLVM Clang
   needed to build the library from Clang 14 to Clang 17. (GH #4528 #4529)
 
-* Add post-quantum scheme Classic McEliece (GH #3883 #4448 #4458)
+* Add post-quantum scheme Classic McEliece (GH #3883 #4448 #4458 #4508)
 
 * In TLS enable the hybrid x25519/ML-KEM-768 post quantum secure key
   exchange by default for clients and servers. (GH #4305)
@@ -18,18 +18,27 @@ Version 3.7.0, Not Yet Released
 * In TLS add support for "pure" ML-KEM key exchange, in addition
   to the existing hybrid ML-KEM + EC suites. (GH #4393)
 
-* Add new EC key constructors (GH #4437)
+* Add new EC key constructors (GH #4437 #4563)
 
 * Internal EC related cleanups and optimizations (GH #4385 #4432 #4436
-  #4492 #4479 #4510 #4511 #4512 #4517 #4518 #4532 #4533)
+  #4492 #4479 #4510 #4511 #4512 #4517 #4518 #4532 #4533 #4549 #4550
+  #4552 #4556 #4557 #4564 #4566 #4570)
+
+* Fix a regression introduced in 3.6.0 which would cause many P-521
+  secret keys to be rejected as invalid due to not having the expected
+  length. (GH #4541 #4539)
 
 * Add new operations to EC_AffinePoint (GH #4433 #4503)
+
+* KDF internals modernization (GH #4455)
+
+* Extend SP800-108 KDFs to support variable length fields (GH #4551)
 
 * TPM 2.0 improvements (GH #4429 #4430 #4482)
 
 * Add support for invoking Entropy Source and DRNG Manager (ESDM) RNG (GH #4309)
 
-* Fix some build issues for baremetal environments (GH #4521)
+* Improve support for baremetal environments (GH #4519 #4521 #4531)
 
 * Fix a bug preventing parsing of OCSP responses containing more than
   one pinned certificate (GH #4536)
@@ -65,6 +74,8 @@ Version 3.7.0, Not Yet Released
 * Fix a build issue when AVX2 support is disabled (GH #4493)
 
 * Fix a build issue when compiling with MSVC on ARM (GH #4483)
+
+* Address some new warnings from Clang 19 (GH #4544 #4545 #4548)
 
 Version 3.6.1, 2024-10-26
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
