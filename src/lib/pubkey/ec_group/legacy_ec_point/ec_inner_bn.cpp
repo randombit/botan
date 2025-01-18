@@ -41,27 +41,27 @@ void EC_Scalar_Data_BN::assign(const EC_Scalar_Data& other) {
 }
 
 void EC_Scalar_Data_BN::square_self() {
-   m_group->square_mod_order(m_v);
+   m_group->mod_order().square(m_v);
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_BN::negate() const {
-   return std::make_unique<EC_Scalar_Data_BN>(m_group, m_group->mod_order(-m_v));
+   return std::make_unique<EC_Scalar_Data_BN>(m_group, m_group->mod_order().reduce(-m_v));
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_BN::invert() const {
-   return std::make_unique<EC_Scalar_Data_BN>(m_group, m_group->inverse_mod_order(m_v));
+   return std::make_unique<EC_Scalar_Data_BN>(m_group, inverse_mod(m_v, m_group->order()));
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_BN::add(const EC_Scalar_Data& other) const {
-   return std::make_unique<EC_Scalar_Data_BN>(m_group, m_group->mod_order(m_v + checked_ref(other).value()));
+   return std::make_unique<EC_Scalar_Data_BN>(m_group, m_group->mod_order().reduce(m_v + checked_ref(other).value()));
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_BN::sub(const EC_Scalar_Data& other) const {
-   return std::make_unique<EC_Scalar_Data_BN>(m_group, m_group->mod_order(m_v - checked_ref(other).value()));
+   return std::make_unique<EC_Scalar_Data_BN>(m_group, m_group->mod_order().reduce(m_v - checked_ref(other).value()));
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_BN::mul(const EC_Scalar_Data& other) const {
-   return std::make_unique<EC_Scalar_Data_BN>(m_group, m_group->multiply_mod_order(m_v, checked_ref(other).value()));
+   return std::make_unique<EC_Scalar_Data_BN>(m_group, m_group->mod_order().multiply(m_v, checked_ref(other).value()));
 }
 
 void EC_Scalar_Data_BN::serialize_to(std::span<uint8_t> bytes) const {
