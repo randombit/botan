@@ -170,6 +170,8 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       const BigInt& monty_a() const { return m_a_r; }
 
       const BigInt& monty_b() const { return m_b_r; }
+
+      const Modular_Reducer& mod_order() const { return m_mod_order; }
 #endif
 
       bool order_is_less_than_p() const { return m_order_is_less_than_p; }
@@ -193,18 +195,6 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       bool a_is_minus_3() const { return m_a_is_minus_3; }
 
       bool a_is_zero() const { return m_a_is_zero; }
-
-      BigInt mod_order(const BigInt& x) const { return m_mod_order.reduce(x); }
-
-      BigInt square_mod_order(const BigInt& x) const { return m_mod_order.square(x); }
-
-      BigInt multiply_mod_order(const BigInt& x, const BigInt& y) const { return m_mod_order.multiply(x, y); }
-
-      BigInt multiply_mod_order(const BigInt& x, const BigInt& y, const BigInt& z) const {
-         return m_mod_order.multiply(m_mod_order.multiply(x, y), z);
-      }
-
-      BigInt inverse_mod_order(const BigInt& x) const { return inverse_mod(x, m_order); }
 
       EC_Group_Source source() const { return m_source; }
 
@@ -321,11 +311,12 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       // Montgomery parameters (only used for legacy EC_Point)
       Montgomery_Params m_monty;
 
+      Modular_Reducer m_mod_order;
+
       BigInt m_a_r;  // (a*r) % p
       BigInt m_b_r;  // (b*r) % p
 #endif
 
-      Modular_Reducer m_mod_order;
       OID m_oid;
       std::vector<uint8_t> m_der_named_curve;
       size_t m_p_words;

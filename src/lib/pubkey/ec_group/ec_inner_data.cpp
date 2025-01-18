@@ -38,8 +38,8 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
       m_cofactor(cofactor),
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
       m_monty(m_p),
-#endif
       m_mod_order(order),
+#endif
       m_oid(oid),
       m_p_words(p.sig_words()),
       m_p_bits(p.bits()),
@@ -161,7 +161,7 @@ std::unique_ptr<EC_Scalar_Data> EC_Group_Data::scalar_from_bytes_mod_order(std::
       }
    } else {
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
-      return std::make_unique<EC_Scalar_Data_BN>(shared_from_this(), mod_order(BigInt(bytes)));
+      return std::make_unique<EC_Scalar_Data_BN>(shared_from_this(), m_mod_order.reduce(BigInt(bytes)));
 #else
       throw Not_Implemented("Legacy EC interfaces disabled in this build configuration");
 #endif
@@ -237,7 +237,7 @@ std::unique_ptr<EC_Scalar_Data> EC_Group_Data::gk_x_mod_order(const EC_Scalar_Da
       if(pt.is_zero()) {
          return scalar_zero();
       } else {
-         return std::make_unique<EC_Scalar_Data_BN>(shared_from_this(), mod_order(pt.get_affine_x()));
+         return std::make_unique<EC_Scalar_Data_BN>(shared_from_this(), m_mod_order.reduce(pt.get_affine_x()));
       }
 #else
       BOTAN_UNUSED(ws);

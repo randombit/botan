@@ -580,7 +580,9 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       /*
       * Reduce x modulo the order
       */
-      BOTAN_DEPRECATED("Deprecated no replacement") BigInt mod_order(const BigInt& x) const;
+      BOTAN_DEPRECATED("Use EC_Scalar") BigInt mod_order(const BigInt& x) const {
+         return EC_Scalar::from_bytes_mod_order(*this, x.serialize()).to_bigint();
+      }
 
       /*
       * Return inverse of x modulo the order

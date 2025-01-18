@@ -534,10 +534,6 @@ bool EC_Group::has_cofactor() const {
    return data().has_cofactor();
 }
 
-BigInt EC_Group::mod_order(const BigInt& k) const {
-   return data().mod_order(k);
-}
-
 const OID& EC_Group::get_curve_oid() const {
    return data().oid();
 }

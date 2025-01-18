@@ -683,7 +683,7 @@ bool EC_Point::_is_x_eq_to_v_mod_order(const BigInt& v) const {
    * The trick used below doesn't work for curves with cofactors
    */
    if(group.has_cofactor()) {
-      return group.mod_order(this->get_affine_x()) == v;
+      return group.mod_order().reduce(this->get_affine_x()) == v;
    }
 
    /*
