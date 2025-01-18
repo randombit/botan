@@ -670,6 +670,7 @@ class Test {
       static std::shared_ptr<Botan::RandomNumberGenerator> new_shared_rng(std::string_view test_name);
 
       static std::string random_password(Botan::RandomNumberGenerator& rng);
+      static size_t random_index(Botan::RandomNumberGenerator& rng, size_t max);
       static uint64_t timestamp();  // nanoseconds arbitrary epoch
 
       static std::vector<Test::Result> flatten_result_lists(std::vector<std::vector<Test::Result>> result_lists);
