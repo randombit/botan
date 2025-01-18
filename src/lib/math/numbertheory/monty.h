@@ -109,8 +109,6 @@ class BOTAN_TEST_API Montgomery_Int final {
 
       Montgomery_Int& square_this_n_times(secure_vector<word>& ws, size_t n);
 
-      Montgomery_Int multiplicative_inverse() const;
-
       Montgomery_Int additive_inverse() const;
 
       Montgomery_Int& mul_by_2(secure_vector<word>& ws);
@@ -186,8 +184,6 @@ class BOTAN_TEST_API Montgomery_Params final {
       void sqr(BigInt& z, std::span<const word> x, secure_vector<word>& ws) const;
 
       void square_this(BigInt& x, secure_vector<word>& ws) const;
-
-      BigInt inv_mod_p(const BigInt& x, secure_vector<word>& ws) const;
 
    private:
       BigInt m_p;

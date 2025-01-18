@@ -15,6 +15,7 @@
    #include <botan/internal/ct_utils.h>
    #include <botan/internal/divide.h>
    #include <botan/internal/fmt.h>
+   #include <botan/internal/mod_inv.h>
    #include <botan/internal/mp_core.h>
    #include <botan/internal/parsing.h>
    #include <botan/internal/primality.h>
@@ -666,19 +667,23 @@ class BigInt_InvMod_Test final : public Text_Based_Test {
          const Botan::BigInt mod = vars.get_req_bn("Modulus");
          const Botan::BigInt expected = vars.get_req_bn("Output");
 
-         const Botan::BigInt a_inv = Botan::inverse_mod(a, mod);
+         result.test_eq("inverse_mod", Botan::inverse_mod(a, mod), expected);
 
-         result.test_eq("inverse_mod", a_inv, expected);
-
-         if(a_inv > 1) {
-            result.test_eq("inverse ok", (a * a_inv) % mod, 1);
-         }
-         /*
-         else if((a % mod) > 0)
-            {
-            result.confirm("no inverse with gcd > 1", gcd(a, mod) > 1);
+         if(a < mod && a > 0 && a < mod) {
+            auto g = Botan::inverse_mod_general(a, mod);
+            if(g.has_value()) {
+               result.test_eq("inverse_mod_general", g.value(), expected);
+               result.test_eq("inverse works", ((g.value() * a) % mod), BigInt::one());
+            } else {
+               result.confirm("inverse_mod_general", expected.is_zero());
             }
-         */
+
+            if(Botan::is_prime(mod, rng()) && mod != 2) {
+               BOTAN_ASSERT_NOMSG(expected > 0);
+               result.test_eq("inverse_mod_secret_prime", Botan::inverse_mod_secret_prime(a, mod), expected);
+               result.test_eq("inverse_mod_public_prime", Botan::inverse_mod_public_prime(a, mod), expected);
+            }
+         }
 
          return result;
       }
@@ -743,6 +748,58 @@ class Lucas_Primality_Test final : public Test {
 };
 
 BOTAN_REGISTER_TEST("math", "bn_lucas", Lucas_Primality_Test);
+
+class RSA_Compute_Exp_Test : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         const size_t iter = 4000;
+
+         Test::Result result("RSA compute exponent");
+
+         const auto e = Botan::BigInt::from_u64(65537);
+
+         /*
+         * Rather than create a fresh p/q for each iteration this test creates
+         * a pool of primes then selects 2 at random as p/q
+         */
+
+         const auto random_primes = [&]() {
+            std::vector<Botan::BigInt> rp;
+            for(size_t i = 0; i != iter / 10; ++i) {
+               size_t bits = (128 + (i % 1024)) % 4096;
+               auto p = Botan::random_prime(rng(), bits);
+               if(gcd(p - 1, e) == 1) {
+                  rp.push_back(p);
+               }
+            }
+            return rp;
+         }();
+
+         for(size_t i = 0; i != iter; ++i) {
+            const size_t p_idx = random_index(rng(), random_primes.size());
+            const size_t q_idx = random_index(rng(), random_primes.size());
+
+            if(p_idx == q_idx) {
+               continue;
+            }
+
+            const auto& p = random_primes[p_idx];
+            const auto& q = random_primes[q_idx];
+
+            auto phi_n = lcm(p - 1, q - 1);
+
+            auto d = Botan::compute_rsa_secret_exponent(e, phi_n, p, q);
+
+            auto one = (e * d) % phi_n;
+
+            result.test_eq("compute_rsa_secret_exponent returned inverse", (e * d) % phi_n, Botan::BigInt::one());
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("math", "rsa_compute_d", RSA_Compute_Exp_Test);
 
 class DSA_ParamGen_Test final : public Text_Based_Test {
    public:

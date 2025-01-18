@@ -13,6 +13,7 @@
 #include <botan/internal/ffi_mp.h>
 #include <botan/internal/ffi_rng.h>
 #include <botan/internal/ffi_util.h>
+#include <botan/internal/mod_inv.h>
 
 extern "C" {
 
@@ -212,7 +213,9 @@ int botan_mp_rshift(botan_mp_t out, const botan_mp_t in, size_t shift) {
 }
 
 int botan_mp_mod_inverse(botan_mp_t out, const botan_mp_t in, const botan_mp_t modulus) {
-   return BOTAN_FFI_VISIT(out, [=](auto& o) { o = Botan::inverse_mod(safe_get(in), safe_get(modulus)); });
+   return BOTAN_FFI_VISIT(out, [=](auto& o) {
+      o = Botan::inverse_mod_general(safe_get(in), safe_get(modulus)).value_or(Botan::BigInt::zero());
+   });
 }
 
 int botan_mp_mod_mul(botan_mp_t out, const botan_mp_t x, const botan_mp_t y, const botan_mp_t modulus) {

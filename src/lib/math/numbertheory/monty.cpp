@@ -48,11 +48,6 @@ Montgomery_Params::Montgomery_Params(const BigInt& p) {
    m_r3 = mod_p.multiply(m_r1, m_r2);
 }
 
-BigInt Montgomery_Params::inv_mod_p(const BigInt& x, secure_vector<word>& ws) const {
-   // TODO use Montgomery inverse here?
-   return this->mul(inverse_mod(x, p()), this->R3(), ws);
-}
-
 BigInt Montgomery_Params::redc(const BigInt& x, secure_vector<word>& ws) const {
    const size_t output_size = m_p_words + 1;
 
@@ -433,11 +428,6 @@ Montgomery_Int Montgomery_Int::square(secure_vector<word>& ws) const {
 
 Montgomery_Int Montgomery_Int::cube(secure_vector<word>& ws) const {
    return Montgomery_Int(m_params, m_params->sqr(m_v, ws), false);
-}
-
-Montgomery_Int Montgomery_Int::multiplicative_inverse() const {
-   secure_vector<word> ws;
-   return Montgomery_Int(m_params, m_params->inv_mod_p(m_v, ws), false);
 }
 
 Montgomery_Int Montgomery_Int::additive_inverse() const {

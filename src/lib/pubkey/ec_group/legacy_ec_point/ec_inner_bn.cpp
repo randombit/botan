@@ -6,6 +6,8 @@
 
 #include <botan/internal/ec_inner_bn.h>
 
+#include <botan/internal/mod_inv.h>
+
 namespace Botan {
 
 const EC_Scalar_Data_BN& EC_Scalar_Data_BN::checked_ref(const EC_Scalar_Data& data) {
@@ -49,7 +51,7 @@ std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_BN::negate() const {
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_BN::invert() const {
-   return std::make_unique<EC_Scalar_Data_BN>(m_group, inverse_mod(m_v, m_group->order()));
+   return std::make_unique<EC_Scalar_Data_BN>(m_group, inverse_mod_public_prime(m_v, m_group->order()));
 }
 
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_BN::add(const EC_Scalar_Data& other) const {

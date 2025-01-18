@@ -13,6 +13,7 @@ reducer.h
 </header:public>
 
 <header:internal>
+mod_inv.h
 monty.h
 monty_exp.h
 primality.h

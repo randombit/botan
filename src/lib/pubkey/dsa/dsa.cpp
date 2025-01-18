@@ -167,7 +167,7 @@ std::vector<uint8_t> DSA_Signature_Operation::raw_sign(std::span<const uint8_t> 
    const BigInt k = BigInt::random_integer(rng, 1, q);
 #endif
 
-   const BigInt k_inv = group.inverse_mod_q(m_b * k) * m_b;
+   const BigInt k_inv = group.inverse_mod_q(group.mod_q(m_b * k)) * m_b;
 
    /*
    * It may not be strictly necessary for the reduction (g^k mod p) mod q to be
