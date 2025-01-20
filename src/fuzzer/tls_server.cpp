@@ -137,10 +137,6 @@ class Fuzzer_TLS_Server_Creds : public Botan::Credentials_Manager {
 
 class Fuzzer_TLS_Policy : public Botan::TLS::Policy {
    public:
-      // TODO: Enable this once the TLS 1.3 server implementation is ready.
-      //       Maybe even build individual fuzz targets for different versions.
-      bool allow_tls13() const override { return false; }
-
       std::vector<uint16_t> ciphersuite_list(Botan::TLS::Protocol_Version) const override {
          std::vector<uint16_t> ciphersuites;
 
