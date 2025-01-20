@@ -2,7 +2,7 @@
 * PKCS #11
 * (C) 2016 Daniel Neus, Sirrix AG
 * (C) 2016 Philipp Weber, Sirrix AG
-* (C) 2025 Fabian Albert, Rohde & Schwarz Cybersecurity
+* (C) 2025 Fabian Albert, Rohde & Schwarz Cybersecurity GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -47,8 +47,9 @@
    #pragma pack(pop, cryptoki)
 #endif
 
-static_assert(CRYPTOKI_VERSION_MAJOR == 3 && CRYPTOKI_VERSION_MINOR == 2,
-              "The Botan PKCS#11 module was implemented against PKCS#11 v3.2. Please use the correct PKCS#11 headers.");
+static_assert(
+   CRYPTOKI_VERSION_MAJOR == 3 && CRYPTOKI_VERSION_MINOR == 2,
+   "The Botan PKCS #11 module was implemented against PKCS #11 v3.2. Please use the correct PKCS #11 headers.");
 
 namespace Botan {
 
@@ -1307,7 +1308,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        *  1. If interface_list_ptr is NULL_PTR, then all that C_GetInterfaceList
        *     does is return (in *count_ptr) the number of interfaces, without
        *     actually returning a list of interfaces. The contents of *count_ptr
-       *     on entry to C_GetInterfaceList has no meaning in this case, and the
+       *     on entry to C_GetInterfaceList have no meaning in this case, and the
        *     call returns the value CKR_OK.
        *  2. If pIntrerfaceList is not NULL_PTR, then *count_ptr MUST contain the
        *     size (in terms of CK_INTERFACE elements) of the buffer pointed to

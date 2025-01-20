@@ -1,7 +1,7 @@
 /*
 * PKCS #11 Interface Wrapper Implementation
 * (C) 2025 Jack Lloyd
-*     2025 Fabian Albert - Rohde & Schwarz Cybersecurity
+*     2025 Fabian Albert - Rohde & Schwarz Cybersecurity GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */

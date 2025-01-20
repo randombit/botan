@@ -17,7 +17,7 @@ or HSM specific code for each device they want to support.
    .. note::
 
      The Botan PKCS#11 interface is implemented against version v3.2 of the standard.
-     Versions 2.40 upto 3.2 are supported, but the 3.2 headers are shipped with Botan.
+     Versions 2.40 upto 3.2 are supported, but only the 3.2 headers are shipped with Botan.
 
 Botan wraps the C PKCS#11 API to provide a C++ PKCS#11 interface. This is done
 in two levels of abstraction: a low level API (see :ref:`pkcs11_low_level`) and

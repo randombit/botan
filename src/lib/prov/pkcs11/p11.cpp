@@ -2,7 +2,7 @@
 * PKCS#11
 * (C) 2016 Daniel Neus, Sirrix AG
 * (C) 2016 Philipp Weber, Sirrix AG
-* (C) 2025 Fabian Albert, Rohde & Schwarz Cybersecurity
+* (C) 2025 Fabian Albert, Rohde & Schwarz Cybersecurity GmbH
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
