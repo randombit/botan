@@ -9,8 +9,8 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
+#include <botan/numthry.h>
 #include <botan/pss_params.h>
-#include <botan/reducer.h>
 #include <botan/internal/blinding.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/emsa.h>

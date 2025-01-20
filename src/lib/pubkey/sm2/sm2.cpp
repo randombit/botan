@@ -9,7 +9,6 @@
 #include <botan/sm2.h>
 
 #include <botan/hash.h>
-#include <botan/numthry.h>
 #include <botan/internal/keypair.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>

@@ -8,7 +8,6 @@
 
 #include <botan/dsa.h>
 
-#include <botan/numthry.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/dl_scheme.h>
 #include <botan/internal/keypair.h>

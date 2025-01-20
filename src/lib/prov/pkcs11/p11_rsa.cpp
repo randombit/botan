@@ -12,6 +12,7 @@
 
 #if defined(BOTAN_HAS_RSA)
 
+   #include <botan/numthry.h>
    #include <botan/p11_mechanism.h>
    #include <botan/pubkey.h>
    #include <botan/rng.h>

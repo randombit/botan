@@ -8,7 +8,7 @@
 #ifndef BOTAN_MODULAR_REDUCER_H_
 #define BOTAN_MODULAR_REDUCER_H_
 
-#include <botan/numthry.h>
+#include <botan/bigint.h>
 
 BOTAN_FUTURE_INTERNAL_HEADER(reducer.h)
 
@@ -42,7 +42,7 @@ class BOTAN_PUBLIC_API(2, 0) Modular_Reducer final {
       * @param x the value to square
       * @return (x * x) % p
       */
-      BigInt square(const BigInt& x) const { return reduce(Botan::square(x)); }
+      BigInt square(const BigInt& x) const;
 
       /**
       * Cube mod p
@@ -54,7 +54,10 @@ class BOTAN_PUBLIC_API(2, 0) Modular_Reducer final {
       /**
       * Low level reduction function. Mostly for internal use.
       * Sometimes useful for performance by reducing temporaries
-      * Reduce x mod p and place the output in out. ** X and out must not reference each other **
+      * Reduce x mod p and place the output in out.
+      *
+      * @warning X and out must not reference each other
+      *
       * ws is a temporary workspace.
       */
       void reduce(BigInt& out, const BigInt& x, secure_vector<word>& ws) const;
