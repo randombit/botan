@@ -48,7 +48,7 @@ class BOTAN_TEST_API Dynamically_Loaded_Library final {
          requires(std::is_pointer_v<PtrT>)
       {
          void* addr = resolve_symbol_internal(symbol);
-         return addr ? reinterpret_cast<PtrT>(addr) : std::nullopt;
+         return addr ? std::optional(reinterpret_cast<PtrT>(addr)) : std::nullopt;
       }
 
       /**
