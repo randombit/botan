@@ -106,7 +106,7 @@ Test::Result PK_Signature_Generation_Test::run_one_test(const std::string& pad_h
    if(vars.has_key("Group")) {
       test_name << "-" << vars.get_req_str("Group");
    }
-   test_name << "/" << padding << " signature generation";
+   test_name << "/" << printed_params(vars, padding) << " signature generation";
 
    Test::Result result(test_name.str());
 

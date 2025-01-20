@@ -12,6 +12,7 @@
 #include <botan/pk_ops.h>
 
 #include <botan/hash.h>
+#include <botan/internal/emsa.h>
 #include <botan/internal/tpm2_util.h>
 
 namespace Botan::TPM2 {
@@ -19,21 +20,21 @@ namespace Botan::TPM2 {
 struct SignatureAlgorithmSelection {
       TPMT_SIG_SCHEME signature_scheme;
       std::string hash_name;
-      std::optional<std::string> padding;
+      std::unique_ptr<EMSA> emsa;
 };
 
 template <typename PKOpT>
 class Signature_Operation_Base : public PKOpT {
    public:
-      Signature_Operation_Base(const Object& object,
-                               const SessionBundle& sessions,
-                               const SignatureAlgorithmSelection& algorithms,
-                               std::unique_ptr<Botan::HashFunction> hash) :
+      Signature_Operation_Base(
+         const Object& object,
+         const SessionBundle& sessions,
+         std::pair<std::unique_ptr<Botan::HashFunction>, SignatureAlgorithmSelection> algorithms) :
             m_key_handle(object),
             m_sessions(sessions),
-            m_scheme(algorithms.signature_scheme),
-            m_hash(std::move(hash)),
-            m_padding(algorithms.padding) {
+            m_hash(std::move(algorithms.first)),
+            m_scheme(algorithms.second.signature_scheme),
+            m_emsa(std::move(algorithms.second.emsa)) {
          BOTAN_ASSERT_NONNULL(m_hash);
       }
 
@@ -51,14 +52,22 @@ class Signature_Operation_Base : public PKOpT {
 
       const TPMT_SIG_SCHEME& scheme() const { return m_scheme; }
 
-      std::optional<std::string> padding() const { return m_padding; }
+      EMSA* emsa() const {
+         BOTAN_STATE_CHECK(m_emsa);
+         return m_emsa.get();
+      }
 
    private:
       const Object& m_key_handle;
       const SessionBundle& m_sessions;
-      TPMT_SIG_SCHEME m_scheme;
       std::unique_ptr<Botan::HashFunction> m_hash;
-      std::optional<std::string> m_padding;
+      TPMT_SIG_SCHEME m_scheme;
+
+      // This EMSA object actually isn't required, we just need it to
+      // conveniently parse the EMSA the user selected.
+      //
+      // TODO: This is a hack, and we should clean this up.
+      std::unique_ptr<EMSA> m_emsa;
 };
 
 /**
@@ -73,9 +82,7 @@ class Signature_Operation_Base : public PKOpT {
  */
 class Signature_Operation : public Signature_Operation_Base<PK_Ops::Signature> {
    public:
-      Signature_Operation(const Object& object,
-                          const SessionBundle& sessions,
-                          const SignatureAlgorithmSelection& algorithms);
+      Signature_Operation(const Object& object, const SessionBundle& sessions, SignatureAlgorithmSelection algorithms);
 
       std::vector<uint8_t> sign(Botan::RandomNumberGenerator& rng) override;
 
@@ -91,7 +98,7 @@ class Verification_Operation : public Signature_Operation_Base<PK_Ops::Verificat
    public:
       Verification_Operation(const Object& object,
                              const SessionBundle& sessions,
-                             const SignatureAlgorithmSelection& algorithms);
+                             SignatureAlgorithmSelection algorithms);
 
       bool is_valid_signature(std::span<const uint8_t> sig_data) override;
 
