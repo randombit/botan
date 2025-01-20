@@ -13,6 +13,7 @@
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/mutex.h>
+#include <botan/numthry.h>
 #include <botan/pem.h>
 #include <botan/reducer.h>
 #include <botan/rng.h>
@@ -219,8 +220,6 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
 
       return std::make_pair(data, false);
    } else if(next_obj_type == ASN1_Type::Sequence) {
-#if defined(BOTAN_HAS_LEGACY_EC_POINT)
-
       BigInt p, a, b, order, cofactor;
       std::vector<uint8_t> base_pt;
       std::vector<uint8_t> seed;
@@ -246,7 +245,8 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
          throw Decoding_Error("ECC p parameter is invalid size");
       }
 
-      if(p.is_negative() || !is_bailie_psw_probable_prime(p)) {
+      Modular_Reducer mod_p(p);
+      if(p.is_negative() || !is_bailie_psw_probable_prime(p, mod_p)) {
          throw Decoding_Error("ECC p parameter is not a prime");
       }
 
@@ -266,14 +266,46 @@ std::pair<std::shared_ptr<EC_Group_Data>, bool> EC_Group::BER_decode_EC_group(st
          throw Decoding_Error("Invalid ECC cofactor parameter");
       }
 
-      const auto [g_x, g_y] = Botan::OS2ECP(base_pt.data(), base_pt.size(), p, a, b);
+      const size_t p_bytes = p.bytes();
+      if(base_pt.size() != 1 + p_bytes && base_pt.size() != 1 + 2 * p_bytes) {
+         throw Decoding_Error("Invalid ECC base point encoding");
+      }
+
+      auto [g_x, g_y] = [&]() {
+         const uint8_t hdr = base_pt[0];
+
+         if(hdr == 0x04 && base_pt.size() == 1 + 2 * p_bytes) {
+            BigInt x = BigInt::decode(&base_pt[1], p_bytes);
+            BigInt y = BigInt::decode(&base_pt[p_bytes + 1], p_bytes);
+
+            if(x < p && y < p) {
+               return std::make_pair(x, y);
+            }
+         } else if((hdr == 0x02 || hdr == 0x03) && base_pt.size() == 1 + p_bytes) {
+            BigInt x = BigInt::decode(&base_pt[1], p_bytes);
+            BigInt y = sqrt_modulo_prime(((x * x + a) * x + b) % p, p);
+
+            if(x < p && y >= 0) {
+               const bool y_mod_2 = (hdr & 0x01) == 1;
+               if(y.get_bit(0) != y_mod_2) {
+                  y = p - y;
+               }
+
+               return std::make_pair(x, y);
+            }
+         }
+
+         throw Decoding_Error("Invalid ECC base point encoding");
+      }();
+
+      auto y2 = mod_p.square(g_y);
+      auto x3_ax_b = mod_p.reduce(mod_p.cube(g_x) + mod_p.multiply(a, g_x) + b);
+      if(y2 != x3_ax_b) {
+         throw Decoding_Error("Invalid ECC base point");
+      }
 
       auto data = ec_group_data().lookup_or_create(p, a, b, g_x, g_y, order, cofactor, OID(), source);
       return std::make_pair(data, true);
-#else
-      BOTAN_UNUSED(source);
-      throw Decoding_Error("Decoding explicit ECC parameters is not supported");
-#endif
    } else if(next_obj_type == ASN1_Type::Null) {
       throw Decoding_Error("Decoding ImplicitCA ECC parameters is not supported");
    } else {

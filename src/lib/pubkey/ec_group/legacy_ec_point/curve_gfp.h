@@ -10,6 +10,8 @@
 #ifndef BOTAN_GFP_CURVE_H_
 #define BOTAN_GFP_CURVE_H_
 
+// TODO(Botan4) delete this header
+
 #include <botan/bigint.h>
 
 // Currently exposed in EC_Point
