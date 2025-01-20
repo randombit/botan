@@ -7,6 +7,7 @@
 #include <botan/internal/primality.h>
 
 #include <botan/bigint.h>
+#include <botan/numthry.h>
 #include <botan/reducer.h>
 #include <botan/rng.h>
 #include <botan/internal/monty.h>

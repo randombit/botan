@@ -11,7 +11,6 @@
 
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
-#include <botan/numthry.h>
 #include <botan/secmem.h>
 #include <botan/internal/ec_key_data.h>
 #include <botan/internal/fmt.h>

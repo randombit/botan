@@ -41,6 +41,15 @@ BigInt Modular_Reducer::reduce(const BigInt& x) const {
    return r;
 }
 
+BigInt Modular_Reducer::square(const BigInt& x) const {
+   secure_vector<word> ws;
+   BigInt x2 = x;
+   x2.square(ws);
+   BigInt r;
+   reduce(r, x2, ws);
+   return r;
+}
+
 namespace {
 
 /*

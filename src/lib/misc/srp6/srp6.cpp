@@ -9,7 +9,6 @@
 
 #include <botan/dl_group.h>
 #include <botan/hash.h>
-#include <botan/numthry.h>
 #include <botan/internal/fmt.h>
 
 namespace Botan {

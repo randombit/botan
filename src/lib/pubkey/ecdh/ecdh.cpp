@@ -9,7 +9,6 @@
 
 #include <botan/ecdh.h>
 
-#include <botan/numthry.h>
 #include <botan/internal/pk_ops_impl.h>
 
 namespace Botan {
