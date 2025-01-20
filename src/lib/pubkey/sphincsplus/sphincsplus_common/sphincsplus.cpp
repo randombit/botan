@@ -179,13 +179,15 @@ std::unique_ptr<Private_Key> SphincsPlus_PublicKey::generate_another(RandomNumbe
 
 class SphincsPlus_Verification_Operation final : public PK_Ops::Verification {
    public:
-      SphincsPlus_Verification_Operation(std::shared_ptr<SphincsPlus_PublicKeyInternal> pub_key) :
+      SphincsPlus_Verification_Operation(std::shared_ptr<SphincsPlus_PublicKeyInternal> pub_key,
+                                         PK_Signature_Options& options) :
             m_public(std::move(pub_key)),
             m_hashes(Botan::Sphincs_Hash_Functions::create(m_public->parameters(), m_public->seed())),
-            m_context(/* TODO: Add API */ {}) {
+            m_context(options.context().optional().value_or(std::vector<uint8_t>())) {
          BOTAN_ARG_CHECK(m_context.size() <= 255, "Context must not exceed 255 bytes");
          BOTAN_ARG_CHECK(m_public->parameters().is_available(),
                          "The selected SLH-DSA (or SPHINCS+) instance is not available in this build.");
+         options.prehash().not_implemented("HashSLH-DSA currently not supported");
       }
 
       /**
@@ -238,23 +240,19 @@ class SphincsPlus_Verification_Operation final : public PK_Ops::Verification {
       SphincsContext m_context;
 };
 
-std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::create_verification_op(std::string_view /*params*/,
-                                                                                    std::string_view provider) const {
-   if(provider.empty() || provider == "base") {
-      return std::make_unique<SphincsPlus_Verification_Operation>(m_public);
-   }
-   throw Provider_Not_Found(algo_name(), provider);
+std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::_create_verification_op(
+   PK_Signature_Options& options) const {
+   options.exclude_provider();
+   return std::make_unique<SphincsPlus_Verification_Operation>(m_public, options);
 }
 
 std::unique_ptr<PK_Ops::Verification> SphincsPlus_PublicKey::create_x509_verification_op(
    const AlgorithmIdentifier& signature_algorithm, std::string_view provider) const {
-   if(provider.empty() || provider == "base") {
-      if(signature_algorithm != this->algorithm_identifier()) {
-         throw Decoding_Error("Unexpected AlgorithmIdentifier for SLH-DSA (or SPHINCS+) signature");
-      }
-      return std::make_unique<SphincsPlus_Verification_Operation>(m_public);
+   if(signature_algorithm != this->algorithm_identifier()) {
+      throw Decoding_Error("Unexpected AlgorithmIdentifier for SLH-DSA (or SPHINCS+) signature");
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   auto options = PK_Verification_Options_Builder().with_provider(provider).commit();
+   return _create_verification_op(options);
 }
 
 bool SphincsPlus_PublicKey::supports_operation(PublicKeyOperation op) const {
@@ -336,15 +334,16 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
    public:
       SphincsPlus_Signature_Operation(std::shared_ptr<SphincsPlus_PrivateKeyInternal> private_key,
                                       std::shared_ptr<SphincsPlus_PublicKeyInternal> public_key,
-                                      bool randomized) :
+                                      PK_Signature_Options& options) :
             m_private(std::move(private_key)),
             m_public(std::move(public_key)),
             m_hashes(Botan::Sphincs_Hash_Functions::create(m_public->parameters(), m_public->seed())),
-            m_randomized(randomized),
-            m_context(/* TODO: add API for context */ {}) {
+            m_deterministic(options.using_deterministic_signature()),
+            m_context(options.context().optional().value_or(std::vector<uint8_t>())) {
          BOTAN_ARG_CHECK(m_context.size() <= 255, "Context must not exceed 255 bytes");
          BOTAN_ARG_CHECK(m_public->parameters().is_available(),
                          "The selected SLH-DSA (or SPHINCS+) instance is not available in this build.");
+         options.prehash().not_implemented("HashSLH-DSA currently not supported");
       }
 
       void update(std::span<const uint8_t> msg) override {
@@ -354,7 +353,7 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
 
       std::vector<uint8_t> sign(RandomNumberGenerator& rng) override {
          std::optional<SphincsOptionalRandomness> addrnd = std::nullopt;
-         if(m_randomized) {
+         if(!m_deterministic) {
             addrnd = rng.random_vec<SphincsOptionalRandomness>(m_public->parameters().n());
          }
          auto internal_msg = prepare_message(std::exchange(m_msg_buffer, {}), m_public->parameters(), m_context);
@@ -417,25 +416,19 @@ class SphincsPlus_Signature_Operation final : public PK_Ops::Signature {
       std::shared_ptr<SphincsPlus_PublicKeyInternal> m_public;
       std::unique_ptr<Sphincs_Hash_Functions> m_hashes;
       SphincsInputMessage m_msg_buffer;
-      bool m_randomized;
+      bool m_deterministic;
       SphincsContext m_context;
 };
 
-std::unique_ptr<PK_Ops::Signature> SphincsPlus_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                                                               std::string_view params,
-                                                                               std::string_view provider) const {
+std::unique_ptr<PK_Ops::Signature> SphincsPlus_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                                PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-   BOTAN_ARG_CHECK(params.empty() || params == "Deterministic" || params == "Randomized",
-                   "Unexpected parameters for signing with SLH-DSA (or SPHINCS+)");
+   options.exclude_provider();
 
    // FIPS 205, Section 9.2
    //   The hedged variant is the default and should be used on platforms where
    //   side-channel attacks are a concern.
-   const bool randomized = (params.empty() || params == "Randomized");
-   if(provider.empty() || provider == "base") {
-      return std::make_unique<SphincsPlus_Signature_Operation>(m_private, m_public, randomized);
-   }
-   throw Provider_Not_Found(algo_name(), provider);
+   return std::make_unique<SphincsPlus_Signature_Operation>(m_private, m_public, options);
 }
 
 }  // namespace Botan

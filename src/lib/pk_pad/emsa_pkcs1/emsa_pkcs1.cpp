@@ -73,16 +73,16 @@ EMSA_PKCS1v15::EMSA_PKCS1v15(std::unique_ptr<HashFunction> hash) : m_hash(std::m
    m_hash_id = pkcs_hash_id(m_hash->name());
 }
 
-EMSA_PKCS1v15_Raw::EMSA_PKCS1v15_Raw() {
-   m_hash_output_len = 0;
-   // m_hash_id, m_hash_name left empty
-}
-
-EMSA_PKCS1v15_Raw::EMSA_PKCS1v15_Raw(std::string_view hash_algo) {
-   std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_algo));
-   m_hash_id = pkcs_hash_id(hash_algo);
-   m_hash_name = hash->name();
-   m_hash_output_len = hash->output_length();
+EMSA_PKCS1v15_Raw::EMSA_PKCS1v15_Raw(const std::optional<std::string>& hash_algo) {
+   if(hash_algo) {
+      std::unique_ptr<HashFunction> hash(HashFunction::create_or_throw(hash_algo.value()));
+      m_hash_id = pkcs_hash_id(hash->name());
+      m_hash_name = hash->name();
+      m_hash_output_len = hash->output_length();
+   } else {
+      m_hash_output_len = 0;
+      // m_hash_id, m_hash_name left empty
+   }
 }
 
 void EMSA_PKCS1v15_Raw::update(const uint8_t input[], size_t length) {

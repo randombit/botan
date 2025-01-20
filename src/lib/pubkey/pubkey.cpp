@@ -1,5 +1,5 @@
 /*
-* (C) 1999-2010,2015,2018 Jack Lloyd
+* (C) 1999-2010,2015,2018,2024 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -9,7 +9,6 @@
 #include <botan/ber_dec.h>
 #include <botan/bigint.h>
 #include <botan/der_enc.h>
-#include <botan/mem_ops.h>
 #include <botan/pk_ops.h>
 #include <botan/pss_params.h>
 #include <botan/rng.h>
@@ -244,20 +243,35 @@ void check_der_format_supported(Signature_Format format, size_t parts) {
 
 }  // namespace
 
-PK_Signer::PK_Signer(const Private_Key& key,
-                     RandomNumberGenerator& rng,
-                     std::string_view emsa,
-                     Signature_Format format,
-                     std::string_view provider) {
-   m_op = key.create_signature_op(rng, emsa, provider);
+PK_Signer::PK_Signer(PK_Signature_Options options) {
+   // Appease GCC warning about a possibly dangling reference because when using
+   // std::reference_wrapper's implicit conversion to the contained reference
+   // the wrapper does not outlive the reference which seems to confuse GCC.
+   const auto key_wrapped = options.private_key().required();
+   const Private_Key& key = key_wrapped.get();
+
+   // TODO: The downstream algorithms should decide whether to require an RNG
+   //       (e.g. explicitly 'deterministic' signatures should not require it).
+   RandomNumberGenerator& rng = options.rng().required();
+
+   m_op = key._create_signature_op(rng, options);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support signature generation", key.algo_name()));
    }
-   m_sig_format = format;
+   m_sig_format = options.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
    m_parts = key.message_parts();
    m_part_size = key.message_part_size();
-   check_der_format_supported(format, m_parts);
+   check_der_format_supported(m_sig_format, m_parts);
+
+   options.validate_option_consumption();
 }
+
+PK_Signer::PK_Signer(const Private_Key& key,
+                     RandomNumberGenerator& rng,
+                     std::string_view padding,
+                     Signature_Format format,
+                     std::string_view provider) :
+      PK_Signer(PK_Signature_Options::from_legacy(key, rng, padding, format, provider)) {}
 
 AlgorithmIdentifier PK_Signer::algorithm_identifier() const {
    return m_op->algorithm_identifier();
@@ -325,19 +339,29 @@ std::vector<uint8_t> PK_Signer::signature(RandomNumberGenerator& rng) {
    }
 }
 
-PK_Verifier::PK_Verifier(const Public_Key& key,
-                         std::string_view emsa,
-                         Signature_Format format,
-                         std::string_view provider) {
-   m_op = key.create_verification_op(emsa, provider);
+PK_Verifier::PK_Verifier(PK_Signature_Options options) {
+   // Appease GCC warning about a possibly dangling reference because when using
+   // std::reference_wrapper's implicit conversion to the contained reference
+   // the wrapper does not outlive the reference which seems to confuse GCC.
+   const auto key_wrapped = options.public_key().required();
+   const Public_Key& key = key_wrapped.get();
+   m_op = key._create_verification_op(options);
    if(!m_op) {
       throw Invalid_Argument(fmt("Key type {} does not support signature verification", key.algo_name()));
    }
-   m_sig_format = format;
+   m_sig_format = options.using_der_encoded_signature() ? Signature_Format::DerSequence : Signature_Format::Standard;
    m_parts = key.message_parts();
    m_part_size = key.message_part_size();
-   check_der_format_supported(format, m_parts);
+   check_der_format_supported(m_sig_format, m_parts);
+
+   options.validate_option_consumption();
 }
+
+PK_Verifier::PK_Verifier(const Public_Key& pub_key,
+                         std::string_view padding,
+                         Signature_Format format,
+                         std::string_view provider) :
+      PK_Verifier(PK_Signature_Options::from_legacy(pub_key, padding, format, provider)) {}
 
 PK_Verifier::PK_Verifier(const Public_Key& key,
                          const AlgorithmIdentifier& signature_algorithm,

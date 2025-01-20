@@ -126,16 +126,27 @@ bool DilithiumMode::is_available() const {
    return false;
 }
 
+// The signature and verification operations should be in an anonymous namespace
+// as well, but cannot due to an apparent bug in MSVC
+
 class Dilithium_Signature_Operation final : public PK_Ops::Signature {
    public:
-      Dilithium_Signature_Operation(DilithiumInternalKeypair keypair, bool randomized) :
+      Dilithium_Signature_Operation(DilithiumInternalKeypair keypair, PK_Signature_Options& options) :
             m_keypair(std::move(keypair)),
-            m_randomized(randomized),
+
+            // FIPS 204, Section 3.4
+            //   By default, this standard specifies the signing algorithm to use both
+            //   types of randomness [fresh from the RNG and a value in the private key].
+            //   This is referred to as the “hedged” variant of the signing procedure.
+            m_randomized(!options.using_deterministic_signature()),
             m_h(m_keypair.second->mode().symmetric_primitives().get_message_hash(m_keypair.first->tr())),
             m_s1(ntt(m_keypair.second->s1().clone())),
             m_s2(ntt(m_keypair.second->s2().clone())),
             m_t0(ntt(m_keypair.second->t0().clone())),
-            m_A(Dilithium_Algos::expand_A(m_keypair.first->rho(), m_keypair.second->mode())) {}
+            m_A(Dilithium_Algos::expand_A(m_keypair.first->rho(), m_keypair.second->mode())) {
+         m_h->start(options.context().optional().value_or(std::vector<uint8_t>()));
+         options.prehash().not_implemented("HashML-DSA currently not supported");
+      }
 
       void update(std::span<const uint8_t> input) override { m_h->update(input); }
 
@@ -248,11 +259,15 @@ class Dilithium_Signature_Operation final : public PK_Ops::Signature {
 
 class Dilithium_Verification_Operation final : public PK_Ops::Verification {
    public:
-      Dilithium_Verification_Operation(std::shared_ptr<Dilithium_PublicKeyInternal> pubkey) :
+      Dilithium_Verification_Operation(std::shared_ptr<Dilithium_PublicKeyInternal> pubkey,
+                                       PK_Signature_Options& options) :
             m_pub_key(std::move(pubkey)),
             m_A(Dilithium_Algos::expand_A(m_pub_key->rho(), m_pub_key->mode())),
             m_t1_ntt_shifted(ntt(m_pub_key->t1() << DilithiumConstants::D)),
-            m_h(m_pub_key->mode().symmetric_primitives().get_message_hash(m_pub_key->tr())) {}
+            m_h(m_pub_key->mode().symmetric_primitives().get_message_hash(m_pub_key->tr())) {
+         m_h->start(options.context().optional().value_or(std::vector<uint8_t>()));
+         options.prehash().not_implemented("HashML-DSA currently not supported");
+      }
 
       void update(std::span<const uint8_t> input) override { m_h->update(input); }
 
@@ -373,24 +388,19 @@ std::unique_ptr<Private_Key> Dilithium_PublicKey::generate_another(RandomNumberG
    return std::make_unique<Dilithium_PrivateKey>(rng, m_public->mode().mode());
 }
 
-std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_verification_op(std::string_view params,
-                                                                                  std::string_view provider) const {
-   BOTAN_ARG_CHECK(params.empty() || params == "Pure", "Unexpected parameters for verifying with Dilithium");
-   if(provider.empty() || provider == "base") {
-      return std::make_unique<Dilithium_Verification_Operation>(m_public);
-   }
-   throw Provider_Not_Found(algo_name(), provider);
+std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::_create_verification_op(
+   PK_Signature_Options& options) const {
+   options.exclude_provider();
+   return std::make_unique<Dilithium_Verification_Operation>(m_public, options);
 }
 
 std::unique_ptr<PK_Ops::Verification> Dilithium_PublicKey::create_x509_verification_op(
    const AlgorithmIdentifier& alg_id, std::string_view provider) const {
-   if(provider.empty() || provider == "base") {
-      if(alg_id != this->algorithm_identifier()) {
-         throw Decoding_Error("Unexpected AlgorithmIdentifier for Dilithium X.509 signature");
-      }
-      return std::make_unique<Dilithium_Verification_Operation>(m_public);
+   if(alg_id != this->algorithm_identifier()) {
+      throw Decoding_Error("Unexpected AlgorithmIdentifier for Dilithium X.509 signature");
    }
-   throw Provider_Not_Found(algo_name(), provider);
+   auto options = PK_Verification_Options_Builder().with_provider(provider).commit();
+   return _create_verification_op(options);
 }
 
 /**
@@ -427,23 +437,11 @@ secure_vector<uint8_t> Dilithium_PrivateKey::private_key_bits() const {
    return m_private->mode().keypair_codec().encode_keypair({m_public, m_private});
 }
 
-std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::create_signature_op(RandomNumberGenerator& rng,
-                                                                             std::string_view params,
-                                                                             std::string_view provider) const {
+std::unique_ptr<PK_Ops::Signature> Dilithium_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                              PK_Signature_Options& options) const {
    BOTAN_UNUSED(rng);
-
-   BOTAN_ARG_CHECK(params.empty() || params == "Deterministic" || params == "Randomized",
-                   "Unexpected parameters for signing with ML-DSA/Dilithium");
-
-   // FIPS 204, Section 3.4
-   //   By default, this standard specifies the signing algorithm to use both
-   //   types of randomness [fresh from the RNG and a value in the private key].
-   //   This is referred to as the “hedged” variant of the signing procedure.
-   const bool randomized = (params.empty() || params == "Randomized");
-   if(provider.empty() || provider == "base") {
-      return std::make_unique<Dilithium_Signature_Operation>(DilithiumInternalKeypair{m_public, m_private}, randomized);
-   }
-   throw Provider_Not_Found(algo_name(), provider);
+   options.exclude_provider();
+   return std::make_unique<Dilithium_Signature_Operation>(DilithiumInternalKeypair{m_public, m_private}, options);
 }
 
 std::unique_ptr<Public_Key> Dilithium_PrivateKey::public_key() const {

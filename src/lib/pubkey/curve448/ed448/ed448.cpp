@@ -215,18 +215,14 @@ AlgorithmIdentifier Ed448_Sign_Operation::algorithm_identifier() const {
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::create_verification_op(std::string_view params,
-                                                                              std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      if(params.empty() || params == "Identity" || params == "Pure" || params == "Ed448") {
-         return std::make_unique<Ed448_Verify_Operation>(*this);
-      } else if(params == "Ed448ph") {
-         return std::make_unique<Ed448_Verify_Operation>(*this, "SHAKE-256(512)");
-      } else {
-         return std::make_unique<Ed448_Verify_Operation>(*this, std::string(params));
-      }
+std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::_create_verification_op(PK_Signature_Options& options) const {
+   options.exclude_provider();
+
+   if(auto prehash = options.prehash().optional()) {
+      return std::make_unique<Ed448_Verify_Operation>(*this, prehash->value_or("SHAKE-256(512)"));
+   } else {
+      return std::make_unique<Ed448_Verify_Operation>(*this);
    }
-   throw Provider_Not_Found(algo_name(), provider);
 }
 
 std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::create_x509_verification_op(const AlgorithmIdentifier& alg_id,
@@ -241,19 +237,16 @@ std::unique_ptr<PK_Ops::Verification> Ed448_PublicKey::create_x509_verification_
    throw Provider_Not_Found(algo_name(), provider);
 }
 
-std::unique_ptr<PK_Ops::Signature> Ed448_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                                                         std::string_view params,
-                                                                         std::string_view provider) const {
-   if(provider == "base" || provider.empty()) {
-      if(params.empty() || params == "Identity" || params == "Pure" || params == "Ed448") {
-         return std::make_unique<Ed448_Sign_Operation>(*this);
-      } else if(params == "Ed448ph") {
-         return std::make_unique<Ed448_Sign_Operation>(*this, "SHAKE-256(512)");
-      } else {
-         return std::make_unique<Ed448_Sign_Operation>(*this, std::string(params));
-      }
+std::unique_ptr<PK_Ops::Signature> Ed448_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                          PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng);
+   options.exclude_provider();
+
+   if(auto prehash = options.prehash().optional()) {
+      return std::make_unique<Ed448_Sign_Operation>(*this, prehash->value_or("SHAKE-256(512)"));
+   } else {
+      return std::make_unique<Ed448_Sign_Operation>(*this);
    }
-   throw Provider_Not_Found(algo_name(), provider);
 }
 
 }  // namespace Botan

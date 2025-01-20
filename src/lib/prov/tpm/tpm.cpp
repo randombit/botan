@@ -10,6 +10,7 @@
 #include <botan/der_enc.h>
 #include <botan/hash.h>
 #include <botan/pk_ops.h>
+#include <botan/pk_options.h>
 #include <botan/rsa.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/hash_id.h>
@@ -371,10 +372,13 @@ class TPM_Signing_Operation final : public PK_Ops::Signature {
 
 }  // namespace
 
-std::unique_ptr<PK_Ops::Signature> TPM_PrivateKey::create_signature_op(RandomNumberGenerator& /*rng*/,
-                                                                       std::string_view params,
-                                                                       std::string_view /*provider*/) const {
-   return std::make_unique<TPM_Signing_Operation>(*this, params);
+std::unique_ptr<PK_Ops::Signature> TPM_PrivateKey::_create_signature_op(RandomNumberGenerator& rng,
+                                                                        PK_Signature_Options& options) const {
+   BOTAN_UNUSED(rng);
+   if(auto padding = options.padding().optional(); !padding.has_value() || padding != "PKCS1v15") {
+      throw Invalid_Argument("TPMv1 can only sign using PKCS1v15 padding");
+   }
+   return std::make_unique<TPM_Signing_Operation>(*this, options.hash_function().required());
 }
 
 }  // namespace Botan

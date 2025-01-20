@@ -97,25 +97,11 @@ BOTAN_REGISTER_COMMAND("keygen", PK_Keygen);
 
 namespace {
 
-std::string choose_sig_padding(const std::string& key, const std::string& padding, const std::string& hash) {
-   if(key == "RSA") {
-      std::ostringstream oss;
-      if(padding.empty()) {
-         oss << "PSS";
-      } else {
-         oss << padding;
-      }
-
-      oss << "(" << hash << ")";
-      return oss.str();
-   } else if(padding.empty()) {
-      return hash;
-   } else if(hash.empty()) {
-      return padding;
+std::string_view normalize_padding(const std::string& algo, const std::string& requested_padding) {
+   if(algo == "RSA" && requested_padding.empty()) {
+      return "PSS";
    } else {
-      std::ostringstream oss;
-      oss << padding << "(" << hash << ")";
-      return oss.str();
+      return requested_padding;
    }
 }
 
@@ -196,21 +182,17 @@ class PK_Sign final : public Command {
             throw CLI_Error_Unsupported("hashing", hash_fn);
          }
 
-         const std::string sig_padding = choose_sig_padding(key->algo_name(), get_arg("padding"), hash_fn);
+         auto signer_builder = key->signer()
+                                  .with_rng(rng())
+                                  .with_hash(hash_fn)
+                                  .with_der_encoded_signature(flag_set("der-format"))
+                                  .with_provider(get_arg("provider"));
 
-         auto format = Botan::Signature_Format::Standard;
-
-         if(flag_set("der-format")) {
-            if(key->message_parts() == 1) {
-               throw CLI_Usage_Error("Key type " + key->algo_name() +
-                                     " does not support DER formatting for signatures");
-            }
-            format = Botan::Signature_Format::DerSequence;
+         if(const auto padding = normalize_padding(key->algo_name(), get_arg("padding")); !padding.empty()) {
+            signer_builder.with_padding(padding);
          }
 
-         const std::string provider = get_arg("provider");
-
-         Botan::PK_Signer signer(*key, rng(), sig_padding, format, provider);
+         auto signer = signer_builder.create();
 
          auto onData = [&signer](const uint8_t b[], size_t l) { signer.update(b, l); };
          Command::read_file(get_arg("file"), onData);
@@ -254,18 +236,15 @@ class PK_Verify final : public Command {
             throw CLI_Error_Unsupported("hashing", hash_fn);
          }
 
-         const std::string sig_padding = choose_sig_padding(key->algo_name(), get_arg("padding"), hash_fn);
+         auto verifier_builder =
+            key->signature_verifier().with_hash(hash_fn).with_der_encoded_signature(flag_set("der-format"));
 
-         auto format = Botan::Signature_Format::Standard;
-         if(flag_set("der-format")) {
-            if(key->message_parts() == 1) {
-               throw CLI_Usage_Error("Key type " + key->algo_name() +
-                                     " does not support DER formatting for signatures");
-            }
-            format = Botan::Signature_Format::DerSequence;
+         if(const auto padding = normalize_padding(key->algo_name(), get_arg("padding")); !padding.empty()) {
+            verifier_builder.with_padding(padding);
          }
 
-         Botan::PK_Verifier verifier(*key, sig_padding, format);
+         auto verifier = verifier_builder.create();
+
          auto onData = [&verifier](const uint8_t b[], size_t l) { verifier.update(b, l); };
          Command::read_file(get_arg("file"), onData);
 
