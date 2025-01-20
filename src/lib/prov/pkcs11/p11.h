@@ -1180,15 +1180,15 @@ BOTAN_PUBLIC_API(2, 0) void set_pin(Slot& slot, const secure_string& so_pin, con
 /**
  * @brief Wraps a PKCS #11 Interface object.
  *
- * This class provides an interface to access PKCS#11 functions of various versions.
- * For example func_3_0() returns the PKCS#11 v3.0 function list for a loaded interface.
+ * This class provides an interface to access PKCS #11 functions of various versions.
+ * For example func_3_0() returns the PKCS #11 v3.0 function list for a loaded interface.
  * The default implementation only supports the official "PKCS 11" named
  * interfaces .
  *
  * When using vendor defined interfaces, this class can be subclassed to specify access
- * to the official PKCS#11 functions while vendor defined function lists can be added.
+ * to the official PKCS #11 functions while vendor defined function lists can be added.
  * In this case, the LowLevel class can be subclassed as well to provide access to the
- * default PKCS#11 functions (via func_2_40(), func_3_0(), etc.) which is extended by
+ * default PKCS #11 functions (via func_2_40(), func_3_0(), etc.) which is extended by
  * the vendor defined ones.
  */
 class BOTAN_PUBLIC_API(3, 7) InterfaceWrapper {
@@ -1237,7 +1237,7 @@ class BOTAN_PUBLIC_API(3, 7) InterfaceWrapper {
       static Utf8Char* p11_interface_name_ptr();
 };
 
-/// Provides access to all PKCS#11 functions
+/// Provides access to all PKCS #11 functions
 class BOTAN_PUBLIC_API(2, 0) LowLevel {
    public:
       /// @param ptr the functon list pointer to use. Can be retrieved via `LowLevel::C_GetFunctionList`
@@ -1252,8 +1252,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * C_Initialize initializes the Cryptoki library.
       * @param init_args if this is not nullptr, it gets cast to (`C_InitializeArgs`) and dereferenced
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CantLock \li CryptokiAlreadyInitialized
       *     \li FunctionFailed \li GeneralError \li HostMemory
       *     \li NeedToCreateThreads \li OK
@@ -1265,8 +1265,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * C_Finalize indicates that an application is done with the Cryptoki library.
       * @param reserved reserved.  Should be nullptr
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li FunctionFailed
       *     \li GeneralError \li HostMemory \li OK
       * @return true on success, false otherwise
@@ -1277,8 +1277,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * C_GetInfo returns general information about Cryptoki.
       * @param info_ptr location that receives information
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li FunctionFailed
       *     \li GeneralError \li HostMemory \li OK
       * @return true on success, false otherwise
@@ -1287,11 +1287,11 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
 
       /**
       * C_GetFunctionList returns the function list.
-      * @param pkcs11_module The PKCS#11 module
+      * @param pkcs11_module The PKCS #11 module
       * @param function_list_ptr_ptr receives pointer to function list
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li FunctionFailed \li GeneralError
       *     \li HostMemory \li OK
       * @return true on success, false otherwise
@@ -1328,7 +1328,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        * should be made to write to this memory. The same caveat applies to
        * the interface names returned.
        *
-       * @param pkcs11_module The PKCS#11 module
+       * @param pkcs11_module The PKCS #11 module
        * @param interface_list_ptr returned interfaces
        * @param count_ptr number of interfaces returned
        * @param return_value default value (`ThrowException`): throw exception on error.
@@ -1357,7 +1357,7 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
        *    specified). If flags is 0, the cryptoki library can return an
        *    interface with any flags
        *
-       * @param pkcs11_module The PKCS#11 module
+       * @param pkcs11_module The PKCS #11 module
        * @param interface_name_ptr name of the interface
        * @param version_ptr version of the interface
        * @param interface_ptr_ptr returned interface
@@ -1380,8 +1380,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param slot_list_ptr receives array of slot IDs
       * @param count_ptr receives number of slots
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li FunctionFailed \li GeneralError \li HostMemory
       *     \li OK
@@ -1397,8 +1397,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param token_present only slots with tokens
       * @param slot_ids receives vector of slot IDs
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li FunctionFailed \li GeneralError \li HostMemory
       *     \li OK
@@ -1413,8 +1413,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param slot_id the ID of the slot
       * @param info_ptr receives the slot information
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
       *     \li FunctionFailed \li GeneralError \li HostMemory
       *     \li OK \li SlotIdInvalid
@@ -1427,8 +1427,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param slot_id ID of the token's slot
       * @param info_ptr receives the token information
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionFailed \li GeneralError
       *     \li HostMemory \li OK \li SlotIdInvalid
@@ -1443,8 +1443,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param slot_ptr location that receives the slot ID
       * @param reserved reserved.  Should be NULL_PTR
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li FunctionFailed
       *     \li GeneralError \li HostMemory \li NoEvent
       *     \li OK
@@ -1461,8 +1461,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param mechanism_list_ptr gets mech. array
       * @param count_ptr gets # of mechs.
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li BufferTooSmall \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionFailed
       *     \li GeneralError \li HostMemory \li OK
@@ -1480,8 +1480,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param slot_id ID of token's slot
       * @param mechanisms receives vector of supported mechanisms
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li BufferTooSmall \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionFailed
       *     \li GeneralError \li HostMemory \li OK
@@ -1499,8 +1499,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param type type of mechanism
       * @param info_ptr receives mechanism info
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionFailed \li GeneralError
       *     \li HostMemory \li MechanismInvalid \li OK
@@ -1520,8 +1520,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param so_pin_len length in bytes of the SO_PIN
       * @param label_ptr 32-byte token label (blank padded)
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
       *     \li GeneralError \li HostMemory \li OK
@@ -1542,8 +1542,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param so_pin the SO's initial PIN
       * @param label token label (at max 32 bytes long)
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
       *     \li GeneralError \li HostMemory \li OK
@@ -1575,8 +1575,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param pin_ptr the normal user's PIN
       * @param pin_len length in bytes of the PIN
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
       *     \li GeneralError \li HostMemory \li OK
@@ -1595,8 +1595,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param session the session's handle
       * @param pin the normal user's PIN
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
       *     \li GeneralError \li HostMemory \li OK
@@ -1623,8 +1623,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param new_pin_ptr the new PIN
       * @param new_len length of the new PIN
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
       *     \li GeneralError \li HostMemory \li OK
@@ -1646,8 +1646,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param old_pin the old PIN
       * @param new_pin the new PIN
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
       *     \li GeneralError \li HostMemory \li OK
@@ -1679,8 +1679,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param notify callback function
       * @param session_ptr gets session handle
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionFailed \li GeneralError
       *     \li HostMemory \li OK \li SessionCount
@@ -1700,8 +1700,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * C_CloseSession closes a session between an application and a token.
       * @param session the session's handle
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionFailed \li GeneralError
       *     \li HostMemory \li OK \li SessionClosed
@@ -1714,8 +1714,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * C_CloseAllSessions closes all sessions with a token.
       * @param slot_id the token's slot
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionFailed \li GeneralError
       *     \li HostMemory \li OK \li SlotIdInvalid
@@ -1729,8 +1729,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param session the session's handle
       * @param info_ptr receives session info
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionFailed \li GeneralError
       *     \li HostMemory \li OK \li SessionClosed
@@ -1757,8 +1757,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param operation_state_ptr gets state
       * @param operation_state_len_ptr gets state length
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li BufferTooSmall \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionFailed
       *     \li GeneralError \li HostMemory \li OK
@@ -1779,8 +1779,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param encryption_key en/decryption key
       * @param authentication_key sign/verify key
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionFailed \li GeneralError
       *     \li HostMemory \li KeyChanged \li KeyNeeded
@@ -1802,8 +1802,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param pin_ptr the user's PIN
       * @param pin_len the length of the PIN
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
       *     \li FunctionFailed \li GeneralError \li HostMemory
@@ -1825,8 +1825,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param user_type the user type
       * @param pin the user or security officer's PIN
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
       *     \li FunctionFailed \li GeneralError \li HostMemory
@@ -1872,8 +1872,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * C_Logout logs a user out from a token.
       * @param session the session's handle
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionFailed \li GeneralError
       *     \li HostMemory \li OK \li SessionClosed
@@ -1908,8 +1908,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param count attributes in template
       * @param object_ptr gets new object's handle.
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li AttributeReadOnly \li AttributeTypeInvalid
       *     \li AttributeValueInvalid \li CryptokiNotInitialized \li CurveNotSupported
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
@@ -1934,8 +1934,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param count attributes in template
       * @param new_object_ptr receives handle of copy
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ActionProhibited \li ArgumentsBad \li AttributeReadOnly
       *     \li AttributeTypeInvalid \li AttributeValueInvalid \li CryptokiNotInitialized
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
@@ -1957,8 +1957,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param session the session's handle
       * @param object the object's handle
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ActionProhibited \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionFailed
       *     \li GeneralError \li HostMemory \li ObjectHandleInvalid
@@ -1976,8 +1976,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param object the object's handle
       * @param size_ptr receives size of object
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionFailed
       *     \li GeneralError \li HostMemory \li InformationSensitive
@@ -1997,8 +1997,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param attribute_template_ptr specifies attrs; gets vals
       * @param count attributes in template
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li AttributeSensitive \li AttributeTypeInvalid
       *     \li BufferTooSmall \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionFailed
@@ -2018,8 +2018,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param object the object's handle
       * @param attribute_values specifies attrs; gets vals
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li AttributeSensitive \li AttributeTypeInvalid
       *     \li BufferTooSmall \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionFailed
@@ -2070,8 +2070,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param attribute_template_ptr specifies attrs and values
       * @param count attributes in template
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ActionProhibited \li ArgumentsBad \li AttributeReadOnly
       *     \li AttributeTypeInvalid \li AttributeValueInvalid \li CryptokiNotInitialized
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
@@ -2093,8 +2093,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param object the object's handle
       * @param attribute_values specifies attrs and values
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ActionProhibited \li ArgumentsBad \li AttributeReadOnly
       *     \li AttributeTypeInvalid \li AttributeValueInvalid \li CryptokiNotInitialized
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
@@ -2130,8 +2130,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param attribute_template_ptr attribute values to match
       * @param count attrs in search template
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li AttributeTypeInvalid \li AttributeValueInvalid
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionFailed \li GeneralError
@@ -2151,8 +2151,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param max_object_count max handles to get
       * @param object_count_ptr actual # returned
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionFailed
       *     \li GeneralError \li HostMemory \li OK
@@ -2169,8 +2169,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * C_FindObjectsFinal finishes a search for token and session objects.
       * @param session the session's handle
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionFailed \li GeneralError
       *     \li HostMemory \li OK \li OperationNotInitialized
@@ -2187,8 +2187,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param mechanism_ptr the encryption mechanism
       * @param key handle of encryption key
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
       *     \li GeneralError \li HostMemory \li KeyFunctionNotPermitted
@@ -2211,8 +2211,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param encrypted_data gets ciphertext
       * @param encrypted_data_len_ptr gets c-text size
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DataInvalid \li DataLenRange \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
@@ -2234,8 +2234,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param plaintext_data the plaintext data
       * @param encrypted_data gets ciphertext
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DataInvalid \li DataLenRange \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
@@ -2280,8 +2280,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param encrypted_part_ptr gets ciphertext
       * @param encrypted_part_len_ptr gets c-text size
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DataLenRange \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
@@ -2302,8 +2302,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param last_encrypted_part_ptr last c-text
       * @param last_encrypted_part_len_ptr gets last size
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DataLenRange \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
@@ -2420,8 +2420,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param mechanism_ptr the decryption mechanism
       * @param key handle of decryption key
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
       *     \li FunctionFailed \li GeneralError \li HostMemory
@@ -2444,8 +2444,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param data_ptr gets plaintext
       * @param data_len_ptr gets p-text size
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
       *     \li EncryptedDataInvalid \li EncryptedDataLenRange \li FunctionCanceled
@@ -2467,8 +2467,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param encrypted_data ciphertext
       * @param decrypted_data gets plaintext
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
       *     \li EncryptedDataInvalid \li EncryptedDataLenRange \li FunctionCanceled
@@ -2513,8 +2513,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param part_ptr gets plaintext
       * @param part_len_ptr p-text size
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
       *     \li EncryptedDataInvalid \li EncryptedDataLenRange \li FunctionCanceled
@@ -2536,8 +2536,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param last_part_ptr gets plaintext
       * @param last_part_len_ptr p-text size
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
       *     \li EncryptedDataInvalid \li EncryptedDataLenRange \li FunctionCanceled
@@ -2654,8 +2654,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param session the session's handle
       * @param mechanism_ptr the digesting mechanism
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
       *     \li FunctionFailed \li GeneralError \li HostMemory
@@ -2676,8 +2676,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param digest_ptr gets the message digest
       * @param digest_len_ptr gets digest length
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
       *     \li FunctionCanceled \li FunctionFailed \li GeneralError
@@ -2698,8 +2698,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param part_ptr data to be digested
       * @param part_len bytes of data to be digested
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
       *     \li FunctionFailed \li GeneralError \li HostMemory
@@ -2717,8 +2717,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param session the session's handle
       * @param key secret key to digest
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
       *     \li GeneralError \li HostMemory \li KeyHandleInvalid
@@ -2734,8 +2734,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param digest_ptr gets the message digest
       * @param digest_len_ptr gets uint8_t count of digest
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
       *     \li FunctionCanceled \li FunctionFailed \li GeneralError
@@ -2756,8 +2756,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param mechanism_ptr the signature mechanism
       * @param key handle of signature key
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
       *     \li FunctionFailed \li GeneralError \li HostMemory
@@ -2780,8 +2780,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param signature_ptr gets the signature
       * @param signature_len_ptr gets signature length
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DataInvalid \li DataLenRange \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
@@ -2803,8 +2803,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param data the data to sign
       * @param signature gets the signature
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DataInvalid \li DataLenRange \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
@@ -2842,8 +2842,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param part_ptr the data to sign
       * @param part_len count of bytes to sign
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DataLenRange
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
       *     \li FunctionCanceled \li FunctionFailed \li GeneralError
@@ -2861,8 +2861,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param session the session's handle
       * @param part the data to sign
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DataLenRange
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
       *     \li FunctionCanceled \li FunctionFailed \li GeneralError
@@ -2883,8 +2883,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param signature_ptr gets the signature
       * @param signature_len_ptr gets signature length
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DataLenRange \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
@@ -2903,8 +2903,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param session the session's handle
       * @param signature gets the signature
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DataLenRange \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
@@ -2936,8 +2936,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param mechanism_ptr the signature mechanism
       * @param key handle of the signature key
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
       *     \li FunctionFailed \li GeneralError \li HostMemory
@@ -2960,8 +2960,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param signature_ptr gets the signature
       * @param signature_len_ptr gets signature length
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DataInvalid \li DataLenRange \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
@@ -3077,8 +3077,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param mechanism_ptr the verification mechanism
       * @param key verification key
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
       *     \li FunctionFailed \li GeneralError \li HostMemory
@@ -3101,8 +3101,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param signature_ptr signature
       * @param signature_len signature length
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DataInvalid
       *     \li DataLenRange \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
@@ -3124,8 +3124,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param data signed data
       * @param signature signature
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DataInvalid
       *     \li DataLenRange \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
@@ -3153,8 +3153,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param part_ptr signed data
       * @param part_len length of signed data
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DataLenRange
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
       *     \li FunctionCanceled \li FunctionFailed \li GeneralError
@@ -3172,8 +3172,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param session the session's handle
       * @param part signed data
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DataLenRange
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
       *     \li FunctionCanceled \li FunctionFailed \li GeneralError
@@ -3194,8 +3194,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param signature_ptr signature to verify
       * @param signature_len signature length
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DataLenRange
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
       *     \li FunctionCanceled \li FunctionFailed \li GeneralError
@@ -3215,8 +3215,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param mechanism_ptr the verification mechanism
       * @param key verification key
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
       *     \li FunctionFailed \li GeneralError \li HostMemory
@@ -3239,8 +3239,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param data_ptr gets signed data
       * @param data_len_ptr gets signed data len
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DataInvalid \li DataLenRange \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
@@ -3417,8 +3417,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param encrypted_part_ptr gets ciphertext
       * @param encrypted_part_len_ptr gets c-text length
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DataLenRange \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
@@ -3441,8 +3441,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param part_ptr gets plaintext
       * @param part_len_ptr gets plaintext len
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
       *     \li EncryptedDataInvalid \li EncryptedDataLenRange \li FunctionCanceled
@@ -3466,8 +3466,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param encrypted_part_ptr gets ciphertext
       * @param encrypted_part_len_ptr gets c-text length
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DataLenRange \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li FunctionCanceled \li FunctionFailed
@@ -3491,8 +3491,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param part_ptr gets plaintext
       * @param part_len_ptr gets p-text length
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DataLenRange \li DeviceError \li DeviceMemory
       *     \li DeviceRemoved \li EncryptedDataInvalid \li EncryptedDataLenRange
@@ -3518,8 +3518,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param count # of attrs in template
       * @param key_ptr gets handle of new key
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li AttributeReadOnly \li AttributeTypeInvalid
       *     \li AttributeValueInvalid \li CryptokiNotInitialized \li CurveNotSupported
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
@@ -3549,8 +3549,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param public_key_ptr gets pub. key handle
       * @param private_key_ptr gets priv. key handle
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li AttributeReadOnly \li AttributeTypeInvalid
       *     \li AttributeValueInvalid \li CryptokiNotInitialized \li CurveNotSupported
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
@@ -3581,8 +3581,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param wrapped_key_ptr gets wrapped key
       * @param wrapped_key_len_ptr gets wrapped key size
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li BufferTooSmall \li CryptokiNotInitialized
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
       *     \li FunctionCanceled \li FunctionFailed \li GeneralError
@@ -3613,8 +3613,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param attribute_count template length
       * @param key_ptr gets new handle
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li AttributeReadOnly \li AttributeTypeInvalid
       *     \li AttributeValueInvalid \li BufferTooSmall \li CryptokiNotInitialized
       *     \li CurveNotSupported \li DeviceError \li DeviceMemory
@@ -3647,8 +3647,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param attribute_count template length
       * @param key_ptr gets new handle
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li AttributeReadOnly \li AttributeTypeInvalid
       *     \li AttributeValueInvalid \li CryptokiNotInitialized \li CurveNotSupported
       *     \li DeviceError \li DeviceMemory \li DeviceRemoved
@@ -3731,8 +3731,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param seed_ptr the seed material
       * @param seed_len length of seed material
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
       *     \li FunctionFailed \li GeneralError \li HostMemory
@@ -3752,8 +3752,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * @param random_data_ptr receives the random data
       * @param random_len # of bytes to generate
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li ArgumentsBad \li CryptokiNotInitialized \li DeviceError
       *     \li DeviceMemory \li DeviceRemoved \li FunctionCanceled
       *     \li FunctionFailed \li GeneralError \li HostMemory
@@ -3772,8 +3772,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * C_GetFunctionStatus is a legacy function; it obtains an updated status of a function running in parallel with an application.
       * @param session the session's handle
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li FunctionFailed \li FunctionNotParallel
       *     \li GeneralError \li HostMemory \li SessionHandleInvalid
       *     \li SessionClosed
@@ -3785,8 +3785,8 @@ class BOTAN_PUBLIC_API(2, 0) LowLevel {
       * C_CancelFunction is a legacy function; it cancels a function running in parallel.
       * @param session the session's handle
       * @param return_value default value (`ThrowException`): throw exception on error.
-      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS#11 function and no exception is thrown.
-      * At least the following PKCS#11 return values may be returned:
+      * if a non-NULL pointer is passed: return_value receives the return value of the PKCS #11 function and no exception is thrown.
+      * At least the following PKCS #11 return values may be returned:
       *     \li CryptokiNotInitialized \li FunctionFailed \li FunctionNotParallel
       *     \li GeneralError \li HostMemory \li SessionHandleInvalid
       *     \li SessionClosed
