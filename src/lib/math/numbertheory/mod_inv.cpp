@@ -1,11 +1,12 @@
 /*
-* (C) 1999-2011,2016,2018,2019,2020 Jack Lloyd
+* (C) 1999-2011,2016,2018,2019,2020,2025 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
-#include <botan/numthry.h>
+#include <botan/internal/mod_inv.h>
 
+#include <botan/numthry.h>
 #include <botan/internal/ct_utils.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/mp_core.h>
@@ -17,10 +18,10 @@ namespace {
 
 BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod) {
    // Caller should assure these preconditions:
-   BOTAN_DEBUG_ASSERT(n.is_positive());
-   BOTAN_DEBUG_ASSERT(mod.is_positive());
-   BOTAN_DEBUG_ASSERT(n < mod);
-   BOTAN_DEBUG_ASSERT(mod >= 3 && mod.is_odd());
+   BOTAN_ASSERT_NOMSG(n.is_positive());
+   BOTAN_ASSERT_NOMSG(mod.is_positive());
+   BOTAN_ASSERT_NOMSG(n < mod);
+   BOTAN_ASSERT_NOMSG(mod >= 3 && mod.is_odd());
 
    /*
    This uses a modular inversion algorithm designed by Niels Möller
@@ -98,10 +99,7 @@ BigInt inverse_mod_odd_modulus(const BigInt& n, const BigInt& mod) {
       bigint_cnd_add(odd_u, u_w, mp1o2, mod_words);
    }
 
-   auto a_is_0 = CT::Mask<word>::set();
-   for(size_t i = 0; i != mod_words; ++i) {
-      a_is_0 &= CT::Mask<word>::is_zero(a_w[i]);
-   }
+   const auto a_is_0 = CT::all_zeros(a_w, mod_words);
 
    auto b_is_1 = CT::Mask<word>::is_equal(b_w[0], 1);
    for(size_t i = 1; i != mod_words; ++i) {
@@ -176,32 +174,28 @@ BigInt inverse_mod_pow2(const BigInt& a1, size_t k) {
 
 }  // namespace
 
-BigInt inverse_mod(const BigInt& n, const BigInt& mod) {
-   if(mod.is_zero()) {
-      throw Invalid_Argument("inverse_mod modulus cannot be zero");
-   }
-   if(mod.is_negative() || n.is_negative()) {
-      throw Invalid_Argument("inverse_mod: arguments must be non-negative");
-   }
-   if(n.is_zero() || (n.is_even() && mod.is_even())) {
-      return BigInt::zero();
+std::optional<BigInt> inverse_mod_general(const BigInt& x, const BigInt& mod) {
+   BOTAN_ARG_CHECK(x > 0, "x must be greater than zero");
+   BOTAN_ARG_CHECK(mod > 0, "mod must be greater than zero");
+   BOTAN_ARG_CHECK(x < mod, "x must be less than m");
+
+   // Easy case where gcd > 1 so no inverse exists
+   if(x.is_even() && mod.is_even()) {
+      return std::nullopt;
    }
 
    if(mod.is_odd()) {
-      /*
-      Fastpath for common case. This leaks if n is greater than mod or
-      not, but we don't guarantee const time behavior in that case.
-      */
-      if(n < mod) {
-         return inverse_mod_odd_modulus(n, mod);
+      BigInt z = inverse_mod_odd_modulus(x, mod);
+      if(z.is_zero()) {
+         return std::nullopt;
       } else {
-         return inverse_mod_odd_modulus(ct_modulo(n, mod), mod);
+         return z;
       }
    }
 
-   // If n is even and mod is even we already returned 0
-   // If n is even and mod is odd we jumped directly to odd-modulus algo
-   BOTAN_DEBUG_ASSERT(n.is_odd());
+   // If x is even and mod is even we already returned 0
+   // If x is even and mod is odd we jumped directly to odd-modulus algo
+   BOTAN_ASSERT_NOMSG(x.is_odd());
 
    const size_t mod_lz = low_zero_bits(mod);
    BOTAN_ASSERT_NOMSG(mod_lz > 0);
@@ -210,7 +204,12 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod) {
 
    if(mod_lz == mod_bits - 1) {
       // In this case we are performing an inversion modulo 2^k
-      return inverse_mod_pow2(n, mod_lz);
+      auto z = inverse_mod_pow2(x, mod_lz);
+      if(z.is_zero()) {
+         return std::nullopt;
+      } else {
+         return z;
+      }
    }
 
    if(mod_lz == 1) {
@@ -229,12 +228,11 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod) {
       */
 
       const BigInt o = mod >> 1;
-      const BigInt n_redc = ct_modulo(n, o);
-      const BigInt inv_o = inverse_mod_odd_modulus(n_redc, o);
+      const BigInt inv_o = inverse_mod_odd_modulus(ct_modulo(x, o), o);
 
       // No modular inverse in this case:
       if(inv_o == 0) {
-         return BigInt::zero();
+         return std::nullopt;
       }
 
       BigInt h = inv_o;
@@ -250,18 +248,20 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod) {
    */
 
    const BigInt o = mod >> mod_lz;
-   const BigInt n_redc = ct_modulo(n, o);
-   const BigInt inv_o = inverse_mod_odd_modulus(n_redc, o);
-   const BigInt inv_2k = inverse_mod_pow2(n, mod_lz);
+   const BigInt inv_o = inverse_mod_odd_modulus(ct_modulo(x, o), o);
+   const BigInt inv_2k = inverse_mod_pow2(x, mod_lz);
 
    // No modular inverse in this case:
    if(inv_o == 0 || inv_2k == 0) {
-      return BigInt::zero();
+      return std::nullopt;
    }
 
    const BigInt m2k = BigInt::power_of_2(mod_lz);
    // Compute the CRT parameter
    const BigInt c = inverse_mod_pow2(o, mod_lz);
+
+   // This should never happen; o is odd so gcd is 1 and inverse mod 2^k exists
+   BOTAN_ASSERT_NOMSG(!c.is_zero());
 
    // Compute h = c*(inv_2k-inv_o) mod 2^k
    BigInt h = c * (inv_2k - inv_o);
@@ -275,6 +275,111 @@ BigInt inverse_mod(const BigInt& n, const BigInt& mod) {
    h *= o;
    h += inv_o;
    return h;
+}
+
+BigInt inverse_mod_secret_prime(const BigInt& x, const BigInt& p) {
+   BOTAN_ARG_CHECK(x.is_positive() && p.is_positive(), "Parameters must be positive");
+   BOTAN_ARG_CHECK(x < p, "x must be less than p");
+   BOTAN_ARG_CHECK(p.is_odd() and p > 1, "Primes are odd integers greater than 1");
+
+   // TODO possibly use FLT, or the algorithm presented for this case in
+   // Handbook of Elliptic and Hyperelliptic Curve Cryptography
+
+   return inverse_mod_odd_modulus(x, p);
+}
+
+BigInt inverse_mod_public_prime(const BigInt& x, const BigInt& p) {
+   return inverse_mod_secret_prime(x, p);
+}
+
+BigInt inverse_mod_rsa_public_modulus(const BigInt& x, const BigInt& n) {
+   BOTAN_ARG_CHECK(n.is_positive() && n.is_odd(), "RSA public modulus must be odd and positive");
+   BOTAN_ARG_CHECK(x.is_positive() && x < n, "Input must be positive and less than RSA modulus");
+   BigInt z = inverse_mod_odd_modulus(x, n);
+   BOTAN_ASSERT(!z.is_zero(), "Accidentally factored the public modulus");  // whoops
+   return z;
+}
+
+namespace {
+
+uint64_t barrett_mod_65537(uint64_t x) {
+   constexpr uint64_t mod = 65537;
+   constexpr size_t s = 32;
+   constexpr uint64_t c = (static_cast<uint64_t>(1) << s) / mod;
+
+   uint64_t q = (x * c) >> s;
+   uint64_t r = x - q * mod;
+
+   auto r_gt_mod = CT::Mask<uint64_t>::is_gte(r, mod);
+   return r - r_gt_mod.if_set_return(mod);
+}
+
+word inverse_mod_65537(word x) {
+   // Need 64-bit here as accum*accum exceeds 32-bit if accum=0x10000
+   uint64_t accum = 1;
+   // Basic square and multiply, with all bits of exponent set
+   for(size_t i = 0; i != 16; ++i) {
+      accum = barrett_mod_65537(accum * accum);
+      accum = barrett_mod_65537(accum * x);
+   }
+   return static_cast<word>(accum);
+}
+
+}  // namespace
+
+BigInt compute_rsa_secret_exponent(const BigInt& e, const BigInt& phi_n, const BigInt& p, const BigInt& q) {
+   /*
+   * Both p - 1 and q - 1 are chosen to be relatively prime to e. Thus
+   * phi(n), the least common multiple of p - 1 and q - 1, is also
+   * relatively prime to e.
+   */
+   BOTAN_DEBUG_ASSERT(gcd(e, phi_n) == 1);
+
+   if(e == 65537) {
+      /*
+      Arazi's algorithm for inversion of prime x modulo a non-prime
+
+      "GCD-Free Algorithms for Computing Modular Inverses"
+      Marc Joye and Pascal Paillier, CHES 2003 (LNCS 2779)
+      https://marcjoye.github.io/papers/JP03gcdfree.pdf
+
+      This could be extended to cover other cases such as e=3 or e=17 but
+      these days 65537 is the standard RSA public exponent
+      */
+
+      constexpr word e_w = 65537;
+
+      const word phi_mod_e = ct_mod_word(phi_n, e_w);
+      const word inv_phi_mod_e = inverse_mod_65537(phi_mod_e);
+      BOTAN_DEBUG_ASSERT((inv_phi_mod_e * phi_mod_e) % e_w == 1);
+      const word neg_inv_phi_mod_e = (e_w - inv_phi_mod_e);
+      return ct_divide_word((phi_n * neg_inv_phi_mod_e) + 1, e_w);
+   } else {
+      // TODO possibly do something else taking advantage of the special structure here
+
+      BOTAN_UNUSED(p, q);
+      if(auto d = inverse_mod_general(e, phi_n)) {
+         return *d;
+      } else {
+         throw Internal_Error("Failed to compute RSA secret exponent");
+      }
+   }
+}
+
+BigInt inverse_mod(const BigInt& n, const BigInt& mod) {
+   BOTAN_ARG_CHECK(!mod.is_zero(), "modulus cannot be zero");
+   BOTAN_ARG_CHECK(!mod.is_negative(), "modulus cannot be negative");
+   BOTAN_ARG_CHECK(!n.is_negative(), "value cannot be negative");
+
+   if(n.is_zero() || (n.is_even() && mod.is_even())) {
+      return BigInt::zero();
+   }
+
+   if(n >= mod) {
+      return inverse_mod(ct_modulo(n, mod), mod);
+   }
+
+   return inverse_mod_general(n, mod).value_or(BigInt::zero());
 }
 
 }  // namespace Botan

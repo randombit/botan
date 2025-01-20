@@ -10,6 +10,7 @@
 #include <botan/internal/cpuid.h>
 #include <botan/internal/filesystem.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/loadstor.h>
 #include <botan/internal/parsing.h>
 #include <botan/internal/stl_util.h>
 #include <fstream>
@@ -840,6 +841,10 @@ std::vector<std::string> Test::provider_filter(const std::vector<std::string>& i
 std::string Test::random_password(Botan::RandomNumberGenerator& rng) {
    const size_t len = 1 + rng.next_byte() % 32;
    return Botan::hex_encode(rng.random_vec(len));
+}
+
+size_t Test::random_index(Botan::RandomNumberGenerator& rng, size_t max) {
+   return Botan::load_be(rng.random_array<8>()) % max;
 }
 
 std::vector<std::vector<uint8_t>> VarMap::get_req_bin_list(const std::string& key) const {

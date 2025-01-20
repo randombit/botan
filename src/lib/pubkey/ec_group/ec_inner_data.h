@@ -12,6 +12,7 @@
 #include <botan/asn1_obj.h>
 #include <botan/bigint.h>
 #include <botan/reducer.h>
+#include <botan/internal/mod_inv.h>
 #include <botan/internal/monty.h>
 #include <botan/internal/stl_util.h>
 #include <memory>

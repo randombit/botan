@@ -16,6 +16,7 @@
    #include <botan/pubkey.h>
    #include <botan/rng.h>
    #include <botan/internal/blinding.h>
+   #include <botan/internal/mod_inv.h>
    #include <botan/internal/pk_ops_impl.h>
 
 namespace Botan::PKCS11 {
@@ -118,7 +119,7 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
                m_key.get_n(),
                rng,
                [this](const BigInt& k) { return power_mod(k, m_key.get_e(), m_key.get_n()); },
-               [this](const BigInt& k) { return inverse_mod(k, m_key.get_n()); }) {
+               [this](const BigInt& k) { return inverse_mod_rsa_public_modulus(k, m_key.get_n()); }) {
          m_bits = m_key.get_n().bits() - 1;
       }
 

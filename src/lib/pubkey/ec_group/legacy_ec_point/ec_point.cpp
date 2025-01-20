@@ -85,7 +85,7 @@ BigInt fe_sqr(const EC_Group_Data& group, const BigInt& x, secure_vector<word>& 
 }
 
 BigInt invert_element(const EC_Group_Data& group, const BigInt& x, secure_vector<word>& ws) {
-   return group.monty().inv_mod_p(x, ws);
+   return group.monty().mul(inverse_mod_public_prime(x, group.p()), group.monty().R3(), ws);
 }
 
 size_t monty_ws_size(const EC_Group_Data& group) {

@@ -53,7 +53,7 @@ inline BigInt ct_divide(const BigInt& x, const BigInt& y) {
 }
 
 /**
-* BigInt division, const time variant
+* Constant time division
 *
 * This runs with control flow independent of the values of x/y.
 * Warning: the loop bounds still leaks the size of x.
@@ -65,6 +65,37 @@ inline BigInt ct_divide(const BigInt& x, const BigInt& y) {
 */
 BOTAN_TEST_API
 void ct_divide_word(const BigInt& x, word y, BigInt& q, word& r);
+
+/**
+* Constant time division
+*
+* This runs with control flow independent of the values of x/y.
+* Warning: the loop bounds still leaks the size of x.
+*
+* @param x an integer
+* @param y a non-zero word
+* @return quotient floor(x / y)
+*/
+inline BigInt ct_divide_word(const BigInt& x, word y) {
+   BigInt q;
+   word r;
+   ct_divide_word(x, y, q, r);
+   BOTAN_UNUSED(r);
+   return q;
+}
+
+/**
+* BigInt word modulo, const time variant
+*
+* This runs with control flow independent of the values of x/y.
+* Warning: the loop bounds still leaks the size of x.
+*
+* @param x a positive integer
+* @param y a non-zero word
+* @return r the remainder of x divided by y
+*/
+BOTAN_TEST_API
+word ct_mod_word(const BigInt& x, word y);
 
 /**
 * BigInt modulo, const time variant

@@ -35,6 +35,7 @@
 
 #if defined(BOTAN_HAS_NUMBERTHEORY)
    #include <botan/numthry.h>
+   #include <botan/internal/mod_inv.h>
 #endif
 
 #if defined(BOTAN_HAS_ECC_GROUP)
@@ -360,7 +361,7 @@ uint64_t Invmod_Timing_Test::measure_critical_function(const std::vector<uint8_t
    const Botan::BigInt k(input.data(), input.size());
 
    TimingTestTimer timer;
-   const Botan::BigInt inv = inverse_mod(k, m_p);
+   const Botan::BigInt inv = Botan::inverse_mod_secret_prime(k, m_p);
    return timer.complete();
 }
 

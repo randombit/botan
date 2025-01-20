@@ -14,6 +14,7 @@
 #include <botan/reducer.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/fmt.h>
+#include <botan/internal/mod_inv.h>
 #include <botan/internal/monty.h>
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/primality.h>
@@ -479,7 +480,7 @@ size_t DL_Group::exponent_bits() const {
 
 BigInt DL_Group::inverse_mod_p(const BigInt& x) const {
    // precompute??
-   return inverse_mod(x, get_p());
+   return inverse_mod_public_prime(x, get_p());
 }
 
 BigInt DL_Group::mod_p(const BigInt& x) const {
@@ -493,7 +494,7 @@ BigInt DL_Group::multiply_mod_p(const BigInt& x, const BigInt& y) const {
 BigInt DL_Group::inverse_mod_q(const BigInt& x) const {
    data().assert_q_is_set("inverse_mod_q");
    // precompute??
-   return inverse_mod(x, get_q());
+   return inverse_mod_public_prime(x, get_q());
 }
 
 BigInt DL_Group::mod_q(const BigInt& x) const {

@@ -385,7 +385,7 @@ def cli_factor_tests(_tmp_dir):
 
 def cli_mod_inverse_tests(_tmp_dir):
     test_cli("mod_inverse", "97 802", "339")
-    test_cli("mod_inverse", "98 802", "0")
+    test_cli("mod_inverse", "98 802", "No modular inverse exists")
 
 def cli_base64_tests(_tmp_dir):
     test_cli("base64_enc", "-", "YmVlcyE=", "bees!")

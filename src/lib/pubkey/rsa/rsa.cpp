@@ -16,6 +16,7 @@
 #include <botan/internal/emsa.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/keypair.h>
+#include <botan/internal/mod_inv.h>
 #include <botan/internal/monty.h>
 #include <botan/internal/monty_exp.h>
 #include <botan/internal/parsing.h>
@@ -288,12 +289,12 @@ RSA_PrivateKey::RSA_PrivateKey(
 
    if(d.is_zero()) {
       const BigInt phi_n = lcm(p_minus_1, q_minus_1);
-      d = inverse_mod(e, phi_n);
+      d = compute_rsa_secret_exponent(e, phi_n, p, q);
    }
 
    BigInt d1 = ct_modulo(d, p_minus_1);
    BigInt d2 = ct_modulo(d, q_minus_1);
-   BigInt c = inverse_mod(q, p);
+   BigInt c = inverse_mod_secret_prime(ct_modulo(q, p), p);
 
    RSA_PublicKey::init(std::move(n), std::move(e));
 
@@ -348,10 +349,10 @@ RSA_PrivateKey::RSA_PrivateKey(RandomNumberGenerator& rng, size_t bits, size_t e
    // This is guaranteed because p,q == 3 mod 4
    BOTAN_DEBUG_ASSERT(low_zero_bits(phi_n) == 1);
 
-   BigInt d = inverse_mod(e, phi_n);
+   BigInt d = compute_rsa_secret_exponent(e, phi_n, p, q);
    BigInt d1 = ct_modulo(d, p_minus_1);
    BigInt d2 = ct_modulo(d, q_minus_1);
-   BigInt c = inverse_mod(q, p);
+   BigInt c = inverse_mod_secret_prime(ct_modulo(q, p), p);
 
    RSA_PublicKey::init(std::move(n), std::move(e));
 
@@ -406,7 +407,7 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
    if(get_d2() != ct_modulo(get_d(), get_q() - 1)) {
       return false;
    }
-   if(get_c() != inverse_mod(get_q(), get_p())) {
+   if(get_c() != inverse_mod_secret_prime(ct_modulo(get_q(), get_p()), get_p())) {
       return false;
    }
 
@@ -448,7 +449,7 @@ class RSA_Private_Operation {
                m_public->get_n(),
                rng,
                [this](const BigInt& k) { return m_public->public_op(k); },
-               [this](const BigInt& k) { return inverse_mod(k, m_public->get_n()); }),
+               [this](const BigInt& k) { return inverse_mod_rsa_public_modulus(k, m_public->get_n()); }),
             m_blinding_bits(64),
             m_max_d1_bits(m_private->p_bits() + m_blinding_bits),
             m_max_d2_bits(m_private->q_bits() + m_blinding_bits) {}

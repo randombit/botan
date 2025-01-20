@@ -9,6 +9,7 @@
 #if defined(BOTAN_HAS_NUMBERTHEORY)
 
    #include <botan/numthry.h>
+   #include <botan/internal/mod_inv.h>
    #include <botan/internal/monty.h>
    #include <iterator>
 
@@ -26,7 +27,11 @@ class Modular_Inverse final : public Command {
          const Botan::BigInt n(get_arg("n"));
          const Botan::BigInt mod(get_arg("mod"));
 
-         output() << Botan::inverse_mod(n, mod) << "\n";
+         if(auto inv = Botan::inverse_mod_general(n, mod)) {
+            output() << *inv << "\n";
+         } else {
+            output() << "No modular inverse exists\n";
+         }
       }
 };
 

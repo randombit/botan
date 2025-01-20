@@ -114,6 +114,30 @@ void ct_divide_word(const BigInt& x, word y, BigInt& q_out, word& r_out) {
    q_out = q;
 }
 
+word ct_mod_word(const BigInt& x, word y) {
+   BOTAN_ARG_CHECK(x.is_positive(), "The argument x must be positive");
+   BOTAN_ARG_CHECK(y != 0, "Cannot divide by zero");
+
+   const size_t x_bits = x.bits();
+
+   word r = 0;
+
+   for(size_t i = 0; i != x_bits; ++i) {
+      const size_t b = x_bits - 1 - i;
+      const bool x_b = x.get_bit(b);
+
+      const auto r_carry = CT::Mask<word>::expand_top_bit(r);
+
+      r *= 2;
+      r += x_b;
+
+      const auto r_gte_y = CT::Mask<word>::is_gte(r, y) | r_carry;
+      r = r_gte_y.select(r - y, r);
+   }
+
+   return r;
+}
+
 BigInt ct_modulo(const BigInt& x, const BigInt& y) {
    if(y.is_negative() || y.is_zero()) {
       throw Invalid_Argument("ct_modulo requires y > 0");
