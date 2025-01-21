@@ -170,7 +170,7 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       *
       * This verifies that 1 < x,y < p and that y=g^x mod p
       */
-      bool verify_element_pair(const BigInt& y, const BigInt& x) const;
+      BOTAN_DEPRECATED("Deprecated no replacement") bool verify_element_pair(const BigInt& y, const BigInt& x) const;
 
       /**
       * Encode this group into a string using PEM encoding.
@@ -246,7 +246,9 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       *
       * @return (g^x) % p
       */
-      BigInt power_g_p(const BigInt& x) const;
+      BOTAN_DEPRECATED("Use version taking bitlength upper bound") inline BigInt power_g_p(const BigInt& x) const {
+         return power_g_p(x, x.bits());
+      }
 
       /**
       * Modular exponentiation

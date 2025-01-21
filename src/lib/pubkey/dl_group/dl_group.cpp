@@ -363,7 +363,7 @@ bool DL_Group::verify_element_pair(const BigInt& y, const BigInt& x) const {
       return false;
    }
 
-   if(y != this->power_g_p(x)) {
+   if(y != this->power_g_p(x, x.bits())) {
       return false;
    }
 
@@ -519,10 +519,6 @@ BigInt DL_Group::square_mod_q(const BigInt& x) const {
 
 BigInt DL_Group::multi_exponentiate(const BigInt& x, const BigInt& y, const BigInt& z) const {
    return monty_multi_exp(data().monty_params_p(), get_g(), x, y, z).value();
-}
-
-BigInt DL_Group::power_g_p(const BigInt& x) const {
-   return data().power_g_p(x, x.bits());
 }
 
 BigInt DL_Group::power_g_p(const BigInt& x, size_t max_x_bits) const {
