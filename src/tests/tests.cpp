@@ -904,9 +904,9 @@ bool VarMap::get_req_bool(const std::string& key) const {
       throw Test_Error("Test missing variable " + key);
    }
 
-   if(i->second == "true") {
+   if(i->second == "true" || i->second == "True") {
       return true;
-   } else if(i->second == "false") {
+   } else if(i->second == "false" || i->second == "False") {
       return false;
    } else {
       throw Test_Error("Invalid boolean for key '" + key + "' value '" + i->second + "'");

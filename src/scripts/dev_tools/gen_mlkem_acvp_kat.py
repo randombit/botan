@@ -103,8 +103,8 @@ def parse_arguments():
 def compress_kat_keygen(kat):
     kat['Z']  = kat.pop('z')
     kat['D']  = kat.pop('d')
-    kat['EK'] = shake_256_16(kat.pop('ek'))
-    kat['DK'] = shake_256_16(kat['D'] + kat['Z'])
+    kat['PK'] = shake_256_16(kat.pop('ek'))
+    kat['SK'] = shake_256_16(kat['D'] + kat['Z'])
     del kat['dk'] # remove the original decaps key (Botan uses the private seed as storage format)
 
     return kat
@@ -136,7 +136,7 @@ def main(args = None):
                 for kat in kat_by_paramset:
                     kat = compress_kat_keygen(kat)
                     for key in kat.keys():
-                        if key in ["Z", "D", "EK", "DK"]:
+                        if key in ["Z", "D", "PK", "SK"]:
                             print(key, '=', kat[key], file=output)
                     print("", file=output)
     if args.encapdecap_directory is not None:

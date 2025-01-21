@@ -5,6 +5,7 @@
 * Botan is released under the Simplified BSD License (see license.txt)
 */
 
+#include "test_pubkey_pqc.h"
 #include "test_rng.h"
 #include "tests.h"
 
@@ -19,6 +20,7 @@
    #include <botan/sphincsplus.h>
    #include <botan/internal/loadstor.h>
    #include <botan/internal/sp_hash.h>
+   #include <botan/internal/stl_util.h>
 
    #include "test_pubkey.h"
 
@@ -289,11 +291,65 @@ class Generic_SlhDsa_Verification_Tests final : public PK_Signature_Verification
       }
 };
 
+class SLH_DSA_ACVP_KAT_KeyGen_Tests final : public PK_PQC_ACVP_KAT_KeyGen_Test {
+   public:
+      SLH_DSA_ACVP_KAT_KeyGen_Tests() :
+            PK_PQC_ACVP_KAT_KeyGen_Test("SLH-DSA", "pubkey/slh_dsa_acvp_keygen.vec", "SKSEED,SKPRF,PKSEED") {}
+
+   private:
+      bool is_available(const std::string& mode) const final {
+         return Botan::Sphincs_Parameters::create(mode).is_available();
+      }
+
+      Fixed_Output_RNG rng_for_keygen(const VarMap& vars) const override {
+         const auto sk_seed = vars.get_req_bin("SKSEED");
+         const auto sk_prf = vars.get_req_bin("SKPRF");
+         const auto pk_seed = vars.get_req_bin("PKSEED");
+         return Fixed_Output_RNG(Botan::concat(sk_seed, sk_prf, pk_seed));
+      }
+};
+
+class SLH_DSA_ACVP_KAT_SigGen_Tests final : public PK_PQC_ACVP_KAT_SigGen_Test {
+   public:
+      SLH_DSA_ACVP_KAT_SigGen_Tests() : PK_PQC_ACVP_KAT_SigGen_Test("SLH-DSA", "pubkey/slh_dsa_acvp_siggen.vec") {}
+
+   private:
+      bool is_available(const std::string& mode) const final {
+         return Botan::Sphincs_Parameters::create(mode).is_available();
+      }
+
+      std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars,
+                                                           const std::string& params) const override {
+         auto sk = std::make_unique<Botan::SphincsPlus_PrivateKey>(vars.get_req_bin("SK"),
+                                                                   Botan::Sphincs_Parameters::create(params));
+         return sk;
+      }
+};
+
+class SLH_DSA_ACVP_KAT_SigVer_Tests final : public PK_PQC_ACVP_KAT_SigVer_Test {
+   public:
+      SLH_DSA_ACVP_KAT_SigVer_Tests() : PK_PQC_ACVP_KAT_SigVer_Test("SLH-DSA", "pubkey/slh_dsa_acvp_sigver.vec") {}
+
+   private:
+      bool is_available(const std::string& mode) const final {
+         return Botan::Sphincs_Parameters::create(mode).is_available();
+      }
+
+      std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars, const std::string& params) const override {
+         auto pk = std::make_unique<Botan::SphincsPlus_PublicKey>(vars.get_req_bin("PK"),
+                                                                  Botan::Sphincs_Parameters::create(params));
+         return pk;
+      }
+};
+
 BOTAN_REGISTER_TEST("pubkey", "sphincsplus", SPHINCS_Plus_Test);
 BOTAN_REGISTER_TEST("pubkey", "slh_dsa", SLH_DSA_Test);
 BOTAN_REGISTER_TEST("pubkey", "slh_dsa_keygen", SPHINCS_Plus_Keygen_Tests);
 BOTAN_REGISTER_TEST("pubkey", "slh_dsa_sign_generic", Generic_SlhDsa_Signature_Tests);
 BOTAN_REGISTER_TEST("pubkey", "slh_dsa_verify_generic", Generic_SlhDsa_Verification_Tests);
+BOTAN_REGISTER_TEST("pubkey", "slh_dsa_acvp_keygen", SLH_DSA_ACVP_KAT_KeyGen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "slh_dsa_acvp_siggen", SLH_DSA_ACVP_KAT_SigGen_Tests);
+BOTAN_REGISTER_TEST("pubkey", "slh_dsa_acvp_sigver", SLH_DSA_ACVP_KAT_SigVer_Tests);
 
 }  // namespace Botan_Tests
 

@@ -1,6 +1,7 @@
 /*
  * (C) 2023 Jack Lloyd
- *     2023 René Meusel - Rohde & Schwarz Cybersecurity
+ *     2023 René Meusel  - Rohde & Schwarz Cybersecurity
+ *     2025 Amos Treiber - Rohde & Schwarz Cybersecurity
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */
@@ -168,32 +169,54 @@ class PK_PQC_KEM_KAT_Test : public PK_Test {
 
 /**
  * These are abstractions over the Known Answer Tests from NIST's ACVP. These do not provide a seed and
- * instead provide directly the input to certain tests.
+ * instead provide directly the input to certain tests. They support all PQC ACVP test types:
+ * - KeyGen
+ * - Encap
+ * - Decap
+ * - SigGen
+ * - SigVer
+ * More Information can be found at https://pages.nist.gov/ACVP/
  */
-class PK_PQC_KEM_ACVP_KAT_KeyGen_Test : public PK_Test {
+class PK_PQC_ACVP_KAT_Test : public PK_Test {
    protected:
-      PK_PQC_KEM_ACVP_KAT_KeyGen_Test(const std::string& algo_name,
-                                      const std::string& input_file,
-                                      const std::string& further_optional_keys = "") :
-            PK_Test(
-               algo_name, input_file, further_optional_keys + (further_optional_keys.empty() ? "" : ",") + "EK,DK") {}
-
-      /// Create an RNG that can be used to generate the keypair. Values should be read from the KAT vector's @p vars
-      virtual Fixed_Output_RNG rng_for_keygen(const VarMap& vars) const = 0;
+      PK_PQC_ACVP_KAT_Test(const std::string& algo_name,
+                           const std::string& input_file,
+                           const std::string& req_keys = "",
+                           const std::string& opt_keys = "") :
+            PK_Test(algo_name, input_file, req_keys, opt_keys) {}
 
       /// Return true if the algorithm with the specified params should be tested
       virtual bool is_available(const std::string& params) const = 0;
 
-      virtual std::vector<uint8_t> compress_value(std::span<const uint8_t> value) const {
-         // Use SHAKE-256(128) as default
+      std::vector<uint8_t> compress_value(std::span<const uint8_t> value) {
+         // We always use SHAKE-256(128) for ACVP tests
          auto hash = Botan::HashFunction::create_or_throw("SHAKE-256(128)");
          const auto digest = hash->process(value);
          return {digest.begin(), digest.begin() + 16};
       }
 
    private:
-      bool skip_this_test(const std::string& params, const VarMap&) final { return !is_available(params); }
+      bool skip_this_test(const std::string& params, const VarMap&) final {
+   #if not defined(BOTAN_HAS_SHAKE)  // Since we always use SHAKE-256 for ACVP tests
+         BOTAN_UNUSED(params);
+         return true;
+   #endif
+         return !is_available(params);
+      }
+};
 
+class PK_PQC_ACVP_KAT_KeyGen_Test : public PK_PQC_ACVP_KAT_Test {
+   protected:
+      PK_PQC_ACVP_KAT_KeyGen_Test(const std::string& algo_name,
+                                  const std::string& input_file,
+                                  const std::string& req_keys = "",
+                                  const std::string& opt_keys = "") :
+            PK_PQC_ACVP_KAT_Test(algo_name, input_file, req_keys + (req_keys.empty() ? "" : ",") + "PK,SK", opt_keys) {}
+
+      /// Create an RNG that can be used to generate the keypair. Values should be read from the KAT vector's @p vars
+      virtual Fixed_Output_RNG rng_for_keygen(const VarMap& vars) const = 0;
+
+   private:
       Test::Result run_one_test(const std::string& params, const VarMap& vars) final {
          Test::Result result(Botan::fmt("PQC ACVP KAT for {} KeyGen with parameters {}", algo_name(), params));
 
@@ -204,18 +227,16 @@ class PK_PQC_KEM_ACVP_KAT_KeyGen_Test : public PK_Test {
          if(!result.test_not_null("Successfully generated private key", sk)) {
             return result;
          }
-         result.test_is_eq("Generated private key", compress_value(sk->raw_private_key_bits()), vars.get_req_bin("DK"));
+         result.test_is_eq("Generated private key", compress_value(sk->private_key_bits()), vars.get_req_bin("SK"));
 
          // Algorithm properties
          result.test_eq("Algorithm name", sk->algo_name(), algo_name());
-         result.confirm("Supported operation KeyEncapsulation",
-                        sk->supports_operation(Botan::PublicKeyOperation::KeyEncapsulation));
          result.test_gte("Key has reasonable estimated strength (lower)", sk->estimated_strength(), 64);
          result.test_lt("Key has reasonable estimated strength (upper)", sk->estimated_strength(), 512);
 
          // Extract Public Key
          auto pk = sk->public_key();
-         result.test_is_eq("Generated public key", compress_value(pk->public_key_bits()), vars.get_req_bin("EK"));
+         result.test_is_eq("Generated public key", compress_value(pk->public_key_bits()), vars.get_req_bin("PK"));
 
          result.confirm("All prepared random bits used for key generation", rng_keygen.empty());
 
@@ -223,10 +244,10 @@ class PK_PQC_KEM_ACVP_KAT_KeyGen_Test : public PK_Test {
       }
 };
 
-class PK_PQC_KEM_ACVP_KAT_Encap_Test : public PK_Test {
+class PK_PQC_KEM_ACVP_KAT_Encap_Test : public PK_PQC_ACVP_KAT_Test {
    protected:
       PK_PQC_KEM_ACVP_KAT_Encap_Test(const std::string& algo_name, const std::string& input_file) :
-            PK_Test(algo_name, input_file, "EK,M,K,C") {}
+            PK_PQC_ACVP_KAT_Test(algo_name, input_file, "EK,M,K,C") {}
 
       /// Create an RNG that can be used to generate the keypair. Values should be read from the KAT vector's @p vars
       virtual Fixed_Output_RNG rng_for_encap(const VarMap& vars) const {
@@ -236,19 +257,7 @@ class PK_PQC_KEM_ACVP_KAT_Encap_Test : public PK_Test {
       virtual std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars,
                                                                  const std::string& params) const = 0;
 
-      /// Return true if the algorithm with the specified params should be tested
-      virtual bool is_available(const std::string& params) const = 0;
-
    private:
-      bool skip_this_test(const std::string& params, const VarMap&) final { return !is_available(params); }
-
-      std::vector<uint8_t> compress_value(std::span<const uint8_t> value) {
-         // We always use SHAKE-256(128) for ML-KEM
-         auto hash = Botan::HashFunction::create_or_throw("SHAKE-256(128)");
-         const auto digest = hash->process(value);
-         return {digest.begin(), digest.begin() + 16};
-      }
-
       Test::Result run_one_test(const std::string& params, const VarMap& vars) final {
          Test::Result result(Botan::fmt("PQC ACVP KAT for {} Encap with parameters {}", algo_name(), params));
 
@@ -266,20 +275,15 @@ class PK_PQC_KEM_ACVP_KAT_Encap_Test : public PK_Test {
       }
 };
 
-class PK_PQC_KEM_ACVP_KAT_Decap_Test : public PK_Test {
+class PK_PQC_KEM_ACVP_KAT_Decap_Test : public PK_PQC_ACVP_KAT_Test {
    protected:
       PK_PQC_KEM_ACVP_KAT_Decap_Test(const std::string& algo_name, const std::string& input_file) :
-            PK_Test(algo_name, input_file, "C,DK,K") {}
+            PK_PQC_ACVP_KAT_Test(algo_name, input_file, "C,DK,K") {}
 
       virtual std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars,
                                                                    const std::string& params) const = 0;
 
-      /// Return true if the algorithm with the specified params should be tested
-      virtual bool is_available(const std::string& params) const = 0;
-
    private:
-      bool skip_this_test(const std::string& params, const VarMap&) final { return !is_available(params); }
-
       Test::Result run_one_test(const std::string& params, const VarMap& vars) final {
          Test::Result result(Botan::fmt("PQC ACVP KAT for {} Decap with parameters {}", algo_name(), params));
 
@@ -289,6 +293,77 @@ class PK_PQC_KEM_ACVP_KAT_Decap_Test : public PK_Test {
          auto dec = Botan::PK_KEM_Decryptor(*sk, null_rng, "Raw");
          const auto shared_key = dec.decrypt(vars.get_req_bin("C"), 0 /* no KDF */);
          result.test_is_eq("Decaps. Shared Secret", shared_key, Botan::lock(vars.get_req_bin("K")));
+
+         return result;
+      }
+};
+
+class PK_PQC_ACVP_KAT_SigGen_Test : public PK_PQC_ACVP_KAT_Test {
+   protected:
+      PK_PQC_ACVP_KAT_SigGen_Test(const std::string& algo_name, const std::string& input_file) :
+            PK_PQC_ACVP_KAT_Test(algo_name, input_file, "CONTEXT,SK,MESSAGE,SIGNATURE", "RND") {}
+
+      virtual std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars,
+                                                                   const std::string& params) const = 0;
+
+   private:
+      Fixed_Output_RNG rng_for_siggen(const VarMap& vars) const {
+         if(vars.has_key("RND")) {
+            const auto seed = vars.get_opt_bin("RND");
+            return Fixed_Output_RNG(seed);
+         } else {
+            return Fixed_Output_RNG();
+         }
+      }
+
+      Test::Result run_one_test(const std::string& params, const VarMap& vars) final {
+         Test::Result result(Botan::fmt("PQC ACVP KAT for {} SigGen with parameters {}", algo_name(), params));
+
+         auto rng_siggen = rng_for_siggen(vars);
+
+         const auto sk = load_private_key(vars, params);
+         if(!result.test_not_null("Successfully loaded private key", sk)) {
+            return result;
+         }
+
+         auto signer = sk->signer()
+                          .with_context(vars.get_req_bin("CONTEXT"))
+                          .with_deterministic_signature(!vars.has_key("RND"))
+                          .with_rng(rng_siggen)  // TODO: This should be optional (provided to sign_message)
+                          .create();
+
+         const auto sig = signer.sign_message(vars.get_req_bin("MESSAGE"), rng_siggen);
+
+         result.test_is_eq("Signature", compress_value(sig), vars.get_req_bin("SIGNATURE"));
+
+         result.confirm("All prepared random bits used for sig generation", rng_siggen.empty());
+
+         return result;
+      }
+};
+
+class PK_PQC_ACVP_KAT_SigVer_Test : public PK_PQC_ACVP_KAT_Test {
+   protected:
+      PK_PQC_ACVP_KAT_SigVer_Test(const std::string& algo_name, const std::string& input_file) :
+            PK_PQC_ACVP_KAT_Test(algo_name, input_file, "CONTEXT,PK,MESSAGE,SIGNATURE,RESULT") {}
+
+      virtual std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars,
+                                                                 const std::string& params) const = 0;
+
+   private:
+      Test::Result run_one_test(const std::string& params, const VarMap& vars) final {
+         Test::Result result(Botan::fmt("PQC ACVP KAT for {} SigVer with parameters {}", algo_name(), params));
+
+         const auto pk = load_public_key(vars, params);
+         if(!result.test_not_null("Successfully loaded public key", pk)) {
+            return result;
+         }
+
+         auto verifier = pk->signature_verifier().with_context(vars.get_req_bin("CONTEXT")).create();
+
+         const auto res = verifier.verify_message(vars.get_req_bin("MESSAGE"), vars.get_req_bin("SIGNATURE"));
+
+         result.test_is_eq("Result", res, vars.get_req_bool("RESULT"));
 
          return result;
       }

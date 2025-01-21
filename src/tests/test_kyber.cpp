@@ -127,9 +127,7 @@ class Kyber_KAT_Tests : public PK_PQC_KEM_KAT_Test {
             PK_PQC_KEM_KAT_Test(algo_name, kat_file, further_optional_keys) {}
 
    private:
-      Botan::KyberMode get_mode(const std::string& mode) const { return Botan::KyberMode(mode); }
-
-      bool is_available(const std::string& mode) const final { return get_mode(mode).is_available(); }
+      bool is_available(const std::string& mode) const final { return Botan::KyberMode(mode).is_available(); }
 
       std::vector<uint8_t> map_value(const std::string& mode,
                                      std::span<const uint8_t> value,
@@ -140,7 +138,7 @@ class Kyber_KAT_Tests : public PK_PQC_KEM_KAT_Test {
 
          // We use different hash functions for Kyber 90s, as those are
          // consistent with the algorithm requirements of the implementations.
-         std::string_view hash_name = get_mode(mode).is_90s() ? "SHA-256" : "SHAKE-256(128)";
+         std::string_view hash_name = Botan::KyberMode(mode).is_90s() ? "SHA-256" : "SHAKE-256(128)";
 
          auto hash = Botan::HashFunction::create_or_throw(hash_name);
          const auto digest = hash->process(value);
@@ -148,11 +146,11 @@ class Kyber_KAT_Tests : public PK_PQC_KEM_KAT_Test {
       }
 
       Fixed_Output_RNG rng_for_keygen(const std::string& mode, Botan::RandomNumberGenerator& rng) const final {
-         if(get_mode(mode).is_kyber_round3()) {
+         if(Botan::KyberMode(mode).is_kyber_round3()) {
             const auto seed = rng.random_vec(32);
             const auto z = rng.random_vec(32);
             return Fixed_Output_RNG(Botan::concat(seed, z));
-         } else if(get_mode(mode).is_ml_kem()) {
+         } else if(Botan::KyberMode(mode).is_ml_kem()) {
             const auto z = rng.random_vec(32);
             const auto d = rng.random_vec(32);
             return Fixed_Output_RNG(Botan::concat(d, z));
@@ -176,15 +174,12 @@ class ML_KEM_KAT_Tests : public Kyber_KAT_Tests {
       ML_KEM_KAT_Tests() : Kyber_KAT_Tests("ML-KEM", "pubkey/ml_kem.vec", "CT_N,SS_N") {}
 };
 
-class ML_KEM_ACVP_KAT_KeyGen_Tests : public PK_PQC_KEM_ACVP_KAT_KeyGen_Test {
+class ML_KEM_ACVP_KAT_KeyGen_Tests final : public PK_PQC_ACVP_KAT_KeyGen_Test {
    public:
-      ML_KEM_ACVP_KAT_KeyGen_Tests() :
-            PK_PQC_KEM_ACVP_KAT_KeyGen_Test("ML-KEM", "pubkey/ml_kem_acvp_keygen.vec", "Z,D") {}
+      ML_KEM_ACVP_KAT_KeyGen_Tests() : PK_PQC_ACVP_KAT_KeyGen_Test("ML-KEM", "pubkey/ml_kem_acvp_keygen.vec", "Z,D") {}
 
    private:
-      Botan::KyberMode get_mode(const std::string& mode) const { return Botan::KyberMode(mode); }
-
-      bool is_available(const std::string& mode) const final { return get_mode(mode).is_available(); }
+      bool is_available(const std::string& mode) const final { return Botan::KyberMode(mode).is_available(); }
 
       Fixed_Output_RNG rng_for_keygen(const VarMap& vars) const override {
          const auto d = vars.get_req_bin("D");
@@ -193,17 +188,15 @@ class ML_KEM_ACVP_KAT_KeyGen_Tests : public PK_PQC_KEM_ACVP_KAT_KeyGen_Test {
       }
 };
 
-class ML_KEM_PQC_KEM_ACVP_KAT_Encap_Test : public PK_PQC_KEM_ACVP_KAT_Encap_Test {
+class ML_KEM_PQC_KEM_ACVP_KAT_Encap_Test final : public PK_PQC_KEM_ACVP_KAT_Encap_Test {
    public:
       ML_KEM_PQC_KEM_ACVP_KAT_Encap_Test() : PK_PQC_KEM_ACVP_KAT_Encap_Test("ML-KEM", "pubkey/ml_kem_acvp_encap.vec") {}
 
    private:
-      Botan::KyberMode get_mode(const std::string& mode) const { return Botan::KyberMode(mode); }
-
-      bool is_available(const std::string& mode) const final { return get_mode(mode).is_available(); }
+      bool is_available(const std::string& mode) const final { return Botan::KyberMode(mode).is_available(); }
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars, const std::string& mode) const final {
-         return std::make_unique<Botan::Kyber_PublicKey>(vars.get_req_bin("EK"), get_mode(mode));
+         return std::make_unique<Botan::Kyber_PublicKey>(vars.get_req_bin("EK"), Botan::KyberMode(mode));
       }
 };
 
