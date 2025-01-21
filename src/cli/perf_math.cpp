@@ -19,7 +19,6 @@
 
 #if defined(BOTAN_HAS_DL_GROUP)
    #include <botan/dl_group.h>
-   #include <botan/internal/workfactor.h>
 #endif
 
 namespace Botan_CLI {
@@ -299,22 +298,22 @@ BOTAN_REGISTER_PERF_TEST("random_prime", PerfTest_RandomPrime);
 class PerfTest_ModExp final : public PerfTest {
    public:
       void go(const PerfConfig& config) override {
-         for(size_t group_bits : {1024, 1536, 2048, 3072, 4096}) {
-            const std::string group_bits_str = std::to_string(group_bits);
-            const Botan::DL_Group group("modp/srp/" + group_bits_str);
+         for(size_t group_bits : {1024, 1536, 2048, 3072, 4096, 6144, 8192}) {
+            const std::string group_name = "modp/ietf/" + std::to_string(group_bits);
+            const Botan::DL_Group group(group_name);
 
-            const size_t e_bits = Botan::dl_exponent_size(group_bits);
+            const size_t e_bits = group.exponent_bits();
             const size_t f_bits = group_bits - 1;
 
             const Botan::BigInt random_e(config.rng(), e_bits);
             const Botan::BigInt random_f(config.rng(), f_bits);
 
-            auto e_timer = config.make_timer(group_bits_str + " short exponent");
-            auto f_timer = config.make_timer(group_bits_str + "  full exponent");
+            auto e_timer = config.make_timer(group_name + " short exp");
+            auto f_timer = config.make_timer(group_name + "  full exp");
 
             while(f_timer->under(config.runtime())) {
-               e_timer->run([&]() { group.power_g_p(random_e); });
-               f_timer->run([&]() { group.power_g_p(random_f); });
+               e_timer->run([&]() { group.power_g_p(random_e, e_bits); });
+               f_timer->run([&]() { group.power_g_p(random_f, f_bits); });
             }
 
             config.record_result(*e_timer);
