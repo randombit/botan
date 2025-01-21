@@ -393,7 +393,7 @@ class DL_Group_Info final : public Command {
       }
 
       void go() override {
-         Botan::DL_Group dl_group(get_arg("name"));
+         auto dl_group = Botan::DL_Group::from_name(get_arg("name"));
 
          if(flag_set("pem")) {
             output() << dl_group.PEM_encode(Botan::DL_Group_Format::ANSI_X9_42_DH_PARAMETERS);

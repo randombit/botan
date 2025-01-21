@@ -195,6 +195,24 @@ DL_Group::DL_Group(std::string_view str) {
    }
 }
 
+DL_Group DL_Group::from_name(std::string_view name) {
+   auto data = DL_group_info(name);
+
+   if(!data) {
+      throw Invalid_Argument(fmt("DL_Group: Unknown group '{}'", name));
+   }
+
+   return DL_Group(data);
+}
+
+//static
+DL_Group DL_Group::from_PEM(std::string_view pem) {
+   std::string label;
+   const std::vector<uint8_t> ber = unlock(PEM_Code::decode(pem, label));
+   DL_Group_Format format = pem_label_to_dl_format(label);
+   return DL_Group(ber, format);
+}
+
 namespace {
 
 /*
@@ -584,14 +602,6 @@ DL_Group::DL_Group(const uint8_t ber[], size_t ber_len, DL_Group_Format format) 
 
 void DL_Group::BER_decode(const std::vector<uint8_t>& ber, DL_Group_Format format) {
    m_data = BER_decode_DL_group(ber.data(), ber.size(), format, DL_Group_Source::ExternalSource);
-}
-
-//static
-DL_Group DL_Group::DL_Group_from_PEM(std::string_view pem) {
-   std::string label;
-   const std::vector<uint8_t> ber = unlock(PEM_Code::decode(pem, label));
-   DL_Group_Format format = pem_label_to_dl_format(label);
-   return DL_Group(ber, format);
 }
 
 }  // namespace Botan

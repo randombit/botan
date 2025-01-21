@@ -63,14 +63,28 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       *
       * @warning This constructor also accepts PEM inputs. This behavior is
       * deprecated and will be removed in a future major release. Instead
-      * use DL_Group_from_PEM function
+      * use DL_Group::from_PEM or DL_Group::from_name
       */
       explicit DL_Group(std::string_view name);
+
+      /**
+      * Construct a DL group that is registered in the configuration.
+      * @param name the name of the group, for example "modp/ietf/3072"
+      * @throws Invalid_Argument if the named group is unknown
+      */
+      static DL_Group from_name(std::string_view name);
 
       /*
       * Read a PEM representation
       */
-      static DL_Group DL_Group_from_PEM(std::string_view pem);
+      static DL_Group from_PEM(std::string_view pem);
+
+      /*
+      * Read a PEM representation
+      */
+      BOTAN_DEPRECATED("Use from_PEM") static DL_Group DL_Group_from_PEM(std::string_view pem) {
+         return DL_Group::from_PEM(pem);
+      }
 
       /**
       * Create a new group randomly.
@@ -357,6 +371,8 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       static std::shared_ptr<DL_Group_Data> DL_group_info(std::string_view name);
 
    private:
+      DL_Group(std::shared_ptr<DL_Group_Data> data) : m_data(std::move(data)) {}
+
       static std::shared_ptr<DL_Group_Data> load_DL_group_info(const char* p_str, const char* q_str, const char* g_str);
 
       static std::shared_ptr<DL_Group_Data> load_DL_group_info(const char* p_str, const char* g_str);

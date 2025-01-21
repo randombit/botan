@@ -695,7 +695,7 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
          return "modp/ietf/2048";
       }();
 
-      DL_Group modp_group(group_id);
+      auto modp_group = DL_Group::from_name(group_id);
 
    #if defined(BOTAN_HAS_DIFFIE_HELLMAN)
       if(alg_name == "DH") {

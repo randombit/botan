@@ -26,7 +26,7 @@ class ElGamal_Encrypt_Tests final : public PK_Encryption_Decryption_Test {
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override {
          const Botan::BigInt x = vars.get_req_bn("Secret");
-         const Botan::DL_Group group(vars.get_req_str("Group"));
+         auto group = Botan::DL_Group::from_name(vars.get_req_str("Group"));
 
          return std::make_unique<Botan::ElGamal_PrivateKey>(group, x);
       }
@@ -56,7 +56,8 @@ class ElGamal_Keygen_Tests final : public PK_Key_Generation_Test {
       std::unique_ptr<Botan::Public_Key> public_key_from_raw(std::string_view keygen_params,
                                                              std::string_view /* provider */,
                                                              std::span<const uint8_t> raw_pk) const override {
-         return std::make_unique<Botan::ElGamal_PublicKey>(Botan::DL_Group(keygen_params), Botan::BigInt(raw_pk));
+         return std::make_unique<Botan::ElGamal_PublicKey>(Botan::DL_Group::from_name(keygen_params),
+                                                           Botan::BigInt(raw_pk));
       }
 };
 
