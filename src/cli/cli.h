@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <cstdint>
 #include "cli_exceptions.h"
 
 namespace Botan {
