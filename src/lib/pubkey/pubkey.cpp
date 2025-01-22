@@ -39,32 +39,39 @@ secure_vector<uint8_t> PK_Decryptor::decrypt_or_random(const uint8_t in[],
                                                        const uint8_t required_content_bytes[],
                                                        const uint8_t required_content_offsets[],
                                                        size_t required_contents_length) const {
-   const secure_vector<uint8_t> fake_pms = rng.random_vec(expected_pt_len);
+   const secure_vector<uint8_t> fake_pms = [&]() {
+      auto pms = rng.random_vec(expected_pt_len);
+
+      for(size_t i = 0; i != required_contents_length; ++i) {
+         const uint8_t exp = required_content_bytes[i];
+
+         /*
+         If an offset repeats we don't detect this and just return a PMS that satisfies
+         the last requested index. If the requested (idx,value) tuple is the same, that's
+         fine and just redundant. If they disagree, decryption will always fail, since the
+         same byte cannot possibly have two distinct values.
+         */
+         const uint8_t off = required_content_offsets[i];
+         BOTAN_ASSERT(off < expected_pt_len, "Offset in range of plaintext");
+         pms[off] = exp;
+      }
+
+      return pms;
+   }();
 
    uint8_t decrypt_valid = 0;
    secure_vector<uint8_t> decoded = do_decrypt(decrypt_valid, in, length);
 
    auto valid_mask = CT::Mask<uint8_t>::is_equal(decrypt_valid, 0xFF);
-   valid_mask &= CT::Mask<uint8_t>(CT::Mask<size_t>::is_zero(decoded.size() ^ expected_pt_len));
+   valid_mask &= CT::Mask<uint8_t>(CT::Mask<size_t>::is_equal(decoded.size(), expected_pt_len));
 
    decoded.resize(expected_pt_len);
 
    for(size_t i = 0; i != required_contents_length; ++i) {
-      /*
-      These values are chosen by the application and for TLS are constants,
-      so this early failure via assert is fine since we know 0,1 < 48
-
-      If there is a protocol that has content checks on the key where
-      the expected offsets are controllable by the attacker this could
-      still leak.
-
-      Alternately could always reduce the offset modulo the length?
-      */
-
       const uint8_t exp = required_content_bytes[i];
-      const uint8_t off = required_content_offsets[i];
 
-      BOTAN_ASSERT(off < expected_pt_len, "Offset in range of plaintext");
+      // We know off is in range because we already checked it when creating the fake premaster above
+      const uint8_t off = required_content_offsets[i];
 
       auto eq = CT::Mask<uint8_t>::is_equal(decoded[off], exp);
 
