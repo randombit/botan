@@ -51,25 +51,25 @@ class DL_Group_Tests final : public Test {
       static Test::Result test_dl_encoding() {
          Test::Result result("DL_Group encoding");
 
-         const Botan::DL_Group orig("modp/ietf/1024");
+         const auto orig = Botan::DL_Group::from_name("modp/ietf/1024");
 
          const std::string pem1 = orig.PEM_encode(Botan::DL_Group_Format::ANSI_X9_42);
          const std::string pem2 = orig.PEM_encode(Botan::DL_Group_Format::ANSI_X9_57);
          const std::string pem3 = orig.PEM_encode(Botan::DL_Group_Format::PKCS_3);
 
-         Botan::DL_Group group1(pem1);
+         const auto group1 = Botan::DL_Group::from_PEM(pem1);
 
          result.test_eq("Same p in X9.42 decoding", group1.get_p(), orig.get_p());
          result.test_eq("Same q in X9.42 decoding", group1.get_q(), orig.get_q());
          result.test_eq("Same g in X9.42 decoding", group1.get_g(), orig.get_g());
 
-         Botan::DL_Group group2(pem2);
+         const auto group2 = Botan::DL_Group::from_PEM(pem2);
 
          result.test_eq("Same p in X9.57 decoding", group2.get_p(), orig.get_p());
          result.test_eq("Same q in X9.57 decoding", group2.get_q(), orig.get_q());
          result.test_eq("Same g in X9.57 decoding", group2.get_g(), orig.get_g());
 
-         Botan::DL_Group group3(pem3);
+         const auto group3 = Botan::DL_Group::from_PEM(pem3);
 
          result.test_eq("Same p in X9.57 decoding", group3.get_p(), orig.get_p());
          // no q in PKCS #3 format
@@ -175,7 +175,7 @@ class DL_Named_Group_Tests final : public Test {
 
          for(const std::string& name : dl_named) {
             // Confirm we can load every group we expect
-            Botan::DL_Group group(name);
+            auto group = Botan::DL_Group::from_name(name);
 
             result.test_ne("DL_Group p is set", group.get_p(), 0);
             result.test_ne("DL_Group g is set", group.get_g(), 0);

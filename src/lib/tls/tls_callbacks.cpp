@@ -172,7 +172,7 @@ DL_Group get_dl_group(const std::variant<TLS::Group_Params, DL_Group>& group) {
    // groups.
    return std::visit(
       overloaded{[](const DL_Group& dl_group) { return dl_group; },
-                 [&](TLS::Group_Params group_param) { return DL_Group(group_param.to_string().value()); }},
+                 [&](TLS::Group_Params group_param) { return DL_Group::from_name(group_param.to_string().value()); }},
       group);
 }
 

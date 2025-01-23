@@ -300,7 +300,7 @@ class PerfTest_ModExp final : public PerfTest {
       void go(const PerfConfig& config) override {
          for(size_t group_bits : {1024, 1536, 2048, 3072, 4096, 6144, 8192}) {
             const std::string group_name = "modp/ietf/" + std::to_string(group_bits);
-            const Botan::DL_Group group(group_name);
+            auto group = Botan::DL_Group::from_name(group_name);
 
             const size_t e_bits = group.exponent_bits();
             const size_t f_bits = group_bits - 1;

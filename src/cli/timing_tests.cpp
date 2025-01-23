@@ -324,7 +324,7 @@ uint64_t ECC_Mul_Timing_Test::measure_critical_function(const std::vector<uint8_
 
 class Powmod_Timing_Test final : public Timing_Test {
    public:
-      explicit Powmod_Timing_Test(std::string_view dl_group) : m_group(dl_group) {}
+      explicit Powmod_Timing_Test(std::string_view dl_group) : m_group(Botan::DL_Group::from_name(dl_group)) {}
 
       uint64_t measure_critical_function(const std::vector<uint8_t>& input) override;
 
