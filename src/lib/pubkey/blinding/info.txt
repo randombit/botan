@@ -5,6 +5,7 @@ PUBLIC_KEY_BLINDING -> 20250125
 <module_info>
 name -> "Public Key Blinding"
 brief -> "Helper for BigInt blinding"
+type -> "Internal"
 </module_info>
 
 <header:internal>
