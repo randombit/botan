@@ -1,0 +1,17 @@
+<defines>
+PUBLIC_KEY_BLINDING -> 20250125
+</defines>
+
+<module_info>
+name -> "Public Key Blinding"
+brief -> "Helper for BigInt blinding"
+</module_info>
+
+<header:internal>
+blinding.h
+</header:internal>
+
+<requires>
+bigint
+rng
+</requires>
