@@ -419,44 +419,47 @@ class BOTAN_PUBLIC_API(2, 0) PK_Key_Agreement final {
       /**
       * Perform Key Agreement Operation
       * @param key_len the desired key output size (ignored if "Raw" KDF is used)
-      * @param in the other parties key
-      * @param in_len the length of in in bytes
-      * @param params extra derivation params
-      * @param params_len the length of params in bytes
+      * @param peer_key the other parties key
+      * @param peer_key_len the length of peer_key in bytes
+      * @param salt extra derivation salt
+      * @param salt_len the length of salt in bytes
       */
       SymmetricKey derive_key(
-         size_t key_len, const uint8_t in[], size_t in_len, const uint8_t params[], size_t params_len) const;
+         size_t key_len, const uint8_t peer_key[], size_t peer_key_len, const uint8_t salt[], size_t salt_len) const;
 
       /**
       * Perform Key Agreement Operation
       * @param key_len the desired key output size (ignored if "Raw" KDF is used)
-      * @param in the other parties key
-      * @param params extra derivation params
-      * @param params_len the length of params in bytes
+      * @param peer_key the other parties key
+      * @param salt extra derivation salt
+      * @param salt_len the length of salt in bytes
       */
       SymmetricKey derive_key(size_t key_len,
-                              std::span<const uint8_t> in,
-                              const uint8_t params[],
-                              size_t params_len) const {
-         return derive_key(key_len, in.data(), in.size(), params, params_len);
+                              std::span<const uint8_t> peer_key,
+                              const uint8_t salt[],
+                              size_t salt_len) const {
+         return derive_key(key_len, peer_key.data(), peer_key.size(), salt, salt_len);
       }
 
       /**
       * Perform Key Agreement Operation
       * @param key_len the desired key output size (ignored if "Raw" KDF is used)
-      * @param in the other parties key
-      * @param in_len the length of in in bytes
-      * @param params extra derivation params
+      * @param peer_key the other parties key
+      * @param peer_key_len the length of peer_key in bytes
+      * @param salt extra derivation info
       */
-      SymmetricKey derive_key(size_t key_len, const uint8_t in[], size_t in_len, std::string_view params = "") const;
+      SymmetricKey derive_key(size_t key_len,
+                              const uint8_t peer_key[],
+                              size_t peer_key_len,
+                              std::string_view salt = "") const;
 
       /**
       * Perform Key Agreement Operation
       * @param key_len the desired key output size (ignored if "Raw" KDF is used)
-      * @param in the other parties key
-      * @param params extra derivation params
+      * @param peer_key the other parties key
+      * @param salt extra derivation info
       */
-      SymmetricKey derive_key(size_t key_len, const std::span<const uint8_t> in, std::string_view params = "") const;
+      SymmetricKey derive_key(size_t key_len, std::span<const uint8_t> peer_key, std::string_view salt = "") const;
 
       /**
       * Return the underlying size of the value that is agreed.
