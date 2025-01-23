@@ -37,6 +37,20 @@ BOTAN_TEST_API
 void ct_divide(const BigInt& x, const BigInt& y, BigInt& q, BigInt& r);
 
 /**
+* BigInt division, const time variant, 2^k variant
+*
+* This runs with control flow independent of the value of y.
+* This function leaks the value of k and the length of y.
+* If k < bits(y) this returns zero
+*
+* @param k an integer
+* @param y a positive integer
+* @return q equal to 2**k / y
+*/
+BOTAN_TEST_API
+BigInt ct_divide_pow2k(size_t k, const BigInt& y);
+
+/**
 * BigInt division, const time variant
 *
 * This runs with control flow independent of the values of x/y.

@@ -401,6 +401,43 @@ class BigInt_Div_Test final : public Text_Based_Test {
 
 BOTAN_REGISTER_TEST("math", "bn_div", BigInt_Div_Test);
 
+class BigInt_DivPow2k_Test final : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         Test::Result result("BigInt ct_divide_pow2k");
+
+         for(size_t k = 2; k != 128; ++k) {
+            auto div1 = Botan::ct_divide_pow2k(k, 1);
+            result.test_eq("ct_divide_pow2k div 1", div1, Botan::BigInt::power_of_2(k));
+
+            auto div2 = Botan::ct_divide_pow2k(k, 2);
+            result.test_eq("ct_divide_pow2k div 2", div2, Botan::BigInt::power_of_2(k - 1));
+
+            auto div4 = Botan::ct_divide_pow2k(k, 4);
+            result.test_eq("ct_divide_pow2k div 4", div4, Botan::BigInt::power_of_2(k - 2));
+         }
+
+         for(size_t k = 4; k != 512; ++k) {
+            const BigInt pow2k = BigInt::power_of_2(k);
+
+            for(size_t y_bits = k / 2; y_bits <= (k + 2); ++y_bits) {
+               const BigInt y(rng(), y_bits, false);
+               if(y.is_zero()) {
+                  continue;
+               }
+               const BigInt ct_pow2k = ct_divide_pow2k(k, y);
+               const BigInt ref = BigInt::power_of_2(k) / y;
+
+               result.test_eq("ct_divide_pow2k matches Knuth division", ct_pow2k, ref);
+            }
+         }
+
+         return {result};
+      }
+};
+
+BOTAN_REGISTER_TEST("math", "bn_div_pow2k", BigInt_DivPow2k_Test);
+
 class BigInt_Mod_Test final : public Text_Based_Test {
    public:
       BigInt_Mod_Test() : Text_Based_Test("bn/mod.vec", "In1,In2,Output") {}

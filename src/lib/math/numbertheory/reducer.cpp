@@ -29,8 +29,10 @@ Modular_Reducer::Modular_Reducer(const BigInt& mod) {
       m_mod_words = m_modulus.sig_words();
 
       // Compute mu = floor(2^{2k} / m)
-      m_mu.set_bit(2 * BOTAN_MP_WORD_BITS * m_mod_words);
-      m_mu = ct_divide(m_mu, m_modulus);
+      const size_t mu_bits = 2 * BOTAN_MP_WORD_BITS * m_mod_words;
+      m_mu.set_bit(mu_bits);
+      m_mu = ct_divide_pow2k(mu_bits, m_modulus);
+      //m_mu = BigInt::power_of_2(mu_bits) / m_modulus;
    }
 }
 
