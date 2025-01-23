@@ -16,66 +16,36 @@
 
 namespace {
 
-const char* const fixed_rsa_key =
-   "-----BEGIN PRIVATE KEY-----\n"
-   "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCe6qqpMQVJ7zCJ\n"
-   "oSnpxia0yO6M7Ie3FGqPcd0DzueC+kWPvuHQ+PpP5vfO6qqRaDVII37PFX5NUZQm\n"
-   "GK/rAm7spjIHTCMgqSZ8pN13LU8m1gDwIdu9al16LXN9zZjB67uLlFn2trtLi234\n"
-   "i0cnyeF8IC0cz7tgCOzMSVEBcqJjkdgGrZ3WUgOXecVm2lXVrYlEiaSxFp4VOE9k\n"
-   "RFeVrELCjmNtc4hRd1yJsF+vObCtvyqGYQE1Qcb0MVSQDBHMkiUVmO6zuW7td5ef\n"
-   "O/1OyntQJGyVa+SnWbkSLCybta2J7MreHENrF5GA0K1KL140SNRHeWifRMuNQua7\n"
-   "qmKXMBTFAgMBAAECggEAIk3fxyQI0zvpy1vZ01ft1QqmzA7nAPNMSWi33/GS8iga\n"
-   "SfxXfKeySPs/tQ/dAARxs//NiOBH4mLgyxR7LQzaawU5OXALCSraXv+ruuUx990s\n"
-   "WKnGaG4EfbJAAwEVn47Gbkv425P4fEc91vAhzQn8PbIoatbAyOtESpjs/pYDTeC/\n"
-   "mnJId8gqO90cqyRECEMjk9sQ8iEjWPlik4ayGlUVbeeMu6/pJ9F8IZEgkLZiNDAB\n"
-   "4anmOFaT7EmqUjI4IlcaqfbbXyDXlvWUYukidEss+CNvPuqbQHBDnpFVvBxdDR2N\n"
-   "Uj2D5Xd5blcIe2/+1IVRnznjoQ5zvutzb7ThBmMehQKBgQDOITKG0ht2kXLxjVoR\n"
-   "r/pVpx+f3hs3H7wE0+vrLHoQgkVjpMWXQ47YuZTT9rCOOYNI2cMoH2D27t1j78/B\n"
-   "9kGYABUVpvQQ+6amqJDI1eYI6e68TPueEDjeALfSCdmPNiI3lZZrCIK9XLpkoy8K\n"
-   "tGYBRRJ+JJxjj1zPXj9SGshPgwKBgQDFXUtoxY3mCStH3+0b1qxGG9r1L5goHEmd\n"
-   "Am8WBYDheNpL0VqPNzouhuM/ZWMGyyAs/py6aLATe+qhR1uX5vn7LVZwjCSONZ4j\n"
-   "7ieEEUh1BHetPI1oI5PxgokRYfVuckotqVseanI/536Er3Yf2FXNQ1/ceVp9WykX\n"
-   "3mYTKMhQFwKBgQDKakcXpZNaZ5IcKdZcsBZ/rdGcR5sqEnursf9lvRNQytwg8Vkn\n"
-   "JSxNHlBLpV/TCh8lltHRwJ6TXhUBYij+KzhWbx5FWOErHDOWTMmArqtp7W6GcoJT\n"
-   "wVJWjxXzp8CApYQMWVSQXpckJL7UvHohZO0WKiHyxTjde5aD++TqV2qEyQKBgBbD\n"
-   "jvoTpy08K4DLxCZs2Uvw1I1pIuylbpwsdrGciuP2s38BM6fHH+/T4Qwj3osfDKQD\n"
-   "7gHWJ1Dn/wUBHQBlRLoC3bB3iZPZfVb5lhc2gxv0GvWhQVIcoGi/vJ2DpfJKPmIL\n"
-   "4ZWdg3X5dm9JaZ98rVDSj5D3ckd5J0E4hp95GbmbAoGBAJJHM4O9lx60tIjw9Sf/\n"
-   "QmKWyUk0NLnt8DcgRMW7fVxtzPNDy9DBKGIkDdWZ2s+ForICA3C9WSxBC1EOEHGG\n"
-   "xkg2xKt66CeutGroP6M191mHQrRClt1VbEYzQFX21BCk5kig9i/BURyoTHtFiV+t\n"
-   "kbf4VLg8Vk9u/R3RU1HsYWhe\n"
-   "-----END PRIVATE KEY-----\n";
+const char* const fixed_ecdsa_key =
+   "-----BEGIN PRIVATE KEY-----"
+   "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfUjnfxgvrIyrqa5N"
+   "47X1W50cVStDPbASwRcY6zqehjyhRANCAAQTNF0poMBM4tuCY50NrDJU8za/SK45"
+   "erOdFpGK7KRWtBE9zNj6J0f1UB+K8GdekFD2me+iL63v+uBqo/PHRPT9"
+   "-----END PRIVATE KEY-----";
 
-const char* const fixed_rsa_cert =
-   "-----BEGIN CERTIFICATE-----\n"
-   "MIIDUDCCAjgCCQD7pIb1ZsoafjANBgkqhkiG9w0BAQsFADBqMQswCQYDVQQGEwJW\n"
-   "VDEQMA4GA1UECAwHVmVybW9udDEWMBQGA1UEBwwNVGhlIEludGVybmV0czEUMBIG\n"
-   "A1UECgwLTWFuZ29zIFIgVXMxGzAZBgNVBAMMEnNlcnZlci5leGFtcGxlLmNvbTAe\n"
-   "Fw0xNjAxMDYxNzQ3MjNaFw0yNjAxMDMxNzQ3MjNaMGoxCzAJBgNVBAYTAlZUMRAw\n"
-   "DgYDVQQIDAdWZXJtb250MRYwFAYDVQQHDA1UaGUgSW50ZXJuZXRzMRQwEgYDVQQK\n"
-   "DAtNYW5nb3MgUiBVczEbMBkGA1UEAwwSc2VydmVyLmV4YW1wbGUuY29tMIIBIjAN\n"
-   "BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnuqqqTEFSe8wiaEp6cYmtMjujOyH\n"
-   "txRqj3HdA87ngvpFj77h0Pj6T+b3zuqqkWg1SCN+zxV+TVGUJhiv6wJu7KYyB0wj\n"
-   "IKkmfKTddy1PJtYA8CHbvWpdei1zfc2Yweu7i5RZ9ra7S4tt+ItHJ8nhfCAtHM+7\n"
-   "YAjszElRAXKiY5HYBq2d1lIDl3nFZtpV1a2JRImksRaeFThPZERXlaxCwo5jbXOI\n"
-   "UXdcibBfrzmwrb8qhmEBNUHG9DFUkAwRzJIlFZjus7lu7XeXnzv9Tsp7UCRslWvk\n"
-   "p1m5Eiwsm7WtiezK3hxDaxeRgNCtSi9eNEjUR3lon0TLjULmu6pilzAUxQIDAQAB\n"
-   "MA0GCSqGSIb3DQEBCwUAA4IBAQA1eZGc/4V7z/E/6eG0hVkzoAZeuTcSP7WqBSx+\n"
-   "OP2yh0163UYjoa6nehmkKYQQ9PbYPZGzIcl+dBFyYzy6jcp0NdtzpWnTFrjl4rMq\n"
-   "akcQ1D0LTYjJXVP9G/vF/SvatOFeVTnQmLlLt/a8ZtRUINqejeZZPzH8ifzFW6tu\n"
-   "mlhTVIEKyPHpxClh5Y3ubw/mZYygekFTqMkTx3FwJxKU8J6rYGZxanWAODUIvCUo\n"
-   "Fxer1qC5Love3uWl3vXPLEZWZdORnExSRByzz2immBP2vX4zYZoeZRhTQ9ae1TIV\n"
-   "Dk02a/1AOJZdZReDbgXhlqaUx5pk/rzo4mDzvu5HSCeXmClz\n"
-   "-----END CERTIFICATE-----\n";
+const char* const fixed_ecdsa_cert =
+   "-----BEGIN CERTIFICATE-----"
+   "MIIB3zCCAYWgAwIBAgIRAPFi6dun9OY7YLuZHqKzdEMwCgYIKoZIzj0EAwIwOTEa"
+   "MBgGA1UEAwwRSXQncyBGdXp6aW5nIFRpbWUxCzAJBgNVBAYTAlZUMQ4wDAYDVQQK"
+   "EwVCb3RhbjAeFw0yNTAxMjAxMzI0MjdaFw0zODAxMTgxMzI0MjdaMDkxGjAYBgNV"
+   "BAMMEUl0J3MgRnV6emluZyBUaW1lMQswCQYDVQQGEwJWVDEOMAwGA1UEChMFQm90"
+   "YW4wWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAQTNF0poMBM4tuCY50NrDJU8za/"
+   "SK45erOdFpGK7KRWtBE9zNj6J0f1UB+K8GdekFD2me+iL63v+uBqo/PHRPT9o24w"
+   "bDAhBgNVHQ4EGgQYevp/SCkZVWPKNAUSez17HTOyneXEWwpEMBQGA1UdEQQNMAuC"
+   "CWxvY2FsaG9zdDAMBgNVHRMBAf8EAjAAMCMGA1UdIwQcMBqAGHr6f0gpGVVjyjQF"
+   "Ens9ex0zsp3lxFsKRDAKBggqhkjOPQQDAgNIADBFAiEApqVCYhySxK/8GLq8wlPh"
+   "MeBg8CwKO83s1h/GYQZD4CUCID5Mzh5mwrkkAuSENjLXAD4dtiu91Zsoye5J0uuU"
+   "60v7"
+   "-----END CERTIFICATE-----";
 
 class Fuzzer_TLS_Server_Creds : public Botan::Credentials_Manager {
    public:
       Fuzzer_TLS_Server_Creds() {
-         Botan::DataSource_Memory cert_in(fixed_rsa_cert);
-         m_rsa_cert = std::make_unique<Botan::X509_Certificate>(cert_in);
+         Botan::DataSource_Memory cert_in(fixed_ecdsa_cert);
+         m_ecdsa_cert = std::make_unique<Botan::X509_Certificate>(cert_in);
 
-         Botan::DataSource_Memory key_in(fixed_rsa_key);
-         m_rsa_key.reset(Botan::PKCS8::load_key(key_in).release());
+         Botan::DataSource_Memory key_in(fixed_ecdsa_key);
+         m_ecdsa_key.reset(Botan::PKCS8::load_key(key_in).release());
       }
 
       std::vector<Botan::X509_Certificate> cert_chain(
@@ -86,8 +56,8 @@ class Fuzzer_TLS_Server_Creds : public Botan::Credentials_Manager {
          std::vector<Botan::X509_Certificate> v;
 
          for(const auto& algo : algos) {
-            if(algo == "RSA") {
-               v.push_back(*m_rsa_cert);
+            if(algo == "ECDSA") {
+               v.push_back(*m_ecdsa_cert);
                break;
             }
          }
@@ -98,8 +68,8 @@ class Fuzzer_TLS_Server_Creds : public Botan::Credentials_Manager {
       std::shared_ptr<Botan::Private_Key> private_key_for(const Botan::X509_Certificate& /*cert*/,
                                                           const std::string& type,
                                                           const std::string& /*context*/) override {
-         if(type == "RSA") {
-            return m_rsa_key;
+         if(type == "ECDSA") {
+            return m_ecdsa_key;
          }
          return nullptr;
       }
@@ -131,8 +101,8 @@ class Fuzzer_TLS_Server_Creds : public Botan::Credentials_Manager {
       }
 
    private:
-      std::unique_ptr<Botan::X509_Certificate> m_rsa_cert;
-      std::shared_ptr<Botan::Private_Key> m_rsa_key;
+      std::unique_ptr<Botan::X509_Certificate> m_ecdsa_cert;
+      std::shared_ptr<Botan::Private_Key> m_ecdsa_key;
 };
 
 class Fuzzer_TLS_Policy : public Botan::TLS::Policy {
