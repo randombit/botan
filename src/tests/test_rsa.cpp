@@ -273,6 +273,108 @@ class RSA_Blinding_Tests final : public Test {
       }
 };
 
+class RSA_DecryptOrRandom_Tests : public Test {
+   public:
+      std::vector<Test::Result> run() override {
+         const std::vector<std::string> padding_schemes = {
+   #if defined(BOTAN_HAS_EME_PKCS1)
+            "PKCS1v15",
+   #endif
+   #if defined(BOTAN_HAS_EME_OAEP)
+            "OAEP(SHA-256)",
+   #endif
+         };
+
+         constexpr size_t bits = 1024;
+
+         auto private_key = Botan::RSA_PrivateKey(rng(), bits);
+
+         std::vector<Test::Result> results;
+         for(const auto& padding : padding_schemes) {
+            Test::Result result("RSA decrypt_or_random " + padding);
+            test_decrypt_or_random(result, padding, private_key, rng());
+            results.push_back(result);
+         }
+         return results;
+      }
+
+   private:
+      static void test_decrypt_or_random(Test::Result& result,
+                                         std::string_view padding,
+                                         Botan::Private_Key& private_key,
+                                         Botan::RandomNumberGenerator& rng) {
+         constexpr size_t trials = 100;
+         constexpr size_t pt_len = 32;
+
+         auto public_key = private_key.public_key();
+         const auto msg = rng.random_vec(pt_len);
+
+         Botan::PK_Encryptor_EME enc(*public_key, rng, padding);
+         const auto ctext = enc.encrypt(msg, rng);
+
+         Botan::PK_Decryptor_EME dec(private_key, rng, padding);
+
+         for(size_t i = 0; i != trials; ++i) {
+            auto bad_ctext = mutate_vec(ctext, rng, false, 1);
+
+            auto rec = dec.decrypt_or_random(bad_ctext.data(), bad_ctext.size(), pt_len, rng);
+
+            result.test_eq("Returns a ciphertext of expected length", rec.size(), pt_len);
+         }
+
+         // Test decrypt_or_random with content check happy path
+         for(size_t i = 1; i != pt_len; ++i) {
+            const size_t req_bytes = i;
+
+            std::vector<uint8_t> required_contents(req_bytes);
+            std::vector<uint8_t> required_offsets(req_bytes);
+
+            for(size_t j = 0; j != req_bytes; ++j) {
+               uint8_t idx = rng.next_byte() % pt_len;
+               required_contents[j] = msg[idx];
+               required_offsets[j] = idx;
+            }
+
+            auto rec = dec.decrypt_or_random(
+               ctext.data(), ctext.size(), pt_len, rng, required_contents.data(), required_offsets.data(), req_bytes);
+
+            result.test_eq("Returned the expected message", rec, msg);
+         }
+
+         // Test decrypt_or_random with content check error path
+         for(size_t i = 1; i != pt_len; ++i) {
+            const size_t req_bytes = i;
+
+            std::vector<uint8_t> required_contents(req_bytes);
+            std::vector<uint8_t> required_offsets(req_bytes);
+
+            size_t corrupted = Test::random_index(rng, req_bytes);
+            uint8_t corruption = rng.next_nonzero_byte();
+
+            for(size_t j = 0; j != req_bytes; ++j) {
+               uint8_t idx = rng.next_byte() % pt_len;
+               required_offsets[j] = idx;
+
+               if(idx == corrupted) {
+                  required_contents[j] = msg[idx] ^ corruption;
+               } else {
+                  required_contents[j] = msg[idx];
+               }
+            }
+
+            auto rec = dec.decrypt_or_random(
+               ctext.data(), ctext.size(), pt_len, rng, required_contents.data(), required_offsets.data(), req_bytes);
+
+            result.test_ne("Returned random message", rec, ctext);
+
+            for(size_t j = 0; j != req_bytes; ++j) {
+               result.confirm("Random message satisfies stated content requirements",
+                              rec[required_offsets[j]] == required_contents[j]);
+            }
+         }
+      }
+};
+
 BOTAN_REGISTER_TEST("pubkey", "rsa_encrypt", RSA_ES_KAT_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_decrypt", RSA_Decryption_KAT_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_sign", RSA_Signature_KAT_Tests);
@@ -285,6 +387,7 @@ BOTAN_REGISTER_TEST("pubkey", "rsa_keygen", RSA_Keygen_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_keygen_stability", RSA_Keygen_Stability_Tests);
 BOTAN_REGISTER_TEST("pubkey", "rsa_keygen_badrng", RSA_Keygen_Bad_RNG_Test);
 BOTAN_REGISTER_TEST("pubkey", "rsa_blinding", RSA_Blinding_Tests);
+BOTAN_REGISTER_TEST("pubkey", "rsa_decrypt_or_random", RSA_DecryptOrRandom_Tests);
 
 #endif
 
