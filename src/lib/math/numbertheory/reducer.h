@@ -64,11 +64,26 @@ class BOTAN_PUBLIC_API(2, 0) Modular_Reducer final {
 
       bool initialized() const { return (m_mod_words != 0); }
 
-      Modular_Reducer() { m_mod_words = 0; }
+      BOTAN_DEPRECATED("Use for_public_modulus or for_secret_modulus") Modular_Reducer() { m_mod_words = 0; }
 
-      explicit Modular_Reducer(const BigInt& mod);
+      /**
+      * Accepts m == 0 and leaves the Modular_Reducer in an uninitialized state
+      */
+      BOTAN_DEPRECATED("Use for_public_modulus or for_secret_modulus") explicit Modular_Reducer(const BigInt& mod);
+
+      /**
+      * Requires that m > 0
+      */
+      static Modular_Reducer for_public_modulus(const BigInt& m);
+
+      /**
+      * Requires that m > 0
+      */
+      static Modular_Reducer for_secret_modulus(const BigInt& m);
 
    private:
+      Modular_Reducer(const BigInt& m, BigInt mu, size_t mw) : m_modulus(m), m_mu(std::move(mu)), m_mod_words(mw) {}
+
       BigInt m_modulus, m_mu;
       size_t m_mod_words;
 };

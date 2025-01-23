@@ -10,10 +10,11 @@
 namespace Botan {
 
 Blinder::Blinder(const BigInt& modulus,
+                 const Modular_Reducer& reducer,
                  RandomNumberGenerator& rng,
                  std::function<BigInt(const BigInt&)> fwd,
                  std::function<BigInt(const BigInt&)> inv) :
-      m_reducer(modulus),
+      m_reducer(reducer),
       m_rng(rng),
       m_fwd_fn(std::move(fwd)),
       m_inv_fn(std::move(inv)),
@@ -31,10 +32,6 @@ BigInt Blinder::blinding_nonce() const {
 }
 
 BigInt Blinder::blind(const BigInt& i) const {
-   if(!m_reducer.initialized()) {
-      throw Invalid_State("Blinder not initialized, cannot blind");
-   }
-
    ++m_counter;
 
    if((BOTAN_BLINDING_REINIT_INTERVAL > 0) && (m_counter > BOTAN_BLINDING_REINIT_INTERVAL)) {
@@ -51,10 +48,6 @@ BigInt Blinder::blind(const BigInt& i) const {
 }
 
 BigInt Blinder::unblind(const BigInt& i) const {
-   if(!m_reducer.initialized()) {
-      throw Invalid_State("Blinder not initialized, cannot unblind");
-   }
-
    return m_reducer.multiply(i, m_d);
 }
 

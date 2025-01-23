@@ -25,15 +25,30 @@ Modular_Reducer::Modular_Reducer(const BigInt& mod) {
    m_mod_words = 0;
 
    if(mod > 0) {
-      m_modulus = mod;
-      m_mod_words = m_modulus.sig_words();
-
-      // Compute mu = floor(2^{2k} / m)
-      const size_t mu_bits = 2 * BOTAN_MP_WORD_BITS * m_mod_words;
-      m_mu.set_bit(mu_bits);
-      m_mu = ct_divide_pow2k(mu_bits, m_modulus);
-      //m_mu = BigInt::power_of_2(mu_bits) / m_modulus;
+      *this = Modular_Reducer::for_secret_modulus(mod);
    }
+}
+
+Modular_Reducer Modular_Reducer::for_secret_modulus(const BigInt& mod) {
+   BOTAN_ARG_CHECK(!mod.is_zero(), "Modulus cannot be zero");
+   BOTAN_ARG_CHECK(!mod.is_negative(), "Modulus cannot be negative");
+
+   size_t mod_words = mod.sig_words();
+
+   // Compute mu = floor(2^{2k} / m)
+   const size_t mu_bits = 2 * BOTAN_MP_WORD_BITS * mod_words;
+   return Modular_Reducer(mod, ct_divide_pow2k(mu_bits, mod), mod_words);
+}
+
+Modular_Reducer Modular_Reducer::for_public_modulus(const BigInt& mod) {
+   BOTAN_ARG_CHECK(!mod.is_zero(), "Modulus cannot be zero");
+   BOTAN_ARG_CHECK(!mod.is_negative(), "Modulus cannot be negative");
+
+   size_t mod_words = mod.sig_words();
+
+   // Compute mu = floor(2^{2k} / m)
+   const size_t mu_bits = 2 * BOTAN_MP_WORD_BITS * mod_words;
+   return Modular_Reducer(mod, BigInt::power_of_2(mu_bits) / mod, mod_words);
 }
 
 BigInt Modular_Reducer::reduce(const BigInt& x) const {

@@ -158,7 +158,7 @@ class PerfTest_BnRedc final : public PerfTest {
             auto barrett_timer = config.make_timer("Barrett-" + bit_str);
             auto schoolbook_timer = config.make_timer("Schoolbook-" + bit_str);
 
-            Botan::Modular_Reducer mod_p(p);
+            auto mod_p = Botan::Modular_Reducer::for_public_modulus(p);
 
             while(schoolbook_timer->under(runtime)) {
                const Botan::BigInt x(config.rng(), p.bits() * 2 - 2);
@@ -226,7 +226,7 @@ class PerfTest_IsPrime final : public PerfTest {
             Botan::BigInt n = Botan::random_prime(config.rng(), bits);
 
             while(lucas_timer->under(runtime)) {
-               Botan::Modular_Reducer mod_n(n);
+               auto mod_n = Botan::Modular_Reducer::for_public_modulus(n);
 
                mr_timer->run([&]() { return Botan::is_miller_rabin_probable_prime(n, mod_n, config.rng(), 2); });
 

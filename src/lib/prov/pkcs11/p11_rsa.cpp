@@ -118,6 +118,7 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
             m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(padding)),
             m_blinder(
                m_key.get_n(),
+               Modular_Reducer::for_public_modulus(m_key.get_n()),
                rng,
                [this](const BigInt& k) { return power_mod(k, m_key.get_e(), m_key.get_n()); },
                [this](const BigInt& k) { return inverse_mod_rsa_public_modulus(k, m_key.get_n()); }) {

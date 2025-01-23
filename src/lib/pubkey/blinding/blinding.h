@@ -49,6 +49,7 @@ class Blinder final {
       * of the given value (the nonce)
       */
       Blinder(const BigInt& modulus,
+              const Modular_Reducer& reducer,
               RandomNumberGenerator& rng,
               std::function<BigInt(const BigInt&)> fwd_func,
               std::function<BigInt(const BigInt&)> inv_func);

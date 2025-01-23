@@ -11,6 +11,7 @@
 #include <botan/der_enc.h>
 #include <botan/numthry.h>
 #include <botan/pss_params.h>
+#include <botan/reducer.h>
 #include <botan/internal/blinding.h>
 #include <botan/internal/divide.h>
 #include <botan/internal/emsa.h>
@@ -34,7 +35,8 @@ class RSA_Public_Data final {
       RSA_Public_Data(BigInt&& n, BigInt&& e) :
             m_n(std::move(n)),
             m_e(std::move(e)),
-            m_monty_n(std::make_shared<Montgomery_Params>(m_n)),
+            m_mod_n(Modular_Reducer::for_public_modulus(m_n)),
+            m_monty_n(std::make_shared<Montgomery_Params>(m_n, m_mod_n)),
             m_public_modulus_bits(m_n.bits()),
             m_public_modulus_bytes(m_n.bytes()) {}
 
@@ -54,9 +56,12 @@ class RSA_Public_Data final {
 
       const std::shared_ptr<const Montgomery_Params>& monty_n() const { return m_monty_n; }
 
+      const Modular_Reducer& reducer_mod_n() const { return m_mod_n; }
+
    private:
       BigInt m_n;
       BigInt m_e;
+      Modular_Reducer m_mod_n;
       std::shared_ptr<const Montgomery_Params> m_monty_n;
       size_t m_public_modulus_bits;
       size_t m_public_modulus_bytes;
@@ -447,6 +452,7 @@ class RSA_Private_Operation {
             m_private(rsa.private_data()),
             m_blinder(
                m_public->get_n(),
+               m_public->reducer_mod_n(),
                rng,
                [this](const BigInt& k) { return m_public->public_op(k); },
                [this](const BigInt& k) { return inverse_mod_rsa_public_modulus(k, m_public->get_n()); }),
