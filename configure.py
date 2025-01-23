@@ -3383,9 +3383,6 @@ def calculate_cc_min_version(options, ccinfo, source_paths):
             logging.error("This version of Botan requires at least %s %s",
                           cxx, ccinfo.minimum_supported_version)
 
-        if cxx == 'clang' and our_ver < 17:
-            logging.warning("Botan 3.8 will drop support for this version of Clang (https://github.com/randombit/botan/issues/4529)")
-
     return cc_version
 
 def check_compiler_arch(options, ccinfo, archinfo, source_paths):
