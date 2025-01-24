@@ -8,20 +8,25 @@
 #ifndef BOTAN_PK_OPERATION_IMPL_H_
 #define BOTAN_PK_OPERATION_IMPL_H_
 
-#include <botan/hash.h>
-#include <botan/kdf.h>
 #include <botan/pk_ops.h>
-#include <botan/internal/eme.h>
+
+namespace Botan {
+
+class HashFunction;
+class KDF;
+class EME;
+
+}  // namespace Botan
 
 namespace Botan::PK_Ops {
 
 class Encryption_with_EME : public Encryption {
    public:
+      ~Encryption_with_EME() override;
+
       size_t max_input_bits() const override;
 
       std::vector<uint8_t> encrypt(std::span<const uint8_t> ptext, RandomNumberGenerator& rng) override;
-
-      ~Encryption_with_EME() override = default;
 
    protected:
       explicit Encryption_with_EME(std::string_view eme);
@@ -35,9 +40,9 @@ class Encryption_with_EME : public Encryption {
 
 class Decryption_with_EME : public Decryption {
    public:
-      secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) override;
+      ~Decryption_with_EME() override;
 
-      ~Decryption_with_EME() override = default;
+      secure_vector<uint8_t> decrypt(uint8_t& valid_mask, std::span<const uint8_t> ctext) override;
 
    protected:
       explicit Decryption_with_EME(std::string_view eme);
@@ -49,12 +54,12 @@ class Decryption_with_EME : public Decryption {
 
 class Verification_with_Hash : public Verification {
    public:
-      ~Verification_with_Hash() override = default;
+      ~Verification_with_Hash() override;
 
       void update(std::span<const uint8_t> input) override;
       bool is_valid_signature(std::span<const uint8_t> sig) override;
 
-      std::string hash_function() const final { return m_hash->name(); }
+      std::string hash_function() const final;
 
    protected:
       explicit Verification_with_Hash(std::string_view hash);
@@ -63,15 +68,13 @@ class Verification_with_Hash : public Verification {
                                       std::string_view pk_algo,
                                       bool allow_null_parameters = false);
 
-      /*
+      /**
       * Perform a signature check operation
       * @param msg the message
-      * @param msg_len the length of msg in bytes
       * @param sig the signature
-      * @param sig_len the length of sig in bytes
-      * @returns if signature is a valid one for message
+      * @returns if sig is a valid signature for msg
       */
-      virtual bool verify(std::span<const uint8_t> input, std::span<const uint8_t> sig) = 0;
+      virtual bool verify(std::span<const uint8_t> msg, std::span<const uint8_t> sig) = 0;
 
    private:
       std::unique_ptr<HashFunction> m_hash;
@@ -83,12 +86,12 @@ class Signature_with_Hash : public Signature {
 
       std::vector<uint8_t> sign(RandomNumberGenerator& rng) override;
 
-      ~Signature_with_Hash() override = default;
+      ~Signature_with_Hash() override;
 
    protected:
       explicit Signature_with_Hash(std::string_view hash);
 
-      std::string hash_function() const final { return m_hash->name(); }
+      std::string hash_function() const final;
 
 #if defined(BOTAN_HAS_RFC6979_GENERATOR)
       std::string rfc6979_hash_function() const;
@@ -106,7 +109,7 @@ class Key_Agreement_with_KDF : public Key_Agreement {
                                    std::span<const uint8_t> other_key,
                                    std::span<const uint8_t> salt) override;
 
-      ~Key_Agreement_with_KDF() override = default;
+      ~Key_Agreement_with_KDF() override;
 
    protected:
       explicit Key_Agreement_with_KDF(std::string_view kdf);
@@ -126,7 +129,7 @@ class KEM_Encryption_with_KDF : public KEM_Encryption {
 
       size_t shared_key_length(size_t desired_shared_key_len) const final;
 
-      ~KEM_Encryption_with_KDF() override = default;
+      ~KEM_Encryption_with_KDF() override;
 
    protected:
       virtual void raw_kem_encrypt(std::span<uint8_t> out_encapsulated_key,
@@ -150,7 +153,7 @@ class KEM_Decryption_with_KDF : public KEM_Decryption {
 
       size_t shared_key_length(size_t desired_shared_key_len) const final;
 
-      ~KEM_Decryption_with_KDF() override = default;
+      ~KEM_Decryption_with_KDF() override;
 
    protected:
       virtual void raw_kem_decrypt(std::span<uint8_t> out_raw_shared_key,
