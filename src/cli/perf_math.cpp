@@ -154,23 +154,38 @@ class PerfTest_BnRedc final : public PerfTest {
          for(size_t bitsize : {512, 1024, 2048, 4096}) {
             Botan::BigInt p(config.rng(), bitsize);
 
-            std::string bit_str = std::to_string(bitsize);
-            auto barrett_timer = config.make_timer("Barrett-" + bit_str);
-            auto schoolbook_timer = config.make_timer("Schoolbook-" + bit_str);
+            std::string bit_str = std::to_string(bitsize) + " bit ";
+            auto barrett_setup_pub_timer = config.make_timer(bit_str + "Barrett setup public");
+            auto barrett_setup_sec_timer = config.make_timer(bit_str + "Barrett setup secret");
+
+            while(barrett_setup_sec_timer->under(runtime)) {
+               barrett_setup_sec_timer->run([&]() { Botan::Modular_Reducer::for_secret_modulus(p); });
+               barrett_setup_pub_timer->run([&]() { Botan::Modular_Reducer::for_public_modulus(p); });
+            }
+
+            config.record_result(*barrett_setup_pub_timer);
+            config.record_result(*barrett_setup_sec_timer);
 
             auto mod_p = Botan::Modular_Reducer::for_public_modulus(p);
 
-            while(schoolbook_timer->under(runtime)) {
-               const Botan::BigInt x(config.rng(), p.bits() * 2 - 2);
+            auto barrett_timer = config.make_timer(bit_str + "Barrett redc");
+            auto knuth_timer = config.make_timer(bit_str + "Knuth redc");
+            auto ct_modulo_timer = config.make_timer(bit_str + "ct_modulo");
+
+            while(ct_modulo_timer->under(runtime)) {
+               const Botan::BigInt x(config.rng(), p.bits() * 2 - 1);
 
                const Botan::BigInt r1 = barrett_timer->run([&] { return mod_p.reduce(x); });
-               const Botan::BigInt r2 = schoolbook_timer->run([&] { return x % p; });
+               const Botan::BigInt r2 = knuth_timer->run([&] { return x % p; });
+               const Botan::BigInt r3 = ct_modulo_timer->run([&] { return Botan::ct_modulo(x, p); });
 
                BOTAN_ASSERT(r1 == r2, "Computed different results");
+               BOTAN_ASSERT(r1 == r3, "Computed different results");
             }
 
             config.record_result(*barrett_timer);
-            config.record_result(*schoolbook_timer);
+            config.record_result(*knuth_timer);
+            config.record_result(*ct_modulo_timer);
          }
       }
 };
