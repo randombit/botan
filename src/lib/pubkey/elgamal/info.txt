@@ -12,6 +12,7 @@ dl_algo
 dl_group
 keypair
 numbertheory
+pk_pad
 </requires>
 
 <header:public>

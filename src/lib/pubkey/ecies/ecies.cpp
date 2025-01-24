@@ -11,6 +11,7 @@
 
 #include <botan/cipher_mode.h>
 #include <botan/ecdh.h>
+#include <botan/kdf.h>
 #include <botan/mac.h>
 #include <botan/numthry.h>
 #include <botan/rng.h>

@@ -14,7 +14,6 @@ ecc_key
 hash
 keypair
 numbertheory
-pk_pad
 rng
 sha2_32
 </requires>
