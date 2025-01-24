@@ -262,7 +262,10 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
         test_prefix = ['valgrind',
                        '-v',
-                       '--error-exitcode=9']
+                       '--error-exitcode=9',
+                       '--leak-check=full',
+                       '--show-reachable=yes',
+                       '--track-origins=yes']
 
         # For finding memory bugs, we're enabling more features that add runtime
         # overhead which we don't need for the secret-dependent execution checks
@@ -522,8 +525,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
             disabled_tests.append("os_utils")
 
         # render 'disabled_tests' array into test_cmd
-        if disabled_tests:
-            test_cmd += ['--skip-tests=%s' % (','.join(disabled_tests))]
+        # if disabled_tests:
+        #     test_cmd += ['--skip-tests=%s' % (','.join(disabled_tests))]
 
         if use_gdb:
             (cmd, args) = test_cmd[0], test_cmd[1:]
@@ -532,7 +535,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                                               '-ex', 'bt',
                                               '-ex', 'quit']
         else:
-            run_test_command = test_prefix + test_cmd
+            run_test_command = test_prefix + test_cmd + ["cmce"]
 
     return flags, pretest_cmd, run_test_command, make_prefix
 
