@@ -230,6 +230,27 @@ void regression_test_conditional_jump_in_ct_mask(Botan::RandomNumberGenerator& r
    std::cout << Botan::hex_encode(output_bytes) << std::endl;
 }
 
+void cond_jump_on_shifted_out_secret_data(Botan::RandomNumberGenerator& rng) {
+   const auto rand = rng.random_array<8>();
+   Botan::CT::poison(rand);
+
+   std::vector<uint32_t> secret_data(8);
+
+   // Only the i least significant bits are actually secret dependent
+   // the rest is just initialized zero bits and not secret.
+   for(size_t i = 0; i < 8; ++i) {
+      secret_data[i] = rand[i] & ((1 << (i)) - 1);
+   }
+
+   // This conditional jump is okay, because the jump does not depend on the
+   // "secret" bits that are shifted out in every loop iteration.
+   for(size_t i = 0; i < 8; ++i) {
+      if((secret_data[i] >> i) != 0) {
+         std::cout << "I won't ever be printed." << std::endl;
+      }
+   }
+}
+
 struct Test {
       bool expect_failure;
       bool needs_special_conditions;
@@ -285,6 +306,7 @@ int main(int argc, char* argv[]) {
       {"scoped_poison_inner",                  {SHOULD_FAIL,    IS_GENERIC,                  test_scoped_poison_inner}},
       {"scoped_poison_outer",                  {SHOULD_SUCCEED, IS_GENERIC,                  test_scoped_poison_outer}},
       {"clang_vs_bare_metal_ct_mask",          {SHOULD_FAIL,    REQUIRES_SPECIAL_CONDITIONS, test_clang_conditional_jump_on_bare_metal_ct_mask}},
+      {"cond_jump_on_shifted_out_secret_data", {SHOULD_SUCCEED, IS_GENERIC,                  cond_jump_on_shifted_out_secret_data}},
    };
    // clang-format on
 
