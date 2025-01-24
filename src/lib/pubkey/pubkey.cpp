@@ -224,21 +224,22 @@ size_t PK_Key_Agreement::agreed_value_size() const {
 }
 
 SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
-                                          const uint8_t in[],
-                                          size_t in_len,
-                                          std::string_view params) const {
-   return this->derive_key(key_len, in, in_len, cast_char_ptr_to_uint8(params.data()), params.length());
+                                          const uint8_t peer_key[],
+                                          size_t peer_key_len,
+                                          std::string_view salt) const {
+   return this->derive_key(key_len, peer_key, peer_key_len, cast_char_ptr_to_uint8(salt.data()), salt.length());
 }
 
 SymmetricKey PK_Key_Agreement::derive_key(size_t key_len,
-                                          const std::span<const uint8_t> in,
-                                          std::string_view params) const {
-   return this->derive_key(key_len, in.data(), in.size(), cast_char_ptr_to_uint8(params.data()), params.length());
+                                          const std::span<const uint8_t> peer_key,
+                                          std::string_view salt) const {
+   return this->derive_key(
+      key_len, peer_key.data(), peer_key.size(), cast_char_ptr_to_uint8(salt.data()), salt.length());
 }
 
 SymmetricKey PK_Key_Agreement::derive_key(
-   size_t key_len, const uint8_t in[], size_t in_len, const uint8_t salt[], size_t salt_len) const {
-   return SymmetricKey(m_op->agree(key_len, {in, in_len}, {salt, salt_len}));
+   size_t key_len, const uint8_t peer_key[], size_t peer_key_len, const uint8_t salt[], size_t salt_len) const {
+   return SymmetricKey(m_op->agree(key_len, {peer_key, peer_key_len}, {salt, salt_len}));
 }
 
 namespace {
