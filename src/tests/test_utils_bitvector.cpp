@@ -1002,6 +1002,20 @@ std::vector<Test::Result> test_bitvector_serialization(Botan::RandomNumberGenera
                expected_bytes.back() &= (uint8_t(1) << (bits_to_load % 8)) - 1;
                result.confirm("uint8_t rendered correctly", std::ranges::equal(expected_bytes, rbv));
             }),
+
+      CHECK("to_bytes(std::span) can handle non-zero out-memory",
+            [&](auto& result) {
+               constexpr size_t bits_to_load = 33;
+               constexpr size_t bytes_to_load = Botan::ceil_tobytes(bits_to_load);
+
+               Botan::bitvector bv(bytearray, bits_to_load);
+               bv.set(32);
+
+               std::array<uint8_t, bytes_to_load> out = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+               bv.to_bytes(out);
+
+               result.test_eq_sz("uint8_t rendered correctly", out[4], 0x01);
+            }),
    };
 }
 

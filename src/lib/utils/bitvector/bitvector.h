@@ -509,6 +509,7 @@ class bitvector_base final {
          }
 
          // copy remaining unaligned data
+         clear_mem(out.subspan(verbatim_bytes));
          for(size_type i = verbatim_bytes * 8; i < m_bits; ++i) {
             out[i >> 3] |= ref(i).template as<uint8_t>() << (i & 7);
          }
