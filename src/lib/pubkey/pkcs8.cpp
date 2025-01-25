@@ -117,174 +117,104 @@ std::string PEM_encode(const Private_Key& key) {
    return PEM_Code::encode(key.private_key_info(), "PRIVATE KEY");
 }
 
-#if defined(BOTAN_HAS_PKCS5_PBES2)
+std::string EncryptedPrivateKey::as_pem() const {
+   return PEM_Code::encode(m_pkcs8, "ENCRYPTED PRIVATE KEY");
+}
 
-namespace {
+KeyEncryptionOptions::KeyEncryptionOptions(std::chrono::milliseconds pwhash_duration) :
+      KeyEncryptionOptions(default_cipher(), default_pwhash(), pwhash_duration) {}
 
-std::pair<std::string, std::string> choose_pbe_params(std::string_view pbe_algo, std::string_view key_algo) {
-   if(pbe_algo.empty()) {
-      /*
-      * For algorithms where we are using a non-RFC format anyway, default to
-      * SIV or GCM. For others (RSA, ECDSA, ...) default to something widely
-      * compatible.
-      */
-      const bool nonstandard_pk = (key_algo == "McEliece" || key_algo == "XMSS");
+KeyEncryptionOptions KeyEncryptionOptions::defaults() {
+   return KeyEncryptionOptions(default_cipher(), default_pwhash(), default_pwhash_duration());
+}
 
-      if(nonstandard_pk) {
-   #if defined(BOTAN_HAS_AEAD_SIV) && defined(BOTAN_HAS_SHA2_64)
-         return std::make_pair("AES-256/SIV", "SHA-512");
-   #elif defined(BOTAN_HAS_AEAD_GCM) && defined(BOTAN_HAS_SHA2_64)
-         return std::make_pair("AES-256/GCM", "SHA-512");
-   #endif
-      }
+size_t KeyEncryptionOptions::pwhash_iterations() const {
+   BOTAN_STATE_CHECK(m_pwhash_iterations.has_value());
+   return m_pwhash_iterations.value();
+}
 
-      // Default is something compatible with everyone else
-      return std::make_pair("AES-256/CBC", "SHA-256");
-   }
+std::chrono::milliseconds KeyEncryptionOptions::pwhash_msec() const {
+   BOTAN_STATE_CHECK(m_pwhash_duration.has_value());
+   return m_pwhash_duration.value();
+}
 
+std::string KeyEncryptionOptions::default_cipher() {
+   return "AES-256/CBC";
+}
+
+std::string KeyEncryptionOptions::default_pwhash() {
+   // TODO(Botan4) Consider changing this to Scrypt
+   return "SHA-512";
+}
+
+std::chrono::milliseconds KeyEncryptionOptions::default_pwhash_duration() {
+   return std::chrono::milliseconds(300);
+}
+
+KeyEncryptionOptions::KeyEncryptionOptions(std::string_view cipher,
+                                           std::string_view pwhash,
+                                           std::chrono::milliseconds pwhash_duration) :
+      m_cipher(cipher.empty() ? default_cipher() : cipher),
+      m_pwhash(pwhash.empty() ? default_pwhash() : pwhash),
+      m_pwhash_duration(pwhash_duration) {
+   BOTAN_ARG_CHECK(OID::from_name(m_cipher).has_value(), "Cipher must have an OID assigned");
+   BOTAN_ARG_CHECK(OID::from_name(m_pwhash).has_value(), "Password hash must have an OID assigned");
+   BOTAN_ARG_CHECK(m_pwhash_duration.value().count() > 0, "Invalid password hash duration");
+}
+
+KeyEncryptionOptions::KeyEncryptionOptions(std::string_view cipher, std::string_view pwhash, size_t pwhash_iterations) :
+      m_cipher(cipher.empty() ? default_cipher() : cipher),
+      m_pwhash(pwhash.empty() ? default_pwhash() : pwhash),
+      m_pwhash_iterations(pwhash_iterations) {
+   BOTAN_ARG_CHECK(OID::from_name(m_cipher).has_value(), "Cipher must have an OID assigned");
+   BOTAN_ARG_CHECK(OID::from_name(m_pwhash).has_value(), "Password hash must have an OID assigned");
+   BOTAN_ARG_CHECK(m_pwhash_iterations.value() >= 1, "Invalid password hash iteration count");
+}
+
+KeyEncryptionOptions KeyEncryptionOptions::_from_pbe_string(std::string_view pbe_algo, std::chrono::milliseconds msec) {
    SCAN_Name request(pbe_algo);
 
    if(request.arg_count() != 2 || (request.algo_name() != "PBE-PKCS5v20" && request.algo_name() != "PBES2")) {
       throw Invalid_Argument(fmt("Unsupported PBE '{}'", pbe_algo));
    }
 
-   return std::make_pair(request.arg(0), request.arg(1));
+   return KeyEncryptionOptions(request.arg(0), request.arg(1), msec);
 }
 
-}  // namespace
+EncryptedPrivateKey encrypt_private_key(const Private_Key& key,
+                                        std::string_view password,
+                                        RandomNumberGenerator& rng,
+                                        const KeyEncryptionOptions& options) {
+   auto raw_pkcs8 = key.private_key_info();
 
-#endif
+   size_t iterations_out = 0;
 
-/*
-* BER encode a PKCS #8 private key, encrypted
-*/
-std::vector<uint8_t> BER_encode(const Private_Key& key,
-                                RandomNumberGenerator& rng,
-                                std::string_view pass,
-                                std::chrono::milliseconds msec,
-                                std::string_view pbe_algo) {
+   const auto [alg_id, pkcs8] = [&]() -> std::pair<AlgorithmIdentifier, std::vector<uint8_t>> {
 #if defined(BOTAN_HAS_PKCS5_PBES2)
-   const auto pbe_params = choose_pbe_params(pbe_algo, key.algo_name());
+      const auto& cipher = options.cipher();
+      const auto& pwhash = options.pwhash();
 
-   const std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbe_info =
-      pbes2_encrypt_msec(PKCS8::BER_encode(key), pass, msec, nullptr, pbe_params.first, pbe_params.second, rng);
+      if(options.using_duration()) {
+         return pbes2_encrypt_msec(raw_pkcs8, password, options.pwhash_msec(), &iterations_out, cipher, pwhash, rng);
+      } else {
+         return pbes2_encrypt_iter(raw_pkcs8, password, options.pwhash_iterations(), cipher, pwhash, rng);
+      }
+#else
+      BOTAN_UNUSED(password, rng);
+      throw Encoding_Error("Cannot encrypt PKCS8 because PBES2 was disabled in build");
+#endif
+   }();
 
    std::vector<uint8_t> output;
    DER_Encoder der(output);
-   der.start_sequence().encode(pbe_info.first).encode(pbe_info.second, ASN1_Type::OctetString).end_cons();
+   der.start_sequence().encode(alg_id).encode(pkcs8, ASN1_Type::OctetString).end_cons();
 
-   return output;
-#else
-   BOTAN_UNUSED(key, rng, pass, msec, pbe_algo);
-   throw Encoding_Error("PKCS8::BER_encode cannot encrypt because PBES2 was disabled in build");
-#endif
-}
-
-/*
-* PEM encode a PKCS #8 private key, encrypted
-*/
-std::string PEM_encode(const Private_Key& key,
-                       RandomNumberGenerator& rng,
-                       std::string_view pass,
-                       std::chrono::milliseconds msec,
-                       std::string_view pbe_algo) {
-   if(pass.empty()) {
-      return PEM_encode(key);
+   // The iterations_out will not be set for Scrypt
+   if(options.using_duration()) {
+      return EncryptedPrivateKey(output, iterations_out);
+   } else {
+      return EncryptedPrivateKey(output, options.pwhash_iterations());
    }
-
-   return PEM_Code::encode(PKCS8::BER_encode(key, rng, pass, msec, pbe_algo), "ENCRYPTED PRIVATE KEY");
-}
-
-/*
-* BER encode a PKCS #8 private key, encrypted
-*/
-std::vector<uint8_t> BER_encode_encrypted_pbkdf_iter(const Private_Key& key,
-                                                     RandomNumberGenerator& rng,
-                                                     std::string_view pass,
-                                                     size_t pbkdf_iterations,
-                                                     std::string_view cipher,
-                                                     std::string_view pbkdf_hash) {
-#if defined(BOTAN_HAS_PKCS5_PBES2)
-   const std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbe_info =
-      pbes2_encrypt_iter(key.private_key_info(),
-                         pass,
-                         pbkdf_iterations,
-                         cipher.empty() ? "AES-256/CBC" : cipher,
-                         pbkdf_hash.empty() ? "SHA-256" : pbkdf_hash,
-                         rng);
-
-   std::vector<uint8_t> output;
-   DER_Encoder der(output);
-   der.start_sequence().encode(pbe_info.first).encode(pbe_info.second, ASN1_Type::OctetString).end_cons();
-
-   return output;
-
-#else
-   BOTAN_UNUSED(key, rng, pass, pbkdf_iterations, cipher, pbkdf_hash);
-   throw Encoding_Error("PKCS8::BER_encode_encrypted_pbkdf_iter cannot encrypt because PBES2 disabled in build");
-#endif
-}
-
-/*
-* PEM encode a PKCS #8 private key, encrypted
-*/
-std::string PEM_encode_encrypted_pbkdf_iter(const Private_Key& key,
-                                            RandomNumberGenerator& rng,
-                                            std::string_view pass,
-                                            size_t pbkdf_iterations,
-                                            std::string_view cipher,
-                                            std::string_view pbkdf_hash) {
-   return PEM_Code::encode(PKCS8::BER_encode_encrypted_pbkdf_iter(key, rng, pass, pbkdf_iterations, cipher, pbkdf_hash),
-                           "ENCRYPTED PRIVATE KEY");
-}
-
-/*
-* BER encode a PKCS #8 private key, encrypted
-*/
-std::vector<uint8_t> BER_encode_encrypted_pbkdf_msec(const Private_Key& key,
-                                                     RandomNumberGenerator& rng,
-                                                     std::string_view pass,
-                                                     std::chrono::milliseconds pbkdf_msec,
-                                                     size_t* pbkdf_iterations,
-                                                     std::string_view cipher,
-                                                     std::string_view pbkdf_hash) {
-#if defined(BOTAN_HAS_PKCS5_PBES2)
-   const std::pair<AlgorithmIdentifier, std::vector<uint8_t>> pbe_info =
-      pbes2_encrypt_msec(key.private_key_info(),
-                         pass,
-                         pbkdf_msec,
-                         pbkdf_iterations,
-                         cipher.empty() ? "AES-256/CBC" : cipher,
-                         pbkdf_hash.empty() ? "SHA-256" : pbkdf_hash,
-                         rng);
-
-   std::vector<uint8_t> output;
-   DER_Encoder(output)
-      .start_sequence()
-      .encode(pbe_info.first)
-      .encode(pbe_info.second, ASN1_Type::OctetString)
-      .end_cons();
-
-   return output;
-#else
-   BOTAN_UNUSED(key, rng, pass, pbkdf_msec, pbkdf_iterations, cipher, pbkdf_hash);
-   throw Encoding_Error("BER_encode_encrypted_pbkdf_msec cannot encrypt because PBES2 disabled in build");
-#endif
-}
-
-/*
-* PEM encode a PKCS #8 private key, encrypted
-*/
-std::string PEM_encode_encrypted_pbkdf_msec(const Private_Key& key,
-                                            RandomNumberGenerator& rng,
-                                            std::string_view pass,
-                                            std::chrono::milliseconds pbkdf_msec,
-                                            size_t* pbkdf_iterations,
-                                            std::string_view cipher,
-                                            std::string_view pbkdf_hash) {
-   return PEM_Code::encode(
-      PKCS8::BER_encode_encrypted_pbkdf_msec(key, rng, pass, pbkdf_msec, pbkdf_iterations, cipher, pbkdf_hash),
-      "ENCRYPTED PRIVATE KEY");
 }
 
 namespace {
