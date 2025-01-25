@@ -4,4 +4,5 @@ ADLER32 -> 20131128
 
 <module_info>
 name -> "Adler32"
+lifecycle -> "Deprecated"
 </module_info>
