@@ -121,7 +121,7 @@ Test::Result PK_Signature_Generation_Test::run_one_test(const std::string& pad_h
    result.confirm("private key claims to support signatures",
                   privkey->supports_operation(Botan::PublicKeyOperation::Signature));
 
-   auto pubkey = Botan::X509::load_key(Botan::X509::BER_encode(*privkey));
+   auto pubkey = Botan::X509::load_key(Botan::X509::BER_encode(*privkey->public_key()));
 
    result.confirm("public key claims to support signatures",
                   pubkey->supports_operation(Botan::PublicKeyOperation::Signature));
@@ -273,6 +273,7 @@ std::vector<Test::Result> PK_Sign_Verify_DER_Test::run() {
    const std::string padding = m_padding;
 
    auto privkey = key();
+   auto pubkey = privkey->public_key();
 
    Test::Result result(algo_name() + "/" + padding + " signature sign/verify using DER format");
 
@@ -284,7 +285,7 @@ std::vector<Test::Result> PK_Sign_Verify_DER_Test::run() {
          signer = std::make_unique<Botan::PK_Signer>(
             *privkey, this->rng(), padding, Botan::Signature_Format::DerSequence, provider);
          verifier =
-            std::make_unique<Botan::PK_Verifier>(*privkey, padding, Botan::Signature_Format::DerSequence, provider);
+            std::make_unique<Botan::PK_Verifier>(*pubkey, padding, Botan::Signature_Format::DerSequence, provider);
       } catch(Botan::Lookup_Error& e) {
          result.test_note("Skipping sign/verify with " + provider, e.what());
       }

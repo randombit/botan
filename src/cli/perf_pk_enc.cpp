@@ -47,16 +47,18 @@ class PerfTest_PKEnc : public PerfTest {
 
          auto keygen_timer = config.make_timer(nm, 1, "keygen");
 
-         auto key = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
+         auto sk = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
          while(keygen_timer->under(msec)) {
-            key = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
+            sk = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
          }
+
+         auto pk = sk->public_key();
 
          // TODO this would have to be generalized for anything but RSA/ElGamal
          const std::string padding = "PKCS1v15";
 
-         Botan::PK_Encryptor_EME enc(*key, rng, padding, provider);
-         Botan::PK_Decryptor_EME dec(*key, rng, padding, provider);
+         Botan::PK_Encryptor_EME enc(*pk, rng, padding, provider);
+         Botan::PK_Decryptor_EME dec(*sk, rng, padding, provider);
 
          auto enc_timer = config.make_timer(nm + " " + padding, 1, "encrypt");
          auto dec_timer = config.make_timer(nm + " " + padding, 1, "decrypt");

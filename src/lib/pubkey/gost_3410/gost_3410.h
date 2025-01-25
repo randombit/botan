@@ -54,11 +54,11 @@ class BOTAN_PUBLIC_API(2, 0) GOST_3410_PublicKey : public virtual EC_PublicKey {
 
       std::vector<uint8_t> public_key_bits() const override;
 
-      size_t message_parts() const override { return 2; }
+      std::optional<size_t> _signature_element_size_for_DER_encoding() const override {
+         return domain().get_order_bytes();
+      }
 
-      size_t message_part_size() const override { return domain().get_order_bytes(); }
-
-      Signature_Format default_x509_signature_format() const override { return Signature_Format::Standard; }
+      Signature_Format _default_x509_signature_format() const override { return Signature_Format::Standard; }
 
       std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
 
