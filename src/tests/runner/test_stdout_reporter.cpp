@@ -25,20 +25,14 @@ namespace {
 
 std::string format_test_duration(std::chrono::milliseconds duration) {
    std::ostringstream o;
-
-   if(duration.count() > 1000) {
-      o << std::setprecision(2) << std::fixed << duration.count() / 1000.0 << " sec";
-   } else {
-      o << std::setprecision(2) << std::fixed << duration.count() << " msec";
-   }
-
+   o << std::setprecision(2) << std::fixed << (duration.count() / 1000.0) << " sec";
    return o.str();
 }
 
 }  // namespace
 
 void StdoutReporter::next_testsuite(const std::string& name, std::chrono::milliseconds duration) {
-   m_out << "Test '" << name << "' completed in " << format_test_duration(duration) << "\n";
+   m_out << "" << name << " [" << format_test_duration(duration) << "]:\n";
 }
 
 void StdoutReporter::record(const std::string& name, const Test::Result& result) {
