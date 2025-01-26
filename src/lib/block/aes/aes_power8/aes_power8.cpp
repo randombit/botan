@@ -11,6 +11,7 @@
 
 #include <botan/internal/aes.h>
 
+#include <botan/compiler.h>
 #include <botan/internal/cpuid.h>
 
 #include <altivec.h>

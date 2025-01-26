@@ -6,6 +6,7 @@
 
 #include <botan/pwdhash.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/internal/scan_name.h>
 

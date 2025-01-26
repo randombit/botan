@@ -7,6 +7,7 @@
 
 #include <botan/internal/locking_allocator.h>
 
+#include <botan/compiler.h>
 #include <botan/internal/int_utils.h>
 #include <botan/internal/mem_pool.h>
 #include <botan/internal/os_utils.h>

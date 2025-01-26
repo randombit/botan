@@ -7,6 +7,7 @@
 
 #include <botan/internal/cpuid.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/types.h>
 #include <botan/internal/parsing.h>

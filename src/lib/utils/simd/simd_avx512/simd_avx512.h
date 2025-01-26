@@ -7,6 +7,7 @@
 #ifndef BOTAN_SIMD_AVX512_H_
 #define BOTAN_SIMD_AVX512_H_
 
+#include <botan/compiler.h>
 #include <botan/types.h>
 #include <immintrin.h>
 

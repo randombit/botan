@@ -8,6 +8,7 @@
 
 #include <botan/internal/rdseed.h>
 
+#include <botan/compiler.h>
 #include <botan/internal/cpuid.h>
 
 #include <immintrin.h>

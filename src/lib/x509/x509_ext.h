@@ -9,6 +9,8 @@
 #define BOTAN_X509_EXTENSIONS_H_
 
 #include <botan/pkix_types.h>
+
+#include <botan/assert.h>
 #include <set>
 
 namespace Botan {

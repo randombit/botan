@@ -10,6 +10,7 @@ brief -> "Various utility functions and types"
 load_on always
 
 <header:public>
+api.h
 assert.h
 allocator.h
 compiler.h

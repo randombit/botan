@@ -8,8 +8,8 @@
 #ifndef BOTAN_SIMD_32_H_
 #define BOTAN_SIMD_32_H_
 
+#include <botan/compiler.h>
 #include <botan/types.h>
-
 #include <span>
 
 #if defined(BOTAN_TARGET_SUPPORTS_SSE2)

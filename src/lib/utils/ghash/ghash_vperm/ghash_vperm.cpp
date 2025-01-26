@@ -5,6 +5,8 @@
 */
 
 #include <botan/internal/ghash.h>
+
+#include <botan/compiler.h>
 #include <immintrin.h>
 
 namespace Botan {

@@ -9,7 +9,7 @@
 #ifndef BOTAN_ASSERTION_CHECKING_H_
 #define BOTAN_ASSERTION_CHECKING_H_
 
-#include <botan/compiler.h>
+#include <botan/api.h>
 
 namespace Botan {
 

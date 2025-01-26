@@ -7,6 +7,7 @@
 
 #include <botan/internal/cpuid.h>
 
+#include <botan/assert.h>
 #include <optional>
 
 #if defined(BOTAN_HAS_OS_UTILS)

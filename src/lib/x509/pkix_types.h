@@ -12,6 +12,8 @@
 #define BOTAN_PKIX_TYPES_H_
 
 #include <botan/asn1_obj.h>
+
+#include <botan/assert.h>
 #include <botan/pkix_enums.h>
 #include <iosfwd>
 #include <map>

@@ -5,6 +5,8 @@
 */
 
 #include <botan/internal/sm4.h>
+
+#include <botan/compiler.h>
 #include <arm_neon.h>
 
 namespace Botan {
