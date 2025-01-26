@@ -180,7 +180,7 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       /**
       * Create an uninitialized EC_Group
       */
-      EC_Group();
+      BOTAN_DEPRECATED("Deprecated no replacement") EC_Group();
 
       ~EC_Group();
 
