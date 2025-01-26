@@ -27,7 +27,7 @@ def format_map(m, for_oid = False):
         if for_oid:
             s += '{"%s", OID(%s)},\n' % (k,format_oid(v))
         else:
-            s += '{"%s", "%s"},\n' % (k,v)
+            s += '{OID(%s), "%s"},\n' % (format_oid(k),v)
 
     s = s[:-2] # chomp last two chars
 

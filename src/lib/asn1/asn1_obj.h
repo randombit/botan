@@ -302,6 +302,14 @@ class BOTAN_PUBLIC_API(2, 0) OID final : public ASN1_Object {
       bool operator==(const OID& other) const { return m_id == other.m_id; }
 
       /**
+      * Return a hash code for this OID
+      *
+      * This value is only meant as a std::unsorted_map hash and
+      * can change value from release to release.
+      */
+      size_t hash_code() const;
+
+      /**
       * Get this OID as list (vector) of its components.
       * @return vector representing this OID
       */
@@ -491,5 +499,11 @@ BOTAN_PUBLIC_API(2, 0) bool operator==(const AlgorithmIdentifier&, const Algorit
 BOTAN_PUBLIC_API(2, 0) bool operator!=(const AlgorithmIdentifier&, const AlgorithmIdentifier&);
 
 }  // namespace Botan
+
+template <>
+class std::hash<Botan::OID> {
+   public:
+      size_t operator()(const Botan::OID& oid) const noexcept { return oid.hash_code(); }
+};
 
 #endif

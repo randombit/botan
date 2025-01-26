@@ -152,6 +152,15 @@ bool OID::registered_oid() const {
    return !human_name_or_empty().empty();
 }
 
+size_t OID::hash_code() const {
+   constexpr uint64_t mod = 0xffffffffffffffc5;
+   uint64_t hash = 0;
+   for(auto id : m_id) {
+      hash = (hash * 257 + id) % mod;
+   }
+   return static_cast<size_t>(hash);
+}
+
 /*
 * Compare two OIDs
 */
