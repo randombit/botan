@@ -314,8 +314,10 @@ class RSA_DecryptOrRandom_Tests : public Test {
 
          Botan::PK_Decryptor_EME dec(private_key, rng, padding);
 
+         const BigInt modulus = public_key->get_int_field("n");
+
          for(size_t i = 0; i != trials; ++i) {
-            auto bad_ctext = mutate_vec(ctext, rng, false, 1);
+            auto bad_ctext = (BigInt::from_bytes(mutate_vec(ctext, rng, false, 0)) % modulus).serialize();
 
             auto rec = dec.decrypt_or_random(bad_ctext.data(), bad_ctext.size(), pt_len, rng);
 
