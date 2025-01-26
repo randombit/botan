@@ -8,6 +8,7 @@
 
 #include <botan/cmce_parameter_set.h>
 
+#include <botan/assert.h>
 #include <botan/internal/fmt.h>
 
 namespace Botan {

@@ -8,6 +8,7 @@
 #ifndef BOTAN_MEMORY_OPS_H_
 #define BOTAN_MEMORY_OPS_H_
 
+#include <botan/assert.h>
 #include <botan/concepts.h>
 #include <botan/types.h>
 #include <array>

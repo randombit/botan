@@ -7,6 +7,7 @@
 
 #include <botan/internal/uri.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>

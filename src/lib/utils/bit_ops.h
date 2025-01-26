@@ -14,6 +14,7 @@
 
 #include <botan/types.h>
 
+#include <botan/compiler.h>
 #include <botan/internal/bswap.h>
 
 namespace Botan {

@@ -5,6 +5,8 @@
 */
 
 #include <botan/argon2.h>
+
+#include <botan/compiler.h>
 #include <tmmintrin.h>
 
 namespace Botan {

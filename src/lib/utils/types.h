@@ -10,12 +10,11 @@
 #ifndef BOTAN_TYPES_H_
 #define BOTAN_TYPES_H_
 
-#include <botan/assert.h>    // IWYU pragma: export
-#include <botan/build.h>     // IWYU pragma: export
-#include <botan/compiler.h>  // IWYU pragma: export
-#include <cstddef>           // IWYU pragma: export
-#include <cstdint>           // IWYU pragma: export
-#include <memory>            // IWYU pragma: export
+#include <botan/api.h>    // IWYU pragma: export
+#include <botan/build.h>  // IWYU pragma: export
+#include <cstddef>        // IWYU pragma: export
+#include <cstdint>        // IWYU pragma: export
+#include <memory>         // IWYU pragma: export
 
 namespace Botan {
 

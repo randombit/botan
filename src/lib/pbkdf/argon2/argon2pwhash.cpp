@@ -6,6 +6,7 @@
 
 #include <botan/argon2.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/time_utils.h>

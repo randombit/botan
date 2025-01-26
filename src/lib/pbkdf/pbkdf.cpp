@@ -7,6 +7,7 @@
 
 #include <botan/pbkdf.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/internal/scan_name.h>
 
@@ -25,8 +26,6 @@ std::unique_ptr<PBKDF> PBKDF::create(std::string_view algo_spec, std::string_vie
 
 #if defined(BOTAN_HAS_PBKDF2)
    if(req.algo_name() == "PBKDF2") {
-      // TODO OpenSSL
-
       if(provider.empty() || provider == "base") {
          if(auto mac = MessageAuthenticationCode::create("HMAC(" + req.arg(0) + ")")) {
             return std::make_unique<PKCS5_PBKDF2>(std::move(mac));
@@ -49,8 +48,7 @@ std::unique_ptr<PBKDF> PBKDF::create(std::string_view algo_spec, std::string_vie
    }
 #endif
 
-   BOTAN_UNUSED(req);
-   BOTAN_UNUSED(provider);
+   BOTAN_UNUSED(req, provider);
 
    return nullptr;
 }

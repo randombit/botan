@@ -6,6 +6,8 @@
 */
 
 #include <botan/internal/shacal2.h>
+
+#include <botan/compiler.h>
 #include <immintrin.h>
 
 namespace Botan {

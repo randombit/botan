@@ -148,6 +148,14 @@ PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key, std::string_view param
    }
 }
 
+PK_KEM_Encryptor::PK_KEM_Encryptor(const Public_Key& key,
+                                   RandomNumberGenerator& rng,
+                                   std::string_view kem_param,
+                                   std::string_view provider) :
+      PK_KEM_Encryptor(key, kem_param, provider) {
+   BOTAN_UNUSED(rng);
+}
+
 PK_KEM_Encryptor::~PK_KEM_Encryptor() = default;
 
 PK_KEM_Encryptor::PK_KEM_Encryptor(PK_KEM_Encryptor&&) noexcept = default;
