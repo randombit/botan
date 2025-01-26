@@ -158,7 +158,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
       * Construct a PK Signer.
       * @param key the key to use inside this signer
       * @param rng the random generator to use
-      * @param padding the padding/hash to use, eg "EMSA_PKCS1(SHA-256)"
+      * @param padding the padding/hash to use, eg "SHA-512" or "PSS(SHA-256)"
       * @param format the signature format to use
       * @param provider the provider to use
       */
@@ -274,7 +274,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Verifier final {
       /**
       * Construct a PK Verifier.
       * @param pub_key the public key to verify against
-      * @param padding the padding/hash to use (eg "EMSA_PKCS1(SHA-256)")
+      * @param padding the padding/hash to use (eg "SHA-512" or "PSS(SHA-256)")
       * @param format the signature format to use
       * @param provider the provider to use
       */

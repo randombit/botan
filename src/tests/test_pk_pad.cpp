@@ -72,14 +72,14 @@ class EMSA_unit_tests final : public Test {
 
          std::vector<std::string> pads_need_hash = {
    #if BOTAN_HAS_EMSA_X931
-            "EMSA2",
+            "X9.31",
    #endif
    #if BOTAN_HAS_EMSA_PKCS1
-            "EMSA3",
+            "PKCS1v15",
    #endif
    #if BOTAN_HAS_EMSA_PSSR
-            "EMSA4",
-            "PSSR_Raw",
+            "PSS",
+            "PSS_Raw",
    #endif
    #if BOTAN_HAS_ISO_9796
             "ISO_9796_DS2",
@@ -92,17 +92,17 @@ class EMSA_unit_tests final : public Test {
             "Raw",
    #endif
    #if BOTAN_HAS_EMSA_PKCS1
-            "EMSA3(Raw)",
-            "EMSA3(Raw,SHA-512)",
+            "PKCS1v15(Raw)",
+            "PKCS1v15(Raw,SHA-512)",
    #endif
          };
 
          for(const auto& pad : pads_need_hash) {
             try {
                const std::string hash_to_use = "SHA-256";
-               auto emsa_1 = Botan::EMSA::create(Botan::fmt("{}({})", pad, hash_to_use));
-               auto emsa_2 = Botan::EMSA::create(emsa_1->name());
-               name_tests.test_eq("EMSA_name_test for " + pad, emsa_1->name(), emsa_2->name());
+               auto emsa = Botan::EMSA::create(Botan::fmt("{}({})", pad, hash_to_use));
+               auto emsa_copy = Botan::EMSA::create(emsa->name());
+               name_tests.test_eq("EMSA_name_test for " + pad, emsa->name(), emsa_copy->name());
             } catch(Botan::Lookup_Error&) {
                name_tests.test_note("Skipping test due to missing hash");
             } catch(const std::exception& e) {
@@ -125,9 +125,9 @@ class EMSA_unit_tests final : public Test {
 
          for(const auto& pad : pads_no_hash) {
             try {
-               auto emsa_1 = Botan::EMSA::create(pad);
-               auto emsa_2 = Botan::EMSA::create(emsa_1->name());
-               name_tests.test_eq("EMSA_name_test for " + pad, emsa_1->name(), emsa_2->name());
+               auto emsa = Botan::EMSA::create(pad);
+               auto emsa_copy = Botan::EMSA::create(emsa->name());
+               name_tests.test_eq("EMSA_name_test for " + pad, emsa->name(), emsa_copy->name());
             } catch(Botan::Lookup_Error&) {
                name_tests.test_note("Skipping test due to missing hash");
             } catch(const std::exception& e) {

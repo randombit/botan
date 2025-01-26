@@ -173,12 +173,12 @@ class RSA_Signature_Operation final : public Signature_Operation {
             return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
          } catch(Lookup_Error&) {}
 
-         if(emsa_name.starts_with("EMSA4(")) {
+         if(emsa_name.starts_with("PSS(")) {
             auto parameters = PSS_Params::from_emsa_name(emsa_name).serialize();
-            return AlgorithmIdentifier("RSA/EMSA4", parameters);
+            return AlgorithmIdentifier("RSA/PSS", parameters);
          }
 
-         throw Not_Implemented("No algorithm identifier defined for RSA with " + emsa_name);
+         throw Invalid_Argument(fmt("Signatures using RSA/{} are not supported", emsa_name));
       }
 
    private:

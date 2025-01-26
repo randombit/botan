@@ -1,9 +1,10 @@
 <defines>
 EMSA_PKCS1 -> 20140118
+PKCSV15_SIGNATURE_PADDING -> 20250126
 </defines>
 
 <module_info>
-name -> "EMSA PKCS #1 v1.5"
+name -> "PKCS #1 v1.5 signature padding"
 </module_info>
 
 <requires>

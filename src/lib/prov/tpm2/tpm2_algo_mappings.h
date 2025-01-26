@@ -323,6 +323,7 @@ namespace Botan::TPM2 {
 
 [[nodiscard]] inline std::optional<TPMI_ALG_SIG_SCHEME> rsa_signature_padding_botan_to_tss2(
    std::string_view padding_name) noexcept {
+   // TODO(Botan4) remove the deprecated aliases
    if(padding_name == "EMSA_PKCS1" || padding_name == "PKCS1v15" || padding_name == "EMSA-PKCS1-v1_5" ||
       padding_name == "EMSA3") {
       return TPM2_ALG_RSASSA;

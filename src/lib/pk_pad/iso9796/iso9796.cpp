@@ -11,6 +11,7 @@
 #include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/hash_id.h>
 #include <botan/internal/mgf1.h>
 #include <botan/internal/stl_util.h>
@@ -233,8 +234,7 @@ bool ISO_9796_DS2::verify(const std::vector<uint8_t>& const_coded, const std::ve
  * Return the SCAN name
  */
 std::string ISO_9796_DS2::name() const {
-   return "ISO_9796_DS2(" + m_hash->name() + "," + (m_implicit ? "imp" : "exp") + "," + std::to_string(m_SALT_SIZE) +
-          ")";
+   return fmt("ISO_9796_DS2({},{},{})", m_hash->name(), (m_implicit ? "imp" : "exp"), m_SALT_SIZE);
 }
 
 /*
@@ -275,6 +275,7 @@ bool ISO_9796_DS3::verify(const std::vector<uint8_t>& const_coded, const std::ve
  * Return the SCAN name
  */
 std::string ISO_9796_DS3::name() const {
-   return "ISO_9796_DS3(" + m_hash->name() + "," + (m_implicit ? "imp" : "exp") + ")";
+   return fmt("ISO_9796_DS3({},{})", m_hash->name(), (m_implicit ? "imp" : "exp"));
 }
+
 }  // namespace Botan

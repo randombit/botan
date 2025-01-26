@@ -33,7 +33,7 @@ class EMSA_PKCS1v15 final : public EMSA {
 
       bool verify(const std::vector<uint8_t>&, const std::vector<uint8_t>&, size_t) override;
 
-      std::string name() const override { return "EMSA3(" + m_hash->name() + ")"; }
+      std::string name() const override;
 
       std::string hash_function() const override { return m_hash->name(); }
 
@@ -67,13 +67,7 @@ class EMSA_PKCS1v15_Raw final : public EMSA {
 
       std::string hash_function() const override { return m_hash_name; }
 
-      std::string name() const override {
-         if(m_hash_name.empty()) {
-            return "EMSA3(Raw)";
-         } else {
-            return "EMSA3(Raw," + m_hash_name + ")";
-         }
-      }
+      std::string name() const override;
 
    private:
       size_t m_hash_output_len = 0;
