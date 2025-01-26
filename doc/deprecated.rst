@@ -123,6 +123,10 @@ Deprecated modules include
 
 - Block cipher ``lion``: Similar situation to Noekeon
 
+- Checksum ``adler32``: Not useful cryptographically
+
+- Checksum ``crc32``: Not useful cryptographically
+
 - Hash function ``gost_3411``: Very weak and questionable hash function.
 
 - Hash function ``streebog``: Incredibly sketchy situation with the sbox
