@@ -65,22 +65,16 @@ EC_PrivateKeyImportProperties::EC_PrivateKeyImportProperties(const std::vector<u
    add_binary(AttributeType::Value, m_value.serialize());
 }
 
-PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session, ObjectHandle handle) : Object(session, handle) {
-   secure_vector<uint8_t> ec_parameters = get_attribute_value(AttributeType::EcParams);
-   m_domain_params = EC_Group(unlock(ec_parameters));
-}
+PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session, ObjectHandle handle) :
+      Object(session, handle), m_domain_params(get_attribute_value(AttributeType::EcParams)) {}
 
 PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session, const EC_PrivateKeyImportProperties& props) :
-      Object(session, props) {
-   m_domain_params = EC_Group(props.ec_params());
-}
+      Object(session, props), m_domain_params(EC_Group(props.ec_params())) {}
 
 PKCS11_EC_PrivateKey::PKCS11_EC_PrivateKey(Session& session,
                                            const std::vector<uint8_t>& ec_params,
                                            const EC_PrivateKeyGenerationProperties& props) :
-      Object(session) {
-   m_domain_params = EC_Group(ec_params);
-
+      Object(session), m_domain_params(ec_params) {
    EC_PublicKeyGenerationProperties pub_key_props(ec_params);
    pub_key_props.set_verify(true);
    pub_key_props.set_private(false);

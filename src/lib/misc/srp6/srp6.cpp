@@ -160,42 +160,45 @@ BigInt SRP6_Server_Session::step1(
    const BigInt& v, const DL_Group& group, std::string_view hash_id, size_t b_bits, RandomNumberGenerator& rng) {
    BOTAN_ARG_CHECK(b_bits <= group.p_bits(), "Invalid b_bits");
 
-   m_group = group;
+   BOTAN_STATE_CHECK(!m_group);
+   m_group = std::make_unique<DL_Group>(group);
 
-   const BigInt& g = group.get_g();
-   const BigInt& p = group.get_p();
+   const BigInt& g = m_group->get_g();
+   const BigInt& p = m_group->get_p();
 
    m_v = v;
    m_b = BigInt(rng, b_bits);
    m_hash_id = hash_id;
 
    auto hash_fn = HashFunction::create_or_throw(hash_id);
-   if(8 * hash_fn->output_length() >= group.p_bits()) {
+   if(8 * hash_fn->output_length() >= m_group->p_bits()) {
       throw Invalid_Argument(fmt("Hash function {} too large for SRP6 with this group", hash_fn->name()));
    }
 
-   const BigInt k = hash_seq(*hash_fn, m_group.p_bytes(), p, g);
-   m_B = group.mod_p(v * k + group.power_g_p(m_b, b_bits));
+   const BigInt k = hash_seq(*hash_fn, m_group->p_bytes(), p, g);
+   m_B = m_group->mod_p(v * k + m_group->power_g_p(m_b, b_bits));
 
    return m_B;
 }
 
 SymmetricKey SRP6_Server_Session::step2(const BigInt& A) {
-   if(A <= 0 || A >= m_group.get_p()) {
+   BOTAN_STATE_CHECK(m_group);
+
+   if(A <= 0 || A >= m_group->get_p()) {
       throw Decoding_Error("Invalid SRP parameter from client");
    }
 
    auto hash_fn = HashFunction::create_or_throw(m_hash_id);
-   if(8 * hash_fn->output_length() >= m_group.p_bits()) {
+   if(8 * hash_fn->output_length() >= m_group->p_bits()) {
       throw Invalid_Argument(fmt("Hash function {} too large for SRP6 with this group", hash_fn->name()));
    }
 
-   const BigInt u = hash_seq(*hash_fn, m_group.p_bytes(), A, m_B);
+   const BigInt u = hash_seq(*hash_fn, m_group->p_bytes(), A, m_B);
 
-   const BigInt vup = m_group.power_b_p(m_v, u, m_group.p_bits());
-   const BigInt S = m_group.power_b_p(m_group.multiply_mod_p(A, vup), m_b, m_group.p_bits());
+   const BigInt vup = m_group->power_b_p(m_v, u, m_group->p_bits());
+   const BigInt S = m_group->power_b_p(m_group->multiply_mod_p(A, vup), m_b, m_group->p_bits());
 
-   return SymmetricKey(S.serialize<secure_vector<uint8_t>>(m_group.p_bytes()));
+   return SymmetricKey(S.serialize<secure_vector<uint8_t>>(m_group->p_bytes()));
 }
 
 }  // namespace Botan
