@@ -57,10 +57,7 @@ class Secp192r1Rep final {
 
          BOTAN_DEBUG_ASSERT(S <= 3);
 
-         const auto correction = p192_mul_mod_192(S);
-         W borrow = bigint_sub2(r.data(), N, correction.data(), N);
-
-         bigint_cnd_add(borrow, r.data(), N, P.data(), N);
+         bigint_correct_redc<N>(r, P, p192_mul_mod_192(S));
 
          return r;
       }

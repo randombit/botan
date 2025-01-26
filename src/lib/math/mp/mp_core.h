@@ -10,6 +10,7 @@
 #ifndef BOTAN_MP_CORE_OPS_H_
 #define BOTAN_MP_CORE_OPS_H_
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/mem_ops.h>
 #include <botan/types.h>
@@ -1118,6 +1119,16 @@ constexpr std::array<W, N> redc_crandall(std::span<const W, 2 * N> z) {
    bigint_monty_maybe_sub<N, W>(r.data(), carry, hi.data(), P.data());
 
    return r;
+}
+
+/**
+* Set r to r - C. Then if r < 0, add P to r
+*/
+template <size_t N, WordType W>
+constexpr inline void bigint_correct_redc(std::array<W, N>& r, const std::array<W, N>& P, const std::array<W, N>& C) {
+   // TODO look into combining the two operations for important values of N
+   W borrow = bigint_sub2(r.data(), N, C.data(), N);
+   bigint_cnd_add(borrow, r.data(), N, P.data(), N);
 }
 
 }  // namespace Botan
