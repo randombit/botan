@@ -52,9 +52,8 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
 
       /**
       * Construct a DL group with uninitialized internal value.
-      * Use this constructor is you wish to set the groups values
-      * from a DER or PEM encoded group.
       */
+      BOTAN_DEPRECATED("Deprecated no replacement")
       DL_Group() = default;
 
       /**

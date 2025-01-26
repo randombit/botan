@@ -133,7 +133,7 @@ class BOTAN_PUBLIC_API(2, 0) SRP6_Server_Session final {
       SymmetricKey step2(const BigInt& A);
 
    private:
-      DL_Group m_group;
+      std::unique_ptr<DL_Group> m_group;
       std::string m_hash_id;
       BigInt m_B, m_b, m_v, m_S;
 };
