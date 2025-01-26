@@ -80,10 +80,7 @@ class Secp384r1Rep final {
 
          BOTAN_DEBUG_ASSERT(S <= 4);
 
-         const auto correction = p384_mul_mod_384(S);
-         W borrow = bigint_sub2(r.data(), N, correction.data(), N);
-
-         bigint_cnd_add(borrow, r.data(), N, P.data(), N);
+         bigint_correct_redc<N>(r, P, p384_mul_mod_384(S));
 
          return r;
       }

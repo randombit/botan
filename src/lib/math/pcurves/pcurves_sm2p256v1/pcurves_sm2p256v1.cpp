@@ -63,10 +63,7 @@ class Sm2p256v1Rep final {
          sum.accum(S7);
          const auto S = sum.final_carry(0);
 
-         const auto correction = sm2_mul_mod_256(S);
-         W borrow = bigint_sub2(r.data(), N, correction.data(), N);
-
-         bigint_cnd_add(borrow, r.data(), N, P.data(), N);
+         bigint_correct_redc<N>(r, P, sm2_mul_mod_256(S));
 
          return r;
       }
