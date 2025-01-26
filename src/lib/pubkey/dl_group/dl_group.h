@@ -53,8 +53,7 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       /**
       * Construct a DL group with uninitialized internal value.
       */
-      BOTAN_DEPRECATED("Deprecated no replacement")
-      DL_Group() = default;
+      BOTAN_DEPRECATED("Deprecated no replacement") DL_Group() = default;
 
       /**
       * Construct a DL group that is registered in the configuration.
@@ -64,7 +63,7 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       * deprecated and will be removed in a future major release. Instead
       * use DL_Group::from_PEM or DL_Group::from_name
       */
-      explicit DL_Group(std::string_view name);
+      BOTAN_DEPRECATED("Use DL_Group::from_name or DL_Group::from_PEM") explicit DL_Group(std::string_view name);
 
       /**
       * Construct a DL group that is registered in the configuration.
