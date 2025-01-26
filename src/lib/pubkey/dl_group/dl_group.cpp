@@ -600,8 +600,4 @@ DL_Group::DL_Group(const uint8_t ber[], size_t ber_len, DL_Group_Format format) 
    m_data = BER_decode_DL_group(ber, ber_len, format, DL_Group_Source::ExternalSource);
 }
 
-void DL_Group::BER_decode(const std::vector<uint8_t>& ber, DL_Group_Format format) {
-   m_data = BER_decode_DL_group(ber.data(), ber.size(), format, DL_Group_Source::ExternalSource);
-}
-
 }  // namespace Botan

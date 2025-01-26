@@ -359,12 +359,16 @@ class BOTAN_PUBLIC_API(2, 0) DL_Group final {
       *
       * @warning avoid this. Instead use the DL_Group constructor
       */
-      void BER_decode(const std::vector<uint8_t>& ber, DL_Group_Format format);
+      BOTAN_DEPRECATED("Use DL_Group constructor taking BER encoding")
+      void BER_decode(const std::vector<uint8_t>& ber, DL_Group_Format format) {
+         *this = DL_Group(ber, format);
+      }
 
       DL_Group_Source source() const;
 
       /*
       * For internal use only
+      * TODO(Botan4) Underscore prefix this
       */
       static std::shared_ptr<DL_Group_Data> DL_group_info(std::string_view name);
 
