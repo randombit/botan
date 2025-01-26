@@ -129,8 +129,11 @@ class Reporter {
        * @brief Reports a list of test results for a given test suite
        *
        * Note that this merges test results with the same name
+       * @param duration The total wall clock time taken to run this test
        */
-      void record(const std::string& test_name, const std::vector<Botan_Tests::Test::Result>& results);
+      void record(const std::string& test_name,
+                  const std::vector<Botan_Tests::Test::Result>& results,
+                  std::chrono::milliseconds duration);
 
       /**
        * Called once all test results have been reported for a single run.
@@ -145,9 +148,12 @@ class Reporter {
        * This information is an artifact of the serial test execution nature and
        * won't be used by this base class.
        *
-       * @param name  the name of the test suite that is going to start
+       * @param name      the name of the test suite that is going to start
+       * @param duration  the total wall clock taken to execute the test
        */
-      virtual void next_testsuite(const std::string& name) { BOTAN_UNUSED(name); }
+      virtual void next_testsuite(const std::string& name, std::chrono::milliseconds duration) {
+         BOTAN_UNUSED(name, duration);
+      }
 
       /**
        * @brief Prepare the reporter for the next test run

@@ -20,6 +20,7 @@
    #include <botan/internal/thread_pool.h>
 #endif
 
+#include <chrono>
 #include <shared_mutex>
 
 namespace Botan_Tests {
@@ -108,8 +109,10 @@ bool Test_Runner::run(const Test_Options& opts) {
 
 namespace {
 
-std::vector<Test::Result> run_a_test(const std::string& test_name) {
+std::pair<std::vector<Test::Result>, std::chrono::milliseconds> run_a_test(const std::string& test_name) {
    std::vector<Test::Result> results;
+
+   auto start = std::chrono::system_clock::now();
 
    try {
       if(test_name == "simd_32" && Botan::CPUID::has_simd_32() == false) {
@@ -133,7 +136,8 @@ std::vector<Test::Result> run_a_test(const std::string& test_name) {
       results.push_back(Test::Result::Failure(test_name, "unknown exception"));
    }
 
-   return results;
+   auto time_taken = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - start);
+   return std::make_pair(results, time_taken);
 }
 
 bool all_passed(const std::vector<Test::Result>& results) {
@@ -154,7 +158,7 @@ bool Test_Runner::run_tests_multithreaded(const std::vector<std::string>& tests_
    Botan::Thread_Pool pool(test_threads);
    Botan::RWLock rwlock;
 
-   std::vector<std::future<std::vector<Test::Result>>> m_fut_results;
+   std::vector<std::future<std::pair<std::vector<Test::Result>, std::chrono::milliseconds>>> m_fut_results;
 
    auto run_test_exclusive = [&](const std::string& test_name) {
       std::unique_lock lk(rwlock);
@@ -176,9 +180,9 @@ bool Test_Runner::run_tests_multithreaded(const std::vector<std::string>& tests_
 
    bool passed = true;
    for(size_t i = 0; i != m_fut_results.size(); ++i) {
-      const auto results = m_fut_results[i].get();
+      const auto [results, duration] = m_fut_results[i].get();
       for(auto& reporter : m_reporters) {
-         reporter->record(tests_to_run[i], results);
+         reporter->record(tests_to_run[i], results, duration);
       }
       passed &= all_passed(results);
    }
@@ -192,10 +196,10 @@ bool Test_Runner::run_tests_multithreaded(const std::vector<std::string>& tests_
 bool Test_Runner::run_tests(const std::vector<std::string>& tests_to_run) {
    bool passed = true;
    for(const auto& test_name : tests_to_run) {
-      const auto results = run_a_test(test_name);
+      const auto [results, duration] = run_a_test(test_name);
 
       for(auto& reporter : m_reporters) {
-         reporter->record(test_name, results);
+         reporter->record(test_name, results, duration);
       }
       passed &= all_passed(results);
    }

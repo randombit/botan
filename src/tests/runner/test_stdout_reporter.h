@@ -16,7 +16,7 @@ class StdoutReporter : public Reporter {
    public:
       StdoutReporter(const Test_Options& opts, std::ostream& output_stream);
 
-      void next_testsuite(const std::string& name) override;
+      void next_testsuite(const std::string& name, std::chrono::milliseconds duration) override;
       void record(const std::string& name, const Test::Result& result) override;
       void render() const override;
 

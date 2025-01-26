@@ -21,8 +21,24 @@ void StdoutReporter::next_run() {
    clear();
 }
 
-void StdoutReporter::next_testsuite(const std::string& name) {
-   m_out << name << ":\n";
+namespace {
+
+std::string format_test_duration(std::chrono::milliseconds duration) {
+   std::ostringstream o;
+
+   if(duration.count() > 1000) {
+      o << std::setprecision(2) << std::fixed << duration.count() / 1000.0 << " sec";
+   } else {
+      o << std::setprecision(2) << std::fixed << duration.count() << " msec";
+   }
+
+   return o.str();
+}
+
+}  // namespace
+
+void StdoutReporter::next_testsuite(const std::string& name, std::chrono::milliseconds duration) {
+   m_out << "Test '" << name << "' completed in " << format_test_duration(duration) << "\n";
 }
 
 void StdoutReporter::record(const std::string& name, const Test::Result& result) {
