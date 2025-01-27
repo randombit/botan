@@ -104,8 +104,14 @@ int botan_x509_cert_get_public_key(botan_x509_cert_t cert, botan_pubkey_t* key) 
 int botan_x509_cert_get_issuer_dn(
    botan_x509_cert_t cert, const char* key, size_t index, uint8_t out[], size_t* out_len) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_VISIT(cert,
-                          [=](const auto& c) { return write_str_output(out, out_len, c.issuer_info(key).at(index)); });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) -> int {
+      auto issuer_info = c.issuer_info(key);
+      if(index < issuer_info.size()) {
+         return write_str_output(out, out_len, c.issuer_info(key).at(index));
+      } else {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+   });
 #else
    BOTAN_UNUSED(cert, key, index, out, out_len);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
@@ -115,8 +121,14 @@ int botan_x509_cert_get_issuer_dn(
 int botan_x509_cert_get_subject_dn(
    botan_x509_cert_t cert, const char* key, size_t index, uint8_t out[], size_t* out_len) {
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
-   return BOTAN_FFI_VISIT(cert,
-                          [=](const auto& c) { return write_str_output(out, out_len, c.subject_info(key).at(index)); });
+   return BOTAN_FFI_VISIT(cert, [=](const auto& c) -> int {
+      auto subject_info = c.subject_info(key);
+      if(index < subject_info.size()) {
+         return write_str_output(out, out_len, c.subject_info(key).at(index));
+      } else {
+         return BOTAN_FFI_ERROR_BAD_PARAMETER;
+      }
+   });
 #else
    BOTAN_UNUSED(cert, key, index, out, out_len);
    return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
