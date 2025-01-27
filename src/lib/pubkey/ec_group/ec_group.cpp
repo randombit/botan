@@ -331,6 +331,15 @@ EC_Group& EC_Group::operator=(const EC_Group&) = default;
 EC_Group::EC_Group(std::shared_ptr<EC_Group_Data>&& data) : m_data(std::move(data)) {}
 
 //static
+bool EC_Group::supports_application_specific_group() {
+#if defined(BOTAN_HAS_LEGACY_EC_POINT) || defined(BOTAN_HAS_PCURVES_GENERIC)
+   return true;
+#else
+   return false;
+#endif
+}
+
+//static
 EC_Group EC_Group::from_OID(const OID& oid) {
    auto data = ec_group_data().lookup(oid);
 

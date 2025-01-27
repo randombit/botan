@@ -88,12 +88,13 @@ class Client_Policy : public Botan::TLS::Strict_Policy {
 };
 
 int main() {
+   if(!Botan::EC_Group::supports_application_specific_group()) {
+      // This build configuration does not support application specific EC groups
+      return 1;
+   }
+
    // prepare rng
    auto rng = std::make_shared<Botan::AutoSeeded_RNG>();
-
-   // prepare custom curve
-
-   // prepare curve parameters
 
    // In this case we will use numsp256d1 from https://datatracker.ietf.org/doc/html/draft-black-numscurves-02
 

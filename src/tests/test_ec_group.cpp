@@ -361,21 +361,22 @@ class EC_Group_Tests : public Test {
 BOTAN_REGISTER_TEST("pubkey", "ec_group", EC_Group_Tests);
 
 Test::Result test_decoding_with_seed() {
-   Test::Result result("ECC Unit");
+   Test::Result result("Decode EC_Group with seed");
 
-   const auto secp384r1_with_seed = Botan::EC_Group::from_PEM(Test::read_data_file("x509/ecc/secp384r1_seed.pem"));
-
-   result.confirm("decoding worked", secp384r1_with_seed.initialized());
-
-   const auto secp384r1 = Botan::EC_Group::from_name("secp384r1");
-
-   result.test_eq("P-384 prime", secp384r1_with_seed.get_p(), secp384r1.get_p());
+   try {
+      const auto secp384r1 = Botan::EC_Group::from_name("secp384r1");
+      const auto secp384r1_with_seed = Botan::EC_Group::from_PEM(Test::read_data_file("x509/ecc/secp384r1_seed.pem"));
+      result.confirm("decoding worked", secp384r1_with_seed.initialized());
+      result.test_eq("P-384 prime", secp384r1_with_seed.get_p(), secp384r1.get_p());
+   } catch(Botan::Exception& e) {
+      result.test_failure(e.what());
+   }
 
    return result;
 }
 
 Test::Result test_mixed_points() {
-   Test::Result result("ECC Unit");
+   Test::Result result("Mixed Point Arithmetic");
 
    const auto secp256r1 = Botan::EC_Group::from_name("secp256r1");
    const auto secp384r1 = Botan::EC_Group::from_name("secp384r1");
@@ -553,11 +554,14 @@ class ECC_Unit_Tests final : public Test {
 
          results.push_back(test_decoding_with_seed());
          results.push_back(test_mixed_points());
-         results.push_back(test_ecc_registration());
-         results.push_back(test_ec_group_from_params());
-         results.push_back(test_ec_group_bad_registration());
-         results.push_back(test_ec_group_duplicate_orders());
-         results.push_back(test_ec_group_registration_with_custom_oid());
+
+         if(Botan::EC_Group::supports_application_specific_group()) {
+            results.push_back(test_ecc_registration());
+            results.push_back(test_ec_group_from_params());
+            results.push_back(test_ec_group_bad_registration());
+            results.push_back(test_ec_group_duplicate_orders());
+            results.push_back(test_ec_group_registration_with_custom_oid());
+         }
 
          return results;
       }

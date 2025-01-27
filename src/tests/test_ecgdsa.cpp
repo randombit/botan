@@ -26,6 +26,10 @@ class ECGDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
 
       bool clear_between_callbacks() const override { return false; }
 
+      bool skip_this_test(const std::string&, const VarMap& vars) override {
+         return !Botan::EC_Group::supports_named_group(vars.get_req_str("Group"));
+      }
+
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override {
          const std::string group_id = vars.get_req_str("Group");
          const BigInt x = vars.get_req_bn("X");

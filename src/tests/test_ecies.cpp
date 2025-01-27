@@ -103,6 +103,10 @@ class ECIES_ISO_Tests final : public Text_Based_Test {
 
       bool clear_between_callbacks() const override { return false; }
 
+      bool skip_this_test(const std::string&, const VarMap&) override {
+         return !Botan::EC_Group::supports_application_specific_group();
+      }
+
       Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
          Test::Result result("ECIES-ISO");
 
@@ -199,6 +203,16 @@ class ECIES_Tests final : public Text_Based_Test {
                             "Curve,PrivateKey,OtherPrivateKey,Kdf,Dem,DemKeyLen,Mac,MacKeyLen,Format,"
                             "CofactorMode,OldCofactorMode,CheckMode,SingleHashMode,Label,Plaintext,Ciphertext",
                             "Iv") {}
+
+      bool skip_this_test(const std::string&, const VarMap& vars) override {
+         const auto curve = vars.get_req_str("Curve");
+
+         if(curve.starts_with("-----BEGIN EC PARAMETERS")) {
+            return !Botan::EC_Group::supports_application_specific_group();
+         } else {
+            return !Botan::EC_Group::supports_named_group(curve);
+         }
+      }
 
       Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
          Test::Result result("ECIES");

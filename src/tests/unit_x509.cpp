@@ -18,6 +18,10 @@
    #include <botan/x509path.h>
    #include <botan/x509self.h>
    #include <botan/internal/calendar.h>
+
+   #if defined(BOTAN_HAS_ECC_GROUP)
+      #include <botan/ec_group.h>
+   #endif
 #endif
 
 namespace Botan_Tests {
@@ -104,7 +108,11 @@ std::unique_ptr<Botan::Private_Key> make_a_private_key(const std::string& algo, 
          return "1024";
       }
       if(algo == "GOST-34.10") {
-         return "gost_256A";
+         if(Botan::EC_Group::supports_named_group("gost_256A")) {
+            return "gost_256A";
+         } else {
+            return "secp256r1";
+         }
       }
       if(algo == "ECKCDSA" || algo == "ECGDSA") {
          return "brainpool256r1";
@@ -691,17 +699,19 @@ Test::Result test_verify_gost2012_cert() {
 
       #if defined(BOTAN_HAS_GOST_34_10_2012) && defined(BOTAN_HAS_STREEBOG)
    try {
-      Botan::X509_Certificate root_cert(Test::data_file("x509/gost/gost_root.pem"));
-      Botan::X509_Certificate root_int(Test::data_file("x509/gost/gost_int.pem"));
+      if(Botan::EC_Group::supports_named_group("gost_256A")) {
+         Botan::X509_Certificate root_cert(Test::data_file("x509/gost/gost_root.pem"));
+         Botan::X509_Certificate root_int(Test::data_file("x509/gost/gost_int.pem"));
 
-      Botan::Certificate_Store_In_Memory trusted;
-      trusted.add_certificate(root_cert);
+         Botan::Certificate_Store_In_Memory trusted;
+         trusted.add_certificate(root_cert);
 
-      const Botan::Path_Validation_Restrictions restrictions(false, 128, false, {"Streebog-256"});
-      const Botan::Path_Validation_Result validation_result =
-         Botan::x509_path_validate(root_int, restrictions, trusted);
+         const Botan::Path_Validation_Restrictions restrictions(false, 128, false, {"Streebog-256"});
+         const Botan::Path_Validation_Result validation_result =
+            Botan::x509_path_validate(root_int, restrictions, trusted);
 
-      result.confirm("GOST certificate validates", validation_result.successful_validation());
+         result.confirm("GOST certificate validates", validation_result.successful_validation());
+      }
    } catch(const Botan::Decoding_Error& e) {
       result.test_failure(e.what());
    }

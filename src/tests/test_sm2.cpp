@@ -41,6 +41,10 @@ class SM2_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
             PK_Signature_Generation_Test(
                "SM2", "pubkey/sm2_sig.vec", "P,A,B,xG,yG,Order,Oid,Ident,Msg,x,Nonce,Signature", "Hash") {}
 
+      bool skip_this_test(const std::string&, const VarMap&) override {
+         return !Botan::EC_Group::supports_application_specific_group();
+      }
+
       bool clear_between_callbacks() const override { return false; }
 
       std::string default_padding(const VarMap& vars) const override {
@@ -63,6 +67,10 @@ class SM2_Encryption_KAT_Tests final : public PK_Encryption_Decryption_Test {
       SM2_Encryption_KAT_Tests() :
             PK_Encryption_Decryption_Test(
                "SM2", "pubkey/sm2_enc.vec", "P,A,B,xG,yG,Order,Oid,Msg,x,Nonce,Ciphertext", "Hash") {}
+
+      bool skip_this_test(const std::string&, const VarMap&) override {
+         return !Botan::EC_Group::supports_application_specific_group();
+      }
 
       std::string default_padding(const VarMap& vars) const override { return vars.get_opt_str("Hash", "SM3"); }
 

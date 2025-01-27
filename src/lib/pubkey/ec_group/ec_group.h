@@ -60,6 +60,11 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       *
       * This is used for example to create custom (application-specific) curves.
       *
+      * Some build configurations do not support application specific curves, in
+      * which case this constructor will throw an exception. You can check for
+      * this situation beforehand using the function
+      * EC_Group::supports_application_specific_group()
+      *
       * @param p the elliptic curve p
       * @param a the elliptic curve a param
       * @param b the elliptic curve b param
@@ -93,6 +98,11 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * Construct elliptic curve from the specified parameters
       *
       * This is used for example to create custom (application-specific) curves.
+      *
+      * Some build configurations do not support application specific curves, in
+      * which case this constructor will throw an exception. You can check for
+      * this situation beforehand using the function
+      * EC_Group::supports_application_specific_group()
       *
       * Unlike the deprecated constructor, this constructor imposes additional
       * restrictions on the parameters, namely:
@@ -203,6 +213,17 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       EC_Group_Source source() const;
 
       /**
+      * Return true if in this build configuration it is possible to
+      * register an application specific elliptic curve.
+      */
+      static bool supports_application_specific_group();
+
+      /**
+      * Return true if in this build configuration EC_Group::from_name(name) will succeed
+      */
+      static bool supports_named_group(std::string_view name);
+
+      /**
       * Return true if this EC_Group was derived from an explicit encoding
       *
       * Explicit encoding of groups is deprecated; when support for explicit curves
@@ -212,6 +233,10 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
 
       /**
       * Return a set of known named EC groups
+      *
+      * This returns the set of groups for which from_name should succeed
+      * Note that the set of included groups can vary based on the
+      * build configuration.
       */
       static const std::set<std::string>& known_named_groups();
 

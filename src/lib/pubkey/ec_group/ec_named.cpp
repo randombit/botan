@@ -473,40 +473,76 @@ OID EC_Group::EC_group_identity_from_order(const BigInt& order)
 }
 
 //static
+bool EC_Group::supports_named_group(std::string_view name) {
+   return EC_Group::known_named_groups().contains(std::string(name));
+}
+
+//static
 const std::set<std::string>& EC_Group::known_named_groups() {
    static const std::set<std::string> named_groups = {
-      "brainpool160r1",
+#if defined(BOTAN_HAS_PCURVES_BRAINPOOL256R1) || defined(BOTAN_HAS_LEGACY_EC_POINT) || defined(BOTAN_HAS_PCURVES_GENERIC)
+      "brainpool256r1",
+#endif
+#if defined(BOTAN_HAS_PCURVES_BRAINPOOL384R1) || defined(BOTAN_HAS_LEGACY_EC_POINT) || defined(BOTAN_HAS_PCURVES_GENERIC)
+      "brainpool384r1",
+#endif
+#if defined(BOTAN_HAS_PCURVES_BRAINPOOL512R1) || defined(BOTAN_HAS_LEGACY_EC_POINT) || defined(BOTAN_HAS_PCURVES_GENERIC)
+      "brainpool512r1",
+#endif
+#if defined(BOTAN_HAS_PCURVES_FRP256V1) || defined(BOTAN_HAS_LEGACY_EC_POINT) || defined(BOTAN_HAS_PCURVES_GENERIC)
+      "frp256v1",
+#endif
+#if defined(BOTAN_HAS_PCURVES_NUMSP512D1) || defined(BOTAN_HAS_LEGACY_EC_POINT) || defined(BOTAN_HAS_PCURVES_GENERIC)
+      "numsp512d1",
+#endif
+#if defined(BOTAN_HAS_PCURVES_SECP192R1) || defined(BOTAN_HAS_LEGACY_EC_POINT) || defined(BOTAN_HAS_PCURVES_GENERIC)
+      "secp192r1",
+#endif
+#if defined(BOTAN_HAS_PCURVES_SECP224R1) || defined(BOTAN_HAS_LEGACY_EC_POINT)
+      "secp224r1", // not supported by pcurves_generic
+#endif
+#if defined(BOTAN_HAS_PCURVES_SECP256K1) || defined(BOTAN_HAS_LEGACY_EC_POINT) || defined(BOTAN_HAS_PCURVES_GENERIC)
+      "secp256k1",
+#endif
+#if defined(BOTAN_HAS_PCURVES_SECP256R1) || defined(BOTAN_HAS_LEGACY_EC_POINT) || defined(BOTAN_HAS_PCURVES_GENERIC)
+      "secp256r1",
+#endif
+#if defined(BOTAN_HAS_PCURVES_SECP384R1) || defined(BOTAN_HAS_LEGACY_EC_POINT) || defined(BOTAN_HAS_PCURVES_GENERIC)
+      "secp384r1",
+#endif
+#if defined(BOTAN_HAS_PCURVES_SECP521R1) || defined(BOTAN_HAS_LEGACY_EC_POINT) || defined(BOTAN_HAS_PCURVES_GENERIC)
+      "secp521r1",
+#endif
+#if defined(BOTAN_HAS_PCURVES_SM2P256V1) || defined(BOTAN_HAS_LEGACY_EC_POINT) || defined(BOTAN_HAS_PCURVES_GENERIC)
+      "sm2p256v1",
+#endif
+
+#if defined(BOTAN_HAS_LEGACY_EC_POINT) || defined(BOTAN_HAS_PCURVES_GENERIC)
       "brainpool192r1",
       "brainpool224r1",
-      "brainpool256r1",
       "brainpool320r1",
-      "brainpool384r1",
-      "brainpool512r1",
-      "frp256v1",
       "gost_256A",
       "gost_512A",
-      "numsp512d1",
-      "secp160k1",
-      "secp160r1",
-      "secp160r2",
       "secp192k1",
       "secp192r1",
-      "secp224k1",
-      "secp224r1",
-      "secp256k1",
-      "secp256r1",
-      "secp384r1",
-      "secp521r1",
-      "sm2p256v1",
       "x962_p192v2",
       "x962_p192v3",
       "x962_p239v1",
       "x962_p239v2",
       "x962_p239v3",
+#endif
+
+#if defined(BOTAN_HAS_LEGACY_EC_POINT)
+      "brainpool160r1",
+      "secp160k1",
+      "secp160r1",
+      "secp160r2",
+      "secp224k1",
+#endif
    };
    return named_groups;
 }
 
-}  // namespace Botan
-
 // clang-format on
+
+}  // namespace Botan
