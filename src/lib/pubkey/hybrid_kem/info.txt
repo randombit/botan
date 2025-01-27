@@ -7,11 +7,8 @@ name -> "Hybrid KEM"
 type -> "Internal"
 </module_info>
 
-<header:public>
-hybrid_kem.h
-</header:public>
-
 <header:internal>
+hybrid_kem.h
 hybrid_kem_ops.h
 </header:internal>
 

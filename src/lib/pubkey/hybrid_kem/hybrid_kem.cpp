@@ -6,7 +6,7 @@
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
-#include <botan/hybrid_kem.h>
+#include <botan/internal/hybrid_kem.h>
 
 #include <botan/pk_algs.h>
 #include <botan/internal/fmt.h>
