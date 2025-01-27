@@ -27,6 +27,14 @@ OID Asymmetric_Key::object_identifier() const {
    }
 }
 
+Signature_Format Asymmetric_Key::_default_x509_signature_format() const {
+   if(_signature_element_size_for_DER_encoding()) {
+      return Signature_Format::DerSequence;
+   } else {
+      return Signature_Format::Standard;
+   }
+}
+
 std::string create_hex_fingerprint(const uint8_t bits[], size_t bits_len, std::string_view hash_name) {
    auto hash_fn = HashFunction::create_or_throw(hash_name);
    const std::string hex_hash = hex_encode(hash_fn->process(bits, bits_len));

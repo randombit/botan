@@ -47,15 +47,15 @@ class BOTAN_PUBLIC_API(2, 2) SM2_PublicKey : public virtual EC_PublicKey {
       */
       std::string algo_name() const override;
 
-      size_t message_parts() const override { return 2; }
-
       std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
 
       bool supports_operation(PublicKeyOperation op) const override {
          return (op == PublicKeyOperation::Signature || op == PublicKeyOperation::Encryption);
       }
 
-      size_t message_part_size() const override { return domain().get_order_bytes(); }
+      std::optional<size_t> _signature_element_size_for_DER_encoding() const override {
+         return domain().get_order_bytes();
+      }
 
       std::unique_ptr<PK_Ops::Verification> create_verification_op(std::string_view params,
                                                                    std::string_view provider) const override;

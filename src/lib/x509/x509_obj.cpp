@@ -209,7 +209,7 @@ std::unique_ptr<PK_Signer> X509_Object::choose_sig_format(const Private_Key& key
                                                           RandomNumberGenerator& rng,
                                                           std::string_view hash_fn,
                                                           std::string_view user_specified_padding) {
-   const Signature_Format format = key.default_x509_signature_format();
+   const Signature_Format format = key._default_x509_signature_format();
 
    if(!user_specified_padding.empty()) {
       try {

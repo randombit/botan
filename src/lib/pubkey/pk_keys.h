@@ -111,6 +111,32 @@ class BOTAN_PUBLIC_API(3, 0) Asymmetric_Key {
        * key pair. For other key types it might throw Not_Implemented.
        */
       virtual std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const = 0;
+
+      /*
+      * Test the key values for consistency.
+      * @param rng rng to use
+      * @param strong whether to perform strong and lengthy version of the test
+      * @return true if the test is passed
+      */
+      virtual bool check_key(RandomNumberGenerator& rng, bool strong) const = 0;
+
+      // Declarations for internal library functions not covered by SemVer follow
+
+      /**
+      * Certain signatures schemes such as ECDSA have more than
+      * one element, and certain unfortunate protocols decided the
+      * thing to do was not concatenate them as normally done, but
+      * instead DER encode each of the elements as independent values.
+      *
+      * If this returns a value x then the signature is checked to
+      * be exactly 2*x bytes and split in half for DER encoding.
+      */
+      virtual std::optional<size_t> _signature_element_size_for_DER_encoding() const { return {}; }
+
+      /*
+      * Return the format normally used by this algorithm for X.509 signatures
+      */
+      virtual Signature_Format _default_x509_signature_format() const;
 };
 
 /*
@@ -130,15 +156,6 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       * Deprecated version of object_identifier
       */
       BOTAN_DEPRECATED("Use object_identifier") OID get_oid() const { return this->object_identifier(); }
-
-      /*
-      * Test the key values for consistency.
-      * @param rng rng to use
-      * @param strong whether to perform strong and lengthy version
-      * of the test
-      * @return true if the test is passed
-      */
-      virtual bool check_key(RandomNumberGenerator& rng, bool strong) const = 0;
 
       /**
       * @return X.509 AlgorithmIdentifier for this key
@@ -171,7 +188,7 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
        */
       std::string fingerprint_public(std::string_view alg = "SHA-256") const;
 
-      // Internal or non-public declarations follow
+      // Declarations for internal library functions not covered by SemVer follow
 
       /**
       * Returns more than 1 if the output of this algorithm
@@ -185,7 +202,9 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       *
       * @return number of message parts
       */
-      virtual size_t message_parts() const { return 1; }
+      BOTAN_DEPRECATED("Deprecated no replacement") size_t message_parts() const {
+         return _signature_element_size_for_DER_encoding() ? 2 : 1;
+      }
 
       /**
       * Returns how large each of the message parts refered to
@@ -196,10 +215,15 @@ class BOTAN_PUBLIC_API(2, 0) Public_Key : public virtual Asymmetric_Key {
       *
       * @return size of the message parts in bits
       */
-      virtual size_t message_part_size() const { return 0; }
+      BOTAN_DEPRECATED("Deprecated no replacement") size_t message_part_size() const {
+         return _signature_element_size_for_DER_encoding().value_or(0);
+      }
 
-      virtual Signature_Format default_x509_signature_format() const {
-         return (this->message_parts() >= 2) ? Signature_Format::DerSequence : Signature_Format::Standard;
+      /*
+      * Return the format normally used by this algorithm for X.509 signatures
+      */
+      BOTAN_DEPRECATED("Deprecated no replacement") Signature_Format default_x509_signature_format() const {
+         return _default_x509_signature_format();
       }
 
       /**
@@ -308,7 +332,7 @@ class BOTAN_PUBLIC_API(2, 0) Private_Key : public virtual Public_Key {
        */
       virtual std::optional<uint64_t> remaining_operations() const { return std::nullopt; }
 
-      // Internal or non-public declarations follow
+      // Declarations for internal library functions not covered by SemVer follow
 
       /**
        * @return Hash of the PKCS #8 encoding for this key object

@@ -201,7 +201,7 @@ class PK_Sign final : public Command {
          auto format = Botan::Signature_Format::Standard;
 
          if(flag_set("der-format")) {
-            if(key->message_parts() == 1) {
+            if(!key->_signature_element_size_for_DER_encoding()) {
                throw CLI_Usage_Error("Key type " + key->algo_name() +
                                      " does not support DER formatting for signatures");
             }
@@ -308,10 +308,11 @@ class PKCS8_Tool final : public Command {
          const bool der_out = flag_set("der-out");
 
          if(flag_set("pub-out")) {
+            auto pk = key->public_key();
             if(der_out) {
-               write_output(Botan::X509::BER_encode(*key));
+               write_output(Botan::X509::BER_encode(*pk));
             } else {
-               output() << Botan::X509::PEM_encode(*key);
+               output() << Botan::X509::PEM_encode(*pk);
             }
          } else {
             const std::string pass_out = get_passphrase_arg("Passphrase to encrypt key", "pass-out");

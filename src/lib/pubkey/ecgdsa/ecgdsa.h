@@ -47,9 +47,9 @@ class BOTAN_PUBLIC_API(2, 0) ECGDSA_PublicKey : public virtual EC_PublicKey {
       */
       std::string algo_name() const override { return "ECGDSA"; }
 
-      size_t message_parts() const override { return 2; }
-
-      size_t message_part_size() const override { return domain().get_order_bytes(); }
+      std::optional<size_t> _signature_element_size_for_DER_encoding() const override {
+         return domain().get_order_bytes();
+      }
 
       std::unique_ptr<Private_Key> generate_another(RandomNumberGenerator& rng) const final;
 

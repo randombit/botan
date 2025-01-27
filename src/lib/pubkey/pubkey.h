@@ -261,7 +261,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Signer final {
    private:
       std::unique_ptr<PK_Ops::Signature> m_op;
       Signature_Format m_sig_format;
-      size_t m_parts, m_part_size;
+      std::optional<size_t> m_sig_element_size;
 };
 
 /**
@@ -375,7 +375,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Verifier final {
       * Set the format of the signatures fed to this verifier.
       * @param format the signature format to use
       */
-      void set_input_format(Signature_Format format);
+      BOTAN_DEPRECATED("Provide Signature_Format to the constructor") void set_input_format(Signature_Format format);
 
       /**
       * Return the hash function which is being used to verify signatures.
@@ -388,7 +388,7 @@ class BOTAN_PUBLIC_API(2, 0) PK_Verifier final {
    private:
       std::unique_ptr<PK_Ops::Verification> m_op;
       Signature_Format m_sig_format;
-      size_t m_parts, m_part_size;
+      std::optional<size_t> m_sig_element_size;
 };
 
 /**

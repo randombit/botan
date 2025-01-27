@@ -49,18 +49,20 @@ class PerfTest_PKSig : public PerfTest {
 
          auto keygen_timer = config.make_timer(nm, 1, "keygen");
 
-         auto key = keygen_timer->run([&] { return Botan::create_private_key(alg, rng, param); });
+         auto sk = keygen_timer->run([&] { return Botan::create_private_key(alg, rng, param); });
          while(keygen_timer->under(msec)) {
-            key = keygen_timer->run([&] { return Botan::create_private_key(alg, rng, param); });
+            sk = keygen_timer->run([&] { return Botan::create_private_key(alg, rng, param); });
          }
 
-         if(key != nullptr) {
+         if(sk != nullptr) {
             config.record_result(*keygen_timer);
+
+            auto pk = sk->public_key();
 
             std::vector<uint8_t> message, signature, bad_signature;
 
-            Botan::PK_Signer sig(*key, rng, padding, Botan::Signature_Format::Standard, provider);
-            Botan::PK_Verifier ver(*key, padding, Botan::Signature_Format::Standard, provider);
+            Botan::PK_Signer sig(*sk, rng, padding, Botan::Signature_Format::Standard, provider);
+            Botan::PK_Verifier ver(*pk, padding, Botan::Signature_Format::Standard, provider);
 
             auto sig_timer = config.make_timer(nm, 1, "sign");
             auto ver_timer = config.make_timer(nm, 1, "verify");

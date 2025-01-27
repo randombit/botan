@@ -19,7 +19,7 @@
 
 namespace Botan {
 
-size_t DSA_PublicKey::message_part_size() const {
+std::optional<size_t> DSA_PublicKey::_signature_element_size_for_DER_encoding() const {
    return m_public_key->group().q_bytes();
 }
 
