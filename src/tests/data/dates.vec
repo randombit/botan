@@ -3,6 +3,7 @@
 Date = 1970,01,01,0,0,0
 Date = 1998,04,23,14,37,28
 Date = 2037,12,31,23,59,59
+Date = 2038,01,19,3,14,7
 
 [valid.not_std]
 # these dates are valid but not representable as a std::system_clock::time_point
@@ -12,8 +13,12 @@ Date = 1969,12,31,23,59,59
 
 [valid.64_bit_time_t]
 # only valid if 64 bit std::time_t is used
-Date = 2038,01,01,0,0,0
+Date = 2038,01,19,3,14,8
 Date = 2083,05,20,8,30,9
+Date = 2200,07,04,19,30,0
+
+# 2262 problem
+Date = 2262,04,11,23,47,16
 
 [invalid]
 #Date = 2037,12,32,24,59,59

@@ -8,6 +8,7 @@
 
 #include <botan/internal/calendar.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <ctime>
 #include <iomanip>
@@ -43,7 +44,9 @@ See https://howardhinnant.github.io/date_algorithms.html#days_from_civil
 for details and explaination. The code is slightly simplified by our assumption
 that the date is at least 1970, which is sufficient for our purposes.
 */
-size_t days_since_epoch(uint32_t year, uint32_t month, uint32_t day) {
+uint64_t days_since_epoch(uint32_t year, uint32_t month, uint32_t day) {
+   BOTAN_ARG_CHECK(year >= 1970, "Years before 1970 not supported");
+
    if(month <= 2) {
       year -= 1;
    }
@@ -56,29 +59,12 @@ size_t days_since_epoch(uint32_t year, uint32_t month, uint32_t day) {
 
 }  // namespace
 
+uint64_t calendar_point::seconds_since_epoch() const {
+   return (days_since_epoch(year(), month(), day()) * 86400) + (hour() * 60 * 60) + (minutes() * 60) + seconds();
+}
+
 std::chrono::system_clock::time_point calendar_point::to_std_timepoint() const {
-   if(year() < 1970) {
-      throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years before 1970");
-   }
-
-   // 32 bit time_t ends at January 19, 2038
-   // https://msdn.microsoft.com/en-us/library/2093ets1.aspx
-   // Throw after 2037 if 32 bit time_t is used
-
-   if constexpr(sizeof(std::time_t) == 4) {
-      if(year() > 2037) {
-         throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years after 2037 on this system");
-      }
-   }
-
-   // This upper bound is completely arbitrary
-   if(year() >= 2400) {
-      throw Invalid_Argument("calendar_point::to_std_timepoint() does not support years after 2400");
-   }
-
-   const uint64_t seconds_64 =
-      (days_since_epoch(year(), month(), day()) * 86400) + (hour() * 60 * 60) + (minutes() * 60) + seconds();
-
+   const uint64_t seconds_64 = this->seconds_since_epoch();
    const time_t seconds_time_t = static_cast<time_t>(seconds_64);
 
    if(seconds_64 - seconds_time_t != 0) {
