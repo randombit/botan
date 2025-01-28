@@ -73,6 +73,18 @@ EMSA_PKCS1v15::EMSA_PKCS1v15(std::unique_ptr<HashFunction> hash) : m_hash(std::m
    m_hash_id = pkcs_hash_id(m_hash->name());
 }
 
+std::string EMSA_PKCS1v15::name() const {
+   return "PKCS1v15(" + m_hash->name() + ")";
+}
+
+std::string EMSA_PKCS1v15_Raw::name() const {
+   if(m_hash_name.empty()) {
+      return "PKCS1v15(Raw)";
+   } else {
+      return "PKCS1v15(Raw," + m_hash_name + ")";
+   }
+}
+
 EMSA_PKCS1v15_Raw::EMSA_PKCS1v15_Raw() {
    m_hash_output_len = 0;
    // m_hash_id, m_hash_name left empty

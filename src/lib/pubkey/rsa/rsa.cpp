@@ -425,7 +425,7 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
          return false;
       }
 
-      return KeyPair::signature_consistency_check(rng, *this, "EMSA4(SHA-256)");
+      return KeyPair::signature_consistency_check(rng, *this, "PSS(SHA-256)");
    }
 
    return true;
@@ -584,12 +584,12 @@ AlgorithmIdentifier RSA_Signature_Operation::algorithm_identifier() const {
       return AlgorithmIdentifier(oid, AlgorithmIdentifier::USE_EMPTY_PARAM);
    } catch(Lookup_Error&) {}
 
-   if(emsa_name.starts_with("EMSA4(")) {
+   if(emsa_name.starts_with("PSS(")) {
       auto parameters = PSS_Params::from_emsa_name(m_emsa->name()).serialize();
-      return AlgorithmIdentifier("RSA/EMSA4", parameters);
+      return AlgorithmIdentifier("RSA/PSS", parameters);
    }
 
-   throw Not_Implemented("No algorithm identifier defined for RSA with " + emsa_name);
+   throw Invalid_Argument(fmt("Signatures using RSA/{} are not supported", emsa_name));
 }
 
 class RSA_Decryption_Operation final : public PK_Ops::Decryption_with_EME,
@@ -753,7 +753,7 @@ std::string parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id) {
 
    std::string padding = sig_info[1];
 
-   if(padding == "EMSA4") {
+   if(padding == "PSS") {
       // "MUST contain RSASSA-PSS-params"
       if(alg_id.parameters().empty()) {
          throw Decoding_Error("PSS params must be provided");

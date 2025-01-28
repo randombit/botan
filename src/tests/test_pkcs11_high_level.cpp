@@ -847,12 +847,12 @@ Test::Result test_rsa_sign_verify() {
 
    // single-part sign
    sign_and_verify("Raw", false);
-   sign_and_verify("EMSA3(SHA-256)", false);
-   sign_and_verify("EMSA4(SHA-256)", false);
+   sign_and_verify("PKCS1v15(SHA-256)", false);
+   sign_and_verify("PSS(SHA-256)", false);
 
    // multi-part sign
-   sign_and_verify("EMSA3(SHA-256)", true);
-   sign_and_verify("EMSA4(SHA-256)", true);
+   sign_and_verify("PKCS1v15(SHA-256)", true);
+   sign_and_verify("PSS(SHA-256)", true);
 
    keypair.first.destroy();
    keypair.second.destroy();

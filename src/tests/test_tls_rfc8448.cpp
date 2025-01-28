@@ -234,7 +234,7 @@ class Test_TLS_13_Callbacks : public Botan::TLS::Callbacks {
                throw Test_Error("TLS implementation selected unexpected signature format for RSA");
             }
 
-            if(padding != "PSSR(SHA-256,MGF1,32)") {
+            if(padding != "PSS(SHA-256,MGF1,32)") {
                throw Test_Error("TLS implementation selected unexpected padding for RSA: " + std::string(padding));
             }
          } else if(key.algo_name() == "ECDSA") {

@@ -154,9 +154,9 @@ std::string x509_signature_padding_for(const std::string& algo_name,
 
       if(user_specified_padding.empty()) {
          if(hash_fn.empty()) {
-            return "EMSA3(SHA-256)";
+            return "PKCS1v15(SHA-256)";
          } else {
-            return fmt("EMSA3({})", hash_fn);
+            return fmt("PKCS1v15({})", hash_fn);
          }
       } else {
          if(hash_fn.empty()) {

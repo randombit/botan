@@ -10,6 +10,7 @@
 #if defined(BOTAN_HAS_RSA)
    #include "test_pubkey.h"
    #include <botan/rsa.h>
+   #include <botan/internal/fmt.h>
 #endif
 
 namespace Botan_Tests {
@@ -82,7 +83,7 @@ class RSA_PSS_KAT_Tests final : public PK_Signature_Generation_Test {
       std::string default_padding(const VarMap& vars) const override {
          const std::string hash_name = vars.get_req_str("Hash");
          const size_t salt_size = vars.get_req_bin("Nonce").size();
-         return "PSSR(" + hash_name + ",MGF1," + std::to_string(salt_size) + ")";
+         return Botan::fmt("PSS({},MGF1,{})", hash_name, salt_size);
       }
 
       bool clear_between_callbacks() const override { return false; }
@@ -100,7 +101,7 @@ class RSA_PSS_Raw_KAT_Tests final : public PK_Signature_Generation_Test {
       std::string default_padding(const VarMap& vars) const override {
          const std::string hash_name = vars.get_req_str("Hash");
          const size_t salt_size = vars.get_req_bin("Nonce").size();
-         return "PSSR_Raw(" + hash_name + ",MGF1," + std::to_string(salt_size) + ")";
+         return Botan::fmt("PSS_Raw({},MGF1,{})", hash_name, salt_size);
       }
 
       bool clear_between_callbacks() const override { return false; }

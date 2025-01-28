@@ -8,6 +8,7 @@
 #include <botan/internal/emsa_x931.h>
 
 #include <botan/exceptn.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/hash_id.h>
 #include <botan/internal/stl_util.h>
 
@@ -49,7 +50,7 @@ std::vector<uint8_t> emsa2_encoding(const std::vector<uint8_t>& msg,
 }  // namespace
 
 std::string EMSA_X931::name() const {
-   return "EMSA2(" + m_hash->name() + ")";
+   return fmt("X9.31({})", m_hash->name());
 }
 
 void EMSA_X931::update(const uint8_t input[], size_t length) {

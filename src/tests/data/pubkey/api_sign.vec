@@ -44,7 +44,7 @@ SigParams =
 [RSA]
 
 AlgoParams = 2048
-SigParams = PSSR(SHA-256)
+SigParams = PSS(SHA-256)
 
 [SM2]
 

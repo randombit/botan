@@ -51,8 +51,8 @@ def format_as_map(oid2str, str2oid):
 
 namespace Botan {
 
-std::unordered_map<std::string, std::string> OID_Map::load_oid2str_map() {
-   return std::unordered_map<std::string, std::string>{
+std::unordered_map<OID, std::string> OID_Map::load_oid2str_map() {
+   return std::unordered_map<OID, std::string>{
 
       %s};
 }

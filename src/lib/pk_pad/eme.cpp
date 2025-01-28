@@ -33,6 +33,7 @@ std::unique_ptr<EME> EME::create(std::string_view algo_spec) {
 #endif
 
 #if defined(BOTAN_HAS_EME_PKCS1)
+   // TODO(Botan4) Remove all but "PKCS1v15"
    if(algo_spec == "PKCS1v15" || algo_spec == "EME-PKCS1-v1_5") {
       return std::make_unique<EME_PKCS1v15>();
    }
@@ -41,6 +42,7 @@ std::unique_ptr<EME> EME::create(std::string_view algo_spec) {
 #if defined(BOTAN_HAS_EME_OAEP)
    SCAN_Name req(algo_spec);
 
+   // TODO(Botan4) Remove all but "OAEP"
    if(req.algo_name() == "OAEP" || req.algo_name() == "EME-OAEP" || req.algo_name() == "EME1") {
       if(req.arg_count() == 1 || ((req.arg_count() == 2 || req.arg_count() == 3) && req.arg(1) == "MGF1")) {
          if(auto hash = HashFunction::create(req.arg(0))) {

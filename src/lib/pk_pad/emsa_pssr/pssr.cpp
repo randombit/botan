@@ -12,6 +12,7 @@
 #include <botan/rng.h>
 #include <botan/internal/bit_ops.h>
 #include <botan/internal/ct_utils.h>
+#include <botan/internal/fmt.h>
 #include <botan/internal/mgf1.h>
 #include <botan/internal/stl_util.h>
 #include <array>
@@ -186,7 +187,7 @@ bool PSSR::verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>&
 }
 
 std::string PSSR::name() const {
-   return "EMSA4(" + m_hash->name() + ",MGF1," + std::to_string(m_salt_size) + ")";
+   return fmt("PSS({},MGF1,{})", m_hash->name(), m_salt_size);
 }
 
 PSSR_Raw::PSSR_Raw(std::unique_ptr<HashFunction> hash) :
@@ -238,7 +239,7 @@ bool PSSR_Raw::verify(const std::vector<uint8_t>& coded, const std::vector<uint8
 }
 
 std::string PSSR_Raw::name() const {
-   return "PSSR_Raw(" + m_hash->name() + ",MGF1," + std::to_string(m_salt_size) + ")";
+   return fmt("PSS_Raw({},MGF1,{})", m_hash->name(), m_salt_size);
 }
 
 }  // namespace Botan

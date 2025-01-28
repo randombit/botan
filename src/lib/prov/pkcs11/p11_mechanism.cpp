@@ -85,10 +85,43 @@ class RSA_SignMechanism final : public MechanismData {
 const std::map<std::string, RSA_SignMechanism> SignMechanisms = {
    {"Raw", RSA_SignMechanism(MechanismType::RsaX509)},
 
+   // X9.31
+   {"X9.31(Raw)", RSA_SignMechanism(MechanismType::RsaX931)},
+   {"X9.31(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaX931)},
+
+   // RSASSA PKCS#1 v1.5
+   {"PKCS1v15(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcs)},
+   {"PKCS1v15(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcs)},
+   {"PKCS1v15(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcs)},
+   {"PKCS1v15(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcs)},
+   {"PKCS1v15(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcs)},
+
+   // PSS PKCS#1 v2.0
+   {"PSS(Raw)", RSA_SignMechanism(MechanismType::RsaPkcsPss)},
+
+   {"PSS(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcsPss)},
+   {"PSS(SHA-1,MGF1,20)", RSA_SignMechanism(MechanismType::Sha1RsaPkcsPss)},
+
+   {"PSS(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcsPss)},
+   {"PSS(SHA-224,MGF1,24)", RSA_SignMechanism(MechanismType::Sha224RsaPkcsPss)},
+
+   {"PSS(SHA-256)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss)},
+   {"PSS(SHA-256,MGF1,32)", RSA_SignMechanism(MechanismType::Sha256RsaPkcsPss)},
+
+   {"PSS(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcsPss)},
+   {"PSS(SHA-384,MGF1,48)", RSA_SignMechanism(MechanismType::Sha384RsaPkcsPss)},
+
+   {"PSS(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
+   {"PSS(SHA-512,MGF1,64)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
+
+   // ISO 9796 (TODO is this DS1, DS2, or DS3?)
+   {"ISO9796", RSA_SignMechanism(MechanismType::Rsa9796)},
+
+   // Deprecated aliases
+   // TODO(Botan4) remove these
    {"EMSA2(Raw)", RSA_SignMechanism(MechanismType::RsaX931)},
    {"EMSA2(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaX931)},
 
-   // RSASSA PKCS#1 v1.5
    {"EMSA3(Raw)", RSA_SignMechanism(MechanismType::RsaPkcs)},
    {"EMSA3(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcs)},
    {"EMSA3(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcs)},
@@ -102,7 +135,6 @@ const std::map<std::string, RSA_SignMechanism> SignMechanisms = {
    {"EMSA_PKCS1(SHA-384)", RSA_SignMechanism(MechanismType::Sha384RsaPkcs)},
    {"EMSA_PKCS1(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcs)},
 
-   // RSASSA PKCS#1 PSS
    {"EMSA4(Raw)", RSA_SignMechanism(MechanismType::RsaPkcsPss)},
    {"EMSA4(SHA-1)", RSA_SignMechanism(MechanismType::Sha1RsaPkcsPss)},
    {"EMSA4(SHA-224)", RSA_SignMechanism(MechanismType::Sha224RsaPkcsPss)},
@@ -118,8 +150,7 @@ const std::map<std::string, RSA_SignMechanism> SignMechanisms = {
    {"EMSA4(SHA-512)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
    {"EMSA4(SHA-512,MGF1,64)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
    {"PSSR(SHA-512,MGF1,64)", RSA_SignMechanism(MechanismType::Sha512RsaPkcsPss)},
-
-   {"ISO9796", RSA_SignMechanism(MechanismType::Rsa9796)}};
+};
 
 struct RSA_CryptMechanism final : public MechanismData {
    public:
@@ -149,7 +180,9 @@ struct RSA_CryptMechanism final : public MechanismData {
 // note: when updating this map, update the documentation for `MechanismWrapper::create_rsa_crypt_mechanism`
 const std::map<std::string, RSA_CryptMechanism> CryptMechanisms = {
    {"Raw", RSA_CryptMechanism(MechanismType::RsaX509, 0)},
+   // TODO(Botan4) Remove this
    {"EME-PKCS1-v1_5", RSA_CryptMechanism(MechanismType::RsaPkcs, 11)},
+   {"PKCS1v15", RSA_CryptMechanism(MechanismType::RsaPkcs, 11)},
    {"OAEP(SHA-1)", RSA_CryptMechanism(MechanismType::RsaPkcsOaep, 2 + 2 * 20, MechanismType::Sha1, MGF::Mgf1Sha1)},
    {"OAEP(SHA-224)",
     RSA_CryptMechanism(MechanismType::RsaPkcsOaep, 2 + 2 * 28, MechanismType::Sha224, MGF::Mgf1Sha224)},
