@@ -116,9 +116,9 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
                                       RandomNumberGenerator& rng) :
             m_key(key),
             m_mechanism(MechanismWrapper::create_rsa_crypt_mechanism(padding)),
+            m_barrett_mod_n(Modular_Reducer::for_public_modulus(m_key.get_n())),
             m_blinder(
-               m_key.get_n(),
-               Modular_Reducer::for_public_modulus(m_key.get_n()),
+               m_barrett_mod_n,
                rng,
                [this](const BigInt& k) { return power_mod(k, m_key.get_e(), m_key.get_n()); },
                [this](const BigInt& k) { return inverse_mod_rsa_public_modulus(k, m_key.get_n()); }) {
@@ -161,6 +161,7 @@ class PKCS11_RSA_Decryption_Operation final : public PK_Ops::Decryption {
    private:
       const PKCS11_RSA_PrivateKey& m_key;
       MechanismWrapper m_mechanism;
+      Modular_Reducer m_barrett_mod_n;
       size_t m_bits = 0;
       Blinder m_blinder;
 };

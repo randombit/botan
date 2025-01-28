@@ -156,7 +156,6 @@ class ElGamal_Decryption_Operation final : public PK_Ops::Decryption_with_EME {
             PK_Ops::Decryption_with_EME(eme),
             m_key(key),
             m_blinder(
-               m_key->group().get_p(),
                m_key->group()._reducer_mod_p(),
                rng,
                [](const BigInt& k) { return k; },

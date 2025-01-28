@@ -9,8 +9,7 @@
 
 namespace Botan {
 
-Blinder::Blinder(const BigInt& modulus,
-                 const Modular_Reducer& reducer,
+Blinder::Blinder(const Modular_Reducer& reducer,
                  RandomNumberGenerator& rng,
                  std::function<BigInt(const BigInt&)> fwd,
                  std::function<BigInt(const BigInt&)> inv) :
@@ -18,7 +17,7 @@ Blinder::Blinder(const BigInt& modulus,
       m_rng(rng),
       m_fwd_fn(std::move(fwd)),
       m_inv_fn(std::move(inv)),
-      m_modulus_bits(modulus.bits()),
+      m_modulus_bits(reducer.get_modulus().bits()),
       m_e{},
       m_d{},
       m_counter{} {

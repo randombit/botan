@@ -451,7 +451,6 @@ class RSA_Private_Operation {
             m_public(rsa.public_data()),
             m_private(rsa.private_data()),
             m_blinder(
-               m_public->get_n(),
                m_public->reducer_mod_n(),
                rng,
                [this](const BigInt& k) { return m_public->public_op(k); },

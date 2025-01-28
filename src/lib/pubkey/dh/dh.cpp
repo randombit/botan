@@ -110,7 +110,6 @@ class DH_KA_Operation final : public PK_Ops::Key_Agreement_with_KDF {
             m_key(key),
             m_key_bits(m_key->private_key().bits()),
             m_blinder(
-               m_key->group().get_p(),
                m_key->group()._reducer_mod_p(),
                rng,
                [](const BigInt& k) { return k; },

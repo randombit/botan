@@ -41,15 +41,17 @@ class Blinder final {
       BigInt unblind(const BigInt& x) const;
 
       /**
-      * @param modulus the modulus
+      * @param reducer precomputed Barrett reduction for the modulus
       * @param rng the RNG to use for generating the nonce
       * @param fwd_func a function that calculates the modular
       * exponentiation of the public exponent and the given value (the nonce)
       * @param inv_func a function that calculates the modular inverse
       * of the given value (the nonce)
+      *
+      * @note Lifetime: The rng and reducer arguments are captured by
+      * reference and must live as long as the Blinder does
       */
-      Blinder(const BigInt& modulus,
-              const Modular_Reducer& reducer,
+      Blinder(const Modular_Reducer& reducer,
               RandomNumberGenerator& rng,
               std::function<BigInt(const BigInt&)> fwd_func,
               std::function<BigInt(const BigInt&)> inv_func);
@@ -63,7 +65,7 @@ class Blinder final {
    private:
       BigInt blinding_nonce() const;
 
-      Modular_Reducer m_reducer;
+      const Modular_Reducer& m_reducer;
       RandomNumberGenerator& m_rng;
       std::function<BigInt(const BigInt&)> m_fwd_fn;
       std::function<BigInt(const BigInt&)> m_inv_fn;
