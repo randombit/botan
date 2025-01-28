@@ -45,18 +45,6 @@ bool BOTAN_TEST_API is_lucas_probable_prime(const BigInt& n, const Modular_Reduc
 bool BOTAN_TEST_API is_bailie_psw_probable_prime(const BigInt& n, const Modular_Reducer& mod_n);
 
 /**
-* Perform Bailie-PSW primality test
-*
-* This is a combination of Miller-Rabin with base 2 and a Lucas test. No known
-* composite integer passes both tests, though it is conjectured that infinitely
-* many composite counterexamples exist.
-*
-* @param n the positive integer to test
-* @return true if n seems probably prime, false if n is composite
-*/
-bool is_bailie_psw_probable_prime(const BigInt& n);
-
-/**
 * Return required number of Miller-Rabin tests in order to
 * reach the specified probability of error.
 *

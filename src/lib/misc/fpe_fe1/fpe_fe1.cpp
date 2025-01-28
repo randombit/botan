@@ -83,7 +83,9 @@ FPE_FE1::FPE_FE1(const BigInt& n, size_t rounds, bool compat_mode, std::string_v
       }
    }
 
-   mod_a = std::make_unique<Modular_Reducer>(m_a);
+   // The modulus is usually a system parameter and anyway is easily deduced from
+   // the ciphertexts
+   mod_a = std::make_unique<Modular_Reducer>(Modular_Reducer::for_public_modulus(m_a));
 }
 
 FPE_FE1::~FPE_FE1() = default;

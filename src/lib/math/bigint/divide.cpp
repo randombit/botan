@@ -63,7 +63,7 @@ void ct_divide(const BigInt& x, const BigInt& y, BigInt& q_out, BigInt& r_out) {
       const size_t b = x_bits - 1 - i;
       const bool x_b = x.get_bit(b);
 
-      r *= 2;
+      r <<= 1;
       r.conditionally_set_bit(0, x_b);
 
       const bool r_gte_y = bigint_sub3(t.mutable_data(), r._data(), r.size(), y._data(), y_words) == 0;
@@ -75,6 +75,46 @@ void ct_divide(const BigInt& x, const BigInt& y, BigInt& q_out, BigInt& r_out) {
    sign_fixup(x, y, q, r);
    r_out = r;
    q_out = q;
+}
+
+BigInt ct_divide_pow2k(size_t k, const BigInt& y) {
+   BOTAN_ARG_CHECK(!y.is_zero(), "Cannot divide by zero");
+   BOTAN_ARG_CHECK(!y.is_negative(), "Negative divisor not supported");
+   BOTAN_ARG_CHECK(k > 1, "Invalid k");
+
+   const size_t x_bits = k + 1;
+   const size_t y_bits = y.bits();
+
+   if(x_bits < y_bits) {
+      return BigInt::zero();
+   }
+
+   BOTAN_ASSERT_NOMSG(y_bits >= 1);
+   const size_t x_words = (x_bits + BOTAN_MP_WORD_BITS - 1) / BOTAN_MP_WORD_BITS;
+   const size_t y_words = y.sig_words();
+
+   BigInt q = BigInt::with_capacity(x_words);
+   BigInt r = BigInt::with_capacity(y_words + 1);
+   BigInt t = BigInt::with_capacity(y_words + 1);  // a temporary
+
+   r.set_bit(y_bits - 1);
+   for(size_t i = y_bits - 1; i != x_bits; ++i) {
+      const size_t b = x_bits - 1 - i;
+
+      if(i >= y_bits) {
+         bigint_shl1(r.mutable_data(), r.size(), r.size(), 1);
+      }
+
+      const bool r_gte_y = bigint_sub3(t.mutable_data(), r._data(), r.size(), y._data(), y_words) == 0;
+
+      q.conditionally_set_bit(b, r_gte_y);
+
+      bigint_cnd_swap(static_cast<word>(r_gte_y), r.mutable_data(), t.mutable_data(), y_words + 1);
+   }
+
+   // No need for sign fixup
+
+   return q;
 }
 
 void ct_divide_word(const BigInt& x, word y, BigInt& q_out, word& r_out) {
@@ -94,7 +134,7 @@ void ct_divide_word(const BigInt& x, word y, BigInt& q_out, word& r_out) {
 
       const auto r_carry = CT::Mask<word>::expand_top_bit(r);
 
-      r *= 2;
+      r <<= 1;
       r += x_b;
 
       const auto r_gte_y = CT::Mask<word>::is_gte(r, y) | r_carry;
@@ -128,7 +168,7 @@ word ct_mod_word(const BigInt& x, word y) {
 
       const auto r_carry = CT::Mask<word>::expand_top_bit(r);
 
-      r *= 2;
+      r <<= 1;
       r += x_b;
 
       const auto r_gte_y = CT::Mask<word>::is_gte(r, y) | r_carry;
@@ -154,7 +194,7 @@ BigInt ct_modulo(const BigInt& x, const BigInt& y) {
       const size_t b = x_bits - 1 - i;
       const bool x_b = x.get_bit(b);
 
-      r *= 2;
+      r <<= 1;
       r.conditionally_set_bit(0, x_b);
 
       const bool r_gte_y = bigint_sub3(t.mutable_data(), r._data(), r.size(), y._data(), y_words) == 0;

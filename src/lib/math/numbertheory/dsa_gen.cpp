@@ -106,7 +106,7 @@ bool generate_dsa_primes(RandomNumberGenerator& rng,
    BigInt X;
    std::vector<uint8_t> V(HASH_SIZE * (n + 1));
 
-   Modular_Reducer mod_2q(2 * q);
+   auto mod_2q = Modular_Reducer::for_public_modulus(2 * q);
 
    for(size_t j = 0; j != 4 * pbits; ++j) {
       for(size_t k = 0; k <= n; ++k) {

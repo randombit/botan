@@ -29,12 +29,24 @@ class DL_Group_Data final {
             m_p(p),
             m_q(q),
             m_g(g),
-            m_mod_p(p),
-            m_mod_q(q),
+            m_mod_p(Modular_Reducer::for_public_modulus(p)),
+            m_mod_q(Modular_Reducer::for_public_modulus(q)),
             m_monty_params(std::make_shared<Montgomery_Params>(m_p, m_mod_p)),
             m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
             m_p_bits(p.bits()),
             m_q_bits(q.bits()),
+            m_estimated_strength(dl_work_factor(m_p_bits)),
+            m_exponent_bits(dl_exponent_size(m_p_bits)),
+            m_source(source) {}
+
+      DL_Group_Data(const BigInt& p, const BigInt& g, DL_Group_Source source) :
+            m_p(p),
+            m_g(g),
+            m_mod_p(Modular_Reducer::for_public_modulus(p)),
+            m_monty_params(std::make_shared<Montgomery_Params>(m_p, m_mod_p)),
+            m_monty(monty_precompute(m_monty_params, m_g, /*window bits=*/4)),
+            m_p_bits(p.bits()),
+            m_q_bits(0),
             m_estimated_strength(dl_work_factor(m_p_bits)),
             m_exponent_bits(dl_exponent_size(m_p_bits)),
             m_source(source) {}
@@ -52,15 +64,12 @@ class DL_Group_Data final {
 
       const BigInt& g() const { return m_g; }
 
-      BigInt mod_p(const BigInt& x) const { return m_mod_p.reduce(x); }
+      const Modular_Reducer& reducer_mod_p() const { return m_mod_p; }
 
-      BigInt multiply_mod_p(const BigInt& x, const BigInt& y) const { return m_mod_p.multiply(x, y); }
-
-      BigInt mod_q(const BigInt& x) const { return m_mod_q.reduce(x); }
-
-      BigInt multiply_mod_q(const BigInt& x, const BigInt& y) const { return m_mod_q.multiply(x, y); }
-
-      BigInt square_mod_q(const BigInt& x) const { return m_mod_q.square(x); }
+      const Modular_Reducer& reducer_mod_q() const {
+         BOTAN_STATE_CHECK(m_mod_q);
+         return *m_mod_q;
+      }
 
       std::shared_ptr<const Montgomery_Params> monty_params_p() const { return m_monty_params; }
 
@@ -102,10 +111,10 @@ class DL_Group_Data final {
 
    private:
       BigInt m_p;
-      BigInt m_q;
+      BigInt m_q;  // zero if no q set
       BigInt m_g;
       Modular_Reducer m_mod_p;
-      Modular_Reducer m_mod_q;
+      std::optional<Modular_Reducer> m_mod_q;
       std::shared_ptr<const Montgomery_Params> m_monty_params;
       std::shared_ptr<const Montgomery_Exponentation_State> m_monty;
       size_t m_p_bits;
@@ -120,23 +129,24 @@ std::shared_ptr<DL_Group_Data> DL_Group::BER_decode_DL_group(const uint8_t data[
                                                              size_t data_len,
                                                              DL_Group_Format format,
                                                              DL_Group_Source source) {
-   BigInt p, q, g;
-
    BER_Decoder decoder(data, data_len);
    BER_Decoder ber = decoder.start_sequence();
 
    if(format == DL_Group_Format::ANSI_X9_57) {
+      BigInt p, q, g;
       ber.decode(p).decode(q).decode(g).verify_end();
+      return std::make_shared<DL_Group_Data>(p, q, g, source);
    } else if(format == DL_Group_Format::ANSI_X9_42) {
+      BigInt p, g, q;
       ber.decode(p).decode(g).decode(q).discard_remaining();
+      return std::make_shared<DL_Group_Data>(p, q, g, source);
    } else if(format == DL_Group_Format::PKCS_3) {
-      // q is left as zero
+      BigInt p, g;
       ber.decode(p).decode(g).discard_remaining();
+      return std::make_shared<DL_Group_Data>(p, g, source);
    } else {
       throw Invalid_Argument("Unknown DL_Group encoding");
    }
-
-   return std::make_shared<DL_Group_Data>(p, q, g, source);
 }
 
 //static
@@ -145,7 +155,11 @@ std::shared_ptr<DL_Group_Data> DL_Group::load_DL_group_info(const char* p_str, c
    const BigInt q(q_str);
    const BigInt g(g_str);
 
-   return std::make_shared<DL_Group_Data>(p, q, g, DL_Group_Source::Builtin);
+   if(q.is_zero()) {
+      return std::make_shared<DL_Group_Data>(p, g, DL_Group_Source::Builtin);
+   } else {
+      return std::make_shared<DL_Group_Data>(p, q, g, DL_Group_Source::Builtin);
+   }
 }
 
 //static
@@ -281,7 +295,7 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, PrimeType type, size_t pbits, siz
       }
 
       const BigInt q = random_prime(rng, qbits);
-      Modular_Reducer mod_2q(2 * q);
+      auto mod_2q = Modular_Reducer::for_public_modulus(2 * q);
       BigInt X;
       BigInt p;
       while(p.bits() != pbits || !is_prime(p, rng, 128, true)) {
@@ -324,14 +338,18 @@ DL_Group::DL_Group(RandomNumberGenerator& rng, const std::vector<uint8_t>& seed,
 * DL_Group Constructor
 */
 DL_Group::DL_Group(const BigInt& p, const BigInt& g) {
-   m_data = std::make_shared<DL_Group_Data>(p, BigInt::zero(), g, DL_Group_Source::ExternalSource);
+   m_data = std::make_shared<DL_Group_Data>(p, g, DL_Group_Source::ExternalSource);
 }
 
 /*
 * DL_Group Constructor
 */
 DL_Group::DL_Group(const BigInt& p, const BigInt& q, const BigInt& g) {
-   m_data = std::make_shared<DL_Group_Data>(p, q, g, DL_Group_Source::ExternalSource);
+   if(q.is_zero()) {
+      m_data = std::make_shared<DL_Group_Data>(p, g, DL_Group_Source::ExternalSource);
+   } else {
+      m_data = std::make_shared<DL_Group_Data>(p, q, g, DL_Group_Source::ExternalSource);
+   }
 }
 
 const DL_Group_Data& DL_Group::data() const {
@@ -502,11 +520,15 @@ BigInt DL_Group::inverse_mod_p(const BigInt& x) const {
 }
 
 BigInt DL_Group::mod_p(const BigInt& x) const {
-   return data().mod_p(x);
+   return data().reducer_mod_p().reduce(x);
 }
 
 BigInt DL_Group::multiply_mod_p(const BigInt& x, const BigInt& y) const {
-   return data().multiply_mod_p(x, y);
+   return data().reducer_mod_p().multiply(x, y);
+}
+
+const Modular_Reducer& DL_Group::_reducer_mod_p() const {
+   return data().reducer_mod_p();
 }
 
 BigInt DL_Group::inverse_mod_q(const BigInt& x) const {
@@ -517,22 +539,22 @@ BigInt DL_Group::inverse_mod_q(const BigInt& x) const {
 
 BigInt DL_Group::mod_q(const BigInt& x) const {
    data().assert_q_is_set("mod_q");
-   return data().mod_q(x);
+   return data().reducer_mod_q().reduce(x);
 }
 
 BigInt DL_Group::multiply_mod_q(const BigInt& x, const BigInt& y) const {
    data().assert_q_is_set("multiply_mod_q");
-   return data().multiply_mod_q(x, y);
+   return data().reducer_mod_q().multiply(x, y);
 }
 
 BigInt DL_Group::multiply_mod_q(const BigInt& x, const BigInt& y, const BigInt& z) const {
    data().assert_q_is_set("multiply_mod_q");
-   return data().multiply_mod_q(data().multiply_mod_q(x, y), z);
+   return this->multiply_mod_q(this->multiply_mod_q(x, y), z);
 }
 
 BigInt DL_Group::square_mod_q(const BigInt& x) const {
    data().assert_q_is_set("square_mod_q");
-   return data().square_mod_q(x);
+   return data().reducer_mod_q().square(x);
 }
 
 BigInt DL_Group::multi_exponentiate(const BigInt& x, const BigInt& y, const BigInt& z) const {

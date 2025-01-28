@@ -80,7 +80,7 @@ Botan::BigInt test_integer(Botan::RandomNumberGenerator& rng, size_t bits, const
 
 Botan::EC_Point create_random_point(Botan::RandomNumberGenerator& rng, const Botan::EC_Group& group) {
    const Botan::BigInt& p = group.get_p();
-   const Botan::Modular_Reducer mod_p(p);
+   auto mod_p = Botan::Modular_Reducer::for_public_modulus(p);
 
    for(;;) {
       const Botan::BigInt x = Botan::BigInt::random_integer(rng, 1, p);

@@ -99,11 +99,6 @@ bool is_bailie_psw_probable_prime(const BigInt& n, const Modular_Reducer& mod_n)
    return passes_miller_rabin_test(n, mod_n, monty_n, base) && is_lucas_probable_prime(n, mod_n);
 }
 
-bool is_bailie_psw_probable_prime(const BigInt& n) {
-   Modular_Reducer mod_n(n);
-   return is_bailie_psw_probable_prime(n, mod_n);
-}
-
 bool passes_miller_rabin_test(const BigInt& n,
                               const Modular_Reducer& mod_n,
                               const std::shared_ptr<Montgomery_Params>& monty_n,

@@ -311,10 +311,11 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       CurveGFp m_curve;
       EC_Point m_base_point;
 
+      Modular_Reducer m_mod_field;
+      Modular_Reducer m_mod_order;
+
       // Montgomery parameters (only used for legacy EC_Point)
       Montgomery_Params m_monty;
-
-      Modular_Reducer m_mod_order;
 
       BigInt m_a_r;  // (a*r) % p
       BigInt m_b_r;  // (b*r) % p

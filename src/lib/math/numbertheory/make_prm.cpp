@@ -171,7 +171,7 @@ BigInt random_prime(
 
          BOTAN_DEBUG_ASSERT(no_small_multiples(p, sieve));
 
-         Modular_Reducer mod_p(p);
+         auto mod_p = Modular_Reducer::for_secret_modulus(p);
 
          if(coprime > 1) {
             /*
@@ -259,7 +259,7 @@ BigInt generate_rsa_prime(RandomNumberGenerator& keygen_rng,
 
          BOTAN_DEBUG_ASSERT(no_small_multiples(p, sieve));
 
-         Modular_Reducer mod_p(p);
+         auto mod_p = Modular_Reducer::for_secret_modulus(p);
 
          /*
          * Do a single primality test first before checking coprimality, since
