@@ -13,16 +13,29 @@
 
 namespace Botan {
 
+/**
+* PSS parameters type
+*
+* Handles encoding/decoding of RSASSA-PSS-params from RFC 3447
+*
+* Only MGF1 is supported, and the trailer field must 1 (ie the variant
+* from IEEE 1363a using a hash identifier is not supported)
+*/
 class BOTAN_PUBLIC_API(3, 7) PSS_Params final : public ASN1_Object {
    public:
+      /**
+      * Note that the only valid strings you can pass to this function
+      * are values returned by EMSA::name() and these may change in a
+      * minor release.
+      */
       static PSS_Params from_emsa_name(std::string_view emsa_name);
 
       PSS_Params(std::string_view hash_fn, size_t salt_len);
 
-      PSS_Params(const uint8_t der[], size_t der_len);
-
-      template <typename Alloc>
-      PSS_Params(const std::vector<uint8_t, Alloc>& vec) : PSS_Params(vec.data(), vec.size()) {}
+      /**
+      * Decode an encoded RSASSA-PSS-params
+      */
+      PSS_Params(std::span<const uint8_t> der);
 
       const AlgorithmIdentifier& hash_algid() const { return m_hash; }
 
@@ -42,9 +55,10 @@ class BOTAN_PUBLIC_API(3, 7) PSS_Params final : public ASN1_Object {
 
       void encode_into(DER_Encoder& to) const override;
 
+   private:
+      // We don't currently support uninitialized PSS_Params
       void decode_from(BER_Decoder& from) override;
 
-   private:
       AlgorithmIdentifier m_hash;
       AlgorithmIdentifier m_mgf;
       AlgorithmIdentifier m_mgf_hash;
