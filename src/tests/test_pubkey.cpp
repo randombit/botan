@@ -850,11 +850,13 @@ class PK_API_Sign_Test : public Text_Based_Test {
          Test::Result result(test_name.str());
 
          auto privkey = Botan::create_private_key(algorithm, this->rng(), algo_params, provider);
+
          if(!privkey) {
             result.test_note(Botan::fmt(
                "Skipping Sign/verify API tests for {}({}) with provider {}", algorithm, algo_params, provider));
             return result;
          }
+
          auto pubkey = Botan::X509::load_key(Botan::X509::BER_encode(*privkey));
          result.confirm("Storing and loading public key works", pubkey != nullptr);
 

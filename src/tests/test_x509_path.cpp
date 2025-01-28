@@ -19,6 +19,10 @@
    #include <botan/internal/fmt.h>
    #include <botan/internal/parsing.h>
 
+   #if defined(BOTAN_HAS_ECDSA)
+      #include <botan/ec_group.h>
+   #endif
+
    #include <algorithm>
    #include <fstream>
    #include <limits>
@@ -1227,6 +1231,11 @@ class CVE_2020_0601_Tests final : public Test {
    public:
       std::vector<Test::Result> run() override {
          Test::Result result("CVE-2020-0601");
+
+         if(!Botan::EC_Group::supports_application_specific_group()) {
+            result.test_note("Skipping as application specific groups are not supported");
+            return {result};
+         }
          auto ca_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/ca.pem"));
          auto fake_ca_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/fake_ca.pem"));
          auto ee_crt = Botan::X509_Certificate(Test::data_file("x509/cve-2020-0601/ee.pem"));

@@ -1091,34 +1091,36 @@ class TLS_Unit_Tests final : public Test {
 
          // Test with a custom curve
 
-         /*
-         * First register a curve, in this case numsp256d1
-         */
-         const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF43");
-         const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF40");
-         const Botan::BigInt b("0x25581");
-         const Botan::BigInt order("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE43C8275EA265C6020AB20294751A825");
+         if(Botan::EC_Group::supports_application_specific_group()) {
+            /*
+            * First register a curve, in this case numsp256d1
+            */
+            const Botan::BigInt p("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF43");
+            const Botan::BigInt a("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF40");
+            const Botan::BigInt b("0x25581");
+            const Botan::BigInt order("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE43C8275EA265C6020AB20294751A825");
 
-         const Botan::BigInt g_x("0x01");
-         const Botan::BigInt g_y("0x696F1853C1E466D7FC82C96CCEEEDD6BD02C2F9375894EC10BF46306C2B56C77");
+            const Botan::BigInt g_x("0x01");
+            const Botan::BigInt g_y("0x696F1853C1E466D7FC82C96CCEEEDD6BD02C2F9375894EC10BF46306C2B56C77");
 
-         const Botan::OID oid("1.3.6.1.4.1.25258.4.1");
+            const Botan::OID oid("1.3.6.1.4.1.25258.4.1");
 
-         Botan::OID::register_oid(oid, "numsp256d1");
+            Botan::OID::register_oid(oid, "numsp256d1");
 
-         // Creating this object implicitly registers the curve for future use ...
-         Botan::EC_Group reg_numsp256d1(oid, p, a, b, g_x, g_y, order);
+            // Creating this object implicitly registers the curve for future use ...
+            Botan::EC_Group reg_numsp256d1(oid, p, a, b, g_x, g_y, order);
 
-         test_modern_versions("AES-256/GCM numsp256d1",
-                              results,
-                              client_ses,
-                              server_ses,
-                              creds,
-                              rng,
-                              "ECDH",
-                              "AES-256/GCM",
-                              "AEAD",
-                              {{"groups", "0xFEE1"}, {"minimum_ecdh_group_size", "112"}});
+            test_modern_versions("AES-256/GCM numsp256d1",
+                                 results,
+                                 client_ses,
+                                 server_ses,
+                                 creds,
+                                 rng,
+                                 "ECDH",
+                                 "AES-256/GCM",
+                                 "AEAD",
+                                 {{"groups", "0xFEE1"}, {"minimum_ecdh_group_size", "112"}});
+         }
 
          // Test connection abort by the application
          // by throwing in Callbacks::tls_session_established()

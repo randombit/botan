@@ -29,6 +29,10 @@ class ECDSA_Verification_Tests final : public PK_Signature_Verification_Test {
 
       bool clear_between_callbacks() const override { return false; }
 
+      bool skip_this_test(const std::string&, const VarMap& vars) override {
+         return !Botan::EC_Group::supports_named_group(vars.get_req_str("Group"));
+      }
+
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
          const std::string group_id = vars.get_req_str("Group");
          const BigInt px = vars.get_req_bn("Px");
@@ -54,6 +58,10 @@ class ECDSA_Wycheproof_Verification_Tests final : public PK_Signature_Verificati
       Botan::Signature_Format sig_format() const override { return Botan::Signature_Format::DerSequence; }
 
       bool test_random_invalid_sigs() const override { return false; }
+
+      bool skip_this_test(const std::string&, const VarMap& vars) override {
+         return !Botan::EC_Group::supports_named_group(vars.get_req_str("Group"));
+      }
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
          const std::string group_id = vars.get_req_str("Group");
@@ -84,6 +92,10 @@ class ECDSA_Signature_KAT_Tests final : public PK_Signature_Generation_Test {
    #endif
 
       bool clear_between_callbacks() const override { return false; }
+
+      bool skip_this_test(const std::string&, const VarMap& vars) override {
+         return !Botan::EC_Group::supports_named_group(vars.get_req_str("Group"));
+      }
 
       std::unique_ptr<Botan::Private_Key> load_private_key(const VarMap& vars) override {
          const std::string group_id = vars.get_req_str("Group");
@@ -119,6 +131,10 @@ class ECDSA_KAT_Verification_Tests final : public PK_Signature_Verification_Test
    #endif
 
       bool clear_between_callbacks() const override { return false; }
+
+      bool skip_this_test(const std::string&, const VarMap& vars) override {
+         return !Botan::EC_Group::supports_named_group(vars.get_req_str("Group"));
+      }
 
       std::unique_ptr<Botan::Public_Key> load_public_key(const VarMap& vars) override {
          const std::string group_id = vars.get_req_str("Group");
@@ -171,6 +187,10 @@ class ECDSA_Key_Recovery_Tests final : public Text_Based_Test {
    public:
       ECDSA_Key_Recovery_Tests() : Text_Based_Test("pubkey/ecdsa_key_recovery.vec", "Group,Msg,R,S,V,Pubkey") {}
 
+      bool skip_this_test(const std::string&, const VarMap& vars) override {
+         return !Botan::EC_Group::supports_named_group(vars.get_req_str("Group"));
+      }
+
       Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
          Test::Result result("ECDSA key recovery");
 
@@ -212,6 +232,10 @@ class ECDSA_Invalid_Key_Tests final : public Text_Based_Test {
       ECDSA_Invalid_Key_Tests() : Text_Based_Test("pubkey/ecdsa_invalid.vec", "Group,InvalidKeyX,InvalidKeyY") {}
 
       bool clear_between_callbacks() const override { return false; }
+
+      bool skip_this_test(const std::string&, const VarMap& vars) override {
+         return !Botan::EC_Group::supports_named_group(vars.get_req_str("Group"));
+      }
 
       Test::Result run_one_test(const std::string& /*header*/, const VarMap& vars) override {
          Test::Result result("ECDSA invalid keys");

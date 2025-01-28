@@ -683,36 +683,33 @@ ofvkP1EDmpx50fHLawIDAQAB
             self.assertFalse(verifier.check_signature(signature))
 
     def test_certs(self):
-        cert = botan.X509Cert(filename=test_data("src/tests/data/x509/ecc/CSCA.CSCA.csca-germany.1.crt"))
+        cert = botan.X509Cert(filename=test_data("src/tests/data/x509/ecc/isrg-root-x2.pem"))
         pubkey = cert.subject_public_key()
 
-        self.assertEqual(len(cert.subject_public_key_bits()), 275)
+        self.assertEqual(len(cert.subject_public_key_bits()), 118)
 
         self.assertEqual(pubkey.algo_name(), 'ECDSA')
-        self.assertEqual(pubkey.estimated_strength(), 112)
+        self.assertEqual(pubkey.estimated_strength(), 192)
 
         self.assertEqual(cert.fingerprint("SHA-1"),
-                         "32:42:1C:C3:EC:54:D7:E9:43:EC:51:F0:19:23:BD:85:1D:F2:1B:B9")
+                         "BD:B1:B9:3C:D5:97:8D:45:C6:26:14:55:F8:DB:95:C7:5A:D1:53:AF")
 
-        self.assertEqual(hex_encode(cert.serial_number()), "01")
-        self.assertEqual(hex_encode(cert.authority_key_id()),
-                         "0096452de588f966c4ccdf161dd1f3f5341b71e7")
+        self.assertEqual(hex_encode(cert.serial_number()), "41d29dd172eaeea780c12c6ce92f8752")
+        self.assertEqual(hex_encode(cert.subject_key_id()),
+                         "7c4296aede4b483bfa92f89e8ccf6d8ba9723795")
 
-        self.assertEqual(cert.subject_dn('Name', 0), 'csca-germany')
-        self.assertEqual(cert.subject_dn('Email', 0), 'csca-germany@bsi.bund.de')
-        self.assertEqual(cert.subject_dn('Organization', 0), 'bund')
-        self.assertEqual(cert.subject_dn('Organizational Unit', 0), 'bsi')
-        self.assertEqual(cert.subject_dn('Country', 0), 'DE')
+        self.assertEqual(cert.subject_dn('Name', 0), 'ISRG Root X2')
+        self.assertEqual(cert.subject_dn('Organization', 0), 'Internet Security Research Group')
+        self.assertEqual(cert.subject_dn('Country', 0), 'US')
 
         self.assertTrue(cert.to_string().startswith("Version: 3"))
 
-        self.assertEqual(cert.issuer_dn('Name', 0), 'csca-germany')
-        self.assertEqual(cert.issuer_dn('Organization', 0), 'bund')
-        self.assertEqual(cert.issuer_dn('Organizational Unit', 0), 'bsi')
-        self.assertEqual(cert.issuer_dn('Country', 0), 'DE')
+        self.assertEqual(cert.issuer_dn('Name', 0), 'ISRG Root X2')
+        self.assertEqual(cert.issuer_dn('Organization', 0), 'Internet Security Research Group')
+        self.assertEqual(cert.issuer_dn('Country', 0), 'US')
 
-        self.assertEqual(cert.not_before(), 1184858838)
-        self.assertEqual(cert.not_after(), 1831907880)
+        self.assertEqual(cert.not_before(), 1599177600)
+        self.assertEqual(cert.not_after(), 2231510400)
 
         self.assertTrue(cert.allowed_usage(["CRL_SIGN", "KEY_CERT_SIGN"]))
         self.assertTrue(cert.allowed_usage(["KEY_CERT_SIGN"]))

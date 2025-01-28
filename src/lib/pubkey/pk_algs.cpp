@@ -677,8 +677,12 @@ std::unique_ptr<Private_Key> create_private_key(std::string_view alg_name,
          return "secp256r1";
       }();
 
-      auto ec_group = EC_Group::from_name(group_id);
-      return create_ec_private_key(alg_name, ec_group, rng);
+      if(EC_Group::supports_named_group(group_id)) {
+         auto ec_group = EC_Group::from_name(group_id);
+         return create_ec_private_key(alg_name, ec_group, rng);
+      } else {
+         return {};
+      }
    }
 #endif
 

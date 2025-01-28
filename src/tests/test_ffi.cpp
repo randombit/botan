@@ -726,8 +726,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
       void ffi_test(Test::Result& result, botan_rng_t /*unused*/) override {
          botan_x509_cert_t cert;
-         if(TEST_FFI_INIT(botan_x509_cert_load_file,
-                          (&cert, Test::data_file("x509/ecc/CSCA.CSCA.csca-germany.1.crt").c_str()))) {
+         if(TEST_FFI_INIT(botan_x509_cert_load_file, (&cert, Test::data_file("x509/ecc/isrg-root-x2.pem").c_str()))) {
             size_t date_len = 0;
             TEST_FFI_RC(
                BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE, botan_x509_cert_get_time_starts, (cert, nullptr, &date_len));
@@ -738,7 +737,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             std::string date(date_len - 1, '0');
             TEST_FFI_OK(botan_x509_cert_get_time_starts, (cert, &date[0], &date_len));
-            result.test_eq("cert valid from", date, "070719152718Z");
+            result.test_eq("cert valid from", date, "200904000000Z");
 
             date_len = 0;
             TEST_FFI_RC(
@@ -746,15 +745,15 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             date.resize(date_len - 1);
             TEST_FFI_OK(botan_x509_cert_get_time_expires, (cert, &date[0], &date_len));
-            result.test_eq("cert valid until", date, "280119151800Z");
+            result.test_eq("cert valid until", date, "400917160000Z");
 
             uint64_t not_before = 0;
             TEST_FFI_OK(botan_x509_cert_not_before, (cert, &not_before));
-            result.confirm("cert not before", not_before == 1184858838);
+            result.confirm("cert not before", not_before == 1599177600);
 
             uint64_t not_after = 0;
             TEST_FFI_OK(botan_x509_cert_not_after, (cert, &not_after));
-            result.confirm("cert not after", not_after == 1831907880);
+            result.confirm("cert not after", not_after == 2231510400);
 
             size_t serial_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
@@ -763,8 +762,8 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             std::vector<uint8_t> serial(serial_len);
             TEST_FFI_OK(botan_x509_cert_get_serial_number, (cert, serial.data(), &serial_len));
-            result.test_eq("cert serial length", serial.size(), 1);
-            result.test_int_eq(serial[0], 1, "cert serial");
+            result.test_eq("cert serial length", serial.size(), 16);
+            result.test_eq("cert serial", Botan::hex_encode(serial), "41D29DD172EAEEA780C12C6CE92F8752");
 
             size_t fingerprint_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
@@ -776,29 +775,25 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
             result.test_eq(
                "cert fingerprint",
                reinterpret_cast<const char*>(fingerprint.data()),
-               "3B:6C:99:1C:D6:5A:51:FC:EB:17:E3:AA:F6:3C:1A:DA:14:1F:82:41:30:6F:64:EE:FF:63:F3:1F:D6:07:14:9F");
+               "69:72:9B:8E:15:A8:6E:FC:17:7A:57:AF:B7:17:1D:FC:64:AD:D2:8C:2F:CA:8C:F1:50:7E:34:45:3C:CB:14:70");
 
             size_t key_id_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
                         botan_x509_cert_get_authority_key_id,
                         (cert, nullptr, &key_id_len));
 
-            std::vector<uint8_t> key_id(key_id_len);
-            TEST_FFI_OK(botan_x509_cert_get_authority_key_id, (cert, key_id.data(), &key_id_len));
-            result.test_eq("cert authority key id",
-                           Botan::hex_encode(key_id.data(), key_id.size(), true),
-                           "0096452DE588F966C4CCDF161DD1F3F5341B71E7");
+            result.test_eq("No AKID", key_id_len, 0);
 
             key_id_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
                         botan_x509_cert_get_subject_key_id,
                         (cert, nullptr, &key_id_len));
 
-            key_id.resize(key_id_len);
+            std::vector<uint8_t> key_id(key_id_len);
             TEST_FFI_OK(botan_x509_cert_get_subject_key_id, (cert, key_id.data(), &key_id_len));
             result.test_eq("cert subject key id",
                            Botan::hex_encode(key_id.data(), key_id.size(), true),
-                           "0096452DE588F966C4CCDF161DD1F3F5341B71E7");
+                           "7C4296AEDE4B483BFA92F89E8CCF6D8BA9723795");
 
             size_t pubkey_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
@@ -810,7 +805,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             botan_pubkey_t pub;
             if(TEST_FFI_OK(botan_x509_cert_get_public_key, (cert, &pub))) {
-               TEST_FFI_RC(1, botan_pubkey_ecc_key_used_explicit_encoding, (pub));
+               TEST_FFI_RC(0, botan_pubkey_ecc_key_used_explicit_encoding, (pub));
                TEST_FFI_OK(botan_pubkey_destroy, (pub));
             }
 
@@ -821,7 +816,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             std::vector<uint8_t> dn(dn_len);
             TEST_FFI_OK(botan_x509_cert_get_issuer_dn, (cert, "Name", 0, dn.data(), &dn_len));
-            result.test_eq("issuer dn", reinterpret_cast<const char*>(dn.data()), "csca-germany");
+            result.test_eq("issuer dn", reinterpret_cast<const char*>(dn.data()), "ISRG Root X2");
 
             dn_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
@@ -830,7 +825,7 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
 
             dn.resize(dn_len);
             TEST_FFI_OK(botan_x509_cert_get_subject_dn, (cert, "Name", 0, dn.data(), &dn_len));
-            result.test_eq("subject dn", reinterpret_cast<const char*>(dn.data()), "csca-germany");
+            result.test_eq("subject dn", reinterpret_cast<const char*>(dn.data()), "ISRG Root X2");
 
             size_t printable_len = 0;
             TEST_FFI_RC(
