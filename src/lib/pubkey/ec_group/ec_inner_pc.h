@@ -101,7 +101,7 @@ class EC_AffinePoint_Data_PC final : public EC_AffinePoint_Data {
 
 class EC_Mul2Table_Data_PC final : public EC_Mul2Table_Data {
    public:
-      EC_Mul2Table_Data_PC(const EC_AffinePoint_Data& g, const EC_AffinePoint_Data& h);
+      EC_Mul2Table_Data_PC(const EC_AffinePoint_Data& q);
 
       std::unique_ptr<EC_AffinePoint_Data> mul2_vartime(const EC_Scalar_Data& x,
                                                         const EC_Scalar_Data& y) const override;
