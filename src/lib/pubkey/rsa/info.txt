@@ -11,8 +11,6 @@ blinding
 keypair
 numbertheory
 pk_pad
-emsa_pssr
-sha2_32
 </requires>
 
 <header:public>

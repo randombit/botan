@@ -657,13 +657,13 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          REQUIRE_FFI_OK(botan_x509_cert_load_file, (&sub2, Test::data_file("x509/nist/test02/int.crt").c_str()));
 
          TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end2, &sub2, 1, &root, 1, nullptr, 0, nullptr, 0));
-         result.confirm("Validation failed", rc == 5002);
-         result.test_eq("Validation status string", botan_x509_cert_validation_status(rc), "Signature error");
+         result.confirm("Validation test02 failed", rc == 5002);
+         result.test_eq("Validation test02 status string", botan_x509_cert_validation_status(rc), "Signature error");
 
          TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end2, nullptr, 0, &root, 1, nullptr, 0, nullptr, 0));
-         result.confirm("Validation failed", rc == 3000);
+         result.confirm("Validation test02 failed (missing int)", rc == 3000);
          result.test_eq(
-            "Validation status string", botan_x509_cert_validation_status(rc), "Certificate issuer not found");
+            "Validation test02 status string", botan_x509_cert_validation_status(rc), "Certificate issuer not found");
 
          botan_x509_cert_t end7;
          botan_x509_cert_t sub7;
@@ -672,29 +672,29 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
 
          botan_x509_cert_t subs[2] = {sub2, sub7};
          TEST_FFI_RC(1, botan_x509_cert_verify, (&rc, end7, subs, 2, &root, 1, nullptr, 0, nullptr, 0));
-         result.confirm("Validation failed", rc == 1001);
-         result.test_eq("Validation status string",
+         result.confirm("Validation test07 failed with expected error", rc == 1001);
+         result.test_eq("Validation test07 status string",
                         botan_x509_cert_validation_status(rc),
                         "Hash function used is considered too weak for security");
 
          TEST_FFI_RC(0, botan_x509_cert_verify, (&rc, end7, subs, 2, &root, 1, nullptr, 80, nullptr, 0));
-         result.confirm("Validation passed", rc == 0);
-         result.test_eq("Validation status string", botan_x509_cert_validation_status(rc), "Verified");
+         result.confirm("Validation test07 passed", rc == 0);
+         result.test_eq("Validation test07 status string", botan_x509_cert_validation_status(rc), "Verified");
 
          TEST_FFI_RC(1,
                      botan_x509_cert_verify_with_crl,
                      (&rc, end7, subs, 2, nullptr, 0, nullptr, 0, "x509/farce", 0, nullptr, 0));
-         result.confirm("Validation failed", rc == 3000);
+         result.confirm("Validation test07 failed with expected error", rc == 3000);
          result.test_eq(
-            "Validation status string", botan_x509_cert_validation_status(rc), "Certificate issuer not found");
+            "Validation test07 status string", botan_x509_cert_validation_status(rc), "Certificate issuer not found");
 
          botan_x509_crl_t rootcrl;
 
          REQUIRE_FFI_OK(botan_x509_crl_load_file, (&rootcrl, Test::data_file("x509/nist/root.crl").c_str()));
          TEST_FFI_RC(
             0, botan_x509_cert_verify_with_crl, (&rc, end7, subs, 2, &root, 1, &rootcrl, 1, nullptr, 80, nullptr, 0));
-         result.confirm("Validation passed", rc == 0);
-         result.test_eq("Validation status string", botan_x509_cert_validation_status(rc), "Verified");
+         result.confirm("Validation test07 with CRL passed", rc == 0);
+         result.test_eq("Validation test07 with CRL status string", botan_x509_cert_validation_status(rc), "Verified");
 
          botan_x509_cert_t end20;
          botan_x509_cert_t sub20;
@@ -705,8 +705,9 @@ class FFI_Cert_Validation_Test final : public FFI_Test {
          botan_x509_crl_t crls[2] = {sub20crl, rootcrl};
          TEST_FFI_RC(
             1, botan_x509_cert_verify_with_crl, (&rc, end20, &sub20, 1, &root, 1, crls, 2, nullptr, 80, nullptr, 0));
-         result.confirm("Validation failed", rc == 5000);
-         result.test_eq("Validation status string", botan_x509_cert_validation_status(rc), "Certificate is revoked");
+         result.confirm("Validation test20 failed with expected error", rc == 5000);
+         result.test_eq(
+            "Validation test20 status string", botan_x509_cert_validation_status(rc), "Certificate is revoked");
 
          TEST_FFI_OK(botan_x509_cert_destroy, (end2));
          TEST_FFI_OK(botan_x509_cert_destroy, (sub2));
@@ -803,11 +804,13 @@ class FFI_ECDSA_Certificate_Test final : public FFI_Test {
             std::vector<uint8_t> pubkey(pubkey_len);
             TEST_FFI_OK(botan_x509_cert_get_public_key_bits, (cert, pubkey.data(), &pubkey_len));
 
+   #if defined(BOTAN_HAS_ECDSA)
             botan_pubkey_t pub;
             if(TEST_FFI_OK(botan_x509_cert_get_public_key, (cert, &pub))) {
                TEST_FFI_RC(0, botan_pubkey_ecc_key_used_explicit_encoding, (pub));
                TEST_FFI_OK(botan_pubkey_destroy, (pub));
             }
+   #endif
 
             size_t dn_len = 0;
             TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
@@ -2523,7 +2526,6 @@ class FFI_RSA_Test final : public FFI_Test {
             }
 
             botan_pk_op_encrypt_t encrypt;
-
             if(TEST_FFI_INIT(botan_pk_op_encrypt_create, (&encrypt, loaded_pubkey, "OAEP(SHA-256)", 0))) {
                std::vector<uint8_t> plaintext(32);
                TEST_FFI_OK(botan_rng_get, (rng, plaintext.data(), plaintext.size()));
@@ -3949,9 +3951,15 @@ class FFI_ElGamal_Test final : public FFI_Test {
          std::vector<uint8_t> ciphertext;
          std::vector<uint8_t> decryption;
 
+   #if defined(BOTAN_HAS_OAEP) && defined(BOTAN_HAS_SHA2_32)
+         const std::string padding = "OAEP(SHA-256)";
+   #else
+         const std::string padding = "Raw";
+   #endif
+
          // Test encryption
          botan_pk_op_encrypt_t op_enc;
-         if(TEST_FFI_OK(botan_pk_op_encrypt_create, (&op_enc, loaded_pubkey, "Raw", 0))) {
+         if(TEST_FFI_OK(botan_pk_op_encrypt_create, (&op_enc, loaded_pubkey, padding.c_str(), 0))) {
             size_t ctext_len;
             TEST_FFI_OK(botan_pk_op_encrypt_output_length, (op_enc, plaintext.size(), &ctext_len));
             ciphertext.resize(ctext_len);
@@ -3963,7 +3971,7 @@ class FFI_ElGamal_Test final : public FFI_Test {
 
          // Test decryption
          botan_pk_op_decrypt_t op_dec;
-         if(TEST_FFI_OK(botan_pk_op_decrypt_create, (&op_dec, loaded_privkey, "Raw", 0))) {
+         if(TEST_FFI_OK(botan_pk_op_decrypt_create, (&op_dec, loaded_privkey, padding.c_str(), 0))) {
             size_t ptext_len;
             TEST_FFI_OK(botan_pk_op_decrypt_output_length, (op_dec, ciphertext.size(), &ptext_len));
             decryption.resize(ptext_len);

@@ -71,6 +71,11 @@ class SPHINCS_Plus_WOTS_Test final : public Text_Based_Test {
          }();
          auto hash = Botan::HashFunction::create(hash_algo_spec);
 
+         if(!hash) {
+            result.test_note("Skipping due to missing hash function");
+            return result;
+         }
+
          // Addresses used for signing
          auto leaf_addr = Botan::Sphincs_Address::as_subtree_from(address);
          auto pk_addr_sign_and_pkgen = Botan::Sphincs_Address::as_subtree_from(address).set_type(

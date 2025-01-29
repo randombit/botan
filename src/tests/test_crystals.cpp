@@ -280,6 +280,8 @@ std::vector<Test::Result> test_polynomial_basics() {
 
 namespace {
 
+   #if defined(BOTAN_HAS_XOF)
+
 class DeterministicXOF : public Botan::XOF {
    public:
       DeterministicXOF(std::span<const uint8_t> data) : m_data(data) {}
@@ -307,6 +309,8 @@ class DeterministicXOF : public Botan::XOF {
    private:
       Botan::BufferSlicer m_data;
 };
+
+   #endif
 
 template <Botan::CRYSTALS::crystals_trait Trait, int32_t range>
 void random_encoding_roundtrips(Test::Result& res, Botan::RandomNumberGenerator& rng, size_t expected_encoding_bits) {
@@ -428,6 +432,7 @@ std::vector<Test::Result> test_encoding() {
 
       CHECK("decode polynomial coefficients from XOF",
             [&](Test::Result& res) {
+   #if defined(BOTAN_HAS_XOF)
                Kyberish_Poly<Domain::Normal> p1;
                DeterministicXOF xof1(threebitencoding);
                Botan::CRYSTALS::unpack<6>(p1, xof1);
@@ -448,6 +453,7 @@ std::vector<Test::Result> test_encoding() {
                for(size_t i = 0; i < p3.size(); ++i) {
                   res.test_is_eq<size_t>("decoded 10-bit coefficient with mapping", p3[i], i);
                }
+   #endif
             }),
 
       CHECK("random encoding roundtrips (0 to x)",

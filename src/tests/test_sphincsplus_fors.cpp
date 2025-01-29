@@ -66,6 +66,11 @@ class SPHINCS_Plus_FORS_Test final : public Text_Based_Test {
          }();
          auto hash = Botan::HashFunction::create(hash_algo_spec);
 
+         if(!hash) {
+            result.test_note("Skipping due to missing hash function");
+            return result;
+         }
+
          auto hashes = Botan::Sphincs_Hash_Functions::create(params, public_seed);
          Botan::Sphincs_Address address = read_address(vars.get_req_bin("Address"));
 

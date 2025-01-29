@@ -100,7 +100,7 @@ class EMSA_unit_tests final : public Test {
          for(const auto& pad : pads_need_hash) {
             try {
                const std::string hash_to_use = "SHA-256";
-               auto emsa = Botan::EMSA::create(Botan::fmt("{}({})", pad, hash_to_use));
+               auto emsa = Botan::EMSA::create_or_throw(Botan::fmt("{}({})", pad, hash_to_use));
                auto emsa_copy = Botan::EMSA::create(emsa->name());
                name_tests.test_eq("EMSA_name_test for " + pad, emsa->name(), emsa_copy->name());
             } catch(Botan::Lookup_Error&) {

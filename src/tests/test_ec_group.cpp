@@ -364,10 +364,13 @@ Test::Result test_decoding_with_seed() {
    Test::Result result("Decode EC_Group with seed");
 
    try {
-      const auto secp384r1 = Botan::EC_Group::from_name("secp384r1");
-      const auto secp384r1_with_seed = Botan::EC_Group::from_PEM(Test::read_data_file("x509/ecc/secp384r1_seed.pem"));
-      result.confirm("decoding worked", secp384r1_with_seed.initialized());
-      result.test_eq("P-384 prime", secp384r1_with_seed.get_p(), secp384r1.get_p());
+      if(Botan::EC_Group::supports_named_group("secp384r1")) {
+         const auto secp384r1 = Botan::EC_Group::from_name("secp384r1");
+         const auto secp384r1_with_seed =
+            Botan::EC_Group::from_PEM(Test::read_data_file("x509/ecc/secp384r1_seed.pem"));
+         result.confirm("decoding worked", secp384r1_with_seed.initialized());
+         result.test_eq("P-384 prime", secp384r1_with_seed.get_p(), secp384r1.get_p());
+      }
    } catch(Botan::Exception& e) {
       result.test_failure(e.what());
    }
@@ -378,19 +381,21 @@ Test::Result test_decoding_with_seed() {
 Test::Result test_mixed_points() {
    Test::Result result("Mixed Point Arithmetic");
 
-   const auto secp256r1 = Botan::EC_Group::from_name("secp256r1");
-   const auto secp384r1 = Botan::EC_Group::from_name("secp384r1");
+   if(Botan::EC_Group::supports_named_group("secp256r1") && Botan::EC_Group::supports_named_group("secp384r1")) {
+      const auto secp256r1 = Botan::EC_Group::from_name("secp256r1");
+      const auto secp384r1 = Botan::EC_Group::from_name("secp384r1");
 
    #if defined(BOTAN_HAS_LEGACY_EC_POINT)
-   const Botan::EC_Point& G256 = secp256r1.get_base_point();
-   const Botan::EC_Point& G384 = secp384r1.get_base_point();
+      const Botan::EC_Point& G256 = secp256r1.get_base_point();
+      const Botan::EC_Point& G384 = secp384r1.get_base_point();
 
-   result.test_throws("Mixing points from different groups", [&] { Botan::EC_Point p = G256 + G384; });
+      result.test_throws("Mixing points from different groups", [&] { Botan::EC_Point p = G256 + G384; });
    #endif
 
-   const auto p1 = Botan::EC_AffinePoint::generator(secp256r1);
-   const auto p2 = Botan::EC_AffinePoint::generator(secp384r1);
-   result.test_throws("Mixing points from different groups", [&] { auto p3 = p1.add(p2); });
+      const auto p1 = Botan::EC_AffinePoint::generator(secp256r1);
+      const auto p2 = Botan::EC_AffinePoint::generator(secp384r1);
+      result.test_throws("Mixing points from different groups", [&] { auto p3 = p1.add(p2); });
+   }
 
    return result;
 }

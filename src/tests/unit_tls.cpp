@@ -222,13 +222,6 @@ std::shared_ptr<Credentials_Manager_Test> create_creds(Botan::RandomNumberGenera
    Botan::X509_CRL rsa_crl = rsa_ca.new_crl(rng);
    Botan::X509_CRL ecdsa_crl = ecdsa_ca.new_crl(rng);
 
-   // dsa support is optional
-   std::unique_ptr<Botan::Private_Key> dsa_ca_key;
-   std::unique_ptr<Botan::Private_Key> dsa_srv_key;
-   std::unique_ptr<Botan::X509_CRL> dsa_crl;
-   std::unique_ptr<Botan::X509_Certificate> dsa_srv_cert;
-   std::unique_ptr<Botan::X509_Certificate> dsa_ca_cert;
-
    return std::make_shared<Credentials_Manager_Test>(with_client_certs,
                                                      rsa_srv_cert,
                                                      rsa_srv_key.release(),

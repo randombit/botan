@@ -43,9 +43,18 @@ tls_reader.h
 </header:internal>
 
 <requires>
+ecdh
+ecdsa
+gcm
+hmac
 rng
+sha2_32
+sha2_64
 tls12
 x509
+pcurves_secp256r1
+pcurves_secp384r1
+pcurves_secp521r1
 </requires>
 
 <os_features>
