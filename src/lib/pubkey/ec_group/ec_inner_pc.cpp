@@ -198,14 +198,12 @@ EC_Point EC_AffinePoint_Data_PC::to_legacy_point() const {
 }
 #endif
 
-EC_Mul2Table_Data_PC::EC_Mul2Table_Data_PC(const EC_AffinePoint_Data& g, const EC_AffinePoint_Data& h) :
-      m_group(g.group()) {
-   BOTAN_ARG_CHECK(h.group() == m_group, "Curve mismatch");
+EC_Mul2Table_Data_PC::EC_Mul2Table_Data_PC(const EC_AffinePoint_Data& q) : m_group(q.group()) {
+   BOTAN_ARG_CHECK(q.group() == m_group, "Curve mismatch");
 
-   const auto& pt_g = EC_AffinePoint_Data_PC::checked_ref(g);
-   const auto& pt_h = EC_AffinePoint_Data_PC::checked_ref(h);
+   const auto& pt_q = EC_AffinePoint_Data_PC::checked_ref(q);
 
-   m_tbl = m_group->pcurve().mul2_setup(pt_g.value(), pt_h.value());
+   m_tbl = m_group->pcurve().mul2_setup_g(pt_q.value());
 }
 
 std::unique_ptr<EC_AffinePoint_Data> EC_Mul2Table_Data_PC::mul2_vartime(const EC_Scalar_Data& xd,

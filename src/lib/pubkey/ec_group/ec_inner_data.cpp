@@ -417,8 +417,7 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::affine_neg(const EC_AffinePo
 
 std::unique_ptr<EC_Mul2Table_Data> EC_Group_Data::make_mul2_table(const EC_AffinePoint_Data& h) const {
    if(m_pcurve) {
-      EC_AffinePoint_Data_PC g(shared_from_this(), m_pcurve->generator());
-      return std::make_unique<EC_Mul2Table_Data_PC>(g, h);
+      return std::make_unique<EC_Mul2Table_Data_PC>(h);
    } else {
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
       EC_AffinePoint_Data_BN g(shared_from_this(), this->base_point());
