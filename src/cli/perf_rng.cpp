@@ -65,6 +65,7 @@ class PerfTest_Rng final : public PerfTest {
             bench_rng(config, hwrng, "Processor_RNG");
          }
 #endif
+         BOTAN_UNUSED(config);
       }
 
    private:

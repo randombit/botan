@@ -108,11 +108,12 @@ std::unique_ptr<Botan::Private_Key> make_a_private_key(const std::string& algo, 
          return "1024";
       }
       if(algo == "GOST-34.10") {
+   #if defined(BOTAN_HAS_ECC_GROUP)
          if(Botan::EC_Group::supports_named_group("gost_256A")) {
             return "gost_256A";
-         } else {
-            return "secp256r1";
          }
+   #endif
+         return "secp256r1";
       }
       if(algo == "ECKCDSA" || algo == "ECGDSA") {
          return "brainpool256r1";

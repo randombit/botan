@@ -849,7 +849,13 @@ class PK_API_Sign_Test : public Text_Based_Test {
          }
          Test::Result result(test_name.str());
 
-         auto privkey = Botan::create_private_key(algorithm, this->rng(), algo_params, provider);
+         auto privkey = [&]() -> std::unique_ptr<Botan::Private_Key> {
+            try {
+               return Botan::create_private_key(algorithm, this->rng(), algo_params, provider);
+            } catch(Botan::Not_Implemented&) {}
+
+            return nullptr;
+         }();
 
          if(!privkey) {
             result.test_note(Botan::fmt(

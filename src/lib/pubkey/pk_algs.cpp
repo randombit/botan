@@ -7,6 +7,7 @@
 
 #include <botan/pk_algs.h>
 
+#include <botan/assert.h>
 #include <botan/internal/fmt.h>
 #include <botan/internal/parsing.h>
 
