@@ -2015,14 +2015,19 @@ inline auto map_to_curve_sswu(const typename C::FieldElement& u) -> typename C::
 template <typename C, bool RO>
 inline auto hash_to_curve_sswu(std::string_view hash, std::span<const uint8_t> pw, std::span<const uint8_t> dst) {
    static_assert(C::ValidForSswuHash);
-#if defined(BOTAN_HAS_XMD)
 
    constexpr size_t SecurityLevel = (C::OrderBits + 1) / 2;
    constexpr size_t L = (C::PrimeFieldBits + SecurityLevel + 7) / 8;
    constexpr size_t Cnt = RO ? 2 : 1;
 
    std::array<uint8_t, L * Cnt> xmd;
+
+#if defined(BOTAN_HAS_XMD)
    expand_message_xmd(hash, xmd, pw, dst);
+#else
+   BOTAN_UNUSED(hash, pw, dst);
+   throw Not_Implemented("Hash to curve not available due to missing XMD");
+#endif
 
    if constexpr(RO) {
       const auto u0 = C::FieldElement::from_wide_bytes(std::span<const uint8_t, L>(xmd.data(), L));
@@ -2035,9 +2040,6 @@ inline auto hash_to_curve_sswu(std::string_view hash, std::span<const uint8_t> p
       const auto u = C::FieldElement::from_wide_bytes(std::span<const uint8_t, L>(xmd.data(), L));
       return map_to_curve_sswu<C>(u);
    }
-#else
-   throw Not_Implemented("Hash to curve not available due to missing XMD");
-#endif
 }
 
 }  // namespace
