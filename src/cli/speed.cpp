@@ -253,8 +253,6 @@ std::string format_timer(const Timer& t, size_t time_unit) {
       oss << "(" << MiB_total << " MiB in " << t.milliseconds() << " ms)";
    }
 
-   oss << "\n";
-
    return oss.str();
 }
 
@@ -491,7 +489,7 @@ class Speed final : public Command {
          if(m_json) {
             m_json->add(t);
          } else {
-            output() << format_timer(t, m_time_unit);
+            output() << format_timer(t, m_time_unit) << std::endl;
 
             if(m_summary) {
                m_summary->add(t);
