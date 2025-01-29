@@ -19,7 +19,12 @@ Version 3.7.0, Not Yet Released
 
 * Internal EC related cleanups and optimizations (GH #4385 #4432 #4436
   #4492 #4479 #4510 #4511 #4512 #4517 #4518 #4532 #4533 #4549 #4550
-  #4552 #4556 #4557 #4564 #4566 #4570)
+  #4552 #4556 #4557 #4564 #4566 #4570 #4601 #4604 #4608)
+
+* Change OID formatting and PK signature padding naming to avoid
+  obsolete IEEE 1363 naming (GH #4600)
+
+* Improve performance of RSA private key parsing (GH #4588)
 
 * Fix a regression introduced in 3.6.0 which would cause many P-521
   secret keys to be rejected as invalid due to not having the expected
@@ -27,7 +32,13 @@ Version 3.7.0, Not Yet Released
 
 * Add new operations to EC_AffinePoint (GH #4433 #4503)
 
+* Optimize modular inversions (GH #4569)
+
 * KDF internals modernization (GH #4455)
+
+* Split compiler.h into api.h and compiler.h (GH #4599)
+
+* Deprecate creating uninitialized DL_Group or EC_Group (GH #4598)
 
 * Extend SP800-108 KDFs to support variable length fields (GH #4551)
 
@@ -47,6 +58,8 @@ Version 3.7.0, Not Yet Released
   are implemented. (GH #4447)
 
 * GCM/GHASH internal cleanups (GH #4469)
+
+* Documentation updates (GH #4586)
 
 * Internal cleanups related to calling ``getauxval`` (GH #4471)
 
