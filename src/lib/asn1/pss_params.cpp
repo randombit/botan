@@ -34,8 +34,8 @@ PSS_Params::PSS_Params(std::string_view hash_fn, size_t salt_len) :
       m_mgf_hash(m_hash),
       m_salt_len(salt_len) {}
 
-PSS_Params::PSS_Params(const uint8_t der[], size_t der_len) {
-   BER_Decoder decoder(der, der_len);
+PSS_Params::PSS_Params(std::span<const uint8_t> der) {
+   BER_Decoder decoder(der);
    this->decode_from(decoder);
 }
 
