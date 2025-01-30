@@ -106,6 +106,9 @@ int privkey_load_ec(std::unique_ptr<ECPrivateKey_t>& key, const Botan::BigInt& s
    if(curve_name == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
    }
+   if(!Botan::EC_Group::supports_named_group(curve_name)) {
+      return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
+   }
 
    Botan::Null_RNG null_rng;
    const auto grp = Botan::EC_Group::from_name(curve_name);
@@ -120,6 +123,10 @@ int pubkey_load_ec(std::unique_ptr<ECPublicKey_t>& key,
                    const char* curve_name) {
    if(curve_name == nullptr) {
       return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   if(!Botan::EC_Group::supports_named_group(curve_name)) {
+      return BOTAN_FFI_ERROR_NOT_IMPLEMENTED;
    }
 
    const auto group = Botan::EC_Group::from_name(curve_name);
