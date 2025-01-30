@@ -21,6 +21,14 @@ Only curves over prime fields are supported.
 
 .. cpp:class:: EC_Group
 
+      .. cpp:function:: static bool EC_Group::supports_named_group(std::string_view name)
+
+         Check if the named group is supported.
+
+      .. cpp:function:: static bool EC_Group::supports_application_specific_group()
+
+         Check if application specific groups are supported.
+
       .. cpp:function:: EC_Group::from_OID(const OID& oid)
 
          Initialize an ``EC_Group`` using an OID referencing the curve
@@ -29,6 +37,9 @@ Only curves over prime fields are supported.
       .. cpp:function:: EC_Group::from_name(std::string_view name)
 
          Initialize an ``EC_Group`` using a name (such as "secp256r1")
+
+         The curve may not be available, based on the build configuration.
+         If this is the case this function will throw `Not_Implemented`.
 
       .. cpp:function:: EC_Group::from_PEM(std::string_view pem)
 

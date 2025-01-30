@@ -2435,7 +2435,7 @@ class ModulesChooser:
         elif not module.compatible_compiler(self._ccinfo, self._cc_min_version, self._archinfo.basename):
             self._not_using_because['incompatible compiler'].add(modname)
             return False
-        elif module.is_deprecated() and not self._options.enable_deprecated_features:
+        elif module.is_deprecated() and not self._options.enable_deprecated_features and modname not in self._options.enabled_modules:
             self._not_using_because['deprecated'].add(modname)
             return False
         elif module.is_experimental() and modname not in self._options.enabled_modules and not self._options.enable_experimental_features:
