@@ -309,9 +309,8 @@ void test_compress(Test::Result& res) {
 
    for(uint16_t x = 0; x < q; ++x) {
       const uint32_t c = Kyber_Algos::compress<d>(x);
-      const auto twotothed = (uint32_t(1) << d);
-      const auto expected = (static_cast<double>(twotothed) / q) * x;
-      const auto e = static_cast<uint32_t>(std::round(expected)) % twotothed;
+      constexpr auto twotothed = (uint32_t(1) << d);
+      const auto e = ((twotothed * x + (q / 2)) / q) % twotothed;
 
       if(c != e) {
          res.test_failure(fmt("compress<{}>({}) = {}; expected {}", d, x, c, e));
@@ -330,13 +329,12 @@ void test_decompress(Test::Result& result) {
 
    result.start_timer();
 
-   const auto twotothed = (uint32_t(1) << d);
+   constexpr auto twotothed = uint32_t(1) << d;
    using from_t = std::conditional_t<d <= 8, uint8_t, uint16_t>;
 
    for(from_t y = 0; y < twotothed; ++y) {
       const uint32_t c = Kyber_Algos::decompress<d>(y);
-      const auto expected = (static_cast<double>(q) / twotothed) * y;
-      const auto e = static_cast<uint32_t>(std::round(expected)) % q;
+      const uint32_t e = (q * y + (twotothed / 2)) / twotothed;
 
       if(c != e) {
          result.test_failure(fmt("decompress<{}>({}) = {}; expected {}", d, static_cast<uint16_t>(y), c, e));
