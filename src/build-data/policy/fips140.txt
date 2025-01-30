@@ -1,5 +1,4 @@
 <required>
-des
 aes
 
 gcm
@@ -35,6 +34,12 @@ ecdsa
 ecdh
 ml_kem
 ml_dsa
+slh_dsa_sha2
+slh_dsa_shake
+
+pcurves_secp256r1
+pcurves_secp384r1
+pcurves_secp521r1
 
 # rng
 auto_rng
@@ -98,13 +103,18 @@ seed
 serpent
 serpent_simd
 serpent_avx2
+serpent_avx512
 sm4
 sm4_gfni
 shacal2
 shacal2_x86
 shacal2_simd
+shacal2_avx2
 threefish_512
 twofish
+
+# mac
+blake2mac
 
 # modes
 chacha20poly1305
@@ -128,13 +138,29 @@ kdf1
 kdf2
 prf_x942
 
+# Brainpool and secp256k1 allowed per latest NIST guidance
+# so left as optional
+legacy_ec_point
+pcurves_secp192r1
+pcurves_numsp512d1
+pcurves_sm2p256v1
+pcurves_frp256v1
+
 # pubkey
+dsa
 ecgdsa
 eckcdsa
 elgamal
 gost_3410
 mce
 rfc6979
+dilithium_round3
+dilithium_aes
+kyber_round3
+kyber_90s
+frodokem
+frodokem_aes
+frodokem_common
 xmss
 sm2
 
@@ -167,6 +193,8 @@ x919_mac
 
 # misc
 bcrypt
+srp6
+sodium
 
 # tls
 tls_cbc
