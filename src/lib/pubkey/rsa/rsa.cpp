@@ -767,9 +767,11 @@ std::string parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id) {
       PSS_Params pss_params(alg_id.parameters());
 
       // hash_algo must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
+      // We also support SHA-3 (is also supported by e.g. OpenSSL and bouncycastle)
       const std::string hash_algo = pss_params.hash_function();
       if(hash_algo != "SHA-1" && hash_algo != "SHA-224" && hash_algo != "SHA-256" && hash_algo != "SHA-384" &&
-         hash_algo != "SHA-512") {
+         hash_algo != "SHA-512" && hash_algo != "SHA-3(224)" && hash_algo != "SHA-3(256)" &&
+         hash_algo != "SHA-3(384)" && hash_algo != "SHA-3(512)") {
          throw Decoding_Error("Unacceptable hash for PSS signatures");
       }
 
@@ -779,8 +781,6 @@ std::string parse_rsa_signature_algorithm(const AlgorithmIdentifier& alg_id) {
 
       // For MGF1, it is strongly RECOMMENDED that the underlying hash
       // function be the same as the one identified by hashAlgorithm
-      //
-      // Must be SHA1, SHA2-224, SHA2-256, SHA2-384 or SHA2-512
       if(pss_params.hash_algid() != pss_params.mgf_hash_algid()) {
          throw Decoding_Error("Unacceptable MGF hash for PSS signatures");
       }
