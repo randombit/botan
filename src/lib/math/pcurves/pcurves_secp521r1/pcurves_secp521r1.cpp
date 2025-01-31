@@ -81,7 +81,7 @@ class Params final : public EllipticCurveParameters<
 class Curve final : public EllipticCurve<Params, P521Rep> {
    public:
       // Return the square of the inverse of x
-      static FieldElement fe_invert2(const FieldElement& x) {
+      static constexpr FieldElement fe_invert2(const FieldElement& x) {
          // Addition chain from https://eprint.iacr.org/2014/852.pdf page 6
 
          FieldElement r = x.square();
@@ -121,7 +121,7 @@ class Curve final : public EllipticCurve<Params, P521Rep> {
          return r;
       }
 
-      static Scalar scalar_invert(const Scalar& x) {
+      static constexpr Scalar scalar_invert(const Scalar& x) {
          // Generated using https://github.com/mmcloughlin/addchain
 
          auto t2 = x.square();
