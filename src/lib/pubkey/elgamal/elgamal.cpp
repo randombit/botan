@@ -91,7 +91,13 @@ bool ElGamal_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) cons
       return false;
    }
 
-   return KeyPair::encryption_consistency_check(rng, *this, "OAEP(SHA-256)");
+#if defined(BOTAN_HAS_OAEP) && defined(BOTAN_HAS_SHA_256)
+   const std::string padding = "OAEP(SHA-256)";
+#else
+   const std::string padding = "Raw";
+#endif
+
+   return KeyPair::encryption_consistency_check(rng, *this, padding);
 }
 
 namespace {

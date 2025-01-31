@@ -73,21 +73,27 @@ class TLS_Policy_Unit_Tests final : public Test {
       static Test::Result test_peer_key_acceptable_ecdh(Botan::RandomNumberGenerator& rng) {
          Test::Result result("TLS Policy ECDH key verification");
    #if defined(BOTAN_HAS_ECDH)
-         const auto group_192 = Botan::EC_Group::from_name("secp192r1");
-         auto ecdh_192 = std::make_unique<Botan::ECDH_PrivateKey>(rng, group_192);
 
          Botan::TLS::Policy policy;
-         try {
-            policy.check_peer_key_acceptable(*ecdh_192);
-            result.test_failure("Incorrectly accepting 192 bit EC keys");
-         } catch(Botan::TLS::TLS_Exception&) {
-            result.test_success("Correctly rejecting 192 bit EC keys");
+
+         if(Botan::EC_Group::supports_named_group("secp192r1")) {
+            const auto group_192 = Botan::EC_Group::from_name("secp192r1");
+            auto ecdh_192 = std::make_unique<Botan::ECDH_PrivateKey>(rng, group_192);
+
+            try {
+               policy.check_peer_key_acceptable(*ecdh_192);
+               result.test_failure("Incorrectly accepting 192 bit EC keys");
+            } catch(Botan::TLS::TLS_Exception&) {
+               result.test_success("Correctly rejecting 192 bit EC keys");
+            }
          }
 
-         const auto group_256 = Botan::EC_Group::from_name("secp256r1");
-         auto ecdh_256 = std::make_unique<Botan::ECDH_PrivateKey>(rng, group_256);
-         policy.check_peer_key_acceptable(*ecdh_256);
-         result.test_success("Correctly accepting 256 bit EC keys");
+         if(Botan::EC_Group::supports_named_group("secp256r1")) {
+            const auto group_256 = Botan::EC_Group::from_name("secp256r1");
+            auto ecdh_256 = std::make_unique<Botan::ECDH_PrivateKey>(rng, group_256);
+            policy.check_peer_key_acceptable(*ecdh_256);
+            result.test_success("Correctly accepting 256 bit EC keys");
+         }
    #endif
          return result;
       }
@@ -95,21 +101,26 @@ class TLS_Policy_Unit_Tests final : public Test {
       static Test::Result test_peer_key_acceptable_ecdsa(Botan::RandomNumberGenerator& rng) {
          Test::Result result("TLS Policy ECDSA key verification");
    #if defined(BOTAN_HAS_ECDSA)
-         const auto group_192 = Botan::EC_Group::from_name("secp192r1");
-         auto ecdsa_192 = std::make_unique<Botan::ECDSA_PrivateKey>(rng, group_192);
-
          Botan::TLS::Policy policy;
-         try {
-            policy.check_peer_key_acceptable(*ecdsa_192);
-            result.test_failure("Incorrectly accepting 192 bit EC keys");
-         } catch(Botan::TLS::TLS_Exception&) {
-            result.test_success("Correctly rejecting 192 bit EC keys");
+
+         if(Botan::EC_Group::supports_named_group("secp192r1")) {
+            const auto group_192 = Botan::EC_Group::from_name("secp192r1");
+            auto ecdsa_192 = std::make_unique<Botan::ECDSA_PrivateKey>(rng, group_192);
+
+            try {
+               policy.check_peer_key_acceptable(*ecdsa_192);
+               result.test_failure("Incorrectly accepting 192 bit EC keys");
+            } catch(Botan::TLS::TLS_Exception&) {
+               result.test_success("Correctly rejecting 192 bit EC keys");
+            }
          }
 
-         const auto group_256 = Botan::EC_Group::from_name("secp256r1");
-         auto ecdsa_256 = std::make_unique<Botan::ECDSA_PrivateKey>(rng, group_256);
-         policy.check_peer_key_acceptable(*ecdsa_256);
-         result.test_success("Correctly accepting 256 bit EC keys");
+         if(Botan::EC_Group::supports_named_group("secp256r1")) {
+            const auto group_256 = Botan::EC_Group::from_name("secp256r1");
+            auto ecdsa_256 = std::make_unique<Botan::ECDSA_PrivateKey>(rng, group_256);
+            policy.check_peer_key_acceptable(*ecdsa_256);
+            result.test_success("Correctly accepting 256 bit EC keys");
+         }
    #endif
          return result;
       }

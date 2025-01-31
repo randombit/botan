@@ -108,41 +108,36 @@ Test::Result test_encoding_options() {
    try {
       auto rng = Test::new_rng("ecdsa_encoding_options");
 
-      const auto group = Botan::EC_Group::from_name("secp256r1");
-      Botan::ECDSA_PrivateKey key(*rng, group);
+      for(const auto& group_id : Botan::EC_Group::known_named_groups()) {
+         const auto group = Botan::EC_Group::from_name(group_id);
+         Botan::ECDSA_PrivateKey key(*rng, group);
 
-      result.confirm("Default encoding is uncompressed", key.point_encoding() == Botan::EC_Point_Format::Uncompressed);
+         result.confirm("Default encoding is uncompressed",
+                        key.point_encoding() == Botan::EC_Point_Format::Uncompressed);
 
-      const std::vector<uint8_t> enc_uncompressed = key.public_key_bits();
+         const std::vector<uint8_t> enc_uncompressed = key.public_key_bits();
+         key.set_point_encoding(Botan::EC_Point_Format::Compressed);
 
-      key.set_point_encoding(Botan::EC_Point_Format::Compressed);
+         result.confirm("set_point_encoding works", key.point_encoding() == Botan::EC_Point_Format::Compressed);
 
-      result.confirm("set_point_encoding works", key.point_encoding() == Botan::EC_Point_Format::Compressed);
-
-      const std::vector<uint8_t> enc_compressed = key.public_key_bits();
-
-      result.test_lt("Compressed points are smaller", enc_compressed.size(), enc_uncompressed.size());
-
-      size_t size_diff = enc_uncompressed.size() - enc_compressed.size();
-
-      result.test_gte("Compressed points smaller by group size", size_diff, 32);
-
-      key.set_point_encoding(Botan::EC_Point_Format::Hybrid);
-
-      result.confirm("set_point_encoding works", key.point_encoding() == Botan::EC_Point_Format::Hybrid);
-
-      const std::vector<uint8_t> enc_hybrid = key.public_key_bits();
-
-      result.test_eq("Hybrid point same size as uncompressed", enc_uncompressed.size(), enc_hybrid.size());
+         const std::vector<uint8_t> enc_compressed = key.public_key_bits();
+         result.test_lt("Compressed points are smaller", enc_compressed.size(), enc_uncompressed.size());
+         size_t size_diff = enc_uncompressed.size() - enc_compressed.size();
+         result.test_gte("Compressed points smaller by group size", size_diff, group.get_p_bytes());
+         key.set_point_encoding(Botan::EC_Point_Format::Hybrid);
+         result.confirm("set_point_encoding works", key.point_encoding() == Botan::EC_Point_Format::Hybrid);
+         const std::vector<uint8_t> enc_hybrid = key.public_key_bits();
+         result.test_eq("Hybrid point same size as uncompressed", enc_uncompressed.size(), enc_hybrid.size());
 
    #if !defined(BOTAN_HAS_SANITIZER_UNDEFINED)
-      // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
-      auto invalid_format = static_cast<Botan::EC_Point_Format>(99);
+         // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
+         auto invalid_format = static_cast<Botan::EC_Point_Format>(99);
 
-      result.test_throws("Invalid point format throws", "Invalid point encoding for EC_PublicKey", [&] {
-         key.set_point_encoding(invalid_format);
-      });
+         result.test_throws("Invalid point format throws", "Invalid point encoding for EC_PublicKey", [&] {
+            key.set_point_encoding(invalid_format);
+         });
    #endif
+      }
    } catch(Botan::Exception& e) {
       result.test_failure(e.what());
    }
@@ -197,12 +192,14 @@ Test::Result test_ecc_key_with_rfc5915_extensions() {
    Test::Result result("ECDSA Unit");
 
    try {
-      Botan::DataSource_Stream key_stream(Test::data_file("x509/ecc/ecc_private_with_rfc5915_ext.pem"));
-      auto pkcs8 = Botan::PKCS8::load_key(key_stream);
+      if(Botan::EC_Group::supports_named_group("secp256r1")) {
+         Botan::DataSource_Stream key_stream(Test::data_file("x509/ecc/ecc_private_with_rfc5915_ext.pem"));
+         auto pkcs8 = Botan::PKCS8::load_key(key_stream);
 
-      result.confirm("loaded RFC 5915 key", pkcs8 != nullptr);
-      result.test_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
-      result.confirm("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()) != nullptr);
+         result.confirm("loaded RFC 5915 key", pkcs8 != nullptr);
+         result.test_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
+         result.confirm("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()) != nullptr);
+      }
    } catch(std::exception& e) {
       result.test_failure("load_rfc5915_ext", e.what());
    }
@@ -214,12 +211,14 @@ Test::Result test_ecc_key_with_rfc5915_parameters() {
    Test::Result result("ECDSA Unit");
 
    try {
-      Botan::DataSource_Stream key_stream(Test::data_file("x509/ecc/ecc_private_with_rfc5915_parameters.pem"));
-      auto pkcs8 = Botan::PKCS8::load_key(key_stream);
+      if(Botan::EC_Group::supports_named_group("secp256r1")) {
+         Botan::DataSource_Stream key_stream(Test::data_file("x509/ecc/ecc_private_with_rfc5915_parameters.pem"));
+         auto pkcs8 = Botan::PKCS8::load_key(key_stream);
 
-      result.confirm("loaded RFC 5915 key", pkcs8 != nullptr);
-      result.test_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
-      result.confirm("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()) != nullptr);
+         result.confirm("loaded RFC 5915 key", pkcs8 != nullptr);
+         result.test_eq("key is ECDSA", pkcs8->algo_name(), "ECDSA");
+         result.confirm("key type is ECDSA", dynamic_cast<Botan::ECDSA_PrivateKey*>(pkcs8.get()) != nullptr);
+      }
    } catch(std::exception& e) {
       result.test_failure("load_rfc5915_params", e.what());
    }

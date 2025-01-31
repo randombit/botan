@@ -574,6 +574,8 @@ typedef Policy Default_Policy;
 */
 class BOTAN_PUBLIC_API(2, 0) NSA_Suite_B_128 : public Policy {
    public:
+      BOTAN_DEPRECATED("This suite is no longer approved") NSA_Suite_B_128() = default;
+
       std::vector<std::string> allowed_ciphers() const override { return std::vector<std::string>({"AES-128/GCM"}); }
 
       std::vector<std::string> allowed_signature_hashes() const override {

@@ -430,7 +430,13 @@ bool RSA_PrivateKey::check_key(RandomNumberGenerator& rng, bool strong) const {
          return false;
       }
 
-      return KeyPair::signature_consistency_check(rng, *this, "PSS(SHA-256)");
+#if defined(BOTAN_HAS_PSS) && defined(BOTAN_HAS_SHA_256)
+      const std::string padding = "PSS(SHA-256)";
+#else
+      const std::string padding = "Raw";
+#endif
+
+      return KeyPair::signature_consistency_check(rng, *this, padding);
    }
 
    return true;

@@ -1,9 +1,12 @@
 <defines>
 SHA2_64 -> 20131128
+SHA_384 -> 20250130
+SHA_512 -> 20250130
+SHA_512_256 -> 20250130
 </defines>
 
 <module_info>
-name -> "SHA-512"
+name -> "SHA-512 and SHA-384"
 </module_info>
 
 <requires>
