@@ -225,7 +225,7 @@ bool GOST_3410_Verification_Operation::verify(std::span<const uint8_t> msg, std:
       if(r.is_nonzero() && s.is_nonzero()) {
          const auto e = gost_msg_to_scalar(m_group, msg);
 
-         const auto v = e.invert();
+         const auto v = e.invert_vartime();
 
          // Check if r == x_coord(g*v*s - y*v*r) % n
          return m_gy_mul.mul2_vartime_x_mod_order_eq(r, v, s, r.negate());

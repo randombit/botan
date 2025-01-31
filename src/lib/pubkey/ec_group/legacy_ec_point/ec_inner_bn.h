@@ -37,6 +37,8 @@ class EC_Scalar_Data_BN final : public EC_Scalar_Data {
 
       std::unique_ptr<EC_Scalar_Data> invert() const override;
 
+      std::unique_ptr<EC_Scalar_Data> invert_vartime() const override;
+
       std::unique_ptr<EC_Scalar_Data> add(const EC_Scalar_Data& other) const override;
 
       std::unique_ptr<EC_Scalar_Data> sub(const EC_Scalar_Data& other) const override;

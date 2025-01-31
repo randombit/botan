@@ -56,6 +56,8 @@ class EC_Scalar_Data {
 
       virtual std::unique_ptr<EC_Scalar_Data> invert() const = 0;
 
+      virtual std::unique_ptr<EC_Scalar_Data> invert_vartime() const = 0;
+
       virtual std::unique_ptr<EC_Scalar_Data> add(const EC_Scalar_Data& other) const = 0;
 
       virtual std::unique_ptr<EC_Scalar_Data> sub(const EC_Scalar_Data& other) const = 0;

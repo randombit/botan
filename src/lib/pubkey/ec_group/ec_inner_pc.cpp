@@ -66,6 +66,10 @@ std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_PC::invert() const {
    return std::make_unique<EC_Scalar_Data_PC>(m_group, m_v.invert());
 }
 
+std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_PC::invert_vartime() const {
+   return std::make_unique<EC_Scalar_Data_PC>(m_group, m_v.invert_vartime());
+}
+
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_PC::add(const EC_Scalar_Data& other) const {
    return std::make_unique<EC_Scalar_Data_PC>(m_group, m_v + checked_ref(other).value());
 }
