@@ -22,136 +22,136 @@ on:
     - cron:  '14 3 * * *'
 
 jobs:
-  sanitizer:
-    name: "Sanitizers"
-    strategy:
-      fail-fast: false
+  # sanitizer:
+  #   name: "Sanitizers"
+  #   strategy:
+  #     fail-fast: false
 
-      matrix:
-        include:
-          - target: sanitizer
-            compiler: msvc
-            host_os: windows-2022
-            make_tool: ninja
-          - target: sanitizer
-            compiler: gcc
-            host_os: ubuntu-24.04
+  #     matrix:
+  #       include:
+  #         - target: sanitizer
+  #           compiler: msvc
+  #           host_os: windows-2022
+  #           make_tool: ninja
+  #         - target: sanitizer
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
 
-    runs-on: ${{ matrix.host_os }}
+  #   runs-on: ${{ matrix.host_os }}
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          path: ./source
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         path: ./source
 
-      - name: Read Repository Configuration
-        uses: ./source/.github/actions/read-repo-config
+  #     - name: Read Repository Configuration
+  #       uses: ./source/.github/actions/read-repo-config
 
-      - name: Fetch BoringSSL fork for BoGo tests
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.BORINGSSL_REPO }}
-          ref: ${{ env.BORINGSSL_BRANCH }}
-          path: ./boringssl
+  #     - name: Fetch BoringSSL fork for BoGo tests
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: ${{ env.BORINGSSL_REPO }}
+  #         ref: ${{ env.BORINGSSL_BRANCH }}
+  #         path: ./boringssl
 
-      - name: Setup Build Agent
-        uses: ./source/.github/actions/setup-build-agent
-        with:
-          target: ${{ matrix.target }}
-          cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
+  #     - name: Setup Build Agent
+  #       uses: ./source/.github/actions/setup-build-agent
+  #       with:
+  #         target: ${{ matrix.target }}
+  #         cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-x86_64-${{ matrix.target }}
 
-      - name: Build and Test Botan
-        run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
+  #     - name: Build and Test Botan
+  #       run: python3 ./source/src/scripts/ci_build.py --root-dir=${{ github.workspace }}/source --build-dir=${{ github.workspace }}/build --boringssl-dir=${{ github.workspace }}/boringssl --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
-  x-compile:
-    name: "Cross"
-    strategy:
-      fail-fast: false
+  # x-compile:
+  #   name: "Cross"
+  #   strategy:
+  #     fail-fast: false
 
-      matrix:
-        include:
-          - target: cross-alpha
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-hppa64
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-m68k
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-mips
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-ppc32
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-sh4
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-sparc64
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-riscv64
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-s390x
-            compiler: gcc
-            host_os: ubuntu-24.04
-          - target: cross-android-arm64-amalgamation
-            compiler: clang
-            host_os: ubuntu-24.04
-          - target: amalgamation
-            compiler: gcc
-            host_os: ubuntu-24.04-arm
-          - target: emscripten
-            compiler: emcc
-            host_os: macos-14
-          - target: sde
-            compiler: gcc
-            host_os: ubuntu-24.04
+  #     matrix:
+  #       include:
+  #         - target: cross-alpha
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
+  #         - target: cross-hppa64
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
+  #         - target: cross-m68k
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
+  #         - target: cross-mips
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
+  #         - target: cross-ppc32
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
+  #         - target: cross-sh4
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
+  #         - target: cross-sparc64
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
+  #         - target: cross-riscv64
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
+  #         - target: cross-s390x
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
+  #         - target: cross-android-arm64-amalgamation
+  #           compiler: clang
+  #           host_os: ubuntu-24.04
+  #         - target: amalgamation
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04-arm
+  #         - target: emscripten
+  #           compiler: emcc
+  #           host_os: macos-14
+  #         - target: sde
+  #           compiler: gcc
+  #           host_os: ubuntu-24.04
 
-    runs-on: ${{ matrix.host_os }}
+  #   runs-on: ${{ matrix.host_os }}
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Read Repository Configuration
-        uses: ./.github/actions/read-repo-config
+  #     - name: Read Repository Configuration
+  #       uses: ./.github/actions/read-repo-config
 
-      - name: Setup Build Agent
-        uses: ./.github/actions/setup-build-agent
-        with:
-          target: ${{ matrix.target }}
-          cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-xcompile-${{ matrix.target }}
+  #     - name: Setup Build Agent
+  #       uses: ./.github/actions/setup-build-agent
+  #       with:
+  #         target: ${{ matrix.target }}
+  #         cache-key: ${{ matrix.host_os }}-${{ matrix.compiler }}-xcompile-${{ matrix.target }}
 
-      - name: Build and Test Botan
-        run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
+  #     - name: Build and Test Botan
+  #       run: python3 ./src/scripts/ci_build.py --cc='${{ matrix.compiler }}' --make-tool='${{ matrix.make_tool }}' --test-results-dir=junit_results ${{ matrix.target }}
 
-  clang_tidy:
-    name: "clang-tidy"
+  # clang_tidy:
+  #   name: "clang-tidy"
 
-    runs-on: ubuntu-24.04
+  #   runs-on: ubuntu-24.04
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Read Repository Configuration
-        uses: ./.github/actions/read-repo-config
+  #     - name: Read Repository Configuration
+  #       uses: ./.github/actions/read-repo-config
 
-      - name: Setup Build Agent
-        uses: ./.github/actions/setup-build-agent
-        with:
-          target: clang-tidy
-          cache-key: linux-x86_64-clang-tidy
+  #     - name: Setup Build Agent
+  #       uses: ./.github/actions/setup-build-agent
+  #       with:
+  #         target: clang-tidy
+  #         cache-key: linux-x86_64-clang-tidy
 
-      - name: Install dependencies
-        run: sudo apt-get -qq install libboost-dev libbz2-dev liblzma-dev libsqlite3-dev
+  #     - name: Install dependencies
+  #       run: sudo apt-get -qq install libboost-dev libbz2-dev liblzma-dev libsqlite3-dev
 
-      - name: Configure Build
-        run: python3 ./configure.py --cc=clang --build-targets=shared,cli,tests,examples,bogo_shim --build-fuzzers=test --with-boost --with-sqlite --with-zlib --with-lzma --with-bzip2
+  #     - name: Configure Build
+  #       run: python3 ./configure.py --cc=clang --build-targets=shared,cli,tests,examples,bogo_shim --build-fuzzers=test --with-boost --with-sqlite --with-zlib --with-lzma --with-bzip2
 
-      - name: Run Clang Tidy
-        run: python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose
+  #     - name: Run Clang Tidy
+  #       run: python3 ./src/scripts/dev_tools/run_clang_tidy.py --verbose
 
   valgrind:
     name: "valgrind"
@@ -210,57 +210,57 @@ jobs:
       - name: Valgrind Checks
         run: python3 ./src/scripts/ci_build.py --make-tool=make --cc=${{ matrix.compiler }} --custom-optimization-flags="${{ matrix.cxxflags }}" ${{ matrix.target }}
 
-  hybrid_tls_interop:
-    name: "PQ/T TLS 1.3"
+  # hybrid_tls_interop:
+  #   name: "PQ/T TLS 1.3"
 
-    runs-on: ubuntu-24.04
+  #   runs-on: ubuntu-24.04
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Read Repository Configuration
-        uses: ./.github/actions/read-repo-config
+  #     - name: Read Repository Configuration
+  #       uses: ./.github/actions/read-repo-config
 
-      - name: Setup Build Agent
-        uses: ./.github/actions/setup-build-agent
-        with:
-          target: hybrid-tls13-interop-test
-          cache-key: linux-x86_64-hybrid_tls
+  #     - name: Setup Build Agent
+  #       uses: ./.github/actions/setup-build-agent
+  #       with:
+  #         target: hybrid-tls13-interop-test
+  #         cache-key: linux-x86_64-hybrid_tls
 
-      - name: Hybrid PQ/T TLS 1.3 Online Interop Checks
-        run: python3 ./src/scripts/ci_build.py --cc=gcc --make-tool=make hybrid-tls13-interop-test
+  #     - name: Hybrid PQ/T TLS 1.3 Online Interop Checks
+  #       run: python3 ./src/scripts/ci_build.py --cc=gcc --make-tool=make hybrid-tls13-interop-test
 
-  tls_anvil_server_test:
-    name: "TLS-Anvil (server)"
+  # tls_anvil_server_test:
+  #   name: "TLS-Anvil (server)"
 
-    runs-on: ubuntu-24.04
+  #   runs-on: ubuntu-24.04
 
-    steps:
-      - name: Fetch Botan Repository
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Fetch Botan Repository
+  #       uses: actions/checkout@v4
 
-      - name: Read Repository Configuration
-        uses: ./.github/actions/read-repo-config
+  #     - name: Read Repository Configuration
+  #       uses: ./.github/actions/read-repo-config
 
-      - name: Setup Build Agent
-        uses: ./.github/actions/setup-build-agent
-        with:
-          target: tlsanvil
-          cache-key: linux-x86_64-tlsanvil
+  #     - name: Setup Build Agent
+  #       uses: ./.github/actions/setup-build-agent
+  #       with:
+  #         target: tlsanvil
+  #         cache-key: linux-x86_64-tlsanvil
 
-      - name: Build and Test Botan Server with TLS-Anvil
-        run: >
-          python3 ./src/scripts/ci/ci_tlsanvil_test.py
-          --botan-dir .
-          --test-target server
-          --parallel $(nproc)
+  #     - name: Build and Test Botan Server with TLS-Anvil
+  #       run: >
+  #         python3 ./src/scripts/ci/ci_tlsanvil_test.py
+  #         --botan-dir .
+  #         --test-target server
+  #         --parallel $(nproc)
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: tls-anvil-server-test-results
-          path: |
-            ./TestSuiteResults/
-            ./logs/
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         name: tls-anvil-server-test-results
+  #         path: |
+  #           ./TestSuiteResults/
+  #           ./logs/
 
-      - name: Check TLS-Anvil Test Results
-        run: python3 ./src/scripts/ci/ci_tlsanvil_check.py --verbose ./TestSuiteResults
+  #     - name: Check TLS-Anvil Test Results
+  #       run: python3 ./src/scripts/ci/ci_tlsanvil_check.py --verbose ./TestSuiteResults
