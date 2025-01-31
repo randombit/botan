@@ -21,6 +21,20 @@ Version 3.7.0, Not Yet Released
   #4492 #4479 #4510 #4511 #4512 #4517 #4518 #4532 #4533 #4549 #4550
   #4552 #4556 #4557 #4564 #4566 #4570 #4601 #4604 #4608)
 
+* An important note relating to EC groups, especially for users who do not build
+  the library using the default module settings (ie using ``--minimized-build``
+  or ``--disable-deprecated-features``). Until 3.7.0, including support for an
+  elliptic curve algorithm such as ECDSA also implicitly pulled in support for
+  all elliptic curves. This is no longer the case. You can re-enable support for
+  specific named curves by adding a ``pcurves`` module, for example
+  ``pcurves_secp256r1`` or ``pcurves_brainpool384r1``. Also in 3.7.0, the old
+  BigInt based EC arithemtic implementation was moved to ``legacy_ec_point``,
+  which is marked as deprecated. Disabling this module will disable support for
+  certain (also deprecated) elliptic curves such as "x962_p239v1" and
+  "secp224k1". It will also disable support for application specific
+  curves. Depending on your usage you may need to enable the ``legacy_ec_point``
+  module. (GH #4027)
+
 * Change OID formatting and PK signature padding naming to avoid
   obsolete IEEE 1363 naming (GH #4600)
 
