@@ -119,6 +119,13 @@ class PrimeOrderCurve {
             Scalar invert() const { return m_curve->scalar_invert(*this); }
 
             /**
+            * Return the modular inverse of *this (variable time)
+            *
+            * If *this is zero then returns zero.
+            */
+            Scalar invert_vartime() const { return m_curve->scalar_invert_vartime(*this); }
+
+            /**
             * Returns true if this is equal to zero
             */
             bool is_zero() const { return m_curve->scalar_is_zero(*this); }
@@ -421,6 +428,7 @@ class PrimeOrderCurve {
       virtual Scalar scalar_mul(const Scalar& a, const Scalar& b) const = 0;
       virtual Scalar scalar_square(const Scalar& s) const = 0;
       virtual Scalar scalar_invert(const Scalar& s) const = 0;
+      virtual Scalar scalar_invert_vartime(const Scalar& s) const = 0;
       virtual Scalar scalar_negate(const Scalar& s) const = 0;
       virtual bool scalar_is_zero(const Scalar& s) const = 0;
       virtual bool scalar_equal(const Scalar& a, const Scalar& b) const = 0;

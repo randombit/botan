@@ -58,7 +58,7 @@ EC_AffinePoint recover_ecdsa_public_key(
          const auto ne = EC_Scalar::from_bytes_with_trunc(group, msg).negate();
          const auto ss = EC_Scalar::from_bigint(group, s);
 
-         const auto r_inv = EC_Scalar::from_bigint(group, r).invert();
+         const auto r_inv = EC_Scalar::from_bigint(group, r).invert_vartime();
 
          EC_Group::Mul2Table GR_mul(R.value());
          if(auto egsr = GR_mul.mul2_vartime(ne * r_inv, ss * r_inv)) {
@@ -218,7 +218,7 @@ bool ECDSA_Verification_Operation::verify(std::span<const uint8_t> msg, std::spa
       if(r.is_nonzero() && s.is_nonzero()) {
          const auto m = EC_Scalar::from_bytes_with_trunc(m_group, msg);
 
-         const auto w = s.invert();
+         const auto w = s.invert_vartime();
 
          // Check if r == x_coord(g*w*m + y*w*r) % n
          return m_gy_mul.mul2_vartime_x_mod_order_eq(r, w, m, r);

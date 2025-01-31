@@ -101,7 +101,7 @@ bool ECGDSA_Verification_Operation::verify(std::span<const uint8_t> msg, std::sp
       if(r.is_nonzero() && s.is_nonzero()) {
          const auto m = EC_Scalar::from_bytes_with_trunc(m_group, msg);
 
-         const auto w = r.invert();
+         const auto w = r.invert_vartime();
 
          // Check if r == x_coord(g*w*m + y*w*s) % n
          return m_gy_mul.mul2_vartime_x_mod_order_eq(r, w, m, s);

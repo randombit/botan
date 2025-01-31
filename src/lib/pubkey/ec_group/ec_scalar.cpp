@@ -134,6 +134,10 @@ EC_Scalar EC_Scalar::invert() const {
    return EC_Scalar(inner().invert());
 }
 
+EC_Scalar EC_Scalar::invert_vartime() const {
+   return EC_Scalar(inner().invert_vartime());
+}
+
 EC_Scalar EC_Scalar::negate() const {
    return EC_Scalar(inner().negate());
 }

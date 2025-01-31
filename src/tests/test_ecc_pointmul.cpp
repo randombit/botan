@@ -330,6 +330,9 @@ class ECC_Scalar_Arithmetic_Tests final : public Test {
             const auto r2 = r * r;
             const auto r_inv = r.invert();
             result.test_eq("r * r^-1 = 1", (r * r_inv).serialize(), ser_one);
+
+            const auto r_inv_vt = r.invert_vartime();
+            result.confirm("CT and variable time inversions produced same result", r_inv == r_inv_vt);
          }
 
          for(size_t i = 0; i != test_iter; ++i) {

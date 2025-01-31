@@ -147,11 +147,22 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       bool is_nonzero() const { return !is_zero(); }
 
       /**
+      * Constant time modular inversion
+      *
       * Return the modular inverse of this EC_Scalar
       *
       * If *this is zero, then invert() returns zero
       */
       EC_Scalar invert() const;
+
+      /**
+      * Variable time modular inversion
+      *
+      * Return the modular inverse of this EC_Scalar
+      *
+      * If *this is zero, then invert_vartime() returns zero
+      */
+      EC_Scalar invert_vartime() const;
 
       /**
       */

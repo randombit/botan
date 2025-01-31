@@ -54,6 +54,10 @@ std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_BN::invert() const {
    return std::make_unique<EC_Scalar_Data_BN>(m_group, inverse_mod_public_prime(m_v, m_group->order()));
 }
 
+std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_BN::invert_vartime() const {
+   return std::make_unique<EC_Scalar_Data_BN>(m_group, inverse_mod_public_prime(m_v, m_group->order()));
+}
+
 std::unique_ptr<EC_Scalar_Data> EC_Scalar_Data_BN::add(const EC_Scalar_Data& other) const {
    return std::make_unique<EC_Scalar_Data_BN>(m_group, m_group->mod_order().reduce(m_v + checked_ref(other).value()));
 }
