@@ -534,7 +534,7 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
                                               '-ex', 'bt',
                                               '-ex', 'quit']
         else:
-            run_test_command = test_prefix + test_cmd
+            run_test_command = test_prefix + test_cmd + ["tls_session_manager"]
 
     return flags, pretest_cmd, run_test_command, make_prefix
 
