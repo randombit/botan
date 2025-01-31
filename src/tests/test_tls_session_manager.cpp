@@ -96,39 +96,51 @@ class Session_Manager_Policy : public Botan::TLS::Policy {
 
 namespace {
 
-decltype(auto) random_id(Botan::RandomNumberGenerator& rng) {
+auto random_id(Botan::RandomNumberGenerator& rng) {
    return rng.random_vec<Botan::TLS::Session_ID>(32);
 }
 
-decltype(auto) random_ticket(Botan::RandomNumberGenerator& rng) {
+auto random_ticket(Botan::RandomNumberGenerator& rng) {
    return rng.random_vec<Botan::TLS::Session_Ticket>(32);
 }
 
-decltype(auto) random_opaque_handle(Botan::RandomNumberGenerator& rng) {
+auto random_opaque_handle(Botan::RandomNumberGenerator& rng) {
    return rng.random_vec<Botan::TLS::Opaque_Session_Handle>(32);
 }
 
 const Botan::TLS::Server_Information server_info("botan.randombit.net");
 
-decltype(auto) default_session(Botan::TLS::Connection_Side side,
-                               Botan::TLS::Callbacks& cbs,
-                               Botan::TLS::Protocol_Version version = Botan::TLS::Protocol_Version::TLS_V12) {
+Botan::TLS::Session default_session(Botan::TLS::Connection_Side side,
+                                    Botan::TLS::Callbacks& cbs,
+                                    Botan::TLS::Protocol_Version version = Botan::TLS::Protocol_Version::TLS_V12) {
    if(version.is_pre_tls_13()) {
-      return Botan::TLS::Session(
-         {}, version, 0x009C, side, true, true, {}, server_info, 0, cbs.tls_current_timestamp());
+      return {
+         {},
+         version,
+         0x009C,
+         side,
+         true,
+         true,
+         {},
+         server_info,
+         0,
+         cbs.tls_current_timestamp(),
+      };
    } else {
    #if defined(BOTAN_HAS_TLS_13)
-      return Botan::TLS::Session({},
-                                 std::nullopt,
-                                 0,
-                                 std::chrono::seconds(1024),
-                                 Botan::TLS::Protocol_Version::TLS_V13,
-                                 Botan::TLS::Ciphersuite::from_name("AES_128_GCM_SHA256")->ciphersuite_code(),
-                                 side,
-                                 {},
-                                 nullptr,
-                                 server_info,
-                                 cbs.tls_current_timestamp());
+      return {
+         {},
+         std::nullopt,
+         0,
+         std::chrono::seconds(1024),
+         Botan::TLS::Protocol_Version::TLS_V13,
+         Botan::TLS::Ciphersuite::from_name("AES_128_GCM_SHA256")->ciphersuite_code(),
+         side,
+         {},
+         nullptr,
+         server_info,
+         cbs.tls_current_timestamp(),
+      };
    #else
       throw Test_Error("TLS 1.3 is not available in this build");
    #endif
