@@ -39,11 +39,14 @@ void Session_Manager_In_Memory::store(const Session& session, const Session_Hand
 
    // Generate a random session ID if the peer did not provide one. Note that
    // this ID is just for internal use and won't be returned on ::find().
-   auto id = handle.id().value_or(m_rng->random_vec<Session_ID>(32));
-   m_sessions.emplace(id, Session_with_Handle{session, handle});
+   const auto [itr, inserted] = m_sessions.emplace(handle.id().value_or(m_rng->random_vec<Session_ID>(32)),
+                                                   Session_with_Handle{
+                                                      .session = session,
+                                                      .handle = handle,
+                                                   });
 
-   if(m_fifo.has_value()) {
-      m_fifo->emplace_back(std::move(id));
+   if(inserted && m_fifo.has_value()) {
+      m_fifo->push_back(itr->first);
    }
 }
 
