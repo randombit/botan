@@ -111,7 +111,7 @@ class BOTAN_PUBLIC_API(3, 0) Session_Handle {
 
       /**
        * If the Session_Handle was constructed with a Session_Ticket or an
-       * Opaque_Session_Handle this returns the handle as a Session_ID.
+       * Opaque_Session_Handle this returns the handle as a Session_Ticket.
        * Otherwise, std::nullopt is returned.
        */
       std::optional<Session_Ticket> ticket() const;
