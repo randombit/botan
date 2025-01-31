@@ -2522,9 +2522,7 @@ class FFI_RSA_Test final : public FFI_Test {
                result.test_eq("algo name", std::string(namebuf), "RSA");
             }
 
-            botan_pk_op_encrypt_t encrypt;
-
-            if(TEST_FFI_INIT(botan_pk_op_encrypt_create, (&encrypt, loaded_pubkey, "OAEP(SHA-256)", 0))) {
+            auto test_encrypt_opt_fn = [&result, &rng, &priv](botan_pk_op_encrypt_t encrypt) {
                std::vector<uint8_t> plaintext(32);
                TEST_FFI_OK(botan_rng_get, (rng, plaintext.data(), plaintext.size()));
 
@@ -2537,7 +2535,7 @@ class FFI_RSA_Test final : public FFI_Test {
                   ciphertext.resize(ctext_len);
 
                   botan_pk_op_decrypt_t decrypt;
-                  if(TEST_FFI_OK(botan_pk_op_decrypt_create, (&decrypt, priv, "OAEP(SHA-256)", 0))) {
+                  if(TEST_FFI_OK(botan_pk_op_decrypt_create_with_rng, (&decrypt, rng, priv, "OAEP(SHA-256)", 0))) {
                      size_t decrypted_len;
                      TEST_FFI_OK(botan_pk_op_decrypt_output_length, (decrypt, ciphertext.size(), &decrypted_len));
                      std::vector<uint8_t> decrypted(decrypted_len);
@@ -2552,6 +2550,16 @@ class FFI_RSA_Test final : public FFI_Test {
                }
 
                TEST_FFI_OK(botan_pk_op_encrypt_destroy, (encrypt));
+            };
+
+            botan_pk_op_encrypt_t encrypt;
+
+            if(TEST_FFI_INIT(botan_pk_op_encrypt_create, (&encrypt, loaded_pubkey, "OAEP(SHA-256)", 0))) {
+               test_encrypt_opt_fn(encrypt);
+            }
+
+            if(TEST_FFI_INIT(botan_pk_op_encrypt_create_with_rng, (&encrypt, rng, loaded_pubkey, "OAEP(SHA-256)", 0))) {
+               test_encrypt_opt_fn(encrypt);
             }
 
             TEST_FFI_OK(botan_pubkey_destroy, (loaded_pubkey));
@@ -3013,7 +3021,7 @@ class FFI_ECDH_Test final : public FFI_Test {
          botan_pk_op_ka_t ka1;
          REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka1, loaded_privkey1, "KDF2(SHA-256)", 0));
          botan_pk_op_ka_t ka2;
-         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka2, priv2, "KDF2(SHA-256)", 0));
+         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create_with_rng, (&ka2, rng, priv2, "KDF2(SHA-256)", 0));
 
          size_t pubkey1_len = 0;
          TEST_FFI_RC(BOTAN_FFI_ERROR_INSUFFICIENT_BUFFER_SPACE,
@@ -3188,10 +3196,9 @@ class FFI_Ed448_Test final : public FFI_Test {
          TEST_FFI_OK(botan_pubkey_destroy, (pub));
          TEST_FFI_OK(botan_pubkey_load_ed448, (&pub, pk_ref.data()));
 
-         botan_pk_op_sign_t signer;
          std::vector<uint8_t> signature;
 
-         if(TEST_FFI_OK(botan_pk_op_sign_create, (&signer, priv, "Pure", 0))) {
+         auto sign_fn = [&result, &rng, &msg, &signature](botan_pk_op_sign_t signer) {
             TEST_FFI_OK(botan_pk_op_sign_update, (signer, msg.data(), msg.size()));
 
             size_t sig_len;
@@ -3203,6 +3210,18 @@ class FFI_Ed448_Test final : public FFI_Test {
             signature.resize(sig_len);
 
             TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
+         };
+
+         botan_pk_op_sign_t signer;
+
+         if(TEST_FFI_OK(botan_pk_op_sign_create, (&signer, priv, "Pure", 0))) {
+            sign_fn(signer);
+         }
+
+         result.test_eq("Expected signature", signature, sig_ref);
+
+         if(TEST_FFI_OK(botan_pk_op_sign_create_with_rng, (&signer, rng, priv, "Pure", 0))) {
+            sign_fn(signer);
          }
 
          result.test_eq("Expected signature", signature, sig_ref);
@@ -3378,6 +3397,7 @@ class FFI_KEM_Roundtrip_Test : public FFI_Test {
 
    public:
       void ffi_test(Test::Result& result, botan_rng_t rng) override {
+         bool use_explicit_rng = true;
          for(auto mode : modes()) {
             // generate a key pair
             botan_privkey_t priv;
@@ -3461,7 +3481,11 @@ class FFI_KEM_Roundtrip_Test : public FFI_Test {
 
             // KEM decryption (using the generated private key)
             botan_pk_op_kem_decrypt_t kem_dec;
-            TEST_FFI_OK(botan_pk_op_kem_decrypt_create, (&kem_dec, priv, "Raw"));
+            if(use_explicit_rng) {
+               TEST_FFI_OK(botan_pk_op_kem_decrypt_create_with_rng, (&kem_dec, rng, priv, "Raw"));
+            } else {
+               TEST_FFI_OK(botan_pk_op_kem_decrypt_create, (&kem_dec, priv, "Raw"));
+            }
             size_t shared_key_length2 = 0;
             TEST_FFI_OK(botan_pk_op_kem_decrypt_shared_key_length, (kem_dec, shared_key_length, &shared_key_length2));
             result.test_eq("shared key lengths are consistent", shared_key_length, shared_key_length2);
@@ -3503,6 +3527,8 @@ class FFI_KEM_Roundtrip_Test : public FFI_Test {
             TEST_FFI_OK(botan_pubkey_destroy, (pub_loaded));
             TEST_FFI_OK(botan_privkey_destroy, (priv));
             TEST_FFI_OK(botan_privkey_destroy, (priv_loaded));
+
+            use_explicit_rng = !use_explicit_rng;
          }
       }
 };
@@ -3527,6 +3553,7 @@ class FFI_Signature_Roundtrip_Test : public FFI_Test {
          const std::vector<uint8_t> message1 = {'H', 'e', 'l', 'l', 'o', ' '};
          const std::vector<uint8_t> message2 = {'W', 'o', 'r', 'l', 'd', '!'};
 
+         bool use_explicit_rng = true;
          for(auto mode : modes()) {
             // generate a key pair
             botan_privkey_t priv;
@@ -3560,7 +3587,11 @@ class FFI_Signature_Roundtrip_Test : public FFI_Test {
 
             // Signature Creation (using the loaded private key)
             botan_pk_op_sign_t signer;
-            TEST_FFI_OK(botan_pk_op_sign_create, (&signer, priv_loaded, hash_algo_or_padding(), 0));
+            if(use_explicit_rng) {
+               TEST_FFI_OK(botan_pk_op_sign_create_with_rng, (&signer, rng, priv_loaded, hash_algo_or_padding(), 0));
+            } else {
+               TEST_FFI_OK(botan_pk_op_sign_create, (&signer, priv_loaded, hash_algo_or_padding(), 0));
+            }
 
             // explicitly query the signature output length
             size_t sig_output_length = 0;
@@ -3579,7 +3610,11 @@ class FFI_Signature_Roundtrip_Test : public FFI_Test {
 
             // Recreate signer and try again
             TEST_FFI_OK(botan_pk_op_sign_destroy, (signer));
-            TEST_FFI_OK(botan_pk_op_sign_create, (&signer, priv_loaded, hash_algo_or_padding(), 0));
+            if(use_explicit_rng) {
+               TEST_FFI_OK(botan_pk_op_sign_create_with_rng, (&signer, rng, priv_loaded, hash_algo_or_padding(), 0));
+            } else {
+               TEST_FFI_OK(botan_pk_op_sign_create, (&signer, priv_loaded, hash_algo_or_padding(), 0));
+            }
             TEST_FFI_OK(botan_pk_op_sign_update, (signer, message1.data(), message1.size()));
             TEST_FFI_OK(botan_pk_op_sign_update, (signer, message2.data(), message2.size()));
 
@@ -3613,6 +3648,8 @@ class FFI_Signature_Roundtrip_Test : public FFI_Test {
             TEST_FFI_OK(botan_pubkey_destroy, (pub_loaded));
             TEST_FFI_OK(botan_privkey_destroy, (priv));
             TEST_FFI_OK(botan_privkey_destroy, (priv_loaded));
+
+            use_explicit_rng = !use_explicit_rng;
          }
       }
 };
@@ -3962,8 +3999,7 @@ class FFI_ElGamal_Test final : public FFI_Test {
          }
 
          // Test decryption
-         botan_pk_op_decrypt_t op_dec;
-         if(TEST_FFI_OK(botan_pk_op_decrypt_create, (&op_dec, loaded_privkey, "Raw", 0))) {
+         auto test_decrypt_fn = [&result, &decryption, &ciphertext](botan_pk_op_decrypt_t op_dec) {
             size_t ptext_len;
             TEST_FFI_OK(botan_pk_op_decrypt_output_length, (op_dec, ciphertext.size(), &ptext_len));
             decryption.resize(ptext_len);
@@ -3971,6 +4007,16 @@ class FFI_ElGamal_Test final : public FFI_Test {
                         (op_dec, decryption.data(), &ptext_len, ciphertext.data(), ciphertext.size()));
             decryption.resize(ptext_len);
             TEST_FFI_OK(botan_pk_op_decrypt_destroy, (op_dec));
+         };
+
+         botan_pk_op_decrypt_t op_dec;
+
+         if(TEST_FFI_OK(botan_pk_op_decrypt_create, (&op_dec, loaded_privkey, "Raw", 0))) {
+            test_decrypt_fn(op_dec);
+         }
+
+         if(TEST_FFI_OK(botan_pk_op_decrypt_create_with_rng, (&op_dec, rng, loaded_privkey, "Raw", 0))) {
+            test_decrypt_fn(op_dec);
          }
 
          result.test_eq("decryption worked", decryption, plaintext);
@@ -4043,7 +4089,7 @@ class FFI_DH_Test final : public FFI_Test {
          result.confirm("bigint_mp_cmp(y, y)", cmp == 0);
 
          botan_pk_op_ka_t ka1;
-         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka1, loaded_privkey1, "Raw", 0));
+         REQUIRE_FFI_OK(botan_pk_op_key_agreement_create_with_rng, (&ka1, rng, loaded_privkey1, "Raw", 0));
          botan_pk_op_ka_t ka2;
          REQUIRE_FFI_OK(botan_pk_op_key_agreement_create, (&ka2, priv2, "Raw", 0));
 

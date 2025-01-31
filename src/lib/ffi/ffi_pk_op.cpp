@@ -43,6 +43,27 @@ int botan_pk_op_encrypt_create(botan_pk_op_encrypt_t* op, botan_pubkey_t key_obj
    });
 }
 
+int botan_pk_op_encrypt_create_with_rng(
+   botan_pk_op_encrypt_t* op, botan_rng_t rng_obj, botan_pubkey_t key_obj, const char* padding, uint32_t flags) {
+   if(op == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   if(flags != 0 && flags != BOTAN_PUBKEY_DER_FORMAT_SIGNATURE) {
+      return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      *op = nullptr;
+
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+
+      auto pk = std::make_unique<Botan::PK_Encryptor_EME>(safe_get(key_obj), rng, padding);
+      *op = new botan_pk_op_encrypt_struct(std::move(pk));
+      return BOTAN_FFI_SUCCESS;
+   });
+}
+
 int botan_pk_op_encrypt_destroy(botan_pk_op_encrypt_t op) {
    return BOTAN_FFI_CHECKED_DELETE(op);
 }
@@ -89,6 +110,27 @@ int botan_pk_op_decrypt_create(botan_pk_op_decrypt_t* op,
    });
 }
 
+int botan_pk_op_decrypt_create_with_rng(
+   botan_pk_op_decrypt_t* op, botan_rng_t rng_obj, botan_privkey_t key_obj, const char* padding, uint32_t flags) {
+   if(op == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   if(flags != 0) {
+      return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      *op = nullptr;
+
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+
+      auto pk = std::make_unique<Botan::PK_Decryptor_EME>(safe_get(key_obj), rng, padding);
+      *op = new botan_pk_op_decrypt_struct(std::move(pk));
+      return BOTAN_FFI_SUCCESS;
+   });
+}
+
 int botan_pk_op_decrypt_destroy(botan_pk_op_decrypt_t op) {
    return BOTAN_FFI_CHECKED_DELETE(op);
 }
@@ -125,6 +167,30 @@ int botan_pk_op_sign_create(botan_pk_op_sign_t* op, botan_privkey_t key_obj, con
                                                                 : Botan::Signature_Format::Standard;
 
       auto pk = std::make_unique<Botan::PK_Signer>(safe_get(key_obj), Botan::system_rng(), hash, format);
+      *op = new botan_pk_op_sign_struct(std::move(pk));
+      return BOTAN_FFI_SUCCESS;
+   });
+}
+
+int botan_pk_op_sign_create_with_rng(
+   botan_pk_op_sign_t* op, botan_rng_t rng_obj, botan_privkey_t key_obj, const char* hash, uint32_t flags) {
+   if(op == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   if(flags != 0 && flags != BOTAN_PUBKEY_DER_FORMAT_SIGNATURE) {
+      return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      *op = nullptr;
+
+      auto format = (flags & BOTAN_PUBKEY_DER_FORMAT_SIGNATURE) ? Botan::Signature_Format::DerSequence
+                                                                : Botan::Signature_Format::Standard;
+
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+
+      auto pk = std::make_unique<Botan::PK_Signer>(safe_get(key_obj), rng, hash, format);
       *op = new botan_pk_op_sign_struct(std::move(pk));
       return BOTAN_FFI_SUCCESS;
    });
@@ -201,6 +267,25 @@ int botan_pk_op_key_agreement_create(botan_pk_op_ka_t* op, botan_privkey_t key_o
    return ffi_guard_thunk(__func__, [=]() -> int {
       *op = nullptr;
       auto pk = std::make_unique<Botan::PK_Key_Agreement>(safe_get(key_obj), Botan::system_rng(), kdf);
+      *op = new botan_pk_op_ka_struct(std::move(pk));
+      return BOTAN_FFI_SUCCESS;
+   });
+}
+
+int botan_pk_op_key_agreement_create_with_rng(
+   botan_pk_op_ka_t* op, botan_rng_t rng_obj, botan_privkey_t key_obj, const char* kdf, uint32_t flags) {
+   if(op == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   if(flags != 0) {
+      return BOTAN_FFI_ERROR_BAD_FLAG;
+   }
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+      *op = nullptr;
+      auto pk = std::make_unique<Botan::PK_Key_Agreement>(safe_get(key_obj), rng, kdf);
       *op = new botan_pk_op_ka_struct(std::move(pk));
       return BOTAN_FFI_SUCCESS;
    });
@@ -317,6 +402,22 @@ int botan_pk_op_kem_decrypt_create(botan_pk_op_kem_decrypt_t* op, botan_privkey_
 
    return ffi_guard_thunk(__func__, [=]() -> int {
       auto pk = std::make_unique<Botan::PK_KEM_Decryptor>(safe_get(key_obj), Botan::system_rng(), padding);
+      *op = new botan_pk_op_kem_decrypt_struct(std::move(pk));
+      return BOTAN_FFI_SUCCESS;
+   });
+}
+
+int botan_pk_op_kem_decrypt_create_with_rng(botan_pk_op_kem_decrypt_t* op,
+                                            botan_rng_t rng_obj,
+                                            botan_privkey_t key_obj,
+                                            const char* padding) {
+   if(op == nullptr || padding == nullptr) {
+      return BOTAN_FFI_ERROR_NULL_POINTER;
+   }
+
+   return ffi_guard_thunk(__func__, [=]() -> int {
+      Botan::RandomNumberGenerator& rng = safe_get(rng_obj);
+      auto pk = std::make_unique<Botan::PK_KEM_Decryptor>(safe_get(key_obj), rng, padding);
       *op = new botan_pk_op_kem_decrypt_struct(std::move(pk));
       return BOTAN_FFI_SUCCESS;
    });
