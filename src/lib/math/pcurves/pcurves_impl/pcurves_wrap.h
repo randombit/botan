@@ -311,12 +311,7 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
 
       Scalar scalar_invert_vartime(const Scalar& ss) const override {
          auto s = from_stash(ss);
-         // TODO take advantage of variable time
-         if constexpr(curve_supports_scalar_invert<C>) {
-            return stash(C::scalar_invert(s));
-         } else {
-            return stash(s.invert());
-         }
+         return stash(s.invert_vartime());
       }
 
       Scalar scalar_negate(const Scalar& s) const override { return stash(from_stash(s).negate()); }

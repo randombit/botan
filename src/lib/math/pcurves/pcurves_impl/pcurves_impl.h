@@ -459,6 +459,119 @@ class IntMod final {
       constexpr Self invert() const { return pow_vartime(Self::P_MINUS_2); }
 
       /**
+      * Helper for variable time BEEA
+      *
+      * Note this function assumes that its arguments are in the standard
+      * domain, not the Montgomery domain. invert_vartime converts its argument
+      * out of Montgomery, and then back to Montgomery when returning the result.
+      */
+      static constexpr void _invert_vartime_div2_helper(Self& a, Self& x) {
+         constexpr auto INV_2 = p_div_2_plus_1(Rep::P);
+
+         while((a.m_val[0] & 1) != 1) {
+            shift_right<1>(a.m_val);
+
+            W borrow = shift_right<1>(x.m_val);
+
+            if(borrow) {
+               bigint_add2_nc(x.m_val.data(), N, INV_2.data(), N);
+            }
+         }
+      }
+
+      /**
+      * Returns the modular inverse, or 0 if no modular inverse exists.
+      *
+      * This function assumes that the modulus is prime
+      *
+      * This function does something a bit nasty and converts from the normal
+      * representation (for scalars, Montgomery) into the "standard"
+      * representation. This relies on the fact that we aren't doing any
+      * multiplications within this function, just additions, subtractions,
+      * division by 2, and comparisons.
+      *
+      * The reason is there is no good way to compare integers in the Montgomery
+      * domain; we could convert out for each comparison but this is slower than
+      * just doing a constant-time inversion.
+      *
+      * This is loosely based on the algorithm BoringSSL uses in
+      * BN_mod_inverse_odd, which is a variant of the Binary Extended Euclidean
+      * algorithm. It is optimized somewhat by taking advantage of a couple of
+      * observations.
+      *
+      * In the first two iterations, the control flow is known because `a` is
+      * less than the modulus and not zero, and we know that the modulus is
+      * odd. So we peel out those iterations. This also avoids having to
+      * initialize `a` with the modulus, because we instead set it directly to
+      * what the first loop iteration would have updated it to. This ensures
+      * that all values are always less than or equal to the modulus.
+      *
+      * Then we take advantage of the fact that in each iteration of the loop,
+      * at the end we update either b/x or a/y, but never both.  In the next
+      * iteration of the loop, we attempt to modify b/x or a/y depending on the
+      * low zero bits of b or a. But if a or b were not updated in the previous
+      * iteration than they will still be odd, and nothing will happen. Instead
+      * update just the pair we need to update, right after writing to b/x or
+      * a/y resp.
+      */
+      constexpr Self invert_vartime() const {
+         if(this->is_zero().as_bool()) {
+            return Self::zero();
+         }
+
+         auto x = Self(std::array<W, N>{1});  // 1 in standard domain
+         auto b = Self(this->to_words());     // *this in standard domain
+
+         // First loop iteration
+         Self::_invert_vartime_div2_helper(b, x);
+
+         auto a = b.negate();
+         // y += x but y is zero at the outset
+         auto y = x;
+
+         // First half of second loop iteration
+         Self::_invert_vartime_div2_helper(a, y);
+
+         for(;;) {
+            if(a.m_val == b.m_val) {
+               // At this point it should be that a == b == 1
+               auto r = y.negate();
+
+               // Convert back to Montgomery if required
+               r.m_val = Rep::to_rep(r.m_val);
+               return r;
+            }
+
+            auto nx = x + y;
+
+            /*
+            * Otherwise either b > a or a > b
+            *
+            * If b > a we want to set b to b - a
+            * Otherwise we want to set a to a - b
+            *
+            * Compute r = b - a and check if it underflowed
+            * If it did not then we are in the b > a path
+            */
+            std::array<W, N> r;
+            word carry = bigint_sub3(r.data(), b.data(), N, a.data(), N);
+
+            if(carry == 0) {
+               // b > a
+               b.m_val = r;
+               x = nx;
+               Self::_invert_vartime_div2_helper(b, x);
+            } else {
+               // We know this can't underflow because a > b
+               bigint_sub3(r.data(), a.data(), N, b.data(), N);
+               a.m_val = r;
+               y = nx;
+               Self::_invert_vartime_div2_helper(a, y);
+            }
+         }
+      }
+
+      /**
       * Return the modular square root if it exists
       *
       * The CT::Choice indicates if the square root exists or not.
