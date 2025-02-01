@@ -4,7 +4,7 @@ Release Notes
 Version 3.7.0, Not Yet Released
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Add post-quantum scheme Classic McEliece (GH #3883 #4448 #4458 #4508)
+* Add post-quantum scheme Classic McEliece (GH #3883 #4448 #4458 #4508 #4605)
 
 * In TLS enable the hybrid x25519/ML-KEM-768 post quantum secure key
   exchange by default for clients and servers. (GH #4305)
@@ -44,7 +44,11 @@ Version 3.7.0, Not Yet Released
   secret keys to be rejected as invalid due to not having the expected
   length. (GH #4541 #4539)
 
-* Add new operations to EC_AffinePoint (GH #4433 #4503)
+* Add new operations to EC_AffinePoint (GH #4433 #4503 #4618)
+
+* Add support for PSS-signed certificates using SHA-3 (GH #4610)
+
+* Expose ``PSS_Params`` type (GH #3867 #4606)
 
 * Optimize modular inversions (GH #4569)
 
@@ -78,6 +82,9 @@ Version 3.7.0, Not Yet Released
 * Internal cleanups related to calling ``getauxval`` (GH #4471)
 
 * Add a ``--timer-unit=`` option to ``botan speed`` (GH #4456 #4490)
+
+* Rename the ``nist`` policy to ``fips140`` to more accurately reflect
+  usage. Update with regards to latest NIST standards. (GH #4614)
 
 * Update the Limbo test suite (GH #4406)
 
