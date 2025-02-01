@@ -48,41 +48,44 @@ class PerfTest_PKEnc : public PerfTest {
          auto keygen_timer = config.make_timer(nm, 1, "keygen");
 
          auto sk = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
-         while(keygen_timer->under(msec)) {
-            sk = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
-         }
 
-         auto pk = sk->public_key();
-
-         // TODO this would have to be generalized for anything but RSA/ElGamal
-         const std::string padding = "PKCS1v15";
-
-         Botan::PK_Encryptor_EME enc(*pk, rng, padding, provider);
-         Botan::PK_Decryptor_EME dec(*sk, rng, padding, provider);
-
-         auto enc_timer = config.make_timer(nm + " " + padding, 1, "encrypt");
-         auto dec_timer = config.make_timer(nm + " " + padding, 1, "decrypt");
-
-         while(enc_timer->under(msec) || dec_timer->under(msec)) {
-            // Generate a new random ciphertext to decrypt
-            if(ciphertext.empty() || enc_timer->under(msec)) {
-               rng.random_vec(plaintext, enc.maximum_input_size());
-               ciphertext = enc_timer->run([&]() { return enc.encrypt(plaintext, rng); });
+         if(sk) {
+            while(keygen_timer->under(msec)) {
+               sk = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
             }
 
-            if(dec_timer->under(msec)) {
-               const auto dec_pt = dec_timer->run([&]() { return dec.decrypt(ciphertext); });
+            auto pk = sk->public_key();
 
-               // sanity check
-               if(!(Botan::unlock(dec_pt) == plaintext)) {
-                  config.error_output() << "Bad roundtrip in PK encrypt/decrypt bench\n";
+            // TODO this would have to be generalized for anything but RSA/ElGamal
+            const std::string padding = "PKCS1v15";
+
+            Botan::PK_Encryptor_EME enc(*pk, rng, padding, provider);
+            Botan::PK_Decryptor_EME dec(*sk, rng, padding, provider);
+
+            auto enc_timer = config.make_timer(nm + " " + padding, 1, "encrypt");
+            auto dec_timer = config.make_timer(nm + " " + padding, 1, "decrypt");
+
+            while(enc_timer->under(msec) || dec_timer->under(msec)) {
+               // Generate a new random ciphertext to decrypt
+               if(ciphertext.empty() || enc_timer->under(msec)) {
+                  rng.random_vec(plaintext, enc.maximum_input_size());
+                  ciphertext = enc_timer->run([&]() { return enc.encrypt(plaintext, rng); });
+               }
+
+               if(dec_timer->under(msec)) {
+                  const auto dec_pt = dec_timer->run([&]() { return dec.decrypt(ciphertext); });
+
+                  // sanity check
+                  if(!(Botan::unlock(dec_pt) == plaintext)) {
+                     config.error_output() << "Bad roundtrip in PK encrypt/decrypt bench\n";
+                  }
                }
             }
-         }
 
-         config.record_result(*keygen_timer);
-         config.record_result(*enc_timer);
-         config.record_result(*dec_timer);
+            config.record_result(*keygen_timer);
+            config.record_result(*enc_timer);
+            config.record_result(*dec_timer);
+         }
       }
 };
 

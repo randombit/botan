@@ -50,33 +50,36 @@ class PerfTest_PKKa : public PerfTest {
 
          auto key1 = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
          auto key2 = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
-         while(keygen_timer->under(msec)) {
-            key2 = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
-         }
 
-         config.record_result(*keygen_timer);
-
-         const Botan::PK_Key_Agreement_Key& ka_key1 = dynamic_cast<const Botan::PK_Key_Agreement_Key&>(*key1);
-         const Botan::PK_Key_Agreement_Key& ka_key2 = dynamic_cast<const Botan::PK_Key_Agreement_Key&>(*key2);
-
-         Botan::PK_Key_Agreement ka1(ka_key1, rng, kdf, provider);
-         Botan::PK_Key_Agreement ka2(ka_key2, rng, kdf, provider);
-
-         const std::vector<uint8_t> ka1_pub = ka_key1.public_value();
-         const std::vector<uint8_t> ka2_pub = ka_key2.public_value();
-
-         auto ka_timer = config.make_timer(nm, 1, "key agreements");
-
-         while(ka_timer->under(msec)) {
-            auto k1 = ka_timer->run([&]() { return ka1.derive_key(32, ka2_pub); });
-            auto k2 = ka_timer->run([&]() { return ka2.derive_key(32, ka1_pub); });
-
-            if(k1 != k2) {
-               config.error_output() << "Key agreement mismatch in PK bench\n";
+         if(key1 && key2) {
+            while(keygen_timer->under(msec)) {
+               key2 = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
             }
-         }
 
-         config.record_result(*ka_timer);
+            config.record_result(*keygen_timer);
+
+            const Botan::PK_Key_Agreement_Key& ka_key1 = dynamic_cast<const Botan::PK_Key_Agreement_Key&>(*key1);
+            const Botan::PK_Key_Agreement_Key& ka_key2 = dynamic_cast<const Botan::PK_Key_Agreement_Key&>(*key2);
+
+            Botan::PK_Key_Agreement ka1(ka_key1, rng, kdf, provider);
+            Botan::PK_Key_Agreement ka2(ka_key2, rng, kdf, provider);
+
+            const std::vector<uint8_t> ka1_pub = ka_key1.public_value();
+            const std::vector<uint8_t> ka2_pub = ka_key2.public_value();
+
+            auto ka_timer = config.make_timer(nm, 1, "key agreements");
+
+            while(ka_timer->under(msec)) {
+               auto k1 = ka_timer->run([&]() { return ka1.derive_key(32, ka2_pub); });
+               auto k2 = ka_timer->run([&]() { return ka2.derive_key(32, ka1_pub); });
+
+               if(k1 != k2) {
+                  config.error_output() << "Key agreement mismatch in PK bench\n";
+               }
+            }
+
+            config.record_result(*ka_timer);
+         }
       }
 };
 

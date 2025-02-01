@@ -50,11 +50,12 @@ class PerfTest_PKSig : public PerfTest {
          auto keygen_timer = config.make_timer(nm, 1, "keygen");
 
          auto sk = keygen_timer->run([&] { return Botan::create_private_key(alg, rng, param); });
-         while(keygen_timer->under(msec)) {
-            sk = keygen_timer->run([&] { return Botan::create_private_key(alg, rng, param); });
-         }
 
          if(sk != nullptr) {
+            while(keygen_timer->under(msec)) {
+               sk = keygen_timer->run([&] { return Botan::create_private_key(alg, rng, param); });
+            }
+
             config.record_result(*keygen_timer);
 
             auto pk = sk->public_key();
