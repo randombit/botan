@@ -128,23 +128,6 @@ std::shared_ptr<const PrimeOrderCurve> PrimeOrderCurve::from_id(PrimeOrderCurveI
    return {};
 }
 
-std::vector<PrimeOrderCurveId> PrimeOrderCurveId::all() {
-   return {
-      PrimeOrderCurveId::secp192r1,
-      PrimeOrderCurveId::secp224r1,
-      PrimeOrderCurveId::secp256r1,
-      PrimeOrderCurveId::secp384r1,
-      PrimeOrderCurveId::secp521r1,
-      PrimeOrderCurveId::secp256k1,
-      PrimeOrderCurveId::brainpool256r1,
-      PrimeOrderCurveId::brainpool384r1,
-      PrimeOrderCurveId::brainpool512r1,
-      PrimeOrderCurveId::frp256v1,
-      PrimeOrderCurveId::sm2p256v1,
-      PrimeOrderCurveId::numsp512d1,
-   };
-}
-
 std::string PrimeOrderCurveId::to_string() const {
    switch(this->code()) {
       case PrimeOrderCurveId::secp192r1:

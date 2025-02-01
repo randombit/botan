@@ -12,7 +12,6 @@
 #include <optional>
 #include <string>
 #include <string_view>
-#include <vector>
 
 namespace Botan {
 
@@ -52,12 +51,6 @@ class BOTAN_TEST_API PrimeOrderCurveId final {
       using enum Code;
 
       Code code() const { return m_code; }
-
-      /// Return a list of all of the defined PrimeOrderCurveId
-      ///
-      /// Note this list always includes all curves, even if some were
-      /// disabled at build time.
-      static std::vector<PrimeOrderCurveId> all();
 
       /// Convert the ID to it's commonly used name (inverse of from_string)
       std::string to_string() const;
