@@ -58,7 +58,7 @@ typedef EllipticCurve<Params> Secp256k1Base;
 class Curve final : public Secp256k1Base {
    public:
       // Return the square of the inverse of x
-      static FieldElement fe_invert2(const FieldElement& x) {
+      static constexpr FieldElement fe_invert2(const FieldElement& x) {
          auto z = x.square();
          z *= x;
          auto t0 = z;
@@ -99,7 +99,7 @@ class Curve final : public Secp256k1Base {
          return z;
       }
 
-      static Scalar scalar_invert(const Scalar& x) {
+      static constexpr Scalar scalar_invert(const Scalar& x) {
          auto z = x.square();
          auto t2 = x * z;
          auto t6 = t2 * z;

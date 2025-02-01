@@ -1326,7 +1326,7 @@ concept curve_supports_fe_invert2 = requires(const typename C::FieldElement& fe)
 * (FLT-based) field inversion.
 */
 template <typename C>
-inline auto invert_field_element(const typename C::FieldElement& fe) {
+inline constexpr auto invert_field_element(const typename C::FieldElement& fe) {
    if constexpr(curve_supports_fe_invert2<C>) {
       return C::fe_invert2(fe) * fe;
    } else {
@@ -1949,7 +1949,7 @@ template <typename C>
 const auto& SSWU_C2()
    requires C::ValidForSswuHash
 {
-   // This could use a variable time inversion
+   // TODO(Botan4) Make this a constexpr once compilers have caught up
    static const typename C::FieldElement C2 = C::B * invert_field_element<C>(C::SSWU_Z * C::A);
    return C2;
 }
@@ -1963,6 +1963,7 @@ template <typename C>
 const auto& SSWU_C1()
    requires C::ValidForSswuHash
 {
+   // TODO(Botan4) Make this a constexpr
    // We derive it from C2 to avoid a second inversion
    static const typename C::FieldElement C1 = (SSWU_C2<C>() * C::SSWU_Z).negate();
    return C1;
