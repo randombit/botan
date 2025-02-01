@@ -9,6 +9,7 @@
 #ifndef BOTAN_MP_ASM_INTERNAL_H_
 #define BOTAN_MP_ASM_INTERNAL_H_
 
+#include <botan/compiler.h>
 #include <botan/types.h>
 
 #if !defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
@@ -210,10 +211,10 @@ template <WordType W>
 inline constexpr auto word8_add2(W x[8], const W y[8], W carry) -> W {
 #if defined(BOTAN_MP_USE_X86_64_ASM)
    if(std::same_as<W, uint64_t> && !std::is_constant_evaluated()) {
-      asm(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB2_OP, "adcq"))
-          : [carry] "=r"(carry)
-          : [x] "r"(x), [y] "r"(y), "0"(carry)
-          : "cc", "memory");
+      asm volatile(ADD_OR_SUBTRACT(DO_8_TIMES(ADDSUB2_OP, "adcq"))
+                   : [carry] "=r"(carry)
+                   : [x] "r"(x), [y] "r"(y), "0"(carry)
+                   : "cc", "memory");
       return carry;
    }
 #endif
