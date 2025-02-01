@@ -48,36 +48,40 @@ class PerfTest_PK_KEM : public PerfTest {
          auto keygen_timer = config.make_timer(nm, 1, "keygen");
 
          auto sk = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
-         while(keygen_timer->under(msec)) {
-            sk = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
-         }
 
-         auto pk = sk->public_key();
-
-         Botan::PK_KEM_Decryptor dec(*sk, rng, kdf, provider);
-         Botan::PK_KEM_Encryptor enc(*pk, kdf, provider);
-
-         auto kem_enc_timer = config.make_timer(nm, 1, "KEM encrypt");
-         auto kem_dec_timer = config.make_timer(nm, 1, "KEM decrypt");
-
-         while(kem_enc_timer->under(msec) && kem_dec_timer->under(msec)) {
-            Botan::secure_vector<uint8_t> salt = rng.random_vec(16);
-
-            kem_enc_timer->start();
-            const auto kem_result = enc.encrypt(rng, 64, salt);
-            kem_enc_timer->stop();
-
-            kem_dec_timer->start();
-            Botan::secure_vector<uint8_t> dec_shared_key = dec.decrypt(kem_result.encapsulated_shared_key(), 64, salt);
-            kem_dec_timer->stop();
-
-            if(kem_result.shared_key() != dec_shared_key) {
-               config.error_output() << "KEM mismatch in PK bench\n";
+         if(sk) {
+            while(keygen_timer->under(msec)) {
+               sk = keygen_timer->run([&] { return Botan::create_private_key(algo, rng, params); });
             }
+
+            auto pk = sk->public_key();
+
+            Botan::PK_KEM_Decryptor dec(*sk, rng, kdf, provider);
+            Botan::PK_KEM_Encryptor enc(*pk, kdf, provider);
+
+            auto kem_enc_timer = config.make_timer(nm, 1, "KEM encrypt");
+            auto kem_dec_timer = config.make_timer(nm, 1, "KEM decrypt");
+
+            while(kem_enc_timer->under(msec) && kem_dec_timer->under(msec)) {
+               Botan::secure_vector<uint8_t> salt = rng.random_vec(16);
+
+               kem_enc_timer->start();
+               const auto kem_result = enc.encrypt(rng, 64, salt);
+               kem_enc_timer->stop();
+
+               kem_dec_timer->start();
+               Botan::secure_vector<uint8_t> dec_shared_key =
+                  dec.decrypt(kem_result.encapsulated_shared_key(), 64, salt);
+               kem_dec_timer->stop();
+
+               if(kem_result.shared_key() != dec_shared_key) {
+                  config.error_output() << "KEM mismatch in PK bench\n";
+               }
+            }
+            config.record_result(*keygen_timer);
+            config.record_result(*kem_enc_timer);
+            config.record_result(*kem_dec_timer);
          }
-         config.record_result(*keygen_timer);
-         config.record_result(*kem_enc_timer);
-         config.record_result(*kem_dec_timer);
       }
 };
 
