@@ -409,6 +409,7 @@ std::unique_ptr<PerfTest> PerfTest::get_sym(const std::string& alg) {
    }
 #endif
 
+   BOTAN_UNUSED(alg);
    return {};
 }
 
