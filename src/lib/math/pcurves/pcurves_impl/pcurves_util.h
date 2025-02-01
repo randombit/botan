@@ -1,5 +1,5 @@
 /*
-* (C) 2024 Jack Lloyd
+* (C) 2024,2025 Jack Lloyd
 *
 * Botan is released under the Simplified BSD License (see license.txt)
 */
@@ -66,6 +66,7 @@ inline constexpr auto monty_redc_pdash1(const std::array<W, 2 * N>& z, const std
    static_assert(N >= 1);
 
    std::array<W, N> ws;
+   std::array<W, N> r;
 
    word3<W> accum;
 
@@ -99,7 +100,6 @@ inline constexpr auto monty_redc_pdash1(const std::array<W, 2 * N>& z, const std
    // w1 is the final part, which is not stored in the workspace
    const W w1 = accum.extract();
 
-   std::array<W, N> r;
    bigint_monty_maybe_sub<N>(r.data(), w1, ws.data(), p.data());
 
    return r;
@@ -111,6 +111,27 @@ inline constexpr auto monty_redc(const std::array<W, 2 * N>& z, const std::array
    static_assert(N >= 1);
 
    std::array<W, N> ws;
+   std::array<W, N> r;
+
+   if(!std::is_constant_evaluated()) {
+      // This range ensures we cover fields of 256, 384 and 512 bits for both 32 and 64 bit words
+      if constexpr(N == 4) {
+         bigint_monty_redc_4(r.data(), z.data(), p.data(), p_dash, ws.data());
+         return r;
+      } else if constexpr(N == 6) {
+         bigint_monty_redc_6(r.data(), z.data(), p.data(), p_dash, ws.data());
+         return r;
+      } else if constexpr(N == 8) {
+         bigint_monty_redc_8(r.data(), z.data(), p.data(), p_dash, ws.data());
+         return r;
+      } else if constexpr(N == 12) {
+         bigint_monty_redc_12(r.data(), z.data(), p.data(), p_dash, ws.data());
+         return r;
+      } else if constexpr(N == 16) {
+         bigint_monty_redc_16(r.data(), z.data(), p.data(), p_dash, ws.data());
+         return r;
+      }
+   }
 
    word3<W> accum;
 
@@ -144,7 +165,6 @@ inline constexpr auto monty_redc(const std::array<W, 2 * N>& z, const std::array
    // w1 is the final part, which is not stored in the workspace
    const W w1 = accum.extract();
 
-   std::array<W, N> r;
    bigint_monty_maybe_sub<N>(r.data(), w1, ws.data(), p.data());
 
    return r;

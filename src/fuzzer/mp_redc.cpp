@@ -14,8 +14,8 @@ void fuzz_mp_redc(std::span<const uint8_t> in) {
 
    word z[2 * N] = {0};
 
-   word z_script[2 * N] = {0};
-   word z_ref[2 * N] = {0};
+   word r_script[N] = {0};
+   word r_ref[N] = {0};
    word p[N] = {0};
    word p_dash = 0;
 
@@ -25,39 +25,35 @@ void fuzz_mp_redc(std::span<const uint8_t> in) {
    std::memcpy(p, in.data() + sizeof(z), sizeof(p));
    std::memcpy(&p_dash, in.data() + sizeof(z) + sizeof(p), sizeof(p_dash));
 
-   for(size_t i = 0; i != 2 * N; ++i) {
-      z_script[i] = z_ref[i] = z[i];
-   }
-
    if(N == 4) {
-      Botan::bigint_monty_redc_4(z_script, p, p_dash, ws);
+      Botan::bigint_monty_redc_4(r_script, z, p, p_dash, ws);
    } else if(N == 6) {
-      Botan::bigint_monty_redc_6(z_script, p, p_dash, ws);
+      Botan::bigint_monty_redc_6(r_script, z, p, p_dash, ws);
    } else if(N == 8) {
-      Botan::bigint_monty_redc_8(z_script, p, p_dash, ws);
+      Botan::bigint_monty_redc_8(r_script, z, p, p_dash, ws);
    } else if(N == 16) {
-      Botan::bigint_monty_redc_16(z_script, p, p_dash, ws);
+      Botan::bigint_monty_redc_16(r_script, z, p, p_dash, ws);
    } else if(N == 24) {
-      Botan::bigint_monty_redc_24(z_script, p, p_dash, ws);
+      Botan::bigint_monty_redc_24(r_script, z, p, p_dash, ws);
    } else if(N == 32) {
-      Botan::bigint_monty_redc_32(z_script, p, p_dash, ws);
+      Botan::bigint_monty_redc_32(r_script, z, p, p_dash, ws);
    } else {
       std::abort();
    }
 
-   Botan::bigint_monty_redc_generic(z_ref, 2 * N, p, N, p_dash, ws);
+   Botan::bigint_monty_redc_generic(r_ref, z, 2 * N, p, N, p_dash, ws);
 
-   for(size_t i = 0; i != 2 * N; ++i) {
-      if(z_script[i] != z_ref[i]) {
+   for(size_t i = 0; i != N; ++i) {
+      if(r_script[i] != r_ref[i]) {
          dump_word_vec("input", z, 2 * N);
-         dump_word_vec("z_script", z_script, 2 * N);
-         dump_word_vec("z_ref", z_ref, 2 * N);
+         dump_word_vec("r_script", r_script, 2 * N);
+         dump_word_vec("r_ref", r_ref, 2 * N);
          dump_word_vec("p", p, N);
          dump_word_vec("p_dash", &p_dash, 1);
          std::abort();
       }
    }
-   compare_word_vec(z_script, 2 * N, z_ref, 2 * N, "redc generic vs specialized");
+   compare_word_vec(r_script, N, r_ref, N, "redc generic vs specialized");
 }
 
 }  // namespace

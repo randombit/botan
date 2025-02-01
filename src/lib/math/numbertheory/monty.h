@@ -161,8 +161,6 @@ class BOTAN_TEST_API Montgomery_Params final {
 
       BigInt redc(const BigInt& x, secure_vector<word>& ws) const;
 
-      void redc_in_place(BigInt& x, secure_vector<word>& ws) const;
-
       void mul(BigInt& z, const BigInt& x, const BigInt& y, secure_vector<word>& ws) const;
 
       void mul(BigInt& z, const BigInt& x, std::span<const word> y, secure_vector<word>& ws) const;
