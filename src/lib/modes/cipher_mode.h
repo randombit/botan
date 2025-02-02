@@ -20,8 +20,7 @@
 namespace Botan {
 
 /**
-* The two possible directions for cipher filters, determining whether they
-* actually perform encryption or decryption.
+* The two possible directions a Cipher_Mode can operate in
 */
 enum class Cipher_Dir : int {
    Encryption,
