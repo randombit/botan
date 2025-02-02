@@ -44,14 +44,14 @@ class PrimeOrderCurveImpl final : public PrimeOrderCurve {
       }
 
       ProjectivePoint mul(const AffinePoint& pt, const Scalar& scalar, RandomNumberGenerator& rng) const override {
-         auto tbl = WindowedMulTable<C, VarPointWindowBits>(from_stash(pt));
+         auto tbl = WindowedBoothMulTable<C, VarPointWindowBits>(from_stash(pt));
          return stash(tbl.mul(from_stash(scalar), rng));
       }
 
       secure_vector<uint8_t> mul_x_only(const AffinePoint& pt,
                                         const Scalar& scalar,
                                         RandomNumberGenerator& rng) const override {
-         auto tbl = WindowedMulTable<C, VarPointWindowBits>(from_stash(pt));
+         auto tbl = WindowedBoothMulTable<C, VarPointWindowBits>(from_stash(pt));
          auto pt_x = to_affine_x<C>(tbl.mul(from_stash(scalar), rng));
          secure_vector<uint8_t> x_bytes(C::FieldElement::BYTES);
          pt_x.serialize_to(std::span<uint8_t, C::FieldElement::BYTES>{x_bytes});
