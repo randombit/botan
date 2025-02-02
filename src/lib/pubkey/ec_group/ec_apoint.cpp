@@ -61,6 +61,13 @@ bool EC_AffinePoint::operator==(const EC_AffinePoint& other) const {
       return false;
    }
 
+   auto a_is_id = this->is_identity();
+   auto b_is_id = other.is_identity();
+
+   if(a_is_id || b_is_id) {
+      return (a_is_id == b_is_id);
+   }
+
    auto a_xy = this->serialize_uncompressed();
    auto b_xy = other.serialize_uncompressed();
    BOTAN_ASSERT_NOMSG(a_xy.size() == b_xy.size());
