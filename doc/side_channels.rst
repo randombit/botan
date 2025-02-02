@@ -70,15 +70,20 @@ to calculate the CRT parameters. The GCD computation, LCM computations, modulo,
 and inversion of ``q`` modulo ``p`` are all done via constant time algorithms.
 An additional inversion, of ``e`` modulo ``phi(n)``, is also required. This one
 is somewhat more complicated because ``phi(n)`` is even and the primary constant
-time algorithm for inversions only works for odd moduli. This is worked around
-by a technique based on the CRT - ``phi(n)`` is factored to ``2**e * z`` for
-some ``e`` > 1 and some odd ``z``. Then ``e`` is inverted modulo ``2**e`` and
-also modulo ``z``. The inversion modulo ``2**e`` is done via a specialized
-constant-time algoirthm which only works for powers of 2. Then the two
-inversions are combined using the CRT. This process does leak the value of
-``e``; to avoid problems ``p`` and ``q`` are chosen so that ``e`` is always 1.
+time algorithm for inversions only works for odd moduli.
 
-See blinding.cpp and rsa.cpp.
+When ``e`` is equal to 65537, we use Arazi's inversion algorithm [GcdFree]
+which is fast and quite simple to run in constant time.
+
+For general ``e``, the inversion proceeds using a technique based on the CRT -
+``phi(n)`` is factored to ``2**k * o`` for some ``k`` > 1 and some odd
+``o``. Then ``e`` is inverted modulo ``2**k`` and also modulo ``o``. The
+inversion modulo ``2**k`` is done via a specialized constant-time algoirthm
+which only works for powers of 2. Then the two inversions are combined using the
+CRT. This process does leak the value of ``k``; when generating keys Botan
+chooses ``p`` and ``q`` so that ``k`` is always 1.
+
+See blinding.cpp, rsa.cpp, and mod_inv.cpp
 
 Decryption of PKCS #1 v1.5 Ciphertexts
 ----------------------------------------
@@ -216,6 +221,9 @@ based on curve25519-donna-c64.c by Adam Langley. The code seems immune to cache
 based side channels. It does make use of integer multiplications; on some old
 CPUs these multiplications take variable time and might allow a side channel
 attack. This is not considered a problem on modern processors.
+
+The x25519 implementation does not currently include blinding or point
+rerandomization.
 
 TLS CBC ciphersuites
 ----------------------
@@ -372,14 +380,16 @@ block of memory is allocated and locked, then the memory is scrubbed before
 freeing. This memory pool is used by secure_vector when available. It can be
 disabled at runtime setting the environment variable BOTAN_MLOCK_POOL_SIZE to 0.
 
-Automated Analysis
----------------------
+Side Channel Analysis Tools
+-----------------------------
 
 Currently the main tool used by the Botan developers for testing for side
 channels at runtime is valgrind; valgrind's runtime API is used to taint memory
 values, and any jumps or indexes using data derived from these values will cause
 a valgrind warning. This technique was first used by Adam Langley in ctgrind.
 See header ct_utils.h.
+
+There is a self-test of the constant time annotations in ``src/ct_selftest``.
 
 To check, install valgrind, configure the build with --with-valgrind, and run
 the tests.
@@ -392,10 +402,10 @@ detect simple timing differences. The output can be processed using the
 Mona timing report library (https://github.com/seecurity/mona-timing-report).
 To run a timing report (here for example pow_mod)::
 
-  $ ./botan timing_test pow_mod > pow_mod.raw
+  $ botan timing_test pow_mod > pow_mod.raw
 
-This must be run from a checkout of the source, or otherwise ``--test-data-dir=``
-must be used to point to the expected input files.
+This must be run from a checkout of the source, or otherwise the option
+``--test-data-dir=`` must be used to point to the expected input files.
 
 Build and run the Mona report as::
 
@@ -406,6 +416,13 @@ Build and run the Mona report as::
 
 This will produce plots and an HTML file in subdirectory starting with
 ``reports_`` followed by a representation of the current date and time.
+
+Finally there is a tool to perform timing tests of RSA decryption using the
+MARVIN toolkit (https://github.com/tomato42/marvin-toolkit)::
+
+  $ botan marvin_test marvin_key marvin_datadir --runs=100000
+
+Consult the documentation for MARVIN for more about how to run this.
 
 References
 ---------------
@@ -419,6 +436,9 @@ References
 [CoronDpa] Coron,
 "Resistance against Differential Power Analysis for Elliptic Curve Cryptosystems"
 (https://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.1.5695)
+
+[GcdFree] Joye, Paillier "GCD-Free Algorithms for Computing Modular Inverses"
+(https://marcjoye.github.io/papers/JP03gcdfree.pdf)
 
 [InvalidCurve] Biehl, Meyer, Müller: Differential fault attacks on
 elliptic curve cryptosystems
