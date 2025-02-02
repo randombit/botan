@@ -36,6 +36,7 @@ API Reference
    tpm
    otp
    roughtime
+   sodium
    zfec
    ffi
    env_vars
