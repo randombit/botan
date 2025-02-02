@@ -82,7 +82,7 @@ Available KDFs
 Botan includes many different KDFs simply because different protocols and.
 standards have created subtly different approaches to this problem. For new
 code, use HKDF which is conservative, well studied, widely implemented and NIST
-approved. There is no technical reason (besides compatability) to choose any
+approved. There is no technical reason (besides compatibility) to choose any
 other KDF.
 
 HKDF

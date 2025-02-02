@@ -278,7 +278,7 @@ class BOTAN_PUBLIC_API(2, 0) Invalid_Authentication_Tag final : public Exception
 };
 
 /**
-* For compatability with older versions
+* For compatibility with older versions
 */
 typedef Invalid_Authentication_Tag Integrity_Failure;
 

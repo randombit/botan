@@ -618,7 +618,7 @@ If you are building a TLS application, you may (or may not) want to include
 ``tls_cbc`` which enables support for CBC ciphersuites. If ``tls_cbc`` is
 disabled, then it will not be possible to negotiate TLS v1.0/v1.1. In general
 this should be considered a feature; only enable this if you need backward
-compatability with obsolete clients or servers.
+compatibility with obsolete clients or servers.
 
 For TLS another useful feature which is not enabled by default is the
 ChaCha20Poly1305 ciphersuites. To enable these, add ``chacha20poly1305``.

@@ -87,7 +87,7 @@ using std::uint8_t;
 #if !defined(BOTAN_IS_BEING_BUILT)
 /*
 * These typedefs are no longer used within the library headers
-* or code. They are kept only for compatability with software
+* or code. They are kept only for compatibility with software
 * written against older versions.
 */
 using byte = std::uint8_t;

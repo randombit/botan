@@ -299,7 +299,7 @@ Version 1.11.32, 2016-09-28
 * New TLS callbacks API. Instead of numerous std::function callbacks, the
   application passes an object implementing the TLS::Callbacks interface, which
   has virtual functions matching the previous callbacks (plus some extras).
-  Full source compatability with previous versions is maintained for now, but
+  Full source compatibility with previous versions is maintained for now, but
   the old interface is deprecated and will be removed in a future release.  The
   manual has been updated to reflect the changes. (GH #457 and #567)
 

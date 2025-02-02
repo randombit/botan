@@ -304,7 +304,7 @@ header). It is a subclass of :cpp:class:`Cipher_Mode`.
           During decryption, if the supplied authentication tag does not
           validate, finish will throw an instance of Invalid_Authentication_Tag
           (aka Integrity_Failure, which was the name for this exception in
-          versions before 2.10, a typedef is included for compatability).
+          versions before 2.10, a typedef is included for compatibility).
 
           If this occurs, all plaintext previously output via calls to update
           must be destroyed and not used in any way that an attacker could

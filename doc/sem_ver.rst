@@ -3,7 +3,7 @@ Semantic Versioning
 
 Starting with 2.0.0, Botan adopted semantic versioning. This means we endevour
 to make no change which will either break compilation of existing code, or cause
-different behavior in a way that will cause compatability issues. Such changes
+different behavior in a way that will cause compatibility issues. Such changes
 are reserved for new major versions.
 
 If on upgrading to a new minor version, you encounter a problem where your
