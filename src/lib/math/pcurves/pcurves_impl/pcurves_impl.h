@@ -1881,12 +1881,18 @@ class WindowedMul2Table final {
 
          constexpr size_t Windows = (BlindedScalar::Bits + WindowBits - 1) / WindowBits;
 
-         auto accum = ProjectivePoint::identity();
+         auto accum = [&]() {
+            const size_t w_1 = bits1.get_window((Windows - 1) * WindowBits);
+            const size_t w_2 = bits2.get_window((Windows - 1) * WindowBits);
+            const size_t window = w_1 + (w_2 << WindowBits);
+            auto pt = ProjectivePoint::from_affine(AffinePoint::ct_select(m_table, window));
+            CT::poison(pt);
+            pt.randomize_rep(rng);
+            return pt;
+         }();
 
-         for(size_t i = 0; i != Windows; ++i) {
-            if(i > 0) {
-               accum = accum.dbl_n(WindowBits);
-            }
+         for(size_t i = 1; i != Windows; ++i) {
+            accum = accum.dbl_n(WindowBits);
 
             const size_t w_1 = bits1.get_window((Windows - i - 1) * WindowBits);
             const size_t w_2 = bits2.get_window((Windows - i - 1) * WindowBits);
@@ -1898,6 +1904,7 @@ class WindowedMul2Table final {
             }
          }
 
+         CT::unpoison(accum);
          return accum;
       }
 
@@ -1916,12 +1923,19 @@ class WindowedMul2Table final {
          const UnblindedScalarBits<C, W> bits1(s1);
          const UnblindedScalarBits<C, W> bits2(s2);
 
-         auto accum = ProjectivePoint::identity();
-
-         for(size_t i = 0; i != Windows; ++i) {
-            if(i > 0) {
-               accum = accum.dbl_n(WindowBits);
+         auto accum = [&]() {
+            const size_t w_1 = bits1.get_window((Windows - 1) * WindowBits);
+            const size_t w_2 = bits2.get_window((Windows - 1) * WindowBits);
+            const size_t window = w_1 + (w_2 << WindowBits);
+            if(window > 0) {
+               return ProjectivePoint::from_affine(m_table[window - 1]);
+            } else {
+               return ProjectivePoint::identity();
             }
+         }();
+
+         for(size_t i = 1; i != Windows; ++i) {
+            accum = accum.dbl_n(WindowBits);
 
             const size_t w_1 = bits1.get_window((Windows - i - 1) * WindowBits);
             const size_t w_2 = bits2.get_window((Windows - i - 1) * WindowBits);
