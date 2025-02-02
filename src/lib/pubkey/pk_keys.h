@@ -95,6 +95,8 @@ class BOTAN_PUBLIC_API(3, 0) Asymmetric_Key {
       *
       * This is primarily used to implement the FFI botan_pubkey_get_field
       * and botan_privkey_get_field functions.
+      *
+      * TODO(Botan4) Change this to return by value
       */
       virtual const BigInt& get_int_field(std::string_view field) const;
 
