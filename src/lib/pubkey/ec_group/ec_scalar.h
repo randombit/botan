@@ -9,7 +9,6 @@
 
 #include <botan/concepts.h>
 #include <botan/types.h>
-
 #include <optional>
 #include <span>
 #include <vector>
@@ -165,21 +164,22 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       EC_Scalar invert_vartime() const;
 
       /**
+      * Return the additive inverse of *this
       */
       EC_Scalar negate() const;
 
       /**
-      * Scalar addition (modulo p)
+      * Scalar addition (modulo group order)
       */
       EC_Scalar add(const EC_Scalar& x) const;
 
       /**
-      * Scalar subtraction (modulo p)
+      * Scalar subtraction (modulo group order)
       */
       EC_Scalar sub(const EC_Scalar& x) const;
 
       /**
-      * Scalar multiplication (modulo p)
+      * Scalar multiplication (modulo group order)
       */
       EC_Scalar mul(const EC_Scalar& x) const;
 
@@ -189,7 +189,7 @@ class BOTAN_UNSTABLE_API EC_Scalar final {
       void assign(const EC_Scalar& x);
 
       /**
-      * Set *this to its own square modulo p
+      * Set *this to its own square modulo the group order
       */
       void square_self();
 

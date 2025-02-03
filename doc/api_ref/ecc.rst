@@ -1,16 +1,14 @@
 Elliptic Curve Operations
 ============================
 
-In addition to high level operations for signatures, key agreement,
-and message encryption using elliptic curve cryptography, the library
-contains lower level interfaces for performing operations such as
-elliptic curve point multiplication.
+In addition to high level operations for signatures, key agreement, and message
+encryption using elliptic curve cryptography, the library contains lower level
+interfaces for performing operations such as elliptic curve point
+multiplication.
 
-Only curves over prime fields are supported.
-
-.. warning::
-
-   You should only use these interfaces if you know what you are doing.
+All operations described here are constant time (avoiding timing/cache based
+side channels) unless otherwise documented. Usually this is denoted by including
+`vartime` in the name.
 
 .. note::
 
@@ -19,148 +17,14 @@ Only curves over prime fields are supported.
    form. ``EC_Point`` still exists, but is intentionally undocumented, and will
    be removed in Botan4.
 
-.. cpp:class:: EC_Group
+.. warning::
 
-      .. cpp:function:: static bool EC_Group::supports_named_group(std::string_view name)
-
-         Check if the named group is supported.
-
-      .. cpp:function:: static bool EC_Group::supports_application_specific_group()
-
-         Check if application specific groups are supported.
-
-      .. cpp:function:: EC_Group::from_OID(const OID& oid)
-
-         Initialize an ``EC_Group`` using an OID referencing the curve
-         parameters.
-
-      .. cpp:function:: EC_Group::from_name(std::string_view name)
-
-         Initialize an ``EC_Group`` using a name (such as "secp256r1")
-
-         The curve may not be available, based on the build configuration.
-         If this is the case this function will throw `Not_Implemented`.
-
-      .. cpp:function:: EC_Group::from_PEM(std::string_view pem)
-
-         Initialize an ``EC_Group`` using a PEM encoded parameter block
-
-      .. cpp:function:: EC_Group(const OID& oid, \
-               const BigInt& p, \
-               const BigInt& a, \
-               const BigInt& b, \
-               const BigInt& base_x, \
-               const BigInt& base_y, \
-               const BigInt& order)
-
-          Create an application specific elliptic curve.
-
-          .. warning::
-
-             Using application specific curves may be hazardous to your health.
-
-          This constructor imposes the following restrictions:
-
-          * The prime must be between 192 and 512 bits, and a multiple of 32 bits.
-          * As a special extension regarding the above restriction, the prime may
-            alternately be 521 bits, in which case it must be exactly 2**521-1.
-            It can also be 239 bits, in which case it must be the X9.63 239-bit prime.
-          * The prime must be congruent to 3 modulo 4
-          * The group order must have identical bitlength to the prime
-          * No cofactor is allowed
-          * An object identifier must be specified
-
-      .. cpp:function:: EC_Group(const BigInt& p, \
-               const BigInt& a, \
-               const BigInt& b, \
-               const BigInt& base_x, \
-               const BigInt& base_y, \
-               const BigInt& order, \
-               const BigInt& cofactor, \
-               const OID& oid = OID())
-
-          This is a deprecated alternative interface for creating application
-          specific elliptic curves.
-
-          This does not impose the same restrictions regarding use of
-          arbitrary sized groups, use of a cofactor, etc, and the
-          object identifier is optional.
-
-          .. warning::
-
-             If you are using this constructor, and cannot use the
-             non-deprecated constructor due to the restrictions it places on the
-             curve parameters, be aware that this constructor will be dropped
-             in Botan 4. Please open an issue on Github describing your usecase.
-
-      .. cpp:function:: EC_Group(std::span<const uint8_t> ber_encoding)
-
-         Initialize an ``EC_Group`` by decoding a DER encoded parameter block.
-
-      .. cpp:function:: std::vector<uint8_t> DER_encode() const
-
-         Return the DER encoding of this group.
-
-      .. cpp:function:: std::vector<uint8_t> DER_encode(EC_Group_Encoding form) const
-
-         Return the DER encoding of this group. This variant is deprecated, but allows
-         the curve to be encoded using the explicit (vs OID) encoding. All support for
-         explicitly encoded elliptic curves is deprecated and will be removed in Botan4.
-
-      .. cpp:function:: std::string PEM_encode() const
-
-         Return the PEM encoding of this group (base64 of DER encoding plus
-         header/trailer).
-
-      .. cpp:function:: const BigInt& get_p() const
-
-         Return the prime modulus as a :cpp:class:`BigInt`
-
-      .. cpp:function:: const BigInt& get_a() const
-
-         Return the ``a`` parameter of the elliptic curve equation as a :cpp:class:`BigInt`
-
-      .. cpp:function:: const BigInt& get_b() const
-
-         Return the ``b`` parameter of the elliptic curve equation as a :cpp:class:`BigInt`
-
-      .. cpp:function:: const EC_Point& get_base_point() const
-
-         Return the groups base point element as a :cpp:class:`BigInt`
-
-      .. cpp:function:: const BigInt& get_g_x() const
-
-         Return the x coordinate of the base point element as a :cpp:class:`BigInt`
-
-      .. cpp:function:: const BigInt& get_g_y() const
-
-         Return the y coordinate of the base point element as a :cpp:class:`BigInt`
-
-      .. cpp:function:: const BigInt& get_order() const
-
-         Return the order of the group generated by the base point as a :cpp:class:`BigInt`
-
-      .. cpp:function:: const BigInt& get_cofactor() const
-
-         Return the cofactor of the curve. In most cases this will be 1.
-
-         .. warning::
-
-            In Botan4 all support for elliptic curves group with a
-            cofactor > 1 will be removed.
-
-      .. cpp:function:: const OID& get_curve_oid() const
-
-         Return the OID used to identify this curve. May be empty.
-
-      .. cpp:function:: bool verify_group(RandomNumberGenerator& rng, bool strong = false) const
-
-         Attempt to verify the group seems valid.
-
-      .. cpp:function:: static const std::set<std::string>& known_named_groups()
-
-         Return a list of known groups, ie groups for which ``EC_Group::from_name(name)``
-         will succeed.
+   The following interfaces are used to implement the elliptic curve signature
+   and key agreement schemes within the library. They are exposed to
+   applications to allow creating custom protocols, such as for example a
+   threshold signature scheme or a PAKE. Ordinary users do not need to use
+   these, outside of perhaps something like deserializing a EC_Scalar and
+   passing it to a constructor.
 
 .. cpp:class:: EC_Scalar
 
@@ -168,8 +32,8 @@ Only curves over prime fields are supported.
    ``n`` is size of the prime order subgroup generated by the standard group
    generator.
 
-   Note that while zero is a representable value, some of the
-   deserialization functions reject zero.
+   Note that while zero is a representable value, some of the deserialization
+   functions reject zero.
 
    .. cpp:function:: static std::optional<EC_Scalar> deserialize(const EC_Group& group, std::span<const uint8_t> buf)
 
@@ -193,13 +57,13 @@ Only curves over prime fields are supported.
 
        Return a random non-zero scalar value
 
-   .. cpp:function:: static EC_Scalar gk_x_mod_order(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws)
+   .. cpp:function:: static EC_Scalar gk_x_mod_order(const EC_Scalar& k, RandomNumberGenerator& rng, std::vector<BigInt>& ws)
 
-       Compute the elliptic curve scalar multiplication (g*k) where g is the
-       standard base point on the curve. Then extract the x coordinate of the
-       resulting point, and reduce it modulo the group order.
+       Compute the elliptic curve scalar multiplication (``g*k``) where ``g`` is
+       the standard base point on the curve. Then extract the ``x`` coordinate
+       of the resulting point, and reduce it modulo the group order.
 
-       If the scalar value is zero (resulting in the scalar multiplication
+       If ``k`` is zero (resulting in the scalar multiplication
        producing the identity element) then this function returns zero.
 
    .. cpp:function:: size_t bytes() const
@@ -217,11 +81,16 @@ Only curves over prime fields are supported.
 
    .. cpp:function:: bool is_nonzero() const
 
-       Returns true if this scalar value is zero
+       Returns true if this scalar value is not zero
 
    .. cpp:function:: EC_Scalar invert() const
 
        Return the multiplicative inverse, or zero if `*this` is zero
+
+   .. cpp:function:: EC_Scalar invert_vartime() const
+
+       Same as :cpp:func:`EC_Scalar::invert`, except that the inversion is
+       allowed to leak the value of the scalar to side channels.
 
    .. cpp:function:: EC_Scalar negate() const
 
@@ -247,6 +116,14 @@ Only curves over prime fields are supported.
 
    A point on the elliptic curve.
 
+   .. cpp:function:: static EC_AffinePoint::generator(const EC_Group& group)
+
+      Return the standard generator of the group
+
+   .. cpp:function:: static EC_AffinePoint::identity(const EC_Group& group)
+
+      Return the identity element of the group (aka the point at infinity)
+
    .. cpp:function:: EC_AffinePoint(const EC_Group& group, std::span<const uint8_t> bytes)
 
       Point deserialization. Throws if invalid, including if the point is not on the curve.
@@ -259,9 +136,19 @@ Only curves over prime fields are supported.
 
       This accepts SEC1 compressed or uncompressed formats
 
+   .. cpp:function:: bool is_identity() const
+
+      Return true if this point is the identity element.
+
+   .. cpp:function:: EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const
+
+      Variable base scalar multiplication. Constant time. If the rng object is
+      seeded, also uses blinding and point rerandomization.
+
    .. cpp:function::  static EC_AffinePoint g_mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws)
 
-      Fixed base scalar multiplication. Constant time with blinding.
+      Fixed base scalar multiplication. Constant time. If the rng object is
+      seeded, also uses blinding and point rerandomization.
 
    .. cpp:function::  static std::optional<EC_AffinePoint> mul_px_qy(const EC_AffinePoint& p, \
                           const EC_Scalar& x, \
@@ -271,10 +158,6 @@ Only curves over prime fields are supported.
 
       Constant time 2-ary multiscalar multiplication. Returns p*x + q*y, or
       nullopt if the resulting point was the identity element.
-
-   .. cpp:function:: EC_AffinePoint mul(const EC_Scalar& scalar, RandomNumberGenerator& rng, std::vector<BigInt>& ws) const
-
-      Variable base scalar multiplication. Constant time with blinding.
 
    .. cpp:function::  static EC_AffinePoint add(const EC_AffinePoint& p, const EC_AffinePoint& q)
 
@@ -286,7 +169,7 @@ Only curves over prime fields are supported.
          must convert the point directly from projective to affine coordinates,
          which requires an expensive field inversion. This is, however,
          sufficient for protocols which just require a small number of point
-         additions. In the future a type for projective coordinate points may
+         additions. In the future a public type for projective coordinate points may
          also be added, to better handle protocols which require many point
          additions. If you are implementing such a protocol using this interface
          please open an issue on Github.
@@ -315,24 +198,53 @@ Only curves over prime fields are supported.
 
    .. cpp:function:: size_t field_element_bytes() const
 
-      Return the size of the x and y coordinates, in bytes.
+      Return the size of the ``x`` and ``y`` coordinates, in bytes.
 
    .. cpp:function:: void serialize_x_to(std::span<uint8_t> bytes) const
 
-      Serialize x coordinate to the output span
+      Serialize the ``x`` coordinate to the output span, which must be
+      exactly of the expected size (1 field element)
 
    .. cpp:function:: void serialize_y_to(std::span<uint8_t> bytes) const
 
-      Serialize y coordinate to the output span
+      Serialize the ``y`` coordinate to the output span, which must be
+      exactly of the expected size (1 field element)
 
    .. cpp:function:: void serialize_xy_to(std::span<uint8_t> bytes) const
 
-      Serialize x and y coordinates to the output span
+      Serialize the ``x`` and ``y`` coordinates to the output span, which must be
+      exactly of the expected size (2 field elements)
 
    .. cpp:function:: void serialize_compressed_to(std::span<uint8_t> bytes) const
 
-      Serialize the compressed SEC1 encoding to the output span
+      Serialize the compressed SEC1 encoding to the output span, which must be
+      exactly of the expected size (1 field element plus 1 byte)
 
    .. cpp:function:: void serialize_uncompressed_to(std::span<uint8_t> bytes) const
 
-      Serialize the uncompressed SEC1 encoding to the output span
+      Serialize the uncompressed SEC1 encoding to the output span, which must be
+      exactly of the expected size (2 field elements plus 1 byte)
+
+.. cpp:class:: EC_Group::Mul2Table
+
+   This class stores precomputed tables for variable time 2-ary multiplications.
+   These are commonly used when verifying elliptic curve signatures.
+
+   .. cpp:function:: Mul2Table(const EC_AffinePoint& h)
+
+      Set up a table for computing ``g*x + h*y`` where ``g`` is the group generator.
+
+   .. cpp:function:: std::optional<EC_AffinePoint> mul2_vartime(const EC_Scalar& x, const EC_Scalar& y) const
+
+      Return ``g*x + h*y``, where it allowed to leak the values of ``x`` and ``y`` to side channels.
+
+      This returns ``nullopt`` if the product was the point at infinity.
+
+   .. cpp:function:: bool mul2_vartime_x_mod_order_eq(const EC_Scalar& v, const EC_Scalar& x, const EC_Scalar& y) const
+
+      Compute ``g*x + h*y``, then extract the ``x`` coordinate of that point. Reduce
+      the ``x`` coordinate modulo the group order, then check if that value equals ``v``.
+
+      This is faster that using :cpp:func:`EC_Group::Mul2Table::mul2_vartime`
+      for this process, because this function can avoid converting the point out
+      of projective coordinates.
