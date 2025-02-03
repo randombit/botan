@@ -58,6 +58,22 @@ enum class EC_Group_Source {
    ExternalSource,
 };
 
+/**
+* Enum indicating the way the group in question is implemented
+*
+* This is returned by EC_Group::engine
+*/
+enum class EC_Group_Engine {
+   /// Using per curve implementation; fastest available
+   Optimized,
+   /// A generic implementation that handles many curves in one implementation
+   Generic,
+   /// The old implementation, used as a fallback if none of the other
+   /// implementations can be used
+   /// TODO(Botan4) remove this
+   Legacy,
+};
+
 class EC_Mul2Table_Data;
 class EC_Group_Data;
 class EC_Group_Data_Map;
@@ -245,6 +261,13 @@ class BOTAN_PUBLIC_API(2, 0) EC_Group final {
       * is removed in a future major release, this function will also be removed.
       */
       bool used_explicit_encoding() const { return m_explicit_encoding; }
+
+      /**
+      * Return how this EC_Group is implemented under the hood
+      *
+      * This is mostly useful for diagnostic or debugging purposes
+      */
+      EC_Group_Engine engine() const;
 
       /**
       * Return a set of known named EC groups
