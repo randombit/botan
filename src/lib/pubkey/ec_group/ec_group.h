@@ -26,7 +26,12 @@
 namespace Botan {
 
 /**
-* This class represents elliptic curce domain parameters
+* This enum indicates the method used to encode the EC parameters
+*
+* @warning All support for explicit or implicit domain encodings
+* will be removed in Botan4. Only named curves will be supported.
+*
+* TODO(Botan4) remove this enum
 */
 enum class EC_Group_Encoding {
    Explicit,
@@ -38,6 +43,16 @@ enum class EC_Group_Encoding {
    EC_DOMPAR_ENC_OID = NamedCurve
 };
 
+/**
+* This enum indicates the source of the elliptic curve parameters
+* in use.
+*
+* Builtin means the curve is a known standard one which was compiled
+* in the library.
+*
+* ExternalSource means the curve parameters came from either an explicit
+* curve encoding or an application defined curve.
+*/
 enum class EC_Group_Source {
    Builtin,
    ExternalSource,

@@ -30,7 +30,7 @@ class EC_Point;
 class EC_Group_Data;
 class EC_AffinePoint_Data;
 
-/// Elliptic Curve in Affine Representation
+/// Elliptic Curve Point in Affine Representation
 ///
 class BOTAN_UNSTABLE_API EC_AffinePoint final {
    public:

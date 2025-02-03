@@ -349,11 +349,12 @@ are no extra parameters:
 
    Generate a new X448 private key
 
-Others require additionally specfiying which curve to use. First create a relevant
-`EC_Group` using for example `EC_Group::from_name` or `EC_Group::from_OID`. Then
-pass it to the private key constructor. If the choice of group is not otherwise
-mandated by your application, use "secp256r1" (aka P-256) or "secp384r1" (aka P-384)
-as they are fastest, widely implemented, and considered secure.
+Others require additionally specfiying which curve to use. First create a
+relevant :cpp:class:`EC_Group` using for example :cpp:func:`EC_Group::from_name`
+or :cpp:func:`EC_Group::from_OID`. Then pass it to the private key
+constructor. If the choice of group is not otherwise mandated by your
+application, use "secp256r1" (aka P-256) or "secp384r1" (aka P-384) as they are
+fastest, widely implemented, and considered secure.
 
 .. cpp:function:: ECDH_PrivateKey::ECDH_PrivateKey(RandomNumberGenerator& rng, const EC_Group& group)
 

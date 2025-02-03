@@ -29,6 +29,7 @@ API Reference
    filters
    fpe
    tss
+   ec_group
    ecc
    compression
    providers
