@@ -421,6 +421,9 @@ Test::Result test_ecc_registration() {
 
    result.test_eq("Group registration worked", group.get_p(), p);
 
+   // TODO(Botan4) this could change to == Generic
+   result.confirm("Group is not pcurve", group.engine() != Botan::EC_Group_Engine::Optimized);
+
    return result;
 }
 
@@ -540,6 +543,8 @@ Test::Result test_ec_group_registration_with_custom_oid() {
    #if defined(BOTAN_HAS_PCURVES_SECP256R1)
    // However we should have gotten a pcurves out of the deal *and* it
    // should be the exact same shared_ptr as the official curve
+
+   result.confirm("Group is pcurves based", reg_group.engine() == Botan::EC_Group_Engine::Optimized);
 
    try {
       const auto& pcurve = reg_group._data()->pcurve();

@@ -203,6 +203,8 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
 
       EC_Group_Source source() const { return m_source; }
 
+      EC_Group_Engine engine() const { return m_engine; }
+
       /// Scalar from bytes
       ///
       /// This returns a value only if the bytes represent (in big-endian encoding) an integer
@@ -334,6 +336,7 @@ class EC_Group_Data final : public std::enable_shared_from_this<EC_Group_Data> {
       bool m_has_cofactor;
       bool m_order_is_less_than_p;
       EC_Group_Source m_source;
+      EC_Group_Engine m_engine;
 };
 
 }  // namespace Botan

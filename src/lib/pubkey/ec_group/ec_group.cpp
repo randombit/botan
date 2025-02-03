@@ -587,6 +587,10 @@ EC_Group_Source EC_Group::source() const {
    return data().source();
 }
 
+EC_Group_Engine EC_Group::engine() const {
+   return data().engine();
+}
+
 std::vector<uint8_t> EC_Group::DER_encode() const {
    const auto& der_named_curve = data().der_named_curve();
    // TODO(Botan4) this can be removed because an OID will always be defined

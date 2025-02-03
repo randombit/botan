@@ -58,6 +58,9 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
 
       if(const auto id = PCurve::PrimeOrderCurveId::from_oid(m_oid)) {
          m_pcurve = PCurve::PrimeOrderCurve::from_id(*id);
+         if(m_pcurve) {
+            m_engine = EC_Group_Engine::Optimized;
+         }
          // still possibly null, if the curve is supported in general but not
          // available in the build
       }
@@ -67,6 +70,9 @@ EC_Group_Data::EC_Group_Data(const BigInt& p,
    secure_vector<word> ws;
    m_a_r = m_monty.mul(a, m_monty.R2(), ws);
    m_b_r = m_monty.mul(b, m_monty.R2(), ws);
+   if(!m_pcurve) {
+      m_engine = EC_Group_Engine::Legacy;
+   }
 #else
    if(!m_pcurve) {
       if(m_oid.empty()) {
