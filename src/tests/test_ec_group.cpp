@@ -277,8 +277,17 @@ class EC_Group_Tests : public Test {
          for(auto scheme : {Botan::EC_Point_Format::Uncompressed,
                             Botan::EC_Point_Format::Compressed,
                             Botan::EC_Point_Format::Hybrid}) {
-            result.test_eq("encoded/decode rt works", group.OS2ECP(pt.encode(scheme)), pt);
-            result.test_eq("encoded/decode rt works", group.OS2ECP(zero.encode(scheme)), zero);
+            try {
+               result.test_eq("encoded/decode rt works", group.OS2ECP(pt.encode(scheme)), pt);
+            } catch(Botan::Exception& e) {
+               result.test_failure("Failed to round trip encode a random point", e.what());
+            }
+
+            try {
+               result.test_eq("encoded/decode rt works", group.OS2ECP(zero.encode(scheme)), zero);
+            } catch(Botan::Exception& e) {
+               result.test_failure("Failed to round trip encode a random point", e.what());
+            }
          }
       }
 

@@ -59,8 +59,6 @@ class EC_AffinePoint_Data_PC final : public EC_AffinePoint_Data {
    public:
       EC_AffinePoint_Data_PC(std::shared_ptr<const EC_Group_Data> group, PCurve::PrimeOrderCurve::AffinePoint pt);
 
-      EC_AffinePoint_Data_PC(std::shared_ptr<const EC_Group_Data> group, std::span<const uint8_t> pt);
-
       static const EC_AffinePoint_Data_PC& checked_ref(const EC_AffinePoint_Data& data);
 
       const std::shared_ptr<const EC_Group_Data>& group() const override;

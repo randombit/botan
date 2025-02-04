@@ -8,19 +8,6 @@
 
 namespace Botan {
 
-namespace {
-
-PCurve::PrimeOrderCurve::AffinePoint deserialize_pcurve_pt(const PCurve::PrimeOrderCurve& curve,
-                                                           std::span<const uint8_t> bytes) {
-   if(auto pt = curve.deserialize_point(bytes)) {
-      return *pt;
-   } else {
-      throw Decoding_Error("Invalid elliptic curve point encoding");
-   }
-}
-
-}  // namespace
-
 const EC_Scalar_Data_PC& EC_Scalar_Data_PC::checked_ref(const EC_Scalar_Data& data) {
    const auto* p = dynamic_cast<const EC_Scalar_Data_PC*>(&data);
    if(!p) {
@@ -92,17 +79,6 @@ void EC_Scalar_Data_PC::serialize_to(std::span<uint8_t> bytes) const {
 EC_AffinePoint_Data_PC::EC_AffinePoint_Data_PC(std::shared_ptr<const EC_Group_Data> group,
                                                PCurve::PrimeOrderCurve::AffinePoint pt) :
       m_group(std::move(group)), m_pt(std::move(pt)) {
-   auto& pcurve = m_group->pcurve();
-
-   if(!pcurve.affine_point_is_identity(m_pt)) {
-      m_xy.resize(1 + 2 * field_element_bytes());
-      pcurve.serialize_point(m_xy, m_pt);
-   }
-}
-
-EC_AffinePoint_Data_PC::EC_AffinePoint_Data_PC(std::shared_ptr<const EC_Group_Data> group,
-                                               std::span<const uint8_t> bytes) :
-      m_group(std::move(group)), m_pt(deserialize_pcurve_pt(m_group->pcurve(), bytes)) {
    auto& pcurve = m_group->pcurve();
 
    if(!pcurve.affine_point_is_identity(m_pt)) {
