@@ -17,9 +17,9 @@ Version 3.7.0, Not Yet Released
 
 * Add new EC key constructors (GH #4437 #4563)
 
-* Internal EC related cleanups and optimizations (GH #4385 #4432 #4436
+* Internal EC optimizations and improvements (GH #4385 #4432 #4436
   #4492 #4479 #4510 #4511 #4512 #4517 #4518 #4532 #4533 #4549 #4550
-  #4552 #4556 #4557 #4564 #4566 #4570 #4601 #4604 #4608)
+  #4552 #4556 #4557 #4564 #4566 #4570 #4601 #4604 #4608 #4619 #4624 #4626)
 
 * An important note relating to EC groups, especially for users who do not build
   the library using the default module settings (ie using ``--minimized-build``
