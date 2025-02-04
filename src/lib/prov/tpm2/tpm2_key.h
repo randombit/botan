@@ -46,7 +46,7 @@ BOTAN_PUBLIC_API(3, 6) Botan::RSA_PublicKey rsa_pubkey_from_tss2_public(const TP
  *
  * @param public_blob The public blob to load as an ordinary EC_Group and EC_AffinePoint
  */
-
+BOTAN_PUBLIC_API(3, 7)
 std::pair<EC_Group, EC_AffinePoint> ecc_pubkey_from_tss2_public(const TPM2B_PUBLIC* public_blob);
 #endif
 

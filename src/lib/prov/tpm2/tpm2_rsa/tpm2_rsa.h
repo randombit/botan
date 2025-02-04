@@ -13,6 +13,15 @@
 
 namespace Botan::TPM2 {
 
+/**
+ * This helper function transforms a @p public_blob in a TPM2B_PUBLIC* format
+ * into the functional components of an RSA public key. Namely, a pair of
+ * modulus and exponent as big integers.
+ *
+ * @param public_blob The public blob to decompose into RSA pubkey components
+ */
+std::pair<BigInt, BigInt> rsa_pubkey_components_from_tss2_public(const TPM2B_PUBLIC* public_blob);
+
 BOTAN_DIAGNOSTIC_PUSH
 BOTAN_DIAGNOSTIC_IGNORE_INHERITED_VIA_DOMINANCE
 
@@ -41,6 +50,15 @@ class BOTAN_PUBLIC_API(3, 6) RSA_PublicKey final : public virtual Botan::TPM2::P
       friend class TPM2::PublicKey;
 
       RSA_PublicKey(Object handle, SessionBundle sessions, const TPM2B_PUBLIC* public_blob);
+
+   private:
+      /**
+       * This constructor is delegated to from the other (protected) constructor
+       * to avoid calling the subclass' RSA_PublicKey's copy/move constructor
+       * during initialization. This is to work around an apparent issue in MSVC
+       * leading to a heap corruption.
+       */
+      RSA_PublicKey(Object handle, SessionBundle sessions, const std::pair<BigInt, BigInt>& pubkey);
 };
 
 class BOTAN_PUBLIC_API(3, 6) RSA_PrivateKey final : public virtual Botan::TPM2::PrivateKey,
@@ -100,6 +118,18 @@ class BOTAN_PUBLIC_API(3, 6) RSA_PrivateKey final : public virtual Botan::TPM2::
       RSA_PrivateKey(Object handle,
                      SessionBundle sessions,
                      const TPM2B_PUBLIC* public_blob,
+                     std::span<const uint8_t> private_blob = {});
+
+   private:
+      /**
+       * This constructor is delegated to from the other (protected) constructor
+       * to avoid calling the subclass' RSA_PublicKey's copy/move constructor
+       * during initialization. This is to work around an apparent issue in MSVC
+       * leading to a heap corruption.
+       */
+      RSA_PrivateKey(Object handle,
+                     SessionBundle sessions,
+                     const std::pair<BigInt, BigInt>& pubkey,
                      std::span<const uint8_t> private_blob = {});
 };
 
