@@ -1,4 +1,4 @@
-Botan: Crypto for Real Systems
+Botan
 ========================================
 
 Botan (Japanese for peony flower) is a cryptography library released under the
@@ -72,17 +72,17 @@ Botan3
 New minor releases of Botan3 are made quarterly, normally on the first Tuesday of
 February, May, August, and November.
 
-The latest release from the Botan3 release series is
-`3.6.1 <https://botan.randombit.net/releases/Botan-3.6.1.tar.xz>`_
-`(sig) <https://botan.randombit.net/releases/Botan-3.6.1.tar.xz.asc>`__,
-released on 2024-10-26.
+The latest release in the Botan3 series is
+`3.7.0 <https://botan.randombit.net/releases/Botan-3.7.0.tar.xz>`_
+`(sig) <https://botan.randombit.net/releases/Botan-3.7.0.tar.xz.asc>`__,
+released on 2025-02-04.
 
 Botan2
 --------
 
 Botan2 has, as of 2025-1-1, reached end of life. No further releases are expected.
 
-The latest release from the Botan2 release series is
+The latest release in the Botan2 series is
 `2.19.5 <https://botan.randombit.net/releases/Botan-2.19.5.tar.xz>`_
 `(sig) <https://botan.randombit.net/releases/Botan-2.19.5.tar.xz.asc>`__,
 released on 2024-07-08.

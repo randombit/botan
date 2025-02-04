@@ -1,7 +1,7 @@
 Release Notes
 ========================================
 
-Version 3.7.0, Not Yet Released
+Version 3.7.0, 2025-02-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Add post-quantum scheme Classic McEliece (GH #3883 #4448 #4458 #4508 #4605)
