@@ -16,6 +16,23 @@
 #include <cstdint>        // IWYU pragma: export
 #include <memory>         // IWYU pragma: export
 
+/**
+* MSVC does define __cplusplus but pins it at 199711L, because "legacy".
+* Note: There is a compiler switch to enable standard behavior (/Zc:__cplusplus),
+*       but we can't control that in downstream applications.
+*
+* See: https://learn.microsoft.com/en-us/cpp/build/reference/zc-cplusplus
+*/
+#if defined(_MSVC_LANG)
+   #define BOTAN_CPLUSPLUS _MSVC_LANG
+#else
+   #define BOTAN_CPLUSPLUS __cplusplus
+#endif
+
+#if BOTAN_CPLUSPLUS < 202002L
+   #error "Botan 3.x requires at least C++20"
+#endif
+
 namespace Botan {
 
 /**
