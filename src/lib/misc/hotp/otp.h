@@ -9,6 +9,7 @@
 #define BOTAN_ONE_TIME_PASSWORDS_H_
 
 #include <botan/mac.h>
+#include <botan/symkey.h>
 #include <chrono>
 
 namespace Botan {

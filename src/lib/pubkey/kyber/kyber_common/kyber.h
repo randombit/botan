@@ -14,8 +14,6 @@
 #ifndef BOTAN_KYBER_COMMON_H_
 #define BOTAN_KYBER_COMMON_H_
 
-#include <botan/asn1_obj.h>
-#include <botan/der_enc.h>
 #include <botan/exceptn.h>
 #include <botan/pk_keys.h>
 

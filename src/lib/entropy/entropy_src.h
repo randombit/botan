@@ -8,11 +8,11 @@
 #ifndef BOTAN_ENTROPY_H_
 #define BOTAN_ENTROPY_H_
 
-#include <botan/rng.h>
-#include <botan/secmem.h>
+#include <botan/api.h>
 #include <chrono>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace Botan {

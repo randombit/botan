@@ -9,6 +9,7 @@
 
 #include <botan/concepts.h>
 #include <botan/types.h>
+#include <memory>
 #include <optional>
 #include <span>
 #include <vector>

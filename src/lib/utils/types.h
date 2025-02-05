@@ -14,7 +14,6 @@
 #include <botan/build.h>  // IWYU pragma: export
 #include <cstddef>        // IWYU pragma: export
 #include <cstdint>        // IWYU pragma: export
-#include <memory>         // IWYU pragma: export
 
 /**
 * MSVC does define __cplusplus but pins it at 199711L, because "legacy".

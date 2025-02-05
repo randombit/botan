@@ -13,6 +13,7 @@
 #define BOTAN_POLYN_GF2M_H_
 
 #include <botan/secmem.h>
+#include <memory>
 #include <utility>
 
 namespace Botan {

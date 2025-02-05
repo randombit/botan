@@ -9,7 +9,7 @@
 #include <botan/internal/cpuid.h>
 #include <botan/internal/loadstor.h>
 
-#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
+#if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY) && !defined(BOTAN_USE_GCC_INLINE_ASM)
    #include <immintrin.h>
 #endif
 

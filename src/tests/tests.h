@@ -13,6 +13,7 @@
 #include <botan/rng.h>
 #include <botan/symkey.h>
 #include <botan/types.h>
+#include <deque>
 #include <functional>
 #include <iosfwd>
 #include <map>

@@ -31,7 +31,6 @@
    #include <boost/asio.hpp>
    #include <boost/beast/core.hpp>
 
-   #include <algorithm>
    #include <memory>
    #include <type_traits>
 

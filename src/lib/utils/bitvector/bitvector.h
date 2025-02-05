@@ -23,6 +23,7 @@
 #include <botan/internal/loadstor.h>
 #include <botan/internal/stl_util.h>
 
+#include <memory>
 #include <optional>
 #include <span>
 #include <sstream>

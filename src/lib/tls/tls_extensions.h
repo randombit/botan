@@ -22,7 +22,6 @@
 #include <botan/tls_signature_scheme.h>
 #include <botan/tls_version.h>
 
-#include <algorithm>
 #include <memory>
 #include <optional>
 #include <set>

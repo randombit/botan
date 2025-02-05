@@ -9,6 +9,7 @@
 
 #include <botan/internal/pcurves.h>
 #include <botan/internal/pcurves_impl.h>
+#include <botan/exceptn.h>
 
 namespace Botan::PCurve {
 

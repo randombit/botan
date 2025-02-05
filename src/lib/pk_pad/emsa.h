@@ -8,8 +8,10 @@
 #ifndef BOTAN_PUBKEY_EMSA_H_
 #define BOTAN_PUBKEY_EMSA_H_
 
-#include <botan/secmem.h>
+#include <botan/types.h>
+#include <memory>
 #include <string>
+#include <vector>
 
 namespace Botan {
 

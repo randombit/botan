@@ -18,7 +18,6 @@
 #include <botan/tls_version.h>
 #include <botan/x509cert.h>
 
-#include <algorithm>
 #include <chrono>
 #include <span>
 #include <variant>

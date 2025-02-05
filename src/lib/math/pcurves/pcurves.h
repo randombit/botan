@@ -14,6 +14,7 @@
 #include <botan/types.h>
 #include <array>
 #include <optional>
+#include <memory>
 #include <span>
 #include <string_view>
 #include <vector>

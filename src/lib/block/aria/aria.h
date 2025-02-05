@@ -17,6 +17,7 @@
 #define BOTAN_ARIA_H_
 
 #include <botan/block_cipher.h>
+#include <botan/secmem.h>
 
 namespace Botan {
 

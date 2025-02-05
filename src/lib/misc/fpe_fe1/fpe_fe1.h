@@ -9,7 +9,9 @@
 #define BOTAN_FPE_FE1_H_
 
 #include <botan/bigint.h>
+#include <botan/symkey.h>
 #include <botan/sym_algo.h>
+#include <memory>
 
 namespace Botan {
 
@@ -83,6 +85,8 @@ class BOTAN_PUBLIC_API(2, 5) FPE_FE1 final : public SymmetricAlgorithm {
 
 namespace FPE {
 
+class OctetString;
+
 /**
 * Format Preserving Encryption using the scheme FE1 from the paper
 * "Format-Preserving Encryption" by Bellare, Rogaway, et al
@@ -98,7 +102,7 @@ namespace FPE {
 * may be insecure for some values of n. Prefer FPE_FE1 class
 */
 BigInt BOTAN_PUBLIC_API(2, 0)
-   fe1_encrypt(const BigInt& n, const BigInt& X, const SymmetricKey& key, const std::vector<uint8_t>& tweak);
+   fe1_encrypt(const BigInt& n, const BigInt& X, const OctetString& key, const std::vector<uint8_t>& tweak);
 
 /**
 * Decrypt X from and onto the group Z_n using key and tweak
@@ -111,7 +115,7 @@ BigInt BOTAN_PUBLIC_API(2, 0)
 * may be insecure for some values of n. Prefer FPE_FE1 class
 */
 BigInt BOTAN_PUBLIC_API(2, 0)
-   fe1_decrypt(const BigInt& n, const BigInt& X, const SymmetricKey& key, const std::vector<uint8_t>& tweak);
+   fe1_decrypt(const BigInt& n, const BigInt& X, const OctetString& key, const std::vector<uint8_t>& tweak);
 
 }  // namespace FPE
 

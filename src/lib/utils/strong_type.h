@@ -9,10 +9,10 @@
 #ifndef BOTAN_STRONG_TYPE_H_
 #define BOTAN_STRONG_TYPE_H_
 
-#include <ostream>
-#include <span>
-
 #include <botan/concepts.h>
+
+#include <iosfwd>
+#include <span>
 
 namespace Botan {
 

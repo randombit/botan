@@ -8,10 +8,13 @@
 
 #include <botan/internal/rdseed.h>
 
+#include <botan/rng.h>
 #include <botan/compiler.h>
 #include <botan/internal/cpuid.h>
 
-#include <immintrin.h>
+#if !defined(BOTAN_USE_GCC_INLINE_ASM)
+   #include <immintrin.h>
+#endif
 
 namespace Botan {
 
@@ -48,7 +51,11 @@ BOTAN_FUNC_ISA("rdseed") bool read_rdseed(secure_vector<uint32_t>& seed) {
       }
 
       // Intel suggests pausing if RDSEED fails.
+#if defined(BOTAN_USE_GCC_INLINE_ASM)
+      asm volatile("pause");
+#else
       _mm_pause();
+#endif
    }
 
    return false;  // failed to produce an output after many attempts

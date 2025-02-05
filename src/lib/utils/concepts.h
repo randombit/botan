@@ -11,10 +11,9 @@
 
 #include <botan/assert.h>
 
-#include <compare>
 #include <concepts>
 #include <cstdint>
-#include <ostream>
+#include <iosfwd>
 #include <ranges>
 #include <span>
 #include <type_traits>
