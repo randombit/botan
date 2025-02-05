@@ -33,9 +33,11 @@ class EMSA_X931 final : public EMSA {
       void update(const uint8_t[], size_t) override;
       std::vector<uint8_t> raw_data() override;
 
-      std::vector<uint8_t> encoding_of(const std::vector<uint8_t>&, size_t, RandomNumberGenerator& rng) override;
+      std::vector<uint8_t> encoding_of(std::span<const uint8_t> raw,
+                                       size_t key_bits,
+                                       RandomNumberGenerator& rng) override;
 
-      bool verify(const std::vector<uint8_t>&, const std::vector<uint8_t>&, size_t) override;
+      bool verify(std::span<const uint8_t> coded, std::span<const uint8_t> raw, size_t key_bits) override;
 
       std::vector<uint8_t> m_empty_hash;
       std::unique_ptr<HashFunction> m_hash;

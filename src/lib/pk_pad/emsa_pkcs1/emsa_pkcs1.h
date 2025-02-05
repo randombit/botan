@@ -29,9 +29,9 @@ class EMSA_PKCS1v15 final : public EMSA {
 
       std::vector<uint8_t> raw_data() override;
 
-      std::vector<uint8_t> encoding_of(const std::vector<uint8_t>&, size_t, RandomNumberGenerator& rng) override;
+      std::vector<uint8_t> encoding_of(std::span<const uint8_t>, size_t, RandomNumberGenerator& rng) override;
 
-      bool verify(const std::vector<uint8_t>&, const std::vector<uint8_t>&, size_t) override;
+      bool verify(std::span<const uint8_t>, std::span<const uint8_t>, size_t) override;
 
       std::string name() const override;
 
@@ -53,9 +53,9 @@ class EMSA_PKCS1v15_Raw final : public EMSA {
 
       std::vector<uint8_t> raw_data() override;
 
-      std::vector<uint8_t> encoding_of(const std::vector<uint8_t>&, size_t, RandomNumberGenerator& rng) override;
+      std::vector<uint8_t> encoding_of(std::span<const uint8_t>, size_t, RandomNumberGenerator& rng) override;
 
-      bool verify(const std::vector<uint8_t>&, const std::vector<uint8_t>&, size_t) override;
+      bool verify(std::span<const uint8_t>, std::span<const uint8_t>, size_t) override;
 
       EMSA_PKCS1v15_Raw();
 

@@ -15,7 +15,7 @@ namespace Botan {
 
 namespace {
 
-std::vector<uint8_t> pkcs1v15_sig_encoding(const std::vector<uint8_t>& msg,
+std::vector<uint8_t> pkcs1v15_sig_encoding(std::span<const uint8_t> msg,
                                            size_t output_bits,
                                            std::span<const uint8_t> hash_id) {
    const size_t output_length = output_bits / 8;
@@ -47,7 +47,7 @@ std::vector<uint8_t> EMSA_PKCS1v15::raw_data() {
    return m_hash->final_stdvec();
 }
 
-std::vector<uint8_t> EMSA_PKCS1v15::encoding_of(const std::vector<uint8_t>& msg,
+std::vector<uint8_t> EMSA_PKCS1v15::encoding_of(std::span<const uint8_t> msg,
                                                 size_t output_bits,
                                                 RandomNumberGenerator& /*rng*/) {
    if(msg.size() != m_hash->output_length()) {
@@ -57,13 +57,14 @@ std::vector<uint8_t> EMSA_PKCS1v15::encoding_of(const std::vector<uint8_t>& msg,
    return pkcs1v15_sig_encoding(msg, output_bits, m_hash_id);
 }
 
-bool EMSA_PKCS1v15::verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>& raw, size_t key_bits) {
+bool EMSA_PKCS1v15::verify(std::span<const uint8_t> coded, std::span<const uint8_t> raw, size_t key_bits) {
    if(raw.size() != m_hash->output_length()) {
       return false;
    }
 
    try {
-      return coded == pkcs1v15_sig_encoding(raw, key_bits, m_hash_id);
+      const auto pkcs1 = pkcs1v15_sig_encoding(raw, key_bits, m_hash_id);
+      return constant_time_compare(coded, pkcs1);
    } catch(...) {
       return false;
    }
@@ -112,19 +113,20 @@ std::vector<uint8_t> EMSA_PKCS1v15_Raw::raw_data() {
    return ret;
 }
 
-std::vector<uint8_t> EMSA_PKCS1v15_Raw::encoding_of(const std::vector<uint8_t>& msg,
+std::vector<uint8_t> EMSA_PKCS1v15_Raw::encoding_of(std::span<const uint8_t> msg,
                                                     size_t output_bits,
                                                     RandomNumberGenerator& /*rng*/) {
    return pkcs1v15_sig_encoding(msg, output_bits, m_hash_id);
 }
 
-bool EMSA_PKCS1v15_Raw::verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>& raw, size_t key_bits) {
+bool EMSA_PKCS1v15_Raw::verify(std::span<const uint8_t> coded, std::span<const uint8_t> raw, size_t key_bits) {
    if(m_hash_output_len > 0 && raw.size() != m_hash_output_len) {
       return false;
    }
 
    try {
-      return coded == pkcs1v15_sig_encoding(raw, key_bits, m_hash_id);
+      const auto pkcs1 = pkcs1v15_sig_encoding(raw, key_bits, m_hash_id);
+      return constant_time_compare(coded, pkcs1);
    } catch(...) {
       return false;
    }

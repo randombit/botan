@@ -23,7 +23,7 @@ class ISO_9796_DS2 final : public EMSA {
        * @param implicit whether or not the trailer is implicit
        */
       explicit ISO_9796_DS2(std::unique_ptr<HashFunction> hash, bool implicit = false) :
-            m_hash(std::move(hash)), m_implicit(implicit), m_SALT_SIZE(hash->output_length()) {}
+            m_hash(std::move(hash)), m_implicit(implicit), m_salt_len(hash->output_length()) {}
 
       /**
        * @param hash function to use
@@ -31,7 +31,7 @@ class ISO_9796_DS2 final : public EMSA {
        * @param salt_size size of the salt to use in bytes
        */
       ISO_9796_DS2(std::unique_ptr<HashFunction> hash, bool implicit, size_t salt_size) :
-            m_hash(std::move(hash)), m_implicit(implicit), m_SALT_SIZE(salt_size) {}
+            m_hash(std::move(hash)), m_implicit(implicit), m_salt_len(salt_size) {}
 
       std::string hash_function() const override { return m_hash->name(); }
 
@@ -42,15 +42,15 @@ class ISO_9796_DS2 final : public EMSA {
 
       std::vector<uint8_t> raw_data() override;
 
-      std::vector<uint8_t> encoding_of(const std::vector<uint8_t>& msg,
+      std::vector<uint8_t> encoding_of(std::span<const uint8_t> msg,
                                        size_t output_bits,
                                        RandomNumberGenerator& rng) override;
 
-      bool verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>& raw, size_t key_bits) override;
+      bool verify(std::span<const uint8_t> coded, std::span<const uint8_t> raw, size_t key_bits) override;
 
       std::unique_ptr<HashFunction> m_hash;
       bool m_implicit;
-      size_t m_SALT_SIZE;
+      size_t m_salt_len;
       std::vector<uint8_t> m_msg_buffer;
 };
 
@@ -75,11 +75,11 @@ class ISO_9796_DS3 final : public EMSA {
 
       std::vector<uint8_t> raw_data() override;
 
-      std::vector<uint8_t> encoding_of(const std::vector<uint8_t>& msg,
+      std::vector<uint8_t> encoding_of(std::span<const uint8_t> msg,
                                        size_t output_bits,
                                        RandomNumberGenerator& rng) override;
 
-      bool verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>& raw, size_t key_bits) override;
+      bool verify(std::span<const uint8_t> coded, std::span<const uint8_t> raw, size_t key_bits) override;
 
       std::unique_ptr<HashFunction> m_hash;
       bool m_implicit;

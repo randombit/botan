@@ -16,9 +16,9 @@ namespace Botan {
 
 namespace {
 
-std::vector<uint8_t> emsa2_encoding(const std::vector<uint8_t>& msg,
+std::vector<uint8_t> emsa2_encoding(std::span<const uint8_t> msg,
                                     size_t output_bits,
-                                    const std::vector<uint8_t>& empty_hash,
+                                    std::span<const uint8_t> empty_hash,
                                     uint8_t hash_id) {
    const size_t HASH_SIZE = empty_hash.size();
 
@@ -31,7 +31,7 @@ std::vector<uint8_t> emsa2_encoding(const std::vector<uint8_t>& msg,
       throw Encoding_Error("EMSA_X931::encoding_of: Output length is too small");
    }
 
-   const bool empty_input = (msg == empty_hash);
+   const bool empty_input = constant_time_compare(msg, empty_hash);
 
    std::vector<uint8_t> output(output_length);
    BufferStuffer stuffer(output);
@@ -64,7 +64,7 @@ std::vector<uint8_t> EMSA_X931::raw_data() {
 /*
 * EMSA_X931 Encode Operation
 */
-std::vector<uint8_t> EMSA_X931::encoding_of(const std::vector<uint8_t>& msg,
+std::vector<uint8_t> EMSA_X931::encoding_of(std::span<const uint8_t> msg,
                                             size_t output_bits,
                                             RandomNumberGenerator& /*rng*/) {
    return emsa2_encoding(msg, output_bits, m_empty_hash, m_hash_id);
@@ -73,9 +73,10 @@ std::vector<uint8_t> EMSA_X931::encoding_of(const std::vector<uint8_t>& msg,
 /*
 * EMSA_X931 Verify Operation
 */
-bool EMSA_X931::verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>& raw, size_t key_bits) {
+bool EMSA_X931::verify(std::span<const uint8_t> coded, std::span<const uint8_t> raw, size_t key_bits) {
    try {
-      return (coded == emsa2_encoding(raw, key_bits, m_empty_hash, m_hash_id));
+      const auto emsa2 = emsa2_encoding(raw, key_bits, m_empty_hash, m_hash_id);
+      return constant_time_compare(coded, emsa2);
    } catch(...) {
       return false;
    }
