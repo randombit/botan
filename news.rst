@@ -1,6 +1,12 @@
 Release Notes
 ========================================
 
+Version 3.7.1, 2025-02-05
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Revert a change that prevented ``build.h`` from being usable from
+  C applications. (GH #4636 #4637)
+
 Version 3.7.0, 2025-02-04
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
