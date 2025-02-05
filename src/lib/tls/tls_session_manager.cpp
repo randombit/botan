@@ -11,6 +11,7 @@
 #include <botan/rng.h>
 #include <botan/tls_callbacks.h>
 #include <botan/tls_policy.h>
+#include <algorithm>
 
 namespace Botan::TLS {
 

@@ -10,6 +10,7 @@
 #define BOTAN_MODE_PADDING_H_
 
 #include <botan/secmem.h>
+#include <memory>
 #include <string>
 
 namespace Botan {

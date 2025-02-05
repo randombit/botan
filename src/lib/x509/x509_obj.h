@@ -10,6 +10,9 @@
 
 #include <botan/asn1_obj.h>
 #include <botan/pkix_enums.h>
+#include <memory>
+#include <string>
+#include <string_view>
 #include <vector>
 
 namespace Botan {

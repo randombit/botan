@@ -17,6 +17,7 @@
 #include <botan/pkix_enums.h>
 #include <iosfwd>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <string_view>

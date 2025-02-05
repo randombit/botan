@@ -13,6 +13,7 @@
 #include <functional>
 #include <iosfwd>
 #include <map>
+#include <memory>
 #include <string>
 
 #include "timer.h"

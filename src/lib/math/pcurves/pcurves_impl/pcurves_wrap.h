@@ -7,6 +7,7 @@
 #ifndef BOTAN_PCURVES_WRAP_H_
 #define BOTAN_PCURVES_WRAP_H_
 
+#include <botan/exceptn.h>
 #include <botan/internal/pcurves.h>
 #include <botan/internal/pcurves_impl.h>
 

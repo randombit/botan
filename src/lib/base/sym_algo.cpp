@@ -7,8 +7,13 @@
 #include <botan/sym_algo.h>
 
 #include <botan/exceptn.h>
+#include <botan/symkey.h>
 
 namespace Botan {
+
+void SymmetricAlgorithm::set_key(const OctetString& key) {
+   set_key(std::span{key.begin(), key.length()});
+}
 
 void SymmetricAlgorithm::throw_key_not_set_error() const {
    throw Key_Not_Set(name());

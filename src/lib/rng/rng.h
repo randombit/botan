@@ -11,7 +11,6 @@
 
 #include <botan/concepts.h>
 #include <botan/exceptn.h>
-#include <botan/mutex.h>
 #include <botan/secmem.h>
 
 #include <array>

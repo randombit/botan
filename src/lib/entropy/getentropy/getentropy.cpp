@@ -6,6 +6,8 @@
 */
 
 #include <botan/internal/getentropy.h>
+
+#include <botan/rng.h>
 #include <unistd.h>
 
 // macOS and Android include it in sys/random.h instead

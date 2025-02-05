@@ -10,6 +10,8 @@
 
 #include <botan/rng.h>
 
+#include <memory>
+
 namespace Botan {
 
 class Stateful_RNG;

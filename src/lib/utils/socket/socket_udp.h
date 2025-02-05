@@ -10,7 +10,8 @@
 
 #include <botan/types.h>
 #include <chrono>
-#include <string>
+#include <memory>
+#include <string_view>
 
 namespace Botan::OS {
 

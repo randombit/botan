@@ -18,8 +18,7 @@
 #include <botan/internal/stl_util.h>
 #include <botan/internal/tls_reader.h>
 
-#include <functional>
-#include <iterator>
+#include <algorithm>
 #include <utility>
 
 #if defined(BOTAN_HAS_X25519)

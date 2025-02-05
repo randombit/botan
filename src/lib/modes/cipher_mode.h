@@ -12,6 +12,7 @@
 #include <botan/exceptn.h>
 #include <botan/secmem.h>
 #include <botan/sym_algo.h>
+#include <memory>
 #include <span>
 #include <string>
 #include <string_view>

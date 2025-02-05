@@ -11,7 +11,7 @@
 
    #include <botan/cipher_mode.h>
    #include <botan/hex.h>
-   #include <sstream>
+   #include <botan/symkey.h>
 
    #if defined(BOTAN_HAS_AEAD_MODES)
       #include <botan/aead.h>
