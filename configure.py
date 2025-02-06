@@ -2058,11 +2058,6 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
 
         return sorted(libs)
 
-    def choose_mp_bits():
-        mp_bits = arch.wordsize # allow command line override?
-        logging.debug('Using MP bits %d', mp_bits)
-        return mp_bits
-
     def configure_command_line():
         # Cut absolute path from main executable (e.g. configure.py or python interpreter)
         # to get the same result when configuring the same thing on different machines
@@ -2256,8 +2251,6 @@ def create_template_vars(source_paths, build_paths, options, modules, disabled_m
         'cpu_family': arch.family,
         'endian': options.with_endian,
         'cpu_is_64bit': arch.wordsize == 64,
-
-        'mp_bits': choose_mp_bits(),
 
         'python_exe': choose_python_exe(),
         'python_version': options.python_version,

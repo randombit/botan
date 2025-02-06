@@ -9,20 +9,28 @@
 #include <botan/bigint.h>
 #include <botan/internal/loadstor.h>
 
+namespace {
+
+consteval word crandall_C() {
+   if(sizeof(word) == 8) {
+      // secp256k1 modulus
+      return static_cast<word>(0x1000003d1);
+   } else {
+      // 128 bit prime with largest possible C
+      return 0xffffffe1;
+   }
+}
+
+}  // namespace
+
 void fuzz(std::span<const uint8_t> in) {
    if(in.size() != 8 * sizeof(word)) {
       return;
    }
 
-#if BOTAN_MP_WORD_BITS == 64
-   // secp256k1 modulus
-   const word C = 0x1000003d1;
-#else
-   // 128 bit prime with largest possible C
-   const word C = 0xffffffe1;
-#endif
+   constexpr word C = crandall_C();
 
-   static const Botan::BigInt refp = Botan::BigInt::power_of_2(4 * BOTAN_MP_WORD_BITS) - C;
+   static const Botan::BigInt refp = Botan::BigInt::power_of_2(4 * 8 * sizeof(C)) - C;
    static const Botan::BigInt refp2 = refp * refp;
 
    const auto refz = Botan::BigInt::from_bytes(in);

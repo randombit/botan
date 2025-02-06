@@ -16,26 +16,17 @@
 namespace Botan {
 
 BigInt::BigInt(uint64_t n) {
-#if BOTAN_MP_WORD_BITS == 64
-   m_data.set_word_at(0, n);
-#else
-   m_data.set_word_at(1, static_cast<word>(n >> 32));
-   m_data.set_word_at(0, static_cast<word>(n));
-#endif
+   if constexpr(sizeof(word) == 8) {
+      m_data.set_word_at(0, static_cast<word>(n));
+   } else {
+      m_data.set_word_at(1, static_cast<word>(n >> 32));
+      m_data.set_word_at(0, static_cast<word>(n));
+   }
 }
 
 //static
 BigInt BigInt::from_u64(uint64_t n) {
-   BigInt bn;
-
-#if BOTAN_MP_WORD_BITS == 64
-   bn.set_word_at(0, n);
-#else
-   bn.set_word_at(1, static_cast<word>(n >> 32));
-   bn.set_word_at(0, static_cast<word>(n));
-#endif
-
-   return bn;
+   return BigInt(n);
 }
 
 //static
