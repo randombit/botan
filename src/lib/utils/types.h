@@ -15,6 +15,7 @@
 #include <cstddef>        // IWYU pragma: export
 #include <cstdint>        // IWYU pragma: export
 #include <memory>         // IWYU pragma: export
+#include <type_traits>
 
 /**
 * MSVC does define __cplusplus but pins it at 199711L, because "legacy".
@@ -114,13 +115,9 @@ using u64bit = std::uint64_t;
 using s32bit = std::int32_t;
 #endif
 
-#if(BOTAN_MP_WORD_BITS == 32)
-typedef uint32_t word;
-#elif(BOTAN_MP_WORD_BITS == 64)
-typedef uint64_t word;
-#else
-   #error BOTAN_MP_WORD_BITS must be 32 or 64
-#endif
+static constexpr bool HasNative64BitRegisters = sizeof(void*) >= 8;
+
+using word = std::conditional_t<HasNative64BitRegisters, std::uint64_t, uint32_t>;
 
 #if defined(__SIZEOF_INT128__) && defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)
    #define BOTAN_TARGET_HAS_NATIVE_UINT128

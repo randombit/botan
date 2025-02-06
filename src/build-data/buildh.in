@@ -79,9 +79,6 @@
  * @{
  */
 
-/** How many bits per limb in a BigInt */
-#define BOTAN_MP_WORD_BITS %{mp_bits}
-
 %{if fuzzer_mode}
 /** Disables certain validation checks to ease fuzzability of the library
  * @warning This causes the library build to be insecure, hence, it must not be

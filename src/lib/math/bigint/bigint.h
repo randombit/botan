@@ -20,6 +20,8 @@ namespace Botan {
 
 class RandomNumberGenerator;
 
+static constexpr size_t BOTAN_MP_WORD_BITS = sizeof(word) * 8;
+
 /**
  * Arbitrary precision integer
  */

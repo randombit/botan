@@ -13,15 +13,30 @@
 
 namespace Botan {
 
+namespace {
+
+consteval word decimal_conversion_radix() {
+   if constexpr(sizeof(word) == 8) {
+      return 10000000000000000000U;
+   } else {
+      return 1000000000U;
+   }
+}
+
+consteval size_t decimal_conversion_radix_digits() {
+   if constexpr(sizeof(word) == 8) {
+      return 19;
+   } else {
+      return 9;
+   }
+}
+
+}  // namespace
+
 std::string BigInt::to_dec_string() const {
+   constexpr word conversion_radix = decimal_conversion_radix();
+   constexpr size_t radix_digits = decimal_conversion_radix_digits();
    // Use the largest power of 10 that fits in a word
-#if(BOTAN_MP_WORD_BITS == 64)
-   const word conversion_radix = 10000000000000000000U;
-   const word radix_digits = 19;
-#else
-   const word conversion_radix = 1000000000U;
-   const word radix_digits = 9;
-#endif
 
    // (over-)estimate of the number of digits needed; log2(10) ~ 3.3219
    const size_t digit_estimate = static_cast<size_t>(1 + (this->bits() / 3.32));
