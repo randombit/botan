@@ -66,70 +66,6 @@ class PrimeOrderCurve {
             Scalar& operator=(Scalar&& other) = default;
             ~Scalar() = default;
 
-            /**
-            * Return the size of the byte encoding of Scalars
-            */
-            size_t bytes() const { return m_curve->scalar_bytes(); }
-
-            /**
-            * Return the fixed length serialization of this scalar
-            */
-            template <concepts::resizable_byte_buffer T = std::vector<uint8_t>>
-            T serialize() const {
-               T bytes(this->bytes());
-               m_curve->serialize_scalar(bytes, *this);
-               return bytes;
-            }
-
-            /**
-            * Perform integer multiplication modulo the group order
-            */
-            friend Scalar operator*(const Scalar& a, const Scalar& b) { return a.m_curve->scalar_mul(a, b); }
-
-            /**
-            * Perform integer addition modulo the group order
-            */
-            friend Scalar operator+(const Scalar& a, const Scalar& b) { return a.m_curve->scalar_add(a, b); }
-
-            /**
-            * Perform integer subtraction modulo the group order
-            */
-            friend Scalar operator-(const Scalar& a, const Scalar& b) { return a.m_curve->scalar_sub(a, b); }
-
-            /**
-            * Check for equality
-            */
-            friend bool operator==(const Scalar& a, const Scalar& b) { return a.m_curve->scalar_equal(a, b); }
-
-            /**
-            * Negate modulo the group order (ie return p - *this where p is the group order)
-            */
-            Scalar negate() const { return m_curve->scalar_negate(*this); }
-
-            /**
-            * Square modulo the group order
-            */
-            Scalar square() const { return m_curve->scalar_square(*this); }
-
-            /**
-            * Return the modular inverse of *this
-            *
-            * If *this is zero then returns zero.
-            */
-            Scalar invert() const { return m_curve->scalar_invert(*this); }
-
-            /**
-            * Return the modular inverse of *this (variable time)
-            *
-            * If *this is zero then returns zero.
-            */
-            Scalar invert_vartime() const { return m_curve->scalar_invert_vartime(*this); }
-
-            /**
-            * Returns true if this is equal to zero
-            */
-            bool is_zero() const { return m_curve->scalar_is_zero(*this); }
-
             const auto& _curve() const { return m_curve; }
 
             const auto& _value() const { return m_value; }
@@ -157,56 +93,6 @@ class PrimeOrderCurve {
             ~AffinePoint() = default;
 
             static AffinePoint generator(CurvePtr curve) { return curve->generator(); }
-
-            /**
-            * Return the size of the uncompressed encoding of points
-            */
-            size_t bytes() const { return 1 + 2 * m_curve->field_element_bytes(); }
-
-            /**
-            * Return the size of the compressed encoding of points
-            */
-            size_t compressed_bytes() const { return 1 + m_curve->field_element_bytes(); }
-
-            /**
-            * Return the serialization of the point in uncompressed form
-            */
-            template <concepts::resizable_byte_buffer T = std::vector<uint8_t>>
-            T serialize() const {
-               T bytes(this->bytes());
-               m_curve->serialize_point(bytes, *this);
-               return bytes;
-            }
-
-            /**
-            * Return the serialization of the point in compressed form
-            */
-            template <concepts::resizable_byte_buffer T = std::vector<uint8_t>>
-            T serialize_compressed() const {
-               T bytes(this->compressed_bytes());
-               m_curve->serialize_point_compressed(bytes, *this);
-               return bytes;
-            }
-
-            /**
-            * Return the serialization of the x coordinate
-            */
-            template <concepts::resizable_byte_buffer T = secure_vector<uint8_t>>
-            T x_bytes() const {
-               secure_vector<uint8_t> bytes(m_curve->field_element_bytes());
-               m_curve->serialize_point_x(bytes, *this);
-               return bytes;
-            }
-
-            /**
-            * Point negation
-            */
-            AffinePoint negate() const { return m_curve->point_negate(*this); }
-
-            /**
-            * Return true if this is the curve identity element (aka the point at infinity)
-            */
-            bool is_identity() const { return m_curve->affine_point_is_identity(*this); }
 
             const auto& _curve() const { return m_curve; }
 
@@ -239,29 +125,6 @@ class PrimeOrderCurve {
             ProjectivePoint& operator=(const ProjectivePoint& other) = default;
             ProjectivePoint& operator=(ProjectivePoint&& other) = default;
             ~ProjectivePoint() = default;
-
-            /**
-            * Convert a point from affine to projective form
-            */
-            static ProjectivePoint from_affine(const AffinePoint& pt) { return pt._curve()->point_to_projective(pt); }
-
-            /**
-            * Convert a point from projective to affine form
-            *
-            * This operation is expensive; perform it only when required for
-            * serialization
-            */
-            AffinePoint to_affine() const { return m_curve->point_to_affine(*this); }
-
-            ProjectivePoint dbl() const { return m_curve->point_double(*this); }
-
-            friend ProjectivePoint operator+(const ProjectivePoint& x, const ProjectivePoint& y) {
-               return x.m_curve->point_add(x, y);
-            }
-
-            friend ProjectivePoint operator+(const ProjectivePoint& x, const AffinePoint& y) {
-               return x.m_curve->point_add_mixed(x, y);
-            }
 
             const auto& _curve() const { return m_curve; }
 

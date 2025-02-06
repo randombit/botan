@@ -310,7 +310,7 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_hash_to_curve_ro(std::
                                                                            std::span<const uint8_t> domain_sep) const {
    if(m_pcurve) {
       auto pt = m_pcurve->hash_to_curve_ro(hash_fn, input, domain_sep);
-      return std::make_unique<EC_AffinePoint_Data_PC>(shared_from_this(), pt.to_affine());
+      return std::make_unique<EC_AffinePoint_Data_PC>(shared_from_this(), m_pcurve->point_to_affine(pt));
    } else {
       throw Not_Implemented("Hash to curve is not implemented for this curve");
    }
@@ -332,7 +332,7 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::point_g_mul(const EC_Scalar_
                                                                 std::vector<BigInt>& ws) const {
    if(m_pcurve) {
       const auto& k = EC_Scalar_Data_PC::checked_ref(scalar);
-      auto pt = m_pcurve->mul_by_g(k.value(), rng).to_affine();
+      auto pt = m_pcurve->point_to_affine(m_pcurve->mul_by_g(k.value(), rng));
       return std::make_unique<EC_AffinePoint_Data_PC>(shared_from_this(), std::move(pt));
    } else {
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
@@ -362,7 +362,7 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::mul_px_qy(const EC_AffinePoi
                                     rng);
 
       if(pt) {
-         return std::make_unique<EC_AffinePoint_Data_PC>(shared_from_this(), pt->to_affine());
+         return std::make_unique<EC_AffinePoint_Data_PC>(shared_from_this(), m_pcurve->point_to_affine(*pt));
       } else {
          return nullptr;
       }
@@ -397,11 +397,10 @@ std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::mul_px_qy(const EC_AffinePoi
 std::unique_ptr<EC_AffinePoint_Data> EC_Group_Data::affine_add(const EC_AffinePoint_Data& p,
                                                                const EC_AffinePoint_Data& q) const {
    if(m_pcurve) {
-      auto pt = m_pcurve->point_add_mixed(
-         PCurve::PrimeOrderCurve::ProjectivePoint::from_affine(EC_AffinePoint_Data_PC::checked_ref(p).value()),
-         EC_AffinePoint_Data_PC::checked_ref(q).value());
+      auto pt = m_pcurve->point_add_mixed(m_pcurve->point_to_projective(EC_AffinePoint_Data_PC::checked_ref(p).value()),
+                                          EC_AffinePoint_Data_PC::checked_ref(q).value());
 
-      return std::make_unique<EC_AffinePoint_Data_PC>(shared_from_this(), pt.to_affine());
+      return std::make_unique<EC_AffinePoint_Data_PC>(shared_from_this(), m_pcurve->point_to_affine(pt));
    } else {
 #if defined(BOTAN_HAS_LEGACY_EC_POINT)
       auto pt = p.to_legacy_point() + q.to_legacy_point();
