@@ -332,7 +332,7 @@ int main(int argc, char* argv[]) {
       return 1;
    }
 
-#if !defined(BOTAN_CT_POISON_ENABLED)
+#if !defined(BOTAN_HAS_VALGRIND)
    std::cout << "The CT::poison API is disabled in this build, this test won't do anything useful\n"
              << "Configure with a compatible checker (e.g. --with-valgrind) to make the magic happen." << std::endl;
    return 1;

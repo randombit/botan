@@ -160,17 +160,6 @@
 #define BOTAN_OPTIMIZE_FOR_SIZE
 %{endif}
 
-#if defined(BOTAN_HAS_VALGRIND)
-   /**
-    * If `BOTAN_CT_POISON_ENABLED` is defined, then the `CT::poison` and
-    * `CT::unpoison` functions have an effect and do not just compile to no-ops.
-    *
-    * At the moment that is only the case when building with valgrind support. We
-    * could potentially add support for other tools in the future.
-    */
-   #define BOTAN_CT_POISON_ENABLED
-#endif
-
 /**
  * @}
  */

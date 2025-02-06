@@ -805,15 +805,6 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
 
       BOTAN_DEPRECATED("replaced by internal API") void const_time_unpoison() const { _const_time_unpoison(); }
 
-#if defined(BOTAN_CT_POISON_ENABLED)
-      void _const_time_poison() const;
-      void _const_time_unpoison() const;
-#else
-      constexpr void _const_time_poison() const {}
-
-      constexpr void _const_time_unpoison() const {}
-#endif
-
       /**
        * @param rng a random number generator
        * @param min the minimum value (must be non-negative)
@@ -945,6 +936,22 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
        * @param bytes the span of bytes to load
        */
       void _assign_from_bytes(std::span<const uint8_t> bytes) { assign_from_bytes(bytes); }
+
+      /**
+       * Mark this BigInt as holding secret data
+       *
+       * @warning this is an implementation detail which is not for
+       * public use and not covered by SemVer.
+       */
+      void _const_time_poison() const;
+
+      /**
+       * Mark this BigInt as no longer holding secret data
+       *
+       * @warning this is an implementation detail which is not for
+       * public use and not covered by SemVer.
+       */
+      void _const_time_unpoison() const;
 
    private:
       /**

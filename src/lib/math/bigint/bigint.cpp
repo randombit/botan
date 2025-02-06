@@ -519,7 +519,6 @@ void BigInt::ct_cond_assign(bool predicate, const BigInt& other) {
    cond_flip_sign((mask.as_choice() && !same_sign).as_bool());
 }
 
-#if defined(BOTAN_CT_POISON_ENABLED)
 void BigInt::_const_time_poison() const {
    CT::poison(m_data.const_data(), m_data.size());
 }
@@ -527,6 +526,5 @@ void BigInt::_const_time_poison() const {
 void BigInt::_const_time_unpoison() const {
    CT::unpoison(m_data.const_data(), m_data.size());
 }
-#endif
 
 }  // namespace Botan
