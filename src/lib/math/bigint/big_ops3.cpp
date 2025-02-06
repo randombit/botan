@@ -174,7 +174,7 @@ word operator%(const BigInt& n, word mod) {
 BigInt operator<<(const BigInt& x, size_t shift) {
    const size_t x_sw = x.sig_words();
 
-   const size_t new_size = x_sw + (shift + BOTAN_MP_WORD_BITS - 1) / BOTAN_MP_WORD_BITS;
+   const size_t new_size = x_sw + (shift + WordInfo<word>::bits - 1) / WordInfo<word>::bits;
    BigInt y = BigInt::with_capacity(new_size);
    bigint_shl2(y.mutable_data(), x._data(), x_sw, shift);
    y.set_sign(x.sign());
@@ -185,7 +185,7 @@ BigInt operator<<(const BigInt& x, size_t shift) {
 * Right Shift Operator
 */
 BigInt operator>>(const BigInt& x, size_t shift) {
-   const size_t shift_words = shift / BOTAN_MP_WORD_BITS;
+   const size_t shift_words = shift / WordInfo<word>::bits;
    const size_t x_sw = x.sig_words();
 
    if(shift_words >= x_sw) {

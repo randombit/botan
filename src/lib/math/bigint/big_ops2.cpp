@@ -253,7 +253,7 @@ word BigInt::operator%=(word mod) {
 */
 BigInt& BigInt::operator<<=(size_t shift) {
    const size_t sw = sig_words();
-   const size_t new_size = sw + (shift + BOTAN_MP_WORD_BITS - 1) / BOTAN_MP_WORD_BITS;
+   const size_t new_size = sw + (shift + WordInfo<word>::bits - 1) / WordInfo<word>::bits;
 
    m_data.grow_to(new_size);
 
