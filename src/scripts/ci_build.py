@@ -837,6 +837,13 @@ def main(args=None):
 
             cmds.append(make_prefix + make_cmd + make_targets)
 
+            if target in ['examples'] and options.cc in ['clang', 'gcc']:
+                cmds.append([options.cc, '-Wall', '-Wextra', '-std=c89',
+                             '-I%s' % (os.path.join(build_dir, 'build/include/public')),
+                             os.path.join(root_dir, 'src/examples/ffi.c'),
+                             '-L%s' % (build_dir), '-lbotan-3', '-o',
+                             os.path.join(build_dir, 'build/examples/ffi')])
+
             if options.compiler_cache is not None:
                 cmds.append([options.compiler_cache, '--show-stats'])
 
