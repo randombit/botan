@@ -9,6 +9,7 @@
 #define BOTAN_PUBKEY_EMSA_H_
 
 #include <botan/secmem.h>
+#include <span>
 #include <string>
 
 namespace Botan {
@@ -59,18 +60,18 @@ class BOTAN_TEST_API EMSA {
       * @param rng a random number generator
       * @return encoded signature
       */
-      virtual std::vector<uint8_t> encoding_of(const std::vector<uint8_t>& msg,
+      virtual std::vector<uint8_t> encoding_of(std::span<const uint8_t> msg,
                                                size_t output_bits,
                                                RandomNumberGenerator& rng) = 0;
 
       /**
       * Verify the encoding
-      * @param coded the received (coded) message representative
-      * @param raw the computed (local, uncoded) message representative
+      * @param encoding the received (coded) message representative
+      * @param raw_hash the computed (local, uncoded) message representative
       * @param key_bits the size of the key in bits
       * @return true if coded is a valid encoding of raw, otherwise false
       */
-      virtual bool verify(const std::vector<uint8_t>& coded, const std::vector<uint8_t>& raw, size_t key_bits) = 0;
+      virtual bool verify(std::span<const uint8_t> encoding, std::span<const uint8_t> raw_hash, size_t key_bits) = 0;
 
       /**
       * Return the hash function being used by this padding scheme

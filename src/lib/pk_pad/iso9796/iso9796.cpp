@@ -1,6 +1,7 @@
 /*
  * ISO-9796-2 - Digital signature schemes giving message recovery schemes 2 and 3
  * (C) 2016 Tobias Niemann, Hackmanit GmbH
+ *     2025 Jack Lloyd
  *
  * Botan is released under the Simplified BSD License (see license.txt)
  */
@@ -20,40 +21,38 @@ namespace Botan {
 
 namespace {
 
-std::vector<uint8_t> iso9796_encoding(const std::vector<uint8_t>& msg,
+std::vector<uint8_t> iso9796_encoding(std::span<const uint8_t> msg,
                                       size_t output_bits,
                                       std::unique_ptr<HashFunction>& hash,
-                                      size_t SALT_SIZE,
+                                      size_t salt_len,
                                       bool implicit,
                                       RandomNumberGenerator& rng) {
    const size_t output_length = (output_bits + 7) / 8;
 
    //set trailer length
-   const size_t tLength = (implicit) ? 1 : 2;
+   const size_t trailer_len = (implicit) ? 1 : 2;
 
-   const size_t HASH_SIZE = hash->output_length();
+   const size_t hash_len = hash->output_length();
 
-   if(output_length <= HASH_SIZE + SALT_SIZE + tLength) {
+   if(output_length <= hash_len + salt_len + trailer_len) {
       throw Encoding_Error("ISO9796-2::encoding_of: Output length is too small");
    }
 
    //calculate message capacity
-   const size_t capacity = output_length - HASH_SIZE - SALT_SIZE - tLength - 1;
+   const size_t capacity = output_length - hash_len - salt_len - trailer_len - 1;
 
    //msg1 is the recoverable and hmsg2 is the hash of the unrecoverable message part.
-   std::vector<uint8_t> msg1;
-   if(msg.size() > capacity) {
-      msg1 = std::vector<uint8_t>(msg.begin(), msg.begin() + capacity);
-      hash->update(std::span(msg).subspan(capacity));
-   } else {
-      msg1 = msg;
-   }
+   std::span<const uint8_t> msg1;
+   const size_t msg1_len = std::min(capacity, msg.size());
+   const size_t msg2_len = msg.size() - msg1_len;  // possibly zero
+   msg1 = msg.first(msg1_len);
+
+   hash->update(msg.subspan(msg1_len, msg2_len));  // possibly empty
    const std::vector<uint8_t> hmsg2 = hash->final_stdvec();
 
    //compute H(C||msg1 ||H(msg2)||S)
-   const size_t msgLength = msg1.size();
-   const auto salt = rng.random_vec<std::vector<uint8_t>>(SALT_SIZE);
-   hash->update_be(static_cast<uint64_t>(msgLength) * 8);
+   const auto salt = rng.random_vec<std::vector<uint8_t>>(salt_len);
+   hash->update_be(static_cast<uint64_t>(msg1_len) * 8);
    hash->update(msg1);
    hash->update(hmsg2);
    hash->update(salt);
@@ -62,13 +61,13 @@ std::vector<uint8_t> iso9796_encoding(const std::vector<uint8_t>& msg,
    std::vector<uint8_t> EM(output_length);
 
    BufferStuffer stuffer(EM);
-   stuffer.append(0x00, stuffer.remaining_capacity() - (HASH_SIZE + SALT_SIZE + tLength + msgLength + 1));
+   stuffer.append(0x00, stuffer.remaining_capacity() - (hash_len + salt_len + trailer_len + msg1_len + 1));
    stuffer.append(0x01);
    stuffer.append(msg1);
    stuffer.append(salt);
 
    //apply mask
-   mgf1_mask(*hash, H.data(), HASH_SIZE, EM.data(), output_length - HASH_SIZE - tLength);
+   mgf1_mask(*hash, H.data(), hash_len, EM.data(), output_length - hash_len - trailer_len);
 
    //clear the leftmost bit (confer bouncy castle)
    EM[0] &= 0x7F;
@@ -82,7 +81,7 @@ std::vector<uint8_t> iso9796_encoding(const std::vector<uint8_t>& msg,
    } else {
       const uint8_t hash_id = ieee1363_hash_id(hash->name());
       if(!hash_id) {
-         throw Encoding_Error("ISO9796-2::encoding_of: no hash identifier for " + hash->name());
+         throw Encoding_Error("ISO-9796: no hash identifier for " + hash->name());
       }
       stuffer.append(hash_id);
       stuffer.append(0xCC);
@@ -93,40 +92,40 @@ std::vector<uint8_t> iso9796_encoding(const std::vector<uint8_t>& msg,
    return EM;
 }
 
-bool iso9796_verification(const std::vector<uint8_t>& const_coded,
-                          const std::vector<uint8_t>& raw,
+bool iso9796_verification(std::span<const uint8_t> const_coded,
+                          std::span<const uint8_t> raw,
                           size_t key_bits,
                           std::unique_ptr<HashFunction>& hash,
-                          size_t SALT_SIZE) {
-   const size_t HASH_SIZE = hash->output_length();
+                          size_t salt_len) {
+   const size_t hash_len = hash->output_length();
    const size_t KEY_BYTES = (key_bits + 7) / 8;
 
    if(const_coded.size() != KEY_BYTES) {
       return false;
    }
    //get trailer length
-   size_t tLength;
+   size_t trailer_len;
    if(const_coded[const_coded.size() - 1] == 0xBC) {
-      tLength = 1;
+      trailer_len = 1;
    } else {
       uint8_t hash_id = ieee1363_hash_id(hash->name());
       if((!const_coded[const_coded.size() - 2]) || (const_coded[const_coded.size() - 2] != hash_id) ||
          (const_coded[const_coded.size() - 1] != 0xCC)) {
          return false;  //in case of wrong ISO trailer.
       }
-      tLength = 2;
+      trailer_len = 2;
    }
 
-   std::vector<uint8_t> coded = const_coded;
+   std::vector<uint8_t> coded(const_coded.begin(), const_coded.end());
 
    CT::poison(coded.data(), coded.size());
    //remove mask
    uint8_t* DB = coded.data();
-   const size_t DB_size = coded.size() - HASH_SIZE - tLength;
+   const size_t DB_size = coded.size() - hash_len - trailer_len;
 
    const uint8_t* H = &coded[DB_size];
 
-   mgf1_mask(*hash, H, HASH_SIZE, DB, DB_size);
+   mgf1_mask(*hash, H, hash_len, DB, DB_size);
    //clear the leftmost bit (confer bouncy castle)
    DB[0] &= 0x7F;
 
@@ -150,7 +149,7 @@ bool iso9796_verification(const std::vector<uint8_t>& const_coded,
 
    //invalid, if delimiter 0x01 was not found or msg1_offset is too big
    bad_input |= waiting_for_delim;
-   bad_input |= CT::Mask<size_t>::is_lt(coded.size(), tLength + HASH_SIZE + msg1_offset + SALT_SIZE);
+   bad_input |= CT::Mask<size_t>::is_lt(coded.size(), trailer_len + hash_len + msg1_offset + salt_len);
 
    //in case that msg1_offset is too big, just continue with offset = 0.
    msg1_offset = CT::Mask<size_t>::expand(bad_input.value()).if_not_set_return(msg1_offset);
@@ -158,17 +157,17 @@ bool iso9796_verification(const std::vector<uint8_t>& const_coded,
    CT::unpoison(coded.data(), coded.size());
    CT::unpoison(msg1_offset);
 
-   std::vector<uint8_t> msg1(coded.begin() + msg1_offset, coded.end() - tLength - HASH_SIZE - SALT_SIZE);
-   std::vector<uint8_t> salt(coded.begin() + msg1_offset + msg1.size(), coded.end() - tLength - HASH_SIZE);
+   std::vector<uint8_t> msg1(coded.begin() + msg1_offset, coded.end() - trailer_len - hash_len - salt_len);
+   std::vector<uint8_t> salt(coded.begin() + msg1_offset + msg1.size(), coded.end() - trailer_len - hash_len);
 
    //compute H2(C||msg1||H(msg2)||S*). * indicates a recovered value
-   const size_t capacity = (key_bits - 2 + 7) / 8 - HASH_SIZE - SALT_SIZE - tLength - 1;
+   const size_t capacity = (key_bits - 2 + 7) / 8 - hash_len - salt_len - trailer_len - 1;
    std::vector<uint8_t> msg1raw;
    if(raw.size() > capacity) {
       msg1raw = std::vector<uint8_t>(raw.begin(), raw.begin() + capacity);
       hash->update(std::span(raw).subspan(capacity));
    } else {
-      msg1raw = raw;
+      msg1raw.assign(raw.begin(), raw.end());
    }
    const std::vector<uint8_t> hmsg2 = hash->final_stdvec();
 
@@ -180,15 +179,15 @@ bool iso9796_verification(const std::vector<uint8_t>& const_coded,
    std::vector<uint8_t> H3 = hash->final_stdvec();
 
    //compute H3(C*||msg1*||H(msg2)||S*) * indicates a recovered value
-   const uint64_t msgLength = msg1.size();
-   hash->update_be(msgLength * 8);
+   const uint64_t msg1_len = msg1.size();
+   hash->update_be(msg1_len * 8);
    hash->update(msg1);
    hash->update(hmsg2);
    hash->update(salt);
    std::vector<uint8_t> H2 = hash->final_stdvec();
 
    //check if H3 == H2
-   bad_input |= CT::is_not_equal(H3.data(), H2.data(), HASH_SIZE);
+   bad_input |= CT::is_not_equal(H3.data(), H2.data(), hash_len);
 
    CT::unpoison(bad_input);
    return (bad_input.as_bool() == false);
@@ -217,24 +216,24 @@ std::vector<uint8_t> ISO_9796_DS2::raw_data() {
 /*
  *  ISO-9796-2 scheme 2 encode operation
  */
-std::vector<uint8_t> ISO_9796_DS2::encoding_of(const std::vector<uint8_t>& msg,
+std::vector<uint8_t> ISO_9796_DS2::encoding_of(std::span<const uint8_t> msg,
                                                size_t output_bits,
                                                RandomNumberGenerator& rng) {
-   return iso9796_encoding(msg, output_bits, m_hash, m_SALT_SIZE, m_implicit, rng);
+   return iso9796_encoding(msg, output_bits, m_hash, m_salt_len, m_implicit, rng);
 }
 
 /*
  * ISO-9796-2 scheme 2 verify operation
  */
-bool ISO_9796_DS2::verify(const std::vector<uint8_t>& const_coded, const std::vector<uint8_t>& raw, size_t key_bits) {
-   return iso9796_verification(const_coded, raw, key_bits, m_hash, m_SALT_SIZE);
+bool ISO_9796_DS2::verify(std::span<const uint8_t> const_coded, std::span<const uint8_t> raw, size_t key_bits) {
+   return iso9796_verification(const_coded, raw, key_bits, m_hash, m_salt_len);
 }
 
 /*
  * Return the SCAN name
  */
 std::string ISO_9796_DS2::name() const {
-   return fmt("ISO_9796_DS2({},{},{})", m_hash->name(), (m_implicit ? "imp" : "exp"), m_SALT_SIZE);
+   return fmt("ISO_9796_DS2({},{},{})", m_hash->name(), (m_implicit ? "imp" : "exp"), m_salt_len);
 }
 
 /*
@@ -258,7 +257,7 @@ std::vector<uint8_t> ISO_9796_DS3::raw_data() {
 /*
  *  ISO-9796-2 scheme 3 encode operation
  */
-std::vector<uint8_t> ISO_9796_DS3::encoding_of(const std::vector<uint8_t>& msg,
+std::vector<uint8_t> ISO_9796_DS3::encoding_of(std::span<const uint8_t> msg,
                                                size_t output_bits,
                                                RandomNumberGenerator& rng) {
    return iso9796_encoding(msg, output_bits, m_hash, 0, m_implicit, rng);
@@ -267,7 +266,7 @@ std::vector<uint8_t> ISO_9796_DS3::encoding_of(const std::vector<uint8_t>& msg,
 /*
  * ISO-9796-2 scheme 3 verify operation
  */
-bool ISO_9796_DS3::verify(const std::vector<uint8_t>& const_coded, const std::vector<uint8_t>& raw, size_t key_bits) {
+bool ISO_9796_DS3::verify(std::span<const uint8_t> const_coded, std::span<const uint8_t> raw, size_t key_bits) {
    return iso9796_verification(const_coded, raw, key_bits, m_hash, 0);
 }
 
