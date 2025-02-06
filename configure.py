@@ -1794,18 +1794,23 @@ def process_template_string(template_text, variables, template_source):
                 k = match.group(1)
                 if k.endswith('|upper'):
                     k = k.replace('|upper', '')
-                    v = get_replacement(k).upper()
+                    return get_replacement(k).upper()
                 elif k.endswith('|concat'):
                     k = k.replace('|concat', '')
                     if not match.group(2):
                         raise InternalError("|concat must be of the form '%{val|concat:<some static value>}'")
                     v = get_replacement(k)
-                    if v:
-                        v = f"{v}{match.group(2)}"
-                else:
-                    v = get_replacement(k)
+                    return f"{v}{match.group(2)}"
+                elif k.endswith('|as_bool'):
+                    k = k.replace('|as_bool', '')
 
-                return v
+                    if k not in self.vals:
+                        raise KeyError(k)
+                    v = self.vals.get(k)
+
+                    return str(bool(v)).lower()
+                else:
+                    return get_replacement(k)
 
             def insert_join(match):
                 var = match.group(1)

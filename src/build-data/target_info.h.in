@@ -22,6 +22,8 @@
 #define BOTAN_CT_VALUE_BARRIER_USE_%{cxx_ct_value_barrier_type|upper}
 %{endif}
 
+[[maybe_unused]] static constexpr bool OptimizeForSize = %{optimize_for_size|as_bool};
+
 /*
 * CPU feature information
 */

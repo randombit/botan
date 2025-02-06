@@ -147,10 +147,6 @@
 #define BOTAN_TERMINATE_ON_ASSERTS
 %{endif}
 
-%{if optimize_for_size}
-#define BOTAN_OPTIMIZE_FOR_SIZE
-%{endif}
-
 /**
  * @}
  */
