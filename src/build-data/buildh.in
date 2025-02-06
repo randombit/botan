@@ -128,7 +128,6 @@
 #define BOTAN_HAS_SANITIZER_%{i|upper}
 %{endfor}
 
-#define BOTAN_TARGET_ARCH "%{arch}"
 #define BOTAN_TARGET_ARCH_IS_%{arch|upper}
 %{if endian}
 #define BOTAN_TARGET_CPU_IS_%{endian|upper}_ENDIAN

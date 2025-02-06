@@ -12,6 +12,7 @@
    #include <botan/build.h>
    #include <botan/version.h>
    #include <botan/internal/loadstor.h>
+   #include <botan/internal/target_info.h>
 
    #if defined(BOTAN_HAS_OS_UTILS)
       #include <botan/internal/os_utils.h>

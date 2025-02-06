@@ -16,6 +16,9 @@
 */
 
 /* CPU feature information */
+#define BOTAN_TARGET_ARCH "%{arch}"
+
+
 %{for cpu_features}
 #define BOTAN_TARGET_CPU_SUPPORTS_%{i|upper}
 %{endfor}
