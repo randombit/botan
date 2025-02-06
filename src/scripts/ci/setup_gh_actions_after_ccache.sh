@@ -41,14 +41,10 @@ function build_and_install_esdm() {
 }
 
 if type -p "apt-get"; then
-    if [ "$TARGET" = "valgrind" ] || [ "$TARGET" = "valgrind-full" ] || [ "$TARGET" = "valgrind-ct-full" ] || [ "$TARGET" = "valgrind-ct" ] || \
-       [ "$TARGET" = "examples" ] || [ "$TARGET" = "amalgamation" ] || [ "$TARGET" = "tlsanvil" ] || [ "$TARGET" = "clang-tidy" ] ; then
-        build_and_install_jitterentropy
-
-    elif [ "$TARGET" = "shared" ]; then
+    if [ "$TARGET" = "shared" ]; then
         build_and_install_esdm
 
-    elif [ "$TARGET" = "coverage" ] || [ "$TARGET" = "sanitizer" ]; then
+    elif [ "$TARGET" = "coverage" ] || [ "$TARGET" = "sanitizer" ] || [ "$TARGET" = "clang-tidy" ]; then
         build_and_install_jitterentropy
         build_and_install_esdm
 
