@@ -23,7 +23,7 @@ Montgomery_Params::Montgomery_Params(const BigInt& p, const Modular_Reducer& mod
    m_p_words = m_p.sig_words();
    m_p_dash = monty_inverse(m_p.word_at(0));
 
-   const BigInt r = BigInt::power_of_2(m_p_words * BOTAN_MP_WORD_BITS);
+   const BigInt r = BigInt::power_of_2(m_p_words * WordInfo<word>::bits);
 
    m_r1 = mod_p.reduce(r);
    m_r2 = mod_p.square(m_r1);
@@ -39,7 +39,7 @@ Montgomery_Params::Montgomery_Params(const BigInt& p) {
    m_p_words = m_p.sig_words();
    m_p_dash = monty_inverse(m_p.word_at(0));
 
-   const BigInt r = BigInt::power_of_2(m_p_words * BOTAN_MP_WORD_BITS);
+   const BigInt r = BigInt::power_of_2(m_p_words * WordInfo<word>::bits);
 
    auto mod_p = Modular_Reducer::for_secret_modulus(p);
 

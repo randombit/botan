@@ -90,7 +90,7 @@ BigInt ct_divide_pow2k(size_t k, const BigInt& y) {
    }
 
    BOTAN_ASSERT_NOMSG(y_bits >= 1);
-   const size_t x_words = (x_bits + BOTAN_MP_WORD_BITS - 1) / BOTAN_MP_WORD_BITS;
+   const size_t x_words = (x_bits + WordInfo<word>::bits - 1) / WordInfo<word>::bits;
    const size_t y_words = y.sig_words();
 
    BigInt q = BigInt::with_capacity(x_words);
@@ -250,14 +250,14 @@ void vartime_divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt&
 
    word* q_words = q.mutable_data();
 
-   BigInt shifted_y = y << (BOTAN_MP_WORD_BITS * (n - t));
+   BigInt shifted_y = y << (WordInfo<word>::bits * (n - t));
 
    // Set q_{n-t} to number of times r > shifted_y
    q_words[n - t] = r.reduce_below(shifted_y, ws);
 
    const word y_t0 = y.word_at(t);
    const word y_t1 = y.word_at(t - 1);
-   BOTAN_DEBUG_ASSERT((y_t0 >> (BOTAN_MP_WORD_BITS - 1)) == 1);
+   BOTAN_DEBUG_ASSERT((y_t0 >> (WordInfo<word>::bits - 1)) == 1);
 
    for(size_t j = n; j != t; --j) {
       const word x_j0 = r.word_at(j);
@@ -273,8 +273,8 @@ void vartime_divide(const BigInt& x, const BigInt& y_arg, BigInt& q_out, BigInt&
       qjt -= division_check(qjt, y_t0, y_t1, x_j0, x_j1, x_j2);
       BOTAN_DEBUG_ASSERT(division_check(qjt, y_t0, y_t1, x_j0, x_j1, x_j2) == false);
 
-      shifted_y >>= BOTAN_MP_WORD_BITS;
-      // Now shifted_y == y << (BOTAN_MP_WORD_BITS * (j-t-1))
+      shifted_y >>= WordInfo<word>::bits;
+      // Now shifted_y == y << (WordInfo<word>::bits * (j-t-1))
 
       // TODO this sequence could be better
       r -= qjt * shifted_y;
