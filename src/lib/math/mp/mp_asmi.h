@@ -11,6 +11,7 @@
 
 #include <botan/compiler.h>
 #include <botan/types.h>
+#include <botan/internal/target_info.h>
 
 #if !defined(BOTAN_TARGET_HAS_NATIVE_UINT128)
    #include <botan/internal/donna128.h>

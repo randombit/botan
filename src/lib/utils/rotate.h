@@ -74,22 +74,6 @@ inline constexpr T rotr_var(T input, size_t rot) {
    return rot ? static_cast<T>((input >> rot) | (input << (sizeof(T) * 8 - rot))) : input;
 }
 
-#if defined(BOTAN_USE_GCC_INLINE_ASM) && defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
-
-template <>
-inline uint32_t rotl_var(uint32_t input, size_t rot) {
-   asm("roll %1,%0" : "+r"(input) : "c"(static_cast<uint8_t>(rot)) : "cc");
-   return input;
-}
-
-template <>
-inline uint32_t rotr_var(uint32_t input, size_t rot) {
-   asm("rorl %1,%0" : "+r"(input) : "c"(static_cast<uint8_t>(rot)) : "cc");
-   return input;
-}
-
-#endif
-
 }  // namespace Botan
 
 #endif

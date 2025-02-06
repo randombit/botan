@@ -8,6 +8,7 @@
 
 #include <botan/internal/cpuid.h>
 #include <botan/internal/loadstor.h>
+#include <botan/internal/target_info.h>
 
 #if defined(BOTAN_TARGET_CPU_IS_X86_FAMILY)
    #include <immintrin.h>

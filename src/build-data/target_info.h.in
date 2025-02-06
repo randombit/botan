@@ -29,6 +29,10 @@
 */
 #define BOTAN_BUILD_COMPILER_IS_%{cc_macro}
 
+%{if cxx_supports_gcc_inline_asm}
+#define BOTAN_USE_GCC_INLINE_ASM
+%{endif}
+
 /*
 * CPU feature information
 */

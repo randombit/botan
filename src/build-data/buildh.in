@@ -114,10 +114,6 @@
 #define BOTAN_TARGET_OS_HAS_%{i|upper}
 %{endfor}
 
-%{if cxx_supports_gcc_inline_asm}
-#define BOTAN_USE_GCC_INLINE_ASM
-%{endif}
-
 %{for sanitizer_types}
 #define BOTAN_HAS_SANITIZER_%{i|upper}
 %{endfor}

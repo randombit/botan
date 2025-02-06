@@ -9,6 +9,7 @@
 
 #if defined(BOTAN_HAS_OS_UTILS)
    #include <botan/internal/os_utils.h>
+   #include <botan/internal/target_info.h>
 #endif
 
 namespace Botan_Tests {
