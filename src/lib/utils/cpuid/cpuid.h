@@ -9,7 +9,7 @@
 #define BOTAN_CPUID_H_
 
 #include <botan/types.h>
-#include <iosfwd>
+#include <botan/internal/target_info.h>
 #include <string>
 #include <vector>
 
@@ -82,11 +82,11 @@ class BOTAN_TEST_API CPUID final {
       * (SSE2, NEON, or Altivec/VMX)
       */
       static bool has_simd_32() {
-#if defined(BOTAN_TARGET_SUPPORTS_SSE2)
+#if defined(BOTAN_TARGET_CPU_SUPPORTS_SSE2)
          return CPUID::has_sse2();
-#elif defined(BOTAN_TARGET_SUPPORTS_ALTIVEC)
+#elif defined(BOTAN_TARGET_CPU_SUPPORTS_ALTIVEC)
          return CPUID::has_altivec();
-#elif defined(BOTAN_TARGET_SUPPORTS_NEON)
+#elif defined(BOTAN_TARGET_CPU_SUPPORTS_NEON)
          return CPUID::has_neon();
 #else
          return false;

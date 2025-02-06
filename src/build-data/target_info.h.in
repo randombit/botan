@@ -15,6 +15,13 @@
 *  - OS: %{os}
 */
 
+/* CPU feature information */
+%{for cpu_features}
+#define BOTAN_TARGET_CPU_SUPPORTS_%{i|upper}
+%{endfor}
+
+
+/* System paths */
 #define BOTAN_INSTALL_PREFIX R"(%{prefix})"
 #define BOTAN_INSTALL_HEADER_DIR R"(%{includedir}/botan-%{version_major})"
 #define BOTAN_INSTALL_LIB_DIR R"(%{libdir})"
