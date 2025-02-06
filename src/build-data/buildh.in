@@ -24,11 +24,19 @@
  * @{
  */
 
-/// The major version of the release
+/**
+* The major version of the release
+*/
 #define BOTAN_VERSION_MAJOR %{version_major}
-/// The minor version of the release
+
+/**
+* The minor version of the release
+*/
 #define BOTAN_VERSION_MINOR %{version_minor}
-/// The patch version of the release
+
+/**
+* The patch version of the release
+*/
 #define BOTAN_VERSION_PATCH %{version_patch}
 
 /**
