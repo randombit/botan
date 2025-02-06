@@ -3439,6 +3439,7 @@ def do_io_for_build(cc, arch, osinfo, using_mods, info_modules, build_paths, sou
         return os.path.join(build_paths.doc_module_info, p)
 
     write_template(in_build_dir('build.h'), in_build_data('buildh.in'))
+    write_template(in_build_dir('target_info.h'), in_build_data('target_info.h.in'))
     write_template(in_build_dir('botan.doxy'), in_build_data('botan.doxy.in'))
 
     if options.with_cmake_config:
@@ -3685,6 +3686,7 @@ def main(argv):
 
     build_paths = BuildPaths(source_paths, options, using_mods)
     build_paths.public_headers.append(os.path.join(build_paths.build_dir, 'build.h'))
+    build_paths.internal_headers.append(os.path.join(build_paths.build_dir, 'target_info.h'))
 
     template_vars = create_template_vars(source_paths, build_paths, options, using_mods, not_using_mods, cc, arch, osinfo)
 

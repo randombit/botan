@@ -1,0 +1,28 @@
+#ifndef BOTAN_TARGET_INFO_H_
+#define BOTAN_TARGET_INFO_H_
+
+#include <botan/build.h>
+
+/**
+* @file  target_info.h
+*
+* Automatically generated from
+* '%{command_line}'
+*
+* Target
+*  - Compiler: %{cxx} %{cxx_abi_flags} %{cc_lang_flags} %{cc_compile_flags}
+*  - Arch: %{arch}
+*  - OS: %{os}
+*/
+
+#define BOTAN_INSTALL_PREFIX R"(%{prefix})"
+#define BOTAN_INSTALL_HEADER_DIR R"(%{includedir}/botan-%{version_major})"
+#define BOTAN_INSTALL_LIB_DIR R"(%{libdir})"
+#define BOTAN_LIB_LINK "%{link_to}"
+#define BOTAN_LINK_FLAGS "%{cxx_abi_flags}"
+
+%{if system_cert_bundle}
+#define BOTAN_SYSTEM_CERT_BUNDLE "%{system_cert_bundle}"
+%{endif}
+
+#endif

@@ -102,16 +102,6 @@
 #define BOTAN_ENABLE_EXPERIMENTAL_FEATURES
 %{endif}
 
-#define BOTAN_INSTALL_PREFIX R"(%{prefix})"
-#define BOTAN_INSTALL_HEADER_DIR R"(%{includedir}/botan-%{version_major})"
-#define BOTAN_INSTALL_LIB_DIR R"(%{libdir})"
-#define BOTAN_LIB_LINK "%{link_to}"
-#define BOTAN_LINK_FLAGS "%{cxx_abi_flags}"
-
-%{if system_cert_bundle}
-#define BOTAN_SYSTEM_CERT_BUNDLE "%{system_cert_bundle}"
-%{endif}
-
 #ifndef BOTAN_DLL
   #define BOTAN_DLL %{visibility_attribute}
 #endif
