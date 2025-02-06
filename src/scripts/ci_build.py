@@ -230,6 +230,8 @@ def determine_flags(target, target_os, target_cpu, target_cc, cc_bin, ccache,
 
     if target in ['docs']:
         flags += ['--with-doxygen', '--with-sphinx', '--with-rst2man']
+    else:
+        flags += ['--without-doc']
 
     if target in ['docs', 'codeql', 'hybrid-tls13-interop-test', 'limbo']:
         test_cmd = None
