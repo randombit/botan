@@ -8,6 +8,7 @@
 #include <botan/internal/ghash.h>
 
 #include <botan/internal/simd_32.h>
+#include <botan/internal/target_info.h>
 
 #if defined(BOTAN_SIMD_USE_SSE2)
    #include <immintrin.h>

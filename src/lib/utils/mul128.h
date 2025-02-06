@@ -9,6 +9,7 @@
 #define BOTAN_UTIL_MUL128_H_
 
 #include <botan/types.h>
+#include <botan/internal/target_info.h>
 #include <type_traits>
 
 #if defined(BOTAN_BUILD_COMPILER_IS_MSVC) && defined(BOTAN_TARGET_CPU_HAS_NATIVE_64BIT)

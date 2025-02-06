@@ -25,6 +25,11 @@
 [[maybe_unused]] static constexpr bool OptimizeForSize = %{optimize_for_size|as_bool};
 
 /*
+* Compiler Information
+*/
+#define BOTAN_BUILD_COMPILER_IS_%{cc_macro}
+
+/*
 * CPU feature information
 */
 #define BOTAN_TARGET_ARCH "%{arch}"
