@@ -49,7 +49,7 @@ std::string http_transact(std::string_view hostname,
    }
 
    std::ostringstream oss;
-   std::vector<uint8_t> buf(BOTAN_DEFAULT_BUFFER_SIZE);
+   std::vector<uint8_t> buf(DefaultBufferSize);
    while(true) {
       const size_t got = socket->read(buf.data(), buf.size());
       if(got == 0) {  // EOF

@@ -354,14 +354,11 @@ The function secure_scrub_memory (in mem_ops.cpp) uses some system specific
 trick to zero out an array. If possible an OS provided routine (such as
 ``RtlSecureZeroMemory`` or ``explicit_bzero``) is used.
 
-On other platforms, by default the trick of referencing memset through a
+On other platforms, the trick of referencing memset through a
 volatile function pointer is used. This approach is not guaranteed to work on
 all platforms, and currently there is no systematic check of the resulting
 binary function that it is compiled as expected. But, it is the best approach
 currently known and has been verified to work as expected on common platforms.
-
-If BOTAN_USE_VOLATILE_MEMSET_FOR_ZERO is set to 0 in build.h (not the default) a
-byte at a time loop through a volatile pointer is used to overwrite the array.
 
 Memory allocation
 ----------------------

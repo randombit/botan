@@ -62,7 +62,7 @@ class BOTAN_PUBLIC_API(2, 0) HMAC_DRBG final : public Stateful_RNG {
       */
       HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
                 RandomNumberGenerator& underlying_rng,
-                size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL,
+                size_t reseed_interval = RandomNumberGenerator::DefaultReseedInterval,
                 size_t max_number_of_bytes_per_request = 64 * 1024);
 
       /**
@@ -89,7 +89,7 @@ class BOTAN_PUBLIC_API(2, 0) HMAC_DRBG final : public Stateful_RNG {
       */
       HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
                 Entropy_Sources& entropy_sources,
-                size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL,
+                size_t reseed_interval = RandomNumberGenerator::DefaultReseedInterval,
                 size_t max_number_of_bytes_per_request = 64 * 1024);
 
       /**
@@ -120,7 +120,7 @@ class BOTAN_PUBLIC_API(2, 0) HMAC_DRBG final : public Stateful_RNG {
       HMAC_DRBG(std::unique_ptr<MessageAuthenticationCode> prf,
                 RandomNumberGenerator& underlying_rng,
                 Entropy_Sources& entropy_sources,
-                size_t reseed_interval = BOTAN_RNG_DEFAULT_RESEED_INTERVAL,
+                size_t reseed_interval = RandomNumberGenerator::DefaultReseedInterval,
                 size_t max_number_of_bytes_per_request = 64 * 1024);
 
       std::string name() const override;

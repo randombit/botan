@@ -22,12 +22,29 @@ class RandomNumberGenerator;
 class Blinder final {
    public:
       /**
+      * Normally blinding is performed by choosing a random starting point (plus
+      * its inverse, of a form appropriate to the algorithm being blinded), and
+      * then choosing new blinding operands by successive squaring of both
+      * values. This is much faster than computing a new starting point but
+      * introduces some possible corelation
+      *
+      * To avoid possible leakage problems in long-running processes, the blinder
+      * periodically reinitializes the sequence. This value specifies how often
+      * a new sequence should be started.
+      *
+      * If set to zero, reinitialization is disabled
+      */
+      static constexpr size_t ReinitInterval = 64;
+
+      /**
       * Blind a value.
-      * The blinding nonce k is freshly generated after
-      * BOTAN_BLINDING_REINIT_INTERVAL calls to blind().
-      * BOTAN_BLINDING_REINIT_INTERVAL = 0 means a fresh
-      * nonce is only generated once. On every other call,
-      * an updated nonce is used for blinding: k' = k*k mod n.
+      *
+      * The blinding nonce k is freshly generated after ReinitInterval
+      * calls to blind().
+      *
+      * ReinitInterval = 0 means a fresh nonce is only generated once.
+      * On every other call, the next nonce is derived via modular squaring.
+      *
       * @param x value to blind
       * @return blinded value
       */
