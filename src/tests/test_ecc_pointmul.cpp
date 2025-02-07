@@ -312,6 +312,9 @@ class ECC_Scalar_Arithmetic_Tests final : public Test {
          result.test_eq("Inverse of zero is zero", zero.invert().serialize(), ser_zero);
          result.test_eq("Inverse of one is one", one.invert().serialize(), ser_one);
 
+         result.test_eq("Inverse (vt) of zero is zero", zero.invert_vartime().serialize(), ser_zero);
+         result.test_eq("Inverse (vt) of one is one", one.invert_vartime().serialize(), ser_one);
+
          constexpr size_t test_iter = 128;
 
          for(size_t i = 0; i != test_iter; ++i) {

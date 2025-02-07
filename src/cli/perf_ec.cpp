@@ -40,6 +40,7 @@ class PerfTest_EllipticCurve final : public PerfTest {
             auto mul2_setup_timer = config.make_timer(group_name + " mul2 setup");
             auto mul2_timer = config.make_timer(group_name + " mul2");
             auto scalar_inv_timer = config.make_timer(group_name + " scalar inversion");
+            auto scalar_inv_vt_timer = config.make_timer(group_name + " scalar inversion vartime");
             auto h2c_nu_timer = config.make_timer(group_name + " hash to curve (NU)");
             auto h2c_ro_timer = config.make_timer(group_name + " hash to curve (RO)");
 
@@ -58,6 +59,7 @@ class PerfTest_EllipticCurve final : public PerfTest {
 
             while(bp_timer->under(run) && vp_timer->under(run)) {
                const auto k = Botan::EC_Scalar::random(group, rng);
+               const auto k2 = Botan::EC_Scalar::random(group, rng);
                const auto r1 = bp_timer->run([&]() { return Botan::EC_AffinePoint::g_mul(k, rng, ws); });
                const auto r2 = vp_timer->run([&]() { return g.mul(k, rng, ws); });
 
@@ -74,14 +76,19 @@ class PerfTest_EllipticCurve final : public PerfTest {
 
                auto mul2 = mul2_setup_timer->run([&]() { return Botan::EC_Group::Mul2Table(r1); });
 
-               auto k_inv = scalar_inv_timer->run([&]() { return k.invert(); });
-
-               auto pt = mul2_timer->run([&]() { return mul2.mul2_vartime(k, k_inv); });
+               auto pt = mul2_timer->run([&]() { return mul2.mul2_vartime(k, k2); });
 
                if(h2c_supported) {
                   h2c_nu_timer->run([&]() { Botan::EC_AffinePoint::hash_to_curve_nu(group, "SHA-256", r1_bytes, {}); });
                   h2c_ro_timer->run([&]() { Botan::EC_AffinePoint::hash_to_curve_ro(group, "SHA-256", r1_bytes, {}); });
                }
+            }
+
+            while(scalar_inv_timer->under(config.runtime())) {
+               const auto k = Botan::EC_Scalar::random(group, rng);
+               auto k_vt_inv = scalar_inv_vt_timer->run([&]() { return k.invert_vartime(); });
+               auto k_inv = scalar_inv_timer->run([&]() { return k.invert(); });
+               BOTAN_ASSERT_EQUAL(k_inv, k_vt_inv, "Same result for inversion");
             }
 
             config.record_result(*add_timer);
@@ -90,6 +97,7 @@ class PerfTest_EllipticCurve final : public PerfTest {
             config.record_result(*mul2_setup_timer);
             config.record_result(*mul2_timer);
             config.record_result(*scalar_inv_timer);
+            config.record_result(*scalar_inv_vt_timer);
             config.record_result(*der_uc_timer);
             config.record_result(*der_c_timer);
 
