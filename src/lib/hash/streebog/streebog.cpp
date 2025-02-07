@@ -13,6 +13,7 @@
 #include <botan/internal/fmt.h>
 #include <botan/internal/loadstor.h>
 #include <botan/internal/stl_util.h>
+#include <bit>
 
 namespace Botan {
 
@@ -94,14 +95,14 @@ void Streebog::final_result(std::span<uint8_t> output) {
 namespace {
 
 inline uint64_t force_le(uint64_t x) {
-#if defined(BOTAN_TARGET_CPU_IS_LITTLE_ENDIAN)
-   return x;
-#elif defined(BOTAN_TARGET_CPU_IS_BIG_ENDIAN)
-   return reverse_bytes(x);
-#else
-   store_le(x, reinterpret_cast<uint8_t*>(&x));
-   return x;
-#endif
+   if constexpr(std::endian::native == std::endian::little) {
+      return x;
+   } else if constexpr(std::endian::native == std::endian::big) {
+      return reverse_bytes(x);
+   } else {
+      store_le(x, reinterpret_cast<uint8_t*>(&x));
+      return x;
+   }
 }
 
 inline void lps(uint64_t block[8]) {
