@@ -8,6 +8,7 @@
 
 #include <botan/exceptn.h>
 #include <botan/hash.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
 #include <vector>
 

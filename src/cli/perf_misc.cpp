@@ -8,6 +8,7 @@
 #include <cstring>
 
 // Always available:
+#include <botan/assert.h>
 #include <botan/hex.h>
 
 #if defined(BOTAN_HAS_BASE64_CODEC)

@@ -9,6 +9,7 @@
 #ifndef BOTAN_MODE_CBC_H_
 #define BOTAN_MODE_CBC_H_
 
+#include <botan/assert.h>
 #include <botan/block_cipher.h>
 #include <botan/cipher_mode.h>
 #include <botan/internal/mode_pad.h>

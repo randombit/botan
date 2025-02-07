@@ -10,7 +10,6 @@
 #define BOTAN_BIGINT_H_
 
 #include <botan/exceptn.h>
-#include <botan/mem_ops.h>
 #include <botan/secmem.h>
 #include <botan/types.h>
 #include <iosfwd>
@@ -999,36 +998,9 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
                m_reg.assign(w, w + len);
             }
 
-            void set_to_zero() {
-               m_reg.resize(m_reg.capacity());
-               clear_mem(m_reg.data(), m_reg.size());
-               m_sig_words = 0;
-            }
+            void set_to_zero();
 
-            void set_size(size_t s) {
-               invalidate_sig_words();
-               clear_mem(m_reg.data(), m_reg.size());
-               m_reg.resize(s + (8 - (s % 8)));
-            }
-
-            void mask_bits(size_t n) {
-               if(n == 0) {
-                  return set_to_zero();
-               }
-
-               const size_t top_word = n / (sizeof(word) * 8);
-
-               // if(top_word < sig_words()) ?
-               if(top_word < size()) {
-                  const word mask = (static_cast<word>(1) << (n % (sizeof(word) * 8))) - 1;
-                  const size_t len = size() - (top_word + 1);
-                  if(len > 0) {
-                     clear_mem(&m_reg[top_word + 1], len);
-                  }
-                  m_reg[top_word] &= mask;
-                  invalidate_sig_words();
-               }
-            }
+            void mask_bits(size_t n);
 
             void grow_to(size_t n) const {
                if(n > size()) {
@@ -1064,8 +1036,6 @@ class BOTAN_PUBLIC_API(2, 0) BigInt final {
             size_t sig_words() const {
                if(m_sig_words == sig_words_npos) {
                   m_sig_words = calc_sig_words();
-               } else {
-                  BOTAN_DEBUG_ASSERT(m_sig_words == calc_sig_words());
                }
                return m_sig_words;
             }

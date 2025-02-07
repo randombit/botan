@@ -7,6 +7,7 @@
 #include <botan/sodium.h>
 
 #include <botan/mac.h>
+#include <botan/mem_ops.h>
 #include <botan/secmem.h>
 #include <botan/stream_cipher.h>
 #include <botan/internal/ct_utils.h>

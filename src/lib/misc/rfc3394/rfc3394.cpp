@@ -7,6 +7,7 @@
 
 #include <botan/rfc3394.h>
 
+#include <botan/assert.h>
 #include <botan/block_cipher.h>
 #include <botan/nist_keywrap.h>
 

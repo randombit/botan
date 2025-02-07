@@ -10,6 +10,7 @@
 #define BOTAN_FILTER_H_
 
 #include <botan/secmem.h>
+#include <span>
 #include <string>
 #include <vector>
 
@@ -72,20 +73,18 @@ class BOTAN_PUBLIC_API(2, 0) Filter {
       /**
       * @param in some input for the filter
       */
-      template <typename Alloc>
-      void send(const std::vector<uint8_t, Alloc>& in) {
-         send(in.data(), in.size());
-      }
+      void send(std::span<const uint8_t> in) { send(in.data(), in.size()); }
 
       /**
       * @param in some input for the filter
       * @param length the number of bytes of in to send
+      *
+      * This previously took a std::vector, for which the length field (allowing
+      * using just a prefix of the vector) somewhat made sense. It makes less
+      * sense now that we are using a span here; you can just use `first` to get
+      * a prefix.
       */
-      template <typename Alloc>
-      void send(const std::vector<uint8_t, Alloc>& in, size_t length) {
-         BOTAN_ASSERT_NOMSG(length <= in.size());
-         send(in.data(), length);
-      }
+      void send(std::span<const uint8_t> in, size_t length);
 
       Filter();
 

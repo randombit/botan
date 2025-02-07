@@ -17,14 +17,14 @@
 #include <botan/tls_server.h>
 #include <botan/tls_session_manager_memory.h>
 
-#if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
+#if __has_include(<arpa/inet.h>)
    #include <arpa/inet.h>
    #include <netinet/in.h>
    #include <sys/ioctl.h>
    #include <sys/socket.h>
-#endif
-#if defined(BOTAN_TARGET_OS_HAS_POSIX1)
    #include <unistd.h>
+
+   #define HAS_BSD_SOCKETS
 #endif
 
 namespace {
@@ -70,12 +70,10 @@ class Server_Credential : public Botan::Credentials_Manager {
       }
 
       std::vector<Botan::X509_Certificate> cert_chain(
-         const std::vector<std::string>& cert_key_types,
-         const std::vector<Botan::AlgorithmIdentifier>& cert_signature_schemes,
-         const std::string& type,
-         const std::string& context) override {
-         BOTAN_UNUSED(cert_signature_schemes, type, context);
-
+         [[maybe_unused]] const std::vector<std::string>& cert_key_types,
+         [[maybe_unused]] const std::vector<Botan::AlgorithmIdentifier>& cert_signature_schemes,
+         [[maybe_unused]] const std::string& type,
+         [[maybe_unused]] const std::string& context) override {
          // return the certificate chain being sent to the tls client
          // e.g., the certificate file "botan.randombit.net.crt"
          std::vector<Botan::X509_Certificate> certs;
@@ -90,10 +88,9 @@ class Server_Credential : public Botan::Credentials_Manager {
          return certs;
       }
 
-      std::shared_ptr<Botan::Private_Key> private_key_for(const Botan::X509_Certificate& cert,
-                                                          const std::string& type,
-                                                          const std::string& context) override {
-         BOTAN_UNUSED(cert, type, context);
+      std::shared_ptr<Botan::Private_Key> private_key_for([[maybe_unused]] const Botan::X509_Certificate& cert,
+                                                          [[maybe_unused]] const std::string& type,
+                                                          [[maybe_unused]] const std::string& context) override {
          // return the private key associated with the leaf certificate,
          // in this case the one associated with "botan.randombit.net.crt"
          return m_key;
@@ -118,9 +115,10 @@ class BotanTLSCallbacksProxy : public Botan::TLS::Callbacks {
 
       void tls_emit_data(std::span<const uint8_t> data) override { parent.tls_emit_data(data); }
 
-      void tls_record_received(uint64_t seq_no, std::span<const uint8_t> data) override { BOTAN_UNUSED(seq_no, data); }
+      void tls_record_received([[maybe_unused]] uint64_t seq_no,
+                               [[maybe_unused]] std::span<const uint8_t> data) override {}
 
-      void tls_alert(Botan::TLS::Alert alert) override { BOTAN_UNUSED(alert); }
+      void tls_alert([[maybe_unused]] Botan::TLS::Alert alert) override {}
 
       void tls_ssl_key_log_data(std::string_view label,
                                 std::span<const uint8_t> client_random,
@@ -133,20 +131,22 @@ class BotanTLSCallbacksProxy : public Botan::TLS::Callbacks {
 
 class DtlsConnection : public Botan::TLS::Callbacks {
       int fd;
-#if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
+#if defined(HAS_BSD_SOCKETS)
       sockaddr_in remote_addr;
 #endif
       std::unique_ptr<Botan::TLS::Channel> dtls_channel;
       std::function<void()> activated_callback;
 
    public:
-      DtlsConnection(const std::string& r_addr, int r_port, int socket, bool is_server) : fd(socket) {
-#if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
+      DtlsConnection([[maybe_unused]] const std::string& r_addr,
+                     [[maybe_unused]] int r_port,
+                     int socket,
+                     bool is_server) :
+            fd(socket) {
+#if defined(HAS_BSD_SOCKETS)
          remote_addr.sin_family = AF_INET;
          inet_aton(r_addr.c_str(), &remote_addr.sin_addr);
          remote_addr.sin_port = htons(r_port);
-#else
-         BOTAN_UNUSED(r_addr, r_port);
 #endif
          auto tls_callbacks_proxy = std::make_shared<BotanTLSCallbacksProxy>(*this);
          auto rng = std::make_shared<Botan::AutoSeeded_RNG>();
@@ -170,19 +170,18 @@ class DtlsConnection : public Botan::TLS::Callbacks {
          }
       }
 
-      void tls_emit_data(std::span<const uint8_t> data) override {
-#if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
-         sendto(fd, data.data(), data.size(), 0, reinterpret_cast<const sockaddr*>(&remote_addr), sizeof(sockaddr_in));
-#else
-         BOTAN_UNUSED(data);
+      void tls_emit_data([[maybe_unused]] std::span<const uint8_t> data) override {
+#if defined(HAS_BSD_SOCKETS)
          // send data to the other side
          // ...
+         sendto(fd, data.data(), data.size(), 0, reinterpret_cast<const sockaddr*>(&remote_addr), sizeof(sockaddr_in));
 #endif
       }
 
-      void tls_record_received(uint64_t seq_no, std::span<const uint8_t> data) override { BOTAN_UNUSED(seq_no, data); }
+      void tls_record_received([[maybe_unused]] uint64_t seq_no,
+                               [[maybe_unused]] std::span<const uint8_t> data) override {}
 
-      void tls_alert(Botan::TLS::Alert alert) override { BOTAN_UNUSED(alert); }
+      void tls_alert([[maybe_unused]] Botan::TLS::Alert alert) override {}
 
       void tls_session_activated() override {
          std::cout << "************ on_dtls_connect() ***********" << std::endl;
@@ -205,11 +204,9 @@ class DtlsConnection : public Botan::TLS::Callbacks {
 
       void close() const {
          if(fd) {
-#if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
+#if defined(HAS_BSD_SOCKETS)
             shutdown(fd, SHUT_RDWR);
-   #if defined(BOTAN_TARGET_OS_HAS_POSIX1)
             ::close(fd);
-   #endif
 #endif
          }
       }
@@ -219,7 +216,7 @@ void server_proc(const std::function<void(std::shared_ptr<DtlsConnection> conn)>
    std::cout << "Start Server" << std::endl;
 
    int fd = 0;
-#if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
+#if defined(HAS_BSD_SOCKETS)
    fd = socket(AF_INET, SOCK_DGRAM, 0);
    if(fd == -1) {
       return;
@@ -246,7 +243,7 @@ void server_proc(const std::function<void(std::shared_ptr<DtlsConnection> conn)>
    auto connection = std::make_shared<DtlsConnection>("127.0.0.1", CLIENT_PORT, fd, true);
    conn_callback(connection);
 
-#if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
+#if defined(HAS_BSD_SOCKETS)
    static uint8_t data[8192];
    ssize_t recvlen = 0;
    while((recvlen = recvfrom(fd, data, sizeof(data), 0, reinterpret_cast<sockaddr*>(&fromaddr), &len)) > 0) {
@@ -265,7 +262,7 @@ void client_proc(const std::function<void(std::shared_ptr<DtlsConnection> conn)>
    std::cout << "Start Client" << std::endl;
 
    int fd = 0;
-#if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
+#if defined(HAS_BSD_SOCKETS)
    fd = socket(AF_INET, SOCK_DGRAM, 0);
    if(fd == -1) {
       return;
@@ -291,7 +288,7 @@ void client_proc(const std::function<void(std::shared_ptr<DtlsConnection> conn)>
 
    auto connection = std::make_shared<DtlsConnection>("127.0.0.1", SERVER_PORT, fd, false);
    conn_callback(connection);
-#if defined(BOTAN_TARGET_OS_HAS_SOCKETS)
+#if defined(HAS_BSD_SOCKETS)
    static uint8_t data[8192];
    ssize_t recvlen = 0;
    while((recvlen = recvfrom(fd, data, sizeof(data), 0, reinterpret_cast<sockaddr*>(&fromaddr), &len)) > 0) {

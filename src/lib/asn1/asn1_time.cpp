@@ -7,6 +7,7 @@
 
 #include <botan/asn1_obj.h>
 
+#include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/exceptn.h>

@@ -7,6 +7,7 @@
 
 #include <botan/srp6.h>
 
+#include <botan/assert.h>
 #include <botan/dl_group.h>
 #include <botan/hash.h>
 #include <botan/internal/fmt.h>

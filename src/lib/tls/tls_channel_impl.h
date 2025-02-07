@@ -11,6 +11,7 @@
 #ifndef BOTAN_TLS_CHANNEL_IMPL_H_
 #define BOTAN_TLS_CHANNEL_IMPL_H_
 
+#include <botan/assert.h>
 #include <botan/tls_channel.h>
 #include <botan/tls_magic.h>
 #include <botan/tls_version.h>

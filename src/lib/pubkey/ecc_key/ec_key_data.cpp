@@ -6,6 +6,7 @@
 
 #include <botan/internal/ec_key_data.h>
 
+#include <botan/mem_ops.h>
 #include <botan/rng.h>
 
 namespace Botan {

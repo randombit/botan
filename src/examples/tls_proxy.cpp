@@ -15,20 +15,18 @@
  */
 class Callbacks : public Botan::TLS::Callbacks {
    public:
-      void tls_emit_data(std::span<const uint8_t> data) override {
+      void tls_emit_data([[maybe_unused]] std::span<const uint8_t> data) override {
          // send data to tls client, e.g., using BSD sockets or boost asio
-         BOTAN_UNUSED(data);
       }
 
-      void tls_record_received(uint64_t seq_no, std::span<const uint8_t> data) override {
+      void tls_record_received([[maybe_unused]] uint64_t seq_no,
+                               [[maybe_unused]] std::span<const uint8_t> data) override {
          // process full TLS record received by tls client, e.g.,
          // by passing it to the application
-         BOTAN_UNUSED(seq_no, data);
       }
 
-      void tls_alert(Botan::TLS::Alert alert) override {
+      void tls_alert([[maybe_unused]] Botan::TLS::Alert alert) override {
          // handle a tls alert received from the tls server
-         BOTAN_UNUSED(alert);
       }
 };
 
@@ -47,9 +45,8 @@ class Server_Credentials : public Botan::Credentials_Manager {
          m_key.reset(Botan::PKCS8::load_key(in).release());
       }
 
-      std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(const std::string& type,
-                                                                             const std::string& context) override {
-         BOTAN_UNUSED(type, context);
+      std::vector<Botan::Certificate_Store*> trusted_certificate_authorities(
+         [[maybe_unused]] const std::string& type, [[maybe_unused]] const std::string& context) override {
          // if client authentication is required, this function
          // shall return a list of certificates of CAs we trust
          // for tls client certificates, otherwise return an empty list
@@ -57,21 +54,18 @@ class Server_Credentials : public Botan::Credentials_Manager {
       }
 
       std::vector<Botan::X509_Certificate> cert_chain(
-         const std::vector<std::string>& cert_key_types,
-         const std::vector<Botan::AlgorithmIdentifier>& cert_signature_schemes,
-         const std::string& type,
-         const std::string& context) override {
-         BOTAN_UNUSED(cert_key_types, cert_signature_schemes, type, context);
-
+         [[maybe_unused]] const std::vector<std::string>& cert_key_types,
+         [[maybe_unused]] const std::vector<Botan::AlgorithmIdentifier>& cert_signature_schemes,
+         [[maybe_unused]] const std::string& type,
+         [[maybe_unused]] const std::string& context) override {
          // return the certificate chain being sent to the tls client
          // e.g., the certificate file "botan.randombit.net.crt"
          return {Botan::X509_Certificate("botan.randombit.net.crt")};
       }
 
-      std::shared_ptr<Botan::Private_Key> private_key_for(const Botan::X509_Certificate& cert,
-                                                          const std::string& type,
-                                                          const std::string& context) override {
-         BOTAN_UNUSED(cert, type, context);
+      std::shared_ptr<Botan::Private_Key> private_key_for([[maybe_unused]] const Botan::X509_Certificate& cert,
+                                                          [[maybe_unused]] const std::string& type,
+                                                          [[maybe_unused]] const std::string& context) override {
          // return the private key associated with the leaf certificate,
          // in this case the one associated with "botan.randombit.net.crt"
          return m_key;

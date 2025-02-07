@@ -67,10 +67,7 @@ class BOTAN_TEST_API TLS_CBC_HMAC_AEAD_Mode : public AEAD_Mode {
 
       Cipher_Mode& cbc() const { return *m_cbc; }
 
-      MessageAuthenticationCode& mac() const {
-         BOTAN_ASSERT_NONNULL(m_mac);
-         return *m_mac;
-      }
+      MessageAuthenticationCode& mac() const { return *m_mac; }
 
       secure_vector<uint8_t>& cbc_state() { return m_cbc_state; }
 

@@ -128,7 +128,7 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
       *
       * @param session the session descriptor
       */
-      virtual void tls_session_established(const Session_Summary& session) { BOTAN_UNUSED(session); }
+      virtual void tls_session_established(const Session_Summary& session);
 
       /**
        * Optional callback: session activated
@@ -270,13 +270,11 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
        * indicates the revocation status of the server certificate. Return an
        * empty vector to indicate that no response is available, and thus
        * suppress the Certificate_Status message.
+       *
+       * Default implementation returns an empty vector, disabling certificate status
        */
       virtual std::vector<uint8_t> tls_provide_cert_status(const std::vector<X509_Certificate>& chain,
-                                                           const Certificate_Status_Request& csr) {
-         BOTAN_UNUSED(chain);
-         BOTAN_UNUSED(csr);
-         return std::vector<uint8_t>();
-      }
+                                                           const Certificate_Status_Request& csr);
 
       /**
        * Called by TLS 1.3 client or server whenever the peer indicated that
@@ -611,13 +609,13 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
        * Optional callback: error logging. (not currently called)
        * @param err An error message related to this connection.
        */
-      virtual void tls_log_error(const char* err) { BOTAN_UNUSED(err); }
+      virtual void tls_log_error(const char* err);
 
       /**
        * Optional callback: debug logging. (not currently called)
        * @param what Some hopefully informative string
        */
-      virtual void tls_log_debug(const char* what) { BOTAN_UNUSED(what); }
+      virtual void tls_log_debug(const char* what);
 
       /**
        * Optional callback: debug logging taking a buffer. (not currently called)
@@ -625,9 +623,7 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
        * @param val the bytes
        * @param val_len length of val
        */
-      virtual void tls_log_debug_bin(const char* descr, const uint8_t val[], size_t val_len) {
-         BOTAN_UNUSED(descr, val, val_len);
-      }
+      virtual void tls_log_debug_bin(const char* descr, const uint8_t val[], size_t val_len);
 
       /**
        * Optional callback: Allows access to a connection's secret data
@@ -647,9 +643,7 @@ class BOTAN_PUBLIC_API(2, 0) Callbacks {
        */
       virtual void tls_ssl_key_log_data(std::string_view label,
                                         std::span<const uint8_t> client_random,
-                                        std::span<const uint8_t> secret) const {
-         BOTAN_UNUSED(label, client_random, secret);
-      }
+                                        std::span<const uint8_t> secret) const;
 };
 
 }  // namespace TLS

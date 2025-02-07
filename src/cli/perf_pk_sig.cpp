@@ -21,10 +21,7 @@ class PerfTest_PKSig : public PerfTest {
 
       virtual std::string hash() const { return "SHA-256"; }
 
-      virtual std::vector<std::string> keygen_params(const PerfConfig& config) const {
-         BOTAN_UNUSED(config);
-         return {""};
-      }
+      virtual std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const { return {""}; }
 
       void go(const PerfConfig& config) override {
          const std::string alg = this->algo();
@@ -117,8 +114,7 @@ class PerfTest_DSA final : public PerfTest_PKSig {
    public:
       std::string algo() const override { return "DSA"; }
 
-      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
-         BOTAN_UNUSED(config);
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
          return {"dsa/jce/1024", "dsa/botan/2048", "dsa/botan/3072"};
       }
 
@@ -139,8 +135,7 @@ class PerfTest_RSA final : public PerfTest_PKSig {
 
       std::string hash() const override { return "PKCS1v15(SHA-256)"; }
 
-      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
-         BOTAN_UNUSED(config);
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
          return {"1024", "2048", "3072", "4096"};
       }
 };
@@ -196,10 +191,7 @@ class PerfTest_Gost3410 final : public PerfTest_PKSig {
 
       std::string hash() const override { return "GOST-34.11"; }
 
-      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
-         BOTAN_UNUSED(config);
-         return {"gost_256A"};
-      }
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override { return {"gost_256A"}; }
 };
 
 BOTAN_REGISTER_PERF_TEST("GOST-34.10", PerfTest_Gost3410);
@@ -214,10 +206,7 @@ class PerfTest_SM2 final : public PerfTest_PKSig {
 
       std::string hash() const override { return "SM3"; }
 
-      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
-         BOTAN_UNUSED(config);
-         return {"sm2p256v1"};
-      }
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override { return {"sm2p256v1"}; }
 };
 
 BOTAN_REGISTER_PERF_TEST("SM2", PerfTest_SM2);
@@ -258,9 +247,7 @@ class PerfTest_XMSS final : public PerfTest_PKSig {
 
       std::string hash() const override { return ""; }
 
-      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
-         BOTAN_UNUSED(config);
-
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
          /*
          We only test H10 signatures here since already they are quite slow (a
          few seconds per signature). On a fast machine, H16 signatures take 1-2
@@ -287,9 +274,7 @@ class PerfTest_HSS_LMS final : public PerfTest_PKSig {
 
       std::string hash() const override { return ""; }
 
-      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
-         BOTAN_UNUSED(config);
-
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
          // At first we compare instances with multiple hash functions. LMS trees with
          // height 10 are suitable, since they can be used for enough signatures and are
          // fast enough for speed testing.
@@ -319,9 +304,7 @@ class PerfTest_SPHINCSp final : public PerfTest_PKSig {
          return alg + param.substr(11);
       }
 
-      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
-         BOTAN_UNUSED(config);
-
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
          return {"SphincsPlus-sha2-128s-r3.1",
                  "SphincsPlus-sha2-128f-r3.1",
                  "SphincsPlus-sha2-192s-r3.1",
@@ -349,9 +332,7 @@ class PerfTest_SLH_DSA final : public PerfTest_PKSig {
 
       std::string hash() const override { return ""; }
 
-      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
-         BOTAN_UNUSED(config);
-
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
          return {"SLH-DSA-SHA2-128s",
                  "SLH-DSA-SHA2-128f",
                  "SLH-DSA-SHA2-192s",
@@ -379,9 +360,7 @@ class PerfTest_Dilithium final : public PerfTest_PKSig {
 
       std::string hash() const override { return ""; }
 
-      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
-         BOTAN_UNUSED(config);
-
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
          return {
             "Dilithium-4x4-r3",
             "Dilithium-4x4-AES-r3",
@@ -405,9 +384,7 @@ class PerfTest_ML_DSA final : public PerfTest_PKSig {
 
       std::string hash() const override { return ""; }
 
-      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
-         BOTAN_UNUSED(config);
-
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
          return {
             "ML-DSA-4x4",
             "ML-DSA-6x5",

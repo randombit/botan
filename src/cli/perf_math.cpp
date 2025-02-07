@@ -7,6 +7,7 @@
 #include "perf.h"
 
 #if defined(BOTAN_HAS_BIGINT)
+   #include <botan/assert.h>
    #include <botan/bigint.h>
    #include <botan/internal/divide.h>
 #endif

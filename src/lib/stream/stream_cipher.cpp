@@ -130,6 +130,11 @@ std::vector<std::string> StreamCipher::providers(std::string_view algo_spec) {
    return probe_providers_of<StreamCipher>(algo_spec);
 }
 
+void StreamCipher::cipher(std::span<const uint8_t> in, std::span<uint8_t> out) {
+   BOTAN_ARG_CHECK(in.size() <= out.size(), "Output buffer of stream cipher must be at least as long as input buffer");
+   cipher_bytes(in.data(), out.data(), in.size());
+}
+
 size_t StreamCipher::default_iv_length() const {
    return 0;
 }

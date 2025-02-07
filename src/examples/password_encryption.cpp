@@ -1,5 +1,4 @@
 #include <botan/aead.h>
-#include <botan/assert.h>
 #include <botan/auto_rng.h>
 #include <botan/hex.h>
 #include <botan/pwdhash.h>
@@ -38,7 +37,7 @@ Botan::secure_vector<uint8_t> derive_key_material(std::string_view password,
    constexpr size_t p = 2;           // parallelism
 
    auto pbkdf = Botan::PasswordHashFamily::create_or_throw(pbkdf_algo)->from_params(M, t, p);
-   BOTAN_ASSERT_NONNULL(pbkdf);
+   // create_or_throw always either throws or returns a non-null pointer
 
    Botan::secure_vector<uint8_t> key(output_length);
    pbkdf->hash(key, password, salt);
@@ -57,7 +56,12 @@ std::unique_ptr<Botan::AEAD_Mode> prepare_aead(std::string_view password,
    // Stretch the password into enough cryptographically strong key material
    // to initialize the AEAD with a key and nonce (aka. initialization vector).
    const auto keydata = derive_key_material(password, salt, key_length + nonce_length);
-   BOTAN_ASSERT_NOMSG(keydata.size() == key_length + nonce_length);
+
+   // The function always returns the requested length but lets check to make sure
+   if(keydata.size() != key_length + nonce_length) {
+      throw std::runtime_error("Unexpected output from derive_key_material");
+   }
+
    const auto key = std::span{keydata}.first(key_length);
    const auto nonce = std::span{keydata}.last(nonce_length);
 
@@ -130,9 +134,6 @@ int main() {
       std::cout << "Ciphertext: " << Botan::hex_encode(ciphertext) << "\n";
 
       const auto decrypted_message = decrypt_by_password(password, ciphertext);
-      BOTAN_ASSERT_NOMSG(message.size() == decrypted_message.size() &&
-                         std::equal(message.begin(), message.end(), decrypted_message.begin()));
-
       std::cout << "Decrypted message: " << as<std::string>(decrypted_message) << "\n";
    } catch(const std::exception& ex) {
       std::cerr << "Something went wrong: " << ex.what() << "\n";

@@ -9,6 +9,8 @@
 
 #include <botan/internal/shake_xof.h>
 
+#include <botan/assert.h>
+
 namespace Botan {
 
 SHAKE_XOF::SHAKE_XOF(size_t capacity) : m_keccak(capacity, 0b1111, 4), m_output_generated(false) {

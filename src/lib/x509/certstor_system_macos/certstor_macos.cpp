@@ -8,6 +8,7 @@
 
 #include <botan/certstor_macos.h>
 
+#include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/data_src.h>
 #include <botan/exceptn.h>

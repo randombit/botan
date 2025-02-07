@@ -9,6 +9,7 @@
 
 #if defined(BOTAN_HAS_X509_CERTIFICATES)
 
+   #include <botan/assert.h>
    #include <botan/ber_dec.h>
    #include <botan/hex.h>
    #include <algorithm>

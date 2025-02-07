@@ -8,6 +8,7 @@
 
 #include <botan/sp_parameters.h>
 
+#include <botan/assert.h>
 #include <botan/concepts.h>
 #include <botan/exceptn.h>
 #include <botan/internal/bit_ops.h>

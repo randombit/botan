@@ -388,4 +388,32 @@ secure_vector<uint8_t> TLS::Callbacks::tls_ephemeral_key_agreement(
    }
 }
 
+void TLS::Callbacks::tls_session_established(const Session_Summary& session) {
+   BOTAN_UNUSED(session);
+}
+
+std::vector<uint8_t> TLS::Callbacks::tls_provide_cert_status(const std::vector<X509_Certificate>& chain,
+                                                             const Certificate_Status_Request& csr) {
+   BOTAN_UNUSED(chain, csr);
+   return std::vector<uint8_t>();
+}
+
+void TLS::Callbacks::tls_log_error(const char* err) {
+   BOTAN_UNUSED(err);
+}
+
+void TLS::Callbacks::tls_log_debug(const char* what) {
+   BOTAN_UNUSED(what);
+}
+
+void TLS::Callbacks::tls_log_debug_bin(const char* descr, const uint8_t val[], size_t val_len) {
+   BOTAN_UNUSED(descr, val, val_len);
+}
+
+void TLS::Callbacks::tls_ssl_key_log_data(std::string_view label,
+                                          std::span<const uint8_t> client_random,
+                                          std::span<const uint8_t> secret) const {
+   BOTAN_UNUSED(label, client_random, secret);
+}
+
 }  // namespace Botan

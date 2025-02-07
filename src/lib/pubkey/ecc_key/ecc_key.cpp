@@ -9,6 +9,7 @@
 
 #include <botan/ecc_key.h>
 
+#include <botan/assert.h>
 #include <botan/ber_dec.h>
 #include <botan/der_enc.h>
 #include <botan/secmem.h>

@@ -67,10 +67,7 @@ class BOTAN_UNSTABLE_API CurveGFp final {
       bool operator==(const CurveGFp& other) const { return (m_group == other.m_group); }
 
    private:
-      const EC_Group_Data& group() const {
-         BOTAN_ASSERT_NONNULL(m_group);
-         return *m_group;
-      }
+      const EC_Group_Data& group() const;
 
       /**
       * Raw pointer

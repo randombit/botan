@@ -6,6 +6,7 @@
 
 #include "perf.h"
 
+#include <botan/assert.h>
 #include <botan/rng.h>
 
 #if defined(BOTAN_HAS_COMPRESSION)

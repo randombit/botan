@@ -19,10 +19,7 @@ class PerfTest_PKEnc : public PerfTest {
    public:
       virtual std::string algo() const = 0;
 
-      virtual std::vector<std::string> keygen_params(const PerfConfig& config) const {
-         BOTAN_UNUSED(config);
-         return {""};
-      }
+      virtual std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const { return {""}; }
 
       void go(const PerfConfig& config) override {
          const std::string alg = this->algo();
@@ -97,8 +94,7 @@ class PerfTest_ElGamal final : public PerfTest_PKEnc {
    public:
       std::string algo() const override { return "ElGamal"; }
 
-      std::vector<std::string> keygen_params(const PerfConfig& config) const override {
-         BOTAN_UNUSED(config);
+      std::vector<std::string> keygen_params(const PerfConfig& /*config*/) const override {
          return {
             "modp/ietf/1024",
             "modp/ietf/2048",

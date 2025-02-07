@@ -154,6 +154,14 @@ void ct_divide_word(const BigInt& x, word y, BigInt& q_out, word& r_out) {
    q_out = q;
 }
 
+BigInt ct_divide_word(const BigInt& x, word y) {
+   BigInt q;
+   word r;
+   ct_divide_word(x, y, q, r);
+   BOTAN_UNUSED(r);
+   return q;
+}
+
 word ct_mod_word(const BigInt& x, word y) {
    BOTAN_ARG_CHECK(x.is_positive(), "The argument x must be positive");
    BOTAN_ARG_CHECK(y != 0, "Cannot divide by zero");

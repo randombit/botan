@@ -9,6 +9,7 @@
 
 #include <botan/internal/xmss_hash.h>
 
+#include <botan/assert.h>
 #include <botan/exceptn.h>
 #include <botan/xmss_parameters.h>
 #include <botan/internal/fmt.h>

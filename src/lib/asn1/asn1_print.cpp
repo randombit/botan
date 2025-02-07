@@ -10,6 +10,7 @@
 #include <botan/bigint.h>
 #include <botan/der_enc.h>
 #include <botan/hex.h>
+#include <botan/mem_ops.h>
 #include <botan/internal/fmt.h>
 #include <cctype>
 #include <iomanip>
