@@ -496,28 +496,19 @@ will want to disable. There is no specific feature flag for this, but
 .. note:: Disabling ``dyn_load`` module will also disable the PKCS #11
           wrapper, which relies on dynamic loading.
 
-Configuration Parameters
+Feature Check Macros
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-There are some configuration parameters which you may want to tweak
-before building the library. These can be found in ``build.h``. This
-file is overwritten every time the configure script is run (and does
-not exist until after you run the script for the first time).
+When ``build.h`` is created, a set of macros are defined which can be used for
+compile-time feature checks.
 
-Also included in ``build/build.h`` are macros which let applications
-check which features are included in the current version of the
-library. All of them begin with ``BOTAN_HAS_``. For example, if
-``BOTAN_HAS_RSA`` is defined, then an application knows that this
-version of the library has RSA available.
-
-``BOTAN_MP_WORD_BITS``: This macro controls the size of the words used for
-calculations with the MPI implementation in Botan.  It must be set to either 32
-or 64 bits. The default is chosen based on the target processor. There is
-normally no reason to change this.
-
-``BOTAN_DEFAULT_BUFFER_SIZE``: This constant is used as the size of
-buffers throughout Botan. The default should be fine for most
-purposes, reduce if you are very concerned about runtime memory usage.
+Each of these macros has the form ``BOTAN_HAS_FOO``, for example
+``BOTAN_HAS_RSA`` or ``BOTAN_HAS_TLS_13``. Each of these macros also has a
+value, which cooresponds to a YYYYMMDD date code integer. If a user-visible
+change is made to a module (for example adding a particular feature) the date
+code is set to a new value. This can be useful for applications if they need to
+check that both a feature is enabled in general and that it supports some
+specific feature that was added in a particular change.
 
 Building Applications
 ----------------------------------------
